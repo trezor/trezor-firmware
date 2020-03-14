@@ -138,3 +138,17 @@ def obj_repr(o: object) -> str:
     else:
         d = o.__dict__
     return "<%s: %s>" % (o.__class__.__name__, d)
+
+
+def truncate_utf8(string: str, max_bytes: int) -> str:
+    """Truncate the codepoints of a string so that its UTF-8 encoding is at most `max_bytes` in length."""
+    data = string.encode()
+    if len(data) <= max_bytes:
+        return string
+
+    # Find the starting position of the last codepoint in data[0 : max_bytes + 1].
+    i = max_bytes
+    while i >= 0 and data[i] & 0xC0 == 0x80:
+        i -= 1
+
+    return data[:i].decode()

@@ -1,7 +1,7 @@
 from common import *
 import storage
 from apps.common import mnemonic
-from apps.webauthn.credential import Fido2Credential
+from apps.webauthn.credential import Fido2Credential, NAME_MAX_LENGTH
 from trezor.crypto.curve import nist256p1
 from trezor.crypto.hashlib import sha256
 
@@ -58,6 +58,21 @@ class TestCredential(unittest.TestCase):
         # Check credential keys.
         self.assertEqual(hexlify(cred.hmac_secret_key()), cred_random)
         self.assertEqual(hexlify(cred.public_key()), public_key)
+
+    def test_truncation(self):
+        cred = Fido2Credential()
+        cred.truncate_names()
+        self.assertIsNone(cred.rp_name)
+        self.assertIsNone(cred.user_name)
+        self.assertIsNone(cred.user_display_name)
+
+        cred.rp_name = "a" * (NAME_MAX_LENGTH - 2) + "\u0123"
+        cred.user_name = "a" * (NAME_MAX_LENGTH - 1) + "\u0123"
+        cred.user_display_name = "a" * NAME_MAX_LENGTH + "\u0123"
+        cred.truncate_names()
+        self.assertEqual(cred.rp_name, "a" * (NAME_MAX_LENGTH - 2) + "\u0123")
+        self.assertEqual(cred.user_name, "a" * (NAME_MAX_LENGTH - 1))
+        self.assertEqual(cred.user_display_name, "a" * NAME_MAX_LENGTH)
 
 if __name__ == '__main__':
     unittest.main()
