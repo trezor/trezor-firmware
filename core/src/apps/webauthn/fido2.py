@@ -15,7 +15,12 @@ from trezor.ui.text import Text
 from apps.common import cbor
 from apps.webauthn import common
 from apps.webauthn.confirm import ConfirmContent, ConfirmInfo
-from apps.webauthn.credential import Credential, Fido2Credential, U2fCredential
+from apps.webauthn.credential import (
+    CRED_ID_MAX_LENGTH,
+    Credential,
+    Fido2Credential,
+    U2fCredential,
+)
 from apps.webauthn.resident_credentials import (
     find_by_rp_id_hash,
     store_resident_credential,
@@ -98,6 +103,8 @@ _GETINFO_RESP_EXTENSIONS = const(0x02)  # array of str, optional
 _GETINFO_RESP_AAGUID = const(0x03)  # bytes(16), required
 _GETINFO_RESP_OPTIONS = const(0x04)  # map, optional
 _GETINFO_RESP_PIN_PROTOCOLS = const(0x06)  # list of unsigned integers, optional
+_GETINFO_RESP_MAX_CRED_COUNT_IN_LIST = const(0x07)  # int, optional
+_GETINFO_RESP_MAX_CRED_ID_LEN = const(0x08)  # int, optional
 
 # CBOR ClientPin command parameter keys
 _CLIENTPIN_CMD_PIN_PROTOCOL = const(0x01)  # unsigned int, required
@@ -210,6 +217,9 @@ _DEFAULT_USE_SELF_ATTESTATION = True
 
 # The default value of the use_sign_count flag for newly created credentials.
 _DEFAULT_USE_SIGN_COUNT = True
+
+# The maximum number of credential IDs that can be supplied in the GetAssertion allow list.
+_MAX_CRED_COUNT_IN_LIST = const(10)
 
 # The CID of the last WINK command. Used to ensure that we do only one WINK at a time on any given CID.
 _last_wink_cid = 0
@@ -1747,6 +1757,8 @@ def cbor_get_info(req: Cmd) -> Cmd:
             "uv": True,
         },
         _GETINFO_RESP_PIN_PROTOCOLS: [1],
+        _GETINFO_RESP_MAX_CRED_COUNT_IN_LIST: _MAX_CRED_COUNT_IN_LIST,
+        _GETINFO_RESP_MAX_CRED_ID_LEN: CRED_ID_MAX_LENGTH,
     }
     return Cmd(req.cid, _CMD_CBOR, bytes([_ERR_NONE]) + cbor.encode(response_data))
 

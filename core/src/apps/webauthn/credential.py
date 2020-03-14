@@ -15,8 +15,12 @@ if False:
 
 # Credential ID values
 _CRED_ID_VERSION = b"\xf1\xd0\x02\x00"
-_CRED_ID_MIN_LENGTH = const(33)
+CRED_ID_MIN_LENGTH = const(33)
+CRED_ID_MAX_LENGTH = const(1024)
 _KEY_HANDLE_LENGTH = const(64)
+
+# Maximum user handle length in bytes.
+_USER_ID_MAX_LENGTH = const(64)
 
 # Maximum supported length of the RP name, user name or user displayName in bytes.
 # Note: The WebAuthn spec allows authenticators to truncate to 64 bytes or more.
@@ -151,11 +155,14 @@ class Fido2Credential(Credential):
         tag = ctx.finish()
         self.id = _CRED_ID_VERSION + iv + ciphertext + tag
 
+        if len(self.id) > CRED_ID_MAX_LENGTH:
+            raise AssertionError
+
     @classmethod
     def from_cred_id(
         cls, cred_id: bytes, rp_id_hash: Optional[bytes]
     ) -> "Fido2Credential":
-        if len(cred_id) < _CRED_ID_MIN_LENGTH or cred_id[0:4] != _CRED_ID_VERSION:
+        if len(cred_id) < CRED_ID_MIN_LENGTH or cred_id[0:4] != _CRED_ID_VERSION:
             raise ValueError  # invalid length or version
 
         key = seed.derive_slip21_node_without_passphrase(
@@ -228,6 +235,7 @@ class Fido2Credential(Credential):
         return (
             self.rp_id is not None
             and self.user_id is not None
+            and len(self.user_id) <= _USER_ID_MAX_LENGTH
             and self.creation_time is not None
         )
 
