@@ -27,7 +27,7 @@ from apps.webauthn.resident_credentials import (
 )
 
 if False:
-    from typing import Any, Coroutine, Iterable, List, Optional, Tuple
+    from typing import Any, Coroutine, Iterable, Iterator, List, Optional, Tuple
 
 _CID_BROADCAST = const(0xFFFFFFFF)  # broadcast channel id
 
@@ -1305,8 +1305,7 @@ def cbor_error(cid: int, code: int) -> Cmd:
 
 def credentials_from_descriptor_list(
     descriptor_list: List[dict], rp_id_hash: bytes
-) -> List[Credential]:
-    cred_list = []
+) -> Iterator[Credential]:
     for credential_descriptor in descriptor_list:
         credential_type = credential_descriptor["type"]
         if not isinstance(credential_type, str):
@@ -1319,10 +1318,26 @@ def credentials_from_descriptor_list(
             raise TypeError
         try:
             cred = Credential.from_bytes(credential_id, rp_id_hash)
-            cred_list.append(cred)
         except Exception:
-            pass
+            continue
 
+        yield cred
+
+
+def distinguishable_cred_list(credentials: Iterable[Credential]) -> List[Credential]:
+    """Reduces the input to a list of credentials which can be distinguished by
+    the user. It is assumed that all input credentials share the same RP ID."""
+    cred_list = []  # type: List[Credential]
+    for cred in credentials:
+        for i, prev_cred in enumerate(cred_list):
+            if prev_cred.account_name() == cred.account_name():
+                # Among indistinguishable FIDO2 credentials prefer the newest.
+                # Among U2F credentials prefer the first in the input.
+                if isinstance(cred, Fido2Credential) and cred < prev_cred:
+                    cred_list[i] = cred
+                break
+        else:
+            cred_list.append(cred)
     return cred_list
 
 
@@ -1369,7 +1384,8 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
 
         # Check if any of the credential descriptors in the exclude list belong to this authenticator.
         exclude_list = param.get(_MAKECRED_CMD_EXCLUDE_LIST, [])
-        if credentials_from_descriptor_list(exclude_list, rp_id_hash):
+        excluded_creds = credentials_from_descriptor_list(exclude_list, rp_id_hash)
+        if not utils.is_empty_iterator(excluded_creds):
             # This authenticator is already registered.
             if not dialog_mgr.set_state(
                 Fido2ConfirmExcluded(req.cid, dialog_mgr.iface, cred)
@@ -1537,7 +1553,8 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         allow_list = param.get(_GETASSERT_CMD_ALLOW_LIST, [])
         if allow_list:
             # Get all credentials from the allow list that belong to this authenticator.
-            cred_list = credentials_from_descriptor_list(allow_list, rp_id_hash)
+            allowed_creds = credentials_from_descriptor_list(allow_list, rp_id_hash)
+            cred_list = distinguishable_cred_list(allowed_creds)
             for cred in cred_list:
                 if cred.rp_id is None:
                     cred.rp_id = rp_id

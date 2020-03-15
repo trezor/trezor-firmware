@@ -152,3 +152,12 @@ def truncate_utf8(string: str, max_bytes: int) -> str:
         i -= 1
 
     return data[:i].decode()
+
+
+def is_empty_iterator(i: Iterator) -> bool:
+    try:
+        next(i)
+    except StopIteration:
+        return True
+    else:
+        return False
