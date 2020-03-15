@@ -60,6 +60,9 @@ class Credential:
         self.rp_id_hash = b""  # type: bytes
         self.user_id = None  # type: Optional[bytes]
 
+    def __lt__(self, other: "Credential") -> bool:
+        raise NotImplementedError
+
     def app_name(self) -> str:
         raise NotImplementedError
 
