@@ -295,14 +295,14 @@ def _encode_manager_common(w: bytearray, sequence_length, operation, to_contract
     write_uint32_be(w, argument_length)
     write_uint8(w, helpers.MICHELSON_SEQUENCE_TAG)
     write_uint32_be(w, sequence_length)
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["DROP"])
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["NIL"])
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["operation"])
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES[operation])
+    helpers.write_instruction(w, "DROP")
+    helpers.write_instruction(w, "NIL")
+    helpers.write_instruction(w, "operation")
+    helpers.write_instruction(w, operation)
     if to_contract is True:
-        write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["address"])
+        helpers.write_instruction(w, "address")
     else:
-        write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["key_hash"])
+        helpers.write_instruction(w, "key_hash")
     if operation == "PUSH":
         write_bytes(w, bytes([10]))  # byte sequence
         if to_contract is True:
@@ -320,13 +320,13 @@ def _encode_manager_to_implicit_transfer(w: bytearray, manager_transfer):
 
     _encode_manager_common(w, sequence_length, "PUSH")
     write_bytes(w, manager_transfer.destination.hash)
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["IMPLICIT_ACCOUNT"])
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["PUSH"])
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["mutez"])
+    helpers.write_instruction(w, "IMPLICIT_ACCOUNT")
+    helpers.write_instruction(w, "PUSH")
+    helpers.write_instruction(w, "mutez")
     _encode_natural(w, manager_transfer.amount)
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["UNIT"])
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["TRANSFER_TOKENS"])
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["CONS"])
+    helpers.write_instruction(w, "UNIT")
+    helpers.write_instruction(w, "TRANSFER_TOKENS")
+    helpers.write_instruction(w, "CONS")
 
 
 # smart_contract_delegation
@@ -335,16 +335,16 @@ def _encode_manager_delegation(w: bytearray, delegate):
 
     _encode_manager_common(w, MICHELSON_LENGTH, "PUSH")
     write_bytes(w, delegate)
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["SOME"])
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["SET_DELEGATE"])
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["CONS"])
+    helpers.write_instruction(w, "SOME")
+    helpers.write_instruction(w, "SET_DELEGATE")
+    helpers.write_instruction(w, "CONS")
 
 
 def _encode_manager_delegation_remove(w: bytearray):
     MICHELSON_LENGTH = 14  # length is fixed this time(no variable length fields)
     _encode_manager_common(w, MICHELSON_LENGTH, "NONE")
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["SET_DELEGATE"])
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["CONS"])
+    helpers.write_instruction(w, "SET_DELEGATE")
+    helpers.write_instruction(w, "CONS")
 
 
 def _encode_manager_to_manager_transfer(w: bytearray, manager_transfer):
@@ -356,12 +356,12 @@ def _encode_manager_to_manager_transfer(w: bytearray, manager_transfer):
 
     _encode_manager_common(w, sequence_length, "PUSH", to_contract=True)
     _encode_contract_id(w, manager_transfer.destination)
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["CONTRACT"])
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["unit"])
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["ASSERT_SOME"])
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["PUSH"])
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["mutez"])
+    helpers.write_instruction(w, "CONTRACT")
+    helpers.write_instruction(w, "unit")
+    helpers.write_instruction(w, "ASSERT_SOME")
+    helpers.write_instruction(w, "PUSH")
+    helpers.write_instruction(w, "mutez")
     _encode_natural(w, manager_transfer.amount)
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["UNIT"])
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["TRANSFER_TOKENS"])
-    write_bytes(w, helpers.MICHELSON_INSTRUCTION_BYTES["CONS"])
+    helpers.write_instruction(w, "UNIT")
+    helpers.write_instruction(w, "TRANSFER_TOKENS")
+    helpers.write_instruction(w, "CONS")

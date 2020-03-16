@@ -3,7 +3,7 @@ from micropython import const
 from trezor.crypto import base58
 
 from apps.common import HARDENED
-from apps.common.writers import write_uint8
+from apps.common.writers import write_uint8, write_bytes
 
 TEZOS_AMOUNT_DECIMALS = const(6)
 TEZOS_ED25519_ADDRESS_PREFIX = "tz1"
@@ -96,3 +96,7 @@ def write_bool(w: bytearray, boolean: bool):
         write_uint8(w, 255)
     else:
         write_uint8(w, 0)
+
+
+def write_instruction(w: bytearray, instruction: str) -> int:
+    write_bytes(w, MICHELSON_INSTRUCTION_BYTES[instruction])
