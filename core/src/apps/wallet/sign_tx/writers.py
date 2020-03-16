@@ -5,7 +5,7 @@ from trezor.utils import ensure
 
 from apps.common.writers import (  # noqa: F401
     empty_bytearray,
-    write_bytes,
+    write_bytes_unchecked,
     write_bytes_reversed,
     write_uint8,
     write_uint16_le,
@@ -22,12 +22,12 @@ def write_tx_input(w, i: TxInputType):
     write_bytes_reversed(w, i.prev_hash)
     write_uint32(w, i.prev_index)
     write_varint(w, len(i.script_sig))
-    write_bytes(w, i.script_sig)
+    write_bytes_unchecked(w, i.script_sig)
     write_uint32(w, i.sequence)
 
 
 def write_tx_input_check(w, i: TxInputType):
-    write_bytes(w, i.prev_hash)
+    write_bytes_unchecked(w, i.prev_hash)
     write_uint32(w, i.prev_index)
     write_uint32(w, i.script_type)
     write_uint32(w, len(i.address_n))
@@ -49,7 +49,7 @@ def write_tx_input_decred_witness(w, i: TxInputType):
     write_uint32(w, 0)  # block height fraud proof
     write_uint32(w, 0xFFFFFFFF)  # block index fraud proof
     write_varint(w, len(i.script_sig))
-    write_bytes(w, i.script_sig)
+    write_bytes_unchecked(w, i.script_sig)
 
 
 def write_tx_output(w, o: TxOutputBinType):
@@ -57,7 +57,7 @@ def write_tx_output(w, o: TxOutputBinType):
     if o.decred_script_version is not None:
         write_uint16(w, o.decred_script_version)
     write_varint(w, len(o.script_pubkey))
-    write_bytes(w, o.script_pubkey)
+    write_bytes_unchecked(w, o.script_pubkey)
 
 
 def write_op_push(w, n: int):

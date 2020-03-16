@@ -151,7 +151,7 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinI
             w_txi = writers.empty_bytearray(8 if i == 0 else 0 + 9 + len(txi.prev_hash))
             if i == 0:  # serializing first input => prepend headers
                 # decred doesn't support segwit
-                writers.write_bytes(w_txi, get_tx_header(coin, tx, False))
+                writers.write_bytes_unchecked(w_txi, get_tx_header(coin, tx, False))
             writers.write_tx_input_decred(w_txi, txi)
             tx_ser.serialized_tx = w_txi
             tx_req.serialized = tx_ser
@@ -281,7 +281,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
                 7 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4
             )
             if i_sign == 0:  # serializing first input => prepend headers
-                writers.write_bytes(w_txi, get_tx_header(coin, tx, True))
+                writers.write_bytes_unchecked(w_txi, get_tx_header(coin, tx, True))
             writers.write_tx_input(w_txi, txi_sign)
             tx_ser.serialized_tx = w_txi
             tx_ser.signature_index = None
@@ -331,7 +331,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
                 5 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4
             )
             if i_sign == 0:  # serializing first input => prepend headers
-                writers.write_bytes(w_txi_sign, get_tx_header(coin, tx, any_segwit))
+                writers.write_bytes_unchecked(w_txi_sign, get_tx_header(coin, tx, any_segwit))
             writers.write_tx_input(w_txi_sign, txi_sign)
             tx_ser.serialized_tx = w_txi_sign
 
@@ -367,7 +367,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
             for ii in range(tx.inputs_count):
                 if ii == i_sign:
                     writers.write_varint(h_witness, len(prev_pkscript))
-                    writers.write_bytes(h_witness, prev_pkscript)
+                    writers.write_bytes_unchecked(h_witness, prev_pkscript)
                 else:
                     writers.write_varint(h_witness, 0)
 
@@ -377,8 +377,8 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
 
             h_sign = utils.HashWriter(blake256())
             writers.write_uint32(h_sign, decred.DECRED_SIGHASHALL)
-            writers.write_bytes(h_sign, prefix_hash)
-            writers.write_bytes(h_sign, witness_hash)
+            writers.write_bytes_unchecked(h_sign, prefix_hash)
+            writers.write_bytes_unchecked(h_sign, witness_hash)
 
             sig_hash = writers.get_tx_hash(h_sign, double=coin.sign_hash_double)
             signature = ecdsa_sign(key_sign, sig_hash)
@@ -397,7 +397,9 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
             )
 
             if i_sign == 0:
-                writers.write_bytes(w_txi_sign, hash143.get_last_output_bytes())
+                writers.write_bytes_unchecked(
+                    w_txi_sign, hash143.get_last_output_bytes()
+                )
                 writers.write_uint32(w_txi_sign, tx.lock_time)
                 writers.write_uint32(w_txi_sign, tx.expiry)
                 writers.write_varint(w_txi_sign, tx.inputs_count)
@@ -486,7 +488,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
                 5 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4
             )
             if i_sign == 0:  # serializing first input => prepend headers
-                writers.write_bytes(w_txi_sign, get_tx_header(coin, tx, any_segwit))
+                writers.write_bytes_unchecked(w_txi_sign, get_tx_header(coin, tx, any_segwit))
             writers.write_tx_input(w_txi_sign, txi_sign)
             tx_ser.serialized_tx = w_txi_sign
 
@@ -652,7 +654,7 @@ async def get_prevtx_output_value(
         while ofs < tx.extra_data_len:
             size = min(1024, tx.extra_data_len - ofs)
             data = await helpers.request_tx_extra_data(tx_req, ofs, size, prev_hash)
-            writers.write_bytes(txh, data)
+            writers.write_bytes_unchecked(txh, data)
             ofs += len(data)
 
     if (

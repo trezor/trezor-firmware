@@ -47,8 +47,8 @@ async def _final(ctx, w: bytearray, msg: StellarSignTx):
 
 async def _init(ctx, w: bytearray, pubkey: bytes, msg: StellarSignTx):
     network_passphrase_hash = sha256(msg.network_passphrase).digest()
-    writers.write_bytes(w, network_passphrase_hash)
-    writers.write_bytes(w, consts.TX_TYPE)
+    writers.write_bytes_unchecked(w, network_passphrase_hash)
+    writers.write_bytes_unchecked(w, consts.TX_TYPE)
 
     address = helpers.address_from_public_key(pubkey)
     accounts_match = msg.source_account == address
@@ -103,7 +103,7 @@ async def _memo(ctx, w: bytearray, msg: StellarSignTx):
         memo_confirm_text = str(msg.memo_id)
     elif msg.memo_type in (consts.MEMO_TYPE_HASH, consts.MEMO_TYPE_RETURN):
         # Hash/Return: 32 byte hash
-        writers.write_bytes(w, bytearray(msg.memo_hash))
+        writers.write_bytes_unchecked(w, bytearray(msg.memo_hash))
         memo_confirm_text = hexlify(msg.memo_hash).decode()
     else:
         raise ProcessError("Stellar invalid memo type")

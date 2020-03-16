@@ -13,7 +13,7 @@ from apps.wallet.sign_tx.multisig import multisig_get_pubkeys
 from apps.wallet.sign_tx.scripts import output_script_multisig, output_script_p2pkh
 from apps.wallet.sign_tx.writers import (
     get_tx_hash,
-    write_bytes,
+    write_bytes_unchecked,
     write_bytes_reversed,
     write_tx_output,
     write_uint32,
@@ -92,10 +92,10 @@ class Zip143:
             h_preimage, tx.version | OVERWINTERED
         )  # 1. nVersion | fOverwintered
         write_uint32(h_preimage, tx.version_group_id)  # 2. nVersionGroupId
-        write_bytes(h_preimage, bytearray(self.get_prevouts_hash()))  # 3. hashPrevouts
-        write_bytes(h_preimage, bytearray(self.get_sequence_hash()))  # 4. hashSequence
-        write_bytes(h_preimage, bytearray(self.get_outputs_hash()))  # 5. hashOutputs
-        write_bytes(h_preimage, b"\x00" * 32)  # 6. hashJoinSplits
+        write_bytes_unchecked(h_preimage, bytearray(self.get_prevouts_hash()))  # 3. hashPrevouts
+        write_bytes_unchecked(h_preimage, bytearray(self.get_sequence_hash()))  # 4. hashSequence
+        write_bytes_unchecked(h_preimage, bytearray(self.get_outputs_hash()))  # 5. hashOutputs
+        write_bytes_unchecked(h_preimage, b"\x00" * 32)  # 6. hashJoinSplits
         write_uint32(h_preimage, tx.lock_time)  # 7. nLockTime
         write_uint32(h_preimage, tx.expiry)  # 8. expiryHeight
         write_uint32(h_preimage, sighash)  # 9. nHashType
@@ -105,7 +105,7 @@ class Zip143:
 
         script_code = derive_script_code(txi, pubkeyhash)  # 10b. scriptCode
         write_varint(h_preimage, len(script_code))
-        write_bytes(h_preimage, script_code)
+        write_bytes_unchecked(h_preimage, script_code)
 
         write_uint64(h_preimage, txi.amount)  # 10c. value
 
@@ -139,12 +139,12 @@ class Zip243(Zip143):
             h_preimage, tx.version | OVERWINTERED
         )  # 1. nVersion | fOverwintered
         write_uint32(h_preimage, tx.version_group_id)  # 2. nVersionGroupId
-        write_bytes(h_preimage, bytearray(self.get_prevouts_hash()))  # 3. hashPrevouts
-        write_bytes(h_preimage, bytearray(self.get_sequence_hash()))  # 4. hashSequence
-        write_bytes(h_preimage, bytearray(self.get_outputs_hash()))  # 5. hashOutputs
-        write_bytes(h_preimage, b"\x00" * 32)  # 6. hashJoinSplits
-        write_bytes(h_preimage, b"\x00" * 32)  # 7. hashShieldedSpends
-        write_bytes(h_preimage, b"\x00" * 32)  # 8. hashShieldedOutputs
+        write_bytes_unchecked(h_preimage, bytearray(self.get_prevouts_hash()))  # 3. hashPrevouts
+        write_bytes_unchecked(h_preimage, bytearray(self.get_sequence_hash()))  # 4. hashSequence
+        write_bytes_unchecked(h_preimage, bytearray(self.get_outputs_hash()))  # 5. hashOutputs
+        write_bytes_unchecked(h_preimage, b"\x00" * 32)  # 6. hashJoinSplits
+        write_bytes_unchecked(h_preimage, b"\x00" * 32)  # 7. hashShieldedSpends
+        write_bytes_unchecked(h_preimage, b"\x00" * 32)  # 8. hashShieldedOutputs
         write_uint32(h_preimage, tx.lock_time)  # 9. nLockTime
         write_uint32(h_preimage, tx.expiry)  # 10. expiryHeight
         write_uint64(h_preimage, 0)  # 11. valueBalance
@@ -155,7 +155,7 @@ class Zip243(Zip143):
 
         script_code = derive_script_code(txi, pubkeyhash)  # 13b. scriptCode
         write_varint(h_preimage, len(script_code))
-        write_bytes(h_preimage, script_code)
+        write_bytes_unchecked(h_preimage, script_code)
 
         write_uint64(h_preimage, txi.amount)  # 13c. value
 

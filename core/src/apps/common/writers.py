@@ -78,11 +78,18 @@ def write_uint64_be(w: Writer, n: int) -> int:
     return 8
 
 
-def write_bytes(w: Writer, b: bytes) -> int:
+def write_bytes_unchecked(w: Writer, b: bytes) -> int:
     w.extend(b)
     return len(b)
 
 
-def write_bytes_reversed(w: Writer, b: bytes) -> int:
+def write_bytes_fixed(w: Writer, b: bytes, length: int) -> int:
+    ensure(len(b) == length)
+    w.extend(b)
+    return length
+
+
+def write_bytes_reversed(w: Writer, b: bytes, length: int) -> int:
+    ensure(len(b) == length)
     w.extend(bytes(reversed(b)))
-    return len(b)
+    return length

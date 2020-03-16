@@ -34,7 +34,7 @@ async def sign_tx(
     await _init(ctx, sha, msg)
     await _actions(ctx, sha, msg.num_actions)
     writers.write_variant32(sha, 0)
-    writers.write_bytes(sha, bytearray(32))
+    writers.write_bytes_unchecked(sha, bytearray(32))
 
     digest = sha.get_digest()
     signature = secp256k1.sign(
@@ -45,7 +45,7 @@ async def sign_tx(
 
 
 async def _init(ctx: wire.Context, sha: HashWriter, msg: EosSignTx) -> None:
-    writers.write_bytes(sha, msg.chain_id)
+    writers.write_bytes_unchecked(sha, msg.chain_id)
     writers.write_header(sha, msg.header)
     writers.write_variant32(sha, 0)
     writers.write_variant32(sha, msg.num_actions)
