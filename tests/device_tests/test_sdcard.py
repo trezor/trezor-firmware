@@ -97,6 +97,10 @@ def test_sd_protect_unlock(client):
         assert "Change PIN" in client.debug.wait_layout().text
         client.debug.press_yes()
 
+        yield  # enter current PIN
+        assert "PinDialog" == client.debug.wait_layout().text
+        client.debug.input("1234")
+
         yield  # SD card problem
         assert "SD card problem" in client.debug.wait_layout().text
         client.debug.press_yes()  # retry
