@@ -61,6 +61,13 @@ def change_pin(
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
+def ensure_not_wipe_code(pin: int) -> None:
+    """
+    Wipes the device if the entered PIN is the wipe code.
+    """
+
+
+# extmod/modtrezorconfig/modtrezorconfig.c
 def has_wipe_code() -> bool:
     """
     Returns True if storage has a configured wipe code, False otherwise.
