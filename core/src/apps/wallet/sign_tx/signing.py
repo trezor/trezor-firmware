@@ -366,8 +366,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
 
             for ii in range(tx.inputs_count):
                 if ii == i_sign:
-                    writers.write_varint(h_witness, len(prev_pkscript))
-                    writers.write_bytes_unchecked(h_witness, prev_pkscript)
+                    writers.write_bytes_prefixed(h_witness, prev_pkscript)
                 else:
                     writers.write_varint(h_witness, 0)
 
@@ -377,8 +376,8 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
 
             h_sign = utils.HashWriter(blake256())
             writers.write_uint32(h_sign, decred.DECRED_SIGHASHALL)
-            writers.write_bytes_unchecked(h_sign, prefix_hash)
-            writers.write_bytes_unchecked(h_sign, witness_hash)
+            writers.write_bytes_fixed(h_sign, prefix_hash, writers.TX_HASH_SIZE)
+            writers.write_bytes_fixed(h_sign, witness_hash, writers.TX_HASH_SIZE)
 
             sig_hash = writers.get_tx_hash(h_sign, double=coin.sign_hash_double)
             signature = ecdsa_sign(key_sign, sig_hash)

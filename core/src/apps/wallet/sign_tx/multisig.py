@@ -5,7 +5,7 @@ from trezor.messages.HDNodeType import HDNodeType
 from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
 from trezor.utils import HashWriter, ensure
 
-from apps.wallet.sign_tx.writers import write_bytes_unchecked, write_uint32
+from apps.wallet.sign_tx.writers import write_bytes_fixed, write_uint32
 
 
 class MultisigError(ValueError):
@@ -59,8 +59,8 @@ def multisig_fingerprint(multisig: MultisigRedeemScriptType) -> bytes:
         write_uint32(h, d.depth)
         write_uint32(h, d.fingerprint)
         write_uint32(h, d.child_num)
-        write_bytes_unchecked(h, d.chain_code)
-        write_bytes_unchecked(h, d.public_key)
+        write_bytes_fixed(h, d.chain_code, 32)
+        write_bytes_fixed(h, d.public_key, 33)
 
     return h.get_digest()
 

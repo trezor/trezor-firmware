@@ -12,13 +12,14 @@ from apps.common.coininfo import CoinInfo
 from apps.wallet.sign_tx.multisig import multisig_get_pubkeys
 from apps.wallet.sign_tx.scripts import output_script_multisig, output_script_p2pkh
 from apps.wallet.sign_tx.writers import (
+    TX_HASH_SIZE,
     get_tx_hash,
-    write_bytes_unchecked,
+    write_bytes_fixed,
+    write_bytes_prefixed,
     write_bytes_reversed,
     write_tx_output,
     write_uint32,
     write_uint64,
-    write_varint,
 )
 
 OVERWINTERED = const(0x80000000)
@@ -53,7 +54,7 @@ class Zip143:
         self.h_outputs = HashWriter(blake2b(outlen=32, personal=b"ZcashOutputsHash"))
 
     def add_prevouts(self, txi: TxInputType):
-        write_bytes_reversed(self.h_prevouts, txi.prev_hash)
+        write_bytes_reversed(self.h_prevouts, txi.prev_hash, TX_HASH_SIZE)
         write_uint32(self.h_prevouts, txi.prev_index)
 
     def add_sequence(self, txi: TxInputType):
@@ -92,20 +93,23 @@ class Zip143:
             h_preimage, tx.version | OVERWINTERED
         )  # 1. nVersion | fOverwintered
         write_uint32(h_preimage, tx.version_group_id)  # 2. nVersionGroupId
-        write_bytes_unchecked(h_preimage, bytearray(self.get_prevouts_hash()))  # 3. hashPrevouts
-        write_bytes_unchecked(h_preimage, bytearray(self.get_sequence_hash()))  # 4. hashSequence
-        write_bytes_unchecked(h_preimage, bytearray(self.get_outputs_hash()))  # 5. hashOutputs
-        write_bytes_unchecked(h_preimage, b"\x00" * 32)  # 6. hashJoinSplits
+        # 3. hashPrevouts
+        write_bytes_fixed(h_preimage, bytearray(self.get_prevouts_hash()), TX_HASH_SIZE)
+        # 4. hashSequence
+        write_bytes_fixed(h_preimage, bytearray(self.get_sequence_hash()), TX_HASH_SIZE)
+        # 5. hashOutputs
+        write_bytes_fixed(h_preimage, bytearray(self.get_outputs_hash()), TX_HASH_SIZE)
+        # 6. hashJoinSplits
+        write_bytes_fixed(h_preimage, b"\x00" * TX_HASH_SIZE, TX_HASH_SIZE)
         write_uint32(h_preimage, tx.lock_time)  # 7. nLockTime
         write_uint32(h_preimage, tx.expiry)  # 8. expiryHeight
         write_uint32(h_preimage, sighash)  # 9. nHashType
 
-        write_bytes_reversed(h_preimage, txi.prev_hash)  # 10a. outpoint
+        write_bytes_reversed(h_preimage, txi.prev_hash, TX_HASH_SIZE)  # 10a. outpoint
         write_uint32(h_preimage, txi.prev_index)
 
         script_code = derive_script_code(txi, pubkeyhash)  # 10b. scriptCode
-        write_varint(h_preimage, len(script_code))
-        write_bytes_unchecked(h_preimage, script_code)
+        write_bytes_prefixed(h_preimage, script_code)
 
         write_uint64(h_preimage, txi.amount)  # 10c. value
 
@@ -139,23 +143,28 @@ class Zip243(Zip143):
             h_preimage, tx.version | OVERWINTERED
         )  # 1. nVersion | fOverwintered
         write_uint32(h_preimage, tx.version_group_id)  # 2. nVersionGroupId
-        write_bytes_unchecked(h_preimage, bytearray(self.get_prevouts_hash()))  # 3. hashPrevouts
-        write_bytes_unchecked(h_preimage, bytearray(self.get_sequence_hash()))  # 4. hashSequence
-        write_bytes_unchecked(h_preimage, bytearray(self.get_outputs_hash()))  # 5. hashOutputs
-        write_bytes_unchecked(h_preimage, b"\x00" * 32)  # 6. hashJoinSplits
-        write_bytes_unchecked(h_preimage, b"\x00" * 32)  # 7. hashShieldedSpends
-        write_bytes_unchecked(h_preimage, b"\x00" * 32)  # 8. hashShieldedOutputs
+        # 3. hashPrevouts
+        write_bytes_fixed(h_preimage, bytearray(self.get_prevouts_hash()), TX_HASH_SIZE)
+        # 4. hashSequence
+        write_bytes_fixed(h_preimage, bytearray(self.get_sequence_hash()), TX_HASH_SIZE)
+        # 5. hashOutputs
+        write_bytes_fixed(h_preimage, bytearray(self.get_outputs_hash()), TX_HASH_SIZE)
+
+        zero_hash = b"\x00" * TX_HASH_SIZE
+        write_bytes_fixed(h_preimage, zero_hash, TX_HASH_SIZE)  # 6. hashJoinSplits
+        write_bytes_fixed(h_preimage, zero_hash, TX_HASH_SIZE)  # 7. hashShieldedSpends
+        write_bytes_fixed(h_preimage, zero_hash, TX_HASH_SIZE)  # 8. hashShieldedOutputs
+
         write_uint32(h_preimage, tx.lock_time)  # 9. nLockTime
         write_uint32(h_preimage, tx.expiry)  # 10. expiryHeight
         write_uint64(h_preimage, 0)  # 11. valueBalance
         write_uint32(h_preimage, sighash)  # 12. nHashType
 
-        write_bytes_reversed(h_preimage, txi.prev_hash)  # 13a. outpoint
+        write_bytes_reversed(h_preimage, txi.prev_hash, TX_HASH_SIZE)  # 13a. outpoint
         write_uint32(h_preimage, txi.prev_index)
 
         script_code = derive_script_code(txi, pubkeyhash)  # 13b. scriptCode
-        write_varint(h_preimage, len(script_code))
-        write_bytes_unchecked(h_preimage, script_code)
+        write_bytes_prefixed(h_preimage, script_code)
 
         write_uint64(h_preimage, txi.amount)  # 13c. value
 

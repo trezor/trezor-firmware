@@ -9,13 +9,14 @@ from apps.common.coininfo import CoinInfo
 from apps.wallet.sign_tx.multisig import multisig_get_pubkeys
 from apps.wallet.sign_tx.scripts import output_script_multisig, output_script_p2pkh
 from apps.wallet.sign_tx.writers import (
+    TX_HASH_SIZE,
     get_tx_hash,
-    write_bytes_unchecked,
+    write_bytes_fixed,
+    write_bytes_prefixed,
     write_bytes_reversed,
     write_tx_output,
     write_uint32,
     write_uint64,
-    write_varint,
 )
 
 
@@ -30,7 +31,7 @@ class Bip143:
         self.h_outputs = HashWriter(sha256())
 
     def add_prevouts(self, txi: TxInputType):
-        write_bytes_reversed(self.h_prevouts, txi.prev_hash)
+        write_bytes_reversed(self.h_prevouts, txi.prev_hash, TX_HASH_SIZE)
         write_uint32(self.h_prevouts, txi.prev_index)
 
     def add_sequence(self, txi: TxInputType):
@@ -61,19 +62,21 @@ class Bip143:
         ensure(not coin.overwintered)
 
         write_uint32(h_preimage, tx.version)  # nVersion
-        write_bytes_unchecked(h_preimage, self.get_prevouts_hash(coin))  # hashPrevouts
-        write_bytes_unchecked(h_preimage, self.get_sequence_hash(coin))  # hashSequence
+        # hashPrevouts
+        write_bytes_fixed(h_preimage, self.get_prevouts_hash(coin), TX_HASH_SIZE)
+        # hashSequence
+        write_bytes_fixed(h_preimage, self.get_sequence_hash(coin), TX_HASH_SIZE)
 
-        write_bytes_reversed(h_preimage, txi.prev_hash)  # outpoint
+        write_bytes_reversed(h_preimage, txi.prev_hash, TX_HASH_SIZE)  # outpoint
         write_uint32(h_preimage, txi.prev_index)  # outpoint
 
         script_code = self.derive_script_code(txi, pubkeyhash)  # scriptCode
-        write_varint(h_preimage, len(script_code))
-        write_bytes_unchecked(h_preimage, script_code)
+        write_bytes_prefixed(h_preimage, script_code)
 
         write_uint64(h_preimage, txi.amount)  # amount
         write_uint32(h_preimage, txi.sequence)  # nSequence
-        write_bytes_unchecked(h_preimage, self.get_outputs_hash(coin))  # hashOutputs
+        # hashOutputs
+        write_bytes_fixed(h_preimage, self.get_outputs_hash(coin), TX_HASH_SIZE)
         write_uint32(h_preimage, tx.lock_time)  # nLockTime
         write_uint32(h_preimage, sighash)  # nHashType
 
