@@ -80,12 +80,13 @@ async def pin_mismatch() -> None:
 async def request_pin_and_sd_salt(
     ctx: wire.Context, prompt: str = "Enter your PIN", allow_cancel: bool = True
 ) -> Tuple[str, Optional[bytearray]]:
-    salt = await request_sd_salt(ctx)
-
     if config.has_pin():
         pin = await request_pin_ack(ctx, prompt, config.get_pin_rem(), allow_cancel)
+        config.ensure_not_wipe_code(pin_to_int(pin))
     else:
         pin = ""
+
+    salt = await request_sd_salt(ctx)
 
     return pin, salt
 
@@ -93,20 +94,27 @@ async def request_pin_and_sd_salt(
 async def verify_user_pin(
     prompt: str = "Enter your PIN", allow_cancel: bool = True, retry: bool = True
 ) -> None:
+    if config.has_pin():
+        pin = await request_pin(prompt, config.get_pin_rem(), allow_cancel)
+        config.ensure_not_wipe_code(pin_to_int(pin))
+    else:
+        pin = ""
+
     try:
         salt = await request_sd_salt()
     except SdCardUnavailable:
         raise PinCancelled
-
-    if not config.has_pin() and not config.check_pin(pin_to_int(""), salt):
+    if config.unlock(pin_to_int(pin), salt):
+        return
+    elif not config.has_pin():
         raise RuntimeError
 
     while retry:
-        pin = await request_pin(prompt, config.get_pin_rem(), allow_cancel)
-        if config.check_pin(pin_to_int(pin), salt):
+        pin = await request_pin(
+            "Wrong PIN, enter again", config.get_pin_rem(), allow_cancel
+        )
+        if config.unlock(pin_to_int(pin), salt):
             return
-        else:
-            prompt = "Wrong PIN, enter again"
 
     raise PinInvalid
 
