@@ -950,12 +950,7 @@ static secbool unlock(uint32_t pin, const uint8_t *ext_salt) {
     return secfalse;
   }
 
-  // Check whether the user entered the wipe code.
-  if (sectrue != is_not_wipe_code(pin)) {
-    storage_wipe();
-    error_shutdown("You have entered the", "wipe code. All private",
-                   "data has been erased.", NULL);
-  }
+  storage_ensure_not_wipe_code(pin);
 
   // Get the pin failure counter
   uint32_t ctr = 0;
@@ -1337,6 +1332,14 @@ secbool storage_change_pin(uint32_t oldpin, uint32_t newpin,
   memzero(&oldpin, sizeof(oldpin));
   memzero(&newpin, sizeof(newpin));
   return ret;
+}
+
+void storage_ensure_not_wipe_code(uint32_t pin) {
+  if (sectrue != is_not_wipe_code(pin)) {
+    storage_wipe();
+    error_shutdown("You have entered the", "wipe code. All private",
+                   "data has been erased.", NULL);
+  }
 }
 
 secbool storage_has_wipe_code(void) {
