@@ -119,11 +119,12 @@ class TestCase:
             return AssertRaisesContext(exc)
         try:
             func(*args, **kwargs)
-            ensure(False, "%r not raised" % exc)
         except Exception as e:
             if isinstance(e, exc):
                 return
             raise
+        else:
+            ensure(False, "%r not raised" % exc)
 
     def assertListEqual(self, x, y, msg=''):
         if len(x) != len(y):
