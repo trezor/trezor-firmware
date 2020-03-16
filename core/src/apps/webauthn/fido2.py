@@ -211,6 +211,7 @@ _KEY_AGREEMENT_PUBKEY = nist256p1.publickey(_KEY_AGREEMENT_PRIVKEY, False)
 # FIDO2 configuration.
 _ALLOW_FIDO2 = True
 _ALLOW_RESIDENT_CREDENTIALS = True
+_ALLOW_WINK = False
 
 # The default attestation type to use in MakeCredential responses. If false, then basic attestation will be used by default.
 _DEFAULT_USE_SELF_ATTESTATION = True
@@ -1043,7 +1044,7 @@ def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         if __debug__:
             log.debug(__name__, "_CMD_PING")
         return req
-    elif req.cmd == _CMD_WINK:
+    elif req.cmd == _CMD_WINK and _ALLOW_WINK:
         if __debug__:
             log.debug(__name__, "_CMD_WINK")
         return cmd_wink(req)
@@ -1105,7 +1106,7 @@ def cmd_init(req: Cmd) -> Cmd:
     resp.versionMajor = 2
     resp.versionMinor = 0
     resp.versionBuild = 0
-    resp.capFlags = _CAPFLAG_WINK | _CAPFLAG_CBOR
+    resp.capFlags = (_CAPFLAG_WINK * _ALLOW_WINK) | _CAPFLAG_CBOR
 
     return Cmd(req.cid, req.cmd, bytes(buf))
 
