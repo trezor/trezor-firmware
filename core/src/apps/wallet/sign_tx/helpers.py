@@ -17,6 +17,7 @@ from trezor.messages.TxOutputType import TxOutputType
 from trezor.messages.TxRequest import TxRequest
 
 from .signing import SigningError
+from .writers import TX_HASH_SIZE
 
 from apps.common.coininfo import CoinInfo
 
@@ -213,6 +214,8 @@ def sanitize_tx_input(tx: TransactionType, coin: CoinInfo) -> TxInputType:
         txi.script_type = InputScriptType.SPENDADDRESS
     if txi.sequence is None:
         txi.sequence = 0xFFFFFFFF
+    if txi.prev_hash is None or len(txi.prev_hash) != TX_HASH_SIZE:
+        raise SigningError(FailureType.DataError, "Provided prev_hash is invalid.")
     if txi.multisig and txi.script_type not in MULTISIG_INPUT_SCRIPT_TYPES:
         raise SigningError(
             FailureType.DataError, "Multisig field provided but not expected.",

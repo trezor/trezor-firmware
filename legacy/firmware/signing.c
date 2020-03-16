@@ -588,6 +588,12 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 static bool signing_validate_input(const TxInputType *txinput) {
+  if (txinput->prev_hash.size != 32) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Encountered invalid prevhash"));
+    signing_abort();
+    return false;
+  }
   if (txinput->has_multisig &&
       (txinput->script_type != InputScriptType_SPENDMULTISIG &&
        txinput->script_type != InputScriptType_SPENDP2SHWITNESS &&
