@@ -203,7 +203,7 @@ def sanitize_tx_input(tx: TransactionType, coin: CoinInfo) -> TxInputType:
         raise SigningError(
             FailureType.DataError, "Input's address_n provided but not expected.",
         )
-    if txi.decred_script_version or txi.decred_script_version and not coin.decred:
+    if (txi.decred_script_version or txi.decred_script_version) and not coin.decred:
         raise SigningError(
             FailureType.DataError,
             "Decred details provided but Decred coin not specified.",
