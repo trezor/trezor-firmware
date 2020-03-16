@@ -151,7 +151,7 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinI
             w_txi = writers.empty_bytearray(8 if i == 0 else 0 + 9 + len(txi.prev_hash))
             if i == 0:  # serializing first input => prepend headers
                 # decred doesn't support segwit
-                writers.write_bytes_unchecked(w_txi, get_tx_header(coin, tx, False))
+                write_tx_header(w_txi, coin, tx, False)
             writers.write_tx_input_decred(w_txi, txi)
             tx_ser.serialized_tx = w_txi
             tx_req.serialized = tx_ser
@@ -281,7 +281,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
                 7 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4
             )
             if i_sign == 0:  # serializing first input => prepend headers
-                writers.write_bytes_unchecked(w_txi, get_tx_header(coin, tx, True))
+                write_tx_header(w_txi, coin, tx, True)
             writers.write_tx_input(w_txi, txi_sign)
             tx_ser.serialized_tx = w_txi
             tx_ser.signature_index = None
@@ -331,7 +331,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
                 5 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4
             )
             if i_sign == 0:  # serializing first input => prepend headers
-                writers.write_bytes_unchecked(w_txi_sign, get_tx_header(coin, tx, any_segwit))
+                write_tx_header(w_txi_sign, coin, tx, any_segwit)
             writers.write_tx_input(w_txi_sign, txi_sign)
             tx_ser.serialized_tx = w_txi_sign
 
@@ -487,7 +487,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
                 5 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4
             )
             if i_sign == 0:  # serializing first input => prepend headers
-                writers.write_bytes_unchecked(w_txi_sign, get_tx_header(coin, tx, any_segwit))
+                write_tx_header(w_txi_sign, coin, tx, any_segwit)
             writers.write_tx_input(w_txi_sign, txi_sign)
             tx_ser.serialized_tx = w_txi_sign
 
@@ -678,22 +678,21 @@ def get_hash_type(coin: coininfo.CoinInfo) -> int:
     return hashtype
 
 
-def get_tx_header(coin: coininfo.CoinInfo, tx: SignTx, segwit: bool):
-    w_txi = bytearray()
+def write_tx_header(
+    w: writers.Writer, coin: coininfo.CoinInfo, tx: SignTx, segwit: bool
+) -> None:
     if not utils.BITCOIN_ONLY and coin.overwintered:
-        writers.write_uint32(
-            w_txi, tx.version | zcash.OVERWINTERED
-        )  # nVersion | fOverwintered
-        writers.write_uint32(w_txi, tx.version_group_id)  # nVersionGroupId
+        # nVersion | fOverwintered
+        writers.write_uint32(w, tx.version | zcash.OVERWINTERED)
+        writers.write_uint32(w, tx.version_group_id)  # nVersionGroupId
     else:
-        writers.write_uint32(w_txi, tx.version)  # nVersion
+        writers.write_uint32(w, tx.version)  # nVersion
         if not utils.BITCOIN_ONLY and coin.timestamp:
-            writers.write_uint32(w_txi, tx.timestamp)
+            writers.write_uint32(w, tx.timestamp)
     if segwit:
-        writers.write_varint(w_txi, 0x00)  # segwit witness marker
-        writers.write_varint(w_txi, 0x01)  # segwit witness flag
-    writers.write_varint(w_txi, tx.inputs_count)
-    return w_txi
+        writers.write_varint(w, 0x00)  # segwit witness marker
+        writers.write_varint(w, 0x01)  # segwit witness flag
+    writers.write_varint(w, tx.inputs_count)
 
 
 # TX Outputs
