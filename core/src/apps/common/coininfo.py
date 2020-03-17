@@ -477,32 +477,6 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
-        elif name == "Capricoin":
-            return CoinInfo(
-                coin_name=name,
-                coin_shortcut="CPC",
-                decimals=8,
-                address_type=28,
-                address_type_p2sh=35,
-                maxfee_kb=2000000,
-                signed_message_header="Capricoin Signed Message:\n",
-                xpub_magic=0x0488b21e,
-                xpub_magic_segwit_p2sh=None,
-                xpub_magic_segwit_native=None,
-                bech32_prefix=None,
-                cashaddr_prefix=None,
-                slip44=289,
-                segwit=False,
-                fork_id=None,
-                force_bip143=False,
-                decred=False,
-                negative_fee=False,
-                curve_name='secp256k1',
-                extra_data=False,
-                timestamp=True,
-                overwintered=False,
-                confidential_assets=None,
-            )
         elif name == "Crown":
             return CoinInfo(
                 coin_name=name,

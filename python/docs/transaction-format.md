@@ -126,7 +126,7 @@ message SignTx {
     optional uint32 expiry = 6;            // only for Decred and Zcash
     optional bool overwintered = 7;        // only for Zcash
     optional uint32 version_group_id = 8;  // only for Zcash, nVersionGroupId when overwintered is set
-    optional uint32 timestamp = 9;         // only for Capricoin, transaction timestamp
+    optional uint32 timestamp = 9;         // only for Peercoin, transaction timestamp
     optional uint32 branch_id = 10;        // only for Zcash, BRANCH_ID when overwintered is set
 }
 ```
@@ -160,7 +160,7 @@ message TransactionType {
     optional uint32 expiry = 10;            // only for Decred and Zcash
     optional bool overwintered = 11;        // only for Zcash
     optional uint32 version_group_id = 12;  // only for Zcash, nVersionGroupId when overwintered is set
-    optional uint32 timestamp = 13;         // only for Capricoin, transaction timestamp
+    optional uint32 timestamp = 13;         // only for Peercoin, transaction timestamp
     optional uint32 branch_id = 14;         // only for Zcash, BRANCH_ID when overwintered is set
 }
 ```

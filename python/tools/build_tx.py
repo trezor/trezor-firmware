@@ -172,7 +172,7 @@ def sign_interactive():
     signtx = messages.SignTx()
     signtx.version = prompt("Transaction version", type=int, default=2)
     signtx.lock_time = prompt("Transaction locktime", type=int, default=0)
-    if coin == "Capricoin":
+    if coin == "Peercoin":
         signtx.timestamp = prompt("Transaction timestamp", type=int)
 
     result = {

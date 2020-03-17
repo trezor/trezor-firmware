@@ -30,10 +30,6 @@ def is_zcash(coin):
     return lcn.startswith("zcash") or lcn.startswith("komodo")
 
 
-def is_capricoin(coin):
-    return coin["coin_name"].lower().startswith("capricoin")
-
-
 def is_peercoin(coin):
     return coin["coin_name"].lower().startswith("peercoin")
 
@@ -90,7 +86,7 @@ def json_to_tx(coin, data):
     t.version = data["version"]
     t.lock_time = data.get("locktime")
 
-    if is_capricoin(coin) or is_peercoin(coin):
+    if is_peercoin(coin):
         t.timestamp = data["time"]
 
     if coin["decred"]:

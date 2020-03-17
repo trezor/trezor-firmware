@@ -284,7 +284,6 @@
 "test_msg_signtx_bgold.py-test_send_multisig_1": "d049b3b25042c732ce26a253e7de49581adc83003713860924b8d951cb46de0c",
 "test_msg_signtx_bgold.py-test_send_p2sh": "ddd48151ce1d74ade0b9858cbcdba316581991ec92c2ef54b5893e3aae75f995",
 "test_msg_signtx_bgold.py-test_send_p2sh_witness_change": "02e44d4c1072eb774486210f885b1bee53acfb3b7fd787207b9f955853fef055",
-"test_msg_signtx_capricoin.py::test_timestamp_included": "15052cadcea92d3405ba0f603c1a5c54bc4fe60eb0b89c79b062620023c3444b",
 "test_msg_signtx_dash.py-test_send_dash": "291f1a3ace22877641494a1a470a1a4a8dab6e363fc4402dadaeb52c1288c72b",
 "test_msg_signtx_dash.py-test_send_dash_dip2_input": "cf7fc7e6fe3a9e4063e743da6fc44c27dac013917bc00cfc63d13a183c091d91",
 "test_msg_signtx_decred.py-test_decred_multisig_change": "9a7e9e1adcb0ba6770e3965df8324f2b7bc46d6bcd866db9289e8e1d62ef486e",
