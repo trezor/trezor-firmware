@@ -1,5 +1,6 @@
 import gc
 
+from trezor import utils
 from trezor.messages import FailureType, InputScriptType, OutputScriptType
 from trezor.messages.RequestType import (
     TXEXTRADATA,
@@ -14,11 +15,13 @@ from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputBinType import TxOutputBinType
 from trezor.messages.TxOutputType import TxOutputType
 from trezor.messages.TxRequest import TxRequest
-from trezor.utils import obj_eq
 
 from .signing import SigningError
 
 from apps.common.coininfo import CoinInfo
+
+if False:
+    from typing import Union
 
 CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES = {
     OutputScriptType.PAYTOADDRESS: InputScriptType.SPENDADDRESS,
@@ -50,7 +53,7 @@ class UiConfirmOutput:
         self.output = output
         self.coin = coin
 
-    __eq__ = obj_eq
+    __eq__ = utils.obj_eq
 
 
 class UiConfirmTotal:
@@ -59,7 +62,7 @@ class UiConfirmTotal:
         self.fee = fee
         self.coin = coin
 
-    __eq__ = obj_eq
+    __eq__ = utils.obj_eq
 
 
 class UiConfirmFeeOverThreshold:
@@ -67,21 +70,21 @@ class UiConfirmFeeOverThreshold:
         self.fee = fee
         self.coin = coin
 
-    __eq__ = obj_eq
+    __eq__ = utils.obj_eq
 
 
 class UiConfirmForeignAddress:
     def __init__(self, address_n: list):
         self.address_n = address_n
 
-    __eq__ = obj_eq
+    __eq__ = utils.obj_eq
 
 
 class UiConfirmNonDefaultLocktime:
     def __init__(self, lock_time: int):
         self.lock_time = lock_time
 
-    __eq__ = obj_eq
+    __eq__ = utils.obj_eq
 
 
 def confirm_output(output: TxOutputType, coin: CoinInfo):
@@ -218,11 +221,25 @@ def sanitize_tx_input(tx: TransactionType, coin: CoinInfo) -> TxInputType:
         raise SigningError(
             FailureType.DataError, "Input's address_n provided but not expected.",
         )
-    if (txi.decred_script_version or txi.decred_script_version) and not coin.decred:
+    if not coin.decred and txi.decred_tree is not None:
         raise SigningError(
             FailureType.DataError,
             "Decred details provided but Decred coin not specified.",
         )
+    if txi.script_type in (
+        InputScriptType.SPENDWITNESS,
+        InputScriptType.SPENDP2SHWITNESS,
+    ):
+        if not coin.segwit:
+            raise SigningError(
+                FailureType.DataError, "Segwit not enabled on this coin",
+            )
+        if txi.amount is None:
+            raise SigningError(
+                FailureType.DataError, "Segwit input without amount",
+            )
+
+    _sanitize_decred(txi, coin)
     return txi
 
 
@@ -259,14 +276,22 @@ def sanitize_tx_output(tx: TransactionType, coin: CoinInfo) -> TxOutputType:
         if not txo.address_n and not txo.address:
             raise SigningError(FailureType.DataError, "Missing address")
 
+    _sanitize_decred(txo, coin)
+
     return txo
 
 
 def sanitize_tx_binoutput(tx: TransactionType, coin: CoinInfo) -> TxOutputBinType:
     txo_bin = tx.bin_outputs[0]
-    if txo_bin.decred_script_version and not coin.decred:
+    _sanitize_decred(txo_bin, coin)
+    return txo_bin
+
+
+def _sanitize_decred(
+    tx: Union[TxInputType, TxOutputType, TxOutputBinType], coin: CoinInfo
+):
+    if not coin.decred and tx.decred_script_version is not None:
         raise SigningError(
             FailureType.DataError,
             "Decred details provided but Decred coin not specified.",
         )
-    return txo_bin
