@@ -641,7 +641,7 @@ static bool signing_validate_input(const TxInputType *txinput) {
     return false;
   }
   if (txinput->has_multisig && !is_multisig_input_script_type(txinput)) {
-    fsm_sendFailure(FailureType_Failure_ProcessError,
+    fsm_sendFailure(FailureType_Failure_DataError,
                     _("Multisig field provided but not expected."));
     signing_abort();
     return false;

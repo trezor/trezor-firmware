@@ -934,3 +934,52 @@ class TestMsgSigntx:
             btc.sign_tx(client, "Bitcoin", [inp0], [out1], details, prev_txes=cache)
         name = field[0].upper() + field[1:].replace("_", " ")
         assert e.value.failure.message.endswith(name + " not enabled on this coin.")
+
+    @pytest.mark.skip_ui
+    def test_incorrect_script_type(self, client):
+        address_n = parse_path("44'/1'/0'/0/0")
+        attacker_multisig_public_key = bytes.fromhex(
+            "030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0"
+        )
+
+        multisig = proto.MultisigRedeemScriptType(
+            m=1,
+            nodes=[
+                btc.get_public_node(client, address_n).node,
+                proto.HDNodeType(
+                    depth=0,
+                    fingerprint=0,
+                    child_num=0,
+                    chain_code=bytes(32),
+                    public_key=attacker_multisig_public_key,
+                ),
+            ],
+            address_n=[],
+        )
+        inp1 = proto.TxInputType(
+            address_n=address_n,
+            prev_index=1,
+            sequence=0xFFFFFFFF,
+            script_type=proto.InputScriptType.SPENDADDRESS,
+            multisig=multisig,
+            prev_hash=TXHASH_e5040e,
+        )
+        out1 = proto.TxOutputType(
+            address_n=address_n,
+            amount=1000000 - 50000 - 10000,
+            script_type=proto.OutputScriptType.PAYTOMULTISIG,
+            multisig=multisig,
+        )
+        out2 = proto.TxOutputType(
+            address="mtkyndbpgv1G7nwggwKDVagRpxEJrwwyh6",
+            amount=50000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+
+        with pytest.raises(CallException) as exc:
+            btc.sign_tx(
+                client, "Testnet", [inp1], [out1, out2], prev_txes=tx_cache("Testnet")
+            )
+
+        assert exc.value.args[0] == proto.FailureType.DataError
+        assert exc.value.args[1].endswith("Multisig field provided but not expected.")
