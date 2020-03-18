@@ -72,6 +72,7 @@ message GetAddress {
     optional bool show_display = 3;                                     // optionally show on display before sending the result
     optional MultisigRedeemScriptType multisig = 4;                     // filled if we are showing a multisig address
     optional InputScriptType script_type = 5 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
+    optional bool confidential = 6;                                     // generate confidetial address (for Confidential Transactions)
 }
 
 /**

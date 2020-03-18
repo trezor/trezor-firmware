@@ -3,7 +3,7 @@ from micropython import const
 from trezor.crypto import base58, bech32, cashaddr
 from trezor.crypto.hashlib import sha256
 from trezor.messages import FailureType, InputScriptType
-from trezor.utils import ensure
+from trezor.utils import BITCOIN_ONLY, ensure
 
 from apps.common import HARDENED, address_type, paths
 from apps.common.coininfo import CoinInfo
@@ -11,6 +11,8 @@ from apps.wallet.sign_tx.multisig import multisig_get_pubkeys, multisig_pubkey_i
 from apps.wallet.sign_tx.scripts import (
     output_script_multisig,
     output_script_native_p2wpkh_or_p2wsh,
+    output_script_p2pkh,
+    output_script_p2sh,
 )
 
 if False:
@@ -25,15 +27,19 @@ class AddressError(Exception):
 
 
 def get_address(
-    script_type: InputScriptType, coin: CoinInfo, node, multisig=None
+    script_type: InputScriptType,
+    coin: CoinInfo,
+    node,
+    multisig=None,
+    derive_blinding_pubkey=None,
 ) -> str:
 
+    pubkey = node.public_key()
     if (
         script_type == InputScriptType.SPENDADDRESS
         or script_type == InputScriptType.SPENDMULTISIG
     ):
         if multisig:  # p2sh multisig
-            pubkey = node.public_key()
             index = multisig_pubkey_index(multisig, pubkey)
             if index is None:
                 raise AddressError(FailureType.ProcessError, "Public key not found")
@@ -51,7 +57,7 @@ def get_address(
             raise AddressError(FailureType.ProcessError, "Multisig details required")
 
         # p2pkh
-        address = node.address(coin.address_type)
+        address = address_pkh(pubkey, coin, derive_blinding_pubkey)
         if coin.cashaddr_prefix is not None:
             address = address_to_cashaddr(address, coin)
         return address
@@ -67,7 +73,7 @@ def get_address(
             return address_multisig_p2wsh(pubkeys, multisig.m, coin.bech32_prefix)
 
         # native p2wpkh
-        return address_p2wpkh(node.public_key(), coin)
+        return address_p2wpkh(pubkey, coin)
 
     elif (
         script_type == InputScriptType.SPENDP2SHWITNESS
@@ -79,10 +85,12 @@ def get_address(
         # p2wsh multisig nested in p2sh
         if multisig is not None:
             pubkeys = multisig_get_pubkeys(multisig)
-            return address_multisig_p2wsh_in_p2sh(pubkeys, multisig.m, coin)
+            return address_multisig_p2wsh_in_p2sh(
+                pubkeys, multisig.m, coin, derive_blinding_pubkey
+            )
 
         # p2wpkh nested in p2sh
-        return address_p2wpkh_in_p2sh(node.public_key(), coin)
+        return address_p2wpkh_in_p2sh(pubkey, coin, derive_blinding_pubkey)
 
     else:
         raise AddressError(FailureType.ProcessError, "Invalid script type")
@@ -98,14 +106,16 @@ def address_multisig_p2sh(pubkeys: List[bytes], m: int, coin: CoinInfo):
     return address_p2sh(redeem_script_hash, coin)
 
 
-def address_multisig_p2wsh_in_p2sh(pubkeys: List[bytes], m: int, coin: CoinInfo):
+def address_multisig_p2wsh_in_p2sh(
+    pubkeys: List[bytes], m: int, coin: CoinInfo, derive_blinding_pubkey=None
+):
     if coin.address_type_p2sh is None:
         raise AddressError(
             FailureType.ProcessError, "Multisig not enabled on this coin"
         )
     witness_script = output_script_multisig(pubkeys, m)
     witness_script_hash = sha256(witness_script).digest()
-    return address_p2wsh_in_p2sh(witness_script_hash, coin)
+    return address_p2wsh_in_p2sh(witness_script_hash, coin, derive_blinding_pubkey)
 
 
 def address_multisig_p2wsh(pubkeys: List[bytes], m: int, hrp: str):
@@ -118,27 +128,56 @@ def address_multisig_p2wsh(pubkeys: List[bytes], m: int, hrp: str):
     return address_p2wsh(witness_script_hash, hrp)
 
 
-def address_pkh(pubkey: bytes, coin: CoinInfo) -> str:
-    s = address_type.tobytes(coin.address_type) + coin.script_hash(pubkey)
+def address_pkh(pubkey: bytes, coin: CoinInfo, derive_blinding_pubkey=None) -> str:
+    script_hash = coin.script_hash(pubkey)
+    address_type_prefix = address_type.tobytes(coin.address_type)
+    if not BITCOIN_ONLY and derive_blinding_pubkey:
+        script = output_script_p2pkh(script_hash)
+        blinding_pubkey = derive_blinding_pubkey(script=script)
+        s = (
+            address_type.tobytes(coin.confidential_assets["address_prefix"])
+            + address_type_prefix
+            + blinding_pubkey
+            + script_hash
+        )
+    else:
+        s = address_type_prefix + script_hash
     return base58.encode_check(bytes(s), coin.b58_hash)
 
 
-def address_p2sh(redeem_script_hash: bytes, coin: CoinInfo) -> str:
-    s = address_type.tobytes(coin.address_type_p2sh) + redeem_script_hash
+def address_p2sh(
+    redeem_script_hash: bytes, coin: CoinInfo, derive_blinding_pubkey=None
+) -> str:
+    address_type_prefix = address_type.tobytes(coin.address_type_p2sh)
+    if not BITCOIN_ONLY and derive_blinding_pubkey:
+        script = output_script_p2sh(redeem_script_hash)
+        blinding_pubkey = derive_blinding_pubkey(script=script)
+        s = (
+            address_type.tobytes(coin.confidential_assets["address_prefix"])
+            + address_type_prefix
+            + blinding_pubkey
+            + redeem_script_hash
+        )
+    else:
+        s = address_type_prefix + redeem_script_hash
     return base58.encode_check(bytes(s), coin.b58_hash)
 
 
-def address_p2wpkh_in_p2sh(pubkey: bytes, coin: CoinInfo) -> str:
+def address_p2wpkh_in_p2sh(
+    pubkey: bytes, coin: CoinInfo, derive_blinding_pubkey=None
+) -> str:
     pubkey_hash = ecdsa_hash_pubkey(pubkey, coin)
     redeem_script = output_script_native_p2wpkh_or_p2wsh(pubkey_hash)
     redeem_script_hash = coin.script_hash(redeem_script)
-    return address_p2sh(redeem_script_hash, coin)
+    return address_p2sh(redeem_script_hash, coin, derive_blinding_pubkey)
 
 
-def address_p2wsh_in_p2sh(witness_script_hash: bytes, coin: CoinInfo) -> str:
+def address_p2wsh_in_p2sh(
+    witness_script_hash: bytes, coin: CoinInfo, derive_blinding_pubkey=None
+) -> str:
     redeem_script = output_script_native_p2wpkh_or_p2wsh(witness_script_hash)
     redeem_script_hash = coin.script_hash(redeem_script)
-    return address_p2sh(redeem_script_hash, coin)
+    return address_p2sh(redeem_script_hash, coin, derive_blinding_pubkey)
 
 
 def address_p2wpkh(pubkey: bytes, coin: CoinInfo) -> str:

@@ -52,13 +52,19 @@ def cli():
 @click.option("-n", "--address", required=True, help="BIP-32 path")
 @click.option("-t", "--script-type", type=ChoiceType(INPUT_SCRIPTS), default="address")
 @click.option("-d", "--show-display", is_flag=True)
+@click.option("--confidential", type=bool)
 @click.pass_obj
-def get_address(connect, coin, address, script_type, show_display):
+def get_address(connect, coin, address, script_type, show_display, confidential):
     """Get address for specified path."""
     coin = coin or DEFAULT_COIN
     address_n = tools.parse_path(address)
     return btc.get_address(
-        connect(), coin, address_n, show_display, script_type=script_type
+        connect(),
+        coin,
+        address_n,
+        show_display,
+        script_type=script_type,
+        confidential=confidential,
     )
 
 
