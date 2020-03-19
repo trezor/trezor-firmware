@@ -68,7 +68,7 @@ static uint8_t hash_prevouts[32], hash_sequence[32], hash_outputs[32];
 static uint8_t decred_hash_prefix[32];
 #endif
 static uint8_t hash_check[32];
-static uint64_t to_spend, authorized_amount, spending, change_spend;
+static uint64_t to_spend, authorized_bip143_in, spending, change_spend;
 static uint32_t version = 1;
 static uint32_t lock_time = 0;
 static uint32_t expiry = 0;
@@ -529,7 +529,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   to_spend = 0;
   spending = 0;
   change_spend = 0;
-  authorized_amount = 0;
+  authorized_bip143_in = 0;
   memzero(&input, sizeof(TxInputType));
   memzero(&resp, sizeof(TxRequest));
 
@@ -628,14 +628,6 @@ static bool is_change_output_script_type(const TxOutputType *txoutput) {
 static bool is_segwit_input_script_type(const TxInputType *txinput) {
   if (txinput->script_type == InputScriptType_SPENDP2SHWITNESS ||
       txinput->script_type == InputScriptType_SPENDWITNESS) {
-    return true;
-  }
-  return false;
-}
-
-static bool is_segwit_output_script_type(const TxOutputType *txoutput) {
-  if (txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS ||
-      txoutput->script_type == OutputScriptType_PAYTOWITNESS) {
     return true;
   }
   return false;
@@ -850,16 +842,6 @@ static bool signing_check_output(TxOutputType *txoutput) {
       }
     } else {
       is_change = check_change_bip32_path(txoutput);
-    }
-    /*
-     * only allow segwit change if amount is smaller than what segwit inputs
-     * paid. this was added during the times segwit was not yet fully activated
-     * to make sure the user is not tricked to use witness change output
-     * instead of regular one therefore creating ANYONECANSPEND output
-     */
-    if ((is_segwit_output_script_type(txoutput)) &&
-        txoutput->amount > authorized_amount) {
-      is_change = false;
     }
   }
 
@@ -1176,13 +1158,13 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
       signing_abort();
       return false;
     }
-    if (txinput->amount > authorized_amount) {
+    if (txinput->amount > authorized_bip143_in) {
       fsm_sendFailure(FailureType_Failure_DataError,
                       _("Transaction has changed during signing"));
       signing_abort();
       return false;
     }
-    authorized_amount -= txinput->amount;
+    authorized_bip143_in -= txinput->amount;
 
     signing_hash_bip143(txinput, hash);
 
@@ -1313,7 +1295,7 @@ void signing_txack(TransactionType *tx) {
             return;
           }
           to_spend += tx->inputs[0].amount;
-          authorized_amount += tx->inputs[0].amount;
+          authorized_bip143_in += tx->inputs[0].amount;
           phase1_request_next_input();
         } else
 #endif
@@ -1347,7 +1329,7 @@ void signing_txack(TransactionType *tx) {
         to.is_segwit = true;
 #endif
         to_spend += tx->inputs[0].amount;
-        authorized_amount += tx->inputs[0].amount;
+        authorized_bip143_in += tx->inputs[0].amount;
         phase1_request_next_input();
       } else {
         fsm_sendFailure(FailureType_Failure_DataError,
@@ -1628,13 +1610,13 @@ void signing_txack(TransactionType *tx) {
           signing_abort();
           return;
         }
-        if (tx->inputs[0].amount > authorized_amount) {
+        if (tx->inputs[0].amount > authorized_bip143_in) {
           fsm_sendFailure(FailureType_Failure_DataError,
                           _("Transaction has changed during signing"));
           signing_abort();
           return;
         }
-        authorized_amount -= tx->inputs[0].amount;
+        authorized_bip143_in -= tx->inputs[0].amount;
 
         uint8_t hash[32] = {0};
 #if !BITCOIN_ONLY
