@@ -771,7 +771,7 @@ def output_is_change(
         return False
     if o.multisig and not multisig_fp.matches(o.multisig):
         return False
-    if output_is_segwit(o) and o.amount > segwit_in:
+    if o.script_type in helpers.SEGWIT_OUTPUT_SCRIPT_TYPES and o.amount > segwit_in:
         # if the output is segwit, make sure it doesn't spend more than what the
         # segwit inputs paid.  this is to prevent user being tricked into
         # creating ANYONECANSPEND outputs before full segwit activation.
@@ -781,13 +781,6 @@ def output_is_change(
         and wallet_path == o.address_n[:-_BIP32_WALLET_DEPTH]
         and o.address_n[-2] <= _BIP32_CHANGE_CHAIN
         and o.address_n[-1] <= _BIP32_MAX_LAST_ELEMENT
-    )
-
-
-def output_is_segwit(o: TxOutputType) -> bool:
-    return (
-        o.script_type == OutputScriptType.PAYTOWITNESS
-        or o.script_type == OutputScriptType.PAYTOP2SHWITNESS
     )
 
 

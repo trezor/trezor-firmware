@@ -24,15 +24,6 @@ from apps.common.coininfo import CoinInfo
 if False:
     from typing import Union
 
-CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES = {
-    OutputScriptType.PAYTOADDRESS: InputScriptType.SPENDADDRESS,
-    OutputScriptType.PAYTOMULTISIG: InputScriptType.SPENDMULTISIG,
-    OutputScriptType.PAYTOWITNESS: InputScriptType.SPENDWITNESS,
-    OutputScriptType.PAYTOP2SHWITNESS: InputScriptType.SPENDP2SHWITNESS,
-}
-CHANGE_INPUT_SCRIPT_TYPES = tuple(CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES.values())
-CHANGE_OUTPUT_SCRIPT_TYPES = tuple(CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES.keys())
-
 MULTISIG_INPUT_SCRIPT_TYPES = (
     InputScriptType.SPENDMULTISIG,
     InputScriptType.SPENDP2SHWITNESS,
@@ -44,6 +35,23 @@ MULTISIG_OUTPUT_SCRIPT_TYPES = (
     OutputScriptType.PAYTOWITNESS,
 )
 
+CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES = {
+    OutputScriptType.PAYTOADDRESS: InputScriptType.SPENDADDRESS,
+    OutputScriptType.PAYTOMULTISIG: InputScriptType.SPENDMULTISIG,
+    OutputScriptType.PAYTOP2SHWITNESS: InputScriptType.SPENDP2SHWITNESS,
+    OutputScriptType.PAYTOWITNESS: InputScriptType.SPENDWITNESS,
+}
+INTERNAL_INPUT_SCRIPT_TYPES = tuple(CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES.values())
+CHANGE_OUTPUT_SCRIPT_TYPES = tuple(CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES.keys())
+
+SEGWIT_INPUT_SCRIPT_TYPES = {
+    InputScriptType.SPENDP2SHWITNESS,
+    InputScriptType.SPENDWITNESS,
+}
+SEGWIT_OUTPUT_SCRIPT_TYPES = {
+    OutputScriptType.PAYTOP2SHWITNESS,
+    OutputScriptType.PAYTOWITNESS,
+}
 
 # Machine instructions
 # ===
@@ -220,7 +228,7 @@ def sanitize_tx_input(tx: TransactionType, coin: CoinInfo) -> TxInputType:
         raise SigningError(
             FailureType.DataError, "Multisig field provided but not expected.",
         )
-    if txi.address_n and txi.script_type not in CHANGE_INPUT_SCRIPT_TYPES:
+    if txi.address_n and txi.script_type not in INTERNAL_INPUT_SCRIPT_TYPES:
         raise SigningError(
             FailureType.DataError, "Input's address_n provided but not expected.",
         )
@@ -229,10 +237,7 @@ def sanitize_tx_input(tx: TransactionType, coin: CoinInfo) -> TxInputType:
             FailureType.DataError,
             "Decred details provided but Decred coin not specified.",
         )
-    if txi.script_type in (
-        InputScriptType.SPENDWITNESS,
-        InputScriptType.SPENDP2SHWITNESS,
-    ):
+    if txi.script_type in SEGWIT_INPUT_SCRIPT_TYPES:
         if not coin.segwit:
             raise SigningError(
                 FailureType.DataError, "Segwit not enabled on this coin",

@@ -587,6 +587,60 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
+static bool is_multisig_input_script_type(const TxInputType *txinput) {
+  if (txinput->script_type == InputScriptType_SPENDMULTISIG ||
+      txinput->script_type == InputScriptType_SPENDP2SHWITNESS ||
+      txinput->script_type == InputScriptType_SPENDWITNESS) {
+    return true;
+  }
+  return false;
+}
+
+static bool is_multisig_output_script_type(const TxOutputType *txoutput) {
+  if (txoutput->script_type == OutputScriptType_PAYTOMULTISIG ||
+      txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS ||
+      txoutput->script_type == OutputScriptType_PAYTOWITNESS) {
+    return true;
+  }
+  return false;
+}
+
+static bool is_internal_input_script_type(const TxInputType *txinput) {
+  if (txinput->script_type == InputScriptType_SPENDADDRESS ||
+      txinput->script_type == InputScriptType_SPENDMULTISIG ||
+      txinput->script_type == InputScriptType_SPENDP2SHWITNESS ||
+      txinput->script_type == InputScriptType_SPENDWITNESS) {
+    return true;
+  }
+  return false;
+}
+
+static bool is_change_output_script_type(const TxOutputType *txoutput) {
+  if (txoutput->script_type == OutputScriptType_PAYTOADDRESS ||
+      txoutput->script_type == OutputScriptType_PAYTOMULTISIG ||
+      txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS ||
+      txoutput->script_type == OutputScriptType_PAYTOWITNESS) {
+    return true;
+  }
+  return false;
+}
+
+static bool is_segwit_input_script_type(const TxInputType *txinput) {
+  if (txinput->script_type == InputScriptType_SPENDP2SHWITNESS ||
+      txinput->script_type == InputScriptType_SPENDWITNESS) {
+    return true;
+  }
+  return false;
+}
+
+static bool is_segwit_output_script_type(const TxOutputType *txoutput) {
+  if (txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS ||
+      txoutput->script_type == OutputScriptType_PAYTOWITNESS) {
+    return true;
+  }
+  return false;
+}
+
 static bool signing_validate_input(const TxInputType *txinput) {
   if (txinput->prev_hash.size != 32) {
     fsm_sendFailure(FailureType_Failure_ProcessError,
@@ -594,20 +648,13 @@ static bool signing_validate_input(const TxInputType *txinput) {
     signing_abort();
     return false;
   }
-  if (txinput->has_multisig &&
-      (txinput->script_type != InputScriptType_SPENDMULTISIG &&
-       txinput->script_type != InputScriptType_SPENDP2SHWITNESS &&
-       txinput->script_type != InputScriptType_SPENDWITNESS)) {
+  if (txinput->has_multisig && !is_multisig_input_script_type(txinput)) {
     fsm_sendFailure(FailureType_Failure_ProcessError,
                     _("Multisig field provided but not expected."));
     signing_abort();
     return false;
   }
-  if (txinput->address_n_count > 0 &&
-      (txinput->script_type != InputScriptType_SPENDADDRESS &&
-       txinput->script_type != InputScriptType_SPENDMULTISIG &&
-       txinput->script_type != InputScriptType_SPENDWITNESS &&
-       txinput->script_type != InputScriptType_SPENDP2SHWITNESS)) {
+  if (txinput->address_n_count > 0 && !is_internal_input_script_type(txinput)) {
     fsm_sendFailure(FailureType_Failure_DataError,
                     "Input's address_n provided but not expected.");
     signing_abort();
@@ -632,8 +679,7 @@ static bool signing_validate_input(const TxInputType *txinput) {
   }
 #endif
 
-  if (txinput->script_type == InputScriptType_SPENDWITNESS ||
-      txinput->script_type == InputScriptType_SPENDP2SHWITNESS) {
+  if (is_segwit_input_script_type(txinput)) {
     if (!coin->has_segwit) {
       fsm_sendFailure(FailureType_Failure_DataError,
                       _("Segwit not enabled on this coin"));
@@ -652,10 +698,7 @@ static bool signing_validate_input(const TxInputType *txinput) {
 }
 
 static bool signing_validate_output(TxOutputType *txoutput) {
-  if (txoutput->has_multisig &&
-      (txoutput->script_type != OutputScriptType_PAYTOMULTISIG &&
-       txoutput->script_type != OutputScriptType_PAYTOP2SHWITNESS &&
-       txoutput->script_type != OutputScriptType_PAYTOWITNESS)) {
+  if (txoutput->has_multisig && !is_multisig_output_script_type(txoutput)) {
     fsm_sendFailure(FailureType_Failure_DataError,
                     _("Multisig field provided but not expected."));
     signing_abort();
@@ -663,10 +706,7 @@ static bool signing_validate_output(TxOutputType *txoutput) {
   }
 
   if (txoutput->address_n_count > 0 &&
-      (txoutput->script_type != OutputScriptType_PAYTOADDRESS &&
-       txoutput->script_type != OutputScriptType_PAYTOMULTISIG &&
-       txoutput->script_type != OutputScriptType_PAYTOWITNESS &&
-       txoutput->script_type != OutputScriptType_PAYTOP2SHWITNESS)) {
+      !is_change_output_script_type(txoutput)) {
     fsm_sendFailure(FailureType_Failure_DataError,
                     _("Output's address_n provided but not expected."));
     signing_abort();
@@ -817,17 +857,13 @@ static bool signing_check_output(TxOutputType *txoutput) {
      * to make sure the user is not tricked to use witness change output
      * instead of regular one therefore creating ANYONECANSPEND output
      */
-    if ((txoutput->script_type == OutputScriptType_PAYTOWITNESS ||
-         txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS) &&
+    if ((is_segwit_output_script_type(txoutput)) &&
         txoutput->amount > authorized_amount) {
       is_change = false;
     }
   }
 
-  if ((txoutput->script_type != OutputScriptType_PAYTOADDRESS) &&
-      (txoutput->script_type != OutputScriptType_PAYTOMULTISIG) &&
-      (txoutput->script_type != OutputScriptType_PAYTOWITNESS) &&
-      (txoutput->script_type != OutputScriptType_PAYTOP2SHWITNESS)) {
+  if (!is_change_output_script_type(txoutput)) {
     is_change = false;
   }
 
@@ -1133,8 +1169,7 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
   // idx1: index to sign
   uint8_t hash[32] = {0};
 
-  if (txinput->script_type == InputScriptType_SPENDWITNESS ||
-      txinput->script_type == InputScriptType_SPENDP2SHWITNESS) {
+  if (is_segwit_input_script_type(txinput)) {
     if (!compile_input_script_sig(txinput)) {
       fsm_sendFailure(FailureType_Failure_ProcessError,
                       _("Failed to compile input"));
@@ -1288,9 +1323,7 @@ void signing_txack(TransactionType *tx) {
           if (next_nonsegwit_input == 0xffffffff) next_nonsegwit_input = idx1;
           send_req_2_prev_meta();
         }
-      } else if (tx->inputs[0].script_type == InputScriptType_SPENDWITNESS ||
-                 tx->inputs[0].script_type ==
-                     InputScriptType_SPENDP2SHWITNESS) {
+      } else if (is_segwit_input_script_type(&tx->inputs[0])) {
         if (to_spend + tx->inputs[0].amount < to_spend) {
           fsm_sendFailure(FailureType_Failure_DataError, _("Value overflow"));
           signing_abort();
