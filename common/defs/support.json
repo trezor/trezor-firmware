@@ -42,7 +42,6 @@
       "bitcoin:XZC": true,
       "bitcoin:ZCR": true,
       "bitcoin:ZEC": true,
-      "bitcoin:ZEN": true,
       "bitcoin:ZNY": true,
       "bitcoin:tDASH": true,
       "bitcoin:tLTC": true,
@@ -1691,7 +1690,6 @@
     },
     "unsupported": {
       "bitcoin:TRC": "address_type collides with Bitcoin",
-      "bitcoin:ZEN": "not implemented",
       "erc20:etc:PLAY": "(AUTO) duplicate key",
       "erc20:eth:A18:ba7d": "(AUTO) duplicate key",
       "erc20:eth:A18:bde8": "(AUTO) duplicate key",
@@ -1970,7 +1968,6 @@
       "bitcoin:ZCR": "2.1.7",
       "bitcoin:ZEC": "2.0.8",
       "bitcoin:ZEL": "2.1.4",
-      "bitcoin:ZEN": "2.0.8",
       "bitcoin:ZNY": "2.1.1",
       "bitcoin:tDASH": "2.0.8",
       "bitcoin:tGRS": "2.0.8",
