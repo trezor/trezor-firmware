@@ -157,19 +157,21 @@ def cli(ctx, path, verbose, is_json, passphrase_on_host, session_id):
         except ValueError:
             raise click.ClickException("Not a valid session id: {}".format(session_id))
 
-    def get_device():
+    def get_device(return_transport=False):
         try:
-            device = get_transport(path, prefix_search=False)
+            transport = get_transport(path, prefix_search=False)
         except Exception:
             try:
-                device = get_transport(path, prefix_search=True)
+                transport = get_transport(path, prefix_search=True)
             except Exception:
                 click.echo("Failed to find a Trezor device.")
                 if path is not None:
                     click.echo("Using path: {}".format(path))
                 sys.exit(1)
+        if return_transport:
+            return transport
         return TrezorClient(
-            transport=device,
+            transport=transport,
             ui=ui.ClickUI(passphrase_on_host=passphrase_on_host),
             session_id=session_id,
         )
