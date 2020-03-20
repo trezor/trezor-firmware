@@ -83,7 +83,7 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinI
     weight = tx_weight.TxWeightCalculator(tx.inputs_count, tx.outputs_count)
 
     total_in = 0  # sum of input amounts
-    segwit_in = 0  # sum of segwit input amounts
+    bip143_in = 0  # sum of segwit input amounts
     total_out = 0  # sum of output amounts
     change_out = 0  # change output amount
     wallet_path = []  # common prefix of input paths
@@ -123,7 +123,7 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinI
             if not txi.amount:
                 raise SigningError(FailureType.DataError, "Segwit input without amount")
             segwit[i] = True
-            segwit_in += txi.amount
+            bip143_in += txi.amount
             total_in += txi.amount
 
         elif txi.script_type in (
@@ -136,7 +136,7 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinI
                         FailureType.DataError, "Expected input with amount"
                     )
                 segwit[i] = False
-                segwit_in += txi.amount
+                bip143_in += txi.amount
                 total_in += txi.amount
             else:
                 segwit[i] = False
@@ -166,9 +166,7 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinI
         txo_bin.script_pubkey = output_derive_script(txo, coin, keychain)
         weight.add_output(txo_bin.script_pubkey)
 
-        if change_out == 0 and output_is_change(
-            txo, wallet_path, segwit_in, multisig_fp
-        ):
+        if change_out == 0 and output_is_change(txo, wallet_path, multisig_fp):
             # output is change and does not need confirmation
             change_out = txo.amount
         elif not await helpers.confirm_output(txo, coin):
@@ -219,7 +217,7 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinI
     if not utils.BITCOIN_ONLY and coin.decred:
         hash143.add_locktime_expiry(tx)
 
-    return h_first, hash143, segwit, total_in, wallet_path, multisig_fp
+    return h_first, hash143, segwit, bip143_in, wallet_path, multisig_fp
 
 
 async def sign_tx(tx: SignTx, keychain: seed.Keychain):
@@ -235,7 +233,7 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
         h_first,
         hash143,
         segwit,
-        authorized_in,
+        authorized_bip143_in,
         wallet_path,
         multisig_fp,
     ) = await check_tx_fee(tx, keychain, coin)
@@ -298,11 +296,11 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
                 txi_sign.script_type == InputScriptType.SPENDADDRESS
                 or txi_sign.script_type == InputScriptType.SPENDMULTISIG
             )
-            if not is_bip143 or txi_sign.amount > authorized_in:
+            if not is_bip143 or txi_sign.amount > authorized_bip143_in:
                 raise SigningError(
                     FailureType.ProcessError, "Transaction has changed during signing"
                 )
-            authorized_in -= txi_sign.amount
+            authorized_bip143_in -= txi_sign.amount
 
             key_sign = keychain.derive(txi_sign.address_n, coin.curve_name)
             key_sign_pub = key_sign.public_key()
@@ -523,11 +521,11 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
             input_check_wallet_path(txi, wallet_path)
             input_check_multisig_fingerprint(txi, multisig_fp)
 
-            if not input_is_segwit(txi) or txi.amount > authorized_in:
+            if not input_is_segwit(txi) or txi.amount > authorized_bip143_in:
                 raise SigningError(
                     FailureType.ProcessError, "Transaction has changed during signing"
                 )
-            authorized_in -= txi.amount
+            authorized_bip143_in -= txi.amount
 
             key_sign = keychain.derive(txi.address_n, coin.curve_name)
             key_sign_pub = key_sign.public_key()
@@ -762,19 +760,11 @@ def get_address_for_change(
 
 
 def output_is_change(
-    o: TxOutputType,
-    wallet_path: list,
-    segwit_in: int,
-    multisig_fp: multisig.MultisigFingerprint,
+    o: TxOutputType, wallet_path: list, multisig_fp: multisig.MultisigFingerprint,
 ) -> bool:
     if o.script_type not in helpers.CHANGE_OUTPUT_SCRIPT_TYPES:
         return False
     if o.multisig and not multisig_fp.matches(o.multisig):
-        return False
-    if o.script_type in helpers.SEGWIT_OUTPUT_SCRIPT_TYPES and o.amount > segwit_in:
-        # if the output is segwit, make sure it doesn't spend more than what the
-        # segwit inputs paid.  this is to prevent user being tricked into
-        # creating ANYONECANSPEND outputs before full segwit activation.
         return False
     return (
         wallet_path is not None

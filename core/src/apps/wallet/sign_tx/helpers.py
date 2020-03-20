@@ -48,10 +48,6 @@ SEGWIT_INPUT_SCRIPT_TYPES = {
     InputScriptType.SPENDP2SHWITNESS,
     InputScriptType.SPENDWITNESS,
 }
-SEGWIT_OUTPUT_SCRIPT_TYPES = {
-    OutputScriptType.PAYTOP2SHWITNESS,
-    OutputScriptType.PAYTOWITNESS,
-}
 
 # Machine instructions
 # ===
