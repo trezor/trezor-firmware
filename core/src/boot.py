@@ -16,10 +16,14 @@ async def bootscreen() -> None:
             await verify_user_pin()
             storage.init_unlocked()
             return
-        except (OSError, PinCancelled) as e:
+        except PinCancelled as e:
+            # verify_user_pin will convert a SdCardUnavailable (in case of sd salt)
+            # to PinCancelled exception.
+            # log the exception and retry loop
             if __debug__:
                 log.exception(__name__, e)
         except BaseException as e:
+            # other exceptions here are unexpected and should halt the device
             if __debug__:
                 log.exception(__name__, e)
             utils.halt(e.__class__.__name__)
