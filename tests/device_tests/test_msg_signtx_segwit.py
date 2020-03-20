@@ -32,6 +32,34 @@ TXHASH_20912f = bytes.fromhex(
 TXHASH_9c3192 = bytes.fromhex(
     "9c31922be756c06d02167656465c8dc83bb553bf386a3f478ae65b5c021002be"
 )
+TXHASH_e5040e = bytes.fromhex(
+    "e5040e1bc1ae7667ffb9e5248e90b2fb93cd9150234151ce90e14ab2f5933bcd"
+)
+
+
+def request_input(n, tx_hash=None):
+    return proto.TxRequest(
+        request_type=proto.RequestType.TXINPUT,
+        details=proto.TxRequestDetailsType(request_index=n, tx_hash=tx_hash),
+    )
+
+
+def request_output(n, tx_hash=None):
+    return proto.TxRequest(
+        request_type=proto.RequestType.TXOUTPUT,
+        details=proto.TxRequestDetailsType(request_index=n, tx_hash=tx_hash),
+    )
+
+
+def request_meta(tx_hash):
+    return proto.TxRequest(
+        request_type=proto.RequestType.TXMETA,
+        details=proto.TxRequestDetailsType(tx_hash=tx_hash),
+    )
+
+
+def request_finished():
+    return proto.TxRequest(request_type=proto.RequestType.TXFINISHED)
 
 
 class TestMsgSigntxSegwit:
@@ -305,3 +333,97 @@ class TestMsgSigntxSegwit:
                 assert exc.value.message.endswith(
                     "Transaction has changed during signing"
                 )
+
+    def test_attack_mixed_inputs(self, client):
+        TRUE_AMOUNT = 12345678
+        FAKE_AMOUNT = 123
+
+        inp1 = proto.TxInputType(
+            address_n=parse_path("44'/1'/0'/0/0"),
+            amount=31000000,
+            prev_hash=TXHASH_e5040e,
+            prev_index=0,
+            script_type=proto.InputScriptType.SPENDADDRESS,
+            sequence=0xFFFFFFFD,
+        )
+        inp2 = proto.TxInputType(
+            address_n=parse_path("49'/1'/0'/1/0"),
+            amount=TRUE_AMOUNT,
+            prev_hash=TXHASH_20912f,
+            prev_index=0,
+            script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+            sequence=0xFFFFFFFD,
+        )
+        out1 = proto.TxOutputType(
+            address="mhRx1CeVfaayqRwq5zgRQmD7W5aWBfD5mC",
+            amount=30998000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+
+        expected_responses = [
+            request_input(0),
+            request_meta(TXHASH_e5040e),
+            request_input(0, TXHASH_e5040e),
+            request_output(0, TXHASH_e5040e),
+            request_output(1, TXHASH_e5040e),
+            request_input(1),
+            request_output(0),
+            proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+            proto.ButtonRequest(code=proto.ButtonRequestType.FeeOverThreshold),
+            proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+            request_input(0),
+            request_input(1),
+            request_output(0),
+            request_input(1),
+            request_output(0),
+            request_input(1),
+        ]
+
+        if client.features.model == "1":
+            # T1 asks for first input for witness again
+            expected_responses.insert(-1, request_input(0))
+            pass
+
+        with client:
+            # Sign unmodified transaction.
+            # "Fee over threshold" warning is displayed - fee is the whole TRUE_AMOUNT
+            client.set_expected_responses(expected_responses + [request_finished()])
+            btc.sign_tx(
+                client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_API,
+            )
+
+        # In Phase 1 make the user confirm a lower value of the segwit input.
+        inp2.amount = FAKE_AMOUNT
+
+        ctr = 3
+
+        def attack(msg):
+            nonlocal ctr
+
+            if msg.tx.inputs and msg.tx.inputs[0] == inp2:
+                ctr -= 1
+                if ctr <= 0:
+                    # after Phase 1 is done and input 1 is signed, let Trezor sign
+                    # the true amount in Phase 2
+                    msg.tx.inputs[0].amount = TRUE_AMOUNT
+
+            return msg
+
+        # Sign with attacker.
+        with pytest.raises(TrezorFailure) as e, client:
+            # "Fee over threshold" is NOT displayed, because the calculated fee
+            # in phase 1 is small.
+            assert expected_responses[8] == proto.ButtonRequest(
+                code=proto.ButtonRequestType.FeeOverThreshold
+            )
+            del expected_responses[8]
+
+            client.set_filter(proto.TxAck, attack)
+            client.set_expected_responses(expected_responses + [proto.Failure()])
+            btc.sign_tx(
+                client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_API,
+            )
+
+        assert e.value.failure.message.endswith(
+            "Transaction has changed during signing"
+        )
