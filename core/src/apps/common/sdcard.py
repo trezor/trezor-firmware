@@ -91,30 +91,32 @@ async def ensure_sdcard(
 
     while True:
         try:
-            with sdcard.filesystem(mounted=False):
-                fatfs.mount()
-                # Mount succeeded, filesystem is OK
+            try:
+                with sdcard.filesystem(mounted=False):
+                    fatfs.mount()
+            except fatfs.NoFilesystem:
+                # card not formatted. proceed out of the except clause
+                pass
+            else:
+                # no error when mounting
                 return
-        except fatfs.FatFSError:
-            # Mount failed. Handle problem outside except clause.
-            pass
 
-        if not await format_card_dialog(ctx):
-            raise SdCardUnavailable("SD card not formatted.")
+            if not await format_card_dialog(ctx):
+                raise SdCardUnavailable("SD card not formatted.")
 
-        try:
+            # Proceed to formatting. Failure is caught by the outside OSError handler
             with sdcard.filesystem(mounted=False):
                 fatfs.mkfs()
                 fatfs.mount()
                 fatfs.setlabel("TREZOR")
-                # mkfs and mount succeeded
-                return
-        except fatfs.FatFSError:
-            pass
 
-        # allow retry if we get as far as here
-        if not await sd_problem_dialog(ctx):
-            raise SdCardUnavailable("Problem formatting SD card.")
+            # format and mount succeeded
+            return
+
+        except OSError:
+            # formatting failed, or generic I/O error (SD card power-on failed)
+            if not await sd_problem_dialog(ctx):
+                raise SdCardUnavailable("Error accessing SD card.")
 
 
 async def request_sd_salt(
