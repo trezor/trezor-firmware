@@ -1,0 +1,43 @@
+[
+    {
+      "name": "USDT",
+      "type": "TRC20",
+      "ticker": "USDT",
+      "address": "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+      "decimals": 6,
+      "links": {
+        "Homepage": "https://tron.network/usdt"
+      }
+    },
+    {
+        "name": "TronWallet",
+        "type": "TRC20",
+        "ticker": "TWX",
+        "address": "TKTcfBEKpp5ZRPwmiZ8SfLx8W7CDZ7PHCY",
+        "decimals": 6,
+        "links": {
+          "Homepage": "https://tronwallet.me/"
+        }
+    },
+    {
+        "name": "CryptoChain Token",
+        "type": "TRC20",
+        "ticker": "CCT",
+        "address": "TBoTZcARzWVgnNuB9SyE3S5g1RwsXoQL16",
+        "decimals": 6,
+        "links": {
+          "Homepage": "https://cryptochain.network/"
+        }
+    },
+    {
+      "name": "CryptoChain Token TRC10",
+      "type": "TRC10",
+      "ticker": "CCT",
+      "address": "1000166",
+      "decimals": 0,
+      "links": {
+        "Homepage": "https://cryptochain.network/"
+      }
+    }
+]
+  
