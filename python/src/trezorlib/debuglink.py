@@ -281,10 +281,12 @@ class TrezorClientDebugLink(TrezorClient):
 
     def open(self):
         super().open()
-        self.debug.open()
+        if self.session_counter == 1:
+            self.debug.open()
 
     def close(self):
-        self.debug.close()
+        if self.session_counter == 1:
+            self.debug.close()
         super().close()
 
     def set_filter(self, message_type, callback):
