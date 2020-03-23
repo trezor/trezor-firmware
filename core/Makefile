@@ -202,6 +202,14 @@ flash_read_storage: ## read storage sectors from flash
 flash_erase_storage: ## erase storage sectors from flash
 	$(OPENOCD) -c "init; flash erase_sector 0 4 4; flash erase_sector 0 16 16; exit"
 
+flash_bootloader_jlink: $(BOOTLOADER_BUILD_DIR)/bootloader.bin ## flash bootloader using JLink
+	JLinkExe -commanderscript embed/bootloader/bootloader_flash.jlink
+
+flash_firmware_jlink: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using JLink. file names must end in .bin for JLink
+	cp -f $<.p1 $<.p1.bin
+	cp -f $<.p2 $<.p2.bin
+	JLinkExe -commanderscript embed/firmware/firmware_flash.jlink
+
 ## openocd debug commands:
 
 openocd: ## start openocd which connects to the device
