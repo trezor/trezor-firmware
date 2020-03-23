@@ -203,15 +203,29 @@ def print_result(res, is_json, **kwargs):
             click.echo(res)
 
 
+def format_device_name(features):
+    model = features.model or "1"
+    if features.bootloader_mode:
+        return "Trezor {} bootloader".format(model)
+
+    label = features.label or "(unnamed)"
+    return "{} [Trezor {}, {}]".format(label, model, features.device_id)
+
 #
 # Common functions
 #
 
 
 @cli.command(name="list")
-def list_devices():
+@click.option("-n", "no_resolve", is_flag=True, help="Do not resolve Trezor names")
+def list_devices(no_resolve):
     """List connected Trezor devices."""
-    return enumerate_devices()
+    if no_resolve:
+        return enumerate_devices()
+
+    for transport in enumerate_devices():
+        client = TrezorClient(transport, ui=ui.ClickUI())
+        click.echo("{} - {}".format(transport, format_device_name(client.features)))
 
 
 @cli.command()
