@@ -7,6 +7,7 @@ Version 2.3.0 [not yet released]
 * Show xpubs with multisig get_address
 * Upgrade MicroPython to 1.12
 * Introduce FatFS (version 0.14)
+* Support Ed25519 in FIDO2
 
 Version 2.2.0 [Jan 2020]
 * Remove unused ButtonRequest.data field
