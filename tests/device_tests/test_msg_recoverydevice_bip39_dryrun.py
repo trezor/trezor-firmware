@@ -98,16 +98,16 @@ def test_dry_run(client):
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_seed_mismatch(client):
-    with pytest.raises(exceptions.TrezorFailure) as exc:
+    with pytest.raises(
+        exceptions.TrezorFailure, match="does not match the one in the device"
+    ):
         do_recover(client, ["all"] * 12)
-    assert "does not match the one in the device" in exc.value.failure.message
 
 
 @pytest.mark.skip_t2
 def test_invalid_seed_t1(client):
-    with pytest.raises(exceptions.TrezorFailure) as exc:
+    with pytest.raises(exceptions.TrezorFailure, match="Invalid seed"):
         do_recover(client, ["stick"] * 12)
-    assert "Invalid seed" in exc.value.failure.message
 
 
 @pytest.mark.skip_t1
@@ -163,9 +163,8 @@ def test_invalid_seed_core(client):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_uninitialized(client):
-    with pytest.raises(exceptions.TrezorFailure) as exc:
+    with pytest.raises(exceptions.TrezorFailure, match="not initialized"):
         do_recover(client, ["all"] * 12)
-    assert "not initialized" in exc.value.failure.message
 
 
 DRY_RUN_ALLOWED_FIELDS = ("dry_run", "word_count", "enforce_wordlist", "type")
@@ -200,6 +199,7 @@ def test_bad_parameters(client, field_name, field_value):
         type=messages.RecoveryDeviceType.ScrambledWords,
     )
     setattr(msg, field_name, field_value)
-    with pytest.raises(exceptions.TrezorFailure) as exc:
+    with pytest.raises(
+        exceptions.TrezorFailure, match="Forbidden field set in dry-run"
+    ):
         client.call(msg)
-    assert "Forbidden field set in dry-run" in exc.value.failure.message

@@ -173,10 +173,10 @@ class TestOpReturn:
                 btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=TX_API)
 
             if client.features.model == "1":
-                assert exc.value.args[0] == proto.FailureType.ProcessError
-                assert exc.value.args[1].endswith("Failed to compile output")
+                assert exc.value.code == proto.FailureType.ProcessError
+                assert exc.value.message.endswith("Failed to compile output")
             else:
-                assert exc.value.args[0] == proto.FailureType.DataError
-                assert exc.value.args[1].endswith(
+                assert exc.value.code == proto.FailureType.DataError
+                assert exc.value.message.endswith(
                     "OP_RETURN output with non-zero amount"
                 )

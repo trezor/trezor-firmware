@@ -49,8 +49,8 @@ class TestMsgStellarGetAddress:
             stellar.get_address(client, parse_path("m/0/1"))
 
         if client.features.model == "1":
-            assert exc.value.args[0] == proto.FailureType.ProcessError
-            assert exc.value.args[1].endswith("Failed to derive private key")
+            assert exc.value.code == proto.FailureType.ProcessError
+            assert exc.value.message.endswith("Failed to derive private key")
         else:
-            assert exc.value.args[0] == proto.FailureType.DataError
-            assert exc.value.args[1].endswith("Forbidden key path")
+            assert exc.value.code == proto.FailureType.DataError
+            assert exc.value.message.endswith("Forbidden key path")

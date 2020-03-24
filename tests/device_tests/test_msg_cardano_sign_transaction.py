@@ -227,7 +227,5 @@ def test_cardano_sign_tx_validation(
     with client:
         client.set_expected_responses(expected_responses)
 
-        with pytest.raises(TrezorFailure) as exc:
+        with pytest.raises(TrezorFailure, match=expected_error_message):
             cardano.sign_tx(client, inputs, outputs, transactions, protocol_magic)
-
-        assert exc.value.args[1] == expected_error_message

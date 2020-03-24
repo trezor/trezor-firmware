@@ -330,14 +330,10 @@ class TestMsgSigntxBch:
                 ]
             )
 
-            with pytest.raises(TrezorFailure) as exc:
+            with pytest.raises(
+                TrezorFailure, match="Transaction has changed during signing"
+            ):
                 btc.sign_tx(client, "Bcash", [inp1, inp2], [out1], prev_txes=TX_API)
-
-            assert exc.value.args[0] in (
-                proto.FailureType.ProcessError,
-                proto.FailureType.DataError,
-            )
-            assert exc.value.args[1].endswith("Transaction has changed during signing")
 
     def test_attack_change_input(self, client):
         inp1 = proto.TxInputType(

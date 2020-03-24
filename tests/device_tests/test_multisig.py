@@ -298,8 +298,5 @@ class TestMultisig:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with pytest.raises(TrezorFailure) as exc:
+        with pytest.raises(TrezorFailure, match="Pubkey not found in multisig script"):
             btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=TX_API)
-
-        assert exc.value.args[0] == proto.FailureType.DataError
-        assert exc.value.args[1].endswith("Pubkey not found in multisig script")

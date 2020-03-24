@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import messages, ripple
+from trezorlib import ripple
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -106,9 +106,8 @@ class TestMsgRippleSignTx:
                 "Sequence": 1,
             }
         )
-        with pytest.raises(TrezorFailure) as exc:
+        with pytest.raises(
+            TrezorFailure,
+            match="ProcessError: Fee must be in the range of 10 to 10,000 drops",
+        ):
             ripple.sign_tx(client, parse_path("m/44'/144'/0'/0/2"), msg)
-        assert exc.value.args[0] == messages.FailureType.ProcessError
-        assert exc.value.args[1].endswith(
-            "Fee must be in the range of 10 to 10,000 drops"
-        )

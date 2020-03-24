@@ -491,7 +491,7 @@ class TestMsgSigntx:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with pytest.raises(TrezorFailure) as exc:
+        with pytest.raises(TrezorFailure, match="NotEnoughFunds"):
             check_sign_tx(
                 client,
                 "Bitcoin",
@@ -500,7 +500,6 @@ class TestMsgSigntx:
                 failure=proto.FailureType.NotEnoughFunds,
                 unknown_path=True,
             )
-        assert exc.value.args[0] == proto.FailureType.NotEnoughFunds
 
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_p2sh(self, client):
@@ -606,7 +605,9 @@ class TestMsgSigntx:
         # Set up attack processors
         client.set_filter(proto.TxAck, attack_processor)
 
-        with pytest.raises(TrezorFailure) as exc:
+        with pytest.raises(
+            TrezorFailure, match="Transaction has changed during signing"
+        ):
             btc.sign_tx(
                 client,
                 "Bitcoin",
@@ -614,11 +615,6 @@ class TestMsgSigntx:
                 [out1, out2],
                 prev_txes=TxCache("Bitcoin"),
             )
-        assert exc.value.args[0] in (
-            proto.FailureType.ProcessError,
-            proto.FailureType.DataError,
-        )
-        assert exc.value.args[1].endswith("Transaction has changed during signing")
 
     # Ensure that if the change output is modified after the user confirms the
     # transaction, then signing fails.
@@ -662,16 +658,12 @@ class TestMsgSigntx:
         # Set up attack processors
         client.set_filter(proto.TxAck, attack_processor)
 
-        with pytest.raises(TrezorFailure) as exc:
+        with pytest.raises(
+            TrezorFailure, match="Transaction has changed during signing"
+        ):
             btc.sign_tx(
                 client, "Testnet", [inp1], [out1, out2], prev_txes=TxCache("Testnet")
             )
-
-        assert exc.value.args[0] in (
-            proto.FailureType.ProcessError,
-            proto.FailureType.DataError,
-        )
-        assert exc.value.args[1].endswith("Transaction has changed during signing")
 
     def test_attack_change_input_address(self, client):
         inp1 = proto.TxInputType(
