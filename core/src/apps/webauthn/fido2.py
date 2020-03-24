@@ -1527,7 +1527,7 @@ def cbor_make_credential_sign(
         attestation_statement = {
             "alg": common.COSE_ALG_ES256,
             "sig": sig,
-            "x5c": _U2F_ATT_CERT,
+            "x5c": [_U2F_ATT_CERT],
         }
 
     # Encode the authenticatorMakeCredential response data.
