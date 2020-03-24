@@ -16,8 +16,8 @@
 
 import json
 
-from . import messages as proto
-from .tools import CallException, expect
+from . import exceptions, messages
+from .tools import expect
 
 TYPE_TRANSACTION_TRANSFER = 0x0101
 TYPE_IMPORTANCE_TRANSFER = 0x0801
@@ -30,7 +30,7 @@ TYPE_MOSAIC_SUPPLY_CHANGE = 0x4002
 
 
 def create_transaction_common(transaction):
-    msg = proto.NEMTransactionCommon()
+    msg = messages.NEMTransactionCommon()
     msg.network = (transaction["version"] >> 24) & 0xFF
     msg.timestamp = transaction["timeStamp"]
     msg.fee = transaction["fee"]
@@ -43,7 +43,7 @@ def create_transaction_common(transaction):
 
 
 def create_transfer(transaction):
-    msg = proto.NEMTransfer()
+    msg = messages.NEMTransfer()
     msg.recipient = transaction["recipient"]
     msg.amount = transaction["amount"]
 
@@ -55,7 +55,7 @@ def create_transfer(transaction):
 
     if "mosaics" in transaction:
         msg.mosaics = [
-            proto.NEMMosaic(
+            messages.NEMMosaic(
                 namespace=mosaic["mosaicId"]["namespaceId"],
                 mosaic=mosaic["mosaicId"]["name"],
                 quantity=mosaic["quantity"],
@@ -67,9 +67,9 @@ def create_transfer(transaction):
 
 
 def create_aggregate_modification(transactions):
-    msg = proto.NEMAggregateModification()
+    msg = messages.NEMAggregateModification()
     msg.modifications = [
-        proto.NEMCosignatoryModification(
+        messages.NEMCosignatoryModification(
             type=modification["modificationType"],
             public_key=bytes.fromhex(modification["cosignatoryAccount"]),
         )
@@ -83,7 +83,7 @@ def create_aggregate_modification(transactions):
 
 
 def create_provision_namespace(transaction):
-    msg = proto.NEMProvisionNamespace()
+    msg = messages.NEMProvisionNamespace()
     msg.namespace = transaction["newPart"]
 
     if transaction["parent"]:
@@ -96,8 +96,8 @@ def create_provision_namespace(transaction):
 
 def create_mosaic_creation(transaction):
     definition = transaction["mosaicDefinition"]
-    msg = proto.NEMMosaicCreation()
-    msg.definition = proto.NEMMosaicDefinition()
+    msg = messages.NEMMosaicCreation()
+    msg.definition = messages.NEMMosaicDefinition()
     msg.definition.namespace = definition["id"]["namespaceId"]
     msg.definition.mosaic = definition["id"]["name"]
 
@@ -129,7 +129,7 @@ def create_mosaic_creation(transaction):
 
 
 def create_supply_change(transaction):
-    msg = proto.NEMMosaicSupplyChange()
+    msg = messages.NEMMosaicSupplyChange()
     msg.namespace = transaction["mosaicId"]["namespaceId"]
     msg.mosaic = transaction["mosaicId"]["name"]
     msg.type = transaction["supplyType"]
@@ -138,7 +138,7 @@ def create_supply_change(transaction):
 
 
 def create_importance_transfer(transaction):
-    msg = proto.NEMImportanceTransfer()
+    msg = messages.NEMImportanceTransfer()
     msg.mode = transaction["importanceTransfer"]["mode"]
     msg.public_key = bytes.fromhex(transaction["importanceTransfer"]["publicKey"])
     return msg
@@ -162,7 +162,7 @@ def fill_transaction_by_type(msg, transaction):
 
 
 def create_sign_tx(transaction):
-    msg = proto.NEMSignTx()
+    msg = messages.NEMSignTx()
     msg.transaction = create_transaction_common(transaction)
     msg.cosigning = transaction["type"] == TYPE_MULTISIG_SIGNATURE
 
@@ -181,19 +181,19 @@ def create_sign_tx(transaction):
 # ====== Client functions ====== #
 
 
-@expect(proto.NEMAddress, field="address")
+@expect(messages.NEMAddress, field="address")
 def get_address(client, n, network, show_display=False):
     return client.call(
-        proto.NEMGetAddress(address_n=n, network=network, show_display=show_display)
+        messages.NEMGetAddress(address_n=n, network=network, show_display=show_display)
     )
 
 
-@expect(proto.NEMSignedTx)
+@expect(messages.NEMSignedTx)
 def sign_tx(client, n, transaction):
     try:
         msg = create_sign_tx(transaction)
     except ValueError as e:
-        raise CallException(e.args)
+        raise exceptions.TrezorException("Failed to encode transaction") from e
 
     assert msg.transaction is not None
     msg.transaction.address_n = n

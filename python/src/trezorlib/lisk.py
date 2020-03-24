@@ -14,45 +14,47 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from . import messages as proto
+from . import exceptions, messages
 from .protobuf import dict_to_proto
-from .tools import CallException, dict_from_camelcase, expect, normalize_nfc
+from .tools import dict_from_camelcase, expect, normalize_nfc
 
 
-@expect(proto.LiskAddress, field="address")
+@expect(messages.LiskAddress, field="address")
 def get_address(client, n, show_display=False):
-    return client.call(proto.LiskGetAddress(address_n=n, show_display=show_display))
+    return client.call(messages.LiskGetAddress(address_n=n, show_display=show_display))
 
 
-@expect(proto.LiskPublicKey)
+@expect(messages.LiskPublicKey)
 def get_public_key(client, n, show_display=False):
-    return client.call(proto.LiskGetPublicKey(address_n=n, show_display=show_display))
+    return client.call(
+        messages.LiskGetPublicKey(address_n=n, show_display=show_display)
+    )
 
 
-@expect(proto.LiskMessageSignature)
+@expect(messages.LiskMessageSignature)
 def sign_message(client, n, message):
     message = normalize_nfc(message)
-    return client.call(proto.LiskSignMessage(address_n=n, message=message))
+    return client.call(messages.LiskSignMessage(address_n=n, message=message))
 
 
 def verify_message(client, pubkey, signature, message):
     message = normalize_nfc(message)
     try:
         resp = client.call(
-            proto.LiskVerifyMessage(
+            messages.LiskVerifyMessage(
                 signature=signature, public_key=pubkey, message=message
             )
         )
-    except CallException as e:
-        resp = e
-    return isinstance(resp, proto.Success)
+    except exceptions.TrezorFailure:
+        return False
+    return isinstance(resp, messages.Success)
 
 
 RENAMES = {"lifetime": "life_time", "keysgroup": "keys_group"}
 
 
-@expect(proto.LiskSignedTx)
+@expect(messages.LiskSignedTx)
 def sign_tx(client, n, transaction):
     transaction = dict_from_camelcase(transaction, renames=RENAMES)
-    msg = dict_to_proto(proto.LiskTransactionCommon, transaction)
-    return client.call(proto.LiskSignTx(address_n=n, transaction=msg))
+    msg = dict_to_proto(messages.LiskTransactionCommon, transaction)
+    return client.call(messages.LiskSignTx(address_n=n, transaction=msg))

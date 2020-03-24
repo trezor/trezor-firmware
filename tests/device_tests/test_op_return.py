@@ -17,7 +17,8 @@
 import pytest
 
 from trezorlib import btc, messages as proto
-from trezorlib.tools import CallException, parse_path
+from trezorlib.exceptions import TrezorFailure
+from trezorlib.tools import parse_path
 
 from ..tx_cache import TxCache
 
@@ -168,7 +169,7 @@ class TestOpReturn:
                 ]
             )
 
-            with pytest.raises(CallException) as exc:
+            with pytest.raises(TrezorFailure) as exc:
                 btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=TX_API)
 
             if client.features.model == "1":

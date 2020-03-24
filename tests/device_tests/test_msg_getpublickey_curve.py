@@ -17,7 +17,8 @@
 import pytest
 
 from trezorlib import btc
-from trezorlib.tools import H_, CallException
+from trezorlib.exceptions import TrezorFailure
+from trezorlib.tools import H_
 
 from ..common import MNEMONIC12
 
@@ -80,5 +81,5 @@ class TestMsgGetpublickeyCurve:
             == "00514f73a05184458611b14c348fee4fd988d36cf3aee7207737861bac611de991"
         )
         # test failure when using public derivation
-        with pytest.raises(CallException):
+        with pytest.raises(TrezorFailure):
             btc.get_public_node(client, [H_(111), 42], ecdsa_curve_name="ed25519")

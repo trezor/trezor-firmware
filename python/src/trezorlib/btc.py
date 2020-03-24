@@ -16,8 +16,8 @@
 
 from decimal import Decimal
 
-from . import messages
-from .tools import CallException, expect, normalize_nfc, session
+from . import exceptions, messages
+from .tools import expect, normalize_nfc, session
 
 
 def from_json(json_dict):
@@ -114,8 +114,8 @@ def verify_message(client, coin_name, address, signature, message):
                 coin_name=coin_name,
             )
         )
-    except CallException as e:
-        resp = e
+    except exceptions.TrezorFailure as e:
+        return False
     return isinstance(resp, messages.Success)
 
 
@@ -197,13 +197,10 @@ def sign_tx(client, coin_name, inputs, outputs, details=None, prev_txes=None):
             msg.extra_data = current_tx.extra_data[o : o + l]
             res = client.call(messages.TxAck(tx=msg))
 
-    if isinstance(res, messages.Failure):
-        raise CallException("Signing failed")
-
     if not isinstance(res, messages.TxRequest):
-        raise CallException("Unexpected message")
+        raise exceptions.TrezorException("Unexpected message")
 
     if None in signatures:
-        raise RuntimeError("Some signatures are missing!")
+        raise exceptions.TrezorException("Some signatures are missing!")
 
     return signatures, serialized_tx

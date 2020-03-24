@@ -17,7 +17,8 @@
 import pytest
 
 from trezorlib import btc, messages as proto
-from trezorlib.tools import H_, CallException, btc_hash, parse_path
+from trezorlib.exceptions import TrezorFailure
+from trezorlib.tools import H_, btc_hash, parse_path
 
 from ..common import MNEMONIC12
 from ..tx_cache import TxCache
@@ -490,7 +491,7 @@ class TestMsgSigntx:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with pytest.raises(CallException) as exc:
+        with pytest.raises(TrezorFailure) as exc:
             check_sign_tx(
                 client,
                 "Bitcoin",
@@ -605,7 +606,7 @@ class TestMsgSigntx:
         # Set up attack processors
         client.set_filter(proto.TxAck, attack_processor)
 
-        with pytest.raises(CallException) as exc:
+        with pytest.raises(TrezorFailure) as exc:
             btc.sign_tx(
                 client,
                 "Bitcoin",
@@ -661,7 +662,7 @@ class TestMsgSigntx:
         # Set up attack processors
         client.set_filter(proto.TxAck, attack_processor)
 
-        with pytest.raises(CallException) as exc:
+        with pytest.raises(TrezorFailure) as exc:
             btc.sign_tx(
                 client, "Testnet", [inp1], [out1, out2], prev_txes=TxCache("Testnet")
             )
@@ -762,7 +763,7 @@ class TestMsgSigntx:
                 ]
             )
             # Now run the attack, must trigger the exception
-            with pytest.raises(CallException) as exc:
+            with pytest.raises(TrezorFailure) as exc:
                 btc.sign_tx(
                     client,
                     "Testnet",

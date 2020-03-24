@@ -17,7 +17,8 @@
 import pytest
 
 from trezorlib import btc, messages as proto
-from trezorlib.tools import H_, CallException, parse_path
+from trezorlib.exceptions import TrezorFailure
+from trezorlib.tools import H_, parse_path
 
 from ..tx_cache import TxCache
 
@@ -412,7 +413,7 @@ class TestMsgSigntxSegwit:
                     proto.Failure(code=proto.FailureType.ProcessError),
                 ]
             )
-            with pytest.raises(CallException) as exc:
+            with pytest.raises(TrezorFailure) as exc:
                 btc.sign_tx(client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API)
             assert exc.value.args[0] == proto.FailureType.ProcessError
             if client.features.model == "1":
