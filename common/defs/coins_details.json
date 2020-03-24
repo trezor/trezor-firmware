@@ -19384,7 +19384,7 @@
             "name": "SpaceChain",
             "network": "eth",
             "shortcut": "SPC",
-            "t1_enabled": "soon",
+            "t1_enabled": "yes",
             "t2_enabled": "yes",
             "type": "erc20",
             "wallet": [
