@@ -11,7 +11,7 @@ from trezor.ui.num_input import NumInput
 from trezor.ui.scroll import Paginated
 from trezor.ui.text import Text
 
-from apps.common.confirm import confirm, hold_to_confirm, require_confirm
+from apps.common.confirm import confirm, require_confirm, require_hold_to_confirm
 from apps.common.layout import show_success
 
 if __debug__:
@@ -127,7 +127,7 @@ async def _show_share_words(ctx, share_words, share_index=None, group_index=None
     utils.ensure(share_words == shares_words_check)
 
     # confirm the share
-    await hold_to_confirm(ctx, paginated, ButtonRequestType.ResetDevice)
+    await require_hold_to_confirm(ctx, paginated, ButtonRequestType.ResetDevice)
 
 
 def _split_share_into_pages(share_words):

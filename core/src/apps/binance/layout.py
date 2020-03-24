@@ -13,7 +13,7 @@ from trezor.ui.text import Text
 
 from . import helpers
 
-from apps.common.confirm import hold_to_confirm
+from apps.common.confirm import require_hold_to_confirm
 from apps.common.layout import split_address
 
 
@@ -38,7 +38,9 @@ async def require_confirm_transfer(ctx, msg: BinanceTransferMsg):
     for txoutput in msg.outputs:
         pages.extend(make_input_output_pages(txoutput, "output"))
 
-    return await hold_to_confirm(ctx, Paginated(pages), ButtonRequestType.ConfirmOutput)
+    return await require_hold_to_confirm(
+        ctx, Paginated(pages), ButtonRequestType.ConfirmOutput
+    )
 
 
 async def require_confirm_cancel(ctx, msg: BinanceCancelMsg):
@@ -52,7 +54,7 @@ async def require_confirm_cancel(ctx, msg: BinanceCancelMsg):
     page2.normal("Order ID:")
     page2.bold(msg.refid)
 
-    return await hold_to_confirm(
+    return await require_hold_to_confirm(
         ctx, Paginated([page1, page2]), ButtonRequestType.SignTx
     )
 
@@ -77,6 +79,6 @@ async def require_confirm_order(ctx, msg: BinanceOrderMsg):
     page3.normal("Price:")
     page3.bold(format_amount(msg.price, helpers.DECIMALS))
 
-    return await hold_to_confirm(
+    return await require_hold_to_confirm(
         ctx, Paginated([page1, page2, page3]), ButtonRequestType.SignTx
     )
