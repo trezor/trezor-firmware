@@ -229,11 +229,14 @@ void ui_screen_install_confirm_upgrade(const vendor_header *const vhdr,
   ui_confirm_cancel_buttons();
 }
 
-void ui_screen_install_confirm_newvendor(const vendor_header *const vhdr,
-                                         const image_header *const hdr) {
+void ui_screen_install_confirm_newvendor_or_downgrade_wipe(
+    const vendor_header *const vhdr, const image_header *const hdr,
+    secbool downgrade_wipe) {
   display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
-  display_text(16, 32, "Vendor change", -1, FONT_NORMAL, COLOR_BLACK,
-               COLOR_WHITE);
+  display_text(
+      16, 32,
+      (sectrue == downgrade_wipe) ? "Firmware downgrade" : "Vendor change", -1,
+      FONT_NORMAL, COLOR_BLACK, COLOR_WHITE);
   display_bar(16, 44, DISPLAY_RESX - 14 * 2, 1, COLOR_BLACK);
   display_icon(16, 54, 32, 32, toi_icon_info + 12, sizeof(toi_icon_info) - 12,
                COLOR_BLACK, COLOR_WHITE);
