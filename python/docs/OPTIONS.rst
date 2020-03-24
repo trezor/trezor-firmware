@@ -185,7 +185,8 @@ Miscellaneous debug features.
     --help  Show this message and exit.
 
   Commands:
-    show-text  Show text on Trezor display.
+    send-bytes  Send raw bytes to Trezor.
+    show-text   Show text on Trezor display.
 
 Device management commands - setup, recover seed, wipe, etc.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

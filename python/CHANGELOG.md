@@ -18,6 +18,9 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
   for multiple subsequent trezorctl operations
 - built-in functionality of UdpTransport to wait until an emulator comes up, and the
   related command `trezorctl wait-for-emulator`
+- `trezorctl debug send-bytes` can send raw messages to the device [f#116]
+- when updating firmware, user is warned that the requested version does not match their device [f#823]
+- `trezorctl list` can now show name, model and id of device
 
 ### Changed
 
@@ -31,10 +34,13 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
   indicating that the connected Trezor is capable of on-device entry
 - `Transport.write` and `read` method signatures changed to accept bytes instead of
   protobuf messages
+- trezorctl subcommands have a common `@with_client` decorator that manages exception
+  handling and connecting to device
 
 ### Fixed
 
 - trezorctl does not print empty line when there is no output
+- trezorctl cleanly reports wire exceptions [f#226]
 
 ### Removed
 
@@ -45,6 +51,7 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
   is being removed
 - PIN protection and passphrase protection for `ping()` command was removed
 - compatibility no-op code from trezorlib 0.9 was removed from `trezorlib.client`
+- `trezorlib.tools.CallException` was dropped, use `trezorlib.exceptions.TrezorFailure` instead
 
 
 ## [0.11.6] - 2019-12-30
