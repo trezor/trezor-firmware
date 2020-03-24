@@ -19,6 +19,7 @@ import base64
 import click
 
 from .. import stellar, tools
+from . import with_client
 
 PATH_HELP = "BIP32 path. Always use hardened paths and the m/44'/148'/ prefix"
 
@@ -37,10 +38,9 @@ def cli():
     default=stellar.DEFAULT_BIP32_PATH,
 )
 @click.option("-d", "--show-display", is_flag=True)
-@click.pass_obj
-def get_address(connect, address, show_display):
+@with_client
+def get_address(client, address, show_display):
     """Get Stellar public address."""
-    client = connect()
     address_n = tools.parse_path(address)
     return stellar.get_address(client, address_n, show_display)
 
@@ -61,14 +61,13 @@ def get_address(connect, address, show_display):
     help="Network passphrase (blank for public network).",
 )
 @click.argument("b64envelope")
-@click.pass_obj
-def sign_transaction(connect, b64envelope, address, network_passphrase):
+@with_client
+def sign_transaction(client, b64envelope, address, network_passphrase):
     """Sign a base64-encoded transaction envelope.
 
     For testnet transactions, use the following network passphrase:
     'Test SDF Network ; September 2015'
     """
-    client = connect()
     address_n = tools.parse_path(address)
     tx, operations = stellar.parse_transaction_bytes(base64.b64decode(b64envelope))
     resp = stellar.sign_tx(client, tx, operations, address_n, network_passphrase)

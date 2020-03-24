@@ -18,6 +18,7 @@ import click
 
 from .. import debuglink, mapping, messages, protobuf
 from ..messages import DebugLinkShowTextStyle as S
+from . import with_client
 
 
 @click.group(name="debug")
@@ -40,8 +41,8 @@ STYLES = {
 @click.option("-c", "--color", help="Header icon color")
 @click.option("-h", "--header", help="Header text", default="Showing text")
 @click.argument("body")
-@click.pass_obj
-def show_text(connect, icon, color, header, body):
+@with_client
+def show_text(client, icon, color, header, body):
     """Show text on Trezor display.
 
     For usage instructions, see:
@@ -68,16 +69,14 @@ def show_text(connect, icon, color, header, body):
 
     _flush()
 
-    return debuglink.show_text(
-        connect(), header, body_text, icon=icon, icon_color=color
-    )
+    return debuglink.show_text(client, header, body_text, icon=icon, icon_color=color)
 
 
 @cli.command()
 @click.argument("message_name_or_type")
 @click.argument("hex_data")
 @click.pass_obj
-def send_bytes(connect, message_name_or_type, hex_data):
+def send_bytes(obj, message_name_or_type, hex_data):
     """Send raw bytes to Trezor.
 
     Message type and message data must be specified separately, due to how message
@@ -100,7 +99,7 @@ def send_bytes(connect, message_name_or_type, hex_data):
     except Exception as e:
         raise click.ClickException("Invalid hex data.") from e
 
-    transport = connect(return_transport=True)
+    transport = obj.get_transport()
     transport.begin_session()
     transport.write(message_type, message_data)
 

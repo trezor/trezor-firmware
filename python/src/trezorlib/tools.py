@@ -21,8 +21,6 @@ import struct
 import unicodedata
 from typing import List, NewType
 
-from .exceptions import TrezorFailure
-
 HARDENED_FLAG = 1 << 31
 
 Address = NewType("Address", List[int])

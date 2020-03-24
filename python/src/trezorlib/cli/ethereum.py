@@ -21,6 +21,7 @@ from decimal import Decimal
 import click
 
 from .. import ethereum, tools
+from . import with_client
 
 try:
     import rlp
@@ -119,10 +120,9 @@ def cli():
 @cli.command()
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.option("-d", "--show-display", is_flag=True)
-@click.pass_obj
-def get_address(connect, address, show_display):
+@with_client
+def get_address(client, address, show_display):
     """Get Ethereum address in hex encoding."""
-    client = connect()
     address_n = tools.parse_path(address)
     return ethereum.get_address(client, address_n, show_display)
 
@@ -130,10 +130,9 @@ def get_address(connect, address, show_display):
 @cli.command()
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.option("-d", "--show-display", is_flag=True)
-@click.pass_obj
-def get_public_node(connect, address, show_display):
+@with_client
+def get_public_node(client, address, show_display):
     """Get Ethereum public node of given path."""
-    client = connect()
     address_n = tools.parse_path(address)
     result = ethereum.get_public_node(client, address_n, show_display=show_display)
     return {
@@ -179,9 +178,9 @@ def get_public_node(connect, address, show_display):
 )
 @click.argument("to_address")
 @click.argument("amount", callback=_amount_to_int)
-@click.pass_obj
+@with_client
 def sign_tx(
-    connect,
+    client,
     chain_id,
     address,
     amount,
@@ -234,7 +233,6 @@ def sign_tx(
         click.echo("Can't send tokens and custom data at the same time")
         sys.exit(1)
 
-    client = connect()
     address_n = tools.parse_path(address)
     from_address = ethereum.get_address(client, address_n)
 
@@ -296,10 +294,9 @@ def sign_tx(
 @cli.command()
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.argument("message")
-@click.pass_obj
-def sign_message(connect, address, message):
+@with_client
+def sign_message(client, address, message):
     """Sign message with Ethereum address."""
-    client = connect()
     address_n = tools.parse_path(address)
     ret = ethereum.sign_message(client, address_n, message)
     output = {
@@ -314,8 +311,8 @@ def sign_message(connect, address, message):
 @click.argument("address")
 @click.argument("signature")
 @click.argument("message")
-@click.pass_obj
-def verify_message(connect, address, signature, message):
+@with_client
+def verify_message(client, address, signature, message):
     """Verify message signed with Ethereum address."""
     signature = _decode_hex(signature)
-    return ethereum.verify_message(connect(), address, signature, message)
+    return ethereum.verify_message(client, address, signature, message)

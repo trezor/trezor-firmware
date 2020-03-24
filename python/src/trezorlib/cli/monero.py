@@ -17,6 +17,7 @@
 import click
 
 from .. import monero, tools
+from . import with_client
 
 PATH_HELP = "BIP-32 path, e.g. m/44'/128'/0'"
 
@@ -32,10 +33,9 @@ def cli():
 @click.option(
     "-t", "--network-type", type=click.Choice(["0", "1", "2", "3"]), default="0"
 )
-@click.pass_obj
-def get_address(connect, address, show_display, network_type):
+@with_client
+def get_address(client, address, show_display, network_type):
     """Get Monero address for specified path."""
-    client = connect()
     address_n = tools.parse_path(address)
     network_type = int(network_type)
     return monero.get_address(client, address_n, show_display, network_type)
@@ -46,10 +46,9 @@ def get_address(connect, address, show_display, network_type):
 @click.option(
     "-t", "--network-type", type=click.Choice(["0", "1", "2", "3"]), default="0"
 )
-@click.pass_obj
-def get_watch_key(connect, address, network_type):
+@with_client
+def get_watch_key(client, address, network_type):
     """Get Monero watch key for specified path."""
-    client = connect()
     address_n = tools.parse_path(address)
     network_type = int(network_type)
     res = monero.get_watch_key(client, address_n, network_type)

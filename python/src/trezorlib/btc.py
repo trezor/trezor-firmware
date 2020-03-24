@@ -114,7 +114,7 @@ def verify_message(client, coin_name, address, signature, message):
                 coin_name=coin_name,
             )
         )
-    except exceptions.TrezorFailure as e:
+    except exceptions.TrezorFailure:
         return False
     return isinstance(resp, messages.Success)
 

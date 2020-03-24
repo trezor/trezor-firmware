@@ -17,6 +17,7 @@
 import click
 
 from .. import fido
+from . import with_client
 
 ALGORITHM_NAME = {-7: "ES256 (ECDSA w/ SHA-256)", -8: "EdDSA"}
 
@@ -34,11 +35,10 @@ def credentials():
 
 
 @credentials.command(name="list")
-@click.pass_obj
-def credentials_list(connect):
+@with_client
+def credentials_list(client):
     """List all resident credentials on the device."""
-
-    creds = fido.list_credentials(connect())
+    creds = fido.list_credentials(client)
     for cred in creds:
         click.echo("")
         click.echo("WebAuthn credential at index {}:".format(cred.index))
@@ -72,23 +72,23 @@ def credentials_list(connect):
 
 @credentials.command(name="add")
 @click.argument("hex_credential_id")
-@click.pass_obj
-def credentials_add(connect, hex_credential_id):
+@with_client
+def credentials_add(client, hex_credential_id):
     """Add the credential with the given ID as a resident credential.
 
     HEX_CREDENTIAL_ID is the credential ID as a hexadecimal string.
     """
-    return fido.add_credential(connect(), bytes.fromhex(hex_credential_id))
+    return fido.add_credential(client, bytes.fromhex(hex_credential_id))
 
 
 @credentials.command(name="remove")
 @click.option(
     "-i", "--index", required=True, type=click.IntRange(0, 99), help="Credential index."
 )
-@click.pass_obj
-def credentials_remove(connect, index):
+@with_client
+def credentials_remove(client, index):
     """Remove the resident credential at the given index."""
-    return fido.remove_credential(connect(), index)
+    return fido.remove_credential(client, index)
 
 
 #
@@ -103,19 +103,19 @@ def counter():
 
 @counter.command(name="set")
 @click.argument("counter", type=int)
-@click.pass_obj
-def counter_set(connect, counter):
+@with_client
+def counter_set(client, counter):
     """Set FIDO/U2F counter value."""
-    return fido.set_counter(connect(), counter)
+    return fido.set_counter(client, counter)
 
 
 @counter.command(name="get-next")
-@click.pass_obj
-def counter_get_next(connect):
+@with_client
+def counter_get_next(client):
     """Get-and-increase value of FIDO/U2F counter.
 
     FIDO counter value cannot be read directly. On each U2F exchange, the counter value
     is returned and atomically increased. This command performs the same operation
     and returns the counter value.
     """
-    return fido.get_next_counter(connect())
+    return fido.get_next_counter(client)

@@ -20,7 +20,7 @@ import json
 import click
 
 from .. import btc, messages, protobuf, tools
-from . import ChoiceType
+from . import ChoiceType, with_client
 
 INPUT_SCRIPTS = {
     "address": messages.InputScriptType.SPENDADDRESS,
@@ -52,13 +52,13 @@ def cli():
 @click.option("-n", "--address", required=True, help="BIP-32 path")
 @click.option("-t", "--script-type", type=ChoiceType(INPUT_SCRIPTS), default="address")
 @click.option("-d", "--show-display", is_flag=True)
-@click.pass_obj
-def get_address(connect, coin, address, script_type, show_display):
+@with_client
+def get_address(client, coin, address, script_type, show_display):
     """Get address for specified path."""
     coin = coin or DEFAULT_COIN
     address_n = tools.parse_path(address)
     return btc.get_address(
-        connect(), coin, address_n, show_display, script_type=script_type
+        client, coin, address_n, show_display, script_type=script_type
     )
 
 
@@ -68,13 +68,13 @@ def get_address(connect, coin, address, script_type, show_display):
 @click.option("-e", "--curve")
 @click.option("-t", "--script-type", type=ChoiceType(INPUT_SCRIPTS), default="address")
 @click.option("-d", "--show-display", is_flag=True)
-@click.pass_obj
-def get_public_node(connect, coin, address, curve, script_type, show_display):
+@with_client
+def get_public_node(client, coin, address, curve, script_type, show_display):
     """Get public node of given path."""
     coin = coin or DEFAULT_COIN
     address_n = tools.parse_path(address)
     result = btc.get_public_node(
-        connect(),
+        client,
         address_n,
         ecdsa_curve_name=curve,
         show_display=show_display,
@@ -101,8 +101,8 @@ def get_public_node(connect, coin, address, curve, script_type, show_display):
 @cli.command()
 @click.option("-c", "--coin", "_ignore", is_flag=True, hidden=True, expose_value=False)
 @click.argument("json_file", type=click.File())
-@click.pass_obj
-def sign_tx(connect, json_file):
+@with_client
+def sign_tx(client, json_file):
     """Sign transaction.
 
     Transaction data must be provided in a JSON file. See `transaction-format.md` for
@@ -111,8 +111,6 @@ def sign_tx(connect, json_file):
 
     $ python3 tools/build_tx.py | trezorctl btc sign-tx -
     """
-    client = connect()
-
     data = json.load(json_file)
     coin = data.get("coin_name", DEFAULT_COIN)
     details = protobuf.dict_to_proto(messages.SignTx, data.get("details", {}))
@@ -145,12 +143,12 @@ def sign_tx(connect, json_file):
 @click.option("-n", "--address", required=True, help="BIP-32 path")
 @click.option("-t", "--script-type", type=ChoiceType(INPUT_SCRIPTS), default="address")
 @click.argument("message")
-@click.pass_obj
-def sign_message(connect, coin, address, message, script_type):
+@with_client
+def sign_message(client, coin, address, message, script_type):
     """Sign message using address of given path."""
     coin = coin or DEFAULT_COIN
     address_n = tools.parse_path(address)
-    res = btc.sign_message(connect(), coin, address_n, message, script_type)
+    res = btc.sign_message(client, coin, address_n, message, script_type)
     return {
         "message": message,
         "address": res.address,
@@ -163,12 +161,12 @@ def sign_message(connect, coin, address, message, script_type):
 @click.argument("address")
 @click.argument("signature")
 @click.argument("message")
-@click.pass_obj
-def verify_message(connect, coin, address, signature, message):
+@with_client
+def verify_message(client, coin, address, signature, message):
     """Verify message."""
     signature = base64.b64decode(signature)
     coin = coin or DEFAULT_COIN
-    return btc.verify_message(connect(), coin, address, signature, message)
+    return btc.verify_message(client, coin, address, signature, message)
 
 
 #

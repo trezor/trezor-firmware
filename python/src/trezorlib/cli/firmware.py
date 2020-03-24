@@ -20,6 +20,7 @@ import click
 import requests
 
 from .. import exceptions, firmware
+from . import with_client
 
 ALLOWED_FIRMWARE_FORMATS = {
     1: (firmware.FirmwareFormat.TREZOR_ONE, firmware.FirmwareFormat.TREZOR_ONE_V2),
@@ -173,9 +174,9 @@ def find_best_firmware_version(
 @click.option("--fingerprint", help="Expected firmware fingerprint in hex")
 @click.option("--skip-vendor-header", help="Skip vendor header validation on Trezor T")
 # fmt: on
-@click.pass_obj
+@with_client
 def firmware_update(
-    connect,
+    client,
     filename,
     url,
     version,
@@ -207,7 +208,6 @@ def firmware_update(
         click.echo("You can use only one of: filename, url, version.")
         sys.exit(1)
 
-    client = connect()
     if not dry_run and not client.features.bootloader_mode:
         click.echo("Please switch your device to bootloader mode.")
         sys.exit(1)

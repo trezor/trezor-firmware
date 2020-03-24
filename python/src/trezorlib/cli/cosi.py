@@ -17,6 +17,7 @@
 import click
 
 from .. import cosi, tools
+from . import with_client
 
 PATH_HELP = "BIP-32 path, e.g. m/44'/0'/0'/0/0"
 
@@ -29,10 +30,9 @@ def cli():
 @cli.command()
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.argument("data")
-@click.pass_obj
-def commit(connect, address, data):
+@with_client
+def commit(client, address, data):
     """Ask device to commit to CoSi signing."""
-    client = connect()
     address_n = tools.parse_path(address)
     return cosi.commit(client, address_n, bytes.fromhex(data))
 
@@ -42,10 +42,9 @@ def commit(connect, address, data):
 @click.argument("data")
 @click.argument("global_commitment")
 @click.argument("global_pubkey")
-@click.pass_obj
-def sign(connect, address, data, global_commitment, global_pubkey):
+@with_client
+def sign(client, address, data, global_commitment, global_pubkey):
     """Ask device to sign using CoSi."""
-    client = connect()
     address_n = tools.parse_path(address)
     return cosi.sign(
         client,
