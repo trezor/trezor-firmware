@@ -257,7 +257,7 @@ class TrezorClient:
     def check_firmware_version(self, warn_only=False):
         if self.is_outdated():
             if warn_only:
-                warnings.warn(OUTDATED_FIRMWARE_ERROR, stacklevel=2)
+                warnings.warn("Firmware is out of date", stacklevel=2)
             else:
                 raise exceptions.OutdatedFirmwareError(OUTDATED_FIRMWARE_ERROR)
 
