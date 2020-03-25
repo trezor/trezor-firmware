@@ -32,6 +32,7 @@
   - [UI Tests](tests/ui-tests.md)
 - [Miscellaneous](misc/index.md)
   - [Coins' BIP-44 Paths](misc/coins-bip44-paths.md)
+  - [FW update and device wipe](misc/update-wipes.md)
   - [Generated Files](misc/generated-files.md)
   - [Git Hooks](misc/git-hooks.md)
   - [Monorepo Notes](misc/monorepo.md)
