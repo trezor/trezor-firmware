@@ -22,6 +22,12 @@ from trezorlib.tools import H_, btc_hash, parse_path
 
 from ..common import MNEMONIC12
 from ..tx_cache import TxCache
+from .signtx import request_finished, request_input, request_meta, request_output
+
+B = proto.ButtonRequestType
+
+TX_CACHE_TESTNET = TxCache("Testnet")
+TX_CACHE_MAINNET = TxCache("Bitcoin")
 
 TXHASH_157041 = bytes.fromhex(
     "1570416eb4302cf52979afd5e6909e37d8fdd874301f7cc87e547e509cb1caa6"
@@ -67,90 +73,6 @@ TXHASH_2bac7a = bytes.fromhex(
 )
 
 
-def check_sign_tx(
-    client,
-    coin_name,
-    inputs,
-    outputs,
-    fee_too_high=False,
-    failure=None,
-    unknown_path=False,
-):
-    __tracebackhide__ = True
-    expected_responses = []
-
-    txes = TxCache(coin_name)
-
-    t = proto.RequestType
-    b = proto.ButtonRequestType
-
-    def tx_request(request_type, **kwargs):
-        if kwargs:
-            details = proto.TxRequestDetailsType(**kwargs)
-        else:
-            details = None
-        return proto.TxRequest(request_type=request_type, details=details)
-
-    def btn(code):
-        return proto.ButtonRequest(code=code)
-
-    for i, inp in enumerate(inputs):
-        expected_responses.append(tx_request(t.TXINPUT, request_index=i))
-        if unknown_path and client.features.model != "1":
-            expected_responses.append(btn(b.UnknownDerivationPath))
-        expected_responses.append(tx_request(t.TXMETA, tx_hash=inp.prev_hash))
-
-        if inp.script_type in (
-            proto.InputScriptType.SPENDP2SHWITNESS,
-            proto.InputScriptType.SPENDWITNESS,
-        ):
-            continue
-
-        prev_tx = txes[inp.prev_hash]
-        for pi in range(len(prev_tx.inputs)):
-            r = tx_request(t.TXINPUT, request_index=pi, tx_hash=inp.prev_hash)
-            expected_responses.append(r)
-
-        for po in range(len(prev_tx.bin_outputs)):
-            r = tx_request(t.TXOUTPUT, request_index=po, tx_hash=inp.prev_hash)
-            expected_responses.append(r)
-
-    for i, outp in enumerate(outputs):
-        expected_responses.append(tx_request(t.TXOUTPUT, request_index=i))
-        if outp.address is not None or hasattr(outp, "force_confirm"):
-            expected_responses.append(btn(b.ConfirmOutput))
-
-    if fee_too_high:
-        expected_responses.append(btn(b.FeeOverThreshold))
-
-    if failure is not None:
-        expected_responses.append(proto.Failure(code=failure))
-
-    else:
-        expected_responses.append(btn(b.SignTx))
-
-        input_requests = [
-            tx_request(t.TXINPUT, request_index=i) for i in range(len(inputs))
-        ]
-        output_requests = [
-            tx_request(t.TXOUTPUT, request_index=i) for i in range(len(outputs))
-        ]
-
-        # No idea why the flow is like this. But it is.
-        for _ in range(len(inputs)):
-            expected_responses.extend(input_requests)
-            expected_responses.extend(output_requests)
-
-        # and once more for good measure
-        expected_responses.extend(output_requests)
-
-        expected_responses.append(tx_request(t.TXFINISHED))
-
-    with client:
-        client.set_expected_responses(expected_responses)
-        return btc.sign_tx(client, coin_name, inputs, outputs, prev_txes=txes)
-
-
 class TestMsgSigntx:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_one_one_fee(self, client):
@@ -170,9 +92,29 @@ class TestMsgSigntx:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        _, serialized_tx = check_sign_tx(
-            client, "Bitcoin", [inp1], [out1], unknown_path=True
-        )
+        trezor_core = client.features.model != "1"
+        with client:
+            client.set_expected_responses(
+                [
+                    request_input(0),
+                    (trezor_core, proto.ButtonRequest(code=B.UnknownDerivationPath)),
+                    request_meta(TXHASH_d5f65e),
+                    request_input(0, TXHASH_d5f65e),
+                    request_input(1, TXHASH_d5f65e),
+                    request_output(0, TXHASH_d5f65e),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_output(0),
+                    request_output(0),
+                    request_finished(),
+                ]
+            )
+
+            _, serialized_tx = btc.sign_tx(
+                client, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET
+            )
 
         # Accepted by network: tx fd79435246dee76b2f159d2db08032d666c95adc544de64c8c49f474df4a7fee
         assert (
@@ -204,7 +146,29 @@ class TestMsgSigntx:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        _, serialized_tx = check_sign_tx(client, "Testnet", [inp1], [out1, out2])
+        with client:
+            client.set_expected_responses(
+                [
+                    request_input(0),
+                    request_meta(TXHASH_e5040e),
+                    request_input(0, TXHASH_e5040e),
+                    request_output(0, TXHASH_e5040e),
+                    request_output(1, TXHASH_e5040e),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    request_output(1),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_output(0),
+                    request_output(1),
+                    request_output(0),
+                    request_output(1),
+                    request_finished(),
+                ]
+            )
+            _, serialized_tx = btc.sign_tx(
+                client, "Testnet", [inp1], [out1, out2], prev_txes=TX_CACHE_TESTNET
+            )
 
         assert (
             serialized_tx.hex()
@@ -234,16 +198,34 @@ class TestMsgSigntx:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        out2.force_confirm = True
-
-        _, serialized_tx = check_sign_tx(
-            client,
-            "Testnet",
-            [inp1],
-            [out1, out2],
-            fee_too_high=True,
-            unknown_path=True,
-        )
+        trezor_core = client.features.model != "1"
+        with client:
+            client.set_expected_responses(
+                [
+                    request_input(0),
+                    (trezor_core, proto.ButtonRequest(code=B.UnknownDerivationPath)),
+                    request_meta(TXHASH_6f90f3),
+                    request_input(0, TXHASH_6f90f3),
+                    request_input(1, TXHASH_6f90f3),
+                    request_output(0, TXHASH_6f90f3),
+                    request_output(1, TXHASH_6f90f3),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    request_output(1),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.FeeOverThreshold),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_output(0),
+                    request_output(1),
+                    request_output(0),
+                    request_output(1),
+                    request_finished(),
+                ]
+            )
+            _, serialized_tx = btc.sign_tx(
+                client, "Testnet", [inp1], [out1, out2], prev_txes=TX_CACHE_TESTNET
+            )
 
         assert (
             serialized_tx.hex()
@@ -276,7 +258,29 @@ class TestMsgSigntx:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        _, serialized_tx = check_sign_tx(client, "Bitcoin", [inp1], [out1, out2])
+        with client:
+            client.set_expected_responses(
+                [
+                    request_input(0),
+                    request_meta(TXHASH_50f6f1),
+                    request_input(0, TXHASH_50f6f1),
+                    request_output(0, TXHASH_50f6f1),
+                    request_output(1, TXHASH_50f6f1),
+                    request_output(0),
+                    request_output(1),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_output(0),
+                    request_output(1),
+                    request_output(0),
+                    request_output(1),
+                    request_finished(),
+                ]
+            )
+            _, serialized_tx = btc.sign_tx(
+                client, "Bitcoin", [inp1], [out1, out2], prev_txes=TX_CACHE_MAINNET
+            )
 
         assert (
             serialized_tx.hex()
@@ -311,11 +315,40 @@ class TestMsgSigntx:
             address_n=[1], amount=80000, script_type=proto.OutputScriptType.PAYTOADDRESS
         )
 
-        out3.force_confirm = True
-
-        _, serialized_tx = check_sign_tx(
-            client, "Bitcoin", [inp1], [out1, out2, out3], unknown_path=True
-        )
+        trezor_core = client.features.model != "1"
+        with client:
+            client.set_expected_responses(
+                [
+                    request_input(0),
+                    (trezor_core, proto.ButtonRequest(code=B.UnknownDerivationPath)),
+                    request_meta(TXHASH_d5f65e),
+                    request_input(0, TXHASH_d5f65e),
+                    request_input(1, TXHASH_d5f65e),
+                    request_output(0, TXHASH_d5f65e),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    request_output(1),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    request_output(2),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_output(0),
+                    request_output(1),
+                    request_output(2),
+                    request_output(0),
+                    request_output(1),
+                    request_output(2),
+                    request_finished(),
+                ]
+            )
+            _, serialized_tx = btc.sign_tx(
+                client,
+                "Bitcoin",
+                [inp1],
+                [out1, out2, out3],
+                prev_txes=TX_CACHE_MAINNET,
+            )
 
         assert (
             serialized_tx.hex()
@@ -355,11 +388,47 @@ class TestMsgSigntx:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        out2.force_confirm = True
-
-        _, serialized_tx = check_sign_tx(
-            client, "Bitcoin", [inp1, inp2], [out1, out2], unknown_path=True
-        )
+        trezor_core = client.features.model != "1"
+        with client:
+            client.set_expected_responses(
+                [
+                    request_input(0),
+                    (trezor_core, proto.ButtonRequest(code=B.UnknownDerivationPath)),
+                    request_meta(TXHASH_c6be22),
+                    request_input(0, TXHASH_c6be22),
+                    request_output(0, TXHASH_c6be22),
+                    request_output(1, TXHASH_c6be22),
+                    request_input(1),
+                    (trezor_core, proto.ButtonRequest(code=B.UnknownDerivationPath)),
+                    request_meta(TXHASH_58497a),
+                    request_input(0, TXHASH_58497a),
+                    request_output(0, TXHASH_58497a),
+                    request_output(1, TXHASH_58497a),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    request_output(1),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_input(1),
+                    request_output(0),
+                    request_output(1),
+                    request_input(0),
+                    request_input(1),
+                    request_output(0),
+                    request_output(1),
+                    request_output(0),
+                    request_output(1),
+                    request_finished(),
+                ]
+            )
+            _, serialized_tx = btc.sign_tx(
+                client,
+                "Bitcoin",
+                [inp1, inp2],
+                [out1, out2],
+                prev_txes=TX_CACHE_MAINNET,
+            )
 
         # Accepted by network: tx c63e24ed820c5851b60c54613fbc4bcb37df6cd49b4c96143e99580a472f79fb
         # The transaction was produced before Trezor implemented BIP-66, so the signature
@@ -389,8 +458,8 @@ class TestMsgSigntx:
             amount=100 * 26000 - 15 * 10000,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
-        _, serialized_tx = check_sign_tx(
-            client, "Bitcoin", inputs, [out], unknown_path=True
+        _, serialized_tx = btc.sign_tx(
+            client, "Bitcoin", inputs, [out], prev_txes=TX_CACHE_MAINNET
         )
         # Accepted by network: tx 23d9d8eecf3abf6c0f0f3f8b0976a04792d7f1c9a4ea9b0a8931734949e27c92
         # too big put in unit test, only check hash
@@ -434,8 +503,8 @@ class TestMsgSigntx:
             )
             outputs.append(out)
 
-        _, serialized_tx = check_sign_tx(
-            client, "Bitcoin", [inp1, inp2], outputs, unknown_path=True
+        _, serialized_tx = btc.sign_tx(
+            client, "Bitcoin", [inp1, inp2], outputs, prev_txes=TX_CACHE_MAINNET
         )
 
         assert (
@@ -464,9 +533,29 @@ class TestMsgSigntx:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        _, serialized_tx = check_sign_tx(
-            client, "Bitcoin", [inp1], [out1], fee_too_high=True, unknown_path=True
-        )
+        trezor_core = client.features.model != "1"
+        with client:
+            client.set_expected_responses(
+                [
+                    request_input(0),
+                    (trezor_core, proto.ButtonRequest(code=B.UnknownDerivationPath)),
+                    request_meta(TXHASH_157041),
+                    request_input(0, TXHASH_157041),
+                    request_output(0, TXHASH_157041),
+                    request_output(1, TXHASH_157041),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.FeeOverThreshold),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_output(0),
+                    request_output(0),
+                    request_finished(),
+                ]
+            )
+            _, serialized_tx = btc.sign_tx(
+                client, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET
+            )
 
         assert (
             serialized_tx.hex()
@@ -491,15 +580,25 @@ class TestMsgSigntx:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with pytest.raises(TrezorFailure, match="NotEnoughFunds"):
-            check_sign_tx(
-                client,
-                "Bitcoin",
-                [inp1],
-                [out1],
-                failure=proto.FailureType.NotEnoughFunds,
-                unknown_path=True,
+        trezor_core = client.features.model != "1"
+        with client:
+            client.set_expected_responses(
+                [
+                    request_input(0),
+                    (trezor_core, proto.ButtonRequest(code=B.UnknownDerivationPath)),
+                    request_meta(TXHASH_d5f65e),
+                    request_input(0, TXHASH_d5f65e),
+                    request_input(1, TXHASH_d5f65e),
+                    request_output(0, TXHASH_d5f65e),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.Failure(code=proto.FailureType.NotEnoughFunds),
+                ]
             )
+            with pytest.raises(TrezorFailure, match="NotEnoughFunds"):
+                btc.sign_tx(
+                    client, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET
+                )
 
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_p2sh(self, client):
@@ -516,9 +615,28 @@ class TestMsgSigntx:
             script_type=proto.OutputScriptType.PAYTOSCRIPTHASH,
         )
 
-        _, serialized_tx = check_sign_tx(
-            client, "Bitcoin", [inp1], [out1], unknown_path=True
-        )
+        trezor_core = client.features.model != "1"
+        with client:
+            client.set_expected_responses(
+                [
+                    request_input(0),
+                    (trezor_core, proto.ButtonRequest(code=B.UnknownDerivationPath)),
+                    request_meta(TXHASH_54aa56),
+                    request_input(0, TXHASH_54aa56),
+                    request_output(0, TXHASH_54aa56),
+                    request_output(1, TXHASH_54aa56),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_output(0),
+                    request_output(0),
+                    request_finished(),
+                ]
+            )
+            _, serialized_tx = btc.sign_tx(
+                client, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET
+            )
 
         # Accepted by network: tx 8cc1f4adf7224ce855cf535a5104594a0004cb3b640d6714fdb00b9128832dd5
         assert (
@@ -543,7 +661,9 @@ class TestMsgSigntx:
             amount=411102528330,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
-        _, serialized_tx = check_sign_tx(client, "Testnet", [inp1], [out1])
+        _, serialized_tx = btc.sign_tx(
+            client, "Testnet", [inp1], [out1], prev_txes=TX_CACHE_TESTNET
+        )
         assert (
             serialized_tx.hex()
             == "01000000010c0f4d514eba2b68b467bad8f97d7bac633f465595ea719a5754c6ded17aac2b010000006b4830450221008e3b926f04d8830bd5b67698af25c9e00c9db1b1ef3e5d69af794446753da94a02202d4a7509f26bba29ff643a7ac0d43fb128c1a632cc502b8f44eada8930fb9c9b0121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0ffffffff014ac39eb75f0000001976a9145b157a678a10021243307e4bb58f36375aa80e1088ac00000000"
@@ -577,10 +697,9 @@ class TestMsgSigntx:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        out2.force_confirm = True
         # Test if the transaction can be signed normally
-        _, serialized_tx = check_sign_tx(
-            client, "Bitcoin", [inp1, inp2], [out1, out2], unknown_path=True
+        _, serialized_tx = btc.sign_tx(
+            client, "Bitcoin", [inp1, inp2], [out1, out2], prev_txes=TX_CACHE_MAINNET
         )
 
         # Accepted by network: tx c63e24ed820c5851b60c54613fbc4bcb37df6cd49b4c96143e99580a472f79fb
@@ -613,7 +732,7 @@ class TestMsgSigntx:
                 "Bitcoin",
                 [inp1, inp2],
                 [out1, out2],
-                prev_txes=TxCache("Bitcoin"),
+                prev_txes=TX_CACHE_MAINNET,
             )
 
     # Ensure that if the change output is modified after the user confirms the
@@ -662,7 +781,7 @@ class TestMsgSigntx:
             TrezorFailure, match="Transaction has changed during signing"
         ):
             btc.sign_tx(
-                client, "Testnet", [inp1], [out1, out2], prev_txes=TxCache("Testnet")
+                client, "Testnet", [inp1], [out1, out2], prev_txes=TX_CACHE_TESTNET
             )
 
     def test_attack_change_input_address(self, client):
@@ -687,7 +806,9 @@ class TestMsgSigntx:
         )
 
         # Test if the transaction can be signed normally
-        _, serialized_tx = check_sign_tx(client, "Testnet", [inp1], [out1, out2])
+        _, serialized_tx = btc.sign_tx(
+            client, "Testnet", [inp1], [out1, out2], prev_txes=TX_CACHE_TESTNET
+        )
 
         assert (
             serialized_tx.hex()
@@ -711,64 +832,30 @@ class TestMsgSigntx:
         with client:
             client.set_expected_responses(
                 [
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXMETA,
-                        details=proto.TxRequestDetailsType(tx_hash=TXHASH_d2dcda),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_d2dcda
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_d2dcda
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=1, tx_hash=TXHASH_d2dcda
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=1),
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
+                    request_input(0),
+                    request_meta(TXHASH_d2dcda),
+                    request_input(0, TXHASH_d2dcda),
+                    request_output(0, TXHASH_d2dcda),
+                    request_output(1, TXHASH_d2dcda),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    request_output(1),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
                     proto.Failure(code=proto.FailureType.ProcessError),
                 ]
             )
             # Now run the attack, must trigger the exception
             with pytest.raises(TrezorFailure) as exc:
                 btc.sign_tx(
-                    client,
-                    "Testnet",
-                    [inp1],
-                    [out1, out2],
-                    prev_txes=TxCache("Testnet"),
+                    client, "Testnet", [inp1], [out1, out2], prev_txes=TX_CACHE_TESTNET,
                 )
 
-            assert exc.value.args[0] == proto.FailureType.ProcessError
+            assert exc.value.code == proto.FailureType.ProcessError
             if client.features.model == "1":
-                assert exc.value.args[1].endswith("Failed to compile input")
+                assert exc.value.message.endswith("Failed to compile input")
             else:
-                assert exc.value.args[1].endswith(
+                assert exc.value.message.endswith(
                     "Transaction has changed during signing"
                 )
 
@@ -787,9 +874,27 @@ class TestMsgSigntx:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        _, serialized_tx = check_sign_tx(
-            client, "Testnet", [inp1], [out1], unknown_path=True
-        )
+        trezor_core = client.features.model != "1"
+        with client:
+            client.set_expected_responses(
+                [
+                    request_input(0),
+                    (trezor_core, proto.ButtonRequest(code=B.UnknownDerivationPath)),
+                    request_meta(TXHASH_d6da21),
+                    request_input(0, TXHASH_d6da21),
+                    request_output(0, TXHASH_d6da21),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_output(0),
+                    request_output(0),
+                    request_finished(),
+                ]
+            )
+            _, serialized_tx = btc.sign_tx(
+                client, "Testnet", [inp1], [out1], prev_txes=TX_CACHE_TESTNET
+            )
 
         # Accepted by network: tx
         assert (
@@ -827,9 +932,38 @@ class TestMsgSigntx:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        out_change2.force_confirm = True
+        with client:
+            client.set_expected_responses(
+                [
+                    request_input(0),
+                    request_meta(TXHASH_e5040e),
+                    request_input(0, TXHASH_e5040e),
+                    request_output(0, TXHASH_e5040e),
+                    request_output(1, TXHASH_e5040e),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    request_output(1),
+                    request_output(2),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_output(0),
+                    request_output(1),
+                    request_output(2),
+                    request_output(0),
+                    request_output(1),
+                    request_output(2),
+                    request_finished(),
+                ]
+            )
 
-        check_sign_tx(client, "Testnet", [inp1], [out1, out_change1, out_change2])
+            btc.sign_tx(
+                client,
+                "Testnet",
+                [inp1],
+                [out1, out_change1, out_change2],
+                prev_txes=TX_CACHE_TESTNET,
+            )
 
     def test_change_on_main_chain_allowed(self, client):
         # see 87be0736f202f7c2bff0781b42bad3e0cdcb54761939da69ea793a3735552c56
@@ -856,12 +990,38 @@ class TestMsgSigntx:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        check_sign_tx(client, "Testnet", [inp1], [out1, out_change])
+        with client:
+            client.set_expected_responses(
+                [
+                    request_input(0),
+                    request_meta(TXHASH_e5040e),
+                    request_input(0, TXHASH_e5040e),
+                    request_output(0, TXHASH_e5040e),
+                    request_output(1, TXHASH_e5040e),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    request_output(1),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_output(0),
+                    request_output(1),
+                    request_output(0),
+                    request_output(1),
+                    request_finished(),
+                ]
+            )
+
+            btc.sign_tx(
+                client,
+                "Testnet",
+                [inp1],
+                [out1, out_change],
+                prev_txes=TX_CACHE_TESTNET,
+            )
 
     @pytest.mark.skip_ui
     def test_not_enough_vouts(self, client):
-        cache = TxCache("Bitcoin")
-        prev_tx = cache[TXHASH_157041]
+        prev_tx = TX_CACHE_MAINNET[TXHASH_157041]
 
         # tx has two vouts
         assert len(prev_tx.bin_outputs) == 2
@@ -882,7 +1042,13 @@ class TestMsgSigntx:
         with pytest.raises(
             TrezorFailure, match="Not enough outputs in previous transaction."
         ):
-            btc.sign_tx(client, "Bitcoin", [inp0, inp1, inp2], [out1], prev_txes=cache)
+            btc.sign_tx(
+                client,
+                "Bitcoin",
+                [inp0, inp1, inp2],
+                [out1],
+                prev_txes=TX_CACHE_MAINNET,
+            )
 
     @pytest.mark.parametrize(
         "field, value",
@@ -890,7 +1056,6 @@ class TestMsgSigntx:
     )
     @pytest.mark.skip_ui
     def test_prevtx_forbidden_fields(self, client, field, value):
-        cache = TxCache("Bitcoin")
         inp0 = proto.TxInputType(address_n=[0], prev_hash=TXHASH_157041, prev_index=0)
         out1 = proto.TxOutputType(
             address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
@@ -898,7 +1063,7 @@ class TestMsgSigntx:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        prev_tx = cache[TXHASH_157041]
+        prev_tx = TX_CACHE_MAINNET[TXHASH_157041]
         setattr(prev_tx, field, value)
         name = field.replace("_", " ")
         with pytest.raises(
@@ -911,7 +1076,6 @@ class TestMsgSigntx:
     @pytest.mark.parametrize("field, value", (("expiry", 9), ("timestamp", 42)))
     @pytest.mark.skip_ui
     def test_signtx_forbidden_fields(self, client, field, value):
-        cache = TxCache("Bitcoin")
         inp0 = proto.TxInputType(address_n=[0], prev_hash=TXHASH_157041, prev_index=0)
         out1 = proto.TxOutputType(
             address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
@@ -925,7 +1089,9 @@ class TestMsgSigntx:
         with pytest.raises(
             TrezorFailure, match=r"(?i){} not enabled on this coin".format(name)
         ):
-            btc.sign_tx(client, "Bitcoin", [inp0], [out1], details, prev_txes=cache)
+            btc.sign_tx(
+                client, "Bitcoin", [inp0], [out1], details, prev_txes=TX_CACHE_MAINNET
+            )
 
     @pytest.mark.parametrize(
         "script_type",
@@ -976,7 +1142,7 @@ class TestMsgSigntx:
             TrezorFailure, match="Multisig field provided but not expected."
         ):
             btc.sign_tx(
-                client, "Testnet", [inp1], [out1, out2], prev_txes=TxCache("Testnet")
+                client, "Testnet", [inp1], [out1, out2], prev_txes=TX_CACHE_TESTNET
             )
 
     @pytest.mark.parametrize(
