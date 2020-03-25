@@ -1167,5 +1167,5 @@ class TestMsgSigntx:
             TrezorFailure, match="Multisig field provided but not expected."
         ):
             btc.sign_tx(
-                client, "Testnet", [inp1], [out1, out2], prev_txes=TxCache("Testnet")
+                client, "Testnet", [inp1], [out1, out2], prev_txes=TX_CACHE_TESTNET
             )
