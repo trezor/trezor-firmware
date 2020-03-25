@@ -68,7 +68,7 @@ static uint8_t hash_prevouts[32], hash_sequence[32], hash_outputs[32];
 static uint8_t decred_hash_prefix[32];
 #endif
 static uint8_t hash_check[32];
-static uint64_t to_spend, authorized_bip143_in, spending, change_spend;
+static uint64_t to_spend, spending, change_spend;
 static uint32_t version = 1;
 static uint32_t lock_time = 0;
 static uint32_t expiry = 0;
@@ -529,7 +529,6 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   to_spend = 0;
   spending = 0;
   change_spend = 0;
-  authorized_bip143_in = 0;
   memzero(&input, sizeof(TxInputType));
   memzero(&resp, sizeof(TxRequest));
 
@@ -1144,13 +1143,6 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
       signing_abort();
       return false;
     }
-    if (txinput->amount > authorized_bip143_in) {
-      fsm_sendFailure(FailureType_Failure_DataError,
-                      _("Transaction has changed during signing"));
-      signing_abort();
-      return false;
-    }
-    authorized_bip143_in -= txinput->amount;
 
     signing_hash_bip143(txinput, hash);
 
@@ -1259,9 +1251,10 @@ void signing_txack(TransactionType *tx) {
       }
 #endif
 
+      memcpy(&input, tx->inputs, sizeof(TxInputType));
+
       if (tx->inputs[0].script_type == InputScriptType_SPENDMULTISIG ||
           tx->inputs[0].script_type == InputScriptType_SPENDADDRESS) {
-        memcpy(&input, tx->inputs, sizeof(TxInputType));
 #if !ENABLE_SEGWIT_NONSEGWIT_MIXING
         // don't mix segwit and non-segwit inputs
         if (idx1 > 0 && to.is_segwit == true) {
@@ -1273,30 +1266,12 @@ void signing_txack(TransactionType *tx) {
         }
 #endif
 
-#if !BITCOIN_ONLY
-        if (coin->force_bip143 || coin->overwintered) {
-          if (to_spend + tx->inputs[0].amount < to_spend) {
-            fsm_sendFailure(FailureType_Failure_DataError, _("Value overflow"));
-            signing_abort();
-            return;
-          }
-          to_spend += tx->inputs[0].amount;
-          authorized_bip143_in += tx->inputs[0].amount;
-          phase1_request_next_input();
-        } else
-#endif
-        {
+        if (!coin->force_bip143 && !coin->overwintered) {
           // remember the first non-segwit input -- this is the first input
           // we need to sign during phase2
           if (next_nonsegwit_input == 0xffffffff) next_nonsegwit_input = idx1;
-          send_req_2_prev_meta();
         }
       } else if (is_segwit_input_script_type(&tx->inputs[0])) {
-        if (to_spend + tx->inputs[0].amount < to_spend) {
-          fsm_sendFailure(FailureType_Failure_DataError, _("Value overflow"));
-          signing_abort();
-          return;
-        }
         if (!to.is_segwit) {
           tx_weight += TXSIZE_SEGWIT_OVERHEAD + to.inputs_len;
         }
@@ -1314,15 +1289,13 @@ void signing_txack(TransactionType *tx) {
 #else
         to.is_segwit = true;
 #endif
-        to_spend += tx->inputs[0].amount;
-        authorized_bip143_in += tx->inputs[0].amount;
-        phase1_request_next_input();
       } else {
         fsm_sendFailure(FailureType_Failure_DataError,
                         _("Wrong input script type"));
         signing_abort();
         return;
       }
+      send_req_2_prev_meta();
       return;
     case STAGE_REQUEST_2_PREV_META:
       if (tx->outputs_cnt <= input.prev_index) {
@@ -1412,6 +1385,12 @@ void signing_txack(TransactionType *tx) {
         return;
       }
       if (idx2 == input.prev_index) {
+        if (input.has_amount && input.amount != tx->bin_outputs[0].amount) {
+          fsm_sendFailure(FailureType_Failure_DataError,
+                          _("Invalid amount specified"));
+          signing_abort();
+          return;
+        }
         if (to_spend + tx->bin_outputs[0].amount < to_spend) {
           fsm_sendFailure(FailureType_Failure_DataError, _("Value overflow"));
           signing_abort();
@@ -1596,13 +1575,6 @@ void signing_txack(TransactionType *tx) {
           signing_abort();
           return;
         }
-        if (tx->inputs[0].amount > authorized_bip143_in) {
-          fsm_sendFailure(FailureType_Failure_DataError,
-                          _("Transaction has changed during signing"));
-          signing_abort();
-          return;
-        }
-        authorized_bip143_in -= tx->inputs[0].amount;
 
         uint8_t hash[32] = {0};
 #if !BITCOIN_ONLY
