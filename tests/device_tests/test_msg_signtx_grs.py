@@ -21,19 +21,27 @@ from trezorlib.tools import parse_path
 
 from ..tx_cache import TxCache
 
+B = proto.ButtonRequestType
 TX_API = TxCache("Groestlcoin")
+
+TXHASH_cb74c8 = bytes.fromhex(
+    "cb74c8478c5814742c87cffdb4a21231869888f8042fb07a90e015a9db1f9d4a"
+)
+TXHASH_09a48b = bytes.fromhex(
+    "09a48bce2f9d5c6e4f0cb9ea1b32d0891855e8acfe5334f9ebd72b9ad2de60cf"
+)
+TXHASH_4f2f85 = bytes.fromhex(
+    "4f2f857f39ed1afe05542d058fb0be865a387446e32fc876d086203f483f61d1"
+)
 
 
 @pytest.mark.altcoin
 class TestMsgSigntxGRS:
     def test_legacy(self, client):
         inp1 = proto.TxInputType(
-            address_n=parse_path(
-                "44'/17'/0'/0/2"
-            ),  # FXHDsC5ZqWQHkDmShzgRVZ1MatpWhwxTAA
-            prev_hash=bytes.fromhex(
-                "cb74c8478c5814742c87cffdb4a21231869888f8042fb07a90e015a9db1f9d4a"
-            ),
+            # FXHDsC5ZqWQHkDmShzgRVZ1MatpWhwxTAA
+            address_n=parse_path("44'/17'/0'/0/2"),
+            prev_hash=TXHASH_cb74c8,
             prev_index=0,
         )
         out1 = proto.TxOutputType(
@@ -51,12 +59,9 @@ class TestMsgSigntxGRS:
 
     def test_legacy_change(self, client):
         inp1 = proto.TxInputType(
-            address_n=parse_path(
-                "44'/17'/0'/0/2"
-            ),  # FXHDsC5ZqWQHkDmShzgRVZ1MatpWhwxTAA
-            prev_hash=bytes.fromhex(
-                "cb74c8478c5814742c87cffdb4a21231869888f8042fb07a90e015a9db1f9d4a"
-            ),
+            # FXHDsC5ZqWQHkDmShzgRVZ1MatpWhwxTAA
+            address_n=parse_path("44'/17'/0'/0/2"),
+            prev_hash=TXHASH_cb74c8,
             prev_index=0,
         )
         out1 = proto.TxOutputType(
@@ -76,13 +81,10 @@ class TestMsgSigntxGRS:
 
     def test_send_segwit_p2sh(self, client):
         inp1 = proto.TxInputType(
-            address_n=parse_path(
-                "49'/1'/0'/1/0"
-            ),  # 2N1LGaGg836mqSQqiuUBLfcyGBhyZYBtBZ7
+            # 2N1LGaGg836mqSQqiuUBLfcyGBhyZYBtBZ7
+            address_n=parse_path("49'/1'/0'/1/0"),
             amount=123456789,
-            prev_hash=bytes.fromhex(
-                "09a48bce2f9d5c6e4f0cb9ea1b32d0891855e8acfe5334f9ebd72b9ad2de60cf"
-            ),
+            prev_hash=TXHASH_09a48b,
             prev_index=0,
             script_type=proto.InputScriptType.SPENDP2SHWITNESS,
             sequence=0xFFFFFFFE,
@@ -108,13 +110,10 @@ class TestMsgSigntxGRS:
 
     def test_send_segwit_p2sh_change(self, client):
         inp1 = proto.TxInputType(
-            address_n=parse_path(
-                "49'/1'/0'/1/0"
-            ),  # 2N1LGaGg836mqSQqiuUBLfcyGBhyZYBtBZ7
+            # 2N1LGaGg836mqSQqiuUBLfcyGBhyZYBtBZ7
+            address_n=parse_path("49'/1'/0'/1/0"),
             amount=123456789,
-            prev_hash=bytes.fromhex(
-                "09a48bce2f9d5c6e4f0cb9ea1b32d0891855e8acfe5334f9ebd72b9ad2de60cf"
-            ),
+            prev_hash=TXHASH_09a48b,
             prev_index=0,
             script_type=proto.InputScriptType.SPENDP2SHWITNESS,
             sequence=0xFFFFFFFE,
@@ -142,9 +141,7 @@ class TestMsgSigntxGRS:
         inp1 = proto.TxInputType(
             address_n=parse_path("84'/1'/0'/0/0"),
             amount=12300000,
-            prev_hash=bytes.fromhex(
-                "4f2f857f39ed1afe05542d058fb0be865a387446e32fc876d086203f483f61d1"
-            ),
+            prev_hash=TXHASH_4f2f85,
             prev_index=0,
             script_type=proto.InputScriptType.SPENDWITNESS,
             sequence=0xFFFFFFFE,
@@ -172,9 +169,7 @@ class TestMsgSigntxGRS:
         inp1 = proto.TxInputType(
             address_n=parse_path("84'/1'/0'/0/0"),
             amount=12300000,
-            prev_hash=bytes.fromhex(
-                "4f2f857f39ed1afe05542d058fb0be865a387446e32fc876d086203f483f61d1"
-            ),
+            prev_hash=TXHASH_4f2f85,
             prev_index=0,
             script_type=proto.InputScriptType.SPENDWITNESS,
             sequence=0xFFFFFFFE,

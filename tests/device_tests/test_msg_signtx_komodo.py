@@ -20,7 +20,9 @@ from trezorlib import btc, messages as proto
 from trezorlib.tools import parse_path
 
 from ..tx_cache import TxCache
+from .signtx import request_finished, request_input, request_output
 
+B = proto.ButtonRequestType
 TX_API = TxCache("Komodo")
 
 TXHASH_2807c = bytes.fromhex(
@@ -39,9 +41,8 @@ class TestMsgSigntxKomodo:
         # input 1: 10.9998 KMD
 
         inp1 = proto.TxInputType(
-            address_n=parse_path(
-                "44'/141'/0'/0/0"
-            ),  # R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi
+            # R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi
+            address_n=parse_path("44'/141'/0'/0/0"),
             amount=1099980000,
             prev_hash=TXHASH_2807c,
             prev_index=0,
@@ -55,29 +56,17 @@ class TestMsgSigntxKomodo:
 
         with client:
             er = [
-                proto.TxRequest(
-                    request_type=proto.RequestType.TXINPUT,
-                    details=proto.TxRequestDetailsType(request_index=0),
-                ),
-                proto.TxRequest(
-                    request_type=proto.RequestType.TXOUTPUT,
-                    details=proto.TxRequestDetailsType(request_index=0),
-                ),
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                request_input(0),
+                request_output(0),
+                proto.ButtonRequest(code=B.ConfirmOutput),
             ]
             if client.features.model != "1":  # extra screen for lock_time
-                er += [proto.ButtonRequest(code=proto.ButtonRequestType.SignTx)]
+                er += [proto.ButtonRequest(code=B.SignTx)]
             er += [
-                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                proto.TxRequest(
-                    request_type=proto.RequestType.TXINPUT,
-                    details=proto.TxRequestDetailsType(request_index=0),
-                ),
-                proto.TxRequest(
-                    request_type=proto.RequestType.TXOUTPUT,
-                    details=proto.TxRequestDetailsType(request_index=0),
-                ),
-                proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
+                proto.ButtonRequest(code=B.SignTx),
+                request_input(0),
+                request_output(0),
+                request_finished(),
             ]
 
             client.set_expected_responses(er)
@@ -103,9 +92,8 @@ class TestMsgSigntxKomodo:
         # input 1: 10.9997 KMD
 
         inp1 = proto.TxInputType(
-            address_n=parse_path(
-                "44'/141'/0'/0/0"
-            ),  # R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi
+            # R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi
+            address_n=parse_path("44'/141'/0'/0/0"),
             amount=1099970000,
             prev_hash=TXHASH_7b28bd,
             prev_index=0,
@@ -126,38 +114,20 @@ class TestMsgSigntxKomodo:
 
         with client:
             er = [
-                proto.TxRequest(
-                    request_type=proto.RequestType.TXINPUT,
-                    details=proto.TxRequestDetailsType(request_index=0),
-                ),
-                proto.TxRequest(
-                    request_type=proto.RequestType.TXOUTPUT,
-                    details=proto.TxRequestDetailsType(request_index=0),
-                ),
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                proto.TxRequest(
-                    request_type=proto.RequestType.TXOUTPUT,
-                    details=proto.TxRequestDetailsType(request_index=1),
-                ),
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                request_input(0),
+                request_output(0),
+                proto.ButtonRequest(code=B.ConfirmOutput),
+                request_output(1),
+                proto.ButtonRequest(code=B.ConfirmOutput),
             ]
             if client.features.model != "1":  # extra screen for lock_time
-                er += [proto.ButtonRequest(code=proto.ButtonRequestType.SignTx)]
+                er += [proto.ButtonRequest(code=B.SignTx)]
             er += [
-                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                proto.TxRequest(
-                    request_type=proto.RequestType.TXINPUT,
-                    details=proto.TxRequestDetailsType(request_index=0),
-                ),
-                proto.TxRequest(
-                    request_type=proto.RequestType.TXOUTPUT,
-                    details=proto.TxRequestDetailsType(request_index=0),
-                ),
-                proto.TxRequest(
-                    request_type=proto.RequestType.TXOUTPUT,
-                    details=proto.TxRequestDetailsType(request_index=1),
-                ),
-                proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
+                proto.ButtonRequest(code=B.SignTx),
+                request_input(0),
+                request_output(0),
+                request_output(1),
+                request_finished(),
             ]
             client.set_expected_responses(er)
 
