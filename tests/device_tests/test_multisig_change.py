@@ -22,8 +22,20 @@ from trezorlib.tools import H_, parse_path
 from .. import bip32
 from ..common import MNEMONIC12
 from ..tx_cache import TxCache
+from .signtx import request_finished, request_input, request_meta, request_output
 
+B = proto.ButtonRequestType
 TX_API = TxCache("Testnet")
+
+TXHASH_16c6c8 = bytes.fromhex(
+    "16c6c8471b8db7a628f2b2bb86bfeefae1766463ce8692438c7fd3fce3f43ce5"
+)
+TXHASH_d80c34 = bytes.fromhex(
+    "d80c34ee14143a8bf61125102b7ef594118a3796cad670fa8ee15080ae155318"
+)
+TXHASH_b0946d = bytes.fromhex(
+    "b0946dc27ba308a749b11afecc2018980af18f79e89ad6b080b58220d856f739"
+)
 
 
 class TestMultisigChange:
@@ -93,9 +105,7 @@ class TestMultisigChange:
     # 2N9W4z9AhAPaHghtqVQPbaTAGHdbrhKeBQw
     inp1 = proto.TxInputType(
         address_n=[H_(45), 0, 0, 0],
-        prev_hash=bytes.fromhex(
-            "16c6c8471b8db7a628f2b2bb86bfeefae1766463ce8692438c7fd3fce3f43ce5"
-        ),
+        prev_hash=TXHASH_16c6c8,
         prev_index=1,
         script_type=proto.InputScriptType.SPENDMULTISIG,
         multisig=multisig_in1,
@@ -104,9 +114,7 @@ class TestMultisigChange:
     # 2NDBG6QXQLtnQ3jRGkrqo53BiCeXfQXLdj4
     inp2 = proto.TxInputType(
         address_n=[H_(45), 0, 0, 1],
-        prev_hash=bytes.fromhex(
-            "d80c34ee14143a8bf61125102b7ef594118a3796cad670fa8ee15080ae155318"
-        ),
+        prev_hash=TXHASH_d80c34,
         prev_index=0,
         script_type=proto.InputScriptType.SPENDMULTISIG,
         multisig=multisig_in2,
@@ -115,9 +123,7 @@ class TestMultisigChange:
     # 2MvwPWfp2XPU3S1cMwgEMKBPUw38VP5SBE4
     inp3 = proto.TxInputType(
         address_n=[H_(45), 0, 0, 1],
-        prev_hash=bytes.fromhex(
-            "b0946dc27ba308a749b11afecc2018980af18f79e89ad6b080b58220d856f739"
-        ),
+        prev_hash=TXHASH_b0946d,
         prev_index=0,
         script_type=proto.InputScriptType.SPENDMULTISIG,
         multisig=multisig_in3,
@@ -125,116 +131,36 @@ class TestMultisigChange:
 
     def _responses(self, inp1, inp2, change=0):
         resp = [
-            proto.TxRequest(
-                request_type=proto.RequestType.TXINPUT,
-                details=proto.TxRequestDetailsType(request_index=0),
-            ),
-            proto.TxRequest(
-                request_type=proto.RequestType.TXMETA,
-                details=proto.TxRequestDetailsType(tx_hash=inp1.prev_hash),
-            ),
-            proto.TxRequest(
-                request_type=proto.RequestType.TXINPUT,
-                details=proto.TxRequestDetailsType(
-                    request_index=0, tx_hash=inp1.prev_hash
-                ),
-            ),
-            proto.TxRequest(
-                request_type=proto.RequestType.TXOUTPUT,
-                details=proto.TxRequestDetailsType(
-                    request_index=0, tx_hash=inp1.prev_hash
-                ),
-            ),
-            proto.TxRequest(
-                request_type=proto.RequestType.TXOUTPUT,
-                details=proto.TxRequestDetailsType(
-                    request_index=1, tx_hash=inp1.prev_hash
-                ),
-            ),
-            proto.TxRequest(
-                request_type=proto.RequestType.TXINPUT,
-                details=proto.TxRequestDetailsType(request_index=1),
-            ),
-            proto.TxRequest(
-                request_type=proto.RequestType.TXMETA,
-                details=proto.TxRequestDetailsType(tx_hash=inp2.prev_hash),
-            ),
-            proto.TxRequest(
-                request_type=proto.RequestType.TXINPUT,
-                details=proto.TxRequestDetailsType(
-                    request_index=0, tx_hash=inp2.prev_hash
-                ),
-            ),
-            proto.TxRequest(
-                request_type=proto.RequestType.TXOUTPUT,
-                details=proto.TxRequestDetailsType(
-                    request_index=0, tx_hash=inp2.prev_hash
-                ),
-            ),
-            proto.TxRequest(
-                request_type=proto.RequestType.TXOUTPUT,
-                details=proto.TxRequestDetailsType(
-                    request_index=1, tx_hash=inp2.prev_hash
-                ),
-            ),
-            proto.TxRequest(
-                request_type=proto.RequestType.TXOUTPUT,
-                details=proto.TxRequestDetailsType(request_index=0),
-            ),
+            request_input(0),
+            request_meta(inp1.prev_hash),
+            request_input(0, inp1.prev_hash),
+            request_output(0, inp1.prev_hash),
+            request_output(1, inp1.prev_hash),
+            request_input(1),
+            request_meta(inp2.prev_hash),
+            request_input(0, inp2.prev_hash),
+            request_output(0, inp2.prev_hash),
+            request_output(1, inp2.prev_hash),
+            request_output(0),
         ]
         if change != 1:
-            resp.append(proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput))
-        resp.append(
-            proto.TxRequest(
-                request_type=proto.RequestType.TXOUTPUT,
-                details=proto.TxRequestDetailsType(request_index=1),
-            )
-        )
+            resp.append(proto.ButtonRequest(code=B.ConfirmOutput))
+        resp.append(request_output(1))
         if change != 2:
-            resp.append(proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput))
+            resp.append(proto.ButtonRequest(code=B.ConfirmOutput))
         resp += [
-            proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-            proto.TxRequest(
-                request_type=proto.RequestType.TXINPUT,
-                details=proto.TxRequestDetailsType(request_index=0),
-            ),
-            proto.TxRequest(
-                request_type=proto.RequestType.TXINPUT,
-                details=proto.TxRequestDetailsType(request_index=1),
-            ),
-            proto.TxRequest(
-                request_type=proto.RequestType.TXOUTPUT,
-                details=proto.TxRequestDetailsType(request_index=0),
-            ),
-            proto.TxRequest(
-                request_type=proto.RequestType.TXOUTPUT,
-                details=proto.TxRequestDetailsType(request_index=1),
-            ),
-            proto.TxRequest(
-                request_type=proto.RequestType.TXINPUT,
-                details=proto.TxRequestDetailsType(request_index=0),
-            ),
-            proto.TxRequest(
-                request_type=proto.RequestType.TXINPUT,
-                details=proto.TxRequestDetailsType(request_index=1),
-            ),
-            proto.TxRequest(
-                request_type=proto.RequestType.TXOUTPUT,
-                details=proto.TxRequestDetailsType(request_index=0),
-            ),
-            proto.TxRequest(
-                request_type=proto.RequestType.TXOUTPUT,
-                details=proto.TxRequestDetailsType(request_index=1),
-            ),
-            proto.TxRequest(
-                request_type=proto.RequestType.TXOUTPUT,
-                details=proto.TxRequestDetailsType(request_index=0),
-            ),
-            proto.TxRequest(
-                request_type=proto.RequestType.TXOUTPUT,
-                details=proto.TxRequestDetailsType(request_index=1),
-            ),
-            proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
+            proto.ButtonRequest(code=B.SignTx),
+            request_input(0),
+            request_input(1),
+            request_output(0),
+            request_output(1),
+            request_input(0),
+            request_input(1),
+            request_output(0),
+            request_output(1),
+            request_output(0),
+            request_output(1),
+            request_finished(),
         ]
         return resp
 
