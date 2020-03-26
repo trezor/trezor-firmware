@@ -21,7 +21,13 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ..tx_cache import TxCache
-from .signtx import request_finished, request_input, request_output
+from .signtx import (
+    request_extra_data,
+    request_finished,
+    request_input,
+    request_meta,
+    request_output,
+)
 
 B = proto.ButtonRequestType
 TX_API = TxCache("Zcash Testnet")
@@ -59,6 +65,11 @@ class TestMsgSigntxZcash:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_aaf51e),
+                    request_input(0, TXHASH_aaf51e),
+                    request_output(0, TXHASH_aaf51e),
+                    request_output(1, TXHASH_aaf51e),
+                    request_extra_data(0, 1, TXHASH_aaf51e),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.SignTx),
@@ -108,6 +119,12 @@ class TestMsgSigntxZcash:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_e38206),
+                    request_input(0, TXHASH_e38206),
+                    request_input(1, TXHASH_e38206),
+                    request_output(0, TXHASH_e38206),
+                    request_output(1, TXHASH_e38206),
+                    request_extra_data(0, 1, TXHASH_e38206),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.SignTx),

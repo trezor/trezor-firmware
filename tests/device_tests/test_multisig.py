@@ -293,6 +293,10 @@ class TestMultisig:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_fbbff7),
+                    request_input(0, TXHASH_fbbff7),
+                    request_output(0, TXHASH_fbbff7),
+                    request_output(1, TXHASH_fbbff7),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
@@ -307,7 +311,11 @@ class TestMultisig:
 
             with pytest.raises(TrezorFailure) as exc:
                 btc.sign_tx(
-                    client, "Testnet", [input_real], [output_payee, output_change]
+                    client,
+                    "Testnet",
+                    [input_real],
+                    [output_payee, output_change],
+                    prev_txes=TxCache("Testnet"),
                 )
                 # must not produce this tx:
                 # 01000000000101396e2c107427f9eaece56a37539983adb8efd52b067c3d4567805fc8f3f7bffb01000000171600147a876a07b366f79000b441335f2907f777a0280bffffffff02e8030000000000001976a914e7c1345fc8f87c68170b3aa798a956c2fe6a9eff88ac703a0f000000000017a914a1261837f1b40e84346b1504ffe294e402965f2687024830450221009ff835e861be4e36ca1f2b6224aee2f253dfb9f456b13e4b1724bb4aaff4c9c802205e10679c2ead85743119f468cba5661f68b7da84dd2d477a7215fef98516f1f9012102af12ddd0d55e4fa2fcd084148eaf5b0b641320d0431d63d1e9a90f3cbd0d540700000000
