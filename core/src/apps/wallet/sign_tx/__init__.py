@@ -3,7 +3,7 @@ from trezor.messages.RequestType import TXFINISHED
 from trezor.messages.TxAck import TxAck
 from trezor.messages.TxRequest import TxRequest
 
-from apps.common import paths
+from apps.common import coins, paths
 from apps.wallet.sign_tx import (
     addresses,
     helpers,
@@ -15,9 +15,17 @@ from apps.wallet.sign_tx import (
     signing,
 )
 
+if not utils.BITCOIN_ONLY:
+    from apps.wallet.sign_tx import decred
+
 
 async def sign_tx(ctx, msg, keychain):
-    signer = signing.sign_tx(msg, keychain)
+    coin_name = msg.coin_name if msg.coin_name is not None else "Bitcoin"
+    coin = coins.by_name(coin_name)
+    if not utils.BITCOIN_ONLY and coin.decred:
+        signer = decred.Decred().signer(msg, keychain, coin)
+    else:
+        signer = signing.Bitcoin().signer(msg, keychain, coin)
 
     res = None
     while True:
