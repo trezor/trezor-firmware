@@ -54,22 +54,20 @@ class TestMsgSigntxKomodo:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
+        trezor_core = client.features.model != "1"
         with client:
-            er = [
-                request_input(0),
-                request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
-            ]
-            if client.features.model != "1":  # extra screen for lock_time
-                er += [proto.ButtonRequest(code=B.SignTx)]
-            er += [
-                proto.ButtonRequest(code=B.SignTx),
-                request_input(0),
-                request_output(0),
-                request_finished(),
-            ]
-
-            client.set_expected_responses(er)
+            client.set_expected_responses(
+                [
+                    request_input(0),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    (trezor_core, proto.ButtonRequest(code=B.SignTx)),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_output(0),
+                    request_finished(),
+                ]
+            )
 
             details = proto.SignTx(
                 version=4,
@@ -112,24 +110,23 @@ class TestMsgSigntxKomodo:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
+        trezor_core = client.features.model != "1"
         with client:
-            er = [
-                request_input(0),
-                request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
-                request_output(1),
-                proto.ButtonRequest(code=B.ConfirmOutput),
-            ]
-            if client.features.model != "1":  # extra screen for lock_time
-                er += [proto.ButtonRequest(code=B.SignTx)]
-            er += [
-                proto.ButtonRequest(code=B.SignTx),
-                request_input(0),
-                request_output(0),
-                request_output(1),
-                request_finished(),
-            ]
-            client.set_expected_responses(er)
+            client.set_expected_responses(
+                [
+                    request_input(0),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    request_output(1),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    (trezor_core, proto.ButtonRequest(code=B.SignTx)),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_output(0),
+                    request_output(1),
+                    request_finished(),
+                ]
+            )
 
             details = proto.SignTx(
                 version=4,
