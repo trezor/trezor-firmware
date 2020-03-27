@@ -489,6 +489,28 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   memcpy(&root, _root, sizeof(HDNode));
   version = msg->version;
   lock_time = msg->lock_time;
+
+  if (coin->overwintered && !msg->has_version_group_id) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("Version group ID must be set."));
+    signing_abort();
+    return;
+  }
+  if (!coin->overwintered) {
+    if (msg->has_version_group_id) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Version group ID not enabled on this coin."));
+      signing_abort();
+      return;
+    }
+    if (msg->has_branch_id) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Branch ID not enabled on this coin."));
+      signing_abort();
+      return;
+    }
+  }
+
 #if !BITCOIN_ONLY
   expiry = (coin->decred || coin->overwintered) ? msg->expiry : 0;
   timestamp = coin->timestamp ? msg->timestamp : 0;
@@ -1327,6 +1349,26 @@ void signing_txack(TransactionType *tx) {
                         _("Timestamp must be set."));
         signing_abort();
         return;
+      }
+      if (coin->overwintered && !tx->has_version_group_id) {
+        fsm_sendFailure(FailureType_Failure_DataError,
+                        _("Version group ID must be set."));
+        signing_abort();
+        return;
+      }
+      if (!coin->overwintered) {
+        if (tx->has_version_group_id) {
+          fsm_sendFailure(FailureType_Failure_DataError,
+                          _("Version group ID not enabled on this coin."));
+          signing_abort();
+          return;
+        }
+        if (tx->has_branch_id) {
+          fsm_sendFailure(FailureType_Failure_DataError,
+                          _("Branch ID not enabled on this coin."));
+          signing_abort();
+          return;
+        }
       }
       if (tx->inputs_cnt + tx->outputs_cnt < tx->inputs_cnt) {
         fsm_sendFailure(FailureType_Failure_DataError, _("Value overflow"));
