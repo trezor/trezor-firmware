@@ -674,27 +674,10 @@ static bool signing_validate_input(const TxInputType *txinput) {
     return false;
   }
 
-#if !BITCOIN_ONLY
-  if (coin->force_bip143 || coin->overwintered) {
-    if (!txinput->has_amount) {
-      fsm_sendFailure(FailureType_Failure_DataError,
-                      _("Expected input with amount"));
-      signing_abort();
-      return false;
-    }
-  }
-#endif
-
   if (is_segwit_input_script_type(txinput)) {
     if (!coin->has_segwit) {
       fsm_sendFailure(FailureType_Failure_DataError,
                       _("Segwit not enabled on this coin"));
-      signing_abort();
-      return false;
-    }
-    if (!txinput->has_amount) {
-      fsm_sendFailure(FailureType_Failure_DataError,
-                      _("Segwit input without amount"));
       signing_abort();
       return false;
     }
@@ -1159,6 +1142,12 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
   uint8_t hash[32] = {0};
 
   if (is_segwit_input_script_type(txinput)) {
+    if (!txinput->has_amount) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Segwit input without amount"));
+      signing_abort();
+      return false;
+    }
     if (!compile_input_script_sig(txinput)) {
       fsm_sendFailure(FailureType_Failure_ProcessError,
                       _("Failed to compile input"));
@@ -1614,6 +1603,12 @@ void signing_txack(TransactionType *tx) {
         if (!compile_input_script_sig(&tx->inputs[0])) {
           fsm_sendFailure(FailureType_Failure_ProcessError,
                           _("Failed to compile input"));
+          signing_abort();
+          return;
+        }
+        if (!tx->inputs[0].has_amount) {
+          fsm_sendFailure(FailureType_Failure_DataError,
+                          _("Expected input with amount"));
           signing_abort();
           return;
         }
