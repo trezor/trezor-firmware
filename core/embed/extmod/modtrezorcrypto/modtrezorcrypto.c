@@ -41,6 +41,7 @@
 #include "modtrezorcrypto-random.h"
 #include "modtrezorcrypto-rfc6979.h"
 #include "modtrezorcrypto-ripemd160.h"
+#include "modtrezorcrypto-secbytes.h"
 #include "modtrezorcrypto-secp256k1.h"
 #include "modtrezorcrypto-sha1.h"
 #include "modtrezorcrypto-sha256.h"
@@ -86,6 +87,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_rfc6979), MP_ROM_PTR(&mod_trezorcrypto_Rfc6979_type)},
     {MP_ROM_QSTR(MP_QSTR_ripemd160),
      MP_ROM_PTR(&mod_trezorcrypto_Ripemd160_type)},
+    {MP_ROM_QSTR(MP_QSTR_secbytes), MP_ROM_PTR(&secbytes_type)},
     {MP_ROM_QSTR(MP_QSTR_secp256k1),
      MP_ROM_PTR(&mod_trezorcrypto_secp256k1_module)},
 #if !BITCOIN_ONLY
