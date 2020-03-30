@@ -241,19 +241,25 @@ class HoldToConfirm(ui.Layout):
         confirm: str = DEFAULT_CONFIRM,
         confirm_style: ButtonStyleType = DEFAULT_CONFIRM_STYLE,
         loader_style: LoaderStyleType = DEFAULT_LOADER_STYLE,
+        cancel: bool = True,
     ):
         self.content = content
 
         self.loader = Loader(loader_style)
         self.loader.on_start = self._on_loader_start  # type: ignore
 
-        self.confirm = Button(ui.grid(17, n_x=4, cells_x=3), confirm, confirm_style)
+        if cancel:
+            self.confirm = Button(ui.grid(17, n_x=4, cells_x=3), confirm, confirm_style)
+        else:
+            self.confirm = Button(ui.grid(4, n_x=1), confirm, confirm_style)
         self.confirm.on_press_start = self._on_press_start  # type: ignore
         self.confirm.on_press_end = self._on_press_end  # type: ignore
         self.confirm.on_click = self._on_click  # type: ignore
 
-        self.cancel = Button(ui.grid(16, n_x=4), res.load(ui.ICON_CANCEL), ButtonAbort)
-        self.cancel.on_click = self.on_cancel  # type: ignore
+        self.cancel = None
+        if cancel:
+            self.cancel = Button(ui.grid(16, n_x=4), res.load(ui.ICON_CANCEL), ButtonAbort)
+            self.cancel.on_click = self.on_cancel  # type: ignore
 
     def _on_press_start(self) -> None:
         self.loader.start()
@@ -278,7 +284,8 @@ class HoldToConfirm(ui.Layout):
         else:
             self.content.dispatch(event, x, y)
         self.confirm.dispatch(event, x, y)
-        self.cancel.dispatch(event, x, y)
+        if self.cancel:
+            self.cancel.dispatch(event, x, y)
 
     def on_confirm(self) -> None:
         raise ui.Result(CONFIRMED)

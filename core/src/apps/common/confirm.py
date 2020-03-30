@@ -84,6 +84,7 @@ async def hold_to_confirm(
     confirm: str = HoldToConfirm.DEFAULT_CONFIRM,
     confirm_style: ButtonStyleType = HoldToConfirm.DEFAULT_CONFIRM_STYLE,
     loader_style: LoaderStyleType = HoldToConfirm.DEFAULT_LOADER_STYLE,
+    cancel: bool = True,
 ) -> bool:
     await ctx.call(ButtonRequest(code=code), ButtonAck)
 
@@ -93,11 +94,11 @@ async def hold_to_confirm(
         assert isinstance(content, Paginated)
 
         content.pages[-1] = HoldToConfirm(
-            content.pages[-1], confirm, confirm_style, loader_style
+            content.pages[-1], confirm, confirm_style, loader_style, cancel
         )
         dialog = content  # type: ui.Layout
     else:
-        dialog = HoldToConfirm(content, confirm, confirm_style, loader_style)
+        dialog = HoldToConfirm(content, confirm, confirm_style, loader_style, cancel)
 
     return await ctx.wait(dialog) is CONFIRMED
 
