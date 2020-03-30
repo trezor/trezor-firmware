@@ -711,8 +711,7 @@ uint32_t tx_serialize_footer_hash(TxStruct *tx) {
 #if !BITCOIN_ONLY
   if (tx->overwintered) {
     hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->expiry), 4);
-    hasher_Update(&(tx->hasher), (const uint8_t *)"\x00", 1);  // nJoinSplit
-    return 9;
+    return 8;
   }
   if (tx->is_decred) {
     hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->expiry), 4);
