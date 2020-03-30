@@ -127,7 +127,9 @@ async def _show_share_words(ctx, share_words, share_index=None, group_index=None
     utils.ensure(share_words == shares_words_check)
 
     # confirm the share
-    await require_hold_to_confirm(ctx, paginated, ButtonRequestType.ResetDevice, cancel=False)
+    await require_hold_to_confirm(
+        ctx, paginated, ButtonRequestType.ResetDevice, cancel=False
+    )
 
 
 def _split_share_into_pages(share_words):

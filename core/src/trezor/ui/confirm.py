@@ -258,7 +258,9 @@ class HoldToConfirm(ui.Layout):
 
         self.cancel = None
         if cancel:
-            self.cancel = Button(ui.grid(16, n_x=4), res.load(ui.ICON_CANCEL), ButtonAbort)
+            self.cancel = Button(
+                ui.grid(16, n_x=4), res.load(ui.ICON_CANCEL), ButtonAbort
+            )
             self.cancel.on_click = self.on_cancel  # type: ignore
 
     def _on_press_start(self) -> None:
