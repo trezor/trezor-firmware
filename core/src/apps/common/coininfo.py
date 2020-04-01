@@ -1507,7 +1507,7 @@ def by_name(name: str) -> CoinInfo:
                 address_type=63,
                 address_type_p2sh=5,
                 maxfee_kb=20000000,
-                signed_message_header="Bitcoin Signed Message:\n",
+                signed_message_header="Syscoin Signed Message:\n",
                 xpub_magic=0x0488b21e,
                 xpub_magic_segwit_p2sh=0x049d7cb2,
                 xpub_magic_segwit_native=0x04b24746,
