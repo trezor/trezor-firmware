@@ -306,13 +306,13 @@ class race(Syscall):
         if not self.finished:
             # because we create tasks for children that are not generators yet,
             # we need to find the child value that the caller supplied
-            for index, child_task in enumerate(self.scheduled):
-                if child_task is task:
-                    child = self.children[index]
-                    break
+            index = self.scheduled.index(task)
+            child = self.children[index]
             self.finished.append(child)
             if self.exit_others:
                 self.exit(task)
+            # Result can be GeneratorExit (see finalize()), which causes the resumed
+            # callback to exit cleanly.
             schedule(self.callback, result)
 
     def __iter__(self) -> Task:  # type: ignore
