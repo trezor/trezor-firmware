@@ -47,7 +47,7 @@ if __debug__:
 
 
 def schedule(
-    task: Task, value: Any = None, deadline: int = None, finalizer: Finalizer = None
+    task: Task, value: Any = None, *, deadline: int = None, finalizer: Finalizer = None
 ) -> None:
     """
     Schedule task to be executed with `value` on given `deadline` (in
@@ -219,7 +219,7 @@ class sleep(Syscall):
 
     def handle(self, task: Task) -> None:
         deadline = utime.ticks_add(utime.ticks_us(), self.delay_us)
-        schedule(task, deadline, deadline)
+        schedule(task, deadline, deadline=deadline)
 
 
 class wait(Syscall):
@@ -293,7 +293,7 @@ class race(Syscall):
                 child_task = child
             else:
                 child_task = iter(child)  # type: ignore
-            schedule(child_task, None, None, finalizer)  # type: ignore
+            schedule(child_task, finalizer=finalizer)  # type: ignore
             scheduled.append(child_task)  # type: ignore
             # TODO: document the types here
 

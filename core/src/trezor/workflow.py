@@ -66,7 +66,7 @@ def start_default(constructor: Callable[[], loop.Task]) -> None:
             log.debug(__name__, "start default: %s", default_task)
         # Schedule the default task.  Because the task can complete on its own,
         # we need to reset the `default_task` global in a finalizer.
-        loop.schedule(default_task, None, None, _finalize_default)
+        loop.schedule(default_task, finalizer=_finalize_default)
     else:
         if __debug__:
             log.debug(__name__, "default already started")
