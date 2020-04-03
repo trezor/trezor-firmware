@@ -41,6 +41,7 @@ _HID_RPT_SIZE = const(64)
 _FRAME_INIT_SIZE = const(57)
 _FRAME_CONT_SIZE = const(59)
 _MAX_U2FHID_MSG_PAYLOAD_LEN = const(_FRAME_INIT_SIZE + 128 * _FRAME_CONT_SIZE)
+_CMD_INIT_NONCE_SIZE = const(8)
 
 # types of cmd
 _CMD_PING = const(0x81)  # echo data through local processor only
@@ -418,20 +419,53 @@ async def read_cmd(iface: io.HID) -> Optional[Cmd]:
         while datalen < bcnt:
             buf = await loop.race(read, loop.sleep(_CTAP_HID_TIMEOUT_MS * 1000))
             if not isinstance(buf, bytes):
+                if __debug__:
+                    log.warning(__name__, "_ERR_MSG_TIMEOUT")
                 await send_cmd(cmd_error(ifrm.cid, _ERR_MSG_TIMEOUT), iface)
                 return None
 
             cfrm = overlay_struct(bytearray(buf), desc_cont)
 
             if cfrm.seq == _CMD_INIT:
-                # _CMD_INIT frame, cancels current channel
-                break
+                if cfrm.cid == ifrm.cid:
+                    # _CMD_INIT command on current channel, abort current transaction.
+                    if __debug__:
+                        log.warning(
+                            __name__,
+                            "U2FHID: received CMD_INIT command during active tran, aborting",
+                        )
+                    break
+                else:
+                    # _CMD_INIT command on different channel, return synchronization response, but continue on current CID.
+                    if __debug__:
+                        log.info(
+                            __name__,
+                            "U2FHID: received CMD_INIT command for different CID",
+                        )
+                    cfrm = overlay_struct(bytearray(buf), desc_init)
+                    await send_cmd(
+                        cmd_init(
+                            Cmd(cfrm.cid, cfrm.cmd, bytes(cfrm.data[: cfrm.bcnt]))
+                        ),
+                        iface,
+                    )
+                    continue
 
             if cfrm.cid != ifrm.cid:
-                # cont frame for a different channel, reply with BUSY and abort
-                if __debug__:
-                    log.warning(__name__, "_ERR_CHANNEL_BUSY")
-                await send_cmd(cmd_error(cfrm.cid, _ERR_CHANNEL_BUSY), iface)
+                # Frame for a different channel, continue waiting for next frame on the active CID.
+                # For init frames reply with BUSY. Ignore continuation frames.
+                if cfrm.seq & _TYPE_MASK == _TYPE_INIT:
+                    if __debug__:
+                        log.warning(
+                            __name__,
+                            "U2FHID: received init frame for different CID, _ERR_CHANNEL_BUSY",
+                        )
+                    await send_cmd(cmd_error(cfrm.cid, _ERR_CHANNEL_BUSY), iface)
+                else:
+                    if __debug__:
+                        log.warning(
+                            __name__, "U2FHID: received cont frame for different CID"
+                        )
                 continue
 
             if cfrm.seq != seq:
@@ -1098,6 +1132,9 @@ def cmd_init(req: Cmd) -> Cmd:
         resp_cid = random.uniform(0xFFFFFFFE) + 1
     else:
         resp_cid = req.cid
+
+    if len(req.data) != _CMD_INIT_NONCE_SIZE:
+        return cmd_error(req.cid, _ERR_INVALID_LEN)
 
     buf, resp = make_struct(resp_cmd_init())
     utils.memcpy(resp.nonce, 0, req.data, 0, len(req.data))
