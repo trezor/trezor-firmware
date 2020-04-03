@@ -21,6 +21,8 @@ using namespace std;
 int arg_Verbose = 0;  // default
 bool arg_Pause = false;  // default
 bool arg_Abort = true;  // default
+bool arg_Time = false;  // default
+float recvTimeout = 5.0;
 
 static
 void checkPause() {
@@ -78,7 +80,7 @@ uint8_t test_BasicInit() {
   initFrame(&f, U2Fob_getCid(device), U2FHID_INIT, INIT_NONCE_SIZE);
 
   SEND(f);
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(f.cid, r.cid);
 
   CHECK_EQ(r.init.cmd, U2FHID_INIT);
@@ -98,11 +100,12 @@ void test_Echo() {
   U2Fob_deltaTime(&t);
 
   SEND(f);
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(f.cid, r.cid);
 
   // Expect echo somewhat quickly.
-  CHECK_LT(U2Fob_deltaTime(&t), .1);
+  if (arg_Time)
+    CHECK_LT(U2Fob_deltaTime(&t), .1);
 
   // Check echoed content matches.
   CHECK_EQ(U2FHID_PING, r.init.cmd);
@@ -137,7 +140,7 @@ void test_LongEcho() {
 
   // Expected transfer times for 2ms bInterval.
   // We do not want fobs to be too slow or too agressive.
-  if (device->dev != NULL) {
+  if (device->dev != NULL && arg_Time) {
     CHECK_GE(sent, .020);
     CHECK_LE(sent, .075);
     CHECK_GE(received, .020);
@@ -154,7 +157,7 @@ void test_OptionalWink() {
   initFrame(&f, U2Fob_getCid(device), U2FHID_WINK, 0);
 
   SEND(f);
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(f.cid, r.cid);
 
   if (caps & CAPFLAG_WINK) {
@@ -175,7 +178,7 @@ void test_Limits() {
   initFrame(&f, U2Fob_getCid(device), U2FHID_PING, 7610);
 
   SEND(f);
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(f.cid, r.cid);
 
   CHECK_EQ(isError(r, ERR_INVALID_LEN), true);
@@ -207,14 +210,17 @@ void test_Timeout() {
   U2Fob_deltaTime(&t);
 
   SEND(f);
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(f.cid, r.cid);
 
   CHECK_EQ(isError(r, ERR_MSG_TIMEOUT), true);
 
   measuredTimeout = U2Fob_deltaTime(&t);
+
+  INFO << "measured timeout: " << measuredTimeout;
   CHECK_GE(measuredTimeout, .4);  // needs to be at least 0.4 seconds
-  CHECK_LE(measuredTimeout, 1.0);  // but at most 1.0 seconds
+  if (arg_Time)
+    CHECK_LE(measuredTimeout, 1.0);  // but at most 1.0 seconds
 }
 
 // Test LOCK functionality, if implemented.
@@ -226,7 +232,7 @@ void test_Lock() {
   // Check whether lock is supported using an unlock command.
   initFrame(&f, U2Fob_getCid(device), U2FHID_LOCK, 1, "\x00");
   SEND(f);
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(f.cid, r.cid);
 
   if (!(caps & CAPFLAG_LOCK)) {
@@ -239,7 +245,7 @@ void test_Lock() {
   initFrame(&f, U2Fob_getCid(device), U2FHID_LOCK, 1, "\x03");
 
   SEND(f);
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(f.cid, r.cid);
 
   CHECK_EQ(f.init.cmd, r.init.cmd);
@@ -257,7 +263,7 @@ void test_Lock() {
     initFrame(&f, U2Fob_getCid(device) ^ 1, U2FHID_PING, 1);
 
     SEND(f);
-    RECV(r, 1.0);
+    RECV(r, recvTimeout);
     CHECK_EQ(f.cid, r.cid);
 
     if (r.init.cmd == U2FHID_ERROR) {
@@ -279,10 +285,12 @@ void test_NotCont() {
   SEND(f);
 
   SEND(f);  // Send frame again, i.e. another TYPE_INIT frame.
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(f.cid, r.cid);
 
-  CHECK_LT(U2Fob_deltaTime(&t), .1);  // Expect fail reply quickly.
+  if (arg_Time)
+    CHECK_LT(U2Fob_deltaTime(&t), .1);  // Expect fail reply quickly.
+
   CHECK_EQ(isError(r, ERR_INVALID_SEQ), true);
 
   // Check there are no further messages.
@@ -301,10 +309,12 @@ void test_WrongSeq() {
   f.cont.seq = 1 | TYPE_CONT;  // Send wrong SEQ, 0 is expected.
 
   SEND(f);
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(f.cid, r.cid);
 
-  CHECK_LT(U2Fob_deltaTime(&t), .1);  // Expect fail reply quickly.
+  if (arg_Time)
+    CHECK_LT(U2Fob_deltaTime(&t), .1);  // Expect fail reply quickly.
+
   CHECK_EQ(isError(r, ERR_INVALID_SEQ), true);
 
   // Check there are no further messages.
@@ -334,15 +344,17 @@ void test_Busy() {
   f.cid ^= 1;  // Flip channel.
 
   SEND(f);
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(f.cid, r.cid);
 
-  CHECK_LT(U2Fob_deltaTime(&t), .1);  // Expect busy reply quickly.
+  if (arg_Time)
+    CHECK_LT(U2Fob_deltaTime(&t), .1);  // Expect busy reply quickly.
+
   CHECK_EQ(isError(r, ERR_CHANNEL_BUSY), true);
 
   f.cid ^= 1;  // Flip back.
 
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(f.cid, r.cid);
 
   CHECK_EQ(isError(r, ERR_MSG_TIMEOUT), true);
@@ -374,15 +386,15 @@ void test_Interleave() {
   SEND(f);
 
   // Expect CHANNEL_BUSY for  cid 1
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(r.cid, cid1);
   CHECK_EQ(isError(r, ERR_CHANNEL_BUSY), true);
 
   // Expect correct 2 frame reply for cid 0
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(r.cid, cid0);
   CHECK_EQ(r.init.data[0], expected);
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(r.cid, cid0);
   CHECK_EQ(r.cont.data[1], expected);
 
@@ -400,7 +412,7 @@ void test_InitSelfAborts() {
   initFrame(&f, U2Fob_getCid(device), U2FHID_INIT, INIT_NONCE_SIZE);
 
   SEND(f);
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(f.cid, r.cid);
 
   CHECK_EQ(r.init.cmd, U2FHID_INIT);
@@ -420,7 +432,7 @@ void test_InitOther() {
   initFrame(&f2, U2Fob_getCid(device) ^ 1, U2FHID_INIT, INIT_NONCE_SIZE);
 
   SEND(f2);
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(f2.cid, r.cid);
 
   // Expect sync reply for requester
@@ -429,7 +441,7 @@ void test_InitOther() {
   CHECK_EQ(memcmp(&f2.init.data[0], &r.init.data[0], INIT_NONCE_SIZE), 0);
 
   // Expect error frame after timeout on first channel.
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(f.cid, r.cid);
 
   CHECK_EQ(isError(r, ERR_MSG_TIMEOUT), true);
@@ -447,7 +459,7 @@ void test_LeadingZero() {
   initFrame(&f, 0x100, U2FHID_PING, 10);
 
   SEND(f);
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(r.cid, f.cid);
 
   CHECK_EQ(r.init.cmd, U2FHID_PING);
@@ -461,7 +473,7 @@ void test_InitOnNonBroadcastEchoesCID() {
   initFrame(&f, 0xdeadbeef, U2FHID_INIT, cs);  // Use non-broadcast cid
 
   SEND(f);
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(r.cid, f.cid);
 
   CHECK_EQ(r.init.cmd, U2FHID_INIT);
@@ -484,7 +496,7 @@ uint32_t test_Init(bool check = true) {
   initFrame(&f, -1, U2FHID_INIT, cs);  // -1 is broadcast channel
 
   SEND(f);
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(r.cid, f.cid);
 
   // expect init reply
@@ -517,7 +529,7 @@ void test_InitUnderLock() {
   initFrame(&f, U2Fob_getCid(device), U2FHID_LOCK, 1, "\x00");  // unlock
 
   SEND(f);
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(f.cid, r.cid);
 
   if (!(caps & CAPFLAG_LOCK)) {
@@ -529,7 +541,7 @@ void test_InitUnderLock() {
   initFrame(&f, U2Fob_getCid(device), U2FHID_LOCK, 1, "\x03");  // 3 seconds
 
   SEND(f);
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(f.cid, r.cid);
 
   CHECK_EQ(f.init.cmd, r.init.cmd);
@@ -544,7 +556,7 @@ void test_InitUnderLock() {
   initFrame(&f, U2Fob_getCid(device), U2FHID_LOCK, 1, "\x00");
 
   SEND(f);
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(f.cid, r.cid);
 
   CHECK_EQ(f.init.cmd, r.init.cmd);
@@ -557,7 +569,7 @@ void test_Unknown(uint8_t cmd) {
   initFrame(&f, U2Fob_getCid(device), cmd, 0);
 
   SEND(f);
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(f.cid, r.cid);
 
   CHECK_EQ(isError(r, ERR_INVALID_CMD), true);
@@ -569,7 +581,7 @@ void test_OnlyInitOnBroadcast() {
   initFrame(&f, -1, U2FHID_PING, INIT_NONCE_SIZE);
 
   SEND(f);
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(f.cid, r.cid);
 
   CHECK_EQ(isError(r, ERR_INVALID_CID), true);
@@ -581,7 +593,7 @@ void test_NothingOnChannel0() {
   initFrame(&f, 0, U2FHID_INIT, INIT_NONCE_SIZE);
 
   SEND(f);
-  RECV(r, 1.0);
+  RECV(r, recvTimeout);
   CHECK_EQ(f.cid, r.cid);
 
   CHECK_EQ(isError(r, ERR_INVALID_CID), true);
@@ -590,7 +602,7 @@ void test_NothingOnChannel0() {
 int main(int argc, char* argv[]) {
   if (argc < 2) {
     cerr << "Usage: " << argv[0]
-         << " <device-path> [-a] [-v] [-V] [-p]" << endl;
+         << " <device-path> [-a] [-v] [-V] [-p] [-t]" << endl;
     return -1;
   }
 
@@ -616,6 +628,11 @@ int main(int argc, char* argv[]) {
       // Pause at abort
       arg_Pause = true;
     }
+    if (!strncmp(argv[argc], "-t", 2)) {
+      // Strict timing checks
+      arg_Time = true;
+      recvTimeout = 1.0;
+    }
   }
 
   srand((unsigned int) time(NULL));
@@ -638,31 +655,31 @@ int main(int argc, char* argv[]) {
   PASS(test_InitOnNonBroadcastEchoesCID());
   PASS(test_InitUnderLock());
   PASS(test_InitSelfAborts());
-  // PASS(test_InitOther());
+  PASS(test_InitOther());
 
   PASS(test_OptionalWink());
 
   PASS(test_Lock());
 
   PASS(test_Echo());
-  // PASS(test_LongEcho());
+  PASS(test_LongEcho());
 
-  // PASS(test_Timeout());
+  PASS(test_Timeout());
 
   PASS(test_WrongSeq());
   PASS(test_NotCont());
   PASS(test_NotFirst());
 
-  // PASS(test_Limits());
+  PASS(test_Limits());
 
-  // PASS(test_Busy());
-  // PASS(test_Interleave());
+  PASS(test_Busy());
+  PASS(test_Interleave());
   PASS(test_LeadingZero());
 
   PASS(test_Idle(2.0));
 
   PASS(test_NothingOnChannel0());
-  // PASS(test_OnlyInitOnBroadcast());
+  PASS(test_OnlyInitOnBroadcast());
 
   U2Fob_destroy(device);
 
