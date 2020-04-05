@@ -12288,16 +12288,16 @@
             ]
         },
         "erc20:eth:JOB": {
-            "address": "0x17280DA053596E097604839C61A2eF5efb7d493f",
+            "address": "0xdfbc9050F5B01DF53512DCC39B4f2B2BBaCD517A",
             "links": {
                 "Github": "https://github.com/JobchainOfficial",
                 "Homepage": "https://www.jobchain.com"
             },
-            "marketcap_usd": 15372,
-            "name": "JOBCHAIN",
+            "marketcap_usd": 250000,
+            "name": "Jobchain",
             "network": "eth",
             "shortcut": "JOB",
-            "t1_enabled": "soon",
+            "t1_enabled": "yes",
             "t2_enabled": "yes",
             "type": "erc20",
             "wallet": [
