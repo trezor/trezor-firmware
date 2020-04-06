@@ -824,7 +824,7 @@ int hdnode_get_shared_key(const HDNode *node, const uint8_t *peer_public_key,
 }
 
 static int hdnode_serialize(const HDNode *node, uint32_t fingerprint,
-                            uint32_t version, char use_public, char *str,
+                            uint32_t version, bool use_private, char *str,
                             int strsize) {
   uint8_t node_data[78] = {0};
   write_be(node_data, version);
@@ -832,11 +832,11 @@ static int hdnode_serialize(const HDNode *node, uint32_t fingerprint,
   write_be(node_data + 5, fingerprint);
   write_be(node_data + 9, node->child_num);
   memcpy(node_data + 13, node->chain_code, 32);
-  if (use_public) {
-    memcpy(node_data + 45, node->public_key, 33);
-  } else {
+  if (use_private) {
     node_data[45] = 0;
     memcpy(node_data + 46, node->private_key, 32);
+  } else {
+    memcpy(node_data + 45, node->public_key, 33);
   }
   int ret = base58_encode_check(node_data, sizeof(node_data),
                                 node->curve->hasher_base58, str, strsize);
@@ -846,18 +846,18 @@ static int hdnode_serialize(const HDNode *node, uint32_t fingerprint,
 
 int hdnode_serialize_public(const HDNode *node, uint32_t fingerprint,
                             uint32_t version, char *str, int strsize) {
-  return hdnode_serialize(node, fingerprint, version, 1, str, strsize);
+  return hdnode_serialize(node, fingerprint, version, false, str, strsize);
 }
 
 int hdnode_serialize_private(const HDNode *node, uint32_t fingerprint,
                              uint32_t version, char *str, int strsize) {
-  return hdnode_serialize(node, fingerprint, version, 0, str, strsize);
+  return hdnode_serialize(node, fingerprint, version, true, str, strsize);
 }
 
 // check for validity of curve point in case of public data not performed
-int hdnode_deserialize(const char *str, uint32_t version_public,
-                       uint32_t version_private, const char *curve,
-                       HDNode *node, uint32_t *fingerprint) {
+static int hdnode_deserialize(const char *str, uint32_t version,
+                              bool use_private, const char *curve, HDNode *node,
+                              uint32_t *fingerprint) {
   uint8_t node_data[78] = {0};
   memzero(node, sizeof(HDNode));
   node->curve = get_curve_by_name(curve);
@@ -865,18 +865,20 @@ int hdnode_deserialize(const char *str, uint32_t version_public,
                           sizeof(node_data)) != sizeof(node_data)) {
     return -1;
   }
-  uint32_t version = read_be(node_data);
-  if (version == version_public) {
-    memzero(node->private_key, sizeof(node->private_key));
-    memcpy(node->public_key, node_data + 45, 33);
-  } else if (version == version_private) {  // private node
-    if (node_data[45]) {                    // invalid data
+  uint32_t ver = read_be(node_data);
+  if (ver != version) {
+    return -3;  // invalid version
+  }
+  if (use_private) {
+    // invalid data
+    if (node_data[45]) {
       return -2;
     }
     memcpy(node->private_key, node_data + 46, 32);
     memzero(node->public_key, sizeof(node->public_key));
   } else {
-    return -3;  // invalid version
+    memzero(node->private_key, sizeof(node->private_key));
+    memcpy(node->public_key, node_data + 45, 33);
   }
   node->depth = node_data[4];
   if (fingerprint) {
@@ -885,6 +887,18 @@ int hdnode_deserialize(const char *str, uint32_t version_public,
   node->child_num = read_be(node_data + 9);
   memcpy(node->chain_code, node_data + 13, 32);
   return 0;
+}
+
+int hdnode_deserialize_public(const char *str, uint32_t version,
+                              const char *curve, HDNode *node,
+                              uint32_t *fingerprint) {
+  return hdnode_deserialize(str, version, false, curve, node, fingerprint);
+}
+
+int hdnode_deserialize_private(const char *str, uint32_t version,
+                               const char *curve, HDNode *node,
+                               uint32_t *fingerprint) {
+  return hdnode_deserialize(str, version, true, curve, node, fingerprint);
 }
 
 const curve_info *get_curve_by_name(const char *curve_name) {

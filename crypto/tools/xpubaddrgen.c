@@ -7,14 +7,13 @@
 #include "ecdsa.h"
 
 #define VERSION_PUBLIC 0x0488b21e
-#define VERSION_PRIVATE 0x0488ade4
 
 void process_job(uint32_t jobid, const char *xpub, uint32_t change,
                  uint32_t from, uint32_t to) {
   HDNode node, child;
   if (change > 1 || to <= from ||
-      hdnode_deserialize(xpub, VERSION_PUBLIC, VERSION_PRIVATE, SECP256K1_NAME,
-                         &node, NULL) != 0) {
+      hdnode_deserialize_public(xpub, VERSION_PUBLIC, SECP256K1_NAME, &node,
+                                NULL) != 0) {
     printf("%d error\n", jobid);
     return;
   }
