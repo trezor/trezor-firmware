@@ -51,8 +51,8 @@ STATIC const mp_obj_type_t mod_trezorcrypto_HDNode_type;
 ///     depth: int,
 ///     fingerprint: int,
 ///     child_num: int,
-///     chain_code: bytes,
-///     private_key: bytes = None,
+///     chain_code: secbytes,
+///     private_key: secbytes = None,
 ///     public_key: bytes = None,
 ///     curve_name: str = None,
 /// ) -> None:
@@ -328,7 +328,7 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_child_num(mp_obj_t self) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_child_num_obj,
                                  mod_trezorcrypto_HDNode_child_num);
 
-/// def chain_code(self) -> bytes:
+/// def chain_code(self) -> secbytes:
 ///     """
 ///     Returns a chain code of the HD node.
 ///     """
@@ -339,7 +339,7 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_chain_code(mp_obj_t self) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_chain_code_obj,
                                  mod_trezorcrypto_HDNode_chain_code);
 
-/// def private_key(self) -> bytes:
+/// def private_key(self) -> secbytes:
 ///     """
 ///     Returns a private key of the HD node.
 ///     """
@@ -350,7 +350,7 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_private_key(mp_obj_t self) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_private_key_obj,
                                  mod_trezorcrypto_HDNode_private_key);
 
-/// def private_key_ext(self) -> bytes:
+/// def private_key_ext(self) -> secbytes:
 ///     """
 ///     Returns a private key extension of the HD node.
 ///     """
@@ -541,7 +541,7 @@ STATIC const mp_obj_type_t mod_trezorcrypto_HDNode_type = {
 
 /// mock:global
 
-/// def from_seed(seed: bytes, curve_name: str) -> HDNode:
+/// def from_seed(seed: secbytes, curve_name: str) -> HDNode:
 ///     """
 ///     Construct a BIP0032 HD node from a BIP0039 seed value.
 ///     """
@@ -583,7 +583,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip32_from_seed_obj,
 
 #if !BITCOIN_ONLY
 
-/// def from_mnemonic_cardano(mnemonic: str, passphrase: str) -> bytes:
+/// def from_mnemonic_cardano(mnemonic: str, passphrase: str) -> secbytes:
 ///     """
 ///     Construct a HD node from a BIP-0039 mnemonic using the Icarus derivation
 ///     scheme, aka v2 derivation scheme.

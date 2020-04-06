@@ -41,9 +41,9 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2s_update(mp_obj_t self, mp_obj_t data);
 
 /// def __init__(
 ///     self,
-///     data: bytes = None,
+///     data: secbytes = None,
 ///     outlen: int = blake2s.digest_size,
-///     key: bytes = None,
+///     key: secbytes = None,
 ///     personal: bytes = None,
 /// ) -> None:
 ///     """
@@ -109,7 +109,7 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2s_make_new(const mp_obj_type_t *type,
   return MP_OBJ_FROM_PTR(o);
 }
 
-/// def update(self, data: bytes) -> None:
+/// def update(self, data: secbytes) -> None:
 ///     """
 ///     Update the hash context with hashed data.
 ///     """

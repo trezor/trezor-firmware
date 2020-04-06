@@ -26,7 +26,7 @@
 
 /// package: trezorcrypto.ed25519
 
-/// def generate_secret() -> bytes:
+/// def generate_secret() -> secbytes:
 ///     """
 ///     Generate secret key.
 ///     """
@@ -42,7 +42,7 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_generate_secret() {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_ed25519_generate_secret_obj,
                                  mod_trezorcrypto_ed25519_generate_secret);
 
-/// def publickey(secret_key: bytes) -> bytes:
+/// def publickey(secret_key: secbytes) -> bytes:
 ///     """
 ///     Computes public key from secret key.
 ///     """
@@ -60,7 +60,7 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_publickey(mp_obj_t secret_key) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_ed25519_publickey_obj,
                                  mod_trezorcrypto_ed25519_publickey);
 
-/// def sign(secret_key: bytes, message: bytes, hasher: str = "") -> bytes:
+/// def sign(secret_key: secbytes, message: bytes, hasher: str = "") -> bytes:
 ///     """
 ///     Uses secret key to produce the signature of message.
 ///     """
@@ -103,7 +103,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_ed25519_sign_obj, 2,
 #if !BITCOIN_ONLY
 
 /// def sign_ext(
-///     secret_key: bytes, secret_extension: bytes, message: bytes
+///     secret_key: secbytes, secret_extension: secbytes, message: bytes
 /// ) -> bytes:
 ///     """
 ///     Uses secret key to produce the cardano signature of message.
@@ -238,7 +238,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(
     mod_trezorcrypto_ed25519_cosi_combine_signatures);
 
 /// def cosi_sign(
-///     secret_key: bytes,
+///     secret_key: secbytes,
 ///     message: bytes,
 ///     nonce: bytes,
 ///     sigR: bytes,

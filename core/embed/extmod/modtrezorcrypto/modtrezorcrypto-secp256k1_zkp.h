@@ -116,7 +116,7 @@ static const secp256k1_context *mod_trezorcrypto_get_secp256k1_context(
   return o->secp256k1_ctx;
 }
 
-/// def generate_secret(self) -> bytes:
+/// def generate_secret(self) -> secbytes:
 ///     """
 ///     Generate secret key.
 ///     """
@@ -136,7 +136,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(
     mod_trezorcrypto_secp256k1_zkp_generate_secret_obj,
     mod_trezorcrypto_secp256k1_zkp_generate_secret);
 
-/// def publickey(self, secret_key: bytes, compressed: bool = True) -> bytes:
+/// def publickey(self, secret_key: secbytes, compressed: bool = True) -> bytes:
 ///     """
 ///     Computes public key from secret key.
 ///     """
@@ -167,7 +167,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_secp256k1_context_publickey);
 
 /// def sign(
-///     self, secret_key: bytes, digest: bytes, compressed: bool = True
+///     self, secret_key: secbytes, digest: bytes, compressed: bool = True
 /// ) -> bytes:
 ///     """
 ///     Uses secret key to produce the signature of the digest.
@@ -298,7 +298,7 @@ static int secp256k1_ecdh_hash_passthrough(uint8_t *output, const uint8_t *x,
   return 1;
 }
 
-/// def multiply(self, secret_key: bytes, public_key: bytes) -> bytes:
+/// def multiply(self, secret_key: secbytes, public_key: bytes) -> bytes:
 ///     """
 ///     Multiplies point defined by public_key with scalar defined by
 ///     secret_key. Useful for ECDH.

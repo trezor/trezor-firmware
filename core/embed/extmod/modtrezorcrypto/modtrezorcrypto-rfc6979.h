@@ -32,7 +32,7 @@ typedef struct _mp_obj_Rfc6979_t {
   rfc6979_state rng;
 } mp_obj_Rfc6979_t;
 
-/// def __init__(self, secret_key: bytes, hash: bytes) -> None:
+/// def __init__(self, secret_key: secbytes, hash: secbytes) -> None:
 ///     """
 ///     Initialize RFC6979 context from secret key and a hash.
 ///     """

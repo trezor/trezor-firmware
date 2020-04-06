@@ -34,7 +34,7 @@ typedef struct _mp_obj_ChaCha20Poly1305_t {
   int64_t alen, plen;
 } mp_obj_ChaCha20Poly1305_t;
 
-/// def __init__(self, key: bytes, nonce: bytes) -> None:
+/// def __init__(self, key: secbytes, nonce: bytes) -> None:
 ///     """
 ///     Initialize the ChaCha20 + Poly1305 context for encryption or decryption
 ///     using a 32 byte key and 12 byte nonce as in the RFC 7539 style.
