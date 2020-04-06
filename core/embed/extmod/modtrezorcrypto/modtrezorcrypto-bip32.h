@@ -259,26 +259,6 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_derive_path(mp_obj_t self,
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_derive_path_obj,
                                  mod_trezorcrypto_HDNode_derive_path);
 
-STATIC mp_obj_t serialize_public_private(mp_obj_t self, bool use_public,
-                                         uint32_t version) {
-  mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
-  char xpub[XPUB_MAXLEN] = {0};
-  int written;
-  if (use_public) {
-    hdnode_fill_public_key(&o->hdnode);
-    written = hdnode_serialize_public(&o->hdnode, o->fingerprint, version, xpub,
-                                      XPUB_MAXLEN);
-  } else {
-    written = hdnode_serialize_private(&o->hdnode, o->fingerprint, version,
-                                       xpub, XPUB_MAXLEN);
-  }
-  if (written <= 0) {
-    mp_raise_ValueError("Failed to serialize");
-  }
-  return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)xpub,
-                             written - 1);  // written includes 0 at the end
-}
-
 /// def serialize_public(self, version: int) -> str:
 ///     """
 ///     Serialize the public info from HD node to base58 string.
@@ -286,22 +266,19 @@ STATIC mp_obj_t serialize_public_private(mp_obj_t self, bool use_public,
 STATIC mp_obj_t mod_trezorcrypto_HDNode_serialize_public(mp_obj_t self,
                                                          mp_obj_t version) {
   uint32_t ver = trezor_obj_get_uint(version);
-  return serialize_public_private(self, true, ver);
+  mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
+  char xpub[XPUB_MAXLEN] = {0};
+  hdnode_fill_public_key(&o->hdnode);
+  int written = hdnode_serialize_public(&o->hdnode, o->fingerprint, ver, xpub,
+                                        XPUB_MAXLEN);
+  if (written <= 0) {
+    mp_raise_ValueError("Failed to serialize");
+  }
+  // written includes NULL at the end of the string
+  return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)xpub, written - 1);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_serialize_public_obj,
                                  mod_trezorcrypto_HDNode_serialize_public);
-
-/// def serialize_private(self, version: int) -> str:
-///     """
-///     Serialize the private info HD node to base58 string.
-///     """
-STATIC mp_obj_t mod_trezorcrypto_HDNode_serialize_private(mp_obj_t self,
-                                                          mp_obj_t version) {
-  uint32_t ver = trezor_obj_get_uint(version);
-  return serialize_public_private(self, false, ver);
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_serialize_private_obj,
-                                 mod_trezorcrypto_HDNode_serialize_private);
 
 /// def clone(self) -> HDNode:
 ///     """
@@ -523,8 +500,6 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_HDNode_locals_dict_table[] = {
 #endif
     {MP_ROM_QSTR(MP_QSTR_derive_path),
      MP_ROM_PTR(&mod_trezorcrypto_HDNode_derive_path_obj)},
-    {MP_ROM_QSTR(MP_QSTR_serialize_private),
-     MP_ROM_PTR(&mod_trezorcrypto_HDNode_serialize_private_obj)},
     {MP_ROM_QSTR(MP_QSTR_serialize_public),
      MP_ROM_PTR(&mod_trezorcrypto_HDNode_serialize_public_obj)},
     {MP_ROM_QSTR(MP_QSTR_clone),

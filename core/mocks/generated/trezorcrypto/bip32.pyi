@@ -41,11 +41,6 @@ class HDNode:
         Serialize the public info from HD node to base58 string.
         """
 
-    def serialize_private(self, version: int) -> str:
-        """
-        Serialize the private info HD node to base58 string.
-        """
-
     def clone(self) -> HDNode:
         """
         Returns a copy of the HD node.
