@@ -64,6 +64,7 @@ class blake2b:
         self,
         data: bytes = None,
         outlen: int = blake2b.digest_size,
+        key: bytes = None,
         personal: bytes = None,
     ) -> None:
         """

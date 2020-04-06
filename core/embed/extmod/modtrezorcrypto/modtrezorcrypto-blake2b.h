@@ -43,6 +43,7 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2b_update(mp_obj_t self, mp_obj_t data);
 ///     self,
 ///     data: bytes = None,
 ///     outlen: int = blake2b.digest_size,
+///     key: bytes = None,
 ///     personal: bytes = None,
 /// ) -> None:
 ///     """
