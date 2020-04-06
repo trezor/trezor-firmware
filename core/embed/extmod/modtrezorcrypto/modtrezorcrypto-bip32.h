@@ -541,38 +541,6 @@ STATIC const mp_obj_type_t mod_trezorcrypto_HDNode_type = {
 
 /// mock:global
 
-/// def deserialize(
-///     value: str, version_public: int, version_private: int
-/// ) -> HDNode:
-///     """
-///     Construct a BIP0032 HD node from a base58-serialized value.
-///     """
-STATIC mp_obj_t mod_trezorcrypto_bip32_deserialize(mp_obj_t value,
-                                                   mp_obj_t version_public,
-                                                   mp_obj_t version_private) {
-  mp_buffer_info_t valueb;
-  mp_get_buffer_raise(value, &valueb, MP_BUFFER_READ);
-  if (valueb.len == 0) {
-    mp_raise_ValueError("Invalid value");
-  }
-  uint32_t vpub = trezor_obj_get_uint(version_public);
-  uint32_t vpriv = trezor_obj_get_uint(version_private);
-  HDNode hdnode;
-  uint32_t fingerprint;
-  if (hdnode_deserialize(valueb.buf, vpub, vpriv, SECP256K1_NAME, &hdnode,
-                         &fingerprint) < 0) {
-    mp_raise_ValueError("Failed to deserialize");
-  }
-
-  mp_obj_HDNode_t *o = m_new_obj(mp_obj_HDNode_t);
-  o->base.type = &mod_trezorcrypto_HDNode_type;
-  o->hdnode = hdnode;
-  o->fingerprint = fingerprint;
-  return MP_OBJ_FROM_PTR(o);
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_bip32_deserialize_obj,
-                                 mod_trezorcrypto_bip32_deserialize);
-
 /// def from_seed(seed: bytes, curve_name: str) -> HDNode:
 ///     """
 ///     Construct a BIP0032 HD node from a BIP0039 seed value.
@@ -662,8 +630,6 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(
 STATIC const mp_rom_map_elem_t mod_trezorcrypto_bip32_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_bip32)},
     {MP_ROM_QSTR(MP_QSTR_HDNode), MP_ROM_PTR(&mod_trezorcrypto_HDNode_type)},
-    {MP_ROM_QSTR(MP_QSTR_deserialize),
-     MP_ROM_PTR(&mod_trezorcrypto_bip32_deserialize_obj)},
     {MP_ROM_QSTR(MP_QSTR_from_seed),
      MP_ROM_PTR(&mod_trezorcrypto_bip32_from_seed_obj)},
 #if !BITCOIN_ONLY

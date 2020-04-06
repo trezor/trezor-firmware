@@ -44,10 +44,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('0339a36013301597daef41fbe593a02cc513d0b55527ec2df1050e2e8ff49c85c2'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
         # [Chain m/0']
         n.derive(HARDENED | 0)
@@ -57,10 +53,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('035a784662a4a20a65bf6aab9ae98a6c068a81c52e4b032c0fb5400c706cfccc56'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub68Gmy5EdvgibQVfPdqkBBCHxA5htiqg55crXYuXoQRKfDBFA1WEjWgP6LHhwBZeNK1VTsfTFUHCdrfp1bgwQ9xv5ski8PX9rL2dZXvgGDnw')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
         # [Chain m/0'/1]
         n.derive(1)
@@ -70,10 +62,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub6ASuArnXKPbfEwhqN6e3mwBcDTgzisQN1wXN9BJcM47sSikHjJf3UFHKkNAWbWMiGj7Wf5uMash7SyYq527Hqck2AxYysAA7xmALppuCkwQ')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
         # [Chain m/0'/1/2']
         n.derive(HARDENED | 2)
@@ -83,10 +71,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('0357bfe1e341d01c69fe5654309956cbea516822fba8a601743a012a7896ee8dc2'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub6D4BDPcP2GT577Vvch3R8wDkScZWzQzMMUm3PWbmWvVJrZwQY4VUNgqFJPMM3No2dFDFGTsxxpG5uJh7n7epu4trkrX7x7DogT5Uv6fcLW5')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
         # [Chain m/0'/1/2'/2]
         n.derive(2)
@@ -96,10 +80,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('02e8445082a72f29b75ca48748a914df60622a609cacfce8ed0e35804560741d29'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub6FHa3pjLCk84BayeJxFW2SP4XRrFd1JYnxeLeU8EqN3vDfZmbqBqaGJAyiLjTAwm6ZLRQUMv1ZACTj37sR62cfN7fe5JnJ7dh8zL4fiyLHV')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
         # [Chain m/0'/1/2'/2/1000000000]
         n.derive(1000000000)
@@ -109,10 +89,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('022a471424da5e657499d1ff51cb43c47481a03b1e77f951fe64cec9f5a48f7011'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub6H1LXWLaKsWFhvm6RVpEL9P4KfRZSW7abD2ttkWP3SSQvnyA8FSVqNTEcYFgJS2UaFcxupHiYkro49S8yGasTvXEYBVPamhGW6cFJodrTHy')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
     def test_secp256k1_vector_2_derive(self):
         # pylint: disable=C0301
@@ -128,10 +104,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('03cbcaa9c98c877a26977d00825c956a238e8dddfbd322cce4f74b0b5bd6ace4a7'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
         # [Chain m/0]
         n.derive(0)
@@ -141,10 +113,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('02fc9e5af0ac8d9b3cecfe2a888e2117ba3d089d8585886c9c826b6b22a98d12ea'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
         # [Chain m/0/2147483647']
         n.derive(HARDENED | 2147483647)
@@ -154,10 +122,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('03c01e7425647bdefa82b12d9bad5e3e6865bee0502694b94ca58b666abc0a5c3b'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub6ASAVgeehLbnwdqV6UKMHVzgqAG8Gr6riv3Fxxpj8ksbH9ebxaEyBLZ85ySDhKiLDBrQSARLq1uNRts8RuJiHjaDMBU4Zn9h8LZNnBC5y4a')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
         # [Chain m/0/2147483647'/1]
         n.derive(1)
@@ -167,10 +131,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('03a7d1d856deb74c508e05031f9895dab54626251b3806e16b4bd12e781a7df5b9'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub6DF8uhdarytz3FWdA8TvFSvvAh8dP3283MY7p2V4SeE2wyWmG5mg5EwVvmdMVCQcoNJxGoWaU9DCWh89LojfZ537wTfunKau47EL2dhHKon')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
         # [Chain m/0/2147483647'/1/2147483646']
         n.derive(HARDENED | 2147483646)
@@ -180,10 +140,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('02d2b36900396c9282fa14628566582f206a5dd0bcc8d5e892611806cafb0301f0'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
         # [Chain m/0/2147483647'/1/2147483646'/2]
         n.derive(2)
@@ -193,10 +149,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('024d902e1a2fc7a8755ab5b694c575fce742c48d9ff192e63df5193e4c7afe1f9c'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub6FnCn6nSzZAw5Tw7cgR9bi15UV96gLZhjDstkXXxvCLsUXBGXPdSnLFbdpq8p9HmGsApME5hQTZ3emM2rnY5agb9rXpVGyy3bdW6EEgAtqt')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
     def test_secp256k1_vector_1_derive_path(self):
         # pylint: disable=C0301
@@ -213,10 +165,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('0339a36013301597daef41fbe593a02cc513d0b55527ec2df1050e2e8ff49c85c2'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
         # [Chain m/0']
         n = m.clone()
@@ -227,10 +175,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('035a784662a4a20a65bf6aab9ae98a6c068a81c52e4b032c0fb5400c706cfccc56'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub68Gmy5EdvgibQVfPdqkBBCHxA5htiqg55crXYuXoQRKfDBFA1WEjWgP6LHhwBZeNK1VTsfTFUHCdrfp1bgwQ9xv5ski8PX9rL2dZXvgGDnw')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
         # [Chain m/0'/1]
         n = m.clone()
@@ -241,10 +185,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('03501e454bf00751f24b1b489aa925215d66af2234e3891c3b21a52bedb3cd711c'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub6ASuArnXKPbfEwhqN6e3mwBcDTgzisQN1wXN9BJcM47sSikHjJf3UFHKkNAWbWMiGj7Wf5uMash7SyYq527Hqck2AxYysAA7xmALppuCkwQ')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
         # [Chain m/0'/1/2']
         n = m.clone()
@@ -255,10 +195,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('0357bfe1e341d01c69fe5654309956cbea516822fba8a601743a012a7896ee8dc2'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub6D4BDPcP2GT577Vvch3R8wDkScZWzQzMMUm3PWbmWvVJrZwQY4VUNgqFJPMM3No2dFDFGTsxxpG5uJh7n7epu4trkrX7x7DogT5Uv6fcLW5')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
         # [Chain m/0'/1/2'/2]
         n = m.clone()
@@ -269,10 +205,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('02e8445082a72f29b75ca48748a914df60622a609cacfce8ed0e35804560741d29'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub6FHa3pjLCk84BayeJxFW2SP4XRrFd1JYnxeLeU8EqN3vDfZmbqBqaGJAyiLjTAwm6ZLRQUMv1ZACTj37sR62cfN7fe5JnJ7dh8zL4fiyLHV')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
         # [Chain m/0'/1/2'/2/1000000000]
         n = m.clone()
@@ -283,10 +215,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('022a471424da5e657499d1ff51cb43c47481a03b1e77f951fe64cec9f5a48f7011'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub6H1LXWLaKsWFhvm6RVpEL9P4KfRZSW7abD2ttkWP3SSQvnyA8FSVqNTEcYFgJS2UaFcxupHiYkro49S8yGasTvXEYBVPamhGW6cFJodrTHy')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
     def test_secp256k1_vector_2_derive_path(self):
         # pylint: disable=C0301
@@ -303,10 +231,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('03cbcaa9c98c877a26977d00825c956a238e8dddfbd322cce4f74b0b5bd6ace4a7'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
         # [Chain m/0]
         n = m.clone()
@@ -317,10 +241,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('02fc9e5af0ac8d9b3cecfe2a888e2117ba3d089d8585886c9c826b6b22a98d12ea'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
         # [Chain m/0/2147483647']
         n = m.clone()
@@ -331,10 +251,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('03c01e7425647bdefa82b12d9bad5e3e6865bee0502694b94ca58b666abc0a5c3b'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub6ASAVgeehLbnwdqV6UKMHVzgqAG8Gr6riv3Fxxpj8ksbH9ebxaEyBLZ85ySDhKiLDBrQSARLq1uNRts8RuJiHjaDMBU4Zn9h8LZNnBC5y4a')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
         # [Chain m/0/2147483647'/1]
         n = m.clone()
@@ -345,10 +261,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('03a7d1d856deb74c508e05031f9895dab54626251b3806e16b4bd12e781a7df5b9'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub6DF8uhdarytz3FWdA8TvFSvvAh8dP3283MY7p2V4SeE2wyWmG5mg5EwVvmdMVCQcoNJxGoWaU9DCWh89LojfZ537wTfunKau47EL2dhHKon')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
         # [Chain m/0/2147483647'/1/2147483646']
         n = m.clone()
@@ -359,10 +271,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('02d2b36900396c9282fa14628566582f206a5dd0bcc8d5e892611806cafb0301f0'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
         # [Chain m/0/2147483647'/1/2147483646'/2]
         n = m.clone()
@@ -373,10 +281,6 @@ class TestCryptoBip32(unittest.TestCase):
         self.assertEqual(n.public_key(), unhexlify('024d902e1a2fc7a8755ab5b694c575fce742c48d9ff192e63df5193e4c7afe1f9c'))
         ns = n.serialize_public(VERSION_PUBLIC)
         self.assertEqual(ns, 'xpub6FnCn6nSzZAw5Tw7cgR9bi15UV96gLZhjDstkXXxvCLsUXBGXPdSnLFbdpq8p9HmGsApME5hQTZ3emM2rnY5agb9rXpVGyy3bdW6EEgAtqt')
-        n2 = bip32.deserialize(ns, VERSION_PUBLIC, VERSION_PRIVATE)
-        self.assertEqual(n2.private_key(), bytes(32))
-        ns2 = n2.serialize_public(VERSION_PUBLIC)
-        self.assertEqual(ns2, ns)
 
 
 if __name__ == '__main__':
