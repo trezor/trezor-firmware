@@ -16,22 +16,6 @@ if False:
 
 
 class Bitcoinlike(signing.Bitcoin):
-    def init_hash143(self) -> None:
-        if self.coin.overwintered:
-            if self.tx.version == 3:
-                branch_id = self.tx.branch_id or 0x5BA81B19  # Overwinter
-                self.hash143 = zcash.Zip143(branch_id)  # ZIP-0143 transaction hashing
-            elif self.tx.version == 4:
-                branch_id = self.tx.branch_id or 0x76B809BB  # Sapling
-                self.hash143 = zcash.Zip243(branch_id)  # ZIP-0243 transaction hashing
-            else:
-                raise signing.SigningError(
-                    FailureType.DataError,
-                    "Unsupported version for overwintered transaction",
-                )
-        else:
-            super().init_hash143()
-
     async def phase1_process_segwit_input(self, i: int, txi: TxInputType) -> None:
         if not self.coin.segwit:
             raise signing.SigningError(
@@ -40,7 +24,7 @@ class Bitcoinlike(signing.Bitcoin):
         await super().phase1_process_segwit_input(i, txi)
 
     async def phase1_process_nonsegwit_input(self, i: int, txi: TxInputType) -> None:
-        if self.coin.force_bip143 or self.coin.overwintered:
+        if self.coin.force_bip143:
             await self.phase1_process_bip143_input(i, txi)
         else:
             await super().phase1_process_nonsegwit_input(i, txi)
@@ -55,7 +39,7 @@ class Bitcoinlike(signing.Bitcoin):
         self.total_in += txi.amount
 
     async def phase2_sign_nonsegwit_input(self, i_sign: int) -> None:
-        if self.coin.force_bip143 or self.coin.overwintered:
+        if self.coin.force_bip143:
             await self.phase2_sign_bip143_input(i_sign)
         else:
             await super().phase2_sign_nonsegwit_input(i_sign)
@@ -133,39 +117,15 @@ class Bitcoinlike(signing.Bitcoin):
             hashtype |= (self.coin.fork_id << 8) | SIGHASH_FORKID
         return hashtype
 
-    def write_sign_tx_footer(self, w: writers.Writer) -> None:
-        super().write_sign_tx_footer(w)
-
-        if self.coin.overwintered:
-            if self.tx.version == 3:
-                writers.write_uint32(w, self.tx.expiry)  # expiryHeight
-                writers.write_varint(w, 0)  # nJoinSplit
-            elif self.tx.version == 4:
-                writers.write_uint32(w, self.tx.expiry)  # expiryHeight
-                writers.write_uint64(w, 0)  # valueBalance
-                writers.write_varint(w, 0)  # nShieldedSpend
-                writers.write_varint(w, 0)  # nShieldedOutput
-                writers.write_varint(w, 0)  # nJoinSplit
-            else:
-                raise signing.SigningError(
-                    FailureType.DataError,
-                    "Unsupported version for overwintered transaction",
-                )
-
     def write_tx_header(
         self, w: writers.Writer, tx: Union[SignTx, TransactionType], has_segwit: bool
     ) -> None:
-        if self.coin.overwintered:
-            # nVersion | fOverwintered
-            writers.write_uint32(w, tx.version | zcash.OVERWINTERED)
-            writers.write_uint32(w, tx.version_group_id)  # nVersionGroupId
-        else:
-            writers.write_uint32(w, tx.version)  # nVersion
-            if self.coin.timestamp:
-                writers.write_uint32(w, tx.timestamp)
-            if has_segwit:
-                writers.write_varint(w, 0x00)  # segwit witness marker
-                writers.write_varint(w, 0x01)  # segwit witness flag
+        writers.write_uint32(w, tx.version)  # nVersion
+        if self.coin.timestamp:
+            writers.write_uint32(w, tx.timestamp)
+        if has_segwit:
+            writers.write_varint(w, 0x00)  # segwit witness marker
+            writers.write_varint(w, 0x01)  # segwit witness flag
 
     async def write_prev_tx_footer(
         self, w: writers.Writer, tx: TransactionType, prev_hash: bytes
@@ -181,3 +141,52 @@ class Bitcoinlike(signing.Bitcoin):
                 )
                 writers.write_bytes_unchecked(w, data)
                 ofs += len(data)
+
+
+class Overwintered(Bitcoinlike):
+    def init_hash143(self) -> None:
+        if self.coin.overwintered:
+            if self.tx.version == 3:
+                branch_id = self.tx.branch_id or 0x5BA81B19  # Overwinter
+                self.hash143 = zcash.Zip143(branch_id)  # ZIP-0143 transaction hashing
+            elif self.tx.version == 4:
+                branch_id = self.tx.branch_id or 0x76B809BB  # Sapling
+                self.hash143 = zcash.Zip243(branch_id)  # ZIP-0243 transaction hashing
+            else:
+                raise signing.SigningError(
+                    FailureType.DataError,
+                    "Unsupported version for overwintered transaction",
+                )
+        else:
+            super().init_hash143()
+
+    async def phase1_process_nonsegwit_input(self, i: int, txi: TxInputType) -> None:
+        await self.phase1_process_bip143_input(i, txi)
+
+    async def phase2_sign_nonsegwit_input(self, i_sign: int) -> None:
+        await self.phase2_sign_bip143_input(i_sign)
+
+    def write_tx_header(
+        self, w: writers.Writer, tx: Union[SignTx, TransactionType], has_segwit: bool
+    ) -> None:
+        # nVersion | fOverwintered
+        writers.write_uint32(w, tx.version | zcash.OVERWINTERED)
+        writers.write_uint32(w, tx.version_group_id)  # nVersionGroupId
+
+    def write_sign_tx_footer(self, w: writers.Writer) -> None:
+        super().write_sign_tx_footer(w)
+
+        if self.tx.version == 3:
+            writers.write_uint32(w, self.tx.expiry)  # expiryHeight
+            writers.write_varint(w, 0)  # nJoinSplit
+        elif self.tx.version == 4:
+            writers.write_uint32(w, self.tx.expiry)  # expiryHeight
+            writers.write_uint64(w, 0)  # valueBalance
+            writers.write_varint(w, 0)  # nShieldedSpend
+            writers.write_varint(w, 0)  # nShieldedOutput
+            writers.write_varint(w, 0)  # nJoinSplit
+        else:
+            raise signing.SigningError(
+                FailureType.DataError,
+                "Unsupported version for overwintered transaction",
+            )
