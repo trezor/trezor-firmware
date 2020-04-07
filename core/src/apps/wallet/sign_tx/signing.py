@@ -2,11 +2,12 @@ import gc
 from micropython import const
 
 from trezor import utils
-from trezor.crypto import base58, bip32, cashaddr, der
+from trezor.crypto import base58, bip32, der
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha256
 from trezor.messages import FailureType, InputScriptType, OutputScriptType
 from trezor.messages.SignTx import SignTx
+from trezor.messages.TransactionType import TransactionType
 from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputBinType import TxOutputBinType
 from trezor.messages.TxOutputType import TxOutputType
@@ -26,11 +27,8 @@ from apps.wallet.sign_tx import (
     writers,
 )
 
-if not utils.BITCOIN_ONLY:
-    from apps.wallet.sign_tx import zcash
-
 if False:
-    from typing import Dict, List, Optional, Tuple
+    from typing import Dict, List, Optional, Tuple, Union
 
 # the number of bip32 levels used in a wallet (chain and address)
 _BIP32_WALLET_DEPTH = const(2)
@@ -73,7 +71,9 @@ class Bitcoin:
         # - check that nothing changed
         await self.phase2()
 
-    def initialize(self, tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinInfo) -> None:
+    def initialize(
+        self, tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinInfo
+    ) -> None:
         self.coin = coin
         self.tx = helpers.sanitize_sign_tx(tx, self.coin)
         self.keychain = keychain
@@ -81,9 +81,13 @@ class Bitcoin:
         self.multisig_fp = (
             multisig.MultisigFingerprint()
         )  # control checksum of multisig inputs
-        self.wallet_path = []  # type: Optional[List[int]] # common prefix of input paths
+        self.wallet_path = (
+            []
+        )  # type: Optional[List[int]] # common prefix of input paths
         self.bip143_in = 0  # sum of segwit input amounts
-        self.segwit = {}  # type: Dict[int, bool] # dict of booleans stating if input is segwit
+        self.segwit = (
+            {}
+        )  # type: Dict[int, bool] # dict of booleans stating if input is segwit
         self.total_in = 0  # sum of input amounts
         self.total_out = 0  # sum of output amounts
         self.change_out = 0  # change output amount
@@ -99,20 +103,7 @@ class Bitcoin:
         self.init_hash143()
 
     def init_hash143(self) -> None:
-        if not utils.BITCOIN_ONLY and self.coin.overwintered:
-            if self.tx.version == 3:
-                branch_id = self.tx.branch_id or 0x5BA81B19  # Overwinter
-                self.hash143 = zcash.Zip143(branch_id)  # ZIP-0143 transaction hashing
-            elif self.tx.version == 4:
-                branch_id = self.tx.branch_id or 0x76B809BB  # Sapling
-                self.hash143 = zcash.Zip243(branch_id)  # ZIP-0243 transaction hashing
-            else:
-                raise SigningError(
-                    FailureType.DataError,
-                    "Unsupported version for overwintered transaction",
-                )
-        else:
-            self.hash143 = segwit_bip143.Bip143()  # BIP-0143 transaction hashing
+        self.hash143 = segwit_bip143.Bip143()  # BIP-0143 transaction hashing
 
     async def phase1(self) -> None:
         weight = tx_weight.TxWeightCalculator(
@@ -174,36 +165,27 @@ class Bitcoin:
             InputScriptType.SPENDWITNESS,
             InputScriptType.SPENDP2SHWITNESS,
         ):
-            if not self.coin.segwit:
-                raise SigningError(
-                    FailureType.DataError, "Segwit not enabled on this coin"
-                )
-            if not txi.amount:
-                raise SigningError(FailureType.DataError, "Segwit input without amount")
-            self.segwit[i] = True
-            self.bip143_in += txi.amount
-            self.total_in += txi.amount
+            await self.phase1_process_segwit_input(i, txi)
         elif txi.script_type in (
             InputScriptType.SPENDADDRESS,
             InputScriptType.SPENDMULTISIG,
         ):
-            if not utils.BITCOIN_ONLY and (
-                self.coin.force_bip143 or self.coin.overwintered
-            ):
-                if not txi.amount:
-                    raise SigningError(
-                        FailureType.DataError, "Expected input with amount"
-                    )
-                self.segwit[i] = False
-                self.bip143_in += txi.amount
-                self.total_in += txi.amount
-            else:
-                self.segwit[i] = False
-                self.total_in += await self.get_prevtx_output_value(
-                    txi.prev_hash, txi.prev_index
-                )
+            await self.phase1_process_nonsegwit_input(i, txi)
         else:
             raise SigningError(FailureType.DataError, "Wrong input script type")
+
+    async def phase1_process_segwit_input(self, i: int, txi: TxInputType) -> None:
+        if not txi.amount:
+            raise SigningError(FailureType.DataError, "Segwit input without amount")
+        self.segwit[i] = True
+        self.bip143_in += txi.amount
+        self.total_in += txi.amount
+
+    async def phase1_process_nonsegwit_input(self, i: int, txi: TxInputType) -> None:
+        self.segwit[i] = False
+        self.total_in += await self.get_prevtx_output_value(
+            txi.prev_hash, txi.prev_index
+        )
 
     async def phase1_confirm_output(
         self, i: int, txo: TxOutputType, txo_bin: TxOutputBinType
@@ -218,10 +200,8 @@ class Bitcoin:
         self.hash143.add_output(txo_bin)
         self.total_out += txo_bin.amount
 
-    def on_negative_fee(self):
-        # some coins require negative fees for reward TX
-        if utils.BITCOIN_ONLY or not self.coin.negative_fee:
-            raise SigningError(FailureType.NotEnoughFunds, "Not enough funds")
+    def on_negative_fee(self) -> None:
+        raise SigningError(FailureType.NotEnoughFunds, "Not enough funds")
 
     async def phase2(self) -> None:
         self.tx_req.serialized = None
@@ -231,12 +211,8 @@ class Bitcoin:
             progress.advance()
             if self.segwit[i]:
                 await self.phase2_serialize_segwit_input(i)
-            elif not utils.BITCOIN_ONLY and (
-                self.coin.force_bip143 or self.coin.overwintered
-            ):
-                await self.phase2_sign_bip143_input(i)
             else:
-                await self.phase2_sign_legacy_input(i)
+                await self.phase2_sign_nonsegwit_input(i)
 
         # Serialize outputs.
         tx_ser = TxRequestSerializedType()
@@ -257,6 +233,7 @@ class Bitcoin:
                 tx_ser.signature_index = i
                 tx_ser.signature = signature
             elif any_segwit:
+                # TODO what if a non-segwit input follows after a segwit input?
                 tx_ser.serialized_tx += bytearray(
                     1
                 )  # empty witness for non-segwit inputs
@@ -265,27 +242,7 @@ class Bitcoin:
 
             self.tx_req.serialized = tx_ser
 
-        writers.write_uint32(tx_ser.serialized_tx, self.tx.lock_time)
-
-        if not utils.BITCOIN_ONLY and self.coin.overwintered:
-            if self.tx.version == 3:
-                writers.write_uint32(
-                    tx_ser.serialized_tx, self.tx.expiry
-                )  # expiryHeight
-                writers.write_varint(tx_ser.serialized_tx, 0)  # nJoinSplit
-            elif self.tx.version == 4:
-                writers.write_uint32(
-                    tx_ser.serialized_tx, self.tx.expiry
-                )  # expiryHeight
-                writers.write_uint64(tx_ser.serialized_tx, 0)  # valueBalance
-                writers.write_varint(tx_ser.serialized_tx, 0)  # nShieldedSpend
-                writers.write_varint(tx_ser.serialized_tx, 0)  # nShieldedOutput
-                writers.write_varint(tx_ser.serialized_tx, 0)  # nJoinSplit
-            else:
-                raise SigningError(
-                    FailureType.DataError,
-                    "Unsupported version for overwintered transaction",
-                )
+        self.write_sign_tx_footer(tx_ser.serialized_tx)
 
         await helpers.request_tx_finish(self.tx_req)
 
@@ -309,7 +266,7 @@ class Bitcoin:
             7 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4
         )
         if i_sign == 0:  # serializing first input => prepend headers
-            self.write_tx_header(w_txi)
+            self.write_sign_tx_header(w_txi, True)
         writers.write_tx_input(w_txi, txi_sign)
         self.tx_req.serialized = TxRequestSerializedType(serialized_tx=w_txi)
 
@@ -349,62 +306,13 @@ class Bitcoin:
 
         return witness, signature
 
-    async def phase2_sign_bip143_input(self, i_sign) -> None:
-        # STAGE_REQUEST_SEGWIT_INPUT
-        txi_sign = await helpers.request_tx_input(self.tx_req, i_sign, self.coin)
-        self.input_check_wallet_path(txi_sign)
-        self.input_check_multisig_fingerprint(txi_sign)
-
-        is_bip143 = (
-            txi_sign.script_type == InputScriptType.SPENDADDRESS
-            or txi_sign.script_type == InputScriptType.SPENDMULTISIG
-        )
-        if not is_bip143 or txi_sign.amount > self.bip143_in:
-            raise SigningError(
-                FailureType.ProcessError, "Transaction has changed during signing"
-            )
-        self.bip143_in -= txi_sign.amount
-
-        key_sign = self.keychain.derive(txi_sign.address_n, self.coin.curve_name)
-        key_sign_pub = key_sign.public_key()
-        self.hash143_hash = self.hash143.preimage_hash(
-            self.coin,
-            self.tx,
-            txi_sign,
-            addresses.ecdsa_hash_pubkey(key_sign_pub, self.coin),
-            self.get_hash_type(),
-        )
-
-        # if multisig, check if signing with a key that is included in multisig
-        if txi_sign.multisig:
-            multisig.multisig_pubkey_index(txi_sign.multisig, key_sign_pub)
-
-        signature = ecdsa_sign(key_sign, self.hash143_hash)
-
-        # serialize input with correct signature
-        gc.collect()
-        txi_sign.script_sig = self.input_derive_script(
-            txi_sign, key_sign_pub, signature
-        )
-        w_txi_sign = writers.empty_bytearray(
-            5 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4
-        )
-        if i_sign == 0:  # serializing first input => prepend headers
-            self.write_tx_header(w_txi_sign)
-        writers.write_tx_input(w_txi_sign, txi_sign)
-        self.tx_req.serialized = TxRequestSerializedType(i_sign, signature, w_txi_sign)
-
-    async def phase2_sign_legacy_input(self, i_sign) -> None:
+    async def phase2_sign_nonsegwit_input(self, i_sign: int) -> None:
         # hash of what we are signing with this input
         h_sign = utils.HashWriter(sha256())
         # same as h_first, checked before signing the digest
         h_second = utils.HashWriter(sha256())
 
-        writers.write_uint32(h_sign, self.tx.version)  # nVersion
-        if not utils.BITCOIN_ONLY and self.coin.timestamp:
-            writers.write_uint32(h_sign, self.tx.timestamp)
-
-        writers.write_varint(h_sign, self.tx.inputs_count)
+        self.write_sign_tx_header(h_sign, has_segwit=False)
 
         for i in range(self.tx.inputs_count):
             # STAGE_REQUEST_4_INPUT
@@ -473,7 +381,7 @@ class Bitcoin:
             5 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4
         )
         if i_sign == 0:  # serializing first input => prepend headers
-            self.write_tx_header(w_txi_sign)
+            self.write_sign_tx_header(w_txi_sign, True in self.segwit.values())
         writers.write_tx_input(w_txi_sign, txi_sign)
         self.tx_req.serialized = TxRequestSerializedType(i_sign, signature, w_txi_sign)
 
@@ -492,7 +400,7 @@ class Bitcoin:
         return w_txo_bin
 
     async def get_prevtx_output_value(self, prev_hash: bytes, prev_index: int) -> int:
-        total_out = 0  # sum of output amounts
+        amount_out = 0  # sum of output amounts
 
         # STAGE_REQUEST_2_PREV_META
         tx = await helpers.request_tx_meta(self.tx_req, self.coin, prev_hash)
@@ -504,16 +412,8 @@ class Bitcoin:
 
         txh = utils.HashWriter(sha256())
 
-        if not utils.BITCOIN_ONLY and self.coin.overwintered:
-            writers.write_uint32(
-                txh, tx.version | zcash.OVERWINTERED
-            )  # nVersion | fOverwintered
-            writers.write_uint32(txh, tx.version_group_id)  # nVersionGroupId
-        else:
-            writers.write_uint32(txh, tx.version)  # nVersion
-            if not utils.BITCOIN_ONLY and self.coin.timestamp:
-                writers.write_uint32(txh, tx.timestamp)
-
+        # TODO set has_segwit correctly
+        self.write_tx_header(txh, tx, has_segwit=False)
         writers.write_varint(txh, tx.inputs_cnt)
 
         for i in range(tx.inputs_cnt):
@@ -530,19 +430,9 @@ class Bitcoin:
             )
             writers.write_tx_output(txh, txo_bin)
             if o == prev_index:
-                total_out += txo_bin.amount
+                amount_out = txo_bin.amount
 
-        writers.write_uint32(txh, tx.lock_time)
-
-        if not utils.BITCOIN_ONLY and self.coin.extra_data:
-            ofs = 0
-            while ofs < tx.extra_data_len:
-                size = min(1024, tx.extra_data_len - ofs)
-                data = await helpers.request_tx_extra_data(
-                    self.tx_req, ofs, size, prev_hash
-                )
-                writers.write_bytes_unchecked(txh, data)
-                ofs += len(data)
+        await self.write_prev_tx_footer(txh, tx, prev_hash)
 
         if (
             writers.get_tx_hash(txh, double=self.coin.sign_hash_double, reverse=True)
@@ -552,32 +442,34 @@ class Bitcoin:
                 FailureType.ProcessError, "Encountered invalid prev_hash"
             )
 
-        return total_out
+        return amount_out
 
     # TX Helpers
     # ===
 
     def get_hash_type(self) -> int:
-        SIGHASH_FORKID = const(0x40)
         SIGHASH_ALL = const(0x01)
-        hashtype = SIGHASH_ALL
-        if self.coin.fork_id is not None:
-            hashtype |= (self.coin.fork_id << 8) | SIGHASH_FORKID
-        return hashtype
+        return SIGHASH_ALL
 
-    def write_tx_header(self, w: writers.Writer) -> None:
-        if not utils.BITCOIN_ONLY and self.coin.overwintered:
-            # nVersion | fOverwintered
-            writers.write_uint32(w, self.tx.version | zcash.OVERWINTERED)
-            writers.write_uint32(w, self.tx.version_group_id)  # nVersionGroupId
-        else:
-            writers.write_uint32(w, self.tx.version)  # nVersion
-            if not utils.BITCOIN_ONLY and self.coin.timestamp:
-                writers.write_uint32(w, self.tx.timestamp)
-        if True in self.segwit.values():
+    def write_sign_tx_header(self, w: writers.Writer, has_segwit: bool) -> None:
+        self.write_tx_header(w, self.tx, has_segwit)
+        writers.write_varint(w, self.tx.inputs_count)
+
+    def write_sign_tx_footer(self, w: writers.Writer) -> None:
+        writers.write_uint32(w, self.tx.lock_time)
+
+    def write_tx_header(
+        self, w: writers.Writer, tx: Union[SignTx, TransactionType], has_segwit: bool
+    ) -> None:
+        writers.write_uint32(w, tx.version)  # nVersion
+        if has_segwit:
             writers.write_varint(w, 0x00)  # segwit witness marker
             writers.write_varint(w, 0x01)  # segwit witness flag
-        writers.write_varint(w, self.tx.inputs_count)
+
+    async def write_prev_tx_footer(
+        self, w: writers.Writer, tx: TransactionType, prev_hash: bytes
+    ) -> None:
+        writers.write_uint32(w, tx.lock_time)
 
     # TX Outputs
     # ===
@@ -597,25 +489,7 @@ class Bitcoin:
             )
             return scripts.output_script_native_p2wpkh_or_p2wsh(witprog)
 
-        if (
-            not utils.BITCOIN_ONLY
-            and self.coin.cashaddr_prefix is not None
-            and o.address.startswith(self.coin.cashaddr_prefix + ":")
-        ):
-            prefix, addr = o.address.split(":")
-            version, data = cashaddr.decode(prefix, addr)
-            if version == cashaddr.ADDRESS_TYPE_P2KH:
-                version = self.coin.address_type
-            elif version == cashaddr.ADDRESS_TYPE_P2SH:
-                version = self.coin.address_type_p2sh
-            else:
-                raise SigningError("Unknown cashaddr address type")
-            raw_address = bytes([version]) + data
-        else:
-            try:
-                raw_address = base58.decode_check(o.address, self.coin.b58_hash)
-            except ValueError:
-                raise SigningError(FailureType.DataError, "Invalid address")
+        raw_address = self.get_raw_address(o)
 
         if address_type.check(self.coin.address_type, raw_address):
             # p2pkh
@@ -630,6 +504,12 @@ class Bitcoin:
             return script
 
         raise SigningError(FailureType.DataError, "Invalid address type")
+
+    def get_raw_address(self, o: TxOutputType) -> bytes:
+        try:
+            return base58.decode_check(o.address, self.coin.b58_hash)
+        except ValueError:
+            raise SigningError(FailureType.DataError, "Invalid address")
 
     def get_address_for_change(self, o: TxOutputType) -> str:
         try:
