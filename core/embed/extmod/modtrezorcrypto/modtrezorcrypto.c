@@ -110,4 +110,7 @@ const mp_obj_module_t mp_module_trezorcrypto = {
     .globals = (mp_obj_dict_t*)&mp_module_trezorcrypto_globals,
 };
 
+MP_REGISTER_MODULE(MP_QSTR_trezorcrypto, mp_module_trezorcrypto,
+                   MICROPY_PY_TREZORCRYPTO);
+
 #endif  // MICROPY_PY_TREZORCRYPTO

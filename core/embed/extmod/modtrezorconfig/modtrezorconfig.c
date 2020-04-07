@@ -402,4 +402,7 @@ const mp_obj_module_t mp_module_trezorconfig = {
     .globals = (mp_obj_dict_t *)&mp_module_trezorconfig_globals,
 };
 
+MP_REGISTER_MODULE(MP_QSTR_trezorconfig, mp_module_trezorconfig,
+                   MICROPY_PY_TREZORCONFIG);
+
 #endif  // MICROPY_PY_TREZORCONFIG
