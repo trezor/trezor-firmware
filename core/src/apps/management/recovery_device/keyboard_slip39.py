@@ -212,7 +212,7 @@ class Slip39Keyboard(ui.Layout):
                 race = race_touch
             result = await race
 
-            if touch in race.finished:
+            if isinstance(result, tuple):
                 event, x, y = result
                 self.dispatch(event, x, y)
             else:

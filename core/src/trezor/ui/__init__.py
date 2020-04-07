@@ -380,4 +380,4 @@ class Layout(Component):
 
 def wait_until_layout_is_running() -> Awaitable[None]:  # type: ignore
     while not layout_chan.takers:
-        yield
+        yield loop.YIELD

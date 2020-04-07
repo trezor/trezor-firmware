@@ -46,6 +46,13 @@ if __debug__:
     synthetic_events = []  # type: List[Tuple[int, Any]]
 
 
+class SyscallTimeout(Exception):
+    pass
+
+
+_TIMEOUT_ERROR = SyscallTimeout()
+
+
 def schedule(
     task: Task, value: Any = None, *, deadline: int = None, finalizer: Finalizer = None
 ) -> None:
@@ -176,11 +183,10 @@ def _step(task: Task, value: Any) -> None:
     else:
         if isinstance(result, Syscall):
             result.handle(task)
-        elif result is None:
-            schedule(task)
         else:
             if __debug__:
                 log.error(__name__, "unknown syscall: %s", result)
+            raise RuntimeError
         if after_step_hook:
             after_step_hook()
 
@@ -221,6 +227,8 @@ class sleep(Syscall):
         deadline = utime.ticks_add(utime.ticks_us(), self.delay_us)
         schedule(task, deadline, deadline=deadline)
 
+YIELD = sleep(0)
+
 
 class wait(Syscall):
     """
@@ -234,11 +242,68 @@ class wait(Syscall):
     >>> event, x, y = await loop.wait(io.TOUCH)  # await touch event
     """
 
-    def __init__(self, msg_iface: int) -> None:
+    # The wait class implements a coroutine interface, so that it can be scheduled
+    # as a regular task. When it is resumed, it can perform cleanup and then give
+    # control back to the callback task.
+    # By returning a Syscall instance that does nothing in its handle() method, it
+    # ensures that the wait() instance will never be automatically resumed.
+    _DO_NOT_RESCHEDULE = Syscall()
+    _TIMEOUT_INDICATOR = object()
+
+    def __init__(self, msg_iface: int, timeout_us: int = None) -> None:
         self.msg_iface = msg_iface
+        self.timeout_us = timeout_us
+        self.callback = None  # type: Optional[Task]
 
     def handle(self, task: Task) -> None:
-        pause(task, self.msg_iface)
+        # We pause (and optionally schedule) ourselves instead of the calling task.
+        # When resumed, send() or throw() will give control to the calling task,
+        # after performing cleanup.
+        pause(self, self.msg_iface)
+        if self.timeout_us is not None:
+            deadline = utime.ticks_add(utime.ticks_us(), self.timeout_us)
+            schedule(self, wait._TIMEOUT_ERROR, deadline=deadline)
+
+    def send(self, value) -> Any:
+        assert self.callback is not None
+        if value is wait._TIMEOUT_INDICATOR:
+            # we were resumed from the timeout
+            # discard the i/o wait
+            _paused[self.msg_iface].discard(self)
+            # convert the value to an exception
+            value = _TIMEOUT_ERROR
+        elif self.timeout_us is not None:
+            # we were resumed from the i/o wait, AND timeout was specified
+            # discard the scheduled timeout
+            _queue.discard(self)
+        _step(self.callback, value)
+        return wait._DO_NOT_RESCHEDULE
+
+    def throw(self, exception, _value=None, _traceback=None) -> None:
+        assert self.callback is not None
+        # An exception was thrown to us.
+        # This should not happen unless (a) the i/o sent it, or (b) we were closed
+        # externally.
+        # Discard both the timeout and the i/o wait, because we don't know which
+        # caused this, if any.
+        _queue.discard(self)
+        _paused[self.msg_iface].discard(self)
+        # resume the callback anyway
+        _step(self.callback, exception)
+        return wait._DO_NOT_RESCHEDULE
+
+    def close(self) -> None:
+        pass
+
+    def __iter__(self) -> Task:  # type: ignore
+        try:
+            return (yield self)
+        except:  # noqa: E722
+            # exception was raised on the waiting task externally with
+            # close() or throw(), kill the children tasks and re-raise
+            _queue.discard(self)
+            _paused[self.msg_iface].discard(self)
+            raise
 
 
 _type_gen = type((lambda: (yield))())

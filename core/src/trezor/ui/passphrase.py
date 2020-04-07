@@ -208,21 +208,20 @@ class PassphraseKeyboard(ui.Layout):
 
     async def handle_input(self) -> None:
         touch = loop.wait(io.TOUCH)
-        timeout = loop.sleep(1000 * 1000 * 1)
-        race_touch = loop.race(touch)
-        race_timeout = loop.race(touch, timeout)
+        touch_timeout = loop.wait(io.TOUCH, timeout_us=1000 * 1000 * 1)
+        # timeout = loop.sleep(1000 * 1000 * 1)
+        # race_touch = loop.race(touch)
+        # race_timeout = loop.race(touch, timeout)
 
         while True:
             if self.pending_button is not None:
-                race = race_timeout
+                touch_source = touch_timeout
             else:
-                race = race_touch
-            result = await race
+                touch_source = touch
 
-            if touch in race.finished:
-                event, x, y = result
-                self.dispatch(event, x, y)
-            else:
+            try:
+                self.dispatch(*(await touch_source))
+            except loop.SyscallTimeout:
                 self.on_timeout()
 
     async def handle_paging(self) -> None:
