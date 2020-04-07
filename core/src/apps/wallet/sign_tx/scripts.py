@@ -132,7 +132,7 @@ def input_script_p2wsh_in_p2sh(script_hash: bytes) -> bytearray:
 # ===
 
 
-def witness_p2wpkh(signature: bytes, pubkey: bytes, sighash: int):
+def witness_p2wpkh(signature: bytes, pubkey: bytes, sighash: int) -> bytearray:
     w = empty_bytearray(1 + 5 + len(signature) + 1 + 5 + len(pubkey))
     write_varint(w, 0x02)  # num of segwit items, in P2WPKH it's always 2
     append_signature(w, signature, sighash)

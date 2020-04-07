@@ -7,17 +7,20 @@ from trezor.utils import HashWriter, ensure
 
 from apps.wallet.sign_tx.writers import write_bytes_fixed, write_uint32
 
+if False:
+    from typing import List, Optional
+
 
 class MultisigError(ValueError):
     pass
 
 
 class MultisigFingerprint:
-    def __init__(self):
-        self.fingerprint = None  # multisig fingerprint bytes
+    def __init__(self) -> None:
+        self.fingerprint = None  # type: Optional[bytes] # multisig fingerprint bytes
         self.mismatch = False  # flag if multisig input fingerprints are equal
 
-    def add(self, multisig: MultisigRedeemScriptType):
+    def add(self, multisig: MultisigRedeemScriptType) -> None:
         fp = multisig_fingerprint(multisig)
         ensure(fp is not None)
         if self.fingerprint is None:
@@ -25,7 +28,7 @@ class MultisigFingerprint:
         elif self.fingerprint != fp:
             self.mismatch = True
 
-    def matches(self, multisig: MultisigRedeemScriptType):
+    def matches(self, multisig: MultisigRedeemScriptType) -> bool:
         fp = multisig_fingerprint(multisig)
         ensure(fp is not None)
         if self.mismatch is False and self.fingerprint == fp:
@@ -90,14 +93,14 @@ def multisig_get_pubkey(n: HDNodeType, p: list) -> bytes:
     return node.public_key()
 
 
-def multisig_get_pubkeys(multisig: MultisigRedeemScriptType):
+def multisig_get_pubkeys(multisig: MultisigRedeemScriptType) -> List[bytes]:
     if multisig.nodes:
         return [multisig_get_pubkey(hd, multisig.address_n) for hd in multisig.nodes]
     else:
         return [multisig_get_pubkey(hd.node, hd.address_n) for hd in multisig.pubkeys]
 
 
-def multisig_get_pubkey_count(multisig: MultisigRedeemScriptType):
+def multisig_get_pubkey_count(multisig: MultisigRedeemScriptType) -> int:
     if multisig.nodes:
         return len(multisig.nodes)
     else:
