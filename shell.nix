@@ -18,7 +18,6 @@ stdenv.mkDerivation {
     pipenv
     pkgconfig
     protobuf3_6
-    scons
     valgrind
     zlib
   ] ++ stdenv.lib.optionals (!stdenv.isDarwin) [
