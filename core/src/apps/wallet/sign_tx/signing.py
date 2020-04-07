@@ -29,6 +29,9 @@ from apps.wallet.sign_tx import (
 if not utils.BITCOIN_ONLY:
     from apps.wallet.sign_tx import zcash
 
+if False:
+    from typing import Dict, List, Optional, Tuple
+
 # the number of bip32 levels used in a wallet (chain and address)
 _BIP32_WALLET_DEPTH = const(2)
 
@@ -54,7 +57,7 @@ class SigningError(ValueError):
 class Bitcoin:
     async def signer(
         self, tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinInfo
-    ):
+    ) -> None:
         self.initialize(tx, keychain, coin)
 
         progress.init(self.tx.inputs_count, self.tx.outputs_count)
@@ -70,7 +73,7 @@ class Bitcoin:
         # - check that nothing changed
         await self.phase2()
 
-    def initialize(self, tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinInfo):
+    def initialize(self, tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinInfo) -> None:
         self.coin = coin
         self.tx = helpers.sanitize_sign_tx(tx, self.coin)
         self.keychain = keychain
@@ -78,9 +81,9 @@ class Bitcoin:
         self.multisig_fp = (
             multisig.MultisigFingerprint()
         )  # control checksum of multisig inputs
-        self.wallet_path = []  # common prefix of input paths
+        self.wallet_path = []  # type: Optional[List[int]] # common prefix of input paths
         self.bip143_in = 0  # sum of segwit input amounts
-        self.segwit = {}  # dict of booleans stating if input is segwit
+        self.segwit = {}  # type: Dict[int, bool] # dict of booleans stating if input is segwit
         self.total_in = 0  # sum of input amounts
         self.total_out = 0  # sum of output amounts
         self.change_out = 0  # change output amount
@@ -95,7 +98,7 @@ class Bitcoin:
 
         self.init_hash143()
 
-    def init_hash143(self):
+    def init_hash143(self) -> None:
         if not utils.BITCOIN_ONLY and self.coin.overwintered:
             if self.tx.version == 3:
                 branch_id = self.tx.branch_id or 0x5BA81B19  # Overwinter
@@ -111,7 +114,7 @@ class Bitcoin:
         else:
             self.hash143 = segwit_bip143.Bip143()  # BIP-0143 transaction hashing
 
-    async def phase1(self):
+    async def phase1(self) -> None:
         weight = tx_weight.TxWeightCalculator(
             self.tx.inputs_count, self.tx.outputs_count
         )
@@ -136,11 +139,8 @@ class Bitcoin:
 
         fee = self.total_in - self.total_out
 
-        if not utils.BITCOIN_ONLY and self.coin.negative_fee:
-            pass  # bypass check for negative fee coins, required for reward TX
-        else:
-            if fee < 0:
-                raise SigningError(FailureType.NotEnoughFunds, "Not enough funds")
+        if fee < 0:
+            self.on_negative_fee()
 
         # fee > (coin.maxfee per byte * tx size)
         if fee > (self.coin.maxfee_kb / 1000) * (weight.get_total() / 4):
@@ -156,7 +156,7 @@ class Bitcoin:
         ):
             raise SigningError(FailureType.ActionCancelled, "Total cancelled")
 
-    async def phase1_process_input(self, i: int, txi: TxInputType):
+    async def phase1_process_input(self, i: int, txi: TxInputType) -> None:
         self.wallet_path = input_extract_wallet_path(txi, self.wallet_path)
         writers.write_tx_input_check(self.h_first, txi)
         self.hash143.add_prevouts(txi)  # all inputs are included (non-segwit as well)
@@ -207,7 +207,7 @@ class Bitcoin:
 
     async def phase1_confirm_output(
         self, i: int, txo: TxOutputType, txo_bin: TxOutputBinType
-    ):
+    ) -> None:
         if self.change_out == 0 and self.output_is_change(txo):
             # output is change and does not need confirmation
             self.change_out = txo.amount
@@ -218,7 +218,12 @@ class Bitcoin:
         self.hash143.add_output(txo_bin)
         self.total_out += txo_bin.amount
 
-    async def phase2(self):
+    def on_negative_fee(self):
+        # some coins require negative fees for reward TX
+        if utils.BITCOIN_ONLY or not self.coin.negative_fee:
+            raise SigningError(FailureType.NotEnoughFunds, "Not enough funds")
+
+    async def phase2(self) -> None:
         self.tx_req.serialized = None
 
         # Serialize inputs and sign non-segwit inputs.
@@ -284,7 +289,7 @@ class Bitcoin:
 
         await helpers.request_tx_finish(self.tx_req)
 
-    async def phase2_serialize_segwit_input(self, i_sign):
+    async def phase2_serialize_segwit_input(self, i_sign) -> None:
         # STAGE_REQUEST_SEGWIT_INPUT
         txi_sign = await helpers.request_tx_input(self.tx_req, i_sign, self.coin)
 
@@ -308,7 +313,7 @@ class Bitcoin:
         writers.write_tx_input(w_txi, txi_sign)
         self.tx_req.serialized = TxRequestSerializedType(serialized_tx=w_txi)
 
-    async def phase2_sign_segwit_input(self, i):
+    async def phase2_sign_segwit_input(self, i) -> Tuple[bytearray, bytes]:
         txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
 
         input_check_wallet_path(txi, self.wallet_path)
@@ -344,7 +349,7 @@ class Bitcoin:
 
         return witness, signature
 
-    async def phase2_sign_bip143_input(self, i_sign):
+    async def phase2_sign_bip143_input(self, i_sign) -> None:
         # STAGE_REQUEST_SEGWIT_INPUT
         txi_sign = await helpers.request_tx_input(self.tx_req, i_sign, self.coin)
         input_check_wallet_path(txi_sign, self.wallet_path)
@@ -389,7 +394,7 @@ class Bitcoin:
         writers.write_tx_input(w_txi_sign, txi_sign)
         self.tx_req.serialized = TxRequestSerializedType(i_sign, signature, w_txi_sign)
 
-    async def phase2_sign_legacy_input(self, i_sign):
+    async def phase2_sign_legacy_input(self, i_sign) -> None:
         # hash of what we are signing with this input
         h_sign = utils.HashWriter(sha256())
         # same as h_first, checked before signing the digest
@@ -472,7 +477,7 @@ class Bitcoin:
         writers.write_tx_input(w_txi_sign, txi_sign)
         self.tx_req.serialized = TxRequestSerializedType(i_sign, signature, w_txi_sign)
 
-    async def phase2_serialize_output(self, i: int):
+    async def phase2_serialize_output(self, i: int) -> bytearray:
         txo = await helpers.request_tx_output(self.tx_req, i, self.coin)
         txo_bin = TxOutputBinType()
         txo_bin.amount = txo.amount
@@ -626,7 +631,7 @@ class Bitcoin:
 
         raise SigningError(FailureType.DataError, "Invalid address type")
 
-    def get_address_for_change(self, o: TxOutputType):
+    def get_address_for_change(self, o: TxOutputType) -> str:
         try:
             input_script_type = helpers.CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES[
                 o.script_type
