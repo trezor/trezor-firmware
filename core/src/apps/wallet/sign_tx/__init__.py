@@ -16,16 +16,20 @@ from apps.wallet.sign_tx import (
 )
 
 if not utils.BITCOIN_ONLY:
-    from apps.wallet.sign_tx import decred
+    from apps.wallet.sign_tx import decred, bitcoinlike
 
 
 async def sign_tx(ctx, msg, keychain):
     coin_name = msg.coin_name if msg.coin_name is not None else "Bitcoin"
     coin = coins.by_name(coin_name)
     if not utils.BITCOIN_ONLY and coin.decred:
-        signer = decred.Decred().signer(msg, keychain, coin)
+        coinsig = decred.Decred()
+    elif not utils.BITCOIN_ONLY and coin_name not in ("Bitcoin", "Regtest", "Testnet"):
+        coinsig = bitcoinlike.Bitcoinlike()
     else:
-        signer = signing.Bitcoin().signer(msg, keychain, coin)
+        coinsig = signing.Bitcoin()
+
+    signer = coinsig.signer(msg, keychain, coin)
 
     res = None
     while True:

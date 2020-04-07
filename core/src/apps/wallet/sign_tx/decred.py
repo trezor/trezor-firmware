@@ -12,11 +12,7 @@ from trezor.utils import HashWriter
 
 from apps.common import coininfo, seed
 from apps.wallet.sign_tx import addresses, helpers, multisig, progress, scripts, writers
-from apps.wallet.sign_tx.signing import (
-    Bitcoin,
-    SigningError,
-    ecdsa_sign,
-)
+from apps.wallet.sign_tx.signing import Bitcoin, SigningError, ecdsa_sign
 
 DECRED_SERIALIZE_FULL = const(0 << 16)
 DECRED_SERIALIZE_NO_WITNESS = const(1 << 16)
@@ -76,7 +72,7 @@ class Decred(Bitcoin):
         await super().phase1_process_input(i, txi)
         w_txi = writers.empty_bytearray(8 if i == 0 else 0 + 9 + len(txi.prev_hash))
         if i == 0:  # serializing first input => prepend headers
-            self.write_tx_header(w_txi)
+            self.write_sign_tx_header(w_txi, False)
         writers.write_tx_input_decred(w_txi, txi)
         self.tx_req.serialized = TxRequestSerializedType(None, None, w_txi)
 
