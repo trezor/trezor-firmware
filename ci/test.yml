@@ -23,7 +23,7 @@ core device ui test:
     - mv tests/ui_tests/reporting/reports/test/ test_ui_report
     - pipenv run python ci/prepare_ui_artifacts.py
   artifacts:
-    name: core-device-ui-test
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
       - ci/ui_test_records/
       - test_ui_report
@@ -47,7 +47,7 @@ core device test:
     - pipenv run make test_emu
     - mv ./src/.coverage .coverage.test_emu
   artifacts:
-    name: core-device-test
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
       - tests/trezor.log
       - tests/junit.xml
@@ -69,7 +69,7 @@ core btconly device test:
     - cd core
     - pipenv run make test_emu
   artifacts:
-    name: core-btconly-device-test
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
       - tests/trezor.log
       - tests/junit.xml
@@ -90,7 +90,7 @@ core monero test:
     - pipenv run make test_emu_monero
     - mv ./src/.coverage .coverage.test_emu_monero
   artifacts:
-    name: core-monero-test
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
       - tests/trezor.log
       - core/.coverage.*
@@ -110,7 +110,7 @@ core u2f test:
     - pipenv run make test_emu_u2f
     - mv ./src/.coverage .coverage.test_emu_u2f
   artifacts:
-    name: core-u2f-test
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
       - tests/trezor.log
       - core/.coverage.*
@@ -129,7 +129,7 @@ core fido2 test:
     - pipenv run make test_emu_fido2
     - mv ./src/.coverage .coverage.test_emu_fido2
   artifacts:
-    name: core-fido2-test
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
       - tests/trezor.log
       - tests/junit.xml
@@ -148,7 +148,7 @@ core click test:
     - cd core
     - pipenv run make test_emu_click
   artifacts:
-    name: core-click-test
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
       - tests/trezor.log
       - tests/junit.xml
@@ -168,7 +168,7 @@ core upgrade test:
     - tests/download_emulators.sh
     - pipenv run pytest --junitxml=tests/junit.xml tests/upgrade_tests
   artifacts:
-    name: core-upgrade-test
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
       - tests/junit.xml
     reports:
@@ -184,7 +184,7 @@ core persistence test:
   script:
     - pipenv run pytest --junitxml=tests/junit.xml tests/persistence_tests
   artifacts:
-    name: core-persistence-test
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
       - tests/junit.xml
     reports:
@@ -211,7 +211,7 @@ crypto test:
     - ITERS=10 pipenv run pytest --junitxml=tests/junit.xml tests
     - CK_TIMEOUT_MULTIPLIER=20 valgrind -q --error-exitcode=1 ./tests/test_check
   artifacts:
-    name: crypto-test
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
       - tests/junit.xml
     reports:
@@ -233,7 +233,7 @@ legacy test:
     - cd legacy
     - pipenv run script/test
   artifacts:
-    name: legacy-emu-test
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
       - tests/junit.xml
     reports:
@@ -254,7 +254,7 @@ legacy btconly test:
     - cd legacy
     - pipenv run script/test
   artifacts:
-    name: legacy-emu-btconly-test
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
       - tests/junit.xml
     reports:
@@ -274,7 +274,7 @@ legacy upgrade test:
     - tests/download_emulators.sh
     - pipenv run pytest --junitxml=tests/junit.xml tests/upgrade_tests
   artifacts:
-    name: legacy-emu-upgrade-test
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
       - tests/junit.xml
     reports:
@@ -312,7 +312,7 @@ storage test:
     - pipenv run make build
     - pipenv run make tests_all
   artifacts:
-    name: storage-test
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
       - tests/junit.xml
     reports:
