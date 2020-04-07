@@ -13,11 +13,14 @@
 # This module adds shiny packaging and support for python3.
 #
 
+if False:
+    from typing import Callable
+
 # 58 character alphabet used
 _alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 
 
-def encode(data: bytes, alphabet=_alphabet) -> str:
+def encode(data: bytes, alphabet: str = _alphabet) -> str:
     """
     Convert bytes to base58 encoded string.
     """
@@ -38,7 +41,7 @@ def encode(data: bytes, alphabet=_alphabet) -> str:
     return "".join((c for c in reversed(result + alphabet[0] * (origlen - newlen))))
 
 
-def decode(string: str, alphabet=_alphabet) -> bytes:
+def decode(string: str, alphabet: str = _alphabet) -> bytes:
     """
     Convert base58 encoded string to bytes.
     """
@@ -89,14 +92,16 @@ def ripemd160_32(data: bytes) -> bytes:
     return ripemd160(data).digest()[:4]
 
 
-def encode_check(data: bytes, digestfunc=sha256d_32) -> str:
+def encode_check(data: bytes, digestfunc: Callable[[bytes], bytes] = sha256d_32) -> str:
     """
     Convert bytes to base58 encoded string, append checksum.
     """
     return encode(data + digestfunc(data))
 
 
-def decode_check(string: str, digestfunc=sha256d_32) -> bytes:
+def decode_check(
+    string: str, digestfunc: Callable[[bytes], bytes] = sha256d_32
+) -> bytes:
     """
     Convert base58 encoded string to bytes and verify checksum.
     """
@@ -104,7 +109,7 @@ def decode_check(string: str, digestfunc=sha256d_32) -> bytes:
     return verify_checksum(result, digestfunc)
 
 
-def verify_checksum(data: bytes, digestfunc) -> bytes:
+def verify_checksum(data: bytes, digestfunc: Callable[[bytes], bytes]) -> bytes:
     digestlen = len(digestfunc(b""))
     result, check = data[:-digestlen], data[-digestlen:]
 

@@ -47,7 +47,7 @@ def derive_script_code(txi: TxInputType, pubkeyhash: bytes) -> bytearray:
 
 
 class Zip143:
-    def __init__(self, branch_id):
+    def __init__(self, branch_id: int) -> None:
         self.branch_id = branch_id
         self.h_prevouts = HashWriter(blake2b(outlen=32, personal=b"ZcashPrevoutHash"))
         self.h_sequence = HashWriter(blake2b(outlen=32, personal=b"ZcashSequencHash"))
@@ -119,7 +119,7 @@ class Zip143:
 
 
 class Zip243(Zip143):
-    def __init__(self, branch_id):
+    def __init__(self, branch_id) -> None:
         super().__init__(branch_id)
 
     def preimage_hash(

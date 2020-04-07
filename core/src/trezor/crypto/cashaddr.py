@@ -20,12 +20,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+if False:
+    from typing import Iterable, List, Tuple
+
 CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 ADDRESS_TYPE_P2KH = 0
 ADDRESS_TYPE_P2SH = 8
 
 
-def cashaddr_polymod(values):
+def cashaddr_polymod(values: List[int]) -> int:
     generator = [0x98F2BC8E61, 0x79B76D99E2, 0xF33E5FB3C4, 0xAE2EABE2A8, 0x1E4F43E470]
     chk = 1
     for value in values:
@@ -36,11 +39,11 @@ def cashaddr_polymod(values):
     return chk ^ 1
 
 
-def prefix_expand(prefix):
+def prefix_expand(prefix: str) -> List[int]:
     return [ord(x) & 0x1F for x in prefix] + [0]
 
 
-def calculate_checksum(prefix, payload):
+def calculate_checksum(prefix: str, payload: List[int]) -> List[int]:
     poly = cashaddr_polymod(prefix_expand(prefix) + payload + [0, 0, 0, 0, 0, 0, 0, 0])
     out = list()
     for i in range(8):
@@ -48,25 +51,27 @@ def calculate_checksum(prefix, payload):
     return out
 
 
-def verify_checksum(prefix, payload):
+def verify_checksum(prefix: str, payload: List[int]) -> bool:
     return cashaddr_polymod(prefix_expand(prefix) + payload) == 0
 
 
-def b32decode(inputs):
+def b32decode(inputs: str) -> List[int]:
     out = list()
     for letter in inputs:
         out.append(CHARSET.find(letter))
     return out
 
 
-def b32encode(inputs):
+def b32encode(inputs: List[int]) -> str:
     out = ""
     for char_code in inputs:
         out += CHARSET[char_code]
     return out
 
 
-def convertbits(data, frombits, tobits, pad=True):
+def convertbits(
+    data: Iterable[int], frombits: int, tobits: int, pad: bool = True
+) -> List[int]:
     acc = 0
     bits = 0
     ret = []
@@ -74,7 +79,7 @@ def convertbits(data, frombits, tobits, pad=True):
     max_acc = (1 << (frombits + tobits - 1)) - 1
     for value in data:
         if value < 0 or (value >> frombits):
-            return None
+            raise ValueError
         acc = ((acc << frombits) | value) & max_acc
         bits += frombits
         while bits >= tobits:
@@ -84,18 +89,18 @@ def convertbits(data, frombits, tobits, pad=True):
         if bits:
             ret.append((acc << (tobits - bits)) & maxv)
     elif bits >= frombits or ((acc << (tobits - bits)) & maxv):
-        return None
+        raise ValueError
     return ret
 
 
-def encode(prefix, version, payload):
-    payload = bytes([version]) + payload
-    payload = convertbits(payload, 8, 5)
+def encode(prefix: str, version: int, payload_bytes: bytes) -> str:
+    payload_bytes = bytes([version]) + payload_bytes
+    payload = convertbits(payload_bytes, 8, 5)
     checksum = calculate_checksum(prefix, payload)
     return prefix + ":" + b32encode(payload + checksum)
 
 
-def decode(prefix, addr):
+def decode(prefix: str, addr: str) -> Tuple[int, bytes]:
     addr = addr.lower()
     decoded = b32decode(addr)
     if not verify_checksum(prefix, decoded):

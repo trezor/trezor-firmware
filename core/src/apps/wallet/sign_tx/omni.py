@@ -2,6 +2,9 @@ from ustruct import unpack
 
 from trezor.strings import format_amount
 
+if False:
+    from typing import Optional
+
 currencies = {
     1: ("OMNI", True),
     2: ("tOMNI", True),
@@ -14,7 +17,7 @@ def is_valid(data: bytes) -> bool:
     return len(data) >= 8 and data[:4] == b"omni"
 
 
-def parse(data: bytes) -> bool:
+def parse(data: bytes) -> Optional[str]:
     if not is_valid(data):
         return None
     tx_version, tx_type = unpack(">HH", data[4:8])
