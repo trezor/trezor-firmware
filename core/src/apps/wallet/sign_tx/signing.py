@@ -157,7 +157,7 @@ class Bitcoin:
             raise SigningError(FailureType.ActionCancelled, "Total cancelled")
 
     async def phase1_process_input(self, i: int, txi: TxInputType) -> None:
-        self.wallet_path = input_extract_wallet_path(txi, self.wallet_path)
+        self.input_extract_wallet_path(txi)
         writers.write_tx_input_check(self.h_first, txi)
         self.hash143.add_prevouts(txi)  # all inputs are included (non-segwit as well)
         self.hash143.add_sequence(txi)
@@ -297,7 +297,7 @@ class Bitcoin:
             raise SigningError(
                 FailureType.ProcessError, "Transaction has changed during signing"
             )
-        input_check_wallet_path(txi_sign, self.wallet_path)
+        self.input_check_wallet_path(txi_sign)
         # NOTE: No need to check the multisig fingerprint, because we won't be signing
         # the script here. Signatures are produced in STAGE_REQUEST_SEGWIT_WITNESS.
 
@@ -316,8 +316,8 @@ class Bitcoin:
     async def phase2_sign_segwit_input(self, i) -> Tuple[bytearray, bytes]:
         txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
 
-        input_check_wallet_path(txi, self.wallet_path)
-        input_check_multisig_fingerprint(txi, self.multisig_fp)
+        self.input_check_wallet_path(txi)
+        self.input_check_multisig_fingerprint(txi)
 
         if not input_is_segwit(txi) or txi.amount > self.bip143_in:
             raise SigningError(
@@ -352,8 +352,8 @@ class Bitcoin:
     async def phase2_sign_bip143_input(self, i_sign) -> None:
         # STAGE_REQUEST_SEGWIT_INPUT
         txi_sign = await helpers.request_tx_input(self.tx_req, i_sign, self.coin)
-        input_check_wallet_path(txi_sign, self.wallet_path)
-        input_check_multisig_fingerprint(txi_sign, self.multisig_fp)
+        self.input_check_wallet_path(txi_sign)
+        self.input_check_multisig_fingerprint(txi_sign)
 
         is_bip143 = (
             txi_sign.script_type == InputScriptType.SPENDADDRESS
@@ -409,11 +409,11 @@ class Bitcoin:
         for i in range(self.tx.inputs_count):
             # STAGE_REQUEST_4_INPUT
             txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
-            input_check_wallet_path(txi, self.wallet_path)
+            self.input_check_wallet_path(txi)
             writers.write_tx_input_check(h_second, txi)
             if i == i_sign:
                 txi_sign = txi
-                input_check_multisig_fingerprint(txi_sign, self.multisig_fp)
+                self.input_check_multisig_fingerprint(txi_sign)
                 key_sign = self.keychain.derive(txi.address_n, self.coin.curve_name)
                 key_sign_pub = key_sign.public_key()
                 # for the signing process the script_sig is equal
@@ -694,47 +694,41 @@ class Bitcoin:
         else:
             raise SigningError(FailureType.ProcessError, "Invalid script type")
 
+    def input_extract_wallet_path(self, txi: TxInputType) -> None:
+        if self.wallet_path is None:
+            return  # there was a mismatch in previous inputs
+        address_n = txi.address_n[:-_BIP32_WALLET_DEPTH]
+        if not address_n:
+            self.wallet_path = None  # input path is too short
+        elif not self.wallet_path:
+            self.wallet_path = address_n  # this is the first input
+        elif self.wallet_path != address_n:
+            self.wallet_path = None  # paths don't match
+
+    def input_check_wallet_path(self, txi: TxInputType) -> None:
+        if self.wallet_path is None:
+            return  # there was a mismatch in Phase 1, ignore it now
+        address_n = txi.address_n[:-_BIP32_WALLET_DEPTH]
+        if self.wallet_path != address_n:
+            raise SigningError(
+                FailureType.ProcessError, "Transaction has changed during signing"
+            )
+
+    def input_check_multisig_fingerprint(self, txi: TxInputType) -> None:
+        if self.multisig_fp.mismatch is False:
+            # All inputs in Phase 1 had matching multisig fingerprints, allowing a multisig change-output.
+            if not txi.multisig or not self.multisig_fp.matches(txi.multisig):
+                # This input no longer has a matching multisig fingerprint.
+                raise SigningError(
+                    FailureType.ProcessError, "Transaction has changed during signing"
+                )
+
 
 def input_is_segwit(i: TxInputType) -> bool:
     return (
         i.script_type == InputScriptType.SPENDWITNESS
         or i.script_type == InputScriptType.SPENDP2SHWITNESS
     )
-
-
-def input_extract_wallet_path(txi: TxInputType, wallet_path: list) -> list:
-    if wallet_path is None:
-        return None  # there was a mismatch in previous inputs
-    address_n = txi.address_n[:-_BIP32_WALLET_DEPTH]
-    if not address_n:
-        return None  # input path is too short
-    if not wallet_path:
-        return address_n  # this is the first input
-    if wallet_path == address_n:
-        return address_n  # paths match
-    return None  # paths don't match
-
-
-def input_check_wallet_path(txi: TxInputType, wallet_path: list) -> list:
-    if wallet_path is None:
-        return  # there was a mismatch in Phase 1, ignore it now
-    address_n = txi.address_n[:-_BIP32_WALLET_DEPTH]
-    if wallet_path != address_n:
-        raise SigningError(
-            FailureType.ProcessError, "Transaction has changed during signing"
-        )
-
-
-def input_check_multisig_fingerprint(
-    txi: TxInputType, multisig_fp: multisig.MultisigFingerprint
-) -> None:
-    if multisig_fp.mismatch is False:
-        # All inputs in Phase 1 had matching multisig fingerprints, allowing a multisig change-output.
-        if not txi.multisig or not multisig_fp.matches(txi.multisig):
-            # This input no longer has a matching multisig fingerprint.
-            raise SigningError(
-                FailureType.ProcessError, "Transaction has changed during signing"
-            )
 
 
 def ecdsa_sign(node: bip32.HDNode, digest: bytes) -> bytes:

@@ -16,8 +16,6 @@ from apps.wallet.sign_tx.signing import (
     Bitcoin,
     SigningError,
     ecdsa_sign,
-    input_check_multisig_fingerprint,
-    input_check_wallet_path,
 )
 
 DECRED_SERIALIZE_FULL = const(0 << 16)
@@ -113,8 +111,8 @@ class Decred(Bitcoin):
 
             txi_sign = await helpers.request_tx_input(self.tx_req, i_sign, self.coin)
 
-            input_check_wallet_path(txi_sign, self.wallet_path)
-            input_check_multisig_fingerprint(txi_sign, self.multisig_fp)
+            self.input_check_wallet_path(txi_sign)
+            self.input_check_multisig_fingerprint(txi_sign)
 
             key_sign = self.keychain.derive(txi_sign.address_n, self.coin.curve_name)
             key_sign_pub = key_sign.public_key()
