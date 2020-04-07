@@ -24,6 +24,8 @@ async def sign_tx(ctx, msg, keychain):
     coin = coins.by_name(coin_name)
     if not utils.BITCOIN_ONLY and coin.decred:
         coinsig = decred.Decred()
+    elif not utils.BITCOIN_ONLY and coin.overwintered:
+        coinsig = bitcoinlike.Overwintered()
     elif not utils.BITCOIN_ONLY and coin_name not in ("Bitcoin", "Regtest", "Testnet"):
         coinsig = bitcoinlike.Bitcoinlike()
     else:
