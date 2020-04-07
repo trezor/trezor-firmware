@@ -176,7 +176,7 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/extmod/modutimeq.c',
     'vendor/micropython/extmod/utime_mphal.c',
     'vendor/micropython/lib/embed/abort_.c',
-    'vendor/micropython/lib/mp-readline/readline.c',
+    #'vendor/micropython/lib/mp-readline/readline.c',
     'vendor/micropython/lib/utils/gchelper_m3.s',
     'vendor/micropython/lib/utils/interrupt_char.c',
     'vendor/micropython/lib/utils/printf.c',
