@@ -163,22 +163,6 @@
 // extra built in names to add to the global namespace
 #define MICROPY_PORT_BUILTINS
 
-// extra built in modules to add to the list of known ones
-extern const struct _mp_obj_module_t mp_module_utime;
-extern const struct _mp_obj_module_t mp_module_trezorconfig;
-extern const struct _mp_obj_module_t mp_module_trezorcrypto;
-extern const struct _mp_obj_module_t mp_module_trezorio;
-extern const struct _mp_obj_module_t mp_module_trezorui;
-extern const struct _mp_obj_module_t mp_module_trezorutils;
-
-#define MICROPY_PORT_BUILTIN_MODULES \
-    { MP_ROM_QSTR(MP_QSTR_utime), MP_ROM_PTR(&mp_module_utime) }, \
-    { MP_ROM_QSTR(MP_QSTR_trezorconfig), MP_ROM_PTR(&mp_module_trezorconfig) }, \
-    { MP_ROM_QSTR(MP_QSTR_trezorcrypto), MP_ROM_PTR(&mp_module_trezorcrypto) }, \
-    { MP_ROM_QSTR(MP_QSTR_trezorio), MP_ROM_PTR(&mp_module_trezorio) }, \
-    { MP_ROM_QSTR(MP_QSTR_trezorui), MP_ROM_PTR(&mp_module_trezorui) }, \
-    { MP_ROM_QSTR(MP_QSTR_trezorutils), MP_ROM_PTR(&mp_module_trezorutils) },
-
 #define MP_STATE_PORT MP_STATE_VM
 
 

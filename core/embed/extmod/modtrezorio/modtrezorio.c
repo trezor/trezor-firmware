@@ -93,4 +93,6 @@ const mp_obj_module_t mp_module_trezorio = {
     .globals = (mp_obj_dict_t*)&mp_module_trezorio_globals,
 };
 
+MP_REGISTER_MODULE(MP_QSTR_trezorio, mp_module_trezorio, MICROPY_PY_TREZORIO);
+
 #endif  // MICROPY_PY_TREZORIO
