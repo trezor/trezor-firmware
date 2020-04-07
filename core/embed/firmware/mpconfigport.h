@@ -33,9 +33,6 @@
 #ifndef __INCLUDED_MPCONFIGPORT_H
 #define __INCLUDED_MPCONFIGPORT_H
 
-// stuff from py/mpconfig.h
-#define MICROPY_ENABLE_COMPILER     (0)
-
 // frozen modules
 #define MICROPY_MODULE_FROZEN_MPY   (1)
 #define MICROPY_QSTR_EXTRA_POOL     (mp_qstr_frozen_const_pool)
@@ -49,6 +46,7 @@
 #define MICROPY_EMIT_INLINE_THUMB   (0)
 
 // compiler configuration
+#define MICROPY_ENABLE_COMPILER     (0)
 #define MICROPY_COMP_MODULE_CONST   (1)
 #define MICROPY_COMP_TRIPLE_TUPLE_ASSIGN (1)
 #define MICROPY_COMP_RETURN_IF_EXPR (1)
@@ -82,7 +80,6 @@
 #define MICROPY_ENABLE_SCHEDULER    (0)
 #define MICROPY_SCHEDULER_DEPTH     (0)
 #define MICROPY_VFS                 (0)
-#define MICROPY_VFS_FAT             (0)
 
 // control over Python builtins
 #define MICROPY_PY_FUNCTION_ATTRS   (1)
@@ -96,6 +93,7 @@
 #define MICROPY_PY_BUILTINS_FROZENSET (0)
 #define MICROPY_PY_BUILTINS_SLICE_ATTRS (1)
 #define MICROPY_PY_BUILTINS_ROUND_INT (0)
+#define MICROPY_PY_REVERSE_SPECIAL_METHODS (0)
 #define MICROPY_PY_ALL_SPECIAL_METHODS (0)
 #define MICROPY_PY_BUILTINS_COMPILE (MICROPY_ENABLE_COMPILER)
 #define MICROPY_PY_BUILTINS_EXECFILE (MICROPY_ENABLE_COMPILER)
@@ -123,9 +121,7 @@
 #define MICROPY_PY_SYS_STDIO_BUFFER (0)
 #define MICROPY_PY_SYS_PLATFORM     "trezor"
 #define MICROPY_PY_UERRNO           (0)
-#ifndef MICROPY_PY_THREAD
 #define MICROPY_PY_THREAD           (0)
-#endif
 
 // extended modules
 #define MICROPY_PY_UCTYPES          (1)
@@ -160,10 +156,9 @@
 #define MICROPY_PY_TREZORUI         (1)
 #define MICROPY_PY_TREZORUTILS      (1)
 
-// extra built in names to add to the global namespace
-#define MICROPY_PORT_BUILTINS
-
 #define MP_STATE_PORT MP_STATE_VM
+
+// ============= this ends common config section ===================
 
 
 // type definitions for the specific machine

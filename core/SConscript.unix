@@ -363,7 +363,6 @@ env.Replace(
     CPPDEFINES=[
         'TREZOR_EMULATOR',
         ('TREZOR_MODEL', '$TREZOR_MODEL'),
-        'MICROPY_USE_READLINE',
         ('MP_CONFIGFILE', '\\"embed/unix/mpconfigport.h\\"'),
     ] + CPPDEFINES_MOD,
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
