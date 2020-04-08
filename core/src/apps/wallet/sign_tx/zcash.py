@@ -6,7 +6,6 @@ from trezor.messages import FailureType, InputScriptType
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TransactionType import TransactionType
 from trezor.messages.TxInputType import TxInputType
-from trezor.messages.TxOutputBinType import TxOutputBinType
 from trezor.utils import HashWriter, ensure
 
 from apps.common.coininfo import CoinInfo
@@ -14,6 +13,7 @@ from apps.common.seed import Keychain
 from apps.wallet.sign_tx.bitcoinlike import Bitcoinlike
 from apps.wallet.sign_tx.multisig import multisig_get_pubkeys
 from apps.wallet.sign_tx.scripts import output_script_multisig, output_script_p2pkh
+from apps.wallet.sign_tx.segwit_bip143 import Bip143
 from apps.wallet.sign_tx.signing import SigningError
 from apps.wallet.sign_tx.writers import (
     TX_HASH_SIZE,
@@ -21,7 +21,6 @@ from apps.wallet.sign_tx.writers import (
     write_bytes_fixed,
     write_bytes_prefixed,
     write_bytes_reversed,
-    write_tx_output,
     write_uint32,
     write_uint64,
     write_varint,
@@ -55,30 +54,20 @@ def derive_script_code(txi: TxInputType, pubkeyhash: bytes) -> bytearray:
         )
 
 
-class Zip143:
+class Zip143(Bip143):
     def __init__(self, branch_id: int) -> None:
         self.branch_id = branch_id
         self.h_prevouts = HashWriter(blake2b(outlen=32, personal=b"ZcashPrevoutHash"))
         self.h_sequence = HashWriter(blake2b(outlen=32, personal=b"ZcashSequencHash"))
         self.h_outputs = HashWriter(blake2b(outlen=32, personal=b"ZcashOutputsHash"))
 
-    def add_prevouts(self, txi: TxInputType) -> None:
-        write_bytes_reversed(self.h_prevouts, txi.prev_hash, TX_HASH_SIZE)
-        write_uint32(self.h_prevouts, txi.prev_index)
-
-    def add_sequence(self, txi: TxInputType) -> None:
-        write_uint32(self.h_sequence, txi.sequence)
-
-    def add_output(self, txo_bin: TxOutputBinType) -> None:
-        write_tx_output(self.h_outputs, txo_bin)
-
-    def get_prevouts_hash(self) -> bytes:
+    def get_prevouts_hash(self, coin: CoinInfo) -> bytes:
         return get_tx_hash(self.h_prevouts)
 
-    def get_sequence_hash(self) -> bytes:
+    def get_sequence_hash(self, coin: CoinInfo) -> bytes:
         return get_tx_hash(self.h_sequence)
 
-    def get_outputs_hash(self) -> bytes:
+    def get_outputs_hash(self, coin: CoinInfo) -> bytes:
         return get_tx_hash(self.h_outputs)
 
     def preimage_hash(
@@ -103,11 +92,17 @@ class Zip143:
         )  # 1. nVersion | fOverwintered
         write_uint32(h_preimage, tx.version_group_id)  # 2. nVersionGroupId
         # 3. hashPrevouts
-        write_bytes_fixed(h_preimage, bytearray(self.get_prevouts_hash()), TX_HASH_SIZE)
+        write_bytes_fixed(
+            h_preimage, bytearray(self.get_prevouts_hash(coin)), TX_HASH_SIZE
+        )
         # 4. hashSequence
-        write_bytes_fixed(h_preimage, bytearray(self.get_sequence_hash()), TX_HASH_SIZE)
+        write_bytes_fixed(
+            h_preimage, bytearray(self.get_sequence_hash(coin)), TX_HASH_SIZE
+        )
         # 5. hashOutputs
-        write_bytes_fixed(h_preimage, bytearray(self.get_outputs_hash()), TX_HASH_SIZE)
+        write_bytes_fixed(
+            h_preimage, bytearray(self.get_outputs_hash(coin)), TX_HASH_SIZE
+        )
         # 6. hashJoinSplits
         write_bytes_fixed(h_preimage, b"\x00" * TX_HASH_SIZE, TX_HASH_SIZE)
         write_uint32(h_preimage, tx.lock_time)  # 7. nLockTime
@@ -153,11 +148,17 @@ class Zip243(Zip143):
         )  # 1. nVersion | fOverwintered
         write_uint32(h_preimage, tx.version_group_id)  # 2. nVersionGroupId
         # 3. hashPrevouts
-        write_bytes_fixed(h_preimage, bytearray(self.get_prevouts_hash()), TX_HASH_SIZE)
+        write_bytes_fixed(
+            h_preimage, bytearray(self.get_prevouts_hash(coin)), TX_HASH_SIZE
+        )
         # 4. hashSequence
-        write_bytes_fixed(h_preimage, bytearray(self.get_sequence_hash()), TX_HASH_SIZE)
+        write_bytes_fixed(
+            h_preimage, bytearray(self.get_sequence_hash(coin)), TX_HASH_SIZE
+        )
         # 5. hashOutputs
-        write_bytes_fixed(h_preimage, bytearray(self.get_outputs_hash()), TX_HASH_SIZE)
+        write_bytes_fixed(
+            h_preimage, bytearray(self.get_outputs_hash(coin)), TX_HASH_SIZE
+        )
 
         zero_hash = b"\x00" * TX_HASH_SIZE
         write_bytes_fixed(h_preimage, zero_hash, TX_HASH_SIZE)  # 6. hashJoinSplits

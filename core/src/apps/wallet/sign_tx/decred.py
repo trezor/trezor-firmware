@@ -13,6 +13,7 @@ from trezor.utils import HashWriter, ensure
 
 from apps.common import coininfo, seed
 from apps.wallet.sign_tx import addresses, helpers, multisig, progress, scripts, writers
+from apps.wallet.sign_tx.segwit_bip143 import Bip143
 from apps.wallet.sign_tx.signing import Bitcoin, SigningError, ecdsa_sign
 
 DECRED_SERIALIZE_FULL = const(0 << 16)
@@ -25,7 +26,7 @@ if False:
     from typing import Union
 
 
-class DecredPrefixHasher:
+class DecredPrefixHasher(Bip143):
     """
     While Decred does not have the exact same implementation as bip143/zip143,
     the semantics for using the prefix hash of transactions are close enough
@@ -53,7 +54,7 @@ class DecredPrefixHasher:
         writers.write_uint32(self.h_prefix, tx.lock_time)
         writers.write_uint32(self.h_prefix, tx.expiry)
 
-    def prefix_hash(self) -> bytes:
+    def get_prefix_hash(self) -> bytes:
         return self.h_prefix.get_digest()
 
 
@@ -110,7 +111,7 @@ class Decred(Bitcoin):
     async def phase2(self) -> None:
         self.tx_req.serialized = None
 
-        prefix_hash = self.hash143.prefix_hash()
+        prefix_hash = self.hash143.get_prefix_hash()
 
         for i_sign in range(self.tx.inputs_count):
             progress.advance()
