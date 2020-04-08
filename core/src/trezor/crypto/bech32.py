@@ -21,7 +21,7 @@
 """Reference implementation for Bech32 and segwit addresses."""
 
 if False:
-    from typing import List, Optional, Tuple
+    from typing import Iterable, List, Optional, Tuple
 
 CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 
@@ -81,7 +81,7 @@ def bech32_decode(bech: str) -> Tuple[Optional[str], Optional[List[int]]]:
 
 
 def convertbits(
-    data: List[int], frombits: int, tobits: int, pad: bool = True
+    data: Iterable[int], frombits: int, tobits: int, pad: bool = True
 ) -> List[int]:
     """General power-of-2 base conversion."""
     acc = 0
@@ -120,7 +120,7 @@ def decode(hrp: str, addr: str) -> Tuple[Optional[int], Optional[List[int]]]:
     return (data[0], decoded)
 
 
-def encode(hrp: str, witver: int, witprog: List[int]) -> Optional[str]:
+def encode(hrp: str, witver: int, witprog: Iterable[int]) -> Optional[str]:
     """Encode a segwit address."""
     ret = bech32_encode(hrp, [witver] + convertbits(witprog, 8, 5))
     if decode(hrp, ret) == (None, None):

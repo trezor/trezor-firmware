@@ -53,14 +53,14 @@ class Zip143:
         self.h_sequence = HashWriter(blake2b(outlen=32, personal=b"ZcashSequencHash"))
         self.h_outputs = HashWriter(blake2b(outlen=32, personal=b"ZcashOutputsHash"))
 
-    def add_prevouts(self, txi: TxInputType):
+    def add_prevouts(self, txi: TxInputType) -> None:
         write_bytes_reversed(self.h_prevouts, txi.prev_hash, TX_HASH_SIZE)
         write_uint32(self.h_prevouts, txi.prev_index)
 
-    def add_sequence(self, txi: TxInputType):
+    def add_sequence(self, txi: TxInputType) -> None:
         write_uint32(self.h_sequence, txi.sequence)
 
-    def add_output(self, txo_bin: TxOutputBinType):
+    def add_output(self, txo_bin: TxOutputBinType) -> None:
         write_tx_output(self.h_outputs, txo_bin)
 
     def get_prevouts_hash(self) -> bytes:
@@ -119,7 +119,7 @@ class Zip143:
 
 
 class Zip243(Zip143):
-    def __init__(self, branch_id) -> None:
+    def __init__(self, branch_id: int) -> None:
         super().__init__(branch_id)
 
     def preimage_hash(

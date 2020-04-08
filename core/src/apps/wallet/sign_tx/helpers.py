@@ -22,7 +22,7 @@ from .writers import TX_HASH_SIZE
 from apps.common.coininfo import CoinInfo
 
 if False:
-    from typing import Union
+    from typing import Any, Awaitable, Union
 
 MULTISIG_INPUT_SCRIPT_TYPES = (
     InputScriptType.SPENDMULTISIG,
@@ -92,27 +92,27 @@ class UiConfirmNonDefaultLocktime:
     __eq__ = utils.obj_eq
 
 
-def confirm_output(output: TxOutputType, coin: CoinInfo):
+def confirm_output(output: TxOutputType, coin: CoinInfo) -> Awaitable[Any]:  # type: ignore
     return (yield UiConfirmOutput(output, coin))
 
 
-def confirm_total(spending: int, fee: int, coin: CoinInfo):
+def confirm_total(spending: int, fee: int, coin: CoinInfo) -> Awaitable[Any]:  # type: ignore
     return (yield UiConfirmTotal(spending, fee, coin))
 
 
-def confirm_feeoverthreshold(fee: int, coin: CoinInfo):
+def confirm_feeoverthreshold(fee: int, coin: CoinInfo) -> Awaitable[Any]:  # type: ignore
     return (yield UiConfirmFeeOverThreshold(fee, coin))
 
 
-def confirm_foreign_address(address_n: list):
+def confirm_foreign_address(address_n: list) -> Awaitable[Any]:  # type: ignore
     return (yield UiConfirmForeignAddress(address_n))
 
 
-def confirm_nondefault_locktime(lock_time: int):
+def confirm_nondefault_locktime(lock_time: int) -> Awaitable[Any]:  # type: ignore
     return (yield UiConfirmNonDefaultLocktime(lock_time))
 
 
-def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes = None):
+def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[Any]:  # type: ignore
     tx_req.request_type = TXMETA
     tx_req.details.tx_hash = tx_hash
     tx_req.details.request_index = None
@@ -122,9 +122,9 @@ def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes = None):
     return sanitize_tx_meta(ack.tx, coin)
 
 
-def request_tx_extra_data(
+def request_tx_extra_data(  # type: ignore
     tx_req: TxRequest, offset: int, size: int, tx_hash: bytes = None
-):
+) -> Awaitable[Any]:
     tx_req.request_type = TXEXTRADATA
     tx_req.details.extra_data_offset = offset
     tx_req.details.extra_data_len = size
@@ -138,7 +138,7 @@ def request_tx_extra_data(
     return ack.tx.extra_data
 
 
-def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes = None):
+def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[Any]:  # type: ignore
     tx_req.request_type = TXINPUT
     tx_req.details.request_index = i
     tx_req.details.tx_hash = tx_hash
@@ -148,7 +148,7 @@ def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes =
     return sanitize_tx_input(ack.tx, coin)
 
 
-def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes = None):
+def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[Any]:  # type: ignore
     tx_req.request_type = TXOUTPUT
     tx_req.details.request_index = i
     tx_req.details.tx_hash = tx_hash
@@ -161,7 +161,7 @@ def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes 
         return sanitize_tx_binoutput(ack.tx, coin)
 
 
-def request_tx_finish(tx_req: TxRequest):
+def request_tx_finish(tx_req: TxRequest) -> Awaitable[Any]:  # type: ignore
     tx_req.request_type = TXFINISHED
     tx_req.details = None
     yield tx_req
@@ -293,7 +293,7 @@ def sanitize_tx_binoutput(tx: TransactionType, coin: CoinInfo) -> TxOutputBinTyp
 
 def _sanitize_decred(
     tx: Union[TxInputType, TxOutputType, TxOutputBinType], coin: CoinInfo
-):
+) -> None:
     if not coin.decred and tx.decred_script_version is not None:
         raise SigningError(
             FailureType.DataError,

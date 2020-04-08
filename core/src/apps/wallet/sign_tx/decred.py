@@ -33,19 +33,19 @@ class DecredPrefixHasher:
         writers.write_uint32(self.h_prefix, tx.version | DECRED_SERIALIZE_NO_WITNESS)
         writers.write_varint(self.h_prefix, tx.inputs_count)
 
-    def add_prevouts(self, txi: TxInputType):
+    def add_prevouts(self, txi: TxInputType) -> None:
         writers.write_tx_input_decred(self.h_prefix, txi)
 
-    def add_sequence(self, txi: TxInputType):
+    def add_sequence(self, txi: TxInputType) -> None:
         pass
 
-    def add_output_count(self, tx: SignTx):
+    def add_output_count(self, tx: SignTx) -> None:
         writers.write_varint(self.h_prefix, tx.outputs_count)
 
-    def add_output(self, txo_bin: TxOutputBinType):
+    def add_output(self, txo_bin: TxOutputBinType) -> None:
         writers.write_tx_output(self.h_prefix, txo_bin)
 
-    def add_locktime_expiry(self, tx: SignTx):
+    def add_locktime_expiry(self, tx: SignTx) -> None:
         writers.write_uint32(self.h_prefix, tx.lock_time)
         writers.write_uint32(self.h_prefix, tx.expiry)
 
@@ -54,21 +54,23 @@ class DecredPrefixHasher:
 
 
 class Decred(Bitcoin):
-    def initialize(self, tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinInfo):
+    def initialize(
+        self, tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinInfo
+    ) -> None:
         super().initialize(tx, keychain, coin)
 
         # This is required because the last serialized output obtained in
         # `check_fee` will only be sent to the client in `sign_tx`
         self.last_output_bytes = None  # type: bytearray
 
-    def init_hash143(self):
+    def init_hash143(self) -> None:
         self.hash143 = DecredPrefixHasher(self.tx)  # pseudo BIP-0143 prefix hashing
 
-    async def phase1(self):
+    async def phase1(self) -> None:
         await super().phase1()
         self.hash143.add_locktime_expiry(self.tx)
 
-    async def phase1_process_input(self, i: int, txi: TxInputType):
+    async def phase1_process_input(self, i: int, txi: TxInputType) -> None:
         await super().phase1_process_input(i, txi)
         w_txi = writers.empty_bytearray(8 if i == 0 else 0 + 9 + len(txi.prev_hash))
         if i == 0:  # serializing first input => prepend headers
@@ -78,7 +80,7 @@ class Decred(Bitcoin):
 
     async def phase1_confirm_output(
         self, i: int, txo: TxOutputType, txo_bin: TxOutputBinType
-    ):
+    ) -> None:
         if txo.decred_script_version is not None and txo.decred_script_version != 0:
             raise SigningError(
                 FailureType.ActionCancelled,
@@ -97,7 +99,7 @@ class Decred(Bitcoin):
 
         await super().phase1_confirm_output(i, txo, txo_bin)
 
-    async def phase2(self):
+    async def phase2(self) -> None:
         self.tx_req.serialized = None
 
         prefix_hash = self.hash143.prefix_hash()
@@ -171,7 +173,7 @@ class Decred(Bitcoin):
                 i_sign, signature, w_txi_sign
             )
 
-        return await helpers.request_tx_finish(self.tx_req)
+        await helpers.request_tx_finish(self.tx_req)
 
     async def get_prevtx_output_value(self, prev_hash: bytes, prev_index: int) -> int:
         total_out = 0  # sum of output amounts

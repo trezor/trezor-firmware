@@ -70,8 +70,8 @@ def multisig_fingerprint(multisig: MultisigRedeemScriptType) -> bytes:
 
 def multisig_pubkey_index(multisig: MultisigRedeemScriptType, pubkey: bytes) -> int:
     if multisig.nodes:
-        for i, hd in enumerate(multisig.nodes):
-            if multisig_get_pubkey(hd, multisig.address_n) == pubkey:
+        for i, hd_node in enumerate(multisig.nodes):
+            if multisig_get_pubkey(hd_node, multisig.address_n) == pubkey:
                 return i
     else:
         for i, hd in enumerate(multisig.pubkeys):

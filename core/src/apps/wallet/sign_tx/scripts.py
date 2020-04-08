@@ -11,6 +11,10 @@ from apps.wallet.sign_tx.writers import (
     write_varint,
 )
 
+if False:
+    from typing import List
+    from apps.wallet.sign_tx.writers import Writer
+
 
 class ScriptsError(ValueError):
     pass
@@ -145,7 +149,7 @@ def witness_p2wsh(
     signature: bytes,
     signature_index: int,
     sighash: int,
-):
+) -> bytearray:
     # get other signatures, stretch with None to the number of the pubkeys
     signatures = multisig.signatures + [None] * (
         multisig_get_pubkey_count(multisig) - len(multisig.signatures)
@@ -184,7 +188,7 @@ def witness_p2wsh(
 
     # redeem script
     write_varint(w, redeem_script_length)
-    output_script_multisig(pubkeys, multisig.m, w)
+    write_output_script_multisig(w, pubkeys, multisig.m)
 
     return w
 
@@ -233,12 +237,18 @@ def input_script_multisig(
 
     # redeem script
     write_op_push(w, redeem_script_length)
-    output_script_multisig(pubkeys, multisig.m, w)
+    write_output_script_multisig(w, pubkeys, multisig.m)
 
     return w
 
 
-def output_script_multisig(pubkeys, m: int, w: bytearray = None) -> bytearray:
+def output_script_multisig(pubkeys: List[bytes], m: int, w: Writer = None) -> bytearray:
+    w = empty_bytearray(output_script_multisig_length(pubkeys, m))
+    write_output_script_multisig(w, pubkeys, m)
+    return w
+
+
+def write_output_script_multisig(w: Writer, pubkeys: List[bytes], m: int) -> None:
     n = len(pubkeys)
     if n < 1 or n > 15 or m < 1 or m > 15 or m > n:
         raise ScriptsError("Invalid multisig parameters")
@@ -246,17 +256,14 @@ def output_script_multisig(pubkeys, m: int, w: bytearray = None) -> bytearray:
         if len(pubkey) != 33:
             raise ScriptsError("Invalid multisig parameters")
 
-    if w is None:
-        w = empty_bytearray(output_script_multisig_length(pubkeys, m))
     w.append(0x50 + m)  # numbers 1 to 16 are pushed as 0x50 + value
     for p in pubkeys:
         append_pubkey(w, p)
     w.append(0x50 + n)
     w.append(0xAE)  # OP_CHECKMULTISIG
-    return w
 
 
-def output_script_multisig_length(pubkeys, m: int) -> int:
+def output_script_multisig_length(pubkeys: List[bytes], m: int) -> int:
     return 1 + len(pubkeys) * (1 + 33) + 1 + 1  # see output_script_multisig
 
 
@@ -276,14 +283,12 @@ def output_script_paytoopreturn(data: bytes) -> bytearray:
 # ===
 
 
-def append_signature(w: bytearray, signature: bytes, sighash: int) -> bytearray:
+def append_signature(w: Writer, signature: bytes, sighash: int) -> None:
     write_op_push(w, len(signature) + 1)
     write_bytes_unchecked(w, signature)
     w.append(sighash)
-    return w
 
 
-def append_pubkey(w: bytearray, pubkey: bytes) -> bytearray:
+def append_pubkey(w: Writer, pubkey: bytes) -> None:
     write_op_push(w, len(pubkey))
     write_bytes_unchecked(w, pubkey)
-    return w
