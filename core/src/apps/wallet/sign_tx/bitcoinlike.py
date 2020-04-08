@@ -9,7 +9,7 @@ from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputType import TxOutputType
 from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
 
-from apps.wallet.sign_tx import addresses, helpers, multisig, signing, writers, zcash
+from apps.wallet.sign_tx import addresses, helpers, multisig, signing, writers
 
 if False:
     from typing import Union
@@ -141,52 +141,3 @@ class Bitcoinlike(signing.Bitcoin):
                 )
                 writers.write_bytes_unchecked(w, data)
                 ofs += len(data)
-
-
-class Overwintered(Bitcoinlike):
-    def init_hash143(self) -> None:
-        if self.coin.overwintered:
-            if self.tx.version == 3:
-                branch_id = self.tx.branch_id or 0x5BA81B19  # Overwinter
-                self.hash143 = zcash.Zip143(branch_id)  # ZIP-0143 transaction hashing
-            elif self.tx.version == 4:
-                branch_id = self.tx.branch_id or 0x76B809BB  # Sapling
-                self.hash143 = zcash.Zip243(branch_id)  # ZIP-0243 transaction hashing
-            else:
-                raise signing.SigningError(
-                    FailureType.DataError,
-                    "Unsupported version for overwintered transaction",
-                )
-        else:
-            super().init_hash143()
-
-    async def phase1_process_nonsegwit_input(self, i: int, txi: TxInputType) -> None:
-        await self.phase1_process_bip143_input(i, txi)
-
-    async def phase2_sign_nonsegwit_input(self, i_sign: int) -> None:
-        await self.phase2_sign_bip143_input(i_sign)
-
-    def write_tx_header(
-        self, w: writers.Writer, tx: Union[SignTx, TransactionType], has_segwit: bool
-    ) -> None:
-        # nVersion | fOverwintered
-        writers.write_uint32(w, tx.version | zcash.OVERWINTERED)
-        writers.write_uint32(w, tx.version_group_id)  # nVersionGroupId
-
-    def write_sign_tx_footer(self, w: writers.Writer) -> None:
-        super().write_sign_tx_footer(w)
-
-        if self.tx.version == 3:
-            writers.write_uint32(w, self.tx.expiry)  # expiryHeight
-            writers.write_varint(w, 0)  # nJoinSplit
-        elif self.tx.version == 4:
-            writers.write_uint32(w, self.tx.expiry)  # expiryHeight
-            writers.write_uint64(w, 0)  # valueBalance
-            writers.write_varint(w, 0)  # nShieldedSpend
-            writers.write_varint(w, 0)  # nShieldedOutput
-            writers.write_varint(w, 0)  # nJoinSplit
-        else:
-            raise signing.SigningError(
-                FailureType.DataError,
-                "Unsupported version for overwintered transaction",
-            )

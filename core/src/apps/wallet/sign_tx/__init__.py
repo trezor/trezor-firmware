@@ -17,7 +17,7 @@ from apps.wallet.sign_tx import (
 )
 
 if not utils.BITCOIN_ONLY:
-    from apps.wallet.sign_tx import decred, bitcoinlike
+    from apps.wallet.sign_tx import bitcoinlike, decred, zcash
 
 if False:
     from typing import Union
@@ -29,7 +29,7 @@ async def sign_tx(ctx: wire.Context, msg: SignTx, keychain: seed.Keychain) -> Tx
     if not utils.BITCOIN_ONLY and coin.decred:
         coinsig = decred.Decred()  # type: signing.Bitcoin
     elif not utils.BITCOIN_ONLY and coin.overwintered:
-        coinsig = bitcoinlike.Overwintered()
+        coinsig = zcash.Overwintered()
     elif not utils.BITCOIN_ONLY and coin_name not in ("Bitcoin", "Regtest", "Testnet"):
         coinsig = bitcoinlike.Bitcoinlike()
     else:
