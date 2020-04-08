@@ -23,6 +23,9 @@ pytest-timeout = "*"
 tox = "*"
 dominate = "*"
 
+# hardware tests
+pyserial = "*"
+
 ## test requirements
 shamir-mnemonic = "*"
 fido2 = ">=0.8.0"
