@@ -37,8 +37,14 @@ class Bip143:
     def add_sequence(self, txi: TxInputType) -> None:
         write_uint32(self.h_sequence, txi.sequence)
 
+    def add_output_count(self, tx: SignTx) -> None:
+        pass
+
     def add_output(self, txo_bin: TxOutputBinType) -> None:
         write_tx_output(self.h_outputs, txo_bin)
+
+    def add_locktime_expiry(self, tx: SignTx) -> None:
+        pass
 
     def get_prevouts_hash(self, coin: CoinInfo) -> bytes:
         return get_tx_hash(self.h_prevouts, double=coin.sign_hash_double)
@@ -48,6 +54,9 @@ class Bip143:
 
     def get_outputs_hash(self, coin: CoinInfo) -> bytes:
         return get_tx_hash(self.h_outputs, double=coin.sign_hash_double)
+
+    def get_prefix_hash(self) -> bytes:
+        pass
 
     def preimage_hash(
         self,
@@ -70,7 +79,7 @@ class Bip143:
         write_bytes_reversed(h_preimage, txi.prev_hash, TX_HASH_SIZE)  # outpoint
         write_uint32(h_preimage, txi.prev_index)  # outpoint
 
-        script_code = self.derive_script_code(txi, pubkeyhash)  # scriptCode
+        script_code = derive_script_code(txi, pubkeyhash)  # scriptCode
         write_bytes_prefixed(h_preimage, script_code)
 
         write_uint64(h_preimage, txi.amount)  # amount
@@ -82,27 +91,27 @@ class Bip143:
 
         return get_tx_hash(h_preimage, double=coin.sign_hash_double)
 
-    # see https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#specification
-    # item 5 for details
-    def derive_script_code(self, txi: TxInputType, pubkeyhash: bytes) -> bytearray:
 
-        if txi.multisig:
-            return output_script_multisig(
-                multisig_get_pubkeys(txi.multisig), txi.multisig.m
-            )
+# see https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#specification
+# item 5 for details
+def derive_script_code(txi: TxInputType, pubkeyhash: bytes) -> bytearray:
 
-        p2pkh = (
-            txi.script_type == InputScriptType.SPENDWITNESS
-            or txi.script_type == InputScriptType.SPENDP2SHWITNESS
-            or txi.script_type == InputScriptType.SPENDADDRESS
+    if txi.multisig:
+        return output_script_multisig(
+            multisig_get_pubkeys(txi.multisig), txi.multisig.m
         )
-        if p2pkh:
-            # for p2wpkh in p2sh or native p2wpkh
-            # the scriptCode is a classic p2pkh
-            return output_script_p2pkh(pubkeyhash)
 
-        else:
-            raise Bip143Error(
-                FailureType.DataError,
-                "Unknown input script type for bip143 script code",
-            )
+    p2pkh = (
+        txi.script_type == InputScriptType.SPENDWITNESS
+        or txi.script_type == InputScriptType.SPENDP2SHWITNESS
+        or txi.script_type == InputScriptType.SPENDADDRESS
+    )
+    if p2pkh:
+        # for p2wpkh in p2sh or native p2wpkh
+        # the scriptCode is a classic p2pkh
+        return output_script_p2pkh(pubkeyhash)
+
+    else:
+        raise Bip143Error(
+            FailureType.DataError, "Unknown input script type for bip143 script code",
+        )
