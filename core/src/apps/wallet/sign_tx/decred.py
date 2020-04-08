@@ -4,11 +4,12 @@ from micropython import const
 from trezor.crypto.hashlib import blake256
 from trezor.messages import FailureType, InputScriptType
 from trezor.messages.SignTx import SignTx
+from trezor.messages.TransactionType import TransactionType
 from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputBinType import TxOutputBinType
 from trezor.messages.TxOutputType import TxOutputType
 from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
-from trezor.utils import HashWriter
+from trezor.utils import HashWriter, ensure
 
 from apps.common import coininfo, seed
 from apps.wallet.sign_tx import addresses, helpers, multisig, progress, scripts, writers
@@ -19,6 +20,9 @@ DECRED_SERIALIZE_NO_WITNESS = const(1 << 16)
 DECRED_SERIALIZE_WITNESS_SIGNING = const(3 << 16)
 
 DECRED_SIGHASHALL = const(1)
+
+if False:
+    from typing import Union
 
 
 class DecredPrefixHasher:
@@ -57,14 +61,18 @@ class Decred(Bitcoin):
     def initialize(
         self, tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinInfo
     ) -> None:
+        ensure(coin.decred)
         super().initialize(tx, keychain, coin)
 
         # This is required because the last serialized output obtained in
-        # `check_fee` will only be sent to the client in `sign_tx`
+        # phase 1 will only be sent to the client in phase 2
         self.last_output_bytes = None  # type: bytearray
 
     def init_hash143(self) -> None:
         self.hash143 = DecredPrefixHasher(self.tx)  # pseudo BIP-0143 prefix hashing
+
+    def create_hash_writer(self) -> HashWriter:
+        return HashWriter(blake256())
 
     async def phase1(self) -> None:
         await super().phase1()
@@ -75,7 +83,7 @@ class Decred(Bitcoin):
         w_txi = writers.empty_bytearray(8 if i == 0 else 0 + 9 + len(txi.prev_hash))
         if i == 0:  # serializing first input => prepend headers
             self.write_sign_tx_header(w_txi, False)
-        writers.write_tx_input_decred(w_txi, txi)
+        self.write_tx_input(w_txi, txi)
         self.tx_req.serialized = TxRequestSerializedType(None, None, w_txi)
 
     async def phase1_confirm_output(
@@ -127,7 +135,7 @@ class Decred(Bitcoin):
             else:
                 raise SigningError("Unsupported input script type")
 
-            h_witness = HashWriter(blake256())
+            h_witness = self.create_hash_writer()
             writers.write_uint32(
                 h_witness, self.tx.version | DECRED_SERIALIZE_WITNESS_SIGNING
             )
@@ -143,7 +151,7 @@ class Decred(Bitcoin):
                 h_witness, double=self.coin.sign_hash_double, reverse=False
             )
 
-            h_sign = HashWriter(blake256())
+            h_sign = self.create_hash_writer()
             writers.write_uint32(h_sign, DECRED_SIGHASHALL)
             writers.write_bytes_fixed(h_sign, prefix_hash, writers.TX_HASH_SIZE)
             writers.write_bytes_fixed(h_sign, witness_hash, writers.TX_HASH_SIZE)
@@ -175,54 +183,30 @@ class Decred(Bitcoin):
 
         await helpers.request_tx_finish(self.tx_req)
 
-    async def get_prevtx_output_value(self, prev_hash: bytes, prev_index: int) -> int:
-        total_out = 0  # sum of output amounts
-
-        # STAGE_REQUEST_2_PREV_META
-        tx = await helpers.request_tx_meta(self.tx_req, self.coin, prev_hash)
-
-        if tx.outputs_cnt <= prev_index:
-            raise SigningError(
-                FailureType.ProcessError, "Not enough outputs in previous transaction."
-            )
-
-        txh = HashWriter(blake256())
-        writers.write_uint32(txh, tx.version | DECRED_SERIALIZE_NO_WITNESS)
-        writers.write_varint(txh, tx.inputs_cnt)
-
-        for i in range(tx.inputs_cnt):
-            # STAGE_REQUEST_2_PREV_INPUT
-            txi = await helpers.request_tx_input(self.tx_req, i, self.coin, prev_hash)
-            writers.write_tx_input_decred(txh, txi)
-
-        writers.write_varint(txh, tx.outputs_cnt)
-
-        for o in range(tx.outputs_cnt):
-            # STAGE_REQUEST_2_PREV_OUTPUT
-            txo_bin = await helpers.request_tx_output(
-                self.tx_req, o, self.coin, prev_hash
-            )
-            writers.write_tx_output(txh, txo_bin)
-            if o == prev_index:
-                total_out += txo_bin.amount
-                if (
-                    txo_bin.decred_script_version is not None
-                    and txo_bin.decred_script_version != 0
-                ):
-                    raise SigningError(
-                        FailureType.ProcessError,
-                        "Cannot use utxo that has script_version != 0",
-                    )
-
-        writers.write_uint32(txh, tx.lock_time)
-        writers.write_uint32(txh, tx.expiry)
-
+    def check_prevtx_output(self, txo_bin: TxOutputBinType) -> None:
         if (
-            writers.get_tx_hash(txh, double=self.coin.sign_hash_double, reverse=True)
-            != prev_hash
+            txo_bin.decred_script_version is not None
+            and txo_bin.decred_script_version != 0
         ):
             raise SigningError(
-                FailureType.ProcessError, "Encountered invalid prev_hash"
+                FailureType.ProcessError,
+                "Cannot use utxo that has script_version != 0",
             )
 
-        return total_out
+    def write_tx_input(self, w: writers.Writer, i: TxInputType) -> None:
+        writers.write_tx_input_decred(w, i)
+
+    def write_sign_tx_header(self, w: writers.Writer, has_segwit: bool) -> None:
+        writers.write_uint32(w, self.tx.version)  # nVersion
+        writers.write_varint(w, self.tx.inputs_count)
+
+    def write_tx_header(
+        self, w: writers.Writer, tx: Union[SignTx, TransactionType], has_segwit: bool
+    ) -> None:
+        writers.write_uint32(w, tx.version | DECRED_SERIALIZE_NO_WITNESS)
+
+    async def write_prev_tx_footer(
+        self, w: writers.Writer, tx: TransactionType, prev_hash: bytes
+    ) -> None:
+        writers.write_uint32(w, tx.lock_time)
+        writers.write_uint32(w, tx.expiry)
