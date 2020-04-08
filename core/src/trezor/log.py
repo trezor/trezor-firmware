@@ -73,4 +73,5 @@ def exception(name: str, exc: BaseException) -> None:
         _log(name, DEBUG, "ui.Cancelled")
     else:
         _log(name, ERROR, "exception:")
-        sys.print_exception(exc)
+        # since mypy 0.770 we cannot override sys, so print_exception is unknown
+        sys.print_exception(exc)  # type: ignore
