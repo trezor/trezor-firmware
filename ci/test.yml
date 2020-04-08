@@ -324,6 +324,10 @@ storage test:
 hardware legacy device test:
   stage: test
   extends: .legacy_job
+  only:
+    - schedules  # nightly build
+    - /^legacy\/v[0-9.]*$/
+    - /^release\/[0-9]{4}-[0-9]{2}$/
   tags:
     - tpmb
   dependencies:
