@@ -246,7 +246,7 @@ class Bitcoin:
 
         await helpers.request_tx_finish(self.tx_req)
 
-    async def phase2_serialize_segwit_input(self, i_sign) -> None:
+    async def phase2_serialize_segwit_input(self, i_sign: int) -> None:
         # STAGE_REQUEST_SEGWIT_INPUT
         txi_sign = await helpers.request_tx_input(self.tx_req, i_sign, self.coin)
 
@@ -270,7 +270,7 @@ class Bitcoin:
         writers.write_tx_input(w_txi, txi_sign)
         self.tx_req.serialized = TxRequestSerializedType(serialized_tx=w_txi)
 
-    async def phase2_sign_segwit_input(self, i) -> Tuple[bytearray, bytes]:
+    async def phase2_sign_segwit_input(self, i: int) -> Tuple[bytearray, bytes]:
         txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
 
         self.input_check_wallet_path(txi)
@@ -552,8 +552,8 @@ class Bitcoin:
                 # p2wsh in p2sh
                 pubkeys = multisig.multisig_get_pubkeys(i.multisig)
                 witness_script_hasher = utils.HashWriter(sha256())
-                scripts.output_script_multisig(
-                    pubkeys, i.multisig.m, witness_script_hasher
+                scripts.write_output_script_multisig(
+                    witness_script_hasher, pubkeys, i.multisig.m
                 )
                 witness_script_hash = witness_script_hasher.get_digest()
                 return scripts.input_script_p2wsh_in_p2sh(witness_script_hash)

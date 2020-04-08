@@ -44,13 +44,13 @@ class TxWeightCalculator:
         )
         self.segwit = False
 
-    def add_witness_header(self):
+    def add_witness_header(self) -> None:
         if not self.segwit:
             self.counter += _TXSIZE_SEGWIT_OVERHEAD
             self.counter += self.ser_length_size(self.inputs_count)
             self.segwit = True
 
-    def add_input(self, i: TxInputType):
+    def add_input(self, i: TxInputType) -> None:
 
         if i.multisig:
             multisig_script_size = _TXSIZE_MULTISIGSCRIPT + len(i.multisig.pubkeys) * (
@@ -88,7 +88,7 @@ class TxWeightCalculator:
                 self.counter += 4  # empty
             self.counter += input_script_size  # discounted witness
 
-    def add_output(self, script: bytes):
+    def add_output(self, script: bytes) -> None:
         size = len(script) + self.ser_length_size(len(script))
         self.counter += 4 * (_TXSIZE_OUTPUT + size)
 
@@ -96,7 +96,7 @@ class TxWeightCalculator:
         return self.counter
 
     @staticmethod
-    def ser_length_size(length: int):
+    def ser_length_size(length: int) -> int:
         if length < 253:
             return 1
         if length < 0x10000:
@@ -104,7 +104,7 @@ class TxWeightCalculator:
         return 5
 
     @staticmethod
-    def op_push_size(length: int):
+    def op_push_size(length: int) -> int:
         if length < 0x4C:
             return 1
         if length < 0x100:

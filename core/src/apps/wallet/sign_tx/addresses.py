@@ -3,6 +3,7 @@ from micropython import const
 from trezor.crypto import base58, bech32, cashaddr
 from trezor.crypto.hashlib import sha256
 from trezor.messages import FailureType, InputScriptType
+from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
 from trezor.utils import ensure
 
 from apps.common import HARDENED, address_type, paths
@@ -15,6 +16,7 @@ from apps.wallet.sign_tx.scripts import (
 
 if False:
     from typing import List
+    from trezor.crypto import bip32
 
 # supported witness version for bech32 addresses
 _BECH32_WITVER = const(0x00)
@@ -25,7 +27,10 @@ class AddressError(Exception):
 
 
 def get_address(
-    script_type: InputScriptType, coin: CoinInfo, node, multisig=None
+    script_type: int,
+    coin: CoinInfo,
+    node: bip32.HDNode,
+    multisig: MultisigRedeemScriptType = None,
 ) -> str:
 
     if (
@@ -88,7 +93,7 @@ def get_address(
         raise AddressError(FailureType.ProcessError, "Invalid script type")
 
 
-def address_multisig_p2sh(pubkeys: List[bytes], m: int, coin: CoinInfo):
+def address_multisig_p2sh(pubkeys: List[bytes], m: int, coin: CoinInfo) -> str:
     if coin.address_type_p2sh is None:
         raise AddressError(
             FailureType.ProcessError, "Multisig not enabled on this coin"
@@ -98,7 +103,7 @@ def address_multisig_p2sh(pubkeys: List[bytes], m: int, coin: CoinInfo):
     return address_p2sh(redeem_script_hash, coin)
 
 
-def address_multisig_p2wsh_in_p2sh(pubkeys: List[bytes], m: int, coin: CoinInfo):
+def address_multisig_p2wsh_in_p2sh(pubkeys: List[bytes], m: int, coin: CoinInfo) -> str:
     if coin.address_type_p2sh is None:
         raise AddressError(
             FailureType.ProcessError, "Multisig not enabled on this coin"
@@ -108,7 +113,7 @@ def address_multisig_p2wsh_in_p2sh(pubkeys: List[bytes], m: int, coin: CoinInfo)
     return address_p2wsh_in_p2sh(witness_script_hash, coin)
 
 
-def address_multisig_p2wsh(pubkeys: List[bytes], m: int, hrp: str):
+def address_multisig_p2wsh(pubkeys: List[bytes], m: int, hrp: str) -> str:
     if not hrp:
         raise AddressError(
             FailureType.ProcessError, "Multisig not enabled on this coin"
@@ -196,7 +201,7 @@ def address_short(coin: CoinInfo, address: str) -> str:
 
 
 def validate_full_path(
-    path: list, coin: CoinInfo, script_type: InputScriptType, validate_script_type=True
+    path: list, coin: CoinInfo, script_type: int, validate_script_type: bool = True
 ) -> bool:
     """
     Validates derivation path to fit Bitcoin-like coins. We mostly use
@@ -244,9 +249,7 @@ def validate_purpose(purpose: int, coin: CoinInfo) -> bool:
     return True
 
 
-def validate_purpose_against_script_type(
-    purpose: int, script_type: InputScriptType
-) -> bool:
+def validate_purpose_against_script_type(purpose: int, script_type: int) -> bool:
     """
     Validates purpose against provided input's script type:
     - 44 for spending address (script_type == SPENDADDRESS)

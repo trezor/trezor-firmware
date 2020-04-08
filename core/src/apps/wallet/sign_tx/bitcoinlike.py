@@ -44,7 +44,7 @@ class Bitcoinlike(signing.Bitcoin):
         else:
             await super().phase2_sign_nonsegwit_input(i_sign)
 
-    async def phase2_sign_bip143_input(self, i_sign) -> None:
+    async def phase2_sign_bip143_input(self, i_sign: int) -> None:
         # STAGE_REQUEST_SEGWIT_INPUT
         txi_sign = await helpers.request_tx_input(self.tx_req, i_sign, self.coin)
         self.input_check_wallet_path(txi_sign)

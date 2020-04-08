@@ -25,19 +25,19 @@ class Bip143Error(ValueError):
 
 
 class Bip143:
-    def __init__(self):
+    def __init__(self) -> None:
         self.h_prevouts = HashWriter(sha256())
         self.h_sequence = HashWriter(sha256())
         self.h_outputs = HashWriter(sha256())
 
-    def add_prevouts(self, txi: TxInputType):
+    def add_prevouts(self, txi: TxInputType) -> None:
         write_bytes_reversed(self.h_prevouts, txi.prev_hash, TX_HASH_SIZE)
         write_uint32(self.h_prevouts, txi.prev_index)
 
-    def add_sequence(self, txi: TxInputType):
+    def add_sequence(self, txi: TxInputType) -> None:
         write_uint32(self.h_sequence, txi.sequence)
 
-    def add_output(self, txo_bin: TxOutputBinType):
+    def add_output(self, txo_bin: TxOutputBinType) -> None:
         write_tx_output(self.h_outputs, txo_bin)
 
     def get_prevouts_hash(self, coin: CoinInfo) -> bytes:

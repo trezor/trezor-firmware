@@ -86,9 +86,6 @@ if False:
         def extend(self, buf: bytes) -> None:
             ...
 
-        def write(self, buf: bytes) -> None:
-            ...
-
 
 class HashWriter:
     def __init__(self, ctx: HashContext) -> None:

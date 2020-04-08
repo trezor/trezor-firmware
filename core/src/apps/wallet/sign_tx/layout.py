@@ -3,25 +3,34 @@ from ubinascii import hexlify
 
 from trezor import ui
 from trezor.messages import ButtonRequestType, OutputScriptType
+from trezor.messages.TxOutputType import TxOutputType
 from trezor.strings import format_amount
 from trezor.utils import chunks
+
+from apps.common import coininfo
+
+if False:
+    from typing import Iterator, List
+    from trezor import wire
 
 _LOCKTIME_TIMESTAMP_MIN_VALUE = const(500000000)
 
 
-def format_coin_amount(amount, coin):
+def format_coin_amount(amount: int, coin: coininfo.CoinInfo) -> str:
     return "%s %s" % (format_amount(amount, coin.decimals), coin.coin_shortcut)
 
 
-def split_address(address):
+def split_address(address: str) -> Iterator[str]:
     return chunks(address, 17)
 
 
-def split_op_return(data):
+def split_op_return(data: str) -> Iterator[str]:
     return chunks(data, 18)
 
 
-async def confirm_output(ctx, output, coin):
+async def confirm_output(
+    ctx: wire.Context, output: TxOutputType, coin: coininfo.CoinInfo
+) -> bool:
     from trezor.ui.text import Text
     from apps.common.confirm import confirm
     from apps.wallet.sign_tx import addresses, omni
@@ -34,11 +43,11 @@ async def confirm_output(ctx, output, coin):
             text.normal(omni.parse(data))
         else:
             # generic OP_RETURN
-            data = hexlify(data).decode()
-            if len(data) >= 18 * 5:
-                data = data[: (18 * 5 - 3)] + "..."
+            hex_data = hexlify(data).decode()
+            if len(hex_data) >= 18 * 5:
+                hex_data = hex_data[: (18 * 5 - 3)] + "..."
             text = Text("OP_RETURN", ui.ICON_SEND, ui.GREEN)
-            text.mono(*split_op_return(data))
+            text.mono(*split_op_return(hex_data))
     else:
         address = output.address
         address_short = addresses.address_short(coin, address)
@@ -48,7 +57,9 @@ async def confirm_output(ctx, output, coin):
     return await confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
 
-async def confirm_total(ctx, spending, fee, coin):
+async def confirm_total(
+    ctx: wire.Context, spending: int, fee: int, coin: coininfo.CoinInfo
+) -> bool:
     from trezor.ui.text import Text
     from apps.common.confirm import hold_to_confirm
 
@@ -60,7 +71,9 @@ async def confirm_total(ctx, spending, fee, coin):
     return await hold_to_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
-async def confirm_feeoverthreshold(ctx, fee, coin):
+async def confirm_feeoverthreshold(
+    ctx: wire.Context, fee: int, coin: coininfo.CoinInfo
+) -> bool:
     from trezor.ui.text import Text
     from apps.common.confirm import confirm
 
@@ -71,7 +84,9 @@ async def confirm_feeoverthreshold(ctx, fee, coin):
     return await confirm(ctx, text, ButtonRequestType.FeeOverThreshold)
 
 
-async def confirm_foreign_address(ctx, address_n, coin):
+async def confirm_foreign_address(
+    ctx: wire.Context, address_n: List[int], coin: coininfo.CoinInfo
+) -> bool:
     from trezor.ui.text import Text
     from apps.common.confirm import confirm
 
@@ -80,7 +95,7 @@ async def confirm_foreign_address(ctx, address_n, coin):
     return await confirm(ctx, text, ButtonRequestType.SignTx)
 
 
-async def confirm_nondefault_locktime(ctx, lock_time):
+async def confirm_nondefault_locktime(ctx: wire.Context, lock_time: int) -> bool:
     from trezor.ui.text import Text
     from apps.common.confirm import confirm
 
