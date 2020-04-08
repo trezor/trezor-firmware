@@ -98,12 +98,15 @@ class Bitcoin:
         # h_first is used to make sure the inputs and outputs streamed in Phase 1
         # are the same as in Phase 2 when signing legacy inputs.  it is thus not required to fully hash the
         # tx, as the SignTx info is streamed only once
-        self.h_first = utils.HashWriter(sha256())  # not a real tx hash
+        self.h_first = self.create_hash_writer()  # not a real tx hash
 
         self.init_hash143()
 
     def init_hash143(self) -> None:
         self.hash143 = segwit_bip143.Bip143()  # BIP-0143 transaction hashing
+
+    def create_hash_writer(self) -> utils.HashWriter:
+        return utils.HashWriter(sha256())
 
     async def phase1(self) -> None:
         weight = tx_weight.TxWeightCalculator(
@@ -267,7 +270,7 @@ class Bitcoin:
         )
         if i_sign == 0:  # serializing first input => prepend headers
             self.write_sign_tx_header(w_txi, True)
-        writers.write_tx_input(w_txi, txi_sign)
+        self.write_tx_input(w_txi, txi_sign)
         self.tx_req.serialized = TxRequestSerializedType(serialized_tx=w_txi)
 
     async def phase2_sign_segwit_input(self, i: int) -> Tuple[bytearray, bytes]:
@@ -308,9 +311,9 @@ class Bitcoin:
 
     async def phase2_sign_nonsegwit_input(self, i_sign: int) -> None:
         # hash of what we are signing with this input
-        h_sign = utils.HashWriter(sha256())
+        h_sign = self.create_hash_writer()
         # same as h_first, checked before signing the digest
-        h_second = utils.HashWriter(sha256())
+        h_second = self.create_hash_writer()
 
         self.write_sign_tx_header(h_sign, has_segwit=False)
 
@@ -341,7 +344,7 @@ class Bitcoin:
                     )
             else:
                 txi.script_sig = bytes()
-            writers.write_tx_input(h_sign, txi)
+            self.write_tx_input(h_sign, txi)
 
         writers.write_varint(h_sign, self.tx.outputs_count)
 
@@ -382,7 +385,7 @@ class Bitcoin:
         )
         if i_sign == 0:  # serializing first input => prepend headers
             self.write_sign_tx_header(w_txi_sign, True in self.segwit.values())
-        writers.write_tx_input(w_txi_sign, txi_sign)
+        self.write_tx_input(w_txi_sign, txi_sign)
         self.tx_req.serialized = TxRequestSerializedType(i_sign, signature, w_txi_sign)
 
     async def phase2_serialize_output(self, i: int) -> bytearray:
@@ -410,7 +413,7 @@ class Bitcoin:
                 FailureType.ProcessError, "Not enough outputs in previous transaction."
             )
 
-        txh = utils.HashWriter(sha256())
+        txh = self.create_hash_writer()
 
         # TODO set has_segwit correctly
         self.write_tx_header(txh, tx, has_segwit=False)
@@ -419,7 +422,7 @@ class Bitcoin:
         for i in range(tx.inputs_cnt):
             # STAGE_REQUEST_2_PREV_INPUT
             txi = await helpers.request_tx_input(self.tx_req, i, self.coin, prev_hash)
-            writers.write_tx_input(txh, txi)
+            self.write_tx_input(txh, txi)
 
         writers.write_varint(txh, tx.outputs_cnt)
 
@@ -431,6 +434,7 @@ class Bitcoin:
             writers.write_tx_output(txh, txo_bin)
             if o == prev_index:
                 amount_out = txo_bin.amount
+                self.check_prevtx_output(txo_bin)
 
         await self.write_prev_tx_footer(txh, tx, prev_hash)
 
@@ -444,12 +448,18 @@ class Bitcoin:
 
         return amount_out
 
+    def check_prevtx_output(self, txo_bin: TxOutputBinType) -> None:
+        pass
+
     # TX Helpers
     # ===
 
     def get_hash_type(self) -> int:
         SIGHASH_ALL = const(0x01)
         return SIGHASH_ALL
+
+    def write_tx_input(self, w: writers.Writer, i: TxInputType) -> None:
+        writers.write_tx_input(w, i)
 
     def write_sign_tx_header(self, w: writers.Writer, has_segwit: bool) -> None:
         self.write_tx_header(w, self.tx, has_segwit)
@@ -551,7 +561,7 @@ class Bitcoin:
             if i.multisig:
                 # p2wsh in p2sh
                 pubkeys = multisig.multisig_get_pubkeys(i.multisig)
-                witness_script_hasher = utils.HashWriter(sha256())
+                witness_script_hasher = self.create_hash_writer()
                 scripts.write_output_script_multisig(
                     witness_script_hasher, pubkeys, i.multisig.m
                 )
