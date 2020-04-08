@@ -4,13 +4,17 @@ from micropython import const
 from trezor.crypto.hashlib import blake2b
 from trezor.messages import FailureType, InputScriptType
 from trezor.messages.SignTx import SignTx
+from trezor.messages.TransactionType import TransactionType
 from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputBinType import TxOutputBinType
 from trezor.utils import HashWriter, ensure
 
 from apps.common.coininfo import CoinInfo
+from apps.common.seed import Keychain
+from apps.wallet.sign_tx.bitcoinlike import Bitcoinlike
 from apps.wallet.sign_tx.multisig import multisig_get_pubkeys
 from apps.wallet.sign_tx.scripts import output_script_multisig, output_script_p2pkh
+from apps.wallet.sign_tx.signing import SigningError
 from apps.wallet.sign_tx.writers import (
     TX_HASH_SIZE,
     get_tx_hash,
@@ -20,7 +24,12 @@ from apps.wallet.sign_tx.writers import (
     write_tx_output,
     write_uint32,
     write_uint64,
+    write_varint,
 )
+
+if False:
+    from typing import Union
+    from apps.wallet.sign_tx.writers import Writer
 
 OVERWINTERED = const(0x80000000)
 
@@ -171,3 +180,53 @@ class Zip243(Zip143):
         write_uint32(h_preimage, txi.sequence)  # 13d. nSequence
 
         return get_tx_hash(h_preimage)
+
+
+class Overwintered(Bitcoinlike):
+    def initialize(self, tx: SignTx, keychain: Keychain, coin: CoinInfo) -> None:
+        ensure(coin.overwintered)
+        super().initialize(tx, keychain, coin)
+
+    def init_hash143(self) -> None:
+        if self.tx.version == 3:
+            branch_id = self.tx.branch_id or 0x5BA81B19  # Overwinter
+            self.hash143 = Zip143(branch_id)  # ZIP-0143 transaction hashing
+        elif self.tx.version == 4:
+            branch_id = self.tx.branch_id or 0x76B809BB  # Sapling
+            self.hash143 = Zip243(branch_id)  # ZIP-0243 transaction hashing
+        else:
+            raise SigningError(
+                FailureType.DataError,
+                "Unsupported version for overwintered transaction",
+            )
+
+    async def phase1_process_nonsegwit_input(self, i: int, txi: TxInputType) -> None:
+        await self.phase1_process_bip143_input(i, txi)
+
+    async def phase2_sign_nonsegwit_input(self, i_sign: int) -> None:
+        await self.phase2_sign_bip143_input(i_sign)
+
+    def write_tx_header(
+        self, w: Writer, tx: Union[SignTx, TransactionType], has_segwit: bool
+    ) -> None:
+        # nVersion | fOverwintered
+        write_uint32(w, tx.version | OVERWINTERED)
+        write_uint32(w, tx.version_group_id)  # nVersionGroupId
+
+    def write_sign_tx_footer(self, w: Writer) -> None:
+        super().write_sign_tx_footer(w)
+
+        if self.tx.version == 3:
+            write_uint32(w, self.tx.expiry)  # expiryHeight
+            write_varint(w, 0)  # nJoinSplit
+        elif self.tx.version == 4:
+            write_uint32(w, self.tx.expiry)  # expiryHeight
+            write_uint64(w, 0)  # valueBalance
+            write_varint(w, 0)  # nShieldedSpend
+            write_varint(w, 0)  # nShieldedOutput
+            write_varint(w, 0)  # nJoinSplit
+        else:
+            raise SigningError(
+                FailureType.DataError,
+                "Unsupported version for overwintered transaction",
+            )
