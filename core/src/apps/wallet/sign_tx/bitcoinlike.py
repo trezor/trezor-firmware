@@ -7,7 +7,6 @@ from trezor.messages.SignTx import SignTx
 from trezor.messages.TransactionType import TransactionType
 from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputType import TxOutputType
-from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
 
 from apps.wallet.sign_tx import addresses, helpers, multisig, signing, writers
 
@@ -16,20 +15,20 @@ if False:
 
 
 class Bitcoinlike(signing.Bitcoin):
-    async def phase1_process_segwit_input(self, i: int, txi: TxInputType) -> None:
+    async def process_segwit_input(self, i: int, txi: TxInputType) -> None:
         if not self.coin.segwit:
             raise signing.SigningError(
                 FailureType.DataError, "Segwit not enabled on this coin"
             )
-        await super().phase1_process_segwit_input(i, txi)
+        await super().process_segwit_input(i, txi)
 
-    async def phase1_process_nonsegwit_input(self, i: int, txi: TxInputType) -> None:
+    async def process_nonsegwit_input(self, i: int, txi: TxInputType) -> None:
         if self.coin.force_bip143:
-            await self.phase1_process_bip143_input(i, txi)
+            await self.process_bip143_input(i, txi)
         else:
-            await super().phase1_process_nonsegwit_input(i, txi)
+            await super().process_nonsegwit_input(i, txi)
 
-    async def phase1_process_bip143_input(self, i: int, txi: TxInputType) -> None:
+    async def process_bip143_input(self, i: int, txi: TxInputType) -> None:
         if not txi.amount:
             raise signing.SigningError(
                 FailureType.DataError, "Expected input with amount"
@@ -38,13 +37,13 @@ class Bitcoinlike(signing.Bitcoin):
         self.bip143_in += txi.amount
         self.total_in += txi.amount
 
-    async def phase2_sign_nonsegwit_input(self, i_sign: int) -> None:
+    async def sign_nonsegwit_input(self, i_sign: int) -> None:
         if self.coin.force_bip143:
-            await self.phase2_sign_bip143_input(i_sign)
+            await self.sign_bip143_input(i_sign)
         else:
-            await super().phase2_sign_nonsegwit_input(i_sign)
+            await super().sign_nonsegwit_input(i_sign)
 
-    async def phase2_sign_bip143_input(self, i_sign: int) -> None:
+    async def sign_bip143_input(self, i_sign: int) -> None:
         # STAGE_REQUEST_SEGWIT_INPUT
         txi_sign = await helpers.request_tx_input(self.tx_req, i_sign, self.coin)
         self.input_check_wallet_path(txi_sign)
@@ -87,7 +86,10 @@ class Bitcoinlike(signing.Bitcoin):
         if i_sign == 0:  # serializing first input => prepend headers
             self.write_sign_tx_header(w_txi_sign, True in self.segwit.values())
         writers.write_tx_input(w_txi_sign, txi_sign)
-        self.tx_req.serialized = TxRequestSerializedType(i_sign, signature, w_txi_sign)
+        self.tx_ser.signature_index = i_sign
+        self.tx_ser.signature = signature
+        self.tx_ser.serialized_tx = w_txi_sign
+        self.tx_req.serialized = self.tx_ser
 
     def on_negative_fee(self) -> None:
         # some coins require negative fees for reward TX

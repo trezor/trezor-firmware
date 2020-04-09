@@ -8,7 +8,6 @@ from trezor.messages.TransactionType import TransactionType
 from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputBinType import TxOutputBinType
 from trezor.messages.TxOutputType import TxOutputType
-from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
 from trezor.utils import HashWriter, ensure
 
 from apps.common import coininfo, seed
@@ -66,7 +65,7 @@ class Decred(Bitcoin):
         super().initialize(tx, keychain, coin)
 
         # This is required because the last serialized output obtained in
-        # phase 1 will only be sent to the client in phase 2
+        # step 2 will only be sent to the client in step 4
         self.last_output_bytes = None  # type: bytearray
 
     def init_hash143(self) -> None:
@@ -75,19 +74,26 @@ class Decred(Bitcoin):
     def create_hash_writer(self) -> HashWriter:
         return HashWriter(blake256())
 
-    async def phase1(self) -> None:
-        await super().phase1()
+    async def step2_confirm_outputs(self) -> None:
+        await super().step2_confirm_outputs()
         self.hash143.add_locktime_expiry(self.tx)
 
-    async def phase1_process_input(self, i: int, txi: TxInputType) -> None:
-        await super().phase1_process_input(i, txi)
+    async def process_input(self, i: int, txi: TxInputType) -> None:
+        await super().process_input(i, txi)
+
+        # Decred serializes inputs early.
         w_txi = writers.empty_bytearray(8 if i == 0 else 0 + 9 + len(txi.prev_hash))
         if i == 0:  # serializing first input => prepend headers
             self.write_sign_tx_header(w_txi, False)
-        self.write_tx_input(w_txi, txi)
-        self.tx_req.serialized = TxRequestSerializedType(None, None, w_txi)
 
-    async def phase1_confirm_output(
+        self.write_tx_input(w_txi, txi)
+
+        self.tx_ser.signature_index = None
+        self.tx_ser.signature = None
+        self.tx_ser.serialized_tx = w_txi
+        self.tx_req.serialized = self.tx_ser
+
+    async def confirm_output(
         self, i: int, txo: TxOutputType, txo_bin: TxOutputBinType
     ) -> None:
         if txo.decred_script_version is not None and txo.decred_script_version != 0:
@@ -103,12 +109,17 @@ class Decred(Bitcoin):
             self.hash143.add_output_count(self.tx)
 
         writers.write_tx_output(w_txo_bin, txo_bin)
-        self.tx_req.serialized = TxRequestSerializedType(serialized_tx=w_txo_bin)
+
+        self.tx_ser.signature_index = None
+        self.tx_ser.signature = None
+        self.tx_ser.serialized_tx = w_txo_bin
+        self.tx_req.serialized = self.tx_ser
+
         self.last_output_bytes = w_txo_bin
 
-        await super().phase1_confirm_output(i, txo, txo_bin)
+        await super().confirm_output(i, txo, txo_bin)
 
-    async def phase2(self) -> None:
+    async def step4_serialize_inputs(self) -> None:
         self.tx_req.serialized = None
 
         prefix_hash = self.hash143.get_prefix_hash()
@@ -178,11 +189,20 @@ class Decred(Bitcoin):
                 writers.write_varint(w_txi_sign, self.tx.inputs_count)
 
             writers.write_tx_input_decred_witness(w_txi_sign, txi_sign)
-            self.tx_req.serialized = TxRequestSerializedType(
-                i_sign, signature, w_txi_sign
-            )
 
-        await helpers.request_tx_finish(self.tx_req)
+            self.tx_ser.signature_index = i_sign
+            self.tx_ser.signature = signature
+            self.tx_ser.serialized_tx = w_txi_sign
+            self.tx_req.serialized = self.tx_ser
+
+    async def step5_serialize_outputs(self) -> None:
+        pass
+
+    async def step6_sign_segwit_inputs(self) -> None:
+        pass
+
+    def write_sign_tx_footer(self, w: writers.Writer) -> None:
+        pass
 
     def check_prevtx_output(self, txo_bin: TxOutputBinType) -> None:
         if (
