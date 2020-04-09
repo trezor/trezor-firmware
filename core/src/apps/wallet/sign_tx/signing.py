@@ -181,12 +181,8 @@ class Bitcoin:
             if self.segwit[i]:
                 await self.sign_segwit_input(i)
             elif any_segwit:
-                # TODO what if a non-segwit input follows after a segwit input?
-                self.tx_ser.serialized_tx += bytearray(
-                    1
-                )  # empty witness for non-segwit inputs
-                self.tx_ser.signature_index = None
-                self.tx_ser.signature = None
+                # add empty witness for non-segwit inputs
+                self.tx_ser.serialized_tx.append(0)
                 self.tx_req.serialized = self.tx_ser
 
     async def step7_finish(self) -> None:
