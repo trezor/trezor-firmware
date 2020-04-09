@@ -64,10 +64,6 @@ class Decred(Bitcoin):
         ensure(coin.decred)
         super().initialize(tx, keychain, coin)
 
-        # This is required because the last serialized output obtained in
-        # step 2 will only be sent to the client in step 4
-        self.last_output_bytes = None  # type: bytearray
-
     def init_hash143(self) -> None:
         self.hash143 = DecredPrefixHasher(self.tx)  # pseudo BIP-0143 prefix hashing
 
@@ -115,13 +111,9 @@ class Decred(Bitcoin):
         self.tx_ser.serialized_tx = w_txo_bin
         self.tx_req.serialized = self.tx_ser
 
-        self.last_output_bytes = w_txo_bin
-
         await super().confirm_output(i, txo, txo_bin)
 
     async def step4_serialize_inputs(self) -> None:
-        self.tx_req.serialized = None
-
         prefix_hash = self.hash143.get_prefix_hash()
 
         for i_sign in range(self.tx.inputs_count):
@@ -176,17 +168,15 @@ class Decred(Bitcoin):
             txi_sign.script_sig = self.input_derive_script(
                 txi_sign, key_sign_pub, signature
             )
-            w_txi_sign = writers.empty_bytearray(
-                8 + 4 + len(self.last_output_bytes)
-                if i_sign == 0
-                else 0 + 16 + 4 + len(txi_sign.script_sig)
-            )
 
+            max_witness_size = 8 + 4 + 4 + 4 + len(txi_sign.script_sig)
             if i_sign == 0:
-                writers.write_bytes_unchecked(w_txi_sign, self.last_output_bytes)
+                w_txi_sign = writers.empty_bytearray(4 + 4 + 4 + max_witness_size)
                 writers.write_uint32(w_txi_sign, self.tx.lock_time)
                 writers.write_uint32(w_txi_sign, self.tx.expiry)
                 writers.write_varint(w_txi_sign, self.tx.inputs_count)
+            else:
+                w_txi_sign = writers.empty_bytearray(max_witness_size)
 
             writers.write_tx_input_decred_witness(w_txi_sign, txi_sign)
 

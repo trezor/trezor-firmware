@@ -160,8 +160,6 @@ class Bitcoin:
             raise SigningError(FailureType.ActionCancelled, "Total cancelled")
 
     async def step4_serialize_inputs(self) -> None:
-        self.tx_req.serialized = None
-
         for i in range(self.tx.inputs_count):
             progress.advance()
             if self.segwit[i]:
