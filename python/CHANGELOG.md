@@ -9,6 +9,14 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 ## [0.12.0] - 2020-04-01
 [0.12.0]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.6...python/v0.12.0
 
+### Incompatible changes
+
+- `trezorlib.coins`, `trezorlib.tx_api`, and the file `coins.json`, were removed
+- `TrezorClient` argument `ui` is now mandatory. `state` argument was renamed to `session_id`.
+- UI callback `get_passphrase()` has a new argument `available_on_device`.
+- API for `cosi` module was changed
+- other changes may also introduce incompatibilities, please review the full list below
+
 ### Added
 
 - support for firmwares 1.9.0 and 2.3.0
