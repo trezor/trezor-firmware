@@ -26,12 +26,17 @@ async def tsx_inputs_permutation(state: State, permutation: list):
     """
     Set permutation on the inputs - sorted by key image on host.
     """
+    if state.last_step != state.STEP_INP:
+        raise ValueError("Invalid state transition")
     if len(permutation) != state.input_count:
         raise ValueError("Invalid permutation size")
+    if state.current_input_index != state.input_count - 1:
+        raise ValueError("Invalid input count")
     _check_permutation(permutation)
 
     state.source_permutation = permutation
     state.current_input_index = -1
+    state.last_step = state.STEP_PERM
 
     return MoneroTransactionInputsPermutationAck()
 

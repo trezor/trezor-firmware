@@ -62,6 +62,8 @@ async def all_outputs_set(state: State):
 
     state.full_message = state.full_message_hasher.get_digest()
     state.full_message_hasher = None
+    state.last_step = state.STEP_ALL_OUT
+    state.last_ki = None
 
     return MoneroTransactionAllOutSetAck(
         extra=extra_b,
@@ -72,6 +74,8 @@ async def all_outputs_set(state: State):
 
 
 def _validate(state: State):
+    if state.last_step != state.STEP_OUT:
+        raise ValueError("Invalid state transition")
     if state.current_output_index + 1 != state.output_count:
         raise ValueError("Invalid out num")
 

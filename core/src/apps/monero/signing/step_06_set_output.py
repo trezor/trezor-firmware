@@ -84,6 +84,7 @@ async def set_output(
     # output_pk_commitment is stored to the state as it is used during the signature and hashed to the
     # RctSigBase later. No need to store amount, it was already stored.
     state.output_pk_commitments.append(out_pk_commitment)
+    state.last_step = state.STEP_OUT
     state.mem_trace(14, True)
 
     from trezor.messages.MoneroTransactionSetOutputAck import (
@@ -106,6 +107,8 @@ async def set_output(
 async def _validate(state: State, dst_entr, dst_entr_hmac, is_offloaded_bp):
     # If offloading flag then it has to be det_masks and offloading enabled.
     # Using IF as it is easier to read.
+    if state.last_step not in (state.STEP_ALL_IN, state.STEP_OUT):
+        raise ValueError("Invalid state transition")
     if is_offloaded_bp and (not state.rsig_offload or not state.is_det_mask()):
         raise ValueError("Extraneous offloaded msg")
 

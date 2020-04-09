@@ -27,7 +27,7 @@ def _build_key(
 
     if discriminator is not None:
         utils.memcpy(key_buff, offset, discriminator, 0, len(discriminator))
-        offset += len(discriminator)
+        offset += 12  # fixed domain separator size
 
     if index is not None:
         # dump_uvarint_b_into, saving import
@@ -97,6 +97,13 @@ def enc_key_cout(key_enc, idx: int = None) -> bytes:
     return _build_key(key_enc, b"cout", idx)
 
 
+def key_signature(master, idx: int, is_iv=False) -> bytes:
+    """
+    Generates signature offloading related offloading keys
+    """
+    return _build_key(master, b"sig-iv" if is_iv else b"sig-key", idx)
+
+
 def det_comm_masks(key_enc, idx: int) -> Sc25519:
     """
     Deterministic output commitment masks
@@ -149,3 +156,11 @@ async def gen_hmac_tsxdest(key, dst_entr, idx: int) -> bytes:
     hmac_key = hmac_key_txdst(key, idx)
     hmac_tsxdest = crypto.compute_hmac(hmac_key, kwriter.get_digest())
     return hmac_tsxdest
+
+
+def get_ki_from_vini(vini_bin: bytes) -> bytes:
+    """
+    Returns key image from the TxinToKey, which is currently
+    serialized as the last 32 bytes.
+    """
+    return bytes(vini_bin[-32:])

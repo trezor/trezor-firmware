@@ -18,9 +18,15 @@ async def all_inputs_set(state: State):
         MoneroTransactionAllInputsSetAck,
     )
 
+    if state.last_step != state.STEP_VINI:
+        raise ValueError("Invalid state transition")
+    if state.current_input_index != state.input_count - 1:
+        raise ValueError("Invalid input count")
+
     # Generate random commitment masks to be used in range proofs.
     # If SimpleRCT is used the sum of the masks must match the input masks sum.
     state.sumout = crypto.sc_init(0)
+    state.last_step = state.STEP_ALL_IN
     rsig_data = None
 
     # Client 0, HF9. Non-deterministic masks

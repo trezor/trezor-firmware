@@ -34,6 +34,8 @@ async def set_input(state: State, src_entr: MoneroTransactionSourceEntry):
 
     await confirms.transaction_step(state, state.STEP_INP, state.current_input_index)
 
+    if state.last_step > state.STEP_INP:
+        raise ValueError("Invalid state transition")
     if state.current_input_index >= state.input_count:
         raise ValueError("Too many inputs")
     # real_output denotes which output in outputs is the real one (ours)
@@ -111,6 +113,7 @@ async def set_input(state: State, src_entr: MoneroTransactionSourceEntry):
         crypto.encodeint(xi),
     )
 
+    state.last_step = state.STEP_INP
     if state.current_input_index + 1 == state.input_count:
         """
         When we finish the inputs processing, we no longer need

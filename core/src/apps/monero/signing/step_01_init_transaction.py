@@ -53,6 +53,7 @@ async def init_transaction(
     state.mixin = tsx_data.mixin
     state.fee = tsx_data.fee
     state.account_idx = tsx_data.account
+    state.last_step = 0
 
     # Ensure change is correct
     _check_change(state, tsx_data.outputs)

@@ -122,6 +122,15 @@ class State:
         # (inputs are sorted by key images)
         self.source_permutation = []
 
+        # Last key image seen. Used for input permutation correctness check
+        self.last_ki = None
+
+        # Encryption key to release to host after protocol ends without error
+        self.opening_key = None
+
+        # Step transition automaton
+        self.last_step = 0
+
         """
         Tx prefix hasher/hash. We use the hasher to incrementally hash and then
         store the final hash in tx_prefix_hash.
