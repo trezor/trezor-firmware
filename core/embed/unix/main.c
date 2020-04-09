@@ -414,12 +414,10 @@ STATIC void set_sys_argv(char *argv[], int argc, int start_arg) {
 void main_clean_exit(int status) {
   fflush(stdout);
   fflush(stderr);
-  mp_obj_t sys_exit =
-      mp_obj_dict_get(mp_module_sys.globals, MP_ROM_QSTR(MP_QSTR_exit));
-  if (mp_obj_is_callable(sys_exit)) {
-    mp_call_function_1(MP_OBJ_TO_PTR(sys_exit), MP_OBJ_NEW_SMALL_INT(status));
-  }
-  // sys.exit shouldn't return so force exit in case it does.
+  // sys.exit is disabled, so raise a SystemExit exception directly
+  nlr_raise(mp_obj_new_exception_arg1(&mp_type_SystemExit,
+                                      MP_OBJ_NEW_SMALL_INT(status)));
+  // the above shouldn't return, but make sure we exit just in case
   exit(status);
 }
 
