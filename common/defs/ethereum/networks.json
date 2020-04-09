@@ -339,7 +339,7 @@
     "blockbook": []
   },
   {
-    "chain": "aux",
+    "chain": "auxi",
     "chain_id": 28945486,
     "slip44": 344,
     "shortcut": "AUX",
