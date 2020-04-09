@@ -173,8 +173,11 @@ async def sign_input(
     from apps.monero.xmr import mlsag
 
     mg_buffer = []
-    ring_pubkeys = [x.key for x in src_entr.outputs]
-    del src_entr
+    ring_pubkeys = [x.key for x in src_entr.outputs if x]
+    utils.ensure(len(ring_pubkeys) == len(src_entr.outputs), "Invalid ring")
+    del (src_entr, CtKey)
+
+    state.mem_trace(5, True)
 
     mlsag.generate_mlsag_simple(
         state.full_message,

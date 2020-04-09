@@ -16,26 +16,54 @@ def compute_hash(rr):
 def export_key_image(creds, subaddresses, td):
     out_key = crypto.decodepoint(td.out_key)
     tx_pub_key = crypto.decodepoint(td.tx_pub_key)
-    additional_tx_pub_keys = [crypto.decodepoint(x) for x in td.additional_tx_pub_keys]
+
+    additional_tx_pub_key = None
+    if len(td.additional_tx_pub_keys) == 1:  # compression
+        additional_tx_pub_key = crypto.decodepoint(td.additional_tx_pub_keys[0])
+    elif td.additional_tx_pub_keys:
+        if td.internal_output_index >= len(td.additional_tx_pub_keys):
+            raise ValueError("Wrong number of additional derivations")
+        additional_tx_pub_key = crypto.decodepoint(
+            td.additional_tx_pub_keys[td.internal_output_index]
+        )
+
     ki, sig = _export_key_image(
         creds,
         subaddresses,
         out_key,
         tx_pub_key,
-        additional_tx_pub_keys,
+        additional_tx_pub_key,
         td.internal_output_index,
+        True,
+        td.sub_addr_major,
+        td.sub_addr_minor,
     )
     return ki, sig
 
 
 def _export_key_image(
-    creds, subaddresses, pkey, tx_pub_key, additional_tx_pub_keys, out_idx, test=True
+    creds,
+    subaddresses,
+    pkey,
+    tx_pub_key,
+    additional_tx_pub_key,
+    out_idx,
+    test=True,
+    sub_addr_major=None,
+    sub_addr_minor=None,
 ):
     """
     Generates key image for the TXO + signature for the key image
     """
     r = monero.generate_tx_spend_and_key_image_and_derivation(
-        creds, subaddresses, pkey, tx_pub_key, additional_tx_pub_keys, out_idx
+        creds,
+        subaddresses,
+        pkey,
+        tx_pub_key,
+        additional_tx_pub_key,
+        out_idx,
+        sub_addr_major,
+        sub_addr_minor,
     )
     xi, ki, recv_derivation = r[:3]
 

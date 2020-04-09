@@ -114,12 +114,28 @@ def det_comm_masks(key_enc, idx: int) -> Sc25519:
 async def gen_hmac_vini(key, src_entr, vini_bin, idx: int) -> bytes:
     """
     Computes hmac (TxSourceEntry[i] || tx.vin[i])
+
+    In src_entr.outputs only src_entr.outputs[src_entr.real_output]
+    is HMACed as it is used across the protocol. Consistency of
+    other values across the protocol is not required as they are
+    used only once and hard to check. I.e., indices in step 2
+    are uncheckable, decoy keys in step 9 are just random keys.
     """
     import protobuf
     from apps.monero.xmr.keccak_hasher import get_keccak_writer
 
     kwriter = get_keccak_writer()
+    real_outputs = src_entr.outputs
+    real_additional = src_entr.real_out_additional_tx_keys
+    src_entr.outputs = [src_entr.outputs[src_entr.real_output]]
+    if real_additional and len(real_additional) > 1:
+        src_entr.real_out_additional_tx_keys = [
+            src_entr.real_out_additional_tx_keys[src_entr.real_output_in_tx_index]
+        ]
+
     await protobuf.dump_message(kwriter, src_entr)
+    src_entr.outputs = real_outputs
+    src_entr.real_out_additional_tx_keys = real_additional
     kwriter.write(vini_bin)
 
     hmac_key_vini = hmac_key_txin(key, idx)

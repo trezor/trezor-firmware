@@ -51,9 +51,7 @@ async def set_input(state: State, src_entr: MoneroTransactionSourceEntry):
     out_key = crypto.decodepoint(src_entr.outputs[src_entr.real_output].key.dest)
     # the tx_pub of our UTXO stored inside its transaction
     tx_key = crypto.decodepoint(src_entr.real_out_tx_key)
-    additional_keys = [
-        crypto.decodepoint(x) for x in src_entr.real_out_additional_tx_keys
-    ]
+    additional_tx_pub_key = _get_additional_public_key(src_entr)
 
     """
     Calculates `derivation = Ra`, private spend key `x = H(Ra||i) + b` to be able
@@ -64,8 +62,10 @@ async def set_input(state: State, src_entr: MoneroTransactionSourceEntry):
         state.subaddresses,
         out_key,
         tx_key,
-        additional_keys,
+        additional_tx_pub_key,
         src_entr.real_output_in_tx_index,
+        state.account_idx,
+        src_entr.subaddr_minor,
     )
     state.mem_trace(1, True)
 
@@ -162,3 +162,20 @@ def _absolute_output_offsets_to_relative(off):
     for i in range(len(off) - 1, 0, -1):
         off[i] -= off[i - 1]
     return off
+
+
+def _get_additional_public_key(src_entr):
+    additional_tx_pub_key = None
+    if len(src_entr.real_out_additional_tx_keys) == 1:  # compression
+        additional_tx_pub_key = crypto.decodepoint(
+            src_entr.real_out_additional_tx_keys[0]
+        )
+    elif src_entr.real_out_additional_tx_keys:
+        if src_entr.real_output_in_tx_index >= len(
+            src_entr.real_out_additional_tx_keys
+        ):
+            raise ValueError("Wrong number of additional derivations")
+        additional_tx_pub_key = crypto.decodepoint(
+            src_entr.real_out_additional_tx_keys[src_entr.real_output_in_tx_index]
+        )
+    return additional_tx_pub_key
