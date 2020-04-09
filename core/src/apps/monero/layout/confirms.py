@@ -9,7 +9,16 @@ from trezor.utils import chunks
 from apps.common.confirm import require_confirm, require_hold_to_confirm
 from apps.monero.layout import common
 
-DUMMY_PAYMENT_ID = b"\x00" * 8
+DUMMY_PAYMENT_ID = b"\x00\x00\x00\x00\x00\x00\x00\x00"
+
+
+if False:
+    from typing import Optional
+    from apps.monero.signing.state import State
+    from trezor.messages.MoneroTransactionData import MoneroTransactionData
+    from trezor.messages.MoneroTransactionDestinationEntry import (
+        MoneroTransactionDestinationEntry,
+    )
 
 
 async def require_confirm_watchkey(ctx):
@@ -43,7 +52,9 @@ async def require_confirm_tx_key(ctx, export_key=False):
     await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
-async def require_confirm_transaction(ctx, state, tsx_data, network_type):
+async def require_confirm_transaction(
+    ctx, state: State, tsx_data: MoneroTransactionData, network_type: int
+):
     """
     Ask for confirmation from user.
     """
@@ -77,7 +88,9 @@ async def require_confirm_transaction(ctx, state, tsx_data, network_type):
     await transaction_step(state, 0)
 
 
-async def _require_confirm_output(ctx, dst, network_type, payment_id):
+async def _require_confirm_output(
+    ctx, dst: MoneroTransactionDestinationEntry, network_type: int, payment_id: bytes
+):
     """
     Single transaction destination confirmation
     """
@@ -103,10 +116,10 @@ async def _require_confirm_output(ctx, dst, network_type, payment_id):
         raise wire.ActionCancelled("Cancelled")
 
 
-async def _require_confirm_payment_id(ctx, payment_id):
+async def _require_confirm_payment_id(ctx, payment_id: bytes):
     if not await common.naive_pagination(
         ctx,
-        [ui.MONO] + list(chunks(hexlify((payment_id)), 16)),
+        [ui.MONO] + list(chunks(hexlify(payment_id), 16)),
         "Payment ID",
         ui.ICON_SEND,
         ui.GREEN,
@@ -171,22 +184,22 @@ class LiveRefreshStep(ui.Component):
         )
 
 
-async def transaction_step(state, step, sub_step=None):
+async def transaction_step(state: State, step: int, sub_step: Optional[int] = None):
     if step == 0:
         info = ["Signing..."]
-    elif step == 100:
+    elif step == state.STEP_INP:
         info = ["Processing inputs", "%d/%d" % (sub_step + 1, state.input_count)]
-    elif step == 200:
+    elif step == state.STEP_PERM:
         info = ["Sorting..."]
-    elif step == 300:
+    elif step == state.STEP_VINI:
         info = ["Hashing inputs", "%d/%d" % (sub_step + 1, state.input_count)]
-    elif step == 350:
+    elif step == state.STEP_ALL_IN:
         info = ["Processing..."]
-    elif step == 400:
+    elif step == state.STEP_OUT:
         info = ["Processing outputs", "%d/%d" % (sub_step + 1, state.output_count)]
-    elif step == 500:
+    elif step == state.STEP_ALL_OUT:
         info = ["Postprocessing..."]
-    elif step == 600:
+    elif step == state.STEP_SIGN:
         info = ["Signing inputs", "%d/%d" % (sub_step + 1, state.input_count)]
     else:
         info = ["Processing..."]
