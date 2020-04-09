@@ -131,21 +131,28 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len) {
   const char *mnemonic = mnemonic_from_data(int_entropy, strength / 8);
   memzero(int_entropy, 32);
 
-  if (skip_backup || no_backup) {
-    if (no_backup) {
-      config_setNoBackup();
+  if(!g_bSelectSEFlag)
+  {
+    if (skip_backup || no_backup) {
+      if (no_backup) {
+        config_setNoBackup();
+      } else {
+        config_setNeedsBackup(true);
+      }
+      if (config_setMnemonic(mnemonic)) {
+        fsm_sendSuccess(_("Device successfully initialized"));
+      } else {
+        fsm_sendFailure(FailureType_Failure_ProcessError,
+                        _("Failed to store mnemonic"));
+      }
+      layoutHome();
     } else {
-      config_setNeedsBackup(true);
+      reset_backup(false, mnemonic);
     }
-    if (config_setMnemonic(mnemonic)) {
-      fsm_sendSuccess(_("Device successfully initialized"));
-    } else {
-      fsm_sendFailure(FailureType_Failure_ProcessError,
-                      _("Failed to store mnemonic"));
-    }
-    layoutHome();
-  } else {
-    reset_backup(false, mnemonic);
+  }
+  else
+  {
+     reset_backup(false, mnemonic);
   }
   mnemonic_clear();
 }

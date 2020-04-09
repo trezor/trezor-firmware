@@ -37,6 +37,8 @@
 #include "rfc6979.h"
 #include "secp256k1.h"
 
+#include "mi2c.h"
+
 // Set cp2 = cp1
 void point_copy(const curve_point *cp1, curve_point *cp2) { *cp2 = *cp1; }
 
@@ -676,11 +678,13 @@ int ecdsa_sign(const ecdsa_curve *curve, HasherType hasher_sign,
 int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
                       const uint8_t *digest, uint8_t *sig, uint8_t *pby,
                       int (*is_canonical)(uint8_t by, uint8_t sig[64])) {
-  int i = 0;
-  curve_point R = {0};
-  bignum256 k = {0}, z = {0}, randk = {0};
-  bignum256 *s = &R.y;
-  uint8_t by;  // signature recovery byte
+
+  if (!g_bSelectSEFlag){
+    int i = 0;
+    curve_point R = {0};
+    bignum256 k = {0}, z = {0}, randk = {0};
+    bignum256 *s = &R.y;
+    uint8_t by;  // signature recovery byte
 
 #if USE_RFC6979
   rfc6979_state rng = {0};
@@ -763,21 +767,44 @@ int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
 #if USE_RFC6979
   memzero(&rng, sizeof(rng));
 #endif
-  return -1;
+    return -1;
+  }
+  else{
+    uint8_t ucRevBuf[65];
+    uint16_t usLen;
+    uint8_t by;  // signature recovery byte
+     if (MI2C_OK != MI2CDRV_Transmit(MI2C_CMD_ECC_EDDSA,ECC_INDEX_SIGN,(uint8_t*)digest, 0x20, ucRevBuf,&usLen,MI2C_ENCRYPT,SET_SESTORE_DATA))                        
+     {
+         return -1;
+     }
+     by = ucRevBuf[0];
+     if (pby) {
+       *pby = by;
+      }
+     memcpy(sig,ucRevBuf+1,0x40);
+     return 0;
+  }
+
 }
 
 void ecdsa_get_public_key33(const ecdsa_curve *curve, const uint8_t *priv_key,
                             uint8_t *pub_key) {
-  curve_point R = {0};
-  bignum256 k = {0};
+  if (!g_bSelectSEFlag){
+    curve_point R = {0};
+    bignum256 k = {0};
 
-  bn_read_be(priv_key, &k);
-  // compute k*G
-  scalar_multiply(curve, &k, &R);
-  pub_key[0] = 0x02 | (R.y.val[0] & 0x01);
-  bn_write_be(&R.x, pub_key + 1);
-  memzero(&R, sizeof(R));
-  memzero(&k, sizeof(k));
+    bn_read_be(priv_key, &k);
+    // compute k*G
+    scalar_multiply(curve, &k, &R);
+    pub_key[0] = 0x02 | (R.y.val[0] & 0x01);
+    bn_write_be(&R.x, pub_key + 1);
+    memzero(&R, sizeof(R));
+    memzero(&k, sizeof(k));
+  }
+  else{
+    uint16_t usLen;
+    MI2CDRV_Transmit(MI2C_CMD_ECC_EDDSA,ECC_INDEX_GITPUBKEY,(uint8_t *)priv_key, 0x20, pub_key,&usLen,MI2C_ENCRYPT,SET_SESTORE_DATA);                       
+  }
 }
 
 void ecdsa_get_public_key65(const ecdsa_curve *curve, const uint8_t *priv_key,

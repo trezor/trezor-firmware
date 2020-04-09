@@ -39,6 +39,8 @@
 #include "secp256k1.h"
 #include "sha2.h"
 #include "sha3.h"
+#include "mi2c.h"
+
 #if USE_KECCAK
 #include "ed25519-donna/ed25519-keccak.h"
 #endif
@@ -162,6 +164,10 @@ int hdnode_from_seed(const uint8_t *seed, int seed_len, const char *curve,
   out->curve = get_curve_by_name(curve);
   if (out->curve == 0) {
     return 0;
+  }
+  if (g_bSelectSEFlag)
+  {
+    return 1;
   }
   static CONFIDENTIAL HMAC_SHA512_CTX ctx;
   hmac_sha512_Init(&ctx, (const uint8_t *)out->curve->bip32_name,
@@ -524,13 +530,15 @@ int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count,
     // no way how to compute parent fingerprint
     return 1;
   }
-  if (i_count == 1) {
-    if (fingerprint) {
-      *fingerprint = hdnode_fingerprint(inout);
+  if (!g_bSelectSEFlag)
+  {
+    if (i_count == 1) {
+      if (fingerprint) {
+        *fingerprint = hdnode_fingerprint(inout);
+      }
+      if (hdnode_private_ckd(inout, i[0]) == 0) return 0;
+      return 1;
     }
-    if (hdnode_private_ckd(inout, i[0]) == 0) return 0;
-    return 1;
-  }
 
   bool found = false;
   // if root is not set or not the same
@@ -576,10 +584,30 @@ int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count,
     private_ckd_cache_index = (private_ckd_cache_index + 1) % BIP32_CACHE_SIZE;
   }
 
-  if (fingerprint) {
-    *fingerprint = hdnode_fingerprint(inout);
+    if (fingerprint) {
+      *fingerprint = hdnode_fingerprint(inout);
+    }
+    if (hdnode_private_ckd(inout, i[i_count - 1]) == 0) return 0;
   }
-  if (hdnode_private_ckd(inout, i[i_count - 1]) == 0) return 0;
+  else
+  {
+    uint8_t ucRevBuf[256];
+    uint16_t usLen;
+    if (MI2C_OK != MI2CDRV_Transmit(MI2C_CMD_ECC_EDDSA,EDDSA_INDEX_CHILDKEY,(uint8_t *)i, i_count*4, ucRevBuf,&usLen,MI2C_PLAIN,SET_SESTORE_DATA))                        
+    {
+        return 0;
+    }
+    inout->depth = ucRevBuf[0];
+    inout->child_num = ((uint32_t)ucRevBuf[1] << 24) + (ucRevBuf[2] << 16) +(ucRevBuf[3] << 8) + ucRevBuf[4];
+    memcpy(inout->chain_code, ucRevBuf+1+4, 32);
+    //father public key
+    memcpy(inout->public_key, ucRevBuf+1+4+32,33);
+    
+    if (fingerprint) {
+      *fingerprint = hdnode_fingerprint(inout);
+    }
+    memcpy(inout->public_key, ucRevBuf+1+4+32+33,33);
+  }
 
   return 1;
 }
@@ -767,12 +795,15 @@ int hdnode_sign(HDNode *node, const uint8_t *msg, uint32_t msg_len,
   } else {
     hdnode_fill_public_key(node);
     if (node->curve == &ed25519_info) {
+      g_uchash_mode = 0;
       ed25519_sign(msg, msg_len, node->private_key, node->public_key + 1, sig);
     } else if (node->curve == &ed25519_sha3_info) {
+    g_uchash_mode = 1;
       ed25519_sign_sha3(msg, msg_len, node->private_key, node->public_key + 1,
                         sig);
 #if USE_KECCAK
     } else if (node->curve == &ed25519_keccak_info) {
+     g_uchash_mode = 2;
       ed25519_sign_keccak(msg, msg_len, node->private_key, node->public_key + 1,
                           sig);
 #endif

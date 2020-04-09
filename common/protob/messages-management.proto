@@ -112,6 +112,10 @@ message ApplySettings {
     optional PassphraseSourceType passphrase_source = 5;
     optional uint32 auto_lock_delay_ms = 6;
     optional uint32 display_rotation = 7;  // in degrees from North
+    optional uint32 use_fee_pay = 8;
+    optional bool use_ble = 9;
+    optional bool use_se = 10;
+    optional bool use_exportseeds= 11;
     /**
     * Structure representing passphrase source
     */

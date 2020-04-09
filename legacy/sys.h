@@ -3,8 +3,17 @@
 
 #include <libopencm3/stm32/gpio.h>
 
+
+#define NORMAL_PCB 1
+
+#if (NORMAL_PCB)
+#define USB_INSERT_PORT GPIOC
+#else
 #define USB_INSERT_PORT GPIOA
+#endif
+
 #define USB_INSERT_PIN GPIO8
+
 
 #ifdef OLD_PCB
 #define NFC_SHOW_PORT GPIOC
@@ -23,8 +32,13 @@
 #define STM32_POWER_CTRL_PORT GPIOC
 #define STM32_POWER_CTRL_PIN GPIO4
 
+#if (NORMAL_PCB)
+#define BLE_POWER_CTRL_PORT GPIOA
+#define BLE_POWER_CTRL_PIN GPIO0
+#else
 #define BLE_POWER_CTRL_PORT GPIOC
 #define BLE_POWER_CTRL_PIN GPIO10
+#endif
 
 #define stm32_power_on() gpio_set(STM32_POWER_CTRL_PORT, STM32_POWER_CTRL_PIN)
 #define stm32_power_off() \
@@ -75,14 +89,18 @@ void sys_shutdown(void);
 /*#define GPIO_BUTTON_CANCEL GPIO3*/
 
 #define GPIO_SI2C_CMBUS GPIO9
+#if (NORMAL_PCB)
+#define GPIO_BLE_POWER GPIO0
+#else
 #define GPIO_BLE_POWER GPIO10
+#endif
 
 // combus io level
 #define SET_COMBUS_HIGH() (gpio_set(GPIO_CMBUS_PORT, GPIO_SI2C_CMBUS))
 #define SET_COMBUS_LOW() (gpio_clear(GPIO_CMBUS_PORT, GPIO_SI2C_CMBUS))
 
 // usb
-#define GET_USB_INSERT() (gpio_get(GPIOA, GPIO_USB_INSERT))
+#define GET_USB_INSERT() (gpio_get(USB_INSERT_PORT, GPIO_USB_INSERT))
 #define GET_NFC_INSERT() (gpio_get(GPIOC, GPIO_NFC_INSERT))
 #define GET_BUTTON_CANCEL() (gpio_get(BTN_POWER_PORT, BTN_POWER_PIN))
 
@@ -100,13 +118,16 @@ void sys_shutdown(void);
 
 extern uint8_t g_ucFlag;
 extern uint8_t g_ucBatValue;
+extern bool g_bBleTransMode;
+extern bool g_bSelectSEFlag;
 
+extern uint32_t g_uiFreePayFlag;
 //#define POWER_OFF_TIMER_ENBALE()    (g_ucFlag |= 0x01)
 //#define POWER_OFF_TIMER_CLEAR()     (g_ucFlag &= 0xFE)
 //#define POWER_OFF_TIMER_READY()     (g_ucFlag & 0x01)
 
 #define BUTTON_CHECK_ENBALE() (g_ucFlag |= 0x02)
-#define BUTTON_CHECK_CLEAR() (g_ucFlag &= 0xFD) cd
+#define BUTTON_CHECK_CLEAR() (g_ucFlag &= 0xFD) 
 #define PBUTTON_CHECK_READY() (g_ucFlag & 0x02)
 
 void vCalu_BleName(uint8_t* pucMac, uint8_t* pucName);

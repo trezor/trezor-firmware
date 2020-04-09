@@ -10,6 +10,9 @@
 
 uint8_t g_ucFlag = 0;
 uint8_t g_ucBatValue = 0;
+bool g_bBleTransMode = false;
+bool g_bSelectSEFlag = false;
+uint32_t g_uiFreePayFlag = 0;
 
 /*
  * ble mac get ble name

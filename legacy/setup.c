@@ -178,10 +178,8 @@ void setupApp(void) {
 #if (_SUPPORT_DEBUG_UART_)
   vUART_DebugInfo("power on", NULL, 1);
 #endif
-#if (MI2C_TEST)
   // master i2c init
   vMI2CDRV_Init();
-#endif
 }
 
 #define MPU_RASR_SIZE_32B (0x04UL << MPU_RASR_SIZE_LSB)

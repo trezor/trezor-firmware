@@ -29,6 +29,8 @@
 #include "protect.h"
 #include "secp256k1.h"
 #include "transaction.h"
+#include "config.h"
+
 
 static uint32_t inputs_count;
 static uint32_t outputs_count;
@@ -523,6 +525,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   authorized_amount = 0;
   memzero(&input, sizeof(TxInputType));
   memzero(&resp, sizeof(TxRequest));
+  config_getFreePayFlag();
 
   signing = true;
   progress = 0;
@@ -734,6 +737,8 @@ static bool signing_check_output(TxOutputType *txoutput) {
 }
 
 static bool signing_check_fee(void) {
+  uint64_t limt_pay;
+
   if (coin->negative_fee) {
     // bypass check for negative fee coins, required for reward TX
   } else {
@@ -745,16 +750,25 @@ static bool signing_check_fee(void) {
       return false;
     }
   }
+  limt_pay = (g_uiFreePayFlag & 0xFFFFF);
+  if((SIGN_FREEPAY_NOPIN != (g_uiFreePayFlag & SIGN_FREEPAY_NOPIN))&& ((to_spend - change_spend)  < limt_pay)){
+    if (!protectPin(true)) { 
+       layoutHome();          
+       return false;                
+     }
+  }
   uint64_t fee = 0;
   if (spending <= to_spend) {
     fee = to_spend - spending;
     if (fee > ((uint64_t)tx_weight * coin->maxfee_kb) / 4000) {
       layoutFeeOverThreshold(coin, fee);
-      if (!protectButton(ButtonRequestType_ButtonRequest_FeeOverThreshold,
-                         false)) {
-        fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-        signing_abort();
-        return false;
+      if((SIGN_FREEPAY_NOBUTTON != (g_uiFreePayFlag & SIGN_FREEPAY_NOBUTTON))&& ((to_spend - change_spend)  < limt_pay)){
+          if (!protectButton(ButtonRequestType_ButtonRequest_FeeOverThreshold,
+                             false)) {
+            fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+            signing_abort();
+            return false;
+          }
       }
     }
   } else {
@@ -762,11 +776,25 @@ static bool signing_check_fee(void) {
   }
   // last confirmation
   layoutConfirmTx(coin, to_spend - change_spend, fee);
-  if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
-    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-    signing_abort();
-    return false;
+  if((SIGN_FREEPAY_NOBUTTON != (g_uiFreePayFlag & SIGN_FREEPAY_NOBUTTON))&& ((to_spend - change_spend)  < limt_pay)){
+
+    if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+      signing_abort();
+      return false;
+    }
   }
+  if (limt_pay >= (to_spend - change_spend))
+  {
+      limt_pay -= (to_spend - change_spend);
+  }
+  else
+  {
+    limt_pay = 0;
+  }
+  limt_pay |= g_uiFreePayFlag & 0xFF000000;
+
+  config_setFreePayFlag(limt_pay);
   return true;
 }
 

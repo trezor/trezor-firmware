@@ -350,13 +350,13 @@ uint8_t *u2f_out_data(void) {
 }
 
 void u2fhid_msg(const APDU *a, uint32_t len) {
-  if ((APDU_LEN(*a) + sizeof(APDU)) > len) {
-    debugLog(0, "", "BAD APDU LENGTH");
-    debugInt(APDU_LEN(*a));
-    debugInt(len);
-    send_u2f_error(U2F_SW_INS_NOT_SUPPORTED);
-    return;
-  }
+//  if ((APDU_LEN(*a) + sizeof(APDU)) > len) {
+//    debugLog(0, "", "BAD APDU LENGTH");
+//    debugInt(APDU_LEN(*a));
+//    debugInt(len);
+//    send_u2f_error(U2F_SW_INS_NOT_SUPPORTED);
+//    return;
+//  }
 
   if (a->cla != 0) {
     send_u2f_error(U2F_SW_CLA_NOT_SUPPORTED);
@@ -374,8 +374,32 @@ void u2fhid_msg(const APDU *a, uint32_t len) {
       u2f_version(a);
       break;
     default:
-      debugLog(0, "", "u2f unknown cmd");
-      send_u2f_error(U2F_SW_INS_NOT_SUPPORTED);
+      if(!g_bSelectSEFlag)
+      {
+        debugLog(0, "", "u2f unknown cmd");
+        send_u2f_error(U2F_SW_INS_NOT_SUPPORTED);
+      }
+      else
+      {
+         // MI2CDRV_Transmit
+        if(false ==bMI2CDRV_SendData((uint8_t *)&(a->cla),len))
+        {
+          send_u2f_error(U2F_SW_INS_NOT_SUPPORTED);
+          return;
+        }
+        g_usMI2cRevLen = sizeof(g_ucMI2cRevBuf);
+        if(true == bMI2CDRV_ReceiveData(g_ucMI2cRevBuf,&g_usMI2cRevLen))
+        {
+            g_ucMI2cRevBuf[g_usMI2cRevLen] = U2F_SW_NO_ERROR >> 8 & 0xFF;
+            g_ucMI2cRevBuf[g_usMI2cRevLen+1] = U2F_SW_NO_ERROR & 0xFF;
+            send_u2f_msg(g_ucMI2cRevBuf,g_usMI2cRevLen+2);
+        }
+        else
+        {
+          debugLog(0, "", "i2c rev fail");
+          send_u2f_error(U2F_SW_INS_NOT_SUPPORTED);
+        }
+      }
   }
 }
 
