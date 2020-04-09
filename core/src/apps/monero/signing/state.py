@@ -65,6 +65,7 @@ class State:
 
         # Bulletproof version. Pre for <=HF9 is 1, for >HP10 is 2
         self.bp_version = 1
+        self.hard_fork = 12
 
         self.input_count = 0
         self.output_count = 0

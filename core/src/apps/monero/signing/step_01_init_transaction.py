@@ -54,6 +54,8 @@ async def init_transaction(
     state.fee = tsx_data.fee
     state.account_idx = tsx_data.account
     state.last_step = 0
+    if tsx_data.hard_fork:
+        state.hard_fork = tsx_data.hard_fork
 
     # Ensure change is correct
     _check_change(state, tsx_data.outputs)

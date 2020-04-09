@@ -145,25 +145,23 @@ async def sign_input(
     utils.unimport_end(mods)
     state.mem_trace(3, True)
 
-    from apps.monero.xmr.serialize_messages.ct_keys import CtKey
-
     # Basic setup, sanity check
     index = src_entr.real_output
-    input_secret_key = CtKey(dest=spend_key, mask=crypto.decodeint(src_entr.mask))
+    input_secret_key = (spend_key, crypto.decodeint(src_entr.mask))
     kLRki = None  # for multisig: src_entr.multisig_kLRki
 
     # Private key correctness test
     utils.ensure(
         crypto.point_eq(
             crypto.decodepoint(src_entr.outputs[src_entr.real_output].key.dest),
-            crypto.scalarmult_base(input_secret_key.dest),
+            crypto.scalarmult_base(input_secret_key[0]),
         ),
         "Real source entry's destination does not equal spend key's",
     )
     utils.ensure(
         crypto.point_eq(
             crypto.decodepoint(src_entr.outputs[src_entr.real_output].key.commitment),
-            crypto.gen_commitment(input_secret_key.mask, src_entr.amount),
+            crypto.gen_commitment(input_secret_key[1], src_entr.amount),
         ),
         "Real source entry's mask does not equal spend key's",
     )
@@ -175,20 +173,32 @@ async def sign_input(
     mg_buffer = []
     ring_pubkeys = [x.key for x in src_entr.outputs if x]
     utils.ensure(len(ring_pubkeys) == len(src_entr.outputs), "Invalid ring")
-    del (src_entr, CtKey)
+    del src_entr
 
     state.mem_trace(5, True)
 
-    mlsag.generate_mlsag_simple(
-        state.full_message,
-        ring_pubkeys,
-        input_secret_key,
-        pseudo_out_alpha,
-        pseudo_out_c,
-        kLRki,
-        index,
-        mg_buffer,
-    )
+    if state.hard_fork and state.hard_fork >= 13:
+        state.mem_trace("CLSAG")
+        mlsag.generate_clsag_simple(
+            state.full_message,
+            ring_pubkeys,
+            input_secret_key,
+            pseudo_out_alpha,
+            pseudo_out_c,
+            index,
+            mg_buffer,
+        )
+    else:
+        mlsag.generate_mlsag_simple(
+            state.full_message,
+            ring_pubkeys,
+            input_secret_key,
+            pseudo_out_alpha,
+            pseudo_out_c,
+            kLRki,
+            index,
+            mg_buffer,
+        )
 
     del (input_secret_key, pseudo_out_alpha, mlsag, ring_pubkeys, kLRki)
     state.mem_trace(6, True)
