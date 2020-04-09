@@ -10,8 +10,15 @@ from apps.monero.signing.state import State
 from apps.monero.xmr import crypto, monero
 
 if False:
+    from typing import List
+    from apps.monero.xmr.types import Sc25519, Ge25519
     from trezor.messages.MoneroTransactionData import MoneroTransactionData
     from trezor.messages.MoneroTransactionRsigData import MoneroTransactionRsigData
+    from trezor.messages.MoneroAccountPublicAddress import MoneroAccountPublicAddress
+    from trezor.messages.MoneroTransactionDestinationEntry import (
+        MoneroTransactionDestinationEntry,
+    )
+    from trezor.messages.MoneroTransactionInitAck import MoneroTransactionInitAck
 
 
 async def init_transaction(
@@ -20,7 +27,7 @@ async def init_transaction(
     network_type: int,
     tsx_data: MoneroTransactionData,
     keychain,
-):
+) -> MoneroTransactionInitAck:
     from apps.monero.signing import offloading_keys
     from apps.common import paths
 
@@ -30,10 +37,12 @@ async def init_transaction(
 
     state.creds = misc.get_creds(keychain, address_n, network_type)
     state.client_version = tsx_data.client_version or 0
+    if state.client_version == 0:
+        raise ValueError("Client version not supported")
+
     state.fee = state.fee if state.fee > 0 else 0
     state.tx_priv = crypto.random_scalar()
     state.tx_pub = crypto.scalarmult_base(state.tx_priv)
-
     state.mem_trace(1)
 
     state.input_count = tsx_data.num_inputs
@@ -45,6 +54,8 @@ async def init_transaction(
     await confirms.require_confirm_transaction(
         state.ctx, state, tsx_data, state.creds.network_type
     )
+    state.creds.address = None
+    state.creds.network_type = None
     gc.collect()
     state.mem_trace(3)
 
@@ -53,6 +64,9 @@ async def init_transaction(
     state.mixin = tsx_data.mixin
     state.fee = tsx_data.fee
     state.account_idx = tsx_data.account
+    state.last_step = state.STEP_INIT
+    if tsx_data.hard_fork:
+        state.hard_fork = tsx_data.hard_fork
 
     # Ensure change is correct
     _check_change(state, tsx_data.outputs)
@@ -66,23 +80,19 @@ async def init_transaction(
     _check_subaddresses(state, tsx_data.outputs)
 
     # Extra processing, payment id
-    state.tx.version = 2  # current Monero transaction format (RingCT = 2)
-    state.tx.unlock_time = tsx_data.unlock_time
     _process_payment_id(state, tsx_data)
     await _compute_sec_keys(state, tsx_data)
     gc.collect()
 
     # Iterative tx_prefix_hash hash computation
-    state.tx_prefix_hasher.uvarint(state.tx.version)
-    state.tx_prefix_hasher.uvarint(state.tx.unlock_time)
+    state.tx_prefix_hasher.uvarint(2)  # current Monero transaction format (RingCT = 2)
+    state.tx_prefix_hasher.uvarint(tsx_data.unlock_time)
     state.tx_prefix_hasher.uvarint(state.input_count)  # ContainerType, size
     state.mem_trace(10, True)
 
     # Final message hasher
     state.full_message_hasher.init()
-    state.full_message_hasher.set_type_fee(
-        signing.get_monero_rct_type(state.bp_version), state.fee
-    )
+    state.full_message_hasher.set_type_fee(signing.RctType.Bulletproof2, state.fee)
 
     # Sub address precomputation
     if tsx_data.account is not None and tsx_data.minor_indices:
@@ -110,7 +120,7 @@ async def init_transaction(
     return MoneroTransactionInitAck(hmacs=hmacs, rsig_data=rsig_data)
 
 
-def _check_subaddresses(state: State, outputs: list):
+def _check_subaddresses(state: State, outputs: List[MoneroTransactionDestinationEntry]):
     """
     Using subaddresses leads to a few poorly documented exceptions.
 
@@ -155,7 +165,7 @@ def _check_subaddresses(state: State, outputs: list):
     state.mem_trace(4, True)
 
 
-def _get_primary_change_address(state: State):
+def _get_primary_change_address(state: State) -> MoneroAccountPublicAddress:
     """
     Computes primary change address for the current account index
     """
@@ -189,12 +199,7 @@ def _check_rsig_data(state: State, rsig_data: MoneroTransactionRsigData):
     if rsig_data.rsig_type == 0:
         raise ValueError("Borromean range sig not supported")
 
-    elif rsig_data.rsig_type in (1, 2, 3):
-        state.bp_version = rsig_data.bp_version or 1
-        if state.bp_version not in (1, 2):
-            raise ValueError("Unknown BP version")
-
-    else:
+    elif rsig_data.rsig_type not in (1, 2, 3):
         raise ValueError("Unknown rsig type")
 
     if state.output_count > 2:
@@ -214,7 +219,7 @@ def _check_grouping(state: State):
         raise ValueError("Invalid grouping")
 
 
-def _check_change(state: State, outputs: list):
+def _check_change(state: State, outputs: List[MoneroTransactionDestinationEntry]):
     """
     Check if the change address in state.output_change (from `tsx_data.outputs`) is
     a) among tx outputs
@@ -281,7 +286,7 @@ async def _compute_sec_keys(state: State, tsx_data: MoneroTransactionData):
     state.key_enc = crypto.keccak_2hash(b"enc" + master_key)
 
 
-def _precompute_subaddr(state: State, account: int, indices):
+def _precompute_subaddr(state: State, account: int, indices: List[int]):
     """
     Precomputes subaddresses for account (major) and list of indices (minors)
     Subaddresses have to be stored in encoded form - unique representation.
@@ -350,7 +355,7 @@ def _get_key_for_payment_id_encryption(
     tsx_data: MoneroTransactionData,
     change_addr=None,
     add_dummy_payment_id: bool = False,
-):
+) -> bytes:
     """
     Returns destination address public view key to be used for
     payment id encryption. If no encrypted payment ID is chosen,
@@ -390,7 +395,9 @@ def _get_key_for_payment_id_encryption(
     return addr.view_public_key
 
 
-def _encrypt_payment_id(payment_id, public_key, secret_key):
+def _encrypt_payment_id(
+    payment_id: bytes, public_key: Ge25519, secret_key: Sc25519
+) -> bytes:
     """
     Encrypts payment_id hex.
     Used in the transaction extra. Only recipient is able to decrypt.

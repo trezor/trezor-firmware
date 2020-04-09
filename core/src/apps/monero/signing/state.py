@@ -5,17 +5,17 @@ from trezor import log
 
 from apps.monero.xmr import crypto
 
+if False:
+    from typing import Dict, List, Optional, Tuple
+    from apps.monero.xmr.types import Ge25519, Sc25519
+    from apps.monero.xmr.credentials import AccountCreds
 
-class TprefixStub:
-    __slots__ = ("version", "unlock_time", "vin", "vout", "extra")
-
-    def __init__(self, **kwargs):
-        for kw in kwargs:
-            setattr(self, kw, kwargs[kw])
+    Subaddresses = Dict[bytes, Tuple[int, int]]
 
 
 class State:
 
+    STEP_INIT = const(0)
     STEP_INP = const(100)
     STEP_PERM = const(200)
     STEP_VINI = const(300)
@@ -37,11 +37,11 @@ class State:
         - spend private/public key
         - and its corresponding address
         """
-        self.creds = None
+        self.creds = None  # type: Optional[AccountCreds]
 
         # HMAC/encryption keys used to protect offloaded data
-        self.key_hmac = None
-        self.key_enc = None
+        self.key_hmac = None  # type: Optional[bytes]
+        self.key_enc = None  # type: Optional[bytes]
 
         """
         Transaction keys
@@ -51,8 +51,8 @@ class State:
         - for subaddresses the `r` is commonly denoted as `s`, however it is still just a random number
         - the keys are used to derive the one time address and its keys (P = H(A*r)*G + B)
         """
-        self.tx_priv = None
-        self.tx_pub = None
+        self.tx_priv = None  # type: Sc25519
+        self.tx_pub = None  # type: Ge25519
 
         """
         In some cases when subaddresses are used we need more tx_keys
@@ -62,9 +62,7 @@ class State:
 
         # Connected client version
         self.client_version = 0
-
-        # Bulletproof version. Pre for <=HF9 is 1, for >HP10 is 2
-        self.bp_version = 1
+        self.hard_fork = 12
 
         self.input_count = 0
         self.output_count = 0
@@ -78,8 +76,8 @@ class State:
         self.account_idx = 0
 
         # contains additional tx keys if need_additional_tx_keys is True
-        self.additional_tx_private_keys = []
-        self.additional_tx_public_keys = []
+        self.additional_tx_private_keys = []  # type: List[Sc25519]
+        self.additional_tx_public_keys = []  # type: List[bytes]
 
         # currently processed input/output index
         self.current_input_index = -1
@@ -93,34 +91,39 @@ class State:
         self.summary_outs_money = 0
 
         # output commitments
-        self.output_pk_commitments = []
+        self.output_pk_commitments = []  # type: List[bytes]
 
-        self.output_amounts = []
+        self.output_amounts = []  # type: List[int]
         # output *range proof* masks. HP10+ makes them deterministic.
-        self.output_masks = []
-        # last output mask for client_version=0
-        self.output_last_mask = None
+        self.output_masks = []  # type: List[Sc25519]
 
         # the range proofs are calculated in batches, this denotes the grouping
-        self.rsig_grouping = []
+        self.rsig_grouping = []  # type: List[int]
         # is range proof computing offloaded or not
         self.rsig_offload = False
 
         # sum of all inputs' pseudo out masks
-        self.sumpouts_alphas = crypto.sc_0()
+        self.sumpouts_alphas = crypto.sc_0()  # type: Sc25519
         # sum of all output' pseudo out masks
-        self.sumout = crypto.sc_0()
+        self.sumout = crypto.sc_0()  # type: Sc25519
 
-        self.subaddresses = {}
+        self.subaddresses = {}  # type: Subaddresses
 
-        # simple stub containing items hashed into tx prefix
-        self.tx = TprefixStub(vin=[], vout=[], extra=b"")
         # TX_EXTRA_NONCE extra field for tx.extra, due to sort_tx_extra()
         self.extra_nonce = None
 
         # contains an array where each item denotes the input's position
         # (inputs are sorted by key images)
-        self.source_permutation = []
+        self.source_permutation = []  # type: List[int]
+
+        # Last key image seen. Used for input permutation correctness check
+        self.last_ki = None  # type: Optional[bytes]
+
+        # Encryption key to release to host after protocol ends without error
+        self.opening_key = None  # type: Optional[bytes]
+
+        # Step transition automaton
+        self.last_step = self.STEP_INIT
 
         """
         Tx prefix hasher/hash. We use the hasher to incrementally hash and then
@@ -128,7 +131,7 @@ class State:
         See Monero-Trezor documentation section 3.3 for more details.
         """
         self.tx_prefix_hasher = KeccakXmrArchive()
-        self.tx_prefix_hash = None
+        self.tx_prefix_hash = None  # type: Optional[bytes]
 
         """
         Full message hasher/hash that is to be signed using MLSAG.
@@ -136,7 +139,7 @@ class State:
         See Monero-Trezor documentation section 3.3 for more details.
         """
         self.full_message_hasher = PreMlsagHasher()
-        self.full_message = None
+        self.full_message = None  # type: Optional[bytes]
 
     def mem_trace(self, x=None, collect=False):
         if __debug__:
@@ -152,9 +155,3 @@ class State:
 
     def change_address(self):
         return self.output_change.addr if self.output_change else None
-
-    def is_bulletproof_v2(self):
-        return self.bp_version >= 2
-
-    def is_det_mask(self):
-        return self.bp_version >= 2 or self.client_version > 0

@@ -1,6 +1,10 @@
 from apps.monero.xmr import crypto
 from apps.monero.xmr.keccak_hasher import KeccakXmrArchive
 
+if False:
+    from typing import List, Union
+    from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import Bulletproof
+
 
 class PreMlsagHasher:
     """
@@ -19,23 +23,23 @@ class PreMlsagHasher:
 
         self.state = 1
 
-    def set_message(self, message):
+    def set_message(self, message: bytes):
         self.kc_master.update(message)
 
-    def set_type_fee(self, rv_type, fee):
+    def set_type_fee(self, rv_type: int, fee: int):
         if self.state != 1:
             raise ValueError("State error")
         self.state = 2
         self.rtcsig_hasher.uint(rv_type, 1)  # UInt8
         self.rtcsig_hasher.uvarint(fee)  # UVarintType
 
-    def set_ecdh(self, ecdh):
+    def set_ecdh(self, ecdh: bytes):
         if self.state != 2 and self.state != 3 and self.state != 4:
             raise ValueError("State error")
         self.state = 4
         self.rtcsig_hasher.buffer(ecdh)
 
-    def set_out_pk_commitment(self, out_pk_commitment):
+    def set_out_pk_commitment(self, out_pk_commitment: bytes):
         if self.state != 4 and self.state != 5:
             raise ValueError("State error")
         self.state = 5
@@ -50,7 +54,7 @@ class PreMlsagHasher:
         self.kc_master.update(c_hash)
         self.rtcsig_hasher = None
 
-    def rsig_val(self, p, bulletproof, raw=False):
+    def rsig_val(self, p: Union[bytes, List[bytes], Bulletproof], raw: bool = False):
         if self.state == 8:
             raise ValueError("State error")
 
@@ -66,31 +70,22 @@ class PreMlsagHasher:
                 self.rsig_hasher.update(p)
             return
 
-        if bulletproof:
-            self.rsig_hasher.update(p.A)
-            self.rsig_hasher.update(p.S)
-            self.rsig_hasher.update(p.T1)
-            self.rsig_hasher.update(p.T2)
-            self.rsig_hasher.update(p.taux)
-            self.rsig_hasher.update(p.mu)
-            for i in range(len(p.L)):
-                self.rsig_hasher.update(p.L[i])
-            for i in range(len(p.R)):
-                self.rsig_hasher.update(p.R[i])
-            self.rsig_hasher.update(p.a)
-            self.rsig_hasher.update(p.b)
-            self.rsig_hasher.update(p.t)
+        # Hash Bulletproof
+        self.rsig_hasher.update(p.A)
+        self.rsig_hasher.update(p.S)
+        self.rsig_hasher.update(p.T1)
+        self.rsig_hasher.update(p.T2)
+        self.rsig_hasher.update(p.taux)
+        self.rsig_hasher.update(p.mu)
+        for i in range(len(p.L)):
+            self.rsig_hasher.update(p.L[i])
+        for i in range(len(p.R)):
+            self.rsig_hasher.update(p.R[i])
+        self.rsig_hasher.update(p.a)
+        self.rsig_hasher.update(p.b)
+        self.rsig_hasher.update(p.t)
 
-        else:
-            for i in range(64):
-                self.rsig_hasher.update(p.asig.s0[i])
-            for i in range(64):
-                self.rsig_hasher.update(p.asig.s1[i])
-            self.rsig_hasher.update(p.asig.ee)
-            for i in range(64):
-                self.rsig_hasher.update(p.Ci[i])
-
-    def get_digest(self):
+    def get_digest(self) -> bytes:
         if self.state != 6:
             raise ValueError("State error")
         self.state = 8

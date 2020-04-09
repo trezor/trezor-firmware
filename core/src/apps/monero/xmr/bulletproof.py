@@ -657,7 +657,6 @@ class KeyVPowers(KeyVBase):
             raise IndexError("Only linear scan allowed: %s, %s" % (prev, item))
 
     def set_state(self, idx, val):
-        self.item = idx
         self.last_idx = idx
         if self.raw:
             return crypto.sc_copy(self.cur, val)
@@ -1666,8 +1665,8 @@ class BulletProofBuilder:
                 _sc_mulsub(h_scalar, tmp, yinvpow, h_scalar)
 
                 if not is_single:  # ph4
-                    _sc_mulsub(m_z4[i], g_scalar, weight_z, m_z4[i])
-                    _sc_mulsub(m_z5[i], h_scalar, weight_z, m_z5[i])
+                    m_z4.read(i, _sc_mulsub(_tmp_bf_0, g_scalar, weight_z, m_z4[i]))
+                    m_z5.read(i, _sc_mulsub(_tmp_bf_0, h_scalar, weight_z, m_z5[i]))
                 else:
                     _sc_mul(tmp, g_scalar, weight_z)
                     _sub_keys(

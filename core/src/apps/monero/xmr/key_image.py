@@ -1,8 +1,17 @@
 from apps.monero.xmr import crypto, monero
 from apps.monero.xmr.serialize.int_serialize import dump_uvarint_b
 
+if False:
+    from typing import List, Tuple, Optional, Dict
+    from apps.monero.xmr.types import Ge25519, Sc25519
+    from apps.monero.xmr.credentials import AccountCreds
+    from trezor.messages.MoneroTransferDetails import MoneroTransferDetails
 
-def compute_hash(rr):
+    Subaddresses = Dict[bytes, Tuple[int, int]]
+    Sig = List[List[Sc25519]]
+
+
+def compute_hash(rr: MoneroTransferDetails) -> bytes:
     kck = crypto.get_keccak()
     kck.update(rr.out_key)
     kck.update(rr.tx_pub_key)
@@ -13,29 +22,59 @@ def compute_hash(rr):
     return kck.digest()
 
 
-def export_key_image(creds, subaddresses, td):
+def export_key_image(
+    creds: AccountCreds, subaddresses: Subaddresses, td: MoneroTransferDetails
+) -> Tuple[Ge25519, Sig]:
     out_key = crypto.decodepoint(td.out_key)
     tx_pub_key = crypto.decodepoint(td.tx_pub_key)
-    additional_tx_pub_keys = [crypto.decodepoint(x) for x in td.additional_tx_pub_keys]
+
+    additional_tx_pub_key = None
+    if len(td.additional_tx_pub_keys) == 1:  # compression
+        additional_tx_pub_key = crypto.decodepoint(td.additional_tx_pub_keys[0])
+    elif td.additional_tx_pub_keys:
+        if td.internal_output_index >= len(td.additional_tx_pub_keys):
+            raise ValueError("Wrong number of additional derivations")
+        additional_tx_pub_key = crypto.decodepoint(
+            td.additional_tx_pub_keys[td.internal_output_index]
+        )
+
     ki, sig = _export_key_image(
         creds,
         subaddresses,
         out_key,
         tx_pub_key,
-        additional_tx_pub_keys,
+        additional_tx_pub_key,
         td.internal_output_index,
+        True,
+        td.sub_addr_major,
+        td.sub_addr_minor,
     )
     return ki, sig
 
 
 def _export_key_image(
-    creds, subaddresses, pkey, tx_pub_key, additional_tx_pub_keys, out_idx, test=True
-):
+    creds: AccountCreds,
+    subaddresses: Subaddresses,
+    pkey: Ge25519,
+    tx_pub_key: Ge25519,
+    additional_tx_pub_key: Optional[Ge25519],
+    out_idx: int,
+    test: bool = True,
+    sub_addr_major: int = None,
+    sub_addr_minor: int = None,
+) -> Tuple[Ge25519, Sig]:
     """
     Generates key image for the TXO + signature for the key image
     """
     r = monero.generate_tx_spend_and_key_image_and_derivation(
-        creds, subaddresses, pkey, tx_pub_key, additional_tx_pub_keys, out_idx
+        creds,
+        subaddresses,
+        pkey,
+        tx_pub_key,
+        additional_tx_pub_key,
+        out_idx,
+        sub_addr_major,
+        sub_addr_minor,
     )
     xi, ki, recv_derivation = r[:3]
 
@@ -45,7 +84,14 @@ def _export_key_image(
     return ki, sig
 
 
-def generate_ring_signature(prefix_hash, image, pubs, sec, sec_idx, test=False):
+def generate_ring_signature(
+    prefix_hash: bytes,
+    image: Ge25519,
+    pubs: List[Ge25519],
+    sec: Sc25519,
+    sec_idx: int,
+    test: bool = False,
+) -> Sig:
     """
     Generates ring signature with key image.
     void crypto_ops::generate_ring_signature()
@@ -72,7 +118,7 @@ def generate_ring_signature(prefix_hash, image, pubs, sec, sec_idx, test=False):
     k = crypto.sc_0()
     sig = []
 
-    for i in range(len(pubs)):
+    for _ in range(len(pubs)):
         sig.append([crypto.sc_0(), crypto.sc_0()])  # c, r
 
     for i in range(len(pubs)):
