@@ -868,8 +868,11 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
             cmd = cbor_error(self.cid, e.code)
         except KeyError:
             cmd = cbor_error(self.cid, _ERR_MISSING_PARAMETER)
-        except Exception:
-            cmd = cbor_error(self.cid, _ERR_OPERATION_DENIED)
+        except Exception as e:
+            # Firmware error.
+            if __debug__:
+                log.exception(__name__, e)
+            cmd = cbor_error(self.cid, _ERR_OTHER)
 
         await send_cmd(cmd, self.iface)
         self.finished = True
@@ -1160,7 +1163,9 @@ def msg_register(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     if not storage.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
-        return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
+        # There is no standard way to decline a U2F request, but responding with ERR_CHANNEL_BUSY
+        # doesn't seem to violate the protocol and at least stops Chrome from polling.
+        return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
 
     # check length of input data
     if len(req.data) != 64:
@@ -1236,7 +1241,8 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     if not storage.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
-        return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
+        # Device is not registered with the RP.
+        return msg_error(req.cid, _SW_WRONG_DATA)
 
     # we need at least keyHandleLen
     if len(req.data) <= _REQ_CMD_AUTHENTICATE_KHLEN:
@@ -1254,7 +1260,7 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     try:
         cred = Credential.from_bytes(key_handle, rp_id_hash)
     except Exception:
-        # specific error logged in msg_authenticate_genkey
+        # specific error logged in _node_from_key_handle
         return msg_error(req.cid, _SW_WRONG_DATA)
 
     # if _AUTH_CHECK_ONLY is requested, return, because keyhandle has been checked already
@@ -1401,7 +1407,7 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     if not storage.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
-        return cbor_error(req.cid, _ERR_OPERATION_DENIED)
+        return cbor_error(req.cid, _ERR_OTHER)
 
     try:
         param = cbor.decode(req.data[1:])
@@ -1491,9 +1497,7 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         # User verification requested, but PIN is not enabled.
         state_set = dialog_mgr.set_state(Fido2ConfirmNoPin(req.cid, dialog_mgr.iface))
         if state_set:
-            # We should return _ERR_UNSUPPORTED_OPTION, but since we claim in GetInfo that the PIN
-            # is set even when it's not, it makes more sense to return _ERR_OPERATION_DENIED.
-            return cbor_error(req.cid, _ERR_OPERATION_DENIED)
+            return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
         else:
             return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
 
@@ -1581,7 +1585,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     if not storage.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
-        return cbor_error(req.cid, _ERR_OPERATION_DENIED)
+        return cbor_error(req.cid, _ERR_OTHER)
 
     try:
         param = cbor.decode(req.data[1:])
@@ -1645,9 +1649,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         # User verification requested, but PIN is not enabled.
         state_set = dialog_mgr.set_state(Fido2ConfirmNoPin(req.cid, dialog_mgr.iface))
         if state_set:
-            # We should return _ERR_UNSUPPORTED_OPTION, but since we claim in GetInfo that the PIN
-            # is set even when it's not, it makes more sense to return _ERR_OPERATION_DENIED.
-            return cbor_error(req.cid, _ERR_OPERATION_DENIED)
+            return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
         else:
             return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
 
@@ -1672,8 +1674,11 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
                 user_verification,
             )
             return Cmd(req.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
-        except Exception:
-            return cbor_error(req.cid, _ERR_OPERATION_DENIED)
+        except Exception as e:
+            # Firmware error.
+            if __debug__:
+                log.exception(__name__, e)
+            return cbor_error(req.cid, _ERR_OTHER)
     else:
         # Ask user to confirm one of the credentials.
         state_set = dialog_mgr.set_state(
@@ -1854,7 +1859,8 @@ def cbor_reset(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     if not storage.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
-        return cbor_error(req.cid, _ERR_OPERATION_DENIED)
+        # Return success, because the authenticator is already in factory default state.
+        return cbor_error(req.cid, _ERR_NONE)
 
     if not dialog_mgr.set_state(Fido2ConfirmReset(req.cid, dialog_mgr.iface)):
         return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
