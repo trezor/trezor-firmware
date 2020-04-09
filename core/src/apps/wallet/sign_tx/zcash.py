@@ -201,11 +201,11 @@ class Overwintered(Bitcoinlike):
                 "Unsupported version for overwintered transaction",
             )
 
-    async def phase1_process_nonsegwit_input(self, i: int, txi: TxInputType) -> None:
-        await self.phase1_process_bip143_input(i, txi)
+    async def process_nonsegwit_input(self, i: int, txi: TxInputType) -> None:
+        await self.process_bip143_input(i, txi)
 
-    async def phase2_sign_nonsegwit_input(self, i_sign: int) -> None:
-        await self.phase2_sign_bip143_input(i_sign)
+    async def sign_nonsegwit_input(self, i_sign: int) -> None:
+        await self.sign_bip143_input(i_sign)
 
     def write_tx_header(
         self, w: Writer, tx: Union[SignTx, TransactionType], has_segwit: bool
@@ -215,7 +215,7 @@ class Overwintered(Bitcoinlike):
         write_uint32(w, tx.version_group_id)  # nVersionGroupId
 
     def write_sign_tx_footer(self, w: Writer) -> None:
-        super().write_sign_tx_footer(w)
+        write_uint32(w, self.tx.lock_time)
 
         if self.tx.version == 3:
             write_uint32(w, self.tx.expiry)  # expiryHeight
