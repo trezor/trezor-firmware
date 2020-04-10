@@ -22,8 +22,7 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
 
   CHECK_INITIALIZED
 
-  if(SIGN_FREEPAY_NOPIN != (g_uiFreePayFlag & SIGN_FREEPAY_NOPIN))
-  {
+  if (SIGN_FREEPAY_NOPIN != (g_uiFreePayFlag & SIGN_FREEPAY_NOPIN)) {
     CHECK_PIN
   }
 
@@ -194,8 +193,7 @@ void fsm_msgGetAddress(const GetAddress *msg) {
   RESP_INIT(Address);
 
   CHECK_INITIALIZED
-  if(SIGN_FREEPAY_NOPIN != (g_uiFreePayFlag & SIGN_FREEPAY_NOPIN))
-  {
+  if (SIGN_FREEPAY_NOPIN != (g_uiFreePayFlag & SIGN_FREEPAY_NOPIN)) {
     CHECK_PIN
   }
 

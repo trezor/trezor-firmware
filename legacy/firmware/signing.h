@@ -27,11 +27,10 @@
 #include "hasher.h"
 #include "messages-bitcoin.pb.h"
 
-#define SIGN_FREEPAY_NOPIN          0x81000000
-#define SIGN_FREEPAY_NOBUTTON       0x82000000
-#define SIGN_FREEPAY_LIEMTPAY       0x84000000
-#define SIGN_FREEPAY_LIEMTTIME      0x88000000
-
+#define SIGN_FREEPAY_NOPIN 0x81000000
+#define SIGN_FREEPAY_NOBUTTON 0x82000000
+#define SIGN_FREEPAY_LIEMTPAY 0x84000000
+#define SIGN_FREEPAY_LIEMTTIME 0x88000000
 
 void signing_init(const SignTx *msg, const CoinInfo *_coin,
                   const HDNode *_root);

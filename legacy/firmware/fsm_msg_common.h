@@ -360,7 +360,8 @@ void fsm_msgClearSession(const ClearSession *msg) {
 
 void fsm_msgApplySettings(const ApplySettings *msg) {
   CHECK_PARAM(msg->has_label || msg->has_language || msg->has_use_passphrase ||
-                  msg->has_homescreen || msg->has_auto_lock_delay_ms||msg->has_use_fee_pay,
+                  msg->has_homescreen || msg->has_auto_lock_delay_ms ||
+                  msg->has_use_fee_pay,
               _("No setting provided"));
 
   CHECK_PIN
@@ -420,8 +421,8 @@ void fsm_msgApplySettings(const ApplySettings *msg) {
   }
   if (msg->has_use_fee_pay && g_bSelectSEFlag) {
     layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
-                      _("Do you really want to"), _("free pay set"),
-                      NULL, NULL, NULL, NULL);
+                      _("Do you really want to"), _("free pay set"), NULL, NULL,
+                      NULL, NULL);
     if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
       fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
       layoutHome();
@@ -430,8 +431,8 @@ void fsm_msgApplySettings(const ApplySettings *msg) {
   }
   if (msg->has_use_se) {
     layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
-                      _("Do you really want to"), _("set whether use SE"),
-                      NULL, NULL, NULL, NULL);
+                      _("Do you really want to"), _("set whether use SE"), NULL,
+                      NULL, NULL, NULL);
     if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
       fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
       layoutHome();
@@ -550,7 +551,7 @@ void fsm_msgBixinGenSeeds(const BixinGenSeeds *msg) {
   CHECK_PIN
   for (i = 0; i < 16; i++) {
     uiTemp = random32();
-    memcpy(ucBuf+1 + i * 4, &uiTemp, 4);
+    memcpy(ucBuf + 1 + i * 4, &uiTemp, 4);
   }
   ucBuf[0] = config_getSeedsExportFlag();
   if (!config_setSeedsBytes(ucBuf, 65)) {

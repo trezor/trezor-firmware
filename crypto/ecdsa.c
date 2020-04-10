@@ -678,8 +678,7 @@ int ecdsa_sign(const ecdsa_curve *curve, HasherType hasher_sign,
 int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
                       const uint8_t *digest, uint8_t *sig, uint8_t *pby,
                       int (*is_canonical)(uint8_t by, uint8_t sig[64])) {
-
-  if (!g_bSelectSEFlag){
+  if (!g_bSelectSEFlag) {
     int i = 0;
     curve_point R = {0};
     bignum256 k = {0}, z = {0}, randk = {0};
@@ -687,109 +686,108 @@ int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
     uint8_t by;  // signature recovery byte
 
 #if USE_RFC6979
-  rfc6979_state rng = {0};
-  init_rfc6979(priv_key, digest, &rng);
+    rfc6979_state rng = {0};
+    init_rfc6979(priv_key, digest, &rng);
 #endif
 
-  bn_read_be(digest, &z);
+    bn_read_be(digest, &z);
 
-  for (i = 0; i < 10000; i++) {
+    for (i = 0; i < 10000; i++) {
 #if USE_RFC6979
-    // generate K deterministically
-    generate_k_rfc6979(&k, &rng);
-    // if k is too big or too small, we don't like it
-    if (bn_is_zero(&k) || !bn_is_less(&k, &curve->order)) {
-      continue;
-    }
+      // generate K deterministically
+      generate_k_rfc6979(&k, &rng);
+      // if k is too big or too small, we don't like it
+      if (bn_is_zero(&k) || !bn_is_less(&k, &curve->order)) {
+        continue;
+      }
 #else
-    // generate random number k
-    generate_k_random(&k, &curve->order);
+      // generate random number k
+      generate_k_random(&k, &curve->order);
 #endif
 
-    // compute k*G
-    scalar_multiply(curve, &k, &R);
-    by = R.y.val[0] & 1;
-    // r = (rx mod n)
-    if (!bn_is_less(&R.x, &curve->order)) {
-      bn_subtract(&R.x, &curve->order, &R.x);
-      by |= 2;
-    }
-    // if r is zero, we retry
-    if (bn_is_zero(&R.x)) {
-      continue;
+      // compute k*G
+      scalar_multiply(curve, &k, &R);
+      by = R.y.val[0] & 1;
+      // r = (rx mod n)
+      if (!bn_is_less(&R.x, &curve->order)) {
+        bn_subtract(&R.x, &curve->order, &R.x);
+        by |= 2;
+      }
+      // if r is zero, we retry
+      if (bn_is_zero(&R.x)) {
+        continue;
+      }
+
+      // randomize operations to counter side-channel attacks
+      generate_k_random(&randk, &curve->order);
+      bn_multiply(&randk, &k, &curve->order);  // k*rand
+      bn_inverse(&k, &curve->order);           // (k*rand)^-1
+      bn_read_be(priv_key, s);                 // priv
+      bn_multiply(&R.x, s, &curve->order);     // R.x*priv
+      bn_add(s, &z);                           // R.x*priv + z
+      bn_multiply(&k, s, &curve->order);       // (k*rand)^-1 (R.x*priv + z)
+      bn_multiply(&randk, s, &curve->order);   // k^-1 (R.x*priv + z)
+      bn_mod(s, &curve->order);
+      // if s is zero, we retry
+      if (bn_is_zero(s)) {
+        continue;
+      }
+
+      // if S > order/2 => S = -S
+      if (bn_is_less(&curve->order_half, s)) {
+        bn_subtract(&curve->order, s, s);
+        by ^= 1;
+      }
+      // we are done, R.x and s is the result signature
+      bn_write_be(&R.x, sig);
+      bn_write_be(s, sig + 32);
+
+      // check if the signature is acceptable or retry
+      if (is_canonical && !is_canonical(by, sig)) {
+        continue;
+      }
+
+      if (pby) {
+        *pby = by;
+      }
+
+      memzero(&k, sizeof(k));
+      memzero(&randk, sizeof(randk));
+#if USE_RFC6979
+      memzero(&rng, sizeof(rng));
+#endif
+      return 0;
     }
 
-    // randomize operations to counter side-channel attacks
-    generate_k_random(&randk, &curve->order);
-    bn_multiply(&randk, &k, &curve->order);  // k*rand
-    bn_inverse(&k, &curve->order);           // (k*rand)^-1
-    bn_read_be(priv_key, s);                 // priv
-    bn_multiply(&R.x, s, &curve->order);     // R.x*priv
-    bn_add(s, &z);                           // R.x*priv + z
-    bn_multiply(&k, s, &curve->order);       // (k*rand)^-1 (R.x*priv + z)
-    bn_multiply(&randk, s, &curve->order);   // k^-1 (R.x*priv + z)
-    bn_mod(s, &curve->order);
-    // if s is zero, we retry
-    if (bn_is_zero(s)) {
-      continue;
-    }
-
-    // if S > order/2 => S = -S
-    if (bn_is_less(&curve->order_half, s)) {
-      bn_subtract(&curve->order, s, s);
-      by ^= 1;
-    }
-    // we are done, R.x and s is the result signature
-    bn_write_be(&R.x, sig);
-    bn_write_be(s, sig + 32);
-
-    // check if the signature is acceptable or retry
-    if (is_canonical && !is_canonical(by, sig)) {
-      continue;
-    }
-
-    if (pby) {
-      *pby = by;
-    }
-
+    // Too many retries without a valid signature
+    // -> fail with an error
     memzero(&k, sizeof(k));
     memzero(&randk, sizeof(randk));
 #if USE_RFC6979
     memzero(&rng, sizeof(rng));
 #endif
-    return 0;
-  }
-
-  // Too many retries without a valid signature
-  // -> fail with an error
-  memzero(&k, sizeof(k));
-  memzero(&randk, sizeof(randk));
-#if USE_RFC6979
-  memzero(&rng, sizeof(rng));
-#endif
     return -1;
-  }
-  else{
+  } else {
     uint8_t ucRevBuf[65];
     uint16_t usLen;
     uint8_t by;  // signature recovery byte
-     if (MI2C_OK != MI2CDRV_Transmit(MI2C_CMD_ECC_EDDSA,ECC_INDEX_SIGN,(uint8_t*)digest, 0x20, ucRevBuf,&usLen,MI2C_ENCRYPT,SET_SESTORE_DATA))                        
-     {
-         return -1;
-     }
-     by = ucRevBuf[0];
-     if (pby) {
-       *pby = by;
-      }
-     memcpy(sig,ucRevBuf+1,0x40);
-     return 0;
+    if (MI2C_OK != MI2CDRV_Transmit(MI2C_CMD_ECC_EDDSA, ECC_INDEX_SIGN,
+                                    (uint8_t *)digest, 0x20, ucRevBuf, &usLen,
+                                    MI2C_ENCRYPT, SET_SESTORE_DATA)) {
+      return -1;
+    }
+    by = ucRevBuf[0];
+    if (pby) {
+      *pby = by;
+    }
+    memcpy(sig, ucRevBuf + 1, 0x40);
+    return 0;
   }
-
 }
 
 void ecdsa_get_public_key33(const ecdsa_curve *curve, const uint8_t *priv_key,
                             uint8_t *pub_key) {
-  if (!g_bSelectSEFlag){
+  if (!g_bSelectSEFlag) {
     curve_point R = {0};
     bignum256 k = {0};
 
@@ -800,10 +798,11 @@ void ecdsa_get_public_key33(const ecdsa_curve *curve, const uint8_t *priv_key,
     bn_write_be(&R.x, pub_key + 1);
     memzero(&R, sizeof(R));
     memzero(&k, sizeof(k));
-  }
-  else{
+  } else {
     uint16_t usLen;
-    MI2CDRV_Transmit(MI2C_CMD_ECC_EDDSA,ECC_INDEX_GITPUBKEY,(uint8_t *)priv_key, 0x20, pub_key,&usLen,MI2C_ENCRYPT,SET_SESTORE_DATA);                       
+    MI2CDRV_Transmit(MI2C_CMD_ECC_EDDSA, ECC_INDEX_GITPUBKEY,
+                     (uint8_t *)priv_key, 0x20, pub_key, &usLen, MI2C_ENCRYPT,
+                     SET_SESTORE_DATA);
   }
 }
 

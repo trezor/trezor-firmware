@@ -3,7 +3,6 @@
 
 #include <libopencm3/stm32/gpio.h>
 
-
 #define NORMAL_PCB 1
 
 #if (NORMAL_PCB)
@@ -13,7 +12,6 @@
 #endif
 
 #define USB_INSERT_PIN GPIO8
-
 
 #ifdef OLD_PCB
 #define NFC_SHOW_PORT GPIOC
@@ -127,7 +125,7 @@ extern uint32_t g_uiFreePayFlag;
 //#define POWER_OFF_TIMER_READY()     (g_ucFlag & 0x01)
 
 #define BUTTON_CHECK_ENBALE() (g_ucFlag |= 0x02)
-#define BUTTON_CHECK_CLEAR() (g_ucFlag &= 0xFD) 
+#define BUTTON_CHECK_CLEAR() (g_ucFlag &= 0xFD)
 #define PBUTTON_CHECK_READY() (g_ucFlag & 0x02)
 
 void vCalu_BleName(uint8_t* pucMac, uint8_t* pucName);

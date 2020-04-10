@@ -131,8 +131,7 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len) {
   const char *mnemonic = mnemonic_from_data(int_entropy, strength / 8);
   memzero(int_entropy, 32);
 
-  if(!g_bSelectSEFlag)
-  {
+  if (!g_bSelectSEFlag) {
     if (skip_backup || no_backup) {
       if (no_backup) {
         config_setNoBackup();
@@ -149,10 +148,8 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len) {
     } else {
       reset_backup(false, mnemonic);
     }
-  }
-  else
-  {
-     reset_backup(false, mnemonic);
+  } else {
+    reset_backup(false, mnemonic);
   }
   mnemonic_clear();
 }

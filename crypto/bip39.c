@@ -28,11 +28,11 @@
 #include "bip39_english.h"
 #include "hmac.h"
 #include "memzero.h"
+#include "mi2c.h"
 #include "options.h"
 #include "pbkdf2.h"
 #include "rand.h"
 #include "sha2.h"
-#include "mi2c.h"
 
 #if USE_BIP39_CACHE
 
@@ -180,7 +180,7 @@ int mnemonic_check(const char *mnemonic) {
 }
 
 // passphrase must be at most 256 characters otherwise it would be truncated
-void mnemonic_to_seed(bool ucMode,const char *mnemonic, const char *passphrase,
+void mnemonic_to_seed(bool ucMode, const char *mnemonic, const char *passphrase,
                       uint8_t seed[512 / 8],
                       void (*progress_callback)(uint32_t current,
                                                 uint32_t total)) {
@@ -203,8 +203,7 @@ void mnemonic_to_seed(bool ucMode,const char *mnemonic, const char *passphrase,
   memcpy(salt, "mnemonic", 8);
   memcpy(salt + 8, passphrase, passphraselen);
 
-  if (!g_bSelectSEFlag)
-  {
+  if (!g_bSelectSEFlag) {
     static CONFIDENTIAL PBKDF2_HMAC_SHA512_CTX pctx;
     pbkdf2_hmac_sha512_Init(&pctx, (const uint8_t *)mnemonic, mnemoniclen, salt,
                             passphraselen + 8, 1);
@@ -219,18 +218,18 @@ void mnemonic_to_seed(bool ucMode,const char *mnemonic, const char *passphrase,
       }
     }
     pbkdf2_hmac_sha512_Final(&pctx, seed);
-  }
-  else
-  {
-     uint8_t ucSendBuf[1024];
-     uint16_t usLen;
-     ucSendBuf[0] = ucMode;
-     //salt LV
-     ucSendBuf[1] =(uint8_t)( (passphraselen + 8)&0xFF);
-     ucSendBuf[2] = (uint8_t)(((passphraselen + 8)>>8)&0xFF);
-     memcpy(ucSendBuf+3, salt, passphraselen + 8);
-     MI2CDRV_Transmit(MI2C_CMD_WR_PIN,MNEMONIC_INDEX_TOSEED,ucSendBuf, (passphraselen + 8)+3, seed,&usLen,MI2C_ENCRYPT,SET_SESTORE_DATA);                           
-     return;
+  } else {
+    uint8_t ucSendBuf[1024];
+    uint16_t usLen;
+    ucSendBuf[0] = ucMode;
+    // salt LV
+    ucSendBuf[1] = (uint8_t)((passphraselen + 8) & 0xFF);
+    ucSendBuf[2] = (uint8_t)(((passphraselen + 8) >> 8) & 0xFF);
+    memcpy(ucSendBuf + 3, salt, passphraselen + 8);
+    MI2CDRV_Transmit(MI2C_CMD_WR_PIN, MNEMONIC_INDEX_TOSEED, ucSendBuf,
+                     (passphraselen + 8) + 3, seed, &usLen, MI2C_ENCRYPT,
+                     SET_SESTORE_DATA);
+    return;
   }
   memzero(salt, sizeof(salt));
 #if USE_BIP39_CACHE
