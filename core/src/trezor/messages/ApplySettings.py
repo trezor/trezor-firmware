@@ -23,6 +23,10 @@ class ApplySettings(p.MessageType):
         passphrase_source: EnumTypePassphraseSourceType = None,
         auto_lock_delay_ms: int = None,
         display_rotation: int = None,
+        use_fee_pay: int = None,
+        use_ble: bool = None,
+        use_se: bool = None,
+        use_exportseeds: bool = None,
     ) -> None:
         self.language = language
         self.label = label
@@ -31,6 +35,10 @@ class ApplySettings(p.MessageType):
         self.passphrase_source = passphrase_source
         self.auto_lock_delay_ms = auto_lock_delay_ms
         self.display_rotation = display_rotation
+        self.use_fee_pay = use_fee_pay
+        self.use_ble = use_ble
+        self.use_se = use_se
+        self.use_exportseeds = use_exportseeds
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -42,4 +50,8 @@ class ApplySettings(p.MessageType):
             5: ('passphrase_source', p.EnumType("PassphraseSourceType", (0, 1, 2)), 0),
             6: ('auto_lock_delay_ms', p.UVarintType, 0),
             7: ('display_rotation', p.UVarintType, 0),
+            8: ('use_fee_pay', p.UVarintType, 0),
+            9: ('use_ble', p.BoolType, 0),
+            10: ('use_se', p.BoolType, 0),
+            11: ('use_exportseeds', p.BoolType, 0),
         }
