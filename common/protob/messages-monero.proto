@@ -364,6 +364,8 @@ message MoneroKeyImageSyncStepRequest {
         optional bytes tx_pub_key = 2;
         repeated bytes additional_tx_pub_keys = 3;
         optional uint64 internal_output_index = 4;
+        optional uint32 sub_addr_major = 5;
+        optional uint32 sub_addr_minor = 6;
     }
 }
 
