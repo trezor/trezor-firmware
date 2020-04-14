@@ -5,7 +5,7 @@ from storage import cache
 from trezor.messages.Initialize import Initialize
 from trezor.wire import DUMMY_CONTEXT
 
-from apps.homescreen import handle_Initialize
+from apps.base import handle_Initialize
 
 KEY = 99
 

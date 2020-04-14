@@ -15,7 +15,7 @@ usb.bus.open()
 
 def _boot_apps() -> None:
     # load applications
-    import apps.homescreen
+    import apps.base
     import apps.management
     import apps.bitcoin
     import apps.misc
@@ -37,7 +37,7 @@ def _boot_apps() -> None:
         import apps.debug
 
     # boot applications
-    apps.homescreen.boot()
+    apps.base.boot()
     apps.management.boot()
     apps.bitcoin.boot()
     apps.misc.boot()
