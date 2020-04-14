@@ -1,30 +1,21 @@
 import storage
 import storage.device
-from trezor import config, res, ui
+from trezor import config, ui
+
+from . import HomescreenBase
 
 
 async def homescreen() -> None:
     await Homescreen()
 
 
-class Homescreen(ui.Layout):
+class Homescreen(HomescreenBase):
     def __init__(self) -> None:
-        self.repaint = True
+        super().__init__()
+        if config.is_unlocked() and not storage.is_initialized():
+            self.label = "Go to trezor.io/start"
 
-    def on_render(self) -> None:
-        if not self.repaint:
-            return
-
-        image = None
-        if not storage.is_initialized():
-            label = "Go to trezor.io/start"
-        else:
-            label = storage.device.get_label() or "My Trezor"
-            image = storage.device.get_homescreen()
-
-        if not image:
-            image = res.load("apps/homescreen/res/bg.toif")
-
+    def render_warning(self) -> None:
         if storage.is_initialized() and storage.device.no_backup():
             ui.header_error("SEEDLESS")
         elif storage.is_initialized() and storage.device.unfinished_backup():
@@ -35,7 +26,9 @@ class Homescreen(ui.Layout):
             ui.header_warning("PIN NOT SET!")
         else:
             ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT, ui.BG)
-        ui.display.avatar(48, 48 - 10, image, ui.WHITE, ui.BLACK)
-        ui.display.text_center(ui.WIDTH // 2, 220, label, ui.BOLD, ui.FG, ui.BG)
 
-        self.repaint = False
+    def on_render(self) -> None:
+        self.render_warning()
+        self.render_homescreen()
+        if not config.is_unlocked():
+            self.render_lock()
