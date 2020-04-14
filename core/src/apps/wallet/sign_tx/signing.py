@@ -40,6 +40,9 @@ _BIP32_CHANGE_CHAIN = const(1)
 # use and still allow to quickly brute-force the correct bip32 path
 _BIP32_MAX_LAST_ELEMENT = const(1000000)
 
+# the number of bytes to preallocate for serialized transaction chunks
+_MAX_SERIALIZED_CHUNK_SIZE = const(2048)
+
 
 class SigningError(ValueError):
     pass
@@ -98,15 +101,19 @@ class Bitcoin:
         # dict of booleans stating if input is segwit
         self.segwit = {}  # type: Dict[int, bool]
 
+        # amounts
         self.total_in = 0  # sum of input amounts
         self.bip143_in = 0  # sum of segwit input amounts
         self.total_out = 0  # sum of output amounts
         self.change_out = 0  # change output amount
         self.weight = tx_weight.TxWeightCalculator(tx.inputs_count, tx.outputs_count)
 
+        # transaction and signature serialization
+        self.serialized_tx = writers.empty_bytearray(_MAX_SERIALIZED_CHUNK_SIZE)
         self.tx_req = TxRequest()
         self.tx_req.details = TxRequestDetailsType()
-        self.tx_ser = TxRequestSerializedType()
+        self.tx_req.serialized = TxRequestSerializedType()
+        self.tx_req.serialized.serialized_tx = self.serialized_tx
 
         # h_confirmed is used to make sure that the inputs and outputs streamed for
         # confirmation in Steps 1 and 2 are the same as the ones streamed for signing
@@ -180,11 +187,10 @@ class Bitcoin:
                 await self.sign_segwit_input(i)
             elif any_segwit:
                 # add empty witness for non-segwit inputs
-                self.tx_ser.serialized_tx.append(0)
-                self.tx_req.serialized = self.tx_ser
+                self.serialized_tx.append(0)
 
     async def step7_finish(self) -> None:
-        self.write_sign_tx_footer(self.tx_ser.serialized_tx)
+        self.write_sign_tx_footer(self.serialized_tx)
         await helpers.request_tx_finish(self.tx_req)
 
     async def process_input(self, i: int, txi: TxInputType) -> None:
@@ -259,16 +265,9 @@ class Bitcoin:
         key_sign_pub = key_sign.public_key()
         txi_sign.script_sig = self.input_derive_script(txi_sign, key_sign_pub)
 
-        w_txi = writers.empty_bytearray(
-            7 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4
-        )
         if i_sign == 0:  # serializing first input => prepend headers
-            self.write_sign_tx_header(w_txi, True)
-        self.write_tx_input(w_txi, txi_sign)
-        self.tx_ser.signature_index = None
-        self.tx_ser.signature = None
-        self.tx_ser.serialized_tx = w_txi
-        self.tx_req.serialized = self.tx_ser
+            self.write_sign_tx_header(self.serialized_tx, True)
+        self.write_tx_input(self.serialized_tx, txi_sign)
 
     async def sign_segwit_input(self, i: int) -> None:
         # STAGE_REQUEST_SEGWIT_WITNESS
@@ -297,18 +296,16 @@ class Bitcoin:
         if txi.multisig:
             # find out place of our signature based on the pubkey
             signature_index = multisig.multisig_pubkey_index(txi.multisig, key_sign_pub)
-            witness = scripts.witness_p2wsh(
+            self.serialized_tx[:] = scripts.witness_p2wsh(
                 txi.multisig, signature, signature_index, self.get_hash_type()
             )
         else:
-            witness = scripts.witness_p2wpkh(
+            self.serialized_tx[:] = scripts.witness_p2wpkh(
                 signature, key_sign_pub, self.get_hash_type()
             )
 
-        self.tx_ser.signature_index = i
-        self.tx_ser.signature = signature
-        self.tx_ser.serialized_tx = witness
-        self.tx_req.serialized = self.tx_ser
+        self.tx_req.serialized.signature_index = i
+        self.tx_req.serialized.signature = signature
 
     async def sign_nonsegwit_input(self, i_sign: int) -> None:
         # hash of what we are signing with this input
@@ -381,17 +378,12 @@ class Bitcoin:
         txi_sign.script_sig = self.input_derive_script(
             txi_sign, key_sign_pub, signature
         )
-        w_txi_sign = writers.empty_bytearray(
-            5 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4
-        )
         if i_sign == 0:  # serializing first input => prepend headers
-            self.write_sign_tx_header(w_txi_sign, True in self.segwit.values())
-        self.write_tx_input(w_txi_sign, txi_sign)
+            self.write_sign_tx_header(self.serialized_tx, True in self.segwit.values())
+        self.write_tx_input(self.serialized_tx, txi_sign)
 
-        self.tx_ser.signature_index = i_sign
-        self.tx_ser.signature = signature
-        self.tx_ser.serialized_tx = w_txi_sign
-        self.tx_req.serialized = self.tx_ser
+        self.tx_req.serialized.signature_index = i_sign
+        self.tx_req.serialized.signature = signature
 
     async def serialize_output(self, i: int) -> None:
         # STAGE_REQUEST_5_OUTPUT
@@ -400,15 +392,9 @@ class Bitcoin:
         txo_bin.amount = txo.amount
         txo_bin.script_pubkey = self.output_derive_script(txo)
 
-        w_txo_bin = writers.empty_bytearray(5 + 8 + 5 + len(txo_bin.script_pubkey) + 4)
         if i == 0:  # serializing first output => prepend outputs count
-            writers.write_varint(w_txo_bin, self.tx.outputs_count)
-        writers.write_tx_output(w_txo_bin, txo_bin)
-
-        self.tx_ser.signature_index = None
-        self.tx_ser.signature = None
-        self.tx_ser.serialized_tx = w_txo_bin
-        self.tx_req.serialized = self.tx_ser
+            writers.write_varint(self.serialized_tx, self.tx.outputs_count)
+        writers.write_tx_output(self.serialized_tx, txo_bin)
 
     async def get_prevtx_output_value(self, prev_hash: bytes, prev_index: int) -> int:
         amount_out = 0  # output amount
