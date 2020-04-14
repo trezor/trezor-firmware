@@ -70,7 +70,13 @@ class Decred(Bitcoin):
     def create_hash_writer(self) -> HashWriter:
         return HashWriter(blake256())
 
+    async def step1_process_inputs(self) -> None:
+        self.write_sign_tx_header(self.serialized_tx, False)
+        await super().step1_process_inputs()
+
     async def step2_confirm_outputs(self) -> None:
+        writers.write_varint(self.serialized_tx, self.tx.outputs_count)
+        self.hash143.add_output_count(self.tx)
         await super().step2_confirm_outputs()
         self.hash143.add_locktime_expiry(self.tx)
 
@@ -78,9 +84,6 @@ class Decred(Bitcoin):
         await super().process_input(i, txi)
 
         # Decred serializes inputs early.
-        if i == 0:  # serializing first input => prepend headers
-            self.write_sign_tx_header(self.serialized_tx, False)
-
         self.write_tx_input(self.serialized_tx, txi)
 
     async def confirm_output(
@@ -92,16 +95,15 @@ class Decred(Bitcoin):
                 "Cannot send to output with script version != 0",
             )
         txo_bin.decred_script_version = txo.decred_script_version
-
-        if i == 0:  # serializing first output => prepend outputs count
-            writers.write_varint(self.serialized_tx, self.tx.outputs_count)
-            self.hash143.add_output_count(self.tx)
-
         writers.write_tx_output(self.serialized_tx, txo_bin)
 
         await super().confirm_output(i, txo, txo_bin)
 
     async def step4_serialize_inputs(self) -> None:
+        writers.write_uint32(self.serialized_tx, self.tx.lock_time)
+        writers.write_uint32(self.serialized_tx, self.tx.expiry)
+        writers.write_varint(self.serialized_tx, self.tx.inputs_count)
+
         prefix_hash = self.hash143.get_prefix_hash()
 
         for i_sign in range(self.tx.inputs_count):
@@ -156,11 +158,6 @@ class Decred(Bitcoin):
             txi_sign.script_sig = self.input_derive_script(
                 txi_sign, key_sign_pub, signature
             )
-
-            if i_sign == 0:
-                writers.write_uint32(self.serialized_tx, self.tx.lock_time)
-                writers.write_uint32(self.serialized_tx, self.tx.expiry)
-                writers.write_varint(self.serialized_tx, self.tx.inputs_count)
 
             writers.write_tx_input_decred_witness(self.serialized_tx, txi_sign)
 

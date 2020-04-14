@@ -167,6 +167,7 @@ class Bitcoin:
             raise SigningError(FailureType.ActionCancelled, "Total cancelled")
 
     async def step4_serialize_inputs(self) -> None:
+        self.write_sign_tx_header(self.serialized_tx, True in self.segwit.values())
         for i in range(self.tx.inputs_count):
             progress.advance()
             if self.segwit[i]:
@@ -175,6 +176,7 @@ class Bitcoin:
                 await self.sign_nonsegwit_input(i)
 
     async def step5_serialize_outputs(self) -> None:
+        writers.write_varint(self.serialized_tx, self.tx.outputs_count)
         for i in range(self.tx.outputs_count):
             progress.advance()
             await self.serialize_output(i)
@@ -265,8 +267,6 @@ class Bitcoin:
         key_sign_pub = key_sign.public_key()
         txi_sign.script_sig = self.input_derive_script(txi_sign, key_sign_pub)
 
-        if i_sign == 0:  # serializing first input => prepend headers
-            self.write_sign_tx_header(self.serialized_tx, True)
         self.write_tx_input(self.serialized_tx, txi_sign)
 
     async def sign_segwit_input(self, i: int) -> None:
@@ -378,8 +378,6 @@ class Bitcoin:
         txi_sign.script_sig = self.input_derive_script(
             txi_sign, key_sign_pub, signature
         )
-        if i_sign == 0:  # serializing first input => prepend headers
-            self.write_sign_tx_header(self.serialized_tx, True in self.segwit.values())
         self.write_tx_input(self.serialized_tx, txi_sign)
 
         self.tx_req.serialized.signature_index = i_sign
@@ -391,9 +389,6 @@ class Bitcoin:
         txo_bin = TxOutputBinType()
         txo_bin.amount = txo.amount
         txo_bin.script_pubkey = self.output_derive_script(txo)
-
-        if i == 0:  # serializing first output => prepend outputs count
-            writers.write_varint(self.serialized_tx, self.tx.outputs_count)
         writers.write_tx_output(self.serialized_tx, txo_bin)
 
     async def get_prevtx_output_value(self, prev_hash: bytes, prev_index: int) -> int:
