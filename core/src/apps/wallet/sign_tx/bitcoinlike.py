@@ -80,8 +80,6 @@ class Bitcoinlike(signing.Bitcoin):
         txi_sign.script_sig = self.input_derive_script(
             txi_sign, key_sign_pub, signature
         )
-        if i_sign == 0:  # serializing first input => prepend headers
-            self.write_sign_tx_header(self.serialized_tx, True in self.segwit.values())
         writers.write_tx_input(self.serialized_tx, txi_sign)
         self.tx_req.serialized.signature_index = i_sign
         self.tx_req.serialized.signature = signature
