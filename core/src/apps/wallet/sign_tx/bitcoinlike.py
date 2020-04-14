@@ -80,16 +80,11 @@ class Bitcoinlike(signing.Bitcoin):
         txi_sign.script_sig = self.input_derive_script(
             txi_sign, key_sign_pub, signature
         )
-        w_txi_sign = writers.empty_bytearray(
-            5 + len(txi_sign.prev_hash) + 4 + len(txi_sign.script_sig) + 4
-        )
         if i_sign == 0:  # serializing first input => prepend headers
-            self.write_sign_tx_header(w_txi_sign, True in self.segwit.values())
-        writers.write_tx_input(w_txi_sign, txi_sign)
-        self.tx_ser.signature_index = i_sign
-        self.tx_ser.signature = signature
-        self.tx_ser.serialized_tx = w_txi_sign
-        self.tx_req.serialized = self.tx_ser
+            self.write_sign_tx_header(self.serialized_tx, True in self.segwit.values())
+        writers.write_tx_input(self.serialized_tx, txi_sign)
+        self.tx_req.serialized.signature_index = i_sign
+        self.tx_req.serialized.signature = signature
 
     def on_negative_fee(self) -> None:
         # some coins require negative fees for reward TX

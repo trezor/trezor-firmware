@@ -78,16 +78,10 @@ class Decred(Bitcoin):
         await super().process_input(i, txi)
 
         # Decred serializes inputs early.
-        w_txi = writers.empty_bytearray(8 if i == 0 else 0 + 9 + len(txi.prev_hash))
         if i == 0:  # serializing first input => prepend headers
-            self.write_sign_tx_header(w_txi, False)
+            self.write_sign_tx_header(self.serialized_tx, False)
 
-        self.write_tx_input(w_txi, txi)
-
-        self.tx_ser.signature_index = None
-        self.tx_ser.signature = None
-        self.tx_ser.serialized_tx = w_txi
-        self.tx_req.serialized = self.tx_ser
+        self.write_tx_input(self.serialized_tx, txi)
 
     async def confirm_output(
         self, i: int, txo: TxOutputType, txo_bin: TxOutputBinType
@@ -99,17 +93,11 @@ class Decred(Bitcoin):
             )
         txo_bin.decred_script_version = txo.decred_script_version
 
-        w_txo_bin = writers.empty_bytearray(4 + 8 + 2 + 4 + len(txo_bin.script_pubkey))
         if i == 0:  # serializing first output => prepend outputs count
-            writers.write_varint(w_txo_bin, self.tx.outputs_count)
+            writers.write_varint(self.serialized_tx, self.tx.outputs_count)
             self.hash143.add_output_count(self.tx)
 
-        writers.write_tx_output(w_txo_bin, txo_bin)
-
-        self.tx_ser.signature_index = None
-        self.tx_ser.signature = None
-        self.tx_ser.serialized_tx = w_txo_bin
-        self.tx_req.serialized = self.tx_ser
+        writers.write_tx_output(self.serialized_tx, txo_bin)
 
         await super().confirm_output(i, txo, txo_bin)
 
@@ -169,21 +157,15 @@ class Decred(Bitcoin):
                 txi_sign, key_sign_pub, signature
             )
 
-            max_witness_size = 8 + 4 + 4 + 4 + len(txi_sign.script_sig)
             if i_sign == 0:
-                w_txi_sign = writers.empty_bytearray(4 + 4 + 4 + max_witness_size)
-                writers.write_uint32(w_txi_sign, self.tx.lock_time)
-                writers.write_uint32(w_txi_sign, self.tx.expiry)
-                writers.write_varint(w_txi_sign, self.tx.inputs_count)
-            else:
-                w_txi_sign = writers.empty_bytearray(max_witness_size)
+                writers.write_uint32(self.serialized_tx, self.tx.lock_time)
+                writers.write_uint32(self.serialized_tx, self.tx.expiry)
+                writers.write_varint(self.serialized_tx, self.tx.inputs_count)
 
-            writers.write_tx_input_decred_witness(w_txi_sign, txi_sign)
+            writers.write_tx_input_decred_witness(self.serialized_tx, txi_sign)
 
-            self.tx_ser.signature_index = i_sign
-            self.tx_ser.signature = signature
-            self.tx_ser.serialized_tx = w_txi_sign
-            self.tx_req.serialized = self.tx_ser
+            self.tx_req.serialized.signature_index = i_sign
+            self.tx_req.serialized.signature = signature
 
     async def step5_serialize_outputs(self) -> None:
         pass

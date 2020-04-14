@@ -117,7 +117,9 @@ def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes = None) ->
     tx_req.details.tx_hash = tx_hash
     tx_req.details.request_index = None
     ack = yield tx_req
-    tx_req.serialized = None
+    tx_req.serialized.signature = None
+    tx_req.serialized.signature_index = None
+    tx_req.serialized.serialized_tx[:] = bytes()
     gc.collect()
     return sanitize_tx_meta(ack.tx, coin)
 
@@ -131,7 +133,9 @@ def request_tx_extra_data(  # type: ignore
     tx_req.details.tx_hash = tx_hash
     tx_req.details.request_index = None
     ack = yield tx_req
-    tx_req.serialized = None
+    tx_req.serialized.signature = None
+    tx_req.serialized.signature_index = None
+    tx_req.serialized.serialized_tx[:] = bytes()
     tx_req.details.extra_data_offset = None
     tx_req.details.extra_data_len = None
     gc.collect()
@@ -143,7 +147,9 @@ def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes =
     tx_req.details.request_index = i
     tx_req.details.tx_hash = tx_hash
     ack = yield tx_req
-    tx_req.serialized = None
+    tx_req.serialized.signature = None
+    tx_req.serialized.signature_index = None
+    tx_req.serialized.serialized_tx[:] = bytes()
     gc.collect()
     return sanitize_tx_input(ack.tx, coin)
 
@@ -153,7 +159,9 @@ def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes 
     tx_req.details.request_index = i
     tx_req.details.tx_hash = tx_hash
     ack = yield tx_req
-    tx_req.serialized = None
+    tx_req.serialized.signature = None
+    tx_req.serialized.signature_index = None
+    tx_req.serialized.serialized_tx[:] = bytes()
     gc.collect()
     if tx_hash is None:
         return sanitize_tx_output(ack.tx, coin)
@@ -165,7 +173,9 @@ def request_tx_finish(tx_req: TxRequest) -> Awaitable[Any]:  # type: ignore
     tx_req.request_type = TXFINISHED
     tx_req.details = None
     yield tx_req
-    tx_req.serialized = None
+    tx_req.serialized.signature = None
+    tx_req.serialized.signature_index = None
+    tx_req.serialized.serialized_tx[:] = bytes()
     gc.collect()
 
 
