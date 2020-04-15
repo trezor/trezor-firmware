@@ -89,11 +89,11 @@ class Bitcoinlike(signing.Bitcoin):
         if not self.coin.negative_fee:
             super().on_negative_fee()
 
-    def get_raw_address(self, o: TxOutputType) -> bytes:
-        if self.coin.cashaddr_prefix is not None and o.address.startswith(
+    def get_raw_address(self, txo: TxOutputType) -> bytes:
+        if self.coin.cashaddr_prefix is not None and txo.address.startswith(
             self.coin.cashaddr_prefix + ":"
         ):
-            prefix, addr = o.address.split(":")
+            prefix, addr = txo.address.split(":")
             version, data = cashaddr.decode(prefix, addr)
             if version == cashaddr.ADDRESS_TYPE_P2KH:
                 version = self.coin.address_type
@@ -103,7 +103,7 @@ class Bitcoinlike(signing.Bitcoin):
                 raise signing.SigningError("Unknown cashaddr address type")
             return bytes([version]) + data
         else:
-            return super().get_raw_address(o)
+            return super().get_raw_address(txo)
 
     def get_hash_type(self) -> int:
         SIGHASH_FORKID = const(0x40)

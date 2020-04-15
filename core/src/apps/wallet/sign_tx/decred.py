@@ -183,8 +183,8 @@ class Decred(Bitcoin):
                 "Cannot use utxo that has script_version != 0",
             )
 
-    def write_tx_input(self, w: writers.Writer, i: TxInputType) -> None:
-        writers.write_tx_input_decred(w, i)
+    def write_tx_input(self, w: writers.Writer, txi: TxInputType) -> None:
+        writers.write_tx_input_decred(w, txi)
 
     def write_sign_tx_header(self, w: writers.Writer, has_segwit: bool) -> None:
         writers.write_uint32(w, self.tx.version)  # nVersion
