@@ -46,8 +46,8 @@ class Bitcoinlike(signing.Bitcoin):
     async def sign_bip143_input(self, i_sign: int) -> None:
         # STAGE_REQUEST_SEGWIT_INPUT
         txi_sign = await helpers.request_tx_input(self.tx_req, i_sign, self.coin)
-        self.input_check_wallet_path(txi_sign)
-        self.input_check_multisig_fingerprint(txi_sign)
+        self.wallet_path.check_input(txi_sign)
+        self.multisig_fingerprint.check_input(txi_sign)
 
         is_bip143 = (
             txi_sign.script_type == InputScriptType.SPENDADDRESS

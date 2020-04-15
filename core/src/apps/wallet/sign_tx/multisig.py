@@ -3,38 +3,16 @@ from trezor.crypto.hashlib import sha256
 from trezor.messages import FailureType
 from trezor.messages.HDNodeType import HDNodeType
 from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
-from trezor.utils import HashWriter, ensure
+from trezor.utils import HashWriter
 
 from apps.wallet.sign_tx.writers import write_bytes_fixed, write_uint32
 
 if False:
-    from typing import List, Optional
+    from typing import List
 
 
 class MultisigError(ValueError):
     pass
-
-
-class MultisigFingerprint:
-    def __init__(self) -> None:
-        self.fingerprint = None  # type: Optional[bytes] # multisig fingerprint bytes
-        self.mismatch = False  # flag if multisig input fingerprints are equal
-
-    def add(self, multisig: MultisigRedeemScriptType) -> None:
-        fp = multisig_fingerprint(multisig)
-        ensure(fp is not None)
-        if self.fingerprint is None:
-            self.fingerprint = fp
-        elif self.fingerprint != fp:
-            self.mismatch = True
-
-    def matches(self, multisig: MultisigRedeemScriptType) -> bool:
-        fp = multisig_fingerprint(multisig)
-        ensure(fp is not None)
-        if self.mismatch is False and self.fingerprint == fp:
-            return True
-        else:
-            return False
 
 
 def multisig_fingerprint(multisig: MultisigRedeemScriptType) -> bytes:
