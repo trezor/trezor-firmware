@@ -111,8 +111,8 @@ class Decred(Bitcoin):
 
             txi_sign = await helpers.request_tx_input(self.tx_req, i_sign, self.coin)
 
-            self.input_check_wallet_path(txi_sign)
-            self.input_check_multisig_fingerprint(txi_sign)
+            self.wallet_path.check_input(txi_sign)
+            self.multisig_fingerprint.check_input(txi_sign)
 
             key_sign = self.keychain.derive(txi_sign.address_n, self.coin.curve_name)
             key_sign_pub = key_sign.public_key()
