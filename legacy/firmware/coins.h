@@ -49,6 +49,9 @@ typedef struct _CoinInfo {
   bool negative_fee;
   const char *curve_name;
   const curve_info *curve;
+  bool extra_data;
+  bool timestamp;
+  bool overwintered;
 } CoinInfo;
 
 #include "coin_info.h"

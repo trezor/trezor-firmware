@@ -40,9 +40,10 @@
     "https://blockbook.flurbo.xyz",
     "https://blockbook.unobtanium.uno"
   ],
-  "bip115": false,
   "negative_fee": false,
   "cooldown": 100,
   "consensus_branch_id": null,
+  "extra_data": false,
+  "timestamp": false,
   "confidential_assets": null
 }

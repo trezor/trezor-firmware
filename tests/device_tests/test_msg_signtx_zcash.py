@@ -78,10 +78,7 @@ class TestMsgSigntxZcash:
             )
 
             details = proto.SignTx(
-                version=3,
-                overwintered=True,
-                version_group_id=0x03C48270,
-                branch_id=0x5BA81B19,
+                version=3, version_group_id=0x03C48270, branch_id=0x5BA81B19,
             )
             _, serialized_tx = btc.sign_tx(
                 client,
@@ -142,10 +139,7 @@ class TestMsgSigntxZcash:
             )
 
             details = proto.SignTx(
-                version=4,
-                overwintered=True,
-                version_group_id=0x892F2085,
-                branch_id=0x76B809BB,
+                version=4, version_group_id=0x892F2085, branch_id=0x76B809BB,
             )
             _, serialized_tx = btc.sign_tx(
                 client,

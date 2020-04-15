@@ -130,10 +130,10 @@ message SignTx {
     optional uint32 version = 4 [default=1];            // transaction version
     optional uint32 lock_time = 5 [default=0];          // transaction lock_time
     optional uint32 expiry = 6;                         // only for Decred and Zcash
-    optional bool overwintered = 7;                     // only for Zcash
-    optional uint32 version_group_id = 8;               // only for Zcash, nVersionGroupId when overwintered is set
-    optional uint32 timestamp = 9;                      // only for Peercoin, Capricoin
-    optional uint32 branch_id = 10;                     // only for Zcash, BRANCH_ID when overwintered is set
+    // optional bool overwintered = 7;                  // deprecated - only for Zcash
+    optional uint32 version_group_id = 8;               // only for Zcash, nVersionGroupId
+    optional uint32 timestamp = 9;                      // only for Peercoin
+    optional uint32 branch_id = 10;                     // only for Zcash, BRANCH_ID
 }
 
 /**
@@ -196,10 +196,10 @@ message TxAck {
         optional bytes extra_data = 8;          // only for Dash, Zcash
         optional uint32 extra_data_len = 9;     // only for Dash, Zcash
         optional uint32 expiry = 10;            // only for Decred and Zcash
-        optional bool overwintered = 11;        // only for Zcash
-        optional uint32 version_group_id = 12;  // only for Zcash, nVersionGroupId when overwintered is set
-        optional uint32 timestamp = 13;         // only for Peercoin, Capricoin
-        optional uint32 branch_id = 14;         // only for Zcash, BRANCH_ID when overwintered is set
+        // optional bool overwintered = 11;     // deprecated - only for Zcash
+        optional uint32 version_group_id = 12;  // only for Zcash, nVersionGroupId
+        optional uint32 timestamp = 13;         // only for Peercoin
+        optional uint32 branch_id = 14;         // only for Zcash, BRANCH_ID
         /**
         * Structure representing transaction input
         */
@@ -214,8 +214,8 @@ message TxAck {
             optional uint64 amount = 8;                                         // amount of previous transaction output (for segwit only)
             optional uint32 decred_tree = 9;                                    // only for Decred
             optional uint32 decred_script_version = 10;                         // only for Decred
-            optional bytes prev_block_hash_bip115 = 11;                         // block hash of previous transaction output (for bip115 implementation)
-            optional uint32 prev_block_height_bip115 = 12;                      // block height of previous transaction output (for bip115 implementation)
+            // optional bytes prev_block_hash_bip115 = 11;     // BIP-115 support dropped
+            // optional uint32 prev_block_height_bip115 = 12;  // BIP-115 support dropped
         }
         /**
         * Structure representing compiled transaction output
@@ -236,8 +236,8 @@ message TxAck {
             optional MultisigRedeemScriptType multisig = 5; // defines multisig address; script_type must be PAYTOMULTISIG
             optional bytes op_return_data = 6;              // defines op_return data; script_type must be PAYTOOPRETURN, amount must be 0
             optional uint32 decred_script_version = 7;      // only for Decred
-            optional bytes block_hash_bip115 = 8;           // block hash of existing block (recommended current_block - 300) (for bip115 implementation)
-            optional uint32 block_height_bip115 = 9;        // block height of existing block (recommended current_block - 300) (for bip115 implementation)
+            // optional bytes block_hash_bip115 = 8;        // BIP-115 support dropped
+            // optional uint32 block_height_bip115 = 9;     // BIP-115 support dropped
             enum OutputScriptType {
                 PAYTOADDRESS = 0;       // used for all addresses (bitcoin, p2sh, witness)
                 PAYTOSCRIPTHASH = 1;    // p2sh address (deprecated; use PAYTOADDRESS)

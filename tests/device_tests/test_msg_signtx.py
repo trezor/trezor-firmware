@@ -857,3 +857,120 @@ class TestMsgSigntx:
         )
 
         check_sign_tx(client, "Testnet", [inp1], [out1, out_change])
+
+    @pytest.mark.skip_ui
+    def test_not_enough_vouts(self, client):
+        cache = TxCache("Bitcoin")
+        prev_tx = cache[TXHASH_157041]
+
+        # tx has two vouts
+        assert len(prev_tx.bin_outputs) == 2
+
+        # vout[0] and vout[1] exist
+        inp0 = proto.TxInputType(address_n=[0], prev_hash=TXHASH_157041, prev_index=0)
+        inp1 = proto.TxInputType(address_n=[0], prev_hash=TXHASH_157041, prev_index=1)
+        # vout[2] does not exist
+        inp2 = proto.TxInputType(address_n=[0], prev_hash=TXHASH_157041, prev_index=2)
+
+        # try to spend the sum of existing vouts
+        out1 = proto.TxOutputType(
+            address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
+            amount=220160000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+
+        with pytest.raises(
+            TrezorFailure, match="Not enough outputs in previous transaction."
+        ):
+            btc.sign_tx(client, "Bitcoin", [inp0, inp1, inp2], [out1], prev_txes=cache)
+
+    @pytest.mark.parametrize(
+        "field, value",
+        (("extra_data", b"hello world"), ("expiry", 9), ("timestamp", 42)),
+    )
+    @pytest.mark.skip_ui
+    def test_prevtx_forbidden_fields(self, client, field, value):
+        cache = TxCache("Bitcoin")
+        inp0 = proto.TxInputType(address_n=[0], prev_hash=TXHASH_157041, prev_index=0)
+        out1 = proto.TxOutputType(
+            address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
+            amount=1000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+
+        prev_tx = cache[TXHASH_157041]
+        setattr(prev_tx, field, value)
+        name = field.replace("_", " ")
+        with pytest.raises(
+            TrezorFailure, match=r"(?i){} not enabled on this coin".format(name)
+        ):
+            btc.sign_tx(
+                client, "Bitcoin", [inp0], [out1], prev_txes={TXHASH_157041: prev_tx}
+            )
+
+    @pytest.mark.parametrize("field, value", (("expiry", 9), ("timestamp", 42)))
+    @pytest.mark.skip_ui
+    def test_signtx_forbidden_fields(self, client, field, value):
+        cache = TxCache("Bitcoin")
+        inp0 = proto.TxInputType(address_n=[0], prev_hash=TXHASH_157041, prev_index=0)
+        out1 = proto.TxOutputType(
+            address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
+            amount=1000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+
+        details = proto.SignTx()
+        setattr(details, field, value)
+        name = field.replace("_", " ")
+        with pytest.raises(
+            TrezorFailure, match=r"(?i){} not enabled on this coin".format(name)
+        ):
+            btc.sign_tx(client, "Bitcoin", [inp0], [out1], details, prev_txes=cache)
+
+    @pytest.mark.skip_ui
+    def test_incorrect_script_type(self, client):
+        address_n = parse_path("44'/1'/0'/0/0")
+        attacker_multisig_public_key = bytes.fromhex(
+            "030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0"
+        )
+
+        multisig = proto.MultisigRedeemScriptType(
+            m=1,
+            nodes=[
+                btc.get_public_node(client, address_n).node,
+                proto.HDNodeType(
+                    depth=0,
+                    fingerprint=0,
+                    child_num=0,
+                    chain_code=bytes(32),
+                    public_key=attacker_multisig_public_key,
+                ),
+            ],
+            address_n=[],
+        )
+        inp1 = proto.TxInputType(
+            address_n=address_n,
+            prev_index=1,
+            sequence=0xFFFFFFFF,
+            script_type=proto.InputScriptType.SPENDADDRESS,
+            multisig=multisig,
+            prev_hash=TXHASH_e5040e,
+        )
+        out1 = proto.TxOutputType(
+            address_n=address_n,
+            amount=1000000 - 50000 - 10000,
+            script_type=proto.OutputScriptType.PAYTOMULTISIG,
+            multisig=multisig,
+        )
+        out2 = proto.TxOutputType(
+            address="mtkyndbpgv1G7nwggwKDVagRpxEJrwwyh6",
+            amount=50000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+
+        with pytest.raises(
+            TrezorFailure, match="Multisig field provided but not expected."
+        ):
+            btc.sign_tx(
+                client, "Testnet", [inp1], [out1, out2], prev_txes=TxCache("Testnet")
+            )

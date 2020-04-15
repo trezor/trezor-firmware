@@ -47,19 +47,15 @@ async def show_tx(
     network_name: str,
     raw_inputs: list,
     raw_outputs: list,
-) -> bool:
+) -> None:
     for index, output in enumerate(outputs):
         if is_change(raw_outputs[index].address_n, raw_inputs):
             continue
 
-        if not await confirm_sending(ctx, outcoins[index], output):
-            return False
+        await confirm_sending(ctx, outcoins[index], output)
 
     total_amount = sum(outcoins)
-    if not await confirm_transaction(ctx, total_amount, fee, network_name):
-        return False
-
-    return True
+    await confirm_transaction(ctx, total_amount, fee, network_name)
 
 
 async def request_transaction(ctx, tx_req: CardanoTxRequest, index: int):
@@ -114,7 +110,7 @@ async def sign_tx(ctx, msg):
         raise wire.ProcessError("Signing failed")
 
     # display the transaction in UI
-    if not await show_tx(
+    await show_tx(
         ctx,
         transaction.output_addresses,
         transaction.outgoing_coins,
@@ -122,8 +118,7 @@ async def sign_tx(ctx, msg):
         transaction.network_name,
         transaction.inputs,
         transaction.outputs,
-    ):
-        raise wire.ActionCancelled("Signing cancelled")
+    )
 
     return tx
 

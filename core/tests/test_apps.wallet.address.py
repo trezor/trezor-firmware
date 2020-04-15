@@ -71,7 +71,7 @@ class TestAddress(unittest.TestCase):
         # pubkey OP_CHECKSIG
         script = unhexlify('210279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798ac')
         h = HashWriter(sha256())
-        write_bytes(h, script)
+        write_bytes_unchecked(h, script)
 
         address = address_p2wsh(
             h.get_digest(),

@@ -24,7 +24,6 @@
   "decred": false,
   "fork_id": 0,
   "force_bip143": true,
-  "bip115": false,
   "default_fee_b": {
     "Normal": 10
   },
@@ -38,5 +37,7 @@
   "negative_fee": false,
   "cooldown": 100,
   "consensus_branch_id": null,
+  "extra_data": false,
+  "timestamp": false,
   "confidential_assets": null
 }
