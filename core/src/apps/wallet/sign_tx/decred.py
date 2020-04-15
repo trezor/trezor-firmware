@@ -41,6 +41,9 @@ class DecredPrefixHasher:
     def add_sequence(self, txi: TxInputType):
         pass
 
+    def add_issuance(self, txi: TxInputType):
+        pass
+
     def add_output_count(self, tx: SignTx):
         write_varint(self.h_prefix, tx.outputs_count)
 

@@ -105,6 +105,7 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
         weight.add_input(txi)
         hash143.add_prevouts(txi)  # all inputs are included (non-segwit as well)
         hash143.add_sequence(txi)
+        hash143.add_issuance(txi)  # TODO: support also non-Elements hashing
 
         if not addresses.validate_full_path(txi.address_n, coin, txi.script_type):
             await helpers.confirm_foreign_address(txi.address_n)
@@ -112,10 +113,10 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
         if txi.multisig:
             multifp.add(txi.multisig)
 
-        if txi.script_type in (
-            InputScriptType.SPENDWITNESS,
-            InputScriptType.SPENDP2SHWITNESS,
-        ):
+        if (
+            txi.script_type
+            in (InputScriptType.SPENDWITNESS, InputScriptType.SPENDP2SHWITNESS)
+        ) or coin.confidential_assets:
             if not coin.segwit:
                 raise SigningError(
                     FailureType.DataError, "Segwit not enabled on this coin"
@@ -163,6 +164,8 @@ async def check_tx_fee(tx: SignTx, keychain: seed.Keychain):
         txo = await helpers.request_tx_output(tx_req, o)
         txo_bin.amount = txo.amount
         txo_bin.script_pubkey = output_derive_script(txo, coin, keychain)
+        if coin.confidential_assets:
+            txo_bin.confidential_value = txo.confidential_value
         weight.add_output(txo_bin.script_pubkey)
 
         if change_out == 0 and output_is_change(txo, wallet_path, segwit_in, multifp):
@@ -501,6 +504,8 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
         txo = await helpers.request_tx_output(tx_req, o)
         txo_bin.amount = txo.amount
         txo_bin.script_pubkey = output_derive_script(txo, coin, keychain)
+        if coin.confidential_assets:
+            txo_bin.confidential_value = txo.confidential_value
 
         # serialize output
         w_txo_bin = writers.empty_bytearray(5 + 8 + 5 + len(txo_bin.script_pubkey) + 4)
@@ -513,6 +518,10 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
         tx_ser.serialized_tx = w_txo_bin
 
         tx_req.serialized = tx_ser
+
+    if coin.confidential_assets:
+        # In Elements, nLockTime is serialized before the witness
+        writers.write_uint32(tx_ser.serialized_tx, tx.lock_time)
 
     any_segwit = True in segwit.values()
 
@@ -553,7 +562,19 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
                     signature, key_sign_pub, get_hash_type(coin)
                 )
 
-            tx_ser.serialized_tx = witness
+            if coin.confidential_assets:
+                # In Elements, there are more input-related witnesses
+                issuance_amount_rangeproof = bytearray([0])
+                inflation_keys_rangeproof = bytearray([0])
+                pegin_witness = bytearray([0])
+                tx_ser.serialized_tx = (
+                    issuance_amount_rangeproof
+                    + inflation_keys_rangeproof
+                    + witness
+                    + pegin_witness
+                )
+            else:
+                tx_ser.serialized_tx = witness
             tx_ser.signature_index = i
             tx_ser.signature = signature
         elif any_segwit:
@@ -563,7 +584,13 @@ async def sign_tx(tx: SignTx, keychain: seed.Keychain):
 
         tx_req.serialized = tx_ser
 
-    writers.write_uint32(tx_ser.serialized_tx, tx.lock_time)
+    if coin.confidential_assets:
+        # In Elements, each blinded output should have range and surjection proofs.
+        for o in range(tx.outputs_count):
+            writers.write_varint(tx_ser.serialized_tx, 0)  # surjection proof
+            writers.write_varint(tx_ser.serialized_tx, 0)  # output amount rangeproof
+    else:
+        writers.write_uint32(tx_ser.serialized_tx, tx.lock_time)
 
     if not utils.BITCOIN_ONLY and tx.overwintered:
         if tx.version == 3:
@@ -684,7 +711,9 @@ def get_tx_header(coin: coininfo.CoinInfo, tx: SignTx, segwit: bool = False):
         if tx.timestamp:
             writers.write_uint32(w_txi, tx.timestamp)
     if segwit:
-        writers.write_varint(w_txi, 0x00)  # segwit witness marker
+        if not coin.confidential_assets:
+            # Elements doesn't use witness marker, only flag
+            writers.write_varint(w_txi, 0x00)  # segwit witness marker
         writers.write_varint(w_txi, 0x01)  # segwit witness flag
     writers.write_varint(w_txi, tx.inputs_count)
     return w_txi
@@ -713,6 +742,9 @@ def output_derive_script(
         o.address = get_address_for_change(o, coin, keychain)
     else:
         if not o.address:
+            if coin.confidential_assets:
+                # An empty address marks explicit fee output in Elements
+                return b""
             raise SigningError(FailureType.DataError, "Missing address")
 
     if coin.bech32_prefix and o.address.startswith(coin.bech32_prefix):

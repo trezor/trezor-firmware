@@ -59,6 +59,9 @@ class Zip143:
     def add_sequence(self, txi: TxInputType):
         write_uint32(self.h_sequence, txi.sequence)
 
+    def add_issuance(self, txi: TxInputType):
+        pass
+
     def add_output(self, txo_bin: TxOutputBinType):
         write_tx_output(self.h_outputs, txo_bin)
 
