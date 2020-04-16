@@ -163,9 +163,9 @@ upgrade tests core deploy:
   dependencies:
     - core unix frozen debug build
   script:
-    - TAG=`git tag --points-at HEAD | sed "s/\//-/"`
-    - "[[ ! $TAG =~ 'core' ]] && echo 'Tag is not core/*: exiting.' && exit 1"
-    - DEST=${DEPLOY_PATH}/trezor-emu-`git tag --points-at HEAD | sed "s/\//-/"`
+    - TAG=`git tag --points-at HEAD | grep "core" | sed "s/\//-/"`
+    - "[[ $TAG == '' ]] && echo 'Tag is not core/*: exiting.' && exit 1"
+    - DEST=${DEPLOY_PATH}/trezor-emu-$TAG
     - echo "Deploying to $DEST"
     - rsync --delete -va core/build/unix/micropython "$DEST"
   only:
@@ -183,9 +183,9 @@ upgrade tests legacy deploy:
   dependencies:
     - legacy emu regular build
   script:
-    - TAG=`git tag --points-at HEAD | sed "s/\//-/"`
-    - "[[ ! $TAG =~ 'legacy' ]] && echo 'Tag is not legacy/*: exiting.' && exit 1"
-    - DEST=${DEPLOY_PATH}/trezor-emu-`git tag --points-at HEAD | sed "s/\//-/"`
+    - TAG=`git tag --points-at HEAD | grep "legacy" | sed "s/\//-/"`
+    - "[[ $TAG == '' ]] && echo 'Tag is not legacy/*: exiting.' && exit 1"
+    - DEST=${DEPLOY_PATH}/trezor-emu-$TAG
     - echo "Deploying to $DEST"
     - rsync --delete -va legacy/firmware/trezor.elf "$DEST"
   only:
