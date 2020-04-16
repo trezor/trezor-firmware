@@ -1,4 +1,6 @@
-Version 2.3.0 [not yet released]
+Version 2.x.x [not yet released]
+
+Version 2.3.0 [Apr 2020]
 * Passphrase redesign
 * Cache up to 10 sessions (passphrases)
 * SD card protection
