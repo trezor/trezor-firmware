@@ -11,10 +11,10 @@ from trezor.utils import HashWriter, ensure
 from apps.common.coininfo import CoinInfo
 from apps.common.seed import Keychain
 from apps.wallet.sign_tx.bitcoinlike import Bitcoinlike
+from apps.wallet.sign_tx.common import SigningError
 from apps.wallet.sign_tx.multisig import multisig_get_pubkeys
 from apps.wallet.sign_tx.scripts import output_script_multisig, output_script_p2pkh
 from apps.wallet.sign_tx.segwit_bip143 import Bip143
-from apps.wallet.sign_tx.signing import SigningError
 from apps.wallet.sign_tx.writers import (
     TX_HASH_SIZE,
     get_tx_hash,
@@ -33,10 +33,6 @@ if False:
 OVERWINTERED = const(0x80000000)
 
 
-class ZcashError(ValueError):
-    pass
-
-
 def derive_script_code(txi: TxInputType, pubkeyhash: bytes) -> bytearray:
 
     if txi.multisig:
@@ -49,7 +45,7 @@ def derive_script_code(txi: TxInputType, pubkeyhash: bytes) -> bytearray:
         return output_script_p2pkh(pubkeyhash)
 
     else:
-        raise ZcashError(
+        raise SigningError(
             FailureType.DataError, "Unknown input script type for zip143 script code"
         )
 
@@ -188,13 +184,13 @@ class Overwintered(Bitcoinlike):
         ensure(coin.overwintered)
         super().initialize(tx, keychain, coin)
 
-    def init_hash143(self) -> None:
+    def create_hash143(self) -> Bip143:
         if self.tx.version == 3:
             branch_id = self.tx.branch_id or 0x5BA81B19  # Overwinter
-            self.hash143 = Zip143(branch_id)  # ZIP-0143 transaction hashing
+            return Zip143(branch_id)  # ZIP-0143 transaction hashing
         elif self.tx.version == 4:
             branch_id = self.tx.branch_id or 0x76B809BB  # Sapling
-            self.hash143 = Zip243(branch_id)  # ZIP-0243 transaction hashing
+            return Zip243(branch_id)  # ZIP-0243 transaction hashing
         else:
             raise SigningError(
                 FailureType.DataError,

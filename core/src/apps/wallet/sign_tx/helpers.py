@@ -16,7 +16,7 @@ from trezor.messages.TxOutputBinType import TxOutputBinType
 from trezor.messages.TxOutputType import TxOutputType
 from trezor.messages.TxRequest import TxRequest
 
-from .signing import SigningError
+from .common import SigningError
 from .writers import TX_HASH_SIZE
 
 from apps.common.coininfo import CoinInfo

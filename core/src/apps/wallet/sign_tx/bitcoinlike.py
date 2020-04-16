@@ -8,18 +8,18 @@ from trezor.messages.TransactionType import TransactionType
 from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputType import TxOutputType
 
-from apps.wallet.sign_tx import addresses, helpers, multisig, signing, writers
+from apps.wallet.sign_tx import addresses, helpers, multisig, writers
+from apps.wallet.sign_tx.bitcoin import Bitcoin
+from apps.wallet.sign_tx.common import SigningError, ecdsa_sign
 
 if False:
     from typing import Union
 
 
-class Bitcoinlike(signing.Bitcoin):
+class Bitcoinlike(Bitcoin):
     async def process_segwit_input(self, i: int, txi: TxInputType) -> None:
         if not self.coin.segwit:
-            raise signing.SigningError(
-                FailureType.DataError, "Segwit not enabled on this coin"
-            )
+            raise SigningError(FailureType.DataError, "Segwit not enabled on this coin")
         await super().process_segwit_input(i, txi)
 
     async def process_nonsegwit_input(self, i: int, txi: TxInputType) -> None:
@@ -30,9 +30,7 @@ class Bitcoinlike(signing.Bitcoin):
 
     async def process_bip143_input(self, i: int, txi: TxInputType) -> None:
         if not txi.amount:
-            raise signing.SigningError(
-                FailureType.DataError, "Expected input with amount"
-            )
+            raise SigningError(FailureType.DataError, "Expected input with amount")
         self.segwit[i] = False
         self.bip143_in += txi.amount
         self.total_in += txi.amount
@@ -54,7 +52,7 @@ class Bitcoinlike(signing.Bitcoin):
             or txi_sign.script_type == InputScriptType.SPENDMULTISIG
         )
         if not is_bip143 or txi_sign.amount > self.bip143_in:
-            raise signing.SigningError(
+            raise SigningError(
                 FailureType.ProcessError, "Transaction has changed during signing"
             )
         self.bip143_in -= txi_sign.amount
@@ -73,7 +71,7 @@ class Bitcoinlike(signing.Bitcoin):
         if txi_sign.multisig:
             multisig.multisig_pubkey_index(txi_sign.multisig, key_sign_pub)
 
-        signature = signing.ecdsa_sign(key_sign, self.hash143_hash)
+        signature = ecdsa_sign(key_sign, self.hash143_hash)
 
         # serialize input with correct signature
         gc.collect()
@@ -100,7 +98,7 @@ class Bitcoinlike(signing.Bitcoin):
             elif version == cashaddr.ADDRESS_TYPE_P2SH:
                 version = self.coin.address_type_p2sh
             else:
-                raise signing.SigningError("Unknown cashaddr address type")
+                raise SigningError("Unknown cashaddr address type")
             return bytes([version]) + data
         else:
             return super().get_raw_address(txo)

@@ -7,13 +7,14 @@ from trezor.messages.TxRequest import TxRequest
 from apps.common import coins, paths, seed
 from apps.wallet.sign_tx import (
     addresses,
+    bitcoin,
+    common,
     helpers,
     layout,
     multisig,
     progress,
     scripts,
     segwit_bip143,
-    signing,
 )
 
 if not utils.BITCOIN_ONLY:
@@ -27,13 +28,13 @@ async def sign_tx(ctx: wire.Context, msg: SignTx, keychain: seed.Keychain) -> Tx
     coin_name = msg.coin_name if msg.coin_name is not None else "Bitcoin"
     coin = coins.by_name(coin_name)
     if not utils.BITCOIN_ONLY and coin.decred:
-        coinsig = decred.Decred()  # type: signing.Bitcoin
+        coinsig = decred.Decred()  # type: bitcoin.Bitcoin
     elif not utils.BITCOIN_ONLY and coin.overwintered:
         coinsig = zcash.Overwintered()
     elif not utils.BITCOIN_ONLY and coin_name not in ("Bitcoin", "Regtest", "Testnet"):
         coinsig = bitcoinlike.Bitcoinlike()
     else:
-        coinsig = signing.Bitcoin()
+        coinsig = bitcoin.Bitcoin()
 
     signer = coinsig.signer(msg, keychain, coin)
 
@@ -42,7 +43,7 @@ async def sign_tx(ctx: wire.Context, msg: SignTx, keychain: seed.Keychain) -> Tx
         try:
             req = signer.send(res)
         except (
-            signing.SigningError,
+            common.SigningError,
             multisig.MultisigError,
             addresses.AddressError,
             scripts.ScriptsError,

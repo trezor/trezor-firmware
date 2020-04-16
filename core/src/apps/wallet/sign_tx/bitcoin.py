@@ -2,8 +2,7 @@ import gc
 from micropython import const
 
 from trezor import utils
-from trezor.crypto import base58, bip32, der
-from trezor.crypto.curve import secp256k1
+from trezor.crypto import base58
 from trezor.crypto.hashlib import sha256
 from trezor.messages import FailureType, InputScriptType, OutputScriptType
 from trezor.messages.SignTx import SignTx
@@ -26,12 +25,11 @@ from apps.wallet.sign_tx import (
     tx_weight,
     writers,
 )
+from apps.wallet.sign_tx.common import SigningError, ecdsa_sign
+from apps.wallet.sign_tx.matchcheck import MultisigFingerprintChecker, WalletPathChecker
 
 if False:
     from typing import Dict, Union
-
-# the number of bip32 levels used in a wallet (chain and address)
-_BIP32_WALLET_DEPTH = const(2)
 
 # the chain id used for change
 _BIP32_CHANGE_CHAIN = const(1)
@@ -42,79 +40,6 @@ _BIP32_MAX_LAST_ELEMENT = const(1000000)
 
 # the number of bytes to preallocate for serialized transaction chunks
 _MAX_SERIALIZED_CHUNK_SIZE = const(2048)
-
-
-class SigningError(ValueError):
-    pass
-
-
-class MatchChecker:
-    """
-    MatchCheckers are used to identify the change-output in a transaction. An output is a change-output
-    if it has certain matching attributes with all inputs.
-    1. When inputs are first processed, add_input() is called on each one to determine if they all match.
-    2. Outputs are tested using output_matches() to tell whether they are admissible as a change-output.
-    3. Before signing each input, check_input() is used to ensure that the attribute has not changed.
-    """
-    MISMATCH = object()
-    UNDEFINED = object()
-
-    def __init__(self) -> None:
-        self.attribute = self.UNDEFINED  # type: object
-        self.read_only = False  # Failsafe to ensure that add_input() is not accidentally called after output_matches().
-
-    def attribute_from_tx(self, txio: Union[TxInputType, TxOutputType]) -> object:
-        # Return the attribute from the txio, which is to be used for matching.
-        # If the txio is invalid for matching, then return an object which
-        # evaluates as a boolean False.
-        raise NotImplementedError
-
-    def add_input(self, txi: TxInputType) -> None:
-        ensure(not self.read_only)
-
-        if self.attribute is self.MISMATCH:
-            return  # There was a mismatch in previous inputs.
-
-        added_attribute = self.attribute_from_tx(txi)
-        if not added_attribute:
-            self.attribute = self.MISMATCH  # The added input is invalid for matching.
-        elif self.attribute is self.UNDEFINED:
-            self.attribute = added_attribute  # This is the first input.
-        elif self.attribute != added_attribute:
-            self.attribute = self.MISMATCH
-
-    def check_input(self, txi: TxInputType) -> None:
-        if self.attribute is self.MISMATCH:
-            return  # There was already a mismatch when adding inputs, ignore it now.
-
-        # All added inputs had a matching attribute, allowing a change-output.
-        # Ensure that this input still has the same attribute.
-        if self.attribute != self.attribute_from_tx(txi):
-            raise SigningError(
-                FailureType.ProcessError, "Transaction has changed during signing"
-            )
-
-    def output_matches(self, txo: TxOutputType) -> bool:
-        self.read_only = True
-
-        if self.attribute is self.MISMATCH:
-            return False
-
-        return self.attribute_from_tx(txo) == self.attribute
-
-
-class WalletPathChecker(MatchChecker):
-    def attribute_from_tx(self, txio: Union[TxInputType, TxOutputType]) -> object:
-        if not txio.address_n:
-            return None
-        return txio.address_n[:-_BIP32_WALLET_DEPTH]
-
-
-class MultisigFingerprintChecker(MatchChecker):
-    def attribute_from_tx(self, txio: Union[TxInputType, TxOutputType]) -> object:
-        if not txio.multisig:
-            return None
-        return multisig.multisig_fingerprint(txio.multisig)
 
 
 # Transaction signing
@@ -189,10 +114,11 @@ class Bitcoin:
         # legacy inputs in Step 4.
         self.h_confirmed = self.create_hash_writer()  # not a real tx hash
 
-        self.init_hash143()
+        # BIP-0143 transaction hashing
+        self.hash143 = self.create_hash143()
 
-    def init_hash143(self) -> None:
-        self.hash143 = segwit_bip143.Bip143()  # BIP-0143 transaction hashing
+    def create_hash143(self) -> segwit_bip143.Bip143:
+        return segwit_bip143.Bip143()
 
     def create_hash_writer(self) -> utils.HashWriter:
         return utils.HashWriter(sha256())
@@ -275,8 +201,10 @@ class Bitcoin:
             await helpers.confirm_foreign_address(txi.address_n)
 
         if input_is_segwit(txi):
+            self.segwit[i] = True
             await self.process_segwit_input(i, txi)
         elif input_is_nonsegwit(txi):
+            self.segwit[i] = False
             await self.process_nonsegwit_input(i, txi)
         else:
             raise SigningError(FailureType.DataError, "Wrong input script type")
@@ -284,12 +212,10 @@ class Bitcoin:
     async def process_segwit_input(self, i: int, txi: TxInputType) -> None:
         if not txi.amount:
             raise SigningError(FailureType.DataError, "Segwit input without amount")
-        self.segwit[i] = True
         self.bip143_in += txi.amount
         self.total_in += txi.amount
 
     async def process_nonsegwit_input(self, i: int, txi: TxInputType) -> None:
-        self.segwit[i] = False
         self.total_in += await self.get_prevtx_output_value(
             txi.prev_hash, txi.prev_index
         )
@@ -384,6 +310,7 @@ class Bitcoin:
                 txi_sign = txi
                 self.wallet_path.check_input(txi_sign)
                 self.multisig_fingerprint.check_input(txi_sign)
+                # NOTE: wallet_path is checked in write_tx_input_check()
                 node = self.keychain.derive(txi.address_n, self.coin.curve_name)
                 key_sign_pub = node.public_key()
                 # for the signing process the script_sig is equal
@@ -644,9 +571,3 @@ def input_is_segwit(txi: TxInputType) -> bool:
 
 def input_is_nonsegwit(txi: TxInputType) -> bool:
     return txi.script_type in helpers.NONSEGWIT_INPUT_SCRIPT_TYPES
-
-
-def ecdsa_sign(node: bip32.HDNode, digest: bytes) -> bytes:
-    sig = secp256k1.sign(node.private_key(), digest)
-    sigder = der.encode_seq((sig[1:33], sig[33:65]))
-    return sigder

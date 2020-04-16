@@ -12,8 +12,9 @@ from trezor.utils import HashWriter, ensure
 
 from apps.common import coininfo, seed
 from apps.wallet.sign_tx import addresses, helpers, multisig, progress, scripts, writers
+from apps.wallet.sign_tx.bitcoin import Bitcoin
+from apps.wallet.sign_tx.common import SigningError, ecdsa_sign
 from apps.wallet.sign_tx.segwit_bip143 import Bip143
-from apps.wallet.sign_tx.signing import Bitcoin, SigningError, ecdsa_sign
 
 DECRED_SERIALIZE_FULL = const(0 << 16)
 DECRED_SERIALIZE_NO_WITNESS = const(1 << 16)
@@ -64,8 +65,8 @@ class Decred(Bitcoin):
         ensure(coin.decred)
         super().initialize(tx, keychain, coin)
 
-    def init_hash143(self) -> None:
-        self.hash143 = DecredPrefixHasher(self.tx)  # pseudo BIP-0143 prefix hashing
+    def create_hash143(self) -> Bip143:
+        return DecredPrefixHasher(self.tx)  # pseudo BIP-0143 prefix hashing
 
     def create_hash_writer(self) -> HashWriter:
         return HashWriter(blake256())
