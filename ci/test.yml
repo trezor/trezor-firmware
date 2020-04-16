@@ -20,6 +20,7 @@ core device ui test:
     - cd core
     - pipenv run make test_emu_ui
     - cd ..
+  after_script:
     - mv tests/ui_tests/reporting/reports/test/ test_ui_report
     - pipenv run python ci/prepare_ui_artifacts.py
   artifacts:
