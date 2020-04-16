@@ -1,8 +1,9 @@
 from common import *
-
-from apps.cardano.seed import Keychain
-from apps.cardano.get_public_key import _get_public_key
 from trezor.crypto import bip32, slip39
+
+from apps.cardano.get_public_key import _get_public_key
+from apps.cardano.seed import Keychain
+from apps.common import HARDENED
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -16,10 +17,10 @@ class TestCardanoGetPublicKey(unittest.TestCase):
         keychain = Keychain(node)
 
         derivation_paths = [
-            [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 0x80000000],
-            [0x80000000 | 44, 0x80000000 | 1815],
-            [0x80000000 | 44, 0x80000000 | 1815, 0, 0, 0],
-            [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 0],
+            [44 | HARDENED, 1815 | HARDENED, HARDENED, 0, HARDENED],
+            [44 | HARDENED, 1815 | HARDENED],
+            [44 | HARDENED, 1815 | HARDENED, 0, 0, 0],
+            [44 | HARDENED, 1815 | HARDENED, HARDENED, 0, 0],
         ]
 
         public_keys = [
@@ -71,9 +72,9 @@ class TestCardanoGetPublicKey(unittest.TestCase):
 
         # 44'/1815'/0'/0/i
         derivation_paths = [
-            [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 0],
-            [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 1],
-            [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 2]
+            [44 | HARDENED, 1815 | HARDENED, HARDENED, 0, 0],
+            [44 | HARDENED, 1815 | HARDENED, HARDENED, 0, 1],
+            [44 | HARDENED, 1815 | HARDENED, HARDENED, 0, 2]
         ]
 
         public_keys = [
@@ -122,9 +123,9 @@ class TestCardanoGetPublicKey(unittest.TestCase):
 
         # 44'/1815'/0'/0/i
         derivation_paths = [
-            [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 0],
-            [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 1],
-            [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 2]
+            [44 | HARDENED, 1815 | HARDENED, HARDENED, 0, 0],
+            [44 | HARDENED, 1815 | HARDENED, HARDENED, 0, 1],
+            [44 | HARDENED, 1815 | HARDENED, HARDENED, 0, 2]
         ]
 
         public_keys = [

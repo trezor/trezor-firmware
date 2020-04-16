@@ -2,6 +2,7 @@
 # fmt: off
 from .. import protobuf as p
 
+from .CardanoTxCertificate import CardanoTxCertificate
 from .CardanoTxInputType import CardanoTxInputType
 from .CardanoTxOutputType import CardanoTxOutputType
 
@@ -22,11 +23,17 @@ class CardanoSignTx(p.MessageType):
         outputs: List[CardanoTxOutputType] = None,
         transactions_count: int = None,
         protocol_magic: int = None,
+        fee: int = None,
+        ttl: int = None,
+        certificates: List[CardanoTxCertificate] = None,
     ) -> None:
         self.inputs = inputs if inputs is not None else []
         self.outputs = outputs if outputs is not None else []
         self.transactions_count = transactions_count
         self.protocol_magic = protocol_magic
+        self.fee = fee
+        self.ttl = ttl
+        self.certificates = certificates if certificates is not None else []
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -35,4 +42,7 @@ class CardanoSignTx(p.MessageType):
             2: ('outputs', CardanoTxOutputType, p.FLAG_REPEATED),
             3: ('transactions_count', p.UVarintType, 0),
             5: ('protocol_magic', p.UVarintType, 0),
+            6: ('fee', p.UVarintType, 0),
+            7: ('ttl', p.UVarintType, 0),
+            8: ('certificates', CardanoTxCertificate, p.FLAG_REPEATED),
         }

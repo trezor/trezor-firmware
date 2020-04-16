@@ -18,7 +18,7 @@ import json
 
 import click
 
-from .. import cardano, tools
+from .. import cardano, messages, tools
 from . import with_client
 
 PATH_HELP = "BIP-32 path to key, e.g. m/44'/1815'/0'/0/0"
@@ -45,9 +45,18 @@ def sign_tx(client, file, network):
 
     inputs = [cardano.create_input(input) for input in transaction["inputs"]]
     outputs = [cardano.create_output(output) for output in transaction["outputs"]]
-    transactions = transaction["transactions"]
+    fee = transaction["fee"]
+    ttl = transaction["ttl"]
+    certificates = []
+    if transaction.get("certificates"):
+        certificates = [
+            cardano.create_certificate(certificate)
+            for certificate in transaction["certificates"]
+        ]
 
-    signed_transaction = cardano.sign_tx(client, inputs, outputs, transactions, network)
+    signed_transaction = cardano.sign_tx(
+        client, inputs, outputs, fee, ttl, certificates, network
+    )
 
     return {
         "tx_hash": signed_transaction.tx_hash.hex(),
@@ -58,11 +67,46 @@ def sign_tx(client, file, network):
 @cli.command()
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.option("-d", "--show-display", is_flag=True)
+@click.option(
+    "-t", "--address_type", type=int, default=messages.CardanoAddressType.BASE_ADDRESS
+)
+@click.option("-N", "--network_id", type=int, default=0)
+@click.option("-b", "--block_index", type=int, default=None)
+@click.option("-x", "--tx_index", type=int, default=None)
+@click.option("-c", "--certificate_index", type=int, default=None)
+@click.option("-s", "--staking_key_hash_str", type=str, default=None)
 @with_client
-def get_address(client, address, show_display):
+def get_address(
+    client,
+    address,
+    show_display,
+    address_type,
+    network_id,
+    block_index,
+    tx_index,
+    certificate_index,
+    staking_key_hash_str,
+):
     """Get Cardano address."""
     address_n = tools.parse_path(address)
-    return cardano.get_address(client, address_n, show_display)
+
+    if block_index is not None or tx_index is not None or certificate_index is not None:
+        certificate_pointer = cardano.create_certificate_pointer(
+            block_index, tx_index, certificate_index
+        )
+    else:
+        certificate_pointer = None
+
+    if staking_key_hash_str:
+        staking_key_hash = bytes.fromhex(staking_key_hash_str)
+    else:
+        staking_key_hash = None
+
+    address_parameters = cardano.create_address_parameters(
+        address_type, address_n, certificate_pointer, staking_key_hash
+    )
+
+    return cardano.get_address(client, address_parameters, show_display, network_id,)
 
 
 @cli.command()

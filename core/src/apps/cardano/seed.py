@@ -3,7 +3,7 @@ from storage import cache
 from trezor import wire
 from trezor.crypto import bip32
 
-from apps.cardano import SEED_NAMESPACE
+from apps.cardano import BYRON_SEED_NAMESPACE, SHELLEY_SEED_NAMESPACE
 from apps.common import mnemonic
 from apps.common.passphrase import get as get_passphrase
 
@@ -20,9 +20,14 @@ class Keychain:
         self.root = root
 
     def match_path(self, path: Bip32Path) -> Tuple[int, Bip32Path]:
-        if path[: len(SEED_NAMESPACE)] != SEED_NAMESPACE:
+        namespace_length = len(SHELLEY_SEED_NAMESPACE)
+        if (
+            path[:namespace_length] != SHELLEY_SEED_NAMESPACE
+            and path[:namespace_length] != BYRON_SEED_NAMESPACE
+        ):
             raise wire.DataError("Forbidden key path")
-        return 0, path[len(SEED_NAMESPACE) :]
+
+        return 0, path[namespace_length:]
 
     def derive(self, node_path: Bip32Path) -> bip32.HDNode:
         _, suffix = self.match_path(node_path)
@@ -37,8 +42,37 @@ class Keychain:
     #     self.root.__del__()
 
 
+class Keychains:
+    def __init__(self, byron_keychain: Keychain, shelley_keychain: Keychain):
+        self.byron_keychain = byron_keychain
+        self.shelley_keychain = shelley_keychain
+
+    def _get_keychain(self, namespace: list) -> Keychain:
+        if namespace == BYRON_SEED_NAMESPACE:
+            return self.byron_keychain
+        elif namespace == SHELLEY_SEED_NAMESPACE:
+            return self.shelley_keychain
+        else:
+            raise wire.DataError("Invalid namespace")
+
+    def match_path(self, checked_path: list) -> None:
+        keychain = self._get_keychain(checked_path[:2])
+        keychain.match_path(checked_path)
+
+    def derive(self, node_path: list) -> bip32.HDNode:
+        keychain = self._get_keychain(node_path[:2])
+        return keychain.derive(node_path)
+
+
 @cache.stored_async(cache.APP_CARDANO_ROOT)
-async def get_keychain(ctx: wire.Context) -> Keychain:
+async def get_keychains(ctx: wire.Context) -> Keychain:
+    byron_keychain = await _get_keychain(ctx, BYRON_SEED_NAMESPACE)
+    shelley_keychain = await _get_keychain(ctx, SHELLEY_SEED_NAMESPACE)
+
+    return Keychains(byron_keychain, shelley_keychain)
+
+
+async def _get_keychain(ctx: wire.Context, namespace) -> Keychain:
     if not storage.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
 
@@ -52,16 +86,16 @@ async def get_keychain(ctx: wire.Context) -> Keychain:
         root = bip32.from_seed(seed, "ed25519 cardano seed")
 
     # derive the namespaced root node
-    for i in SEED_NAMESPACE:
+    for i in namespace:
         root.derive_cardano(i)
 
     keychain = Keychain(root)
     return keychain
 
 
-def with_keychain(func: HandlerWithKeychain[MsgIn, MsgOut]) -> Handler[MsgIn, MsgOut]:
+def with_keychains(func: HandlerWithKeychain[MsgIn, MsgOut]) -> Handler[MsgIn, MsgOut]:
     async def wrapper(ctx: wire.Context, msg: MsgIn) -> MsgOut:
-        keychain = await get_keychain(ctx)
-        return await func(ctx, msg, keychain)
+        keychains = await get_keychains(ctx)
+        return await func(ctx, msg, keychains)
 
     return wrapper

@@ -34,6 +34,7 @@ _CBOR_FALSE = const(0x14)
 _CBOR_TRUE = const(0x15)
 _CBOR_BREAK = const(0x1F)
 _CBOR_RAW_TAG = const(0x18)
+_CBOR_SET_TAG = const(0x102)
 
 
 def _header(typ: int, l: int) -> bytes:
@@ -78,6 +79,12 @@ def _cbor_encode(value: Value) -> Iterable[bytes]:
         for k, v in sorted_map:
             yield k
             yield from _cbor_encode(v)
+    elif isinstance(value, Set):
+        yield _header(_CBOR_TAG, _CBOR_SET_TAG)
+        sorted_array = sorted(encode(v) for v in value.array)
+        yield _header(_CBOR_ARRAY, len(sorted_array))
+        for v in sorted_array:
+            yield v
     elif isinstance(value, Tagged):
         yield _header(_CBOR_TAG, value.tag)
         yield from _cbor_encode(value.value)
@@ -184,10 +191,19 @@ def _cbor_decode(cbor: bytes) -> Tuple[Value, bytes]:
         return res, data
     elif fb_type == _CBOR_TAG:
         val, data = _read_length(cbor[1:], fb_aux)
-        item, data = _cbor_decode(data)
-        if val == _CBOR_RAW_TAG:  # only tag 24 (0x18) is supported
+        if val == _CBOR_RAW_TAG:
+            item, data = _cbor_decode(data)
             return item, data
+        elif val == _CBOR_SET_TAG:
+            aux = data[0] & _CBOR_INFO_BITS
+            ln, data = _read_length(data[1:], aux)
+            res = []
+            for i in range(ln):
+                item, data = _cbor_decode(data)
+                res.append(item)
+            return (Set(res), data)
         else:
+            item, data = _cbor_decode(data)
             return Tagged(val, item), data
     elif fb_type == _CBOR_PRIMITIVE:
         if fb_aux == _CBOR_FALSE:
@@ -215,6 +231,30 @@ class Tagged:
             and self.tag == other.tag
             and self.value == other.value
         )
+
+
+class Set:
+    """Spec taken from: https://github.com/input-output-hk/cbor-sets-spec/blob/master/CBOR_SETS.md"""
+
+    def __init__(self, array: List[Value]) -> None:
+        self.raise_if_duplicates(array)
+        self.array = array
+
+    def raise_if_duplicates(self, array: List[Value]) -> None:
+        for i in range(0, len(array)):
+            for j in range(i + 1, len(array)):
+                if i == j:
+                    continue
+                if array[i] == array[j]:
+                    raise ValueError("Duplicates in CBOR Set")
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, Set):
+            return self.array == other.array
+        elif isinstance(other, list):
+            return self.array == other
+        else:
+            return False
 
 
 class Raw:

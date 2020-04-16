@@ -3,6 +3,7 @@ from common import *
 from apps.common.cbor import (
     Tagged,
     IndefiniteLengthArray,
+    Set,
     decode,
     encode,
 )
@@ -46,6 +47,12 @@ class TestCardanoCbor(unittest.TestCase):
             (Tagged(1, 1363896240), 'c11a514b67b0'),
             (Tagged(23, unhexlify('01020304')), 'd74401020304'),
 
+            # set
+            (Set([]), 'd9010280'),
+            (Set([1, 2, 3]), 'd9010283010203'),
+            (Set([1, 2, IndefiniteLengthArray([4, 5])]), 'd901028301029f0405ff'),
+            (Set(["i", ["abcd", "efgh"], ["ijkl", "mnop"]]), 'd9010283616982646162636464656667688264696A6B6C646D6E6F70'),
+
             # arrays
             ([], '80'),
             ([1, 2, 3], '83010203'),
@@ -69,6 +76,31 @@ class TestCardanoCbor(unittest.TestCase):
         for val, encoded in test_vectors:
             self.assertEqual(unhexlify(encoded), encode(val))
             self.assertEqual(val, decode(unhexlify(encoded)))
+
+
+    def test_invalid_cbor_decoding(self):
+        test_vectors = [
+            # set tag duplicates
+            'd901028401020203', #Set([1, 2, 2, 3])
+            'd901028382010282010203', #Set([[1, 2], [1, 2], 3])
+            'd9010283826461626364028264616263640203', #Set([["abcd", 2], ["abcd", 2], 3])
+            # map duplicates
+            'a2010203040105', #{1: 2, 3: 4, 1: 5}
+        ]
+        for encoded in test_vectors:
+            self.assertRaises(ValueError, lambda: decode(unhexlify(encoded)))
+
+
+    def test_cbor_set_constructor_with_duplicates(self):
+        test_vectors = [
+            lambda: Set([1, 2, 2, 3]),
+            lambda: Set([[1, 2], [1, 2], 3]),
+            lambda: Set([IndefiniteLengthArray([4, 5]), IndefiniteLengthArray([4, 5])]),
+        ]
+
+        for test in test_vectors:
+            self.assertRaises(ValueError, test)
+
 
 if __name__ == '__main__':
     unittest.main()
