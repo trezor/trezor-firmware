@@ -79,7 +79,9 @@ def _from_env(name):
     return os.environ.get(name) == "1"
 
 
-@click.command(context_settings=dict(ignore_unknown_options=True))
+@click.command(
+    context_settings=dict(ignore_unknown_options=True, allow_interspersed_args=False)
+)
 # fmt: off
 @click.option("-a", "--disable-animation/--enable-animation", default=_from_env("TREZOR_DISABLE_ANIMATION"), help="Disable animation")
 @click.option("-c", "--command", "run_command", is_flag=True, help="Run command while emulator is running")
