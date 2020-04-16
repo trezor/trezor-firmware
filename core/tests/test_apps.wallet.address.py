@@ -5,8 +5,8 @@ from trezor.utils import HashWriter
 from apps.wallet.sign_tx.addresses import validate_full_path, validate_path_for_bitcoin_public_key
 from apps.common.paths import HARDENED
 from apps.common import coins
+from apps.wallet.sign_tx import scripts
 from apps.wallet.sign_tx.addresses import *
-from apps.wallet.sign_tx.signing import *
 from apps.wallet.sign_tx.writers import *
 
 

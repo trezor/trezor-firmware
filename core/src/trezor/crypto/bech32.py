@@ -82,7 +82,7 @@ def bech32_decode(bech: str) -> Tuple[Optional[str], Optional[List[int]]]:
 
 def convertbits(
     data: Iterable[int], frombits: int, tobits: int, pad: bool = True
-) -> List[int]:
+) -> Optional[List[int]]:
     """General power-of-2 base conversion."""
     acc = 0
     bits = 0
@@ -91,7 +91,7 @@ def convertbits(
     max_acc = (1 << (frombits + tobits - 1)) - 1
     for value in data:
         if value < 0 or (value >> frombits):
-            raise ValueError
+            return None
         acc = ((acc << frombits) | value) & max_acc
         bits += frombits
         while bits >= tobits:
@@ -101,7 +101,7 @@ def convertbits(
         if bits:
             ret.append((acc << (tobits - bits)) & maxv)
     elif bits >= frombits or ((acc << (tobits - bits)) & maxv):
-        raise ValueError
+        return None
     return ret
 
 
@@ -111,7 +111,7 @@ def decode(hrp: str, addr: str) -> Tuple[Optional[int], Optional[List[int]]]:
     if data is None or hrpgot != hrp:
         return (None, None)
     decoded = convertbits(data[1:], 5, 8, False)
-    if len(decoded) < 2 or len(decoded) > 40:
+    if decoded is None or len(decoded) < 2 or len(decoded) > 40:
         return (None, None)
     if data[0] > 16:
         return (None, None)
@@ -122,7 +122,10 @@ def decode(hrp: str, addr: str) -> Tuple[Optional[int], Optional[List[int]]]:
 
 def encode(hrp: str, witver: int, witprog: Iterable[int]) -> Optional[str]:
     """Encode a segwit address."""
-    ret = bech32_encode(hrp, [witver] + convertbits(witprog, 8, 5))
+    data = convertbits(witprog, 8, 5)
+    if data is None:
+        return None
+    ret = bech32_encode(hrp, [witver] + data)
     if decode(hrp, ret) == (None, None):
         return None
     return ret

@@ -1,11 +1,12 @@
 from common import *
 
-from apps.wallet.sign_tx.signing import *
+from apps.wallet.sign_tx import bitcoin
 from apps.wallet.sign_tx.segwit_bip143 import *
 from apps.common import coins
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputType import TxOutputType
+from trezor.messages import InputScriptType
 from trezor.messages import OutputScriptType
 from trezor.crypto import bip32, bip39
 
@@ -52,13 +53,15 @@ class TestSegwitBip143(unittest.TestCase):
         seed = bip39.seed('alcohol woman abuse must during monitor noble actual mixed trade anger aisle', '')
         root = bip32.from_seed(seed, 'secp256k1')
         coin = coins.by_name(self.tx.coin_name)
+        coinsig = bitcoin.Bitcoin()
+        coinsig.initialize(self.tx, root, coin)
 
         bip143 = Bip143()
 
         for txo in [self.out1, self.out2]:
             txo_bin = TxOutputBinType()
             txo_bin.amount = txo.amount
-            txo_bin.script_pubkey = output_derive_script(txo, coin, root)
+            txo_bin.script_pubkey = coinsig.output_derive_script(txo)
             bip143.add_output(txo_bin)
 
         self.assertEqual(hexlify(bip143.get_outputs_hash(coin)),
@@ -69,6 +72,8 @@ class TestSegwitBip143(unittest.TestCase):
         seed = bip39.seed('alcohol woman abuse must during monitor noble actual mixed trade anger aisle', '')
         root = bip32.from_seed(seed, 'secp256k1')
         coin = coins.by_name(self.tx.coin_name)
+        coinsig = bitcoin.Bitcoin()
+        coinsig.initialize(self.tx, root, coin)
 
         bip143 = Bip143()
         bip143.add_prevouts(self.inp1)
@@ -76,7 +81,7 @@ class TestSegwitBip143(unittest.TestCase):
         for txo in [self.out1, self.out2]:
             txo_bin = TxOutputBinType()
             txo_bin.amount = txo.amount
-            txo_bin.script_pubkey = output_derive_script(txo, coin, root)
+            txo_bin.script_pubkey = coinsig.output_derive_script(txo)
             bip143.add_output(txo_bin)
 
         # test data public key hash
