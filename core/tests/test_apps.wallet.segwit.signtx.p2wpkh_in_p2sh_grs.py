@@ -16,7 +16,11 @@ from trezor.messages import OutputScriptType
 
 from apps.common import coins
 from apps.common.seed import Keychain
-from apps.wallet.sign_tx import helpers, signing
+from apps.wallet.sign_tx import bitcoinlike, helpers
+
+
+EMPTY_SERIALIZED = TxRequestSerializedType(serialized_tx=bytearray())
+
 
 # https://groestlsight-test.groestlcoin.org/api/tx/4ce0220004bdfe14e3dd49fd8636bcb770a400c0c9e9bff670b6a13bb8f15c72
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -26,6 +30,7 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
     def test_send_p2wpkh_in_p2sh(self):
 
         coin = coins.by_name('Groestlcoin Testnet')
+        coinsig = bitcoinlike.Bitcoinlike()
         seed = bip39.seed(' '.join(['all'] * 12), '')
 
         inp1 = TxInputType(
@@ -58,16 +63,16 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
             None,
 
             # check fee
-            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None)),
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(inputs=[inp1])),
 
-            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(outputs=[out1])),
 
             helpers.UiConfirmOutput(out1, coin),
             True,
 
-            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None), serialized=None),
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(outputs=[out2])),
 
             helpers.UiConfirmOutput(out2, coin),
@@ -80,18 +85,21 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
             True,
 
             # sign tx
-            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=TxRequestSerializedType(
+                # returned serialized header
+                serialized_tx=unhexlify('01000000000101'),
+            )),
             TxAck(tx=TransactionType(inputs=[inp1])),
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=TxRequestSerializedType(
                 # returned serialized inp1
-                serialized_tx=unhexlify('01000000000101cf60ded29a2bd7ebf93453feace8551889d0321beab90c4f6e5c9d2fce8ba4090000000017160014d16b8c0680c61fc6ed2e407455715055e41052f5feffffff'),
+                serialized_tx=unhexlify('cf60ded29a2bd7ebf93453feace8551889d0321beab90c4f6e5c9d2fce8ba4090000000017160014d16b8c0680c61fc6ed2e407455715055e41052f5feffffff02'),
             )),
             TxAck(tx=TransactionType(outputs=[out1])),
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None), serialized=TxRequestSerializedType(
                 # returned serialized out1
-                serialized_tx=unhexlify('02e0aebb00000000001976a914a579388225827d9f2fe9014add644487808c695d88ac'),
+                serialized_tx=unhexlify('e0aebb00000000001976a914a579388225827d9f2fe9014add644487808c695d88ac'),
                 signature_index=None,
                 signature=None,
             )),
@@ -114,7 +122,7 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
         ]
 
         keychain = Keychain(seed, [[coin.curve_name]])
-        signer = signing.sign_tx(tx, keychain)
+        signer = coinsig.signer(tx, keychain, coin)
         for request, response in chunks(messages, 2):
             self.assertEqual(signer.send(request), response)
         with self.assertRaises(StopIteration):
@@ -123,6 +131,7 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
     def test_send_p2wpkh_in_p2sh_change(self):
 
         coin = coins.by_name('Groestlcoin Testnet')
+        coinsig = bitcoinlike.Bitcoinlike()
         seed = bip39.seed(' '.join(['all'] * 12), '')
 
         inp1 = TxInputType(
@@ -155,18 +164,16 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
             None,
 
             # check fee
-            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None)),
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(inputs=[inp1])),
 
-            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None),
-                      serialized=None),
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(outputs=[out1])),
 
             helpers.UiConfirmOutput(out1, coin),
             True,
 
-            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None),
-                      serialized=None),
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(outputs=[out2])),
 
             helpers.UiConfirmNonDefaultLocktime(tx.lock_time),
@@ -177,14 +184,18 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
 
             # sign tx
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None),
-                      serialized=None),
+                      serialized=TxRequestSerializedType(
+                          # returned serialized header
+                          serialized_tx=unhexlify(
+                              '01000000000101'),
+            )),
             TxAck(tx=TransactionType(inputs=[inp1])),
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None),
                       serialized=TxRequestSerializedType(
                           # returned serialized inp1
                           serialized_tx=unhexlify(
-                              '01000000000101cf60ded29a2bd7ebf93453feace8551889d0321beab90c4f6e5c9d2fce8ba4090000000017160014d16b8c0680c61fc6ed2e407455715055e41052f5feffffff'),
+                              'cf60ded29a2bd7ebf93453feace8551889d0321beab90c4f6e5c9d2fce8ba4090000000017160014d16b8c0680c61fc6ed2e407455715055e41052f5feffffff02'),
             )),
             # the out has to be cloned not to send the same object which was modified
             TxAck(tx=TransactionType(outputs=[TxOutputType(**out1.__dict__)])),
@@ -193,7 +204,7 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
                       serialized=TxRequestSerializedType(
                           # returned serialized out1
                           serialized_tx=unhexlify(
-                              '02e0aebb00000000001976a914a579388225827d9f2fe9014add644487808c695d88ac'),
+                              'e0aebb00000000001976a914a579388225827d9f2fe9014add644487808c695d88ac'),
                           signature_index=None,
                           signature=None,
             )),
@@ -218,7 +229,7 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
         ]
 
         keychain = Keychain(seed, [[coin.curve_name]])
-        signer = signing.sign_tx(tx, keychain)
+        signer = coinsig.signer(tx, keychain, coin)
         for request, response in chunks(messages, 2):
             self.assertEqual(signer.send(request), response)
         with self.assertRaises(StopIteration):

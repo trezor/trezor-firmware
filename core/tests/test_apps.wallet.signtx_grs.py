@@ -16,7 +16,10 @@ from trezor.messages import OutputScriptType
 
 from apps.common import coins
 from apps.common.seed import Keychain
-from apps.wallet.sign_tx import helpers, signing
+from apps.wallet.sign_tx import bitcoinlike, helpers
+
+
+EMPTY_SERIALIZED = TxRequestSerializedType(serialized_tx=bytearray())
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -28,6 +31,7 @@ class TestSignTx_GRS(unittest.TestCase):
         # ptx1: http://groestlsight.groestlcoin.org/api/tx/cb74c8478c5814742c87cffdb4a21231869888f8042fb07a90e015a9db1f9d4a
 
         coin = coins.by_name('Groestlcoin')
+        coinsig = bitcoinlike.Bitcoinlike()
 
         ptx1 = TransactionType(version=1, lock_time=2160993, inputs_cnt=1, outputs_cnt=1, extra_data_len=0)
         pinp1 = TxInputType(script_sig=unhexlify('48304502210096a287593b1212a188e778596eb8ecd4cc169b93a4d115226460d8e3deae431c02206c78ec09b3df977f04a6df5eb53181165c4ea5a0b35f826551349130f879d6b8012102cf5126ff54e38a80a919579d7091cafe24840eab1d30fe2b4d59bdd9d267cad8'),
@@ -54,15 +58,15 @@ class TestSignTx_GRS(unittest.TestCase):
 
         messages = [
             None,
-            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None)),
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(inputs=[inp1])),
-            TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=unhexlify('cb74c8478c5814742c87cffdb4a21231869888f8042fb07a90e015a9db1f9d4a')), serialized=None),
+            TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=unhexlify('cb74c8478c5814742c87cffdb4a21231869888f8042fb07a90e015a9db1f9d4a')), serialized=EMPTY_SERIALIZED),
             TxAck(tx=ptx1),
-            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=unhexlify('cb74c8478c5814742c87cffdb4a21231869888f8042fb07a90e015a9db1f9d4a')), serialized=None),
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=unhexlify('cb74c8478c5814742c87cffdb4a21231869888f8042fb07a90e015a9db1f9d4a')), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(inputs=[pinp1])),
-            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=unhexlify('cb74c8478c5814742c87cffdb4a21231869888f8042fb07a90e015a9db1f9d4a')), serialized=None),
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=unhexlify('cb74c8478c5814742c87cffdb4a21231869888f8042fb07a90e015a9db1f9d4a')), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(bin_outputs=[pout1])),
-            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(outputs=[out1])),
             helpers.UiConfirmOutput(out1, coin),
             True,
@@ -70,25 +74,28 @@ class TestSignTx_GRS(unittest.TestCase):
             True,
             # ButtonRequest(code=ButtonRequest_ConfirmOutput),
             # ButtonRequest(code=ButtonRequest_SignTx),
-            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=TxRequestSerializedType(
+                signature_index=None,
+                signature=None,
+                serialized_tx=unhexlify('0100000001'))),
             TxAck(tx=TransactionType(inputs=[inp1])),
-            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(outputs=[out1])),
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=TxRequestSerializedType(
                 signature_index=0,
                 signature=unhexlify('304402201fb96d20d0778f54520ab59afe70d5fb20e500ecc9f02281cf57934e8029e8e10220383d5a3e80f2e1eb92765b6da0f23d454aecbd8236f083d483e9a74302368761'),
-                serialized_tx=unhexlify('01000000014a9d1fdba915e0907ab02f04f88898863112a2b4fdcf872c7414588c47c874cb000000006a47304402201fb96d20d0778f54520ab59afe70d5fb20e500ecc9f02281cf57934e8029e8e10220383d5a3e80f2e1eb92765b6da0f23d454aecbd8236f083d483e9a7430236876101210331693756f749180aeed0a65a0fab0625a2250bd9abca502282a4cf0723152e67ffffffff'))),
+                serialized_tx=unhexlify('4a9d1fdba915e0907ab02f04f88898863112a2b4fdcf872c7414588c47c874cb000000006a47304402201fb96d20d0778f54520ab59afe70d5fb20e500ecc9f02281cf57934e8029e8e10220383d5a3e80f2e1eb92765b6da0f23d454aecbd8236f083d483e9a7430236876101210331693756f749180aeed0a65a0fab0625a2250bd9abca502282a4cf0723152e67ffffffff01'))),
             TxAck(tx=TransactionType(outputs=[out1])),
             TxRequest(request_type=TXFINISHED, details=None, serialized=TxRequestSerializedType(
                 signature_index=None,
                 signature=None,
-                serialized_tx=unhexlify('01a0330300000000001976a914fe40329c95c5598ac60752a5310b320cb52d18e688ac00000000'),
+                serialized_tx=unhexlify('a0330300000000001976a914fe40329c95c5598ac60752a5310b320cb52d18e688ac00000000'),
             )),
         ]
 
         seed = bip39.seed(' '.join(['all'] * 12), '')
         keychain = Keychain(seed, [[coin.curve_name]])
-        signer = signing.sign_tx(tx, keychain)
+        signer = coinsig.signer(tx, keychain, coin)
         for request, response in chunks(messages, 2):
             self.assertEqual(signer.send(request), response)
         with self.assertRaises(StopIteration):

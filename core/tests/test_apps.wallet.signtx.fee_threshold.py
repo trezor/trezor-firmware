@@ -11,11 +11,15 @@ from trezor.messages.TxAck import TxAck
 from trezor.messages.TransactionType import TransactionType
 from trezor.messages.RequestType import TXINPUT, TXOUTPUT, TXMETA
 from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
+from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
 from trezor.messages import OutputScriptType
 
 from apps.common import coins
 from apps.common.seed import Keychain
-from apps.wallet.sign_tx import helpers, signing
+from apps.wallet.sign_tx import bitcoin, helpers
+
+
+EMPTY_SERIALIZED = TxRequestSerializedType(serialized_tx=bytearray())
 
 
 class TestSignTxFeeThreshold(unittest.TestCase):
@@ -99,6 +103,7 @@ class TestSignTxFeeThreshold(unittest.TestCase):
 
     def test_under_threshold(self):
         coin_bitcoin = coins.by_name('Bitcoin')
+        coinsig = bitcoin.Bitcoin()
 
         ptx1 = TransactionType(version=1, lock_time=0, inputs_cnt=2, outputs_cnt=1, extra_data_len=0)
         pinp1 = TxInputType(script_sig=unhexlify('483045022072ba61305fe7cb542d142b8f3299a7b10f9ea61f6ffaab5dca8142601869d53c0221009a8027ed79eb3b9bc13577ac2853269323434558528c6b6a7e542be46e7e9a820141047a2d177c0f3626fc68c53610b0270fa6156181f46586c679ba6a88b34c6f4874686390b4d92e5769fbb89c8050b984f4ec0b257a0e5c4ff8bd3b035a51709503'),
@@ -134,33 +139,34 @@ class TestSignTxFeeThreshold(unittest.TestCase):
         messages = [
             None,
 
-            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None)),
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(inputs=[inp1])),
             helpers.UiConfirmForeignAddress(address_n=inp1.address_n),
             True,
-            TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=None),
+            TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=EMPTY_SERIALIZED),
             TxAck(tx=ptx1),
-            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=None),
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(inputs=[pinp1])),
-            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=1, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=None),
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=1, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(inputs=[pinp2])),
-            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=None),
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(bin_outputs=[pout1])),
-            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(outputs=[out1])),
             helpers.UiConfirmOutput(out1, coin_bitcoin),
             True,
             helpers.UiConfirmTotal(300000 + 90000, 90000, coin_bitcoin),
             True,
-            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=TxRequestSerializedType(serialized_tx=unhexlify('0100000001'))),
         ]
 
         seed = bip39.seed('alcohol woman abuse must during monitor noble actual mixed trade anger aisle', '')
 
         keychain = Keychain(seed, [[coin_bitcoin.curve_name]])
-        signer = signing.sign_tx(tx, keychain)
+        signer = coinsig.signer(tx, keychain, coin_bitcoin)
         for request, response in chunks(messages, 2):
-            self.assertEqual(signer.send(request), response)
+            res = signer.send(request)
+            self.assertEqual(res, response)
 
 
 if __name__ == '__main__':

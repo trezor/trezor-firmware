@@ -203,9 +203,9 @@ class TestZcashZip243(unittest.TestCase):
                 txo.script_pubkey = unhexlify(o["script_pubkey"])
                 zip243.add_output(txo)
 
-            self.assertEqual(hexlify(zip243.get_prevouts_hash()), v["prevouts_hash"])
-            self.assertEqual(hexlify(zip243.get_sequence_hash()), v["sequence_hash"])
-            self.assertEqual(hexlify(zip243.get_outputs_hash()), v["outputs_hash"])
+            self.assertEqual(hexlify(zip243.get_prevouts_hash(coin)), v["prevouts_hash"])
+            self.assertEqual(hexlify(zip243.get_sequence_hash(coin)), v["sequence_hash"])
+            self.assertEqual(hexlify(zip243.get_outputs_hash(coin)), v["outputs_hash"])
             self.assertEqual(
                 hexlify(
                     zip243.preimage_hash(
