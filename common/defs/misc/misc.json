@@ -25,7 +25,6 @@
             "Github": "https://github.com/stellar/stellar-core"
         },
         "wallet": {
-            "Account Viewer": "https://trezor.io/stellar/",
             "Exodus": "https://www.exodus.io"
         },
         "blockchain_link": null
