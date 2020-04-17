@@ -17,7 +17,7 @@ from trezor.messages import OutputScriptType
 from apps.common import coins
 from apps.common.seed import Keychain
 from apps.wallet.sign_tx import helpers, bitcoin
-from apps.wallet.sign_tx.common import SigningError
+from apps.wallet.sign_tx.scripts import ScriptsError
 
 
 EMPTY_SERIALIZED = TxRequestSerializedType(serialized_tx=bytearray())
@@ -271,7 +271,7 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
         signer = coinsig.signer(tx, keychain, coin)
         for request, response in chunks(messages, 2):
             if response is None:
-                with self.assertRaises(SigningError):
+                with self.assertRaises(ScriptsError):
                     signer.send(request)
             else:
                 self.assertEqual(signer.send(request), response)

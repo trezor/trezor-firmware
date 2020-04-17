@@ -7,7 +7,7 @@ from trezor.crypto import bip32, bip39
 
 from apps.common import coins
 from apps.wallet.sign_tx.tx_weight import *
-from apps.wallet.sign_tx import bitcoin
+from apps.wallet.sign_tx.scripts import output_derive_script
 
 
 class TestCalculateTxWeight(unittest.TestCase):
@@ -16,11 +16,7 @@ class TestCalculateTxWeight(unittest.TestCase):
     def test_p2pkh_txweight(self):
 
         coin = coins.by_name('Bitcoin')
-        coinsig = bitcoin.Bitcoin()
-
         seed = bip39.seed(' '.join(['all'] * 12), '')
-        root = bip32.from_seed(seed, 'secp256k1')
-        coinsig.initialize(SignTx(), root, coin)
 
         inp1 = TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
                            # amount=390000,
@@ -38,7 +34,7 @@ class TestCalculateTxWeight(unittest.TestCase):
 
         calculator = TxWeightCalculator(1, 1)
         calculator.add_input(inp1)
-        calculator.add_output(coinsig.output_derive_script(out1))
+        calculator.add_output(output_derive_script(out1, coin))
 
         serialized_tx = '010000000182488650ef25a58fef6788bd71b8212038d7f2bbe4750bc7bcb44701e85ef6d5000000006b4830450221009a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8b7077102202b79ab1e7736219387dffe8d615bbdba87e11477104b867ef47afed1a5ede7810121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff0160cc0500000000001976a914de9b2a8da088824e8fe51debea566617d851537888ac00000000'
         tx_weight = len(serialized_tx) / 2 * 4  # non-segwit tx's weight is simple length*4
@@ -48,11 +44,7 @@ class TestCalculateTxWeight(unittest.TestCase):
     def test_p2wpkh_in_p2sh_txweight(self):
 
         coin = coins.by_name('Testnet')
-        coinsig = bitcoin.Bitcoin()
-
         seed = bip39.seed(' '.join(['all'] * 12), '')
-        root = bip32.from_seed(seed, 'secp256k1')
-        coinsig.initialize(SignTx(), root, coin)
 
         inp1 = TxInputType(
             # 49'/1'/0'/1/0" - 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
@@ -81,8 +73,8 @@ class TestCalculateTxWeight(unittest.TestCase):
 
         calculator = TxWeightCalculator(1, 2)
         calculator.add_input(inp1)
-        calculator.add_output(coinsig.output_derive_script(out1))
-        calculator.add_output(coinsig.output_derive_script(out2))
+        calculator.add_output(output_derive_script(out1, coin))
+        calculator.add_output(output_derive_script(out2, coin))
 
         self.assertEqual(calculator.get_total(), 670)
         # non-segwit: header, inputs, outputs, locktime 4*(4+65+67+4) = 560
@@ -92,11 +84,7 @@ class TestCalculateTxWeight(unittest.TestCase):
     def test_native_p2wpkh_txweight(self):
 
         coin = coins.by_name('Testnet')
-        coinsig = bitcoin.Bitcoin()
-
         seed = bip39.seed(' '.join(['all'] * 12), '')
-        root = bip32.from_seed(seed, 'secp256k1')
-        coinsig.initialize(SignTx(), root, coin)
 
         inp1 = TxInputType(
             # 49'/1'/0'/0/0" - tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s
@@ -125,8 +113,8 @@ class TestCalculateTxWeight(unittest.TestCase):
 
         calculator = TxWeightCalculator(1, 2)
         calculator.add_input(inp1)
-        calculator.add_output(coinsig.output_derive_script(out1))
-        calculator.add_output(coinsig.output_derive_script(out2))
+        calculator.add_output(output_derive_script(out1, coin))
+        calculator.add_output(output_derive_script(out2, coin))
 
         self.assertEqual(calculator.get_total(), 566)
         # non-segwit: header, inputs, outputs, locktime 4*(4+42+64+4) = 456

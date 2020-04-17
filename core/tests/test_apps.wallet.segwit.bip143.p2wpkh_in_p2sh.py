@@ -1,6 +1,6 @@
 from common import *
 
-from apps.wallet.sign_tx import bitcoin
+from apps.wallet.sign_tx.scripts import output_derive_script
 from apps.wallet.sign_tx.segwit_bip143 import *
 from apps.common import coins
 from trezor.messages.SignTx import SignTx
@@ -51,17 +51,14 @@ class TestSegwitBip143(unittest.TestCase):
     def test_bip143_outputs(self):
 
         seed = bip39.seed('alcohol woman abuse must during monitor noble actual mixed trade anger aisle', '')
-        root = bip32.from_seed(seed, 'secp256k1')
         coin = coins.by_name(self.tx.coin_name)
-        coinsig = bitcoin.Bitcoin()
-        coinsig.initialize(self.tx, root, coin)
 
         bip143 = Bip143()
 
         for txo in [self.out1, self.out2]:
             txo_bin = TxOutputBinType()
             txo_bin.amount = txo.amount
-            txo_bin.script_pubkey = coinsig.output_derive_script(txo)
+            txo_bin.script_pubkey = output_derive_script(txo, coin)
             bip143.add_output(txo_bin)
 
         self.assertEqual(hexlify(bip143.get_outputs_hash(coin)),
@@ -70,10 +67,7 @@ class TestSegwitBip143(unittest.TestCase):
     def test_bip143_preimage_testdata(self):
 
         seed = bip39.seed('alcohol woman abuse must during monitor noble actual mixed trade anger aisle', '')
-        root = bip32.from_seed(seed, 'secp256k1')
         coin = coins.by_name(self.tx.coin_name)
-        coinsig = bitcoin.Bitcoin()
-        coinsig.initialize(self.tx, root, coin)
 
         bip143 = Bip143()
         bip143.add_prevouts(self.inp1)
@@ -81,7 +75,7 @@ class TestSegwitBip143(unittest.TestCase):
         for txo in [self.out1, self.out2]:
             txo_bin = TxOutputBinType()
             txo_bin.amount = txo.amount
-            txo_bin.script_pubkey = coinsig.output_derive_script(txo)
+            txo_bin.script_pubkey = output_derive_script(txo, coin)
             bip143.add_output(txo_bin)
 
         # test data public key hash

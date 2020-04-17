@@ -1,9 +1,20 @@
 from trezor import utils
+from trezor.crypto import base58, cashaddr
+from trezor.crypto.hashlib import sha256
+from trezor.messages import FailureType, InputScriptType, OutputScriptType
 from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
+from trezor.messages.TxInputType import TxInputType
+from trezor.messages.TxOutputType import TxOutputType
 
+from apps.common import address_type
 from apps.common.coininfo import CoinInfo
 from apps.common.writers import empty_bytearray
-from apps.wallet.sign_tx.multisig import multisig_get_pubkey_count, multisig_get_pubkeys
+from apps.wallet.sign_tx import addresses
+from apps.wallet.sign_tx.multisig import (
+    multisig_get_pubkey_count,
+    multisig_get_pubkeys,
+    multisig_pubkey_index,
+)
 from apps.wallet.sign_tx.writers import (
     write_bytes_fixed,
     write_bytes_unchecked,
@@ -12,12 +23,92 @@ from apps.wallet.sign_tx.writers import (
 )
 
 if False:
-    from typing import List
+    from typing import List, Optional
     from apps.wallet.sign_tx.writers import Writer
 
 
 class ScriptsError(ValueError):
     pass
+
+
+def input_derive_script(
+    txi: TxInputType,
+    coin: CoinInfo,
+    hash_type: int,
+    pubkey: bytes,
+    signature: Optional[bytes],
+) -> bytes:
+    if txi.script_type == InputScriptType.SPENDADDRESS:
+        # p2pkh or p2sh
+        return input_script_p2pkh_or_p2sh(pubkey, signature, hash_type)
+
+    if txi.script_type == InputScriptType.SPENDP2SHWITNESS:
+        # p2wpkh or p2wsh using p2sh
+
+        if txi.multisig:
+            # p2wsh in p2sh
+            pubkeys = multisig_get_pubkeys(txi.multisig)
+            witness_script_hasher = utils.HashWriter(sha256())
+            write_output_script_multisig(witness_script_hasher, pubkeys, txi.multisig.m)
+            witness_script_hash = witness_script_hasher.get_digest()
+            return input_script_p2wsh_in_p2sh(witness_script_hash)
+
+        # p2wpkh in p2sh
+        return input_script_p2wpkh_in_p2sh(addresses.ecdsa_hash_pubkey(pubkey, coin))
+    elif txi.script_type == InputScriptType.SPENDWITNESS:
+        # native p2wpkh or p2wsh
+        return input_script_native_p2wpkh_or_p2wsh()
+    elif txi.script_type == InputScriptType.SPENDMULTISIG:
+        # p2sh multisig
+        signature_index = multisig_pubkey_index(txi.multisig, pubkey)
+        return input_script_multisig(
+            txi.multisig, signature, signature_index, hash_type, coin
+        )
+    else:
+        raise ScriptsError(FailureType.ProcessError, "Invalid script type")
+
+
+def output_derive_script(txo: TxOutputType, coin: CoinInfo) -> bytes:
+    if txo.script_type == OutputScriptType.PAYTOOPRETURN:
+        return output_script_paytoopreturn(txo.op_return_data)
+
+    if coin.bech32_prefix and txo.address.startswith(coin.bech32_prefix):
+        # p2wpkh or p2wsh
+        witprog = addresses.decode_bech32_address(coin.bech32_prefix, txo.address)
+        return output_script_native_p2wpkh_or_p2wsh(witprog)
+
+    if (
+        not utils.BITCOIN_ONLY
+        and coin.cashaddr_prefix is not None
+        and txo.address.startswith(coin.cashaddr_prefix + ":")
+    ):
+        prefix, addr = txo.address.split(":")
+        version, data = cashaddr.decode(prefix, addr)
+        if version == cashaddr.ADDRESS_TYPE_P2KH:
+            version = coin.address_type
+        elif version == cashaddr.ADDRESS_TYPE_P2SH:
+            version = coin.address_type_p2sh
+        else:
+            raise ScriptsError("Unknown cashaddr address type")
+        raw_address = bytes([version]) + data
+    else:
+        try:
+            raw_address = base58.decode_check(txo.address, coin.b58_hash)
+        except ValueError:
+            raise ScriptsError(FailureType.DataError, "Invalid address")
+
+    if address_type.check(coin.address_type, raw_address):
+        # p2pkh
+        pubkeyhash = address_type.strip(coin.address_type, raw_address)
+        script = output_script_p2pkh(pubkeyhash)
+        return script
+    elif address_type.check(coin.address_type_p2sh, raw_address):
+        # p2sh
+        scripthash = address_type.strip(coin.address_type_p2sh, raw_address)
+        script = output_script_p2sh(scripthash)
+        return script
+
+    raise ScriptsError(FailureType.DataError, "Invalid address type")
 
 
 # P2PKH, P2SH
@@ -225,7 +316,7 @@ def input_script_multisig(
 
     w = empty_bytearray(total_length)
 
-    if not coin.decred:
+    if utils.BITCOIN_ONLY or not coin.decred:
         # Starts with OP_FALSE because of an old OP_CHECKMULTISIG bug, which
         # consumes one additional item on the stack:
         # https://bitcoin.org/en/developer-guide#standard-transactions
@@ -242,7 +333,7 @@ def input_script_multisig(
     return w
 
 
-def output_script_multisig(pubkeys: List[bytes], m: int, w: Writer = None) -> bytearray:
+def output_script_multisig(pubkeys: List[bytes], m: int) -> bytearray:
     w = empty_bytearray(output_script_multisig_length(pubkeys, m))
     write_output_script_multisig(w, pubkeys, m)
     return w
