@@ -2,9 +2,8 @@ import gc
 from micropython import const
 
 from trezor import utils
-from trezor.crypto import base58
 from trezor.crypto.hashlib import sha256
-from trezor.messages import FailureType, InputScriptType, OutputScriptType
+from trezor.messages import FailureType, InputScriptType
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TransactionType import TransactionType
 from trezor.messages.TxInputType import TxInputType
@@ -14,7 +13,7 @@ from trezor.messages.TxRequest import TxRequest
 from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
 
-from apps.common import address_type, coininfo, seed
+from apps.common import coininfo, seed
 from apps.wallet.sign_tx import (
     addresses,
     helpers,
@@ -426,6 +425,7 @@ class Bitcoin:
         return amount_out
 
     def check_prevtx_output(self, txo_bin: TxOutputBinType) -> None:
+        # Validations to perform on the UTXO when checking the previous transaction output amount.
         pass
 
     # TX Helpers
@@ -462,51 +462,20 @@ class Bitcoin:
     # ===
 
     def output_derive_script(self, txo: TxOutputType) -> bytes:
-        if txo.script_type == OutputScriptType.PAYTOOPRETURN:
-            return scripts.output_script_paytoopreturn(txo.op_return_data)
-
         if txo.address_n:
             # change output
-            txo.address = self.get_address_for_change(txo)
-
-        if self.coin.bech32_prefix and txo.address.startswith(self.coin.bech32_prefix):
-            # p2wpkh or p2wsh
-            witprog = addresses.decode_bech32_address(
-                self.coin.bech32_prefix, txo.address
+            try:
+                input_script_type = helpers.CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES[
+                    txo.script_type
+                ]
+            except KeyError:
+                raise SigningError(FailureType.DataError, "Invalid script type")
+            node = self.keychain.derive(txo.address_n, self.coin.curve_name)
+            txo.address = addresses.get_address(
+                input_script_type, self.coin, node, txo.multisig
             )
-            return scripts.output_script_native_p2wpkh_or_p2wsh(witprog)
 
-        raw_address = self.get_raw_address(txo)
-
-        if address_type.check(self.coin.address_type, raw_address):
-            # p2pkh
-            pubkeyhash = address_type.strip(self.coin.address_type, raw_address)
-            script = scripts.output_script_p2pkh(pubkeyhash)
-            return script
-
-        elif address_type.check(self.coin.address_type_p2sh, raw_address):
-            # p2sh
-            scripthash = address_type.strip(self.coin.address_type_p2sh, raw_address)
-            script = scripts.output_script_p2sh(scripthash)
-            return script
-
-        raise SigningError(FailureType.DataError, "Invalid address type")
-
-    def get_raw_address(self, txo: TxOutputType) -> bytes:
-        try:
-            return base58.decode_check(txo.address, self.coin.b58_hash)
-        except ValueError:
-            raise SigningError(FailureType.DataError, "Invalid address")
-
-    def get_address_for_change(self, txo: TxOutputType) -> str:
-        try:
-            input_script_type = helpers.CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES[
-                txo.script_type
-            ]
-        except KeyError:
-            raise SigningError(FailureType.DataError, "Invalid script type")
-        node = self.keychain.derive(txo.address_n, self.coin.curve_name)
-        return addresses.get_address(input_script_type, self.coin, node, txo.multisig)
+        return scripts.output_derive_script(txo, self.coin)
 
     def output_is_change(self, txo: TxOutputType) -> bool:
         if txo.script_type not in helpers.CHANGE_OUTPUT_SCRIPT_TYPES:
@@ -525,44 +494,9 @@ class Bitcoin:
     def input_derive_script(
         self, txi: TxInputType, pubkey: bytes, signature: bytes = None
     ) -> bytes:
-        if txi.script_type == InputScriptType.SPENDADDRESS:
-            # p2pkh or p2sh
-            return scripts.input_script_p2pkh_or_p2sh(
-                pubkey, signature, self.get_hash_type()
-            )
-
-        if txi.script_type == InputScriptType.SPENDP2SHWITNESS:
-            # p2wpkh or p2wsh using p2sh
-
-            if txi.multisig:
-                # p2wsh in p2sh
-                pubkeys = multisig.multisig_get_pubkeys(txi.multisig)
-                witness_script_hasher = self.create_hash_writer()
-                scripts.write_output_script_multisig(
-                    witness_script_hasher, pubkeys, txi.multisig.m
-                )
-                witness_script_hash = witness_script_hasher.get_digest()
-                return scripts.input_script_p2wsh_in_p2sh(witness_script_hash)
-
-            # p2wpkh in p2sh
-            return scripts.input_script_p2wpkh_in_p2sh(
-                addresses.ecdsa_hash_pubkey(pubkey, self.coin)
-            )
-        elif txi.script_type == InputScriptType.SPENDWITNESS:
-            # native p2wpkh or p2wsh
-            return scripts.input_script_native_p2wpkh_or_p2wsh()
-        elif txi.script_type == InputScriptType.SPENDMULTISIG:
-            # p2sh multisig
-            signature_index = multisig.multisig_pubkey_index(txi.multisig, pubkey)
-            return scripts.input_script_multisig(
-                txi.multisig,
-                signature,
-                signature_index,
-                self.get_hash_type(),
-                self.coin,
-            )
-        else:
-            raise SigningError(FailureType.ProcessError, "Invalid script type")
+        return scripts.input_derive_script(
+            txi, self.coin, self.get_hash_type(), pubkey, signature
+        )
 
 
 def input_is_segwit(txi: TxInputType) -> bool:

@@ -1,12 +1,10 @@
 import gc
 from micropython import const
 
-from trezor.crypto import cashaddr
 from trezor.messages import FailureType, InputScriptType
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TransactionType import TransactionType
 from trezor.messages.TxInputType import TxInputType
-from trezor.messages.TxOutputType import TxOutputType
 
 from apps.wallet.sign_tx import addresses, helpers, multisig, writers
 from apps.wallet.sign_tx.bitcoin import Bitcoin
@@ -86,22 +84,6 @@ class Bitcoinlike(Bitcoin):
         # some coins require negative fees for reward TX
         if not self.coin.negative_fee:
             super().on_negative_fee()
-
-    def get_raw_address(self, txo: TxOutputType) -> bytes:
-        if self.coin.cashaddr_prefix is not None and txo.address.startswith(
-            self.coin.cashaddr_prefix + ":"
-        ):
-            prefix, addr = txo.address.split(":")
-            version, data = cashaddr.decode(prefix, addr)
-            if version == cashaddr.ADDRESS_TYPE_P2KH:
-                version = self.coin.address_type
-            elif version == cashaddr.ADDRESS_TYPE_P2SH:
-                version = self.coin.address_type_p2sh
-            else:
-                raise SigningError("Unknown cashaddr address type")
-            return bytes([version]) + data
-        else:
-            return super().get_raw_address(txo)
 
     def get_hash_type(self) -> int:
         SIGHASH_FORKID = const(0x40)
