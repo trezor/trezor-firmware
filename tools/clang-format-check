@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 error=0
 for f in $*; do
     changes=$(clang-format -output-replacements-xml "$f" | grep -c '^<replacement '; exit ${PIPESTATUS[0]})

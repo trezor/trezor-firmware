@@ -1,0 +1,1 @@
+../../docs/tests/device-tests.md

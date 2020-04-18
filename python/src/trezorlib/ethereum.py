@@ -56,21 +56,15 @@ def sign_tx(
         gas_price=int_to_big_endian(gas_price),
         gas_limit=int_to_big_endian(gas_limit),
         value=int_to_big_endian(value),
+        to=to,
+        chain_id=chain_id,
+        tx_type=tx_type,
     )
-
-    if to:
-        msg.to = to
 
     if data:
         msg.data_length = len(data)
         data, chunk = data[1024:], data[:1024]
         msg.data_initial_chunk = chunk
-
-    if chain_id:
-        msg.chain_id = chain_id
-
-    if tx_type is not None:
-        msg.tx_type = tx_type
 
     response = client.call(msg)
 

@@ -2,23 +2,24 @@ ifneq ($(V),1)
 Q := @
 endif
 
+SKIPPED_MESSAGES := Binance Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tezos WebAuthn \
+	DebugLinkRecordScreen DebugLinkReseedRandom DebugLinkShowText DebugLinkEraseSdCard
+
 ifeq ($(BITCOIN_ONLY), 1)
-SKIPPED_MESSAGES := Cardano Tezos Ripple Monero DebugMonero Ontology Eos Binance Ethereum Lisk NEM Stellar
-else
-SKIPPED_MESSAGES := Cardano Tezos Ripple Monero DebugMonero Ontology Eos Binance
+SKIPPED_MESSAGES += Ethereum Lisk NEM Stellar
 endif
 
-all: messages_map.h messages_map_limits.h messages-bitcoin.pb.c messages-common.pb.c messages-crypto.pb.c messages-debug.pb.c messages-ethereum.pb.c messages-management.pb.c messages-nem.pb.c messages.pb.c messages-stellar.pb.c messages-lisk.pb.c messages_nem_pb2.py
+all: messages_map.h messages_map_limits.h messages-bitcoin.pb.h messages-common.pb.h messages-crypto.pb.h messages-debug.pb.h messages-ethereum.pb.h messages-management.pb.h messages-nem.pb.h messages.pb.h messages-stellar.pb.h messages-lisk.pb.h messages_nem_pb2.py
 
 PYTHON ?= python
 
-%.pb.c: %.pb %.options
+%.pb.h: %.pb %.options
 	@printf "  NANOPB  $@\n"
-	$(Q)$(PYTHON) ../../vendor/nanopb/generator/nanopb_generator.py $< \
+	$(Q)nanopb_generator $< \
 		-L '#include "%s"' \
 		-T \
 		-s "mangle_names:M_FLATTEN"
-	@grep CALLBACK $@ && echo "CALLBACK field found" && rm $@ && exit 1  || :
+	@grep " CALLBACK, " $@ && echo "CALLBACK field found" && rm $@ && exit 1  || :
 
 %.pb: %.proto
 	@printf "  PROTOC  $@\n"

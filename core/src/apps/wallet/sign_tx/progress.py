@@ -1,4 +1,4 @@
-from trezor import ui
+from trezor import ui, utils
 
 _progress = 0
 _steps = 0
@@ -24,5 +24,7 @@ def report_init():
 
 
 def report():
+    if utils.DISABLE_ANIMATION:
+        return
     p = 1000 * _progress // _steps
     ui.display.loader(p, False, 18, ui.WHITE, ui.BG)

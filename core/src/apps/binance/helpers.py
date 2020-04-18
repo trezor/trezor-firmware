@@ -15,10 +15,10 @@ MSG_TRANSFER_BLUEPRINT = '{{"inputs":[{inputs}],"outputs":[{outputs}]}}'
 MSG_NEWORDER_BLUEPRINT = '{{"id":"{id}","ordertype":{ordertype},"price":{price},"quantity":{quantity},"sender":"{sender}","side":{side},"symbol":"{symbol}","timeinforce":{timeinforce}}}'
 MSG_CANCEL_BLUEPRINT = '{{"refid":"{refid}","sender":"{sender}","symbol":"{symbol}"}}'
 INPUT_OUTPUT_BLUEPRINT = '{{"address":"{address}","coins":[{coins}]}}'
-COIN_BLUEPRINT = '{{"amount":"{amount}","denom":"{denom}"}}'
+COIN_BLUEPRINT = '{{"amount":{amount},"denom":"{denom}"}}'
 
-# 1*10^18 Jagers equal 1 BNB https://www.binance.vision/glossary/jager
-DIVISIBILITY = const(18)
+# 1*10^8 Jagers equal 1 BNB https://www.binance.vision/glossary/jager
+DECIMALS = const(8)
 
 
 def produce_json_for_signing(envelope: BinanceSignTx, msg) -> str:

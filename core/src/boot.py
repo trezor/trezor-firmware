@@ -1,30 +1,32 @@
-from trezor import config, log, loop, res, ui
-from trezor.pin import pin_to_int, show_pin_timeout
+import storage
+import storage.device
+import storage.sd_salt
+from trezor import config, log, loop, res, ui, utils
+from trezor.pin import show_pin_timeout
 
-from apps.common import storage
-from apps.common.request_pin import request_pin
+from apps.common.request_pin import PinCancelled, verify_user_pin
 
 
 async def bootscreen() -> None:
     ui.display.orientation(storage.device.get_rotation())
     while True:
         try:
-            if not config.has_pin():
-                config.unlock(pin_to_int(""))
-                storage.init_unlocked()
-                return
-            await lockscreen()
-            label = "Enter your PIN"
-            while True:
-                pin = await request_pin(label, config.get_pin_rem())
-                if config.unlock(pin_to_int(pin)):
-                    storage.init_unlocked()
-                    return
-                else:
-                    label = "Wrong PIN, enter again"
-        except Exception as e:
+            if storage.sd_salt.is_enabled() or config.has_pin():
+                await lockscreen()
+            await verify_user_pin()
+            storage.init_unlocked()
+            return
+        except PinCancelled as e:
+            # verify_user_pin will convert a SdCardUnavailable (in case of sd salt)
+            # to PinCancelled exception.
+            # log the exception and retry loop
             if __debug__:
                 log.exception(__name__, e)
+        except BaseException as e:
+            # other exceptions here are unexpected and should halt the device
+            if __debug__:
+                log.exception(__name__, e)
+            utils.halt(e.__class__.__name__)
 
 
 async def lockscreen() -> None:

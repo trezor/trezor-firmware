@@ -51,7 +51,7 @@ def test_stellar_parse_transaction_bytes_memo_text():
     assert tx.timebounds_start is None
     assert tx.timebounds_end is None
     assert tx.memo_type == stellar.MEMO_TYPE_TEXT
-    assert tx.memo_text == b"example memo"
+    assert tx.memo_text == "example memo"
     assert tx.memo_id is None
     assert tx.memo_hash is None
     assert tx.num_operations == len(operations)
@@ -162,7 +162,7 @@ def test_stellar_parse_operation_bytes_payment_custom4():
         == "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
     )
     assert op.asset.type == stellar.ASSET_TYPE_ALPHA4
-    assert op.asset.code == b"TEST"
+    assert op.asset.code == "TEST"
     assert op.asset.issuer == "GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC"
     assert op.amount == 500111000
 
@@ -181,7 +181,7 @@ def test_stellar_parse_operation_bytes_payment_custom7():
     )
     assert op.asset.type == stellar.ASSET_TYPE_ALPHA12
     # asset codes are either 4 or 12 characters, so this will be null-padded at the end
-    assert op.asset.code == b"SEVENXX\x00\x00\x00\x00\x00"
+    assert op.asset.code == "SEVENXX\x00\x00\x00\x00\x00"
     assert op.asset.issuer == "GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC"
     assert op.amount == 500111000
 
@@ -208,7 +208,7 @@ def test_stellar_parse_operation_bytes_path_payment_none():
     )
     assert op.destination_asset.type == stellar.ASSET_TYPE_ALPHA4
     # asset codes are either 4 or 12 characters, so this will be null-padded at the end
-    assert op.destination_asset.code == b"JPY\x00"
+    assert op.destination_asset.code == "JPY\x00"
     assert (
         op.destination_asset.issuer
         == "GDCPWFVXCG65ZS6OKZE5VIGCOUWQXJIDYKYLRVMAYA3OBKT3ZPDMNTIJ"
@@ -239,7 +239,7 @@ def test_stellar_parse_operation_bytes_path_payment_one():
     )
     assert op.destination_asset.type == stellar.ASSET_TYPE_ALPHA4
     # asset codes are either 4 or 12 characters, so this will be null-padded at the end
-    assert op.destination_asset.code == b"JPY\x00"
+    assert op.destination_asset.code == "JPY\x00"
     assert (
         op.destination_asset.issuer
         == "GDCPWFVXCG65ZS6OKZE5VIGCOUWQXJIDYKYLRVMAYA3OBKT3ZPDMNTIJ"
@@ -248,7 +248,7 @@ def test_stellar_parse_operation_bytes_path_payment_one():
 
     assert len(op.paths) == 1
     assert op.paths[0].type == stellar.ASSET_TYPE_ALPHA4
-    assert op.paths[0].code == b"PTH1"
+    assert op.paths[0].code == "PTH1"
     assert (
         op.paths[0].issuer == "GDGP656XZHPLCYT5XFYN4NH3WELG77EWXZ7KFX5BX77WRNSQIUEJXAJK"
     )
@@ -267,7 +267,7 @@ def test_stellar_parse_operation_bytes_manage_offer_new():
 
     assert op.buying_asset.type == stellar.ASSET_TYPE_ALPHA4
     # asset codes are either 4 or 12 characters, so this will be null-padded at the end
-    assert op.buying_asset.code == b"USD\x00"
+    assert op.buying_asset.code == "USD\x00"
     assert (
         op.buying_asset.issuer
         == "GADEAA7R7K2HPZXIPQGUWCNLKQXUOQSMS6YZ6JQYO6DDLAQZZVIXG74A"
@@ -292,7 +292,7 @@ def test_stellar_parse_operation_bytes_passive_offer_new():
 
     assert op.buying_asset.type == stellar.ASSET_TYPE_ALPHA4
     # asset codes are either 4 or 12 characters, so this will be null-padded at the end
-    assert op.buying_asset.code == b"USD\x00"
+    assert op.buying_asset.code == "USD\x00"
     assert (
         op.buying_asset.issuer
         == "GADEAA7R7K2HPZXIPQGUWCNLKQXUOQSMS6YZ6JQYO6DDLAQZZVIXG74A"
@@ -328,7 +328,7 @@ def test_stellar_parse_operation_bytes_change_trust_add():
     assert op.source_account is None
 
     assert op.asset.type == stellar.ASSET_TYPE_ALPHA4
-    assert op.asset.code == b"USD\x00"
+    assert op.asset.code == "USD\x00"
     assert op.asset.issuer == "GCSJ7MFIIGIRMAS4R3VT5FIFIAOXNMGDI5HPYTWS5X7HH74FSJ6STSGF"
 
     assert op.limit == 10000000000
@@ -344,7 +344,7 @@ def test_stellar_parse_operation_bytes_allow_trust_allow():
     assert op.source_account is None
 
     assert op.asset_type == stellar.ASSET_TYPE_ALPHA4
-    assert op.asset_code == b"JPY\x00"
+    assert op.asset_code == "JPY\x00"
 
     assert (
         op.trusted_account == "GBTUGHW45HYSG23ONAXSVN66KMOF2X5YDY3KQBCTTT62RISCLKSQLYF4"
@@ -375,7 +375,7 @@ def test_stellar_parse_operation_bytes_manage_data_set_simple():
     assert isinstance(op, messages.StellarManageDataOp)
     assert op.source_account is None
 
-    assert op.key == b"test data"
+    assert op.key == "test data"
     assert op.value == b"asdf"
 
 

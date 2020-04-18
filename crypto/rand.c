@@ -65,7 +65,7 @@ void __attribute__((weak)) random_buffer(uint8_t *buf, size_t len) {
 }
 
 uint32_t random_uniform(uint32_t n) {
-  uint32_t x, max = 0xFFFFFFFF - (0xFFFFFFFF % n);
+  uint32_t x = 0, max = 0xFFFFFFFF - (0xFFFFFFFF % n);
   while ((x = random32()) >= max)
     ;
   return x / (max / n);

@@ -1,28 +1,31 @@
-from trezor import ui, wire
-from trezor.errors import IdentifierMismatchError, ShareAlreadyAddedError
+import storage.recovery
+from trezor import strings, ui, wire
+from trezor.crypto.slip39 import MAX_SHARE_COUNT
 from trezor.messages import ButtonRequestType
 from trezor.messages.ButtonAck import ButtonAck
 from trezor.messages.ButtonRequest import ButtonRequest
-from trezor.ui.info import InfoConfirm
+from trezor.ui.scroll import Paginated
 from trezor.ui.text import Text
 from trezor.ui.word_select import WordSelector
 
+from . import word_validity
 from .keyboard_bip39 import Bip39Keyboard
 from .keyboard_slip39 import Slip39Keyboard
 from .recover import RecoveryAborted
 
-from apps.common import mnemonic, storage
-from apps.common.confirm import confirm, require_confirm
+from apps.common.confirm import confirm, info_confirm, require_confirm
 from apps.common.layout import show_success, show_warning
+from apps.management import backup_types
 
 if __debug__:
-    from apps.debug import input_signal, confirm_signal
+    from apps.debug import input_signal
 
 if False:
-    from typing import List
+    from typing import List, Optional, Callable, Iterable, Tuple, Union
+    from trezor.messages.ResetDevice import EnumTypeBackupType
 
 
-async def confirm_abort(ctx: wire.Context, dry_run: bool = False) -> bool:
+async def confirm_abort(ctx: wire.GenericContext, dry_run: bool = False) -> bool:
     if dry_run:
         text = Text("Abort seed check", ui.ICON_WIPE)
         text.normal("Do you really want to", "abort the seed check?")
@@ -33,7 +36,7 @@ async def confirm_abort(ctx: wire.Context, dry_run: bool = False) -> bool:
     return await confirm(ctx, text, code=ButtonRequestType.ProtectCall)
 
 
-async def request_word_count(ctx: wire.Context, dry_run: bool) -> int:
+async def request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
     await ctx.call(ButtonRequest(code=ButtonRequestType.MnemonicWordCount), ButtonAck)
 
     if dry_run:
@@ -48,49 +51,95 @@ async def request_word_count(ctx: wire.Context, dry_run: bool) -> int:
     else:
         count = await ctx.wait(WordSelector(text))
 
-    return count
+    return count  # type: ignore
 
 
 async def request_mnemonic(
-    ctx: wire.Context, count: int, mnemonic_type: int, mnemonics: List[str]
-) -> str:
+    ctx: wire.GenericContext, word_count: int, backup_type: Optional[EnumTypeBackupType]
+) -> Optional[str]:
     await ctx.call(ButtonRequest(code=ButtonRequestType.MnemonicInput), ButtonAck)
 
-    words = []
-    for i in range(count):
-        if mnemonic_type == mnemonic.TYPE_SLIP39:
-            keyboard = Slip39Keyboard("Type word %s of %s:" % (i + 1, count))
+    words = []  # type: List[str]
+    for i in range(word_count):
+        if backup_types.is_slip39_word_count(word_count):
+            keyboard = Slip39Keyboard(
+                "Type word %s of %s:" % (i + 1, word_count)
+            )  # type: Union[Slip39Keyboard, Bip39Keyboard]
         else:
-            keyboard = Bip39Keyboard("Type word %s of %s:" % (i + 1, count))
+            keyboard = Bip39Keyboard("Type word %s of %s:" % (i + 1, word_count))
         if __debug__:
             word = await ctx.wait(keyboard, input_signal())
         else:
             word = await ctx.wait(keyboard)
 
-        if mnemonic_type == mnemonic.TYPE_SLIP39 and mnemonics:
-            # check if first 3 words of mnemonic match
-            # we can check against the first one, others were checked already
-            if i < 3:
-                share_list = mnemonics[0].split(" ")
-                if share_list[i] != word:
-                    raise IdentifierMismatchError()
-            elif i == 3:
-                for share in mnemonics:
-                    share_list = share.split(" ")
-                    # check if the fourth word is different from previous shares
-                    if share_list[i] == word:
-                        raise ShareAlreadyAddedError()
-
         words.append(word)
+
+        try:
+            word_validity.check(backup_type, words)
+        except word_validity.AlreadyAdded:
+            await show_share_already_added(ctx)
+            return None
+        except word_validity.IdentifierMismatch:
+            await show_identifier_mismatch(ctx)
+            return None
+        except word_validity.ThresholdReached:
+            await show_group_threshold_reached(ctx)
+            return None
 
     return " ".join(words)
 
 
+async def show_remaining_shares(
+    ctx: wire.GenericContext,
+    groups: Iterable[Tuple[int, Tuple[str, ...]]],  # remaining + list 3 words
+    shares_remaining: List[int],
+    group_threshold: int,
+) -> None:
+    pages = []  # type: List[ui.Component]
+    for remaining, group in groups:
+        if 0 < remaining < MAX_SHARE_COUNT:
+            text = Text("Remaining Shares")
+            text.bold(
+                strings.format_plural(
+                    "{count} more {plural} starting", remaining, "share"
+                )
+            )
+            for word in group:
+                text.normal(word)
+            pages.append(text)
+        elif (
+            remaining == MAX_SHARE_COUNT and shares_remaining.count(0) < group_threshold
+        ):
+            text = Text("Remaining Shares")
+            groups_remaining = group_threshold - shares_remaining.count(0)
+            text.bold(
+                strings.format_plural(
+                    "{count} more {plural} starting", groups_remaining, "group"
+                )
+            )
+            for word in group:
+                text.normal(word)
+            pages.append(text)
+    await confirm(ctx, Paginated(pages), cancel=None)
+
+
+async def show_group_share_success(
+    ctx: wire.GenericContext, share_index: int, group_index: int
+) -> None:
+    text = Text("Success", ui.ICON_CONFIRM)
+    text.bold("You have entered")
+    text.bold("Share %s" % (share_index + 1))
+    text.normal("from")
+    text.bold("Group %s" % (group_index + 1))
+
+    await confirm(ctx, text, confirm="Continue", cancel=None)
+
+
 async def show_dry_run_result(
-    ctx: wire.Context, result: bool, mnemonic_type: int
+    ctx: wire.GenericContext, result: bool, is_slip39: bool
 ) -> None:
     if result:
-        if mnemonic_type == mnemonic.TYPE_SLIP39:
+        if is_slip39:
             text = (
                 "The entered recovery",
                 "shares are valid and",
@@ -106,7 +155,7 @@ async def show_dry_run_result(
             )
         await show_success(ctx, text, button="Continue")
     else:
-        if mnemonic_type == mnemonic.TYPE_SLIP39:
+        if is_slip39:
             text = (
                 "The entered recovery",
                 "shares are valid but",
@@ -123,7 +172,7 @@ async def show_dry_run_result(
         await show_warning(ctx, text, button="Continue")
 
 
-async def show_dry_run_different_type(ctx: wire.Context) -> None:
+async def show_dry_run_different_type(ctx: wire.GenericContext) -> None:
     text = Text("Dry run failure", ui.ICON_CANCEL)
     text.normal("Seed in the device was")
     text.normal("created using another")
@@ -133,39 +182,34 @@ async def show_dry_run_different_type(ctx: wire.Context) -> None:
     )
 
 
-async def show_keyboard_info(ctx: wire.Context) -> None:
-    # TODO: do not send ButtonRequestType.Other
-    await ctx.call(ButtonRequest(code=ButtonRequestType.Other), ButtonAck)
-
-    info = InfoConfirm(
-        "Did you know? "
-        "You can type the letters "
-        "one by one or use it like "
-        "a T9 keyboard.",
-        "Great!",
-    )
-    if __debug__:
-        await ctx.wait(info, confirm_signal())
-    else:
-        await ctx.wait(info)
-
-
-async def show_invalid_mnemonic(ctx: wire.Context, mnemonic_type: int) -> None:
-    if mnemonic_type == mnemonic.TYPE_SLIP39:
+async def show_invalid_mnemonic(ctx: wire.GenericContext, word_count: int) -> None:
+    if backup_types.is_slip39_word_count(word_count):
         await show_warning(ctx, ("You have entered", "an invalid recovery", "share."))
     else:
         await show_warning(ctx, ("You have entered", "an invalid recovery", "seed."))
 
 
-async def show_share_already_added(ctx: wire.Context) -> None:
+async def show_share_already_added(ctx: wire.GenericContext) -> None:
     await show_warning(
         ctx, ("Share already entered,", "please enter", "a different share.")
     )
 
 
-async def show_identifier_mismatch(ctx: wire.Context) -> None:
+async def show_identifier_mismatch(ctx: wire.GenericContext) -> None:
     await show_warning(
         ctx, ("You have entered", "a share from another", "Shamir Backup.")
+    )
+
+
+async def show_group_threshold_reached(ctx: wire.GenericContext) -> None:
+    await show_warning(
+        ctx,
+        (
+            "Threshold of this",
+            "group has been reached.",
+            "Input share from",
+            "different group",
+        ),
     )
 
 
@@ -203,18 +247,37 @@ class RecoveryHomescreen(ui.Component):
 
         self.repaint = False
 
+    if __debug__:
+
+        def read_content(self) -> List[str]:
+            return [self.__class__.__name__, self.text, self.subtext or ""]
+
 
 async def homescreen_dialog(
-    ctx: wire.Context, homepage: RecoveryHomescreen, button_label: str
+    ctx: wire.GenericContext,
+    homepage: RecoveryHomescreen,
+    button_label: str,
+    info_func: Callable = None,
 ) -> None:
     while True:
-        continue_recovery = await confirm(
-            ctx,
-            homepage,
-            code=ButtonRequestType.RecoveryHomepage,
-            confirm=button_label,
-            major_confirm=True,
-        )
+        if info_func:
+            continue_recovery = await info_confirm(
+                ctx,
+                homepage,
+                code=ButtonRequestType.RecoveryHomepage,
+                confirm=button_label,
+                info_func=info_func,
+                info="Info",
+                cancel="Abort",
+            )
+        else:
+            continue_recovery = await confirm(
+                ctx,
+                homepage,
+                code=ButtonRequestType.RecoveryHomepage,
+                confirm=button_label,
+                major_confirm=True,
+            )
         if continue_recovery:
             # go forward in the recovery process
             break

@@ -35,7 +35,7 @@
 #include "util.h"
 
 void layoutFirmwareFingerprint(const uint8_t *hash) {
-  char str[4][17];
+  char str[4][17] = {0};
   for (int i = 0; i < 4; i++) {
     data2hex(hash + i * 8, 8, str[i]);
   }
@@ -55,6 +55,11 @@ void show_halt(const char *line1, const char *line2) {
   layoutDialog(&bmp_icon_error, NULL, NULL, NULL, line1, line2, NULL,
                "Unplug your Trezor,", "reinstall firmware.", NULL);
   shutdown();
+}
+
+void show_unplug(const char *line1, const char *line2) {
+  layoutDialog(&bmp_icon_ok, NULL, NULL, NULL, line1, line2, NULL,
+               "You may now", "unplug your Trezor.", NULL);
 }
 
 static void show_unofficial_warning(const uint8_t *hash) {
@@ -129,17 +134,14 @@ int main(void) {
     const image_header *hdr =
         (const image_header *)FLASH_PTR(FLASH_FWHEADER_START);
 
-    uint8_t fingerprint[32];
+    uint8_t fingerprint[32] = {0};
     int signed_firmware = signatures_new_ok(hdr, fingerprint);
     if (SIG_OK != signed_firmware) {
       show_unofficial_warning(fingerprint);
     }
 
     if (SIG_OK != check_firmware_hashes(hdr)) {
-      layoutDialog(&bmp_icon_error, NULL, NULL, NULL, "Broken firmware",
-                   "detected.", NULL, "Unplug your Trezor,",
-                   "reinstall firmware.", NULL);
-      shutdown();
+      show_halt("Broken firmware", "detected.");
     }
 
     mpu_config_off();

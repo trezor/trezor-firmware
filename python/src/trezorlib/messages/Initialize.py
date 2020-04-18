@@ -4,10 +4,10 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List, Optional
+        from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
-        Dict, List, Optional = None, None, None  # type: ignore
+        pass
 
 
 class Initialize(p.MessageType):
@@ -15,15 +15,12 @@ class Initialize(p.MessageType):
 
     def __init__(
         self,
-        state: bytes = None,
-        skip_passphrase: bool = None,
+        session_id: bytes = None,
     ) -> None:
-        self.state = state
-        self.skip_passphrase = skip_passphrase
+        self.session_id = session_id
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('state', p.BytesType, 0),
-            2: ('skip_passphrase', p.BoolType, 0),
+            1: ('session_id', p.BytesType, 0),
         }

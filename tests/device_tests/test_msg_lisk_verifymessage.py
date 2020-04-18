@@ -18,16 +18,13 @@ import pytest
 
 from trezorlib import lisk, messages as proto
 
-from .common import TrezorTest
-
 
 @pytest.mark.altcoin
 @pytest.mark.lisk
-class TestMsgLiskVerifymessage(TrezorTest):
-    def test_verify(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-        with self.client:
-            self.client.set_expected_responses(
+class TestMsgLiskVerifymessage:
+    def test_verify(self, client):
+        with client:
+            client.set_expected_responses(
                 [
                     proto.ButtonRequest(code=proto.ButtonRequestType.Other),
                     proto.ButtonRequest(code=proto.ButtonRequestType.Other),
@@ -35,7 +32,7 @@ class TestMsgLiskVerifymessage(TrezorTest):
                 ]
             )
             lisk.verify_message(
-                self.client,
+                client,
                 bytes.fromhex(
                     "eb56d7bbb5e8ea9269405f7a8527fe126023d1db2c973cfac6f760b60ae27294"
                 ),
@@ -45,10 +42,9 @@ class TestMsgLiskVerifymessage(TrezorTest):
                 "This is an example of a signed message.",
             )
 
-    def test_verify_long(self):
-        self.setup_mnemonic_nopin_nopassphrase()
-        with self.client:
-            self.client.set_expected_responses(
+    def test_verify_long(self, client):
+        with client:
+            client.set_expected_responses(
                 [
                     proto.ButtonRequest(code=proto.ButtonRequestType.Other),
                     proto.ButtonRequest(code=proto.ButtonRequestType.Other),
@@ -56,7 +52,7 @@ class TestMsgLiskVerifymessage(TrezorTest):
                 ]
             )
             lisk.verify_message(
-                self.client,
+                client,
                 bytes.fromhex(
                     "8bca6b65a1a877767b746ea0b3c4310d404aa113df99c1b554e1802d70185ab5"
                 ),

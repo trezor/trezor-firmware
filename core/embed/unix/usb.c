@@ -24,6 +24,7 @@
 #include <string.h>
 #include <sys/poll.h>
 #include <sys/socket.h>
+#include <time.h>
 
 #include "touch.h"
 #include "usb.h"
@@ -225,6 +226,18 @@ int usb_hid_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
     return 0;
   }
   return usb_emulated_write(iface_num, buf, len);
+}
+
+int usb_hid_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len,
+                           int timeout) {
+  const uint32_t start = clock();
+  while (sectrue != usb_hid_can_write(iface_num)) {
+    if (timeout >= 0 &&
+        (1000 * (clock() - start)) / CLOCKS_PER_SEC >= timeout) {
+      return 0;  // Timeout
+    }
+  }
+  return usb_hid_write(iface_num, buf, len);
 }
 
 int usb_webusb_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {

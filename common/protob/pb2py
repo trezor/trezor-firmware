@@ -63,7 +63,8 @@ class ProtoField:
         if field.type == field.TYPE_MESSAGE:
             proto_type = py_type = type_name
         elif field.type == field.TYPE_ENUM:
-            valuestr = ", ".join(str(v) for v in descriptor.enum_types[type_name])
+            value_dict = descriptor.enum_types[type_name]
+            valuestr = ", ".join(str(v) for v in value_dict.values())
             proto_type = 'p.EnumType("{}", ({}))'.format(type_name, valuestr)
             py_type = "EnumType" + type_name
         else:
@@ -162,7 +163,7 @@ class Descriptor:
         # find messages and enums
         self.messages = []
         self.enums = []
-        self.enum_types = defaultdict(set)
+        self.enum_types = defaultdict(dict)
         for file in self.files:
             self.messages += file.message_type
             self.enums += file.enum_type
@@ -218,17 +219,17 @@ class Descriptor:
         # please keep the yields aligned
         # fmt: off
         ... # https://github.com/ambv/black/issues/385
-        yield         "    def __init__("
-        yield         "        self,"
+        yield          "    def __init__("
+        yield          "        self,"
         for field in fields:
-            yield     "        {}: {} = None,".format(field.name, field.py_type)
-        yield         "    ) -> None:"
+            yield     f"        {field.name}: {field.py_type} = None,"
+        yield          "    ) -> None:"
 
         for field in fields:
             if field.repeated:
-                yield "        self.{0} = {0} if {0} is not None else []".format(field.name)
+                yield f"        self.{field.name} = {field.name} if {field.name} is not None else []"
             else:
-                yield "        self.{0} = {0}".format(field.name)
+                yield f"        self.{field.name} = {field.name}"
         # fmt: on
 
     def create_fields_method(self, fields):
@@ -278,19 +279,17 @@ class Descriptor:
         yield ""
         yield "if __debug__:"
         yield "    try:"
-        yield "        from typing import Dict, List, Optional"
+        yield "        from typing import Dict, List  # noqa: F401"
         yield "        from typing_extensions import Literal  # noqa: F401"
 
         all_enums = [field for field in fields if field.type_name in self.enum_types]
         for field in all_enums:
-            allowed_values = self.enum_types[field.type_name]
+            allowed_values = self.enum_types[field.type_name].values()
             valuestr = ", ".join(str(v) for v in sorted(allowed_values))
             yield "        {} = Literal[{}]".format(field.py_inner_type, valuestr)
 
         yield "    except ImportError:"
-        yield "        Dict, List, Optional = None, None, None  # type: ignore"
-        for field in all_enums:
-            yield "        {} = None  # type: ignore".format(field.py_inner_type)
+        yield "        pass"
 
         yield ""
         yield ""
@@ -311,6 +310,11 @@ class Descriptor:
     def process_enum(self, enum):
         logging.debug("Processing enum {}".format(enum.name))
 
+        # file header
+        yield "if False:"
+        yield "    from typing_extensions import Literal"
+        yield ""
+
         for value in enum.value:
             # Remove type name from the beginning of the constant
             # For example "PinMatrixRequestType_Current" -> "Current"
@@ -324,8 +328,8 @@ class Descriptor:
                 enum_prefix, _ = enum_prefix.rsplit("Type", 1)
                 name = strip_leader(name, enum_prefix)
 
-            self.enum_types[enum.name].add(value.number)
-            yield "{} = {}".format(name, value.number)
+            self.enum_types[enum.name][value.name] = value.number
+            yield f"{name} = {value.number}  # type: Literal[{value.number}]"
 
     def process_messages(self, messages):
         for message in sorted(messages, key=lambda m: m.name):

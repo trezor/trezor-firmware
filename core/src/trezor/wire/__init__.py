@@ -36,11 +36,11 @@ reads the message's header. When the message type is known the first handler is 
 """
 
 import protobuf
-from trezor import log, loop, messages, utils, workflow
+from trezor import log, loop, messages, ui, utils, workflow
 from trezor.messages import FailureType
 from trezor.messages.Failure import Failure
 from trezor.wire import codec_v1
-from trezor.wire.errors import Error
+from trezor.wire.errors import ActionCancelled, Error
 
 # Import all errors into namespace, so that `wire.Error` is available from
 # other packages.
@@ -99,18 +99,42 @@ def clear() -> None:
     workflow_namespaces.clear()
 
 
+if False:
+    from typing import Protocol
+
+    class GenericContext(Protocol):
+        async def call(
+            self,
+            msg: protobuf.MessageType,
+            expected_type: Type[protobuf.LoadedMessageType],
+        ) -> Any:
+            ...
+
+        async def read(self, expected_type: Type[protobuf.LoadedMessageType]) -> Any:
+            ...
+
+        async def write(self, msg: protobuf.MessageType) -> None:
+            ...
+
+        async def wait(self, *tasks: Awaitable) -> Any:
+            ...
+
+
 class DummyContext:
-    async def call(*argv: Any) -> None:
+    async def call(self, *argv: Any) -> None:
         pass
 
-    async def read(*argv: Any) -> None:
+    async def read(self, *argv: Any) -> None:
         pass
 
-    async def write(*argv: Any) -> None:
+    async def write(self, *argv: Any) -> None:
         pass
 
     async def wait(self, *tasks: Awaitable) -> Any:
         return await loop.race(*tasks)
+
+
+DUMMY_CONTEXT = DummyContext()
 
 
 class Context:
@@ -241,6 +265,10 @@ class UnexpectedMessageError(Exception):
 async def handle_session(iface: WireInterface, session_id: int) -> None:
     ctx = Context(iface, session_id)
     next_reader = None  # type: Optional[codec_v1.Reader]
+    res_msg = None
+    req_reader = None
+    req_type = None
+    req_msg = None
     while True:
         try:
             if next_reader is None:
@@ -251,6 +279,19 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
                 # header is eventually received, after a couple of tries.
                 req_reader = ctx.make_reader()
                 await req_reader.aopen()
+
+                if __debug__:
+                    try:
+                        msg_type = messages.get_type(req_reader.type).__name__
+                    except KeyError:
+                        msg_type = "%d - unknown message type" % req_reader.type
+                    log.debug(
+                        __name__,
+                        "%s:%x receive: <%s>",
+                        iface.iface_num(),
+                        session_id,
+                        msg_type,
+                    )
             else:
                 # We have a reader left over from earlier.  We should process
                 # this message instead of waiting for new one.
@@ -330,7 +371,10 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
                     # - the first workflow message was not a valid protobuf
                     # - workflow raised some kind of an exception while running
                     if __debug__:
-                        log.exception(__name__, exc)
+                        if isinstance(exc, ActionCancelled):
+                            log.debug(__name__, "cancelled: {}".format(exc.message))
+                        else:
+                            log.exception(__name__, exc)
                     res_msg = failure(exc)
 
                 finally:
@@ -338,6 +382,11 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
                     # registered it before.
                     if wf_task is not None:
                         workflow.on_close(wf_task)
+                        # If a default workflow is on, make sure we do not race
+                        # against the layout that is inside.
+                        # TODO: this is very hacky and complects wire with the ui
+                        if workflow.default_task is not None:
+                            await ui.wait_until_layout_is_running()
 
             if res_msg is not None:
                 # Either the workflow returned a response, or we created one.
@@ -360,7 +409,7 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
             # Unload modules imported by the workflow.  Should not raise.
             utils.unimport_end(modules)
 
-        except BaseException as exc:
+        except Exception as exc:
             # The session handling should never exit, just log and continue.
             if __debug__:
                 log.exception(__name__, exc)
@@ -390,9 +439,9 @@ def get_workflow_handler(reader: codec_v1.Reader) -> Optional[Handler]:
     return handler
 
 
-def import_workflow(pkgname: str, modname: str) -> Handler:
+def import_workflow(pkgname: str, modname: str) -> Any:
     modpath = "%s.%s" % (pkgname, modname)
-    module = __import__(modpath, None, None, (modname,), 0)  # type: ignore
+    module = __import__(modpath, None, None, (modname,), 0)
     handler = getattr(module, modname)
     return handler
 

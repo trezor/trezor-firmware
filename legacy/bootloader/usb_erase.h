@@ -1,7 +1,5 @@
 static void erase_storage_code_progress(void) {
-  flash_wait_for_last_operation();
-  flash_clear_status_flags();
-  flash_unlock();
+  flash_enter();
   // erase storage area
   for (int i = FLASH_STORAGE_SECTOR_FIRST; i <= FLASH_STORAGE_SECTOR_LAST;
        i++) {
@@ -17,14 +15,11 @@ static void erase_storage_code_progress(void) {
                        (FLASH_CODE_SECTOR_LAST - FLASH_STORAGE_SECTOR_FIRST));
     flash_erase_sector(i, FLASH_CR_PROGRAM_X32);
   }
-  flash_wait_for_last_operation();
-  flash_lock();
+  flash_exit();
 }
 
 static void erase_code_progress(void) {
-  flash_wait_for_last_operation();
-  flash_clear_status_flags();
-  flash_unlock();
+  flash_enter();
   for (int i = FLASH_CODE_SECTOR_FIRST; i <= FLASH_CODE_SECTOR_LAST; i++) {
     layoutProgress("PREPARING ... Please wait",
                    1000 * (i - FLASH_CODE_SECTOR_FIRST) /
@@ -32,18 +27,14 @@ static void erase_code_progress(void) {
     flash_erase_sector(i, FLASH_CR_PROGRAM_X32);
   }
   layoutProgress("INSTALLING ... Please wait", 0);
-  flash_wait_for_last_operation();
-  flash_lock();
+  flash_exit();
 }
 
 static void erase_storage(void) {
-  flash_wait_for_last_operation();
-  flash_clear_status_flags();
-  flash_unlock();
+  flash_enter();
   for (int i = FLASH_STORAGE_SECTOR_FIRST; i <= FLASH_STORAGE_SECTOR_LAST;
        i++) {
     flash_erase_sector(i, FLASH_CR_PROGRAM_X32);
   }
-  flash_wait_for_last_operation();
-  flash_lock();
+  flash_exit();
 }

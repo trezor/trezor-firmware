@@ -7,19 +7,25 @@ verify_ssl = true
 # all
 trezor = {editable = true,path = "./python"}
 scons = "*"
-protobuf = "==3.4.0"
+protobuf = "==3.6.1"
 pyblake2 = "*"
+Pyro4 = "*"
+nanopb = "==0.4.1"
 
 ## test tools
 pytest = "*"
 mock = "*"
-coverage = "==4.5.3"  # coverage 5+ uses binary format
+coverage = "<5"  # coverage 5+ uses binary sqlite format
 flaky = ">=3.6.1"  # https://github.com/box/flaky/issues/156
+pytest-ordering = "*"
 pytest-random-order = "*"
+pytest-timeout = "*"
 tox = "*"
+dominate = "*"
 
 ## test requirements
 shamir-mnemonic = "*"
+fido2 = "==0.7.3"  # https://github.com/solokeys/fido2-tests/issues/27
 
 ## typing
 mypy = "*"
@@ -35,17 +41,17 @@ autoflake = "*"
 
 # common
 demjson = "*"
-graphviz = "*"  # TODO this was '8' do we need that?
+graphviz = "*"
 
 ## cointool
 click = ">=6"
-"ed25519" = ">=1.4"
+ed25519 = ">=1.4"
 requests = ">=2.19"
 termcolor = ">=0.1.2"
 Pillow = ">=5.2.0"
 
 # crypto
-ecdsa = "*"
+ecdsa = ">=0.13.3"
 curve25519-donna = "*"
 pyasn1 = "*"
 
@@ -55,7 +61,9 @@ typing = "*"
 
 # storage
 cryptography = "*"
-hypothesis = "*"
+hypothesis = "==4.38.1"  # let's use this version because of the nixos pipenv/pip issue
+attrs = "==18.2.0"  # let's use this version because of the nixos pipenv/pip issue
+inotify = "*"
 
 [dev-packages]
 scan-build = "*"

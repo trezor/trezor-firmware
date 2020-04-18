@@ -33,7 +33,6 @@ class CoinDef(p.MessageType):
         29: ("github", p.UnicodeType, 0),
         30: ("maintainer", p.UnicodeType, 0),
         31: ("blocktime_seconds", p.UVarintType, 0),
-        32: ("bip115", p.BoolType, 0),
         33: ("cooldown", p.UVarintType, 0),
     }
 
@@ -60,7 +59,6 @@ class CoinDef(p.MessageType):
         decred: bool = None,
         fork_id: int = None,
         force_bip143: bool = None,
-        bip115: bool = None,
         dust_limit: int = None,
         uri_prefix: str = None,
         min_address_length: int = None,
@@ -96,7 +94,6 @@ class CoinDef(p.MessageType):
         self.decred = decred
         self.fork_id = fork_id
         self.force_bip143 = force_bip143
-        self.bip115 = bip115
         self.dust_limit = dust_limit
         self.uri_prefix = uri_prefix
         self.min_address_length = min_address_length

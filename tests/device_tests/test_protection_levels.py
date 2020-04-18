@@ -16,10 +16,11 @@
 
 import pytest
 
-from trezorlib import btc, debuglink, device, messages as proto, misc
+from trezorlib import btc, device, messages as proto, misc
+from trezorlib.exceptions import TrezorFailure
 
-from .common import TrezorTest
-from .tx_cache import tx_cache
+from ..common import MNEMONIC12
+from ..tx_cache import tx_cache
 
 TXHASH_d5f65e = bytes.fromhex(
     "d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"
@@ -27,17 +28,17 @@ TXHASH_d5f65e = bytes.fromhex(
 
 
 @pytest.mark.skip_t2
-class TestProtectionLevels(TrezorTest):
-    def test_initialize(self):
-        with self.client:
-            self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([proto.Features()])
-            self.client.init_device()
+class TestProtectionLevels:
+    @pytest.mark.setup_client(pin=True, passphrase=True)
+    def test_initialize(self, client):
+        with client:
+            client.set_expected_responses([proto.Features()])
+            client.init_device()
 
-    def test_apply_settings(self):
-        with self.client:
-            self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses(
+    @pytest.mark.setup_client(pin=True, passphrase=True)
+    def test_apply_settings(self, client):
+        with client:
+            client.set_expected_responses(
                 [
                     proto.PinMatrixRequest(),
                     proto.ButtonRequest(),
@@ -45,12 +46,12 @@ class TestProtectionLevels(TrezorTest):
                     proto.Features(),
                 ]
             )  # TrezorClient reinitializes device
-            device.apply_settings(self.client, label="nazdar")
+            device.apply_settings(client, label="nazdar")
 
-    def test_change_pin(self):
-        with self.client:
-            self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses(
+    @pytest.mark.setup_client(pin=True, passphrase=True)
+    def test_change_pin(self, client):
+        with client:
+            client.set_expected_responses(
                 [
                     proto.ButtonRequest(),
                     proto.PinMatrixRequest(),
@@ -60,127 +61,99 @@ class TestProtectionLevels(TrezorTest):
                     proto.Features(),
                 ]
             )
-            device.change_pin(self.client)
+            device.change_pin(client)
 
-    def test_ping(self):
-        with self.client:
-            self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses(
-                [
-                    proto.ButtonRequest(),
-                    proto.PinMatrixRequest(),
-                    proto.PassphraseRequest(),
-                    proto.Success(),
-                ]
-            )
-            self.client.ping("msg", True, True, True)
+    def test_ping(self, client):
+        with client:
+            client.set_expected_responses([proto.ButtonRequest(), proto.Success()])
+            client.ping("msg", True)
 
-    def test_get_entropy(self):
-        with self.client:
-            self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses([proto.ButtonRequest(), proto.Entropy()])
-            misc.get_entropy(self.client, 10)
+    @pytest.mark.setup_client(pin=True, passphrase=True)
+    def test_get_entropy(self, client):
+        with client:
+            client.set_expected_responses([proto.ButtonRequest(), proto.Entropy()])
+            misc.get_entropy(client, 10)
 
-    def test_get_public_key(self):
-        with self.client:
-            self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses(
+    @pytest.mark.setup_client(pin=True, passphrase=True)
+    def test_get_public_key(self, client):
+        with client:
+            client.set_expected_responses(
                 [proto.PinMatrixRequest(), proto.PassphraseRequest(), proto.PublicKey()]
             )
-            btc.get_public_node(self.client, [])
+            btc.get_public_node(client, [])
 
-    def test_get_address(self):
-        with self.client:
-            self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses(
+    @pytest.mark.setup_client(pin=True, passphrase=True)
+    def test_get_address(self, client):
+        with client:
+            client.set_expected_responses(
                 [proto.PinMatrixRequest(), proto.PassphraseRequest(), proto.Address()]
             )
-            btc.get_address(self.client, "Bitcoin", [])
+            btc.get_address(client, "Bitcoin", [])
 
-    def test_wipe_device(self):
-        with self.client:
-            self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses(
+    @pytest.mark.setup_client(pin=True, passphrase=True)
+    def test_wipe_device(self, client):
+        with client:
+            client.set_expected_responses(
                 [proto.ButtonRequest(), proto.Success(), proto.Features()]
             )
-            device.wipe(self.client)
+            device.wipe(client)
 
-    def test_load_device(self):
-        with self.client:
-            self.client.set_expected_responses(
-                [proto.ButtonRequest(), proto.Success(), proto.Features()]
-            )
-            debuglink.load_device_by_mnemonic(
-                self.client,
-                "this is mnemonic",
-                "1234",
-                True,
-                "label",
-                "english",
-                skip_checksum=True,
-            )
-
-        # This must fail, because device is already initialized
-        with pytest.raises(Exception):
-            debuglink.load_device_by_mnemonic(
-                self.client,
-                "this is mnemonic",
-                "1234",
-                True,
-                "label",
-                "english",
-                skip_checksum=True,
-            )
-
-    def test_reset_device(self):
-        with self.client:
-            self.client.set_expected_responses(
+    @pytest.mark.setup_client(uninitialized=True)
+    def test_reset_device(self, client):
+        with client:
+            client.set_expected_responses(
                 [proto.ButtonRequest()]
                 + [proto.EntropyRequest()]
                 + [proto.ButtonRequest()] * 24
                 + [proto.Success(), proto.Features()]
             )
-            device.reset(self.client, False, 128, True, False, "label", "english")
+            device.reset(client, False, 128, True, False, "label", "en-US")
 
-        # This must fail, because device is already initialized
-        with pytest.raises(Exception):
-            device.reset(self.client, False, 128, True, False, "label", "english")
+        with pytest.raises(TrezorFailure):
+            # This must fail, because device is already initialized
+            # Using direct call because `device.reset` has its own check
+            client.call(
+                proto.ResetDevice(
+                    display_random=False,
+                    strength=128,
+                    passphrase_protection=True,
+                    pin_protection=False,
+                    label="label",
+                    language="en-US",
+                )
+            )
 
-    def test_recovery_device(self):
-        self.client.set_mnemonic(self.mnemonic12)
-        with self.client:
-            self.client.set_expected_responses(
+    @pytest.mark.setup_client(uninitialized=True)
+    def test_recovery_device(self, client):
+        client.use_mnemonic(MNEMONIC12)
+        with client:
+            client.set_expected_responses(
                 [proto.ButtonRequest()]
                 + [proto.WordRequest()] * 24
                 + [proto.Success(), proto.Features()]
             )
 
             device.recover(
-                self.client,
-                12,
-                False,
-                False,
-                "label",
-                "english",
-                self.client.mnemonic_callback,
+                client, 12, False, False, "label", "en-US", client.mnemonic_callback
             )
 
-        # This must fail, because device is already initialized
-        with pytest.raises(RuntimeError):
-            device.recover(
-                self.client,
-                12,
-                False,
-                False,
-                "label",
-                "english",
-                self.client.mnemonic_callback,
+        with pytest.raises(TrezorFailure):
+            # This must fail, because device is already initialized
+            # Using direct call because `device.reset` has its own check
+            client.call(
+                proto.RecoveryDevice(
+                    word_count=12,
+                    passphrase_protection=False,
+                    pin_protection=False,
+                    label="label",
+                    language="en-US",
+                )
             )
 
-    def test_sign_message(self):
-        with self.client:
-            self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses(
+    @pytest.mark.setup_client(pin=True, passphrase=True)
+    def test_sign_message(self, client):
+        with client:
+            client.set_expected_responses(
                 [
                     proto.ButtonRequest(),
                     proto.PinMatrixRequest(),
@@ -188,16 +161,16 @@ class TestProtectionLevels(TrezorTest):
                     proto.MessageSignature(),
                 ]
             )
-            btc.sign_message(self.client, "Bitcoin", [], "testing message")
+            btc.sign_message(client, "Bitcoin", [], "testing message")
 
-    def test_verify_message(self):
-        with self.client:
-            self.setup_mnemonic_pin_passphrase()
-            self.client.set_expected_responses(
+    @pytest.mark.setup_client(pin=True, passphrase=True)
+    def test_verify_message(self, client):
+        with client:
+            client.set_expected_responses(
                 [proto.ButtonRequest(), proto.ButtonRequest(), proto.Success()]
             )
             btc.verify_message(
-                self.client,
+                client,
                 "Bitcoin",
                 "14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e",
                 bytes.fromhex(
@@ -206,9 +179,8 @@ class TestProtectionLevels(TrezorTest):
                 "This is an example of a signed message.",
             )
 
-    def test_signtx(self):
-        self.setup_mnemonic_pin_passphrase()
-
+    @pytest.mark.setup_client(pin=True, passphrase=True)
+    def test_signtx(self, client):
         inp1 = proto.TxInputType(
             address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
             prev_hash=TXHASH_d5f65e,
@@ -221,9 +193,9 @@ class TestProtectionLevels(TrezorTest):
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with self.client:
+        with client:
 
-            self.client.set_expected_responses(
+            client.set_expected_responses(
                 [
                     proto.PinMatrixRequest(),
                     proto.PassphraseRequest(),
@@ -275,7 +247,7 @@ class TestProtectionLevels(TrezorTest):
                 ]
             )
             btc.sign_tx(
-                self.client, "Bitcoin", [inp1], [out1], prev_txes=tx_cache("Bitcoin")
+                client, "Bitcoin", [inp1], [out1], prev_txes=tx_cache("Bitcoin")
             )
 
     # def test_firmware_erase(self):
@@ -283,3 +255,27 @@ class TestProtectionLevels(TrezorTest):
 
     # def test_firmware_upload(self):
     #    pass
+
+    @pytest.mark.setup_client(pin=True)
+    def test_pin_cached(self, client):
+        assert client.features.pin_cached is False
+
+        with client:
+            client.set_expected_responses([proto.PinMatrixRequest(), proto.Address()])
+            btc.get_address(client, "Testnet", [0])
+
+        client.init_device()
+        assert client.features.pin_cached is True
+        with client:
+            client.set_expected_responses([proto.Address()])
+            btc.get_address(client, "Testnet", [0])
+
+    @pytest.mark.setup_client(passphrase=True)
+    def test_passphrase_cached(self, client):
+        with client:
+            client.set_expected_responses([proto.PassphraseRequest(), proto.Address()])
+            btc.get_address(client, "Testnet", [0])
+
+        with client:
+            client.set_expected_responses([proto.Address()])
+            btc.get_address(client, "Testnet", [0])

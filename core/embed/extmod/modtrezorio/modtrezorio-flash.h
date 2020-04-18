@@ -21,6 +21,8 @@
 
 #include "embed/extmod/trezorobj.h"
 
+/// package: trezorio.__init__
+
 /// class FlashOTP:
 ///     """
 ///     """

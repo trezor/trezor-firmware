@@ -4,10 +4,10 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List, Optional
+        from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
-        Dict, List, Optional = None, None, None  # type: ignore
+        pass
 
 
 class PassphraseAck(p.MessageType):
@@ -16,14 +16,17 @@ class PassphraseAck(p.MessageType):
     def __init__(
         self,
         passphrase: str = None,
-        state: bytes = None,
+        _state: bytes = None,
+        on_device: bool = None,
     ) -> None:
         self.passphrase = passphrase
-        self.state = state
+        self._state = _state
+        self.on_device = on_device
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
             1: ('passphrase', p.UnicodeType, 0),
-            2: ('state', p.BytesType, 0),
+            2: ('_state', p.BytesType, 0),
+            3: ('on_device', p.BoolType, 0),
         }

@@ -20,6 +20,7 @@ import click
 from mnemonic import Mnemonic
 
 from . import device
+from .client import PASSPHRASE_ON_DEVICE
 from .exceptions import Cancelled
 from .messages import PinMatrixRequestType, WordRequestType
 
@@ -45,6 +46,8 @@ PIN_GENERIC = None
 PIN_CURRENT = PinMatrixRequestType.Current
 PIN_NEW = PinMatrixRequestType.NewFirst
 PIN_CONFIRM = PinMatrixRequestType.NewSecond
+WIPE_CODE_NEW = PinMatrixRequestType.WipeCodeFirst
+WIPE_CODE_CONFIRM = PinMatrixRequestType.WipeCodeSecond
 
 
 def echo(*args, **kwargs):
@@ -56,10 +59,11 @@ def prompt(*args, **kwargs):
 
 
 class ClickUI:
-    def __init__(self, always_prompt=False):
+    def __init__(self, always_prompt=False, passphrase_on_host=False):
         self.pinmatrix_shown = False
         self.prompt_shown = False
         self.always_prompt = always_prompt
+        self.passphrase_on_host = passphrase_on_host
 
     def button_request(self, code):
         if not self.prompt_shown:
@@ -74,6 +78,10 @@ class ClickUI:
             desc = "new PIN"
         elif code == PIN_CONFIRM:
             desc = "new PIN again"
+        elif code == WIPE_CODE_NEW:
+            desc = "new wipe code"
+        elif code == WIPE_CODE_CONFIRM:
+            desc = "new wipe code again"
         else:
             desc = "PIN"
 
@@ -87,12 +95,17 @@ class ClickUI:
                 pin = prompt("Please enter {}".format(desc), hide_input=True)
             except click.Abort:
                 raise Cancelled from None
-            if not pin.isdigit():
-                echo("Non-numerical PIN provided, please try again")
+            if any(d not in "123456789" for d in pin):
+                echo("The value may only consist of digits 1 to 9.")
+            elif len(pin) > 9:
+                echo("The value must be at most 9 digits in length.")
             else:
                 return pin
 
-    def get_passphrase(self):
+    def get_passphrase(self, available_on_device):
+        if available_on_device and not self.passphrase_on_host:
+            return PASSPHRASE_ON_DEVICE
+
         if os.getenv("PASSPHRASE") is not None:
             echo("Passphrase required. Using PASSPHRASE environment variable.")
             return os.getenv("PASSPHRASE")
@@ -132,7 +145,7 @@ def mnemonic_words(expand=False, language="english"):
             return word
         matches = [w for w in wordlist if w.startswith(word)]
         if len(matches) == 1:
-            return word
+            return matches[0]
         echo("Choose one of: " + ", ".join(matches))
         raise KeyError(word)
 

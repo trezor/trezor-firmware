@@ -83,6 +83,13 @@ def test_invalid_key():
             s.set(0xFFFF, b"Hello")
 
 
+def test_non_existing_key():
+    sc, sp = common.init()
+    for s in (sc, sp):
+        with pytest.raises(RuntimeError):
+            s.get(0xABCD)
+
+
 def test_chacha_strings():
     sc, sp = common.init(unlock=True)
     for s in (sc, sp):

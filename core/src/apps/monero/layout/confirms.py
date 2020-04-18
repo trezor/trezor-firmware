@@ -15,19 +15,19 @@ DUMMY_PAYMENT_ID = b"\x00" * 8
 async def require_confirm_watchkey(ctx):
     content = Text("Confirm export", ui.ICON_SEND, ui.GREEN)
     content.normal("Do you really want to", "export watch-only", "credentials?")
-    return await require_confirm(ctx, content, ButtonRequestType.SignTx)
+    await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
 async def require_confirm_keyimage_sync(ctx):
     content = Text("Confirm ki sync", ui.ICON_SEND, ui.GREEN)
     content.normal("Do you really want to", "sync key images?")
-    return await require_confirm(ctx, content, ButtonRequestType.SignTx)
+    await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
 async def require_confirm_live_refresh(ctx):
     content = Text("Confirm refresh", ui.ICON_SEND, ui.GREEN)
     content.normal("Do you really want to", "start refresh?")
-    return await require_confirm(ctx, content, ButtonRequestType.SignTx)
+    await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
 async def require_confirm_tx_key(ctx, export_key=False):
@@ -40,7 +40,7 @@ async def require_confirm_tx_key(ctx, export_key=False):
         txt.append("for tx_proof?")
 
     content.normal(*txt)
-    return await require_confirm(ctx, content, ButtonRequestType.SignTx)
+    await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
 async def require_confirm_transaction(ctx, state, tsx_data, network_type):
@@ -53,6 +53,9 @@ async def require_confirm_transaction(ctx, state, tsx_data, network_type):
     change_idx = get_change_addr_idx(outputs, tsx_data.change_dts)
     has_integrated = bool(tsx_data.integrated_indices)
     has_payment = bool(tsx_data.payment_id)
+
+    if tsx_data.unlock_time != 0:
+        await _require_confirm_unlock_time(ctx, tsx_data.unlock_time)
 
     for idx, dst in enumerate(outputs):
         is_change = change_idx is not None and idx == change_idx
@@ -115,6 +118,14 @@ async def _require_confirm_fee(ctx, fee):
     content = Text("Confirm fee", ui.ICON_SEND, ui.GREEN)
     content.bold(common.format_amount(fee))
     await require_hold_to_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
+
+
+async def _require_confirm_unlock_time(ctx, unlock_time):
+    content = Text("Confirm unlock time", ui.ICON_SEND, ui.GREEN)
+    content.normal("Unlock time for this transaction is set to")
+    content.bold(str(unlock_time))
+    content.normal("Continue?")
+    await require_confirm(ctx, content, ButtonRequestType.SignTx)
 
 
 class TransactionStep(ui.Component):

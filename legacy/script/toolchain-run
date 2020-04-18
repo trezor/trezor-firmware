@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # script/toolchain-run: Run command with downloaded GNU Arm Embedded toolchain.
 #

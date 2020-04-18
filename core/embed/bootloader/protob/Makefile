@@ -1,7 +1,7 @@
 all: messages.pb.c types.pb.c
 
 %.pb.c: %.pb %.options
-	../../../vendor/nanopb/generator/nanopb_generator.py $< -T
+	nanopb_generator $< -T
 
 %.pb: %.proto
 	protoc -I/usr/include -I. $< -o $@

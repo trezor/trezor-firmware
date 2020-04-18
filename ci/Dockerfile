@@ -2,7 +2,7 @@
 
 FROM debian:10
 
-ARG TOOLCHAIN_FLAVOR=linux
+ARG TOOLCHAIN_FLAVOR=x86_64-linux
 ENV TOOLCHAIN_FLAVOR=${TOOLCHAIN_FLAVOR}
 
 ARG FULLDEPS_TESTING=0
@@ -57,6 +57,15 @@ RUN if [ "${FULLDEPS_TESTING}" = "1" ]; then \
         cd Python-${PYTHON38VER}${PYTHONSUBVER}/ && ./configure && make && make install ; \
     fi
 
+# remove symlinks to newly installed pythons
+RUN cd /usr/local/bin; \
+    rm -f 2to3; \
+    rm -f python3; \
+    rm -f python3-config; \
+    rm -f pydoc3; \
+    rm -f pip3; \
+    rm -f pyvenv;
+
 # install dependencies from toolchain source build
 
 RUN if [ "${TOOLCHAIN_FLAVOR}" = "src" ]; then \
@@ -69,16 +78,16 @@ RUN if [ "${TOOLCHAIN_FLAVOR}" = "src" ]; then \
 
 # download toolchain
 
-ENV TOOLCHAIN_LONGVER=gcc-arm-none-eabi-8-2019-q3-update
-ENV TOOLCHAIN_SUBDIR="8-2019q3/RC1.1"
+ENV TOOLCHAIN_LONGVER=gcc-arm-none-eabi-9-2019-q4-major
+ENV TOOLCHAIN_SUBDIR="9-2019q4/RC2.1"
 ENV TOOLCHAIN_URL=https://developer.arm.com/-/media/Files/downloads/gnu-rm/${TOOLCHAIN_SUBDIR}/${TOOLCHAIN_LONGVER}-${TOOLCHAIN_FLAVOR}.tar.bz2
-ENV TOOLCHAIN_HASH_linux=b50b02b0a16e5aad8620e9d7c31110ef285c1dde28980b1a9448b764d77d8f92
-ENV TOOLCHAIN_HASH_src=e8a8ddfec47601f2d83f1d80c0600f198476f227102121c8d6a5a781d0c2eeef
+ENV TOOLCHAIN_HASH_linux=bcd840f839d5bf49279638e9f67890b2ef3a7c9c7a9b25271e83ec4ff41d177a
+ENV TOOLCHAIN_HASH_src=f162a655f222319f75862d7aba9ff8a4a86f752392e4f3c5d9ef2ee8bc13be58
 
 # extract toolchain
 
 RUN cd /opt && wget --no-verbose ${TOOLCHAIN_URL}
-RUN cd /opt && echo "${TOOLCHAIN_HASH_linux} ${TOOLCHAIN_LONGVER}-linux.tar.bz2\n${TOOLCHAIN_HASH_src} ${TOOLCHAIN_LONGVER}-src.tar.bz2" | sha256sum -c --ignore-missing
+RUN cd /opt && echo "${TOOLCHAIN_HASH_linux} ${TOOLCHAIN_LONGVER}-x86_64-linux.tar.bz2\n${TOOLCHAIN_HASH_src} ${TOOLCHAIN_LONGVER}-src.tar.bz2" | sha256sum -c --ignore-missing
 RUN cd /opt && tar xfj ${TOOLCHAIN_LONGVER}-${TOOLCHAIN_FLAVOR}.tar.bz2
 
 # build toolchain (if required)
@@ -93,8 +102,8 @@ RUN if [ "${TOOLCHAIN_FLAVOR}" = "src" ]; then \
 
 # download protobuf
 
-ENV PROTOBUF_VERSION=3.4.0
-ENV PROTOBUF_HASH=e4b51de1b75813e62d6ecdde582efa798586e09b5beaebfb866ae7c9eaadace4
+ENV PROTOBUF_VERSION=3.6.1
+ENV PROTOBUF_HASH=6003de742ea3fcf703cfec1cd4a3380fd143081a2eb0e559065563496af27807
 RUN wget --no-verbose "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
 RUN echo "${PROTOBUF_HASH} protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" | sha256sum -c
 
@@ -113,8 +122,8 @@ ENV WORKON_HOME=/tmp/.venvs
 
 # download monero tests binary
 
-ENV TREZOR_MONERO_TESTS_SHA256SUM=140a16b3d6105b5e8e88a93b451e9600a36ed23928ea3cf2f975f9c83f36dab7
-ENV TREZOR_MONERO_TESTS_URL="https://github.com/ph4r05/monero/releases/download/v0.14.1.0-tests-u14.04-01/trezor_tests"
+ENV TREZOR_MONERO_TESTS_SHA256SUM=36852ff2add3f865dbf4e23f4e32e1022a8f4b14cd4fb4eb97491d99ba93b9bc
+ENV TREZOR_MONERO_TESTS_URL="https://github.com/ph4r05/monero/releases/download/v0.15.0.0-tests-u18.04-02/trezor_tests"
 ENV TREZOR_MONERO_TESTS_PATH="/opt/trezor_monero_tests"
 
 RUN if [ "${FULLDEPS_TESTING}" = "1" ]; then \

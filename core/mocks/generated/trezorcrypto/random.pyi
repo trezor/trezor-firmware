@@ -21,3 +21,10 @@ def shuffle(data: list) -> None:
     """
     Shuffles items of given list (in-place).
     """
+
+
+# extmod/modtrezorcrypto/modtrezorcrypto-random.h
+def reseed(value: int) -> None:
+    """
+    Re-seed the RNG with given value.
+    """

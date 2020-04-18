@@ -27,15 +27,15 @@ MARKET_CAPS = {}
 
 # automatic wallet entries
 WALLET_TREZOR = {"Trezor": "https://wallet.trezor.io"}
-WALLET_TREZOR_NEXT = {"Trezor Beta": "https://beta-wallet.trezor.io/next/"}
-WALLET_NEM = {"Nano Wallet": "https://nem.io/downloads/"}
-
+WALLET_ETH_TREZOR = {"Trezor Beta": "https://beta-wallet.trezor.io/next/"}
+WALLET_NEM = {
+    "Nano Wallet": "https://nem.io/downloads/",
+    "Magnum": "https://magnumwallet.co",
+}
 WALLETS_ETH_3RDPARTY = {
     "MyEtherWallet": "https://www.myetherwallet.com",
     "MyCrypto": "https://mycrypto.com",
 }
-WALLETS_ETH_NATIVE = WALLETS_ETH_3RDPARTY.copy()
-WALLETS_ETH_NATIVE.update(WALLET_TREZOR_NEXT)
 
 
 TREZOR_KNOWN_URLS = (
@@ -259,7 +259,7 @@ def update_erc20(coins, networks, support_info):
             hidden = True
 
         if network_support.get(chain, {}).get("webwallet"):
-            wallets = WALLETS_ETH_NATIVE
+            wallets = WALLET_ETH_TREZOR
         else:
             wallets = WALLETS_ETH_3RDPARTY
 
@@ -287,7 +287,7 @@ def update_ethereum_networks(coins, support_info):
     for coin in coins:
         key = coin["key"]
         if support_info[key].get("webwallet"):
-            wallets = WALLETS_ETH_NATIVE
+            wallets = WALLET_ETH_TREZOR
         else:
             wallets = WALLETS_ETH_3RDPARTY
         details = dict(links=dict(Homepage=coin.get("url")), wallet=wallets)
@@ -376,7 +376,7 @@ def finalize_wallets(coins):
 
     for coin in coins.values():
         wallets_list = [
-            dict(name=name, url=url) for name, url in coin["wallet"].items()
+            dict(name=name, url=url) for name, url in coin["wallet"].items() if url
         ]
         wallets_list.sort(key=sort_key)
         coin["wallet"] = wallets_list
@@ -422,6 +422,7 @@ def main(refresh, api_key, verbose):
     print(json.dumps(info, sort_keys=True, indent=4))
     with open(os.path.join(coin_info.DEFS_DIR, "coins_details.json"), "w") as f:
         json.dump(details, f, sort_keys=True, indent=4)
+        f.write("\n")
 
 
 if __name__ == "__main__":

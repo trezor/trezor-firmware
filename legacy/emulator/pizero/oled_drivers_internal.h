@@ -1,5 +1,5 @@
 /*
- * Modified Copyright (C) 2018, 2019 Yannick Heneault <yheneaul@gmail.com>
+ * Modified Copyright (C) 2018, 2019, 2020 Yannick Heneault <yheneaul@gmail.com>
  * original code taken from : https://github.com/hallard/ArduiPi_OLED (ArduiPi_OLED.h)
  *
  * This library is free software: you can redistribute it and/or modify

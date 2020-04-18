@@ -1,6 +1,6 @@
+import storage
+import storage.device
 from trezor import config, res, ui
-
-from apps.common import storage
 
 
 async def homescreen() -> None:
@@ -8,10 +8,10 @@ async def homescreen() -> None:
 
 
 class Homescreen(ui.Layout):
-    def __init__(self):
+    def __init__(self) -> None:
         self.repaint = True
 
-    def on_render(self):
+    def on_render(self) -> None:
         if not self.repaint:
             return
 

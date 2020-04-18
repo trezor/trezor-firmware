@@ -1,0 +1,21 @@
+{
+    "header_len": 2560,
+    "text": "UNSAFE, DO NOT USE!",
+    "expiry": 0,
+    "version": {
+        "major": 0,
+        "minor": 0
+    },
+    "sig_m": 2,
+    "trust": {
+        "show_vendor_string": true,
+        "require_user_click": true,
+        "red_background": true,
+        "delay": 1
+    },
+    "pubkeys": [
+        "e28a8970753332bd72fef413e6b0b2ef1b4aadda7aa2c141f233712a6876b351",
+        "d4eec1869fb1b8a4e817516ad5a931557cb56805c3eb16e8f3a803d647df7869",
+        "772c8a442b7db06e166cfbc1ccbcbcde6f3eba76a4e98ef3ffc519502237d6ef"
+    ]
+}

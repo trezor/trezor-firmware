@@ -19,8 +19,7 @@ import pytest
 from trezorlib.cardano import get_address
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
-from .conftest import setup_client
+from ..common import MNEMONIC12
 
 
 @pytest.mark.altcoin
@@ -43,9 +42,8 @@ from .conftest import setup_client
         ),
     ],
 )
-@setup_client(mnemonic=TrezorTest.mnemonic12)
+@pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_cardano_get_address(client, path, expected_address):
-    # data from https://iancoleman.io/bip39/#english
-
+    # data from https://iancoleman.io/bip39/
     address = get_address(client, parse_path(path))
     assert address == expected_address

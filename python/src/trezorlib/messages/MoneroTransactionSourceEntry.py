@@ -7,10 +7,10 @@ from .MoneroOutputEntry import MoneroOutputEntry
 
 if __debug__:
     try:
-        from typing import Dict, List, Optional
+        from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
-        Dict, List, Optional = None, None, None  # type: ignore
+        pass
 
 
 class MoneroTransactionSourceEntry(p.MessageType):
@@ -26,6 +26,7 @@ class MoneroTransactionSourceEntry(p.MessageType):
         rct: bool = None,
         mask: bytes = None,
         multisig_kLRki: MoneroMultisigKLRki = None,
+        subaddr_minor: int = None,
     ) -> None:
         self.outputs = outputs if outputs is not None else []
         self.real_output = real_output
@@ -36,6 +37,7 @@ class MoneroTransactionSourceEntry(p.MessageType):
         self.rct = rct
         self.mask = mask
         self.multisig_kLRki = multisig_kLRki
+        self.subaddr_minor = subaddr_minor
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -49,4 +51,5 @@ class MoneroTransactionSourceEntry(p.MessageType):
             7: ('rct', p.BoolType, 0),
             8: ('mask', p.BytesType, 0),
             9: ('multisig_kLRki', MoneroMultisigKLRki, 0),
+            10: ('subaddr_minor', p.UVarintType, 0),
         }

@@ -2,35 +2,56 @@
     "bitcoin:ACM": {
         "Actilectrum": "https://actilectrum.org"
     },
+    "bitcoin:AXE": {
+        "Electrum-AXE": "https://github.com/AXErunners/electrum-axe"
+    },
     "bitcoin:BCH": {
-        "Electron Cash": "https://electroncash.org"
+        "Electron Cash": "https://electroncash.org",
+        "Exodus": "https://www.exodus.io"
     },
     "bitcoin:BELL": {
         "Electrum-BELL": "https://bell.electrum-jp.net"
     },
     "bitcoin:BTC": {
-        "Electrum": "https://electrum.org"
+        "Electrum": "https://electrum.org",
+        "Exodus": "https://www.exodus.io",
+        "Magnum": "https://magnumwallet.co"
     },
     "bitcoin:BTCP": {
         "BTCP Electrum": "https://github.com/BTCPrivate/electrum-btcp"
     },
     "bitcoin:BTG": {
-        "ElectrumG": "https://github.com/BTCGPU/electrum"
+        "ElectrumG": "https://github.com/BTCGPU/electrum",
+        "Exodus": "https://www.exodus.io"
     },
     "bitcoin:BTX": {
-        "Electrum-BTX": "https://github.com/LIMXTEC/electrum-btx"
-    },
-    "bitcoin:CPC": {
-        "Capricoin Mobile Wallet": "https://wallet.capricoin.org"
+        "Electrum-BTX": "https://github.com/LIMXTEC/electrum-btx",
+        "Magnum": "https://magnumwallet.co"
     },
     "bitcoin:CPU": {
         "Electrum-CPU": "https://cpuchain.org/download-page.html"
     },
     "bitcoin:DASH": {
-        "Dash Electrum": "https://electrum.dash.org"
+        "Dash Electrum": "https://electrum.dash.org",
+        "DMT": "https://github.com/Bertrand256/dash-masternode-tool",
+        "Exodus": "https://www.exodus.io",
+        "Magnum": "https://magnumwallet.co"
+    },
+    "bitcoin:DCR": {
+        "Exodus": "https://www.exodus.io"
+    },
+    "bitcoin:DGB": {
+        "Exodus": "https://www.exodus.io"
+    },
+    "bitcoin:DOGE": {
+        "Exodus": "https://www.exodus.io",
+        "Magnum": "https://magnumwallet.co"
     },
     "bitcoin:FJC": {
         "Electrum-FJC": "http://www.fujicoin.org/downloads.php"
+    },
+    "bitcoin:FLO": {
+        "Chaintek": "https://wallet.chaintek.net/"
     },
     "bitcoin:FTC": {
         "Electrum-FTC": "https://github.com/Feathercoin-Foundation/electrum-ftc"
@@ -41,14 +62,27 @@
     "bitcoin:GRS": {
         "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet"
     },
+    "bitcoin:HATCH": {
+        "HMT": "https://github.com/hatchpay/hatch-masternode-tool/"
+    },
+    "bitcoin:KMD": {
+        "Magnum": "https://magnumwallet.co"
+    },
     "bitcoin:KOTO": {
         "Electrum-KOTO": "https://electrum.kotocoin.info"
     },
     "bitcoin:LTC": {
-        "Electrum-LTC": "https://electrum-ltc.org"
+        "Electrum-LTC": "https://electrum-ltc.org",
+        "Exodus": "https://www.exodus.io"
     },
     "bitcoin:MONA": {
         "Electrum-MONA": "https://electrum-mona.org"
+    },
+    "bitcoin:MUE": {
+        "Electrum-MUE": "https://electrum.monetaryunit.org"
+    },
+    "bitcoin:NIX": {
+        "NIX-Electrum": "https://github.com/nixplatform/electrum-nix"
     },
     "bitcoin:NMC": {
         "Electrum-NMC": "https://github.com/namecoin/electrum-nmc"
@@ -56,8 +90,35 @@
     "bitcoin:PART": {
         "Particl Core": "https://github.com/particl/particl-core/releases"
     },
+    "bitcoin:PIVX": {
+        "SPMT": "https://github.com/PIVX-Project/PIVX-SPMT/",
+        "Zephyr": "https://github.com/mrcarlanthony/Zephyr-wallet"
+    },
     "bitcoin:POLIS": {
         "PolisPay": "https://polispay.com"
+    },
+    "bitcoin:PPC": {
+        "Magnum": "https://magnumwallet.co"
+    },
+    "bitcoin:QTUM": {
+        "Qtum-Electrum": "https://github.com/qtumproject/qtum-electrum"
+    },
+    "bitcoin:RITO": {
+        "Chaintek": "https://wallet.chaintek.net/"
+    },
+    "bitcoin:RVN": {
+        "Chaintek": "https://wallet.chaintek.net/",
+        "Electrum-RVN": "https://github.com/traysi/electrum-raven",
+        "Mango Farm": "https://mangofarmassets.com/mangowallet"
+    },
+    "bitcoin:SMART": {
+        "Electrum-SMART": "https://github.com/smartcash/electrum-smart"
+    },
+    "bitcoin:SYS": {
+        "Electrum-SYS": "https://github.com/syscoin/electrum"
+    },
+    "bitcoin:UNO": {
+        "Electrum-UNO": "https://github.com/flurbos/electrum-uno"
     },
     "bitcoin:VIA": {
         "Vialectrum": "https://vialectrum.org"
@@ -65,28 +126,27 @@
     "bitcoin:VIPS": {
         "Electrum-VIPS": "https://electrum-vips.info"
     },
+    "bitcoin:XPM": {
+        "Electrum-XPM": "https://github.com/justjamesdev/electrum-xpm"
+    },
+    "bitcoin:XRC": {
+        "Electrum-XRC": "https://electrum.bitcoinrh.org"
+    },
+    "bitcoin:XSN": {
+        "Stakenet": "https://xsnexplorer.io/trezor"
+    },
     "bitcoin:XZC": {
         "Electrum-XZC": "https://github.com/zcoinofficial/electrum-xzc",
         "Znode Tool": "https://github.com/yura-pakhuchiy/znode-tool"
     },
-    "bitcoin:SMART": {
-        "Electrum-SMART": "https://github.com/smartcash/electrum-smart"
+    "bitcoin:ZEC": {
+        "Exodus": "https://www.exodus.io",
+        "Magnum": "https://magnumwallet.co"
     },
-    "bitcoin:NIX": {
-        "NIX-Electrum": "https://github.com/nixplatform/electrum-nix",
-        "Ghostnode Tool": "https://github.com/nixplatform/ghostnode-tool"
-    },
-    "bitcoin:QTUM": {
-        "Qtum-Electrum": "https://github.com/qtumproject/qtum-electrum"
-    },
-    "bitcoin:RVN": {
-        "Electrum-RVN": "https://github.com/traysi/electrum-raven",
-        "Mango Farm": "https://mangofarmassets.com/mangowallet"
+    "bitcoin:ZCR": {
+        "Electrum-ZCR": "https://github.com/zcore-coin/electrum-wallet/"
     },
     "bitcoin:ZNY": {
         "Electrum-ZNY": "https://zny.electrum-jp.net"
-    },
-    "bitcoin:XRC": {
-        "Electrum-XRC": "https://electrum.bitcoinrh.org"
     }
 }

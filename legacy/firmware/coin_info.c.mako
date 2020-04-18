@@ -29,12 +29,11 @@ const CoinInfo coins[COINS_COUNT] = {
 	.coin_shortcut = ${c_str(" " + c.coin_shortcut)},
 	.maxfee_kb = ${c_int(c.maxfee_kb)},
 	.signed_message_header = ${signed_message_header(c.signed_message_header)},
-	.has_address_type = ${defined(c.address_type)},
-	.has_address_type_p2sh = ${defined(c.address_type_p2sh)},
 	.has_segwit = ${c_bool(c.segwit)},
 	.has_fork_id = ${defined(c.fork_id)},
 	.force_bip143 = ${c_bool(c.force_bip143)},
 	.decred = ${c_bool(c.decred)},
+	.decimals = ${c.decimals},
 	.address_type = ${c.address_type},
 	.address_type_p2sh = ${c.address_type_p2sh},
 	.xpub_magic = ${hex(c.xpub_magic)},
@@ -47,6 +46,9 @@ const CoinInfo coins[COINS_COUNT] = {
 	.negative_fee = ${c_bool(c.negative_fee)},
 	.curve_name = ${c.curve_name.upper()}_NAME,
 	.curve = &${c.curve_name}_info,
+	.extra_data = ${c_bool(c.extra_data)},
+	.timestamp = ${c_bool(c.timestamp)},
+	.overwintered = ${c_bool(c.consensus_branch_id)},
 },
 % endfor
 };

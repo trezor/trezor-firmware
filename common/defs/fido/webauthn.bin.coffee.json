@@ -1,0 +1,5 @@
+{
+  "label": "webauthn.bin.coffee",
+  "webauthn": ["webauthn.bin.coffee"],
+  "no_icon": true
+}

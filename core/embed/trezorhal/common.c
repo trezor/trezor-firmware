@@ -163,7 +163,7 @@ void clear_otg_hs_memory(void) {
 uint32_t __stack_chk_guard = 0;
 
 void __attribute__((noreturn)) __stack_chk_fail(void) {
-  ensure(secfalse, "Stack smashing detected");
+  error_shutdown("Internal error", "(SS)", NULL, NULL);
 }
 
 uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];

@@ -1,6 +1,6 @@
 from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
 
-from apps.common.writers import write_bytes, write_uint32_le, write_uint64_le
+from apps.common.writers import write_bytes_unchecked, write_uint32_le, write_uint64_le
 
 
 def serialize_tx_common(
@@ -26,4 +26,4 @@ def serialize_tx_common(
 
 def write_bytes_with_len(w, buf: bytes):
     write_uint32_le(w, len(buf))
-    write_bytes(w, buf)
+    write_bytes_unchecked(w, buf)

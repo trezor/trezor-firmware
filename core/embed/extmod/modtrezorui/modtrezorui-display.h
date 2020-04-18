@@ -17,8 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "inflate.h"
-
 #include "display.h"
 
 /// class Display:
@@ -139,7 +137,7 @@ STATIC mp_obj_t mod_trezorui_Display_image(size_t n_args,
   }
   mp_int_t w = *(uint16_t *)(data + 4);
   mp_int_t h = *(uint16_t *)(data + 6);
-  mp_int_t datalen = *(uint32_t *)(data + 8);
+  uint32_t datalen = *(uint32_t *)(data + 8);
   if (datalen != image.len - 12) {
     mp_raise_ValueError("Invalid size of data");
   }
@@ -173,7 +171,7 @@ STATIC mp_obj_t mod_trezorui_Display_avatar(size_t n_args,
   if (w != AVATAR_IMAGE_SIZE || h != AVATAR_IMAGE_SIZE) {
     mp_raise_ValueError("Invalid image size");
   }
-  mp_int_t datalen = *(uint32_t *)(data + 8);
+  uint32_t datalen = *(uint32_t *)(data + 8);
   if (datalen != image.len - 12) {
     mp_raise_ValueError("Invalid size of data");
   }
@@ -204,7 +202,7 @@ STATIC mp_obj_t mod_trezorui_Display_icon(size_t n_args, const mp_obj_t *args) {
   }
   mp_int_t w = *(uint16_t *)(data + 4);
   mp_int_t h = *(uint16_t *)(data + 6);
-  mp_int_t datalen = *(uint32_t *)(data + 8);
+  uint32_t datalen = *(uint32_t *)(data + 8);
   if (datalen != icon.len - 12) {
     mp_raise_ValueError("Invalid size of data");
   }
@@ -250,7 +248,7 @@ STATIC mp_obj_t mod_trezorui_Display_loader(size_t n_args,
     }
     mp_int_t w = *(uint16_t *)(data + 4);
     mp_int_t h = *(uint16_t *)(data + 6);
-    mp_int_t datalen = *(uint32_t *)(data + 8);
+    uint32_t datalen = *(uint32_t *)(data + 8);
     if (w != LOADER_ICON_SIZE || h != LOADER_ICON_SIZE) {
       mp_raise_ValueError("Invalid icon size");
     }
@@ -416,6 +414,25 @@ STATIC mp_obj_t mod_trezorui_Display_text_width(mp_obj_t self, mp_obj_t text,
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorui_Display_text_width_obj,
                                  mod_trezorui_Display_text_width);
 
+/// def text_split(self, text: str, font: int, requested_width: int) -> int:
+///     """
+///     Returns how many characters of the string can be used before exceeding
+///     the requested width. Tries to avoid breaking words if possible. Font
+///     font is used for rendering.
+///     """
+STATIC mp_obj_t mod_trezorui_Display_text_split(size_t n_args,
+                                                const mp_obj_t *args) {
+  mp_buffer_info_t text;
+  mp_get_buffer_raise(args[1], &text, MP_BUFFER_READ);
+  mp_int_t font = mp_obj_get_int(args[2]);
+  mp_int_t requested_width = mp_obj_get_int(args[3]);
+  int chars = display_text_split(text.buf, text.len, font, requested_width);
+  return mp_obj_new_int(chars);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_split_obj,
+                                           4, 4,
+                                           mod_trezorui_Display_text_split);
+
 /// def qrcode(self, x: int, y: int, data: bytes, scale: int) -> None:
 ///     """
 ///     Renders data encoded as a QR code centered at position (x,y).
@@ -535,6 +552,17 @@ STATIC mp_obj_t mod_trezorui_Display_save(mp_obj_t self, mp_obj_t prefix) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorui_Display_save_obj,
                                  mod_trezorui_Display_save);
 
+/// def clear_save(self) -> None:
+///     """
+///     Clears buffers in display saving.
+///     """
+STATIC mp_obj_t mod_trezorui_Display_clear_save(mp_obj_t self) {
+  display_clear_save();
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui_Display_clear_save_obj,
+                                 mod_trezorui_Display_clear_save);
+
 STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_clear), MP_ROM_PTR(&mod_trezorui_Display_clear_obj)},
     {MP_ROM_QSTR(MP_QSTR_refresh),
@@ -554,6 +582,8 @@ STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
      MP_ROM_PTR(&mod_trezorui_Display_text_right_obj)},
     {MP_ROM_QSTR(MP_QSTR_text_width),
      MP_ROM_PTR(&mod_trezorui_Display_text_width_obj)},
+    {MP_ROM_QSTR(MP_QSTR_text_split),
+     MP_ROM_PTR(&mod_trezorui_Display_text_split_obj)},
     {MP_ROM_QSTR(MP_QSTR_qrcode), MP_ROM_PTR(&mod_trezorui_Display_qrcode_obj)},
     {MP_ROM_QSTR(MP_QSTR_orientation),
      MP_ROM_PTR(&mod_trezorui_Display_orientation_obj)},
@@ -561,6 +591,8 @@ STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
      MP_ROM_PTR(&mod_trezorui_Display_backlight_obj)},
     {MP_ROM_QSTR(MP_QSTR_offset), MP_ROM_PTR(&mod_trezorui_Display_offset_obj)},
     {MP_ROM_QSTR(MP_QSTR_save), MP_ROM_PTR(&mod_trezorui_Display_save_obj)},
+    {MP_ROM_QSTR(MP_QSTR_clear_save),
+     MP_ROM_PTR(&mod_trezorui_Display_clear_save_obj)},
     {MP_ROM_QSTR(MP_QSTR_WIDTH), MP_ROM_INT(DISPLAY_RESX)},
     {MP_ROM_QSTR(MP_QSTR_HEIGHT), MP_ROM_INT(DISPLAY_RESY)},
     {MP_ROM_QSTR(MP_QSTR_FONT_SIZE), MP_ROM_INT(FONT_SIZE)},

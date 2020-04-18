@@ -28,9 +28,7 @@ def get_type(wire_type: int) -> MessageClass:
     else:
         # import message class from trezor.messages dynamically
         name = type_to_name[wire_type]
-        module = __import__(  # type: ignore
-            "trezor.messages.%s" % name, None, None, (name,), 0
-        )
+        module = __import__("trezor.messages.%s" % name, None, None, (name,), 0)
         msg_type = getattr(module, name)
     return msg_type
 

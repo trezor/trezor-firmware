@@ -4,12 +4,11 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List, Optional
+        from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeWordRequestType = Literal[0, 1, 2]
     except ImportError:
-        Dict, List, Optional = None, None, None  # type: ignore
-        EnumTypeWordRequestType = None  # type: ignore
+        pass
 
 
 class WordRequest(p.MessageType):

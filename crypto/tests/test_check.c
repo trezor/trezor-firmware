@@ -5097,6 +5097,17 @@ START_TEST(test_mnemonic_to_entropy) {
 }
 END_TEST
 
+START_TEST(test_mnemonic_find_word) {
+  ck_assert_int_eq(-1, mnemonic_find_word("aaaa"));
+  ck_assert_int_eq(-1, mnemonic_find_word("zzzz"));
+  for (int i = 0; i < BIP39_WORDS; i++) {
+    const char *word = mnemonic_get_word(i);
+    int index = mnemonic_find_word(word);
+    ck_assert_int_eq(i, index);
+  }
+}
+END_TEST
+
 START_TEST(test_slip39_get_word) {
   static const struct {
     const int index;
@@ -8765,6 +8776,7 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_mnemonic);
   tcase_add_test(tc, test_mnemonic_check);
   tcase_add_test(tc, test_mnemonic_to_entropy);
+  tcase_add_test(tc, test_mnemonic_find_word);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("slip39");

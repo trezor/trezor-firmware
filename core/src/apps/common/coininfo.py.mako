@@ -12,6 +12,7 @@ class CoinInfo:
         self,
         coin_name: str,
         coin_shortcut: str,
+        decimals: int,
         address_type: int,
         address_type_p2sh: int,
         maxfee_kb: int,
@@ -25,14 +26,17 @@ class CoinInfo:
         segwit: bool,
         fork_id: int,
         force_bip143: bool,
-        bip115: bool,
         decred: bool,
         negative_fee: bool,
         curve_name: str,
+        extra_data: bool,
+        timestamp: bool,
+        overwintered: bool,
         confidential_assets: dict,
     ):
         self.coin_name = coin_name
         self.coin_shortcut = coin_shortcut
+        self.decimals = decimals
         self.address_type = address_type
         self.address_type_p2sh = address_type_p2sh
         self.maxfee_kb = maxfee_kb
@@ -46,10 +50,12 @@ class CoinInfo:
         self.segwit = segwit
         self.fork_id = fork_id
         self.force_bip143 = force_bip143
-        self.bip115 = bip115
         self.decred = decred
         self.negative_fee = negative_fee
         self.curve_name = curve_name
+        self.extra_data = extra_data
+        self.timestamp = timestamp
+        self.overwintered = overwintered
         self.confidential_assets = confidential_assets
         if curve_name == "secp256k1-groestl":
             self.b58_hash = groestl512d_32
@@ -90,6 +96,7 @@ def optional_dict(x):
 ATTRIBUTES = (
     ("coin_name", lambda _: "name"),
     ("coin_shortcut", black_repr),
+    ("decimals", int),
     ("address_type", int),
     ("address_type_p2sh", int),
     ("maxfee_kb", int),
@@ -103,10 +110,12 @@ ATTRIBUTES = (
     ("segwit", bool),
     ("fork_id", black_repr),
     ("force_bip143", bool),
-    ("bip115", bool),
     ("decred", bool),
     ("negative_fee", bool),
     ("curve_name", lambda r: repr(r.replace("_", "-"))),
+    ("extra_data", bool),
+    ("timestamp", bool),
+    ("overwintered", bool),
     ("confidential_assets", optional_dict),
 )
 
@@ -114,6 +123,9 @@ btc_names = ["Bitcoin", "Testnet", "Regtest"]
 
 coins_btc = [c for c in supported_on("trezor2", bitcoin) if c.name in btc_names]
 coins_alt = [c for c in supported_on("trezor2", bitcoin) if c.name not in btc_names]
+
+for c in coins_btc + coins_alt:
+    c.overwintered = bool(c.consensus_branch_id)
 
 %>\
 def by_name(name: str) -> CoinInfo:

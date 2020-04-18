@@ -209,6 +209,16 @@
     "blockbook": []
   },
   {
+    "chain": "ere",
+    "chain_id": 466,
+    "slip44": 466,
+    "shortcut": "ERE",
+    "name": "EtherCore",
+    "rskip60": false,
+    "url": "https://ethercore.org",
+    "blockbook": []
+  },
+  {
     "chain": "clo",
     "chain_id": 820,
     "slip44": 820,

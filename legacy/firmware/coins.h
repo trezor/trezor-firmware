@@ -31,8 +31,7 @@ typedef struct _CoinInfo {
   const char *coin_shortcut;
   uint64_t maxfee_kb;
   const char *signed_message_header;
-  bool has_address_type;
-  bool has_address_type_p2sh;
+  uint32_t decimals;
   bool has_segwit;
   bool has_fork_id;
   bool force_bip143;
@@ -50,6 +49,9 @@ typedef struct _CoinInfo {
   bool negative_fee;
   const char *curve_name;
   const curve_info *curve;
+  bool extra_data;
+  bool timestamp;
+  bool overwintered;
 } CoinInfo;
 
 #include "coin_info.h"

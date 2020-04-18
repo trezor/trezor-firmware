@@ -5,8 +5,11 @@ from trezorui import Display
 
 from trezor import io, loop, res, utils
 
+if __debug__:
+    from apps.debug import notify_layout_change
+
 if False:
-    from typing import Any, Generator, Iterable, Tuple, TypeVar
+    from typing import Any, Awaitable, Generator, List, Tuple, TypeVar
 
     Pos = Tuple[int, int]
     Area = Tuple[int, int, int, int]
@@ -31,20 +34,26 @@ VIEWY = const(9)
 # channel used to cancel layouts, see `Cancelled` exception
 layout_chan = loop.chan()
 
+# allow only one alert at a time to avoid alerts overlapping
+_alert_in_progress = False
+
 # in debug mode, display an indicator in top right corner
 if __debug__:
+    from apps.debug import screenshot
 
-    def debug_display_refresh() -> None:
-        display.bar(Display.WIDTH - 8, 0, 8, 8, 0xF800)
+    def refresh() -> None:
+        if not screenshot():
+            display.bar(Display.WIDTH - 8, 0, 8, 8, 0xF800)
         display.refresh()
-        if utils.SAVE_SCREEN:
-            display.save("refresh")
 
-    loop.after_step_hook = debug_display_refresh
+
+else:
+    refresh = display.refresh
+
 
 # in both debug and production, emulator needs to draw the screen explicitly
-elif utils.EMULATOR:
-    loop.after_step_hook = display.refresh
+if utils.EMULATOR:
+    loop.after_step_hook = refresh
 
 
 def lerpi(a: int, b: int, t: float) -> int:
@@ -70,9 +79,33 @@ from trezor.ui import style  # isort:skip
 from trezor.ui.style import *  # isort:skip # noqa: F401,F403
 
 
-def pulse(coef: int) -> float:
+def pulse(period: int, offset: int = 0) -> float:
     # normalize sin from interval -1:1 to 0:1
-    return 0.5 + 0.5 * math.sin(utime.ticks_us() / coef)
+    return 0.5 + 0.5 * math.sin(2 * math.pi * (utime.ticks_us() + offset) / period)
+
+
+async def _alert(count: int) -> None:
+    short_sleep = loop.sleep(20000)
+    long_sleep = loop.sleep(80000)
+    for i in range(count * 2):
+        if i % 2 == 0:
+            display.backlight(style.BACKLIGHT_MAX)
+            await short_sleep
+        else:
+            display.backlight(style.BACKLIGHT_DIM)
+            await long_sleep
+    display.backlight(style.BACKLIGHT_NORMAL)
+    global _alert_in_progress
+    _alert_in_progress = False
+
+
+def alert(count: int = 3) -> None:
+    global _alert_in_progress
+    if _alert_in_progress:
+        return
+
+    _alert_in_progress = True
+    loop.schedule(_alert(count))
 
 
 async def click() -> Pos:
@@ -90,7 +123,7 @@ async def click() -> Pos:
 
 def backlight_fade(val: int, delay: int = 14000, step: int = 15) -> None:
     if __debug__:
-        if utils.DISABLE_FADE:
+        if utils.DISABLE_ANIMATION:
             display.backlight(val)
             return
     current = display.backlight()
@@ -125,6 +158,23 @@ def header_error(message: str, clear: bool = True) -> None:
     display.text_center(WIDTH // 2, 22, message, BOLD, style.WHITE, style.RED)
     if clear:
         display.bar(0, 30, WIDTH, HEIGHT - 30, style.BG)
+
+
+def draw_simple(t: Component) -> None:  # noqa: F405
+    """Render a component synchronously.
+
+    Useful when you need to put something on screen and go on to do other things.
+
+    This function bypasses the UI workflow engine, so other layouts will not know
+    that something was drawn over them. In particular, if no other Layout is shown
+    in a workflow, the homescreen will not redraw when the workflow is finished.
+    Use `workflow.kill_default()` if you need to avoid this situation.
+    """
+    backlight_fade(style.BACKLIGHT_DIM)
+    display.clear()
+    t.on_render()
+    refresh()
+    backlight_fade(style.BACKLIGHT_NORMAL)
 
 
 def grid(
@@ -213,6 +263,11 @@ class Component:
     def on_touch_end(self, x: int, y: int) -> None:
         pass
 
+    if __debug__:
+
+        def read_content(self) -> List[str]:
+            return [self.__class__.__name__]
+
 
 class Result(Exception):
     """
@@ -266,6 +321,8 @@ class Layout(Component):
             # layout channel.  This allows other layouts to cancel us, and the
             # layout tasks to trigger restart by exiting (new tasks are created
             # and we continue, because we are in a loop).
+            if __debug__:
+                notify_layout_change(self)
             while True:
                 await loop.race(layout_chan.take(), *self.create_tasks())
         except Result as result:
@@ -276,7 +333,7 @@ class Layout(Component):
     def __await__(self) -> Generator[Any, Any, ResultValue]:
         return self.__iter__()  # type: ignore
 
-    def create_tasks(self) -> Iterable[loop.Task]:
+    def create_tasks(self) -> Tuple[loop.Task, ...]:
         """
         Called from `__iter__`.  Creates and returns a sequence of tasks that
         run this layout.  Tasks are executed in parallel.  When one of them
@@ -309,7 +366,7 @@ class Layout(Component):
         # Display is usually refreshed after every loop step, but here we are
         # rendering everything synchronously, so refresh it manually and turn
         # the brightness on again.
-        display.refresh()
+        refresh()
         backlight_fade(style.BACKLIGHT_NORMAL)
         sleep = loop.sleep(_RENDER_DELAY_US)
         while True:
@@ -319,3 +376,8 @@ class Layout(Component):
             # TODO: remove the busy loop
             yield sleep
             self.dispatch(RENDER, 0, 0)
+
+
+def wait_until_layout_is_running() -> Awaitable[None]:  # type: ignore
+    while not layout_chan.takers:
+        yield

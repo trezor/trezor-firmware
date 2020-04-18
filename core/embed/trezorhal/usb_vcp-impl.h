@@ -297,7 +297,7 @@ int usb_vcp_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
     b->write++;
   }
 
-  return len;
+  return i;
 }
 
 int usb_vcp_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len,
@@ -315,13 +315,19 @@ int usb_vcp_read_blocking(uint8_t iface_num, uint8_t *buf, uint32_t len,
 int usb_vcp_write_blocking(uint8_t iface_num, const uint8_t *buf, uint32_t len,
                            int timeout) {
   uint32_t start = HAL_GetTick();
-  while (sectrue != usb_vcp_can_write(iface_num)) {
-    if (timeout >= 0 && HAL_GetTick() - start >= timeout) {
-      return 0;  // Timeout
+  uint32_t i = 0;
+  while (i < len) {
+    while (sectrue != usb_vcp_can_write(iface_num)) {
+      if (timeout >= 0 && HAL_GetTick() - start >= timeout) {
+        return i;  // Timeout
+      }
+      __WFI();  // Enter sleep mode, waiting for interrupt
     }
-    __WFI();  // Enter sleep mode, waiting for interrupt
+    int ret = usb_vcp_write(iface_num, buf + i, len - i);
+    if (ret < 0) return ret;
+    i += ret;
   }
-  return usb_vcp_write(iface_num, buf, len);
+  return i;
 }
 
 static void usb_vcp_class_init(USBD_HandleTypeDef *dev, usb_vcp_state_t *state,

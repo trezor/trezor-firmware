@@ -1,0 +1,59 @@
+syntax = "proto2";
+package hw.trezor.messages.webauthn;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageWebAuthn";
+
+/**
+ * Request: List resident credentials
+ * @start
+ * @next WebAuthnCredentials
+ * @next Failure
+ */
+message WebAuthnListResidentCredentials {
+}
+
+/**
+ * Request: Add resident credential
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message WebAuthnAddResidentCredential {
+    optional bytes credential_id = 1;
+}
+
+/**
+ * Request: Remove resident credential
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message WebAuthnRemoveResidentCredential {
+    optional uint32 index = 1;
+}
+
+
+/**
+ * Response: Resident credential list
+ * @start
+ * @next end
+ */
+message WebAuthnCredentials {
+    repeated WebAuthnCredential credentials = 1;
+    message WebAuthnCredential {
+        optional uint32 index = 1;
+        optional bytes id = 2;
+        optional string rp_id = 3;
+        optional string rp_name = 4;
+        optional bytes user_id = 5;
+        optional string user_name = 6;
+        optional string user_display_name = 7;
+        optional uint32 creation_time = 8;
+        optional bool hmac_secret = 9;
+        optional bool use_sign_count = 10;
+        optional sint32 algorithm = 11;
+        optional sint32 curve = 12;
+    }
+}

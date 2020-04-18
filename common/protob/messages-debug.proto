@@ -10,12 +10,78 @@ import "messages-common.proto";
 /**
  * Request: "Press" the button on the device
  * @start
- * @next Success
+ * @next DebugLinkLayout
  */
 message DebugLinkDecision {
     optional bool yes_no = 1;   // true for "Confirm", false for "Cancel"
-    optional bool up_down = 2;  // true for scroll up, false for scroll down
+    optional DebugSwipeDirection swipe = 2;  // swipe direction
     optional string input = 3;  // keyboard input
+    /**
+    * Structure representing swipe direction
+    */
+    enum DebugSwipeDirection {
+        UP = 0;
+        DOWN = 1;
+        LEFT = 2;
+        RIGHT = 3;
+    }
+
+    optional uint32 x = 4;   // touch X coordinate
+    optional uint32 y = 5;   // touch Y coordinate
+    optional bool wait = 6;  // wait for layout change
+}
+
+/**
+ * Response: Device text layout
+ * @end
+ */
+message DebugLinkLayout {
+    repeated string lines = 1;
+}
+
+/**
+ * Request: Re-seed RNG with given value
+ * @start
+ * @next Success
+ */
+message DebugLinkReseedRandom {
+    optional uint32 value = 1;
+}
+
+/**
+ * Request: Start or stop recording screen changes into given target directory
+ * @start
+ * @next Success
+ */
+message DebugLinkRecordScreen {
+    optional string target_directory = 1;  // empty or missing to stop recording
+}
+
+/**
+ * Request: Show text on the screen
+ * @start
+ * @next Success
+ */
+ message DebugLinkShowText {
+    optional string header_text = 1;  // screen header text
+    repeated DebugLinkShowTextItem body_text = 2;  // body text segments
+    optional string header_icon = 3;  // icon name in ui.style
+    optional string icon_color = 4;   // color name in ui.style
+
+    message DebugLinkShowTextItem {
+        optional DebugLinkShowTextStyle style = 1;
+        optional string content = 2;
+    }
+
+    enum DebugLinkShowTextStyle {
+        NORMAL = 0;
+        BOLD = 1;
+        MONO = 2;
+        MONO_BOLD = 3;
+        BR = 4;
+        BR_HALF = 5;
+        SET_COLOR = 6;
+    }
 }
 
 /**
@@ -26,6 +92,7 @@ message DebugLinkDecision {
 message DebugLinkGetState {
     optional bool wait_word_list = 1;  // Trezor T only - wait until mnemonic words are shown
     optional bool wait_word_pos = 2;   // Trezor T only - wait until reset word position is requested
+    optional bool wait_layout = 3;     // wait until current layout changes
 }
 
 /**
@@ -45,6 +112,7 @@ message DebugLinkState {
     optional uint32 recovery_word_pos = 10;                 // index of mnemonic word the device is expecting during RecoveryDevice workflow
     optional uint32 reset_word_pos = 11;                    // index of mnemonic word the device is expecting during ResetDevice workflow
     optional uint32 mnemonic_type = 12;                     // current mnemonic type (BIP-39/SLIP-39)
+    repeated string layout_lines = 13;                      // current layout text
 }
 
 /**
@@ -104,4 +172,16 @@ message DebugLinkMemoryWrite {
  */
 message DebugLinkFlashErase {
     optional uint32 sector = 1;
+}
+
+
+/**
+ * Request: Erase the SD card
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message DebugLinkEraseSdCard {
+    optional bool format = 1;  // if true, the card will be formatted to FAT32.
+                               // if false, it will be all 0xFF bytes.
 }

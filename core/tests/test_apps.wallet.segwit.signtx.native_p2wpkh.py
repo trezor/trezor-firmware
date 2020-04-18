@@ -17,6 +17,7 @@ from trezor.messages import OutputScriptType
 from apps.common import coins
 from apps.common.seed import Keychain
 from apps.wallet.sign_tx import helpers, signing
+from apps.wallet.sign_tx.signing import SigningError
 
 
 class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
@@ -213,6 +214,54 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             self.assertEqual(signer.send(request), response)
         with self.assertRaises(StopIteration):
             signer.send(None)
+
+    def test_send_native_invalid_address(self):
+
+        coin = coins.by_name('Testnet')
+        seed = bip39.seed(' '.join(['all'] * 12), '')
+
+        inp1 = TxInputType(
+            # 49'/1'/0'/0/0" - tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s
+            address_n=[49 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 0, 0],
+            amount=12300000,
+            prev_hash=unhexlify('09144602765ce3dd8f4329445b20e3684e948709c5cdcaf12da3bb079c99448a'),
+            prev_index=0,
+            script_type=InputScriptType.SPENDWITNESS,
+            sequence=0xffffffff,
+            multisig=None,
+        )
+        out1 = TxOutputType(
+            address='TB1Q694CCP5QCC0UDMFWGP692U2S2HJPQ5H407URTU',  # Error: should be lower case
+            script_type=OutputScriptType.PAYTOADDRESS,
+            amount=12300000 - 11000 - 5000000,
+            address_n=[],
+            multisig=None,
+        )
+        tx = SignTx(coin_name='Testnet', version=None, lock_time=None, inputs_count=1, outputs_count=1)
+
+        messages = [
+            None,
+
+            # check fee
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None)),
+            TxAck(tx=TransactionType(inputs=[inp1])),
+
+            helpers.UiConfirmForeignAddress(address_n=inp1.address_n),
+            True,
+
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
+            TxAck(tx=TransactionType(outputs=[out1])),
+            None
+        ]
+
+        keychain = Keychain(seed, [[coin.curve_name]])
+        signer = signing.sign_tx(tx, keychain)
+        for request, response in chunks(messages, 2):
+            if response is None:
+                with self.assertRaises(SigningError):
+                    signer.send(request)
+            else:
+                self.assertEqual(signer.send(request), response)
 
 
 if __name__ == '__main__':

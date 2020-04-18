@@ -60,8 +60,15 @@ def critical(name: str, msg: str, *args: Any) -> None:
 
 def exception(name: str, exc: BaseException) -> None:
     # we are using `__class__.__name__` to avoid importing ui module
+    # we also need to instruct mypy to ignore the missing argument
+    # in ui.Result exception
     if exc.__class__.__name__ == "Result":
-        _log(name, DEBUG, "ui.Result: %s", exc.value)
+        _log(
+            name,
+            DEBUG,
+            "ui.Result: %s",
+            exc.value,  # type: ignore[attr-defined] # noqa: F821
+        )
     elif exc.__class__.__name__ == "Cancelled":
         _log(name, DEBUG, "ui.Cancelled")
     else:

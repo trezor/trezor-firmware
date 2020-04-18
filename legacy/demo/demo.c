@@ -35,9 +35,9 @@ int frame = 0;
 
 uint8_t seed[128];
 uint8_t *pass = (uint8_t *)"meadow";
-uint32_t passlen;
+uint32_t passlen = 0;
 uint8_t *salt = (uint8_t *)"TREZOR";
-uint32_t saltlen;
+uint32_t saltlen = 0;
 
 static const struct usb_device_descriptor dev_descr = {
     .bLength = USB_DT_DEVICE_SIZE,

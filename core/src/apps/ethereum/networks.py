@@ -197,6 +197,13 @@ NETWORKS = [
         rskip60=False,
     ),
     NetworkInfo(
+        chain_id=466,
+        slip44=466,
+        shortcut="ERE",
+        name="EtherCore",
+        rskip60=False,
+    ),
+    NetworkInfo(
         chain_id=820,
         slip44=820,
         shortcut="CLO",
@@ -278,6 +285,13 @@ NETWORKS = [
         slip44=184,
         shortcut="MUSIC",
         name="Musicoin",
+        rskip60=False,
+    ),
+    NetworkInfo(
+        chain_id=28945486,
+        slip44=344,
+        shortcut="AUX",
+        name="Auxilium",
         rskip60=False,
     ),
     NetworkInfo(

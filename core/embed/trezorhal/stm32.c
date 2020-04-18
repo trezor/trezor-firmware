@@ -86,14 +86,6 @@ void SystemInit(void) {
   SCB->CPACR |= ((3U << 22) | (3U << 20));
 }
 
-extern volatile uint32_t uwTick;
-
-void SysTick_Handler(void) {
-  // this is a millisecond tick counter that wraps after approximately
-  // 49.71 days = (0xffffffff / (24 * 60 * 60 * 1000))
-  uwTick++;
-}
-
 // from util.s
 extern void shutdown(void);
 

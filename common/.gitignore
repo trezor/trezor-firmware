@@ -3,3 +3,4 @@ defs/coins/tools/coindefs.json
 tools/coins.json
 tools/coindefs.json
 tools/coinmarketcap.json
+tools/__pycache__

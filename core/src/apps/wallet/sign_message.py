@@ -2,12 +2,10 @@ from trezor import wire
 from trezor.crypto.curve import secp256k1
 from trezor.messages.InputScriptType import SPENDADDRESS, SPENDP2SHWITNESS, SPENDWITNESS
 from trezor.messages.MessageSignature import MessageSignature
-from trezor.ui.text import Text
 
 from apps.common import coins
-from apps.common.confirm import require_confirm
 from apps.common.paths import validate_path
-from apps.common.signverify import message_digest, split_message
+from apps.common.signverify import message_digest, require_confirm_sign_message
 from apps.wallet.sign_tx.addresses import get_address, validate_full_path
 
 
@@ -18,7 +16,7 @@ async def sign_message(ctx, msg, keychain):
     script_type = msg.script_type or 0
     coin = coins.by_name(coin_name)
 
-    await require_confirm_sign_message(ctx, message)
+    await require_confirm_sign_message(ctx, "Sign message", message)
     await validate_path(
         ctx,
         validate_full_path,
@@ -47,10 +45,3 @@ async def sign_message(ctx, msg, keychain):
         raise wire.ProcessError("Unsupported script type")
 
     return MessageSignature(address=address, signature=signature)
-
-
-async def require_confirm_sign_message(ctx, message):
-    message = split_message(message)
-    text = Text("Sign message", new_lines=False)
-    text.normal(*message)
-    await require_confirm(ctx, text)

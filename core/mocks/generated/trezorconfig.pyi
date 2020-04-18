@@ -12,17 +12,18 @@ def init(
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
-def unlock(pin: int) -> bool:
+def unlock(pin: int, ext_salt: Optional[bytes]) -> bool:
     """
-    Attempts to unlock the storage with given PIN.  Returns True on
-    success, False on failure.
+    Attempts to unlock the storage with the given PIN and external salt.
+    Returns True on success, False on failure.
     """
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
-def check_pin(pin: int) -> bool:
+def check_pin(pin: int, ext_salt: Optional[bytes]) -> bool:
     """
-    Check the given PIN. Returns True on success, False on failure.
+    Check the given PIN with the given external salt.
+    Returns True on success, False on failure.
     """
 
 
@@ -48,9 +49,39 @@ def get_pin_rem() -> int:
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
-def change_pin(pin: int, newpin: int) -> bool:
+def change_pin(
+    oldpin: int,
+    newpin: int,
+    old_ext_salt: Optional[bytes],
+    new_ext_salt: Optional[bytes],
+) -> bool:
     """
-    Change PIN. Returns True on success, False on failure.
+    Change PIN and external salt. Returns True on success, False on failure.
+    """
+
+
+# extmod/modtrezorconfig/modtrezorconfig.c
+def ensure_not_wipe_code(pin: int) -> None:
+    """
+    Wipes the device if the entered PIN is the wipe code.
+    """
+
+
+# extmod/modtrezorconfig/modtrezorconfig.c
+def has_wipe_code() -> bool:
+    """
+    Returns True if storage has a configured wipe code, False otherwise.
+    """
+
+
+# extmod/modtrezorconfig/modtrezorconfig.c
+def change_wipe_code(
+    pin: int,
+    ext_salt: Optional[bytes],
+    wipe_code: int,
+) -> bool:
+    """
+    Change wipe code. Returns True on success, False on failure.
     """
 
 

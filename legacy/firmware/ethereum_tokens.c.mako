@@ -10,7 +10,8 @@ const TokenType tokens[TOKENS_COUNT] = {
 % endfor
 };
 
-const TokenType *UnknownToken = (const TokenType *)1;
+static const TokenType _UnknownToken = { 0, "\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff\xff", " UNKN", 0 };
+const TokenType *UnknownToken = &_UnknownToken; 
 
 const TokenType *tokenByChainAddress(uint32_t chain_id, const uint8_t *address)
 {

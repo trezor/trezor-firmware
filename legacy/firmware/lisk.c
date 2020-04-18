@@ -30,7 +30,7 @@
 
 void lisk_get_address_from_public_key(const uint8_t *public_key,
                                       char *address) {
-  uint64_t digest[4];
+  uint64_t digest[4] = {0};
   sha256_Raw(public_key, 32, (uint8_t *)digest);
   bn_format_uint64(digest[0], NULL, "L", 0, 0, false, address,
                    MAX_LISK_ADDRESS_SIZE);
@@ -38,10 +38,10 @@ void lisk_get_address_from_public_key(const uint8_t *public_key,
 
 void lisk_message_hash(const uint8_t *message, size_t message_len,
                        uint8_t hash[32]) {
-  SHA256_CTX ctx;
+  SHA256_CTX ctx = {0};
   sha256_Init(&ctx);
   sha256_Update(&ctx, (const uint8_t *)"\x15" "Lisk Signed Message:\n", 22);
-  uint8_t varint[5];
+  uint8_t varint[5] = {0};
   uint32_t l = ser_length(message_len, varint);
   sha256_Update(&ctx, varint, l);
   sha256_Update(&ctx, message, message_len);
@@ -60,8 +60,8 @@ void lisk_sign_message(const HDNode *node, const LiskSignMessage *msg,
 
   layoutProgressSwipe(_("Signing"), 0);
 
-  uint8_t signature[64];
-  uint8_t hash[32];
+  uint8_t signature[64] = {0};
+  uint8_t hash[32] = {0};
   lisk_message_hash(msg->message.bytes, msg->message.size, hash);
 
   ed25519_sign(hash, 32, node->private_key, &node->public_key[1], signature);
@@ -76,7 +76,7 @@ void lisk_sign_message(const HDNode *node, const LiskSignMessage *msg,
 }
 
 bool lisk_verify_message(const LiskVerifyMessage *msg) {
-  uint8_t hash[32];
+  uint8_t hash[32] = {0};
   lisk_message_hash(msg->message.bytes, msg->message.size, hash);
   return 0 == ed25519_sign_open(hash, 32, msg->public_key.bytes,
                                 msg->signature.bytes);
@@ -98,7 +98,7 @@ static void lisk_update_raw_tx(const HDNode *node, LiskSignTx *msg) {
 }
 
 static void lisk_hashupdate_uint32(SHA256_CTX *ctx, uint32_t value) {
-  uint8_t data[4];
+  uint8_t data[4] = {0};
   write_le(data, value);
   sha256_Update(ctx, data, sizeof(data));
 }
@@ -108,7 +108,7 @@ static void lisk_hashupdate_uint64_le(SHA256_CTX *ctx, uint64_t value) {
 }
 
 static void lisk_hashupdate_uint64_be(SHA256_CTX *ctx, uint64_t value) {
-  uint8_t data[8];
+  uint8_t data[8] = {0};
   data[0] = value >> 56;
   data[1] = value >> 48;
   data[2] = value >> 40;
@@ -174,7 +174,7 @@ void lisk_sign_tx(const HDNode *node, LiskSignTx *msg, LiskSignedTx *resp) {
   lisk_update_raw_tx(node, msg);
 
   if (msg->has_transaction) {
-    SHA256_CTX ctx;
+    SHA256_CTX ctx = {0};
     sha256_Init(&ctx);
 
     switch (msg->transaction.type) {
@@ -256,7 +256,7 @@ void lisk_sign_tx(const HDNode *node, LiskSignTx *msg, LiskSignedTx *resp) {
                     msg->transaction.signature.size);
     }
 
-    uint8_t hash[32];
+    uint8_t hash[32] = {0};
     sha256_Final(&ctx, hash);
     ed25519_sign(hash, 32, node->private_key, &node->public_key[1],
                  resp->signature.bytes);
@@ -282,7 +282,7 @@ void layoutLiskVerifyAddress(const char *address) {
 }
 
 void layoutRequireConfirmTx(char *recipient_id, uint64_t amount) {
-  char formated_amount[MAX_LISK_VALUE_SIZE];
+  char formated_amount[MAX_LISK_VALUE_SIZE] = {0};
   const char **str =
       split_message((const uint8_t *)recipient_id, strlen(recipient_id), 16);
   lisk_format_value(amount, formated_amount);
@@ -292,8 +292,8 @@ void layoutRequireConfirmTx(char *recipient_id, uint64_t amount) {
 }
 
 void layoutRequireConfirmFee(uint64_t fee, uint64_t amount) {
-  char formated_amount[MAX_LISK_VALUE_SIZE];
-  char formated_fee[MAX_LISK_VALUE_SIZE];
+  char formated_amount[MAX_LISK_VALUE_SIZE] = {0};
+  char formated_fee[MAX_LISK_VALUE_SIZE] = {0};
   lisk_format_value(amount, formated_amount);
   lisk_format_value(fee, formated_fee);
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
@@ -314,8 +314,8 @@ void layoutRequireConfirmDelegateRegistration(LiskTransactionAsset *asset) {
 void layoutRequireConfirmCastVotes(LiskTransactionAsset *asset) {
   uint8_t plus = 0;
   uint8_t minus = 0;
-  char add_votes_txt[13];
-  char remove_votes_txt[16];
+  char add_votes_txt[13] = {0};
+  char remove_votes_txt[16] = {0};
 
   for (int i = 0; i < asset->votes_count; i++) {
     if (asset->votes[i][0] == '+') {
@@ -336,9 +336,9 @@ void layoutRequireConfirmCastVotes(LiskTransactionAsset *asset) {
 }
 
 void layoutRequireConfirmMultisig(LiskTransactionAsset *asset) {
-  char keys_group_str[25];
-  char life_time_str[14];
-  char min_str[8];
+  char keys_group_str[25] = {0};
+  char life_time_str[14] = {0};
+  char min_str[8] = {0};
 
   bn_format_uint64(asset->multisignature.keys_group_count,
                    "Keys group length: ", NULL, 0, 0, false, keys_group_str,

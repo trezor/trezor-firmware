@@ -2,72 +2,250 @@ image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
 
 # Core
 
-test core unix unit:
+core unit test:
   stage: test
+  extends: .core_job
   dependencies:
-    - build core unix frozen
+    - core unix regular build
   script:
     - cd core
     - pipenv run make test
 
-test core unix device:
+core device ui test:
   stage: test
+  extends: .core_job
   dependencies:
-    - build core unix frozen
+    - core unix frozen debug build
+  script:
+    - cd core
+    - pipenv run make test_emu_ui
+    - cd ..
+    - mv tests/ui_tests/reporting/reports/test/ test_ui_report
+    - pipenv run python ci/prepare_ui_artifacts.py
+  artifacts:
+    name: core-device-ui-test
+    paths:
+      - ci/ui_test_records/
+      - test_ui_report
+      - tests/ui_tests/screens/
+      - tests/junit.xml
+      - tests/trezor.log
+    when: always
+    expire_in: 1 week
+    reports:
+      junit: tests/junit.xml
+
+core device test:
+  stage: test
+  extends: .core_job
+  dependencies:
+    - core unix frozen debug build
+  variables:
+    TREZOR_PROFILING: 1
   script:
     - cd core
     - pipenv run make test_emu
+    - mv ./src/.coverage .coverage.test_emu
+  artifacts:
+    name: core-device-test
+    paths:
+      - tests/trezor.log
+      - tests/junit.xml
+      - core/.coverage.*
+    expire_in: 1 week
+    when: always
+    reports:
+      junit: tests/junit.xml
 
-test core unix device bitcoinonly:
+core btconly device test:
   stage: test
+  extends: .core_job
   dependencies:
-    - build core unix frozen bitcoinonly
+    - core unix frozen btconly debug build
   variables:
-    MICROPYTHON: "../build/unix/micropython-bitcoinonly"
+    MICROPYTHON: "build/unix/micropython-bitcoinonly"
     TREZOR_PYTEST_SKIP_ALTCOINS: 1
   script:
     - cd core
     - pipenv run make test_emu
+  artifacts:
+    name: core-btconly-device-test
+    paths:
+      - tests/trezor.log
+      - tests/junit.xml
+    expire_in: 1 week
+    when: always
+    reports:
+      junit: tests/junit.xml
 
-test core unix monero:
+core monero test:
   stage: test
+  extends: .core_job
   dependencies:
-    - build core unix frozen
+    - core unix frozen debug build
+  variables:
+    TREZOR_PROFILING: 1
   script:
     - cd core
     - pipenv run make test_emu_monero
+    - mv ./src/.coverage .coverage.test_emu_monero
+  artifacts:
+    name: core-monero-test
+    paths:
+      - tests/trezor.log
+      - core/.coverage.*
+    expire_in: 1 week
+    when: always
+
+core u2f test:
+  stage: test
+  extends: .core_job
+  dependencies:
+    - core unix frozen debug build
+  variables:
+    TREZOR_PROFILING: 1
+  script:
+    - make -C tests/fido_tests/u2f-tests-hid
+    - cd core
+    - pipenv run make test_emu_u2f
+    - mv ./src/.coverage .coverage.test_emu_u2f
+  artifacts:
+    name: core-u2f-test
+    paths:
+      - tests/trezor.log
+      - core/.coverage.*
+    expire_in: 1 week
+    when: always
+
+core fido2 test:
+  stage: test
+  extends: .core_job
+  dependencies:
+    - core unix frozen debug build
+  variables:
+    TREZOR_PROFILING: 1
+  script:
+    - cd core
+    - pipenv run make test_emu_fido2
+    - mv ./src/.coverage .coverage.test_emu_fido2
+  artifacts:
+    name: core-fido2-test
+    paths:
+      - tests/trezor.log
+      - tests/junit.xml
+      - core/.coverage.*
+    expire_in: 1 week
+    reports:
+      junit: tests/junit.xml
+    when: always
+
+core click test:
+  stage: test
+  extends: .core_job
+  dependencies:
+    - core unix frozen debug build
+  script:
+    - cd core
+    - pipenv run make test_emu_click
+  artifacts:
+    name: core-click-test
+    paths:
+      - tests/trezor.log
+      - tests/junit.xml
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
+
+core upgrade test:
+  stage: test
+  extends: .core_job
+  dependencies:
+    - core unix frozen debug build
+  variables:
+    TREZOR_UPGRADE_TEST: "core"
+  script:
+    - tests/download_emulators.sh
+    - pipenv run pytest --junitxml=tests/junit.xml tests/upgrade_tests
+  artifacts:
+    name: core-upgrade-test
+    paths:
+      - tests/junit.xml
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
+
+core persistence test:
+  stage: test
+  extends: .core_job
+  dependencies:
+    - core unix frozen debug build
+  script:
+    - pipenv run pytest --junitxml=tests/junit.xml tests/persistence_tests
+  artifacts:
+    name: core-persistence-test
+    paths:
+      - tests/junit.xml
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
 
 
 # Crypto
 
-test crypto:
+crypto test:
   stage: test
+  only:
+    changes:
+      - ci/**/*
+      - crypto/**/*
   dependencies:
-    - build crypto
+    - crypto build
   script:
     - cd crypto
     - ./tests/aestst
     - ./tests/test_check
     - ./tests/test_openssl 1000
-    - ITERS=10 pipenv run pytest tests
+    - ITERS=10 pipenv run pytest --junitxml=tests/junit.xml tests
+    - CK_TIMEOUT_MULTIPLIER=20 valgrind -q --error-exitcode=1 ./tests/test_check
+  artifacts:
+    name: crypto-test
+    paths:
+      - tests/junit.xml
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
 
 
 # Legacy
 
-test legacy emu:
+legacy test:
   stage: test
+  extends: .legacy_job
   dependencies:
-    - build legacy emu
+    - legacy emu regular build
   variables:
     EMULATOR: "1"
   script:
     - cd legacy
     - pipenv run script/test
+  artifacts:
+    name: legacy-emu-test
+    paths:
+      - tests/junit.xml
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
 
-test legacy emu bitcoinonly:
+legacy btconly test:
   stage: test
+  extends: .legacy_job
   dependencies:
-    - build legacy emu bitcoinonly
+    - legacy emu btconly build
   variables:
     EMULATOR: "1"
     EMULATOR_BINARY: "firmware/trezor-bitcoinonly.elf"
@@ -75,12 +253,46 @@ test legacy emu bitcoinonly:
   script:
     - cd legacy
     - pipenv run script/test
+  artifacts:
+    name: legacy-emu-btconly-test
+    paths:
+      - tests/junit.xml
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
+
+
+legacy upgrade test:
+  stage: test
+  extends: .legacy_job
+  dependencies:
+    - legacy emu regular build
+  variables:
+    TREZOR_UPGRADE_TEST: "legacy"
+  script:
+    - tests/download_emulators.sh
+    - pipenv run pytest --junitxml=tests/junit.xml tests/upgrade_tests
+  artifacts:
+    name: legacy-emu-upgrade-test
+    paths:
+      - tests/junit.xml
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always
 
 
 # Python
 
-test python:
+python test:
   stage: test
+  dependencies: []
+  only:
+    changes:
+      - ci/**/*
+      - common/**/*
+      - python/**/*
   script:
     - cd python
     - pipenv run tox
@@ -88,22 +300,22 @@ test python:
 
 # Storage
 
-test storage:
+storage test:
   stage: test
+  only:
+    changes:
+      - ci/**/*
+      - storage/**/*
   dependencies: []
   script:
     - cd storage/tests
     - pipenv run make build
     - pipenv run make tests_all
-
-
-# Other
-
-test upgrade:
-  stage: test
-  dependencies:
-    - build core unix frozen debug
-    - build legacy emu
-  script:
-    - tests/upgrade_tests/download_emulators.sh
-    - pipenv run pytest tests/upgrade_tests
+  artifacts:
+    name: storage-test
+    paths:
+      - tests/junit.xml
+    reports:
+      junit: tests/junit.xml
+    expire_in: 1 week
+    when: always

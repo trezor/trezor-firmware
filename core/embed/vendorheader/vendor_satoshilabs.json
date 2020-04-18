@@ -1,0 +1,21 @@
+{
+    "header_len": 4608,
+    "text": "SatoshiLabs",
+    "expiry": 0,
+    "version": {
+        "major": 0,
+        "minor": 0
+    },
+    "sig_m": 2,
+    "trust": {
+        "show_vendor_string": false,
+        "require_user_click": false,
+        "red_background": false,
+        "delay": 0
+    },
+    "pubkeys": [
+        "47fbdc84d8abef44fe6abde8f87b6ead821b7082ec63b9f7cc33dc53bf6c708d",
+        "9af22a52ab47a93091403612b3d6731a2dfef8a33383048ed7556a20e8b03c81",
+        "2218c25f8ba70c82eba8ed6a321df209c0a7643d014f33bf9317846f62923830"
+    ]
+}

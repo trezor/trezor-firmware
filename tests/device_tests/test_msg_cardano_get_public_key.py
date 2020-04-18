@@ -19,13 +19,10 @@ import pytest
 from trezorlib.cardano import get_public_key
 from trezorlib.tools import parse_path
 
-from .conftest import setup_client
-
 
 @pytest.mark.altcoin
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
-@setup_client(mnemonic=" ".join(["all"] * 12))
 @pytest.mark.parametrize(
     "path,public_key,chain_code",
     [

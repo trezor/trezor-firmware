@@ -8,6 +8,8 @@ typedef struct {
   const uint8_t *data;
 } BITMAP;
 
+extern const BITMAP bmp_btn_cancel;
+extern const BITMAP bmp_btn_confirm;
 extern const BITMAP bmp_digit0;
 extern const BITMAP bmp_digit1;
 extern const BITMAP bmp_digit2;

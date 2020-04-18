@@ -30,7 +30,7 @@
 void pbkdf2_hmac_sha256_Init(PBKDF2_HMAC_SHA256_CTX *pctx, const uint8_t *pass,
                              int passlen, const uint8_t *salt, int saltlen,
                              uint32_t blocknr) {
-  SHA256_CTX ctx;
+  SHA256_CTX ctx = {0};
 #if BYTE_ORDER == LITTLE_ENDIAN
   REVERSE32(blocknr, blocknr);
 #endif
@@ -88,10 +88,10 @@ void pbkdf2_hmac_sha256(const uint8_t *pass, int passlen, const uint8_t *salt,
     last_block_size = SHA256_DIGEST_LENGTH;
   }
   for (uint32_t blocknr = 1; blocknr <= blocks_count; blocknr++) {
-    PBKDF2_HMAC_SHA256_CTX pctx;
+    PBKDF2_HMAC_SHA256_CTX pctx = {0};
     pbkdf2_hmac_sha256_Init(&pctx, pass, passlen, salt, saltlen, blocknr);
     pbkdf2_hmac_sha256_Update(&pctx, iterations);
-    uint8_t digest[SHA256_DIGEST_LENGTH];
+    uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
     pbkdf2_hmac_sha256_Final(&pctx, digest);
     uint32_t key_offset = (blocknr - 1) * SHA256_DIGEST_LENGTH;
     if (blocknr < blocks_count) {
@@ -105,7 +105,7 @@ void pbkdf2_hmac_sha256(const uint8_t *pass, int passlen, const uint8_t *salt,
 void pbkdf2_hmac_sha512_Init(PBKDF2_HMAC_SHA512_CTX *pctx, const uint8_t *pass,
                              int passlen, const uint8_t *salt, int saltlen,
                              uint32_t blocknr) {
-  SHA512_CTX ctx;
+  SHA512_CTX ctx = {0};
 #if BYTE_ORDER == LITTLE_ENDIAN
   REVERSE32(blocknr, blocknr);
 #endif
@@ -164,10 +164,10 @@ void pbkdf2_hmac_sha512(const uint8_t *pass, int passlen, const uint8_t *salt,
     last_block_size = SHA512_DIGEST_LENGTH;
   }
   for (uint32_t blocknr = 1; blocknr <= blocks_count; blocknr++) {
-    PBKDF2_HMAC_SHA512_CTX pctx;
+    PBKDF2_HMAC_SHA512_CTX pctx = {0};
     pbkdf2_hmac_sha512_Init(&pctx, pass, passlen, salt, saltlen, blocknr);
     pbkdf2_hmac_sha512_Update(&pctx, iterations);
-    uint8_t digest[SHA512_DIGEST_LENGTH];
+    uint8_t digest[SHA512_DIGEST_LENGTH] = {0};
     pbkdf2_hmac_sha512_Final(&pctx, digest);
     uint32_t key_offset = (blocknr - 1) * SHA512_DIGEST_LENGTH;
     if (blocknr < blocks_count) {

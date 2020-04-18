@@ -143,7 +143,7 @@ def _cbor_decode(cbor: bytes) -> Tuple[Value, bytes]:
         return (data[0:ln], data[ln:])
     elif fb_type == _CBOR_TEXT_STRING:
         ln, data = _read_length(cbor[1:], fb_aux)
-        return (bytes(data[0:ln]).decode(), data[ln:])
+        return (data[0:ln].decode(), data[ln:])
     elif fb_type == _CBOR_ARRAY:
         if fb_aux == _CBOR_VAR_FOLLOWS:
             res = []  # type: Value

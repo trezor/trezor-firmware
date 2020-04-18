@@ -1,34 +1,37 @@
+from storage import is_initialized
 from trezor import config, ui, wire
-from trezor.messages import ButtonRequestType
-from trezor.messages.ButtonAck import ButtonAck
-from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
-from trezor.ui.popup import Popup
 from trezor.ui.text import Text
 
 from apps.common.confirm import require_confirm
-from apps.common.request_pin import PinCancelled, request_pin
+from apps.common.layout import show_success
+from apps.common.request_pin import (
+    request_pin_and_sd_salt,
+    request_pin_confirm,
+    show_pin_invalid,
+    show_pin_matches_wipe_code,
+)
 
 if False:
-    from typing import Any
     from trezor.messages.ChangePin import ChangePin
 
 
 async def change_pin(ctx: wire.Context, msg: ChangePin) -> Success:
+    if not is_initialized():
+        raise wire.NotInitialized("Device is not initialized")
 
     # confirm that user wants to change the pin
     await require_confirm_change_pin(ctx, msg)
 
-    # get current pin, return failure if invalid
-    if config.has_pin():
-        curpin = await request_pin_ack(ctx, "Enter old PIN", config.get_pin_rem())
-        # if removing, defer check to change_pin()
-        if not msg.remove:
-            if not config.check_pin(pin_to_int(curpin)):
-                raise wire.PinInvalid("PIN invalid")
-    else:
-        curpin = ""
+    # get old pin
+    curpin, salt = await request_pin_and_sd_salt(ctx, "Enter old PIN")
+
+    # if changing pin, pre-check the entered pin before getting new pin
+    if curpin and not msg.remove:
+        if not config.check_pin(pin_to_int(curpin), salt):
+            await show_pin_invalid(ctx)
+            raise wire.PinInvalid("PIN invalid")
 
     # get new pin
     if not msg.remove:
@@ -37,13 +40,26 @@ async def change_pin(ctx: wire.Context, msg: ChangePin) -> Success:
         newpin = ""
 
     # write into storage
-    if not config.change_pin(pin_to_int(curpin), pin_to_int(newpin)):
+    if not config.change_pin(pin_to_int(curpin), pin_to_int(newpin), salt, salt):
+        if newpin:
+            await show_pin_matches_wipe_code(ctx)
+        else:
+            await show_pin_invalid(ctx)
         raise wire.PinInvalid("PIN invalid")
 
     if newpin:
-        return Success(message="PIN changed")
+        if curpin:
+            msg_screen = "changed your PIN."
+            msg_wire = "PIN changed"
+        else:
+            msg_screen = "enabled PIN protection."
+            msg_wire = "PIN enabled"
     else:
-        return Success(message="PIN removed")
+        msg_screen = "disabled PIN protection."
+        msg_wire = "PIN removed"
+
+    await show_success(ctx, ("You have successfully", msg_screen))
+    return Success(message=msg_wire)
 
 
 def require_confirm_change_pin(ctx: wire.Context, msg: ChangePin) -> None:
@@ -58,7 +74,7 @@ def require_confirm_change_pin(ctx: wire.Context, msg: ChangePin) -> None:
     if not msg.remove and has_pin:  # changing pin
         text = Text("Change PIN", ui.ICON_CONFIG)
         text.normal("Do you really want to")
-        text.bold("change the current PIN?")
+        text.bold("change your PIN?")
         return require_confirm(ctx, text)
 
     if not msg.remove and not has_pin:  # setting new pin
@@ -67,28 +83,5 @@ def require_confirm_change_pin(ctx: wire.Context, msg: ChangePin) -> None:
         text.bold("enable PIN protection?")
         return require_confirm(ctx, text)
 
-
-async def request_pin_confirm(ctx: wire.Context, *args: Any, **kwargs: Any) -> str:
-    while True:
-        pin1 = await request_pin_ack(ctx, "Enter new PIN", *args, **kwargs)
-        pin2 = await request_pin_ack(ctx, "Re-enter new PIN", *args, **kwargs)
-        if pin1 == pin2:
-            return pin1
-        await pin_mismatch()
-
-
-async def request_pin_ack(ctx: wire.Context, *args: Any, **kwargs: Any) -> str:
-    try:
-        await ctx.call(ButtonRequest(code=ButtonRequestType.Other), ButtonAck)
-        return await ctx.wait(request_pin(*args, **kwargs))
-    except PinCancelled:
-        raise wire.ActionCancelled("Cancelled")
-
-
-async def pin_mismatch() -> None:
-    text = Text("PIN mismatch", ui.ICON_WRONG, ui.RED)
-    text.normal("The PINs you entered", "do not match.")
-    text.normal("")
-    text.normal("Please try again.")
-    popup = Popup(text, 3000)  # show for 3 seconds
-    await popup
+    # removing non-existing PIN
+    raise wire.ProcessError("PIN protection already disabled")

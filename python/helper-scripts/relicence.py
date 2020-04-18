@@ -24,7 +24,8 @@ SHEBANG_HEADER = """\
 
 """
 
-EXCLUDE_FILES = ["trezorlib/__init__.py", "trezorlib/_ed25519.py"]
+EXCLUDE_FILES = ["src/trezorlib/__init__.py", "src/trezorlib/_ed25519.py"]
+EXCLUDE_DIRS = ["src/trezorlib/messages"]
 
 
 def one_file(fp):
@@ -56,14 +57,22 @@ def one_file(fp):
 
 import glob
 import os
+import sys
 
-for fn in glob.glob("trezorlib/**/*.py", recursive=True):
-    if fn.startswith("trezorlib/messages/"):
-        continue
-    if fn in EXCLUDE_FILES:
-        continue
-    statinfo = os.stat(fn)
-    if statinfo.st_size == 0:
-        continue
-    with open(fn, "r+") as fp:
-        one_file(fp)
+
+def main(paths):
+    for path in paths:
+        for fn in glob.glob(f"{path}/**/*.py", recursive=True):
+            if any(exclude in fn for exclude in EXCLUDE_DIRS):
+                continue
+            if fn in EXCLUDE_FILES:
+                continue
+            statinfo = os.stat(fn)
+            if statinfo.st_size == 0:
+                continue
+            with open(fn, "r+") as fp:
+                one_file(fp)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

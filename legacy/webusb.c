@@ -23,15 +23,27 @@
 #include "util.h"
 #include "webusb.h"
 
-const struct webusb_platform_descriptor webusb_platform_capability_descriptor =
-    {.bLength = WEBUSB_PLATFORM_DESCRIPTOR_SIZE,
-     .bDescriptorType = USB_DT_DEVICE_CAPABILITY,
-     .bDevCapabilityType = USB_DC_PLATFORM,
-     .bReserved = 0,
-     .platformCapabilityUUID = WEBUSB_UUID,
-     .bcdVersion = 0x0100,
-     .bVendorCode = WEBUSB_VENDOR_CODE,
-     .iLandingPage = 1};
+const struct webusb_platform_descriptor
+    webusb_platform_capability_descriptor_landing = {
+        .bLength = WEBUSB_PLATFORM_DESCRIPTOR_SIZE,
+        .bDescriptorType = USB_DT_DEVICE_CAPABILITY,
+        .bDevCapabilityType = USB_DC_PLATFORM,
+        .bReserved = 0,
+        .platformCapabilityUUID = WEBUSB_UUID,
+        .bcdVersion = 0x0100,
+        .bVendorCode = WEBUSB_VENDOR_CODE,
+        .iLandingPage = 1};
+
+const struct webusb_platform_descriptor
+    webusb_platform_capability_descriptor_no_landing = {
+        .bLength = WEBUSB_PLATFORM_DESCRIPTOR_SIZE,
+        .bDescriptorType = USB_DT_DEVICE_CAPABILITY,
+        .bDevCapabilityType = USB_DC_PLATFORM,
+        .bReserved = 0,
+        .platformCapabilityUUID = WEBUSB_UUID,
+        .bcdVersion = 0x0100,
+        .bVendorCode = WEBUSB_VENDOR_CODE,
+        .iLandingPage = 0};
 
 static const char* webusb_https_url;
 

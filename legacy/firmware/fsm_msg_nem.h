@@ -43,7 +43,7 @@ void fsm_msgNEMGetAddress(NEMGetAddress *msg) {
     strlcat(desc, ":", sizeof(desc));
 
     if (!fsm_layoutAddress(resp->address, desc, true, 0, msg->address_n,
-                           msg->address_n_count, false)) {
+                           msg->address_n_count, false, NULL, 0, NULL)) {
       return;
     }
   }
@@ -132,8 +132,7 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
   hdnode_get_nem_address(node, common->network, address);
 
   if (msg->has_transfer) {
-    msg->transfer.mosaics_count = nem_canonicalizeMosaics(
-        msg->transfer.mosaics, msg->transfer.mosaics_count);
+    nem_canonicalizeMosaics(&msg->transfer);
   }
 
   if (msg->has_transfer && !nem_askTransfer(common, &msg->transfer, network)) {

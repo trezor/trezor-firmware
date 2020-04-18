@@ -24,8 +24,10 @@
 #ifndef __BIP39_H__
 #define __BIP39_H__
 
+#include <stdbool.h>
 #include <stdint.h>
 
+#define BIP39_WORDS 2048
 #define BIP39_PBKDF2_ROUNDS 2048
 
 const char *mnemonic_generate(int strength);  // strength in bits
@@ -42,6 +44,9 @@ void mnemonic_to_seed(const char *mnemonic, const char *passphrase,
                       void (*progress_callback)(uint32_t current,
                                                 uint32_t total));
 
-const char *const *mnemonic_wordlist(void);
+int mnemonic_find_word(const char *word);
+const char *mnemonic_complete_word(const char *prefix, int len);
+const char *mnemonic_get_word(int index);
+uint32_t mnemonic_word_completion_mask(const char *prefix, int len);
 
 #endif

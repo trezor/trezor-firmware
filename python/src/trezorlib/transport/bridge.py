@@ -22,6 +22,7 @@ from typing import Any, Dict, Iterable, Optional
 import requests
 
 from .. import mapping, protobuf
+from ..log import DUMP_BYTES
 from . import Transport, TransportException
 
 LOG = logging.getLogger(__name__)
@@ -159,6 +160,7 @@ class BridgeTransport(Transport):
         buffer = BytesIO()
         protobuf.dump_message(buffer, msg)
         ser = buffer.getvalue()
+        LOG.log(DUMP_BYTES, "sending bytes: {}".format(ser.hex()))
         header = struct.pack(">HL", mapping.get_type(msg), len(ser))
 
         self.handle.write_buf(header + ser)
@@ -167,7 +169,9 @@ class BridgeTransport(Transport):
         data = self.handle.read_buf()
         headerlen = struct.calcsize(">HL")
         msg_type, datalen = struct.unpack(">HL", data[:headerlen])
-        buffer = BytesIO(data[headerlen : headerlen + datalen])
+        ser = data[headerlen : headerlen + datalen]
+        LOG.log(DUMP_BYTES, "received bytes: {}".format(ser.hex()))
+        buffer = BytesIO(ser)
         msg = protobuf.load_message(buffer, mapping.get_class(msg_type))
         LOG.debug(
             "received message: {}".format(msg.__class__.__name__),

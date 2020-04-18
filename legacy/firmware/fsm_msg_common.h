@@ -17,28 +17,7 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-void fsm_msgInitialize(const Initialize *msg) {
-  recovery_abort();
-  signing_abort();
-  if (msg && msg->has_state && msg->state.size == 64) {
-    uint8_t i_state[64];
-    if (!session_getState(msg->state.bytes, i_state, NULL)) {
-      session_clear(false);  // do not clear PIN
-    } else {
-      if (0 != memcmp(msg->state.bytes, i_state, 64)) {
-        session_clear(false);  // do not clear PIN
-      }
-    }
-  } else {
-    session_clear(false);  // do not clear PIN
-  }
-  layoutHome();
-  fsm_msgGetFeatures(0);
-}
-
-void fsm_msgGetFeatures(const GetFeatures *msg) {
-  (void)msg;
-  RESP_INIT(Features);
+bool get_features(Features *resp) {
   resp->has_vendor = true;
   strlcpy(resp->vendor, "trezor.io", sizeof(resp->vendor));
   resp->has_major_version = true;
@@ -71,8 +50,6 @@ void fsm_msgGetFeatures(const GetFeatures *msg) {
   resp->has_imported = config_getImported(&(resp->imported));
   resp->has_pin_cached = true;
   resp->pin_cached = session_isUnlocked() && config_hasPin();
-  resp->has_passphrase_cached = true;
-  resp->passphrase_cached = session_isPassphraseCached();
   resp->has_needs_backup = true;
   config_getNeedsBackup(&(resp->needs_backup));
   resp->has_unfinished_backup = true;
@@ -82,6 +59,10 @@ void fsm_msgGetFeatures(const GetFeatures *msg) {
   resp->has_flags = config_getFlags(&(resp->flags));
   resp->has_model = true;
   strlcpy(resp->model, "1", sizeof(resp->model));
+  if (session_isUnlocked()) {
+    resp->has_wipe_code_protection = true;
+    resp->wipe_code_protection = config_hasWipeCode();
+  }
 
 #if BITCOIN_ONLY
   resp->capabilities_count = 2;
@@ -98,7 +79,35 @@ void fsm_msgGetFeatures(const GetFeatures *msg) {
   resp->capabilities[6] = Capability_Capability_Stellar;
   resp->capabilities[7] = Capability_Capability_U2F;
 #endif
+  return resp;
+}
 
+void fsm_msgInitialize(const Initialize *msg) {
+  recovery_abort();
+  signing_abort();
+
+  uint8_t *session_id;
+  if (msg && msg->has_session_id) {
+    session_id = session_startSession(msg->session_id.bytes);
+  } else {
+    session_id = session_startSession(NULL);
+  }
+
+  RESP_INIT(Features);
+  get_features(resp);
+
+  resp->has_session_id = true;
+  memcpy(resp->session_id.bytes, session_id, sizeof(resp->session_id.bytes));
+  resp->session_id.size = sizeof(resp->session_id.bytes);
+
+  layoutHome();
+  msg_write(MessageType_MessageType_Features, resp);
+}
+
+void fsm_msgGetFeatures(const GetFeatures *msg) {
+  (void)msg;
+  RESP_INIT(Features);
+  get_features(resp);
   msg_write(MessageType_MessageType_Features, resp);
 }
 
@@ -116,17 +125,6 @@ void fsm_msgPing(const Ping *msg) {
     }
   }
 
-  if (msg->has_pin_protection && msg->pin_protection) {
-    CHECK_PIN
-  }
-
-  if (msg->has_passphrase_protection && msg->passphrase_protection) {
-    if (!protectPassphrase()) {
-      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-      return;
-    }
-  }
-
   if (msg->has_message) {
     resp->has_message = true;
     memcpy(&(resp->message), &(msg->message), sizeof(resp->message));
@@ -136,6 +134,8 @@ void fsm_msgPing(const Ping *msg) {
 }
 
 void fsm_msgChangePin(const ChangePin *msg) {
+  CHECK_INITIALIZED
+
   bool removal = msg->has_remove && msg->remove;
   if (removal) {
     if (config_hasPin()) {
@@ -168,6 +168,52 @@ void fsm_msgChangePin(const ChangePin *msg) {
       fsm_sendSuccess(_("PIN removed"));
     } else {
       fsm_sendSuccess(_("PIN changed"));
+    }
+  }
+
+  layoutHome();
+}
+
+void fsm_msgChangeWipeCode(const ChangeWipeCode *msg) {
+  CHECK_INITIALIZED
+
+  bool removal = msg->has_remove && msg->remove;
+  bool has_wipe_code = config_hasWipeCode();
+
+  if (removal) {
+    // Note that if storage is locked, then config_hasWipeCode() returns false.
+    if (has_wipe_code || !session_isUnlocked()) {
+      layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                        _("Do you really want to"), _("disable wipe code"),
+                        _("protection?"), NULL, NULL, NULL);
+    } else {
+      fsm_sendSuccess(_("Wipe code removed"));
+      return;
+    }
+  } else {
+    if (has_wipe_code) {
+      layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                        _("Do you really want to"), _("change the current"),
+                        _("wipe code?"), NULL, NULL, NULL);
+    } else {
+      layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                        _("Do you really want to"), _("set a new wipe code?"),
+                        NULL, NULL, NULL, NULL);
+    }
+  }
+  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    layoutHome();
+    return;
+  }
+
+  if (protectChangeWipeCode(removal)) {
+    if (removal) {
+      fsm_sendSuccess(_("Wipe code removed"));
+    } else if (has_wipe_code) {
+      fsm_sendSuccess(_("Wipe code changed"));
+    } else {
+      fsm_sendSuccess(_("Wipe code set"));
     }
   }
 
@@ -214,6 +260,8 @@ void fsm_msgGetEntropy(const GetEntropy *msg) {
   layoutHome();
 }
 
+#if DEBUG_LINK
+
 void fsm_msgLoadDevice(const LoadDevice *msg) {
   CHECK_PIN
 
@@ -242,6 +290,8 @@ void fsm_msgLoadDevice(const LoadDevice *msg) {
   fsm_sendSuccess(_("Device loaded"));
   layoutHome();
 }
+
+#endif
 
 void fsm_msgResetDevice(const ResetDevice *msg) {
   CHECK_PIN
@@ -297,12 +347,18 @@ void fsm_msgCancel(const Cancel *msg) {
 
 void fsm_msgClearSession(const ClearSession *msg) {
   (void)msg;
-  session_clear(true);  // clear PIN as well
+  // we do not actually clear the session, we just lock it
+  // TODO: the message should be called LockSession see #819
+  config_lockDevice();
   layoutScreensaver();
   fsm_sendSuccess(_("Session cleared"));
 }
 
 void fsm_msgApplySettings(const ApplySettings *msg) {
+  CHECK_PARAM(
+      !msg->has_passphrase_always_on_device,
+      _("This firmware is incapable of passphrase entry on the device."));
+
   CHECK_PARAM(msg->has_label || msg->has_language || msg->has_use_passphrase ||
                   msg->has_homescreen || msg->has_auto_lock_delay_ms,
               _("No setting provided"));
@@ -397,6 +453,12 @@ void fsm_msgRecoveryDevice(const RecoveryDevice *msg) {
   const bool dry_run = msg->has_dry_run ? msg->dry_run : false;
   if (!dry_run) {
     CHECK_NOT_INITIALIZED
+  } else {
+    CHECK_INITIALIZED
+    CHECK_PARAM(!msg->has_passphrase_protection && !msg->has_pin_protection &&
+                    !msg->has_language && !msg->has_label &&
+                    !msg->has_u2f_counter,
+                _("Forbidden field set in dry-run"))
   }
 
   CHECK_PARAM(!msg->has_word_count || msg->word_count == 12 ||
@@ -426,5 +488,23 @@ void fsm_msgSetU2FCounter(const SetU2FCounter *msg) {
   }
   config_setU2FCounter(msg->u2f_counter);
   fsm_sendSuccess(_("U2F counter set"));
+  layoutHome();
+}
+
+void fsm_msgGetNextU2FCounter() {
+  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                    _("Do you want to"), _("increase and retrieve"),
+                    _("the U2F counter?"), NULL, NULL, NULL);
+  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    layoutHome();
+    return;
+  }
+  uint32_t counter = config_nextU2FCounter();
+
+  RESP_INIT(NextU2FCounter);
+  resp->has_u2f_counter = true;
+  resp->u2f_counter = counter;
+  msg_write(MessageType_MessageType_NextU2FCounter, resp);
   layoutHome();
 }

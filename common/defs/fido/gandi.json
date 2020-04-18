@@ -1,0 +1,6 @@
+{
+  "label": "Gandi",
+  "u2f": ["a4e22dcafea7e90e128950113989fc45978dc9fb87767560516c1c69dfdfd196"],
+  "webauthn": ["gandi.net"],
+  "use_sign_count": false
+}

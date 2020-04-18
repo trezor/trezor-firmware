@@ -139,7 +139,7 @@ void hasher_Final(Hasher *hasher, uint8_t hash[HASHER_DIGEST_LENGTH]) {
 
 void hasher_Raw(HasherType type, const uint8_t *data, size_t length,
                 uint8_t hash[HASHER_DIGEST_LENGTH]) {
-  Hasher hasher;
+  Hasher hasher = {0};
 
   hasher_Init(&hasher, type);
   hasher_Update(&hasher, data, length);

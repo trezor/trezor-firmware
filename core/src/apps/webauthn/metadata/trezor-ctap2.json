@@ -1,0 +1,59 @@
+{
+  "description": "Trezor FIDO2 CTAP2 Authenticator",
+  "aaguid": "d6d0bdc3-62ee-c4db-de8d-7a656e4a4487",
+  "alternativeDescriptions": {
+  },
+  "protocolFamily": "fido2",
+  "authenticatorVersion": 2,
+  "upv": [
+    {
+      "major": 1,
+      "minor": 0
+    }
+  ],
+  "assertionScheme": "FIDOV2",
+  "authenticationAlgorithm": 1,
+  "publicKeyAlgAndEncoding": 260,
+  "attestationTypes": [
+    15879,
+    15880
+  ],
+  "userVerificationDetails": [
+    [
+      {
+        "userVerification": 1
+      },
+      {
+        "userVerification": 4
+      }
+    ]
+  ],
+  "isSecondFactorOnly": false,
+  "keyProtection": 2,
+  "matcherProtection": 4,
+  "cryptoStrength": 128,
+  "attachmentHint": 6,
+  "tcDisplay": 9,
+  "tcDisplayContentType": "text/plain",
+  "tcDisplayPNGCharacteristics": [
+    {
+      "bitDepth": 16,
+      "colorType": 2,
+      "compression": 0,
+      "filter": 0,
+      "height": 240,
+      "interlace": 0,
+      "width": 240
+    }
+  ],
+  "supportedExtensions": [
+    {
+      "id": "txAuthSimple",
+      "fail_if_unknown": false
+    }
+  ],
+  "attestationRootCertificates": [
+    "MIIBGDCBwAIJALHZj0JkctMsMAoGCCqGSM49BAMCMBUxEzARBgNVBAMMClRyZXpvciBVMkYwHhcNMTYwNDI5MTMzMTUzWhcNMjYwNDI3MTMzMTUzWjAVMRMwEQYDVQQDDApUcmV6b3IgVTJGMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE2Ri9+opUrJLpDakfynqiZFTA0XM2MU3eg6VLhrXfTvBSZZodb/y3Rn8azduKMwgLXu2RiRP0Q6UmG8d7aGBvwTAKBggqhkjOPQQDAgNHADBEAiAkHoH/0uXmFTaUw1Uuj+vXHok1khy0g0FDcRx26u7zlQIgX4DrEPJczDmLPKipraQCf5MTIHe3q853Rlon9T0zoR0="
+  ],
+  "icon": "data:image/png;base64,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"
+}

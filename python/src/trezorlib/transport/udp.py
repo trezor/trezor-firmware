@@ -15,10 +15,13 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import socket
+import time
 from typing import Iterable, Optional, cast
 
 from . import TransportException
 from .protocol import ProtocolBasedTransport, get_protocol
+
+SOCKET_TIMEOUT = 10
 
 
 class UdpTransport(ProtocolBasedTransport):
@@ -58,7 +61,7 @@ class UdpTransport(ProtocolBasedTransport):
                 return d
             else:
                 raise TransportException(
-                    "No Trezor device found at address {}".format(path)
+                    "No Trezor device found at address {}".format(d.get_path())
                 )
         finally:
             d.close()
@@ -82,10 +85,26 @@ class UdpTransport(ProtocolBasedTransport):
             path = path.replace("{}:".format(cls.PATH_PREFIX), "")
             return cls._try_path(path)
 
+    def wait_until_ready(self, timeout: float = 10) -> None:
+        try:
+            self.open()
+            self.socket.settimeout(0)
+            start = time.monotonic()
+            while True:
+                if self._ping():
+                    break
+                elapsed = time.monotonic() - start
+                if elapsed >= timeout:
+                    raise TransportException("Timed out waiting for connection.")
+
+                time.sleep(0.05)
+        finally:
+            self.close()
+
     def open(self) -> None:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.connect(self.device)
-        self.socket.settimeout(10)
+        self.socket.settimeout(SOCKET_TIMEOUT)
 
     def close(self) -> None:
         if self.socket is not None:

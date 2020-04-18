@@ -1,11 +1,12 @@
 from micropython import const
 
 from trezor import ui
+from trezor.strings import format_amount
 from trezor.ui.scroll import Paginated
 from trezor.ui.text import Text
-from trezor.utils import chunks, format_amount
+from trezor.utils import chunks
 
-from apps.common.confirm import confirm, hold_to_confirm
+from apps.common.confirm import require_confirm, require_hold_to_confirm
 
 
 def format_coin_amount(amount):
@@ -31,7 +32,7 @@ async def confirm_sending(ctx, amount, to):
                 t.bold(line)
             pages.append(t)
 
-    return await confirm(ctx, Paginated(pages))
+    await require_confirm(ctx, Paginated(pages))
 
 
 async def confirm_transaction(ctx, amount, fee, network_name):
@@ -45,4 +46,4 @@ async def confirm_transaction(ctx, amount, fee, network_name):
     t2.normal("Network:")
     t2.bold(network_name)
 
-    return await hold_to_confirm(ctx, Paginated([t1, t2]))
+    await require_hold_to_confirm(ctx, Paginated([t1, t2]))

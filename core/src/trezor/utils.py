@@ -1,6 +1,6 @@
 import gc
 import sys
-from trezorutils import (  # noqa: F401
+from trezorutils import (  # type: ignore[attr-defined] # noqa: F401
     BITCOIN_ONLY,
     EMULATOR,
     GITREV,
@@ -11,25 +11,21 @@ from trezorutils import (  # noqa: F401
     consteq,
     halt,
     memcpy,
-    set_mode_unprivileged,
 )
+
+DISABLE_ANIMATION = 0
 
 if __debug__:
     if EMULATOR:
         import uos
 
-        TEST = int(uos.getenv("TREZOR_TEST") or "0")
-        DISABLE_FADE = int(uos.getenv("TREZOR_DISABLE_FADE") or "0")
-        SAVE_SCREEN = int(uos.getenv("TREZOR_SAVE_SCREEN") or "0")
+        DISABLE_ANIMATION = int(uos.getenv("TREZOR_DISABLE_ANIMATION") or "0")
         LOG_MEMORY = int(uos.getenv("TREZOR_LOG_MEMORY") or "0")
     else:
-        TEST = 0
-        DISABLE_FADE = 0
-        SAVE_SCREEN = 0
         LOG_MEMORY = 0
 
 if False:
-    from typing import Iterable, Iterator, Protocol, List, TypeVar
+    from typing import Any, Iterable, Iterator, Protocol, TypeVar, Sequence
 
 
 def unimport_begin() -> Iterable[str]:
@@ -66,33 +62,12 @@ def ensure(cond: bool, msg: str = None) -> None:
 
 
 if False:
-    Chunked = TypeVar("Chunked")
+    Chunkable = TypeVar("Chunkable", str, Sequence[Any])
 
 
-def chunks(items: List[Chunked], size: int) -> Iterator[List[Chunked]]:
+def chunks(items: Chunkable, size: int) -> Iterator[Chunkable]:
     for i in range(0, len(items), size):
         yield items[i : i + size]
-
-
-def format_amount(amount: int, decimals: int) -> str:
-    if amount < 0:
-        amount = -amount
-        sign = "-"
-    else:
-        sign = ""
-    d = pow(10, decimals)
-    s = (
-        ("%s%d.%0*d" % (sign, amount // d, decimals, amount % d))
-        .rstrip("0")
-        .rstrip(".")
-    )
-    return s
-
-
-def format_ordinal(number: int) -> str:
-    return str(number) + {1: "st", 2: "nd", 3: "rd"}.get(
-        4 if 10 <= number % 100 < 20 else number % 10, "th"
-    )
 
 
 if False:
@@ -163,3 +138,26 @@ def obj_repr(o: object) -> str:
     else:
         d = o.__dict__
     return "<%s: %s>" % (o.__class__.__name__, d)
+
+
+def truncate_utf8(string: str, max_bytes: int) -> str:
+    """Truncate the codepoints of a string so that its UTF-8 encoding is at most `max_bytes` in length."""
+    data = string.encode()
+    if len(data) <= max_bytes:
+        return string
+
+    # Find the starting position of the last codepoint in data[0 : max_bytes + 1].
+    i = max_bytes
+    while i >= 0 and data[i] & 0xC0 == 0x80:
+        i -= 1
+
+    return data[:i].decode()
+
+
+def is_empty_iterator(i: Iterator) -> bool:
+    try:
+        next(i)
+    except StopIteration:
+        return True
+    else:
+        return False

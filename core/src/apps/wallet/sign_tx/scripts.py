@@ -5,9 +5,9 @@ from apps.common.coininfo import CoinInfo
 from apps.common.writers import empty_bytearray
 from apps.wallet.sign_tx.multisig import multisig_get_pubkey_count, multisig_get_pubkeys
 from apps.wallet.sign_tx.writers import (
-    write_bytes,
+    write_bytes_fixed,
+    write_bytes_unchecked,
     write_op_push,
-    write_scriptnum,
     write_varint,
 )
 
@@ -53,20 +53,6 @@ def output_script_p2sh(scripthash: bytes) -> bytearray:
     return s
 
 
-def script_replay_protection_bip115(
-    block_hash: bytes, block_height: bytes
-) -> bytearray:
-    if block_hash is None or block_height is None:
-        return bytearray()
-    utils.ensure(len(block_hash) == 32)
-    s = bytearray(33)
-    s[0] = 0x20  # 32 bytes for block hash
-    s[1:33] = block_hash  # block hash
-    write_scriptnum(s, block_height)
-    s.append(0xB4)  # OP_CHECKBLOCKATHEIGHT
-    return s
-
-
 # SegWit: Native P2WPKH or P2WSH
 # ===
 # https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#p2wpkh
@@ -88,12 +74,13 @@ def output_script_native_p2wpkh_or_p2wsh(witprog: bytes) -> bytearray:
     # Either:
     # 00 14 <20-byte-key-hash>
     # 00 20 <32-byte-script-hash>
-    utils.ensure(len(witprog) == 20 or len(witprog) == 32)
+    length = len(witprog)
+    utils.ensure(length == 20 or length == 32)
 
-    w = empty_bytearray(3 + len(witprog))
+    w = empty_bytearray(3 + length)
     w.append(0x00)  # witness version byte
-    w.append(len(witprog))  # pub key hash length is 20 (P2WPKH) or 32 (P2WSH) bytes
-    write_bytes(w, witprog)  # pub key hash
+    w.append(length)  # pub key hash length is 20 (P2WPKH) or 32 (P2WSH) bytes
+    write_bytes_fixed(w, witprog, length)  # pub key hash
     return w
 
 
@@ -114,7 +101,7 @@ def input_script_p2wpkh_in_p2sh(pubkeyhash: bytes) -> bytearray:
     w.append(0x16)  # length of the data
     w.append(0x00)  # witness version byte
     w.append(0x14)  # P2WPKH witness program (pub key hash length)
-    write_bytes(w, pubkeyhash)  # pub key hash
+    write_bytes_fixed(w, pubkeyhash, 20)  # pub key hash
     return w
 
 
@@ -137,7 +124,7 @@ def input_script_p2wsh_in_p2sh(script_hash: bytes) -> bytearray:
     w.append(0x22)  # length of the data
     w.append(0x00)  # witness version byte
     w.append(0x20)  # P2WSH witness program (redeem script hash length)
-    write_bytes(w, script_hash)
+    write_bytes_fixed(w, script_hash, 32)
     return w
 
 
@@ -179,7 +166,7 @@ def witness_p2wsh(
     redeem_script_length = output_script_multisig_length(pubkeys, multisig.m)
 
     # length of the result
-    total_length = 1 + 1  # number of items, version
+    total_length = 1 + 1  # number of items, OP_FALSE
     for s in signatures:
         total_length += 1 + len(s) + 1  # length, signature, sighash
     total_length += 1 + redeem_script_length  # length, script
@@ -187,7 +174,10 @@ def witness_p2wsh(
     w = empty_bytearray(total_length)
 
     write_varint(w, num_of_witness_items)
-    write_varint(w, 0)  # version 0 witness program
+    # Starts with OP_FALSE because of an old OP_CHECKMULTISIG bug, which
+    # consumes one additional item on the stack:
+    # https://bitcoin.org/en/developer-guide#standard-transactions
+    write_varint(w, 0)
 
     for s in signatures:
         append_signature(w, s, sighash)  # size of the witness included
@@ -288,12 +278,12 @@ def output_script_paytoopreturn(data: bytes) -> bytearray:
 
 def append_signature(w: bytearray, signature: bytes, sighash: int) -> bytearray:
     write_op_push(w, len(signature) + 1)
-    write_bytes(w, signature)
+    write_bytes_unchecked(w, signature)
     w.append(sighash)
     return w
 
 
 def append_pubkey(w: bytearray, pubkey: bytes) -> bytearray:
     write_op_push(w, len(pubkey))
-    write_bytes(w, pubkey)
+    write_bytes_unchecked(w, pubkey)
     return w

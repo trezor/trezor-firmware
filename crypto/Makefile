@@ -21,6 +21,7 @@ CFLAGS   += $(OPTFLAGS) \
             -Winit-self \
             -Wuninitialized \
             -Wformat-security \
+            -Wno-missing-braces \
             -Werror
 
 VALGRIND ?= 1

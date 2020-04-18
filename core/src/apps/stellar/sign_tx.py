@@ -25,7 +25,7 @@ async def sign_tx(ctx, msg: StellarSignTx, keychain):
 
     w = bytearray()
     await _init(ctx, w, pubkey, msg)
-    _timebounds(w, msg.timebounds_start, msg.timebounds_end)
+    await _timebounds(ctx, w, msg.timebounds_start, msg.timebounds_end)
     await _memo(ctx, w, msg)
     await _operations(ctx, w, msg.num_operations)
     await _final(ctx, w, msg)
@@ -47,8 +47,8 @@ async def _final(ctx, w: bytearray, msg: StellarSignTx):
 
 async def _init(ctx, w: bytearray, pubkey: bytes, msg: StellarSignTx):
     network_passphrase_hash = sha256(msg.network_passphrase).digest()
-    writers.write_bytes(w, network_passphrase_hash)
-    writers.write_bytes(w, consts.TX_TYPE)
+    writers.write_bytes_unchecked(w, network_passphrase_hash)
+    writers.write_bytes_unchecked(w, consts.TX_TYPE)
 
     address = helpers.address_from_public_key(pubkey)
     accounts_match = msg.source_account == address
@@ -63,13 +63,16 @@ async def _init(ctx, w: bytearray, pubkey: bytes, msg: StellarSignTx):
     )
 
 
-def _timebounds(w: bytearray, start: int, end: int):
+async def _timebounds(ctx, w: bytearray, start: int, end: int):
     # timebounds are only present if timebounds_start or timebounds_end is non-zero
     if start or end:
+        # confirm dialog
+        await layout.require_confirm_timebounds(ctx, start, end)
         writers.write_bool(w, True)
+
         # timebounds are sent as uint32s since that's all we can display, but they must be hashed as 64bit
-        writers.write_uint64(w, start)
-        writers.write_uint64(w, end)
+        writers.write_uint64(w, start or 0)
+        writers.write_uint64(w, end or 0)
     else:
         writers.write_bool(w, False)
 
@@ -100,7 +103,7 @@ async def _memo(ctx, w: bytearray, msg: StellarSignTx):
         memo_confirm_text = str(msg.memo_id)
     elif msg.memo_type in (consts.MEMO_TYPE_HASH, consts.MEMO_TYPE_RETURN):
         # Hash/Return: 32 byte hash
-        writers.write_bytes(w, bytearray(msg.memo_hash))
+        writers.write_bytes_unchecked(w, bytearray(msg.memo_hash))
         memo_confirm_text = hexlify(msg.memo_hash).decode()
     else:
         raise ProcessError("Stellar invalid memo type")

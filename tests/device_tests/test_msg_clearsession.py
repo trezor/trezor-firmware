@@ -16,81 +16,41 @@
 
 import pytest
 
-from trezorlib import messages as proto
+from trezorlib import messages
+from trezorlib.btc import get_public_node
+from trezorlib.tools import parse_path
 
-from .common import TrezorTest
+ADDRESS_N = parse_path("44'/0'/0'")
+XPUB = "xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy"
 
 
-@pytest.mark.skip_t2
-class TestMsgClearsession(TrezorTest):
-    def test_clearsession(self):
-        self.setup_mnemonic_pin_passphrase()
+@pytest.mark.skip_ui
+@pytest.mark.setup_client(pin=True, passphrase=True)
+def test_clear_session(client):
+    if client.features.model == "1":
+        init_responses = [messages.PinMatrixRequest(), messages.PassphraseRequest()]
+    else:
+        init_responses = [messages.PassphraseRequest()]
 
-        with self.client:
-            self.client.set_expected_responses(
-                [
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall),
-                    proto.PinMatrixRequest(),
-                    proto.PassphraseRequest(),
-                    proto.Success(),
-                ]
-            )
-            res = self.client.ping(
-                "random data",
-                button_protection=True,
-                pin_protection=True,
-                passphrase_protection=True,
-            )
-            assert res == "random data"
+    cached_responses = [messages.PublicKey()]
 
-        with self.client:
-            # pin and passphrase are cached
-            self.client.set_expected_responses(
-                [
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall),
-                    proto.Success(),
-                ]
-            )
-            res = self.client.ping(
-                "random data",
-                button_protection=True,
-                pin_protection=True,
-                passphrase_protection=True,
-            )
-            assert res == "random data"
+    with client:
+        client.set_expected_responses(init_responses + cached_responses)
+        assert get_public_node(client, ADDRESS_N).xpub == XPUB
 
-        self.client.clear_session()
+    with client:
+        # pin and passphrase are cached
+        client.set_expected_responses(cached_responses)
+        assert get_public_node(client, ADDRESS_N).xpub == XPUB
 
-        # session cache is cleared
-        with self.client:
-            self.client.set_expected_responses(
-                [
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall),
-                    proto.PinMatrixRequest(),
-                    proto.PassphraseRequest(),
-                    proto.Success(),
-                ]
-            )
-            res = self.client.ping(
-                "random data",
-                button_protection=True,
-                pin_protection=True,
-                passphrase_protection=True,
-            )
-            assert res == "random data"
+    client.clear_session()
 
-        with self.client:
-            # pin and passphrase are cached
-            self.client.set_expected_responses(
-                [
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall),
-                    proto.Success(),
-                ]
-            )
-            res = self.client.ping(
-                "random data",
-                button_protection=True,
-                pin_protection=True,
-                passphrase_protection=True,
-            )
-            assert res == "random data"
+    # session cache is cleared
+    with client:
+        client.set_expected_responses(init_responses + cached_responses)
+        assert get_public_node(client, ADDRESS_N).xpub == XPUB
+
+    with client:
+        # pin and passphrase are cached
+        client.set_expected_responses(cached_responses)
+        assert get_public_node(client, ADDRESS_N).xpub == XPUB

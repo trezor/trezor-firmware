@@ -6,12 +6,11 @@ from .LiskTransactionAsset import LiskTransactionAsset
 
 if __debug__:
     try:
-        from typing import Dict, List, Optional
+        from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeLiskTransactionType = Literal[0, 1, 2, 3, 4, 5, 6, 7]
     except ImportError:
-        Dict, List, Optional = None, None, None  # type: ignore
-        EnumTypeLiskTransactionType = None  # type: ignore
+        pass
 
 
 class LiskTransactionCommon(p.MessageType):
@@ -42,7 +41,7 @@ class LiskTransactionCommon(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('type', p.EnumType("LiskTransactionType", (0, 1, 2, 3, 4, 5, 6, 7)), 0),
-            2: ('amount', p.UVarintType, 0),  # default=0
+            2: ('amount', p.UVarintType, 0),
             3: ('fee', p.UVarintType, 0),
             4: ('recipient_id', p.UnicodeType, 0),
             5: ('sender_public_key', p.BytesType, 0),

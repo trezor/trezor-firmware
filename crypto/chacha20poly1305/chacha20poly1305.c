@@ -13,7 +13,7 @@ void hchacha20(ECRYPT_ctx *x,u8 *c);
 void xchacha20poly1305_init(chacha20poly1305_ctx *ctx, const uint8_t key[32], const uint8_t nonce[24]) {
     unsigned char subkey[32] = {0};
     unsigned char block0[64] = {0};
-    ECRYPT_ctx tmp;
+    ECRYPT_ctx tmp = {0};
 
     // Generate the Chacha20 key by applying HChaCha20 to the
     // original key and the first 16 bytes of the nonce.

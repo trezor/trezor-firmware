@@ -14,7 +14,7 @@ def generate(env):
         action="cat $SOURCES"
         " | $SED 's/^Q(.*)/\"&\"/'"
         " | $CC -E $CFLAGS $CCFLAGS $_CCCOMCOM -"
-        " | $SED 's/^\"\(Q(.*)\)\"/\\1/' > $TARGET", )
+        " | $SED 's/^\"\\(Q(.*)\\)\"/\\1/' > $TARGET", )
 
     env['BUILDERS']['GenerateQstrDefs'] = SCons.Builder.Builder(
         action='$MAKEQSTRDATA $SOURCE > $TARGET', )
@@ -23,10 +23,11 @@ def generate(env):
         target = str(target[0])
         source = str(source[0])
         source_name = source.replace(env['source_dir'], '')
-        # unroll the utils.BITCOIN_ONLY constant
+        # replace "utils.BITCOIN_ONLY" with literal constant (True/False)
+        # so the compiler can optimize out the things we don't want
         btc_only = 'True' if env['bitcoin_only'] == '1' else 'False'
         interim = "%s.i" % target[:-4]  # replace .mpy with .i
-        return '$SED "s:utils\.BITCOIN_ONLY:%s:g" %s > %s && $MPY_CROSS -o %s -s %s %s' % (btc_only, source, interim, target, source_name, interim)
+        return '$SED "s:utils\\.BITCOIN_ONLY:%s:g" %s > %s && $MPY_CROSS -o %s -s %s %s' % (btc_only, source, interim, target, source_name, interim)
 
     env['BUILDERS']['FrozenModule'] = SCons.Builder.Builder(
         generator=generate_frozen_module,

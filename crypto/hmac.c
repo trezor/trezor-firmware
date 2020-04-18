@@ -83,7 +83,7 @@ void hmac_sha256_prepare(const uint8_t *key, const uint32_t keylen,
 
   /* compute o_key_pad and its digest */
   for (int i = 0; i < SHA256_BLOCK_LENGTH / (int)sizeof(uint32_t); i++) {
-    uint32_t data;
+    uint32_t data = 0;
 #if BYTE_ORDER == LITTLE_ENDIAN
     REVERSE32(key_pad[i], data);
 #else
@@ -135,7 +135,7 @@ void hmac_sha512_Final(HMAC_SHA512_CTX *hctx, uint8_t *hmac) {
 
 void hmac_sha512(const uint8_t *key, const uint32_t keylen, const uint8_t *msg,
                  const uint32_t msglen, uint8_t *hmac) {
-  HMAC_SHA512_CTX hctx;
+  HMAC_SHA512_CTX hctx = {0};
   hmac_sha512_Init(&hctx, key, keylen);
   hmac_sha512_Update(&hctx, msg, msglen);
   hmac_sha512_Final(&hctx, hmac);
@@ -157,7 +157,7 @@ void hmac_sha512_prepare(const uint8_t *key, const uint32_t keylen,
 
   /* compute o_key_pad and its digest */
   for (int i = 0; i < SHA512_BLOCK_LENGTH / (int)sizeof(uint64_t); i++) {
-    uint64_t data;
+    uint64_t data = 0;
 #if BYTE_ORDER == LITTLE_ENDIAN
     REVERSE64(key_pad[i], data);
 #else

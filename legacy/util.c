@@ -40,25 +40,3 @@ void data2hex(const void *data, uint32_t len, char *str) {
   }
   str[len * 2] = 0;
 }
-
-uint32_t readprotobufint(const uint8_t **ptr) {
-  uint32_t result = (**ptr & 0x7F);
-  if (**ptr & 0x80) {
-    (*ptr)++;
-    result += (**ptr & 0x7F) * 128;
-    if (**ptr & 0x80) {
-      (*ptr)++;
-      result += (**ptr & 0x7F) * 128 * 128;
-      if (**ptr & 0x80) {
-        (*ptr)++;
-        result += (**ptr & 0x7F) * 128 * 128 * 128;
-        if (**ptr & 0x80) {
-          (*ptr)++;
-          result += (**ptr & 0x7F) * 128 * 128 * 128 * 128;
-        }
-      }
-    }
-  }
-  (*ptr)++;
-  return result;
-}

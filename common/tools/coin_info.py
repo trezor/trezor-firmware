@@ -136,7 +136,6 @@ BTC_CHECKS = [
     check_key("decred", bool),
     check_key("fork_id", int, nullable=True),
     check_key("force_bip143", bool),
-    check_key("bip115", bool),
     check_key("default_fee_b", dict),
     check_key("dust_limit", int),
     check_key("blocktime_seconds", int),
@@ -197,9 +196,9 @@ def validate_btc(coin):
 
 
 def _load_btc_coins():
-    """Load btc-like coins from `coins/*.json`"""
+    """Load btc-like coins from `bitcoin/*.json`"""
     coins = []
-    for filename in glob.glob(os.path.join(DEFS_DIR, "coins", "*.json")):
+    for filename in glob.glob(os.path.join(DEFS_DIR, "bitcoin", "*.json")):
         coin = load_json(filename)
         coin.update(
             name=coin["coin_label"],
@@ -257,6 +256,27 @@ def _load_misc():
     for other in others:
         other.update(key="misc:{}".format(other["shortcut"]))
     return others
+
+
+def _load_fido_apps():
+    """Load FIDO apps from `fido/*.json`"""
+    apps = []
+    for filename in sorted(glob.glob(os.path.join(DEFS_DIR, "fido", "*.json"))):
+        app_name = os.path.basename(filename)[:-5].lower()
+        app = load_json(filename)
+        app.setdefault("use_sign_count", None)
+        app.setdefault("use_self_attestation", None)
+        app.setdefault("u2f", [])
+        app.setdefault("webauthn", [])
+
+        icon_path = os.path.join(DEFS_DIR, "fido", app_name + ".png")
+        if not os.path.exists(icon_path):
+            icon_path = None
+
+        app.update(key=app_name, icon=icon_path)
+        apps.append(app)
+
+    return apps
 
 
 # ====== support info ======
@@ -557,6 +577,11 @@ def coin_info():
     #     coin for coin in all_coins["erc20"] if not coin.get("duplicate")
     # ]
     return all_coins
+
+
+def fido_info():
+    """Returns info about known FIDO/U2F apps."""
+    return _load_fido_apps()
 
 
 def search(coins, keyword):

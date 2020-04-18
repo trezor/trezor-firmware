@@ -1,4 +1,3 @@
-import utest
 from common import *
 from trezor import log, loop, utils
 

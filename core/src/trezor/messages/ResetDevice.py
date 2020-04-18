@@ -4,12 +4,11 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List, Optional
+        from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
-        EnumTypeResetDeviceBackupType = Literal[0, 1, 2]
+        EnumTypeBackupType = Literal[0, 1, 2]
     except ImportError:
-        Dict, List, Optional = None, None, None  # type: ignore
-        EnumTypeResetDeviceBackupType = None  # type: ignore
+        pass
 
 
 class ResetDevice(p.MessageType):
@@ -26,7 +25,7 @@ class ResetDevice(p.MessageType):
         u2f_counter: int = None,
         skip_backup: bool = None,
         no_backup: bool = None,
-        backup_type: EnumTypeResetDeviceBackupType = None,
+        backup_type: EnumTypeBackupType = None,
     ) -> None:
         self.display_random = display_random
         self.strength = strength
@@ -46,10 +45,10 @@ class ResetDevice(p.MessageType):
             2: ('strength', p.UVarintType, 0),  # default=256
             3: ('passphrase_protection', p.BoolType, 0),
             4: ('pin_protection', p.BoolType, 0),
-            5: ('language', p.UnicodeType, 0),  # default=english
+            5: ('language', p.UnicodeType, 0),  # default=en-US
             6: ('label', p.UnicodeType, 0),
             7: ('u2f_counter', p.UVarintType, 0),
             8: ('skip_backup', p.BoolType, 0),
             9: ('no_backup', p.BoolType, 0),
-            10: ('backup_type', p.EnumType("ResetDeviceBackupType", (0, 1, 2)), 0),  # default=ResetDeviceBackupType_Bip39
+            10: ('backup_type', p.EnumType("BackupType", (0, 1, 2)), 0),  # default=Bip39
         }

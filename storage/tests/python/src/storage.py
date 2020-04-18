@@ -38,8 +38,10 @@ class Storage:
         self.sak = prng.random_buffer(consts.SAK_SIZE)
 
         self.nc.set(consts.SAT_KEY, crypto.init_hmacs(self.sak))
-        self._set_encrypt(consts.VERSION_KEY, b"\x01\x00\x00\x00")
+        self._set_encrypt(consts.VERSION_KEY, b"\x02\x00\x00\x00")
+        self.nc.set(consts.STORAGE_UPGRADED_KEY, consts.FALSE_WORD)
         self.pin_log.init()
+        self._set_wipe_code(consts.WIPE_CODE_EMPTY)
         self._set_pin(consts.PIN_EMPTY)
         self.unlocked = False
 
@@ -59,11 +61,22 @@ class Storage:
         else:
             self._set_bool(consts.PIN_NOT_SET_KEY, False)
 
+    def _set_wipe_code(self, wipe_code: int):
+        if wipe_code == consts.PIN_EMPTY:
+            wipe_code = consts.WIPE_CODE_EMPTY
+        wipe_code_bytes = wipe_code.to_bytes(4, "little")
+        salt = prng.random_buffer(consts.WIPE_CODE_SALT_SIZE)
+        tag = crypto._hmac(salt, wipe_code_bytes)[: consts.WIPE_CODE_TAG_SIZE]
+        self.nc.set(consts.WIPE_CODE_DATA_KEY, wipe_code_bytes + salt + tag)
+
     def wipe(self):
         self.nc.wipe()
         self._init_pin()
 
     def check_pin(self, pin: int) -> bool:
+        if pin == 0:
+            return False
+
         self.pin_log.write_attempt()
 
         data = self.nc.get(consts.EDEK_ESEK_PVC_KEY)
@@ -105,7 +118,12 @@ class Storage:
         return consts.PIN_MAX_TRIES - self.pin_log.get_failures_count()
 
     def change_pin(self, oldpin: int, newpin: int) -> bool:
-        if not self.initialized or not self.unlocked:
+        if (
+            not self.initialized
+            or not self.unlocked
+            or oldpin == consts.PIN_INVALID
+            or newpin == consts.PIN_INVALID
+        ):
             return False
         if not self.check_pin(oldpin):
             return False
@@ -120,8 +138,12 @@ class Storage:
             # public fields can be read from an unlocked device
             raise RuntimeError("Storage locked")
         if consts.is_app_public(app):
-            return self.nc.get(key)
-        return self._get_encrypted(key)
+            value = self.nc.get(key)
+        else:
+            value = self._get_encrypted(key)
+        if value is False:
+            raise RuntimeError("Failed to find key in storage.")
+        return value
 
     def set(self, key: int, val: bytes) -> bool:
         app = key >> 8
@@ -143,7 +165,7 @@ class Storage:
         app = key >> 8
         self._check_lock(app)
 
-        current = self.get(key)
+        current = self.nc.get(key)
         if current is False:
             self.set_counter(key, 0)
             return 0

@@ -8,10 +8,10 @@ from .TxOutputType import TxOutputType
 
 if __debug__:
     try:
-        from typing import Dict, List, Optional
+        from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
-        Dict, List, Optional = None, None, None  # type: ignore
+        pass
 
 
 class TransactionType(p.MessageType):
@@ -28,7 +28,6 @@ class TransactionType(p.MessageType):
         extra_data: bytes = None,
         extra_data_len: int = None,
         expiry: int = None,
-        overwintered: bool = None,
         version_group_id: int = None,
         timestamp: int = None,
         branch_id: int = None,
@@ -43,7 +42,6 @@ class TransactionType(p.MessageType):
         self.extra_data = extra_data
         self.extra_data_len = extra_data_len
         self.expiry = expiry
-        self.overwintered = overwintered
         self.version_group_id = version_group_id
         self.timestamp = timestamp
         self.branch_id = branch_id
@@ -61,7 +59,6 @@ class TransactionType(p.MessageType):
             8: ('extra_data', p.BytesType, 0),
             9: ('extra_data_len', p.UVarintType, 0),
             10: ('expiry', p.UVarintType, 0),
-            11: ('overwintered', p.BoolType, 0),
             12: ('version_group_id', p.UVarintType, 0),
             13: ('timestamp', p.UVarintType, 0),
             14: ('branch_id', p.UVarintType, 0),

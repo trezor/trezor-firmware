@@ -14,15 +14,23 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from collections import namedtuple
 from copy import deepcopy
 
 from mnemonic import Mnemonic
 
-from . import messages as proto, protobuf, tools
+from . import messages as proto, protobuf
 from .client import TrezorClient
 from .tools import expect
 
 EXPECTED_RESPONSES_CONTEXT_LINES = 3
+
+
+LayoutLines = namedtuple("LayoutLines", "lines text")
+
+
+def layout_lines(lines):
+    return LayoutLines(lines, " ".join(lines))
 
 
 class DebugLink:
@@ -45,6 +53,13 @@ class DebugLink:
 
     def state(self):
         return self._call(proto.DebugLinkGetState())
+
+    def read_layout(self):
+        return layout_lines(self.state().layout_lines)
+
+    def wait_layout(self):
+        obj = self._call(proto.DebugLinkGetState(wait_layout=True))
+        return layout_lines(obj.layout_lines)
 
     def read_pin(self):
         state = self.state()
@@ -83,16 +98,24 @@ class DebugLink:
         obj = self._call(proto.DebugLinkGetState())
         return obj.passphrase_protection
 
-    def input(self, word=None, button=None, swipe=None):
+    def input(self, word=None, button=None, swipe=None, x=None, y=None, wait=False):
         if not self.allow_interactions:
             return
 
-        args = sum(a is not None for a in (word, button, swipe))
+        args = sum(a is not None for a in (word, button, swipe, x))
         if args != 1:
             raise ValueError("Invalid input - must use one of word, button, swipe")
 
-        decision = proto.DebugLinkDecision(yes_no=button, up_down=swipe, input=word)
-        self._call(decision, nowait=True)
+        decision = proto.DebugLinkDecision(
+            yes_no=button, swipe=swipe, input=word, x=x, y=y, wait=wait
+        )
+        ret = self._call(decision, nowait=not wait)
+        if ret is not None:
+            return layout_lines(ret.lines)
+
+    def click(self, click, wait=False):
+        x, y = click
+        return self.input(x=x, y=y, wait=wait)
 
     def press_yes(self):
         self.input(button=True)
@@ -101,13 +124,28 @@ class DebugLink:
         self.input(button=False)
 
     def swipe_up(self):
-        self.input(swipe=True)
+        self.input(swipe=proto.DebugSwipeDirection.UP)
 
     def swipe_down(self):
-        self.input(swipe=False)
+        self.input(swipe=proto.DebugSwipeDirection.DOWN)
+
+    def swipe_right(self):
+        self.input(swipe=proto.DebugSwipeDirection.RIGHT)
+
+    def swipe_left(self):
+        self.input(swipe=proto.DebugSwipeDirection.LEFT)
 
     def stop(self):
         self._call(proto.DebugLinkStop(), nowait=True)
+
+    def reseed(self, value):
+        self._call(proto.DebugLinkReseedRandom(value=value))
+
+    def start_recording(self, directory):
+        self._call(proto.DebugLinkRecordScreen(target_directory=directory))
+
+    def stop_recording(self):
+        self._call(proto.DebugLinkRecordScreen(target_directory=None))
 
     @expect(proto.DebugLinkMemory, field="memory")
     def memory_read(self, address, length):
@@ -121,6 +159,10 @@ class DebugLink:
 
     def flash_erase(self, sector):
         self._call(proto.DebugLinkFlashErase(sector=sector), nowait=True)
+
+    @expect(proto.Success)
+    def erase_sd_card(self, format=True):
+        return self._call(proto.DebugLinkEraseSdCard(format=format))
 
 
 class NullDebugLink(DebugLink):
@@ -146,12 +188,36 @@ class DebugUI:
 
     def __init__(self, debuglink: DebugLink):
         self.debuglink = debuglink
-        self.pin = None
-        self.passphrase = "sphinx of black quartz, judge my wov"
+        self.clear()
+
+    def clear(self):
+        self.pins = None
+        self.passphrase = ""
         self.input_flow = None
 
     def button_request(self, code):
         if self.input_flow is None:
+            # XXX
+            # On Trezor T, in some rare cases, two layouts may be queuing for events at
+            # the same time.  A new workflow will first send out a ButtonRequest, wait
+            # for a ButtonAck, and only then display a layout (closing the old one).
+            # That means that if a layout that accepts debuglink decisions is currently
+            # on screen, it has a good chance of accepting the following `press_yes`
+            # before it can be closed by the newly open layout from the new workflow.
+            #
+            # This happens in particular when the recovery homescreen is on, because
+            # it is a homescreen that accepts debuglink decisions.
+            #
+            # To prevent the issue, we insert a `wait_layout`, which on TT will only
+            # return after the screen is refreshed, so we are certain that the new
+            # layout is on. On T1 it is a no-op.
+            #
+            # This could run into trouble if some workflow asks for a ButtonRequest
+            # without refreshing the screen.
+            # This will also freeze on old bridges, where Read and Write are not
+            # separate operations, because it relies on ButtonAck being sent without
+            # waiting for a response.
+            self.debuglink.wait_layout()
             self.debuglink.press_yes()
         elif self.input_flow is self.INPUT_FLOW_DONE:
             raise AssertionError("input flow ended prematurely")
@@ -162,12 +228,16 @@ class DebugUI:
                 self.input_flow = self.INPUT_FLOW_DONE
 
     def get_pin(self, code=None):
-        if self.pin:
-            return self.pin
-        else:
+        if self.pins is None:
+            # respond with correct pin
             return self.debuglink.read_pin_encoded()
 
-    def get_passphrase(self):
+        if self.pins == []:
+            raise AssertionError("PIN sequence ended prematurely")
+        else:
+            return self.debuglink.encode_pin(self.pins.pop(0))
+
+    def get_passphrase(self, available_on_device):
         return self.passphrase
 
 
@@ -202,15 +272,10 @@ class TrezorClientDebugLink(TrezorClient):
 
         self.filters = {}
 
-        # Always press Yes and provide correct pin
-        self.setup_debuglink(True, True)
-
         # Do not expect any specific response from device
         self.expected_responses = None
         self.current_response = None
 
-        # Use blank passphrase
-        self.set_passphrase("")
         super().__init__(transport, ui=self.ui)
 
     def open(self):
@@ -222,6 +287,15 @@ class TrezorClientDebugLink(TrezorClient):
         super().close()
 
     def set_filter(self, message_type, callback):
+        """Configure a filter function for a specified message type.
+
+        The `callback` must be a function that accepts a protobuf message, and returns
+        a (possibly modified) protobuf message of the same type. Whenever a message
+        is sent or received that matches `message_type`, `callback` is invoked on the
+        message and its result is substituted for the original.
+
+        Useful for test scenarios with an active malicious actor on the wire.
+        """
         self.filters[message_type] = callback
 
     def _filter_message(self, msg):
@@ -233,9 +307,32 @@ class TrezorClientDebugLink(TrezorClient):
             return msg
 
     def set_input_flow(self, input_flow):
-        if input_flow is None:
-            self.ui.input_flow = None
-            return
+        """Configure a sequence of input events for the current with-block.
+
+        The `input_flow` must be a generator function. A `yield` statement in the
+        input flow function waits for a ButtonRequest from the device, and returns
+        its code.
+
+        Example usage:
+
+        >>> def input_flow():
+        >>>     # wait for first button prompt
+        >>>     code = yield
+        >>>     assert code == ButtonRequestType.Other
+        >>>     # press No
+        >>>     client.debug.press_no()
+        >>>
+        >>>     # wait for second button prompt
+        >>>     yield
+        >>>     # press Yes
+        >>>     client.debug.press_yes()
+        >>>
+        >>> with client:
+        >>>     client.set_input_flow(input_flow)
+        >>>     some_call(client)
+        """
+        if not self.in_with_statement:
+            raise RuntimeError("Must be called inside 'with' statement")
 
         if callable(input_flow):
             input_flow = input_flow()
@@ -252,41 +349,60 @@ class TrezorClientDebugLink(TrezorClient):
     def __exit__(self, _type, value, traceback):
         self.in_with_statement -= 1
 
-        if _type is not None:
-            # Another exception raised
-            return False
+        # Clear input flow.
+        try:
+            if _type is not None:
+                # Another exception raised
+                return False
 
-        if self.expected_responses is None:
-            # no need to check anything else
-            return False
+            if self.expected_responses is None:
+                # no need to check anything else
+                return False
 
-        # return isinstance(value, TypeError)
-        # Evaluate missed responses in 'with' statement
-        if self.current_response < len(self.expected_responses):
-            self._raise_unexpected_response(None)
+            # Evaluate missed responses in 'with' statement
+            if self.current_response < len(self.expected_responses):
+                self._raise_unexpected_response(None)
 
-        # Cleanup
-        self.expected_responses = None
-        self.current_response = None
+        finally:
+            # Cleanup
+            self.expected_responses = None
+            self.current_response = None
+            self.ui.clear()
+
         return False
 
     def set_expected_responses(self, expected):
+        """Set a sequence of expected responses to client calls.
+
+        Within a given with-block, the list of received responses from device must
+        match the list of expected responses, otherwise an AssertionError is raised.
+
+        If an expected response is given a field value other than None, that field value
+        must exactly match the received field value. If a given field is None
+        (or unspecified) in the expected response, the received field value is not
+        checked.
+        """
         if not self.in_with_statement:
             raise RuntimeError("Must be called inside 'with' statement")
         self.expected_responses = expected
         self.current_response = 0
 
-    def setup_debuglink(self, button, pin_correct):
-        # self.button = button  # True -> YES button, False -> NO button
-        if pin_correct:
-            self.ui.pin = None
-        else:
-            self.ui.pin = "444222"
+    def use_pin_sequence(self, pins):
+        """Respond to PIN prompts from device with the provided PINs.
+        The sequence must be at least as long as the expected number of PIN prompts.
+        """
+        # XXX This currently only works on T1 as a response to PinMatrixRequest, but
+        # if we modify trezor-core to introduce PIN prompts predictably (i.e. by
+        # a new ButtonRequestType), it could also be used on TT via debug.input()
+        self.ui.pins = list(pins)
 
-    def set_passphrase(self, passphrase):
+    def use_passphrase(self, passphrase):
+        """Respond to passphrase prompts from device with the provided passphrase."""
         self.ui.passphrase = Mnemonic.normalize_string(passphrase)
 
-    def set_mnemonic(self, mnemonic):
+    def use_mnemonic(self, mnemonic):
+        """Use the provided mnemonic to respond to device.
+        Only applies to T1, where device prompts the host for mnemonic words."""
         self.mnemonic = Mnemonic.normalize_string(mnemonic).split(" ")
 
     def _raw_read(self):
@@ -393,14 +509,16 @@ class TrezorClientDebugLink(TrezorClient):
 
 
 @expect(proto.Success, field="message")
-def load_device_by_mnemonic(
+def load_device(
     client,
     mnemonic,
     pin,
     passphrase_protection,
     label,
-    language="english",
+    language="en-US",
     skip_checksum=False,
+    needs_backup=False,
+    no_backup=False,
 ):
     if not isinstance(mnemonic, (list, tuple)):
         mnemonic = [mnemonic]
@@ -420,60 +538,16 @@ def load_device_by_mnemonic(
             language=language,
             label=label,
             skip_checksum=skip_checksum,
+            needs_backup=needs_backup,
+            no_backup=no_backup,
         )
     )
     client.init_device()
     return resp
 
 
-@expect(proto.Success, field="message")
-def load_device_by_xprv(client, xprv, pin, passphrase_protection, label, language):
-    if client.features.initialized:
-        raise RuntimeError(
-            "Device is initialized already. Call wipe_device() and try again."
-        )
-
-    if xprv[0:4] not in ("xprv", "tprv"):
-        raise ValueError("Unknown type of xprv")
-
-    if not 100 < len(xprv) < 112:  # yes this is correct in Python
-        raise ValueError("Invalid length of xprv")
-
-    node = proto.HDNodeType()
-    data = tools.b58decode(xprv, None).hex()
-
-    if data[90:92] != "00":
-        raise ValueError("Contain invalid private key")
-
-    checksum = (tools.btc_hash(bytes.fromhex(data[:156]))[:4]).hex()
-    if checksum != data[156:]:
-        raise ValueError("Checksum doesn't match")
-
-    # version 0488ade4
-    # depth 00
-    # fingerprint 00000000
-    # child_num 00000000
-    # chaincode 873dff81c02f525623fd1fe5167eac3a55a049de3d314bb42ee227ffed37d508
-    # privkey   00e8f32e723decf4051aefac8e2c93c9c5b214313817cdb01a1494b917c8436b35
-    # checksum e77e9d71
-
-    node.depth = int(data[8:10], 16)
-    node.fingerprint = int(data[10:18], 16)
-    node.child_num = int(data[18:26], 16)
-    node.chain_code = bytes.fromhex(data[26:90])
-    node.private_key = bytes.fromhex(data[92:156])  # skip 0x00 indicating privkey
-
-    resp = client.call(
-        proto.LoadDevice(
-            node=node,
-            pin=pin,
-            passphrase_protection=passphrase_protection,
-            language=language,
-            label=label,
-        )
-    )
-    client.init_device()
-    return resp
+# keep the old name for compatibility
+load_device_by_mnemonic = load_device
 
 
 @expect(proto.Success, field="message")
@@ -486,3 +560,18 @@ def self_test(client):
             payload=b"\x00\xFF\x55\xAA\x66\x99\x33\xCCABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\x00\xFF\x55\xAA\x66\x99\x33\xCC"
         )
     )
+
+
+@expect(proto.Success, field="message")
+def show_text(client, header_text, body_text, icon=None, icon_color=None):
+    body_text = [
+        proto.DebugLinkShowTextItem(style=style, content=content)
+        for style, content in body_text
+    ]
+    msg = proto.DebugLinkShowText(
+        header_text=header_text,
+        body_text=body_text,
+        header_icon=icon,
+        icon_color=icon_color,
+    )
+    return client.call(msg)

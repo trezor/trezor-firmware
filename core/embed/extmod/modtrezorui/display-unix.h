@@ -54,6 +54,8 @@ static SDL_Renderer *RENDERER;
 static SDL_Surface *BUFFER;
 static SDL_Texture *TEXTURE, *BACKGROUND;
 
+static SDL_Surface *PREV_SAVED;
+
 int sdl_display_res_x = DISPLAY_RESX, sdl_display_res_y = DISPLAY_RESY;
 int sdl_touch_offset_x, sdl_touch_offset_y;
 
@@ -219,7 +221,6 @@ const char *display_save(const char *prefix) {
   }
   static int count;
   static char filename[256];
-  static SDL_Surface *prev;
   // take a cropped view of the screen contents
   const SDL_Rect rect = {0, 0, DISPLAY_RESX, DISPLAY_RESY};
   SDL_Surface *crop = SDL_CreateRGBSurface(
@@ -228,16 +229,21 @@ const char *display_save(const char *prefix) {
       BUFFER->format->Amask);
   SDL_BlitSurface(BUFFER, &rect, crop, NULL);
   // compare with previous screen, skip if equal
-  if (prev != NULL) {
-    if (memcmp(prev->pixels, crop->pixels, crop->pitch * crop->h) == 0) {
+  if (PREV_SAVED != NULL) {
+    if (memcmp(PREV_SAVED->pixels, crop->pixels, crop->pitch * crop->h) == 0) {
       SDL_FreeSurface(crop);
       return filename;
     }
-    SDL_FreeSurface(prev);
+    SDL_FreeSurface(PREV_SAVED);
   }
   // save to png
   snprintf(filename, sizeof(filename), "%s%08d.png", prefix, count++);
   IMG_SavePNG(crop, filename);
-  prev = crop;
+  PREV_SAVED = crop;
   return filename;
+}
+
+void display_clear_save(void) {
+  SDL_FreeSurface(PREV_SAVED);
+  PREV_SAVED = NULL;
 }

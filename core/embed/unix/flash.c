@@ -83,7 +83,7 @@ const uint8_t STORAGE_SECTORS[STORAGE_SECTORS_COUNT] = {
     FLASH_SECTOR_STORAGE_2,
 };
 
-static uint8_t *FLASH_BUFFER;
+static uint8_t *FLASH_BUFFER = NULL;
 static uint32_t FLASH_SIZE;
 
 static void flash_exit(void) {
@@ -92,6 +92,8 @@ static void flash_exit(void) {
 }
 
 void flash_init(void) {
+  if (FLASH_BUFFER) return;
+
   FLASH_SIZE = FLASH_SECTOR_TABLE[FLASH_SECTOR_COUNT] - FLASH_SECTOR_TABLE[0];
 
   // check whether the file exists and it has the correct size

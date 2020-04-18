@@ -373,7 +373,7 @@ static uint8_t usbd_control_buffer[256] __attribute__((aligned(2)));
 
 static const struct usb_device_capability_descriptor *capabilities[] = {
     (const struct usb_device_capability_descriptor
-         *)&webusb_platform_capability_descriptor,
+         *)&webusb_platform_capability_descriptor_no_landing,
 };
 
 static const struct usb_bos_descriptor bos_descriptor = {
@@ -432,7 +432,7 @@ void usbPoll(void) {
 void usbReconnect(void) {
   if (usbd_dev != NULL) {
     usbd_disconnect(usbd_dev, 1);
-    delay(1000);
+    delay(120000);
     usbd_disconnect(usbd_dev, 0);
   }
 }

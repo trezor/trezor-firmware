@@ -9,14 +9,17 @@ PY_FILES = $(shell find . -type f -name '*.py'   | grep -f ./tools/style.py.incl
 C_FILES =  $(shell find . -type f -name '*.[ch]' | grep -f ./tools/style.c.include  | grep -v -f ./tools/style.c.exclude )
 
 
-style_check: pystyle_check cstyle_check
+style_check: pystyle_check cstyle_check ## run all style checks (C+Py)
 
-style: pystyle cstyle
+style: pystyle cstyle ## apply all code styles (C+Py)
 
 pystyle_check: ## run code style check on application sources and tests
 	flake8 --version
 	isort --version | awk '/VERSION/{print $$2}'
 	black --version
+	mypy --version
+	@echo [MYPY]
+	@make -C core mypy
 	@echo [FLAKE8]
 	@flake8 $(PY_FILES)
 	@echo [ISORT]
@@ -30,6 +33,8 @@ pystyle: ## apply code style on application sources and tests
 	@isort $(PY_FILES)
 	@echo [BLACK]
 	@black $(PY_FILES)
+	@echo [MYPY]
+	@make -C core mypy
 	@echo [FLAKE8]
 	@flake8 $(PY_FILES)
 	make -C python style
@@ -65,14 +70,20 @@ templates: ## rebuild coin lists from definitions in common
 templates_check: ## check that coin lists are up to date
 	./core/tools/build_templates --check
 
+icons: ## generate FIDO service icons
+	python3 core/tools/build_icons.py
+
+icons_check: ## generate FIDO service icons
+	python3 core/tools/build_icons.py --check
+
 protobuf: ## generate python protobuf headers
 	./tools/build_protobuf
 
 protobuf_check: ## check that generated protobuf headers are up to date
 	./tools/build_protobuf --check
 
-gen:  mocks templates protobuf ## regeneate auto-generated files from sources
+gen:  mocks templates protobuf icons ## regeneate auto-generated files from sources
 	make -C python coins_json
 
-gen_check: mocks_check templates_check protobuf_check ## check validity of auto-generated files
+gen_check: mocks_check templates_check protobuf_check icons_check ## check validity of auto-generated files
 	make -C python coins_json_check

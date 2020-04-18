@@ -26,6 +26,8 @@
 #define POLL_READ (0x0000)
 #define POLL_WRITE (0x0100)
 
+/// package: trezorio.__init__
+
 /// def poll(ifaces: Iterable[int], list_ref: List, timeout_us: int) -> bool:
 ///     """
 ///     Wait until one of `ifaces` is ready to read or write (using masks

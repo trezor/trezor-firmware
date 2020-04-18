@@ -168,4 +168,7 @@ void mpu_config_firmware(void) {
 
   // Enable MPU
   HAL_MPU_Enable(LL_MPU_CTRL_HARDFAULT_NMI);
+
+  __asm__ volatile("dsb");
+  __asm__ volatile("isb");
 }

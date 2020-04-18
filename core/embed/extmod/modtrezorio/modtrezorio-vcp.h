@@ -19,6 +19,8 @@
 
 void pendsv_kbd_intr(void);
 
+/// package: trezorio.__init__
+
 /// class VCP:
 ///     """
 ///     USB VCP interface configuration.

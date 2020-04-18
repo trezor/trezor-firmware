@@ -30,8 +30,8 @@ def is_zcash(coin):
     return lcn.startswith("zcash") or lcn.startswith("komodo")
 
 
-def is_capricoin(coin):
-    return coin["coin_name"].lower().startswith("capricoin")
+def is_peercoin(coin):
+    return coin["coin_name"].lower().startswith("peercoin")
 
 
 def is_dash(coin):
@@ -72,15 +72,9 @@ def _json_to_input(coin, vin):
 
 def _json_to_bin_output(coin, vout):
     o = messages.TxOutputBinType()
-    o.amount = int(Decimal(vout["value"]) * 100000000)
+    DECIMALS = 6 if is_peercoin(coin) else 8
+    o.amount = int(Decimal(vout["value"]) * (10 ** DECIMALS))
     o.script_pubkey = bytes.fromhex(vout["scriptPubKey"]["hex"])
-    if coin["bip115"] and o.script_pubkey[-1] == 0xB4:
-        # Verify if coin implements replay protection bip115 and script includes
-        # checkblockatheight opcode. 0xb4 - is op_code (OP_CHECKBLOCKATHEIGHT)
-        # <OP_32> <32-byte block hash> <OP_3> <3-byte block height> <OP_CHECKBLOCKATHEIGHT>
-        tail = o.script_pubkey[-38:]
-        o.block_hash = tail[1:33]  # <32-byte block hash>
-        o.block_height = int.from_bytes(tail[34:37], "little")  # <3-byte block height>
     if coin["decred"]:
         o.decred_script_version = vout["version"]
 
@@ -92,7 +86,7 @@ def json_to_tx(coin, data):
     t.version = data["version"]
     t.lock_time = data.get("locktime")
 
-    if is_capricoin(coin):
+    if is_peercoin(coin):
         t.timestamp = data["time"]
 
     if coin["decred"]:

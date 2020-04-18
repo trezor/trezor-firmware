@@ -18,12 +18,10 @@ import pytest
 
 from trezorlib import ethereum
 
-from .common import TrezorTest
-
 
 @pytest.mark.altcoin
 @pytest.mark.ethereum
-class TestMsgEthereumVerifymessage(TrezorTest):
+class TestMsgEthereumVerifymessage:
 
     ADDRESS = "0xEa53AF85525B1779eE99ece1a5560C0b78537C3b"
     VECTORS = [
@@ -61,18 +59,14 @@ class TestMsgEthereumVerifymessage(TrezorTest):
         ),
     ]
 
-    def test_verify(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_verify(self, client):
         for msg, sig in self.VECTORS:
-            res = ethereum.verify_message(
-                self.client, self.ADDRESS, bytes.fromhex(sig), msg
-            )
+            res = ethereum.verify_message(client, self.ADDRESS, bytes.fromhex(sig), msg)
             assert res is True
 
-    def test_verify_invalid(self):
-        self.setup_mnemonic_nopin_nopassphrase()
+    def test_verify_invalid(self, client):
         signature = bytes.fromhex(self.VECTORS[0][1])
         res = ethereum.verify_message(
-            self.client, self.ADDRESS, signature, "another message"
+            client, self.ADDRESS, signature, "another message"
         )
         assert res is False

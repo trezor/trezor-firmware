@@ -272,7 +272,7 @@ AES_RETURN aes_init(void)
 
 #if defined(FF_TABLES)
 
-    uint8_t  pow[512], log[256];
+    uint8_t  pow[512] = {0}, log[256] = {0};
 
     if(init)
         return EXIT_SUCCESS;

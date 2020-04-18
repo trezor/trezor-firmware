@@ -6,10 +6,10 @@ from .MoneroTransactionSourceEntry import MoneroTransactionSourceEntry
 
 if __debug__:
     try:
-        from typing import Dict, List, Optional
+        from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
-        Dict, List, Optional = None, None, None  # type: ignore
+        pass
 
 
 class MoneroTransactionSignInputRequest(p.MessageType):
@@ -24,6 +24,7 @@ class MoneroTransactionSignInputRequest(p.MessageType):
         pseudo_out_hmac: bytes = None,
         pseudo_out_alpha: bytes = None,
         spend_key: bytes = None,
+        orig_idx: int = None,
     ) -> None:
         self.src_entr = src_entr
         self.vini = vini
@@ -32,6 +33,7 @@ class MoneroTransactionSignInputRequest(p.MessageType):
         self.pseudo_out_hmac = pseudo_out_hmac
         self.pseudo_out_alpha = pseudo_out_alpha
         self.spend_key = spend_key
+        self.orig_idx = orig_idx
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -43,4 +45,5 @@ class MoneroTransactionSignInputRequest(p.MessageType):
             5: ('pseudo_out_hmac', p.BytesType, 0),
             6: ('pseudo_out_alpha', p.BytesType, 0),
             7: ('spend_key', p.BytesType, 0),
+            8: ('orig_idx', p.UVarintType, 0),
         }

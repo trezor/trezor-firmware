@@ -1,5 +1,15 @@
-Version 1.x.x [not yet released]
-* nothing yet
+Version 1.9.0 [not yet released]
+* Disallow changing of settings via dry-run recovery
+* Wipe code
+* Make LoadDevice debug only and drop its XPRV feature
+* Add feature to retrieve the next U2F counter
+* Passphrase redesign
+* Cache up to 10 sessions (passphrases)
+* Show xpubs with multisig get_address
+* Update nanopb api to version 0.4
+
+Version 1.8.3 [Sep 2019]
+* Small code improvements
 
 Version 1.8.2 [Aug 2019]
 * OLED display security improvements
@@ -15,6 +25,7 @@ Version 1.8.0 [Feb 2019]
 * Stellar and NEM fixes
 * New coins: ATS, KMD, XPM, XSN, ZCL
 * New ETH tokens
+* Included bootloader 1.8.0
 
 Version 1.7.3 [Dec 2018]
 * Fix USB issue on some Windows 10 installations
@@ -23,6 +34,7 @@ Version 1.7.2 [Dec 2018]
 * Add support for OMNI layer: OMNI/MAID/USDT
 * U2F fixes
 * Don't ask for PIN if it has been just set
+* Included bootloader 1.6.1
 
 Version 1.7.1 [Oct 2018]
 * Add support for Lisk

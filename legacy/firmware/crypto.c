@@ -124,11 +124,11 @@ int signifyMessageSign(HDNode *node, const uint8_t *message, size_t message_len,
 static void cryptoMessageHash(const CoinInfo *coin, const uint8_t *message,
                               size_t message_len,
                               uint8_t hash[HASHER_DIGEST_LENGTH]) {
-  Hasher hasher;
+  Hasher hasher = {0};
   hasher_Init(&hasher, coin->curve->hasher_sign);
   hasher_Update(&hasher, (const uint8_t *)coin->signed_message_header,
                 strlen(coin->signed_message_header));
-  uint8_t varint[5];
+  uint8_t varint[5] = {0};
   uint32_t l = ser_length(message_len, varint);
   hasher_Update(&hasher, varint, l);
   hasher_Update(&hasher, message, message_len);
@@ -138,10 +138,10 @@ static void cryptoMessageHash(const CoinInfo *coin, const uint8_t *message,
 int cryptoMessageSign(const CoinInfo *coin, HDNode *node,
                       InputScriptType script_type, const uint8_t *message,
                       size_t message_len, uint8_t *signature) {
-  uint8_t hash[HASHER_DIGEST_LENGTH];
+  uint8_t hash[HASHER_DIGEST_LENGTH] = {0};
   cryptoMessageHash(coin, message, message_len, hash);
 
-  uint8_t pby;
+  uint8_t pby = 0;
   int result = hdnode_sign_digest(node, hash, signature + 1, &pby, NULL);
   if (result == 0) {
     switch (script_type) {
@@ -170,14 +170,14 @@ int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message,
     return 1;
   }
 
-  uint8_t hash[HASHER_DIGEST_LENGTH];
+  uint8_t hash[HASHER_DIGEST_LENGTH] = {0};
   cryptoMessageHash(coin, message, message_len, hash);
 
   uint8_t recid = (signature[0] - 27) % 4;
   bool compressed = signature[0] >= 31;
 
   // check if signature verifies the digest and recover the public key
-  uint8_t pubkey[65];
+  uint8_t pubkey[65] = {0};
   if (ecdsa_recover_pub_from_sig(coin->curve->params, pubkey, signature + 1,
                                  hash, recid) != 0) {
     return 3;
@@ -188,12 +188,12 @@ int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message,
   }
 
   // check if the address is correct
-  uint8_t addr_raw[MAX_ADDR_RAW_SIZE];
-  uint8_t recovered_raw[MAX_ADDR_RAW_SIZE];
+  uint8_t addr_raw[MAX_ADDR_RAW_SIZE] = {0};
+  uint8_t recovered_raw[MAX_ADDR_RAW_SIZE] = {0};
 
   // p2pkh
   if (signature[0] >= 27 && signature[0] <= 34) {
-    size_t len;
+    size_t len = 0;
     if (coin->cashaddr_prefix) {
       if (!cash_addr_decode(addr_raw, &len, coin->cashaddr_prefix, address)) {
         return 2;
@@ -223,8 +223,8 @@ int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message,
   } else
       // segwit
       if (signature[0] >= 39 && signature[0] <= 42) {
-    int witver;
-    size_t len;
+    int witver = 0;
+    size_t len = 0;
     if (!coin->bech32_prefix ||
         !segwit_addr_decode(&witver, recovered_raw, &len, coin->bech32_prefix,
                             address)) {
@@ -248,7 +248,7 @@ msg_size, bool display_only, uint8_t *nonce, size_t *nonce_len, uint8_t
 *privkey, const uint8_t *address_raw)
 {
         if (privkey && address_raw) { // signing == true
-                HDNode node;
+                HDNode node = {0};
                 payload[0] = display_only ? 0x81 : 0x01;
                 uint32_t l = ser_length(msg_size, payload + 1);
                 memcpy(payload + 1 + l, msg, msg_size);
@@ -265,8 +265,8 @@ msg_size, bool display_only, uint8_t *nonce, size_t *nonce_len, uint8_t
                 *payload_len = 1 + l + msg_size;
         }
         // generate random nonce
-        curve_point R;
-        bignum256 k;
+        curve_point R = {0};
+        bignum256 k = {0};
         if (generate_k_random(&secp256k1, &k) != 0) {
                 return 2;
         }
@@ -277,23 +277,23 @@ msg_size, bool display_only, uint8_t *nonce, size_t *nonce_len, uint8_t
         *nonce_len = 33;
         // compute shared secret
         point_multiply(&secp256k1, &k, pubkey, &R);
-        uint8_t shared_secret[33];
+        uint8_t shared_secret[33] = {0};
         shared_secret[0] = 0x02 | (R.y.val[0] & 0x01);
         bn_write_be(&R.x, shared_secret + 1);
         // generate keying bytes
-        uint8_t keying_bytes[80];
-        uint8_t salt[22 + 33];
+        uint8_t keying_bytes[80] = {0};
+        uint8_t salt[22 + 33] = {0};
         memcpy(salt, "Bitcoin Secure Message", 22);
         memcpy(salt + 22, nonce, 33);
         pbkdf2_hmac_sha256(shared_secret, 33, salt, 22 + 33, 2048, keying_bytes,
 80);
         // encrypt payload
-        aes_encrypt_ctx ctx;
+        aes_encrypt_ctx ctx = {0};
         aes_encrypt_key256(keying_bytes, &ctx);
         aes_cfb_encrypt(payload, payload, *payload_len, keying_bytes + 64,
 &ctx);
         // compute hmac
-        uint8_t out[32];
+        uint8_t out[32] = {0};
         hmac_sha256(keying_bytes + 32, 32, payload, *payload_len, out);
         memcpy(hmac, out, 8);
         *hmac_len = 8;
@@ -310,29 +310,29 @@ uint8_t *msg, size_t *msg_len, bool *display_only, bool *signing, uint8_t
                 return 1;
         }
         // compute shared secret
-        curve_point R;
-        bignum256 k;
+        curve_point R = {0};
+        bignum256 k = {0};
         bn_read_be(privkey, &k);
         point_multiply(&secp256k1, &k, nonce, &R);
-        uint8_t shared_secret[33];
+        uint8_t shared_secret[33] = {0};
         shared_secret[0] = 0x02 | (R.y.val[0] & 0x01);
         bn_write_be(&R.x, shared_secret + 1);
         // generate keying bytes
-        uint8_t keying_bytes[80];
-        uint8_t salt[22 + 33];
+        uint8_t keying_bytes[80] = {0};
+        uint8_t salt[22 + 33] = {0};
         memcpy(salt, "Bitcoin Secure Message", 22);
         salt[22] = 0x02 | (nonce->y.val[0] & 0x01);
         bn_write_be(&(nonce->x), salt + 23);
         pbkdf2_hmac_sha256(shared_secret, 33, salt, 22 + 33, 2048, keying_bytes,
 80);
         // compute hmac
-        uint8_t out[32];
+        uint8_t out[32] = {0};
         hmac_sha256(keying_bytes + 32, 32, payload, payload_len, out);
         if (memcmp(hmac, out, 8) != 0) {
                 return 2;
         }
         // decrypt payload
-        aes_encrypt_ctx ctx;
+        aes_encrypt_ctx ctx = {0};
         aes_encrypt_key256(keying_bytes, &ctx);
         aes_cfb_decrypt(payload, payload, payload_len, keying_bytes + 64, &ctx);
         // check first byte
@@ -341,7 +341,7 @@ payload[0] != 0x81) { return 3;
         }
         *signing = payload[0] & 0x01;
         *display_only = payload[0] & 0x80;
-        uint32_t l, o;
+        uint32_t l = 0; uint32_t o = 0;
         l = deser_length(payload + 1, &o);
         if (*signing) {
                 // FIXME: assumes a raw address is 21 bytes (also below).
@@ -367,9 +367,9 @@ payload + 1 + l + o + 21) != 0) { return 5;
 const HDNode *cryptoMultisigPubkey(const CoinInfo *coin,
                                    const MultisigRedeemScriptType *multisig,
                                    uint32_t index) {
-  const HDNodeType *node_ptr;
-  const uint32_t *address_n;
-  uint32_t address_n_count;
+  const HDNodeType *node_ptr = NULL;
+  const uint32_t *address_n = NULL;
+  uint32_t address_n_count = 0;
   if (multisig->nodes_count) {  // use multisig->nodes
     if (index >= multisig->nodes_count) {
       return 0;
@@ -458,7 +458,7 @@ int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig,
     }
   }
   // hash sorted nodes
-  SHA256_CTX ctx;
+  SHA256_CTX ctx = {0};
   sha256_Init(&ctx);
   sha256_Update(&ctx, (const uint8_t *)&(multisig->m), sizeof(uint32_t));
   for (uint32_t i = 0; i < n; i++) {
@@ -478,7 +478,7 @@ int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig,
 }
 
 int cryptoIdentityFingerprint(const IdentityType *identity, uint8_t *hash) {
-  SHA256_CTX ctx;
+  SHA256_CTX ctx = {0};
   sha256_Init(&ctx);
   sha256_Update(&ctx, (const uint8_t *)&(identity->index), sizeof(uint32_t));
   if (identity->has_proto && identity->proto[0]) {

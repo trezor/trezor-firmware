@@ -1,5 +1,5 @@
 from apps.common.writers import (
-    write_bytes,
+    write_bytes_unchecked,
     write_uint8,
     write_uint16_le,
     write_uint32_le,
@@ -31,7 +31,7 @@ def write_auth(w: Writer, auth: EosAuthorization) -> None:
     write_variant32(w, len(auth.keys))
     for key in auth.keys:
         write_variant32(w, key.type)
-        write_bytes(w, key.key)
+        write_bytes_unchecked(w, key.key)
         write_uint16_le(w, key.weight)
 
     write_variant32(w, len(auth.accounts))
@@ -60,7 +60,7 @@ def write_action_transfer(w: Writer, msg: EosActionTransfer) -> None:
     write_uint64_le(w, msg.receiver)
     write_asset(w, msg.quantity)
     write_variant32(w, len(msg.memo))
-    write_bytes(w, msg.memo)
+    write_bytes_unchecked(w, msg.memo)
 
 
 def write_action_buyram(w: Writer, msg: EosActionBuyRam) -> None:
@@ -162,4 +162,4 @@ def write_variant32(w: Writer, value: int) -> None:
         variant.append(b)
         if value == 0:
             break
-    write_bytes(w, bytes(variant))
+    write_bytes_unchecked(w, bytes(variant))

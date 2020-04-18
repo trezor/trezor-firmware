@@ -19,6 +19,7 @@ message MoneroTransactionSourceEntry {
     optional bool rct = 7;  // is RingCT used (true for newer UTXOs)
     optional bytes mask = 8;
     optional MoneroMultisigKLRki multisig_kLRki = 9;
+    optional uint32 subaddr_minor = 10;  // minor subaddr index UTXO was sent to
     message MoneroOutputEntry {
         optional uint64 idx = 1;
         optional MoneroRctKeyPublic key = 2;
@@ -200,6 +201,7 @@ message MoneroTransactionInputViniRequest {
     optional bytes vini_hmac = 3;
     optional bytes pseudo_out = 4;
     optional bytes pseudo_out_hmac = 5;
+    optional uint32 orig_idx = 6;  // original sort index, before sorting by key-images
 }
 
 /**
@@ -289,6 +291,7 @@ message MoneroTransactionSignInputRequest {
     optional bytes pseudo_out_hmac = 5;
     optional bytes pseudo_out_alpha = 6;
     optional bytes spend_key = 7;
+    optional uint32 orig_idx = 8;  // original sort index, before sorting by key-images
 }
 
 /**
@@ -317,6 +320,7 @@ message MoneroTransactionFinalAck {
     optional bytes salt = 2;
     optional bytes rand_mult = 3;
     optional bytes tx_enc_keys = 4;
+    optional bytes opening_key = 5;  // enc master key to decrypt MLSAGs after protocol finishes correctly
 }
 
 /**

@@ -1,0 +1,5 @@
+{
+  "label": "Google",
+  "u2f": ["a54672b222c4cf95e151ed8d4d3c767a6cc349435943794e884f3d023a8229fd"],
+  "webauthn": ["google.com"]
+}

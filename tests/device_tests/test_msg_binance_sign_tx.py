@@ -1,9 +1,23 @@
+# This file is part of the Trezor project.
+#
+# Copyright (C) 2012-2019 SatoshiLabs and contributors
+#
+# This library is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License version 3
+# as published by the Free Software Foundation.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the License along with this library.
+# If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
+
 import pytest
 
 from trezorlib import binance
 from trezorlib.tools import parse_path
-
-from .conftest import setup_client
 
 BINANCE_TEST_VECTORS = [
     (  # CANCEL
@@ -80,7 +94,7 @@ BINANCE_TEST_VECTORS = [
         },
         {
             "public_key": "029729a52e4e3c2b4a4e52aa74033eedaf8ba1df5ab6d1f518fd69e67bbd309b0e",
-            "signature": "97b4c2e41b0d0f61ddcf4020fff0ecb227d6df69b3dd7e657b34be0e32b956e22d0c6be5832d25353ae24af0bb223d4a5337320518c4e7708b84c8e05eb6356b",
+            "signature": "faf5b908d6c4ec0c7e2e7d8f7e1b9ca56ac8b1a22b01655813c62ce89bf84a4c7b14f58ce51e85d64c13f47e67d6a9187b8f79f09e0a9b82019f47ae190a4db3",
         },
     ),
 ]
@@ -89,7 +103,7 @@ BINANCE_TEST_VECTORS = [
 @pytest.mark.altcoin
 @pytest.mark.binance
 @pytest.mark.skip_t1  # T1 support is not planned
-@setup_client(
+@pytest.mark.setup_client(
     mnemonic="offer caution gift cross surge pretty orange during eye soldier popular holiday mention east eight office fashion ill parrot vault rent devote earth cousin"
 )
 @pytest.mark.parametrize("message, expected_response", BINANCE_TEST_VECTORS)

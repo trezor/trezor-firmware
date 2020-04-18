@@ -96,8 +96,8 @@ void sha3_512_Init(SHA3_CTX *ctx)
 /* Keccak theta() transformation */
 static void keccak_theta(uint64_t *A)
 {
-	unsigned int x;
-	uint64_t C[5], D[5];
+	unsigned int x = 0;
+	uint64_t C[5] = {0}, D[5] = {0};
 
 	for (x = 0; x < 5; x++) {
 		C[x] = A[x] ^ A[x + 5] ^ A[x + 10] ^ A[x + 15] ^ A[x + 20];
@@ -120,7 +120,7 @@ static void keccak_theta(uint64_t *A)
 /* Keccak pi() transformation */
 static void keccak_pi(uint64_t *A)
 {
-	uint64_t A1;
+	uint64_t A1 = 0;
 	A1 = A[1];
 	A[ 1] = A[ 6];
 	A[ 6] = A[ 9];
@@ -152,7 +152,7 @@ static void keccak_pi(uint64_t *A)
 /* Keccak chi() transformation */
 static void keccak_chi(uint64_t *A)
 {
-	int i;
+	int i = 0;
 	for (i = 0; i < 25; i += 5) {
 		uint64_t A0 = A[0 + i], A1 = A[1 + i];
 		A[0 + i] ^= ~A1 & A[2 + i];
@@ -165,7 +165,7 @@ static void keccak_chi(uint64_t *A)
 
 static void sha3_permutation(uint64_t *state)
 {
-	int round;
+	int round = 0;
 	for (round = 0; round < NumberOfRounds; round++)
 	{
 		keccak_theta(state);
@@ -287,7 +287,7 @@ void sha3_Update(SHA3_CTX *ctx, const unsigned char *msg, size_t size)
 		size -= left;
 	}
 	while (size >= block_size) {
-		uint64_t* aligned_message_block;
+		uint64_t *aligned_message_block = NULL;
 		if (IS_ALIGNED_64(msg)) {
 			/* the most common case is processing of an already aligned message
 			without copying it */
@@ -365,7 +365,7 @@ void keccak_Final(SHA3_CTX *ctx, unsigned char* result)
 
 void keccak_256(const unsigned char* data, size_t len, unsigned char* digest)
 {
-	SHA3_CTX ctx;
+	SHA3_CTX ctx = {0};
 	keccak_256_Init(&ctx);
 	keccak_Update(&ctx, data, len);
 	keccak_Final(&ctx, digest);
@@ -373,7 +373,7 @@ void keccak_256(const unsigned char* data, size_t len, unsigned char* digest)
 
 void keccak_512(const unsigned char* data, size_t len, unsigned char* digest)
 {
-	SHA3_CTX ctx;
+	SHA3_CTX ctx = {0};
 	keccak_512_Init(&ctx);
 	keccak_Update(&ctx, data, len);
 	keccak_Final(&ctx, digest);
@@ -382,7 +382,7 @@ void keccak_512(const unsigned char* data, size_t len, unsigned char* digest)
 
 void sha3_256(const unsigned char* data, size_t len, unsigned char* digest)
 {
-	SHA3_CTX ctx;
+	SHA3_CTX ctx = {0};
 	sha3_256_Init(&ctx);
 	sha3_Update(&ctx, data, len);
 	sha3_Final(&ctx, digest);
@@ -390,7 +390,7 @@ void sha3_256(const unsigned char* data, size_t len, unsigned char* digest)
 
 void sha3_512(const unsigned char* data, size_t len, unsigned char* digest)
 {
-	SHA3_CTX ctx;
+	SHA3_CTX ctx = {0};
 	sha3_512_Init(&ctx);
 	sha3_Update(&ctx, data, len);
 	sha3_Final(&ctx, digest);

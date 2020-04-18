@@ -2,14 +2,14 @@ from typing import *
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-bip39.h
-def find_word(prefix: str) -> Optional[str]:
+def complete_word(prefix: str) -> Optional[str]:
     """
     Return the first word from the wordlist starting with prefix.
     """
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-bip39.h
-def complete_word(prefix: str) -> int:
+def word_completion_mask(prefix: str) -> int:
     """
     Return possible 1-letter suffixes for given word prefix.
     Result is a bitmask, with 'a' on the lowest bit, 'b' on the second

@@ -4,10 +4,10 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List, Optional
+        from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
-        Dict, List, Optional = None, None, None  # type: ignore
+        pass
 
 
 class PassphraseRequest(p.MessageType):
@@ -15,12 +15,12 @@ class PassphraseRequest(p.MessageType):
 
     def __init__(
         self,
-        on_device: bool = None,
+        _on_device: bool = None,
     ) -> None:
-        self.on_device = on_device
+        self._on_device = _on_device
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('on_device', p.BoolType, 0),
+            1: ('_on_device', p.BoolType, 0),
         }

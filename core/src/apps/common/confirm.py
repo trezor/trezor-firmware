@@ -2,31 +2,36 @@ from trezor import wire
 from trezor.messages import ButtonRequestType
 from trezor.messages.ButtonAck import ButtonAck
 from trezor.messages.ButtonRequest import ButtonRequest
-from trezor.ui.confirm import CONFIRMED, Confirm, HoldToConfirm
+from trezor.ui.confirm import CONFIRMED, INFO, Confirm, HoldToConfirm, InfoConfirm
 
 if __debug__:
-    from apps.debug import confirm_signal
+    from trezor.ui.scroll import Paginated
 
 if False:
-    from typing import Any
+    from typing import Any, Callable, Optional
     from trezor import ui
     from trezor.ui.confirm import ButtonContent, ButtonStyleType
     from trezor.ui.loader import LoaderStyleType
+    from trezor.messages.ButtonRequest import EnumTypeButtonRequestType
 
 
 async def confirm(
-    ctx: wire.Context,
+    ctx: wire.GenericContext,
     content: ui.Component,
-    code: int = ButtonRequestType.Other,
-    confirm: ButtonContent = Confirm.DEFAULT_CONFIRM,
+    code: EnumTypeButtonRequestType = ButtonRequestType.Other,
+    confirm: Optional[ButtonContent] = Confirm.DEFAULT_CONFIRM,
     confirm_style: ButtonStyleType = Confirm.DEFAULT_CONFIRM_STYLE,
-    cancel: ButtonContent = Confirm.DEFAULT_CANCEL,
+    cancel: Optional[ButtonContent] = Confirm.DEFAULT_CANCEL,
     cancel_style: ButtonStyleType = Confirm.DEFAULT_CANCEL_STYLE,
     major_confirm: bool = False,
 ) -> bool:
     await ctx.call(ButtonRequest(code=code), ButtonAck)
 
     if content.__class__.__name__ == "Paginated":
+        # The following works because asserts are omitted in non-debug builds.
+        # IOW if the assert runs, that means __debug__ is True and Paginated is imported
+        assert isinstance(content, Paginated)
+
         content.pages[-1] = Confirm(
             content.pages[-1],
             confirm,
@@ -35,40 +40,67 @@ async def confirm(
             cancel_style,
             major_confirm,
         )
-        dialog = content
+        dialog = content  # type: ui.Layout
     else:
         dialog = Confirm(
             content, confirm, confirm_style, cancel, cancel_style, major_confirm
         )
 
-    if __debug__:
-        return await ctx.wait(dialog, confirm_signal()) is CONFIRMED
-    else:
-        return await ctx.wait(dialog) is CONFIRMED
+    return await ctx.wait(dialog) is CONFIRMED
+
+
+async def info_confirm(
+    ctx: wire.GenericContext,
+    content: ui.Component,
+    info_func: Callable,
+    code: EnumTypeButtonRequestType = ButtonRequestType.Other,
+    confirm: ButtonContent = InfoConfirm.DEFAULT_CONFIRM,
+    confirm_style: ButtonStyleType = InfoConfirm.DEFAULT_CONFIRM_STYLE,
+    cancel: ButtonContent = InfoConfirm.DEFAULT_CANCEL,
+    cancel_style: ButtonStyleType = InfoConfirm.DEFAULT_CANCEL_STYLE,
+    info: ButtonContent = InfoConfirm.DEFAULT_INFO,
+    info_style: ButtonStyleType = InfoConfirm.DEFAULT_INFO_STYLE,
+) -> bool:
+    await ctx.call(ButtonRequest(code=code), ButtonAck)
+
+    dialog = InfoConfirm(
+        content, confirm, confirm_style, cancel, cancel_style, info, info_style
+    )
+
+    while True:
+        result = await ctx.wait(dialog)
+
+        if result is INFO:
+            await info_func(ctx)
+
+        else:
+            return result is CONFIRMED
 
 
 async def hold_to_confirm(
-    ctx: wire.Context,
+    ctx: wire.GenericContext,
     content: ui.Component,
-    code: int = ButtonRequestType.Other,
-    confirm: ButtonContent = HoldToConfirm.DEFAULT_CONFIRM,
+    code: EnumTypeButtonRequestType = ButtonRequestType.Other,
+    confirm: str = HoldToConfirm.DEFAULT_CONFIRM,
     confirm_style: ButtonStyleType = HoldToConfirm.DEFAULT_CONFIRM_STYLE,
     loader_style: LoaderStyleType = HoldToConfirm.DEFAULT_LOADER_STYLE,
+    cancel: bool = True,
 ) -> bool:
     await ctx.call(ButtonRequest(code=code), ButtonAck)
 
     if content.__class__.__name__ == "Paginated":
-        content.pages[-1] = HoldToConfirm(
-            content.pages[-1], confirm, confirm_style, loader_style
-        )
-        dialog = content
-    else:
-        dialog = HoldToConfirm(content, confirm, confirm_style, loader_style)
+        # The following works because asserts are omitted in non-debug builds.
+        # IOW if the assert runs, that means __debug__ is True and Paginated is imported
+        assert isinstance(content, Paginated)
 
-    if __debug__:
-        return await ctx.wait(dialog, confirm_signal()) is CONFIRMED
+        content.pages[-1] = HoldToConfirm(
+            content.pages[-1], confirm, confirm_style, loader_style, cancel
+        )
+        dialog = content  # type: ui.Layout
     else:
-        return await ctx.wait(dialog) is CONFIRMED
+        dialog = HoldToConfirm(content, confirm, confirm_style, loader_style, cancel)
+
+    return await ctx.wait(dialog) is CONFIRMED
 
 
 async def require_confirm(*args: Any, **kwargs: Any) -> None:

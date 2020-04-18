@@ -56,8 +56,7 @@ def write_manage_data_op(w, msg: StellarManageDataOp):
     writers.write_string(w, msg.key)
     writers.write_bool(w, bool(msg.value))
     if msg.value:
-        writers.write_uint32(w, len(msg.value))
-        writers.write_bytes(w, msg.value)
+        writers.write_string(w, msg.value)
 
 
 def write_manage_offer_op(w, msg: StellarManageOfferOp):
@@ -120,7 +119,7 @@ def write_set_options_op(w, msg: StellarSetOptionsOp):
     elif msg.signer_type in consts.SIGN_TYPES:
         writers.write_bool(w, True)
         writers.write_uint32(w, msg.signer_type)
-        writers.write_bytes(w, msg.signer_key)
+        writers.write_bytes_unchecked(w, msg.signer_key)
         writers.write_uint32(w, msg.signer_weight)
     else:
         raise ProcessError("Stellar: unknown signer type")
@@ -147,10 +146,10 @@ def _write_asset_code(w, asset_type: int, asset_code: str):
         return  # nothing is needed
     elif asset_type == consts.ASSET_TYPE_ALPHANUM4:
         # pad with zeros to 4 chars
-        writers.write_bytes(w, code + bytearray([0] * (4 - len(code))))
+        writers.write_bytes_unchecked(w, code + bytearray([0] * (4 - len(code))))
     elif asset_type == consts.ASSET_TYPE_ALPHANUM12:
         # pad with zeros to 12 chars
-        writers.write_bytes(w, code + bytearray([0] * (12 - len(code))))
+        writers.write_bytes_unchecked(w, code + bytearray([0] * (12 - len(code))))
     else:
         raise ProcessError("Stellar: invalid asset type")
 

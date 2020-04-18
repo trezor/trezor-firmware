@@ -6,6 +6,7 @@
   "github": "https://github.com/dashpay/dash",
   "maintainer": "Karel Bilek <karel.bilek@satoshilabs.com>",
   "curve_name": "secp256k1",
+  "decimals": 8,
   "address_type": 140,
   "address_type_p2sh": 19,
   "maxfee_kb": 100000,
@@ -23,7 +24,6 @@
   "decred": false,
   "fork_id": null,
   "force_bip143": false,
-  "bip115": false,
   "default_fee_b": {
     "Normal": 10
   },
@@ -37,5 +37,7 @@
   "negative_fee": false,
   "cooldown": 100,
   "consensus_branch_id": null,
+  "extra_data": true,
+  "timestamp": false,
   "confidential_assets": null
 }

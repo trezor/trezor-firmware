@@ -1,5 +1,4 @@
 from trezor.utils import ensure
-from utest import assert_async
 
 
 class SkipTest(Exception):
@@ -120,11 +119,12 @@ class TestCase:
             return AssertRaisesContext(exc)
         try:
             func(*args, **kwargs)
-            ensure(False, "%r not raised" % exc)
         except Exception as e:
             if isinstance(e, exc):
                 return
             raise
+        else:
+            ensure(False, "%r not raised" % exc)
 
     def assertListEqual(self, x, y, msg=''):
         if len(x) != len(y):
@@ -134,6 +134,19 @@ class TestCase:
 
         for i in range(len(x)):
             self.assertEqual(x[i], y[i], msg)
+
+    def assertAsync(self, task, syscalls):
+        for prev_result, expected in syscalls:
+            if isinstance(expected, Exception):
+                with self.assertRaises(expected.__class__):
+                    task.send(prev_result)
+            else:
+                syscall = task.send(prev_result)
+                self.assertObjectEqual(syscall, expected)
+
+    def assertObjectEqual(self, a, b, msg=''):
+        self.assertIsInstance(a, b.__class__, msg)
+        self.assertEqual(a.__dict__, b.__dict__, msg)
 
 
 def skip(msg):
@@ -188,16 +201,12 @@ def run_class(c, test_result):
     print('class', c.__qualname__)
     for name in dir(o):
         if name.startswith("test"):
-            is_async = name.startswith("test_async")
             print(' ', name, end=' ...')
             m = getattr(o, name)
             try:
                 set_up()
                 test_result.testsRun += 1
-                if is_async:
-                    assert_async(m(), [(None, StopIteration()), ])
-                else:
-                    m()
+                m()
                 tear_down()
                 print(" ok")
             except SkipTest as e:

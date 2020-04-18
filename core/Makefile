@@ -38,6 +38,17 @@ FIRMWARE_MAXSIZE    = 1703936
 GITREV=$(shell git describe --always --dirty | tr '-' '_')
 CFLAGS += -DGITREV=$(GITREV)
 
+TESTPATH = $(CURDIR)/../tests
+
+EMU = $(CURDIR)/emu.py
+EMU_LOG_FILE ?= $(TESTPATH)/trezor.log
+EMU_TEST_ARGS = --disable-animation --headless --output=$(EMU_LOG_FILE) --temporary-profile
+EMU_TEST = $(EMU) $(EMU_TEST_ARGS) -c
+
+JUNIT_XML ?= $(TESTPATH)/junit.xml
+PYTEST = pytest --junitxml=$(JUNIT_XML)
+TREZOR_FIDO2_UDP_PORT = 21326
+
 ## help commands:
 
 help: ## show this help
@@ -57,7 +68,7 @@ run: ## run unix port
 	cd src ; ../$(UNIX_BUILD_DIR)/micropython
 
 emu: ## run emulator
-	./emu.sh
+	$(EMU)
 
 ## test commands:
 
@@ -65,15 +76,32 @@ test: ## run unit tests
 	cd tests ; ./run_tests.sh $(TESTOPTS)
 
 test_emu: ## run selected device tests from python-trezor
-	cd tests ; ./run_tests_device_emu.sh $(TESTOPTS)
+	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS)
 
 test_emu_monero: ## run selected monero device tests from monero-agent
-	cd tests ; ./run_tests_device_emu_monero.sh $(TESTOPTS)
+	cd tests ; $(EMU_TEST) ./run_tests_device_emu_monero.sh $(TESTOPTS)
+
+test_emu_u2f: ## run selected u2f device tests from u2f-tests-hid
+	$(EMU_TEST) --slip0014 $(TESTPATH)/fido_tests/u2f-tests-hid/HIDTest $(TREZOR_FIDO2_UDP_PORT) $(TESTOPTS)
+	$(EMU_TEST) --slip0014 $(TESTPATH)/fido_tests/u2f-tests-hid/U2FTest $(TREZOR_FIDO2_UDP_PORT) $(TESTOPTS)
+
+test_emu_fido2: ## run fido2 device tests
+	cd $(TESTPATH)/fido_tests/fido2 ; \
+		$(EMU_TEST) $(PYTEST) --sim tests/standard/ --vendor trezor $(TESTOPTS)
+
+test_emu_click: ## run click tests
+	$(EMU_TEST) $(PYTEST) $(TESTPATH)/click_tests $(TESTOPTS)
+
+test_emu_ui: ## run ui integration tests
+	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests --ui=test --ui-check-missing -m "not skip_ui" $(TESTOPTS)
+
+test_emu_ui_record: ## record and hash screens for ui integration tests
+	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests --ui=record --ui-check-missing -m "not skip_ui" $(TESTOPTS)
 
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
 
-mypy:
+mypy: res
 	mypy --config-file ../setup.cfg \
 		src/main.py
 
@@ -106,7 +134,7 @@ build_reflash: ## build reflash firmware + reflash image
 	dd if=build/bootloader/bootloader.bin of=$(REFLASH_BUILD_DIR)/sdimage.bin bs=1 seek=49152
 
 build_firmware: res build_cross ## build firmware with frozen modules
-	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" BITCOIN_ONLY="$(BITCOIN_ONLY)" $(FIRMWARE_BUILD_DIR)/firmware.bin
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" $(FIRMWARE_BUILD_DIR)/firmware.bin
 
 build_unix: res ## build unix port
 	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/micropython $(UNIX_PORT_OPTS) BITCOIN_ONLY="$(BITCOIN_ONLY)"
@@ -114,12 +142,16 @@ build_unix: res ## build unix port
 build_unix_frozen: res build_cross ## build unix port with frozen modules
 	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/micropython $(UNIX_PORT_OPTS) PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_EMULATOR_FROZEN=1
 
+build_unix_debug: res ## build unix port
+	$(SCONS) --max-drift=1 CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/micropython $(UNIX_PORT_OPTS) TREZOR_EMULATOR_ASAN=1 TREZOR_EMULATOR_DEBUGGABLE=1
+
 build_cross: ## build mpy-cross port
 	$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS)
 
 ## clean commands:
 
 clean: clean_boardloader clean_bootloader clean_prodtest clean_firmware clean_unix clean_cross ## clean all
+	rm -f ".sconsign.dblite"
 
 clean_boardloader: ## clean boardloader build
 	rm -rf $(BOARDLOADER_BUILD_DIR)
@@ -195,8 +227,8 @@ gdb_firmware: $(FIRMWARE_BUILD_DIR)/firmware.elf ## start remote gdb session to 
 ## misc commands:
 
 binctl: ## print info about binary files
-	./tools/binctl $(BOOTLOADER_BUILD_DIR)/bootloader.bin
-	./tools/binctl $(FIRMWARE_BUILD_DIR)/firmware.bin
+	./tools/headertool.py $(BOOTLOADER_BUILD_DIR)/bootloader.bin
+	./tools/headertool.py $(FIRMWARE_BUILD_DIR)/firmware.bin
 
 bloaty: ## run bloaty size profiler
 	bloaty -d symbols -n 0 -s file $(FIRMWARE_BUILD_DIR)/firmware.elf | less
@@ -221,3 +253,10 @@ upload: ## upload firmware using trezorctl
 
 upload_prodtest: ## upload prodtest using trezorctl
 	trezorctl firmware_update -f $(PRODTEST_BUILD_DIR)/prodtest.bin
+
+coverage:  # generate coverage report
+	coverage run --source=./src /dev/null 2>/dev/null && \
+	mv .coverage .coverage.empty && \
+	coverage combine .coverage.* && \
+	coverage html
+	grep pc_cov htmlcov/index.html

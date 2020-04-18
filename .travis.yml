@@ -4,7 +4,7 @@ language: python
 dist: xenial
 sudo: false
 python:
-    - "3.6"
+    - "3.7"
 
 cache:
     directories:
@@ -18,7 +18,7 @@ addons:
 
 env:
     global:
-        PROTOBUF_VERSION=3.4.0
+        PROTOBUF_VERSION=3.6.1
 
 install:
     - pip install --upgrade pip wheel setuptools
@@ -33,6 +33,7 @@ script:
     - pipenv run make style_check
     - pipenv run make defs_check
     - pipenv run make gen_check
+    - ci/check_fixup.sh
 
 notifications:
     webhooks:

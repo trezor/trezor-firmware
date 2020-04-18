@@ -45,7 +45,7 @@ LGPL License Terms @ref lgpl_license
 int usbd_register_set_config_callback(usbd_device *usbd_dev,
 				       usbd_set_config_callback callback)
 {
-	int i;
+	int i = 0;
 
 	for (i = 0; i < MAX_USER_SET_CONFIG_CALLBACK; i++) {
 		if (usbd_dev->user_callback_set_config[i]) {
@@ -73,8 +73,8 @@ static uint16_t build_config_descriptor(usbd_device *usbd_dev,
 {
 	uint8_t *tmpbuf = buf;
 	const struct usb_config_descriptor *cfg = &usbd_dev->config[index];
-	uint16_t count, total = 0, totallen = 0;
-	uint16_t i, j, k;
+	uint16_t count = 0, total = 0, totallen = 0;
+	uint16_t i = 0, j = 0, k = 0;
 
 	memcpy(buf, cfg, count = MIN(len, cfg->bLength));
 	buf += count;
@@ -160,8 +160,8 @@ usb_standard_get_descriptor(usbd_device *usbd_dev,
 
 	wait_random();
 
-	int i, array_idx, descr_idx;
-	struct usb_string_descriptor *sd;
+	int i = 0, array_idx = 0, descr_idx = 0;
+	struct usb_string_descriptor *sd = NULL;
 
 	descr_idx = usb_descriptor_index(req->wValue);
 
@@ -259,9 +259,9 @@ usb_standard_set_configuration(usbd_device *usbd_dev,
 			       struct usb_setup_data *req,
 			       uint8_t **buf, uint16_t *len)
 {
-	unsigned i;
+	unsigned i = 0;
 	int found_index = -1;
-	const struct usb_config_descriptor *cfg;
+	const struct usb_config_descriptor *cfg = NULL;
 
 	(void)req;
 	(void)buf;
@@ -344,7 +344,7 @@ usb_standard_set_interface(usbd_device *usbd_dev,
 {
 	const struct usb_config_descriptor *cfx =
 		&usbd_dev->config[usbd_dev->current_config - 1];
-	const struct usb_interface *iface;
+	const struct usb_interface *iface = NULL;
 
 	(void)buf;
 
@@ -380,7 +380,7 @@ usb_standard_get_interface(usbd_device *usbd_dev,
 			   struct usb_setup_data *req,
 			   uint8_t **buf, uint16_t *len)
 {
-	uint8_t *cur_altsetting;
+	uint8_t *cur_altsetting = NULL;
 	const struct usb_config_descriptor *cfx =
 		&usbd_dev->config[usbd_dev->current_config - 1];
 

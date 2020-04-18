@@ -2,8 +2,9 @@ from ubinascii import hexlify
 
 from trezor import ui
 from trezor.messages import ButtonRequestType
+from trezor.strings import format_amount
 from trezor.ui.text import Text
-from trezor.utils import chunks, format_amount
+from trezor.utils import chunks
 
 from apps.common.confirm import require_confirm, require_hold_to_confirm
 from apps.common.layout import split_address

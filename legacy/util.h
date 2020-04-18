@@ -58,9 +58,6 @@ void uint32hex(uint32_t num, char *str);
 // converts data to hexa
 void data2hex(const void *data, uint32_t len, char *str);
 
-// read protobuf integer and advance pointer
-uint32_t readprotobufint(const uint8_t **ptr);
-
 // defined in startup.s (or setup.c for emulator)
 extern void __attribute__((noreturn)) shutdown(void);
 

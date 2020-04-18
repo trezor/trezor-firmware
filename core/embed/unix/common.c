@@ -102,9 +102,7 @@ error_shutdown(const char *line1, const char *line2, const char *line3,
   printf("\nPlease unplug the device.\n");
   display_backlight(255);
   hal_delay(5000);
-  __shutdown();
-  for (;;)
-    ;
+  exit(4);
 }
 
 void hal_delay(uint32_t ms) { usleep(1000 * ms); }

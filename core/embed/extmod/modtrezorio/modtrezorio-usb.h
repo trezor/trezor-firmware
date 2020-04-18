@@ -24,6 +24,8 @@ enum {
   USB_OPENED = 1,
 };
 
+/// package: trezorio.__init__
+
 /// class USB:
 ///     """
 ///     USB device configuration.

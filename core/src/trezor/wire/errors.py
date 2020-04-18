@@ -1,8 +1,11 @@
 from trezor.messages import FailureType
 
+if False:
+    from trezor.messages.Failure import EnumTypeFailureType
+
 
 class Error(Exception):
-    def __init__(self, code: int, message: str) -> None:
+    def __init__(self, code: EnumTypeFailureType, message: str) -> None:
         super().__init__()
         self.code = code
         self.message = message
@@ -66,6 +69,11 @@ class NotInitialized(Error):
 class PinMismatch(Error):
     def __init__(self, message: str) -> None:
         super().__init__(FailureType.PinMismatch, message)
+
+
+class WipeCodeMismatch(Error):
+    def __init__(self, message: str) -> None:
+        super().__init__(FailureType.WipeCodeMismatch, message)
 
 
 class FirmwareError(Error):

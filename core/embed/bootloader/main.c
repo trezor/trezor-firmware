@@ -50,8 +50,8 @@ static const uint8_t * const BOOTLOADER_KEYS[] = {
 
 #define USB_IFACE_NUM 0
 
-static void usb_init_all(void) {
-  static const usb_dev_info_t dev_info = {
+static void usb_init_all(secbool usb21_landing) {
+  usb_dev_info_t dev_info = {
       .device_class = 0x00,
       .device_subclass = 0x00,
       .device_protocol = 0x00,
@@ -63,7 +63,7 @@ static void usb_init_all(void) {
       .serial_number = "000000000000000000000000",
       .interface = "TREZOR Interface",
       .usb21_enabled = sectrue,
-      .usb21_landing = sectrue,
+      .usb21_landing = usb21_landing,
   };
 
   static uint8_t rx_buffer[USB_PACKET_SIZE];
@@ -88,7 +88,9 @@ static void usb_init_all(void) {
 
 static secbool bootloader_usb_loop(const vendor_header *const vhdr,
                                    const image_header *const hdr) {
-  usb_init_all();
+  // if both are NULL, we don't have a firmware installed
+  // let's show a webusb landing page in this case
+  usb_init_all((vhdr == NULL && hdr == NULL) ? sectrue : secfalse);
 
   uint8_t buf[USB_PACKET_SIZE];
 

@@ -1,8 +1,0 @@
-[book]
-title = "Trezor Core"
-description = "Documentation of Trezor Core firmware."
-src = "."
-
-[build]
-build-dir = "../build/docs"
-create-missing = false

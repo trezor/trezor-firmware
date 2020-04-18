@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018, 2019 Yannick Heneault <yheneaul@gmail.com>
+ * Copyright (C) 2018, 2019, 2020 Yannick Heneault <yheneaul@gmail.com>
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by

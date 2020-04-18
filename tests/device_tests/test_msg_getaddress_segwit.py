@@ -19,15 +19,12 @@ import pytest
 from trezorlib import btc, messages as proto
 from trezorlib.tools import parse_path
 
-from .common import TrezorTest
 
-
-class TestMsgGetaddressSegwit(TrezorTest):
-    def test_show_segwit(self):
-        self.setup_mnemonic_allallall()
+class TestMsgGetaddressSegwit:
+    def test_show_segwit(self, client):
         assert (
             btc.get_address(
-                self.client,
+                client,
                 "Testnet",
                 parse_path("49'/1'/0'/1/0"),
                 True,
@@ -38,7 +35,7 @@ class TestMsgGetaddressSegwit(TrezorTest):
         )
         assert (
             btc.get_address(
-                self.client,
+                client,
                 "Testnet",
                 parse_path("49'/1'/0'/0/0"),
                 False,
@@ -49,7 +46,7 @@ class TestMsgGetaddressSegwit(TrezorTest):
         )
         assert (
             btc.get_address(
-                self.client,
+                client,
                 "Testnet",
                 parse_path("44'/1'/0'/0/0"),
                 False,
@@ -60,7 +57,7 @@ class TestMsgGetaddressSegwit(TrezorTest):
         )
         assert (
             btc.get_address(
-                self.client,
+                client,
                 "Testnet",
                 parse_path("44'/1'/0'/0/0"),
                 False,
@@ -71,11 +68,10 @@ class TestMsgGetaddressSegwit(TrezorTest):
         )
 
     @pytest.mark.altcoin
-    def test_show_segwit_altcoin(self):
-        self.setup_mnemonic_allallall()
+    def test_show_segwit_altcoin(self, client):
         assert (
             btc.get_address(
-                self.client,
+                client,
                 "Groestlcoin Testnet",
                 parse_path("49'/1'/0'/0/0"),
                 False,
@@ -86,7 +82,7 @@ class TestMsgGetaddressSegwit(TrezorTest):
         )
         assert (
             btc.get_address(
-                self.client,
+                client,
                 "Elements",
                 parse_path("m/49'/1'/0'/0/0"),
                 False,
@@ -96,10 +92,10 @@ class TestMsgGetaddressSegwit(TrezorTest):
             == "XNW67ZQA9K3AuXPBWvJH4zN2y5QBDTwy2Z"
         )
 
-    def test_show_multisig_3(self):
-        self.setup_mnemonic_allallall()
+    @pytest.mark.multisig
+    def test_show_multisig_3(self, client):
         nodes = [
-            btc.get_public_node(self.client, parse_path("999'/1'/%d'" % i)).node
+            btc.get_public_node(client, parse_path("999'/1'/%d'" % i)).node
             for i in range(1, 4)
         ]
 
@@ -114,7 +110,7 @@ class TestMsgGetaddressSegwit(TrezorTest):
         for i in [1, 2, 3]:
             assert (
                 btc.get_address(
-                    self.client,
+                    client,
                     "Testnet",
                     parse_path("999'/1'/%d'/2/0" % i),
                     False,
