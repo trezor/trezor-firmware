@@ -1,6 +1,6 @@
 import gc
 import sys
-from trezorutils import (  # type: ignore[attr-defined] # noqa: F401
+from trezorutils import (  # noqa: F401
     BITCOIN_ONLY,
     EMULATOR,
     GITREV,
