@@ -59,8 +59,6 @@
 
 static uint8_t _oledbuffer[OLED_BUFSIZE];
 static bool is_debug_link = 0;
-Ble_Info g_ble_info;
-USB_Info g_usb_info;
 
 /*
  * macros to convert coordinate to bit position
@@ -173,7 +171,11 @@ void oledInit() {
 /*
  * Clears the display buffer (sets all pixels to black)
  */
-void oledClear() { memzero(_oledbuffer, sizeof(_oledbuffer)); }
+void oledClear() {
+  // memzero(_oledbuffer, sizeof(_oledbuffer));
+  // do not clear logo status,logo line 12
+  memzero(_oledbuffer, sizeof(_oledbuffer) - (OLED_WIDTH * (LOGO_HEIGHT / 8)));
+}
 
 void oledInvertDebugLink() {
   if (is_debug_link) {
@@ -207,6 +209,11 @@ void oledRefresh() {
                                OLED_SETHIGHCOLUMN | 0x00,
                                OLED_SETSTARTLINE | 0x00};
 
+  static bool refreshing = false;
+
+  if (refreshing == true) return;
+  refreshing = true;
+
   // draw triangle in upper right corner
   oledInvertDebugLink();
 
@@ -220,9 +227,11 @@ void oledRefresh() {
   gpio_set(OLED_CS_PORT, OLED_CS_PIN);    // SPI deselect
   gpio_clear(OLED_DC_PORT, OLED_DC_PIN);  // set to CMD
 
+  refreshing = false;
   // return it back
   oledInvertDebugLink();
 }
+
 #endif
 
 const uint8_t *oledGetBuffer() { return _oledbuffer; }
@@ -419,7 +428,7 @@ void oledFrame(int x1, int y1, int x2, int y2) {
  */
 void oledSwipeLeft(void) {
   for (int i = 0; i < OLED_WIDTH; i++) {
-    for (int j = 0; j < OLED_HEIGHT / 8; j++) {
+    for (int j = 0; j < (OLED_HEIGHT - LOGO_HEIGHT) / 8; j++) {
       for (int k = OLED_WIDTH - 1; k > 0; k--) {
         _oledbuffer[j * OLED_WIDTH + k] = _oledbuffer[j * OLED_WIDTH + k - 1];
       }
@@ -435,7 +444,7 @@ void oledSwipeLeft(void) {
  */
 void oledSwipeRight(void) {
   for (int i = 0; i < OLED_WIDTH / 4; i++) {
-    for (int j = 0; j < OLED_HEIGHT / 8; j++) {
+    for (int j = 0; j < (OLED_HEIGHT - LOGO_HEIGHT) / 8; j++) {
       for (int k = 0; k < OLED_WIDTH / 4 - 1; k++) {
         _oledbuffer[k * 4 + 0 + j * OLED_WIDTH] =
             _oledbuffer[k * 4 + 4 + j * OLED_WIDTH];

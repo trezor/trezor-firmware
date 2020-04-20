@@ -26,6 +26,7 @@
 #include "messages.h"
 #include "oled.h"
 #include "timer.h"
+#include "trans_fifo.h"
 #include "trezor.h"
 #if U2F_ENABLED
 #include "u2f.h"
@@ -336,8 +337,10 @@ static void main_rx_callback(usbd_device *dev, uint8_t ep) {
   if (dev != NULL) {
     if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_MAIN_OUT, buf, 64) != 64)
       return;
+    host_channel = CHANNEL_USB;
   } else {
     memcpy(buf, s_ucPackAppRevBuf, 64);
+    host_channel = CHANNEL_SLAVE;
   }
   debugLog(0, "", "main_rx_callback");
   if (!tiny) {
@@ -445,17 +448,20 @@ static void i2cSlaveRxData(uint8_t *pucInputBuf, uint32_t data_len) {
 
 void i2cSlavePoll(void) {
   uint32_t usLen;
-  if (true == i2c_recv_done) {
-    host_channel = CHANNEL_SLAVE;
-    i2c_recv_done = false;
-    usLen = i2c_data_inlen;
-    i2c_data_inlen = 0;
-    i2cSlaveRxData(i2c_data_in, usLen);
+  volatile uint32_t total_len, len;
+  uint8_t buf[128];
+  while (i2c_recv_done) {
+    total_len = fifo_lockdata_len(&i2c_fifo_in);
+    if (total_len == 0) {
+      i2c_recv_done = false;
+      break;
+    }
+    len = total_len > 64 ? 64 : total_len;
+    fifo_read_lock(&i2c_fifo_in, buf, len);
+    i2cSlaveRxData(buf, len);
   }
-
-  if (msg_out_end) {
-    if (CHANNEL_SLAVE == host_channel) {
-      host_channel = CHANNEL_NULL;
+  if (CHANNEL_SLAVE == host_channel) {
+    if (msg_out_end) {
       usLen = (msg_out_end * 64) & 0xFFFF;
       i2cSlaveResponse(msg_out, usLen);
       msg_out_end = 0;
@@ -467,19 +473,21 @@ void usbPoll(void) {
 
   i2cSlavePoll();
 
-  if ((usbd_dev == NULL) || (CHANNEL_SLAVE == host_channel)) {
+  if (usbd_dev == NULL) {
     return;
   }
-
   // poll read buffer
   usbd_poll(usbd_dev);
   // write pending data
-  data = msg_out_data();
-  if (data) {
-    while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_MAIN_IN, data, 64) !=
-           64) {
+  if (CHANNEL_USB == host_channel) {
+    data = msg_out_data();
+    if (data) {
+      while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_MAIN_IN, data,
+                                  64) != 64) {
+      }
     }
   }
+
 #if U2F_ENABLED
   data = u2f_out_data();
   if (data) {

@@ -41,6 +41,41 @@ extern void *layoutLast;
 #define layoutSwipe oledSwipeLeft
 #endif
 
+// prompt info display
+#define DISP_NOT_ACTIVE 0x01     // Not Activated
+#define DISP_TOUCHPH 0x02        // It needs to touch the phone
+#define DISP_NFC_LINK 0x03       // Connect by NFC
+#define DISP_USB_LINK 0x04       // Connect by USB
+#define DISP_COMPUTER_LINK 0x05  // Connect to a computer
+#define DISP_INPUTPIN \
+  0x06  // Enter PIN code according to the prompts on the
+        // right screen
+#define DISP_BUTTON_OK_RO_NO 0x07     // Press OK to confirm, Press < to Cancel
+#define DISP_GEN_PRI_KEY 0x08         // Generating private key...
+#define DISP_ACTIVE_SUCCESS 0x09      // Activated
+#define DISP_BOTTON_UP_OR_DOWN 0x0A   // Turn up or down to view
+#define DISP_SN 0x0B                  // Serial NO.
+#define DISP_VERSION 0x0C             // Firmware version
+#define DISP_CONFIRM_PUB_KEY 0x0D     // Confirm public key
+#define DISP_BOTTON_OK_SIGN 0x0E      // Press OK to sign
+#define DISP_SIGN_SUCCESS 0x0F        // Signed! Touch it to the phone closely
+#define DISP_SIGN_PRESS_OK_HOME 0x10  // Signed! Press OK to return to homepage
+#define DISP_SIGN_SUCCESS_VIEW \
+  0x11                               // Signed! Please view
+                                     // transaction on your
+                                     // phone
+#define DISP_UPDATGE_APP_GOING 0x12  // Upgrading, do not turn off
+#define DISP_UPDATGE_SUCCESS \
+  0x13                               // Firmware upgraded, press OK to return to
+                                     // homepage
+#define DISP_PRESSKEY_POWEROFF 0x14  // power off
+#define DISP_BLE_NAME 0x15           // ble name
+#define DISP_EXPORT_PRIVATE_KEY 0x16     // export encrypted private key
+#define DISP_IMPORT_PRIVATE_KEY 0x17     // import private key
+#define DISP_UPDATE_SETTINGS 0x18        // update settings
+#define DISP_BIXIN_KEY_INITIALIZED 0x19  // Bixin Key initialized
+#define DISP_CONFIRM_PIN 0x1A            // confirm pin
+
 void layoutDialogSwipe(const BITMAP *icon, const char *btnNo,
                        const char *btnYes, const char *desc, const char *line1,
                        const char *line2, const char *line3, const char *line4,

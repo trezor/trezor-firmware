@@ -29,6 +29,7 @@
 #include "messages.pb.h"
 #include "protect.h"
 #include "secp256k1.h"
+#include "sys.h"
 #include "transaction.h"
 
 static uint32_t inputs_count;

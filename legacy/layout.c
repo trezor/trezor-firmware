@@ -17,15 +17,25 @@
  * along with this library.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
-
 #include "layout.h"
 #include "oled.h"
 #include "prompt.h"
 
 #if !EMULATOR
 #include "sys.h"
+#include "timer.h"
 #endif
+
+static bool refresh_home = true;
+
+bool layoutNeedRefresh(void) {
+  if (refresh_home) {
+    refresh_home = false;
+    return true;
+  }
+  return false;
+}
+void layoutRefreshSet(bool refresh) { refresh_home = refresh; }
 
 void layoutButtonNo(const char *btnNo, const BITMAP *icon) {
   int icon_width = 0;
@@ -59,22 +69,22 @@ void layoutDialog(const BITMAP *icon, const char *btnNo, const char *btnYes,
   int left = 0;
   oledClear();
   if (icon) {
-    oledDrawBitmap(0, 0, icon);
+    oledDrawBitmap(0, LOGO_HEIGHT + 1, icon);
     left = icon->width + 4;
   }
-  if (line1) oledDrawString(left, 0 * 9, line1, FONT_STANDARD);
-  if (line2) oledDrawString(left, 1 * 9, line2, FONT_STANDARD);
-  if (line3) oledDrawString(left, 2 * 9, line3, FONT_STANDARD);
-  if (line4) oledDrawString(left, 3 * 9, line4, FONT_STANDARD);
+  if (line1) oledDrawString(left, 1 * 9, line1, FONT_STANDARD);
+  if (line2) oledDrawString(left, 2 * 9, line2, FONT_STANDARD);
+  if (line3) oledDrawString(left, 3 * 9, line3, FONT_STANDARD);
+  if (line4) oledDrawString(left, 4 * 9, line4, FONT_STANDARD);
   if (desc) {
     oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 2 * 9 - 1, desc,
                          FONT_STANDARD);
     if (btnYes || btnNo) {
-      oledHLine(OLED_HEIGHT - 21);
+      oledHLine(OLED_HEIGHT - 20);
     }
   } else {
-    if (line5) oledDrawString(left, 4 * 9, line5, FONT_STANDARD);
-    if (line6) oledDrawString(left, 5 * 9, line6, FONT_STANDARD);
+    if (line5) oledDrawString(left, 5 * 9, line5, FONT_STANDARD);
+    if (line6) oledDrawString(left, 6 * 9, line6, FONT_STANDARD);
     if (btnYes || btnNo) {
       oledHLine(OLED_HEIGHT - 13);
     }
@@ -153,49 +163,104 @@ void layoutProgress(const char *desc, int permil) {
 #if !EMULATOR
 void layoutStatusLogo(void) {
   static bool nfc_status_bak = false;
-  if ((sys_nfcState() == true) && (false == nfc_status_bak)) {
+  static bool ble_status_bak = false;
+  static bool usb_status_bak = false;
+  static uint32_t counter = 0, counter_bak = 0;
+  static uint8_t battery_bak = 0;
+  uint8_t pad = 16;
+  bool refresh = false;
+
+  if ((false == nfc_status_bak) && (sys_nfcState() == true)) {
     nfc_status_bak = true;
-    oledDrawBitmap(90, 0, &bmp_nfc);
-    oledRefresh();
-  } else if ((sys_nfcState() == false) && (true == nfc_status_bak)) {
+    oledDrawBitmap(OLED_WIDTH - 3 * LOGO_WIDTH - pad, 0, &bmp_nfc);
+    refresh = true;
+  } else if ((true == nfc_status_bak) && (sys_nfcState() == false)) {
     nfc_status_bak = false;
-    oledClearBitmap(90, 0, &bmp_nfc);
-    oledRefresh();
+    oledClearBitmap(OLED_WIDTH - 3 * LOGO_WIDTH - pad, 0, &bmp_nfc);
+    refresh = true;
   }
+  if ((false == ble_status_bak) && (sys_bleState() == true)) {
+    ble_status_bak = true;
+    oledDrawBitmap(OLED_WIDTH - 2 * LOGO_WIDTH - pad, 0, &bmp_ble);
+    refresh = true;
+  } else if ((true == ble_status_bak) && (sys_bleState() == false)) {
+    ble_status_bak = false;
+    oledClearBitmap(OLED_WIDTH - 2 * LOGO_WIDTH - pad, 0, &bmp_ble);
+    refresh = true;
+  }
+  if ((false == usb_status_bak) && (sys_usbState() == true)) {
+    usb_status_bak = true;
+    oledDrawBitmap(OLED_WIDTH - LOGO_WIDTH - pad, 0, &bmp_usb);
+    refresh = true;
+  } else if ((true == usb_status_bak) && (sys_usbState() == false)) {
+    usb_status_bak = false;
+    oledClearBitmap(OLED_WIDTH - LOGO_WIDTH - pad, 0, &bmp_usb);
+    refresh = true;
+  }
+
+  counter = timer_out_get(timer_out_countdown) / timer1s;
+  if (counter_bak != counter) {
+    uint8_t asc_buf[3] = {0};
+    oledBox(0, 0, 16, 8, false);
+    counter_bak = counter;
+    asc_buf[0] = counter / 10 + 0x30;
+    asc_buf[1] = counter % 10 + 0x30;
+    if (counter > 0) {
+      oledDrawString(0, 0, (char *)asc_buf, FONT_STANDARD);
+    }
+    refresh = true;
+  }
+
+  if (battery_bak != battery_cap) {
+    battery_bak = battery_cap;
+    refresh = true;
+    switch (battery_bak) {
+      case 0:
+        oledDrawBitmap(OLED_WIDTH - 16, 0, &bmp_battery_0);
+        break;
+      case 1:
+        oledDrawBitmap(OLED_WIDTH - 16, 0, &bmp_battery_1);
+        break;
+      case 2:
+        oledDrawBitmap(OLED_WIDTH - 16, 0, &bmp_battery_2);
+        break;
+      case 3:
+        oledDrawBitmap(OLED_WIDTH - 16, 0, &bmp_battery_3);
+        break;
+      case 4:
+        oledDrawBitmap(OLED_WIDTH - 16, 0, &bmp_battery_4);
+        break;
+      case 5:
+        oledDrawBitmap(OLED_WIDTH - 16, 0, &bmp_battery_5);
+        break;
+      default:
+        break;
+    }
+  }
+
+  if (refresh) oledRefresh();
+}
+
+void layoutBlePasskey(uint8_t *passkey) {
+  oledClear();
+  oledDrawStringCenter(60, 20, "Bluetooth passkey:", FONT_STANDARD);
+  oledDrawStringCenter(60, 30, (char *)passkey, FONT_STANDARD);
+  oledRefresh();
 }
 #endif
-/*
- * display ble message
- */
-void layoutBleInfo(uint8_t ucIndex, uint8_t *ucStr) {
-  oledClear();
-  switch (ucIndex) {
-    case BT_LINK:
-      oledDrawStringCenter(60, 30, "Connect by Bluetooth", FONT_STANDARD);
-      break;
-    case BT_UNLINK:
-      oledDrawStringCenter(60, 30, "BLE unLink", FONT_STANDARD);
-      break;
-    case BT_DISPIN:
-      ucStr[BT_PAIR_LEN] = '\0';
-      oledDrawStringCenter(60, 30, "BLE Pair Pin", FONT_STANDARD);
-      oledDrawStringCenter(60, 50, (char *)ucStr, FONT_STANDARD);
-      break;
-    case BT_PINERROR:
-      oledDrawStringCenter(60, 30, "Pair Pin Error", FONT_STANDARD);
-      break;
-    case BT_PINTIMEOUT:
-      oledDrawStringCenter(60, 30, "Pair Pin Timeout", FONT_STANDARD);
-      break;
-    case BT_PAIRINGSCESS:
-      oledDrawStringCenter(60, 30, "Pair Pin Success", FONT_STANDARD);
-      break;
-    case BT_PINCANCEL:
-      oledDrawStringCenter(60, 30, "Pair Pin Cancel", FONT_STANDARD);
-      break;
 
-    default:
-      break;
-  }
+extern void shutdown(void);
+
+void layoutError(const char *line1, const char *line2) {
+  layoutDialog(&bmp_icon_error, NULL, NULL, NULL, line1, line2, NULL,
+               "Your device", "will reset.", NULL);
+  delay_ms(2000);
+  shutdown();
+}
+
+void layoutOperationWithCountdown(const char *info, uint32_t counter) {
+  timer_out_set(timer_out_countdown, counter);
+  oledClear();
+  oledDrawStringCenter(OLED_WIDTH / 2, 30, info, FONT_STANDARD);
   oledRefresh();
 }

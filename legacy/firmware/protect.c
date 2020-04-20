@@ -182,7 +182,7 @@ secbool protectPinUiCallback(uint32_t wait, uint32_t progress,
     secstrbuf[16] = 0;
   }
   oledClear();
-  oledDrawStringCenter(OLED_WIDTH / 2, 0 * 9, message, FONT_STANDARD);
+  oledDrawStringCenter(OLED_WIDTH / 2, 1 * 9, message, FONT_STANDARD);
   oledDrawStringCenter(OLED_WIDTH / 2, 2 * 9, _("Please wait"), FONT_STANDARD);
   oledDrawStringCenter(OLED_WIDTH / 2, 3 * 9, secstr, FONT_STANDARD);
   oledDrawStringCenter(OLED_WIDTH / 2, 4 * 9, _("to continue ..."),

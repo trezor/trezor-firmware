@@ -26,6 +26,7 @@
 #include "buttons.h"
 #include "common.h"
 #include "config.h"
+#include "dev_info.h"
 #include "gettext.h"
 #include "layout2.h"
 #include "memory.h"
@@ -40,7 +41,6 @@
 #include "util.h"
 
 uint8_t Disp_buffer[DISP_BUFSIZE];
-uint8_t s_usPower_Button_Status = POWER_BUTTON_UP;
 
 static uint16_t s_usCurrentCount;
 static uint16_t s_uiShowLength;

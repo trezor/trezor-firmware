@@ -36,6 +36,7 @@
 #include "layout2.h"
 #include "memory.h"
 #include "memzero.h"
+#include "mi2c.h"
 #include "pbkdf2.h"
 #include "protect.h"
 #include "rng.h"

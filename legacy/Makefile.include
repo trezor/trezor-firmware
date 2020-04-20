@@ -151,6 +151,18 @@ else
 CFLAGS += -DDEBUG_RNG=0
 endif
 
+ifeq ($(BLE_SWD_UPDATE), 1)
+CFLAGS += -DBLE_SWD_UPDATE=1
+else
+CFLAGS += -DBLE_SWD_UPDATE=0
+endif
+
+ifeq ($(DEBUG_RTT), 1)
+CFLAGS += -DDEBUG_RTT=1
+else
+CFLAGS += -DDEBUG_RTT=0
+endif
+
 all: $(NAME).bin
 
 openocd:
@@ -219,6 +231,7 @@ $(NAME).elf: $(OBJS) $(LDSCRIPT) $(LIBDEPS)
 
 clean::
 	rm -f $(OBJS)
+	rm -f $(patsubst %.o,%.d,$(OBJS))
 	rm -f *.a
 	rm -f *.bin
 	rm -f *.d

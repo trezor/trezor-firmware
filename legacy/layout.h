@@ -22,6 +22,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 #include "bitmaps.h"
 
 // Ble display
@@ -36,6 +37,8 @@
 // Pairing code length
 #define BT_PAIR_LEN 0x06
 
+bool layoutNeedRefresh(void);
+void layoutRefreshSet(bool refresh);
 void layoutButtonNo(const char *btnNo, const BITMAP *icon);
 void layoutButtonYes(const char *btnYes, const BITMAP *icon);
 void layoutDialog(const BITMAP *icon, const char *btnNo, const char *btnYes,
@@ -44,7 +47,9 @@ void layoutDialog(const BITMAP *icon, const char *btnNo, const char *btnYes,
                   const char *line6);
 void layoutProgressUpdate(bool refresh);
 void layoutProgress(const char *desc, int permil);
-void layoutBleInfo(uint8_t ucIndex, uint8_t *ucStr);
 void layoutStatusLogo(void);
+void layoutBlePasskey(uint8_t *passkey);
+void layoutError(const char *line1, const char *line2);
+void layoutOperationWithCountdown(const char *info, uint32_t counter);
 
 #endif

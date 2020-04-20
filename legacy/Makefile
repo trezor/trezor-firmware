@@ -8,6 +8,7 @@ OBJS += flash.o
 OBJS += layout.o
 OBJS += oled.o
 OBJS += rng.o
+OBJS += dev_info.o
 
 ifneq ($(EMULATOR),1)
 OBJS += setup.o
@@ -15,6 +16,13 @@ OBJS += sys.o
 OBJS += si2c.o
 OBJS += mi2c.o
 OBJS += usart.o
+OBJS += nordic_dfu.o
+OBJS += ble.o
+OBJS += trans_fifo.o
+
+OBJS += segger_rtt/SEGGER_RTT.o
+OBJS += segger_rtt/SEGGER_RTT_printf.o
+OBJS += segger_rtt/rtt_log.o
 endif
 
 OBJS += util.o

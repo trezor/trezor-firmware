@@ -72,7 +72,7 @@ unsigned char bUBLE_UpdateBleFirmware(unsigned int ulBleLen,
     templen = 0;
   }
   // verify
-  layoutProgress("Checking BLE firmware...", 1000);
+  layoutProgress("Verify BLE firmware...", 1000);
   res = swd_check_code(ulbleaddr, g_offset, ucMode);
   if (res != 1) {
     return FALSE;

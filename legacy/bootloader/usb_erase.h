@@ -41,6 +41,7 @@ static void erase_ble_code_progress(void) {
   layoutProgress("INSTALLING ... Please wait", 0);
   flash_exit();
 }
+
 static void erase_storage(void) {
   flash_enter();
   for (int i = FLASH_STORAGE_SECTOR_FIRST; i <= FLASH_STORAGE_SECTOR_LAST;

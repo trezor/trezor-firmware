@@ -19,7 +19,6 @@
 
 #include "buttons.h"
 #include "common.h"
-#include "timer.h"
 
 struct buttonState button;
 
@@ -72,7 +71,7 @@ void buttonsTimer(void) {
         button_timer_enable = 0;
       }
     }
-    if (button_timer_counter > 20) {  // long press
+    if (button_timer_counter > 4) {  // long press
       sys_shutdown();
     }
   }
@@ -187,4 +186,66 @@ bool hasbutton(void) {
     return true;
   }
   return false;
+}
+
+bool checkButtonOrTimeout(uint8_t btn, TimerOut type) {
+  bool flag = false;
+  buttonUpdate();
+  if (timer_out_get(type) == 0) flag = true;
+  switch (btn) {
+    case BTN_PIN_YES:
+      if (button.YesUp) flag = true;
+      break;
+    case BTN_PIN_NO:
+      if (button.NoUp) flag = true;
+      break;
+    case BTN_PIN_UP:
+      if (button.UpUp) flag = true;
+      break;
+    case BTN_PIN_DOWN:
+      if (button.DownUp) flag = true;
+      break;
+    default:
+      break;
+  }
+  if (true == flag) timer_out_set(type, 0);
+  return flag;
+}
+
+bool waitButtonResponse(uint8_t btn, uint32_t time_out) {
+  bool flag = false;
+  timer_out_set(timer_out_countdown, time_out);
+  while (1) {
+    if (timer_out_get(timer_out_countdown) == 0) {
+      flag = false;
+      break;
+    }
+    buttonUpdate();
+    if (button.YesUp) {
+      if (btn == BTN_PIN_YES)
+        flag = true;
+      else
+        flag = false;
+      break;
+    } else if (button.NoUp) {
+      if (btn == BTN_PIN_NO)
+        flag = true;
+      else
+        flag = false;
+      break;
+    } else if (button.UpUp) {
+      if (btn == BTN_PIN_UP)
+        flag = true;
+      else
+        flag = false;
+      break;
+    } else if (button.DownUp) {
+      if (btn == BTN_PIN_DOWN)
+        flag = true;
+      else
+        flag = false;
+      break;
+    }
+  }
+  return flag;
 }

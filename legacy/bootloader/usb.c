@@ -22,10 +22,12 @@
 
 #include <string.h>
 
+#include "ble.h"
 #include "bootloader.h"
 #include "buttons.h"
 #include "ecdsa.h"
 #include "layout.h"
+#include "layout_boot.h"
 #include "memory.h"
 #include "memzero.h"
 #include "oled.h"
@@ -40,27 +42,44 @@
 #include "usb.h"
 #include "util.h"
 
+#include "timer.h"
+#include "usart.h"
+
+#include "nordic_dfu.h"
+
 #include "usb21_standard.h"
 #include "webusb.h"
 #include "winusb.h"
 
 #include "usb_desc.h"
-#include "usb_send.h"
 
 enum {
   STATE_READY,
   STATE_OPEN,
   STATE_FLASHSTART,
   STATE_FLASHING,
+  STATE_INTERRPUPT,
   STATE_CHECK,
   STATE_END,
 };
 
+typedef enum _ChannelType {
+  CHANNEL_NULL,
+  CHANNEL_USB,
+  CHANNEL_SLAVE,
+} ChannelType;
+
+ChannelType host_channel = CHANNEL_NULL;
+
 #define UPDATE_BLE 0x5A
 #define UPDATE_ST 0x55
-static uint32_t flash_pos = 0, flash_len = 0;
+uint32_t flash_pos = 0, flash_len = 0;
 static uint32_t chunk_idx = 0;
 static char flash_state = STATE_READY;
+
+static uint8_t packet_buf[64] __attribute__((aligned(4)));
+
+#include "usb_send.h"
 
 static uint32_t FW_HEADER[FLASH_FWHEADER_LEN / sizeof(uint32_t)];
 static uint32_t FW_CHUNK[FW_CHUNK_SIZE / sizeof(uint32_t)];
@@ -106,6 +125,7 @@ static void check_and_write_chunk(void) {
     return;
   }
 
+#if 0
   flash_enter();
   for (uint32_t i = offset / sizeof(uint32_t); i < chunk_pos / sizeof(uint32_t);
        i++) {
@@ -114,12 +134,13 @@ static void check_and_write_chunk(void) {
                              i * sizeof(uint32_t),
                          FW_CHUNK[i]);
     } else {
-      flash_program_word(FLASH_BLE_SECTOR9_START + chunk_idx * FW_CHUNK_SIZE +
+      flash_program_word(FLASH_BLE_ADDR_START + chunk_idx * FW_CHUNK_SIZE +
                              i * sizeof(uint32_t),
                          FW_CHUNK[i]);
     }
   }
   flash_exit();
+#endif
 
   // all done
   if (flash_len == flash_pos) {
@@ -169,17 +190,23 @@ static secbool readprotobufint(const uint8_t **ptr, uint32_t *result) {
 static void rx_callback(usbd_device *dev, uint8_t ep) {
   (void)ep;
   static uint16_t msg_id = 0xFFFF;
-  static uint8_t buf[64] __attribute__((aligned(4)));
   static uint32_t w;
   static int wi;
   static int old_was_signed;
+  uint8_t *p_buf;
+
+  p_buf = packet_buf;
 
   if (dev != NULL) {
-    if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_OUT, buf, 64) != 64) return;
+    if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_OUT, packet_buf, 64) != 64)
+      return;
+    host_channel = CHANNEL_USB;
+    if (flash_state == STATE_INTERRPUPT) {
+      flash_state = STATE_READY;
+      flash_pos = 0;
+    }
   } else {
-    memset(buf, 0, 64);
-    memcpy(buf, i2c_data_in, i2c_data_inlen);
-    i2c_data_inlen = 0;
+    host_channel = CHANNEL_SLAVE;
   }
 
   if (flash_state == STATE_END) {
@@ -187,13 +214,14 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
   }
 
   if (flash_state == STATE_READY || flash_state == STATE_OPEN ||
-      flash_state == STATE_FLASHSTART || flash_state == STATE_CHECK) {
-    if (buf[0] != '?' || buf[1] != '#' ||
-        buf[2] != '#') {  // invalid start - discard
+      flash_state == STATE_FLASHSTART || flash_state == STATE_CHECK ||
+      flash_state == STATE_INTERRPUPT) {
+    if (p_buf[0] != '?' || p_buf[1] != '#' ||
+        p_buf[2] != '#') {  // invalid start - discard
       return;
     }
     // struct.unpack(">HL") => msg, size
-    msg_id = (buf[3] << 8) + buf[4];
+    msg_id = (p_buf[3] << 8) + p_buf[4];
   }
 
   if (flash_state == STATE_READY || flash_state == STATE_OPEN) {
@@ -214,17 +242,23 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       layoutDialog(&bmp_icon_question, "Cancel", "Confirm", NULL,
                    "Do you really want to", "wipe the device?", NULL,
                    "All data will be lost.", NULL, NULL);
-      bool but = get_button_response();
-      if (but) {
-        erase_storage_code_progress();
-        flash_state = STATE_END;
-        show_unplug("Device", "successfully wiped.");
-        send_msg_success(dev);
+      bool but = waitButtonResponse(BTN_PIN_YES, default_oper_time);
+      if (host_channel == CHANNEL_SLAVE) {
       } else {
-        flash_state = STATE_END;
-        show_unplug("Device wipe", "aborted.");
-        send_msg_failure(dev);
+        if (but) {
+          erase_storage_code_progress();
+          flash_state = STATE_END;
+          show_unplug("Device", "successfully wiped.");
+          send_msg_success(dev);
+
+        } else {
+          flash_state = STATE_END;
+          show_unplug("Device wipe", "aborted.");
+          send_msg_failure(dev);
+          shutdown();
+        }
       }
+
       return;
     }
   }
@@ -234,9 +268,9 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       bool proceed = false;
       if (firmware_present_new()) {
         layoutDialog(&bmp_icon_question, "Abort", "Continue", NULL,
-                     "Install new", "firmware?", NULL, "Never do this without",
-                     "your recovery card!", NULL);
-        proceed = get_button_response();
+                     "Install new", "firmware?", "Never do this without",
+                     "your recovery card!", NULL, NULL);
+        proceed = waitButtonResponse(BTN_PIN_YES, default_oper_time);
       } else {
         proceed = true;
       }
@@ -253,29 +287,32 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
           old_was_signed = SIG_FAIL;
         }
         erase_code_progress();
-        erase_ble_code_progress();
         send_msg_success(dev);
         flash_state = STATE_FLASHSTART;
+        timer_out_set(timer_out_countdown, timer1s * 10);
       } else {
         send_msg_failure(dev);
         flash_state = STATE_END;
         show_unplug("Firmware installation", "aborted.");
+        shutdown();
       }
       return;
-    } else if (msg_id == 0x0002) {  // FirmwareErase message (id 2)
+    } else if (msg_id == 0x0010) {  // FirmwareErase message (id 16)
       bool proceed = false;
       layoutDialog(&bmp_icon_question, "Abort", "Continue", NULL, "Install ble",
                    "firmware?", NULL, "Never do this without",
                    "your recovery card!", NULL);
-      proceed = get_button_response();
+      proceed = waitButtonResponse(BTN_PIN_YES, default_oper_time);
       if (proceed) {
         erase_ble_code_progress();
         send_msg_success(dev);
         flash_state = STATE_FLASHSTART;
+        timer_out_set(timer_out_countdown, timer1s * 10);
       } else {
         send_msg_failure(dev);
         flash_state = STATE_END;
         show_unplug("Firmware installation", "aborted.");
+        shutdown();
       }
       return;
     }
@@ -283,90 +320,137 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
   }
 
   if (flash_state == STATE_FLASHSTART) {
-    if (msg_id == 0x0007) {  // FirmwareUpload message (id 7)
-      if (buf[9] != 0x0a) {  // invalid contents
+    if (msg_id == 0x0007) {    // FirmwareUpload message (id 7)
+      if (p_buf[9] != 0x0a) {  // invalid contents
         send_msg_failure(dev);
         flash_state = STATE_END;
         show_halt("Error installing", "firmware.");
         return;
       }
       // read payload length
-      const uint8_t *p = buf + 10;
-      if (readprotobufint(&p, &flash_len) != sectrue) {  // integer too large
-        send_msg_failure(dev);
-        flash_state = STATE_END;
-        show_halt("Firmware is", "too big.");
-        return;
-      }
-
-      // check firmware magic
-      if ((memcmp(p, &FIRMWARE_MAGIC_NEW, 4) != 0) &&
-          (memcmp(p, &FIRMWARE_MAGIC_BLE, 4) != 0)) {
-        send_msg_failure(dev);
-        flash_state = STATE_END;
-        show_halt("Wrong firmware", "header.");
-        return;
-      }
-      if (memcmp(p, &FIRMWARE_MAGIC_NEW, 4) == 0) {
-        update_mode = UPDATE_ST;
-      } else {
-        update_mode = UPDATE_BLE;
-      }
-
-      if (flash_len <= FLASH_FWHEADER_LEN) {  // firmware is too small
-        send_msg_failure(dev);
-        flash_state = STATE_END;
-        show_halt("Firmware is", "too small.");
-        return;
-      }
-      if (UPDATE_ST == update_mode) {
-        if (flash_len >
-            FLASH_FWHEADER_LEN + FLASH_APP_LEN) {  // firmware is too big
+      const uint8_t *p = p_buf + 10;
+      if (flash_pos) {
+        uint32_t tmp_len;
+        if (readprotobufint(&p, &tmp_len) != sectrue) {  // integer too large
           send_msg_failure(dev);
           flash_state = STATE_END;
-          show_halt("Firmware is", "too big");
+          show_halt("Firmware is", "too big.");
           return;
         }
+        w = 0;
+        wi = 0;
+        while (p < p_buf + 64 && flash_pos < flash_len) {
+          // assign byte to first byte of uint32_t w
+          w = (w >> 8) | (((uint32_t)*p) << 24);
+          wi++;
+          if (wi == 4) {
+            if (flash_pos < FLASH_FWHEADER_LEN) {
+              FW_HEADER[flash_pos / 4] = w;
+            } else {
+              FW_CHUNK[(flash_pos % FW_CHUNK_SIZE) / 4] = w;
+              flash_enter();
+              if (UPDATE_ST == update_mode) {
+                flash_program_word(FLASH_FWHEADER_START + flash_pos, w);
+              } else {
+                flash_program_word(FLASH_BLE_ADDR_START + flash_pos, w);
+              }
+              flash_exit();
+            }
+            flash_pos += 4;
+            wi = 0;
+            // finished the whole chunk
+            if (flash_pos % FW_CHUNK_SIZE == 0) {
+              check_and_write_chunk();
+            }
+          }
+          p++;
+        }
+        flash_state = STATE_FLASHING;
+        return;
       } else {
-        if (flash_len >
-            FLASH_FWHEADER_LEN + FLASH_BLE_MAX_LEN) {  // firmware is too big
+        if (readprotobufint(&p, &flash_len) != sectrue) {  // integer too large
+          send_msg_failure(dev);
+          flash_state = STATE_END;
+          show_halt("Firmware is", "too big.");
+          return;
+        }
+        // check firmware magic
+        if ((memcmp(p, &FIRMWARE_MAGIC_NEW, 4) != 0) &&
+            (memcmp(p, &FIRMWARE_MAGIC_BLE, 4) != 0)) {
+          send_msg_failure(dev);
+          flash_state = STATE_END;
+          show_halt("Wrong firmware", "header.");
+          return;
+        }
+        if (memcmp(p, &FIRMWARE_MAGIC_NEW, 4) == 0) {
+          update_mode = UPDATE_ST;
+        } else {
+          update_mode = UPDATE_BLE;
+        }
+
+        if (flash_len <= FLASH_FWHEADER_LEN) {  // firmware is too small
           send_msg_failure(dev);
           flash_state = STATE_END;
           show_halt("Firmware is", "too small.");
           return;
         }
-      }
-
-      memzero(FW_HEADER, sizeof(FW_HEADER));
-      memzero(FW_CHUNK, sizeof(FW_CHUNK));
-      flash_state = STATE_FLASHING;
-      flash_pos = 0;
-      chunk_idx = 0;
-      w = 0;
-      while (p < buf + 64) {
-        // assign byte to first byte of uint32_t w
-        w = (w >> 8) | (((uint32_t)*p) << 24);
-        wi++;
-        if (wi == 4) {
-          FW_HEADER[flash_pos / 4] = w;
-          flash_pos += 4;
-          wi = 0;
+        if (UPDATE_ST == update_mode) {
+          if (flash_len >
+              FLASH_FWHEADER_LEN + FLASH_APP_LEN) {  // firmware is too big
+            send_msg_failure(dev);
+            flash_state = STATE_END;
+            show_halt("Firmware is", "too big");
+            return;
+          }
+        } else {
+          if (flash_len >
+              FLASH_FWHEADER_LEN + FLASH_BLE_MAX_LEN) {  // firmware is too big
+            send_msg_failure(dev);
+            flash_state = STATE_END;
+            show_halt("Firmware is", "too small.");
+            return;
+          }
         }
-        p++;
+
+        memzero(FW_HEADER, sizeof(FW_HEADER));
+        memzero(FW_CHUNK, sizeof(FW_CHUNK));
+        flash_state = STATE_FLASHING;
+        flash_pos = 0;
+        chunk_idx = 0;
+        w = 0;
+        wi = 0;
+        while (p < p_buf + 64) {
+          // assign byte to first byte of uint32_t w
+          w = (w >> 8) | (((uint32_t)*p) << 24);
+          wi++;
+          if (wi == 4) {
+            FW_HEADER[flash_pos / 4] = w;
+            flash_pos += 4;
+            wi = 0;
+          }
+          p++;
+        }
+        return;
       }
-      return;
     }
     return;
   }
+  if (flash_state == STATE_INTERRPUPT)
+    if (msg_id == 0x0000) {
+      send_msg_features(dev);
+      flash_state = STATE_FLASHSTART;
+      timer_out_set(timer_out_countdown, timer1s * 10);
+      return;
+    }
 
   if (flash_state == STATE_FLASHING) {
-    if (buf[0] != '?') {  // invalid contents
+    if (p_buf[0] != '?') {  // invalid contents
       send_msg_failure(dev);
       flash_state = STATE_END;
       show_halt("Error installing", "firmware.");
       return;
     }
-
+    timer_out_set(timer_out_countdown, timer1s * 10);
     static uint8_t flash_anim = 0;
     if (flash_anim % 32 == 4) {
       layoutProgress("INSTALLING ... Please wait",
@@ -374,8 +458,8 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
     }
     flash_anim++;
 
-    const uint8_t *p = buf + 1;
-    while (p < buf + 64 && flash_pos < flash_len) {
+    const uint8_t *p = p_buf + 1;
+    while (p < p_buf + 64 && flash_pos < flash_len) {
       // assign byte to first byte of uint32_t w
       w = (w >> 8) | (((uint32_t)*p) << 24);
       wi++;
@@ -384,6 +468,13 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
           FW_HEADER[flash_pos / 4] = w;
         } else {
           FW_CHUNK[(flash_pos % FW_CHUNK_SIZE) / 4] = w;
+          flash_enter();
+          if (UPDATE_ST == update_mode) {
+            flash_program_word(FLASH_FWHEADER_START + flash_pos, w);
+          } else {
+            flash_program_word(FLASH_BLE_ADDR_START + flash_pos, w);
+          }
+          flash_exit();
         }
         flash_pos += 4;
         wi = 0;
@@ -412,6 +503,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
   }
 
   if (flash_state == STATE_CHECK) {
+    timer_out_set(timer_out_countdown, 0);
     // use the firmware header from RAM
     const image_header *hdr = (const image_header *)FW_HEADER;
 
@@ -424,7 +516,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       uint8_t hash[32] = {0};
       compute_firmware_fingerprint(hdr, hash);
       layoutFirmwareFingerprint(hash);
-      hash_check_ok = get_button_response();
+      hash_check_ok = waitButtonResponse(BTN_PIN_YES, default_oper_time);
     } else {
       hash_check_ok = true;
     }
@@ -454,7 +546,6 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       }
 
       flash_enter();
-
       // write firmware header only when hash was confirmed
       if (hash_check_ok) {
         for (size_t i = 0; i < FLASH_FWHEADER_LEN / sizeof(uint32_t); i++) {
@@ -470,8 +561,8 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
 
       flash_state = STATE_END;
       if (hash_check_ok) {
-        show_unplug("New firmware", "successfully installed.");
         send_msg_success(dev);
+        show_unplug("New firmware", "successfully installed.");
         shutdown();
       } else {
         layoutDialog(&bmp_icon_warning, NULL, NULL, NULL,
@@ -483,38 +574,40 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       }
       return;
     } else {
-      flash_enter();
-      // write firmware header only when hash was confirmed
-      for (size_t i = 0; i < FLASH_FWHEADER_LEN / sizeof(uint32_t); i++) {
-        flash_program_word(FLASH_BLE_SECTOR9_START + i * sizeof(uint32_t),
-                           FW_HEADER[i]);
-      }
-      flash_exit();
-
       flash_state = STATE_END;
       send_msg_success(dev);
 
-      unsigned int uiBleLen = flash_len - FLASH_FWHEADER_LEN;
-      if (FALSE == bUBLE_UpdateBleFirmware(
-                       uiBleLen, FLASH_BLE_SECTOR9_START + FLASH_FWHEADER_LEN,
-                       ERASE_ALL)) {
+      uint32_t fw_len = flash_len - FLASH_FWHEADER_LEN;
+      bool update_status = false;
+#if BLE_SWD_UPDATE
+      update_status = bUBLE_UpdateBleFirmware(
+          fw_len, FLASH_BLE_ADDR_START + FLASH_FWHEADER_LEN, ERASE_ALL);
+
+#else
+      uint8_t *p_init = (uint8_t *)FLASH_INIT_DATA_START;
+      uint32_t init_data_len = p_init[0] + (p_init[1] << 8);
+
+      update_status = updateBle(p_init + 4, init_data_len,
+                                (uint8_t *)FLASH_BLE_FIRMWARE_START,
+                                fw_len - FLASH_INIT_DATA_LEN);
+
+#endif
+      if (update_status == false) {
         layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "ble installation",
                      "aborted.", NULL, "You need to repeat",
                      "the procedure with", "the correct firmware.");
         send_msg_failure(dev);
-        return;
+      } else {
+        // ble power reset
+        ble_power_off();
+        delay_ms(100);
+        ble_power_on();
+        show_unplug("ble firmware", "successfully installed.");
+        shutdown();
       }
-      // ble power rest
-      show_unplug("ble firmware", "successfully installed.");
-      ble_power_off();
-      delay_ms(10);
-      ble_power_on();
-      send_msg_success(dev);
-      return;
     }
   }
 }
-
 static void set_config(usbd_device *dev, uint16_t wValue) {
   (void)wValue;
 
@@ -553,19 +646,14 @@ static void checkButtons(void) {
     return;
   }
   uint16_t state = gpio_port_read(BTN_PORT);
-  if ((state & BTN_PIN_NO)) {
+  if ((btn_left == false) && (state & BTN_PIN_NO)) {
     btn_left = true;
-  }
-  if ((state & BTN_PIN_YES) != BTN_PIN_YES) {
-    btn_right = true;
-  }
-  if (btn_left) {
     oledBox(0, 0, 3, 3, true);
+    oledRefresh();
   }
-  if (btn_right) {
+  if ((btn_right == false) && (state & BTN_PIN_YES) != BTN_PIN_YES) {
+    btn_right = true;
     oledBox(OLED_WIDTH - 4, 0, OLED_WIDTH - 1, 3, true);
-  }
-  if (btn_left || btn_right) {
     oledRefresh();
   }
   if (btn_left && btn_right) {
@@ -574,8 +662,15 @@ static void checkButtons(void) {
 }
 
 static void i2cSlavePoll(void) {
-  if (true == i2c_recv_done) {
-    i2c_recv_done = false;
+  volatile uint32_t total_len, len;
+  while (i2c_recv_done) {
+    total_len = fifo_lockdata_len(&i2c_fifo_in);
+    if (total_len == 0) {
+      i2c_recv_done = false;
+      break;
+    }
+    len = total_len > 64 ? 64 : total_len;
+    fifo_read_lock(&i2c_fifo_in, packet_buf, len);
     rx_callback(NULL, 0);
   }
 }
@@ -584,11 +679,20 @@ void usbLoop(void) {
   bool firmware_present = firmware_present_new();
   usbInit();
   for (;;) {
+    layoutBootHome();
     usbd_poll(usbd_dev);
     i2cSlavePoll();
+    bleUartPoll();
     if (!firmware_present &&
         (flash_state == STATE_READY || flash_state == STATE_OPEN)) {
       checkButtons();
+    }
+    if (flash_state == STATE_FLASHSTART || flash_state == STATE_FLASHING) {
+      if (checkButtonOrTimeout(BTN_PIN_NO, timer_out_countdown)) {
+        flash_state = STATE_INTERRPUPT;
+        fifo_flush(&i2c_fifo_in);
+        layoutRefreshSet(true);
+      }
     }
   }
 }

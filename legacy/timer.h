@@ -23,13 +23,21 @@
 #include <stdint.h>
 #include "supervise.h"
 
-extern uint8_t ucTimeFlag;
-
 #define autoPowerOffMsDefault (90 * 1000U)
 
-#define POWER_OFF_TIMER_ENBALE() (ucTimeFlag |= 0x01)
-#define POWER_OFF_TIMER_CLEAR() (ucTimeFlag &= 0xFE)
-#define POWER_OFF_TIMER_READY() (ucTimeFlag & 0x01)
+#define sys_time1s 1000
+#define timer1s 1000
+
+#define default_time timer1s * 5
+#define default_oper_time timer1s * 60
+#define default_resp_time timer1s * 60
+
+typedef enum _TimerOut {
+  timer_out_cmd = 0,
+  timer_out_countdown,
+  timer_out_oper,
+  timer_out_null,
+} TimerOut;
 
 typedef void (*timer_func)(void);
 
@@ -40,6 +48,9 @@ void delay_ms(uint32_t uiDelay_Ms);
 void delay_us(uint32_t uiDelay_us);
 
 void timer_init(void);
+
+void timer_out_set(TimerOut type, uint32_t val);
+uint32_t timer_out_get(TimerOut type);
 
 #if EMULATOR
 uint32_t timer_ms(void);

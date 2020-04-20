@@ -26,6 +26,7 @@
 #include "bootloader.h"
 #include "buttons.h"
 #include "layout.h"
+#include "layout_boot.h"
 #include "memory.h"
 #include "oled.h"
 #include "rng.h"
@@ -54,13 +55,15 @@ bool get_button_response(void) {
 
 void show_halt(const char *line1, const char *line2) {
   layoutDialog(&bmp_icon_error, NULL, NULL, NULL, line1, line2, NULL,
-               "Unplug your Trezor,", "reinstall firmware.", NULL);
+               "Your device", "will be restart.", NULL);
+  delay_ms(2000);
   shutdown();
 }
 
 void show_unplug(const char *line1, const char *line2) {
   layoutDialog(&bmp_icon_ok, NULL, NULL, NULL, line1, line2, NULL,
-               "You may now", "unplug your Trezor.", NULL);
+               "Your device", "will be restart.", NULL);
+  delay_ms(2000);
 }
 
 static void show_unofficial_warning(const uint8_t *hash) {
@@ -91,19 +94,7 @@ static void __attribute__((noreturn)) load_app(int signed_firmware) {
                    signed_firmware);
 }
 
-static void bootloader_loop(void) {
-  oledClear();
-  oledDrawBitmap(20, 15, &bmp_BiXin_logo32);
-  oledDrawStringCenter(90, 20, "BiXin", FONT_STANDARD);
-  oledDrawStringCenter(90, 30, "Bootloader", FONT_STANDARD);
-  oledDrawStringCenter(
-      90, 40,
-      VERSTR(VERSION_MAJOR) "." VERSTR(VERSION_MINOR) "." VERSTR(VERSION_PATCH),
-      FONT_STANDARD);
-  oledRefresh();
-
-  usbLoop();
-}
+static void bootloader_loop(void) { usbLoop(); }
 
 int main(void) {
 #ifndef APPVER
@@ -112,23 +103,19 @@ int main(void) {
   __stack_chk_guard = random32();  // this supports compiler provided
                                    // unpredictable stack protection checks
 #ifndef APPVER
-  memory_protect();
+  // memory_protect();
   oledInit();
   sys_poweron();
   buttonsIrqInit();
   timer_init();
-  register_timer("layout", 100, layoutStatusLogo);
-  register_timer("button", 100, buttonsTimer);
+  register_timer("layout", timer1s / 2, layoutStatusLogo);
+  register_timer("button", timer1s / 2, buttonsTimer);
 #endif
   mpu_config_bootloader();
 #ifndef APPVER
   bool left_pressed = (buttonRead() & BTN_PIN_DOWN) == 0;
 
   if (firmware_present_new() && !left_pressed) {
-    oledClear();
-    oledDrawBitmap(40, 0, &bmp_BiXin_logo32);
-    oledRefresh();
-
     const image_header *hdr =
         (const image_header *)FLASH_PTR(FLASH_FWHEADER_START);
 
@@ -139,15 +126,15 @@ int main(void) {
     }
 
     if (SIG_OK != check_firmware_hashes(hdr)) {
-      show_halt("Broken firmware", "detected.");
+      // show_halt("Broken firmware", "detected.");
     }
     mpu_config_off();
     load_app(signed_firmware);
   }
 #endif
 
+  layoutBootHome();
   bootloader_loop();
 
   return 0;
 }
-////////////////////////////////////////

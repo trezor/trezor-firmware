@@ -24,6 +24,7 @@
 #include "common.h"
 #include "hmac.h"
 #include "memzero.h"
+#include "mi2c.h"
 #include "norcow.h"
 #include "pbkdf2.h"
 #include "rand.h"

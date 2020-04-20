@@ -67,7 +67,7 @@
 #define GPIO_MI2C_SCL GPIO8
 #define GPIO_MI2C_SDA GPIO9
 
-#if (NORMAL_PCB)
+#if (FEITIAN_PCB_V1_1)
 // SE power IO
 #define GPIO_SE_PORT GPIOB
 #define GPIO_SE_POWER GPIO13

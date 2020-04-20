@@ -30,6 +30,7 @@
 #include "protect.h"
 #include "rng.h"
 #include "sha2.h"
+#include "sys.h"
 #include "util.h"
 
 static uint32_t strength;

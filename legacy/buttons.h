@@ -23,6 +23,8 @@
 #include <libopencm3/stm32/gpio.h>
 #include <stdbool.h>
 
+#include "timer.h"
+
 struct buttonState {
   volatile bool YesUp;
   volatile int YesDown;
@@ -41,6 +43,8 @@ void buttonUpdate(void);
 bool hasbutton(void);
 void buttonsIrqInit(void);
 void buttonsTimer(void);
+bool checkButtonOrTimeout(uint8_t btn, TimerOut type);
+bool waitButtonResponse(uint8_t btn, uint32_t time_out);
 
 #ifndef BTN_PORT
 #define BTN_PORT GPIOC

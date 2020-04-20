@@ -34,6 +34,9 @@
 #include "sys.h"
 #include "usart.h"
 #include "util.h"
+
+#include "./segger_rtt/rtt_log.h"
+
 uint32_t __stack_chk_guard;
 
 static inline void __attribute__((noreturn)) fault_handler(const char *line1) {
@@ -107,13 +110,17 @@ void setup(void) {
   gpio_mode_setup(BLE_POWER_CTRL_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLDOWN,
                   BLE_POWER_CTRL_PIN);
   // combus
-  gpio_mode_setup(GPIO_CMBUS_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
+  gpio_mode_setup(GPIO_CMBUS_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLDOWN,
                   GPIO_SI2C_CMBUS);
-  SET_COMBUS_HIGH();
+  SET_COMBUS_LOW();
+  // bluetooth power control
+  gpio_mode_setup(BLE_CONNECT_PORT, GPIO_MODE_INPUT, GPIO_PUPD_PULLDOWN,
+                  BLE_CONNECT_PIN);
+  ble_power_off();
   // se power
-  gpio_mode_setup(GPIO_SE_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
-                  GPIO_SE_POWER);
-  POWER_OFF_SE();
+  gpio_mode_setup(SE_POWER_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
+                  SE_POWER_PIN);
+  se_power_off();
 
   // set GPIO for OLED display
   gpio_mode_setup(OLED_DC_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, OLED_DC_PIN);
@@ -147,7 +154,11 @@ void setup(void) {
 #if (_SUPPORT_DEBUG_UART_)
   usart_setup();
 #endif
-  i2c_slave_init();
+  ble_usart_init();
+  i2c_slave_init_irq();
+
+  rtt_log_init();
+  rtt_log_print("segger rtt start\r\n");
 }
 
 void setupApp(void) {
@@ -175,9 +186,6 @@ void setupApp(void) {
   gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO10);
   gpio_set_af(GPIOA, GPIO_AF10, GPIO10);
 
-#if (_SUPPORT_DEBUG_UART_)
-  vUART_DebugInfo("power on", NULL, 1);
-#endif
   // master i2c init
   vMI2CDRV_Init();
 }

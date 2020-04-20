@@ -30,7 +30,6 @@
 
 /* 1 tick = 1 ms */
 extern volatile uint32_t system_millis;
-uint8_t ucTimeFlag;
 
 /*
  * delay ms
@@ -77,19 +76,27 @@ void unregister_timer(char *name) {
 
   for (i = 0; i < TIMER_NUM; i++) {
     if (!strcmp(timer_array[i].name, name)) {
-      memset(timer_array[i].name, 0x00, 32);
-      timer_array[i].fp = NULL;
+      memset(timer_array[i].name, 0x00, sizeof(TimerDsec));
       return;
     }
   }
 }
 
+static uint32_t timer_out_array[timer_out_null];
+static void timer_out_decrease(void) {
+  uint32_t i = timer_out_null;
+  while (i--) {
+    if (timer_out_array[i]) timer_out_array[i]--;
+  }
+}
+
+void timer_out_set(TimerOut type, uint32_t val) { timer_out_array[type] = val; }
+uint32_t timer_out_get(TimerOut type) { return timer_out_array[type]; }
 /*
  * Initialise the Cortex-M3 SysTick timer
  */
 void timer_init(void) {
   system_millis = 0;
-  ucTimeFlag = 0;
 
   /*
    * MCU clock (120 MHz) as source
@@ -118,7 +125,7 @@ void timer_init(void) {
 void sys_tick_handler(void) {
   int i;
   system_millis++;
-
+  timer_out_decrease();
   for (i = 0; i < TIMER_NUM; i++) {
     if (timer_array[i].fp) {
       if ((system_millis - timer_array[i].current) > timer_array[i].cycle) {
