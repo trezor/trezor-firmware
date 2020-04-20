@@ -26,6 +26,7 @@
 #include <libopencm3/stm32/usart.h>
 #include <stdio.h>
 #include <string.h>
+
 #if (_SUPPORT_DEBUG_UART_)
 /************************************************************************
 函数名称:vUART_HtoA
@@ -115,4 +116,51 @@ void usart_setup(void) {
   /* Finally enable the USART. */
   usart_enable(USART1);
 }
+
 #endif
+
+void ble_usart_init(void) {
+  // enable USART clock
+  rcc_periph_clock_enable(RCC_USART2);
+  //	set GPIO for USART1
+  rcc_periph_clock_enable(RCC_GPIOA);
+  gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO2 | GPIO3);
+  gpio_set_af(GPIOA, GPIO_AF7, GPIO2 | GPIO3);
+
+  // usart1 set
+  usart_set_baudrate(BLE_UART, 115200);
+  usart_set_databits(BLE_UART, 8);
+  usart_set_stopbits(BLE_UART, USART_STOPBITS_1);
+  usart_set_parity(BLE_UART, USART_PARITY_NONE);
+  usart_set_flow_control(BLE_UART, USART_FLOWCONTROL_NONE);
+  usart_set_mode(BLE_UART, USART_MODE_TX_RX);
+  usart_enable(BLE_UART);
+}
+
+void ble_usart_enable(void) { usart_enable(BLE_UART); }
+void ble_usart_disable(void) { usart_disable(BLE_UART); }
+
+void ble_usart_sendByte(uint8_t data) {
+  usart_send_blocking(BLE_UART, data);
+  while (!usart_get_flag(BLE_UART, USART_SR_TXE))
+    ;
+}
+
+void ble_usart_send(uint8_t *buf, uint32_t len) {
+  uint32_t i;
+  for (i = 0; i < len; i++) {
+    usart_send_blocking(BLE_UART, buf[i]);
+    while (!usart_get_flag(BLE_UART, USART_SR_TXE))
+      ;
+  }
+}
+
+bool ble_read_byte(uint8_t *buf) {
+  uint16_t tmp;
+  if (usart_get_flag(BLE_UART, USART_SR_RXNE) != 0) {
+    tmp = usart_recv(BLE_UART);
+    buf[0] = (uint8_t)tmp;
+    return true;
+  }
+  return false;
+}
