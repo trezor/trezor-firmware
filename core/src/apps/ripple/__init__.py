@@ -1,12 +1,10 @@
 from trezor import wire
 from trezor.messages import MessageType
 
-from apps.common import HARDENED
-
 CURVE = "secp256k1"
+SLIP44_ID = 144
 
 
 def boot() -> None:
-    ns = [[CURVE, HARDENED | 44, HARDENED | 144]]
-    wire.add(MessageType.RippleGetAddress, __name__, "get_address", ns)
-    wire.add(MessageType.RippleSignTx, __name__, "sign_tx", ns)
+    wire.add(MessageType.RippleGetAddress, __name__, "get_address")
+    wire.add(MessageType.RippleSignTx, __name__, "sign_tx")

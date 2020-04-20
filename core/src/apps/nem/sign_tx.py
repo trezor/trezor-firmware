@@ -5,11 +5,13 @@ from trezor.messages.NEMSignTx import NEMSignTx
 
 from apps.common import seed
 from apps.common.paths import validate_path
-from apps.nem import CURVE, mosaic, multisig, namespace, transfer
+from apps.common.seed import with_slip44_keychain
+from apps.nem import CURVE, SLIP44_ID, mosaic, multisig, namespace, transfer
 from apps.nem.helpers import NEM_HASH_ALG, check_path
 from apps.nem.validators import validate
 
 
+@with_slip44_keychain(SLIP44_ID, CURVE, allow_testnet=True)
 async def sign_tx(ctx, msg: NEMSignTx, keychain):
     validate(msg)
 
@@ -22,7 +24,7 @@ async def sign_tx(ctx, msg: NEMSignTx, keychain):
         network=msg.transaction.network,
     )
 
-    node = keychain.derive(msg.transaction.address_n, CURVE)
+    node = keychain.derive(msg.transaction.address_n)
 
     if msg.multisig:
         public_key = msg.multisig.signer
