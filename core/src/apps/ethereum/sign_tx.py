@@ -10,6 +10,7 @@ from trezor.utils import HashWriter
 from apps.common import paths
 from apps.ethereum import CURVE, address, tokens
 from apps.ethereum.address import validate_full_path
+from apps.ethereum.keychain import with_keychain_from_chain_id
 from apps.ethereum.layout import (
     require_confirm_data,
     require_confirm_fee,
@@ -20,6 +21,7 @@ from apps.ethereum.layout import (
 MAX_CHAIN_ID = 2147483629
 
 
+@with_keychain_from_chain_id
 async def sign_tx(ctx, msg, keychain):
     msg = sanitize(msg)
     check(msg)
