@@ -63,9 +63,8 @@ async def request_transaction(ctx, tx_req: CardanoTxRequest, index: int):
     return await ctx.call(tx_req, CardanoTxAck)
 
 
-async def sign_tx(ctx, msg):
-    keychain = await seed.get_keychain(ctx)
-
+@seed.with_keychain
+async def sign_tx(ctx, msg, keychain: seed.Keychain):
     progress.init(msg.transactions_count, "Loading data")
 
     try:
