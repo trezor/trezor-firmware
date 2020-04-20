@@ -50,8 +50,11 @@ with open("../prompt.h", "wt") as f:
 #define __PROMPT_H__
 
 #include <stdint.h>
+
 #include "bitmaps.h"
 
+#define LOGO_WIDTH 8
+#define LOGO_HEIGHT 8
 
 """
     )

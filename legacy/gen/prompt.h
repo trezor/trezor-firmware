@@ -5,7 +5,15 @@
 
 #include "bitmaps.h"
 
-extern const BITMAP bmp_battery;
+#define LOGO_WIDTH 8
+#define LOGO_HEIGHT 8
+
+extern const BITMAP bmp_battery_0;
+extern const BITMAP bmp_battery_1;
+extern const BITMAP bmp_battery_2;
+extern const BITMAP bmp_battery_3;
+extern const BITMAP bmp_battery_4;
+extern const BITMAP bmp_battery_5;
 extern const BITMAP bmp_ble;
 extern const BITMAP bmp_ble_link;
 extern const BITMAP bmp_cn_active_success;

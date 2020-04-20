@@ -8,6 +8,7 @@ typedef struct {
   const uint8_t *data;
 } BITMAP;
 
+extern const BITMAP bmp_BiXin_logo32;
 extern const BITMAP bmp_btn_cancel;
 extern const BITMAP bmp_btn_confirm;
 extern const BITMAP bmp_digit0;
@@ -34,10 +35,5 @@ extern const BITMAP bmp_logo48_empty;
 extern const BITMAP bmp_logo64;
 extern const BITMAP bmp_logo64_empty;
 extern const BITMAP bmp_webauthn;
-
-// BiXin
-extern const BITMAP bmp_BiXin_logo32;
-extern const BITMAP bmp_BiXin_logo64;
-extern const BITMAP bmp_BiXin_logo64_empty;
 
 #endif
