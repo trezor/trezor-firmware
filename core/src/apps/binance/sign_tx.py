@@ -8,11 +8,13 @@ from trezor.messages.BinanceSignedTx import BinanceSignedTx
 from trezor.messages.BinanceTransferMsg import BinanceTransferMsg
 from trezor.messages.BinanceTxRequest import BinanceTxRequest
 
-from apps.binance import CURVE, helpers, layout
+from apps.binance import CURVE, SLIP44_ID, helpers, layout
 from apps.common import paths
+from apps.common.seed import Keychain, with_slip44_keychain
 
 
-async def sign_tx(ctx, envelope, keychain):
+@with_slip44_keychain(SLIP44_ID, CURVE, allow_testnet=True)
+async def sign_tx(ctx, envelope, keychain: Keychain):
     # create transaction message -> sign it -> create signature/pubkey message -> serialize all
     if envelope.msg_count > 1:
         raise wire.DataError("Multiple messages not supported.")

@@ -8,18 +8,15 @@ from trezor.messages.EosTxActionRequest import EosTxActionRequest
 from trezor.utils import HashWriter
 
 from apps.common import paths
-from apps.eos import CURVE, writers
+from apps.common.seed import Keychain, with_slip44_keychain
+from apps.eos import CURVE, SLIP44_ID, writers
 from apps.eos.actions import process_action
 from apps.eos.helpers import base58_encode, validate_full_path
 from apps.eos.layout import require_sign_tx
 
-if False:
-    from apps.common import seed
 
-
-async def sign_tx(
-    ctx: wire.Context, msg: EosSignTx, keychain: seed.Keychain
-) -> EosSignedTx:
+@with_slip44_keychain(SLIP44_ID, CURVE)
+async def sign_tx(ctx: wire.Context, msg: EosSignTx, keychain: Keychain) -> EosSignedTx:
     if msg.chain_id is None:
         raise wire.DataError("No chain id")
     if msg.header is None:

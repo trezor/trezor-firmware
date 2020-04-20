@@ -1,12 +1,14 @@
 from trezor.messages.BinanceAddress import BinanceAddress
 from trezor.messages.BinanceGetAddress import BinanceGetAddress
 
-from apps.binance import CURVE, helpers
+from apps.binance import CURVE, SLIP44_ID, helpers
 from apps.common import paths
 from apps.common.layout import address_n_to_str, show_address, show_qr
+from apps.common.seed import Keychain, with_slip44_keychain
 
 
-async def get_address(ctx, msg: BinanceGetAddress, keychain):
+@with_slip44_keychain(SLIP44_ID, CURVE, allow_testnet=True)
+async def get_address(ctx, msg: BinanceGetAddress, keychain: Keychain):
     HRP = "bnb"
 
     await paths.validate_path(

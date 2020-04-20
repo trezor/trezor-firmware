@@ -6,10 +6,12 @@ from trezor.messages.RippleSignTx import RippleSignTx
 from trezor.wire import ProcessError
 
 from apps.common import paths
-from apps.ripple import CURVE, helpers, layout
+from apps.common.seed import with_slip44_keychain
+from apps.ripple import CURVE, SLIP44_ID, helpers, layout
 from apps.ripple.serialize import serialize
 
 
+@with_slip44_keychain(SLIP44_ID, CURVE, allow_testnet=True)
 async def sign_tx(ctx, msg: RippleSignTx, keychain):
     validate(msg)
 
