@@ -21,7 +21,7 @@ async def validate_path(
     curve: str,
     **kwargs: Any,
 ) -> None:
-    keychain.validate_path(path, curve)
+    keychain.match_path(path)
     if not validate_func(path, **kwargs):
         await show_path_warning(ctx, path)
 
@@ -58,10 +58,7 @@ def validate_path_for_get_public_key(path: list, slip44_id: int) -> bool:
 
 
 def is_hardened(i: int) -> bool:
-    if i & HARDENED:
-        return True
-    else:
-        return False
+    return bool(i & HARDENED)
 
 
 def break_address_n_to_lines(address_n: list) -> list:
