@@ -10,9 +10,8 @@ from apps.common import layout, paths
 from apps.common.seed import remove_ed25519_prefix
 
 
-async def get_public_key(ctx, msg):
-    keychain = await seed.get_keychain(ctx)
-
+@seed.with_keychain
+async def get_public_key(ctx, msg, keychain: seed.Keychain):
     await paths.validate_path(
         ctx,
         paths.validate_path_for_get_public_key,

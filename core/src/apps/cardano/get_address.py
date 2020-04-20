@@ -7,9 +7,8 @@ from apps.common import paths
 from apps.common.layout import address_n_to_str, show_address, show_qr
 
 
-async def get_address(ctx, msg):
-    keychain = await seed.get_keychain(ctx)
-
+@seed.with_keychain
+async def get_address(ctx, msg, keychain: seed.Keychain):
     await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n, CURVE)
 
     try:

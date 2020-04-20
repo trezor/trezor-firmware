@@ -21,7 +21,7 @@ class TestCardanoAddress(unittest.TestCase):
         node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
         node.derive_cardano(0x80000000 | 44)
         node.derive_cardano(0x80000000 | 1815)
-        keychain = Keychain([0x80000000 | 44, 0x80000000 | 1815], node)
+        keychain = Keychain(node)
 
         addresses = [
             "Ae2tdPwUPEZ98eHFwxSsPBDz73amioKpr58Vw85mP1tMkzq8siaftiejJ3j",
@@ -68,7 +68,7 @@ class TestCardanoAddress(unittest.TestCase):
         node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
         node.derive_cardano(0x80000000 | 44)
         node.derive_cardano(0x80000000 | 1815)
-        keychain = Keychain([0x80000000 | 44, 0x80000000 | 1815], node)
+        keychain = Keychain(node)
 
         addresses = [
             "Ae2tdPwUPEZ5YUb8sM3eS8JqKgrRLzhiu71crfuH2MFtqaYr5ACNRdsswsZ",
@@ -116,7 +116,7 @@ class TestCardanoAddress(unittest.TestCase):
         node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
         node.derive_cardano(0x80000000 | 44)
         node.derive_cardano(0x80000000 | 1815)
-        keychain = Keychain([0x80000000 | 44, 0x80000000 | 1815], node)
+        keychain = Keychain(node)
 
         # 44'/1815'
         address, _ = derive_address_and_node(keychain, [0x80000000 | 44, 0x80000000 | 1815])
@@ -207,7 +207,7 @@ class TestCardanoAddress(unittest.TestCase):
         # Check derived nodes and addresses.
         node.derive_cardano(0x80000000 | 44)
         node.derive_cardano(0x80000000 | 1815)
-        keychain = Keychain([0x80000000 | 44, 0x80000000 | 1815], node)
+        keychain = Keychain(node)
 
         nodes = [
             (
@@ -271,7 +271,7 @@ class TestCardanoAddress(unittest.TestCase):
         # Check derived nodes and addresses.
         node.derive_cardano(0x80000000 | 44)
         node.derive_cardano(0x80000000 | 1815)
-        keychain = Keychain([0x80000000 | 44, 0x80000000 | 1815], node)
+        keychain = Keychain(node)
 
         nodes = [
             (
