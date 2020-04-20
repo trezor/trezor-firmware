@@ -50,6 +50,51 @@ class TestStorageCache(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             cache.get(KEY)
 
+    def test_decorator_mismatch(self):
+        with self.assertRaises(AssertionError):
+
+            @cache.stored(KEY)
+            async def async_fun():
+                pass
+
+    def test_decorators(self):
+        run_count = 0
+        cache.start_session()
+
+        @cache.stored(KEY)
+        def func():
+            nonlocal run_count
+            run_count += 1
+            return "foo"
+
+        # cache is empty
+        self.assertIsNone(cache.get(KEY))
+        self.assertEqual(run_count, 0)
+        self.assertEqual(func(), "foo")
+        # function was run
+        self.assertEqual(run_count, 1)
+        self.assertEqual(cache.get(KEY), "foo")
+        # function does not run again but returns cached value
+        self.assertEqual(func(), "foo")
+        self.assertEqual(run_count, 1)
+
+        @cache.stored_async(KEY)
+        async def async_func():
+            nonlocal run_count
+            run_count += 1
+            return "bar"
+
+        # cache is still full
+        self.assertEqual(await_result(async_func()), "foo")
+        self.assertEqual(run_count, 1)
+
+        cache.start_session()
+        self.assertEqual(await_result(async_func()), "bar")
+        self.assertEqual(run_count, 2)
+        # awaitable is also run only once
+        self.assertEqual(await_result(async_func()), "bar")
+        self.assertEqual(run_count, 2)
+
     @mock_storage
     def test_Initialize(self):
         def call_Initialize(**kwargs):
