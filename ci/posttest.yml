@@ -2,7 +2,6 @@ image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
 
 core unix coverage posttest:
   stage: posttest
-  extends: .core_job
   dependencies:
     - core device test
     - core monero test
@@ -22,7 +21,6 @@ core unix coverage posttest:
 
 core unix ui changes:
   stage: posttest
-  extends: .core_job
   except:
     - master
   dependencies:

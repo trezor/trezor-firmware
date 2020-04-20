@@ -4,7 +4,6 @@ image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
 
 core unit test:
   stage: test
-  extends: .core_job
   dependencies:
     - core unix regular build
   script:
@@ -13,7 +12,6 @@ core unit test:
 
 core device ui test:
   stage: test
-  extends: .core_job
   dependencies:
     - core unix frozen debug build
   script:
@@ -38,7 +36,6 @@ core device ui test:
 
 core device test:
   stage: test
-  extends: .core_job
   dependencies:
     - core unix frozen debug build
   variables:
@@ -60,7 +57,6 @@ core device test:
 
 core btconly device test:
   stage: test
-  extends: .core_job
   dependencies:
     - core unix frozen btconly debug build
   variables:
@@ -81,7 +77,6 @@ core btconly device test:
 
 core monero test:
   stage: test
-  extends: .core_job
   dependencies:
     - core unix frozen debug build
   variables:
@@ -100,7 +95,6 @@ core monero test:
 
 core u2f test:
   stage: test
-  extends: .core_job
   dependencies:
     - core unix frozen debug build
   variables:
@@ -120,7 +114,6 @@ core u2f test:
 
 core fido2 test:
   stage: test
-  extends: .core_job
   dependencies:
     - core unix frozen debug build
   variables:
@@ -142,7 +135,6 @@ core fido2 test:
 
 core click test:
   stage: test
-  extends: .core_job
   dependencies:
     - core unix frozen debug build
   script:
@@ -160,7 +152,6 @@ core click test:
 
 core upgrade test:
   stage: test
-  extends: .core_job
   dependencies:
     - core unix frozen debug build
   variables:
@@ -179,7 +170,6 @@ core upgrade test:
 
 core persistence test:
   stage: test
-  extends: .core_job
   dependencies:
     - core unix frozen debug build
   script:
@@ -225,7 +215,6 @@ crypto test:
 
 legacy test:
   stage: test
-  extends: .legacy_job
   dependencies:
     - legacy emu regular build
   variables:
@@ -244,7 +233,6 @@ legacy test:
 
 legacy btconly test:
   stage: test
-  extends: .legacy_job
   dependencies:
     - legacy emu btconly build
   variables:
@@ -266,7 +254,6 @@ legacy btconly test:
 
 legacy upgrade test:
   stage: test
-  extends: .legacy_job
   dependencies:
     - legacy emu regular build
   variables:
@@ -324,7 +311,6 @@ storage test:
 # Hardware
 hardware legacy device test:
   stage: test
-  extends: .legacy_job
   only:
     - schedules  # nightly build
     - /^legacy\//
