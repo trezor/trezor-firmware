@@ -44,7 +44,7 @@ async def add_resident_credential(
             "authenticator.",
         )
         await require_confirm(ctx, text, confirm=None, cancel="Close")
-        raise wire.ActionCancelled("Cancelled") from None
+        raise wire.ActionCancelled
 
     content = ConfirmContent(ConfirmAddCredential(cred))
     await require_confirm(ctx, content)

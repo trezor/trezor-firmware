@@ -106,10 +106,10 @@ async def hold_to_confirm(
 async def require_confirm(*args: Any, **kwargs: Any) -> None:
     confirmed = await confirm(*args, **kwargs)
     if not confirmed:
-        raise wire.ActionCancelled("Cancelled")
+        raise wire.ActionCancelled
 
 
 async def require_hold_to_confirm(*args: Any, **kwargs: Any) -> None:
     confirmed = await hold_to_confirm(*args, **kwargs)
     if not confirmed:
-        raise wire.ActionCancelled("Cancelled")
+        raise wire.ActionCancelled

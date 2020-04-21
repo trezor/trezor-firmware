@@ -41,7 +41,7 @@ async def recovery_process(ctx: wire.GenericContext) -> Success:
             storage.recovery.end_progress()
         else:
             storage.wipe()
-        raise wire.ActionCancelled("Cancelled")
+        raise wire.ActionCancelled
 
 
 async def _continue_recovery_process(ctx: wire.GenericContext) -> Success:
