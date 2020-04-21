@@ -1,4 +1,5 @@
-from trezor import config, loop, ui, wire
+import storage.sd_salt
+from trezor import config, ui, wire
 from trezor.messages import ButtonRequestType
 from trezor.messages.ButtonAck import ButtonAck
 from trezor.messages.ButtonRequest import ButtonRequest
@@ -17,10 +18,13 @@ if __debug__:
 
 
 async def request_pin(
+    ctx: wire.GenericContext,
     prompt: str = "Enter your PIN",
     attempts_remaining: int = None,
     allow_cancel: bool = True,
 ) -> str:
+    await ctx.call(ButtonRequest(code=ButtonRequestType.Other), ButtonAck)
+
     if attempts_remaining is None:
         subprompt = None
     elif attempts_remaining == 1:
@@ -32,26 +36,19 @@ async def request_pin(
 
     while True:
         if __debug__:
-            pin = await loop.race(dialog, input_signal())
+            pin = await ctx.wait(dialog, input_signal())
         else:
-            pin = await dialog
+            pin = await ctx.wait(dialog)
         if pin is CANCELLED:
             raise wire.PinCancelled
         assert isinstance(pin, str)
         return pin
 
 
-async def request_pin_ack(ctx: wire.Context, *args: Any, **kwargs: Any) -> str:
-    await ctx.call(ButtonRequest(code=ButtonRequestType.Other), ButtonAck)
-    pin = await ctx.wait(request_pin(*args, **kwargs))
-    assert isinstance(pin, str)
-    return pin
-
-
 async def request_pin_confirm(ctx: wire.Context, *args: Any, **kwargs: Any) -> str:
     while True:
-        pin1 = await request_pin_ack(ctx, "Enter new PIN", *args, **kwargs)
-        pin2 = await request_pin_ack(ctx, "Re-enter new PIN", *args, **kwargs)
+        pin1 = await request_pin(ctx, "Enter new PIN", *args, **kwargs)
+        pin2 = await request_pin(ctx, "Re-enter new PIN", *args, **kwargs)
         if pin1 == pin2:
             return pin1
         await pin_mismatch()
@@ -70,7 +67,7 @@ async def request_pin_and_sd_salt(
     ctx: wire.Context, prompt: str = "Enter your PIN", allow_cancel: bool = True
 ) -> Tuple[str, Optional[bytearray]]:
     if config.has_pin():
-        pin = await request_pin_ack(ctx, prompt, config.get_pin_rem(), allow_cancel)
+        pin = await request_pin(ctx, prompt, config.get_pin_rem(), allow_cancel)
         config.ensure_not_wipe_code(pin_to_int(pin))
     else:
         pin = ""
@@ -81,16 +78,19 @@ async def request_pin_and_sd_salt(
 
 
 async def verify_user_pin(
-    prompt: str = "Enter your PIN", allow_cancel: bool = True, retry: bool = True
+    ctx: wire.GenericContext = wire.DUMMY_CONTEXT,
+    prompt: str = "Enter your PIN",
+    allow_cancel: bool = True,
+    retry: bool = True,
 ) -> None:
     if config.has_pin():
-        pin = await request_pin(prompt, config.get_pin_rem(), allow_cancel)
+        pin = await request_pin(ctx, prompt, config.get_pin_rem(), allow_cancel)
         config.ensure_not_wipe_code(pin_to_int(pin))
     else:
         pin = ""
 
     try:
-        salt = await request_sd_salt()
+        salt = await request_sd_salt(ctx)
     except SdCardUnavailable:
         raise wire.PinCancelled("SD salt is unavailable")
     if config.unlock(pin_to_int(pin), salt):
@@ -100,7 +100,7 @@ async def verify_user_pin(
 
     while retry:
         pin = await request_pin(
-            "Wrong PIN, enter again", config.get_pin_rem(), allow_cancel
+            ctx, "Wrong PIN, enter again", config.get_pin_rem(), allow_cancel
         )
         if config.unlock(pin_to_int(pin), salt):
             return
