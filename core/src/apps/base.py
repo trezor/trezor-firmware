@@ -89,7 +89,7 @@ async def handle_GetFeatures(ctx: wire.Context, msg: GetFeatures) -> Features:
 
 
 async def handle_Cancel(ctx: wire.Context, msg: Cancel) -> NoReturn:
-    raise wire.ActionCancelled("Cancelled")
+    raise wire.ActionCancelled
 
 
 async def handle_ClearSession(ctx: wire.Context, msg: ClearSession) -> Success:
