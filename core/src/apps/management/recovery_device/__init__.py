@@ -9,9 +9,9 @@ from trezor.ui.text import Text
 
 from apps.common.confirm import require_confirm
 from apps.common.request_pin import (
+    error_pin_invalid,
     request_pin_and_sd_salt,
     request_pin_confirm,
-    show_pin_invalid,
 )
 from apps.management.recovery_device.homescreen import (
     recovery_homescreen,
@@ -46,8 +46,7 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
     if msg.dry_run:
         curpin, salt = await request_pin_and_sd_salt(ctx, "Enter PIN")
         if not config.check_pin(pin_to_int(curpin), salt):
-            await show_pin_invalid(ctx)
-            raise wire.PinInvalid("PIN invalid")
+            await error_pin_invalid(ctx)
 
     if not msg.dry_run:
         # set up pin if requested
