@@ -35,6 +35,13 @@ def lock() -> None:
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
+def is_unlocked() -> bool:
+    """
+    Returns True if storage is unlocked, False otherwise.
+    """
+
+
+# extmod/modtrezorconfig/modtrezorconfig.c
 def has_pin() -> bool:
     """
     Returns True if storage has a configured PIN, False otherwise.
