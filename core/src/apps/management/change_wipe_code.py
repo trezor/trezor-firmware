@@ -8,9 +8,9 @@ from trezor.ui.text import Text
 from apps.common.confirm import require_confirm
 from apps.common.layout import show_success
 from apps.common.request_pin import (
+    error_pin_invalid,
     request_pin_ack,
     request_pin_and_sd_salt,
-    show_pin_invalid,
 )
 
 if False:
@@ -31,8 +31,7 @@ async def change_wipe_code(ctx: wire.Context, msg: ChangeWipeCode) -> Success:
     if not msg.remove:
         # Pre-check the entered PIN.
         if config.has_pin() and not config.check_pin(pin_to_int(pin), salt):
-            await show_pin_invalid(ctx)
-            raise wire.PinInvalid("PIN invalid")
+            await error_pin_invalid(ctx)
 
         # Get new wipe code.
         wipe_code = await _request_wipe_code_confirm(ctx, pin)
@@ -41,8 +40,7 @@ async def change_wipe_code(ctx: wire.Context, msg: ChangeWipeCode) -> Success:
 
     # Write into storage.
     if not config.change_wipe_code(pin_to_int(pin), salt, pin_to_int(wipe_code)):
-        await show_pin_invalid(ctx)
-        raise wire.PinInvalid("PIN invalid")
+        await error_pin_invalid(ctx)
 
     if wipe_code:
         if has_wipe_code:

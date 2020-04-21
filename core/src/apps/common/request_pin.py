@@ -10,18 +10,10 @@ from trezor.ui.text import Text
 from apps.common.sdcard import SdCardUnavailable, request_sd_salt
 
 if False:
-    from typing import Any, Optional, Tuple
+    from typing import Any, NoReturn, Optional, Tuple
 
 if __debug__:
     from apps.debug import input_signal
-
-
-class PinCancelled(Exception):
-    pass
-
-
-class PinInvalid(Exception):
-    pass
 
 
 async def request_pin(
@@ -44,19 +36,16 @@ async def request_pin(
         else:
             pin = await dialog
         if pin is CANCELLED:
-            raise PinCancelled
+            raise wire.PinCancelled
         assert isinstance(pin, str)
         return pin
 
 
 async def request_pin_ack(ctx: wire.Context, *args: Any, **kwargs: Any) -> str:
-    try:
-        await ctx.call(ButtonRequest(code=ButtonRequestType.Other), ButtonAck)
-        pin = await ctx.wait(request_pin(*args, **kwargs))
-        assert isinstance(pin, str)
-        return pin
-    except PinCancelled:
-        raise wire.ActionCancelled("Cancelled")
+    await ctx.call(ButtonRequest(code=ButtonRequestType.Other), ButtonAck)
+    pin = await ctx.wait(request_pin(*args, **kwargs))
+    assert isinstance(pin, str)
+    return pin
 
 
 async def request_pin_confirm(ctx: wire.Context, *args: Any, **kwargs: Any) -> str:
@@ -103,7 +92,7 @@ async def verify_user_pin(
     try:
         salt = await request_sd_salt()
     except SdCardUnavailable:
-        raise PinCancelled
+        raise wire.PinCancelled("SD salt is unavailable")
     if config.unlock(pin_to_int(pin), salt):
         return
     elif not config.has_pin():
@@ -116,20 +105,22 @@ async def verify_user_pin(
         if config.unlock(pin_to_int(pin), salt):
             return
 
-    raise PinInvalid
+    raise wire.PinInvalid
 
 
-async def show_pin_invalid(ctx: wire.Context) -> None:
+async def error_pin_invalid(ctx: wire.Context) -> NoReturn:
     from apps.common.confirm import confirm
 
     text = Text("Wrong PIN", ui.ICON_WRONG, ui.RED)
     text.normal("The PIN you entered is", "invalid.")
     await confirm(ctx, text, confirm=None, cancel="Close")
+    raise wire.PinInvalid
 
 
-async def show_pin_matches_wipe_code(ctx: wire.Context) -> None:
+async def error_pin_matches_wipe_code(ctx: wire.Context) -> NoReturn:
     from apps.common.confirm import confirm
 
     text = Text("Invalid PIN", ui.ICON_WRONG, ui.RED)
     text.normal("The new PIN must be", "different from your", "wipe code.")
     await confirm(ctx, text, confirm=None, cancel="Close")
+    raise wire.PinInvalid
