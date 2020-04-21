@@ -93,11 +93,21 @@ message Features {
 }
 
 /**
- * Request: clear session (removes cached PIN, passphrase, etc).
+ * Request: soft-lock the device. Following actions will require PIN. Passphrases remain cached.
  * @start
  * @next Success
  */
-message ClearSession {
+message LockDevice {
+}
+
+/**
+ * Request: end the current sesson. Following actions must call Initialize again.
+ * Cache for the current session is discarded, other sessions remain intact.
+ * Device is not PIN-locked.
+ * @start
+ * @next Success
+ */
+message EndSession {
 }
 
 /**

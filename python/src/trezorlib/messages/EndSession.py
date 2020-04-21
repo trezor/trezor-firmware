@@ -10,5 +10,5 @@ if __debug__:
         pass
 
 
-class ClearSession(p.MessageType):
-    MESSAGE_WIRE_TYPE = 24
+class EndSession(p.MessageType):
+    MESSAGE_WIRE_TYPE = 83
