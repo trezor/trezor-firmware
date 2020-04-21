@@ -576,7 +576,8 @@ class KeepaliveCallback:
 
 
 async def verify_user(keepalive_callback: KeepaliveCallback) -> bool:
-    from apps.common.request_pin import verify_user_pin, PinCancelled, PinInvalid
+    from trezor.wire import PinCancelled, PinInvalid
+    from apps.common.request_pin import verify_user_pin
     import trezor.pin
 
     try:
