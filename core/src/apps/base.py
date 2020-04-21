@@ -3,20 +3,21 @@ import storage.device
 import storage.recovery
 import storage.sd_salt
 from storage import cache
-from trezor import config, sdcard, utils, wire
+from trezor import config, sdcard, utils, wire, workflow
 from trezor.messages import Capability, MessageType
 from trezor.messages.Features import Features
 from trezor.messages.Success import Success
-from trezor.wire import register
 
 from apps.common import mnemonic
+from apps.common.request_pin import verify_user_pin
 
 if False:
-    from typing import NoReturn
+    import protobuf
+    from typing import Optional, NoReturn
     from trezor.messages.Initialize import Initialize
     from trezor.messages.GetFeatures import GetFeatures
     from trezor.messages.Cancel import Cancel
-    from trezor.messages.ClearSession import ClearSession
+    from trezor.messages.LockDevice import LockDevice
     from trezor.messages.Ping import Ping
 
 
@@ -33,7 +34,7 @@ def get_features() -> Features:
     f.label = storage.device.get_label()
     f.initialized = storage.is_initialized()
     f.pin_protection = config.has_pin()
-    f.pin_cached = config.has_pin()
+    f.pin_cached = config.is_unlocked()
     f.passphrase_protection = storage.device.is_passphrase_enabled()
     f.needs_backup = storage.device.needs_backup()
     f.unfinished_backup = storage.device.unfinished_backup()
@@ -92,12 +93,9 @@ async def handle_Cancel(ctx: wire.Context, msg: Cancel) -> NoReturn:
     raise wire.ActionCancelled
 
 
-async def handle_ClearSession(ctx: wire.Context, msg: ClearSession) -> Success:
-    """
-    This is currently a no-op on T. This should be called LockSession/LockDevice
-    and lock the device. In other words the cache should stay but the PIN should
-    be forgotten and required again.
-    """
+async def handle_LockDevice(ctx: wire.Context, msg: LockDevice) -> Success:
+    lock_device()
+    workflow.kill_default()  # this restarts the homescreen to show lock icon
     return Success()
 
 
@@ -111,9 +109,48 @@ async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:
     return Success(message=msg.message)
 
 
+ALLOW_WHILE_LOCKED = (MessageType.Initialize, MessageType.GetFeatures)
+
+
+def lock_device() -> None:
+    config.lock()
+    wire.find_handler = get_pinlocked_handler
+
+
+async def unlock_device(ctx: wire.GenericContext = wire.DUMMY_CONTEXT) -> None:
+    await verify_user_pin(ctx)
+    # verify_user_pin will raise if the PIN was invalid
+    wire.find_handler = wire.find_registered_workflow_handler
+
+
+def get_pinlocked_handler(
+    iface: wire.WireInterface, msg_type: int
+) -> Optional[wire.Handler[wire.Msg]]:
+    orig_handler = wire.find_registered_workflow_handler(iface, msg_type)
+    if orig_handler is None:
+        return None
+
+    if __debug__:
+        import usb
+
+        if iface is usb.iface_debug:
+            return orig_handler
+
+    if msg_type in ALLOW_WHILE_LOCKED:
+        return orig_handler
+
+    async def wrapper(ctx: wire.Context, msg: wire.Msg) -> protobuf.MessageType:
+        # mypy limitation: orig_handler is not recognized as non-None
+        assert orig_handler is not None
+        await unlock_device(ctx)
+        return await orig_handler(ctx, msg)
+
+    return wrapper
+
+
 def boot() -> None:
-    register(MessageType.Initialize, handle_Initialize)
-    register(MessageType.GetFeatures, handle_GetFeatures)
-    register(MessageType.Cancel, handle_Cancel)
-    register(MessageType.ClearSession, handle_ClearSession)
-    register(MessageType.Ping, handle_Ping)
+    wire.register(MessageType.Initialize, handle_Initialize)
+    wire.register(MessageType.GetFeatures, handle_GetFeatures)
+    wire.register(MessageType.Cancel, handle_Cancel)
+    wire.register(MessageType.LockDevice, handle_LockDevice)
+    wire.register(MessageType.Ping, handle_Ping)
