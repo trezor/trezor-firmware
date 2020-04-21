@@ -11,7 +11,7 @@ from apps.common.confirm import require_confirm
 from apps.common.layout import show_success
 from apps.common.request_pin import (
     error_pin_invalid,
-    request_pin_ack,
+    request_pin,
     request_pin_and_sd_salt,
 )
 from apps.common.sdcard import ensure_sdcard, sd_problem_dialog
@@ -66,7 +66,7 @@ async def sd_protect_enable(ctx: wire.Context, msg: SdProtect) -> Success:
 
     # Get the current PIN.
     if config.has_pin():
-        pin = pin_to_int(await request_pin_ack(ctx, "Enter PIN", config.get_pin_rem()))
+        pin = pin_to_int(await request_pin(ctx, "Enter PIN", config.get_pin_rem()))
     else:
         pin = pin_to_int("")
 

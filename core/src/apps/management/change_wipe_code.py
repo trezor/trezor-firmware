@@ -9,7 +9,7 @@ from apps.common.confirm import require_confirm
 from apps.common.layout import show_success
 from apps.common.request_pin import (
     error_pin_invalid,
-    request_pin_ack,
+    request_pin,
     request_pin_and_sd_salt,
 )
 
@@ -85,12 +85,12 @@ def _require_confirm_action(
 
 async def _request_wipe_code_confirm(ctx: wire.Context, pin: str) -> str:
     while True:
-        code1 = await request_pin_ack(ctx, "Enter new wipe code")
+        code1 = await request_pin(ctx, "Enter new wipe code")
         if code1 == pin:
             await _wipe_code_invalid()
             continue
 
-        code2 = await request_pin_ack(ctx, "Re-enter new wipe code")
+        code2 = await request_pin(ctx, "Re-enter new wipe code")
         if code1 == code2:
             return code1
         await _wipe_code_mismatch()
