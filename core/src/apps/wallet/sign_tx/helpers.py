@@ -120,11 +120,8 @@ def confirm_nondefault_locktime(lock_time: int) -> Awaitable[Any]:  # type: igno
 def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[Any]:  # type: ignore
     tx_req.request_type = TXMETA
     tx_req.details.tx_hash = tx_hash
-    tx_req.details.request_index = None
     ack = yield tx_req
-    tx_req.serialized.signature = None
-    tx_req.serialized.signature_index = None
-    tx_req.serialized.serialized_tx[:] = bytes()
+    _clear_tx_request(tx_req)
     gc.collect()
     return sanitize_tx_meta(ack.tx, coin)
 
@@ -136,13 +133,8 @@ def request_tx_extra_data(  # type: ignore
     tx_req.details.extra_data_offset = offset
     tx_req.details.extra_data_len = size
     tx_req.details.tx_hash = tx_hash
-    tx_req.details.request_index = None
     ack = yield tx_req
-    tx_req.serialized.signature = None
-    tx_req.serialized.signature_index = None
-    tx_req.serialized.serialized_tx[:] = bytes()
-    tx_req.details.extra_data_offset = None
-    tx_req.details.extra_data_len = None
+    _clear_tx_request(tx_req)
     gc.collect()
     return ack.tx.extra_data
 
@@ -152,9 +144,7 @@ def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes =
     tx_req.details.request_index = i
     tx_req.details.tx_hash = tx_hash
     ack = yield tx_req
-    tx_req.serialized.signature = None
-    tx_req.serialized.signature_index = None
-    tx_req.serialized.serialized_tx[:] = bytes()
+    _clear_tx_request(tx_req)
     gc.collect()
     return sanitize_tx_input(ack.tx, coin)
 
@@ -164,9 +154,7 @@ def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes 
     tx_req.details.request_index = i
     tx_req.details.tx_hash = tx_hash
     ack = yield tx_req
-    tx_req.serialized.signature = None
-    tx_req.serialized.signature_index = None
-    tx_req.serialized.serialized_tx[:] = bytes()
+    _clear_tx_request(tx_req)
     gc.collect()
     if tx_hash is None:
         return sanitize_tx_output(ack.tx, coin)
@@ -176,12 +164,20 @@ def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes 
 
 def request_tx_finish(tx_req: TxRequest) -> Awaitable[Any]:  # type: ignore
     tx_req.request_type = TXFINISHED
-    tx_req.details = None
     yield tx_req
+    _clear_tx_request(tx_req)
+    gc.collect()
+
+
+def _clear_tx_request(tx_req: TxRequest) -> None:
+    tx_req.request_type = None
+    tx_req.details.request_index = None
+    tx_req.details.tx_hash = None
+    tx_req.details.extra_data_len = None
+    tx_req.details.extra_data_offset = None
     tx_req.serialized.signature = None
     tx_req.serialized.signature_index = None
     tx_req.serialized.serialized_tx[:] = bytes()
-    gc.collect()
 
 
 # Data sanitizers

@@ -30,11 +30,9 @@ class Bip143:
         self.h_sequence = HashWriter(sha256())
         self.h_outputs = HashWriter(sha256())
 
-    def add_prevouts(self, txi: TxInputType) -> None:
+    def add_input(self, txi: TxInputType) -> None:
         write_bytes_reversed(self.h_prevouts, txi.prev_hash, TX_HASH_SIZE)
         write_uint32(self.h_prevouts, txi.prev_index)
-
-    def add_sequence(self, txi: TxInputType) -> None:
         write_uint32(self.h_sequence, txi.sequence)
 
     def add_output_count(self, tx: SignTx) -> None:

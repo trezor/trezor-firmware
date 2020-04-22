@@ -180,9 +180,9 @@ class Zip243(Zip143):
 
 
 class Overwintered(Bitcoinlike):
-    def initialize(self, tx: SignTx, keychain: Keychain, coin: CoinInfo) -> None:
+    def __init__(self, tx: SignTx, keychain: Keychain, coin: CoinInfo) -> None:
         ensure(coin.overwintered)
-        super().initialize(tx, keychain, coin)
+        super().__init__(tx, keychain, coin)
 
     def create_hash143(self) -> Bip143:
         if self.tx.version == 3:

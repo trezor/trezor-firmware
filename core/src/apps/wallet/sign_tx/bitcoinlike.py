@@ -13,6 +13,8 @@ from apps.wallet.sign_tx.common import SigningError, ecdsa_sign
 if False:
     from typing import Union
 
+_SIGHASH_FORKID = const(0x40)
+
 
 class Bitcoinlike(Bitcoin):
     async def process_segwit_input(self, i: int, txi: TxInputType) -> None:
@@ -29,7 +31,6 @@ class Bitcoinlike(Bitcoin):
     async def process_bip143_input(self, i: int, txi: TxInputType) -> None:
         if not txi.amount:
             raise SigningError(FailureType.DataError, "Expected input with amount")
-        self.segwit[i] = False
         self.bip143_in += txi.amount
         self.total_in += txi.amount
 
@@ -77,8 +78,7 @@ class Bitcoinlike(Bitcoin):
             txi_sign, key_sign_pub, signature
         )
         writers.write_tx_input(self.serialized_tx, txi_sign)
-        self.tx_req.serialized.signature_index = i_sign
-        self.tx_req.serialized.signature = signature
+        self.set_serialized_signature(i_sign, signature)
 
     def on_negative_fee(self) -> None:
         # some coins require negative fees for reward TX
@@ -86,10 +86,9 @@ class Bitcoinlike(Bitcoin):
             super().on_negative_fee()
 
     def get_hash_type(self) -> int:
-        SIGHASH_FORKID = const(0x40)
         hashtype = super().get_hash_type()
         if self.coin.fork_id is not None:
-            hashtype |= (self.coin.fork_id << 8) | SIGHASH_FORKID
+            hashtype |= (self.coin.fork_id << 8) | _SIGHASH_FORKID
         return hashtype
 
     def write_tx_header(

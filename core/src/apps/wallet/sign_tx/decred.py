@@ -38,11 +38,8 @@ class DecredPrefixHasher(Bip143):
         writers.write_uint32(self.h_prefix, tx.version | DECRED_SERIALIZE_NO_WITNESS)
         writers.write_varint(self.h_prefix, tx.inputs_count)
 
-    def add_prevouts(self, txi: TxInputType) -> None:
+    def add_input(self, txi: TxInputType) -> None:
         writers.write_tx_input_decred(self.h_prefix, txi)
-
-    def add_sequence(self, txi: TxInputType) -> None:
-        pass
 
     def add_output_count(self, tx: SignTx) -> None:
         writers.write_varint(self.h_prefix, tx.outputs_count)
@@ -59,11 +56,11 @@ class DecredPrefixHasher(Bip143):
 
 
 class Decred(Bitcoin):
-    def initialize(
+    def __init__(
         self, tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinInfo
     ) -> None:
         ensure(coin.decred)
-        super().initialize(tx, keychain, coin)
+        super().__init__(tx, keychain, coin)
 
     def create_hash143(self) -> Bip143:
         return DecredPrefixHasher(self.tx)  # pseudo BIP-0143 prefix hashing
@@ -161,17 +158,12 @@ class Decred(Bitcoin):
             )
 
             writers.write_tx_input_decred_witness(self.serialized_tx, txi_sign)
-
-            self.tx_req.serialized.signature_index = i_sign
-            self.tx_req.serialized.signature = signature
+            self.set_serialized_signature(i_sign, signature)
 
     async def step5_serialize_outputs(self) -> None:
         pass
 
     async def step6_sign_segwit_inputs(self) -> None:
-        pass
-
-    def write_sign_tx_footer(self, w: writers.Writer) -> None:
         pass
 
     def check_prevtx_output(self, txo_bin: TxOutputBinType) -> None:
@@ -195,6 +187,9 @@ class Decred(Bitcoin):
         self, w: writers.Writer, tx: Union[SignTx, TransactionType], has_segwit: bool
     ) -> None:
         writers.write_uint32(w, tx.version | DECRED_SERIALIZE_NO_WITNESS)
+
+    def write_sign_tx_footer(self, w: writers.Writer) -> None:
+        pass
 
     async def write_prev_tx_footer(
         self, w: writers.Writer, tx: TransactionType, prev_hash: bytes

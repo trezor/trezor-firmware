@@ -161,8 +161,7 @@ class TestZcashZip143(unittest.TestCase):
                 txi.prev_index = i["prevout"][1]
                 txi.script_type = i["script_type"]
                 txi.sequence = i["sequence"]
-                zip143.add_prevouts(txi)
-                zip143.add_sequence(txi)
+                zip143.add_input(txi)
             for o in v["outputs"]:
                 txo = TxOutputBinType()
                 txo.amount = o["amount"]

@@ -30,7 +30,6 @@ class TestSignTx(unittest.TestCase):
         # input 0: 0.0039 BTC
 
         coin_bitcoin = coins.by_name('Bitcoin')
-        coinsig = bitcoin.Bitcoin()
 
         ptx1 = TransactionType(version=1, lock_time=0, inputs_cnt=2, outputs_cnt=1, extra_data_len=0)
         pinp1 = TxInputType(script_sig=unhexlify('483045022072ba61305fe7cb542d142b8f3299a7b10f9ea61f6ffaab5dca8142601869d53c0221009a8027ed79eb3b9bc13577ac2853269323434558528c6b6a7e542be46e7e9a820141047a2d177c0f3626fc68c53610b0270fa6156181f46586c679ba6a88b34c6f4874686390b4d92e5769fbb89c8050b984f4ec0b257a0e5c4ff8bd3b035a51709503'),
@@ -93,7 +92,7 @@ class TestSignTx(unittest.TestCase):
                 signature=unhexlify('30450221009a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8b7077102202b79ab1e7736219387dffe8d615bbdba87e11477104b867ef47afed1a5ede781'),
                 serialized_tx=unhexlify('82488650ef25a58fef6788bd71b8212038d7f2bbe4750bc7bcb44701e85ef6d5000000006b4830450221009a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8b7077102202b79ab1e7736219387dffe8d615bbdba87e11477104b867ef47afed1a5ede7810121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff01'))),
             TxAck(tx=TransactionType(outputs=[out1])),
-            TxRequest(request_type=TXFINISHED, details=None, serialized=TxRequestSerializedType(
+            TxRequest(request_type=TXFINISHED, details=TxRequestDetailsType(), serialized=TxRequestSerializedType(
                 signature_index=None,
                 signature=None,
                 serialized_tx=unhexlify('60cc0500000000001976a914de9b2a8da088824e8fe51debea566617d851537888ac00000000'),
@@ -102,7 +101,7 @@ class TestSignTx(unittest.TestCase):
 
         seed = bip39.seed('alcohol woman abuse must during monitor noble actual mixed trade anger aisle', '')
         keychain = Keychain(seed, [[coin_bitcoin.curve_name]])
-        signer = coinsig.signer(tx, keychain, coin_bitcoin)
+        signer = bitcoin.Bitcoin(tx, keychain, coin_bitcoin).signer()
 
         for request, response in chunks(messages, 2):
             res = signer.send(request)
