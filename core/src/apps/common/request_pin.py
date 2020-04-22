@@ -17,6 +17,11 @@ if __debug__:
     from apps.debug import input_signal
 
 
+def can_lock_device() -> bool:
+    """Return True if the device has a PIN set or SD-protect enabled."""
+    return config.has_pin() or storage.sd_salt.is_enabled()
+
+
 async def request_pin(
     ctx: wire.GenericContext,
     prompt: str = "Enter your PIN",
