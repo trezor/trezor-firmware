@@ -37,14 +37,14 @@ class TestSegwitBip143(unittest.TestCase):
     def test_bip143_prevouts(self):
 
         bip143 = Bip143()
-        bip143.add_prevouts(self.inp1)
+        bip143.add_input(self.inp1)
         coin = coins.by_name(self.tx.coin_name)
         self.assertEqual(hexlify(bip143.get_prevouts_hash(coin)), b'b0287b4a252ac05af83d2dcef00ba313af78a3e9c329afa216eb3aa2a7b4613a')
 
     def test_bip143_sequence(self):
 
         bip143 = Bip143()
-        bip143.add_sequence(self.inp1)
+        bip143.add_input(self.inp1)
         coin = coins.by_name(self.tx.coin_name)
         self.assertEqual(hexlify(bip143.get_sequence_hash(coin)), b'18606b350cd8bf565266bc352f0caddcf01e8fa789dd8a15386327cf8cabe198')
 
@@ -70,8 +70,7 @@ class TestSegwitBip143(unittest.TestCase):
         coin = coins.by_name(self.tx.coin_name)
 
         bip143 = Bip143()
-        bip143.add_prevouts(self.inp1)
-        bip143.add_sequence(self.inp1)
+        bip143.add_input(self.inp1)
         for txo in [self.out1, self.out2]:
             txo_bin = TxOutputBinType()
             txo_bin.amount = txo.amount

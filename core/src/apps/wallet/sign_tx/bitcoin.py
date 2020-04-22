@@ -1,7 +1,6 @@
 import gc
 from micropython import const
 
-from trezor import utils
 from trezor.crypto.hashlib import sha256
 from trezor.messages import FailureType, InputScriptType
 from trezor.messages.SignTx import SignTx
@@ -12,6 +11,7 @@ from trezor.messages.TxOutputType import TxOutputType
 from trezor.messages.TxRequest import TxRequest
 from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
+from trezor.utils import HashWriter, ensure
 
 from apps.common import coininfo, seed
 from apps.wallet.sign_tx import (
@@ -28,7 +28,10 @@ from apps.wallet.sign_tx.common import SigningError, ecdsa_sign
 from apps.wallet.sign_tx.matchcheck import MultisigFingerprintChecker, WalletPathChecker
 
 if False:
-    from typing import Dict, Union
+    from typing import Set, Union
+
+# Default signature hash type in Bitcoin, which signs the entire transaction except scripts.
+_SIGHASH_ALL = const(0x01)
 
 # the chain id used for change
 _BIP32_CHANGE_CHAIN = const(1)
@@ -49,11 +52,7 @@ _MAX_SERIALIZED_CHUNK_SIZE = const(2048)
 
 
 class Bitcoin:
-    async def signer(
-        self, tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinInfo
-    ) -> None:
-        self.initialize(tx, keychain, coin)
-
+    async def signer(self) -> None:
         progress.init(self.tx.inputs_count, self.tx.outputs_count)
 
         # Add inputs to hash143 and h_confirmed and compute the sum of input amounts.
@@ -64,7 +63,7 @@ class Bitcoin:
         await self.step2_confirm_outputs()
 
         # Check fee, confirm lock_time and total.
-        await self.step3_confirm_tran()
+        await self.step3_confirm_tx()
 
         # Check that inputs are unchanged. Serialize inputs and sign the non-segwit ones.
         await self.step4_serialize_inputs()
@@ -78,11 +77,11 @@ class Bitcoin:
         # Write footer and send remaining data.
         await self.step7_finish()
 
-    def initialize(
+    def __init__(
         self, tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinInfo
     ) -> None:
         self.coin = coin
-        self.tx = helpers.sanitize_sign_tx(tx, self.coin)
+        self.tx = helpers.sanitize_sign_tx(tx, coin)
         self.keychain = keychain
 
         # checksum of multisig inputs, used to validate change-output
@@ -91,8 +90,8 @@ class Bitcoin:
         # common prefix of input paths, used to validate change-output
         self.wallet_path = WalletPathChecker()
 
-        # dict of booleans stating if input is segwit
-        self.segwit = {}  # type: Dict[int, bool]
+        # set of indices of inputs which are segwit
+        self.segwit = set()  # type: Set[int]
 
         # amounts
         self.total_in = 0  # sum of input amounts
@@ -119,8 +118,8 @@ class Bitcoin:
     def create_hash143(self) -> segwit_bip143.Bip143:
         return segwit_bip143.Bip143()
 
-    def create_hash_writer(self) -> utils.HashWriter:
-        return utils.HashWriter(sha256())
+    def create_hash_writer(self) -> HashWriter:
+        return HashWriter(sha256())
 
     async def step1_process_inputs(self) -> None:
         for i in range(self.tx.inputs_count):
@@ -140,7 +139,7 @@ class Bitcoin:
             self.weight.add_output(txo_bin.script_pubkey)
             await self.confirm_output(i, txo, txo_bin)
 
-    async def step3_confirm_tran(self) -> None:
+    async def step3_confirm_tx(self) -> None:
         fee = self.total_in - self.total_out
 
         if fee < 0:
@@ -161,10 +160,10 @@ class Bitcoin:
             raise SigningError(FailureType.ActionCancelled, "Total cancelled")
 
     async def step4_serialize_inputs(self) -> None:
-        self.write_sign_tx_header(self.serialized_tx, True in self.segwit.values())
+        self.write_sign_tx_header(self.serialized_tx, bool(self.segwit))
         for i in range(self.tx.inputs_count):
             progress.advance()
-            if self.segwit[i]:
+            if i in self.segwit:
                 await self.serialize_segwit_input(i)
             else:
                 await self.sign_nonsegwit_input(i)
@@ -176,10 +175,10 @@ class Bitcoin:
             await self.serialize_output(i)
 
     async def step6_sign_segwit_inputs(self) -> None:
-        any_segwit = True in self.segwit.values()
+        any_segwit = bool(self.segwit)
         for i in range(self.tx.inputs_count):
             progress.advance()
-            if self.segwit[i]:
+            if i in self.segwit:
                 await self.sign_segwit_input(i)
             elif any_segwit:
                 # add empty witness for non-segwit inputs
@@ -193,17 +192,15 @@ class Bitcoin:
         self.wallet_path.add_input(txi)
         self.multisig_fingerprint.add_input(txi)
         writers.write_tx_input_check(self.h_confirmed, txi)
-        self.hash143.add_prevouts(txi)  # all inputs are included (non-segwit as well)
-        self.hash143.add_sequence(txi)
+        self.hash143.add_input(txi)  # all inputs are included (non-segwit as well)
 
         if not addresses.validate_full_path(txi.address_n, self.coin, txi.script_type):
             await helpers.confirm_foreign_address(txi.address_n)
 
         if input_is_segwit(txi):
-            self.segwit[i] = True
+            self.segwit.add(i)
             await self.process_segwit_input(i, txi)
         elif input_is_nonsegwit(txi):
-            self.segwit[i] = False
             await self.process_nonsegwit_input(i, txi)
         else:
             raise SigningError(FailureType.DataError, "Wrong input script type")
@@ -277,6 +274,7 @@ class Bitcoin:
         )
 
         signature = ecdsa_sign(node, hash143_hash)
+        self.set_serialized_signature(i, signature)
         if txi.multisig:
             # find out place of our signature based on the pubkey
             signature_index = multisig.multisig_pubkey_index(txi.multisig, key_sign_pub)
@@ -289,9 +287,6 @@ class Bitcoin:
             self.serialized_tx.extend(
                 scripts.witness_p2wpkh(signature, key_sign_pub, self.get_hash_type())
             )
-
-        self.tx_req.serialized.signature_index = i
-        self.tx_req.serialized.signature = signature
 
     async def sign_nonsegwit_input(self, i_sign: int) -> None:
         # hash of what we are signing with this input
@@ -366,9 +361,7 @@ class Bitcoin:
             txi_sign, key_sign_pub, signature
         )
         self.write_tx_input(self.serialized_tx, txi_sign)
-
-        self.tx_req.serialized.signature_index = i_sign
-        self.tx_req.serialized.signature = signature
+        self.set_serialized_signature(i_sign, signature)
 
     async def serialize_output(self, i: int) -> None:
         # STAGE_REQUEST_5_OUTPUT
@@ -432,8 +425,7 @@ class Bitcoin:
     # ===
 
     def get_hash_type(self) -> int:
-        SIGHASH_ALL = const(0x01)
-        return SIGHASH_ALL
+        return _SIGHASH_ALL
 
     def write_tx_input(self, w: writers.Writer, txi: TxInputType) -> None:
         writers.write_tx_input(w, txi)
@@ -457,6 +449,13 @@ class Bitcoin:
         self, w: writers.Writer, tx: TransactionType, prev_hash: bytes
     ) -> None:
         writers.write_uint32(w, tx.lock_time)
+
+    def set_serialized_signature(self, index: int, signature: bytes) -> None:
+        # Only one signature per TxRequest can be serialized.
+        ensure(self.tx_req.serialized.signature is None)
+
+        self.tx_req.serialized.signature_index = index
+        self.tx_req.serialized.signature = signature
 
     # TX Outputs
     # ===

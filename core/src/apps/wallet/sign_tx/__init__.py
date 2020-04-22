@@ -27,16 +27,21 @@ if False:
 async def sign_tx(ctx: wire.Context, msg: SignTx, keychain: seed.Keychain) -> TxRequest:
     coin_name = msg.coin_name if msg.coin_name is not None else "Bitcoin"
     coin = coins.by_name(coin_name)
-    if not utils.BITCOIN_ONLY and coin.decred:
-        coinsig = decred.Decred()  # type: bitcoin.Bitcoin
-    elif not utils.BITCOIN_ONLY and coin.overwintered:
-        coinsig = zcash.Overwintered()
-    elif not utils.BITCOIN_ONLY and coin_name not in ("Bitcoin", "Regtest", "Testnet"):
-        coinsig = bitcoinlike.Bitcoinlike()
-    else:
-        coinsig = bitcoin.Bitcoin()
-
-    signer = coinsig.signer(msg, keychain, coin)
+    try:
+        if not utils.BITCOIN_ONLY and coin.decred:
+            signer = decred.Decred(msg, keychain, coin).signer()
+        elif not utils.BITCOIN_ONLY and coin.overwintered:
+            signer = zcash.Overwintered(msg, keychain, coin).signer()
+        elif not utils.BITCOIN_ONLY and coin_name not in (
+            "Bitcoin",
+            "Regtest",
+            "Testnet",
+        ):
+            signer = bitcoinlike.Bitcoinlike(msg, keychain, coin).signer()
+        else:
+            signer = bitcoin.Bitcoin(msg, keychain, coin).signer()
+    except common.SigningError as e:
+        raise wire.Error(*e.args)
 
     res = None  # type: Union[TxAck, bool]
     while True:

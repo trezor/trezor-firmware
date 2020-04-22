@@ -17,6 +17,7 @@ from apps.wallet.sign_tx.scripts import (
 if False:
     from typing import List
     from trezor.crypto import bip32
+    from trezor.messages.TxInputType import EnumTypeInputScriptType
 
 # supported witness version for bech32 addresses
 _BECH32_WITVER = const(0x00)
@@ -201,7 +202,10 @@ def address_short(coin: CoinInfo, address: str) -> str:
 
 
 def validate_full_path(
-    path: list, coin: CoinInfo, script_type: int, validate_script_type: bool = True
+    path: list,
+    coin: CoinInfo,
+    script_type: EnumTypeInputScriptType,
+    validate_script_type: bool = True,
 ) -> bool:
     """
     Validates derivation path to fit Bitcoin-like coins. We mostly use
