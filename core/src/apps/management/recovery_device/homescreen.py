@@ -24,7 +24,7 @@ if False:
 
 async def recovery_homescreen() -> None:
     if not storage.recovery.is_in_progress():
-        workflow.replace_default(homescreen)
+        workflow.set_default(homescreen)
         return
 
     # recovery process does not communicate on the wire

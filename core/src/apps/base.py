@@ -112,14 +112,33 @@ async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:
 ALLOW_WHILE_LOCKED = (MessageType.Initialize, MessageType.GetFeatures)
 
 
+def set_homescreen() -> None:
+    if not config.is_unlocked():
+        from apps.homescreen.lockscreen import lockscreen
+
+        workflow.set_default(lockscreen)
+
+    elif storage.recovery.is_in_progress():
+        from apps.management.recovery_device.homescreen import recovery_homescreen
+
+        workflow.set_default(recovery_homescreen)
+
+    else:
+        from apps.homescreen.homescreen import homescreen
+
+        workflow.set_default(homescreen)
+
+
 def lock_device() -> None:
     config.lock()
+    set_homescreen()
     wire.find_handler = get_pinlocked_handler
 
 
 async def unlock_device(ctx: wire.GenericContext = wire.DUMMY_CONTEXT) -> None:
     await verify_user_pin(ctx)
     # verify_user_pin will raise if the PIN was invalid
+    set_homescreen()
     wire.find_handler = wire.find_registered_workflow_handler
 
 
