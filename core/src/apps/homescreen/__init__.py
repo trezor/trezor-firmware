@@ -6,10 +6,9 @@ if False:
 
 
 class HomescreenBase(ui.Layout):
-    def __init__(self, lock_label = "Locked") -> None:
+    def __init__(self) -> None:
         self.repaint = True
 
-        self.lock_label = lock_label
         self.label = storage.device.get_label() or "My Trezor"
         self.image = storage.device.get_homescreen() or res.load(
             "apps/homescreen/res/bg.toif"
@@ -18,18 +17,6 @@ class HomescreenBase(ui.Layout):
     def render_homescreen(self) -> None:
         ui.display.avatar(48, 48 - 10, self.image, ui.WHITE, ui.BLACK)
         ui.display.text_center(ui.WIDTH // 2, 220, self.label, ui.BOLD, ui.FG, ui.BG)
-
-    def render_lock(self) -> None:
-        ui.display.bar_radius(40, 100, 160, 40, ui.TITLE_GREY, ui.BG, 4)
-        ui.display.bar_radius(42, 102, 156, 36, ui.BG, ui.TITLE_GREY, 4)
-        ui.display.text_center(
-            ui.WIDTH // 2, 128, self.lock_label, ui.BOLD, ui.TITLE_GREY, ui.BG
-        )
-
-        ui.display.text_center(
-            ui.WIDTH // 2 + 10, 220, "Tap to unlock", ui.BOLD, ui.TITLE_GREY, ui.BG
-        )
-        ui.display.icon(45, 202, res.load(ui.ICON_CLICK), ui.TITLE_GREY, ui.BG)
 
     def dispatch(self, event: int, x: int, y: int) -> None:
         if event is ui.RENDER and self.repaint:
