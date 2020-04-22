@@ -12,7 +12,7 @@ async def homescreen() -> None:
 class Homescreen(HomescreenBase):
     def __init__(self) -> None:
         super().__init__()
-        if config.is_unlocked() and not storage.is_initialized():
+        if not storage.is_initialized():
             self.label = "Go to trezor.io/start"
 
     def render_warning(self) -> None:
@@ -30,5 +30,3 @@ class Homescreen(HomescreenBase):
     def on_render(self) -> None:
         self.render_warning()
         self.render_homescreen()
-        if not config.is_unlocked():
-            self.render_lock()

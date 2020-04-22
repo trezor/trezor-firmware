@@ -42,7 +42,7 @@ def on_close(workflow: loop.Task) -> None:
     if not tasks and default_constructor:
         # If no workflows are running, we should create a new default workflow
         # and run it.
-        start_default(default_constructor)
+        start_default()
     if __debug__:
         # In debug builds, we dump a memory info right after a workflow is
         # finished.
@@ -50,18 +50,19 @@ def on_close(workflow: loop.Task) -> None:
             micropython.mem_info()
 
 
-def start_default(constructor: Callable[[], loop.Task]) -> None:
-    """Start a default workflow, created from `constructor`.
+def start_default() -> None:
+    """Start a default workflow.
 
-    If a default task is already running, nothing will happen. Use `replace_default`
-    to set up a new default task for the next run.
+    Use `set_default` to set the default workflow constructor.
+    If a default task is already running, nothing will happen.
     """
     global default_task
     global default_constructor
 
+    assert default_constructor is not None
+
     if not default_task:
-        default_constructor = constructor
-        default_task = constructor()
+        default_task = default_constructor()
         if __debug__:
             log.debug(__name__, "start default: %s", default_task)
         # Schedule the default task.  Because the task can complete on its own,
@@ -72,7 +73,7 @@ def start_default(constructor: Callable[[], loop.Task]) -> None:
             log.debug(__name__, "default already started")
 
 
-def replace_default(constructor: Callable[[], loop.Task]) -> None:
+def set_default(constructor: Callable[[], loop.Task]) -> None:
     """Configure a default workflow, which will be started next time it is needed."""
     global default_constructor
     if __debug__:
@@ -111,7 +112,7 @@ def _finalize_default(task: loop.Task, value: Any) -> None:
             # finalizer, so when this function finished, nothing will be running.
             # We must schedule a new instance of the default now.
             if default_constructor is not None:
-                start_default(default_constructor)
+                start_default()
             else:
                 raise RuntimeError  # no tasks and no default constructor
 

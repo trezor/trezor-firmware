@@ -63,7 +63,7 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
     storage.recovery.set_in_progress(True)
     storage.recovery.set_dry_run(bool(msg.dry_run))
 
-    workflow.replace_default(recovery_homescreen)
+    workflow.set_default(recovery_homescreen)
     return await recovery_process(ctx)
 
 
