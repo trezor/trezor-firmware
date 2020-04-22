@@ -4,14 +4,14 @@ import storage.sd_salt
 from trezor import config, log, loop, res, ui, utils, wire
 from trezor.pin import show_pin_timeout
 
-from apps.common.request_pin import verify_user_pin
+from apps.common.request_pin import can_lock_device, verify_user_pin
 
 
 async def bootscreen() -> None:
     ui.display.orientation(storage.device.get_rotation())
     while True:
         try:
-            if storage.sd_salt.is_enabled() or config.has_pin():
+            if can_lock_device():
                 await lockscreen()
             await verify_user_pin()
             storage.init_unlocked()
