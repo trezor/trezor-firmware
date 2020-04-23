@@ -160,7 +160,9 @@ class Bitcoin:
             raise SigningError(FailureType.ActionCancelled, "Total cancelled")
 
     async def step4_serialize_inputs(self) -> None:
-        self.write_sign_tx_header(self.serialized_tx, bool(self.segwit))
+        self.write_tx_header(self.serialized_tx, self.tx, bool(self.segwit))
+        writers.write_varint(self.serialized_tx, self.tx.inputs_count)
+
         for i in range(self.tx.inputs_count):
             progress.advance()
             if i in self.segwit:
@@ -294,7 +296,8 @@ class Bitcoin:
         # should come out the same as h_confirmed, checked before signing the digest
         h_check = self.create_hash_writer()
 
-        self.write_sign_tx_header(h_sign, has_segwit=False)
+        self.write_tx_header(h_sign, self.tx, has_segwit=False)
+        writers.write_varint(h_sign, self.tx.inputs_count)
 
         for i in range(self.tx.inputs_count):
             # STAGE_REQUEST_4_INPUT
@@ -429,10 +432,6 @@ class Bitcoin:
 
     def write_tx_input(self, w: writers.Writer, txi: TxInputType) -> None:
         writers.write_tx_input(w, txi)
-
-    def write_sign_tx_header(self, w: writers.Writer, has_segwit: bool) -> None:
-        self.write_tx_header(w, self.tx, has_segwit)
-        writers.write_varint(w, self.tx.inputs_count)
 
     def write_sign_tx_footer(self, w: writers.Writer) -> None:
         writers.write_uint32(w, self.tx.lock_time)

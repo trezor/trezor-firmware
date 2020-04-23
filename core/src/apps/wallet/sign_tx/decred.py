@@ -69,7 +69,8 @@ class Decred(Bitcoin):
         return HashWriter(blake256())
 
     async def step1_process_inputs(self) -> None:
-        self.write_sign_tx_header(self.serialized_tx, False)
+        self.write_tx_header(self.serialized_tx, self.tx, has_segwit=False)
+        writers.write_varint(self.serialized_tx, self.tx.inputs_count)
         await super().step1_process_inputs()
 
     async def step2_confirm_outputs(self) -> None:
@@ -179,14 +180,15 @@ class Decred(Bitcoin):
     def write_tx_input(self, w: writers.Writer, txi: TxInputType) -> None:
         writers.write_tx_input_decred(w, txi)
 
-    def write_sign_tx_header(self, w: writers.Writer, has_segwit: bool) -> None:
-        writers.write_uint32(w, self.tx.version)  # nVersion
-        writers.write_varint(w, self.tx.inputs_count)
-
     def write_tx_header(
         self, w: writers.Writer, tx: Union[SignTx, TransactionType], has_segwit: bool
     ) -> None:
-        writers.write_uint32(w, tx.version | DECRED_SERIALIZE_NO_WITNESS)
+        if isinstance(tx, TransactionType):
+            version = tx.version | DECRED_SERIALIZE_NO_WITNESS
+        else:
+            version = tx.version | DECRED_SERIALIZE_FULL
+
+        writers.write_uint32(w, version)
 
     def write_sign_tx_footer(self, w: writers.Writer) -> None:
         pass
