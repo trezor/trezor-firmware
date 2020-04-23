@@ -34,3 +34,10 @@ gen prebuild:
       - "**/*.pyi"
   script:
     - pipenv run make gen_check
+
+release commit messages prebuild:
+  stage: prebuild
+  only:
+    - /^release\//
+  script:
+    - ci/check_release_commit_messages.sh
