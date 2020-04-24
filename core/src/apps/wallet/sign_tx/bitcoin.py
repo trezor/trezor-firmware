@@ -349,7 +349,7 @@ class Bitcoin:
                 FailureType.ProcessError, "Transaction has changed during signing"
             )
 
-        # if multisig, check if signing with a key that is included in multisig
+        # if multisig, do a sanity check to ensure we are signing with a key that is included in the multisig
         if txi_sign.multisig:
             multisig.multisig_pubkey_index(txi_sign.multisig, key_sign_pub)
 

@@ -120,9 +120,6 @@ class Zip143(Bip143):
 
 
 class Zip243(Zip143):
-    def __init__(self, branch_id: int) -> None:
-        super().__init__(branch_id)
-
     def preimage_hash(
         self,
         coin: CoinInfo,
