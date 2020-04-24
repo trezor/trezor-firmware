@@ -20,7 +20,7 @@ DECRED_SERIALIZE_FULL = const(0 << 16)
 DECRED_SERIALIZE_NO_WITNESS = const(1 << 16)
 DECRED_SERIALIZE_WITNESS_SIGNING = const(3 << 16)
 
-DECRED_SIGHASHALL = const(1)
+DECRED_SIGHASH_ALL = const(1)
 
 if False:
     from typing import Union
@@ -78,6 +78,7 @@ class Decred(Bitcoin):
         self.hash143.add_output_count(self.tx)
         await super().step2_confirm_outputs()
         self.hash143.add_locktime_expiry(self.tx)
+        self.write_tx_footer(self.serialized_tx, self.tx)
 
     async def process_input(self, i: int, txi: TxInputType) -> None:
         await super().process_input(i, txi)
@@ -99,8 +100,6 @@ class Decred(Bitcoin):
         await super().confirm_output(i, txo, txo_bin)
 
     async def step4_serialize_inputs(self) -> None:
-        writers.write_uint32(self.serialized_tx, self.tx.lock_time)
-        writers.write_uint32(self.serialized_tx, self.tx.expiry)
         writers.write_varint(self.serialized_tx, self.tx.inputs_count)
 
         prefix_hash = self.hash143.get_prefix_hash()
@@ -145,7 +144,7 @@ class Decred(Bitcoin):
             )
 
             h_sign = self.create_hash_writer()
-            writers.write_uint32(h_sign, DECRED_SIGHASHALL)
+            writers.write_uint32(h_sign, DECRED_SIGHASH_ALL)
             writers.write_bytes_fixed(h_sign, prefix_hash, writers.TX_HASH_SIZE)
             writers.write_bytes_fixed(h_sign, witness_hash, writers.TX_HASH_SIZE)
 
@@ -166,6 +165,9 @@ class Decred(Bitcoin):
 
     async def step6_sign_segwit_inputs(self) -> None:
         pass
+
+    async def step7_finish(self) -> None:
+        await helpers.request_tx_finish(self.tx_req)
 
     def check_prevtx_output(self, txo_bin: TxOutputBinType) -> None:
         if (
@@ -190,11 +192,8 @@ class Decred(Bitcoin):
 
         writers.write_uint32(w, version)
 
-    def write_sign_tx_footer(self, w: writers.Writer) -> None:
-        pass
-
-    async def write_prev_tx_footer(
-        self, w: writers.Writer, tx: TransactionType, prev_hash: bytes
+    def write_tx_footer(
+        self, w: writers.Writer, tx: Union[SignTx, TransactionType]
     ) -> None:
         writers.write_uint32(w, tx.lock_time)
         writers.write_uint32(w, tx.expiry)
