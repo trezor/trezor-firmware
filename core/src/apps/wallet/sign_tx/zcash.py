@@ -219,7 +219,7 @@ class Overwintered(Bitcoinlike):
         await self.process_bip143_input(i, txi)
 
     async def sign_nonsegwit_input(self, i_sign: int) -> None:
-        await self.sign_bip143_input(i_sign)
+        await self.sign_nonsegwit_bip143_input(i_sign)
 
     def write_tx_header(
         self, w: Writer, tx: Union[SignTx, TransactionType], has_segwit: bool
