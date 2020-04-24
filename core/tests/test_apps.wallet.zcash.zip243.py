@@ -6,8 +6,7 @@ from trezor.messages.TxOutputBinType import TxOutputBinType
 
 from apps.common import coins
 
-if not utils.BITCOIN_ONLY:
-    from apps.wallet.sign_tx.zcash import Zip243
+from apps.wallet.sign_tx.zcash import Overwintered
 
 
 # test vectors inspired from https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/zip_0243.py
@@ -187,7 +186,9 @@ class TestZcashZip243(unittest.TestCase):
                 expiry=v["expiry"],
                 version_group_id=v["version_group_id"],
             )
-            zip243 = Zip243(0x76b809bb)  # Sapling
+
+            zip243 = Overwintered(tx, None, coin)
+
             for i in v["inputs"]:
                 txi = TxInputType()
                 txi.amount = i["amount"]
@@ -195,24 +196,17 @@ class TestZcashZip243(unittest.TestCase):
                 txi.prev_index = i["prevout"][1]
                 txi.script_type = i["script_type"]
                 txi.sequence = i["sequence"]
-                zip243.add_input(txi)
+                zip243.hash143_add_input(txi)
             for o in v["outputs"]:
                 txo = TxOutputBinType()
                 txo.amount = o["amount"]
                 txo.script_pubkey = unhexlify(o["script_pubkey"])
-                zip243.add_output(txo)
+                zip243.hash143_add_output(txo)
 
-            self.assertEqual(hexlify(zip243.get_prevouts_hash(coin)), v["prevouts_hash"])
-            self.assertEqual(hexlify(zip243.get_sequence_hash(coin)), v["sequence_hash"])
-            self.assertEqual(hexlify(zip243.get_outputs_hash(coin)), v["outputs_hash"])
-            self.assertEqual(
-                hexlify(
-                    zip243.preimage_hash(
-                        coin, tx, txi, unhexlify(i["pubkeyhash"]), v["hash_type"]
-                    )
-                ),
-                v["preimage_hash"],
-            )
+            self.assertEqual(hexlify(zip243.get_prevouts_hash()), v["prevouts_hash"])
+            self.assertEqual(hexlify(zip243.get_sequence_hash()), v["sequence_hash"])
+            self.assertEqual(hexlify(zip243.get_outputs_hash()), v["outputs_hash"])
+            self.assertEqual(hexlify(zip243.hash143_preimage_hash(txi, unhexlify(i["pubkeyhash"]))), v["preimage_hash"])
 
 
 if __name__ == "__main__":

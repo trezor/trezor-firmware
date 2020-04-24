@@ -111,6 +111,31 @@ def output_derive_script(txo: TxOutputType, coin: CoinInfo) -> bytes:
     raise ScriptsError(FailureType.DataError, "Invalid address type")
 
 
+# see https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#specification
+# item 5 for details
+def bip143_derive_script_code(txi: TxInputType, pubkeyhash: bytes) -> bytearray:
+
+    if txi.multisig:
+        return output_script_multisig(
+            multisig_get_pubkeys(txi.multisig), txi.multisig.m
+        )
+
+    p2pkh = (
+        txi.script_type == InputScriptType.SPENDWITNESS
+        or txi.script_type == InputScriptType.SPENDP2SHWITNESS
+        or txi.script_type == InputScriptType.SPENDADDRESS
+    )
+    if p2pkh:
+        # for p2wpkh in p2sh or native p2wpkh
+        # the scriptCode is a classic p2pkh
+        return output_script_p2pkh(pubkeyhash)
+
+    else:
+        raise ScriptsError(
+            FailureType.DataError, "Unknown input script type for bip143 script code",
+        )
+
+
 # P2PKH, P2SH
 # ===
 # https://github.com/bitcoin/bips/blob/master/bip-0016.mediawiki

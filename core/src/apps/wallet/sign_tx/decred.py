@@ -14,7 +14,6 @@ from apps.common import coininfo, seed
 from apps.wallet.sign_tx import addresses, helpers, multisig, progress, scripts, writers
 from apps.wallet.sign_tx.bitcoin import Bitcoin
 from apps.wallet.sign_tx.common import SigningError, ecdsa_sign
-from apps.wallet.sign_tx.segwit_bip143 import Bip143
 
 DECRED_SERIALIZE_FULL = const(0 << 16)
 DECRED_SERIALIZE_NO_WITNESS = const(1 << 16)
@@ -26,35 +25,6 @@ if False:
     from typing import Union
 
 
-class DecredPrefixHasher(Bip143):
-    """
-    While Decred does not have the exact same implementation as bip143/zip143,
-    the semantics for using the prefix hash of transactions are close enough
-    that a pseudo-bip143 class can be used.
-    """
-
-    def __init__(self, tx: SignTx):
-        self.h_prefix = HashWriter(blake256())
-        writers.write_uint32(self.h_prefix, tx.version | DECRED_SERIALIZE_NO_WITNESS)
-        writers.write_varint(self.h_prefix, tx.inputs_count)
-
-    def add_input(self, txi: TxInputType) -> None:
-        writers.write_tx_input_decred(self.h_prefix, txi)
-
-    def add_output_count(self, tx: SignTx) -> None:
-        writers.write_varint(self.h_prefix, tx.outputs_count)
-
-    def add_output(self, txo_bin: TxOutputBinType) -> None:
-        writers.write_tx_output(self.h_prefix, txo_bin)
-
-    def add_locktime_expiry(self, tx: SignTx) -> None:
-        writers.write_uint32(self.h_prefix, tx.lock_time)
-        writers.write_uint32(self.h_prefix, tx.expiry)
-
-    def get_prefix_hash(self) -> bytes:
-        return self.h_prefix.get_digest()
-
-
 class Decred(Bitcoin):
     def __init__(
         self, tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinInfo
@@ -62,23 +32,25 @@ class Decred(Bitcoin):
         ensure(coin.decred)
         super().__init__(tx, keychain, coin)
 
-    def create_hash143(self) -> Bip143:
-        return DecredPrefixHasher(self.tx)  # pseudo BIP-0143 prefix hashing
+        self.write_tx_header(self.serialized_tx, self.tx, has_segwit=False)
+        writers.write_varint(self.serialized_tx, self.tx.inputs_count)
+
+    def init_hash143(self) -> None:
+        self.h_prefix = self.create_hash_writer()
+        writers.write_uint32(
+            self.h_prefix, self.tx.version | DECRED_SERIALIZE_NO_WITNESS
+        )
+        writers.write_varint(self.h_prefix, self.tx.inputs_count)
 
     def create_hash_writer(self) -> HashWriter:
         return HashWriter(blake256())
 
-    async def step1_process_inputs(self) -> None:
-        self.write_tx_header(self.serialized_tx, self.tx, has_segwit=False)
-        writers.write_varint(self.serialized_tx, self.tx.inputs_count)
-        await super().step1_process_inputs()
-
     async def step2_confirm_outputs(self) -> None:
         writers.write_varint(self.serialized_tx, self.tx.outputs_count)
-        self.hash143.add_output_count(self.tx)
+        writers.write_varint(self.h_prefix, self.tx.outputs_count)
         await super().step2_confirm_outputs()
-        self.hash143.add_locktime_expiry(self.tx)
         self.write_tx_footer(self.serialized_tx, self.tx)
+        self.write_tx_footer(self.h_prefix, self.tx)
 
     async def process_input(self, i: int, txi: TxInputType) -> None:
         await super().process_input(i, txi)
@@ -95,14 +67,13 @@ class Decred(Bitcoin):
                 "Cannot send to output with script version != 0",
             )
         txo_bin.decred_script_version = txo.decred_script_version
-        writers.write_tx_output(self.serialized_tx, txo_bin)
-
         await super().confirm_output(i, txo, txo_bin)
+        writers.write_tx_output(self.serialized_tx, txo_bin)
 
     async def step4_serialize_inputs(self) -> None:
         writers.write_varint(self.serialized_tx, self.tx.inputs_count)
 
-        prefix_hash = self.hash143.get_prefix_hash()
+        prefix_hash = self.h_prefix.get_digest()
 
         for i_sign in range(self.tx.inputs_count):
             progress.advance()
@@ -178,6 +149,12 @@ class Decred(Bitcoin):
                 FailureType.ProcessError,
                 "Cannot use utxo that has script_version != 0",
             )
+
+    def hash143_add_input(self, txi: TxInputType) -> None:
+        writers.write_tx_input_decred(self.h_prefix, txi)
+
+    def hash143_add_output(self, txo_bin: TxOutputBinType) -> None:
+        writers.write_tx_output(self.h_prefix, txo_bin)
 
     def write_tx_input(self, w: writers.Writer, txi: TxInputType) -> None:
         writers.write_tx_input_decred(w, txi)
