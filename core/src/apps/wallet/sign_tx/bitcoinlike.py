@@ -1,14 +1,14 @@
 import gc
 from micropython import const
 
-from trezor.messages import FailureType, InputScriptType
+from trezor.messages import FailureType
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TransactionType import TransactionType
 from trezor.messages.TxInputType import TxInputType
 
-from apps.wallet.sign_tx import addresses, helpers, multisig, writers
-from apps.wallet.sign_tx.bitcoin import Bitcoin
-from apps.wallet.sign_tx.common import SigningError, ecdsa_sign
+from apps.wallet.sign_tx import helpers, multisig, writers
+from apps.wallet.sign_tx.bitcoin import Bitcoin, input_is_nonsegwit
+from apps.wallet.sign_tx.common import SigningError
 
 if False:
     from typing import Union
@@ -28,57 +28,30 @@ class Bitcoinlike(Bitcoin):
         else:
             await super().process_nonsegwit_input(i, txi)
 
-    async def process_bip143_input(self, i: int, txi: TxInputType) -> None:
-        if not txi.amount:
-            raise SigningError(FailureType.DataError, "Expected input with amount")
-        self.bip143_in += txi.amount
-        self.total_in += txi.amount
+    async def sign_nonsegwit_bip143_input(self, i_sign: int) -> None:
+        txi = await helpers.request_tx_input(self.tx_req, i_sign, self.coin)
 
-    async def sign_nonsegwit_input(self, i_sign: int) -> None:
-        if self.coin.force_bip143:
-            await self.sign_bip143_input(i_sign)
-        else:
-            await super().sign_nonsegwit_input(i_sign)
-
-    async def sign_bip143_input(self, i_sign: int) -> None:
-        # STAGE_REQUEST_SEGWIT_INPUT
-        txi_sign = await helpers.request_tx_input(self.tx_req, i_sign, self.coin)
-        self.wallet_path.check_input(txi_sign)
-        self.multisig_fingerprint.check_input(txi_sign)
-
-        is_bip143 = (
-            txi_sign.script_type == InputScriptType.SPENDADDRESS
-            or txi_sign.script_type == InputScriptType.SPENDMULTISIG
-        )
-        if not is_bip143 or txi_sign.amount > self.bip143_in:
+        if not input_is_nonsegwit(txi):
             raise SigningError(
                 FailureType.ProcessError, "Transaction has changed during signing"
             )
-        self.bip143_in -= txi_sign.amount
-
-        key_sign = self.keychain.derive(txi_sign.address_n, self.coin.curve_name)
-        key_sign_pub = key_sign.public_key()
-        hash143_hash = self.hash143.preimage_hash(
-            self.coin,
-            self.tx,
-            txi_sign,
-            addresses.ecdsa_hash_pubkey(key_sign_pub, self.coin),
-            self.get_hash_type(),
-        )
+        public_key, signature = self.sign_bip143_input(txi)
 
         # if multisig, do a sanity check to ensure we are signing with a key that is included in the multisig
-        if txi_sign.multisig:
-            multisig.multisig_pubkey_index(txi_sign.multisig, key_sign_pub)
-
-        signature = ecdsa_sign(key_sign, hash143_hash)
+        if txi.multisig:
+            multisig.multisig_pubkey_index(txi.multisig, public_key)
 
         # serialize input with correct signature
         gc.collect()
-        txi_sign.script_sig = self.input_derive_script(
-            txi_sign, key_sign_pub, signature
-        )
-        writers.write_tx_input(self.serialized_tx, txi_sign)
+        txi.script_sig = self.input_derive_script(txi, public_key, signature)
+        writers.write_tx_input(self.serialized_tx, txi)
         self.set_serialized_signature(i_sign, signature)
+
+    async def sign_nonsegwit_input(self, i_sign: int) -> None:
+        if self.coin.force_bip143:
+            await self.sign_nonsegwit_bip143_input(i_sign)
+        else:
+            await super().sign_nonsegwit_input(i_sign)
 
     def on_negative_fee(self) -> None:
         # some coins require negative fees for reward TX

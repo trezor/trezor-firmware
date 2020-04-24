@@ -28,7 +28,7 @@ from apps.wallet.sign_tx.common import SigningError, ecdsa_sign
 from apps.wallet.sign_tx.matchcheck import MultisigFingerprintChecker, WalletPathChecker
 
 if False:
-    from typing import Set, Union
+    from typing import Set, Tuple, Union
 
 # Default signature hash type in Bitcoin, which signs the entire transaction except scripts.
 _SIGHASH_ALL = const(0x01)
@@ -208,15 +208,18 @@ class Bitcoin:
             raise SigningError(FailureType.DataError, "Wrong input script type")
 
     async def process_segwit_input(self, i: int, txi: TxInputType) -> None:
-        if not txi.amount:
-            raise SigningError(FailureType.DataError, "Segwit input without amount")
-        self.bip143_in += txi.amount
-        self.total_in += txi.amount
+        await self.process_bip143_input(i, txi)
 
     async def process_nonsegwit_input(self, i: int, txi: TxInputType) -> None:
         self.total_in += await self.get_prevtx_output_value(
             txi.prev_hash, txi.prev_index
         )
+
+    async def process_bip143_input(self, i: int, txi: TxInputType) -> None:
+        if not txi.amount:
+            raise SigningError(FailureType.DataError, "Expected input with amount")
+        self.bip143_in += txi.amount
+        self.total_in += txi.amount
 
     async def confirm_output(
         self, i: int, txo: TxOutputType, txo_bin: TxOutputBinType
@@ -252,34 +255,45 @@ class Bitcoin:
 
         self.write_tx_input(self.serialized_tx, txi)
 
-    async def sign_segwit_input(self, i: int) -> None:
-        # STAGE_REQUEST_SEGWIT_WITNESS
-        txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
-
+    def sign_bip143_input(self, txi: TxInputType) -> Tuple[bytes, bytes]:
         self.wallet_path.check_input(txi)
         self.multisig_fingerprint.check_input(txi)
 
-        if not input_is_segwit(txi) or txi.amount > self.bip143_in:
+        if txi.amount > self.bip143_in:
             raise SigningError(
                 FailureType.ProcessError, "Transaction has changed during signing"
             )
         self.bip143_in -= txi.amount
 
         node = self.keychain.derive(txi.address_n, self.coin.curve_name)
-        key_sign_pub = node.public_key()
+        public_key = node.public_key()
         hash143_hash = self.hash143.preimage_hash(
             self.coin,
             self.tx,
             txi,
-            addresses.ecdsa_hash_pubkey(key_sign_pub, self.coin),
+            addresses.ecdsa_hash_pubkey(public_key, self.coin),
             self.get_hash_type(),
         )
 
         signature = ecdsa_sign(node, hash143_hash)
+
+        return public_key, signature
+
+    async def sign_segwit_input(self, i: int) -> None:
+        # STAGE_REQUEST_SEGWIT_WITNESS
+        txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
+
+        if not input_is_segwit(txi):
+            raise SigningError(
+                FailureType.ProcessError, "Transaction has changed during signing"
+            )
+
+        public_key, signature = self.sign_bip143_input(txi)
+
         self.set_serialized_signature(i, signature)
         if txi.multisig:
             # find out place of our signature based on the pubkey
-            signature_index = multisig.multisig_pubkey_index(txi.multisig, key_sign_pub)
+            signature_index = multisig.multisig_pubkey_index(txi.multisig, public_key)
             self.serialized_tx.extend(
                 scripts.witness_p2wsh(
                     txi.multisig, signature, signature_index, self.get_hash_type()
@@ -287,7 +301,7 @@ class Bitcoin:
             )
         else:
             self.serialized_tx.extend(
-                scripts.witness_p2wpkh(signature, key_sign_pub, self.get_hash_type())
+                scripts.witness_p2wpkh(signature, public_key, self.get_hash_type())
             )
 
     async def sign_nonsegwit_input(self, i_sign: int) -> None:
