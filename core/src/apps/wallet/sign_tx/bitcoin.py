@@ -187,7 +187,7 @@ class Bitcoin:
                 self.serialized_tx.append(0)
 
     async def step7_finish(self) -> None:
-        self.write_sign_tx_footer(self.serialized_tx)
+        self.write_tx_footer(self.serialized_tx, self.tx)
         await helpers.request_tx_finish(self.tx_req)
 
     async def process_input(self, i: int, txi: TxInputType) -> None:
@@ -433,9 +433,6 @@ class Bitcoin:
     def write_tx_input(self, w: writers.Writer, txi: TxInputType) -> None:
         writers.write_tx_input(w, txi)
 
-    def write_sign_tx_footer(self, w: writers.Writer) -> None:
-        writers.write_uint32(w, self.tx.lock_time)
-
     def write_tx_header(
         self, w: writers.Writer, tx: Union[SignTx, TransactionType], has_segwit: bool
     ) -> None:
@@ -444,10 +441,15 @@ class Bitcoin:
             writers.write_varint(w, 0x00)  # segwit witness marker
             writers.write_varint(w, 0x01)  # segwit witness flag
 
+    def write_tx_footer(
+        self, w: writers.Writer, tx: Union[SignTx, TransactionType]
+    ) -> None:
+        writers.write_uint32(w, tx.lock_time)
+
     async def write_prev_tx_footer(
         self, w: writers.Writer, tx: TransactionType, prev_hash: bytes
     ) -> None:
-        writers.write_uint32(w, tx.lock_time)
+        self.write_tx_footer(w, tx)
 
     def set_serialized_signature(self, index: int, signature: bytes) -> None:
         # Only one signature per TxRequest can be serialized.

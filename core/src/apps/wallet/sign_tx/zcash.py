@@ -10,6 +10,7 @@ from trezor.utils import HashWriter, ensure
 
 from apps.common.coininfo import CoinInfo
 from apps.common.seed import Keychain
+from apps.wallet.sign_tx import helpers
 from apps.wallet.sign_tx.bitcoinlike import Bitcoinlike
 from apps.wallet.sign_tx.common import SigningError
 from apps.wallet.sign_tx.multisig import multisig_get_pubkeys
@@ -197,6 +198,26 @@ class Overwintered(Bitcoinlike):
                 "Unsupported version for overwintered transaction",
             )
 
+    async def step7_finish(self) -> None:
+        self.write_tx_footer(self.serialized_tx, self.tx)
+
+        if self.tx.version == 3:
+            write_uint32(self.serialized_tx, self.tx.expiry)  # expiryHeight
+            write_varint(self.serialized_tx, 0)  # nJoinSplit
+        elif self.tx.version == 4:
+            write_uint32(self.serialized_tx, self.tx.expiry)  # expiryHeight
+            write_uint64(self.serialized_tx, 0)  # valueBalance
+            write_varint(self.serialized_tx, 0)  # nShieldedSpend
+            write_varint(self.serialized_tx, 0)  # nShieldedOutput
+            write_varint(self.serialized_tx, 0)  # nJoinSplit
+        else:
+            raise SigningError(
+                FailureType.DataError,
+                "Unsupported version for overwintered transaction",
+            )
+
+        await helpers.request_tx_finish(self.tx_req)
+
     async def process_nonsegwit_input(self, i: int, txi: TxInputType) -> None:
         await self.process_bip143_input(i, txi)
 
@@ -209,21 +230,3 @@ class Overwintered(Bitcoinlike):
         # nVersion | fOverwintered
         write_uint32(w, tx.version | OVERWINTERED)
         write_uint32(w, tx.version_group_id)  # nVersionGroupId
-
-    def write_sign_tx_footer(self, w: Writer) -> None:
-        write_uint32(w, self.tx.lock_time)
-
-        if self.tx.version == 3:
-            write_uint32(w, self.tx.expiry)  # expiryHeight
-            write_varint(w, 0)  # nJoinSplit
-        elif self.tx.version == 4:
-            write_uint32(w, self.tx.expiry)  # expiryHeight
-            write_uint64(w, 0)  # valueBalance
-            write_varint(w, 0)  # nShieldedSpend
-            write_varint(w, 0)  # nShieldedOutput
-            write_varint(w, 0)  # nJoinSplit
-        else:
-            raise SigningError(
-                FailureType.DataError,
-                "Unsupported version for overwintered transaction",
-            )
