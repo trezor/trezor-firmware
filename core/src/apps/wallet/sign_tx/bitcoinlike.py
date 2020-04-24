@@ -58,7 +58,7 @@ class Bitcoinlike(Bitcoin):
 
         key_sign = self.keychain.derive(txi_sign.address_n, self.coin.curve_name)
         key_sign_pub = key_sign.public_key()
-        self.hash143_hash = self.hash143.preimage_hash(
+        hash143_hash = self.hash143.preimage_hash(
             self.coin,
             self.tx,
             txi_sign,
@@ -66,11 +66,11 @@ class Bitcoinlike(Bitcoin):
             self.get_hash_type(),
         )
 
-        # if multisig, check if signing with a key that is included in multisig
+        # if multisig, do a sanity check to ensure we are signing with a key that is included in the multisig
         if txi_sign.multisig:
             multisig.multisig_pubkey_index(txi_sign.multisig, key_sign_pub)
 
-        signature = ecdsa_sign(key_sign, self.hash143_hash)
+        signature = ecdsa_sign(key_sign, hash143_hash)
 
         # serialize input with correct signature
         gc.collect()
