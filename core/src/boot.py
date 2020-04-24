@@ -9,7 +9,7 @@ from apps.homescreen.lockscreen import Lockscreen
 
 
 async def bootscreen() -> None:
-    lockscreen = Lockscreen(lock_label="Disconnected")
+    lockscreen = Lockscreen(lock_label="Not connected", tap_label="Tap to connect")
     ui.display.orientation(storage.device.get_rotation())
     while True:
         try:

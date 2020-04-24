@@ -14,8 +14,11 @@ async def lockscreen() -> None:
 
 
 class Lockscreen(HomescreenBase):
-    def __init__(self, lock_label: str = "Locked") -> None:
+    def __init__(
+        self, lock_label: str = "Locked", tap_label: str = "Tap to unlock"
+    ) -> None:
         self.lock_label = lock_label
+        self.tap_label = tap_label
         super().__init__()
 
     def render_lock(self) -> None:
@@ -26,7 +29,7 @@ class Lockscreen(HomescreenBase):
         )
 
         ui.display.text_center(
-            ui.WIDTH // 2 + 10, 220, "Tap to unlock", ui.BOLD, ui.TITLE_GREY, ui.BG
+            ui.WIDTH // 2 + 10, 220, self.tap_label, ui.BOLD, ui.TITLE_GREY, ui.BG
         )
         ui.display.icon(45, 202, res.load(ui.ICON_CLICK), ui.TITLE_GREY, ui.BG)
 
