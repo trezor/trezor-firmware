@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import logging
 from collections import namedtuple
 from copy import deepcopy
 
@@ -21,12 +22,14 @@ from mnemonic import Mnemonic
 
 from . import mapping, messages as proto, protobuf
 from .client import TrezorClient
+from .log import DUMP_BYTES
 from .tools import expect
 
 EXPECTED_RESPONSES_CONTEXT_LINES = 3
 
-
 LayoutLines = namedtuple("LayoutLines", "lines text")
+
+LOG = logging.getLogger(__name__)
 
 
 def layout_lines(lines):
@@ -45,12 +48,34 @@ class DebugLink:
         self.transport.end_session()
 
     def _call(self, msg, nowait=False):
+        LOG.debug(
+            "sending message: {}".format(msg.__class__.__name__),
+            extra={"protobuf": msg},
+        )
         msg_type, msg_bytes = mapping.encode(msg)
+        LOG.log(
+            DUMP_BYTES,
+            "encoded as type {} ({} bytes): {}".format(
+                msg_type, len(msg_bytes), msg_bytes.hex()
+            ),
+        )
         self.transport.write(msg_type, msg_bytes)
         if nowait:
             return None
+
         ret_type, ret_bytes = self.transport.read()
-        return mapping.decode(ret_type, ret_bytes)
+        LOG.log(
+            DUMP_BYTES,
+            "received type {} ({} bytes): {}".format(
+                msg_type, len(msg_bytes), msg_bytes.hex()
+            ),
+        )
+        msg = mapping.decode(ret_type, ret_bytes)
+        LOG.debug(
+            "received message: {}".format(msg.__class__.__name__),
+            extra={"protobuf": msg},
+        )
+        return msg
 
     def state(self):
         return self._call(proto.DebugLinkGetState())
