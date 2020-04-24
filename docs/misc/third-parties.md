@@ -41,5 +41,4 @@ of projects depending on Connect.
 - lisk-desktop https://github.com/LiskHQ/lisk-desktop
 - web3-react https://github.com/NoahZinsmeister/web3-react
 - KyberSwap https://github.com/KyberNetwork/KyberSwap
-- Augur https://github.com/AugurProject/augur
 - Balance Manager https://github.com/balance-io/balance-manager
