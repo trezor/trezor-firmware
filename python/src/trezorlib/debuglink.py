@@ -384,10 +384,31 @@ class TrezorClientDebugLink(TrezorClient):
         must exactly match the received field value. If a given field is None
         (or unspecified) in the expected response, the received field value is not
         checked.
+
+        Each expected response can also be a tuple (bool, message). In that case, the
+        expected response is only evaluated if the first field is True.
+        This is useful for differentiating sequences between Trezor models:
+
+        >>> trezor_one = client.features.model == "1"
+        >>> client.set_expected_responses([
+        >>>     messages.ButtonRequest(code=ConfirmOutput),
+        >>>     (trezor_one, messages.ButtonRequest(code=ConfirmOutput)),
+        >>>     messages.Success(),
+        >>> ])
         """
         if not self.in_with_statement:
             raise RuntimeError("Must be called inside 'with' statement")
-        self.expected_responses = expected
+
+        # make sure all items are (bool, message) tuples
+        expected_with_validity = [
+            e if isinstance(e, tuple) else (True, e) for e in expected
+        ]
+
+        # only apply those items that are (True, message)
+        self.expected_responses = [
+            expected for valid, expected in expected_with_validity if valid
+        ]
+
         self.current_response = 0
 
     def use_pin_sequence(self, pins):
