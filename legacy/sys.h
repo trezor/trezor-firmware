@@ -82,8 +82,5 @@ void sys_shutdown(void);
 extern uint8_t g_ucFlag;
 extern uint8_t g_ucBatValue;
 extern uint8_t battery_cap;
-extern bool g_bBleTransMode;
-extern bool g_bSelectSEFlag;
-extern uint32_t g_uiFreePayFlag;
 
 #endif

@@ -19,8 +19,11 @@ typedef enum _rtt_log_level {
 
 void rtt_log_init(void);
 
-#define rtt_log_print(sFormat, ...) \
-  if (DEBUG_RTT) SEGGER_RTT_printf(0, sFormat, ##__VA_ARGS__)
+#define rtt_log_print(sFormat, ...)               \
+  if (DEBUG_RTT) {                                \
+    SEGGER_RTT_printf(0, sFormat, ##__VA_ARGS__); \
+    SEGGER_RTT_printf(0, "\r\n");                 \
+  }
 
 #if RAW_ONLY
 #define rtt_log_fomate(log_level, sFormat, ...)              \

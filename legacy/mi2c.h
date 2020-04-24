@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "common.h"
 #include "sys.h"
 #include "usart.h"
 
@@ -56,7 +57,7 @@
 #define EDDSA_INDEX_CHILDKEY (0x06)
 
 // mnemonic index
-#define MNEMONIC_INDEX_TOSEED (26)
+#define MNEMONIC_INDEX_TOSEED (0x1A)
 
 #define MI2CX I2C1
 
@@ -95,7 +96,6 @@ extern uint8_t g_ucMI2cSendBuf[MI2C_BUF_MAX_LEN];
 extern uint8_t g_ucSessionKey[SESSION_KEYLEN];
 
 extern uint16_t g_usMI2cRevLen;
-extern uint8_t g_uchash_mode;
 
 #define CLA (g_ucMI2cSendBuf[0])
 #define INS (g_ucMI2cSendBuf[1])

@@ -32,6 +32,7 @@
 #include "options.h"
 #include "pbkdf2.h"
 #include "rand.h"
+#include "se_chip.h"
 #include "sha2.h"
 
 #if USE_BIP39_CACHE
@@ -184,26 +185,25 @@ void mnemonic_to_seed(bool ucMode, const char *mnemonic, const char *passphrase,
                       uint8_t seed[512 / 8],
                       void (*progress_callback)(uint32_t current,
                                                 uint32_t total)) {
-  int mnemoniclen = strlen(mnemonic);
-  int passphraselen = strnlen(passphrase, 256);
-#if USE_BIP39_CACHE
-  // check cache
-  if (mnemoniclen < 256 && passphraselen < 64) {
-    for (int i = 0; i < BIP39_CACHE_SIZE; i++) {
-      if (!bip39_cache[i].set) continue;
-      if (strcmp(bip39_cache[i].mnemonic, mnemonic) != 0) continue;
-      if (strcmp(bip39_cache[i].passphrase, passphrase) != 0) continue;
-      // found the correct entry
-      memcpy(seed, bip39_cache[i].seed, 512 / 8);
-      return;
-    }
-  }
-#endif
-  uint8_t salt[8 + 256] = {0};
-  memcpy(salt, "mnemonic", 8);
-  memcpy(salt + 8, passphrase, passphraselen);
-
   if (!g_bSelectSEFlag) {
+    int mnemoniclen = strlen(mnemonic);
+    int passphraselen = strnlen(passphrase, 256);
+#if USE_BIP39_CACHE
+    // check cache
+    if (mnemoniclen < 256 && passphraselen < 64) {
+      for (int i = 0; i < BIP39_CACHE_SIZE; i++) {
+        if (!bip39_cache[i].set) continue;
+        if (strcmp(bip39_cache[i].mnemonic, mnemonic) != 0) continue;
+        if (strcmp(bip39_cache[i].passphrase, passphrase) != 0) continue;
+        // found the correct entry
+        memcpy(seed, bip39_cache[i].seed, 512 / 8);
+        return;
+      }
+    }
+#endif
+    uint8_t salt[8 + 256] = {0};
+    memcpy(salt, "mnemonic", 8);
+    memcpy(salt + 8, passphrase, passphraselen);
     static CONFIDENTIAL PBKDF2_HMAC_SHA512_CTX pctx;
     pbkdf2_hmac_sha512_Init(&pctx, (const uint8_t *)mnemonic, mnemoniclen, salt,
                             passphraselen + 8, 1);
@@ -218,30 +218,25 @@ void mnemonic_to_seed(bool ucMode, const char *mnemonic, const char *passphrase,
       }
     }
     pbkdf2_hmac_sha512_Final(&pctx, seed);
-  } else {
-    uint8_t ucSendBuf[1024];
-    uint16_t usLen;
-    ucSendBuf[0] = ucMode;
-    // salt LV
-    ucSendBuf[1] = (uint8_t)((passphraselen + 8) & 0xFF);
-    ucSendBuf[2] = (uint8_t)(((passphraselen + 8) >> 8) & 0xFF);
-    memcpy(ucSendBuf + 3, salt, passphraselen + 8);
-    MI2CDRV_Transmit(MI2C_CMD_WR_PIN, MNEMONIC_INDEX_TOSEED, ucSendBuf,
-                     (passphraselen + 8) + 3, seed, &usLen, MI2C_ENCRYPT,
-                     SET_SESTORE_DATA);
-    return;
-  }
-  memzero(salt, sizeof(salt));
+    memzero(salt, sizeof(salt));
 #if USE_BIP39_CACHE
-  // store to cache
-  if (mnemoniclen < 256 && passphraselen < 64) {
-    bip39_cache[bip39_cache_index].set = true;
-    strcpy(bip39_cache[bip39_cache_index].mnemonic, mnemonic);
-    strcpy(bip39_cache[bip39_cache_index].passphrase, passphrase);
-    memcpy(bip39_cache[bip39_cache_index].seed, seed, 512 / 8);
-    bip39_cache_index = (bip39_cache_index + 1) % BIP39_CACHE_SIZE;
-  }
+    // store to cache
+    if (mnemoniclen < 256 && passphraselen < 64) {
+      bip39_cache[bip39_cache_index].set = true;
+      strcpy(bip39_cache[bip39_cache_index].mnemonic, mnemonic);
+      strcpy(bip39_cache[bip39_cache_index].passphrase, passphrase);
+      memcpy(bip39_cache[bip39_cache_index].seed, seed, 512 / 8);
+      bip39_cache_index = (bip39_cache_index + 1) % BIP39_CACHE_SIZE;
+    }
 #endif
+  } else {
+#if USE_SE
+    se_get_seed(ucMode, passphrase, seed);
+    return;
+#else
+    (void)(ucMode);
+#endif
+  }
 }
 
 // binary search for finding the word in the wordlist

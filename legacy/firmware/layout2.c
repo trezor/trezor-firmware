@@ -285,8 +285,6 @@ void vlayoutLogo(void) {
   if (!config_isInitialized()) {
     vDisp_PromptInfo(DISP_NOT_ACTIVE, false);
   }
-  oledclearLine(0);
-  oledclearLine(1);
   vDisp_PromptInfo(DISP_BLE_NAME, false);
   oledRefresh();
 }
@@ -1066,24 +1064,24 @@ void layoutDeviceInfo(uint8_t ucPage) {
   switch (ucPage) {
     case 0:
       oledClear();
-      oledDrawString(0, 0, (char *)USB_LABLE, FONT_STANDARD);
+      oledDrawString(0, 8, (char *)USB_LABLE, FONT_STANDARD);
       oledDrawStringCenter(64, 8, (char *)DEFAULTLABE, FONT_STANDARD);
 
-      oledDrawString(0, 24, (char *)USB_SN, FONT_STANDARD);
-      oledDrawStringCenter(64, 32, (char *)DEFAULSN, FONT_STANDARD);
+      oledDrawString(0, 16, (char *)USB_SN, FONT_STANDARD);
+      oledDrawStringCenter(64, 16, (char *)DEFAULSN, FONT_STANDARD);
 
-      oledDrawString(0, 48, (char *)USB_VER, FONT_STANDARD);
+      oledDrawString(0, 24, (char *)USB_VER, FONT_STANDARD);
       memzero(ucBuf, sizeof(ucBuf));
       ucBuf[0] = VERSION_MAJOR + '0';
       ucBuf[1] = '.';
       ucBuf[2] = VERSION_MINOR + '0';
       ucBuf[3] = '.';
       ucBuf[4] = VERSION_PATCH + '0';
-      oledDrawString(64, 56, (char *)ucBuf, FONT_STANDARD);
+      oledDrawString(64, 24, (char *)ucBuf, FONT_STANDARD);
       break;
     case 1:
       oledClear();
-      oledDrawString(0, 0, (char *)APP_FINGERPRINT, FONT_STANDARD);
+      oledDrawString(0, 8, (char *)APP_FINGERPRINT, FONT_STANDARD);
       memzero(g_usb_info.ucfingerprint, sizeof(g_usb_info.ucfingerprint));
       sha256_Raw(FLASH_PTR(FLASH_APP_START), (64 - 1) * 1024,
                  g_usb_info.ucfingerprint);
@@ -1103,7 +1101,7 @@ void layoutDeviceInfo(uint8_t ucPage) {
       break;
     case 2:
       oledClear();
-      oledDrawString(0, 0, (char *)BLE_NAME, FONT_STANDARD);
+      oledDrawString(0, 8, (char *)BLE_NAME, FONT_STANDARD);
       oledDrawStringCenter(64, 8, (char *)g_ble_info.ucBle_Name, FONT_STANDARD);
       oledDrawString(0, 16, (char *)BLE_MAC, FONT_STANDARD);
       memzero(ucBuf, sizeof(ucBuf));

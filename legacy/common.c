@@ -31,7 +31,12 @@ uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
 
 uint8_t g_ucLanguageFlag = 0;
 uint8_t g_ucPromptIndex = 0;
-uint8_t g_ucWorkMode = 0;
+
+bool g_bBleTransMode = false;
+bool g_bSelectSEFlag = false;
+uint32_t g_uiFreePayFlag = 0;
+uint8_t g_uchash_mode = 0;
+
 /*poweroff */
 volatile uint32_t system_millis_poweroff_start;
 

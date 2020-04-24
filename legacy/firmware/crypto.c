@@ -395,12 +395,12 @@ const HDNode *cryptoMultisigPubkey(const CoinInfo *coin,
                         coin->curve_name, &node)) {
     return 0;
   }
-  layoutProgressUpdate(true);
+  // layoutProgressUpdate(true);
   for (uint32_t i = 0; i < address_n_count; i++) {
     if (!hdnode_public_ckd(&node, address_n[i])) {
       return 0;
     }
-    layoutProgressUpdate(true);
+    // layoutProgressUpdate(true);
   }
   return &node;
 }
@@ -473,7 +473,7 @@ int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig,
   }
   sha256_Update(&ctx, (const uint8_t *)&n, sizeof(uint32_t));
   sha256_Final(&ctx, hash);
-  layoutProgressUpdate(true);
+  // layoutProgressUpdate(true);
   return 1;
 }
 

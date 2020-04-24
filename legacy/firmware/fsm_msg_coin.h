@@ -99,6 +99,9 @@ void fsm_msgSignTx(const SignTx *msg) {
               _("Transaction must have at least one output"));
   CHECK_PARAM(msg->inputs_count + msg->outputs_count >= msg->inputs_count,
               _("Value overflow"));
+
+  CHECK_PIN
+
   const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
   if (!coin) return;
   const HDNode *node = fsm_getDerivedNode(coin->curve_name, NULL, 0, NULL);

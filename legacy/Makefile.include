@@ -71,6 +71,7 @@ CFLAGS   += $(OPTFLAGS) \
             -I$(TOOLCHAIN_DIR)/include \
             -I$(TOP_DIR) \
             -I$(TOP_DIR)gen \
+            -I$(TOP_DIR)segger_rtt \
             -I$(TOP_DIR)vendor/trezor-crypto \
             -I$(TOP_DIR)vendor/QR-Code-generator/c \
             -I$(TOP_DIR)vendor/trezor-storage
@@ -161,6 +162,12 @@ ifeq ($(DEBUG_RTT), 1)
 CFLAGS += -DDEBUG_RTT=1
 else
 CFLAGS += -DDEBUG_RTT=0
+endif
+
+ifeq ($(USE_SE), 1)
+CFLAGS += -DUSE_SE=1
+else
+CFLAGS += -DUSE_SE=0
 endif
 
 all: $(NAME).bin

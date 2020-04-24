@@ -56,11 +56,13 @@ ED25519_FN(ed25519_publickey) (const ed25519_secret_key sk, ed25519_public_key p
     ge25519_pack(pk, &A);
   }
   else{
+#if USE_SE
     uint16_t usLen;
     uint8_t ucSendBuf[33];
     ucSendBuf[0] = g_uchash_mode;
     memcpy(ucSendBuf+1, (uint8_t *)sk, 0x20); 
-    MI2CDRV_Transmit(MI2C_CMD_ECC_EDDSA,EDDSA_INDEX_GITPUBKEY,ucSendBuf, 0x21, pk,&usLen,MI2C_ENCRYPT,SET_SESTORE_DATA);                       
+    MI2CDRV_Transmit(MI2C_CMD_ECC_EDDSA,EDDSA_INDEX_GITPUBKEY,ucSendBuf, 0x21, pk,&usLen,MI2C_ENCRYPT,SET_SESTORE_DATA);
+#endif                       
   }
 }
 
@@ -144,11 +146,13 @@ ED25519_FN(ed25519_sign) (const unsigned char *m, size_t mlen, const ed25519_sec
   contract256_modm(RS + 32, S);
   }
   else{
+#if USE_SE
   	uint16_t usLen;
   	uint8_t ucSendBuf[1024+32];
   	ucSendBuf[0] = g_uchash_mode;
     memcpy(ucSendBuf+1, m, mlen); 
-    MI2CDRV_Transmit(MI2C_CMD_ECC_EDDSA,EDDSA_INDEX_SIGN,ucSendBuf, mlen+1, (uint8_t *)RS,&usLen,MI2C_ENCRYPT,SET_SESTORE_DATA);                       
+    MI2CDRV_Transmit(MI2C_CMD_ECC_EDDSA,EDDSA_INDEX_SIGN,ucSendBuf, mlen+1, (uint8_t *)RS,&usLen,MI2C_ENCRYPT,SET_SESTORE_DATA); 
+#endif                      
   }
 }
 

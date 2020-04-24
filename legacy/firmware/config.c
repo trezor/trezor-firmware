@@ -40,6 +40,7 @@
 #include "pbkdf2.h"
 #include "protect.h"
 #include "rng.h"
+#include "se_chip.h"
 #include "sha2.h"
 #include "storage.h"
 #include "supervise.h"
@@ -69,19 +70,19 @@ static const uint32_t META_MAGIC_V10 = 0xFFFFFFFF;
 #define KEY_LANGUAGE (3 | APP | FLAG_PUBLIC_SHIFTED)  // string(17)
 #define KEY_LABEL (4 | APP | FLAG_PUBLIC_SHIFTED)     // string(33)
 #define KEY_PASSPHRASE_PROTECTION (5 | APP | FLAG_PUBLIC_SHIFTED)  // bool
-#define KEY_HOMESCREEN (6 | APP | FLAG_PUBLIC_SHIFTED)   // bytes(1024)
-#define KEY_NEEDS_BACKUP (7 | APP)                       // bool
-#define KEY_FLAGS (8 | APP)                              // uint32
-#define KEY_U2F_COUNTER (9 | APP | FLAGS_WRITE_SHIFTED)  // uint32
-#define KEY_UNFINISHED_BACKUP (11 | APP)                 // bool
-#define KEY_AUTO_LOCK_DELAY_MS (12 | APP)                // uint32
-#define KEY_NO_BACKUP (13 | APP)                         // bool
-#define KEY_INITIALIZED (14 | APP)                       // uint32
-#define KEY_NODE (15 | APP)                              // node
-#define KEY_IMPORTED (16 | APP)                          // bool
-#define KEY_U2F_ROOT (17 | APP | FLAG_PUBLIC_SHIFTED)    // node
-#define KEY_SEEDS (18 | APP)                             // bytes
-#define KEY_SEEDSFLAG (19 | APP)                         // uint32
+#define KEY_HOMESCREEN (6 | APP | FLAG_PUBLIC_SHIFTED)    // bytes(1024)
+#define KEY_NEEDS_BACKUP (7 | APP)                        // bool
+#define KEY_FLAGS (8 | APP)                               // uint32
+#define KEY_U2F_COUNTER (9 | APP | FLAGS_WRITE_SHIFTED)   // uint32
+#define KEY_UNFINISHED_BACKUP (11 | APP)                  // bool
+#define KEY_AUTO_LOCK_DELAY_MS (12 | APP)                 // uint32
+#define KEY_NO_BACKUP (13 | APP)                          // bool
+#define KEY_INITIALIZED (14 | APP | FLAG_PUBLIC_SHIFTED)  // uint32
+#define KEY_NODE (15 | APP)                               // node
+#define KEY_IMPORTED (16 | APP)                           // bool
+#define KEY_U2F_ROOT (17 | APP | FLAG_PUBLIC_SHIFTED)     // node
+#define KEY_SEEDS (18 | APP)                              // bytes
+#define KEY_SEEDSFLAG (19 | APP | FLAG_PUBLIC_SHIFTED)    // uint32
 //#define KEY_PIN (20| APP_PIN )      // uint32
 //#define KEY_PINFLAG (21| APP_PIN )      // uint32
 //#define KEY_VERIFYPIN (22| APP_PIN)      // uint32
@@ -401,7 +402,8 @@ void config_init(void) {
 
   storage_init(&protectPinUiCallback, HW_ENTROPY_DATA, HW_ENTROPY_LEN);
   memzero(HW_ENTROPY_DATA, sizeof(HW_ENTROPY_DATA));
-  vMI2CDRV_SynSessionKey();
+  // FIXME:do not use SE this until change the flash address
+  // vMI2CDRV_SynSessionKey();
   // whether use se flag store se
   config_getWhetherUseSE();
   // Auto-unlock storage if no PIN is set.
@@ -1017,10 +1019,11 @@ void config_wipe(void) {
     storage_set(KEY_UUID, config_uuid, sizeof(config_uuid));
     storage_set(KEY_VERSION, &CONFIG_VERSION, sizeof(CONFIG_VERSION));
   } else {
+#if USE_SE
     // wipe user flash
     session_clear(false);
-    MI2CDRV_Transmit(MI2C_CMD_WR_PIN, (KEY_RESET & 0xFF), NULL, 0, NULL, NULL,
-                     MI2C_ENCRYPT, SET_SESTORE_DATA);
+    se_reset_storage(KEY_RESET);
+#endif
   }
 }
 

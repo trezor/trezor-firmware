@@ -179,85 +179,69 @@ void u2fhid_init_cmd(const U2FHID_FRAME *f) {
 void u2fhid_read_start(const U2FHID_FRAME *f) {
   U2F_ReadBuffer readbuffer = {0};
   memzero(&readbuffer, sizeof(readbuffer));
-  if (WORK_MODE_USB == g_ucWorkMode) {
-    if (!(f->type & TYPE_INIT)) {
-      return;
-    }
-
-    // Broadcast is reserved for init
-    if (f->cid == CID_BROADCAST || f->cid == 0) {
-      send_u2fhid_error(f->cid, ERR_INVALID_CID);
-      return;
-    }
-
-    if ((unsigned)MSG_LEN(*f) > sizeof(reader->buf)) {
-      send_u2fhid_error(f->cid, ERR_INVALID_LEN);
-      return;
-    }
-
-    reader = &readbuffer;
-    u2fhid_init_cmd(f);
+  if (!(f->type & TYPE_INIT)) {
+    return;
   }
-#if !EMULATOR
-  else {
-    reader = &readbuffer;
-    memcpy(reader->buf, (uint8_t *)f, i2c_data_inlen);
-    reader->len = i2c_data_inlen;
+
+  // Broadcast is reserved for init
+  if (f->cid == CID_BROADCAST || f->cid == 0) {
+    send_u2fhid_error(f->cid, ERR_INVALID_CID);
+    return;
   }
-#endif
+
+  if ((unsigned)MSG_LEN(*f) > sizeof(reader->buf)) {
+    send_u2fhid_error(f->cid, ERR_INVALID_LEN);
+    return;
+  }
+
+  reader = &readbuffer;
+  u2fhid_init_cmd(f);
 
   usbTiny(1);
   for (;;) {
-    if (WORK_MODE_USB == g_ucWorkMode) {
-      // Do we need to wait for more data
-      while ((reader->buf_ptr - reader->buf) < (signed)reader->len) {
-        uint8_t lastseq = reader->seq;
-        uint8_t lastcmd = reader->cmd;
-        int counter = U2F_TIMEOUT;
-        while (reader->seq == lastseq && reader->cmd == lastcmd) {
-          if (counter-- == 0) {
-            // timeout
-            send_u2fhid_error(cid, ERR_MSG_TIMEOUT);
-            cid = 0;
-            reader = 0;
-            usbTiny(0);
-            layoutHome();
-            return;
-          }
-          usbPoll();
+    // Do we need to wait for more data
+    while ((reader->buf_ptr - reader->buf) < (signed)reader->len) {
+      uint8_t lastseq = reader->seq;
+      uint8_t lastcmd = reader->cmd;
+      int counter = U2F_TIMEOUT;
+      while (reader->seq == lastseq && reader->cmd == lastcmd) {
+        if (counter-- == 0) {
+          // timeout
+          send_u2fhid_error(cid, ERR_MSG_TIMEOUT);
+          cid = 0;
+          reader = 0;
+          usbTiny(0);
+          layoutHome();
+          return;
         }
+        usbPoll();
       }
+    }
 
-      // We have all the data
-      switch (reader->cmd) {
-        case 0:
-          // message was aborted by init
-          break;
-        case U2FHID_PING:
-          u2fhid_ping(reader->buf, reader->len);
-          break;
-        case U2FHID_MSG:
-          u2fhid_msg((APDU *)reader->buf, reader->len);
-          break;
-        case U2FHID_WINK:
-          u2fhid_wink(reader->buf, reader->len);
-          break;
-        default:
-          send_u2fhid_error(cid, ERR_INVALID_CMD);
-          break;
-      }
+    // We have all the data
+    switch (reader->cmd) {
+      case 0:
+        // message was aborted by init
+        break;
+      case U2FHID_PING:
+        u2fhid_ping(reader->buf, reader->len);
+        break;
+      case U2FHID_MSG:
+        u2fhid_msg((APDU *)reader->buf, reader->len);
+        break;
+      case U2FHID_WINK:
+        u2fhid_wink(reader->buf, reader->len);
+        break;
+      default:
+        send_u2fhid_error(cid, ERR_INVALID_CMD);
+        break;
     }
-#if !EMULATOR
-    else {
-      u2fhid_msg((APDU *)reader->buf, reader->len);
-    }
-#endif
+
     // wait for next commmand/ button press
     reader->cmd = 0;
     reader->seq = 255;
     while (dialog_timeout > 0 && reader->cmd == 0) {
       dialog_timeout--;
-
       usbPoll();  // may trigger new request
       buttonUpdate();
       if (button.YesUp && (last_req_state == AUTH || last_req_state == REG)) {
@@ -350,13 +334,12 @@ uint8_t *u2f_out_data(void) {
 }
 
 void u2fhid_msg(const APDU *a, uint32_t len) {
-  //  if ((APDU_LEN(*a) + sizeof(APDU)) > len) {
-  //    debugLog(0, "", "BAD APDU LENGTH");
-  //    debugInt(APDU_LEN(*a));
-  //    debugInt(len);
-  //    send_u2f_error(U2F_SW_INS_NOT_SUPPORTED);
-  //    return;
-  //  }
+  if ((APDU_LEN(*a) + sizeof(APDU)) > len) {
+    debugLog(0, "", "BAD APDU LENGTH");
+    debugInt(APDU_LEN(*a));
+    debugInt(len);
+    return;
+  }
 
   if (a->cla != 0) {
     send_u2f_error(U2F_SW_CLA_NOT_SUPPORTED);
@@ -378,6 +361,7 @@ void u2fhid_msg(const APDU *a, uint32_t len) {
         debugLog(0, "", "u2f unknown cmd");
         send_u2f_error(U2F_SW_INS_NOT_SUPPORTED);
       } else {
+#if USE_SE
         // MI2CDRV_Transmit
         if (false == bMI2CDRV_SendData((uint8_t *)&(a->cla), len)) {
           send_u2f_error(U2F_SW_INS_NOT_SUPPORTED);
@@ -392,6 +376,7 @@ void u2fhid_msg(const APDU *a, uint32_t len) {
           debugLog(0, "", "i2c rev fail");
           send_u2f_error(U2F_SW_INS_NOT_SUPPORTED);
         }
+#endif
       }
   }
 }
@@ -787,10 +772,5 @@ void send_u2f_error(const uint16_t err) {
 }
 
 void send_u2f_msg(const uint8_t *data, const uint32_t len) {
-  if (WORK_MODE_USB == g_ucWorkMode) {
-    send_u2fhid_msg(U2FHID_MSG, data, len);
-  } else {
-    memcpy(u2f_out_packets, data, len);
-    u2f_out_end = len;
-  }
+  send_u2fhid_msg(U2FHID_MSG, data, len);
 }

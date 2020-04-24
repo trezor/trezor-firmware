@@ -7,6 +7,14 @@
 #define _SUPPORT_SOFTI2C_ 0
 #define SI2C_BUF_MAX_LEN (1024 * 3)
 
+typedef enum _ChannelType {
+  CHANNEL_NULL,
+  CHANNEL_USB,
+  CHANNEL_SLAVE,
+} ChannelType;
+
+extern ChannelType host_channel;
+
 // I2C gpio
 #define GPIO_SI2C_PORT GPIOB
 #define GPIO_SI2C_SCL GPIO10
@@ -15,17 +23,18 @@
 #define SI2C_ADDR 0x48  // 90
 
 extern uint8_t i2c_data_in[SI2C_BUF_MAX_LEN];
-extern volatile uint32_t i2c_data_inlen, i2c_data_offset;
+extern volatile uint32_t i2c_data_inlen;
 extern volatile bool i2c_recv_done;
 extern uint8_t i2c_data_out[SI2C_BUF_MAX_LEN];
 extern volatile uint32_t i2c_data_outlen, i2c_data_out_pos;
 
-extern trans_fifo i2c_fifo_in;
+extern trans_fifo i2c_fifo_in, i2c_fifo_out;
 
 void i2c_slave_init_irq(void);
 void i2c_slave_init(void);
 void i2cSlaveResponse(uint8_t *pucStr, uint32_t usStrLen);
 bool i2c2_slave_recevie(void);
+void i2c_slave_send(uint8_t *buf, uint32_t buf_size);
 void i2c2_slave_send(void);
 
 #endif

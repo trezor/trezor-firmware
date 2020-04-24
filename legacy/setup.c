@@ -120,7 +120,7 @@ void setup(void) {
   // se power
   gpio_mode_setup(SE_POWER_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE,
                   SE_POWER_PIN);
-  se_power_off();
+  se_power_on();
 
   // set GPIO for OLED display
   gpio_mode_setup(OLED_DC_PORT, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, OLED_DC_PIN);
@@ -186,8 +186,10 @@ void setupApp(void) {
   gpio_mode_setup(GPIOA, GPIO_MODE_AF, GPIO_PUPD_PULLUP, GPIO10);
   gpio_set_af(GPIOA, GPIO_AF10, GPIO10);
 
+#if USE_SE
   // master i2c init
   vMI2CDRV_Init();
+#endif
 }
 
 #define MPU_RASR_SIZE_32B (0x04UL << MPU_RASR_SIZE_LSB)
@@ -268,6 +270,8 @@ void mpu_config_bootloader(void) {
 
 // Never use in bootloader! Disables access to PPB (including MPU, NVIC, SCB)
 void mpu_config_firmware(void) {
+  // TODO:for debug
+//   return;
 #if MEMORY_PROTECT
   // Disable MPU
   MPU_CTRL = 0;

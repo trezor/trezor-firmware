@@ -12,9 +12,6 @@
 uint8_t g_ucFlag = 0;
 uint8_t g_ucBatValue = 0;
 uint8_t battery_cap = 1;
-bool g_bBleTransMode = false;
-bool g_bSelectSEFlag = false;
-uint32_t g_uiFreePayFlag = 0;
 
 bool sys_nfcState(void) {
   if (get_nfc_state() == 0) {
@@ -31,6 +28,7 @@ bool sys_usbState(void) {
 bool sys_bleState(void) { return ble_connect_state(); }
 
 void sys_shutdown(void) {
+  delay_ms(2000);  // delay for prevois display
   oledClear();
   oledDrawStringCenter(64, 30, "power off ...", FONT_STANDARD);
   oledRefresh();
@@ -57,8 +55,8 @@ void sys_poweron(void) {
           ;
         break;
       }
-    } else if (sys_nfcState() || sys_usbState())
-      break;
+    }
+    if (sys_nfcState() || sys_usbState()) break;
   }
   stm32_power_on();
   ble_power_on();

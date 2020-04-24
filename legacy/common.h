@@ -20,9 +20,9 @@
 #ifndef __TREZORHAL_COMMON_H__
 #define __TREZORHAL_COMMON_H__
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include "secbool.h"
 
 #define HW_ENTROPY_LEN (12 + 32)
 extern uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
@@ -34,7 +34,12 @@ extern uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
 
 extern uint8_t g_ucLanguageFlag;
 extern uint8_t g_ucPromptIndex;
-extern uint8_t g_ucWorkMode;
+
+extern bool g_bBleTransMode;
+extern bool g_bSelectSEFlag;
+extern uint32_t g_uiFreePayFlag;
+extern uint8_t g_uchash_mode;
+
 extern volatile uint32_t system_millis_poweroff_start;
 
 void __attribute__((noreturn))

@@ -42,14 +42,6 @@
 #include "webusb.h"
 #include "winusb.h"
 
-typedef enum _ChannelType {
-  CHANNEL_NULL,
-  CHANNEL_USB,
-  CHANNEL_SLAVE,
-} ChannelType;
-
-ChannelType host_channel = CHANNEL_NULL;
-
 #define USB_INTERFACE_INDEX_MAIN 0
 #if DEBUG_LINK
 #define USB_INTERFACE_INDEX_DEBUG 1
@@ -94,7 +86,8 @@ enum {
 };
 #undef X
 
-uint8_t s_ucPackAppRevBuf[64 + 2];
+static uint8_t packet_buf[64] __attribute__((aligned(4)));
+uint8_t s_ucPackAppRevBuf[64];
 uint16_t s_usOffset;
 #define X(name, value) value,
 static const char *usb_strings[] = {USB_STRINGS};
@@ -322,11 +315,8 @@ static void u2f_rx_callback(usbd_device *dev, uint8_t ep) {
   static CONFIDENTIAL uint8_t buf[64] __attribute__((aligned(4)));
 
   debugLog(0, "", "u2f_rx_callback");
-  if (WORK_MODE_USB == g_ucWorkMode) {
-    if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_U2F_OUT, buf, 64) != 64)
-      return;
-    u2fhid_read(tiny, (const U2FHID_FRAME *)(void *)buf);
-  }
+  if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_U2F_OUT, buf, 64) != 64) return;
+  u2fhid_read(tiny, (const U2FHID_FRAME *)(void *)buf);
 }
 
 #endif
@@ -339,7 +329,7 @@ static void main_rx_callback(usbd_device *dev, uint8_t ep) {
       return;
     host_channel = CHANNEL_USB;
   } else {
-    memcpy(buf, s_ucPackAppRevBuf, 64);
+    memcpy(buf, packet_buf, 64);
     host_channel = CHANNEL_SLAVE;
   }
   debugLog(0, "", "main_rx_callback");
@@ -420,45 +410,20 @@ void usbInit(void) {
   winusb_setup(usbd_dev, USB_INTERFACE_INDEX_MAIN);
 }
 
-static void i2cSlaveRxData(uint8_t *pucInputBuf, uint32_t data_len) {
-  uint16_t i;
-  memset(s_ucPackAppRevBuf, 0x00, sizeof(s_ucPackAppRevBuf));
-  if (data_len > 64) {
-    memcpy(s_ucPackAppRevBuf, pucInputBuf, 64);
-    main_rx_callback(NULL, 0);
-    data_len -= 64;
-    i = 0;
-    while (data_len / 63) {
-      s_ucPackAppRevBuf[0] = '?';
-      memcpy(s_ucPackAppRevBuf + 1, pucInputBuf + 64 + i * 63, 63);
-      main_rx_callback(NULL, 0);
-      data_len -= 63;
-      i++;
-    }
-    if (data_len) {
-      s_ucPackAppRevBuf[0] = '?';
-      memcpy(s_ucPackAppRevBuf + 1, pucInputBuf + 64 + i * 63, data_len);
-      main_rx_callback(NULL, 0);
-    }
-  } else {
-    memcpy(s_ucPackAppRevBuf, pucInputBuf, data_len);
-    main_rx_callback(NULL, 0);
-  }
-}
-
 void i2cSlavePoll(void) {
   uint32_t usLen;
-  volatile uint32_t total_len, len;
-  uint8_t buf[128];
-  while (i2c_recv_done) {
-    total_len = fifo_lockdata_len(&i2c_fifo_in);
-    if (total_len == 0) {
-      i2c_recv_done = false;
-      break;
+  uint32_t len;
+  if (i2c_recv_done) {
+    memset(packet_buf, 0x00, sizeof(packet_buf));
+    fifo_read_peek(&i2c_fifo_in, packet_buf, 1);
+    if (packet_buf[0] == '?') {  // trezor command
+      len = fifo_lockdata_len(&i2c_fifo_in);
+      if (len > 64) layoutError("Trezor cmd", "wrong len");
+      fifo_read_lock(&i2c_fifo_in, packet_buf, len);
+      main_rx_callback(NULL, 0);
+    } else {  // apdu command
     }
-    len = total_len > 64 ? 64 : total_len;
-    fifo_read_lock(&i2c_fifo_in, buf, len);
-    i2cSlaveRxData(buf, len);
+    i2c_recv_done = false;
   }
   if (CHANNEL_SLAVE == host_channel) {
     if (msg_out_end) {
@@ -470,9 +435,7 @@ void i2cSlavePoll(void) {
 }
 void usbPoll(void) {
   static const uint8_t *data;
-
   i2cSlavePoll();
-
   if (usbd_dev == NULL) {
     return;
   }

@@ -28,6 +28,7 @@
 #include "norcow.h"
 #include "pbkdf2.h"
 #include "rand.h"
+#include "se_chip.h"
 #include "sha2.h"
 #include "storage.h"
 
@@ -1175,15 +1176,10 @@ secbool storage_get(const uint16_t key, void *val_dest, const uint16_t max_len,
       return storage_get_encrypted(key, val_dest, max_len, len);
     }
   } else {
-    if (sectrue != MI2CDRV_Transmit(MI2C_CMD_WR_PIN, (key & 0xFF), NULL, 0,
-                                    val_dest, len, (app & FLAG_PUBLIC),
-                                    GET_SESTORE_DATA)) {
-      return secfalse;
-    }
-    if (*len > max_len) {
-      return secfalse;
-    }
-    return sectrue;
+#if USE_SE
+    if (se_get_value(key, val_dest, max_len, len)) return sectrue;
+#endif
+    return secfalse;
   }
 }
 /*
@@ -1261,8 +1257,10 @@ secbool storage_set(const uint16_t key, const void *val, const uint16_t len) {
       ret = storage_set_encrypted(key, val, len);
     }
   } else {
-    ret = MI2CDRV_Transmit(MI2C_CMD_WR_PIN, (key & 0xFF), (uint8_t *)val, len,
-                           NULL, 0, (app & FLAG_PUBLIC), SET_SESTORE_DATA);
+#if USE_SE
+    if (se_set_value(key, val, len)) return sectrue;
+    return secfalse;
+#endif
   }
   return ret;
 }
@@ -1285,8 +1283,10 @@ secbool storage_delete(const uint16_t key) {
     }
     return ret;
   } else {
-    return MI2CDRV_Transmit(MI2C_CMD_WR_PIN, (key & 0xFF), NULL, 0, NULL, 0,
-                            FLAG_PUBLIC, DELETE_SESTORE_DATA);
+#if USE_SE
+    if (se_delete_key(key)) return sectrue;
+#endif
+    return secfalse;
   }
 }
 

@@ -18,6 +18,7 @@
  */
 
 #include "signing.h"
+#include "common.h"
 #include "config.h"
 #include "crypto.h"
 #include "ecdsa.h"

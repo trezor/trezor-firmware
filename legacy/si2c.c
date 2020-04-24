@@ -14,8 +14,10 @@
 #include "timer.h"
 #include "usart.h"
 
+ChannelType host_channel = CHANNEL_NULL;
+
 uint8_t i2c_data_in[SI2C_BUF_MAX_LEN];
-volatile uint32_t i2c_data_inlen, i2c_data_offset;
+volatile uint32_t i2c_data_inlen;
 volatile bool i2c_recv_done = false;
 uint8_t i2c_data_out[SI2C_BUF_MAX_LEN];
 volatile uint32_t i2c_data_outlen, i2c_data_out_pos;
@@ -27,7 +29,12 @@ trans_fifo i2c_fifo_in = {.p_buf = i2c_data_in,
                           .write_pos = 0,
                           .lock_pos = 0};
 
-bool bCheckNFC(void) { return sys_nfcState(); }
+trans_fifo i2c_fifo_out = {.p_buf = i2c_data_out,
+                           .buf_size = SI2C_BUF_MAX_LEN,
+                           .over_pre = false,
+                           .read_pos = 0,
+                           .write_pos = 0,
+                           .lock_pos = 0};
 
 void i2c_slave_init_irq(void) {
   rcc_periph_clock_enable(RCC_I2C2);
@@ -136,9 +143,11 @@ void i2c2_ev_isr() {
   }
   if (sr1 & I2C_SR1_STOPF) {  // EV4
     I2C_CR1(I2C2) |= I2C_CR1_PE;
-    fifo_lockpos_set(&i2c_fifo_in);
+    if (i2c_recv_done == false) {
+      fifo_lockpos_set(&i2c_fifo_in);
+      i2c_recv_done = true;
+    }
     SET_COMBUS_LOW();
-    i2c_recv_done = true;
   }
   if (sr1 & I2C_SR1_AF) {  // EV4
     I2C_SR1(I2C2) &= ~I2C_SR1_AF;
@@ -199,11 +208,28 @@ void i2c2_slave_send(void) {
   SET_COMBUS_LOW();
 }
 
+void i2c_slave_send(uint8_t *buf, uint32_t buf_size) {
+  memcpy(i2c_data_out, buf, buf_size);
+  i2c_data_outlen = buf_size;
+  i2c_data_out_pos = 0;
+  SET_COMBUS_HIGH();
+  timer_out_set(timer_out_countdown, default_resp_time);
+  //   layoutOperationWithCountdown("Sending response...", default_resp_time);
+  while (1) {
+    if (checkButtonOrTimeout(BTN_PIN_NO, timer_out_countdown) == true ||
+        i2c_data_outlen == 0)
+      break;
+  }
+  i2c_data_outlen = 0;
+  timer_out_set(timer_out_countdown, 0);
+  SET_COMBUS_LOW();
+}
+
 void i2cSlaveResponse(uint8_t *pucStr, uint32_t usStrLen) {
-  uint32_t len;
-  volatile uint32_t i;
+  uint32_t len = 0;
+  uint32_t i;
   memcpy(i2c_data_out, pucStr, usStrLen);
-  len = usStrLen - 64;
+  if (usStrLen > 64) len = usStrLen - 64;
   if (len) {
     for (i = 0; i < (len / 64); i++) {
       memcpy(i2c_data_out + 64 + i * 63, pucStr + (i + 1) * 64 + 1, 63);
@@ -213,4 +239,14 @@ void i2cSlaveResponse(uint8_t *pucStr, uint32_t usStrLen) {
                     (i2c_data_out[7] << 8) + i2c_data_out[8] + 9;
   i2c_data_out_pos = 0;
   SET_COMBUS_HIGH();
+  timer_out_set(timer_out_countdown, default_resp_time);
+  //   layoutOperationWithCountdown("Sending response...", default_resp_time);
+  while (1) {
+    if (checkButtonOrTimeout(BTN_PIN_NO, timer_out_countdown) == true ||
+        i2c_data_outlen == 0)
+      break;
+  }
+  i2c_data_outlen = 0;
+  timer_out_set(timer_out_countdown, 0);
+  SET_COMBUS_LOW();
 }

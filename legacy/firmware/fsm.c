@@ -25,6 +25,7 @@
 #include "bip32.h"
 #include "bip39.h"
 #include "coins.h"
+#include "common.h"
 #include "config.h"
 #include "crypto.h"
 #include "curves.h"
@@ -48,11 +49,12 @@
 #include "secp256k1.h"
 #include "signing.h"
 #include "supervise.h"
-#include "sys.h"
 #include "transaction.h"
 #include "trezor.h"
 #include "usb.h"
 #include "util.h"
+
+#include "rtt_log.h"
 
 #if !BITCOIN_ONLY
 #include "ethereum.h"

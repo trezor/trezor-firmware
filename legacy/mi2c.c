@@ -23,7 +23,6 @@ uint8_t g_ucMI2cRevBuf[MI2C_BUF_MAX_LEN];
 uint8_t g_ucMI2cSendBuf[MI2C_BUF_MAX_LEN];
 uint8_t g_ucSessionKey[SESSION_KEYLEN];
 uint16_t g_usMI2cRevLen;
-uint8_t g_uchash_mode = 0;
 
 static uint8_t ucXorCheck(uint8_t ucInputXor, uint8_t *pucSrc, uint16_t usLen) {
   uint16_t i;
@@ -371,9 +370,10 @@ uint32_t MI2CDRV_Transmit(uint8_t ucCmd, uint8_t ucIndex, uint8_t *pucSendData,
     } else {
       // data add random
       random_buffer_ST(ucRandom, sizeof(ucRandom));
-      usSendLen += sizeof(ucRandom);
       memcpy(g_ucMI2cRevBuf, ucRandom, sizeof(ucRandom));
-      memcpy(g_ucMI2cRevBuf + sizeof(ucRandom), pucSendData, usSendLen);
+      if (usSendLen > 0)
+        memcpy(g_ucMI2cRevBuf + sizeof(ucRandom), pucSendData, usSendLen);
+      usSendLen += sizeof(ucRandom);
     }
   }
 

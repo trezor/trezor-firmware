@@ -30,6 +30,7 @@
 #include "address.h"
 #include "base58.h"
 #include "bignum.h"
+#include "common.h"
 #include "ecdsa.h"
 #include "hmac.h"
 #include "memzero.h"
@@ -37,7 +38,9 @@
 #include "rfc6979.h"
 #include "secp256k1.h"
 
+#if USE_SE
 #include "mi2c.h"
+#endif
 
 // Set cp2 = cp1
 void point_copy(const curve_point *cp1, curve_point *cp2) { *cp2 = *cp1; }
@@ -768,6 +771,7 @@ int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
 #endif
     return -1;
   } else {
+#if USE_SE
     uint8_t ucRevBuf[65];
     uint16_t usLen;
     uint8_t by;  // signature recovery byte
@@ -781,6 +785,7 @@ int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
       *pby = by;
     }
     memcpy(sig, ucRevBuf + 1, 0x40);
+#endif
     return 0;
   }
 }
@@ -799,10 +804,12 @@ void ecdsa_get_public_key33(const ecdsa_curve *curve, const uint8_t *priv_key,
     memzero(&R, sizeof(R));
     memzero(&k, sizeof(k));
   } else {
+#if USE_SE
     uint16_t usLen;
     MI2CDRV_Transmit(MI2C_CMD_ECC_EDDSA, ECC_INDEX_GITPUBKEY,
                      (uint8_t *)priv_key, 0x20, pub_key, &usLen, MI2C_ENCRYPT,
                      SET_SESTORE_DATA);
+#endif
   }
 }
 

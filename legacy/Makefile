@@ -14,7 +14,6 @@ ifneq ($(EMULATOR),1)
 OBJS += setup.o
 OBJS += sys.o
 OBJS += si2c.o
-OBJS += mi2c.o
 OBJS += usart.o
 OBJS += nordic_dfu.o
 OBJS += ble.o
@@ -23,6 +22,12 @@ OBJS += trans_fifo.o
 OBJS += segger_rtt/SEGGER_RTT.o
 OBJS += segger_rtt/SEGGER_RTT_printf.o
 OBJS += segger_rtt/rtt_log.o
+
+ifeq ($(USE_SE),1)
+OBJS += mi2c.o
+OBJS += se_chip.o
+endif
+
 endif
 
 OBJS += util.o

@@ -19,6 +19,7 @@
 
 #include "reset.h"
 #include "bip39.h"
+#include "common.h"
 #include "config.h"
 #include "fsm.h"
 #include "gettext.h"
@@ -57,8 +58,9 @@ void reset_init(bool display_random, uint32_t _strength,
   }
 
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
-                    _("Do you really want to"), _("create a new wallet?"), NULL,
-                    _("By continuing you"), _("agree to trezor.io/tos"), NULL);
+                    _("Do you really want to"), _("create a new wallet?"),
+                    _("By continuing you"), _("agree to trezor.io/tos"), NULL,
+                    NULL);
   if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
     fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
     layoutHome();

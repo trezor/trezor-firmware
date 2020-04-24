@@ -103,9 +103,6 @@ int main(void) {
 #endif
 #endif
 
-#if EMULATOR
-  g_ucWorkMode = WORK_MODE_USB;
-#endif
   config_init();
   layoutHome();
   usbInit();

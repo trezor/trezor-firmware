@@ -588,6 +588,7 @@ int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count,
     }
     if (hdnode_private_ckd(inout, i[i_count - 1]) == 0) return 0;
   } else {
+#if USE_SE
     uint8_t ucRevBuf[256];
     uint16_t usLen;
     if (MI2C_OK != MI2CDRV_Transmit(MI2C_CMD_ECC_EDDSA, EDDSA_INDEX_CHILDKEY,
@@ -606,6 +607,7 @@ int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count,
       *fingerprint = hdnode_fingerprint(inout);
     }
     memcpy(inout->public_key, ucRevBuf + 1 + 4 + 32 + 33, 33);
+#endif
   }
 
   return 1;

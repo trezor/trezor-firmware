@@ -33,7 +33,7 @@ void pinmatrix_draw(const char *text) {
       &bmp_digit5, &bmp_digit6, &bmp_digit7, &bmp_digit8, &bmp_digit9,
   };
   layoutSwipe();
-  const int w = bmp_digit0.width, h = bmp_digit0.height, pad = 1;
+  const int w = bmp_digit0.width, h = bmp_digit0.height, pad = 0;
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
       // use (2 - j) instead of j to achieve 789456123 layout
@@ -42,7 +42,7 @@ void pinmatrix_draw(const char *text) {
         vDisp_PromptInfo(g_ucPromptIndex, false);
       } else {
         if (text) {
-          oledDrawStringCenter(OLED_WIDTH / 2, 0, text, FONT_STANDARD);
+          oledDrawStringCenter(OLED_WIDTH / 2, 8, text, FONT_STANDARD);
         }
       }
       oledDrawBitmap((OLED_WIDTH - 3 * w - 2 * pad) / 2 + i * (w + pad),

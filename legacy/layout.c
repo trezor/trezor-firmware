@@ -254,13 +254,14 @@ extern void shutdown(void);
 void layoutError(const char *line1, const char *line2) {
   layoutDialog(&bmp_icon_error, NULL, NULL, NULL, line1, line2, NULL,
                "Your device", "will reset.", NULL);
-  delay_ms(2000);
   shutdown();
 }
 
+#if !EMULATOR
 void layoutOperationWithCountdown(const char *info, uint32_t counter) {
   timer_out_set(timer_out_countdown, counter);
   oledClear();
   oledDrawStringCenter(OLED_WIDTH / 2, 30, info, FONT_STANDARD);
   oledRefresh();
 }
+#endif

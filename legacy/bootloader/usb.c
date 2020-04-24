@@ -63,14 +63,6 @@ enum {
   STATE_END,
 };
 
-typedef enum _ChannelType {
-  CHANNEL_NULL,
-  CHANNEL_USB,
-  CHANNEL_SLAVE,
-} ChannelType;
-
-ChannelType host_channel = CHANNEL_NULL;
-
 #define UPDATE_BLE 0x5A
 #define UPDATE_ST 0x55
 uint32_t flash_pos = 0, flash_len = 0;
@@ -663,15 +655,15 @@ static void checkButtons(void) {
 
 static void i2cSlavePoll(void) {
   volatile uint32_t total_len, len;
-  while (i2c_recv_done) {
-    total_len = fifo_lockdata_len(&i2c_fifo_in);
-    if (total_len == 0) {
-      i2c_recv_done = false;
-      break;
+  if (i2c_recv_done) {
+    while (1) {
+      total_len = fifo_lockdata_len(&i2c_fifo_in);
+      if (total_len == 0) break;
+      len = total_len > 64 ? 64 : total_len;
+      fifo_read_lock(&i2c_fifo_in, packet_buf, len);
+      rx_callback(NULL, 0);
     }
-    len = total_len > 64 ? 64 : total_len;
-    fifo_read_lock(&i2c_fifo_in, packet_buf, len);
-    rx_callback(NULL, 0);
+    i2c_recv_done = false;
   }
 }
 
