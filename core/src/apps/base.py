@@ -130,9 +130,10 @@ def set_homescreen() -> None:
 
 
 def lock_device() -> None:
-    config.lock()
-    set_homescreen()
-    wire.find_handler = get_pinlocked_handler
+    if config.has_pin():
+        config.lock()
+        set_homescreen()
+        wire.find_handler = get_pinlocked_handler
 
 
 async def unlock_device(ctx: wire.GenericContext = wire.DUMMY_CONTEXT) -> None:
