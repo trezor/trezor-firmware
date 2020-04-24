@@ -14,7 +14,6 @@ from apps.wallet.sign_tx import (
     multisig,
     progress,
     scripts,
-    segwit_bip143,
 )
 
 if not utils.BITCOIN_ONLY:
@@ -52,7 +51,6 @@ async def sign_tx(ctx: wire.Context, msg: SignTx, keychain: seed.Keychain) -> Tx
             multisig.MultisigError,
             addresses.AddressError,
             scripts.ScriptsError,
-            segwit_bip143.Bip143Error,
         ) as e:
             raise wire.Error(*e.args)
         if isinstance(req, TxRequest):

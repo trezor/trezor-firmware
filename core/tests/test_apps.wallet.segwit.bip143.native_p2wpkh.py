@@ -1,14 +1,15 @@
 from common import *
 
 from apps.wallet.sign_tx.scripts import output_derive_script
-from apps.wallet.sign_tx.segwit_bip143 import *
+from apps.wallet.sign_tx.bitcoin import Bitcoin
 from apps.common import coins
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputType import TxOutputType
+from trezor.messages.TxOutputBinType import TxOutputBinType
 from trezor.messages import InputScriptType
 from trezor.messages import OutputScriptType
-from trezor.crypto import bip32, bip39
+from trezor.crypto import bip39
 
 
 class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
@@ -43,55 +44,51 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
                         address_n=[])
 
     def test_prevouts(self):
-
-        bip143 = Bip143()
-        bip143.add_input(self.inp1)
-        bip143.add_input(self.inp2)
         coin = coins.by_name(self.tx.coin_name)
-        self.assertEqual(hexlify(bip143.get_prevouts_hash(coin)), b'96b827c8483d4e9b96712b6713a7b68d6e8003a781feba36c31143470b4efd37')
+        bip143 = Bitcoin(self.tx, None, coin)
+        bip143.hash143_add_input(self.inp1)
+        bip143.hash143_add_input(self.inp2)
+        self.assertEqual(hexlify(bip143.get_prevouts_hash()), b'96b827c8483d4e9b96712b6713a7b68d6e8003a781feba36c31143470b4efd37')
 
     def test_sequence(self):
-
-        bip143 = Bip143()
-        bip143.add_input(self.inp1)
-        bip143.add_input(self.inp2)
         coin = coins.by_name(self.tx.coin_name)
-        self.assertEqual(hexlify(bip143.get_sequence_hash(coin)), b'52b0a642eea2fb7ae638c36f6252b6750293dbe574a806984b8e4d8548339a3b')
+        bip143 = Bitcoin(self.tx, None, coin)
+        bip143.hash143_add_input(self.inp1)
+        bip143.hash143_add_input(self.inp2)
+        self.assertEqual(hexlify(bip143.get_sequence_hash()), b'52b0a642eea2fb7ae638c36f6252b6750293dbe574a806984b8e4d8548339a3b')
 
     def test_outputs(self):
 
         seed = bip39.seed('alcohol woman abuse must during monitor noble actual mixed trade anger aisle', '')
         coin = coins.by_name(self.tx.coin_name)
-
-        bip143 = Bip143()
+        bip143 = Bitcoin(self.tx, None, coin)
 
         for txo in [self.out1, self.out2]:
             txo_bin = TxOutputBinType()
             txo_bin.amount = txo.amount
             txo_bin.script_pubkey = output_derive_script(txo, coin)
-            bip143.add_output(txo_bin)
+            bip143.hash143_add_output(txo_bin)
 
-        self.assertEqual(hexlify(bip143.get_outputs_hash(coin)),
+        self.assertEqual(hexlify(bip143.get_outputs_hash()),
                          b'863ef3e1a92afbfdb97f31ad0fc7683ee943e9abcf2501590ff8f6551f47e5e5')
 
     def test_preimage_testdata(self):
 
         seed = bip39.seed('alcohol woman abuse must during monitor noble actual mixed trade anger aisle', '')
         coin = coins.by_name(self.tx.coin_name)
-
-        bip143 = Bip143()
-        bip143.add_input(self.inp1)
-        bip143.add_input(self.inp2)
+        bip143 = Bitcoin(self.tx, None, coin)
+        bip143.hash143_add_input(self.inp1)
+        bip143.hash143_add_input(self.inp2)
 
         for txo in [self.out1, self.out2]:
             txo_bin = TxOutputBinType()
             txo_bin.amount = txo.amount
             txo_bin.script_pubkey = output_derive_script(txo, coin)
-            bip143.add_output(txo_bin)
+            bip143.hash143_add_output(txo_bin)
 
         # test data public key hash
         # only for input 2 - input 1 is not segwit
-        result = bip143.preimage_hash(coin, self.tx, self.inp2, unhexlify('1d0f172a0ecb48aee1be1f2687d2963ae33f71a1'), 0x01)
+        result = bip143.hash143_preimage_hash(self.inp2, unhexlify('1d0f172a0ecb48aee1be1f2687d2963ae33f71a1'))
         self.assertEqual(hexlify(result), b'c37af31116d1b27caf68aae9e3ac82f1477929014d5b917657d0eb49478cb670')
 
 
