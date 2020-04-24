@@ -20,7 +20,7 @@ from copy import deepcopy
 
 from mnemonic import Mnemonic
 
-from . import mapping, messages as proto, protobuf
+from . import mapping, messages, protobuf
 from .client import TrezorClient
 from .log import DUMP_BYTES
 from .tools import expect
@@ -78,13 +78,13 @@ class DebugLink:
         return msg
 
     def state(self):
-        return self._call(proto.DebugLinkGetState())
+        return self._call(messages.DebugLinkGetState())
 
     def read_layout(self):
         return layout_lines(self.state().layout_lines)
 
     def wait_layout(self):
-        obj = self._call(proto.DebugLinkGetState(wait_layout=True))
+        obj = self._call(messages.DebugLinkGetState(wait_layout=True))
         return layout_lines(obj.layout_lines)
 
     def read_pin_encoded(self):
@@ -102,11 +102,11 @@ class DebugLink:
         return (state.recovery_fake_word, state.recovery_word_pos)
 
     def read_reset_word(self):
-        state = self._call(proto.DebugLinkGetState(wait_word_list=True))
+        state = self._call(messages.DebugLinkGetState(wait_word_list=True))
         return state.reset_word
 
     def read_reset_word_pos(self):
-        state = self._call(proto.DebugLinkGetState(wait_word_pos=True))
+        state = self._call(messages.DebugLinkGetState(wait_word_pos=True))
         return state.reset_word_pos
 
     def input(self, word=None, button=None, swipe=None, x=None, y=None, wait=False):
@@ -117,7 +117,7 @@ class DebugLink:
         if args != 1:
             raise ValueError("Invalid input - must use one of word, button, swipe")
 
-        decision = proto.DebugLinkDecision(
+        decision = messages.DebugLinkDecision(
             yes_no=button, swipe=swipe, input=word, x=x, y=y, wait=wait
         )
         ret = self._call(decision, nowait=not wait)
@@ -135,45 +135,45 @@ class DebugLink:
         self.input(button=False)
 
     def swipe_up(self):
-        self.input(swipe=proto.DebugSwipeDirection.UP)
+        self.input(swipe=messages.DebugSwipeDirection.UP)
 
     def swipe_down(self):
-        self.input(swipe=proto.DebugSwipeDirection.DOWN)
+        self.input(swipe=messages.DebugSwipeDirection.DOWN)
 
     def swipe_right(self):
-        self.input(swipe=proto.DebugSwipeDirection.RIGHT)
+        self.input(swipe=messages.DebugSwipeDirection.RIGHT)
 
     def swipe_left(self):
-        self.input(swipe=proto.DebugSwipeDirection.LEFT)
+        self.input(swipe=messages.DebugSwipeDirection.LEFT)
 
     def stop(self):
-        self._call(proto.DebugLinkStop(), nowait=True)
+        self._call(messages.DebugLinkStop(), nowait=True)
 
     def reseed(self, value):
-        self._call(proto.DebugLinkReseedRandom(value=value))
+        self._call(messages.DebugLinkReseedRandom(value=value))
 
     def start_recording(self, directory):
-        self._call(proto.DebugLinkRecordScreen(target_directory=directory))
+        self._call(messages.DebugLinkRecordScreen(target_directory=directory))
 
     def stop_recording(self):
-        self._call(proto.DebugLinkRecordScreen(target_directory=None))
+        self._call(messages.DebugLinkRecordScreen(target_directory=None))
 
-    @expect(proto.DebugLinkMemory, field="memory")
+    @expect(messages.DebugLinkMemory, field="memory")
     def memory_read(self, address, length):
-        return self._call(proto.DebugLinkMemoryRead(address=address, length=length))
+        return self._call(messages.DebugLinkMemoryRead(address=address, length=length))
 
     def memory_write(self, address, memory, flash=False):
         self._call(
-            proto.DebugLinkMemoryWrite(address=address, memory=memory, flash=flash),
+            messages.DebugLinkMemoryWrite(address=address, memory=memory, flash=flash),
             nowait=True,
         )
 
     def flash_erase(self, sector):
-        self._call(proto.DebugLinkFlashErase(sector=sector), nowait=True)
+        self._call(messages.DebugLinkFlashErase(sector=sector), nowait=True)
 
-    @expect(proto.Success)
+    @expect(messages.Success)
     def erase_sd_card(self, format=True):
-        return self._call(proto.DebugLinkEraseSdCard(format=format))
+        return self._call(messages.DebugLinkEraseSdCard(format=format))
 
 
 class NullDebugLink(DebugLink):
@@ -188,8 +188,8 @@ class NullDebugLink(DebugLink):
 
     def _call(self, msg, nowait=False):
         if not nowait:
-            if isinstance(msg, proto.DebugLinkGetState):
-                return proto.DebugLinkState()
+            if isinstance(msg, messages.DebugLinkGetState):
+                return messages.DebugLinkState()
             else:
                 raise RuntimeError("unexpected call to a fake debuglink")
 
@@ -542,7 +542,7 @@ class TrezorClientDebugLink(TrezorClient):
         raise RuntimeError("Unexpected call")
 
 
-@expect(proto.Success, field="message")
+@expect(messages.Success, field="message")
 def load_device(
     client,
     mnemonic,
@@ -565,7 +565,7 @@ def load_device(
         )
 
     resp = client.call(
-        proto.LoadDevice(
+        messages.LoadDevice(
             mnemonics=mnemonics,
             pin=pin,
             passphrase_protection=passphrase_protection,
@@ -584,25 +584,25 @@ def load_device(
 load_device_by_mnemonic = load_device
 
 
-@expect(proto.Success, field="message")
+@expect(messages.Success, field="message")
 def self_test(client):
     if client.features.bootloader_mode is not True:
         raise RuntimeError("Device must be in bootloader mode")
 
     return client.call(
-        proto.SelfTest(
+        messages.SelfTest(
             payload=b"\x00\xFF\x55\xAA\x66\x99\x33\xCCABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\x00\xFF\x55\xAA\x66\x99\x33\xCC"
         )
     )
 
 
-@expect(proto.Success, field="message")
+@expect(messages.Success, field="message")
 def show_text(client, header_text, body_text, icon=None, icon_color=None):
     body_text = [
-        proto.DebugLinkShowTextItem(style=style, content=content)
+        messages.DebugLinkShowTextItem(style=style, content=content)
         for style, content in body_text
     ]
-    msg = proto.DebugLinkShowText(
+    msg = messages.DebugLinkShowText(
         header_text=header_text,
         body_text=body_text,
         header_icon=icon,
