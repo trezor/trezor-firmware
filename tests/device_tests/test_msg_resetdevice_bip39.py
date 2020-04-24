@@ -43,7 +43,7 @@ def reset_device(client, strength):
 
     # Provide entropy
     assert isinstance(ret, proto.EntropyRequest)
-    internal_entropy = client.debug.read_reset_entropy()
+    internal_entropy = client.debug.state().reset_entropy
     ret = client.call_raw(proto.EntropyAck(entropy=external_entropy))
 
     # Generate mnemonic locally
@@ -142,7 +142,7 @@ class TestMsgResetDevice:
 
         # Provide entropy
         assert isinstance(ret, proto.EntropyRequest)
-        internal_entropy = client.debug.read_reset_entropy()
+        internal_entropy = client.debug.state().reset_entropy
         ret = client.call_raw(proto.EntropyAck(entropy=external_entropy))
 
         # Generate mnemonic locally
