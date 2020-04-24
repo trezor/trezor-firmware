@@ -37,9 +37,9 @@ class TestDebuglink:
         resp = client.call_raw(messages.GetAddress())
         assert isinstance(resp, messages.PinMatrixRequest)
 
-        pin, matrix = client.debug.read_pin()
-        assert pin == "1234"
-        assert matrix != ""
+        state = client.debug.state()
+        assert state.pin == "1234"
+        assert state.matrix != ""
 
         pin_encoded = client.debug.read_pin_encoded()
         resp = client.call_raw(messages.PinMatrixAck(pin=pin_encoded))

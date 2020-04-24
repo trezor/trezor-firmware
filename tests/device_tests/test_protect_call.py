@@ -33,14 +33,14 @@ class TestProtectCall:
 
     def test_no_protection(self, client):
         with client:
-            assert client.debug.read_pin()[0] is None
+            assert client.debug.state().pin is None
             client.set_expected_responses([proto.Address()])
             self._some_protected_call(client)
 
     @pytest.mark.setup_client(pin="1234")
     def test_pin(self, client):
         with client:
-            assert client.debug.read_pin()[0] == "1234"
+            assert client.debug.state().pin == "1234"
             client.set_expected_responses([proto.PinMatrixRequest(), proto.Address()])
             self._some_protected_call(client)
 
