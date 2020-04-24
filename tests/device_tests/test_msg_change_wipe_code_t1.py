@@ -31,8 +31,7 @@ def _set_wipe_code(client, wipe_code):
     # Set/change wipe code.
     with client:
         if client.features.pin_protection:
-            pin, _ = client.debug.read_pin()
-            pins = [pin, wipe_code, wipe_code]
+            pins = [client.debug.state().pin, wipe_code, wipe_code]
             pin_matrices = [
                 messages.PinMatrixRequest(type=PinType.Current),
                 messages.PinMatrixRequest(type=PinType.WipeCodeFirst),
@@ -66,8 +65,7 @@ def _change_pin(client, old_pin, new_pin):
 
 def _check_wipe_code(client, wipe_code):
     """Check that wipe code is set by changing the PIN to it."""
-    old_pin, _ = client.debug.read_pin()
-    f = _change_pin(client, old_pin, wipe_code)
+    f = _change_pin(client, client.debug.state().pin, wipe_code)
     assert isinstance(f, messages.Failure)
 
 

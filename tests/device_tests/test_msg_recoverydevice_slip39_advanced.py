@@ -63,7 +63,7 @@ def test_secret(client, shares, secret):
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
     assert client.features.backup_type is messages.BackupType.Slip39_Advanced
-    assert debug.read_mnemonic_secret().hex() == secret
+    assert debug.state().mnemonic_secret.hex() == secret
 
 
 @pytest.mark.setup_client(uninitialized=True)

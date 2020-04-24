@@ -62,42 +62,27 @@ class DebugLink:
         obj = self._call(proto.DebugLinkGetState(wait_layout=True))
         return layout_lines(obj.layout_lines)
 
-    def read_pin(self):
-        state = self.state()
-        return state.pin, state.matrix
-
     def read_pin_encoded(self):
-        return self.encode_pin(*self.read_pin())
+        state = self.state()
+        return self.encode_pin(state.pin, state.matrix)
 
     def encode_pin(self, pin, matrix=None):
         """Transform correct PIN according to the displayed matrix."""
         if matrix is None:
-            _, matrix = self.read_pin()
+            matrix = self.state().matrix
         return "".join([str(matrix.index(p) + 1) for p in pin])
 
-    def read_mnemonic_secret(self):
-        obj = self._call(proto.DebugLinkGetState())
-        return obj.mnemonic_secret
-
     def read_recovery_word(self):
-        obj = self._call(proto.DebugLinkGetState())
-        return (obj.recovery_fake_word, obj.recovery_word_pos)
+        state = self.state()
+        return (state.recovery_fake_word, state.recovery_word_pos)
 
     def read_reset_word(self):
-        obj = self._call(proto.DebugLinkGetState(wait_word_list=True))
-        return obj.reset_word
+        state = self._call(proto.DebugLinkGetState(wait_word_list=True))
+        return state.reset_word
 
     def read_reset_word_pos(self):
-        obj = self._call(proto.DebugLinkGetState(wait_word_pos=True))
-        return obj.reset_word_pos
-
-    def read_reset_entropy(self):
-        obj = self._call(proto.DebugLinkGetState())
-        return obj.reset_entropy
-
-    def read_passphrase_protection(self):
-        obj = self._call(proto.DebugLinkGetState())
-        return obj.passphrase_protection
+        state = self._call(proto.DebugLinkGetState(wait_word_pos=True))
+        return state.reset_word_pos
 
     def input(self, word=None, button=None, swipe=None, x=None, y=None, wait=False):
         if not self.allow_interactions:
