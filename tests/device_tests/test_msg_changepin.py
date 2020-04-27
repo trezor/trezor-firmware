@@ -16,255 +16,193 @@
 
 import pytest
 
-from trezorlib import messages as proto
+from trezorlib import device, messages
+from trezorlib.exceptions import TrezorFailure
 
 PIN4 = "1234"
 PIN6 = "789456"
 
 
-@pytest.mark.skip_t2
-class TestMsgChangepin:
-    def test_set_pin(self, client):
-        features = client.call_raw(proto.Initialize())
-        assert features.pin_protection is False
+pytestmark = pytest.mark.skip_t2
 
-        # Check that there's no PIN protection
-        ret = client.call_raw(proto.GetAddress())
-        assert isinstance(ret, proto.Address)
 
-        # Let's set new PIN
-        ret = client.call_raw(proto.ChangePin())
-        assert isinstance(ret, proto.ButtonRequest)
+def _check_pin(client, pin):
+    client.clear_session()
+    with client:
+        client.use_pin_sequence([pin])
+        client.set_expected_responses([messages.PinMatrixRequest(), messages.Address()])
+        client.call(messages.GetAddress())
 
-        # Press button
-        client.debug.press_yes()
-        ret = client.call_raw(proto.ButtonAck())
 
-        # Send the PIN for first time
-        assert isinstance(ret, proto.PinMatrixRequest)
-        pin_encoded = client.debug.encode_pin(PIN6)
-        ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
+def _check_no_pin(client):
+    client.clear_session()
+    with client:
+        client.set_expected_responses([messages.Address()])
+        client.call(messages.GetAddress())
 
-        # Send the PIN for second time
-        assert isinstance(ret, proto.PinMatrixRequest)
-        pin_encoded = client.debug.encode_pin(PIN6)
-        ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
 
-        # Now we're done
-        assert isinstance(ret, proto.Success)
+def test_set_pin(client):
+    assert client.features.pin_protection is False
 
-        # Check that there's PIN protection now
-        features = client.call_raw(proto.Initialize())
-        assert features.pin_protection is True
+    # Check that there's no PIN protection
+    _check_no_pin(client)
 
-        # Check that the PIN is correct
-        self.check_pin(client, PIN6)
+    # Let's set new PIN
+    with client:
+        client.use_pin_sequence([PIN6, PIN6])
+        client.set_expected_responses(
+            [
+                messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
+                messages.PinMatrixRequest(),
+                messages.PinMatrixRequest(),
+                messages.Success(),
+                messages.Features(),
+            ]
+        )
+        device.change_pin(client)
 
-    @pytest.mark.setup_client(pin=True)
-    def test_change_pin(self, client):
-        features = client.call_raw(proto.Initialize())
-        assert features.pin_protection is True
+    # Check that there's PIN protection now
+    assert client.features.pin_protection is True
+    # Check that the PIN is correct
+    _check_pin(client, PIN6)
 
-        # Check that there's PIN protection
-        ret = client.call_raw(proto.GetAddress())
-        assert isinstance(ret, proto.PinMatrixRequest)
-        client.call_raw(proto.Cancel())
 
-        # Check current PIN value
-        self.check_pin(client, PIN4)
+@pytest.mark.setup_client(pin=PIN4)
+def test_change_pin(client):
+    assert client.features.pin_protection is True
+    # Check that there's PIN protection
+    _check_pin(client, PIN4)
 
-        # Let's change PIN
-        ret = client.call_raw(proto.ChangePin())
-        assert isinstance(ret, proto.ButtonRequest)
+    # Let's change PIN
+    with client:
+        client.use_pin_sequence([PIN4, PIN6, PIN6])
+        client.set_expected_responses(
+            [
+                messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
+                messages.PinMatrixRequest(),
+                messages.PinMatrixRequest(),
+                messages.PinMatrixRequest(),
+                messages.Success(),
+                messages.Features(),
+            ]
+        )
+        device.change_pin(client)
 
-        # Press button
-        client.debug.press_yes()
-        ret = client.call_raw(proto.ButtonAck())
+    # Check that there's still PIN protection now
+    assert client.features.pin_protection is True
+    # Check that the PIN is correct
+    _check_pin(client, PIN6)
 
-        # Send current PIN
-        assert isinstance(ret, proto.PinMatrixRequest)
-        pin_encoded = client.debug.read_pin_encoded()
-        ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
 
-        # Send new PIN for first time
-        assert isinstance(ret, proto.PinMatrixRequest)
-        pin_encoded = client.debug.encode_pin(PIN6)
-        ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
+@pytest.mark.setup_client(pin=PIN4)
+def test_remove_pin(client):
+    assert client.features.pin_protection is True
+    # Check that there's PIN protection
+    _check_pin(client, PIN4)
 
-        # Send the PIN for second time
-        assert isinstance(ret, proto.PinMatrixRequest)
-        pin_encoded = client.debug.encode_pin(PIN6)
-        ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
+    # Let's remove PIN
+    with client:
+        client.use_pin_sequence([PIN4])
+        client.set_expected_responses(
+            [
+                messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
+                messages.PinMatrixRequest(),
+                messages.Success(),
+                messages.Features(),
+            ]
+        )
+        device.change_pin(client, remove=True)
 
-        # Now we're done
-        assert isinstance(ret, proto.Success)
+    # Check that there's no PIN protection now
+    assert client.features.pin_protection is False
+    _check_no_pin(client)
 
-        # Check that there's still PIN protection now
-        features = client.call_raw(proto.Initialize())
-        assert features.pin_protection is True
 
-        # Check that the PIN is correct
-        self.check_pin(client, PIN6)
+def test_set_mismatch(client):
+    assert client.features.pin_protection is False
+    # Check that there's no PIN protection
+    _check_no_pin(client)
 
-    @pytest.mark.setup_client(pin=True)
-    def test_remove_pin(self, client):
-        features = client.call_raw(proto.Initialize())
-        assert features.pin_protection is True
+    # Let's set new PIN
+    with pytest.raises(TrezorFailure, match="PIN mismatch"), client:
+        # use different PINs for first and second attempt. This will fail.
+        client.use_pin_sequence([PIN4, PIN6])
+        client.set_expected_responses(
+            [
+                messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
+                messages.PinMatrixRequest(),
+                messages.PinMatrixRequest(),
+                messages.Failure(),
+            ]
+        )
+        device.change_pin(client)
 
-        # Check that there's PIN protection
-        ret = client.call_raw(proto.GetAddress())
-        assert isinstance(ret, proto.PinMatrixRequest)
-        client.call_raw(proto.Cancel())
+    # Check that there's still no PIN protection now
+    client.init_device()
+    assert client.features.pin_protection is False
+    _check_no_pin(client)
 
-        # Let's remove PIN
-        ret = client.call_raw(proto.ChangePin(remove=True))
-        assert isinstance(ret, proto.ButtonRequest)
 
-        # Press button
-        client.debug.press_yes()
-        ret = client.call_raw(proto.ButtonAck())
+@pytest.mark.setup_client(pin=PIN4)
+def test_change_mismatch(client):
+    assert client.features.pin_protection is True
 
-        # Send current PIN
-        assert isinstance(ret, proto.PinMatrixRequest)
-        pin_encoded = client.debug.read_pin_encoded()
-        ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
+    # Let's set new PIN
+    with pytest.raises(TrezorFailure, match="PIN mismatch"), client:
+        client.use_pin_sequence([PIN4, PIN6, PIN6 + "3"])
+        client.set_expected_responses(
+            [
+                messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
+                messages.PinMatrixRequest(),
+                messages.PinMatrixRequest(),
+                messages.PinMatrixRequest(),
+                messages.Failure(),
+            ]
+        )
+        device.change_pin(client)
 
-        # Now we're done
-        assert isinstance(ret, proto.Success)
+    # Check that there's still old PIN protection
+    client.init_device()
+    assert client.features.pin_protection is True
+    _check_pin(client, PIN4)
 
-        # Check that there's no PIN protection now
-        features = client.call_raw(proto.Initialize())
-        assert features.pin_protection is False
-        ret = client.call_raw(proto.GetAddress())
-        assert isinstance(ret, proto.Address)
 
-    def test_set_mismatch(self, client):
-        features = client.call_raw(proto.Initialize())
-        assert features.pin_protection is False
+@pytest.mark.parametrize("invalid_pin", ("1204", "", "1234567891"))
+def test_set_invalid(client, invalid_pin):
+    assert client.features.pin_protection is False
 
-        # Check that there's no PIN protection
-        ret = client.call_raw(proto.GetAddress())
-        assert isinstance(ret, proto.Address)
+    # Let's set an invalid PIN
+    ret = client.call_raw(messages.ChangePin())
+    assert isinstance(ret, messages.ButtonRequest)
 
-        # Let's set new PIN
-        ret = client.call_raw(proto.ChangePin())
-        assert isinstance(ret, proto.ButtonRequest)
+    # Press button
+    client.debug.press_yes()
+    ret = client.call_raw(messages.ButtonAck())
 
-        # Press button
-        client.debug.press_yes()
-        ret = client.call_raw(proto.ButtonAck())
+    # Send a PIN containing an invalid digit
+    assert isinstance(ret, messages.PinMatrixRequest)
+    ret = client.call_raw(messages.PinMatrixAck(pin=invalid_pin))
 
-        # Send the PIN for first time
-        assert isinstance(ret, proto.PinMatrixRequest)
-        pin_encoded = client.debug.encode_pin(PIN6)
-        ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
+    # Ensure the invalid PIN is detected
+    assert isinstance(ret, messages.Failure)
 
-        # Send the PIN for second time, but with typo
-        assert isinstance(ret, proto.PinMatrixRequest)
-        pin_encoded = client.debug.encode_pin(PIN4)
-        ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
+    # Check that there's still no PIN protection now
+    client.init_device()
+    assert client.features.pin_protection is False
+    _check_no_pin(client)
 
-        # Now it should fail, because pins are different
-        assert isinstance(ret, proto.Failure)
 
-        # Check that there's still no PIN protection now
-        features = client.call_raw(proto.Initialize())
-        assert features.pin_protection is False
-        ret = client.call_raw(proto.GetAddress())
-        assert isinstance(ret, proto.Address)
+@pytest.mark.parametrize("invalid_pin", ("1204", "", "1234567891"))
+@pytest.mark.setup_client(pin=PIN4)
+def test_enter_invalid(client, invalid_pin):
+    assert client.features.pin_protection is True
 
-    @pytest.mark.setup_client(pin=True)
-    def test_change_mismatch(self, client):
-        features = client.call_raw(proto.Initialize())
-        assert features.pin_protection is True
+    # use an invalid PIN
+    ret = client.call_raw(messages.GetAddress())
 
-        # Let's set new PIN
-        ret = client.call_raw(proto.ChangePin())
-        assert isinstance(ret, proto.ButtonRequest)
+    # Send a PIN containing an invalid digit
+    assert isinstance(ret, messages.PinMatrixRequest)
+    ret = client.call_raw(messages.PinMatrixAck(pin=invalid_pin))
 
-        # Press button
-        client.debug.press_yes()
-        ret = client.call_raw(proto.ButtonAck())
-
-        # Send current PIN
-        assert isinstance(ret, proto.PinMatrixRequest)
-        pin_encoded = client.debug.read_pin_encoded()
-        ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
-
-        # Send the PIN for first time
-        assert isinstance(ret, proto.PinMatrixRequest)
-        pin_encoded = client.debug.encode_pin(PIN6)
-        ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
-
-        # Send the PIN for second time, but with typo
-        assert isinstance(ret, proto.PinMatrixRequest)
-        pin_encoded = client.debug.encode_pin(PIN6 + "3")
-        ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
-
-        # Now it should fail, because pins are different
-        assert isinstance(ret, proto.Failure)
-
-        # Check that there's still old PIN protection
-        features = client.call_raw(proto.Initialize())
-        assert features.pin_protection is True
-        self.check_pin(client, PIN4)
-
-    @pytest.mark.parametrize("invalid_pin", ("1204", "", "1234567891"))
-    def test_set_invalid(self, client, invalid_pin):
-        features = client.call_raw(proto.Initialize())
-        assert features.pin_protection is False
-
-        # Let's set an invalid PIN
-        ret = client.call_raw(proto.ChangePin())
-        assert isinstance(ret, proto.ButtonRequest)
-
-        # Press button
-        client.debug.press_yes()
-        ret = client.call_raw(proto.ButtonAck())
-
-        # Send a PIN containing an invalid digit
-        assert isinstance(ret, proto.PinMatrixRequest)
-        ret = client.call_raw(proto.PinMatrixAck(pin=invalid_pin))
-
-        # Ensure the invalid PIN is detected
-        assert isinstance(ret, proto.Failure)
-
-        # Check that there's still no PIN protection now
-        features = client.call_raw(proto.Initialize())
-        assert features.pin_protection is False
-        ret = client.call_raw(proto.GetAddress())
-        assert isinstance(ret, proto.Address)
-
-    @pytest.mark.parametrize("invalid_pin", ("1204", "", "1234567891"))
-    @pytest.mark.setup_client(pin=True)
-    def test_remove_invalid(self, client, invalid_pin):
-        features = client.call_raw(proto.Initialize())
-        assert features.pin_protection is True
-
-        # Let's change the PIN
-        ret = client.call_raw(proto.ChangePin(remove=True))
-        assert isinstance(ret, proto.ButtonRequest)
-
-        # Press button
-        client.debug.press_yes()
-        ret = client.call_raw(proto.ButtonAck())
-
-        # Instead of the old PIN, send a PIN containing an invalid digit
-        assert isinstance(ret, proto.PinMatrixRequest)
-        ret = client.call_raw(proto.PinMatrixAck(pin=invalid_pin))
-
-        # Ensure the invalid PIN is detected
-        assert isinstance(ret, proto.Failure)
-
-        # Check that there's still old PIN protection
-        features = client.call_raw(proto.Initialize())
-        assert features.pin_protection is True
-        self.check_pin(client, PIN4)
-
-    def check_pin(self, client, pin):
-        client.clear_session()
-        ret = client.call_raw(proto.GetAddress())
-        assert isinstance(ret, proto.PinMatrixRequest)
-        pin_encoded = client.debug.encode_pin(pin)
-        ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
-        assert isinstance(ret, proto.Address)
+    # Ensure the invalid PIN is detected
+    assert isinstance(ret, messages.Failure)
