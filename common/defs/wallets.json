@@ -114,6 +114,9 @@
     "bitcoin:SMART": {
         "Electrum-SMART": "https://github.com/smartcash/electrum-smart"
     },
+    "bitcoin:SUGAR": {
+        "Electrum-SUGAR": "https://github.com/sugarchain-project/electrum-sugar"
+    },
     "bitcoin:SYS": {
         "Electrum-SYS": "https://github.com/syscoin/electrum"
     },
