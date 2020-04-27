@@ -87,14 +87,6 @@ class DebugLink:
         obj = self._call(messages.DebugLinkGetState(wait_layout=True))
         return layout_lines(obj.layout_lines)
 
-    def read_pin_encoded(self):
-        state = self.state()
-        if state.matrix is None:
-            raise RuntimeError("PIN matrix does not exist (are you running Trezor T?)")
-        if state.pin is None:
-            raise RuntimeError("PIN is not set")
-        return self.encode_pin(state.pin, state.matrix)
-
     def encode_pin(self, pin, matrix=None):
         """Transform correct PIN according to the displayed matrix."""
         if matrix is None:
@@ -251,8 +243,7 @@ class DebugUI:
 
     def get_pin(self, code=None):
         if self.pins is None:
-            # respond with correct pin
-            return self.debuglink.read_pin_encoded()
+            raise RuntimeError("PIN requested but no sequence was configured")
 
         try:
             return self.debuglink.encode_pin(next(self.pins))

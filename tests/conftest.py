@@ -119,9 +119,6 @@ def client(request):
         setup_params.update(marker.kwargs)
 
     if not setup_params["uninitialized"]:
-        if setup_params["pin"] is True:
-            setup_params["pin"] = "1234"
-
         debuglink.load_device(
             client,
             mnemonic=setup_params["mnemonic"],
