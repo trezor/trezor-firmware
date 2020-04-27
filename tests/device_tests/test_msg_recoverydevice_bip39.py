@@ -205,3 +205,11 @@ class TestMsgRecoverydevice:
             device.recover(
                 client, 12, False, False, "label", "en-US", client.mnemonic_callback
             )
+
+        ret = client.call_raw(
+            proto.RecoveryDevice(
+                word_count=12, type=proto.RecoveryDeviceType.ScrambledWords
+            )
+        )
+        assert isinstance(ret, proto.Failure)
+        assert "Device is already initialized" in ret.message
