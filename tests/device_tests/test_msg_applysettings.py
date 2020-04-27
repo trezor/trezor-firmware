@@ -21,14 +21,16 @@ import pytest
 from trezorlib import btc, device, messages as proto
 
 EXPECTED_RESPONSES_NOPIN = [proto.ButtonRequest(), proto.Success(), proto.Features()]
-EXPECTED_RESPONSES_PIN = [proto.PinMatrixRequest()] + EXPECTED_RESPONSES_NOPIN
+EXPECTED_RESPONSES_PIN_T1 = [proto.PinMatrixRequest()] + EXPECTED_RESPONSES_NOPIN
+EXPECTED_RESPONSES_PIN_TT = [proto.ButtonRequest()] + EXPECTED_RESPONSES_NOPIN
 
 
 def _set_expected_responses(client):
     if client.features.model == "1":
-        client.set_expected_responses(EXPECTED_RESPONSES_PIN)
+        client.set_expected_responses(EXPECTED_RESPONSES_PIN_T1)
     else:
-        client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
+        client.use_pin_sequence(["1234"])
+        client.set_expected_responses(EXPECTED_RESPONSES_PIN_TT)
 
 
 @pytest.mark.setup_client(pin=True)

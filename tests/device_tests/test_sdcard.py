@@ -49,6 +49,10 @@ def test_sd_no_format(client):
 @pytest.mark.setup_client(pin="1234")
 def test_sd_protect_unlock(client):
     def input_flow_enable_sd_protect():
+        yield  # Enter PIN to unlock device
+        assert "PinDialog" == client.debug.wait_layout().text
+        client.debug.input("1234")
+
         yield  # do you really want to enable SD protection
         assert "SD card protection" in client.debug.wait_layout().text
         client.debug.press_yes()

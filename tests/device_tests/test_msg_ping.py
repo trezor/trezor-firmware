@@ -16,24 +16,22 @@
 
 import pytest
 
-from trezorlib import messages as proto
+from trezorlib import messages
 
 
-class TestMsgPing:
-    @pytest.mark.skip_ui
-    @pytest.mark.setup_client(pin=True, passphrase=True)
-    def test_ping(self, client):
-        with client:
-            client.set_expected_responses([proto.Success()])
-            res = client.ping("random data")
-            assert res == "random data"
+@pytest.mark.skip_ui
+def test_ping(client):
+    with client:
+        client.set_expected_responses([messages.Success()])
+        res = client.ping("random data")
+        assert res == "random data"
 
-        with client:
-            client.set_expected_responses(
-                [
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ProtectCall),
-                    proto.Success(),
-                ]
-            )
-            res = client.ping("random data", button_protection=True)
-            assert res == "random data"
+    with client:
+        client.set_expected_responses(
+            [
+                messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
+                messages.Success(),
+            ]
+        )
+        res = client.ping("random data", button_protection=True)
+        assert res == "random data"
