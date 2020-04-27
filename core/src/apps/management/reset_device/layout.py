@@ -14,6 +14,10 @@ from trezor.ui.text import Text
 from apps.common.confirm import confirm, require_confirm, require_hold_to_confirm
 from apps.common.layout import show_success
 
+if False:
+    from trezor import loop
+    from typing import List, Tuple
+
 if __debug__:
     from apps import debug
 
@@ -184,11 +188,7 @@ async def _confirm_word(ctx, share_index, share_words, offset, count, group_inde
 
     # let the user pick a word
     select = MnemonicWordSelect(choices, share_index, checked_index, count, group_index)
-    if __debug__:
-        selected_word = await ctx.wait(select, debug.input_signal())
-    else:
-        selected_word = await ctx.wait(select)
-
+    selected_word = await ctx.wait(select)
     # confirm it is the correct one
     return selected_word == checked_word
 
@@ -647,8 +647,11 @@ class MnemonicWordSelect(ui.Layout):
 
     if __debug__:
 
-        def read_content(self):
+        def read_content(self) -> List[str]:
             return self.text.read_content() + [b.text for b in self.buttons]
+
+        def create_tasks(self) -> Tuple[loop.Task, ...]:
+            return super().create_tasks() + (debug.input_signal(),)
 
 
 async def show_reset_device_warning(ctx, backup_type: BackupType = BackupType.Bip39):

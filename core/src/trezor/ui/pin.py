@@ -12,7 +12,8 @@ from trezor.ui.button import (
 )
 
 if False:
-    from typing import Iterable, Optional
+    from trezor import loop
+    from typing import Iterable, Optional, Tuple
 
 
 def digit_area(i: int) -> ui.Area:
@@ -150,3 +151,10 @@ class PinDialog(ui.Layout):
     def on_confirm(self) -> None:
         if self.input.pin:
             raise ui.Result(self.input.pin)
+
+    if __debug__:
+
+        def create_tasks(self) -> Tuple[loop.Task, ...]:
+            from apps.debug import input_signal
+
+            return super().create_tasks() + (input_signal(),)
