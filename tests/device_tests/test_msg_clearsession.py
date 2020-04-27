@@ -23,18 +23,22 @@ from trezorlib.tools import parse_path
 ADDRESS_N = parse_path("44'/0'/0'")
 XPUB = "xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy"
 
+PIN4 = "1234"
+
 
 @pytest.mark.skip_ui
-@pytest.mark.setup_client(pin=True, passphrase=True)
+@pytest.mark.setup_client(pin=PIN4, passphrase=True)
 def test_clear_session(client):
-    if client.features.model == "1":
-        init_responses = [messages.PinMatrixRequest(), messages.PassphraseRequest()]
-    else:
-        init_responses = [messages.PassphraseRequest()]
+    is_trezor1 = client.features.model == "1"
+    init_responses = [
+        messages.PinMatrixRequest() if is_trezor1 else messages.ButtonRequest(),
+        messages.PassphraseRequest(),
+    ]
 
     cached_responses = [messages.PublicKey()]
 
     with client:
+        client.use_pin_sequence([PIN4])
         client.set_expected_responses(init_responses + cached_responses)
         assert get_public_node(client, ADDRESS_N).xpub == XPUB
 
@@ -47,6 +51,7 @@ def test_clear_session(client):
 
     # session cache is cleared
     with client:
+        client.use_pin_sequence([PIN4])
         client.set_expected_responses(init_responses + cached_responses)
         assert get_public_node(client, ADDRESS_N).xpub == XPUB
 

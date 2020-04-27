@@ -16,7 +16,8 @@
 
 import pytest
 
-from trezorlib import device, messages
+from trezorlib import btc, device, messages
+from trezorlib.client import PASSPHRASE_TEST_PATH
 from trezorlib.exceptions import Cancelled, TrezorFailure
 
 PIN4 = "1234"
@@ -26,91 +27,41 @@ WIPE_CODE6 = "456789"
 pytestmark = pytest.mark.skip_t1
 
 
-def _input_flow_set_pin(debug, pin):
-    yield  # do you want to set a new pin?
-    print("set pin?")
-    debug.press_yes()
-    yield  # enter new pin
-    print(f"enter pin {pin}")
-    debug.input(pin)
-    yield  # enter new pin again
-    print(f"reenter pin {pin}")
-    debug.input(pin)
-    yield  # success
-    print("success")
-    debug.press_yes()
-
-
-def _input_flow_change_pin(debug, old_pin, new_pin):
-    yield  # do you want to change pin?
-    debug.press_yes()
-    yield  # enter current pin
-    debug.input(old_pin)
-    yield  # enter new pin
-    debug.input(new_pin)
-    yield  # enter new pin again
-    debug.input(new_pin)
-    yield  # success
-    debug.press_yes()
-
-
-def _input_flow_clear_pin(debug, old_pin):
-    yield  # do you want to remove pin?
-    debug.press_yes()
-    yield  # enter current pin
-    debug.input(old_pin)
-    yield  # success
-    debug.press_yes()
-
-
-def _input_flow_set_wipe_code(debug, pin, wipe_code):
-    yield  # do you want to set/change the wipe_code?
-    debug.press_yes()
-    if pin is not None:
-        yield  # enter current pin
-        debug.input(pin)
-    yield  # enter new wipe code
-    debug.input(wipe_code)
-    yield  # enter new wipe code again
-    debug.input(wipe_code)
-    yield  # success
-    debug.press_yes()
-
-
-def _input_flow_remove_wipe_code(debug, pin):
-    yield  # do you want to remove wipe code?
-    debug.press_yes()
-    yield  # enter current pin
-    debug.input(pin)
-    yield  # success
-    debug.press_yes()
-
-
 def _check_wipe_code(client, pin, wipe_code):
-    client.clear_session()
+    client.init_device()
     assert client.features.wipe_code_protection is True
 
     # Try to change the PIN to the current wipe code value. The operation should fail.
     with client, pytest.raises(TrezorFailure):
+        client.use_pin_sequence([pin, wipe_code, wipe_code])
         client.set_expected_responses(
             [messages.ButtonRequest()] * 5
             + [messages.Failure(code=messages.FailureType.PinInvalid)]
         )
-        client.set_input_flow(_input_flow_change_pin(client.debug, pin, wipe_code))
         device.change_pin(client)
+
+
+def _ensure_unlocked(client, pin):
+    with client:
+        client.use_pin_sequence([pin])
+        btc.get_address(client, "Testnet", PASSPHRASE_TEST_PATH)
+
+    client.init_device()
 
 
 @pytest.mark.setup_client(pin=PIN4)
 def test_set_remove_wipe_code(client):
     # Test set wipe code.
+    assert client.features.wipe_code_protection is None
+
+    _ensure_unlocked(client, PIN4)
     assert client.features.wipe_code_protection is False
 
     with client:
         client.set_expected_responses(
             [messages.ButtonRequest()] * 5 + [messages.Success(), messages.Features()]
         )
-        client.set_input_flow(_input_flow_set_wipe_code(client.debug, PIN4, WIPE_CODE4))
-
+        client.use_pin_sequence([PIN4, WIPE_CODE4, WIPE_CODE4])
         device.change_wipe_code(client)
 
     client.init_device()
@@ -122,8 +73,7 @@ def test_set_remove_wipe_code(client):
         client.set_expected_responses(
             [messages.ButtonRequest()] * 5 + [messages.Success(), messages.Features()]
         )
-        client.set_input_flow(_input_flow_set_wipe_code(client.debug, PIN4, WIPE_CODE6))
-
+        client.use_pin_sequence([PIN4, WIPE_CODE6, WIPE_CODE6])
         device.change_wipe_code(client)
 
     client.init_device()
@@ -135,8 +85,7 @@ def test_set_remove_wipe_code(client):
         client.set_expected_responses(
             [messages.ButtonRequest()] * 3 + [messages.Success(), messages.Features()]
         )
-        client.set_input_flow(_input_flow_clear_pin(client.debug, PIN4))
-
+        client.use_pin_sequence([PIN4])
         device.change_wipe_code(client, remove=True)
 
     client.init_device()
@@ -172,28 +121,13 @@ def test_set_wipe_code_mismatch(client):
 
 @pytest.mark.setup_client(pin=PIN4)
 def test_set_wipe_code_to_pin(client):
-    def input_flow():
-        yield  # do you want to set the wipe code?
-        client.debug.press_yes()
-        yield  # enter current pin
-        client.debug.input(PIN4)
-        yield  # enter new wipe code (same as PIN)
-        client.debug.input(PIN4)
-
-        # failed retry
-        yield  # enter new wipe code
-        client.debug.input(WIPE_CODE4)
-        yield  # enter new wipe code again
-        client.debug.input(WIPE_CODE4)
-        yield  # success
-        client.debug.press_yes()
+    _ensure_unlocked(client, PIN4)
 
     with client:
         client.set_expected_responses(
             [messages.ButtonRequest()] * 6 + [messages.Success(), messages.Features()]
         )
-        client.set_input_flow(input_flow)
-
+        client.use_pin_sequence([PIN4, PIN4, WIPE_CODE4, WIPE_CODE4])
         device.change_wipe_code(client)
 
     client.init_device()
@@ -207,8 +141,7 @@ def test_set_pin_to_wipe_code(client):
         client.set_expected_responses(
             [messages.ButtonRequest()] * 4 + [messages.Success(), messages.Features()]
         )
-        client.set_input_flow(_input_flow_set_wipe_code(client.debug, None, WIPE_CODE4))
-
+        client.use_pin_sequence([WIPE_CODE4, WIPE_CODE4])
         device.change_wipe_code(client)
 
     # Try to set the PIN to the current wipe code value.
@@ -217,5 +150,5 @@ def test_set_pin_to_wipe_code(client):
             [messages.ButtonRequest()] * 4
             + [messages.Failure(code=messages.FailureType.PinInvalid)]
         )
-        client.set_input_flow(_input_flow_set_pin(client.debug, WIPE_CODE4))
+        client.use_pin_sequence([WIPE_CODE4, WIPE_CODE4])
         device.change_pin(client)

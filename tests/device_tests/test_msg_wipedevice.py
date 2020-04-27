@@ -16,23 +16,19 @@
 
 import pytest
 
-from trezorlib import device, messages as proto
+from trezorlib import device
 
 
-class TestMsgWipedevice:
-    @pytest.mark.setup_client(pin=True, passphrase=True)
-    def test_wipe_device(self, client):
-        features = client.call_raw(proto.Initialize())
+@pytest.mark.setup_client(passphrase=True)
+def test_wipe_device(client):
+    assert client.features.initialized is True
+    assert client.features.label == "test"
+    assert client.features.passphrase_protection is True
+    device_id = client.get_device_id()
 
-        assert features.initialized is True
-        assert features.pin_protection is True
-        assert features.passphrase_protection is True
-        device_id = features.device_id
+    device.wipe(client)
 
-        device.wipe(client)
-        features = client.call_raw(proto.Initialize())
-
-        assert features.initialized is False
-        assert features.pin_protection is False
-        assert features.passphrase_protection is False
-        assert features.device_id != device_id
+    assert client.features.initialized is False
+    assert client.features.label is None
+    assert client.features.passphrase_protection is False
+    assert client.get_device_id() != device_id

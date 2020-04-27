@@ -41,12 +41,12 @@ class TestMsgRecoverydeviceT2:
         ret = client.call_raw(proto.ButtonAck())
 
         # Enter PIN for first time
-        assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.Other)
+        assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.PinEntry)
         client.debug.input("654")
         ret = client.call_raw(proto.ButtonAck())
 
         # Enter PIN for second time
-        assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.Other)
+        assert ret == proto.ButtonRequest(code=proto.ButtonRequestType.PinEntry)
         client.debug.input("654")
         ret = client.call_raw(proto.ButtonAck())
 
