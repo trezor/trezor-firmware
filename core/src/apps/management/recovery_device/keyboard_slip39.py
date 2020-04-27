@@ -4,7 +4,7 @@ from trezor.ui import display
 from trezor.ui.button import Button, ButtonClear, ButtonMono, ButtonMonoConfirm
 
 if False:
-    from typing import Optional
+    from typing import Optional, Tuple
     from trezor.ui.button import ButtonContent, ButtonStyleStateType
 
 
@@ -217,3 +217,10 @@ class Slip39Keyboard(ui.Layout):
                 self.dispatch(event, x, y)
             else:
                 self.on_timeout()
+
+    if __debug__:
+
+        def create_tasks(self) -> Tuple[loop.Task, ...]:
+            from apps.debug import input_signal
+
+            return super().create_tasks() + (input_signal(),)

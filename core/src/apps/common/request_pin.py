@@ -13,9 +13,6 @@ from apps.common.sdcard import SdCardUnavailable, request_sd_salt
 if False:
     from typing import Any, NoReturn, Optional, Tuple
 
-if __debug__:
-    from apps.debug import input_signal
-
 
 def can_lock_device() -> bool:
     """Return True if the device has a PIN set or SD-protect enabled."""
@@ -40,10 +37,7 @@ async def request_pin(
     dialog = PinDialog(prompt, subprompt, allow_cancel)
 
     while True:
-        if __debug__:
-            pin = await ctx.wait(dialog, input_signal())
-        else:
-            pin = await ctx.wait(dialog)
+        pin = await ctx.wait(dialog)
         if pin is CANCELLED:
             raise wire.PinCancelled
         assert isinstance(pin, str)

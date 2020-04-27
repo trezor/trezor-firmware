@@ -69,7 +69,7 @@ if __debug__:
                 elif msg.swipe == DebugSwipeDirection.RIGHT:
                     await swipe_chan.put(swipe.SWIPE_RIGHT)
             if msg.input is not None:
-                await input_chan.put(msg.input)
+                await input_chan.put(ui.Result(msg.input))
 
     loop.schedule(debuglink_decision_dispatcher())
 
