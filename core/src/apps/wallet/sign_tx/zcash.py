@@ -50,11 +50,6 @@ class Overwintered(Bitcoinlike):
                 "Unsupported version for overwintered transaction",
             )
 
-    def init_hash143(self) -> None:
-        self.h_prevouts = HashWriter(blake2b(outlen=32, personal=b"ZcashPrevoutHash"))
-        self.h_sequence = HashWriter(blake2b(outlen=32, personal=b"ZcashSequencHash"))
-        self.h_outputs = HashWriter(blake2b(outlen=32, personal=b"ZcashOutputsHash"))
-
     async def step7_finish(self) -> None:
         self.write_tx_footer(self.serialized_tx, self.tx)
 
@@ -91,14 +86,10 @@ class Overwintered(Bitcoinlike):
     # ZIP-0143 / ZIP-0243
     # ===
 
-    def get_prevouts_hash(self) -> bytes:
-        return get_tx_hash(self.h_prevouts)
-
-    def get_sequence_hash(self) -> bytes:
-        return get_tx_hash(self.h_sequence)
-
-    def get_outputs_hash(self) -> bytes:
-        return get_tx_hash(self.h_outputs)
+    def init_hash143(self) -> None:
+        self.h_prevouts = HashWriter(blake2b(outlen=32, personal=b"ZcashPrevoutHash"))
+        self.h_sequence = HashWriter(blake2b(outlen=32, personal=b"ZcashSequencHash"))
+        self.h_outputs = HashWriter(blake2b(outlen=32, personal=b"ZcashOutputsHash"))
 
     def hash143_preimage_hash(self, txi: TxInputType, pubkeyhash: bytes) -> bytes:
         h_preimage = HashWriter(
@@ -113,11 +104,11 @@ class Overwintered(Bitcoinlike):
         # 2. nVersionGroupId
         write_uint32(h_preimage, self.tx.version_group_id)
         # 3. hashPrevouts
-        write_bytes_fixed(h_preimage, self.get_prevouts_hash(), TX_HASH_SIZE)
+        write_bytes_fixed(h_preimage, get_tx_hash(self.h_prevouts), TX_HASH_SIZE)
         # 4. hashSequence
-        write_bytes_fixed(h_preimage, self.get_sequence_hash(), TX_HASH_SIZE)
+        write_bytes_fixed(h_preimage, get_tx_hash(self.h_sequence), TX_HASH_SIZE)
         # 5. hashOutputs
-        write_bytes_fixed(h_preimage, self.get_outputs_hash(), TX_HASH_SIZE)
+        write_bytes_fixed(h_preimage, get_tx_hash(self.h_outputs), TX_HASH_SIZE)
 
         if self.tx.version == 3:
             # 6. hashJoinSplits

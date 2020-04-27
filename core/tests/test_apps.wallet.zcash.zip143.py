@@ -5,6 +5,7 @@ from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputBinType import TxOutputBinType
 
 from apps.common import coins
+from apps.wallet.sign_tx.writers import get_tx_hash
 
 if not utils.BITCOIN_ONLY:
     from apps.wallet.sign_tx.zcash import Overwintered
@@ -170,9 +171,9 @@ class TestZcashZip143(unittest.TestCase):
                 txo.script_pubkey = unhexlify(o["script_pubkey"])
                 zip143.hash143_add_output(txo)
 
-            self.assertEqual(hexlify(zip143.get_prevouts_hash()), v["prevouts_hash"])
-            self.assertEqual(hexlify(zip143.get_sequence_hash()), v["sequence_hash"])
-            self.assertEqual(hexlify(zip143.get_outputs_hash()), v["outputs_hash"])
+            self.assertEqual(hexlify(get_tx_hash(zip143.h_prevouts)), v["prevouts_hash"])
+            self.assertEqual(hexlify(get_tx_hash(zip143.h_sequence)), v["sequence_hash"])
+            self.assertEqual(hexlify(get_tx_hash(zip143.h_outputs)), v["outputs_hash"])
             self.assertEqual(
                 hexlify(zip143.hash143_preimage_hash(txi, unhexlify(i["pubkeyhash"]))),
                 v["preimage_hash"],
