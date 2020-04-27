@@ -2,6 +2,7 @@ from common import *
 
 from apps.wallet.sign_tx.scripts import output_derive_script
 from apps.wallet.sign_tx.bitcoin import Bitcoin
+from apps.wallet.sign_tx.writers import get_tx_hash
 from apps.common import coins
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxInputType import TxInputType
@@ -39,13 +40,15 @@ class TestSegwitBip143(unittest.TestCase):
         coin = coins.by_name(self.tx.coin_name)
         bip143 = Bitcoin(self.tx, None, coin)
         bip143.hash143_add_input(self.inp1)
-        self.assertEqual(hexlify(bip143.get_prevouts_hash()), b'b0287b4a252ac05af83d2dcef00ba313af78a3e9c329afa216eb3aa2a7b4613a')
+        prevouts_hash = get_tx_hash(bip143.h_prevouts, double=coin.sign_hash_double)
+        self.assertEqual(hexlify(prevouts_hash), b'b0287b4a252ac05af83d2dcef00ba313af78a3e9c329afa216eb3aa2a7b4613a')
 
     def test_bip143_sequence(self):
         coin = coins.by_name(self.tx.coin_name)
         bip143 = Bitcoin(self.tx, None, coin)
         bip143.hash143_add_input(self.inp1)
-        self.assertEqual(hexlify(bip143.get_sequence_hash()), b'18606b350cd8bf565266bc352f0caddcf01e8fa789dd8a15386327cf8cabe198')
+        sequence_hash = get_tx_hash(bip143.h_sequence, double=coin.sign_hash_double)
+        self.assertEqual(hexlify(sequence_hash), b'18606b350cd8bf565266bc352f0caddcf01e8fa789dd8a15386327cf8cabe198')
 
     def test_bip143_outputs(self):
         seed = bip39.seed('alcohol woman abuse must during monitor noble actual mixed trade anger aisle', '')
@@ -58,8 +61,8 @@ class TestSegwitBip143(unittest.TestCase):
             txo_bin.script_pubkey = output_derive_script(txo, coin)
             bip143.hash143_add_output(txo_bin)
 
-        self.assertEqual(hexlify(bip143.get_outputs_hash()),
-                         b'de984f44532e2173ca0d64314fcefe6d30da6f8cf27bafa706da61df8a226c83')
+        outputs_hash = get_tx_hash(bip143.h_outputs, double=coin.sign_hash_double)
+        self.assertEqual(hexlify(outputs_hash), b'de984f44532e2173ca0d64314fcefe6d30da6f8cf27bafa706da61df8a226c83')
 
     def test_bip143_preimage_testdata(self):
         seed = bip39.seed('alcohol woman abuse must during monitor noble actual mixed trade anger aisle', '')

@@ -114,11 +114,6 @@ class Bitcoin:
         # BIP-0143 transaction hashing
         self.init_hash143()
 
-    def init_hash143(self) -> None:
-        self.h_prevouts = HashWriter(sha256())
-        self.h_sequence = HashWriter(sha256())
-        self.h_outputs = HashWriter(sha256())
-
     def create_hash_writer(self) -> HashWriter:
         return HashWriter(sha256())
 
@@ -512,6 +507,11 @@ class Bitcoin:
     # BIP-0143
     # ===
 
+    def init_hash143(self) -> None:
+        self.h_prevouts = HashWriter(sha256())
+        self.h_sequence = HashWriter(sha256())
+        self.h_outputs = HashWriter(sha256())
+
     def hash143_add_input(self, txi: TxInputType) -> None:
         writers.write_bytes_reversed(
             self.h_prevouts, txi.prev_hash, writers.TX_HASH_SIZE
@@ -522,15 +522,6 @@ class Bitcoin:
     def hash143_add_output(self, txo_bin: TxOutputBinType) -> None:
         writers.write_tx_output(self.h_outputs, txo_bin)
 
-    def get_prevouts_hash(self) -> bytes:
-        return writers.get_tx_hash(self.h_prevouts, double=self.coin.sign_hash_double)
-
-    def get_sequence_hash(self) -> bytes:
-        return writers.get_tx_hash(self.h_sequence, double=self.coin.sign_hash_double)
-
-    def get_outputs_hash(self) -> bytes:
-        return writers.get_tx_hash(self.h_outputs, double=self.coin.sign_hash_double)
-
     def hash143_preimage_hash(self, txi: TxInputType, pubkeyhash: bytes) -> bytes:
         h_preimage = HashWriter(sha256())
 
@@ -538,14 +529,16 @@ class Bitcoin:
         writers.write_uint32(h_preimage, self.tx.version)
 
         # hashPrevouts
-        writers.write_bytes_fixed(
-            h_preimage, self.get_prevouts_hash(), writers.TX_HASH_SIZE
+        prevouts_hash = writers.get_tx_hash(
+            self.h_prevouts, double=self.coin.sign_hash_double
         )
+        writers.write_bytes_fixed(h_preimage, prevouts_hash, writers.TX_HASH_SIZE)
 
         # hashSequence
-        writers.write_bytes_fixed(
-            h_preimage, self.get_sequence_hash(), writers.TX_HASH_SIZE
+        sequence_hash = writers.get_tx_hash(
+            self.h_sequence, double=self.coin.sign_hash_double
         )
+        writers.write_bytes_fixed(h_preimage, sequence_hash, writers.TX_HASH_SIZE)
 
         # outpoint
         writers.write_bytes_reversed(h_preimage, txi.prev_hash, writers.TX_HASH_SIZE)
@@ -562,9 +555,10 @@ class Bitcoin:
         writers.write_uint32(h_preimage, txi.sequence)
 
         # hashOutputs
-        writers.write_bytes_fixed(
-            h_preimage, self.get_outputs_hash(), writers.TX_HASH_SIZE
+        outputs_hash = writers.get_tx_hash(
+            self.h_outputs, double=self.coin.sign_hash_double
         )
+        writers.write_bytes_fixed(h_preimage, outputs_hash, writers.TX_HASH_SIZE)
 
         # nLockTime
         writers.write_uint32(h_preimage, self.tx.lock_time)
