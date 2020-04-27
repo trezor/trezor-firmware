@@ -24,16 +24,18 @@ EXPECTED_RESPONSES_NOPIN = [proto.ButtonRequest(), proto.Success(), proto.Featur
 EXPECTED_RESPONSES_PIN_T1 = [proto.PinMatrixRequest()] + EXPECTED_RESPONSES_NOPIN
 EXPECTED_RESPONSES_PIN_TT = [proto.ButtonRequest()] + EXPECTED_RESPONSES_NOPIN
 
+PIN4 = "1234"
+
 
 def _set_expected_responses(client):
+    client.use_pin_sequence([PIN4])
     if client.features.model == "1":
         client.set_expected_responses(EXPECTED_RESPONSES_PIN_T1)
     else:
-        client.use_pin_sequence(["1234"])
         client.set_expected_responses(EXPECTED_RESPONSES_PIN_TT)
 
 
-@pytest.mark.setup_client(pin=True)
+@pytest.mark.setup_client(pin=PIN4)
 class TestMsgApplysettings:
     def test_apply_settings(self, client):
         assert client.features.label == "test"
@@ -54,7 +56,7 @@ class TestMsgApplysettings:
 
         assert client.features.language == "en-US"
 
-    @pytest.mark.setup_client(pin=True, passphrase=False)
+    @pytest.mark.setup_client(pin=PIN4, passphrase=False)
     def test_apply_settings_passphrase(self, client):
         assert client.features.passphrase_protection is False
 
@@ -121,7 +123,7 @@ class TestMsgApplysettings:
     @pytest.mark.skip_t2
     def test_apply_auto_lock_delay(self, client):
         with client:
-            client.set_expected_responses(EXPECTED_RESPONSES_PIN)
+            _set_expected_responses(client)
             device.apply_settings(client, auto_lock_delay_ms=int(10e3))  # 10 secs
 
         time.sleep(0.1)  # sleep less than auto-lock delay
@@ -132,6 +134,7 @@ class TestMsgApplysettings:
 
         time.sleep(10.1)  # sleep more than auto-lock delay
         with client:
+            client.use_pin_sequence([PIN4])
             client.set_expected_responses([proto.PinMatrixRequest(), proto.Address()])
             btc.get_address(client, "Testnet", [0])
 
@@ -143,7 +146,7 @@ class TestMsgApplysettings:
         """
 
         with client:
-            client.set_expected_responses(EXPECTED_RESPONSES_PIN)
+            _set_expected_responses(client)
             # Note: the actual delay will be 10 secs (see above).
             device.apply_settings(client, auto_lock_delay_ms=int(1e3))
 
@@ -161,5 +164,6 @@ class TestMsgApplysettings:
 
         time.sleep(10.1)  # sleep more than the minimal auto-lock delay
         with client:
+            client.use_pin_sequence([PIN4])
             client.set_expected_responses([proto.PinMatrixRequest(), proto.Address()])
             btc.get_address(client, "Testnet", [0])

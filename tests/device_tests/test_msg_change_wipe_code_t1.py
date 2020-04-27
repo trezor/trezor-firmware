@@ -27,11 +27,11 @@ WIPE_CODE6 = "456789"
 pytestmark = pytest.mark.skip_t2
 
 
-def _set_wipe_code(client, wipe_code):
+def _set_wipe_code(client, pin, wipe_code):
     # Set/change wipe code.
     with client:
         if client.features.pin_protection:
-            pins = [client.debug.state().pin, wipe_code, wipe_code]
+            pins = [pin, wipe_code, wipe_code]
             pin_matrices = [
                 messages.PinMatrixRequest(type=PinType.Current),
                 messages.PinMatrixRequest(type=PinType.WipeCodeFirst),
@@ -63,9 +63,9 @@ def _change_pin(client, old_pin, new_pin):
             return f.failure
 
 
-def _check_wipe_code(client, wipe_code):
+def _check_wipe_code(client, pin, wipe_code):
     """Check that wipe code is set by changing the PIN to it."""
-    f = _change_pin(client, client.debug.state().pin, wipe_code)
+    f = _change_pin(client, pin, wipe_code)
     assert isinstance(f, messages.Failure)
 
 
@@ -75,27 +75,29 @@ def test_set_remove_wipe_code(client):
     assert client.features.wipe_code_protection is None
 
     # Test set wipe code.
-    _set_wipe_code(client, WIPE_CODE4)
+    _set_wipe_code(client, PIN4, WIPE_CODE4)
 
     # Check that there's wipe code protection now.
     client.init_device()
     assert client.features.wipe_code_protection is True
 
     # Check that the wipe code is correct.
-    _check_wipe_code(client, WIPE_CODE4)
+    _check_wipe_code(client, PIN4, WIPE_CODE4)
 
     # Test change wipe code.
-    _set_wipe_code(client, WIPE_CODE6)
+    _set_wipe_code(client, PIN4, WIPE_CODE6)
 
     # Check that there's still wipe code protection now.
     client.init_device()
     assert client.features.wipe_code_protection is True
 
     # Check that the wipe code is correct.
-    _check_wipe_code(client, WIPE_CODE6)
+    _check_wipe_code(client, PIN4, WIPE_CODE6)
 
     # Test remove wipe code.
-    device.change_wipe_code(client, remove=True)
+    with client:
+        client.use_pin_sequence([PIN4])
+        device.change_wipe_code(client, remove=True)
 
     # Check that there's no wipe code protection now.
     client.init_device()
@@ -151,7 +153,7 @@ def test_set_wipe_code_to_pin(client):
 
 def test_set_pin_to_wipe_code(client):
     # Set wipe code.
-    _set_wipe_code(client, WIPE_CODE4)
+    _set_wipe_code(client, None, WIPE_CODE4)
 
     # Try to set the PIN to the current wipe code value.
     with client:
