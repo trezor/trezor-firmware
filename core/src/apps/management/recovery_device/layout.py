@@ -17,9 +17,6 @@ from .keyboard_bip39 import Bip39Keyboard
 from .keyboard_slip39 import Slip39Keyboard
 from .recover import RecoveryAborted
 
-if __debug__:
-    from apps.debug import input_signal
-
 if False:
     from typing import List, Optional, Callable, Iterable, Tuple, Union
     from trezor.messages.ResetDevice import EnumTypeBackupType
@@ -45,13 +42,11 @@ async def request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
         text = Text("Recovery mode", ui.ICON_RECOVERY)
     text.normal("Number of words?")
 
-    if __debug__:
-        count = await ctx.wait(WordSelector(text), input_signal())
-        count = int(count)  # if input_signal was triggered, count is a string
-    else:
-        count = await ctx.wait(WordSelector(text))
-
-    return count  # type: ignore
+    count = await ctx.wait(WordSelector(text))
+    # WordSelector can return int, or string if the value came from debuglink
+    # ctx.wait has a return type Any
+    # Hence, it is easier to convert the returned value to int explicitly
+    return int(count)
 
 
 async def request_mnemonic(
@@ -67,11 +62,8 @@ async def request_mnemonic(
             )  # type: Union[Slip39Keyboard, Bip39Keyboard]
         else:
             keyboard = Bip39Keyboard("Type word %s of %s:" % (i + 1, word_count))
-        if __debug__:
-            word = await ctx.wait(keyboard, input_signal())
-        else:
-            word = await ctx.wait(keyboard)
 
+        word = await ctx.wait(keyboard)
         words.append(word)
 
         try:

@@ -11,9 +11,6 @@ from trezor.ui import ICON_CONFIG, draw_simple
 from trezor.ui.passphrase import CANCELLED, PassphraseKeyboard
 from trezor.ui.text import Text
 
-if __debug__:
-    from apps.debug import input_signal
-
 _MAX_PASSPHRASE_LEN = const(50)
 
 
@@ -62,10 +59,7 @@ async def _request_on_device(ctx: wire.Context) -> str:
     await ctx.call(ButtonRequest(code=ButtonRequestType.PassphraseEntry), ButtonAck)
 
     keyboard = PassphraseKeyboard("Enter passphrase", _MAX_PASSPHRASE_LEN)
-    if __debug__:
-        passphrase = await ctx.wait(keyboard, input_signal())
-    else:
-        passphrase = await ctx.wait(keyboard)
+    passphrase = await ctx.wait(keyboard)
     if passphrase is CANCELLED:
         raise wire.ActionCancelled("Passphrase entry cancelled")
 
