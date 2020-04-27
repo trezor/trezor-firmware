@@ -32,16 +32,10 @@ def get_features() -> Features:
     f.model = utils.MODEL
     f.device_id = storage.device.get_device_id()
     f.label = storage.device.get_label()
-    f.initialized = storage.is_initialized()
     f.pin_protection = config.has_pin()
     f.pin_cached = config.is_unlocked()
     f.passphrase_protection = storage.device.is_passphrase_enabled()
-    f.needs_backup = storage.device.needs_backup()
-    f.unfinished_backup = storage.device.unfinished_backup()
-    f.no_backup = storage.device.no_backup()
-    f.flags = storage.device.get_flags()
-    f.recovery_mode = storage.recovery.is_in_progress()
-    f.backup_type = mnemonic.get_type()
+
     if utils.BITCOIN_ONLY:
         f.capabilities = [
             Capability.Bitcoin,
@@ -71,9 +65,23 @@ def get_features() -> Features:
             Capability.PassphraseEntry,
         ]
     f.sd_card_present = sdcard.is_present()
-    f.sd_protection = storage.sd_salt.is_enabled()
-    f.wipe_code_protection = config.has_wipe_code()
-    f.passphrase_always_on_device = storage.device.get_passphrase_always_on_device()
+
+    # private fields:
+    if config.is_unlocked():
+        # While this is technically not private, we can't reliably find the value while
+        # locked. Instead of sending always False, we choose to not send it.
+        f.initialized = storage.is_initialized()
+
+        f.needs_backup = storage.device.needs_backup()
+        f.unfinished_backup = storage.device.unfinished_backup()
+        f.no_backup = storage.device.no_backup()
+        f.flags = storage.device.get_flags()
+        f.recovery_mode = storage.recovery.is_in_progress()
+        f.backup_type = mnemonic.get_type()
+        f.sd_protection = storage.sd_salt.is_enabled()
+        f.wipe_code_protection = config.has_wipe_code()
+        f.passphrase_always_on_device = storage.device.get_passphrase_always_on_device()
+
     return f
 
 
@@ -109,7 +117,11 @@ async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:
     return Success(message=msg.message)
 
 
-ALLOW_WHILE_LOCKED = (MessageType.Initialize, MessageType.GetFeatures)
+ALLOW_WHILE_LOCKED = (
+    MessageType.Initialize,
+    MessageType.GetFeatures,
+    MessageType.WipeDevice,
+)
 
 
 def set_homescreen() -> None:
