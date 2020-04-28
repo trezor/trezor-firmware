@@ -714,6 +714,8 @@ bool config_getMnemonic(char *dest, uint16_t dest_size) {
   return sectrue == config_get_string(KEY_MNEMONIC, dest, dest_size);
 }
 
+bool config_hasMnemonic(void) { return sectrue == storage_has(KEY_MNEMONIC); }
+
 /* Check whether mnemonic matches storage. The mnemonic must be
  * a null-terminated string.
  */
