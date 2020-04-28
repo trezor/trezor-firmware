@@ -56,6 +56,7 @@ void storage_ensure_not_wipe_code(uint32_t pin);
 secbool storage_has_wipe_code(void);
 secbool storage_change_wipe_code(uint32_t pin, const uint8_t *ext_salt,
                                  uint32_t wipe_code);
+secbool storage_has(const uint16_t key);
 secbool storage_get(const uint16_t key, void *val, const uint16_t max_len,
                     uint16_t *len);
 secbool storage_set(const uint16_t key, const void *val, const uint16_t len);
