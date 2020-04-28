@@ -169,8 +169,8 @@ def pytest_sessionfinish(session, exitstatus):
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
-    println = terminalreporter.writer.line
-    println()
+    println = terminalreporter.write_line
+    println("")
 
     ui_option = config.getoption("ui")
     missing_tests = ui_tests.list_missing()
@@ -185,7 +185,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
                 println("UI test failed.")
             elif ui_option == "record":
                 println("Removing missing tests from record.")
-            println()
+            println("")
 
     if _should_write_ui_report(exitstatus):
         println(f"UI tests summary: {testreport.REPORTS_PATH / 'index.html'}")
