@@ -120,6 +120,7 @@ async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:
 ALLOW_WHILE_LOCKED = (
     MessageType.Initialize,
     MessageType.GetFeatures,
+    MessageType.LockDevice,
     MessageType.WipeDevice,
 )
 
