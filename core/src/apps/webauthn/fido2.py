@@ -12,6 +12,7 @@ from trezor.ui.confirm import CONFIRMED, Confirm, ConfirmPageable, Pageable
 from trezor.ui.popup import Popup
 from trezor.ui.text import Text
 
+from apps.base import set_homescreen
 from apps.common import cbor
 from apps.webauthn import common
 from apps.webauthn.confirm import ConfirmContent, ConfirmInfo
@@ -710,6 +711,28 @@ class U2fConfirmAuthenticate(U2fState):
         )
 
 
+class U2fUnlock(State):
+    def keepalive_status(self) -> int:
+        return _KEEPALIVE_STATUS_NONE
+
+    def timeout_ms(self) -> int:
+        return _U2F_CONFIRM_TIMEOUT_MS
+
+    async def confirm_dialog(self) -> bool:
+        from trezor.wire import PinCancelled, PinInvalid
+        from apps.common.request_pin import verify_user_pin
+
+        try:
+            await verify_user_pin()
+            set_homescreen()
+        except (PinCancelled, PinInvalid):
+            return False
+        return True
+
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, U2fUnlock)
+
+
 class Fido2State(State):
     def __init__(self, cid: int, iface: io.HID) -> None:
         super().__init__(cid, iface)
@@ -975,15 +998,11 @@ class DialogManager:
 
         return True
 
-    def compare(self, state: State) -> bool:
-        if self.state != state:
-            return False
-        if utime.ticks_ms() >= self.deadline:
-            self.reset()
-            return False
-        return True
-
     def set_state(self, state: State) -> bool:
+        if self.state == state and utime.ticks_ms() < self.deadline:
+            self.reset_timeout()
+            return True
+
         if self.is_busy():
             return False
 
@@ -999,7 +1018,7 @@ class DialogManager:
 
     async def keepalive_loop(self) -> None:
         try:
-            if not isinstance(self.state, (U2fState, Fido2State)):
+            if not isinstance(self.state, (U2fState, U2fUnlock, Fido2State)):
                 return
             while utime.ticks_ms() < self.deadline:
                 if self.state.keepalive_status() != _KEEPALIVE_STATUS_NONE:
@@ -1161,6 +1180,11 @@ def cmd_wink(req: Cmd) -> Cmd:
 
 
 def msg_register(req: Msg, dialog_mgr: DialogManager) -> Cmd:
+    if not config.is_unlocked():
+        new_state = U2fUnlock(req.cid, dialog_mgr.iface)  # type: State
+        dialog_mgr.set_state(new_state)
+        return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
+
     if not storage.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
@@ -1182,10 +1206,8 @@ def msg_register(req: Msg, dialog_mgr: DialogManager) -> Cmd:
 
     # check equality with last request
     new_state = U2fConfirmRegister(req.cid, dialog_mgr.iface, req.data, cred)
-    if not dialog_mgr.compare(new_state):
-        if not dialog_mgr.set_state(new_state):
-            return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
-    dialog_mgr.reset_timeout()
+    if not dialog_mgr.set_state(new_state):
+        return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
 
     # wait for a button or continue
     if dialog_mgr.result == _RESULT_NONE:
@@ -1239,6 +1261,11 @@ def msg_register_sign(challenge: bytes, cred: U2fCredential) -> bytes:
 
 
 def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
+    if not config.is_unlocked():
+        new_state = U2fUnlock(req.cid, dialog_mgr.iface)  # type: State
+        dialog_mgr.set_state(new_state)
+        return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
+
     if not storage.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
@@ -1280,10 +1307,8 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
 
     # check equality with last request
     new_state = U2fConfirmAuthenticate(req.cid, dialog_mgr.iface, req.data, cred)
-    if not dialog_mgr.compare(new_state):
-        if not dialog_mgr.set_state(new_state):
-            return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
-    dialog_mgr.reset_timeout()
+    if not dialog_mgr.set_state(new_state):
+        return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
 
     # wait for a button or continue
     if dialog_mgr.result == _RESULT_NONE:
