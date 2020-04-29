@@ -240,18 +240,17 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_derive_path(mp_obj_t self,
     mp_raise_ValueError("Path cannot be longer than 32 indexes");
   }
 
-  // convert path to int array
-  uint32_t pi;
-  uint32_t pints[plen];
-  for (pi = 0; pi < plen; pi++) {
-    pints[pi] = trezor_obj_get_uint(pitems[pi]);
-  }
-
-  if (!hdnode_private_ckd_cached(&o->hdnode, pints, plen, &o->fingerprint)) {
-    // derivation failed, reset the state and raise
-    o->fingerprint = 0;
-    memzero(&o->hdnode, sizeof(o->hdnode));
-    mp_raise_ValueError("Failed to derive path");
+  for (uint32_t pi = 0; pi < plen; pi++) {
+    if (pi == plen - 1) {
+      // fingerprint is calculated from the parent of the final derivation
+      o->fingerprint = hdnode_fingerprint(&o->hdnode);
+    }
+    uint32_t pitem = trezor_obj_get_uint(pitems[pi]);
+    if (!hdnode_private_ckd(&o->hdnode, pitem)) {
+      o->fingerprint = 0;
+      memzero(&o->hdnode, sizeof(o->hdnode));
+      mp_raise_ValueError("Failed to derive path");
+    }
   }
 
   return mp_const_none;
