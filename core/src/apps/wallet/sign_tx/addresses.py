@@ -28,7 +28,7 @@ class AddressError(Exception):
 
 
 def get_address(
-    script_type: int,
+    script_type: EnumTypeInputScriptType,
     coin: CoinInfo,
     node: bip32.HDNode,
     multisig: MultisigRedeemScriptType = None,
@@ -253,7 +253,9 @@ def validate_purpose(purpose: int, coin: CoinInfo) -> bool:
     return True
 
 
-def validate_purpose_against_script_type(purpose: int, script_type: int) -> bool:
+def validate_purpose_against_script_type(
+    purpose: int, script_type: EnumTypeInputScriptType
+) -> bool:
     """
     Validates purpose against provided input's script type:
     - 44 for spending address (script_type == SPENDADDRESS)
