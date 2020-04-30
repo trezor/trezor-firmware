@@ -20,25 +20,31 @@ if not utils.BITCOIN_ONLY:
     from apps.wallet.sign_tx import bitcoinlike, decred, zcash
 
 if False:
-    from typing import Union
+    from typing import Type, Union
+
+
+BITCOIN_NAMES = ("Bitcoin", "Regtest", "Testnet")
 
 
 async def sign_tx(ctx: wire.Context, msg: SignTx, keychain: seed.Keychain) -> TxRequest:
     coin_name = msg.coin_name if msg.coin_name is not None else "Bitcoin"
     coin = coins.by_name(coin_name)
-    try:
-        if not utils.BITCOIN_ONLY and coin.decred:
-            signer = decred.Decred(msg, keychain, coin).signer()
-        elif not utils.BITCOIN_ONLY and coin.overwintered:
-            signer = zcash.Overwintered(msg, keychain, coin).signer()
-        elif not utils.BITCOIN_ONLY and coin_name not in (
-            "Bitcoin",
-            "Regtest",
-            "Testnet",
-        ):
-            signer = bitcoinlike.Bitcoinlike(msg, keychain, coin).signer()
+
+    if not utils.BITCOIN_ONLY:
+        if coin.decred:
+            signer_class = decred.Decred  # type: Type[bitcoin.Bitcoin]
+        elif coin.overwintered:
+            signer_class = zcash.Overwintered
+        elif coin_name not in BITCOIN_NAMES:
+            signer_class = bitcoinlike.Bitcoinlike
         else:
-            signer = bitcoin.Bitcoin(msg, keychain, coin).signer()
+            signer_class = bitcoin.Bitcoin
+
+    else:
+        signer_class = bitcoin.Bitcoin
+
+    try:
+        signer = signer_class(msg, keychain, coin).signer()
     except common.SigningError as e:
         raise wire.Error(*e.args)
 
