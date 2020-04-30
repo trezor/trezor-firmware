@@ -48,7 +48,7 @@ async def sign_tx(ctx: wire.Context, msg: SignTx, keychain: seed.Keychain) -> Tx
     except common.SigningError as e:
         raise wire.Error(*e.args)
 
-    res = None  # type: Union[TxAck, bool]
+    res = None  # type: Union[TxAck, bool, None]
     while True:
         try:
             req = signer.send(res)
