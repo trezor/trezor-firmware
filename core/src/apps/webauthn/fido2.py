@@ -28,7 +28,17 @@ from apps.webauthn.resident_credentials import (
 )
 
 if False:
-    from typing import Any, Coroutine, Iterable, Iterator, List, Optional, Tuple
+    from typing import (
+        Any,
+        Callable,
+        Coroutine,
+        Iterable,
+        Iterator,
+        List,
+        Optional,
+        Tuple,
+        Union,
+    )
 
 _CID_BROADCAST = const(0xFFFFFFFF)  # broadcast channel id
 
@@ -756,6 +766,36 @@ class Fido2State(State):
         self.finished = True
 
 
+class Fido2Unlock(Fido2State):
+    def __init__(
+        self,
+        process_func: Callable[[Cmd, "DialogManager"], Union[State, Cmd]],
+        req: Cmd,
+        dialog_mgr: "DialogManager",
+    ) -> None:
+        super().__init__(req.cid, dialog_mgr.iface)
+        self.process_func = process_func
+        self.req = req
+        self.resp = None  # type: Optional[Cmd]
+        self.dialog_mgr = dialog_mgr
+
+    async def confirm_dialog(self) -> Union[bool, "State"]:
+        if not await verify_user(KeepaliveCallback(self.cid, self.iface)):
+            return False
+
+        set_homescreen()
+        resp = self.process_func(self.req, self.dialog_mgr)
+        if isinstance(resp, State):
+            return resp
+        else:
+            self.resp = resp
+            return True
+
+    async def on_confirm(self) -> None:
+        if self.resp:
+            await send_cmd(self.resp, self.iface)
+
+
 class Fido2ConfirmMakeCredential(Fido2State, ConfirmInfo):
     def __init__(
         self,
@@ -897,14 +937,14 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
 
 
 class Fido2ConfirmNoPin(State):
-    def __init__(self, cid: int, iface: io.HID) -> None:
-        super().__init__(cid, iface)
-        self.finished = True
-
     def timeout_ms(self) -> int:
         return _FIDO2_CONFIRM_TIMEOUT_MS
 
     async def confirm_dialog(self) -> bool:
+        cmd = cbor_error(self.cid, _ERR_UNSUPPORTED_OPTION)
+        await send_cmd(cmd, self.iface)
+        self.finished = True
+
         text = Text("FIDO2 Verify User", ui.ICON_WRONG, ui.RED)
         text.bold("Unable to verify user.")
         text.br_half()
@@ -1003,9 +1043,8 @@ class DialogManager:
         self.state = state
         self.reset_timeout()
         self.result = _RESULT_NONE
-        if state.keepalive_status() is not None:
-            self.keepalive = self.keepalive_loop()
-            loop.schedule(self.keepalive)
+        self.keepalive = self.keepalive_loop()
+        loop.schedule(self.keepalive)
         self.workflow = self.dialog_workflow()
         loop.schedule(self.workflow)
         return True
@@ -1427,6 +1466,23 @@ def algorithms_from_pub_key_cred_params(pub_key_cred_params: List[dict]) -> List
 
 
 def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
+    if config.is_unlocked():
+        resp = cbor_make_credential_process(req, dialog_mgr)
+    else:
+        resp = Fido2Unlock(cbor_make_credential_process, req, dialog_mgr)
+
+    if isinstance(resp, State):
+        if dialog_mgr.set_state(resp):
+            return None
+        else:
+            return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
+    else:
+        return resp
+
+
+def cbor_make_credential_process(
+    req: Cmd, dialog_mgr: DialogManager
+) -> Union[State, Cmd]:
     from apps.webauthn import knownapps
 
     if not storage.is_initialized():
@@ -1456,11 +1512,7 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         excluded_creds = credentials_from_descriptor_list(exclude_list, rp_id_hash)
         if not utils.is_empty_iterator(excluded_creds):
             # This authenticator is already registered.
-            if not dialog_mgr.set_state(
-                Fido2ConfirmExcluded(req.cid, dialog_mgr.iface, cred)
-            ):
-                return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
-            return None
+            return Fido2ConfirmExcluded(req.cid, dialog_mgr.iface, cred)
 
         # Check that the relying party supports ECDSA with SHA-256 or EdDSA. We don't support any other algorithms.
         pub_key_cred_params = param[_MAKECRED_CMD_PUB_KEY_CRED_PARAMS]
@@ -1520,32 +1572,21 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
 
     if user_verification and not config.has_pin():
         # User verification requested, but PIN is not enabled.
-        state_set = dialog_mgr.set_state(Fido2ConfirmNoPin(req.cid, dialog_mgr.iface))
-        if state_set:
-            return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
-        else:
-            return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
+        return Fido2ConfirmNoPin(req.cid, dialog_mgr.iface)
 
     # Check that the pinAuth parameter is absent. Client PIN is not supported.
     if _MAKECRED_CMD_PIN_AUTH in param:
         return cbor_error(req.cid, _ERR_PIN_AUTH_INVALID)
 
     # Ask user to confirm registration.
-    state_set = dialog_mgr.set_state(
-        Fido2ConfirmMakeCredential(
-            req.cid,
-            dialog_mgr.iface,
-            client_data_hash,
-            cred,
-            resident_key,
-            user_verification,
-        )
+    return Fido2ConfirmMakeCredential(
+        req.cid,
+        dialog_mgr.iface,
+        client_data_hash,
+        cred,
+        resident_key,
+        user_verification,
     )
-
-    if not state_set:
-        return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
-
-    return None
 
 
 def use_self_attestation(rp_id_hash: bytes) -> bool:
@@ -1607,6 +1648,23 @@ def cbor_make_credential_sign(
 
 
 def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
+    if config.is_unlocked():
+        resp = cbor_get_assertion_process(req, dialog_mgr)
+    else:
+        resp = Fido2Unlock(cbor_get_assertion_process, req, dialog_mgr)
+
+    if isinstance(resp, State):
+        if dialog_mgr.set_state(resp):
+            return None
+        else:
+            return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
+    else:
+        return resp
+
+
+def cbor_get_assertion_process(
+    req: Cmd, dialog_mgr: DialogManager
+) -> Union[State, Cmd]:
     if not storage.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
@@ -1672,18 +1730,12 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
 
     if user_verification and not config.has_pin():
         # User verification requested, but PIN is not enabled.
-        state_set = dialog_mgr.set_state(Fido2ConfirmNoPin(req.cid, dialog_mgr.iface))
-        if state_set:
-            return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
-        else:
-            return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
+        return Fido2ConfirmNoPin(req.cid, dialog_mgr.iface)
 
     if not cred_list:
         # No credentials. This authenticator is not registered.
         if user_presence:
-            state_set = dialog_mgr.set_state(
-                Fido2ConfirmNoCredentials(req.cid, dialog_mgr.iface, rp_id)
-            )
+            return Fido2ConfirmNoCredentials(req.cid, dialog_mgr.iface, rp_id)
         else:
             return cbor_error(req.cid, _ERR_NO_CREDENTIALS)
     elif not user_presence and not user_verification:
@@ -1706,22 +1758,15 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
             return cbor_error(req.cid, _ERR_OTHER)
     else:
         # Ask user to confirm one of the credentials.
-        state_set = dialog_mgr.set_state(
-            Fido2ConfirmGetAssertion(
-                req.cid,
-                dialog_mgr.iface,
-                client_data_hash,
-                cred_list,
-                hmac_secret,
-                resident,
-                user_verification,
-            )
+        return Fido2ConfirmGetAssertion(
+            req.cid,
+            dialog_mgr.iface,
+            client_data_hash,
+            cred_list,
+            hmac_secret,
+            resident,
+            user_verification,
         )
-
-    if not state_set:
-        return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
-
-    return None
 
 
 def cbor_get_assertion_hmac_secret(
