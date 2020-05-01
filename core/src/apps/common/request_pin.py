@@ -1,3 +1,5 @@
+import utime
+
 import storage.sd_salt
 from trezor import config, ui, wire
 from trezor.messages import ButtonRequestType
@@ -12,6 +14,9 @@ from apps.common.sdcard import SdCardUnavailable, request_sd_salt
 
 if False:
     from typing import Any, NoReturn, Optional, Tuple
+
+
+_last_successful_unlock = 0
 
 
 def can_lock_device() -> bool:
@@ -81,7 +86,17 @@ async def verify_user_pin(
     prompt: str = "Enter your PIN",
     allow_cancel: bool = True,
     retry: bool = True,
+    cache_time_ms: int = 0,
 ) -> None:
+    global _last_successful_unlock
+    if (
+        cache_time_ms
+        and _last_successful_unlock
+        and utime.ticks_ms() - _last_successful_unlock <= cache_time_ms
+        and config.is_unlocked()
+    ):
+        return
+
     if config.has_pin():
         pin = await request_pin(ctx, prompt, config.get_pin_rem(), allow_cancel)
         config.ensure_not_wipe_code(pin_to_int(pin))
@@ -93,6 +108,7 @@ async def verify_user_pin(
     except SdCardUnavailable:
         raise wire.PinCancelled("SD salt is unavailable")
     if config.unlock(pin_to_int(pin), salt):
+        _last_successful_unlock = utime.ticks_ms()
         return
     elif not config.has_pin():
         raise RuntimeError
@@ -102,6 +118,7 @@ async def verify_user_pin(
             ctx, "Wrong PIN, enter again", config.get_pin_rem(), allow_cancel
         )
         if config.unlock(pin_to_int(pin), salt):
+            _last_successful_unlock = utime.ticks_ms()
             return
 
     raise wire.PinInvalid

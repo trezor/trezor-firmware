@@ -141,6 +141,7 @@ _U2F_CONFIRM_TIMEOUT_MS = const(
 )  # maximum U2F pollling interval, Chrome uses 200 ms
 _FIDO2_CONFIRM_TIMEOUT_MS = const(60 * 1000)
 _POPUP_TIMEOUT_MS = const(4 * 1000)
+_UV_CACHE_TIME_MS = const(3 * 60 * 1000)  # user verification cache time
 
 # hid error codes
 _ERR_NONE = const(0x00)  # no error
@@ -593,7 +594,7 @@ async def verify_user(keepalive_callback: KeepaliveCallback) -> bool:
 
     try:
         trezor.pin.keepalive_callback = keepalive_callback
-        await verify_user_pin()
+        await verify_user_pin(cache_time_ms=_UV_CACHE_TIME_MS)
         ret = True
     except (PinCancelled, PinInvalid):
         ret = False
