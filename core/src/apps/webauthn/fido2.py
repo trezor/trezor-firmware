@@ -607,13 +607,14 @@ class State:
         self.iface = iface
         self.finished = False
 
-    def keepalive_status(self) -> Optional[int]:
-        return None
+    def keepalive_status(self) -> int:
+        # Run the keepalive loop to check for timeout, but do not send any keepalive messages.
+        return _KEEPALIVE_STATUS_NONE
 
     def timeout_ms(self) -> int:
         raise NotImplementedError
 
-    async def confirm_dialog(self) -> bool:
+    async def confirm_dialog(self) -> Union[bool, "State"]:
         pass
 
     async def on_confirm(self) -> None:
@@ -638,10 +639,6 @@ class U2fState(State, ConfirmInfo):
         self._cred = cred
         self._req_data = req_data
         self.load_icon(self._cred.rp_id_hash)
-
-    def keepalive_status(self) -> int:
-        # Run the keepalive loop to check for timeout, but do not send any keepalive messages.
-        return _KEEPALIVE_STATUS_NONE
 
     def timeout_ms(self) -> int:
         return _U2F_CONFIRM_TIMEOUT_MS
@@ -712,9 +709,6 @@ class U2fConfirmAuthenticate(U2fState):
 
 
 class U2fUnlock(State):
-    def keepalive_status(self) -> int:
-        return _KEEPALIVE_STATUS_NONE
-
     def timeout_ms(self) -> int:
         return _U2F_CONFIRM_TIMEOUT_MS
 
@@ -1018,7 +1012,7 @@ class DialogManager:
 
     async def keepalive_loop(self) -> None:
         try:
-            if not isinstance(self.state, (U2fState, U2fUnlock, Fido2State)):
+            if not self.state:
                 return
             while utime.ticks_ms() < self.deadline:
                 if self.state.keepalive_status() != _KEEPALIVE_STATUS_NONE:
@@ -1038,10 +1032,15 @@ class DialogManager:
         try:
             workflow.on_start(self.workflow)
             try:
-                if await self.state.confirm_dialog():
-                    self.result = _RESULT_CONFIRM
-                else:
-                    self.result = _RESULT_DECLINE
+                while self.result is _RESULT_NONE:
+                    result = await self.state.confirm_dialog()
+                    if isinstance(result, State):
+                        self.state = result
+                        self.reset_timeout()
+                    elif result is True:
+                        self.result = _RESULT_CONFIRM
+                    else:
+                        self.result = _RESULT_DECLINE
             finally:
                 if self.keepalive is not None:
                     loop.close(self.keepalive)
