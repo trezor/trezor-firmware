@@ -96,10 +96,11 @@ class HidHandle:
             else:
                 time.sleep(0.001)
 
-        LOG.log(DUMP_PACKETS, "read packet: {}".format(chunk.hex()))
         if len(chunk) != 64:
             raise TransportException("Unexpected chunk size: %d" % len(chunk))
-        return bytes(chunk)
+        chunk_bytes = bytes(chunk)
+        LOG.log(DUMP_PACKETS, "read packet: {}".format(chunk_bytes.hex()))
+        return chunk_bytes
 
     def probe_hid_version(self) -> int:
         n = self.handle.write([0, 63] + [0xFF] * 63)
