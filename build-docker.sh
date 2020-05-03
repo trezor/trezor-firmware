@@ -1,14 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-if [ "$1" = "--gcc_source" ]; then
-  TOOLCHAIN_FLAVOR=src
-  shift
-else
-  TOOLCHAIN_FLAVOR=x86_64-linux
-fi
-
-IMAGE=trezor-firmware-build.$TOOLCHAIN_FLAVOR
+IMAGE=trezor-firmware-build.nixos
 
 TAG=${1:-master}
 REPOSITORY=${2:-local}
@@ -21,7 +14,7 @@ else
   REPOSITORY=https://github.com/$REPOSITORY/trezor-firmware.git
 fi
 
-docker build -t "$IMAGE" --build-arg TOOLCHAIN_FLAVOR=$TOOLCHAIN_FLAVOR ci/
+docker build -t "$IMAGE" ci/
 
 USER=$(ls -lnd . | awk '{ print $3 }')
 GROUP=$(ls -lnd . | awk '{ print $4 }')
@@ -43,7 +36,7 @@ for BITCOIN_ONLY in 0 1; do
     --env PRODUCTION="$PRODUCTION" \
     --user="$USER:$GROUP" \
     "$IMAGE" \
-    /bin/sh -c "\
+    /nix/var/nix/profiles/default/bin/nix-shell --run "\
       cd /tmp && \
       git clone $REPOSITORY trezor-firmware && \
       cd trezor-firmware/core && \
@@ -69,7 +62,7 @@ for BITCOIN_ONLY in 0 1; do
     --env MEMORY_PROTECT="$MEMORY_PROTECT" \
     --user="$USER:$GROUP" \
     "$IMAGE" \
-    /bin/sh -c "\
+    /nix/var/nix/profiles/default/bin/nix-shell --run "\
       cd /tmp && \
       git clone $REPOSITORY trezor-firmware && \
       cd trezor-firmware/legacy && \
