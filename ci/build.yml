@@ -107,7 +107,7 @@ core unix frozen debug build:
     untracked: true
     expire_in: 1 week
 
-build core unix frozen regular darwin:
+core unix frozen regular darwin:
   stage: build
   tags:
     - darwin
