@@ -90,7 +90,8 @@ class HidHandle:
 
     def read_chunk(self) -> bytes:
         while True:
-            chunk = self.handle.read(64)
+            # hidapi seems to return lists of ints instead of bytes
+            chunk = bytes(self.handle.read(64))
             if chunk:
                 break
             else:
