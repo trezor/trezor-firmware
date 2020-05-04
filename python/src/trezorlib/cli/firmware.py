@@ -286,7 +286,7 @@ def firmware_update(
         # for bootloader < 1.8, keep the embedding
         # for bootloader 1.8.0 and up, strip the old OneV1 header
         if bootloader_onev2 and data[:4] == b"TRZR" and data[256 : 256 + 4] == b"TRZF":
-            click.echo("Extracting embedded firmware image (fingerprint may change).")
+            click.echo("Extracting embedded firmware image.")
             data = data[256:]
 
     if dry_run:
