@@ -9,6 +9,7 @@ stdenv.mkDerivation {
     check
     clang-tools
     gcc
+    git
     gnumake
     graphviz
     libffi
