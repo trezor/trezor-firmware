@@ -123,7 +123,9 @@ class Bitcoin:
             progress.advance()
             txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
             self.weight.add_input(txi)
-            await self.process_input(i, txi)
+            if input_is_segwit(txi):
+                self.segwit.add(i)
+            await self.process_input(txi)
 
     async def step2_confirm_outputs(self) -> None:
         txo_bin = TxOutputBinType()
@@ -133,7 +135,7 @@ class Bitcoin:
             txo_bin.amount = txo.amount
             txo_bin.script_pubkey = self.output_derive_script(txo)
             self.weight.add_output(txo_bin.script_pubkey)
-            await self.confirm_output(i, txo, txo_bin)
+            await self.confirm_output(txo, txo_bin)
 
     async def step3_confirm_tx(self) -> None:
         fee = self.total_in - self.total_out
@@ -186,7 +188,7 @@ class Bitcoin:
         self.write_tx_footer(self.serialized_tx, self.tx)
         await helpers.request_tx_finish(self.tx_req)
 
-    async def process_input(self, i: int, txi: TxInputType) -> None:
+    async def process_input(self, txi: TxInputType) -> None:
         self.wallet_path.add_input(txi)
         self.multisig_fingerprint.add_input(txi)
         writers.write_tx_input_check(self.h_confirmed, txi)
@@ -196,30 +198,27 @@ class Bitcoin:
             await helpers.confirm_foreign_address(txi.address_n)
 
         if input_is_segwit(txi):
-            self.segwit.add(i)
-            await self.process_segwit_input(i, txi)
+            await self.process_segwit_input(txi)
         elif input_is_nonsegwit(txi):
-            await self.process_nonsegwit_input(i, txi)
+            await self.process_nonsegwit_input(txi)
         else:
             raise SigningError(FailureType.DataError, "Wrong input script type")
 
-    async def process_segwit_input(self, i: int, txi: TxInputType) -> None:
-        await self.process_bip143_input(i, txi)
+    async def process_segwit_input(self, txi: TxInputType) -> None:
+        await self.process_bip143_input(txi)
 
-    async def process_nonsegwit_input(self, i: int, txi: TxInputType) -> None:
+    async def process_nonsegwit_input(self, txi: TxInputType) -> None:
         self.total_in += await self.get_prevtx_output_value(
             txi.prev_hash, txi.prev_index
         )
 
-    async def process_bip143_input(self, i: int, txi: TxInputType) -> None:
+    async def process_bip143_input(self, txi: TxInputType) -> None:
         if not txi.amount:
             raise SigningError(FailureType.DataError, "Expected input with amount")
         self.bip143_in += txi.amount
         self.total_in += txi.amount
 
-    async def confirm_output(
-        self, i: int, txo: TxOutputType, txo_bin: TxOutputBinType
-    ) -> None:
+    async def confirm_output(self, txo: TxOutputType, txo_bin: TxOutputBinType) -> None:
         if self.change_out == 0 and self.output_is_change(txo):
             # output is change and does not need confirmation
             self.change_out = txo.amount
@@ -228,7 +227,7 @@ class Bitcoin:
 
         self.write_tx_output(self.h_confirmed, txo_bin)
         self.hash143_add_output(txo_bin)
-        self.total_out += txo_bin.amount
+        self.total_out += txo.amount
 
     def on_negative_fee(self) -> None:
         raise SigningError(FailureType.NotEnoughFunds, "Not enough funds")
