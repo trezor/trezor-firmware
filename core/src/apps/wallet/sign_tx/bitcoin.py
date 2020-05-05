@@ -226,7 +226,7 @@ class Bitcoin:
         elif not await helpers.confirm_output(txo, self.coin):
             raise SigningError(FailureType.ActionCancelled, "Output cancelled")
 
-        writers.write_tx_output(self.h_confirmed, txo_bin)
+        self.write_tx_output(self.h_confirmed, txo_bin)
         self.hash143_add_output(txo_bin)
         self.total_out += txo_bin.amount
 
@@ -345,8 +345,8 @@ class Bitcoin:
             txo = await helpers.request_tx_output(self.tx_req, i, self.coin)
             txo_bin.amount = txo.amount
             txo_bin.script_pubkey = self.output_derive_script(txo)
-            writers.write_tx_output(h_check, txo_bin)
-            writers.write_tx_output(h_sign, txo_bin)
+            self.write_tx_output(h_check, txo_bin)
+            self.write_tx_output(h_sign, txo_bin)
 
         writers.write_uint32(h_sign, self.tx.lock_time)
         writers.write_uint32(h_sign, self.get_hash_type())
@@ -376,7 +376,7 @@ class Bitcoin:
         txo_bin = TxOutputBinType()
         txo_bin.amount = txo.amount
         txo_bin.script_pubkey = self.output_derive_script(txo)
-        writers.write_tx_output(self.serialized_tx, txo_bin)
+        self.write_tx_output(self.serialized_tx, txo_bin)
 
     async def get_prevtx_output_value(self, prev_hash: bytes, prev_index: int) -> int:
         amount_out = 0  # output amount
@@ -407,7 +407,7 @@ class Bitcoin:
             txo_bin = await helpers.request_tx_output(
                 self.tx_req, i, self.coin, prev_hash
             )
-            writers.write_tx_output(txh, txo_bin)
+            self.write_tx_output(txh, txo_bin)
             if i == prev_index:
                 amount_out = txo_bin.amount
                 self.check_prevtx_output(txo_bin)
@@ -436,6 +436,9 @@ class Bitcoin:
 
     def write_tx_input(self, w: writers.Writer, txi: TxInputType) -> None:
         writers.write_tx_input(w, txi)
+
+    def write_tx_output(self, w: writers.Writer, txo_bin: TxOutputBinType) -> None:
+        writers.write_tx_output(w, txo_bin)
 
     def write_tx_header(
         self, w: writers.Writer, tx: Union[SignTx, TransactionType], has_segwit: bool

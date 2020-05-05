@@ -66,6 +66,11 @@ def write_tx_input_decred_witness(w: Writer, i: TxInputType) -> None:
 
 def write_tx_output(w: Writer, o: TxOutputBinType) -> None:
     write_uint64(w, o.amount)
+    write_bytes_prefixed(w, o.script_pubkey)
+
+
+def write_tx_output_decred(w: Writer, o: TxOutputBinType) -> None:
+    write_uint64(w, o.amount)
     if o.decred_script_version is not None:
         write_uint16(w, o.decred_script_version)
     write_bytes_prefixed(w, o.script_pubkey)

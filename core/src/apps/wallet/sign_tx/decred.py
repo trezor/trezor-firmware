@@ -68,7 +68,7 @@ class Decred(Bitcoin):
             )
         txo_bin.decred_script_version = txo.decred_script_version
         await super().confirm_output(i, txo, txo_bin)
-        writers.write_tx_output(self.serialized_tx, txo_bin)
+        self.write_tx_output(self.serialized_tx, txo_bin)
 
     async def step4_serialize_inputs(self) -> None:
         writers.write_varint(self.serialized_tx, self.tx.inputs_count)
@@ -154,10 +154,13 @@ class Decred(Bitcoin):
         writers.write_tx_input_decred(self.h_prefix, txi)
 
     def hash143_add_output(self, txo_bin: TxOutputBinType) -> None:
-        writers.write_tx_output(self.h_prefix, txo_bin)
+        writers.write_tx_output_decred(self.h_prefix, txo_bin)
 
     def write_tx_input(self, w: writers.Writer, txi: TxInputType) -> None:
         writers.write_tx_input_decred(w, txi)
+
+    def write_tx_output(self, w: writers.Writer, txo_bin: TxOutputBinType) -> None:
+        writers.write_tx_output_decred(w, txo_bin)
 
     def write_tx_header(
         self, w: writers.Writer, tx: Union[SignTx, TransactionType], has_segwit: bool
