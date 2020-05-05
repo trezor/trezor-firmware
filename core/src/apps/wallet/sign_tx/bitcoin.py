@@ -490,6 +490,7 @@ class Bitcoin:
             self.wallet_path.output_matches(txo)
             and txo.address_n[-2] <= _BIP32_CHANGE_CHAIN
             and txo.address_n[-1] <= _BIP32_MAX_LAST_ELEMENT
+            and txo.amount > 0
         )
 
     # Tx Inputs
