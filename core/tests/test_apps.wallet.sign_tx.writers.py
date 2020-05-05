@@ -22,12 +22,12 @@ class TestWriters(unittest.TestCase):
         )
 
         b = bytearray()
-        writers.write_tx_input(b, inp)
+        writers.write_tx_input(b, inp, inp.script_sig)
         self.assertEqual(len(b), 32 + 4 + 1 + 10 + 4)
 
         for bad_prevhash in (b"", b"x", b"hello", b"x" * 33):
             inp.prev_hash = bad_prevhash
-            self.assertRaises(AssertionError, writers.write_tx_input, b, inp)
+            self.assertRaises(AssertionError, writers.write_tx_input, b, inp, inp.script_sig)
 
     def test_tx_input_check(self):
         inp = TxInputType(
