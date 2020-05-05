@@ -169,7 +169,7 @@ class TestZcashZip143(unittest.TestCase):
                 txo = TxOutputBinType()
                 txo.amount = o["amount"]
                 txo.script_pubkey = unhexlify(o["script_pubkey"])
-                zip143.hash143_add_output(txo)
+                zip143.hash143_add_output(txo, txo.script_pubkey)
 
             self.assertEqual(hexlify(get_tx_hash(zip143.h_prevouts)), v["prevouts_hash"])
             self.assertEqual(hexlify(get_tx_hash(zip143.h_sequence)), v["sequence_hash"])

@@ -128,14 +128,12 @@ class Bitcoin:
             await self.process_input(txi)
 
     async def step2_confirm_outputs(self) -> None:
-        txo_bin = TxOutputBinType()
         for i in range(self.tx.outputs_count):
             # STAGE_REQUEST_3_OUTPUT
             txo = await helpers.request_tx_output(self.tx_req, i, self.coin)
-            txo_bin.amount = txo.amount
-            txo_bin.script_pubkey = self.output_derive_script(txo)
-            self.weight.add_output(txo_bin.script_pubkey)
-            await self.confirm_output(txo, txo_bin)
+            script_pubkey = self.output_derive_script(txo)
+            self.weight.add_output(script_pubkey)
+            await self.confirm_output(txo, script_pubkey)
 
     async def step3_confirm_tx(self) -> None:
         fee = self.total_in - self.total_out
@@ -218,15 +216,15 @@ class Bitcoin:
         self.bip143_in += txi.amount
         self.total_in += txi.amount
 
-    async def confirm_output(self, txo: TxOutputType, txo_bin: TxOutputBinType) -> None:
+    async def confirm_output(self, txo: TxOutputType, script_pubkey: bytes) -> None:
         if self.change_out == 0 and self.output_is_change(txo):
             # output is change and does not need confirmation
             self.change_out = txo.amount
         elif not await helpers.confirm_output(txo, self.coin):
             raise SigningError(FailureType.ActionCancelled, "Output cancelled")
 
-        self.write_tx_output(self.h_confirmed, txo_bin)
-        self.hash143_add_output(txo_bin)
+        self.write_tx_output(self.h_confirmed, txo, script_pubkey)
+        self.hash143_add_output(txo, script_pubkey)
         self.total_out += txo.amount
 
     def on_negative_fee(self) -> None:
@@ -337,14 +335,12 @@ class Bitcoin:
 
         writers.write_varint(h_sign, self.tx.outputs_count)
 
-        txo_bin = TxOutputBinType()
         for i in range(self.tx.outputs_count):
             # STAGE_REQUEST_4_OUTPUT
             txo = await helpers.request_tx_output(self.tx_req, i, self.coin)
-            txo_bin.amount = txo.amount
-            txo_bin.script_pubkey = self.output_derive_script(txo)
-            self.write_tx_output(h_check, txo_bin)
-            self.write_tx_output(h_sign, txo_bin)
+            script_pubkey = self.output_derive_script(txo)
+            self.write_tx_output(h_check, txo, script_pubkey)
+            self.write_tx_output(h_sign, txo, script_pubkey)
 
         writers.write_uint32(h_sign, self.tx.lock_time)
         writers.write_uint32(h_sign, self.get_hash_type())
@@ -369,10 +365,8 @@ class Bitcoin:
     async def serialize_output(self, i: int) -> None:
         # STAGE_REQUEST_5_OUTPUT
         txo = await helpers.request_tx_output(self.tx_req, i, self.coin)
-        txo_bin = TxOutputBinType()
-        txo_bin.amount = txo.amount
-        txo_bin.script_pubkey = self.output_derive_script(txo)
-        self.write_tx_output(self.serialized_tx, txo_bin)
+        script_pubkey = self.output_derive_script(txo)
+        self.write_tx_output(self.serialized_tx, txo, script_pubkey)
 
     async def get_prevtx_output_value(self, prev_hash: bytes, prev_index: int) -> int:
         amount_out = 0  # output amount
@@ -403,7 +397,7 @@ class Bitcoin:
             txo_bin = await helpers.request_tx_output(
                 self.tx_req, i, self.coin, prev_hash
             )
-            self.write_tx_output(txh, txo_bin)
+            self.write_tx_output(txh, txo_bin, txo_bin.script_pubkey)
             if i == prev_index:
                 amount_out = txo_bin.amount
                 self.check_prevtx_output(txo_bin)
@@ -435,8 +429,13 @@ class Bitcoin:
     ) -> None:
         writers.write_tx_input(w, txi, script)
 
-    def write_tx_output(self, w: writers.Writer, txo_bin: TxOutputBinType) -> None:
-        writers.write_tx_output(w, txo_bin)
+    def write_tx_output(
+        self,
+        w: writers.Writer,
+        txo: Union[TxOutputType, TxOutputBinType],
+        script_pubkey: bytes,
+    ) -> None:
+        writers.write_tx_output(w, txo, script_pubkey)
 
     def write_tx_header(
         self, w: writers.Writer, tx: Union[SignTx, TransactionType], has_segwit: bool
@@ -519,8 +518,8 @@ class Bitcoin:
         writers.write_uint32(self.h_prevouts, txi.prev_index)
         writers.write_uint32(self.h_sequence, txi.sequence)
 
-    def hash143_add_output(self, txo_bin: TxOutputBinType) -> None:
-        writers.write_tx_output(self.h_outputs, txo_bin)
+    def hash143_add_output(self, txo: TxOutputType, script_pubkey) -> None:
+        writers.write_tx_output(self.h_outputs, txo, script_pubkey)
 
     def hash143_preimage_hash(self, txi: TxInputType, pubkeyhash: bytes) -> bytes:
         h_preimage = HashWriter(sha256())

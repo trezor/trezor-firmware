@@ -58,8 +58,8 @@ class TestSegwitBip143(unittest.TestCase):
         for txo in [self.out1, self.out2]:
             txo_bin = TxOutputBinType()
             txo_bin.amount = txo.amount
-            txo_bin.script_pubkey = output_derive_script(txo, coin)
-            bip143.hash143_add_output(txo_bin)
+            script_pubkey = output_derive_script(txo, coin)
+            bip143.hash143_add_output(txo_bin, script_pubkey)
 
         outputs_hash = get_tx_hash(bip143.h_outputs, double=coin.sign_hash_double)
         self.assertEqual(hexlify(outputs_hash), b'de984f44532e2173ca0d64314fcefe6d30da6f8cf27bafa706da61df8a226c83')
@@ -72,8 +72,8 @@ class TestSegwitBip143(unittest.TestCase):
         for txo in [self.out1, self.out2]:
             txo_bin = TxOutputBinType()
             txo_bin.amount = txo.amount
-            txo_bin.script_pubkey = output_derive_script(txo, coin)
-            bip143.hash143_add_output(txo_bin)
+            script_pubkey = output_derive_script(txo, coin)
+            bip143.hash143_add_output(txo_bin, script_pubkey)
 
         # test data public key hash
         result = bip143.hash143_preimage_hash(self.inp1, unhexlify('79091972186c449eb1ded22b78e40d009bdf0089'))

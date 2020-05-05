@@ -69,8 +69,8 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
         for txo in [self.out1, self.out2]:
             txo_bin = TxOutputBinType()
             txo_bin.amount = txo.amount
-            txo_bin.script_pubkey = output_derive_script(txo, coin)
-            bip143.hash143_add_output(txo_bin)
+            script_pubkey = output_derive_script(txo, coin)
+            bip143.hash143_add_output(txo_bin, script_pubkey)
 
         outputs_hash = get_tx_hash(bip143.h_outputs, double=coin.sign_hash_double)
         self.assertEqual(hexlify(outputs_hash), b'863ef3e1a92afbfdb97f31ad0fc7683ee943e9abcf2501590ff8f6551f47e5e5')
@@ -86,8 +86,8 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
         for txo in [self.out1, self.out2]:
             txo_bin = TxOutputBinType()
             txo_bin.amount = txo.amount
-            txo_bin.script_pubkey = output_derive_script(txo, coin)
-            bip143.hash143_add_output(txo_bin)
+            script_pubkey = output_derive_script(txo, coin)
+            bip143.hash143_add_output(txo_bin, script_pubkey)
 
         # test data public key hash
         # only for input 2 - input 1 is not segwit

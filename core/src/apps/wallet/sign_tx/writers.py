@@ -3,6 +3,7 @@ from micropython import const
 from trezor.crypto.hashlib import sha256
 from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputBinType import TxOutputBinType
+from trezor.messages.TxOutputType import TxOutputType
 from trezor.utils import ensure
 
 from apps.common.writers import (  # noqa: F401
@@ -17,6 +18,7 @@ from apps.common.writers import (  # noqa: F401
 )
 
 if False:
+    from typing import Union
     from apps.common.writers import Writer
     from trezor.utils import HashWriter
 
@@ -64,15 +66,19 @@ def write_tx_input_decred_witness(w: Writer, i: TxInputType, script_sig: bytes) 
     write_bytes_prefixed(w, script_sig)
 
 
-def write_tx_output(w: Writer, o: TxOutputBinType) -> None:
+def write_tx_output(
+    w: Writer, o: Union[TxOutputType, TxOutputBinType], script_pubkey: bytes
+) -> None:
     write_uint64(w, o.amount)
-    write_bytes_prefixed(w, o.script_pubkey)
+    write_bytes_prefixed(w, script_pubkey)
 
 
-def write_tx_output_decred(w: Writer, o: TxOutputBinType) -> None:
+def write_tx_output_decred(
+    w: Writer, o: Union[TxOutputType, TxOutputBinType], script_pubkey: bytes
+) -> None:
     write_uint64(w, o.amount)
     write_uint16(w, o.decred_script_version)
-    write_bytes_prefixed(w, o.script_pubkey)
+    write_bytes_prefixed(w, script_pubkey)
 
 
 def write_op_push(w: Writer, n: int) -> None:
