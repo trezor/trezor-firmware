@@ -61,7 +61,7 @@ class Decred(Bitcoin):
     async def confirm_output(
         self, i: int, txo: TxOutputType, txo_bin: TxOutputBinType
     ) -> None:
-        if txo.decred_script_version is not None and txo.decred_script_version != 0:
+        if txo.decred_script_version != 0:
             raise SigningError(
                 FailureType.ActionCancelled,
                 "Cannot send to output with script version != 0",
@@ -141,10 +141,7 @@ class Decred(Bitcoin):
         await helpers.request_tx_finish(self.tx_req)
 
     def check_prevtx_output(self, txo_bin: TxOutputBinType) -> None:
-        if (
-            txo_bin.decred_script_version is not None
-            and txo_bin.decred_script_version != 0
-        ):
+        if txo_bin.decred_script_version != 0:
             raise SigningError(
                 FailureType.ProcessError,
                 "Cannot use utxo that has script_version != 0",

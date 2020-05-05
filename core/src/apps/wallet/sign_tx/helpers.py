@@ -307,8 +307,12 @@ def sanitize_tx_binoutput(tx: TransactionType, coin: CoinInfo) -> TxOutputBinTyp
 def _sanitize_decred(
     tx: Union[TxInputType, TxOutputType, TxOutputBinType], coin: CoinInfo
 ) -> None:
-    if not coin.decred and tx.decred_script_version is not None:
-        raise SigningError(
-            FailureType.DataError,
-            "Decred details provided but Decred coin not specified.",
-        )
+    if coin.decred:
+        if tx.decred_script_version is None:
+            tx.decred_script_version = 0
+    else:
+        if tx.decred_script_version is not None:
+            raise SigningError(
+                FailureType.DataError,
+                "Decred details provided but Decred coin not specified.",
+            )
