@@ -29,7 +29,7 @@ from apps.wallet.sign_tx.matchcheck import MultisigFingerprintChecker, WalletPat
 if False:
     from typing import Set, Tuple, Union
 
-# Default signature hash type in Bitcoin, which signs the entire transaction except scripts.
+# Default signature hash type in Bitcoin which signs all inputs and all outputs of the transaction.
 _SIGHASH_ALL = const(0x01)
 
 # the chain id used for change
@@ -41,13 +41,6 @@ _BIP32_MAX_LAST_ELEMENT = const(1000000)
 
 # the number of bytes to preallocate for serialized transaction chunks
 _MAX_SERIALIZED_CHUNK_SIZE = const(2048)
-
-
-# Transaction signing
-# ===
-# see https://github.com/trezor/trezor-mcu/blob/master/firmware/signing.c#L84
-# for pseudo code overview
-# ===
 
 
 class Bitcoin:
@@ -119,7 +112,7 @@ class Bitcoin:
 
     async def step1_process_inputs(self) -> None:
         for i in range(self.tx.inputs_count):
-            # STAGE_REQUEST_1_INPUT
+            # STAGE_REQUEST_1_INPUT in legacy
             progress.advance()
             txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
             self.weight.add_input(txi)
@@ -129,7 +122,7 @@ class Bitcoin:
 
     async def step2_confirm_outputs(self) -> None:
         for i in range(self.tx.outputs_count):
-            # STAGE_REQUEST_3_OUTPUT
+            # STAGE_REQUEST_3_OUTPUT in legacy
             txo = await helpers.request_tx_output(self.tx_req, i, self.coin)
             script_pubkey = self.output_derive_script(txo)
             self.weight.add_output(script_pubkey)
@@ -231,7 +224,7 @@ class Bitcoin:
         raise SigningError(FailureType.NotEnoughFunds, "Not enough funds")
 
     async def serialize_segwit_input(self, i: int) -> None:
-        # STAGE_REQUEST_SEGWIT_INPUT
+        # STAGE_REQUEST_SEGWIT_INPUT in legacy
         txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
 
         if not input_is_segwit(txi):
@@ -268,7 +261,7 @@ class Bitcoin:
         return public_key, signature
 
     async def sign_segwit_input(self, i: int) -> None:
-        # STAGE_REQUEST_SEGWIT_WITNESS
+        # STAGE_REQUEST_SEGWIT_WITNESS in legacy
         txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
 
         if not input_is_segwit(txi):
@@ -302,7 +295,7 @@ class Bitcoin:
         writers.write_varint(h_sign, self.tx.inputs_count)
 
         for i in range(self.tx.inputs_count):
-            # STAGE_REQUEST_4_INPUT
+            # STAGE_REQUEST_4_INPUT in legacy
             txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
             writers.write_tx_input_check(h_check, txi)
             if i == i_sign:
@@ -336,7 +329,7 @@ class Bitcoin:
         writers.write_varint(h_sign, self.tx.outputs_count)
 
         for i in range(self.tx.outputs_count):
-            # STAGE_REQUEST_4_OUTPUT
+            # STAGE_REQUEST_4_OUTPUT in legacy
             txo = await helpers.request_tx_output(self.tx_req, i, self.coin)
             script_pubkey = self.output_derive_script(txo)
             self.write_tx_output(h_check, txo, script_pubkey)
@@ -363,7 +356,7 @@ class Bitcoin:
         self.set_serialized_signature(i_sign, signature)
 
     async def serialize_output(self, i: int) -> None:
-        # STAGE_REQUEST_5_OUTPUT
+        # STAGE_REQUEST_5_OUTPUT in legacy
         txo = await helpers.request_tx_output(self.tx_req, i, self.coin)
         script_pubkey = self.output_derive_script(txo)
         self.write_tx_output(self.serialized_tx, txo, script_pubkey)
@@ -371,7 +364,7 @@ class Bitcoin:
     async def get_prevtx_output_value(self, prev_hash: bytes, prev_index: int) -> int:
         amount_out = 0  # output amount
 
-        # STAGE_REQUEST_2_PREV_META
+        # STAGE_REQUEST_2_PREV_META in legacy
         tx = await helpers.request_tx_meta(self.tx_req, self.coin, prev_hash)
 
         if tx.outputs_cnt <= prev_index:
@@ -386,14 +379,14 @@ class Bitcoin:
         writers.write_varint(txh, tx.inputs_cnt)
 
         for i in range(tx.inputs_cnt):
-            # STAGE_REQUEST_2_PREV_INPUT
+            # STAGE_REQUEST_2_PREV_INPUT in legacy
             txi = await helpers.request_tx_input(self.tx_req, i, self.coin, prev_hash)
             self.write_tx_input(txh, txi, txi.script_sig)
 
         writers.write_varint(txh, tx.outputs_cnt)
 
         for i in range(tx.outputs_cnt):
-            # STAGE_REQUEST_2_PREV_OUTPUT
+            # STAGE_REQUEST_2_PREV_OUTPUT in legacy
             txo_bin = await helpers.request_tx_output(
                 self.tx_req, i, self.coin, prev_hash
             )
