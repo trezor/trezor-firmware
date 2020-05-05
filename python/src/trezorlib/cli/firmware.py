@@ -74,9 +74,7 @@ def validate_firmware(version, fw, expected_fingerprint=None):
         fingerprint_onev2 = firmware.digest(
             firmware.FirmwareFormat.TREZOR_ONE_V2, fw.embedded_onev2
         ).hex()
-        click.echo(
-            "Embedded v2 image fingerprint: {}".format(fingerprint_onev2)
-        )
+        click.echo("Embedded v2 image fingerprint: {}".format(fingerprint_onev2))
     if expected_fingerprint and fingerprint != expected_fingerprint:
         click.echo("Expected fingerprint: {}".format(expected_fingerprint))
         click.echo("Fingerprints do not match, aborting.")
