@@ -49,6 +49,7 @@ firmwares.
 
 - Exodus (closed source)
 - MagnumWallet (closed source)
+- CoinMate (closed source)
 - MyEtherWallet https://github.com/MyEtherWallet/MyEtherWallet
 - MyCrypto https://github.com/MyCryptoHQ/MyCrypto
 - MetaMask https://github.com/MetaMask/metamask-extension
@@ -57,6 +58,7 @@ firmwares.
 - Stellarterm https://github.com/stellarterm/stellarterm
 - frame https://github.com/floating/frame
 - lisk-desktop https://github.com/LiskHQ/lisk-desktop
+- Liskish Wallet https://github.com/hirishh/liskish-wallet/
 - web3-react https://github.com/NoahZinsmeister/web3-react
 - KyberSwap https://github.com/KyberNetwork/KyberSwap
 - Balance Manager https://github.com/balance-io/balance-manager
