@@ -52,22 +52,20 @@ class Decred(Bitcoin):
         self.write_tx_footer(self.serialized_tx, self.tx)
         self.write_tx_footer(self.h_prefix, self.tx)
 
-    async def process_input(self, i: int, txi: TxInputType) -> None:
-        await super().process_input(i, txi)
+    async def process_input(self, txi: TxInputType) -> None:
+        await super().process_input(txi)
 
         # Decred serializes inputs early.
         self.write_tx_input(self.serialized_tx, txi)
 
-    async def confirm_output(
-        self, i: int, txo: TxOutputType, txo_bin: TxOutputBinType
-    ) -> None:
+    async def confirm_output(self, txo: TxOutputType, txo_bin: TxOutputBinType) -> None:
         if txo.decred_script_version != 0:
             raise SigningError(
                 FailureType.ActionCancelled,
                 "Cannot send to output with script version != 0",
             )
         txo_bin.decred_script_version = txo.decred_script_version
-        await super().confirm_output(i, txo, txo_bin)
+        await super().confirm_output(txo, txo_bin)
         self.write_tx_output(self.serialized_tx, txo_bin)
 
     async def step4_serialize_inputs(self) -> None:

@@ -17,16 +17,16 @@ _SIGHASH_FORKID = const(0x40)
 
 
 class Bitcoinlike(Bitcoin):
-    async def process_segwit_input(self, i: int, txi: TxInputType) -> None:
+    async def process_segwit_input(self, txi: TxInputType) -> None:
         if not self.coin.segwit:
             raise SigningError(FailureType.DataError, "Segwit not enabled on this coin")
-        await super().process_segwit_input(i, txi)
+        await super().process_segwit_input(txi)
 
-    async def process_nonsegwit_input(self, i: int, txi: TxInputType) -> None:
+    async def process_nonsegwit_input(self, txi: TxInputType) -> None:
         if self.coin.force_bip143:
-            await self.process_bip143_input(i, txi)
+            await self.process_bip143_input(txi)
         else:
-            await super().process_nonsegwit_input(i, txi)
+            await super().process_nonsegwit_input(txi)
 
     async def sign_nonsegwit_bip143_input(self, i_sign: int) -> None:
         txi = await helpers.request_tx_input(self.tx_req, i_sign, self.coin)

@@ -70,8 +70,8 @@ class Overwintered(Bitcoinlike):
 
         await helpers.request_tx_finish(self.tx_req)
 
-    async def process_nonsegwit_input(self, i: int, txi: TxInputType) -> None:
-        await self.process_bip143_input(i, txi)
+    async def process_nonsegwit_input(self, txi: TxInputType) -> None:
+        await self.process_bip143_input(txi)
 
     async def sign_nonsegwit_input(self, i_sign: int) -> None:
         await self.sign_nonsegwit_bip143_input(i_sign)
