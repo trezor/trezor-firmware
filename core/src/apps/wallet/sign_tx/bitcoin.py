@@ -291,7 +291,7 @@ class Bitcoin:
         # should come out the same as h_confirmed, checked before signing the digest
         h_check = self.create_hash_writer()
 
-        self.write_tx_header(h_sign, self.tx, has_segwit=False)
+        self.write_tx_header(h_sign, self.tx, witness_marker=False)
         writers.write_varint(h_sign, self.tx.inputs_count)
 
         for i in range(self.tx.inputs_count):
@@ -374,8 +374,8 @@ class Bitcoin:
 
         txh = self.create_hash_writer()
 
-        # TODO set has_segwit correctly
-        self.write_tx_header(txh, tx, has_segwit=False)
+        # witnesses are not included in txid hash
+        self.write_tx_header(txh, tx, witness_marker=False)
         writers.write_varint(txh, tx.inputs_cnt)
 
         for i in range(tx.inputs_cnt):
@@ -431,10 +431,13 @@ class Bitcoin:
         writers.write_tx_output(w, txo, script_pubkey)
 
     def write_tx_header(
-        self, w: writers.Writer, tx: Union[SignTx, TransactionType], has_segwit: bool
+        self,
+        w: writers.Writer,
+        tx: Union[SignTx, TransactionType],
+        witness_marker: bool,
     ) -> None:
         writers.write_uint32(w, tx.version)  # nVersion
-        if has_segwit:
+        if witness_marker:
             writers.write_varint(w, 0x00)  # segwit witness marker
             writers.write_varint(w, 0x01)  # segwit witness flag
 

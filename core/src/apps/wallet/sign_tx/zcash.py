@@ -77,7 +77,7 @@ class Overwintered(Bitcoinlike):
         await self.sign_nonsegwit_bip143_input(i_sign)
 
     def write_tx_header(
-        self, w: Writer, tx: Union[SignTx, TransactionType], has_segwit: bool
+        self, w: Writer, tx: Union[SignTx, TransactionType], witness_marker: bool
     ) -> None:
         # nVersion | fOverwintered
         write_uint32(w, tx.version | OVERWINTERED)
