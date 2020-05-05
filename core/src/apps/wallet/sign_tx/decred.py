@@ -56,7 +56,7 @@ class Decred(Bitcoin):
         await super().process_input(txi)
 
         # Decred serializes inputs early.
-        self.write_tx_input(self.serialized_tx, txi)
+        self.write_tx_input(self.serialized_tx, txi, bytes())
 
     async def confirm_output(self, txo: TxOutputType, txo_bin: TxOutputBinType) -> None:
         if txo.decred_script_version != 0:
@@ -122,11 +122,10 @@ class Decred(Bitcoin):
 
             # serialize input with correct signature
             gc.collect()
-            txi_sign.script_sig = self.input_derive_script(
-                txi_sign, key_sign_pub, signature
+            script_sig = self.input_derive_script(txi_sign, key_sign_pub, signature)
+            writers.write_tx_input_decred_witness(
+                self.serialized_tx, txi_sign, script_sig
             )
-
-            writers.write_tx_input_decred_witness(self.serialized_tx, txi_sign)
             self.set_serialized_signature(i_sign, signature)
 
     async def step5_serialize_outputs(self) -> None:
@@ -151,7 +150,9 @@ class Decred(Bitcoin):
     def hash143_add_output(self, txo_bin: TxOutputBinType) -> None:
         writers.write_tx_output_decred(self.h_prefix, txo_bin)
 
-    def write_tx_input(self, w: writers.Writer, txi: TxInputType) -> None:
+    def write_tx_input(
+        self, w: writers.Writer, txi: TxInputType, script: bytes
+    ) -> None:
         writers.write_tx_input_decred(w, txi)
 
     def write_tx_output(self, w: writers.Writer, txo_bin: TxOutputBinType) -> None:

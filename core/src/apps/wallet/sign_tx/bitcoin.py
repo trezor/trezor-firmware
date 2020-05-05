@@ -246,9 +246,8 @@ class Bitcoin:
 
         node = self.keychain.derive(txi.address_n, self.coin.curve_name)
         key_sign_pub = node.public_key()
-        txi.script_sig = self.input_derive_script(txi, key_sign_pub)
-
-        self.write_tx_input(self.serialized_tx, txi)
+        script_sig = self.input_derive_script(txi, key_sign_pub)
+        self.write_tx_input(self.serialized_tx, txi, script_sig)
 
     def sign_bip143_input(self, txi: TxInputType) -> Tuple[bytes, bytes]:
         self.wallet_path.check_input(txi)
@@ -317,14 +316,14 @@ class Bitcoin:
                 # if multisig, do a sanity check to ensure we are signing with a key that is included in the multisig
                 if txi.multisig:
                     multisig.multisig_pubkey_index(txi.multisig, key_sign_pub)
-                # for the signing process the script_sig is equal
-                # to the previous tx's scriptPubKey (P2PKH) or a redeem script (P2SH)
+
+                # For the signing process the previous UTXO's scriptPubKey is included in h_sign.
                 if txi.script_type == InputScriptType.SPENDMULTISIG:
-                    txi.script_sig = scripts.output_script_multisig(
+                    script_pubkey = scripts.output_script_multisig(
                         multisig.multisig_get_pubkeys(txi.multisig), txi.multisig.m,
                     )
                 elif txi.script_type == InputScriptType.SPENDADDRESS:
-                    txi.script_sig = scripts.output_script_p2pkh(
+                    script_pubkey = scripts.output_script_p2pkh(
                         addresses.ecdsa_hash_pubkey(key_sign_pub, self.coin)
                     )
                 else:
@@ -333,8 +332,8 @@ class Bitcoin:
                     )
                 txi_sign = txi
             else:
-                txi.script_sig = bytes()
-            self.write_tx_input(h_sign, txi)
+                script_pubkey = bytes()
+            self.write_tx_input(h_sign, txi, script_pubkey)
 
         writers.write_varint(h_sign, self.tx.outputs_count)
 
@@ -363,10 +362,8 @@ class Bitcoin:
 
         # serialize input with correct signature
         gc.collect()
-        txi_sign.script_sig = self.input_derive_script(
-            txi_sign, key_sign_pub, signature
-        )
-        self.write_tx_input(self.serialized_tx, txi_sign)
+        script_sig = self.input_derive_script(txi_sign, key_sign_pub, signature)
+        self.write_tx_input(self.serialized_tx, txi_sign, script_sig)
         self.set_serialized_signature(i_sign, signature)
 
     async def serialize_output(self, i: int) -> None:
@@ -397,7 +394,7 @@ class Bitcoin:
         for i in range(tx.inputs_cnt):
             # STAGE_REQUEST_2_PREV_INPUT
             txi = await helpers.request_tx_input(self.tx_req, i, self.coin, prev_hash)
-            self.write_tx_input(txh, txi)
+            self.write_tx_input(txh, txi, txi.script_sig)
 
         writers.write_varint(txh, tx.outputs_cnt)
 
@@ -433,8 +430,10 @@ class Bitcoin:
     def get_hash_type(self) -> int:
         return _SIGHASH_ALL
 
-    def write_tx_input(self, w: writers.Writer, txi: TxInputType) -> None:
-        writers.write_tx_input(w, txi)
+    def write_tx_input(
+        self, w: writers.Writer, txi: TxInputType, script: bytes
+    ) -> None:
+        writers.write_tx_input(w, txi, script)
 
     def write_tx_output(self, w: writers.Writer, txo_bin: TxOutputBinType) -> None:
         writers.write_tx_output(w, txo_bin)

@@ -32,10 +32,10 @@ def write_bytes_prefixed(w: Writer, b: bytes) -> None:
     write_bytes_unchecked(w, b)
 
 
-def write_tx_input(w: Writer, i: TxInputType) -> None:
+def write_tx_input(w: Writer, i: TxInputType, script: bytes) -> None:
     write_bytes_reversed(w, i.prev_hash, TX_HASH_SIZE)
     write_uint32(w, i.prev_index)
-    write_bytes_prefixed(w, i.script_sig)
+    write_bytes_prefixed(w, script)
     write_uint32(w, i.sequence)
 
 
@@ -57,11 +57,11 @@ def write_tx_input_decred(w: Writer, i: TxInputType) -> None:
     write_uint32(w, i.sequence)
 
 
-def write_tx_input_decred_witness(w: Writer, i: TxInputType) -> None:
+def write_tx_input_decred_witness(w: Writer, i: TxInputType, script_sig: bytes) -> None:
     write_uint64(w, i.amount or 0)
     write_uint32(w, 0)  # block height fraud proof
     write_uint32(w, 0xFFFFFFFF)  # block index fraud proof
-    write_bytes_prefixed(w, i.script_sig)
+    write_bytes_prefixed(w, script_sig)
 
 
 def write_tx_output(w: Writer, o: TxOutputBinType) -> None:

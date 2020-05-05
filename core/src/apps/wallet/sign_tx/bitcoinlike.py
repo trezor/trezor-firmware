@@ -43,8 +43,8 @@ class Bitcoinlike(Bitcoin):
 
         # serialize input with correct signature
         gc.collect()
-        txi.script_sig = self.input_derive_script(txi, public_key, signature)
-        self.write_tx_input(self.serialized_tx, txi)
+        script_sig = self.input_derive_script(txi, public_key, signature)
+        self.write_tx_input(self.serialized_tx, txi, script_sig)
         self.set_serialized_signature(i_sign, signature)
 
     async def sign_nonsegwit_input(self, i_sign: int) -> None:
