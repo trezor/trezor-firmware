@@ -65,12 +65,15 @@ class Bitcoinlike(Bitcoin):
         return hashtype
 
     def write_tx_header(
-        self, w: writers.Writer, tx: Union[SignTx, TransactionType], has_segwit: bool
+        self,
+        w: writers.Writer,
+        tx: Union[SignTx, TransactionType],
+        witness_marker: bool,
     ) -> None:
         writers.write_uint32(w, tx.version)  # nVersion
         if self.coin.timestamp:
             writers.write_uint32(w, tx.timestamp)
-        if has_segwit:
+        if witness_marker:
             writers.write_varint(w, 0x00)  # segwit witness marker
             writers.write_varint(w, 0x01)  # segwit witness flag
 

@@ -32,7 +32,7 @@ class Decred(Bitcoin):
         ensure(coin.decred)
         super().__init__(tx, keychain, coin)
 
-        self.write_tx_header(self.serialized_tx, self.tx, has_segwit=False)
+        self.write_tx_header(self.serialized_tx, self.tx, witness_marker=True)
         writers.write_varint(self.serialized_tx, self.tx.inputs_count)
 
     def init_hash143(self) -> None:
@@ -163,12 +163,17 @@ class Decred(Bitcoin):
         writers.write_tx_output_decred(w, txo, script_pubkey)
 
     def write_tx_header(
-        self, w: writers.Writer, tx: Union[SignTx, TransactionType], has_segwit: bool
+        self,
+        w: writers.Writer,
+        tx: Union[SignTx, TransactionType],
+        witness_marker: bool,
     ) -> None:
-        if isinstance(tx, TransactionType):
-            version = tx.version | DECRED_SERIALIZE_NO_WITNESS
-        else:
+        # The upper 16 bits of the transaction version specify the serialization
+        # format and the lower 16 bits specify the version number.
+        if witness_marker:
             version = tx.version | DECRED_SERIALIZE_FULL
+        else:
+            version = tx.version | DECRED_SERIALIZE_NO_WITNESS
 
         writers.write_uint32(w, version)
 
