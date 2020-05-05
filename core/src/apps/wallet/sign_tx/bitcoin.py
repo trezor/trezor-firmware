@@ -310,27 +310,29 @@ class Bitcoin:
             txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
             writers.write_tx_input_check(h_check, txi)
             if i == i_sign:
-                txi_sign = txi
-                self.wallet_path.check_input(txi_sign)
-                self.multisig_fingerprint.check_input(txi_sign)
+                self.wallet_path.check_input(txi)
+                self.multisig_fingerprint.check_input(txi)
                 # NOTE: wallet_path is checked in write_tx_input_check()
                 node = self.keychain.derive(txi.address_n, self.coin.curve_name)
                 key_sign_pub = node.public_key()
+                # if multisig, do a sanity check to ensure we are signing with a key that is included in the multisig
+                if txi.multisig:
+                    multisig.multisig_pubkey_index(txi.multisig, key_sign_pub)
                 # for the signing process the script_sig is equal
                 # to the previous tx's scriptPubKey (P2PKH) or a redeem script (P2SH)
-                if txi_sign.script_type == InputScriptType.SPENDMULTISIG:
-                    txi_sign.script_sig = scripts.output_script_multisig(
-                        multisig.multisig_get_pubkeys(txi_sign.multisig),
-                        txi_sign.multisig.m,
+                if txi.script_type == InputScriptType.SPENDMULTISIG:
+                    txi.script_sig = scripts.output_script_multisig(
+                        multisig.multisig_get_pubkeys(txi.multisig), txi.multisig.m,
                     )
-                elif txi_sign.script_type == InputScriptType.SPENDADDRESS:
-                    txi_sign.script_sig = scripts.output_script_p2pkh(
+                elif txi.script_type == InputScriptType.SPENDADDRESS:
+                    txi.script_sig = scripts.output_script_p2pkh(
                         addresses.ecdsa_hash_pubkey(key_sign_pub, self.coin)
                     )
                 else:
                     raise SigningError(
                         FailureType.ProcessError, "Unknown transaction type"
                     )
+                txi_sign = txi
             else:
                 txi.script_sig = bytes()
             self.write_tx_input(h_sign, txi)
@@ -354,10 +356,6 @@ class Bitcoin:
             raise SigningError(
                 FailureType.ProcessError, "Transaction has changed during signing"
             )
-
-        # if multisig, do a sanity check to ensure we are signing with a key that is included in the multisig
-        if txi_sign.multisig:
-            multisig.multisig_pubkey_index(txi_sign.multisig, key_sign_pub)
 
         # compute the signature from the tx digest
         signature = ecdsa_sign(
