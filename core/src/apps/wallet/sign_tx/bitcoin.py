@@ -235,7 +235,7 @@ class Bitcoin:
         # NOTE: No need to check the multisig fingerprint, because we won't be signing
         # the script here. Signatures are produced in STAGE_REQUEST_SEGWIT_WITNESS.
 
-        node = self.keychain.derive(txi.address_n, self.coin.curve_name)
+        node = self.keychain.derive(txi.address_n)
         key_sign_pub = node.public_key()
         script_sig = self.input_derive_script(txi, key_sign_pub)
         self.write_tx_input(self.serialized_tx, txi, script_sig)
@@ -250,7 +250,7 @@ class Bitcoin:
             )
         self.bip143_in -= txi.amount
 
-        node = self.keychain.derive(txi.address_n, self.coin.curve_name)
+        node = self.keychain.derive(txi.address_n)
         public_key = node.public_key()
         hash143_hash = self.hash143_preimage_hash(
             txi, addresses.ecdsa_hash_pubkey(public_key, self.coin)
@@ -302,7 +302,7 @@ class Bitcoin:
                 self.wallet_path.check_input(txi)
                 self.multisig_fingerprint.check_input(txi)
                 # NOTE: wallet_path is checked in write_tx_input_check()
-                node = self.keychain.derive(txi.address_n, self.coin.curve_name)
+                node = self.keychain.derive(txi.address_n)
                 key_sign_pub = node.public_key()
                 # if multisig, do a sanity check to ensure we are signing with a key that is included in the multisig
                 if txi.multisig:
@@ -470,7 +470,7 @@ class Bitcoin:
                 ]
             except KeyError:
                 raise SigningError(FailureType.DataError, "Invalid script type")
-            node = self.keychain.derive(txo.address_n, self.coin.curve_name)
+            node = self.keychain.derive(txo.address_n)
             txo.address = addresses.get_address(
                 input_script_type, self.coin, node, txo.multisig
             )

@@ -2,11 +2,12 @@ from trezor.crypto import bip32
 from trezor.messages import InputScriptType
 from trezor.messages.Address import Address
 
-from apps.common import coins
+from .keychain import with_keychain
+from .sign_tx import addresses
+from .sign_tx.multisig import multisig_pubkey_index
+
 from apps.common.layout import address_n_to_str, show_address, show_qr, show_xpub
 from apps.common.paths import validate_path
-from apps.wallet.sign_tx import addresses
-from apps.wallet.sign_tx.multisig import multisig_pubkey_index
 
 if False:
     from typing import List
@@ -36,10 +37,8 @@ async def show_xpubs(
     return False
 
 
-async def get_address(ctx, msg, keychain):
-    coin_name = msg.coin_name or "Bitcoin"
-    coin = coins.by_name(coin_name)
-
+@with_keychain
+async def get_address(ctx, msg, keychain, coin):
     await validate_path(
         ctx,
         addresses.validate_full_path,
@@ -50,7 +49,7 @@ async def get_address(ctx, msg, keychain):
         script_type=msg.script_type,
     )
 
-    node = keychain.derive(msg.address_n, coin.curve_name)
+    node = keychain.derive(msg.address_n)
     address = addresses.get_address(msg.script_type, coin, node, msg.multisig)
     address_short = addresses.address_short(coin, address)
     if msg.script_type == InputScriptType.SPENDWITNESS:

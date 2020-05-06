@@ -5,9 +5,12 @@ from trezor.messages.CipheredKeyValue import CipheredKeyValue
 from trezor.ui.text import Text
 
 from apps.common.confirm import require_confirm
+from apps.common.seed import get_keychain
 
 
-async def cipher_key_value(ctx, msg, keychain):
+async def cipher_key_value(ctx, msg):
+    keychain = await get_keychain(ctx, [("secp256k1", [])])
+
     if len(msg.value) % 16 > 0:
         raise wire.DataError("Value length must be a multiple of 16")
 
