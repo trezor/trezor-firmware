@@ -8,18 +8,20 @@ from trezor.utils import chunks
 
 from apps.common import HARDENED, coins
 from apps.common.confirm import require_confirm
+from apps.common.seed import get_keychain
 
 
-async def sign_identity(ctx, msg, keychain):
+async def sign_identity(ctx, msg):
     if msg.ecdsa_curve_name is None:
         msg.ecdsa_curve_name = "secp256k1"
 
+    keychain = await get_keychain(ctx, [(msg.ecdsa_curve_name, [])])
     identity = serialize_identity(msg.identity)
 
     await require_confirm_sign_identity(ctx, msg.identity, msg.challenge_visual)
 
     address_n = get_identity_path(identity, msg.identity.index or 0)
-    node = keychain.derive(address_n, msg.ecdsa_curve_name)
+    node = keychain.derive(address_n)
 
     coin = coins.by_name("Bitcoin")
     if msg.ecdsa_curve_name == "secp256k1":

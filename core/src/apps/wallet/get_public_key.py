@@ -3,16 +3,42 @@ from trezor.messages import InputScriptType
 from trezor.messages.HDNodeType import HDNodeType
 from trezor.messages.PublicKey import PublicKey
 
-from apps.common import coins, layout
+from .keychain import get_keychain_for_coin
+
+from apps.common import HARDENED, coins, layout, seed
 
 
-async def get_public_key(ctx, msg, keychain):
-    coin_name = msg.coin_name or "Bitcoin"
-    coin = coins.by_name(coin_name)
-    curve_name = msg.ecdsa_curve_name or coin.curve_name
+async def get_keychain_for_curve(ctx: wire.Context, curve_name: str) -> seed.Keychain:
+    """Set up a keychain for SLIP-13 and SLIP-17 namespaces with a specified curve."""
+    namespaces = [
+        (curve_name, [13 | HARDENED]),
+        (curve_name, [17 | HARDENED]),
+    ]
+    return await seed.get_keychain(ctx, namespaces)
+
+
+async def get_public_key(ctx, msg):
     script_type = msg.script_type or InputScriptType.SPENDADDRESS
 
-    node = keychain.derive(msg.address_n, curve_name=curve_name)
+    if msg.ecdsa_curve_name is not None:
+        # If a curve name is provided, disallow coin-specific features.
+        if (
+            msg.coin_name is not None
+            or msg.script_type is not InputScriptType.SPENDADDRESS
+        ):
+            raise wire.DataError(
+                "Cannot use coin_name or script_type with ecdsa_curve_name"
+            )
+
+        coin = coins.by_name("Bitcoin")
+        # only allow SLIP-13/17 namespaces
+        keychain = await get_keychain_for_curve(ctx, msg.ecdsa_curve_name)
+
+    else:
+        # select curve and namespaces based on the requested coin properties
+        keychain, coin = await get_keychain_for_coin(ctx, msg.coin_name)
+
+    node = keychain.derive(msg.address_n)
 
     if (
         script_type in [InputScriptType.SPENDADDRESS, InputScriptType.SPENDMULTISIG]

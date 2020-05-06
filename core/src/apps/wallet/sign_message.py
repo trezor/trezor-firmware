@@ -3,18 +3,18 @@ from trezor.crypto.curve import secp256k1
 from trezor.messages.InputScriptType import SPENDADDRESS, SPENDP2SHWITNESS, SPENDWITNESS
 from trezor.messages.MessageSignature import MessageSignature
 
-from apps.common import coins
+from .keychain import with_keychain
+from .sign_tx.addresses import get_address, validate_full_path
+
 from apps.common.paths import validate_path
 from apps.common.signverify import message_digest, require_confirm_sign_message
-from apps.wallet.sign_tx.addresses import get_address, validate_full_path
 
 
-async def sign_message(ctx, msg, keychain):
+@with_keychain
+async def sign_message(ctx, msg, keychain, coin):
     message = msg.message
     address_n = msg.address_n
-    coin_name = msg.coin_name or "Bitcoin"
     script_type = msg.script_type or 0
-    coin = coins.by_name(coin_name)
 
     await require_confirm_sign_message(ctx, "Sign message", message)
     await validate_path(
@@ -28,7 +28,7 @@ async def sign_message(ctx, msg, keychain):
         validate_script_type=False,
     )
 
-    node = keychain.derive(address_n, coin.curve_name)
+    node = keychain.derive(address_n)
     seckey = node.private_key()
 
     address = get_address(script_type, coin, node)

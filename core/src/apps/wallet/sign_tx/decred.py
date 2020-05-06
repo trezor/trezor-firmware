@@ -80,7 +80,7 @@ class Decred(Bitcoin):
             self.wallet_path.check_input(txi_sign)
             self.multisig_fingerprint.check_input(txi_sign)
 
-            key_sign = self.keychain.derive(txi_sign.address_n, self.coin.curve_name)
+            key_sign = self.keychain.derive(txi_sign.address_n)
             key_sign_pub = key_sign.public_key()
 
             if txi_sign.script_type == InputScriptType.SPENDMULTISIG:

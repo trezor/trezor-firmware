@@ -4,17 +4,10 @@ from trezor.messages.SignTx import SignTx
 from trezor.messages.TxAck import TxAck
 from trezor.messages.TxRequest import TxRequest
 
-from apps.common import coins, paths, seed
-from apps.wallet.sign_tx import (
-    addresses,
-    bitcoin,
-    common,
-    helpers,
-    layout,
-    multisig,
-    progress,
-    scripts,
-)
+from ..keychain import with_keychain
+from . import addresses, bitcoin, common, helpers, layout, multisig, progress, scripts
+
+from apps.common import coininfo, paths, seed
 
 if not utils.BITCOIN_ONLY:
     from apps.wallet.sign_tx import bitcoinlike, decred, zcash
@@ -26,16 +19,16 @@ if False:
 BITCOIN_NAMES = ("Bitcoin", "Regtest", "Testnet")
 
 
-async def sign_tx(ctx: wire.Context, msg: SignTx, keychain: seed.Keychain) -> TxRequest:
-    coin_name = msg.coin_name if msg.coin_name is not None else "Bitcoin"
-    coin = coins.by_name(coin_name)
-
+@with_keychain
+async def sign_tx(
+    ctx: wire.Context, msg: SignTx, keychain: seed.Keychain, coin: coininfo.CoinInfo
+) -> TxRequest:
     if not utils.BITCOIN_ONLY:
         if coin.decred:
             signer_class = decred.Decred  # type: Type[bitcoin.Bitcoin]
         elif coin.overwintered:
             signer_class = zcash.Overwintered
-        elif coin_name not in BITCOIN_NAMES:
+        elif coin.coin_name not in BITCOIN_NAMES:
             signer_class = bitcoinlike.Bitcoinlike
         else:
             signer_class = bitcoin.Bitcoin
