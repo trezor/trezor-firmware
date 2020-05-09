@@ -6,6 +6,8 @@
 
 /core/embed @prusnak
 
+/core/src/apps/monero @onvej-sl
+
 /core/src/apps/webauthn @andrewkozlik
 
 /core/src/storage @andrewkozlik
@@ -17,6 +19,12 @@
 /core/tools @matejcik
 
 /crypto @andrewkozlik @onvej-sl @prusnak
+
+/crypto/gui @prusnak
+
+/crypto/monero @onvej-sl
+
+/crypto/tools @prusnak
 
 /docs @tsusanka
 
