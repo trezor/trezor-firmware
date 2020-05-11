@@ -8,6 +8,7 @@ from trezorcrypto import (  # noqa: F401
     pbkdf2,
     random,
     rfc6979,
+    SecureContext,
 )
 
 if not utils.BITCOIN_ONLY:
