@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from .reporting import report_test
+from .reporting import testreport
 
 UI_TESTS_DIR = Path(__file__).parent.resolve()
 HASH_FILE = UI_TESTS_DIR / "fixtures.json"
@@ -61,7 +61,7 @@ def _process_tested(fixture_test_path, test_name):
     _rename_records(actual_path)
 
     if actual_hash != expected_hash:
-        file_path = report_test.failed(
+        file_path = testreport.failed(
             fixture_test_path, test_name, actual_hash, expected_hash
         )
 
@@ -71,7 +71,7 @@ def _process_tested(fixture_test_path, test_name):
             )
         )
     else:
-        report_test.passed(fixture_test_path, test_name, actual_hash)
+        testreport.passed(fixture_test_path, test_name, actual_hash)
 
 
 @contextmanager
