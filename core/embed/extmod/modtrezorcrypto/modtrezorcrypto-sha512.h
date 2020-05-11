@@ -45,7 +45,7 @@ STATIC mp_obj_t mod_trezorcrypto_Sha512_make_new(const mp_obj_type_t *type,
                                                  size_t n_args, size_t n_kw,
                                                  const mp_obj_t *args) {
   mp_arg_check_num(n_args, n_kw, 0, 1, false);
-  mp_obj_Sha512_t *o = m_new_obj(mp_obj_Sha512_t);
+  mp_obj_Sha512_t *o = m_new_obj_with_finaliser(mp_obj_Sha512_t);
   o->base.type = type;
   sha512_Init(&(o->ctx));
   if (n_args == 1) {

@@ -117,7 +117,7 @@ static uint64_t mp_obj_get_uint64(mp_const_obj_t arg) {
 }
 
 STATIC mp_obj_t mp_obj_new_scalar() {
-  mp_obj_bignum256modm_t *o = m_new_obj(mp_obj_bignum256modm_t);
+  mp_obj_bignum256modm_t *o = m_new_obj_with_finaliser(mp_obj_bignum256modm_t);
   o->base.type = &mod_trezorcrypto_monero_bignum256modm_type;
   set256_modm(o->p, 0);
   return MP_OBJ_FROM_PTR(o);
@@ -133,7 +133,7 @@ STATIC mp_obj_t mp_obj_new_scalar_r(mp_obj_t r) {
 }
 
 STATIC mp_obj_t mp_obj_new_ge25519() {
-  mp_obj_ge25519_t *o = m_new_obj(mp_obj_ge25519_t);
+  mp_obj_ge25519_t *o = m_new_obj_with_finaliser(mp_obj_ge25519_t);
   o->base.type = &mod_trezorcrypto_monero_ge25519_type;
   ge25519_set_neutral(&o->p);
   return MP_OBJ_FROM_PTR(o);
@@ -189,7 +189,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_ge25519_make_new(
     const mp_obj_type_t *type, size_t n_args, size_t n_kw,
     const mp_obj_t *args) {
   mp_arg_check_num(n_args, n_kw, 0, 1, false);
-  mp_obj_ge25519_t *o = m_new_obj(mp_obj_ge25519_t);
+  mp_obj_ge25519_t *o = m_new_obj_with_finaliser(mp_obj_ge25519_t);
   o->base.type = type;
 
   if (n_args == 0 || args[0] == mp_const_none) {
@@ -228,7 +228,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_bignum256modm_make_new(
     const mp_obj_type_t *type, size_t n_args, size_t n_kw,
     const mp_obj_t *args) {
   mp_arg_check_num(n_args, n_kw, 0, 1, false);
-  mp_obj_bignum256modm_t *o = m_new_obj(mp_obj_bignum256modm_t);
+  mp_obj_bignum256modm_t *o = m_new_obj_with_finaliser(mp_obj_bignum256modm_t);
   o->base.type = type;
 
   if (n_args == 0 || args[0] == mp_const_none) {
@@ -286,7 +286,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_hasher_make_new(
     const mp_obj_type_t *type, size_t n_args, size_t n_kw,
     const mp_obj_t *args) {
   mp_arg_check_num(n_args, n_kw, 0, 1, false);
-  mp_obj_hasher_t *o = m_new_obj(mp_obj_hasher_t);
+  mp_obj_hasher_t *o = m_new_obj_with_finaliser(mp_obj_hasher_t);
   o->base.type = type;
   xmr_hasher_init(&(o->h));
 
@@ -1350,7 +1350,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 
 STATIC mp_obj_t mod_trezorcrypto_monero_hasher_copy(mp_obj_t self) {
   mp_obj_hasher_t *o = MP_OBJ_TO_PTR(self);
-  mp_obj_hasher_t *cp = m_new_obj(mp_obj_hasher_t);
+  mp_obj_hasher_t *cp = m_new_obj_with_finaliser(mp_obj_hasher_t);
   cp->base.type = o->base.type;
   memcpy(&(cp->h), &(o->h), sizeof(Hasher));
   return MP_OBJ_FROM_PTR(o);

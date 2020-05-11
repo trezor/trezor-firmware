@@ -18,12 +18,20 @@
  */
 
 #include "common.h"
+#include "py/gc.h"
 #include "py/objstr.h"
 
 #include "vendor/secp256k1-zkp/include/secp256k1.h"
 #include "vendor/secp256k1-zkp/include/secp256k1_ecdh.h"
 #include "vendor/secp256k1-zkp/include/secp256k1_preallocated.h"
 #include "vendor/secp256k1-zkp/include/secp256k1_recovery.h"
+
+// "maybe" = do not fail if allocation fails
+// "with_finaliser" = pass true to gc_alloc
+// combination of "malloc_maybe" and "malloc_with_finaliser" does not exist in
+// malloc.c, so we need to define our own version here.
+#define m_new_obj_var_maybe_with_finaliser(obj_type, var_type, var_num) \
+  gc_alloc(sizeof(obj_type) + sizeof(var_type) * (var_num), true)
 
 void secp256k1_default_illegal_callback_fn(const char *str, void *data) {
   (void)data;
@@ -64,7 +72,7 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_context_make_new(
   const size_t secp256k1_ctx_size = secp256k1_context_preallocated_size(
       SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
 
-  mp_obj_secp256k1_context_t *o = m_new_obj_var_maybe(
+  mp_obj_secp256k1_context_t *o = m_new_obj_var_maybe_with_finaliser(
       mp_obj_secp256k1_context_t, uint8_t, secp256k1_ctx_size);
   if (!o) {
     mp_raise_ValueError("secp256k1_zkp context is too large");
