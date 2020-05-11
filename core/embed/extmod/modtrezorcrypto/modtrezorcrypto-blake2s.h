@@ -85,7 +85,7 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2s_make_new(const mp_obj_type_t *type,
         "time");
   }
 
-  mp_obj_Blake2s_t *o = m_new_obj(mp_obj_Blake2s_t);
+  mp_obj_Blake2s_t *o = m_new_obj_with_finaliser(mp_obj_Blake2s_t);
   o->base.type = type;
   int res = 0;
 

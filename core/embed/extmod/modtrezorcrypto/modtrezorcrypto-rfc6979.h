@@ -40,7 +40,7 @@ STATIC mp_obj_t mod_trezorcrypto_Rfc6979_make_new(const mp_obj_type_t *type,
                                                   size_t n_args, size_t n_kw,
                                                   const mp_obj_t *args) {
   mp_arg_check_num(n_args, n_kw, 2, 2, false);
-  mp_obj_Rfc6979_t *o = m_new_obj(mp_obj_Rfc6979_t);
+  mp_obj_Rfc6979_t *o = m_new_obj_with_finaliser(mp_obj_Rfc6979_t);
   o->base.type = type;
   mp_buffer_info_t pkey, hash;
   mp_get_buffer_raise(args[0], &pkey, MP_BUFFER_READ);
