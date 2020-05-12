@@ -88,7 +88,7 @@ test_emu_u2f: ## run selected u2f device tests from u2f-tests-hid
 
 test_emu_fido2: ## run fido2 device tests
 	cd $(TESTPATH)/fido_tests/fido2 ; \
-		$(EMU_TEST) --slip0014 $(PYTEST) --sim tests/standard/ --vendor trezor $(TESTOPTS)
+		$(EMU_TEST) --slip0014 $(PYTEST) --maxfail=5 --sim tests/standard/ --vendor trezor $(TESTOPTS)
 
 test_emu_click: ## run click tests
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/click_tests $(TESTOPTS)
