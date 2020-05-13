@@ -16,9 +16,7 @@
 
 import pytest
 
-from trezorlib import btc
-
-from ..common import MNEMONIC_SLIP39_BASIC_20_3of6
+from ..common import MNEMONIC_SLIP39_BASIC_20_3of6, test_address
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6, passphrase=True)
@@ -26,13 +24,13 @@ from ..common import MNEMONIC_SLIP39_BASIC_20_3of6
 def test_3of6_passphrase(client):
     """
     BIP32 Root Key for passphrase TREZOR:
-    provided by Andrew, address calculated using T1
+    provided by Andrew, address calculated via https://iancoleman.io/bip39/
     xprv9s21ZrQH143K2pMWi8jrTawHaj16uKk4CSbvo4Zt61tcrmuUDMx2o1Byzcr3saXNGNvHP8zZgXVdJHsXVdzYFPavxvCyaGyGr1WkAYG83ce
     """
     assert client.features.passphrase_protection is True
     client.use_passphrase("TREZOR")
-    address = btc.get_address(client, "Bitcoin", [])
-    assert address == "18oZEMRWurCZW1FeK8sWYyXuWx2bFqEKyX"
+    address = test_address(client)
+    assert address == "mi4HXfRJAqCDyEdet5veunBvXLTKSxpuim"
 
 
 @pytest.mark.setup_client(
@@ -46,10 +44,10 @@ def test_3of6_passphrase(client):
 def test_2of5_passphrase(client):
     """
     BIP32 Root Key for passphrase TREZOR:
-    provided by Andrew, address calculated using T1
+    provided by Andrew, address calculated via https://iancoleman.io/bip39/
     xprv9s21ZrQH143K2o6EXEHpVy8TCYoMmkBnDCCESLdR2ieKwmcNG48ck2XJQY4waS7RUQcXqR9N7HnQbUVEDMWYyREdF1idQqxFHuCfK7fqFni
     """
     assert client.features.passphrase_protection is True
     client.use_passphrase("TREZOR")
-    address = btc.get_address(client, "Bitcoin", [])
-    assert address == "19Fjs9AvT13Y2Nx8GtoVfADmFWnccsPinQ"
+    address = test_address(client)
+    assert address == "mjXH4pN7TtbHp3tWLqVKktKuaQeByHMoBZ"

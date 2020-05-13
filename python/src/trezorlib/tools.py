@@ -40,6 +40,14 @@ def btc_hash(data):
     return hashlib.sha256(hashlib.sha256(data).digest()).digest()
 
 
+def tx_hash(data):
+    """Calculate and return double-SHA256 hash in reverse order.
+
+    This is what Bitcoin uses as txids.
+    """
+    return btc_hash(data)[::-1]
+
+
 def hash_160(public_key):
     md = hashlib.new("ripemd160")
     md.update(hashlib.sha256(public_key).digest())

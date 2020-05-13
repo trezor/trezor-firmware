@@ -18,68 +18,58 @@ import pytest
 
 from trezorlib import btc
 from trezorlib.exceptions import TrezorFailure
-from trezorlib.tools import H_
+from trezorlib.tools import parse_path
 
-from ..common import MNEMONIC12
+pytestmark = pytest.mark.skip_ui
+
+PATH_PRIVATE = parse_path("m/17h/0h/1h/2h/3h")
+PATH_PUBLIC = parse_path("m/17h/0h/1h/2h/3h/42")
+
+VECTORS = (  # curve, path, pubkey
+    (
+        "secp256k1",
+        PATH_PRIVATE,
+        "02f65ce170451f66f46daf9486b0cf266bd199a3e67f734e469556745a78d254ee",
+    ),
+    (
+        "secp256k1",
+        PATH_PUBLIC,
+        "0212f4629f4f224db0f778ca68abd1c53e21dd02e76dbd1f7312788544b5b1e042",
+    ),
+    (
+        "nist256p1",
+        PATH_PRIVATE,
+        "0324c6860c25cdf7a8c103666662ac6183bf5a181a3341ea4130dcc6fdee7919e4",
+    ),
+    (
+        "nist256p1",
+        PATH_PUBLIC,
+        "03b93f7e6c777143ad4eeb590aaa7cdcd95980cf68d3f75dc2c31ca637ec50c49b",
+    ),
+    (
+        "ed25519",
+        PATH_PRIVATE,
+        "002e28dc0346d6d30d4e33f53c47f2fa97f3cfb5e80fc30fa3570fccf30652718a",
+    ),
+)
 
 
-class TestMsgGetpublickeyCurve:
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_default_curve(self, client):
-        assert (
-            btc.get_public_node(client, [H_(111), 42]).node.public_key.hex()
-            == "02e7fcec053f0df94d88c86447970743e8a1979d242d09338dcf8687a9966f7fbc"
-        )
-        assert (
-            btc.get_public_node(client, [H_(111), H_(42)]).node.public_key.hex()
-            == "03ce7b690969d773ba9ed212464eb2b534b87b9b8a9383300bddabe1f093f79220"
-        )
+@pytest.mark.parametrize("curve, path, pubkey", VECTORS)
+def test_publickey_curve(client, curve, path, pubkey):
+    resp = btc.get_public_node(client, path, ecdsa_curve_name=curve)
+    assert resp.node.public_key.hex() == pubkey
 
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_secp256k1_curve(self, client):
-        assert (
-            btc.get_public_node(
-                client, [H_(111), 42], ecdsa_curve_name="secp256k1"
-            ).node.public_key.hex()
-            == "02e7fcec053f0df94d88c86447970743e8a1979d242d09338dcf8687a9966f7fbc"
-        )
-        assert (
-            btc.get_public_node(
-                client, [H_(111), H_(42)], ecdsa_curve_name="secp256k1"
-            ).node.public_key.hex()
-            == "03ce7b690969d773ba9ed212464eb2b534b87b9b8a9383300bddabe1f093f79220"
-        )
 
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_nist256p1_curve(self, client):
-        assert (
-            btc.get_public_node(
-                client, [H_(111), 42], ecdsa_curve_name="nist256p1"
-            ).node.public_key.hex()
-            == "02a9ce59b32bd64a70bc52aca96e5d09af65c6b9593ba2a60af8fccfe1437f2129"
-        )
-        assert (
-            btc.get_public_node(
-                client, [H_(111), H_(42)], ecdsa_curve_name="nist256p1"
-            ).node.public_key.hex()
-            == "026fe35d8afed67dbf0561a1d32922e8ad0cd0d86effbc82be970cbed7d9bab2c2"
-        )
+def test_ed25519_public(client):
+    with pytest.raises(TrezorFailure):
+        btc.get_public_node(client, PATH_PUBLIC, ecdsa_curve_name="ed25519")
 
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_ed25519_curve(self, client):
-        # ed25519 curve does not support public derivation, so test only private derivation paths
-        assert (
-            btc.get_public_node(
-                client, [H_(111), H_(42)], ecdsa_curve_name="ed25519"
-            ).node.public_key.hex()
-            == "0069a14b478e508eab6e93303f4e6f5c50b8136627830f2ed5c3a835fc6c0ea2b7"
+
+@pytest.mark.skip_t1
+def test_coin_and_curve(client):
+    with pytest.raises(
+        TrezorFailure, match="Cannot use coin_name or script_type with ecdsa_curve_name"
+    ):
+        btc.get_public_node(
+            client, PATH_PRIVATE, coin_name="Bitcoin", ecdsa_curve_name="ed25519"
         )
-        assert (
-            btc.get_public_node(
-                client, [H_(111), H_(65535)], ecdsa_curve_name="ed25519"
-            ).node.public_key.hex()
-            == "00514f73a05184458611b14c348fee4fd988d36cf3aee7207737861bac611de991"
-        )
-        # test failure when using public derivation
-        with pytest.raises(TrezorFailure):
-            btc.get_public_node(client, [H_(111), 42], ecdsa_curve_name="ed25519")

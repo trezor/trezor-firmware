@@ -16,16 +16,15 @@
 
 import pytest
 
-from trezorlib import btc, messages as proto
+from trezorlib import btc, messages
 from trezorlib.exceptions import TrezorFailure
-from trezorlib.tools import H_, parse_path
+from trezorlib.tools import parse_path
 
 from .. import bip32
-from ..common import MNEMONIC12
 
 
 def getmultisig(chain, nr, xpubs, signatures=[b"", b"", b""]):
-    return proto.MultisigRedeemScriptType(
+    return messages.MultisigRedeemScriptType(
         nodes=[bip32.deserialize(xpub) for xpub in xpubs],
         address_n=[chain, nr],
         signatures=signatures,
@@ -33,59 +32,49 @@ def getmultisig(chain, nr, xpubs, signatures=[b"", b"", b""]):
     )
 
 
+@pytest.mark.skip_ui
 class TestMsgGetaddress:
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_btc(self, client):
         assert (
-            btc.get_address(client, "Bitcoin", [])
-            == "1EfKbQupktEMXf4gujJ9kCFo83k1iMqwqK"
+            btc.get_address(client, "Bitcoin", parse_path("m/44'/0'/0'/0/0"))
+            == "1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL"
         )
         assert (
-            btc.get_address(client, "Bitcoin", [1])
-            == "1CK7SJdcb8z9HuvVft3D91HLpLC6KSsGb"
+            btc.get_address(client, "Bitcoin", parse_path("m/44'/0'/0'/0/1"))
+            == "1GWFxtwWmNVqotUPXLcKVL2mUKpshuJYo"
         )
         assert (
-            btc.get_address(client, "Bitcoin", [0, H_(1)])
-            == "1JVq66pzRBvqaBRFeU9SPVvg3er4ZDgoMs"
-        )
-        assert (
-            btc.get_address(client, "Bitcoin", [H_(9), 0])
-            == "1F4YdQdL9ZQwvcNTuy5mjyQxXkyCfMcP2P"
-        )
-        assert (
-            btc.get_address(client, "Bitcoin", [0, 9999999])
-            == "1GS8X3yc7ntzwGw9vXwj9wqmBWZkTFewBV"
+            btc.get_address(client, "Bitcoin", parse_path("m/44'/0'/0'/1/0"))
+            == "1DyHzbQUoQEsLxJn6M7fMD8Xdt1XvNiwNE"
         )
 
     @pytest.mark.altcoin
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_ltc(self, client):
         assert (
-            btc.get_address(client, "Litecoin", [])
-            == "LYtGrdDeqYUQnTkr5sHT2DKZLG7Hqg7HTK"
+            btc.get_address(client, "Litecoin", parse_path("m/44'/2'/0'/0/0"))
+            == "LcubERmHD31PWup1fbozpKuiqjHZ4anxcL"
         )
         assert (
-            btc.get_address(client, "Litecoin", [1])
-            == "LKRGNecThFP3Q6c5fosLVA53Z2hUDb1qnE"
+            btc.get_address(client, "Litecoin", parse_path("m/44'/2'/0'/0/1"))
+            == "LVWBmHBkCGNjSPHucvL2PmnuRAJnucmRE6"
         )
         assert (
-            btc.get_address(client, "Litecoin", [0, H_(1)])
-            == "LcinMK8pVrAtpz7Qpc8jfWzSFsDLgLYfG6"
-        )
-        assert (
-            btc.get_address(client, "Litecoin", [H_(9), 0])
-            == "LZHVtcwAEDf1BR4d67551zUijyLUpDF9EX"
-        )
-        assert (
-            btc.get_address(client, "Litecoin", [0, 9999999])
-            == "Laf5nGHSCT94C5dK6fw2RxuXPiw2ZuRR9S"
+            btc.get_address(client, "Litecoin", parse_path("m/44'/2'/0'/1/0"))
+            == "LWj6ApswZxay4cJEJES2sGe7fLMLRvvv8h"
         )
 
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_tbtc(self, client):
         assert (
-            btc.get_address(client, "Testnet", [111, 42])
-            == "moN6aN6NP1KWgnPSqzrrRPvx2x1UtZJssa"
+            btc.get_address(client, "Testnet", parse_path("m/44'/1'/0'/0/0"))
+            == "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q"
+        )
+        assert (
+            btc.get_address(client, "Testnet", parse_path("m/44'/1'/0'/0/1"))
+            == "mopZWqZZyQc3F2Sy33cvDtJchSAMsnLi7b"
+        )
+        assert (
+            btc.get_address(client, "Testnet", parse_path("m/44'/1'/0'/1/0"))
+            == "mm6kLYbGEL1tGe4ZA8xacfgRPdW1NLjCbZ"
         )
 
     @pytest.mark.altcoin
@@ -186,7 +175,9 @@ class TestMsgGetaddress:
     def test_bch_multisig(self, client):
         xpubs = []
         for n in range(1, 4):
-            node = btc.get_public_node(client, parse_path("44'/145'/%d'" % n))
+            node = btc.get_public_node(
+                client, parse_path("44'/145'/%d'" % n), coin_name="Bcash"
+            )
             xpubs.append(node.xpub)
 
         for nr in range(1, 4):
@@ -211,17 +202,39 @@ class TestMsgGetaddress:
                 == "bitcoincash:pp6kcpkhua7789g2vyj0qfkcux3yvje7euhyhltn0a"
             )
 
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_public_ckd(self, client):
-        node = btc.get_public_node(client, []).node
-        node_sub1 = btc.get_public_node(client, [1]).node
-        node_sub2 = bip32.public_ckd(node, [1])
+        node = btc.get_public_node(client, parse_path("m/44'/0'/0'")).node
+        node_sub1 = btc.get_public_node(client, parse_path("m/44'/0'/0'/1/0")).node
+        node_sub2 = bip32.public_ckd(node, [1, 0])
 
         assert node_sub1.chain_code == node_sub2.chain_code
         assert node_sub1.public_key == node_sub2.public_key
 
-        address1 = btc.get_address(client, "Bitcoin", [1])
+        address1 = btc.get_address(client, "Bitcoin", parse_path("m/44'/0'/0'/1/0"))
         address2 = bip32.get_address(node_sub2, 0)
 
-        assert address2 == "1CK7SJdcb8z9HuvVft3D91HLpLC6KSsGb"
+        assert address2 == "1DyHzbQUoQEsLxJn6M7fMD8Xdt1XvNiwNE"
         assert address1 == address2
+
+
+@pytest.mark.skip_t1
+@pytest.mark.skip_ui
+def test_invalid_path(client):
+    with pytest.raises(TrezorFailure, match="Forbidden key path"):
+        # slip44 id mismatch
+        btc.get_address(client, "Bitcoin", parse_path("m/44'/111'/0'/0/0"))
+
+
+@pytest.mark.skip_t1
+def test_unknown_path(client):
+    with client:
+        client.set_expected_responses(
+            [
+                messages.ButtonRequest(
+                    code=messages.ButtonRequestType.UnknownDerivationPath
+                ),
+                messages.Address(),
+            ]
+        )
+        # account number is too high
+        btc.get_address(client, "Bitcoin", parse_path("m/44'/0'/21'/0/0"))

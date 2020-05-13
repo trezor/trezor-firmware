@@ -3,7 +3,7 @@ from io import BytesIO
 
 import pytest
 
-from trezorlib import btc, messages
+from trezorlib import btc, messages, tools
 from trezorlib.exceptions import TrezorFailure
 
 from ..tx_cache import TxCache
@@ -77,7 +77,7 @@ def _check_error_message(value: bytes, model: str, message: str):
 @pytest.mark.parametrize("prev_hash", (None, b"", b"x", b"hello world", b"x" * 33))
 def test_invalid_prev_hash(client, prev_hash):
     inp1 = messages.TxInputType(
-        address_n=[0],
+        address_n=tools.parse_path("m/44h/0h/0h/0/0"),
         amount=123456789,
         prev_hash=prev_hash,
         prev_index=0,
@@ -99,7 +99,7 @@ def test_invalid_prev_hash(client, prev_hash):
 def test_invalid_prev_hash_attack(client, prev_hash):
     # prepare input with a valid prev-hash
     inp1 = messages.TxInputType(
-        address_n=[0],
+        address_n=tools.parse_path("m/44h/0h/0h/0/0"),
         amount=123456789,
         prev_hash=b"\x00" * 32,
         prev_index=0,
@@ -147,7 +147,9 @@ def test_invalid_prev_hash_in_prevtx(client, prev_hash):
     prev_tx.inputs[0].prev_hash = b"\x00" * 32
     tx_hash = hash_tx(serialize_tx(prev_tx))
 
-    inp0 = messages.TxInputType(address_n=[0], prev_hash=tx_hash, prev_index=0)
+    inp0 = messages.TxInputType(
+        address_n=tools.parse_path("m/44h/0h/0h/0/0"), prev_hash=tx_hash, prev_index=0
+    )
     out1 = messages.TxOutputType(
         address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
         amount=1000,
