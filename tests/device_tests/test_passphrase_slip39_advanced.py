@@ -16,9 +16,11 @@
 
 import pytest
 
-from trezorlib import btc
-
-from ..common import MNEMONIC_SLIP39_ADVANCED_20, MNEMONIC_SLIP39_ADVANCED_33
+from ..common import (
+    MNEMONIC_SLIP39_ADVANCED_20,
+    MNEMONIC_SLIP39_ADVANCED_33,
+    test_address,
+)
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_20, passphrase=True)
@@ -26,17 +28,17 @@ from ..common import MNEMONIC_SLIP39_ADVANCED_20, MNEMONIC_SLIP39_ADVANCED_33
 def test_128bit_passphrase(client):
     """
     BIP32 Root Key for passphrase TREZOR:
-    provided by Andrew, address calculated using Model T
+    provided by Andrew, address calculated via https://iancoleman.io/bip39/
     xprv9s21ZrQH143K3dzDLfeY3cMp23u5vDeFYftu5RPYZPucKc99mNEddU4w99GxdgUGcSfMpVDxhnR1XpJzZNXRN1m6xNgnzFS5MwMP6QyBRKV
     """
     assert client.features.passphrase_protection is True
     client.use_passphrase("TREZOR")
-    address = btc.get_address(client, "Bitcoin", [])
-    assert address == "1CX5rv2vbSV8YFAZEAdMwRVqbxxswPnSPw"
+    address = test_address(client)
+    assert address == "mkKDUMRR1CcK8eLAzCZAjKnNbCquPoWPxN"
     client.state = None
     client.clear_session()
     client.use_passphrase("ROZERT")
-    address_compare = btc.get_address(client, "Bitcoin", [])
+    address_compare = test_address(client)
     assert address != address_compare
 
 
@@ -45,15 +47,15 @@ def test_128bit_passphrase(client):
 def test_256bit_passphrase(client):
     """
     BIP32 Root Key for passphrase TREZOR:
-    provided by Andrew, address calculated using Model T
+    provided by Andrew, address calculated via https://iancoleman.io/bip39/
     xprv9s21ZrQH143K2UspC9FRPfQC9NcDB4HPkx1XG9UEtuceYtpcCZ6ypNZWdgfxQ9dAFVeD1F4Zg4roY7nZm2LB7THPD6kaCege3M7EuS8v85c
     """
     assert client.features.passphrase_protection is True
     client.use_passphrase("TREZOR")
-    address = btc.get_address(client, "Bitcoin", [])
-    assert address == "18oNx6UczHWASBQXc5XQqdSdAAZyhUwdQU"
+    address = test_address(client)
+    assert address == "mxVtGxUJ898WLzPMmy6PT1FDHD1GUCWGm7"
     client.state = None
     client.clear_session()
     client.use_passphrase("ROZERT")
-    address_compare = btc.get_address(client, "Bitcoin", [])
+    address_compare = test_address(client)
     assert address != address_compare

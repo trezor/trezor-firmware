@@ -301,7 +301,9 @@ class TestMsgSigntxBch:
     @pytest.mark.multisig
     def test_send_bch_multisig_wrongchange(self, client):
         nodes = [
-            btc.get_public_node(client, parse_path("48'/145'/%d'" % i)).node
+            btc.get_public_node(
+                client, parse_path(f"48'/145'/{i}'"), coin_name="Bcash"
+            ).node
             for i in range(1, 4)
         ]
 
@@ -374,7 +376,9 @@ class TestMsgSigntxBch:
     @pytest.mark.multisig
     def test_send_bch_multisig_change(self, client):
         nodes = [
-            btc.get_public_node(client, parse_path("48'/145'/%d'" % i)).node
+            btc.get_public_node(
+                client, parse_path(f"48'/145'/{i}'"), coin_name="Bcash"
+            ).node
             for i in range(1, 4)
         ]
 

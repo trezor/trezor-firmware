@@ -16,13 +16,14 @@
 
 import pytest
 
-from trezorlib import btc, debuglink, device
+from trezorlib import debuglink, device
 from trezorlib.messages import BackupType
 
 from ..common import (
     MNEMONIC12,
     MNEMONIC_SLIP39_ADVANCED_20,
     MNEMONIC_SLIP39_BASIC_20_3of6,
+    test_address,
 )
 
 
@@ -41,8 +42,8 @@ class TestDeviceLoad:
         assert state.pin is None
         assert state.passphrase_protection is False
 
-        address = btc.get_address(client, "Bitcoin", [])
-        assert address == "1EfKbQupktEMXf4gujJ9kCFo83k1iMqwqK"
+        address = test_address(client)
+        assert address == "mkqRFzxmkCGX9jxgpqqFHcxRUmLJcLDBer"
 
     def test_load_device_2(self, client):
         debuglink.load_device(
@@ -61,8 +62,8 @@ class TestDeviceLoad:
             assert state.pin == "1234"
         assert state.passphrase_protection is True
 
-        address = btc.get_address(client, "Bitcoin", [])
-        assert address == "15fiTDFwZd2kauHYYseifGi9daH2wniDHH"
+        address = test_address(client)
+        assert address == "mx77VZjTVixVsU7nCtAKHnGFdsyNCnsWWw"
 
     @pytest.mark.skip_t1
     def test_load_device_slip39_basic(self, client):
@@ -115,7 +116,7 @@ class TestDeviceLoad:
             skip_checksum=True,
         )
         client.use_passphrase(passphrase_nfkd)
-        address_nfkd = btc.get_address(client, "Bitcoin", [])
+        address_nfkd = test_address(client)
 
         device.wipe(client)
         debuglink.load_device(
@@ -128,7 +129,7 @@ class TestDeviceLoad:
             skip_checksum=True,
         )
         client.use_passphrase(passphrase_nfc)
-        address_nfc = btc.get_address(client, "Bitcoin", [])
+        address_nfc = test_address(client)
 
         device.wipe(client)
         debuglink.load_device(
@@ -141,7 +142,7 @@ class TestDeviceLoad:
             skip_checksum=True,
         )
         client.use_passphrase(passphrase_nfkc)
-        address_nfkc = btc.get_address(client, "Bitcoin", [])
+        address_nfkc = test_address(client)
 
         device.wipe(client)
         debuglink.load_device(
@@ -154,7 +155,7 @@ class TestDeviceLoad:
             skip_checksum=True,
         )
         client.use_passphrase(passphrase_nfd)
-        address_nfd = btc.get_address(client, "Bitcoin", [])
+        address_nfd = test_address(client)
 
         assert address_nfkd == address_nfc
         assert address_nfkd == address_nfkc

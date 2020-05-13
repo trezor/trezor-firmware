@@ -95,7 +95,9 @@ class TestMsgGetaddressSegwitNative:
     @pytest.mark.multisig
     def test_show_multisig_3(self, client):
         nodes = [
-            btc.get_public_node(client, parse_path("999'/1'/%d'" % index)).node
+            btc.get_public_node(
+                client, parse_path("84'/1'/%d'" % index), coin_name="Testnet"
+            ).node
             for index in range(1, 4)
         ]
         multisig1 = proto.MultisigRedeemScriptType(
@@ -109,21 +111,21 @@ class TestMsgGetaddressSegwitNative:
                 btc.get_address(
                     client,
                     "Testnet",
-                    parse_path("999'/1'/%d'/2/1" % i),
+                    parse_path("84'/1'/%d'/2/1" % i),
                     False,
                     multisig2,
                     script_type=proto.InputScriptType.SPENDWITNESS,
                 )
-                == "tb1qch62pf820spe9mlq49ns5uexfnl6jzcezp7d328fw58lj0rhlhasge9hzy"
+                == "tb1qnqlw0gwzpcdken0sarskrgxf7l36pprlfy4uk7yf98jz9rfd36ss2tc6ja"
             )
             assert (
                 btc.get_address(
                     client,
                     "Testnet",
-                    parse_path("999'/1'/%d'/2/0" % i),
+                    parse_path("84'/1'/%d'/2/0" % i),
                     False,
                     multisig1,
                     script_type=proto.InputScriptType.SPENDWITNESS,
                 )
-                == "tb1qr6xa5v60zyt3ry9nmfew2fk5g9y3gerkjeu6xxdz7qga5kknz2ssld9z2z"
+                == "tb1qaqrlzu8unz58p77d30ej85n3gv5574alkqw0qcjsyd2hs9frp2vstew67z"
             )

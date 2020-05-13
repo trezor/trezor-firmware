@@ -179,7 +179,9 @@ class TestMsgSigntxBitcoinGold:
     @pytest.mark.multisig
     def test_send_btg_multisig_change(self, client):
         nodes = [
-            btc.get_public_node(client, parse_path("48'/156'/%d'" % i)).node
+            btc.get_public_node(
+                client, parse_path(f"48'/156'/{i}'"), coin_name="Bgold"
+            ).node
             for i in range(1, 4)
         ]
 
@@ -356,7 +358,9 @@ class TestMsgSigntxBitcoinGold:
     @pytest.mark.multisig
     def test_send_multisig_1(self, client):
         nodes = [
-            btc.get_public_node(client, parse_path("49'/156'/%d'" % i)).node
+            btc.get_public_node(
+                client, parse_path(f"49'/156'/{i}'"), coin_name="Bgold"
+            ).node
             for i in range(1, 4)
         ]
         multisig = proto.MultisigRedeemScriptType(

@@ -159,7 +159,9 @@ class TestMsgSigntxSegwit:
     @pytest.mark.multisig
     def test_send_multisig_1(self, client):
         nodes = [
-            btc.get_public_node(client, parse_path("49'/1'/%d'" % i)).node
+            btc.get_public_node(
+                client, parse_path(f"49'/1'/{i}'"), coin_name="Testnet"
+            ).node
             for i in range(1, 4)
         ]
 
