@@ -44,9 +44,10 @@ async def get_keychain(ctx: wire.Context) -> Keychain:
 
     passphrase = await get_passphrase(ctx)
     if mnemonic.is_bip39():
-        # derive the root node from mnemonic and passphrase
+        # derive the root node from mnemonic and passphrase via Cardano Icarus algorithm
         root = bip32.from_mnemonic_cardano(mnemonic.get_secret().decode(), passphrase)
     else:
+        # derive the root node via SLIP-0023
         seed = mnemonic.get_seed(passphrase)
         root = bip32.from_seed(seed, "ed25519 cardano seed")
 
