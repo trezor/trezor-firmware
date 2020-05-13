@@ -88,6 +88,10 @@ STATIC const mp_obj_type_t secbytes_type = {
     .locals_dict = (void *)&secbytes_locals_dict,
 };
 
+/// class SecureContext:
+///     """
+///     Secure context manager
+///     """
 typedef struct _mp_obj_SecureContext_t {
   mp_obj_base_t base;
   mp_obj_list_t list;
@@ -101,6 +105,20 @@ STATIC mp_obj_t SecureContext_make_new(const mp_obj_type_t *type, size_t n_args,
   return MP_OBJ_FROM_PTR(o);
 }
 
+/// def __enter__(self) -> SecureContext:
+///     """
+///     Return an open secure context manager
+///     """
+
+/// from types import TracebackType
+/// def __exit__(
+///     self, type: Optional[Type[BaseException]],
+///     value: Optional[BaseException],
+///     traceback: Optional[TracebackType],
+/// ) -> None:
+///     """
+///     Closes the secure context manager
+///     """
 STATIC mp_obj_t SecureContext___exit__(size_t n_args, const mp_obj_t *args) {
   mp_obj_SecureContext_t *o = MP_OBJ_TO_PTR(args[0]);
   // iterate the list and memzero its members
@@ -114,6 +132,10 @@ STATIC mp_obj_t SecureContext___exit__(size_t n_args, const mp_obj_t *args) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(SecureContext___exit___obj, 4, 4, SecureContext___exit__);
 
+/// def new(self, data: bytes) -> secbytes:
+///     """
+///     Wrap data into a secbytes object
+///     """
 STATIC mp_obj_t SecureContext_new(mp_obj_t self, mp_obj_t data) {
   mp_buffer_info_t input;
   mp_get_buffer_raise(data, &input, MP_BUFFER_READ);
@@ -124,6 +146,10 @@ STATIC mp_obj_t SecureContext_new(mp_obj_t self, mp_obj_t data) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(SecureContext_new_obj, SecureContext_new);
 
+/// def concat(self, *args) -> secbytes:
+///     """
+///     Concatenates a list of secbytes
+///     """
 STATIC mp_obj_t SecureContext_concat(size_t n_args, const mp_obj_t *args) {
   uint32_t len = 0;
   for (size_t i = 1; i < n_args; i++) {
