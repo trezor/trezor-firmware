@@ -124,17 +124,27 @@ STATIC mp_obj_t SecureContext_new(mp_obj_t self, mp_obj_t data) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(SecureContext_new_obj, SecureContext_new);
 
-STATIC mp_obj_t SecureContext_concat(mp_obj_t self, mp_obj_t bytes1, mp_obj_t bytes2) {
-  mp_obj_secbytes_t *b1 = MP_OBJ_TO_PTR(bytes1);
-  mp_obj_secbytes_t *b2 = MP_OBJ_TO_PTR(bytes2);
-  mp_obj_secbytes_t *b = m_new_secbytes(NULL, b1->len + b2->len);
-  memcpy(b->ptr, b1->ptr, b1->len);
-  memcpy(b->ptr + b1->len, b2->ptr, b2->len);
-  mp_obj_SecureContext_t *o = MP_OBJ_TO_PTR(self);
+STATIC mp_obj_t SecureContext_concat(size_t n_args, const mp_obj_t *args) {
+  uint32_t len = 0;
+  for (size_t i = 1; i < n_args; i++) {
+    if (&secbytes_type != mp_obj_get_type(args[1])) {
+      mp_raise_TypeError("wrong type");
+    }
+    mp_obj_secbytes_t *a = MP_OBJ_TO_PTR(args[i]);
+    len += a->len;
+  }
+  uint32_t offset = 0;
+  mp_obj_secbytes_t *b = m_new_secbytes(NULL, len);
+  for (size_t i = 1; i < n_args; i++) {
+    mp_obj_secbytes_t *a = MP_OBJ_TO_PTR(args[i]);
+    memcpy(b->ptr + offset, a->ptr, a->len);
+    offset += a->len;
+  }
+  mp_obj_SecureContext_t *o = MP_OBJ_TO_PTR(args[0]);
   mp_obj_list_append(MP_OBJ_FROM_PTR(&(o->list)), MP_OBJ_FROM_PTR(b));
   return MP_OBJ_FROM_PTR(b);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(SecureContext_concat_obj, SecureContext_concat);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR(SecureContext_concat_obj, 2, SecureContext_concat);
 
 STATIC const mp_rom_map_elem_t SecureContext_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR___enter__), MP_ROM_PTR(&mp_identity_obj)},
