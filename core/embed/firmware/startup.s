@@ -5,6 +5,14 @@
   .global reset_handler
   .type reset_handler, STT_FUNC
 reset_handler:
+
+#if TREZOR_MODEL == 1
+  ldr r0, =_estack - 8  // r0 = stack pointer, T1 bootloader had 8 bytes reserved at end
+  msr msp, r0           // set stack pointer
+  dsb
+  isb
+#endif
+
   // setup environment for subsequent stage of code
   ldr r0, =ccmram_start // r0 - point to beginning of CCMRAM
   ldr r1, =ccmram_end   // r1 - point to byte after the end of CCMRAM
