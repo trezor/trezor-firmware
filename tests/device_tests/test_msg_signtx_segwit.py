@@ -40,31 +40,6 @@ TXHASH_e5040e = bytes.fromhex(
 )
 
 
-def request_input(n, tx_hash=None):
-    return proto.TxRequest(
-        request_type=proto.RequestType.TXINPUT,
-        details=proto.TxRequestDetailsType(request_index=n, tx_hash=tx_hash),
-    )
-
-
-def request_output(n, tx_hash=None):
-    return proto.TxRequest(
-        request_type=proto.RequestType.TXOUTPUT,
-        details=proto.TxRequestDetailsType(request_index=n, tx_hash=tx_hash),
-    )
-
-
-def request_meta(tx_hash):
-    return proto.TxRequest(
-        request_type=proto.RequestType.TXMETA,
-        details=proto.TxRequestDetailsType(tx_hash=tx_hash),
-    )
-
-
-def request_finished():
-    return proto.TxRequest(request_type=proto.RequestType.TXFINISHED)
-
-
 class TestMsgSigntxSegwit:
     def test_send_p2sh(self, client):
         inp1 = proto.TxInputType(
@@ -366,7 +341,7 @@ class TestMsgSigntxSegwit:
                 )
 
     def test_attack_mixed_inputs(self, client):
-        TRUE_AMOUNT = 12345678
+        TRUE_AMOUNT = 123456789
         FAKE_AMOUNT = 123
 
         inp1 = proto.TxInputType(
@@ -398,6 +373,10 @@ class TestMsgSigntxSegwit:
             request_output(0, TXHASH_e5040e),
             request_output(1, TXHASH_e5040e),
             request_input(1),
+            request_meta(TXHASH_20912f),
+            request_input(0, TXHASH_20912f),
+            request_output(0, TXHASH_20912f),
+            request_output(1, TXHASH_20912f),
             request_output(0),
             proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
             proto.ButtonRequest(code=proto.ButtonRequestType.FeeOverThreshold),
@@ -408,17 +387,17 @@ class TestMsgSigntxSegwit:
             request_input(1),
             request_output(0),
             request_input(1),
+            request_finished(),
         ]
 
         if client.features.model == "1":
             # T1 asks for first input for witness again
-            expected_responses.insert(-1, request_input(0))
-            pass
+            expected_responses.insert(-2, request_input(0))
 
         with client:
             # Sign unmodified transaction.
             # "Fee over threshold" warning is displayed - fee is the whole TRUE_AMOUNT
-            client.set_expected_responses(expected_responses + [request_finished()])
+            client.set_expected_responses(expected_responses)
             btc.sign_tx(
                 client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_API,
             )
@@ -426,35 +405,16 @@ class TestMsgSigntxSegwit:
         # In Phase 1 make the user confirm a lower value of the segwit input.
         inp2.amount = FAKE_AMOUNT
 
-        ctr = 3
+        if client.features.model == "1":
+            # T1 fails as soon as it encounters the fake amount.
+            expected_responses = expected_responses[:9] + [proto.Failure()]
+        else:
+            expected_responses = expected_responses[:10] + [proto.Failure()]
 
-        def attack(msg):
-            nonlocal ctr
-
-            if msg.tx.inputs and msg.tx.inputs[0] == inp2:
-                ctr -= 1
-                if ctr <= 0:
-                    # after Phase 1 is done and input 1 is signed, let Trezor sign
-                    # the true amount in Phase 2
-                    msg.tx.inputs[0].amount = TRUE_AMOUNT
-
-            return msg
-
-        # Sign with attacker.
         with pytest.raises(TrezorFailure) as e, client:
-            # "Fee over threshold" is NOT displayed, because the calculated fee
-            # in phase 1 is small.
-            assert expected_responses[8] == proto.ButtonRequest(
-                code=proto.ButtonRequestType.FeeOverThreshold
-            )
-            del expected_responses[8]
-
-            client.set_filter(proto.TxAck, attack)
-            client.set_expected_responses(expected_responses + [proto.Failure()])
+            client.set_expected_responses(expected_responses)
             btc.sign_tx(
                 client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_API,
             )
 
-        assert e.value.failure.message.endswith(
-            "Transaction has changed during signing"
-        )
+        assert e.value.failure.message.endswith("Invalid amount specified")
