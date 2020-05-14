@@ -7,9 +7,9 @@
     .type g_header, %object
     .size g_header, .-g_header
 
-#if TREZOR_MODEL != 1
+// Firmware header for both Trezor One and Trezor T.
+// Trezor One must have bootloader version >= 1.8.0 (before that version the hdrlen used to be reset vector)
 
-// model T header
 g_header:
     .byte 'T','R','Z','F'            // magic
     .word g_header_end - g_header    // hdrlen
@@ -25,29 +25,14 @@ g_header:
     .byte FIX_VERSION_BUILD          // fix_vbuild
     . = . + 8                        // reserved
     . = . + 512                      // hash1 ... hash16
+
+#if TREZOR_MODEL != 1
+// model T header specifics
     . = . + 415                      // reserved
     .byte 0                          // sigmask
     . = . + 64                       // sig
-g_header_end:
-
 #else
-
-// model 1 header
-g_header:
-    .byte 'T','R','Z','F'            // magic
-    .word reset_handler              // reset handler,  replace later with : .word g_header_end - g_header    // hdrlen
-    .word 0                          // expiry
-    .word _codelen                   // codelen
-    .byte VERSION_MAJOR              // vmajor
-    .byte VERSION_MINOR              // vminor
-    .byte VERSION_PATCH              // vpatch
-    .byte 0                          // vbuild
-    .byte FIX_VERSION_MAJOR          // fix_vmajor
-    .byte FIX_VERSION_MINOR          // fix_vminor
-    .byte FIX_VERSION_PATCH          // fix_vpatch
-    .byte 0                          // fix_vbuild
-    . = . + 8                        // reserved
-    . = . + 512                      // hash1 ... hash16
+// model 1 header specifics
     . = . + 64                       // sig1
     . = . + 64                       // sig2
     . = . + 64                       // sig3
@@ -56,6 +41,7 @@ g_header:
     .byte 0                          // sigindex3
     . = . + 220                      // reserved
     . = . + 65                       // reserved
+#endif
+
 g_header_end:
 
-#endif
