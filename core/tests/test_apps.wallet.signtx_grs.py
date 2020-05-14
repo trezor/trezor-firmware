@@ -16,6 +16,7 @@ from trezor.messages import OutputScriptType
 
 from apps.common import coins
 from apps.common.seed import Keychain
+from apps.wallet.keychain import get_namespaces_for_coin
 from apps.wallet.sign_tx import bitcoinlike, helpers
 
 
@@ -93,7 +94,8 @@ class TestSignTx_GRS(unittest.TestCase):
         ]
 
         seed = bip39.seed(' '.join(['all'] * 12), '')
-        keychain = Keychain(seed, [[coin.curve_name]])
+        ns = get_namespaces_for_coin(coin)
+        keychain = Keychain(seed, ns)
         signer = bitcoinlike.Bitcoinlike(tx, keychain, coin).signer()
         for request, response in chunks(messages, 2):
             self.assertEqual(signer.send(request), response)

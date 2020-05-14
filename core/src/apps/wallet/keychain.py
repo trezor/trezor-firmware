@@ -19,17 +19,7 @@ if False:
     ]
 
 
-async def get_keychain_for_coin(
-    ctx: wire.Context, coin_name: Optional[str]
-) -> Tuple[Keychain, coininfo.CoinInfo]:
-    if coin_name is None:
-        coin_name = "Bitcoin"
-
-    try:
-        coin = coininfo.by_name(coin_name)
-    except ValueError:
-        raise wire.DataError("Unsupported coin type")
-
+def get_namespaces_for_coin(coin: coininfo.CoinInfo):
     namespaces = []
     curve = coin.curve_name
     slip44_id = coin.slip44 | HARDENED
@@ -48,6 +38,21 @@ async def get_keychain_for_coin(
         # BIP-84 - native segwit: m/84'/slip44' (/account'/change/addr)
         namespaces.append((curve, [84 | HARDENED, slip44_id]))
 
+    return namespaces
+
+
+async def get_keychain_for_coin(
+    ctx: wire.Context, coin_name: Optional[str]
+) -> Tuple[Keychain, coininfo.CoinInfo]:
+    if coin_name is None:
+        coin_name = "Bitcoin"
+
+    try:
+        coin = coininfo.by_name(coin_name)
+    except ValueError:
+        raise wire.DataError("Unsupported coin type")
+
+    namespaces = get_namespaces_for_coin(coin)
     keychain = await get_keychain(ctx, namespaces)
     return keychain, coin
 

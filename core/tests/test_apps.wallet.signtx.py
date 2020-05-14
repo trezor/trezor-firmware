@@ -16,6 +16,7 @@ from trezor.messages import OutputScriptType
 
 from apps.common import coins
 from apps.common.seed import Keychain
+from apps.wallet.keychain import get_namespaces_for_coin
 from apps.wallet.sign_tx import bitcoin, helpers
 
 
@@ -45,7 +46,7 @@ class TestSignTx(unittest.TestCase):
         pout1 = TxOutputBinType(script_pubkey=unhexlify('76a91424a56db43cf6f2b02e838ea493f95d8d6047423188ac'),
                                 amount=390000)
 
-        inp1 = TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
+        inp1 = TxInputType(address_n=[44 | 0x80000000, 0 | 0x80000000, 0 | 0x80000000, 0, 0],
                            # amount=390000,
                            prev_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882'),
                            prev_index=0,
@@ -56,7 +57,6 @@ class TestSignTx(unittest.TestCase):
         out1 = TxOutputType(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
                             amount=390000 - 10000,
                             script_type=OutputScriptType.PAYTOADDRESS,
-                            address_n=[],
                             multisig=None)
         tx = SignTx(coin_name=None, version=None, lock_time=None, inputs_count=1, outputs_count=1)
 
@@ -65,8 +65,6 @@ class TestSignTx(unittest.TestCase):
 
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(inputs=[inp1])),
-            helpers.UiConfirmForeignAddress(address_n=inp1.address_n),
-            True,
             TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=EMPTY_SERIALIZED),
             TxAck(tx=ptx1),
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=EMPTY_SERIALIZED),
@@ -89,8 +87,8 @@ class TestSignTx(unittest.TestCase):
             TxAck(tx=TransactionType(outputs=[out1])),
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=TxRequestSerializedType(
                 signature_index=0,
-                signature=unhexlify('30450221009a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8b7077102202b79ab1e7736219387dffe8d615bbdba87e11477104b867ef47afed1a5ede781'),
-                serialized_tx=unhexlify('82488650ef25a58fef6788bd71b8212038d7f2bbe4750bc7bcb44701e85ef6d5000000006b4830450221009a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8b7077102202b79ab1e7736219387dffe8d615bbdba87e11477104b867ef47afed1a5ede7810121023230848585885f63803a0a8aecdd6538792d5c539215c91698e315bf0253b43dffffffff01'))),
+                signature=unhexlify('30440220198146fa987da8d78c4c7a471614fceb54d161ede244412f3369f436a7aec386022066bbede7644baa38abbdb4b1f3037f8db225c04e107099b625339a55614c3db3'),
+                serialized_tx=unhexlify('82488650ef25a58fef6788bd71b8212038d7f2bbe4750bc7bcb44701e85ef6d5000000006a4730440220198146fa987da8d78c4c7a471614fceb54d161ede244412f3369f436a7aec386022066bbede7644baa38abbdb4b1f3037f8db225c04e107099b625339a55614c3db30121027a4cebff51c97c047637cda66838e8b64421a4af6bf8ef3c99717f92d09b3c1dffffffff01'))),
             TxAck(tx=TransactionType(outputs=[out1])),
             TxRequest(request_type=TXFINISHED, details=TxRequestDetailsType(), serialized=TxRequestSerializedType(
                 signature_index=None,
@@ -100,7 +98,8 @@ class TestSignTx(unittest.TestCase):
         ]
 
         seed = bip39.seed('alcohol woman abuse must during monitor noble actual mixed trade anger aisle', '')
-        keychain = Keychain(seed, [[coin_bitcoin.curve_name]])
+        ns = get_namespaces_for_coin(coin_bitcoin)
+        keychain = Keychain(seed, ns)
         signer = bitcoin.Bitcoin(tx, keychain, coin_bitcoin).signer()
 
         for request, response in chunks(messages, 2):
