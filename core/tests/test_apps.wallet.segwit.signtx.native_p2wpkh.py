@@ -16,6 +16,7 @@ from trezor.messages import OutputScriptType
 
 from apps.common import coins
 from apps.common.seed import Keychain
+from apps.wallet.keychain import get_namespaces_for_coin
 from apps.wallet.sign_tx import helpers, bitcoin
 from apps.wallet.sign_tx.scripts import ScriptsError
 
@@ -119,7 +120,8 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             )),
         ]
 
-        keychain = Keychain(seed, [[coin.curve_name]])
+        ns = get_namespaces_for_coin(coin)
+        keychain = Keychain(seed, ns)
         signer = bitcoin.Bitcoin(tx, keychain, coin).signer()
         for request, response in chunks(messages, 2):
             res = signer.send(request)
@@ -218,7 +220,8 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             )),
         ]
 
-        keychain = Keychain(seed, [[coin.curve_name]])
+        ns = get_namespaces_for_coin(coin)
+        keychain = Keychain(seed, ns)
         signer = bitcoin.Bitcoin(tx, keychain, coin).signer()
         for request, response in chunks(messages, 2):
             self.assertEqual(signer.send(request), response)
@@ -264,7 +267,8 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             None
         ]
 
-        keychain = Keychain(seed, [[coin.curve_name]])
+        ns = get_namespaces_for_coin(coin)
+        keychain = Keychain(seed, ns)
         signer = bitcoin.Bitcoin(tx, keychain, coin).signer()
         for request, response in chunks(messages, 2):
             if response is None:

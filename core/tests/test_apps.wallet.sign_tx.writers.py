@@ -4,7 +4,6 @@ from trezor.messages.TxInputType import TxInputType
 from trezor.messages import InputScriptType
 
 from apps.common import coins
-from apps.common.seed import Keychain
 from apps.wallet.sign_tx import writers
 
 
