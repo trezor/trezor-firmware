@@ -1,6 +1,8 @@
 from common import *
+
+from storage import cache
 from apps.common import HARDENED, coins
-from apps.common.seed import Keychain, Slip21Node, _path_hardened
+from apps.common.seed import Keychain, Slip21Node, _path_hardened, get_keychain, with_slip44_keychain
 from apps.wallet.sign_tx import scripts, addresses
 from trezor import wire
 from trezor.crypto import bip39
@@ -111,6 +113,63 @@ class TestKeychain(unittest.TestCase):
             self.assertFalse(keychain.match_path([b"SLIP-9999", b"Authentication key"]))
         with self.assertRaises(wire.DataError):
             keychain.derive([b"SLIP-9999", b"Authentication key"]).key()
+
+    def test_get_keychain(self):
+        seed = bip39.seed(' '.join(['all'] * 12), '')
+        cache.start_session()
+        cache.set(cache.APP_COMMON_SEED, seed)
+
+        namespaces = [("secp256k1", [44 | HARDENED])]
+        keychain = await_result(get_keychain(wire.DUMMY_CONTEXT, namespaces))
+
+        # valid path:
+        self.assertIsNotNone(keychain.derive([44 | HARDENED, 1 | HARDENED]))
+
+        # invalid path:
+        with self.assertRaises(wire.DataError):
+            keychain.derive([44])
+
+    def test_with_slip44(self):
+        seed = bip39.seed(' '.join(['all'] * 12), '')
+        cache.start_session()
+        cache.set(cache.APP_COMMON_SEED, seed)
+
+        slip44_id = 42
+        valid_path = [44 | HARDENED, slip44_id | HARDENED]
+        invalid_path = [44 | HARDENED, 99 | HARDENED]
+        testnet_path = [44 | HARDENED, 1 | HARDENED]
+
+        def check_valid_paths(keychain, *paths):
+            for path in paths:
+                self.assertIsNotNone(keychain.derive(path))
+
+        def check_invalid_paths(keychain, *paths):
+            for path in paths:
+                self.assertRaises(wire.DataError, keychain.derive, path)
+
+        @with_slip44_keychain(slip44_id)
+        async def func_id_only(ctx, msg, keychain):
+            check_valid_paths(keychain, valid_path)
+            check_invalid_paths(keychain, testnet_path, invalid_path)
+
+        @with_slip44_keychain(slip44_id, allow_testnet=True)
+        async def func_allow_testnet(ctx, msg, keychain):
+            check_valid_paths(keychain, valid_path, testnet_path)
+            check_invalid_paths(keychain, invalid_path)
+
+        @with_slip44_keychain(slip44_id, curve="ed25519")
+        async def func_with_curve(ctx, msg, keychain):
+            check_valid_paths(keychain, valid_path)
+            check_invalid_paths(keychain, testnet_path, invalid_path)
+
+            i, _ = keychain.match_path(valid_path)
+            ns_curve, ns = keychain.namespaces[i]
+            self.assertEqual(ns_curve, "ed25519")
+
+        await_result(func_id_only(wire.DUMMY_CONTEXT, None))
+        await_result(func_allow_testnet(wire.DUMMY_CONTEXT, None))
+        await_result(func_with_curve(wire.DUMMY_CONTEXT, None))
+
 
 
 if __name__ == '__main__':
