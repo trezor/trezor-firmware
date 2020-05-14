@@ -626,7 +626,8 @@ if env.get('TREZOR_MODEL') == 'T':
     ]
 else:
     action_bin=[
-        '$OBJCOPY -O binary -j .flash -j .data $SOURCE $TARGET',
+        '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
+        '../legacy/bootloader/firmware_sign.py -f $TARGET',
     ]
 
 program_bin = env.Command(

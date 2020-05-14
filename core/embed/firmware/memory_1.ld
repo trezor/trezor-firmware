@@ -26,13 +26,17 @@ sram_end = ORIGIN(SRAM) + LENGTH(SRAM);
 _ram_start = sram_start;
 _ram_end = sram_end;
 
-_codelen = LENGTH(FLASH);
+_codelen = SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.ARM.exidx);
 _flash_start = ORIGIN(FLASH);
 _flash_end = ORIGIN(FLASH) + LENGTH(FLASH);
 _heap_start = ADDR(.heap);
 _heap_end = ADDR(.heap) + SIZEOF(.heap);
 
 SECTIONS {
+   .header : ALIGN(4) {
+     KEEP(*(.header));
+   } >FLASH AT>FLASH
+
   .flash : ALIGN(512) {
     KEEP(*(.vector_table));
     . = ALIGN(4);
