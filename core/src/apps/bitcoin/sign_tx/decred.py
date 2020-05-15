@@ -12,6 +12,7 @@ from trezor.messages.TxOutputType import TxOutputType
 from trezor.utils import HashWriter, ensure
 
 from apps.common import coininfo, seed
+from apps.common.writers import write_bitcoin_varint
 
 from .. import multisig, scripts, writers
 from ..common import ecdsa_hash_pubkey, ecdsa_sign
@@ -36,21 +37,21 @@ class Decred(Bitcoin):
         super().__init__(tx, keychain, coin)
 
         self.write_tx_header(self.serialized_tx, self.tx, witness_marker=True)
-        writers.write_varint(self.serialized_tx, self.tx.inputs_count)
+        write_bitcoin_varint(self.serialized_tx, self.tx.inputs_count)
 
     def init_hash143(self) -> None:
         self.h_prefix = self.create_hash_writer()
         writers.write_uint32(
             self.h_prefix, self.tx.version | DECRED_SERIALIZE_NO_WITNESS
         )
-        writers.write_varint(self.h_prefix, self.tx.inputs_count)
+        write_bitcoin_varint(self.h_prefix, self.tx.inputs_count)
 
     def create_hash_writer(self) -> HashWriter:
         return HashWriter(blake256())
 
     async def step2_confirm_outputs(self) -> None:
-        writers.write_varint(self.serialized_tx, self.tx.outputs_count)
-        writers.write_varint(self.h_prefix, self.tx.outputs_count)
+        write_bitcoin_varint(self.serialized_tx, self.tx.outputs_count)
+        write_bitcoin_varint(self.h_prefix, self.tx.outputs_count)
         await super().step2_confirm_outputs()
         self.write_tx_footer(self.serialized_tx, self.tx)
         self.write_tx_footer(self.h_prefix, self.tx)
@@ -68,7 +69,7 @@ class Decred(Bitcoin):
         self.write_tx_output(self.serialized_tx, txo, script_pubkey)
 
     async def step4_serialize_inputs(self) -> None:
-        writers.write_varint(self.serialized_tx, self.tx.inputs_count)
+        write_bitcoin_varint(self.serialized_tx, self.tx.inputs_count)
 
         prefix_hash = self.h_prefix.get_digest()
 
@@ -99,13 +100,13 @@ class Decred(Bitcoin):
             writers.write_uint32(
                 h_witness, self.tx.version | DECRED_SERIALIZE_WITNESS_SIGNING
             )
-            writers.write_varint(h_witness, self.tx.inputs_count)
+            write_bitcoin_varint(h_witness, self.tx.inputs_count)
 
             for ii in range(self.tx.inputs_count):
                 if ii == i_sign:
                     writers.write_bytes_prefixed(h_witness, prev_pkscript)
                 else:
-                    writers.write_varint(h_witness, 0)
+                    write_bitcoin_varint(h_witness, 0)
 
             witness_hash = writers.get_tx_hash(
                 h_witness, double=self.coin.sign_hash_double, reverse=False

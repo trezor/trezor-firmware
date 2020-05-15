@@ -16,11 +16,7 @@ from .multisig import (
     multisig_get_pubkeys,
     multisig_pubkey_index,
 )
-from .writers import (
-    write_bytes_fixed,
-    write_bytes_unchecked,
-    write_op_push,
-)
+from .writers import write_bytes_fixed, write_bytes_unchecked, write_op_push
 
 if False:
     from typing import List, Optional
@@ -248,7 +244,7 @@ def input_script_p2wsh_in_p2sh(script_hash: bytes) -> bytearray:
 
 def witness_p2wpkh(signature: bytes, pubkey: bytes, sighash: int) -> bytearray:
     w = empty_bytearray(1 + 5 + len(signature) + 1 + 5 + len(pubkey))
-    write_varint(w, 0x02)  # num of segwit items, in P2WPKH it's always 2
+    write_bitcoin_varint(w, 0x02)  # num of segwit items, in P2WPKH it's always 2
     append_signature(w, signature, sighash)
     append_pubkey(w, pubkey)
     return w
@@ -287,17 +283,17 @@ def witness_p2wsh(
 
     w = empty_bytearray(total_length)
 
-    write_varint(w, num_of_witness_items)
+    write_bitcoin_varint(w, num_of_witness_items)
     # Starts with OP_FALSE because of an old OP_CHECKMULTISIG bug, which
     # consumes one additional item on the stack:
     # https://bitcoin.org/en/developer-guide#standard-transactions
-    write_varint(w, 0)
+    write_bitcoin_varint(w, 0)
 
     for s in signatures:
         append_signature(w, s, sighash)  # size of the witness included
 
     # redeem script
-    write_varint(w, redeem_script_length)
+    write_bitcoin_varint(w, redeem_script_length)
     write_output_script_multisig(w, pubkeys, multisig.m)
 
     return w

@@ -8,6 +8,7 @@ from trezor.utils import ensure
 
 from apps.common.writers import (  # noqa: F401
     empty_bytearray,
+    write_bitcoin_varint,
     write_bytes_fixed,
     write_bytes_reversed,
     write_bytes_unchecked,
@@ -30,7 +31,7 @@ TX_HASH_SIZE = const(32)
 
 
 def write_bytes_prefixed(w: Writer, b: bytes) -> None:
-    write_varint(w, len(b))
+    write_bitcoin_varint(w, len(b))
     write_bytes_unchecked(w, b)
 
 
@@ -94,22 +95,6 @@ def write_op_push(w: Writer, n: int) -> None:
         w.append((n >> 8) & 0xFF)
     else:
         w.append(0x4E)
-        w.append(n & 0xFF)
-        w.append((n >> 8) & 0xFF)
-        w.append((n >> 16) & 0xFF)
-        w.append((n >> 24) & 0xFF)
-
-
-def write_varint(w: Writer, n: int) -> None:
-    ensure(n >= 0 and n <= 0xFFFFFFFF)
-    if n < 253:
-        w.append(n & 0xFF)
-    elif n < 0x10000:
-        w.append(253)
-        w.append(n & 0xFF)
-        w.append((n >> 8) & 0xFF)
-    else:
-        w.append(254)
         w.append(n & 0xFF)
         w.append((n >> 8) & 0xFF)
         w.append((n >> 16) & 0xFF)

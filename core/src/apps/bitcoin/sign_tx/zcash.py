@@ -11,6 +11,7 @@ from trezor.utils import HashWriter, ensure
 
 from apps.common.coininfo import CoinInfo
 from apps.common.seed import Keychain
+from apps.common.writers import write_bitcoin_varint
 
 from ..multisig import multisig_get_pubkeys
 from ..scripts import output_script_multisig, output_script_p2pkh
@@ -22,7 +23,6 @@ from ..writers import (
     write_bytes_reversed,
     write_uint32,
     write_uint64,
-    write_varint,
 )
 from . import helpers
 from .bitcoinlike import Bitcoinlike
@@ -53,13 +53,13 @@ class Overwintered(Bitcoinlike):
 
         if self.tx.version == 3:
             write_uint32(self.serialized_tx, self.tx.expiry)  # expiryHeight
-            write_varint(self.serialized_tx, 0)  # nJoinSplit
+            write_bitcoin_varint(self.serialized_tx, 0)  # nJoinSplit
         elif self.tx.version == 4:
             write_uint32(self.serialized_tx, self.tx.expiry)  # expiryHeight
             write_uint64(self.serialized_tx, 0)  # valueBalance
-            write_varint(self.serialized_tx, 0)  # nShieldedSpend
-            write_varint(self.serialized_tx, 0)  # nShieldedOutput
-            write_varint(self.serialized_tx, 0)  # nJoinSplit
+            write_bitcoin_varint(self.serialized_tx, 0)  # nShieldedSpend
+            write_bitcoin_varint(self.serialized_tx, 0)  # nShieldedOutput
+            write_bitcoin_varint(self.serialized_tx, 0)  # nJoinSplit
         else:
             raise wire.DataError("Unsupported version for overwintered transaction")
 

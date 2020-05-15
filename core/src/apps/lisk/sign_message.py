@@ -3,10 +3,10 @@ from trezor.crypto.hashlib import sha256
 from trezor.messages.LiskMessageSignature import LiskMessageSignature
 from trezor.utils import HashWriter
 
-from apps.bitcoin.sign_tx.writers import write_varint
 from apps.common import paths
 from apps.common.seed import with_slip44_keychain
 from apps.common.signverify import require_confirm_sign_message
+from apps.common.writers import write_bitcoin_varint
 from apps.lisk import CURVE, SLIP44_ID
 from apps.lisk.helpers import validate_full_path
 
@@ -14,9 +14,9 @@ from apps.lisk.helpers import validate_full_path
 def message_digest(message):
     h = HashWriter(sha256())
     signed_message_header = "Lisk Signed Message:\n"
-    write_varint(h, len(signed_message_header))
+    write_bitcoin_varint(h, len(signed_message_header))
     h.extend(signed_message_header)
-    write_varint(h, len(message))
+    write_bitcoin_varint(h, len(message))
     h.extend(message)
     return sha256(h.get_digest()).digest()
 
