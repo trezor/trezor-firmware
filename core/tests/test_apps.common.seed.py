@@ -1,12 +1,10 @@
 from common import *
 
 from storage import cache
-from apps.common import HARDENED, coins
+from apps.common import HARDENED
 from apps.common.seed import Keychain, Slip21Node, _path_hardened, get_keychain, with_slip44_keychain
-from apps.wallet.sign_tx import scripts, addresses
 from trezor import wire
 from trezor.crypto import bip39
-from trezor.crypto.curve import secp256k1
 
 class TestKeychain(unittest.TestCase):
 

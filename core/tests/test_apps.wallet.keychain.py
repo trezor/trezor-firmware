@@ -4,7 +4,7 @@ from trezor import wire
 from trezor.crypto import bip39
 from apps.common.paths import HARDENED
 
-from apps.wallet.keychain import get_keychain_for_coin
+from apps.bitcoin.keychain import get_keychain_for_coin
 
 
 class TestBitcoinKeychain(unittest.TestCase):
