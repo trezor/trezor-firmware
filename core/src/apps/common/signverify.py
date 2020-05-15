@@ -4,9 +4,9 @@ from trezor import utils, wire
 from trezor.crypto.hashlib import blake256, sha256
 from trezor.ui.text import Text
 
-from apps.bitcoin.writers import write_varint
 from apps.common.confirm import require_confirm
 from apps.common.layout import split_address
+from apps.common.writers import write_bitcoin_varint
 
 if False:
     from typing import List
@@ -18,9 +18,9 @@ def message_digest(coin: CoinType, message: bytes) -> bytes:
         h = utils.HashWriter(blake256())
     else:
         h = utils.HashWriter(sha256())
-    write_varint(h, len(coin.signed_message_header))
+    write_bitcoin_varint(h, len(coin.signed_message_header))
     h.extend(coin.signed_message_header)
-    write_varint(h, len(message))
+    write_bitcoin_varint(h, len(message))
     h.extend(message)
     ret = h.get_digest()
     if coin.sign_hash_double:

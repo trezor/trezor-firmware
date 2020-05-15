@@ -6,6 +6,8 @@ from trezor.messages.SignTx import SignTx
 from trezor.messages.TransactionType import TransactionType
 from trezor.messages.TxInputType import TxInputType
 
+from apps.common.writers import write_bitcoin_varint
+
 from .. import multisig, writers
 from . import helpers
 from .bitcoin import Bitcoin, input_is_nonsegwit
@@ -74,8 +76,8 @@ class Bitcoinlike(Bitcoin):
         if self.coin.timestamp:
             writers.write_uint32(w, tx.timestamp)
         if witness_marker:
-            writers.write_varint(w, 0x00)  # segwit witness marker
-            writers.write_varint(w, 0x01)  # segwit witness flag
+            write_bitcoin_varint(w, 0x00)  # segwit witness marker
+            write_bitcoin_varint(w, 0x01)  # segwit witness flag
 
     async def write_prev_tx_footer(
         self, w: writers.Writer, tx: TransactionType, prev_hash: bytes
