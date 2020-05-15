@@ -4,9 +4,9 @@ from trezor import utils, wire
 from trezor.crypto.hashlib import blake256, sha256
 from trezor.ui.text import Text
 
+from apps.bitcoin.writers import write_varint
 from apps.common.confirm import require_confirm
 from apps.common.layout import split_address
-from apps.wallet.sign_tx.writers import write_varint
 
 if False:
     from typing import List

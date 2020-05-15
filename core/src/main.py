@@ -17,7 +17,8 @@ def _boot_apps() -> None:
     # load applications
     import apps.homescreen
     import apps.management
-    import apps.wallet
+    import apps.bitcoin
+    import apps.misc
 
     if not utils.BITCOIN_ONLY:
         import apps.ethereum
@@ -38,7 +39,8 @@ def _boot_apps() -> None:
     # boot applications
     apps.homescreen.boot()
     apps.management.boot()
-    apps.wallet.boot()
+    apps.bitcoin.boot()
+    apps.misc.boot()
     if not utils.BITCOIN_ONLY:
         apps.ethereum.boot()
         apps.lisk.boot()

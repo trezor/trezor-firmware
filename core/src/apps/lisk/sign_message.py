@@ -3,12 +3,12 @@ from trezor.crypto.hashlib import sha256
 from trezor.messages.LiskMessageSignature import LiskMessageSignature
 from trezor.utils import HashWriter
 
+from apps.bitcoin.sign_tx.writers import write_varint
 from apps.common import paths
 from apps.common.seed import with_slip44_keychain
 from apps.common.signverify import require_confirm_sign_message
 from apps.lisk import CURVE, SLIP44_ID
 from apps.lisk.helpers import validate_full_path
-from apps.wallet.sign_tx.writers import write_varint
 
 
 def message_digest(message):
