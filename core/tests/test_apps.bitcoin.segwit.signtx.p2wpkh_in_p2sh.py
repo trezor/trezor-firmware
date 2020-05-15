@@ -343,7 +343,7 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
         messages_count = int(len(messages) / 2)
         for request, response in chunks(messages, 2):
             if i == messages_count - 1:  # last message should throw wire.Error
-                self.assertRaises(wire.ProcessError, signer.send, request)
+                self.assertRaises(wire.DataError, signer.send, request)
             else:
                 self.assertEqual(signer.send(request), response)
             i += 1

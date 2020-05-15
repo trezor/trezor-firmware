@@ -4,7 +4,6 @@ from micropython import const
 from trezor import wire
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TransactionType import TransactionType
-from trezor.messages.TxInputType import TxInputType
 
 from apps.common.writers import write_bitcoin_varint
 
@@ -19,17 +18,6 @@ _SIGHASH_FORKID = const(0x40)
 
 
 class Bitcoinlike(Bitcoin):
-    async def process_segwit_input(self, txi: TxInputType) -> None:
-        if not self.coin.segwit:
-            raise wire.DataError("Segwit not enabled on this coin")
-        await super().process_segwit_input(txi)
-
-    async def process_nonsegwit_input(self, txi: TxInputType) -> None:
-        if self.coin.force_bip143:
-            await self.process_bip143_input(txi)
-        else:
-            await super().process_nonsegwit_input(txi)
-
     async def sign_nonsegwit_bip143_input(self, i_sign: int) -> None:
         txi = await helpers.request_tx_input(self.tx_req, i_sign, self.coin)
 
@@ -83,11 +71,11 @@ class Bitcoinlike(Bitcoin):
         await super().write_prev_tx_footer(w, tx, prev_hash)
 
         if self.coin.extra_data:
-            ofs = 0
-            while ofs < tx.extra_data_len:
-                size = min(1024, tx.extra_data_len - ofs)
+            offset = 0
+            while offset < tx.extra_data_len:
+                size = min(1024, tx.extra_data_len - offset)
                 data = await helpers.request_tx_extra_data(
-                    self.tx_req, ofs, size, prev_hash
+                    self.tx_req, offset, size, prev_hash
                 )
                 writers.write_bytes_unchecked(w, data)
-                ofs += len(data)
+                offset += len(data)

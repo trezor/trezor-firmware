@@ -52,10 +52,8 @@ class Overwintered(Bitcoinlike):
         self.write_tx_footer(self.serialized_tx, self.tx)
 
         if self.tx.version == 3:
-            write_uint32(self.serialized_tx, self.tx.expiry)  # expiryHeight
             write_bitcoin_varint(self.serialized_tx, 0)  # nJoinSplit
         elif self.tx.version == 4:
-            write_uint32(self.serialized_tx, self.tx.expiry)  # expiryHeight
             write_uint64(self.serialized_tx, 0)  # valueBalance
             write_bitcoin_varint(self.serialized_tx, 0)  # nShieldedSpend
             write_bitcoin_varint(self.serialized_tx, 0)  # nShieldedOutput
@@ -64,9 +62,6 @@ class Overwintered(Bitcoinlike):
             raise wire.DataError("Unsupported version for overwintered transaction")
 
         await helpers.request_tx_finish(self.tx_req)
-
-    async def process_nonsegwit_input(self, txi: TxInputType) -> None:
-        await self.process_bip143_input(txi)
 
     async def sign_nonsegwit_input(self, i_sign: int) -> None:
         await self.sign_nonsegwit_bip143_input(i_sign)
@@ -77,6 +72,10 @@ class Overwintered(Bitcoinlike):
         # nVersion | fOverwintered
         write_uint32(w, tx.version | OVERWINTERED)
         write_uint32(w, tx.version_group_id)  # nVersionGroupId
+
+    def write_tx_footer(self, w: Writer, tx: Union[SignTx, TransactionType]) -> None:
+        write_uint32(w, tx.lock_time)
+        write_uint32(w, tx.expiry)  # expiryHeight
 
     # ZIP-0143 / ZIP-0243
     # ===
