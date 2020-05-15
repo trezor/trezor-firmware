@@ -242,6 +242,8 @@ def sanitize_tx_input(tx: TransactionType, coin: CoinInfo) -> TxInputType:
         txi.script_type = InputScriptType.SPENDADDRESS
     if txi.sequence is None:
         txi.sequence = 0xFFFFFFFF
+    if txi.prev_index is None:
+        raise wire.DataError("Missing prev_index field.")
     if txi.prev_hash is None or len(txi.prev_hash) != TX_HASH_SIZE:
         raise wire.DataError("Provided prev_hash is invalid.")
     if txi.multisig and txi.script_type not in MULTISIG_INPUT_SCRIPT_TYPES:
@@ -253,8 +255,6 @@ def sanitize_tx_input(tx: TransactionType, coin: CoinInfo) -> TxInputType:
     if txi.script_type in SEGWIT_INPUT_SCRIPT_TYPES:
         if not coin.segwit:
             raise wire.DataError("Segwit not enabled on this coin")
-        if txi.amount is None:
-            raise wire.DataError("Segwit input without amount")
     return txi
 
 
@@ -264,8 +264,12 @@ def sanitize_tx_output(tx: TransactionType, coin: CoinInfo) -> TxOutputType:
         raise wire.DataError("Multisig field provided but not expected.")
     if txo.address_n and txo.script_type not in CHANGE_OUTPUT_SCRIPT_TYPES:
         raise wire.DataError("Output's address_n provided but not expected.")
+    if txo.amount is None:
+        raise wire.DataError("Missing amount field.")
     if txo.script_type == OutputScriptType.PAYTOOPRETURN:
         # op_return output
+        if txo.op_return_data is None:
+            raise wire.DataError("OP_RETURN output without op_return_data")
         if txo.amount != 0:
             raise wire.DataError("OP_RETURN output with non-zero amount")
         if txo.address or txo.address_n or txo.multisig:
@@ -284,4 +288,8 @@ def sanitize_tx_output(tx: TransactionType, coin: CoinInfo) -> TxOutputType:
 
 def sanitize_tx_binoutput(tx: TransactionType, coin: CoinInfo) -> TxOutputBinType:
     txo_bin = tx.bin_outputs[0]
+    if txo_bin.amount is None:
+        raise wire.DataError("Missing amount field.")
+    if txo_bin.script_pubkey is None:
+        raise wire.DataError("Missing script_pubkey field.")
     return txo_bin
