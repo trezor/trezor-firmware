@@ -39,7 +39,6 @@
 #include "modtrezorcrypto-nist256p1.h"
 #include "modtrezorcrypto-pbkdf2.h"
 #include "modtrezorcrypto-random.h"
-#include "modtrezorcrypto-rfc6979.h"
 #include "modtrezorcrypto-ripemd160.h"
 #include "modtrezorcrypto-secp256k1.h"
 #include "modtrezorcrypto-sha1.h"
@@ -83,7 +82,6 @@ STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
 #endif
     {MP_ROM_QSTR(MP_QSTR_pbkdf2), MP_ROM_PTR(&mod_trezorcrypto_Pbkdf2_type)},
     {MP_ROM_QSTR(MP_QSTR_random), MP_ROM_PTR(&mod_trezorcrypto_random_module)},
-    {MP_ROM_QSTR(MP_QSTR_rfc6979), MP_ROM_PTR(&mod_trezorcrypto_Rfc6979_type)},
     {MP_ROM_QSTR(MP_QSTR_ripemd160),
      MP_ROM_PTR(&mod_trezorcrypto_Ripemd160_type)},
     {MP_ROM_QSTR(MP_QSTR_secp256k1),

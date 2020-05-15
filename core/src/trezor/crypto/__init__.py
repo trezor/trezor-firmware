@@ -7,7 +7,6 @@ from trezorcrypto import (  # noqa: F401
     crc,
     pbkdf2,
     random,
-    rfc6979,
 )
 
 if not utils.BITCOIN_ONLY:
