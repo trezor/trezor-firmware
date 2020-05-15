@@ -4,11 +4,12 @@ from trezor.utils import chunks
 from trezor.crypto import bip39
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxInputType import TxInputType
+from trezor.messages.TxOutputBinType import TxOutputBinType
 from trezor.messages.TxOutputType import TxOutputType
 from trezor.messages.TxRequest import TxRequest
 from trezor.messages.TxAck import TxAck
 from trezor.messages.TransactionType import TransactionType
-from trezor.messages.RequestType import TXINPUT, TXOUTPUT, TXFINISHED
+from trezor.messages.RequestType import TXINPUT, TXMETA, TXOUTPUT, TXFINISHED
 from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
 from trezor.messages import InputScriptType
@@ -43,6 +44,17 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
             sequence=0xfffffffe,
             multisig=None,
         )
+        ptx1 = TransactionType(version=1, lock_time=650749, inputs_cnt=1, outputs_cnt=2, extra_data_len=0)
+        pinp1 = TxInputType(script_sig=unhexlify('47304402201f8f57f708144c3a11da322546cb37bd385aa825d940c37e8016f0efd6ec3e9402202a41bc02c29e4f3f13efd4bededbcd4308a6393279111d614ee1f7635cf3e65701210371546a36bdf6bc82087301b3f6e759736dc8790150673d2e7e2715d2ad72f3a4'),
+                            prev_hash=unhexlify('4f2f857f39ed1afe05542d058fb0be865a387446e32fc876d086203f483f61d1'),
+                            prev_index=1,
+                            script_type=None,
+                            sequence=4294967294)
+        pout1 = TxOutputBinType(script_pubkey=unhexlify('a91458b53ea7f832e8f096e896b8713a8c6df0e892ca87'),
+                                amount=123456789)
+        pout2 = TxOutputBinType(script_pubkey=unhexlify('76a91435528b20e9a793cf2c3a1cf9cff1f2127ad377da88ac'),
+                                amount=9764242764)
+
         out1 = TxOutputType(
             address='mvbu1Gdy8SUjTenqerxUaZyYjmvedc787y',
             amount=12300000,
@@ -65,6 +77,18 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
             # check fee
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(inputs=[inp1])),
+
+            TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=ptx1),
+
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(inputs=[pinp1])),
+
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(bin_outputs=[pout1])),
+
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(bin_outputs=[pout2])),
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(outputs=[out1])),
@@ -144,6 +168,17 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
             sequence=0xfffffffe,
             multisig=None,
         )
+        ptx1 = TransactionType(version=1, lock_time=650749, inputs_cnt=1, outputs_cnt=2, extra_data_len=0)
+        pinp1 = TxInputType(script_sig=unhexlify('47304402201f8f57f708144c3a11da322546cb37bd385aa825d940c37e8016f0efd6ec3e9402202a41bc02c29e4f3f13efd4bededbcd4308a6393279111d614ee1f7635cf3e65701210371546a36bdf6bc82087301b3f6e759736dc8790150673d2e7e2715d2ad72f3a4'),
+                            prev_hash=unhexlify('4f2f857f39ed1afe05542d058fb0be865a387446e32fc876d086203f483f61d1'),
+                            prev_index=1,
+                            script_type=None,
+                            sequence=4294967294)
+        pout1 = TxOutputBinType(script_pubkey=unhexlify('a91458b53ea7f832e8f096e896b8713a8c6df0e892ca87'),
+                                amount=123456789)
+        pout2 = TxOutputBinType(script_pubkey=unhexlify('76a91435528b20e9a793cf2c3a1cf9cff1f2127ad377da88ac'),
+                                amount=9764242764)
+
         out1 = TxOutputType(
             address='mvbu1Gdy8SUjTenqerxUaZyYjmvedc787y',
             amount=12300000,
@@ -166,6 +201,18 @@ class TestSignSegwitTxP2WPKHInP2SH_GRS(unittest.TestCase):
             # check fee
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(inputs=[inp1])),
+
+            TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=ptx1),
+
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(inputs=[pinp1])),
+
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(bin_outputs=[pout1])),
+
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(bin_outputs=[pout2])),
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(outputs=[out1])),
