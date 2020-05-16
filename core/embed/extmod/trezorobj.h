@@ -75,4 +75,33 @@ static inline uint8_t trezor_obj_get_uint8(mp_obj_t obj) {
   return u;
 }
 
+static inline uint64_t trezor_obj_get_uint64(mp_const_obj_t obj) {
+  if (obj == mp_const_false) {
+    return 0;
+  } else if (obj == mp_const_true) {
+    return 1;
+  } else if (MP_OBJ_IS_SMALL_INT(obj)) {
+    return MP_OBJ_SMALL_INT_VALUE(obj);
+  } else if (MP_OBJ_IS_TYPE(obj, &mp_type_int)) {
+    byte buff[8];
+    uint64_t res = 0;
+    mp_obj_t *o = MP_OBJ_TO_PTR(obj);
+
+    mp_obj_int_to_bytes_impl(o, true, 8, buff);
+    for (int i = 0; i < 8; i++) {
+      res <<= 8;
+      res |= (uint64_t)(buff[i] & 0xff);
+    }
+    return res;
+  } else {
+    if (MICROPY_ERROR_REPORTING == MICROPY_ERROR_REPORTING_TERSE) {
+      mp_raise_TypeError("can't convert to int");
+    } else {
+      nlr_raise(mp_obj_new_exception_msg_varg(&mp_type_TypeError,
+                                              "can't convert %s to int",
+                                              mp_obj_get_type_str(obj)));
+    }
+  }
+}
+
 #endif

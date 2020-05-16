@@ -2,6 +2,18 @@ from typing import *
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-secp256k1_zkp.h
+class RangeProofConfig:
+    """
+    Range proof configuration.
+    """
+
+    def __init__(self, min_value: int, exponent: int, bits: int):
+        """
+        Initialize range proof configuration.
+        """
+
+
+# extmod/modtrezorcrypto/modtrezorcrypto-secp256k1_zkp.h
 class Context:
     """
     Owns a secp256k1 context.
@@ -10,12 +22,17 @@ class Context:
 
     def __init__(self) -> None:
         """
-        Allocate and initialize secp256k1_context.
+        Allocate and initialize secp256k1_zkp context object.
         """
 
-    def __del__(self) -> None:
+    def __enter__(self) -> None:
         """
-        Destructor.
+        Allocate and initialize secp256k1_context memory.
+        """
+
+    def __exit__(self, *args: Any) -> None:
+        """
+        Erase and free secp256k1_context memory.
         """
 
     def size(self) -> int:
@@ -59,3 +76,33 @@ class Context:
         Multiplies point defined by public_key with scalar defined by
         secret_key. Useful for ECDH.
         """
+
+    def blind_generator(self, asset: bytes, blinder: bytes) -> bytes:
+        '''
+        Generate blinded generator for the specified confidential asset.
+        '''
+
+    def pedersen_commit(self, value: int, blinder: bytes, gen: bytes) -> bytes:
+        '''
+        Commit to specified integer value, using given 32-byte blinding factor.
+        '''
+
+    def balance_blinds(self, values: Tuple[int], value_blinds: bytearray,
+                       asset_blinds: bytes, num_of_inputs: int) -> None:
+        '''
+        Balance value blinds (by updating value_blinds in-place).
+        '''
+
+    def verify_balance(self, commits: Tuple[bytes], n_inputs: int) -> None:
+        '''
+        Verify that Pedersen commitments are balanced.
+        '''
+
+    def rangeproof_sign(self, config: RangeProofConfig, value: int,
+                        commit: bytes, blind: bytes, nonce: bytes,
+                        message: bytes, extra_commit: bytes,
+                        gen: bytes) -> memoryview:
+        '''
+        Return a range proof for specified value (as a memoryview of the
+        underlying rangeproof_buffer).
+        '''
