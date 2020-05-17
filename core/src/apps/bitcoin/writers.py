@@ -53,32 +53,10 @@ def write_tx_input_check(w: Writer, i: TxInputType) -> None:
     write_uint64(w, i.amount or 0)
 
 
-def write_tx_input_decred(w: Writer, i: TxInputType) -> None:
-    write_bytes_reversed(w, i.prev_hash, TX_HASH_SIZE)
-    write_uint32(w, i.prev_index or 0)
-    write_uint8(w, i.decred_tree or 0)
-    write_uint32(w, i.sequence)
-
-
-def write_tx_input_decred_witness(w: Writer, i: TxInputType, script_sig: bytes) -> None:
-    write_uint64(w, i.amount or 0)
-    write_uint32(w, 0)  # block height fraud proof
-    write_uint32(w, 0xFFFFFFFF)  # block index fraud proof
-    write_bytes_prefixed(w, script_sig)
-
-
 def write_tx_output(
     w: Writer, o: Union[TxOutputType, TxOutputBinType], script_pubkey: bytes
 ) -> None:
     write_uint64(w, o.amount)
-    write_bytes_prefixed(w, script_pubkey)
-
-
-def write_tx_output_decred(
-    w: Writer, o: Union[TxOutputType, TxOutputBinType], script_pubkey: bytes
-) -> None:
-    write_uint64(w, o.amount)
-    write_uint16(w, o.decred_script_version)
     write_bytes_prefixed(w, script_pubkey)
 
 

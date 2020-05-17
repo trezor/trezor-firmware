@@ -123,9 +123,7 @@ class Decred(Bitcoin):
             # serialize input with correct signature
             gc.collect()
             script_sig = self.input_derive_script(txi_sign, key_sign_pub, signature)
-            writers.write_tx_input_decred_witness(
-                self.serialized_tx, txi_sign, script_sig
-            )
+            self.write_tx_input_witness(self.serialized_tx, txi_sign, script_sig)
             self.set_serialized_signature(i_sign, signature)
 
     async def step5_serialize_outputs(self) -> None:
@@ -142,15 +140,18 @@ class Decred(Bitcoin):
             raise wire.ProcessError("Cannot use utxo that has script_version != 0")
 
     def hash143_add_input(self, txi: TxInputType) -> None:
-        writers.write_tx_input_decred(self.h_prefix, txi)
+        self.write_tx_input(self.h_prefix, txi, bytes())
 
     def hash143_add_output(self, txo: TxOutputType, script_pubkey: bytes) -> None:
-        writers.write_tx_output_decred(self.h_prefix, txo, script_pubkey)
+        self.write_tx_output(self.h_prefix, txo, script_pubkey)
 
     def write_tx_input(
         self, w: writers.Writer, txi: TxInputType, script: bytes
     ) -> None:
-        writers.write_tx_input_decred(w, txi)
+        writers.write_bytes_reversed(w, txi.prev_hash, writers.TX_HASH_SIZE)
+        writers.write_uint32(w, txi.prev_index or 0)
+        writers.write_uint8(w, txi.decred_tree or 0)
+        writers.write_uint32(w, txi.sequence)
 
     def write_tx_output(
         self,
@@ -158,7 +159,9 @@ class Decred(Bitcoin):
         txo: Union[TxOutputType, TxOutputBinType],
         script_pubkey: bytes,
     ) -> None:
-        writers.write_tx_output_decred(w, txo, script_pubkey)
+        writers.write_uint64(w, txo.amount)
+        writers.write_uint16(w, txo.decred_script_version)
+        writers.write_bytes_prefixed(w, script_pubkey)
 
     def write_tx_header(
         self,
@@ -180,3 +183,11 @@ class Decred(Bitcoin):
     ) -> None:
         writers.write_uint32(w, tx.lock_time)
         writers.write_uint32(w, tx.expiry)
+
+    def write_tx_input_witness(
+        self, w: writers.Writer, i: TxInputType, script_sig: bytes
+    ) -> None:
+        writers.write_uint64(w, i.amount or 0)
+        writers.write_uint32(w, 0)  # block height fraud proof
+        writers.write_uint32(w, 0xFFFFFFFF)  # block index fraud proof
+        writers.write_bytes_prefixed(w, script_sig)
