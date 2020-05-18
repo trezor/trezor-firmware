@@ -1,19 +1,24 @@
 import storage.device
-from trezor import ui, wire
+from trezor import ui, wire, workflow
 from trezor.messages import ButtonRequestType
 from trezor.messages.Success import Success
 from trezor.ui.text import Text
 
+from apps.base import lock_device
 from apps.common.confirm import require_confirm
 
+if False:
+    from trezor.messages.ApplySettings import ApplySettings
 
-async def apply_settings(ctx, msg):
+
+async def apply_settings(ctx: wire.Context, msg: ApplySettings):
     if (
         msg.homescreen is None
         and msg.label is None
         and msg.use_passphrase is None
         and msg.passphrase_always_on_device is None
         and msg.display_rotation is None
+        and msg.auto_lock_delay_ms is None
     ):
         raise wire.ProcessError("No setting provided")
 
@@ -36,16 +41,26 @@ async def apply_settings(ctx, msg):
     if msg.display_rotation is not None:
         await require_confirm_change_display_rotation(ctx, msg.display_rotation)
 
+    if msg.auto_lock_delay_ms is not None:
+        msg.auto_lock_delay_ms = max(
+            msg.auto_lock_delay_ms, storage.device.AUTOLOCK_DELAY_MINIMUM
+        )
+        await require_confirm_change_autolock_delay(ctx, msg.auto_lock_delay_ms)
+
     storage.device.load_settings(
         label=msg.label,
         use_passphrase=msg.use_passphrase,
         homescreen=msg.homescreen,
         passphrase_always_on_device=msg.passphrase_always_on_device,
         display_rotation=msg.display_rotation,
+        autolock_delay_ms=msg.auto_lock_delay_ms,
     )
 
     if msg.display_rotation is not None:
         ui.display.orientation(storage.device.get_rotation())
+
+    # use the value that was stored, not the one that was supplied by the user
+    workflow.idle_timer.set(storage.device.get_autolock_delay_ms(), lock_device)
 
     return Success(message="Settings applied")
 
@@ -97,4 +112,11 @@ async def require_confirm_change_display_rotation(ctx, rotation):
     text.normal("Do you really want to", "change display rotation")
     text.normal("to")
     text.bold("%s?" % label)
+    await require_confirm(ctx, text, ButtonRequestType.ProtectCall)
+
+
+async def require_confirm_change_autolock_delay(ctx, delay_ms):
+    text = Text("Auto-lock delay", ui.ICON_CONFIG, new_lines=False)
+    text.normal("Do you really want to", "auto-lock your device", "after")
+    text.bold("{} seconds?".format(delay_ms // 1000))
     await require_confirm(ctx, text, ButtonRequestType.ProtectCall)

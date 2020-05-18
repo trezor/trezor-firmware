@@ -187,3 +187,5 @@ def boot() -> None:
     wire.register(MessageType.Cancel, handle_Cancel)
     wire.register(MessageType.LockDevice, handle_LockDevice)
     wire.register(MessageType.Ping, handle_Ping)
+
+    workflow.idle_timer.set(storage.device.get_autolock_delay_ms(), lock_device)

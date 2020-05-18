@@ -38,6 +38,8 @@ _DEFAULT_BACKUP_TYPE       = BackupType.Bip39
 # fmt: on
 
 HOMESCREEN_MAXSIZE = 16384
+AUTOLOCK_DELAY_MINIMUM = 10 * 1000  # 10 seconds
+AUTOLOCK_DELAY_DEFAULT = 10 * 60 * 1000  # 10 minutes
 
 # Length of SD salt auth tag.
 # Other SD-salt-related constants are in sd_salt.py
@@ -159,6 +161,7 @@ def load_settings(
     homescreen: bytes = None,
     passphrase_always_on_device: bool = None,
     display_rotation: int = None,
+    autolock_delay_ms: int = None,
 ) -> None:
     if use_passphrase is False:
         passphrase_always_on_device = False
@@ -185,6 +188,8 @@ def load_settings(
             common.set(
                 _NAMESPACE, _ROTATION, display_rotation.to_bytes(2, "big"), True
             )  # public
+    if autolock_delay_ms is not None:
+        set_autolock_delay_ms(autolock_delay_ms)
 
 
 def get_flags() -> int:
@@ -209,14 +214,13 @@ def set_flags(flags: int) -> None:
 def get_autolock_delay_ms() -> int:
     b = common.get(_NAMESPACE, _AUTOLOCK_DELAY_MS)
     if b is None:
-        return 10 * 60 * 1000
+        return AUTOLOCK_DELAY_DEFAULT
     else:
         return int.from_bytes(b, "big")
 
 
 def set_autolock_delay_ms(delay_ms: int) -> None:
-    if delay_ms < 60 * 1000:
-        delay_ms = 60 * 1000
+    delay_ms = max(delay_ms, AUTOLOCK_DELAY_MINIMUM)
     common.set(_NAMESPACE, _AUTOLOCK_DELAY_MS, delay_ms.to_bytes(4, "big"))
 
 
