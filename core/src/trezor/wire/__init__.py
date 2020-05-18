@@ -185,6 +185,8 @@ class Context:
                 expected_type,
             )
 
+        workflow.idle_timer.touch()
+
         # parse the message and return it
         return await protobuf.load_message(reader, expected_type)
 
@@ -218,6 +220,8 @@ class Context:
             log.debug(
                 __name__, "%s:%x read: %s", self.iface.iface_num(), self.sid, exptype
             )
+
+        workflow.idle_timer.touch()
 
         # parse the message and return it
         return await protobuf.load_message(reader, exptype)

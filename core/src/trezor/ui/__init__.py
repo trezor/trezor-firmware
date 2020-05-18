@@ -3,7 +3,7 @@ import utime
 from micropython import const
 from trezorui import Display
 
-from trezor import io, loop, res, utils
+from trezor import io, loop, res, utils, workflow
 
 if __debug__:
     from apps.debug import notify_layout_change
@@ -348,6 +348,7 @@ class Layout(Component):
         while True:
             # Using `yield` instead of `await` to avoid allocations.
             event, x, y = yield touch
+            workflow.idle_timer.touch()
             self.dispatch(event, x, y)
             # We dispatch a render event right after the touch.  Quick and dirty
             # way to get the lowest input-to-render latency.

@@ -47,14 +47,22 @@ if __debug__:
 
 
 def schedule(
-    task: Task, value: Any = None, deadline: int = None, finalizer: Finalizer = None
+    task: Task,
+    value: Any = None,
+    deadline: int = None,
+    finalizer: Finalizer = None,
+    reschedule: bool = False,
 ) -> None:
     """
     Schedule task to be executed with `value` on given `deadline` (in
     microseconds).  Does not start the event loop itself, see `run`.
     Usually done in very low-level cases, see `race` for more user-friendly
     and correct concept.
+
+    If `reschedule` is set, updates an existing entry.
     """
+    if reschedule:
+        _queue.discard(task)
     if deadline is None:
         deadline = utime.ticks_us()
     if finalizer is not None:
