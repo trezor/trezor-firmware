@@ -3,11 +3,11 @@ from trezor.crypto.curve import secp256k1
 from trezor.messages.InputScriptType import SPENDADDRESS, SPENDP2SHWITNESS, SPENDWITNESS
 from trezor.messages.MessageSignature import MessageSignature
 
-from .addresses import get_address, validate_full_path
-from .keychain import with_keychain
-
 from apps.common.paths import validate_path
 from apps.common.signverify import message_digest, require_confirm_sign_message
+
+from .addresses import get_address, validate_full_path
+from .keychain import with_keychain
 
 
 @with_keychain

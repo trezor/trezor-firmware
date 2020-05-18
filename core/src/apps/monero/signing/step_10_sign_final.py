@@ -10,11 +10,11 @@ The private tx keys are used in other numerous Monero features.
 
 from trezor.messages.MoneroTransactionFinalAck import MoneroTransactionFinalAck
 
-from .state import State
-
 from apps.monero import misc
 from apps.monero.xmr import crypto
 from apps.monero.xmr.crypto import chacha_poly
+
+from .state import State
 
 if False:
     from typing import Tuple

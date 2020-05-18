@@ -3,11 +3,11 @@ This step serves for an incremental hashing of tx.vin[i] to the tx_prefix_hasher
 after the sorting on tx.vin[i].ki. The sorting order was received in the previous step.
 """
 
-from .state import State
-
 from apps.monero.layout import confirms
 from apps.monero.signing import offloading_keys
 from apps.monero.xmr import crypto
+
+from .state import State
 
 if False:
     from trezor.messages.MoneroTransactionSourceEntry import (

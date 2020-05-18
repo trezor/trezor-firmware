@@ -11,10 +11,10 @@ from trezor.strings import format_amount
 from trezor.ui.scroll import Paginated
 from trezor.ui.text import Text
 
-from . import helpers
-
 from apps.common.confirm import require_hold_to_confirm
 from apps.common.layout import split_address
+
+from . import helpers
 
 
 async def require_confirm_transfer(ctx, msg: BinanceTransferMsg):

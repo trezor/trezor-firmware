@@ -11,6 +11,9 @@ from trezor.messages import (
 from trezor.strings import format_amount
 from trezor.ui.text import Text
 
+from apps.common.confirm import require_confirm
+from apps.common.layout import split_address
+
 from ..helpers import (
     NEM_LEVY_PERCENTILE_DIVISOR_ABSOLUTE,
     NEM_MAX_DIVISIBILITY,
@@ -18,9 +21,6 @@ from ..helpers import (
 )
 from ..layout import require_confirm_final, require_confirm_text
 from ..mosaic.helpers import get_mosaic_definition, is_nem_xem_mosaic
-
-from apps.common.confirm import require_confirm
-from apps.common.layout import split_address
 
 
 async def ask_transfer(

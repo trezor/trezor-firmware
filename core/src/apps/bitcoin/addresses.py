@@ -4,12 +4,12 @@ from trezor.crypto.hashlib import sha256
 from trezor.messages import InputScriptType
 from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
 
+from apps.common import HARDENED, address_type, paths
+from apps.common.coininfo import CoinInfo
+
 from .common import ecdsa_hash_pubkey, encode_bech32_address
 from .multisig import multisig_get_pubkeys, multisig_pubkey_index
 from .scripts import output_script_multisig, output_script_native_p2wpkh_or_p2wsh
-
-from apps.common import HARDENED, address_type, paths
-from apps.common.coininfo import CoinInfo
 
 if False:
     from typing import List

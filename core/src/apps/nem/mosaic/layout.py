@@ -11,14 +11,14 @@ from trezor.messages import (
 from trezor.ui.scroll import Paginated
 from trezor.ui.text import Text
 
+from apps.common.layout import require_confirm, split_address
+
 from ..layout import (
     require_confirm_content,
     require_confirm_fee,
     require_confirm_final,
     require_confirm_text,
 )
-
-from apps.common.layout import require_confirm, split_address
 
 
 async def ask_mosaic_creation(

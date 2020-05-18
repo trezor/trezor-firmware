@@ -2,9 +2,9 @@ from micropython import const
 
 from trezor.crypto.hashlib import ripemd160, sha256
 
-from . import base58_ripple
-
 from apps.common import HARDENED
+
+from . import base58_ripple
 
 # HASH_TX_ID = const(0x54584E00)  # 'TXN'
 HASH_TX_SIGN = const(0x53545800)  # 'STX'

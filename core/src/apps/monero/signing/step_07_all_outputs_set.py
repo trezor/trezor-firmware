@@ -8,11 +8,11 @@ import gc
 
 from trezor import utils
 
-from .state import State
-
 from apps.monero.layout import confirms
 from apps.monero.signing import RctType
 from apps.monero.xmr import crypto
+
+from .state import State
 
 if False:
     from trezor.messages.MoneroTransactionAllOutSetAck import (

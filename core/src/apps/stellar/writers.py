@@ -1,6 +1,6 @@
-from .helpers import public_key_from_address
-
 from apps.common.writers import write_bytes_unchecked, write_uint32_be, write_uint64_be
+
+from .helpers import public_key_from_address
 
 write_uint32 = write_uint32_be
 write_uint64 = write_uint64_be

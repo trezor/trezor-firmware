@@ -3,9 +3,9 @@ from trezor.messages import InputScriptType
 from trezor.messages.HDNodeType import HDNodeType
 from trezor.messages.PublicKey import PublicKey
 
-from .keychain import get_keychain_for_coin
-
 from apps.common import HARDENED, coins, layout, seed
+
+from .keychain import get_keychain_for_coin
 
 
 async def get_keychain_for_curve(ctx: wire.Context, curve_name: str) -> seed.Keychain:
