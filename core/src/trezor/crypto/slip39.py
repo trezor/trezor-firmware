@@ -31,10 +31,10 @@ See https://github.com/satoshilabs/slips/blob/master/slip-0039.md.
 """
 
 from micropython import const
+from trezorcrypto import shamir, slip39
 
 from trezor.crypto import hashlib, hmac, pbkdf2, random
 from trezor.errors import MnemonicError
-from trezorcrypto import shamir, slip39
 
 if False:
     from typing import Dict, Iterable, List, Optional, Set, Tuple

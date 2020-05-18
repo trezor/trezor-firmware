@@ -6,12 +6,12 @@ import gc
 
 from trezor import utils
 
-from .state import State
-
 from apps.monero import signing
 from apps.monero.layout import confirms
 from apps.monero.signing import offloading_keys
 from apps.monero.xmr import crypto, serialize
+
+from .state import State
 
 if False:
     from typing import Tuple

@@ -8,14 +8,14 @@ from trezor.ui.scroll import Paginated
 from trezor.ui.text import Text
 from trezor.ui.word_select import WordSelector
 
+from apps.common.confirm import confirm, info_confirm, require_confirm
+from apps.common.layout import show_success, show_warning
+from apps.management import backup_types
+
 from . import word_validity
 from .keyboard_bip39 import Bip39Keyboard
 from .keyboard_slip39 import Slip39Keyboard
 from .recover import RecoveryAborted
-
-from apps.common.confirm import confirm, info_confirm, require_confirm
-from apps.common.layout import show_success, show_warning
-from apps.management import backup_types
 
 if __debug__:
     from apps.debug import input_signal

@@ -3,6 +3,9 @@ from trezor.crypto.curve import secp256k1
 from trezor.messages.InputScriptType import SPENDADDRESS, SPENDP2SHWITNESS, SPENDWITNESS
 from trezor.messages.Success import Success
 
+from apps.common import coins
+from apps.common.signverify import message_digest, require_confirm_verify_message
+
 from .addresses import (
     address_p2wpkh,
     address_p2wpkh_in_p2sh,
@@ -10,9 +13,6 @@ from .addresses import (
     address_short,
     address_to_cashaddr,
 )
-
-from apps.common import coins
-from apps.common.signverify import message_digest, require_confirm_verify_message
 
 
 async def verify_message(ctx, msg):

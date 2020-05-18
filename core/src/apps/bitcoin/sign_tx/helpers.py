@@ -16,9 +16,9 @@ from trezor.messages.TxOutputBinType import TxOutputBinType
 from trezor.messages.TxOutputType import TxOutputType
 from trezor.messages.TxRequest import TxRequest
 
-from ..writers import TX_HASH_SIZE
-
 from apps.common.coininfo import CoinInfo
+
+from ..writers import TX_HASH_SIZE
 
 if False:
     from typing import Any, Awaitable, Dict, Union

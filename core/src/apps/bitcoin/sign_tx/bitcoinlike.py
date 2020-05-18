@@ -12,8 +12,6 @@ from .. import multisig, writers
 from . import helpers
 from .bitcoin import Bitcoin, input_is_nonsegwit
 
-from apps.common.writers import write_bitcoin_varint
-
 if False:
     from typing import Union
 

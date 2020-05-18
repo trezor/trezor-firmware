@@ -4,10 +4,10 @@ from trezor.messages.SignTx import SignTx
 from trezor.messages.TxAck import TxAck
 from trezor.messages.TxRequest import TxRequest
 
+from apps.common import coininfo, paths, seed
+
 from ..keychain import with_keychain
 from . import bitcoin, helpers, layout, progress
-
-from apps.common import coininfo, paths, seed
 
 if not utils.BITCOIN_ONLY:
     from . import bitcoinlike, decred, zcash

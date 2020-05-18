@@ -1,9 +1,9 @@
 from trezor import wire
 
-from . import CURVE, networks
-
 from apps.common import HARDENED, seed
 from apps.common.seed import get_keychain
+
+from . import CURVE, networks
 
 if False:
     from typing import List

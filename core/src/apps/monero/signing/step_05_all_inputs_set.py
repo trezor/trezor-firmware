@@ -3,10 +3,10 @@ All inputs set. Defining range signature parameters.
 If in the applicable offloading mode, generate commitment masks.
 """
 
-from .state import State
-
 from apps.monero.layout import confirms
 from apps.monero.xmr import crypto
+
+from .state import State
 
 if False:
     from trezor.messages.MoneroTransactionAllInputsSetAck import (

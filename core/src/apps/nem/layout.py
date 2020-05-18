@@ -3,9 +3,9 @@ from trezor.messages import ButtonRequestType
 from trezor.strings import format_amount
 from trezor.ui.text import Text
 
-from .helpers import NEM_MAX_DIVISIBILITY
-
 from apps.common.confirm import require_confirm, require_hold_to_confirm
+
+from .helpers import NEM_MAX_DIVISIBILITY
 
 
 async def require_confirm_text(ctx, action: str):

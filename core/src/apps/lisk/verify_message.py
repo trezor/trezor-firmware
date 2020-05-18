@@ -2,10 +2,10 @@ from trezor import wire
 from trezor.crypto.curve import ed25519
 from trezor.messages.Success import Success
 
+from apps.common.signverify import require_confirm_verify_message
+
 from .helpers import get_address_from_public_key
 from .sign_message import message_digest
-
-from apps.common.signverify import require_confirm_verify_message
 
 
 async def verify_message(ctx, msg):

@@ -2,12 +2,12 @@ from trezor.crypto import bip32
 from trezor.messages import InputScriptType
 from trezor.messages.Address import Address
 
+from apps.common.layout import address_n_to_str, show_address, show_qr, show_xpub
+from apps.common.paths import validate_path
+
 from . import addresses
 from .keychain import with_keychain
 from .multisig import multisig_pubkey_index
-
-from apps.common.layout import address_n_to_str, show_address, show_qr, show_xpub
-from apps.common.paths import validate_path
 
 if False:
     from typing import List
