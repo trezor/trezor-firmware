@@ -90,8 +90,6 @@ def client(request):
         )
 
     test_ui = request.config.getoption("ui")
-    if test_ui not in ("", "record", "test"):
-        raise ValueError("Invalid ui option.")
     run_ui_tests = not request.node.get_closest_marker("skip_ui") and test_ui
 
     client.open()
@@ -195,7 +193,7 @@ def pytest_addoption(parser):
     parser.addoption(
         "--ui",
         action="store",
-        default="",
+        choices=["test", "record"],
         help="Enable UI intergration tests: 'record' or 'test'",
     )
     parser.addoption(
