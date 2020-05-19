@@ -103,7 +103,6 @@ async def handle_Cancel(ctx: wire.Context, msg: Cancel) -> NoReturn:
 
 async def handle_LockDevice(ctx: wire.Context, msg: LockDevice) -> Success:
     lock_device()
-    workflow.kill_default()  # this restarts the homescreen to show lock icon
     return Success()
 
 
@@ -145,8 +144,9 @@ def set_homescreen() -> None:
 def lock_device() -> None:
     if config.has_pin():
         config.lock()
-        set_homescreen()
         wire.find_handler = get_pinlocked_handler
+        set_homescreen()
+        workflow.close_others()
 
 
 async def unlock_device(ctx: wire.GenericContext = wire.DUMMY_CONTEXT) -> None:

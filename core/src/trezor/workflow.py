@@ -113,6 +113,24 @@ def kill_default() -> None:
         loop.close(default_task)
 
 
+def close_others() -> None:
+    """Shut down all running tasks, except the one that is currently executing, and
+    restart the default."""
+    try:
+        kill_default()
+        # if no other tasks are running, start_default will run immediately
+    except ValueError:
+        pass
+
+    # we need a local copy of tasks because processing task.close() modifies
+    # the global instance
+    for task in list(tasks):
+        if not task.is_running():
+            task.close()
+
+    # if tasks were running, closing the last of them will run start_default
+
+
 def _finalize_default(task: loop.Task, value: Any) -> None:
     """Finalizer for the default task. Cleans up globals and restarts the default
     in case no other task is running."""
