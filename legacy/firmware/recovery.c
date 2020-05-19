@@ -499,9 +499,7 @@ void requestOnDeviceTextInput(void) {
 
 bool confirmWord(const char *word, const char *desc, const char *input_invalid,
                  bool enable_edit, bool enable_done) {
-  char str[256];
-  sprintf(str, "Confirm %s:", desc);
-  layoutCheckInput(word, WORD_WIDTH, enable_edit, enable_done, str,
+  layoutCheckInput(word, WORD_WIDTH, enable_edit, enable_done, desc,
                    input_invalid, NULL);
 
   buttonUpdate();
