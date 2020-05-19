@@ -43,11 +43,12 @@ class Bitcoin:
     async def signer(self) -> None:
         progress.init(self.tx.inputs_count, self.tx.outputs_count)
 
-        # Add inputs to hash143 and h_confirmed and compute the sum of input amounts.
+        # Add inputs to hash143 and h_confirmed and compute the sum of input amounts
+        # by requesting each previous transaction and checking its output amounts.
         await self.step1_process_inputs()
 
-        # Add outputs to hash143 and h_confirmed, check previous transaction output
-        # amounts, confirm outputs and compute sum of output amounts.
+        # Add outputs to hash143 and h_confirmed, confirm outputs and compute
+        # sum of output amounts.
         await self.step2_confirm_outputs()
 
         # Check fee, confirm lock_time and total.
