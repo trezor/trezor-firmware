@@ -7,6 +7,7 @@ RADIUS = const(2)
 
 # backlight brightness
 BACKLIGHT_NORMAL = const(150)
+BACKLIGHT_LOW = const(70)
 BACKLIGHT_DIM = const(5)
 BACKLIGHT_NONE = const(2)
 BACKLIGHT_MAX = const(255)
