@@ -63,7 +63,6 @@ class TestMsgSigntxDecred:
             address="TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz",
             amount=190000000,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
-            decred_script_version=0,
         )
 
         with client:
@@ -123,7 +122,6 @@ class TestMsgSigntxDecred:
             address="TsWjioPrP8E1TuTMmTrVMM2BA4iPrjQXBpR",
             amount=489975000,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
-            decred_script_version=0,
         )
 
         out2 = proto.TxOutputType(
@@ -131,7 +129,6 @@ class TestMsgSigntxDecred:
             address_n=parse_path("m/44'/1'/0'/1/0"),
             amount=100000000,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
-            decred_script_version=0,
         )
 
         with client:
@@ -222,14 +219,12 @@ class TestMsgSigntxDecred:
                 multisig=multisig,
                 amount=99900000,
                 script_type=proto.OutputScriptType.PAYTOMULTISIG,
-                decred_script_version=0,
             )
 
             out2 = proto.TxOutputType(
                 address="TsWjioPrP8E1TuTMmTrVMM2BA4iPrjQXBpR",
                 amount=300000000,
                 script_type=proto.OutputScriptType.PAYTOADDRESS,
-                decred_script_version=0,
             )
 
             with client:

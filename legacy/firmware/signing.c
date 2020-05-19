@@ -652,13 +652,6 @@ static bool signing_validate_input(const TxInputType *txinput) {
     signing_abort();
     return false;
   }
-  if (!coin->decred && txinput->has_decred_script_version) {
-    fsm_sendFailure(
-        FailureType_Failure_DataError,
-        _("Decred details provided but Decred coin not specified."));
-    signing_abort();
-    return false;
-  }
 
 #if !BITCOIN_ONLY
   if (coin->force_bip143 || coin->overwintered) {
@@ -783,13 +776,6 @@ static bool signing_check_input(const TxInputType *txinput) {
   tx_sequence_hash(&hasher_sequence, txinput);
 #if !BITCOIN_ONLY
   if (coin->decred) {
-    if (txinput->decred_script_version > 0) {
-      fsm_sendFailure(FailureType_Failure_DataError,
-                      _("Decred v1+ scripts are not supported"));
-      signing_abort();
-      return false;
-    }
-
     // serialize Decred prefix in Phase 1
     resp.has_serialized = true;
     resp.serialized.has_serialized_tx = true;
