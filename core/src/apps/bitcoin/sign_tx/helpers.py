@@ -21,7 +21,7 @@ from apps.common.coininfo import CoinInfo
 from ..writers import TX_HASH_SIZE
 
 if False:
-    from typing import Any, Awaitable, Dict, Union
+    from typing import Any, Awaitable, Dict
     from trezor.messages.TxInputType import EnumTypeInputScriptType
     from trezor.messages.TxOutputType import EnumTypeOutputScriptType
 
@@ -241,8 +241,6 @@ def sanitize_tx_input(tx: TransactionType, coin: CoinInfo) -> TxInputType:
             raise wire.DataError("Segwit not enabled on this coin")
         if txi.amount is None:
             raise wire.DataError("Segwit input without amount")
-
-    _sanitize_decred(txi, coin)
     return txi
 
 
@@ -267,26 +265,9 @@ def sanitize_tx_output(tx: TransactionType, coin: CoinInfo) -> TxOutputType:
             raise wire.DataError("Both address and address_n provided.")
         if not txo.address_n and not txo.address:
             raise wire.DataError("Missing address")
-
-    _sanitize_decred(txo, coin)
-
     return txo
 
 
 def sanitize_tx_binoutput(tx: TransactionType, coin: CoinInfo) -> TxOutputBinType:
     txo_bin = tx.bin_outputs[0]
-    _sanitize_decred(txo_bin, coin)
     return txo_bin
-
-
-def _sanitize_decred(
-    tx: Union[TxInputType, TxOutputType, TxOutputBinType], coin: CoinInfo
-) -> None:
-    if coin.decred:
-        if tx.decred_script_version is None:
-            tx.decred_script_version = 0
-    else:
-        if tx.decred_script_version is not None:
-            raise wire.DataError(
-                "Decred details provided but Decred coin not specified."
-            )

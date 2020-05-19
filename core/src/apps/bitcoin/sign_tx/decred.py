@@ -22,6 +22,7 @@ from .bitcoin import Bitcoin
 DECRED_SERIALIZE_FULL = const(0 << 16)
 DECRED_SERIALIZE_NO_WITNESS = const(1 << 16)
 DECRED_SERIALIZE_WITNESS_SIGNING = const(3 << 16)
+DECRED_SCRIPT_VERSION = const(0)
 
 DECRED_SIGHASH_ALL = const(1)
 
@@ -63,8 +64,6 @@ class Decred(Bitcoin):
         self.write_tx_input(self.serialized_tx, txi, bytes())
 
     async def confirm_output(self, txo: TxOutputType, script_pubkey: bytes) -> None:
-        if txo.decred_script_version != 0:
-            raise wire.ActionCancelled("Cannot send to output with script version != 0")
         await super().confirm_output(txo, script_pubkey)
         self.write_tx_output(self.serialized_tx, txo, script_pubkey)
 
@@ -160,7 +159,10 @@ class Decred(Bitcoin):
         script_pubkey: bytes,
     ) -> None:
         writers.write_uint64(w, txo.amount)
-        writers.write_uint16(w, txo.decred_script_version)
+        if isinstance(txo, TxOutputBinType):
+            writers.write_uint16(w, txo.decred_script_version)
+        else:
+            writers.write_uint16(w, DECRED_SCRIPT_VERSION)
         writers.write_bytes_prefixed(w, script_pubkey)
 
     def write_tx_header(
