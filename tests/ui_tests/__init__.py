@@ -82,10 +82,8 @@ def screen_recording(client, request):
 
     if test_ui == "record":
         screen_path = screens_test_path / "recorded"
-    elif test_ui == "test":
-        screen_path = screens_test_path / "actual"
     else:
-        raise ValueError("Invalid 'ui' option.")
+        screen_path = screens_test_path / "actual"
 
     if not screens_test_path.exists():
         screens_test_path.mkdir()
@@ -98,10 +96,8 @@ def screen_recording(client, request):
         yield
         if test_ui == "record":
             _process_recorded(screen_path, test_name)
-        elif test_ui == "test":
-            _process_tested(screens_test_path, test_name)
         else:
-            raise ValueError("Invalid 'ui' option.")
+            _process_tested(screens_test_path, test_name)
     finally:
         client.debug.stop_recording()
 
