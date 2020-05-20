@@ -255,4 +255,8 @@ enum MessageType {
     MessageType_WebAuthnCredentials = 801 [(wire_out) = true];
     MessageType_WebAuthnAddResidentCredential = 802 [(wire_in) = true];
     MessageType_WebAuthnRemoveResidentCredential = 803 [(wire_in) = true];
+
+    // Elements
+    MessageType_ElementsGetRangeProofNonce = 900 [(wire_in) = true];
+    MessageType_ElementsRangeProofNonce = 901 [(wire_out) = true];
 }

@@ -24,6 +24,7 @@ def _boot_apps() -> None:
         import apps.ethereum
         import apps.lisk
         import apps.monero
+        import apps.elements
         import apps.nem
         import apps.stellar
         import apps.ripple
@@ -45,6 +46,7 @@ def _boot_apps() -> None:
         apps.ethereum.boot()
         apps.lisk.boot()
         apps.monero.boot()
+        apps.elements.boot()
         apps.nem.boot()
         apps.stellar.boot()
         apps.ripple.boot()

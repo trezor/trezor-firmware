@@ -1,0 +1,26 @@
+syntax = "proto2";
+package hw.trezor.messages.elements;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageElements";
+
+/**
+ * Request: Ask device for Elements range-proof nonce (generated using SLIP-0077 and ECDH)
+ * @start
+ * @next ElementsRangeProofNonce
+ * @next Failure
+ */
+
+message ElementsGetRangeProofNonce {
+    optional bytes ecdh_pubkey = 1;         // recipient pubkey, for ECDH nonce generation
+    optional bytes script_pubkey = 2;		// output script (required for SLIP-0077)
+}
+
+/**
+ * Response: Contains Elements range-proof nonce.
+ * @end
+ */
+message ElementsRangeProofNonce {
+	optional bytes nonce = 1;
+}
