@@ -1241,7 +1241,7 @@ void stellar_format_price(uint32_t numerator, uint32_t denominator, char *out,
   }
 
   // Format with bn_format_uint64
-  bn_format_uint64(value, NULL, NULL, scale, 0, false, out, outlen);
+  bn_format_uint64(value, NULL, NULL, 6, 6 - scale, true, out, outlen);
 }
 
 /*
