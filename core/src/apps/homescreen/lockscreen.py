@@ -1,4 +1,4 @@
-from trezor import loop, res, ui
+from trezor import loop, res, ui, wire
 
 from . import HomescreenBase
 
@@ -10,7 +10,10 @@ async def lockscreen() -> None:
     if can_lock_device():
         await Lockscreen()
 
-    await unlock_device()
+    try:
+        await unlock_device()
+    except wire.PinCancelled:
+        pass
 
 
 class Lockscreen(HomescreenBase):
