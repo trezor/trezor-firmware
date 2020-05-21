@@ -18,6 +18,7 @@ async def get_keychain_for_curve(ctx: wire.Context, curve_name: str) -> seed.Key
 
 
 async def get_public_key(ctx, msg):
+    coin_name = msg.coin_name or "Bitcoin"
     script_type = msg.script_type or InputScriptType.SPENDADDRESS
 
     if msg.ecdsa_curve_name is not None:
@@ -33,6 +34,15 @@ async def get_public_key(ctx, msg):
         coin = coins.by_name("Bitcoin")
         # only allow SLIP-13/17 namespaces
         keychain = await get_keychain_for_curve(ctx, msg.ecdsa_curve_name)
+
+    elif (
+        coin_name == "Bitcoin"
+        and script_type is InputScriptType.SPENDADDRESS
+        and msg.address_n == [HARDENED]
+    ):
+        # allow extracting PSBT master fingerprinty by calling GetPublicKey(m/0')
+        coin = coins.by_name("Bitcoin")
+        keychain = await seed.get_keychain(ctx, [("secp256k1", [HARDENED])])
 
     else:
         # select curve and namespaces based on the requested coin properties

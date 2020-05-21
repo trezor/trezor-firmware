@@ -17,9 +17,12 @@
 import pytest
 
 from trezorlib import btc, messages
+from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from .. import bip32
+
+pytestmark = pytest.mark.skip_ui
 
 VECTORS_BITCOIN = (  # coin_name, xpub_magic, path, xpub
     (
@@ -58,33 +61,51 @@ VECTORS_BITCOIN = (  # coin_name, xpub_magic, path, xpub
         parse_path("m/44h/1h/0h/0/0"),
         "tpubDGwNSs8z8jZU2EcUiubR4frGvKqddvLBqCDNknnWhmoUd6EHrRWrqXmDaWBNddWzM5Yqh4e4TUYFK9hGCEnSrMKgV6cthRhArfZpwzihdw7",
     ),
-)
-
-VECTORS_ALTCOINS = (
-    (
+    (  # PSBT master fingerprint retrieval
+        "Bitcoin",
+        0x0488B21E,
+        parse_path("m/0h"),
+        "xpub68Zyu13qjcQvJXTsnmhH2h2TyPiXAama5bTU8u9iRXyYtS9X9yWvSKij6YGt7JJ2nr5rSGi4KLUW5Z8bTKHqXhbLwqb7smG3Y8j2wy4rmf3",
+    ),
+    pytest.param(
         "Litecoin",
         0x019DA462,
         parse_path("m/44h/2h/0h"),
         "Ltub2Y8PyEMWQVgiX4L4gVzU8PakBTQ2WBxFdS6tJARQeasUUfXmBut2jGShnQyD3jgyBf7mmvs5jPNgmgXad5J6M8a8FiZK78dbT21fYtTAC9a",
+        marks=pytest.mark.altcoin,
     ),
-    (
+    pytest.param(
         "Litecoin",
         0x019DA462,
         parse_path("m/44h/2h/10h"),
         "Ltub2Y8PyEMWQVgiy8Zio1XrKWkGL6ZmCZB9W5ShbvbzZ14irCrAb62YEoMafTAM5a2A6x6XNcyDdCNW7NVgES9jtQqyUZcBUFTimS7VVJ8tbpE",
+        marks=pytest.mark.altcoin,
     ),
-    (
+    pytest.param(
         "Litecoin",
         0x019DA462,
         parse_path("m/44h/2h/0h/0/0"),
         "Ltub2dTvwC4v7GNeR6UEaywQ6j72wHi4dwRo3oDDzvXAwb4CrXVQEUTbxC4hEfULiKByiUMEmYLhuMo1YMYmBBjKJ8kyk9ia5gZaVNWq5rVLom4",
+        marks=pytest.mark.altcoin,
     ),
-    (
+    pytest.param(
         "Litecoin",
         0x019DA462,
         parse_path("m/44h/2h/10h/1/100"),
         "Ltub2dcb6Nghj3kwaC2g3TtPgFzMSm7LXfe4mijFYsvEtxXu18vicTB4kYc9z6jGVMpdYhMScNhVY1naQYALnM2x4fvaGzAAGgcuZ89nFyyLhiK",
+        marks=pytest.mark.altcoin,
     ),
+)
+
+VECTORS_INVALID = (  # coin_name, path
+    ("Bitcoin", parse_path("m/44h/1h/0h")),  # Testnet path on Bitcoin
+    ("Testnet", parse_path("m/44h/0h/0h")),  # Bitcoin path on Testnet
+    ("Bitcoin", parse_path("m/40h/0h/0h")),  # Unknown purpose
+    ("Bitcoin", parse_path("m/13h/0h/0h")),  # SLIP-13 path
+    # Bitcoin path on Litecoin
+    pytest.param("Litecoin", parse_path("m/44h/0h/0h"), marks=pytest.mark.altcoin),
+    # Segwit path on Bitcoin Cash
+    pytest.param("Bcash", parse_path("m/84h/145h/0h"), marks=pytest.mark.altcoin),
 )
 
 
@@ -95,12 +116,11 @@ def test_get_public_node(client, coin_name, xpub_magic, path, xpub):
     assert bip32.serialize(res.node, xpub_magic) == xpub
 
 
-@pytest.mark.parametrize("coin_name, xpub_magic, path, xpub", VECTORS_ALTCOINS)
-@pytest.mark.altcoin
-def test_get_public_node_altcoin(client, coin_name, xpub_magic, path, xpub):
-    res = btc.get_public_node(client, path, coin_name=coin_name)
-    assert res.xpub == xpub
-    assert bip32.serialize(res.node, xpub_magic) == xpub
+@pytest.mark.skip_t1
+@pytest.mark.parametrize("coin_name, path", VECTORS_INVALID)
+def test_invalid_path(client, coin_name, path):
+    with pytest.raises(TrezorFailure, match="Forbidden key path"):
+        btc.get_public_node(client, path, coin_name=coin_name)
 
 
 VECTORS_SCRIPT_TYPES = (  # script_type, xpub
