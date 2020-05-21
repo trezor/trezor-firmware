@@ -1,0 +1,7 @@
+device CORTEX-M3
+if swd
+speed 50000
+loadbin build/firmware/firmware.bin 0x08010000
+r
+g
+exit

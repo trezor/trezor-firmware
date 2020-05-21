@@ -6,7 +6,15 @@
   .type reset_handler, STT_FUNC
 reset_handler:
 
+// The following loading of VTOR address only works if T1 bootloader was built with MEMORY_PROTECT=0
+// or the firmware was properly signed. All other variants end up in hard fault due to MPU 
+// (cf mpu_config_firmware in legacy bootloader)
+
 #if TREZOR_MODEL == 1
+  ldr r0, =0xE000ED08  // r0 = VTOR address
+  ldr r1, =0x08010400  // r1 = FLASH_APP_START
+  str r1, [r0]         // assign
+
   ldr r0, =_estack - 8  // r0 = stack pointer, T1 bootloader had 8 bytes reserved at end
   msr msp, r0           // set stack pointer
   dsb
