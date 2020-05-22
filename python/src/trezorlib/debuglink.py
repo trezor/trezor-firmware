@@ -87,6 +87,15 @@ class DebugLink:
         obj = self._call(messages.DebugLinkGetState(wait_layout=True))
         return layout_lines(obj.layout_lines)
 
+    def watch_layout(self, watch: bool) -> None:
+        """Enable or disable watching layouts.
+        If disabled, wait_layout will not work.
+
+        The message is missing on T1. Use `TrezorClientDebugLink.watch_layout` for
+        cross-version compatibility.
+        """
+        self._call(messages.DebugLinkWatchLayout(watch=watch))
+
     def encode_pin(self, pin, matrix=None):
         """Transform correct PIN according to the displayed matrix."""
         if matrix is None:
@@ -335,9 +344,25 @@ class TrezorClientDebugLink(TrezorClient):
         self.ui.input_flow = input_flow
         input_flow.send(None)  # start the generator
 
+    def watch_layout(self, watch: bool) -> None:
+        """Enable or disable watching layout changes.
+
+        Happens implicitly in a `with client` block.
+
+        Since trezor-core v2.3.2, it is necessary to call `watch_layout()` before
+        using `debug.wait_layout()`, otherwise layout changes are not reported.
+        """
+        if self.version >= (2, 3, 2):
+            # version check is necessary because otherwise we cannot reliably detect
+            # whether and where to wait for reply:
+            # - T1 reports unknown debuglink messages on the wirelink
+            # - TT < 2.3.0 does not reply to unknown debuglink messages due to a bug
+            self.debug.watch_layout(watch)
+
     def __enter__(self):
         # For usage in with/expected_responses
         self.in_with_statement += 1
+        self.watch_layout(True)
         return self
 
     def __exit__(self, _type, value, traceback):
@@ -362,6 +387,7 @@ class TrezorClientDebugLink(TrezorClient):
             self.expected_responses = None
             self.current_response = None
             self.ui.clear()
+            self.watch_layout(False)
 
         return False
 
