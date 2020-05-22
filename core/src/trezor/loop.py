@@ -341,6 +341,8 @@ class race(Syscall):
         except:  # noqa: E722
             # exception was raised on the waiting task externally with
             # close() or throw(), kill the children tasks and re-raise
+            # Make sure finalizers don't continue processing.
+            self.finished.append(self)
             self.exit()
             raise
 
