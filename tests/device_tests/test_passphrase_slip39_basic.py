@@ -16,7 +16,7 @@
 
 import pytest
 
-from ..common import MNEMONIC_SLIP39_BASIC_20_3of6, test_address
+from ..common import MNEMONIC_SLIP39_BASIC_20_3of6, get_test_address
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6, passphrase=True)
@@ -29,7 +29,7 @@ def test_3of6_passphrase(client):
     """
     assert client.features.passphrase_protection is True
     client.use_passphrase("TREZOR")
-    address = test_address(client)
+    address = get_test_address(client)
     assert address == "mi4HXfRJAqCDyEdet5veunBvXLTKSxpuim"
 
 
@@ -49,5 +49,5 @@ def test_2of5_passphrase(client):
     """
     assert client.features.passphrase_protection is True
     client.use_passphrase("TREZOR")
-    address = test_address(client)
+    address = get_test_address(client)
     assert address == "mjXH4pN7TtbHp3tWLqVKktKuaQeByHMoBZ"

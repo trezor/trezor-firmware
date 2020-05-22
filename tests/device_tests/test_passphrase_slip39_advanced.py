@@ -19,7 +19,7 @@ import pytest
 from ..common import (
     MNEMONIC_SLIP39_ADVANCED_20,
     MNEMONIC_SLIP39_ADVANCED_33,
-    test_address,
+    get_test_address,
 )
 
 
@@ -33,12 +33,12 @@ def test_128bit_passphrase(client):
     """
     assert client.features.passphrase_protection is True
     client.use_passphrase("TREZOR")
-    address = test_address(client)
+    address = get_test_address(client)
     assert address == "mkKDUMRR1CcK8eLAzCZAjKnNbCquPoWPxN"
     client.state = None
     client.clear_session()
     client.use_passphrase("ROZERT")
-    address_compare = test_address(client)
+    address_compare = get_test_address(client)
     assert address != address_compare
 
 
@@ -52,10 +52,10 @@ def test_256bit_passphrase(client):
     """
     assert client.features.passphrase_protection is True
     client.use_passphrase("TREZOR")
-    address = test_address(client)
+    address = get_test_address(client)
     assert address == "mxVtGxUJ898WLzPMmy6PT1FDHD1GUCWGm7"
     client.state = None
     client.clear_session()
     client.use_passphrase("ROZERT")
-    address_compare = test_address(client)
+    address_compare = get_test_address(client)
     assert address != address_compare
