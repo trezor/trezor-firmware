@@ -23,7 +23,7 @@ from ..common import (
     MNEMONIC12,
     MNEMONIC_SLIP39_ADVANCED_20,
     MNEMONIC_SLIP39_BASIC_20_3of6,
-    test_address,
+    get_test_address,
 )
 
 
@@ -42,7 +42,7 @@ class TestDeviceLoad:
         assert state.pin is None
         assert state.passphrase_protection is False
 
-        address = test_address(client)
+        address = get_test_address(client)
         assert address == "mkqRFzxmkCGX9jxgpqqFHcxRUmLJcLDBer"
 
     def test_load_device_2(self, client):
@@ -62,7 +62,7 @@ class TestDeviceLoad:
             assert state.pin == "1234"
         assert state.passphrase_protection is True
 
-        address = test_address(client)
+        address = get_test_address(client)
         assert address == "mx77VZjTVixVsU7nCtAKHnGFdsyNCnsWWw"
 
     @pytest.mark.skip_t1
@@ -116,7 +116,7 @@ class TestDeviceLoad:
             skip_checksum=True,
         )
         client.use_passphrase(passphrase_nfkd)
-        address_nfkd = test_address(client)
+        address_nfkd = get_test_address(client)
 
         device.wipe(client)
         debuglink.load_device(
@@ -129,7 +129,7 @@ class TestDeviceLoad:
             skip_checksum=True,
         )
         client.use_passphrase(passphrase_nfc)
-        address_nfc = test_address(client)
+        address_nfc = get_test_address(client)
 
         device.wipe(client)
         debuglink.load_device(
@@ -142,7 +142,7 @@ class TestDeviceLoad:
             skip_checksum=True,
         )
         client.use_passphrase(passphrase_nfkc)
-        address_nfkc = test_address(client)
+        address_nfkc = get_test_address(client)
 
         device.wipe(client)
         debuglink.load_device(
@@ -155,7 +155,7 @@ class TestDeviceLoad:
             skip_checksum=True,
         )
         client.use_passphrase(passphrase_nfd)
-        address_nfd = test_address(client)
+        address_nfd = get_test_address(client)
 
         assert address_nfkd == address_nfc
         assert address_nfkd == address_nfkc
