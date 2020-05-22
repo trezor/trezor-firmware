@@ -322,7 +322,7 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
             else:
                 # We found a valid handler for this message type.
 
-                # Workflow task, declared for the `workflow.on_close` call later.
+                # Workflow task, declared for the finally block
                 wf_task = None  # type: Optional[HandlerTask]
 
                 # Here we make sure we always respond with a Failure response
@@ -342,14 +342,11 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
                     # Create the workflow task.
                     wf_task = handler(ctx, req_msg)
 
-                    # Register the task into the workflow management system.
-                    workflow.on_start(wf_task)
-
                     # Run the workflow task.  Workflow can do more on-the-wire
                     # communication inside, but it should eventually return a
                     # response message, or raise an exception (a rather common
                     # thing to do).  Exceptions are handled in the code below.
-                    res_msg = await wf_task
+                    res_msg = await workflow.spawn(wf_task)
 
                 except UnexpectedMessageError as exc:
                     # Workflow was trying to read a message from the wire, and
@@ -371,23 +368,22 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
                     #   registered handler, but does not have a protobuf class
                     # - the first workflow message was not a valid protobuf
                     # - workflow raised some kind of an exception while running
+                    # - something canceled the workflow from the outside
                     if __debug__:
                         if isinstance(exc, ActionCancelled):
                             log.debug(__name__, "cancelled: {}".format(exc.message))
+                        elif isinstance(exc, loop.TaskClosed):
+                            log.debug(__name__, "cancelled: loop task was closed")
                         else:
                             log.exception(__name__, exc)
                     res_msg = failure(exc)
 
                 finally:
-                    # De-register the task from the workflow system, if we
-                    # registered it before.
-                    if wf_task is not None:
-                        workflow.on_close(wf_task)
-                        # If a default workflow is on, make sure we do not race
-                        # against the layout that is inside.
-                        # TODO: this is very hacky and complects wire with the ui
-                        if workflow.default_task is not None:
-                            await ui.wait_until_layout_is_running()
+                    # If we ran a workflow task, and a default workflow is on, make sure
+                    # we do not race against the layout that is inside.
+                    # TODO: this is very hacky and complects wire with the ui
+                    if wf_task is not None and workflow.default_task is not None:
+                        await ui.wait_until_layout_is_running()
 
             if res_msg is not None:
                 # Either the workflow returned a response, or we created one.
@@ -448,6 +444,8 @@ def import_workflow(pkgname: str, modname: str) -> Any:
 def failure(exc: BaseException) -> Failure:
     if isinstance(exc, Error):
         return Failure(code=exc.code, message=exc.message)
+    elif isinstance(exc, loop.TaskClosed):
+        return Failure(code=FailureType.ActionCancelled, message="Cancelled")
     else:
         return Failure(code=FailureType.FirmwareError, message="Firmware error")
 

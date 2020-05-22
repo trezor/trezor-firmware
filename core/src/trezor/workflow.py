@@ -16,7 +16,7 @@ if __debug__:
 
 
 # Set of workflow tasks.  Multiple workflows can be running at the same time.
-tasks = set()  # type: Set[loop.Task]
+tasks = set()  # type: Set[loop.spawn]
 
 # Default workflow task, if a default workflow is running.  Default workflow
 # is not contained in the `tasks` set above.
@@ -26,23 +26,22 @@ default_task = None  # type: Optional[loop.Task]
 default_constructor = None  # type: Optional[Callable[[], loop.Task]]
 
 
-def on_start(workflow: loop.Task) -> None:
+def _on_start(workflow: loop.spawn) -> None:
     """
-    Call after creating a workflow task, but before running it.  You should
-    make sure to always call `on_close` when the task is finished.
+    Called after creating a workflow task, but before running it.
     """
     # Take note that this workflow task is running.
     if __debug__:
-        log.debug(__name__, "start: %s", workflow)
+        log.debug(__name__, "start: %s", workflow.task)
     idle_timer.touch()
     tasks.add(workflow)
 
 
-def on_close(workflow: loop.Task) -> None:
-    """Call when a workflow task has finished running."""
+def _on_close(workflow: loop.spawn) -> None:
+    """Called when a workflow task has finished running."""
     # Remove task from the running set.
     if __debug__:
-        log.debug(__name__, "close: %s", workflow)
+        log.debug(__name__, "close: %s", workflow.task)
     tasks.remove(workflow)
     if not tasks and default_constructor:
         # If no workflows are running, we should create a new default workflow
@@ -53,6 +52,18 @@ def on_close(workflow: loop.Task) -> None:
         # finished.
         if utils.LOG_MEMORY:
             micropython.mem_info()
+
+
+def spawn(workflow: loop.Task) -> loop.spawn:
+    """Spawn a workflow task.
+
+    Creates an instance of loop.spawn for the workflow and registers it into the
+    workflow management system.
+    """
+    task = loop.spawn(workflow)
+    _on_start(task)
+    task.set_finalizer(_on_close)
+    return task
 
 
 def start_default() -> None:
