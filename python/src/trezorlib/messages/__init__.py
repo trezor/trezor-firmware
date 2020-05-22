@@ -53,6 +53,7 @@ from .DebugLinkShowText import DebugLinkShowText
 from .DebugLinkShowTextItem import DebugLinkShowTextItem
 from .DebugLinkState import DebugLinkState
 from .DebugLinkStop import DebugLinkStop
+from .DebugLinkWatchLayout import DebugLinkWatchLayout
 from .DebugMoneroDiagAck import DebugMoneroDiagAck
 from .DebugMoneroDiagRequest import DebugMoneroDiagRequest
 from .Deprecated_PassphraseStateAck import Deprecated_PassphraseStateAck
