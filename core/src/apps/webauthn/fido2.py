@@ -1001,8 +1001,11 @@ class DialogManager:
         self.state = None  # type: Optional[State]
         self.deadline = 0
         self.result = _RESULT_NONE
-        self.workflow = None  # type: Optional[Coroutine]
+        self.workflow = None  # type: Optional[loop.spawn]
         self.keepalive = None  # type: Optional[Coroutine]
+
+    def _workflow_is_running(self) -> bool:
+        return self.workflow is not None and not self.workflow.finished
 
     def reset_timeout(self) -> None:
         if self.state is not None:
@@ -1010,7 +1013,7 @@ class DialogManager:
 
     def reset(self) -> None:
         if self.workflow is not None:
-            loop.close(self.workflow)
+            self.workflow.close()
         if self.keepalive is not None:
             loop.close(self.keepalive)
         self._clear()
@@ -1024,7 +1027,7 @@ class DialogManager:
         if utime.ticks_ms() >= self.deadline:
             self.reset()
 
-        if self.workflow is None:
+        if not self._workflow_is_running():
             return bool(workflow.tasks)
 
         if self.state is None or self.state.finished:
@@ -1044,10 +1047,9 @@ class DialogManager:
         self.state = state
         self.reset_timeout()
         self.result = _RESULT_NONE
-        self.keepalive = self.keepalive_loop()
+        self.keepalive = self.keepalive_loop()  # TODO: use loop.spawn here
         loop.schedule(self.keepalive)
-        self.workflow = self.dialog_workflow()
-        loop.schedule(self.workflow)
+        self.workflow = workflow.spawn(self.dialog_workflow())
         return True
 
     async def keepalive_loop(self) -> None:
@@ -1066,36 +1068,31 @@ class DialogManager:
         self.reset()
 
     async def dialog_workflow(self) -> None:
-        if self.workflow is None or self.state is None:
+        if self.state is None:
             return
 
         try:
-            workflow.on_start(self.workflow)
-            try:
-                while self.result is _RESULT_NONE:
-                    result = await self.state.confirm_dialog()
-                    if isinstance(result, State):
-                        self.state = result
-                        self.reset_timeout()
-                    elif result is True:
-                        self.result = _RESULT_CONFIRM
-                    else:
-                        self.result = _RESULT_DECLINE
-            finally:
-                if self.keepalive is not None:
-                    loop.close(self.keepalive)
-
-                if self.result == _RESULT_CONFIRM:
-                    await self.state.on_confirm()
-                elif self.result == _RESULT_CANCEL:
-                    await self.state.on_cancel()
-                elif self.result == _RESULT_TIMEOUT:
-                    await self.state.on_timeout()
+            while self.result is _RESULT_NONE:
+                result = await self.state.confirm_dialog()
+                if isinstance(result, State):
+                    self.state = result
+                    self.reset_timeout()
+                elif result is True:
+                    self.result = _RESULT_CONFIRM
                 else:
-                    await self.state.on_decline()
+                    self.result = _RESULT_DECLINE
         finally:
-            workflow.on_close(self.workflow)
-            self.workflow = None
+            if self.keepalive is not None:
+                loop.close(self.keepalive)
+
+            if self.result == _RESULT_CONFIRM:
+                await self.state.on_confirm()
+            elif self.result == _RESULT_CANCEL:
+                await self.state.on_cancel()
+            elif self.result == _RESULT_TIMEOUT:
+                await self.state.on_timeout()
+            else:
+                await self.state.on_decline()
 
 
 def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
