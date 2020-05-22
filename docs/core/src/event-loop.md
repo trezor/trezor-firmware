@@ -27,13 +27,16 @@ to `__iter__`. The `__await__` method is never executed, however.
 `loop.run()` starts the event loop. The call only returns when there are no further
 waiting tasks -- so, in usual conditions, never.
 
-`loop.schedule(task, value, deadline, finalizer)` schedules an awaitable to be run
-either as soon as possible, or at a specified time (given as a `deadline` in
+`loop.schedule(task, value, deadline, finalizer, reschedule)` schedules an awaitable to
+be run either as soon as possible, or at a specified time (given as a `deadline` in
 microseconds since system bootup.)
 
 In addition, when the task finishes processing or is closed externally, the `finalizer`
 callback will be executed, with the task and the return value (or the raised exception)
 as a parameter.
+
+If `reschedule` is true, the task is first cleared from the scheduled queue -- in
+effect, it is rescheduled to run at a different time.
 
 `loop.close(task)` removes a previously scheduled task from the list of waiting tasks
 and calls its finalizer.
@@ -183,6 +186,26 @@ Also, when a child task is done, another scheduling gap happens, and the parent 
 is scheduled to run on the next tick.
 
 _Upcoming changes may solve this in relevant cases, by inlining syscall operations._
+
+**`loop.spawn(task)`**: Start the task asynchronously. Return an object that allows
+the caller to await its result, or shut the task down.
+
+Example usage:
+```python
+task = loop.spawn(some_background_task())
+await do_something_here()
+result = await task
+```
+
+Unlike other syscalls, `loop.spawn` starts the task at instantiation time. `await`ing
+the same `loop.spawn` instance a second time will immediately return the result of the
+original run.
+
+If the task is cancelled (usually by calling `task.close()`), the awaiter receives a
+`loop.TaskClosed` exception.
+
+It is also possible to register a synchronous finalizer callback via
+`task.set_finalizer`. This is used internally to implement workflow management.
 
 **`loop.chan()`** is a unidirectional communication channel that actually implements two
 syscalls:
