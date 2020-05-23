@@ -313,7 +313,7 @@ SOURCE_FIRMWARE = [
     'embed/firmware/main.c',
     'embed/firmware/mphalport.c',
     'embed/firmware/nlrthumb.c',
-    'embed/firmware/startup.s',
+    'embed/firmware/startup.S',
 ]
 
 SOURCE_TREZORHAL = [
