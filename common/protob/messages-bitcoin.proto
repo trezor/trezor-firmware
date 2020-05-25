@@ -216,6 +216,7 @@ message TxAck {
             // optional uint32 decred_script_version = 10;                         // only for Decred  // deprecated -> only 0 is supported
             // optional bytes prev_block_hash_bip115 = 11;     // BIP-115 support dropped
             // optional uint32 prev_block_height_bip115 = 12;  // BIP-115 support dropped
+            optional bytes witness = 13;                                        // witness data, only set for EXTERNAL inputs
         }
         /**
         * Structure representing compiled transaction output
