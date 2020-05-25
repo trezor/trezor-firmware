@@ -966,9 +966,9 @@ def by_name(name: str) -> CoinInfo:
                 decred=False,
                 negative_fee=False,
                 curve_name='secp256k1',
-                extra_data=False,
+                extra_data=True,
                 timestamp=False,
-                overwintered=False,
+                overwintered=True,
                 confidential_assets=None,
             )
         elif name == "Litecoin":
