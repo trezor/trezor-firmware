@@ -14,13 +14,9 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import time
-
 import pytest
 
 from trezorlib import device, messages as proto
-
-from ..common import test_address
 
 EXPECTED_RESPONSES_NOPIN = [proto.ButtonRequest(), proto.Success(), proto.Features()]
 EXPECTED_RESPONSES_PIN_T1 = [proto.PinMatrixRequest()] + EXPECTED_RESPONSES_NOPIN
@@ -121,59 +117,3 @@ class TestMsgApplysettings:
         with client:
             _set_expected_responses(client)
             device.apply_settings(client, homescreen=img)
-
-    def test_apply_auto_lock_delay(self, client):
-        pin_response = (
-            proto.PinMatrixRequest()
-            if client.features.model == "1"
-            else proto.ButtonRequest()
-        )
-        with client:
-            _set_expected_responses(client)
-            device.apply_settings(client, auto_lock_delay_ms=int(10e3))  # 10 secs
-
-        time.sleep(0.1)  # sleep less than auto-lock delay
-        with client:
-            # No PIN protection is required.
-            client.set_expected_responses([proto.Address()])
-            test_address(client)
-
-        time.sleep(10.1)  # sleep more than auto-lock delay
-        with client:
-            client.use_pin_sequence([PIN4])
-            client.set_expected_responses([pin_response, proto.Address()])
-            test_address(client)
-
-    def test_apply_minimal_auto_lock_delay(self, client):
-        """
-        Verify that the delay is not below the minimal auto-lock delay (10 secs)
-        otherwise the device may auto-lock before any user interaction.
-        """
-        pin_response = (
-            proto.PinMatrixRequest()
-            if client.features.model == "1"
-            else proto.ButtonRequest()
-        )
-
-        with client:
-            _set_expected_responses(client)
-            # Note: the actual delay will be 10 secs (see above).
-            device.apply_settings(client, auto_lock_delay_ms=int(1e3))
-
-        time.sleep(0.1)  # sleep less than auto-lock delay
-        with client:
-            # No PIN protection is required.
-            client.set_expected_responses([proto.Address()])
-            test_address(client)
-
-        time.sleep(2)  # sleep less than the minimal auto-lock delay
-        with client:
-            # No PIN protection is required.
-            client.set_expected_responses([proto.Address()])
-            test_address(client)
-
-        time.sleep(10.1)  # sleep more than the minimal auto-lock delay
-        with client:
-            client.use_pin_sequence([PIN4])
-            client.set_expected_responses([pin_response, proto.Address()])
-            test_address(client)
