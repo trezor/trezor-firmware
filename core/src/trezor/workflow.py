@@ -3,7 +3,7 @@ import utime
 from trezor import log, loop
 
 if False:
-    from typing import Any, Callable, Dict, Optional, Set
+    from typing import Callable, Dict, Optional, Set
 
     IdleCallback = Callable[[], None]
 
@@ -20,7 +20,7 @@ tasks = set()  # type: Set[loop.spawn]
 
 # Default workflow task, if a default workflow is running.  Default workflow
 # is not contained in the `tasks` set above.
-default_task = None  # type: Optional[loop.Task]
+default_task = None  # type: Optional[loop.spawn]
 
 # Constructor for the default workflow.  Returns a workflow task.
 default_constructor = None  # type: Optional[Callable[[], loop.Task]]
@@ -78,12 +78,10 @@ def start_default() -> None:
     assert default_constructor is not None
 
     if not default_task:
-        default_task = default_constructor()
+        default_task = loop.spawn(default_constructor())
         if __debug__:
-            log.debug(__name__, "start default: %s", default_task)
-        # Schedule the default task.  Because the task can complete on its own,
-        # we need to reset the `default_task` global in a finalizer.
-        loop.schedule(default_task, None, None, _finalize_default)
+            log.debug(__name__, "start default: %s", default_task.task)
+        default_task.set_finalizer(_finalize_default)
     else:
         if __debug__:
             log.debug(__name__, "default already started")
@@ -110,17 +108,19 @@ def kill_default() -> None:
         if __debug__:
             log.debug(__name__, "close default")
         # We let the `_finalize_default` reset the global.
-        loop.close(default_task)
+        default_task.close()
 
 
 def close_others() -> None:
-    """Shut down all running tasks, except the one that is currently executing, and
-    restart the default."""
-    try:
-        kill_default()
+    """Request workflow (and UI) exclusivity: shut down all running tasks, except
+    the one that is currently executing.
+
+    If this is called from outside a registered workflow, it is equivalent to "close
+    all tasks". In that case, the default task will be restarted afterwards.
+    """
+    if default_task is not None and not default_task.is_running():
+        default_task.close()
         # if no other tasks are running, start_default will run immediately
-    except ValueError:
-        pass
 
     # we need a local copy of tasks because processing task.close() modifies
     # the global instance
@@ -131,39 +131,23 @@ def close_others() -> None:
     # if tasks were running, closing the last of them will run start_default
 
 
-def _finalize_default(task: loop.Task, value: Any) -> None:
+def _finalize_default(task: loop.spawn) -> None:
     """Finalizer for the default task. Cleans up globals and restarts the default
     in case no other task is running."""
     global default_task
 
-    if default_task is task:
-        if __debug__:
-            log.debug(__name__, "default closed: %s", task)
-        default_task = None
+    assert default_task is task  # finalizer is closing something other than default?
+    assert default_constructor is not None  # it should always be configured
 
-        if not tasks:
-            # No registered workflows are running and we are in the default task
-            # finalizer, so when this function finished, nothing will be running.
-            # We must schedule a new instance of the default now.
-            if default_constructor is not None:
-                start_default()
-            else:
-                raise RuntimeError  # no tasks and no default constructor
+    if __debug__:
+        log.debug(__name__, "default closed: %s", task.task)
+    default_task = None
 
-    else:
-        if __debug__:
-            log.warning(
-                __name__,
-                "default task does not match: task=%s, default_task=%s",
-                task,
-                default_task,
-            )
-
-
-# TODO
-# If required, a function `shutdown_default` should be written, that clears the
-# default constructor and shuts down the running default task.
-# We currently do not need such function, so I'm just noting how it should work.
+    if not tasks:
+        # No registered workflows are running and we are in the default task
+        # finalizer, so when this function finished, nothing will be running.
+        # We must schedule a new instance of the default now.
+        start_default()
 
 
 class IdleTimer:
