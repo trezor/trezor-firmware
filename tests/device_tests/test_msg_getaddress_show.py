@@ -118,6 +118,7 @@ def test_show_multisig_xpubs(client):
             assert lines[1:] == xpubs[0]
             # just for UI test
             client.debug.swipe_up()
+            client.debug.wait_layout()
 
             client.debug.press_no()
             yield  # show XPUB#2
@@ -126,6 +127,7 @@ def test_show_multisig_xpubs(client):
             assert lines[1:] == xpubs[1]
             # just for UI test
             client.debug.swipe_up()
+            client.debug.wait_layout()
 
             client.debug.press_no()
             yield  # show XPUB#3
@@ -134,6 +136,7 @@ def test_show_multisig_xpubs(client):
             assert lines[1:] == xpubs[2]
             # just for UI test
             client.debug.swipe_up()
+            client.debug.wait_layout()
 
             client.debug.press_yes()
 

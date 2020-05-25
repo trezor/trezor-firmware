@@ -12,20 +12,24 @@ class NullUI:
 
     @staticmethod
     def get_pin(code=None):
-        raise NotImplementedError("Should not be used with T1")
+        raise NotImplementedError("NullUI should not be used with T1")
 
     @staticmethod
     def get_passphrase():
-        raise NotImplementedError("Should not be used with T1")
+        raise NotImplementedError("NullUI should not be used with T1")
 
 
 class BackgroundDeviceHandler:
     _pool = ThreadPoolExecutor()
 
     def __init__(self, client):
+        self._configure_client(client)
+        self.task = None
+
+    def _configure_client(self, client):
         self.client = client
         self.client.ui = NullUI
-        self.task = None
+        self.client.watch_layout(True)
 
     def run(self, function, *args, **kwargs):
         if self.task is not None:
@@ -49,8 +53,7 @@ class BackgroundDeviceHandler:
         # TODO handle actual restart as well
         self.kill_task()
         emulator.restart()
-        self.client = emulator.client
-        self.client.ui = NullUI
+        self._configure_client(emulator.client)
 
     def result(self):
         if self.task is None:
