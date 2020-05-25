@@ -26,6 +26,7 @@ async def get(ctx: wire.Context) -> str:
 
 
 async def _request_from_user(ctx: wire.Context) -> str:
+    workflow.close_others()  # request exclusive UI access
     if storage.device.get_passphrase_always_on_device():
         passphrase = await _request_on_device(ctx)
     else:
@@ -69,7 +70,6 @@ async def _request_on_device(ctx: wire.Context) -> str:
 
 
 def _entry_dialog() -> None:
-    workflow.kill_default()
     text = Text("Passphrase entry", ICON_CONFIG)
     text.normal("Please type your", "passphrase on the", "connected host.")
     draw_simple(text)

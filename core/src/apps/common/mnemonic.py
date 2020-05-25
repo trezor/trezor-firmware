@@ -57,9 +57,8 @@ def get_seed(passphrase: str = "", progress_bar: bool = True) -> bytes:
 
 def _start_progress() -> None:
     # Because we are drawing to the screen manually, without a layout, we
-    # should make sure that no other layout is running.  At this point, only
-    # the homescreen should be on, so shut it down.
-    workflow.kill_default()
+    # should make sure that no other layout is running.
+    workflow.close_others()
     t = Text("Please wait", ui.ICON_CONFIG)
     ui.draw_simple(t)
 
