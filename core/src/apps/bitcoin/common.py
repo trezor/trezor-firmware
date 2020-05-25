@@ -5,7 +5,8 @@ from trezor.crypto import bech32, bip32, der
 from trezor.crypto.curve import secp256k1
 from trezor.utils import ensure
 
-from apps.common.coininfo import CoinInfo
+if False:
+    from apps.common.coininfo import CoinInfo
 
 # supported witness version for bech32 addresses
 _BECH32_WITVER = const(0x00)
