@@ -135,7 +135,10 @@ def sign_tx(client, coin_name, inputs, outputs, details=None, prev_txes=None):
     res = client.call(signtx)
 
     # Prepare structure for signatures
-    signatures = [None] * len(inputs)
+    signatures = [
+        None if i.script_type != messages.InputScriptType.EXTERNAL else ""
+        for i in inputs
+    ]
     serialized_tx = b""
 
     def copy_tx_meta(tx):
