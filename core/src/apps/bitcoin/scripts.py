@@ -16,7 +16,12 @@ from .multisig import (
     multisig_get_pubkeys,
     multisig_pubkey_index,
 )
-from .writers import write_bytes_fixed, write_bytes_unchecked, write_op_push
+from .writers import (
+    write_bytes_fixed,
+    write_bytes_prefixed,
+    write_bytes_unchecked,
+    write_op_push,
+)
 
 if False:
     from typing import List, Optional
@@ -245,8 +250,8 @@ def input_script_p2wsh_in_p2sh(script_hash: bytes) -> bytearray:
 def witness_p2wpkh(signature: bytes, pubkey: bytes, sighash: int) -> bytearray:
     w = empty_bytearray(1 + 5 + len(signature) + 1 + 5 + len(pubkey))
     write_bitcoin_varint(w, 0x02)  # num of segwit items, in P2WPKH it's always 2
-    append_signature(w, signature, sighash)
-    append_pubkey(w, pubkey)
+    write_signature_prefixed(w, signature, sighash)
+    write_bytes_prefixed(w, pubkey)
     return w
 
 
@@ -290,7 +295,7 @@ def witness_p2wsh(
     write_bitcoin_varint(w, 0)
 
     for s in signatures:
-        append_signature(w, s, sighash)  # size of the witness included
+        write_signature_prefixed(w, s, sighash)  # size of the witness included
 
     # redeem script
     write_bitcoin_varint(w, redeem_script_length)
@@ -387,6 +392,12 @@ def output_script_paytoopreturn(data: bytes) -> bytearray:
 
 # Helpers
 # ===
+
+
+def write_signature_prefixed(w: Writer, signature: bytes, sighash: int) -> None:
+    write_bitcoin_varint(w, len(signature) + 1)
+    write_bytes_unchecked(w, signature)
+    w.append(sighash)
 
 
 def append_signature(w: Writer, signature: bytes, sighash: int) -> None:
