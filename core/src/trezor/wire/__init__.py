@@ -84,9 +84,9 @@ def register(wire_type: int, handler: Handler) -> None:
     workflow_handlers[wire_type] = handler
 
 
-def setup(iface: WireInterface) -> None:
+def setup(iface: WireInterface, use_workflow: bool = True) -> None:
     """Initialize the wire stack on passed USB interface."""
-    loop.schedule(handle_session(iface, codec_v1.SESSION_ID))
+    loop.schedule(handle_session(iface, codec_v1.SESSION_ID, use_workflow))
 
 
 def clear() -> None:
@@ -263,7 +263,9 @@ class UnexpectedMessageError(Exception):
         self.reader = reader
 
 
-async def handle_session(iface: WireInterface, session_id: int) -> None:
+async def handle_session(
+    iface: WireInterface, session_id: int, use_workflow: bool = True
+) -> None:
     ctx = Context(iface, session_id)
     next_reader = None  # type: Optional[codec_v1.Reader]
     res_msg = None  # type: Optional[protobuf.MessageType]
@@ -346,7 +348,10 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
                     # communication inside, but it should eventually return a
                     # response message, or raise an exception (a rather common
                     # thing to do).  Exceptions are handled in the code below.
-                    res_msg = await workflow.spawn(wf_task)
+                    if use_workflow:
+                        res_msg = await workflow.spawn(wf_task)
+                    else:
+                        res_msg = await wf_task
 
                 except UnexpectedMessageError as exc:
                     # Workflow was trying to read a message from the wire, and
