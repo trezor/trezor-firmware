@@ -4,7 +4,7 @@ def encode_length(l: int) -> bytes:
     elif l <= 0xFF:
         return bytes([0x81, l])
     elif l <= 0xFFFF:
-        return bytes([0x82, l & 0xFF, l >> 8])
+        return bytes([0x82, l >> 8, l & 0xFF])
     else:
         raise ValueError
 
