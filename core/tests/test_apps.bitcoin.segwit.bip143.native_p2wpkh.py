@@ -69,7 +69,7 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
         for txo in [self.out1, self.out2]:
             txo_bin = TxOutputBinType()
             txo_bin.amount = txo.amount
-            script_pubkey = output_derive_script(txo, coin)
+            script_pubkey = output_derive_script(txo.address, coin)
             bip143.hash143_add_output(txo_bin, script_pubkey)
 
         outputs_hash = get_tx_hash(bip143.h_outputs, double=coin.sign_hash_double)
@@ -86,7 +86,7 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
         for txo in [self.out1, self.out2]:
             txo_bin = TxOutputBinType()
             txo_bin.amount = txo.amount
-            script_pubkey = output_derive_script(txo, coin)
+            script_pubkey = output_derive_script(txo.address, coin)
             bip143.hash143_add_output(txo_bin, script_pubkey)
 
         # test data public key hash

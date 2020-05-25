@@ -1,10 +1,9 @@
 from trezor import utils, wire
 from trezor.crypto import base58, cashaddr
 from trezor.crypto.hashlib import sha256
-from trezor.messages import InputScriptType, OutputScriptType
+from trezor.messages import InputScriptType
 from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
 from trezor.messages.TxInputType import TxInputType
-from trezor.messages.TxOutputType import TxOutputType
 
 from apps.common import address_type
 from apps.common.coininfo import CoinInfo
@@ -65,21 +64,18 @@ def input_derive_script(
         raise wire.ProcessError("Invalid script type")
 
 
-def output_derive_script(txo: TxOutputType, coin: CoinInfo) -> bytes:
-    if txo.script_type == OutputScriptType.PAYTOOPRETURN:
-        return output_script_paytoopreturn(txo.op_return_data)
-
-    if coin.bech32_prefix and txo.address.startswith(coin.bech32_prefix):
+def output_derive_script(address: str, coin: CoinInfo) -> bytes:
+    if coin.bech32_prefix and address.startswith(coin.bech32_prefix):
         # p2wpkh or p2wsh
-        witprog = common.decode_bech32_address(coin.bech32_prefix, txo.address)
+        witprog = common.decode_bech32_address(coin.bech32_prefix, address)
         return output_script_native_p2wpkh_or_p2wsh(witprog)
 
     if (
         not utils.BITCOIN_ONLY
         and coin.cashaddr_prefix is not None
-        and txo.address.startswith(coin.cashaddr_prefix + ":")
+        and address.startswith(coin.cashaddr_prefix + ":")
     ):
-        prefix, addr = txo.address.split(":")
+        prefix, addr = address.split(":")
         version, data = cashaddr.decode(prefix, addr)
         if version == cashaddr.ADDRESS_TYPE_P2KH:
             version = coin.address_type
@@ -90,7 +86,7 @@ def output_derive_script(txo: TxOutputType, coin: CoinInfo) -> bytes:
         raw_address = bytes([version]) + data
     else:
         try:
-            raw_address = base58.decode_check(txo.address, coin.b58_hash)
+            raw_address = base58.decode_check(address, coin.b58_hash)
         except ValueError:
             raise wire.DataError("Invalid address")
 

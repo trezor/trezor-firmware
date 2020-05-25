@@ -180,7 +180,9 @@ class Bitcoin:
         if txi.script_type not in helpers.INTERNAL_INPUT_SCRIPT_TYPES:
             raise wire.DataError("Wrong input script type")
 
-        prev_amount = await self.get_prevtx_output_value(txi.prev_hash, txi.prev_index)
+        prev_amount, script_pubkey = await self.get_prevtx_output(
+            txi.prev_hash, txi.prev_index
+        )
 
         if txi.amount is not None and prev_amount != txi.amount:
             raise wire.DataError("Invalid amount specified")
@@ -328,7 +330,9 @@ class Bitcoin:
         script_pubkey = self.output_derive_script(txo)
         self.write_tx_output(self.serialized_tx, txo, script_pubkey)
 
-    async def get_prevtx_output_value(self, prev_hash: bytes, prev_index: int) -> int:
+    async def get_prevtx_output(
+        self, prev_hash: bytes, prev_index: int
+    ) -> Tuple[int, bytes]:
         amount_out = 0  # output amount
 
         # STAGE_REQUEST_2_PREV_META in legacy
@@ -358,6 +362,7 @@ class Bitcoin:
             self.write_tx_output(txh, txo_bin, txo_bin.script_pubkey)
             if i == prev_index:
                 amount_out = txo_bin.amount
+                script_pubkey = txo_bin.script_pubkey
                 self.check_prevtx_output(txo_bin)
 
         await self.write_prev_tx_footer(txh, tx, prev_hash)
@@ -368,7 +373,7 @@ class Bitcoin:
         ):
             raise wire.ProcessError("Encountered invalid prev_hash")
 
-        return amount_out
+        return amount_out, script_pubkey
 
     def check_prevtx_output(self, txo_bin: TxOutputBinType) -> None:
         # Validations to perform on the UTXO when checking the previous transaction output amount.
@@ -425,6 +430,9 @@ class Bitcoin:
     # ===
 
     def output_derive_script(self, txo: TxOutputType) -> bytes:
+        if txo.script_type == OutputScriptType.PAYTOOPRETURN:
+            return scripts.output_script_paytoopreturn(txo.op_return_data)
+
         if txo.address_n:
             # change output
             try:
@@ -438,7 +446,7 @@ class Bitcoin:
                 input_script_type, self.coin, node, txo.multisig
             )
 
-        return scripts.output_derive_script(txo, self.coin)
+        return scripts.output_derive_script(txo.address, self.coin)
 
     def output_is_change(self, txo: TxOutputType) -> bool:
         if txo.script_type not in helpers.CHANGE_OUTPUT_SCRIPT_TYPES:
