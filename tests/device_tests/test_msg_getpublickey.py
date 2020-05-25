@@ -67,6 +67,12 @@ VECTORS_BITCOIN = (  # coin_name, xpub_magic, path, xpub
         parse_path("m/0h"),
         "xpub68Zyu13qjcQvJXTsnmhH2h2TyPiXAama5bTU8u9iRXyYtS9X9yWvSKij6YGt7JJ2nr5rSGi4KLUW5Z8bTKHqXhbLwqb7smG3Y8j2wy4rmf3",
     ),
+    (  # mytrezor compat
+        "Bitcoin",
+        0x0488B21E,
+        parse_path("m/0"),
+        "xpub68Zyu13hPwsx8egknnRtfGmk6n9f6S5zbousZUJmQDZsB3GCppTz73oD2WS8DcCa4hqvNePCt8dFt5TKSSBgvCdgg48iWZQ7qgKnFaQnj21",
+    ),
     pytest.param(
         "Litecoin",
         0x019DA462,

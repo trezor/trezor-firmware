@@ -38,11 +38,13 @@ async def get_public_key(ctx, msg):
     elif (
         coin_name == "Bitcoin"
         and script_type is InputScriptType.SPENDADDRESS
-        and msg.address_n == [HARDENED]
+        and msg.address_n in ([HARDENED], [0])
     ):
         # allow extracting PSBT master fingerprinty by calling GetPublicKey(m/0')
         coin = coins.by_name("Bitcoin")
-        keychain = await seed.get_keychain(ctx, [("secp256k1", [HARDENED])])
+        keychain = await seed.get_keychain(
+            ctx, [("secp256k1", [HARDENED]), ("secp256k1", [0])]
+        )
 
     else:
         # select curve and namespaces based on the requested coin properties
