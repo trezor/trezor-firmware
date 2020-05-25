@@ -62,7 +62,7 @@ def test_wipe_code_activate_core():
         ret = emu.client.call_raw(messages.ButtonAck())
 
         # Enter the wipe code instead of the current PIN
-        assert ret == messages.ButtonRequest(code=messages.ButtonRequestType.Other)
+        assert ret == messages.ButtonRequest(code=messages.ButtonRequestType.PinEntry)
         emu.client._raw_write(messages.ButtonAck())
         emu.client.debug.input(WIPE_CODE)
 
