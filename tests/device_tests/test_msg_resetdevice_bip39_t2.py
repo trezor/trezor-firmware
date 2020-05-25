@@ -175,8 +175,8 @@ class TestMsgResetDeviceT2:
             client.set_expected_responses(
                 [
                     proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Other),
-                    proto.ButtonRequest(code=B.Other),
+                    proto.ButtonRequest(code=B.PinEntry),
+                    proto.ButtonRequest(code=B.PinEntry),
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.EntropyRequest(),
                     proto.ButtonRequest(code=B.ResetDevice),
