@@ -30,7 +30,7 @@ async def request_pin(
     attempts_remaining: int = None,
     allow_cancel: bool = True,
 ) -> str:
-    await ctx.call(ButtonRequest(code=ButtonRequestType.Other), ButtonAck)
+    await ctx.call(ButtonRequest(code=ButtonRequestType.PinEntry), ButtonAck)
 
     if attempts_remaining is None:
         subprompt = None
