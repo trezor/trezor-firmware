@@ -168,7 +168,8 @@ def draw_simple(t: Component) -> None:  # noqa: F405
     This function bypasses the UI workflow engine, so other layouts will not know
     that something was drawn over them. In particular, if no other Layout is shown
     in a workflow, the homescreen will not redraw when the workflow is finished.
-    Use `workflow.kill_default()` if you need to avoid this situation.
+    Make sure you use `workflow.close_others()` before invoking this function
+    (note that `workflow.close_others()` is implicitly called with `button_request()`).
     """
     backlight_fade(style.BACKLIGHT_DIM)
     display.clear()
