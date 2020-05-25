@@ -3,13 +3,13 @@ from micropython import const
 import storage.device
 from trezor import wire, workflow
 from trezor.messages import ButtonRequestType
-from trezor.messages.ButtonAck import ButtonAck
-from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.messages.PassphraseAck import PassphraseAck
 from trezor.messages.PassphraseRequest import PassphraseRequest
 from trezor.ui import ICON_CONFIG, draw_simple
 from trezor.ui.passphrase import CANCELLED, PassphraseKeyboard
 from trezor.ui.text import Text
+
+from . import button_request
 
 _MAX_PASSPHRASE_LEN = const(50)
 
@@ -56,7 +56,7 @@ async def _request_on_host(ctx: wire.Context) -> str:
 
 
 async def _request_on_device(ctx: wire.Context) -> str:
-    await ctx.call(ButtonRequest(code=ButtonRequestType.PassphraseEntry), ButtonAck)
+    await button_request(ctx, code=ButtonRequestType.PassphraseEntry)
 
     keyboard = PassphraseKeyboard("Enter passphrase", _MAX_PASSPHRASE_LEN)
     passphrase = await ctx.wait(keyboard)
