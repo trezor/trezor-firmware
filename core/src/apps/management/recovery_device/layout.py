@@ -2,12 +2,11 @@ import storage.recovery
 from trezor import strings, ui, wire
 from trezor.crypto.slip39 import MAX_SHARE_COUNT
 from trezor.messages import ButtonRequestType
-from trezor.messages.ButtonAck import ButtonAck
-from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.ui.scroll import Paginated
 from trezor.ui.text import Text
 from trezor.ui.word_select import WordSelector
 
+from apps.common import button_request
 from apps.common.confirm import confirm, info_confirm, require_confirm
 from apps.common.layout import show_success, show_warning
 from apps.management import backup_types
@@ -34,7 +33,7 @@ async def confirm_abort(ctx: wire.GenericContext, dry_run: bool = False) -> bool
 
 
 async def request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
-    await ctx.call(ButtonRequest(code=ButtonRequestType.MnemonicWordCount), ButtonAck)
+    await button_request(ctx, code=ButtonRequestType.MnemonicWordCount)
 
     if dry_run:
         text = Text("Seed check", ui.ICON_RECOVERY)
@@ -52,7 +51,7 @@ async def request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
 async def request_mnemonic(
     ctx: wire.GenericContext, word_count: int, backup_type: Optional[EnumTypeBackupType]
 ) -> Optional[str]:
-    await ctx.call(ButtonRequest(code=ButtonRequestType.MnemonicInput), ButtonAck)
+    await button_request(ctx, code=ButtonRequestType.MnemonicInput)
 
     words = []  # type: List[str]
     for i in range(word_count):

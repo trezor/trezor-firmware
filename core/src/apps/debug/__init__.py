@@ -79,12 +79,12 @@ if __debug__:
         content = await layout_change_chan.take()
         await ctx.write(DebugLinkLayout(lines=content))
 
-    async def dispatch_DebugLinkWatchLayout(  # type: ignore
+    async def dispatch_DebugLinkWatchLayout(
         ctx: wire.Context, msg: DebugLinkWatchLayout
     ) -> Success:
         global watch_layout_changes
         layout_change_chan.putters.clear()
-        watch_layout_changes = msg.watch
+        watch_layout_changes = bool(msg.watch)
         log.debug(__name__, "Watch layout changes: {}".format(watch_layout_changes))
         return Success()
 

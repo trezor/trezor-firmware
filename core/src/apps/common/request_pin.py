@@ -3,14 +3,13 @@ import utime
 import storage.sd_salt
 from trezor import config, ui, wire
 from trezor.messages import ButtonRequestType
-from trezor.messages.ButtonAck import ButtonAck
-from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.pin import pin_to_int
 from trezor.ui.pin import CANCELLED, PinDialog
 from trezor.ui.popup import Popup
 from trezor.ui.text import Text
 
-from apps.common.sdcard import SdCardUnavailable, request_sd_salt
+from . import button_request
+from .sdcard import SdCardUnavailable, request_sd_salt
 
 if False:
     from typing import Any, NoReturn, Optional, Tuple
@@ -30,7 +29,7 @@ async def request_pin(
     attempts_remaining: int = None,
     allow_cancel: bool = True,
 ) -> str:
-    await ctx.call(ButtonRequest(code=ButtonRequestType.PinEntry), ButtonAck)
+    await button_request(ctx, code=ButtonRequestType.PinEntry)
 
     if attempts_remaining is None:
         subprompt = None
