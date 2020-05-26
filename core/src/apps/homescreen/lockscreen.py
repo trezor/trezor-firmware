@@ -49,6 +49,13 @@ class Lockscreen(HomescreenBase):
         # and paint it.
         ui.display.clear()
         self.on_render()
+
+        if __debug__ and self.should_notify_layout_change:
+            from apps.debug import notify_layout_change
+
+            self.should_notify_layout_change = False
+            notify_layout_change(self)
+
         ui.refresh()
         ui.backlight_fade(ui.BACKLIGHT_LOW)
         # long sleep
