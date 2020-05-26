@@ -258,7 +258,7 @@ enum MessageType {
 
     // Polis
     MessageType_PolisGetAddress = 804 [(wire_in) = true];
-    MessageType_PolisGetPublickey = 805 [(wire_in) = true];
+    MessageType_PolisGetPublicKey = 805 [(wire_in) = true];
     MessageType_PolisAddress = 806 [(wire_out) = true];
-    MessageType_PolisPublickey = 807 [(wire_out) = true];
+    MessageType_PolisPublicKey = 807 [(wire_out) = true];
 }

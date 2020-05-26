@@ -68,6 +68,7 @@ def get_features() -> Features:
             Capability.Shamir,
             Capability.ShamirGroups,
             Capability.PassphraseEntry,
+            Capability.Polis,
         ]
     f.sd_card_present = sdcard.is_present()
     f.sd_protection = storage.sd_salt.is_enabled()
