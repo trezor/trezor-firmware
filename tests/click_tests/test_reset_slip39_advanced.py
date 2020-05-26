@@ -48,7 +48,7 @@ def test_reset_slip39_advanced_2of2groups_2of2shares(device_handler):
     reset.confirm_wait(debug, "Create new wallet")
 
     # confirm back up
-    reset.confirm_wait(debug, "Success")
+    reset.confirm_read(debug, "Success")
 
     # confirm checklist
     reset.confirm_read(debug, "Checklist")
@@ -130,7 +130,7 @@ def test_reset_slip39_advanced_16of16groups_16of16shares(device_handler):
     reset.confirm_wait(debug, "Create new wallet")
 
     # confirm back up
-    reset.confirm_wait(debug, "Success")
+    reset.confirm_read(debug, "Success")
 
     # confirm checklist
     reset.confirm_read(debug, "Checklist")
