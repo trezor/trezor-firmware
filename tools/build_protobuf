@@ -17,6 +17,7 @@ CORE_PROTOBUF_SOURCES="\
     $PROTOB/messages-management.proto \
     $PROTOB/messages-monero.proto \
     $PROTOB/messages-nem.proto \
+    $PROTOB/messages-polis.proto \
     $PROTOB/messages-ripple.proto \
     $PROTOB/messages-stellar.proto \
     $PROTOB/messages-tezos.proto \

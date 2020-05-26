@@ -90,6 +90,10 @@ from .EosSignedTx import EosSignedTx
 from .EosTxActionAck import EosTxActionAck
 from .EosTxActionRequest import EosTxActionRequest
 from .EosTxHeader import EosTxHeader
+from .PolisGetAddress import PolisGetAddress
+from .PolisGetPublicKey import PolisGetPublicKey
+from .PolisAddress import PolisAddress
+from .PolisPublicKey import PolisPublicKey
 from .EthereumAddress import EthereumAddress
 from .EthereumGetAddress import EthereumGetAddress
 from .EthereumGetPublicKey import EthereumGetPublicKey

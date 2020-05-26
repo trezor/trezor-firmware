@@ -54,6 +54,7 @@ on one page here.
     monero             Monero commands.
     nem                NEM commands.
     ping               Send ping message.
+    polis              Polis commands.
     ripple             Ripple commands.
     set                Device settings.
     stellar            Stellar commands.
@@ -425,4 +426,24 @@ Tezos commands.
     get-address     Get Tezos address for specified path.
     get-public-key  Get Tezos public key.
     sign-tx         Sign Tezos transaction.
+
+Polis commands.
+~~~~~~~~~~~~~~~~
+
+.. code::
+
+  trezorctl polis --help
+
+.. code::
+
+  Usage: trezorctl polis [OPTIONS] COMMAND [ARGS]...
+
+    Polis commands.
+
+  Options:
+    --help  Show this message and exit.
+
+  Commands:
+    get-address     Get Polis address for specified path.
+    get-public-key  Get Polis public key.
 

@@ -48,6 +48,7 @@ from . import (
     stellar,
     tezos,
     with_client,
+    polis
 )
 
 LOG = logging.getLogger(__name__)
@@ -76,6 +77,8 @@ COMMAND_ALIASES = {
     "xrp": ripple.cli,
     "xlm": stellar.cli,
     "xtz": tezos.cli,
+    "polis": polis.cli,
+
 }
 
 

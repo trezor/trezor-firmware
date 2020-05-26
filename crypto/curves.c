@@ -34,3 +34,4 @@ const char ED25519_SHA3_NAME[] = "ed25519-sha3";
 const char ED25519_KECCAK_NAME[] = "ed25519-keccak";
 #endif
 const char CURVE25519_NAME[] = "curve25519";
+const char BLS12_381[] = "bls12_381";

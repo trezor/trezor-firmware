@@ -209,6 +209,22 @@
             "Homepage": "https://tether.to"
         },
         "wallet": {},
+        "blockkchain_link": null
+    },
+    {
+        "name": "Polis",
+        "shortcut": "POLIS",
+        "slip44": 1997,
+        "curve": "secp256k1",
+        "decimals": 3,
+        "links": {
+            "Homepage": "https://oly.tech/",
+            "Github": "https://github.com/olympus-protocol"
+        },
+        "wallet": {
+            "PolisPay": "https://polispay.com",
+            "Olympus Wallet": "https://github.com/olympus-protocol/ogen"
+        },
         "blockchain_link": null
     }
 ]
