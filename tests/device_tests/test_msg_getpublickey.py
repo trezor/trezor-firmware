@@ -116,7 +116,7 @@ def test_get_public_node(client, coin_name, xpub_magic, path, xpub):
     assert bip32.serialize(res.node, xpub_magic) == xpub
 
 
-@pytest.mark.skip_t1
+@pytest.mark.xfail(reason="Currently path validation on get_public_node is disabled.")
 @pytest.mark.parametrize("coin_name, path", VECTORS_INVALID)
 def test_invalid_path(client, coin_name, path):
     with pytest.raises(TrezorFailure, match="Forbidden key path"):

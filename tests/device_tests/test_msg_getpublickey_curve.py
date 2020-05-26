@@ -65,7 +65,7 @@ def test_ed25519_public(client):
         btc.get_public_node(client, PATH_PUBLIC, ecdsa_curve_name="ed25519")
 
 
-@pytest.mark.skip_t1
+@pytest.mark.xfail(reason="Currently path validation on get_public_node is disabled.")
 def test_coin_and_curve(client):
     with pytest.raises(
         TrezorFailure, match="Cannot use coin_name or script_type with ecdsa_curve_name"
