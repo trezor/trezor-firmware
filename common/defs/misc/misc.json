@@ -215,7 +215,7 @@
         "name": "Polis",
         "shortcut": "POLIS",
         "slip44": 1997,
-        "curve": "secp256k1",
+        "curve": "bls12_381",
         "decimals": 3,
         "links": {
             "Homepage": "https://oly.tech/",
