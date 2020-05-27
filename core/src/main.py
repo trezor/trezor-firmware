@@ -60,12 +60,13 @@ def _boot_apps() -> None:
     workflow.start_default()
 
 
+_boot_apps()
+
 # initialize the wire codec
 wire.setup(usb.iface_wire)
 if __debug__:
     wire.setup(usb.iface_debug, use_workflow=False)
 
-_boot_apps()
 loop.run()
 
 # loop is empty. That should not happen
