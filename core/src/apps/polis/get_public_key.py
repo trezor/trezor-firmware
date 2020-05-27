@@ -1,25 +1,22 @@
 from trezor.messages.PolisPublicKey import PolisPublicKey
 from trezor.messages.HDNodeType import HDNodeType
 
-from apps.common import coins, layout, paths
-from apps.polis import CURVE, address
-from apps.polis.keychain import with_keychain_from_path
+from apps.common.seed import with_slip44_keychain
+from apps.common import paths
+from apps.polis import CURVE, SLIP44_ID
+from .address import validate_full_path
 
 
-@with_keychain_from_path
+@with_slip44_keychain(SLIP44_ID, CURVE, allow_testnet=True)
 async def get_public_key(ctx, msg, keychain):
     await paths.validate_path(
-        ctx, address.validate_full_path, keychain, msg.address_n, CURVE
+        ctx, validate_full_path, keychain, msg.address_n, CURVE
     )
     node_type = HDNodeType(
-        depth="x",
-        child_num="x",
-        fingerprint="x",
-        chain_code="x",
-        public_key="x",
+        depth=0,
+        child_num=0,
+        fingerprint=0,
+        chain_code=bytes(0),
+        public_key=bytes(0),
     )
-
-    if msg.show_display:
-        await layout.show_pubkey(ctx, pubkey)
-
     return PolisPublicKey(node=node_type, xpub="xpub")

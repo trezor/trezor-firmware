@@ -32,6 +32,7 @@ def _boot_apps() -> None:
         import apps.eos
         import apps.binance
         import apps.webauthn
+        import apps.polis
 
     if __debug__:
         import apps.debug
@@ -53,6 +54,8 @@ def _boot_apps() -> None:
         apps.eos.boot()
         apps.binance.boot()
         apps.webauthn.boot()
+        apps.polis.boot()
+
     if __debug__:
         apps.debug.boot()
 

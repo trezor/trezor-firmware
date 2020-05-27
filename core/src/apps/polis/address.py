@@ -1,10 +1,5 @@
-from ubinascii import unhexlify
-
 from trezor import wire
-
 from apps.common import HARDENED, paths
-from apps.polis import networks
-
 
 """
 We believe Polis should use 44'/1997'/a for everything, because it is
