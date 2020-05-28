@@ -151,8 +151,15 @@ def lock_device() -> None:
 
 
 async def unlock_device(ctx: wire.GenericContext = wire.DUMMY_CONTEXT) -> None:
-    await verify_user_pin(ctx)
-    # verify_user_pin will raise if the PIN was invalid
+    """Ensure the device is in unlocked state.
+
+    If the storage is locked, attempt to unlock it. Reset the homescreen and the wire
+    handler.
+    """
+    if not config.is_unlocked():
+        # verify_user_pin will raise if the PIN was invalid
+        await verify_user_pin(ctx)
+
     set_homescreen()
     wire.find_handler = wire.find_registered_workflow_handler
 
