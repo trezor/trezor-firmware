@@ -455,7 +455,7 @@ def format_message(
 
         if isinstance(value, list):
             # short list of simple values
-            if not value or isinstance(value, (UVarintType, SVarintType, BoolType)):
+            if not value or isinstance(value[0], int):
                 return repr(value)
 
             # long list, one line per entry
