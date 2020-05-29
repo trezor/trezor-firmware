@@ -1,5 +1,6 @@
 import shutil
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 
 import dominate
@@ -151,21 +152,24 @@ def create_dirs():
 def create_reports():
     removed_tests, added_tests, diff_tests = get_diff()
 
-    with tempfile.TemporaryDirectory(prefix="trezor-records-") as temp_dir:
-        temp_dir = Path(temp_dir)
+    @contextmanager
+    def tmpdir():
+        with tempfile.TemporaryDirectory(prefix="trezor-records-") as temp_dir:
+            yield Path(temp_dir)
 
-        for test_name, test_hash in removed_tests.items():
+    for test_name, test_hash in removed_tests.items():
+        with tmpdir() as temp_dir:
             download.fetch_recorded(test_hash, temp_dir)
             removed(temp_dir, test_name)
 
-        for test_name, test_hash in added_tests.items():
-            path = RECORDED_SCREENS_PATH / test_name / "actual"
-            if not path.exists():
-                raise RuntimeError("Folder does not exist, has it been recorded?", path)
-            added(path, test_name)
+    for test_name, test_hash in added_tests.items():
+        path = RECORDED_SCREENS_PATH / test_name / "actual"
+        if not path.exists():
+            raise RuntimeError("Folder does not exist, has it been recorded?", path)
+        added(path, test_name)
 
-        for test_name, (master_hash, current_hash) in diff_tests.items():
-            master_screens = temp_dir
+    for test_name, (master_hash, current_hash) in diff_tests.items():
+        with tmpdir() as master_screens:
             download.fetch_recorded(master_hash, master_screens)
 
             current_screens = RECORDED_SCREENS_PATH / test_name / "actual"
