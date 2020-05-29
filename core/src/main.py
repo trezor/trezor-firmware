@@ -9,6 +9,15 @@ import usb
 import storage.recovery
 from trezor import loop, utils, wire, workflow
 
+########
+
+from trezor import i18n
+i18n.init()
+for i in range(6):
+    print(i18n.get(i))
+
+########
+
 # start the USB
 usb.bus.open()
 
