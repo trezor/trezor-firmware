@@ -124,6 +124,12 @@ if EVERYTHING:
         'vendor/secp256k1-zkp/src/secp256k1.c',
     ]
 
+# modtrezori18n
+SOURCE_MOD += [
+    'embed/extmod/modtrezori18n/i18n-block.c',
+    'embed/extmod/modtrezori18n/modtrezori18n.c',
+]
+
 # modtrezorio
 SOURCE_MOD += [
     'embed/extmod/modtrezorio/ff.c',

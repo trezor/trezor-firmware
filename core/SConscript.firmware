@@ -130,6 +130,12 @@ if EVERYTHING:
         'vendor/secp256k1-zkp/src/asm/field_10x26_arm.s'
     ]
 
+# modtrezori18n
+SOURCE_MOD += [
+    'embed/extmod/modtrezori18n/i18n-block.c',
+    'embed/extmod/modtrezori18n/modtrezori18n.c',
+]
+
 # modtrezorio
 SOURCE_MOD += [
     'embed/extmod/modtrezorio/ff.c',

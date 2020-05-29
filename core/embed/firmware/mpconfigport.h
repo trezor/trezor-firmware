@@ -152,6 +152,7 @@
 
 #define MICROPY_PY_TREZORCONFIG     (1)
 #define MICROPY_PY_TREZORCRYPTO     (1)
+#define MICROPY_PY_TREZORI18N       (1)
 #define MICROPY_PY_TREZORIO         (1)
 #define MICROPY_PY_TREZORUI         (1)
 #define MICROPY_PY_TREZORUTILS      (1)

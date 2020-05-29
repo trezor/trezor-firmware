@@ -1,0 +1,7 @@
+{
+"TR_CANCEL": 1,
+"TR_OK": 0,
+"TR_RECEIVE": 4,
+"TR_SEND": 3,
+"TR_SIGN": 2
+}

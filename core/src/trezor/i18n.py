@@ -1,0 +1,1 @@
+from trezori18n import init, get
