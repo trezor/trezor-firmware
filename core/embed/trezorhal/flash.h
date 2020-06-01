@@ -26,7 +26,11 @@
 
 // see docs/memory.md for more information
 
+#if TREZOR_MODEL == T
 #define FLASH_SECTOR_COUNT 24
+#elif TREZOR_MODEL == 1
+#define FLASH_SECTOR_COUNT 12
+#endif
 
 #define FLASH_SECTOR_BOARDLOADER_START 0
 //                                           1
@@ -34,7 +38,13 @@
 
 //                                           3
 
+#if TREZOR_MODEL == T
 #define FLASH_SECTOR_STORAGE_1 4
+#define FLASH_SECTOR_STORAGE_2 16
+#elif TREZOR_MODEL == 1
+#define FLASH_SECTOR_STORAGE_1 2
+#define FLASH_SECTOR_STORAGE_2 3
+#endif
 
 #define FLASH_SECTOR_BOOTLOADER 5
 
@@ -49,8 +59,6 @@
 //                                          13
 //                                          14
 #define FLASH_SECTOR_UNUSED_END 15
-
-#define FLASH_SECTOR_STORAGE_2 16
 
 #define FLASH_SECTOR_FIRMWARE_EXTRA_START 17
 //                                          18
