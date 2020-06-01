@@ -305,6 +305,9 @@ class Layout(Component):
     raised, usually from some of the child components.
     """
 
+    BACKLIGHT_LEVEL = style.BACKLIGHT_NORMAL
+    RENDER_SLEEP = loop.sleep(_RENDER_DELAY_US)  # type: loop.Syscall
+
     async def __iter__(self) -> ResultValue:
         """
         Run the layout and wait until it completes.  Returns the result value.
@@ -381,8 +384,8 @@ class Layout(Component):
         # rendering everything synchronously, so refresh it manually and turn
         # the brightness on again.
         refresh()
-        backlight_fade(style.BACKLIGHT_NORMAL)
-        sleep = loop.sleep(_RENDER_DELAY_US)
+        backlight_fade(self.BACKLIGHT_LEVEL)
+        sleep = self.RENDER_SLEEP
         while True:
             # Wait for a couple of ms and render the layout again.  Because
             # components use re-paint marking, they do not really draw on the
