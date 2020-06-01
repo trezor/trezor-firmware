@@ -1,0 +1,1 @@
+../../../src/trezor/crypto/base32.py
