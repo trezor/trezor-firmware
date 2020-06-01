@@ -1715,23 +1715,33 @@ size_t bn_format(const bignum256 *amount, const char *prefix, const char *suffix
     BN_FORMAT_ADD_OUTPUT_CHAR(suffix[i])
 
   // amount //= 10**exponent
-  if (exponent < 0) {
-    for (; exponent < 0; ++exponent) {
-      bn_divmod10(&temp, &digit);
+  for (; exponent < 0; ++exponent) {
+    // if temp == 0, there is no need to divide it by 10 anymore
+    if (bn_is_zero(&temp)) {
+      exponent = 0;
+      break;
     }
+    bn_divmod10(&temp, &digit);
   }
+
   // exponent >= 0 && decimals >= 0
 
   bool fractional_part = false;  // is fractional-part of amount present
 
   {  // Add fractional-part digits of amount
     // Add trailing zeroes
-    for (; exponent > 0 && decimals > 0; --exponent, --decimals) {
-      if (trailing) {
-        BN_FORMAT_ADD_OUTPUT_CHAR('0')
-        fractional_part = true;
-      }
+    unsigned int trailing_zeros = decimals < (unsigned int) exponent ? decimals : (unsigned int) exponent;
+    // When casting a negative int to unsigned int, UINT_MAX is added to the int before
+    // Since exponent >= 0, the value remains unchanged
+    decimals -= trailing_zeros;
+    exponent -= trailing_zeros;
+
+    if (trailing && trailing_zeros) {
+      fractional_part = true;
+      for (; trailing_zeros > 0; --trailing_zeros)
+          BN_FORMAT_ADD_OUTPUT_CHAR('0')
     }
+
     // exponent == 0 || decimals == 0
 
     // Add significant digits and leading zeroes
@@ -1741,6 +1751,11 @@ size_t bn_format(const bignum256 *amount, const char *prefix, const char *suffix
       if (fractional_part || digit || trailing) {
         fractional_part = true;
         BN_FORMAT_ADD_OUTPUT_CHAR('0' + digit)
+      }
+      else if (bn_is_zero(&temp)) {
+        // We break since the remaining digits are zeroes and fractional_part == trailing == false
+        decimals = 0;
+        break;
       }
     }
     // decimals == 0
