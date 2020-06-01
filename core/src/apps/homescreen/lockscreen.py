@@ -1,4 +1,4 @@
-from trezor import loop, res, ui, wire
+from trezor import res, ui, wire
 
 from . import HomescreenBase
 
@@ -20,6 +20,8 @@ async def lockscreen() -> None:
 
 
 class Lockscreen(HomescreenBase):
+    BACKLIGHT_LEVEL = ui.BACKLIGHT_LOW
+
     def __init__(
         self, lock_label: str = "Locked", tap_label: str = "Tap to unlock"
     ) -> None:
@@ -38,33 +40,6 @@ class Lockscreen(HomescreenBase):
             ui.WIDTH // 2 + 10, 220, self.tap_label, ui.BOLD, ui.TITLE_GREY, ui.BG
         )
         ui.display.icon(45, 202, res.load(ui.ICON_CLICK), ui.TITLE_GREY, ui.BG)
-
-    def handle_rendering(self) -> loop.Task:  # type: ignore
-        """Task that is rendering the layout in a busy loop.
-
-        Copy-pasted from ui.Layout.handle_rendering with modification to set the
-        backlight to a lower level while lockscreen is on, and a longer sleep because
-        we never do any redrawing."""
-        # Before the first render, we dim the display.
-        ui.backlight_fade(ui.BACKLIGHT_DIM)
-        # Clear the screen of any leftovers, make sure everything is marked for
-        # repaint (we can be running the same layout instance multiple times)
-        # and paint it.
-        ui.display.clear()
-        self.on_render()
-
-        if __debug__ and self.should_notify_layout_change:
-            from apps.debug import notify_layout_change
-
-            self.should_notify_layout_change = False
-            notify_layout_change(self)
-
-        ui.refresh()
-        ui.backlight_fade(ui.BACKLIGHT_LOW)
-        # long sleep
-        sleep = loop.sleep(1000 * 1000 * 1000)
-        while True:
-            yield sleep
 
     def on_render(self) -> None:
         self.render_homescreen()

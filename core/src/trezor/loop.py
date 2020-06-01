@@ -222,6 +222,10 @@ class Syscall:
         pass
 
 
+SLEEP_FOREVER = Syscall()
+"""Tasks awaiting `SLEEP_FOREVER` will never be resumed."""
+
+
 class sleep(Syscall):
     """
     Pause current task and resume it after given delay.  Although the delay is
