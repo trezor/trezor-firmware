@@ -28,7 +28,7 @@
 
 /// package: trezorio.__init__
 
-/// def poll(ifaces: Iterable[int], list_ref: List, timeout_us: int) -> bool:
+/// def poll(ifaces: Iterable[int], list_ref: List, timeout_ms: int) -> bool:
 ///     """
 ///     Wait until one of `ifaces` is ready to read or write (using masks
 //      `io.POLL_READ` and `io.POLL_WRITE`) and assign the result into
@@ -42,14 +42,14 @@
 ///     If timeout occurs, False is returned, True otherwise.
 ///     """
 STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
-                                  mp_obj_t timeout_us) {
+                                  mp_obj_t timeout_ms) {
   mp_obj_list_t *ret = MP_OBJ_TO_PTR(list_ref);
   if (!MP_OBJ_IS_TYPE(list_ref, &mp_type_list) || ret->len < 2) {
     mp_raise_TypeError("invalid list_ref");
   }
 
-  const mp_uint_t timeout = trezor_obj_get_uint(timeout_us);
-  const mp_uint_t deadline = mp_hal_ticks_us() + timeout;
+  const mp_uint_t timeout = trezor_obj_get_uint(timeout_ms);
+  const mp_uint_t deadline = mp_hal_ticks_ms() + timeout;
   mp_obj_iter_buf_t iterbuf;
 
   for (;;) {
@@ -125,7 +125,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
       }
     }
 
-    if (mp_hal_ticks_us() >= deadline) {
+    if (mp_hal_ticks_ms() >= deadline) {
       break;
     } else {
       MICROPY_EVENT_POLL_HOOK
