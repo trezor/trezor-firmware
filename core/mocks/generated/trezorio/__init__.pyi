@@ -68,7 +68,7 @@ class HID:
 
 
 # extmod/modtrezorio/modtrezorio-poll.h
-def poll(ifaces: Iterable[int], list_ref: List, timeout_us: int) -> bool:
+def poll(ifaces: Iterable[int], list_ref: List, timeout_ms: int) -> bool:
     """
     Wait until one of `ifaces` is ready to read or write (using masks
     `list_ref`:

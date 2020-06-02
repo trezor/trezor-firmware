@@ -157,9 +157,9 @@ syscalls is the preferred method of writing code.
 
 The following syscalls and constructs are available:
 
-**`loop.sleep(delay_us: int)`**: Suspend execution until the given delay (in
-microseconds) elapses. Sub-millisecond precision is not guaranteed, however.
-Return value is the planned deadline in microseconds since system start.
+**`loop.sleep(delay_ms: int)`**: Suspend execution until the given delay (in
+milliseconds) elapses. Return value is the planned deadline in milliseconds since system
+start.
 
 Calling `await loop.sleep(0)` yields execution to other tasks, and schedules the current
 task for the next tick.
@@ -174,7 +174,7 @@ the first of them finishes.
 
 It is possible to specify wait timeout for `loop.wait` by using `loop.race`:
 ```python
-result = await loop.race(loop.wait(io.TOUCH), loop.sleep(1000 * 1000))
+result = await loop.race(loop.wait(io.TOUCH), loop.sleep(1000))
 ```
 This introduces scheduling gaps: every child is treated as a task and scheduled
 to run. This means that if the child is a syscall, as in the above example, its action

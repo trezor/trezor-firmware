@@ -201,7 +201,7 @@ class Slip39Keyboard(ui.Layout):
 
     async def handle_input(self) -> None:
         touch = loop.wait(io.TOUCH)
-        timeout = loop.sleep(1000 * 1000 * 1)
+        timeout = loop.sleep(1000)
         race_touch = loop.race(touch)
         race_timeout = loop.race(touch, timeout)
 

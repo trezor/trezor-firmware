@@ -19,5 +19,5 @@ class Popup(ui.Layout):
         return self.handle_input(), self.handle_rendering(), self.handle_timeout()
 
     def handle_timeout(self) -> loop.Task:  # type: ignore
-        yield loop.sleep(self.time_ms * 1000)
+        yield loop.sleep(self.time_ms)
         raise ui.Result(None)

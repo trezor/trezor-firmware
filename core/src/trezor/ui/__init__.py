@@ -85,8 +85,8 @@ def pulse(period: int, offset: int = 0) -> float:
 
 
 async def _alert(count: int) -> None:
-    short_sleep = loop.sleep(20000)
-    long_sleep = loop.sleep(80000)
+    short_sleep = loop.sleep(20)
+    long_sleep = loop.sleep(80)
     for i in range(count * 2):
         if i % 2 == 0:
             display.backlight(style.BACKLIGHT_MAX)
@@ -223,9 +223,9 @@ RENDER = const(-255)
 # Event dispatched when components should mark themselves for re-painting.
 REPAINT = const(-256)
 
-# How long, in microseconds, should the layout rendering task sleep betweeen
+# How long, in milliseconds, should the layout rendering task sleep betweeen
 # the render calls.
-_RENDER_DELAY_US = const(10000)  # 10 msec
+_RENDER_DELAY_MS = const(10)
 
 
 class Component:
@@ -306,7 +306,7 @@ class Layout(Component):
     """
 
     BACKLIGHT_LEVEL = style.BACKLIGHT_NORMAL
-    RENDER_SLEEP = loop.sleep(_RENDER_DELAY_US)  # type: loop.Syscall
+    RENDER_SLEEP = loop.sleep(_RENDER_DELAY_MS)  # type: loop.Syscall
 
     async def __iter__(self) -> ResultValue:
         """
