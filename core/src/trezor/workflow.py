@@ -181,7 +181,7 @@ class IdleTimer:
         """
         for callback, task in self.tasks.items():
             timeout_us = self.timeouts[callback]
-            deadline = utime.ticks_add(utime.ticks_us(), timeout_us)
+            deadline = utime.ticks_add(utime.ticks_ms(), timeout_us)
             loop.schedule(task, None, deadline, reschedule=True)
 
     def set(self, timeout_ms: int, callback: IdleCallback) -> None:
@@ -207,7 +207,7 @@ class IdleTimer:
         if callback in self.tasks:
             loop.close(self.tasks[callback])
 
-        self.timeouts[callback] = timeout_ms * 1000
+        self.timeouts[callback] = timeout_ms
         self.tasks[callback] = self._timeout_task(callback)
         self.touch()
 

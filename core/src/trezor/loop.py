@@ -74,7 +74,7 @@ def schedule(
     if reschedule:
         _queue.discard(task)
     if deadline is None:
-        deadline = utime.ticks_us()
+        deadline = utime.ticks_ms()
     if finalizer is not None:
         _finalizers[id(task)] = finalizer
     _queue.push(deadline, task, value)
@@ -123,9 +123,9 @@ def run() -> None:
     while _queue or _paused:
         # compute the maximum amount of time we can wait for a message
         if _queue:
-            delay = utime.ticks_diff(_queue.peektime(), utime.ticks_us())
+            delay = utime.ticks_diff(_queue.peektime(), utime.ticks_ms())
         else:
-            delay = 1000000  # wait for 1 sec maximum if queue is empty
+            delay = 1000  # wait for 1 sec maximum if queue is empty
 
         if __debug__:
             # process synthetic events
@@ -227,22 +227,21 @@ SLEEP_FOREVER = Syscall()
 
 
 class sleep(Syscall):
-    """
-    Pause current task and resume it after given delay.  Although the delay is
-    given in microseconds, sub-millisecond precision is not guaranteed.  Result
-    value is the calculated deadline.
+    """Pause current task and resume it after given delay.
+
+    Result value is the calculated deadline.
 
     Example:
 
-    >>> planned = await loop.sleep(1000 * 1000)  # sleep for 1ms
-    >>> print('missed by %d us', utime.ticks_diff(utime.ticks_us(), planned))
+    >>> planned = await loop.sleep(1000)  # sleep for 1s
+    >>> print('missed by %d ms', utime.ticks_diff(utime.ticks_ms(), planned))
     """
 
-    def __init__(self, delay_us: int) -> None:
-        self.delay_us = delay_us
+    def __init__(self, delay_ms: int) -> None:
+        self.delay_ms = delay_ms
 
     def handle(self, task: Task) -> None:
-        deadline = utime.ticks_add(utime.ticks_us(), self.delay_us)
+        deadline = utime.ticks_add(utime.ticks_ms(), self.delay_ms)
         schedule(task, deadline, deadline)
 
 

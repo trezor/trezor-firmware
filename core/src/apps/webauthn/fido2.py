@@ -429,7 +429,7 @@ async def read_cmd(iface: io.HID) -> Optional[Cmd]:
             data = data[:bcnt]
 
         while datalen < bcnt:
-            buf = await loop.race(read, loop.sleep(_CTAP_HID_TIMEOUT_MS * 1000))
+            buf = await loop.race(read, loop.sleep(_CTAP_HID_TIMEOUT_MS))
             if not isinstance(buf, bytes):
                 if __debug__:
                     log.warning(__name__, "_ERR_MSG_TIMEOUT")
@@ -520,7 +520,7 @@ async def send_cmd(cmd: Cmd, iface: io.HID) -> None:
         if copied < _FRAME_CONT_SIZE:
             frm.data[copied:] = bytearray(_FRAME_CONT_SIZE - copied)
         while True:
-            ret = await loop.race(write, loop.sleep(_CTAP_HID_TIMEOUT_MS * 1000))
+            ret = await loop.race(write, loop.sleep(_CTAP_HID_TIMEOUT_MS))
             if ret is not None:
                 raise TimeoutError
 
@@ -1060,7 +1060,7 @@ class DialogManager:
                 if self.state.keepalive_status() != _KEEPALIVE_STATUS_NONE:
                     cmd = cmd_keepalive(self.state.cid, self.state.keepalive_status())
                     await send_cmd(cmd, self.iface)
-                await loop.sleep(_KEEPALIVE_INTERVAL_MS * 1000)
+                await loop.sleep(_KEEPALIVE_INTERVAL_MS)
         finally:
             self.keepalive = None
 
