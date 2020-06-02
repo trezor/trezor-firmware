@@ -22,28 +22,36 @@ async def lockscreen() -> None:
 class Lockscreen(HomescreenBase):
     BACKLIGHT_LEVEL = ui.BACKLIGHT_LOW
 
-    def __init__(
-        self, lock_label: str = "Locked", tap_label: str = "Tap to unlock"
-    ) -> None:
-        self.lock_label = lock_label
-        self.tap_label = tap_label
+    def __init__(self, bootscreen: bool = False) -> None:
+        if bootscreen:
+            self.BACKLIGHT_LEVEL = ui.BACKLIGHT_NORMAL
+            self.lock_label = "Not connected"
+            self.tap_label = "Tap to connect"
+        else:
+            self.lock_label = "Locked"
+            self.tap_label = "Tap to unlock"
+
         super().__init__()
 
-    def render_lock(self) -> None:
+    def on_render(self) -> None:
+        # homescreen with label text on top
+        ui.display.text_center(
+            ui.WIDTH // 2, 35, self.label, ui.BOLD, ui.TITLE_GREY, ui.BG
+        )
+        ui.display.avatar(48, 48, self.image, ui.WHITE, ui.BLACK)
+
+        # lock bar
         ui.display.bar_radius(40, 100, 160, 40, ui.TITLE_GREY, ui.BG, 4)
         ui.display.bar_radius(42, 102, 156, 36, ui.BG, ui.TITLE_GREY, 4)
         ui.display.text_center(
             ui.WIDTH // 2, 128, self.lock_label, ui.BOLD, ui.TITLE_GREY, ui.BG
         )
 
+        # "tap to unlock"
         ui.display.text_center(
             ui.WIDTH // 2 + 10, 220, self.tap_label, ui.BOLD, ui.TITLE_GREY, ui.BG
         )
         ui.display.icon(45, 202, res.load(ui.ICON_CLICK), ui.TITLE_GREY, ui.BG)
 
-    def on_render(self) -> None:
-        self.render_homescreen()
-        self.render_lock()
-
-    def on_touch_end(self, x: int, y: int) -> None:
+    def on_tap(self) -> None:
         raise ui.Result(None)

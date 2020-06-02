@@ -15,7 +15,8 @@ class Homescreen(HomescreenBase):
         if not storage.is_initialized():
             self.label = "Go to trezor.io/start"
 
-    def render_warning(self) -> None:
+    def on_render(self) -> None:
+        # warning bar on top
         if storage.is_initialized() and storage.device.no_backup():
             ui.header_error("SEEDLESS")
         elif storage.is_initialized() and storage.device.unfinished_backup():
@@ -27,6 +28,6 @@ class Homescreen(HomescreenBase):
         else:
             ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT, ui.BG)
 
-    def on_render(self) -> None:
-        self.render_warning()
-        self.render_homescreen()
+        # homescreen with shifted avatar and text on bottom
+        ui.display.avatar(48, 48 - 10, self.image, ui.WHITE, ui.BLACK)
+        ui.display.text_center(ui.WIDTH // 2, 220, self.label, ui.BOLD, ui.FG, ui.BG)
