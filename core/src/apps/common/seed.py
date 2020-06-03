@@ -111,7 +111,7 @@ class Keychain:
 
 
 @cache.stored_async(cache.APP_COMMON_SEED)
-async def _get_seed(ctx: wire.Context) -> bytes:
+async def get_seed(ctx: wire.Context) -> bytes:
     if not device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
     passphrase = await get_passphrase(ctx)
@@ -126,7 +126,7 @@ def _get_seed_without_passphrase() -> bytes:
 
 
 async def get_keychain(ctx: wire.Context, namespaces: Sequence[Namespace]) -> Keychain:
-    seed = await _get_seed(ctx)
+    seed = await get_seed(ctx)
     keychain = Keychain(seed, namespaces)
     return keychain
 
