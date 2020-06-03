@@ -16,9 +16,9 @@
 
 import pytest
 
-from trezorlib import cardano, messages
+from trezorlib import btc, cardano, messages, tools
 
-from ..common import MNEMONIC_SLIP39_BASIC_20_3of6
+from ...common import MNEMONIC_SLIP39_BASIC_20_3of6
 
 PROTOCOL_MAGICS = {"mainnet": 764824073, "testnet": 1097911063}
 
@@ -146,3 +146,36 @@ def test_cardano_sign_tx(
         )
         assert response.tx_hash.hex() == tx_hash
         assert response.tx_body.hex() == tx_body
+
+
+@pytest.mark.altcoin
+@pytest.mark.cardano
+@pytest.mark.skip_t1  # T1 support is not planned
+@pytest.mark.skip_ui
+@pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6, passphrase=True)
+def test_single_passphrase_entry(client):
+    # try empty passphrase
+    with client:
+        client.use_passphrase("")
+        client.set_expected_responses(
+            [messages.PassphraseRequest(), messages.CardanoAddress()]
+        )
+        address_a = cardano.get_address(client, tools.parse_path("m/44'/1815'/0'/0/0"))
+
+    client.clear_session()
+
+    # in a new session, unlock non-Cardano first
+    with client:
+        client.use_passphrase("TREZOR")
+        client.set_expected_responses(
+            [messages.PassphraseRequest(), messages.Address()]
+        )
+        # invoke passphrase prompt
+        btc.get_address(client, "Testnet", tools.parse_path("m/44'/1'/0'/0/0"))
+
+    with client:
+        # Cardano should not ask for passphrase again
+        client.set_expected_responses([messages.CardanoAddress()])
+        address_b = cardano.get_address(client, tools.parse_path("m/44'/1815'/0'/0/0"))
+        # but it should be using the previously entered passphrase
+        assert address_a != address_b
