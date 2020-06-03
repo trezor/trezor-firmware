@@ -62,13 +62,13 @@ release legacy fw regular deploy:
   tags:
     - deploy
 
-legacy fw btconly deploy:
+release legacy fw btconly deploy:
   stage: deploy
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares"
   before_script: []  # no pipenv
   dependencies:
-    - legacy fw regular build
+    - legacy fw btconly build
   script:
     - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
     - export NAME="trezor-fw-btconly-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
