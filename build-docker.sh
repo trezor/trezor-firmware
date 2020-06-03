@@ -34,7 +34,6 @@ for BITCOIN_ONLY in 0 1; do
     -v $(pwd)/build/core"${DIRSUFFIX}":/build:z \
     --env BITCOIN_ONLY="$BITCOIN_ONLY" \
     --env PRODUCTION="$PRODUCTION" \
-    --user="$USER:$GROUP" \
     "$IMAGE" \
     /nix/var/nix/profiles/default/bin/nix-shell --run "\
       cd /tmp && \
@@ -44,7 +43,8 @@ for BITCOIN_ONLY in 0 1; do
       git checkout $TAG && \
       git submodule update --init --recursive && \
       pipenv install && \
-      pipenv run make clean vendor build_firmware"
+      pipenv run make clean vendor build_firmware && \
+      chown -R $USER:$GROUP /build"
 
 done
 
@@ -60,7 +60,6 @@ for BITCOIN_ONLY in 0 1; do
     -v $(pwd)/build/legacy"${DIRSUFFIX}":/build:z \
     --env BITCOIN_ONLY="$BITCOIN_ONLY" \
     --env MEMORY_PROTECT="$MEMORY_PROTECT" \
-    --user="$USER:$GROUP" \
     "$IMAGE" \
     /nix/var/nix/profiles/default/bin/nix-shell --run "\
       cd /tmp && \
@@ -73,6 +72,7 @@ for BITCOIN_ONLY in 0 1; do
       pipenv run script/cibuild && \
       mkdir -p build/firmware && \
       cp firmware/trezor.bin build/firmware/firmware.bin && \
-      cp firmware/trezor.elf build/firmware/firmware.elf"
+      cp firmware/trezor.elf build/firmware/firmware.elf && \
+      chown -R $USER:$GROUP /build"
 
 done
