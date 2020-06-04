@@ -1,6 +1,6 @@
 from micropython import const
 
-from trezor import res, ui
+from trezor import config, res, ui
 from trezor.crypto import random
 from trezor.ui import display
 from trezor.ui.button import (
@@ -102,7 +102,9 @@ class PinDialog(ui.Layout):
         self.reset_button.on_click = self.on_reset  # type: ignore
 
         if allow_cancel:
-            icon_lock = res.load(ui.ICON_LOCK)
+            icon_lock = res.load(
+                ui.ICON_CANCEL if config.is_unlocked() else ui.ICON_LOCK
+            )
             self.cancel_button = Button(ui.grid(12), icon_lock, ButtonCancel)
             self.cancel_button.on_click = self.on_cancel  # type: ignore
         else:
