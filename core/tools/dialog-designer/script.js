@@ -12,33 +12,27 @@ function setFont(ctx, bold, mono) {
     ctx.font = font;
 }
 
-function measureWidth(ctx, text, bold, mono) {
-    setFont(ctx, bold, mono);
-    return ctx.measureText(text).width;
-}
-
 function text(ctx, x, y, text, bold, mono) {
     setFont(ctx, bold, mono);
     ctx.fillText(text, x, y);
 }
 
+function textCenter(ctx, x, y, text, bold, mono) {
+    setFont(ctx, bold, mono);
+    var w = ctx.measureText(text).width;
+    ctx.fillText(text, x - w / 2, y);
+}
+
 function render() {
     var title_str = document.getElementById("title").value;
-    var line1_str = document.getElementById("line1").value;
-    var line2_str = document.getElementById("line2").value;
-    var line3_str = document.getElementById("line3").value;
-    var line4_str = document.getElementById("line4").value;
-    var line5_str = document.getElementById("line5").value;
-    var bold1 = document.getElementById("bold_line1").checked;
-    var bold2 = document.getElementById("bold_line2").checked;
-    var bold3 = document.getElementById("bold_line3").checked;
-    var bold4 = document.getElementById("bold_line4").checked;
-    var bold5 = document.getElementById("bold_line5").checked;
-    var mono1 = document.getElementById("mono_line1").checked;
-    var mono2 = document.getElementById("mono_line2").checked;
-    var mono3 = document.getElementById("mono_line3").checked;
-    var mono4 = document.getElementById("mono_line4").checked;
-    var mono5 = document.getElementById("mono_line5").checked;
+    var line_str = [];
+    var bold = [];
+    var mono = [];
+    for (var i = 1; i <= 5; i++) {
+        line_str[i] = document.getElementById("line" + i).value;
+        bold[i] = document.getElementById("bold_line" + i).checked;
+        mono[i] = document.getElementById("mono_line" + i).checked;
+    }
     var confirm_str = document.getElementById("confirm").value;
 
     var canvas = document.getElementById('canvas');
@@ -51,33 +45,19 @@ function render() {
     }
 
     text(ctx, 44, 35, title_str, true);
-    text(ctx, 14, 48 + 26 * 1, line1_str, bold1, mono1);
-    text(ctx, 14, 48 + 26 * 2, line2_str, bold2, mono2);
-    text(ctx, 14, 48 + 26 * 3, line3_str, bold3, mono3);
-    text(ctx, 14, 48 + 26 * 4, line4_str, bold4, mono4);
-    text(ctx, 14, 48 + 26 * 5, line5_str, bold5, mono5);
-
-    var w = measureWidth(ctx, confirm_str);
-    text(ctx, 120 - w / 2, 215, confirm_str, true);
+    for (var i = 1; i <= 5; i++) {
+        text(ctx, 14, 48 + 26 * i, line_str[i], bold[i], mono[i]);
+    }
+    textCenter(ctx, 120, 215, confirm_str, true);
 }
 
 window.onload = function() {
     document.getElementById("title").onkeyup = render;
-    document.getElementById("line1").onkeyup = render;
-    document.getElementById("line2").onkeyup = render;
-    document.getElementById("line3").onkeyup = render;
-    document.getElementById("line4").onkeyup = render;
-    document.getElementById("line5").onkeyup = render;
-    document.getElementById("bold_line1").onclick = render;
-    document.getElementById("bold_line2").onclick = render;
-    document.getElementById("bold_line3").onclick = render;
-    document.getElementById("bold_line4").onclick = render;
-    document.getElementById("bold_line5").onclick = render;
-    document.getElementById("mono_line1").onclick = render;
-    document.getElementById("mono_line2").onclick = render;
-    document.getElementById("mono_line3").onclick = render;
-    document.getElementById("mono_line4").onclick = render;
-    document.getElementById("mono_line5").onclick = render;
+    for (var i = 1; i <= 5; i++) {
+        document.getElementById("line" + i).onkeyup = render;
+        document.getElementById("bold_line" + i).onclick = render;
+        document.getElementById("mono_line" + i).onclick = render;
+    }
     document.getElementById("confirm").onkeyup = render;
     render();
 }
