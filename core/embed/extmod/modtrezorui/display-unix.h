@@ -47,7 +47,7 @@
 #define TOUCH_OFFSET_Y 92
 
 #else
-#error Unknown Trezor Model
+#error Unknown Trezor model
 #endif
 
 static SDL_Renderer *RENDERER;

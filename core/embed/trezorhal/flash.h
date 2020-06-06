@@ -30,6 +30,8 @@
 #define FLASH_SECTOR_COUNT 24
 #elif TREZOR_MODEL == 1
 #define FLASH_SECTOR_COUNT 12
+#else
+#error Unknown Trezor model
 #endif
 
 #define FLASH_SECTOR_BOARDLOADER_START 0
@@ -44,6 +46,8 @@
 #elif TREZOR_MODEL == 1
 #define FLASH_SECTOR_STORAGE_1 2
 #define FLASH_SECTOR_STORAGE_2 3
+#else
+#error Unknown Trezor model
 #endif
 
 #define FLASH_SECTOR_BOOTLOADER 5

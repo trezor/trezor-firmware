@@ -54,9 +54,11 @@ static struct { int x, y; } DISPLAY_OFFSET;
 #include "display-unix.h"
 #else
 #if TREZOR_MODEL == T
-#include "display-stm32_t.h"
+#include "display-stm32_T.h"
 #elif TREZOR_MODEL == 1
 #include "display-stm32_1.h"
+#else
+#error Unknown Trezor model
 #endif
 #endif
 

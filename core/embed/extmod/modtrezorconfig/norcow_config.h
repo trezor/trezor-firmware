@@ -26,17 +26,11 @@
 #define NORCOW_SECTOR_COUNT 2
 
 #if TREZOR_MODEL == T
-
 #define NORCOW_SECTOR_SIZE (64 * 1024)
-
 #elif TREZOR_MODEL == 1
-
 #define NORCOW_SECTOR_SIZE (16 * 1024)
-
 #else
-
-#error Unknown Trezor Model
-
+#error Unknown Trezor model
 #endif
 
 #define NORCOW_SECTORS \

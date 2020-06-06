@@ -26,12 +26,12 @@ g_header:
     . = . + 8                        // reserved
     . = . + 512                      // hash1 ... hash16
 
-#if TREZOR_MODEL != 1
+#if TREZOR_MODEL == T
 // model T header specifics
     . = . + 415                      // reserved
     .byte 0                          // sigmask
     . = . + 64                       // sig
-#else
+#elif TREZOR_MODEL == 1
 // model 1 header specifics
     . = . + 64                       // sig1
     . = . + 64                       // sig2
@@ -41,6 +41,8 @@ g_header:
     .byte 0                          // sigindex3
     . = . + 220                      // reserved
     . = . + 65                       // reserved
+#else
+#error Unknown Trezor model
 #endif
 
 g_header_end:
