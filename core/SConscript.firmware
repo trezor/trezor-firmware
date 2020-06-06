@@ -369,10 +369,12 @@ if env.get('TREZOR_MODEL') == 'T':
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16'
     CPU_CCFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 '
     CPU_MODEL   = 'STM32F427xx'
-else:
+elif env.get('TREZOR_MODEL') == '1':
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m3 -mfloat-abi=soft'
     CPU_CCFLAGS = '-mthumb -mtune=cortex-m3 -mcpu=cortex-m3 -mfloat-abi=soft '
     CPU_MODEL   = 'STM32F405xx'
+else:
+    raise ValueError('Unknown Trezor model')
 
 env.Replace(
     COPT=env.get('ENV').get('OPTIMIZE', '-Os'),
@@ -457,10 +459,12 @@ env.Ignore(hdr_moduledefs, qstr_generated)
 #
 
 if FROZEN:
-    if env.get('TREZOR_MODEL') == '1':
+    if env.get('TREZOR_MODEL') == 'T':
+        SOURCE_PY_DIR = 'src/'
+    elif env.get('TREZOR_MODEL') == '1':
         SOURCE_PY_DIR = 'src1/'
     else:
-        SOURCE_PY_DIR = 'src/'
+        raise ValueError('Unknown Trezor model')
 
     SOURCE_PY = Glob(SOURCE_PY_DIR + '*.py')
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/*.py'))
@@ -629,11 +633,13 @@ if env.get('TREZOR_MODEL') == 'T':
         '$HEADERTOOL $TARGET ' + ('-D' if ARGUMENTS.get('PRODUCTION', '0') == '0' else ''),
         '$DD if=$TARGET of=${TARGET}.p1 skip=0 bs=128k count=6',
     ]
-else:
+elif env.get('TREZOR_MODEL') == '1':
     action_bin=[
         '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
         '../legacy/bootloader/firmware_sign.py -f $TARGET',
     ]
+else:
+    raise ValueError('Unknown Trezor model')
 
 program_bin = env.Command(
     target='firmware.bin',

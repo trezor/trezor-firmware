@@ -31,10 +31,12 @@
  * The length of the sector header in bytes. The header is preserved between
  * sector erasures.
  */
-#if TREZOR_MODEL == 1
+#if TREZOR_MODEL == T
+#define NORCOW_HEADER_LEN 0
+#elif TREZOR_MODEL == 1
 #define NORCOW_HEADER_LEN (0x100)
 #else
-#define NORCOW_HEADER_LEN 0
+#error Unknown Trezor model
 #endif
 
 /*
