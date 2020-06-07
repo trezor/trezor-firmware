@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-IMAGE=trezor-firmware-build.nixos
+CONTAINER_NAME=trezor-firmware-build.nix
 
 TAG=${1:-master}
 REPOSITORY=${2:-local}
@@ -15,7 +15,7 @@ else
 fi
 
 wget -nc -P ci/ http://dl-cdn.alpinelinux.org/alpine/v3.12/releases/x86_64/alpine-minirootfs-3.12.0-x86_64.tar.gz
-docker build -t "$IMAGE" ci/
+docker build -t "$CONTAINER_NAME" ci/
 
 USER=$(ls -lnd . | awk '{ print $3 }')
 GROUP=$(ls -lnd . | awk '{ print $4 }')
@@ -35,7 +35,7 @@ for BITCOIN_ONLY in 0 1; do
     -v $(pwd)/build/core"${DIRSUFFIX}":/build:z \
     --env BITCOIN_ONLY="$BITCOIN_ONLY" \
     --env PRODUCTION="$PRODUCTION" \
-    "$IMAGE" \
+    "$CONTAINER_NAME" \
     /nix/var/nix/profiles/default/bin/nix-shell --run "\
       cd /tmp && \
       git clone $REPOSITORY trezor-firmware && \
@@ -61,7 +61,7 @@ for BITCOIN_ONLY in 0 1; do
     -v $(pwd)/build/legacy"${DIRSUFFIX}":/build:z \
     --env BITCOIN_ONLY="$BITCOIN_ONLY" \
     --env MEMORY_PROTECT="$MEMORY_PROTECT" \
-    "$IMAGE" \
+    "$CONTAINER_NAME" \
     /nix/var/nix/profiles/default/bin/nix-shell --run "\
       cd /tmp && \
       git clone $REPOSITORY trezor-firmware && \
