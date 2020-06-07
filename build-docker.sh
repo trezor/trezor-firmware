@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-CONTAINER_NAME=trezor-firmware-build.nix
+CONTAINER_NAME=trezor-firmware-env.nix
 
 TAG=${1:-master}
 REPOSITORY=${2:-local}

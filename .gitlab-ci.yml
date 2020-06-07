@@ -33,7 +33,7 @@ stages:
   - deploy
 
 before_script:
-  - command -v pipenv >/dev/null && pipenv sync --python=/usr/bin/python3
+  - nix-shell --run "pipenv sync"
 
 include:
   - ci/environment.yml

@@ -11,7 +11,7 @@ do
     # The commit message must contain either
     # 1. "cherry-picked from [some commit in master]"
     if [[ $message =~ "(cherry picked from commit" ]]; then
-    	# remove last ")" and extract commit hash
+      # remove last ")" and extract commit hash
       master_commit=$(echo ${message:0:-1} | tr ' ' '\n' | tail -1)
       # check if master really contains this commit hash
       if [[ $(git branch -a --contains $master_commit | grep --only-matching master) == "master" ]]; then
