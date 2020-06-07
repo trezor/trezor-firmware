@@ -14,6 +14,7 @@ else
   REPOSITORY=https://github.com/$REPOSITORY/trezor-firmware.git
 fi
 
+wget -nc -P ci/ http://dl-cdn.alpinelinux.org/alpine/v3.12/releases/x86_64/alpine-minirootfs-3.12.0-x86_64.tar.gz
 docker build -t "$IMAGE" ci/
 
 USER=$(ls -lnd . | awk '{ print $3 }')
