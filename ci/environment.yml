@@ -4,7 +4,7 @@ environment:
   when: manual
   variables:
     GIT_SUBMODULE_STRATEGY: none  # no need to fetch submodules
-    CONTAINER_NAME: "$CI_REGISTRY/satoshilabs/trezor/trezor-firmware/environment"
+    CONTAINER_NAME: "$CI_REGISTRY/satoshilabs/trezor/trezor-firmware/trezor-firmware-build.nix"
   services:
     - docker:dind
   before_script:
