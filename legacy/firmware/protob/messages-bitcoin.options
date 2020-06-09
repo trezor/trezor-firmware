@@ -50,3 +50,11 @@ MultisigRedeemScriptType.nodes                              max_count:15
 MultisigRedeemScriptType.address_n                          max_count:8
 
 HDNodePathType.address_n           max_count:8
+
+GetOwnershipProof.address_n                                 max_count:8
+GetOwnershipProof.coin_name                                 max_size:21
+GetOwnershipProof.ownership_ids                             max_count:15 max_size:32
+GetOwnershipProof.commitment_data                           max_size:32
+
+OwnershipProof.ownership_proof                              max_size:171
+OwnershipProof.signature                                    max_size:65

@@ -3,7 +3,8 @@ Q := @
 endif
 
 SKIPPED_MESSAGES := Binance Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tezos WebAuthn \
-	DebugLinkRecordScreen DebugLinkReseedRandom DebugLinkShowText DebugLinkEraseSdCard DebugLinkWatchLayout
+	DebugLinkRecordScreen DebugLinkReseedRandom DebugLinkShowText DebugLinkEraseSdCard DebugLinkWatchLayout \
+	GetOwnershipProof OwnershipProof
 
 ifeq ($(BITCOIN_ONLY), 1)
 SKIPPED_MESSAGES += Ethereum Lisk NEM Stellar
