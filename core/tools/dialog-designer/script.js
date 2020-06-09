@@ -63,7 +63,7 @@ function text(ctx, x, y, text, bold, mono) {
 function textCenter(ctx, x, y, text, bold, mono) {
     setFont(ctx, bold, mono);
     var w = ppMeasureWidth(ctx, text);
-    ctx.fillText(text, x - w / 2, y);
+    ppFillText(ctx, text, x - w / 2, y);
 }
 
 function render() {
