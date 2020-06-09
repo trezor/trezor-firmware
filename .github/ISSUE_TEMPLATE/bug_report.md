@@ -10,8 +10,8 @@ assignees: ''
 **Describe the bug**
 A clear and concise description of what the bug is.
 
-**Firmware version or revision**
-Describe firmware version or revision you are using when encountering the bug.
+**Firmware version and revision**
+Describe firmware version and revision you are using when encountering the bug.
 
 **Desktop/smartphone setup (please complete the following information):**
  - Wallet software: [e.g. Trezor Wallet, Trezor Beta Wallet, Trezor Suite, Electrum]
