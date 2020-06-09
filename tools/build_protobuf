@@ -113,7 +113,7 @@ else
     func=do_rebuild
 fi
 
-$func core/src/trezor/messages "$CORE_PROTOBUF_SOURCES" "$CORE_MESSAGES_IGNORE" TRUE --no-init-py
+$func core/src/trezor/messages "$CORE_PROTOBUF_SOURCES" "$CORE_MESSAGES_IGNORE" TRUE --no-init-py --use-slots
 $func python/src/trezorlib/messages "$PYTHON_PROTOBUF_SOURCES" "$PYTHON_MESSAGES_IGNORE" FALSE -P ..protobuf
 
 exit $RETURN

@@ -232,6 +232,12 @@ class Descriptor:
                 yield f"        self.{field.name} = {field.name}"
         # fmt: on
 
+    def create_fields_slots(self, fields):
+        # fmt: off
+        yield "    __slots__ = ['" + "', '".join([f.name for f in fields]) + "']"
+        yield ""
+        # fmt: on
+
     def create_fields_method(self, fields):
         # fmt: off
         yield "    @classmethod"
@@ -265,7 +271,7 @@ class Descriptor:
         yield "        }"
         # fmt: on
 
-    def process_message(self, message):
+    def process_message(self, message, slots):
         logging.debug("Processing message {}".format(message.name))
         msg_id = self.message_types.get(message.name)
 
@@ -302,6 +308,8 @@ class Descriptor:
             yield ""
             yield from self.create_init_method(fields)
             yield ""
+            if slots:
+                yield from self.create_fields_slots(fields)
             yield from self.create_fields_method(fields)
 
         if not fields and not msg_id:
@@ -331,9 +339,9 @@ class Descriptor:
             self.enum_types[enum.name][value.name] = value.number
             yield f"{name} = {value.number}  # type: Literal[{value.number}]"
 
-    def process_messages(self, messages):
+    def process_messages(self, messages, slots):
         for message in sorted(messages, key=lambda m: m.name):
-            self.write_to_file(message.name, self.process_message(message))
+            self.write_to_file(message.name, self.process_message(message, slots))
 
     def process_enums(self, enums):
         for enum in sorted(enums, key=lambda e: e.name):
@@ -358,10 +366,10 @@ class Descriptor:
             for enum in sorted(self.enums, key=lambda m: m.name):
                 init_py.write("from . import {}\n".format(enum.name))
 
-    def write_classes(self, out_dir, init_py=True):
+    def write_classes(self, out_dir, init_py=True, slots=False):
         self.out_dir = out_dir
         self.process_enums(self.enums)
-        self.process_messages(self.messages)
+        self.process_messages(self.messages, slots)
         if init_py:
             self.write_init_py()
 
@@ -373,6 +381,7 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--out-dir", help="Directory for generated source code")
     parser.add_argument("-P", "--protobuf-module", default="protobuf", help="Name of protobuf module")
     parser.add_argument("-l", "--no-init-py", action="store_true", help="Do not generate __init__.py with list of modules")
+    parser.add_argument("-s", "--use-slots", action="store_true", help="Use __slots__")
     parser.add_argument("--message-type", default="MessageType", help="Name of enum with message IDs")
     parser.add_argument("-I", "--protoc-include", action="append", help="protoc include path")
     parser.add_argument("-v", "--verbose", action="store_true", help="Print debug messages")
@@ -387,7 +396,7 @@ if __name__ == "__main__":
     descriptor = Descriptor(descriptor_proto, args.message_type, args.protobuf_module)
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        descriptor.write_classes(tmpdir, not args.no_init_py)
+        descriptor.write_classes(tmpdir, not args.no_init_py, args.use_slots)
 
         for filename in os.listdir(args.out_dir):
             pathname = os.path.join(args.out_dir, filename)
