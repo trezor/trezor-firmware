@@ -18,7 +18,7 @@ from apps.common import coininfo, seed
 from apps.common.writers import write_bitcoin_varint
 
 from .. import addresses, common, multisig, scripts, writers
-from ..common import ecdsa_sign
+from ..common import SIGHASH_ALL, ecdsa_sign
 from ..verification import SignatureVerifier
 from . import helpers, progress, tx_weight
 from .matchcheck import MultisigFingerprintChecker, WalletPathChecker
@@ -26,9 +26,6 @@ from .matchcheck import MultisigFingerprintChecker, WalletPathChecker
 if False:
     from typing import List, Optional, Set, Tuple, Union
     from trezor.crypto.bip32 import HDNode
-
-# Default signature hash type in Bitcoin which signs all inputs and all outputs of the transaction.
-_SIGHASH_ALL = const(0x01)
 
 # the chain id used for change
 _BIP32_CHANGE_CHAIN = const(1)
@@ -486,7 +483,7 @@ class Bitcoin:
     # ===
 
     def get_sighash_type(self, txi: TxInputType) -> int:
-        return _SIGHASH_ALL
+        return SIGHASH_ALL
 
     def get_hash_type(self, txi: TxInputType) -> int:
         """ Return the nHashType flags."""

@@ -12,6 +12,9 @@ if False:
     from trezor.messages.TxInputType import EnumTypeInputScriptType
     from trezor.messages.TxOutputType import EnumTypeOutputScriptType
 
+# Default signature hash type in Bitcoin which signs all inputs and all outputs of the transaction.
+SIGHASH_ALL = const(0x01)
+
 # supported witness version for bech32 addresses
 _BECH32_WITVER = const(0x00)
 
