@@ -250,3 +250,28 @@ message TxAck {
         }
     }
 }
+
+/**
+ * Request: Ask device for a proof of ownership corresponding to address_n path
+ * @start
+ * @next OwnershipProof
+ * @next Failure
+ */
+message GetOwnershipProof {
+    repeated uint32 address_n = 1;                                      // BIP-32 path to derive the key from master node
+    optional string coin_name = 2 [default='Bitcoin'];                  // coin to use
+    optional InputScriptType script_type = 3 [default=SPENDWITNESS];    // used to distinguish between various scriptPubKey types
+    optional MultisigRedeemScriptType multisig = 4;                     // filled if proof is for a multisig address
+    optional bool user_confirmation = 5;                                // show a confirmation dialog and set the "user confirmation" bit in the proof
+    repeated bytes ownership_ids = 6;                                   // list of ownership identifiers in case of multisig
+    optional bytes commitment_data = 7;                                 // additional data to which the proof should commit
+}
+
+/**
+ * Response: Contains the proof of ownership
+ * @end
+ */
+message OwnershipProof {
+    required bytes ownership_proof = 1;     // SLIP-0019 proof of ownership
+    required bytes signature = 2;           // signature of the proof
+}
