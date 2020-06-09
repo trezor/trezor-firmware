@@ -22,6 +22,8 @@ class CardanoTxOutputType(p.MessageType):
         self.address_n = address_n if address_n is not None else []
         self.amount = amount
 
+    __slots__ = ('address', 'address_n', 'amount',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

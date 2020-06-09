@@ -45,6 +45,8 @@ class DebugLinkState(p.MessageType):
         self.mnemonic_type = mnemonic_type
         self.layout_lines = layout_lines if layout_lines is not None else []
 
+    __slots__ = ('layout', 'pin', 'matrix', 'mnemonic_secret', 'node', 'passphrase_protection', 'reset_word', 'reset_entropy', 'recovery_fake_word', 'recovery_word_pos', 'reset_word_pos', 'mnemonic_type', 'layout_lines',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

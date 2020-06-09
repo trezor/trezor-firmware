@@ -19,6 +19,8 @@ class DebugLinkLayout(p.MessageType):
     ) -> None:
         self.lines = lines if lines is not None else []
 
+    __slots__ = ('lines',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

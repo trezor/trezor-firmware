@@ -24,6 +24,8 @@ class NEMProvisionNamespace(p.MessageType):
         self.sink = sink
         self.fee = fee
 
+    __slots__ = ('namespace', 'parent', 'sink', 'fee',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

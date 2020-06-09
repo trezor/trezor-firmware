@@ -19,6 +19,8 @@ class MoneroTransactionInputsPermutationRequest(p.MessageType):
     ) -> None:
         self.perm = perm if perm is not None else []
 
+    __slots__ = ('perm',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

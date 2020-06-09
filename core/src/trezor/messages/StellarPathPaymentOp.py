@@ -33,6 +33,8 @@ class StellarPathPaymentOp(p.MessageType):
         self.destination_amount = destination_amount
         self.paths = paths if paths is not None else []
 
+    __slots__ = ('source_account', 'send_asset', 'send_max', 'destination_account', 'destination_asset', 'destination_amount', 'paths',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

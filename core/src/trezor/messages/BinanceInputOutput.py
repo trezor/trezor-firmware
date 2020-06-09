@@ -22,6 +22,8 @@ class BinanceInputOutput(p.MessageType):
         self.address = address
         self.coins = coins if coins is not None else []
 
+    __slots__ = ('address', 'coins',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

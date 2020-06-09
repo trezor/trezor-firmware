@@ -24,6 +24,8 @@ class MoneroMultisigKLRki(p.MessageType):
         self.R = R
         self.ki = ki
 
+    __slots__ = ('K', 'L', 'R', 'ki',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

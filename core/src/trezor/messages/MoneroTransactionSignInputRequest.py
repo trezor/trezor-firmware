@@ -35,6 +35,8 @@ class MoneroTransactionSignInputRequest(p.MessageType):
         self.spend_key = spend_key
         self.orig_idx = orig_idx
 
+    __slots__ = ('src_entr', 'vini', 'vini_hmac', 'pseudo_out', 'pseudo_out_hmac', 'pseudo_out_alpha', 'spend_key', 'orig_idx',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

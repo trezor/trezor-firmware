@@ -19,6 +19,8 @@ class Deprecated_PassphraseStateRequest(p.MessageType):
     ) -> None:
         self.state = state
 
+    __slots__ = ('state',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

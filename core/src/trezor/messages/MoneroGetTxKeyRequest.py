@@ -33,6 +33,8 @@ class MoneroGetTxKeyRequest(p.MessageType):
         self.reason = reason
         self.view_public_key = view_public_key
 
+    __slots__ = ('address_n', 'network_type', 'salt1', 'salt2', 'tx_enc_keys', 'tx_prefix_hash', 'reason', 'view_public_key',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

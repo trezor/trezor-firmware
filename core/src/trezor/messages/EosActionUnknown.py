@@ -20,6 +20,8 @@ class EosActionUnknown(p.MessageType):
         self.data_size = data_size
         self.data_chunk = data_chunk
 
+    __slots__ = ('data_size', 'data_chunk',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

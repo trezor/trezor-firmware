@@ -20,6 +20,8 @@ class EosPermissionLevel(p.MessageType):
         self.actor = actor
         self.permission = permission
 
+    __slots__ = ('actor', 'permission',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

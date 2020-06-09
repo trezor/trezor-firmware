@@ -29,6 +29,8 @@ class MoneroTransactionSetInputAck(p.MessageType):
         self.pseudo_out_alpha = pseudo_out_alpha
         self.spend_key = spend_key
 
+    __slots__ = ('vini', 'vini_hmac', 'pseudo_out', 'pseudo_out_hmac', 'pseudo_out_alpha', 'spend_key',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

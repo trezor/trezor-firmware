@@ -29,6 +29,8 @@ class DebugMoneroDiagAck(p.MessageType):
         self.data1 = data1
         self.data2 = data2
 
+    __slots__ = ('ins', 'p1', 'p2', 'pd', 'data1', 'data2',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

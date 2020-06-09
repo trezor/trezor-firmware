@@ -38,6 +38,8 @@ class TezosOriginationOp(p.MessageType):
         self.delegate = delegate
         self.script = script
 
+    __slots__ = ('source', 'fee', 'counter', 'gas_limit', 'storage_limit', 'manager_pubkey', 'balance', 'spendable', 'delegatable', 'delegate', 'script',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -26,6 +26,8 @@ class EosActionNewAccount(p.MessageType):
         self.owner = owner
         self.active = active
 
+    __slots__ = ('creator', 'name', 'owner', 'active',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

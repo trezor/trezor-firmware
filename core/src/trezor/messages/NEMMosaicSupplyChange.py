@@ -25,6 +25,8 @@ class NEMMosaicSupplyChange(p.MessageType):
         self.type = type
         self.delta = delta
 
+    __slots__ = ('namespace', 'mosaic', 'type', 'delta',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

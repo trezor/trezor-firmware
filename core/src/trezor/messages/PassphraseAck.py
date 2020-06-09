@@ -23,6 +23,8 @@ class PassphraseAck(p.MessageType):
         self._state = _state
         self.on_device = on_device
 
+    __slots__ = ('passphrase', '_state', 'on_device',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

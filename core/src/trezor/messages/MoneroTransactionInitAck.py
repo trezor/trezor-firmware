@@ -23,6 +23,8 @@ class MoneroTransactionInitAck(p.MessageType):
         self.hmacs = hmacs if hmacs is not None else []
         self.rsig_data = rsig_data
 
+    __slots__ = ('hmacs', 'rsig_data',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -23,6 +23,8 @@ class StellarManageDataOp(p.MessageType):
         self.key = key
         self.value = value
 
+    __slots__ = ('source_account', 'key', 'value',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

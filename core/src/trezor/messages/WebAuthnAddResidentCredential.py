@@ -19,6 +19,8 @@ class WebAuthnAddResidentCredential(p.MessageType):
     ) -> None:
         self.credential_id = credential_id
 
+    __slots__ = ('credential_id',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

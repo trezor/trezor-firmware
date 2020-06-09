@@ -26,6 +26,8 @@ class EosActionTransfer(p.MessageType):
         self.quantity = quantity
         self.memo = memo
 
+    __slots__ = ('sender', 'receiver', 'quantity', 'memo',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

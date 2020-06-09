@@ -23,6 +23,8 @@ class BinanceCancelMsg(p.MessageType):
         self.sender = sender
         self.symbol = symbol
 
+    __slots__ = ('refid', 'sender', 'symbol',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

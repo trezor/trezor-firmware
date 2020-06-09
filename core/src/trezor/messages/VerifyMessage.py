@@ -25,6 +25,8 @@ class VerifyMessage(p.MessageType):
         self.message = message
         self.coin_name = coin_name
 
+    __slots__ = ('address', 'signature', 'message', 'coin_name',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

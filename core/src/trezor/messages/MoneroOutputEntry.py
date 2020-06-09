@@ -22,6 +22,8 @@ class MoneroOutputEntry(p.MessageType):
         self.idx = idx
         self.key = key
 
+    __slots__ = ('idx', 'key',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

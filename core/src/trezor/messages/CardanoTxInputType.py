@@ -24,6 +24,8 @@ class CardanoTxInputType(p.MessageType):
         self.prev_index = prev_index
         self.type = type
 
+    __slots__ = ('address_n', 'prev_hash', 'prev_index', 'type',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

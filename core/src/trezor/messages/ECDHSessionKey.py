@@ -19,6 +19,8 @@ class ECDHSessionKey(p.MessageType):
     ) -> None:
         self.session_key = session_key
 
+    __slots__ = ('session_key',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

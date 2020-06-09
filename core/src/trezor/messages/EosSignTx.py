@@ -27,6 +27,8 @@ class EosSignTx(p.MessageType):
         self.header = header
         self.num_actions = num_actions
 
+    __slots__ = ('address_n', 'chain_id', 'header', 'num_actions',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

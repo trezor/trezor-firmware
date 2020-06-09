@@ -22,6 +22,8 @@ class NEMAggregateModification(p.MessageType):
         self.modifications = modifications if modifications is not None else []
         self.relative_change = relative_change
 
+    __slots__ = ('modifications', 'relative_change',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

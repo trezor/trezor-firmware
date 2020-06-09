@@ -19,6 +19,8 @@ class ApplyFlags(p.MessageType):
     ) -> None:
         self.flags = flags
 
+    __slots__ = ('flags',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

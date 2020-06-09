@@ -21,6 +21,8 @@ class TxAck(p.MessageType):
     ) -> None:
         self.tx = tx
 
+    __slots__ = ('tx',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

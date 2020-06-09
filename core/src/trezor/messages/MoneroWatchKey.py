@@ -21,6 +21,8 @@ class MoneroWatchKey(p.MessageType):
         self.watch_key = watch_key
         self.address = address
 
+    __slots__ = ('watch_key', 'address',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

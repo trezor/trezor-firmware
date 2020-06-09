@@ -24,6 +24,8 @@ class EosActionCommon(p.MessageType):
         self.name = name
         self.authorization = authorization if authorization is not None else []
 
+    __slots__ = ('account', 'name', 'authorization',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

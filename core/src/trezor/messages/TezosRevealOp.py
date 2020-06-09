@@ -28,6 +28,8 @@ class TezosRevealOp(p.MessageType):
         self.storage_limit = storage_limit
         self.public_key = public_key
 
+    __slots__ = ('source', 'fee', 'counter', 'gas_limit', 'storage_limit', 'public_key',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -20,6 +20,8 @@ class BinanceCoin(p.MessageType):
         self.amount = amount
         self.denom = denom
 
+    __slots__ = ('amount', 'denom',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

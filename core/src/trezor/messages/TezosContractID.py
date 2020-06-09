@@ -21,6 +21,8 @@ class TezosContractID(p.MessageType):
         self.tag = tag
         self.hash = hash
 
+    __slots__ = ('tag', 'hash',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -19,6 +19,8 @@ class PassphraseRequest(p.MessageType):
     ) -> None:
         self._on_device = _on_device
 
+    __slots__ = ('_on_device',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

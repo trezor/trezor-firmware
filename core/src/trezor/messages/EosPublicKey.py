@@ -21,6 +21,8 @@ class EosPublicKey(p.MessageType):
         self.wif_public_key = wif_public_key
         self.raw_public_key = raw_public_key
 
+    __slots__ = ('wif_public_key', 'raw_public_key',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

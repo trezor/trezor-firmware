@@ -21,6 +21,8 @@ class NEMCosignatoryModification(p.MessageType):
         self.type = type
         self.public_key = public_key
 
+    __slots__ = ('type', 'public_key',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

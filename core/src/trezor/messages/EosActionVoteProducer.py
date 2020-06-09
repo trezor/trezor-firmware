@@ -22,6 +22,8 @@ class EosActionVoteProducer(p.MessageType):
         self.proxy = proxy
         self.producers = producers if producers is not None else []
 
+    __slots__ = ('voter', 'proxy', 'producers',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

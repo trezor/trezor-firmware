@@ -31,6 +31,8 @@ class RippleSignTx(p.MessageType):
         self.last_ledger_sequence = last_ledger_sequence
         self.payment = payment
 
+    __slots__ = ('address_n', 'fee', 'flags', 'sequence', 'last_ledger_sequence', 'payment',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

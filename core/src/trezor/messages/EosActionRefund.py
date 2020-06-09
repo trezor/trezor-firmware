@@ -18,6 +18,8 @@ class EosActionRefund(p.MessageType):
     ) -> None:
         self.owner = owner
 
+    __slots__ = ('owner',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

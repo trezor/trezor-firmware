@@ -21,6 +21,8 @@ class Ping(p.MessageType):
         self.message = message
         self.button_protection = button_protection
 
+    __slots__ = ('message', 'button_protection',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

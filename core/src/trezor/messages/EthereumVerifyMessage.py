@@ -23,6 +23,8 @@ class EthereumVerifyMessage(p.MessageType):
         self.message = message
         self.address = address
 
+    __slots__ = ('signature', 'message', 'address',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

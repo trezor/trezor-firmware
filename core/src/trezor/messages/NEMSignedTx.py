@@ -21,6 +21,8 @@ class NEMSignedTx(p.MessageType):
         self.data = data
         self.signature = signature
 
+    __slots__ = ('data', 'signature',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

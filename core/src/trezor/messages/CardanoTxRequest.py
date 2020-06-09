@@ -23,6 +23,8 @@ class CardanoTxRequest(p.MessageType):
         self.tx_hash = tx_hash
         self.tx_body = tx_body
 
+    __slots__ = ('tx_index', 'tx_hash', 'tx_body',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

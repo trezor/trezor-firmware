@@ -22,6 +22,8 @@ class TezosProposalOp(p.MessageType):
         self.period = period
         self.proposals = proposals if proposals is not None else []
 
+    __slots__ = ('source', 'period', 'proposals',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

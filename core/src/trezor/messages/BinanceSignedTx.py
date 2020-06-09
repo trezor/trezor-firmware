@@ -21,6 +21,8 @@ class BinanceSignedTx(p.MessageType):
         self.signature = signature
         self.public_key = public_key
 
+    __slots__ = ('signature', 'public_key',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

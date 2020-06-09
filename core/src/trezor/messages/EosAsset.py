@@ -20,6 +20,8 @@ class EosAsset(p.MessageType):
         self.amount = amount
         self.symbol = symbol
 
+    __slots__ = ('amount', 'symbol',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

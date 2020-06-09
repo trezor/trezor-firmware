@@ -27,6 +27,8 @@ class SignIdentity(p.MessageType):
         self.challenge_visual = challenge_visual
         self.ecdsa_curve_name = ecdsa_curve_name
 
+    __slots__ = ('identity', 'challenge_hidden', 'challenge_visual', 'ecdsa_curve_name',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -23,6 +23,8 @@ class CardanoPublicKey(p.MessageType):
         self.xpub = xpub
         self.node = node
 
+    __slots__ = ('xpub', 'node',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -23,6 +23,8 @@ class LiskVerifyMessage(p.MessageType):
         self.signature = signature
         self.message = message
 
+    __slots__ = ('public_key', 'signature', 'message',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

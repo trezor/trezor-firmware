@@ -29,6 +29,8 @@ class MoneroTransactionSetOutputAck(p.MessageType):
         self.out_pk = out_pk
         self.ecdh_info = ecdh_info
 
+    __slots__ = ('tx_out', 'vouti_hmac', 'rsig_data', 'out_pk', 'ecdh_info',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

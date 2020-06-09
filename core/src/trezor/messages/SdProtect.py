@@ -20,6 +20,8 @@ class SdProtect(p.MessageType):
     ) -> None:
         self.operation = operation
 
+    __slots__ = ('operation',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -23,6 +23,8 @@ class LiskSignTx(p.MessageType):
         self.address_n = address_n if address_n is not None else []
         self.transaction = transaction
 
+    __slots__ = ('address_n', 'transaction',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

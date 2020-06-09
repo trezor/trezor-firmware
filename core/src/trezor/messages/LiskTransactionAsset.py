@@ -30,6 +30,8 @@ class LiskTransactionAsset(p.MessageType):
         self.multisignature = multisignature
         self.data = data
 
+    __slots__ = ('signature', 'delegate', 'votes', 'multisignature', 'data',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

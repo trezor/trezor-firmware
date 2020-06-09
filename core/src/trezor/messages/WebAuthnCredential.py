@@ -40,6 +40,8 @@ class WebAuthnCredential(p.MessageType):
         self.algorithm = algorithm
         self.curve = curve
 
+    __slots__ = ('index', 'id', 'rp_id', 'rp_name', 'user_id', 'user_name', 'user_display_name', 'creation_time', 'hmac_secret', 'use_sign_count', 'algorithm', 'curve',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

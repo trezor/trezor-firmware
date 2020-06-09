@@ -19,6 +19,8 @@ class EosTxActionRequest(p.MessageType):
     ) -> None:
         self.data_size = data_size
 
+    __slots__ = ('data_size',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

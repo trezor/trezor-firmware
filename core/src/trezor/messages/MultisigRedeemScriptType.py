@@ -29,6 +29,8 @@ class MultisigRedeemScriptType(p.MessageType):
         self.nodes = nodes if nodes is not None else []
         self.address_n = address_n if address_n is not None else []
 
+    __slots__ = ('pubkeys', 'signatures', 'm', 'nodes', 'address_n',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

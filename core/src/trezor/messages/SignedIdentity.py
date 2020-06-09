@@ -23,6 +23,8 @@ class SignedIdentity(p.MessageType):
         self.public_key = public_key
         self.signature = signature
 
+    __slots__ = ('address', 'public_key', 'signature',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -20,6 +20,8 @@ class MoneroSubAddressIndicesList(p.MessageType):
         self.account = account
         self.minor_indices = minor_indices if minor_indices is not None else []
 
+    __slots__ = ('account', 'minor_indices',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

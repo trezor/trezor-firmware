@@ -23,6 +23,8 @@ class EthereumPublicKey(p.MessageType):
         self.node = node
         self.xpub = xpub
 
+    __slots__ = ('node', 'xpub',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

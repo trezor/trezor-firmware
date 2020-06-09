@@ -31,6 +31,8 @@ class MoneroTransactionInputViniRequest(p.MessageType):
         self.pseudo_out_hmac = pseudo_out_hmac
         self.orig_idx = orig_idx
 
+    __slots__ = ('src_entr', 'vini', 'vini_hmac', 'pseudo_out', 'pseudo_out_hmac', 'orig_idx',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

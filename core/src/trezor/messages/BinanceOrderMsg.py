@@ -36,6 +36,8 @@ class BinanceOrderMsg(p.MessageType):
         self.symbol = symbol
         self.timeinforce = timeinforce
 
+    __slots__ = ('id', 'ordertype', 'price', 'quantity', 'sender', 'side', 'symbol', 'timeinforce',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -23,6 +23,8 @@ class DebugLinkGetState(p.MessageType):
         self.wait_word_pos = wait_word_pos
         self.wait_layout = wait_layout
 
+    __slots__ = ('wait_word_list', 'wait_word_pos', 'wait_layout',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

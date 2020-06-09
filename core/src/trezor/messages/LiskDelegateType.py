@@ -18,6 +18,8 @@ class LiskDelegateType(p.MessageType):
     ) -> None:
         self.username = username
 
+    __slots__ = ('username',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

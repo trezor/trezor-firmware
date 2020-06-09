@@ -22,6 +22,8 @@ class HDNodePathType(p.MessageType):
         self.node = node
         self.address_n = address_n if address_n is not None else []
 
+    __slots__ = ('node', 'address_n',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

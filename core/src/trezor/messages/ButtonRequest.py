@@ -20,6 +20,8 @@ class ButtonRequest(p.MessageType):
     ) -> None:
         self.code = code
 
+    __slots__ = ('code',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

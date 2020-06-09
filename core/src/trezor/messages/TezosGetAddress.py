@@ -21,6 +21,8 @@ class TezosGetAddress(p.MessageType):
         self.address_n = address_n if address_n is not None else []
         self.show_display = show_display
 
+    __slots__ = ('address_n', 'show_display',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -27,6 +27,8 @@ class StellarPaymentOp(p.MessageType):
         self.asset = asset
         self.amount = amount
 
+    __slots__ = ('source_account', 'destination_account', 'asset', 'amount',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

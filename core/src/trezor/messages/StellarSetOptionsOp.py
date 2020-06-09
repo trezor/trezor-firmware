@@ -41,6 +41,8 @@ class StellarSetOptionsOp(p.MessageType):
         self.signer_key = signer_key
         self.signer_weight = signer_weight
 
+    __slots__ = ('source_account', 'inflation_destination_account', 'clear_flags', 'set_flags', 'master_weight', 'low_threshold', 'medium_threshold', 'high_threshold', 'home_domain', 'signer_type', 'signer_key', 'signer_weight',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

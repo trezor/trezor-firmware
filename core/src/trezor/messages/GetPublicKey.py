@@ -28,6 +28,8 @@ class GetPublicKey(p.MessageType):
         self.coin_name = coin_name
         self.script_type = script_type
 
+    __slots__ = ('address_n', 'ecdsa_curve_name', 'show_display', 'coin_name', 'script_type',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

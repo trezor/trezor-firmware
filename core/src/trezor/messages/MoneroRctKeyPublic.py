@@ -20,6 +20,8 @@ class MoneroRctKeyPublic(p.MessageType):
         self.dest = dest
         self.commitment = commitment
 
+    __slots__ = ('dest', 'commitment',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

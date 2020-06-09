@@ -22,6 +22,8 @@ class Failure(p.MessageType):
         self.code = code
         self.message = message
 
+    __slots__ = ('code', 'message',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -63,6 +63,8 @@ class EosTxActionAck(p.MessageType):
         self.new_account = new_account
         self.unknown = unknown
 
+    __slots__ = ('common', 'transfer', 'delegate', 'undelegate', 'refund', 'buy_ram', 'buy_ram_bytes', 'sell_ram', 'vote_producer', 'update_auth', 'delete_auth', 'link_auth', 'unlink_auth', 'new_account', 'unknown',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

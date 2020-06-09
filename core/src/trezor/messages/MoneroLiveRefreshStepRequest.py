@@ -27,6 +27,8 @@ class MoneroLiveRefreshStepRequest(p.MessageType):
         self.sub_addr_major = sub_addr_major
         self.sub_addr_minor = sub_addr_minor
 
+    __slots__ = ('out_key', 'recv_deriv', 'real_out_idx', 'sub_addr_major', 'sub_addr_minor',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

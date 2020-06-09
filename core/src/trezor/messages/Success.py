@@ -19,6 +19,8 @@ class Success(p.MessageType):
     ) -> None:
         self.message = message
 
+    __slots__ = ('message',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

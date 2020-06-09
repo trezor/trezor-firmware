@@ -26,6 +26,8 @@ class SignMessage(p.MessageType):
         self.coin_name = coin_name
         self.script_type = script_type
 
+    __slots__ = ('address_n', 'message', 'coin_name', 'script_type',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

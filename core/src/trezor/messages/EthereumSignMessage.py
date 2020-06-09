@@ -21,6 +21,8 @@ class EthereumSignMessage(p.MessageType):
         self.address_n = address_n if address_n is not None else []
         self.message = message
 
+    __slots__ = ('address_n', 'message',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

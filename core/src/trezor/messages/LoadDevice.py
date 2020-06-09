@@ -35,6 +35,8 @@ class LoadDevice(p.MessageType):
         self.needs_backup = needs_backup
         self.no_backup = no_backup
 
+    __slots__ = ('mnemonics', 'pin', 'passphrase_protection', 'language', 'label', 'skip_checksum', 'u2f_counter', 'needs_backup', 'no_backup',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -19,6 +19,8 @@ class LiskPublicKey(p.MessageType):
     ) -> None:
         self.public_key = public_key
 
+    __slots__ = ('public_key',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -23,6 +23,8 @@ class NEMGetAddress(p.MessageType):
         self.network = network
         self.show_display = show_display
 
+    __slots__ = ('address_n', 'network', 'show_display',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -22,6 +22,8 @@ class StellarAssetType(p.MessageType):
         self.code = code
         self.issuer = issuer
 
+    __slots__ = ('type', 'code', 'issuer',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

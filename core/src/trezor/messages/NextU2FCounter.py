@@ -19,6 +19,8 @@ class NextU2FCounter(p.MessageType):
     ) -> None:
         self.u2f_counter = u2f_counter
 
+    __slots__ = ('u2f_counter',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

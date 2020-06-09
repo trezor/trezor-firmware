@@ -28,6 +28,8 @@ class MoneroTransferDetails(p.MessageType):
         self.sub_addr_major = sub_addr_major
         self.sub_addr_minor = sub_addr_minor
 
+    __slots__ = ('out_key', 'tx_pub_key', 'additional_tx_pub_keys', 'internal_output_index', 'sub_addr_major', 'sub_addr_minor',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

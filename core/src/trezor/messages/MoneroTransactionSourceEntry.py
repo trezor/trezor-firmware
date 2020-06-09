@@ -39,6 +39,8 @@ class MoneroTransactionSourceEntry(p.MessageType):
         self.multisig_kLRki = multisig_kLRki
         self.subaddr_minor = subaddr_minor
 
+    __slots__ = ('outputs', 'real_output', 'real_out_tx_key', 'real_out_additional_tx_keys', 'real_output_in_tx_index', 'amount', 'rct', 'mask', 'multisig_kLRki', 'subaddr_minor',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

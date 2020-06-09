@@ -23,6 +23,8 @@ class TezosSignedTx(p.MessageType):
         self.sig_op_contents = sig_op_contents
         self.operation_hash = operation_hash
 
+    __slots__ = ('signature', 'sig_op_contents', 'operation_hash',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

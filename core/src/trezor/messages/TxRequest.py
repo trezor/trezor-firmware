@@ -27,6 +27,8 @@ class TxRequest(p.MessageType):
         self.details = details
         self.serialized = serialized
 
+    __slots__ = ('request_type', 'details', 'serialized',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

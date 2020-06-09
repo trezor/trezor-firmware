@@ -31,6 +31,8 @@ class ApplySettings(p.MessageType):
         self.display_rotation = display_rotation
         self.passphrase_always_on_device = passphrase_always_on_device
 
+    __slots__ = ('language', 'label', 'use_passphrase', 'homescreen', 'auto_lock_delay_ms', 'display_rotation', 'passphrase_always_on_device',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

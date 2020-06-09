@@ -27,6 +27,8 @@ class MoneroTransactionInitRequest(p.MessageType):
         self.network_type = network_type
         self.tsx_data = tsx_data
 
+    __slots__ = ('version', 'address_n', 'network_type', 'tsx_data',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

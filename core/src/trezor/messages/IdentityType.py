@@ -28,6 +28,8 @@ class IdentityType(p.MessageType):
         self.path = path
         self.index = index
 
+    __slots__ = ('proto', 'user', 'host', 'port', 'path', 'index',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

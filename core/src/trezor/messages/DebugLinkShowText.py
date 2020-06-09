@@ -27,6 +27,8 @@ class DebugLinkShowText(p.MessageType):
         self.header_icon = header_icon
         self.icon_color = icon_color
 
+    __slots__ = ('header_text', 'body_text', 'header_icon', 'icon_color',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

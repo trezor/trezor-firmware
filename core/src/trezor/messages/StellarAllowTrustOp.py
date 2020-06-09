@@ -27,6 +27,8 @@ class StellarAllowTrustOp(p.MessageType):
         self.asset_code = asset_code
         self.is_authorized = is_authorized
 
+    __slots__ = ('source_account', 'trusted_account', 'asset_type', 'asset_code', 'is_authorized',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

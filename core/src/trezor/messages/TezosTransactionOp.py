@@ -37,6 +37,8 @@ class TezosTransactionOp(p.MessageType):
         self.parameters = parameters
         self.parameters_manager = parameters_manager
 
+    __slots__ = ('source', 'fee', 'counter', 'gas_limit', 'storage_limit', 'amount', 'destination', 'parameters', 'parameters_manager',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

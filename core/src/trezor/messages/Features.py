@@ -87,6 +87,8 @@ class Features(p.MessageType):
         self.session_id = session_id
         self.passphrase_always_on_device = passphrase_always_on_device
 
+    __slots__ = ('vendor', 'major_version', 'minor_version', 'patch_version', 'bootloader_mode', 'device_id', 'pin_protection', 'passphrase_protection', 'language', 'label', 'initialized', 'revision', 'bootloader_hash', 'imported', 'pin_cached', 'firmware_present', 'needs_backup', 'flags', 'model', 'fw_major', 'fw_minor', 'fw_patch', 'fw_vendor', 'fw_vendor_keys', 'unfinished_backup', 'no_backup', 'recovery_mode', 'capabilities', 'backup_type', 'sd_card_present', 'sd_protection', 'wipe_code_protection', 'session_id', 'passphrase_always_on_device',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

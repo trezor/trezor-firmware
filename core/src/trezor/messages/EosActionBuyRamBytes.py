@@ -22,6 +22,8 @@ class EosActionBuyRamBytes(p.MessageType):
         self.receiver = receiver
         self.bytes = bytes
 
+    __slots__ = ('payer', 'receiver', 'bytes',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

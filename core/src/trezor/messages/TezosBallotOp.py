@@ -25,6 +25,8 @@ class TezosBallotOp(p.MessageType):
         self.proposal = proposal
         self.ballot = ballot
 
+    __slots__ = ('source', 'period', 'proposal', 'ballot',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

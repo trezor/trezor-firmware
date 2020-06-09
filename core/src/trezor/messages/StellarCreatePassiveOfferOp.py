@@ -31,6 +31,8 @@ class StellarCreatePassiveOfferOp(p.MessageType):
         self.price_n = price_n
         self.price_d = price_d
 
+    __slots__ = ('source_account', 'selling_asset', 'buying_asset', 'amount', 'price_n', 'price_d',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

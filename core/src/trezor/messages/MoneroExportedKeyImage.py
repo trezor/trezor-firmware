@@ -20,6 +20,8 @@ class MoneroExportedKeyImage(p.MessageType):
         self.iv = iv
         self.blob = blob
 
+    __slots__ = ('iv', 'blob',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

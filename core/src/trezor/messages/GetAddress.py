@@ -30,6 +30,8 @@ class GetAddress(p.MessageType):
         self.multisig = multisig
         self.script_type = script_type
 
+    __slots__ = ('address_n', 'coin_name', 'show_display', 'multisig', 'script_type',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

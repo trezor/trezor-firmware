@@ -36,6 +36,8 @@ class RecoveryDevice(p.MessageType):
         self.u2f_counter = u2f_counter
         self.dry_run = dry_run
 
+    __slots__ = ('word_count', 'passphrase_protection', 'pin_protection', 'language', 'label', 'enforce_wordlist', 'type', 'u2f_counter', 'dry_run',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

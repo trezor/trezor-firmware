@@ -19,6 +19,8 @@ class DebugLinkEraseSdCard(p.MessageType):
     ) -> None:
         self.format = format
 
+    __slots__ = ('format',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -20,6 +20,8 @@ class EosActionSellRam(p.MessageType):
         self.account = account
         self.bytes = bytes
 
+    __slots__ = ('account', 'bytes',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

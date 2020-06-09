@@ -28,6 +28,8 @@ class EosActionDelegate(p.MessageType):
         self.cpu_quantity = cpu_quantity
         self.transfer = transfer
 
+    __slots__ = ('sender', 'receiver', 'net_quantity', 'cpu_quantity', 'transfer',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

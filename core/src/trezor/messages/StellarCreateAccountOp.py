@@ -23,6 +23,8 @@ class StellarCreateAccountOp(p.MessageType):
         self.new_account = new_account
         self.starting_balance = starting_balance
 
+    __slots__ = ('source_account', 'new_account', 'starting_balance',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

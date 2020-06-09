@@ -24,6 +24,8 @@ class NEMMosaicCreation(p.MessageType):
         self.sink = sink
         self.fee = fee
 
+    __slots__ = ('definition', 'sink', 'fee',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

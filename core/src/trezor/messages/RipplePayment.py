@@ -22,6 +22,8 @@ class RipplePayment(p.MessageType):
         self.destination = destination
         self.destination_tag = destination_tag
 
+    __slots__ = ('amount', 'destination', 'destination_tag',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

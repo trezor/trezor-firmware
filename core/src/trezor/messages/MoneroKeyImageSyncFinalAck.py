@@ -19,6 +19,8 @@ class MoneroKeyImageSyncFinalAck(p.MessageType):
     ) -> None:
         self.enc_key = enc_key
 
+    __slots__ = ('enc_key',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

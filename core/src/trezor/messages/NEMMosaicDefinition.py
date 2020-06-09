@@ -47,6 +47,8 @@ class NEMMosaicDefinition(p.MessageType):
         self.description = description
         self.networks = networks if networks is not None else []
 
+    __slots__ = ('name', 'ticker', 'namespace', 'mosaic', 'divisibility', 'levy', 'fee', 'levy_address', 'levy_namespace', 'levy_mosaic', 'supply', 'mutable_supply', 'transferable', 'description', 'networks',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

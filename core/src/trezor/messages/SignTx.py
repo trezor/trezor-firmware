@@ -35,6 +35,8 @@ class SignTx(p.MessageType):
         self.timestamp = timestamp
         self.branch_id = branch_id
 
+    __slots__ = ('outputs_count', 'inputs_count', 'coin_name', 'version', 'lock_time', 'expiry', 'version_group_id', 'timestamp', 'branch_id',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

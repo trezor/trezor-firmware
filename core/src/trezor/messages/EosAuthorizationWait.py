@@ -20,6 +20,8 @@ class EosAuthorizationWait(p.MessageType):
         self.wait_sec = wait_sec
         self.weight = weight
 
+    __slots__ = ('wait_sec', 'weight',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

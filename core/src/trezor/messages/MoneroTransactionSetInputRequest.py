@@ -21,6 +21,8 @@ class MoneroTransactionSetInputRequest(p.MessageType):
     ) -> None:
         self.src_entr = src_entr
 
+    __slots__ = ('src_entr',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

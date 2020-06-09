@@ -21,6 +21,8 @@ class StellarAccountMergeOp(p.MessageType):
         self.source_account = source_account
         self.destination_account = destination_account
 
+    __slots__ = ('source_account', 'destination_account',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

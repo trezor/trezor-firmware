@@ -22,6 +22,8 @@ class EosAuthorizationAccount(p.MessageType):
         self.account = account
         self.weight = weight
 
+    __slots__ = ('account', 'weight',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

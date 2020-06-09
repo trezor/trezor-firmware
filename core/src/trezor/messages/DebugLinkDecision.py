@@ -30,6 +30,8 @@ class DebugLinkDecision(p.MessageType):
         self.y = y
         self.wait = wait
 
+    __slots__ = ('yes_no', 'swipe', 'input', 'x', 'y', 'wait',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

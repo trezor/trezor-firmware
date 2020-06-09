@@ -29,6 +29,8 @@ class MoneroKeyImageExportInitRequest(p.MessageType):
         self.network_type = network_type
         self.subs = subs if subs is not None else []
 
+    __slots__ = ('num', 'hash', 'address_n', 'network_type', 'subs',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

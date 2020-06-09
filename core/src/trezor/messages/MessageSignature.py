@@ -21,6 +21,8 @@ class MessageSignature(p.MessageType):
         self.address = address
         self.signature = signature
 
+    __slots__ = ('address', 'signature',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

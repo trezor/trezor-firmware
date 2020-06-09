@@ -25,6 +25,8 @@ class GetECDHSessionKey(p.MessageType):
         self.peer_public_key = peer_public_key
         self.ecdsa_curve_name = ecdsa_curve_name
 
+    __slots__ = ('identity', 'peer_public_key', 'ecdsa_curve_name',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

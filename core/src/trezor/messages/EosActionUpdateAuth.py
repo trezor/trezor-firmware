@@ -26,6 +26,8 @@ class EosActionUpdateAuth(p.MessageType):
         self.parent = parent
         self.auth = auth
 
+    __slots__ = ('account', 'permission', 'parent', 'auth',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

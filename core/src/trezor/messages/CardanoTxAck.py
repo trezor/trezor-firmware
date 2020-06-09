@@ -19,6 +19,8 @@ class CardanoTxAck(p.MessageType):
     ) -> None:
         self.transaction = transaction
 
+    __slots__ = ('transaction',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

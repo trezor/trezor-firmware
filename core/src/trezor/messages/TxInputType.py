@@ -37,6 +37,8 @@ class TxInputType(p.MessageType):
         self.amount = amount
         self.decred_tree = decred_tree
 
+    __slots__ = ('address_n', 'prev_hash', 'prev_index', 'script_sig', 'sequence', 'script_type', 'multisig', 'amount', 'decred_tree',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

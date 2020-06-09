@@ -28,6 +28,8 @@ class EosAuthorization(p.MessageType):
         self.accounts = accounts if accounts is not None else []
         self.waits = waits if waits is not None else []
 
+    __slots__ = ('threshold', 'keys', 'accounts', 'waits',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

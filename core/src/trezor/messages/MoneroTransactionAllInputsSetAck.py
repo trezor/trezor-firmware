@@ -21,6 +21,8 @@ class MoneroTransactionAllInputsSetAck(p.MessageType):
     ) -> None:
         self.rsig_data = rsig_data
 
+    __slots__ = ('rsig_data',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

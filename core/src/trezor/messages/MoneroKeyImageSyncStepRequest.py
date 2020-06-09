@@ -21,6 +21,8 @@ class MoneroKeyImageSyncStepRequest(p.MessageType):
     ) -> None:
         self.tdis = tdis if tdis is not None else []
 
+    __slots__ = ('tdis',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

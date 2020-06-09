@@ -19,6 +19,8 @@ class GetEntropy(p.MessageType):
     ) -> None:
         self.size = size
 
+    __slots__ = ('size',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

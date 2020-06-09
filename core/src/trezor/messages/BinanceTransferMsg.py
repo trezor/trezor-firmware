@@ -23,6 +23,8 @@ class BinanceTransferMsg(p.MessageType):
         self.inputs = inputs if inputs is not None else []
         self.outputs = outputs if outputs is not None else []
 
+    __slots__ = ('inputs', 'outputs',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

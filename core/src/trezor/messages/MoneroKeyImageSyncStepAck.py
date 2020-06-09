@@ -21,6 +21,8 @@ class MoneroKeyImageSyncStepAck(p.MessageType):
     ) -> None:
         self.kis = kis if kis is not None else []
 
+    __slots__ = ('kis',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

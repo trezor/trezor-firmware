@@ -28,6 +28,8 @@ class MoneroTransactionDestinationEntry(p.MessageType):
         self.original = original
         self.is_integrated = is_integrated
 
+    __slots__ = ('amount', 'addr', 'is_subaddress', 'original', 'is_integrated',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

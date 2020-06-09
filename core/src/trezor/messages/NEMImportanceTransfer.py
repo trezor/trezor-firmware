@@ -21,6 +21,8 @@ class NEMImportanceTransfer(p.MessageType):
         self.mode = mode
         self.public_key = public_key
 
+    __slots__ = ('mode', 'public_key',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

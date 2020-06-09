@@ -19,6 +19,8 @@ class LiskSignedTx(p.MessageType):
     ) -> None:
         self.signature = signature
 
+    __slots__ = ('signature',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

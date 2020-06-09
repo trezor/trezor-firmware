@@ -20,6 +20,8 @@ class MoneroAccountPublicAddress(p.MessageType):
         self.spend_public_key = spend_public_key
         self.view_public_key = view_public_key
 
+    __slots__ = ('spend_public_key', 'view_public_key',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

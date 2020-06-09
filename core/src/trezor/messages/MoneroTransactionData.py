@@ -49,6 +49,8 @@ class MoneroTransactionData(p.MessageType):
         self.hard_fork = hard_fork
         self.monero_version = monero_version
 
+    __slots__ = ('version', 'payment_id', 'unlock_time', 'outputs', 'change_dts', 'num_inputs', 'mixin', 'fee', 'account', 'minor_indices', 'rsig_data', 'integrated_indices', 'client_version', 'hard_fork', 'monero_version',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

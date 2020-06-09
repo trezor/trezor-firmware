@@ -21,6 +21,8 @@ class MoneroLiveRefreshStepAck(p.MessageType):
         self.salt = salt
         self.key_image = key_image
 
+    __slots__ = ('salt', 'key_image',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

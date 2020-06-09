@@ -20,6 +20,8 @@ class EosActionDeleteAuth(p.MessageType):
         self.account = account
         self.permission = permission
 
+    __slots__ = ('account', 'permission',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

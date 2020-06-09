@@ -22,6 +22,8 @@ class TxOutputBinType(p.MessageType):
         self.script_pubkey = script_pubkey
         self.decred_script_version = decred_script_version
 
+    __slots__ = ('amount', 'script_pubkey', 'decred_script_version',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

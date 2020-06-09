@@ -26,6 +26,8 @@ class EosActionUndelegate(p.MessageType):
         self.net_quantity = net_quantity
         self.cpu_quantity = cpu_quantity
 
+    __slots__ = ('sender', 'receiver', 'net_quantity', 'cpu_quantity',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

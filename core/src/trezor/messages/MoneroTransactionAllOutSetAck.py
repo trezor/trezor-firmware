@@ -27,6 +27,8 @@ class MoneroTransactionAllOutSetAck(p.MessageType):
         self.rv = rv
         self.full_message_hash = full_message_hash
 
+    __slots__ = ('extra', 'tx_prefix_hash', 'rv', 'full_message_hash',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

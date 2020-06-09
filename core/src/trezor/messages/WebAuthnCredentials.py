@@ -21,6 +21,8 @@ class WebAuthnCredentials(p.MessageType):
     ) -> None:
         self.credentials = credentials if credentials is not None else []
 
+    __slots__ = ('credentials',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

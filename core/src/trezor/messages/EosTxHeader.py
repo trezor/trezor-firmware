@@ -28,6 +28,8 @@ class EosTxHeader(p.MessageType):
         self.max_cpu_usage_ms = max_cpu_usage_ms
         self.delay_sec = delay_sec
 
+    __slots__ = ('expiration', 'ref_block_num', 'ref_block_prefix', 'max_net_usage_words', 'max_cpu_usage_ms', 'delay_sec',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

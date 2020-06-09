@@ -41,6 +41,8 @@ class StellarSignTx(p.MessageType):
         self.memo_hash = memo_hash
         self.num_operations = num_operations
 
+    __slots__ = ('address_n', 'network_passphrase', 'source_account', 'fee', 'sequence_number', 'timebounds_start', 'timebounds_end', 'memo_type', 'memo_text', 'memo_id', 'memo_hash', 'num_operations',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -37,6 +37,8 @@ class EthereumSignTx(p.MessageType):
         self.chain_id = chain_id
         self.tx_type = tx_type
 
+    __slots__ = ('address_n', 'nonce', 'gas_price', 'gas_limit', 'to', 'value', 'data_initial_chunk', 'data_length', 'chain_id', 'tx_type',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

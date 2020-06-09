@@ -29,6 +29,8 @@ class MoneroGetAddress(p.MessageType):
         self.minor = minor
         self.payment_id = payment_id
 
+    __slots__ = ('address_n', 'show_display', 'network_type', 'account', 'minor', 'payment_id',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

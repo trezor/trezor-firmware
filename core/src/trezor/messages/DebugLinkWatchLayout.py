@@ -19,6 +19,8 @@ class DebugLinkWatchLayout(p.MessageType):
     ) -> None:
         self.watch = watch
 
+    __slots__ = ('watch',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

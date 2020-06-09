@@ -21,6 +21,8 @@ class DebugLinkShowTextItem(p.MessageType):
         self.style = style
         self.content = content
 
+    __slots__ = ('style', 'content',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

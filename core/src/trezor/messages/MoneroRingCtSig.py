@@ -22,6 +22,8 @@ class MoneroRingCtSig(p.MessageType):
         self.message = message
         self.rv_type = rv_type
 
+    __slots__ = ('txn_fee', 'message', 'rv_type',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

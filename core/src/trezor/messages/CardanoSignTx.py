@@ -28,6 +28,8 @@ class CardanoSignTx(p.MessageType):
         self.transactions_count = transactions_count
         self.protocol_magic = protocol_magic
 
+    __slots__ = ('inputs', 'outputs', 'transactions_count', 'protocol_magic',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

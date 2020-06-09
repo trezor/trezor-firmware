@@ -28,6 +28,8 @@ class NEMTransfer(p.MessageType):
         self.public_key = public_key
         self.mosaics = mosaics if mosaics is not None else []
 
+    __slots__ = ('recipient', 'amount', 'payload', 'public_key', 'mosaics',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

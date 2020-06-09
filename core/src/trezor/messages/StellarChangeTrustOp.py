@@ -25,6 +25,8 @@ class StellarChangeTrustOp(p.MessageType):
         self.asset = asset
         self.limit = limit
 
+    __slots__ = ('source_account', 'asset', 'limit',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

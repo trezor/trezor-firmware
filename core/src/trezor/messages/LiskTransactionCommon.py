@@ -37,6 +37,8 @@ class LiskTransactionCommon(p.MessageType):
         self.timestamp = timestamp
         self.asset = asset
 
+    __slots__ = ('type', 'amount', 'fee', 'recipient_id', 'sender_public_key', 'requester_public_key', 'signature', 'timestamp', 'asset',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -23,6 +23,8 @@ class MoneroGetTxKeyAck(p.MessageType):
         self.tx_keys = tx_keys
         self.tx_derivations = tx_derivations
 
+    __slots__ = ('salt', 'tx_keys', 'tx_derivations',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

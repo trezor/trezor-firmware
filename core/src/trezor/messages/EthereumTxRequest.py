@@ -25,6 +25,8 @@ class EthereumTxRequest(p.MessageType):
         self.signature_r = signature_r
         self.signature_s = signature_s
 
+    __slots__ = ('data_length', 'signature_v', 'signature_r', 'signature_s',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

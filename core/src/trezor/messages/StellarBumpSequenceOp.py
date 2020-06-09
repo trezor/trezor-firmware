@@ -21,6 +21,8 @@ class StellarBumpSequenceOp(p.MessageType):
         self.source_account = source_account
         self.bump_to = bump_to
 
+    __slots__ = ('source_account', 'bump_to',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -28,6 +28,8 @@ class HDNodeType(p.MessageType):
         self.private_key = private_key
         self.public_key = public_key
 
+    __slots__ = ('depth', 'fingerprint', 'child_num', 'chain_code', 'private_key', 'public_key',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

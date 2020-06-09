@@ -31,6 +31,8 @@ class BinanceSignTx(p.MessageType):
         self.sequence = sequence
         self.source = source
 
+    __slots__ = ('address_n', 'msg_count', 'account_number', 'chain_id', 'memo', 'sequence', 'source',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

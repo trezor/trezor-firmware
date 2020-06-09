@@ -30,6 +30,8 @@ class MoneroTransactionRsigData(p.MessageType):
         self.rsig_parts = rsig_parts if rsig_parts is not None else []
         self.bp_version = bp_version
 
+    __slots__ = ('rsig_type', 'offload_type', 'grouping', 'mask', 'rsig', 'rsig_parts', 'bp_version',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

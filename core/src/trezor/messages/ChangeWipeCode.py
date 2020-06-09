@@ -19,6 +19,8 @@ class ChangeWipeCode(p.MessageType):
     ) -> None:
         self.remove = remove
 
+    __slots__ = ('remove',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -19,6 +19,8 @@ class DebugLinkRecordScreen(p.MessageType):
     ) -> None:
         self.target_directory = target_directory
 
+    __slots__ = ('target_directory',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

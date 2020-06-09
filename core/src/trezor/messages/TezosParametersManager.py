@@ -24,6 +24,8 @@ class TezosParametersManager(p.MessageType):
         self.cancel_delegate = cancel_delegate
         self.transfer = transfer
 
+    __slots__ = ('set_delegate', 'cancel_delegate', 'transfer',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

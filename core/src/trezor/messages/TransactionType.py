@@ -46,6 +46,8 @@ class TransactionType(p.MessageType):
         self.timestamp = timestamp
         self.branch_id = branch_id
 
+    __slots__ = ('version', 'inputs', 'bin_outputs', 'lock_time', 'outputs', 'inputs_cnt', 'outputs_cnt', 'extra_data', 'extra_data_len', 'expiry', 'version_group_id', 'timestamp', 'branch_id',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

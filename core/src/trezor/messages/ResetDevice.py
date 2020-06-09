@@ -38,6 +38,8 @@ class ResetDevice(p.MessageType):
         self.no_backup = no_backup
         self.backup_type = backup_type
 
+    __slots__ = ('display_random', 'strength', 'passphrase_protection', 'pin_protection', 'language', 'label', 'u2f_counter', 'skip_backup', 'no_backup', 'backup_type',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

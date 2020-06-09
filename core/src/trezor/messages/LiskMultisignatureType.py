@@ -22,6 +22,8 @@ class LiskMultisignatureType(p.MessageType):
         self.life_time = life_time
         self.keys_group = keys_group if keys_group is not None else []
 
+    __slots__ = ('min', 'life_time', 'keys_group',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

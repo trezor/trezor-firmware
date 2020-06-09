@@ -19,6 +19,8 @@ class WebAuthnRemoveResidentCredential(p.MessageType):
     ) -> None:
         self.index = index
 
+    __slots__ = ('index',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

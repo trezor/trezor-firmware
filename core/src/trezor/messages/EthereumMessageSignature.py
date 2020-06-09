@@ -21,6 +21,8 @@ class EthereumMessageSignature(p.MessageType):
         self.signature = signature
         self.address = address
 
+    __slots__ = ('signature', 'address',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

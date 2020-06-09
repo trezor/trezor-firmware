@@ -31,6 +31,8 @@ class CipherKeyValue(p.MessageType):
         self.ask_on_decrypt = ask_on_decrypt
         self.iv = iv
 
+    __slots__ = ('address_n', 'key', 'value', 'encrypt', 'ask_on_encrypt', 'ask_on_decrypt', 'iv',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

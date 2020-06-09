@@ -40,6 +40,8 @@ class TezosSignTx(p.MessageType):
         self.proposal = proposal
         self.ballot = ballot
 
+    __slots__ = ('address_n', 'branch', 'reveal', 'transaction', 'origination', 'delegation', 'proposal', 'ballot',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -22,6 +22,8 @@ class EosActionUnlinkAuth(p.MessageType):
         self.code = code
         self.type = type
 
+    __slots__ = ('account', 'code', 'type',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

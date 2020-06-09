@@ -22,6 +22,8 @@ class NEMMosaic(p.MessageType):
         self.mosaic = mosaic
         self.quantity = quantity
 
+    __slots__ = ('namespace', 'mosaic', 'quantity',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

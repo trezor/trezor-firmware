@@ -21,6 +21,8 @@ class EthereumAddress(p.MessageType):
         self.old_address = old_address
         self.address = address
 
+    __slots__ = ('old_address', 'address',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -24,6 +24,8 @@ class TxRequestDetailsType(p.MessageType):
         self.extra_data_len = extra_data_len
         self.extra_data_offset = extra_data_offset
 
+    __slots__ = ('request_index', 'tx_hash', 'extra_data_len', 'extra_data_offset',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

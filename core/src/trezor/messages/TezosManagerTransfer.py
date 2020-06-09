@@ -22,6 +22,8 @@ class TezosManagerTransfer(p.MessageType):
         self.destination = destination
         self.amount = amount
 
+    __slots__ = ('destination', 'amount',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

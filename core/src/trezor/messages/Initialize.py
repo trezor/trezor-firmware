@@ -19,6 +19,8 @@ class Initialize(p.MessageType):
     ) -> None:
         self.session_id = session_id
 
+    __slots__ = ('session_id',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -24,6 +24,8 @@ class EosActionLinkAuth(p.MessageType):
         self.type = type
         self.requirement = requirement
 
+    __slots__ = ('account', 'code', 'type', 'requirement',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

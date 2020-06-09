@@ -19,6 +19,8 @@ class CipheredKeyValue(p.MessageType):
     ) -> None:
         self.value = value
 
+    __slots__ = ('value',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

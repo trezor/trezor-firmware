@@ -31,6 +31,8 @@ class TxOutputType(p.MessageType):
         self.multisig = multisig
         self.op_return_data = op_return_data
 
+    __slots__ = ('address', 'address_n', 'amount', 'script_type', 'multisig', 'op_return_data',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

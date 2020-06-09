@@ -33,6 +33,8 @@ class StellarManageOfferOp(p.MessageType):
         self.price_d = price_d
         self.offer_id = offer_id
 
+    __slots__ = ('source_account', 'selling_asset', 'buying_asset', 'amount', 'price_n', 'price_d', 'offer_id',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

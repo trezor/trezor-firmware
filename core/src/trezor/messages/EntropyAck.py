@@ -19,6 +19,8 @@ class EntropyAck(p.MessageType):
     ) -> None:
         self.entropy = entropy
 
+    __slots__ = ('entropy',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

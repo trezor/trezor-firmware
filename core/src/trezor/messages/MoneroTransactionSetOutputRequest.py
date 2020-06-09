@@ -28,6 +28,8 @@ class MoneroTransactionSetOutputRequest(p.MessageType):
         self.rsig_data = rsig_data
         self.is_offloaded_bp = is_offloaded_bp
 
+    __slots__ = ('dst_entr', 'dst_entr_hmac', 'rsig_data', 'is_offloaded_bp',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

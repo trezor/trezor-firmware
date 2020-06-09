@@ -22,6 +22,8 @@ class TxRequestSerializedType(p.MessageType):
         self.signature = signature
         self.serialized_tx = serialized_tx
 
+    __slots__ = ('signature_index', 'signature', 'serialized_tx',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

@@ -28,6 +28,8 @@ class NEMTransactionCommon(p.MessageType):
         self.deadline = deadline
         self.signer = signer
 
+    __slots__ = ('address_n', 'network', 'timestamp', 'fee', 'deadline', 'signer',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

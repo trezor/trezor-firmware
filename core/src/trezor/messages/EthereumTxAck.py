@@ -19,6 +19,8 @@ class EthereumTxAck(p.MessageType):
     ) -> None:
         self.data_chunk = data_chunk
 
+    __slots__ = ('data_chunk',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

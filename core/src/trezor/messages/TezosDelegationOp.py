@@ -28,6 +28,8 @@ class TezosDelegationOp(p.MessageType):
         self.storage_limit = storage_limit
         self.delegate = delegate
 
+    __slots__ = ('source', 'fee', 'counter', 'gas_limit', 'storage_limit', 'delegate',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

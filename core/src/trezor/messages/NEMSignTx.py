@@ -43,6 +43,8 @@ class NEMSignTx(p.MessageType):
         self.aggregate_modification = aggregate_modification
         self.importance_transfer = importance_transfer
 
+    __slots__ = ('transaction', 'multisig', 'transfer', 'cosigning', 'provision_namespace', 'mosaic_creation', 'supply_change', 'aggregate_modification', 'importance_transfer',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

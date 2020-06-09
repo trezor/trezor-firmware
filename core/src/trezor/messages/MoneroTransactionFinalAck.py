@@ -27,6 +27,8 @@ class MoneroTransactionFinalAck(p.MessageType):
         self.tx_enc_keys = tx_enc_keys
         self.opening_key = opening_key
 
+    __slots__ = ('cout_key', 'salt', 'rand_mult', 'tx_enc_keys', 'opening_key',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

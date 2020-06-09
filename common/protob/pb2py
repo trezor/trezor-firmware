@@ -234,7 +234,7 @@ class Descriptor:
 
     def create_fields_slots(self, fields):
         # fmt: off
-        yield "    __slots__ = ['" + "', '".join([f.name for f in fields]) + "']"
+        yield "    __slots__ = ('" + "', '".join([f.name for f in fields]) + "',)"
         yield ""
         # fmt: on
 

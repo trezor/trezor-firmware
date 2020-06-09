@@ -19,6 +19,8 @@ class StellarAddress(p.MessageType):
     ) -> None:
         self.address = address
 
+    __slots__ = ('address',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {

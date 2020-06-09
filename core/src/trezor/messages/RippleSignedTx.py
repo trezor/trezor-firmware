@@ -21,6 +21,8 @@ class RippleSignedTx(p.MessageType):
         self.signature = signature
         self.serialized_tx = serialized_tx
 
+    __slots__ = ('signature', 'serialized_tx',)
+
     @classmethod
     def get_fields(cls) -> Dict:
         return {
