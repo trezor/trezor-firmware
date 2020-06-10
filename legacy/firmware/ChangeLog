@@ -1,4 +1,24 @@
-Version 1.x.x [not yet released]
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+## [Unreleased]
+
+### Added
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+------------
+
+### Older changelog:
 
 Version 1.9.1 [Jun 2020]
 * Stream previous tx also for Segwit inputs
