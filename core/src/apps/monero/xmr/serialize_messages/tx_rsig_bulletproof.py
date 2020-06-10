@@ -10,7 +10,7 @@ class _KeyV(ContainerType):
 
 
 class Bulletproof(MessageType):
-    __slots__ = ("A", "S", "T1", "T2", "taux", "mu", "L", "R", "a", "b", "t")
+    __slots__ = ("V", "A", "S", "T1", "T2", "taux", "mu", "L", "R", "a", "b", "t")
 
     @classmethod
     def f_specs(cls):
