@@ -1,6 +1,6 @@
 from common import *
 
-from trezor.utils import chunks
+from trezor.utils import chunks, obj_dict
 from trezor.crypto import bip39
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxInputType import TxInputType
@@ -241,7 +241,7 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
                 serialized_tx=unhexlify('d1613f483f2086d076c82fe34674385a86beb08f052d5405fe1aed397f852f4f0000000000feffffff02'),
             )),
             # the out has to be cloned not to send the same object which was modified
-            TxAck(tx=TransactionType(outputs=[TxOutputType(**out1.__dict__)])),
+            TxAck(tx=TransactionType(outputs=[TxOutputType(**obj_dict(out1))])),
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None), serialized=TxRequestSerializedType(
                 # returned serialized out1
@@ -249,7 +249,7 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
                 signature_index=None,
                 signature=None,
             )),
-            TxAck(tx=TransactionType(outputs=[TxOutputType(**out2.__dict__)])),
+            TxAck(tx=TransactionType(outputs=[TxOutputType(**obj_dict(out2))])),
 
             # segwit
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=TxRequestSerializedType(

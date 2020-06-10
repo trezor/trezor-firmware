@@ -1,4 +1,4 @@
-from trezor.utils import ensure
+from trezor.utils import ensure, obj_eq
 
 
 class SkipTest(Exception):
@@ -145,8 +145,7 @@ class TestCase:
                 self.assertObjectEqual(syscall, expected)
 
     def assertObjectEqual(self, a, b, msg=''):
-        self.assertIsInstance(a, b.__class__, msg)
-        self.assertEqual(a.__dict__, b.__dict__, msg)
+        ensure(obj_eq(a, b), msg)
 
 
 def skip(msg):

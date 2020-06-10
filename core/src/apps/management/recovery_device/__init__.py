@@ -80,7 +80,8 @@ def _validate(msg: RecoveryDevice) -> None:
 
     if msg.dry_run:
         # check that only allowed fields are set
-        for key, value in msg.__dict__.items():
+        for key in msg.__slots__:
+            value = getattr(msg, key, None)
             if key not in DRY_RUN_ALLOWED_FIELDS and value is not None:
                 raise wire.ProcessError(
                     "Forbidden field set in dry-run: {}".format(key)

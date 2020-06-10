@@ -126,15 +126,18 @@ def obj_eq(l: object, r: object) -> bool:
     return True
 
 
+def obj_dict(o: object) -> dict:
+    if hasattr(o, "__slots__"):
+        return {attr: getattr(o, attr, None) for attr in o.__slots__}
+    else:
+        return o.__dict__
+
+
 def obj_repr(o: object) -> str:
     """
     Returns a string representation of object, supports __slots__.
     """
-    if hasattr(o, "__slots__"):
-        d = {attr: getattr(o, attr, None) for attr in o.__slots__}
-    else:
-        d = o.__dict__
-    return "<%s: %s>" % (o.__class__.__name__, d)
+    return "<%s: %s>" % (o.__class__.__name__, obj_dict(o))
 
 
 def truncate_utf8(string: str, max_bytes: int) -> str:

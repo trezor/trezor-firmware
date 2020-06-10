@@ -158,7 +158,14 @@ class MessageType:
             setattr(self, kw, kwargs[kw])
 
     def __eq__(self, rhs: Any) -> bool:
-        return self.__class__ is rhs.__class__ and self.__dict__ == rhs.__dict__
+        if self.__class__ is not rhs.__class__:
+            return False
+        if self.__slots__ is not rhs.__slots__:
+            return False
+        for slot in self.__slots__:
+            if getattr(self, slot, None) != getattr(rhs, slot, None):
+                return False
+        return True
 
     def __repr__(self) -> str:
         return "<%s>" % self.__class__.__name__
