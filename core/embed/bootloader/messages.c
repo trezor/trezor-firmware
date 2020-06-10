@@ -425,9 +425,11 @@ static void detect_installation(vendor_header *current_vhdr,
                                 image_header *current_hdr,
                                 const vendor_header *const new_vhdr,
                                 const image_header *const new_hdr,
-                                secbool *is_new, secbool *is_upgrade) {
+                                secbool *is_new, secbool *is_upgrade,
+                                secbool *is_downgrade_wipe) {
   *is_new = secfalse;
   *is_upgrade = secfalse;
+  *is_downgrade_wipe = secfalse;
   if (sectrue !=
       load_vendor_header_keys((const uint8_t *)FIRMWARE_START, current_vhdr)) {
     *is_new = sectrue;
@@ -448,6 +450,7 @@ static void detect_installation(vendor_header *current_vhdr,
     return;
   }
   if (version_compare(new_hdr->version, current_hdr->fix_version) < 0) {
+    *is_downgrade_wipe = sectrue;
     return;
   }
   *is_upgrade = sectrue;
@@ -473,6 +476,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 
   static image_header hdr;
   secbool is_upgrade = secfalse;
+  secbool is_downgrade_wipe = secfalse;
 
   if (firmware_block == 0) {
     if (headers_offset == 0) {
@@ -500,7 +504,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
       image_header current_hdr;
       secbool is_new = secfalse;
       detect_installation(&current_vhdr, &current_hdr, &vhdr, &hdr, &is_new,
-                          &is_upgrade);
+                          &is_upgrade, &is_downgrade_wipe);
 
       int response = INPUT_CANCEL;
       if (sectrue == is_new) {
@@ -513,9 +517,10 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
         ui_fadein();
         response = ui_user_input(INPUT_CONFIRM | INPUT_CANCEL);
       } else {
-        // new firmware vendor
+        // downgrade with wipe or new firmware vendor
         ui_fadeout();
-        ui_screen_install_confirm_newvendor(&vhdr, &hdr);
+        ui_screen_install_confirm_newvendor_or_downgrade_wipe(
+            &vhdr, &hdr, is_downgrade_wipe);
         ui_fadein();
         response = ui_user_input(INPUT_CONFIRM | INPUT_CANCEL);
       }

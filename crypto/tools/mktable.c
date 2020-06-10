@@ -39,7 +39,8 @@ int main(int argc, char **argv) {
       curve_point checkresult;
       bignum256 a;
       bn_zero(&a);
-      a.val[(4 * i) / 30] = ((uint32_t)2 * j + 1) << ((4 * i) % 30);
+      a.val[(4 * i) / BN_BITS_PER_LIMB] = ((uint32_t)2 * j + 1)
+                                          << ((4 * i) % BN_BITS_PER_LIMB);
       bn_normalize(&a);
       point_multiply(curve, &a, &curve->G, &checkresult);
       assert(point_is_equal(&checkresult, &ng));

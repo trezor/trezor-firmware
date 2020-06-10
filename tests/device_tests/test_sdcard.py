@@ -42,7 +42,7 @@ def test_sd_no_format(client):
         client.set_input_flow(input_flow)
         device.sd_protect(client, Op.ENABLE)
 
-    assert e.value.failure.code == messages.FailureType.ProcessError
+    assert e.value.code == messages.FailureType.ProcessError
 
 
 @pytest.mark.sd_card
@@ -109,4 +109,4 @@ def test_sd_protect_unlock(client):
         client.set_input_flow(input_flow_change_pin_format)
         device.change_pin(client)
 
-    assert e.value.failure.code == messages.FailureType.ProcessError
+    assert e.value.code == messages.FailureType.ProcessError

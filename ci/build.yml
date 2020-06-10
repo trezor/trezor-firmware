@@ -8,7 +8,6 @@ variables:
 
 core fw regular build:
   stage: build
-  extends: .core_job
   script:
     - cd core
     - pipenv run make build_cross
@@ -28,7 +27,6 @@ core fw regular build:
 
 core fw regular debug build:
   stage: build
-  extends: .core_job
   script:
     - cd core
     - PYOPT=0 pipenv run make build_firmware
@@ -43,7 +41,6 @@ core fw regular debug build:
 
 core fw btconly build:
   stage: build
-  extends: .core_job
   variables:
     BITCOIN_ONLY: "1"
   script:
@@ -62,7 +59,6 @@ core fw btconly build:
 
 core unix regular build:
   stage: build
-  extends: .core_job
   script:
     - cd core
     - pipenv run make build_unix
@@ -75,7 +71,6 @@ core unix regular build:
 
 core unix frozen regular build:
   stage: build
-  extends: .core_job
   script:
     - cd core
     - pipenv run make build_unix_frozen
@@ -87,7 +82,6 @@ core unix frozen regular build:
 
 core unix frozen btconly debug build:
   stage: build
-  extends: .core_job
   variables:
     PYOPT: "0"
     BITCOIN_ONLY: "1"
@@ -103,7 +97,6 @@ core unix frozen btconly debug build:
 
 core unix frozen debug build:
   stage: build
-  extends: .core_job
   variables:
     PYOPT: "0"
   script:
@@ -114,7 +107,7 @@ core unix frozen debug build:
     untracked: true
     expire_in: 1 week
 
-build core unix frozen regular darwin:
+core unix frozen regular darwin:
   stage: build
   tags:
     - darwin
@@ -158,7 +151,6 @@ crypto build:
 
 legacy fw regular build:
   stage: build
-  extends: .legacy_job
   variables:
     MEMORY_PROTECT: "0"
   script:
@@ -176,7 +168,6 @@ legacy fw regular build:
 
 legacy fw debug build:
   stage: build
-  extends: .legacy_job
   variables:
     DEBUG_LINK: "1"
     MEMORY_PROTECT: "0"
@@ -194,7 +185,6 @@ legacy fw debug build:
 
 legacy fw btconly build:
   stage: build
-  extends: .legacy_job
   variables:
     BITCOIN_ONLY: "1"
     MEMORY_PROTECT: "0"
@@ -214,7 +204,6 @@ legacy fw btconly build:
 
 legacy emu regular build:
   stage: build
-  extends: .legacy_job
   variables:
     DEBUG_LINK: "1"
     EMULATOR: "1"
@@ -229,7 +218,6 @@ legacy emu regular build:
 
 legacy emu btconly build:
   stage: build
-  extends: .legacy_job
   variables:
     BITCOIN_ONLY: "1"
     DEBUG_LINK: "1"

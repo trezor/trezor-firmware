@@ -5,7 +5,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2013, 2014 Damien P. George
+ * Copyright (c) 2013-2017 Damien P. George
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,148 +26,142 @@
  * THE SOFTWARE.
  */
 
-// options to control how MicroPython is built
+// Options to control how MicroPython is built for this port,
+// overriding defaults in py/mpconfig.h.
 
+#pragma once
+#ifndef __INCLUDED_MPCONFIGPORT_H
+#define __INCLUDED_MPCONFIGPORT_H
+
+// frozen modules
 #ifdef TREZOR_EMULATOR_FROZEN
-#define MICROPY_QSTR_EXTRA_POOL (mp_qstr_frozen_const_pool)
-#define MICROPY_MODULE_FROZEN_MPY (1)
+#define MICROPY_MODULE_FROZEN_MPY   (1)
+#define MICROPY_QSTR_EXTRA_POOL     (mp_qstr_frozen_const_pool)
+#define MPZ_DIG_SIZE                (16)
 #endif
 
-#define MPZ_DIG_SIZE (16)
-
+// memory allocation policies
 #define MICROPY_ALLOC_PATH_MAX      (PATH_MAX)
-#define MICROPY_PERSISTENT_CODE_LOAD (1)
-#if !defined(MICROPY_EMIT_X64) && defined(__x86_64__)
-    #define MICROPY_EMIT_X64        (0)
-#endif
-#if !defined(MICROPY_EMIT_X86) && defined(__i386__)
-    #define MICROPY_EMIT_X86        (0)
-#endif
-#if !defined(MICROPY_EMIT_THUMB) && defined(__thumb2__)
-    #define MICROPY_EMIT_THUMB      (0)
-    #define MICROPY_MAKE_POINTER_CALLABLE(p) ((void*)((mp_uint_t)(p) | 1))
-#endif
-// Some compilers define __thumb2__ and __arm__ at the same time, let
-// autodetected thumb2 emitter have priority.
-#if !defined(MICROPY_EMIT_ARM) && defined(__arm__) && !defined(__thumb2__)
-    #define MICROPY_EMIT_ARM        (0)
-#endif
+#define MICROPY_MALLOC_USES_ALLOCATED_SIZE (1)
+#define MICROPY_MEM_STATS           (1)
+
+// emitters
+#define MICROPY_PERSISTENT_CODE_LOAD (0)
+
+// compiler configuration
+#define MICROPY_ENABLE_COMPILER     (1)
 #define MICROPY_COMP_MODULE_CONST   (1)
 #define MICROPY_COMP_TRIPLE_TUPLE_ASSIGN (1)
 #define MICROPY_COMP_RETURN_IF_EXPR (1)
+#define MICROPY_HELPER_LEXER_UNIX   (1)
+#define MICROPY_READER_POSIX        (1)
+
+// optimisations
+#define MICROPY_OPT_COMPUTED_GOTO   (1)
+#define MICROPY_OPT_CACHE_MAP_LOOKUP_IN_BYTECODE (0)
+#define MICROPY_OPT_MPZ_BITWISE     (1)
+#define MICROPY_OPT_MATH_FACTORIAL  (0)
+
+// Python internal features
+#define MICROPY_READER_VFS          (0)
 #define MICROPY_ENABLE_GC           (1)
 #define MICROPY_ENABLE_FINALISER    (1)
 #define MICROPY_STACK_CHECK         (1)
-#define MICROPY_MALLOC_USES_ALLOCATED_SIZE (1)
-#define MICROPY_MEM_STATS           (1)
-#define MICROPY_DEBUG_PRINTERS      (1)
-// Printing debug to stderr may give tests which
-// check stdout a chance to pass, etc.
-#define MICROPY_DEBUG_PRINTER       (&mp_stderr_print)
-#define MICROPY_READER_POSIX        (1)
+#define MICROPY_ENABLE_EMERGENCY_EXCEPTION_BUF (1)
+#define MICROPY_EMERGENCY_EXCEPTION_BUF_SIZE (256)
+#define MICROPY_KBD_EXCEPTION       (1)
+#define MICROPY_USE_READLINE         (1)
 #define MICROPY_USE_READLINE_HISTORY (1)
 #define MICROPY_HELPER_REPL         (1)
 #define MICROPY_REPL_EMACS_KEYS     (1)
 #define MICROPY_REPL_AUTO_INDENT    (1)
-#define MICROPY_HELPER_LEXER_UNIX   (1)
-#define MICROPY_ENABLE_SOURCE_LINE  (1)
-#define MICROPY_FLOAT_IMPL          (MICROPY_FLOAT_IMPL_DOUBLE)
 #define MICROPY_LONGINT_IMPL        (MICROPY_LONGINT_IMPL_MPZ)
+#define MICROPY_ENABLE_SOURCE_LINE  (1)
+#define MICROPY_FLOAT_IMPL          (MICROPY_FLOAT_IMPL_FLOAT)
 #define MICROPY_STREAMS_NON_BLOCK   (1)
-#define MICROPY_STREAMS_POSIX_API   (1)
-#define MICROPY_OPT_COMPUTED_GOTO   (1)
-#ifndef MICROPY_OPT_CACHE_MAP_LOOKUP_IN_BYTECODE
-#define MICROPY_OPT_CACHE_MAP_LOOKUP_IN_BYTECODE (0)
-#endif
-#define MICROPY_MODULE_WEAK_LINKS   (0)
+#define MICROPY_MODULE_WEAK_LINKS   (1)
 #define MICROPY_CAN_OVERRIDE_BUILTINS (0)
+#define MICROPY_USE_INTERNAL_ERRNO  (0)
+#define MICROPY_ENABLE_SCHEDULER    (0)
+#define MICROPY_SCHEDULER_DEPTH     (0)
+#define MICROPY_VFS                 (0)
+
+// control over Python builtins
 #define MICROPY_PY_FUNCTION_ATTRS   (1)
-#define MICROPY_PY_DESCRIPTORS      (1)
+#define MICROPY_PY_DESCRIPTORS      (0)
+#define MICROPY_PY_DELATTR_SETATTR  (0)
 #define MICROPY_PY_BUILTINS_STR_UNICODE (1)
 #define MICROPY_PY_BUILTINS_STR_CENTER (1)
 #define MICROPY_PY_BUILTINS_STR_PARTITION (0)
 #define MICROPY_PY_BUILTINS_STR_SPLITLINES (0)
 #define MICROPY_PY_BUILTINS_MEMORYVIEW (1)
 #define MICROPY_PY_BUILTINS_FROZENSET (0)
-#define MICROPY_PY_BUILTINS_COMPILE (1)
-#define MICROPY_PY_BUILTINS_NOTIMPLEMENTED (1)
-#define MICROPY_PY_BUILTINS_INPUT   (1)
-#define MICROPY_PY_BUILTINS_POW3    (1)
-#define MICROPY_PY_BUILTINS_ROUND_INT    (0)
-#define MICROPY_PY_MICROPYTHON_MEM_INFO (1)
-#define MICROPY_PY_ALL_SPECIAL_METHODS (0)
-#define MICROPY_PY_REVERSE_SPECIAL_METHODS (0)
-#define MICROPY_PY_ARRAY_SLICE_ASSIGN (1)
 #define MICROPY_PY_BUILTINS_SLICE_ATTRS (1)
-#define MICROPY_PY_SYS_EXIT         (1)
-#define MICROPY_PY_SYS_ATEXIT       (1)
-#define MICROPY_PY_SYS_SETTRACE     (1)
-#if MICROPY_PY_SYS_SETTRACE
-#define MICROPY_PERSISTENT_CODE_SAVE (1)
-#define MICROPY_COMP_CONST (0)
-#endif
-#if defined(__APPLE__) && defined(__MACH__)
-    #define MICROPY_PY_SYS_PLATFORM  "darwin"
-#else
-    #define MICROPY_PY_SYS_PLATFORM  "linux"
-#endif
-#define MICROPY_PY_SYS_MAXSIZE      (0)
-#define MICROPY_PY_SYS_STDFILES     (0)
-#define MICROPY_PY_SYS_EXC_INFO     (1)
-#define MICROPY_PY_COLLECTIONS      (0)
+#define MICROPY_PY_BUILTINS_ROUND_INT (0)
+#define MICROPY_PY_REVERSE_SPECIAL_METHODS (0)
+#define MICROPY_PY_ALL_SPECIAL_METHODS (0)
+#define MICROPY_PY_BUILTINS_COMPILE (MICROPY_ENABLE_COMPILER)
+#define MICROPY_PY_BUILTINS_EXECFILE (MICROPY_ENABLE_COMPILER)
+#define MICROPY_PY_BUILTINS_NOTIMPLEMENTED (1)
+#define MICROPY_PY_BUILTINS_INPUT   (0)
+#define MICROPY_PY_BUILTINS_POW3    (0)
+#define MICROPY_PY_BUILTINS_HELP    (0)
+#define MICROPY_PY_BUILTINS_HELP_TEXT stm32_help_text
+#define MICROPY_PY_BUILTINS_HELP_MODULES (0)
+#define MICROPY_PY_MICROPYTHON_MEM_INFO (1)
+#define MICROPY_PY_ARRAY_SLICE_ASSIGN (1)
+#define MICROPY_PY_COLLECTIONS       (0)
 #define MICROPY_PY_COLLECTIONS_DEQUE (0)
 #define MICROPY_PY_COLLECTIONS_ORDEREDDICT (0)
-#ifndef MICROPY_PY_MATH_SPECIAL_FUNCTIONS
 #define MICROPY_PY_MATH_SPECIAL_FUNCTIONS (0)
-#endif
-#define MICROPY_PY_MATH_ISCLOSE     (MICROPY_PY_MATH_SPECIAL_FUNCTIONS)
+#define MICROPY_PY_MATH_ISCLOSE     (0)
+#define MICROPY_PY_MATH_FACTORIAL   (0)
 #define MICROPY_PY_CMATH            (0)
 #define MICROPY_PY_IO               (1)
 #define MICROPY_PY_IO_IOBASE        (1)
 #define MICROPY_PY_IO_FILEIO        (1)
-#define MICROPY_PY_GC_COLLECT_RETVAL (1)
-#define MICROPY_MODULE_FROZEN_STR   (0)
-
-#ifndef MICROPY_STACKLESS
-#define MICROPY_STACKLESS           (0)
-#define MICROPY_STACKLESS_STRICT    (0)
-#endif
-
-#define MICROPY_PY_OS_STATVFS       (0)
-#define MICROPY_PY_UTIME            (1)
-#define MICROPY_PY_UTIME_MP_HAL     (1)
+#define MICROPY_PY_SYS_MAXSIZE      (0)
+#define MICROPY_PY_SYS_EXIT         (0)
+#define MICROPY_PY_SYS_STDFILES     (0)
+#define MICROPY_PY_SYS_STDIO_BUFFER (0)
+#define MICROPY_PY_SYS_PLATFORM     "trezor-emulator"
 #define MICROPY_PY_UERRNO           (0)
+#define MICROPY_PY_THREAD           (0)
+
+// extended modules
 #define MICROPY_PY_UCTYPES          (1)
 #define MICROPY_PY_UZLIB            (0)
 #define MICROPY_PY_UJSON            (0)
 #define MICROPY_PY_URE              (0)
+#define MICROPY_PY_URE_SUB          (0)
 #define MICROPY_PY_UHEAPQ           (0)
-#define MICROPY_PY_UTIMEQ           (1)
 #define MICROPY_PY_UHASHLIB         (0)
-#if MICROPY_PY_USSL
-#define MICROPY_PY_UHASHLIB_MD5     (1)
-#define MICROPY_PY_UHASHLIB_SHA1    (1)
-#define MICROPY_PY_UCRYPTOLIB       (1)
-#endif
+#define MICROPY_PY_UHASHLIB_MD5     (0)
+#define MICROPY_PY_UHASHLIB_SHA1    (0)
+#define MICROPY_PY_UCRYPTOLIB       (0)
 #define MICROPY_PY_UBINASCII        (1)
 #define MICROPY_PY_UBINASCII_CRC32  (0)
 #define MICROPY_PY_URANDOM          (0)
-#ifndef MICROPY_PY_USELECT_POSIX
-#define MICROPY_PY_USELECT_POSIX    (0)
-#endif
-#define MICROPY_PY_UWEBSOCKET       (0)
+#define MICROPY_PY_URANDOM_EXTRA_FUNCS (0)
+#define MICROPY_PY_USELECT          (0)
+#define MICROPY_PY_UTIMEQ           (1)
+#define MICROPY_PY_UTIME            (1)
+#define MICROPY_PY_UTIME_MP_HAL     (1)
+#define MICROPY_PY_OS_DUPTERM       (0)
+#define MICROPY_PY_LWIP_SOCK_RAW    (0)
 #define MICROPY_PY_MACHINE          (0)
-#define MICROPY_PY_MACHINE_PULSE    (0)
-#define MICROPY_MACHINE_MEM_GET_READ_ADDR   mod_machine_mem_get_addr
-#define MICROPY_MACHINE_MEM_GET_WRITE_ADDR  mod_machine_mem_get_addr
+#define MICROPY_PY_UWEBSOCKET       (0)
+#define MICROPY_PY_WEBREPL          (0)
+#define MICROPY_PY_FRAMEBUF         (0)
+#define MICROPY_PY_USOCKET          (0)
+#define MICROPY_PY_NETWORK          (0)
 
-#define MICROPY_FATFS_ENABLE_LFN       (1)
-#define MICROPY_FATFS_RPATH            (2)
-#define MICROPY_FATFS_MAX_SS           (4096)
-#define MICROPY_FATFS_LFN_CODE_PAGE    437 /* 1=SFN/ANSI 437=LFN/U.S.(OEM) */
-#define MICROPY_VFS                 (0)
-#define MICROPY_VFS_FAT             (0)
-
+// Debugging and interactive functionality.
+#define MICROPY_DEBUG_PRINTERS      (1)
+// Printing debug to stderr may give tests which
+// check stdout a chance to pass, etc.
+#define MICROPY_DEBUG_PRINTER       (&mp_stderr_print)
+#define MICROPY_ASYNC_KBD_INTR      (1)
 // Define to MICROPY_ERROR_REPORTING_DETAILED to get function, etc.
 // names in exception messages (may require more RAM).
 #define MICROPY_ERROR_REPORTING     (MICROPY_ERROR_REPORTING_DETAILED)
@@ -177,120 +171,37 @@
 
 extern const struct _mp_print_t mp_stderr_print;
 
-// Define to 1 to use undertested inefficient GC helper implementation
-// (if more efficient arch-specific one is not available).
-#ifndef MICROPY_GCREGS_SETJMP
-    #ifdef __mips__
-        #define MICROPY_GCREGS_SETJMP (1)
-    #else
-        #define MICROPY_GCREGS_SETJMP (0)
-    #endif
+// coverage support
+#define MICROPY_PY_SYS_ATEXIT       (1)
+#define MICROPY_PY_SYS_SETTRACE     (1)
+#if MICROPY_PY_SYS_SETTRACE
+#define MICROPY_PERSISTENT_CODE_SAVE (1)
+#define MICROPY_COMP_CONST (0)
 #endif
+#define MICROPY_PY_SYS_EXC_INFO     (1)
 
-#define MICROPY_ENABLE_EMERGENCY_EXCEPTION_BUF   (1)
-#define MICROPY_EMERGENCY_EXCEPTION_BUF_SIZE  (256)
-#define MICROPY_KBD_EXCEPTION       (1)
-#define MICROPY_ASYNC_KBD_INTR      (1)
+// extern const struct _mp_print_t mp_stderr_print;
 
 #define MICROPY_PY_TREZORCONFIG     (1)
-#define MICROPY_PY_TREZORCRYPTO (1)
-#define MICROPY_PY_TREZORIO (1)
-#define MICROPY_PY_TREZORMSG (1)
-#define MICROPY_PY_TREZORUI (1)
-#define MICROPY_PY_TREZORUTILS (1)
+#define MICROPY_PY_TREZORCRYPTO     (1)
+#define MICROPY_PY_TREZORIO         (1)
+#define MICROPY_PY_TREZORUI         (1)
+#define MICROPY_PY_TREZORUTILS      (1)
 
+#define MP_STATE_PORT MP_STATE_VM
+
+// ============= this ends common config section ===================
+
+// extra built in modules to add to the list of known ones
 extern const struct _mp_obj_module_t mp_module_os;
-// extern const struct _mp_obj_module_t mp_module_uos_vfs;
-// extern const struct _mp_obj_module_t mp_module_uselect;
+// on unix, we use time, not utime
 extern const struct _mp_obj_module_t mp_module_time;
-// extern const struct _mp_obj_module_t mp_module_termios;
-// extern const struct _mp_obj_module_t mp_module_socket;
-// extern const struct _mp_obj_module_t mp_module_ffi;
-// extern const struct _mp_obj_module_t mp_module_jni;
-
-extern const struct _mp_obj_module_t mp_module_trezorconfig;
-extern const struct _mp_obj_module_t mp_module_trezorcrypto;
-extern const struct _mp_obj_module_t mp_module_trezorio;
-extern const struct _mp_obj_module_t mp_module_trezorui;
-extern const struct _mp_obj_module_t mp_module_trezorutils;
-
-#if MICROPY_PY_UOS_VFS
-#define MICROPY_PY_UOS_DEF { MP_ROM_QSTR(MP_QSTR_uos), MP_ROM_PTR(&mp_module_uos_vfs) },
-#else
-#define MICROPY_PY_UOS_DEF { MP_ROM_QSTR(MP_QSTR_uos), MP_ROM_PTR(&mp_module_os) },
-#endif
-#if MICROPY_PY_FFI
-#define MICROPY_PY_FFI_DEF { MP_ROM_QSTR(MP_QSTR_ffi), MP_ROM_PTR(&mp_module_ffi) },
-#else
-#define MICROPY_PY_FFI_DEF
-#endif
-#if MICROPY_PY_JNI
-#define MICROPY_PY_JNI_DEF { MP_ROM_QSTR(MP_QSTR_jni), MP_ROM_PTR(&mp_module_jni) },
-#else
-#define MICROPY_PY_JNI_DEF
-#endif
-#if MICROPY_PY_UTIME
-#define MICROPY_PY_UTIME_DEF { MP_ROM_QSTR(MP_QSTR_utime), MP_ROM_PTR(&mp_module_time) },
-#else
-#define MICROPY_PY_UTIME_DEF
-#endif
-#if MICROPY_PY_TERMIOS
-#define MICROPY_PY_TERMIOS_DEF { MP_ROM_QSTR(MP_QSTR_termios), MP_ROM_PTR(&mp_module_termios) },
-#else
-#define MICROPY_PY_TERMIOS_DEF
-#endif
-#if MICROPY_PY_SOCKET
-#define MICROPY_PY_SOCKET_DEF { MP_ROM_QSTR(MP_QSTR_usocket), MP_ROM_PTR(&mp_module_socket) },
-#else
-#define MICROPY_PY_SOCKET_DEF
-#endif
-#if MICROPY_PY_USELECT_POSIX
-#define MICROPY_PY_USELECT_DEF { MP_ROM_QSTR(MP_QSTR_uselect), MP_ROM_PTR(&mp_module_uselect) },
-#else
-#define MICROPY_PY_USELECT_DEF
-#endif
-
-#if MICROPY_PY_TREZORCONFIG
-#define MICROPY_PY_TREZORCONFIG_DEF { MP_ROM_QSTR(MP_QSTR_trezorconfig), MP_ROM_PTR(&mp_module_trezorconfig) },
-#else
-#define MICROPY_PY_TREZORCONFIG_DEF
-#endif
-#if MICROPY_PY_TREZORCRYPTO
-#define MICROPY_PY_TREZORCRYPTO_DEF { MP_ROM_QSTR(MP_QSTR_trezorcrypto), MP_ROM_PTR(&mp_module_trezorcrypto) },
-#else
-#define MICROPY_PY_TREZORCRYPTO_DEF
-#endif
-#if MICROPY_PY_TREZORIO
-#define MICROPY_PY_TREZORIO_DEF { MP_ROM_QSTR(MP_QSTR_trezorio), MP_ROM_PTR(&mp_module_trezorio) },
-#else
-#define MICROPY_PY_TREZORIO_DEF
-#endif
-#if MICROPY_PY_TREZORUI
-#define MICROPY_PY_TREZORUI_DEF { MP_ROM_QSTR(MP_QSTR_trezorui), MP_ROM_PTR(&mp_module_trezorui) },
-#else
-#define MICROPY_PY_TREZORUI_DEF
-#endif
-#if MICROPY_PY_TREZORUTILS
-#define MICROPY_PY_TREZORUTILS_DEF { MP_ROM_QSTR(MP_QSTR_trezorutils), MP_ROM_PTR(&mp_module_trezorutils) },
-#else
-#define MICROPY_PY_TREZORUTILS_DEF
-#endif
 
 #define MICROPY_PORT_BUILTIN_MODULES \
-    MICROPY_PY_FFI_DEF \
-    MICROPY_PY_JNI_DEF \
-    MICROPY_PY_UTIME_DEF \
-    MICROPY_PY_SOCKET_DEF \
-    MICROPY_PY_UOS_DEF \
-    MICROPY_PY_USELECT_DEF \
-    MICROPY_PY_TERMIOS_DEF \
-    MICROPY_PY_TREZORCONFIG_DEF \
-    MICROPY_PY_TREZORCRYPTO_DEF \
-    MICROPY_PY_TREZORIO_DEF \
-    MICROPY_PY_TREZORUI_DEF \
-    MICROPY_PY_TREZORUTILS_DEF
+    { MP_ROM_QSTR(MP_QSTR_uos), MP_ROM_PTR(&mp_module_os) }, \
+    { MP_ROM_QSTR(MP_QSTR_utime), MP_ROM_PTR(&mp_module_time) },
 
-// type definitions for the specific machine
+
 
 // For size_t and ssize_t
 #include <unistd.h>
@@ -343,19 +254,6 @@ void mp_unix_mark_exec(void);
 // with EINTR, updates remaining timeout value.
 #define MICROPY_SELECT_REMAINING_TIME (1)
 
-#ifdef __ANDROID__
-#include <android/api-level.h>
-#if __ANDROID_API__ < 4
-// Bionic libc in Android 1.5 misses these 2 functions
-#define MP_NEED_LOG2 (1)
-#define nan(x) NAN
-#endif
-#endif
-
-#define MICROPY_PORT_BUILTINS
-
-#define MP_STATE_PORT MP_STATE_VM
-
 #define MICROPY_PORT_ROOT_POINTERS \
     const char *readline_hist[50]; \
     void *mmap_region_head; \
@@ -388,3 +286,5 @@ void mp_unix_mark_exec(void);
 // For debugging purposes, make printf() available to any source file.
 #include <stdio.h>
 #endif
+
+#endif // __INCLUDED_MPCONFIGPORT_H

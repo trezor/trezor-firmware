@@ -13,7 +13,7 @@ class TestCardanoGetPublicKey(unittest.TestCase):
         node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
         node.derive_cardano(0x80000000 | 44)
         node.derive_cardano(0x80000000 | 1815)
-        keychain = Keychain([0x80000000 | 44, 0x80000000 | 1815], node)
+        keychain = Keychain(node)
 
         derivation_paths = [
             [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 0x80000000],
@@ -67,7 +67,7 @@ class TestCardanoGetPublicKey(unittest.TestCase):
 
         node.derive_cardano(0x80000000 | 44)
         node.derive_cardano(0x80000000 | 1815)
-        keychain = Keychain([0x80000000 | 44, 0x80000000 | 1815], node)
+        keychain = Keychain(node)
 
         # 44'/1815'/0'/0/i
         derivation_paths = [
@@ -118,7 +118,7 @@ class TestCardanoGetPublicKey(unittest.TestCase):
 
         node.derive_cardano(0x80000000 | 44)
         node.derive_cardano(0x80000000 | 1815)
-        keychain = Keychain([0x80000000 | 44, 0x80000000 | 1815], node)
+        keychain = Keychain(node)
 
         # 44'/1815'/0'/0/i
         derivation_paths = [

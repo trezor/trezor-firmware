@@ -3,10 +3,10 @@ from io import BytesIO
 
 import pytest
 
-from trezorlib import btc, messages
+from trezorlib import btc, messages, tools
 from trezorlib.exceptions import TrezorFailure
 
-from ..tx_cache import tx_cache
+from ..tx_cache import TxCache
 
 TXHASH_157041 = bytes.fromhex(
     "1570416eb4302cf52979afd5e6909e37d8fdd874301f7cc87e547e509cb1caa6"
@@ -48,7 +48,8 @@ def serialize_tx(tx) -> bytes:
     b.write(len(tx.bin_outputs).to_bytes(1, "little"))
     for outp in tx.bin_outputs:
         b.write(serialize_bin_output(outp))
-    b.write(tx.lock_time.to_bytes(4, "little"))
+    lock_time = tx.lock_time or 0
+    b.write(lock_time.to_bytes(4, "little"))
     if tx.extra_data:
         b.write(tx.extra_data)
     return b.getvalue()
@@ -76,7 +77,7 @@ def _check_error_message(value: bytes, model: str, message: str):
 @pytest.mark.parametrize("prev_hash", (None, b"", b"x", b"hello world", b"x" * 33))
 def test_invalid_prev_hash(client, prev_hash):
     inp1 = messages.TxInputType(
-        address_n=[0],
+        address_n=tools.parse_path("m/44h/0h/0h/0/0"),
         amount=123456789,
         prev_hash=prev_hash,
         prev_index=0,
@@ -90,7 +91,7 @@ def test_invalid_prev_hash(client, prev_hash):
 
     with pytest.raises(TrezorFailure) as e:
         btc.sign_tx(client, "Testnet", [inp1], [out1])
-    _check_error_message(prev_hash, client.features.model, e.value.failure.message)
+    _check_error_message(prev_hash, client.features.model, e.value.message)
 
 
 @pytest.mark.skip_ui
@@ -98,14 +99,14 @@ def test_invalid_prev_hash(client, prev_hash):
 def test_invalid_prev_hash_attack(client, prev_hash):
     # prepare input with a valid prev-hash
     inp1 = messages.TxInputType(
-        address_n=[0],
-        amount=123456789,
-        prev_hash=b"\x00" * 32,
+        address_n=tools.parse_path("m/44h/0h/0h/0/0"),
+        amount=100000000,
+        prev_hash=TXHASH_157041,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
     )
     out1 = messages.TxOutputType(
-        address="mhRx1CeVfaayqRwq5zgRQmD7W5aWBfD5mC",
+        address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
         amount=12300000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
@@ -129,24 +130,26 @@ def test_invalid_prev_hash_attack(client, prev_hash):
 
     with client, pytest.raises(TrezorFailure) as e:
         client.set_filter(messages.TxAck, attack_filter)
-        btc.sign_tx(client, "Testnet", [inp1], [out1])
+        btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=TxCache("Bitcoin"))
 
     # check that injection was performed
     assert counter == 0
-    _check_error_message(prev_hash, client.features.model, e.value.failure.message)
+    _check_error_message(prev_hash, client.features.model, e.value.message)
 
 
 @pytest.mark.skip_ui
 @pytest.mark.parametrize("prev_hash", (None, b"", b"x", b"hello world", b"x" * 33))
 def test_invalid_prev_hash_in_prevtx(client, prev_hash):
-    cache = tx_cache("Bitcoin")
+    cache = TxCache("Bitcoin")
     prev_tx = cache[TXHASH_157041]
 
     # smoke check: replace prev_hash with all zeros, reserialize and hash, try to sign
     prev_tx.inputs[0].prev_hash = b"\x00" * 32
     tx_hash = hash_tx(serialize_tx(prev_tx))
 
-    inp0 = messages.TxInputType(address_n=[0], prev_hash=tx_hash, prev_index=0)
+    inp0 = messages.TxInputType(
+        address_n=tools.parse_path("m/44h/0h/0h/0/0"), prev_hash=tx_hash, prev_index=0
+    )
     out1 = messages.TxOutputType(
         address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
         amount=1000,
@@ -161,4 +164,4 @@ def test_invalid_prev_hash_in_prevtx(client, prev_hash):
 
     with pytest.raises(TrezorFailure) as e:
         btc.sign_tx(client, "Bitcoin", [inp0], [out1], prev_txes={tx_hash: prev_tx})
-    _check_error_message(prev_hash, client.features.model, e.value.failure.message)
+    _check_error_message(prev_hash, client.features.model, e.value.message)

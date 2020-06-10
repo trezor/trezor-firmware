@@ -18,8 +18,8 @@ import base64
 import struct
 import xdrlib
 
-from . import messages
-from .tools import CallException, expect
+from . import exceptions, messages
+from .tools import expect
 
 # Memo types
 MEMO_TYPE_NONE = 0
@@ -368,18 +368,18 @@ def sign_tx(
             resp = client.call(operations.pop(0))
     except IndexError:
         # pop from empty list
-        raise CallException(
-            "Stellar.UnexpectedEndOfOperations",
-            "Reached end of operations without a signature.",
+        raise exceptions.TrezorException(
+            "Reached end of operations without a signature."
         ) from None
 
     if not isinstance(resp, messages.StellarSignedTx):
-        raise CallException(messages.FailureType.UnexpectedMessage, resp)
+        raise exceptions.TrezorException(
+            "Unexpected message: {}".format(resp.__class__.__name__)
+        )
 
     if operations:
-        raise CallException(
-            "Stellar.UnprocessedOperations",
-            "Received a signature before processing all operations.",
+        raise exceptions.TrezorException(
+            "Received a signature before processing all operations."
         )
 
     return resp

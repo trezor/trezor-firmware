@@ -7,12 +7,6 @@ EXCLUDE_TARGETS=messages
 
 all: build
 
-coins_json:
-	./helper-scripts/build-coins-json.sh
-
-coins_json_check:
-	./helper-scripts/build-coins-json.sh --check
-
 build:
 	$(SETUP) build
 

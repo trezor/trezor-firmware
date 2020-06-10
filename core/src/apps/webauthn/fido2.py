@@ -41,6 +41,7 @@ _HID_RPT_SIZE = const(64)
 _FRAME_INIT_SIZE = const(57)
 _FRAME_CONT_SIZE = const(59)
 _MAX_U2FHID_MSG_PAYLOAD_LEN = const(_FRAME_INIT_SIZE + 128 * _FRAME_CONT_SIZE)
+_CMD_INIT_NONCE_SIZE = const(8)
 
 # types of cmd
 _CMD_PING = const(0x81)  # echo data through local processor only
@@ -172,8 +173,8 @@ _U2FHID_IF_VERSION = const(2)  # interface version
 
 # register response
 _U2F_REGISTER_ID = const(0x05)  # version 2 registration identifier
-_U2F_ATT_PRIV_KEY = b"q&\xac+\xf6D\xdca\x86\xad\x83\xef\x1f\xcd\xf1*W\xb5\xcf\xa2\x00\x0b\x8a\xd0'\xe9V\xe8T\xc5\n\x8b"
-_U2F_ATT_CERT = b"0\x82\x01\x180\x81\xc0\x02\t\x00\xb1\xd9\x8fBdr\xd3,0\n\x06\x08*\x86H\xce=\x04\x03\x020\x151\x130\x11\x06\x03U\x04\x03\x0c\nTrezor U2F0\x1e\x17\r160429133153Z\x17\r260427133153Z0\x151\x130\x11\x06\x03U\x04\x03\x0c\nTrezor U2F0Y0\x13\x06\x07*\x86H\xce=\x02\x01\x06\x08*\x86H\xce=\x03\x01\x07\x03B\x00\x04\xd9\x18\xbd\xfa\x8aT\xac\x92\xe9\r\xa9\x1f\xcaz\xa2dT\xc0\xd1s61M\xde\x83\xa5K\x86\xb5\xdfN\xf0Re\x9a\x1do\xfc\xb7F\x7f\x1a\xcd\xdb\x8a3\x08\x0b^\xed\x91\x89\x13\xf4C\xa5&\x1b\xc7{h`o\xc10\n\x06\x08*\x86H\xce=\x04\x03\x02\x03G\x000D\x02 $\x1e\x81\xff\xd2\xe5\xe6\x156\x94\xc3U.\x8f\xeb\xd7\x1e\x895\x92\x1c\xb4\x83ACq\x1cv\xea\xee\xf3\x95\x02 _\x80\xeb\x10\xf2\\\xcc9\x8b<\xa8\xa9\xad\xa4\x02\x7f\x93\x13 w\xb7\xab\xcewFZ'\xf5=3\xa1\x1d"
+_FIDO_ATT_PRIV_KEY = b"q&\xac+\xf6D\xdca\x86\xad\x83\xef\x1f\xcd\xf1*W\xb5\xcf\xa2\x00\x0b\x8a\xd0'\xe9V\xe8T\xc5\n\x8b"
+_FIDO_ATT_CERT = b"0\x82\x01\xcd0\x82\x01s\xa0\x03\x02\x01\x02\x02\x04\x03E`\xc40\n\x06\x08*\x86H\xce=\x04\x03\x020.1,0*\x06\x03U\x04\x03\x0c#Trezor FIDO Root CA Serial 841513560 \x17\r200406100417Z\x18\x0f20500406100417Z0x1\x0b0\t\x06\x03U\x04\x06\x13\x02CZ1\x1c0\x1a\x06\x03U\x04\n\x0c\x13SatoshiLabs, s.r.o.1\"0 \x06\x03U\x04\x0b\x0c\x19Authenticator Attestation1'0%\x06\x03U\x04\x03\x0c\x1eTrezor FIDO EE Serial 548784040Y0\x13\x06\x07*\x86H\xce=\x02\x01\x06\x08*\x86H\xce=\x03\x01\x07\x03B\x00\x04\xd9\x18\xbd\xfa\x8aT\xac\x92\xe9\r\xa9\x1f\xcaz\xa2dT\xc0\xd1s61M\xde\x83\xa5K\x86\xb5\xdfN\xf0Re\x9a\x1do\xfc\xb7F\x7f\x1a\xcd\xdb\x8a3\x08\x0b^\xed\x91\x89\x13\xf4C\xa5&\x1b\xc7{h`o\xc1\xa33010!\x06\x0b+\x06\x01\x04\x01\x82\xe5\x1c\x01\x01\x04\x04\x12\x04\x10\xd6\xd0\xbd\xc3b\xee\xc4\xdb\xde\x8dzenJD\x870\x0c\x06\x03U\x1d\x13\x01\x01\xff\x04\x020\x000\n\x06\x08*\x86H\xce=\x04\x03\x02\x03H\x000E\x02 \x0b\xce\xc4R\xc3\n\x11'\xe5\xd5\xf5\xfc\xf5\xd6Wy\x11+\xe50\xad\x9d-TXJ\xbeE\x86\xda\x93\xc6\x02!\x00\xaf\xca=\xcf\xd8A\xb0\xadz\x9e$}\x0ff\xf4L,\x83\xf9T\xab\x95O\x896\xc15\x08\x7fX\xf1\x95"
 _BOGUS_APPID_CHROME = b"A" * 32
 _BOGUS_APPID_FIREFOX = b"\0" * 32
 _BOGUS_APPIDS = (_BOGUS_APPID_CHROME, _BOGUS_APPID_FIREFOX)
@@ -418,20 +419,53 @@ async def read_cmd(iface: io.HID) -> Optional[Cmd]:
         while datalen < bcnt:
             buf = await loop.race(read, loop.sleep(_CTAP_HID_TIMEOUT_MS * 1000))
             if not isinstance(buf, bytes):
+                if __debug__:
+                    log.warning(__name__, "_ERR_MSG_TIMEOUT")
                 await send_cmd(cmd_error(ifrm.cid, _ERR_MSG_TIMEOUT), iface)
                 return None
 
             cfrm = overlay_struct(bytearray(buf), desc_cont)
 
             if cfrm.seq == _CMD_INIT:
-                # _CMD_INIT frame, cancels current channel
-                break
+                if cfrm.cid == ifrm.cid:
+                    # _CMD_INIT command on current channel, abort current transaction.
+                    if __debug__:
+                        log.warning(
+                            __name__,
+                            "U2FHID: received CMD_INIT command during active tran, aborting",
+                        )
+                    break
+                else:
+                    # _CMD_INIT command on different channel, return synchronization response, but continue on current CID.
+                    if __debug__:
+                        log.info(
+                            __name__,
+                            "U2FHID: received CMD_INIT command for different CID",
+                        )
+                    cfrm = overlay_struct(bytearray(buf), desc_init)
+                    await send_cmd(
+                        cmd_init(
+                            Cmd(cfrm.cid, cfrm.cmd, bytes(cfrm.data[: cfrm.bcnt]))
+                        ),
+                        iface,
+                    )
+                    continue
 
             if cfrm.cid != ifrm.cid:
-                # cont frame for a different channel, reply with BUSY and abort
-                if __debug__:
-                    log.warning(__name__, "_ERR_CHANNEL_BUSY")
-                await send_cmd(cmd_error(cfrm.cid, _ERR_CHANNEL_BUSY), iface)
+                # Frame for a different channel, continue waiting for next frame on the active CID.
+                # For init frames reply with BUSY. Ignore continuation frames.
+                if cfrm.seq & _TYPE_MASK == _TYPE_INIT:
+                    if __debug__:
+                        log.warning(
+                            __name__,
+                            "U2FHID: received init frame for different CID, _ERR_CHANNEL_BUSY",
+                        )
+                    await send_cmd(cmd_error(cfrm.cid, _ERR_CHANNEL_BUSY), iface)
+                else:
+                    if __debug__:
+                        log.warning(
+                            __name__, "U2FHID: received cont frame for different CID"
+                        )
                 continue
 
             if cfrm.seq != seq:
@@ -834,8 +868,11 @@ class Fido2ConfirmGetAssertion(Fido2State, ConfirmInfo, Pageable):
             cmd = cbor_error(self.cid, e.code)
         except KeyError:
             cmd = cbor_error(self.cid, _ERR_MISSING_PARAMETER)
-        except Exception:
-            cmd = cbor_error(self.cid, _ERR_OPERATION_DENIED)
+        except Exception as e:
+            # Firmware error.
+            if __debug__:
+                log.exception(__name__, e)
+            cmd = cbor_error(self.cid, _ERR_OTHER)
 
         await send_cmd(cmd, self.iface)
         self.finished = True
@@ -1099,6 +1136,9 @@ def cmd_init(req: Cmd) -> Cmd:
     else:
         resp_cid = req.cid
 
+    if len(req.data) != _CMD_INIT_NONCE_SIZE:
+        return cmd_error(req.cid, _ERR_INVALID_LEN)
+
     buf, resp = make_struct(resp_cmd_init())
     utils.memcpy(resp.nonce, 0, req.data, 0, len(req.data))
     resp.cid = resp_cid
@@ -1123,7 +1163,9 @@ def msg_register(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     if not storage.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
-        return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
+        # There is no standard way to decline a U2F request, but responding with ERR_CHANNEL_BUSY
+        # doesn't seem to violate the protocol and at least stops Chrome from polling.
+        return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
 
     # check length of input data
     if len(req.data) != 64:
@@ -1171,7 +1213,7 @@ def basic_attestation_sign(data: Iterable[bytes]) -> bytes:
     dig = hashlib.sha256()
     for segment in data:
         dig.update(segment)
-    sig = nist256p1.sign(_U2F_ATT_PRIV_KEY, dig.digest(), False)
+    sig = nist256p1.sign(_FIDO_ATT_PRIV_KEY, dig.digest(), False)
     return der.encode_seq((sig[1:33], sig[33:]))
 
 
@@ -1182,13 +1224,13 @@ def msg_register_sign(challenge: bytes, cred: U2fCredential) -> bytes:
 
     # pack to a response
     buf, resp = make_struct(
-        resp_cmd_register(len(cred.id), len(_U2F_ATT_CERT), len(sig))
+        resp_cmd_register(len(cred.id), len(_FIDO_ATT_CERT), len(sig))
     )
     resp.registerId = _U2F_REGISTER_ID
     utils.memcpy(resp.pubKey, 0, pubkey, 0, len(pubkey))
     resp.keyHandleLen = len(cred.id)
     utils.memcpy(resp.keyHandle, 0, cred.id, 0, len(cred.id))
-    utils.memcpy(resp.cert, 0, _U2F_ATT_CERT, 0, len(_U2F_ATT_CERT))
+    utils.memcpy(resp.cert, 0, _FIDO_ATT_CERT, 0, len(_FIDO_ATT_CERT))
     utils.memcpy(resp.sig, 0, sig, 0, len(sig))
     resp.status = _SW_NO_ERROR
 
@@ -1199,7 +1241,8 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     if not storage.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
-        return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
+        # Device is not registered with the RP.
+        return msg_error(req.cid, _SW_WRONG_DATA)
 
     # we need at least keyHandleLen
     if len(req.data) <= _REQ_CMD_AUTHENTICATE_KHLEN:
@@ -1217,7 +1260,7 @@ def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     try:
         cred = Credential.from_bytes(key_handle, rp_id_hash)
     except Exception:
-        # specific error logged in msg_authenticate_genkey
+        # specific error logged in _node_from_key_handle
         return msg_error(req.cid, _SW_WRONG_DATA)
 
     # if _AUTH_CHECK_ONLY is requested, return, because keyhandle has been checked already
@@ -1364,7 +1407,7 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     if not storage.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
-        return cbor_error(req.cid, _ERR_OPERATION_DENIED)
+        return cbor_error(req.cid, _ERR_OTHER)
 
     try:
         param = cbor.decode(req.data[1:])
@@ -1454,9 +1497,7 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         # User verification requested, but PIN is not enabled.
         state_set = dialog_mgr.set_state(Fido2ConfirmNoPin(req.cid, dialog_mgr.iface))
         if state_set:
-            # We should return _ERR_UNSUPPORTED_OPTION, but since we claim in GetInfo that the PIN
-            # is set even when it's not, it makes more sense to return _ERR_OPERATION_DENIED.
-            return cbor_error(req.cid, _ERR_OPERATION_DENIED)
+            return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
         else:
             return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
 
@@ -1527,7 +1568,7 @@ def cbor_make_credential_sign(
         attestation_statement = {
             "alg": common.COSE_ALG_ES256,
             "sig": sig,
-            "x5c": [_U2F_ATT_CERT],
+            "x5c": [_FIDO_ATT_CERT],
         }
 
     # Encode the authenticatorMakeCredential response data.
@@ -1544,7 +1585,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     if not storage.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
-        return cbor_error(req.cid, _ERR_OPERATION_DENIED)
+        return cbor_error(req.cid, _ERR_OTHER)
 
     try:
         param = cbor.decode(req.data[1:])
@@ -1608,9 +1649,7 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
         # User verification requested, but PIN is not enabled.
         state_set = dialog_mgr.set_state(Fido2ConfirmNoPin(req.cid, dialog_mgr.iface))
         if state_set:
-            # We should return _ERR_UNSUPPORTED_OPTION, but since we claim in GetInfo that the PIN
-            # is set even when it's not, it makes more sense to return _ERR_OPERATION_DENIED.
-            return cbor_error(req.cid, _ERR_OPERATION_DENIED)
+            return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
         else:
             return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
 
@@ -1635,8 +1674,11 @@ def cbor_get_assertion(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
                 user_verification,
             )
             return Cmd(req.cid, _CMD_CBOR, bytes([_ERR_NONE]) + response_data)
-        except Exception:
-            return cbor_error(req.cid, _ERR_OPERATION_DENIED)
+        except Exception as e:
+            # Firmware error.
+            if __debug__:
+                log.exception(__name__, e)
+            return cbor_error(req.cid, _ERR_OTHER)
     else:
         # Ask user to confirm one of the credentials.
         state_set = dialog_mgr.set_state(
@@ -1817,7 +1859,8 @@ def cbor_reset(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     if not storage.is_initialized():
         if __debug__:
             log.warning(__name__, "not initialized")
-        return cbor_error(req.cid, _ERR_OPERATION_DENIED)
+        # Return success, because the authenticator is already in factory default state.
+        return cbor_error(req.cid, _ERR_NONE)
 
     if not dialog_mgr.set_state(Fido2ConfirmReset(req.cid, dialog_mgr.iface)):
         return cmd_error(req.cid, _ERR_CHANNEL_BUSY)

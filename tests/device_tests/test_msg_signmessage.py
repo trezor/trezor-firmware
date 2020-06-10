@@ -14,86 +14,195 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import base64
 
 import pytest
 
-from trezorlib import btc
+from trezorlib import btc, messages
 from trezorlib.tools import parse_path
 
-from ..common import MNEMONIC12
+S = messages.InputScriptType
 
 
-class TestMsgSignmessage:
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_sign(self, client):
-        sig = btc.sign_message(
-            client, "Bitcoin", [0], "This is an example of a signed message."
-        )
-        assert sig.address == "14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e"
-        assert (
-            sig.signature.hex()
-            == "209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80"
-        )
+def case(id, *args, altcoin=False):
+    if altcoin:
+        marks = pytest.mark.altcoin
+    else:
+        marks = ()
+    return pytest.param(*args, id=id, marks=marks)
 
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_sign_testnet(self, client):
-        sig = btc.sign_message(
-            client, "Testnet", [0], "This is an example of a signed message."
-        )
-        assert sig.address == "mirio8q3gtv7fhdnmb3TpZ4EuafdzSs7zL"
-        assert (
-            sig.signature.hex()
-            == "209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80"
-        )
 
-    @pytest.mark.altcoin
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_sign_bch(self, client):
-        sig = btc.sign_message(
-            client, "Bcash", [0], "This is an example of a signed message."
-        )
-        assert sig.address == "bitcoincash:qqj22md58nm09vpwsw82fyletkxkq36zxyxh322pru"
-        assert (
-            sig.signature.hex()
-            == "209e23edf0e4e47ff1dec27f32cd78c50e74ef018ee8a6adf35ae17c7a9b0dd96f48b493fd7dbab03efb6f439c6383c9523b3bbc5f1a7d158a6af90ab154e9be80"
-        )
+MESSAGE_NFKD = u"Pr\u030ci\u0301s\u030cerne\u030c z\u030clut\u030couc\u030cky\u0301 ku\u030an\u030c u\u0301pe\u030cl d\u030ca\u0301belske\u0301 o\u0301dy za\u0301ker\u030cny\u0301 uc\u030cen\u030c be\u030cz\u030ci\u0301 pode\u0301l zo\u0301ny u\u0301lu\u030a"
+MESSAGE_NFC = u"P\u0159\xed\u0161ern\u011b \u017elu\u0165ou\u010dk\xfd k\u016f\u0148 \xfap\u011bl \u010f\xe1belsk\xe9 \xf3dy z\xe1ke\u0159n\xfd u\u010de\u0148 b\u011b\u017e\xed pod\xe9l z\xf3ny \xfal\u016f"
+NFKD_NFC_SIGNATURE = "2046a0b46e81492f82e0412c73701b9740e6462c603575ee2d36c7d7b4c20f0f33763ca8cb3027ea8e1ce5e83fda8b6746fea8f5c82655d78fd419e7c766a5e17a"
 
-    @pytest.mark.altcoin
-    def test_sign_grs(self, client):
-        sig = btc.sign_message(
-            client, "Groestlcoin", parse_path("44'/17'/0'/0/0"), "test"
-        )
-        assert sig.address == "Fj62rBJi8LvbmWu2jzkaUX1NFXLEqDLoZM"
-        assert (
-            base64.b64encode(sig.signature)
-            == b"INOYaa/jj8Yxz3mD5k+bZfUmjkjB9VzoV4dNG7+RsBUyK30xL7I9yMgWWVvsL46C5yQtxtZY0cRRk7q9N6b+YTM="
-        )
+VECTORS = (  # case name, coin_name, path, script_type, address, message, signature
+    # ==== Bitcoin script types ====
+    case(
+        "p2pkh",
+        "Bitcoin",
+        "44h/0h/0h/0/0",
+        S.SPENDADDRESS,
+        "1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL",
+        "This is an example of a signed message.",
+        "20fd8f2f7db5238fcdd077d5204c3e6949c261d700269cefc1d9d2dcef6b95023630ee617f6c8acf9eb40c8edd704c9ca74ea4afc393f43f35b4e8958324cbdd1c",
+    ),
+    case(
+        "segwit-p2sh",
+        "Bitcoin",
+        "49h/0h/0h/0/0",
+        S.SPENDP2SHWITNESS,
+        "3L6TyTisPBmrDAj6RoKmDzNnj4eQi54gD2",
+        "This is an example of a signed message.",
+        "23744de4516fac5c140808015664516a32fead94de89775cec7e24dbc24fe133075ac09301c4cc8e197bea4b6481661d5b8e9bf19d8b7b8a382ecdb53c2ee0750d",
+    ),
+    case(
+        "segwit-native",
+        "Bitcoin",
+        "84h/0h/0h/0/0",
+        S.SPENDWITNESS,
+        "bc1qannfxke2tfd4l7vhepehpvt05y83v3qsf6nfkk",
+        "This is an example of a signed message.",
+        "28b55d7600d9e9a7e2a49155ddf3cfdb8e796c207faab833010fa41fb7828889bc47cf62348a7aaa0923c0832a589fab541e8f12eb54fb711c90e2307f0f66b194",
+    ),
+    # ==== Bitcoin with long message ====
+    case(
+        "p2pkh long message",
+        "Bitcoin",
+        "44h/0h/0h/0/0",
+        S.SPENDADDRESS,
+        "1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL",
+        "VeryLongMessage!" * 64,
+        "200a46476ceb84d06ef5784828026f922c8815f57aac837b8c013007ca8a8460db63ef917dbebaebd108b1c814bbeea6db1f2b2241a958e53fe715cc86b199d9c3",
+    ),
+    case(
+        "segwit-p2sh long message",
+        "Bitcoin",
+        "49h/0h/0h/0/0",
+        S.SPENDP2SHWITNESS,
+        "3L6TyTisPBmrDAj6RoKmDzNnj4eQi54gD2",
+        "VeryLongMessage!" * 64,
+        "236eadee380684f70749c52141c8aa7c3b6afd84d0e5f38cfa71823f3b1105a5f34e23834a5bb6f239ff28ad87f409f44e4ce6269754adc00388b19507a5d9386f",
+    ),
+    case(
+        "segwit-native long message",
+        "Bitcoin",
+        "84h/0h/0h/0/0",
+        S.SPENDWITNESS,
+        "bc1qannfxke2tfd4l7vhepehpvt05y83v3qsf6nfkk",
+        "VeryLongMessage!" * 64,
+        "28c6f86e255eaa768c447d635d91da01631ac54af223c2c182d4fa3676cfecae4a199ad33a74fe04fb46c39432acb8d83de74da90f5f01123b3b7d8bc252bc7f71",
+    ),
+    # ==== NFKD vs NFC message - signatures must be identical ====
+    case(
+        "NFKD message",
+        "Bitcoin",
+        "44h/0h/0h/0/1",
+        S.SPENDADDRESS,
+        "1GWFxtwWmNVqotUPXLcKVL2mUKpshuJYo",
+        MESSAGE_NFKD,
+        NFKD_NFC_SIGNATURE,
+    ),
+    case(
+        "NFC message",
+        "Bitcoin",
+        "44h/0h/0h/0/1",
+        S.SPENDADDRESS,
+        "1GWFxtwWmNVqotUPXLcKVL2mUKpshuJYo",
+        MESSAGE_NFC,
+        NFKD_NFC_SIGNATURE,
+    ),
+    # ==== Testnet script types ====
+    case(
+        "p2pkh",
+        "Testnet",
+        "44h/1h/0h/0/0",
+        S.SPENDADDRESS,
+        "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
+        "This is an example of a signed message.",
+        "2030cd7f116c0481d1936cfef48137fd23ee56aaf00787bfa08a94837466ec9909390c3efacfc56bae5782f1db4cf49ae05f242b5f62a47f871ec46bf1a3253e7f",
+    ),
+    case(
+        "segwit-p2sh",
+        "Testnet",
+        "49h/1h/0h/0/0",
+        S.SPENDP2SHWITNESS,
+        "2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp",
+        "This is an example of a signed message.",
+        "23ef39fd388c3425d6aaa04274dcd5c7dd4c283a411b616443474fbcde5dd966050d91bc7c57e9578f28efdd84c9a9bcba415f93c5727b5d3f2bf3de46d7084896",
+    ),
+    case(
+        "segwit-native",
+        "Testnet",
+        "84h/1h/0h/0/0",
+        S.SPENDWITNESS,
+        "tb1qkvwu9g3k2pdxewfqr7syz89r3gj557l3uuf9r9",
+        "This is an example of a signed message.",
+        "27758b3393396ad9fe48f6ce81f63410145e7b2b69a5dfc1d48b5e6e623e91e08e3afb60bda1546f9c6f9fb5bd0a41887b784c266036dd4b4015a0abc1137daa1d",
+    ),
+    # ==== Altcoins ====
+    case(
+        "bcash",
+        "Bcash",
+        "44h/145h/0h/0/0",
+        S.SPENDADDRESS,
+        "bitcoincash:qr08q88p9etk89wgv05nwlrkm4l0urz4cyl36hh9sv",
+        "This is an example of a signed message.",
+        "1fda7733e666a4ab8ba86f3cfc3728d318ecf824a3bf99597570297aa131607c10316959136b2c500b2b478a73c563ba314c0b7b2a22065b6d9596118f246d360e",
+        altcoin=True,
+    ),
+    case(
+        "grs-p2pkh",
+        "Groestlcoin",
+        "44h/17h/0h/0/0",
+        S.SPENDADDRESS,
+        "Fj62rBJi8LvbmWu2jzkaUX1NFXLEqDLoZM",
+        "test",
+        "20d39869afe38fc631cf7983e64f9b65f5268e48c1f55ce857874d1bbf91b015322b7d312fb23dc8c816595bec2f8e82e7242dc6d658d1c45193babd37a6fe6133",
+        altcoin=True,
+    ),
+    case(
+        "grs-segwit-p2sh",
+        "Groestlcoin",
+        "49h/17h/0h/0/0",
+        S.SPENDP2SHWITNESS,
+        "31inaRqambLsd9D7Ke4USZmGEVd3PHkh7P",
+        "test",
+        "23f340fc9f9ea6469e13dbc743b70313e4d076bcd8ce867eddd71ec41160d02a4a462205d21ec6e49502bf3e2a8463d48e895ca56f6b385b15ec2cc7556292ecae",
+        altcoin=True,
+    ),
+    case(
+        "grs-segwit-native",
+        "Groestlcoin",
+        "84h/17h/0h/0/0",
+        S.SPENDWITNESS,
+        "grs1qw4teyraux2s77nhjdwh9ar8rl9dt7zww8r6lne",
+        "test",
+        "288253db4b4a1d5dac059296385310a353ef80992c4777a44133a335d12d3444da6c287d32aec4071ec49ae327e208f89ba0a115a129f106221c8dd5590fd3df13",
+        altcoin=True,
+    ),
+    case(
+        "decred",
+        "Decred",
+        "44h/42h/0h/0/0",
+        S.SPENDADDRESS,
+        "DsZtHtXHwvNR3nWf1PqfxrEdnRJisKEyzp1",
+        "This is an example of a signed message.",
+        "206b1f8ba47ef9eaf87aa900e41ab1e97f67e8c09292faa4acf825228d074c4b774484046dcb1d9bbf0603045dbfb328c3e1b0c09c5ae133e89e604a67a1fc6cca",
+        altcoin=True,
+    ),
+)
 
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_sign_long(self, client):
-        sig = btc.sign_message(client, "Bitcoin", [0], "VeryLongMessage!" * 64)
-        assert sig.address == "14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e"
-        assert (
-            sig.signature.hex()
-            == "205ff795c29aef7538f8b3bdb2e8add0d0722ad630a140b6aefd504a5a895cbd867cbb00981afc50edd0398211e8d7c304bb8efa461181bc0afa67ea4a720a89ed"
-        )
 
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_sign_utf(self, client):
-        words_nfkd = u"Pr\u030ci\u0301s\u030cerne\u030c z\u030clut\u030couc\u030cky\u0301 ku\u030an\u030c u\u0301pe\u030cl d\u030ca\u0301belske\u0301 o\u0301dy za\u0301ker\u030cny\u0301 uc\u030cen\u030c be\u030cz\u030ci\u0301 pode\u0301l zo\u0301ny u\u0301lu\u030a"
-        words_nfc = u"P\u0159\xed\u0161ern\u011b \u017elu\u0165ou\u010dk\xfd k\u016f\u0148 \xfap\u011bl \u010f\xe1belsk\xe9 \xf3dy z\xe1ke\u0159n\xfd u\u010de\u0148 b\u011b\u017e\xed pod\xe9l z\xf3ny \xfal\u016f"
-
-        sig_nfkd = btc.sign_message(client, "Bitcoin", [0], words_nfkd)
-        assert sig_nfkd.address == "14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e"
-        assert (
-            sig_nfkd.signature.hex()
-            == "20d0ec02ed8da8df23e7fe9e680e7867cc290312fe1c970749d8306ddad1a1eda41c6a771b13d495dd225b13b0a9d0f915a984ee3d0703f92287bf8009fbb9f7d6"
-        )
-
-        sig_nfc = btc.sign_message(client, "Bitcoin", [0], words_nfc)
-        assert sig_nfc.address == "14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e"
-        assert (
-            sig_nfc.signature.hex()
-            == "20d0ec02ed8da8df23e7fe9e680e7867cc290312fe1c970749d8306ddad1a1eda41c6a771b13d495dd225b13b0a9d0f915a984ee3d0703f92287bf8009fbb9f7d6"
-        )
+@pytest.mark.parametrize(
+    "coin_name, path, script_type, address, message, signature", VECTORS
+)
+def test_signmessage(client, coin_name, path, script_type, address, message, signature):
+    sig = btc.sign_message(
+        client,
+        coin_name=coin_name,
+        n=parse_path(path),
+        script_type=script_type,
+        message=message,
+    )
+    assert sig.address == address
+    assert sig.signature.hex() == signature

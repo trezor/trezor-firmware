@@ -95,6 +95,10 @@ static int eos_is_canonical(uint8_t v, uint8_t signature[64]) {
          !(signature[32] == 0 && !(signature[33] & 0x80));
 }
 
+/// mock:global
+
+/// CANONICAL_SIG_ETHEREUM: int = 1
+/// CANONICAL_SIG_EOS: int = 2
 enum {
   CANONICAL_SIG_ETHEREUM = 1,
   CANONICAL_SIG_EOS = 2,

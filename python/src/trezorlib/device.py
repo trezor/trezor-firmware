@@ -16,32 +16,12 @@
 
 import os
 import time
-import warnings
 
 from . import messages
 from .exceptions import Cancelled
 from .tools import expect, session
-from .transport import enumerate_devices, get_transport
 
 RECOVERY_BACK = "\x08"  # backspace character, sent literally
-
-
-class TrezorDevice:
-    """
-    This class is deprecated. (There is no reason for it to exist in the first
-    place, it is nothing but a collection of two functions.)
-    Instead, please use functions from the ``trezorlib.transport`` module.
-    """
-
-    @classmethod
-    def enumerate(cls):
-        warnings.warn("TrezorDevice is deprecated.", DeprecationWarning)
-        return enumerate_devices()
-
-    @classmethod
-    def find_by_path(cls, path):
-        warnings.warn("TrezorDevice is deprecated.", DeprecationWarning)
-        return get_transport(path, prefix_search=False)
 
 
 @expect(messages.Success, field="message")

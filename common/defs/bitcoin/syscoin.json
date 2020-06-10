@@ -9,8 +9,8 @@
   "decimals": 8,
   "address_type": 63,
   "address_type_p2sh": 5,
-  "maxfee_kb": 10000000,
-  "minfee_kb": 1000,
+  "maxfee_kb": 20000000,
+  "minfee_kb": 10000,
   "signed_message_header": "Syscoin Signed Message:\n",
   "hash_genesis_block": "0000022642db0346b6e01c2a397471f4f12e65d4f4251ec96c1f85367a61a7ab",
   "xprv_magic": 76066276,
@@ -26,8 +26,8 @@
   "force_bip143": false,
   "default_fee_b": {
     "Low": 100,
-    "Economy": 200,
-    "Normal": 400,
+    "Economy": 700,
+    "Normal": 1400,
     "High": 2000
   },
   "dust_limit": 1820,
@@ -36,7 +36,9 @@
   "min_address_length": 27,
   "max_address_length": 34,
   "bitcore": [],
-  "blockbook": [],
+  "blockbook": [
+    "https://sys1.bcfn.ca"
+  ],
   "negative_fee": false,
   "cooldown": 100,
   "consensus_branch_id": null,

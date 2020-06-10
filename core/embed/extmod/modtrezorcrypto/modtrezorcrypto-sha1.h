@@ -45,7 +45,7 @@ STATIC mp_obj_t mod_trezorcrypto_Sha1_make_new(const mp_obj_type_t *type,
                                                size_t n_args, size_t n_kw,
                                                const mp_obj_t *args) {
   mp_arg_check_num(n_args, n_kw, 0, 1, false);
-  mp_obj_Sha1_t *o = m_new_obj(mp_obj_Sha1_t);
+  mp_obj_Sha1_t *o = m_new_obj_with_finaliser(mp_obj_Sha1_t);
   o->base.type = type;
   sha1_Init(&(o->ctx));
   // constructor called with bytes/str as first parameter

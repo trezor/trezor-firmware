@@ -3,9 +3,12 @@ import gc
 from trezor import log, utils, wire
 from trezor.messages import MessageType
 
+from apps.common.seed import with_slip44_keychain
+from apps.monero import CURVE, SLIP44_ID
 from apps.monero.signing.state import State
 
 
+@with_slip44_keychain(SLIP44_ID, CURVE, allow_testnet=True)
 async def sign_tx(ctx, received_msg, keychain):
     state = State(ctx)
     mods = utils.unimport_begin()
@@ -51,6 +54,7 @@ async def sign_tx_dispatch(state, msg, keychain):
             (
                 MessageType.MoneroTransactionSetInputRequest,
                 MessageType.MoneroTransactionInputsPermutationRequest,
+                MessageType.MoneroTransactionInputViniRequest,
             ),
         )
 
@@ -67,7 +71,7 @@ async def sign_tx_dispatch(state, msg, keychain):
 
         return (
             await step_04_input_vini.input_vini(
-                state, msg.src_entr, msg.vini, msg.vini_hmac
+                state, msg.src_entr, msg.vini, msg.vini_hmac, msg.orig_idx
             ),
             (
                 MessageType.MoneroTransactionInputViniRequest,
@@ -121,6 +125,7 @@ async def sign_tx_dispatch(state, msg, keychain):
                 msg.pseudo_out_hmac,
                 msg.pseudo_out_alpha,
                 msg.spend_key,
+                msg.orig_idx,
             ),
             (
                 MessageType.MoneroTransactionSignInputRequest,

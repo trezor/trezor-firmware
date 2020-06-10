@@ -33,9 +33,6 @@
 #ifndef __INCLUDED_MPCONFIGPORT_H
 #define __INCLUDED_MPCONFIGPORT_H
 
-// stuff from py/mpconfig.h
-#define MICROPY_ENABLE_COMPILER     (0)
-
 // frozen modules
 #define MICROPY_MODULE_FROZEN_MPY   (1)
 #define MICROPY_QSTR_EXTRA_POOL     (mp_qstr_frozen_const_pool)
@@ -49,6 +46,7 @@
 #define MICROPY_EMIT_INLINE_THUMB   (0)
 
 // compiler configuration
+#define MICROPY_ENABLE_COMPILER     (0)
 #define MICROPY_COMP_MODULE_CONST   (1)
 #define MICROPY_COMP_TRIPLE_TUPLE_ASSIGN (1)
 #define MICROPY_COMP_RETURN_IF_EXPR (1)
@@ -82,7 +80,6 @@
 #define MICROPY_ENABLE_SCHEDULER    (0)
 #define MICROPY_SCHEDULER_DEPTH     (0)
 #define MICROPY_VFS                 (0)
-#define MICROPY_VFS_FAT             (0)
 
 // control over Python builtins
 #define MICROPY_PY_FUNCTION_ATTRS   (1)
@@ -96,6 +93,7 @@
 #define MICROPY_PY_BUILTINS_FROZENSET (0)
 #define MICROPY_PY_BUILTINS_SLICE_ATTRS (1)
 #define MICROPY_PY_BUILTINS_ROUND_INT (0)
+#define MICROPY_PY_REVERSE_SPECIAL_METHODS (0)
 #define MICROPY_PY_ALL_SPECIAL_METHODS (0)
 #define MICROPY_PY_BUILTINS_COMPILE (MICROPY_ENABLE_COMPILER)
 #define MICROPY_PY_BUILTINS_EXECFILE (MICROPY_ENABLE_COMPILER)
@@ -123,9 +121,7 @@
 #define MICROPY_PY_SYS_STDIO_BUFFER (0)
 #define MICROPY_PY_SYS_PLATFORM     "trezor"
 #define MICROPY_PY_UERRNO           (0)
-#ifndef MICROPY_PY_THREAD
 #define MICROPY_PY_THREAD           (0)
-#endif
 
 // extended modules
 #define MICROPY_PY_UCTYPES          (1)
@@ -160,29 +156,10 @@
 #define MICROPY_PY_TREZORUI         (1)
 #define MICROPY_PY_TREZORUTILS      (1)
 
-// extra built in names to add to the global namespace
-#define MICROPY_PORT_BUILTINS
-
-// extra built in modules to add to the list of known ones
-extern const struct _mp_obj_module_t mp_module_utime;
-extern const struct _mp_obj_module_t mp_module_trezorconfig;
-extern const struct _mp_obj_module_t mp_module_trezorcrypto;
-extern const struct _mp_obj_module_t mp_module_trezorio;
-extern const struct _mp_obj_module_t mp_module_trezorui;
-extern const struct _mp_obj_module_t mp_module_trezorutils;
-
-#define MICROPY_PORT_BUILTIN_MODULES \
-    { MP_ROM_QSTR(MP_QSTR_utime), MP_ROM_PTR(&mp_module_utime) }, \
-    { MP_ROM_QSTR(MP_QSTR_trezorconfig), MP_ROM_PTR(&mp_module_trezorconfig) }, \
-    { MP_ROM_QSTR(MP_QSTR_trezorcrypto), MP_ROM_PTR(&mp_module_trezorcrypto) }, \
-    { MP_ROM_QSTR(MP_QSTR_trezorio), MP_ROM_PTR(&mp_module_trezorio) }, \
-    { MP_ROM_QSTR(MP_QSTR_trezorui), MP_ROM_PTR(&mp_module_trezorui) }, \
-    { MP_ROM_QSTR(MP_QSTR_trezorutils), MP_ROM_PTR(&mp_module_trezorutils) },
-
 #define MP_STATE_PORT MP_STATE_VM
 
-#define MICROPY_PORT_ROOT_POINTERS \
-    const char *readline_hist[8]; \
+// ============= this ends common config section ===================
+
 
 // type definitions for the specific machine
 

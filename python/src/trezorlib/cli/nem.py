@@ -20,6 +20,7 @@ import click
 import requests
 
 from .. import nem, tools
+from . import with_client
 
 PATH_HELP = "BIP-32 path, e.g. m/44'/134'/0'/0'"
 
@@ -33,10 +34,9 @@ def cli():
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.option("-N", "--network", type=int, default=0x68)
 @click.option("-d", "--show-display", is_flag=True)
-@click.pass_obj
-def get_address(connect, address, network, show_display):
+@with_client
+def get_address(client, address, network, show_display):
     """Get NEM address for specified path."""
-    client = connect()
     address_n = tools.parse_path(address)
     return nem.get_address(client, address_n, network, show_display)
 
@@ -51,10 +51,9 @@ def get_address(connect, address, network, show_display):
     help="Transaction in NIS (RequestPrepareAnnounce) format",
 )
 @click.option("-b", "--broadcast", help="NIS to announce transaction to")
-@click.pass_obj
-def sign_tx(connect, address, file, broadcast):
+@with_client
+def sign_tx(client, address, file, broadcast):
     """Sign (and optionally broadcast) NEM transaction."""
-    client = connect()
     address_n = tools.parse_path(address)
     transaction = nem.sign_tx(client, address_n, json.load(file))
 

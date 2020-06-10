@@ -20,7 +20,9 @@ from trezorlib import btc, messages
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
-from ..tx_cache import tx_cache
+from ..tx_cache import TxCache
+
+TX_CACHE = TxCache("Peercoin")
 
 TXHASH_41b29a = bytes.fromhex(
     "41b29ad615d8eea40a4654a052d18bb10cd08f203c351f4d241f88b031357d3d"
@@ -45,12 +47,7 @@ def test_timestamp_included(client):
 
     details = messages.SignTx(version=1, timestamp=0x5DC5448A)
     _, timestamp_tx = btc.sign_tx(
-        client,
-        "Peercoin",
-        [inp1],
-        [out1],
-        details=details,
-        prev_txes=tx_cache("Peercoin", allow_fetch=False),
+        client, "Peercoin", [inp1], [out1], details=details, prev_txes=TX_CACHE,
     )
 
     # Accepted by network https://explorer.peercoin.net/api/getrawtransaction?txid=f7e3624c143b6a170cc44f9337d0fa8ea8564a211de9c077c6889d8c78f80909&decrypt=1
@@ -72,28 +69,16 @@ def test_timestamp_missing(client):
     )
 
     details = messages.SignTx(version=1, timestamp=None)
-    with pytest.raises(TrezorFailure) as e:
+    with pytest.raises(TrezorFailure, match="Timestamp must be set."):
         btc.sign_tx(
-            client,
-            "Peercoin",
-            [inp1],
-            [out1],
-            details=details,
-            prev_txes=tx_cache("Peercoin", allow_fetch=False),
+            client, "Peercoin", [inp1], [out1], details=details, prev_txes=TX_CACHE,
         )
-    assert e.value.failure.message.endswith("Timestamp must be set.")
 
     details = messages.SignTx(version=1, timestamp=0)
-    with pytest.raises(TrezorFailure) as e:
+    with pytest.raises(TrezorFailure, match="Timestamp must be set."):
         btc.sign_tx(
-            client,
-            "Peercoin",
-            [inp1],
-            [out1],
-            details=details,
-            prev_txes=tx_cache("Peercoin", allow_fetch=False),
+            client, "Peercoin", [inp1], [out1], details=details, prev_txes=TX_CACHE,
         )
-    assert e.value.failure.message.endswith("Timestamp must be set.")
 
 
 @pytest.mark.altcoin
@@ -110,10 +95,10 @@ def test_timestamp_missing_prevtx(client):
     )
     details = messages.SignTx(version=1, timestamp=0x5DC5448A)
 
-    prevtx = tx_cache("Peercoin", allow_fetch=False)[TXHASH_41b29a]
+    prevtx = TX_CACHE[TXHASH_41b29a]
     prevtx.timestamp = 0
 
-    with pytest.raises(TrezorFailure) as e:
+    with pytest.raises(TrezorFailure, match="Timestamp must be set."):
         btc.sign_tx(
             client,
             "Peercoin",
@@ -122,10 +107,9 @@ def test_timestamp_missing_prevtx(client):
             details=details,
             prev_txes={TXHASH_41b29a: prevtx},
         )
-    assert e.value.failure.message.endswith("Timestamp must be set.")
 
     prevtx.timestamp = None
-    with pytest.raises(TrezorFailure) as e:
+    with pytest.raises(TrezorFailure, match="Timestamp must be set."):
         btc.sign_tx(
             client,
             "Peercoin",
@@ -134,4 +118,3 @@ def test_timestamp_missing_prevtx(client):
             details=details,
             prev_txes={TXHASH_41b29a: prevtx},
         )
-    assert e.value.failure.message.endswith("Timestamp must be set.")

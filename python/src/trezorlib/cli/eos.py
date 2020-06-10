@@ -19,6 +19,7 @@ import json
 import click
 
 from .. import eos, tools
+from . import with_client
 
 PATH_HELP = "BIP-32 path, e.g. m/44'/194'/0'/0/0"
 
@@ -31,10 +32,9 @@ def cli():
 @cli.command()
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.option("-d", "--show-display", is_flag=True)
-@click.pass_obj
-def get_public_key(connect, address, show_display):
+@with_client
+def get_public_key(client, address, show_display):
     """Get Eos public key in base58 encoding."""
-    client = connect()
     address_n = tools.parse_path(address)
     res = eos.get_public_key(client, address_n, show_display)
     return "WIF: {}\nRaw: {}".format(res.wif_public_key, res.raw_public_key.hex())
@@ -49,11 +49,9 @@ def get_public_key(connect, address, show_display):
     required=True,
     help="Transaction in JSON format",
 )
-@click.pass_obj
-def sign_transaction(connect, address, file):
+@with_client
+def sign_transaction(client, address, file):
     """Sign EOS transaction."""
-    client = connect()
-
     tx_json = json.load(file)
 
     address_n = tools.parse_path(address)

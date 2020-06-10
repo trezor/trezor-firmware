@@ -10,14 +10,23 @@ The private tx keys are used in other numerous Monero features.
 
 from trezor.messages.MoneroTransactionFinalAck import MoneroTransactionFinalAck
 
-from .state import State
-
 from apps.monero import misc
 from apps.monero.xmr import crypto
 from apps.monero.xmr.crypto import chacha_poly
 
+from .state import State
 
-async def final_msg(state: State):
+if False:
+    from typing import Tuple
+    from apps.monero.xmr.types import Sc25519
+
+
+async def final_msg(state: State) -> MoneroTransactionFinalAck:
+    if state.last_step != state.STEP_SIGN:
+        raise ValueError("Invalid state transition")
+    if state.current_input_index != state.input_count - 1:
+        raise ValueError("Invalid input count")
+
     tx_key, salt, rand_mult = _compute_tx_key(
         state.creds.spend_key_private, state.tx_prefix_hash
     )
@@ -26,13 +35,20 @@ async def final_msg(state: State):
         [crypto.encodeint(x) for x in state.additional_tx_private_keys]
     )
     tx_enc_keys = chacha_poly.encrypt_pack(tx_key, key_buff)
+    state.last_step = None
 
     return MoneroTransactionFinalAck(
-        cout_key=None, salt=salt, rand_mult=rand_mult, tx_enc_keys=tx_enc_keys
+        cout_key=None,
+        salt=salt,
+        rand_mult=rand_mult,
+        tx_enc_keys=tx_enc_keys,
+        opening_key=state.opening_key,
     )
 
 
-def _compute_tx_key(spend_key_private, tx_prefix_hash):
+def _compute_tx_key(
+    spend_key_private: Sc25519, tx_prefix_hash: bytes
+) -> Tuple[bytes, bytes, bytes]:
     salt = crypto.random_bytes(32)
 
     rand_mult_num = crypto.random_scalar()

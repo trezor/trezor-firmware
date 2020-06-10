@@ -133,8 +133,8 @@ First, make sure your submodules are up-to-date with:
 git submodule update --init --recursive
 ```
 
-Then, rebuild the protobuf messages and get `coins.json` by running, from the
-`trezor-firmware` top-level directory:
+Then, rebuild the protobuf messages by running, from the `trezor-firmware` top-level
+directory:
 
 ```sh
 make gen

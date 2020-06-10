@@ -47,8 +47,29 @@ import gc
 from apps.monero.xmr import crypto
 from apps.monero.xmr.serialize import int_serialize
 
+if False:
+    from typing import List, Tuple
+    from apps.monero.xmr.types import Ge25519, Sc25519
+    from apps.monero.xmr.serialize_messages.tx_ct_key import CtKey
+    from trezor.messages.MoneroRctKeyPublic import MoneroRctKeyPublic
 
-def generate_mlsag_simple(message, pubs, in_sk, a, cout, kLRki, index, mg_buff):
+    KeyM = List[List[bytes]]
+
+
+_HASH_KEY_CLSAG_ROUND = b"CLSAG_round\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+_HASH_KEY_CLSAG_AGG_0 = b"CLSAG_agg_0\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+_HASH_KEY_CLSAG_AGG_1 = b"CLSAG_agg_1\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+
+
+def generate_mlsag_simple(
+    message: bytes,
+    pubs: List[MoneroRctKeyPublic],
+    in_sk: CtKey,
+    a: Sc25519,
+    cout: Ge25519,
+    index: int,
+    mg_buff: List[bytes],
+) -> List[bytes]:
     """
     MLSAG for RctType.Simple
     :param message: the full message to be signed (actually its hash)
@@ -56,7 +77,6 @@ def generate_mlsag_simple(message, pubs, in_sk, a, cout, kLRki, index, mg_buff):
     :param in_sk: CtKey; spending private key with input commitment mask (original); better_name: input_secret_key
     :param a: mask from the pseudo output commitment; better name: pseudo_out_alpha
     :param cout: pseudo output commitment; point, decoded; better name: pseudo_out_c
-    :param kLRki: used only in multisig, currently not implemented
     :param index: specifies corresponding public key to the `in_sk` in the pubs array
     :param mg_buff: buffer to store the signature to
     """
@@ -87,10 +107,10 @@ def generate_mlsag_simple(message, pubs, in_sk, a, cout, kLRki, index, mg_buff):
     del pubs
     gc.collect()
 
-    return generate_mlsag(message, M, sk, kLRki, index, dsRows, mg_buff)
+    return generate_mlsag(message, M, sk, index, dsRows, mg_buff)
 
 
-def gen_mlsag_assert(pk, xx, kLRki, index, dsRows):
+def gen_mlsag_assert(pk: KeyM, xx: List[Sc25519], index: int, dsRows: int):
     """
     Conditions check
     """
@@ -111,20 +131,23 @@ def gen_mlsag_assert(pk, xx, kLRki, index, dsRows):
         raise ValueError("Bad xx size")
     if dsRows > rows:
         raise ValueError("Bad dsRows size")
-    if kLRki and dsRows != 1:
-        raise ValueError("Multisig requires exactly 1 dsRows")
-    if kLRki:
-        raise NotImplementedError("Multisig not implemented")
     return rows, cols
 
 
-def generate_first_c_and_key_images(message, pk, xx, kLRki, index, dsRows, rows, cols):
+def generate_first_c_and_key_images(
+    message: bytes,
+    pk: KeyM,
+    xx: List[Sc25519],
+    index: int,
+    dsRows: int,
+    rows: int,
+    cols: int,
+) -> Tuple[Sc25519, List[Ge25519], List[Ge25519]]:
     """
     MLSAG computation - the part with secret keys
     :param message: the full message to be signed (actually its hash)
     :param pk: matrix of public keys and commitments
     :param xx: input secret array composed of a private key and commitment mask
-    :param kLRki: used only in multisig, currently not implemented
     :param index: specifies corresponding public key to the `xx`'s private key in the `pk` array
     :param dsRows: row number where the pubkeys "end" (and commitments follow)
     :param rows: total number of rows
@@ -143,24 +166,17 @@ def generate_first_c_and_key_images(message, pk, xx, kLRki, index, dsRows, rows,
         # this is somewhat extra as compared to the Ring Confidential Tx paper
         # see footnote in From Zero to Monero section 3.3
         hasher.update(pk[index][i])
-        if kLRki:
-            raise NotImplementedError("Multisig not implemented")
-            # alpha[i] = kLRki.k
-            # rv.II[i] = kLRki.ki
-            # hash_point(hasher, kLRki.L, tmp_buff)
-            # hash_point(hasher, kLRki.R, tmp_buff)
 
-        else:
-            crypto.hash_to_point_into(Hi, pk[index][i])
-            alpha[i] = crypto.random_scalar()
-            # L = alpha_i * G
-            crypto.scalarmult_base_into(aGi, alpha[i])
-            # Ri = alpha_i * H(P_i)
-            crypto.scalarmult_into(aHPi, Hi, alpha[i])
-            # key image
-            II[i] = crypto.scalarmult(Hi, xx[i])
-            _hash_point(hasher, aGi, tmp_buff)
-            _hash_point(hasher, aHPi, tmp_buff)
+        crypto.hash_to_point_into(Hi, pk[index][i])
+        alpha[i] = crypto.random_scalar()
+        # L = alpha_i * G
+        crypto.scalarmult_base_into(aGi, alpha[i])
+        # Ri = alpha_i * H(P_i)
+        crypto.scalarmult_into(aHPi, Hi, alpha[i])
+        # key image
+        II[i] = crypto.scalarmult(Hi, xx[i])
+        _hash_point(hasher, aGi, tmp_buff)
+        _hash_point(hasher, aHPi, tmp_buff)
 
     for i in range(dsRows, rows):
         alpha[i] = crypto.random_scalar()
@@ -178,19 +194,25 @@ def generate_first_c_and_key_images(message, pk, xx, kLRki, index, dsRows, rows,
     return c_old, II, alpha
 
 
-def generate_mlsag(message, pk, xx, kLRki, index, dsRows, mg_buff):
+def generate_mlsag(
+    message: bytes,
+    pk: KeyM,
+    xx: List[Sc25519],
+    index: int,
+    dsRows: int,
+    mg_buff: List[bytes],
+) -> List[bytes]:
     """
     Multilayered Spontaneous Anonymous Group Signatures (MLSAG signatures)
 
     :param message: the full message to be signed (actually its hash)
     :param pk: matrix of public keys and commitments
     :param xx: input secret array composed of a private key and commitment mask
-    :param kLRki: used only in multisig, currently not implemented
     :param index: specifies corresponding public key to the `xx`'s private key in the `pk` array
     :param dsRows: separates pubkeys from commitment
     :param mg_buff: mg signature buffer
     """
-    rows, cols = gen_mlsag_assert(pk, xx, kLRki, index, dsRows)
+    rows, cols = gen_mlsag_assert(pk, xx, index, dsRows)
     rows_b_size = int_serialize.uvarint_size(rows)
 
     # Preallocation of the chunked buffer, len + cols + cc
@@ -206,7 +228,7 @@ def generate_mlsag(message, pk, xx, kLRki, index, dsRows, mg_buff):
 
     # calculates the "first" c, key images and random scalars alpha
     c_old, II, alpha = generate_first_c_and_key_images(
-        message, pk, xx, kLRki, index, dsRows, rows, cols
+        message, pk, xx, index, dsRows, rows, cols
     )
 
     i = (index + 1) % cols
@@ -271,6 +293,176 @@ def generate_mlsag(message, pk, xx, kLRki, index, dsRows, mg_buff):
 
     # rv.cc
     mg_buff[-1] = crypto.encodeint(cc)
+    return mg_buff
+
+
+def generate_clsag_simple(
+    message: bytes,
+    pubs: List[MoneroRctKeyPublic],
+    in_sk: CtKey,
+    a: Sc25519,
+    cout: Ge25519,
+    index: int,
+    mg_buff: List[bytes],
+) -> List[bytes]:
+    """
+    CLSAG for RctType.Simple
+    https://eprint.iacr.org/2019/654.pdf
+
+    Corresponds to proveRctCLSAGSimple in rctSigs.cpp
+
+    :param message: the full message to be signed (actually its hash)
+    :param pubs: vector of MoneroRctKey; this forms the ring; point values in encoded form; (dest, mask) = (P, C)
+    :param in_sk: CtKey; spending private key with input commitment mask (original); better_name: input_secret_key
+    :param a: mask from the pseudo output commitment; better name: pseudo_out_alpha
+    :param cout: pseudo output commitment; point, decoded; better name: pseudo_out_c
+    :param index: specifies corresponding public key to the `in_sk` in the pubs array
+    :param mg_buff: buffer to store the signature to
+    """
+    cols = len(pubs)
+    if cols == 0:
+        raise ValueError("Empty pubs")
+
+    P = _key_vector(cols)
+    C_nonzero = _key_vector(cols)
+    p = in_sk.dest
+    z = crypto.sc_sub(in_sk.mask, a)
+
+    for i in range(cols):
+        P[i] = pubs[i].dest
+        C_nonzero[i] = pubs[i].commitment
+        pubs[i] = None
+
+    del pubs
+    gc.collect()
+
+    return _generate_clsag(message, P, p, C_nonzero, z, cout, index, mg_buff)
+
+
+def _generate_clsag(
+    message: bytes,
+    P: List[bytes],
+    p: Sc25519,
+    C_nonzero: List[bytes],
+    z: Sc25519,
+    Cout: Ge25519,
+    index: int,
+    mg_buff: List[bytes],
+) -> List[bytes]:
+    sI = crypto.new_point()  # sig.I
+    sD = crypto.new_point()  # sig.D
+    sc1 = crypto.new_scalar()  # sig.c1
+    a = crypto.random_scalar()
+    H = crypto.new_point()
+    D = crypto.new_point()
+    Cout_bf = crypto.encodepoint(Cout)
+
+    tmp_sc = crypto.new_scalar()
+    tmp = crypto.new_point()
+    tmp_bf = bytearray(32)
+
+    crypto.hash_to_point_into(H, P[index])
+    crypto.scalarmult_into(sI, H, p)  # I = p*H
+    crypto.scalarmult_into(D, H, z)  # D = z*H
+    crypto.sc_mul_into(tmp_sc, z, crypto.sc_inv_eight())  # 1/8*z
+    crypto.scalarmult_into(sD, H, tmp_sc)  # sig.D = 1/8*z*H
+    sD = crypto.encodepoint(sD)
+
+    hsh_P = crypto.get_keccak()  # domain, I, D, P, C, C_offset
+    hsh_C = crypto.get_keccak()  # domain, I, D, P, C, C_offset
+    hsh_P.update(_HASH_KEY_CLSAG_AGG_0)
+    hsh_C.update(_HASH_KEY_CLSAG_AGG_1)
+
+    def hsh_PC(x):
+        nonlocal hsh_P, hsh_C
+        hsh_P.update(x)
+        hsh_C.update(x)
+
+    for x in P:
+        hsh_PC(x)
+
+    for x in C_nonzero:
+        hsh_PC(x)
+
+    hsh_PC(crypto.encodepoint_into(tmp_bf, sI))
+    hsh_PC(sD)
+    hsh_PC(Cout_bf)
+    mu_P = crypto.decodeint(hsh_P.digest())
+    mu_C = crypto.decodeint(hsh_C.digest())
+
+    del (hsh_PC, hsh_P, hsh_C)
+    c_to_hash = crypto.get_keccak()  # domain, P, C, C_offset, message, aG, aH
+    c_to_hash.update(_HASH_KEY_CLSAG_ROUND)
+    for i in range(len(P)):
+        c_to_hash.update(P[i])
+    for i in range(len(P)):
+        c_to_hash.update(C_nonzero[i])
+    c_to_hash.update(Cout_bf)
+    c_to_hash.update(message)
+
+    chasher = c_to_hash.copy()
+    crypto.scalarmult_base_into(tmp, a)
+    chasher.update(crypto.encodepoint_into(tmp_bf, tmp))  # aG
+    crypto.scalarmult_into(tmp, H, a)
+    chasher.update(crypto.encodepoint_into(tmp_bf, tmp))  # aH
+    c = crypto.decodeint(chasher.digest())
+    del (chasher, H)
+
+    L = crypto.new_point()
+    R = crypto.new_point()
+    c_p = crypto.new_scalar()
+    c_c = crypto.new_scalar()
+    i = (index + 1) % len(P)
+    if i == 0:
+        crypto.sc_copy(sc1, c)
+
+    mg_buff.append(int_serialize.dump_uvarint_b(len(P)))
+    for _ in range(len(P)):
+        mg_buff.append(bytearray(32))
+
+    while i != index:
+        crypto.random_scalar(tmp_sc)
+        crypto.encodeint_into(mg_buff[i + 1], tmp_sc)
+
+        crypto.sc_mul_into(c_p, mu_P, c)
+        crypto.sc_mul_into(c_c, mu_C, c)
+
+        # L = tmp_sc * G + c_P * P[i] + c_c * C[i]
+        crypto.add_keys2_into(L, tmp_sc, c_p, crypto.decodepoint_into(tmp, P[i]))
+        crypto.decodepoint_into(tmp, C_nonzero[i])  # C = C_nonzero - Cout
+        crypto.point_sub_into(tmp, tmp, Cout)
+        crypto.scalarmult_into(tmp, tmp, c_c)
+        crypto.point_add_into(L, L, tmp)
+
+        # R = tmp_sc * HP + c_p * I + c_c * D
+        crypto.hash_to_point_into(tmp, P[i])
+        crypto.add_keys3_into(R, tmp_sc, tmp, c_p, sI)
+        crypto.point_add_into(R, R, crypto.scalarmult_into(tmp, D, c_c))
+
+        chasher = c_to_hash.copy()
+        chasher.update(crypto.encodepoint_into(tmp_bf, L))
+        chasher.update(crypto.encodepoint_into(tmp_bf, R))
+        crypto.decodeint_into(c, chasher.digest())
+
+        P[i] = None
+        C_nonzero[i] = None
+
+        i = (i + 1) % len(P)
+        if i == 0:
+            crypto.sc_copy(sc1, c)
+
+        if i & 3 == 0:
+            gc.collect()
+
+    # Final scalar = a - c * (mu_P * p + mu_c * Z)
+    crypto.sc_mul_into(tmp_sc, mu_P, p)
+    crypto.sc_muladd_into(tmp_sc, mu_C, z, tmp_sc)
+    crypto.sc_mulsub_into(tmp_sc, c, tmp_sc, a)
+    crypto.encodeint_into(mg_buff[index + 1], tmp_sc)
+
+    mg_buff.append(crypto.encodeint(sc1))
+    mg_buff.append(sD)
+    return mg_buff
 
 
 def _key_vector(rows):
@@ -285,13 +477,6 @@ def _key_matrix(rows, cols):
     for i in range(0, cols):
         rv[i] = _key_vector(rows)
     return rv
-
-
-def _generate_random_vector(n):
-    """
-    Generates vector of random scalars
-    """
-    return [crypto.random_scalar() for _ in range(0, n)]
 
 
 def _hasher_message(message):

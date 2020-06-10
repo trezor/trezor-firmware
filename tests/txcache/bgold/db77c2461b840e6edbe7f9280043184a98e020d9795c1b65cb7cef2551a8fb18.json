@@ -1,0 +1,24 @@
+{
+  "bin_outputs": [
+    {
+      "amount": 38448607,
+      "script_pubkey": "76a914b79bbff2766286a99129642d70912c6a4223c62b88ac"
+    }
+  ],
+  "inputs": [
+    {
+      "prev_hash": "52fb172f86926a89a16edf55bc9baec3929149b7cd2d2389be3c7d08d744d300",
+      "prev_index": 1,
+      "script_sig": "4830450221008bff524a092086372a19b924f41fa7fa2a5523bf42a4801b9503fcdfff2094e8022000f223a032bd0d7fee31d5663cd5cf86b82533bda6871366d519a68deae1042341210222c6760cc54de6fd7f2a40207a13137d497c7cdb472376523700d8ea88275a96",
+      "sequence": 4294967295
+    },
+    {
+      "prev_hash": "371eb4feaa4085b378bb825f3c1b457867c24211ee838584b1adac226bba654b",
+      "prev_index": 0,
+      "script_sig": "47304402206aee1d853479782029755dd3c360dbd963e6390da12ddf2c2c38314692510385022040c9c01253a77bc33ac11ce0e8c187ab4f2d78346c0b222a87b1f00fea6b212941210222c6760cc54de6fd7f2a40207a13137d497c7cdb472376523700d8ea88275a96",
+      "sequence": 4294967295
+    }
+  ],
+  "lock_time": 0,
+  "version": 1
+}

@@ -19,14 +19,16 @@ import pytest
 import trezorlib.messages as m
 from trezorlib.exceptions import Cancelled
 
+from ..common import TEST_ADDRESS_N
+
 
 @pytest.mark.parametrize(
     "message",
     [
         m.Ping(message="hello", button_protection=True),
         m.GetAddress(
-            address_n=[0],
-            coin_name="Bitcoin",
+            address_n=TEST_ADDRESS_N,
+            coin_name="Testnet",
             script_type=m.InputScriptType.SPENDADDRESS,
             show_display=True,
         ),
@@ -48,8 +50,8 @@ def test_cancel_message_via_cancel(client, message):
     [
         m.Ping(message="hello", button_protection=True),
         m.GetAddress(
-            address_n=[0],
-            coin_name="Bitcoin",
+            address_n=TEST_ADDRESS_N,
+            coin_name="Testnet",
             script_type=m.InputScriptType.SPENDADDRESS,
             show_display=True,
         ),
@@ -59,9 +61,9 @@ def test_cancel_message_via_initialize(client, message):
     resp = client.call_raw(message)
     assert isinstance(resp, m.ButtonRequest)
 
-    client.transport.write(m.ButtonAck())
-    client.transport.write(m.Initialize())
+    client._raw_write(m.ButtonAck())
+    client._raw_write(m.Initialize())
 
-    resp = client.transport.read()
+    resp = client._raw_read()
 
     assert isinstance(resp, m.Features)

@@ -213,7 +213,7 @@ message TxAck {
             optional MultisigRedeemScriptType multisig = 7;                     // Filled if input is going to spend multisig tx
             optional uint64 amount = 8;                                         // amount of previous transaction output (for segwit only)
             optional uint32 decred_tree = 9;                                    // only for Decred
-            optional uint32 decred_script_version = 10;                         // only for Decred
+            // optional uint32 decred_script_version = 10;                         // only for Decred  // deprecated -> only 0 is supported
             // optional bytes prev_block_hash_bip115 = 11;     // BIP-115 support dropped
             // optional uint32 prev_block_height_bip115 = 12;  // BIP-115 support dropped
         }
@@ -235,7 +235,7 @@ message TxAck {
             required OutputScriptType script_type = 4;      // output script type
             optional MultisigRedeemScriptType multisig = 5; // defines multisig address; script_type must be PAYTOMULTISIG
             optional bytes op_return_data = 6;              // defines op_return data; script_type must be PAYTOOPRETURN, amount must be 0
-            optional uint32 decred_script_version = 7;      // only for Decred
+            // optional uint32 decred_script_version = 7;      // only for Decred  // deprecated -> only 0 is supported
             // optional bytes block_hash_bip115 = 8;        // BIP-115 support dropped
             // optional uint32 block_height_bip115 = 9;     // BIP-115 support dropped
             enum OutputScriptType {

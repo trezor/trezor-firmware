@@ -19,15 +19,18 @@ CROSS_PORT_OPTS ?=
 PRODUCTION ?= 0
 PYOPT      ?= 1
 BITCOIN_ONLY ?= 0
+RDI        ?= 1
 
 STLINK_VER ?= v2
 OPENOCD = openocd -f interface/stlink-$(STLINK_VER).cfg -c "transport select hla_swd" -f target/stm32f4x.cfg
+OPENOCD_T1 = openocd -f interface/stlink-$(STLINK_VER).cfg -c "transport select hla_swd" -f target/stm32f2x.cfg
 
 BOARDLOADER_START   = 0x08000000
 BOOTLOADER_START    = 0x08020000
 FIRMWARE_P1_START   = 0x08040000
 FIRMWARE_P2_START   = 0x08120000
 PRODTEST_START      = 0x08040000
+FIRMWARE_T1_START   = 0x08010000
 
 BOARDLOADER_MAXSIZE = 49152
 BOOTLOADER_MAXSIZE  = 131072
@@ -87,7 +90,7 @@ test_emu_u2f: ## run selected u2f device tests from u2f-tests-hid
 
 test_emu_fido2: ## run fido2 device tests
 	cd $(TESTPATH)/fido_tests/fido2 ; \
-		$(EMU_TEST) $(PYTEST) --sim tests/standard/ --vendor trezor $(TESTOPTS)
+		$(EMU_TEST) --slip0014 $(PYTEST) --maxfail=5 --sim tests/standard/ --vendor trezor $(TESTOPTS)
 
 test_emu_click: ## run click tests
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/click_tests $(TESTOPTS)
@@ -134,7 +137,7 @@ build_reflash: ## build reflash firmware + reflash image
 	dd if=build/bootloader/bootloader.bin of=$(REFLASH_BUILD_DIR)/sdimage.bin bs=1 seek=49152
 
 build_firmware: res build_cross ## build firmware with frozen modules
-	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" $(FIRMWARE_BUILD_DIR)/firmware.bin
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" RDI="$(RDI)" $(FIRMWARE_BUILD_DIR)/firmware.bin
 
 build_unix: res ## build unix port
 	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/micropython $(UNIX_PORT_OPTS) BITCOIN_ONLY="$(BITCOIN_ONLY)"
@@ -190,6 +193,9 @@ flash_prodtest: $(PRODTEST_BUILD_DIR)/prodtest.bin ## flash prodtest using OpenO
 flash_firmware: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using OpenOCD
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $<.p1 $(FIRMWARE_P1_START); flash write_image erase $<.p2 $(FIRMWARE_P2_START); exit"
 
+flash_firmware_t1: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash T1 core port on T1 using OpenOCD
+	$(OPENOCD_T1) -c "init; reset halt; flash write_image erase $< $(FIRMWARE_T1_START); exit"
+
 flash_combine: $(PRODTEST_BUILD_DIR)/combined.bin ## flash combined using OpenOCD
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOARDLOADER_START); exit"
 
@@ -201,6 +207,17 @@ flash_read_storage: ## read storage sectors from flash
 
 flash_erase_storage: ## erase storage sectors from flash
 	$(OPENOCD) -c "init; flash erase_sector 0 4 4; flash erase_sector 0 16 16; exit"
+
+flash_bootloader_jlink: $(BOOTLOADER_BUILD_DIR)/bootloader.bin ## flash bootloader using JLink
+	JLinkExe -commanderscript embed/bootloader/bootloader_flash.jlink
+
+flash_firmware_jlink: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using JLink. file names must end in .bin for JLink
+	cp -f $<.p1 $<.p1.bin
+	cp -f $<.p2 $<.p2.bin
+	JLinkExe -commanderscript embed/firmware/firmware_flash.jlink
+
+flash_firmware_t1_jlink: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash T1 core port via JLink
+	JLinkExe -commanderscript embed/firmware/firmware_flash_t1.jlink
 
 ## openocd debug commands:
 

@@ -19,10 +19,17 @@ import pytest
 from trezorlib import btc, messages as proto
 from trezorlib.tools import parse_path
 
-from ..tx_cache import tx_cache
+from ..tx_cache import TxCache
+from .signtx import (
+    request_extra_data,
+    request_finished,
+    request_input,
+    request_meta,
+    request_output,
+)
 
-# KMD has no usable backends, use cached TX only
-TX_API = tx_cache("Komodo", allow_fetch=False)
+B = proto.ButtonRequestType
+TX_API = TxCache("Komodo")
 
 TXHASH_2807c = bytes.fromhex(
     "2807c5b126ec8e2b078cab0f12e4c8b4ce1d7724905f8ebef8dca26b0c8e0f1d"
@@ -40,9 +47,8 @@ class TestMsgSigntxKomodo:
         # input 1: 10.9998 KMD
 
         inp1 = proto.TxInputType(
-            address_n=parse_path(
-                "44'/141'/0'/0/0"
-            ),  # R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi
+            # R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi
+            address_n=parse_path("44'/141'/0'/0/0"),
             amount=1099980000,
             prev_hash=TXHASH_2807c,
             prev_index=0,
@@ -54,34 +60,24 @@ class TestMsgSigntxKomodo:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
+        trezor_core = client.features.model != "1"
         with client:
-            er = [
-                proto.TxRequest(
-                    request_type=proto.RequestType.TXINPUT,
-                    details=proto.TxRequestDetailsType(request_index=0),
-                ),
-                proto.TxRequest(
-                    request_type=proto.RequestType.TXOUTPUT,
-                    details=proto.TxRequestDetailsType(request_index=0),
-                ),
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-            ]
-            if client.features.model != "1":  # extra screen for lock_time
-                er += [proto.ButtonRequest(code=proto.ButtonRequestType.SignTx)]
-            er += [
-                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                proto.TxRequest(
-                    request_type=proto.RequestType.TXINPUT,
-                    details=proto.TxRequestDetailsType(request_index=0),
-                ),
-                proto.TxRequest(
-                    request_type=proto.RequestType.TXOUTPUT,
-                    details=proto.TxRequestDetailsType(request_index=0),
-                ),
-                proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
-            ]
-
-            client.set_expected_responses(er)
+            client.set_expected_responses(
+                [
+                    request_input(0),
+                    request_meta(TXHASH_2807c),
+                    request_input(0, TXHASH_2807c),
+                    request_output(0, TXHASH_2807c),
+                    request_extra_data(0, 11, TXHASH_2807c),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    (trezor_core, proto.ButtonRequest(code=B.SignTx)),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_output(0),
+                    request_finished(),
+                ]
+            )
 
             details = proto.SignTx(
                 version=4,
@@ -104,9 +100,8 @@ class TestMsgSigntxKomodo:
         # input 1: 10.9997 KMD
 
         inp1 = proto.TxInputType(
-            address_n=parse_path(
-                "44'/141'/0'/0/0"
-            ),  # R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi
+            # R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi
+            address_n=parse_path("44'/141'/0'/0/0"),
             amount=1099970000,
             prev_hash=TXHASH_7b28bd,
             prev_index=0,
@@ -125,42 +120,27 @@ class TestMsgSigntxKomodo:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
+        trezor_core = client.features.model != "1"
         with client:
-            er = [
-                proto.TxRequest(
-                    request_type=proto.RequestType.TXINPUT,
-                    details=proto.TxRequestDetailsType(request_index=0),
-                ),
-                proto.TxRequest(
-                    request_type=proto.RequestType.TXOUTPUT,
-                    details=proto.TxRequestDetailsType(request_index=0),
-                ),
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                proto.TxRequest(
-                    request_type=proto.RequestType.TXOUTPUT,
-                    details=proto.TxRequestDetailsType(request_index=1),
-                ),
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-            ]
-            if client.features.model != "1":  # extra screen for lock_time
-                er += [proto.ButtonRequest(code=proto.ButtonRequestType.SignTx)]
-            er += [
-                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                proto.TxRequest(
-                    request_type=proto.RequestType.TXINPUT,
-                    details=proto.TxRequestDetailsType(request_index=0),
-                ),
-                proto.TxRequest(
-                    request_type=proto.RequestType.TXOUTPUT,
-                    details=proto.TxRequestDetailsType(request_index=0),
-                ),
-                proto.TxRequest(
-                    request_type=proto.RequestType.TXOUTPUT,
-                    details=proto.TxRequestDetailsType(request_index=1),
-                ),
-                proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
-            ]
-            client.set_expected_responses(er)
+            client.set_expected_responses(
+                [
+                    request_input(0),
+                    request_meta(TXHASH_7b28bd),
+                    request_input(0, TXHASH_7b28bd),
+                    request_output(0, TXHASH_7b28bd),
+                    request_extra_data(0, 11, TXHASH_7b28bd),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    request_output(1),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    (trezor_core, proto.ButtonRequest(code=B.SignTx)),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_output(0),
+                    request_output(1),
+                    request_finished(),
+                ]
+            )
 
             details = proto.SignTx(
                 version=4,

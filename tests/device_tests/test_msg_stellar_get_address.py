@@ -17,7 +17,8 @@
 import pytest
 
 from trezorlib import messages as proto, stellar
-from trezorlib.tools import CallException, parse_path
+from trezorlib.exceptions import TrezorFailure
+from trezorlib.tools import parse_path
 
 from ..common import MNEMONIC12
 
@@ -44,12 +45,12 @@ class TestMsgStellarGetAddress:
         assert address == "GBAW5XGWORWVFE2XTJYDTLDHXTY2Q2MO73HYCGB3XMFMQ562Q2W2GJQX"
 
     def test_stellar_get_address_fail(self, client):
-        with pytest.raises(CallException) as exc:
+        with pytest.raises(TrezorFailure) as exc:
             stellar.get_address(client, parse_path("m/0/1"))
 
         if client.features.model == "1":
-            assert exc.value.args[0] == proto.FailureType.ProcessError
-            assert exc.value.args[1].endswith("Failed to derive private key")
+            assert exc.value.code == proto.FailureType.ProcessError
+            assert exc.value.message.endswith("Failed to derive private key")
         else:
-            assert exc.value.args[0] == proto.FailureType.DataError
-            assert exc.value.args[1].endswith("Forbidden key path")
+            assert exc.value.code == proto.FailureType.DataError
+            assert exc.value.message.endswith("Forbidden key path")

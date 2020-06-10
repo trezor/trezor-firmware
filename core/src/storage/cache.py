@@ -21,7 +21,9 @@ _session_ids = []  # type: List[bytes]
 _sessionless_cache = {}  # type: Dict[int, Any]
 
 if False:
-    from typing import Any
+    from typing import Any, Callable, TypeVar
+
+    F = TypeVar("F", bound=Callable[..., Any])
 
 
 def _move_session_ids_queue(session_id: bytes) -> None:
@@ -68,6 +70,43 @@ def get(key: int) -> Any:
     if _active_session_id is None:
         raise RuntimeError  # no session active
     return _caches[_active_session_id].get(key)
+
+
+def stored(key: int) -> Callable[[F], F]:
+    def decorator(func: F) -> F:
+        # if we didn't check this, it would be easy to store an Awaitable[something]
+        # in cache, which might prove hard to debug
+        assert not isinstance(func, type(lambda: (yield))), "use stored_async instead"
+
+        def wrapper(*args, **kwargs):  # type: ignore
+            value = get(key)
+            if value is None:
+                value = func(*args, **kwargs)
+                set(key, value)
+            return value
+
+        return wrapper  # type: ignore
+
+    return decorator
+
+
+def stored_async(key: int) -> Callable[[F], F]:
+    def decorator(func: F) -> F:
+        # assert isinstance(func, type(lambda: (yield))), "do not use stored_async"
+        # XXX the test above fails for closures
+        # We shouldn't need this test here anyway: the 'await func()' should fail
+        # with functions that do not return an awaitable so the problem is more visible.
+
+        async def wrapper(*args, **kwargs):  # type: ignore
+            value = get(key)
+            if value is None:
+                value = await func(*args, **kwargs)
+                set(key, value)
+            return value
+
+        return wrapper  # type: ignore
+
+    return decorator
 
 
 def clear_all() -> None:

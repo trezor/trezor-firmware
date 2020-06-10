@@ -43,6 +43,7 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2b_update(mp_obj_t self, mp_obj_t data);
 ///     self,
 ///     data: bytes = None,
 ///     outlen: int = blake2b.digest_size,
+///     key: bytes = None,
 ///     personal: bytes = None,
 /// ) -> None:
 ///     """
@@ -84,7 +85,7 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2b_make_new(const mp_obj_type_t *type,
         "time");
   }
 
-  mp_obj_Blake2b_t *o = m_new_obj(mp_obj_Blake2b_t);
+  mp_obj_Blake2b_t *o = m_new_obj_with_finaliser(mp_obj_Blake2b_t);
   o->base.type = type;
   int res = 0;
 

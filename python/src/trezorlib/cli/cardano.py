@@ -19,6 +19,7 @@ import json
 import click
 
 from .. import cardano, tools
+from . import with_client
 
 PATH_HELP = "BIP-32 path to key, e.g. m/44'/1815'/0'/0/0"
 
@@ -37,11 +38,9 @@ def cli():
     help="Transaction in JSON format",
 )
 @click.option("-N", "--network", type=int, default=1)
-@click.pass_obj
-def sign_tx(connect, file, network):
+@with_client
+def sign_tx(client, file, network):
     """Sign Cardano transaction."""
-    client = connect()
-
     transaction = json.load(file)
 
     inputs = [cardano.create_input(input) for input in transaction["inputs"]]
@@ -59,21 +58,17 @@ def sign_tx(connect, file, network):
 @cli.command()
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.option("-d", "--show-display", is_flag=True)
-@click.pass_obj
-def get_address(connect, address, show_display):
+@with_client
+def get_address(client, address, show_display):
     """Get Cardano address."""
-    client = connect()
     address_n = tools.parse_path(address)
-
     return cardano.get_address(client, address_n, show_display)
 
 
 @cli.command()
 @click.option("-n", "--address", required=True, help=PATH_HELP)
-@click.pass_obj
-def get_public_key(connect, address):
+@with_client
+def get_public_key(client, address):
     """Get Cardano public key."""
-    client = connect()
     address_n = tools.parse_path(address)
-
     return cardano.get_public_key(client, address_n)

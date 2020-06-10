@@ -20,6 +20,7 @@ import click
 import requests
 
 from .. import exceptions, firmware
+from . import with_client
 
 ALLOWED_FIRMWARE_FORMATS = {
     1: (firmware.FirmwareFormat.TREZOR_ONE, firmware.FirmwareFormat.TREZOR_ONE_V2),
@@ -69,6 +70,11 @@ def validate_firmware(version, fw, expected_fingerprint=None):
 
     fingerprint = firmware.digest(version, fw).hex()
     click.echo("Firmware fingerprint: {}".format(fingerprint))
+    if version == firmware.FirmwareFormat.TREZOR_ONE and fw.embedded_onev2:
+        fingerprint_onev2 = firmware.digest(
+            firmware.FirmwareFormat.TREZOR_ONE_V2, fw.embedded_onev2
+        ).hex()
+        click.echo("Embedded v2 image fingerprint: {}".format(fingerprint_onev2))
     if expected_fingerprint and fingerprint != expected_fingerprint:
         click.echo("Expected fingerprint: {}".format(expected_fingerprint))
         click.echo("Fingerprints do not match, aborting.")
@@ -94,9 +100,10 @@ def find_best_firmware_version(
         return ".".join(map(str, version))
 
     want_version = requested_version
+    highest_version = releases[0]["version"]
 
     if want_version is None:
-        want_version = releases[0]["version"]
+        want_version = highest_version
         click.echo("Best available version: {}".format(version_str(want_version)))
 
     confirm_different_version = False
@@ -105,7 +112,20 @@ def find_best_firmware_version(
         try:
             release = next(r for r in releases if r["version"] == want_version)
         except StopIteration:
-            click.echo("Version {} not found.".format(want_version_str))
+            click.echo("Version {} not found for your device.".format(want_version_str))
+
+            # look for versions starting with the lowest
+            for release in reversed(releases):
+                closest_version = release["version"]
+                if closest_version > want_version:
+                    # stop at first that is higher than the requested
+                    break
+            # if there was no break, the newest is used
+            click.echo(
+                "Closest available version: {}".format(version_str(closest_version))
+            )
+            if not beta and want_version > highest_version:
+                click.echo("Hint: specify --beta to look for a beta release.")
             sys.exit(1)
 
         if (
@@ -159,9 +179,9 @@ def find_best_firmware_version(
 @click.option("--fingerprint", help="Expected firmware fingerprint in hex")
 @click.option("--skip-vendor-header", help="Skip vendor header validation on Trezor T")
 # fmt: on
-@click.pass_obj
+@with_client
 def firmware_update(
-    connect,
+    client,
     filename,
     url,
     version,
@@ -193,7 +213,6 @@ def firmware_update(
         click.echo("You can use only one of: filename, url, version.")
         sys.exit(1)
 
-    client = connect()
     if not dry_run and not client.features.bootloader_mode:
         click.echo("Please switch your device to bootloader mode.")
         sys.exit(1)
@@ -202,12 +221,22 @@ def firmware_update(
     f = client.features
     bootloader_version = (f.major_version, f.minor_version, f.patch_version)
     bootloader_onev2 = f.major_version == 1 and bootloader_version >= (1, 8, 0)
+    model = client.features.model or "1"
 
     if filename:
         data = open(filename, "rb").read()
     else:
         if not url:
-            version_list = [int(x) for x in version.split(".")] if version else None
+            if version:
+                version_list = [int(x) for x in version.split(".")]
+                if version_list[0] != bootloader_version[0]:
+                    click.echo(
+                        "Warning: Trezor {} firmware version should be {}.X.Y (requested: {})".format(
+                            model, bootloader_version[0], version
+                        )
+                    )
+            else:
+                version_list = None
             url, fp = find_best_firmware_version(
                 list(bootloader_version), version_list, beta, bitcoin_only
             )
@@ -255,7 +284,7 @@ def firmware_update(
         # for bootloader < 1.8, keep the embedding
         # for bootloader 1.8.0 and up, strip the old OneV1 header
         if bootloader_onev2 and data[:4] == b"TRZR" and data[256 : 256 + 4] == b"TRZF":
-            click.echo("Extracting embedded firmware image (fingerprint may change).")
+            click.echo("Extracting embedded firmware image.")
             data = data[256:]
 
     if dry_run:

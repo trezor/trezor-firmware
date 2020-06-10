@@ -14,7 +14,10 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from . import messages
+import io
+from typing import Tuple
+
+from . import messages, protobuf
 
 map_type_to_class = {}
 map_class_to_type = {}
@@ -57,6 +60,19 @@ def get_type(msg):
 
 def get_class(t):
     return map_type_to_class[t]
+
+
+def encode(msg: protobuf.MessageType) -> Tuple[int, bytes]:
+    message_type = msg.MESSAGE_WIRE_TYPE
+    buf = io.BytesIO()
+    protobuf.dump_message(buf, msg)
+    return message_type, buf.getvalue()
+
+
+def decode(message_type: int, message_bytes: bytes) -> protobuf.MessageType:
+    cls = get_class(message_type)
+    buf = io.BytesIO(message_bytes)
+    return protobuf.load_message(buf, cls)
 
 
 build_map()

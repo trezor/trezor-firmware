@@ -17,6 +17,7 @@
 import click
 
 from .. import misc, tools
+from . import with_client
 
 
 @click.group(name="crypto")
@@ -26,32 +27,29 @@ def cli():
 
 @cli.command()
 @click.argument("size", type=int)
-@click.pass_obj
-def get_entropy(connect, size):
+@with_client
+def get_entropy(client, size):
     """Get random bytes from device."""
-    return misc.get_entropy(connect(), size).hex()
+    return misc.get_entropy(client, size).hex()
 
 
 @cli.command()
 @click.option("-n", "--address", required=True, help="BIP-32 path, e.g. m/10016'/0")
 @click.argument("key")
 @click.argument("value")
-@click.pass_obj
-def encrypt_keyvalue(connect, address, key, value):
+@with_client
+def encrypt_keyvalue(client, address, key, value):
     """Encrypt value by given key and path."""
-    client = connect()
     address_n = tools.parse_path(address)
-    res = misc.encrypt_keyvalue(client, address_n, key, value.encode())
-    return res.hex()
+    return misc.encrypt_keyvalue(client, address_n, key, value.encode()).hex()
 
 
 @cli.command()
 @click.option("-n", "--address", required=True, help="BIP-32 path, e.g. m/10016'/0")
 @click.argument("key")
 @click.argument("value")
-@click.pass_obj
-def decrypt_keyvalue(connect, address, key, value):
+@with_client
+def decrypt_keyvalue(client, address, key, value):
     """Decrypt value by given key and path."""
-    client = connect()
     address_n = tools.parse_path(address)
     return misc.decrypt_keyvalue(client, address_n, key, bytes.fromhex(value))

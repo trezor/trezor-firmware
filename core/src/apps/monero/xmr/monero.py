@@ -1,8 +1,11 @@
 from apps.monero.xmr import crypto
 
 if False:
-    from typing import Tuple, Optional
+    from typing import List, Tuple, Optional, Dict
     from apps.monero.xmr.types import Ge25519, Sc25519
+    from apps.monero.xmr.credentials import AccountCreds
+
+    Subaddresses = Dict[bytes, Tuple[int, int]]
 
 
 class XmrException(Exception):
@@ -13,22 +16,20 @@ class XmrNoSuchAddressException(XmrException):
     pass
 
 
-def get_subaddress_secret_key(secret_key, index=None, major=None, minor=None):
+def get_subaddress_secret_key(secret_key: Sc25519, major: int = 0, minor: int = 0):
     """
     Builds subaddress secret key from the subaddress index
     Hs(SubAddr || a || index_major || index_minor)
     """
-    if index:
-        major = index.major
-        minor = index.minor
-
     if major == 0 and minor == 0:
         return secret_key
 
     return crypto.get_subaddress_secret_key(secret_key, major, minor)
 
 
-def get_subaddress_spend_public_key(view_private, spend_public, major, minor):
+def get_subaddress_spend_public_key(
+    view_private: Sc25519, spend_public: Ge25519, major: int, minor: int
+) -> Ge25519:
     """
     Generates subaddress spend public key D_{major, minor}
     """
@@ -41,7 +42,9 @@ def get_subaddress_spend_public_key(view_private, spend_public, major, minor):
     return D
 
 
-def derive_subaddress_public_key(out_key, derivation, output_index):
+def derive_subaddress_public_key(
+    out_key: Ge25519, derivation: Ge25519, output_index: int
+) -> Ge25519:
     """
     out_key - H_s(derivation || varint(output_index))G
     """
@@ -52,7 +55,7 @@ def derive_subaddress_public_key(out_key, derivation, output_index):
     return point4
 
 
-def generate_key_image(public_key, secret_key):
+def generate_key_image(public_key: bytes, secret_key: Sc25519) -> Ge25519:
     """
     Key image: secret_key * H_p(pub_key)
     """
@@ -62,43 +65,67 @@ def generate_key_image(public_key, secret_key):
 
 
 def is_out_to_account(
-    subaddresses: dict,
+    subaddresses: Subaddresses,
     out_key: Ge25519,
     derivation: Ge25519,
-    additional_derivations: list,
+    additional_derivation: Ge25519,
     output_index: int,
+    creds: Optional[AccountCreds] = None,
+    sub_addr_major: int = None,
+    sub_addr_minor: int = None,
 ):
     """
     Checks whether the given transaction is sent to the account.
     Searches subaddresses for the computed subaddress_spendkey.
     Corresponds to is_out_to_acc_precomp() in the Monero codebase.
     If found, returns (major, minor), derivation, otherwise None.
+    If (creds, sub_addr_major, sub_addr_minor) are specified,
+    subaddress is checked directly (avoids the need to store
+    large subaddresses dicts).
     """
-    subaddress_spendkey = crypto.encodepoint(
-        derive_subaddress_public_key(out_key, derivation, output_index)
+    subaddress_spendkey_obj = derive_subaddress_public_key(
+        out_key, derivation, output_index
     )
-    if subaddress_spendkey in subaddresses:
-        return subaddresses[subaddress_spendkey], derivation
 
-    if additional_derivations and len(additional_derivations) > 0:
-        if output_index >= len(additional_derivations):
-            raise ValueError("Wrong number of additional derivations")
-
-        subaddress_spendkey = derive_subaddress_public_key(
-            out_key, additional_derivations[output_index], output_index
+    sub_pub_key = None
+    if creds and sub_addr_major is not None and sub_addr_minor is not None:
+        sub_pub_key = get_subaddress_spend_public_key(
+            creds.view_key_private,
+            creds.spend_key_public,
+            sub_addr_major,
+            sub_addr_minor,
         )
-        subaddress_spendkey = crypto.encodepoint(subaddress_spendkey)
+
+        if crypto.point_eq(subaddress_spendkey_obj, sub_pub_key):
+            return (sub_addr_major, sub_addr_minor), derivation
+
+    if subaddresses:
+        subaddress_spendkey = crypto.encodepoint(subaddress_spendkey_obj)
         if subaddress_spendkey in subaddresses:
-            return (
-                subaddresses[subaddress_spendkey],
-                additional_derivations[output_index],
-            )
+            return subaddresses[subaddress_spendkey], derivation
+
+    if additional_derivation:
+        subaddress_spendkey_obj = derive_subaddress_public_key(
+            out_key, additional_derivation, output_index
+        )
+
+        if sub_pub_key and crypto.point_eq(subaddress_spendkey_obj, sub_pub_key):
+            return (sub_addr_major, sub_addr_minor), additional_derivation
+
+        if subaddresses:
+            subaddress_spendkey = crypto.encodepoint(subaddress_spendkey_obj)
+            if subaddress_spendkey in subaddresses:
+                return subaddresses[subaddress_spendkey], additional_derivation
 
     return None
 
 
 def generate_tx_spend_and_key_image(
-    ack, out_key, recv_derivation, real_output_index, received_index: tuple
+    ack: AccountCreds,
+    out_key: Ge25519,
+    recv_derivation: Ge25519,
+    real_output_index: int,
+    received_index: Tuple[int, int],
 ) -> Optional[Tuple[Sc25519, Ge25519]]:
     """
     Generates UTXO spending key and key image.
@@ -156,12 +183,14 @@ def generate_tx_spend_and_key_image(
 
 
 def generate_tx_spend_and_key_image_and_derivation(
-    creds,
-    subaddresses: dict,
+    creds: AccountCreds,
+    subaddresses: Subaddresses,
     out_key: Ge25519,
     tx_public_key: Ge25519,
-    additional_tx_public_keys: list,
+    additional_tx_public_key: Ge25519,
     real_output_index: int,
+    sub_addr_major: int = None,
+    sub_addr_minor: int = None,
 ) -> Tuple[Sc25519, Ge25519, Ge25519]:
     """
     Generates UTXO spending key and key image and corresponding derivation.
@@ -172,26 +201,31 @@ def generate_tx_spend_and_key_image_and_derivation(
     :param subaddresses:
     :param out_key: real output (from input RCT) destination key
     :param tx_public_key: R, transaction public key
-    :param additional_tx_public_keys: Additional Rs, for subaddress destinations
+    :param additional_tx_public_key: Additional Rs, for subaddress destinations
     :param real_output_index: index of the real output in the RCT
+    :param sub_addr_major: subaddress major index
+    :param sub_addr_minor: subaddress minor index
     :return:
     """
     recv_derivation = crypto.generate_key_derivation(
         tx_public_key, creds.view_key_private
     )
 
-    additional_recv_derivations = []
-    for add_pub_key in additional_tx_public_keys:
-        additional_recv_derivations.append(
-            crypto.generate_key_derivation(add_pub_key, creds.view_key_private)
-        )
+    additional_recv_derivation = (
+        crypto.generate_key_derivation(additional_tx_public_key, creds.view_key_private)
+        if additional_tx_public_key
+        else None
+    )
 
     subaddr_recv_info = is_out_to_account(
         subaddresses,
         out_key,
         recv_derivation,
-        additional_recv_derivations,
+        additional_recv_derivation,
         real_output_index,
+        creds,
+        sub_addr_major,
+        sub_addr_minor,
     )
     if subaddr_recv_info is None:
         raise XmrNoSuchAddressException("No such addr")
@@ -202,7 +236,12 @@ def generate_tx_spend_and_key_image_and_derivation(
     return xi, ki, recv_derivation
 
 
-def compute_subaddresses(creds, account: int, indices, subaddresses=None):
+def compute_subaddresses(
+    creds: AccountCreds,
+    account: int,
+    indices: List[int],
+    subaddresses: Optional[Subaddresses] = None,
+) -> Subaddresses:
     """
     Computes subaddress public spend key for receiving transactions.
 
@@ -228,12 +267,12 @@ def compute_subaddresses(creds, account: int, indices, subaddresses=None):
     return subaddresses
 
 
-def generate_keys(recovery_key):
+def generate_keys(recovery_key: Sc25519) -> Tuple[Sc25519, Ge25519]:
     pub = crypto.scalarmult_base(recovery_key)
     return recovery_key, pub
 
 
-def generate_monero_keys(seed):
+def generate_monero_keys(seed: bytes) -> Tuple[Sc25519, Ge25519, Sc25519, Ge25519]:
     """
     Generates spend key / view key from the seed in the same manner as Monero code does.
 
@@ -246,7 +285,9 @@ def generate_monero_keys(seed):
     return spend_sec, spend_pub, view_sec, view_pub
 
 
-def generate_sub_address_keys(view_sec, spend_pub, major, minor):
+def generate_sub_address_keys(
+    view_sec: Sc25519, spend_pub: Ge25519, major: int, minor: int
+) -> Tuple[Ge25519, Ge25519]:
     if major == 0 and minor == 0:  # special case, Monero-defined
         return spend_pub, crypto.scalarmult_base(view_sec)
 
@@ -257,7 +298,7 @@ def generate_sub_address_keys(view_sec, spend_pub, major, minor):
     return D, C
 
 
-def commitment_mask(key, buff=None):
+def commitment_mask(key: bytes, buff: Optional[Sc25519] = None) -> Sc25519:
     """
     Generates deterministic commitment mask for Bulletproof2
     """

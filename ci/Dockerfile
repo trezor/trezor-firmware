@@ -118,12 +118,10 @@ ENV PYTHON=python3
 # use zipfile module to extract files world-readable
 RUN ${PYTHON} -m zipfile -e "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" /usr/local && chmod 755 /usr/local/bin/protoc
 
-ENV WORKON_HOME=/tmp/.venvs
-
 # download monero tests binary
 
-ENV TREZOR_MONERO_TESTS_SHA256SUM=36852ff2add3f865dbf4e23f4e32e1022a8f4b14cd4fb4eb97491d99ba93b9bc
-ENV TREZOR_MONERO_TESTS_URL="https://github.com/ph4r05/monero/releases/download/v0.15.0.0-tests-u18.04-02/trezor_tests"
+ENV TREZOR_MONERO_TESTS_SHA256SUM=5b35342c79eb91265f5f427224016a52994fff32c8ea078de5d502b37d3022d6
+ENV TREZOR_MONERO_TESTS_URL="https://github.com/ph4r05/monero/releases/download/v0.15.0.0-tests-u18.04-03/trezor_tests"
 ENV TREZOR_MONERO_TESTS_PATH="/opt/trezor_monero_tests"
 
 RUN if [ "${FULLDEPS_TESTING}" = "1" ]; then \
@@ -133,6 +131,9 @@ RUN if [ "${FULLDEPS_TESTING}" = "1" ]; then \
     fi
 
 # install python dependencies
+
+ENV WORKON_HOME=/tmp/.venvs
+ENV PIPENV_CACHE_DIR=/tmp/.pipenv-cache
 
 RUN ${PYTHON} -m pip install pipenv
 

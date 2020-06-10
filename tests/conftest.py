@@ -25,7 +25,7 @@ from trezorlib.transport import enumerate_devices, get_transport
 
 from . import ui_tests
 from .device_handler import BackgroundDeviceHandler
-from .ui_tests.reporting import report_test
+from .ui_tests.reporting import testreport
 
 
 def get_device():
@@ -149,7 +149,7 @@ def client(request):
 def pytest_sessionstart(session):
     ui_tests.read_fixtures()
     if session.config.getoption("ui") == "test":
-        report_test.clear_dir()
+        testreport.clear_dir()
 
 
 def _should_write_ui_report(exitstatus):
@@ -166,7 +166,7 @@ def pytest_sessionfinish(session, exitstatus):
     if session.config.getoption("ui") == "test":
         if session.config.getoption("ui_check_missing") and ui_tests.list_missing():
             session.exitstatus = pytest.ExitCode.TESTS_FAILED
-        report_test.index()
+        testreport.index()
     if session.config.getoption("ui") == "record":
         ui_tests.write_fixtures(session.config.getoption("ui_check_missing"))
 
@@ -191,7 +191,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
             println()
 
     if _should_write_ui_report(exitstatus):
-        println(f"UI tests summary: {report_test.REPORTS_PATH / 'index.html'}")
+        println(f"UI tests summary: {testreport.REPORTS_PATH / 'index.html'}")
 
 
 def pytest_addoption(parser):

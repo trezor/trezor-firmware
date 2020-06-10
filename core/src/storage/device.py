@@ -160,6 +160,8 @@ def load_settings(
     passphrase_always_on_device: bool = None,
     display_rotation: int = None,
 ) -> None:
+    if use_passphrase is False:
+        passphrase_always_on_device = False
     if label is not None:
         common.set(_NAMESPACE, _LABEL, label.encode(), True)  # public
     if use_passphrase is not None:

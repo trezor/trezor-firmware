@@ -8,16 +8,18 @@ from trezor.messages.StellarTxOpRequest import StellarTxOpRequest
 from trezor.wire import ProcessError
 
 from apps.common import paths, seed
-from apps.stellar import CURVE, consts, helpers, layout, writers
+from apps.common.seed import with_slip44_keychain
+from apps.stellar import CURVE, SLIP44_ID, consts, helpers, layout, writers
 from apps.stellar.operations import process_operation
 
 
+@with_slip44_keychain(SLIP44_ID, CURVE, allow_testnet=True)
 async def sign_tx(ctx, msg: StellarSignTx, keychain):
     await paths.validate_path(
         ctx, helpers.validate_full_path, keychain, msg.address_n, CURVE
     )
 
-    node = keychain.derive(msg.address_n, CURVE)
+    node = keychain.derive(msg.address_n)
     pubkey = seed.remove_ed25519_prefix(node.public_key())
 
     if msg.num_operations == 0:

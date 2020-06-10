@@ -48,6 +48,9 @@
 // Initialise without a cid
 static uint32_t cid = 0;
 
+// The channel ID of the last successful U2F_AUTHENTICATE check-only request.
+static uint32_t last_good_auth_check_cid = 0;
+
 // Circular Output buffer
 static uint32_t u2f_out_start = 0;
 static uint32_t u2f_out_end = 0;
@@ -63,7 +66,9 @@ static uint8_t u2f_out_packets[U2F_OUT_PKT_BUFFER_LEN][HID_RPT_SIZE];
 // Defined as UsbSignHandler.BOGUS_APP_ID_HASH
 // in
 // https://github.com/google/u2f-ref-code/blob/master/u2f-chrome-extension/usbsignhandler.js#L118
-#define BOGUS_APPID "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+#define BOGUS_APPID_CHROME "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+#define BOGUS_APPID_FIREFOX \
+  "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"
 
 // Auth/Register request state machine
 typedef enum {
@@ -553,10 +558,18 @@ void u2f_register(const APDU *a) {
   if (last_req_state == INIT) {
     // error: testof-user-presence is required
     buttonUpdate();  // Clear button state
-    if (0 == memcmp(req->appId, BOGUS_APPID, U2F_APPID_SIZE)) {
-      layoutDialog(&bmp_icon_warning, NULL, _("OK"), NULL,
-                   _("Another U2F device"), _("was used to register"),
-                   _("in this application."), NULL, NULL, NULL);
+    if (0 == memcmp(req->appId, BOGUS_APPID_CHROME, U2F_APPID_SIZE) ||
+        0 == memcmp(req->appId, BOGUS_APPID_FIREFOX, U2F_APPID_SIZE)) {
+      if (cid == last_good_auth_check_cid) {
+        layoutDialog(&bmp_icon_warning, NULL, _("OK"), NULL,
+                     _("Already registered."), NULL, _("This U2F device is"),
+                     _("already registered"), _("in this application."), NULL);
+      } else {
+        layoutDialog(&bmp_icon_warning, NULL, _("OK"), NULL,
+                     _("Not registered."), NULL, _("Another U2F device"),
+                     _("was used to register"), _("in this application."),
+                     NULL);
+      }
     } else {
       const char *appname = NULL;
       getReadableAppId(req->appId, &appname);
@@ -670,6 +683,7 @@ void u2f_authenticate(const APDU *a) {
     // A failed check would have happened earlier
     // error: testof-user-presence is required
     send_u2f_error(U2F_SW_CONDITIONS_NOT_SATISFIED);
+    last_good_auth_check_cid = cid;
     return;
   }
 

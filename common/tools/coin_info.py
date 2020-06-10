@@ -182,6 +182,21 @@ def validate_btc(coin):
     if not coin["max_address_length"] >= coin["min_address_length"]:
         errors.append("max address length must not be smaller than min address length")
 
+    if coin["segwit"]:
+        if coin["bech32_prefix"] is None:
+            errors.append("bech32_prefix must be defined for segwit-enabled coin")
+        if coin["xpub_magic_segwit_p2sh"] is None:
+            errors.append(
+                "xpub_magic_segwit_p2sh must be defined for segwit-enabled coin"
+            )
+    else:
+        if coin["bech32_prefix"] is not None:
+            errors.append("bech32_prefix must not be defined for segwit-disabled coin")
+        if coin["xpub_magic_segwit_p2sh"] is not None:
+            errors.append(
+                "xpub_magic_segwit_p2sh must not be defined for segwit-disabled coin"
+            )
+
     for bc in coin["bitcore"] + coin["blockbook"]:
         if not bc.startswith("https://"):
             errors.append("make sure URLs start with https://")

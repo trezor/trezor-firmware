@@ -19,7 +19,7 @@ import sys
 import click
 
 from .. import debuglink, device, exceptions, messages, ui
-from . import ChoiceType
+from . import ChoiceType, with_client
 
 RECOVERY_TYPE = {
     "scrambled": messages.RecoveryDeviceType.ScrambledWords,
@@ -45,10 +45,10 @@ def cli():
 
 
 @cli.command()
-@click.pass_obj
-def self_test(connect):
+@with_client
+def self_test(client):
     """Perform a self-test."""
-    return debuglink.self_test(connect())
+    return debuglink.self_test(client)
 
 
 @cli.command()
@@ -58,10 +58,9 @@ def self_test(connect):
     help="Wipe device in bootloader mode. This also erases the firmware.",
     is_flag=True,
 )
-@click.pass_obj
-def wipe(connect, bootloader):
+@with_client
+def wipe(client, bootloader):
     """Reset device to factory defaults and remove all private data."""
-    client = connect()
     if bootloader:
         if not client.features.bootloader_mode:
             click.echo("Please switch your device to bootloader mode.")
@@ -82,7 +81,7 @@ def wipe(connect, bootloader):
             click.echo("Wiping user data!")
 
     try:
-        return device.wipe(connect())
+        return device.wipe(client)
     except exceptions.TrezorFailure as e:
         click.echo("Action failed: {} {}".format(*e.args))
         sys.exit(3)
@@ -97,9 +96,9 @@ def wipe(connect, bootloader):
 @click.option("-s", "--slip0014", is_flag=True)
 @click.option("-b", "--needs-backup", is_flag=True)
 @click.option("-n", "--no-backup", is_flag=True)
-@click.pass_obj
+@with_client
 def load(
-    connect,
+    client,
     mnemonic,
     pin,
     passphrase_protection,
@@ -115,8 +114,6 @@ def load(
     """
     if slip0014 and mnemonic:
         raise click.ClickException("Cannot use -s and -m together.")
-
-    client = connect()
 
     if slip0014:
         mnemonic = [" ".join(["all"] * 12)]
@@ -147,9 +144,9 @@ def load(
     "-t", "--type", "rec_type", type=ChoiceType(RECOVERY_TYPE), default="scrambled"
 )
 @click.option("-d", "--dry-run", is_flag=True)
-@click.pass_obj
+@with_client
 def recover(
-    connect,
+    client,
     words,
     expand,
     pin_protection,
@@ -167,7 +164,7 @@ def recover(
         click.echo(ui.RECOVERY_MATRIX_DESCRIPTION)
 
     return device.recover(
-        connect(),
+        client,
         word_count=int(words),
         passphrase_protection=passphrase_protection,
         pin_protection=pin_protection,
@@ -190,9 +187,9 @@ def recover(
 @click.option("-s", "--skip-backup", is_flag=True)
 @click.option("-n", "--no-backup", is_flag=True)
 @click.option("-b", "--backup-type", type=ChoiceType(BACKUP_TYPE), default="single")
-@click.pass_obj
+@with_client
 def setup(
-    connect,
+    client,
     show_entropy,
     strength,
     passphrase_protection,
@@ -207,7 +204,6 @@ def setup(
     if strength:
         strength = int(strength)
 
-    client = connect()
     if (
         backup_type == messages.BackupType.Slip39_Basic
         and messages.Capability.Shamir not in client.features.capabilities
@@ -236,16 +232,16 @@ def setup(
 
 
 @cli.command()
-@click.pass_obj
-def backup(connect):
+@with_client
+def backup(client):
     """Perform device seed backup."""
-    return device.backup(connect())
+    return device.backup(client)
 
 
 @cli.command()
 @click.argument("operation", type=ChoiceType(SD_PROTECT_OPERATIONS))
-@click.pass_obj
-def sd_protect(connect, operation):
+@with_client
+def sd_protect(client, operation):
     """Secure the device with SD card protection.
 
     When SD card protection is enabled, a randomly generated secret is stored
@@ -259,7 +255,6 @@ def sd_protect(connect, operation):
     disable - Remove SD card secret protection.
     refresh - Replace the current SD card secret with a new one.
     """
-    client = connect()
     if client.features.model == "1":
         raise click.BadUsage("Trezor One does not support SD card protection.")
     return device.sd_protect(client, operation)

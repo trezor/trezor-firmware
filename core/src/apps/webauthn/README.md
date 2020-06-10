@@ -20,15 +20,16 @@ This implementation supports client-side credential storage on the device and us
 
 ### User verification
 
-The device is capable of verifying the user within itself by direct PIN entry via the touchscreen. Client PIN is not supported, because it is less secure than direct PIN verification. The authenticatorClientPIN command is therefore implemented only to the extent required by the hmac-secret extension. Namely, only the getKeyAgreement subcommand is supported.
+The device is capable of verifying the user within itself by direct PIN entry via the touchscreen. Client PIN is not supported, because it is less secure than direct PIN verification. The `authenticatorClientPIN` command is therefore implemented only to the extent required by the hmac-secret extension. Namely, only the `getKeyAgreement` subcommand is supported.
 
 ### Credential selection
 
-Credential selection is supported directly on the device. The authenticatorGetNextAssertion command is therefore not implemented.
+Credential selection is supported directly on the device. The `authenticatorGetNextAssertion` command is therefore not implemented.
 
 ### Public key credential algorithms
 
 * COSE algorithm ES256 (-7): ECDSA using the NIST P-256 curve with SHA-256.
+* COSE algorithm EdDSA (-8): Pure EdDSA using the Ed25519 curve.
 
 ### Extenstions
 
@@ -36,8 +37,15 @@ Credential selection is supported directly on the device. The authenticatorGetNe
 
 ### Attestation types
 
-* Self attestation.
+* Basic attestation for login.microsoft.com.
+* Self attestation for all other sites.
 
 ## AAGUID
 
 The AAGUID is a 128-bit globally unique identifier indicating the type (e.g. make and model) of the authenticator. The AAGUID for Trezor T is d6d0bdc3-62ee-c4db-de8d-7a656e4a4487.
+
+## Certificates for basic attestation
+
+* [Trezor FIDO Root CA Serial 84151356](https://github.com/trezor/trezor-firmware/blob/master/core/tools/codegen/fido/ca_cert.pem)
+* [Trezor FIDO EE Serial 54878404](https://github.com/trezor/trezor-firmware/blob/master/core/tools/codegen/fido/att_cert.der) used by Trezor T.
+

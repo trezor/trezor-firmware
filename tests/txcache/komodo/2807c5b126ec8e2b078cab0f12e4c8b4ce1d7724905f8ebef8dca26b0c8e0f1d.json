@@ -1,0 +1,21 @@
+{
+  "bin_outputs": [
+    {
+      "amount": 1099980000,
+      "script_pubkey": "76a91400178fa0b6fc253a3a402ee2cadd8a7bfec08f6388ac"
+    }
+  ],
+  "branch_id": 1991772603,
+  "inputs": [
+    {
+      "prev_hash": "340d478f0c5750057d5f5028db8c10993578849e63f5cf8500e33ddefcd5334f",
+      "prev_index": 0,
+      "script_sig": "483045022100d29433faed373d23883ace59acda117a67d6e8e3e99bc767b96a183a840b4aec0220258baef0d63360324f2a455299b2695ae2fa727a5969a25a604c22086e36c6e9012102a87aef7b1a8f676e452d6240767699719cd58b0261c822472c25df146938bca5",
+      "sequence": 4294967295
+    }
+  ],
+  "extra_data": "0000000000000000000000",
+  "lock_time": 0,
+  "version": 4,
+  "version_group_id": 2301567109
+}

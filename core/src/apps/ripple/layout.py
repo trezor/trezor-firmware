@@ -3,10 +3,10 @@ from trezor.messages import ButtonRequestType
 from trezor.strings import format_amount
 from trezor.ui.text import Text
 
-from . import helpers
-
 from apps.common.confirm import require_confirm, require_hold_to_confirm
 from apps.common.layout import split_address
+
+from . import helpers
 
 
 async def require_confirm_fee(ctx, fee):

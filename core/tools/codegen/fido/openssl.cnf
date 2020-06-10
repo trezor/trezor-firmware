@@ -1,0 +1,13 @@
+[req]
+distinguished_name = req_distinguished_name
+prompt = no
+
+[req_distinguished_name]
+C = CZ
+O = SatoshiLabs, s.r.o.
+OU = Authenticator Attestation
+CN = Trezor FIDO EE Serial 54878404
+
+[v3_req]
+1.3.6.1.4.1.45724.1.1.4=ASN1:FORMAT:HEX,OCTETSTRING:d6d0bdc362eec4dbde8d7a656e4a4487
+basicConstraints=critical,CA:FALSE

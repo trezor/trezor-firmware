@@ -21,11 +21,6 @@ import struct
 import unicodedata
 from typing import List, NewType
 
-from .coins import slip44
-from .exceptions import TrezorFailure
-
-CallException = TrezorFailure
-
 HARDENED_FLAG = 1 << 31
 
 Address = NewType("Address", List[int])
@@ -43,6 +38,14 @@ def btc_hash(data):
     Double-SHA256 hash as used in BTC
     """
     return hashlib.sha256(hashlib.sha256(data).digest()).digest()
+
+
+def tx_hash(data):
+    """Calculate and return double-SHA256 hash in reverse order.
+
+    This is what Bitcoin uses as txids.
+    """
+    return btc_hash(data)[::-1]
 
 
 def hash_160(public_key):
@@ -168,11 +171,6 @@ def parse_path(nstr: str) -> Address:
     if n[0] == "m":
         n = n[1:]
 
-    # coin_name/a/b/c => 44'/SLIP44_constant'/a/b/c
-    if n[0] in slip44:
-        coin_id = slip44[n[0]]
-        n[0:1] = ["44h", "{}h".format(coin_id)]
-
     def str_to_harden(x: str) -> int:
         if x.startswith("-"):
             return H_(abs(int(x)))
@@ -183,8 +181,8 @@ def parse_path(nstr: str) -> Address:
 
     try:
         return [str_to_harden(x) for x in n]
-    except Exception:
-        raise ValueError("Invalid BIP32 path", nstr)
+    except Exception as e:
+        raise ValueError("Invalid BIP32 path", nstr) from e
 
 
 def normalize_nfc(txt):

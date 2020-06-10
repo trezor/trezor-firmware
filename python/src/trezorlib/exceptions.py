@@ -22,8 +22,9 @@ class TrezorException(Exception):
 class TrezorFailure(TrezorException):
     def __init__(self, failure):
         self.failure = failure
-        # TODO: this is backwards compatibility with tests. it should be changed
-        super().__init__(self.failure.code, self.failure.message)
+        self.code = failure.code
+        self.message = failure.message
+        super().__init__(self.code, self.message, self.failure)
 
     def __str__(self):
         from .messages import FailureType
@@ -33,8 +34,8 @@ class TrezorFailure(TrezorException):
             for name in dir(FailureType)
             if not name.startswith("_")
         }
-        if self.failure.message is not None:
-            return "{}: {}".format(types[self.failure.code], self.failure.message)
+        if self.message is not None:
+            return "{}: {}".format(types[self.code], self.message)
         else:
             return types[self.failure.code]
 

@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from trezorlib import btc, tools
 from trezorlib.messages import ButtonRequestType as B
 
 # fmt: off
@@ -40,6 +41,8 @@ MNEMONIC_SLIP39_ADVANCED_33 = [
 # External entropy mocked as received from trezorlib.
 EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 # fmt: on
+
+TEST_ADDRESS_N = tools.parse_path("m/44h/1h/0h/0/0")
 
 
 def generate_entropy(strength, internal_entropy, external_entropy):
@@ -164,3 +167,7 @@ def read_and_confirm_mnemonic(debug, words):
         debug.input(mnemonic[index])
 
     return " ".join(mnemonic)
+
+
+def test_address(client):
+    return btc.get_address(client, "Testnet", TEST_ADDRESS_N)

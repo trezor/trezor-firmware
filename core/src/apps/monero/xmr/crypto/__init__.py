@@ -10,6 +10,11 @@
 from trezor.crypto import hmac, monero as tcry, random
 from trezor.crypto.hashlib import sha3_256
 
+if False:
+    from typing import Tuple, Optional, Union
+    from apps.monero.xmr.types import Sc25519, Ge25519
+
+
 NULL_KEY_ENC = b"\x00" * 32
 
 random_bytes = random.bytes
@@ -45,7 +50,7 @@ def compute_hmac(key, msg=None):
 new_point = tcry.ge25519_set_neutral
 
 
-def new_scalar():
+def new_scalar() -> Sc25519:
     return tcry.init256_modm(0)
 
 
@@ -81,7 +86,7 @@ INV_EIGHT = b"\x79\x2f\xdc\xe2\x29\xe5\x06\x61\xd0\xda\x1c\x7d\xb3\x9d\xd3\x07\x
 INV_EIGHT_SC = decodeint(INV_EIGHT)
 
 
-def sc_inv_eight():
+def sc_inv_eight() -> Sc25519:
     return INV_EIGHT_SC
 
 
@@ -90,21 +95,21 @@ def sc_inv_eight():
 #
 
 
-def sc_0():
+def sc_0() -> Sc25519:
     return tcry.init256_modm(0)
 
 
-def sc_0_into(r):
+def sc_0_into(r: Sc25519) -> Sc25519:
     return tcry.init256_modm(r, 0)
 
 
-def sc_init(x):
+def sc_init(x: int) -> Sc25519:
     if x >= (1 << 64):
         raise ValueError("Initialization works up to 64-bit only")
     return tcry.init256_modm(x)
 
 
-def sc_init_into(r, x):
+def sc_init_into(r: Sc25519, x: int) -> Sc25519:
     if x >= (1 << 64):
         raise ValueError("Initialization works up to 64-bit only")
     return tcry.init256_modm(r, x)
@@ -123,7 +128,7 @@ sc_mul = tcry.mul256_modm
 sc_mul_into = tcry.mul256_modm
 
 
-def sc_isnonzero(c):
+def sc_isnonzero(c: Sc25519) -> bool:
     """
     Returns true if scalar is non-zero
     """
@@ -138,7 +143,7 @@ sc_muladd_into = tcry.muladd256_modm
 sc_inv_into = tcry.inv256_modm
 
 
-def random_scalar(r=None):
+def random_scalar(r=None) -> Sc25519:
     return tcry.xmr_random_scalar(r if r is not None else new_scalar())
 
 
@@ -147,7 +152,7 @@ def random_scalar(r=None):
 #
 
 
-def ge25519_double_scalarmult_base_vartime(a, A, b):
+def ge25519_double_scalarmult_base_vartime(a, A, b) -> Ge25519:
     """
     void ge25519_double_scalarmult_vartime(ge25519 *r, const ge25519 *p1, const bignum256modm s1, const bignum256modm s2);
     r = a * A + b * B
@@ -159,7 +164,7 @@ def ge25519_double_scalarmult_base_vartime(a, A, b):
 ge25519_double_scalarmult_vartime2 = tcry.xmr_add_keys3
 
 
-def identity(byte_enc=False):
+def identity(byte_enc=False) -> Union[Ge25519, bytes]:
     idd = tcry.ge25519_set_neutral()
     return idd if not byte_enc else encodepoint(idd)
 
@@ -180,7 +185,7 @@ http://elligator.cr.yp.to/elligator-20130828.pdf
 cn_fast_hash = keccak_hash
 
 
-def hash_to_scalar(data, length=None):
+def hash_to_scalar(data: bytes, length: Optional[int] = None):
     """
     H_s(P)
     """
@@ -188,7 +193,7 @@ def hash_to_scalar(data, length=None):
     return tcry.xmr_hash_to_scalar(dt)
 
 
-def hash_to_scalar_into(r, data, length=None):
+def hash_to_scalar_into(r: Sc25519, data: bytes, length: Optional[int] = None):
     dt = data[:length] if length else data
     return tcry.xmr_hash_to_scalar(r, dt)
 
@@ -212,7 +217,7 @@ hash_to_point_into = tcry.xmr_hash_to_ec
 xmr_H = tcry.ge25519_set_h
 
 
-def scalarmult_h(i):
+def scalarmult_h(i) -> Ge25519:
     return scalarmult(xmr_H(), sc_init(i) if isinstance(i, int) else i)
 
 
@@ -223,7 +228,7 @@ add_keys3_into = tcry.xmr_add_keys3_vartime
 gen_commitment = tcry.xmr_gen_c
 
 
-def generate_key_derivation(pub, sec):
+def generate_key_derivation(pub: Ge25519, sec: Sc25519) -> Ge25519:
     """
     Key derivation: 8*(key2*key1)
     """
@@ -232,7 +237,7 @@ def generate_key_derivation(pub, sec):
     return tcry.xmr_generate_key_derivation(pub, sec)
 
 
-def derivation_to_scalar(derivation, output_index):
+def derivation_to_scalar(derivation: Ge25519, output_index: int) -> Sc25519:
     """
     H_s(derivation || varint(output_index))
     """
@@ -240,7 +245,7 @@ def derivation_to_scalar(derivation, output_index):
     return tcry.xmr_derivation_to_scalar(derivation, output_index)
 
 
-def derive_public_key(derivation, output_index, B):
+def derive_public_key(derivation: Ge25519, output_index: int, B: Ge25519) -> Ge25519:
     """
     H_s(derivation || varint(output_index))G + B
     """
@@ -248,7 +253,7 @@ def derive_public_key(derivation, output_index, B):
     return tcry.xmr_derive_public_key(derivation, output_index, B)
 
 
-def derive_secret_key(derivation, output_index, base):
+def derive_secret_key(derivation: Ge25519, output_index: int, base: Sc25519) -> Sc25519:
     """
     base + H_s(derivation || varint(output_index))
     """
@@ -256,7 +261,9 @@ def derive_secret_key(derivation, output_index, base):
     return tcry.xmr_derive_private_key(derivation, output_index, base)
 
 
-def get_subaddress_secret_key(secret_key, major=0, minor=0):
+def get_subaddress_secret_key(
+    secret_key: Sc25519, major: int = 0, minor: int = 0
+) -> Sc25519:
     """
     Builds subaddress secret key from the subaddress index
     Hs(SubAddr || a || index_major || index_minor)
@@ -264,12 +271,7 @@ def get_subaddress_secret_key(secret_key, major=0, minor=0):
     return tcry.xmr_get_subaddress_secret_key(major, minor, secret_key)
 
 
-#
-# Repr invariant
-#
-
-
-def generate_signature(data, priv):
+def generate_signature(data: bytes, priv: Sc25519) -> Tuple[Sc25519, Sc25519, Ge25519]:
     """
     Generate EC signature
     crypto_ops::generate_signature(const hash &prefix_hash, const public_key &pub, const secret_key &sec, signature &sig)
@@ -285,7 +287,7 @@ def generate_signature(data, priv):
     return c, r, pub
 
 
-def check_signature(data, c, r, pub):
+def check_signature(data: bytes, c: Sc25519, r: Sc25519, pub: Ge25519) -> bool:
     """
     EC signature verification
     """
@@ -300,7 +302,7 @@ def check_signature(data, c, r, pub):
     return not sc_isnonzero(res)
 
 
-def xor8(buff, key):
+def xor8(buff: bytes, key: bytes) -> bytes:
     for i in range(8):
         buff[i] ^= key[i]
     return buff

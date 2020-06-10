@@ -16,141 +16,137 @@
 
 import pytest
 
-from trezorlib import btc, ckd_public as bip32, messages as proto
-from trezorlib.tools import H_
+from trezorlib import btc, messages
+from trezorlib.exceptions import TrezorFailure
+from trezorlib.tools import parse_path
 
-from ..common import MNEMONIC12
+from .. import bip32
+
+pytestmark = pytest.mark.skip_ui
+
+VECTORS_BITCOIN = (  # coin_name, xpub_magic, path, xpub
+    (
+        "Bitcoin",
+        0x0488B21E,
+        parse_path("m/44h/0h/0h"),
+        "xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy",
+    ),
+    (
+        "Bitcoin",
+        0x0488B21E,
+        parse_path("m/44h/0h/10h"),
+        "xpub6BiVtCpG9fQQR6cSuFeDaSvCDgNvNme499JUGX4RHDiZVWwZy9NwNieWKXHLe8XRbdrEmY87aqztBCbRJkXWV7VJB96XBT5cpkqYMHwvLWB",
+    ),
+    (
+        "Bitcoin",
+        0x0488B21E,
+        parse_path("m/44h/0h/0h/0/0"),
+        "xpub6FVDRC1jiWNTuT3embehwSZ1buxRDyZGbTakVCkBr6w2LwpERmYqXyvtrLeJX9hqzLaucS3qJXGekeFsSVCELkbgepp7FVGeH5BYekEgT9x",
+    ),
+    (
+        "Bitcoin",
+        0x0488B21E,
+        parse_path("m/44h/0h/10h/1/100"),
+        "xpub6GhTNegKCjTqjYS4HNkPhXHXHNZV2cPC38N7HbpUKexXXuTkjKPnijqKTB7yXidP4JtTUWTuWPTt6P55xi91NPgUp51BnqYzYdNhho4y5j8",
+    ),
+    (
+        "Testnet",
+        0x043587CF,
+        parse_path("m/44h/1h/0h"),
+        "tpubDDKn3FtHc74CaRrRbi1WFdJNaaenZkDWqq9NsEhcafnDZ4VuKeuLG2aKHm5SuwuLgAhRkkfHqcCxpnVNSrs5kJYZXwa6Ud431VnevzzzK3U",
+    ),
+    (
+        "Testnet",
+        0x043587CF,
+        parse_path("m/44h/1h/0h/0/0"),
+        "tpubDGwNSs8z8jZU2EcUiubR4frGvKqddvLBqCDNknnWhmoUd6EHrRWrqXmDaWBNddWzM5Yqh4e4TUYFK9hGCEnSrMKgV6cthRhArfZpwzihdw7",
+    ),
+    (  # PSBT master fingerprint retrieval
+        "Bitcoin",
+        0x0488B21E,
+        parse_path("m/0h"),
+        "xpub68Zyu13qjcQvJXTsnmhH2h2TyPiXAama5bTU8u9iRXyYtS9X9yWvSKij6YGt7JJ2nr5rSGi4KLUW5Z8bTKHqXhbLwqb7smG3Y8j2wy4rmf3",
+    ),
+    pytest.param(
+        "Litecoin",
+        0x019DA462,
+        parse_path("m/44h/2h/0h"),
+        "Ltub2Y8PyEMWQVgiX4L4gVzU8PakBTQ2WBxFdS6tJARQeasUUfXmBut2jGShnQyD3jgyBf7mmvs5jPNgmgXad5J6M8a8FiZK78dbT21fYtTAC9a",
+        marks=pytest.mark.altcoin,
+    ),
+    pytest.param(
+        "Litecoin",
+        0x019DA462,
+        parse_path("m/44h/2h/10h"),
+        "Ltub2Y8PyEMWQVgiy8Zio1XrKWkGL6ZmCZB9W5ShbvbzZ14irCrAb62YEoMafTAM5a2A6x6XNcyDdCNW7NVgES9jtQqyUZcBUFTimS7VVJ8tbpE",
+        marks=pytest.mark.altcoin,
+    ),
+    pytest.param(
+        "Litecoin",
+        0x019DA462,
+        parse_path("m/44h/2h/0h/0/0"),
+        "Ltub2dTvwC4v7GNeR6UEaywQ6j72wHi4dwRo3oDDzvXAwb4CrXVQEUTbxC4hEfULiKByiUMEmYLhuMo1YMYmBBjKJ8kyk9ia5gZaVNWq5rVLom4",
+        marks=pytest.mark.altcoin,
+    ),
+    pytest.param(
+        "Litecoin",
+        0x019DA462,
+        parse_path("m/44h/2h/10h/1/100"),
+        "Ltub2dcb6Nghj3kwaC2g3TtPgFzMSm7LXfe4mijFYsvEtxXu18vicTB4kYc9z6jGVMpdYhMScNhVY1naQYALnM2x4fvaGzAAGgcuZ89nFyyLhiK",
+        marks=pytest.mark.altcoin,
+    ),
+)
+
+VECTORS_INVALID = (  # coin_name, path
+    ("Bitcoin", parse_path("m/44h/1h/0h")),  # Testnet path on Bitcoin
+    ("Testnet", parse_path("m/44h/0h/0h")),  # Bitcoin path on Testnet
+    ("Bitcoin", parse_path("m/40h/0h/0h")),  # Unknown purpose
+    ("Bitcoin", parse_path("m/13h/0h/0h")),  # SLIP-13 path
+    # Bitcoin path on Litecoin
+    pytest.param("Litecoin", parse_path("m/44h/0h/0h"), marks=pytest.mark.altcoin),
+    # Segwit path on Bitcoin Cash
+    pytest.param("Bcash", parse_path("m/84h/145h/0h"), marks=pytest.mark.altcoin),
+)
 
 
-class TestMsgGetpublickey:
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_btc(self, client):
-        assert (
-            bip32.serialize(btc.get_public_node(client, []).node, 0x0488B21E)
-            == "xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy"
-        )
-        assert (
-            btc.get_public_node(client, [], coin_name="Bitcoin").xpub
-            == "xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy"
-        )
-        assert (
-            bip32.serialize(btc.get_public_node(client, [1]).node, 0x0488B21E)
-            == "xpub68zNxjsTrV8y9AadThLW7dTAqEpZ7xBLFSyJ3X9pjTv6Njg6kxgjXJkzxq8u3ttnjBw1jupQHMP3gpGZzZqd1eh5S4GjkaMhPR18vMyUi8N"
-        )
-        assert (
-            btc.get_public_node(client, [1], coin_name="Bitcoin").xpub
-            == "xpub68zNxjsTrV8y9AadThLW7dTAqEpZ7xBLFSyJ3X9pjTv6Njg6kxgjXJkzxq8u3ttnjBw1jupQHMP3gpGZzZqd1eh5S4GjkaMhPR18vMyUi8N"
-        )
-        assert (
-            bip32.serialize(btc.get_public_node(client, [0, H_(1)]).node, 0x0488B21E)
-            == "xpub6A3FoZqYXj1AbW4thRwBh26YwZWbmoyjTaZwwxJjY1oKUpefLepL3RFS9DHKQrjAfxDrzDepYMDZPqXN6upQm3bHQ9xaXD5a3mqni3goF4v"
-        )
-        assert (
-            btc.get_public_node(client, [0, H_(1)], coin_name="Bitcoin").xpub
-            == "xpub6A3FoZqYXj1AbW4thRwBh26YwZWbmoyjTaZwwxJjY1oKUpefLepL3RFS9DHKQrjAfxDrzDepYMDZPqXN6upQm3bHQ9xaXD5a3mqni3goF4v"
-        )
-        assert (
-            bip32.serialize(btc.get_public_node(client, [H_(9), 0]).node, 0x0488B21E)
-            == "xpub6A2h5mzLDfYginoD7q7wCWbq18wTbN9gducRr2w5NRTwdLeoT3cJSwefFqW7uXTpVFGtpUyDMBNYs3DNvvXx6NPjF9YEbUQrtxFSWnPtVrv"
-        )
-        assert (
-            btc.get_public_node(client, [H_(9), 0], coin_name="Bitcoin").xpub
-            == "xpub6A2h5mzLDfYginoD7q7wCWbq18wTbN9gducRr2w5NRTwdLeoT3cJSwefFqW7uXTpVFGtpUyDMBNYs3DNvvXx6NPjF9YEbUQrtxFSWnPtVrv"
-        )
-        assert (
-            bip32.serialize(btc.get_public_node(client, [0, 9999999]).node, 0x0488B21E)
-            == "xpub6A3FoZqQEK6iwLZ4HFkqSo5fb35BH4bpjC4SPZ63prfLdGYPwYxEuC6o91bUvFFdMzKWe5rs3axHRUjxJaSvBnKKFtnfLwDACRxPxabsv2r"
-        )
-        assert (
-            btc.get_public_node(client, [0, 9999999], coin_name="Bitcoin").xpub
-            == "xpub6A3FoZqQEK6iwLZ4HFkqSo5fb35BH4bpjC4SPZ63prfLdGYPwYxEuC6o91bUvFFdMzKWe5rs3axHRUjxJaSvBnKKFtnfLwDACRxPxabsv2r"
-        )
+@pytest.mark.parametrize("coin_name, xpub_magic, path, xpub", VECTORS_BITCOIN)
+def test_get_public_node(client, coin_name, xpub_magic, path, xpub):
+    res = btc.get_public_node(client, path, coin_name=coin_name)
+    assert res.xpub == xpub
+    assert bip32.serialize(res.node, xpub_magic) == xpub
 
-    @pytest.mark.altcoin
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_ltc(self, client):
-        assert (
-            bip32.serialize(btc.get_public_node(client, []).node, 0x019DA462)
-            == "Ltub2SSUS19CirucVPGDKDBatBDBEM2s9UbH66pBURfaKrMocCPLhQ7Z7hecy5VYLHA5fRdXwB2e61j2VJCNzVsqKTCVEU1vECjqi5EyczFX9xp"
-        )
-        assert (
-            btc.get_public_node(client, [], coin_name="Litecoin").xpub
-            == "Ltub2SSUS19CirucVPGDKDBatBDBEM2s9UbH66pBURfaKrMocCPLhQ7Z7hecy5VYLHA5fRdXwB2e61j2VJCNzVsqKTCVEU1vECjqi5EyczFX9xp"
-        )
-        assert (
-            bip32.serialize(btc.get_public_node(client, [1]).node, 0x019DA462)
-            == "Ltub2VRVRP5VjvSyPXra4BLVyVZPv397sjhUNjBGsbtw6xko77JuQyBULxFSKheviJJ3KQLbL3Cx8P2RnudguTw4raUVjCACRG7jsumUptYx55C"
-        )
-        assert (
-            btc.get_public_node(client, [1], coin_name="Litecoin").xpub
-            == "Ltub2VRVRP5VjvSyPXra4BLVyVZPv397sjhUNjBGsbtw6xko77JuQyBULxFSKheviJJ3KQLbL3Cx8P2RnudguTw4raUVjCACRG7jsumUptYx55C"
-        )
-        assert (
-            bip32.serialize(btc.get_public_node(client, [0, H_(1)]).node, 0x019DA462)
-            == "Ltub2WUNGD3aRAKAqsLqHuwBYtCn2MqAXbVsarmvn33quWe2DCHTzfK4s4jsW5oM5G8RGAdSaM3NPNrwVvtV1ourbyNhhHr3BtqcYGc8caf5GoT"
-        )
-        assert (
-            btc.get_public_node(client, [0, H_(1)], coin_name="Litecoin").xpub
-            == "Ltub2WUNGD3aRAKAqsLqHuwBYtCn2MqAXbVsarmvn33quWe2DCHTzfK4s4jsW5oM5G8RGAdSaM3NPNrwVvtV1ourbyNhhHr3BtqcYGc8caf5GoT"
-        )
-        assert (
-            bip32.serialize(btc.get_public_node(client, [H_(9), 0]).node, 0x019DA462)
-            == "Ltub2WToYRCN76rgyA59iK7w4Ni45wG2M9fpmBpQg7gBjvJeMiHc7473Gb96ci29Zvs55TgUQcMmCD1vy8aVqpdPwJB9YHRhGAAuPT1nRLLXmFu"
-        )
-        assert (
-            btc.get_public_node(client, [H_(9), 0], coin_name="Litecoin").xpub
-            == "Ltub2WToYRCN76rgyA59iK7w4Ni45wG2M9fpmBpQg7gBjvJeMiHc7473Gb96ci29Zvs55TgUQcMmCD1vy8aVqpdPwJB9YHRhGAAuPT1nRLLXmFu"
-        )
-        assert (
-            bip32.serialize(btc.get_public_node(client, [0, 9999999]).node, 0x019DA462)
-            == "Ltub2WUNGD3S7kQjBhpzsjkqJfBtfqPk2r7xrUGRDdqACMW3MeBCbZSyiqbEVt7WaeesxCj6EDFQtcbfXa75DUYN2i6jZ2g81cyCgvijs9J2u2n"
-        )
-        assert (
-            btc.get_public_node(client, [0, 9999999], coin_name="Litecoin").xpub
-            == "Ltub2WUNGD3S7kQjBhpzsjkqJfBtfqPk2r7xrUGRDdqACMW3MeBCbZSyiqbEVt7WaeesxCj6EDFQtcbfXa75DUYN2i6jZ2g81cyCgvijs9J2u2n"
-        )
 
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_tbtc(self, client):
-        assert (
-            bip32.serialize(btc.get_public_node(client, [111, 42]).node, 0x043587CF)
-            == "tpubDAgixSyai5PWbc8N1mBkHDR5nLgAnHFtY7r4y5EzxqAxrt9YUDpZL3kaRoHVvCfrcwNo31c2isBP2uTHcZxEosuKbyJhCAbrvGoPuLUZ7Mz"
-        )
-        assert (
-            btc.get_public_node(client, [111, 42], coin_name="Testnet").xpub
-            == "tpubDAgixSyai5PWbc8N1mBkHDR5nLgAnHFtY7r4y5EzxqAxrt9YUDpZL3kaRoHVvCfrcwNo31c2isBP2uTHcZxEosuKbyJhCAbrvGoPuLUZ7Mz"
-        )
+@pytest.mark.xfail(reason="Currently path validation on get_public_node is disabled.")
+@pytest.mark.parametrize("coin_name, path", VECTORS_INVALID)
+def test_invalid_path(client, coin_name, path):
+    with pytest.raises(TrezorFailure, match="Forbidden key path"):
+        btc.get_public_node(client, path, coin_name=coin_name)
 
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_script_type(self, client):
-        assert (
-            btc.get_public_node(client, [], coin_name="Bitcoin").xpub
-            == "xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy"
-        )
-        assert (
-            btc.get_public_node(
-                client,
-                [],
-                coin_name="Bitcoin",
-                script_type=proto.InputScriptType.SPENDADDRESS,
-            ).xpub
-            == "xpub661MyMwAqRbcF1zGijBb2K6x9YiJPh58xpcCeLvTxMX6spkY3PcpJ4ABcCyWfskq5DDxM3e6Ez5ePCqG5bnPUXR4wL8TZWyoDaUdiWW7bKy"
-        )
-        assert (
-            btc.get_public_node(
-                client,
-                [],
-                coin_name="Bitcoin",
-                script_type=proto.InputScriptType.SPENDP2SHWITNESS,
-            ).xpub
-            == "ypub6QqdH2c5z7966KBPZ5yDEQCTKWrkLK4dsw8RRjpMLMtyvvZmJ3nNv7pKdQw6fnQkUrLm6XEeheSCGVSpoJCQGm6fofpt9RoHVJYH72ecmVm"
-        )
-        assert (
-            btc.get_public_node(
-                client,
-                [],
-                coin_name="Bitcoin",
-                script_type=proto.InputScriptType.SPENDWITNESS,
-            ).xpub
-            == "zpub6jftahH18ngZwcNWPSkqSVHxVV1CGw48o3eeD8iEiNGrz2NzYhwwYBUTectgfh4ftVTZqzqDAJnk9n4PWzcR4znGg1XJjLcmm2bvVc3Honv"
-        )
+
+VECTORS_SCRIPT_TYPES = (  # script_type, xpub
+    (
+        None,
+        "xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXFD3YS797S55Y42sm2raxPrXQWAJodn7aXnHJdhz433ZJDhyUztHW55WatHeoYUVqui8cYNX8y",
+    ),
+    (
+        messages.InputScriptType.SPENDADDRESS,
+        "xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXFD3YS797S55Y42sm2raxPrXQWAJodn7aXnHJdhz433ZJDhyUztHW55WatHeoYUVqui8cYNX8y",
+    ),
+    (
+        messages.InputScriptType.SPENDP2SHWITNESS,
+        "ypub6WYmBsV2xgQueQwhduAUQTFzUuXzQ2HEidmRpwKzX7ox8dsG8RCRD23zYcTkJiHhXDeb2nEGSiPbSaqGhBQu5jkgNvaiEiMxmZyMXEvfNco",
+    ),
+    (
+        messages.InputScriptType.SPENDWITNESS,
+        "zpub6qP2VY9x7MxPVi8pUFx6cYMVesgSLeGjdkHecLDsu8BqBjgVP5Myq5i8ZpRLJcwcvrmPnFppuNk9KsSqQspusySHFGH8pdBT3J2zujqcVuz",
+    ),
+)
+
+
+@pytest.mark.parametrize("script_type, xpub", VECTORS_SCRIPT_TYPES)
+def test_script_type(client, script_type, xpub):
+    path = parse_path("m/44h/0h/0")
+    res = btc.get_public_node(
+        client, path, coin_name="Bitcoin", script_type=script_type
+    )
+    assert res.xpub == xpub

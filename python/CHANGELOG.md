@@ -6,7 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 _At the moment, the project does **not** adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
 
-## [0.12.0] - Unreleased
+## [0.12.0] - 2020-04-01
+[0.12.0]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.6...python/v0.12.0
+
+### Incompatible changes
+
+- `trezorlib.coins`, `trezorlib.tx_api`, and the file `coins.json`, were removed
+- `TrezorClient` argument `ui` is now mandatory. `state` argument was renamed to `session_id`.
+- UI callback `get_passphrase()` has a new argument `available_on_device`.
+- API for `cosi` module was changed
+- other changes may also introduce incompatibilities, please review the full list below
 
 ### Added
 
@@ -18,25 +27,41 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
   for multiple subsequent trezorctl operations
 - built-in functionality of UdpTransport to wait until an emulator comes up, and the
   related command `trezorctl wait-for-emulator`
+- `trezorctl debug send-bytes` can send raw messages to the device [f#116]
+- when updating firmware, user is warned that the requested version does not match their device [f#823]
+- `trezorctl list` can now show name, model and id of device
 
 ### Changed
 
+- `trezorlib.tx_api.json_to_tx` was reduced to only support Bitcoin fields, and moved
+  to `trezorlib.btc.from_json`.
 - API for `cosi` module was streamlined: `verify_m_of_n` is now `verify`, the old
   `verify` is `verify_combined`
 - internals of firmware parsing were reworked to support signing firmware headers
 - `get_default_client` respects `TREZOR_PATH` environment variable
 - UI callback `get_passphrase` has an additional argument `available_on_device`,
   indicating that the connected Trezor is capable of on-device entry
+- `Transport.write` and `read` method signatures changed to accept bytes instead of
+  protobuf messages
+- trezorctl subcommands have a common `@with_client` decorator that manages exception
+  handling and connecting to device
 
 ### Fixed
 
 - trezorctl does not print empty line when there is no output
+- trezorctl cleanly reports wire exceptions [f#226]
 
 ### Removed
 
+- `trezorlib.tx_api` was removed
+- `trezorlib.coins` and coin data was removed
+- `trezorlib.ckd_public`, which was deprecated in 0.10, was now removed.
 - `btc.sign_tx` will not preload transaction data from `prev_txes`, as usage with TxApi
-  is being phased out
+  is being removed
 - PIN protection and passphrase protection for `ping()` command was removed
+- compatibility no-op code from trezorlib 0.9 was removed from `trezorlib.client`
+- `trezorlib.tools.CallException` was dropped, use `trezorlib.exceptions.TrezorFailure` instead
+
 
 ## [0.11.6] - 2019-12-30
 [0.11.6]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.5...python/v0.11.6
@@ -63,6 +88,7 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
   input format is JSON. See [`docs/transaction-format.md`](docs/transaction-format.md)
   for details.
 - support for "load device by xprv" was removed from firmware and trezorlib
+
 
 ## [0.11.5] - 2019-09-26
 
@@ -381,8 +407,10 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 [#352]: https://github.com/trezor/python-trezor/issues/352
 [f#41]: https://github.com/trezor/trezor-firmware/issues/41
 [f#87]: https://github.com/trezor/trezor-firmware/issues/87
+[f#116]: https://github.com/trezor/trezor-firmware/issues/116
 [f#117]: https://github.com/trezor/trezor-firmware/issues/117
 [f#224]: https://github.com/trezor/trezor-firmware/issues/224
+[f#226]: https://github.com/trezor/trezor-firmware/issues/226
 [f#363]: https://github.com/trezor/trezor-firmware/issues/363
 [f#411]: https://github.com/trezor/trezor-firmware/issues/411
 [f#420]: https://github.com/trezor/trezor-firmware/issues/420
@@ -393,3 +421,4 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 [f#680]: https://github.com/trezor/trezor-firmware/issues/680
 [f#681]: https://github.com/trezor/trezor-firmware/issues/681
 [f#778]: https://github.com/trezor/trezor-firmware/issues/778
+[f#823]: https://github.com/trezor/trezor-firmware/issues/823

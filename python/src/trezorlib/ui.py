@@ -67,7 +67,7 @@ class ClickUI:
 
     def button_request(self, code):
         if not self.prompt_shown:
-            echo("Please confirm action on your Trezor device")
+            echo("Please confirm action on your Trezor device.")
         if not self.always_prompt:
             self.prompt_shown = True
 

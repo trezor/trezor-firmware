@@ -53,7 +53,6 @@ if False:
         Callable,
         Dict,
         Iterable,
-        List,
         Optional,
         Tuple,
         Type,
@@ -70,15 +69,9 @@ workflow_handlers = {}  # type: Dict[int, Handler]
 # to be dynamically imported when such message arrives.
 workflow_packages = {}  # type: Dict[int, Tuple[str, str]]
 
-# Maps a wire type to a "keychain namespace".  Such workflows are created
-# with an instance of `seed.Keychain` with correctly derived keys.
-workflow_namespaces = {}  # type: Dict[int, List]
 
-
-def add(wire_type: int, pkgname: str, modname: str, namespace: List = None) -> None:
+def add(wire_type: int, pkgname: str, modname: str) -> None:
     """Shortcut for registering a dynamically-imported Protobuf workflow."""
-    if namespace is not None:
-        workflow_namespaces[wire_type] = namespace
     workflow_packages[wire_type] = (pkgname, modname)
 
 
@@ -96,7 +89,6 @@ def clear() -> None:
     """Remove all registered handlers."""
     workflow_handlers.clear()
     workflow_packages.clear()
-    workflow_namespaces.clear()
 
 
 if False:
@@ -431,11 +423,6 @@ def get_workflow_handler(reader: codec_v1.Reader) -> Optional[Handler]:
         # Message does not have any registered handler.
         return None
 
-    if msg_type in workflow_namespaces:
-        # Workflow needs a keychain, wrap it with a keychain provider.
-        namespace = workflow_namespaces[msg_type]
-        handler = wrap_keychain_workflow(handler, namespace)
-
     return handler
 
 
@@ -444,24 +431,6 @@ def import_workflow(pkgname: str, modname: str) -> Any:
     module = __import__(modpath, None, None, (modname,), 0)
     handler = getattr(module, modname)
     return handler
-
-
-def wrap_keychain_workflow(handler: Handler, namespace: List) -> Handler:
-    async def keychain_workflow(ctx: Context, req: protobuf.MessageType) -> Any:
-        from apps.common import seed
-
-        # Workflow that is hiding behind `handler` expects a keychain
-        # instance, in addition to the request message.  Acquire it from
-        # the seed module.  More on-the-wire communication, and also UI
-        # interaction, might happen here.
-        keychain = await seed.get_keychain(ctx, namespace)
-        try:
-            return await handler(ctx, req, keychain)
-        finally:
-            # Be hygienic and wipe the keys from memory.
-            keychain.__del__()
-
-    return keychain_workflow
 
 
 def failure(exc: BaseException) -> Failure:

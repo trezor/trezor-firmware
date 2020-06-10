@@ -7,8 +7,9 @@ stdenv.mkDerivation {
     SDL2_image
     autoflake
     check
-    clang
+    clang-tools
     gcc
+    git
     gnumake
     graphviz
     libffi
@@ -18,7 +19,6 @@ stdenv.mkDerivation {
     pipenv
     pkgconfig
     protobuf3_6
-    scons
     valgrind
     zlib
   ] ++ stdenv.lib.optionals (!stdenv.isDarwin) [

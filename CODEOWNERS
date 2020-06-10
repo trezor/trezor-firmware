@@ -1,0 +1,39 @@
+/ci @tsusanka
+
+/common/defs @prusnak @matejcik
+
+/common/protob @tsusanka @matejcik
+
+/core/embed @prusnak
+
+/core/src/apps/monero @onvej-sl
+
+/core/src/apps/webauthn @andrewkozlik
+
+/core/src/storage @andrewkozlik
+
+/core/src/trezor @tsusanka @matejcik
+
+/core/tests @tsusanka
+
+/core/tools @matejcik
+
+/crypto @andrewkozlik @onvej-sl @prusnak
+
+/crypto/gui @prusnak
+
+/crypto/monero @onvej-sl
+
+/crypto/tools @prusnak
+
+/docs @tsusanka
+
+/legacy @prusnak
+
+/python @matejcik
+
+/storage @andrewkozlik
+
+/tests @tsusanka @matejcik
+
+/vendor @prusnak

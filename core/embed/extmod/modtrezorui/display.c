@@ -696,9 +696,9 @@ int display_text_width(const char *text, int textlen, int font) {
 // the requested width. Tries to avoid breaking words if possible.
 int display_text_split(const char *text, int textlen, int font,
                        int requested_width) {
+#if TREZOR_MODEL == T
   int width = 0;
   int lastspace = 0;
-#if TREZOR_MODEL == T
   // determine text length if not provided
   if (textlen < 0) {
     textlen = strlen(text);

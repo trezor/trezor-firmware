@@ -20,7 +20,10 @@ from trezorlib import btc, device, messages as proto, misc
 from trezorlib.exceptions import TrezorFailure
 
 from ..common import MNEMONIC12
-from ..tx_cache import tx_cache
+from ..tx_cache import TxCache
+from .signtx import request_finished, request_input, request_meta, request_output
+
+B = proto.ButtonRequestType
 
 TXHASH_d5f65e = bytes.fromhex(
     "d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"
@@ -199,56 +202,21 @@ class TestProtectionLevels:
                 [
                     proto.PinMatrixRequest(),
                     proto.PassphraseRequest(),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXMETA,
-                        details=proto.TxRequestDetailsType(tx_hash=TXHASH_d5f65e),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_d5f65e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=1, tx_hash=TXHASH_d5f65e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(
-                            request_index=0, tx_hash=TXHASH_d5f65e
-                        ),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXINPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(
-                        request_type=proto.RequestType.TXOUTPUT,
-                        details=proto.TxRequestDetailsType(request_index=0),
-                    ),
-                    proto.TxRequest(request_type=proto.RequestType.TXFINISHED),
+                    request_input(0),
+                    request_meta(TXHASH_d5f65e),
+                    request_input(0, TXHASH_d5f65e),
+                    request_input(1, TXHASH_d5f65e),
+                    request_output(0, TXHASH_d5f65e),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_output(0),
+                    request_output(0),
+                    request_finished(),
                 ]
             )
-            btc.sign_tx(
-                client, "Bitcoin", [inp1], [out1], prev_txes=tx_cache("Bitcoin")
-            )
+            btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=TxCache("Bitcoin"))
 
     # def test_firmware_erase(self):
     #    pass

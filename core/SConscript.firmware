@@ -3,6 +3,7 @@
 import os
 
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
+RDI = ARGUMENTS.get('RDI', '1') == '1'
 EVERYTHING = BITCOIN_ONLY != '1'
 
 CCFLAGS_MOD = ''
@@ -63,6 +64,7 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/chacha20poly1305/chacha_merged.c',
     'vendor/trezor-crypto/chacha20poly1305/poly1305-donna.c',
     'vendor/trezor-crypto/chacha20poly1305/rfc7539.c',
+    'vendor/trezor-crypto/chacha_drbg.c',
     'vendor/trezor-crypto/curves.c',
     'vendor/trezor-crypto/ecdsa.c',
     'vendor/trezor-crypto/ed25519-donna/curve25519-donna-32bit.c',
@@ -176,7 +178,7 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/extmod/modutimeq.c',
     'vendor/micropython/extmod/utime_mphal.c',
     'vendor/micropython/lib/embed/abort_.c',
-    'vendor/micropython/lib/mp-readline/readline.c',
+    #'vendor/micropython/lib/mp-readline/readline.c',
     'vendor/micropython/lib/utils/gchelper_m3.s',
     'vendor/micropython/lib/utils/interrupt_char.c',
     'vendor/micropython/lib/utils/printf.c',
@@ -311,7 +313,7 @@ SOURCE_FIRMWARE = [
     'embed/firmware/main.c',
     'embed/firmware/mphalport.c',
     'embed/firmware/nlrthumb.c',
-    'embed/firmware/startup.s',
+    'embed/firmware/startup.S',
 ]
 
 SOURCE_TREZORHAL = [
@@ -334,6 +336,12 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/util.s',
     'embed/trezorhal/vectortable.s',
 ]
+
+if RDI:
+    SOURCE_TREZORHAL += [
+        'embed/trezorhal/rdi.c',
+    ]
+    CPPDEFINES_MOD += ['RDI']
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED
 
@@ -401,6 +409,7 @@ env.Replace(
     PYTHON='python',
     MAKEQSTRDATA='$PYTHON vendor/micropython/py/makeqstrdata.py',
     MAKEVERSIONHDR='$PYTHON vendor/micropython/py/makeversionhdr.py',
+    MAKEMODULEDEFS='$PYTHON vendor/micropython/py/makemoduledefs.py',
     MPY_TOOL='$PYTHON vendor/micropython/tools/mpy-tool.py',
     MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross -O' + PYOPT
 )
@@ -483,11 +492,13 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/wallet/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/wallet/*/*.py',
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/misc/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/*/*.py',
         exclude=[
-            SOURCE_PY_DIR + 'apps/wallet/sign_tx/decred.py',
-            SOURCE_PY_DIR + 'apps/wallet/sign_tx/zcash.py',
+            SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/decred.py',
+            SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/bitcoinlike.py',
+            SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash.py',
         ])
     )
 
@@ -531,8 +542,9 @@ if FROZEN:
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/webauthn/*.py'))
 
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/wallet/sign_tx/decred.py'))
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/wallet/sign_tx/zcash.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/decred.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/bitcoinlike.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash.py'))
 
     source_mpy = env.FrozenModule(source=SOURCE_PY, source_dir=SOURCE_PY_DIR, bitcoin_only=BITCOIN_ONLY)
 
@@ -617,7 +629,8 @@ if env.get('TREZOR_MODEL') == 'T':
     ]
 else:
     action_bin=[
-        '$OBJCOPY -O binary -j .flash -j .data $SOURCE $TARGET',
+        '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
+        '../legacy/bootloader/firmware_sign.py -f $TARGET',
     ]
 
 program_bin = env.Command(

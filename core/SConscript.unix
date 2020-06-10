@@ -63,6 +63,7 @@ SOURCE_MOD += [
     'vendor/trezor-crypto/chacha20poly1305/chacha_merged.c',
     'vendor/trezor-crypto/chacha20poly1305/poly1305-donna.c',
     'vendor/trezor-crypto/chacha20poly1305/rfc7539.c',
+    'vendor/trezor-crypto/chacha_drbg.c',
     'vendor/trezor-crypto/ed25519-donna/curve25519-donna-32bit.c',
     'vendor/trezor-crypto/ed25519-donna/curve25519-donna-helpers.c',
     'vendor/trezor-crypto/ed25519-donna/curve25519-donna-scalarmult-base.c',
@@ -363,7 +364,6 @@ env.Replace(
     CPPDEFINES=[
         'TREZOR_EMULATOR',
         ('TREZOR_MODEL', '$TREZOR_MODEL'),
-        'MICROPY_USE_READLINE',
         ('MP_CONFIGFILE', '\\"embed/unix/mpconfigport.h\\"'),
     ] + CPPDEFINES_MOD,
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
@@ -377,6 +377,7 @@ env.Replace(
     PYTHON='python',
     MAKEQSTRDATA='$PYTHON vendor/micropython/py/makeqstrdata.py',
     MAKEVERSIONHDR='$PYTHON vendor/micropython/py/makeversionhdr.py',
+    MAKEMODULEDEFS='$PYTHON vendor/micropython/py/makemoduledefs.py',
     MPY_TOOL='$PYTHON vendor/micropython/tools/mpy-tool.py',
     MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross -O' + PYOPT
 )
@@ -459,11 +460,13 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/wallet/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/wallet/*/*.py',
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/misc/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/*/*.py',
         exclude=[
-            SOURCE_PY_DIR + 'apps/wallet/sign_tx/decred.py',
-            SOURCE_PY_DIR + 'apps/wallet/sign_tx/zcash.py',
+            SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/decred.py',
+            SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/bitcoinlike.py',
+            SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash.py',
         ])
     )
 
@@ -507,8 +510,9 @@ if FROZEN:
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/webauthn/*.py'))
 
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/wallet/sign_tx/decred.py'))
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/wallet/sign_tx/zcash.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/decred.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/bitcoinlike.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash.py'))
 
     source_mpy = env.FrozenModule(source=SOURCE_PY, source_dir=SOURCE_PY_DIR, bitcoin_only=BITCOIN_ONLY)
 

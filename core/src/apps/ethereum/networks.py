@@ -12,8 +12,12 @@ if False:
     from typing import Iterator, Optional
 
 
+def is_wanchain(chain_id: int, tx_type: int) -> bool:
+    return tx_type in (1, 6) and chain_id in (1, 3)
+
+
 def shortcut_by_chain_id(chain_id: int, tx_type: int = None) -> str:
-    if tx_type in (1, 6) and chain_id in (1, 3):
+    if is_wanchain(chain_id, tx_type):
         return "WAN"
     else:
         n = by_chain_id(chain_id)

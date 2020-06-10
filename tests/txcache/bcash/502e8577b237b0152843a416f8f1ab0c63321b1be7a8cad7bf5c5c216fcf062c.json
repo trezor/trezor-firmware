@@ -1,0 +1,22 @@
+{
+  "bin_outputs": [
+    {
+      "amount": 1896050,
+      "script_pubkey": "76a914b1401fce7e8bf123c88a0467e0ed11e3b9fbef5488ac"
+    },
+    {
+      "amount": 73452,
+      "script_pubkey": "76a914d51eca49695cdf47e7f4b55507893e3ad53fe9d888ac"
+    }
+  ],
+  "inputs": [
+    {
+      "prev_hash": "bc37c28dfb467d2ecb50261387bf752a3977d7e5337915071bb4151e6b711a78",
+      "prev_index": 0,
+      "script_sig": "473044022061aee4f17abe044d5df8c52c9ffd3b84e5a29743517e488b20ecf1ae0b3e4d3a02206bb84c55e407f3b684ff8d9bea0a3409cfd865795a19d10b3d3c31f12795c34a412103a020b36130021a0f037c1d1a02042e325c0cb666d6478c1afdcd9d913b9ef080",
+      "sequence": 4294967295
+    }
+  ],
+  "lock_time": 0,
+  "version": 1
+}
