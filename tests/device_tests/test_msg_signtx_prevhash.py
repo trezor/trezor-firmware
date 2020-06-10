@@ -100,13 +100,13 @@ def test_invalid_prev_hash_attack(client, prev_hash):
     # prepare input with a valid prev-hash
     inp1 = messages.TxInputType(
         address_n=tools.parse_path("m/44h/0h/0h/0/0"),
-        amount=123456789,
-        prev_hash=b"\x00" * 32,
+        amount=100000000,
+        prev_hash=TXHASH_157041,
         prev_index=0,
         script_type=messages.InputScriptType.SPENDP2SHWITNESS,
     )
     out1 = messages.TxOutputType(
-        address="mhRx1CeVfaayqRwq5zgRQmD7W5aWBfD5mC",
+        address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
         amount=12300000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
@@ -130,7 +130,7 @@ def test_invalid_prev_hash_attack(client, prev_hash):
 
     with client, pytest.raises(TrezorFailure) as e:
         client.set_filter(messages.TxAck, attack_filter)
-        btc.sign_tx(client, "Testnet", [inp1], [out1])
+        btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=TxCache("Bitcoin"))
 
     # check that injection was performed
     assert counter == 0

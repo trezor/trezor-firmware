@@ -23,6 +23,7 @@ from ..tx_cache import TxCache
 
 B = proto.ButtonRequestType
 TX_API = TxCache("Groestlcoin")
+TX_API_TESTNET = TxCache("Groestlcoin Testnet")
 
 TXHASH_cb74c8 = bytes.fromhex(
     "cb74c8478c5814742c87cffdb4a21231869888f8042fb07a90e015a9db1f9d4a"
@@ -101,7 +102,12 @@ class TestMsgSigntxGRS:
         )
         details = proto.SignTx(lock_time=650756)
         _, serialized_tx = btc.sign_tx(
-            client, "Groestlcoin Testnet", [inp1], [out1, out2], details=details
+            client,
+            "Groestlcoin Testnet",
+            [inp1],
+            [out1, out2],
+            details=details,
+            prev_txes=TX_API_TESTNET,
         )
         assert (
             serialized_tx.hex()
@@ -130,7 +136,12 @@ class TestMsgSigntxGRS:
         )
         details = proto.SignTx(lock_time=650756)
         _, serialized_tx = btc.sign_tx(
-            client, "Groestlcoin Testnet", [inp1], [out1, out2], details=details
+            client,
+            "Groestlcoin Testnet",
+            [inp1],
+            [out1, out2],
+            details=details,
+            prev_txes=TX_API_TESTNET,
         )
         assert (
             serialized_tx.hex()
@@ -158,7 +169,12 @@ class TestMsgSigntxGRS:
         )
         details = proto.SignTx(lock_time=650713)
         _, serialized_tx = btc.sign_tx(
-            client, "Groestlcoin Testnet", [inp1], [out1, out2], details=details
+            client,
+            "Groestlcoin Testnet",
+            [inp1],
+            [out1, out2],
+            details=details,
+            prev_txes=TX_API_TESTNET,
         )
         assert (
             serialized_tx.hex()
@@ -186,7 +202,12 @@ class TestMsgSigntxGRS:
         )
         details = proto.SignTx(lock_time=650713)
         _, serialized_tx = btc.sign_tx(
-            client, "Groestlcoin Testnet", [inp1], [out1, out2], details=details
+            client,
+            "Groestlcoin Testnet",
+            [inp1],
+            [out1, out2],
+            details=details,
+            prev_txes=TX_API_TESTNET,
         )
         assert (
             serialized_tx.hex()

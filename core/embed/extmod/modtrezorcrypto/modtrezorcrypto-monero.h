@@ -519,13 +519,21 @@ STATIC mp_obj_t mod_trezorcrypto_monero_inv256_modm(size_t n_args,
   assert_scalar(args[1 + off]);
 
   // bn_prime = curve order, little endian encoded
-  bignum256 bn_prime = {.val = {0x1cf5d3ed, 0x20498c69, 0x2f79cd65, 0x37be77a8,
-                                0x14, 0x0, 0x0, 0x0, 0x1000}};
+  bignum256 bn_prime = {.val = {0x1cf5d3ed, 0x9318d2, 0x1de73596, 0x1df3bd45,
+                                0x14d, 0x0, 0x0, 0x0, 0x100000}};
   bignum256 bn_x;
+  bignum256modm bm_x;
+  uint8_t raw_x[32];
 
-  memcpy(&bn_x.val, MP_OBJ_C_SCALAR(args[1 + off]), sizeof(bignum256modm));
+  memcpy(bm_x, MP_OBJ_C_SCALAR(args[1 + off]), sizeof(bignum256modm));
+  contract256_modm(raw_x, bm_x);
+  bn_read_le(raw_x, &bn_x);
+
   bn_inverse(&bn_x, &bn_prime);
-  memcpy(MP_OBJ_SCALAR(res), bn_x.val, sizeof(bignum256modm));
+
+  bn_write_le(&bn_x, raw_x);
+  expand_raw256_modm(bm_x, raw_x);
+  memcpy(MP_OBJ_SCALAR(res), bm_x, sizeof(bignum256modm));
 
   return res;
 }

@@ -102,6 +102,8 @@ bool decode_block(const char* block, size_t size, char* res)
 	uint64_t order = 1;
 	for (size_t i = size - 1; i < size; --i)
 	{
+		if (block[i] & 0x80)
+			return false; // Invalid symbol
 		int digit = reverse_alphabet(block[i]);
 		if (digit < 0)
 			return false; // Invalid symbol

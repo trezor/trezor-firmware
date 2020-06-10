@@ -21,7 +21,7 @@ from trezorlib.tools import H_, parse_path
 
 from ..bip32 import deserialize
 from ..tx_cache import TxCache
-from .signtx import request_finished, request_input, request_output
+from .signtx import request_finished, request_input, request_meta, request_output
 
 B = proto.ButtonRequestType
 TX_API = TxCache("Testnet")
@@ -79,6 +79,10 @@ class TestMsgSigntxSegwitNative:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_20912f),
+                    request_input(0, TXHASH_20912f),
+                    request_output(0, TXHASH_20912f),
+                    request_output(1, TXHASH_20912f),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
@@ -123,6 +127,10 @@ class TestMsgSigntxSegwitNative:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_20912f),
+                    request_input(0, TXHASH_20912f),
+                    request_output(0, TXHASH_20912f),
+                    request_output(1, TXHASH_20912f),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
@@ -165,6 +173,10 @@ class TestMsgSigntxSegwitNative:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_091446),
+                    request_input(0, TXHASH_091446),
+                    request_output(0, TXHASH_091446),
+                    request_output(1, TXHASH_091446),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
@@ -208,6 +220,10 @@ class TestMsgSigntxSegwitNative:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_091446),
+                    request_input(0, TXHASH_091446),
+                    request_output(0, TXHASH_091446),
+                    request_output(1, TXHASH_091446),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
@@ -266,7 +282,15 @@ class TestMsgSigntxSegwitNative:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_091446),
+                    request_input(0, TXHASH_091446),
+                    request_output(0, TXHASH_091446),
+                    request_output(1, TXHASH_091446),
                     request_input(1),
+                    request_meta(TXHASH_65b811),
+                    request_input(0, TXHASH_65b811),
+                    request_output(0, TXHASH_65b811),
+                    request_output(1, TXHASH_65b811),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
@@ -327,6 +351,10 @@ class TestMsgSigntxSegwitNative:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_9c3192),
+                    request_input(0, TXHASH_9c3192),
+                    request_output(0, TXHASH_9c3192),
+                    request_output(1, TXHASH_9c3192),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.SignTx),
@@ -346,6 +374,10 @@ class TestMsgSigntxSegwitNative:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_9c3192),
+                    request_input(0, TXHASH_9c3192),
+                    request_output(0, TXHASH_9c3192),
+                    request_output(1, TXHASH_9c3192),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.SignTx),
@@ -398,6 +430,9 @@ class TestMsgSigntxSegwitNative:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_f41cbe),
+                    request_input(0, TXHASH_f41cbe),
+                    request_output(0, TXHASH_f41cbe),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.SignTx),
@@ -417,6 +452,9 @@ class TestMsgSigntxSegwitNative:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_f41cbe),
+                    request_input(0, TXHASH_f41cbe),
+                    request_output(0, TXHASH_f41cbe),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.SignTx),
@@ -476,6 +514,9 @@ class TestMsgSigntxSegwitNative:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_c93480),
+                    request_input(0, TXHASH_c93480),
+                    request_output(0, TXHASH_c93480),
                     request_output(0),
                     proto.ButtonRequest(code=B.SignTx),
                     request_input(0),
@@ -495,6 +536,9 @@ class TestMsgSigntxSegwitNative:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_c93480),
+                    request_input(0, TXHASH_c93480),
+                    request_output(0, TXHASH_c93480),
                     request_output(0),
                     proto.ButtonRequest(code=B.SignTx),
                     request_input(0),
@@ -553,6 +597,9 @@ class TestMsgSigntxSegwitNative:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_31bc1c),
+                    request_input(0, TXHASH_31bc1c),
+                    request_output(0, TXHASH_31bc1c),
                     request_output(0),
                     proto.ButtonRequest(code=B.SignTx),
                     request_input(0),
@@ -572,6 +619,9 @@ class TestMsgSigntxSegwitNative:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_31bc1c),
+                    request_input(0, TXHASH_31bc1c),
+                    request_output(0, TXHASH_31bc1c),
                     request_output(0),
                     proto.ButtonRequest(code=B.SignTx),
                     request_input(0),
@@ -645,7 +695,14 @@ class TestMsgSigntxSegwitNative:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_091446),
+                    request_input(0, TXHASH_091446),
+                    request_output(0, TXHASH_091446),
+                    request_output(1, TXHASH_091446),
                     request_input(1),
+                    request_meta(TXHASH_a345b8),
+                    request_input(0, TXHASH_a345b8),
+                    request_output(0, TXHASH_a345b8),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),

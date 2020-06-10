@@ -21,7 +21,7 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
 from ..tx_cache import TxCache
-from .signtx import request_finished, request_input, request_output
+from .signtx import request_finished, request_input, request_meta, request_output
 
 B = proto.ButtonRequestType
 TX_API = TxCache("Bcash")
@@ -65,6 +65,9 @@ class TestMsgSigntxBch:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_bc37c2),
+                    request_input(0, TXHASH_bc37c2),
+                    request_output(0, TXHASH_bc37c2),
                     request_output(0),
                     request_output(1),
                     proto.ButtonRequest(code=B.ConfirmOutput),
@@ -110,7 +113,15 @@ class TestMsgSigntxBch:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_502e85),
+                    request_input(0, TXHASH_502e85),
+                    request_output(0, TXHASH_502e85),
+                    request_output(1, TXHASH_502e85),
                     request_input(1),
+                    request_meta(TXHASH_502e85),
+                    request_input(0, TXHASH_502e85),
+                    request_output(0, TXHASH_502e85),
+                    request_output(1, TXHASH_502e85),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.SignTx),
@@ -155,7 +166,15 @@ class TestMsgSigntxBch:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_502e85),
+                    request_input(0, TXHASH_502e85),
+                    request_output(0, TXHASH_502e85),
+                    request_output(1, TXHASH_502e85),
                     request_input(1),
+                    request_meta(TXHASH_502e85),
+                    request_input(0, TXHASH_502e85),
+                    request_output(0, TXHASH_502e85),
+                    request_output(1, TXHASH_502e85),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.SignTx),
@@ -173,81 +192,6 @@ class TestMsgSigntxBch:
             serialized_tx.hex()
             == "01000000022c06cf6f215c5cbfd7caa8e71b1b32630cabf1f816a4432815b037b277852e50000000006a47304402207a2a955f1cb3dc5f03f2c82934f55654882af4e852e5159639f6349e9386ec4002205fb8419dce4e648eae8f67bc4e369adfb130a87d2ea2d668f8144213b12bb457412103174c61e9c5362507e8061e28d2c0ce3d4df4e73f3535ae0b12f37809e0f92d2dffffffff2c06cf6f215c5cbfd7caa8e71b1b32630cabf1f816a4432815b037b277852e50010000006a473044022062151cf960b71823bbe68c7ed2c2a93ad1b9706a30255fddb02fcbe056d8c26102207bad1f0872bc5f0cfaf22e45c925c35d6c1466e303163b75cb7688038f1a5541412102595caf9aeb6ffdd0e82b150739a83297358b9a77564de382671056ad9e5b8c58ffffffff0170861d00000000001976a91434e9cec317896e818619ab7dc99d2305216ff4af88ac00000000"
         )
-
-    def test_attack_amount(self, client):
-        inp1 = proto.TxInputType(
-            address_n=parse_path("44'/145'/0'/1/0"),
-            # bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw
-            amount=300,
-            prev_hash=TXHASH_502e85,
-            prev_index=0,
-            script_type=proto.InputScriptType.SPENDADDRESS,
-        )
-        inp2 = proto.TxInputType(
-            address_n=parse_path("44'/145'/0'/0/1"),
-            # bitcoincash:qr23ajjfd9wd73l87j642puf8cad20lfmqdgwvpat4
-            amount=70,
-            prev_hash=TXHASH_502e85,
-            prev_index=1,
-            script_type=proto.InputScriptType.SPENDADDRESS,
-        )
-        out1 = proto.TxOutputType(
-            address="bitcoincash:qq6wnnkrz7ykaqvxrx4hmjvayvzjzml54uyk76arx4",
-            amount=200,
-            script_type=proto.OutputScriptType.PAYTOADDRESS,
-        )
-
-        # test if passes without modifications
-        with client:
-            client.set_expected_responses(
-                [
-                    request_input(0),
-                    request_input(1),
-                    request_output(0),
-                    proto.ButtonRequest(code=B.ConfirmOutput),
-                    proto.ButtonRequest(code=B.SignTx),
-                    request_input(0),
-                    request_input(1),
-                    request_output(0),
-                    request_finished(),
-                ]
-            )
-            btc.sign_tx(client, "Bcash", [inp1, inp2], [out1], prev_txes=TX_API)
-
-        run_attack = True
-
-        def attack_processor(msg):
-            nonlocal run_attack
-
-            if run_attack and msg.tx.inputs and msg.tx.inputs[0] == inp1:
-                # 300 is lowered to 280 at the first run
-                # the user confirms 280 but the transaction
-                # is spending 300 => larger fee without the user knowing
-                msg.tx.inputs[0].amount = 280
-                run_attack = False
-
-            return msg
-
-        # now fails
-        client.set_filter(proto.TxAck, attack_processor)
-        with client:
-            client.set_expected_responses(
-                [
-                    request_input(0),
-                    request_input(1),
-                    request_output(0),
-                    proto.ButtonRequest(code=B.ConfirmOutput),
-                    proto.ButtonRequest(code=B.SignTx),
-                    request_input(0),
-                    request_input(1),
-                    proto.Failure(),
-                ]
-            )
-
-            with pytest.raises(
-                TrezorFailure, match="Transaction has changed during signing"
-            ):
-                btc.sign_tx(client, "Bcash", [inp1, inp2], [out1], prev_txes=TX_API)
 
     def test_attack_change_input(self, client):
         inp1 = proto.TxInputType(
@@ -287,6 +231,9 @@ class TestMsgSigntxBch:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_bc37c2),
+                    request_input(0, TXHASH_bc37c2),
+                    request_output(0, TXHASH_bc37c2),
                     request_output(0),
                     request_output(1),
                     proto.ButtonRequest(code=B.ConfirmOutput),
@@ -353,6 +300,10 @@ class TestMsgSigntxBch:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_f68caf),
+                    request_input(0, TXHASH_f68caf),
+                    request_output(0, TXHASH_f68caf),
+                    request_output(1, TXHASH_f68caf),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.SignTx),
@@ -410,6 +361,9 @@ class TestMsgSigntxBch:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_8b6db9),
+                    request_input(0, TXHASH_8b6db9),
+                    request_output(0, TXHASH_8b6db9),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
@@ -444,6 +398,9 @@ class TestMsgSigntxBch:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_meta(TXHASH_8b6db9),
+                    request_input(0, TXHASH_8b6db9),
+                    request_output(0, TXHASH_8b6db9),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),

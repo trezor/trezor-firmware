@@ -1022,7 +1022,13 @@ class TestMsgSigntx:
 
     @pytest.mark.parametrize(
         "field, value",
-        (("extra_data", b"hello world"), ("expiry", 9), ("timestamp", 42)),
+        (
+            ("extra_data", b"hello world"),
+            ("expiry", 9),
+            ("timestamp", 42),
+            ("version_group_id", 69),
+            ("branch_id", 13),
+        ),
     )
     @pytest.mark.skip_ui
     def test_prevtx_forbidden_fields(self, client, field, value):
@@ -1045,7 +1051,10 @@ class TestMsgSigntx:
                 client, "Bitcoin", [inp0], [out1], prev_txes={TXHASH_157041: prev_tx}
             )
 
-    @pytest.mark.parametrize("field, value", (("expiry", 9), ("timestamp", 42)))
+    @pytest.mark.parametrize(
+        "field, value",
+        (("expiry", 9), ("timestamp", 42), ("version_group_id", 69), ("branch_id", 13)),
+    )
     @pytest.mark.skip_ui
     def test_signtx_forbidden_fields(self, client, field, value):
         inp0 = proto.TxInputType(
@@ -1167,5 +1176,5 @@ class TestMsgSigntx:
             TrezorFailure, match="Multisig field provided but not expected."
         ):
             btc.sign_tx(
-                client, "Testnet", [inp1], [out1, out2], prev_txes=TxCache("Testnet")
+                client, "Testnet", [inp1], [out1, out2], prev_txes=TX_CACHE_TESTNET
             )

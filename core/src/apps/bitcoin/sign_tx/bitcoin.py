@@ -84,7 +84,6 @@ class Bitcoin:
 
         # amounts
         self.total_in = 0  # sum of input amounts
-        self.bip143_in = 0  # sum of segwit input amounts
         self.total_out = 0  # sum of output amounts
         self.change_out = 0  # change output amount
         self.weight = tx_weight.TxWeightCalculator(tx.inputs_count, tx.outputs_count)
@@ -178,26 +177,15 @@ class Bitcoin:
         if not addresses.validate_full_path(txi.address_n, self.coin, txi.script_type):
             await helpers.confirm_foreign_address(txi.address_n)
 
-        if input_is_segwit(txi):
-            await self.process_segwit_input(txi)
-        elif input_is_nonsegwit(txi):
-            await self.process_nonsegwit_input(txi)
-        else:
+        if txi.script_type not in helpers.INTERNAL_INPUT_SCRIPT_TYPES:
             raise wire.DataError("Wrong input script type")
 
-    async def process_segwit_input(self, txi: TxInputType) -> None:
-        await self.process_bip143_input(txi)
+        prev_amount = await self.get_prevtx_output_value(txi.prev_hash, txi.prev_index)
 
-    async def process_nonsegwit_input(self, txi: TxInputType) -> None:
-        self.total_in += await self.get_prevtx_output_value(
-            txi.prev_hash, txi.prev_index
-        )
+        if txi.amount is not None and prev_amount != txi.amount:
+            raise wire.DataError("Invalid amount specified")
 
-    async def process_bip143_input(self, txi: TxInputType) -> None:
-        if not txi.amount:
-            raise wire.DataError("Expected input with amount")
-        self.bip143_in += txi.amount
-        self.total_in += txi.amount
+        self.total_in += prev_amount
 
     async def confirm_output(self, txo: TxOutputType, script_pubkey: bytes) -> None:
         if self.change_out == 0 and self.output_is_change(txo):
@@ -229,12 +217,11 @@ class Bitcoin:
         self.write_tx_input(self.serialized_tx, txi, script_sig)
 
     def sign_bip143_input(self, txi: TxInputType) -> Tuple[bytes, bytes]:
+        if txi.amount is None:
+            raise wire.DataError("Expected input with amount")
+
         self.wallet_path.check_input(txi)
         self.multisig_fingerprint.check_input(txi)
-
-        if txi.amount > self.bip143_in:
-            raise wire.ProcessError("Transaction has changed during signing")
-        self.bip143_in -= txi.amount
 
         node = self.keychain.derive(txi.address_n)
         public_key = node.public_key()
