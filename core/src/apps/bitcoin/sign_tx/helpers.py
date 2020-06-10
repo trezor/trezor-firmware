@@ -18,42 +18,12 @@ from trezor.messages.TxRequest import TxRequest
 
 from apps.common.coininfo import CoinInfo
 
+from .. import common
 from ..writers import TX_HASH_SIZE
 
 if False:
-    from typing import Any, Awaitable, Dict
-    from trezor.messages.TxInputType import EnumTypeInputScriptType
-    from trezor.messages.TxOutputType import EnumTypeOutputScriptType
+    from typing import Any, Awaitable
 
-MULTISIG_INPUT_SCRIPT_TYPES = (
-    InputScriptType.SPENDMULTISIG,
-    InputScriptType.SPENDP2SHWITNESS,
-    InputScriptType.SPENDWITNESS,
-)
-MULTISIG_OUTPUT_SCRIPT_TYPES = (
-    OutputScriptType.PAYTOMULTISIG,
-    OutputScriptType.PAYTOP2SHWITNESS,
-    OutputScriptType.PAYTOWITNESS,
-)
-
-CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES = {
-    OutputScriptType.PAYTOADDRESS: InputScriptType.SPENDADDRESS,
-    OutputScriptType.PAYTOMULTISIG: InputScriptType.SPENDMULTISIG,
-    OutputScriptType.PAYTOP2SHWITNESS: InputScriptType.SPENDP2SHWITNESS,
-    OutputScriptType.PAYTOWITNESS: InputScriptType.SPENDWITNESS,
-}  # type: Dict[EnumTypeOutputScriptType, EnumTypeInputScriptType]
-INTERNAL_INPUT_SCRIPT_TYPES = tuple(CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES.values())
-CHANGE_OUTPUT_SCRIPT_TYPES = tuple(CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES.keys())
-
-SEGWIT_INPUT_SCRIPT_TYPES = (
-    InputScriptType.SPENDP2SHWITNESS,
-    InputScriptType.SPENDWITNESS,
-)
-
-NONSEGWIT_INPUT_SCRIPT_TYPES = (
-    InputScriptType.SPENDADDRESS,
-    InputScriptType.SPENDMULTISIG,
-)
 
 # Machine instructions
 # ===
@@ -244,13 +214,13 @@ def sanitize_tx_input(tx: TransactionType, coin: CoinInfo) -> TxInputType:
         raise wire.DataError("Missing prev_index field.")
     if txi.prev_hash is None or len(txi.prev_hash) != TX_HASH_SIZE:
         raise wire.DataError("Provided prev_hash is invalid.")
-    if txi.multisig and txi.script_type not in MULTISIG_INPUT_SCRIPT_TYPES:
+    if txi.multisig and txi.script_type not in common.MULTISIG_INPUT_SCRIPT_TYPES:
         raise wire.DataError("Multisig field provided but not expected.")
-    if txi.address_n and txi.script_type not in INTERNAL_INPUT_SCRIPT_TYPES:
+    if txi.address_n and txi.script_type not in common.INTERNAL_INPUT_SCRIPT_TYPES:
         raise wire.DataError("Input's address_n provided but not expected.")
     if not coin.decred and txi.decred_tree is not None:
         raise wire.DataError("Decred details provided but Decred coin not specified.")
-    if txi.script_type in SEGWIT_INPUT_SCRIPT_TYPES:
+    if txi.script_type in common.SEGWIT_INPUT_SCRIPT_TYPES:
         if not coin.segwit:
             raise wire.DataError("Segwit not enabled on this coin")
     return txi
@@ -258,9 +228,9 @@ def sanitize_tx_input(tx: TransactionType, coin: CoinInfo) -> TxInputType:
 
 def sanitize_tx_output(tx: TransactionType, coin: CoinInfo) -> TxOutputType:
     txo = tx.outputs[0]
-    if txo.multisig and txo.script_type not in MULTISIG_OUTPUT_SCRIPT_TYPES:
+    if txo.multisig and txo.script_type not in common.MULTISIG_OUTPUT_SCRIPT_TYPES:
         raise wire.DataError("Multisig field provided but not expected.")
-    if txo.address_n and txo.script_type not in CHANGE_OUTPUT_SCRIPT_TYPES:
+    if txo.address_n and txo.script_type not in common.CHANGE_OUTPUT_SCRIPT_TYPES:
         raise wire.DataError("Output's address_n provided but not expected.")
     if txo.amount is None:
         raise wire.DataError("Missing amount field.")

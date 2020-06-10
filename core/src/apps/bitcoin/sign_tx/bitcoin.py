@@ -17,7 +17,7 @@ from trezor.utils import HashWriter, ensure
 from apps.common import coininfo, seed
 from apps.common.writers import write_bitcoin_varint
 
-from .. import addresses, multisig, scripts, writers
+from .. import addresses, common, multisig, scripts, writers
 from ..common import ecdsa_hash_pubkey, ecdsa_sign
 from . import helpers, progress, tx_weight
 from .matchcheck import MultisigFingerprintChecker, WalletPathChecker
@@ -177,7 +177,7 @@ class Bitcoin:
         if not addresses.validate_full_path(txi.address_n, self.coin, txi.script_type):
             await helpers.confirm_foreign_address(txi.address_n)
 
-        if txi.script_type not in helpers.INTERNAL_INPUT_SCRIPT_TYPES:
+        if txi.script_type not in common.INTERNAL_INPUT_SCRIPT_TYPES:
             raise wire.DataError("Wrong input script type")
 
         prev_amount, script_pubkey = await self.get_prevtx_output(
@@ -436,7 +436,7 @@ class Bitcoin:
         if txo.address_n:
             # change output
             try:
-                input_script_type = helpers.CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES[
+                input_script_type = common.CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES[
                     txo.script_type
                 ]
             except KeyError:
@@ -449,7 +449,7 @@ class Bitcoin:
         return scripts.output_derive_script(txo.address, self.coin)
 
     def output_is_change(self, txo: TxOutputType) -> bool:
-        if txo.script_type not in helpers.CHANGE_OUTPUT_SCRIPT_TYPES:
+        if txo.script_type not in common.CHANGE_OUTPUT_SCRIPT_TYPES:
             return False
         if txo.multisig and not self.multisig_fingerprint.output_matches(txo):
             return False
@@ -536,8 +536,8 @@ class Bitcoin:
 
 
 def input_is_segwit(txi: TxInputType) -> bool:
-    return txi.script_type in helpers.SEGWIT_INPUT_SCRIPT_TYPES
+    return txi.script_type in common.SEGWIT_INPUT_SCRIPT_TYPES
 
 
 def input_is_nonsegwit(txi: TxInputType) -> bool:
-    return txi.script_type in helpers.NONSEGWIT_INPUT_SCRIPT_TYPES
+    return txi.script_type in common.NONSEGWIT_INPUT_SCRIPT_TYPES
