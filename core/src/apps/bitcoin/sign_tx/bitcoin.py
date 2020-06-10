@@ -467,7 +467,12 @@ class Bitcoin:
         self, txi: TxInputType, pubkey: bytes, signature: bytes = None
     ) -> bytes:
         return scripts.input_derive_script(
-            txi, self.coin, self.get_hash_type(), pubkey, signature
+            txi.script_type,
+            txi.multisig,
+            self.coin,
+            self.get_hash_type(),
+            pubkey,
+            signature,
         )
 
     # BIP-0143

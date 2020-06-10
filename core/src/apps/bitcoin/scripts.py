@@ -24,41 +24,43 @@ from .writers import (
 
 if False:
     from typing import List, Optional
+    from trezor.messages.TxInputType import EnumTypeInputScriptType
     from .writers import Writer
 
 
 def input_derive_script(
-    txi: TxInputType,
+    script_type: EnumTypeInputScriptType,
+    multisig: MultisigRedeemScriptType,
     coin: CoinInfo,
     hash_type: int,
     pubkey: bytes,
     signature: Optional[bytes],
 ) -> bytes:
-    if txi.script_type == InputScriptType.SPENDADDRESS:
+    if script_type == InputScriptType.SPENDADDRESS:
         # p2pkh or p2sh
         return input_script_p2pkh_or_p2sh(pubkey, signature, hash_type)
 
-    if txi.script_type == InputScriptType.SPENDP2SHWITNESS:
+    if script_type == InputScriptType.SPENDP2SHWITNESS:
         # p2wpkh or p2wsh using p2sh
 
-        if txi.multisig:
+        if multisig:
             # p2wsh in p2sh
-            pubkeys = multisig_get_pubkeys(txi.multisig)
+            pubkeys = multisig_get_pubkeys(multisig)
             witness_script_hasher = utils.HashWriter(sha256())
-            write_output_script_multisig(witness_script_hasher, pubkeys, txi.multisig.m)
+            write_output_script_multisig(witness_script_hasher, pubkeys, multisig.m)
             witness_script_hash = witness_script_hasher.get_digest()
             return input_script_p2wsh_in_p2sh(witness_script_hash)
 
         # p2wpkh in p2sh
         return input_script_p2wpkh_in_p2sh(common.ecdsa_hash_pubkey(pubkey, coin))
-    elif txi.script_type == InputScriptType.SPENDWITNESS:
+    elif script_type == InputScriptType.SPENDWITNESS:
         # native p2wpkh or p2wsh
         return input_script_native_p2wpkh_or_p2wsh()
-    elif txi.script_type == InputScriptType.SPENDMULTISIG:
+    elif script_type == InputScriptType.SPENDMULTISIG:
         # p2sh multisig
-        signature_index = multisig_pubkey_index(txi.multisig, pubkey)
+        signature_index = multisig_pubkey_index(multisig, pubkey)
         return input_script_multisig(
-            txi.multisig, signature, signature_index, hash_type, coin
+            multisig, signature, signature_index, hash_type, coin
         )
     else:
         raise wire.ProcessError("Invalid script type")
