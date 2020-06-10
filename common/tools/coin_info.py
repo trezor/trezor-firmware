@@ -76,6 +76,8 @@ def check_type(val, types, nullable=False, empty=False, regex=None, choice=None)
     # check empty
     if isinstance(val, (list, dict)) and not empty and not val:
         raise ValueError("Empty collection")
+    if isinstance(val, str) and not empty and not val:
+        raise ValueError("Empty string")
 
     # check regex
     if regex is not None:
