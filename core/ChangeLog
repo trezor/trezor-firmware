@@ -1,4 +1,30 @@
-Version 2.x.x [not yet released]
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+## [Unreleased]
+
+_Most likely to be released on July 1st._
+
+### Added
+- Soft lock.  #958
+- Auto lock.  #1027
+
+### Deprecated
+
+### Removed
+
+### Fixed
+- Fix cancel icon in PIN dialog.  #1042
+
+### Security
+
+
+------------
+
+### Older changelog:
 
 Version 2.3.1 [Jun 2020]
 * Refactor Bitcoin signing
