@@ -1,5 +1,25 @@
-Version 1.x.x [not yet released]
-* Use Trezor instead of TREZOR
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+## [Unreleased]
+
+### Added
+
+### Deprecated
+
+### Removed
+
+### Fixed
+- Use Trezor instead of TREZOR
+
+### Security
+
+------------
+
+### Older changelog:
 
 Version 1.8.0 [Feb 2019]
 * Make the update process more similar to Model T process
