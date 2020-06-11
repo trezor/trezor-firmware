@@ -212,6 +212,14 @@ def test_upgrade_shamir_recovery(gen, tag):
 def test_upgrade_u2f(gen, tag):
     """Check U2F counter stayed the same after an upgrade."""
     with EmulatorWrapper(gen, tag) as emu:
+        debuglink.load_device_by_mnemonic(
+            emu.client,
+            mnemonic=MNEMONIC,
+            pin="",
+            passphrase_protection=False,
+            label=LABEL,
+        )
+
         success = fido.set_counter(emu.client, 10)
         assert "U2F counter set" in success
 
