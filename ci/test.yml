@@ -335,3 +335,4 @@ hardware legacy device test:
     paths:
       - ci/hardware_tests/video*.mp4
     expire_in: 2 days
+    when: always

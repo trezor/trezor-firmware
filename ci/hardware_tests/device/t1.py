@@ -20,8 +20,10 @@ class TrezorOne(Device):
             unofficial = False
             trezorctlcmd = "trezorctl firmware-update &"
             print("[software/trezorctl] Updating the firmware to latest...")
+        self.wait(3)
         self._enter_bootloader()
 
+        self.wait(3)
         os.system(trezorctlcmd)
         self.wait(3)
         self.touch("right", "click")
