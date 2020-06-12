@@ -286,7 +286,7 @@ void bn_cmov(bignum256 *res, volatile uint32_t cond, const bignum256 *truecase,
 //   else (x if x > prime else x + prime)
 // Assumes x is normalized and partly reduced
 // Assumes cond is either 1 or 0
-// Guarantees x is normalized and partly reduced
+// Guarantees x is normalized
 // Assumes prime is normalized and
 //   0 < prime < 2**260 == 2**(BITS_PER_LIMB * LIMBS - 1)
 void bn_cnegate(volatile uint32_t cond, bignum256 *x, const bignum256 *prime) {
