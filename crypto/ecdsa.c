@@ -999,19 +999,22 @@ int ecdsa_recover_pub_from_sig(const ecdsa_curve *curve, uint8_t *pub_key,
   }
   // e = -digest
   bn_read_be(digest, &e);
-  bn_subtractmod(&curve->order, &e, &e, &curve->order);
-  bn_fast_mod(&e, &curve->order);
   bn_mod(&e, &curve->order);
-  // r := r^-1
+  bn_subtract(&curve->order, &e, &e);
+  // r = r^-1
   bn_inverse(&r, &curve->order);
-  // cp := s * R = s * k *G
+  // e = -digest * r^-1
+  bn_multiply(&r, &e, &curve->order);
+  bn_mod(&e, &curve->order);
+  // s = s * r^-1
+  bn_multiply(&r, &s, &curve->order);
+  bn_mod(&s, &curve->order);
+  // cp = s * r^-1 * k * G
   point_multiply(curve, &s, &cp, &cp);
-  // cp2 := -digest * G
+  // cp2 = -digest * r^-1 * G
   scalar_multiply(curve, &e, &cp2);
-  // cp := (s * k - digest) * G = (r*priv) * G = r * Pub
+  // cp = (s * r^-1 * k - digest * r^-1) * G = Pub
   point_add(curve, &cp2, &cp);
-  // cp := r^{-1} * r * Pub = Pub
-  point_multiply(curve, &r, &cp, &cp);
   pub_key[0] = 0x04;
   bn_write_be(&cp.x, pub_key + 1);
   bn_write_be(&cp.y, pub_key + 33);
