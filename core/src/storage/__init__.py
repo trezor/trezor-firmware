@@ -6,10 +6,6 @@ def set_current_version() -> None:
     device.set_version(common.STORAGE_VERSION_CURRENT)
 
 
-def is_initialized() -> bool:
-    return device.is_version_stored()
-
-
 def wipe() -> None:
     config.wipe()
     cache.clear_all()
@@ -20,6 +16,16 @@ def init_unlocked() -> None:
     version = device.get_version()
     if version == common.STORAGE_VERSION_01:
         _migrate_from_version_01()
+    # <= 2.3.1 used storage version as a flag denoting initialization
+    if not device.is_initialized() and device.get_version():
+        common.set_bool(common.APP_DEVICE, device.INITIALIZED, True, public=True)
+
+
+def reset() -> None:
+    device_id = device.get_device_id()
+    wipe()
+    device.set_device_id(device_id)
+    set_current_version()
 
 
 def _migrate_from_version_01() -> None:

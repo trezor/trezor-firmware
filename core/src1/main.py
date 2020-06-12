@@ -17,7 +17,7 @@ salt = None
 config.unlock(1, salt)
 storage.init_unlocked()
 storage.cache.start_session()
-print("is_initialized: ", storage.is_initialized())
+print("is_initialized: ", storage.device.is_initialized())
 print("version: ", storage.device.is_version_stored())
 print("version: ", storage.device.get_version())
 print("needs backup: ", storage.device.needs_backup())

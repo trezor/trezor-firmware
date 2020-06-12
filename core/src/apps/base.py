@@ -65,12 +65,10 @@ def get_features() -> Features:
             Capability.PassphraseEntry,
         ]
     f.sd_card_present = sdcard.is_present()
+    f.initialized = storage.device.is_initialized()
 
     # private fields:
     if config.is_unlocked():
-        # While this is technically not private, we can't reliably find the value while
-        # locked. Instead of sending always False, we choose to not send it.
-        f.initialized = storage.is_initialized()
 
         f.needs_backup = storage.device.needs_backup()
         f.unfinished_backup = storage.device.unfinished_backup()

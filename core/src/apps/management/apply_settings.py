@@ -12,7 +12,7 @@ if False:
 
 
 async def apply_settings(ctx: wire.Context, msg: ApplySettings):
-    if not storage.is_initialized():
+    if not storage.device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
     if (
         msg.homescreen is None
