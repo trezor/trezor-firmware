@@ -4,7 +4,7 @@
   "coin_label": "Zcoin",
   "website": "https://zcoin.io",
   "github": "https://github.com/zcoinofficial/zcoin",
-  "maintainer": "Zcoin Team <team@zcoin.io>",
+  "maintainer": "Andrey Bezrukov <andreyvbezrukov@gmail.com>",
   "curve_name": "secp256k1",
   "decimals": 8,
   "address_type": 82,
