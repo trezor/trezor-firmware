@@ -16,9 +16,8 @@ def init_unlocked() -> None:
     version = device.get_version()
     if version == common.STORAGE_VERSION_01:
         _migrate_from_version_01()
-    # <= 2.3.1 used storage version as a flag denoting initialization
-    if not device.is_initialized() and device.get_version():
-        common.set_bool(common.APP_DEVICE, device.INITIALIZED, True, public=True)
+    if version == common.STORAGE_VERSION_02:
+        _migrate_from_version_02()
 
 
 def reset() -> None:
@@ -36,4 +35,13 @@ def _migrate_from_version_01() -> None:
         device.set_u2f_counter(int.from_bytes(counter, "big"))
         # Delete the old, non-public U2F_COUNTER.
         common.delete(common.APP_DEVICE, device.U2F_COUNTER)
+    _migrate_from_version_02()
+
+
+def _migrate_from_version_02() -> None:
+    # <= 2.3.1 used storage version as a flag denoting initialization
+    if device.is_initialized():
+        raise RuntimeError  # So this should not happen.
+    # Because the version is written it means the device is initialized.
+    common.set_bool(common.APP_DEVICE, device.INITIALIZED, True, public=True)
     set_current_version()
