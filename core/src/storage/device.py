@@ -14,7 +14,7 @@ _NAMESPACE = common.APP_DEVICE
 
 # fmt: off
 # Keys:
-_DEVICE_ID                 = const(0x00)  # bytes
+DEVICE_ID                  = const(0x00)  # bytes
 _VERSION                   = const(0x01)  # int
 _MNEMONIC_SECRET           = const(0x02)  # bytes
 _LANGUAGE                  = const(0x03)  # str
@@ -70,15 +70,11 @@ def _new_device_id() -> str:
 
 
 def get_device_id() -> str:
-    dev_id = common.get(_NAMESPACE, _DEVICE_ID, True)  # public
+    dev_id = common.get(_NAMESPACE, DEVICE_ID, public=True)
     if not dev_id:
         dev_id = _new_device_id().encode()
-        common.set(_NAMESPACE, _DEVICE_ID, dev_id, True)  # public
+        common.set(_NAMESPACE, DEVICE_ID, dev_id, public=True)
     return dev_id.decode()
-
-
-def set_device_id(device_id: str) -> None:
-    common.set(_NAMESPACE, _DEVICE_ID, device_id.encode(), public=True)
 
 
 def get_rotation() -> int:

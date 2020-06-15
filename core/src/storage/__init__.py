@@ -23,7 +23,7 @@ def init_unlocked() -> None:
 def reset() -> None:
     device_id = device.get_device_id()
     wipe()
-    device.set_device_id(device_id)
+    common.set(common.APP_DEVICE, device.DEVICE_ID, device_id.encode(), public=True)
     set_current_version()
 
 
