@@ -32,6 +32,8 @@ def get_namespaces_for_coin(coin: coininfo.CoinInfo):
     # m/48'/slip44' (/account'/script_type'/change/addr)
     namespaces.append((curve, [48 | HARDENED, slip44_id]))
 
+    namespaces.append(("slip21", [b"SLIP-0019"]))
+
     if coin.segwit:
         # BIP-49 - p2sh segwit: m/49'/slip44' (/account'/change/addr)
         namespaces.append((curve, [49 | HARDENED, slip44_id]))

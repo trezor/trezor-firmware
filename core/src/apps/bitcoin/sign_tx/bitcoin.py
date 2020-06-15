@@ -19,6 +19,7 @@ from apps.common.writers import write_bitcoin_varint
 
 from .. import addresses, common, multisig, scripts, writers
 from ..common import SIGHASH_ALL, ecdsa_sign
+from ..ownership import verify_nonownership
 from ..verification import SignatureVerifier
 from . import helpers, progress, tx_weight
 from .matchcheck import MultisigFingerprintChecker, WalletPathChecker
@@ -51,7 +52,8 @@ class Bitcoin:
         # Check fee, confirm lock_time and total.
         await self.step3_confirm_tx()
 
-        # Verify external inputs which have already been signed.
+        # Verify external inputs which have already been signed or which come with
+        # a proof of non-ownership.
         await self.step4_verify_external_inputs()
 
         # Check that inputs are unchanged. Serialize inputs and sign the non-segwit ones.
@@ -169,16 +171,22 @@ class Bitcoin:
             if prev_amount != txi.amount:
                 raise wire.DataError("Invalid amount specified")
 
-            verifier = SignatureVerifier(
-                script_pubkey, txi.script_sig, txi.witness, self.coin
-            )
+            if txi.ownership_proof:
+                if not verify_nonownership(
+                    txi.ownership_proof, script_pubkey, b"", self.keychain, self.coin
+                ):
+                    raise wire.DataError("Invalid external input")
+            else:
+                verifier = SignatureVerifier(
+                    script_pubkey, txi.script_sig, txi.witness, self.coin
+                )
 
-            verifier.ensure_hash_type(self.get_hash_type(txi))
+                verifier.ensure_hash_type(self.get_hash_type(txi))
 
-            tx_digest = await self.get_tx_digest(
-                i, txi, verifier.public_keys, verifier.threshold, script_pubkey
-            )
-            verifier.verify(tx_digest)
+                tx_digest = await self.get_tx_digest(
+                    i, txi, verifier.public_keys, verifier.threshold, script_pubkey
+                )
+                verifier.verify(tx_digest)
 
         # check that the inputs were the same as those streamed for confirmation
         if self.h_external.get_digest() != h_check.get_digest():
@@ -288,7 +296,7 @@ class Bitcoin:
         if not input_is_external(txi):
             raise wire.ProcessError("Transaction has changed during signing")
 
-        self.write_tx_input(self.serialized_tx, txi, txi.script_sig)
+        self.write_tx_input(self.serialized_tx, txi, txi.script_sig or bytes())
 
     async def serialize_segwit_input(self, i: int) -> None:
         # STAGE_REQUEST_SEGWIT_INPUT in legacy
