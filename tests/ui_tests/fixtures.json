@@ -122,6 +122,8 @@
 "test_msg_getentropy.py::test_entropy[65]": "a722fa2048fa3102889ec05558d25f837a364ef2a118e85975683e10a56f1356",
 "test_msg_getentropy.py::test_entropy[8]": "a722fa2048fa3102889ec05558d25f837a364ef2a118e85975683e10a56f1356",
 "test_msg_getentropy.py::test_entropy[9]": "a722fa2048fa3102889ec05558d25f837a364ef2a118e85975683e10a56f1356",
+"test_msg_getownershipproof.py::test_confirm_ownership_proof": "7724ef59fee121da564b935b5880479c9518d97dc286e2949f13a8a8bdf6fa4a",
+"test_msg_getownershipproof.py::test_confirm_ownership_proof_with_data": "1043f54be594bd3180c59c8474ef7ef46be35f99ad5f6890949c38680c097e52",
 "test_msg_lisk_getaddress.py-test_lisk_getaddress": "0063ceb48d21aecd1ddabdb083c8afd2042cdf577e4751fa3f57b2b80f619084",
 "test_msg_lisk_getpublickey.py-test_lisk_get_public_key": "e4cb8c7430c240e27a2211391ab5eba848be4f50136cf9f693142c2677a939d7",
 "test_msg_lisk_signmessage.py-test_sign": "c47a6ec147137c75903cff19da6607eaef5a1fc03ace1f840d2952744342b568",
