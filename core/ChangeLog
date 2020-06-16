@@ -11,6 +11,7 @@ _Most likely to be released on July 1st._
 ### Added
 - Soft lock.  #958
 - Auto lock.  #1027
+- Dedicated `initialized` field in storage.
 
 ### Deprecated
 
