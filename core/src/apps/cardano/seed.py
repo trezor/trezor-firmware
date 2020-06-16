@@ -1,5 +1,4 @@
-import storage
-from storage import cache
+from storage import cache, device
 from trezor import wire
 from trezor.crypto import bip32
 
@@ -39,7 +38,7 @@ class Keychain:
 
 @cache.stored_async(cache.APP_CARDANO_ROOT)
 async def get_keychain(ctx: wire.Context) -> Keychain:
-    if not storage.is_initialized():
+    if not device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
 
     passphrase = await get_passphrase(ctx)

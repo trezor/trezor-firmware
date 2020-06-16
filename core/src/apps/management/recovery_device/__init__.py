@@ -42,6 +42,10 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
 
     await _continue_dialog(ctx, msg)
 
+    if not msg.dry_run:
+        # wipe storage to make sure the device is in a clear state
+        storage.reset()
+
     # for dry run pin needs to be entered
     if msg.dry_run:
         curpin, salt = await request_pin_and_sd_salt(ctx, "Enter PIN")
@@ -68,9 +72,9 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
 
 
 def _validate(msg: RecoveryDevice) -> None:
-    if not msg.dry_run and storage.is_initialized():
+    if not msg.dry_run and storage.device.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
-    if msg.dry_run and not storage.is_initialized():
+    if msg.dry_run and not storage.device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
 
     if msg.enforce_wordlist is False:

@@ -1,4 +1,4 @@
-from storage import is_initialized
+from storage.device import is_initialized
 from trezor import config, ui, wire
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int

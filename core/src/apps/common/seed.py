@@ -1,5 +1,4 @@
-import storage
-from storage import cache
+from storage import cache, device
 from trezor import wire
 from trezor.crypto import bip32, hashlib, hmac
 
@@ -113,7 +112,7 @@ class Keychain:
 
 @cache.stored_async(cache.APP_COMMON_SEED)
 async def _get_seed(ctx: wire.Context) -> bytes:
-    if not storage.is_initialized():
+    if not device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
     passphrase = await get_passphrase(ctx)
     return mnemonic.get_seed(passphrase)
@@ -121,7 +120,7 @@ async def _get_seed(ctx: wire.Context) -> bytes:
 
 @cache.stored(cache.APP_COMMON_SEED_WITHOUT_PASSPHRASE)
 def _get_seed_without_passphrase() -> bytes:
-    if not storage.is_initialized():
+    if not device.is_initialized():
         raise Exception("Device is not initialized")
     return mnemonic.get_seed(progress_bar=False)
 

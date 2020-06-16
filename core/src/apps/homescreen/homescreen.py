@@ -12,18 +12,18 @@ async def homescreen() -> None:
 class Homescreen(HomescreenBase):
     def __init__(self) -> None:
         super().__init__()
-        if not storage.is_initialized():
+        if not storage.device.is_initialized():
             self.label = "Go to trezor.io/start"
 
     def on_render(self) -> None:
         # warning bar on top
-        if storage.is_initialized() and storage.device.no_backup():
+        if storage.device.is_initialized() and storage.device.no_backup():
             ui.header_error("SEEDLESS")
-        elif storage.is_initialized() and storage.device.unfinished_backup():
+        elif storage.device.is_initialized() and storage.device.unfinished_backup():
             ui.header_error("BACKUP FAILED!")
-        elif storage.is_initialized() and storage.device.needs_backup():
+        elif storage.device.is_initialized() and storage.device.needs_backup():
             ui.header_warning("NEEDS BACKUP!")
-        elif storage.is_initialized() and not config.has_pin():
+        elif storage.device.is_initialized() and not config.has_pin():
             ui.header_warning("PIN NOT SET!")
         else:
             ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT, ui.BG)

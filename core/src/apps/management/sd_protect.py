@@ -41,7 +41,7 @@ async def _set_salt(
 
 
 async def sd_protect(ctx: wire.Context, msg: SdProtect) -> Success:
-    if not storage.is_initialized():
+    if not storage.device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
 
     if msg.operation == SdProtectOperationType.ENABLE:
