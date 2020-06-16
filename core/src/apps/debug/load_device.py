@@ -54,7 +54,7 @@ async def load_device(ctx, msg):
 
 
 def _validate(msg) -> int:
-    if storage.is_initialized():
+    if storage.device.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
 
     if not msg.mnemonics:
