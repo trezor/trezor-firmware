@@ -1,7 +1,14 @@
+ENABLE_COVERAGE = True
+ENABLE_MEMPROFILE = False
+
 import sys
 
 from uio import open
 from uos import getenv
+
+if ENABLE_MEMPROFILE:
+    from micropython import mem_total, mem_current, mem_peak
+
 
 # We need to insert "" to sys.path so that the frozen build can import main from the
 # frozen modules, and regular build can import it from current directory.
@@ -33,16 +40,24 @@ class Coverage:
 class _Prof:
     trace_count = 0
     display_flags = 0
-    __coverage = Coverage()
+    if ENABLE_COVERAGE:
+        __coverage = Coverage()
+    if ENABLE_MEMPROFILE:
+        __memprofile = open(".memprofile", "wt")
+        __memprofile.write("trace;mem_total;mem_current;mem_peak\n")
 
     def trace_tick(self, frame, event, arg):
         self.trace_count += 1
 
-        # if frame.f_code.co_filename.endswith('/loop.py'):
-        #     print(event, frame.f_code.co_filename, frame.f_lineno)
+        if ENABLE_COVERAGE:
+            if event == "line":
+                self.__coverage.line_tick(frame.f_code.co_filename, frame.f_lineno)
 
-        if event == "line":
-            self.__coverage.line_tick(frame.f_code.co_filename, frame.f_lineno)
+        if ENABLE_MEMPROFILE:
+            self.__memprofile.write(
+                "%d;%d;%d;%d\n"
+                % (self.trace_count, mem_total(), mem_current(), mem_peak())
+            )
 
     def coverage_data(self):
         return self.__coverage.lines_execution()
@@ -56,11 +71,14 @@ def trace_handler(frame, event, arg):
 def atexit():
     print("\n------------------ script exited ------------------")
     print("Total traces executed: ", __prof__.trace_count)
-    with open(".coverage", "w") as f:
-        # wtf so private much beautiful wow
-        f.write("!coverage.py: This is a private format, don't read it directly!")
-        # poormans json
-        f.write(str(__prof__.coverage_data()).replace("'", '"'))
+    if ENABLE_COVERAGE:
+        with open(".coverage", "w") as f:
+            # wtf so private much beautiful wow
+            f.write("!coverage.py: This is a private format, don't read it directly!")
+            # poormans json
+            f.write(str(__prof__.coverage_data()).replace("'", '"'))
+    if ENABLE_MEMPROFILE:
+        __prof__.__memprofile.close()
 
 
 sys.atexit(atexit)
