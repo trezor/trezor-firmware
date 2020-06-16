@@ -83,6 +83,27 @@ message Address {
 }
 
 /**
+ * Request: Ask device for ownership identifier corresponding to scriptPubKey for address_n path
+ * @start
+ * @next OwnershipId
+ * @next Failure
+ */
+message GetOwnershipId {
+    repeated uint32 address_n = 1;                                      // BIP-32 path to derive the key from master node
+    optional string coin_name = 2 [default='Bitcoin'];                  // coin to use
+    optional MultisigRedeemScriptType multisig = 3;                     // filled if we are dealing with a multisig scriptPubKey
+    optional InputScriptType script_type = 4 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
+}
+
+/**
+ * Response: Contains the ownership identifier for the scriptPubKey and device private seed
+ * @end
+ */
+message OwnershipId {
+    required bytes ownership_id = 1;    // ownership identifier
+}
+
+/**
  * Request: Ask device to sign message
  * @start
  * @next MessageSignature

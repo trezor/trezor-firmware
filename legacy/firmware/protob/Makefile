@@ -4,7 +4,7 @@ endif
 
 SKIPPED_MESSAGES := Binance Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tezos WebAuthn \
 	DebugLinkRecordScreen DebugLinkReseedRandom DebugLinkShowText DebugLinkEraseSdCard DebugLinkWatchLayout \
-	GetOwnershipProof OwnershipProof
+	GetOwnershipProof OwnershipProof GetOwnershipId OwnershipId
 
 ifeq ($(BITCOIN_ONLY), 1)
 SKIPPED_MESSAGES += Ethereum Lisk NEM Stellar
