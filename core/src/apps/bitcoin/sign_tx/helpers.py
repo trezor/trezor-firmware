@@ -46,6 +46,15 @@ class UiConfirmTotal:
     __eq__ = utils.obj_eq
 
 
+class UiConfirmJointTotal:
+    def __init__(self, spending: int, total: int, coin: CoinInfo):
+        self.spending = spending
+        self.total = total
+        self.coin = coin
+
+    __eq__ = utils.obj_eq
+
+
 class UiConfirmFeeOverThreshold:
     def __init__(self, fee: int, coin: CoinInfo):
         self.fee = fee
@@ -74,6 +83,10 @@ def confirm_output(output: TxOutputType, coin: CoinInfo) -> Awaitable[Any]:  # t
 
 def confirm_total(spending: int, fee: int, coin: CoinInfo) -> Awaitable[Any]:  # type: ignore
     return (yield UiConfirmTotal(spending, fee, coin))
+
+
+def confirm_joint_total(spending: int, total: int, coin: CoinInfo) -> Awaitable[Any]:  # type: ignore
+    return (yield UiConfirmJointTotal(spending, total, coin))
 
 
 def confirm_feeoverthreshold(fee: int, coin: CoinInfo) -> Awaitable[Any]:  # type: ignore

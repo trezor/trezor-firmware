@@ -148,14 +148,18 @@ class Bitcoin:
         if fee < 0:
             self.on_negative_fee()
 
+        total = self.total_in - self.change_out
+        spending = total - self.external_in
+
         # fee > (coin.maxfee per byte * tx size)
         if fee > (self.coin.maxfee_kb / 1000) * (self.weight.get_total() / 4):
             await helpers.confirm_feeoverthreshold(fee, self.coin)
         if self.tx.lock_time > 0:
             await helpers.confirm_nondefault_locktime(self.tx.lock_time)
-        await helpers.confirm_total(
-            self.total_in - self.external_in - self.change_out, fee, self.coin
-        )
+        if not self.external:
+            await helpers.confirm_total(total, fee, self.coin)
+        else:
+            await helpers.confirm_joint_total(spending, total, self.coin)
 
     async def step4_verify_external_inputs(self) -> None:
         # should come out the same as h_external, checked before continuing
