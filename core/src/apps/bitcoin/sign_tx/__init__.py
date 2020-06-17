@@ -55,6 +55,13 @@ async def sign_tx(
             res = await layout.confirm_total(ctx, req.spending, req.fee, req.coin)
             utils.unimport_end(mods)
             progress.report_init()
+        elif isinstance(req, helpers.UiConfirmJointTotal):
+            mods = utils.unimport_begin()
+            res = await layout.confirm_joint_total(
+                ctx, req.spending, req.total, req.coin
+            )
+            utils.unimport_end(mods)
+            progress.report_init()
         elif isinstance(req, helpers.UiConfirmFeeOverThreshold):
             mods = utils.unimport_begin()
             res = await layout.confirm_feeoverthreshold(ctx, req.fee, req.coin)

@@ -58,6 +58,20 @@ async def confirm_output(
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
 
+async def confirm_joint_total(
+    ctx: wire.Context, spending: int, total: int, coin: coininfo.CoinInfo
+) -> None:
+    from trezor.ui.text import Text
+    from apps.common.confirm import require_hold_to_confirm
+
+    text = Text("Joint transaction", ui.ICON_SEND, ui.GREEN)
+    text.normal("You are contributing:")
+    text.bold(format_coin_amount(spending, coin))
+    text.normal("to the total amount:")
+    text.bold(format_coin_amount(total, coin))
+    await require_hold_to_confirm(ctx, text, ButtonRequestType.SignTx)
+
+
 async def confirm_total(
     ctx: wire.Context, spending: int, fee: int, coin: coininfo.CoinInfo
 ) -> None:
