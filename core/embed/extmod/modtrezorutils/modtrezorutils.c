@@ -24,6 +24,7 @@
 
 #if MICROPY_PY_TREZORUTILS
 
+#include "embed/extmod/modtrezorutils/modtrezorutils-meminfo.h"
 #include "embed/extmod/trezorobj.h"
 
 #include <string.h>
@@ -144,6 +145,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_MODEL), MP_ROM_QSTR(MP_QSTR(TREZOR_MODEL))},
 #ifdef TREZOR_EMULATOR
     {MP_ROM_QSTR(MP_QSTR_EMULATOR), mp_const_true},
+    MEMINFO_DICT_ENTRIES
 #else
     {MP_ROM_QSTR(MP_QSTR_EMULATOR), mp_const_false},
 #endif
