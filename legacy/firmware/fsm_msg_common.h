@@ -46,8 +46,7 @@ bool get_features(Features *resp) {
       config_getLanguage(resp->language, sizeof(resp->language));
   resp->has_label = config_getLabel(resp->label, sizeof(resp->label));
   resp->has_initialized = true;
-  // imported xprv is not supported anymore so we require mnemonic
-  resp->initialized = config_isInitialized() && config_hasMnemonic();
+  resp->initialized = config_isInitialized();
   resp->has_imported = config_getImported(&(resp->imported));
   resp->has_pin_cached = true;
   resp->pin_cached = session_isUnlocked() && config_hasPin();
