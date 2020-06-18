@@ -1,10 +1,10 @@
 from trezor.messages.MoneroAddress import MoneroAddress
 
 from apps.common import paths
-from apps.common.layout import address_n_to_str, show_qr
+from apps.common.layout import address_n_to_str
 from apps.common.seed import with_slip44_keychain
 from apps.monero import CURVE, SLIP44_ID, misc
-from apps.monero.layout import confirms
+from apps.monero.layout import address as layout_address
 from apps.monero.xmr import addresses, crypto, monero
 from apps.monero.xmr.networks import net_version
 
@@ -45,9 +45,9 @@ async def get_address(ctx, msg, keychain):
     if msg.show_display:
         desc = address_n_to_str(msg.address_n)
         while True:
-            if await confirms.show_address(ctx, addr.decode(), desc=desc):
+            if await layout_address.show_address(ctx, addr.decode(), desc=desc):
                 break
-            if await show_qr(ctx, "monero:" + addr.decode(), desc=desc):
+            if await layout_address.show_qr(ctx, "monero:" + addr.decode(), desc=desc):
                 break
 
     return MoneroAddress(address=addr)
