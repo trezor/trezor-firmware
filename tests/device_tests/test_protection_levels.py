@@ -233,8 +233,8 @@ class TestProtectionLevels:
     #    pass
 
     @pytest.mark.setup_client(pin=PIN4)
-    def test_pin_cached(self, client):
-        assert client.features.pin_cached is False
+    def test_unlocked(self, client):
+        assert client.features.unlocked is False
 
         with client:
             client.use_pin_sequence([PIN4])
@@ -242,7 +242,7 @@ class TestProtectionLevels:
             btc.get_address(client, "Testnet", [0])
 
         client.init_device()
-        assert client.features.pin_cached is True
+        assert client.features.unlocked is True
         with client:
             client.set_expected_responses([proto.Address()])
             btc.get_address(client, "Testnet", [0])

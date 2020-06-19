@@ -48,8 +48,8 @@ bool get_features(Features *resp) {
   resp->has_initialized = true;
   resp->initialized = config_isInitialized();
   resp->has_imported = config_getImported(&(resp->imported));
-  resp->has_pin_cached = true;
-  resp->pin_cached = session_isUnlocked() && config_hasPin();
+  resp->has_unlocked = true;
+  resp->unlocked = session_isUnlocked();
   resp->has_needs_backup = true;
   config_getNeedsBackup(&(resp->needs_backup));
   resp->has_unfinished_backup = true;

@@ -33,7 +33,7 @@ def get_features() -> Features:
     f.device_id = storage.device.get_device_id()
     f.label = storage.device.get_label()
     f.pin_protection = config.has_pin()
-    f.pin_cached = config.is_unlocked()
+    f.unlocked = config.is_unlocked()
     f.passphrase_protection = storage.device.is_passphrase_enabled()
 
     if utils.BITCOIN_ONLY:
