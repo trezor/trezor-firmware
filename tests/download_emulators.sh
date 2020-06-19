@@ -10,5 +10,6 @@ wget --no-check-certificate -e robots=off --no-verbose --no-clobber --no-parent 
 chmod u+x emulators/trezor-emu-*
 
 if [ -f /etc/NIXOS ]; then
+  # for this to work you need to run ./download_emulators.sh outside the main nix shell
   cd emulators && nix-shell --run "autoPatchelf trezor-emu*"
 fi
