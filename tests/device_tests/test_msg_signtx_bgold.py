@@ -32,7 +32,9 @@ TXHASH_25526b = bytes.fromhex(
 TXHASH_db77c2 = bytes.fromhex(
     "db77c2461b840e6edbe7f9280043184a98e020d9795c1b65cb7cef2551a8fb18"
 )
-
+TXHASH_f55c5b = bytes.fromhex(
+    "f55c5bc925eb2a0bf9de0ac142b24bed81ec46dd2151d5f69728070eaea1aded"
+)
 
 # All data taken from T1
 @pytest.mark.altcoin
@@ -488,4 +490,63 @@ class TestMsgSigntxBitcoinGold:
         assert (
             btc_hash(serialized_tx)[::-1].hex()
             == "2c64109fba890657e37f0782efda29bbc277dfd521658f185d302ddffcacffd2"
+        )
+
+    @pytest.mark.skip_t1
+    def test_send_btg_external_presigned(self, client):
+        inp1 = proto.TxInputType(
+            address_n=parse_path("44'/156'/0'/1/0"),
+            amount=1252382934,
+            prev_hash=TXHASH_25526b,
+            prev_index=0,
+            script_type=proto.InputScriptType.SPENDADDRESS,
+        )
+        inp2 = proto.TxInputType(
+            # address_n=parse_path("49'/156'/0'/0/0"),
+            # AXibjT5r96ZaVA8Lu4BQZocdTx7p5Ud8ZP
+            amount=58456,
+            prev_hash=TXHASH_f55c5b,
+            prev_index=0,
+            script_type=proto.InputScriptType.EXTERNAL,
+            script_sig=bytes.fromhex("1600147c5edda9b293db2c8894b9d81efd77764910c445"),
+            witness=bytes.fromhex(
+                "024730440220091eece828409b3a9aa92dd2f9b032f9fb3a12b21b323a3fdea3cb18d08249af022065412107afcf76b0d28b90188c802f8f17b41790ed81c868d0ee23f1dd2ec53441210386789a34fe1a49bfc3e174adc6706c6222b0d80de76b884a0e3d32f8e9c4dc3e"
+            ),
+        )
+        out1 = proto.TxOutputType(
+            address="GfDB1tvjfm3bukeoBTtfNqrJVFohS2kCTe",
+            amount=1252382934 + 58456 - 1000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+        with client:
+            client.set_expected_responses(
+                [
+                    request_input(0),
+                    request_meta(TXHASH_25526b),
+                    request_input(0, TXHASH_25526b),
+                    request_output(0, TXHASH_25526b),
+                    request_output(1, TXHASH_25526b),
+                    request_input(1),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(1),
+                    request_meta(TXHASH_f55c5b),
+                    request_input(0, TXHASH_f55c5b),
+                    request_output(0, TXHASH_f55c5b),
+                    request_output(1, TXHASH_f55c5b),
+                    request_input(0),
+                    request_input(1),
+                    request_output(0),
+                    request_input(1),
+                    request_finished(),
+                ]
+            )
+            _, serialized_tx = btc.sign_tx(
+                client, "Bgold", [inp1, inp2], [out1], prev_txes=TX_API
+            )
+
+        assert (
+            btc_hash(serialized_tx)[::-1].hex()
+            == "95ebe5cdfb8dc3c112eb0107fc3bd7701689ac5ec4a74a3d12e203333d0832d3"
         )
