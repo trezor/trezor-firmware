@@ -12,9 +12,9 @@ def init(inputs: int, outputs: int) -> None:
     report()
 
 
-def advance() -> None:
+def advance(i: int = 1) -> None:
     global _progress
-    _progress += 1
+    _progress += i
     report()
 
 

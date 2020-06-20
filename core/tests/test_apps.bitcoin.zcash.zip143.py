@@ -25,7 +25,7 @@ class TestZcashZip143(unittest.TestCase):
                         "702c35a67cd7364d3fab552fb349e35c15c50250453fd18f7b855992632e2c76",
                         4025613248,
                     ],
-                    "pubkeyhash": "4d9cafb657677f2321fc538e367767dbdf551539",
+                    "pubkey": "03c6d9cc725bb7e19c026df03bf693ee1171371a8eaf25f04b7a58f6befabcd38c",
                     "script_type": InputScriptType.SPENDADDRESS,
                     "sequence": 1999822371,
                 }
@@ -40,7 +40,7 @@ class TestZcashZip143(unittest.TestCase):
             "prevouts_hash": b"bd4318eecf841a0cf01c2be532cf4bc3303e881e2aface159f1882f153152688",
             "sequence_hash": b"9ac6a31952ff626bf5a0a30d3d8ac63a0d4298d33d7bc38854bfa5860695e30a",
             "outputs_hash": b"d0cadf116b4441f5e1e17814908dee509ec262a79f3c88f7f3389e8200658992",
-            "preimage_hash": b"287146efaa30b3c1c7bd1a72308c46205712e6944780fdc5a7f91f477fddd55b",
+            "preimage_hash": b"fed855ea5fcec81928fa35d39b8582c6e026a0bf52cebeed4445a7fc7d730280",
         },
         {
             "expiry": 231041495,
@@ -51,7 +51,7 @@ class TestZcashZip143(unittest.TestCase):
                         "76647d2be4c2cd6b3d17d6870971d7a098baf72c6f6f1214cf1faae488bd7de2",
                         1547817817,
                     ],
-                    "pubkeyhash": "9f5d230603ce57a0e8b31a8c9b6c983ad5b00cd5",
+                    "pubkey": "03c6d9cc725bb7e19c026df03bf693ee1171371a8eaf25f04b7a58f6befabcd38c",
                     "script_type": InputScriptType.SPENDADDRESS,
                     "sequence": 3973122135,
                 },
@@ -61,7 +61,7 @@ class TestZcashZip143(unittest.TestCase):
                         "cccc0df65a04943ad5cbc13f295f000fe056c40b2d88f27dc34cfeb803be3483",
                         3053054889,
                     ],
-                    "pubkeyhash": "b5e71ef1df5ed3a2589607ca58ed19634f07fb4f",
+                    "pubkey": "02c651a011009e2c7e7b3ed2068857ca0a47cba35b73e06c32e3c06ef3aa67621d",
                     "script_type": InputScriptType.SPENDADDRESS,
                     "sequence": 3932380530,
                 },
@@ -77,7 +77,7 @@ class TestZcashZip143(unittest.TestCase):
             "prevouts_hash": b"8e286c6c0dde3119271c9c1398ef46614b0253c502b00a3691cec2e9047da35b",
             "sequence_hash": b"58477fd9ecd5faf3e08159e0ab5fdaab66cab364d081498ddcef41de0af3624e",
             "outputs_hash": b"c518797fc6f2c08fc22aa3f66122047b360e1db4df5c3feb28573c00cdf45fa1",
-            "preimage_hash": b"b71358954aca8ffe1d3f1b5707ed6c082ed2b35e35e293b897bfc12ae7c85396",
+            "preimage_hash": b"1c6f563d2f16002f4c59bec5e7d56ed298315630c1d7e9a431b89e6f81026a02",
         },
         {
             "expiry": 186996458,
@@ -89,7 +89,7 @@ class TestZcashZip143(unittest.TestCase):
                         1290359941,
                     ],
                     "script_type": InputScriptType.SPENDADDRESS,
-                    "pubkeyhash": "0873d1baed6c8696e4bd2b26755692b4d8050086",
+                    "pubkey": "03c6d9cc725bb7e19c026df03bf693ee1171371a8eaf25f04b7a58f6befabcd38c",
                     "sequence": 1230917966,
                 }
             ],
@@ -101,7 +101,7 @@ class TestZcashZip143(unittest.TestCase):
             "prevouts_hash": b"445bc6328cd33b3c86259953dd674bded341ff1e1104dc21856919e9761036dd",
             "sequence_hash": b"42e1d5c2636f165afaa954afa6d7a50779eb145e947bf668f1a40dd771c711fc",
             "outputs_hash": b"869eda84eecf7257f9979a4848bbf52f4969a5736594ab7ba41452e7bb906824",
-            "preimage_hash": b"19ea4ce2467cb5cdcc4562ce81b22006f1fb55189ea93ccc7a3bc78ff5d97a93",
+            "preimage_hash": b"7159247daa16cc7e683f03ebf968314ce03324028ac138468a7b76c77e551fe8",
         },
         {
             "expiry": 254788522,
@@ -113,7 +113,7 @@ class TestZcashZip143(unittest.TestCase):
                         1517971891,
                     ],
                     "script_type": InputScriptType.SPENDADDRESS,
-                    "pubkeyhash": "80b6c35a9b2efd77dbfd5d5d3bb1fd03ff40f182",
+                    "pubkey": "03c6d9cc725bb7e19c026df03bf693ee1171371a8eaf25f04b7a58f6befabcd38c",
                     "sequence": 3833577708,
                 },
                 {
@@ -123,7 +123,7 @@ class TestZcashZip143(unittest.TestCase):
                         687648622,
                     ],
                     "script_type": InputScriptType.SPENDADDRESS,
-                    "pubkeyhash": "fb8c27a442afe0f0b39a3875823c4893fe8f8550",
+                    "pubkey": "02c651a011009e2c7e7b3ed2068857ca0a47cba35b73e06c32e3c06ef3aa67621d",
                     "sequence": 4190617831,
                 },
             ],
@@ -137,7 +137,7 @@ class TestZcashZip143(unittest.TestCase):
             "prevouts_hash": b"509abdfafcc75265037f1ce6a4658ac9ecadd7b82378c3fbaeb48ab437ff6898",
             "sequence_hash": b"2b13f671cd1a9aa04c1e250eef74a316d7d2b049360d20604514ddc2dfacfd23",
             "outputs_hash": b"4f01b8785e80779290aa86c16b24952f9b7f8bc09da44e68f760ab1920ab8f2a",
-            "preimage_hash": b"d0b92233e185a69f320f18bfacff7e5dcc5f0ed02af2f3ecf59359853e105e59",
+            "preimage_hash": b"16b24c5d599107efb41cbc6cb0127094878bab1e0d33d734cfccce58e07b3386",
         },
     ]
 
@@ -175,7 +175,7 @@ class TestZcashZip143(unittest.TestCase):
             self.assertEqual(hexlify(get_tx_hash(zip143.h_sequence)), v["sequence_hash"])
             self.assertEqual(hexlify(get_tx_hash(zip143.h_outputs)), v["outputs_hash"])
             self.assertEqual(
-                hexlify(zip143.hash143_preimage_hash(txi, unhexlify(i["pubkeyhash"]))),
+                hexlify(zip143.hash143_preimage_hash(txi, [unhexlify(i["pubkey"])], 1)),
                 v["preimage_hash"],
             )
 

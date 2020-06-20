@@ -220,7 +220,7 @@ def sanitize_tx_input(tx: TransactionType, coin: CoinInfo) -> TxInputType:
         raise wire.DataError("Input's address_n provided but not expected.")
     if not coin.decred and txi.decred_tree is not None:
         raise wire.DataError("Decred details provided but Decred coin not specified.")
-    if txi.script_type in common.SEGWIT_INPUT_SCRIPT_TYPES:
+    if txi.script_type in common.SEGWIT_INPUT_SCRIPT_TYPES or txi.witness is not None:
         if not coin.segwit:
             raise wire.DataError("Segwit not enabled on this coin")
     return txi
