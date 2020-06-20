@@ -4,6 +4,7 @@ from micropython import const
 from trezor import wire
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TransactionType import TransactionType
+from trezor.messages.TxInputType import TxInputType
 
 from apps.common.writers import write_bitcoin_varint
 
@@ -12,7 +13,7 @@ from . import helpers
 from .bitcoin import Bitcoin, input_is_nonsegwit
 
 if False:
-    from typing import Union
+    from typing import List, Union
 
 _SIGHASH_FORKID = const(0x40)
 
@@ -40,6 +41,21 @@ class Bitcoinlike(Bitcoin):
             await self.sign_nonsegwit_bip143_input(i_sign)
         else:
             await super().sign_nonsegwit_input(i_sign)
+
+    async def get_tx_digest(
+        self,
+        i: int,
+        txi: TxInputType,
+        public_keys: List[bytes],
+        threshold: int,
+        script_pubkey: bytes,
+    ) -> bytes:
+        if self.coin.force_bip143:
+            return self.hash143_preimage_hash(txi, public_keys, threshold)
+        else:
+            return await super().get_tx_digest(
+                i, txi, public_keys, threshold, script_pubkey
+            )
 
     def on_negative_fee(self) -> None:
         # some coins require negative fees for reward TX

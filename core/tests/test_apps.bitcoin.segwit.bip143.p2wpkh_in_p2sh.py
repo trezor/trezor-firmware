@@ -4,6 +4,7 @@ from apps.bitcoin.scripts import output_derive_script
 from apps.bitcoin.sign_tx.bitcoin import Bitcoin
 from apps.bitcoin.writers import get_tx_hash
 from apps.common import coins
+from apps.common.seed import Keychain
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputType import TxOutputType
@@ -75,9 +76,12 @@ class TestSegwitBip143(unittest.TestCase):
             script_pubkey = output_derive_script(txo.address, coin)
             bip143.hash143_add_output(txo_bin, script_pubkey)
 
+        keychain = Keychain(seed, [[coin.curve_name, []]])
+        node = keychain.derive(self.inp1.address_n)
+
         # test data public key hash
-        result = bip143.hash143_preimage_hash(self.inp1, unhexlify('79091972186c449eb1ded22b78e40d009bdf0089'))
-        self.assertEqual(hexlify(result), b'64f3b0f4dd2bb3aa1ce8566d220cc74dda9df97d8490cc81d89d735c92e59fb6')
+        result = bip143.hash143_preimage_hash(self.inp1, [node.public_key()], 1)
+        self.assertEqual(hexlify(result), b'6e28aca7041720995d4acf59bbda64eef5d6f23723d23f2e994757546674bbd9')
 
 
 if __name__ == '__main__':
