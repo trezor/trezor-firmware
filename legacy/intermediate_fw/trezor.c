@@ -30,64 +30,56 @@
 #include <vendor/libopencm3/include/libopencmsis/core_cm3.h>
 #include <libopencm3/stm32/flash.h>
 
-/* Screen timeout */
-uint32_t system_millis_lock_start = 0;
-
-static void __attribute__((noinline, section(".data"))) returnable(void) {
-    asm("");
-}
-
+/** Sector erase operation extracted from libopencm3 - flash_erase_sector so it can run from RAM */
 static void __attribute__((noinline, section(".data"))) erase_sector(uint8_t sector, uint32_t psize) {
-    // flash_wait_for_last_operation(); vvv
-    while ((FLASH_SR & FLASH_SR_BSY) == FLASH_SR_BSY);
-    FLASH_CR &= ~(FLASH_CR_PROGRAM_MASK << FLASH_CR_PROGRAM_SHIFT);
-    FLASH_CR |= psize << FLASH_CR_PROGRAM_SHIFT;
+  // Wait for flash controller to be ready
+  while ((FLASH_SR & FLASH_SR_BSY) == FLASH_SR_BSY);
+  // Set program word width
+  FLASH_CR &= ~(FLASH_CR_PROGRAM_MASK << FLASH_CR_PROGRAM_SHIFT);
+  FLASH_CR |= psize << FLASH_CR_PROGRAM_SHIFT;
 
-    /* Sector numbering is not contiguous internally! */
-    if (sector >= 12) {
-            sector += 4;
-    }
+  /* Sector numbering is not contiguous internally! */
+  if (sector >= 12) {
+    sector += 4;
+  }
 
-    FLASH_CR &= ~(FLASH_CR_SNB_MASK << FLASH_CR_SNB_SHIFT);
-    FLASH_CR |= (sector & FLASH_CR_SNB_MASK) << FLASH_CR_SNB_SHIFT;
-    FLASH_CR |= FLASH_CR_SER;
-    FLASH_CR |= FLASH_CR_STRT;
+  FLASH_CR &= ~(FLASH_CR_SNB_MASK << FLASH_CR_SNB_SHIFT);
+  FLASH_CR |= (sector & FLASH_CR_SNB_MASK) << FLASH_CR_SNB_SHIFT;
+  FLASH_CR |= FLASH_CR_SER;
+  FLASH_CR |= FLASH_CR_STRT;
 
-    // flash_wait_for_last_operation(); vvv
-    while ((FLASH_SR & FLASH_SR_BSY) == FLASH_SR_BSY);
-    FLASH_CR &= ~FLASH_CR_SER;
-    FLASH_CR &= ~(FLASH_CR_SNB_MASK << FLASH_CR_SNB_SHIFT);
-
+  // Wait for flash controller to be ready
+  while ((FLASH_SR & FLASH_SR_BSY) == FLASH_SR_BSY);
+  FLASH_CR &= ~FLASH_CR_SER;
+  FLASH_CR &= ~(FLASH_CR_SNB_MASK << FLASH_CR_SNB_SHIFT);
 }
 
-static void __attribute__((noinline, section(".data"))) erase_fw(void) {
+static void __attribute__((noinline, section(".data"))) erase_firmware(void) {
   // Flash unlock
-    FLASH_KEYR = FLASH_KEYR_KEY1;
-    FLASH_KEYR = FLASH_KEYR_KEY2;
+  FLASH_KEYR = FLASH_KEYR_KEY1;
+  FLASH_KEYR = FLASH_KEYR_KEY2;
 
-  //flash_enter();
+  // Erase firmware sectors
   for (int i = FLASH_CODE_SECTOR_FIRST; i <= FLASH_CODE_SECTOR_LAST;
        i++) {
     erase_sector(i, FLASH_CR_PROGRAM_X32);
   }
-  //flash_exit();
+
   // Flash lock
   FLASH_CR |= FLASH_CR_LOCK;
 }
 
-void __attribute__((noinline, noreturn, section(".data"))) scb_reset_system_ram(void)
+void __attribute__((noinline, noreturn, section(".data"))) reboot_device(void)
 {
             SCB_AIRCR = SCB_AIRCR_VECTKEY | SCB_AIRCR_SYSRESETREQ;
                     while (1);
 }
 
-void __attribute__((noinline, noreturn, section(".data"))) ram_shim(void) {
-    volatile int a = 127;
-    asm("");
-    a++;
-    erase_fw();
-    scb_reset_system_ram();
-    for (;;);
+void __attribute__((noinline, noreturn, section(".data"))) erase_fw_from_ram_and_reboot(void) {
+    erase_firmware();
+    reboot_device();
+
+    for (;;); // never reached, but compiler would generate error
 }
 
 int main(void) {
@@ -101,8 +93,7 @@ int main(void) {
 
   oledDrawBitmap(40, 0, &bmp_logo64);
   oledRefresh();
-  returnable();
-  ram_shim();
+  erase_fw_from_ram_and_reboot();
 
 
   return 0;
