@@ -23,7 +23,8 @@ from . import helpers, progress, tx_weight
 from .matchcheck import MultisigFingerprintChecker, WalletPathChecker
 
 if False:
-    from typing import Set, Tuple, Union
+    from typing import Set, Optional, Tuple, Union
+    from trezor.crypto.bip32 import HDNode
 
 # Default signature hash type in Bitcoin which signs all inputs and all outputs of the transaction.
 _SIGHASH_ALL = const(0x01)
@@ -258,8 +259,10 @@ class Bitcoin:
                 scripts.witness_p2wpkh(signature, public_key, self.get_hash_type(txi))
             )
 
-    async def sign_nonsegwit_input(self, i_sign: int) -> None:
-        # hash of what we are signing with this input
+    async def get_legacy_tx_digest(
+        self, index: int, script_pubkey: Optional[bytes] = None
+    ) -> Tuple[bytes, TxInputType, Optional[HDNode]]:
+        # the transaction digest which gets signed for this input
         h_sign = self.create_hash_writer()
         # should come out the same as h_confirmed, checked before signing the digest
         h_check = self.create_hash_writer()
@@ -271,31 +274,32 @@ class Bitcoin:
             # STAGE_REQUEST_4_INPUT in legacy
             txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
             writers.write_tx_input_check(h_check, txi)
-            if i == i_sign:
-                self.wallet_path.check_input(txi)
-                self.multisig_fingerprint.check_input(txi)
-                # NOTE: wallet_path is checked in write_tx_input_check()
-                node = self.keychain.derive(txi.address_n)
-                key_sign_pub = node.public_key()
-                # if multisig, do a sanity check to ensure we are signing with a key that is included in the multisig
-                if txi.multisig:
-                    multisig.multisig_pubkey_index(txi.multisig, key_sign_pub)
-
-                # For the signing process the previous UTXO's scriptPubKey is included in h_sign.
-                if txi.script_type == InputScriptType.SPENDMULTISIG:
-                    script_pubkey = scripts.output_script_multisig(
-                        multisig.multisig_get_pubkeys(txi.multisig), txi.multisig.m,
-                    )
-                elif txi.script_type == InputScriptType.SPENDADDRESS:
-                    script_pubkey = scripts.output_script_p2pkh(
-                        addresses.ecdsa_hash_pubkey(key_sign_pub, self.coin)
-                    )
-                else:
-                    raise wire.ProcessError("Unknown transaction type")
+            # Only the previous UTXO's scriptPubKey is included in h_sign.
+            if i == index:
                 txi_sign = txi
+                node = None
+                if not script_pubkey:
+                    self.wallet_path.check_input(txi)
+                    self.multisig_fingerprint.check_input(txi)
+                    node = self.keychain.derive(txi.address_n)
+                    key_sign_pub = node.public_key()
+                    if txi.multisig:
+                        # Sanity check to ensure we are signing with a key that is included in the multisig.
+                        multisig.multisig_pubkey_index(txi.multisig, key_sign_pub)
+
+                    if txi.script_type == InputScriptType.SPENDMULTISIG:
+                        script_pubkey = scripts.output_script_multisig(
+                            multisig.multisig_get_pubkeys(txi.multisig), txi.multisig.m,
+                        )
+                    elif txi.script_type == InputScriptType.SPENDADDRESS:
+                        script_pubkey = scripts.output_script_p2pkh(
+                            addresses.ecdsa_hash_pubkey(key_sign_pub, self.coin)
+                        )
+                    else:
+                        raise wire.ProcessError("Unknown transaction type")
+                self.write_tx_input(h_sign, txi, script_pubkey)
             else:
-                script_pubkey = bytes()
-            self.write_tx_input(h_sign, txi, script_pubkey)
+                self.write_tx_input(h_sign, txi, bytes())
 
         write_bitcoin_varint(h_sign, self.tx.outputs_count)
 
@@ -313,16 +317,21 @@ class Bitcoin:
         if self.h_confirmed.get_digest() != h_check.get_digest():
             raise wire.ProcessError("Transaction has changed during signing")
 
+        tx_digest = writers.get_tx_hash(h_sign, double=self.coin.sign_hash_double)
+        return tx_digest, txi_sign, node
+
+    async def sign_nonsegwit_input(self, i: int) -> None:
+        tx_digest, txi, node = await self.get_legacy_tx_digest(i)
+        assert node is not None
+
         # compute the signature from the tx digest
-        signature = ecdsa_sign(
-            node, writers.get_tx_hash(h_sign, double=self.coin.sign_hash_double)
-        )
+        signature = ecdsa_sign(node, tx_digest)
 
         # serialize input with correct signature
         gc.collect()
-        script_sig = self.input_derive_script(txi_sign, key_sign_pub, signature)
-        self.write_tx_input(self.serialized_tx, txi_sign, script_sig)
-        self.set_serialized_signature(i_sign, signature)
+        script_sig = self.input_derive_script(txi, node.public_key(), signature)
+        self.write_tx_input(self.serialized_tx, txi, script_sig)
+        self.set_serialized_signature(i, signature)
 
     async def serialize_output(self, i: int) -> None:
         # STAGE_REQUEST_5_OUTPUT in legacy
