@@ -1339,9 +1339,10 @@ void signing_txack(TransactionType *tx) {
         signing_abort();
         return;
       }
-      if (coin->overwintered && !tx->has_version_group_id) {
+      if (coin->overwintered &&
+          (tx->version >= 3) != (tx->has_version_group_id)) {
         fsm_sendFailure(FailureType_Failure_DataError,
-                        _("Version group ID must be set."));
+                        _("Version group ID must be set when version >= 3."));
         signing_abort();
         return;
       }
@@ -1366,7 +1367,8 @@ void signing_txack(TransactionType *tx) {
       }
       tx_init(&tp, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time,
               tx->expiry, tx->extra_data_len, coin->curve->hasher_sign,
-              coin->overwintered, tx->version_group_id, tx->timestamp);
+              coin->overwintered && tx->version >= 3, tx->version_group_id,
+              tx->timestamp);
 #if !BITCOIN_ONLY
       if (coin->decred) {
         tp.version |= (DECRED_SERIALIZE_NO_WITNESS << 16);

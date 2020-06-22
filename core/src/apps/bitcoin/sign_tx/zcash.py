@@ -29,7 +29,7 @@ from .bitcoinlike import Bitcoinlike
 
 if False:
     from typing import Union
-    from .writers import Writer
+    from ..writers import Writer
 
 OVERWINTERED = const(0x80000000)
 
@@ -69,13 +69,18 @@ class Overwintered(Bitcoinlike):
     def write_tx_header(
         self, w: Writer, tx: Union[SignTx, TransactionType], witness_marker: bool
     ) -> None:
-        # nVersion | fOverwintered
-        write_uint32(w, tx.version | OVERWINTERED)
-        write_uint32(w, tx.version_group_id)  # nVersionGroupId
+        if tx.version < 3:
+            # pre-overwinter
+            write_uint32(w, tx.version)
+        else:
+            # nVersion | fOverwintered
+            write_uint32(w, tx.version | OVERWINTERED)
+            write_uint32(w, tx.version_group_id)  # nVersionGroupId
 
     def write_tx_footer(self, w: Writer, tx: Union[SignTx, TransactionType]) -> None:
         write_uint32(w, tx.lock_time)
-        write_uint32(w, tx.expiry)  # expiryHeight
+        if tx.version >= 3:
+            write_uint32(w, tx.expiry)  # expiryHeight
 
     # ZIP-0143 / ZIP-0243
     # ===
