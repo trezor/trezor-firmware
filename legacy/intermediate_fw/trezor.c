@@ -38,7 +38,8 @@ static void __attribute__((noinline, section(".data"))) returnable(void) {
 }
 
 static void __attribute__((noinline, section(".data"))) erase_sector(uint8_t sector, uint32_t psize) {
-    //flash_wait_for_last_operation();
+    // flash_wait_for_last_operation(); vvv
+    while ((FLASH_SR & FLASH_SR_BSY) == FLASH_SR_BSY);
     FLASH_CR &= ~(FLASH_CR_PROGRAM_MASK << FLASH_CR_PROGRAM_SHIFT);
     FLASH_CR |= psize << FLASH_CR_PROGRAM_SHIFT;
 
@@ -52,7 +53,8 @@ static void __attribute__((noinline, section(".data"))) erase_sector(uint8_t sec
     FLASH_CR |= FLASH_CR_SER;
     FLASH_CR |= FLASH_CR_STRT;
 
-    //flash_wait_for_last_operation();
+    // flash_wait_for_last_operation(); vvv
+    while ((FLASH_SR & FLASH_SR_BSY) == FLASH_SR_BSY);
     FLASH_CR &= ~FLASH_CR_SER;
     FLASH_CR &= ~(FLASH_CR_SNB_MASK << FLASH_CR_SNB_SHIFT);
 
