@@ -71,8 +71,9 @@ static void __attribute__((noinline, section(".data"))) erase_firmware(void) {
 
 void __attribute__((noinline, noreturn, section(".data"))) reboot_device(void)
 {
-            SCB_AIRCR = SCB_AIRCR_VECTKEY | SCB_AIRCR_SYSRESETREQ;
-                    while (1);
+  __disable_irq();
+  SCB_AIRCR = SCB_AIRCR_VECTKEY | SCB_AIRCR_SYSRESETREQ;
+  while (1);
 }
 
 void __attribute__((noinline, noreturn, section(".data"))) erase_fw_from_ram_and_reboot(void) {
