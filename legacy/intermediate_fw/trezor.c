@@ -37,11 +37,32 @@ static void __attribute__((noinline, section(".data"))) returnable(void) {
     asm("");
 }
 
+static void __attribute__((noinline, section(".data"))) erase_sector(uint8_t sector, uint32_t psize) {
+    //flash_wait_for_last_operation();
+    FLASH_CR &= ~(FLASH_CR_PROGRAM_MASK << FLASH_CR_PROGRAM_SHIFT);
+    FLASH_CR |= psize << FLASH_CR_PROGRAM_SHIFT;
+
+    /* Sector numbering is not contiguous internally! */
+    if (sector >= 12) {
+            sector += 4;
+    }
+
+    FLASH_CR &= ~(FLASH_CR_SNB_MASK << FLASH_CR_SNB_SHIFT);
+    FLASH_CR |= (sector & FLASH_CR_SNB_MASK) << FLASH_CR_SNB_SHIFT;
+    FLASH_CR |= FLASH_CR_SER;
+    FLASH_CR |= FLASH_CR_STRT;
+
+    //flash_wait_for_last_operation();
+    FLASH_CR &= ~FLASH_CR_SER;
+    FLASH_CR &= ~(FLASH_CR_SNB_MASK << FLASH_CR_SNB_SHIFT);
+
+}
+
 static void __attribute__((noinline, section(".data"))) erase_fw(void) {
   //flash_enter();
   for (int i = FLASH_CODE_SECTOR_FIRST; i <= FLASH_CODE_SECTOR_LAST;
        i++) {
-    flash_erase_sector(i, FLASH_CR_PROGRAM_X32);
+    erase_sector(i, FLASH_CR_PROGRAM_X32);
   }
   //flash_exit();
 }
