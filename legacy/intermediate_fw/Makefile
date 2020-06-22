@@ -6,7 +6,8 @@ OBJS += trezor.o
 OBJS += header.o
 OBJS += ../vendor/trezor-crypto/memzero.o
 
-OPTFLAGS ?= -Os
+OPTFLAGS ?= -Og
+
 
 ../vendor/trezor-crypto/bip32.o: OPTFLAGS = -O3
 ../vendor/trezor-crypto/bip39.o: OPTFLAGS = -O3
@@ -15,6 +16,7 @@ OPTFLAGS ?= -Os
 ../vendor/trezor-crypto/secp256k1.o: OPTFLAGS = -O3
 
 include ../Makefile.include
+CFLAGS:=$(filter-out -fstack-protector-all,$(CFLAGS))
 
 DEBUG_LINK ?= 0
 DEBUG_LOG  ?= 0

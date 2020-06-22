@@ -20,18 +20,31 @@
 #include "trezor.h"
 #include "bitmaps.h"
 #include "memzero.h"
+#include "memory.h"
 #include "oled.h"
 #include "rng.h"
 #include "setup.h"
 #include "timer.h"
 #include "util.h"
-#if !EMULATOR
 #include <libopencm3/stm32/desig.h>
 #include <vendor/libopencm3/include/libopencmsis/core_cm3.h>
-#endif
+#include <libopencm3/stm32/flash.h>
 
 /* Screen timeout */
 uint32_t system_millis_lock_start = 0;
+
+static void __attribute__((noinline, section(".data"))) returnable(void) {
+    asm("");
+}
+
+static void __attribute__((noinline, section(".data"))) erase_fw(void) {
+  //flash_enter();
+  for (int i = FLASH_CODE_SECTOR_FIRST; i <= FLASH_CODE_SECTOR_LAST;
+       i++) {
+    flash_erase_sector(i, FLASH_CR_PROGRAM_X32);
+  }
+  //flash_exit();
+}
 
 void __attribute__((noinline, noreturn, section(".data"))) scb_reset_system_ram(void)
 {
@@ -43,7 +56,8 @@ void __attribute__((noinline, noreturn, section(".data"))) ram_shim(void) {
     volatile int a = 127;
     asm("");
     a++;
-    scb_reset_system_ram();
+    erase_fw();
+    //scb_reset_system_ram();
     for (;;);
 }
 
@@ -58,6 +72,7 @@ int main(void) {
 
   oledDrawBitmap(40, 0, &bmp_logo64);
   oledRefresh();
+  returnable();
   ram_shim();
 
 
