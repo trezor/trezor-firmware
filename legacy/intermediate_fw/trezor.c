@@ -59,12 +59,18 @@ static void __attribute__((noinline, section(".data"))) erase_sector(uint8_t sec
 }
 
 static void __attribute__((noinline, section(".data"))) erase_fw(void) {
+  // Flash unlock
+    FLASH_KEYR = FLASH_KEYR_KEY1;
+    FLASH_KEYR = FLASH_KEYR_KEY2;
+
   //flash_enter();
   for (int i = FLASH_CODE_SECTOR_FIRST; i <= FLASH_CODE_SECTOR_LAST;
        i++) {
     erase_sector(i, FLASH_CR_PROGRAM_X32);
   }
   //flash_exit();
+  // Flash lock
+  FLASH_CR |= FLASH_CR_LOCK;
 }
 
 void __attribute__((noinline, noreturn, section(".data"))) scb_reset_system_ram(void)
@@ -78,7 +84,7 @@ void __attribute__((noinline, noreturn, section(".data"))) ram_shim(void) {
     asm("");
     a++;
     erase_fw();
-    //scb_reset_system_ram();
+    scb_reset_system_ram();
     for (;;);
 }
 
