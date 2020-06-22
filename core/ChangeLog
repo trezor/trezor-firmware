@@ -12,6 +12,8 @@ _Most likely to be released on July 1st._
 - Soft lock.  #958
 - Auto lock.  #1027
 - Dedicated `initialized` field in storage.
+- Support EXTERNAL transaction inputs with a SLIP-0019 proof of ownership #1052
+- Support pre-signed EXTERNAL transaction inputs
 
 ### Deprecated
 - Deprecate `Overwintered` field in `SignTx` and `TxAck`.
