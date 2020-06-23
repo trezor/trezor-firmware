@@ -30,8 +30,11 @@
 #include <vendor/libopencm3/include/libopencmsis/core_cm3.h>
 #include <libopencm3/stm32/flash.h>
 
-/** Sector erase operation extracted from libopencm3 - flash_erase_sector  - so it can run from RAM */
-static void __attribute__((noinline, section(".data"))) erase_sector(uint8_t sector, uint32_t psize) {
+/** Sector erase operation extracted from libopencm3 - flash_erase_sector
+ * so it can run from RAM 
+ */
+static void __attribute__((noinline, section(".data"))) 
+erase_sector(uint8_t sector, uint32_t psize) {
   // Wait for flash controller to be ready
   while ((FLASH_SR & FLASH_SR_BSY) == FLASH_SR_BSY);
   // Set program word width
@@ -54,13 +57,15 @@ static void __attribute__((noinline, section(".data"))) erase_sector(uint8_t sec
   FLASH_CR &= ~(FLASH_CR_SNB_MASK << FLASH_CR_SNB_SHIFT);
 }
 
-static void __attribute__((noinline, section(".data"))) erase_firmware_and_storage(void) {
+static void __attribute__((noinline, section(".data"))) 
+erase_firmware_and_storage(void) {
   // Flash unlock
   FLASH_KEYR = FLASH_KEYR_KEY1;
   FLASH_KEYR = FLASH_KEYR_KEY2;
 
-  // Erase storage sectors to prevent firmware downgrade to vulnerable version later
-  for (int i = FLASH_STORAGE_SECTOR_FIRST; i <= FLASH_STORAGE_SECTOR_LAST ; i++) {
+  // Erase storage sectors to prevent firmware downgrade to vulnerable version
+  for (int i = FLASH_STORAGE_SECTOR_FIRST; i <= FLASH_STORAGE_SECTOR_LAST ; 
+    i++) {
     erase_sector(i, FLASH_CR_PROGRAM_X32);
   }
 
@@ -73,19 +78,20 @@ static void __attribute__((noinline, section(".data"))) erase_firmware_and_stora
   FLASH_CR |= FLASH_CR_LOCK;
 }
 
-void __attribute__((noinline, noreturn, section(".data"))) reboot_device(void)
-{
+void __attribute__((noinline, noreturn, section(".data"))) 
+reboot_device(void) {
   __disable_irq();
   SCB_AIRCR = SCB_AIRCR_VECTKEY | SCB_AIRCR_SYSRESETREQ;
   while (1);
 }
 
 /** Entry point of RAM shim that deletes old FW, storage and reboot */
-void __attribute__((noinline, noreturn, section(".data"))) erase_fw_and_reboot(void) {
-    erase_firmware_and_storage();
-    reboot_device();
+void __attribute__((noinline, noreturn, section(".data"))) 
+erase_fw_and_reboot(void) {
+  erase_firmware_and_storage();
+  reboot_device();
 
-    for (;;); // never reached, but compiler would generate error
+  for (;;); // never reached, but compiler would generate error
 }
 
 int main(void) {
