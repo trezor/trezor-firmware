@@ -108,7 +108,7 @@ int main(void) {
 
   timer_init();
 
-  //check_bootloader();
+  check_bootloader();
 
   layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Erasing old data", NULL,
                NULL, "DO NOT UNPLUG", "YOUR TREZOR!", NULL);

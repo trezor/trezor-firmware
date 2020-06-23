@@ -182,10 +182,6 @@ void check_bootloader(void) {
     // check whether the write was OK
     r = memory_bootloader_hash(hash);
     if (r == 32 && 0 == memcmp(hash, bl_hash, 32)) {
-      // OK -> show info and halt
-      layoutDialog(&bmp_icon_info, NULL, NULL, NULL, _("Update finished"),
-                   _("successfully."), NULL, _("Please reconnect"),
-                   _("the device."), NULL);
       return; // return so that intermediate firmware can delete itself
     }
   }
