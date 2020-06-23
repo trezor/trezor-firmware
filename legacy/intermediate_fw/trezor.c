@@ -22,6 +22,7 @@
 #include "memzero.h"
 #include "memory.h"
 #include "oled.h"
+#include "layout.h"
 #include "rng.h"
 #include "setup.h"
 #include "timer.h"
@@ -103,8 +104,14 @@ int main(void) {
 
   timer_init();
 
-  oledDrawBitmap(40, 0, &bmp_logo64);
+  layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Installing bootloader",
+                 NULL, NULL, "DO NOT UNPLUG", "YOUR TREZOR!", NULL);
+  delay(100000);
+
+  layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Erasing old data",
+                 NULL, NULL, "DO NOT UNPLUG", "YOUR TREZOR!", NULL);
   oledRefresh();
+
   // from this point the execution is from RAM instead of flash
   erase_fw_and_reboot();
 
