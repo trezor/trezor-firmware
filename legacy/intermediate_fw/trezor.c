@@ -18,26 +18,27 @@
  */
 
 #include "trezor.h"
+#include <libopencm3/stm32/desig.h>
+#include <libopencm3/stm32/flash.h>
+#include <vendor/libopencm3/include/libopencmsis/core_cm3.h>
 #include "bitmaps.h"
-#include "memzero.h"
-#include "memory.h"
-#include "oled.h"
 #include "layout.h"
+#include "memory.h"
+#include "memzero.h"
+#include "oled.h"
 #include "rng.h"
 #include "setup.h"
 #include "timer.h"
 #include "util.h"
-#include <libopencm3/stm32/desig.h>
-#include <vendor/libopencm3/include/libopencmsis/core_cm3.h>
-#include <libopencm3/stm32/flash.h>
 
 /** Sector erase operation extracted from libopencm3 - flash_erase_sector
- * so it can run from RAM 
+ * so it can run from RAM
  */
-static void __attribute__((noinline, section(".data"))) 
+static void __attribute__((noinline, section(".data")))
 erase_sector(uint8_t sector, uint32_t psize) {
   // Wait for flash controller to be ready
-  while ((FLASH_SR & FLASH_SR_BSY) == FLASH_SR_BSY);
+  while ((FLASH_SR & FLASH_SR_BSY) == FLASH_SR_BSY)
+    ;
   // Set program word width
   FLASH_CR &= ~(FLASH_CR_PROGRAM_MASK << FLASH_CR_PROGRAM_SHIFT);
   FLASH_CR |= psize << FLASH_CR_PROGRAM_SHIFT;
@@ -53,20 +54,21 @@ erase_sector(uint8_t sector, uint32_t psize) {
   FLASH_CR |= FLASH_CR_STRT;
 
   // Wait for flash controller to be ready
-  while ((FLASH_SR & FLASH_SR_BSY) == FLASH_SR_BSY);
+  while ((FLASH_SR & FLASH_SR_BSY) == FLASH_SR_BSY)
+    ;
   FLASH_CR &= ~FLASH_CR_SER;
   FLASH_CR &= ~(FLASH_CR_SNB_MASK << FLASH_CR_SNB_SHIFT);
 }
 
-static void __attribute__((noinline, section(".data"))) 
+static void __attribute__((noinline, section(".data")))
 erase_firmware_and_storage(void) {
   // Flash unlock
   FLASH_KEYR = FLASH_KEYR_KEY1;
   FLASH_KEYR = FLASH_KEYR_KEY2;
 
   // Erase storage sectors to prevent firmware downgrade to vulnerable version
-  for (int i = FLASH_STORAGE_SECTOR_FIRST; i <= FLASH_STORAGE_SECTOR_LAST ; 
-    i++) {
+  for (int i = FLASH_STORAGE_SECTOR_FIRST; i <= FLASH_STORAGE_SECTOR_LAST;
+       i++) {
     erase_sector(i, FLASH_CR_PROGRAM_X32);
   }
 
@@ -79,20 +81,21 @@ erase_firmware_and_storage(void) {
   FLASH_CR |= FLASH_CR_LOCK;
 }
 
-void __attribute__((noinline, noreturn, section(".data"))) 
-reboot_device(void) {
+void __attribute__((noinline, noreturn, section(".data"))) reboot_device(void) {
   __disable_irq();
   SCB_AIRCR = SCB_AIRCR_VECTKEY | SCB_AIRCR_SYSRESETREQ;
-  while (1);
+  while (1)
+    ;
 }
 
 /** Entry point of RAM shim that deletes old FW, storage and reboot */
-void __attribute__((noinline, noreturn, section(".data"))) 
+void __attribute__((noinline, noreturn, section(".data")))
 erase_fw_and_reboot(void) {
   erase_firmware_and_storage();
   reboot_device();
 
-  for (;;); // never reached, but compiler would generate error
+  for (;;)
+    ;  // never reached, but compiler would generate error
 }
 
 int main(void) {
@@ -105,16 +108,15 @@ int main(void) {
   timer_init();
 
   layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Installing bootloader",
-                 NULL, NULL, "DO NOT UNPLUG", "YOUR TREZOR!", NULL);
+               NULL, NULL, "DO NOT UNPLUG", "YOUR TREZOR!", NULL);
   delay(100000);
 
-  layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Erasing old data",
-                 NULL, NULL, "DO NOT UNPLUG", "YOUR TREZOR!", NULL);
+  layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Erasing old data", NULL,
+               NULL, "DO NOT UNPLUG", "YOUR TREZOR!", NULL);
   oledRefresh();
 
   // from this point the execution is from RAM instead of flash
   erase_fw_and_reboot();
-
 
   return 0;
 }
