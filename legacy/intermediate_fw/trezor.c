@@ -30,7 +30,7 @@
 #include <vendor/libopencm3/include/libopencmsis/core_cm3.h>
 #include <libopencm3/stm32/flash.h>
 
-/** Sector erase operation extracted from libopencm3 - flash_erase_sector so it can run from RAM */
+/** Sector erase operation extracted from libopencm3 - flash_erase_sector  - so it can run from RAM */
 static void __attribute__((noinline, section(".data"))) erase_sector(uint8_t sector, uint32_t psize) {
   // Wait for flash controller to be ready
   while ((FLASH_SR & FLASH_SR_BSY) == FLASH_SR_BSY);
@@ -54,14 +54,18 @@ static void __attribute__((noinline, section(".data"))) erase_sector(uint8_t sec
   FLASH_CR &= ~(FLASH_CR_SNB_MASK << FLASH_CR_SNB_SHIFT);
 }
 
-static void __attribute__((noinline, section(".data"))) erase_firmware(void) {
+static void __attribute__((noinline, section(".data"))) erase_firmware_and_storage(void) {
   // Flash unlock
   FLASH_KEYR = FLASH_KEYR_KEY1;
   FLASH_KEYR = FLASH_KEYR_KEY2;
 
+  // Erase storage sectors to prevent firmware downgrade to vulnerable version later
+  for (int i = FLASH_STORAGE_SECTOR_FIRST; i <= FLASH_STORAGE_SECTOR_LAST ; i++) {
+    erase_sector(i, FLASH_CR_PROGRAM_X32);
+  }
+
   // Erase firmware sectors
-  for (int i = FLASH_CODE_SECTOR_FIRST; i <= FLASH_CODE_SECTOR_LAST;
-       i++) {
+  for (int i = FLASH_CODE_SECTOR_FIRST; i <= FLASH_CODE_SECTOR_LAST; i++) {
     erase_sector(i, FLASH_CR_PROGRAM_X32);
   }
 
@@ -76,8 +80,9 @@ void __attribute__((noinline, noreturn, section(".data"))) reboot_device(void)
   while (1);
 }
 
-void __attribute__((noinline, noreturn, section(".data"))) erase_fw_from_ram_and_reboot(void) {
-    erase_firmware();
+/** Entry point of RAM shim that deletes old FW, storage and reboot */
+void __attribute__((noinline, noreturn, section(".data"))) erase_fw_and_reboot(void) {
+    erase_firmware_and_storage();
     reboot_device();
 
     for (;;); // never reached, but compiler would generate error
@@ -94,7 +99,8 @@ int main(void) {
 
   oledDrawBitmap(40, 0, &bmp_logo64);
   oledRefresh();
-  erase_fw_from_ram_and_reboot();
+  // from this point the execution is from RAM instead of flash
+  erase_fw_and_reboot();
 
 
   return 0;
