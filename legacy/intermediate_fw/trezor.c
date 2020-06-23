@@ -22,6 +22,7 @@
 #include <libopencm3/stm32/flash.h>
 #include <vendor/libopencm3/include/libopencmsis/core_cm3.h>
 #include "bitmaps.h"
+#include "bl_check.h"
 #include "layout.h"
 #include "memory.h"
 #include "memzero.h"
@@ -107,9 +108,7 @@ int main(void) {
 
   timer_init();
 
-  layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Installing bootloader",
-               NULL, NULL, "DO NOT UNPLUG", "YOUR TREZOR!", NULL);
-  delay(100000);
+  //check_bootloader();
 
   layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Erasing old data", NULL,
                NULL, "DO NOT UNPLUG", "YOUR TREZOR!", NULL);

@@ -4,6 +4,7 @@ NAME  = trezor
 
 OBJS += trezor.o
 OBJS += header.o
+OBJS += bl_check.o
 OBJS += ../vendor/trezor-crypto/memzero.o
 
 OPTFLAGS ?= -Og
