@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - CoinJoin preauthorization and signing flow.  [#1053]
 - Value of the `safety-checks` setting to the `Features` message.  [#1193]
+- ERC20 tokens show contract address for confirmation. Unknown ERC20 tokens show wei amount.  [#800]
 
 ### Changed
 - The `safety-checks` setting gained new possible value `PromptTemporarily` which overrides safety checks until device reboot.  [#1133]

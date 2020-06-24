@@ -121,6 +121,7 @@ class TestMsgEthereumSigntx:
                 [
                     messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
                     messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
                     messages.EthereumTxRequest(data_length=None),
                 ]
             )
