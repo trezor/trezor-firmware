@@ -11,7 +11,12 @@ from apps.common import paths
 
 from . import address, tokens
 from .keychain import with_keychain_from_chain_id
-from .layout import require_confirm_data, require_confirm_fee, require_confirm_tx
+from .layout import (
+    require_confirm_data,
+    require_confirm_fee,
+    require_confirm_tx,
+    require_confirm_unknown_token,
+)
 
 # maximum supported chain id
 MAX_CHAIN_ID = 2147483629
@@ -40,6 +45,9 @@ async def sign_tx(ctx, msg, keychain):
         token = tokens.token_by_chain_address(msg.chain_id, address_bytes)
         recipient = msg.data_initial_chunk[16:36]
         value = int.from_bytes(msg.data_initial_chunk[36:68], "big")
+
+        if token is tokens.UNKNOWN_TOKEN:
+            await require_confirm_unknown_token(ctx, address_bytes)
 
     await require_confirm_tx(ctx, recipient, value, msg.chain_id, token, msg.tx_type)
     if token is None and msg.data_length > 0:

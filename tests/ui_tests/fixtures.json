@@ -127,7 +127,7 @@
 "test_msg_ethereum_signtx.py-test_ethereum_signtx_message": "f15bfcd910b3a315515a07babc1f1bbfb30a78a9304b0fa4646cfc91911a638c",
 "test_msg_ethereum_signtx.py-test_ethereum_signtx_newcontract": "b8672006a9590fa69b4a882830810734ddbf120327780d59e51dd894afa383cc",
 "test_msg_ethereum_signtx.py-test_ethereum_signtx_nodata": "9d69b61aee19c42c22651cd9912d8a29b2ac6987b552966a6659e3505d4869e7",
-"test_msg_ethereum_signtx.py-test_ethereum_signtx_unknown_erc20_token": "74ccd107e69bfd5d08355636f4d5814a9e4f2d2153f63a4a10bfab39c4ff60a1",
+"test_msg_ethereum_signtx.py-test_ethereum_signtx_unknown_erc20_token": "1c35295d3216ba377a73e152d506033896c7d958775f4c9cfd13dd3cd5e3cfd2",
 "test_msg_ethereum_signtx.py-test_ethereum_signtx_wanchain": "4abb87c2b2836601971af8483fb95ff0f5913bdf912ff3e17a20c8c34872470a",
 "test_msg_ethereum_signtx_eip155.py::test_chain_ids[1-60-sig0]": "4fb0b0b8fb5f803132a422d8b26d51e46ee6976c04ad0de29230adfc63d0e44c",
 "test_msg_ethereum_signtx_eip155.py::test_chain_ids[2018-2018-sig4]": "1eaf3c481d105f3c5da45e3455f6af13ac7c77a3796a9b69fdd38adae89a0401",
