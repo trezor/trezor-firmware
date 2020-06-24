@@ -100,7 +100,7 @@ erase_fw_and_reboot(void) {
 }
 
 int main(void) {
-  setup();
+  setupApp();
   __stack_chk_guard = random32();  // this supports compiler provided
                                    // unpredictable stack protection checks
   oledInit();
