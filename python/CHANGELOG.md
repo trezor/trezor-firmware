@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 _At the moment, the project does **not** adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
 
+## [0.12.1] - unreleased
+[0.12.1]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.0...master
+
+### Fixed
+
+- correctly calculate hashes for very small firmwares [f#1082]
+
 ## [0.12.0] - 2020-04-01
 [0.12.0]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.6...python/v0.12.0
 
@@ -422,3 +429,4 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 [f#681]: https://github.com/trezor/trezor-firmware/issues/681
 [f#778]: https://github.com/trezor/trezor-firmware/issues/778
 [f#823]: https://github.com/trezor/trezor-firmware/issues/823
+[f#1082]: https://github.com/trezor/trezor-firmware/issues/1082
