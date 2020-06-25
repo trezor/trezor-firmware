@@ -9,4 +9,6 @@ class Qr(ui.Component):
         self.scale = scale
 
     def on_render(self) -> None:
-        ui.display.qrcode(self.x, self.y, self.data.encode(), self.scale)
+        if self.repaint:
+            ui.display.qrcode(self.x, self.y, self.data.encode(), self.scale)
+            self.repaint = False
