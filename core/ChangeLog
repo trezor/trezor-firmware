@@ -19,6 +19,7 @@ _Most likely to be released on July 1st._
 
 ### Fixed
 - Fix cancel icon in PIN dialog.  #1042
+- Fix repaint bug in QR code rendering.  #1067
 
 ### Security
 
