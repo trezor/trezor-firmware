@@ -104,10 +104,14 @@ int main(void) {
   __stack_chk_guard = random32();  // this supports compiler provided
                                    // unpredictable stack protection checks
   oledInit();
-  mpu_config_off();
-
+  if (is_mode_unprivileged()) {
+    layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Cannot update", NULL,
+                 NULL, "Unprivileged mode", "Unsigned firmware", NULL);
+    shutdown();
+  }
+  
+  mpu_config_off(); // needed for flash writable, RAM RWX
   timer_init();
-
   check_bootloader(false);
 
   layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Erasing old data", NULL,
