@@ -105,3 +105,21 @@ Switch your device to bootloader mode, then execute:
 ```sh
 trezorctl firmware-update -f build/legacy/firmware/trezor.bin
 ```
+
+## Combining bootloader and firmware with various `MEMORY_PROTECT` settings, signed/unsigned
+
+Not all combinations of bootloader and firmware will work. This depends on
+3 variables: MEMORY_PROTECT of bootloader, MEMORY_PROTECT of firmware, whether firmware is signed
+
+This table shows the result for bootloader 1.8.0+ and 1.9.1+:
+
+| Bootloader MEMORY_PROTECT | Firmware MEMORY_PROTECT | Is firmware officially signed? | Result                                                                                     |
+| ------------------------- | ----------------------- | ------------------------------ | ------------------------------------------------------------------------------------------ |
+|  1                        |  1                      | yes                            | works, official configuration                                                              |
+|  1                        |  1                      | no                             | hardfault in header.S when setting VTOR and stack                                          |
+|  0                        |  1                      | no                             | works, but don't forget to comment out `check_bootloader`, otherwise it'll get overwritten |
+|  0                        |  0                      | no                             | hard fault because header.S doesn't set VTOR and stack right                               |
+|  1                        |  0                      | no                             | works                                                                                      |
+
+The other three possibilities with signed firmware and `MEMORY_PROTECT!=0` for bootloader/firmware don't exist.
+
