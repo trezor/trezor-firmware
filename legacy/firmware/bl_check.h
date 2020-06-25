@@ -20,6 +20,8 @@
 #ifndef __BL_CHECK_H__
 #define __BL_CHECK_H__
 
-void check_bootloader(void);
+#include <stdbool.h>
+
+void check_bootloader(bool shutdown_on_success);
 
 #endif
