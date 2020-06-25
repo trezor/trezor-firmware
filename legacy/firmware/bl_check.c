@@ -185,11 +185,11 @@ void check_bootloader(bool shutdown_on_success) {
     r = memory_bootloader_hash(hash);
     if (r == 32 && 0 == memcmp(hash, bl_hash, 32)) {
       if (shutdown_on_success) {
-      // OK -> show info and halt
-      layoutDialog(&bmp_icon_info, NULL, NULL, NULL, _("Update finished"),
-                   _("successfully."), NULL, _("Please reconnect"),
-                   _("the device."), NULL);
-      shutdown();
+        // OK -> show info and halt
+        layoutDialog(&bmp_icon_info, NULL, NULL, NULL, _("Update finished"),
+                     _("successfully."), NULL, _("Please reconnect"),
+                     _("the device."), NULL);
+        shutdown();
       }
       return;
     }

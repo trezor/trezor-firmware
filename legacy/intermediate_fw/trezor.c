@@ -109,8 +109,8 @@ int main(void) {
                  NULL, "Unprivileged mode", "Unsigned firmware", NULL);
     shutdown();
   }
-  
-  mpu_config_off(); // needed for flash writable, RAM RWX
+
+  mpu_config_off();  // needed for flash writable, RAM RWX
   timer_init();
   check_bootloader(false);
 
