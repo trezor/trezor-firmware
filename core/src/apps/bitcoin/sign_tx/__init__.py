@@ -39,12 +39,13 @@ async def sign_tx(
     signer = signer_class(msg, keychain, coin).signer()
 
     res = None  # type: Union[TxAck, bool, None]
+    field_cache = {}
     while True:
         req = signer.send(res)
         if isinstance(req, TxRequest):
             if req.request_type == TXFINISHED:
                 break
-            res = await ctx.call(req, TxAck)
+            res = await ctx.call(req, TxAck, field_cache)
         elif isinstance(req, helpers.UiConfirmOutput):
             mods = utils.unimport_begin()
             res = await layout.confirm_output(ctx, req.output, req.coin)
