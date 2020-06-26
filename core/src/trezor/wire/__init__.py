@@ -141,11 +141,14 @@ class Context:
         self.buffer_io = codec_v1.BytesIO(bytearray(8192))
 
     async def call(
-        self, msg: protobuf.MessageType, expected_type: Type[protobuf.LoadedMessageType]
+        self,
+        msg: protobuf.MessageType,
+        expected_type: Type[protobuf.LoadedMessageType],
+        field_cache: Dict = None,
     ) -> protobuf.LoadedMessageType:
-        await self.write(msg)
+        await self.write(msg, field_cache)
         del msg
-        return await self.read(expected_type)
+        return await self.read(expected_type, field_cache)
 
     async def call_any(
         self, msg: protobuf.MessageType, *expected_wire_types: int
@@ -159,7 +162,7 @@ class Context:
         return await codec_v1.read_message(self.iface, self.buffer_io.buffer)
 
     async def read(
-        self, expected_type: Type[protobuf.LoadedMessageType]
+        self, expected_type: Type[protobuf.LoadedMessageType], field_cache: Dict = None
     ) -> protobuf.LoadedMessageType:
         if __debug__:
             log.debug(
@@ -191,7 +194,7 @@ class Context:
 
         # look up the protobuf class and parse the message
         pbtype = messages.get_type(msg.type)
-        return protobuf.load_message(msg.data, pbtype)
+        return protobuf.load_message(msg.data, pbtype, field_cache)
 
     async def read_any(
         self, expected_wire_types: Iterable[int]
@@ -226,7 +229,7 @@ class Context:
         # parse the message and return it
         return protobuf.load_message(msg.data, exptype)
 
-    async def write(self, msg: protobuf.MessageType) -> None:
+    async def write(self, msg: protobuf.MessageType, field_cache: Dict = None) -> None:
         if __debug__:
             log.debug(
                 __name__, "%s:%x write: %s", self.iface.iface_num(), self.sid, msg
@@ -234,7 +237,7 @@ class Context:
 
         # write the message
         self.buffer_io.seek(0)
-        protobuf.dump_message(self.buffer_io, msg)
+        protobuf.dump_message(self.buffer_io, msg, field_cache)
         await codec_v1.write_message(
             self.iface, msg.MESSAGE_WIRE_TYPE, self.buffer_io.get_written()
         )

@@ -185,9 +185,16 @@ if False:
 
 
 def load_message(
-    reader: Reader, msg_type: Type[LoadedMessageType]
+    reader: Reader, msg_type: Type[LoadedMessageType], field_cache: Dict = None
 ) -> LoadedMessageType:
-    fields = msg_type.get_fields()
+
+    if field_cache is None:
+        field_cache = {}
+    fields = field_cache.get(msg_type)
+    if fields is None:
+        fields = msg_type.get_fields()
+        field_cache[msg_type] = fields
+
     msg = msg_type()
 
     if False:
@@ -238,7 +245,7 @@ def load_message(
             reader.readinto(fvalue)
             fvalue = bytes(fvalue).decode()
         elif issubclass(ftype, MessageType):
-            fvalue = load_message(LimitedReader(reader, ivalue), ftype)
+            fvalue = load_message(LimitedReader(reader, ivalue), ftype, field_cache)
         else:
             raise TypeError  # field type is unknown
 
@@ -257,11 +264,15 @@ def load_message(
     return msg
 
 
-def dump_message(writer: Writer, msg: MessageType, fields: Dict = None) -> None:
+def dump_message(writer: Writer, msg: MessageType, field_cache: Dict = None) -> None:
     repvalue = [0]
 
+    if field_cache is None:
+        field_cache = {}
+    fields = field_cache.get(type(msg))
     if fields is None:
         fields = msg.get_fields()
+        field_cache[type(msg)] = fields
 
     for ftag in fields:
         fname, ftype, fflags = fields[ftag]
@@ -275,8 +286,6 @@ def dump_message(writer: Writer, msg: MessageType, fields: Dict = None) -> None:
         if not fflags & FLAG_REPEATED:
             repvalue[0] = fvalue
             fvalue = repvalue
-
-        ffields = None  # type: Optional[Dict]
 
         for svalue in fvalue:
             dump_uvarint(writer, fkey)
@@ -308,21 +317,27 @@ def dump_message(writer: Writer, msg: MessageType, fields: Dict = None) -> None:
                 writer.write(svalue)
 
             elif issubclass(ftype, MessageType):
+                ffields = field_cache.get(ftype)
                 if ffields is None:
                     ffields = ftype.get_fields()
-                dump_uvarint(writer, count_message(svalue, ffields))
-                dump_message(writer, svalue, ffields)
+                    field_cache[ftype] = ffields
+                dump_uvarint(writer, count_message(svalue, field_cache))
+                dump_message(writer, svalue, field_cache)
 
             else:
                 raise TypeError
 
 
-def count_message(msg: MessageType, fields: Dict = None) -> int:
+def count_message(msg: MessageType, field_cache: Dict = None) -> int:
     nbytes = 0
     repvalue = [0]
 
+    if field_cache is None:
+        field_cache = {}
+    fields = field_cache.get(type(msg))
     if fields is None:
         fields = msg.get_fields()
+        field_cache[msg] = fields
 
     for ftag in fields:
         fname, ftype, fflags = fields[ftag]
