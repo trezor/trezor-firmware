@@ -117,7 +117,7 @@ class Overwintered(Bitcoinlike):
             # 8. expiryHeight
             write_uint32(h_preimage, self.tx.expiry)
             # 9. nHashType
-            write_uint32(h_preimage, self.get_hash_type())
+            write_uint32(h_preimage, self.get_sighash_type(txi))
         elif self.tx.version == 4:
             zero_hash = b"\x00" * TX_HASH_SIZE
             # 6. hashJoinSplits
@@ -133,7 +133,7 @@ class Overwintered(Bitcoinlike):
             # 11. valueBalance
             write_uint64(h_preimage, 0)
             # 12. nHashType
-            write_uint32(h_preimage, self.get_hash_type())
+            write_uint32(h_preimage, self.get_sighash_type(txi))
         else:
             raise wire.DataError("Unsupported version for overwintered transaction")
 

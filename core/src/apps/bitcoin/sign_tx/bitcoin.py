@@ -250,12 +250,12 @@ class Bitcoin:
             signature_index = multisig.multisig_pubkey_index(txi.multisig, public_key)
             self.serialized_tx.extend(
                 scripts.witness_p2wsh(
-                    txi.multisig, signature, signature_index, self.get_hash_type()
+                    txi.multisig, signature, signature_index, self.get_hash_type(txi)
                 )
             )
         else:
             self.serialized_tx.extend(
-                scripts.witness_p2wpkh(signature, public_key, self.get_hash_type())
+                scripts.witness_p2wpkh(signature, public_key, self.get_hash_type(txi))
             )
 
     async def sign_nonsegwit_input(self, i_sign: int) -> None:
@@ -307,7 +307,7 @@ class Bitcoin:
             self.write_tx_output(h_sign, txo, script_pubkey)
 
         writers.write_uint32(h_sign, self.tx.lock_time)
-        writers.write_uint32(h_sign, self.get_hash_type())
+        writers.write_uint32(h_sign, self.get_sighash_type(txi_sign))
 
         # check the control digests
         if self.h_confirmed.get_digest() != h_check.get_digest():
@@ -382,8 +382,15 @@ class Bitcoin:
     # Tx Helpers
     # ===
 
-    def get_hash_type(self) -> int:
+    def get_sighash_type(self, txi: TxInputType) -> int:
         return _SIGHASH_ALL
+
+    def get_hash_type(self, txi: TxInputType) -> int:
+        """ Return the nHashType flags."""
+        # The nHashType is the 8 least significant bits of the sighash type.
+        # Some coins set the 24 most significant bits of the sighash type to
+        # the fork ID value.
+        return self.get_sighash_type(txi) & 0xFF
 
     def write_tx_input(
         self, w: writers.Writer, txi: TxInputType, script: bytes
@@ -470,7 +477,7 @@ class Bitcoin:
             txi.script_type,
             txi.multisig,
             self.coin,
-            self.get_hash_type(),
+            self.get_hash_type(txi),
             pubkey,
             signature,
         )
@@ -535,7 +542,7 @@ class Bitcoin:
         writers.write_uint32(h_preimage, self.tx.lock_time)
 
         # nHashType
-        writers.write_uint32(h_preimage, self.get_hash_type())
+        writers.write_uint32(h_preimage, self.get_sighash_type(txi))
 
         return writers.get_tx_hash(h_preimage, double=self.coin.sign_hash_double)
 

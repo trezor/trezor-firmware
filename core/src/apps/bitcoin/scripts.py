@@ -137,10 +137,10 @@ def bip143_derive_script_code(txi: TxInputType, pubkeyhash: bytes) -> bytearray:
 
 
 def input_script_p2pkh_or_p2sh(
-    pubkey: bytes, signature: bytes, sighash: int
+    pubkey: bytes, signature: bytes, hash_type: int
 ) -> bytearray:
     w = empty_bytearray(5 + len(signature) + 1 + 5 + len(pubkey))
-    append_signature(w, signature, sighash)
+    append_signature(w, signature, hash_type)
     append_pubkey(w, pubkey)
     return w
 
@@ -264,10 +264,10 @@ def input_script_p2wsh_in_p2sh(script_hash: bytes) -> bytearray:
 # ===
 
 
-def witness_p2wpkh(signature: bytes, pubkey: bytes, sighash: int) -> bytearray:
+def witness_p2wpkh(signature: bytes, pubkey: bytes, hash_type: int) -> bytearray:
     w = empty_bytearray(1 + 5 + len(signature) + 1 + 5 + len(pubkey))
     write_bitcoin_varint(w, 0x02)  # num of segwit items, in P2WPKH it's always 2
-    write_signature_prefixed(w, signature, sighash)
+    write_signature_prefixed(w, signature, hash_type)
     write_bytes_prefixed(w, pubkey)
     return w
 
@@ -297,7 +297,7 @@ def witness_p2wsh(
     multisig: MultisigRedeemScriptType,
     signature: bytes,
     signature_index: int,
-    sighash: int,
+    hash_type: int,
 ) -> bytearray:
     # get other signatures, stretch with None to the number of the pubkeys
     signatures = multisig.signatures + [None] * (
@@ -321,7 +321,7 @@ def witness_p2wsh(
     # length of the result
     total_length = 1 + 1  # number of items, OP_FALSE
     for s in signatures:
-        total_length += 1 + len(s) + 1  # length, signature, sighash
+        total_length += 1 + len(s) + 1  # length, signature, hash_type
     total_length += 1 + redeem_script_length  # length, script
 
     w = empty_bytearray(total_length)
@@ -333,7 +333,7 @@ def witness_p2wsh(
     write_bitcoin_varint(w, 0)
 
     for s in signatures:
-        write_signature_prefixed(w, s, sighash)  # size of the witness included
+        write_signature_prefixed(w, s, hash_type)  # size of the witness included
 
     # redeem script
     write_bitcoin_varint(w, redeem_script_length)
@@ -379,7 +379,7 @@ def input_script_multisig(
     multisig: MultisigRedeemScriptType,
     signature: bytes,
     signature_index: int,
-    sighash: int,
+    hash_type: int,
     coin: CoinInfo,
 ) -> bytearray:
     signatures = multisig.signatures  # other signatures
@@ -396,7 +396,7 @@ def input_script_multisig(
     if utils.BITCOIN_ONLY or not coin.decred:
         total_length += 1  # OP_FALSE
     for s in signatures:
-        total_length += 1 + len(s) + 1  # length, signature, sighash
+        total_length += 1 + len(s) + 1  # length, signature, hash_type
     total_length += 1 + redeem_script_length  # length, script
 
     w = empty_bytearray(total_length)
@@ -409,7 +409,7 @@ def input_script_multisig(
 
     for s in signatures:
         if len(s):
-            append_signature(w, s, sighash)
+            append_signature(w, s, hash_type)
 
     # redeem script
     write_op_push(w, redeem_script_length)
@@ -519,16 +519,16 @@ def output_script_paytoopreturn(data: bytes) -> bytearray:
 # ===
 
 
-def write_signature_prefixed(w: Writer, signature: bytes, sighash: int) -> None:
+def write_signature_prefixed(w: Writer, signature: bytes, hash_type: int) -> None:
     write_bitcoin_varint(w, len(signature) + 1)
     write_bytes_unchecked(w, signature)
-    w.append(sighash)
+    w.append(hash_type)
 
 
-def append_signature(w: Writer, signature: bytes, sighash: int) -> None:
+def append_signature(w: Writer, signature: bytes, hash_type: int) -> None:
     write_op_push(w, len(signature) + 1)
     write_bytes_unchecked(w, signature)
-    w.append(sighash)
+    w.append(hash_type)
 
 
 def append_pubkey(w: Writer, pubkey: bytes) -> None:
