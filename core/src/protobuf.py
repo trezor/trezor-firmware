@@ -9,14 +9,14 @@ if False:
     from typing import Any, Dict, Iterable, List, Optional, Type, TypeVar, Union
     from typing_extensions import Protocol
 
-    class AsyncReader(Protocol):
-        async def areadinto(self, buf: bytearray) -> int:
+    class Reader(Protocol):
+        def readinto(self, buf: bytearray) -> int:
             """
             Reads `len(buf)` bytes into `buf`, or raises `EOFError`.
             """
 
-    class AsyncWriter(Protocol):
-        async def awrite(self, buf: bytes) -> int:
+    class Writer(Protocol):
+        def write(self, buf: bytes) -> int:
             """
             Writes all bytes from `buf`, or raises `EOFError`.
             """
@@ -25,20 +25,20 @@ if False:
 _UVARINT_BUFFER = bytearray(1)
 
 
-async def load_uvarint(reader: AsyncReader) -> int:
+def load_uvarint(reader: Reader) -> int:
     buffer = _UVARINT_BUFFER
     result = 0
     shift = 0
     byte = 0x80
     while byte & 0x80:
-        await reader.areadinto(buffer)
+        reader.readinto(buffer)
         byte = buffer[0]
         result += (byte & 0x7F) << shift
         shift += 7
     return result
 
 
-async def dump_uvarint(writer: AsyncWriter, n: int) -> None:
+def dump_uvarint(writer: Writer, n: int) -> None:
     if n < 0:
         raise ValueError("Cannot dump signed value, convert it to unsigned first.")
     buffer = _UVARINT_BUFFER
@@ -46,7 +46,7 @@ async def dump_uvarint(writer: AsyncWriter, n: int) -> None:
     while shifted:
         shifted = n >> 7
         buffer[0] = (n & 0x7F) | (0x80 if shifted else 0x00)
-        await writer.awrite(buffer)
+        writer.write(buffer)
         n = shifted
 
 
@@ -165,15 +165,15 @@ class MessageType:
 
 
 class LimitedReader:
-    def __init__(self, reader: AsyncReader, limit: int) -> None:
+    def __init__(self, reader: Reader, limit: int) -> None:
         self.reader = reader
         self.limit = limit
 
-    async def areadinto(self, buf: bytearray) -> int:
+    def readinto(self, buf: bytearray) -> int:
         if self.limit < len(buf):
             raise EOFError
         else:
-            nread = await self.reader.areadinto(buf)
+            nread = self.reader.readinto(buf)
             self.limit -= nread
             return nread
 
@@ -184,8 +184,8 @@ if False:
     LoadedMessageType = TypeVar("LoadedMessageType", bound=MessageType)
 
 
-async def load_message(
-    reader: AsyncReader, msg_type: Type[LoadedMessageType]
+def load_message(
+    reader: Reader, msg_type: Type[LoadedMessageType]
 ) -> LoadedMessageType:
     fields = msg_type.get_fields()
     msg = msg_type()
@@ -197,7 +197,7 @@ async def load_message(
 
     while True:
         try:
-            fkey = await load_uvarint(reader)
+            fkey = load_uvarint(reader)
         except EOFError:
             break  # no more fields to load
 
@@ -208,10 +208,10 @@ async def load_message(
 
         if field is None:  # unknown field, skip it
             if wtype == 0:
-                await load_uvarint(reader)
+                load_uvarint(reader)
             elif wtype == 2:
-                ivalue = await load_uvarint(reader)
-                await reader.areadinto(bytearray(ivalue))
+                ivalue = load_uvarint(reader)
+                reader.readinto(bytearray(ivalue))
             else:
                 raise ValueError
             continue
@@ -220,7 +220,7 @@ async def load_message(
         if wtype != ftype.WIRE_TYPE:
             raise TypeError  # parsed wire type differs from the schema
 
-        ivalue = await load_uvarint(reader)
+        ivalue = load_uvarint(reader)
 
         if ftype is UVarintType:
             fvalue = ivalue
@@ -232,13 +232,13 @@ async def load_message(
             fvalue = ftype.validate(ivalue)
         elif ftype is BytesType:
             fvalue = bytearray(ivalue)
-            await reader.areadinto(fvalue)
+            reader.readinto(fvalue)
         elif ftype is UnicodeType:
             fvalue = bytearray(ivalue)
-            await reader.areadinto(fvalue)
+            reader.readinto(fvalue)
             fvalue = bytes(fvalue).decode()
         elif issubclass(ftype, MessageType):
-            fvalue = await load_message(LimitedReader(reader, ivalue), ftype)
+            fvalue = load_message(LimitedReader(reader, ivalue), ftype)
         else:
             raise TypeError  # field type is unknown
 
@@ -257,9 +257,7 @@ async def load_message(
     return msg
 
 
-async def dump_message(
-    writer: AsyncWriter, msg: MessageType, fields: Dict = None
-) -> None:
+def dump_message(writer: Writer, msg: MessageType, fields: Dict = None) -> None:
     repvalue = [0]
 
     if fields is None:
@@ -281,39 +279,39 @@ async def dump_message(
         ffields = None  # type: Optional[Dict]
 
         for svalue in fvalue:
-            await dump_uvarint(writer, fkey)
+            dump_uvarint(writer, fkey)
 
             if ftype is UVarintType:
-                await dump_uvarint(writer, svalue)
+                dump_uvarint(writer, svalue)
 
             elif ftype is SVarintType:
-                await dump_uvarint(writer, sint_to_uint(svalue))
+                dump_uvarint(writer, sint_to_uint(svalue))
 
             elif ftype is BoolType:
-                await dump_uvarint(writer, int(svalue))
+                dump_uvarint(writer, int(svalue))
 
             elif isinstance(ftype, EnumType):
-                await dump_uvarint(writer, svalue)
+                dump_uvarint(writer, svalue)
 
             elif ftype is BytesType:
                 if isinstance(svalue, list):
-                    await dump_uvarint(writer, _count_bytes_list(svalue))
+                    dump_uvarint(writer, _count_bytes_list(svalue))
                     for sub_svalue in svalue:
-                        await writer.awrite(sub_svalue)
+                        writer.write(sub_svalue)
                 else:
-                    await dump_uvarint(writer, len(svalue))
-                    await writer.awrite(svalue)
+                    dump_uvarint(writer, len(svalue))
+                    writer.write(svalue)
 
             elif ftype is UnicodeType:
                 svalue = svalue.encode()
-                await dump_uvarint(writer, len(svalue))
-                await writer.awrite(svalue)
+                dump_uvarint(writer, len(svalue))
+                writer.write(svalue)
 
             elif issubclass(ftype, MessageType):
                 if ffields is None:
                     ffields = ftype.get_fields()
-                await dump_uvarint(writer, count_message(svalue, ffields))
-                await dump_message(writer, svalue, ffields)
+                dump_uvarint(writer, count_message(svalue, ffields))
+                dump_message(writer, svalue, ffields)
 
             else:
                 raise TypeError

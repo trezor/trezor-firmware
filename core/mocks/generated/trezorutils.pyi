@@ -13,12 +13,13 @@ def consteq(sec: bytes, pub: bytes) -> bool:
 
 # extmod/modtrezorutils/modtrezorutils.c
 def memcpy(
-    dst: bytearray, dst_ofs: int, src: bytes, src_ofs: int, n: int
+    dst: bytearray, dst_ofs: int, src: bytes, src_ofs: int, n: int = None
 ) -> int:
     """
     Copies at most `n` bytes from `src` at offset `src_ofs` to
-    `dst` at offset `dst_ofs`.  Returns the number of actually
-    copied bytes.
+    `dst` at offset `dst_ofs`. Returns the number of actually
+    copied bytes. If `n` is not specified, tries to copy
+    as much as possible.
     """
 
 
