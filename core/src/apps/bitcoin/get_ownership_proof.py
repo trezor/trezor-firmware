@@ -10,29 +10,43 @@ from apps.common.confirm import require_confirm
 from apps.common.paths import validate_path
 
 from . import addresses, common, scripts
-from .keychain import with_keychain
+from .keychain import get_keychain_for_coin
 from .ownership import generate_proof, get_identifier
 
 if False:
+    from typing import Optional
     from apps.common.seed import Keychain
+    from .authorization import CoinJoinAuthorization
 
 # Maximum number of characters per line in monospace font.
 _MAX_MONO_LINE = 18
 
 
-@with_keychain
-async def get_ownership_proof(
-    ctx, msg: GetOwnershipProof, keychain: Keychain, coin: coininfo.CoinInfo
+async def get_ownership_proof(ctx, msg: GetOwnershipProof) -> OwnershipProof:
+    keychain, coin = await get_keychain_for_coin(ctx, msg.coin_name)
+    return await get_ownership_proof_impl(ctx, msg, keychain, coin)
+
+
+async def get_ownership_proof_impl(
+    ctx,
+    msg: GetOwnershipProof,
+    keychain: Keychain,
+    coin: coininfo.CoinInfo,
+    authorization: Optional[CoinJoinAuthorization] = None,
 ) -> OwnershipProof:
-    await validate_path(
-        ctx,
-        addresses.validate_full_path,
-        keychain,
-        msg.address_n,
-        coin.curve_name,
-        coin=coin,
-        script_type=msg.script_type,
-    )
+    if authorization:
+        if not authorization.check_get_ownership_proof(msg):
+            raise wire.ProcessError("Unauthorized operation")
+    else:
+        await validate_path(
+            ctx,
+            addresses.validate_full_path,
+            keychain,
+            msg.address_n,
+            coin.curve_name,
+            coin=coin,
+            script_type=msg.script_type,
+        )
 
     if msg.script_type not in common.INTERNAL_INPUT_SCRIPT_TYPES:
         raise wire.DataError("Invalid script type")
@@ -57,7 +71,7 @@ async def get_ownership_proof(
         msg.ownership_ids = [ownership_id]
 
     # In order to set the "user confirmation" bit in the proof, the user must actually confirm.
-    if msg.user_confirmation:
+    if msg.user_confirmation and not authorization:
         text = Text("Proof of ownership", ui.ICON_CONFIG)
         text.normal("Do you want to create a")
         if not msg.commitment_data:
