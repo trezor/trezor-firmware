@@ -298,3 +298,18 @@ message OwnershipProof {
     required bytes ownership_proof = 1;     // SLIP-0019 proof of ownership
     required bytes signature = 2;           // signature of the proof
 }
+
+/**
+ * Request: Ask device to prompt the user to authorize a CoinJoin transaction
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message AuthorizeCoinJoin {
+    required uint64 amount = 1;                                         // amount to mix
+    required uint64 max_fee = 2;                                        // maximum total fees
+    required string coordinator = 3;                                    // coordinator identifier to use in commitment data (max. 18 ASCII characters)
+    repeated uint32 address_n = 4;                                      // prefix of the BIP-32 path leading to the account (m / purpose' / coin_type' / account')
+    optional string coin_name = 5 [default='Bitcoin'];                  // coin to use
+    optional InputScriptType script_type = 6 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
+}
