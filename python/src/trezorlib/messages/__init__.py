@@ -4,6 +4,7 @@
 from .Address import Address
 from .ApplyFlags import ApplyFlags
 from .ApplySettings import ApplySettings
+from .AuthorizeCoinJoin import AuthorizeCoinJoin
 from .BackupDevice import BackupDevice
 from .BinanceAddress import BinanceAddress
 from .BinanceCancelMsg import BinanceCancelMsg
