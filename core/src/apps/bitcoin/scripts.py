@@ -515,6 +515,45 @@ def output_script_paytoopreturn(data: bytes) -> bytearray:
     return w
 
 
+# BIP-322: SignatureProof container for scriptSig & witness
+# ===
+# https://github.com/bitcoin/bips/blob/master/bip-0322.mediawiki
+
+
+def write_bip322_signature_proof(
+    w: Writer,
+    script_type: EnumTypeInputScriptType,
+    multisig: MultisigRedeemScriptType,
+    coin: CoinInfo,
+    public_key: bytes,
+    signature: bytes,
+) -> None:
+    script_sig = input_derive_script(
+        script_type, multisig, coin, common.SIGHASH_ALL, public_key, signature
+    )
+    if script_type in common.SEGWIT_INPUT_SCRIPT_TYPES:
+        if multisig:
+            # find the place of our signature based on the public key
+            signature_index = multisig_pubkey_index(multisig, public_key)
+            witness = witness_p2wsh(
+                multisig, signature, signature_index, common.SIGHASH_ALL
+            )
+        else:
+            witness = witness_p2wpkh(signature, public_key, common.SIGHASH_ALL)
+    else:
+        # Zero entries in witness stack.
+        witness = bytearray(b"\x00")
+
+    write_bytes_prefixed(w, script_sig)
+    w.extend(witness)
+
+
+def read_bip322_signature_proof(r: BytearrayReader) -> Tuple[bytes, bytes]:
+    script_sig = read_bytes_prefixed(r)
+    witness = r.read()
+    return script_sig, witness
+
+
 # Helpers
 # ===
 
