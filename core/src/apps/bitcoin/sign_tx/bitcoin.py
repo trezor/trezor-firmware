@@ -353,7 +353,7 @@ class Bitcoin:
             # find out place of our signature based on the pubkey
             signature_index = multisig.multisig_pubkey_index(txi.multisig, public_key)
             self.serialized_tx.extend(
-                scripts.witness_p2wsh(
+                scripts.witness_multisig(
                     txi.multisig, signature, signature_index, self.get_hash_type(txi)
                 )
             )
