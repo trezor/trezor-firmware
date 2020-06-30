@@ -44,6 +44,7 @@
 #define MICROPY_ALLOC_PATH_MAX      (PATH_MAX)
 #define MICROPY_MALLOC_USES_ALLOCATED_SIZE (1)
 #define MICROPY_MEM_STATS           (1)
+#define MICROPY_ENABLE_PYSTACK      (1)
 
 // emitters
 #define MICROPY_PERSISTENT_CODE_LOAD (0)

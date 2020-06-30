@@ -282,6 +282,7 @@ SOURCE_MICROPYTHON = [
 
 SOURCE_MICROPYTHON_SPEED = [
     'vendor/micropython/py/gc.c',
+    'vendor/micropython/py/pystack.c',
     'vendor/micropython/py/vm.c',
 ]
 

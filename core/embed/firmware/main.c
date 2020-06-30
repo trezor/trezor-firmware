@@ -97,6 +97,11 @@ int main(void) {
   mp_stack_set_top(&_estack);
   mp_stack_set_limit((char *)&_estack - (char *)&_heap_end - 1024);
 
+#if MICROPY_ENABLE_PYSTACK
+  static mp_obj_t pystack[1024];
+  mp_pystack_init(pystack, &pystack[MP_ARRAY_SIZE(pystack)]);
+#endif
+
   // GC init
   printf("CORE: Starting GC\n");
   gc_init(&_heap_start, &_heap_end);
