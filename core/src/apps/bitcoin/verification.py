@@ -13,8 +13,8 @@ from .scripts import (
     parse_input_script_multisig,
     parse_input_script_p2pkh,
     parse_output_script_multisig,
+    parse_witness_multisig,
     parse_witness_p2wpkh,
-    parse_witness_p2wsh,
 )
 
 if False:
@@ -38,7 +38,7 @@ class SignatureVerifier:
                 self.public_keys = [public_key]
                 self.signatures = [(signature, hash_type)]
             elif len(script_pubkey) == 34:  # P2WSH
-                script, self.signatures = parse_witness_p2wsh(witness)
+                script, self.signatures = parse_witness_multisig(witness)
                 script_hash = sha256(script).digest()
                 if output_script_native_p2wpkh_or_p2wsh(script_hash) != script_pubkey:
                     raise wire.DataError("Invalid script hash")
@@ -57,7 +57,7 @@ class SignatureVerifier:
                 self.public_keys = [public_key]
                 self.signatures = [(signature, hash_type)]
             elif len(script_sig) == 35:  # P2WSH nested in BIP16 P2SH
-                script, self.signatures = parse_witness_p2wsh(witness)
+                script, self.signatures = parse_witness_multisig(witness)
                 script_hash = sha256(script).digest()
                 if input_script_p2wsh_in_p2sh(script_hash) != script_sig:
                     raise wire.DataError("Invalid script hash")

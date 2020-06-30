@@ -293,7 +293,7 @@ def parse_witness_p2wpkh(witness: bytes) -> Tuple[bytes, bytes, int]:
     return pubkey, signature, hash_type
 
 
-def witness_p2wsh(
+def witness_multisig(
     multisig: MultisigRedeemScriptType,
     signature: bytes,
     signature_index: int,
@@ -342,7 +342,7 @@ def witness_p2wsh(
     return w
 
 
-def parse_witness_p2wsh(witness: bytes) -> Tuple[bytes, List[Tuple[bytes, int]]]:
+def parse_witness_multisig(witness: bytes) -> Tuple[bytes, List[Tuple[bytes, int]]]:
     try:
         r = BytearrayReader(witness)
 
@@ -535,7 +535,7 @@ def write_bip322_signature_proof(
         if multisig:
             # find the place of our signature based on the public key
             signature_index = multisig_pubkey_index(multisig, public_key)
-            witness = witness_p2wsh(
+            witness = witness_multisig(
                 multisig, signature, signature_index, common.SIGHASH_ALL
             )
         else:
