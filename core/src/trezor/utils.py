@@ -25,7 +25,7 @@ if __debug__:
         LOG_MEMORY = 0
 
 if False:
-    from typing import Any, Iterable, Iterator, Protocol, TypeVar, Sequence
+    from typing import Any, Iterable, Iterator, Protocol, Union, TypeVar, Sequence
 
 
 def unimport_begin() -> Iterable[str]:
@@ -108,6 +108,64 @@ class HashWriter:
 
     def get_digest(self) -> bytes:
         return self.ctx.digest()
+
+
+if False:
+    BufferType = Union[bytearray, memoryview]
+
+
+class BufferIO:
+    """Seekable, readable and writeable view into a buffer.
+
+    Implementation is similar to the native BytesIO (disabled in our codebase),
+    but has some differences that warrant a separate implementation.
+    """
+
+    def __init__(self, buffer: BufferType) -> None:
+        self.buffer = buffer
+        self.offset = 0
+
+    def seek(self, offset: int) -> None:
+        """Set current offset to `offset`.
+
+        If negative, set to zero. If longer than the buffer, set to end of buffer.
+        """
+        offset = min(offset, len(self.buffer))
+        offset = max(offset, 0)
+        self.offset = offset
+
+    def readinto(self, dst: BufferType) -> int:
+        """Read exactly `len(dst)` bytes into `dst`, or raise EOFError.
+
+        Returns number of bytes read.
+        """
+        buffer = self.buffer
+        offset = self.offset
+        if len(dst) > len(buffer) - offset:
+            raise EOFError
+        nread = memcpy(dst, 0, buffer, offset)
+        self.offset += nread
+        return nread
+
+    def write(self, src: bytes) -> int:
+        """Write exactly `len(src)` bytes into buffer, or raise EOFError.
+
+        Returns number of bytes written.
+        """
+        buffer = self.buffer
+        offset = self.offset
+        if len(src) > len(buffer) - offset:
+            raise EOFError
+        nwrite = memcpy(buffer, offset, src, 0)
+        self.offset += nwrite
+        return nwrite
+
+    def get_written(self) -> bytes:
+        """Return a view of the data written so far.
+
+        This might be less than the full buffer.
+        """
+        return memoryview(self.buffer)[: self.offset]
 
 
 def obj_eq(l: object, r: object) -> bool:

@@ -22,45 +22,13 @@ class CodecError(Exception):
     pass
 
 
-class BytesIO:
-    def __init__(self, buffer: bytearray) -> None:
-        self.buffer = buffer
-        self.offset = 0
-
-    def seek(self, offset: int) -> None:
-        offset = min(offset, len(self.buffer))
-        offset = max(offset, 0)
-        self.offset = offset
-
-    def readinto(self, dst: bytearray) -> int:
-        buffer = self.buffer
-        offset = self.offset
-        if len(dst) > len(buffer) - offset:
-            raise EOFError
-        nread = utils.memcpy(dst, 0, buffer, offset)
-        self.offset += nread
-        return nread
-
-    def write(self, src: bytes) -> int:
-        buffer = self.buffer
-        offset = self.offset
-        if len(src) > len(buffer) - offset:
-            raise EOFError
-        nwrite = utils.memcpy(buffer, offset, src, 0)
-        self.offset += nwrite
-        return nwrite
-
-    def get_written(self) -> bytes:
-        return memoryview(self.buffer)[: self.offset]
-
-
 class Message:
-    def __init__(self, mtype: int, mdata: BytesIO) -> None:
+    def __init__(self, mtype: int, mdata: utils.BufferIO) -> None:
         self.type = mtype
         self.data = mdata
 
 
-async def read_message(iface: WireInterface, buffer: bytearray) -> Message:
+async def read_message(iface: WireInterface, buffer: utils.BufferType) -> Message:
     read = loop.wait(iface.iface_num() | io.POLL_READ)
 
     # wait for initial report
@@ -94,10 +62,10 @@ async def read_message(iface: WireInterface, buffer: bytearray) -> Message:
     if throw_away:
         raise CodecError("Message too large")
 
-    return Message(mtype, BytesIO(mdata))
+    return Message(mtype, utils.BufferIO(mdata))
 
 
-async def write_message(iface: WireInterface, mtype: int, mdata: bytearray) -> None:
+async def write_message(iface: WireInterface, mtype: int, mdata: bytes) -> None:
     write = loop.wait(iface.iface_num() | io.POLL_WRITE)
 
     # gather data from msg
