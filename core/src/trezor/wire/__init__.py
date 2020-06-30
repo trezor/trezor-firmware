@@ -138,13 +138,13 @@ class Context:
     def __init__(self, iface: WireInterface, sid: int) -> None:
         self.iface = iface
         self.sid = sid
-        self.buffer_io = codec_v1.BytesIO(bytearray(8192))
+        self.buffer_io = utils.BufferIO(bytearray(8192))
 
     async def call(
         self,
         msg: protobuf.MessageType,
         expected_type: Type[protobuf.LoadedMessageType],
-        field_cache: Dict = None,
+        field_cache: protobuf.FieldCache = None,
     ) -> protobuf.LoadedMessageType:
         await self.write(msg, field_cache)
         del msg
@@ -162,7 +162,9 @@ class Context:
         return await codec_v1.read_message(self.iface, self.buffer_io.buffer)
 
     async def read(
-        self, expected_type: Type[protobuf.LoadedMessageType], field_cache: Dict = None
+        self,
+        expected_type: Type[protobuf.LoadedMessageType],
+        field_cache: protobuf.FieldCache = None,
     ) -> protobuf.LoadedMessageType:
         if __debug__:
             log.debug(
@@ -194,7 +196,7 @@ class Context:
 
         # look up the protobuf class and parse the message
         pbtype = messages.get_type(msg.type)
-        return protobuf.load_message(msg.data, pbtype, field_cache)
+        return protobuf.load_message(msg.data, pbtype, field_cache)  # type: ignore
 
     async def read_any(
         self, expected_wire_types: Iterable[int]
@@ -229,7 +231,9 @@ class Context:
         # parse the message and return it
         return protobuf.load_message(msg.data, exptype)
 
-    async def write(self, msg: protobuf.MessageType, field_cache: Dict = None) -> None:
+    async def write(
+        self, msg: protobuf.MessageType, field_cache: protobuf.FieldCache = None
+    ) -> None:
         if __debug__:
             log.debug(
                 __name__, "%s:%x write: %s", self.iface.iface_num(), self.sid, msg
@@ -445,9 +449,3 @@ def failure(exc: BaseException) -> Failure:
 
 def unexpected_message() -> Failure:
     return Failure(code=FailureType.UnexpectedMessage, message="Unexpected message")
-
-
-async def read_and_throw_away(reader: codec_v1.Reader) -> None:
-    while reader.size > 0:
-        buf = bytearray(reader.size)
-        await reader.areadinto(buf)

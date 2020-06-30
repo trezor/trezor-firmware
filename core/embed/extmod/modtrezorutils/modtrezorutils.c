@@ -58,7 +58,11 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorutils_consteq_obj,
                                  mod_trezorutils_consteq);
 
 /// def memcpy(
-///     dst: bytearray, dst_ofs: int, src: bytes, src_ofs: int, n: int = None
+///     dst: Union[bytearray, memoryview],
+///     dst_ofs: int,
+///     src: bytes,
+///     src_ofs: int,
+///     n: int = None,
 /// ) -> int:
 ///     """
 ///     Copies at most `n` bytes from `src` at offset `src_ofs` to
