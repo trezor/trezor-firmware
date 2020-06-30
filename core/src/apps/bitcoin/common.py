@@ -15,6 +15,9 @@ if False:
 # Default signature hash type in Bitcoin which signs all inputs and all outputs of the transaction.
 SIGHASH_ALL = const(0x01)
 
+# The number of bip32 levels used in a wallet (chain and address)
+BIP32_WALLET_DEPTH = const(2)
+
 # supported witness version for bech32 addresses
 _BECH32_WITVER = const(0x00)
 
