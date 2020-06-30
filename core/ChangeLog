@@ -14,6 +14,7 @@ _Most likely to be released on July 1st._
 - Dedicated `initialized` field in storage.
 
 ### Deprecated
+- Deprecate `Overwintered` field in `SignTx` and `TxAck`.
 
 ### Removed
 

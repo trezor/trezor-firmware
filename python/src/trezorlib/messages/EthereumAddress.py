@@ -15,15 +15,15 @@ class EthereumAddress(p.MessageType):
 
     def __init__(
         self,
-        old_address: bytes = None,
+        _old_address: bytes = None,
         address: str = None,
     ) -> None:
-        self.old_address = old_address
+        self._old_address = _old_address
         self.address = address
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('old_address', p.BytesType, 0),
+            1: ('_old_address', p.BytesType, 0),
             2: ('address', p.UnicodeType, 0),
         }
