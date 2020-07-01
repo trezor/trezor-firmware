@@ -1,14 +1,14 @@
 try:
-    from .resources import resdata
+    from .resources import load_resource
 except ImportError:
-    resdata = {}
+    raise RuntimeError("Please regenerate resources via 'make res'")
 
 
 def load(name: str) -> bytes:
     """
     Loads resource of a given name as bytes.
     """
-    return resdata[name]
+    return load_resource(name)
 
 
 def gettext(message: str) -> str:
