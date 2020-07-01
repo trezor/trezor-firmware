@@ -37,32 +37,36 @@ def cli():
     required=True,
     help="Transaction in JSON format",
 )
-@click.option("-N", "--network", type=int, default=1)
+@click.option("-p", "--protocol-magic", type=int, default=1)
 @with_client
-def sign_tx(client, file, network):
+def sign_tx(client, file, protocol_magic):
     """Sign Cardano transaction."""
     transaction = json.load(file)
 
     inputs = [cardano.create_input(input) for input in transaction["inputs"]]
     outputs = [cardano.create_output(output) for output in transaction["outputs"]]
-    transactions = transaction["transactions"]
+    fee = transaction["fee"]
+    ttl = transaction["ttl"]
 
-    signed_transaction = cardano.sign_tx(client, inputs, outputs, transactions, network)
+    signed_transaction = cardano.sign_tx(
+        client, inputs, outputs, fee, ttl, protocol_magic
+    )
 
     return {
         "tx_hash": signed_transaction.tx_hash.hex(),
-        "tx_body": signed_transaction.tx_body.hex(),
+        "serialized_tx": signed_transaction.serialized_tx.hex(),
     }
 
 
 @cli.command()
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.option("-d", "--show-display", is_flag=True)
+@click.option("-p", "--protocol-magic", type=int, default=1)
 @with_client
-def get_address(client, address, show_display):
+def get_address(client, address, show_display, protocol_magic):
     """Get Cardano address."""
     address_n = tools.parse_path(address)
-    return cardano.get_address(client, address_n, show_display)
+    return cardano.get_address(client, address_n, protocol_magic, show_display)
 
 
 @cli.command()

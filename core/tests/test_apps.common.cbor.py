@@ -65,9 +65,27 @@ class TestCardanoCbor(unittest.TestCase):
             # boolean
             (True, 'f5'),
             (False, 'f4'),
+
+            # null
+            (None, 'f6'),
         ]
         for val, encoded in test_vectors:
             self.assertEqual(unhexlify(encoded), encode(val))
+            self.assertEqual(val, decode(unhexlify(encoded)))
+
+    def test_cbor_tuples(self):
+        """
+        Tuples should be encoded as arrays and decoded back as lists.
+        """
+        test_vectors = [
+            ([], '80'),
+            ([1, 2, 3], '83010203'),
+            ([1, [2, 3], [4, 5]], '8301820203820405'),
+            (list(range(1, 26)), '98190102030405060708090a0b0c0d0e0f101112131415161718181819'),
+        ]
+        for val, encoded in test_vectors:
+            value_tuple = tuple(val)
+            self.assertEqual(unhexlify(encoded), encode(value_tuple))
             self.assertEqual(val, decode(unhexlify(encoded)))
 
 if __name__ == '__main__':

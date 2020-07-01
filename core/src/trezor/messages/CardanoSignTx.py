@@ -20,19 +20,22 @@ class CardanoSignTx(p.MessageType):
         self,
         inputs: List[CardanoTxInputType] = None,
         outputs: List[CardanoTxOutputType] = None,
-        transactions_count: int = None,
         protocol_magic: int = None,
+        fee: int = None,
+        ttl: int = None,
     ) -> None:
         self.inputs = inputs if inputs is not None else []
         self.outputs = outputs if outputs is not None else []
-        self.transactions_count = transactions_count
         self.protocol_magic = protocol_magic
+        self.fee = fee
+        self.ttl = ttl
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
             1: ('inputs', CardanoTxInputType, p.FLAG_REPEATED),
             2: ('outputs', CardanoTxOutputType, p.FLAG_REPEATED),
-            3: ('transactions_count', p.UVarintType, 0),
             5: ('protocol_magic', p.UVarintType, 0),
+            6: ('fee', p.UVarintType, 0),
+            7: ('ttl', p.UVarintType, 0),
         }
