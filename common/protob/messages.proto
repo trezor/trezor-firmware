@@ -181,13 +181,12 @@ enum MessageType {
 
     // Cardano
     // dropped Sign/VerifyMessage ids 300-302
+    // dropped TxRequest/TxAck ids 304 and 309 (shelley update)
     MessageType_CardanoSignTx = 303 [(wire_in) = true];
-    MessageType_CardanoTxRequest = 304 [(wire_out) = true];
     MessageType_CardanoGetPublicKey = 305 [(wire_in) = true];
     MessageType_CardanoPublicKey = 306 [(wire_out) = true];
     MessageType_CardanoGetAddress = 307 [(wire_in) = true];
     MessageType_CardanoAddress = 308 [(wire_out) = true];
-    MessageType_CardanoTxAck = 309 [(wire_in) = true];
     MessageType_CardanoSignedTx = 310 [(wire_out) = true];
 
     // Ripple

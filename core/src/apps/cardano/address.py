@@ -1,11 +1,22 @@
-from trezor import log
+from trezor import log, wire
 from trezor.crypto import base58, crc, hashlib
 
 from apps.common import HARDENED, cbor
 from apps.common.seed import remove_ed25519_prefix
 
+from . import protocol_magics
 
-def _encode_address_raw(address_data_encoded):
+if False:
+    from typing import Tuple
+    from trezor.crypto import bip32
+    from . import seed
+
+PROTOCOL_MAGIC_KEY = 2
+INVALID_ADDRESS = wire.ProcessError("Invalid address")
+NETWORK_MISMATCH = wire.ProcessError("Output address network mismatch!")
+
+
+def _encode_address_raw(address_data_encoded: bytes) -> str:
     return base58.encode(
         cbor.encode(
             [cbor.Tagged(24, address_data_encoded), crc.crc32(address_data_encoded)]
@@ -13,13 +24,14 @@ def _encode_address_raw(address_data_encoded):
     )
 
 
-def derive_address_and_node(keychain, path: list):
+def derive_address_and_node(
+    keychain: seed.Keychain, path: list, protocol_magic: int
+) -> Tuple[str, bip32.HDNode]:
     node = keychain.derive(path)
 
-    address_payload = None
-    address_attributes = {}
+    address_attributes = get_address_attributes(protocol_magic)
 
-    address_root = _get_address_root(node, address_payload)
+    address_root = _get_address_root(node, address_attributes)
     address_type = 0
     address_data = [address_root, address_attributes, address_type]
     address_data_encoded = cbor.encode(address_data)
@@ -27,28 +39,75 @@ def derive_address_and_node(keychain, path: list):
     return (_encode_address_raw(address_data_encoded), node)
 
 
-def is_safe_output_address(address) -> bool:
-    """
-    Determines whether it is safe to include the address as-is as
-    a tx output, preventing unintended side effects (e.g. CBOR injection)
-    """
+def get_address_attributes(protocol_magic: int) -> dict:
+    # protocol magic is included in Byron addresses only on testnets
+    if protocol_magic == protocol_magics.MAINNET:
+        address_attributes = {}
+    else:
+        address_attributes = {PROTOCOL_MAGIC_KEY: cbor.encode(protocol_magic)}
+
+    return address_attributes
+
+
+def validate_output_address(address: str, protocol_magic: int) -> None:
+    address_data_encoded = _decode_address_raw(address)
+    _validate_address_data_protocol_magic(address_data_encoded, protocol_magic)
+
+
+def _decode_address_raw(address: str) -> bytes:
     try:
         address_hex = base58.decode(address)
         address_unpacked = cbor.decode(address_hex)
     except ValueError as e:
         if __debug__:
             log.exception(__name__, e)
-        return False
+        raise INVALID_ADDRESS
 
     if not isinstance(address_unpacked, list) or len(address_unpacked) != 2:
-        return False
+        raise INVALID_ADDRESS
 
     address_data_encoded = address_unpacked[0]
-
     if not isinstance(address_data_encoded, bytes):
-        return False
+        raise INVALID_ADDRESS
 
-    return _encode_address_raw(address_data_encoded) == address
+    address_crc = address_unpacked[1]
+    if not isinstance(address_crc, int):
+        raise INVALID_ADDRESS
+
+    if address_crc != crc.crc32(address_data_encoded):
+        raise INVALID_ADDRESS
+
+    return address_data_encoded
+
+
+def _validate_address_data_protocol_magic(
+    address_data_encoded: bytes, protocol_magic: int
+) -> None:
+    """
+    Determines whether the correct protocol magic (or none)
+    is included in the address. Addresses on mainnet don't
+    contain protocol magic, but addresses on the testnet do.
+    """
+    address_data = cbor.decode(address_data_encoded)
+    if not isinstance(address_data, list) or len(address_data) < 2:
+        raise INVALID_ADDRESS
+
+    attributes = address_data[1]
+    if protocol_magic == protocol_magics.MAINNET:
+        if PROTOCOL_MAGIC_KEY in attributes:
+            raise NETWORK_MISMATCH
+    else:  # testnet
+        if len(attributes) == 0 or PROTOCOL_MAGIC_KEY not in attributes:
+            raise NETWORK_MISMATCH
+
+        protocol_magic_cbor = attributes[PROTOCOL_MAGIC_KEY]
+        address_protocol_magic = cbor.decode(protocol_magic_cbor)
+
+        if not isinstance(address_protocol_magic, int):
+            raise INVALID_ADDRESS
+
+        if address_protocol_magic != protocol_magic:
+            raise NETWORK_MISMATCH
 
 
 def validate_full_path(path: list) -> bool:
@@ -74,17 +133,13 @@ def validate_full_path(path: list) -> bool:
     return True
 
 
-def _address_hash(data) -> bytes:
-    data = cbor.encode(data)
-    data = hashlib.sha3_256(data).digest()
-    res = hashlib.blake2b(data=data, outlen=28).digest()
+def _address_hash(data: list) -> bytes:
+    cbor_data = cbor.encode(data)
+    sha_data_hash = hashlib.sha3_256(cbor_data).digest()
+    res = hashlib.blake2b(data=sha_data_hash, outlen=28).digest()
     return res
 
 
-def _get_address_root(node, payload):
+def _get_address_root(node: bip32.HDNode, address_attributes: dict) -> bytes:
     extpubkey = remove_ed25519_prefix(node.public_key()) + node.chain_code()
-    if payload:
-        payload = {1: cbor.encode(payload)}
-    else:
-        payload = {}
-    return _address_hash([0, [0, extpubkey], payload])
+    return _address_hash([0, [0, extpubkey], address_attributes])

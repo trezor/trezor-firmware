@@ -2,9 +2,10 @@ from storage import cache, device
 from trezor import wire
 from trezor.crypto import bip32
 
-from apps.cardano import SEED_NAMESPACE
 from apps.common import mnemonic
 from apps.common.passphrase import get as get_passphrase
+
+from . import SEED_NAMESPACE
 
 if False:
     from apps.common.paths import Bip32Path
