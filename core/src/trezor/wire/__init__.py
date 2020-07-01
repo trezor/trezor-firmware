@@ -133,12 +133,14 @@ class DummyContext:
 
 DUMMY_CONTEXT = DummyContext()
 
+PROTOBUF_BUFFER_SIZE = 16384
+
 
 class Context:
     def __init__(self, iface: WireInterface, sid: int) -> None:
         self.iface = iface
         self.sid = sid
-        self.buffer_io = utils.BufferIO(bytearray(8192))
+        self.buffer_io = utils.BufferIO(bytearray(PROTOBUF_BUFFER_SIZE))
 
     async def call(
         self,
