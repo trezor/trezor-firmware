@@ -21,6 +21,7 @@ _Most likely to be released on July 1st._
 ### Fixed
 - Fix cancel icon in PIN dialog.  #1042
 - Fix repaint bug in QR code rendering.  #1067
+- Fix QR code overlapping in Monero address.  monero-gui #2960
 
 ### Security
 
