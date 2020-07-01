@@ -47,6 +47,7 @@ firmwares.
 
 #### Notable third-parties
 
+- Trezor Password Manager https://github.com/trezor/trezor-password-manager
 - Exodus (closed source)
 - MagnumWallet (closed source)
 - CoinMate (closed source)
