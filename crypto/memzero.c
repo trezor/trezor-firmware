@@ -63,4 +63,13 @@ void memzero(void *const pnt, const size_t len) {
     pnt_[i++] = 0U;
   }
 #endif
+
+  // explicitly mark the memory as overwritten for the Clang MemorySanitizer
+  // this is only included at compile time if MemorySanitizer is enabled and
+  // should not come with any downsides during regular builds
+#if defined(__has_feature)
+#if __has_feature(memory_sanitizer)
+  memset(pnt, 0, len);
+#endif
+#endif
 }
