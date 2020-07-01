@@ -77,7 +77,7 @@ async def sign_input(
     # Check input's HMAC
     from apps.monero.signing import offloading_keys
 
-    vini_hmac_comp = await offloading_keys.gen_hmac_vini(
+    vini_hmac_comp = offloading_keys.gen_hmac_vini(
         state.key_hmac, src_entr, vini_bin, input_position
     )
     if not crypto.ct_equals(vini_hmac_comp, vini_hmac):

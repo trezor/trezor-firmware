@@ -81,7 +81,7 @@ async def init_transaction(
 
     # Extra processing, payment id
     _process_payment_id(state, tsx_data)
-    await _compute_sec_keys(state, tsx_data)
+    _compute_sec_keys(state, tsx_data)
     gc.collect()
 
     # Iterative tx_prefix_hash hash computation
@@ -104,7 +104,7 @@ async def init_transaction(
     # and trezor validates it.
     hmacs = []
     for idx in range(state.output_count):
-        c_hmac = await offloading_keys.gen_hmac_tsxdest(
+        c_hmac = offloading_keys.gen_hmac_tsxdest(
             state.key_hmac, tsx_data.outputs[idx], idx
         )
         hmacs.append(c_hmac)
@@ -268,7 +268,7 @@ def _check_change(state: State, outputs: List[MoneroTransactionDestinationEntry]
         raise signing.ChangeAddressError("Change address differs from ours")
 
 
-async def _compute_sec_keys(state: State, tsx_data: MoneroTransactionData):
+def _compute_sec_keys(state: State, tsx_data: MoneroTransactionData):
     """
     Generate master key H( H(TsxData || tx_priv) || rand )
     """
@@ -276,7 +276,7 @@ async def _compute_sec_keys(state: State, tsx_data: MoneroTransactionData):
     from apps.monero.xmr.keccak_hasher import get_keccak_writer
 
     writer = get_keccak_writer()
-    await protobuf.dump_message(writer, tsx_data)
+    protobuf.dump_message(writer, tsx_data)
     writer.write(crypto.encodeint(state.tx_priv))
 
     master_key = crypto.keccak_2hash(

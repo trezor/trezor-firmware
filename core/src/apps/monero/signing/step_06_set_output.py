@@ -79,7 +79,7 @@ async def set_output(
         return MoneroTransactionSetOutputAck()
 
     # Tx header prefix hashing, hmac dst_entr
-    tx_out_bin, hmac_vouti = await _set_out_tx_out(state, dst_entr, tx_out_key)
+    tx_out_bin, hmac_vouti = _set_out_tx_out(state, dst_entr, tx_out_key)
     state.mem_trace(11, True)
 
     out_pk_dest, out_pk_commitment, ecdh_info_bin = _get_ecdh_info_and_out_pk(
@@ -157,7 +157,7 @@ async def _validate(
 
     if not state.is_processing_offloaded:
         # HMAC check of the destination
-        dst_entr_hmac_computed = await offloading_keys.gen_hmac_tsxdest(
+        dst_entr_hmac_computed = offloading_keys.gen_hmac_tsxdest(
             state.key_hmac, dst_entr, state.current_output_index
         )
 
@@ -204,7 +204,7 @@ def _compute_tx_keys(
     return tx_out_key, amount_key
 
 
-async def _set_out_tx_out(
+def _set_out_tx_out(
     state: State, dst_entr: MoneroTransactionDestinationEntry, tx_out_key: Ge25519
 ) -> Tuple[bytes, bytes]:
     """
@@ -221,7 +221,7 @@ async def _set_out_tx_out(
     state.mem_trace(9, True)
 
     # Hmac dst_entr
-    hmac_vouti = await offloading_keys.gen_hmac_vouti(
+    hmac_vouti = offloading_keys.gen_hmac_vouti(
         state.key_hmac, dst_entr, tx_out_bin, state.current_output_index
     )
     state.mem_trace(10, True)
