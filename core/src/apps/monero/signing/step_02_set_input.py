@@ -95,7 +95,7 @@ async def set_input(
     state.mem_trace(2, True)
 
     # HMAC(T_in,i || vin_i)
-    hmac_vini = await offloading_keys.gen_hmac_vini(
+    hmac_vini = offloading_keys.gen_hmac_vini(
         state.key_hmac, src_entr, vini_bin, state.current_input_index
     )
     state.mem_trace(3, True)

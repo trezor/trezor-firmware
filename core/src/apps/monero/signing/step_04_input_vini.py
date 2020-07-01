@@ -44,7 +44,7 @@ async def input_vini(
     state.current_input_index += 1
 
     # HMAC(T_in,i || vin_i)
-    hmac_vini_comp = await offloading_keys.gen_hmac_vini(
+    hmac_vini_comp = offloading_keys.gen_hmac_vini(
         state.key_hmac,
         src_entr,
         vini_bin,
