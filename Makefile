@@ -9,9 +9,9 @@ PY_FILES = $(shell find . -type f -name '*.py'   | grep -f ./tools/style.py.incl
 C_FILES =  $(shell find . -type f -name '*.[ch]' | grep -f ./tools/style.c.include  | grep -v -f ./tools/style.c.exclude )
 
 
-style_check: pystyle_check cstyle_check ## run all style checks (C+Py)
+style_check: pystyle_check cstyle_check changelog_check ## run all style checks (C+Py)
 
-style: pystyle cstyle ## apply all code styles (C+Py)
+style: pystyle cstyle changelog ## apply all code styles (C+Py)
 
 pystyle_check: ## run code style check on application sources and tests
 	flake8 --version
@@ -38,6 +38,12 @@ pystyle: ## apply code style on application sources and tests
 	@echo [FLAKE8]
 	@flake8 $(PY_FILES)
 	make -C python style
+
+changelog_check:  # check changelog format
+	./tools/linkify-changelogs.py --check
+
+changelog:  # fill out issue links in changelog
+	./tools/linkify-changelogs.py
 
 cstyle_check: ## run code style check on low-level C code
 	clang-format --version
