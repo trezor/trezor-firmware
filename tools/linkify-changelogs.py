@@ -12,9 +12,9 @@ ISSUE_URL = "https://github.com/trezor/trezor-firmware/issues/{issue}"
 ROOT = Path(__file__).parent.resolve().parent
 
 DEFAULT_CHANGELOGS = (  # TODO replace with a wildcard?
-    ROOT / "core" / "ChangeLog",
-    ROOT / "legacy" / "firmware" / "ChangeLog",
-    ROOT / "legacy" / "bootloader" / "ChangeLog",
+    ROOT / "core" / "CHANGELOG.md",
+    ROOT / "legacy" / "firmware" / "CHANGELOG.md",
+    ROOT / "legacy" / "bootloader" / "CHANGELOG.md",
     ROOT / "python" / "CHANGELOG.md",
 )
 
