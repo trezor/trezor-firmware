@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- Set initialized in storage to false if no mnemonic is present.  #965
 
 ### Deprecated
 
