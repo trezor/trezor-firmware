@@ -38,7 +38,7 @@ make vendor build_boardloader build_bootloader build_firmware
 
 ## Uploading
 
-Use `make upload` to upload the firmware to a production device. Do not forget to [enter bootloader](https://wiki.trezor.io/User_manual-Updating_the_Trezor_device_firmware__TT) on the device beforehand.
+Use `make upload` to upload the firmware to a production device. Do not forget to [enter bootloader](https://wiki.trezor.io/User_manual:Updating_the_Trezor_device_firmware) on the device beforehand.
 
 ## Flashing
 
