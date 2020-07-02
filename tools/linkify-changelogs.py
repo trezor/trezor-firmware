@@ -19,8 +19,9 @@ DEFAULT_CHANGELOGS = (  # TODO replace with a wildcard?
 )
 
 
-def process_changelog(changelog_file):
+def process_changelog(changelog_file, only_check=False):
     links = {}
+    orig_links = {}
     result_lines = []
 
     with open(changelog_file, "r+") as changelog:
@@ -28,11 +29,21 @@ def process_changelog(changelog_file):
             m = LINK_RE.match(line)
             if m:  # line *starts with* issue identifier
                 # keep existing links as-is
-                links[int(m[1])] = line.replace(m[0] + ": ", "").strip()
+                orig_links[int(m[1])] = line.replace(m[0] + ": ", "").strip()
             else:
                 for issue in LINK_RE.findall(line):
                     links[int(issue)] = ISSUE_URL.format(issue=issue)
                 result_lines.append(line)
+
+        if only_check:
+            missing_links = set(links.keys()) - set(orig_links.keys())
+            if missing_links:
+                click.echo(f"missing links: {missing_links}")
+                return False
+            else:
+                return True
+
+        links.update(orig_links)
 
         changelog.seek(0)
         changelog.truncate(0)
@@ -41,6 +52,8 @@ def process_changelog(changelog_file):
         for marker, url in sorted(links.items()):
             changelog.write(f"[#{marker}]: {url}\n")
 
+    return True
+
 
 @click.command()
 @click.argument(
@@ -48,7 +61,8 @@ def process_changelog(changelog_file):
     nargs=-1,
     type=click.Path(exists=True, dir_okay=False, writable=True),
 )
-def cli(changelogs):
+@click.option("--check", is_flag=True, help="Check for missing links, do not modify.")
+def cli(changelogs, check):
     """Linkify changelog.
 
     Find all occurences of "[#123]" in text, and add a Markdown link to the referenced
@@ -59,9 +73,14 @@ def cli(changelogs):
     if not changelogs:
         changelogs = DEFAULT_CHANGELOGS
 
+    all_ok = True
     for changelog in changelogs:
-        click.echo(f"Linkifying {changelog}...")
-        process_changelog(changelog)
+        click.echo(changelog)
+        if not process_changelog(changelog, check):
+            all_ok = False
+
+    if not all_ok:
+        raise click.ClickException("Some links are missing. Run `make style` to fix.")
 
 
 if __name__ == "__main__":
