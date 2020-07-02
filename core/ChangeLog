@@ -9,15 +9,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 _Most likely to be released on July 1st._
 
 ### Added
-- Soft lock.  #958
-- Auto lock.  #1027
+- Soft lock.  [#958]
+- Auto lock.  [#1027]
 - Dedicated `initialized` field in storage.
-- Support EXTERNAL transaction inputs with a SLIP-0019 proof of ownership #1052
-- Support pre-signed EXTERNAL transaction inputs
+- Support EXTERNAL transaction inputs with a SLIP-0019 proof of ownership.  [#1052]
+- Support pre-signed EXTERNAL transaction inputs.
 
 ### Changed
 - `Features.pin_cached` renamed to `unlocked`.
-- Forbid all settings if the device is not yet initialized.  #1056
+- Forbid all settings if the device is not yet initialized.  [#1056]
 
 ### Deprecated
 - Deprecate `Overwintered` field in `SignTx` and `TxAck`.
@@ -26,10 +26,10 @@ _Most likely to be released on July 1st._
 - Generated protobuf classes now do not contain deprecated fields.
 
 ### Fixed
-- Fix cancel icon in PIN dialog.  #1042
-- Fix repaint bug in QR code rendering.  #1067
-- Fix QR code overlapping in Monero address.  monero-gui #2960
-- Re-introduce ability to spend pre-Overwinter UTXO on Zcash-like coins.  #1030
+- Fix cancel icon in PIN dialog.  [#1042]
+- Fix repaint bug in QR code rendering.  [#1067]
+- Fix QR code overlapping in Monero address.  monero-gui#2960, [#1074]
+- Re-introduce ability to spend pre-Overwinter UTXO on Zcash-like coins.  [#1030]
 
 ### Security
 
@@ -159,3 +159,12 @@ Version 2.0.6 [Mar 2018]
 
 Version 2.0.5 [Mar 2018]
 * first public release
+
+[#958]: https://github.com/trezor/trezor-firmware/issues/958
+[#1027]: https://github.com/trezor/trezor-firmware/issues/1027
+[#1030]: https://github.com/trezor/trezor-firmware/issues/1030
+[#1042]: https://github.com/trezor/trezor-firmware/issues/1042
+[#1052]: https://github.com/trezor/trezor-firmware/issues/1052
+[#1056]: https://github.com/trezor/trezor-firmware/issues/1056
+[#1067]: https://github.com/trezor/trezor-firmware/issues/1067
+[#1074]: https://github.com/trezor/trezor-firmware/issues/1074
