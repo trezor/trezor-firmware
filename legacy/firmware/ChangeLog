@@ -9,11 +9,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Set initialized in storage to false if no mnemonic is present.  #965
 
+### Changed
+- `Features.pin_cached` renamed to `unlocked`, and it is now `true` even if PIN is not set.
+
 ### Deprecated
 
 ### Removed
 
 ### Fixed
+- Re-introduce ability to spend pre-Overwinter UTXO on Zcash-like coins.  #1030
 
 ### Security
 

@@ -15,16 +15,21 @@ _Most likely to be released on July 1st._
 - Support EXTERNAL transaction inputs with a SLIP-0019 proof of ownership #1052
 - Support pre-signed EXTERNAL transaction inputs
 
+### Changed
+- `Features.pin_cached` renamed to `unlocked`.
+- Forbid all settings if the device is not yet initialized.  #1056
+
 ### Deprecated
 - Deprecate `Overwintered` field in `SignTx` and `TxAck`.
 
 ### Removed
+- Generated protobuf classes now do not contain deprecated fields.
 
 ### Fixed
 - Fix cancel icon in PIN dialog.  #1042
 - Fix repaint bug in QR code rendering.  #1067
 - Fix QR code overlapping in Monero address.  monero-gui #2960
-- Forbid all settings if the device is not yet initialized.  #1056
+- Re-introduce ability to spend pre-Overwinter UTXO on Zcash-like coins.  #1030
 
 ### Security
 
