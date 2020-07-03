@@ -252,3 +252,25 @@ def sign_tx(client, coin_name, inputs, outputs, details=None, prev_txes=None):
         raise exceptions.TrezorException("Some signatures are missing!")
 
     return signatures, serialized_tx
+
+
+@expect(messages.Success, field="message")
+def authorize_coinjoin(
+    client,
+    coordinator,
+    max_total_fee,
+    n,
+    coin_name,
+    fee_per_anonymity=None,
+    script_type=messages.InputScriptType.SPENDADDRESS,
+):
+    return client.call(
+        messages.AuthorizeCoinJoin(
+            coordinator=coordinator,
+            max_total_fee=max_total_fee,
+            address_n=n,
+            coin_name=coin_name,
+            fee_per_anonymity=fee_per_anonymity,
+            script_type=script_type,
+        )
+    )
