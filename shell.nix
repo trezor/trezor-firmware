@@ -12,6 +12,7 @@ stdenv.mkDerivation {
     gcc
     gcc-arm-embedded
     git
+    gitAndTools.git-subrepo
     gnumake
     graphviz
     libffi
