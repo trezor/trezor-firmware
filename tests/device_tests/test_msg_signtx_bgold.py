@@ -36,6 +36,7 @@ TXHASH_f55c5b = bytes.fromhex(
     "f55c5bc925eb2a0bf9de0ac142b24bed81ec46dd2151d5f69728070eaea1aded"
 )
 
+
 # All data taken from T1
 @pytest.mark.altcoin
 class TestMsgSigntxBitcoinGold:
