@@ -103,7 +103,6 @@ core unix frozen regular darwin:
     - darwin
   when: manual
   script:
-    - . $HOME/.nix-profile/etc/profile.d/nix.sh
     - nix-shell --run "pipenv run make -C core build_unix_frozen"
     - mkdir -p TrezorEmu-$CI_COMMIT_SHORT_SHA.app/Contents/{MacOS,libs}
     - cp -v core/build/unix/micropython TrezorEmu-$CI_COMMIT_SHORT_SHA.app/Contents/MacOS/TrezorEmu-$CI_COMMIT_SHORT_SHA

@@ -33,6 +33,7 @@ stages:
   - deploy
 
 before_script:
+  - . $HOME/.nix-profile/etc/profile.d/nix.sh || true
   - nix-shell --run "pipenv sync"
 
 include:
