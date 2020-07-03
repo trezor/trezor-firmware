@@ -266,6 +266,9 @@ legacy upgrade test:
 python test:
   stage: test
   dependencies: []
+  variables:
+    LC_ALL: "C.UTF-8"
+    LANG: "C.UTF-8"
   only:
     changes:
       - ci/**/*
