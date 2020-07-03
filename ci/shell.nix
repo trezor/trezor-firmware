@@ -7,6 +7,7 @@ stdenv.mkDerivation {
     SDL2
     SDL2_image
     autoflake
+    bash
     check
     clang-tools
     gcc
@@ -17,8 +18,8 @@ stdenv.mkDerivation {
     graphviz
     libffi
     libjpeg
-    libressl
     libusb1
+    openssl
     pipenv
     pkgconfig
     protobuf3_6
