@@ -9,7 +9,5 @@ wget -e robots=off --no-verbose --no-clobber --no-parent --cut-dirs=2 --no-host-
 
 chmod u+x emulators/trezor-emu-*
 
-if [ -f /etc/NIXOS ]; then
-  # for this to work you need to run ./download_emulators.sh outside the main nix shell
-  cd emulators && nix-shell --run "autoPatchelf trezor-emu*"
-fi
+# are we in Nix(OS)?
+command -v nix-shell >/dev/null && nix-shell -p autoPatchelfHook SDL2 SDL2_image --run "autoPatchelf emulators/trezor-emu-*"
