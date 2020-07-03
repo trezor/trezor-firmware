@@ -40,13 +40,13 @@ error=1
 : "${TREZOR_MONERO_TESTS_PATH:=$CORE_DIR/tests/trezor_monero_tests}"
 : "${TREZOR_MONERO_TESTS_LOG:=$CORE_DIR/tests/trezor_monero_tests.log}"
 
-if [[ ! -f "$TREZOR_MONERO_TESTS_PATH" || "`shasum -a256 "$TREZOR_MONERO_TESTS_PATH" | cut -d' ' -f1`" != $TREZOR_MONERO_TESTS_SHA256SUM ]]; then
-  echo "Downloading Trezor monero tests binary ($TREZOR_MONERO_TESTS_SHA256SUM) to `pwd`${TREZOR_MONERO_TESTS_PATH:1}"
+if [[ ! -f "$TREZOR_MONERO_TESTS_PATH" ]]; then
+  echo "Downloading Trezor monero tests binary ($TREZOR_MONERO_TESTS_SHA256SUM) to ${TREZOR_MONERO_TESTS_PATH}"
   wget -O "$TREZOR_MONERO_TESTS_PATH" "$TREZOR_MONERO_TESTS_URL" \
     && chmod +x "$TREZOR_MONERO_TESTS_PATH" \
-    && test "`shasum -a256 "$TREZOR_MONERO_TESTS_PATH" | cut -d' ' -f1`" == "$TREZOR_MONERO_TESTS_SHA256SUM" || exit 1
+    && echo "${TREZOR_MONERO_TESTS_SHA256SUM} ${TREZOR_MONERO_TESTS_PATH}" | shasum -a 256 -c
 else
-  echo "Trezor monero binary with valid hash ($TREZOR_MONERO_TESTS_SHA256SUM) already present at $TREZOR_MONERO_TESTS_PATH - not downloading again."
+  echo "Trezor monero binary already present at $TREZOR_MONERO_TESTS_PATH - not downloading again."
 fi
 
 echo "Running tests"
