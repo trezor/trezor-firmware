@@ -24,7 +24,10 @@ stdenv.mkDerivation {
     pkgconfig
     protobuf3_6
     valgrind
+    wget
     zlib
+  ] ++ stdenv.lib.optionals (!stdenv.isDarwin) [
+    procps
   ] ++ stdenv.lib.optionals (stdenv.isDarwin) [
     darwin.apple_sdk.frameworks.CoreAudio
     darwin.apple_sdk.frameworks.AudioToolbox
