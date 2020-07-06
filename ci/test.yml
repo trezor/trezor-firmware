@@ -39,7 +39,7 @@ core device test:
     TREZOR_PROFILING: 1
   script:
     - nix-shell --run "pipenv run make -C core test_emu"
-    - mv ./core/src/.coverage .coverage.test_emu
+    - mv core/src/.coverage core/.coverage.test_emu
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -78,7 +78,7 @@ core monero test:
     TREZOR_PROFILING: 1
   script:
     - nix-shell --run "pipenv run make -C core test_emu_monero"
-    - mv ./core/src/.coverage .coverage.test_emu_monero
+    - mv core/src/.coverage core/.coverage.test_emu_monero
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -96,7 +96,7 @@ core u2f test:
   script:
     - nix-shell --run "pipenv run make -C tests/fido_tests/u2f-tests-hid"
     - nix-shell --run "pipenv run make -C core test_emu_u2f"
-    - mv ./core/src/.coverage .coverage.test_emu_u2f
+    - mv core/src/.coverage core/.coverage.test_emu_u2f
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -115,7 +115,7 @@ core fido2 test:
     - pgrep micropython || true
     - nix-shell --run "pipenv run make -C core test_emu_fido2"
     - pgrep micropython || true
-    - mv ./core/src/.coverage .coverage.test_emu_fido2
+    - mv core/src/.coverage core/.coverage.test_emu_fido2
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
