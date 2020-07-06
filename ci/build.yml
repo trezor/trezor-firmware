@@ -15,8 +15,7 @@ core fw regular build:
     - nix-shell --run "pipenv run make -C core build_prodtest"
     - nix-shell --run "pipenv run make -C core build_firmware"
     - nix-shell --run "pipenv run make -C core sizecheck"
-    - export VERSION=$(nix-shell --run "./tools/version.sh core/embed/firmware/version.h")
-    - cp core/build/firmware/firmware.bin trezor-fw-regular-$VERSION-$CI_COMMIT_SHORT_SHA.bin
+    - cp core/build/firmware/firmware.bin trezor-fw-regular-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -27,8 +26,7 @@ core fw regular debug build:
   stage: build
   script:
     - nix-shell --run "PYOPT=0 pipenv run make -C core build_firmware"
-    - export VERSION=$(nix-shell --run "./tools/version.sh core/embed/firmware/version.h")
-    - cp core/build/firmware/firmware.bin trezor-fw-regular-debug-$VERSION-$CI_COMMIT_SHORT_SHA.bin
+    - cp core/build/firmware/firmware.bin trezor-fw-regular-debug-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -43,8 +41,7 @@ core fw btconly build:
     - nix-shell --run "pipenv run make -C core build_firmware"
     - mv core/build/firmware/firmware.bin core/build/firmware/firmware-bitcoinonly.bin
     - nix-shell --run "pipenv run ./tools/check-bitcoin-only core/build/firmware/firmware-bitcoinonly.bin"
-    - export VERSION=$(nix-shell --run "./tools/version.sh core/embed/firmware/version.h")
-    - cp core/build/firmware/firmware-bitcoinonly.bin trezor-fw-btconly-$VERSION-$CI_COMMIT_SHORT_SHA.bin
+    - cp core/build/firmware/firmware-bitcoinonly.bin trezor-fw-btconly-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -107,12 +104,12 @@ core unix frozen regular darwin:
     - mkdir -p TrezorEmu-$CI_COMMIT_SHORT_SHA.app/Contents/{MacOS,libs}
     - cp -v core/build/unix/micropython TrezorEmu-$CI_COMMIT_SHORT_SHA.app/Contents/MacOS/TrezorEmu-$CI_COMMIT_SHORT_SHA
     - dylibbundler -of -b -i /usr/lib/system -d TrezorEmu-$CI_COMMIT_SHORT_SHA.app/Contents/libs -x TrezorEmu-$CI_COMMIT_SHORT_SHA.app/Contents/MacOS/TrezorEmu-$CI_COMMIT_SHORT_SHA
-    - mv TrezorEmu-$CI_COMMIT_SHORT_SHA.app trezor-emu-regular-macos-$VERSION-$CI_COMMIT_SHORT_SHA.app
+    - mv TrezorEmu-$CI_COMMIT_SHORT_SHA.app trezor-emu-regular-macos-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.app
   allow_failure: true
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-      - trezor-emu-regular-macos-$VERSION-$CI_COMMIT_SHORT_SHA.app
+      - trezor-emu-regular-macos-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.app
     expire_in: 1 week
 
 # Crypto
@@ -144,8 +141,7 @@ legacy fw regular build:
   script:
     - nix-shell --run "pipenv run legacy/script/cibuild"
     - nix-shell --run "pipenv run make -C legacy/demo"
-    - export VERSION=$(nix-shell --run "./tools/version.sh legacy/firmware/version.h")
-    - mv legacy/firmware/trezor.bin trezor-fw-regular-$VERSION-$CI_COMMIT_SHORT_SHA.bin
+    - mv legacy/firmware/trezor.bin trezor-fw-regular-$LEGACY_VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -159,8 +155,7 @@ legacy fw debug build:
     MEMORY_PROTECT: "0"
   script:
     - nix-shell --run "pipenv run legacy/script/cibuild"
-    - export VERSION=$(nix-shell --run "./tools/version.sh legacy/firmware/version.h")
-    - mv legacy/firmware/trezor.bin trezor-fw-regular-debug-$VERSION-$CI_COMMIT_SHORT_SHA.bin
+    - mv legacy/firmware/trezor.bin trezor-fw-regular-debug-$LEGACY_VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -176,8 +171,7 @@ legacy fw btconly build:
     - nix-shell --run "pipenv run legacy/script/cibuild"
     - mv legacy/firmware/trezor.bin legacy/firmware/trezor-bitcoinonly.bin
     - nix-shell --run "pipenv run ./tools/check-bitcoin-only legacy/firmware/trezor-bitcoinonly.bin"
-    - export VERSION=$(nix-shell --run "./tools/version.sh legacy/firmware/version.h")
-    - mv legacy/firmware/trezor-bitcoinonly.bin trezor-fw-btconly-$VERSION-$CI_COMMIT_SHORT_SHA.bin
+    - mv legacy/firmware/trezor-bitcoinonly.bin trezor-fw-btconly-$LEGACY_VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
