@@ -23,12 +23,14 @@ class CardanoSignTx(p.MessageType):
         protocol_magic: int = None,
         fee: int = None,
         ttl: int = None,
+        network_id: int = None,
     ) -> None:
         self.inputs = inputs if inputs is not None else []
         self.outputs = outputs if outputs is not None else []
         self.protocol_magic = protocol_magic
         self.fee = fee
         self.ttl = ttl
+        self.network_id = network_id
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -38,4 +40,5 @@ class CardanoSignTx(p.MessageType):
             5: ('protocol_magic', p.UVarintType, 0),
             6: ('fee', p.UVarintType, 0),
             7: ('ttl', p.UVarintType, 0),
+            8: ('network_id', p.UVarintType, 0),
         }

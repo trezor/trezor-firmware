@@ -2,6 +2,8 @@
 # fmt: off
 import protobuf as p
 
+from .CardanoAddressParametersType import CardanoAddressParametersType
+
 if __debug__:
     try:
         from typing import Dict, List  # noqa: F401
@@ -14,18 +16,18 @@ class CardanoTxOutputType(p.MessageType):
 
     def __init__(
         self,
-        address: str = None,
-        address_n: List[int] = None,
+        address: bytes = None,
         amount: int = None,
+        address_parameters: CardanoAddressParametersType = None,
     ) -> None:
         self.address = address
-        self.address_n = address_n if address_n is not None else []
         self.amount = amount
+        self.address_parameters = address_parameters
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('address', p.UnicodeType, 0),
-            2: ('address_n', p.UVarintType, p.FLAG_REPEATED),
+            1: ('address', p.BytesType, 0),
             3: ('amount', p.UVarintType, 0),
+            4: ('address_parameters', CardanoAddressParametersType, 0),
         }

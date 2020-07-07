@@ -21,6 +21,8 @@ from .ButtonAck import ButtonAck
 from .ButtonRequest import ButtonRequest
 from .Cancel import Cancel
 from .CardanoAddress import CardanoAddress
+from .CardanoAddressParametersType import CardanoAddressParametersType
+from .CardanoBlockchainPointerType import CardanoBlockchainPointerType
 from .CardanoGetAddress import CardanoGetAddress
 from .CardanoGetPublicKey import CardanoGetPublicKey
 from .CardanoPublicKey import CardanoPublicKey
@@ -277,6 +279,7 @@ from . import BinanceOrderType
 from . import BinanceTimeInForce
 from . import ButtonRequestType
 from . import Capability
+from . import CardanoAddressType
 from . import DebugLinkShowTextStyle
 from . import DebugSwipeDirection
 from . import FailureType
