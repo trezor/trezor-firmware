@@ -16,8 +16,8 @@
 
 import pytest
 
-from trezorlib.cardano import PROTOCOL_MAGICS, get_address
-from trezorlib.tools import parse_path
+from trezorlib.cardano import PROTOCOL_MAGICS, create_address_parameters, get_address
+from trezorlib.messages import CardanoAddressType
 
 from ..common import MNEMONIC_SLIP39_BASIC_20_3of6
 
@@ -27,7 +27,7 @@ from ..common import MNEMONIC_SLIP39_BASIC_20_3of6
 @pytest.mark.skip_t1  # T1 support is not planned
 @pytest.mark.skip_ui
 @pytest.mark.parametrize(
-    "path,protocol_magic,expected_address",
+    "spending_path,protocol_magic,expected_address",
     [
         # mainnet
         (
@@ -65,10 +65,18 @@ from ..common import MNEMONIC_SLIP39_BASIC_20_3of6
     ],
 )
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6, passphrase=True)
-def test_cardano_get_address(client, path, protocol_magic, expected_address):
+def test_cardano_get_address(client, spending_path, protocol_magic, expected_address):
     # enter passphrase
     assert client.features.passphrase_protection is True
     client.use_passphrase("TREZOR")
 
-    address = get_address(client, parse_path(path), protocol_magic)
+    address = get_address(
+        client,
+        address_parameters=create_address_parameters(
+            address_type=CardanoAddressType.BYRON, spending_key_path_str=spending_path,
+        ),
+        protocol_magic=protocol_magic,
+        network_id=0,
+    )
+    assert address == expected_address
     assert address == expected_address

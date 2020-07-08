@@ -16,17 +16,26 @@
 
 import pytest
 
-from trezorlib.cardano import PROTOCOL_MAGICS, get_address
-from trezorlib.tools import parse_path
+from trezorlib.cardano import (
+    NETWORK_IDS,
+    PROTOCOL_MAGICS,
+    create_address_parameters,
+    get_address,
+)
+from trezorlib.messages import CardanoAddressType
 
 from ..common import MNEMONIC12
+
+SHELLEY_TEST_VECTORS_MNEMONIC = (
+    "test walk nut penalty hip pave soap entry language right filter choice"
+)
 
 
 @pytest.mark.altcoin
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
 @pytest.mark.parametrize(
-    "path,protocol_magic,expected_address",
+    "spending_path,protocol_magic,expected_address",
     [
         # mainnet
         (
@@ -64,6 +73,254 @@ from ..common import MNEMONIC12
     ],
 )
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_cardano_get_address(client, path, protocol_magic, expected_address):
-    address = get_address(client, parse_path(path), protocol_magic)
+def test_cardano_get_address(client, spending_path, protocol_magic, expected_address):
+    address = get_address(
+        client,
+        address_parameters=create_address_parameters(
+            address_type=CardanoAddressType.BYRON, spending_key_path_str=spending_path,
+        ),
+        protocol_magic=protocol_magic,
+        network_id=NETWORK_IDS["mainnet"],
+    )
+    assert address == expected_address
+
+
+@pytest.mark.altcoin
+@pytest.mark.cardano
+@pytest.mark.skip_t1  # T1 support is not planned
+@pytest.mark.parametrize(
+    "spending_path, staking_path, network_id, expected_address",
+    [
+        # data form shelley test vectors
+        (
+            "m/1852'/1815'/0'/0/0",
+            "m/1852'/1815'/0'/2/0",
+            0,
+            "addr1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3jcu5d8ps7zex2k2xt3uqxgjqnnj83ws8lhrn648jjxtwqcyl47r",
+        ),
+        (
+            "m/1852'/1815'/0'/0/0",
+            "m/1852'/1815'/0'/2/0",
+            3,
+            "addr1qw2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3jcu5d8ps7zex2k2xt3uqxgjqnnj83ws8lhrn648jjxtwqzhyupd",
+        ),
+        # data generated with code under test
+        (
+            "m/1852'/1815'/4'/0/0",
+            "m/1852'/1815'/4'/2/0",
+            NETWORK_IDS["mainnet"],
+            "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+        ),
+        (
+            "m/1852'/1815'/4'/0/0",
+            "m/1852'/1815'/4'/2/0",
+            NETWORK_IDS["testnet"],
+            "addr1qr4sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsuzz8x7",
+        ),
+    ],
+)
+@pytest.mark.setup_client(mnemonic=SHELLEY_TEST_VECTORS_MNEMONIC)
+def test_cardano_get_base_address(
+    client, spending_path, staking_path, network_id, expected_address
+):
+    address = get_address(
+        client,
+        address_parameters=create_address_parameters(
+            address_type=CardanoAddressType.BASE,
+            spending_key_path_str=spending_path,
+            staking_key_path_str=staking_path,
+        ),
+        protocol_magic=PROTOCOL_MAGICS["mainnet"],
+        network_id=network_id,
+    )
+    assert address == expected_address
+
+
+@pytest.mark.altcoin
+@pytest.mark.cardano
+@pytest.mark.skip_t1  # T1 support is not planned
+@pytest.mark.parametrize(
+    "spending_path, staking_key_hash, network_id, expected_address",
+    [
+        # data from shelley test vectors
+        (
+            "m/1852'/1815'/0'/0/0",
+            "32c728d3861e164cab28cb8f006448139c8f1740ffb8e7aa9e5232dc",
+            0,
+            "addr1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3jcu5d8ps7zex2k2xt3uqxgjqnnj83ws8lhrn648jjxtwqcyl47r",
+        ),
+        (
+            "m/1852'/1815'/0'/0/0",
+            "32c728d3861e164cab28cb8f006448139c8f1740ffb8e7aa9e5232dc",
+            3,
+            "addr1qw2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3jcu5d8ps7zex2k2xt3uqxgjqnnj83ws8lhrn648jjxtwqzhyupd",
+        ),
+        # data generated with code under test
+        (
+            "m/1852'/1815'/4'/0/0",
+            "1bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff",
+            NETWORK_IDS["mainnet"],
+            "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+        ),
+        (
+            "m/1852'/1815'/4'/0/0",
+            "1bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff",
+            NETWORK_IDS["testnet"],
+            "addr1qr4sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsuzz8x7",
+        ),
+        # staking key hash not owned - derived with "all all..." mnenomnic, data generated with code under test
+        (
+            "m/1852'/1815'/4'/0/0",
+            "122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277",
+            NETWORK_IDS["mainnet"],
+            "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgj922xhxkn6twlq2wn4q50q352annk3903tj00h45mgfmsxrrvc2",
+        ),
+        (
+            "m/1852'/1815'/0'/0/0",
+            "122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277",
+            NETWORK_IDS["testnet"],
+            "addr1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzersj922xhxkn6twlq2wn4q50q352annk3903tj00h45mgfmstsm5zk",
+        ),
+        (
+            "m/1852'/1815'/4'/0/0",
+            "122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277",
+            NETWORK_IDS["testnet"],
+            "addr1qr4sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgj922xhxkn6twlq2wn4q50q352annk3903tj00h45mgfmsh42t2h",
+        ),
+    ],
+)
+@pytest.mark.setup_client(mnemonic=SHELLEY_TEST_VECTORS_MNEMONIC)
+def test_cardano_get_base_address_with_staking_key_hash(
+    client, spending_path, staking_key_hash, network_id, expected_address
+):
+    # data form shelley test vectors
+    address = get_address(
+        client,
+        address_parameters=create_address_parameters(
+            address_type=CardanoAddressType.BASE,
+            spending_key_path_str=spending_path,
+            staking_key_hash_str=staking_key_hash,
+        ),
+        protocol_magic=PROTOCOL_MAGICS["mainnet"],
+        network_id=network_id,
+    )
+    assert address == expected_address
+
+
+@pytest.mark.altcoin
+@pytest.mark.cardano
+@pytest.mark.skip_t1  # T1 support is not planned
+@pytest.mark.parametrize(
+    "spending_path, network_id, expected_address",
+    [
+        # data form shelley test vectors
+        (
+            "m/1852'/1815'/0'/0/0",
+            0,
+            "addr1vz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzers6g8jlq",
+        ),
+        (
+            "m/1852'/1815'/0'/0/0",
+            3,
+            "addr1vw2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzers6h7glf",
+        ),
+    ],
+)
+@pytest.mark.setup_client(mnemonic=SHELLEY_TEST_VECTORS_MNEMONIC)
+def test_cardano_get_enterprise_address(
+    client, spending_path, network_id, expected_address
+):
+    address = get_address(
+        client,
+        address_parameters=create_address_parameters(
+            address_type=CardanoAddressType.ENTERPRISE,
+            spending_key_path_str=spending_path,
+        ),
+        protocol_magic=PROTOCOL_MAGICS["mainnet"],
+        network_id=network_id,
+    )
+    assert address == expected_address
+
+
+@pytest.mark.altcoin
+@pytest.mark.cardano
+@pytest.mark.skip_t1  # T1 support is not planned
+@pytest.mark.parametrize(
+    "spending_path, block_index, tx_index, certificate_index, network_id, expected_address",
+    [
+        # data form shelley test vectors
+        (
+            "m/1852'/1815'/0'/0/0",
+            1,
+            2,
+            3,
+            0,
+            "addr1gz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzerspqgpslhplej",
+        ),
+        (
+            "m/1852'/1815'/0'/0/0",
+            24157,
+            177,
+            42,
+            3,
+            "addr1gw2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer5ph3wczvf2x4v58t",
+        ),
+    ],
+)
+@pytest.mark.setup_client(mnemonic=SHELLEY_TEST_VECTORS_MNEMONIC)
+def test_cardano_get_pointer_address(
+    client,
+    spending_path,
+    block_index,
+    tx_index,
+    certificate_index,
+    network_id,
+    expected_address,
+):
+    address = get_address(
+        client,
+        address_parameters=create_address_parameters(
+            address_type=CardanoAddressType.POINTER,
+            spending_key_path_str=spending_path,
+            block_index=block_index,
+            tx_index=tx_index,
+            certificate_index=certificate_index,
+        ),
+        protocol_magic=PROTOCOL_MAGICS["mainnet"],
+        network_id=network_id,
+    )
+    assert address == expected_address
+
+
+@pytest.mark.altcoin
+@pytest.mark.cardano
+@pytest.mark.skip_t1  # T1 support is not planned
+@pytest.mark.parametrize(
+    "spending_path, network_id, expected_address",
+    [
+        # data generated by code under test
+        (
+            "m/1852'/1815'/0'/2/0",
+            NETWORK_IDS["mainnet"],
+            "addr1uyevw2xnsc0pvn9t9r9c7qryfqfeerchgrlm3ea2nefr9hqq40szs",
+        ),
+        (
+            "m/1852'/1815'/0'/2/0",
+            NETWORK_IDS["testnet"],
+            "addr1uqevw2xnsc0pvn9t9r9c7qryfqfeerchgrlm3ea2nefr9hqq8lpzh",
+        ),
+    ],
+)
+@pytest.mark.setup_client(mnemonic=SHELLEY_TEST_VECTORS_MNEMONIC)
+def test_cardano_get_reward_address(
+    client, spending_path, network_id, expected_address
+):
+    address = get_address(
+        client,
+        address_parameters=create_address_parameters(
+            address_type=CardanoAddressType.REWARD, spending_key_path_str=spending_path,
+        ),
+        protocol_magic=PROTOCOL_MAGICS["mainnet"],
+        network_id=network_id,
+    )
     assert address == expected_address

@@ -1,16 +1,22 @@
 from common import *
-from apps.common import seed
-
-from apps.common import HARDENED
+from trezor import wire
 from trezor.crypto import bip32, slip39
+from trezor.messages import CardanoAddressType
+from trezor.messages.CardanoAddressParametersType import CardanoAddressParametersType
+from trezor.messages.CardanoBlockchainPointerType import CardanoBlockchainPointerType
+
+from apps.common import HARDENED, seed
+
 if not utils.BITCOIN_ONLY:
-    from apps.cardano import protocol_magics
     from apps.cardano.address import (
+        derive_human_readable_address,
+        validate_full_path,
+    )
+    from apps.cardano.byron_address import (
         _get_address_root,
         _address_hash,
-        validate_full_path,
-        derive_address_and_node
     )
+    from apps.cardano.helpers import protocol_magics
     from apps.cardano.seed import Keychain
 
 
@@ -20,8 +26,6 @@ class TestCardanoAddress(unittest.TestCase):
         mnemonic = "all all all all all all all all all all all all"
         passphrase = ""
         node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
-        node.derive_cardano(0x80000000 | 44)
-        node.derive_cardano(0x80000000 | 1815)
         keychain = Keychain(node)
 
         addresses = [
@@ -32,7 +36,11 @@ class TestCardanoAddress(unittest.TestCase):
 
         for i, expected in enumerate(addresses):
             # 44'/1815'/0'/0/i'
-            address, _ = derive_address_and_node(keychain, [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 0x80000000 + i], protocol_magics.MAINNET)
+            address_parameters = CardanoAddressParametersType(
+                address_type=CardanoAddressType.BYRON,
+                spending_key_path=[0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 0x80000000 + i],
+            )
+            address = derive_human_readable_address(keychain, address_parameters, protocol_magics.MAINNET, 0)
             self.assertEqual(expected, address)
 
         nodes = [
@@ -57,7 +65,7 @@ class TestCardanoAddress(unittest.TestCase):
         ]
 
         for i, (priv, ext, pub, chain) in enumerate(nodes):
-            _, n = derive_address_and_node(keychain, [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 0x80000000 + i], protocol_magics.MAINNET)
+            n = keychain.derive([0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 0x80000000 + i])
             self.assertEqual(hexlify(n.private_key()), priv)
             self.assertEqual(hexlify(n.private_key_ext()), ext)
             self.assertEqual(hexlify(seed.remove_ed25519_prefix(n.public_key())), pub)
@@ -67,8 +75,6 @@ class TestCardanoAddress(unittest.TestCase):
         mnemonic = "all all all all all all all all all all all all"
         passphrase = ""
         node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
-        node.derive_cardano(0x80000000 | 44)
-        node.derive_cardano(0x80000000 | 1815)
         keychain = Keychain(node)
 
         addresses = [
@@ -79,7 +85,11 @@ class TestCardanoAddress(unittest.TestCase):
 
         for i, expected in enumerate(addresses):
             # 44'/1815'/0'/0/i
-            address, _ = derive_address_and_node(keychain, [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i], protocol_magics.MAINNET)
+            address_parameters = CardanoAddressParametersType(
+                address_type=CardanoAddressType.BYRON,
+                spending_key_path=[0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i],
+            )
+            address = derive_human_readable_address(keychain, address_parameters, protocol_magics.MAINNET, 0)
             self.assertEqual(address, expected)
 
         nodes = [
@@ -104,7 +114,7 @@ class TestCardanoAddress(unittest.TestCase):
         ]
 
         for i, (priv, ext, pub, chain) in enumerate(nodes):
-            _, n = derive_address_and_node(keychain, [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i], protocol_magics.MAINNET)
+            n = keychain.derive([0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i])
             self.assertEqual(hexlify(n.private_key()), priv)
             self.assertEqual(hexlify(n.private_key_ext()), ext)
             self.assertEqual(hexlify(seed.remove_ed25519_prefix(n.public_key())), pub)
@@ -115,12 +125,14 @@ class TestCardanoAddress(unittest.TestCase):
         mnemonic = "all all all all all all all all all all all all"
         passphrase = ""
         node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
-        node.derive_cardano(0x80000000 | 44)
-        node.derive_cardano(0x80000000 | 1815)
         keychain = Keychain(node)
 
         # 44'/1815'
-        address, _ = derive_address_and_node(keychain, [0x80000000 | 44, 0x80000000 | 1815], protocol_magics.MAINNET)
+        address_parameters = CardanoAddressParametersType(
+            address_type=CardanoAddressType.BYRON,
+            spending_key_path=[0x80000000 | 44, 0x80000000 | 1815],
+        )
+        address = derive_human_readable_address(keychain, address_parameters, protocol_magics.MAINNET, 0)
         self.assertEqual(address, "Ae2tdPwUPEZ2FGHX3yCKPSbSgyuuTYgMxNq652zKopxT4TuWvEd8Utd92w3")
 
         priv, ext, pub, chain = (
@@ -130,7 +142,7 @@ class TestCardanoAddress(unittest.TestCase):
             b"02ac67c59a8b0264724a635774ca2c242afa10d7ab70e2bf0a8f7d4bb10f1f7a"
         )
 
-        _, n = derive_address_and_node(keychain, [0x80000000 | 44, 0x80000000 | 1815], protocol_magics.MAINNET)
+        n = keychain.derive([0x80000000 | 44, 0x80000000 | 1815])
         self.assertEqual(hexlify(n.private_key()), priv)
         self.assertEqual(hexlify(n.private_key_ext()), ext)
         self.assertEqual(hexlify(seed.remove_ed25519_prefix(n.public_key())), pub)
@@ -198,8 +210,6 @@ class TestCardanoAddress(unittest.TestCase):
         self.assertEqual(hexlify(node.chain_code()), root_chain)
 
         # Check derived nodes and addresses.
-        node.derive_cardano(0x80000000 | 44)
-        node.derive_cardano(0x80000000 | 1815)
         keychain = Keychain(node)
 
         nodes = [
@@ -228,7 +238,12 @@ class TestCardanoAddress(unittest.TestCase):
 
         for i, (address, priv, ext, pub, chain) in enumerate(nodes):
             # 44'/1815'/0'/0/i
-            a, n = derive_address_and_node(keychain, [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i], protocol_magics.MAINNET)
+            address_parameters = CardanoAddressParametersType(
+                address_type=CardanoAddressType.BYRON,
+                spending_key_path=[0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i],
+            )
+            a = derive_human_readable_address(keychain, address_parameters, protocol_magics.MAINNET, 0)
+            n = keychain.derive([0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i])
             self.assertEqual(a, address)
             self.assertEqual(hexlify(n.private_key()), priv)
             self.assertEqual(hexlify(n.private_key_ext()), ext)
@@ -262,8 +277,6 @@ class TestCardanoAddress(unittest.TestCase):
         self.assertEqual(hexlify(node.chain_code()), root_chain)
 
         # Check derived nodes and addresses.
-        node.derive_cardano(0x80000000 | 44)
-        node.derive_cardano(0x80000000 | 1815)
         keychain = Keychain(node)
 
         nodes = [
@@ -292,19 +305,280 @@ class TestCardanoAddress(unittest.TestCase):
 
         for i, (address, priv, ext, pub, chain) in enumerate(nodes):
             # 44'/1815'/0'/0/i
-            a, n = derive_address_and_node(keychain, [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i], protocol_magics.MAINNET)
+            address_parameters = CardanoAddressParametersType(
+                address_type=CardanoAddressType.BYRON,
+                spending_key_path=[0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i],
+            )
+            a = derive_human_readable_address(keychain, address_parameters, protocol_magics.MAINNET, 0)
+            n = keychain.derive([0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i])
             self.assertEqual(a, address)
             self.assertEqual(hexlify(n.private_key()), priv)
             self.assertEqual(hexlify(n.private_key_ext()), ext)
             self.assertEqual(hexlify(seed.remove_ed25519_prefix(n.public_key())), pub)
             self.assertEqual(hexlify(n.chain_code()), chain)
 
-    def test_testnet_address(self):
+    def test_base_address(self):
+        mnemonic = "test walk nut penalty hip pave soap entry language right filter choice"
+        passphrase = ""
+        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
+        keychain = Keychain(node)
+
+        test_vectors = [
+            # network id, account, expected result
+            # data from shelley test vectors
+            (0, 0, "addr1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3jcu5d8ps7zex2k2xt3uqxgjqnnj83ws8lhrn648jjxtwqcyl47r"),
+            (3, 0, "addr1qw2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3jcu5d8ps7zex2k2xt3uqxgjqnnj83ws8lhrn648jjxtwqzhyupd"),
+            # data generated with code under test
+            (0, 4, "addr1qr4sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsuzz8x7"),
+            (3, 4, "addr1q04sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsx3ewes"),
+        ]
+
+        for network_id, account, expected_address in test_vectors:
+            address_parameters = CardanoAddressParametersType(
+                address_type=CardanoAddressType.BASE,
+                spending_key_path=[1852 | HARDENED, 1815 | HARDENED, account | HARDENED, 0, 0],
+                staking_key_path=[1852 | HARDENED, 1815 | HARDENED, account | HARDENED, 2, 0]
+            )
+            actual_address = derive_human_readable_address(keychain, address_parameters, protocol_magics.MAINNET, network_id)
+
+            self.assertEqual(actual_address, expected_address)
+
+    def test_base_address_with_staking_key_hash(self):
+        mnemonic = "test walk nut penalty hip pave soap entry language right filter choice"
+        passphrase = ""
+        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
+        keychain = Keychain(node)
+
+        test_vectors = [
+            # network id, account, staking key hash, expected result
+            # own staking key hash
+            # data from shelley test vectors
+            (0, 0, unhexlify("32c728d3861e164cab28cb8f006448139c8f1740ffb8e7aa9e5232dc"), "addr1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3jcu5d8ps7zex2k2xt3uqxgjqnnj83ws8lhrn648jjxtwqcyl47r"),
+            (3, 0, unhexlify("32c728d3861e164cab28cb8f006448139c8f1740ffb8e7aa9e5232dc"), "addr1qw2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3jcu5d8ps7zex2k2xt3uqxgjqnnj83ws8lhrn648jjxtwqzhyupd"),
+            # data generated with code under test
+            (0, 4, unhexlify("1bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff"), "addr1qr4sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsuzz8x7"),
+            (3, 4, unhexlify("1bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff"), "addr1q04sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsx3ewes"),
+            # staking key hash not owned - derived with "all all..." mnenomnic, data generated with code under test
+            (0, 4, unhexlify("122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277"), "addr1qr4sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgj922xhxkn6twlq2wn4q50q352annk3903tj00h45mgfmsh42t2h"),
+            (3, 0, unhexlify("122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277"), "addr1qw2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzersj922xhxkn6twlq2wn4q50q352annk3903tj00h45mgfms3rqaac"),
+            (3, 4, unhexlify("122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277"), "addr1q04sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgj922xhxkn6twlq2wn4q50q352annk3903tj00h45mgfmsdx3z4e"),
+        ]
+
+        for network_id, account, staking_key_hash, expected_address in test_vectors:
+            address_parameters = CardanoAddressParametersType(
+                address_type=CardanoAddressType.BASE,
+                spending_key_path=[1852 | HARDENED, 1815 | HARDENED, account | HARDENED, 0, 0],
+                staking_key_hash=staking_key_hash,
+            )
+            actual_address = derive_human_readable_address(keychain, address_parameters, protocol_magics.MAINNET, network_id)
+
+            self.assertEqual(actual_address, expected_address)
+
+    def test_base_address_with_invalid_parameters(self):
+        mnemonic = "test walk nut penalty hip pave soap entry language right filter choice"
+        passphrase = ""
+        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
+        keychain = Keychain(node)
+
+        # both staking_key_path and staking_key_hash are None
+        with self.assertRaises(wire.DataError):
+            address_parameters = CardanoAddressParametersType(
+                address_type=CardanoAddressType.BASE,
+                spending_key_path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                staking_key_path=None,
+                staking_key_hash=None,
+            )
+            derive_human_readable_address(keychain, address_parameters, 0, 0)
+
+        # staking_key_path is not a staking path
+        with self.assertRaises(wire.DataError):
+            address_parameters = CardanoAddressParametersType(
+                address_type=CardanoAddressType.BASE,
+                spending_key_path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                staking_key_path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                staking_key_hash=None,
+            )
+            derive_human_readable_address(keychain, address_parameters, 0, 0)
+
+    def test_enterprise_address(self):
+        mnemonic = "test walk nut penalty hip pave soap entry language right filter choice"
+        passphrase = ""
+        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
+        keychain = Keychain(node)
+
+        test_vectors = [
+            # network id, expected result
+            (0, "addr1vz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzers6g8jlq"),
+            (3, "addr1vw2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzers6h7glf")
+        ]
+
+        for network_id, expected_address in test_vectors:
+            address_parameters = CardanoAddressParametersType(
+                address_type=CardanoAddressType.ENTERPRISE,
+                spending_key_path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+            )
+            actual_address = derive_human_readable_address(keychain, address_parameters, protocol_magics.MAINNET, network_id)
+
+            self.assertEqual(actual_address, expected_address)
+
+    def test_pointer_address(self):
+        mnemonic = "test walk nut penalty hip pave soap entry language right filter choice"
+        passphrase = ""
+        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
+        keychain = Keychain(node)
+
+        test_vectors = [
+            # network id, pointer, expected result
+            (0, CardanoBlockchainPointerType(1, 2, 3), "addr1gz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzerspqgpslhplej"),
+            (3, CardanoBlockchainPointerType(24157, 177, 42), "addr1gw2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer5ph3wczvf2x4v58t")
+        ]
+
+        for network_id, pointer, expected_address in test_vectors:
+            address_parameters = CardanoAddressParametersType(
+                address_type=CardanoAddressType.POINTER,
+                spending_key_path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                certificate_pointer=pointer,
+            )
+            actual_address = derive_human_readable_address(keychain, address_parameters, protocol_magics.MAINNET, network_id)
+
+            self.assertEqual(actual_address, expected_address)
+
+    def test_pointer_address_invalid_pointers(self):
+        mnemonic = "test walk nut penalty hip pave soap entry language right filter choice"
+        passphrase = ""
+        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
+        keychain = Keychain(node)
+
+        # pointer is None
+        with self.assertRaises(wire.DataError):
+            address_parameters = CardanoAddressParametersType(
+                address_type=CardanoAddressType.POINTER,
+                spending_key_path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                certificate_pointer=None,
+            )
+            derive_human_readable_address(keychain, address_parameters, 0, 0)
+
+        # block index is None
+        with self.assertRaises(wire.DataError):
+            address_parameters = CardanoAddressParametersType(
+                address_type=CardanoAddressType.POINTER,
+                spending_key_path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                certificate_pointer=CardanoBlockchainPointerType(None, 2, 3),
+            )
+            derive_human_readable_address(keychain, address_parameters, 0, 0)
+
+        # tx index is None
+        with self.assertRaises(wire.DataError):
+            address_parameters = CardanoAddressParametersType(
+                address_type=CardanoAddressType.POINTER,
+                spending_key_path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                certificate_pointer=CardanoBlockchainPointerType(1, None, 3),
+            )
+            derive_human_readable_address(keychain, address_parameters, 0, 0)
+
+        # certificate index is None
+        with self.assertRaises(wire.DataError):
+            address_parameters = CardanoAddressParametersType(
+                address_type=CardanoAddressType.POINTER,
+                spending_key_path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                certificate_pointer=CardanoBlockchainPointerType(1, 2, None),
+            )
+            derive_human_readable_address(keychain, address_parameters, 0, 0)
+
+    def test_reward_address(self):
+        mnemonic = "test walk nut penalty hip pave soap entry language right filter choice"
+        passphrase = ""
+        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
+        keychain = Keychain(node)
+
+        test_vectors = [
+            # network id, expected result
+            (0, "addr1uqevw2xnsc0pvn9t9r9c7qryfqfeerchgrlm3ea2nefr9hqq8lpzh"),
+            (3, "addr1uvevw2xnsc0pvn9t9r9c7qryfqfeerchgrlm3ea2nefr9hqqcxmz7")
+        ]
+
+        for network_id, expected_address in test_vectors:
+            address_parameters = CardanoAddressParametersType(
+                address_type=CardanoAddressType.REWARD,
+                spending_key_path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
+            )
+            actual_address = derive_human_readable_address(keychain, address_parameters, protocol_magics.MAINNET, network_id)
+
+            self.assertEqual(actual_address, expected_address)
+
+    def test_reward_address_with_non_staking_path(self):
+        mnemonic = "test walk nut penalty hip pave soap entry language right filter choice"
+        passphrase = ""
+        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
+        keychain = Keychain(node)
+
+        with self.assertRaises(wire.DataError):
+            address_parameters = CardanoAddressParametersType(
+                address_type=CardanoAddressType.REWARD,
+                spending_key_path=[44 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0]
+            )
+            derive_human_readable_address(keychain, address_parameters, 0, 0)
+
+    def test_shelley_address_with_byron_namespace(self):
+        """
+        It shouldn't be possible to derive Shelley addresses
+        (Base, Pointer, Enterprise, Reward) with a Byron namespace (44')
+        """
+        mnemonic = "test walk nut penalty hip pave soap entry language right filter choice"
+        passphrase = ""
+        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
+        keychain = Keychain(node)
+
+        with self.assertRaises(wire.DataError):
+            address_parameters = CardanoAddressParametersType(
+                address_type=CardanoAddressType.BASE,
+                spending_key_path=[44 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0]
+            )
+            derive_human_readable_address(keychain, address_parameters, 0, 0)
+
+        with self.assertRaises(wire.DataError):
+            address_parameters = CardanoAddressParametersType(
+                address_type=CardanoAddressType.POINTER,
+                spending_key_path=[44 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                certificate_pointer=CardanoBlockchainPointerType(0, 0, 0)
+            )
+            derive_human_readable_address(keychain, address_parameters, 0, 0)
+
+        with self.assertRaises(wire.DataError):
+            address_parameters = CardanoAddressParametersType(
+                address_type=CardanoAddressType.ENTERPRISE,
+                spending_key_path=[44 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+            )
+            derive_human_readable_address(keychain, address_parameters, 0, 0)
+
+        with self.assertRaises(wire.DataError):
+            address_parameters = CardanoAddressParametersType(
+                address_type=CardanoAddressType.REWARD,
+                spending_key_path=[44 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+            )
+            derive_human_readable_address(keychain, address_parameters, 0, 0)
+
+    def test_byron_address_with_shelley_namespace(self):
+        """
+        It shouldn't be possible to derive Byron addresses
+        with a Shelley namespace (1852')
+        """
         mnemonic = "all all all all all all all all all all all all"
         passphrase = ""
         node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
-        node.derive_cardano(0x80000000 | 44)
-        node.derive_cardano(0x80000000 | 1815)
+        keychain = Keychain(node)
+
+        with self.assertRaises(wire.DataError):
+            address_parameters = CardanoAddressParametersType(
+                address_type=CardanoAddressType.BYRON,
+                spending_key_path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+            )
+            derive_human_readable_address(keychain, address_parameters, 0, 0)
+
+    def test_testnet_byron_address(self):
+        mnemonic = "all all all all all all all all all all all all"
+        passphrase = ""
+        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
         keychain = Keychain(node)
 
         addresses = [
@@ -315,7 +589,11 @@ class TestCardanoAddress(unittest.TestCase):
 
         for i, expected in enumerate(addresses):
             # 44'/1815'/0'/0/i'
-            address, _ = derive_address_and_node(keychain, [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i], protocol_magics.TESTNET)
+            address_parameters = CardanoAddressParametersType(
+                address_type=CardanoAddressType.BYRON,
+                spending_key_path=[0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i],
+            )
+            address = derive_human_readable_address(keychain, address_parameters, protocol_magics.TESTNET, 0)
             self.assertEqual(expected, address)
 
 if __name__ == '__main__':

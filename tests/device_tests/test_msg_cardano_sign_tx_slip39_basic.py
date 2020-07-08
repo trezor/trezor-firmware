@@ -17,41 +17,32 @@
 import pytest
 
 from trezorlib import cardano, messages
-from trezorlib.cardano import PROTOCOL_MAGICS
+from trezorlib.cardano import NETWORK_IDS, PROTOCOL_MAGICS
 
 from ..common import MNEMONIC_SLIP39_BASIC_20_3of6
-
-SAMPLE_INPUT = {
-    "path": "m/44'/1815'/0'/0/1",
-    "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
-    "prev_index": 0,
-}
-
-SAMPLE_OUTPUTS = {
-    "simple_output": {
-        "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
-        "amount": "3003112",
-    },
-    "change_output": {"path": "m/44'/1815'/0'/0/1", "amount": "1000000"},
-    "testnet_output": {
-        "address": "2657WMsDfac5vydkak9a7BqGrsLqBzB7K3vT55rucZKYDmVnUCf6hXAFkZSTcUx7r",
-        "amount": "3003112",
-    },
-}
+from .test_msg_cardano_sign_transaction import (
+    SAMPLE_INPUTS,
+    SAMPLE_OUTPUTS,
+    InputAction,
+)
 
 VALID_VECTORS = [
     # Mainnet transaction without change
     (
         # protocol magic
         PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
         # inputs
-        [SAMPLE_INPUT],
+        [SAMPLE_INPUTS["byron_input"]],
         # outputs
-        [SAMPLE_OUTPUTS["simple_output"]],
+        [SAMPLE_OUTPUTS["simple_byron_output"]],
         # fee
         42,
         # ttl
         10,
+        # input flow
+        [[InputAction.SWIPE, InputAction.YES], [InputAction.SWIPE, InputAction.YES]],
         # tx hash
         "73e09bdebf98a9e0f17f86a2d11e0f14f4f8dae77cdf26ff1678e821f20c8db6",
         # serialized tx
@@ -61,14 +52,22 @@ VALID_VECTORS = [
     (
         # protocol magic (mainnet)
         PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
         # inputs
-        [SAMPLE_INPUT],
+        [SAMPLE_INPUTS["byron_input"]],
         # outputs
-        [SAMPLE_OUTPUTS["simple_output"], SAMPLE_OUTPUTS["change_output"]],
+        [SAMPLE_OUTPUTS["simple_byron_output"], SAMPLE_OUTPUTS["byron_change_output"]],
         # fee
         42,
         # ttl
         10,
+        # input flow
+        [
+            [InputAction.SWIPE, InputAction.YES],
+            [InputAction.YES],
+            [InputAction.SWIPE, InputAction.YES],
+        ],
         # tx hash
         "4c43ce4c72f145b145ae7add414722735e250d048f61c4585a5becafcbffa6ae",
         # serialized tx
@@ -78,18 +77,26 @@ VALID_VECTORS = [
     (
         # protocol magic
         PROTOCOL_MAGICS["testnet"],
+        # network id
+        NETWORK_IDS["testnet"],
         # inputs
-        [SAMPLE_INPUT],
+        [SAMPLE_INPUTS["byron_input"]],
         # outputs
-        [SAMPLE_OUTPUTS["testnet_output"], SAMPLE_OUTPUTS["change_output"]],
+        [SAMPLE_OUTPUTS["testnet_output"], SAMPLE_OUTPUTS["byron_change_output"]],
         # fee
         42,
         # ttl
         10,
+        # input flow
+        [
+            [InputAction.SWIPE, InputAction.YES],
+            [InputAction.YES],
+            [InputAction.SWIPE, InputAction.YES],
+        ],
         # tx hash
-        "ac7ef9e4f51ed4d6b791cee111b240dae2f00c39c5cc1a150631eba8aa955528",
+        "93a2c3cfb67ef1e4bae167b0f443c3370664bdb9171bc9cd41bad98e5cc049b2",
         # serialized tx
-        "83a400818258201af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc00018282582f82d818582583581c586b90cf80c021db288ce1c18ecfd3610acf64f8748768b0eb7335b1a10242182a001aae3129311a002dd2e882582f82d818582583581c709bfb5d9733cbdd72f520cd2c8b9f8f942da5e6cd0b6994e1803b0aa10242182a001aef14e76d1a000f424002182a030aa1028184582024c4fe188a39103db88818bc191fd8571eae7b284ebcbdf2462bde97b058a95c5840cfd68676454ad8bed8575dcb8ee91824c0f836da4f07a54112088b12c6b89be0c8f729d4e3fb1df0de10f049a66dea372f3e2888cabb6110d538a0e9a06fbb0758206f7a744035f4b3ddb8f861c18446169643cc3ae85e271b4b4f0eda05cf84c65b45a10242182af6",
+        "83a400818258201af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc00018282582f82d818582583581cc817d85b524e3d073795819a25cdbb84cff6aa2bbb3a081980d248cba10242182a001a0fb6fc611a002dd2e882582f82d818582583581c709bfb5d9733cbdd72f520cd2c8b9f8f942da5e6cd0b6994e1803b0aa10242182a001aef14e76d1a000f424002182a030aa1028184582024c4fe188a39103db88818bc191fd8571eae7b284ebcbdf2462bde97b058a95c5840552d1d66972598532fa539faa98cdc7889c8dce00577626a62fb22d0e244d9f49732b6ab65593352a7486123077b7e36308c5048cc8ee6dc465e576f065cb70558206f7a744035f4b3ddb8f861c18446169643cc3ae85e271b4b4f0eda05cf84c65b45a10242182af6",
     ),
 ]
 
@@ -99,33 +106,48 @@ VALID_VECTORS = [
 @pytest.mark.skip_t1  # T1 support is not planned
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6, passphrase=True)
 @pytest.mark.parametrize(
-    "protocol_magic,inputs,outputs,fee,ttl,tx_hash,serialized_tx", VALID_VECTORS
+    "protocol_magic,network_id,inputs,outputs,fee,ttl,input_flow_sequences,tx_hash,serialized_tx",
+    VALID_VECTORS,
 )
 def test_cardano_sign_tx(
-    client, protocol_magic, inputs, outputs, fee, ttl, tx_hash, serialized_tx
+    client,
+    protocol_magic,
+    network_id,
+    inputs,
+    outputs,
+    fee,
+    ttl,
+    input_flow_sequences,
+    tx_hash,
+    serialized_tx,
 ):
     inputs = [cardano.create_input(i) for i in inputs]
     outputs = [cardano.create_output(o) for o in outputs]
 
-    expected_responses = [
-        messages.PassphraseRequest(),
-        messages.ButtonRequest(code=messages.ButtonRequestType.Other),
-        messages.ButtonRequest(code=messages.ButtonRequestType.Other),
-        messages.CardanoSignedTx(),
+    expected_responses = [messages.PassphraseRequest()]
+    expected_responses += [
+        messages.ButtonRequest(code=messages.ButtonRequestType.Other)
+        for i in range(len(input_flow_sequences))
     ]
+    expected_responses.append(messages.CardanoSignedTx())
 
     def input_flow():
-        yield
-        client.debug.swipe_up()
-        client.debug.press_yes()
-        yield
-        client.debug.swipe_up()
-        client.debug.press_yes()
+        for sequence in input_flow_sequences:
+            yield
+            for action in sequence:
+                if action == InputAction.SWIPE:
+                    client.debug.swipe_up()
+                elif action == InputAction.YES:
+                    client.debug.press_yes()
+                else:
+                    raise ValueError("Invalid input action")
 
     client.use_passphrase("TREZOR")
     with client:
         client.set_expected_responses(expected_responses)
         client.set_input_flow(input_flow)
-        response = cardano.sign_tx(client, inputs, outputs, fee, ttl, protocol_magic)
+        response = cardano.sign_tx(
+            client, inputs, outputs, fee, ttl, protocol_magic, network_id
+        )
         assert response.tx_hash.hex() == tx_hash
         assert response.serialized_tx.hex() == serialized_tx
