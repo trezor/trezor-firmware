@@ -1,4 +1,4 @@
-from trezor import io, loop, res, ui
+from trezor import io, loop, res, ui, workflow
 from trezor.crypto import slip39
 from trezor.ui import display
 from trezor.ui.button import Button, ButtonClear, ButtonMono, ButtonMonoConfirm
@@ -214,6 +214,7 @@ class Slip39Keyboard(ui.Layout):
 
             if touch in race.finished:
                 event, x, y = result
+                workflow.idle_timer.touch()
                 self.dispatch(event, x, y)
             else:
                 self.on_timeout()
