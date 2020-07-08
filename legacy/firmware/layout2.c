@@ -18,7 +18,9 @@
  */
 
 #include <ctype.h>
+#include <inttypes.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "bignum.h"
@@ -438,6 +440,14 @@ void layoutFeeOverThreshold(const CoinInfo *coin, uint64_t fee) {
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Fee"), str_fee, _("is unexpectedly high."), NULL,
                     _("Send anyway?"), NULL);
+}
+
+void layoutChangeCountOverThreshold(uint32_t change_count) {
+  char str_change[21] = {0};
+  snprintf(str_change, sizeof(str_change), "There are %" PRIu32, change_count);
+  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                    _("Warning!"), str_change, _("change-outputs."), NULL,
+                    _("Continue?"), NULL);
 }
 
 void layoutSignMessage(const uint8_t *msg, uint32_t len) {
