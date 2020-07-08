@@ -18,7 +18,7 @@ import json
 
 import click
 
-from .. import cardano, tools
+from .. import cardano, messages, tools
 from . import with_client
 
 PATH_HELP = "BIP-32 path to key, e.g. m/44'/1815'/0'/0/0"
@@ -37,9 +37,10 @@ def cli():
     required=True,
     help="Transaction in JSON format",
 )
-@click.option("-p", "--protocol-magic", type=int, default=1)
+@click.option("-p", "--protocol-magic", type=int, default=764824073)
+@click.option("-N", "--network-id", type=int, default=0)
 @with_client
-def sign_tx(client, file, protocol_magic):
+def sign_tx(client, file, protocol_magic, network_id):
     """Sign Cardano transaction."""
     transaction = json.load(file)
 
@@ -49,7 +50,7 @@ def sign_tx(client, file, protocol_magic):
     ttl = transaction["ttl"]
 
     signed_transaction = cardano.sign_tx(
-        client, inputs, outputs, fee, ttl, protocol_magic
+        client, inputs, outputs, fee, ttl, protocol_magic, network_id
     )
 
     return {
@@ -59,14 +60,46 @@ def sign_tx(client, file, protocol_magic):
 
 
 @cli.command()
-@click.option("-n", "--address", required=True, help=PATH_HELP)
+@click.option("-n", "--path-str", required=True, help=PATH_HELP)
 @click.option("-d", "--show-display", is_flag=True)
-@click.option("-p", "--protocol-magic", type=int, default=1)
+@click.option(
+    "-t", "--address-type", type=int, default=messages.CardanoAddressType.BASE
+)
+@click.option("-s", "--staking-key-path-str", type=str, default=None)
+@click.option("-h", "--staking-key-hash-str", type=str, default=None)
+@click.option("-b", "--block_index", type=int, default=None)
+@click.option("-x", "--tx_index", type=int, default=None)
+@click.option("-c", "--certificate_index", type=int, default=None)
+@click.option("-p", "--protocol-magic", type=int, default=0)
+@click.option("-N", "--network-id", type=int, default=0)
 @with_client
-def get_address(client, address, show_display, protocol_magic):
+def get_address(
+    client,
+    path_str,
+    address_type,
+    staking_key_path_str,
+    staking_key_hash_str,
+    block_index,
+    tx_index,
+    certificate_index,
+    protocol_magic,
+    network_id,
+    show_display,
+):
     """Get Cardano address."""
-    address_n = tools.parse_path(address)
-    return cardano.get_address(client, address_n, protocol_magic, show_display)
+    address_parameters = cardano.create_address_parameters(
+        address_type,
+        path_str,
+        staking_key_path_str,
+        staking_key_hash_str,
+        block_index,
+        tx_index,
+        certificate_index,
+    )
+
+    return cardano.get_address(
+        client, address_parameters, protocol_magic, network_id, show_display
+    )
 
 
 @cli.command()
