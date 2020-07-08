@@ -75,6 +75,10 @@ def display_rotation(client, rotation):
 @with_client
 def auto_lock_delay(client, delay):
     """Set auto-lock delay (in seconds)."""
+
+    if not client.features.pin_protection:
+        raise click.ClickException("Set up a PIN first")
+
     value, unit = delay[:-1], delay[-1:]
     units = {"s": 1, "m": 60, "h": 3600}
     if unit in units:
