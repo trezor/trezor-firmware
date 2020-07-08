@@ -493,6 +493,90 @@ class TestMsgSigntx:
             == "aa0cfe57938b71db47a3992b25d4bee39f258a5de513c907727b982478648a7d"
         )
 
+    @pytest.mark.slow
+    def test_lots_of_change(self, client):
+        # Tests if device implements prompting for multiple change addresses correctly
+
+        # tx: c63e24ed820c5851b60c54613fbc4bcb37df6cd49b4c96143e99580a472f79fb
+        # index 1: 0.0010 BTC
+        # tx: 39a29e954977662ab3879c66fb251ef753e0912223a83d1dcb009111d28265e5
+        # index 1: 0.0254 BTC
+
+        inp1 = proto.TxInputType(
+            address_n=parse_path("44h/0h/1h/0/0"),
+            # amount=100000,
+            prev_hash=TXHASH_c63e24,
+            prev_index=1,
+        )
+
+        inp2 = proto.TxInputType(
+            address_n=parse_path("44h/0h/1h/0/1"),
+            # amount=2540000,
+            prev_hash=TXHASH_39a29e,
+            prev_index=1,
+        )
+
+        outputs = [
+            proto.TxOutputType(
+                address="1NwN6UduuVkJi6sw3gSiKZaCY5rHgVXC2h",
+                amount=500000,
+                script_type=proto.OutputScriptType.PAYTOADDRESS,
+            )
+        ]
+
+        cnt = 20
+        for i in range(cnt):
+            out = proto.TxOutputType(
+                address_n=parse_path(f"44h/0h/1h/1/{i}"),
+                amount=(100000 + 2540000 - 500000 - 39000) // cnt,
+                script_type=proto.OutputScriptType.PAYTOADDRESS,
+            )
+            outputs.append(out)
+
+        request_change_outputs = [request_output(i + 1) for i in range(cnt)]
+
+        with client:
+            client.set_expected_responses(
+                [
+                    request_input(0),
+                    request_meta(TXHASH_c63e24),
+                    request_input(0, TXHASH_c63e24),
+                    request_input(1, TXHASH_c63e24),
+                    request_output(0, TXHASH_c63e24),
+                    request_output(1, TXHASH_c63e24),
+                    request_input(1),
+                    request_meta(TXHASH_39a29e),
+                    request_input(0, TXHASH_39a29e),
+                    request_output(0, TXHASH_39a29e),
+                    request_output(1, TXHASH_39a29e),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                ]
+                + request_change_outputs
+                + [
+                    proto.ButtonRequest(code=B.SignTx),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_input(1),
+                    request_output(0),
+                ]
+                + request_change_outputs
+                + [request_input(0), request_input(1), request_output(0)]
+                + request_change_outputs
+                + [request_output(0)]
+                + request_change_outputs
+                + [request_finished()]
+            )
+
+            _, serialized_tx = btc.sign_tx(
+                client, "Bitcoin", [inp1, inp2], outputs, prev_txes=TX_CACHE_MAINNET
+            )
+
+        assert (
+            tx_hash(serialized_tx).hex()
+            == "fae68e4a3a4b0540eb200e2218a6d8465eac469788ccb236e0d5822d105ddde9"
+        )
+
     def test_fee_too_high(self, client):
         # tx: 1570416eb4302cf52979afd5e6909e37d8fdd874301f7cc87e547e509cb1caa6
         # input 0: 1.0 BTC
@@ -908,7 +992,6 @@ class TestMsgSigntx:
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
                     request_output(2),
-                    proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_output(0),
