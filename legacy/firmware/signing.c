@@ -32,6 +32,7 @@
 
 static uint32_t inputs_count;
 static uint32_t outputs_count;
+static uint32_t change_count;
 static const CoinInfo *coin;
 static CONFIDENTIAL HDNode root;
 static CONFIDENTIAL HDNode node;
@@ -102,6 +103,9 @@ static uint32_t tx_weight;
 #define TXSIZE_FOOTER 4
 /* transaction segwit overhead 2 marker */
 #define TXSIZE_SEGWIT_OVERHEAD 2
+
+/* The maximum number of change-outputs allowed without user confirmation. */
+#define MAX_SILENT_CHANGE_COUNT 2
 
 enum {
   SIGHASH_ALL = 1,
@@ -551,6 +555,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   to_spend = 0;
   spending = 0;
   change_spend = 0;
+  change_count = 0;
   memzero(&input, sizeof(TxInputType));
   memzero(&resp, sizeof(TxRequest));
 
@@ -840,11 +845,18 @@ static bool signing_check_output(TxOutputType *txoutput) {
   }
 
   if (is_change) {
-    if (change_spend == 0) {  // not set
-      change_spend = txoutput->amount;
-    } else {
-      /* We only skip confirmation for the first change output */
-      is_change = false;
+    if (change_spend + txoutput->amount < change_spend) {
+      fsm_sendFailure(FailureType_Failure_DataError, _("Value overflow"));
+      signing_abort();
+      return false;
+    }
+    change_spend += txoutput->amount;
+
+    change_count++;
+    if (change_count <= 0) {
+      fsm_sendFailure(FailureType_Failure_DataError, _("Value overflow"));
+      signing_abort();
+      return false;
     }
   }
 
@@ -885,7 +897,7 @@ static bool signing_check_output(TxOutputType *txoutput) {
   return true;
 }
 
-static bool signing_check_fee(void) {
+static bool signing_confirm_tx(void) {
   if (coin->negative_fee) {
     // bypass check for negative fee coins, required for reward TX
   } else {
@@ -912,6 +924,16 @@ static bool signing_check_fee(void) {
   } else {
     fee = 0;
   }
+
+  if (change_count > MAX_SILENT_CHANGE_COUNT) {
+    layoutChangeCountOverThreshold(change_count);
+    if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+      signing_abort();
+      return false;
+    }
+  }
+
   // last confirmation
   layoutConfirmTx(coin, to_spend - change_spend, fee);
   if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
@@ -944,7 +966,7 @@ static void phase1_request_next_output(void) {
     }
 #endif
     hasher_Final(&hasher_outputs, hash_outputs);
-    if (!signing_check_fee()) {
+    if (!signing_confirm_tx()) {
       return;
     }
     // Everything was checked, now phase 2 begins and the transaction is signed.
