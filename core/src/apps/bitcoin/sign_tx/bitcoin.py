@@ -38,6 +38,9 @@ _BIP32_MAX_LAST_ELEMENT = const(1000000)
 # the number of bytes to preallocate for serialized transaction chunks
 _MAX_SERIALIZED_CHUNK_SIZE = const(2048)
 
+# the maximum number of change-outputs allowed without user confirmation
+_MAX_SILENT_CHANGE_COUNT = const(2)
+
 
 class Bitcoin:
     async def signer(self) -> None:
@@ -92,6 +95,7 @@ class Bitcoin:
         self.external_in = 0  # sum of external input amounts
         self.total_out = 0  # sum of output amounts
         self.change_out = 0  # change output amount
+        self.change_count = 0  # the number of change-outputs
         self.weight = tx_weight.TxWeightCalculator(tx.inputs_count, tx.outputs_count)
 
         # transaction and signature serialization
@@ -154,6 +158,8 @@ class Bitcoin:
         # fee > (coin.maxfee per byte * tx size)
         if fee > (self.coin.maxfee_kb / 1000) * (self.weight.get_total() / 4):
             await helpers.confirm_feeoverthreshold(fee, self.coin)
+        if self.change_count > _MAX_SILENT_CHANGE_COUNT:
+            await helpers.confirm_change_count_over_threshold(self.change_count)
         if self.tx.lock_time > 0:
             await helpers.confirm_nondefault_locktime(self.tx.lock_time)
         if not self.external:
@@ -268,9 +274,10 @@ class Bitcoin:
         self.external_in += txi.amount
 
     async def confirm_output(self, txo: TxOutputType, script_pubkey: bytes) -> None:
-        if self.change_out == 0 and self.output_is_change(txo):
+        if self.output_is_change(txo):
             # output is change and does not need confirmation
-            self.change_out = txo.amount
+            self.change_out += txo.amount
+            self.change_count += 1
         else:
             await helpers.confirm_output(txo, self.coin)
 

@@ -14,6 +14,7 @@ _Most likely to be released on July 1st._
 - Dedicated `initialized` field in storage.
 - Support EXTERNAL transaction inputs with a SLIP-0019 proof of ownership.  [#1052]
 - Support pre-signed EXTERNAL transaction inputs.
+- Support multiple change-outputs.  [#1098]
 
 ### Changed
 - `Features.pin_cached` renamed to `unlocked`.
@@ -168,3 +169,4 @@ Version 2.0.5 [Mar 2018]
 [#1056]: https://github.com/trezor/trezor-firmware/issues/1056
 [#1067]: https://github.com/trezor/trezor-firmware/issues/1067
 [#1074]: https://github.com/trezor/trezor-firmware/issues/1074
+[#1098]: https://github.com/trezor/trezor-firmware/issues/1098

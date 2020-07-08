@@ -99,6 +99,20 @@ async def confirm_feeoverthreshold(
     await require_confirm(ctx, text, ButtonRequestType.FeeOverThreshold)
 
 
+async def confirm_change_count_over_threshold(
+    ctx: wire.Context, change_count: int
+) -> None:
+    from trezor.ui.text import Text
+    from apps.common.confirm import require_confirm
+
+    text = Text("Warning", ui.ICON_SEND, ui.GREEN)
+    text.normal("There are {}".format(change_count))
+    text.normal("change-outputs.")
+    text.br_half()
+    text.normal("Continue?")
+    await require_confirm(ctx, text, ButtonRequestType.SignTx)
+
+
 async def confirm_nondefault_locktime(ctx: wire.Context, lock_time: int) -> None:
     from trezor.ui.text import Text
     from apps.common.confirm import require_confirm
