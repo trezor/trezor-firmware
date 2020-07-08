@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 
+from trezorlib.client import PASSPHRASE_ON_DEVICE
 from trezorlib.transport import udp
 
 udp.SOCKET_TIMEOUT = 0.1
@@ -15,8 +16,11 @@ class NullUI:
         raise NotImplementedError("NullUI should not be used with T1")
 
     @staticmethod
-    def get_passphrase():
-        raise NotImplementedError("NullUI should not be used with T1")
+    def get_passphrase(available_on_device=False):
+        if available_on_device:
+            return PASSPHRASE_ON_DEVICE
+        else:
+            raise NotImplementedError("NullUI should not be used with T1")
 
 
 class BackgroundDeviceHandler:
