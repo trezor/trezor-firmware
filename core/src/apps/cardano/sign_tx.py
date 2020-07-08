@@ -1,8 +1,9 @@
 from micropython import const
 
 from trezor import log, wire
-from trezor.crypto import base58, hashlib
+from trezor.crypto import hashlib
 from trezor.crypto.curve import ed25519
+from trezor.messages import CardanoAddressParametersType
 from trezor.messages.CardanoSignedTx import CardanoSignedTx
 
 from apps.common import cbor
@@ -11,12 +12,23 @@ from apps.common.seed import remove_ed25519_prefix
 
 from . import CURVE, seed
 from .address import (
-    derive_address_and_node,
-    get_address_attributes,
+    derive_address_bytes,
+    derive_human_readable_address,
+    get_human_readable_address,
     validate_full_path,
     validate_output_address,
 )
-from .layout import confirm_sending, confirm_transaction
+from .byron_address import get_address_attributes
+from .helpers import network_ids, protocol_magics, staking_use_cases
+from .layout import (
+    confirm_sending,
+    confirm_transaction,
+    show_warning_tx_different_staking_account,
+    show_warning_tx_no_staking_info,
+    show_warning_tx_pointer_address,
+    show_warning_tx_staking_key_hash,
+)
+from .seed import is_byron_path, is_shelley_path
 
 if False:
     from typing import Dict, List, Tuple
@@ -41,10 +53,12 @@ async def sign_tx(
         if msg.fee > LOVELACE_MAX_SUPPLY:
             raise wire.ProcessError("Fee is out of range!")
 
+        _validate_network_info(msg.network_id, msg.protocol_magic)
+
         for i in msg.inputs:
             await validate_path(ctx, validate_full_path, keychain, i.address_n, CURVE)
 
-        _validate_outputs(keychain, msg.outputs, msg.protocol_magic)
+        _validate_outputs(keychain, msg.outputs, msg.protocol_magic, msg.network_id)
 
         # display the transaction in UI
         await _show_tx(ctx, keychain, msg)
@@ -61,18 +75,34 @@ async def sign_tx(
     return tx
 
 
+def _validate_network_info(network_id: int, protocol_magic: int) -> None:
+    is_mainnet_network_id = network_id == network_ids.MAINNET
+    is_mainnet_protocol_magic = protocol_magic == protocol_magics.MAINNET
+
+    if is_mainnet_network_id != is_mainnet_protocol_magic:
+        raise wire.ProcessError("Invalid network id/protocol magic combination!")
+
+
 def _validate_outputs(
-    keychain: seed.Keychain, outputs: List[CardanoTxOutputType], protocol_magic: int
+    keychain: seed.Keychain,
+    outputs: List[CardanoTxOutputType],
+    protocol_magic: int,
+    network_id: int,
 ) -> None:
+    if len(outputs) < 1:
+        raise wire.ProcessError("Transaction has no outputs!")
+
     total_amount = 0
     for output in outputs:
         total_amount += output.amount
-        if output.address_n:
+        if output.address_parameters:
             continue
         elif output.address is not None:
-            validate_output_address(output.address, protocol_magic)
+            validate_output_address(bytes(output.address), protocol_magic, network_id)
         else:
-            raise wire.ProcessError("Each output must have address or address_n field!")
+            raise wire.ProcessError(
+                "Each output must have an address field or address_parameters!"
+            )
 
     if total_amount > LOVELACE_MAX_SUPPLY:
         raise wire.ProcessError("Total transaction amount is out of range!")
@@ -82,11 +112,7 @@ def _serialize_tx(keychain: seed.Keychain, msg: CardanoSignTx) -> Tuple[bytes, b
     tx_body = _build_tx_body(keychain, msg)
     tx_hash = _hash_tx_body(tx_body)
 
-    witnesses_for_cbor = _build_witnesses(
-        keychain, msg.inputs, tx_hash, msg.protocol_magic
-    )
-    # byron witnesses have the key 2 in Shelley
-    witnesses = {2: witnesses_for_cbor}
+    witnesses = _build_witnesses(keychain, msg.inputs, tx_hash, msg.protocol_magic)
 
     serialized_tx = cbor.encode([tx_body, witnesses, None])
 
@@ -95,7 +121,9 @@ def _serialize_tx(keychain: seed.Keychain, msg: CardanoSignTx) -> Tuple[bytes, b
 
 def _build_tx_body(keychain: seed.Keychain, msg: CardanoSignTx) -> Dict:
     inputs_for_cbor = _build_inputs(msg.inputs)
-    outputs_for_cbor = _build_outputs(keychain, msg.outputs, msg.protocol_magic)
+    outputs_for_cbor = _build_outputs(
+        keychain, msg.outputs, msg.protocol_magic, msg.network_id
+    )
 
     tx_body = {
         0: inputs_for_cbor,
@@ -112,19 +140,22 @@ def _build_inputs(inputs: List[CardanoTxInputType]) -> List[Tuple[bytes, int]]:
 
 
 def _build_outputs(
-    keychain: seed.Keychain, outputs: List[CardanoTxOutputType], protocol_magic: int
+    keychain: seed.Keychain,
+    outputs: List[CardanoTxOutputType],
+    protocol_magic: int,
+    network_id: int,
 ) -> List[Tuple[bytes, int]]:
     result = []
     for output in outputs:
         amount = output.amount
-        if output.address_n:
-            address, _ = derive_address_and_node(
-                keychain, output.address_n, protocol_magic
+        if output.address_parameters:
+            address = derive_address_bytes(
+                keychain, output.address_parameters, protocol_magic, network_id
             )
         else:
-            address = output.address
+            address = bytes(output.address)
 
-        result.append((base58.decode(address), amount))
+        result.append((address, amount))
 
     return result
 
@@ -139,9 +170,51 @@ def _build_witnesses(
     inputs: List[CardanoTxInputType],
     tx_body_hash: bytes,
     protocol_magic: int,
-) -> List[Tuple[bytes, bytes, bytes, bytes]]:
-    result = []
+) -> Dict:
+    shelley_witnesses = _build_shelley_witnesses(keychain, inputs, tx_body_hash)
+    byron_witnesses = _build_byron_witnesses(
+        keychain, inputs, tx_body_hash, protocol_magic
+    )
+
+    witnesses = {}
+    if len(shelley_witnesses) > 0:
+        witnesses[0] = shelley_witnesses
+    if len(byron_witnesses) > 0:
+        witnesses[2] = byron_witnesses
+
+    return witnesses
+
+
+def _build_shelley_witnesses(
+    keychain: seed.Keychain, inputs: List[CardanoTxInputType], tx_body_hash: bytes,
+) -> List[Tuple[bytes, bytes]]:
+    shelley_witnesses = []
     for input in inputs:
+        if not is_shelley_path(input.address_n):
+            continue
+
+        node = keychain.derive(input.address_n)
+
+        public_key = remove_ed25519_prefix(node.public_key())
+        signature = ed25519.sign_ext(
+            node.private_key(), node.private_key_ext(), tx_body_hash
+        )
+        shelley_witnesses.append((public_key, signature))
+
+    return shelley_witnesses
+
+
+def _build_byron_witnesses(
+    keychain: seed.Keychain,
+    inputs: List[CardanoTxInputType],
+    tx_body_hash: bytes,
+    protocol_magic: int,
+) -> List[Tuple[bytes, bytes, bytes, bytes]]:
+    byron_witnesses = []
+    for input in inputs:
+        if not is_byron_path(input.address_n):
+            continue
+
         node = keychain.derive(input.address_n)
 
         public_key = remove_ed25519_prefix(node.public_key())
@@ -151,31 +224,73 @@ def _build_witnesses(
         chain_code = node.chain_code()
         address_attributes = cbor.encode(get_address_attributes(protocol_magic))
 
-        result.append((public_key, signature, chain_code, address_attributes))
+        byron_witnesses.append((public_key, signature, chain_code, address_attributes))
 
-    return result
+    return byron_witnesses
 
 
 async def _show_tx(
     ctx: wire.Context, keychain: seed.Keychain, msg: CardanoSignTx
 ) -> None:
+    total_amount = await _show_outputs(ctx, keychain, msg)
+    await confirm_transaction(ctx, total_amount, msg.fee, msg.protocol_magic)
+
+
+async def _show_outputs(
+    ctx: wire.Context, keychain: seed.Keychain, msg: CardanoSignTx
+) -> int:
     total_amount = 0
     for output in msg.outputs:
-        if _should_hide_output(output.address_n, msg.inputs):
-            continue
+        if output.address_parameters:
+            address = derive_human_readable_address(
+                keychain, output.address_parameters, msg.protocol_magic, msg.network_id
+            )
+
+            await _show_change_output_staking_warnings(
+                ctx, keychain, output.address_parameters, address, output.amount
+            )
+
+            if _should_hide_output(
+                output.address_parameters.spending_key_path, msg.inputs
+            ):
+                continue
+        else:
+            address = get_human_readable_address(bytes(output.address))
 
         total_amount += output.amount
 
-        if not output.address:
-            address, _ = derive_address_and_node(
-                keychain, output.address_n, msg.protocol_magic
-            )
-        else:
-            address = output.address
-
         await confirm_sending(ctx, output.amount, address)
 
-    await confirm_transaction(ctx, total_amount, msg.fee, msg.protocol_magic)
+    return total_amount
+
+
+async def _show_change_output_staking_warnings(
+    ctx: wire.Context,
+    keychain: seed.Keychain,
+    address_parameters: CardanoAddressParametersType,
+    address: str,
+    amount: int,
+):
+    address_type = address_parameters.address_type
+
+    staking_type = staking_use_cases.get(keychain, address_parameters)
+    if staking_type == staking_use_cases.NO_STAKING:
+        await show_warning_tx_no_staking_info(ctx, address_type, amount)
+    elif staking_type == staking_use_cases.POINTER_ADDRESS:
+        await show_warning_tx_pointer_address(
+            ctx, address_parameters.certificate_pointer, amount,
+        )
+    elif staking_type == staking_use_cases.DIFFERENT_ACCOUNT:
+        await show_warning_tx_different_staking_account(
+            ctx, address_type, address_parameters.staking_key_path[:3], amount,
+        )
+    elif staking_type == staking_use_cases.DIFFERENT_HASH:
+        await show_warning_tx_staking_key_hash(
+            ctx,
+            address_parameters.address_type,
+            address_parameters.staking_key_hash,
+            amount,
+        )
 
 
 # addresses from the same account as inputs should be hidden

@@ -9,7 +9,7 @@ from trezor.ui.text import Text
 from trezor.utils import chunks
 
 from apps.common.confirm import confirm, require_confirm, require_hold_to_confirm
-from apps.common.layout import show_warning
+from apps.common.layout import address_n_to_str, show_warning
 
 from ..helpers import protocol_magics
 
@@ -27,7 +27,7 @@ async def confirm_sending(ctx: wire.Context, amount: int, to: str):
     t1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     t1.normal("Confirm sending:")
     t1.bold(format_coin_amount(amount))
-    t1.normal("to:")
+    t1.normal("to")
 
     to_lines = list(chunks(to, 17))
     t1.bold(to_lines[0])
@@ -37,11 +37,86 @@ async def confirm_sending(ctx: wire.Context, amount: int, to: str):
     await require_confirm(ctx, Paginated(pages))
 
 
+async def show_warning_tx_no_staking_info(
+    ctx: wire.Context, address_type: CardanoAddressType, amount: int
+):
+    t1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    t1.normal("Change " + _format_address_type(address_type).lower())
+    t1.normal("address has no stake")
+    t1.normal("rights.")
+    t1.normal("Change amount:")
+    t1.bold(format_coin_amount(amount))
+
+    await require_confirm(ctx, t1)
+
+
+async def show_warning_tx_pointer_address(
+    ctx: wire.Context, pointer: CardanoBlockchainPointerType, amount: int,
+):
+    t1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    t1.normal("Change address has a")
+    t1.normal("pointer with staking")
+    t1.normal("rights.")
+
+    t2 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    t2.normal("Pointer:")
+    t2.bold(
+        "%s, %s, %s"
+        % (pointer.block_index, pointer.tx_index, pointer.certificate_index)
+    )
+    t2.normal("Change amount:")
+    t2.bold(format_coin_amount(amount))
+
+    await require_confirm(ctx, Paginated([t1, t2]))
+
+
+async def show_warning_tx_different_staking_account(
+    ctx: wire.Context,
+    address_type: CardanoAddressType,
+    staking_account_path: List[int],
+    amount: int,
+):
+    t1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    t1.normal("Change address staking")
+    t1.normal("rights do not belong to")
+    t1.normal("the current account.")
+
+    t2 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    t2.normal("Staking account:")
+    t2.bold(address_n_to_str(staking_account_path))
+    t2.normal("Change amount:")
+    t2.bold(format_coin_amount(amount))
+
+    await require_confirm(ctx, Paginated([t1, t2]))
+
+
+async def show_warning_tx_staking_key_hash(
+    ctx: wire.Context,
+    address_type: CardanoAddressType,
+    staking_key_hash: bytes,
+    amount: int,
+):
+    t1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    t1.normal("Change address staking")
+    t1.normal("rights do not belong to")
+    t1.normal("the current account.")
+
+    t2 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    t2.normal("Staking key hash:")
+    t2.mono(*chunks(hexlify(staking_key_hash), 17))
+
+    t3 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    t3.normal("Change amount:")
+    t3.bold(format_coin_amount(amount))
+
+    await require_confirm(ctx, Paginated([t1, t2, t3]))
+
+
 async def confirm_transaction(ctx, amount: int, fee: int, protocol_magic: int):
     t1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
-    t1.normal("Total amount:")
+    t1.normal("Transaction amount:")
     t1.bold(format_coin_amount(amount))
-    t1.normal("including fee:")
+    t1.normal("Transaction fee:")
     t1.bold(format_coin_amount(fee))
 
     t2 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
