@@ -63,6 +63,13 @@ class UiConfirmFeeOverThreshold:
     __eq__ = utils.obj_eq
 
 
+class UiConfirmChangeCountOverThreshold:
+    def __init__(self, change_count: int):
+        self.change_count = change_count
+
+    __eq__ = utils.obj_eq
+
+
 class UiConfirmForeignAddress:
     def __init__(self, address_n: list):
         self.address_n = address_n
@@ -91,6 +98,10 @@ def confirm_joint_total(spending: int, total: int, coin: CoinInfo) -> Awaitable[
 
 def confirm_feeoverthreshold(fee: int, coin: CoinInfo) -> Awaitable[Any]:  # type: ignore
     return (yield UiConfirmFeeOverThreshold(fee, coin))
+
+
+def confirm_change_count_over_threshold(change_count: int) -> Awaitable[Any]:  # type: ignore
+    return (yield UiConfirmChangeCountOverThreshold(change_count))
 
 
 def confirm_foreign_address(address_n: list) -> Awaitable[Any]:  # type: ignore

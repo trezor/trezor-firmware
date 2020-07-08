@@ -67,6 +67,13 @@ async def sign_tx(
             res = await layout.confirm_feeoverthreshold(ctx, req.fee, req.coin)
             utils.unimport_end(mods)
             progress.report_init()
+        elif isinstance(req, helpers.UiConfirmChangeCountOverThreshold):
+            mods = utils.unimport_begin()
+            res = await layout.confirm_change_count_over_threshold(
+                ctx, req.change_count
+            )
+            utils.unimport_end(mods)
+            progress.report_init()
         elif isinstance(req, helpers.UiConfirmNonDefaultLocktime):
             mods = utils.unimport_begin()
             res = await layout.confirm_nondefault_locktime(ctx, req.lock_time)
