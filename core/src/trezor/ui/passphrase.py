@@ -1,6 +1,6 @@
 from micropython import const
 
-from trezor import io, loop, res, ui
+from trezor import io, loop, res, ui, workflow
 from trezor.ui import display
 from trezor.ui.button import Button, ButtonClear, ButtonConfirm
 from trezor.ui.swipe import SWIPE_HORIZONTAL, SWIPE_LEFT, Swipe
@@ -221,6 +221,7 @@ class PassphraseKeyboard(ui.Layout):
 
             if touch in race.finished:
                 event, x, y = result
+                workflow.idle_timer.touch()
                 self.dispatch(event, x, y)
             else:
                 self.on_timeout()
