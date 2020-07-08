@@ -9,6 +9,11 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 ## [0.12.1] - unreleased
 [0.12.1]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.0...master
 
+
+### Changed
+
+- do not allow setting auto-lock delay unless PIN is configured
+
 ### Fixed
 
 - correctly calculate hashes for very small firmwares [f#1082]
