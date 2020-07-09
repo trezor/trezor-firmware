@@ -76,8 +76,9 @@ class UiConfirmForeignAddress:
 
 
 class UiConfirmNonDefaultLocktime:
-    def __init__(self, lock_time: int):
+    def __init__(self, lock_time: int, lock_time_disabled):
         self.lock_time = lock_time
+        self.lock_time_disabled = lock_time_disabled
 
     __eq__ = utils.obj_eq
 
@@ -106,8 +107,8 @@ def confirm_foreign_address(address_n: list) -> Awaitable[Any]:  # type: ignore
     return (yield UiConfirmForeignAddress(address_n))
 
 
-def confirm_nondefault_locktime(lock_time: int) -> Awaitable[Any]:  # type: ignore
-    return (yield UiConfirmNonDefaultLocktime(lock_time))
+def confirm_nondefault_locktime(lock_time: int, lock_time_disabled: bool) -> Awaitable[Any]:  # type: ignore
+    return (yield UiConfirmNonDefaultLocktime(lock_time, lock_time_disabled))
 
 
 def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[Any]:  # type: ignore

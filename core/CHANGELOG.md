@@ -29,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Security
 - Show non-empty passphrase on device when it was entered on host.
+- Show warning if nLockTime is set but ineffective due to all nSequence values being 0xffffffff.
 
 ## 2.3.2 [5th August 2020]
 

@@ -15,6 +15,9 @@ from . import helpers, tx_weight
 if False:
     from ..authorization import CoinJoinAuthorization
 
+# Setting nSequence to this value for every input in a transaction disables nLockTime.
+_SEQUENCE_FINAL = const(0xFFFFFFFF)
+
 
 # An Approver object computes the transaction totals and either prompts the user
 # to confirm transaction parameters (output addresses, amounts and fees) or uses
@@ -25,6 +28,7 @@ class Approver:
         self.tx = tx
         self.coin = coin
         self.weight = tx_weight.TxWeightCalculator(tx.inputs_count, tx.outputs_count)
+        self.min_sequence = _SEQUENCE_FINAL  # the minimum nSequence of all inputs
 
         # amounts
         self.total_in = 0  # sum of input amounts
@@ -35,11 +39,13 @@ class Approver:
     async def add_internal_input(self, txi: TxInputType, amount: int) -> None:
         self.weight.add_input(txi)
         self.total_in += amount
+        self.min_sequence = min(self.min_sequence, txi.sequence)
 
     def add_external_input(self, txi: TxInputType) -> None:
         self.weight.add_input(txi)
         self.total_in += txi.amount
         self.external_in += txi.amount
+        self.min_sequence = min(self.min_sequence, txi.sequence)
 
     def add_change_output(self, txo: TxOutputType, script_pubkey: bytes) -> None:
         self.weight.add_output(script_pubkey)
@@ -100,7 +106,10 @@ class BasicApprover(Approver):
         if self.change_count > self.MAX_SILENT_CHANGE_COUNT:
             await helpers.confirm_change_count_over_threshold(self.change_count)
         if self.tx.lock_time > 0:
-            await helpers.confirm_nondefault_locktime(self.tx.lock_time)
+            lock_time_disabled = self.min_sequence == _SEQUENCE_FINAL
+            await helpers.confirm_nondefault_locktime(
+                self.tx.lock_time, lock_time_disabled
+            )
         if not self.external_in:
             await helpers.confirm_total(total, fee, self.coin)
         else:

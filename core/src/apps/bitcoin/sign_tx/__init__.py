@@ -72,7 +72,9 @@ async def sign_tx(
             )
             progress.report_init()
         elif isinstance(req, helpers.UiConfirmNonDefaultLocktime):
-            res = await layout.confirm_nondefault_locktime(ctx, req.lock_time)
+            res = await layout.confirm_nondefault_locktime(
+                ctx, req.lock_time, req.lock_time_disabled
+            )
             progress.report_init()
         elif isinstance(req, helpers.UiConfirmForeignAddress):
             res = await paths.show_path_warning(ctx, req.address_n)
