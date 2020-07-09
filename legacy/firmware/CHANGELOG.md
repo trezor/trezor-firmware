@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - Set initialized in storage to false if no mnemonic is present.  [#965]
+- Support multiple change-outputs.  [#1098]
 
 ### Changed
 - `Features.pin_cached` renamed to `unlocked`, and it is now `true` even if PIN is not set.
@@ -206,3 +207,4 @@ Version 1.0.0 [Apr 2014]
 
 [#965]: https://github.com/trezor/trezor-firmware/issues/965
 [#1030]: https://github.com/trezor/trezor-firmware/issues/1030
+[#1098]: https://github.com/trezor/trezor-firmware/issues/1098
