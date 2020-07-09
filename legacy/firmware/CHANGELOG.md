@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - XVG support.  [#1165]
+- Ask user to confirm custom nLockTime.
 
 ### Changed
 - Print inverted question mark for non-printable characters.

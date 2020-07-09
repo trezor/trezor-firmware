@@ -75,6 +75,7 @@ static uint32_t lock_time = 0;
 static uint32_t expiry = 0;
 static uint32_t version_group_id = 0;
 static uint32_t timestamp = 0;
+static uint32_t min_sequence = 0;
 #if !BITCOIN_ONLY
 static uint32_t branch_id = 0;
 #endif
@@ -106,6 +107,10 @@ static uint32_t tx_weight;
 
 /* The maximum number of change-outputs allowed without user confirmation. */
 #define MAX_SILENT_CHANGE_COUNT 2
+
+/* Setting nSequence to this value for every input in a transaction disables
+   nLockTime. */
+#define SEQUENCE_FINAL 0xffffffff
 
 enum {
   SIGHASH_ALL = 1,
@@ -497,6 +502,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   memcpy(&root, _root, sizeof(HDNode));
   version = msg->version;
   lock_time = msg->lock_time;
+  min_sequence = SEQUENCE_FINAL;
 
   if (!coin->overwintered) {
     if (msg->has_version_group_id) {
@@ -782,12 +788,18 @@ static bool signing_check_input(const TxInputType *txinput) {
   } else {  // single signature
     multisig_fp_mismatch = true;
   }
+
   // remember the input bip32 path
   // change addresses must use the same bip32 path as all inputs
   extract_input_bip32_path(txinput);
+
+  // remember the minimum nSequence value
+  if (txinput->sequence < min_sequence) min_sequence = txinput->sequence;
+
   // compute segwit hashPrevouts & hashSequence
   tx_prevout_hash(&hasher_prevouts, txinput);
   tx_sequence_hash(&hasher_sequence, txinput);
+
 #if !BITCOIN_ONLY
   if (coin->decred) {
     // serialize Decred prefix in Phase 1
@@ -800,6 +812,7 @@ static bool signing_check_input(const TxInputType *txinput) {
     tx_serialize_input_hash(&ti, txinput);
   }
 #endif
+
   // hash prevout and script type to check it later (relevant for fee
   // computation)
   tx_prevout_hash(&hasher_check, txinput);
@@ -914,6 +927,7 @@ static bool signing_confirm_tx(void) {
       return false;
     }
   }
+
   uint64_t fee = 0;
   if (spending <= to_spend) {
     fee = to_spend - spending;
@@ -932,6 +946,16 @@ static bool signing_confirm_tx(void) {
 
   if (change_count > MAX_SILENT_CHANGE_COUNT) {
     layoutChangeCountOverThreshold(change_count);
+    if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+      signing_abort();
+      return false;
+    }
+  }
+
+  if (lock_time != 0) {
+    bool lock_time_disabled = (min_sequence == SEQUENCE_FINAL);
+    layoutConfirmNondefaultLockTime(lock_time, lock_time_disabled);
     if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
       fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
       signing_abort();

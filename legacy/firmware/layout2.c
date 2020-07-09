@@ -37,6 +37,8 @@
 #include "timer.h"
 #include "util.h"
 
+#define LOCKTIME_TIMESTAMP_MIN_VALUE 500000000
+
 #if !BITCOIN_ONLY
 
 static const char *slip44_extras(uint32_t coin_type) {
@@ -448,6 +450,25 @@ void layoutChangeCountOverThreshold(uint32_t change_count) {
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Warning!"), str_change, _("change-outputs."), NULL,
                     _("Continue?"), NULL);
+}
+
+void layoutConfirmNondefaultLockTime(uint32_t lock_time,
+                                     bool lock_time_disabled) {
+  if (lock_time_disabled) {
+    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                      _("Warning!"), _("Locktime is set but"),
+                      _("will have no effect."), NULL, _("Continue?"), NULL);
+
+  } else {
+    char str_locktime[11] = {0};
+    snprintf(str_locktime, sizeof(str_locktime), "%" PRIu32, lock_time);
+    char *str_type = (lock_time < LOCKTIME_TIMESTAMP_MIN_VALUE) ? "blockheight:"
+                                                                : "timestamp:";
+
+    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                      _("Locktime for this"), _("transaction is set to"),
+                      str_type, str_locktime, _("Continue?"), NULL);
+  }
 }
 
 void layoutSignMessage(const uint8_t *msg, uint32_t len) {
