@@ -1,3 +1,11 @@
+# click-test generator
+#
+# Beware: This tool is alpha-stage, both in terms of functionality and code quality.
+# It is published here because it can be useful as-is. But it's full of bugs in any
+# case.
+#
+# See docs/tests/click-tests.md for a brief instruction manual.
+
 import inspect
 import sys
 import threading
