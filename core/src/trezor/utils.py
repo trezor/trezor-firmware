@@ -160,13 +160,6 @@ class BufferIO:
         self.offset += nwrite
         return nwrite
 
-    def get_written(self) -> bytes:
-        """Return a view of the data written so far.
-
-        This might be less than the full buffer.
-        """
-        return memoryview(self.buffer)[: self.offset]
-
 
 def obj_eq(l: object, r: object) -> bool:
     """

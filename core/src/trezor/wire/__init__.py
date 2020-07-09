@@ -133,7 +133,7 @@ class DummyContext:
 
 DUMMY_CONTEXT = DummyContext()
 
-PROTOBUF_BUFFER_SIZE = 16384
+PROTOBUF_BUFFER_SIZE = 8192
 
 
 class Context:
@@ -141,6 +141,8 @@ class Context:
         self.iface = iface
         self.sid = sid
         self.buffer_io = utils.BufferIO(bytearray(PROTOBUF_BUFFER_SIZE))
+
+        self._field_cache = {}  # type: protobuf.FieldCache
 
     async def call(
         self,
@@ -241,12 +243,28 @@ class Context:
                 __name__, "%s:%x write: %s", self.iface.iface_num(), self.sid, msg
             )
 
+        if field_cache is None:
+            field_cache = self._field_cache
+
         # write the message
-        self.buffer_io.seek(0)
-        protobuf.dump_message(self.buffer_io, msg, field_cache)
+        msg_size = protobuf.count_message(msg, field_cache)
+
+        # prepare buffer
+        if msg_size <= len(self.buffer_io.buffer):
+            # reuse preallocated
+            buffer_io = self.buffer_io
+        else:
+            # message is too big, we need to allocate a new buffer
+            buffer_io = utils.BufferIO(bytearray(msg_size))
+
+        buffer_io.seek(0)
+        protobuf.dump_message(buffer_io, msg, field_cache)
         await codec_v1.write_message(
-            self.iface, msg.MESSAGE_WIRE_TYPE, self.buffer_io.get_written()
+            self.iface, msg.MESSAGE_WIRE_TYPE, memoryview(buffer_io.buffer)[:msg_size],
         )
+
+        # make sure we don't keep around fields of all protobuf types ever
+        self._field_cache.clear()
 
     def wait(self, *tasks: Awaitable) -> Any:
         """
