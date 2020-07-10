@@ -259,7 +259,12 @@ def device_handler(client, request):
     device_handler = BackgroundDeviceHandler(client)
     yield device_handler
 
-    # make sure all background tasks are done
+    # if test did not finish, e.g. interrupted by Ctrl+C, the pytest_runtest_makereport
+    # did not create the attribute we need
+    if not hasattr(request.node, "rep_call"):
+        return
+
+    # if test finished, make sure all background tasks are done
     finalized_ok = device_handler.check_finalize()
     if request.node.rep_call.passed and not finalized_ok:
         raise RuntimeError("Test did not check result of background task")
