@@ -69,6 +69,7 @@ void layoutXPUB(const char *xpub, int index, int page, bool ours);
 void layoutSignIdentity(const IdentityType *identity, const char *challenge);
 void layoutDecryptIdentity(const IdentityType *identity);
 void layoutU2FDialog(const char *verb, const char *appname);
+void layoutShowPassphrase(const char *passphrase);
 
 void layoutNEMDialog(const BITMAP *icon, const char *btnNo, const char *btnYes,
                      const char *desc, const char *line1, const char *address);

@@ -823,6 +823,25 @@ void layoutU2FDialog(const char *verb, const char *appname) {
 
 #endif
 
+void layoutShowPassphrase(const char *passphrase) {
+  if (layoutLast != layoutShowPassphrase) {
+    layoutSwipe();
+  } else {
+    oledClear();
+  }
+  const char **str =
+      split_message((const uint8_t *)passphrase, strlen(passphrase), 21);
+  for (int i = 0; i < 3; i++) {
+    oledDrawString(0, i * 9 + 4, str[i], FONT_FIXED);
+  }
+  oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 2 * 9 - 1,
+                       _("Use this passphrase?"), FONT_STANDARD);
+  oledHLine(OLED_HEIGHT - 21);
+  layoutButtonNo(_("Cancel"), &bmp_btn_cancel);
+  layoutButtonYes(_("Confirm"), &bmp_btn_confirm);
+  oledRefresh();
+}
+
 #if !BITCOIN_ONLY
 
 void layoutNEMDialog(const BITMAP *icon, const char *btnNo, const char *btnYes,
