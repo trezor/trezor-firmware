@@ -1310,3 +1310,54 @@ class TestMsgSigntx:
             btc.sign_tx(
                 client, "Testnet", [inp1], [out1, out2], prev_txes=TX_CACHE_TESTNET
             )
+
+    @pytest.mark.parametrize(
+        "lock_time, sequence",
+        ((499999999, 0xFFFFFFFE), (500000000, 0xFFFFFFFE), (1, 0xFFFFFFFF)),
+    )
+    def test_lock_time(self, client, lock_time, sequence):
+        # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
+        # input 0: 0.0039 BTC
+
+        inp1 = messages.TxInputType(
+            address_n=parse_path("44h/0h/0h/0/0"),
+            # amount=390000,
+            prev_hash=TXHASH_d5f65e,
+            prev_index=0,
+            sequence=sequence,
+        )
+
+        out1 = messages.TxOutputType(
+            address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
+            amount=390000 - 10000,
+            script_type=messages.OutputScriptType.PAYTOADDRESS,
+        )
+
+        with client:
+            client.set_expected_responses(
+                [
+                    request_input(0),
+                    request_meta(TXHASH_d5f65e),
+                    request_input(0, TXHASH_d5f65e),
+                    request_input(1, TXHASH_d5f65e),
+                    request_output(0, TXHASH_d5f65e),
+                    request_output(0),
+                    messages.ButtonRequest(code=B.ConfirmOutput),
+                    messages.ButtonRequest(code=B.SignTx),
+                    messages.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_output(0),
+                    request_output(0),
+                    request_finished(),
+                ]
+            )
+
+            details = messages.SignTx(lock_time=lock_time)
+            btc.sign_tx(
+                client,
+                "Bitcoin",
+                [inp1],
+                [out1],
+                details=details,
+                prev_txes=TX_CACHE_MAINNET,
+            )
