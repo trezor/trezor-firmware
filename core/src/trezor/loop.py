@@ -121,12 +121,6 @@ def run() -> None:
     task_entry = [0, 0, 0]  # deadline, task, value
     msg_entry = [0, 0]  # iface | flags, value
     while _queue or _paused:
-        # compute the maximum amount of time we can wait for a message
-        if _queue:
-            delay = utime.ticks_diff(_queue.peektime(), utime.ticks_ms())
-        else:
-            delay = 1000  # wait for 1 sec maximum if queue is empty
-
         if __debug__:
             # process synthetic events
             if synthetic_events:
@@ -136,6 +130,16 @@ def run() -> None:
                     synthetic_events.pop(0)
                     for task in msg_tasks:
                         _step(task, event)
+
+                    # XXX: we assume that synthetic events are rare. If there is a lot of them,
+                    # this degrades to "while synthetic_events" and would ignore all real ones.
+                    continue
+
+        # compute the maximum amount of time we can wait for a message
+        if _queue:
+            delay = utime.ticks_diff(_queue.peektime(), utime.ticks_ms())
+        else:
+            delay = 1000  # wait for 1 sec maximum if queue is empty
 
         if io.poll(_paused, msg_entry, delay):
             # message received, run tasks paused on the interface
