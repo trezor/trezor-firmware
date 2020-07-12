@@ -116,17 +116,23 @@ def client(request):
     if marker:
         setup_params.update(marker.kwargs)
 
+    # passphrase is turned on either for True or the str directly
+    use_passphrase = setup_params["passphrase"] not in (None, False)
+
     if not setup_params["uninitialized"]:
         debuglink.load_device(
             client,
             mnemonic=setup_params["mnemonic"],
             pin=setup_params["pin"],
-            passphrase_protection=setup_params["passphrase"],
+            passphrase_protection=use_passphrase,
             label="test",
             language="en-US",
             needs_backup=setup_params["needs_backup"],
             no_backup=setup_params["no_backup"],
         )
+
+        if use_passphrase and isinstance(setup_params["passphrase"], str):
+            client.use_passphrase(setup_params["passphrase"])
 
         if setup_params["pin"]:
             # ClearSession locks the device. We only do that if the PIN is set.

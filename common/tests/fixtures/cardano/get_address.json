@@ -1,0 +1,35 @@
+{
+  "setup": {
+    "mnemonic": "alcohol woman abuse must during monitor noble actual mixed trade anger aisle",
+    "passphrase": false
+  },
+  "tests": [
+    {
+      "parameters": {
+        "path": "m/44'/1815'/0'/0/0"
+      },
+      "result": {
+        "success": true,
+        "expected_address": "Ae2tdPwUPEZLCq3sFv4wVYxwqjMH2nUzBVt1HFr4v87snYrtYq3d3bq2PUQ"
+      }
+    },
+    {
+      "parameters":{
+        "path": "m/44'/1815'/0'/0/1"
+      },
+      "result": {
+        "success":true,
+        "expected_address": "Ae2tdPwUPEZEY6pVJoyuNNdLp7VbMB7U7qfebeJ7XGunk5Z2eHarkcN1bHK"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/44'/1815'/0'/0/2"
+      },
+      "result":  {
+        "success": true,
+        "expected_address": "Ae2tdPwUPEZ3gZD1QeUHvAqadAV59Zid6NP9VCR9BG5LLAja9YtBUgr6ttK"
+      }
+    }
+  ]
+}
