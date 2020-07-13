@@ -4,7 +4,7 @@ import ustruct
 
 from trezor import io
 from trezor.loop import wait
-from trezor.utils import chunks, BufferIO
+from trezor.utils import chunks
 from trezor.wire import codec_v1
 
 
@@ -179,17 +179,20 @@ class TestWireCodecV1(unittest.TestCase):
         self.assertEqual(result.data.buffer, message)
 
     def test_read_huge_packet(self):
-        # length such that it fits into 1 000 000 USB packets:
-        header = make_header(
-            mtype=MESSAGE_TYPE, length=999_999 * 63 + HEADER_PAYLOAD_LENGTH
-        )
+        PACKET_COUNT = 100_000
+        # message that takes up 100 000 USB packets
+        message_size = (PACKET_COUNT - 1) * 63 + HEADER_PAYLOAD_LENGTH
+        # ensure that a message this big won't fit into memory
+        self.assertRaises(MemoryError, bytearray, message_size)
+
+        header = make_header(mtype=MESSAGE_TYPE, length=message_size)
         packet = header + b"\x00" * HEADER_PAYLOAD_LENGTH
 
         buffer = bytearray(65536)
         gen = codec_v1.read_message(self.interface, buffer)
 
         query = gen.send(None)
-        for _ in range(999_999):
+        for _ in range(PACKET_COUNT - 1):
             self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
             query = gen.send(packet)
 
