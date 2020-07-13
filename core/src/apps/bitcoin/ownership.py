@@ -2,7 +2,7 @@ from trezor import utils, wire
 from trezor.crypto import bip32, hashlib, hmac
 
 from apps.common import seed
-from apps.common.readers import BytearrayReader, read_bitcoin_varint
+from apps.common.readers import read_bitcoin_varint
 from apps.common.writers import (
     empty_bytearray,
     write_bitcoin_varint,
@@ -71,7 +71,7 @@ def verify_nonownership(
     coin: CoinInfo,
 ) -> bool:
     try:
-        r = BytearrayReader(proof)
+        r = utils.BufferReader(proof)
         if r.read(4) != _VERSION_MAGIC:
             raise wire.DataError("Unknown format of proof of ownership")
 
@@ -100,7 +100,7 @@ def verify_nonownership(
         # the digest and the value to use is not defined in BIP-322.
         verifier = SignatureVerifier(script_pubkey, script_sig, witness, coin)
         verifier.verify(sighash.digest())
-    except (ValueError, IndexError):
+    except (ValueError, EOFError):
         raise wire.DataError("Invalid proof of ownership")
 
     return not_owned

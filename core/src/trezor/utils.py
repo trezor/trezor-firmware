@@ -208,10 +208,14 @@ class BufferReader:
 
     def peek(self) -> int:
         """Peek the ordinal value of the next byte to be read."""
+        if self.offset >= len(self.buffer):
+            raise EOFError
         return self.buffer[self.offset]
 
     def get(self) -> int:
         """Read exactly one byte and return its ordinal value."""
+        if self.offset >= len(self.buffer):
+            raise EOFError
         byte = self.buffer[self.offset]
         self.offset += 1
         return byte

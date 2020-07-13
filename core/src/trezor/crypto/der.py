@@ -1,4 +1,4 @@
-from apps.common.readers import BytearrayReader
+from trezor.utils import BufferReader
 
 if False:
     from typing import List
@@ -15,7 +15,7 @@ def encode_length(l: int) -> bytes:
         raise ValueError
 
 
-def decode_length(r: BytearrayReader) -> int:
+def decode_length(r: BufferReader) -> int:
     init = r.get()
     if init < 0x80:
         # short form encodes length in initial octet
@@ -45,7 +45,7 @@ def encode_int(i: bytes) -> bytes:
     return b"\x02" + encode_length(len(i)) + i
 
 
-def decode_int(r: BytearrayReader) -> bytes:
+def decode_int(r: BufferReader) -> bytes:
     if r.get() != 0x02:
         raise ValueError
 
@@ -76,7 +76,7 @@ def encode_seq(seq: tuple) -> bytes:
 
 
 def decode_seq(data: bytes) -> List[bytes]:
-    r = BytearrayReader(data)
+    r = BufferReader(data)
 
     if r.get() != 0x30:
         raise ValueError
