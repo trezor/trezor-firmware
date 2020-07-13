@@ -39,9 +39,15 @@ async def read_message(iface: WireInterface, buffer: utils.BufferType) -> Messag
     if magic1 != _REP_MAGIC or magic2 != _REP_MAGIC:
         raise CodecError("Invalid magic")
 
+    read_and_throw_away = False
+
     if msize > len(buffer):
         # allocate a new buffer to fit the message
-        mdata = bytearray(msize)  # type: utils.BufferType
+        try:
+            mdata = bytearray(msize)  # type: utils.BufferType
+        except MemoryError:
+            mdata = bytearray(_REP_LEN)
+            read_and_throw_away = True
     else:
         # reuse a part of the supplied buffer
         mdata = memoryview(buffer)[:msize]
@@ -56,7 +62,13 @@ async def read_message(iface: WireInterface, buffer: utils.BufferType) -> Messag
             raise CodecError("Invalid magic")
 
         # buffer the continuation data
-        nread += utils.memcpy(mdata, nread, report, _REP_CONT_DATA)
+        if read_and_throw_away:
+            nread += len(report) - 1
+        else:
+            nread += utils.memcpy(mdata, nread, report, _REP_CONT_DATA)
+
+    if read_and_throw_away:
+        raise CodecError("Message too large")
 
     return Message(mtype, utils.BufferIO(mdata))
 
