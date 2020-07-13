@@ -7,7 +7,7 @@ from trezor.messages.TxInputType import TxInputType
 
 from apps.common import address_type
 from apps.common.coininfo import CoinInfo
-from apps.common.readers import BytearrayReader, read_bitcoin_varint
+from apps.common.readers import read_bitcoin_varint
 from apps.common.writers import empty_bytearray, write_bitcoin_varint
 
 from . import common
@@ -145,9 +145,9 @@ def input_script_p2pkh_or_p2sh(
     return w
 
 
-def parse_input_script_p2pkh(script_sig: bytes,) -> Tuple[bytes, bytes, int]:
+def parse_input_script_p2pkh(script_sig: bytes) -> Tuple[bytes, bytes, int]:
     try:
-        r = BytearrayReader(script_sig)
+        r = utils.BufferReader(script_sig)
         n = read_op_push(r)
         signature = r.read(n - 1)
         hash_type = r.get()
@@ -156,7 +156,7 @@ def parse_input_script_p2pkh(script_sig: bytes,) -> Tuple[bytes, bytes, int]:
         pubkey = r.read()
         if len(pubkey) != n:
             raise ValueError
-    except (ValueError, IndexError):
+    except (ValueError, EOFError):
         wire.DataError("Invalid scriptSig.")
 
     return pubkey, signature, hash_type
@@ -274,7 +274,7 @@ def witness_p2wpkh(signature: bytes, pubkey: bytes, hash_type: int) -> bytearray
 
 def parse_witness_p2wpkh(witness: bytes) -> Tuple[bytes, bytes, int]:
     try:
-        r = BytearrayReader(witness)
+        r = utils.BufferReader(witness)
 
         if r.get() != 2:
             # num of stack items, in P2WPKH it's always 2
@@ -287,7 +287,7 @@ def parse_witness_p2wpkh(witness: bytes) -> Tuple[bytes, bytes, int]:
         pubkey = read_bytes_prefixed(r)
         if r.remaining_count():
             raise ValueError
-    except (ValueError, IndexError):
+    except (ValueError, EOFError):
         raise wire.DataError("Invalid witness.")
 
     return pubkey, signature, hash_type
@@ -344,7 +344,7 @@ def witness_multisig(
 
 def parse_witness_multisig(witness: bytes) -> Tuple[bytes, List[Tuple[bytes, int]]]:
     try:
-        r = BytearrayReader(witness)
+        r = utils.BufferReader(witness)
 
         # Get number of witness stack items.
         item_count = read_bitcoin_varint(r)
@@ -363,7 +363,7 @@ def parse_witness_multisig(witness: bytes) -> Tuple[bytes, List[Tuple[bytes, int
         script = read_bytes_prefixed(r)
         if r.remaining_count():
             raise ValueError
-    except (ValueError, IndexError):
+    except (ValueError, EOFError):
         raise wire.DataError("Invalid witness.")
 
     return script, signatures
@@ -422,7 +422,7 @@ def parse_input_script_multisig(
     script_sig: bytes,
 ) -> Tuple[bytes, List[Tuple[bytes, int]]]:
     try:
-        r = BytearrayReader(script_sig)
+        r = utils.BufferReader(script_sig)
 
         # Skip over OP_FALSE, which is due to the old OP_CHECKMULTISIG bug.
         if r.get() != 0:
@@ -439,7 +439,7 @@ def parse_input_script_multisig(
         script = r.read()
         if len(script) != n:
             raise ValueError
-    except (ValueError, IndexError):
+    except (ValueError, EOFError):
         raise wire.DataError("Invalid scriptSig.")
 
     return script, signatures
@@ -472,7 +472,7 @@ def output_script_multisig_length(pubkeys: List[bytes], m: int) -> int:
 
 def parse_output_script_multisig(script: bytes) -> Tuple[List[bytes], int]:
     try:
-        r = BytearrayReader(script)
+        r = utils.BufferReader(script)
 
         threshold = r.get() - 0x50
         pubkey_count = script[-2] - 0x50
@@ -497,7 +497,7 @@ def parse_output_script_multisig(script: bytes) -> Tuple[List[bytes], int]:
         if r.remaining_count():
             raise ValueError
 
-    except (ValueError, IndexError):
+    except (ValueError, IndexError, EOFError):
         raise wire.DataError("Invalid multisig script")
 
     return public_keys, threshold
@@ -548,7 +548,7 @@ def write_bip322_signature_proof(
     w.extend(witness)
 
 
-def read_bip322_signature_proof(r: BytearrayReader) -> Tuple[bytes, bytes]:
+def read_bip322_signature_proof(r: utils.BufferReader) -> Tuple[bytes, bytes]:
     script_sig = read_bytes_prefixed(r)
     witness = r.read()
     return script_sig, witness

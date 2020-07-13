@@ -1,12 +1,14 @@
-from apps.common.readers import BytearrayReader, read_bitcoin_varint
+from trezor.utils import BufferReader
+
+from apps.common.readers import read_bitcoin_varint
 
 
-def read_bytes_prefixed(r: BytearrayReader) -> bytes:
+def read_bytes_prefixed(r: BufferReader) -> bytes:
     n = read_bitcoin_varint(r)
     return r.read(n)
 
 
-def read_op_push(r: BytearrayReader) -> int:
+def read_op_push(r: BufferReader) -> int:
     prefix = r.get()
     if prefix < 0x4C:
         n = prefix

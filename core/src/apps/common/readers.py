@@ -1,36 +1,7 @@
-if False:
-    from typing import Optional
+from trezor.utils import BufferReader
 
 
-class BytearrayReader:
-    def __init__(self, data: bytes):
-        self.data = data
-        self.offset = 0
-
-    def get(self) -> int:
-        ret = self.data[self.offset]
-        self.offset += 1
-        return ret
-
-    def peek(self) -> int:
-        return self.data[self.offset]
-
-    def read(self, i: Optional[int] = None) -> bytes:
-        if i is None:
-            ret = self.data[self.offset :]
-            self.offset = len(self.data)
-        elif 0 <= i <= len(self.data) - self.offset:
-            ret = self.data[self.offset : self.offset + i]
-            self.offset += i
-        else:
-            raise IndexError
-        return ret
-
-    def remaining_count(self) -> int:
-        return len(self.data) - self.offset
-
-
-def read_bitcoin_varint(r: BytearrayReader) -> int:
+def read_bitcoin_varint(r: BufferReader) -> int:
     prefix = r.get()
     if prefix < 253:
         n = prefix
