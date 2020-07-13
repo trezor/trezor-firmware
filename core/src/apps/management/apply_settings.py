@@ -6,7 +6,7 @@ from trezor.strings import format_duration_ms
 from trezor.ui.text import Text
 
 from apps.base import lock_device
-from apps.common.confirm import require_confirm
+from apps.common.confirm import require_confirm, require_hold_to_confirm
 
 if False:
     from trezor.messages.ApplySettings import ApplySettings
@@ -22,6 +22,7 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings):
         and msg.passphrase_always_on_device is None
         and msg.display_rotation is None
         and msg.auto_lock_delay_ms is None
+        and msg.unsafe_prompts is None
     ):
         raise wire.ProcessError("No setting provided")
 
@@ -59,6 +60,10 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings):
         display_rotation=msg.display_rotation,
         autolock_delay_ms=msg.auto_lock_delay_ms,
     )
+
+    if msg.unsafe_prompts is not None:
+        await require_confirm_unsafe_prompts(ctx, msg.unsafe_prompts)
+        storage.device.set_unsafe_prompts_allowed(msg.unsafe_prompts)
 
     if msg.display_rotation is not None:
         ui.display.orientation(storage.device.get_rotation())
@@ -124,3 +129,16 @@ async def require_confirm_change_autolock_delay(ctx, delay_ms):
     text.normal("Do you really want to", "auto-lock your device", "after")
     text.bold("{}?".format(format_duration_ms(delay_ms)))
     await require_confirm(ctx, text, ButtonRequestType.ProtectCall)
+
+
+async def require_confirm_unsafe_prompts(ctx, allow: bool) -> None:
+    if allow:
+        text = Text("Unsafe prompts", ui.ICON_WIPE)
+        text.normal("Trezor will allow you to", "confirm actions which", "might be dangerous.")
+        text.br_half()
+        text.bold("Allow unsafe prompts?")
+        await require_hold_to_confirm(ctx, text, ButtonRequestType.ProtectCall)
+    else:
+        text = Text("Unsafe prompts", ui.ICON_CONFIG)
+        text.normal("Do you really want to", "disable unsafe prompts?")
+        await require_confirm(ctx, text, ButtonRequestType.ProtectCall)

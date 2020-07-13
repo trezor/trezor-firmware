@@ -34,22 +34,18 @@ def apply_settings(
     passphrase_always_on_device=None,
     auto_lock_delay_ms=None,
     display_rotation=None,
+    unsafe_prompts=None,
 ):
-    settings = messages.ApplySettings()
-    if label is not None:
-        settings.label = label
-    if language:
-        settings.language = language
-    if use_passphrase is not None:
-        settings.use_passphrase = use_passphrase
-    if homescreen is not None:
-        settings.homescreen = homescreen
-    if passphrase_always_on_device is not None:
-        settings.passphrase_always_on_device = passphrase_always_on_device
-    if auto_lock_delay_ms is not None:
-        settings.auto_lock_delay_ms = auto_lock_delay_ms
-    if display_rotation is not None:
-        settings.display_rotation = display_rotation
+    settings = messages.ApplySettings(
+        label=label,
+        language=language,
+        use_passphrase=use_passphrase,
+        homescreen=homescreen,
+        passphrase_always_on_device=passphrase_always_on_device,
+        auto_lock_delay_ms=auto_lock_delay_ms,
+        display_rotation=display_rotation,
+        unsafe_prompts=unsafe_prompts,
+    )
 
     out = client.call(settings)
     client.init_device()  # Reload Features
