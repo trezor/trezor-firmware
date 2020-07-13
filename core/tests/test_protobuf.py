@@ -1,7 +1,7 @@
 from common import *
 
 import protobuf
-from trezor.utils import BufferIO
+from trezor.utils import BufferReader, BufferWriter
 
 
 class Message(protobuf.MessageType):
@@ -18,12 +18,12 @@ class Message(protobuf.MessageType):
 
 
 def load_uvarint(data: bytes) -> int:
-    reader = BufferIO(data)
+    reader = BufferReader(data)
     return protobuf.load_uvarint(reader)
 
 
 def dump_uvarint(value: int) -> bytearray:
-    writer = BufferIO(bytearray(16))
+    writer = BufferWriter(bytearray(16))
     protobuf.dump_uvarint(writer, value)
     return memoryview(writer.buffer)[:writer.offset]
 
@@ -65,22 +65,23 @@ class TestProtobuf(unittest.TestCase):
         # ok message:
         msg = Message(-42, 5)
         length = protobuf.count_message(msg)
-        buffer_io = BufferIO(bytearray(length))
-        protobuf.dump_message(buffer_io, msg)
-        buffer_io.seek(0)
-        nmsg = protobuf.load_message(buffer_io, Message)
+        buffer_writer = BufferWriter(bytearray(length))
+        protobuf.dump_message(buffer_writer, msg)
+
+        buffer_reader = BufferReader(buffer_writer.buffer)
+        nmsg = protobuf.load_message(buffer_reader, Message)
 
         self.assertEqual(msg.sint_field, nmsg.sint_field)
         self.assertEqual(msg.enum_field, nmsg.enum_field)
 
         # bad enum value:
-        buffer_io.seek(0)
+        buffer_writer.seek(0)
         msg = Message(-42, 42)
         # XXX this assumes the message will have equal size
-        protobuf.dump_message(buffer_io, msg)
-        buffer_io.seek(0)
+        protobuf.dump_message(buffer_writer, msg)
+        buffer_reader.seek(0)
         with self.assertRaises(TypeError):
-            protobuf.load_message(buffer_io, Message)
+            protobuf.load_message(buffer_reader, Message)
 
 
 if __name__ == "__main__":
