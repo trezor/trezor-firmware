@@ -1,9 +1,7 @@
 from common import *
 
 import protobuf
-
-if False:
-    from typing import Awaitable, Dict
+from trezor.utils import BufferIO
 
 
 class Message(protobuf.MessageType):
@@ -12,47 +10,22 @@ class Message(protobuf.MessageType):
         self.enum_field = enum_field
 
     @classmethod
-    def get_fields(cls) -> Dict:
+    def get_fields(cls):
         return {
             1: ("sint_field", protobuf.SVarintType, 0),
             2: ("enum_field", protobuf.EnumType("t", (0, 5, 25)), 0),
         }
 
 
-class ByteReader:
-    def __init__(self, data: bytes) -> None:
-        self.data = data
-        self.pos = 0
-
-    async def areadinto(self, buf: bytearray) -> int:
-        remaining = len(self.data) - self.pos
-        limit = len(buf)
-        if remaining < limit:
-            raise EOFError
-
-        buf[:] = self.data[self.pos : self.pos + limit]
-        self.pos += limit
-        return limit
-
-
-class ByteArrayWriter:
-    def __init__(self) -> None:
-        self.buf = bytearray(0)
-
-    async def awrite(self, buf: bytes) -> int:
-        self.buf.extend(buf)
-        return len(buf)
-
-
 def load_uvarint(data: bytes) -> int:
-    reader = ByteReader(data)
-    return await_result(protobuf.load_uvarint(reader))
+    reader = BufferIO(data)
+    return protobuf.load_uvarint(reader)
 
 
 def dump_uvarint(value: int) -> bytearray:
-    writer = ByteArrayWriter()
-    await_result(protobuf.dump_uvarint(writer, value))
-    return writer.buf
+    writer = BufferIO(bytearray(16))
+    protobuf.dump_uvarint(writer, value)
+    return memoryview(writer.buffer)[:writer.offset]
 
 
 class TestProtobuf(unittest.TestCase):
@@ -91,21 +64,23 @@ class TestProtobuf(unittest.TestCase):
     def test_validate_enum(self):
         # ok message:
         msg = Message(-42, 5)
-        writer = ByteArrayWriter()
-        await_result(protobuf.dump_message(writer, msg))
-        reader = ByteReader(bytes(writer.buf))
-        nmsg = await_result(protobuf.load_message(reader, Message))
+        length = protobuf.count_message(msg)
+        buffer_io = BufferIO(bytearray(length))
+        protobuf.dump_message(buffer_io, msg)
+        buffer_io.seek(0)
+        nmsg = protobuf.load_message(buffer_io, Message)
 
         self.assertEqual(msg.sint_field, nmsg.sint_field)
         self.assertEqual(msg.enum_field, nmsg.enum_field)
 
         # bad enum value:
+        buffer_io.seek(0)
         msg = Message(-42, 42)
-        writer = ByteArrayWriter()
-        await_result(protobuf.dump_message(writer, msg))
-        reader = ByteReader(bytes(writer.buf))
+        # XXX this assumes the message will have equal size
+        protobuf.dump_message(buffer_io, msg)
+        buffer_io.seek(0)
         with self.assertRaises(TypeError):
-            await_result(protobuf.load_message(reader, Message))
+            protobuf.load_message(buffer_io, Message)
 
 
 if __name__ == "__main__":
