@@ -63,7 +63,9 @@ int main(void) {
   collect_hw_entropy();
 
 #if TREZOR_MODEL == T
+#if PRODUCTION
   check_and_replace_bootloader();
+#endif
   // Enable MPU
   mpu_config_firmware();
 #endif
