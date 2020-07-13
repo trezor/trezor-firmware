@@ -9,6 +9,7 @@ class AssertRaisesContext:
 
     def __init__(self, exc):
         self.expected = exc
+        self.value = None
 
     def __enter__(self):
         return self
@@ -17,6 +18,7 @@ class AssertRaisesContext:
         if exc_type is None:
             ensure(False, "%r not raised" % self.expected)
         if issubclass(exc_type, self.expected):
+            self.value = exc_value
             return True
         return False
 
