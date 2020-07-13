@@ -19,6 +19,7 @@ _Most likely to be released on July 1st._
 ### Changed
 - `Features.pin_cached` renamed to `unlocked`.
 - Forbid all settings if the device is not yet initialized.  [#1056]
+- Rewrite USB codec and Protobuf decoder to be more memory-efficient.  [#1089]
 
 ### Deprecated
 - Deprecate `Overwintered` field in `SignTx` and `TxAck`.
@@ -169,4 +170,5 @@ Version 2.0.5 [Mar 2018]
 [#1056]: https://github.com/trezor/trezor-firmware/issues/1056
 [#1067]: https://github.com/trezor/trezor-firmware/issues/1067
 [#1074]: https://github.com/trezor/trezor-firmware/issues/1074
+[#1089]: https://github.com/trezor/trezor-firmware/issues/1089
 [#1098]: https://github.com/trezor/trezor-firmware/issues/1098
