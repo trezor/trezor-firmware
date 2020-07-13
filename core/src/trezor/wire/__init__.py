@@ -140,7 +140,9 @@ class Context:
     def __init__(self, iface: WireInterface, sid: int) -> None:
         self.iface = iface
         self.sid = sid
-        self.buffer_io = utils.BufferIO(bytearray(PROTOBUF_BUFFER_SIZE))
+        self.buffer = bytearray(PROTOBUF_BUFFER_SIZE)
+        self.buffer_reader = utils.BufferReader(self.buffer)
+        self.buffer_writer = utils.BufferWriter(self.buffer)
 
         self._field_cache = {}  # type: protobuf.FieldCache
 
@@ -162,8 +164,8 @@ class Context:
         return await self.read_any(expected_wire_types)
 
     async def read_from_wire(self) -> codec_v1.Message:
-        self.buffer_io.seek(0)
-        return await codec_v1.read_message(self.iface, self.buffer_io.buffer)
+        self.buffer_writer.seek(0)
+        return await codec_v1.read_message(self.iface, self.buffer_writer.buffer)
 
     async def read(
         self,
@@ -250,17 +252,19 @@ class Context:
         msg_size = protobuf.count_message(msg, field_cache)
 
         # prepare buffer
-        if msg_size <= len(self.buffer_io.buffer):
+        if msg_size <= len(self.buffer_writer.buffer):
             # reuse preallocated
-            buffer_io = self.buffer_io
+            buffer_writer = self.buffer_writer
         else:
             # message is too big, we need to allocate a new buffer
-            buffer_io = utils.BufferIO(bytearray(msg_size))
+            buffer_writer = utils.BufferWriter(bytearray(msg_size))
 
-        buffer_io.seek(0)
-        protobuf.dump_message(buffer_io, msg, field_cache)
+        buffer_writer.seek(0)
+        protobuf.dump_message(buffer_writer, msg, field_cache)
         await codec_v1.write_message(
-            self.iface, msg.MESSAGE_WIRE_TYPE, memoryview(buffer_io.buffer)[:msg_size],
+            self.iface,
+            msg.MESSAGE_WIRE_TYPE,
+            memoryview(buffer_writer.buffer)[:msg_size],
         )
 
         # make sure we don't keep around fields of all protobuf types ever
