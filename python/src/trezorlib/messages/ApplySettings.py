@@ -22,6 +22,7 @@ class ApplySettings(p.MessageType):
         auto_lock_delay_ms: int = None,
         display_rotation: int = None,
         passphrase_always_on_device: bool = None,
+        unsafe_prompts: bool = None,
     ) -> None:
         self.language = language
         self.label = label
@@ -30,6 +31,7 @@ class ApplySettings(p.MessageType):
         self.auto_lock_delay_ms = auto_lock_delay_ms
         self.display_rotation = display_rotation
         self.passphrase_always_on_device = passphrase_always_on_device
+        self.unsafe_prompts = unsafe_prompts
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -41,4 +43,5 @@ class ApplySettings(p.MessageType):
             6: ('auto_lock_delay_ms', p.UVarintType, 0),
             7: ('display_rotation', p.UVarintType, 0),
             8: ('passphrase_always_on_device', p.BoolType, 0),
+            9: ('unsafe_prompts', p.BoolType, 0),
         }

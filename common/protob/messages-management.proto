@@ -125,6 +125,7 @@ message ApplySettings {
     optional uint32 auto_lock_delay_ms = 6;
     optional uint32 display_rotation = 7;  // in degrees from North
     optional bool passphrase_always_on_device = 8;  // do not prompt for passphrase, enforce device entry
+    optional bool unsafe_prompts = 9;  // allow or disallow unsafe prompts
 }
 
 /**

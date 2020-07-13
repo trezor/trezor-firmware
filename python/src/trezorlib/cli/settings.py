@@ -132,6 +132,20 @@ def homescreen(client, filename):
     return device.apply_settings(client, homescreen=img)
 
 
+@cli.command()
+@click.argument("allow", type=click.Choice(("on", "off")))
+@with_client
+def unsafe_prompts(client, allow):
+    """Allow or disallow unsafe prompts.
+
+    This is a power-user feature. With unsafe prompts enabled, Trezor will ask the user
+    to confirm possibly dangerous actions instead of rejecting them outright.
+    Use with caution.
+    """
+    allowed = allow == "on"
+    return device.apply_settings(client, unsafe_prompts=allowed)
+
+
 #
 # passphrase operations
 #
@@ -140,6 +154,8 @@ def homescreen(client, filename):
 @cli.group()
 def passphrase():
     """Enable, disable or configure passphrase protection."""
+    # this exists in order to support command aliases for "enable-passphrase"
+    # and "disable-passphrase". Otherwise `passphrase` would just take an argument.
 
 
 @passphrase.command(name="enabled")
