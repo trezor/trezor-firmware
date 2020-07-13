@@ -1,4 +1,4 @@
-device CORTEX-M3
+device STM32F205RG
 if swd
 speed 50000
 loadbin build/firmware/firmware.bin 0x08010000
