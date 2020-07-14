@@ -30,20 +30,27 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings):
         if len(msg.homescreen) > storage.device.HOMESCREEN_MAXSIZE:
             raise wire.DataError("Homescreen is too complex")
         await require_confirm_change_homescreen(ctx)
+        try:
+            storage.device.set_homescreen(msg.homescreen)
+        except ValueError:
+            raise wire.DataError("Invalid homescreen")
 
     if msg.label is not None:
         await require_confirm_change_label(ctx, msg.label)
+        storage.device.set_label(msg.label)
 
     if msg.use_passphrase is not None:
         await require_confirm_change_passphrase(ctx, msg.use_passphrase)
+        storage.device.set_passphrase_enabled(msg.use_passphrase)
 
-    if msg.passphrase_always_on_device is not None:
+    if (
+        storage.device.is_passphrase_enabled()
+        and msg.passphrase_always_on_device is not None
+    ):
         await require_confirm_change_passphrase_source(
             ctx, msg.passphrase_always_on_device
         )
-
-    if msg.display_rotation is not None:
-        await require_confirm_change_display_rotation(ctx, msg.display_rotation)
+        storage.device.set_passphrase_always_on_device(msg.passphrase_always_on_device)
 
     if msg.auto_lock_delay_ms is not None:
         if msg.auto_lock_delay_ms < storage.device.AUTOLOCK_DELAY_MINIMUM:
@@ -51,25 +58,18 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings):
         if msg.auto_lock_delay_ms > storage.device.AUTOLOCK_DELAY_MAXIMUM:
             raise wire.ProcessError("Auto-lock delay too long")
         await require_confirm_change_autolock_delay(ctx, msg.auto_lock_delay_ms)
-
-    storage.device.load_settings(
-        label=msg.label,
-        use_passphrase=msg.use_passphrase,
-        homescreen=msg.homescreen,
-        passphrase_always_on_device=msg.passphrase_always_on_device,
-        display_rotation=msg.display_rotation,
-        autolock_delay_ms=msg.auto_lock_delay_ms,
-    )
+        storage.device.set_autolock_delay_ms(msg.auto_lock_delay_ms)
+        # use the value that was stored, not the one that was supplied by the user
+        workflow.idle_timer.set(storage.device.get_autolock_delay_ms(), lock_device)
 
     if msg.unsafe_prompts is not None:
         await require_confirm_unsafe_prompts(ctx, msg.unsafe_prompts)
         storage.device.set_unsafe_prompts_allowed(msg.unsafe_prompts)
 
     if msg.display_rotation is not None:
+        await require_confirm_change_display_rotation(ctx, msg.display_rotation)
+        storage.device.set_rotation(msg.display_rotation)
         ui.display.orientation(storage.device.get_rotation())
-
-    # use the value that was stored, not the one that was supplied by the user
-    workflow.idle_timer.set(storage.device.get_autolock_delay_ms(), lock_device)
 
     return Success(message="Settings applied")
 
@@ -117,6 +117,8 @@ async def require_confirm_change_display_rotation(ctx, rotation):
         label = "south"
     elif rotation == 270:
         label = "west"
+    else:
+        raise wire.DataError("Unsupported display rotation")
     text = Text("Change rotation", ui.ICON_CONFIG, new_lines=False)
     text.normal("Do you really want to", "change display rotation")
     text.normal("to")
@@ -134,7 +136,9 @@ async def require_confirm_change_autolock_delay(ctx, delay_ms):
 async def require_confirm_unsafe_prompts(ctx, allow: bool) -> None:
     if allow:
         text = Text("Unsafe prompts", ui.ICON_WIPE)
-        text.normal("Trezor will allow you to", "confirm actions which", "might be dangerous.")
+        text.normal(
+            "Trezor will allow you to", "confirm actions which", "might be dangerous."
+        )
         text.br_half()
         text.bold("Allow unsafe prompts?")
         await require_hold_to_confirm(ctx, text, ButtonRequestType.ProtectCall)
