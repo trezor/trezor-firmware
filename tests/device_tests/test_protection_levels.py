@@ -195,6 +195,7 @@ class TestProtectionLevels:
             address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
             prev_hash=TXHASH_d5f65e,
             prev_index=0,
+            amount=390000,
         )
 
         out1 = proto.TxOutputType(
@@ -211,13 +212,14 @@ class TestProtectionLevels:
                     proto.PinMatrixRequest(),
                     proto.PassphraseRequest(),
                     request_input(0),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
                     request_meta(TXHASH_d5f65e),
                     request_input(0, TXHASH_d5f65e),
                     request_input(1, TXHASH_d5f65e),
                     request_output(0, TXHASH_d5f65e),
-                    request_output(0),
-                    proto.ButtonRequest(code=B.ConfirmOutput),
-                    proto.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_output(0),
                     request_output(0),

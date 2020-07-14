@@ -105,6 +105,7 @@ class TestMultisigChange:
     # 2N9W4z9AhAPaHghtqVQPbaTAGHdbrhKeBQw
     inp1 = proto.TxInputType(
         address_n=[H_(45), 0, 0, 0],
+        amount=50000000,
         prev_hash=TXHASH_16c6c8,
         prev_index=1,
         script_type=proto.InputScriptType.SPENDMULTISIG,
@@ -114,6 +115,7 @@ class TestMultisigChange:
     # 2NDBG6QXQLtnQ3jRGkrqo53BiCeXfQXLdj4
     inp2 = proto.TxInputType(
         address_n=[H_(45), 0, 0, 1],
+        amount=34500000,
         prev_hash=TXHASH_d80c34,
         prev_index=0,
         script_type=proto.InputScriptType.SPENDMULTISIG,
@@ -123,6 +125,7 @@ class TestMultisigChange:
     # 2MvwPWfp2XPU3S1cMwgEMKBPUw38VP5SBE4
     inp3 = proto.TxInputType(
         address_n=[H_(45), 0, 0, 1],
+        amount=55500000,
         prev_hash=TXHASH_b0946d,
         prev_index=0,
         script_type=proto.InputScriptType.SPENDMULTISIG,
@@ -131,6 +134,17 @@ class TestMultisigChange:
 
     def _responses(self, inp1, inp2, change=0):
         resp = [
+            request_input(0),
+            request_input(1),
+            request_output(0),
+        ]
+        if change != 1:
+            resp.append(proto.ButtonRequest(code=B.ConfirmOutput))
+        resp.append(request_output(1))
+        if change != 2:
+            resp.append(proto.ButtonRequest(code=B.ConfirmOutput))
+        resp += [
+            proto.ButtonRequest(code=B.SignTx),
             request_input(0),
             request_meta(inp1.prev_hash),
             request_input(0, inp1.prev_hash),
@@ -141,15 +155,6 @@ class TestMultisigChange:
             request_input(0, inp2.prev_hash),
             request_output(0, inp2.prev_hash),
             request_output(1, inp2.prev_hash),
-            request_output(0),
-        ]
-        if change != 1:
-            resp.append(proto.ButtonRequest(code=B.ConfirmOutput))
-        resp.append(request_output(1))
-        if change != 2:
-            resp.append(proto.ButtonRequest(code=B.ConfirmOutput))
-        resp += [
-            proto.ButtonRequest(code=B.SignTx),
             request_input(0),
             request_input(1),
             request_output(0),

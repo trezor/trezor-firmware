@@ -42,6 +42,7 @@ class TestMsgSigntxGRS:
         inp1 = proto.TxInputType(
             # FXHDsC5ZqWQHkDmShzgRVZ1MatpWhwxTAA
             address_n=parse_path("44'/17'/0'/0/2"),
+            amount=210016,
             prev_hash=TXHASH_cb74c8,
             prev_index=0,
         )
@@ -62,6 +63,7 @@ class TestMsgSigntxGRS:
         inp1 = proto.TxInputType(
             # FXHDsC5ZqWQHkDmShzgRVZ1MatpWhwxTAA
             address_n=parse_path("44'/17'/0'/0/2"),
+            amount=210016,
             prev_hash=TXHASH_cb74c8,
             prev_index=0,
         )

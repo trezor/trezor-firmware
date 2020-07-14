@@ -46,7 +46,7 @@ class TestMsgSigntxInvalidPath:
 
         inp1 = proto.TxInputType(
             address_n=parse_path("44h/0h/0h/0/0"),
-            # amount=390000,
+            amount=390000,
             prev_hash=TXHASH_d5f65e,
             prev_index=0,
         )

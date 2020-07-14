@@ -62,7 +62,7 @@ def test_autolock_interrupts_signing(device_handler):
     # try to sign a transaction
     inp1 = messages.TxInputType(
         address_n=parse_path("44h/0h/0h/0/0"),
-        # amount=390000,
+        amount=390000,
         prev_hash=TXHASH_d5f65e,
         prev_index=0,
     )

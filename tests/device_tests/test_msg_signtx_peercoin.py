@@ -36,7 +36,10 @@ def test_timestamp_included(client):
     # input 0: 0.1 PPC
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("m/44'/6'/0'/0/0"), prev_hash=TXHASH_41b29a, prev_index=0
+        address_n=parse_path("m/44'/6'/0'/0/0"),
+        amount=100000,
+        prev_hash=TXHASH_41b29a,
+        prev_index=0,
     )
 
     out1 = messages.TxOutputType(
@@ -60,7 +63,10 @@ def test_timestamp_included(client):
 @pytest.mark.skip_ui
 def test_timestamp_missing(client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("m/44'/6'/0'/0/0"), prev_hash=TXHASH_41b29a, prev_index=0
+        address_n=parse_path("m/44'/6'/0'/0/0"),
+        amount=100000,
+        prev_hash=TXHASH_41b29a,
+        prev_index=0,
     )
     out1 = messages.TxOutputType(
         address="PXtfyTjzgXSgTwK5AbszdHQSSxyQN3BLM5",
@@ -86,7 +92,10 @@ def test_timestamp_missing(client):
 @pytest.mark.skip_ui
 def test_timestamp_missing_prevtx(client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("m/44'/6'/0'/0/0"), prev_hash=TXHASH_41b29a, prev_index=0
+        address_n=parse_path("m/44'/6'/0'/0/0"),
+        amount=100000,
+        prev_hash=TXHASH_41b29a,
+        prev_index=0,
     )
     out1 = messages.TxOutputType(
         address="PXtfyTjzgXSgTwK5AbszdHQSSxyQN3BLM5",
