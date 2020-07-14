@@ -7,8 +7,6 @@ from apps.common import mnemonic
 from apps.common.passphrase import get as get_passphrase
 
 if False:
-    from typing import Tuple
-
     from apps.common.seed import Bip32Path, MsgIn, MsgOut, Handler, HandlerWithKeychain
 
 
@@ -18,15 +16,14 @@ class Keychain:
     def __init__(self, root: bip32.HDNode) -> None:
         self.root = root
 
-    def match_path(self, path: Bip32Path) -> Tuple[int, Bip32Path]:
+    def verify_path(self, path: Bip32Path) -> None:
         if path[: len(SEED_NAMESPACE)] != SEED_NAMESPACE:
             raise wire.DataError("Forbidden key path")
-        return 0, path[len(SEED_NAMESPACE) :]
 
     def derive(self, node_path: Bip32Path) -> bip32.HDNode:
-        _, suffix = self.match_path(node_path)
         # derive child node from the root
         node = self.root.clone()
+        suffix = node_path[len(SEED_NAMESPACE) :]
         for i in suffix:
             node.derive_cardano(i)
         return node
