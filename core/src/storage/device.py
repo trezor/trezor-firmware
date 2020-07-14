@@ -85,11 +85,21 @@ def get_rotation() -> int:
     return int.from_bytes(rotation, "big")
 
 
+def set_rotation(value: int) -> None:
+    if value not in (0, 90, 180, 270):
+        raise ValueError  # unsupported display rotation
+    common.set(_NAMESPACE, _ROTATION, value.to_bytes(2, "big"), True)  # public
+
+
 def get_label() -> Optional[str]:
     label = common.get(_NAMESPACE, _LABEL, True)  # public
     if label is None:
         return None
     return label.decode()
+
+
+def set_label(label: str) -> None:
+    common.set(_NAMESPACE, _LABEL, label.encode(), True)  # public
 
 
 def get_mnemonic_secret() -> Optional[bytes]:
@@ -115,8 +125,23 @@ def is_passphrase_enabled() -> bool:
     return common.get_bool(_NAMESPACE, _USE_PASSPHRASE)
 
 
+def set_passphrase_enabled(enable: bool) -> None:
+    common.set_bool(_NAMESPACE, _USE_PASSPHRASE, enable)
+    if not enable:
+        set_passphrase_always_on_device(False)
+
+
 def get_homescreen() -> Optional[bytes]:
     return common.get(_NAMESPACE, _HOMESCREEN, True)  # public
+
+
+def set_homescreen(homescreen: bytes) -> None:
+    if len(homescreen) > HOMESCREEN_MAXSIZE:
+        raise ValueError  # homescreen too large
+    if homescreen[:8] == b"TOIf\x90\x00\x90\x00" or homescreen == b"":
+        common.set(_NAMESPACE, _HOMESCREEN, homescreen, True)  # public
+    else:
+        raise ValueError  # invalid homescreen
 
 
 def store_mnemonic_secret(
@@ -164,41 +189,8 @@ def get_passphrase_always_on_device() -> bool:
     return common.get_bool(_NAMESPACE, _PASSPHRASE_ALWAYS_ON_DEVICE)
 
 
-def load_settings(
-    label: str = None,
-    use_passphrase: bool = None,
-    homescreen: bytes = None,
-    passphrase_always_on_device: bool = None,
-    display_rotation: int = None,
-    autolock_delay_ms: int = None,
-) -> None:
-    if use_passphrase is False:
-        passphrase_always_on_device = False
-    if label is not None:
-        common.set(_NAMESPACE, _LABEL, label.encode(), True)  # public
-    if use_passphrase is not None:
-        common.set_bool(_NAMESPACE, _USE_PASSPHRASE, use_passphrase)
-    if homescreen is not None:
-        if homescreen[:8] == b"TOIf\x90\x00\x90\x00":
-            if len(homescreen) <= HOMESCREEN_MAXSIZE:
-                common.set(_NAMESPACE, _HOMESCREEN, homescreen, True)  # public
-        else:
-            common.set(_NAMESPACE, _HOMESCREEN, b"", True)  # public
-    if passphrase_always_on_device is not None:
-        common.set_bool(
-            _NAMESPACE, _PASSPHRASE_ALWAYS_ON_DEVICE, passphrase_always_on_device
-        )
-    if display_rotation is not None:
-        if display_rotation not in (0, 90, 180, 270):
-            raise ValueError(
-                "Unsupported display rotation degrees: %d" % display_rotation
-            )
-        else:
-            common.set(
-                _NAMESPACE, _ROTATION, display_rotation.to_bytes(2, "big"), True
-            )  # public
-    if autolock_delay_ms is not None:
-        set_autolock_delay_ms(autolock_delay_ms)
+def set_passphrase_always_on_device(enable: bool) -> None:
+    common.set_bool(_NAMESPACE, _PASSPHRASE_ALWAYS_ON_DEVICE, enable)
 
 
 def get_flags() -> int:

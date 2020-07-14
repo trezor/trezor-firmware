@@ -58,11 +58,11 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
             newpin = await request_pin_confirm(ctx, allow_cancel=False)
             config.change_pin(pin_to_int(""), pin_to_int(newpin), None, None)
 
+        storage.device.set_passphrase_enabled(bool(msg.passphrase_protection))
         if msg.u2f_counter is not None:
             storage.device.set_u2f_counter(msg.u2f_counter)
-        storage.device.load_settings(
-            label=msg.label, use_passphrase=msg.passphrase_protection
-        )
+        if msg.label is not None:
+            storage.device.set_label(msg.label)
 
     storage.recovery.set_in_progress(True)
     storage.recovery.set_dry_run(bool(msg.dry_run))
