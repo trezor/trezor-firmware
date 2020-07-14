@@ -34,7 +34,10 @@ TXHASH_d5f65e = bytes.fromhex(
 class TestOpReturn:
     def test_opreturn(self, client):
         inp1 = proto.TxInputType(
-            address_n=parse_path("44'/0'/0'/0/2"), prev_hash=TXHASH_d5f65e, prev_index=0
+            address_n=parse_path("44'/0'/0'/0/2"),
+            amount=390000,
+            prev_hash=TXHASH_d5f65e,
+            prev_index=0,
         )
 
         out1 = proto.TxOutputType(
@@ -53,15 +56,16 @@ class TestOpReturn:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_d5f65e),
-                    request_input(0, TXHASH_d5f65e),
-                    request_input(1, TXHASH_d5f65e),
-                    request_output(0, TXHASH_d5f65e),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_d5f65e),
+                    request_input(0, TXHASH_d5f65e),
+                    request_input(1, TXHASH_d5f65e),
+                    request_output(0, TXHASH_d5f65e),
                     request_input(0),
                     request_output(0),
                     request_output(1),
@@ -83,6 +87,7 @@ class TestOpReturn:
     def test_nonzero_opreturn(self, client):
         inp1 = proto.TxInputType(
             address_n=parse_path("44'/0'/10'/0/5"),
+            amount=390000,
             prev_hash=TXHASH_d5f65e,
             prev_index=0,
         )
@@ -95,15 +100,7 @@ class TestOpReturn:
 
         with client:
             client.set_expected_responses(
-                [
-                    request_input(0),
-                    request_meta(TXHASH_d5f65e),
-                    request_input(0, TXHASH_d5f65e),
-                    request_input(1, TXHASH_d5f65e),
-                    request_output(0, TXHASH_d5f65e),
-                    request_output(0),
-                    proto.Failure(),
-                ]
+                [request_input(0), request_output(0), proto.Failure()]
             )
 
             with pytest.raises(
@@ -114,7 +111,10 @@ class TestOpReturn:
     @pytest.mark.skip_ui
     def test_opreturn_address(self, client):
         inp1 = proto.TxInputType(
-            address_n=parse_path("44'/0'/0'/0/2"), prev_hash=TXHASH_d5f65e, prev_index=0
+            address_n=parse_path("44'/0'/0'/0/2"),
+            amount=390000,
+            prev_hash=TXHASH_d5f65e,
+            prev_index=0,
         )
 
         out1 = proto.TxOutputType(
@@ -126,15 +126,7 @@ class TestOpReturn:
 
         with client:
             client.set_expected_responses(
-                [
-                    request_input(0),
-                    request_meta(TXHASH_d5f65e),
-                    request_input(0, TXHASH_d5f65e),
-                    request_input(1, TXHASH_d5f65e),
-                    request_output(0, TXHASH_d5f65e),
-                    request_output(0),
-                    proto.Failure(),
-                ]
+                [request_input(0), request_output(0), proto.Failure()]
             )
             with pytest.raises(
                 TrezorFailure, match="Output's address_n provided but not expected."

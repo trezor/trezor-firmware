@@ -65,13 +65,14 @@ class TestMsgSigntxBch:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_bc37c2),
-                    request_input(0, TXHASH_bc37c2),
-                    request_output(0, TXHASH_bc37c2),
                     request_output(0),
                     request_output(1),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_bc37c2),
+                    request_input(0, TXHASH_bc37c2),
+                    request_output(0, TXHASH_bc37c2),
                     request_input(0),
                     request_output(0),
                     request_output(1),
@@ -113,6 +114,11 @@ class TestMsgSigntxBch:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_input(1),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
                     request_meta(TXHASH_502e85),
                     request_input(0, TXHASH_502e85),
                     request_output(0, TXHASH_502e85),
@@ -122,9 +128,6 @@ class TestMsgSigntxBch:
                     request_input(0, TXHASH_502e85),
                     request_output(0, TXHASH_502e85),
                     request_output(1, TXHASH_502e85),
-                    request_output(0),
-                    proto.ButtonRequest(code=B.ConfirmOutput),
-                    proto.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_input(1),
                     request_output(0),
@@ -166,6 +169,11 @@ class TestMsgSigntxBch:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_input(1),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
                     request_meta(TXHASH_502e85),
                     request_input(0, TXHASH_502e85),
                     request_output(0, TXHASH_502e85),
@@ -175,9 +183,6 @@ class TestMsgSigntxBch:
                     request_input(0, TXHASH_502e85),
                     request_output(0, TXHASH_502e85),
                     request_output(1, TXHASH_502e85),
-                    request_output(0),
-                    proto.ButtonRequest(code=B.ConfirmOutput),
-                    proto.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_input(1),
                     request_output(0),
@@ -212,14 +217,14 @@ class TestMsgSigntxBch:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        run_attack = False
+        attack_count = 2
 
         def attack_processor(msg):
-            nonlocal run_attack
+            nonlocal attack_count
 
             if msg.tx.inputs and msg.tx.inputs[0] == inp1:
-                if not run_attack:
-                    run_attack = True
+                if attack_count > 0:
+                    attack_count -= 1
                 else:
                     msg.tx.inputs[0].address_n[2] = H_(1)
 
@@ -231,13 +236,14 @@ class TestMsgSigntxBch:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_bc37c2),
-                    request_input(0, TXHASH_bc37c2),
-                    request_output(0, TXHASH_bc37c2),
                     request_output(0),
                     request_output(1),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_bc37c2),
+                    request_input(0, TXHASH_bc37c2),
+                    request_output(0, TXHASH_bc37c2),
                     request_input(0),
                     proto.Failure(code=proto.FailureType.ProcessError),
                 ]
@@ -300,13 +306,14 @@ class TestMsgSigntxBch:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
                     request_meta(TXHASH_f68caf),
                     request_input(0, TXHASH_f68caf),
                     request_output(0, TXHASH_f68caf),
                     request_output(1, TXHASH_f68caf),
-                    request_output(0),
-                    proto.ButtonRequest(code=B.ConfirmOutput),
-                    proto.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_output(0),
                     request_finished(),
@@ -361,13 +368,14 @@ class TestMsgSigntxBch:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_8b6db9),
-                    request_input(0, TXHASH_8b6db9),
-                    request_output(0, TXHASH_8b6db9),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
                     proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_8b6db9),
+                    request_input(0, TXHASH_8b6db9),
+                    request_output(0, TXHASH_8b6db9),
                     request_input(0),
                     request_output(0),
                     request_output(1),
@@ -398,13 +406,14 @@ class TestMsgSigntxBch:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_8b6db9),
-                    request_input(0, TXHASH_8b6db9),
-                    request_output(0, TXHASH_8b6db9),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
                     proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_8b6db9),
+                    request_input(0, TXHASH_8b6db9),
+                    request_output(0, TXHASH_8b6db9),
                     request_input(0),
                     request_output(0),
                     request_output(1),
@@ -455,14 +464,15 @@ class TestMsgSigntxBch:
                 [
                     request_input(0),
                     request_input(1),
-                    request_meta(TXHASH_502e85),
-                    request_input(0, TXHASH_502e85),
-                    request_output(0, TXHASH_502e85),
-                    request_output(1, TXHASH_502e85),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.SignTx),
                     request_input(0),
+                    request_meta(TXHASH_502e85),
+                    request_input(0, TXHASH_502e85),
+                    request_output(0, TXHASH_502e85),
+                    request_output(1, TXHASH_502e85),
+                    request_input(1),
                     request_meta(TXHASH_502e85),
                     request_input(0, TXHASH_502e85),
                     request_output(0, TXHASH_502e85),

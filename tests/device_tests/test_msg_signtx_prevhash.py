@@ -107,7 +107,7 @@ def test_invalid_prev_hash_attack(client, prev_hash):
     )
     out1 = messages.TxOutputType(
         address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
-        amount=12300000,
+        amount=100000000 - 10000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
@@ -148,7 +148,10 @@ def test_invalid_prev_hash_in_prevtx(client, prev_hash):
     tx_hash = hash_tx(serialize_tx(prev_tx))
 
     inp0 = messages.TxInputType(
-        address_n=tools.parse_path("m/44h/0h/0h/0/0"), prev_hash=tx_hash, prev_index=0
+        address_n=tools.parse_path("m/44h/0h/0h/0/0"),
+        amount=100000000,
+        prev_hash=tx_hash,
+        prev_index=0,
     )
     out1 = messages.TxOutputType(
         address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",

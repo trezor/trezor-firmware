@@ -52,6 +52,7 @@ class TestMultisig:
         # Let's go to sign with key 1
         inp1 = proto.TxInputType(
             address_n=parse_path("48'/0'/1'/0/0"),
+            amount=100000,
             prev_hash=TXHASH_c6091a,
             prev_index=1,
             script_type=proto.InputScriptType.SPENDMULTISIG,
@@ -68,13 +69,14 @@ class TestMultisig:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
                     request_meta(TXHASH_c6091a),
                     request_input(0, TXHASH_c6091a),
                     request_output(0, TXHASH_c6091a),
                     request_output(1, TXHASH_c6091a),
-                    request_output(0),
-                    proto.ButtonRequest(code=B.ConfirmOutput),
-                    proto.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_output(0),
                     request_output(0),
@@ -109,6 +111,7 @@ class TestMultisig:
         # Let's do a second signature with key 3
         inp3 = proto.TxInputType(
             address_n=parse_path("48'/0'/3'/0/0"),
+            amount=100000,
             prev_hash=TXHASH_c6091a,
             prev_index=1,
             script_type=proto.InputScriptType.SPENDMULTISIG,
@@ -119,13 +122,14 @@ class TestMultisig:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
                     request_meta(TXHASH_c6091a),
                     request_input(0, TXHASH_c6091a),
                     request_output(0, TXHASH_c6091a),
                     request_output(1, TXHASH_c6091a),
-                    request_output(0),
-                    proto.ButtonRequest(code=B.ConfirmOutput),
-                    proto.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_output(0),
                     request_output(0),
@@ -169,6 +173,7 @@ class TestMultisig:
 
             inp1 = proto.TxInputType(
                 address_n=parse_path(f"48h/0h/1h/0/{x}"),
+                amount=20000,
                 prev_hash=TXHASH_6189e3,
                 prev_index=1,
                 script_type=proto.InputScriptType.SPENDMULTISIG,
@@ -206,6 +211,7 @@ class TestMultisig:
         # Let's go to sign with key 10, which is NOT in pubkeys
         inp1 = proto.TxInputType(
             address_n=parse_path("48h/0h/1h/0/10"),
+            amount=100000,
             prev_hash=TXHASH_c6091a,
             prev_index=1,
             script_type=proto.InputScriptType.SPENDMULTISIG,
@@ -278,7 +284,7 @@ class TestMultisig:
             multisig=multisig_fake,
         )
 
-        attack_count = 2
+        attack_count = 3
 
         def attack_processor(msg):
             nonlocal attack_count
@@ -293,14 +299,15 @@ class TestMultisig:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_fbbff7),
-                    request_input(0, TXHASH_fbbff7),
-                    request_output(0, TXHASH_fbbff7),
-                    request_output(1, TXHASH_fbbff7),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
                     proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_fbbff7),
+                    request_input(0, TXHASH_fbbff7),
+                    request_output(0, TXHASH_fbbff7),
+                    request_output(1, TXHASH_fbbff7),
                     request_input(0),
                     request_output(0),
                     request_output(1),
