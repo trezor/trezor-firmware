@@ -12,6 +12,9 @@ if False:
     from trezor.messages.TxInputType import EnumTypeInputScriptType
     from trezor.messages.TxOutputType import EnumTypeOutputScriptType
 
+
+BITCOIN_NAMES = ("Bitcoin", "Regtest", "Testnet")
+
 # Default signature hash type in Bitcoin which signs all inputs and all outputs of the transaction.
 SIGHASH_ALL = const(0x01)
 

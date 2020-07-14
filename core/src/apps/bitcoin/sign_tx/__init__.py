@@ -6,6 +6,7 @@ from trezor.messages.TxRequest import TxRequest
 
 from apps.common import coininfo, paths, seed
 
+from ..common import BITCOIN_NAMES
 from ..keychain import with_keychain
 from . import bitcoin, helpers, layout, progress
 
@@ -14,9 +15,6 @@ if not utils.BITCOIN_ONLY:
 
 if False:
     from typing import Type, Union
-
-
-BITCOIN_NAMES = ("Bitcoin", "Regtest", "Testnet")
 
 
 @with_keychain
