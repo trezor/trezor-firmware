@@ -116,8 +116,9 @@ def client(request):
     if marker:
         setup_params.update(marker.kwargs)
 
-    # passphrase is turned on either for True or the str directly
-    use_passphrase = setup_params["passphrase"] not in (None, False)
+    use_passphrase = setup_params["passphrase"] is True or isinstance(
+        setup_params["passphrase"], str
+    )
 
     if not setup_params["uninitialized"]:
         debuglink.load_device(

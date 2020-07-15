@@ -48,13 +48,15 @@ EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 # fmt: on
 
 TEST_ADDRESS_N = tools.parse_path("m/44h/1h/0h/0/0")
-COMMON_FIXTURES_DIR = Path(__file__).parent / "../common/tests/fixtures/"
+COMMON_FIXTURES_DIR = (
+    Path(__file__).parent.resolve().parent / "common" / "tests" / "fixtures"
+)
 
 
-def parametrize_using_common_fixtures(paths):
+def parametrize_using_common_fixtures(*paths):
     fixtures = []
     for path in paths:
-        fixtures.append(_load_fixtures(COMMON_FIXTURES_DIR / path))
+        json.loads((COMMON_FIXTURES_DIR / path).read_text())
 
     tests = []
     for fixture in fixtures:

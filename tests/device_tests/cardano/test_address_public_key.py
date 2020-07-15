@@ -25,21 +25,20 @@ pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.cardano,
     pytest.mark.skip_t1,
+    pytest.mark.skip_ui,
 ]
 
 
-@pytest.mark.skip_ui
 @parametrize_using_common_fixtures(
-    ["cardano/get_address.json", "cardano/get_address.slip39.json"]
+    "cardano/get_address.json", "cardano/get_address.slip39.json"
 )
 def test_cardano_get_address(client, parameters, result):
     address = get_address(client, parse_path(parameters["path"]))
     assert address == result["expected_address"]
 
 
-@pytest.mark.skip_ui
 @parametrize_using_common_fixtures(
-    ["cardano/get_public_key.json", "cardano/get_public_key.slip39.json"]
+    "cardano/get_public_key.json", "cardano/get_public_key.slip39.json"
 )
 def test_cardano_get_public_key(client, parameters, result):
     key = get_public_key(client, parse_path(parameters["path"]))

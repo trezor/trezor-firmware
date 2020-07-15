@@ -29,16 +29,13 @@ pytestmark = [
 
 
 @parametrize_using_common_fixtures(
-    ["cardano/sign_tx.json", "cardano/sign_tx.slip39.json"]
+    "cardano/sign_tx.json", "cardano/sign_tx.slip39.json"
 )
 def test_cardano_sign_tx(client, parameters, result):
     inputs = [cardano.create_input(i) for i in parameters["inputs"]]
     outputs = [cardano.create_output(o) for o in parameters["outputs"]]
 
-    expected_responses = []
-    # TODO: or we could pass the fixture json name or description/name
-    if client.features.passphrase_protection:
-        expected_responses += [messages.PassphraseRequest()]
+    expected_responses = [messages.PassphraseRequest()]
 
     expected_responses += [
         messages.CardanoTxRequest(tx_index=i) for i in range(len(parameters["prev_tx"]))
@@ -62,23 +59,39 @@ def test_cardano_sign_tx(client, parameters, result):
 
     with client:
         client.set_expected_responses(expected_responses)
-        if result["success"]:
-            client.set_input_flow(input_flow)
-            response = cardano.sign_tx(
+        client.set_input_flow(input_flow)
+        response = cardano.sign_tx(
+            client,
+            inputs,
+            outputs,
+            parameters["prev_tx"],
+            parameters["protocol_magic"],
+        )
+        assert response.tx_hash.hex() == result["tx_hash"]
+        assert response.tx_body.hex() == result["tx_body"]
+
+
+@parametrize_using_common_fixtures("cardano/sign_tx.failures.json")
+def test_cardano_sign_tx_failures(client, parameters, result):
+    inputs = [cardano.create_input(i) for i in parameters["inputs"]]
+    outputs = [cardano.create_output(o) for o in parameters["outputs"]]
+
+    expected_responses = [
+        messages.PassphraseRequest(),
+        *(
+            messages.CardanoTxRequest(tx_index=i)
+            for i in range(len(parameters["prev_tx"]))
+        ),
+        messages.Failure(),
+    ]
+
+    with client:
+        client.set_expected_responses(expected_responses)
+        with pytest.raises(TrezorFailure, match=result["error"]):
+            cardano.sign_tx(
                 client,
                 inputs,
                 outputs,
                 parameters["prev_tx"],
                 parameters["protocol_magic"],
             )
-            assert response.tx_hash.hex() == result["tx_hash"]
-            assert response.tx_body.hex() == result["tx_body"]
-        else:
-            with pytest.raises(TrezorFailure, match=result["error"]):
-                cardano.sign_tx(
-                    client,
-                    inputs,
-                    outputs,
-                    parameters["prev_tx"],
-                    parameters["protocol_magic"],
-                )
