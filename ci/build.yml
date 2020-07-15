@@ -148,7 +148,7 @@ legacy fw regular build:
     - trezor-fw-regular-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
-legacy fw debug build:
+legacy fw regular debug build:
   stage: build
   variables:
     DEBUG_LINK: "1"
@@ -172,6 +172,22 @@ legacy fw btconly build:
     - mv legacy/firmware/trezor.bin legacy/firmware/trezor-bitcoinonly.bin
     - nix-shell --run "pipenv run ./tools/check-bitcoin-only legacy/firmware/trezor-bitcoinonly.bin"
     - mv legacy/firmware/trezor-bitcoinonly.bin trezor-fw-btconly-$LEGACY_VERSION-$CI_COMMIT_SHORT_SHA.bin
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+    - trezor-fw-btconly-*.*.*-$CI_COMMIT_SHORT_SHA.bin
+    expire_in: 1 week
+
+legacy fw btconly debug build:
+  stage: build
+  variables:
+    BITCOIN_ONLY: "1"
+    MEMORY_PROTECT: "0"
+    DEBUG_LINK: "1"
+  script:
+    - nix-shell --run "pipenv run legacy/script/cibuild"
+    - nix-shell --run "pipenv run ./tools/check-bitcoin-only legacy/firmware/trezor.bin"
+    - mv legacy/firmware/trezor.bin trezor-fw-btconly-debug-$LEGACY_VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
