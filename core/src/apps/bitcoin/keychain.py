@@ -1,13 +1,16 @@
 from trezor import wire
 
-from apps.common import HARDENED, coininfo
+from apps.common import HARDENED
 from apps.common.seed import get_keychain
+
+from .common import get_coin_by_name
 
 if False:
     from protobuf import MessageType
     from typing import Callable, Optional, Tuple, TypeVar
     from typing_extensions import Protocol
 
+    from apps.common import coininfo
     from apps.common.seed import Keychain, MsgOut, Handler
 
     class MsgWithCoinName(MessageType, Protocol):
@@ -46,14 +49,7 @@ def get_namespaces_for_coin(coin: coininfo.CoinInfo):
 async def get_keychain_for_coin(
     ctx: wire.Context, coin_name: Optional[str]
 ) -> Tuple[Keychain, coininfo.CoinInfo]:
-    if coin_name is None:
-        coin_name = "Bitcoin"
-
-    try:
-        coin = coininfo.by_name(coin_name)
-    except ValueError:
-        raise wire.DataError("Unsupported coin type")
-
+    coin = get_coin_by_name(coin_name)
     namespaces = get_namespaces_for_coin(coin)
     keychain = await get_keychain(ctx, namespaces)
     return keychain, coin

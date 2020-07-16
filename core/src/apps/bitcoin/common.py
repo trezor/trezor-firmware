@@ -6,9 +6,11 @@ from trezor.crypto.curve import secp256k1
 from trezor.messages import InputScriptType, OutputScriptType
 from trezor.utils import ensure
 
+from apps.common import coininfo
+
 if False:
     from apps.common.coininfo import CoinInfo
-    from typing import Dict
+    from typing import Dict, Optional
     from trezor.messages.TxInputType import EnumTypeInputScriptType
     from trezor.messages.TxOutputType import EnumTypeOutputScriptType
 
@@ -81,3 +83,13 @@ def decode_bech32_address(prefix: str, address: str) -> bytes:
     if witver != _BECH32_WITVER:
         raise wire.ProcessError("Invalid address witness program")
     return bytes(raw)
+
+
+def get_coin_by_name(coin_name: Optional[str]) -> coininfo.CoinInfo:
+    if coin_name is None:
+        coin_name = "Bitcoin"
+
+    try:
+        return coininfo.by_name(coin_name)
+    except ValueError:
+        raise wire.DataError("Unsupported coin type")
