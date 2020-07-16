@@ -118,18 +118,25 @@ def get_ownership_proof(
     user_confirmation=False,
     ownership_ids=None,
     commitment_data=None,
+    preauthorized=False,
 ):
-    res = client.call(
-        messages.GetOwnershipProof(
-            address_n=n,
-            coin_name=coin_name,
-            script_type=script_type,
-            multisig=multisig,
-            user_confirmation=user_confirmation,
-            ownership_ids=ownership_ids,
-            commitment_data=commitment_data,
-        )
+    get_ownership_proof = messages.GetOwnershipProof(
+        address_n=n,
+        coin_name=coin_name,
+        script_type=script_type,
+        multisig=multisig,
+        user_confirmation=user_confirmation,
+        ownership_ids=ownership_ids,
+        commitment_data=commitment_data,
     )
+
+    if preauthorized:
+        res = client.call(
+            messages.Preauthorized(get_ownership_proof=get_ownership_proof)
+        )
+    else:
+        res = client.call(get_ownership_proof)
+
     if not isinstance(res, messages.OwnershipProof):
         raise exceptions.TrezorException("Unexpected message")
 
@@ -165,7 +172,15 @@ def verify_message(client, coin_name, address, signature, message):
 
 
 @session
-def sign_tx(client, coin_name, inputs, outputs, details=None, prev_txes=None):
+def sign_tx(
+    client,
+    coin_name,
+    inputs,
+    outputs,
+    details=None,
+    prev_txes=None,
+    preauthorized=False,
+):
     this_tx = messages.TransactionType(inputs=inputs, outputs=outputs)
 
     if details is None:
@@ -177,7 +192,10 @@ def sign_tx(client, coin_name, inputs, outputs, details=None, prev_txes=None):
     signtx.inputs_count = len(inputs)
     signtx.outputs_count = len(outputs)
 
-    res = client.call(signtx)
+    if preauthorized:
+        res = client.call(messages.Preauthorized(sign_tx=signtx))
+    else:
+        res = client.call(signtx)
 
     # Prepare structure for signatures
     signatures = [
