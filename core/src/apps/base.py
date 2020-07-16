@@ -119,6 +119,7 @@ ALLOW_WHILE_LOCKED = (
     MessageType.GetFeatures,
     MessageType.Cancel,
     MessageType.LockDevice,
+    MessageType.Preauthorized,
     MessageType.WipeDevice,
 )
 
