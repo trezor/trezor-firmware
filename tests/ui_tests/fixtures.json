@@ -332,7 +332,7 @@
 "test_msg_signtx_komodo.py-test_one_one_rewards_claim": "e53f221fda81469027e39e21877a81a8fafbffbece0a45aeda12aae8873b0464",
 "test_msg_signtx_peercoin.py::test_timestamp_included": "825b9bdf5238c5c6415a254a6bae4b2bd9df8fc5cb31f66f0c20145cb4e60bbb",
 "test_msg_signtx_segwit.py-test_attack_change_input_address": "5ae71202c062ef7942626a80a4ceeb8d8c4ea5065a97f0de6a97505e9cb82c2c",
-"test_msg_signtx_segwit.py-test_attack_mixed_inputs": "1ae5200c6ce74cefae77ab1cfd6e032d0660aa4d106b8c54e092856f656f1e39",
+"test_msg_signtx_segwit.py-test_attack_mixed_inputs": "406596db037a13d5e26b3829a74b6efcde1d13159532a36fcd6b1b4bdcef3781",
 "test_msg_signtx_segwit.py-test_send_multisig_1": "958a0741070e057dcb889b2000e5487d391bc513e4a5d86193a355261c5f361b",
 "test_msg_signtx_segwit.py-test_send_p2sh": "ca593e31e919b9e920289b13e4c70b9607f34b93d06ace69835e3d08ecf046c8",
 "test_msg_signtx_segwit.py-test_send_p2sh_change": "562c7ee5a2e264c9f93387dd165403dab32bb305a4c3a6143a902c4a4c9e5950",
