@@ -209,6 +209,7 @@ from .PassphraseRequest import PassphraseRequest
 from .PinMatrixAck import PinMatrixAck
 from .PinMatrixRequest import PinMatrixRequest
 from .Ping import Ping
+from .Preauthorized import Preauthorized
 from .PublicKey import PublicKey
 from .RecoveryDevice import RecoveryDevice
 from .ResetDevice import ResetDevice

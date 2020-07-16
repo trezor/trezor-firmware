@@ -92,6 +92,7 @@ enum MessageType {
     MessageType_GetOwnershipProof = 49 [(wire_in) = true];
     MessageType_OwnershipProof = 50 [(wire_out) = true];
     MessageType_AuthorizeCoinJoin = 51 [(wire_in) = true];
+    MessageType_Preauthorized = 52 [(wire_in) = true];
 
     // Crypto
     MessageType_CipherKeyValue = 23 [(wire_in) = true];
