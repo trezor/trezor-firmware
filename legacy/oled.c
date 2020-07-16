@@ -276,7 +276,7 @@ static uint8_t convert_char(const char a) {
   // non-printable ASCII character
   if (c < ' ') {
     last_was_utf8 = 0;
-    return '_';
+    return 0x7f;
   }
 
   // regular ASCII character
@@ -290,7 +290,7 @@ static uint8_t convert_char(const char a) {
   // bytes 11xxxxxx are first bytes of UTF-8 characters
   if (c >= 0xC0) {
     last_was_utf8 = 1;
-    return '_';
+    return 0x7f;
   }
 
   if (last_was_utf8) {
@@ -298,7 +298,7 @@ static uint8_t convert_char(const char a) {
     return 0;  // skip glyph
   } else {
     // ... or they are just non-printable ASCII characters
-    return '_';
+    return 0x7f;
   }
 
   return 0;
