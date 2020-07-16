@@ -2,7 +2,7 @@ from common import *
 from trezor.crypto import bip32, bip39
 from trezor.utils import HashWriter
 
-from apps.bitcoin.addresses import validate_full_path, validate_path_for_bitcoin_public_key
+from apps.bitcoin.addresses import validate_full_path
 from apps.common.paths import HARDENED
 from apps.common import coins
 from apps.bitcoin import scripts
@@ -219,50 +219,6 @@ class TestAddress(unittest.TestCase):
 
         for path, input_type in incorrect_derivation_paths:
             self.assertFalse(validate_full_path(path, coin, input_type))
-
-    def test_paths_public_key(self):
-        incorrect_derivation_paths = [
-            [49 | HARDENED],  # invalid length
-            [49 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED],  # too many HARDENED
-            [49 | HARDENED, 0 | HARDENED],  # invalid length
-            [49 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0, 0, 0],  # invalid length
-            [49 | HARDENED, 123 | HARDENED, 0 | HARDENED, 0, 0, 0],  # invalid slip44
-            [49 | HARDENED, 0 | HARDENED, 1000 | HARDENED, 0, 0],  # account too high
-        ]
-        correct_derivation_paths = [
-            [44 | HARDENED, 0 | HARDENED, 0 | HARDENED],  # btc is segwit coin, but non-segwit paths are allowed as well
-            [44 | HARDENED, 0 | HARDENED, 0 | HARDENED, 1, 0],
-            [49 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0, 0],
-            [49 | HARDENED, 0 | HARDENED, 0 | HARDENED, 1, 0],
-            [49 | HARDENED, 0 | HARDENED, 5 | HARDENED],
-            [84 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0, 0],
-            [84 | HARDENED, 0 | HARDENED, 5 | HARDENED, 0, 0],
-            [84 | HARDENED, 0 | HARDENED, 5 | HARDENED, 0, 10],
-        ]
-        coin = coins.by_name('Bitcoin')
-        for path in correct_derivation_paths:
-            self.assertTrue(validate_path_for_bitcoin_public_key(path, coin))
-
-        for path in incorrect_derivation_paths:
-            self.assertFalse(validate_path_for_bitcoin_public_key(path, coin))
-
-    @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
-    def test_paths_public_key_nosegwit(self):
-        incorrect_derivation_paths = [
-            [49 | HARDENED, 3 | HARDENED, 0 | HARDENED, 0, 0],  # no segwit
-        ]
-        correct_derivation_paths = [
-            [44 | HARDENED, 3 | HARDENED, 0 | HARDENED],
-            [44 | HARDENED, 3 | HARDENED, 1 | HARDENED],
-            [44 | HARDENED, 3 | HARDENED, 0 | HARDENED, 0],
-            [44 | HARDENED, 3 | HARDENED, 0 | HARDENED, 0, 0],
-        ]
-        coin = coins.by_name('Dogecoin')  # segwit is disabled
-        for path in correct_derivation_paths:
-            self.assertTrue(validate_path_for_bitcoin_public_key(path, coin))
-
-        for path in incorrect_derivation_paths:
-            self.assertFalse(validate_path_for_bitcoin_public_key(path, coin))
 
 
 if __name__ == '__main__':

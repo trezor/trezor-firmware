@@ -4,7 +4,7 @@ from trezor.crypto.hashlib import sha256
 from trezor.messages import InputScriptType
 from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
 
-from apps.common import HARDENED, address_type, paths
+from apps.common import HARDENED, address_type
 from apps.common.coininfo import CoinInfo
 
 from .common import ecdsa_hash_pubkey, encode_bech32_address
@@ -230,27 +230,5 @@ def validate_purpose_against_script_type(
     if purpose == 49 | HARDENED and script_type != InputScriptType.SPENDP2SHWITNESS:
         return False
     if purpose == 84 | HARDENED and script_type != InputScriptType.SPENDWITNESS:
-        return False
-    return True
-
-
-def validate_path_for_bitcoin_public_key(path: list, coin: CoinInfo) -> bool:
-    """
-    Validates derivation path to fit Bitcoin-like coins for GetPublicKey.
-    """
-    length = len(path)
-    if length < 3 or length > 5:
-        return False
-
-    if not validate_purpose(path[0], coin):
-        return False
-
-    if path[1] != coin.slip44 | HARDENED:
-        return False
-    if path[2] < HARDENED or path[2] > 20 | HARDENED:
-        return False
-    if length > 3 and paths.is_hardened(path[3]):
-        return False
-    if length > 4 and paths.is_hardened(path[4]):
         return False
     return True
