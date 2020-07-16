@@ -61,6 +61,7 @@ from .DebugMoneroDiagAck import DebugMoneroDiagAck
 from .DebugMoneroDiagRequest import DebugMoneroDiagRequest
 from .Deprecated_PassphraseStateAck import Deprecated_PassphraseStateAck
 from .Deprecated_PassphraseStateRequest import Deprecated_PassphraseStateRequest
+from .DoPreauthorized import DoPreauthorized
 from .ECDHSessionKey import ECDHSessionKey
 from .EndSession import EndSession
 from .Entropy import Entropy
@@ -211,6 +212,7 @@ from .PassphraseRequest import PassphraseRequest
 from .PinMatrixAck import PinMatrixAck
 from .PinMatrixRequest import PinMatrixRequest
 from .Ping import Ping
+from .PreauthorizedRequest import PreauthorizedRequest
 from .PublicKey import PublicKey
 from .RecoveryDevice import RecoveryDevice
 from .ResetDevice import ResetDevice
