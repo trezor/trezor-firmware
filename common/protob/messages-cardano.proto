@@ -25,6 +25,12 @@ enum CardanoAddressType {
     REWARD_SCRIPT = 15;
 }
 
+enum CardanoCertificateType {
+    STAKE_REGISTRATION = 0;
+    STAKE_DEREGISTRATION = 1;
+    STAKE_DELEGATION = 2;
+}
+
 /**
  * Structure representing cardano PointerAddress pointer,
  * which points to a staking key registration certificate.
@@ -103,13 +109,16 @@ message CardanoPublicKey {
  * @next Failure
  */
 message CardanoSignTx {
-    repeated CardanoTxInputType inputs = 1;     // inputs to be used in transaction
-    repeated CardanoTxOutputType outputs = 2;   // outputs to be used in transaction
-    // optional uint32 transactions_count = 3;  // left as a comment so we know to skip the id 3 in the future
-    optional uint32 protocol_magic = 5;         // network's protocol magic
-    optional uint64 fee = 6;                    // transaction fee - added in shelley
-    optional uint64 ttl = 7;                    // transaction ttl - added in shelley
-    optional uint32 network_id = 8;             // network id - mainnet or testnet
+    repeated CardanoTxInputType inputs = 1;             // inputs to be used in transaction
+    repeated CardanoTxOutputType outputs = 2;           // outputs to be used in transaction
+    // optional uint32 transactions_count = 3;          // left as a comment so we know to skip the id 3 in the future
+    optional uint32 protocol_magic = 5;                 // network's protocol magic
+    optional uint64 fee = 6;                            // transaction fee - added in shelley
+    optional uint64 ttl = 7;                            // transaction ttl - added in shelley
+    optional uint32 network_id = 8;                     // network id - mainnet or testnet
+    repeated CardanoTxCertificateType certificates = 9; // transaction certificates - added in shelley
+    repeated CardanoTxWithdrawalType withdrawals = 10;  // transaction withdrawals - added in shelley
+    optional bytes metadata_hash = 11;                  // transaction metadata hash - added in shelley
     /**
      * Structure representing cardano transaction input
      */
@@ -128,6 +137,21 @@ message CardanoSignTx {
         // repeated uint32 address_n = 2;                               // moved to address_parameters
         optional uint64 amount = 3;                                     // amount to spend
         optional CardanoAddressParametersType address_parameters = 4;   // parameters used to derive the address
+    }
+    /**
+     * Structure representing cardano transaction certificate
+     */
+    message CardanoTxCertificateType {
+        optional CardanoCertificateType type = 1;   // certificate type
+        repeated uint32 path = 2;                   // BIP-32 path to derive (staking) key
+        optional bytes pool = 3;                    // pool hash
+    }
+    /**
+     * Structure representing cardano transaction withdrawals
+     */
+    message CardanoTxWithdrawalType {
+        repeated uint32 path = 1;
+        optional uint64 amount = 2;
     }
 }
 
