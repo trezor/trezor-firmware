@@ -15,7 +15,7 @@ from apps.common.writers import write_bitcoin_varint
 
 from .. import multisig, scripts, writers
 from ..common import ecdsa_hash_pubkey, ecdsa_sign
-from . import helpers, progress
+from . import approvers, helpers, progress
 from .bitcoin import Bitcoin
 
 DECRED_SERIALIZE_FULL = const(0 << 16)
@@ -31,10 +31,14 @@ if False:
 
 class Decred(Bitcoin):
     def __init__(
-        self, tx: SignTx, keychain: seed.Keychain, coin: coininfo.CoinInfo
+        self,
+        tx: SignTx,
+        keychain: seed.Keychain,
+        coin: coininfo.CoinInfo,
+        approver: approvers.Approver,
     ) -> None:
         ensure(coin.decred)
-        super().__init__(tx, keychain, coin)
+        super().__init__(tx, keychain, coin, approver)
 
         self.write_tx_header(self.serialized_tx, self.tx, witness_marker=True)
         write_bitcoin_varint(self.serialized_tx, self.tx.inputs_count)
@@ -49,10 +53,10 @@ class Decred(Bitcoin):
     def create_hash_writer(self) -> HashWriter:
         return HashWriter(blake256())
 
-    async def step2_confirm_outputs(self) -> None:
+    async def step2_approve_outputs(self) -> None:
         write_bitcoin_varint(self.serialized_tx, self.tx.outputs_count)
         write_bitcoin_varint(self.h_prefix, self.tx.outputs_count)
-        await super().step2_confirm_outputs()
+        await super().step2_approve_outputs()
         self.write_tx_footer(self.serialized_tx, self.tx)
         self.write_tx_footer(self.h_prefix, self.tx)
 
@@ -65,11 +69,11 @@ class Decred(Bitcoin):
     async def process_external_input(self, txi: TxInputType) -> None:
         raise wire.DataError("External inputs not supported")
 
-    async def confirm_output(self, txo: TxOutputType, script_pubkey: bytes) -> None:
-        await super().confirm_output(txo, script_pubkey)
+    async def approve_output(self, txo: TxOutputType, script_pubkey: bytes) -> None:
+        await super().approve_output(txo, script_pubkey)
         self.write_tx_output(self.serialized_tx, txo, script_pubkey)
 
-    async def step5_serialize_inputs(self) -> None:
+    async def step4_serialize_inputs(self) -> None:
         write_bitcoin_varint(self.serialized_tx, self.tx.inputs_count)
 
         prefix_hash = self.h_prefix.get_digest()
@@ -126,13 +130,13 @@ class Decred(Bitcoin):
             self.write_tx_input_witness(self.serialized_tx, txi_sign, script_sig)
             self.set_serialized_signature(i_sign, signature)
 
-    async def step6_serialize_outputs(self) -> None:
+    async def step5_serialize_outputs(self) -> None:
         pass
 
-    async def step7_sign_segwit_inputs(self) -> None:
+    async def step6_sign_segwit_inputs(self) -> None:
         pass
 
-    async def step8_finish(self) -> None:
+    async def step7_finish(self) -> None:
         await helpers.request_tx_finish(self.tx_req)
 
     def check_prevtx_output(self, txo_bin: TxOutputBinType) -> None:

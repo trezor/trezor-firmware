@@ -24,7 +24,7 @@ from ..writers import (
     write_uint32,
     write_uint64,
 )
-from . import helpers
+from . import approvers, helpers
 from .bitcoinlike import Bitcoinlike
 
 if False:
@@ -35,14 +35,20 @@ OVERWINTERED = const(0x80000000)
 
 
 class Zcashlike(Bitcoinlike):
-    def __init__(self, tx: SignTx, keychain: Keychain, coin: CoinInfo) -> None:
+    def __init__(
+        self,
+        tx: SignTx,
+        keychain: Keychain,
+        coin: CoinInfo,
+        approver: approvers.Approver,
+    ) -> None:
         ensure(coin.overwintered)
-        super().__init__(tx, keychain, coin)
+        super().__init__(tx, keychain, coin, approver)
 
         if self.tx.version != 4:
             raise wire.DataError("Unsupported transaction version.")
 
-    async def step8_finish(self) -> None:
+    async def step7_finish(self) -> None:
         self.write_tx_footer(self.serialized_tx, self.tx)
 
         write_uint64(self.serialized_tx, 0)  # valueBalance
