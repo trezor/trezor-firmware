@@ -2,8 +2,10 @@
 # fmt: off
 import protobuf as p
 
+from .CardanoTxCertificateType import CardanoTxCertificateType
 from .CardanoTxInputType import CardanoTxInputType
 from .CardanoTxOutputType import CardanoTxOutputType
+from .CardanoTxWithdrawalType import CardanoTxWithdrawalType
 
 if __debug__:
     try:
@@ -24,6 +26,9 @@ class CardanoSignTx(p.MessageType):
         fee: int = None,
         ttl: int = None,
         network_id: int = None,
+        certificates: List[CardanoTxCertificateType] = None,
+        withdrawals: List[CardanoTxWithdrawalType] = None,
+        metadata_hash: bytes = None,
     ) -> None:
         self.inputs = inputs if inputs is not None else []
         self.outputs = outputs if outputs is not None else []
@@ -31,6 +36,9 @@ class CardanoSignTx(p.MessageType):
         self.fee = fee
         self.ttl = ttl
         self.network_id = network_id
+        self.certificates = certificates if certificates is not None else []
+        self.withdrawals = withdrawals if withdrawals is not None else []
+        self.metadata_hash = metadata_hash
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -41,4 +49,7 @@ class CardanoSignTx(p.MessageType):
             6: ('fee', p.UVarintType, 0),
             7: ('ttl', p.UVarintType, 0),
             8: ('network_id', p.UVarintType, 0),
+            9: ('certificates', CardanoTxCertificateType, p.FLAG_REPEATED),
+            10: ('withdrawals', CardanoTxWithdrawalType, p.FLAG_REPEATED),
+            11: ('metadata_hash', p.BytesType, 0),
         }
