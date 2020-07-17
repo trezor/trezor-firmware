@@ -28,8 +28,10 @@ from .CardanoGetPublicKey import CardanoGetPublicKey
 from .CardanoPublicKey import CardanoPublicKey
 from .CardanoSignTx import CardanoSignTx
 from .CardanoSignedTx import CardanoSignedTx
+from .CardanoTxCertificateType import CardanoTxCertificateType
 from .CardanoTxInputType import CardanoTxInputType
 from .CardanoTxOutputType import CardanoTxOutputType
+from .CardanoTxWithdrawalType import CardanoTxWithdrawalType
 from .ChangePin import ChangePin
 from .ChangeWipeCode import ChangeWipeCode
 from .CipherKeyValue import CipherKeyValue
@@ -280,6 +282,7 @@ from . import BinanceTimeInForce
 from . import ButtonRequestType
 from . import Capability
 from . import CardanoAddressType
+from . import CardanoCertificateType
 from . import DebugLinkShowTextStyle
 from . import DebugSwipeDirection
 from . import FailureType
