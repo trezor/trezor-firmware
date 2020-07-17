@@ -6,6 +6,7 @@ from trezor.messages.TxOutputBinType import TxOutputBinType
 
 from apps.common import coins
 from apps.bitcoin.writers import get_tx_hash
+from apps.bitcoin.sign_tx.approvers import BasicApprover
 
 if not utils.BITCOIN_ONLY:
     from apps.bitcoin.sign_tx.zcash import Overwintered
@@ -189,7 +190,7 @@ class TestZcashZip243(unittest.TestCase):
                 version_group_id=v["version_group_id"],
             )
 
-            zip243 = Overwintered(tx, None, coin)
+            zip243 = Overwintered(tx, None, coin, BasicApprover(tx, coin))
 
             for i in v["inputs"]:
                 txi = TxInputType()

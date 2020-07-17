@@ -1,6 +1,7 @@
 from common import *
 
 from apps.bitcoin.scripts import output_derive_script
+from apps.bitcoin.sign_tx.approvers import BasicApprover
 from apps.bitcoin.sign_tx.bitcoin import Bitcoin
 from apps.bitcoin.writers import get_tx_hash
 from apps.common import coins
@@ -47,7 +48,7 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
 
     def test_prevouts(self):
         coin = coins.by_name(self.tx.coin_name)
-        bip143 = Bitcoin(self.tx, None, coin)
+        bip143 = Bitcoin(self.tx, None, coin, BasicApprover(self.tx, coin))
         bip143.hash143_add_input(self.inp1)
         bip143.hash143_add_input(self.inp2)
         prevouts_hash = get_tx_hash(bip143.h_prevouts, double=coin.sign_hash_double)
@@ -55,7 +56,7 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
 
     def test_sequence(self):
         coin = coins.by_name(self.tx.coin_name)
-        bip143 = Bitcoin(self.tx, None, coin)
+        bip143 = Bitcoin(self.tx, None, coin, BasicApprover(self.tx, coin))
         bip143.hash143_add_input(self.inp1)
         bip143.hash143_add_input(self.inp2)
         sequence_hash = get_tx_hash(bip143.h_sequence, double=coin.sign_hash_double)
@@ -65,7 +66,7 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
 
         seed = bip39.seed('alcohol woman abuse must during monitor noble actual mixed trade anger aisle', '')
         coin = coins.by_name(self.tx.coin_name)
-        bip143 = Bitcoin(self.tx, None, coin)
+        bip143 = Bitcoin(self.tx, None, coin, BasicApprover(self.tx, coin))
 
         for txo in [self.out1, self.out2]:
             txo_bin = TxOutputBinType()
@@ -80,7 +81,7 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
 
         seed = bip39.seed('alcohol woman abuse must during monitor noble actual mixed trade anger aisle', '')
         coin = coins.by_name(self.tx.coin_name)
-        bip143 = Bitcoin(self.tx, None, coin)
+        bip143 = Bitcoin(self.tx, None, coin, BasicApprover(self.tx, coin))
         bip143.hash143_add_input(self.inp1)
         bip143.hash143_add_input(self.inp2)
 
