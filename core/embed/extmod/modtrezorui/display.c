@@ -534,7 +534,7 @@ static uint8_t convert_char(const uint8_t c) {
   // non-printable ASCII character
   if (c < ' ') {
     last_was_utf8 = 0;
-    return '_';
+    return 0x7F;
   }
 
   // regular ASCII character
@@ -548,7 +548,7 @@ static uint8_t convert_char(const uint8_t c) {
   // bytes 11xxxxxx are first bytes of UTF-8 characters
   if (c >= 0xC0) {
     last_was_utf8 = 1;
-    return '_';
+    return 0x7F;
   }
 
   if (last_was_utf8) {
@@ -556,7 +556,7 @@ static uint8_t convert_char(const uint8_t c) {
     return 0;  // skip glyph
   } else {
     // ... or they are just non-printable ASCII characters
-    return '_';
+    return 0x7F;
   }
 
   return 0;
@@ -565,22 +565,47 @@ static uint8_t convert_char(const uint8_t c) {
 static const uint8_t *get_glyph(int font, uint8_t c) {
   c = convert_char(c);
   if (!c) return 0;
+
+  // printable ASCII character
+  if (c >= ' ' && c < 0x7F) {
+    switch (font) {
+#ifdef TREZOR_FONT_NORMAL_ENABLE
+      case FONT_NORMAL:
+        return Font_Roboto_Regular_20[c - ' '];
+#endif
+#ifdef TREZOR_FONT_BOLD_ENABLE
+      case FONT_BOLD:
+        return Font_Roboto_Bold_20[c - ' '];
+#endif
+#ifdef TREZOR_FONT_MONO_ENABLE
+      case FONT_MONO:
+        return Font_RobotoMono_Regular_20[c - ' '];
+#endif
+#ifdef TREZOR_FONT_MONO_BOLD_ENABLE
+      case FONT_MONO_BOLD:
+        return Font_RobotoMono_Bold_20[c - ' '];
+#endif
+    }
+    return 0;
+  }
+
+  // non-printable character
   switch (font) {
 #ifdef TREZOR_FONT_NORMAL_ENABLE
     case FONT_NORMAL:
-      return Font_Roboto_Regular_20[c - ' '];
+      return Font_Roboto_Regular_20_glyph_nonprintable;
 #endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
     case FONT_BOLD:
-      return Font_Roboto_Bold_20[c - ' '];
+      return Font_Roboto_Bold_20_glyph_nonprintable;
 #endif
 #ifdef TREZOR_FONT_MONO_ENABLE
     case FONT_MONO:
-      return Font_RobotoMono_Regular_20[c - ' '];
+      return Font_RobotoMono_Regular_20_glyph_nonprintable;
 #endif
 #ifdef TREZOR_FONT_MONO_BOLD_ENABLE
     case FONT_MONO_BOLD:
-      return Font_RobotoMono_Bold_20[c - ' '];
+      return Font_RobotoMono_Bold_20_glyph_nonprintable;
 #endif
   }
   return 0;
