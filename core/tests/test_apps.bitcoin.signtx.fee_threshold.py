@@ -17,6 +17,7 @@ from trezor.messages import OutputScriptType
 from apps.common import coins
 from apps.common.keychain import Keychain
 from apps.bitcoin.sign_tx import bitcoin, helpers
+from apps.bitcoin.sign_tx.approvers import BasicApprover
 
 
 EMPTY_SERIALIZED = TxRequestSerializedType(serialized_tx=bytearray())
@@ -140,8 +141,6 @@ class TestSignTxFeeThreshold(unittest.TestCase):
 
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(inputs=[inp1])),
-            helpers.UiConfirmForeignAddress(address_n=inp1.address_n),
-            True,
             TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=EMPTY_SERIALIZED),
             TxAck(tx=ptx1),
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=EMPTY_SERIALIZED),
@@ -150,6 +149,8 @@ class TestSignTxFeeThreshold(unittest.TestCase):
             TxAck(tx=TransactionType(inputs=[pinp2])),
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(bin_outputs=[pout1])),
+            helpers.UiConfirmForeignAddress(address_n=inp1.address_n),
+            True,
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(outputs=[out1])),
             helpers.UiConfirmOutput(out1, coin_bitcoin),
@@ -162,7 +163,8 @@ class TestSignTxFeeThreshold(unittest.TestCase):
         seed = bip39.seed('alcohol woman abuse must during monitor noble actual mixed trade anger aisle', '')
 
         keychain = Keychain(seed, coin_bitcoin.curve_name, [[]])
-        signer = bitcoin.Bitcoin(tx, keychain, coin_bitcoin).signer()
+        approver = BasicApprover(tx, coin_bitcoin)
+        signer = bitcoin.Bitcoin(tx, keychain, coin_bitcoin, approver).signer()
         for request, response in chunks(messages, 2):
             res = signer.send(request)
             self.assertEqual(res, response)
