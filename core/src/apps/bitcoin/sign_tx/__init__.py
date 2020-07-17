@@ -8,7 +8,7 @@ from apps.common import coininfo, paths, seed
 
 from ..common import BITCOIN_NAMES
 from ..keychain import with_keychain
-from . import bitcoin, helpers, layout, progress
+from . import approvers, bitcoin, helpers, layout, progress
 
 if not utils.BITCOIN_ONLY:
     from . import bitcoinlike, decred, zcash
@@ -21,20 +21,19 @@ if False:
 async def sign_tx(
     ctx: wire.Context, msg: SignTx, keychain: seed.Keychain, coin: coininfo.CoinInfo
 ) -> TxRequest:
-    if not utils.BITCOIN_ONLY:
+    approver = approvers.BasicApprover(msg, coin)
+
+    if utils.BITCOIN_ONLY or coin.coin_name in BITCOIN_NAMES:
+        signer_class = bitcoin.Bitcoin
+    else:
         if coin.decred:
-            signer_class = decred.Decred  # type: Type[bitcoin.Bitcoin]
+            signer_class = decred.Decred
         elif coin.overwintered:
             signer_class = zcash.Zcashlike
-        elif coin.coin_name not in BITCOIN_NAMES:
-            signer_class = bitcoinlike.Bitcoinlike
         else:
-            signer_class = bitcoin.Bitcoin
+            signer_class = bitcoinlike.Bitcoinlike
 
-    else:
-        signer_class = bitcoin.Bitcoin
-
-    signer = signer_class(msg, keychain, coin).signer()
+    signer = signer_class(msg, keychain, coin, approver).signer()
 
     res = None  # type: Union[TxAck, bool, None]
     field_cache = {}
