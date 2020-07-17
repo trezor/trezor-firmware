@@ -6,6 +6,7 @@ from trezor.messages.TxOutputBinType import TxOutputBinType
 
 from apps.common import coins
 from apps.bitcoin.writers import get_tx_hash
+from apps.bitcoin.sign_tx.approvers import BasicApprover
 
 if not utils.BITCOIN_ONLY:
     from apps.bitcoin.sign_tx.zcash import Zcashlike
@@ -190,7 +191,7 @@ class TestZcashZip243(unittest.TestCase):
                 branch_id=v["branch_id"],
             )
 
-            zip243 = Zcashlike(tx, None, coin)
+            zip243 = Zcashlike(tx, None, coin, BasicApprover(tx, coin))
 
             for i in v["inputs"]:
                 txi = TxInputType()

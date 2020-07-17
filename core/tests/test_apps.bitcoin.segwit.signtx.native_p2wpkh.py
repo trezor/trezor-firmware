@@ -20,6 +20,7 @@ from apps.common import coins
 from apps.common.keychain import Keychain
 from apps.bitcoin.keychain import get_namespaces_for_coin
 from apps.bitcoin.sign_tx import helpers, bitcoin
+from apps.bitcoin.sign_tx.approvers import BasicApprover
 
 
 EMPTY_SERIALIZED = TxRequestSerializedType(serialized_tx=bytearray())
@@ -77,9 +78,6 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(inputs=[inp1])),
 
-            helpers.UiConfirmForeignAddress(address_n=inp1.address_n),
-            True,
-
             TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
             TxAck(tx=ptx1),
 
@@ -91,6 +89,9 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(bin_outputs=[pout2])),
+
+            helpers.UiConfirmForeignAddress(address_n=inp1.address_n),
+            True,
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(outputs=[out1])),
@@ -146,7 +147,8 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
 
         ns = get_namespaces_for_coin(coin)
         keychain = Keychain(seed, coin.curve_name, ns)
-        signer = bitcoin.Bitcoin(tx, keychain, coin).signer()
+        approver = BasicApprover(tx, coin)
+        signer = bitcoin.Bitcoin(tx, keychain, coin, approver).signer()
         for request, response in chunks(messages, 2):
             res = signer.send(request)
             self.assertEqual(res, response)
@@ -202,9 +204,6 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(inputs=[inp1])),
 
-            helpers.UiConfirmForeignAddress(address_n=inp1.address_n),
-            True,
-
             TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
             TxAck(tx=ptx1),
 
@@ -216,6 +215,9 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(bin_outputs=[pout2])),
+
+            helpers.UiConfirmForeignAddress(address_n=inp1.address_n),
+            True,
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(outputs=[out1])),
@@ -269,7 +271,8 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
 
         ns = get_namespaces_for_coin(coin)
         keychain = Keychain(seed, coin.curve_name, ns)
-        signer = bitcoin.Bitcoin(tx, keychain, coin).signer()
+        approver = BasicApprover(tx, coin)
+        signer = bitcoin.Bitcoin(tx, keychain, coin, approver).signer()
         for request, response in chunks(messages, 2):
             self.assertEqual(signer.send(request), response)
         with self.assertRaises(StopIteration):
@@ -317,9 +320,6 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(inputs=[inp1])),
 
-            helpers.UiConfirmForeignAddress(address_n=inp1.address_n),
-            True,
-
             TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
             TxAck(tx=ptx1),
 
@@ -332,6 +332,9 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(bin_outputs=[pout2])),
 
+            helpers.UiConfirmForeignAddress(address_n=inp1.address_n),
+            True,
+
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(outputs=[out1])),
             None
@@ -339,7 +342,8 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
 
         ns = get_namespaces_for_coin(coin)
         keychain = Keychain(seed, coin.curve_name, ns)
-        signer = bitcoin.Bitcoin(tx, keychain, coin).signer()
+        approver = BasicApprover(tx, coin)
+        signer = bitcoin.Bitcoin(tx, keychain, coin, approver).signer()
         for request, response in chunks(messages, 2):
             if response is None:
                 with self.assertRaises(wire.DataError):
