@@ -116,7 +116,7 @@ message CardanoSignTx {
      * Structure representing cardano transaction output
      */
     message CardanoTxOutputType {
-        optional bytes address = 1;                                     // target coin address bytes hex encoded (not base58 or bech32)
+        optional string address = 1;                                    // target coin address in bech32 or base58
         optional uint64 amount = 3;                                     // amount to spend
         optional CardanoAddressParametersType address_parameters = 4;   // parameters used to derive the address
     }

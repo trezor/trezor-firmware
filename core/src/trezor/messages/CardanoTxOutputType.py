@@ -16,7 +16,7 @@ class CardanoTxOutputType(p.MessageType):
 
     def __init__(
         self,
-        address: bytes = None,
+        address: str = None,
         amount: int = None,
         address_parameters: CardanoAddressParametersType = None,
     ) -> None:
@@ -27,7 +27,7 @@ class CardanoTxOutputType(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('address', p.BytesType, 0),
+            1: ('address', p.UnicodeType, 0),
             3: ('amount', p.UVarintType, 0),
             4: ('address_parameters', CardanoAddressParametersType, 0),
         }
