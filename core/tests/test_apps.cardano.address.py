@@ -16,7 +16,7 @@ if not utils.BITCOIN_ONLY:
         _get_address_root,
         _address_hash,
     )
-    from apps.cardano.helpers import protocol_magics
+    from apps.cardano.helpers import network_ids, protocol_magics
     from apps.cardano.seed import Keychain
 
 
@@ -40,7 +40,7 @@ class TestCardanoAddress(unittest.TestCase):
                 address_type=CardanoAddressType.BYRON,
                 spending_key_path=[0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 0x80000000 + i],
             )
-            address = derive_human_readable_address(keychain, address_parameters, protocol_magics.MAINNET, 0)
+            address = derive_human_readable_address(keychain, address_parameters, protocol_magics.MAINNET, network_ids.MAINNET)
             self.assertEqual(expected, address)
 
         nodes = [
@@ -89,7 +89,7 @@ class TestCardanoAddress(unittest.TestCase):
                 address_type=CardanoAddressType.BYRON,
                 spending_key_path=[0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i],
             )
-            address = derive_human_readable_address(keychain, address_parameters, protocol_magics.MAINNET, 0)
+            address = derive_human_readable_address(keychain, address_parameters, protocol_magics.MAINNET, network_ids.MAINNET)
             self.assertEqual(address, expected)
 
         nodes = [
@@ -132,7 +132,7 @@ class TestCardanoAddress(unittest.TestCase):
             address_type=CardanoAddressType.BYRON,
             spending_key_path=[0x80000000 | 44, 0x80000000 | 1815],
         )
-        address = derive_human_readable_address(keychain, address_parameters, protocol_magics.MAINNET, 0)
+        address = derive_human_readable_address(keychain, address_parameters, protocol_magics.MAINNET, network_ids.MAINNET)
         self.assertEqual(address, "Ae2tdPwUPEZ2FGHX3yCKPSbSgyuuTYgMxNq652zKopxT4TuWvEd8Utd92w3")
 
         priv, ext, pub, chain = (
@@ -242,7 +242,7 @@ class TestCardanoAddress(unittest.TestCase):
                 address_type=CardanoAddressType.BYRON,
                 spending_key_path=[0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i],
             )
-            a = derive_human_readable_address(keychain, address_parameters, protocol_magics.MAINNET, 0)
+            a = derive_human_readable_address(keychain, address_parameters, protocol_magics.MAINNET, network_ids.MAINNET)
             n = keychain.derive([0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i])
             self.assertEqual(a, address)
             self.assertEqual(hexlify(n.private_key()), priv)
@@ -309,7 +309,7 @@ class TestCardanoAddress(unittest.TestCase):
                 address_type=CardanoAddressType.BYRON,
                 spending_key_path=[0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i],
             )
-            a = derive_human_readable_address(keychain, address_parameters, protocol_magics.MAINNET, 0)
+            a = derive_human_readable_address(keychain, address_parameters, protocol_magics.MAINNET, network_ids.MAINNET)
             n = keychain.derive([0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, i])
             self.assertEqual(a, address)
             self.assertEqual(hexlify(n.private_key()), priv)
@@ -325,12 +325,9 @@ class TestCardanoAddress(unittest.TestCase):
 
         test_vectors = [
             # network id, account, expected result
-            # data from shelley test vectors
-            (0, 0, "addr1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3jcu5d8ps7zex2k2xt3uqxgjqnnj83ws8lhrn648jjxtwqcyl47r"),
-            (3, 0, "addr1qw2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3jcu5d8ps7zex2k2xt3uqxgjqnnj83ws8lhrn648jjxtwqzhyupd"),
             # data generated with code under test
-            (0, 4, "addr1qr4sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsuzz8x7"),
-            (3, 4, "addr1q04sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsx3ewes"),
+            (network_ids.MAINNET, 4, "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r"),
+            (network_ids.TESTNET, 4, "addr_test1qr4sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlswzkqcu"),
         ]
 
         for network_id, account, expected_address in test_vectors:
@@ -352,16 +349,13 @@ class TestCardanoAddress(unittest.TestCase):
         test_vectors = [
             # network id, account, staking key hash, expected result
             # own staking key hash
-            # data from shelley test vectors
-            (0, 0, unhexlify("32c728d3861e164cab28cb8f006448139c8f1740ffb8e7aa9e5232dc"), "addr1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3jcu5d8ps7zex2k2xt3uqxgjqnnj83ws8lhrn648jjxtwqcyl47r"),
-            (3, 0, unhexlify("32c728d3861e164cab28cb8f006448139c8f1740ffb8e7aa9e5232dc"), "addr1qw2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3jcu5d8ps7zex2k2xt3uqxgjqnnj83ws8lhrn648jjxtwqzhyupd"),
             # data generated with code under test
-            (0, 4, unhexlify("1bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff"), "addr1qr4sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsuzz8x7"),
-            (3, 4, unhexlify("1bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff"), "addr1q04sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsx3ewes"),
+            (network_ids.MAINNET, 4, unhexlify("1bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff"), "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r"),
+            (network_ids.TESTNET, 4, unhexlify("1bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff"), "addr_test1qr4sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlswzkqcu"),
             # staking key hash not owned - derived with "all all..." mnenomnic, data generated with code under test
-            (0, 4, unhexlify("122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277"), "addr1qr4sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgj922xhxkn6twlq2wn4q50q352annk3903tj00h45mgfmsh42t2h"),
-            (3, 0, unhexlify("122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277"), "addr1qw2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzersj922xhxkn6twlq2wn4q50q352annk3903tj00h45mgfms3rqaac"),
-            (3, 4, unhexlify("122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277"), "addr1q04sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgj922xhxkn6twlq2wn4q50q352annk3903tj00h45mgfmsdx3z4e"),
+            (network_ids.MAINNET, 4, unhexlify("122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277"), "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgj922xhxkn6twlq2wn4q50q352annk3903tj00h45mgfmsxrrvc2"),
+            (network_ids.MAINNET, 0, unhexlify("122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277"), "addr1qx2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzersj922xhxkn6twlq2wn4q50q352annk3903tj00h45mgfms6xjnst"),
+            (network_ids.TESTNET, 4, unhexlify("122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277"), "addr_test1qr4sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgj922xhxkn6twlq2wn4q50q352annk3903tj00h45mgfms947v54"),
         ]
 
         for network_id, account, staking_key_hash, expected_address in test_vectors:
@@ -408,8 +402,8 @@ class TestCardanoAddress(unittest.TestCase):
 
         test_vectors = [
             # network id, expected result
-            (0, "addr1vz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzers6g8jlq"),
-            (3, "addr1vw2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzers6h7glf")
+            (network_ids.MAINNET, "addr1vx2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzers66hrl8"),
+            (network_ids.TESTNET, "addr_test1vz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzerspjrlsz")
         ]
 
         for network_id, expected_address in test_vectors:
@@ -429,8 +423,8 @@ class TestCardanoAddress(unittest.TestCase):
 
         test_vectors = [
             # network id, pointer, expected result
-            (0, CardanoBlockchainPointerType(1, 2, 3), "addr1gz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzerspqgpslhplej"),
-            (3, CardanoBlockchainPointerType(24157, 177, 42), "addr1gw2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer5ph3wczvf2x4v58t")
+            (network_ids.MAINNET, CardanoBlockchainPointerType(1, 2, 3), "addr1gx2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzerspqgpse33frd"),
+            (network_ids.TESTNET, CardanoBlockchainPointerType(24157, 177, 42), "addr_test1gz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer5ph3wczvf2pfz4ly")
         ]
 
         for network_id, pointer, expected_address in test_vectors:
@@ -493,8 +487,8 @@ class TestCardanoAddress(unittest.TestCase):
 
         test_vectors = [
             # network id, expected result
-            (0, "addr1uqevw2xnsc0pvn9t9r9c7qryfqfeerchgrlm3ea2nefr9hqq8lpzh"),
-            (3, "addr1uvevw2xnsc0pvn9t9r9c7qryfqfeerchgrlm3ea2nefr9hqqcxmz7")
+            (network_ids.MAINNET, "stake1uyevw2xnsc0pvn9t9r9c7qryfqfeerchgrlm3ea2nefr9hqxdekzz"),
+            (network_ids.TESTNET, "stake_test1uqevw2xnsc0pvn9t9r9c7qryfqfeerchgrlm3ea2nefr9hqp8n5xl")
         ]
 
         for network_id, expected_address in test_vectors:

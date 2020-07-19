@@ -435,7 +435,7 @@ INVALID_VECTORS = [
         # ttl
         10,
         # error message
-        "Output address network mismatch!",
+        "Invalid address",
     ),
     # Shelley testnet transaction with mainnet output
     (
@@ -452,7 +452,7 @@ INVALID_VECTORS = [
         # ttl
         10,
         # error message
-        "Output address network mismatch!",
+        "Invalid address",
     ),
     # Testnet protocol magic with mainnet network id
     (
