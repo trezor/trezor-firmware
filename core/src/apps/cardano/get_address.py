@@ -57,7 +57,7 @@ async def _display_address(
     await _show_staking_warnings(ctx, keychain, address_parameters)
 
     network = None
-    if protocol_magic != protocol_magics.MAINNET:
+    if not protocol_magics.is_mainnet(protocol_magic):
         network = protocol_magic
 
     while True:

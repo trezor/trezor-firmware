@@ -6,8 +6,7 @@ from apps.common import HARDENED
 from apps.common.seed import remove_ed25519_prefix
 
 from .byron_address import derive_byron_address, validate_output_byron_address
-from .helpers import INVALID_ADDRESS, NETWORK_MISMATCH, purposes
-from .helpers.bech32 import bech32_encode
+from .helpers import INVALID_ADDRESS, NETWORK_MISMATCH, bech32, network_ids, purposes
 from .helpers.utils import variable_length_encode
 from .seed import is_byron_path, is_shelley_path
 
@@ -15,8 +14,6 @@ if False:
     from typing import List
     from trezor.messages import CardanoBlockchainPointerType
     from . import seed
-
-BECH32_ADDRESS_PREFIX = "addr"
 
 
 def validate_full_path(path: List[int]) -> bool:
@@ -40,26 +37,42 @@ def validate_full_path(path: List[int]) -> bool:
     return True
 
 
-def validate_output_address(
-    address: bytes, protocol_magic: int, network_id: int
-) -> None:
+def validate_output_address(address: str, protocol_magic: int, network_id: int) -> None:
     if address is None or len(address) == 0:
         raise INVALID_ADDRESS
 
-    if _has_byron_address_header(address):
-        validate_output_byron_address(address, protocol_magic)
-    elif _has_shelley_address_header(address):
-        _validate_address_network_id(address, network_id)
+    address_bytes = get_address_bytes(address)
+
+    if _has_byron_address_header(address_bytes):
+        validate_output_byron_address(address_bytes, protocol_magic)
+    elif _has_shelley_address_header(address_bytes):
+        _validate_output_shelley_address(address, address_bytes, network_id)
     else:
         raise INVALID_ADDRESS
 
 
+def get_address_bytes(address: str) -> bytes:
+    try:
+        address_bytes = bech32.decode_unsafe(address)
+    except ValueError:
+        try:
+            address_bytes = base58.decode(address)
+        except ValueError:
+            raise INVALID_ADDRESS
+
+    return address_bytes
+
+
 def _has_byron_address_header(address: bytes) -> bool:
-    return (address[0] >> 4) == CardanoAddressType.BYRON
+    return _get_address_type(address) == CardanoAddressType.BYRON
+
+
+def _get_address_type(address: bytes) -> int:
+    return address[0] >> 4
 
 
 def _has_shelley_address_header(address: bytes) -> bool:
-    address_type = address[0] >> 4
+    address_type = _get_address_type(address)
     return (
         address_type == CardanoAddressType.BASE
         or address_type == CardanoAddressType.POINTER
@@ -68,9 +81,50 @@ def _has_shelley_address_header(address: bytes) -> bool:
     )
 
 
+def _validate_output_shelley_address(
+    address_str: str, address_bytes: bytes, network_id: int
+) -> None:
+    address_type = _get_address_type(address_bytes)
+    if address_type == CardanoAddressType.REWARD:
+        raise INVALID_ADDRESS
+
+    _validate_output_address_bech32_hrp(address_str, address_type, network_id)
+    _validate_address_network_id(address_bytes, network_id)
+
+
+def _validate_output_address_bech32_hrp(
+    address_str: str, address_type: int, network_id: int
+) -> None:
+    valid_hrp = _get_bech32_hrp_for_address(address_type, network_id)
+    bech32_hrp = bech32.get_hrp(address_str)
+
+    if valid_hrp != bech32_hrp:
+        raise INVALID_ADDRESS
+
+
+def _get_bech32_hrp_for_address(address_type: int, network_id: int) -> str:
+    if address_type == CardanoAddressType.BYRON:
+        raise ValueError("Byron address uses base58 encoding")
+
+    if address_type == CardanoAddressType.REWARD:
+        if network_ids.is_mainnet(network_id):
+            return bech32.HRP_REWARD_ADDRESS
+        else:
+            return bech32.HRP_TESTNET_REWARD_ADDRESS
+    else:
+        if network_ids.is_mainnet(network_id):
+            return bech32.HRP_ADDRESS
+        else:
+            return bech32.HRP_TESTNET_ADDRESS
+
+
 def _validate_address_network_id(address: bytes, network_id: int) -> None:
-    if (address[0] & 0x0F) != network_id:
+    if _get_address_network_id(address) != network_id:
         raise NETWORK_MISMATCH
+
+
+def _get_address_network_id(address: bytes) -> int:
+    return address[0] & 0x0F
 
 
 def get_public_key_hash(keychain: seed.Keychain, path: List[int]) -> bytes:
@@ -79,11 +133,14 @@ def get_public_key_hash(keychain: seed.Keychain, path: List[int]) -> bytes:
     return hashlib.blake2b(data=public_key, outlen=28).digest()
 
 
-def get_human_readable_address(address: bytes) -> str:
+def get_human_readable_address(address: bytes, network_id: int) -> str:
     if _has_byron_address_header(address):
         return base58.encode(address)
+    elif _has_shelley_address_header(address):
+        hrp = _get_bech32_hrp_for_address(_get_address_type(address), network_id)
+        return bech32.encode(hrp, address)
     else:
-        return bech32_encode(BECH32_ADDRESS_PREFIX, address)
+        raise ValueError("Invalid address")
 
 
 def derive_human_readable_address(
@@ -93,7 +150,7 @@ def derive_human_readable_address(
     network_id: int,
 ) -> str:
     address = derive_address_bytes(keychain, parameters, protocol_magic, network_id)
-    return get_human_readable_address(address)
+    return get_human_readable_address(address, network_id)
 
 
 def derive_address_bytes(

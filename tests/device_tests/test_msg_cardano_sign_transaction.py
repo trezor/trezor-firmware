@@ -47,7 +47,7 @@ SAMPLE_INPUTS = {
 
 SAMPLE_OUTPUTS = {
     "simple_byron_output": {
-        "address": "82d818582183581c9e1c71de652ec8b85fec296f0685ca3988781c94a2e1a5d89d92f45fa0001a0d0c2561",
+        "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
         "amount": "3003112",
     },
     "byron_change_output": {
@@ -56,7 +56,7 @@ SAMPLE_OUTPUTS = {
         "amount": "1000000",
     },
     "simple_shelley_output": {
-        "address": "017cb05fce110fb999f01abb4f62bc455e217d4a51fde909fa9aea545443ac53c046cf6a42095e3c60310fa802771d0672f8fe2d1861138b09da61d425f3461114",
+        "address": "addr1q97tqh7wzy8mnx0sr2a57c4ug40zzl222877jz06nt49g4zr43fuq3k0dfpqjh3uvqcsl2qzwuwsvuhclck3scgn3vya5cw5yhe5vyg5x20akz",
         "amount": "1",
     },
     "base_address_change_output": {
@@ -85,27 +85,27 @@ SAMPLE_OUTPUTS = {
         "amount": "7120787",
     },
     "invalid_address": {
-        "address": "83d818582183581c9e1c71de652ec8b85fec296f0685ca3988781c94a2e1a5d89d92f45fa0001a0d0c256100",
+        "address": "jsK75PTH2esX8k4Wvxenyz83LJJWToBbVmGrWUer2CHFHanLseh7r3sW5X5q",
         "amount": "3003112",
     },
     "invalid_cbor": {
-        "address": "8282d818582183581c9e1c71de652ec8b85fec296f0685ca3988781c94a2e1a5d89d92f45fa0001a0d0c2561158282d818582183581c9e1c71de652ec8b85fec296f0685ca3988781c94a2e1a5d89d92f45fa0001a0d0c2561",
+        "address": "5dnY6xgRcNUSLGa4gfqef2jGAMHb7koQs9EXErXLNC1LiMPUnhn8joXhvEJpWQtN3F4ysATcBvCn5tABgL3e4hPWapPHmcK5GJMSEaET5JafgAGwSrznzL1Mqa",
         "amount": "3003112",
     },
     "invalid_crc": {
-        "address": "82d818582183581c578e965bd8e000b67ae6847de0c098b5c63470dc1a51222829c482bfa0001a00000000",
+        "address": "Ae2tdPwUPEZ5YUb8sM3eS8JqKgrRLzhiu71crfuH2MFtqaYr5ACNRZR3Mbm",
         "amount": "3003112",
     },
     "large_simple_byron_output": {
-        "address": "82d818582183581c9e1c71de652ec8b85fec296f0685ca3988781c94a2e1a5d89d92f45fa0001a0d0c2561",
+        "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
         "amount": "449999999199999999",
     },
     "testnet_output": {
-        "address": "82d818582583581cc817d85b524e3d073795819a25cdbb84cff6aa2bbb3a081980d248cba10242182a001a0fb6fc61",
+        "address": "2657WMsDfac7BteXkJq5Jzdog4h47fPbkwUM49isuWbYAr2cFRHa3rURP236h9PBe",
         "amount": "3003112",
     },
     "shelley_testnet_output": {
-        "address": "60a6274badf4c9ca583df893a73139625ff4dc73aaa3082e67d6d5d08e0ce3daa4",
+        "address": "addr_test1vznzwjad7nyu5kpalzf6wvfevf0lfhrn423sstn86m2aprsvu0d2gxeef9a",
         "amount": "1",
     },
 }

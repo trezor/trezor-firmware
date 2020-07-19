@@ -44,7 +44,7 @@ def derive_byron_address(
 
 def get_address_attributes(protocol_magic: int) -> dict:
     # protocol magic is included in Byron addresses only on testnets
-    if protocol_magic == protocol_magics.MAINNET:
+    if protocol_magics.is_mainnet(protocol_magic):
         address_attributes = {}
     else:
         address_attributes = {PROTOCOL_MAGIC_KEY: cbor.encode(protocol_magic)}
@@ -95,7 +95,7 @@ def _validate_address_data_protocol_magic(
         raise INVALID_ADDRESS
 
     attributes = address_data[1]
-    if protocol_magic == protocol_magics.MAINNET:
+    if protocol_magics.is_mainnet(protocol_magic):
         if PROTOCOL_MAGIC_KEY in attributes:
             raise NETWORK_MISMATCH
     else:  # testnet

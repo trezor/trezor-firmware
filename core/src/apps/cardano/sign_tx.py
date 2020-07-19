@@ -14,7 +14,7 @@ from . import CURVE, seed
 from .address import (
     derive_address_bytes,
     derive_human_readable_address,
-    get_human_readable_address,
+    get_address_bytes,
     validate_full_path,
     validate_output_address,
 )
@@ -76,8 +76,8 @@ async def sign_tx(
 
 
 def _validate_network_info(network_id: int, protocol_magic: int) -> None:
-    is_mainnet_network_id = network_id == network_ids.MAINNET
-    is_mainnet_protocol_magic = protocol_magic == protocol_magics.MAINNET
+    is_mainnet_network_id = network_ids.is_mainnet(network_id)
+    is_mainnet_protocol_magic = protocol_magics.is_mainnet(protocol_magic)
 
     if is_mainnet_network_id != is_mainnet_protocol_magic:
         raise wire.ProcessError("Invalid network id/protocol magic combination!")
@@ -98,7 +98,7 @@ def _validate_outputs(
         if output.address_parameters:
             continue
         elif output.address is not None:
-            validate_output_address(bytes(output.address), protocol_magic, network_id)
+            validate_output_address(output.address, protocol_magic, network_id)
         else:
             raise wire.ProcessError(
                 "Each output must have an address field or address_parameters!"
@@ -153,7 +153,7 @@ def _build_outputs(
                 keychain, output.address_parameters, protocol_magic, network_id
             )
         else:
-            address = bytes(output.address)
+            address = get_address_bytes(output.address)
 
         result.append((address, amount))
 
@@ -255,7 +255,7 @@ async def _show_outputs(
             ):
                 continue
         else:
-            address = get_human_readable_address(bytes(output.address))
+            address = output.address
 
         total_amount += output.amount
 
