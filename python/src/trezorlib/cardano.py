@@ -112,7 +112,7 @@ def create_output(output) -> messages.CardanoTxOutputType:
 
     if contains_address:
         return messages.CardanoTxOutputType(
-            address=bytes.fromhex(output["address"]), amount=int(output["amount"])
+            address=output["address"], amount=int(output["amount"])
         )
     else:
         return _create_change_output(output)
