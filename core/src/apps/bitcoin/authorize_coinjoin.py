@@ -1,12 +1,12 @@
 from micropython import const
 
-import storage.cache
 from trezor import ui
 from trezor.messages.AuthorizeCoinJoin import AuthorizeCoinJoin
 from trezor.messages.Success import Success
 from trezor.strings import format_amount
 from trezor.ui.text import Text
 
+from apps.base import set_authorization
 from apps.common.confirm import require_confirm, require_hold_to_confirm
 from apps.common.paths import validate_path
 
@@ -53,12 +53,6 @@ async def authorize_coinjoin(ctx: wire.Context, msg: AuthorizeCoinJoin,) -> Succ
     text.bold("%s %s" % (format_amount(msg.max_fee, coin.decimals), coin.coin_shortcut))
     await require_hold_to_confirm(ctx, text)
 
-    authorization = storage.cache.get(
-        storage.cache.APP_BITCOIN_COINJOIN_AUTHORIZATION
-    )  # type: CoinJoinAuthorization
-    if authorization:
-        authorization.__del__()
-    authorization = CoinJoinAuthorization(msg, keychain, coin)
-    storage.cache.set(storage.cache.APP_BITCOIN_COINJOIN_AUTHORIZATION, authorization)
+    set_authorization(CoinJoinAuthorization(msg, keychain, coin))
 
     return Success(message="CoinJoin authorized")
