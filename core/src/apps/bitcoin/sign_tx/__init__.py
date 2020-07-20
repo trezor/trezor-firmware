@@ -2,18 +2,17 @@ from trezor import utils, wire
 from trezor.messages.RequestType import TXFINISHED
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxAck import TxAck
-from trezor.messages.TxRequest import TxRequest
 
 from apps.common import coininfo, paths
 
 from ..keychain import get_keychain_for_coin
-from . import approvers, bitcoin, helpers, layout, progress
 
 if not utils.BITCOIN_ONLY:
     from . import bitcoinlike, decred, zcash
 
 if False:
     from typing import Optional, Union
+    from trezor.messages.TxRequest import TxRequest
     from apps.common.seed import Keychain
     from ..authorization import CoinJoinAuthorization
 
@@ -33,6 +32,9 @@ async def sign_tx_impl(
     coin: coininfo.CoinInfo,
     authorization: Optional[CoinJoinAuthorization] = None,
 ) -> TxRequest:
+    from . import approvers, bitcoin, helpers, layout, progress
+    from trezor.messages.TxRequest import TxRequest
+
     if authorization:
         approver = approvers.CoinJoinApprover(msg, coin, authorization)
     else:
