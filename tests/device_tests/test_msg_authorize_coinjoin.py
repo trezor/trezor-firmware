@@ -57,7 +57,9 @@ def test_sign_tx(client):
     client.call_raw(messages.LockDevice())
 
     with client:
-        client.set_expected_responses([messages.OwnershipProof()])
+        client.set_expected_responses(
+            [messages.PreauthorizedRequest(), messages.OwnershipProof()]
+        )
         btc.get_ownership_proof(
             client,
             "Testnet",
@@ -69,7 +71,9 @@ def test_sign_tx(client):
         )
 
     with client:
-        client.set_expected_responses([messages.OwnershipProof()])
+        client.set_expected_responses(
+            [messages.PreauthorizedRequest(), messages.OwnershipProof()]
+        )
         btc.get_ownership_proof(
             client,
             "Testnet",
@@ -134,6 +138,7 @@ def test_sign_tx(client):
     with client:
         client.set_expected_responses(
             [
+                messages.PreauthorizedRequest(),
                 request_input(0),
                 request_input(1),
                 request_meta(TXHASH_65b811),
@@ -228,7 +233,9 @@ def test_change_round_id(client):
     )
 
     with client:
-        client.set_expected_responses([messages.OwnershipProof()])
+        client.set_expected_responses(
+            [messages.PreauthorizedRequest(), messages.OwnershipProof()]
+        )
         btc.get_ownership_proof(
             client,
             "Testnet",
