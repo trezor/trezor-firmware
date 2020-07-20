@@ -1,16 +1,16 @@
-Features.vendor				max_size:33
-Features.device_id			max_size:25
-Features.language			max_size:17
-Features.label				max_size:33
-Features.revision			max_size:20
-Features.model				max_size:17
-Features.fw_vendor			max_size:256
-Features.fw_vendor_keys			max_size:32
+Features.vendor                 max_size:33
+Features.device_id              max_size:25
+Features.language               max_size:17
+Features.label                  max_size:33
+Features.revision               max_size:20
+Features.model                  max_size:17
+Features.fw_vendor              max_size:256
+Features.fw_vendor_keys         max_size:32
 
-Ping.message				max_size:256
+Ping.message                    max_size:256
 
-Success.message				max_size:256
+Success.message                 max_size:256
 
-Failure.message				max_size:256
+Failure.message                 max_size:256
 
-FirmwareUpload.hash			max_size:32
+FirmwareUpload.hash             max_size:32

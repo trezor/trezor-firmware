@@ -85,7 +85,6 @@ SOURCE_BOOTLOADER = [
     'embed/bootloader/main.c',
     'embed/bootloader/messages.c',
     'embed/bootloader/protob/messages.pb.c',
-    'embed/bootloader/protob/types.pb.c',
 ]
 
 SOURCE_TREZORHAL = [

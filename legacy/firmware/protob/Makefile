@@ -18,7 +18,7 @@ PYTHON ?= python
 	@printf "  NANOPB  $@\n"
 	$(Q)nanopb_generator $< \
 		-L '#include "%s"' \
-		-T \
+		-T -D . \
 		-s "mangle_names:M_FLATTEN"
 	@grep " CALLBACK, " $@ && echo "CALLBACK field found" && rm $@ && exit 1  || :
 
