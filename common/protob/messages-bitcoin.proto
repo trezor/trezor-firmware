@@ -313,15 +313,3 @@ message AuthorizeCoinJoin {
     optional string coin_name = 5 [default='Bitcoin'];                  // coin to use
     optional InputScriptType script_type = 6 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
 }
-
-/**
- * Request: Ask device to perform a preauthorized operation.
- * @start
- * @next TxRequest
- * @next OwnershipProof
- * @next Failure
- */
-message Preauthorized {
-    optional SignTx sign_tx = 1;                        // a preauthorized SignTx request
-    optional GetOwnershipProof get_ownership_proof = 2; // a preauthorized GetOwnershipProof request
-}
