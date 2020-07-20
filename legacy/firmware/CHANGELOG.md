@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Security
+- Show non-empty passphrase on device when it was entered on host.
 
 ## 1.9.2 [5th August 2020]
 

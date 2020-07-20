@@ -28,6 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix boot loop after uploading invalid homescreen.  [#1118]
 
 ### Security
+- Show non-empty passphrase on device when it was entered on host.
 
 ## 2.3.2 [5th August 2020]
 
