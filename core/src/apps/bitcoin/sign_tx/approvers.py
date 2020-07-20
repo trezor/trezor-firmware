@@ -77,10 +77,9 @@ class BasicApprover(Approver):
     async def approve_tx(self) -> None:
         fee = self.total_in - self.total_out
 
-        if fee < 0:
-            # some coins require negative fees for reward TX
-            if not self.coin.negative_fee:
-                raise wire.NotEnoughFunds("Not enough funds")
+        # some coins require negative fees for reward TX
+        if fee < 0 and not self.coin.negative_fee:
+            raise wire.NotEnoughFunds("Not enough funds")
 
         total = self.total_in - self.change_out
         spending = total - self.external_in
