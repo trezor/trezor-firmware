@@ -25,6 +25,10 @@ nix-shell
 
 ### OS X
 
+_Consider using [Nix](https://nixos.org/download.html). With Nix all you need to do is `nix-shell`._
+
+For other users:
+
 1. Download [gcc-arm-none-eabi](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads)
 2. Follow the [install instructions](https://launchpadlibrarian.net/287100883/readme.txt)
 3. To install OpenOCD, run `brew install open-ocd`

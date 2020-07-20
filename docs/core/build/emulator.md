@@ -42,6 +42,10 @@ nix-shell
 
 * __Mac OS X__:
 
+_Consider using [Nix](https://nixos.org/download.html). With Nix all you need to do is `nix-shell`._
+
+For other users:
+
 ```sh
 brew install scons sdl2 sdl2_image pkg-config
 ```
