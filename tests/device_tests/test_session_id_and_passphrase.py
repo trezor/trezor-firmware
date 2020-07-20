@@ -18,7 +18,7 @@ import random
 
 import pytest
 
-from trezorlib import messages
+from trezorlib import exceptions, messages
 from trezorlib.messages import FailureType
 from trezorlib.tools import parse_path
 
@@ -53,12 +53,21 @@ def _init_session(client, session_id=None):
 
 def _get_xpub(client, passphrase=None):
     """Get XPUB and check that the appropriate passphrase flow has happened."""
-    response = client.call_raw(XPUB_REQUEST)
     if passphrase is not None:
-        assert isinstance(response, messages.PassphraseRequest)
-        response = client.call_raw(messages.PassphraseAck(passphrase=passphrase))
-    assert isinstance(response, messages.PublicKey)
-    return response.xpub
+        expected_responses = [
+            messages.PassphraseRequest(),
+            messages.ButtonRequest(),
+            messages.ButtonRequest(),
+            messages.PublicKey(),
+        ]
+    else:
+        expected_responses = [messages.PublicKey()]
+
+    with client:
+        client.use_passphrase(passphrase or "")
+        client.set_expected_responses(expected_responses)
+        result = client.call(XPUB_REQUEST)
+        return result.xpub
 
 
 @pytest.mark.skip_ui
@@ -239,7 +248,9 @@ def test_passphrase_on_device(client):
     # try to get xpub with passphrase on host:
     response = client.call_raw(XPUB_REQUEST)
     assert isinstance(response, messages.PassphraseRequest)
-    response = client.call_raw(messages.PassphraseAck(passphrase="A", on_device=False))
+    # using `client.call` to auto-skip subsequent ButtonRequests for "show passphrase"
+    response = client.call(messages.PassphraseAck(passphrase="A", on_device=False))
+
     assert isinstance(response, messages.PublicKey)
     assert response.xpub == XPUB_PASSPHRASES["A"]
 
@@ -255,6 +266,7 @@ def test_passphrase_on_device(client):
     response = client.call_raw(XPUB_REQUEST)
     assert isinstance(response, messages.PassphraseRequest)
     response = client.call_raw(messages.PassphraseAck(on_device=True))
+    # no "show passphrase" here
     assert isinstance(response, messages.ButtonRequest)
     client.debug.input("A")
     response = client.call_raw(messages.ButtonAck())
@@ -352,12 +364,13 @@ def test_passphrase_length(client):
         _init_session(client)
         response = client.call_raw(XPUB_REQUEST)
         assert isinstance(response, messages.PassphraseRequest)
-        response = client.call_raw(messages.PassphraseAck(passphrase))
-        if expected_result:
+        try:
+            response = client.call(messages.PassphraseAck(passphrase))
+            assert expected_result is True, "Call should have failed"
             assert isinstance(response, messages.PublicKey)
-        else:
-            assert isinstance(response, messages.Failure)
-            assert response.code == FailureType.DataError
+        except exceptions.TrezorFailure as e:
+            assert expected_result is False, "Call should have succeeded"
+            assert e.code == FailureType.DataError
 
     # 50 is ok
     call(passphrase="A" * 50, expected_result=True)
@@ -374,7 +387,7 @@ def _get_xpub_cardano(client, passphrase):
     response = client.call_raw(msg)
     if passphrase is not None:
         assert isinstance(response, messages.PassphraseRequest)
-        response = client.call_raw(messages.PassphraseAck(passphrase=passphrase))
+        response = client.call(messages.PassphraseAck(passphrase=passphrase))
     assert isinstance(response, messages.CardanoPublicKey)
     return response.xpub
 

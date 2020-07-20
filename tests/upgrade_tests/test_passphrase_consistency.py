@@ -68,9 +68,20 @@ def test_passphrase_works(emulator):
             messages.Deprecated_PassphraseStateRequest(),
             messages.Address(),
         ]
+    elif (
+        emulator.client.features.model == "T" and emulator.client.version < (2, 3, 3)
+    ) or (
+        emulator.client.features.model == "1" and emulator.client.version < (1, 9, 3)
+    ):
+        expected_responses = [
+            messages.PassphraseRequest(),
+            messages.Address(),
+        ]
     else:
         expected_responses = [
             messages.PassphraseRequest(),
+            messages.ButtonRequest(),
+            messages.ButtonRequest(),
             messages.Address(),
         ]
 
@@ -96,9 +107,22 @@ def test_init_device(emulator):
             messages.Features(),
             messages.Address(),
         ]
+    elif (
+        emulator.client.features.model == "T" and emulator.client.version < (2, 3, 3)
+    ) or (
+        emulator.client.features.model == "1" and emulator.client.version < (1, 9, 3)
+    ):
+        expected_responses = [
+            messages.PassphraseRequest(),
+            messages.Address(),
+            messages.Features(),
+            messages.Address(),
+        ]
     else:
         expected_responses = [
             messages.PassphraseRequest(),
+            messages.ButtonRequest(),
+            messages.ButtonRequest(),
             messages.Address(),
             messages.Features(),
             messages.Address(),
