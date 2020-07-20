@@ -120,22 +120,22 @@ def get_ownership_proof(
     commitment_data=None,
     preauthorized=False,
 ):
-    get_ownership_proof = messages.GetOwnershipProof(
-        address_n=n,
-        coin_name=coin_name,
-        script_type=script_type,
-        multisig=multisig,
-        user_confirmation=user_confirmation,
-        ownership_ids=ownership_ids,
-        commitment_data=commitment_data,
-    )
-
     if preauthorized:
-        res = client.call(
-            messages.Preauthorized(get_ownership_proof=get_ownership_proof)
+        res = client.call(messages.DoPreauthorized())
+        if not isinstance(res, messages.PreauthorizedRequest):
+            raise exceptions.TrezorException("Unexpected message")
+
+    res = client.call(
+        messages.GetOwnershipProof(
+            address_n=n,
+            coin_name=coin_name,
+            script_type=script_type,
+            multisig=multisig,
+            user_confirmation=user_confirmation,
+            ownership_ids=ownership_ids,
+            commitment_data=commitment_data,
         )
-    else:
-        res = client.call(get_ownership_proof)
+    )
 
     if not isinstance(res, messages.OwnershipProof):
         raise exceptions.TrezorException("Unexpected message")
@@ -193,9 +193,11 @@ def sign_tx(
     signtx.outputs_count = len(outputs)
 
     if preauthorized:
-        res = client.call(messages.Preauthorized(sign_tx=signtx))
-    else:
-        res = client.call(signtx)
+        res = client.call(messages.DoPreauthorized())
+        if not isinstance(res, messages.PreauthorizedRequest):
+            raise exceptions.TrezorException("Unexpected message")
+
+    res = client.call(signtx)
 
     # Prepare structure for signatures
     signatures = [
