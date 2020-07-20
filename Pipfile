@@ -10,7 +10,7 @@ scons = "*"
 protobuf = "*"
 pyblake2 = "*"
 Pyro4 = "*"
-nanopb = "==0.4.1"
+nanopb = "==0.4.2"
 virtualenv = "==20.0.23"  # https://github.com/pypa/virtualenv/issues/1873
 
 ## test tools

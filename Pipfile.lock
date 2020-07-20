@@ -418,11 +418,11 @@
         },
         "nanopb": {
             "hashes": [
-                "sha256:0f1ef49aed947892a648197201c0c0b86b1e093794ef5cdba85f3f4ee00c5bfb",
-                "sha256:462b94f57cdfc691f4d303c2585024bb5da1f958d16b90d8982043b3d76188ce"
+                "sha256:03fc05e5e7c2b72c385c361d0dcaba47fe676b0881afc708f1a9b75633668ce3",
+                "sha256:bedd36e2e01d7f57dfebf2b5aa57af69b1c672f35f780f1722ec7a443f5583b4"
             ],
             "index": "pypi",
-            "version": "==0.4.1"
+            "version": "==0.4.2"
         },
         "nose": {
             "hashes": [
