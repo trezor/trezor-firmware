@@ -45,3 +45,22 @@ def format_plural(string: str, count: int, plural: str) -> str:
             plural = plural + "s"
 
     return string.format(count=count, plural=plural)
+
+
+def format_duration_ms(milliseconds: int) -> str:
+    """
+    Returns human-friendly representation of a duration. Truncates all decimals.
+    """
+    units = (
+        ("hour", 60 * 60 * 1000),
+        ("minute", 60 * 1000),
+        ("second", 1000),
+    )
+    for unit, divisor in units:
+        if milliseconds >= divisor:
+            break
+    else:
+        unit = "millisecond"
+        divisor = 1
+
+    return format_plural("{count} {plural}", milliseconds // divisor, unit)

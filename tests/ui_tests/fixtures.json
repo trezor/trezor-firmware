@@ -1,6 +1,11 @@
 {
 "test_autolock.py::test_apply_auto_lock_delay": "1997527e85989f3ca5719f93cd76bcfb8f125fb96ef3025073b13fd4de7a5fa2",
-"test_autolock.py::test_apply_minimal_auto_lock_delay": "adc5da99fcc8b4023d6989fa59f69c3918e70165bdeb693a887364e2009ee2fa",
+"test_autolock.py::test_apply_auto_lock_delay_valid[10]": "d03aca645ebd8a44c8a1bb24a275e31441245c3211f7c82365b2f432370b05bc",
+"test_autolock.py::test_apply_auto_lock_delay_valid[123]": "7588a745923a732cd8715ab76f95b7abb9c2caf043075ec1a73e31b2453743a1",
+"test_autolock.py::test_apply_auto_lock_delay_valid[3601]": "904323c7f7a27393c4a192680340d571a2a4899f0300da4d0e439f55f32768e8",
+"test_autolock.py::test_apply_auto_lock_delay_valid[536870]": "ff8b1d62a60d581504779cb7bb3dcf7882e960914bac4981d52fa714880c3d1e",
+"test_autolock.py::test_apply_auto_lock_delay_valid[60]": "02f813f809bec7b303998fe288f02bfa4cd1a30990c0dc071ad51ff86f2739e6",
+"test_autolock.py::test_apply_auto_lock_delay_valid[7227]": "41bca947f7834baa9968cbb164b70005aee4dbf23586187ab3bef336ff42a422",
 "test_autolock.py::test_autolock_cancels_ui": "eedc6196565bf6d53bc9c3f8984acc2bb91d2d71e57f3a28f8afbe35b02fb4dc",
 "test_basic.py-test_device_id_different": "bc6acd0386b9d009e6550519917d6e08632b3badde0b0cf04c95abe5f773038a",
 "test_basic.py-test_device_id_same": "5a80508a71a9ef64f94762b07636f90e464832f0f4a3102af8fa1a8c69e94586",
