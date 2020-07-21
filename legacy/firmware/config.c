@@ -937,8 +937,7 @@ uint32_t config_getAutoLockDelayMs() {
 }
 
 void config_setAutoLockDelayMs(uint32_t auto_lock_delay_ms) {
-  const uint32_t min_delay_ms = 10 * 1000U;  // 10 seconds
-  auto_lock_delay_ms = MAX(auto_lock_delay_ms, min_delay_ms);
+  auto_lock_delay_ms = MAX(auto_lock_delay_ms, MIN_AUTOLOCK_DELAY_MS);
   if (sectrue == storage_set(KEY_AUTO_LOCK_DELAY_MS, &auto_lock_delay_ms,
                              sizeof(auto_lock_delay_ms))) {
     autoLockDelayMs = auto_lock_delay_ms;
