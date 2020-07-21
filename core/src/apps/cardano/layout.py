@@ -11,12 +11,21 @@ from trezor.utils import chunks
 from apps.common.confirm import confirm, require_confirm, require_hold_to_confirm
 from apps.common.layout import address_n_to_str, show_warning
 
-from ..helpers import protocol_magics
+from .helpers import protocol_magics
 
 if False:
     from typing import List
     from trezor import wire
     from trezor.messages import CardanoBlockchainPointerType
+
+
+ADDRESS_TYPE_NAMES = {
+    CardanoAddressType.BYRON: "Legacy",
+    CardanoAddressType.BASE: "Base",
+    CardanoAddressType.POINTER: "Pointer",
+    CardanoAddressType.ENTERPRISE: "Enterprise",
+    CardanoAddressType.REWARD: "Reward",
+}
 
 
 def format_coin_amount(amount: int) -> str:
@@ -41,7 +50,7 @@ async def show_warning_tx_no_staking_info(
     ctx: wire.Context, address_type: CardanoAddressType, amount: int
 ):
     t1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
-    t1.normal("Change " + _format_address_type(address_type).lower())
+    t1.normal("Change " + ADDRESS_TYPE_NAMES[address_type].lower())
     t1.normal("address has no stake")
     t1.normal("rights.")
     t1.normal("Change amount:")
@@ -141,7 +150,7 @@ async def show_address(
     t1 = Text(path_str, ui.ICON_RECEIVE, ui.GREEN)
     if network is not None:
         t1.normal("%s network" % protocol_magics.to_ui_string(network))
-    t1.normal("%s address" % _format_address_type(address_type))
+    t1.normal("%s address" % ADDRESS_TYPE_NAMES[address_type])
 
     address_lines = list(chunks(address, 17))
     t1.bold(address_lines[0])
@@ -157,21 +166,6 @@ async def show_address(
         cancel="QR",
         cancel_style=ButtonDefault,
     )
-
-
-def _format_address_type(address_type: CardanoAddressType) -> str:
-    if address_type == CardanoAddressType.BYRON:
-        return "Legacy"
-    elif address_type == CardanoAddressType.BASE:
-        return "Base"
-    elif address_type == CardanoAddressType.POINTER:
-        return "Pointer"
-    elif address_type == CardanoAddressType.ENTERPRISE:
-        return "Enterprise"
-    elif address_type == CardanoAddressType.REWARD:
-        return "Reward"
-    else:
-        raise ValueError("Unknown address type")
 
 
 def _paginate_lines(
