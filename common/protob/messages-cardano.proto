@@ -54,6 +54,7 @@ message CardanoAddressParametersType {
  * @next Failure
  */
 message CardanoGetAddress {
+    // repeated uint32 address_n = 1;                               // moved to address_parameters
     optional bool show_display = 2;                                 // optionally prompt for confirmation on trezor display
     optional uint32 protocol_magic = 3;                             // network's protocol magic - needed for Byron addresses on testnets
     optional uint32 network_id = 4;                                 // network id - mainnet or testnet
@@ -117,6 +118,7 @@ message CardanoSignTx {
      */
     message CardanoTxOutputType {
         optional string address = 1;                                    // target coin address in bech32 or base58
+        // repeated uint32 address_n = 2;                               // moved to address_parameters
         optional uint64 amount = 3;                                     // amount to spend
         optional CardanoAddressParametersType address_parameters = 4;   // parameters used to derive the address
     }
