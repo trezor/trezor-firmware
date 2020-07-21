@@ -1,8 +1,8 @@
 from trezor.messages.NEMAddress import NEMAddress
 
+from apps.common.keychain import with_slip44_keychain
 from apps.common.layout import address_n_to_str, show_address, show_qr
 from apps.common.paths import validate_path
-from apps.common.seed import with_slip44_keychain
 from apps.nem import CURVE, SLIP44_ID
 from apps.nem.helpers import check_path, get_network_str
 from apps.nem.validators import validate_network

@@ -8,7 +8,7 @@ from trezor.messages.EosTxActionRequest import EosTxActionRequest
 from trezor.utils import HashWriter
 
 from apps.common import paths
-from apps.common.seed import Keychain, with_slip44_keychain
+from apps.common.keychain import Keychain, with_slip44_keychain
 from apps.eos import CURVE, SLIP44_ID, writers
 from apps.eos.actions import process_action
 from apps.eos.helpers import base58_encode, validate_full_path

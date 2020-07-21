@@ -8,7 +8,7 @@ from trezor.messages.LiskSignedTx import LiskSignedTx
 from trezor.utils import HashWriter
 
 from apps.common import paths
-from apps.common.seed import with_slip44_keychain
+from apps.common.keychain import with_slip44_keychain
 from apps.lisk import CURVE, SLIP44_ID, layout
 from apps.lisk.helpers import get_address_from_public_key, validate_full_path
 

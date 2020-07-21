@@ -2,8 +2,8 @@ from trezor.messages.StellarAddress import StellarAddress
 from trezor.messages.StellarGetAddress import StellarGetAddress
 
 from apps.common import paths, seed
+from apps.common.keychain import with_slip44_keychain
 from apps.common.layout import address_n_to_str, show_address, show_qr
-from apps.common.seed import with_slip44_keychain
 from apps.stellar import CURVE, SLIP44_ID, helpers
 
 

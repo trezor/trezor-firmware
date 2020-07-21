@@ -10,7 +10,7 @@ from .keychain import with_keychain
 from .ownership import get_identifier
 
 if False:
-    from apps.common.seed import Keychain
+    from apps.common.keychain import Keychain
 
 
 @with_keychain

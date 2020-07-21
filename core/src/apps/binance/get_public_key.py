@@ -3,7 +3,7 @@ from trezor.messages.BinancePublicKey import BinancePublicKey
 
 from apps.binance import CURVE, SLIP44_ID, helpers
 from apps.common import layout, paths
-from apps.common.seed import Keychain, with_slip44_keychain
+from apps.common.keychain import Keychain, with_slip44_keychain
 
 
 @with_slip44_keychain(SLIP44_ID, CURVE, allow_testnet=True)

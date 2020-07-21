@@ -14,7 +14,7 @@ from .keychain import with_keychain
 from .ownership import generate_proof, get_identifier
 
 if False:
-    from apps.common.seed import Keychain
+    from apps.common.keychain import Keychain
 
 # Maximum number of characters per line in monospace font.
 _MAX_MONO_LINE = 18

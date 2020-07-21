@@ -7,7 +7,8 @@ from apps.common import mnemonic
 from apps.common.passphrase import get as get_passphrase
 
 if False:
-    from apps.common.seed import Bip32Path, MsgIn, MsgOut, Handler, HandlerWithKeychain
+    from apps.common.paths import Bip32Path
+    from apps.common.keychain import MsgIn, MsgOut, Handler, HandlerWithKeychain
 
 
 class Keychain:
