@@ -27,6 +27,14 @@ REQUIRED_FIELDS_INPUT = ("path", "prev_hash", "prev_index")
 
 INCOMPLETE_OUTPUT_ERROR_MESSAGE = "The output is missing some fields"
 
+ADDRESS_TYPES = (
+    messages.CardanoAddressType.BYRON,
+    messages.CardanoAddressType.BASE,
+    messages.CardanoAddressType.POINTER,
+    messages.CardanoAddressType.ENTERPRISE,
+    messages.CardanoAddressType.REWARD,
+)
+
 
 def create_address_parameters(
     address_type: messages.CardanoAddressType,
@@ -39,7 +47,7 @@ def create_address_parameters(
 ) -> messages.CardanoAddressParametersType:
     certificate_pointer = None
 
-    if not _is_known_address_type(address_type):
+    if address_type not in ADDRESS_TYPES:
         raise ValueError("Unknown address type")
 
     if address_type == messages.CardanoAddressType.POINTER:
@@ -53,16 +61,6 @@ def create_address_parameters(
         address_n_staking=address_n_staking,
         staking_key_hash=staking_key_hash,
         certificate_pointer=certificate_pointer,
-    )
-
-
-def _is_known_address_type(address_type: messages.CardanoAddressType) -> bool:
-    return (
-        address_type == messages.CardanoAddressType.BYRON
-        or address_type == messages.CardanoAddressType.BASE
-        or address_type == messages.CardanoAddressType.POINTER
-        or address_type == messages.CardanoAddressType.ENTERPRISE
-        or address_type == messages.CardanoAddressType.REWARD
     )
 
 
