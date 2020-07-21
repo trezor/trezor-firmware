@@ -27,7 +27,7 @@ async def get_address(
     address_parameters = msg.address_parameters
 
     await paths.validate_path(
-        ctx, validate_full_path, keychain, address_parameters.spending_key_path, CURVE
+        ctx, validate_full_path, keychain, address_parameters.address_n, CURVE
     )
 
     try:
@@ -65,12 +65,12 @@ async def _display_address(
             ctx,
             address,
             address_parameters.address_type,
-            address_parameters.spending_key_path,
+            address_parameters.address_n,
             network=network,
         ):
             break
         if await show_qr(
-            ctx, address, desc=address_n_to_str(address_parameters.spending_key_path)
+            ctx, address, desc=address_n_to_str(address_parameters.address_n)
         ):
             break
 
@@ -84,14 +84,14 @@ async def _show_staking_warnings(
     if staking_type == staking_use_cases.DIFFERENT_ACCOUNT:
         await show_warning_address_foreign_staking_key(
             ctx,
-            _to_account_path(address_parameters.spending_key_path),
-            _to_account_path(address_parameters.staking_key_path),
+            _to_account_path(address_parameters.address_n),
+            _to_account_path(address_parameters.address_n_staking),
             None,
         )
     elif staking_type == staking_use_cases.DIFFERENT_HASH:
         await show_warning_address_foreign_staking_key(
             ctx,
-            _to_account_path(address_parameters.spending_key_path),
+            _to_account_path(address_parameters.address_n),
             None,
             address_parameters.staking_key_hash,
         )

@@ -60,13 +60,13 @@ def sign_tx(client, file, protocol_magic, network_id):
 
 
 @cli.command()
-@click.option("-n", "--path-str", required=True, help=PATH_HELP)
+@click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.option("-d", "--show-display", is_flag=True)
 @click.option(
     "-t", "--address-type", type=int, default=messages.CardanoAddressType.BASE
 )
-@click.option("-s", "--staking-key-path-str", type=str, default=None)
-@click.option("-h", "--staking-key-hash-str", type=str, default=None)
+@click.option("-s", "--staking-address", type=str, default=None)
+@click.option("-h", "--staking-key-hash", type=str, default=None)
 @click.option("-b", "--block_index", type=int, default=None)
 @click.option("-x", "--tx_index", type=int, default=None)
 @click.option("-c", "--certificate_index", type=int, default=None)
@@ -75,10 +75,10 @@ def sign_tx(client, file, protocol_magic, network_id):
 @with_client
 def get_address(
     client,
-    path_str,
+    address,
     address_type,
-    staking_key_path_str,
-    staking_key_hash_str,
+    staking_address,
+    staking_key_hash,
     block_index,
     tx_index,
     certificate_index,
@@ -87,11 +87,15 @@ def get_address(
     show_display,
 ):
     """Get Cardano address."""
+    staking_key_hash_bytes = None
+    if staking_key_hash:
+        staking_key_hash_bytes = bytes.fromhex(staking_key_hash)
+
     address_parameters = cardano.create_address_parameters(
         address_type,
-        path_str,
-        staking_key_path_str,
-        staking_key_hash_str,
+        tools.parse_path(address),
+        tools.parse_path(staking_address),
+        staking_key_hash_bytes,
         block_index,
         tx_index,
         certificate_index,

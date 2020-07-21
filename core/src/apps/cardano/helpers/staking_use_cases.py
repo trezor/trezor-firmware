@@ -30,10 +30,10 @@ def get(
     address_type = address_parameters.address_type
     if address_type == CardanoAddressType.BASE:
         spending_account_staking_path = _path_to_staking_path(
-            address_parameters.spending_key_path
+            address_parameters.address_n
         )
-        if address_parameters.staking_key_path:
-            if address_parameters.staking_key_path != spending_account_staking_path:
+        if address_parameters.address_n_staking:
+            if address_parameters.address_n_staking != spending_account_staking_path:
                 return DIFFERENT_ACCOUNT
             else:
                 return SAME_ACCOUNT

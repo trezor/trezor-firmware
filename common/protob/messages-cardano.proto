@@ -39,11 +39,11 @@ message CardanoBlockchainPointerType {
  */
 message CardanoAddressParametersType {
     optional CardanoAddressType address_type = 1;                   // one of the CardanoAddressType-s
-    repeated uint32 spending_key_path = 2;                          // BIP-32-style path to derive the spending key from master node
-    repeated uint32 staking_key_path = 3;                           // BIP-32-style path to derive staking key from master node
-    optional bytes staking_key_hash = 4;                            // staking key can be derived from staking_key_path, or
+    repeated uint32 address_n = 2;                                  // BIP-32-style path to derive the spending key from master node
+    repeated uint32 address_n_staking = 3;                          // BIP-32-style path to derive staking key from master node
+    optional bytes staking_key_hash = 4;                            // staking key can be derived from address_n_staking, or
                                                                     // can be sent directly e.g. if it doesn't belong to
-                                                                    // the same account as spending_key_path
+                                                                    // the same account as address_n
     optional CardanoBlockchainPointerType certificate_pointer = 5;  // a pointer to the staking key registration certificate
 }
 

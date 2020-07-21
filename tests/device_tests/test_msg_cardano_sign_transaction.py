@@ -62,7 +62,7 @@ SAMPLE_OUTPUTS = {
     "base_address_change_output": {
         "addressType": 0,
         "path": "m/1852'/1815'/0'/0/0",
-        "stakingKeyPath": "m/1852'/1815'/0'/2/0",
+        "stakingPath": "m/1852'/1815'/0'/2/0",
         "amount": "7120787",
     },
     "staking_key_hash_output": {

@@ -16,6 +16,7 @@
 
 import pytest
 
+from trezorlib import tools
 from trezorlib.cardano import (
     NETWORK_IDS,
     PROTOCOL_MAGICS,
@@ -35,7 +36,7 @@ SHELLEY_TEST_VECTORS_MNEMONIC = (
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
 @pytest.mark.parametrize(
-    "spending_path,protocol_magic,expected_address",
+    "path,protocol_magic,expected_address",
     [
         # mainnet
         (
@@ -73,11 +74,11 @@ SHELLEY_TEST_VECTORS_MNEMONIC = (
     ],
 )
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_cardano_get_address(client, spending_path, protocol_magic, expected_address):
+def test_cardano_get_address(client, path, protocol_magic, expected_address):
     address = get_address(
         client,
         address_parameters=create_address_parameters(
-            address_type=CardanoAddressType.BYRON, spending_key_path_str=spending_path,
+            address_type=CardanoAddressType.BYRON, address_n=tools.parse_path(path),
         ),
         protocol_magic=protocol_magic,
         network_id=NETWORK_IDS["mainnet"],
@@ -89,7 +90,7 @@ def test_cardano_get_address(client, spending_path, protocol_magic, expected_add
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
 @pytest.mark.parametrize(
-    "spending_path, staking_path, network_id, expected_address",
+    "path, staking_path, network_id, expected_address",
     [
         # data generated with code under test
         (
@@ -108,14 +109,14 @@ def test_cardano_get_address(client, spending_path, protocol_magic, expected_add
 )
 @pytest.mark.setup_client(mnemonic=SHELLEY_TEST_VECTORS_MNEMONIC)
 def test_cardano_get_base_address(
-    client, spending_path, staking_path, network_id, expected_address
+    client, path, staking_path, network_id, expected_address
 ):
     address = get_address(
         client,
         address_parameters=create_address_parameters(
             address_type=CardanoAddressType.BASE,
-            spending_key_path_str=spending_path,
-            staking_key_path_str=staking_path,
+            address_n=tools.parse_path(path),
+            address_n_staking=tools.parse_path(staking_path),
         ),
         protocol_magic=PROTOCOL_MAGICS["mainnet"],
         network_id=network_id,
@@ -127,7 +128,7 @@ def test_cardano_get_base_address(
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
 @pytest.mark.parametrize(
-    "spending_path, staking_key_hash, network_id, expected_address",
+    "path, staking_key_hash, network_id, expected_address",
     [
         # data generated with code under test
         (
@@ -165,15 +166,15 @@ def test_cardano_get_base_address(
 )
 @pytest.mark.setup_client(mnemonic=SHELLEY_TEST_VECTORS_MNEMONIC)
 def test_cardano_get_base_address_with_staking_key_hash(
-    client, spending_path, staking_key_hash, network_id, expected_address
+    client, path, staking_key_hash, network_id, expected_address
 ):
     # data form shelley test vectors
     address = get_address(
         client,
         address_parameters=create_address_parameters(
             address_type=CardanoAddressType.BASE,
-            spending_key_path_str=spending_path,
-            staking_key_hash_str=staking_key_hash,
+            address_n=tools.parse_path(path),
+            staking_key_hash=bytes.fromhex(staking_key_hash),
         ),
         protocol_magic=PROTOCOL_MAGICS["mainnet"],
         network_id=network_id,
@@ -185,7 +186,7 @@ def test_cardano_get_base_address_with_staking_key_hash(
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
 @pytest.mark.parametrize(
-    "spending_path, network_id, expected_address",
+    "path, network_id, expected_address",
     [
         # data generated with code under test
         (
@@ -200,15 +201,12 @@ def test_cardano_get_base_address_with_staking_key_hash(
         ),
     ],
 )
-@pytest.mark.setup_client(mnemonic=SHELLEY_TEST_VECTORS_MNEMONIC)
-def test_cardano_get_enterprise_address(
-    client, spending_path, network_id, expected_address
-):
+def test_cardano_get_enterprise_address(client, path, network_id, expected_address):
     address = get_address(
         client,
         address_parameters=create_address_parameters(
             address_type=CardanoAddressType.ENTERPRISE,
-            spending_key_path_str=spending_path,
+            address_n=tools.parse_path(path),
         ),
         protocol_magic=PROTOCOL_MAGICS["mainnet"],
         network_id=network_id,
@@ -220,7 +218,7 @@ def test_cardano_get_enterprise_address(
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
 @pytest.mark.parametrize(
-    "spending_path, block_index, tx_index, certificate_index, network_id, expected_address",
+    "path, block_index, tx_index, certificate_index, network_id, expected_address",
     [
         # data generated with code under test
         (
@@ -244,7 +242,7 @@ def test_cardano_get_enterprise_address(
 @pytest.mark.setup_client(mnemonic=SHELLEY_TEST_VECTORS_MNEMONIC)
 def test_cardano_get_pointer_address(
     client,
-    spending_path,
+    path,
     block_index,
     tx_index,
     certificate_index,
@@ -255,7 +253,7 @@ def test_cardano_get_pointer_address(
         client,
         address_parameters=create_address_parameters(
             address_type=CardanoAddressType.POINTER,
-            spending_key_path_str=spending_path,
+            address_n=tools.parse_path(path),
             block_index=block_index,
             tx_index=tx_index,
             certificate_index=certificate_index,
@@ -270,7 +268,7 @@ def test_cardano_get_pointer_address(
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
 @pytest.mark.parametrize(
-    "spending_path, network_id, expected_address",
+    "path, network_id, expected_address",
     [
         # data generated with code under test
         (
@@ -285,14 +283,11 @@ def test_cardano_get_pointer_address(
         ),
     ],
 )
-@pytest.mark.setup_client(mnemonic=SHELLEY_TEST_VECTORS_MNEMONIC)
-def test_cardano_get_reward_address(
-    client, spending_path, network_id, expected_address
-):
+def test_cardano_get_reward_address(client, path, network_id, expected_address):
     address = get_address(
         client,
         address_parameters=create_address_parameters(
-            address_type=CardanoAddressType.REWARD, spending_key_path_str=spending_path,
+            address_type=CardanoAddressType.REWARD, address_n=tools.parse_path(path),
         ),
         protocol_magic=PROTOCOL_MAGICS["mainnet"],
         network_id=network_id,

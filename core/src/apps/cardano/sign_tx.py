@@ -251,7 +251,7 @@ async def _show_outputs(
             )
 
             if _should_hide_output(
-                output.address_parameters.spending_key_path, msg.inputs
+                output.address_parameters.address_n, msg.inputs
             ):
                 continue
         else:
@@ -282,7 +282,7 @@ async def _show_change_output_staking_warnings(
         )
     elif staking_type == staking_use_cases.DIFFERENT_ACCOUNT:
         await show_warning_tx_different_staking_account(
-            ctx, address_type, address_parameters.staking_key_path[:3], amount,
+            ctx, address_type, address_parameters.address_n_staking[:3], amount,
         )
     elif staking_type == staking_use_cases.DIFFERENT_HASH:
         await show_warning_tx_staking_key_hash(

@@ -30,38 +30,27 @@ INCOMPLETE_OUTPUT_ERROR_MESSAGE = "The output is missing some fields"
 
 def create_address_parameters(
     address_type: messages.CardanoAddressType,
-    spending_key_path_str: str,
-    staking_key_path_str: str = None,
-    staking_key_hash_str: str = None,
+    address_n: List[int],
+    address_n_staking: List[int] = None,
+    staking_key_hash: bytes = None,
     block_index: int = None,
     tx_index: int = None,
     certificate_index: int = None,
 ) -> messages.CardanoAddressParametersType:
-    staking_key_path = None
-    staking_key_hash = None
     certificate_pointer = None
 
     if not _is_known_address_type(address_type):
         raise ValueError("Unknown address type")
 
-    if address_type == messages.CardanoAddressType.BASE:
-        if staking_key_path_str:
-            staking_key_path = tools.parse_path(staking_key_path_str)
-        elif staking_key_hash_str:
-            staking_key_hash = bytes.fromhex(staking_key_hash_str)
-        else:
-            raise ValueError(
-                "Base address requires a staking key path or a staking key hash"
-            )
-    elif address_type == messages.CardanoAddressType.POINTER:
+    if address_type == messages.CardanoAddressType.POINTER:
         certificate_pointer = create_certificate_pointer(
             block_index, tx_index, certificate_index
         )
 
     return messages.CardanoAddressParametersType(
         address_type=address_type,
-        spending_key_path=tools.parse_path(spending_key_path_str),
-        staking_key_path=staking_key_path,
+        address_n=address_n,
+        address_n_staking=address_n_staking,
         staking_key_hash=staking_key_hash,
         certificate_pointer=certificate_pointer,
     )
@@ -122,11 +111,15 @@ def _create_change_output(output) -> messages.CardanoTxOutputType:
     if output.get("path") is None:
         raise ValueError(INCOMPLETE_OUTPUT_ERROR_MESSAGE)
 
+    staking_key_hash_bytes = None
+    if output.get("stakingKeyHash"):
+        staking_key_hash_bytes = bytes.fromhex(output.get("stakingKeyHash"))
+
     address_parameters = create_address_parameters(
         int(output["addressType"]),
-        output["path"],
-        output.get("stakingKeyPath"),
-        output.get("stakingKeyHash"),
+        tools.parse_path(output["path"]),
+        tools.parse_path(output.get("stakingPath")),
+        staking_key_hash_bytes,
         output.get("blockIndex"),
         output.get("txIndex"),
         output.get("certificateIndex"),

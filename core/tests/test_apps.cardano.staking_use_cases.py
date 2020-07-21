@@ -29,23 +29,23 @@ class TestCardanoStakingUseCases(unittest.TestCase):
             (
                 CardanoAddressParametersType(
                     address_type=CardanoAddressType.BASE,
-                    spending_key_path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
-                    staking_key_path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
+                    address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                    address_n_staking=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
                 ),
                 staking_use_cases.SAME_ACCOUNT,
             ),
             (
                 CardanoAddressParametersType(
                     address_type=CardanoAddressType.BASE,
-                    spending_key_path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
-                    staking_key_path=[1852 | HARDENED, 1815 | HARDENED, 2 | HARDENED, 2, 0],
+                    address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                    address_n_staking=[1852 | HARDENED, 1815 | HARDENED, 2 | HARDENED, 2, 0],
                 ),
                 staking_use_cases.DIFFERENT_ACCOUNT,
             ),
             (
                 CardanoAddressParametersType(
                     address_type=CardanoAddressType.BASE,
-                    spending_key_path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                    address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
                     staking_key_hash=unhexlify("32c728d3861e164cab28cb8f006448139c8f1740ffb8e7aa9e5232dc"),
                 ),
                 staking_use_cases.SAME_HASH,
@@ -53,7 +53,7 @@ class TestCardanoStakingUseCases(unittest.TestCase):
             (
                 CardanoAddressParametersType(
                     address_type=CardanoAddressType.BASE,
-                    spending_key_path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                    address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
                     staking_key_hash=unhexlify("122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277"),
                 ),
                 staking_use_cases.DIFFERENT_HASH,
@@ -61,7 +61,7 @@ class TestCardanoStakingUseCases(unittest.TestCase):
             (
                 CardanoAddressParametersType(
                     address_type=CardanoAddressType.POINTER,
-                    spending_key_path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                    address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
                     certificate_pointer=CardanoBlockchainPointerType(
                         block_index=1, tx_index=2, certificate_index=3
                     ),
@@ -71,21 +71,21 @@ class TestCardanoStakingUseCases(unittest.TestCase):
             (
                 CardanoAddressParametersType(
                     address_type=CardanoAddressType.REWARD,
-                    spending_key_path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
+                    address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
                 ),
                 staking_use_cases.REWARD_ADDRESS,
             ),
             (
                 CardanoAddressParametersType(
                     address_type=CardanoAddressType.ENTERPRISE,
-                    spending_key_path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                    address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
                 ),
                 staking_use_cases.NO_STAKING,
             ),
             (
                 CardanoAddressParametersType(
                     address_type=CardanoAddressType.BYRON,
-                    spending_key_path=[44 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                    address_n=[44 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
                 ),
                 staking_use_cases.NO_STAKING,
             ),
