@@ -1022,3 +1022,32 @@ void layoutCosiCommitSign(const uint32_t *address_n, size_t address_n_count,
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), desc, str[0],
                     str[1], str[2], str[3], NULL, NULL);
 }
+
+void layoutConfirmAutoLockDelay(uint32_t delay_ms) {
+  char line[sizeof("after 4294967296 minutes?")] = {0};
+
+  const char *unit = _("second");
+  uint32_t num = delay_ms / 1000U;
+
+  if (delay_ms >= 60 * 60 * 1000) {
+    unit = _("hour");
+    num /= 60 * 60U;
+  } else if (delay_ms >= 60 * 1000) {
+    unit = _("minute");
+    num /= 60U;
+  }
+
+  strlcpy(line, _("after "), sizeof(line));
+  size_t off = strlen(line);
+  bn_format_uint64(num, NULL, NULL, 0, 0, false, &line[off],
+                   sizeof(line) - off);
+  strlcat(line, " ", sizeof(line));
+  strlcat(line, unit, sizeof(line));
+  if (num > 1) {
+    strlcat(line, "s", sizeof(line));
+  }
+  strlcat(line, "?", sizeof(line));
+  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                    _("Do you really want to"), _("auto-lock your device"),
+                    line, NULL, NULL, NULL);
+}

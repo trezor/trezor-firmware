@@ -413,9 +413,19 @@ void fsm_msgApplySettings(const ApplySettings *msg) {
   }
 
   if (msg->has_auto_lock_delay_ms) {
-    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
-                      _("Do you really want to"), _("change auto-lock"),
-                      _("delay?"), NULL, NULL, NULL);
+    if (msg->auto_lock_delay_ms < MIN_AUTOLOCK_DELAY_MS) {
+      fsm_sendFailure(FailureType_Failure_ProcessError,
+                      _("Auto-lock delay too short"));
+      layoutHome();
+      return;
+    }
+    if (msg->auto_lock_delay_ms > MAX_AUTOLOCK_DELAY_MS) {
+      fsm_sendFailure(FailureType_Failure_ProcessError,
+                      _("Auto-lock delay too long"));
+      layoutHome();
+      return;
+    }
+    layoutConfirmAutoLockDelay(msg->auto_lock_delay_ms);
     if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
       fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
       layoutHome();
