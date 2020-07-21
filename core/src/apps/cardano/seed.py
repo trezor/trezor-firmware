@@ -18,8 +18,8 @@ class Keychain:
 
     def __init__(self, root: bip32.HDNode) -> None:
         self.root = root
-        self.byron_root = None
-        self.shelley_root = None
+        self.byron_root = self._create_namespace_root(seed_namespaces.BYRON)
+        self.shelley_root = self._create_namespace_root(seed_namespaces.SHELLEY)
 
     def match_path(self, path: Bip32Path) -> Tuple[int, Bip32Path]:
         if is_byron_path(path):
@@ -38,17 +38,11 @@ class Keychain:
 
     def _get_path_root(self, path: list):
         if is_byron_path(path):
-            if self.byron_root is None:
-                self.byron_root = self._create_namespace_root(seed_namespaces.BYRON)
-            root = self.byron_root
+            return self.byron_root
         elif is_shelley_path(path):
-            if self.shelley_root is None:
-                self.shelley_root = self._create_namespace_root(seed_namespaces.SHELLEY)
-            root = self.shelley_root
+            return self.shelley_root
         else:
             raise wire.DataError("Forbidden key path")
-
-        return root
 
     def derive(self, node_path: Bip32Path) -> bip32.HDNode:
         _, suffix = self.match_path(node_path)
