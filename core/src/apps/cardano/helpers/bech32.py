@@ -19,16 +19,16 @@ def decode_unsafe(bech: str) -> bytes:
 
 
 def get_hrp(bech: str):
-    return bech.split(HRP_SEPARATOR)[0]
+    return bech.rsplit(HRP_SEPARATOR, 1)[0]
 
 
 def decode(hrp: str, bech: str) -> bytes:
     decoded_hrp, data = bech32.bech32_decode(bech, 130)
     if decoded_hrp != hrp:
-        raise ValueError("Bech 32 decode failed")
+        raise ValueError
 
     decoded = bech32.convertbits(data, 5, 8, False)
     if decoded is None:
-        raise ValueError("Bech 32 decode failed")
+        raise ValueError
 
     return bytes(decoded)
