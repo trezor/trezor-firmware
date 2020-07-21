@@ -22,6 +22,27 @@ ADDRESS_TYPES_SHELLEY = (
     CardanoAddressType.REWARD,
 )
 
+HEADER_LENGTH = 1
+HASH_LENGTH = 28
+MIN_POINTER_SIZE = 0
+MAX_POINTER_SIZE = 12
+
+ADDRESS_BYTES_MIN_LENGTHS = {
+    CardanoAddressType.BASE: HEADER_LENGTH + HASH_LENGTH + HASH_LENGTH,
+    CardanoAddressType.POINTER: HEADER_LENGTH + HASH_LENGTH + MIN_POINTER_SIZE,
+    CardanoAddressType.ENTERPRISE: HEADER_LENGTH + HASH_LENGTH,
+    CardanoAddressType.REWARD: HEADER_LENGTH + HASH_LENGTH,
+}
+
+ADDRESS_BYTES_MAX_LENGTHS = {
+    CardanoAddressType.BASE: ADDRESS_BYTES_MIN_LENGTHS[CardanoAddressType.BASE],
+    CardanoAddressType.POINTER: HEADER_LENGTH + HASH_LENGTH + MAX_POINTER_SIZE,
+    CardanoAddressType.ENTERPRISE: ADDRESS_BYTES_MIN_LENGTHS[
+        CardanoAddressType.ENTERPRISE
+    ],
+    CardanoAddressType.REWARD: ADDRESS_BYTES_MIN_LENGTHS[CardanoAddressType.REWARD],
+}
+
 
 def validate_full_path(path: List[int]) -> bool:
     """
@@ -83,8 +104,20 @@ def _validate_output_shelley_address(
     if address_type == CardanoAddressType.REWARD:
         raise INVALID_ADDRESS
 
+    _validate_address_size(address_bytes, address_type)
     _validate_output_address_bech32_hrp(address_str, address_type, network_id)
     _validate_address_network_id(address_bytes, network_id)
+
+
+def _validate_address_size(
+    address_bytes: bytes, address_type: CardanoAddressType
+) -> None:
+    if not (
+        ADDRESS_BYTES_MIN_LENGTHS[address_type]
+        <= len(address_bytes)
+        <= ADDRESS_BYTES_MAX_LENGTHS[address_type]
+    ):
+        raise INVALID_ADDRESS
 
 
 def _validate_output_address_bech32_hrp(
@@ -201,9 +234,7 @@ def _derive_shelley_address(
     return address
 
 
-def _create_address_header(
-    address_type: CardanoAddressType, network_id: int
-) -> bytes:
+def _create_address_header(address_type: CardanoAddressType, network_id: int) -> bytes:
     header = address_type << 4 | network_id
     return header.to_bytes(1, "little")
 

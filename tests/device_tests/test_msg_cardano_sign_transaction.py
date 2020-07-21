@@ -56,7 +56,7 @@ SAMPLE_OUTPUTS = {
         "amount": "1000000",
     },
     "simple_shelley_output": {
-        "address": "addr1q97tqh7wzy8mnx0sr2a57c4ug40zzl222877jz06nt49g4zr43fuq3k0dfpqjh3uvqcsl2qzwuwsvuhclck3scgn3vya5cw5yhe5vyg5x20akz",
+        "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
         "amount": "1",
     },
     "base_address_change_output": {
@@ -96,6 +96,30 @@ SAMPLE_OUTPUTS = {
         "address": "Ae2tdPwUPEZ5YUb8sM3eS8JqKgrRLzhiu71crfuH2MFtqaYr5ACNRZR3Mbm",
         "amount": "3003112",
     },
+    "invalid_base_address_too_short": {
+        "address": "addr1q89s8py7y68e3x66sscs0wkhlg5ssfrfs65084jrlrqcfqqj922xhxkn6twlq2wn4q50q352annk3903tj00h45mggqvpjcf",
+        "amount": "3003112",
+    },
+    "invalid_base_address_too_long": {
+        "address": "addr1q89s8py7y68e3x66sscs0wkhlg5ssfrfs65084jrlrqcfqqj922xhxkn6twlq2wn4q50q352annk3903tj00h45mgfm5zhnjqfc",
+        "amount": "3003112",
+    },
+    "invalid_pointer_address_too_short": {
+        "address": "addr1g89s8py7y68e3x66sscs0wkhlg5ssfrfs65084jrlrqcgrfjd3l",
+        "amount": "3003112",
+    },
+    "invalid_pointer_address_too_long": {
+        "address": "addr1g89s8py7y68e3x66sscs0wkhlg5ssfrfs65084jrlrqcfqysszqgqqysszqgqqysszqgqqzpqv0wa7",
+        "amount": "3003112",
+    },
+    "invalid_enterprise_address_too_short": {
+        "address": "addr1v89s8py7y68e3x66sscs0wkhlg5ssfrfs65084jrlrqcg0c7m2w",
+        "amount": "3003112",
+    },
+    "invalid_enterprise_address_too_long": {
+        "address": "addr1v89s8py7y68e3x66sscs0wkhlg5ssfrfs65084jrlrqcfqzp9v4srv",
+        "amount": "3003112",
+    },
     "large_simple_byron_output": {
         "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
         "amount": "449999999199999999",
@@ -105,7 +129,7 @@ SAMPLE_OUTPUTS = {
         "amount": "3003112",
     },
     "shelley_testnet_output": {
-        "address": "addr_test1vznzwjad7nyu5kpalzf6wvfevf0lfhrn423sstn86m2aprsvu0d2gxeef9a",
+        "address": "addr_test1vr9s8py7y68e3x66sscs0wkhlg5ssfrfs65084jrlrqcfqqtmut0e",
         "amount": "1",
     },
 }
@@ -177,9 +201,9 @@ VALID_VECTORS = [
         # input flow
         [[InputAction.SWIPE, InputAction.YES], [InputAction.SWIPE, InputAction.YES]],
         # tx hash
-        "1652fbf24d30316977f8ac117bfdf83054affb9baebfeb1f46b4ab5b8ee878fe",
+        "16fe72bb198be423677577e6326f1f648ec5fc11263b072006382d8125a6edda",
         # tx body
-        "83a400818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7000182825841017cb05fce110fb999f01abb4f62bc455e217d4a51fde909fa9aea545443ac53c046cf6a42095e3c60310fa802771d0672f8fe2d1861138b09da61d425f3461114018258390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b42771a006ca79302182a030aa100818258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c158408bc12e9a888a848ca79a9e52749fd429f36d02c6728c61672cf851562f616ac3b1070533a30395709da64bf323d4e70a42d71828386bfae7db07fc3d010e3e0df6",
+        "83a400818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018282583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff018258390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b42771a006ca79302182a030aa100818258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c158406a78f07836dcf4a303448d2b16b217265a9226be3984a69a04dba5d04f4dbb2a47b5e1cbb345f474c0b9634a2f37b921ab26e6a65d5dfd015dacb4455fb8430af6",
     ),
     # simple transaction with base address change output with staking key hash
     (
@@ -205,9 +229,9 @@ VALID_VECTORS = [
             [InputAction.SWIPE, InputAction.YES],
         ],
         # tx hash
-        "f20ad1550ec356f871a858a8946dc86bdf982ff09f280beae781ab7c634baf88",
+        "d1610bb89bece22ed3158738bc1fbb31c6af0685053e2993361e3380f49afad9",
         # tx body
-        "83a400818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7000182825841017cb05fce110fb999f01abb4f62bc455e217d4a51fde909fa9aea545443ac53c046cf6a42095e3c60310fa802771d0672f8fe2d1861138b09da61d425f3461114018258390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa32c728d3861e164cab28cb8f006448139c8f1740ffb8e7aa9e5232dc1a006ca79302182a030aa100818258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c15840fb999e6919fb2991f7751b06a6e8b3c65693023ef692068d98277a1108395714ed7e1e2040bd5d7e45e6679b89fead43c3401defa9d79560b6722cd2574b220af6",
+        "83a400818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018282583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff018258390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa32c728d3861e164cab28cb8f006448139c8f1740ffb8e7aa9e5232dc1a006ca79302182a030aa100818258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c15840622f22d03bc9651ddc5eb2f5dc709ac4240a64d2b78c70355dd62106543c407d56e8134c4df7884ba67c8a1b5c706fc021df5c4d0ff37385c30572e73c727d00f6",
     ),
     # simple transaction with pointer address change output
     (
@@ -233,9 +257,9 @@ VALID_VECTORS = [
             [InputAction.SWIPE, InputAction.YES],
         ],
         # tx hash
-        "3d1b607a22004e79db08179568497ed10263992472d3e402fbd0d0907679c385",
+        "40535fa8f88515f1da008d3cdf544cf9dbf1675c3cb0adb13b74b9293f1b7096",
         # tx body
-        "83a400818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7000182825841017cb05fce110fb999f01abb4f62bc455e217d4a51fde909fa9aea545443ac53c046cf6a42095e3c60310fa802771d0672f8fe2d1861138b09da61d425f3461114018258204180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa0102031a006ca79302182a030aa100818258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c158405ce3bc8c68dae9a320edf7bf08f3cd4f77adf2c0cd634c2b9ffa365b72de6b33f21afce8a8dc448644a12156fa0a71625bf4c9b02b4b98b56fcc3f06e42b0d0bf6",
+        "83a400818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018282583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff018258204180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa0102031a006ca79302182a030aa100818258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c15840dbbf050cc13d0696b1884113613318a275e6f0f8c7cb3e7828c4f2f3c158b2622a5d65ea247f1eed758a0f6242a52060c319d6f37c8460f5d14be24456cd0b08f6",
     ),
     # simple transaction with enterprise address change output
     (
@@ -261,9 +285,9 @@ VALID_VECTORS = [
             [InputAction.SWIPE, InputAction.YES],
         ],
         # tx hash
-        "ecc43fed0c00a140a36a517cf0982994103776d68a29ca23b48d902b2222706b",
+        "d3570557b197604109481a80aeb66cd2cfabc57f802ad593bacc12eb658e5d72",
         # tx body
-        "83a400818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7000182825841017cb05fce110fb999f01abb4f62bc455e217d4a51fde909fa9aea545443ac53c046cf6a42095e3c60310fa802771d0672f8fe2d1861138b09da61d425f34611140182581d6180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa1a006ca79302182a030aa100818258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c158406b72a593d657e80ac2971d5cdc443c138e29adbe8400e62facc5634df6bfad29bac220bd080082b67e7283eed99d33ce564762fe35734adaa444d555adf38701f6",
+        "83a400818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018282583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff0182581d6180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa1a006ca79302182a030aa100818258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c15840c5996650c438c4493b2c8a94229621bb9b151b8d61d75fb868c305e917031e9a1654f35023f7dbf5d1839ab9d57b153c7f79c2666af51ecf363780397956e00af6",
     ),
     # Testnet transaction
     (
@@ -291,9 +315,9 @@ VALID_VECTORS = [
             [InputAction.SWIPE, InputAction.YES],
         ],
         # tx hash
-        "8bbe6dd4185cf8b0fe6ede75f707d1e367589d33ff321d4f2646ebe800df43d6",
+        "47cf79f20c6c62edb4162b3b232a57afc1bd0b57c7fd8389555276408a004776",
         # serialized tx
-        "83a400818258201af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc00018382582f82d818582583581cc817d85b524e3d073795819a25cdbb84cff6aa2bbb3a081980d248cba10242182a001a0fb6fc611a002dd2e882582160a6274badf4c9ca583df893a73139625ff4dc73aaa3082e67d6d5d08e0ce3daa40182582f82d818582583581c98c3a558f39d1d993cc8770e8825c70a6d0f5a9eb243501c4526c29da10242182a001aa8566c011a000f424002182a030aa1028184582089053545a6c254b0d9b1464e48d2b5fcf91d4e25c128afb1fcfc61d0843338ea5840ad6cdb5106db5c295095c389808189d58ace73577aedfe670fbf9cb51c228c3ee55d98ba7896599beebedb64f01798ef00ffb32c7ed13732cad9ad6817237709582026308151516f3b0e02bb1638142747863c520273ce9bd3e5cd91e1d46fe2a63545a10242182af6",
+        "83a400818258201af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc00018382582f82d818582583581cc817d85b524e3d073795819a25cdbb84cff6aa2bbb3a081980d248cba10242182a001a0fb6fc611a002dd2e882581d60cb03849e268f989b5a843107bad7fa2908246986a8f3d643f8c184800182582f82d818582583581c98c3a558f39d1d993cc8770e8825c70a6d0f5a9eb243501c4526c29da10242182a001aa8566c011a000f424002182a030aa1028184582089053545a6c254b0d9b1464e48d2b5fcf91d4e25c128afb1fcfc61d0843338ea5840cc11adf81cb3c3b75a438325f8577666f5cbb4d5d6b73fa6dbbcf5ab36897df34eecacdb54c3bc3ce7fc594ebb2c7aa4db4700f4290facad9b611a035af8710a582026308151516f3b0e02bb1638142747863c520273ce9bd3e5cd91e1d46fe2a63545a10242182af6",
     ),
 ]
 
@@ -342,6 +366,108 @@ INVALID_VECTORS = [
         [SAMPLE_INPUTS["byron_input"]],
         # outputs
         [SAMPLE_OUTPUTS["invalid_crc"]],
+        # fee
+        42,
+        # ttl
+        10,
+        # error message
+        "Invalid address",
+    ),
+    # Output base address is too short
+    (
+        # protocol magic (mainnet)
+        PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
+        # inputs
+        [SAMPLE_INPUTS["shelley_input"]],
+        # outputs
+        [SAMPLE_OUTPUTS["invalid_base_address_too_short"]],
+        # fee
+        42,
+        # ttl
+        10,
+        # error message
+        "Invalid address",
+    ),
+    # Output base address is too long
+    (
+        # protocol magic (mainnet)
+        PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
+        # inputs
+        [SAMPLE_INPUTS["shelley_input"]],
+        # outputs
+        [SAMPLE_OUTPUTS["invalid_base_address_too_long"]],
+        # fee
+        42,
+        # ttl
+        10,
+        # error message
+        "Invalid address",
+    ),
+    # Output pointer address is too short
+    (
+        # protocol magic (mainnet)
+        PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
+        # inputs
+        [SAMPLE_INPUTS["shelley_input"]],
+        # outputs
+        [SAMPLE_OUTPUTS["invalid_pointer_address_too_short"]],
+        # fee
+        42,
+        # ttl
+        10,
+        # error message
+        "Invalid address",
+    ),
+    # Output pointer address is too long
+    (
+        # protocol magic (mainnet)
+        PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
+        # inputs
+        [SAMPLE_INPUTS["shelley_input"]],
+        # outputs
+        [SAMPLE_OUTPUTS["invalid_pointer_address_too_long"]],
+        # fee
+        42,
+        # ttl
+        10,
+        # error message
+        "Invalid address",
+    ),
+    # Output enterprise address is too short
+    (
+        # protocol magic (mainnet)
+        PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
+        # inputs
+        [SAMPLE_INPUTS["shelley_input"]],
+        # outputs
+        [SAMPLE_OUTPUTS["invalid_enterprise_address_too_short"]],
+        # fee
+        42,
+        # ttl
+        10,
+        # error message
+        "Invalid address",
+    ),
+    # Output enterprise address is too long
+    (
+        # protocol magic (mainnet)
+        PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
+        # inputs
+        [SAMPLE_INPUTS["shelley_input"]],
+        # outputs
+        [SAMPLE_OUTPUTS["invalid_enterprise_address_too_long"]],
         # fee
         42,
         # ttl
