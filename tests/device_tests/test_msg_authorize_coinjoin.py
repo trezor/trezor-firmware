@@ -36,6 +36,7 @@ TXHASH_65b811 = bytes.fromhex(
 )
 
 PIN = "1234"
+ROUND_ID_LEN = 32
 
 pytestmark = pytest.mark.skip_t1
 
@@ -66,7 +67,7 @@ def test_sign_tx(client):
             parse_path("84'/1'/0'/1/0"),
             script_type=messages.InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"www.example.com" + (1).to_bytes(8, "big"),
+            commitment_data=b"www.example.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
             preauthorized=True,
         )
 
@@ -80,7 +81,7 @@ def test_sign_tx(client):
             parse_path("84'/1'/0'/1/5"),
             script_type=messages.InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"www.example.com" + (1).to_bytes(8, "big"),
+            commitment_data=b"www.example.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
             preauthorized=True,
         )
 
@@ -297,46 +298,6 @@ def test_wrong_coordinator(client):
             parse_path("84'/1'/0'/1/0"),
             script_type=messages.InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"www.example.org" + (1).to_bytes(8, "big"),
-            preauthorized=True,
-        )
-
-
-def test_change_round_id(client):
-    # Ensure that if the round ID changes, then GetOwnershipProof fails.
-
-    btc.authorize_coinjoin(
-        client,
-        amount=100000000,
-        max_fee=50000,
-        coordinator="www.example.com",
-        n=parse_path("m/84'/1'/0'"),
-        coin_name="Testnet",
-        script_type=messages.InputScriptType.SPENDWITNESS,
-    )
-
-    with client:
-        client.set_expected_responses(
-            [messages.PreauthorizedRequest(), messages.OwnershipProof()]
-        )
-        btc.get_ownership_proof(
-            client,
-            "Testnet",
-            parse_path("84'/1'/0'/1/0"),
-            script_type=messages.InputScriptType.SPENDWITNESS,
-            user_confirmation=True,
-            commitment_data=b"www.example.com" + (1).to_bytes(8, "big"),
-            preauthorized=True,
-        )
-
-    # GetOwnershipProof with changed round ID.
-    with pytest.raises(TrezorFailure, match="Unauthorized operation"):
-        ownership_proof, _ = btc.get_ownership_proof(
-            client,
-            "Testnet",
-            parse_path("84'/1'/0'/1/0"),
-            script_type=messages.InputScriptType.SPENDWITNESS,
-            user_confirmation=True,
-            commitment_data=b"www.example.com" + (2).to_bytes(8, "big"),
+            commitment_data=b"www.example.org" + (1).to_bytes(ROUND_ID_LEN, "big"),
             preauthorized=True,
         )
