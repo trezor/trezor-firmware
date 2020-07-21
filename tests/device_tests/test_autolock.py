@@ -19,6 +19,7 @@ import time
 import pytest
 
 from trezorlib import device, messages
+from trezorlib.exceptions import TrezorFailure
 
 from ..common import TEST_ADDRESS_N, get_test_address
 
@@ -65,31 +66,38 @@ def test_apply_auto_lock_delay(client):
         get_test_address(client)
 
 
-def test_apply_minimal_auto_lock_delay(client):
-    """
-    Verify that the delay is not below the minimal auto-lock delay (10 secs)
-    otherwise the device may auto-lock before any user interaction.
-    """
-    set_autolock_delay(client, 1 * 1000)
+@pytest.mark.parametrize(
+    "seconds",
+    [
+        10,  # 10 seconds, minimum
+        60,  # 1 minute
+        123,  # 2 minutes
+        3601,  # 1 hour
+        7227,  # 2 hours
+        536870,  # 149 hours, maximum
+    ],
+)
+def test_apply_auto_lock_delay_valid(client, seconds):
+    set_autolock_delay(client, seconds * 1000)
 
-    time.sleep(0.1)  # sleep less than auto-lock delay
-    with client:
-        # No PIN protection is required.
-        client.set_expected_responses([messages.Address()])
-        get_test_address(client)
 
-    # sleep more than specified auto-lock delay (1s) but less than minimal allowed (10s)
-    time.sleep(3)
-    with client:
-        # No PIN protection is required.
-        client.set_expected_responses([messages.Address()])
-        get_test_address(client)
-
-    time.sleep(10.1)  # sleep more than the minimal auto-lock delay
+@pytest.mark.skip_ui
+@pytest.mark.parametrize(
+    "seconds", [0, 1, 9, 536871, 2 ** 22],
+)
+def test_apply_auto_lock_delay_out_of_range(client, seconds):
     with client:
         client.use_pin_sequence([PIN4])
-        client.set_expected_responses([pin_request(client), messages.Address()])
-        get_test_address(client)
+        client.set_expected_responses(
+            [
+                pin_request(client),
+                messages.Failure(code=messages.FailureType.ProcessError),
+            ]
+        )
+
+        delay = seconds * 1000
+        with pytest.raises(TrezorFailure):
+            device.apply_settings(client, auto_lock_delay_ms=delay)
 
 
 @pytest.mark.skip_t1

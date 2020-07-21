@@ -2,6 +2,7 @@ import storage.device
 from trezor import ui, wire, workflow
 from trezor.messages import ButtonRequestType
 from trezor.messages.Success import Success
+from trezor.strings import format_duration_ms
 from trezor.ui.text import Text
 
 from apps.base import lock_device
@@ -44,9 +45,10 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings):
         await require_confirm_change_display_rotation(ctx, msg.display_rotation)
 
     if msg.auto_lock_delay_ms is not None:
-        msg.auto_lock_delay_ms = max(
-            msg.auto_lock_delay_ms, storage.device.AUTOLOCK_DELAY_MINIMUM
-        )
+        if msg.auto_lock_delay_ms < storage.device.AUTOLOCK_DELAY_MINIMUM:
+            raise wire.ProcessError("Auto-lock delay too short")
+        if msg.auto_lock_delay_ms > storage.device.AUTOLOCK_DELAY_MAXIMUM:
+            raise wire.ProcessError("Auto-lock delay too long")
         await require_confirm_change_autolock_delay(ctx, msg.auto_lock_delay_ms)
 
     storage.device.load_settings(
@@ -120,5 +122,5 @@ async def require_confirm_change_display_rotation(ctx, rotation):
 async def require_confirm_change_autolock_delay(ctx, delay_ms):
     text = Text("Auto-lock delay", ui.ICON_CONFIG, new_lines=False)
     text.normal("Do you really want to", "auto-lock your device", "after")
-    text.bold("{} seconds?".format(delay_ms // 1000))
+    text.bold("{}?".format(format_duration_ms(delay_ms)))
     await require_confirm(ctx, text, ButtonRequestType.ProtectCall)
