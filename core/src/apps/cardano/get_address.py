@@ -101,8 +101,4 @@ async def _show_staking_warnings(
 
 def _to_account_path(path: List[int]) -> List[int]:
     ACCOUNT_PATH_LENGTH = const(3)
-
-    if len(path) < ACCOUNT_PATH_LENGTH:
-        raise ValueError("Path too short for account path")
-
     return path[:ACCOUNT_PATH_LENGTH]
