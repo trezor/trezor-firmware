@@ -2,17 +2,18 @@ from trezor import utils, wire
 from trezor.messages.RequestType import TXFINISHED
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxAck import TxAck
+from trezor.messages.TxRequest import TxRequest
 
 from apps.common import coininfo, paths
 
-from ..keychain import get_keychain_for_coin
+from ..keychain import with_keychain
+from . import approvers, bitcoin, helpers, layout, progress
 
 if not utils.BITCOIN_ONLY:
     from . import bitcoinlike, decred, zcash
 
 if False:
     from typing import Optional, Union
-    from trezor.messages.TxRequest import TxRequest
     from apps.common.seed import Keychain
     from ..authorization import CoinJoinAuthorization
 
@@ -20,21 +21,14 @@ if False:
 BITCOIN_NAMES = ("Bitcoin", "Regtest", "Testnet")
 
 
-async def sign_tx(ctx: wire.Context, msg: SignTx) -> TxRequest:
-    keychain, coin = await get_keychain_for_coin(ctx, msg.coin_name)
-    return await sign_tx_impl(ctx, msg, keychain, coin)
-
-
-async def sign_tx_impl(
+@with_keychain
+async def sign_tx(
     ctx: wire.Context,
     msg: SignTx,
     keychain: Keychain,
     coin: coininfo.CoinInfo,
     authorization: Optional[CoinJoinAuthorization] = None,
 ) -> TxRequest:
-    from . import approvers, bitcoin, helpers, layout, progress
-    from trezor.messages.TxRequest import TxRequest
-
     if authorization:
         approver = approvers.CoinJoinApprover(msg, coin, authorization)
     else:
