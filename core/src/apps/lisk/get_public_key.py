@@ -1,7 +1,7 @@
 from trezor.messages.LiskPublicKey import LiskPublicKey
 
 from apps.common import layout, paths
-from apps.common.seed import with_slip44_keychain
+from apps.common.keychain import with_slip44_keychain
 from apps.lisk import CURVE, SLIP44_ID
 from apps.lisk.helpers import validate_full_path
 

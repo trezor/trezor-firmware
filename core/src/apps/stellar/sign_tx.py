@@ -8,7 +8,7 @@ from trezor.messages.StellarTxOpRequest import StellarTxOpRequest
 from trezor.wire import ProcessError
 
 from apps.common import paths, seed
-from apps.common.seed import with_slip44_keychain
+from apps.common.keychain import with_slip44_keychain
 from apps.stellar import CURVE, SLIP44_ID, consts, helpers, layout, writers
 from apps.stellar.operations import process_operation
 

@@ -10,7 +10,7 @@ from trezor.messages.BinanceTxRequest import BinanceTxRequest
 
 from apps.binance import CURVE, SLIP44_ID, helpers, layout
 from apps.common import paths
-from apps.common.seed import Keychain, with_slip44_keychain
+from apps.common.keychain import Keychain, with_slip44_keychain
 
 
 @with_slip44_keychain(SLIP44_ID, CURVE, allow_testnet=True)

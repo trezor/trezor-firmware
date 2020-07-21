@@ -3,7 +3,7 @@ import gc
 from trezor import log, utils, wire
 from trezor.messages import MessageType
 
-from apps.common.seed import with_slip44_keychain
+from apps.common.keychain import with_slip44_keychain
 from apps.monero import CURVE, SLIP44_ID
 from apps.monero.signing.state import State
 

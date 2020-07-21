@@ -11,7 +11,7 @@ from trezor.messages.MoneroKeyImageSyncStepAck import MoneroKeyImageSyncStepAck
 from trezor.messages.MoneroKeyImageSyncStepRequest import MoneroKeyImageSyncStepRequest
 
 from apps.common import paths
-from apps.common.seed import with_slip44_keychain
+from apps.common.keychain import with_slip44_keychain
 from apps.monero import CURVE, SLIP44_ID, misc
 from apps.monero.layout import confirms
 from apps.monero.xmr import crypto, key_image, monero

@@ -20,7 +20,7 @@ from trezor.messages.MoneroGetTxKeyAck import MoneroGetTxKeyAck
 from trezor.messages.MoneroGetTxKeyRequest import MoneroGetTxKeyRequest
 
 from apps.common import paths
-from apps.common.seed import with_slip44_keychain
+from apps.common.keychain import with_slip44_keychain
 from apps.monero import CURVE, SLIP44_ID, misc
 from apps.monero.layout import confirms
 from apps.monero.xmr import crypto

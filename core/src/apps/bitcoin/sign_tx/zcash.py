@@ -10,7 +10,7 @@ from trezor.messages.TxInputType import TxInputType
 from trezor.utils import HashWriter, ensure
 
 from apps.common.coininfo import CoinInfo
-from apps.common.seed import Keychain
+from apps.common.keychain import Keychain
 from apps.common.writers import write_bitcoin_varint
 
 from ..common import ecdsa_hash_pubkey

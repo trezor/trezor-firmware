@@ -1,7 +1,7 @@
 from trezor import utils, wire
 from trezor.crypto import bip32, hashlib, hmac
 
-from apps.common import seed
+from apps.common.keychain import Keychain
 from apps.common.readers import read_bitcoin_varint
 from apps.common.writers import (
     empty_bytearray,
@@ -67,7 +67,7 @@ def verify_nonownership(
     proof: bytes,
     script_pubkey: bytes,
     commitment_data: bytes,
-    keychain: seed.Keychain,
+    keychain: Keychain,
     coin: CoinInfo,
 ) -> bool:
     try:
@@ -106,9 +106,9 @@ def verify_nonownership(
     return not_owned
 
 
-def get_identifier(script_pubkey: bytes, keychain: seed.Keychain) -> bytes:
+def get_identifier(script_pubkey: bytes, keychain: Keychain) -> bytes:
     # k = Key(m/"SLIP-0019"/"Ownership identification key")
-    node = keychain.derive(_OWNERSHIP_ID_KEY_PATH)
+    node = keychain.derive_slip21(_OWNERSHIP_ID_KEY_PATH)
 
     # id = HMAC-SHA256(key = k, msg = scriptPubKey)
     return hmac.Hmac(node.key(), script_pubkey, hashlib.sha256).digest()

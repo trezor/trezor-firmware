@@ -6,7 +6,7 @@ from trezor.utils import chunks
 
 from apps.common import paths, seed
 from apps.common.confirm import require_confirm
-from apps.common.seed import with_slip44_keychain
+from apps.common.keychain import with_slip44_keychain
 from apps.tezos import CURVE, SLIP44_ID, helpers
 
 

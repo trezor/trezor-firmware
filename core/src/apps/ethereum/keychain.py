@@ -1,7 +1,7 @@
 from trezor import wire
 
 from apps.common import HARDENED, seed
-from apps.common.seed import get_keychain
+from apps.common.keychain import get_keychain
 
 from . import CURVE, networks
 
@@ -13,7 +13,7 @@ if False:
 
     from trezor.messages.EthereumSignTx import EthereumSignTx
 
-    from apps.common.seed import MsgOut, Handler, HandlerWithKeychain
+    from apps.common.keychain import MsgOut, Handler, HandlerWithKeychain
 
     class MsgWithAddressN(MessageType, Protocol):
         address_n = ...  # type: List[int]
@@ -25,8 +25,8 @@ async def from_address_n(ctx: wire.Context, address_n: List[int]) -> seed.Keycha
     slip44_hardened = address_n[1]
     if slip44_hardened not in networks.all_slip44_ids_hardened():
         raise wire.DataError("Forbidden key path")
-    namespace = CURVE, [44 | HARDENED, slip44_hardened]
-    return await get_keychain(ctx, [namespace])
+    namespace = [44 | HARDENED, slip44_hardened]
+    return await get_keychain(ctx, CURVE, [namespace])
 
 
 def with_keychain_from_path(
@@ -55,8 +55,8 @@ def with_keychain_from_chain_id(
             if networks.is_wanchain(msg.chain_id, msg.tx_type):
                 slip44 = networks.SLIP44_WANCHAIN
 
-            namespace = CURVE, [44 | HARDENED, slip44 | HARDENED]
-            keychain = await get_keychain(ctx, [namespace])
+            namespace = [44 | HARDENED, slip44 | HARDENED]
+            keychain = await get_keychain(ctx, CURVE, [namespace])
 
         with keychain:
             return await func(ctx, msg, keychain)
