@@ -13,6 +13,8 @@ if False:
     from apps.common import coininfo
     from apps.common.seed import Keychain, MsgOut, Handler
 
+    from .authorization import CoinJoinAuthorization
+
     class MsgWithCoinName(MessageType, Protocol):
         coin_name = ...  # type: Optional[str]
 
@@ -56,9 +58,18 @@ async def get_keychain_for_coin(
 
 
 def with_keychain(func: HandlerWithCoinInfo[MsgIn, MsgOut]) -> Handler[MsgIn, MsgOut]:
-    async def wrapper(ctx: wire.Context, msg: MsgIn) -> MsgOut:
-        keychain, coin = await get_keychain_for_coin(ctx, msg.coin_name)
-        with keychain:
-            return await func(ctx, msg, keychain, coin)
+    async def wrapper(
+        ctx: wire.Context,
+        msg: MsgIn,
+        authorization: Optional[CoinJoinAuthorization] = None,
+    ) -> MsgOut:
+        if authorization:
+            keychain = authorization.keychain
+            coin = get_coin_by_name(msg.coin_name)
+            return await func(ctx, msg, keychain, coin, authorization)
+        else:
+            keychain, coin = await get_keychain_for_coin(ctx, msg.coin_name)
+            with keychain:
+                return await func(ctx, msg, keychain, coin)
 
     return wrapper

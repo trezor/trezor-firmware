@@ -10,7 +10,7 @@ from apps.common.confirm import require_confirm
 from apps.common.paths import validate_path
 
 from . import addresses, common, scripts
-from .keychain import get_keychain_for_coin
+from .keychain import with_keychain
 from .ownership import generate_proof, get_identifier
 
 if False:
@@ -22,12 +22,8 @@ if False:
 _MAX_MONO_LINE = 18
 
 
-async def get_ownership_proof(ctx, msg: GetOwnershipProof) -> OwnershipProof:
-    keychain, coin = await get_keychain_for_coin(ctx, msg.coin_name)
-    return await get_ownership_proof_impl(ctx, msg, keychain, coin)
-
-
-async def get_ownership_proof_impl(
+@with_keychain
+async def get_ownership_proof(
     ctx,
     msg: GetOwnershipProof,
     keychain: Keychain,
