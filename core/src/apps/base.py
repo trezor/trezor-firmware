@@ -14,7 +14,7 @@ from apps.common.request_pin import verify_user_pin
 
 if False:
     import protobuf
-    from typing import Any, Coroutine, Iterable, NoReturn, Optional, Protocol
+    from typing import Iterable, NoReturn, Optional, Protocol
     from trezor.messages.Initialize import Initialize
     from trezor.messages.GetFeatures import GetFeatures
     from trezor.messages.Cancel import Cancel
@@ -25,11 +25,6 @@ if False:
 if False:
 
     class Authorization(Protocol):
-        def handler(
-            self, ctx: wire.Context, msg: protobuf.MessageType
-        ) -> Coroutine[Any, Any, protobuf.MessageType]:
-            ...
-
         def expected_wire_types(self) -> Iterable[int]:
             ...
 
@@ -143,7 +138,11 @@ async def handle_DoPreauthorized(
         PreauthorizedRequest(), *authorization.expected_wire_types()
     )
 
-    return await authorization.handler(ctx, req)
+    handler = wire.find_registered_workflow_handler(ctx.iface, req.MESSAGE_WIRE_TYPE)
+    if handler is None:
+        return wire.unexpected_message()
+
+    return await handler(ctx, req, authorization)  # type: ignore
 
 
 def set_authorization(authorization: Authorization) -> None:
