@@ -76,6 +76,11 @@ async def sign_tx(
 
 
 def _validate_network_info(network_id: int, protocol_magic: int) -> None:
+    """
+    We are only concerned about checking that both network_id and protocol_magic
+    belong to the mainnet or that both belong to a testnet. We don't need to check for
+    consistency between various testnets (at least for now).
+    """
     is_mainnet_network_id = network_ids.is_mainnet(network_id)
     is_mainnet_protocol_magic = protocol_magics.is_mainnet(protocol_magic)
 
@@ -89,7 +94,7 @@ def _validate_outputs(
     protocol_magic: int,
     network_id: int,
 ) -> None:
-    if len(outputs) < 1:
+    if not outputs:
         raise wire.ProcessError("Transaction has no outputs!")
 
     total_amount = 0
