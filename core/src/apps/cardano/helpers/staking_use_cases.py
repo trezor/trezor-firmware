@@ -54,4 +54,7 @@ def get(
 
 
 def _path_to_staking_path(path: List[int]) -> List[int]:
+    if len(path) < 3:
+        raise ValueError
+
     return path[:3] + [2, 0]
