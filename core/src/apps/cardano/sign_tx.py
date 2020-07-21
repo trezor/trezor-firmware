@@ -14,7 +14,7 @@ from . import CURVE, seed
 from .address import (
     derive_address_bytes,
     derive_human_readable_address,
-    get_address_bytes,
+    get_address_bytes_unsafe,
     validate_full_path,
     validate_output_address,
 )
@@ -153,7 +153,7 @@ def _build_outputs(
                 keychain, output.address_parameters, protocol_magic, network_id
             )
         else:
-            address = get_address_bytes(output.address)
+            address = get_address_bytes_unsafe(output.address)
 
         result.append((address, amount))
 

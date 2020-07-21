@@ -15,6 +15,13 @@ if False:
     from trezor.messages import CardanoBlockchainPointerType
     from . import seed
 
+ADDRESS_TYPES_SHELLEY = (
+    CardanoAddressType.BASE,
+    CardanoAddressType.POINTER,
+    CardanoAddressType.ENTERPRISE,
+    CardanoAddressType.REWARD,
+)
+
 
 def validate_full_path(path: List[int]) -> bool:
     """
@@ -24,13 +31,13 @@ def validate_full_path(path: List[int]) -> bool:
     """
     if len(path) != 5:
         return False
-    if path[0] != purposes.BYRON and path[0] != purposes.SHELLEY:
+    if path[0] not in (purposes.BYRON, purposes.SHELLEY):
         return False
     if path[1] != 1815 | HARDENED:
         return False
     if path[2] < HARDENED or path[2] > 20 | HARDENED:
         return False
-    if path[3] not in [0, 1, 2]:
+    if path[3] not in (0, 1, 2):
         return False
     if path[4] > 1000000:
         return False
@@ -41,17 +48,18 @@ def validate_output_address(address: str, protocol_magic: int, network_id: int) 
     if address is None or len(address) == 0:
         raise INVALID_ADDRESS
 
-    address_bytes = get_address_bytes(address)
+    address_bytes = get_address_bytes_unsafe(address)
+    address_type = _get_address_type(address_bytes)
 
-    if _has_byron_address_header(address_bytes):
+    if address_type == CardanoAddressType.BYRON:
         validate_output_byron_address(address_bytes, protocol_magic)
-    elif _has_shelley_address_header(address_bytes):
+    elif address_type in ADDRESS_TYPES_SHELLEY:
         _validate_output_shelley_address(address, address_bytes, network_id)
     else:
         raise INVALID_ADDRESS
 
 
-def get_address_bytes(address: str) -> bytes:
+def get_address_bytes_unsafe(address: str) -> bytes:
     try:
         address_bytes = bech32.decode_unsafe(address)
     except ValueError:
@@ -63,28 +71,15 @@ def get_address_bytes(address: str) -> bytes:
     return address_bytes
 
 
-def _has_byron_address_header(address: bytes) -> bool:
-    return _get_address_type(address) == CardanoAddressType.BYRON
-
-
 def _get_address_type(address: bytes) -> int:
     return address[0] >> 4
-
-
-def _has_shelley_address_header(address: bytes) -> bool:
-    address_type = _get_address_type(address)
-    return (
-        address_type == CardanoAddressType.BASE
-        or address_type == CardanoAddressType.POINTER
-        or address_type == CardanoAddressType.ENTERPRISE
-        or address_type == CardanoAddressType.REWARD
-    )
 
 
 def _validate_output_shelley_address(
     address_str: str, address_bytes: bytes, network_id: int
 ) -> None:
     address_type = _get_address_type(address_bytes)
+    # reward address cannot be an output address
     if address_type == CardanoAddressType.REWARD:
         raise INVALID_ADDRESS
 
@@ -104,7 +99,8 @@ def _validate_output_address_bech32_hrp(
 
 def _get_bech32_hrp_for_address(address_type: int, network_id: int) -> str:
     if address_type == CardanoAddressType.BYRON:
-        raise ValueError("Byron address uses base58 encoding")
+        # Byron address uses base58 encoding
+        raise ValueError
 
     if address_type == CardanoAddressType.REWARD:
         if network_ids.is_mainnet(network_id):
@@ -133,16 +129,6 @@ def get_public_key_hash(keychain: seed.Keychain, path: List[int]) -> bytes:
     return hashlib.blake2b(data=public_key, outlen=28).digest()
 
 
-def get_human_readable_address(address: bytes, network_id: int) -> str:
-    if _has_byron_address_header(address):
-        return base58.encode(address)
-    elif _has_shelley_address_header(address):
-        hrp = _get_bech32_hrp_for_address(_get_address_type(address), network_id)
-        return bech32.encode(hrp, address)
-    else:
-        raise ValueError("Invalid address")
-
-
 def derive_human_readable_address(
     keychain: seed.Keychain,
     parameters: CardanoAddressParametersType,
@@ -150,7 +136,15 @@ def derive_human_readable_address(
     network_id: int,
 ) -> str:
     address = derive_address_bytes(keychain, parameters, protocol_magic, network_id)
-    return get_human_readable_address(address, network_id)
+
+    address_type = _get_address_type(address)
+    if address_type == CardanoAddressType.BYRON:
+        return base58.encode(address)
+    elif address_type in ADDRESS_TYPES_SHELLEY:
+        hrp = _get_bech32_hrp_for_address(_get_address_type(address), network_id)
+        return bech32.encode(hrp, address)
+    else:
+        raise ValueError
 
 
 def derive_address_bytes(
@@ -185,15 +179,13 @@ def _derive_shelley_address(
     if not is_shelley_path(parameters.address_n):
         raise wire.DataError("Invalid path for shelley address!")
 
-    address_header = _create_address_header(parameters.address_type, network_id)
-
     if parameters.address_type == CardanoAddressType.BASE:
         address = _derive_base_address(
             keychain,
-            address_header,
             parameters.address_n,
             parameters.address_n_staking,
             parameters.staking_key_hash,
+            network_id,
         )
     elif parameters.address_type == CardanoAddressType.ENTERPRISE:
         address = _derive_enterprise_address(keychain, parameters.address_n, network_id)
@@ -204,37 +196,16 @@ def _derive_shelley_address(
     elif parameters.address_type == CardanoAddressType.REWARD:
         address = _derive_reward_address(keychain, parameters.address_n, network_id)
     else:
-        raise ValueError("Invalid address type '%s'!" % parameters.address_type)
+        raise ValueError
 
     return address
 
 
-def _create_address_header(address_type: int, network_id: int) -> bytes:
-    if address_type == CardanoAddressType.BYRON:
-        """
-        Byron addresses don't have an explicit header in the Shelley
-        spec. However, thanks to their CBOR structure they always start with
-        0b1000 - the byron address id. This is no coincidence.
-        The Shelley address headers are purposefully built around these
-        starting bits of the byron address.
-        """
-        raise ValueError("Byron address does not contain an explicit header!")
-
-    if not _validate_address_type(address_type):
-        raise ValueError("Invalid address type '%s'!" % address_type)
-
+def _create_address_header(
+    address_type: CardanoAddressType, network_id: int
+) -> bytes:
     header = address_type << 4 | network_id
-    return bytes([header])
-
-
-def _validate_address_type(address_type: int) -> bool:
-    return (
-        address_type == CardanoAddressType.BYRON
-        or address_type == CardanoAddressType.BASE
-        or address_type == CardanoAddressType.POINTER
-        or address_type == CardanoAddressType.ENTERPRISE
-        or address_type == CardanoAddressType.REWARD
-    )
+    return header.to_bytes(1, "little")
 
 
 def _derive_base_address(
@@ -252,16 +223,14 @@ def _derive_base_address(
     if staking_key_hash is None:
         staking_key_hash = get_public_key_hash(keychain, staking_path)
 
-    return address_header + spending_key_hash + staking_key_hash
+    return header + spending_key_hash + staking_key_hash
 
 
 def _validate_base_address_staking_info(
     staking_path: List[int], staking_key_hash: bytes,
 ) -> None:
     if staking_key_hash is None and staking_path is None:
-        raise wire.DataError(
-            "Base address needs a staking path or a staking key hash!"
-        )
+        raise wire.DataError("Base address needs a staking path or a staking key hash!")
 
     if staking_key_hash is None and not _is_staking_path(staking_path):
         raise wire.DataError("Invalid staking path!")
@@ -290,15 +259,15 @@ def _is_staking_path(path: List[int]) -> bool:
 
 def _derive_pointer_address(
     keychain: seed.Keychain,
-    address_header: bytes,
     path: List[int],
     pointer: CardanoBlockchainPointerType,
+    network_id: int,
 ) -> bytes:
+    header = _create_address_header(CardanoAddressType.POINTER, network_id)
     spending_key_hash = get_public_key_hash(keychain, path)
-
     encoded_pointer = _encode_certificate_pointer(pointer)
 
-    return address_header + spending_key_hash + encoded_pointer
+    return header + spending_key_hash + encoded_pointer
 
 
 def _encode_certificate_pointer(pointer: CardanoBlockchainPointerType) -> bytes:
@@ -318,19 +287,21 @@ def _encode_certificate_pointer(pointer: CardanoBlockchainPointerType) -> bytes:
 
 
 def _derive_enterprise_address(
-    keychain: seed.Keychain, address_header: bytes, path: List[int]
+    keychain: seed.Keychain, path: List[int], network_id: int,
 ) -> bytes:
+    header = _create_address_header(CardanoAddressType.ENTERPRISE, network_id)
     spending_key_hash = get_public_key_hash(keychain, path)
 
-    return address_header + spending_key_hash
+    return header + spending_key_hash
 
 
 def _derive_reward_address(
-    keychain: seed.Keychain, address_header: bytes, path: List[int]
+    keychain: seed.Keychain, path: List[int], network_id: int,
 ) -> bytes:
     if not _is_staking_path(path):
         raise wire.DataError("Invalid path for reward address!")
 
+    header = _create_address_header(CardanoAddressType.REWARD, network_id)
     staking_key_hash = get_public_key_hash(keychain, path)
 
-    return address_header + staking_key_hash
+    return header + staking_key_hash
