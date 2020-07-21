@@ -101,7 +101,10 @@ def _validate_outputs(
     for output in outputs:
         total_amount += output.amount
         if output.address_parameters:
-            continue
+            # try to derive the address to validate it
+            _ = derive_address_bytes(
+                keychain, output.address_parameters, protocol_magic, network_id
+            )
         elif output.address is not None:
             validate_output_address(output.address, protocol_magic, network_id)
         else:
@@ -255,9 +258,7 @@ async def _show_outputs(
                 ctx, keychain, output.address_parameters, address, output.amount
             )
 
-            if _should_hide_output(
-                output.address_parameters.address_n, msg.inputs
-            ):
+            if _should_hide_output(output.address_parameters.address_n, msg.inputs):
                 continue
         else:
             address = output.address
