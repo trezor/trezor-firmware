@@ -4,13 +4,10 @@ from micropython import const
 from trezor.messages import MessageType
 from trezor.messages.TxInputType import TxInputType
 
-from . import get_ownership_proof, sign_tx
-from .common import BIP32_WALLET_DEPTH, get_coin_by_name
+from .common import BIP32_WALLET_DEPTH
 
 if False:
-    import protobuf
-    from typing import Any, Coroutine, Iterable
-    from trezor import wire
+    from typing import Iterable
     from trezor.messages.AuthorizeCoinJoin import AuthorizeCoinJoin
     from trezor.messages.GetOwnershipProof import GetOwnershipProof
     from trezor.messages.SignTx import SignTx
@@ -24,11 +21,6 @@ _ROUND_ID_LIFETIME_MS = const(
 
 
 class CoinJoinAuthorization:
-    MESSAGE_HANDLERS = {
-        MessageType.SignTx: sign_tx.sign_tx_impl,
-        MessageType.GetOwnershipProof: get_ownership_proof.get_ownership_proof_impl,
-    }
-
     def __init__(
         self, msg: AuthorizeCoinJoin, keychain: Keychain, coin: coininfo.CoinInfo
     ):
@@ -45,15 +37,8 @@ class CoinJoinAuthorization:
     def __del__(self) -> None:
         self.keychain.__del__()
 
-    def handler(
-        self, ctx: wire.Context, msg: protobuf.MessageType
-    ) -> Coroutine[Any, Any, protobuf.MessageType]:
-        handler = self.MESSAGE_HANDLERS[msg.MESSAGE_WIRE_TYPE]
-        coin = get_coin_by_name(msg.coin_name)
-        return handler(ctx, msg, self.keychain, coin, self)
-
     def expected_wire_types(self) -> Iterable[int]:
-        return self.MESSAGE_HANDLERS.keys()
+        return (MessageType.SignTx, MessageType.GetOwnershipProof)
 
     def check_get_ownership_proof(self, msg: GetOwnershipProof) -> bool:
         # Check whether the current authorization matches the parameters of the request.
