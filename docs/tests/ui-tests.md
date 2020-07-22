@@ -90,4 +90,6 @@ In the ui tests folder you will also find a Python script `report_master_diff.py
 creates a report where you find which tests were altered, added, or removed relative to
 master. This useful for Pull Requests.
 
-This report is available as an artifact on CI as well.
+This report is available as an artifact on CI as well. You can find it by
+visiting the "core unix ui changes" job in your pipeline - browse the
+artifacts and open `master_diff/index.html`.
