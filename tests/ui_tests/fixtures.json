@@ -9,6 +9,7 @@
 "test_msg_applysettings.py-test_apply_settings": "2cc8bf660f3be815d19a4bf1265936162a58386fbe632ca4be01541245b79134",
 "test_msg_applysettings.py-test_apply_settings_passphrase": "5c1ed9a0be3d14475102d447da0b5d51bbb6dfaaeceff5ea9179064609db7870",
 "test_msg_applysettings.py-test_apply_settings_passphrase_on_device": "3e6527e227bdde54f51bc9c417b176d0d87fdb6c40c4761368f50eb201b4beed",
+"test_msg_authorize_coinjoin.py::test_no_anonymity": "7e8c98efce9b16fc6137eb7c10b259e0547ec5b30da62c7a23f57d99963e8e88",
 "test_msg_authorize_coinjoin.py::test_sign_tx": "62b84ee6eb8fa91f8115c5f269b6c8f70a166907bcd9e0760e2788666fafe16b",
 "test_msg_authorize_coinjoin.py::test_unfair_fee": "66d09d57a40e3c928e85e3ce08a73b90a376503dcbd7897cb90a36e459c6dbfc",
 "test_msg_authorize_coinjoin.py::test_wrong_coordinator": "23f142171a5a57358d5efec947caba28035bb1e156dbb1b86045169f8ca1f7d5",

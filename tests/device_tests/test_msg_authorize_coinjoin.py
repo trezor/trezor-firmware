@@ -279,6 +279,94 @@ def test_unfair_fee(client):
         )
 
 
+def test_no_anonymity(client):
+    # Test CoinJoin transaction giving the user's outputs no gain in anonymity.
+
+    with client:
+        btc.authorize_coinjoin(
+            client,
+            coordinator="www.example.com",
+            max_total_fee=5005,
+            fee_per_anonymity=5000000,  # 0.005 %
+            n=parse_path("m/84'/1'/0'"),
+            coin_name="Testnet",
+            script_type=messages.InputScriptType.SPENDWITNESS,
+        )
+
+    inp1 = messages.TxInputType(
+        # seed "alcohol woman abuse must during monitor noble actual mixed trade anger aisle"
+        # 84'/1'/0'/0/0
+        # tb1qnspxpr2xj9s2jt6qlhuvdnxw6q55jvygcf89r2
+        amount=100000,
+        prev_hash=TXHASH_e5b7e2,
+        prev_index=0,
+        script_type=messages.InputScriptType.EXTERNAL,
+        ownership_proof=bytearray.fromhex(
+            "534c001900016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c40002483045022100d4ad0374c922848c71d913fba59c81b9075e0d33e884d953f0c4b4806b8ffd0c022024740e6717a2b6a5aa03148c3a28b02c713b4e30fc8aeae67fa69eb20e8ddcd9012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
+        ),
+    )
+    inp2 = messages.TxInputType(
+        address_n=parse_path("84'/1'/0'/1/0"),
+        amount=7289000,
+        prev_hash=TXHASH_65b811,
+        prev_index=1,
+        script_type=messages.InputScriptType.SPENDWITNESS,
+    )
+
+    # Other's coinjoined output.
+    out1 = messages.TxOutputType(
+        address="tb1qk7j3ahs2v6hrv4v282cf0tvxh0vqq7rpt3zcml",
+        amount=30000,
+        script_type=messages.OutputScriptType.PAYTOWITNESS,
+    )
+    # Other's coinjoined output.
+    out2 = messages.TxOutputType(
+        address="tb1q9cqhdr9ydetjzrct6tyeuccws9505hl96azwxk",
+        amount=30000,
+        script_type=messages.OutputScriptType.PAYTOWITNESS,
+    )
+    # Our coinjoined output.
+    out3 = messages.TxOutputType(
+        address_n=parse_path("84'/1'/0'/1/1"),
+        amount=50000,
+        script_type=messages.OutputScriptType.PAYTOWITNESS,
+    )
+    # Our coinjoined output.
+    out4 = messages.TxOutputType(
+        address_n=parse_path("84'/1'/0'/1/2"),
+        amount=50000,
+        script_type=messages.OutputScriptType.PAYTOWITNESS,
+    )
+    # Our change output.
+    out5 = messages.TxOutputType(
+        address_n=parse_path("84'/1'/0'/1/2"),
+        amount=7289000 - 50000 - 50000 - 10 - 5000,
+        script_type=messages.OutputScriptType.PAYTOWITNESS,
+    )
+    # Other's change output.
+    out6 = messages.TxOutputType(
+        address="tb1q9cqhdr9ydetjzrct6tyeuccws9505hl96azwxk",
+        amount=100000 - 30000 - 30000 - 6 - 5000,
+        script_type=messages.OutputScriptType.PAYTOWITNESS,
+    )
+    # Coordinator's output.
+    out7 = messages.TxOutputType(
+        address="mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
+        amount=16,
+        script_type=messages.OutputScriptType.PAYTOWITNESS,
+    )
+
+    with pytest.raises(TrezorFailure, match="No anonymity gain"):
+        btc.sign_tx(
+            client,
+            "Testnet",
+            [inp1, inp2],
+            [out1, out2, out3, out4, out5, out6, out7],
+            prev_txes=TX_CACHE_TESTNET,
+            preauthorized=True,
+        )
+
+
 def test_wrong_coordinator(client):
     # Ensure that a preauthorized GetOwnershipProof fails if the commitment_data doesn't match the coordinator.
 
