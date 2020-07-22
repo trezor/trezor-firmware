@@ -11,9 +11,8 @@ TEXT_LINE_HEIGHT_HALF = const(13)
 TEXT_MARGIN_LEFT = const(14)
 TEXT_MAX_LINES = const(5)
 
-# needs to be different from all colors and font ids
-BR = const(-256)
-BR_HALF = const(-257)
+BR = "\n"
+BR_HALF = "\r"
 
 _FONTS = (ui.NORMAL, ui.BOLD, ui.MONO)
 
@@ -172,6 +171,42 @@ _WORKING_SPAN = Span()
 
 
 def render_text(
+    items: List[TextContent],
+    new_lines: bool,
+    max_lines: int,
+    font: int = ui.NORMAL,
+    fg: int = ui.FG,
+    bg: int = ui.BG,
+    offset_x: int = TEXT_MARGIN_LEFT,
+    offset_y: int = TEXT_HEADER_HEIGHT + TEXT_LINE_HEIGHT,
+    line_width: int = ui.WIDTH - TEXT_MARGIN_LEFT,
+    item_offset: int = 0,
+    char_offset: int = 0,
+    break_words: bool = False,
+    render_page_overflow: bool = True,
+) -> None:
+    result = ui.display.text_rich(
+        items=items,
+        item_offset=item_offset,
+        char_offset=char_offset,
+        # bounds
+        x0=TEXT_MARGIN_LEFT,
+        y0=TEXT_HEADER_HEIGHT,
+        x1=ui.WIDTH,
+        y1=TEXT_HEADER_HEIGHT + (TEXT_LINE_HEIGHT * max_lines),
+        # style
+        fg=fg,
+        bg=bg,
+        font=font,
+        break_words=break_words,
+        insert_new_lines=new_lines,
+        render_page_overflow=render_page_overflow,
+    )
+    if result is None:
+        raise RuntimeError("failed to render text")
+
+
+def render_text_python(
     items: List[TextContent],
     new_lines: bool,
     max_lines: int,

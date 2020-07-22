@@ -1,6 +1,6 @@
 import storage
 import storage.device
-from trezor import config, ui
+from trezor import config, ui, loop
 
 from . import HomescreenBase
 

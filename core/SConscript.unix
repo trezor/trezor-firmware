@@ -1,4 +1,5 @@
 # pylint: disable=E0602
+# fmt: off
 
 import os
 
@@ -367,6 +368,7 @@ env.Replace(
     LIBS=['m'],
     CPPPATH=[
         '.',
+        'embed/rust',
         'embed/unix',
         'embed/extmod/modtrezorui',
         'vendor/micropython',
@@ -552,6 +554,42 @@ if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
     )
 
 #
+# Rust library
+#
+
+RUST_TOOLCHAIN = 'nightly'
+RUST_PROFILE = 'release'
+RUST_LIB = 'trezor_lib'
+RUST_LIBDIR = f'embed/rust/target/{RUST_PROFILE}'
+RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
+RUST_HEADERPATH = f'embed/rust/librust.h'
+
+def cargo_build():
+    # Determine the profile build flags.
+    if RUST_PROFILE == 'release':
+        profile = '--release'
+    else:
+        profile = ''
+    # Pass the absolute path to the generated QSTR table to cargo.
+    qstr_path = qstr_generated[0].get_abspath()
+    return f'cd embed/rust; env QSTR_GENERATED={qstr_path} cargo +{RUST_TOOLCHAIN} build {profile}'
+
+# cbindgen = env.Command(
+#     target=RUST_HEADERPATH,
+#     source='',
+#     action='cd embed/rust; ./build_header.sh',
+# )
+rust = env.Command(
+    target=RUST_LIBPATH,
+    source='',
+    action=cargo_build(), )
+
+env.Depends(rust, qstr_generated)
+
+env.Append(LINKFLAGS=f'-L{RUST_LIBDIR}')
+env.Append(LINKFLAGS=f'-l{RUST_LIB}')
+
+#
 # Program objects
 #
 
@@ -572,3 +610,5 @@ program = env.Command(
     target='trezor-emu-core',
     source=obj_program,
     action='$CC -o $TARGET $SOURCES $_LIBDIRFLAGS $_LIBFLAGS $LINKFLAGS', )
+
+env.Depends(program, rust)

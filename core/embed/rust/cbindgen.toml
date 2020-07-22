@@ -1,0 +1,10 @@
+# We are generating C header, not C++.
+language = "C"
+
+# Do not add any inludes to the output header.
+no_includes = true
+
+# Rename opaque, unexposed types to their Micropython variants.
+[export.rename]
+"Obj" = "mp_obj_t"
+"Map" = "mp_map_t"

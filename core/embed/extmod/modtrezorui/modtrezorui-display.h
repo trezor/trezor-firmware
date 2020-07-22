@@ -19,6 +19,8 @@
 
 #include "display.h"
 
+#include "librust.h"
+
 /// class Display:
 ///     """
 ///     Provide access to device display.
@@ -476,6 +478,29 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_split_obj,
                                            4, 4,
                                            mod_trezorui_Display_text_split);
 
+/// def text_rich(
+///     self,
+///     text: str,
+///     fg: str,
+///     bg: str,
+///     font: int,
+///     x0: int,
+///     y0: int,
+///     x1: int,
+///     y1: int,
+///     break_words: bool,
+///     render_page_overflow: bool
+/// ) -> int:
+///     """
+///     """
+STATIC mp_obj_t mod_trezorui_Display_text_rich(size_t n_args,
+                                               const mp_obj_t *args,
+                                               mp_map_t *kwargs) {
+  return ui_render_rich_text(kwargs);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorui_Display_text_rich_obj, 0,
+                                  mod_trezorui_Display_text_rich);
+
 /// def qrcode(self, x: int, y: int, data: bytes, scale: int) -> None:
 ///     """
 ///     Renders data encoded as a QR code centered at position (x,y).
@@ -629,6 +654,8 @@ STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
      MP_ROM_PTR(&mod_trezorui_Display_text_width_obj)},
     {MP_ROM_QSTR(MP_QSTR_text_split),
      MP_ROM_PTR(&mod_trezorui_Display_text_split_obj)},
+    {MP_ROM_QSTR(MP_QSTR_text_rich),
+     MP_ROM_PTR(&mod_trezorui_Display_text_rich_obj)},
     {MP_ROM_QSTR(MP_QSTR_qrcode), MP_ROM_PTR(&mod_trezorui_Display_qrcode_obj)},
     {MP_ROM_QSTR(MP_QSTR_orientation),
      MP_ROM_PTR(&mod_trezorui_Display_orientation_obj)},
