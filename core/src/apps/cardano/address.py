@@ -13,6 +13,7 @@ from .seed import is_byron_path, is_shelley_path
 if False:
     from typing import List
     from trezor.messages import CardanoBlockchainPointerType
+    from trezor.messages.CardanoAddressParametersType import EnumTypeCardanoAddressType
     from . import seed
 
 ADDRESS_TYPES_SHELLEY = (
@@ -110,7 +111,7 @@ def _validate_output_shelley_address(
 
 
 def _validate_address_size(
-    address_bytes: bytes, address_type: CardanoAddressType
+    address_bytes: bytes, address_type: EnumTypeCardanoAddressType
 ) -> None:
     if not (
         ADDRESS_BYTES_MIN_LENGTHS[address_type]
@@ -121,7 +122,7 @@ def _validate_address_size(
 
 
 def _validate_output_address_bech32_hrp(
-    address_str: str, address_type: int, network_id: int
+    address_str: str, address_type: EnumTypeCardanoAddressType, network_id: int
 ) -> None:
     valid_hrp = _get_bech32_hrp_for_address(address_type, network_id)
     bech32_hrp = bech32.get_hrp(address_str)
@@ -130,7 +131,9 @@ def _validate_output_address_bech32_hrp(
         raise INVALID_ADDRESS
 
 
-def _get_bech32_hrp_for_address(address_type: int, network_id: int) -> str:
+def _get_bech32_hrp_for_address(
+    address_type: EnumTypeCardanoAddressType, network_id: int
+) -> str:
     if address_type == CardanoAddressType.BYRON:
         # Byron address uses base58 encoding
         raise ValueError
@@ -234,7 +237,9 @@ def _derive_shelley_address(
     return address
 
 
-def _create_address_header(address_type: CardanoAddressType, network_id: int) -> bytes:
+def _create_address_header(
+    address_type: EnumTypeCardanoAddressType, network_id: int
+) -> bytes:
     header = address_type << 4 | network_id
     return header.to_bytes(1, "little")
 

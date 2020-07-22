@@ -17,6 +17,7 @@ if False:
     from typing import List
     from trezor import wire
     from trezor.messages import CardanoBlockchainPointerType
+    from trezor.messages.CardanoAddressParametersType import EnumTypeCardanoAddressType
 
 
 ADDRESS_TYPE_NAMES = {
@@ -47,7 +48,7 @@ async def confirm_sending(ctx: wire.Context, amount: int, to: str):
 
 
 async def show_warning_tx_no_staking_info(
-    ctx: wire.Context, address_type: CardanoAddressType, amount: int
+    ctx: wire.Context, address_type: EnumTypeCardanoAddressType, amount: int
 ):
     t1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     t1.normal("Change " + ADDRESS_TYPE_NAMES[address_type].lower())
@@ -132,7 +133,7 @@ async def confirm_transaction(ctx, amount: int, fee: int, protocol_magic: int):
 async def show_address(
     ctx: wire.Context,
     address: str,
-    address_type: CardanoAddressType,
+    address_type: EnumTypeCardanoAddressType,
     path: List[int],
     network: int = None,
 ) -> bool:
