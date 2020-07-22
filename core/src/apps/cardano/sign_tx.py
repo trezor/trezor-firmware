@@ -102,7 +102,7 @@ def _validate_outputs(
         total_amount += output.amount
         if output.address_parameters:
             # try to derive the address to validate it
-            _ = derive_address_bytes(
+            derive_address_bytes(
                 keychain, output.address_parameters, protocol_magic, network_id
             )
         elif output.address is not None:
