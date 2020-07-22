@@ -277,20 +277,20 @@ def sign_tx(
 @expect(messages.Success, field="message")
 def authorize_coinjoin(
     client,
-    amount,
-    max_fee,
     coordinator,
+    max_total_fee,
     n,
     coin_name,
+    fee_per_anonymity=None,
     script_type=messages.InputScriptType.SPENDADDRESS,
 ):
     return client.call(
         messages.AuthorizeCoinJoin(
-            amount=amount,
-            max_fee=max_fee,
             coordinator=coordinator,
+            max_total_fee=max_total_fee,
             address_n=n,
             coin_name=coin_name,
+            fee_per_anonymity=fee_per_anonymity,
             script_type=script_type,
         )
     )
