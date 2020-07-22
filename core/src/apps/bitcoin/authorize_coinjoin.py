@@ -11,7 +11,7 @@ from apps.common.confirm import require_confirm, require_hold_to_confirm
 from apps.common.paths import validate_path
 
 from . import addresses
-from .authorization import CoinJoinAuthorization
+from .authorization import FEE_PER_ANONYMITY_DECIMALS, CoinJoinAuthorization
 from .common import BIP32_WALLET_DEPTH
 from .keychain import get_keychain_for_coin
 
@@ -47,10 +47,19 @@ async def authorize_coinjoin(ctx: wire.Context, msg: AuthorizeCoinJoin,) -> Succ
     await require_confirm(ctx, text)
 
     text = Text("Authorize CoinJoin", ui.ICON_RECOVERY)
-    text.normal("Amount to mix:")
-    text.bold("%s %s" % (format_amount(msg.amount, coin.decimals), coin.coin_shortcut))
+    if msg.fee_per_anonymity is not None:
+        text.normal("Fee per anonymity set:")
+        text.bold(
+            "{} %".format(
+                format_amount(msg.fee_per_anonymity, FEE_PER_ANONYMITY_DECIMALS)
+            )
+        )
     text.normal("Maximum total fees:")
-    text.bold("%s %s" % (format_amount(msg.max_fee, coin.decimals), coin.coin_shortcut))
+    text.bold(
+        "{} {}".format(
+            format_amount(msg.max_total_fee, coin.decimals), coin.coin_shortcut
+        )
+    )
     await require_hold_to_confirm(ctx, text)
 
     set_authorization(CoinJoinAuthorization(msg, keychain, coin))
