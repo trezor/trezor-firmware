@@ -14,15 +14,16 @@ if False:
     from apps.common.seed import Keychain
 
 _ROUND_ID_LEN = const(32)
+FEE_PER_ANONYMITY_DECIMALS = const(9)
 
 
 class CoinJoinAuthorization:
     def __init__(
         self, msg: AuthorizeCoinJoin, keychain: Keychain, coin: coininfo.CoinInfo
     ):
-        self.amount = msg.amount
-        self.max_fee = msg.max_fee
         self.coordinator = msg.coordinator
+        self.remaining_fee = msg.max_total_fee
+        self.fee_per_anonymity = msg.fee_per_anonymity or 0
         self.address_n = msg.address_n
         self.keychain = keychain
         self.coin = coin
@@ -45,18 +46,16 @@ class CoinJoinAuthorization:
         )
 
     def check_sign_tx_input(self, txi: TxInputType, coin: coininfo.CoinInfo) -> bool:
-        if (
-            txi.address_n[:-BIP32_WALLET_DEPTH] != self.address_n
-            or coin.coin_name != self.coin.coin_name
-            or txi.script_type != self.script_type
-        ):
-            return False
-
-        return True
+        # Check whether the current input matches the parameters of the request.
+        return (
+            txi.address_n[:-BIP32_WALLET_DEPTH] == self.address_n
+            and coin.coin_name == self.coin.coin_name
+            and txi.script_type == self.script_type
+        )
 
     def check_sign_tx(self, msg: SignTx, fee: int) -> bool:
-        if self.max_fee < fee or msg.coin_name != self.coin.coin_name:
+        if self.remaining_fee < fee or msg.coin_name != self.coin.coin_name:
             return False
 
-        self.max_fee -= fee
+        self.remaining_fee -= fee
         return True
