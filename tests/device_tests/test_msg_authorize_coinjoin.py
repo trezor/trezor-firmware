@@ -210,7 +210,7 @@ def test_unfair_fee(client):
         btc.authorize_coinjoin(
             client,
             coordinator="www.example.com",
-            max_total_fee=5005,
+            max_total_fee=10000,
             fee_per_anonymity=5000000,  # 0.005 %
             n=parse_path("m/84'/1'/0'"),
             coin_name="Testnet",
