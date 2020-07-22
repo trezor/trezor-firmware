@@ -161,6 +161,7 @@ def _build_outputs(
                 keychain, output.address_parameters, protocol_magic, network_id
             )
         else:
+            # output address is validated in _validate_outputs before this happens
             address = get_address_bytes_unsafe(output.address)
 
         result.append((address, amount))
