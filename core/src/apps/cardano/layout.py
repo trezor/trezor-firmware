@@ -80,10 +80,7 @@ async def show_warning_tx_pointer_address(
 
 
 async def show_warning_tx_different_staking_account(
-    ctx: wire.Context,
-    address_type: CardanoAddressType,
-    staking_account_path: List[int],
-    amount: int,
+    ctx: wire.Context, staking_account_path: List[int], amount: int,
 ):
     t1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     t1.normal("Change address staking")
@@ -100,10 +97,7 @@ async def show_warning_tx_different_staking_account(
 
 
 async def show_warning_tx_staking_key_hash(
-    ctx: wire.Context,
-    address_type: CardanoAddressType,
-    staking_key_hash: bytes,
-    amount: int,
+    ctx: wire.Context, staking_key_hash: bytes, amount: int,
 ):
     t1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     t1.normal("Change address staking")

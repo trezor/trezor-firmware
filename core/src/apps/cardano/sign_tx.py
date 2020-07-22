@@ -288,14 +288,11 @@ async def _show_change_output_staking_warnings(
         )
     elif staking_type == staking_use_cases.DIFFERENT_ACCOUNT:
         await show_warning_tx_different_staking_account(
-            ctx, address_type, address_parameters.address_n_staking[:3], amount,
+            ctx, address_parameters.address_n_staking[:3], amount,
         )
     elif staking_type == staking_use_cases.DIFFERENT_HASH:
         await show_warning_tx_staking_key_hash(
-            ctx,
-            address_parameters.address_type,
-            address_parameters.staking_key_hash,
-            amount,
+            ctx, address_parameters.staking_key_hash, amount,
         )
 
 
