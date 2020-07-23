@@ -186,6 +186,8 @@ def _build_witnesses(
         keychain, inputs, tx_body_hash, protocol_magic
     )
 
+    # use key 0 for shelley witnesses and key 2 for byron witnesses according to the CDDL spec:
+    # https://github.com/input-output-hk/cardano-ledger-specs/blob/master/shelley/chain-and-ledger/executable-spec/cddl-files/shelley.cddl
     witnesses = {}
     if len(shelley_witnesses) > 0:
         witnesses[0] = shelley_witnesses
