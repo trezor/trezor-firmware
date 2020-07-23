@@ -30,7 +30,7 @@ class HDNode:
         Derive a BIP0032 child node in place using Cardano algorithm.
         """
 
-    def derive_path(self, path: List[int]) -> None:
+    def derive_path(self, path: Sequence[int]) -> None:
         """
         Go through a list of indexes and iteratively derive a child node in
         place.

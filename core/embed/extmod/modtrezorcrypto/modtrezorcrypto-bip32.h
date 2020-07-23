@@ -223,7 +223,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_derive_cardano_obj,
 
 #endif
 
-/// def derive_path(self, path: List[int]) -> None:
+/// def derive_path(self, path: Sequence[int]) -> None:
 ///     """
 ///     Go through a list of indexes and iteratively derive a child node in
 ///     place.
