@@ -1,13 +1,17 @@
 from trezor import wire
+from trezor.messages import InputScriptType as I
 
-from apps.common import HARDENED, coininfo
+from apps.common import coininfo
 from apps.common.keychain import get_keychain
+from apps.common.paths import PATTERN_BIP44, PathSchema
 
 from .common import BITCOIN_NAMES
 
 if False:
-    from typing import Awaitable, Callable, Optional, Sequence, Tuple, TypeVar
+    from typing import Awaitable, Callable, Iterable, List, Optional, Tuple, TypeVar
     from typing_extensions import Protocol
+
+    from trezor.messages.TxInputType import EnumTypeInputScriptType
 
     from apps.common.keychain import Keychain, MsgOut, Handler
     from apps.common.paths import Bip32Path
@@ -17,54 +21,124 @@ if False:
     class MsgWithCoinName(Protocol):
         coin_name = ...  # type: str
 
+    class MsgWithAddressScriptType(Protocol):
+        # XXX should be Bip32Path but that fails
+        address_n = ...  # type: List[int]
+        script_type = ...  # type: EnumTypeInputScriptType
+
     MsgIn = TypeVar("MsgIn", bound=MsgWithCoinName)
     HandlerWithCoinInfo = Callable[..., Awaitable[MsgOut]]
 
+# common patterns
+PATTERN_BIP45 = "m/45'/[0-100]/change/address_index"
+PATTERN_PURPOSE48_LEGACY = "m/48'/coin_type'/account'/0'/change/address_index"
+PATTERN_PURPOSE48_P2SHSEGWIT = "m/48'/coin_type'/account'/1'/change/address_index"
+PATTERN_PURPOSE48_SEGWIT = "m/48'/coin_type'/account'/2'/change/address_index"
+PATTERN_BIP49 = "m/49'/coin_type'/account'/change/address_index"
+PATTERN_BIP84 = "m/84'/coin_type'/account'/change/address_index"
 
-def get_namespaces_for_coin(coin: coininfo.CoinInfo) -> Sequence[Bip32Path]:
-    namespaces = []
-    slip44_id = coin.slip44 | HARDENED
+# compatibility patterns, will be removed in the future
+PATTERN_GREENADDRESS_A = "m/[1,4]/address_index"
+PATTERN_GREENADDRESS_B = "m/3'/[1-100]'/[1,4]/address_index"
+PATTERN_GREENADDRESS_SIGN_A = "m/1195487518"
+PATTERN_GREENADDRESS_SIGN_B = "m/1195487518/6/address_index"
 
-    # BIP-44 - legacy: m/44'/slip44' (/account'/change/addr)
-    namespaces.append([44 | HARDENED, slip44_id])
-    # BIP-45 - multisig cosigners: m/45' (/cosigner/change/addr)
-    namespaces.append([45 | HARDENED])
-    # "purpose48" - multisig as done by Electrum
-    # m/48'/slip44' (/account'/script_type'/change/addr)
-    namespaces.append([48 | HARDENED, slip44_id])
+PATTERN_CASA = "m/49/coin_type/account/change/address_index"
 
-    if coin.segwit:
-        # BIP-49 - p2sh segwit: m/49'/slip44' (/account'/change/addr)
-        namespaces.append([49 | HARDENED, slip44_id])
-        # BIP-84 - native segwit: m/84'/slip44' (/account'/change/addr)
-        namespaces.append([84 | HARDENED, slip44_id])
 
+def validate_path_against_script_type(
+    coin: coininfo.CoinInfo,
+    msg: MsgWithAddressScriptType = None,
+    address_n: Bip32Path = None,
+    script_type: EnumTypeInputScriptType = None,
+    multisig: bool = False,
+) -> bool:
+    patterns = []
+
+    if msg is not None:
+        assert address_n is None and script_type is None
+        address_n = msg.address_n
+        script_type = msg.script_type or I.SPENDADDRESS
+        multisig = bool(getattr(msg, "multisig", False))
+
+    else:
+        assert address_n is not None and script_type is not None
+
+    if script_type == I.SPENDADDRESS and not multisig:
+        patterns.append(PATTERN_BIP44)
+        if coin.coin_name in BITCOIN_NAMES:
+            patterns.append(PATTERN_GREENADDRESS_A)
+            patterns.append(PATTERN_GREENADDRESS_B)
+
+    elif script_type in (I.SPENDADDRESS, I.SPENDMULTISIG) and multisig:
+        patterns.append(PATTERN_BIP45)
+        patterns.append(PATTERN_PURPOSE48_LEGACY)
+        if coin.coin_name in BITCOIN_NAMES:
+            patterns.append(PATTERN_GREENADDRESS_A)
+            patterns.append(PATTERN_GREENADDRESS_B)
+
+    elif coin.segwit and script_type == I.SPENDP2SHWITNESS:
+        patterns.append(PATTERN_BIP49)
+        if multisig:
+            patterns.append(PATTERN_PURPOSE48_P2SHSEGWIT)
+        if coin.coin_name in BITCOIN_NAMES:
+            patterns.append(PATTERN_GREENADDRESS_A)
+            patterns.append(PATTERN_GREENADDRESS_B)
+            patterns.append(PATTERN_CASA)
+
+    elif coin.segwit and script_type == I.SPENDWITNESS:
+        patterns.append(PATTERN_BIP84)
+        if multisig:
+            patterns.append(PATTERN_PURPOSE48_SEGWIT)
+        if coin.coin_name in BITCOIN_NAMES:
+            patterns.append(PATTERN_GREENADDRESS_A)
+            patterns.append(PATTERN_GREENADDRESS_B)
+
+    return any(
+        PathSchema(pattern, coin.slip44).match(address_n) for pattern in patterns
+    )
+
+
+def get_schemas_for_coin(coin: coininfo.CoinInfo) -> Iterable[PathSchema]:
+    # basic patterns
+    patterns = [
+        PATTERN_BIP44,
+        PATTERN_BIP45,
+        PATTERN_PURPOSE48_LEGACY,
+    ]
+
+    # compatibility patterns
     if coin.coin_name in BITCOIN_NAMES:
-        # compatibility namespace for Casa
-        namespaces.append([49, coin.slip44])
+        patterns.extend(
+            (
+                PATTERN_GREENADDRESS_A,
+                PATTERN_GREENADDRESS_B,
+                PATTERN_GREENADDRESS_SIGN_A,
+                PATTERN_GREENADDRESS_SIGN_B,
+                PATTERN_CASA,
+            )
+        )
 
-        # compatibility namespace for Greenaddress:
-        # m/branch/address_pointer, for branch in (1, 4)
-        namespaces.append([1])
-        namespaces.append([4])
-        # m/3'/subaccount'/branch/address_pointer
-        namespaces.append([3 | HARDENED])
-        # sign msg:
-        # m/0x4741b11e
-        # m/0x4741b11e/6/pointer
-        namespaces.append([0x4741B11E])
+    # segwit patterns
+    if coin.segwit:
+        patterns.extend(
+            (
+                PATTERN_BIP49,
+                PATTERN_BIP84,
+                PATTERN_PURPOSE48_P2SHSEGWIT,
+                PATTERN_PURPOSE48_SEGWIT,
+            )
+        )
+
+    schemas = [PathSchema(pattern, coin.slip44) for pattern in patterns]
 
     # some wallets such as Electron-Cash (BCH) store coins on Bitcoin paths
     # we can allow spending these coins from Bitcoin paths if the coin has
     # implemented strong replay protection via SIGHASH_FORKID
     if coin.fork_id is not None:
-        namespaces.append([44 | HARDENED, 0 | HARDENED])
-        namespaces.append([48 | HARDENED, 0 | HARDENED])
-        if coin.segwit:
-            namespaces.append([49 | HARDENED, 0 | HARDENED])
-            namespaces.append([84 | HARDENED, 0 | HARDENED])
+        schemas.extend(PathSchema(pattern, 0) for pattern in patterns)
 
-    return namespaces
+    return schemas
 
 
 def get_coin_by_name(coin_name: Optional[str]) -> coininfo.CoinInfo:
@@ -81,9 +155,9 @@ async def get_keychain_for_coin(
     ctx: wire.Context, coin_name: Optional[str]
 ) -> Tuple[Keychain, coininfo.CoinInfo]:
     coin = get_coin_by_name(coin_name)
-    namespaces = get_namespaces_for_coin(coin)
+    schemas = get_schemas_for_coin(coin)
     slip21_namespaces = [[b"SLIP-0019"]]
-    keychain = await get_keychain(ctx, coin.curve_name, namespaces, slip21_namespaces)
+    keychain = await get_keychain(ctx, coin.curve_name, schemas, slip21_namespaces)
     return keychain, coin
 
 
