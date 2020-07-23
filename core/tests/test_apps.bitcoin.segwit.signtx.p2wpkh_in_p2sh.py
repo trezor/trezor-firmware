@@ -17,7 +17,7 @@ from trezor.messages import OutputScriptType
 from trezor import wire
 
 from apps.common import coins
-from apps.common.seed import Keychain
+from apps.common.keychain import Keychain
 from apps.bitcoin.keychain import get_namespaces_for_coin
 from apps.bitcoin.sign_tx import bitcoin, helpers
 
@@ -142,7 +142,7 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
         ]
 
         ns = get_namespaces_for_coin(coin)
-        keychain = Keychain(seed, ns)
+        keychain = Keychain(seed, coin.curve_name, ns)
         signer = bitcoin.Bitcoin(tx, keychain, coin).signer()
         for request, response in chunks(messages, 2):
             self.assertEqual(signer.send(request), response)
@@ -272,7 +272,7 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
         ]
 
         ns = get_namespaces_for_coin(coin)
-        keychain = Keychain(seed, ns)
+        keychain = Keychain(seed, coin.curve_name, ns)
         signer = bitcoin.Bitcoin(tx, keychain, coin).signer()
         for request, response in chunks(messages, 2):
             self.assertEqual(signer.send(request), response)
@@ -354,7 +354,7 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
         ]
 
         ns = get_namespaces_for_coin(coin)
-        keychain = Keychain(seed, ns)
+        keychain = Keychain(seed, coin.curve_name, ns)
         signer = bitcoin.Bitcoin(tx, keychain, coin).signer()
         i = 0
         messages_count = int(len(messages) / 2)

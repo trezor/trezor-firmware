@@ -15,7 +15,7 @@ from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
 from trezor.messages import OutputScriptType
 
 from apps.common import coins
-from apps.common.seed import Keychain
+from apps.common.keychain import Keychain
 from apps.bitcoin.sign_tx import bitcoin, helpers
 
 
@@ -161,7 +161,7 @@ class TestSignTxFeeThreshold(unittest.TestCase):
 
         seed = bip39.seed('alcohol woman abuse must during monitor noble actual mixed trade anger aisle', '')
 
-        keychain = Keychain(seed, [[coin_bitcoin.curve_name]])
+        keychain = Keychain(seed, coin_bitcoin.curve_name, [[]])
         signer = bitcoin.Bitcoin(tx, keychain, coin_bitcoin).signer()
         for request, response in chunks(messages, 2):
             res = signer.send(request)
