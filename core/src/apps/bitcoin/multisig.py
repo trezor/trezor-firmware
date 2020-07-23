@@ -5,6 +5,8 @@ from trezor.messages.HDNodeType import HDNodeType
 from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
 from trezor.utils import HashWriter
 
+from apps.common import paths
+
 from .writers import write_bytes_fixed, write_uint32
 
 if False:
@@ -42,7 +44,16 @@ def multisig_fingerprint(multisig: MultisigRedeemScriptType) -> bytes:
     return h.get_digest()
 
 
+def validate_multisig(multisig: MultisigRedeemScriptType) -> None:
+    if any(paths.is_hardened(n) for n in multisig.address_n):
+        raise wire.DataError("Cannot perform hardened derivation from XPUB")
+    for hd in multisig.pubkeys:
+        if any(paths.is_hardened(n) for n in hd.address_n):
+            raise wire.DataError("Cannot perform hardened derivation from XPUB")
+
+
 def multisig_pubkey_index(multisig: MultisigRedeemScriptType, pubkey: bytes) -> int:
+    validate_multisig(multisig)
     if multisig.nodes:
         for i, hd_node in enumerate(multisig.nodes):
             if multisig_get_pubkey(hd_node, multisig.address_n) == pubkey:
@@ -54,7 +65,7 @@ def multisig_pubkey_index(multisig: MultisigRedeemScriptType, pubkey: bytes) -> 
     raise wire.DataError("Pubkey not found in multisig script")
 
 
-def multisig_get_pubkey(n: HDNodeType, p: list) -> bytes:
+def multisig_get_pubkey(n: HDNodeType, p: paths.Bip32Path) -> bytes:
     node = bip32.HDNode(
         depth=n.depth,
         fingerprint=n.fingerprint,
@@ -68,6 +79,7 @@ def multisig_get_pubkey(n: HDNodeType, p: list) -> bytes:
 
 
 def multisig_get_pubkeys(multisig: MultisigRedeemScriptType) -> List[bytes]:
+    validate_multisig(multisig)
     if multisig.nodes:
         return [multisig_get_pubkey(hd, multisig.address_n) for hd in multisig.nodes]
     else:

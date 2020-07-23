@@ -6,7 +6,7 @@ from apps.common.layout import address_n_to_str, show_address, show_qr, show_xpu
 from apps.common.paths import validate_path
 
 from . import addresses
-from .keychain import with_keychain
+from .keychain import validate_path_against_script_type, with_keychain
 from .multisig import multisig_pubkey_index
 
 if False:
@@ -45,12 +45,9 @@ async def get_address(
 ) -> Address:
     await validate_path(
         ctx,
-        addresses.validate_full_path,
         keychain,
         msg.address_n,
-        coin.curve_name,
-        coin=coin,
-        script_type=msg.script_type,
+        validate_path_against_script_type(coin, msg),
     )
 
     node = keychain.derive(msg.address_n)

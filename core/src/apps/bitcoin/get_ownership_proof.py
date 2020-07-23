@@ -9,7 +9,7 @@ from apps.common.confirm import require_confirm
 from apps.common.paths import validate_path
 
 from . import addresses, common, scripts
-from .keychain import with_keychain
+from .keychain import validate_path_against_script_type, with_keychain
 from .ownership import generate_proof, get_identifier
 
 if False:
@@ -36,12 +36,9 @@ async def get_ownership_proof(
     else:
         await validate_path(
             ctx,
-            addresses.validate_full_path,
             keychain,
             msg.address_n,
-            coin.curve_name,
-            coin=coin,
-            script_type=msg.script_type,
+            validate_path_against_script_type(coin, msg),
         )
 
     if msg.script_type not in common.INTERNAL_INPUT_SCRIPT_TYPES:

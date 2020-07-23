@@ -3,7 +3,7 @@ from trezor.messages import InputScriptType
 from trezor.messages.HDNodeType import HDNodeType
 from trezor.messages.PublicKey import PublicKey
 
-from apps.common import coins, layout
+from apps.common import coins, layout, paths
 from apps.common.keychain import get_keychain
 
 if False:
@@ -16,7 +16,7 @@ async def get_public_key(ctx: wire.Context, msg: GetPublicKey) -> PublicKey:
     coin = coins.by_name(coin_name)
     curve_name = msg.ecdsa_curve_name or coin.curve_name
 
-    keychain = await get_keychain(ctx, curve_name, [[]])
+    keychain = await get_keychain(ctx, curve_name, [paths.AlwaysMatchingSchema])
 
     node = keychain.derive(msg.address_n)
 

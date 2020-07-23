@@ -10,10 +10,9 @@ from apps.base import set_authorization
 from apps.common.confirm import require_confirm, require_hold_to_confirm
 from apps.common.paths import validate_path
 
-from . import addresses
 from .authorization import FEE_PER_ANONYMITY_DECIMALS, CoinJoinAuthorization
 from .common import BIP32_WALLET_DEPTH
-from .keychain import get_keychain_for_coin
+from .keychain import get_keychain_for_coin, validate_path_against_script_type
 
 if False:
     from trezor import wire
@@ -36,14 +35,14 @@ async def authorize_coinjoin(ctx: wire.Context, msg: AuthorizeCoinJoin) -> Succe
         if not msg.address_n:
             raise wire.DataError("Empty path not allowed.")
 
+        validation_path = msg.address_n + [0] * BIP32_WALLET_DEPTH
         await validate_path(
             ctx,
-            addresses.validate_full_path,
             keychain,
-            msg.address_n + [0] * BIP32_WALLET_DEPTH,
-            coin.curve_name,
-            coin=coin,
-            script_type=msg.script_type,
+            validation_path,
+            validate_path_against_script_type(
+                coin, address_n=validation_path, script_type=msg.script_type
+            ),
         )
 
         text = Text("Authorize CoinJoin", ui.ICON_RECOVERY)
