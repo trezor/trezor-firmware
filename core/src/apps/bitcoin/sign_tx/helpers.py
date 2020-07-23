@@ -1,5 +1,3 @@
-import gc
-
 from trezor import utils, wire
 from trezor.messages import InputScriptType, OutputScriptType
 from trezor.messages.RequestType import (
@@ -117,7 +115,6 @@ def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes = None) ->
     tx_req.details.tx_hash = tx_hash
     ack = yield tx_req
     _clear_tx_request(tx_req)
-    gc.collect()
     return sanitize_tx_meta(ack.tx, coin)
 
 
@@ -130,7 +127,6 @@ def request_tx_extra_data(  # type: ignore
     tx_req.details.tx_hash = tx_hash
     ack = yield tx_req
     _clear_tx_request(tx_req)
-    gc.collect()
     return ack.tx.extra_data
 
 
@@ -140,7 +136,6 @@ def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes =
     tx_req.details.tx_hash = tx_hash
     ack = yield tx_req
     _clear_tx_request(tx_req)
-    gc.collect()
     return sanitize_tx_input(ack.tx, coin)
 
 
@@ -150,7 +145,6 @@ def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes 
     tx_req.details.tx_hash = tx_hash
     ack = yield tx_req
     _clear_tx_request(tx_req)
-    gc.collect()
     if tx_hash is None:
         return sanitize_tx_output(ack.tx, coin)
     else:
@@ -161,7 +155,6 @@ def request_tx_finish(tx_req: TxRequest) -> Awaitable[Any]:  # type: ignore
     tx_req.request_type = TXFINISHED
     yield tx_req
     _clear_tx_request(tx_req)
-    gc.collect()
 
 
 def _clear_tx_request(tx_req: TxRequest) -> None:

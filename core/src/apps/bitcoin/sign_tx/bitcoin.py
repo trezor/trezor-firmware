@@ -1,4 +1,3 @@
-import gc
 from micropython import const
 
 from trezor import wire
@@ -438,7 +437,6 @@ class Bitcoin:
         signature = ecdsa_sign(node, tx_digest)
 
         # serialize input with correct signature
-        gc.collect()
         script_sig = self.input_derive_script(txi, node.public_key(), signature)
         self.write_tx_input(self.serialized_tx, txi, script_sig)
         self.set_serialized_signature(i, signature)
