@@ -1,4 +1,3 @@
-import gc
 from micropython import const
 
 from trezor import wire
@@ -31,7 +30,6 @@ class Bitcoinlike(Bitcoin):
             multisig.multisig_pubkey_index(txi.multisig, public_key)
 
         # serialize input with correct signature
-        gc.collect()
         script_sig = self.input_derive_script(txi, public_key, signature)
         self.write_tx_input(self.serialized_tx, txi, script_sig)
         self.set_serialized_signature(i_sign, signature)

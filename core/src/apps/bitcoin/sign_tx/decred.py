@@ -1,4 +1,3 @@
-import gc
 from micropython import const
 
 from trezor import wire
@@ -123,7 +122,6 @@ class Decred(Bitcoin):
             signature = ecdsa_sign(key_sign, sig_hash)
 
             # serialize input with correct signature
-            gc.collect()
             script_sig = self.input_derive_script(txi_sign, key_sign_pub, signature)
             self.write_tx_input_witness(self.serialized_tx, txi_sign, script_sig)
             self.set_serialized_signature(i_sign, signature)
