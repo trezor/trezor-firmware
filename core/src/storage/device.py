@@ -79,7 +79,7 @@ def get_device_id() -> str:
 
 
 def get_rotation() -> int:
-    rotation = common.get(_NAMESPACE, _ROTATION, True)  # public
+    rotation = common.get(_NAMESPACE, _ROTATION, public=True)
     if not rotation:
         return 0
     return int.from_bytes(rotation, "big")
@@ -132,14 +132,14 @@ def set_passphrase_enabled(enable: bool) -> None:
 
 
 def get_homescreen() -> Optional[bytes]:
-    return common.get(_NAMESPACE, _HOMESCREEN, True)  # public
+    return common.get(_NAMESPACE, _HOMESCREEN, public=True)
 
 
 def set_homescreen(homescreen: bytes) -> None:
     if len(homescreen) > HOMESCREEN_MAXSIZE:
         raise ValueError  # homescreen too large
     if homescreen[:8] == b"TOIf\x90\x00\x90\x00" or homescreen == b"":
-        common.set(_NAMESPACE, _HOMESCREEN, homescreen, True)  # public
+        common.set(_NAMESPACE, _HOMESCREEN, homescreen, public=True)
     else:
         raise ValueError  # invalid homescreen
 
