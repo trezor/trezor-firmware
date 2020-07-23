@@ -16,11 +16,16 @@
 
 import pytest
 
-from trezorlib import device, messages as proto
+from trezorlib import btc, device, exceptions, messages
+from trezorlib.tools import parse_path
 
-EXPECTED_RESPONSES_NOPIN = [proto.ButtonRequest(), proto.Success(), proto.Features()]
-EXPECTED_RESPONSES_PIN_T1 = [proto.PinMatrixRequest()] + EXPECTED_RESPONSES_NOPIN
-EXPECTED_RESPONSES_PIN_TT = [proto.ButtonRequest()] + EXPECTED_RESPONSES_NOPIN
+EXPECTED_RESPONSES_NOPIN = [
+    messages.ButtonRequest(),
+    messages.Success(),
+    messages.Features(),
+]
+EXPECTED_RESPONSES_PIN_T1 = [messages.PinMatrixRequest()] + EXPECTED_RESPONSES_NOPIN
+EXPECTED_RESPONSES_PIN_TT = [messages.ButtonRequest()] + EXPECTED_RESPONSES_NOPIN
 
 PIN4 = "1234"
 
@@ -117,3 +122,34 @@ class TestMsgApplysettings:
         with client:
             _set_expected_responses(client)
             device.apply_settings(client, homescreen=img)
+
+    @pytest.mark.skip_t1
+    @pytest.mark.setup_client(pin=None)
+    def test_unsafe_prompts(self, client):
+        BAD_ADDRESS = parse_path("m/0")
+
+        with pytest.raises(
+            exceptions.TrezorFailure, match="Forbidden key path"
+        ), client:
+            client.set_expected_responses([messages.Failure()])
+            btc.get_address(client, "Bitcoin", BAD_ADDRESS)
+
+        with client:
+            client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
+            device.apply_settings(client, unsafe_prompts=True)
+
+        with client:
+            client.set_expected_responses(
+                [messages.ButtonRequest(), messages.Address()]
+            )
+            btc.get_address(client, "Bitcoin", BAD_ADDRESS)
+
+        with client:
+            client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
+            device.apply_settings(client, unsafe_prompts=False)
+
+        with pytest.raises(
+            exceptions.TrezorFailure, match="Forbidden key path"
+        ), client:
+            client.set_expected_responses([messages.Failure()])
+            btc.get_address(client, "Bitcoin", BAD_ADDRESS)
