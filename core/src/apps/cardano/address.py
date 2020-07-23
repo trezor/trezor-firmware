@@ -267,8 +267,8 @@ def _derive_base_address(
 def _validate_base_address_staking_info(
     staking_path: List[int], staking_key_hash: bytes,
 ) -> None:
-    if staking_key_hash is None and staking_path is None:
-        raise wire.DataError("Base address needs a staking path or a staking key hash!")
+    if (staking_key_hash is None) == (not staking_path):
+        raise wire.DataError("Base address needs either a staking path or a staking key hash!")
 
     if staking_key_hash is None and not _is_staking_path(staking_path):
         raise wire.DataError("Invalid staking path!")
