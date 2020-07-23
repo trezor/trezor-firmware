@@ -85,7 +85,7 @@ async def show_warning_tx_different_staking_account(
 ):
     t1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     t1.normal("Change address staking")
-    t1.normal("rights do not belong to")
+    t1.normal("rights do not match")
     t1.normal("the current account.")
 
     t2 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
@@ -102,7 +102,7 @@ async def show_warning_tx_staking_key_hash(
 ):
     t1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     t1.normal("Change address staking")
-    t1.normal("rights do not belong to")
+    t1.normal("rights do not match")
     t1.normal("the current account.")
 
     t2 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
@@ -180,7 +180,7 @@ def _paginate_lines(
 
 async def show_warning_address_foreign_staking_key(
     ctx: wire.Context,
-    spending_account_path: List[int],
+    account_path: List[int],
     staking_account_path: List[int],
     staking_key_hash: bytes,
 ) -> None:
@@ -189,9 +189,9 @@ async def show_warning_address_foreign_staking_key(
         (
             "Stake rights associated",
             "with this address do",
-            "not belong to your",
+            "not match your",
             "account",
-            address_n_to_str(spending_account_path),
+            address_n_to_str(account_path),
         ),
         button="Ok",
     )

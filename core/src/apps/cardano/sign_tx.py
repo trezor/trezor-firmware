@@ -15,6 +15,7 @@ from .address import (
     derive_address_bytes,
     derive_human_readable_address,
     get_address_bytes_unsafe,
+    to_account_path,
     validate_full_path,
     validate_output_address,
 )
@@ -280,21 +281,22 @@ async def _show_change_output_staking_warnings(
 ):
     address_type = address_parameters.address_type
 
-    staking_type = staking_use_cases.get(keychain, address_parameters)
-    if staking_type == staking_use_cases.NO_STAKING:
+    staking_use_case = staking_use_cases.get(keychain, address_parameters)
+    if staking_use_case == staking_use_cases.NO_STAKING:
         await show_warning_tx_no_staking_info(ctx, address_type, amount)
-    elif staking_type == staking_use_cases.POINTER_ADDRESS:
+    elif staking_use_case == staking_use_cases.POINTER_ADDRESS:
         await show_warning_tx_pointer_address(
             ctx, address_parameters.certificate_pointer, amount,
         )
-    elif staking_type == staking_use_cases.DIFFERENT_ACCOUNT:
-        await show_warning_tx_different_staking_account(
-            ctx, address_parameters.address_n_staking[:3], amount,
-        )
-    elif staking_type == staking_use_cases.DIFFERENT_HASH:
-        await show_warning_tx_staking_key_hash(
-            ctx, address_parameters.staking_key_hash, amount,
-        )
+    elif staking_use_case == staking_use_cases.MISMATCH:
+        if address_parameters.address_n_staking:
+            await show_warning_tx_different_staking_account(
+                ctx, to_account_path(address_parameters.address_n_staking), amount,
+            )
+        else:
+            await show_warning_tx_staking_key_hash(
+                ctx, address_parameters.staking_key_hash, amount,
+            )
 
 
 # addresses from the same account as inputs should be hidden

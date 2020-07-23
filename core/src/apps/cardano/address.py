@@ -1,3 +1,5 @@
+from micropython import const
+
 from trezor import wire
 from trezor.crypto import base58, hashlib
 from trezor.messages import CardanoAddressParametersType, CardanoAddressType
@@ -341,3 +343,8 @@ def _derive_reward_address(
     staking_key_hash = get_public_key_hash(keychain, path)
 
     return header + staking_key_hash
+
+
+def to_account_path(path: List[int]) -> List[int]:
+    ACCOUNT_PATH_LENGTH = const(3)
+    return path[:ACCOUNT_PATH_LENGTH]

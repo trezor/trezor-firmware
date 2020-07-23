@@ -1,6 +1,7 @@
 from trezor.messages import CardanoAddressType
 
-from ..address import get_public_key_hash
+from ..address import get_public_key_hash, to_account_path, validate_full_path
+from ..seed import is_shelley_path
 
 if False:
     from typing import List
@@ -16,12 +17,9 @@ on the type of address and its parameters.
 
 
 NO_STAKING = 0
-SAME_ACCOUNT = 1
-SAME_HASH = 2
-DIFFERENT_ACCOUNT = 3
-DIFFERENT_HASH = 4
-POINTER_ADDRESS = 5
-REWARD_ADDRESS = 6
+MATCH = 1
+MISMATCH = 2
+POINTER_ADDRESS = 3
 
 
 def get(
@@ -29,32 +27,32 @@ def get(
 ) -> int:
     address_type = address_parameters.address_type
     if address_type == CardanoAddressType.BASE:
+        if not validate_full_path(address_parameters.address_n):
+            return MISMATCH
+        if not is_shelley_path(address_parameters.address_n):
+            return MISMATCH
+
         spending_account_staking_path = _path_to_staking_path(
             address_parameters.address_n
         )
         if address_parameters.address_n_staking:
             if address_parameters.address_n_staking != spending_account_staking_path:
-                return DIFFERENT_ACCOUNT
-            else:
-                return SAME_ACCOUNT
+                return MISMATCH
         else:
             staking_key_hash = get_public_key_hash(
                 keychain, spending_account_staking_path
             )
             if address_parameters.staking_key_hash != staking_key_hash:
-                return DIFFERENT_HASH
-            else:
-                return SAME_HASH
+                return MISMATCH
+
+        return MATCH
     elif address_type == CardanoAddressType.POINTER:
         return POINTER_ADDRESS
     elif address_type == CardanoAddressType.REWARD:
-        return REWARD_ADDRESS
+        return MATCH
     else:
         return NO_STAKING
 
 
 def _path_to_staking_path(path: List[int]) -> List[int]:
-    if len(path) < 3:
-        raise ValueError
-
-    return path[:3] + [2, 0]
+    return to_account_path(path) + [2, 0]

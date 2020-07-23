@@ -1,5 +1,3 @@
-from micropython import const
-
 from trezor import log, wire
 from trezor.messages.CardanoAddress import CardanoAddress
 
@@ -7,7 +5,7 @@ from apps.common import paths
 from apps.common.layout import address_n_to_str, show_qr
 
 from . import CURVE, seed
-from .address import derive_human_readable_address, validate_full_path
+from .address import derive_human_readable_address, to_account_path, validate_full_path
 from .helpers import protocol_magics, staking_use_cases
 from .layout import (
     show_address,
@@ -16,7 +14,6 @@ from .layout import (
 )
 
 if False:
-    from typing import List
     from trezor.messages import CardanoAddressParametersType, CardanoGetAddress
 
 
@@ -81,24 +78,12 @@ async def _show_staking_warnings(
     address_parameters: CardanoAddressParametersType,
 ) -> None:
     staking_type = staking_use_cases.get(keychain, address_parameters)
-    if staking_type == staking_use_cases.DIFFERENT_ACCOUNT:
+    if staking_type == staking_use_cases.MISMATCH:
         await show_warning_address_foreign_staking_key(
             ctx,
-            _to_account_path(address_parameters.address_n),
-            _to_account_path(address_parameters.address_n_staking),
-            None,
-        )
-    elif staking_type == staking_use_cases.DIFFERENT_HASH:
-        await show_warning_address_foreign_staking_key(
-            ctx,
-            _to_account_path(address_parameters.address_n),
-            None,
+            to_account_path(address_parameters.address_n),
+            to_account_path(address_parameters.address_n_staking),
             address_parameters.staking_key_hash,
         )
     elif staking_type == staking_use_cases.POINTER_ADDRESS:
         await show_warning_address_pointer(ctx, address_parameters.certificate_pointer)
-
-
-def _to_account_path(path: List[int]) -> List[int]:
-    ACCOUNT_PATH_LENGTH = const(3)
-    return path[:ACCOUNT_PATH_LENGTH]
