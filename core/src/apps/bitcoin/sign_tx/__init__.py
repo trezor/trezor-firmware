@@ -45,43 +45,29 @@ async def sign_tx(
                 break
             res = await ctx.call(req, TxAck, field_cache)
         elif isinstance(req, helpers.UiConfirmOutput):
-            mods = utils.unimport_begin()
             res = await layout.confirm_output(ctx, req.output, req.coin)
-            utils.unimport_end(mods)
             progress.report_init()
         elif isinstance(req, helpers.UiConfirmTotal):
-            mods = utils.unimport_begin()
             res = await layout.confirm_total(ctx, req.spending, req.fee, req.coin)
-            utils.unimport_end(mods)
             progress.report_init()
         elif isinstance(req, helpers.UiConfirmJointTotal):
-            mods = utils.unimport_begin()
             res = await layout.confirm_joint_total(
                 ctx, req.spending, req.total, req.coin
             )
-            utils.unimport_end(mods)
             progress.report_init()
         elif isinstance(req, helpers.UiConfirmFeeOverThreshold):
-            mods = utils.unimport_begin()
             res = await layout.confirm_feeoverthreshold(ctx, req.fee, req.coin)
-            utils.unimport_end(mods)
             progress.report_init()
         elif isinstance(req, helpers.UiConfirmChangeCountOverThreshold):
-            mods = utils.unimport_begin()
             res = await layout.confirm_change_count_over_threshold(
                 ctx, req.change_count
             )
-            utils.unimport_end(mods)
             progress.report_init()
         elif isinstance(req, helpers.UiConfirmNonDefaultLocktime):
-            mods = utils.unimport_begin()
             res = await layout.confirm_nondefault_locktime(ctx, req.lock_time)
-            utils.unimport_end(mods)
             progress.report_init()
         elif isinstance(req, helpers.UiConfirmForeignAddress):
-            mods = utils.unimport_begin()
             res = await paths.show_path_warning(ctx, req.address_n)
-            utils.unimport_end(mods)
             progress.report_init()
         else:
             raise TypeError("Invalid signing instruction")

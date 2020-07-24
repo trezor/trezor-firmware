@@ -5,9 +5,14 @@ from trezor import ui
 from trezor.messages import ButtonRequestType, OutputScriptType
 from trezor.messages.TxOutputType import TxOutputType
 from trezor.strings import format_amount
+from trezor.ui.text import Text
 from trezor.utils import chunks
 
 from apps.common import coininfo
+from apps.common.confirm import require_confirm, require_hold_to_confirm
+
+from .. import addresses
+from . import omni
 
 if False:
     from typing import Iterator
@@ -31,11 +36,6 @@ def split_op_return(data: str) -> Iterator[str]:
 async def confirm_output(
     ctx: wire.Context, output: TxOutputType, coin: coininfo.CoinInfo
 ) -> None:
-    from trezor.ui.text import Text
-    from apps.common.confirm import require_confirm
-    from . import omni
-    from .. import addresses
-
     if output.script_type == OutputScriptType.PAYTOOPRETURN:
         data = output.op_return_data
         if omni.is_valid(data):
@@ -61,9 +61,6 @@ async def confirm_output(
 async def confirm_joint_total(
     ctx: wire.Context, spending: int, total: int, coin: coininfo.CoinInfo
 ) -> None:
-    from trezor.ui.text import Text
-    from apps.common.confirm import require_hold_to_confirm
-
     text = Text("Joint transaction", ui.ICON_SEND, ui.GREEN)
     text.normal("You are contributing:")
     text.bold(format_coin_amount(spending, coin))
@@ -75,9 +72,6 @@ async def confirm_joint_total(
 async def confirm_total(
     ctx: wire.Context, spending: int, fee: int, coin: coininfo.CoinInfo
 ) -> None:
-    from trezor.ui.text import Text
-    from apps.common.confirm import require_hold_to_confirm
-
     text = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     text.normal("Total amount:")
     text.bold(format_coin_amount(spending, coin))
@@ -89,9 +83,6 @@ async def confirm_total(
 async def confirm_feeoverthreshold(
     ctx: wire.Context, fee: int, coin: coininfo.CoinInfo
 ) -> None:
-    from trezor.ui.text import Text
-    from apps.common.confirm import require_confirm
-
     text = Text("High fee", ui.ICON_SEND, ui.GREEN)
     text.normal("The fee of")
     text.bold(format_coin_amount(fee, coin))
@@ -102,9 +93,6 @@ async def confirm_feeoverthreshold(
 async def confirm_change_count_over_threshold(
     ctx: wire.Context, change_count: int
 ) -> None:
-    from trezor.ui.text import Text
-    from apps.common.confirm import require_confirm
-
     text = Text("Warning", ui.ICON_SEND, ui.GREEN)
     text.normal("There are {}".format(change_count))
     text.normal("change-outputs.")
@@ -114,9 +102,6 @@ async def confirm_change_count_over_threshold(
 
 
 async def confirm_nondefault_locktime(ctx: wire.Context, lock_time: int) -> None:
-    from trezor.ui.text import Text
-    from apps.common.confirm import require_confirm
-
     text = Text("Confirm locktime", ui.ICON_SEND, ui.GREEN)
     text.normal("Locktime for this transaction is set to")
     if lock_time < _LOCKTIME_TIMESTAMP_MIN_VALUE:
