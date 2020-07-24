@@ -15,6 +15,7 @@ _Most likely to be released on August 5th._
 - Support EXTERNAL transaction inputs with a SLIP-0019 proof of ownership.  [#1052]
 - Support pre-signed EXTERNAL transaction inputs.
 - Support multiple change-outputs.  [#1098]
+- New option `unsafe-prompts` allows overriding "forbidden key path" errors.  [#1126]
 
 ### Changed
 - `Features.pin_cached` renamed to `unlocked`.
@@ -22,7 +23,7 @@ _Most likely to be released on August 5th._
 - Rewrite USB codec and Protobuf decoder to be more memory-efficient.  [#1089]
 
 ### Deprecated
-- Deprecate `Overwintered` field in `SignTx` and `TxAck`.
+- Deprecate `overwintered` field in `SignTx` and `TxAck`.
 
 ### Removed
 - Generated protobuf classes now do not contain deprecated fields.
@@ -172,3 +173,4 @@ Version 2.0.5 [Mar 2018]
 [#1074]: https://github.com/trezor/trezor-firmware/issues/1074
 [#1089]: https://github.com/trezor/trezor-firmware/issues/1089
 [#1098]: https://github.com/trezor/trezor-firmware/issues/1098
+[#1126]: https://github.com/trezor/trezor-firmware/issues/1126
