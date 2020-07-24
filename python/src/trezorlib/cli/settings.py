@@ -16,7 +16,7 @@
 
 import click
 
-from .. import device
+from .. import device, messages
 from . import ChoiceType, with_client
 
 ROTATION = {"north": 0, "east": 90, "south": 180, "west": 270}
@@ -142,8 +142,13 @@ def unsafe_prompts(client, allow):
     to confirm possibly dangerous actions instead of rejecting them outright.
     Use with caution.
     """
-    allowed = allow == "on"
-    return device.apply_settings(client, unsafe_prompts=allowed)
+    # TODO change this to ChoiceType
+    if allow == "on":
+        level = messages.SafetyCheckLevel.Prompt
+    else:
+        level = messages.SafetyCheckLevel.Strict
+
+    return device.apply_settings(client, safety_checks=level)
 
 
 #

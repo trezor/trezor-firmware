@@ -293,6 +293,7 @@ from . import OutputScriptType
 from . import PinMatrixRequestType
 from . import RecoveryDeviceType
 from . import RequestType
+from . import SafetyCheckLevel
 from . import SdProtectOperationType
 from . import TezosBallotType
 from . import TezosContractType

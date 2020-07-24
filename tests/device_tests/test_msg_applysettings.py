@@ -125,7 +125,7 @@ class TestMsgApplysettings:
 
     @pytest.mark.skip_t1
     @pytest.mark.setup_client(pin=None)
-    def test_unsafe_prompts(self, client):
+    def test_safety_checks(self, client):
         BAD_ADDRESS = parse_path("m/0")
 
         with pytest.raises(
@@ -136,7 +136,9 @@ class TestMsgApplysettings:
 
         with client:
             client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
-            device.apply_settings(client, unsafe_prompts=True)
+            device.apply_settings(
+                client, safety_checks=messages.SafetyCheckLevel.Prompt
+            )
 
         with client:
             client.set_expected_responses(
@@ -146,7 +148,9 @@ class TestMsgApplysettings:
 
         with client:
             client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
-            device.apply_settings(client, unsafe_prompts=False)
+            device.apply_settings(
+                client, safety_checks=messages.SafetyCheckLevel.Strict
+            )
 
         with pytest.raises(
             exceptions.TrezorFailure, match="Forbidden key path"
