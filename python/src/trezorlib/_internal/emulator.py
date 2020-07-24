@@ -75,7 +75,7 @@ class Emulator:
         self.client = None
         self.process = None
 
-        self.port = 21324
+        self.port = 21325
         self.headless = headless
         self.debug = debug
         self.extra_args = list(extra_args)

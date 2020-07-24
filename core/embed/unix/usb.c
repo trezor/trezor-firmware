@@ -45,7 +45,7 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
 // gracefully ignores all other USB interfaces
 
 #define USBD_MAX_NUM_INTERFACES 8
-#define TREZOR_UDP_PORT 21324
+#define TREZOR_UDP_PORT 21325
 
 static struct {
   usb_iface_type_t type;

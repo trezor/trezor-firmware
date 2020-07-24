@@ -24,7 +24,7 @@
 #include <string.h>
 #include <sys/socket.h>
 
-#define TREZOR_UDP_PORT 21324
+#define TREZOR_UDP_PORT 21325
 
 struct usb_socket {
   int fd;
