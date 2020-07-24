@@ -3,6 +3,8 @@ from trezor import wire
 from apps.common import HARDENED, coininfo
 from apps.common.keychain import get_keychain
 
+from .common import BITCOIN_NAMES
+
 if False:
     from protobuf import MessageType
     from typing import Callable, Optional, Tuple, TypeVar
@@ -36,6 +38,21 @@ def get_namespaces_for_coin(coin: coininfo.CoinInfo):
         namespaces.append([49 | HARDENED, slip44_id])
         # BIP-84 - native segwit: m/84'/slip44' (/account'/change/addr)
         namespaces.append([84 | HARDENED, slip44_id])
+
+    if coin.coin_name in BITCOIN_NAMES:
+        # compatibility namespace for Casa
+        namespaces.append([49, slip44_id])
+
+        # compatibility namespace for Greenaddress:
+        # m/branch/address_pointer, for branch in (1, 4)
+        namespaces.append([1])
+        namespaces.append([4])
+        # m/3'/subaccount'/branch/address_pointer
+        namespaces.append([3 | HARDENED])
+        # sign msg:
+        # m/0x4741b11e
+        # m/0x4741b11e/6/pointer
+        namespaces.append([0x4741B11E])
 
     return namespaces
 
