@@ -125,7 +125,12 @@ message ApplySettings {
     optional uint32 auto_lock_delay_ms = 6;
     optional uint32 display_rotation = 7;  // in degrees from North
     optional bool passphrase_always_on_device = 8;  // do not prompt for passphrase, enforce device entry
-    optional bool unsafe_prompts = 9;  // allow or disallow unsafe prompts
+    optional SafetyCheckLevel safety_checks = 9;  // Safety check level, set to Prompt to limit path namespace enforcement
+
+    enum SafetyCheckLevel {
+        Strict = 0;
+        Prompt = 1;
+    }
 }
 
 /**

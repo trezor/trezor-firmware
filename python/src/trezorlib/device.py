@@ -34,7 +34,7 @@ def apply_settings(
     passphrase_always_on_device=None,
     auto_lock_delay_ms=None,
     display_rotation=None,
-    unsafe_prompts=None,
+    safety_checks=None,
 ):
     settings = messages.ApplySettings(
         label=label,
@@ -44,7 +44,7 @@ def apply_settings(
         passphrase_always_on_device=passphrase_always_on_device,
         auto_lock_delay_ms=auto_lock_delay_ms,
         display_rotation=display_rotation,
-        unsafe_prompts=unsafe_prompts,
+        safety_checks=safety_checks,
     )
 
     out = client.call(settings)

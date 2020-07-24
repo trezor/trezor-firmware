@@ -1,6 +1,6 @@
 import storage.device
 from trezor import ui, wire, workflow
-from trezor.messages import ButtonRequestType
+from trezor.messages import ButtonRequestType, SafetyCheckLevel
 from trezor.messages.Success import Success
 from trezor.strings import format_duration_ms
 from trezor.ui.text import Text
@@ -9,7 +9,7 @@ from apps.base import lock_device
 from apps.common.confirm import require_confirm, require_hold_to_confirm
 
 if False:
-    from trezor.messages.ApplySettings import ApplySettings
+    from trezor.messages.ApplySettings import ApplySettings, EnumTypeSafetyCheckLevel
 
 
 async def apply_settings(ctx: wire.Context, msg: ApplySettings):
@@ -22,7 +22,7 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings):
         and msg.passphrase_always_on_device is None
         and msg.display_rotation is None
         and msg.auto_lock_delay_ms is None
-        and msg.unsafe_prompts is None
+        and msg.safety_checks is None
     ):
         raise wire.ProcessError("No setting provided")
 
@@ -61,9 +61,11 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings):
         # use the value that was stored, not the one that was supplied by the user
         workflow.idle_timer.set(storage.device.get_autolock_delay_ms(), lock_device)
 
-    if msg.unsafe_prompts is not None:
-        await require_confirm_unsafe_prompts(ctx, msg.unsafe_prompts)
-        storage.device.set_unsafe_prompts_allowed(msg.unsafe_prompts)
+    if msg.safety_checks is not None:
+        await require_confirm_safety_checks(ctx, msg.safety_checks)
+        storage.device.set_unsafe_prompts_allowed(
+            msg.safety_checks == SafetyCheckLevel.Prompt
+        )
 
     if msg.display_rotation is not None:
         await require_confirm_change_display_rotation(ctx, msg.display_rotation)
@@ -132,8 +134,8 @@ async def require_confirm_change_autolock_delay(ctx, delay_ms):
     await require_confirm(ctx, text, ButtonRequestType.ProtectCall)
 
 
-async def require_confirm_unsafe_prompts(ctx, allow: bool) -> None:
-    if allow:
+async def require_confirm_safety_checks(ctx, level: EnumTypeSafetyCheckLevel) -> None:
+    if level == SafetyCheckLevel.Prompt:
         text = Text("Unsafe prompts", ui.ICON_WIPE)
         text.normal(
             "Trezor will allow you to", "confirm actions which", "might be dangerous."
@@ -141,7 +143,9 @@ async def require_confirm_unsafe_prompts(ctx, allow: bool) -> None:
         text.br_half()
         text.bold("Allow unsafe prompts?")
         await require_hold_to_confirm(ctx, text, ButtonRequestType.ProtectCall)
-    else:
+    elif level == SafetyCheckLevel.Strict:
         text = Text("Unsafe prompts", ui.ICON_CONFIG)
         text.normal("Do you really want to", "disable unsafe prompts?")
         await require_confirm(ctx, text, ButtonRequestType.ProtectCall)
+    else:
+        raise ValueError  # enum value out of range

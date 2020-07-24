@@ -15,7 +15,7 @@ _Most likely to be released on August 5th._
 - Support EXTERNAL transaction inputs with a SLIP-0019 proof of ownership.  [#1052]
 - Support pre-signed EXTERNAL transaction inputs.
 - Support multiple change-outputs.  [#1098]
-- New option `unsafe-prompts` allows overriding "forbidden key path" errors.  [#1126]
+- New option `safety-checks` allows overriding "forbidden key path" errors.  [#1126]
 
 ### Changed
 - `Features.pin_cached` renamed to `unlocked`.
