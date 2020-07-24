@@ -103,7 +103,7 @@ class Keychain:
 
     def verify_path(self, path: paths.Bip32Path) -> None:
         if "ed25519" in self.curve and not paths.path_is_hardened(path):
-            raise FORBIDDEN_KEY_PATH
+            raise wire.DataError("Non-hardened paths unsupported on Ed25519")
 
         if device.unsafe_prompts_allowed():
             return
