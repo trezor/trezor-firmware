@@ -5,6 +5,8 @@ bytes, string, embedded message and repeated fields.
 
 from micropython import const
 
+from trezor.utils import decode_bytes
+
 if False:
     from typing import Any, Dict, Iterable, List, Tuple, Type, TypeVar, Union
     from typing_extensions import Protocol
@@ -257,7 +259,7 @@ def load_message(
         elif ftype is UnicodeType:
             fvalue = bytearray(ivalue)
             reader.readinto(fvalue)
-            fvalue = bytes(fvalue).decode()
+            fvalue = decode_bytes(fvalue)
         elif issubclass(ftype, MessageType):
             fvalue = load_message(LimitedReader(reader, ivalue), ftype, field_cache)
         else:
