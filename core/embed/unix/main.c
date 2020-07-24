@@ -427,6 +427,46 @@ void main_clean_exit(int status) {
 #define PATHLIST_SEP_CHAR ':'
 #endif
 
+static int do_import_module(const char *modname) {
+  mp_obj_t import_args[4];
+  import_args[0] = mp_obj_new_str(modname, strlen(modname));
+  import_args[1] = import_args[2] = mp_const_none;
+  // Ask __import__ to handle imported module specially - set its __name__
+  // to __main__, and also return this leaf module, not top-level package
+  // containing it.
+  import_args[3] = mp_const_false;
+  // TODO: https://docs.python.org/3/using/cmdline.html#cmdoption-m :
+  // "the first element of sys.argv will be the full path to
+  // the module file (while the module file is being located,
+  // the first element will be set to "-m")."
+
+  mp_obj_t mod;
+  nlr_buf_t nlr;
+  bool subpkg_tried = false;
+
+reimport:
+  if (nlr_push(&nlr) == 0) {
+    mod = mp_builtin___import__(MP_ARRAY_SIZE(import_args), import_args);
+    nlr_pop();
+  } else {
+    // uncaught exception
+    exit(handle_uncaught_exception(nlr.ret_val) & 0xff);
+  }
+
+  if (mp_obj_is_package(mod) && !subpkg_tried) {
+    subpkg_tried = true;
+    vstr_t vstr;
+    int len = strlen(modname);
+    vstr_init(&vstr, len + sizeof(".__main__"));
+    vstr_add_strn(&vstr, modname, len);
+    vstr_add_strn(&vstr, ".__main__", sizeof(".__main__") - 1);
+    import_args[0] = mp_obj_new_str_from_vstr(&mp_type_str, &vstr);
+    goto reimport;
+  }
+
+  return 0;
+}
+
 MP_NOINLINE int main_(int argc, char **argv);
 
 int main(int argc, char **argv) {
@@ -555,9 +595,11 @@ MP_NOINLINE int main_(int argc, char **argv) {
   const int NOTHING_EXECUTED = -2;
   int ret = NOTHING_EXECUTED;
   bool inspect = false;
+  bool default_import = true;
   for (int a = 1; a < argc; a++) {
     if (argv[a][0] == '-') {
       if (strcmp(argv[a], "-i") == 0) {
+        default_import = false;
         inspect = true;
       } else if (strcmp(argv[a], "-c") == 0) {
         if (a + 1 >= argc) {
@@ -572,44 +614,9 @@ MP_NOINLINE int main_(int argc, char **argv) {
         if (a + 1 >= argc) {
           return usage(argv);
         }
-        mp_obj_t import_args[4];
-        import_args[0] = mp_obj_new_str(argv[a + 1], strlen(argv[a + 1]));
-        import_args[1] = import_args[2] = mp_const_none;
-        // Ask __import__ to handle imported module specially - set its __name__
-        // to __main__, and also return this leaf module, not top-level package
-        // containing it.
-        import_args[3] = mp_const_false;
-        // TODO: https://docs.python.org/3/using/cmdline.html#cmdoption-m :
-        // "the first element of sys.argv will be the full path to
-        // the module file (while the module file is being located,
-        // the first element will be set to "-m")."
+        default_import = false;
         set_sys_argv(argv, argc, a + 1);
-
-        mp_obj_t mod;
-        nlr_buf_t nlr;
-        bool subpkg_tried = false;
-
-      reimport:
-        if (nlr_push(&nlr) == 0) {
-          mod = mp_builtin___import__(MP_ARRAY_SIZE(import_args), import_args);
-          nlr_pop();
-        } else {
-          // uncaught exception
-          return handle_uncaught_exception(nlr.ret_val) & 0xff;
-        }
-
-        if (mp_obj_is_package(mod) && !subpkg_tried) {
-          subpkg_tried = true;
-          vstr_t vstr;
-          int len = strlen(argv[a + 1]);
-          vstr_init(&vstr, len + sizeof(".__main__"));
-          vstr_add_strn(&vstr, argv[a + 1], len);
-          vstr_add_strn(&vstr, ".__main__", sizeof(".__main__") - 1);
-          import_args[0] = mp_obj_new_str_from_vstr(&mp_type_str, &vstr);
-          goto reimport;
-        }
-
-        ret = 0;
+        ret = do_import_module(argv[a + 1]);
         break;
       } else if (strcmp(argv[a], "-X") == 0) {
         a += 1;
@@ -649,6 +656,10 @@ MP_NOINLINE int main_(int argc, char **argv) {
       ret = do_file(argv[a]);
       break;
     }
+  }
+
+  if (ret == NOTHING_EXECUTED && default_import) {
+    ret = do_import_module("main");
   }
 
   if (ret == NOTHING_EXECUTED || inspect) {

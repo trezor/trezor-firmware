@@ -34,7 +34,7 @@ on the device gets wiped on every start in this firmware.
 Build of Core into UNIX emulator. Something you can run on your laptop.
 
 Frozen version. That means you do not need any other files to run it, it is just
-a single binary file. Run it using `micropython -m main`.
+a single binary file that you can execute directly.
 
 See [Emulator](../core/emulator/index.md) for more info.
 
