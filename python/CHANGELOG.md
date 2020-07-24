@@ -9,6 +9,9 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 ## [0.12.1] - unreleased
 [0.12.1]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.0...master
 
+### Added
+
+- `trezorctl set unsafe-prompts` controls the new "unsafe prompts" feature.  [#1126]
 
 ### Changed
 
@@ -435,3 +438,4 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 [#349]: https://github.com/trezor/python-trezor/issues/349
 [#351]: https://github.com/trezor/python-trezor/issues/351
 [#352]: https://github.com/trezor/python-trezor/issues/352
+[#1126]: https://github.com/trezor/trezor-firmware/issues/1126
