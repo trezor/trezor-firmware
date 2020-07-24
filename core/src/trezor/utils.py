@@ -9,6 +9,7 @@ from trezorutils import (  # noqa: F401
     VERSION_MINOR,
     VERSION_PATCH,
     consteq,
+    decode_bytes,
     halt,
     memcpy,
 )

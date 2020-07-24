@@ -32,6 +32,13 @@ def halt(msg: str = None) -> None:
     """
     Halts execution.
     """
+
+
+# extmod/modtrezorutils/modtrezorutils.c
+def decode_bytes(b: bytes) -> str:
+    """
+    Decodes string from bytes
+    """
 GITREV: str
 VERSION_MAJOR: int
 VERSION_MINOR: int
