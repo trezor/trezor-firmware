@@ -44,6 +44,7 @@ class TestMsgStellarGetAddress:
         )
         assert address == "GBAW5XGWORWVFE2XTJYDTLDHXTY2Q2MO73HYCGB3XMFMQ562Q2W2GJQX"
 
+    @pytest.mark.skip_ui
     def test_stellar_get_address_fail(self, client):
         with pytest.raises(TrezorFailure) as exc:
             stellar.get_address(client, parse_path("m/0/1"))
@@ -53,4 +54,4 @@ class TestMsgStellarGetAddress:
             assert exc.value.message.endswith("Failed to derive private key")
         else:
             assert exc.value.code == proto.FailureType.DataError
-            assert exc.value.message.endswith("Forbidden key path")
+            assert exc.value.message == "Non-hardened paths unsupported on Ed25519"
