@@ -494,12 +494,6 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   version = msg->version;
   lock_time = msg->lock_time;
 
-  if (coin->overwintered && !msg->has_version_group_id) {
-    fsm_sendFailure(FailureType_Failure_DataError,
-                    _("Version group ID must be set."));
-    signing_abort();
-    return;
-  }
   if (!coin->overwintered) {
     if (msg->has_version_group_id) {
       fsm_sendFailure(FailureType_Failure_DataError,
@@ -519,19 +513,26 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   expiry = (coin->decred || coin->overwintered) ? msg->expiry : 0;
   timestamp = coin->timestamp ? msg->timestamp : 0;
   if (coin->overwintered) {
+    if (!msg->has_version_group_id) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Version group ID must be set."));
+      signing_abort();
+      return;
+    }
+    if (!msg->has_branch_id) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Branch ID must be set."));
+      signing_abort();
+      return;
+    }
+    if (version != 4) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Unsupported transaction version."));
+      signing_abort();
+      return;
+    }
     version_group_id = msg->version_group_id;
     branch_id = msg->branch_id;
-    if (branch_id == 0) {
-      // set default values for Zcash if branch_id is unset
-      switch (version) {
-        case 3:
-          branch_id = 0x5BA81B19;  // Overwinter
-          break;
-        case 4:
-          branch_id = 0x76B809BB;  // Sapling
-          break;
-      }
-    }
   } else {
     version_group_id = 0;
     branch_id = 0;
@@ -1005,40 +1006,6 @@ static void signing_hash_bip143(const TxInputType *txinput, uint8_t *hash) {
 }
 
 #if !BITCOIN_ONLY
-
-static void signing_hash_zip143(const TxInputType *txinput, uint8_t *hash) {
-  uint32_t hash_type = signing_hash_type();
-  uint8_t personal[16] = {0};
-  memcpy(personal, "ZcashSigHash", 12);
-  memcpy(personal + 12, &branch_id, 4);
-  Hasher hasher_preimage = {0};
-  hasher_InitParam(&hasher_preimage, HASHER_BLAKE2B_PERSONAL, personal,
-                   sizeof(personal));
-  uint32_t ver = version | TX_OVERWINTERED;  // 1. nVersion | fOverwintered
-  hasher_Update(&hasher_preimage, (const uint8_t *)&ver, 4);
-  hasher_Update(&hasher_preimage, (const uint8_t *)&version_group_id,
-                4);                                    // 2. nVersionGroupId
-  hasher_Update(&hasher_preimage, hash_prevouts, 32);  // 3. hashPrevouts
-  hasher_Update(&hasher_preimage, hash_sequence, 32);  // 4. hashSequence
-  hasher_Update(&hasher_preimage, hash_outputs, 32);   // 5. hashOutputs
-                                                       // 6. hashJoinSplits
-  hasher_Update(&hasher_preimage, (const uint8_t *)"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 32);
-  hasher_Update(&hasher_preimage, (const uint8_t *)&lock_time,
-                4);  // 7. nLockTime
-  hasher_Update(&hasher_preimage, (const uint8_t *)&expiry,
-                4);  // 8. expiryHeight
-  hasher_Update(&hasher_preimage, (const uint8_t *)&hash_type,
-                4);  // 9. nHashType
-
-  tx_prevout_hash(&hasher_preimage, txinput);  // 10a. outpoint
-  tx_script_hash(&hasher_preimage, txinput->script_sig.size,
-                 txinput->script_sig.bytes);  // 10b. scriptCode
-  hasher_Update(&hasher_preimage, (const uint8_t *)&txinput->amount,
-                8);                             // 10c. value
-  tx_sequence_hash(&hasher_preimage, txinput);  // 10d. nSequence
-
-  hasher_Final(&hasher_preimage, hash);
-}
 
 static void signing_hash_zip243(const TxInputType *txinput, uint8_t *hash) {
   uint32_t hash_type = signing_hash_type();
@@ -1640,20 +1607,14 @@ void signing_txack(TransactionType *tx) {
         uint8_t hash[32] = {0};
 #if !BITCOIN_ONLY
         if (coin->overwintered) {
-          switch (version) {
-            case 3:
-              signing_hash_zip143(&tx->inputs[0], hash);
-              break;
-            case 4:
-              signing_hash_zip243(&tx->inputs[0], hash);
-              break;
-            default:
-              fsm_sendFailure(
-                  FailureType_Failure_DataError,
-                  _("Unsupported version for overwintered transaction"));
-              signing_abort();
-              return;
+          if (version != 4) {
+            fsm_sendFailure(
+                FailureType_Failure_DataError,
+                _("Unsupported version for overwintered transaction"));
+            signing_abort();
+            return;
           }
+          signing_hash_zip243(&tx->inputs[0], hash);
         } else
 #endif
         {
