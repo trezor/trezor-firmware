@@ -256,11 +256,11 @@ def _validate_base_address_staking_info(
             "Base address needs either a staking path or a staking key hash!"
         )
 
-    if staking_key_hash is None and not _is_staking_path(staking_path):
+    if staking_key_hash is None and not is_staking_path(staking_path):
         raise wire.DataError("Invalid staking path!")
 
 
-def _is_staking_path(path: List[int]) -> bool:
+def is_staking_path(path: List[int]) -> bool:
     """
     Validates path to match 1852'/1815'/a'/2/0. Path must
     be a valid Cardano path. It must have a Shelley purpose
@@ -322,7 +322,7 @@ def _derive_enterprise_address(
 def _derive_reward_address(
     keychain: seed.Keychain, path: List[int], network_id: int,
 ) -> bytes:
-    if not _is_staking_path(path):
+    if not is_staking_path(path):
         raise wire.DataError("Invalid path for reward address!")
 
     header = _create_address_header(CardanoAddressType.REWARD, network_id)
