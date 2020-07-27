@@ -8,10 +8,6 @@ import storage
 import storage.resident_credentials
 from trezor import config
 
-d = Display()
-
-d.clear()
-d.backlight(255)
 config.init(False)
 salt = None
 config.unlock(1, salt)
@@ -71,12 +67,20 @@ print("Res credential 1", res1)
 
 i = 0
 
+d = Display()
+d.clear()
+d.backlight(255)
+
 while True:
-    d.print("Loop %d\n" % i)
+    d.clear()
+    d.text(0, 20, "%d" % i, Display.FONT_NORMAL, 0xFFFF, 0x0000)
+    d.text_right(128, 20, "%d" % i, Display.FONT_BOLD, 0xFFFF, 0x0000)
+    d.text(0, 64, "%d" % i, Display.FONT_MONO, 0xFFFF, 0x0000)
+    d.text_right(128, 64, "%d" % i, Display.FONT_MONO_BOLD, 0xFFFF, 0x0000)
     i += 1
     r = [0, 0]
     if io.poll([io.TOUCH], r, 1000000):
         print("TOUCH", r)
     else:
         print("NOTOUCH")
-    # d.refresh()
+    d.refresh()
