@@ -29,9 +29,6 @@
 #ifdef TREZOR_FONT_MONO_ENABLE
 #include "font_robotomono_regular_20.h"
 #endif
-#ifdef TREZOR_FONT_MONO_BOLD_ENABLE
-#include "font_robotomono_bold_20.h"
-#endif
 
 #include "qr-code-generator/qrcodegen.h"
 
@@ -579,10 +576,6 @@ static const uint8_t *get_glyph(int font, uint8_t c) {
       case FONT_MONO:
         return Font_RobotoMono_Regular_20[c - ' '];
 #endif
-#ifdef TREZOR_FONT_MONO_BOLD_ENABLE
-      case FONT_MONO_BOLD:
-        return Font_RobotoMono_Bold_20[c - ' '];
-#endif
     }
     return 0;
   }
@@ -600,10 +593,6 @@ static const uint8_t *get_glyph(int font, uint8_t c) {
 #ifdef TREZOR_FONT_MONO_ENABLE
     case FONT_MONO:
       return Font_RobotoMono_Regular_20_glyph_nonprintable;
-#endif
-#ifdef TREZOR_FONT_MONO_BOLD_ENABLE
-    case FONT_MONO_BOLD:
-      return Font_RobotoMono_Bold_20_glyph_nonprintable;
 #endif
   }
   return 0;

@@ -12,7 +12,6 @@ class Display:
     FONT_MONO: int  # id of monospace font
     FONT_NORMAL: int  # id of normal-width font
     FONT_BOLD: int  # id of bold-width font
-    FONT_MONO_BOLD: int # id of monospace bold-width font
 
     def __init__(self) -> None:
         """

@@ -6,7 +6,6 @@ if False:
 NORMAL = 0  # type: Literal[0]
 BOLD = 1  # type: Literal[1]
 MONO = 2  # type: Literal[2]
-MONO_BOLD = 3  # type: Literal[3]
 BR = 4  # type: Literal[4]
 BR_HALF = 5  # type: Literal[5]
 SET_COLOR = 6  # type: Literal[6]

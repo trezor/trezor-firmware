@@ -73,10 +73,9 @@ d.backlight(255)
 
 while True:
     d.clear()
-    d.text(0, 20, "%d" % i, Display.FONT_NORMAL, 0xFFFF, 0x0000)
-    d.text_right(128, 20, "%d" % i, Display.FONT_BOLD, 0xFFFF, 0x0000)
-    d.text(0, 64, "%d" % i, Display.FONT_MONO, 0xFFFF, 0x0000)
-    d.text_right(128, 64, "%d" % i, Display.FONT_MONO_BOLD, 0xFFFF, 0x0000)
+    d.text(0, 20, "Hamburgefont %d" % i, Display.FONT_NORMAL, 0xFFFF, 0x0000)
+    d.text(0, 40, "Hamburgefont %d" % i, Display.FONT_BOLD, 0xFFFF, 0x0000)
+    d.text(0, 60, "Hamburgefont %d" % i, Display.FONT_MONO, 0xFFFF, 0x0000)
     i += 1
     r = [0, 0]
     if io.poll([io.TOUCH], r, 1000000):

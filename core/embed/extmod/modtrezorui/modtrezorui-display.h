@@ -30,7 +30,6 @@
 ///     FONT_MONO: int  # id of monospace font
 ///     FONT_NORMAL: int  # id of normal-width font
 ///     FONT_BOLD: int  # id of bold-width font
-///     FONT_MONO_BOLD: int # id of monospace bold-width font
 ///
 typedef struct _mp_obj_Display_t {
   mp_obj_base_t base;
@@ -599,7 +598,6 @@ STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_FONT_NORMAL), MP_ROM_INT(FONT_NORMAL)},
     {MP_ROM_QSTR(MP_QSTR_FONT_BOLD), MP_ROM_INT(FONT_BOLD)},
     {MP_ROM_QSTR(MP_QSTR_FONT_MONO), MP_ROM_INT(FONT_MONO)},
-    {MP_ROM_QSTR(MP_QSTR_FONT_MONO_BOLD), MP_ROM_INT(FONT_MONO_BOLD)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorui_Display_locals_dict,
                             mod_trezorui_Display_locals_dict_table);

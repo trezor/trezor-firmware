@@ -126,4 +126,3 @@ def process_face(dirprefix, name, style, size):
 process_face("/usr", "Roboto", "Regular", 20)
 process_face("/usr", "Roboto", "Bold", 20)
 process_face("/usr", "RobotoMono", "Regular", 20)
-process_face("/usr", "RobotoMono", "Bold", 20)

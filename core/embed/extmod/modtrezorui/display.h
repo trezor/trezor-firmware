@@ -60,9 +60,6 @@
 #ifdef TREZOR_FONT_MONO_ENABLE
 #define FONT_MONO (-3)
 #endif
-#ifdef TREZOR_FONT_MONO_BOLD_ENABLE
-#define FONT_MONO_BOLD (-4)
-#endif
 
 // provided by port
 
