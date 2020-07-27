@@ -1,3 +1,6 @@
+from micropython import const
+
+
 def variable_length_encode(number: int) -> bytes:
     """
     Used for pointer encoding in pointer address.
@@ -18,3 +21,8 @@ def variable_length_encode(number: int) -> bytes:
         encoded.insert(0, (number & 127) + 128)
 
     return bytes(encoded)
+
+
+def to_account_path(path: List[int]) -> List[int]:
+    ACCOUNT_PATH_LENGTH = const(3)
+    return path[:ACCOUNT_PATH_LENGTH]

@@ -5,8 +5,9 @@ from apps.common import paths
 from apps.common.layout import address_n_to_str, show_qr
 
 from . import CURVE, seed
-from .address import derive_human_readable_address, to_account_path, validate_full_path
+from .address import derive_human_readable_address, validate_full_path
 from .helpers import protocol_magics, staking_use_cases
+from .helpers.utils import to_account_path
 from .layout import (
     show_address,
     show_warning_address_foreign_staking_key,
