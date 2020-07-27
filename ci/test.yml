@@ -56,7 +56,7 @@ core btconly device test:
   dependencies:
     - core unix frozen btconly debug build
   variables:
-    MICROPYTHON: "build/unix/micropython-bitcoinonly"
+    MICROPYTHON: "build/unix/trezor-emu-core-bitcoinonly"
     TREZOR_PYTEST_SKIP_ALTCOINS: 1
   script:
     - nix-shell --run "pipenv run make -C core test_emu"
@@ -112,9 +112,9 @@ core fido2 test:
   variables:
     TREZOR_PROFILING: 1
   script:
-    - pgrep micropython || true
+    - pgrep trezor-emu-core || true
     - nix-shell --run "pipenv run make -C core test_emu_fido2"
-    - pgrep micropython || true
+    - pgrep trezor-emu-core || true
     - mv core/src/.coverage core/.coverage.test_emu_fido2
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"

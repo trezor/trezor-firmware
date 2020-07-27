@@ -3,7 +3,7 @@
 : "${RUN_TEST_EMU:=1}"
 
 CORE_DIR="$(SHELL_SESSION_FILE='' && cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"
-MICROPYTHON="${MICROPYTHON:-$CORE_DIR/build/unix/micropython}"
+MICROPYTHON="${MICROPYTHON:-$CORE_DIR/build/unix/trezor-emu-core}"
 TREZOR_SRC="${CORE_DIR}/src"
 
 DISABLE_ANIMATION=1

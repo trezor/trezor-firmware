@@ -13,4 +13,4 @@ else
     cd "src${TREZOR_MODEL}"
 fi
 
-../build/unix/micropython -O$PYOPT -X heapsize=20M
+../build/unix/trezor-emu-core -O$PYOPT -X heapsize=20M
