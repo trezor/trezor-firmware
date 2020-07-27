@@ -6,5 +6,11 @@ if [ -n "$1" ]; then
     exit 1
 fi
 
-cd src
+TREZOR_MODEL="${TREZOR_MODEL:-T}"
+if [ "$TREZOR_MODEL" = "T" ]; then
+    cd src
+else
+    cd "src${TREZOR_MODEL}"
+fi
+
 ../build/unix/micropython -O$PYOPT -X heapsize=20M -m main
