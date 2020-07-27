@@ -565,6 +565,6 @@ if EVERYTHING:
     env.Depends(obj_program, secp256k1_zkp_ecmult_static_context)
 
 program = env.Command(
-    target='micropython',
+    target='trezor-emu-core',
     source=obj_program,
     action='$CC -o $TARGET $SOURCES $_LIBDIRFLAGS $_LIBFLAGS $LINKFLAGS', )

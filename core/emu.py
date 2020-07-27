@@ -22,7 +22,7 @@ except Exception:
 
 
 HERE = Path(__file__).parent.resolve()
-MICROPYTHON = HERE / "build" / "unix" / "micropython"
+MICROPYTHON = HERE / "build" / "unix" / "trezor-emu-core"
 SRC_DIR = HERE / "src"
 
 PROFILING_WRAPPER = HERE / "prof" / "prof.py"

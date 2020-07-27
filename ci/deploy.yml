@@ -227,7 +227,7 @@ upgrade tests core deploy:
     - "[[ $TAG == '' ]] && echo 'Tag is not core/*: exiting.' && exit 1"
     - DEST=${DEPLOY_PATH}/trezor-emu-$TAG
     - echo "Deploying to $DEST"
-    - rsync --delete -va core/build/unix/micropython "$DEST"
+    - rsync --delete -va core/build/unix/trezor-emu-core "$DEST"
   only:
     - /^core\//
   except:
