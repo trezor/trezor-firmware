@@ -1,5 +1,8 @@
 from micropython import const
 
+if False:
+    from typing import List
+
 
 def variable_length_encode(number: int) -> bytes:
     """
