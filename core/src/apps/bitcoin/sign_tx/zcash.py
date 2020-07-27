@@ -34,7 +34,7 @@ if False:
 OVERWINTERED = const(0x80000000)
 
 
-class Overwintered(Bitcoinlike):
+class Zcashlike(Bitcoinlike):
     def __init__(self, tx: SignTx, keychain: Keychain, coin: CoinInfo) -> None:
         ensure(coin.overwintered)
         super().__init__(tx, keychain, coin)

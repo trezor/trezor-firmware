@@ -25,7 +25,7 @@ async def sign_tx(
         if coin.decred:
             signer_class = decred.Decred  # type: Type[bitcoin.Bitcoin]
         elif coin.overwintered:
-            signer_class = zcash.Overwintered
+            signer_class = zcash.Zcashlike
         elif coin.coin_name not in BITCOIN_NAMES:
             signer_class = bitcoinlike.Bitcoinlike
         else:
