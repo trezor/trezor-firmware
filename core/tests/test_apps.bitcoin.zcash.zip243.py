@@ -8,7 +8,7 @@ from apps.common import coins
 from apps.bitcoin.writers import get_tx_hash
 
 if not utils.BITCOIN_ONLY:
-    from apps.bitcoin.sign_tx.zcash import Overwintered
+    from apps.bitcoin.sign_tx.zcash import Zcashlike
 
 
 # test vectors inspired from https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/zip_0243.py
@@ -190,7 +190,7 @@ class TestZcashZip243(unittest.TestCase):
                 branch_id=v["branch_id"],
             )
 
-            zip243 = Overwintered(tx, None, coin)
+            zip243 = Zcashlike(tx, None, coin)
 
             for i in v["inputs"]:
                 txi = TxInputType()
