@@ -1,7 +1,11 @@
 from ubinascii import hexlify
 
 from trezor import ui
-from trezor.messages import ButtonRequestType, CardanoAddressType
+from trezor.messages import (
+    ButtonRequestType,
+    CardanoAddressType,
+    CardanoCertificateType,
+)
 from trezor.strings import format_amount
 from trezor.ui.button import ButtonDefault
 from trezor.ui.scroll import Paginated
@@ -12,11 +16,16 @@ from apps.common.confirm import confirm, require_confirm, require_hold_to_confir
 from apps.common.layout import address_n_to_str, show_warning
 
 from .helpers import protocol_magics
+from .helpers.utils import to_account_path
 
 if False:
     from typing import List
     from trezor import wire
-    from trezor.messages import CardanoBlockchainPointerType
+    from trezor.messages import (
+        CardanoBlockchainPointerType,
+        CardanoTxCertificateType,
+        CardanoTxWithdrawalType,
+    )
     from trezor.messages.CardanoAddressParametersType import EnumTypeCardanoAddressType
 
 
@@ -26,6 +35,12 @@ ADDRESS_TYPE_NAMES = {
     CardanoAddressType.POINTER: "Pointer",
     CardanoAddressType.ENTERPRISE: "Enterprise",
     CardanoAddressType.REWARD: "Reward",
+}
+
+CERTIFICATE_TYPE_NAMES = {
+    CardanoCertificateType.STAKE_REGISTRATION: "Stake key registration",
+    CardanoCertificateType.STAKE_DEREGISTRATION: "Stake key deregistration",
+    CardanoCertificateType.STAKE_DELEGATION: "Stake delegation",
 }
 
 
@@ -128,6 +143,48 @@ async def confirm_transaction(ctx, amount: int, fee: int, protocol_magic: int):
     t2.bold(protocol_magics.to_ui_string(protocol_magic))
 
     await require_hold_to_confirm(ctx, Paginated([t1, t2]))
+
+
+async def confirm_certificate(
+    ctx: wire.Context, certificate: CardanoTxCertificateType
+) -> bool:
+    pages = []
+
+    t1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    t1.normal("Confirm:")
+    t1.bold(CERTIFICATE_TYPE_NAMES[certificate.type])
+    t1.normal("for account:")
+    t1.bold(address_n_to_str(to_account_path(certificate.path)))
+    pages.append(t1)
+
+    if certificate.type == CardanoCertificateType.STAKE_DELEGATION:
+        t2 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+        t2.normal("to pool:")
+        t2.bold(hexlify(certificate.pool).decode())
+        pages.append(t2)
+
+    await require_confirm(ctx, Paginated(pages))
+
+
+async def confirm_withdrawal(
+    ctx: wire.Context, withdrawal: CardanoTxWithdrawalType
+) -> bool:
+    t1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    t1.normal("Confirm withdrawal")
+    t1.normal("for account:")
+    t1.bold(address_n_to_str(to_account_path(withdrawal.path)))
+    t1.normal("Amount:")
+    t1.bold(format_coin_amount(withdrawal.amount))
+
+    await require_confirm(ctx, t1)
+
+
+async def confirm_metadata_hash(ctx: wire.Context, metadata_hash: bytes) -> bool:
+    t1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    t1.normal("Confirm metadata hash:")
+    t1.bold(hexlify(metadata_hash).decode())
+
+    await require_confirm(ctx, t1)
 
 
 async def show_address(
