@@ -123,6 +123,9 @@ def test_cardano_sign_tx(
 ):
     inputs = [cardano.create_input(i) for i in inputs]
     outputs = [cardano.create_output(o) for o in outputs]
+    certificates = []
+    withdrawals = []
+    metadata_hash = bytes()
 
     expected_responses = [messages.PassphraseRequest()]
     expected_responses += [
@@ -147,7 +150,16 @@ def test_cardano_sign_tx(
         client.set_expected_responses(expected_responses)
         client.set_input_flow(input_flow)
         response = cardano.sign_tx(
-            client, inputs, outputs, fee, ttl, protocol_magic, network_id
+            client=client,
+            inputs=inputs,
+            outputs=outputs,
+            fee=fee,
+            ttl=ttl,
+            certificates=certificates,
+            withdrawals=withdrawals,
+            metadata_hash=metadata_hash,
+            protocol_magic=protocol_magic,
+            network_id=network_id,
         )
         assert response.tx_hash.hex() == tx_hash
         assert response.serialized_tx.hex() == serialized_tx
