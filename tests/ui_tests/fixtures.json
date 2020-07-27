@@ -337,7 +337,6 @@
 "test_msg_signtx_segwit_native.py-test_send_p2sh": "0c15ccc36f6b081cab2ebb1632310cd7e02c0b4650c1d2d607cbefc252c1b9ef",
 "test_msg_signtx_segwit_native.py-test_send_p2sh_change": "2a35826b696d0fcf779bc2670a588279c3beb8770c0f79a7942c22eaf6594cc2",
 "test_msg_signtx_zcash.py-test_external_presigned": "539b10ad2f3a626a880b9823897ff827a6c30af1dfd041da147bf009fcec2497",
-"test_msg_signtx_zcash.py-test_one_one_fee_overwinter": "112df2ad84f4a517623eed893b3be809e0ba43e6139fd70b7f94c12f28cc633c",
 "test_msg_signtx_zcash.py-test_one_one_fee_sapling": "112df2ad84f4a517623eed893b3be809e0ba43e6139fd70b7f94c12f28cc633c",
 "test_msg_signtx_zcash.py-test_spend_old_versions": "da64743acaead691ec617cd56886b65453f82a2e3eb78b3f9dc737dbfc4155e6",
 "test_msg_stellar_get_address.py-test_stellar_get_address": "5a80508a71a9ef64f94762b07636f90e464832f0f4a3102af8fa1a8c69e94586",
