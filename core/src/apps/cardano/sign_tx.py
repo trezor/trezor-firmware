@@ -320,6 +320,7 @@ def _build_shelley_witnesses(
 ) -> List[Tuple[bytes, bytes]]:
     shelley_witnesses = []
 
+    # include only one witness for each path
     paths = set()
     for input in inputs:
         if not is_shelley_path(input.address_n):
@@ -363,11 +364,16 @@ def _build_byron_witnesses(
     protocol_magic: int,
 ) -> List[Tuple[bytes, bytes, bytes, bytes]]:
     byron_witnesses = []
+
+    # include only one witness for each path
+    paths = set()
     for input in inputs:
         if not is_byron_path(input.address_n):
             continue
+        paths.add(tuple(input.address_n))
 
-        node = keychain.derive(input.address_n)
+    for path in paths:
+        node = keychain.derive(list(input.address_n))
 
         public_key = remove_ed25519_prefix(node.public_key())
         signature = ed25519.sign_ext(
