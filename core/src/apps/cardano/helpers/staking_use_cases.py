@@ -1,7 +1,8 @@
 from trezor.messages import CardanoAddressType
 
-from ..address import get_public_key_hash, to_account_path, validate_full_path
+from ..address import get_public_key_hash, validate_full_path
 from ..seed import is_shelley_path
+from .utils import to_account_path
 
 if False:
     from typing import List
