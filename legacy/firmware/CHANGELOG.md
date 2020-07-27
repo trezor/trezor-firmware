@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 1.9.3 [to be released on 2nd September 2020]
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
 ## 1.9.2 [to be released on 5th August 2020]
 
 ### Added
@@ -13,14 +27,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - `Features.pin_cached` renamed to `unlocked`, and it is now `true` even if PIN is not set.
 
-### Deprecated
-
-### Removed
-
 ### Fixed
 - Re-introduce ability to spend pre-Overwinter UTXO on Zcash-like coins.  [#1030]
-
-### Security
 
 ## 1.9.1 [Jun 2020]
 
