@@ -8,44 +8,70 @@ import freetype
 MIN_GLYPH = ord(" ")
 MAX_GLYPH = ord("~")
 
-FONT_BPP = 4
-
 # metrics explanation: https://www.freetype.org/freetype2/docs/glyphs/metrics.png
 
 
-def process_bitmap_buffer(buf):
+def process_bitmap_buffer(buf, bpp):
     res = buf[:]
-    if FONT_BPP == 2:
+    if bpp == 1:
+        for _ in range(8 - len(res) % 8):
+            res.append(0)
+        res = [
+            (
+                (a & 0x80)
+                | ((b & 0x80) >> 1)
+                | ((c & 0x80) >> 2)
+                | ((d & 0x80) >> 3)
+                | ((e & 0x80) >> 4)
+                | ((f & 0x80) >> 5)
+                | ((g & 0x80) >> 6)
+                | ((h & 0x80) >> 7)
+            )
+            for a, b, c, d, e, f, g, h in [
+                res[i : i + 8] for i in range(0, len(res), 8)
+            ]
+        ]
+    elif bpp == 2:
         for _ in range(4 - len(res) % 4):
             res.append(0)
         res = [
             ((a & 0xC0) | ((b & 0xC0) >> 2) | ((c & 0xC0) >> 4) | ((d & 0xC0) >> 6))
             for a, b, c, d in [res[i : i + 4] for i in range(0, len(res), 4)]
         ]
-    elif FONT_BPP == 4:
+    elif bpp == 4:
         if len(res) % 2 > 0:
             res.append(0)
         res = [
             ((a & 0xF0) | (b >> 4))
             for a, b in [res[i : i + 2] for i in range(0, len(res), 2)]
         ]
+    elif bpp == 8:
+        pass
+    else:
+        raise ValueError
     return res
 
 
-def process_face(dirprefix, name, style, size):
+def process_face(name, style, size, bpp=4):
     print("Processing ... %s %s %s" % (name, style, size))
-    face = freetype.Face("%s/share/fonts/truetype/%s-%s.ttf" % (dirprefix, name, style))
+    face = freetype.Face("fonts/%s-%s.ttf" % (name, style))
     face.set_pixel_sizes(0, size)
     fontname = "%s_%s_%d" % (name.lower(), style.lower(), size)
     with open("font_%s.h" % fontname, "wt") as f:
         f.write("#include <stdint.h>\n\n")
+        f.write("#if TREZOR_FONT_BPP != %d\n" % bpp)
+        f.write("#error Wrong TREZOR_FONT_BPP (expected %d)\n" % bpp)
+        f.write("#endif\n")
         f.write(
             "extern const uint8_t* const Font_%s_%s_%d[%d + 1 - %d];\n"
+            % (name, style, size, MAX_GLYPH, MIN_GLYPH)
+        )
+        f.write(
             "extern const uint8_t Font_%s_%s_%d_glyph_nonprintable[];\n"
-            % (name, style, size, MAX_GLYPH, MIN_GLYPH, name, style, size)
+            % (name, style, size)
         )
     with open("font_%s.c" % fontname, "wt") as f:
-        f.write('#include "font_%s.h"\n\n' % fontname)
+        f.write("#include <stdint.h>\n\n")
         f.write("// first two bytes are width and height of the glyph\n")
         f.write("// third, fourth and fifth bytes are advance\n")
         f.write("// bearingX and bearingY of the horizontal metrics of the glyph\n")
@@ -98,7 +124,8 @@ def process_face(dirprefix, name, style, size):
             buf = list(bitmap.buffer)
             if len(buf) > 0:
                 f.write(
-                    ", " + ", ".join(["%d" % x for x in process_bitmap_buffer(buf)])
+                    ", "
+                    + ", ".join(["%d" % x for x in process_bitmap_buffer(buf, bpp)])
                 )
             f.write(" };\n")
 
@@ -108,7 +135,7 @@ def process_face(dirprefix, name, style, size):
                     % (name, style, size, width, rows, advance, bearingX, bearingY)
                 )
                 nonprintable += ", " + ", ".join(
-                    ["%d" % (x ^ 0xFF) for x in process_bitmap_buffer(buf)]
+                    ["%d" % (x ^ 0xFF) for x in process_bitmap_buffer(buf, bpp)]
                 )
                 nonprintable += " };\n"
 
@@ -123,6 +150,10 @@ def process_face(dirprefix, name, style, size):
         f.write("};\n")
 
 
-process_face("/usr", "Roboto", "Regular", 20)
-process_face("/usr", "Roboto", "Bold", 20)
-process_face("/usr", "RobotoMono", "Regular", 20)
+process_face("Roboto", "Regular", 20)
+process_face("Roboto", "Bold", 20)
+process_face("RobotoMono", "Regular", 20)
+
+process_face("PixelOperator", "Regular", 8, 1)
+process_face("PixelOperator", "Bold", 8, 1)
+process_face("PixelOperatorMono", "Regular", 8, 1)

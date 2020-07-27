@@ -19,23 +19,48 @@
 
 #define _GNU_SOURCE
 
-#include "font_bitmap.h"
-#ifdef TREZOR_FONT_NORMAL_ENABLE
-#include "font_roboto_regular_20.h"
-#endif
-#ifdef TREZOR_FONT_BOLD_ENABLE
-#include "font_roboto_bold_20.h"
-#endif
-#ifdef TREZOR_FONT_MONO_ENABLE
-#include "font_robotomono_regular_20.h"
-#endif
-
 #include "qr-code-generator/qrcodegen.h"
 
 #include "uzlib.h"
 
 #include "common.h"
 #include "display.h"
+
+#include "font_bitmap.h"
+
+#if TREZOR_MODEL == T
+
+#ifdef TREZOR_FONT_NORMAL_ENABLE
+#include "font_roboto_regular_20.h"
+#define FONT_NORMAL_DATA Font_Roboto_Regular_20
+#endif
+#ifdef TREZOR_FONT_BOLD_ENABLE
+#include "font_roboto_bold_20.h"
+#define FONT_BOLD_DATA Font_Roboto_Bold_20
+#endif
+#ifdef TREZOR_FONT_MONO_ENABLE
+#include "font_robotomono_regular_20.h"
+#define FONT_MONO_DATA Font_RobotoMono_Regular_20
+#endif
+
+#elif TREZOR_MODEL == 1
+
+#ifdef TREZOR_FONT_NORMAL_ENABLE
+#include "font_pixeloperator_regular_8.h"
+#define FONT_NORMAL_DATA Font_PixelOperator_Regular_8
+#endif
+#ifdef TREZOR_FONT_BOLD_ENABLE
+#include "font_pixeloperator_bold_8.h"
+#define FONT_BOLD_DATA Font_PixelOperator_Bold_8
+#endif
+#ifdef TREZOR_FONT_MONO_ENABLE
+#include "font_pixeloperatormono_regular_8.h"
+#define FONT_MONO_DATA Font_PixelOperatorMono_Regular_8
+#endif
+
+#else
+#error Unknown Trezor model
+#endif
 
 #include <stdarg.h>
 #include <string.h>
@@ -566,33 +591,36 @@ static const uint8_t *get_glyph(int font, uint8_t c) {
     switch (font) {
 #ifdef TREZOR_FONT_NORMAL_ENABLE
       case FONT_NORMAL:
-        return Font_Roboto_Regular_20[c - ' '];
+        return FONT_NORMAL_DATA[c - ' '];
 #endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
       case FONT_BOLD:
-        return Font_Roboto_Bold_20[c - ' '];
+        return FONT_BOLD_DATA[c - ' '];
 #endif
 #ifdef TREZOR_FONT_MONO_ENABLE
       case FONT_MONO:
-        return Font_RobotoMono_Regular_20[c - ' '];
+        return FONT_MONO_DATA[c - ' '];
 #endif
     }
     return 0;
   }
 
-  // non-printable character
+// non-printable character
+#define PASTER(s) s##_glyph_nonprintable
+#define NONPRINTABLE_GLYPH(s) PASTER(s)
+
   switch (font) {
 #ifdef TREZOR_FONT_NORMAL_ENABLE
     case FONT_NORMAL:
-      return Font_Roboto_Regular_20_glyph_nonprintable;
+      return NONPRINTABLE_GLYPH(FONT_NORMAL_DATA);
 #endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
     case FONT_BOLD:
-      return Font_Roboto_Bold_20_glyph_nonprintable;
+      return NONPRINTABLE_GLYPH(FONT_BOLD_DATA);
 #endif
 #ifdef TREZOR_FONT_MONO_ENABLE
     case FONT_MONO:
-      return Font_RobotoMono_Regular_20_glyph_nonprintable;
+      return NONPRINTABLE_GLYPH(FONT_MONO_DATA);
 #endif
   }
   return 0;
@@ -628,12 +656,16 @@ static void display_text_render(int x, int y, const char *text, int textlen,
           const int rx = i - sx;
           const int ry = j - sy;
           const int a = rx + ry * w;
-#if FONT_BPP == 2
+#if TREZOR_FONT_BPP == 1
+          const uint8_t c = ((g[5 + a / 8] >> (7 - (a % 8) * 1)) & 0x01) * 15;
+#elif TREZOR_FONT_BPP == 2
           const uint8_t c = ((g[5 + a / 4] >> (6 - (a % 4) * 2)) & 0x03) * 5;
-#elif FONT_BPP == 4
+#elif TREZOR_FONT_BPP == 4
           const uint8_t c = (g[5 + a / 2] >> (4 - (a % 2) * 4)) & 0x0F;
+#elif TREZOR_FONT_BPP == 8
+          const uint8_t c = g[5 + a / 1] >> 4;
 #else
-#error Unsupported FONT_BPP value
+#error Unsupported TREZOR_FONT_BPP value
 #endif
           PIXELDATA(colortable[c]);
         }

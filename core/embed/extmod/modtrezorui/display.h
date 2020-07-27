@@ -30,6 +30,7 @@
 #define MAX_DISPLAY_RESY 320
 #define DISPLAY_RESX 240
 #define DISPLAY_RESY 240
+#define TREZOR_FONT_BPP 4
 
 #elif TREZOR_MODEL == 1
 
@@ -37,12 +38,12 @@
 #define MAX_DISPLAY_RESY 64
 #define DISPLAY_RESX 128
 #define DISPLAY_RESY 64
+#define TREZOR_FONT_BPP 1
 
 #else
 #error Unknown Trezor model
 #endif
 
-#define FONT_BPP 4
 #define FONT_SIZE 20
 #define AVATAR_IMAGE_SIZE 144
 #define LOADER_ICON_SIZE 64
