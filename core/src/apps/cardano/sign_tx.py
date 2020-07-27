@@ -15,12 +15,12 @@ from .address import (
     derive_address_bytes,
     derive_human_readable_address,
     get_address_bytes_unsafe,
-    to_account_path,
     validate_full_path,
     validate_output_address,
 )
 from .byron_address import get_address_attributes
 from .helpers import network_ids, protocol_magics, staking_use_cases
+from .helpers.utils import to_account_path
 from .layout import (
     confirm_sending,
     confirm_transaction,
