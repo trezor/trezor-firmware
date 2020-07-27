@@ -526,8 +526,6 @@ void display_printf(const char *fmt, ...) {
 
 #endif  // TREZOR_PRINT_DISABLE
 
-#if TREZOR_MODEL == T
-
 static uint8_t convert_char(const uint8_t c) {
   static char last_was_utf8 = 0;
 
@@ -611,10 +609,6 @@ static const uint8_t *get_glyph(int font, uint8_t c) {
   return 0;
 }
 
-#endif
-
-#if TREZOR_MODEL == T
-
 static void display_text_render(int x, int y, const char *text, int textlen,
                                 int font, uint16_t fgcolor, uint16_t bgcolor) {
   // determine text length if not provided
@@ -660,41 +654,32 @@ static void display_text_render(int x, int y, const char *text, int textlen,
   }
 }
 
-#endif
-
 void display_text(int x, int y, const char *text, int textlen, int font,
                   uint16_t fgcolor, uint16_t bgcolor) {
-#if TREZOR_MODEL == T
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
   display_text_render(x, y, text, textlen, font, fgcolor, bgcolor);
-#endif
 }
 
 void display_text_center(int x, int y, const char *text, int textlen, int font,
                          uint16_t fgcolor, uint16_t bgcolor) {
-#if TREZOR_MODEL == T
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
   int w = display_text_width(text, textlen, font);
   display_text_render(x - w / 2, y, text, textlen, font, fgcolor, bgcolor);
-#endif
 }
 
 void display_text_right(int x, int y, const char *text, int textlen, int font,
                         uint16_t fgcolor, uint16_t bgcolor) {
-#if TREZOR_MODEL == T
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
   int w = display_text_width(text, textlen, font);
   display_text_render(x - w, y, text, textlen, font, fgcolor, bgcolor);
-#endif
 }
 
 // compute the width of the text (in pixels)
 int display_text_width(const char *text, int textlen, int font) {
   int width = 0;
-#if TREZOR_MODEL == T
   // determine text length if not provided
   if (textlen < 0) {
     textlen = strlen(text);
@@ -715,7 +700,6 @@ int display_text_width(const char *text, int textlen, int font) {
     }
     */
   }
-#endif
   return width;
 }
 
@@ -723,7 +707,6 @@ int display_text_width(const char *text, int textlen, int font) {
 // the requested width. Tries to avoid breaking words if possible.
 int display_text_split(const char *text, int textlen, int font,
                        int requested_width) {
-#if TREZOR_MODEL == T
   int width = 0;
   int lastspace = 0;
   // determine text length if not provided
@@ -746,7 +729,6 @@ int display_text_split(const char *text, int textlen, int font,
       }
     }
   }
-#endif
   return textlen;
 }
 
