@@ -127,6 +127,31 @@ SAMPLE_OUTPUTS = {
     },
 }
 
+SAMPLE_CERTIFICATES = {
+    "stake_registration": {"type": 0, "path": "m/1852'/1815'/0'/2/0"},
+    "stake_deregistration": {"type": 1, "path": "m/1852'/1815'/0'/2/0"},
+    "stake_delegation": {
+        "type": 2,
+        "path": "m/1852'/1815'/0'/2/0",
+        "pool": "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973",
+    },
+    "invalid_non_staking_path": {"type": 0, "path": "m/1852'/1815'/0'/0/0"},
+    "invalid_pool_size": {
+        "type": 2,
+        "path": "m/1852'/1815'/0'/2/0",
+        "pool": "f61c42cbf7c8c53af3f520508212ad3e72",
+    },
+}
+
+SAMPLE_WITHDRAWALS = {
+    "valid": {"path": "m/1852'/1815'/0'/2/0", "amount": "1000"},
+    "invalid_non_staking_path": {"path": "m/1852'/1815'/0'/0/0", "amount": "1000"},
+    "invalid_amount_too_large": {
+        "path": "m/1852'/1815'/0'/2/0",
+        "amount": "449999999199999999",
+    },
+}
+
 VALID_VECTORS = [
     # Mainnet transaction without change
     (
@@ -142,6 +167,12 @@ VALID_VECTORS = [
         42,
         # ttl
         10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
         # input flow
         [[InputAction.SWIPE, InputAction.YES], [InputAction.SWIPE, InputAction.YES]],
         # tx hash
@@ -163,6 +194,12 @@ VALID_VECTORS = [
         42,
         # ttl
         10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
         # input flow
         [
             [InputAction.SWIPE, InputAction.YES],
@@ -191,6 +228,12 @@ VALID_VECTORS = [
         42,
         # ttl
         10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
         # input flow
         [[InputAction.SWIPE, InputAction.YES], [InputAction.SWIPE, InputAction.YES]],
         # tx hash
@@ -239,6 +282,12 @@ VALID_VECTORS = [
         42,
         # ttl
         10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
         # input flow
         [
             [InputAction.SWIPE, InputAction.YES],
@@ -267,6 +316,12 @@ VALID_VECTORS = [
         42,
         # ttl
         10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
         # input flow
         [
             [InputAction.SWIPE, InputAction.YES],
@@ -295,6 +350,12 @@ VALID_VECTORS = [
         42,
         # ttl
         10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
         # input flow
         [
             [InputAction.SWIPE, InputAction.YES],
@@ -305,6 +366,166 @@ VALID_VECTORS = [
         "d3570557b197604109481a80aeb66cd2cfabc57f802ad593bacc12eb658e5d72",
         # tx body
         "83a400818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018282583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff0182581d6180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa1a006ca79302182a030aa100818258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c15840c5996650c438c4493b2c8a94229621bb9b151b8d61d75fb868c305e917031e9a1654f35023f7dbf5d1839ab9d57b153c7f79c2666af51ecf363780397956e00af6",
+    ),
+    # transaction with stake registration certificate
+    (
+        # network id
+        PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
+        # inputs
+        [SAMPLE_INPUTS["shelley_input"]],
+        # outputs
+        [SAMPLE_OUTPUTS["simple_shelley_output"]],
+        # fee
+        42,
+        # ttl
+        10,
+        # certificates
+        [SAMPLE_CERTIFICATES["stake_registration"]],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
+        # input flow
+        [
+            [InputAction.SWIPE, InputAction.YES],
+            [InputAction.YES],
+            [InputAction.SWIPE, InputAction.YES],
+        ],
+        # tx hash
+        "1a3a295908afd8b2afc368071272d6964be6ee0af062bb765aea65ca454dc0c9",
+        # tx body
+        "83a500818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018182583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff0102182a030a048182008200581c122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277a100818258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c15840a938b16bd81aea8d3aaf11e4d460dad1f36d34bf34ad066d0f5ce5d4137654145d998c3482aa823ff1acf021c6e2cd2774fff00361cbb9e72b98632307ee4000f6",
+    ),
+    # transaction with stake registration and stake delegation certificates
+    (
+        # network id
+        PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
+        # inputs
+        [SAMPLE_INPUTS["shelley_input"]],
+        # outputs
+        [SAMPLE_OUTPUTS["simple_shelley_output"]],
+        # fee
+        42,
+        # ttl
+        10,
+        # certificates
+        [
+            SAMPLE_CERTIFICATES["stake_registration"],
+            SAMPLE_CERTIFICATES["stake_delegation"],
+        ],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
+        # input flow
+        [
+            [InputAction.SWIPE, InputAction.YES],
+            [InputAction.YES],
+            [InputAction.SWIPE, InputAction.YES],
+            [InputAction.SWIPE, InputAction.YES],
+        ],
+        # tx hash
+        "439764b5f7e08839881536a3191faeaf111e75d9f00f83b102c5c1c6fa9fcaf9",
+        # tx body
+        "83a500818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018182583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff0102182a030a048282008200581c122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b427783028200581c122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277581cf61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973a10082825820bc65be1b0b9d7531778a1317c2aa6de936963c3f9ac7d5ee9e9eda25e0c97c5e58400dbdf36f92bc5199526ffb8b83b33a9eeda0ed3e46fb4025a104346801afb9cf45fa1a5482e54c769f4102e67af46205457d7ae05a889fc342acb0cdc23ecd038258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c158405ebe8eff752f07e8448f55304fdf3665ac68162099dcacd81886b73affe67fb6df401f8a5fa60ddb6d5fb65b93235e6a234182a40c001e3cf7634f82afd5fe0af6",
+    ),
+    # transaction with stake deregistration
+    (
+        # network id
+        PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
+        # inputs
+        [SAMPLE_INPUTS["shelley_input"]],
+        # outputs
+        [SAMPLE_OUTPUTS["simple_shelley_output"]],
+        # fee
+        42,
+        # ttl
+        10,
+        # certificates
+        [SAMPLE_CERTIFICATES["stake_deregistration"]],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
+        # input flow
+        [
+            [InputAction.SWIPE, InputAction.YES],
+            [InputAction.YES],
+            [InputAction.SWIPE, InputAction.YES],
+        ],
+        # tx hash
+        "3aca1784d151dc75bdbb80fae71bda3f4b26af3f5fd71bd5e9e9bbcdd2b64ad1",
+        # tx body
+        "83a500818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018182583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff0102182a030a048182018200581c122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277a10082825820bc65be1b0b9d7531778a1317c2aa6de936963c3f9ac7d5ee9e9eda25e0c97c5e584084f321d313da67f80f7fab2e4f3996d3dbe3186659e6f98315e372dbe88c55d56f637ccc7534890c3601ddd31ba885dc86ba0074c230869f20099b7dd5eeaf008258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c15840e563a8012e16affd801564e8410ca7b2c96f76f8ecb878e35c098a823c40be7f59dc12cb44a9b678210d4e8f18ab215133eef7ca9ece94b4683d3db0fd37e105f6",
+    ),
+    # transaction with stake deregistration and withdrawal
+    (
+        # network id
+        PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
+        # inputs
+        [SAMPLE_INPUTS["shelley_input"]],
+        # outputs
+        [SAMPLE_OUTPUTS["simple_shelley_output"]],
+        # fee
+        42,
+        # ttl
+        10,
+        # certificates
+        [SAMPLE_CERTIFICATES["stake_deregistration"]],
+        # withdrawals
+        [SAMPLE_WITHDRAWALS["valid"]],
+        # metadata hash
+        "",
+        # input flow
+        [
+            [InputAction.SWIPE, InputAction.YES],
+            [InputAction.YES],
+            [InputAction.YES],
+            [InputAction.SWIPE, InputAction.YES],
+        ],
+        # tx hash
+        "22c67f12e6f6aa0f2f09fd27d472b19c7208ccd7c3af4b09604fd5d462c1de2b",
+        # tx body
+        "83a600818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018182583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff0102182a030a048182018200581c122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b427705a1581de1122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b42771903e8a10082825820bc65be1b0b9d7531778a1317c2aa6de936963c3f9ac7d5ee9e9eda25e0c97c5e58400202826a8b9688cf978000e7d1591582c65b149bb9f55dc883ae1acf85432618ca32be8a06fef37e69df503a294e7093006f63ababf9fcea639390226934020a8258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c158407efa634e42fa844cad5f60bf005d645817cc674f30eaab0da398b99034850780b40ab5a1028da033330a0f82b01648ec92cff8ca85a072594efb298016f38d0df6",
+    ),
+    # transaction with metadata hash
+    (
+        # network id
+        PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
+        # inputs
+        [SAMPLE_INPUTS["shelley_input"]],
+        # outputs
+        [SAMPLE_OUTPUTS["simple_shelley_output"]],
+        # fee
+        42,
+        # ttl
+        10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        # input flow
+        [
+            [InputAction.SWIPE, InputAction.YES],
+            [InputAction.YES],
+            [InputAction.SWIPE, InputAction.YES],
+        ],
+        # tx hash
+        "4e123da8fbe13219e10e7287e6592befcbdbe4e42028e5699249289c8049afc5",
+        # tx body
+        "83a500818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018182583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff0102182a030a075820aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa100818258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c15840bf400eece1e8081aa670bd1e80321af98e78089cabc6033fe72a2a859ed8de57a439e23a39798fffab595bc8801a05b2359abc655cc3699c65a3170f30732005f6",
     ),
     # Testnet transaction
     (
@@ -324,6 +545,12 @@ VALID_VECTORS = [
         42,
         # ttl
         10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
         # input flow
         [
             [InputAction.SWIPE, InputAction.YES],
@@ -353,6 +580,12 @@ INVALID_VECTORS = [
         42,
         # ttl
         10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
         # error message
         "Invalid address",
     ),
@@ -370,6 +603,12 @@ INVALID_VECTORS = [
         42,
         # ttl
         10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
         # error message
         "Invalid address",
     ),
@@ -387,6 +626,12 @@ INVALID_VECTORS = [
         42,
         # ttl
         10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
         # error message
         "Invalid address",
     ),
@@ -404,6 +649,12 @@ INVALID_VECTORS = [
         42,
         # ttl
         10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
         # error message
         "Invalid address",
     ),
@@ -421,6 +672,12 @@ INVALID_VECTORS = [
         42,
         # ttl
         10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
         # error message
         "Invalid address",
     ),
@@ -438,6 +695,12 @@ INVALID_VECTORS = [
         45000000000000001,
         # ttl
         10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
         # error message
         "Fee is out of range!",
     ),
@@ -458,6 +721,12 @@ INVALID_VECTORS = [
         42,
         # ttl
         10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
         # error message
         "Total transaction amount is out of range!",
     ),
@@ -475,6 +744,12 @@ INVALID_VECTORS = [
         42,
         # ttl
         10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
         # error message
         "Output address network mismatch!",
     ),
@@ -492,6 +767,12 @@ INVALID_VECTORS = [
         42,
         # ttl
         10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
         # error message
         "Output address network mismatch!",
     ),
@@ -509,6 +790,12 @@ INVALID_VECTORS = [
         42,
         # ttl
         10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
         # error message
         "Invalid address",
     ),
@@ -526,6 +813,12 @@ INVALID_VECTORS = [
         42,
         # ttl
         10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
         # error message
         "Invalid address",
     ),
@@ -543,6 +836,12 @@ INVALID_VECTORS = [
         42,
         # ttl
         10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
         # error message
         "Invalid network id/protocol magic combination!",
     ),
@@ -560,6 +859,12 @@ INVALID_VECTORS = [
         42,
         # ttl
         10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
         # error message
         "Invalid network id/protocol magic combination!",
     ),
@@ -577,8 +882,129 @@ INVALID_VECTORS = [
         42,
         # ttl
         10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
         # error message
         "Invalid address",
+    ),
+    # Certificate has non staking path
+    (
+        # protocol magic
+        PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
+        # inputs
+        [SAMPLE_INPUTS["shelley_input"]],
+        # outputs
+        [SAMPLE_OUTPUTS["simple_byron_output"]],
+        # fee
+        42,
+        # ttl
+        10,
+        # certificates
+        [SAMPLE_CERTIFICATES["invalid_non_staking_path"]],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
+        # error message
+        "Invalid certificate",
+    ),
+    # Certificate has invalid pool size
+    (
+        # protocol magic
+        PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
+        # inputs
+        [SAMPLE_INPUTS["shelley_input"]],
+        # outputs
+        [SAMPLE_OUTPUTS["simple_byron_output"]],
+        # fee
+        42,
+        # ttl
+        10,
+        # certificates
+        [SAMPLE_CERTIFICATES["invalid_pool_size"]],
+        # withdrawals
+        [],
+        # metadata hash
+        "",
+        # error message
+        "Invalid certificate",
+    ),
+    # Withdrawal has non staking path
+    (
+        # protocol magic
+        PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
+        # inputs
+        [SAMPLE_INPUTS["shelley_input"]],
+        # outputs
+        [SAMPLE_OUTPUTS["simple_byron_output"]],
+        # fee
+        42,
+        # ttl
+        10,
+        # certificates
+        [],
+        # withdrawals
+        [SAMPLE_WITHDRAWALS["invalid_non_staking_path"]],
+        # metadata hash
+        "",
+        # error message
+        "Invalid withdrawal",
+    ),
+    # Withdrawal amount is too large
+    (
+        # protocol magic
+        PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
+        # inputs
+        [SAMPLE_INPUTS["shelley_input"]],
+        # outputs
+        [SAMPLE_OUTPUTS["simple_byron_output"]],
+        # fee
+        42,
+        # ttl
+        10,
+        # certificates
+        [],
+        # withdrawals
+        [SAMPLE_WITHDRAWALS["invalid_amount_too_large"]],
+        # metadata hash
+        "",
+        # error message
+        "Invalid withdrawal",
+    ),
+    # Invalid metadata hash size
+    (
+        # protocol magic
+        PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
+        # inputs
+        [SAMPLE_INPUTS["shelley_input"]],
+        # outputs
+        [SAMPLE_OUTPUTS["simple_byron_output"]],
+        # fee
+        42,
+        # ttl
+        10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata hash
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        # error message
+        "Invalid metadata hash",
     ),
 ]
 
@@ -587,7 +1013,7 @@ INVALID_VECTORS = [
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
 @pytest.mark.parametrize(
-    "protocol_magic,network_id,inputs,outputs,fee,ttl,input_flow_sequences,tx_hash,serialized_tx",
+    "protocol_magic,network_id,inputs,outputs,fee,ttl,certificates,withdrawals,metadata_hash,input_flow_sequences,tx_hash,serialized_tx",
     VALID_VECTORS,
 )
 def test_cardano_sign_tx(
@@ -598,12 +1024,17 @@ def test_cardano_sign_tx(
     outputs,
     fee,
     ttl,
+    certificates,
+    withdrawals,
+    metadata_hash,
     input_flow_sequences,
     tx_hash,
     serialized_tx,
 ):
     inputs = [cardano.create_input(i) for i in inputs]
     outputs = [cardano.create_output(o) for o in outputs]
+    certificates = [cardano.create_certificate(c) for c in certificates]
+    withdrawals = [cardano.create_withdrawal(w) for w in withdrawals]
 
     expected_responses = [
         messages.ButtonRequest(code=messages.ButtonRequestType.Other)
@@ -626,7 +1057,16 @@ def test_cardano_sign_tx(
         client.set_expected_responses(expected_responses)
         client.set_input_flow(input_flow)
         response = cardano.sign_tx(
-            client, inputs, outputs, fee, ttl, protocol_magic, network_id
+            client=client,
+            inputs=inputs,
+            outputs=outputs,
+            fee=fee,
+            ttl=ttl,
+            certificates=certificates,
+            withdrawals=withdrawals,
+            metadata_hash=bytes.fromhex(metadata_hash),
+            protocol_magic=protocol_magic,
+            network_id=network_id,
         )
         assert response.tx_hash.hex() == tx_hash
         assert response.serialized_tx.hex() == serialized_tx
@@ -636,7 +1076,7 @@ def test_cardano_sign_tx(
 @pytest.mark.cardano
 @pytest.mark.skip_t1  # T1 support is not planned
 @pytest.mark.parametrize(
-    "protocol_magic,network_id,inputs,outputs,fee,ttl,expected_error_message",
+    "protocol_magic,network_id,inputs,outputs,fee,ttl,certificates,withdrawals,metadata_hash,expected_error_message",
     INVALID_VECTORS,
 )
 def test_cardano_sign_tx_validation(
@@ -647,10 +1087,15 @@ def test_cardano_sign_tx_validation(
     outputs,
     fee,
     ttl,
+    certificates,
+    withdrawals,
+    metadata_hash,
     expected_error_message,
 ):
     inputs = [cardano.create_input(i) for i in inputs]
     outputs = [cardano.create_output(o) for o in outputs]
+    certificates = [cardano.create_certificate(c) for c in certificates]
+    withdrawals = [cardano.create_withdrawal(w) for w in withdrawals]
 
     expected_responses = [messages.Failure()]
 
@@ -659,5 +1104,14 @@ def test_cardano_sign_tx_validation(
 
         with pytest.raises(TrezorFailure, match=expected_error_message):
             cardano.sign_tx(
-                client, inputs, outputs, fee, ttl, protocol_magic, network_id
+                client=client,
+                inputs=inputs,
+                outputs=outputs,
+                fee=fee,
+                ttl=ttl,
+                certificates=certificates,
+                withdrawals=withdrawals,
+                metadata_hash=bytes.fromhex(metadata_hash),
+                protocol_magic=protocol_magic,
+                network_id=network_id,
             )
