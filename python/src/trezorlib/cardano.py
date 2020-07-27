@@ -24,6 +24,8 @@ NETWORK_IDS = {"mainnet": 1, "testnet": 0}
 
 REQUIRED_FIELDS_TRANSACTION = ("inputs", "outputs")
 REQUIRED_FIELDS_INPUT = ("path", "prev_hash", "prev_index")
+REQUIRED_FIELDS_CERTIFICATE = ("path", "type")
+REQUIRED_FIELDS_WITHDRAWAL = ("path", "amount")
 
 INCOMPLETE_OUTPUT_ERROR_MESSAGE = "The output is missing some fields"
 
@@ -128,6 +130,44 @@ def _create_change_output(output) -> messages.CardanoTxOutputType:
     )
 
 
+def create_certificate(certificate) -> messages.CardanoTxCertificateType:
+    if not all(certificate.get(k) is not None for k in REQUIRED_FIELDS_CERTIFICATE):
+        raise ValueError("The certificate is missing some fields")
+
+    path = certificate["path"]
+    certificate_type = certificate["type"]
+
+    if certificate_type == messages.CardanoCertificateType.STAKE_DELEGATION:
+        if certificate.get("pool") is None:
+            raise ValueError("The certificate is missing some fields")
+
+        pool = certificate["pool"]
+        return messages.CardanoTxCertificateType(
+            type=certificate_type,
+            path=tools.parse_path(path),
+            pool=bytes.fromhex(pool),
+        )
+    elif (
+        certificate_type == messages.CardanoCertificateType.STAKE_REGISTRATION
+        or certificate_type == messages.CardanoCertificateType.STAKE_DEREGISTRATION
+    ):
+        return messages.CardanoTxCertificateType(
+            type=certificate_type, path=tools.parse_path(path),
+        )
+    else:
+        raise ValueError("Unknown certificate type")
+
+
+def create_withdrawal(withdrawal) -> messages.CardanoTxWithdrawalType:
+    if not all(withdrawal.get(k) is not None for k in REQUIRED_FIELDS_WITHDRAWAL):
+        raise ValueError("Withdrawal is missing some fields")
+
+    path = withdrawal["path"]
+    return messages.CardanoTxWithdrawalType(
+        path=tools.parse_path(path), amount=int(withdrawal["amount"]),
+    )
+
+
 # ====== Client functions ====== #
 
 
@@ -161,6 +201,9 @@ def sign_tx(
     outputs: List[messages.CardanoTxOutputType],
     fee: int,
     ttl: int,
+    certificates: List[messages.CardanoTxCertificateType],
+    withdrawals: List[messages.CardanoTxWithdrawalType],
+    metadata_hash: bytes,
     protocol_magic: int,
     network_id: int,
 ) -> messages.CardanoSignedTx:
@@ -170,6 +213,9 @@ def sign_tx(
             outputs=outputs,
             fee=fee,
             ttl=ttl,
+            certificates=certificates,
+            withdrawals=withdrawals,
+            metadata_hash=metadata_hash,
             protocol_magic=protocol_magic,
             network_id=network_id,
         )
