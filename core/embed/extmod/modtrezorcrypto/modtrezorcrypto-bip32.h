@@ -44,7 +44,9 @@ typedef struct _mp_obj_HDNode_t {
 STATIC const mp_obj_type_t mod_trezorcrypto_HDNode_type;
 
 #define XPUB_MAXLEN 128
-#define ADDRESS_MAXLEN 36
+
+// should match highest max_address_length from coins, + 1 for terminator
+#define ADDRESS_MAXLEN 41
 
 /// def __init__(
 ///     self,
