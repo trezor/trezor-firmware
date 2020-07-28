@@ -37,7 +37,7 @@ if __debug__:
     debuglink_decision_chan = loop.chan()
 
     layout_change_chan = loop.chan()
-    current_content = None  # type: Optional[List[str]]
+    current_content = []  # type: List[str]
     watch_layout_changes = False
 
     def screenshot() -> bool:
@@ -117,7 +117,9 @@ if __debug__:
         m.passphrase_protection = passphrase.is_enabled()
         m.reset_entropy = reset_internal_entropy
 
-        if msg.wait_layout or current_content is None:
+        if msg.wait_layout:
+            if not watch_layout_changes:
+                raise wire.ProcessError("Layout is not watched")
             m.layout_lines = await layout_change_chan.take()
         else:
             m.layout_lines = current_content
