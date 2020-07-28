@@ -175,9 +175,9 @@ def create_withdrawal(withdrawal) -> messages.CardanoTxWithdrawalType:
 def get_address(
     client,
     address_parameters: messages.CardanoAddressParametersType,
-    protocol_magic: int,
-    network_id: int,
-    show_display=False,
+    protocol_magic: int = PROTOCOL_MAGICS["mainnet"],
+    network_id: int = NETWORK_IDS["mainnet"],
+    show_display: bool = False,
 ) -> messages.CardanoAddress:
     return client.call(
         messages.CardanoGetAddress(
@@ -201,11 +201,11 @@ def sign_tx(
     outputs: List[messages.CardanoTxOutputType],
     fee: int,
     ttl: int,
-    certificates: List[messages.CardanoTxCertificateType],
-    withdrawals: List[messages.CardanoTxWithdrawalType],
-    metadata_hash: bytes,
-    protocol_magic: int,
-    network_id: int,
+    certificates: List[messages.CardanoTxCertificateType] = (),
+    withdrawals: List[messages.CardanoTxWithdrawalType] = (),
+    metadata_hash: bytes = None,
+    protocol_magic: int = PROTOCOL_MAGICS["mainnet"],
+    network_id: int = NETWORK_IDS["mainnet"],
 ) -> messages.CardanoSignedTx:
     response = client.call(
         messages.CardanoSignTx(
