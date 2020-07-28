@@ -1,11 +1,10 @@
 #include <stdint.h>
 
-// first two bytes are width and height of the glyph
-// third, fourth and fifth bytes are advance
-// bearingX and bearingY of the horizontal metrics of the glyph
-// rest is packed 4-bit glyph data
-
 // clang-format off
+
+// - the first two bytes are width and height of the glyph
+// - the third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph
+// - the rest is packed 4-bit glyph data
 
 /*   */ static const uint8_t Font_Roboto_Bold_20_glyph_32[] = { 0, 0, 5, 0, 0 };
 /* ! */ static const uint8_t Font_Roboto_Bold_20_glyph_33[] = { 3, 15, 5, 1, 15, 255, 223, 253, 255, 223, 253, 255, 223, 253, 255, 223, 253, 255, 223, 253, 0, 0, 0, 159, 111, 252, 159, 96 };

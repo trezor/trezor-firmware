@@ -72,11 +72,10 @@ def process_face(name, style, size, bpp=4):
         )
     with open("font_%s.c" % fontname, "wt") as f:
         f.write("#include <stdint.h>\n\n")
-        f.write("// first two bytes are width and height of the glyph\n")
-        f.write("// third, fourth and fifth bytes are advance\n")
-        f.write("// bearingX and bearingY of the horizontal metrics of the glyph\n")
-        f.write("// rest is packed 4-bit glyph data\n\n")
         f.write("// clang-format off\n\n")
+        f.write("// - the first two bytes are width and height of the glyph\n")
+        f.write("// - the third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph\n")
+        f.write("// - the rest is packed %d-bit glyph data\n\n" % bpp)
         for i in range(MIN_GLYPH, MAX_GLYPH + 1):
             c = chr(i)
             face.load_char(c, freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_NORMAL)

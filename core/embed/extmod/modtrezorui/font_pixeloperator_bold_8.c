@@ -1,11 +1,10 @@
 #include <stdint.h>
 
-// first two bytes are width and height of the glyph
-// third, fourth and fifth bytes are advance
-// bearingX and bearingY of the horizontal metrics of the glyph
-// rest is packed 4-bit glyph data
-
 // clang-format off
+
+// - the first two bytes are width and height of the glyph
+// - the third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph
+// - the rest is packed 1-bit glyph data
 
 /*   */ static const uint8_t Font_PixelOperator_Bold_8_glyph_32[] = { 0, 0, 4, 0, 0 };
 /* ! */ static const uint8_t Font_PixelOperator_Bold_8_glyph_33[] = { 2, 7, 6, 2, 7, 255, 204 };
