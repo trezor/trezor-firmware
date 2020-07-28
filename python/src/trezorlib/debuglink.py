@@ -22,6 +22,7 @@ from mnemonic import Mnemonic
 
 from . import mapping, messages, protobuf
 from .client import TrezorClient
+from .exceptions import TrezorFailure
 from .log import DUMP_BYTES
 from .tools import expect
 
@@ -85,6 +86,8 @@ class DebugLink:
 
     def wait_layout(self):
         obj = self._call(messages.DebugLinkGetState(wait_layout=True))
+        if isinstance(obj, messages.Failure):
+            raise TrezorFailure(obj)
         return layout_lines(obj.layout_lines)
 
     def watch_layout(self, watch: bool) -> None:
@@ -344,10 +347,8 @@ class TrezorClientDebugLink(TrezorClient):
         self.ui.input_flow = input_flow
         input_flow.send(None)  # start the generator
 
-    def watch_layout(self, watch: bool) -> None:
+    def watch_layout(self, watch: bool = True) -> None:
         """Enable or disable watching layout changes.
-
-        Happens implicitly in a `with client` block.
 
         Since trezor-core v2.3.2, it is necessary to call `watch_layout()` before
         using `debug.wait_layout()`, otherwise layout changes are not reported.
@@ -362,7 +363,6 @@ class TrezorClientDebugLink(TrezorClient):
     def __enter__(self):
         # For usage in with/expected_responses
         self.in_with_statement += 1
-        self.watch_layout(True)
         return self
 
     def __exit__(self, _type, value, traceback):
