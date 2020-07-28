@@ -141,6 +141,7 @@ def test_show_multisig_xpubs(client):
             client.debug.press_yes()
 
         with client:
+            client.watch_layout()
             client.set_input_flow(input_flow)
             btc.get_address(
                 client,

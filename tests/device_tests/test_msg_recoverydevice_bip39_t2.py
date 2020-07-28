@@ -64,6 +64,7 @@ def test_tt_pin_passphrase(client):
 
     with client:
         client.set_input_flow(input_flow)
+        client.watch_layout()
         device.recover(
             client, pin_protection=True, passphrase_protection=True, label="hello"
         )
@@ -109,6 +110,7 @@ def test_tt_nopin_nopassphrase(client):
 
     with client:
         client.set_input_flow(input_flow)
+        client.watch_layout()
         device.recover(
             client, pin_protection=False, passphrase_protection=False, label="hello"
         )
