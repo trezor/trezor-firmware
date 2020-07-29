@@ -32,7 +32,6 @@ from .helpers import (
 from .helpers.utils import to_account_path
 from .layout import (
     confirm_certificate,
-    confirm_metadata_hash,
     confirm_sending,
     confirm_transaction,
     confirm_withdrawal,
@@ -61,6 +60,7 @@ LOVELACE_MAX_SUPPLY = 45_000_000_000 * 1_000_000
 
 POOL_HASH_SIZE = 28
 METADATA_HASH_SIZE = 32
+MAX_METADATA_LENGTH = 500
 
 
 @seed.with_keychain
@@ -80,8 +80,8 @@ async def sign_tx(
         _validate_certificates(msg.certificates)
         _validate_withdrawals(msg.withdrawals)
 
-        if msg.metadata_hash and len(msg.metadata_hash) != METADATA_HASH_SIZE:
-            raise wire.ProcessError("Invalid metadata hash")
+        if msg.metadata and len(msg.metadata) > MAX_METADATA_LENGTH:
+            raise wire.ProcessError("Invalid metadata")
 
         # display the transaction in UI
         await _show_tx(ctx, keychain, msg)
@@ -171,10 +171,11 @@ def _serialize_tx(keychain: seed.Keychain, msg: CardanoSignTx) -> Tuple[bytes, b
         msg.protocol_magic,
     )
 
-    # We always set transaction metadata to None, even if metadata
-    # hash is set. Metadata aren't sent to Trezor and the None
-    # should be replaced by the SW wallet if metadata exist.
-    serialized_tx = cbor.encode([tx_body, witnesses, None])
+    metadata = None
+    if msg.metadata:
+        metadata = cbor.Raw(bytes(msg.metadata))
+
+    serialized_tx = cbor.encode([tx_body, witnesses, metadata])
 
     return serialized_tx, tx_hash
 
@@ -204,8 +205,8 @@ def _build_tx_body(keychain: seed.Keychain, msg: CardanoSignTx) -> Dict:
 
     # tx_body[6] is for protocol updates, which we don't support
 
-    if msg.metadata_hash:
-        tx_body[7] = msg.metadata_hash
+    if msg.metadata:
+        tx_body[7] = _hash_metadata(bytes(msg.metadata))
 
     return tx_body
 
@@ -278,6 +279,10 @@ def _build_withdrawals(
         result[reward_address] = withdrawal.amount
 
     return result
+
+
+def _hash_metadata(metadata: bytes) -> bytes:
+    return hashlib.blake2b(data=metadata, outlen=METADATA_HASH_SIZE).digest()
 
 
 def _hash_tx_body(tx_body: Dict) -> bytes:
@@ -398,10 +403,10 @@ async def _show_tx(
     for withdrawal in msg.withdrawals:
         await confirm_withdrawal(ctx, withdrawal)
 
-    if msg.metadata_hash:
-        await confirm_metadata_hash(ctx, msg.metadata_hash)
-
-    await confirm_transaction(ctx, total_amount, msg.fee, msg.protocol_magic)
+    has_metadata = bool(msg.metadata)
+    await confirm_transaction(
+        ctx, total_amount, msg.fee, msg.protocol_magic, has_metadata
+    )
 
 
 async def _show_outputs(

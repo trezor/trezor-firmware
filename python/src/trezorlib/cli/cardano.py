@@ -71,9 +71,9 @@ def sign_tx(client, file, protocol_magic, network_id, testnet):
         cardano.create_withdrawal(withdrawal)
         for withdrawal in transaction.get("withdrawals", ())
     ]
-    metadata_hash = None
-    if transaction.get("metadata_hash"):
-        metadata_hash = bytes.fromhex(transaction["metadata_hash"])
+    metadata = None
+    if transaction.get("metadata"):
+        metadata = bytes.fromhex(transaction["metadata"])
 
     signed_transaction = cardano.sign_tx(
         client,
@@ -83,7 +83,7 @@ def sign_tx(client, file, protocol_magic, network_id, testnet):
         ttl,
         certificates,
         withdrawals,
-        metadata_hash,
+        metadata,
         protocol_magic,
         network_id,
     )

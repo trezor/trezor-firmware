@@ -131,7 +131,9 @@ async def show_warning_tx_staking_key_hash(
     await require_confirm(ctx, Paginated([t1, t2, t3]))
 
 
-async def confirm_transaction(ctx, amount: int, fee: int, protocol_magic: int):
+async def confirm_transaction(
+    ctx, amount: int, fee: int, protocol_magic: int, has_metadata: bool
+) -> None:
     t1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     t1.normal("Transaction amount:")
     t1.bold(format_coin_amount(amount))
@@ -141,6 +143,9 @@ async def confirm_transaction(ctx, amount: int, fee: int, protocol_magic: int):
     t2 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     t2.normal("Network:")
     t2.bold(protocol_magics.to_ui_string(protocol_magic))
+    if has_metadata:
+        t2.normal("Transaction contains")
+        t2.normal("metadata")
 
     await require_hold_to_confirm(ctx, Paginated([t1, t2]))
 
@@ -175,14 +180,6 @@ async def confirm_withdrawal(
     t1.bold(address_n_to_str(to_account_path(withdrawal.path)))
     t1.normal("Amount:")
     t1.bold(format_coin_amount(withdrawal.amount))
-
-    await require_confirm(ctx, t1)
-
-
-async def confirm_metadata_hash(ctx: wire.Context, metadata_hash: bytes) -> bool:
-    t1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
-    t1.normal("Confirm metadata hash:")
-    t1.bold(hexlify(metadata_hash).decode())
 
     await require_confirm(ctx, t1)
 
