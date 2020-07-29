@@ -125,7 +125,7 @@ def test_cardano_sign_tx(
     outputs = [cardano.create_output(o) for o in outputs]
     certificates = []
     withdrawals = []
-    metadata_hash = bytes()
+    metadata = bytes()
 
     expected_responses = [messages.PassphraseRequest()]
     expected_responses += [
@@ -157,7 +157,7 @@ def test_cardano_sign_tx(
             ttl=ttl,
             certificates=certificates,
             withdrawals=withdrawals,
-            metadata_hash=metadata_hash,
+            metadata=metadata,
             protocol_magic=protocol_magic,
             network_id=network_id,
         )
