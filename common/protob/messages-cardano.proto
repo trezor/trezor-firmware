@@ -118,7 +118,7 @@ message CardanoSignTx {
     optional uint32 network_id = 8;                     // network id - mainnet or testnet
     repeated CardanoTxCertificateType certificates = 9; // transaction certificates - added in shelley
     repeated CardanoTxWithdrawalType withdrawals = 10;  // transaction withdrawals - added in shelley
-    optional bytes metadata_hash = 11;                  // transaction metadata hash - added in shelley
+    optional bytes metadata = 11;                       // transaction metadata - added in shelley
     /**
      * Structure representing cardano transaction input
      */

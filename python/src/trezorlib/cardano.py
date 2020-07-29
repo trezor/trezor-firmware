@@ -203,7 +203,7 @@ def sign_tx(
     ttl: int,
     certificates: List[messages.CardanoTxCertificateType] = (),
     withdrawals: List[messages.CardanoTxWithdrawalType] = (),
-    metadata_hash: bytes = None,
+    metadata: bytes = None,
     protocol_magic: int = PROTOCOL_MAGICS["mainnet"],
     network_id: int = NETWORK_IDS["mainnet"],
 ) -> messages.CardanoSignedTx:
@@ -215,7 +215,7 @@ def sign_tx(
             ttl=ttl,
             certificates=certificates,
             withdrawals=withdrawals,
-            metadata_hash=metadata_hash,
+            metadata=metadata,
             protocol_magic=protocol_magic,
             network_id=network_id,
         )
