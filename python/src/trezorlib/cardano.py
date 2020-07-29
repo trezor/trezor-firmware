@@ -78,7 +78,7 @@ def create_certificate_pointer(
 
 
 def create_input(input) -> messages.CardanoTxInputType:
-    if not all(input.get(k) is not None for k in REQUIRED_FIELDS_INPUT):
+    if not all(k in input for k in REQUIRED_FIELDS_INPUT):
         raise ValueError("The input is missing some fields")
 
     path = input["path"]
@@ -91,10 +91,10 @@ def create_input(input) -> messages.CardanoTxInputType:
 
 
 def create_output(output) -> messages.CardanoTxOutputType:
-    contains_address = output.get("address") is not None
-    contains_address_type = output.get("addressType") is not None
+    contains_address = "address" in output
+    contains_address_type = "addressType" in output
 
-    if output.get("amount") is None:
+    if "amount" not in output:
         raise ValueError(INCOMPLETE_OUTPUT_ERROR_MESSAGE)
     if not (contains_address or contains_address_type):
         raise ValueError(INCOMPLETE_OUTPUT_ERROR_MESSAGE)
@@ -108,11 +108,11 @@ def create_output(output) -> messages.CardanoTxOutputType:
 
 
 def _create_change_output(output) -> messages.CardanoTxOutputType:
-    if output.get("path") is None:
+    if "path" not in output:
         raise ValueError(INCOMPLETE_OUTPUT_ERROR_MESSAGE)
 
     staking_key_hash_bytes = None
-    if output.get("stakingKeyHash"):
+    if "stakingKeyHash" in output:
         staking_key_hash_bytes = bytes.fromhex(output.get("stakingKeyHash"))
 
     address_parameters = create_address_parameters(
@@ -131,14 +131,14 @@ def _create_change_output(output) -> messages.CardanoTxOutputType:
 
 
 def create_certificate(certificate) -> messages.CardanoTxCertificateType:
-    if not all(certificate.get(k) is not None for k in REQUIRED_FIELDS_CERTIFICATE):
+    if not all(k in certificate for k in REQUIRED_FIELDS_CERTIFICATE):
         raise ValueError("The certificate is missing some fields")
 
     path = certificate["path"]
     certificate_type = certificate["type"]
 
     if certificate_type == messages.CardanoCertificateType.STAKE_DELEGATION:
-        if certificate.get("pool") is None:
+        if "pool" not in certificate:
             raise ValueError("The certificate is missing some fields")
 
         pool = certificate["pool"]
@@ -159,7 +159,7 @@ def create_certificate(certificate) -> messages.CardanoTxCertificateType:
 
 
 def create_withdrawal(withdrawal) -> messages.CardanoTxWithdrawalType:
-    if not all(withdrawal.get(k) is not None for k in REQUIRED_FIELDS_WITHDRAWAL):
+    if not all(k in withdrawal for k in REQUIRED_FIELDS_WITHDRAWAL):
         raise ValueError("Withdrawal is missing some fields")
 
     path = withdrawal["path"]
