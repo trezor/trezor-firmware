@@ -72,7 +72,7 @@ def sign_tx(client, file, protocol_magic, network_id, testnet):
         for withdrawal in transaction.get("withdrawals", ())
     ]
     metadata = None
-    if transaction.get("metadata"):
+    if "metadata" in transaction:
         metadata = bytes.fromhex(transaction["metadata"])
 
     signed_transaction = cardano.sign_tx(
