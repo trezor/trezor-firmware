@@ -202,7 +202,7 @@ async def show_warning_address_foreign_staking_key(
             address_n_to_str(staking_account_path),
         )
     else:
-        staking_key_message = ("Staking key:", hexlify(staking_key_hash))
+        staking_key_message = ("Staking key:", hexlify(staking_key_hash).decode())
 
     await show_warning(
         ctx, staking_key_message, button="Ok",
