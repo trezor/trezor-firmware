@@ -20,31 +20,18 @@ if False:
 
 ADDRESS_TYPES_SHELLEY = (
     CardanoAddressType.BASE,
+    CardanoAddressType.BASE_SCRIPT_KEY,
+    CardanoAddressType.BASE_KEY_SCRIPT,
+    CardanoAddressType.BASE_SCRIPT_SCRIPT,
     CardanoAddressType.POINTER,
+    CardanoAddressType.POINTER_SCRIPT,
     CardanoAddressType.ENTERPRISE,
+    CardanoAddressType.ENTERPRISE_SCRIPT,
     CardanoAddressType.REWARD,
+    CardanoAddressType.REWARD_SCRIPT,
 )
-
-HEADER_LENGTH = 1
-HASH_LENGTH = 28
-MIN_POINTER_SIZE = 0
-MAX_POINTER_SIZE = 12
-
-ADDRESS_BYTES_MIN_LENGTHS = {
-    CardanoAddressType.BASE: HEADER_LENGTH + HASH_LENGTH + HASH_LENGTH,
-    CardanoAddressType.POINTER: HEADER_LENGTH + HASH_LENGTH + MIN_POINTER_SIZE,
-    CardanoAddressType.ENTERPRISE: HEADER_LENGTH + HASH_LENGTH,
-    CardanoAddressType.REWARD: HEADER_LENGTH + HASH_LENGTH,
-}
-
-ADDRESS_BYTES_MAX_LENGTHS = {
-    CardanoAddressType.BASE: ADDRESS_BYTES_MIN_LENGTHS[CardanoAddressType.BASE],
-    CardanoAddressType.POINTER: HEADER_LENGTH + HASH_LENGTH + MAX_POINTER_SIZE,
-    CardanoAddressType.ENTERPRISE: ADDRESS_BYTES_MIN_LENGTHS[
-        CardanoAddressType.ENTERPRISE
-    ],
-    CardanoAddressType.REWARD: ADDRESS_BYTES_MIN_LENGTHS[CardanoAddressType.REWARD],
-}
+MIN_ADDRESS_BYTES_LENGTH = 29
+MAX_ADDRESS_BYTES_LENGTH = 65
 
 
 def validate_full_path(path: List[int]) -> bool:
@@ -104,7 +91,10 @@ def _validate_output_shelley_address(
 ) -> None:
     address_type = _get_address_type(address_bytes)
     # reward address cannot be an output address
-    if address_type == CardanoAddressType.REWARD:
+    if (
+        address_type == CardanoAddressType.REWARD
+        or address_type == CardanoAddressType.REWARD_SCRIPT
+    ):
         raise INVALID_ADDRESS
 
     _validate_address_size(address_bytes, address_type)
@@ -115,11 +105,7 @@ def _validate_output_shelley_address(
 def _validate_address_size(
     address_bytes: bytes, address_type: EnumTypeCardanoAddressType
 ) -> None:
-    if not (
-        ADDRESS_BYTES_MIN_LENGTHS[address_type]
-        <= len(address_bytes)
-        <= ADDRESS_BYTES_MAX_LENGTHS[address_type]
-    ):
+    if not (MIN_ADDRESS_BYTES_LENGTH <= len(address_bytes) <= MAX_ADDRESS_BYTES_LENGTH):
         raise INVALID_ADDRESS
 
 

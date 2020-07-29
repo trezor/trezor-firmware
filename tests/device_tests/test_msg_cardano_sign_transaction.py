@@ -59,6 +59,10 @@ SAMPLE_OUTPUTS = {
         "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
         "amount": "1",
     },
+    "base_address_with_script_output": {
+        "address": "addr1z90z7zqwhya6mpk5q929ur897g3pp9kkgalpreny8y304r2dcrtx0sf3dluyu4erzr3xtmdnzvcyfzekkuteu2xagx0qeva0pr",
+        "amount": "7120787",
+    },
     "base_address_change_output": {
         "addressType": 0,
         "path": "m/1852'/1815'/0'/0/0",
@@ -96,33 +100,22 @@ SAMPLE_OUTPUTS = {
         "address": "Ae2tdPwUPEZ5YUb8sM3eS8JqKgrRLzhiu71crfuH2MFtqaYr5ACNRZR3Mbm",
         "amount": "3003112",
     },
-    "invalid_base_address_too_short": {
-        "address": "addr1q89s8py7y68e3x66sscs0wkhlg5ssfrfs65084jrlrqcfqqj922xhxkn6twlq2wn4q50q352annk3903tj00h45mggqvpjcf",
+    "invalid_address_too_short": {
+        "address": "addr1q89s8py7y68e3x66sscs0wkhlg5ssfrfs65084jry45scvehcr",
         "amount": "3003112",
     },
-    "invalid_base_address_too_long": {
-        "address": "addr1q89s8py7y68e3x66sscs0wkhlg5ssfrfs65084jrlrqcfqqj922xhxkn6twlq2wn4q50q352annk3903tj00h45mgfm5zhnjqfc",
-        "amount": "3003112",
-    },
-    "invalid_pointer_address_too_short": {
-        "address": "addr1g89s8py7y68e3x66sscs0wkhlg5ssfrfs65084jrlrqcgrfjd3l",
-        "amount": "3003112",
-    },
-    "invalid_pointer_address_too_long": {
-        "address": "addr1g89s8py7y68e3x66sscs0wkhlg5ssfrfs65084jrlrqcfqysszqgqqysszqgqqysszqgqqzpqv0wa7",
-        "amount": "3003112",
-    },
-    "invalid_enterprise_address_too_short": {
-        "address": "addr1v89s8py7y68e3x66sscs0wkhlg5ssfrfs65084jrlrqcg0c7m2w",
-        "amount": "3003112",
-    },
-    "invalid_enterprise_address_too_long": {
-        "address": "addr1v89s8py7y68e3x66sscs0wkhlg5ssfrfs65084jrlrqcfqzp9v4srv",
+    "invalid_address_too_long": {
+        "address": "addr1q89s8py7y68e3x66sscs0wkhlg5ssfrfs65084jrlrqcfqqj922xhxkn6twlq2wn4q50q352annk3903tj00h45mgfm5z3vcwsfrvkr5zglq4rxu",
         "amount": "3003112",
     },
     "large_simple_byron_output": {
         "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
         "amount": "449999999199999999",
+    },
+    # address type 10
+    "unsupported_address_type": {
+        "address": "addr1590z7zqwhya6mpk5q929ur897g3pp9kkgalpreny8y304r2dcrtx0sf3dluyu4erzr3xtmdnzvcyfzekkuteu2xagx0qt7gvvj",
+        "amount": "3003112",
     },
     "testnet_output": {
         "address": "2657WMsDfac7BteXkJq5Jzdog4h47fPbkwUM49isuWbYAr2cFRHa3rURP236h9PBe",
@@ -204,6 +197,30 @@ VALID_VECTORS = [
         "16fe72bb198be423677577e6326f1f648ec5fc11263b072006382d8125a6edda",
         # tx body
         "83a400818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018282583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff018258390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b42771a006ca79302182a030aa100818258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c158406a78f07836dcf4a303448d2b16b217265a9226be3984a69a04dba5d04f4dbb2a47b5e1cbb345f474c0b9634a2f37b921ab26e6a65d5dfd015dacb4455fb8430af6",
+    ),
+    # simple transaction with base script address change output
+    (
+        # protocol magic
+        PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
+        # inputs
+        [SAMPLE_INPUTS["shelley_input"]],
+        # outputs
+        [
+            SAMPLE_OUTPUTS["base_address_with_script_output"],
+            SAMPLE_OUTPUTS["base_address_change_output"],
+        ],
+        # fee
+        42,
+        # ttl
+        10,
+        # input flow
+        [[InputAction.SWIPE, InputAction.YES], [InputAction.SWIPE, InputAction.YES]],
+        # tx hash
+        "5ddbb530b8a89e2b08fc91db03950c876c4a9c1c3fb6e628c4cab638b1c97648",
+        # tx body
+        "83a400818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7000182825839115e2f080eb93bad86d401545e0ce5f2221096d6477e11e6643922fa8d4dc0d667c1316ff84e572310e265edb31330448b36b7179e28dd419e1a006ca7938258390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b42771a006ca79302182a030aa100818258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c15840e0bdaa59016f2a521d31179b60364eacdcb53c34ae01c56b339afa62d312f5f89783579691cac777e3d5f2e7810aa8fe554ba545a8d1578c55405af5ae51b30ff6",
     ),
     # simple transaction with base address change output with staking key hash
     (
@@ -373,7 +390,7 @@ INVALID_VECTORS = [
         # error message
         "Invalid address",
     ),
-    # Output base address is too short
+    # Output address is too short
     (
         # protocol magic (mainnet)
         PROTOCOL_MAGICS["mainnet"],
@@ -382,7 +399,7 @@ INVALID_VECTORS = [
         # inputs
         [SAMPLE_INPUTS["shelley_input"]],
         # outputs
-        [SAMPLE_OUTPUTS["invalid_base_address_too_short"]],
+        [SAMPLE_OUTPUTS["invalid_address_too_short"]],
         # fee
         42,
         # ttl
@@ -390,7 +407,7 @@ INVALID_VECTORS = [
         # error message
         "Invalid address",
     ),
-    # Output base address is too long
+    # Output address is too long
     (
         # protocol magic (mainnet)
         PROTOCOL_MAGICS["mainnet"],
@@ -399,75 +416,7 @@ INVALID_VECTORS = [
         # inputs
         [SAMPLE_INPUTS["shelley_input"]],
         # outputs
-        [SAMPLE_OUTPUTS["invalid_base_address_too_long"]],
-        # fee
-        42,
-        # ttl
-        10,
-        # error message
-        "Invalid address",
-    ),
-    # Output pointer address is too short
-    (
-        # protocol magic (mainnet)
-        PROTOCOL_MAGICS["mainnet"],
-        # network id
-        NETWORK_IDS["mainnet"],
-        # inputs
-        [SAMPLE_INPUTS["shelley_input"]],
-        # outputs
-        [SAMPLE_OUTPUTS["invalid_pointer_address_too_short"]],
-        # fee
-        42,
-        # ttl
-        10,
-        # error message
-        "Invalid address",
-    ),
-    # Output pointer address is too long
-    (
-        # protocol magic (mainnet)
-        PROTOCOL_MAGICS["mainnet"],
-        # network id
-        NETWORK_IDS["mainnet"],
-        # inputs
-        [SAMPLE_INPUTS["shelley_input"]],
-        # outputs
-        [SAMPLE_OUTPUTS["invalid_pointer_address_too_long"]],
-        # fee
-        42,
-        # ttl
-        10,
-        # error message
-        "Invalid address",
-    ),
-    # Output enterprise address is too short
-    (
-        # protocol magic (mainnet)
-        PROTOCOL_MAGICS["mainnet"],
-        # network id
-        NETWORK_IDS["mainnet"],
-        # inputs
-        [SAMPLE_INPUTS["shelley_input"]],
-        # outputs
-        [SAMPLE_OUTPUTS["invalid_enterprise_address_too_short"]],
-        # fee
-        42,
-        # ttl
-        10,
-        # error message
-        "Invalid address",
-    ),
-    # Output enterprise address is too long
-    (
-        # protocol magic (mainnet)
-        PROTOCOL_MAGICS["mainnet"],
-        # network id
-        NETWORK_IDS["mainnet"],
-        # inputs
-        [SAMPLE_INPUTS["shelley_input"]],
-        # outputs
-        [SAMPLE_OUTPUTS["invalid_enterprise_address_too_long"]],
+        [SAMPLE_OUTPUTS["invalid_address_too_long"]],
         # fee
         42,
         # ttl
@@ -613,6 +562,23 @@ INVALID_VECTORS = [
         10,
         # error message
         "Invalid network id/protocol magic combination!",
+    ),
+    # Unsupported address type
+    (
+        # protocol magic
+        PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
+        # inputs
+        [SAMPLE_INPUTS["shelley_input"]],
+        # outputs
+        [SAMPLE_OUTPUTS["unsupported_address_type"]],
+        # fee
+        42,
+        # ttl
+        10,
+        # error message
+        "Invalid address",
     ),
 ]
 
