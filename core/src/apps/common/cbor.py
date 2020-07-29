@@ -92,6 +92,8 @@ def _cbor_encode(value: Value) -> Iterable[bytes]:
             yield bytes([_CBOR_PRIMITIVE + _CBOR_TRUE])
         else:
             yield bytes([_CBOR_PRIMITIVE + _CBOR_FALSE])
+    elif isinstance(value, Raw):
+        yield value.value
     elif value is None:
         yield bytes([_CBOR_PRIMITIVE + _CBOR_NULL])
     else:
@@ -218,6 +220,11 @@ class Tagged:
             and self.tag == other.tag
             and self.value == other.value
         )
+
+
+class Raw:
+    def __init__(self, value: Value):
+        self.value = value
 
 
 class IndefiniteLengthArray:
