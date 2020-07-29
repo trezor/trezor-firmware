@@ -24,6 +24,7 @@ from .address import (
 from .byron_address import get_address_attributes
 from .helpers import (
     INVALID_CERTIFICATE,
+    INVALID_METADATA,
     INVALID_WITHDRAWAL,
     network_ids,
     protocol_magics,
@@ -79,9 +80,7 @@ async def sign_tx(
         _validate_outputs(keychain, msg.outputs, msg.protocol_magic, msg.network_id)
         _validate_certificates(msg.certificates)
         _validate_withdrawals(msg.withdrawals)
-
-        if msg.metadata and len(msg.metadata) > MAX_METADATA_LENGTH:
-            raise wire.ProcessError("Invalid metadata")
+        _validate_metadata(msg.metadata)
 
         # display the transaction in UI
         await _show_tx(ctx, keychain, msg)
@@ -156,6 +155,23 @@ def _validate_withdrawals(withdrawals: List[CardanoTxWithdrawalType]) -> None:
 
         if not 0 <= withdrawal.amount < LOVELACE_MAX_SUPPLY:
             raise INVALID_WITHDRAWAL
+
+
+def _validate_metadata(metadata: bytes) -> None:
+    if not metadata:
+        return
+
+    if len(metadata) > MAX_METADATA_LENGTH:
+        raise INVALID_METADATA
+
+    try:
+        # this also raises an error if there's some data remaining
+        decoded = cbor.decode(metadata)
+    except:
+        raise INVALID_METADATA
+
+    if not isinstance(decoded, dict):
+        raise INVALID_METADATA
 
 
 def _serialize_tx(keychain: seed.Keychain, msg: CardanoSignTx) -> Tuple[bytes, bytes]:
