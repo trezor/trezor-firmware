@@ -220,7 +220,7 @@ def _derive_shelley_address(
     elif parameters.address_type == CardanoAddressType.REWARD:
         address = _derive_reward_address(keychain, parameters.address_n, network_id)
     else:
-        raise ValueError
+        raise wire.DataError("Invalid address type!")
 
     return address
 
