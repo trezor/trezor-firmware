@@ -258,6 +258,12 @@ VALID_VECTORS = [
         42,
         # ttl
         10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata
+        "",
         # input flow
         [[InputAction.SWIPE, InputAction.YES], [InputAction.SWIPE, InputAction.YES]],
         # tx hash
