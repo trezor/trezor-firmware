@@ -1,6 +1,11 @@
 {
-  "label": "Dropbox",
-  "u2f": ["c50f8a7b708e92f82e7a50e2bdc55d8fd91a22fe6b29c0cdf7805530842af581"],
+  "name": "Dropbox",
+  "u2f": [
+    {
+      "app_id": "c50f8a7b708e92f82e7a50e2bdc55d8fd91a22fe6b29c0cdf7805530842af581",
+      "label": "www.dropbox.com"
+    }
+  ],
   "webauthn": ["www.dropbox.com"],
   "use_sign_count": false
 }

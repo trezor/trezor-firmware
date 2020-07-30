@@ -1,4 +1,9 @@
 {
-  "label": "Tutanota",
-  "u2f": ["fabeece3982fad9ddcc98f91bd2e75afc7d1f4ca544929b2d0d04212dffa30fa"]
+  "name": "Tutanota",
+  "u2f": [
+    {
+      "app_id": "fabeece3982fad9ddcc98f91bd2e75afc7d1f4ca544929b2d0d04212dffa30fa",
+      "label": "tutanota.com"
+    }
+  ]
 }

@@ -1,4 +1,9 @@
 {
-  "label": "Amazon Web Services",
-  "u2f": ["968978a29953de52d3ef0f0c71b7b7b6b1af9f08e257896a8d8126918530293b"]
+  "name": "Amazon Web Services",
+  "u2f": [
+    {
+      "app_id": "968978a29953de52d3ef0f0c71b7b7b6b1af9f08e257896a8d8126918530293b",
+      "label": "aws.amazon.com"
+    }
+  ]
 }

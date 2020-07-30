@@ -1,7 +1,13 @@
 {
-  "label": "Keeper",
+  "name": "Keeper",
   "u2f": [
-    "53a15ba42a7c0325b8dbee289634a48f58aea3246645d5ff418f9bb8819885a9",
-    "d65f005ef4dea9320c9973053c95ff6020115d5fec1b7fee41a578e18df9ca8c"
+    {
+      "app_id": "53a15ba42a7c0325b8dbee289634a48f58aea3246645d5ff418f9bb8819885a9",
+      "label": "keepersecurity.com"
+    },
+    {
+      "app_id": "d65f005ef4dea9320c9973053c95ff6020115d5fec1b7fee41a578e18df9ca8c",
+      "label": "keepersecurity.eu"
+    }
   ]
 }
