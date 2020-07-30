@@ -507,6 +507,27 @@ def check_fido(apps):
         print_log(logging.ERROR, webauthn_str, bucket_str)
         check_passed = False
 
+    domain_hashes = {}
+    for app in apps:
+        if "webauthn" in app:
+            for domain in app["webauthn"]:
+                domain_hashes[sha256(domain.encode()).digest()] = domain
+    for app in apps:
+        if "u2f" in app:
+            for u2f in app["u2f"]:
+                domain = domain_hashes.get(bytes.fromhex(u2f["app_id"]))
+                if domain:
+                    print_log(
+                        logging.ERROR,
+                        "colliding WebAuthn domain "
+                        + crayon(None, domain, bold=True)
+                        + " and U2F app_id "
+                        + crayon(None, u2f["app_id"], bold=True)
+                        + " for "
+                        + u2f["label"],
+                    )
+                    check_passed = False
+
     for app in apps:
         if "name" not in app:
             print_log(logging.ERROR, app["key"], ": missing name")
