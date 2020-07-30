@@ -167,7 +167,7 @@ def _validate_metadata(metadata: bytes) -> None:
     try:
         # this also raises an error if there's some data remaining
         decoded = cbor.decode(metadata)
-    except:
+    except Exception:
         raise INVALID_METADATA
 
     if not isinstance(decoded, dict):
