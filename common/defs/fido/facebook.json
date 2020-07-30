@@ -1,4 +1,4 @@
 {
-  "label": "Facebook",
+  "name": "Facebook",
   "webauthn": ["facebook.com"]
 }

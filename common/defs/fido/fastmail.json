@@ -1,4 +1,9 @@
 {
-  "label": "FastMail",
-  "u2f": ["6966abe3674ea2f53079eb710197848c9be6f363992fd029e9898447cb9f0084"]
+  "name": "FastMail",
+  "u2f": [
+    {
+      "app_id": "6966abe3674ea2f53079eb710197848c9be6f363992fd029e9898447cb9f0084",
+      "label": "www.fastmail.com"
+    }
+  ]
 }

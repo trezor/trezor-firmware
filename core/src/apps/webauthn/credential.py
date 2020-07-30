@@ -258,6 +258,12 @@ class Fido2Credential(Credential):
         )
 
     def app_name(self) -> str:
+        from apps.webauthn import knownapps
+
+        app = knownapps.by_rp_id_hash(self.rp_id_hash)
+        if app is not None:
+            return app.label
+
         return self.rp_id
 
     def account_name(self) -> Optional[str]:

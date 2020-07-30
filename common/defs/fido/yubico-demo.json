@@ -1,5 +1,5 @@
 {
-  "label": "demo.yubico.com",
+  "name": "demo.yubico.com",
   "webauthn": ["demo.yubico.com"],
   "no_icon": true
 }

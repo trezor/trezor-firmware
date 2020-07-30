@@ -481,7 +481,7 @@ FIDO_KNOWN_KEYS = frozenset(
         "key",
         "u2f",
         "webauthn",
-        "label",
+        "name",
         "use_sign_count",
         "use_self_attestation",
         "no_icon",
@@ -493,11 +493,11 @@ FIDO_KNOWN_KEYS = frozenset(
 def check_fido(apps):
     check_passed = True
 
-    uf2_hashes = find_collisions((a for a in apps if "u2f" in a), "u2f")
-    for key, bucket in uf2_hashes.items():
-        bucket_str = ", ".join(app["key"] for app in bucket)
-        u2f_hash_str = "colliding U2F hash " + crayon(None, key, bold=True) + ":"
-        print_log(logging.ERROR, u2f_hash_str, bucket_str)
+    u2fs = find_collisions((u for a in apps if "u2f" in a for u in a["u2f"]), "app_id")
+    for key, bucket in u2fs.items():
+        bucket_str = ", ".join(u2f["label"] for u2f in bucket)
+        app_id_str = "colliding U2F app ID " + crayon(None, key, bold=True) + ":"
+        print_log(logging.ERROR, app_id_str, bucket_str)
         check_passed = False
 
     webauthn_domains = find_collisions((a for a in apps if "webauthn" in a), "webauthn")
@@ -508,9 +508,19 @@ def check_fido(apps):
         check_passed = False
 
     for app in apps:
-        if "label" not in app:
-            print_log(logging.ERROR, app["key"], ": missing label")
+        if "name" not in app:
+            print_log(logging.ERROR, app["key"], ": missing name")
             check_passed = False
+
+        if "u2f" in app:
+            for u2f in app["u2f"]:
+                if "app_id" not in u2f:
+                    print_log(logging.ERROR, app["key"], ": missing app_id")
+                    check_passed = False
+
+                if "label" not in u2f:
+                    print_log(logging.ERROR, app["key"], ": missing label")
+                    check_passed = False
 
         if not app.get("u2f") and not app.get("webauthn"):
             print_log(logging.ERROR, app["key"], ": no U2F nor WebAuthn addresses")
