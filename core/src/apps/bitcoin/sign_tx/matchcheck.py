@@ -79,7 +79,7 @@ class MatchChecker:
 
 class WalletPathChecker(MatchChecker):
     def attribute_from_tx(self, txio: Union[TxInputType, TxOutputType]) -> Any:
-        if not txio.address_n:
+        if len(txio.address_n) < BIP32_WALLET_DEPTH:
             return None
         return txio.address_n[:-BIP32_WALLET_DEPTH]
 
