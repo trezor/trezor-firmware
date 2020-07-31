@@ -152,7 +152,7 @@ def test_invalid_prev_hash_in_prevtx(client, prev_hash):
     )
     out1 = messages.TxOutputType(
         address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
-        amount=1000,
+        amount=99000000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     btc.sign_tx(client, "Bitcoin", [inp0], [out1], prev_txes={tx_hash: prev_tx})
