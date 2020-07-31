@@ -191,7 +191,8 @@ void display_refresh(void) {
     display_init();
   }
   if (BACKGROUND) {
-    SDL_RenderCopy(RENDERER, BACKGROUND, NULL, NULL);
+    const SDL_Rect r = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
+    SDL_RenderCopy(RENDERER, BACKGROUND, NULL, &r);
   } else {
     SDL_RenderClear(RENDERER);
   }
