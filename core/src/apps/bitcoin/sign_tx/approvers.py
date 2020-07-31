@@ -1,5 +1,6 @@
 from micropython import const
 
+from storage import device
 from trezor import wire
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxInputType import TxInputType
@@ -88,9 +89,13 @@ class BasicApprover(Approver):
 
         total = self.total_in - self.change_out
         spending = total - self.external_in
+        # fee_threshold = (coin.maxfee per byte * tx size)
+        fee_threshold = (self.coin.maxfee_kb / 1000) * (self.weight.get_total() / 4)
 
         # fee > (coin.maxfee per byte * tx size)
-        if fee > (self.coin.maxfee_kb / 1000) * (self.weight.get_total() / 4):
+        if fee > fee_threshold:
+            if fee > 10 * fee_threshold and not device.unsafe_prompts_allowed():
+                raise wire.DataError("The fee is unexpectedly large")
             await helpers.confirm_feeoverthreshold(fee, self.coin)
         if self.change_count > self.MAX_SILENT_CHANGE_COUNT:
             await helpers.confirm_change_count_over_threshold(self.change_count)

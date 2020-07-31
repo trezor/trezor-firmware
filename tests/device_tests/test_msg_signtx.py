@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import btc, messages
+from trezorlib import btc, device, messages
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path, tx_hash
 
@@ -171,7 +171,7 @@ class TestMsgSigntx:
             == "0100000001cd3b93f5b24ae190ce5141235091cd93fbb2908e24e5b9ff6776aec11b0e04e5000000006b483045022100eba3bbcbb82ab1ebac88a394e8fb53b0263dadbb3e8072f0a21ee62818c911060220686a9b7f306d028b54a228b5c47cc6c27b1d01a3b0770440bcc64d55d8bace2c0121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0ffffffff021023cb01000000001976a91485eb47fe98f349065d6f044e27a4ac541af79ee288aca0bb0d00000000001976a9143d3cca567e00a04819742b21a696a67da796498b88ac00000000"
         )
 
-    def test_testnet_fee_too_high(self, client):
+    def test_testnet_fee_high_warning(self, client):
         # tx: 6f90f3c7cbec2258b0971056ef3fe34128dbde30daa9c0639a898f9977299d54
         # input 1: 10.00000000 BTC
         inp1 = messages.TxInputType(
@@ -183,7 +183,7 @@ class TestMsgSigntx:
 
         out1 = messages.TxOutputType(
             address="mfiGQVPcRcaEvQPYDErR34DcCovtxYvUUV",
-            amount=1000000000 - 500000000 - 100000000,
+            amount=1000000000 - 500000000 - 8000000,
             script_type=messages.OutputScriptType.PAYTOADDRESS,
         )
 
@@ -221,7 +221,7 @@ class TestMsgSigntx:
 
         assert (
             tx_hash(serialized_tx).hex()
-            == "c669527e0d80dc645925f6965e1622e71fa5ca51e284442c4620c1ade7a76c63"
+            == "54fd5e9b65b8acc10144c1e78ea9720df7606d7d4a543e4c547ecd45b2ae226b"
         )
 
     def test_one_two_fee(self, client):
@@ -577,7 +577,7 @@ class TestMsgSigntx:
             == "fae68e4a3a4b0540eb200e2218a6d8465eac469788ccb236e0d5822d105ddde9"
         )
 
-    def test_fee_too_high(self, client):
+    def test_fee_high_warning(self, client):
         # tx: 1570416eb4302cf52979afd5e6909e37d8fdd874301f7cc87e547e509cb1caa6
         # input 0: 1.0 BTC
 
@@ -619,6 +619,52 @@ class TestMsgSigntx:
         assert (
             tx_hash(serialized_tx).hex()
             == "c36928aca6452d50cb63e2592200bbcc3722ce6b631b1dfd185ccdf9a954af28"
+        )
+
+    @pytest.mark.skip_t1
+    def test_fee_high_hardfail(self, client):
+        # tx: 1570416eb4302cf52979afd5e6909e37d8fdd874301f7cc87e547e509cb1caa6
+        # input 0: 1.0 BTC
+
+        inp1 = messages.TxInputType(
+            address_n=parse_path("44h/0h/0h/0/0"),
+            # amount=100000000,
+            prev_hash=TXHASH_157041,
+            prev_index=0,
+        )
+
+        out1 = messages.TxOutputType(
+            address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
+            amount=100000000 - 5100000,
+            script_type=messages.OutputScriptType.PAYTOADDRESS,
+        )
+
+        with pytest.raises(TrezorFailure, match="fee is unexpectedly large"):
+            btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET)
+
+        # set SafetyCheckLevel to Prompt and try again
+        device.apply_settings(client, safety_checks=messages.SafetyCheckLevel.Prompt)
+        with client:
+            finished = False
+
+            def input_flow():
+                nonlocal finished
+                for expected in (B.ConfirmOutput, B.FeeOverThreshold, B.SignTx):
+                    br = yield
+                    assert br == expected
+                    client.debug.press_yes()
+                finished = True
+
+            client.set_input_flow(input_flow)
+
+            _, serialized_tx = btc.sign_tx(
+                client, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET
+            )
+            assert finished
+
+        assert (
+            tx_hash(serialized_tx).hex()
+            == "0fadc325662e84fd1a5efcb20c5369cf9134a24b6d29bce99f61e69680397a79"
         )
 
     def test_not_enough_funds(self, client):

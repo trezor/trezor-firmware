@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Running the frozen version of the emulator doesn't need arguments.  [#1115]
 - CoinJoin preauthorization and siging flow.  [#1053]
 - XVG support.  [#1165]
+- Hard limit on transaction fees. Can be disabled using `safety-checks`. [#1087]
 
 ### Changed
 - Print inverted question mark for non-printable characters.
@@ -257,6 +258,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1056]: https://github.com/trezor/trezor-firmware/issues/1056
 [#1067]: https://github.com/trezor/trezor-firmware/issues/1067
 [#1074]: https://github.com/trezor/trezor-firmware/issues/1074
+[#1087]: https://github.com/trezor/trezor-firmware/issues/1087
 [#1089]: https://github.com/trezor/trezor-firmware/issues/1089
 [#1098]: https://github.com/trezor/trezor-firmware/issues/1098
 [#1115]: https://github.com/trezor/trezor-firmware/issues/1115
