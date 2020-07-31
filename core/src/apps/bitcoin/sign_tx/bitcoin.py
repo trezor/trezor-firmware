@@ -17,7 +17,7 @@ from apps.common import coininfo, seed
 from apps.common.writers import write_bitcoin_varint
 
 from .. import addresses, common, multisig, scripts, writers
-from ..common import SIGHASH_ALL, ecdsa_sign
+from ..common import BIP32_WALLET_DEPTH, SIGHASH_ALL, ecdsa_sign
 from ..ownership import verify_nonownership
 from ..verification import SignatureVerifier
 from . import approvers, helpers, progress
@@ -541,6 +541,7 @@ class Bitcoin:
             return False
         return (
             self.wallet_path.output_matches(txo)
+            and len(txo.address_n) >= BIP32_WALLET_DEPTH
             and txo.address_n[-2] <= _BIP32_CHANGE_CHAIN
             and txo.address_n[-1] <= _BIP32_MAX_LAST_ELEMENT
             and txo.amount > 0
