@@ -1,1 +1,0 @@
-../../../src/trezor/crypto/__init__.py

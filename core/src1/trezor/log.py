@@ -1,1 +1,0 @@
-../../src/trezor/log.py

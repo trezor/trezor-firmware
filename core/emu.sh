@@ -6,11 +6,5 @@ if [ -n "$1" ]; then
     exit 1
 fi
 
-TREZOR_MODEL="${TREZOR_MODEL:-T}"
-if [ "$TREZOR_MODEL" = "T" ]; then
-    cd src
-else
-    cd "src${TREZOR_MODEL}"
-fi
-
+cd src
 ../build/unix/trezor-emu-core -O$PYOPT -X heapsize=20M
