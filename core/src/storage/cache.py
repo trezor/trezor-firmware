@@ -73,6 +73,17 @@ def get(key: int) -> Any:
     return _caches[_active_session_id].get(key)
 
 
+def delete(key: int) -> None:
+    if key & _SESSIONLESS_FLAG:
+        if key in _sessionless_cache:
+            del _sessionless_cache[key]
+        return
+    if _active_session_id is None:
+        raise RuntimeError  # no session active
+    if key in _caches[_active_session_id]:
+        del _caches[_active_session_id][key]
+
+
 def stored(key: int) -> Callable[[F], F]:
     def decorator(func: F) -> F:
         # if we didn't check this, it would be easy to store an Awaitable[something]
