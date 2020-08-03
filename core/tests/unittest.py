@@ -1,3 +1,5 @@
+import sys
+
 from trezor.utils import ensure
 
 
@@ -196,6 +198,9 @@ class TestResult:
         return self.errorsNum == 0 and self.failuresNum == 0
 
 
+generator_type = type((lambda: (yield))())
+
+
 def run_class(c, test_result):
     o = c()
     set_up = getattr(o, "setUp", lambda: None)
@@ -206,14 +211,28 @@ def run_class(c, test_result):
             print(' ', name, end=' ...')
             m = getattr(o, name)
             try:
-                set_up()
-                test_result.testsRun += 1
-                m()
-                tear_down()
+                try:
+                    set_up()
+                    test_result.testsRun += 1
+                    retval = m()
+                    if isinstance(retval, generator_type):
+                        raise RuntimeError("{} must not be a generator (it is async, uses yield or await).".format(name))
+                    elif retval is not None:
+                        raise RuntimeError("{} should not return a result.".format(name))
+                finally:
+                    tear_down()
                 print(" ok")
             except SkipTest as e:
                 print(" skipped:", e.args[0])
                 test_result.skippedNum += 1
+            except AssertionError as e:
+                print(" failed")
+                sys.print_exception(e)
+                test_result.failuresNum += 1
+            except BaseException as e:
+                print(" errored:", e)
+                sys.print_exception(e)
+                test_result.errorsNum += 1
 
 
 def main(module="__main__"):
@@ -230,6 +249,16 @@ def main(module="__main__"):
     runner = TestRunner()
     result = runner.run(suite)
     msg = "Ran %d tests" % result.testsRun
+    result_strs = []
     if result.skippedNum > 0:
-        msg += " (%d skipped)" % result.skippedNum
+        result_strs.append("{} skipped".format(result.skippedNum))
+    if result.failuresNum > 0:
+        result_strs.append("{} failed".format(result.failuresNum))
+    if result.errorsNum > 0:
+        result_strs.append("{} errored".format(result.errorsNum))
+    if result_strs:
+        msg += " (" + ", ".join(result_strs) + ")"
     print(msg)
+
+    if not result.wasSuccessful():
+        raise SystemExit(1)
