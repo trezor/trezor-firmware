@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import btc, messages
+from trezorlib import btc, device, messages
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -387,5 +387,31 @@ def test_wrong_coordinator(client):
             script_type=messages.InputScriptType.SPENDWITNESS,
             user_confirmation=True,
             commitment_data=b"www.example.org" + (1).to_bytes(ROUND_ID_LEN, "big"),
+            preauthorized=True,
+        )
+
+
+def test_cancel_authorization(client):
+    # Ensure that a preauthorized GetOwnershipProof fails if the commitment_data doesn't match the coordinator.
+
+    btc.authorize_coinjoin(
+        client,
+        max_total_fee=50000,
+        coordinator="www.example.com",
+        n=parse_path("m/84'/1'/0'"),
+        coin_name="Testnet",
+        script_type=messages.InputScriptType.SPENDWITNESS,
+    )
+
+    device.cancel_authorization(client)
+
+    with pytest.raises(TrezorFailure, match="No preauthorized operation"):
+        ownership_proof, _ = btc.get_ownership_proof(
+            client,
+            "Testnet",
+            parse_path("84'/1'/0'/1/0"),
+            script_type=messages.InputScriptType.SPENDWITNESS,
+            user_confirmation=True,
+            commitment_data=b"www.example.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
             preauthorized=True,
         )
