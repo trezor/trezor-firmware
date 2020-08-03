@@ -21,6 +21,7 @@ if False:
     from trezor.messages.LockDevice import LockDevice
     from trezor.messages.Ping import Ping
     from trezor.messages.DoPreauthorized import DoPreauthorized
+    from trezor.messages.CancelAuthorization import CancelAuthorization
 
 if False:
 
@@ -154,6 +155,21 @@ def set_authorization(authorization: Authorization) -> None:
     storage.cache.set(storage.cache.APP_BASE_AUTHORIZATION, authorization)
 
 
+async def handle_CancelAuthorization(
+    ctx: wire.Context, msg: CancelAuthorization
+) -> protobuf.MessageType:
+    authorization = storage.cache.get(
+        storage.cache.APP_BASE_AUTHORIZATION
+    )  # type: Authorization
+    if not authorization:
+        raise wire.ProcessError("No preauthorized operation")
+
+    authorization.__del__()
+    storage.cache.delete(storage.cache.APP_BASE_AUTHORIZATION)
+
+    return Success(message="Authorization cancelled")
+
+
 ALLOW_WHILE_LOCKED = (
     MessageType.Initialize,
     MessageType.GetFeatures,
@@ -235,5 +251,6 @@ def boot() -> None:
     wire.register(MessageType.LockDevice, handle_LockDevice)
     wire.register(MessageType.Ping, handle_Ping)
     wire.register(MessageType.DoPreauthorized, handle_DoPreauthorized)
+    wire.register(MessageType.CancelAuthorization, handle_CancelAuthorization)
 
     workflow.idle_timer.set(storage.device.get_autolock_delay_ms(), lock_device)
