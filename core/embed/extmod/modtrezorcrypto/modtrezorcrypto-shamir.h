@@ -39,18 +39,18 @@
 ///     :rtype: Array of bytes.
 ///     """
 mp_obj_t mod_trezorcrypto_shamir_interpolate(mp_obj_t shares, mp_obj_t x) {
-  size_t share_count;
-  mp_obj_t *share_items;
+  size_t share_count = 0;
+  mp_obj_t *share_items = NULL;
   mp_obj_get_array(shares, &share_count, &share_items);
   if (share_count < 1 || share_count > SHAMIR_MAX_SHARE_COUNT) {
     mp_raise_ValueError("Invalid number of shares.");
   }
   uint8_t x_uint8 = trezor_obj_get_uint8(x);
-  uint8_t share_indices[SHAMIR_MAX_SHARE_COUNT];
-  const uint8_t *share_values[SHAMIR_MAX_SHARE_COUNT];
+  uint8_t share_indices[SHAMIR_MAX_SHARE_COUNT] = {0};
+  const uint8_t *share_values[SHAMIR_MAX_SHARE_COUNT] = {0};
   size_t value_len = 0;
   for (int i = 0; i < share_count; ++i) {
-    mp_obj_t *share;
+    mp_obj_t *share = NULL;
     mp_obj_get_array_fixed_n(share_items[i], 2, &share);
     share_indices[i] = trezor_obj_get_uint8(share[0]);
     mp_buffer_info_t value;
@@ -66,7 +66,7 @@ mp_obj_t mod_trezorcrypto_shamir_interpolate(mp_obj_t shares, mp_obj_t x) {
     }
     share_values[i] = value.buf;
   }
-  vstr_t vstr;
+  vstr_t vstr = {0};
   vstr_init_len(&vstr, value_len);
   if (shamir_interpolate((uint8_t *)vstr.buf, x_uint8, share_indices,
                          share_values, share_count, value_len) != true) {

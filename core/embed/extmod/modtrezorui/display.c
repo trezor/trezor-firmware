@@ -88,7 +88,7 @@ static struct { int x, y; } DISPLAY_OFFSET;
 
 static inline uint16_t interpolate_color(uint16_t color0, uint16_t color1,
                                          uint8_t step) {
-  uint8_t cr, cg, cb;
+  uint8_t cr = 0, cg = 0, cb = 0;
   cr = (((color0 & 0xF800) >> 11) * step +
         ((color1 & 0xF800) >> 11) * (15 - step)) /
        15;
@@ -133,7 +133,7 @@ void display_clear(void) {
 void display_bar(int x, int y, int w, int h, uint16_t c) {
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
-  int x0, y0, x1, y1;
+  int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
   clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
   display_set_window(x0, y0, x1, y1);
   for (int i = 0; i < (x1 - x0 + 1) * (y1 - y0 + 1); i++) {
@@ -167,11 +167,11 @@ void display_bar_radius(int x, int y, int w, int h, uint16_t c, uint16_t b,
   } else {
     r = 16 / r;
   }
-  uint16_t colortable[16];
+  uint16_t colortable[16] = {0};
   set_color_table(colortable, c, b);
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
-  int x0, y0, x1, y1;
+  int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
   clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
   display_set_window(x0, y0, x1, y1);
   for (int j = y0; j <= y1; j++) {
@@ -220,7 +220,7 @@ void display_image(int x, int y, int w, int h, const void *data,
 #if TREZOR_MODEL == T
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
-  int x0, y0, x1, y1;
+  int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
   clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
   display_set_window(x0, y0, x1, y1);
   x0 -= x;
@@ -228,9 +228,9 @@ void display_image(int x, int y, int w, int h, const void *data,
   y0 -= y;
   y1 -= y;
 
-  struct uzlib_uncomp decomp;
-  uint8_t decomp_window[UZLIB_WINDOW_SIZE];
-  uint8_t decomp_out[2];
+  struct uzlib_uncomp decomp = {0};
+  uint8_t decomp_window[UZLIB_WINDOW_SIZE] = {0};
+  uint8_t decomp_out[2] = {0};
   uzlib_prepare(&decomp, decomp_window, data, datalen, decomp_out,
                 sizeof(decomp_out));
 
@@ -260,7 +260,7 @@ void display_avatar(int x, int y, const void *data, uint32_t datalen,
 #if TREZOR_MODEL == T
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
-  int x0, y0, x1, y1;
+  int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
   clamp_coords(x, y, AVATAR_IMAGE_SIZE, AVATAR_IMAGE_SIZE, &x0, &y0, &x1, &y1);
   display_set_window(x0, y0, x1, y1);
   x0 -= x;
@@ -268,9 +268,9 @@ void display_avatar(int x, int y, const void *data, uint32_t datalen,
   y0 -= y;
   y1 -= y;
 
-  struct uzlib_uncomp decomp;
-  uint8_t decomp_window[UZLIB_WINDOW_SIZE];
-  uint8_t decomp_out[2];
+  struct uzlib_uncomp decomp = {0};
+  uint8_t decomp_window[UZLIB_WINDOW_SIZE] = {0};
+  uint8_t decomp_out[2] = {0};
   uzlib_prepare(&decomp, decomp_window, data, datalen, decomp_out,
                 sizeof(decomp_out));
 
@@ -295,7 +295,7 @@ void display_avatar(int x, int y, const void *data, uint32_t datalen,
 #if AVATAR_ANTIALIAS
         d = 31 * (d - AVATAR_BORDER_LOW) /
             (AVATAR_BORDER_HIGH - AVATAR_BORDER_LOW);
-        uint16_t c;
+        uint16_t c = 0;
         if (d >= 16) {
           c = interpolate_color(bgcolor, fgcolor, d - 16);
         } else {
@@ -318,7 +318,7 @@ void display_icon(int x, int y, int w, int h, const void *data,
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
   x &= ~1;  // cannot draw at odd coordinate
-  int x0, y0, x1, y1;
+  int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
   clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
   display_set_window(x0, y0, x1, y1);
   x0 -= x;
@@ -326,12 +326,12 @@ void display_icon(int x, int y, int w, int h, const void *data,
   y0 -= y;
   y1 -= y;
 
-  uint16_t colortable[16];
+  uint16_t colortable[16] = {0};
   set_color_table(colortable, fgcolor, bgcolor);
 
-  struct uzlib_uncomp decomp;
-  uint8_t decomp_window[UZLIB_WINDOW_SIZE];
-  uint8_t decomp_out;
+  struct uzlib_uncomp decomp = {0};
+  uint8_t decomp_window[UZLIB_WINDOW_SIZE] = {0};
+  uint8_t decomp_out = 0;
   uzlib_prepare(&decomp, decomp_window, data, datalen, &decomp_out,
                 sizeof(decomp_out));
 
@@ -357,7 +357,7 @@ void display_loader(uint16_t progress, bool indeterminate, int yoffset,
                     uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon,
                     uint32_t iconlen, uint16_t iconfgcolor) {
 #if TREZOR_MODEL == T
-  uint16_t colortable[16], iconcolortable[16];
+  uint16_t colortable[16] = {0}, iconcolortable[16] = {0};
   set_color_table(colortable, fgcolor, bgcolor);
   if (icon) {
     set_color_table(iconcolortable, iconfgcolor, bgcolor);
@@ -374,9 +374,9 @@ void display_loader(uint16_t progress, bool indeterminate, int yoffset,
       LOADER_ICON_SIZE == *(uint16_t *)(icon + 4) &&
       LOADER_ICON_SIZE == *(uint16_t *)(icon + 6) &&
       iconlen == 12 + *(uint32_t *)(icon + 8)) {
-    uint8_t icondata[LOADER_ICON_SIZE * LOADER_ICON_SIZE / 2];
+    uint8_t icondata[(LOADER_ICON_SIZE * LOADER_ICON_SIZE) / 2] = {0};
     memzero(&icondata, sizeof(icondata));
-    struct uzlib_uncomp decomp;
+    struct uzlib_uncomp decomp = {0};
     uzlib_prepare(&decomp, NULL, icon + 12, iconlen - 12, icondata,
                   sizeof(icondata));
     uzlib_uncompress(&decomp);
@@ -387,7 +387,7 @@ void display_loader(uint16_t progress, bool indeterminate, int yoffset,
   for (int y = 0; y < img_loader_size * 2; y++) {
     for (int x = 0; x < img_loader_size * 2; x++) {
       int mx = x, my = y;
-      uint16_t a;
+      uint16_t a = 0;
       if ((mx >= img_loader_size) && (my >= img_loader_size)) {
         mx = img_loader_size * 2 - 1 - x;
         my = img_loader_size * 2 - 1 - y;
@@ -411,7 +411,7 @@ void display_loader(uint16_t progress, bool indeterminate, int yoffset,
         int i =
             (x - (img_loader_size - (LOADER_ICON_SIZE / 2))) +
             (y - (img_loader_size - (LOADER_ICON_SIZE / 2))) * LOADER_ICON_SIZE;
-        uint8_t c;
+        uint8_t c = 0;
         if (i % 2) {
           c = icon[i / 2] & 0x0F;
         } else {
@@ -419,7 +419,7 @@ void display_loader(uint16_t progress, bool indeterminate, int yoffset,
         }
         PIXELDATA(iconcolortable[c]);
       } else {
-        uint8_t c;
+        uint8_t c = 0;
         if (indeterminate) {
           uint16_t diff =
               (progress > a) ? (progress - a) : (1000 + progress - a);
@@ -505,7 +505,7 @@ void display_print(const char *text, int textlen) {
     y /= 8;
     const int k = x % 6;
     x /= 6;
-    char c;
+    char c = 0;
     if (x < DISPLAY_PRINT_COLS && y < DISPLAY_PRINT_ROWS) {
       c = display_print_buf[y][x] & 0x7F;
       // char invert = display_print_buf[y][x] & 0x80;
@@ -539,7 +539,7 @@ void display_printf(const char *fmt, ...) {
   } else {
     va_list va;
     va_start(va, fmt);
-    char buf[256];
+    char buf[256] = {0};
     int len = mini_vsnprintf(buf, sizeof(buf), fmt, va);
     display_print(buf, len);
     va_end(va);
@@ -633,7 +633,7 @@ static void display_text_render(int x, int y, const char *text, int textlen,
     textlen = strlen(text);
   }
 
-  uint16_t colortable[16];
+  uint16_t colortable[16] = {0};
   set_color_table(colortable, fgcolor, bgcolor);
 
   // render glyphs
@@ -648,7 +648,7 @@ static void display_text_render(int x, int y, const char *text, int textlen,
     if (w && h) {
       const int sx = x + bearX;
       const int sy = y - bearY;
-      int x0, y0, x1, y1;
+      int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
       clamp_coords(sx, sy, w, h, &x0, &y0, &x1, &y1);
       display_set_window(x0, y0, x1, y1);
       for (int j = y0; j <= y1; j++) {
@@ -759,8 +759,8 @@ void display_qrcode(int x, int y, const char *data, uint32_t datalen,
                     uint8_t scale) {
   if (scale < 1 || scale > 10) return;
 
-  uint8_t codedata[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)];
-  uint8_t tempdata[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)];
+  uint8_t codedata[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)] = {0};
+  uint8_t tempdata[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)] = {0};
 
   int side = 0;
   if (qrcodegen_encodeText(data, tempdata, codedata, qrcodegen_Ecc_MEDIUM,
@@ -771,7 +771,7 @@ void display_qrcode(int x, int y, const char *data, uint32_t datalen,
 
   x += DISPLAY_OFFSET.x - (side + 2) * scale / 2;
   y += DISPLAY_OFFSET.y - (side + 2) * scale / 2;
-  int x0, y0, x1, y1;
+  int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
   clamp_coords(x, y, (side + 2) * scale, (side + 2) * scale, &x0, &y0, &x1,
                &y1);
   display_set_window(x0, y0, x1, y1);

@@ -29,7 +29,7 @@
 ///     Return the first word from the wordlist starting with prefix.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_bip39_complete_word(mp_obj_t prefix) {
-  mp_buffer_info_t pfx;
+  mp_buffer_info_t pfx = {0};
   mp_get_buffer_raise(prefix, &pfx, MP_BUFFER_READ);
   if (pfx.len == 0) {
     return mp_const_none;
@@ -51,7 +51,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip39_complete_word_obj,
 ///     lowest, etc.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_bip39_word_completion_mask(mp_obj_t prefix) {
-  mp_buffer_info_t pfx;
+  mp_buffer_info_t pfx = {0};
   mp_get_buffer_raise(prefix, &pfx, MP_BUFFER_READ);
   return mp_obj_new_int(mnemonic_word_completion_mask(pfx.buf, pfx.len));
 }
@@ -84,7 +84,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip39_generate_obj,
 ///     Generate a mnemonic from given data (of 16, 20, 24, 28 and 32 bytes).
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_bip39_from_data(mp_obj_t data) {
-  mp_buffer_info_t bin;
+  mp_buffer_info_t bin = {0};
   mp_get_buffer_raise(data, &bin, MP_BUFFER_READ);
   if (bin.len % 4 || bin.len < 16 || bin.len > 32) {
     mp_raise_ValueError(
@@ -104,7 +104,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip39_from_data_obj,
 ///     Check whether given mnemonic is valid.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_bip39_check(mp_obj_t mnemonic) {
-  mp_buffer_info_t text;
+  mp_buffer_info_t text = {0};
   mp_get_buffer_raise(mnemonic, &text, MP_BUFFER_READ);
   return (text.len > 0 && mnemonic_check(text.buf)) ? mp_const_true
                                                     : mp_const_false;
@@ -131,11 +131,11 @@ STATIC void wrapped_ui_wait_callback(uint32_t current, uint32_t total) {
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_bip39_seed(size_t n_args,
                                             const mp_obj_t *args) {
-  mp_buffer_info_t mnemo;
-  mp_buffer_info_t phrase;
+  mp_buffer_info_t mnemo = {0};
+  mp_buffer_info_t phrase = {0};
   mp_get_buffer_raise(args[0], &mnemo, MP_BUFFER_READ);
   mp_get_buffer_raise(args[1], &phrase, MP_BUFFER_READ);
-  uint8_t seed[64];
+  uint8_t seed[64] = {0};
   const char *pmnemonic = mnemo.len > 0 ? mnemo.buf : "";
   const char *ppassphrase = phrase.len > 0 ? phrase.buf : "";
   if (n_args > 2) {

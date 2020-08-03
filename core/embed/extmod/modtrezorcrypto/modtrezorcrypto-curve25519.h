@@ -30,7 +30,7 @@
 ///     Generate secret key.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_curve25519_generate_secret() {
-  uint8_t out[32];
+  uint8_t out[32] = {0};
   random_buffer(out, 32);
   // taken from https://cr.yp.to/ecdh.html
   out[0] &= 248;
@@ -47,12 +47,12 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(
 ///     Computes public key from secret key.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_curve25519_publickey(mp_obj_t secret_key) {
-  mp_buffer_info_t sk;
+  mp_buffer_info_t sk = {0};
   mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
   if (sk.len != 32) {
     mp_raise_ValueError("Invalid length of secret key");
   }
-  uint8_t out[32];
+  uint8_t out[32] = {0};
   curve25519_scalarmult_basepoint(out, (const uint8_t *)sk.buf);
   return mp_obj_new_bytes(out, sizeof(out));
 }
@@ -66,7 +66,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_curve25519_publickey_obj,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_curve25519_multiply(mp_obj_t secret_key,
                                                      mp_obj_t public_key) {
-  mp_buffer_info_t sk, pk;
+  mp_buffer_info_t sk = {0}, pk = {0};
   mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(public_key, &pk, MP_BUFFER_READ);
   if (sk.len != 32) {
@@ -75,7 +75,7 @@ STATIC mp_obj_t mod_trezorcrypto_curve25519_multiply(mp_obj_t secret_key,
   if (pk.len != 32) {
     mp_raise_ValueError("Invalid length of public key");
   }
-  uint8_t out[32];
+  uint8_t out[32] = {0};
   curve25519_scalarmult(out, (const uint8_t *)sk.buf, (const uint8_t *)pk.buf);
   return mp_obj_new_bytes(out, sizeof(out));
 }

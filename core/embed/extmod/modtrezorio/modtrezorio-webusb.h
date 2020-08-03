@@ -58,7 +58,7 @@ STATIC mp_obj_t mod_trezorio_WebUSB_make_new(const mp_obj_type_t *type,
       {MP_QSTR_polling_interval, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 1}},
       {MP_QSTR_max_packet_len, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 64}},
   };
-  mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)];
+  mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)] = {0};
   mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args),
                             allowed_args, vals);
 
@@ -110,7 +110,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_WebUSB_iface_num_obj,
 ///     """
 STATIC mp_obj_t mod_trezorio_WebUSB_write(mp_obj_t self, mp_obj_t msg) {
   mp_obj_WebUSB_t *o = MP_OBJ_TO_PTR(self);
-  mp_buffer_info_t buf;
+  mp_buffer_info_t buf = {0};
   mp_get_buffer_raise(msg, &buf, MP_BUFFER_READ);
   ssize_t r = usb_webusb_write(o->info.iface_num, buf.buf, buf.len);
   return MP_OBJ_NEW_SMALL_INT(r);

@@ -50,11 +50,11 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
 
   const mp_uint_t timeout = trezor_obj_get_uint(timeout_ms);
   const mp_uint_t deadline = mp_hal_ticks_ms() + timeout;
-  mp_obj_iter_buf_t iterbuf;
+  mp_obj_iter_buf_t iterbuf = {0};
 
   for (;;) {
     mp_obj_t iter = mp_getiter(ifaces, &iterbuf);
-    mp_obj_t item;
+    mp_obj_t item = 0;
     while ((item = mp_iternext(iter)) != MP_OBJ_STOP_ITERATION) {
       const mp_uint_t i = trezor_obj_get_uint(item);
       const mp_uint_t iface = i & 0x00FF;
@@ -96,7 +96,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
         }
       } else if (mode == POLL_READ) {
         if (sectrue == usb_hid_can_read(iface)) {
-          uint8_t buf[64];
+          uint8_t buf[64] = {0};
           int len = usb_hid_read(iface, buf, sizeof(buf));
           if (len > 0) {
             ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
@@ -104,7 +104,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
             return mp_const_true;
           }
         } else if (sectrue == usb_webusb_can_read(iface)) {
-          uint8_t buf[64];
+          uint8_t buf[64] = {0};
           int len = usb_webusb_read(iface, buf, sizeof(buf));
           if (len > 0) {
             ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);

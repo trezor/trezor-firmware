@@ -29,7 +29,7 @@
 ///     Generate secret key.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_nist256p1_generate_secret() {
-  uint8_t out[32];
+  uint8_t out[32] = {0};
   for (;;) {
     random_buffer(out, 32);
     // check whether secret > 0 && secret < curve_order
@@ -60,18 +60,18 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_nist256p1_generate_secret_obj,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_nist256p1_publickey(size_t n_args,
                                                      const mp_obj_t *args) {
-  mp_buffer_info_t sk;
+  mp_buffer_info_t sk = {0};
   mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
   if (sk.len != 32) {
     mp_raise_ValueError("Invalid length of secret key");
   }
   bool compressed = n_args < 2 || args[1] == mp_const_true;
   if (compressed) {
-    uint8_t out[33];
+    uint8_t out[33] = {0};
     ecdsa_get_public_key33(&nist256p1, (const uint8_t *)sk.buf, out);
     return mp_obj_new_bytes(out, sizeof(out));
   } else {
-    uint8_t out[65];
+    uint8_t out[65] = {0};
     ecdsa_get_public_key65(&nist256p1, (const uint8_t *)sk.buf, out);
     return mp_obj_new_bytes(out, sizeof(out));
   }
@@ -88,7 +88,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_nist256p1_sign(size_t n_args,
                                                 const mp_obj_t *args) {
-  mp_buffer_info_t sk, dig;
+  mp_buffer_info_t sk = {0}, dig = {0};
   mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(args[1], &dig, MP_BUFFER_READ);
   bool compressed = n_args < 3 || args[2] == mp_const_true;
@@ -98,7 +98,7 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_sign(size_t n_args,
   if (dig.len != 32) {
     mp_raise_ValueError("Invalid length of digest");
   }
-  uint8_t out[65], pby;
+  uint8_t out[65] = {0}, pby = 0;
   if (0 != ecdsa_sign_digest(&nist256p1, (const uint8_t *)sk.buf,
                              (const uint8_t *)dig.buf, out + 1, &pby, NULL)) {
     mp_raise_ValueError("Signing failed");
@@ -118,7 +118,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_nist256p1_sign_obj,
 STATIC mp_obj_t mod_trezorcrypto_nist256p1_verify(mp_obj_t public_key,
                                                   mp_obj_t signature,
                                                   mp_obj_t digest) {
-  mp_buffer_info_t pk, sig, dig;
+  mp_buffer_info_t pk = {0}, sig = {0}, dig = {0};
   mp_get_buffer_raise(public_key, &pk, MP_BUFFER_READ);
   mp_get_buffer_raise(signature, &sig, MP_BUFFER_READ);
   mp_get_buffer_raise(digest, &dig, MP_BUFFER_READ);
@@ -147,7 +147,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_nist256p1_verify_obj,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_nist256p1_verify_recover(mp_obj_t signature,
                                                           mp_obj_t digest) {
-  mp_buffer_info_t sig, dig;
+  mp_buffer_info_t sig = {0}, dig = {0};
   mp_get_buffer_raise(signature, &sig, MP_BUFFER_READ);
   mp_get_buffer_raise(digest, &dig, MP_BUFFER_READ);
   if (sig.len != 65) {
@@ -162,7 +162,7 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_verify_recover(mp_obj_t signature,
   }
   bool compressed = (recid >= 4);
   recid &= 3;
-  uint8_t out[65];
+  uint8_t out[65] = {0};
   if (0 == ecdsa_recover_pub_from_sig(&nist256p1, out,
                                       (const uint8_t *)sig.buf + 1,
                                       (const uint8_t *)dig.buf, recid)) {
@@ -185,7 +185,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_nist256p1_verify_recover_obj,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_nist256p1_multiply(mp_obj_t secret_key,
                                                     mp_obj_t public_key) {
-  mp_buffer_info_t sk, pk;
+  mp_buffer_info_t sk = {0}, pk = {0};
   mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(public_key, &pk, MP_BUFFER_READ);
   if (sk.len != 32) {
@@ -194,7 +194,7 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_multiply(mp_obj_t secret_key,
   if (pk.len != 33 && pk.len != 65) {
     mp_raise_ValueError("Invalid length of public key");
   }
-  uint8_t out[65];
+  uint8_t out[65] = {0};
   if (0 != ecdh_multiply(&nist256p1, (const uint8_t *)sk.buf,
                          (const uint8_t *)pk.buf, out)) {
     mp_raise_ValueError("Multiply failed");

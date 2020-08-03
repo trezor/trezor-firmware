@@ -129,8 +129,8 @@ DWORD ff_wtoupper (	/* Returns up-converted code point */
 	DWORD uni		/* Unicode code point to be up-converted */
 )
 {
-	const WORD *p;
-	WORD uc, bc, nc, cmd;
+	const WORD *p = (void*) 0;
+	WORD uc = 0, bc = 0, nc = 0, cmd = 0;
 	static const WORD cvt1[] = {	/* Compressed up conversion table for U+0000 - U+0FFF */
 		/* Basic Latin */
 		0x0061,0x031A,

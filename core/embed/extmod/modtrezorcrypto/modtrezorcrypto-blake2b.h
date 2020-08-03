@@ -64,18 +64,18 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2b_make_new(const mp_obj_type_t *type,
        MP_ARG_KW_ONLY | MP_ARG_OBJ,
        {.u_obj = mp_const_empty_bytes}},
   };
-  mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)];
+  mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)] = {0};
   mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args),
                             allowed_args, vals);
 
-  size_t data_len;
+  size_t data_len = 0;
   const uint8_t *data =
       (const uint8_t *)mp_obj_str_get_data(vals[0].u_obj, &data_len);
   const mp_int_t outlen = vals[1].u_int;
-  size_t key_len;
+  size_t key_len = 0;
   const uint8_t *key =
       (const uint8_t *)mp_obj_str_get_data(vals[2].u_obj, &key_len);
-  size_t personal_len;
+  size_t personal_len = 0;
   const uint8_t *personal =
       (const uint8_t *)mp_obj_str_get_data(vals[3].u_obj, &personal_len);
 
@@ -115,7 +115,7 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2b_make_new(const mp_obj_type_t *type,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_Blake2b_update(mp_obj_t self, mp_obj_t data) {
   mp_obj_Blake2b_t *o = MP_OBJ_TO_PTR(self);
-  mp_buffer_info_t msg;
+  mp_buffer_info_t msg = {0};
   mp_get_buffer_raise(data, &msg, MP_BUFFER_READ);
   if (msg.len > 0) {
     blake2b_Update(&(o->ctx), msg.buf, msg.len);
@@ -131,8 +131,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Blake2b_update_obj,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_Blake2b_digest(mp_obj_t self) {
   mp_obj_Blake2b_t *o = MP_OBJ_TO_PTR(self);
-  uint8_t out[BLAKE2B_DIGEST_LENGTH];
-  BLAKE2B_CTX ctx;
+  uint8_t out[BLAKE2B_DIGEST_LENGTH] = {0};
+  BLAKE2B_CTX ctx = {0};
   memcpy(&ctx, &(o->ctx), sizeof(BLAKE2B_CTX));
   blake2b_Final(&ctx, out, ctx.outlen);
   memzero(&ctx, sizeof(BLAKE2B_CTX));
