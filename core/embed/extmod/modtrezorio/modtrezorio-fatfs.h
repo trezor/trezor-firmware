@@ -211,9 +211,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_FatFSFile_close_obj,
 ///     """
 STATIC mp_obj_t mod_trezorio_FatFSFile_read(mp_obj_t self, mp_obj_t data) {
   mp_obj_FatFSFile_t *o = MP_OBJ_TO_PTR(self);
-  mp_buffer_info_t buf;
+  mp_buffer_info_t buf = {0};
   mp_get_buffer_raise(data, &buf, MP_BUFFER_WRITE);
-  UINT read;
+  UINT read = 0;
   FRESULT res = f_read(&(o->fp), buf.buf, buf.len, &read);
   if (res != FR_OK) {
     FATFS_RAISE(FatFSError, res);
@@ -229,9 +229,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFSFile_read_obj,
 ///     """
 STATIC mp_obj_t mod_trezorio_FatFSFile_write(mp_obj_t self, mp_obj_t data) {
   mp_obj_FatFSFile_t *o = MP_OBJ_TO_PTR(self);
-  mp_buffer_info_t buf;
+  mp_buffer_info_t buf = {0};
   mp_get_buffer_raise(data, &buf, MP_BUFFER_READ);
-  UINT written;
+  UINT written = 0;
   FRESULT res = f_write(&(o->fp), buf.buf, buf.len, &written);
   if (res != FR_OK) {
     FATFS_RAISE(FatFSError, res);
@@ -327,7 +327,7 @@ typedef struct _mp_obj_FatFSDir_t {
 ///     """
 STATIC mp_obj_t mod_trezorio_FatFSDir_iternext(mp_obj_t self) {
   mp_obj_FatFSDir_t *o = MP_OBJ_TO_PTR(self);
-  FILINFO info;
+  FILINFO info = {0};
   FRESULT res = f_readdir(&(o->dp), &info);
   if (res != FR_OK) {
     f_closedir(&(o->dp));
@@ -357,7 +357,7 @@ STATIC const mp_obj_type_t mod_trezorio_FatFSDir_type = {
 ///     """
 STATIC mp_obj_t mod_trezorio_fatfs_open(mp_obj_t path, mp_obj_t flags) {
   FATFS_ONLY_MOUNTED;
-  mp_buffer_info_t _path, _flags;
+  mp_buffer_info_t _path = {0}, _flags = {0};
   mp_get_buffer_raise(path, &_path, MP_BUFFER_READ);
   mp_get_buffer_raise(flags, &_flags, MP_BUFFER_READ);
   const char *mode_s = _flags.buf;
@@ -381,7 +381,7 @@ STATIC mp_obj_t mod_trezorio_fatfs_open(mp_obj_t path, mp_obj_t flags) {
         break;
     }
   }
-  FIL fp;
+  FIL fp = {0};
   FRESULT res = f_open(&fp, _path.buf, mode);
   if (res != FR_OK) {
     FATFS_RAISE(FatFSError, res);
@@ -400,9 +400,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_fatfs_open_obj,
 ///     """
 STATIC mp_obj_t mod_trezorio_fatfs_listdir(mp_obj_t path) {
   FATFS_ONLY_MOUNTED;
-  mp_buffer_info_t _path;
+  mp_buffer_info_t _path = {0};
   mp_get_buffer_raise(path, &_path, MP_BUFFER_READ);
-  DIR dp;
+  DIR dp = {0};
   FRESULT res = f_opendir(&dp, _path.buf);
   if (res != FR_OK) {
     FATFS_RAISE(FatFSError, res);
@@ -421,7 +421,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_fatfs_listdir_obj,
 ///     """
 STATIC mp_obj_t mod_trezorio_fatfs_mkdir(size_t n_args, const mp_obj_t *args) {
   FATFS_ONLY_MOUNTED;
-  mp_buffer_info_t path;
+  mp_buffer_info_t path = {0};
   mp_get_buffer_raise(args[0], &path, MP_BUFFER_READ);
   FRESULT res = f_mkdir(path.buf);
   // directory exists and exist_ok is True, return without failure
@@ -442,7 +442,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_fatfs_mkdir_obj, 1, 2,
 ///     """
 STATIC mp_obj_t mod_trezorio_fatfs_unlink(mp_obj_t path) {
   FATFS_ONLY_MOUNTED;
-  mp_buffer_info_t _path;
+  mp_buffer_info_t _path = {0};
   mp_get_buffer_raise(path, &_path, MP_BUFFER_READ);
   FRESULT res = f_unlink(_path.buf);
   if (res != FR_OK) {
@@ -459,9 +459,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_fatfs_unlink_obj,
 ///     """
 STATIC mp_obj_t mod_trezorio_fatfs_stat(mp_obj_t path) {
   FATFS_ONLY_MOUNTED;
-  mp_buffer_info_t _path;
+  mp_buffer_info_t _path = {0};
   mp_get_buffer_raise(path, &_path, MP_BUFFER_READ);
-  FILINFO info;
+  FILINFO info = {0};
   FRESULT res = f_stat(_path.buf, &info);
   if (res != FR_OK) {
     FATFS_RAISE(FatFSError, res);
@@ -477,7 +477,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_fatfs_stat_obj,
 ///     """
 STATIC mp_obj_t mod_trezorio_fatfs_rename(mp_obj_t oldpath, mp_obj_t newpath) {
   FATFS_ONLY_MOUNTED;
-  mp_buffer_info_t _oldpath, _newpath;
+  mp_buffer_info_t _oldpath = {0}, _newpath = {0};
   mp_get_buffer_raise(oldpath, &_oldpath, MP_BUFFER_READ);
   mp_get_buffer_raise(newpath, &_newpath, MP_BUFFER_READ);
   FRESULT res = f_rename(_oldpath.buf, _newpath.buf);
@@ -537,7 +537,7 @@ STATIC mp_obj_t mod_trezorio_fatfs_mkfs() {
     FATFS_RAISE(FatFSError, FR_LOCKED);
   }
   MKFS_PARM params = {FM_FAT32, 0, 0, 0, 0};
-  uint8_t working_buf[FF_MAX_SS];
+  uint8_t working_buf[FF_MAX_SS] = {0};
   FRESULT res = f_mkfs("", &params, working_buf, sizeof(working_buf));
   if (res != FR_OK) {
     FATFS_RAISE(FatFSError, res);
@@ -556,7 +556,7 @@ STATIC mp_obj_t mod_trezorio_fatfs_setlabel(mp_obj_t label) {
   having parsed the FAT table, which is of course a prerequisite for setting
   label. */
   FATFS_ONLY_MOUNTED;
-  mp_buffer_info_t _label;
+  mp_buffer_info_t _label = {0};
   mp_get_buffer_raise(label, &_label, MP_BUFFER_READ);
   FRESULT res = f_setlabel(_label.buf);
   if (res != FR_OK) {

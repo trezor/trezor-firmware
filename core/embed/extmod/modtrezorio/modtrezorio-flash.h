@@ -50,7 +50,7 @@ STATIC mp_obj_t mod_trezorio_FlashOTP_write(size_t n_args,
                                             const mp_obj_t *args) {
   uint8_t block = trezor_obj_get_uint8(args[1]);
   uint8_t offset = trezor_obj_get_uint8(args[2]);
-  mp_buffer_info_t data;
+  mp_buffer_info_t data = {0};
   mp_get_buffer_raise(args[3], &data, MP_BUFFER_READ);
   if (sectrue != flash_otp_write(block, offset, data.buf, data.len)) {
     mp_raise_ValueError("write failed");
@@ -68,7 +68,7 @@ STATIC mp_obj_t mod_trezorio_FlashOTP_read(size_t n_args,
                                            const mp_obj_t *args) {
   uint8_t block = trezor_obj_get_uint8(args[1]);
   uint8_t offset = trezor_obj_get_uint8(args[2]);
-  mp_buffer_info_t data;
+  mp_buffer_info_t data = {0};
   mp_get_buffer_raise(args[3], &data, MP_BUFFER_WRITE);
   if (sectrue != flash_otp_read(block, offset, data.buf, data.len)) {
     mp_raise_ValueError("read failed");

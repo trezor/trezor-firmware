@@ -71,7 +71,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(
 ///     Raises ValueError if not found.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_slip39_word_index(mp_obj_t _word) {
-  mp_buffer_info_t word;
+  mp_buffer_info_t word = {0};
 
   mp_get_buffer_raise(_word, &word, MP_BUFFER_READ);
 

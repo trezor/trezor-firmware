@@ -62,7 +62,7 @@ STATIC mp_obj_t mod_trezorcrypto_Ripemd160_make_new(const mp_obj_type_t *type,
 STATIC mp_obj_t mod_trezorcrypto_Ripemd160_update(mp_obj_t self,
                                                   mp_obj_t data) {
   mp_obj_Ripemd160_t *o = MP_OBJ_TO_PTR(self);
-  mp_buffer_info_t msg;
+  mp_buffer_info_t msg = {0};
   mp_get_buffer_raise(data, &msg, MP_BUFFER_READ);
   if (msg.len > 0) {
     ripemd160_Update(&(o->ctx), msg.buf, msg.len);
@@ -78,8 +78,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Ripemd160_update_obj,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_Ripemd160_digest(mp_obj_t self) {
   mp_obj_Ripemd160_t *o = MP_OBJ_TO_PTR(self);
-  uint8_t out[RIPEMD160_DIGEST_LENGTH];
-  RIPEMD160_CTX ctx;
+  uint8_t out[RIPEMD160_DIGEST_LENGTH] = {0};
+  RIPEMD160_CTX ctx = {0};
   memcpy(&ctx, &(o->ctx), sizeof(RIPEMD160_CTX));
   ripemd160_Final(&ctx, out);
   memzero(&ctx, sizeof(RIPEMD160_CTX));

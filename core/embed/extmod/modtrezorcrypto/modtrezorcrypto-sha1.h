@@ -61,7 +61,7 @@ STATIC mp_obj_t mod_trezorcrypto_Sha1_make_new(const mp_obj_type_t *type,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_Sha1_update(mp_obj_t self, mp_obj_t data) {
   mp_obj_Sha1_t *o = MP_OBJ_TO_PTR(self);
-  mp_buffer_info_t msg;
+  mp_buffer_info_t msg = {0};
   mp_get_buffer_raise(data, &msg, MP_BUFFER_READ);
   if (msg.len > 0) {
     sha1_Update(&(o->ctx), msg.buf, msg.len);
@@ -77,8 +77,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Sha1_update_obj,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_Sha1_digest(mp_obj_t self) {
   mp_obj_Sha1_t *o = MP_OBJ_TO_PTR(self);
-  uint8_t out[SHA1_DIGEST_LENGTH];
-  SHA1_CTX ctx;
+  uint8_t out[SHA1_DIGEST_LENGTH] = {0};
+  SHA1_CTX ctx = {0};
   memcpy(&ctx, &(o->ctx), sizeof(SHA1_CTX));
   sha1_Final(&ctx, out);
   memzero(&ctx, sizeof(SHA1_CTX));

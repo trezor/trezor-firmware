@@ -101,7 +101,7 @@ void display_init(void) {
   }
   atexit(SDL_Quit);
 
-  char *window_title;
+  char *window_title = NULL;
   if (!asprintf(&window_title, "Trezor^emu: %s", profile_name())) {
     window_title = "Trezor^emu";
   }
