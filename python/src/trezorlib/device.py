@@ -193,3 +193,8 @@ def reset(
 def backup(client):
     ret = client.call(messages.BackupDevice())
     return ret
+
+
+@expect(messages.Success, field="message")
+def cancel_authorization(client):
+    return client.call(messages.CancelAuthorization())
