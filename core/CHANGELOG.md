@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `Features.pin_cached` renamed to `unlocked`.
 - Forbid all settings if the device is not yet initialized.  [#1056]
 - Rewrite USB codec and Protobuf decoder to be more memory-efficient.  [#1089]
+- Allow compatibility namespaces for Casa and Green Address. 
 
 ### Deprecated
 - Deprecate `overwintered` field in `SignTx` and `TxAck`.
