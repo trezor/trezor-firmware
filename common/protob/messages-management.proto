@@ -387,3 +387,12 @@ message DoPreauthorized {
  */
 message PreauthorizedRequest {
 }
+
+/**
+ * Request: Cancel any outstanding authorization in the current session.
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message CancelAuthorization {
+}

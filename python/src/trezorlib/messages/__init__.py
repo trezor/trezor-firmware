@@ -21,6 +21,7 @@ from .BinanceTxRequest import BinanceTxRequest
 from .ButtonAck import ButtonAck
 from .ButtonRequest import ButtonRequest
 from .Cancel import Cancel
+from .CancelAuthorization import CancelAuthorization
 from .CardanoAddress import CardanoAddress
 from .CardanoAddressParametersType import CardanoAddressParametersType
 from .CardanoBlockchainPointerType import CardanoBlockchainPointerType
