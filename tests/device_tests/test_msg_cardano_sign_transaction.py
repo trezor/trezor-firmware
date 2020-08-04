@@ -38,9 +38,19 @@ SAMPLE_INPUTS = {
         "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
         "prev_index": 0,
     },
+    "byron_input_different_path": {
+        "path": "m/44'/1815'/0'/0/5",
+        "prev_hash": "a34dc95d806a3b206aab5e0c2aaa5ff0704f84868fe65793053f6ae9a7970979",
+        "prev_index": 0,
+    },
     "shelley_input": {
         "path": "m/1852'/1815'/0'/0/0",
         "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+        "prev_index": 0,
+    },
+    "shelley_input_different_path": {
+        "path": "m/1852'/1815'/0'/0/5",
+        "prev_hash": "33ad5e2a8f298053da804c30c9f72836bfac0a58a30aef2ff87656418b01f70b",
         "prev_index": 0,
     },
 }
@@ -240,6 +250,38 @@ VALID_VECTORS = [
         "16fe72bb198be423677577e6326f1f648ec5fc11263b072006382d8125a6edda",
         # tx body
         "83a400818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018282583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff018258390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b42771a006ca79302182a030aa100818258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c158406a78f07836dcf4a303448d2b16b217265a9226be3984a69a04dba5d04f4dbb2a47b5e1cbb345f474c0b9634a2f37b921ab26e6a65d5dfd015dacb4455fb8430af6",
+    ),
+    # Mainnet transaction with multiple inputs
+    (
+        # protocol magic
+        PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
+        # inputs
+        [
+            SAMPLE_INPUTS["byron_input"],
+            SAMPLE_INPUTS["byron_input_different_path"],
+            SAMPLE_INPUTS["shelley_input"],
+            SAMPLE_INPUTS["shelley_input_different_path"],
+        ],
+        # outputs
+        [SAMPLE_OUTPUTS["simple_byron_output"]],
+        # fee
+        42,
+        # ttl
+        10,
+        # certificates
+        [],
+        # withdrawals
+        [],
+        # metadata
+        "",
+        # input flow
+        [[InputAction.SWIPE, InputAction.YES], [InputAction.SWIPE, InputAction.YES]],
+        # tx hash
+        "7e16a0b47bdfc37abf4ddd3143f7481af07ffe7abd68f752676f5b0b2890d05b",
+        # serialized tx
+        "83a400848258201af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc00825820a34dc95d806a3b206aab5e0c2aaa5ff0704f84868fe65793053f6ae9a7970979008258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b70082582033ad5e2a8f298053da804c30c9f72836bfac0a58a30aef2ff87656418b01f70b00018182582b82d818582183581c9e1c71de652ec8b85fec296f0685ca3988781c94a2e1a5d89d92f45fa0001a0d0c25611a002dd2e802182a030aa20082825820e246aa6392958f01fc8fafd5ac1cf5f28ef34af05820b49c98919753a76109c05840517ca4c901a9cded7b4ab3b1d576f41b28a05aed9ed96ef86a78556099aaa5e996a38c74783262d807d86d48c131b1cb91cbab4ef4b6b52dc8d49708b0f40d068258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c15840e661d9d1002bc2f8b310e0b0541f9bb9c3357e8e6e7f772ca72fdfd4dfc27f9ae040197d4ef69c98dc16a105f00c7ff2cebf2d85920307606bff087e550b470d028284582089053545a6c254b0d9b1464e48d2b5fcf91d4e25c128afb1fcfc61d0843338ea5840ca7325ac3280708a12a70f794699243fa1c2a3e3981dccd7e5a1200f521e19fad52489c9be81e8a8ccaccd3c42d917ffd1719e6808e11fbcd1ef495f7324b10b582026308151516f3b0e02bb1638142747863c520273ce9bd3e5cd91e1d46fe2a63541a084582040ed7b4134e85866f55ec896a8a81e9d41c20969af8f88c532e5ad1f9c9425ab5840e11444cf81b94754a15e244259d983cc3099ff04a8212dde814d6e0a9cb7e4423caa440cdee9e2d663b59e5005dbfeee8057765245b96711f1ff20caf8cfb3025820ec19de133d3c5a598212a3b8ad9249453c4ca10e0b9228714700eeaed944590941a0f6",
     ),
     # simple transaction with base script address change output
     (
