@@ -44,7 +44,6 @@
 #error Unknown Trezor model
 #endif
 
-#define FONT_SIZE 20
 #define AVATAR_IMAGE_SIZE 144
 #define LOADER_ICON_SIZE 64
 
