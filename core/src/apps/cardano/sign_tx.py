@@ -394,7 +394,7 @@ def _build_byron_witnesses(
         paths.add(tuple(input.address_n))
 
     for path in paths:
-        node = keychain.derive(list(input.address_n))
+        node = keychain.derive(list(path))
 
         public_key = remove_ed25519_prefix(node.public_key())
         signature = ed25519.sign_ext(
