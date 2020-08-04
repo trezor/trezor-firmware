@@ -37,6 +37,10 @@ gen prebuild:
 
 release commit messages prebuild:
   stage: prebuild
+  before_script: []  # nothing needed
+  variables:
+    # We need to clone the repo properly so we can work with origin/master
+    GIT_STRATEGY: clone
   only:
     - /^release\//
   script:
