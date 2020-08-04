@@ -415,3 +415,122 @@ def test_cancel_authorization(client):
             commitment_data=b"www.example.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
             preauthorized=True,
         )
+
+
+@pytest.mark.skip_ui
+def test_multisession_authorization(client):
+    # Authorize CoinJoin with www.example1.com in session 1.
+    btc.authorize_coinjoin(
+        client,
+        max_total_fee=50000,
+        coordinator="www.example1.com",
+        n=parse_path("m/84'/1'/0'"),
+        coin_name="Testnet",
+        script_type=messages.InputScriptType.SPENDWITNESS,
+    )
+
+    # Open a second session.
+    session_id1 = client.session_id
+    client.session_id = None
+    client.init_device()
+
+    # Authorize CoinJoin with www.example2.com in session 2.
+    btc.authorize_coinjoin(
+        client,
+        max_total_fee=50000,
+        coordinator="www.example2.com",
+        n=parse_path("m/84'/1'/0'"),
+        coin_name="Testnet",
+        script_type=messages.InputScriptType.SPENDWITNESS,
+    )
+
+    # Requesting a preauthorized ownership proof for www.example1.com should fail in session 2.
+    with pytest.raises(TrezorFailure, match="Unauthorized operation"):
+        ownership_proof, _ = btc.get_ownership_proof(
+            client,
+            "Testnet",
+            parse_path("84'/1'/0'/1/0"),
+            script_type=messages.InputScriptType.SPENDWITNESS,
+            user_confirmation=True,
+            commitment_data=b"www.example1.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
+            preauthorized=True,
+        )
+
+    # Requesting a preauthorized ownership proof for www.example2.com should succeed in session 2.
+    ownership_proof, _ = btc.get_ownership_proof(
+        client,
+        "Testnet",
+        parse_path("84'/1'/0'/1/0"),
+        script_type=messages.InputScriptType.SPENDWITNESS,
+        user_confirmation=True,
+        commitment_data=b"www.example2.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
+        preauthorized=True,
+    )
+
+    assert (
+        ownership_proof.hex()
+        == "534c00190101f3ce2cb33599634353452b60b38e311282b6fca743eb6147d3d492066c8963de0002483045022100ff4df2485a3206642ce7053902da16f26f0084faa2eb6288a1c27e389f057f4f02202268e0f4e253bd1387230b1ff3de315794e0b426f9cc9624e9c34fa73451164c012103505647c017ff2156eb6da20fae72173d3b681a1d0a629f95f49e884db300689f"
+    )
+
+    # Switch back to the first session.
+    session_id2 = client.session_id
+    client.session_id = session_id1
+    client.init_device()
+
+    # Requesting a preauthorized ownership proof for www.example1.com should succeed in session 1.
+    ownership_proof, _ = btc.get_ownership_proof(
+        client,
+        "Testnet",
+        parse_path("84'/1'/0'/1/0"),
+        script_type=messages.InputScriptType.SPENDWITNESS,
+        user_confirmation=True,
+        commitment_data=b"www.example1.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
+        preauthorized=True,
+    )
+
+    assert (
+        ownership_proof.hex()
+        == "534c00190101f3ce2cb33599634353452b60b38e311282b6fca743eb6147d3d492066c8963de000247304402203b098674577c55c8d9151335c9e73ed74649fa01c461bd8390717bfca48167af02205ac35def1b0d7019fc492acb9bbd9914cf55e08e4f1a7e6d4f6f65cbc88b0bd2012103505647c017ff2156eb6da20fae72173d3b681a1d0a629f95f49e884db300689f"
+    )
+
+    # Requesting a preauthorized ownership proof for www.example2.com should fail in session 1.
+    with pytest.raises(TrezorFailure, match="Unauthorized operation"):
+        ownership_proof, _ = btc.get_ownership_proof(
+            client,
+            "Testnet",
+            parse_path("84'/1'/0'/1/0"),
+            script_type=messages.InputScriptType.SPENDWITNESS,
+            user_confirmation=True,
+            commitment_data=b"www.example2.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
+            preauthorized=True,
+        )
+
+    # Cancel the authorization in session 1.
+    device.cancel_authorization(client)
+
+    # Requesting a preauthorized ownership proof should fail now.
+    with pytest.raises(TrezorFailure, match="No preauthorized operation"):
+        ownership_proof, _ = btc.get_ownership_proof(
+            client,
+            "Testnet",
+            parse_path("84'/1'/0'/1/0"),
+            script_type=messages.InputScriptType.SPENDWITNESS,
+            user_confirmation=True,
+            commitment_data=b"www.example1.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
+            preauthorized=True,
+        )
+
+    # Switch to the second session.
+    client.session_id = session_id2
+    client.init_device()
+
+    # Requesting a preauthorized ownership proof for www.example2.com should still succeed in session 2.
+    ownership_proof, _ = btc.get_ownership_proof(
+        client,
+        "Testnet",
+        parse_path("84'/1'/0'/1/0"),
+        script_type=messages.InputScriptType.SPENDWITNESS,
+        user_confirmation=True,
+        commitment_data=b"www.example2.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
+        preauthorized=True,
+    )
