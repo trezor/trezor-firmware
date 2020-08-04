@@ -466,6 +466,10 @@ bool compile_input_script_sig(TxInputType *tinput) {
       return false;
     }
   }
+  if (!coin_known_path_check(coin, tinput->script_type, tinput->address_n_count,
+                             tinput->address_n, false)) {
+    return false;
+  }
   memcpy(&node, &root, sizeof(HDNode));
   if (hdnode_private_ckd_cached(&node, tinput->address_n,
                                 tinput->address_n_count, NULL) == 0) {
