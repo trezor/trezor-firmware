@@ -14,7 +14,7 @@ do
       # remove last ")" and extract commit hash
       master_commit=$(echo ${message:0:-1} | tr ' ' '\n' | tail -1)
       # check if master really contains this commit hash
-      if [[ $(git branch -a --contains $master_commit | grep --only-matching master) == "master" ]]; then
+      if [[ $(git branch -a --contains $master_commit | grep --only-matching "remotes/origin/master") == "remotes/origin/master" ]]; then
         continue
       fi
     fi
