@@ -200,10 +200,7 @@ def sign_tx(
     res = client.call(signtx)
 
     # Prepare structure for signatures
-    signatures = [
-        None if i.script_type != messages.InputScriptType.EXTERNAL else ""
-        for i in inputs
-    ]
+    signatures = [None] * len(inputs)
     serialized_tx = b""
 
     def copy_tx_meta(tx):
@@ -268,8 +265,9 @@ def sign_tx(
     if not isinstance(res, messages.TxRequest):
         raise exceptions.TrezorException("Unexpected message")
 
-    if None in signatures:
-        raise exceptions.TrezorException("Some signatures are missing!")
+    for i, sig in zip(inputs, signatures):
+        if i.script_type != messages.InputScriptType.EXTERNAL and sig is None:
+            raise exceptions.TrezorException("Some signatures are missing!")
 
     return signatures, serialized_tx
 
