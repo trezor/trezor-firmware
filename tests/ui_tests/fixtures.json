@@ -398,7 +398,7 @@
 "test_msg_verifymessage_segwit_native.py-test_message_testnet": "113ad2d6389810b542e5ae5aba5d0de2aa52661e321c3f1d9f45cc91637b3c1d",
 "test_msg_verifymessage_segwit_native.py-test_message_verify": "b206b7a79c40525efa765718376d5f369caf424e11e93dd0eab97861dc1f4f8d",
 "test_msg_verifymessage_segwit_native.py-test_verify_utf": "118265328951cb575b2a044acabaec0d80597b730cd06b3dbcbc66193dab8315",
-"test_msg_webauthn.py-test_add_remove": "820eac5b32863356b967dc70b0afbc4b9faa9c39ec40d55923f4fb07bd5f3707",
+"test_msg_webauthn.py::test_add_remove": "a9cdefeb089f197427257e097d07179b23de4fcad4ee91af0191ed767f80577c",
 "test_msg_wipedevice.py::test_wipe_device": "bc6acd0386b9d009e6550519917d6e08632b3badde0b0cf04c95abe5f773038a",
 "test_multisig.py-test_15_of_15": "9d1799a199b45785ac69ae6af715c251b10aebb60f981c9b73d78e53e1a91374",
 "test_multisig.py-test_2_of_3": "2be92556edf4ff8eed340d535f379ee6915eae34fef25d669ce865848e7b4705",
