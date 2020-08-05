@@ -20,6 +20,10 @@ from .. import device, messages
 from . import ChoiceType, with_client
 
 ROTATION = {"north": 0, "east": 90, "south": 180, "west": 270}
+SAFETY_LEVELS = {
+    "strict": messages.SafetyCheckLevel.Strict,
+    "prompt": messages.SafetyCheckLevel.Prompt,
+}
 
 
 @click.group(name="set")
@@ -136,21 +140,18 @@ def homescreen(client, filename):
 
 
 @cli.command()
-@click.argument("allow", type=click.Choice(("on", "off")))
+@click.argument("level", type=ChoiceType(SAFETY_LEVELS))
 @with_client
-def unsafe_prompts(client, allow):
-    """Allow or disallow unsafe prompts.
+def safety_checks(client, level):
+    """Set safety check level.
 
-    This is a power-user feature. With unsafe prompts enabled, Trezor will ask the user
-    to confirm possibly dangerous actions instead of rejecting them outright.
-    Use with caution.
+    Set to "strict" to get the full Trezor security.
+
+    Set to "prompt" if you want to be able to allow potentially unsafe actions, such as
+    mismatching coin keys or extreme fees.
+
+    This is a power-user feature. Use with caution.
     """
-    # TODO change this to ChoiceType
-    if allow == "on":
-        level = messages.SafetyCheckLevel.Prompt
-    else:
-        level = messages.SafetyCheckLevel.Strict
-
     return device.apply_settings(client, safety_checks=level)
 
 

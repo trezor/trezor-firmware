@@ -11,7 +11,7 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 
 ### Added
 
-- `trezorctl set unsafe-prompts` controls the new "unsafe prompts" feature.  [#1126]
+- `trezorctl set safety-checks` controls the new "safety checks" feature.  [#1126]
 - `trezorctl btc get-address` can create multisig addresses.
 - the following commands are now equivalent in trezorctl: `firmware-update`, `firmware-upgrade`,
   `update-firmware`, `upgrade-firmware`
