@@ -10,6 +10,7 @@ class HomescreenBase(ui.Layout):
         self.image = storage.device.get_homescreen() or res.load(
             "apps/homescreen/res/bg.toif"
         )
+        self.repaint = True
 
     def on_tap(self) -> None:
         """Called when the user taps the screen."""
