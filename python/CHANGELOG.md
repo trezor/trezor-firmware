@@ -15,6 +15,10 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 - `trezorctl btc get-address` can create multisig addresses.
 - the following commands are now equivalent in trezorctl: `firmware-update`, `firmware-upgrade`,
   `update-firmware`, `upgrade-firmware`
+- support for EXTERNAL input type  [#38], [#1052]
+- support for ownership proofs
+- support for pre-authorized CoinJoin transactions  [#37]
+- support for Cardano Shelley  [#948]
 
 ### Changed
 
@@ -22,7 +26,7 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 
 ### Fixed
 
-- correctly calculate hashes for very small firmwares [f#1082]
+- correctly calculate hashes for very small firmwares  [f#1082]
 - unified file arguments in trezorctl
 
 ## [0.12.0] - 2020-04-01
@@ -399,6 +403,8 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 [f#778]: https://github.com/trezor/trezor-firmware/issues/778
 [f#823]: https://github.com/trezor/trezor-firmware/issues/823
 [f#1082]: https://github.com/trezor/trezor-firmware/issues/1082
+[#37]: https://github.com/trezor/trezor-firmware/issues/37
+[#38]: https://github.com/trezor/trezor-firmware/issues/38
 [#94]: https://github.com/trezor/python-trezor/issues/94
 [#167]: https://github.com/trezor/python-trezor/issues/167
 [#169]: https://github.com/trezor/python-trezor/issues/169
@@ -442,4 +448,6 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 [#349]: https://github.com/trezor/python-trezor/issues/349
 [#351]: https://github.com/trezor/python-trezor/issues/351
 [#352]: https://github.com/trezor/python-trezor/issues/352
+[#948]: https://github.com/trezor/trezor-firmware/issues/948
+[#1052]: https://github.com/trezor/trezor-firmware/issues/1052
 [#1126]: https://github.com/trezor/trezor-firmware/issues/1126
