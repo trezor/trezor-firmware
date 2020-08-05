@@ -13,12 +13,12 @@ build:
 install:
 	$(SETUP) install
 
-dist: clean doc
+dist: doc clean
 	$(SETUP) sdist
 	$(SETUP) bdist_wheel
 
 doc:
-	$(PYTHON) helper-scripts/linkify-changelog.py
+	make -C .. changelog
 	$(PYTHON) helper-scripts/make-options-rst.py
 
 clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
