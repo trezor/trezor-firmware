@@ -431,8 +431,7 @@ def test_multisession_authorization(client):
 
     # Open a second session.
     session_id1 = client.session_id
-    client.session_id = None
-    client.init_device()
+    client.init_device(new_session=True)
 
     # Authorize CoinJoin with www.example2.com in session 2.
     btc.authorize_coinjoin(
@@ -474,8 +473,7 @@ def test_multisession_authorization(client):
 
     # Switch back to the first session.
     session_id2 = client.session_id
-    client.session_id = session_id1
-    client.init_device()
+    client.init_device(session_id=session_id1)
 
     # Requesting a preauthorized ownership proof for www.example1.com should succeed in session 1.
     ownership_proof, _ = btc.get_ownership_proof(
@@ -521,8 +519,7 @@ def test_multisession_authorization(client):
         )
 
     # Switch to the second session.
-    client.session_id = session_id2
-    client.init_device()
+    client.init_device(session_id=session_id2)
 
     # Requesting a preauthorized ownership proof for www.example2.com should still succeed in session 2.
     ownership_proof, _ = btc.get_ownership_proof(
