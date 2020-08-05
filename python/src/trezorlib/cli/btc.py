@@ -181,7 +181,7 @@ def get_public_node(client, coin, address, curve, script_type, show_display):
 
 
 @cli.command()
-@click.option("-c", "--coin", "_ignore", is_flag=True, hidden=True, expose_value=False)
+@click.option("-c", "--coin", is_flag=True, hidden=True, expose_value=False)
 @click.argument("json_file", type=click.File())
 @with_client
 def sign_tx(client, json_file):

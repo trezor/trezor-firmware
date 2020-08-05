@@ -52,11 +52,9 @@ def get_public_key(client, address, show_display):
 
 
 @cli.command()
+@click.argument("file", type=click.File("r"))
 @click.option("-n", "--address", required=True, help=PATH_HELP)
-@click.option(
-    "-f", "--file", type=click.File("r"), default="-", help="Transaction in JSON format"
-)
-# @click.option('-b', '--broadcast', help='Broadcast Lisk transaction')
+@click.option("-f", "--file", is_flag=True, hidden=True, expose_value=False)
 @with_client
 def sign_tx(client, address, file):
     """Sign Lisk transaction."""

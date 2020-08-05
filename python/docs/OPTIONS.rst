@@ -81,7 +81,7 @@ Binance Chain commands.
   Commands:
     get-address     Get Binance address for specified path.
     get-public-key  Get Binance public key.
-    sign-tx         Sign Binance transaction
+    sign-tx         Sign Binance transaction.
 
 Bitcoin and Bitcoin-like coins commands.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

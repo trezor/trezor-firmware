@@ -21,6 +21,7 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 ### Fixed
 
 - correctly calculate hashes for very small firmwares [f#1082]
+- unified file arguments in trezorctl
 
 ## [0.12.0] - 2020-04-01
 [0.12.0]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.6...python/v0.12.0

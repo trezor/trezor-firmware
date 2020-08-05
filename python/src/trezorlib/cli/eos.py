@@ -41,14 +41,9 @@ def get_public_key(client, address, show_display):
 
 
 @cli.command()
+@click.argument("file", type=click.File("r"))
 @click.option("-n", "--address", required=True, help=PATH_HELP)
-@click.option(
-    "-f",
-    "--file",
-    type=click.File("r"),
-    required=True,
-    help="Transaction in JSON format",
-)
+@click.option("-f", "--file", is_flag=True, hidden=True, expose_value=False)
 @with_client
 def sign_transaction(client, address, file):
     """Sign EOS transaction."""
