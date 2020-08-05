@@ -52,7 +52,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix QR code overlapping in Monero address.  monero-gui#2960, [#1074]
 - Re-introduce ability to spend pre-Overwinter UTXO on Zcash-like coins.  [#1030]
 
-## 2.3.1 [Jun 2020]
+## 2.3.1 [June 2020]
 
 ### Changed
 - Refactor Bitcoin signing
@@ -61,7 +61,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Security
 - Stream previous tx also for Segwit inputs
 
-## 2.3.0 [Apr 2020]
+## 2.3.0 [April 2020]
 
 ### Added
 - Cache up to 10 sessions (passphrases)
@@ -78,7 +78,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Properly limit passphrase to 50 bytes and not 50 characters
 - Monero: add confirmation dialog for unlock_time
 
-## 2.2.0 [Jan 2020]
+## 2.2.0 [January 2020]
 
 ### Added
 - Add feature to retrieve the next U2F counter.
@@ -96,7 +96,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Remove unused ButtonRequest.data field.
 - Disallow changing of settings via dry-run recovery.
 
-## 2.1.8 [Nov 2019]
+## 2.1.8 [November 2019]
 
 ### Added
 - Support Tezos 005-BABYLON hardfork.
@@ -105,12 +105,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Security
 - Security improvements.
 
-## 2.1.7 [Oct 2019]
+## 2.1.7 [October 2019]
 
 ### Fixed
 - Fix low memory issue.
 
-## 2.1.6 [Oct 2019]
+## 2.1.6 [October 2019]
 
 ### Added
 - Super Shamir.
@@ -124,7 +124,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix storage keys module visibility bug (6ad329) introduced in 2.1.3 (46e4c0) which was breaking upgrades.
 
-## 2.1.5 [Sep 2019]
+## 2.1.5 [September 2019]
 
 ### Added
 - Binance Coin support.
@@ -135,12 +135,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix UI for Shamir with 33 words.
 - Fix Wanchain signing.
 
-## 2.1.4 [Aug 2019 hotfix]
+## 2.1.4 [August 2019 hotfix]
 
 ### Fixed
 - Shamir Backup reset device hotfix.
 
-## 2.1.3 [Aug 2019]
+## 2.1.3 [August 2019]
 
 ### Added
 - Shamir Backup with Recovery persistence.
@@ -154,7 +154,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Shamir Backup feature preview.
 
-## 2.1.1 [Jun 2019]
+## 2.1.1 [June 2019]
 
 ### Added
 - EOS support.
@@ -170,7 +170,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Monero UI fixes.
 - Speed and memory optimizations.
 
-## 2.1.0 [Mar 2019]
+## 2.1.0 [March 2019]
 
 ### Added
 - New coins: ATS, AXE, FLO, GIN, KMD, NIX, PIVX, REOSC, XPM, XSN, ZCL.
@@ -186,7 +186,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Security improvements.
 - Upgraded to new storage format.
 
-## 2.0.10 [Dec 2018]
+## 2.0.10 [December 2018]
 
 ### Added
 - Add support for OMNI layer: OMNI/MAID/USDT.
@@ -200,12 +200,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix Monero payment ID computation.
 - Fix issue with touch screen and flickering.
 
-## 2.0.9 [Nov 2018]
+## 2.0.9 [November 2018]
 
 ### Fixed
 - Small Monero and Segwit bugfixes.
 
-## 2.0.8 [Oct 2018]
+## 2.0.8 [October 2018]
 
 ### Added
 - Monero support.
@@ -219,7 +219,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Zcash sapling hardfork support.
 - Implemented seedless setup.
 
-## 2.0.7 [Jun 2018]
+## 2.0.7 [June 2018]
 
 ### Added
 - Bitcoin Cash cashaddr support.
@@ -231,7 +231,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Support for new Ethereum networks (EOSC, ETHS, ELLA, CTL, EGEM, WAN).
 - Support for 500+ new Ethereum tokens.
 
-## 2.0.6 [Mar 2018]
+## 2.0.6 [March 2018]
 
 ### Added
 - Add special characters to passphrase keyboard.
@@ -240,7 +240,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix layout for Ethereum transactions.
 - Fix public key generation for SSH and GPG.
 
-## 2.0.5 [Mar 2018]
+## 2.0.5 [March 2018]
 
 ### Added
 - First public release.
