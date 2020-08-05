@@ -331,7 +331,12 @@ class TrezorClient:
             # XXX this should be: `with self:`
             try:
                 self.open()
-                return self.call_raw(messages.Ping(message=msg))
+                resp = self.call_raw(messages.Ping(message=msg))
+                if isinstance(resp, messages.ButtonRequest):
+                    # device is PIN-locked.
+                    # respond and hope for the best
+                    resp = self._callback_button(resp)
+                return resp
             finally:
                 self.close()
 
