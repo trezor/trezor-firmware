@@ -31,6 +31,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Re-introduce ability to spend pre-Overwinter UTXO on Zcash-like coins.  [#1030]
 
+### Security
+- Adds a security check to prevent potential issues with paths used in altcoin transactions.
+
 ## 1.9.1 [Jun 2020]
 
 ### Security
