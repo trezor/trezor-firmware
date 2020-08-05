@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## 1.9.3 [to be released on 2nd September 2020]
 
 ### Added
+- XVG support.  [#1165]
 
 ### Changed
 - Print inverted question mark for non-printable characters.
@@ -19,7 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Security
 
-## 1.9.2 [to be released on 5th August 2020]
+## 1.9.2 [5th August 2020]
 
 ### Added
 - Set initialized in storage to false if no mnemonic is present.  [#965]
@@ -328,3 +329,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#965]: https://github.com/trezor/trezor-firmware/issues/965
 [#1030]: https://github.com/trezor/trezor-firmware/issues/1030
 [#1098]: https://github.com/trezor/trezor-firmware/issues/1098
+[#1165]: https://github.com/trezor/trezor-firmware/pull/1165

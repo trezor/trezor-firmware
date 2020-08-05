@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Running the frozen version of the emulator doesn't need arguments.  [#1115]
 - CoinJoin preauthorization and siging flow.  [#1053]
+- XVG support.  [#1165]
 
 ### Changed
 - Print inverted question mark for non-printable characters.
@@ -21,7 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Security
 
-## 2.3.2 [to be released on 5th August 2020]
+## 2.3.2 [5th August 2020]
 
 ### Added
 - Soft lock.  [#958]
@@ -258,3 +259,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1098]: https://github.com/trezor/trezor-firmware/issues/1098
 [#1115]: https://github.com/trezor/trezor-firmware/issues/1115
 [#1126]: https://github.com/trezor/trezor-firmware/issues/1126
+[#1165]: https://github.com/trezor/trezor-firmware/pull/1165
