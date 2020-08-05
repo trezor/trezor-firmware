@@ -14,7 +14,7 @@ PATTERNS = (
     "apps/*/res/**/*.toif",
 )
 
-resfiles = chain.from_iterable(SRCDIR.glob(p) for p in PATTERNS)
+resfiles = chain.from_iterable(sorted(SRCDIR.glob(p)) for p in PATTERNS)
 %>\
 
 def load_resource(name: str) -> bytes:
