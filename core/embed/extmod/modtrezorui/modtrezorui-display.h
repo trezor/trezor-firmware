@@ -294,13 +294,11 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorui_Display_print_obj,
 ///     font: int,
 ///     fgcolor: int,
 ///     bgcolor: int,
-///     minwidth: int = None,
-/// ) -> int:
+/// ) -> None:
 ///     """
 ///     Renders left-aligned text at position (x,y) where x is left position and
 ///     y is baseline. Font font is used for rendering, fgcolor is used as
-///     foreground color, bgcolor as background. Fills at least minwidth pixels
-///     with bgcolor. Returns width of rendered text in pixels.
+///     foreground color, bgcolor as background.
 ///     """
 STATIC mp_obj_t mod_trezorui_Display_text(size_t n_args, const mp_obj_t *args) {
   mp_int_t x = mp_obj_get_int(args[1]);
@@ -310,16 +308,10 @@ STATIC mp_obj_t mod_trezorui_Display_text(size_t n_args, const mp_obj_t *args) {
   mp_int_t font = mp_obj_get_int(args[4]);
   mp_int_t fgcolor = mp_obj_get_int(args[5]);
   mp_int_t bgcolor = mp_obj_get_int(args[6]);
-  mp_int_t minwidth = (n_args > 7) ? mp_obj_get_int(args[7]) : 0;
-  // prefill start
-  int w = display_text_width(text.buf, text.len, font);
-  int barwidth = MAX(w, minwidth);
-  display_bar(x, y - 18, barwidth, 23, bgcolor);
-  // prefill end
   display_text(x, y, text.buf, text.len, font, fgcolor, bgcolor);
-  return mp_obj_new_int(w);
+  return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_obj, 7, 8,
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_obj, 7, 7,
                                            mod_trezorui_Display_text);
 
 /// def text_center(
@@ -330,13 +322,11 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_obj, 7, 8,
 ///     font: int,
 ///     fgcolor: int,
 ///     bgcolor: int,
-///     minwidth: int = None,
-/// ) -> int:
+/// ) -> None:
 ///     """
 ///     Renders text centered at position (x,y) where x is text center and y is
 ///     baseline. Font font is used for rendering, fgcolor is used as foreground
-///     color, bgcolor as background. Fills at least minwidth pixels with
-///     bgcolor. Returns width of rendered text in pixels.
+///     color, bgcolor as background.
 ///     """
 STATIC mp_obj_t mod_trezorui_Display_text_center(size_t n_args,
                                                  const mp_obj_t *args) {
@@ -347,17 +337,11 @@ STATIC mp_obj_t mod_trezorui_Display_text_center(size_t n_args,
   mp_int_t font = mp_obj_get_int(args[4]);
   mp_int_t fgcolor = mp_obj_get_int(args[5]);
   mp_int_t bgcolor = mp_obj_get_int(args[6]);
-  mp_int_t minwidth = (n_args > 7) ? mp_obj_get_int(args[7]) : 0;
-  // prefill start
-  int w = display_text_width(text.buf, text.len, font);
-  int barwidth = MAX(w, minwidth);
-  display_bar(x - barwidth / 2, y - 18, barwidth, 23, bgcolor);
-  // prefill end
   display_text_center(x, y, text.buf, text.len, font, fgcolor, bgcolor);
-  return mp_obj_new_int(w);
+  return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_center_obj,
-                                           7, 8,
+                                           7, 7,
                                            mod_trezorui_Display_text_center);
 
 /// def text_right(
@@ -368,13 +352,11 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_center_obj,
 ///     font: int,
 ///     fgcolor: int,
 ///     bgcolor: int,
-///     minwidth: int = None,
-/// ) -> int:
+/// ) -> None:
 ///     """
 ///     Renders right-aligned text at position (x,y) where x is right position
 ///     and y is baseline. Font font is used for rendering, fgcolor is used as
-///     foreground color, bgcolor as background. Fills at least minwidth pixels
-///     with bgcolor. Returns width of rendered text in pixels.
+///     foreground color, bgcolor as background.
 ///     """
 STATIC mp_obj_t mod_trezorui_Display_text_right(size_t n_args,
                                                 const mp_obj_t *args) {
@@ -385,17 +367,11 @@ STATIC mp_obj_t mod_trezorui_Display_text_right(size_t n_args,
   mp_int_t font = mp_obj_get_int(args[4]);
   mp_int_t fgcolor = mp_obj_get_int(args[5]);
   mp_int_t bgcolor = mp_obj_get_int(args[6]);
-  mp_int_t minwidth = (n_args > 7) ? mp_obj_get_int(args[7]) : 0;
-  // prefill start
-  int w = display_text_width(text.buf, text.len, font);
-  int barwidth = MAX(w, minwidth);
-  display_bar(x - barwidth, y - 18, barwidth, 23, bgcolor);
-  // prefill end
   display_text_right(x, y, text.buf, text.len, font, fgcolor, bgcolor);
-  return mp_obj_new_int(w);
+  return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_right_obj,
-                                           7, 8,
+                                           7, 7,
                                            mod_trezorui_Display_text_right);
 
 /// def text_width(self, text: str, font: int) -> int:

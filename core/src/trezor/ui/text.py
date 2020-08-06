@@ -197,18 +197,15 @@ class Label(ui.Component):
         if self.repaint:
             align = self.align
             ax, ay, aw, ah = self.area
+            ui.display.bar(ax, ay, aw, ah, ui.BG)
             tx = ax + aw // 2
             ty = ay + ah // 2 + 8
             if align is LABEL_LEFT:
-                ui.display.text(tx, ty, self.content, self.style, ui.FG, ui.BG, aw)
+                ui.display.text(tx, ty, self.content, self.style, ui.FG, ui.BG)
             elif align is LABEL_CENTER:
-                ui.display.text_center(
-                    tx, ty, self.content, self.style, ui.FG, ui.BG, aw
-                )
+                ui.display.text_center(tx, ty, self.content, self.style, ui.FG, ui.BG)
             elif align is LABEL_RIGHT:
-                ui.display.text_right(
-                    tx, ty, self.content, self.style, ui.FG, ui.BG, aw
-                )
+                ui.display.text_right(tx, ty, self.content, self.style, ui.FG, ui.BG)
             self.repaint = False
 
     if __debug__:
