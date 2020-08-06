@@ -108,13 +108,11 @@ class Display:
         font: int,
         fgcolor: int,
         bgcolor: int,
-        minwidth: int = None,
-    ) -> int:
+    ) -> None:
         """
         Renders left-aligned text at position (x,y) where x is left position and
         y is baseline. Font font is used for rendering, fgcolor is used as
-        foreground color, bgcolor as background. Fills at least minwidth pixels
-        with bgcolor. Returns width of rendered text in pixels.
+        foreground color, bgcolor as background.
         """
 
     def text_center(
@@ -125,13 +123,11 @@ class Display:
         font: int,
         fgcolor: int,
         bgcolor: int,
-        minwidth: int = None,
-    ) -> int:
+    ) -> None:
         """
         Renders text centered at position (x,y) where x is text center and y is
         baseline. Font font is used for rendering, fgcolor is used as foreground
-        color, bgcolor as background. Fills at least minwidth pixels with
-        bgcolor. Returns width of rendered text in pixels.
+        color, bgcolor as background.
         """
 
     def text_right(
@@ -142,13 +138,11 @@ class Display:
         font: int,
         fgcolor: int,
         bgcolor: int,
-        minwidth: int = None,
-    ) -> int:
+    ) -> None:
         """
         Renders right-aligned text at position (x,y) where x is right position
         and y is baseline. Font font is used for rendering, fgcolor is used as
-        foreground color, bgcolor as background. Fills at least minwidth pixels
-        with bgcolor. Returns width of rendered text in pixels.
+        foreground color, bgcolor as background.
         """
 
     def text_width(self, text: str, font: int) -> int:
