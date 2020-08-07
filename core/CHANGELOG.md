@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Removed
 
 ### Fixed
+- CRW addresses are properly generated.  [#1139]
 
 ### Security
 
@@ -259,4 +260,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1098]: https://github.com/trezor/trezor-firmware/issues/1098
 [#1115]: https://github.com/trezor/trezor-firmware/issues/1115
 [#1126]: https://github.com/trezor/trezor-firmware/issues/1126
+[#1139]: https://github.com/trezor/trezor-firmware/issues/1139
 [#1165]: https://github.com/trezor/trezor-firmware/pull/1165
