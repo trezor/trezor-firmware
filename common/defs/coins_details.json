@@ -405,6 +405,28 @@
                 }
             ]
         },
+		"bitcoin:GBX": {
+            "links": {
+                "Github": "https://github.com/gobytecoin/gobyte",
+                "Homepage": "https://www.gobyte.network"
+            },
+            "marketcap_usd": 215750,
+            "name": "GoByte",
+            "shortcut": "GBX",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin",
+            "wallet": [
+                {
+                    "name": "GMT",
+                    "url": "https://github.com/D0WN3D/gobyte-masternode-tool"
+                },
+                {
+                    "name": "GoByte Electrum",
+                    "url": "https://electrum.gobyte.network"
+                }
+            ]
+        },
         "bitcoin:GIN": {
             "links": {
                 "Github": "https://github.com/gincoin-dev/gincoin-core",

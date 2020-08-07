@@ -59,6 +59,9 @@
     "bitcoin:GAME": {
         "Electrum-GAME": "https://electrum-game.org"
     },
+	"bitcoin:GBX": {
+        "Electrum-GBX": "https://electrum.gobyte.network"
+    },
     "bitcoin:GRS": {
         "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet"
     },
