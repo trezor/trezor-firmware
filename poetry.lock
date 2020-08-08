@@ -559,6 +559,14 @@ version = "0.4.8"
 
 [[package]]
 category = "main"
+description = "BLAKE2 hash function extension module"
+name = "pyblake2"
+optional = false
+python-versions = "*"
+version = "1.1.2"
+
+[[package]]
+category = "main"
 description = "Python style guide checker"
 name = "pycodestyle"
 optional = false
@@ -918,7 +926,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "9591974eb5f36198da1009eed68fcb9ded62f7590c29152cb9fd4b2da78b9d54"
+content-hash = "51911283a2df05a51d01221d604d70b13538777ff159342b5c59ed6dda175829"
 lock-version = "1.0"
 python-versions = "^3.6"
 
@@ -1283,6 +1291,17 @@ pyasn1 = [
     {file = "pyasn1-0.4.8-py3.6.egg", hash = "sha256:014c0e9976956a08139dc0712ae195324a75e142284d5f87f1a87ee1b068a359"},
     {file = "pyasn1-0.4.8-py3.7.egg", hash = "sha256:99fcc3c8d804d1bc6d9a099921e39d827026409a58f2a720dcdb89374ea0c776"},
     {file = "pyasn1-0.4.8.tar.gz", hash = "sha256:aef77c9fb94a3ac588e87841208bdec464471d9871bd5050a287cc9a475cd0ba"},
+]
+pyblake2 = [
+    {file = "pyblake2-1.1.2-cp27-cp27m-win32.whl", hash = "sha256:3757f7ad709b0e1b2a6b3919fa79fe3261f166fc375cd521f2be480f8319dde9"},
+    {file = "pyblake2-1.1.2-cp27-cp27m-win_amd64.whl", hash = "sha256:8043267fbc0b2f3748c6920591cd0b8b5609dcce60c504c32858aa36206386f2"},
+    {file = "pyblake2-1.1.2-cp34-cp34m-win32.whl", hash = "sha256:4d47b4a2c1d292b1e460bde1dda4d13aa792ed2ed70fcc263b6bc24632c8e902"},
+    {file = "pyblake2-1.1.2-cp34-cp34m-win_amd64.whl", hash = "sha256:982295a87907d50f4723db6bc724660da76b6547826d52160171d54f95b919ac"},
+    {file = "pyblake2-1.1.2-cp35-cp35m-win32.whl", hash = "sha256:baa2190bfe549e36163aa44664d4ee3a9080b236fc5d42f50dc6fd36bbdc749e"},
+    {file = "pyblake2-1.1.2-cp35-cp35m-win_amd64.whl", hash = "sha256:407e02c7f8f36fcec1b7aa114ddca0c1060c598142ea6f6759d03710b946a7e3"},
+    {file = "pyblake2-1.1.2-cp36-cp36m-win32.whl", hash = "sha256:fbc9fcde75713930bc2a91b149e97be2401f7c9c56d735b46a109210f58d7358"},
+    {file = "pyblake2-1.1.2-cp36-cp36m-win_amd64.whl", hash = "sha256:c53417ee0bbe77db852d5fd1036749f03696ebc2265de359fe17418d800196c4"},
+    {file = "pyblake2-1.1.2.tar.gz", hash = "sha256:5ccc7eb02edb82fafb8adbb90746af71460fbc29aa0f822526fc976dff83e93f"},
 ]
 pycodestyle = [
     {file = "pycodestyle-2.6.0-py2.py3-none-any.whl", hash = "sha256:2295e7b2f6b5bd100585ebcb1f616591b652db8a741695b3d8f5d28bdc934367"},
