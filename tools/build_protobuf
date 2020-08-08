@@ -99,7 +99,7 @@ do_check() {
 
     cp -rT "$DESTDIR" "$TMPDIR"
     do_rebuild "$TMPDIR" "$@"
-    DIFF=$(diff -ur "$DESTDIR" "$TMPDIR")
+    DIFF=$(diff -ur --exclude __pycache__ "$DESTDIR" "$TMPDIR")
     rm -r "$TMPDIR"
     if [ -n "$DIFF" ]; then
         echo "$DIFF"
