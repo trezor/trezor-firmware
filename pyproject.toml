@@ -12,6 +12,7 @@ scons = "*"
 protobuf = "*"
 Pyro4 = "*"
 nanopb = "0.4.1"
+virtualenv = "20.0.23"  # https://github.com/pypa/virtualenv/issues/1873
 
 ## test tools
 pytest = "*"
