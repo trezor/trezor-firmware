@@ -22,6 +22,7 @@ stdenv.mkDerivation {
     openssl
     pipenv
     pkgconfig
+    poetry
     protobuf3_6
     valgrind
     wget
