@@ -271,6 +271,8 @@ python test:
     LANG: "C.UTF-8"
   only:
     changes:
+      - Pipfile.lock
+      - poetry.lock
       - ci/**/*
       - common/**/*
       - python/**/*
