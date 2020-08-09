@@ -4,9 +4,14 @@ from typing import Any, List, Optional
 
 import click
 import construct as c
-import pyblake2
 
 from trezorlib import cosi, firmware
+
+try:
+    from hashlib import blake2s
+except ImportError:
+    from pyblake2 import blake2s
+
 
 SYM_OK = click.style("\u2714", fg="green")
 SYM_FAIL = click.style("\u274c", fg="red")
@@ -47,7 +52,7 @@ def compute_vhash(vendor_header):
     m = vendor_header.sig_m
     n = vendor_header.sig_n
     pubkeys = vendor_header.pubkeys
-    h = pyblake2.blake2s()
+    h = blake2s()
     h.update(struct.pack("<BB", m, n))
     for i in range(8):
         if i < n:
