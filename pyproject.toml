@@ -6,7 +6,7 @@ authors = ["SatoshiLabs <info@satoshilabs.com>"]
 
 [tool.poetry.dependencies]
 # all
-python = "^3.6"
+python = "^3.5"
 trezor = {path = "./python"}
 scons = "*"
 protobuf = "*"
