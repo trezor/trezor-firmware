@@ -79,12 +79,12 @@ SOURCE_NANOPB = [
 ]
 
 SOURCE_BOOTLOADER = [
-    'embed/bootloader/startup.s',
-    'embed/bootloader/header.S',
-    'embed/bootloader/bootui.c',
-    'embed/bootloader/main.c',
-    'embed/bootloader/messages.c',
-    'embed/bootloader/protob/messages.pb.c',
+    'embed/bootloader_ci/startup.s',
+    'embed/bootloader_ci/header.S',
+    'embed/bootloader_ci/bootui.c',
+    'embed/bootloader_ci/main.c',
+    'embed/bootloader_ci/messages.c',
+    'embed/bootloader_ci/protob/messages.pb.c',
 ]
 
 SOURCE_TREZORHAL = [
@@ -142,11 +142,11 @@ env.Replace(
     '-fstack-protector-all '
     + CPU_CCFLAGS + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS='-T embed/bootloader/memory.ld -Wl,--gc-sections -Wl,-Map=build/bootloader/bootloader.map -Wl,--warn-common',
+    LINKFLAGS='-T embed/bootloader_ci/memory.ld -Wl,--gc-sections -Wl,-Map=build/bootloader_ci/bootloader.map -Wl,--warn-common',
     CPPPATH=[
-        'embed/bootloader',
-        'embed/bootloader/nanopb',
-        'embed/bootloader/protob',
+        'embed/bootloader_ci',
+        'embed/bootloader_ci/nanopb',
+        'embed/bootloader_ci/protob',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
         'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc',

@@ -7,6 +7,7 @@ SCONS = scons -Q -j $(JOBS)
 BUILD_DIR             = build
 BOARDLOADER_BUILD_DIR = $(BUILD_DIR)/boardloader
 BOOTLOADER_BUILD_DIR  = $(BUILD_DIR)/bootloader
+BOOTLOADER_CI_BUILD_DIR  = $(BUILD_DIR)/bootloader_ci
 PRODTEST_BUILD_DIR    = $(BUILD_DIR)/prodtest
 REFLASH_BUILD_DIR     = $(BUILD_DIR)/reflash
 FIRMWARE_BUILD_DIR    = $(BUILD_DIR)/firmware
@@ -126,6 +127,9 @@ build_boardloader: ## build boardloader
 
 build_bootloader: ## build bootloader
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" $(BOOTLOADER_BUILD_DIR)/bootloader.bin
+
+build_bootloader_ci: ## build CI device testing bootloader
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" $(BOOTLOADER_CI_BUILD_DIR)/bootloader.bin
 
 build_prodtest: ## build production test firmware
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" $(PRODTEST_BUILD_DIR)/prodtest.bin
