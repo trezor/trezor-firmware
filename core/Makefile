@@ -190,6 +190,9 @@ flash_boardloader: $(BOARDLOADER_BUILD_DIR)/boardloader.bin ## flash boardloader
 flash_bootloader: $(BOOTLOADER_BUILD_DIR)/bootloader.bin ## flash bootloader using OpenOCD
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOOTLOADER_START); exit"
 
+flash_bootloader_ci: $(BOOTLOADER_CI_BUILD_DIR)/bootloader.bin ## flash CI bootloader using OpenOCD
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOOTLOADER_START); exit"
+
 flash_prodtest: $(PRODTEST_BUILD_DIR)/prodtest.bin ## flash prodtest using OpenOCD
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(PRODTEST_START); exit"
 
@@ -213,6 +216,9 @@ flash_erase_storage: ## erase storage sectors from flash
 
 flash_bootloader_jlink: $(BOOTLOADER_BUILD_DIR)/bootloader.bin ## flash bootloader using JLink
 	JLinkExe -commanderscript embed/bootloader/bootloader_flash.jlink
+
+flash_bootloader_ci_jlink: $(BOOTLOADER_BUILD_DIR)/bootloader.bin ## flash CI bootloader using JLink
+	JLinkExe -commanderscript embed/bootloader_ci/bootloader_flash.jlink
 
 flash_firmware_jlink: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using JLink. file names must end in .bin for JLink
 	cp -f $<.p1 $<.p1.bin
