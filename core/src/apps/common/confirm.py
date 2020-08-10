@@ -1,11 +1,12 @@
 from trezor import wire
 from trezor.messages import ButtonRequestType
-from trezor.messages.ButtonAck import ButtonAck
-from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.ui.confirm import CONFIRMED, INFO, Confirm, HoldToConfirm, InfoConfirm
+
+from . import button_request
 
 if __debug__:
     from trezor.ui.scroll import Paginated
+
 
 if False:
     from typing import Any, Callable, Optional
@@ -25,7 +26,7 @@ async def confirm(
     cancel_style: ButtonStyleType = Confirm.DEFAULT_CANCEL_STYLE,
     major_confirm: bool = False,
 ) -> bool:
-    await ctx.call(ButtonRequest(code=code), ButtonAck)
+    await button_request(ctx, code=code)
 
     if content.__class__.__name__ == "Paginated":
         # The following works because asserts are omitted in non-debug builds.
@@ -61,7 +62,7 @@ async def info_confirm(
     info: ButtonContent = InfoConfirm.DEFAULT_INFO,
     info_style: ButtonStyleType = InfoConfirm.DEFAULT_INFO_STYLE,
 ) -> bool:
-    await ctx.call(ButtonRequest(code=code), ButtonAck)
+    await button_request(ctx, code=code)
 
     dialog = InfoConfirm(
         content, confirm, confirm_style, cancel, cancel_style, info, info_style
@@ -86,7 +87,7 @@ async def hold_to_confirm(
     loader_style: LoaderStyleType = HoldToConfirm.DEFAULT_LOADER_STYLE,
     cancel: bool = True,
 ) -> bool:
-    await ctx.call(ButtonRequest(code=code), ButtonAck)
+    await button_request(ctx, code=code)
 
     if content.__class__.__name__ == "Paginated":
         # The following works because asserts are omitted in non-debug builds.
@@ -106,10 +107,10 @@ async def hold_to_confirm(
 async def require_confirm(*args: Any, **kwargs: Any) -> None:
     confirmed = await confirm(*args, **kwargs)
     if not confirmed:
-        raise wire.ActionCancelled("Cancelled")
+        raise wire.ActionCancelled
 
 
 async def require_hold_to_confirm(*args: Any, **kwargs: Any) -> None:
     confirmed = await hold_to_confirm(*args, **kwargs)
     if not confirmed:
-        raise wire.ActionCancelled("Cancelled")
+        raise wire.ActionCancelled

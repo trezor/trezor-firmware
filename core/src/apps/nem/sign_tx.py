@@ -4,8 +4,8 @@ from trezor.messages.NEMSignedTx import NEMSignedTx
 from trezor.messages.NEMSignTx import NEMSignTx
 
 from apps.common import seed
+from apps.common.keychain import with_slip44_keychain
 from apps.common.paths import validate_path
-from apps.common.seed import with_slip44_keychain
 from apps.nem import CURVE, SLIP44_ID, mosaic, multisig, namespace, transfer
 from apps.nem.helpers import NEM_HASH_ALG, check_path
 from apps.nem.validators import validate

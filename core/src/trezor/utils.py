@@ -1,6 +1,6 @@
 import gc
 import sys
-from trezorutils import (  # type: ignore[attr-defined] # noqa: F401
+from trezorutils import (  # noqa: F401
     BITCOIN_ONLY,
     EMULATOR,
     GITREV,
@@ -25,7 +25,16 @@ if __debug__:
         LOG_MEMORY = 0
 
 if False:
-    from typing import Any, Iterable, Iterator, Protocol, TypeVar, Sequence
+    from typing import (
+        Any,
+        Iterable,
+        Iterator,
+        Optional,
+        Protocol,
+        Union,
+        TypeVar,
+        Sequence,
+    )
 
 
 def unimport_begin() -> Iterable[str]:
@@ -108,6 +117,108 @@ class HashWriter:
 
     def get_digest(self) -> bytes:
         return self.ctx.digest()
+
+
+if False:
+    BufferType = Union[bytearray, memoryview]
+
+
+class BufferWriter:
+    """Seekable and writeable view into a buffer."""
+
+    def __init__(self, buffer: BufferType) -> None:
+        self.buffer = buffer
+        self.offset = 0
+
+    def seek(self, offset: int) -> None:
+        """Set current offset to `offset`.
+
+        If negative, set to zero. If longer than the buffer, set to end of buffer.
+        """
+        offset = min(offset, len(self.buffer))
+        offset = max(offset, 0)
+        self.offset = offset
+
+    def write(self, src: bytes) -> int:
+        """Write exactly `len(src)` bytes into buffer, or raise EOFError.
+
+        Returns number of bytes written.
+        """
+        buffer = self.buffer
+        offset = self.offset
+        if len(src) > len(buffer) - offset:
+            raise EOFError
+        nwrite = memcpy(buffer, offset, src, 0)
+        self.offset += nwrite
+        return nwrite
+
+
+class BufferReader:
+    """Seekable and readable view into a buffer."""
+
+    def __init__(self, buffer: bytes) -> None:
+        self.buffer = buffer
+        self.offset = 0
+
+    def seek(self, offset: int) -> None:
+        """Set current offset to `offset`.
+
+        If negative, set to zero. If longer than the buffer, set to end of buffer.
+        """
+        offset = min(offset, len(self.buffer))
+        offset = max(offset, 0)
+        self.offset = offset
+
+    def readinto(self, dst: BufferType) -> int:
+        """Read exactly `len(dst)` bytes into `dst`, or raise EOFError.
+
+        Returns number of bytes read.
+        """
+        buffer = self.buffer
+        offset = self.offset
+        if len(dst) > len(buffer) - offset:
+            raise EOFError
+        nread = memcpy(dst, 0, buffer, offset)
+        self.offset += nread
+        return nread
+
+    def read(self, length: Optional[int] = None) -> bytes:
+        """Read and return exactly `length` bytes, or raise EOFError.
+
+        If `length` is unspecified, reads all remaining data.
+
+        Note that this method makes a copy of the data. To avoid allocation, use
+        `readinto()`.
+        """
+        if length is None:
+            ret = self.buffer[self.offset :]
+            self.offset = len(self.buffer)
+        elif length < 0:
+            raise ValueError
+        elif length <= self.remaining_count():
+            ret = self.buffer[self.offset : self.offset + length]
+            self.offset += length
+        else:
+            raise EOFError
+        return ret
+
+    def remaining_count(self) -> int:
+        """Return the number of bytes remaining for reading."""
+        return len(self.buffer) - self.offset
+
+    def peek(self) -> int:
+        """Peek the ordinal value of the next byte to be read."""
+        if self.offset >= len(self.buffer):
+            raise EOFError
+        return self.buffer[self.offset]
+
+    def get(self) -> int:
+        """Read exactly one byte and return its ordinal value."""
+        if self.offset >= len(self.buffer):
+            raise EOFError
+        byte = self.buffer[self.offset]
+        self.offset += 1
+        return byte
 
 
 def obj_eq(l: object, r: object) -> bool:

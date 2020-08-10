@@ -112,6 +112,19 @@ STATIC mp_obj_t mod_trezorconfig_lock(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_lock_obj,
                                  mod_trezorconfig_lock);
 
+/// def is_unlocked() -> bool:
+///     """
+///     Returns True if storage is unlocked, False otherwise.
+///     """
+STATIC mp_obj_t mod_trezorconfig_is_unlocked(void) {
+  if (sectrue != storage_is_unlocked()) {
+    return mp_const_false;
+  }
+  return mp_const_true;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_is_unlocked_obj,
+                                 mod_trezorconfig_is_unlocked);
+
 /// def has_pin() -> bool:
 ///     """
 ///     Returns True if storage has a configured PIN, False otherwise.
@@ -374,6 +387,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorconfig_globals_table[] = {
      MP_ROM_PTR(&mod_trezorconfig_check_pin_obj)},
     {MP_ROM_QSTR(MP_QSTR_unlock), MP_ROM_PTR(&mod_trezorconfig_unlock_obj)},
     {MP_ROM_QSTR(MP_QSTR_lock), MP_ROM_PTR(&mod_trezorconfig_lock_obj)},
+    {MP_ROM_QSTR(MP_QSTR_is_unlocked),
+     MP_ROM_PTR(&mod_trezorconfig_is_unlocked_obj)},
     {MP_ROM_QSTR(MP_QSTR_has_pin), MP_ROM_PTR(&mod_trezorconfig_has_pin_obj)},
     {MP_ROM_QSTR(MP_QSTR_get_pin_rem),
      MP_ROM_PTR(&mod_trezorconfig_get_pin_rem_obj)},

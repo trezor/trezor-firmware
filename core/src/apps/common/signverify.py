@@ -18,6 +18,8 @@ def message_digest(coin: CoinType, message: bytes) -> bytes:
         h = utils.HashWriter(blake256())
     else:
         h = utils.HashWriter(sha256())
+    if not coin.signed_message_header:
+        raise wire.DataError("Empty message header not allowed.")
     write_bitcoin_varint(h, len(coin.signed_message_header))
     h.extend(coin.signed_message_header)
     write_bitcoin_varint(h, len(message))

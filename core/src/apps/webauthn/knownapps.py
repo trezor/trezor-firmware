@@ -25,6 +25,14 @@ class FIDOApp:
 def by_rp_id_hash(rp_id_hash: bytes) -> Optional[FIDOApp]:
     if False:
         raise RuntimeError  # if false
+    elif rp_id_hash == b"\x96\x89\x78\xa2\x99\x53\xde\x52\xd3\xef\x0f\x0c\x71\xb7\xb7\xb6\xb1\xaf\x9f\x08\xe2\x57\x89\x6a\x8d\x81\x26\x91\x85\x30\x29\x3b":
+        # U2F key for Amazon Web Services
+        return FIDOApp(
+            label="Amazon Web Services",
+            icon="apps/webauthn/res/icon_aws.toif",
+            use_sign_count=None,
+            use_self_attestation=None,
+        )
     elif rp_id_hash == b"\xc3\x40\x8c\x04\x47\x88\xae\xa5\xb3\xdf\x30\x89\x52\xfd\x8c\xa3\xc7\x0e\x21\xfe\xf4\xf6\xc1\xc2\x37\x4c\xaa\x1d\xf9\xb2\x8d\xdd":
         # WebAuthn key for Binance
         return FIDOApp(
@@ -230,6 +238,14 @@ def by_rp_id_hash(rp_id_hash: bytes) -> Optional[FIDOApp]:
         return FIDOApp(
             label="Stripe",
             icon="apps/webauthn/res/icon_stripe.toif",
+            use_sign_count=None,
+            use_self_attestation=None,
+        )
+    elif rp_id_hash == b"\xfa\xbe\xec\xe3\x98\x2f\xad\x9d\xdc\xc9\x8f\x91\xbd\x2e\x75\xaf\xc7\xd1\xf4\xca\x54\x49\x29\xb2\xd0\xd0\x42\x12\xdf\xfa\x30\xfa":
+        # U2F key for Tutanota
+        return FIDOApp(
+            label="Tutanota",
+            icon="apps/webauthn/res/icon_tutanota.toif",
             use_sign_count=None,
             use_self_attestation=None,
         )

@@ -91,6 +91,51 @@ def get_address(
     )
 
 
+@expect(messages.OwnershipId, field="ownership_id")
+def get_ownership_id(
+    client,
+    coin_name,
+    n,
+    multisig=None,
+    script_type=messages.InputScriptType.SPENDADDRESS,
+):
+    return client.call(
+        messages.GetOwnershipId(
+            address_n=n,
+            coin_name=coin_name,
+            multisig=multisig,
+            script_type=script_type,
+        )
+    )
+
+
+def get_ownership_proof(
+    client,
+    coin_name,
+    n,
+    multisig=None,
+    script_type=messages.InputScriptType.SPENDADDRESS,
+    user_confirmation=False,
+    ownership_ids=None,
+    commitment_data=None,
+):
+    res = client.call(
+        messages.GetOwnershipProof(
+            address_n=n,
+            coin_name=coin_name,
+            script_type=script_type,
+            multisig=multisig,
+            user_confirmation=user_confirmation,
+            ownership_ids=ownership_ids,
+            commitment_data=commitment_data,
+        )
+    )
+    if not isinstance(res, messages.OwnershipProof):
+        raise exceptions.TrezorException("Unexpected message")
+
+    return res.ownership_proof, res.signature
+
+
 @expect(messages.MessageSignature)
 def sign_message(
     client, coin_name, n, message, script_type=messages.InputScriptType.SPENDADDRESS
@@ -135,7 +180,10 @@ def sign_tx(client, coin_name, inputs, outputs, details=None, prev_txes=None):
     res = client.call(signtx)
 
     # Prepare structure for signatures
-    signatures = [None] * len(inputs)
+    signatures = [
+        None if i.script_type != messages.InputScriptType.EXTERNAL else ""
+        for i in inputs
+    ]
     serialized_tx = b""
 
     def copy_tx_meta(tx):

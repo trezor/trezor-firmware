@@ -35,18 +35,18 @@ if [[ "$OSTYPE" != "linux-gnu" && "$OSTYPE" != "darwin"* ]]; then
 fi
 
 error=1
-: "${TREZOR_MONERO_TESTS_URL:=https://github.com/ph4r05/monero/releases/download/v0.15.0.0-tests-u18.04-02/trezor_tests}"
-: "${TREZOR_MONERO_TESTS_SHA256SUM:=36852ff2add3f865dbf4e23f4e32e1022a8f4b14cd4fb4eb97491d99ba93b9bc}"
+: "${TREZOR_MONERO_TESTS_URL:=https://github.com/ph4r05/monero/releases/download/v0.15.0.0-tests-u18.04-03/trezor_tests}"
+: "${TREZOR_MONERO_TESTS_SHA256SUM:=1e5dfdb07de4ea46088f4a5bdb0d51f040fe479019efae30f76427eee6edb3f7}"
 : "${TREZOR_MONERO_TESTS_PATH:=$CORE_DIR/tests/trezor_monero_tests}"
 : "${TREZOR_MONERO_TESTS_LOG:=$CORE_DIR/tests/trezor_monero_tests.log}"
 
-if [[ ! -f "$TREZOR_MONERO_TESTS_PATH" || "`shasum -a256 "$TREZOR_MONERO_TESTS_PATH" | cut -d' ' -f1`" != $TREZOR_MONERO_TESTS_SHA256SUM ]]; then
-  echo "Downloading Trezor monero tests binary ($TREZOR_MONERO_TESTS_SHA256SUM) to `pwd`${TREZOR_MONERO_TESTS_PATH:1}"
+if [[ ! -f "$TREZOR_MONERO_TESTS_PATH" ]]; then
+  echo "Downloading Trezor monero tests binary ($TREZOR_MONERO_TESTS_SHA256SUM) to ${TREZOR_MONERO_TESTS_PATH}"
   wget -O "$TREZOR_MONERO_TESTS_PATH" "$TREZOR_MONERO_TESTS_URL" \
     && chmod +x "$TREZOR_MONERO_TESTS_PATH" \
-    && test "`shasum -a256 "$TREZOR_MONERO_TESTS_PATH" | cut -d' ' -f1`" == "$TREZOR_MONERO_TESTS_SHA256SUM" || exit 1
+    && echo "${TREZOR_MONERO_TESTS_SHA256SUM} ${TREZOR_MONERO_TESTS_PATH}" | shasum -a 256 -c
 else
-  echo "Trezor monero binary with valid hash ($TREZOR_MONERO_TESTS_SHA256SUM) already present at $TREZOR_MONERO_TESTS_PATH - not downloading again."
+  echo "Trezor monero binary already present at $TREZOR_MONERO_TESTS_PATH - not downloading again."
 fi
 
 echo "Running tests"

@@ -1,9 +1,9 @@
-import gc
 from micropython import const
 
 from trezor import wire
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TransactionType import TransactionType
+from trezor.messages.TxInputType import TxInputType
 
 from apps.common.writers import write_bitcoin_varint
 
@@ -12,7 +12,7 @@ from . import helpers
 from .bitcoin import Bitcoin, input_is_nonsegwit
 
 if False:
-    from typing import Union
+    from typing import List, Union
 
 _SIGHASH_FORKID = const(0x40)
 
@@ -30,7 +30,6 @@ class Bitcoinlike(Bitcoin):
             multisig.multisig_pubkey_index(txi.multisig, public_key)
 
         # serialize input with correct signature
-        gc.collect()
         script_sig = self.input_derive_script(txi, public_key, signature)
         self.write_tx_input(self.serialized_tx, txi, script_sig)
         self.set_serialized_signature(i_sign, signature)
@@ -41,13 +40,28 @@ class Bitcoinlike(Bitcoin):
         else:
             await super().sign_nonsegwit_input(i_sign)
 
+    async def get_tx_digest(
+        self,
+        i: int,
+        txi: TxInputType,
+        public_keys: List[bytes],
+        threshold: int,
+        script_pubkey: bytes,
+    ) -> bytes:
+        if self.coin.force_bip143:
+            return self.hash143_preimage_hash(txi, public_keys, threshold)
+        else:
+            return await super().get_tx_digest(
+                i, txi, public_keys, threshold, script_pubkey
+            )
+
     def on_negative_fee(self) -> None:
         # some coins require negative fees for reward TX
         if not self.coin.negative_fee:
             super().on_negative_fee()
 
-    def get_hash_type(self) -> int:
-        hashtype = super().get_hash_type()
+    def get_sighash_type(self, txi: TxInputType) -> int:
+        hashtype = super().get_sighash_type(txi)
         if self.coin.fork_id is not None:
             hashtype |= (self.coin.fork_id << 8) | _SIGHASH_FORKID
         return hashtype

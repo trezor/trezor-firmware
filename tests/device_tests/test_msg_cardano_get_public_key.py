@@ -37,14 +37,24 @@ from trezorlib.tools import parse_path
             "70f131bb799fd659c997221ad8cae7dcce4e8da701f8101cf15307fd3a3712a1",
         ),
         (
-            "m/44'/1815'/2'",
-            "076338cee5ab3dae19f06ccaa80e3d4428cf0e1bdc04243e41bba7be63a90da7",
-            "5dcdf129f6f2d108292e615c4b67a1fc41a64e6a96130f5c981e5e8e046a6cd7",
+            "m/1852'/1815'/0'",
+            "d507c8f866691bd96e131334c355188b1a1d0b2fa0ab11545075aab332d77d9e",
+            "b19657ad13ee581b56b0f8d744d66ca356b93d42fe176b3de007d53e9c4c4e7a",
         ),
         (
-            "m/44'/1815'/3'",
-            "5f769380dc6fd17a4e0f2d23aa359442a712e5e96d7838ebb91eb020003cccc3",
-            "1197ea234f528987cbac9817ebc31344395b837a3bb7c2332f87e095e70550a5",
+            "m/1852'/1815'/1'",
+            "140791584001446365f169c82241c7c214475000180dab39fa0588fc9c3d6d80",
+            "7f9f812d49816844b52e319857aa75961724ad1a146701679d02d7168622233d",
+        ),
+        (
+            "m/1852'/1815'/2'",
+            "ff6ccc3097ca79fc29fe92a9639c47644746780c63acae10a9e6f03bf5c919dd",
+            "27d985feabf40d83a30aa4645ff008c068187559dd224ba59e26d0d2dc3598ce",
+        ),
+        (
+            "m/1852'/1815'/3'",
+            "be81ace1f63f4f0cae74dd274a72d7818f238bc764ab3e0dc0beb1945b756dca",
+            "29034f036a162ac4f9f9f397b2d1f289754bb6633915f26b199e156f81d05c88",
         ),
     ],
 )

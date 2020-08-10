@@ -57,7 +57,7 @@ To use the "all all all" seed defined in [SLIP-14](https://github.com/satoshilab
 
 ### Storage and Profiles
 
-Internal Trezor's storage is emulated and stored in the `/var/tmp/trezor.flash` file on
+Internal Trezor's storage is emulated and stored in the `/var/tmp/trezor.flash` file by
 default. Deleting this file is similar to calling _wipe device_. You can also find
 `/var/tmp/trezor.sdcard` for SD card.
 

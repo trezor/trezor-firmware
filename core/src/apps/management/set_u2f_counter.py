@@ -9,6 +9,8 @@ from apps.common.confirm import require_confirm
 
 
 async def set_u2f_counter(ctx: wire.Context, msg: SetU2FCounter) -> Success:
+    if not storage.device.is_initialized():
+        raise wire.NotInitialized("Device is not initialized")
     if msg.u2f_counter is None:
         raise wire.ProcessError("No value provided")
 

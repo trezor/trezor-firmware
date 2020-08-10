@@ -1,4 +1,4 @@
-from storage import is_initialized
+from storage.device import is_initialized
 from trezor import config, ui, wire
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
@@ -8,9 +8,9 @@ from trezor.ui.text import Text
 from apps.common.confirm import require_confirm
 from apps.common.layout import show_success
 from apps.common.request_pin import (
-    request_pin_ack,
+    error_pin_invalid,
+    request_pin,
     request_pin_and_sd_salt,
-    show_pin_invalid,
 )
 
 if False:
@@ -31,8 +31,7 @@ async def change_wipe_code(ctx: wire.Context, msg: ChangeWipeCode) -> Success:
     if not msg.remove:
         # Pre-check the entered PIN.
         if config.has_pin() and not config.check_pin(pin_to_int(pin), salt):
-            await show_pin_invalid(ctx)
-            raise wire.PinInvalid("PIN invalid")
+            await error_pin_invalid(ctx)
 
         # Get new wipe code.
         wipe_code = await _request_wipe_code_confirm(ctx, pin)
@@ -41,8 +40,7 @@ async def change_wipe_code(ctx: wire.Context, msg: ChangeWipeCode) -> Success:
 
     # Write into storage.
     if not config.change_wipe_code(pin_to_int(pin), salt, pin_to_int(wipe_code)):
-        await show_pin_invalid(ctx)
-        raise wire.PinInvalid("PIN invalid")
+        await error_pin_invalid(ctx)
 
     if wipe_code:
         if has_wipe_code:
@@ -87,12 +85,12 @@ def _require_confirm_action(
 
 async def _request_wipe_code_confirm(ctx: wire.Context, pin: str) -> str:
     while True:
-        code1 = await request_pin_ack(ctx, "Enter new wipe code")
+        code1 = await request_pin(ctx, "Enter new wipe code")
         if code1 == pin:
             await _wipe_code_invalid()
             continue
 
-        code2 = await request_pin_ack(ctx, "Re-enter new wipe code")
+        code2 = await request_pin(ctx, "Re-enter new wipe code")
         if code1 == code2:
             return code1
         await _wipe_code_mismatch()

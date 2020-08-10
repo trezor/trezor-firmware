@@ -4,29 +4,35 @@ from trezor import ui
 from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
 
-from apps.common import HARDENED
-from apps.common.confirm import require_confirm
+from . import HARDENED
+from .confirm import require_confirm
 
 if False:
-    from typing import Any, Callable, List
+    from typing import Any, Callable, List, Sequence, TypeVar
     from trezor import wire
-    from apps.common import seed
+
+    # XXX this is a circular import, but it's only for typing
+    from .keychain import Keychain
+
+    Bip32Path = Sequence[int]
+    Slip21Path = Sequence[bytes]
+    PathType = TypeVar("PathType", Bip32Path, Slip21Path)
 
 
 async def validate_path(
     ctx: wire.Context,
     validate_func: Callable[..., bool],
-    keychain: seed.Keychain,
+    keychain: Keychain,
     path: List[int],
     curve: str,
     **kwargs: Any,
 ) -> None:
-    keychain.match_path(path)
+    keychain.verify_path(path)
     if not validate_func(path, **kwargs):
         await show_path_warning(ctx, path)
 
 
-async def show_path_warning(ctx: wire.Context, path: List[int]) -> None:
+async def show_path_warning(ctx: wire.Context, path: Bip32Path) -> None:
     text = Text("Confirm path", ui.ICON_WRONG, ui.RED)
     text.normal("Path")
     text.mono(*break_address_n_to_lines(path))
@@ -35,7 +41,7 @@ async def show_path_warning(ctx: wire.Context, path: List[int]) -> None:
     await require_confirm(ctx, text, ButtonRequestType.UnknownDerivationPath)
 
 
-def validate_path_for_get_public_key(path: list, slip44_id: int) -> bool:
+def validate_path_for_get_public_key(path: Bip32Path, slip44_id: int) -> bool:
     """
     Checks if path has at least three hardened items and slip44 id matches.
     The path is allowed to have more than three items, but all the following
@@ -61,7 +67,11 @@ def is_hardened(i: int) -> bool:
     return bool(i & HARDENED)
 
 
-def break_address_n_to_lines(address_n: list) -> list:
+def path_is_hardened(address_n: Bip32Path) -> bool:
+    return all(is_hardened(n) for n in address_n)
+
+
+def break_address_n_to_lines(address_n: Bip32Path) -> List[str]:
     def path_item(i: int) -> str:
         if i & HARDENED:
             return str(i ^ HARDENED) + "'"

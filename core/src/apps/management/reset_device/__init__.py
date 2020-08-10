@@ -28,6 +28,9 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     # make sure user knows they're setting up a new wallet
     await layout.show_reset_device_warning(ctx, msg.backup_type)
 
+    # wipe storage to make sure the device is in a clear state
+    storage.reset()
+
     # request and set new PIN
     if msg.pin_protection:
         newpin = await request_pin_confirm(ctx)
@@ -72,9 +75,9 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
         await backup_seed(ctx, msg.backup_type, secret)
 
     # write settings and master secret into storage
-    storage.device.load_settings(
-        label=msg.label, use_passphrase=msg.passphrase_protection
-    )
+    if msg.label is not None:
+        storage.device.set_label(msg.label)
+    storage.device.set_passphrase_enabled(bool(msg.passphrase_protection))
     storage.device.store_mnemonic_secret(
         secret,  # for SLIP-39, this is the EMS
         msg.backup_type,
@@ -164,7 +167,7 @@ def _validate_reset_device(msg: ResetDevice) -> None:
             raise wire.ProcessError("Invalid strength (has to be 128, 192 or 256 bits)")
     if msg.display_random and (msg.skip_backup or msg.no_backup):
         raise wire.ProcessError("Can't show internal entropy when backup is skipped")
-    if storage.is_initialized():
+    if storage.device.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
 
 

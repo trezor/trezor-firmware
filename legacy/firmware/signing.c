@@ -32,6 +32,7 @@
 
 static uint32_t inputs_count;
 static uint32_t outputs_count;
+static uint32_t change_count;
 static const CoinInfo *coin;
 static CONFIDENTIAL HDNode root;
 static CONFIDENTIAL HDNode node;
@@ -102,6 +103,9 @@ static uint32_t tx_weight;
 #define TXSIZE_FOOTER 4
 /* transaction segwit overhead 2 marker */
 #define TXSIZE_SEGWIT_OVERHEAD 2
+
+/* The maximum number of change-outputs allowed without user confirmation. */
+#define MAX_SILENT_CHANGE_COUNT 2
 
 enum {
   SIGHASH_ALL = 1,
@@ -462,6 +466,10 @@ bool compile_input_script_sig(TxInputType *tinput) {
       return false;
     }
   }
+  if (!coin_known_path_check(coin, tinput->script_type, tinput->address_n_count,
+                             tinput->address_n, false)) {
+    return false;
+  }
   memcpy(&node, &root, sizeof(HDNode));
   if (hdnode_private_ckd_cached(&node, tinput->address_n,
                                 tinput->address_n_count, NULL) == 0) {
@@ -551,6 +559,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   to_spend = 0;
   spending = 0;
   change_spend = 0;
+  change_count = 0;
   memzero(&input, sizeof(TxInputType));
   memzero(&resp, sizeof(TxRequest));
 
@@ -840,11 +849,18 @@ static bool signing_check_output(TxOutputType *txoutput) {
   }
 
   if (is_change) {
-    if (change_spend == 0) {  // not set
-      change_spend = txoutput->amount;
-    } else {
-      /* We only skip confirmation for the first change output */
-      is_change = false;
+    if (change_spend + txoutput->amount < change_spend) {
+      fsm_sendFailure(FailureType_Failure_DataError, _("Value overflow"));
+      signing_abort();
+      return false;
+    }
+    change_spend += txoutput->amount;
+
+    change_count++;
+    if (change_count <= 0) {
+      fsm_sendFailure(FailureType_Failure_DataError, _("Value overflow"));
+      signing_abort();
+      return false;
     }
   }
 
@@ -885,7 +901,7 @@ static bool signing_check_output(TxOutputType *txoutput) {
   return true;
 }
 
-static bool signing_check_fee(void) {
+static bool signing_confirm_tx(void) {
   if (coin->negative_fee) {
     // bypass check for negative fee coins, required for reward TX
   } else {
@@ -912,6 +928,16 @@ static bool signing_check_fee(void) {
   } else {
     fee = 0;
   }
+
+  if (change_count > MAX_SILENT_CHANGE_COUNT) {
+    layoutChangeCountOverThreshold(change_count);
+    if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+      signing_abort();
+      return false;
+    }
+  }
+
   // last confirmation
   layoutConfirmTx(coin, to_spend - change_spend, fee);
   if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
@@ -944,7 +970,7 @@ static void phase1_request_next_output(void) {
     }
 #endif
     hasher_Final(&hasher_outputs, hash_outputs);
-    if (!signing_check_fee()) {
+    if (!signing_confirm_tx()) {
       return;
     }
     // Everything was checked, now phase 2 begins and the transaction is signed.
@@ -1339,9 +1365,10 @@ void signing_txack(TransactionType *tx) {
         signing_abort();
         return;
       }
-      if (coin->overwintered && !tx->has_version_group_id) {
+      if (coin->overwintered &&
+          (tx->version >= 3) != (tx->has_version_group_id)) {
         fsm_sendFailure(FailureType_Failure_DataError,
-                        _("Version group ID must be set."));
+                        _("Version group ID must be set when version >= 3."));
         signing_abort();
         return;
       }
@@ -1366,7 +1393,8 @@ void signing_txack(TransactionType *tx) {
       }
       tx_init(&tp, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time,
               tx->expiry, tx->extra_data_len, coin->curve->hasher_sign,
-              coin->overwintered, tx->version_group_id, tx->timestamp);
+              coin->overwintered && tx->version >= 3, tx->version_group_id,
+              tx->timestamp);
 #if !BITCOIN_ONLY
       if (coin->decred) {
         tp.version |= (DECRED_SERIALIZE_NO_WITNESS << 16);

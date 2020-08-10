@@ -10,9 +10,9 @@ from trezor.ui.text import Text
 from apps.common.confirm import require_confirm
 from apps.common.layout import show_success
 from apps.common.request_pin import (
-    request_pin_ack,
+    error_pin_invalid,
+    request_pin,
     request_pin_and_sd_salt,
-    show_pin_invalid,
 )
 from apps.common.sdcard import ensure_sdcard, sd_problem_dialog
 
@@ -41,7 +41,7 @@ async def _set_salt(
 
 
 async def sd_protect(ctx: wire.Context, msg: SdProtect) -> Success:
-    if not storage.is_initialized():
+    if not storage.device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
 
     if msg.operation == SdProtectOperationType.ENABLE:
@@ -66,7 +66,7 @@ async def sd_protect_enable(ctx: wire.Context, msg: SdProtect) -> Success:
 
     # Get the current PIN.
     if config.has_pin():
-        pin = pin_to_int(await request_pin_ack(ctx, "Enter PIN", config.get_pin_rem()))
+        pin = pin_to_int(await request_pin(ctx, "Enter PIN", config.get_pin_rem()))
     else:
         pin = pin_to_int("")
 
@@ -83,8 +83,7 @@ async def sd_protect_enable(ctx: wire.Context, msg: SdProtect) -> Success:
             # SD-protection. If it fails for any reason, we suppress the
             # exception, because primarily we need to raise wire.PinInvalid.
             pass
-        await show_pin_invalid(ctx)
-        raise wire.PinInvalid("PIN invalid")
+        await error_pin_invalid(ctx)
 
     storage.device.set_sd_salt_auth_key(salt_auth_key)
 
@@ -107,8 +106,7 @@ async def sd_protect_disable(ctx: wire.Context, msg: SdProtect) -> Success:
 
     # Check PIN and remove salt.
     if not config.change_pin(pin_to_int(pin), pin_to_int(pin), salt, None):
-        await show_pin_invalid(ctx)
-        raise wire.PinInvalid("PIN invalid")
+        await error_pin_invalid(ctx)
 
     storage.device.set_sd_salt_auth_key(None)
 
@@ -143,8 +141,7 @@ async def sd_protect_refresh(ctx: wire.Context, msg: SdProtect) -> Success:
     await _set_salt(ctx, new_salt, new_salt_tag, stage=True)
 
     if not config.change_pin(pin_to_int(pin), pin_to_int(pin), old_salt, new_salt):
-        await show_pin_invalid(ctx)
-        raise wire.PinInvalid("PIN invalid")
+        await error_pin_invalid(ctx)
 
     storage.device.set_sd_salt_auth_key(new_auth_key)
 

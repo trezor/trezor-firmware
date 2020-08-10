@@ -51,15 +51,19 @@ if False:
         Any,
         Awaitable,
         Callable,
+        Coroutine,
         Dict,
         Iterable,
         Optional,
         Tuple,
         Type,
+        TypeVar,
     )
     from trezorio import WireInterface
 
-    Handler = Callable[..., loop.Task]
+    Msg = TypeVar("Msg", bound=protobuf.MessageType)
+    HandlerTask = Coroutine[Any, Any, protobuf.MessageType]
+    Handler = Callable[["Context", Msg], HandlerTask]
 
 
 # Maps a wire type directly to a handler.
@@ -80,9 +84,9 @@ def register(wire_type: int, handler: Handler) -> None:
     workflow_handlers[wire_type] = handler
 
 
-def setup(iface: WireInterface) -> None:
+def setup(iface: WireInterface, use_workflow: bool = True) -> None:
     """Initialize the wire stack on passed USB interface."""
-    loop.schedule(handle_session(iface, codec_v1.SESSION_ID))
+    loop.schedule(handle_session(iface, codec_v1.SESSION_ID, use_workflow))
 
 
 def clear() -> None:
@@ -108,6 +112,7 @@ if False:
         async def write(self, msg: protobuf.MessageType) -> None:
             ...
 
+        # XXX modify type signature so that the return value must be of the same type?
         async def wait(self, *tasks: Awaitable) -> Any:
             ...
 
@@ -128,18 +133,28 @@ class DummyContext:
 
 DUMMY_CONTEXT = DummyContext()
 
+PROTOBUF_BUFFER_SIZE = 8192
+
 
 class Context:
     def __init__(self, iface: WireInterface, sid: int) -> None:
         self.iface = iface
         self.sid = sid
+        self.buffer = bytearray(PROTOBUF_BUFFER_SIZE)
+        self.buffer_reader = utils.BufferReader(self.buffer)
+        self.buffer_writer = utils.BufferWriter(self.buffer)
+
+        self._field_cache = {}  # type: protobuf.FieldCache
 
     async def call(
-        self, msg: protobuf.MessageType, expected_type: Type[protobuf.LoadedMessageType]
+        self,
+        msg: protobuf.MessageType,
+        expected_type: Type[protobuf.LoadedMessageType],
+        field_cache: protobuf.FieldCache = None,
     ) -> protobuf.LoadedMessageType:
-        await self.write(msg)
+        await self.write(msg, field_cache)
         del msg
-        return await self.read(expected_type)
+        return await self.read(expected_type, field_cache)
 
     async def call_any(
         self, msg: protobuf.MessageType, *expected_wire_types: int
@@ -148,11 +163,15 @@ class Context:
         del msg
         return await self.read_any(expected_wire_types)
 
-    async def read(
-        self, expected_type: Type[protobuf.LoadedMessageType]
-    ) -> protobuf.LoadedMessageType:
-        reader = self.make_reader()
+    async def read_from_wire(self) -> codec_v1.Message:
+        self.buffer_writer.seek(0)
+        return await codec_v1.read_message(self.iface, self.buffer_writer.buffer)
 
+    async def read(
+        self,
+        expected_type: Type[protobuf.LoadedMessageType],
+        field_cache: protobuf.FieldCache = None,
+    ) -> protobuf.LoadedMessageType:
         if __debug__:
             log.debug(
                 __name__,
@@ -162,14 +181,13 @@ class Context:
                 expected_type,
             )
 
-        # Wait for the message header, contained in the first report.  After
-        # we receive it, we have a message type to match on.
-        await reader.aopen()
+        # Load the full message into a buffer, parse out type and data payload
+        msg = await self.read_from_wire()
 
-        # If we got a message with unexpected type, raise the reader via
+        # If we got a message with unexpected type, raise the message via
         # `UnexpectedMessageError` and let the session handler deal with it.
-        if reader.type != expected_type.MESSAGE_WIRE_TYPE:
-            raise UnexpectedMessageError(reader)
+        if msg.type != expected_type.MESSAGE_WIRE_TYPE:
+            raise UnexpectedMessageError(msg)
 
         if __debug__:
             log.debug(
@@ -180,14 +198,15 @@ class Context:
                 expected_type,
             )
 
-        # parse the message and return it
-        return await protobuf.load_message(reader, expected_type)
+        workflow.idle_timer.touch()
+
+        # look up the protobuf class and parse the message
+        pbtype = messages.get_type(msg.type)
+        return protobuf.load_message(msg.data, pbtype, field_cache)  # type: ignore
 
     async def read_any(
         self, expected_wire_types: Iterable[int]
     ) -> protobuf.MessageType:
-        reader = self.make_reader()
-
         if __debug__:
             log.debug(
                 __name__,
@@ -197,42 +216,59 @@ class Context:
                 expected_wire_types,
             )
 
-        # Wait for the message header, contained in the first report.  After
-        # we receive it, we have a message type to match on.
-        await reader.aopen()
+        # Load the full message into a buffer, parse out type and data payload
+        msg = await self.read_from_wire()
 
-        # If we got a message with unexpected type, raise the reader via
+        # If we got a message with unexpected type, raise the message via
         # `UnexpectedMessageError` and let the session handler deal with it.
-        if reader.type not in expected_wire_types:
-            raise UnexpectedMessageError(reader)
+        if msg.type not in expected_wire_types:
+            raise UnexpectedMessageError(msg)
 
         # find the protobuf type
-        exptype = messages.get_type(reader.type)
+        exptype = messages.get_type(msg.type)
 
         if __debug__:
             log.debug(
                 __name__, "%s:%x read: %s", self.iface.iface_num(), self.sid, exptype
             )
 
+        workflow.idle_timer.touch()
+
         # parse the message and return it
-        return await protobuf.load_message(reader, exptype)
+        return protobuf.load_message(msg.data, exptype)
 
-    async def write(self, msg: protobuf.MessageType) -> None:
-        writer = self.make_writer()
-
+    async def write(
+        self, msg: protobuf.MessageType, field_cache: protobuf.FieldCache = None
+    ) -> None:
         if __debug__:
             log.debug(
                 __name__, "%s:%x write: %s", self.iface.iface_num(), self.sid, msg
             )
 
-        # get the message size
-        fields = msg.get_fields()
-        size = protobuf.count_message(msg, fields)
+        if field_cache is None:
+            field_cache = self._field_cache
 
         # write the message
-        writer.setheader(msg.MESSAGE_WIRE_TYPE, size)
-        await protobuf.dump_message(writer, msg, fields)
-        await writer.aclose()
+        msg_size = protobuf.count_message(msg, field_cache)
+
+        # prepare buffer
+        if msg_size <= len(self.buffer_writer.buffer):
+            # reuse preallocated
+            buffer_writer = self.buffer_writer
+        else:
+            # message is too big, we need to allocate a new buffer
+            buffer_writer = utils.BufferWriter(bytearray(msg_size))
+
+        buffer_writer.seek(0)
+        protobuf.dump_message(buffer_writer, msg, field_cache)
+        await codec_v1.write_message(
+            self.iface,
+            msg.MESSAGE_WIRE_TYPE,
+            memoryview(buffer_writer.buffer)[:msg_size],
+        )
+
+        # make sure we don't keep around fields of all protobuf types ever
+        self._field_cache.clear()
 
     def wait(self, *tasks: Awaitable) -> Any:
         """
@@ -242,41 +278,35 @@ class Context:
         """
         return loop.race(self.read_any(()), *tasks)
 
-    def make_reader(self) -> codec_v1.Reader:
-        return codec_v1.Reader(self.iface)
-
-    def make_writer(self) -> codec_v1.Writer:
-        return codec_v1.Writer(self.iface)
-
 
 class UnexpectedMessageError(Exception):
-    def __init__(self, reader: codec_v1.Reader) -> None:
-        self.reader = reader
+    def __init__(self, msg: codec_v1.Message) -> None:
+        self.msg = msg
 
 
-async def handle_session(iface: WireInterface, session_id: int) -> None:
+async def handle_session(
+    iface: WireInterface, session_id: int, use_workflow: bool = True
+) -> None:
     ctx = Context(iface, session_id)
-    next_reader = None  # type: Optional[codec_v1.Reader]
-    res_msg = None
-    req_reader = None
+    next_msg = None  # type: Optional[codec_v1.Message]
+    res_msg = None  # type: Optional[protobuf.MessageType]
     req_type = None
     req_msg = None
     while True:
         try:
-            if next_reader is None:
+            if next_msg is None:
                 # We are not currently reading a message, so let's wait for one.
                 # If the decoding fails, exception is raised and we try again
                 # (with the same `Reader` instance, it's OK).  Even in case of
                 # de-synchronized wire communication, report with a message
                 # header is eventually received, after a couple of tries.
-                req_reader = ctx.make_reader()
-                await req_reader.aopen()
+                msg = await ctx.read_from_wire()
 
                 if __debug__:
                     try:
-                        msg_type = messages.get_type(req_reader.type).__name__
+                        msg_type = messages.get_type(msg.type).__name__
                     except KeyError:
-                        msg_type = "%d - unknown message type" % req_reader.type
+                        msg_type = "%d - unknown message type" % msg.type
                     log.debug(
                         __name__,
                         "%s:%x receive: <%s>",
@@ -287,8 +317,8 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
             else:
                 # We have a reader left over from earlier.  We should process
                 # this message instead of waiting for new one.
-                req_reader = next_reader
-                next_reader = None
+                msg = next_msg
+                next_msg = None
 
             # Now we are in a middle of reading a message and we need to decide
             # what to do with it, based on its type from the message header.
@@ -301,31 +331,29 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
 
             # We need to find a handler for this message type.  Should not
             # raise.
-            handler = get_workflow_handler(req_reader)
+            handler = find_handler(iface, msg.type)
 
             if handler is None:
                 # If no handler is found, we can skip decoding and directly
-                # respond with failure, but first, we should read the rest of
-                # the message reports.  Should not raise.
-                await read_and_throw_away(req_reader)
+                # respond with failure.  Should not raise.
                 res_msg = unexpected_message()
 
             else:
                 # We found a valid handler for this message type.
 
-                # Workflow task, declared for the `workflow.on_close` call later.
-                wf_task = None  # type: Optional[loop.Task]
+                # Workflow task, declared for the finally block
+                wf_task = None  # type: Optional[HandlerTask]
 
                 # Here we make sure we always respond with a Failure response
                 # in case of any errors.
                 try:
                     # Find a protobuf.MessageType subclass that describes this
                     # message.  Raises if the type is not found.
-                    req_type = messages.get_type(req_reader.type)
+                    req_type = messages.get_type(msg.type)
 
                     # Try to decode the message according to schema from
                     # `req_type`. Raises if the message is malformed.
-                    req_msg = await protobuf.load_message(req_reader, req_type)
+                    req_msg = protobuf.load_message(msg.data, req_type)
 
                     # At this point, message reports are all processed and
                     # correctly parsed into `req_msg`.
@@ -333,14 +361,14 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
                     # Create the workflow task.
                     wf_task = handler(ctx, req_msg)
 
-                    # Register the task into the workflow management system.
-                    workflow.on_start(wf_task)
-
                     # Run the workflow task.  Workflow can do more on-the-wire
                     # communication inside, but it should eventually return a
                     # response message, or raise an exception (a rather common
                     # thing to do).  Exceptions are handled in the code below.
-                    res_msg = await wf_task
+                    if use_workflow:
+                        res_msg = await workflow.spawn(wf_task)
+                    else:
+                        res_msg = await wf_task
 
                 except UnexpectedMessageError as exc:
                     # Workflow was trying to read a message from the wire, and
@@ -353,7 +381,7 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
                     # TODO:
                     # We might handle only the few common cases here, like
                     # Initialize and Cancel.
-                    next_reader = exc.reader
+                    next_msg = exc.msg
                     res_msg = None
 
                 except Exception as exc:
@@ -362,23 +390,22 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
                     #   registered handler, but does not have a protobuf class
                     # - the first workflow message was not a valid protobuf
                     # - workflow raised some kind of an exception while running
+                    # - something canceled the workflow from the outside
                     if __debug__:
                         if isinstance(exc, ActionCancelled):
                             log.debug(__name__, "cancelled: {}".format(exc.message))
+                        elif isinstance(exc, loop.TaskClosed):
+                            log.debug(__name__, "cancelled: loop task was closed")
                         else:
                             log.exception(__name__, exc)
                     res_msg = failure(exc)
 
                 finally:
-                    # De-register the task from the workflow system, if we
-                    # registered it before.
-                    if wf_task is not None:
-                        workflow.on_close(wf_task)
-                        # If a default workflow is on, make sure we do not race
-                        # against the layout that is inside.
-                        # TODO: this is very hacky and complects wire with the ui
-                        if workflow.default_task is not None:
-                            await ui.wait_until_layout_is_running()
+                    # If we ran a workflow task, and a default workflow is on, make sure
+                    # we do not race against the layout that is inside.
+                    # TODO: this is very hacky and complects wire with the ui
+                    if wf_task is not None and workflow.default_task is not None:
+                        await ui.wait_until_layout_is_running()
 
             if res_msg is not None:
                 # Either the workflow returned a response, or we created one.
@@ -391,7 +418,6 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
 
             # Cleanup, so garbage collection triggered after un-importing can
             # pick up the trash.
-            req_reader = None
             req_type = None
             req_msg = None
             res_msg = None
@@ -407,9 +433,9 @@ async def handle_session(iface: WireInterface, session_id: int) -> None:
                 log.exception(__name__, exc)
 
 
-def get_workflow_handler(reader: codec_v1.Reader) -> Optional[Handler]:
-    msg_type = reader.type
-
+def find_registered_workflow_handler(
+    iface: WireInterface, msg_type: int
+) -> Optional[Handler]:
     if msg_type in workflow_handlers:
         # Message has a handler available, return it directly.
         handler = workflow_handlers[msg_type]
@@ -426,6 +452,9 @@ def get_workflow_handler(reader: codec_v1.Reader) -> Optional[Handler]:
     return handler
 
 
+find_handler = find_registered_workflow_handler
+
+
 def import_workflow(pkgname: str, modname: str) -> Any:
     modpath = "%s.%s" % (pkgname, modname)
     module = __import__(modpath, None, None, (modname,), 0)
@@ -436,15 +465,11 @@ def import_workflow(pkgname: str, modname: str) -> Any:
 def failure(exc: BaseException) -> Failure:
     if isinstance(exc, Error):
         return Failure(code=exc.code, message=exc.message)
+    elif isinstance(exc, loop.TaskClosed):
+        return Failure(code=FailureType.ActionCancelled, message="Cancelled")
     else:
         return Failure(code=FailureType.FirmwareError, message="Firmware error")
 
 
 def unexpected_message() -> Failure:
     return Failure(code=FailureType.UnexpectedMessage, message="Unexpected message")
-
-
-async def read_and_throw_away(reader: codec_v1.Reader) -> None:
-    while reader.size > 0:
-        buf = bytearray(reader.size)
-        await reader.areadinto(buf)

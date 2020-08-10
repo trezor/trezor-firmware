@@ -8,7 +8,7 @@ from trezor.utils import chunks
 
 from apps.common import HARDENED
 from apps.common.confirm import require_confirm
-from apps.common.seed import get_keychain
+from apps.common.keychain import get_keychain
 
 from .sign_identity import serialize_identity, serialize_identity_without_proto
 
@@ -17,7 +17,7 @@ async def get_ecdh_session_key(ctx, msg):
     if msg.ecdsa_curve_name is None:
         msg.ecdsa_curve_name = "secp256k1"
 
-    keychain = await get_keychain(ctx, [(msg.ecdsa_curve_name, [])])
+    keychain = await get_keychain(ctx, msg.ecdsa_curve_name, [[]])
     identity = serialize_identity(msg.identity)
 
     await require_confirm_ecdh_session_key(ctx, msg.identity)

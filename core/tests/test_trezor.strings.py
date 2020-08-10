@@ -32,6 +32,27 @@ class TestStrings(unittest.TestCase):
         with self.assertRaises(ValueError):
             strings.format_plural("Hello", 1, "share")
 
+    def test_format_duration_ms(self):
+        VECTORS = [
+            (0, "0 milliseconds"),
+            (1, "1 millisecond"),
+            (999, "999 milliseconds"),
+            (1000, "1 second"),
+            (2345, "2 seconds"),
+            (59999, "59 seconds"),
+            (60 * 1000, "1 minute"),
+            (119 * 1000, "1 minute"),
+            (120 * 1000, "2 minutes"),
+            (59 * 60 * 1000, "59 minutes"),
+            (60 * 60 * 1000, "1 hour"),
+            (119 * 60 * 1000, "1 hour"),
+            (3 * 60 * 60 * 1000, "3 hours"),
+            (48 * 60 * 60 * 1000, "48 hours"),
+        ]
+
+        for v in VECTORS:
+            self.assertEqual(strings.format_duration_ms(v[0]), v[1])
+
 
 if __name__ == '__main__':
     unittest.main()

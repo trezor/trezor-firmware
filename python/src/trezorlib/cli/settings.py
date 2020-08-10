@@ -16,7 +16,7 @@
 
 import click
 
-from .. import device
+from .. import device, messages
 from . import ChoiceType, with_client
 
 ROTATION = {"north": 0, "east": 90, "south": 180, "west": 270}
@@ -75,6 +75,10 @@ def display_rotation(client, rotation):
 @with_client
 def auto_lock_delay(client, delay):
     """Set auto-lock delay (in seconds)."""
+
+    if not client.features.pin_protection:
+        raise click.ClickException("Set up a PIN first")
+
     value, unit = delay[:-1], delay[-1:]
     units = {"s": 1, "m": 60, "h": 3600}
     if unit in units:
@@ -128,6 +132,25 @@ def homescreen(client, filename):
     return device.apply_settings(client, homescreen=img)
 
 
+@cli.command()
+@click.argument("allow", type=click.Choice(("on", "off")))
+@with_client
+def unsafe_prompts(client, allow):
+    """Allow or disallow unsafe prompts.
+
+    This is a power-user feature. With unsafe prompts enabled, Trezor will ask the user
+    to confirm possibly dangerous actions instead of rejecting them outright.
+    Use with caution.
+    """
+    # TODO change this to ChoiceType
+    if allow == "on":
+        level = messages.SafetyCheckLevel.Prompt
+    else:
+        level = messages.SafetyCheckLevel.Strict
+
+    return device.apply_settings(client, safety_checks=level)
+
+
 #
 # passphrase operations
 #
@@ -136,6 +159,8 @@ def homescreen(client, filename):
 @cli.group()
 def passphrase():
     """Enable, disable or configure passphrase protection."""
+    # this exists in order to support command aliases for "enable-passphrase"
+    # and "disable-passphrase". Otherwise `passphrase` would just take an argument.
 
 
 @passphrase.command(name="enabled")

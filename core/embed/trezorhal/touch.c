@@ -21,11 +21,11 @@
 #include "touch.h"
 
 #if TREZOR_MODEL == T
-#include "touch_t.h"
+#include "touch_T.h"
 #elif TREZOR_MODEL == 1
 #include "touch_1.h"
 #else
-#error Unknown Trezor Model
+#error Unknown Trezor model
 #endif
 
 uint32_t touch_click(void) {

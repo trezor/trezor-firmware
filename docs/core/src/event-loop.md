@@ -27,13 +27,16 @@ to `__iter__`. The `__await__` method is never executed, however.
 `loop.run()` starts the event loop. The call only returns when there are no further
 waiting tasks -- so, in usual conditions, never.
 
-`loop.schedule(task, value, deadline, finalizer)` schedules an awaitable to be run
-either as soon as possible, or at a specified time (given as a `deadline` in
+`loop.schedule(task, value, deadline, finalizer, reschedule)` schedules an awaitable to
+be run either as soon as possible, or at a specified time (given as a `deadline` in
 microseconds since system bootup.)
 
 In addition, when the task finishes processing or is closed externally, the `finalizer`
 callback will be executed, with the task and the return value (or the raised exception)
 as a parameter.
+
+If `reschedule` is true, the task is first cleared from the scheduled queue -- in
+effect, it is rescheduled to run at a different time.
 
 `loop.close(task)` removes a previously scheduled task from the list of waiting tasks
 and calls its finalizer.
@@ -154,9 +157,9 @@ syscalls is the preferred method of writing code.
 
 The following syscalls and constructs are available:
 
-**`loop.sleep(delay_us: int)`**: Suspend execution until the given delay (in
-microseconds) elapses. Sub-millisecond precision is not guaranteed, however.
-Return value is the planned deadline in microseconds since system start.
+**`loop.sleep(delay_ms: int)`**: Suspend execution until the given delay (in
+milliseconds) elapses. Return value is the planned deadline in milliseconds since system
+start.
 
 Calling `await loop.sleep(0)` yields execution to other tasks, and schedules the current
 task for the next tick.
@@ -171,7 +174,7 @@ the first of them finishes.
 
 It is possible to specify wait timeout for `loop.wait` by using `loop.race`:
 ```python
-result = await loop.race(loop.wait(io.TOUCH), loop.sleep(1000 * 1000))
+result = await loop.race(loop.wait(io.TOUCH), loop.sleep(1000))
 ```
 This introduces scheduling gaps: every child is treated as a task and scheduled
 to run. This means that if the child is a syscall, as in the above example, its action
@@ -183,6 +186,26 @@ Also, when a child task is done, another scheduling gap happens, and the parent 
 is scheduled to run on the next tick.
 
 _Upcoming changes may solve this in relevant cases, by inlining syscall operations._
+
+**`loop.spawn(task)`**: Start the task asynchronously. Return an object that allows
+the caller to await its result, or shut the task down.
+
+Example usage:
+```python
+task = loop.spawn(some_background_task())
+await do_something_here()
+result = await task
+```
+
+Unlike other syscalls, `loop.spawn` starts the task at instantiation time. `await`ing
+the same `loop.spawn` instance a second time will immediately return the result of the
+original run.
+
+If the task is cancelled (usually by calling `task.close()`), the awaiter receives a
+`loop.TaskClosed` exception.
+
+It is also possible to register a synchronous finalizer callback via
+`task.set_finalizer`. This is used internally to implement workflow management.
 
 **`loop.chan()`** is a unidirectional communication channel that actually implements two
 syscalls:

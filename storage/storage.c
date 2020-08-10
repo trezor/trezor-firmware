@@ -1104,6 +1104,11 @@ static secbool storage_get_encrypted(const uint16_t key, void *val_dest,
   return sectrue;
 }
 
+secbool storage_has(const uint16_t key) {
+  uint16_t len = 0;
+  return storage_get(key, NULL, 0, &len);
+}
+
 /*
  * Finds the data stored under key and writes its length to len. If val_dest is
  * not NULL and max_len >= len, then the data is copied to val_dest.

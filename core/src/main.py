@@ -6,7 +6,6 @@ import boot  # noqa: F401
 # prepare the USB interfaces, but do not connect to the host yet
 import usb
 
-import storage.recovery
 from trezor import loop, utils, wire, workflow
 
 # start the USB
@@ -15,7 +14,7 @@ usb.bus.open()
 
 def _boot_apps() -> None:
     # load applications
-    import apps.homescreen
+    import apps.base
     import apps.management
     import apps.bitcoin
     import apps.misc
@@ -37,7 +36,7 @@ def _boot_apps() -> None:
         import apps.debug
 
     # boot applications
-    apps.homescreen.boot()
+    apps.base.boot()
     apps.management.boot()
     apps.bitcoin.boot()
     apps.misc.boot()
@@ -57,22 +56,17 @@ def _boot_apps() -> None:
         apps.debug.boot()
 
     # run main event loop and specify which screen is the default
-    if storage.recovery.is_in_progress():
-        from apps.management.recovery_device.homescreen import recovery_homescreen
+    apps.base.set_homescreen()
+    workflow.start_default()
 
-        workflow.start_default(recovery_homescreen)
-    else:
-        from apps.homescreen.homescreen import homescreen
 
-        workflow.start_default(homescreen)
-
+_boot_apps()
 
 # initialize the wire codec
 wire.setup(usb.iface_wire)
 if __debug__:
-    wire.setup(usb.iface_debug)
+    wire.setup(usb.iface_debug, use_workflow=False)
 
-_boot_apps()
 loop.run()
 
 # loop is empty. That should not happen

@@ -68,6 +68,7 @@ message ButtonRequest {
         ButtonRequest_Success = 17;
         ButtonRequest_Warning = 18;
         ButtonRequest_PassphraseEntry = 19;
+        ButtonRequest_PinEntry = 20;
     }
 }
 

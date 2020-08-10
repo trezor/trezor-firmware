@@ -73,9 +73,11 @@ def do_recover_core(client, mnemonic, **kwargs):
 
         yield
         for word in mnemonic:
+            client.debug.wait_layout()
             client.debug.input(word)
 
         yield
+        client.debug.wait_layout()
         client.debug.click(buttons.OK)
 
     with client:
@@ -136,6 +138,8 @@ def test_invalid_seed_core(client):
 
         yield
         for _ in range(12):
+            layout = client.debug.wait_layout()
+            assert layout.text == "Bip39Keyboard"
             client.debug.input("stick")
 
         code = yield

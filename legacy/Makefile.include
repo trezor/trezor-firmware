@@ -99,8 +99,8 @@ LIBDEPS  += $(TOP_DIR)emulator/pizero/libpizero.a
 LDLIBS   += -lpizero -lbcm2835 -pthread
 endif
 
-CFLAGS   += $(shell pkg-config --cflags sdl2)
-LDLIBS   += $(shell pkg-config --libs sdl2)
+CFLAGS   += $(shell pkg-config --cflags sdl2 SDL2_image)
+LDLIBS   += $(shell pkg-config --libs sdl2 SDL2_image)
 
 ifdef RANDOM_DEV_FILE
 CFLAGS += -DRANDOM_DEV_FILE=\"$(RANDOM_DEV_FILE)\"

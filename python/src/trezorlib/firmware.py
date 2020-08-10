@@ -363,7 +363,7 @@ def calculate_code_hashes(
         chunk = code[start:end]
         # padding for last non-empty chunk
         if padding_byte is not None and start < len(code) and end > len(code):
-            chunk += padding_byte[0:1] * (chunk_size - len(chunk))
+            chunk += padding_byte[0:1] * (end - start - len(chunk))
 
         if not chunk:
             hashes.append(b"\0" * 32)

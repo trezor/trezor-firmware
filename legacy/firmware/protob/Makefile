@@ -3,7 +3,8 @@ Q := @
 endif
 
 SKIPPED_MESSAGES := Binance Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tezos WebAuthn \
-	DebugLinkRecordScreen DebugLinkReseedRandom DebugLinkShowText DebugLinkEraseSdCard
+	DebugLinkRecordScreen DebugLinkReseedRandom DebugLinkShowText DebugLinkEraseSdCard DebugLinkWatchLayout \
+	GetOwnershipProof OwnershipProof GetOwnershipId OwnershipId
 
 ifeq ($(BITCOIN_ONLY), 1)
 SKIPPED_MESSAGES += Ethereum Lisk NEM Stellar
@@ -17,7 +18,7 @@ PYTHON ?= python
 	@printf "  NANOPB  $@\n"
 	$(Q)$(PYTHON) ../../vendor/nanopb/generator/nanopb_generator.py $< \
 		-L '#include "%s"' \
-		-T \
+		-T -D . \
 		-s "mangle_names:M_FLATTEN"
 	@grep " CALLBACK, " $@ && echo "CALLBACK field found" && rm $@ && exit 1  || :
 

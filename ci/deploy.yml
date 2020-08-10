@@ -1,4 +1,4 @@
-image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
+image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/trezor-firmware-env.nix
 
 # Releases
 
@@ -62,16 +62,76 @@ release legacy fw regular deploy:
   tags:
     - deploy
 
-legacy fw btconly deploy:
+release legacy fw btconly deploy:
   stage: deploy
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares"
   before_script: []  # no pipenv
   dependencies:
-    - legacy fw regular build
+    - legacy fw btconly build
   script:
     - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
     - export NAME="trezor-fw-btconly-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
+    - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
+    - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
+    - rsync --delete -va $NAME "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}/$NAME"
+  only:
+    - /^legacy\//
+  except:
+    - branches  # run for tags only
+  tags:
+    - deploy
+
+release core fw regular debug deploy:
+  stage: deploy
+  variables:
+    DEPLOY_DIRECTORY: "releases/firmwares"
+  before_script: []  # no pipenv
+  dependencies:
+    - core fw regular debug build
+  script:
+    - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
+    - export NAME="trezor-fw-regular-debug-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
+    - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
+    - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
+    - rsync --delete -va $NAME "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}/$NAME"
+  only:
+    - /^core\//
+  except:
+    - branches  # run for tags only
+  tags:
+    - deploy
+
+release legacy fw regular debug deploy:
+  stage: deploy
+  variables:
+    DEPLOY_DIRECTORY: "releases/firmwares"
+  before_script: []  # no pipenv
+  dependencies:
+    - legacy fw regular debug build
+  script:
+    - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
+    - export NAME="trezor-fw-regular-debug-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
+    - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
+    - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
+    - rsync --delete -va $NAME "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}/$NAME"
+  only:
+    - /^legacy\//
+  except:
+    - branches  # run for tags only
+  tags:
+    - deploy
+
+release legacy fw btconly debug deploy:
+  stage: deploy
+  variables:
+    DEPLOY_DIRECTORY: "releases/firmwares"
+  before_script: []  # no pipenv
+  dependencies:
+    - legacy fw btconly debug build
+  script:
+    - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
+    - export NAME="trezor-fw-btconly-debug-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
     - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
     - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
     - rsync --delete -va $NAME "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}/$NAME"

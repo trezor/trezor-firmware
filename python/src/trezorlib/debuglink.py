@@ -14,19 +14,22 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import logging
 from collections import namedtuple
 from copy import deepcopy
 
 from mnemonic import Mnemonic
 
-from . import mapping, messages as proto, protobuf
+from . import mapping, messages, protobuf
 from .client import TrezorClient
+from .log import DUMP_BYTES
 from .tools import expect
 
 EXPECTED_RESPONSES_CONTEXT_LINES = 3
 
-
 LayoutLines = namedtuple("LayoutLines", "lines text")
+
+LOG = logging.getLogger(__name__)
 
 
 def layout_lines(lines):
@@ -45,59 +48,75 @@ class DebugLink:
         self.transport.end_session()
 
     def _call(self, msg, nowait=False):
+        LOG.debug(
+            "sending message: {}".format(msg.__class__.__name__),
+            extra={"protobuf": msg},
+        )
         msg_type, msg_bytes = mapping.encode(msg)
+        LOG.log(
+            DUMP_BYTES,
+            "encoded as type {} ({} bytes): {}".format(
+                msg_type, len(msg_bytes), msg_bytes.hex()
+            ),
+        )
         self.transport.write(msg_type, msg_bytes)
         if nowait:
             return None
+
         ret_type, ret_bytes = self.transport.read()
-        return mapping.decode(ret_type, ret_bytes)
+        LOG.log(
+            DUMP_BYTES,
+            "received type {} ({} bytes): {}".format(
+                msg_type, len(msg_bytes), msg_bytes.hex()
+            ),
+        )
+        msg = mapping.decode(ret_type, ret_bytes)
+        LOG.debug(
+            "received message: {}".format(msg.__class__.__name__),
+            extra={"protobuf": msg},
+        )
+        return msg
 
     def state(self):
-        return self._call(proto.DebugLinkGetState())
+        return self._call(messages.DebugLinkGetState())
 
     def read_layout(self):
         return layout_lines(self.state().layout_lines)
 
     def wait_layout(self):
-        obj = self._call(proto.DebugLinkGetState(wait_layout=True))
+        obj = self._call(messages.DebugLinkGetState(wait_layout=True))
         return layout_lines(obj.layout_lines)
 
-    def read_pin(self):
-        state = self.state()
-        return state.pin, state.matrix
+    def watch_layout(self, watch: bool) -> None:
+        """Enable or disable watching layouts.
+        If disabled, wait_layout will not work.
 
-    def read_pin_encoded(self):
-        return self.encode_pin(*self.read_pin())
+        The message is missing on T1. Use `TrezorClientDebugLink.watch_layout` for
+        cross-version compatibility.
+        """
+        self._call(messages.DebugLinkWatchLayout(watch=watch))
 
     def encode_pin(self, pin, matrix=None):
         """Transform correct PIN according to the displayed matrix."""
         if matrix is None:
-            _, matrix = self.read_pin()
+            matrix = self.state().matrix
+            if matrix is None:
+                # we are on trezor-core
+                return pin
+
         return "".join([str(matrix.index(p) + 1) for p in pin])
 
-    def read_mnemonic_secret(self):
-        obj = self._call(proto.DebugLinkGetState())
-        return obj.mnemonic_secret
-
     def read_recovery_word(self):
-        obj = self._call(proto.DebugLinkGetState())
-        return (obj.recovery_fake_word, obj.recovery_word_pos)
+        state = self.state()
+        return (state.recovery_fake_word, state.recovery_word_pos)
 
     def read_reset_word(self):
-        obj = self._call(proto.DebugLinkGetState(wait_word_list=True))
-        return obj.reset_word
+        state = self._call(messages.DebugLinkGetState(wait_word_list=True))
+        return state.reset_word
 
     def read_reset_word_pos(self):
-        obj = self._call(proto.DebugLinkGetState(wait_word_pos=True))
-        return obj.reset_word_pos
-
-    def read_reset_entropy(self):
-        obj = self._call(proto.DebugLinkGetState())
-        return obj.reset_entropy
-
-    def read_passphrase_protection(self):
-        obj = self._call(proto.DebugLinkGetState())
-        return obj.passphrase_protection
+        state = self._call(messages.DebugLinkGetState(wait_word_pos=True))
+        return state.reset_word_pos
 
     def input(self, word=None, button=None, swipe=None, x=None, y=None, wait=False):
         if not self.allow_interactions:
@@ -107,7 +126,7 @@ class DebugLink:
         if args != 1:
             raise ValueError("Invalid input - must use one of word, button, swipe")
 
-        decision = proto.DebugLinkDecision(
+        decision = messages.DebugLinkDecision(
             yes_no=button, swipe=swipe, input=word, x=x, y=y, wait=wait
         )
         ret = self._call(decision, nowait=not wait)
@@ -125,45 +144,45 @@ class DebugLink:
         self.input(button=False)
 
     def swipe_up(self):
-        self.input(swipe=proto.DebugSwipeDirection.UP)
+        self.input(swipe=messages.DebugSwipeDirection.UP)
 
     def swipe_down(self):
-        self.input(swipe=proto.DebugSwipeDirection.DOWN)
+        self.input(swipe=messages.DebugSwipeDirection.DOWN)
 
     def swipe_right(self):
-        self.input(swipe=proto.DebugSwipeDirection.RIGHT)
+        self.input(swipe=messages.DebugSwipeDirection.RIGHT)
 
     def swipe_left(self):
-        self.input(swipe=proto.DebugSwipeDirection.LEFT)
+        self.input(swipe=messages.DebugSwipeDirection.LEFT)
 
     def stop(self):
-        self._call(proto.DebugLinkStop(), nowait=True)
+        self._call(messages.DebugLinkStop(), nowait=True)
 
     def reseed(self, value):
-        self._call(proto.DebugLinkReseedRandom(value=value))
+        self._call(messages.DebugLinkReseedRandom(value=value))
 
     def start_recording(self, directory):
-        self._call(proto.DebugLinkRecordScreen(target_directory=directory))
+        self._call(messages.DebugLinkRecordScreen(target_directory=directory))
 
     def stop_recording(self):
-        self._call(proto.DebugLinkRecordScreen(target_directory=None))
+        self._call(messages.DebugLinkRecordScreen(target_directory=None))
 
-    @expect(proto.DebugLinkMemory, field="memory")
+    @expect(messages.DebugLinkMemory, field="memory")
     def memory_read(self, address, length):
-        return self._call(proto.DebugLinkMemoryRead(address=address, length=length))
+        return self._call(messages.DebugLinkMemoryRead(address=address, length=length))
 
     def memory_write(self, address, memory, flash=False):
         self._call(
-            proto.DebugLinkMemoryWrite(address=address, memory=memory, flash=flash),
+            messages.DebugLinkMemoryWrite(address=address, memory=memory, flash=flash),
             nowait=True,
         )
 
     def flash_erase(self, sector):
-        self._call(proto.DebugLinkFlashErase(sector=sector), nowait=True)
+        self._call(messages.DebugLinkFlashErase(sector=sector), nowait=True)
 
-    @expect(proto.Success)
+    @expect(messages.Success)
     def erase_sd_card(self, format=True):
-        return self._call(proto.DebugLinkEraseSdCard(format=format))
+        return self._call(messages.DebugLinkEraseSdCard(format=format))
 
 
 class NullDebugLink(DebugLink):
@@ -178,8 +197,8 @@ class NullDebugLink(DebugLink):
 
     def _call(self, msg, nowait=False):
         if not nowait:
-            if isinstance(msg, proto.DebugLinkGetState):
-                return proto.DebugLinkState()
+            if isinstance(msg, messages.DebugLinkGetState):
+                return messages.DebugLinkState()
             else:
                 raise RuntimeError("unexpected call to a fake debuglink")
 
@@ -198,28 +217,10 @@ class DebugUI:
 
     def button_request(self, code):
         if self.input_flow is None:
-            # XXX
-            # On Trezor T, in some rare cases, two layouts may be queuing for events at
-            # the same time.  A new workflow will first send out a ButtonRequest, wait
-            # for a ButtonAck, and only then display a layout (closing the old one).
-            # That means that if a layout that accepts debuglink decisions is currently
-            # on screen, it has a good chance of accepting the following `press_yes`
-            # before it can be closed by the newly open layout from the new workflow.
-            #
-            # This happens in particular when the recovery homescreen is on, because
-            # it is a homescreen that accepts debuglink decisions.
-            #
-            # To prevent the issue, we insert a `wait_layout`, which on TT will only
-            # return after the screen is refreshed, so we are certain that the new
-            # layout is on. On T1 it is a no-op.
-            #
-            # This could run into trouble if some workflow asks for a ButtonRequest
-            # without refreshing the screen.
-            # This will also freeze on old bridges, where Read and Write are not
-            # separate operations, because it relies on ButtonAck being sent without
-            # waiting for a response.
-            self.debuglink.wait_layout()
-            self.debuglink.press_yes()
+            if code == messages.ButtonRequestType.PinEntry:
+                self.debuglink.input(self.get_pin())
+            else:
+                self.debuglink.press_yes()
         elif self.input_flow is self.INPUT_FLOW_DONE:
             raise AssertionError("input flow ended prematurely")
         else:
@@ -230,13 +231,12 @@ class DebugUI:
 
     def get_pin(self, code=None):
         if self.pins is None:
-            # respond with correct pin
-            return self.debuglink.read_pin_encoded()
+            raise RuntimeError("PIN requested but no sequence was configured")
 
-        if self.pins == []:
+        try:
+            return self.debuglink.encode_pin(next(self.pins))
+        except StopIteration:
             raise AssertionError("PIN sequence ended prematurely")
-        else:
-            return self.debuglink.encode_pin(self.pins.pop(0))
 
     def get_passphrase(self, available_on_device):
         return self.passphrase
@@ -342,11 +342,27 @@ class TrezorClientDebugLink(TrezorClient):
         if not hasattr(input_flow, "send"):
             raise RuntimeError("input_flow should be a generator function")
         self.ui.input_flow = input_flow
-        next(input_flow)  # can't send before first yield
+        input_flow.send(None)  # start the generator
+
+    def watch_layout(self, watch: bool) -> None:
+        """Enable or disable watching layout changes.
+
+        Happens implicitly in a `with client` block.
+
+        Since trezor-core v2.3.2, it is necessary to call `watch_layout()` before
+        using `debug.wait_layout()`, otherwise layout changes are not reported.
+        """
+        if self.version >= (2, 3, 2):
+            # version check is necessary because otherwise we cannot reliably detect
+            # whether and where to wait for reply:
+            # - T1 reports unknown debuglink messages on the wirelink
+            # - TT < 2.3.0 does not reply to unknown debuglink messages due to a bug
+            self.debug.watch_layout(watch)
 
     def __enter__(self):
         # For usage in with/expected_responses
         self.in_with_statement += 1
+        self.watch_layout(True)
         return self
 
     def __exit__(self, _type, value, traceback):
@@ -371,6 +387,7 @@ class TrezorClientDebugLink(TrezorClient):
             self.expected_responses = None
             self.current_response = None
             self.ui.clear()
+            self.watch_layout(False)
 
         return False
 
@@ -415,10 +432,7 @@ class TrezorClientDebugLink(TrezorClient):
         """Respond to PIN prompts from device with the provided PINs.
         The sequence must be at least as long as the expected number of PIN prompts.
         """
-        # XXX This currently only works on T1 as a response to PinMatrixRequest, but
-        # if we modify trezor-core to introduce PIN prompts predictably (i.e. by
-        # a new ButtonRequestType), it could also be used on TT via debug.input()
-        self.ui.pins = list(pins)
+        self.ui.pins = iter(pins)
 
     def use_passphrase(self, passphrase):
         """Respond to passphrase prompts from device with the provided passphrase."""
@@ -532,7 +546,7 @@ class TrezorClientDebugLink(TrezorClient):
         raise RuntimeError("Unexpected call")
 
 
-@expect(proto.Success, field="message")
+@expect(messages.Success, field="message")
 def load_device(
     client,
     mnemonic,
@@ -555,7 +569,7 @@ def load_device(
         )
 
     resp = client.call(
-        proto.LoadDevice(
+        messages.LoadDevice(
             mnemonics=mnemonics,
             pin=pin,
             passphrase_protection=passphrase_protection,
@@ -574,25 +588,25 @@ def load_device(
 load_device_by_mnemonic = load_device
 
 
-@expect(proto.Success, field="message")
+@expect(messages.Success, field="message")
 def self_test(client):
     if client.features.bootloader_mode is not True:
         raise RuntimeError("Device must be in bootloader mode")
 
     return client.call(
-        proto.SelfTest(
+        messages.SelfTest(
             payload=b"\x00\xFF\x55\xAA\x66\x99\x33\xCCABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\x00\xFF\x55\xAA\x66\x99\x33\xCC"
         )
     )
 
 
-@expect(proto.Success, field="message")
+@expect(messages.Success, field="message")
 def show_text(client, header_text, body_text, icon=None, icon_color=None):
     body_text = [
-        proto.DebugLinkShowTextItem(style=style, content=content)
+        messages.DebugLinkShowTextItem(style=style, content=content)
         for style, content in body_text
     ]
-    msg = proto.DebugLinkShowText(
+    msg = messages.DebugLinkShowText(
         header_text=header_text,
         body_text=body_text,
         header_icon=icon,

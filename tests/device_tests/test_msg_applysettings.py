@@ -14,24 +14,31 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import time
-
 import pytest
 
-from trezorlib import btc, device, messages as proto
+from trezorlib import btc, device, exceptions, messages
+from trezorlib.tools import parse_path
 
-EXPECTED_RESPONSES_NOPIN = [proto.ButtonRequest(), proto.Success(), proto.Features()]
-EXPECTED_RESPONSES_PIN = [proto.PinMatrixRequest()] + EXPECTED_RESPONSES_NOPIN
+EXPECTED_RESPONSES_NOPIN = [
+    messages.ButtonRequest(),
+    messages.Success(),
+    messages.Features(),
+]
+EXPECTED_RESPONSES_PIN_T1 = [messages.PinMatrixRequest()] + EXPECTED_RESPONSES_NOPIN
+EXPECTED_RESPONSES_PIN_TT = [messages.ButtonRequest()] + EXPECTED_RESPONSES_NOPIN
+
+PIN4 = "1234"
 
 
 def _set_expected_responses(client):
+    client.use_pin_sequence([PIN4])
     if client.features.model == "1":
-        client.set_expected_responses(EXPECTED_RESPONSES_PIN)
+        client.set_expected_responses(EXPECTED_RESPONSES_PIN_T1)
     else:
-        client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
+        client.set_expected_responses(EXPECTED_RESPONSES_PIN_TT)
 
 
-@pytest.mark.setup_client(pin=True)
+@pytest.mark.setup_client(pin=PIN4)
 class TestMsgApplysettings:
     def test_apply_settings(self, client):
         assert client.features.label == "test"
@@ -52,7 +59,7 @@ class TestMsgApplysettings:
 
         assert client.features.language == "en-US"
 
-    @pytest.mark.setup_client(pin=True, passphrase=False)
+    @pytest.mark.setup_client(pin=PIN4, passphrase=False)
     def test_apply_settings_passphrase(self, client):
         assert client.features.passphrase_protection is False
 
@@ -116,48 +123,37 @@ class TestMsgApplysettings:
             _set_expected_responses(client)
             device.apply_settings(client, homescreen=img)
 
-    @pytest.mark.skip_t2
-    def test_apply_auto_lock_delay(self, client):
-        with client:
-            client.set_expected_responses(EXPECTED_RESPONSES_PIN)
-            device.apply_settings(client, auto_lock_delay_ms=int(10e3))  # 10 secs
+    @pytest.mark.skip_t1
+    @pytest.mark.setup_client(pin=None)
+    def test_safety_checks(self, client):
+        BAD_ADDRESS = parse_path("m/0")
 
-        time.sleep(0.1)  # sleep less than auto-lock delay
-        with client:
-            # No PIN protection is required.
-            client.set_expected_responses([proto.Address()])
-            btc.get_address(client, "Testnet", [0])
-
-        time.sleep(10.1)  # sleep more than auto-lock delay
-        with client:
-            client.set_expected_responses([proto.PinMatrixRequest(), proto.Address()])
-            btc.get_address(client, "Testnet", [0])
-
-    @pytest.mark.skip_t2
-    def test_apply_minimal_auto_lock_delay(self, client):
-        """
-        Verify that the delay is not below the minimal auto-lock delay (10 secs)
-        otherwise the device may auto-lock before any user interaction.
-        """
+        with pytest.raises(
+            exceptions.TrezorFailure, match="Forbidden key path"
+        ), client:
+            client.set_expected_responses([messages.Failure()])
+            btc.get_address(client, "Bitcoin", BAD_ADDRESS)
 
         with client:
-            client.set_expected_responses(EXPECTED_RESPONSES_PIN)
-            # Note: the actual delay will be 10 secs (see above).
-            device.apply_settings(client, auto_lock_delay_ms=int(1e3))
+            client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
+            device.apply_settings(
+                client, safety_checks=messages.SafetyCheckLevel.Prompt
+            )
 
-        time.sleep(0.1)  # sleep less than auto-lock delay
         with client:
-            # No PIN protection is required.
-            client.set_expected_responses([proto.Address()])
-            btc.get_address(client, "Testnet", [0])
+            client.set_expected_responses(
+                [messages.ButtonRequest(), messages.Address()]
+            )
+            btc.get_address(client, "Bitcoin", BAD_ADDRESS)
 
-        time.sleep(2)  # sleep less than the minimal auto-lock delay
         with client:
-            # No PIN protection is required.
-            client.set_expected_responses([proto.Address()])
-            btc.get_address(client, "Testnet", [0])
+            client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
+            device.apply_settings(
+                client, safety_checks=messages.SafetyCheckLevel.Strict
+            )
 
-        time.sleep(10.1)  # sleep more than the minimal auto-lock delay
-        with client:
-            client.set_expected_responses([proto.PinMatrixRequest(), proto.Address()])
-            btc.get_address(client, "Testnet", [0])
+        with pytest.raises(
+            exceptions.TrezorFailure, match="Forbidden key path"
+        ), client:
+            client.set_expected_responses([messages.Failure()])
+            btc.get_address(client, "Bitcoin", BAD_ADDRESS)

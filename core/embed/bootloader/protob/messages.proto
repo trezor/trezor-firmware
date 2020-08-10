@@ -1,26 +1,26 @@
 syntax = "proto2";
 
-import "types.proto";
 
 /**
  * Mapping between Trezor wire identifier (uint) and a protobuf message
  */
 enum MessageType {
-	MessageType_Initialize = 0;
-	MessageType_Ping = 1;
-	MessageType_Success = 2;
-	MessageType_Failure = 3;
-	MessageType_FirmwareErase = 6;
-	MessageType_FirmwareUpload = 7;
-	MessageType_FirmwareRequest = 8;
-	MessageType_Features = 17;
-	MessageType_ButtonRequest = 26;
-	MessageType_ButtonAck = 27;
-	MessageType_GetFeatures = 55;
+    MessageType_Initialize = 0;
+    MessageType_Ping = 1;
+    MessageType_Success = 2;
+    MessageType_Failure = 3;
+    MessageType_FirmwareErase = 6;
+    MessageType_FirmwareUpload = 7;
+    MessageType_FirmwareRequest = 8;
+    MessageType_Features = 17;
+    MessageType_ButtonRequest = 26;
+    MessageType_ButtonAck = 27;
+    MessageType_GetFeatures = 55;
 }
 
 /**
  * Request: Reset device to default state and ask for device details
+ * @start
  * @next Features
  */
 message Initialize {
@@ -28,6 +28,7 @@ message Initialize {
 
 /**
  * Request: Ask for device details (no device reset)
+ * @start
  * @next Features
  */
 message GetFeatures {
@@ -35,87 +36,89 @@ message GetFeatures {
 
 /**
  * Response: Reports various information about the device
- * @prev Initialize
- * @prev GetFeatures
+ * @end
  */
 message Features {
-	optional string vendor = 1;			// name of the manufacturer, e.g. "trezor.io"
-	optional uint32 major_version = 2;		// major version of the firmware/bootloader, e.g. 1
-	optional uint32 minor_version = 3;		// minor version of the firmware/bootloader, e.g. 0
-	optional uint32 patch_version = 4;		// patch version of the firmware/bootloader, e.g. 0
-	optional bool bootloader_mode = 5;		// is device in bootloader mode?
-	optional string device_id = 6;			// device's unique identifier
-//	optional bool pin_protection = 7;		// is device protected by PIN?
-//	optional bool passphrase_protection = 8;	// is node/mnemonic encrypted using passphrase?
-	optional string language = 9;			// device language
-	optional string label = 10;			// device description label
-	optional bool initialized = 12;			// does device contain seed?
-	optional bytes revision = 13;			// SCM revision of firmware
-//	optional bytes bootloader_hash = 14;		// hash of the bootloader
-//	optional bool imported = 15;			// was storage imported from an external source?
-//	optional bool pin_cached = 16;			// is PIN already cached in session?
-//	optional bool passphrase_cached = 17;		// is passphrase already cached in session?
-	optional bool firmware_present = 18;		// is valid firmware loaded?
-//	optional bool needs_backup = 19;		// does storage need backup? (equals to Storage.needs_backup)
-//	optional uint32 flags = 20;			// device flags (equals to Storage.flags)
-	optional string model = 21;			// device hardware model
-	optional uint32 fw_major = 22;			// reported firmware version if in bootloader mode
-	optional uint32 fw_minor = 23;			// reported firmware version if in bootloader mode
-	optional uint32 fw_patch = 24;			// reported firmware version if in bootloader mode
-	optional string fw_vendor = 25;			// reported firmware vendor if in bootloader mode
-	optional bytes fw_vendor_keys = 26;		// reported firmware vendor keys (their hash)
+    optional string vendor = 1;                 // name of the manufacturer, e.g. "trezor.io"
+    optional uint32 major_version = 2;          // major version of the firmware/bootloader, e.g. 1
+    optional uint32 minor_version = 3;          // minor version of the firmware/bootloader, e.g. 0
+    optional uint32 patch_version = 4;          // patch version of the firmware/bootloader, e.g. 0
+    optional bool bootloader_mode = 5;          // is device in bootloader mode?
+    optional string device_id = 6;              // device's unique identifier
+    optional string language = 9;               // device language
+    optional string label = 10;                 // device description label
+    optional bool initialized = 12;             // does device contain seed?
+    optional bytes revision = 13;               // SCM revision of firmware
+    optional bool firmware_present = 18;        // is valid firmware loaded?
+    optional string model = 21;                 // device hardware model
+    optional uint32 fw_major = 22;              // reported firmware version if in bootloader mode
+    optional uint32 fw_minor = 23;              // reported firmware version if in bootloader mode
+    optional uint32 fw_patch = 24;              // reported firmware version if in bootloader mode
+    optional string fw_vendor = 25;             // reported firmware vendor if in bootloader mode
+    optional bytes fw_vendor_keys = 26;         // reported firmware vendor keys (their hash)
 }
 
 /**
  * Request: Test if the device is alive, device sends back the message in Success response
+ * @start
  * @next Success
  */
 message Ping {
-	optional string message = 1;			// message to send back in Success message
-	optional bool button_protection = 2;		// ask for button press
-	optional bool pin_protection = 3;		// ask for PIN if set in device
-	optional bool passphrase_protection = 4;	// ask for passphrase if set in device
+    optional string message = 1;                // message to send back in Success message
 }
 
 /**
  * Response: Success of the previous request
+ * @end
  */
 message Success {
-	optional string message = 1;	// human readable description of action or request-specific payload
+    optional string message = 1;    // human readable description of action or request-specific payload
 }
 
 /**
  * Response: Failure of the previous request
+ * @end
  */
 message Failure {
-	optional FailureType code = 1;	// computer-readable definition of the error state
-	optional string message = 2;	// human-readable message of the error state
+    optional FailureType code = 1;  // computer-readable definition of the error state
+    optional string message = 2;    // human-readable message of the error state
+    enum FailureType {
+        Failure_UnexpectedMessage = 1;
+        Failure_DataError = 3;
+        Failure_ActionCancelled = 4;
+        Failure_ProcessError = 9;
+    }
 }
 
 /**
  * Response: Device is waiting for HW button press.
+ * @auxstart
  * @next ButtonAck
- * @next Cancel
  */
 message ButtonRequest {
-	optional ButtonRequestType code = 1;
+    optional ButtonRequestType code = 1;
+    /**
+    * Type of button request
+    */
+    enum ButtonRequestType {
+        ButtonRequest_Other = 1;
+    }
 }
 
 /**
  * Request: Computer agrees to wait for HW button press
- * @prev ButtonRequest
+ * @auxend
  */
 message ButtonAck {
 }
 
 /**
  * Request: Ask device to erase its firmware (so it can be replaced via FirmwareUpload)
- * @next Success
+ * @start
  * @next FirmwareRequest
- * @next Failure
  */
 message FirmwareErase {
-	optional uint32 length = 1;			// length of new firmware
+    optional uint32 length = 1; // length of new firmware
 }
 
 /**
@@ -123,16 +126,17 @@ message FirmwareErase {
  * @next FirmwareUpload
  */
 message FirmwareRequest {
-	optional uint32 offset = 1;			// offset of requested firmware chunk
-	optional uint32 length = 2;			// length of requested firmware chunk
+    optional uint32 offset = 1; // offset of requested firmware chunk
+    optional uint32 length = 2; // length of requested firmware chunk
 }
 
 /**
  * Request: Send firmware in binary form to the device
+ * @next FirmwareRequest
  * @next Success
  * @next Failure
  */
-message FirmwareUpload {
-	required bytes payload = 1;			// firmware to be loaded into device
-	optional bytes hash = 2;			// hash of the payload
+ message FirmwareUpload {
+    required bytes payload = 1; // firmware to be loaded into device
+    optional bytes hash = 2;    // hash of the payload
 }

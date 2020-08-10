@@ -24,7 +24,7 @@ if False:
 
 async def recovery_homescreen() -> None:
     if not storage.recovery.is_in_progress():
-        workflow.replace_default(homescreen)
+        workflow.set_default(homescreen)
         return
 
     # recovery process does not communicate on the wire
@@ -41,7 +41,7 @@ async def recovery_process(ctx: wire.GenericContext) -> Success:
             storage.recovery.end_progress()
         else:
             storage.wipe()
-        raise wire.ActionCancelled("Cancelled")
+        raise wire.ActionCancelled
 
 
 async def _continue_recovery_process(ctx: wire.GenericContext) -> Success:

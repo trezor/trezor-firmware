@@ -44,7 +44,7 @@ enum MessageType {
     MessageType_PinMatrixRequest = 18 [(wire_out) = true];
     MessageType_PinMatrixAck = 19 [(wire_in) = true, (wire_tiny) = true, (wire_no_fsm) = true];
     MessageType_Cancel = 20 [(wire_in) = true, (wire_tiny) = true];
-    MessageType_ClearSession = 24 [(wire_in) = true];
+    MessageType_LockDevice = 24 [(wire_in) = true];
     MessageType_ApplySettings = 25 [(wire_in) = true];
     MessageType_ButtonRequest = 26 [(wire_out) = true];
     MessageType_ButtonAck = 27 [(wire_in) = true, (wire_tiny) = true, (wire_no_fsm) = true];
@@ -63,6 +63,7 @@ enum MessageType {
     MessageType_GetNextU2FCounter = 80 [(wire_in) = true];
     MessageType_NextU2FCounter = 81 [(wire_out) = true];
     MessageType_ChangeWipeCode = 82 [(wire_in) = true];
+    MessageType_EndSession = 83 [(wire_in) = true];
 
     // Deprecated messages, kept for protobuf compatibility.
     // Both are marked wire_out so that we don't need to implement incoming handler for legacy
@@ -86,6 +87,10 @@ enum MessageType {
     MessageType_SignMessage = 38 [(wire_in) = true];
     MessageType_VerifyMessage = 39 [(wire_in) = true];
     MessageType_MessageSignature = 40 [(wire_out) = true];
+    MessageType_GetOwnershipId = 43 [(wire_in) = true];
+    MessageType_OwnershipId = 44 [(wire_out) = true];
+    MessageType_GetOwnershipProof = 49 [(wire_in) = true];
+    MessageType_OwnershipProof = 50 [(wire_out) = true];
 
     // Crypto
     MessageType_CipherKeyValue = 23 [(wire_in) = true];
@@ -114,6 +119,7 @@ enum MessageType {
     MessageType_DebugLinkRecordScreen = 9003 [(wire_debug_in) = true];
     MessageType_DebugLinkShowText = 9004 [(wire_debug_in) = true];
     MessageType_DebugLinkEraseSdCard = 9005 [(wire_debug_in) = true];
+    MessageType_DebugLinkWatchLayout = 9006 [(wire_debug_in) = true];
 
     // Ethereum
     MessageType_EthereumGetPublicKey = 450 [(wire_in) = true];
@@ -175,13 +181,12 @@ enum MessageType {
 
     // Cardano
     // dropped Sign/VerifyMessage ids 300-302
+    // dropped TxRequest/TxAck ids 304 and 309 (shelley update)
     MessageType_CardanoSignTx = 303 [(wire_in) = true];
-    MessageType_CardanoTxRequest = 304 [(wire_out) = true];
     MessageType_CardanoGetPublicKey = 305 [(wire_in) = true];
     MessageType_CardanoPublicKey = 306 [(wire_out) = true];
     MessageType_CardanoGetAddress = 307 [(wire_in) = true];
     MessageType_CardanoAddress = 308 [(wire_out) = true];
-    MessageType_CardanoTxAck = 309 [(wire_in) = true];
     MessageType_CardanoSignedTx = 310 [(wire_out) = true];
 
     // Ripple

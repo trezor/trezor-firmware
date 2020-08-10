@@ -1,4 +1,4 @@
-image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/environment
+image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/trezor-firmware-env.nix
 
 style prebuild:
   stage: prebuild
@@ -9,7 +9,7 @@ style prebuild:
       - "**/*.h"
       - "**/*.py"
   script:
-    - pipenv run make style_check
+    - nix-shell --run "pipenv run make style_check"
 
 common prebuild:
   stage: prebuild
@@ -19,7 +19,7 @@ common prebuild:
       - "**/*.json"
       - "**/*.proto"
   script:
-    - pipenv run make defs_check
+    - nix-shell --run "pipenv run make defs_check"
 
 gen prebuild:
   stage: prebuild
@@ -33,11 +33,11 @@ gen prebuild:
       - "**/*.py"
       - "**/*.pyi"
   script:
-    - pipenv run make gen_check
+    - nix-shell --run "pipenv run make gen_check"
 
-release commit messages prebuild:
-  stage: prebuild
-  only:
-    - /^release\//
-  script:
-    - ci/check_release_commit_messages.sh
+#release commit messages prebuild:
+#  stage: prebuild
+#  only:
+#    - /^release\//
+#  script:
+#    - nix-shell --run "ci/check_release_commit_messages.sh"

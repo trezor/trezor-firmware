@@ -18,6 +18,7 @@ if __debug__:
         from trezor.messages.DebugLinkReseedRandom import DebugLinkReseedRandom
         from trezor.messages.DebugLinkState import DebugLinkState
         from trezor.messages.DebugLinkEraseSdCard import DebugLinkEraseSdCard
+        from trezor.messages.DebugLinkWatchLayout import DebugLinkWatchLayout
 
     save_screen = False
     save_screen_directory = "."
@@ -37,6 +38,7 @@ if __debug__:
 
     layout_change_chan = loop.chan()
     current_content = None  # type: Optional[List[str]]
+    watch_layout_changes = False
 
     def screenshot() -> bool:
         if save_screen:
@@ -47,7 +49,7 @@ if __debug__:
     def notify_layout_change(layout: ui.Layout) -> None:
         global current_content
         current_content = layout.read_content()
-        if layout_change_chan.takers:
+        if watch_layout_changes:
             layout_change_chan.publish(current_content)
 
     async def debuglink_decision_dispatcher() -> None:
@@ -69,13 +71,22 @@ if __debug__:
                 elif msg.swipe == DebugSwipeDirection.RIGHT:
                     await swipe_chan.put(swipe.SWIPE_RIGHT)
             if msg.input is not None:
-                await input_chan.put(msg.input)
+                await input_chan.put(ui.Result(msg.input))
 
     loop.schedule(debuglink_decision_dispatcher())
 
     async def return_layout_change(ctx: wire.Context) -> None:
         content = await layout_change_chan.take()
         await ctx.write(DebugLinkLayout(lines=content))
+
+    async def dispatch_DebugLinkWatchLayout(
+        ctx: wire.Context, msg: DebugLinkWatchLayout
+    ) -> Success:
+        global watch_layout_changes
+        layout_change_chan.putters.clear()
+        watch_layout_changes = bool(msg.watch)
+        log.debug(__name__, "Watch layout changes: {}".format(watch_layout_changes))
+        return Success()
 
     async def dispatch_DebugLinkDecision(
         ctx: wire.Context, msg: DebugLinkDecision
@@ -166,8 +177,9 @@ if __debug__:
 
         wire.add(MessageType.LoadDevice, __name__, "load_device")
         wire.add(MessageType.DebugLinkShowText, __name__, "show_text")
-        wire.register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)
+        wire.register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)  # type: ignore
         wire.register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)
         wire.register(MessageType.DebugLinkReseedRandom, dispatch_DebugLinkReseedRandom)
         wire.register(MessageType.DebugLinkRecordScreen, dispatch_DebugLinkRecordScreen)
         wire.register(MessageType.DebugLinkEraseSdCard, dispatch_DebugLinkEraseSdCard)
+        wire.register(MessageType.DebugLinkWatchLayout, dispatch_DebugLinkWatchLayout)

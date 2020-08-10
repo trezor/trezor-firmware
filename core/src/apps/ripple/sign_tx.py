@@ -6,7 +6,7 @@ from trezor.messages.RippleSignTx import RippleSignTx
 from trezor.wire import ProcessError
 
 from apps.common import paths
-from apps.common.seed import with_slip44_keychain
+from apps.common.keychain import with_slip44_keychain
 from apps.ripple import CURVE, SLIP44_ID, helpers, layout
 from apps.ripple.serialize import serialize
 

@@ -4,7 +4,6 @@
 #ifndef PB_MESSAGES_PB_H_INCLUDED
 #define PB_MESSAGES_PB_H_INCLUDED
 #include <pb.h>
-#include "types.pb.h"
 
 #if PB_PROTO_HEADER_VERSION != 40
 #error Regenerate this file with the current version of nanopb generator.
@@ -28,6 +27,17 @@ typedef enum _MessageType {
     MessageType_MessageType_ButtonAck = 27,
     MessageType_MessageType_GetFeatures = 55
 } MessageType;
+
+typedef enum _FailureType {
+    FailureType_Failure_UnexpectedMessage = 1,
+    FailureType_Failure_DataError = 3,
+    FailureType_Failure_ActionCancelled = 4,
+    FailureType_Failure_ProcessError = 9
+} FailureType;
+
+typedef enum _ButtonRequestType {
+    ButtonRequestType_ButtonRequest_Other = 1
+} ButtonRequestType;
 
 /* Struct definitions */
 typedef struct _ButtonAck {
@@ -115,12 +125,6 @@ typedef struct _FirmwareUpload {
 typedef struct _Ping {
     bool has_message;
     char message[256];
-    bool has_button_protection;
-    bool button_protection;
-    bool has_pin_protection;
-    bool pin_protection;
-    bool has_passphrase_protection;
-    bool passphrase_protection;
 } Ping;
 
 typedef struct _Success {
@@ -134,12 +138,20 @@ typedef struct _Success {
 #define _MessageType_MAX MessageType_MessageType_GetFeatures
 #define _MessageType_ARRAYSIZE ((MessageType)(MessageType_MessageType_GetFeatures+1))
 
+#define _FailureType_MIN FailureType_Failure_UnexpectedMessage
+#define _FailureType_MAX FailureType_Failure_ProcessError
+#define _FailureType_ARRAYSIZE ((FailureType)(FailureType_Failure_ProcessError+1))
+
+#define _ButtonRequestType_MIN ButtonRequestType_ButtonRequest_Other
+#define _ButtonRequestType_MAX ButtonRequestType_ButtonRequest_Other
+#define _ButtonRequestType_ARRAYSIZE ((ButtonRequestType)(ButtonRequestType_ButtonRequest_Other+1))
+
 
 /* Initializer values for message structs */
 #define Initialize_init_default                  {0}
 #define GetFeatures_init_default                 {0}
 #define Features_init_default                    {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, "", false, {0, {0}}}
-#define Ping_init_default                        {false, "", false, 0, false, 0, false, 0}
+#define Ping_init_default                        {false, ""}
 #define Success_init_default                     {false, ""}
 #define Failure_init_default                     {false, _FailureType_MIN, false, ""}
 #define ButtonRequest_init_default               {false, _ButtonRequestType_MIN}
@@ -150,7 +162,7 @@ typedef struct _Success {
 #define Initialize_init_zero                     {0}
 #define GetFeatures_init_zero                    {0}
 #define Features_init_zero                       {false, "", false, 0, false, 0, false, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, "", false, {0, {0}}}
-#define Ping_init_zero                           {false, "", false, 0, false, 0, false, 0}
+#define Ping_init_zero                           {false, ""}
 #define Success_init_zero                        {false, ""}
 #define Failure_init_zero                        {false, _FailureType_MIN, false, ""}
 #define ButtonRequest_init_zero                  {false, _ButtonRequestType_MIN}
@@ -186,9 +198,6 @@ typedef struct _Success {
 #define FirmwareUpload_payload_tag               1
 #define FirmwareUpload_hash_tag                  2
 #define Ping_message_tag                         1
-#define Ping_button_protection_tag               2
-#define Ping_pin_protection_tag                  3
-#define Ping_passphrase_protection_tag           4
 #define Success_message_tag                      1
 
 /* Struct field encoding specification for nanopb */
@@ -224,10 +233,7 @@ X(a, STATIC,   OPTIONAL, BYTES,    fw_vendor_keys,   26)
 #define Features_DEFAULT NULL
 
 #define Ping_FIELDLIST(X, a) \
-X(a, STATIC,   OPTIONAL, STRING,   message,           1) \
-X(a, STATIC,   OPTIONAL, BOOL,     button_protection,   2) \
-X(a, STATIC,   OPTIONAL, BOOL,     pin_protection,    3) \
-X(a, STATIC,   OPTIONAL, BOOL,     passphrase_protection,   4)
+X(a, STATIC,   OPTIONAL, STRING,   message,           1)
 #define Ping_CALLBACK NULL
 #define Ping_DEFAULT NULL
 
@@ -237,13 +243,13 @@ X(a, STATIC,   OPTIONAL, STRING,   message,           1)
 #define Success_DEFAULT NULL
 
 #define Failure_FIELDLIST(X, a) \
-X(a, STATIC,   OPTIONAL, ENUM,     code,              1) \
+X(a, STATIC,   OPTIONAL, UENUM,    code,              1) \
 X(a, STATIC,   OPTIONAL, STRING,   message,           2)
 #define Failure_CALLBACK NULL
 #define Failure_DEFAULT NULL
 
 #define ButtonRequest_FIELDLIST(X, a) \
-X(a, STATIC,   OPTIONAL, ENUM,     code,              1)
+X(a, STATIC,   OPTIONAL, UENUM,    code,              1)
 #define ButtonRequest_CALLBACK NULL
 #define ButtonRequest_DEFAULT NULL
 
@@ -298,10 +304,10 @@ extern const pb_msgdesc_t FirmwareUpload_msg;
 #define Initialize_size                          0
 #define GetFeatures_size                         0
 #define Features_size                            493
-#define Ping_size                                264
+#define Ping_size                                258
 #define Success_size                             258
-#define Failure_size                             269
-#define ButtonRequest_size                       11
+#define Failure_size                             260
+#define ButtonRequest_size                       2
 #define ButtonAck_size                           0
 #define FirmwareErase_size                       6
 #define FirmwareRequest_size                     12

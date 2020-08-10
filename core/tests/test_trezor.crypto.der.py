@@ -46,11 +46,26 @@ class TestCryptoDer(unittest.TestCase):
     def test_der_encode_seq(self):
 
         for s, d in self.vectors_seq:
-            s = (unhexlify(i) for i in s)
+            s = tuple(unhexlify(i) for i in s)
             d = unhexlify(d)
             d2 = der.encode_seq(s)
-            self.assertEqual(d, d2)
+            self.assertEqual(d2, d)
+            s = [i.lstrip(b"\x00") for i in s]
+            s2 = der.decode_seq(d)
+            self.assertEqual(s2, s)
 
+    def test_der_encode_decode_long_seq(self):
+        for length in (1, 127, 128, 129, 255, 256, 257):
+            raw_int = bytes((i & 0xfe) + 1 for i in range(length))
+            for leading_zeros in range(3):
+                encoded = der.encode_seq((b"\x00" * leading_zeros + raw_int,))
+                decoded = der.decode_seq(encoded)
+                self.assertEqual(decoded, [raw_int])
+
+        for zeroes in range(3):
+            encoded = der.encode_seq((b"\x00" * zeroes,))
+            decoded = der.decode_seq(encoded)
+            self.assertEqual(decoded, [b"\x00"])
 
 if __name__ == '__main__':
     unittest.main()

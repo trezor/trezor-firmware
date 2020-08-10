@@ -1,5 +1,3 @@
-import gc
-
 from trezor import utils, wire
 from trezor.messages import InputScriptType, OutputScriptType
 from trezor.messages.RequestType import (
@@ -18,42 +16,12 @@ from trezor.messages.TxRequest import TxRequest
 
 from apps.common.coininfo import CoinInfo
 
+from .. import common
 from ..writers import TX_HASH_SIZE
 
 if False:
-    from typing import Any, Awaitable, Dict
-    from trezor.messages.TxInputType import EnumTypeInputScriptType
-    from trezor.messages.TxOutputType import EnumTypeOutputScriptType
+    from typing import Any, Awaitable
 
-MULTISIG_INPUT_SCRIPT_TYPES = (
-    InputScriptType.SPENDMULTISIG,
-    InputScriptType.SPENDP2SHWITNESS,
-    InputScriptType.SPENDWITNESS,
-)
-MULTISIG_OUTPUT_SCRIPT_TYPES = (
-    OutputScriptType.PAYTOMULTISIG,
-    OutputScriptType.PAYTOP2SHWITNESS,
-    OutputScriptType.PAYTOWITNESS,
-)
-
-CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES = {
-    OutputScriptType.PAYTOADDRESS: InputScriptType.SPENDADDRESS,
-    OutputScriptType.PAYTOMULTISIG: InputScriptType.SPENDMULTISIG,
-    OutputScriptType.PAYTOP2SHWITNESS: InputScriptType.SPENDP2SHWITNESS,
-    OutputScriptType.PAYTOWITNESS: InputScriptType.SPENDWITNESS,
-}  # type: Dict[EnumTypeOutputScriptType, EnumTypeInputScriptType]
-INTERNAL_INPUT_SCRIPT_TYPES = tuple(CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES.values())
-CHANGE_OUTPUT_SCRIPT_TYPES = tuple(CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES.keys())
-
-SEGWIT_INPUT_SCRIPT_TYPES = (
-    InputScriptType.SPENDP2SHWITNESS,
-    InputScriptType.SPENDWITNESS,
-)
-
-NONSEGWIT_INPUT_SCRIPT_TYPES = (
-    InputScriptType.SPENDADDRESS,
-    InputScriptType.SPENDMULTISIG,
-)
 
 # Machine instructions
 # ===
@@ -76,10 +44,26 @@ class UiConfirmTotal:
     __eq__ = utils.obj_eq
 
 
+class UiConfirmJointTotal:
+    def __init__(self, spending: int, total: int, coin: CoinInfo):
+        self.spending = spending
+        self.total = total
+        self.coin = coin
+
+    __eq__ = utils.obj_eq
+
+
 class UiConfirmFeeOverThreshold:
     def __init__(self, fee: int, coin: CoinInfo):
         self.fee = fee
         self.coin = coin
+
+    __eq__ = utils.obj_eq
+
+
+class UiConfirmChangeCountOverThreshold:
+    def __init__(self, change_count: int):
+        self.change_count = change_count
 
     __eq__ = utils.obj_eq
 
@@ -106,8 +90,16 @@ def confirm_total(spending: int, fee: int, coin: CoinInfo) -> Awaitable[Any]:  #
     return (yield UiConfirmTotal(spending, fee, coin))
 
 
+def confirm_joint_total(spending: int, total: int, coin: CoinInfo) -> Awaitable[Any]:  # type: ignore
+    return (yield UiConfirmJointTotal(spending, total, coin))
+
+
 def confirm_feeoverthreshold(fee: int, coin: CoinInfo) -> Awaitable[Any]:  # type: ignore
     return (yield UiConfirmFeeOverThreshold(fee, coin))
+
+
+def confirm_change_count_over_threshold(change_count: int) -> Awaitable[Any]:  # type: ignore
+    return (yield UiConfirmChangeCountOverThreshold(change_count))
 
 
 def confirm_foreign_address(address_n: list) -> Awaitable[Any]:  # type: ignore
@@ -123,7 +115,6 @@ def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes = None) ->
     tx_req.details.tx_hash = tx_hash
     ack = yield tx_req
     _clear_tx_request(tx_req)
-    gc.collect()
     return sanitize_tx_meta(ack.tx, coin)
 
 
@@ -136,7 +127,6 @@ def request_tx_extra_data(  # type: ignore
     tx_req.details.tx_hash = tx_hash
     ack = yield tx_req
     _clear_tx_request(tx_req)
-    gc.collect()
     return ack.tx.extra_data
 
 
@@ -146,7 +136,6 @@ def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes =
     tx_req.details.tx_hash = tx_hash
     ack = yield tx_req
     _clear_tx_request(tx_req)
-    gc.collect()
     return sanitize_tx_input(ack.tx, coin)
 
 
@@ -156,7 +145,6 @@ def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes 
     tx_req.details.tx_hash = tx_hash
     ack = yield tx_req
     _clear_tx_request(tx_req)
-    gc.collect()
     if tx_hash is None:
         return sanitize_tx_output(ack.tx, coin)
     else:
@@ -167,7 +155,6 @@ def request_tx_finish(tx_req: TxRequest) -> Awaitable[Any]:  # type: ignore
     tx_req.request_type = TXFINISHED
     yield tx_req
     _clear_tx_request(tx_req)
-    gc.collect()
 
 
 def _clear_tx_request(tx_req: TxRequest) -> None:
@@ -226,8 +213,6 @@ def sanitize_tx_meta(tx: TransactionType, coin: CoinInfo) -> TransactionType:
         raise wire.DataError("Timestamp must be set.")
     elif not coin.timestamp and tx.timestamp:
         raise wire.DataError("Timestamp not enabled on this coin.")
-    if coin.overwintered and tx.version_group_id is None:
-        raise wire.DataError("Version group ID must be set.")
     elif not coin.overwintered:
         if tx.version_group_id is not None:
             raise wire.DataError("Version group ID not enabled on this coin.")
@@ -246,13 +231,13 @@ def sanitize_tx_input(tx: TransactionType, coin: CoinInfo) -> TxInputType:
         raise wire.DataError("Missing prev_index field.")
     if txi.prev_hash is None or len(txi.prev_hash) != TX_HASH_SIZE:
         raise wire.DataError("Provided prev_hash is invalid.")
-    if txi.multisig and txi.script_type not in MULTISIG_INPUT_SCRIPT_TYPES:
+    if txi.multisig and txi.script_type not in common.MULTISIG_INPUT_SCRIPT_TYPES:
         raise wire.DataError("Multisig field provided but not expected.")
-    if txi.address_n and txi.script_type not in INTERNAL_INPUT_SCRIPT_TYPES:
+    if txi.address_n and txi.script_type not in common.INTERNAL_INPUT_SCRIPT_TYPES:
         raise wire.DataError("Input's address_n provided but not expected.")
     if not coin.decred and txi.decred_tree is not None:
         raise wire.DataError("Decred details provided but Decred coin not specified.")
-    if txi.script_type in SEGWIT_INPUT_SCRIPT_TYPES:
+    if txi.script_type in common.SEGWIT_INPUT_SCRIPT_TYPES or txi.witness is not None:
         if not coin.segwit:
             raise wire.DataError("Segwit not enabled on this coin")
     return txi
@@ -260,9 +245,9 @@ def sanitize_tx_input(tx: TransactionType, coin: CoinInfo) -> TxInputType:
 
 def sanitize_tx_output(tx: TransactionType, coin: CoinInfo) -> TxOutputType:
     txo = tx.outputs[0]
-    if txo.multisig and txo.script_type not in MULTISIG_OUTPUT_SCRIPT_TYPES:
+    if txo.multisig and txo.script_type not in common.MULTISIG_OUTPUT_SCRIPT_TYPES:
         raise wire.DataError("Multisig field provided but not expected.")
-    if txo.address_n and txo.script_type not in CHANGE_OUTPUT_SCRIPT_TYPES:
+    if txo.address_n and txo.script_type not in common.CHANGE_OUTPUT_SCRIPT_TYPES:
         raise wire.DataError("Output's address_n provided but not expected.")
     if txo.amount is None:
         raise wire.DataError("Missing amount field.")

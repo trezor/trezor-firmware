@@ -1,6 +1,6 @@
 from micropython import const
 
-from trezor import res, ui
+from trezor import config, res, ui
 from trezor.crypto import random
 from trezor.ui import display
 from trezor.ui.button import (
@@ -12,7 +12,8 @@ from trezor.ui.button import (
 )
 
 if False:
-    from typing import Iterable, Optional
+    from trezor import loop
+    from typing import Iterable, Optional, Tuple
 
 
 def digit_area(i: int) -> ui.Area:
@@ -101,7 +102,9 @@ class PinDialog(ui.Layout):
         self.reset_button.on_click = self.on_reset  # type: ignore
 
         if allow_cancel:
-            icon_lock = res.load(ui.ICON_LOCK)
+            icon_lock = res.load(
+                ui.ICON_CANCEL if config.is_unlocked() else ui.ICON_LOCK
+            )
             self.cancel_button = Button(ui.grid(12), icon_lock, ButtonCancel)
             self.cancel_button.on_click = self.on_cancel  # type: ignore
         else:
@@ -150,3 +153,10 @@ class PinDialog(ui.Layout):
     def on_confirm(self) -> None:
         if self.input.pin:
             raise ui.Result(self.input.pin)
+
+    if __debug__:
+
+        def create_tasks(self) -> Tuple[loop.Task, ...]:
+            from apps.debug import input_signal
+
+            return super().create_tasks() + (input_signal(),)

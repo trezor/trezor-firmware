@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 _At the moment, the project does **not** adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
 
+## [0.12.1] - unreleased
+[0.12.1]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.0...master
+
+### Added
+
+- `trezorctl set unsafe-prompts` controls the new "unsafe prompts" feature.  [#1126]
+
+### Changed
+
+- do not allow setting auto-lock delay unless PIN is configured
+
+### Fixed
+
+- correctly calculate hashes for very small firmwares [f#1082]
+
 ## [0.12.0] - 2020-04-01
 [0.12.0]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.6...python/v0.12.0
 
@@ -362,6 +377,24 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 
 - gradually dropping Python 2 compatibility (pypi package will now be marked as Python 3 only)
 
+[f#41]: https://github.com/trezor/trezor-firmware/issues/41
+[f#87]: https://github.com/trezor/trezor-firmware/issues/87
+[f#116]: https://github.com/trezor/trezor-firmware/issues/116
+[f#117]: https://github.com/trezor/trezor-firmware/issues/117
+[f#224]: https://github.com/trezor/trezor-firmware/issues/224
+[f#226]: https://github.com/trezor/trezor-firmware/issues/226
+[f#363]: https://github.com/trezor/trezor-firmware/issues/363
+[f#411]: https://github.com/trezor/trezor-firmware/issues/411
+[f#420]: https://github.com/trezor/trezor-firmware/issues/420
+[f#445]: https://github.com/trezor/trezor-firmware/issues/445
+[f#510]: https://github.com/trezor/trezor-firmware/issues/510
+[f#525]: https://github.com/trezor/trezor-firmware/issues/525
+[f#666]: https://github.com/trezor/trezor-firmware/issues/666
+[f#680]: https://github.com/trezor/trezor-firmware/issues/680
+[f#681]: https://github.com/trezor/trezor-firmware/issues/681
+[f#778]: https://github.com/trezor/trezor-firmware/issues/778
+[f#823]: https://github.com/trezor/trezor-firmware/issues/823
+[f#1082]: https://github.com/trezor/trezor-firmware/issues/1082
 [#94]: https://github.com/trezor/python-trezor/issues/94
 [#167]: https://github.com/trezor/python-trezor/issues/167
 [#169]: https://github.com/trezor/python-trezor/issues/169
@@ -405,20 +438,4 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 [#349]: https://github.com/trezor/python-trezor/issues/349
 [#351]: https://github.com/trezor/python-trezor/issues/351
 [#352]: https://github.com/trezor/python-trezor/issues/352
-[f#41]: https://github.com/trezor/trezor-firmware/issues/41
-[f#87]: https://github.com/trezor/trezor-firmware/issues/87
-[f#116]: https://github.com/trezor/trezor-firmware/issues/116
-[f#117]: https://github.com/trezor/trezor-firmware/issues/117
-[f#224]: https://github.com/trezor/trezor-firmware/issues/224
-[f#226]: https://github.com/trezor/trezor-firmware/issues/226
-[f#363]: https://github.com/trezor/trezor-firmware/issues/363
-[f#411]: https://github.com/trezor/trezor-firmware/issues/411
-[f#420]: https://github.com/trezor/trezor-firmware/issues/420
-[f#445]: https://github.com/trezor/trezor-firmware/issues/445
-[f#510]: https://github.com/trezor/trezor-firmware/issues/510
-[f#525]: https://github.com/trezor/trezor-firmware/issues/525
-[f#666]: https://github.com/trezor/trezor-firmware/issues/666
-[f#680]: https://github.com/trezor/trezor-firmware/issues/680
-[f#681]: https://github.com/trezor/trezor-firmware/issues/681
-[f#778]: https://github.com/trezor/trezor-firmware/issues/778
-[f#823]: https://github.com/trezor/trezor-firmware/issues/823
+[#1126]: https://github.com/trezor/trezor-firmware/issues/1126

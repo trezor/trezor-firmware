@@ -1,142 +1,71 @@
-# initialize from the image
+# install the latest Alpine linux from scratch
 
-FROM debian:10
+FROM scratch
+ARG ALPINE_VERSION=3.12.0
+ADD alpine-minirootfs-${ALPINE_VERSION}-x86_64.tar.gz /
 
-ARG TOOLCHAIN_FLAVOR=x86_64-linux
-ENV TOOLCHAIN_FLAVOR=${TOOLCHAIN_FLAVOR}
+# the following is adapted from https://github.com/NixOS/docker/blob/master/Dockerfile
+
+# Enable HTTPS support in wget and set nsswitch.conf to make resolution work within containers
+RUN apk add --no-cache --update openssl \
+  && echo hosts: dns files > /etc/nsswitch.conf
+
+# Download Nix and install it into the system.
+ARG NIX_VERSION=2.3.6
+RUN wget https://nixos.org/releases/nix/nix-${NIX_VERSION}/nix-${NIX_VERSION}-x86_64-linux.tar.xz \
+  && tar xf nix-${NIX_VERSION}-x86_64-linux.tar.xz \
+  && addgroup -g 30000 -S nixbld \
+  && for i in $(seq 1 30); do adduser -S -D -h /var/empty -g "Nix build user $i" -u $((30000 + i)) -G nixbld nixbld$i ; done \
+  && mkdir -m 0755 /etc/nix \
+  && echo 'sandbox = false' > /etc/nix/nix.conf \
+  && mkdir -m 0755 /nix && USER=root sh nix-${NIX_VERSION}-x86_64-linux/install \
+  && ln -s /nix/var/nix/profiles/default/etc/profile.d/nix.sh /etc/profile.d/ \
+  && rm -r /nix-${NIX_VERSION}-x86_64-linux* \
+  && rm -rf /var/cache/apk/* \
+  && /nix/var/nix/profiles/default/bin/nix-collect-garbage --delete-old \
+  && /nix/var/nix/profiles/default/bin/nix-store --optimise \
+  && /nix/var/nix/profiles/default/bin/nix-store --verify --check-contents
+
+ENV \
+    USER=root \
+    PATH=/nix/var/nix/profiles/default/bin:/nix/var/nix/profiles/default/sbin:/bin:/sbin:/usr/bin:/usr/sbin \
+    GIT_SSL_CAINFO=/etc/ssl/certs/ca-certificates.crt \
+    NIX_SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
+    NIX_PATH=/nix/var/nix/profiles/per-user/root/channels
+
+# Trezor specific stuff starts here
+
+COPY shell.nix shell.nix
+
+RUN nix-shell --run "echo deps pre-installed"
+
+CMD [ "nix-shell" ]
+
+# the rest of the file only applies when docker build is called
+# with the following argument: "--build-arg FULLDEPS_TESTING=1"
 
 ARG FULLDEPS_TESTING=0
 ENV FULLDEPS_TESTING=${FULLDEPS_TESTING}
 
-# install build tools and dependencies
-
-RUN apt-get update && apt-get install -y \
-        build-essential \
-        check \
-        clang-format \
-        git \
-        graphviz \
-        libjpeg-dev \
-        libsdl2-dev \
-        libsdl2-image-dev \
-        libsodium-dev \
-        libssl-dev \
-        libudev-dev \
-        libusb-1.0-0-dev \
-        valgrind \
-        wget \
-        zlib1g-dev
-
-# install python 3.7.3 + pip from the image
-
-RUN apt-get install -y \
-    python3-dev \
-    python3-pip
-
-# install other python versions from their sources
+# install other python versions for tox testing
 
 RUN if [ "${FULLDEPS_TESTING}" = "1" ]; then \
-        export PYTHON35VER="3.5.7" ; \
-        wget --no-verbose https://www.python.org/ftp/python/${PYTHON35VER}/Python-${PYTHON35VER}.tgz ; \
-        tar zxf Python-${PYTHON35VER}.tgz ; \
-        cd Python-${PYTHON35VER}/ && ./configure && make && make install ; \
+        nix-env -iP python3-3.7.7 ; \
+        nix-env --set-flag priority 6 python3-3.7.7 ; \
+        nix-env -iP python3-3.6.10 ; \
+        nix-env --set-flag priority 7 python3-3.6.10 ; \
+        nix-env -iP python3-3.5.9 ; \
+        nix-env --set-flag priority 8 python3-3.5.9 ; \
     fi
-
-RUN if [ "${FULLDEPS_TESTING}" = "1" ]; then \
-        export PYTHON36VER="3.6.9" ; \
-        wget --no-verbose https://www.python.org/ftp/python/${PYTHON36VER}/Python-${PYTHON36VER}.tgz ; \
-        tar zxf Python-${PYTHON36VER}.tgz ; \
-        cd Python-${PYTHON36VER}/ && ./configure && make && make install ; \
-    fi
-
-RUN if [ "${FULLDEPS_TESTING}" = "1" ]; then \
-        export PYTHON38VER="3.8.0" ; \
-        export PYTHONSUBVER="b3"; \
-        wget --no-verbose https://www.python.org/ftp/python/${PYTHON38VER}/Python-${PYTHON38VER}${PYTHONSUBVER}.tgz ; \
-        tar zxf Python-${PYTHON38VER}${PYTHONSUBVER}.tgz ; \
-        cd Python-${PYTHON38VER}${PYTHONSUBVER}/ && ./configure && make && make install ; \
-    fi
-
-# remove symlinks to newly installed pythons
-RUN cd /usr/local/bin; \
-    rm -f 2to3; \
-    rm -f python3; \
-    rm -f python3-config; \
-    rm -f pydoc3; \
-    rm -f pip3; \
-    rm -f pyvenv;
-
-# install dependencies from toolchain source build
-
-RUN if [ "${TOOLCHAIN_FLAVOR}" = "src" ]; then \
-        apt-get install -y autoconf autogen bison dejagnu \
-                           flex flip gawk git gperf gzip nsis \
-                           openssh-client p7zip-full perl python-dev \
-                           libisl-dev tcl tofrodos zip \
-                           texinfo texlive texlive-extra-utils; \
-    fi
-
-# download toolchain
-
-ENV TOOLCHAIN_LONGVER=gcc-arm-none-eabi-9-2019-q4-major
-ENV TOOLCHAIN_SUBDIR="9-2019q4/RC2.1"
-ENV TOOLCHAIN_URL=https://developer.arm.com/-/media/Files/downloads/gnu-rm/${TOOLCHAIN_SUBDIR}/${TOOLCHAIN_LONGVER}-${TOOLCHAIN_FLAVOR}.tar.bz2
-ENV TOOLCHAIN_HASH_linux=bcd840f839d5bf49279638e9f67890b2ef3a7c9c7a9b25271e83ec4ff41d177a
-ENV TOOLCHAIN_HASH_src=f162a655f222319f75862d7aba9ff8a4a86f752392e4f3c5d9ef2ee8bc13be58
-
-# extract toolchain
-
-RUN cd /opt && wget --no-verbose ${TOOLCHAIN_URL}
-RUN cd /opt && echo "${TOOLCHAIN_HASH_linux} ${TOOLCHAIN_LONGVER}-x86_64-linux.tar.bz2\n${TOOLCHAIN_HASH_src} ${TOOLCHAIN_LONGVER}-src.tar.bz2" | sha256sum -c --ignore-missing
-RUN cd /opt && tar xfj ${TOOLCHAIN_LONGVER}-${TOOLCHAIN_FLAVOR}.tar.bz2
-
-# build toolchain (if required)
-
-RUN if [ "${TOOLCHAIN_FLAVOR}" = "src" ]; then \
-        pushd /opt/${TOOLCHAIN_LONGVER} ; \
-        ./install-sources.sh --skip_steps=mingw32 ; \
-        ./build-prerequisites.sh --skip_steps=mingw32 ; \
-        ./build-toolchain.sh --skip_steps=mingw32,manual ; \
-        popd ; \
-    fi
-
-# download protobuf
-
-ENV PROTOBUF_VERSION=3.6.1
-ENV PROTOBUF_HASH=6003de742ea3fcf703cfec1cd4a3380fd143081a2eb0e559065563496af27807
-RUN wget --no-verbose "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
-RUN echo "${PROTOBUF_HASH} protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" | sha256sum -c
-
-# setup toolchain
-
-ENV PATH=/opt/${TOOLCHAIN_LONGVER}/bin:${PATH}
-
-ENV LC_ALL=C.UTF-8 LANG=C.UTF-8
-
-ENV PYTHON=python3
-
-# use zipfile module to extract files world-readable
-RUN ${PYTHON} -m zipfile -e "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" /usr/local && chmod 755 /usr/local/bin/protoc
 
 # download monero tests binary
 
-ENV TREZOR_MONERO_TESTS_SHA256SUM=5b35342c79eb91265f5f427224016a52994fff32c8ea078de5d502b37d3022d6
-ENV TREZOR_MONERO_TESTS_URL="https://github.com/ph4r05/monero/releases/download/v0.15.0.0-tests-u18.04-03/trezor_tests"
 ENV TREZOR_MONERO_TESTS_PATH="/opt/trezor_monero_tests"
-
 RUN if [ "${FULLDEPS_TESTING}" = "1" ]; then \
+        TREZOR_MONERO_TESTS_SHA256SUM=1e5dfdb07de4ea46088f4a5bdb0d51f040fe479019efae30f76427eee6edb3f7 ; \
+        TREZOR_MONERO_TESTS_URL="https://github.com/ph4r05/monero/releases/download/v0.15.0.0-tests-u18.04-03/trezor_tests" ; \
         wget --no-verbose "${TREZOR_MONERO_TESTS_URL}" -O "${TREZOR_MONERO_TESTS_PATH}" ; \
         chmod +x "${TREZOR_MONERO_TESTS_PATH}" ; \
         echo "${TREZOR_MONERO_TESTS_SHA256SUM} ${TREZOR_MONERO_TESTS_PATH}" | sha256sum -c ; \
+        nix-shell -p patchelf --run 'patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" "${TREZOR_MONERO_TESTS_PATH}"' ; \
     fi
-
-# install python dependencies
-
-ENV WORKON_HOME=/tmp/.venvs
-ENV PIPENV_CACHE_DIR=/tmp/.pipenv-cache
-
-RUN ${PYTHON} -m pip install pipenv
-
-RUN ${PYTHON} --version
-RUN ${PYTHON} -m pip --version
-RUN pipenv --version

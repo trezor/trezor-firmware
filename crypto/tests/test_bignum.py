@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import ctypes
+import itertools
 import os
 import random
 from ctypes import (
@@ -1016,13 +1017,16 @@ def test_bn_divmod10(r):
     assert_bn_divmod10(x)
 
 
-def test_bn_format():
-    for decimals in range(0, 5):
-        for exponent in range(-5, 5):
-            for trailing in [True, False]:
-                for prefix in ["", "prefix"]:
-                    for suffix in ["", "suffix"]:
-                        for value in [123, 120]:
-                            assert_bn_format(
-                                value, prefix, suffix, decimals, exponent, trailing
-                            )
+@pytest.mark.parametrize(
+    "decimals,exponent,trailing,prefix,suffix,value",
+    itertools.product(
+        range(0, 5),
+        range(-5, 5),
+        [True, False],
+        ["", "prefix"],
+        ["", "suffix"],
+        [123, 120],
+    ),
+)
+def test_bn_format(decimals, exponent, trailing, prefix, suffix, value):
+    assert_bn_format(value, prefix, suffix, decimals, exponent, trailing)

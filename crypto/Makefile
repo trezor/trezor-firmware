@@ -1,3 +1,13 @@
+ifeq ($(FUZZER),1)
+CC       ?= clang
+LD       ?= $(CC)
+
+SANFLAGS += -fsanitize=fuzzer
+
+CFLAGS   += $(SANFLAGS)
+LDFLAGS  += $(SANFLAGS)
+endif
+
 CC       ?= gcc
 
 OPTFLAGS ?= -O3 -g
@@ -110,7 +120,14 @@ tools/mktable: tools/mktable.o $(OBJS)
 tools/bip39bruteforce: tools/bip39bruteforce.o $(OBJS)
 	$(CC) tools/bip39bruteforce.o $(OBJS) -o tools/bip39bruteforce
 
+fuzzer: fuzzer/fuzzer.o $(OBJS)
+	$(CC) $(CFLAGS) fuzzer/fuzzer.o $(OBJS) -o fuzzer/fuzzer
+
 clean:
 	rm -f *.o aes/*.o chacha20poly1305/*.o ed25519-donna/*.o
 	rm -f tests/test_check tests/test_speed tests/test_openssl tests/libtrezor-crypto.so tests/aestst
 	rm -f tools/*.o tools/xpubaddrgen tools/mktable tools/bip39bruteforce
+	rm -f fuzzer/*.o fuzzer/fuzzer
+
+clean-fuzzer: clean
+	rm -f crash-* fuzz-*.log slow-unit-* timeout-*

@@ -90,8 +90,6 @@ def client(request):
         )
 
     test_ui = request.config.getoption("ui")
-    if test_ui not in ("", "record", "test"):
-        raise ValueError("Invalid ui option.")
     run_ui_tests = not request.node.get_closest_marker("skip_ui") and test_ui
 
     client.open()
@@ -119,9 +117,6 @@ def client(request):
         setup_params.update(marker.kwargs)
 
     if not setup_params["uninitialized"]:
-        if setup_params["pin"] is True:
-            setup_params["pin"] = "1234"
-
         debuglink.load_device(
             client,
             mnemonic=setup_params["mnemonic"],
@@ -172,8 +167,8 @@ def pytest_sessionfinish(session, exitstatus):
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
-    println = terminalreporter.writer.line
-    println()
+    println = terminalreporter.write_line
+    println("")
 
     ui_option = config.getoption("ui")
     missing_tests = ui_tests.list_missing()
@@ -188,7 +183,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
                 println("UI test failed.")
             elif ui_option == "record":
                 println("Removing missing tests from record.")
-            println()
+            println("")
 
     if _should_write_ui_report(exitstatus):
         println(f"UI tests summary: {testreport.REPORTS_PATH / 'index.html'}")
@@ -198,7 +193,7 @@ def pytest_addoption(parser):
     parser.addoption(
         "--ui",
         action="store",
-        default="",
+        choices=["test", "record"],
         help="Enable UI intergration tests: 'record' or 'test'",
     )
     parser.addoption(
@@ -264,7 +259,12 @@ def device_handler(client, request):
     device_handler = BackgroundDeviceHandler(client)
     yield device_handler
 
-    # make sure all background tasks are done
+    # if test did not finish, e.g. interrupted by Ctrl+C, the pytest_runtest_makereport
+    # did not create the attribute we need
+    if not hasattr(request.node, "rep_call"):
+        return
+
+    # if test finished, make sure all background tasks are done
     finalized_ok = device_handler.check_finalize()
     if request.node.rep_call.passed and not finalized_ok:
         raise RuntimeError("Test did not check result of background task")

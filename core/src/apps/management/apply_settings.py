@@ -1,19 +1,28 @@
 import storage.device
-from trezor import ui, wire
-from trezor.messages import ButtonRequestType
+from trezor import ui, wire, workflow
+from trezor.messages import ButtonRequestType, SafetyCheckLevel
 from trezor.messages.Success import Success
+from trezor.strings import format_duration_ms
 from trezor.ui.text import Text
 
-from apps.common.confirm import require_confirm
+from apps.base import lock_device
+from apps.common.confirm import require_confirm, require_hold_to_confirm
+
+if False:
+    from trezor.messages.ApplySettings import ApplySettings, EnumTypeSafetyCheckLevel
 
 
-async def apply_settings(ctx, msg):
+async def apply_settings(ctx: wire.Context, msg: ApplySettings):
+    if not storage.device.is_initialized():
+        raise wire.NotInitialized("Device is not initialized")
     if (
         msg.homescreen is None
         and msg.label is None
         and msg.use_passphrase is None
         and msg.passphrase_always_on_device is None
         and msg.display_rotation is None
+        and msg.auto_lock_delay_ms is None
+        and msg.safety_checks is None
     ):
         raise wire.ProcessError("No setting provided")
 
@@ -21,30 +30,46 @@ async def apply_settings(ctx, msg):
         if len(msg.homescreen) > storage.device.HOMESCREEN_MAXSIZE:
             raise wire.DataError("Homescreen is too complex")
         await require_confirm_change_homescreen(ctx)
+        try:
+            storage.device.set_homescreen(msg.homescreen)
+        except ValueError:
+            raise wire.DataError("Invalid homescreen")
 
     if msg.label is not None:
         await require_confirm_change_label(ctx, msg.label)
+        storage.device.set_label(msg.label)
 
     if msg.use_passphrase is not None:
         await require_confirm_change_passphrase(ctx, msg.use_passphrase)
+        storage.device.set_passphrase_enabled(msg.use_passphrase)
 
     if msg.passphrase_always_on_device is not None:
+        if not storage.device.is_passphrase_enabled():
+            raise wire.DataError("Passphrase is not enabled")
         await require_confirm_change_passphrase_source(
             ctx, msg.passphrase_always_on_device
+        )
+        storage.device.set_passphrase_always_on_device(msg.passphrase_always_on_device)
+
+    if msg.auto_lock_delay_ms is not None:
+        if msg.auto_lock_delay_ms < storage.device.AUTOLOCK_DELAY_MINIMUM:
+            raise wire.ProcessError("Auto-lock delay too short")
+        if msg.auto_lock_delay_ms > storage.device.AUTOLOCK_DELAY_MAXIMUM:
+            raise wire.ProcessError("Auto-lock delay too long")
+        await require_confirm_change_autolock_delay(ctx, msg.auto_lock_delay_ms)
+        storage.device.set_autolock_delay_ms(msg.auto_lock_delay_ms)
+        # use the value that was stored, not the one that was supplied by the user
+        workflow.idle_timer.set(storage.device.get_autolock_delay_ms(), lock_device)
+
+    if msg.safety_checks is not None:
+        await require_confirm_safety_checks(ctx, msg.safety_checks)
+        storage.device.set_unsafe_prompts_allowed(
+            msg.safety_checks == SafetyCheckLevel.Prompt
         )
 
     if msg.display_rotation is not None:
         await require_confirm_change_display_rotation(ctx, msg.display_rotation)
-
-    storage.device.load_settings(
-        label=msg.label,
-        use_passphrase=msg.use_passphrase,
-        homescreen=msg.homescreen,
-        passphrase_always_on_device=msg.passphrase_always_on_device,
-        display_rotation=msg.display_rotation,
-    )
-
-    if msg.display_rotation is not None:
+        storage.device.set_rotation(msg.display_rotation)
         ui.display.orientation(storage.device.get_rotation())
 
     return Success(message="Settings applied")
@@ -93,8 +118,34 @@ async def require_confirm_change_display_rotation(ctx, rotation):
         label = "south"
     elif rotation == 270:
         label = "west"
+    else:
+        raise wire.DataError("Unsupported display rotation")
     text = Text("Change rotation", ui.ICON_CONFIG, new_lines=False)
     text.normal("Do you really want to", "change display rotation")
     text.normal("to")
     text.bold("%s?" % label)
     await require_confirm(ctx, text, ButtonRequestType.ProtectCall)
+
+
+async def require_confirm_change_autolock_delay(ctx, delay_ms):
+    text = Text("Auto-lock delay", ui.ICON_CONFIG, new_lines=False)
+    text.normal("Do you really want to", "auto-lock your device", "after")
+    text.bold("{}?".format(format_duration_ms(delay_ms)))
+    await require_confirm(ctx, text, ButtonRequestType.ProtectCall)
+
+
+async def require_confirm_safety_checks(ctx, level: EnumTypeSafetyCheckLevel) -> None:
+    if level == SafetyCheckLevel.Prompt:
+        text = Text("Unsafe prompts", ui.ICON_WIPE)
+        text.normal(
+            "Trezor will allow you to", "confirm actions which", "might be dangerous."
+        )
+        text.br_half()
+        text.bold("Allow unsafe prompts?")
+        await require_hold_to_confirm(ctx, text, ButtonRequestType.ProtectCall)
+    elif level == SafetyCheckLevel.Strict:
+        text = Text("Unsafe prompts", ui.ICON_CONFIG)
+        text.normal("Do you really want to", "disable unsafe prompts?")
+        await require_confirm(ctx, text, ButtonRequestType.ProtectCall)
+    else:
+        raise ValueError  # enum value out of range

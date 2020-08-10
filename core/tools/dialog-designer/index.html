@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Trezor Dialog Designer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet"> 
+</head>
+<body>
+  <table>
+  <tr><td>Title:</td><td><input id="title" value="SD card protection"></td><td rowspan="7"><canvas id="canvas" width="240" height="240" style="margin: 10px; background: black;"></canvas></td></tr>
+  <tr><td>Line 1:</td><td><input id="line1" value="Do you really want to"><input type="checkbox" id="bold_line1"><input type="checkbox" id="mono_line1"></td></tr>
+  <tr><td>Line 2:</td><td><input id="line2" value="secure your device with"><input type="checkbox" id="bold_line2"><input type="checkbox" id="mono_line2"></td></tr>
+  <tr><td>Line 3:</td><td><input id="line3" value="SD card protection?"><input type="checkbox" id="bold_line3"><input type="checkbox" id="mono_line3"></td></tr>
+  <tr><td>Line 4:</td><td><input id="line4" value=""><input type="checkbox" id="bold_line4"><input type="checkbox" id="mono_line4"></td></tr>
+  <tr><td>Line 5:</td><td><input id="line5" value=""><input type="checkbox" id="bold_line5"><input type="checkbox" id="mono_line5"></td></tr>
+  <tr><td>Confirm:</td><td><input id="confirm" value=""></td></tr>
+  </table>
+  <!-- keep these lines here so the fonts are preloaded -->
+  <div style="font-size: 20px; font-family: 'Roboto';"> </div>
+  <div style="font-size: 20px; font-family: 'Roboto'; font-weight: bold;"> </div>
+  <div style="font-size: 20px; font-family: 'Roboto Mono';"> </div>
+  <div style="font-size: 20px; font-family: 'Roboto Mono'; font-weight: bold;"> </div>
+  <script src="script.js"></script>
+</body>
+</html>

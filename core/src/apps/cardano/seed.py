@@ -1,45 +1,71 @@
-import storage
-from storage import cache
+from storage import cache, device
 from trezor import wire
 from trezor.crypto import bip32
 
-from apps.cardano import SEED_NAMESPACE
 from apps.common import mnemonic
 from apps.common.passphrase import get as get_passphrase
 
-if False:
-    from typing import Tuple
+from .helpers import seed_namespaces
 
-    from apps.common.seed import Bip32Path, MsgIn, MsgOut, Handler, HandlerWithKeychain
+if False:
+    from apps.common.paths import Bip32Path
+    from apps.common.keychain import MsgIn, MsgOut, Handler, HandlerWithKeychain
 
 
 class Keychain:
-    """Cardano keychain hard-coded to SEED_NAMESPACE."""
+    """Cardano keychain hard-coded to Byron and Shelley seed namespaces."""
 
     def __init__(self, root: bip32.HDNode) -> None:
-        self.root = root
+        self.byron_root = derive_path_cardano(root, seed_namespaces.BYRON)
+        self.shelley_root = derive_path_cardano(root, seed_namespaces.SHELLEY)
+        root.__del__()
 
-    def match_path(self, path: Bip32Path) -> Tuple[int, Bip32Path]:
-        if path[: len(SEED_NAMESPACE)] != SEED_NAMESPACE:
+    def verify_path(self, path: Bip32Path) -> None:
+        if not is_byron_path(path) and not is_shelley_path(path):
             raise wire.DataError("Forbidden key path")
-        return 0, path[len(SEED_NAMESPACE) :]
+
+    def _get_path_root(self, path: list):
+        if is_byron_path(path):
+            return self.byron_root
+        elif is_shelley_path(path):
+            return self.shelley_root
+        else:
+            raise wire.DataError("Forbidden key path")
 
     def derive(self, node_path: Bip32Path) -> bip32.HDNode:
-        _, suffix = self.match_path(node_path)
+        self.verify_path(node_path)
+        path_root = self._get_path_root(node_path)
+
+        # this is true now, so for simplicity we don't branch on path type
+        assert len(seed_namespaces.BYRON) == len(seed_namespaces.SHELLEY)
+        suffix = node_path[len(seed_namespaces.SHELLEY) :]
+
         # derive child node from the root
-        node = self.root.clone()
-        for i in suffix:
-            node.derive_cardano(i)
-        return node
+        return derive_path_cardano(path_root, suffix)
 
     # XXX the root node remains in session cache so we should not delete it
     # def __del__(self) -> None:
     #     self.root.__del__()
 
 
+def is_byron_path(path: Bip32Path):
+    return path[: len(seed_namespaces.BYRON)] == seed_namespaces.BYRON
+
+
+def is_shelley_path(path: Bip32Path):
+    return path[: len(seed_namespaces.SHELLEY)] == seed_namespaces.SHELLEY
+
+
+def derive_path_cardano(root: bip32.HDNode, path: Bip32Path) -> bip32.HDNode:
+    node = root.clone()
+    for i in path:
+        node.derive_cardano(i)
+    return node
+
+
 @cache.stored_async(cache.APP_CARDANO_ROOT)
 async def get_keychain(ctx: wire.Context) -> Keychain:
-    if not storage.is_initialized():
+    if not device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
 
     passphrase = await get_passphrase(ctx)
@@ -50,10 +76,6 @@ async def get_keychain(ctx: wire.Context) -> Keychain:
         # derive the root node via SLIP-0023
         seed = mnemonic.get_seed(passphrase)
         root = bip32.from_seed(seed, "ed25519 cardano seed")
-
-    # derive the namespaced root node
-    for i in SEED_NAMESPACE:
-        root.derive_cardano(i)
 
     keychain = Keychain(root)
     return keychain

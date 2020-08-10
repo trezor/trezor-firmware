@@ -2,6 +2,8 @@
 # fmt: off
 from .. import protobuf as p
 
+from .CardanoAddressParametersType import CardanoAddressParametersType
+
 if __debug__:
     try:
         from typing import Dict, List  # noqa: F401
@@ -15,15 +17,21 @@ class CardanoGetAddress(p.MessageType):
 
     def __init__(
         self,
-        address_n: List[int] = None,
         show_display: bool = None,
+        protocol_magic: int = None,
+        network_id: int = None,
+        address_parameters: CardanoAddressParametersType = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
         self.show_display = show_display
+        self.protocol_magic = protocol_magic
+        self.network_id = network_id
+        self.address_parameters = address_parameters
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
             2: ('show_display', p.BoolType, 0),
+            3: ('protocol_magic', p.UVarintType, 0),
+            4: ('network_id', p.UVarintType, 0),
+            5: ('address_parameters', CardanoAddressParametersType, 0),
         }

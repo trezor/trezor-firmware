@@ -21,6 +21,8 @@ from trezorlib.exceptions import Cancelled
 
 from ..common import TEST_ADDRESS_N
 
+pytestmark = pytest.mark.skip_ui
+
 
 @pytest.mark.parametrize(
     "message",

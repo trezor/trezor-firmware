@@ -44,9 +44,8 @@ async def load_device(ctx, msg):
         needs_backup=msg.needs_backup is True,
         no_backup=msg.no_backup is True,
     )
-    storage.device.load_settings(
-        use_passphrase=msg.passphrase_protection, label=msg.label
-    )
+    storage.device.set_passphrase_enabled(msg.passphrase_protection)
+    storage.device.set_label(msg.label or "")
     if msg.pin:
         config.change_pin(pin_to_int(""), pin_to_int(msg.pin), None, None)
 
@@ -54,7 +53,7 @@ async def load_device(ctx, msg):
 
 
 def _validate(msg) -> int:
-    if storage.is_initialized():
+    if storage.device.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
 
     if not msg.mnemonics:

@@ -6,10 +6,6 @@ def set_current_version() -> None:
     device.set_version(common.STORAGE_VERSION_CURRENT)
 
 
-def is_initialized() -> bool:
-    return device.is_version_stored()
-
-
 def wipe() -> None:
     config.wipe()
     cache.clear_all()
@@ -20,6 +16,20 @@ def init_unlocked() -> None:
     version = device.get_version()
     if version == common.STORAGE_VERSION_01:
         _migrate_from_version_01()
+
+    # In FWs <= 2.3.1 'version' denoted whether the device is initialized or not.
+    # In 2.3.2 we have introduced a new field 'initialized' for that.
+    if device.is_version_stored() and not device.is_initialized():
+        common.set_bool(common.APP_DEVICE, device.INITIALIZED, True, public=True)
+
+
+def reset() -> None:
+    """
+    Wipes storage but keeps the device id unchanged.
+    """
+    device_id = device.get_device_id()
+    wipe()
+    common.set(common.APP_DEVICE, device.DEVICE_ID, device_id.encode(), public=True)
 
 
 def _migrate_from_version_01() -> None:

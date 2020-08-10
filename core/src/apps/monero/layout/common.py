@@ -1,8 +1,8 @@
 from trezor import strings, ui, utils
 from trezor.messages import ButtonRequestType
-from trezor.messages.ButtonAck import ButtonAck
-from trezor.messages.ButtonRequest import ButtonRequest
 from trezor.ui.text import Text
+
+from apps.common import button_request
 
 
 async def naive_pagination(
@@ -25,7 +25,7 @@ async def naive_pagination(
     paginated = PaginatedWithButtons(pages, one_by_one=True)
 
     while True:
-        await ctx.call(ButtonRequest(code=ButtonRequestType.SignTx), ButtonAck)
+        await button_request(ctx, code=ButtonRequestType.SignTx)
         result = await ctx.wait(paginated)
         if result is CONFIRMED:
             return True

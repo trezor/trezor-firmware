@@ -34,6 +34,7 @@ CPPPATH_MOD += [
 CPPDEFINES_MOD += [
     'AES_128',
     'AES_192',
+    ('USE_BIP32_CACHE', '0'),
     ('USE_KECCAK', '1'),
     ('USE_ETHEREUM', '1' if EVERYTHING else '0'),
     ('USE_MONERO', '1' if EVERYTHING else '0'),
@@ -424,10 +425,12 @@ env.Ignore(hdr_moduledefs, qstr_generated)
 #
 
 if FROZEN:
-    if env.get('TREZOR_MODEL') == '1':
+    if env.get('TREZOR_MODEL') == 'T':
+        SOURCE_PY_DIR = 'src/'
+    elif env.get('TREZOR_MODEL') == '1':
         SOURCE_PY_DIR = 'src1/'
     else:
-        SOURCE_PY_DIR = 'src/'
+        raise ValueError('Unknown Trezor model')
 
     SOURCE_PY = Glob(SOURCE_PY_DIR + '*.py')
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/*.py'))
@@ -454,6 +457,7 @@ if FROZEN:
         ])
     )
 
+    SOURCE_PY.append(SOURCE_PY_DIR + 'apps/base.py')
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/*/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/debug/*.py'))

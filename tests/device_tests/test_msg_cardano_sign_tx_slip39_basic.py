@@ -17,91 +17,86 @@
 import pytest
 
 from trezorlib import cardano, messages
+from trezorlib.cardano import NETWORK_IDS, PROTOCOL_MAGICS
 
 from ..common import MNEMONIC_SLIP39_BASIC_20_3of6
-
-PROTOCOL_MAGICS = {"mainnet": 764824073, "testnet": 1097911063}
-
-SAMPLE_INPUTS = [
-    {
-        "input": {
-            "path": "m/44'/1815'/0'/0/1",
-            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
-            "prev_index": 0,
-            "type": 0,
-        },
-        "prev_tx": "839f8200d818582482582008abb575fac4c39d5bf80683f7f0c37e48f4e3d96e37d1f6611919a7241b456600ff9f8282d818582183581cda4da43db3fca93695e71dab839e72271204d28b9d964d306b8800a8a0001a7a6916a51a00305becffa0",
-    }
-]
+from .test_msg_cardano_sign_transaction import (
+    SAMPLE_INPUTS,
+    SAMPLE_OUTPUTS,
+    InputAction,
+)
 
 VALID_VECTORS = [
     # Mainnet transaction without change
     (
         # protocol magic
         PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
         # inputs
-        [SAMPLE_INPUTS[0]["input"]],
+        [SAMPLE_INPUTS["byron_input"]],
         # outputs
-        [
-            {
-                "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
-                "amount": "3003112",
-            }
-        ],
-        # transactions
-        [SAMPLE_INPUTS[0]["prev_tx"]],
+        [SAMPLE_OUTPUTS["simple_byron_output"]],
+        # fee
+        42,
+        # ttl
+        10,
+        # input flow
+        [[InputAction.SWIPE, InputAction.YES], [InputAction.SWIPE, InputAction.YES]],
         # tx hash
-        "799c65e8a2c0b1dc4232611728c09d3f3eb0d811c077f8e9798f84605ef1b23d",
-        # tx body
-        "82839f8200d81858248258201af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc00ff9f8282d818582183581c9e1c71de652ec8b85fec296f0685ca3988781c94a2e1a5d89d92f45fa0001a0d0c25611a002dd2e8ffa0818200d818588582584024c4fe188a39103db88818bc191fd8571eae7b284ebcbdf2462bde97b058a95c6f7a744035f4b3ddb8f861c18446169643cc3ae85e271b4b4f0eda05cf84c65b584032a773bcd60c83880de09676c45e52cc2c2189c1b46d93de596a5cf6e3e93041c22e6e5762144feb65b40e905659c9b5e51528fa6574273279c2507a2b996f0e",
+        "73e09bdebf98a9e0f17f86a2d11e0f14f4f8dae77cdf26ff1678e821f20c8db6",
+        # serialized tx
+        "83a400818258201af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc00018182582b82d818582183581c9e1c71de652ec8b85fec296f0685ca3988781c94a2e1a5d89d92f45fa0001a0d0c25611a002dd2e802182a030aa1028184582024c4fe188a39103db88818bc191fd8571eae7b284ebcbdf2462bde97b058a95c584055c179ff2beca2c6a78d66de3dea5a6e3134ca3430447c9b73ede73d9b6ae524cde73db59d93a4dfccbbd42b4f4dbacbb655b27171d0f248fdd2d0dc16e0130458206f7a744035f4b3ddb8f861c18446169643cc3ae85e271b4b4f0eda05cf84c65b41a0f6",
     ),
     # Mainnet transaction with change
     (
         # protocol magic (mainnet)
         PROTOCOL_MAGICS["mainnet"],
+        # network id
+        NETWORK_IDS["mainnet"],
         # inputs
-        [
-            {
-                "path": "m/44'/1815'/0'/0/1",
-                "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
-                "prev_index": 0,
-                "type": 0,
-            }
-        ],
+        [SAMPLE_INPUTS["byron_input"]],
         # outputs
+        [SAMPLE_OUTPUTS["simple_byron_output"], SAMPLE_OUTPUTS["byron_change_output"]],
+        # fee
+        42,
+        # ttl
+        10,
+        # input flow
         [
-            {
-                "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
-                "amount": "3003112",
-            },
-            {"path": "m/44'/1815'/0'/0/1", "amount": "1000000"},
+            [InputAction.SWIPE, InputAction.YES],
+            [InputAction.YES],
+            [InputAction.SWIPE, InputAction.YES],
         ],
-        # transactions
-        [SAMPLE_INPUTS[0]["prev_tx"]],
         # tx hash
-        "5a3921053daabc6a2ffc1528963352fa8ea842bd04056371effcd58256e0cd55",
-        # tx body
-        "82839f8200d81858248258201af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc00ff9f8282d818582183581c9e1c71de652ec8b85fec296f0685ca3988781c94a2e1a5d89d92f45fa0001a0d0c25611a002dd2e88282d818582183581c2ea63b3db3a1865f59c11762a5aede800ed8f2dc0605d75df2ed7c9ca0001ae82668161a000f4240ffa0818200d818588582584024c4fe188a39103db88818bc191fd8571eae7b284ebcbdf2462bde97b058a95c6f7a744035f4b3ddb8f861c18446169643cc3ae85e271b4b4f0eda05cf84c65b5840ea38a37167d652fd35ac3517a6b3a5ec73e01a9f3b6d57d645c7727856a17a2c8d9403b497e148811cb087822c49b5ab6e14b1bc78acc21eca434c3e5147260f",
+        "4c43ce4c72f145b145ae7add414722735e250d048f61c4585a5becafcbffa6ae",
+        # serialized tx
+        "83a400818258201af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc00018282582b82d818582183581c9e1c71de652ec8b85fec296f0685ca3988781c94a2e1a5d89d92f45fa0001a0d0c25611a002dd2e882582b82d818582183581c2ea63b3db3a1865f59c11762a5aede800ed8f2dc0605d75df2ed7c9ca0001ae82668161a000f424002182a030aa1028184582024c4fe188a39103db88818bc191fd8571eae7b284ebcbdf2462bde97b058a95c5840594c986290cc5cddf3c242f2d650fcbfd0705949c9990569798c29e42ca7b0d6e92a589be6962dcce9c53c63de973d84c38cf53374b5329e20973a280abec00d58206f7a744035f4b3ddb8f861c18446169643cc3ae85e271b4b4f0eda05cf84c65b41a0f6",
     ),
     # Testnet transaction
     (
         # protocol magic
         PROTOCOL_MAGICS["testnet"],
+        # network id
+        NETWORK_IDS["testnet"],
         # inputs
-        [SAMPLE_INPUTS[0]["input"]],
+        [SAMPLE_INPUTS["byron_input"]],
         # outputs
+        [SAMPLE_OUTPUTS["testnet_output"], SAMPLE_OUTPUTS["byron_change_output"]],
+        # fee
+        42,
+        # ttl
+        10,
+        # input flow
         [
-            {
-                "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
-                "amount": "3003112",
-            }
+            [InputAction.SWIPE, InputAction.YES],
+            [InputAction.YES],
+            [InputAction.SWIPE, InputAction.YES],
         ],
-        # transactions
-        [SAMPLE_INPUTS[0]["prev_tx"]],
         # tx hash
-        "799c65e8a2c0b1dc4232611728c09d3f3eb0d811c077f8e9798f84605ef1b23d",
-        # tx body
-        "82839f8200d81858248258201af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc00ff9f8282d818582183581c9e1c71de652ec8b85fec296f0685ca3988781c94a2e1a5d89d92f45fa0001a0d0c25611a002dd2e8ffa0818200d818588582584024c4fe188a39103db88818bc191fd8571eae7b284ebcbdf2462bde97b058a95c6f7a744035f4b3ddb8f861c18446169643cc3ae85e271b4b4f0eda05cf84c65b58407aab2a707a6d295c0a93e396429721c48d2c09238e32112f2e1d14a8296ff463204240e7d9168e2dfe8276f426cd1f73f1254df434cdab7c942e2a920c8ce800",
+        "93a2c3cfb67ef1e4bae167b0f443c3370664bdb9171bc9cd41bad98e5cc049b2",
+        # serialized tx
+        "83a400818258201af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc00018282582f82d818582583581cc817d85b524e3d073795819a25cdbb84cff6aa2bbb3a081980d248cba10242182a001a0fb6fc611a002dd2e882582f82d818582583581c709bfb5d9733cbdd72f520cd2c8b9f8f942da5e6cd0b6994e1803b0aa10242182a001aef14e76d1a000f424002182a030aa1028184582024c4fe188a39103db88818bc191fd8571eae7b284ebcbdf2462bde97b058a95c5840552d1d66972598532fa539faa98cdc7889c8dce00577626a62fb22d0e244d9f49732b6ab65593352a7486123077b7e36308c5048cc8ee6dc465e576f065cb70558206f7a744035f4b3ddb8f861c18446169643cc3ae85e271b4b4f0eda05cf84c65b45a10242182af6",
     ),
 ]
 
@@ -111,38 +106,60 @@ VALID_VECTORS = [
 @pytest.mark.skip_t1  # T1 support is not planned
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6, passphrase=True)
 @pytest.mark.parametrize(
-    "protocol_magic,inputs,outputs,transactions,tx_hash,tx_body", VALID_VECTORS
+    "protocol_magic,network_id,inputs,outputs,fee,ttl,input_flow_sequences,tx_hash,serialized_tx",
+    VALID_VECTORS,
 )
 def test_cardano_sign_tx(
-    client, protocol_magic, inputs, outputs, transactions, tx_hash, tx_body
+    client,
+    protocol_magic,
+    network_id,
+    inputs,
+    outputs,
+    fee,
+    ttl,
+    input_flow_sequences,
+    tx_hash,
+    serialized_tx,
 ):
     inputs = [cardano.create_input(i) for i in inputs]
     outputs = [cardano.create_output(o) for o in outputs]
+    certificates = []
+    withdrawals = []
+    metadata = bytes()
 
     expected_responses = [messages.PassphraseRequest()]
     expected_responses += [
-        messages.CardanoTxRequest(tx_index=i) for i in range(len(transactions))
+        messages.ButtonRequest(code=messages.ButtonRequestType.Other)
+        for i in range(len(input_flow_sequences))
     ]
-    expected_responses += [
-        messages.ButtonRequest(code=messages.ButtonRequestType.Other),
-        messages.ButtonRequest(code=messages.ButtonRequestType.Other),
-        messages.CardanoSignedTx(),
-    ]
+    expected_responses.append(messages.CardanoSignedTx())
 
     def input_flow():
-        yield
-        client.debug.swipe_up()
-        client.debug.press_yes()
-        yield
-        client.debug.swipe_up()
-        client.debug.press_yes()
+        for sequence in input_flow_sequences:
+            yield
+            for action in sequence:
+                if action == InputAction.SWIPE:
+                    client.debug.swipe_up()
+                elif action == InputAction.YES:
+                    client.debug.press_yes()
+                else:
+                    raise ValueError("Invalid input action")
 
     client.use_passphrase("TREZOR")
     with client:
         client.set_expected_responses(expected_responses)
         client.set_input_flow(input_flow)
         response = cardano.sign_tx(
-            client, inputs, outputs, transactions, protocol_magic
+            client=client,
+            inputs=inputs,
+            outputs=outputs,
+            fee=fee,
+            ttl=ttl,
+            certificates=certificates,
+            withdrawals=withdrawals,
+            metadata=metadata,
+            protocol_magic=protocol_magic,
+            network_id=network_id,
         )
         assert response.tx_hash.hex() == tx_hash
-        assert response.tx_body.hex() == tx_body
+        assert response.serialized_tx.hex() == serialized_tx

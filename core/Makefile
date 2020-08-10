@@ -62,8 +62,7 @@ help: ## show this help
 vendor: ## update git submodules
 	git submodule update --init --recursive --force
 
-res: ## update resources
-	./tools/res_collect
+res: templates ## update resources
 
 ## emulator commands:
 

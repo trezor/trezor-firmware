@@ -1,0 +1,1 @@
+../../../src/trezor/crypto/hmac.py

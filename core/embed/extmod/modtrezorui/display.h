@@ -39,7 +39,7 @@
 #define DISPLAY_RESY 64
 
 #else
-#error Unknown Trezor Model
+#error Unknown Trezor model
 #endif
 
 #define FONT_BPP 4

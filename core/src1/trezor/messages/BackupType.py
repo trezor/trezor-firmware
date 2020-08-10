@@ -1,0 +1,1 @@
+../../../src/trezor/messages/BackupType.py

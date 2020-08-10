@@ -169,5 +169,7 @@ def read_and_confirm_mnemonic(debug, words):
     return " ".join(mnemonic)
 
 
-def test_address(client):
+def get_test_address(client):
+    """Fetch a testnet address on a fixed path. Useful to make a pin/passphrase
+    protected call, or to identify the root secret (seed+passphrase)"""
     return btc.get_address(client, "Testnet", TEST_ADDRESS_N)

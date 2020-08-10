@@ -118,7 +118,7 @@ def test_chain_ids(client, chain_id, slip44, sig):
 def test_with_data(client):
     sig_v, sig_r, sig_s = ethereum.sign_tx(
         client,
-        n=parse_path(f"m/44h/60h/0h/0/0"),
+        n=parse_path("m/44h/60h/0h/0/0"),
         nonce=0,
         gas_price=20000000000,
         gas_limit=21000,

@@ -122,7 +122,7 @@ def det_comm_masks(key_enc, idx: int) -> Sc25519:
     return crypto.decodeint(_build_key(key_enc, b"out-mask", idx))
 
 
-async def gen_hmac_vini(
+def gen_hmac_vini(
     key, src_entr: MoneroTransactionSourceEntry, vini_bin: bytes, idx: int
 ) -> bytes:
     """
@@ -146,7 +146,7 @@ async def gen_hmac_vini(
             src_entr.real_out_additional_tx_keys[src_entr.real_output_in_tx_index]
         ]
 
-    await protobuf.dump_message(kwriter, src_entr)
+    protobuf.dump_message(kwriter, src_entr)
     src_entr.outputs = real_outputs
     src_entr.real_out_additional_tx_keys = real_additional
     kwriter.write(vini_bin)
@@ -156,7 +156,7 @@ async def gen_hmac_vini(
     return hmac_vini
 
 
-async def gen_hmac_vouti(
+def gen_hmac_vouti(
     key, dst_entr: MoneroTransactionDestinationEntry, tx_out_bin: bytes, idx: int
 ) -> bytes:
     """
@@ -166,7 +166,7 @@ async def gen_hmac_vouti(
     from apps.monero.xmr.keccak_hasher import get_keccak_writer
 
     kwriter = get_keccak_writer()
-    await protobuf.dump_message(kwriter, dst_entr)
+    protobuf.dump_message(kwriter, dst_entr)
     kwriter.write(tx_out_bin)
 
     hmac_key_vouti = hmac_key_txout(key, idx)
@@ -174,7 +174,7 @@ async def gen_hmac_vouti(
     return hmac_vouti
 
 
-async def gen_hmac_tsxdest(
+def gen_hmac_tsxdest(
     key, dst_entr: MoneroTransactionDestinationEntry, idx: int
 ) -> bytes:
     """
@@ -184,7 +184,7 @@ async def gen_hmac_tsxdest(
     from apps.monero.xmr.keccak_hasher import get_keccak_writer
 
     kwriter = get_keccak_writer()
-    await protobuf.dump_message(kwriter, dst_entr)
+    protobuf.dump_message(kwriter, dst_entr)
 
     hmac_key = hmac_key_txdst(key, idx)
     hmac_tsxdest = crypto.compute_hmac(hmac_key, kwriter.get_digest())

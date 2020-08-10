@@ -79,7 +79,7 @@ class TestMsgRecoverydevice:
 
         # Mnemonic is the same
         client.init_device()
-        assert client.debug.read_mnemonic_secret() == MNEMONIC12.encode()
+        assert client.debug.state().mnemonic_secret == MNEMONIC12.encode()
 
         assert client.features.pin_protection is True
         assert client.features.passphrase_protection is True
@@ -131,7 +131,7 @@ class TestMsgRecoverydevice:
 
         # Mnemonic is the same
         client.init_device()
-        assert client.debug.read_mnemonic_secret() == MNEMONIC12.encode()
+        assert client.debug.state().mnemonic_secret == MNEMONIC12.encode()
 
         assert client.features.pin_protection is False
         assert client.features.passphrase_protection is False
@@ -205,3 +205,11 @@ class TestMsgRecoverydevice:
             device.recover(
                 client, 12, False, False, "label", "en-US", client.mnemonic_callback
             )
+
+        ret = client.call_raw(
+            proto.RecoveryDevice(
+                word_count=12, type=proto.RecoveryDeviceType.ScrambledWords
+            )
+        )
+        assert isinstance(ret, proto.Failure)
+        assert "Device is already initialized" in ret.message

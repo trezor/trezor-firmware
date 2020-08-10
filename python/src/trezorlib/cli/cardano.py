@@ -18,10 +18,18 @@ import json
 
 import click
 
-from .. import cardano, tools
-from . import with_client
+from .. import cardano, messages, tools
+from . import ChoiceType, with_client
 
 PATH_HELP = "BIP-32 path to key, e.g. m/44'/1815'/0'/0/0"
+
+ADDRESS_TYPES = {
+    "byron": messages.CardanoAddressType.BYRON,
+    "base": messages.CardanoAddressType.BASE,
+    "pointer": messages.CardanoAddressType.POINTER,
+    "enterprise": messages.CardanoAddressType.ENTERPRISE,
+    "reward": messages.CardanoAddressType.REWARD,
+}
 
 
 @click.group(name="cardano")
@@ -37,32 +45,119 @@ def cli():
     required=True,
     help="Transaction in JSON format",
 )
-@click.option("-N", "--network", type=int, default=1)
+@click.option(
+    "-p", "--protocol-magic", type=int, default=cardano.PROTOCOL_MAGICS["mainnet"]
+)
+@click.option("-N", "--network-id", type=int, default=cardano.NETWORK_IDS["mainnet"])
+@click.option("-t", "--testnet", is_flag=True)
 @with_client
-def sign_tx(client, file, network):
+def sign_tx(client, file, protocol_magic, network_id, testnet):
     """Sign Cardano transaction."""
     transaction = json.load(file)
 
+    if testnet:
+        protocol_magic = cardano.PROTOCOL_MAGICS["testnet"]
+        network_id = cardano.NETWORK_IDS["testnet"]
+
     inputs = [cardano.create_input(input) for input in transaction["inputs"]]
     outputs = [cardano.create_output(output) for output in transaction["outputs"]]
-    transactions = transaction["transactions"]
+    fee = transaction["fee"]
+    ttl = transaction["ttl"]
+    certificates = [
+        cardano.create_certificate(certificate)
+        for certificate in transaction.get("certificates", ())
+    ]
+    withdrawals = [
+        cardano.create_withdrawal(withdrawal)
+        for withdrawal in transaction.get("withdrawals", ())
+    ]
+    metadata = None
+    if "metadata" in transaction:
+        metadata = bytes.fromhex(transaction["metadata"])
 
-    signed_transaction = cardano.sign_tx(client, inputs, outputs, transactions, network)
+    signed_transaction = cardano.sign_tx(
+        client,
+        inputs,
+        outputs,
+        fee,
+        ttl,
+        certificates,
+        withdrawals,
+        metadata,
+        protocol_magic,
+        network_id,
+    )
 
     return {
         "tx_hash": signed_transaction.tx_hash.hex(),
-        "tx_body": signed_transaction.tx_body.hex(),
+        "serialized_tx": signed_transaction.serialized_tx.hex(),
     }
 
 
 @cli.command()
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.option("-d", "--show-display", is_flag=True)
+@click.option("-t", "--address-type", type=ChoiceType(ADDRESS_TYPES), default="base")
+@click.option("-s", "--staking-address", type=str, default=None)
+@click.option("-h", "--staking-key-hash", type=str, default=None)
+@click.option("-b", "--block_index", type=int, default=None)
+@click.option("-x", "--tx_index", type=int, default=None)
+@click.option("-c", "--certificate_index", type=int, default=None)
+@click.option(
+    "-p", "--protocol-magic", type=int, default=cardano.PROTOCOL_MAGICS["mainnet"]
+)
+@click.option("-N", "--network-id", type=int, default=cardano.NETWORK_IDS["mainnet"])
+@click.option("-e", "--testnet", is_flag=True)
 @with_client
-def get_address(client, address, show_display):
-    """Get Cardano address."""
-    address_n = tools.parse_path(address)
-    return cardano.get_address(client, address_n, show_display)
+def get_address(
+    client,
+    address,
+    address_type,
+    staking_address,
+    staking_key_hash,
+    block_index,
+    tx_index,
+    certificate_index,
+    protocol_magic,
+    network_id,
+    show_display,
+    testnet,
+):
+    """
+    Get Cardano address.
+
+    All address types require the address, address_type, protocol_magic and
+    network_id parameters.
+
+    When deriving a base address you can choose to include staking info as
+    staking_address or staking_key_hash - one has to be chosen.
+
+    When deriving a pointer address you need to specify the block_index,
+    tx_index and certificate_index parameters.
+
+    Byron, enterprise and reward addresses only require the general parameters.
+    """
+    if testnet:
+        protocol_magic = cardano.PROTOCOL_MAGICS["testnet"]
+        network_id = cardano.NETWORK_IDS["testnet"]
+
+    staking_key_hash_bytes = None
+    if staking_key_hash:
+        staking_key_hash_bytes = bytes.fromhex(staking_key_hash)
+
+    address_parameters = cardano.create_address_parameters(
+        address_type,
+        tools.parse_path(address),
+        tools.parse_path(staking_address),
+        staking_key_hash_bytes,
+        block_index,
+        tx_index,
+        certificate_index,
+    )
+
+    return cardano.get_address(
+        client, address_parameters, protocol_magic, network_id, show_display
+    )
 
 
 @cli.command()
