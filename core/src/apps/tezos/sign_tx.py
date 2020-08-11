@@ -9,7 +9,8 @@ from trezor.messages.TezosSignedTx import TezosSignedTx
 from apps.common import paths
 from apps.common.keychain import with_slip44_keychain
 from apps.common.writers import write_bytes_unchecked, write_uint8, write_uint32_be
-from apps.tezos import CURVE, SLIP44_ID, helpers, layout
+
+from . import CURVE, SLIP44_ID, helpers, layout
 
 PROPOSAL_LENGTH = const(32)
 

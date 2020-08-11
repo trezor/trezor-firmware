@@ -1,9 +1,10 @@
 from trezor.messages.BinanceGetPublicKey import BinanceGetPublicKey
 from trezor.messages.BinancePublicKey import BinancePublicKey
 
-from apps.binance import CURVE, SLIP44_ID, helpers
 from apps.common import layout, paths
 from apps.common.keychain import Keychain, with_slip44_keychain
+
+from . import CURVE, SLIP44_ID, helpers
 
 
 @with_slip44_keychain(SLIP44_ID, CURVE, allow_testnet=True)

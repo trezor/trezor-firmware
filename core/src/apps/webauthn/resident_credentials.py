@@ -3,7 +3,7 @@ from micropython import const
 import storage.resident_credentials
 from storage.resident_credentials import MAX_RESIDENT_CREDENTIALS
 
-from apps.webauthn.credential import Fido2Credential
+from .credential import Fido2Credential
 
 if False:
     from typing import Iterator, Optional

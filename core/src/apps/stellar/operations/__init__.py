@@ -1,5 +1,5 @@
-from apps.stellar import consts, writers
-from apps.stellar.operations import layout, serialize
+from .. import consts, writers
+from . import layout, serialize
 
 
 async def process_operation(ctx, w, op):

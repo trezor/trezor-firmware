@@ -1,10 +1,11 @@
 from trezor.messages.BinanceAddress import BinanceAddress
 from trezor.messages.BinanceGetAddress import BinanceGetAddress
 
-from apps.binance import CURVE, SLIP44_ID, helpers
 from apps.common import paths
 from apps.common.keychain import Keychain, with_slip44_keychain
 from apps.common.layout import address_n_to_str, show_address, show_qr
+
+from . import CURVE, SLIP44_ID, helpers
 
 
 @with_slip44_keychain(SLIP44_ID, CURVE, allow_testnet=True)

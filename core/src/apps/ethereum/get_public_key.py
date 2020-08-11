@@ -2,8 +2,9 @@ from trezor.messages.EthereumPublicKey import EthereumPublicKey
 from trezor.messages.HDNodeType import HDNodeType
 
 from apps.common import coins, layout, paths
-from apps.ethereum import CURVE, address
-from apps.ethereum.keychain import with_keychain_from_path
+
+from . import CURVE, address
+from .keychain import with_keychain_from_path
 
 
 @with_keychain_from_path

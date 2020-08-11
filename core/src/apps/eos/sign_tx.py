@@ -9,10 +9,11 @@ from trezor.utils import HashWriter
 
 from apps.common import paths
 from apps.common.keychain import Keychain, with_slip44_keychain
-from apps.eos import CURVE, SLIP44_ID, writers
-from apps.eos.actions import process_action
-from apps.eos.helpers import base58_encode, validate_full_path
-from apps.eos.layout import require_sign_tx
+
+from . import CURVE, SLIP44_ID, writers
+from .actions import process_action
+from .helpers import base58_encode, validate_full_path
+from .layout import require_sign_tx
 
 
 @with_slip44_keychain(SLIP44_ID, CURVE)

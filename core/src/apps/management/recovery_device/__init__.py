@@ -13,10 +13,8 @@ from apps.common.request_pin import (
     request_pin_and_sd_salt,
     request_pin_confirm,
 )
-from apps.management.recovery_device.homescreen import (
-    recovery_homescreen,
-    recovery_process,
-)
+
+from .homescreen import recovery_homescreen, recovery_process
 
 if False:
     from trezor.messages.RecoveryDevice import RecoveryDevice

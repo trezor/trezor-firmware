@@ -7,8 +7,9 @@ from apps.common import paths
 from apps.common.keychain import with_slip44_keychain
 from apps.common.signverify import require_confirm_sign_message
 from apps.common.writers import write_bitcoin_varint
-from apps.lisk import CURVE, SLIP44_ID
-from apps.lisk.helpers import validate_full_path
+
+from . import CURVE, SLIP44_ID
+from .helpers import validate_full_path
 
 
 def message_digest(message):

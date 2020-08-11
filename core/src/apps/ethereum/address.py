@@ -3,7 +3,8 @@ from ubinascii import unhexlify
 from trezor import wire
 
 from apps.common import HARDENED, paths
-from apps.ethereum import networks
+
+from . import networks
 
 
 """

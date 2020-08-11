@@ -7,8 +7,8 @@ from trezor.ui.scroll import Paginated
 from trezor.ui.text import Text
 from trezor.utils import chunks
 
-from apps.eos import helpers
-from apps.eos.layout import require_confirm
+from .. import helpers
+from ..layout import require_confirm
 
 if False:
     from typing import List

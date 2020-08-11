@@ -23,7 +23,7 @@ class ConfirmInfo:
 
     def load_icon(self, rp_id_hash: bytes) -> None:
         from trezor import res
-        from apps.webauthn import knownapps
+        from . import knownapps
 
         fido_app = knownapps.by_rp_id_hash(rp_id_hash)
         if fido_app is not None and fido_app.icon is not None:

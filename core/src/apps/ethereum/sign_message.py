@@ -5,8 +5,9 @@ from trezor.utils import HashWriter
 
 from apps.common import paths
 from apps.common.signverify import require_confirm_sign_message
-from apps.ethereum import CURVE, address
-from apps.ethereum.keychain import with_keychain_from_path
+
+from . import CURVE, address
+from .keychain import with_keychain_from_path
 
 
 def message_digest(message):

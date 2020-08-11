@@ -4,9 +4,10 @@ from trezor.messages.EthereumAddress import EthereumAddress
 
 from apps.common import paths
 from apps.common.layout import address_n_to_str, show_address, show_qr
-from apps.ethereum import CURVE, networks
-from apps.ethereum.address import address_from_bytes, validate_full_path
-from apps.ethereum.keychain import with_keychain_from_path
+
+from . import CURVE, networks
+from .address import address_from_bytes, validate_full_path
+from .keychain import with_keychain_from_path
 
 
 @with_keychain_from_path

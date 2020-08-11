@@ -14,18 +14,11 @@ from trezor.ui.text import Text
 
 from apps.base import set_homescreen
 from apps.common import cbor
-from apps.webauthn import common
-from apps.webauthn.confirm import ConfirmContent, ConfirmInfo
-from apps.webauthn.credential import (
-    CRED_ID_MAX_LENGTH,
-    Credential,
-    Fido2Credential,
-    U2fCredential,
-)
-from apps.webauthn.resident_credentials import (
-    find_by_rp_id_hash,
-    store_resident_credential,
-)
+
+from . import common
+from .confirm import ConfirmContent, ConfirmInfo
+from .credential import CRED_ID_MAX_LENGTH, Credential, Fido2Credential, U2fCredential
+from .resident_credentials import find_by_rp_id_hash, store_resident_credential
 
 if False:
     from typing import (
@@ -1481,7 +1474,7 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
 def cbor_make_credential_process(
     req: Cmd, dialog_mgr: DialogManager
 ) -> Union[State, Cmd]:
-    from apps.webauthn import knownapps
+    from . import knownapps
 
     if not storage.device.is_initialized():
         if __debug__:
@@ -1588,7 +1581,7 @@ def cbor_make_credential_process(
 
 
 def use_self_attestation(rp_id_hash: bytes) -> bool:
-    from apps.webauthn import knownapps
+    from . import knownapps
 
     app = knownapps.by_rp_id_hash(rp_id_hash)
     if app is not None and app.use_self_attestation is not None:

@@ -3,8 +3,8 @@ from trezor.messages.EosTxActionAck import EosTxActionAck
 from trezor.messages.EosTxActionRequest import EosTxActionRequest
 from trezor.utils import HashWriter
 
-from apps.eos import helpers, writers
-from apps.eos.actions import layout
+from .. import helpers, writers
+from . import layout
 
 if False:
     from trezor import wire
