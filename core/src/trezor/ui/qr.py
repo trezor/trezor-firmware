@@ -7,6 +7,7 @@ class Qr(ui.Component):
         self.x = x
         self.y = y
         self.scale = scale
+        self.repaint = True
 
     def on_render(self) -> None:
         if self.repaint:
