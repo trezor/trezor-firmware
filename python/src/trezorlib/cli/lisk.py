@@ -72,7 +72,7 @@ def sign_tx(client, address, file):
 @with_client
 def sign_message(client, address, message):
     """Sign message with Lisk address."""
-    address_n = client.expand_path(address)
+    address_n = tools.parse_path(address)
     res = lisk.sign_message(client, address_n, message)
     output = {
         "message": message,
