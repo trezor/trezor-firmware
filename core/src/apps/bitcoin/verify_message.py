@@ -57,7 +57,7 @@ async def verify_message(ctx, msg):
         raise wire.ProcessError("Invalid signature")
 
     await require_confirm_verify_message(
-        ctx, address_short(coin, address), "Verify message", message
+        ctx, address_short(coin, address), coin.coin_shortcut, message
     )
 
     return Success(message="Message verified")
