@@ -9,8 +9,9 @@ from trezor.utils import HashWriter
 
 from apps.common import paths
 from apps.common.keychain import with_slip44_keychain
-from apps.lisk import CURVE, SLIP44_ID, layout
-from apps.lisk.helpers import get_address_from_public_key, validate_full_path
+
+from . import CURVE, SLIP44_ID, layout
+from .helpers import get_address_from_public_key, validate_full_path
 
 
 @with_slip44_keychain(SLIP44_ID, CURVE, allow_testnet=True)

@@ -4,8 +4,9 @@ from trezor.crypto.hashlib import sha3_256
 from trezor.messages.Success import Success
 
 from apps.common.signverify import require_confirm_verify_message
-from apps.ethereum.address import address_from_bytes, bytes_from_address
-from apps.ethereum.sign_message import message_digest
+
+from .address import address_from_bytes, bytes_from_address
+from .sign_message import message_digest
 
 
 async def verify_message(ctx, msg):

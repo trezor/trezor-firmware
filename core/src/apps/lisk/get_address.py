@@ -3,8 +3,8 @@ from trezor.messages.LiskAddress import LiskAddress
 from apps.common import paths
 from apps.common.keychain import with_slip44_keychain
 from apps.common.layout import address_n_to_str, show_address, show_qr
-from apps.lisk import CURVE, SLIP44_ID
 
+from . import CURVE, SLIP44_ID
 from .helpers import get_address_from_public_key, validate_full_path
 
 

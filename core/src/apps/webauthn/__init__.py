@@ -1,7 +1,7 @@
 from trezor import loop, wire
 from trezor.messages import MessageType
 
-from apps.webauthn.fido2 import handle_reports
+from .fido2 import handle_reports
 
 
 def boot() -> None:

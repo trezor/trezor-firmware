@@ -8,8 +8,9 @@ from trezor.utils import chunks
 
 from apps.common.confirm import require_confirm, require_hold_to_confirm
 from apps.common.layout import split_address
-from apps.ethereum import networks, tokens
-from apps.ethereum.address import address_from_bytes
+
+from . import networks, tokens
+from .address import address_from_bytes
 
 
 async def require_confirm_tx(ctx, to_bytes, value, chain_id, token=None, tx_type=None):

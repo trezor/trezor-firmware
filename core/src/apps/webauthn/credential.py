@@ -8,7 +8,8 @@ from trezor.crypto import bip32, chacha20poly1305, der, hashlib, hmac, random
 from trezor.crypto.curve import ed25519, nist256p1
 
 from apps.common import HARDENED, cbor, seed
-from apps.webauthn import common
+
+from . import common
 
 if False:
     from typing import Iterable, Optional
@@ -258,7 +259,7 @@ class Fido2Credential(Credential):
         )
 
     def app_name(self) -> str:
-        from apps.webauthn import knownapps
+        from . import knownapps
 
         app = knownapps.by_rp_id_hash(self.rp_id_hash)
         if app is not None:
@@ -400,7 +401,7 @@ class U2fCredential(Credential):
         self.id = keypath + mac.digest()
 
     def app_name(self) -> str:
-        from apps.webauthn import knownapps
+        from . import knownapps
 
         app = knownapps.by_rp_id_hash(self.rp_id_hash)
         if app is not None:

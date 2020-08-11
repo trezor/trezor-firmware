@@ -7,7 +7,8 @@ from trezor.utils import chunks
 from apps.common import paths, seed
 from apps.common.confirm import require_confirm
 from apps.common.keychain import with_slip44_keychain
-from apps.tezos import CURVE, SLIP44_ID, helpers
+
+from . import CURVE, SLIP44_ID, helpers
 
 
 @with_slip44_keychain(SLIP44_ID, CURVE, allow_testnet=True)

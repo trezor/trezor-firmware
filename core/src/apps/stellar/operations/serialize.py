@@ -12,7 +12,7 @@ from trezor.messages.StellarPaymentOp import StellarPaymentOp
 from trezor.messages.StellarSetOptionsOp import StellarSetOptionsOp
 from trezor.wire import ProcessError
 
-from apps.stellar import consts, writers
+from .. import consts, writers
 
 
 def write_account_merge_op(w, msg: StellarAccountMergeOp):

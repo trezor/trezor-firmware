@@ -8,14 +8,11 @@ from trezor.messages.EthereumTxRequest import EthereumTxRequest
 from trezor.utils import HashWriter
 
 from apps.common import paths
-from apps.ethereum import CURVE, address, tokens
-from apps.ethereum.address import validate_full_path
-from apps.ethereum.keychain import with_keychain_from_chain_id
-from apps.ethereum.layout import (
-    require_confirm_data,
-    require_confirm_fee,
-    require_confirm_tx,
-)
+
+from . import CURVE, address, tokens
+from .address import validate_full_path
+from .keychain import with_keychain_from_chain_id
+from .layout import require_confirm_data, require_confirm_fee, require_confirm_tx
 
 # maximum supported chain id
 MAX_CHAIN_ID = 2147483629

@@ -3,7 +3,7 @@ import storage.recovery_shares
 from trezor.crypto import bip39, slip39
 from trezor.errors import MnemonicError
 
-from apps.management import backup_types
+from .. import backup_types
 
 if False:
     from trezor.messages.ResetDevice import EnumTypeBackupType

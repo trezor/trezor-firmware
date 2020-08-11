@@ -16,8 +16,8 @@ from trezor.messages.StellarSetOptionsOp import StellarSetOptionsOp
 from trezor.ui.text import Text
 from trezor.wire import ProcessError
 
-from apps.stellar import consts, helpers
-from apps.stellar.layout import format_amount, require_confirm, split, trim_to_rows, ui
+from .. import consts, helpers
+from ..layout import format_amount, require_confirm, split, trim_to_rows, ui
 
 
 async def confirm_source_account(ctx, source_account: bytes):

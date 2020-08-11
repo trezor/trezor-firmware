@@ -5,9 +5,10 @@ from trezor.messages.EosPublicKey import EosPublicKey
 
 from apps.common import paths
 from apps.common.keychain import Keychain, with_slip44_keychain
-from apps.eos import CURVE, SLIP44_ID
-from apps.eos.helpers import public_key_to_wif, validate_full_path
-from apps.eos.layout import require_get_public_key
+
+from . import CURVE, SLIP44_ID
+from .helpers import public_key_to_wif, validate_full_path
+from .layout import require_get_public_key
 
 if False:
     from typing import Tuple

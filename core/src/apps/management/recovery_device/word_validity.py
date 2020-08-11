@@ -1,7 +1,7 @@
 import storage.recovery
 from trezor.messages import BackupType
 
-from apps.management.recovery_device import recover
+from . import recover
 
 if False:
     from typing import List, Optional

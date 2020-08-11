@@ -8,9 +8,10 @@ from trezor.messages.BinanceSignedTx import BinanceSignedTx
 from trezor.messages.BinanceTransferMsg import BinanceTransferMsg
 from trezor.messages.BinanceTxRequest import BinanceTxRequest
 
-from apps.binance import CURVE, SLIP44_ID, helpers, layout
 from apps.common import paths
 from apps.common.keychain import Keychain, with_slip44_keychain
+
+from . import CURVE, SLIP44_ID, helpers, layout
 
 
 @with_slip44_keychain(SLIP44_ID, CURVE, allow_testnet=True)
