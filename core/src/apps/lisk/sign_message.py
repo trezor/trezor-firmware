@@ -24,7 +24,7 @@ def message_digest(message):
 @with_slip44_keychain(SLIP44_ID, CURVE, allow_testnet=True)
 async def sign_message(ctx, msg, keychain):
     await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n, CURVE)
-    await require_confirm_sign_message(ctx, "Sign Lisk message", msg.message)
+    await require_confirm_sign_message(ctx, "Lisk", msg.message)
 
     node = keychain.derive(msg.address_n)
     seckey = node.private_key()

@@ -15,8 +15,6 @@ async def verify_message(ctx, msg):
         raise wire.ProcessError("Invalid signature")
 
     address = get_address_from_public_key(msg.public_key)
-    await require_confirm_verify_message(
-        ctx, address, "Verify Lisk message", msg.message
-    )
+    await require_confirm_verify_message(ctx, address, "Lisk", msg.message)
 
     return Success(message="Message verified")

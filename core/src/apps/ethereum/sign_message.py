@@ -23,7 +23,7 @@ async def sign_message(ctx, msg, keychain):
     await paths.validate_path(
         ctx, address.validate_full_path, keychain, msg.address_n, CURVE
     )
-    await require_confirm_sign_message(ctx, "Sign ETH message", msg.message)
+    await require_confirm_sign_message(ctx, "ETH", msg.message)
 
     node = keychain.derive(msg.address_n)
     signature = secp256k1.sign(
