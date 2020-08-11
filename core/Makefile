@@ -217,7 +217,7 @@ flash_erase_storage: ## erase storage sectors from flash
 flash_bootloader_jlink: $(BOOTLOADER_BUILD_DIR)/bootloader.bin ## flash bootloader using JLink
 	JLinkExe -commanderscript embed/bootloader/bootloader_flash.jlink
 
-flash_bootloader_ci_jlink: $(BOOTLOADER_BUILD_DIR)/bootloader.bin ## flash CI bootloader using JLink
+flash_bootloader_ci_jlink: $(BOOTLOADER_CI_BUILD_DIR)/bootloader.bin ## flash CI bootloader using JLink
 	JLinkExe -commanderscript embed/bootloader_ci/bootloader_flash.jlink
 
 flash_firmware_jlink: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using JLink. file names must end in .bin for JLink
