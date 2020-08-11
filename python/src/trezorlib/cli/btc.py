@@ -134,6 +134,9 @@ def get_address(
         )
         if script_type == messages.InputScriptType.SPENDADDRESS:
             script_type = messages.InputScriptType.SPENDMULTISIG
+    else:
+        multisig = None
+
     return btc.get_address(
         client,
         coin,

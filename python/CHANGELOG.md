@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 _At the moment, the project does **not** adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
 
+## [0.12.2] - unreleased
+[0.12.2]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.1...master
+
+### Fixed
+
+- fix `UnboundLocalError` in `trezorctl btc get-address`  [#1179]
+
 ## [0.12.1] - 2020-08-05
 [0.12.1]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.0...python/v0.12.1
 
@@ -452,3 +459,4 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 [#948]: https://github.com/trezor/trezor-firmware/issues/948
 [#1052]: https://github.com/trezor/trezor-firmware/issues/1052
 [#1126]: https://github.com/trezor/trezor-firmware/issues/1126
+[#1179]: https://github.com/trezor/trezor-firmware/issues/1179
