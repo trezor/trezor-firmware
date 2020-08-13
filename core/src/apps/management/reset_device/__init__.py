@@ -6,7 +6,6 @@ from trezor.messages import BackupType
 from trezor.messages.EntropyAck import EntropyAck
 from trezor.messages.EntropyRequest import EntropyRequest
 from trezor.messages.Success import Success
-from trezor.pin import pin_to_int
 from trezor.ui.layouts import confirm_backup, confirm_reset_device, require
 from trezor.ui.loader import LoadingAnimation
 
@@ -43,7 +42,7 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     # request and set new PIN
     if msg.pin_protection:
         newpin = await request_pin_confirm(ctx)
-        if not config.change_pin(pin_to_int(""), pin_to_int(newpin), None, None):
+        if not config.change_pin("", newpin, None, None):
             raise wire.ProcessError("Failed to set PIN")
 
     # generate and display internal entropy
