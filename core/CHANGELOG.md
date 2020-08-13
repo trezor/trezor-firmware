@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 ### Changed
+- Support PIN of unlimited length.  [#1167]
 
 ### Deprecated
 
@@ -351,6 +352,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1139]: https://github.com/trezor/trezor-firmware/issues/1139
 [#1159]: https://github.com/trezor/trezor-firmware/issues/1159
 [#1165]: https://github.com/trezor/trezor-firmware/pull/1165
+[#1167]: https://github.com/trezor/trezor-firmware/issues/1167
 [#1173]: https://github.com/trezor/trezor-firmware/pull/1173
 [#1184]: https://github.com/trezor/trezor-firmware/issues/1184
 [#1188]: https://github.com/trezor/trezor-firmware/issues/1188

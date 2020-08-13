@@ -3,7 +3,6 @@ import utime
 import storage.sd_salt
 from trezor import config, ui, wire
 from trezor.messages import ButtonRequestType
-from trezor.pin import pin_to_int
 from trezor.ui.components.tt.pin import CANCELLED, PinDialog
 from trezor.ui.components.tt.text import Text
 from trezor.ui.popup import Popup
@@ -71,7 +70,7 @@ async def request_pin_and_sd_salt(
 ) -> Tuple[str, Optional[bytearray]]:
     if config.has_pin():
         pin = await request_pin(ctx, prompt, config.get_pin_rem(), allow_cancel)
-        config.ensure_not_wipe_code(pin_to_int(pin))
+        config.ensure_not_wipe_code(pin)
     else:
         pin = ""
 
@@ -98,7 +97,7 @@ async def verify_user_pin(
 
     if config.has_pin():
         pin = await request_pin(ctx, prompt, config.get_pin_rem(), allow_cancel)
-        config.ensure_not_wipe_code(pin_to_int(pin))
+        config.ensure_not_wipe_code(pin)
     else:
         pin = ""
 
@@ -106,7 +105,7 @@ async def verify_user_pin(
         salt = await request_sd_salt(ctx)
     except SdCardUnavailable:
         raise wire.PinCancelled("SD salt is unavailable")
-    if config.unlock(pin_to_int(pin), salt):
+    if config.unlock(pin, salt):
         _last_successful_unlock = utime.ticks_ms()
         return
     elif not config.has_pin():
@@ -116,7 +115,7 @@ async def verify_user_pin(
         pin = await request_pin(
             ctx, "Wrong PIN, enter again", config.get_pin_rem(), allow_cancel
         )
-        if config.unlock(pin_to_int(pin), salt):
+        if config.unlock(pin, salt):
             _last_successful_unlock = utime.ticks_ms()
             return
 

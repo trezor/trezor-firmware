@@ -1,7 +1,6 @@
 from storage.device import is_initialized
 from trezor import config, ui, wire
 from trezor.messages.Success import Success
-from trezor.pin import pin_to_int
 from trezor.ui.components.tt.text import Text
 from trezor.ui.layouts import require, show_success
 
@@ -29,7 +28,7 @@ async def change_pin(ctx: wire.Context, msg: ChangePin) -> Success:
 
     # if changing pin, pre-check the entered pin before getting new pin
     if curpin and not msg.remove:
-        if not config.check_pin(pin_to_int(curpin), salt):
+        if not config.check_pin(curpin, salt):
             await error_pin_invalid(ctx)
 
     # get new pin
@@ -39,7 +38,7 @@ async def change_pin(ctx: wire.Context, msg: ChangePin) -> Success:
         newpin = ""
 
     # write into storage
-    if not config.change_pin(pin_to_int(curpin), pin_to_int(newpin), salt, salt):
+    if not config.change_pin(curpin, newpin, salt, salt):
         if newpin:
             await error_pin_matches_wipe_code(ctx)
         else:
