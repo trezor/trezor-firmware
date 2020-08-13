@@ -1,7 +1,6 @@
 from storage.device import is_initialized
 from trezor import config, ui, wire
 from trezor.messages.Success import Success
-from trezor.pin import pin_to_int
 from trezor.ui.components.tt.text import Text
 from trezor.ui.layouts import require, show_success
 from trezor.ui.popup import Popup
@@ -30,7 +29,7 @@ async def change_wipe_code(ctx: wire.Context, msg: ChangeWipeCode) -> Success:
 
     if not msg.remove:
         # Pre-check the entered PIN.
-        if config.has_pin() and not config.check_pin(pin_to_int(pin), salt):
+        if config.has_pin() and not config.check_pin(pin, salt):
             await error_pin_invalid(ctx)
 
         # Get new wipe code.
@@ -39,7 +38,7 @@ async def change_wipe_code(ctx: wire.Context, msg: ChangeWipeCode) -> Success:
         wipe_code = ""
 
     # Write into storage.
-    if not config.change_wipe_code(pin_to_int(pin), salt, pin_to_int(wipe_code)):
+    if not config.change_wipe_code(pin, salt, wipe_code):
         await error_pin_invalid(ctx)
 
     if wipe_code:

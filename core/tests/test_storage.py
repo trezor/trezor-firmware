@@ -1,5 +1,4 @@
 from common import *
-from trezor.pin import pin_to_int
 from trezor import config
 from storage import device
 
