@@ -1,0 +1,16 @@
+#!/bin/sh
+
+COVERAGE_THRESHOLD=${COVERAGE_THRESHOLD:-0}
+
+coverage run --source=./src /dev/null 2>/dev/null
+mv .coverage .coverage.empty
+coverage combine .coverage.*
+
+coverage html --fail-under=${COVERAGE_THRESHOLD}
+if [ $? -eq 2 ]; then
+  echo "Code coverage is less than ${COVERAGE_THRESHOLD}%"
+  exit 1
+fi
+
+RESULT=$(grep pc_cov htmlcov/index.html | egrep -o '[0-9]{1,3}%')
+echo "COVERAGE: ${RESULT}"
