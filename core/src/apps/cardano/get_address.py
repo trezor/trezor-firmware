@@ -4,9 +4,10 @@ from trezor.messages.CardanoAddress import CardanoAddress
 from apps.common import paths
 from apps.common.layout import address_n_to_str, show_qr
 
-from . import CURVE, seed
-from .address import derive_human_readable_address, validate_full_path
+from . import seed
+from .address import derive_human_readable_address
 from .helpers import protocol_magics, staking_use_cases
+from .helpers.paths import SCHEMA_ADDRESS
 from .helpers.utils import to_account_path
 from .layout import (
     show_address,
@@ -26,7 +27,11 @@ async def get_address(
     address_parameters = msg.address_parameters
 
     await paths.validate_path(
-        ctx, validate_full_path, keychain, address_parameters.address_n, CURVE
+        ctx,
+        keychain,
+        address_parameters.address_n,
+        # path must match the ADDRESS schema
+        SCHEMA_ADDRESS.match(address_parameters.address_n),
     )
 
     validate_network_info(msg.network_id, msg.protocol_magic)
