@@ -3,15 +3,12 @@ from trezor.messages.HDNodeType import HDNodeType
 
 from apps.common import coins, layout, paths
 
-from . import CURVE, address
-from .keychain import with_keychain_from_path
+from .keychain import PATTERN_PUBKEY, with_keychain_from_path
 
 
-@with_keychain_from_path
+@with_keychain_from_path(PATTERN_PUBKEY)
 async def get_public_key(ctx, msg, keychain):
-    await paths.validate_path(
-        ctx, address.validate_path_for_get_public_key, keychain, msg.address_n, CURVE
-    )
+    await paths.validate_path(ctx, keychain, msg.address_n)
     node = keychain.derive(msg.address_n)
 
     # we use the Bitcoin format for Ethereum xpubs

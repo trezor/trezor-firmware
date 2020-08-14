@@ -4,12 +4,9 @@ from trezor.messages.LiskMessageSignature import LiskMessageSignature
 from trezor.utils import HashWriter
 
 from apps.common import paths
-from apps.common.keychain import with_slip44_keychain
+from apps.common.keychain import auto_keychain
 from apps.common.signverify import require_confirm_sign_message
 from apps.common.writers import write_bitcoin_varint
-
-from . import CURVE, SLIP44_ID
-from .helpers import validate_full_path
 
 
 def message_digest(message):
@@ -22,9 +19,9 @@ def message_digest(message):
     return sha256(h.get_digest()).digest()
 
 
-@with_slip44_keychain(SLIP44_ID, CURVE, allow_testnet=True)
+@auto_keychain(__name__)
 async def sign_message(ctx, msg, keychain):
-    await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n, CURVE)
+    await paths.validate_path(ctx, keychain, msg.address_n)
     await require_confirm_sign_message(ctx, "Lisk", msg.message)
 
     node = keychain.derive(msg.address_n)

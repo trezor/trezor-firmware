@@ -10,14 +10,14 @@ from trezor.messages.MoneroLiveRefreshStepAck import MoneroLiveRefreshStepAck
 from trezor.messages.MoneroLiveRefreshStepRequest import MoneroLiveRefreshStepRequest
 
 from apps.common import paths
-from apps.common.keychain import with_slip44_keychain
-from apps.monero import CURVE, SLIP44_ID, misc
+from apps.common.keychain import auto_keychain
+from apps.monero import misc
 from apps.monero.layout import confirms
 from apps.monero.xmr import crypto, key_image, monero
 from apps.monero.xmr.crypto import chacha_poly
 
 
-@with_slip44_keychain(SLIP44_ID, CURVE, allow_testnet=True)
+@auto_keychain(__name__)
 async def live_refresh(ctx, msg: MoneroLiveRefreshStartRequest, keychain):
     state = LiveRefreshState()
 
@@ -47,9 +47,7 @@ class LiveRefreshState:
 async def _init_step(
     s: LiveRefreshState, ctx, msg: MoneroLiveRefreshStartRequest, keychain
 ):
-    await paths.validate_path(
-        ctx, misc.validate_full_path, keychain, msg.address_n, CURVE
-    )
+    await paths.validate_path(ctx, keychain, msg.address_n)
 
     if not storage.cache.get(storage.cache.APP_MONERO_LIVE_REFRESH):
         await confirms.require_confirm_live_refresh(ctx)

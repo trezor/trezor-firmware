@@ -10,16 +10,14 @@ from apps.common import paths
 from apps.common.keychain import with_slip44_keychain
 from apps.common.writers import write_bytes_unchecked, write_uint8, write_uint32_be
 
-from . import CURVE, SLIP44_ID, helpers, layout
+from . import CURVE, PATTERNS, SLIP44_ID, helpers, layout
 
 PROPOSAL_LENGTH = const(32)
 
 
-@with_slip44_keychain(SLIP44_ID, CURVE, allow_testnet=True)
+@with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
 async def sign_tx(ctx, msg, keychain):
-    await paths.validate_path(
-        ctx, helpers.validate_full_path, keychain, msg.address_n, CURVE
-    )
+    await paths.validate_path(ctx, keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)
 

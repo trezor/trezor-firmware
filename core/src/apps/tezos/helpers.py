@@ -2,7 +2,6 @@ from micropython import const
 
 from trezor.crypto import base58
 
-from apps.common import HARDENED
 from apps.common.writers import write_bytes_unchecked, write_uint8
 
 TEZOS_AMOUNT_DECIMALS = const(6)
@@ -64,31 +63,6 @@ def base58_decode_check(enc, prefix=None):
     if prefix is not None:
         decoded = decoded[len(TEZOS_PREFIX_BYTES[prefix]) :]
     return decoded
-
-
-def validate_full_path(path: list) -> bool:
-    """
-    Validates derivation path to equal 44'/1729'/a',
-    where `a` is an account index from 0 to 1 000 000.
-    Additional component added to allow ledger migration
-    44'/1729'/0'/b' where `b` is an account index from 0 to 1 000 000
-    """
-    length = len(path)
-    if length < 3 or length > 4:
-        return False
-    if path[0] != 44 | HARDENED:
-        return False
-    if path[1] != 1729 | HARDENED:
-        return False
-    if length == 3:
-        if path[2] < HARDENED or path[2] > 1000000 | HARDENED:
-            return False
-    if length == 4:
-        if path[2] != 0 | HARDENED:
-            return False
-        if path[3] < HARDENED or path[3] > 1000000 | HARDENED:
-            return False
-    return True
 
 
 def write_bool(w: bytearray, boolean: bool):
