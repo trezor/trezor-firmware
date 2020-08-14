@@ -27,8 +27,8 @@ def test_set_get():
     assert common.memory_equals(sc, sp)
 
     for s in (sc, sp):
-        s.change_pin(1, 2221)
-        s.change_pin(2221, 991)
+        s.change_pin("", "222")
+        s.change_pin("222", "99")
         s.set(0xAAAA, b"something else")
     assert common.memory_equals(sc, sp)
 
@@ -60,7 +60,7 @@ def test_set_get():
 
     # check that storage functions after unlock
     for s in (sc, sp):
-        s.unlock(991)
+        s.unlock("99")
         s.set(0xAAAA, b"public")
         s.set(0x0902, b"protected")
         assert s.get(0xAAAA) == b"public"
@@ -131,14 +131,14 @@ def test_set_similar():
 
     for s in (sc, sp):
         s.wipe()
-        s.unlock(1)
+        s.unlock("")
         s.set(0xBEEF, b"satoshi")
         s.set(0xBEEF, b"Satoshi")
     assert common.memory_equals(sc, sp)
 
     for s in (sc, sp):
         s.wipe()
-        s.unlock(1)
+        s.unlock("")
         s.set(0xBEEF, b"satoshi")
         s.set(0xBEEF, b"Satoshi")
         s.set(0xBEEF, b"Satoshi")

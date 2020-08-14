@@ -7,7 +7,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from . import consts, prng
 
 
-def derive_kek_keiv(salt: bytes, pin: int) -> (bytes, bytes):
+def derive_kek_keiv(salt: bytes, pin: str) -> (bytes, bytes):
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=consts.KEK_SIZE + consts.KEIV_SIZE,
@@ -15,7 +15,7 @@ def derive_kek_keiv(salt: bytes, pin: int) -> (bytes, bytes):
         iterations=10000,
         backend=default_backend(),
     )
-    pbkdf_output = kdf.derive(pin.to_bytes(4, "little"))
+    pbkdf_output = kdf.derive(pin.encode())
     # the first 256b is Key Encryption Key
     kek = pbkdf_output[: consts.KEK_SIZE]
     # following with 96b of Initialization Vector
@@ -42,7 +42,7 @@ def chacha_poly_decrypt(
 
 
 def decrypt_edek_esak(
-    pin: int, salt: bytes, edek_esak: bytes, pvc: bytes
+    pin: str, salt: bytes, edek_esak: bytes, pvc: bytes
 ) -> (bytes, bytes):
     """
     Decrypts EDEK, ESAK to DEK, SAK and checks PIN in the process.

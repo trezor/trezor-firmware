@@ -17,12 +17,12 @@ def set_values(s):
     s.set(0xBEEF, b"Hello")
     s.set(0xCAFE, b"world!  ")
     s.set(0xDEAD, b"How\n")
-    s.change_pin(1, 1222)
+    s.change_pin("", "222")
     s.set(0xAAAA, b"are")
     s.set(0x0901, b"you?")
     s.set(0x0902, b"Lorem")
     s.set(0x0903, b"ipsum")
-    s.change_pin(1222, 199)
+    s.change_pin("222", "99")
     s.set(0xDEAD, b"A\n")
     s.set(0xDEAD, b"AAAAAAAAAAA")
     s.set(0x2200, b"BBBB")
@@ -31,7 +31,7 @@ def set_values(s):
 
 
 def check_values(s):
-    assert s.unlock(199)
+    assert s.unlock("99")
     assert s.get(0xAAAA) == b"are"
     assert s.get(0x0901) == b"you?"
     assert s.get(0x0902) == b"Lorem"
@@ -45,10 +45,10 @@ def check_values(s):
 def test_upgrade():
     sc0 = StorageC0()
     sc0.init()
-    assert sc0.unlock(1)
+    assert sc0.unlock("")
     set_values(sc0)
     for _ in range(10):
-        assert not sc0.unlock(3)
+        assert not sc0.unlock("3")
 
     sc1 = StorageC()
     sc1._set_flash_buffer(sc0._get_flash_buffer())
@@ -60,10 +60,10 @@ def test_upgrade():
 def test_python_set_sectors():
     sp0 = StoragePy()
     sp0.init(common.test_uid)
-    assert sp0.unlock(1)
+    assert sp0.unlock("")
     set_values(sp0)
     for _ in range(10):
-        assert not sp0.unlock(3)
+        assert not sp0.unlock("3")
     assert sp0.get_pin_rem() == 6
 
     sp1 = StoragePy()

@@ -9,11 +9,13 @@ from .storage_model import StorageModel
 class StorageComparison(RuleBasedStateMachine):
     def __init__(self):
         super(StorageComparison, self).__init__()
+        print("X")
         self.sc, self.sp = common.init(unlock=True)
         self.sm = StorageModel()
         self.sm.init(b"")
-        self.sm.unlock(1)
+        self.sm.unlock("")
         self.storages = (self.sc, self.sp, self.sm)
+        print("Y")
 
     keys = Bundle("keys")
     values = Bundle("values")
@@ -29,7 +31,10 @@ class StorageComparison(RuleBasedStateMachine):
 
     @rule(target=pins, p=st.integers(1, 3))
     def p(self, p):
-        return p
+        if p == 1:
+            return ""
+        else:
+            return str(p)
 
     @rule(k=keys, v=values)
     def set(self, k, v):
