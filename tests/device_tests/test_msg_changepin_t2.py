@@ -17,11 +17,12 @@
 import pytest
 
 from trezorlib import btc, device, messages
-from trezorlib.client import PASSPHRASE_TEST_PATH
+from trezorlib.client import MAX_PIN_LENGTH, PASSPHRASE_TEST_PATH
 from trezorlib.exceptions import Cancelled
 
 PIN4 = "1234"
-PIN6 = "789456"
+PIN60 = "789456" * 10
+PIN_MAX = "".join(chr((i % 10) + ord("0")) for i in range(MAX_PIN_LENGTH))
 
 pytestmark = pytest.mark.skip_t1
 
@@ -54,7 +55,7 @@ def test_set_pin(client):
 
     # Let's set new PIN
     with client:
-        client.use_pin_sequence([PIN6, PIN6])
+        client.use_pin_sequence([PIN_MAX, PIN_MAX])
         client.set_expected_responses(
             [messages.ButtonRequest] * 4 + [messages.Success, messages.Features]
         )
@@ -62,7 +63,7 @@ def test_set_pin(client):
 
     client.init_device()
     assert client.features.pin_protection is True
-    _check_pin(client, PIN6)
+    _check_pin(client, PIN_MAX)
 
 
 @pytest.mark.setup_client(pin=PIN4)
@@ -74,7 +75,7 @@ def test_change_pin(client):
 
     # Let's change PIN
     with client:
-        client.use_pin_sequence([PIN4, PIN6, PIN6])
+        client.use_pin_sequence([PIN4, PIN_MAX, PIN_MAX])
         client.set_expected_responses(
             [messages.ButtonRequest] * 5 + [messages.Success, messages.Features]
         )
@@ -84,7 +85,7 @@ def test_change_pin(client):
     client.init_device()
     assert client.features.pin_protection is True
     # Check that the PIN is correct
-    _check_pin(client, PIN6)
+    _check_pin(client, PIN_MAX)
 
 
 @pytest.mark.setup_client(pin=PIN4)
@@ -121,7 +122,7 @@ def test_set_failed(client):
         yield  # enter new pin
         client.debug.input(PIN4)
         yield  # enter new pin again (but different)
-        client.debug.input(PIN6)
+        client.debug.input(PIN60)
 
         # failed retry
         yield  # enter new pin
