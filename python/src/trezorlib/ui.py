@@ -20,7 +20,7 @@ import click
 from mnemonic import Mnemonic
 
 from . import device
-from .client import PASSPHRASE_ON_DEVICE
+from .client import MAX_PIN_LENGTH, PASSPHRASE_ON_DEVICE
 from .exceptions import Cancelled
 from .messages import PinMatrixRequestType, WordRequestType
 
@@ -107,8 +107,12 @@ class ClickUI:
                 echo(
                     "The value may only consist of digits 1 to 9 or letters cvbdfgert."
                 )
-            elif len(pin) > 9:
-                echo("The value must be at most 9 digits in length.")
+            elif len(pin) > MAX_PIN_LENGTH:
+                echo(
+                    "The value must be at most {} digits in length.".format(
+                        MAX_PIN_LENGTH
+                    )
+                )
             else:
                 return pin
 
