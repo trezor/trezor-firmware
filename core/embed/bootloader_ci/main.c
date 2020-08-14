@@ -277,10 +277,6 @@ int main(void) {
   ui_screen_third();
   ui_fadein();
 
-  // erase storage
-  ensure(flash_erase_sectors(STORAGE_SECTORS, STORAGE_SECTORS_COUNT, NULL),
-         NULL);
-
   // and start the usb loop
   if (bootloader_usb_loop(NULL, NULL) != sectrue) {
     return 1;
