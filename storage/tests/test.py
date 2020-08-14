@@ -28,8 +28,8 @@ a = []
 for s in [sc, sp]:
     print(s.__class__)
     s.init(uid)
-    assert s.unlock(3) is False
-    assert s.unlock(1) is True
+    assert s.unlock("3") is False
+    assert s.unlock("") is True
     s.set(0xBEEF, b"hello")
     s.set(0x03FE, b"world!")
     s.set(0xBEEF, b"satoshi")

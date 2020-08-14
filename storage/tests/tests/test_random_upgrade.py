@@ -33,7 +33,10 @@ class StorageUpgrade(RuleBasedStateMachine):
 
     @rule(target=pins, p=st.integers(1, 3))
     def p(self, p):
-        return p
+        if p == 1:
+            return ""
+        else:
+            return str(p)
 
     @rule(k=keys, v=values)
     def set(self, k, v):
