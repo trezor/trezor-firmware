@@ -2,7 +2,7 @@
 
 
 class StorageModel:
-    _EMPTY_PIN = 1
+    _EMPTY_PIN = ""
     _PIN_MAX_TRIES = 16
 
     def __init__(self) -> None:
@@ -13,14 +13,14 @@ class StorageModel:
 
     def wipe(self) -> None:
         self.unlocked = False
-        self.pin = 1
+        self.pin = self._EMPTY_PIN
         self.pin_rem = self._PIN_MAX_TRIES
         self.dict = {}
 
     def lock(self) -> None:
         self.unlocked = False
 
-    def unlock(self, pin: int) -> bool:
+    def unlock(self, pin: str) -> bool:
         if pin == self.pin:
             self.pin_rem = self._PIN_MAX_TRIES
             self.unlocked = True
@@ -37,7 +37,7 @@ class StorageModel:
     def get_pin_rem(self) -> int:
         return self.pin_rem
 
-    def change_pin(self, oldpin: int, newpin: int) -> bool:
+    def change_pin(self, oldpin: str, newpin: str) -> bool:
         if self.unlocked and self.unlock(oldpin):
             self.pin = newpin
             return True
