@@ -6,8 +6,8 @@ from trezor.utils import HashWriter
 from apps.common import paths
 from apps.common.signverify import require_confirm_sign_message
 
-from . import CURVE, address
-from .keychain import with_keychain_from_path
+from . import address
+from .keychain import PATTERN_ADDRESS, with_keychain_from_path
 
 
 def message_digest(message):
@@ -19,11 +19,9 @@ def message_digest(message):
     return h.get_digest()
 
 
-@with_keychain_from_path
+@with_keychain_from_path(PATTERN_ADDRESS)
 async def sign_message(ctx, msg, keychain):
-    await paths.validate_path(
-        ctx, address.validate_full_path, keychain, msg.address_n, CURVE
-    )
+    await paths.validate_path(ctx, keychain, msg.address_n)
     await require_confirm_sign_message(ctx, "ETH", msg.message)
 
     node = keychain.derive(msg.address_n)

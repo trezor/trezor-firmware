@@ -20,8 +20,8 @@ from trezor.messages.MoneroGetTxKeyAck import MoneroGetTxKeyAck
 from trezor.messages.MoneroGetTxKeyRequest import MoneroGetTxKeyRequest
 
 from apps.common import paths
-from apps.common.keychain import with_slip44_keychain
-from apps.monero import CURVE, SLIP44_ID, misc
+from apps.common.keychain import auto_keychain
+from apps.monero import misc
 from apps.monero.layout import confirms
 from apps.monero.xmr import crypto
 from apps.monero.xmr.crypto import chacha_poly
@@ -30,11 +30,9 @@ _GET_TX_KEY_REASON_TX_KEY = 0
 _GET_TX_KEY_REASON_TX_DERIVATION = 1
 
 
-@with_slip44_keychain(SLIP44_ID, CURVE, allow_testnet=True)
+@auto_keychain(__name__)
 async def get_tx_keys(ctx, msg: MoneroGetTxKeyRequest, keychain):
-    await paths.validate_path(
-        ctx, misc.validate_full_path, keychain, msg.address_n, CURVE
-    )
+    await paths.validate_path(ctx, keychain, msg.address_n)
 
     do_deriv = msg.reason == _GET_TX_KEY_REASON_TX_DERIVATION
     await confirms.require_confirm_tx_key(ctx, export_key=not do_deriv)

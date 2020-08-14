@@ -4,7 +4,7 @@ Initializes a new transaction.
 
 import gc
 
-from apps.monero import CURVE, misc, signing
+from apps.monero import misc, signing
 from apps.monero.layout import confirms
 from apps.monero.signing.state import State
 from apps.monero.xmr import crypto, monero
@@ -31,9 +31,7 @@ async def init_transaction(
     from apps.monero.signing import offloading_keys
     from apps.common import paths
 
-    await paths.validate_path(
-        state.ctx, misc.validate_full_path, keychain, address_n, CURVE
-    )
+    await paths.validate_path(state.ctx, keychain, address_n)
 
     state.creds = misc.get_creds(keychain, address_n, network_type)
     state.client_version = tsx_data.client_version or 0

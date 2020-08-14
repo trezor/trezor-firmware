@@ -9,8 +9,7 @@ from trezor.utils import HashWriter
 
 from apps.common import paths
 
-from . import CURVE, address, tokens
-from .address import validate_full_path
+from . import address, tokens
 from .keychain import with_keychain_from_chain_id
 from .layout import require_confirm_data, require_confirm_fee, require_confirm_tx
 
@@ -22,7 +21,7 @@ MAX_CHAIN_ID = 2147483629
 async def sign_tx(ctx, msg, keychain):
     msg = sanitize(msg)
     check(msg)
-    await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n, CURVE)
+    await paths.validate_path(ctx, keychain, msg.address_n)
 
     data_total = msg.data_length
 

@@ -5,14 +5,14 @@ from trezor.messages.EthereumAddress import EthereumAddress
 from apps.common import paths
 from apps.common.layout import address_n_to_str, show_address, show_qr
 
-from . import CURVE, networks
-from .address import address_from_bytes, validate_full_path
-from .keychain import with_keychain_from_path
+from . import networks
+from .address import address_from_bytes
+from .keychain import PATTERN_ADDRESS, with_keychain_from_path
 
 
-@with_keychain_from_path
+@with_keychain_from_path(PATTERN_ADDRESS)
 async def get_address(ctx, msg, keychain):
-    await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n, CURVE)
+    await paths.validate_path(ctx, keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)
     seckey = node.private_key()
