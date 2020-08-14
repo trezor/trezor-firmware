@@ -79,7 +79,7 @@ typedef struct _Storage {
 
 extern Storage configUpdate;
 
-#define MAX_PIN_LEN 9
+#define MAX_PIN_LEN 50
 #define MAX_LABEL_LEN 32
 #define MAX_LANGUAGE_LEN 16
 #define MAX_MNEMONIC_LEN 240
