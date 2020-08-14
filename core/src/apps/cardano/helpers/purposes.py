@@ -1,4 +1,0 @@
-from apps.common import HARDENED
-
-BYRON = 44 | HARDENED
-SHELLEY = 1852 | HARDENED

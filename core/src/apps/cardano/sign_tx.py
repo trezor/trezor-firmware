@@ -11,14 +11,12 @@ from apps.common import cbor
 from apps.common.paths import validate_path
 from apps.common.seed import remove_ed25519_prefix
 
-from . import CURVE, seed
+from . import seed
 from .address import (
     derive_address_bytes,
     derive_human_readable_address,
     get_address_bytes_unsafe,
     get_public_key_hash,
-    is_staking_path,
-    validate_full_path,
     validate_output_address,
 )
 from .byron_address import get_address_attributes
@@ -30,6 +28,7 @@ from .helpers import (
     protocol_magics,
     staking_use_cases,
 )
+from .helpers.paths import SCHEMA_ADDRESS, SCHEMA_STAKING
 from .helpers.utils import to_account_path
 from .layout import (
     confirm_certificate,
@@ -75,7 +74,9 @@ async def sign_tx(
         validate_network_info(msg.network_id, msg.protocol_magic)
 
         for i in msg.inputs:
-            await validate_path(ctx, validate_full_path, keychain, i.address_n, CURVE)
+            await validate_path(
+                ctx, keychain, i.address_n, SCHEMA_ADDRESS.match(i.address_n)
+            )
 
         _validate_outputs(keychain, msg.outputs, msg.protocol_magic, msg.network_id)
         _validate_certificates(msg.certificates)
@@ -140,7 +141,7 @@ def _validate_outputs(
 
 def _validate_certificates(certificates: List[CardanoTxCertificateType]) -> None:
     for certificate in certificates:
-        if not is_staking_path(certificate.path):
+        if not SCHEMA_STAKING.match(certificate.path):
             raise INVALID_CERTIFICATE
 
         if certificate.type == CardanoCertificateType.STAKE_DELEGATION:
@@ -150,7 +151,7 @@ def _validate_certificates(certificates: List[CardanoTxCertificateType]) -> None
 
 def _validate_withdrawals(withdrawals: List[CardanoTxWithdrawalType]) -> None:
     for withdrawal in withdrawals:
-        if not is_staking_path(withdrawal.path):
+        if not SCHEMA_STAKING.match(withdrawal.path):
             raise INVALID_WITHDRAWAL
 
         if not 0 <= withdrawal.amount < LOVELACE_MAX_SUPPLY:

@@ -2,11 +2,11 @@ from trezor import wire
 from trezor.crypto import base58, hashlib
 from trezor.messages import CardanoAddressParametersType, CardanoAddressType
 
-from apps.common import HARDENED
 from apps.common.seed import remove_ed25519_prefix
 
 from .byron_address import derive_byron_address, validate_output_byron_address
-from .helpers import INVALID_ADDRESS, NETWORK_MISMATCH, bech32, network_ids, purposes
+from .helpers import INVALID_ADDRESS, NETWORK_MISMATCH, bech32, network_ids
+from .helpers.paths import SCHEMA_STAKING
 from .helpers.utils import variable_length_encode
 from .seed import is_byron_path, is_shelley_path
 
@@ -30,27 +30,6 @@ ADDRESS_TYPES_SHELLEY = (
 )
 MIN_ADDRESS_BYTES_LENGTH = 29
 MAX_ADDRESS_BYTES_LENGTH = 65
-
-
-def validate_full_path(path: List[int]) -> bool:
-    """
-    Validates derivation path to fit {44', 1852'}/1815'/a'/{0,1,2}/i,
-    where `a` is an account number and i an address index.
-    The max value for `a` is 20, 1 000 000 for `i`.
-    """
-    if len(path) != 5:
-        return False
-    if path[0] not in (purposes.BYRON, purposes.SHELLEY):
-        return False
-    if path[1] != 1815 | HARDENED:
-        return False
-    if path[2] < HARDENED or path[2] > 20 | HARDENED:
-        return False
-    if path[3] not in (0, 1, 2):
-        return False
-    if path[4] > 1000000:
-        return False
-    return True
 
 
 def validate_output_address(address: str, protocol_magic: int, network_id: int) -> None:
@@ -262,29 +241,8 @@ def _validate_base_address_staking_info(
             "Base address needs either a staking path or a staking key hash!"
         )
 
-    if staking_key_hash is None and not is_staking_path(staking_path):
+    if staking_key_hash is None and not SCHEMA_STAKING.match(staking_path):
         raise wire.DataError("Invalid staking path!")
-
-
-def is_staking_path(path: List[int]) -> bool:
-    """
-    Validates path to match 1852'/1815'/a'/2/0. Path must
-    be a valid Cardano path. It must have a Shelley purpose
-    (Byron paths are not valid staking paths), it must have
-    2 as chain type and currently there is only one staking
-    path for each account so a 0 is required for address index.
-    """
-    if not validate_full_path(path):
-        return False
-
-    if path[0] != purposes.SHELLEY:
-        return False
-    if path[3] != 2:
-        return False
-    if path[4] != 0:
-        return False
-
-    return True
 
 
 def _derive_pointer_address(
@@ -332,7 +290,7 @@ def _derive_reward_address(
     path: List[int],
     network_id: int,
 ) -> bytes:
-    if not is_staking_path(path):
+    if not SCHEMA_STAKING.match(path):
         raise wire.DataError("Invalid path for reward address!")
 
     header = _create_address_header(CardanoAddressType.REWARD, network_id)
