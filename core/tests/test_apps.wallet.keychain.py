@@ -87,14 +87,46 @@ class TestAltcoinKeychains(unittest.TestCase):
         self.assertFalse(coin.segwit)
         valid_addresses = (
             [44 | HARDENED, 145 | HARDENED],
+            [44 | HARDENED, 0 | HARDENED],
             [45 | HARDENED, 123456],
             [48 | HARDENED, 145 | HARDENED],
+            [48 | HARDENED, 0 | HARDENED],
         )
         invalid_addresses = (
             [43 | HARDENED, 145 | HARDENED],
-            [44 | HARDENED, 0 | HARDENED],
+            [43 | HARDENED, 0 | HARDENED],
             [49 | HARDENED, 145 | HARDENED],
+            [49 | HARDENED, 0 | HARDENED],
             [84 | HARDENED, 145 | HARDENED],
+            [84 | HARDENED, 0 | HARDENED],
+        )
+
+        for addr in valid_addresses:
+            keychain.derive(addr)
+
+        for addr in invalid_addresses:
+            self.assertRaises(wire.DataError, keychain.derive, addr)
+
+    def test_litecoin(self):
+        keychain, coin = await_result(
+            get_keychain_for_coin(wire.DUMMY_CONTEXT, "Litecoin")
+        )
+        self.assertEqual(coin.coin_name, "Litecoin")
+
+        self.assertTrue(coin.segwit)
+        valid_addresses = (
+            [44 | HARDENED, 2 | HARDENED],
+            [45 | HARDENED, 123456],
+            [48 | HARDENED, 2 | HARDENED],
+            [49 | HARDENED, 2 | HARDENED],
+            [84 | HARDENED, 2 | HARDENED],
+        )
+        invalid_addresses = (
+            [43 | HARDENED, 2 | HARDENED],
+            [44 | HARDENED, 0 | HARDENED],
+            [48 | HARDENED, 0 | HARDENED],
+            [49 | HARDENED, 0 | HARDENED],
+            [84 | HARDENED, 0 | HARDENED],
         )
 
         for addr in valid_addresses:
