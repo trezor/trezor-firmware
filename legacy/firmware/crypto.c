@@ -509,7 +509,18 @@ int cryptoIdentityFingerprint(const IdentityType *identity, uint8_t *hash) {
 }
 
 static bool check_cointype(const CoinInfo *coin, uint32_t slip44, bool full) {
+#if BITCOIN_ONLY
   (void)full;
+#else
+  if (!full) {
+    // some wallets such as Electron-Cash (BCH) store coins on Bitcoin paths
+    // we can allow spending these coins from Bitcoin paths if the coin has
+    // implemented strong replay protection via SIGHASH_FORKID
+    if (slip44 == 0x80000000 && coin->has_fork_id) {
+      return true;
+    }
+  }
+#endif
   return coin->coin_type == slip44;
 }
 
