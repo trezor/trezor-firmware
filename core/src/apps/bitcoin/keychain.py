@@ -56,6 +56,16 @@ def get_namespaces_for_coin(coin: coininfo.CoinInfo):
         # m/0x4741b11e/6/pointer
         namespaces.append([0x4741B11E])
 
+    # some wallets such as Electron-Cash (BCH) store coins on Bitcoin paths
+    # we can allow spending these coins from Bitcoin paths if the coin has
+    # implemented strong replay protection via SIGHASH_FORKID
+    if coin.fork_id is not None:
+        namespaces.append([44 | HARDENED, 0 | HARDENED])
+        namespaces.append([48 | HARDENED, 0 | HARDENED])
+        if coin.segwit:
+            namespaces.append([49 | HARDENED, 0 | HARDENED])
+            namespaces.append([84 | HARDENED, 0 | HARDENED])
+
     return namespaces
 
 
