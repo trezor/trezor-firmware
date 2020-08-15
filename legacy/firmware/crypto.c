@@ -508,6 +508,11 @@ int cryptoIdentityFingerprint(const IdentityType *identity, uint8_t *hash) {
   return 1;
 }
 
+static bool check_cointype(const CoinInfo *coin, uint32_t slip44, bool full) {
+  (void)full;
+  return coin->coin_type == slip44;
+}
+
 bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
                            uint32_t address_n_count, const uint32_t *address_n,
                            bool full) {
@@ -521,7 +526,7 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
     } else {
       valid &= (address_n_count >= 2);
     }
-    valid &= (address_n[1] == coin->coin_type);
+    valid &= check_cointype(coin, address_n[1], full);
     if (full) {
       valid &= (address_n[2] & 0x80000000) == 0x80000000;
       valid &= (address_n[3] & 0x80000000) == 0;
@@ -556,7 +561,7 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
     } else {
       valid &= (address_n_count >= 2);
     }
-    valid &= (address_n[1] == coin->coin_type);
+    valid &= check_cointype(coin, address_n[1], full);
     if (full) {
       valid &= (address_n[2] & 0x80000000) == 0x80000000;
       valid &= (address_n[4] & 0x80000000) == 0;
@@ -574,7 +579,7 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
     } else {
       valid &= (address_n_count >= 2);
     }
-    valid &= (address_n[1] == coin->coin_type);
+    valid &= check_cointype(coin, address_n[1], full);
     if (full) {
       valid &= (address_n[2] & 0x80000000) == 0x80000000;
       valid &= (address_n[3] & 0x80000000) == 0;
@@ -594,7 +599,7 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
     } else {
       valid &= (address_n_count >= 2);
     }
-    valid &= (address_n[1] == coin->coin_type);
+    valid &= check_cointype(coin, address_n[1], full);
     if (full) {
       valid &= (address_n[2] & 0x80000000) == 0x80000000;
       valid &= (address_n[3] & 0x80000000) == 0;
