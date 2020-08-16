@@ -43,7 +43,7 @@ def get_namespaces_for_coin(coin: coininfo.CoinInfo):
 
     if coin.coin_name in BITCOIN_NAMES:
         # compatibility namespace for Casa
-        namespaces.append([49, slip44_id])
+        namespaces.append([49, coin.slip44])
 
         # compatibility namespace for Greenaddress:
         # m/branch/address_pointer, for branch in (1, 4)
