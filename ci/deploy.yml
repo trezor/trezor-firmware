@@ -7,8 +7,7 @@ release core fw regular deploy:
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares"
   before_script: []  # no pipenv
-  dependencies:
-    - core fw regular build
+  needs: ["core fw regular build"]
   script:
     - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
     - export NAME="trezor-fw-regular-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
@@ -27,8 +26,7 @@ release core fw btconly deploy:
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares"
   before_script: []  # no pipenv
-  dependencies:
-    - core fw btconly build
+  needs: ["core fw btconly build"]
   script:
     - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
     - export NAME="trezor-fw-btconly-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
@@ -47,8 +45,7 @@ release legacy fw regular deploy:
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares"
   before_script: []  # no pipenv
-  dependencies:
-    - legacy fw regular build
+  needs: ["legacy fw regular build"]
   script:
     - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
     - export NAME="trezor-fw-regular-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
@@ -67,8 +64,7 @@ release legacy fw btconly deploy:
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares"
   before_script: []  # no pipenv
-  dependencies:
-    - legacy fw btconly build
+  needs: ["legacy fw btconly build"]
   script:
     - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
     - export NAME="trezor-fw-btconly-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
@@ -87,8 +83,7 @@ release core fw regular debug deploy:
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares"
   before_script: []  # no pipenv
-  dependencies:
-    - core fw regular debug build
+  needs: ["core fw regular debug build"]
   script:
     - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
     - export NAME="trezor-fw-regular-debug-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
@@ -107,8 +102,7 @@ release legacy fw regular debug deploy:
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares"
   before_script: []  # no pipenv
-  dependencies:
-    - legacy fw regular debug build
+  needs: ["legacy fw regular debug build"]
   script:
     - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
     - export NAME="trezor-fw-regular-debug-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
@@ -127,8 +121,7 @@ release legacy fw btconly debug deploy:
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares"
   before_script: []  # no pipenv
-  dependencies:
-    - legacy fw btconly debug build
+  needs: ["legacy fw btconly debug build"]
   script:
     - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
     - export NAME="trezor-fw-btconly-debug-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
@@ -148,8 +141,7 @@ release legacy fw btconly debug deploy:
 rc core fw regular deploy:
   stage: deploy
   before_script: []  # no pipenv
-  dependencies:
-    - core fw regular build
+  needs: ["core fw regular build"]
   script:
     - export DEPLOY_DIRECTORY="release_candidates/${CI_COMMIT_REF_NAME:8}/firmwares"  # stripping 'release/'
     - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
@@ -165,8 +157,7 @@ rc core fw regular deploy:
 rc core fw btconly deploy:
   stage: deploy
   before_script: []  # no pipenv
-  dependencies:
-    - core fw btconly build
+  needs: ["core fw btconly build"]
   script:
     - export DEPLOY_DIRECTORY="release_candidates/${CI_COMMIT_REF_NAME:8}/firmwares"  # stripping 'release/'
     - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
@@ -182,8 +173,7 @@ rc core fw btconly deploy:
 rc legacy fw regular deploy:
   stage: deploy
   before_script: []  # no pipenv
-  dependencies:
-    - legacy fw regular build
+  needs: ["legacy fw regular build"]
   script:
     - export DEPLOY_DIRECTORY="release_candidates/${CI_COMMIT_REF_NAME:8}/firmwares"  # stripping 'release/'
     - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
@@ -199,8 +189,7 @@ rc legacy fw regular deploy:
 rc legacy fw btconly deploy:
   stage: deploy
   before_script: []  # no pipenv
-  dependencies:
-    - legacy fw btconly build
+  needs: ["legacy fw btconly build"]
   script:
     - export DEPLOY_DIRECTORY="release_candidates/${CI_COMMIT_REF_NAME:8}/firmwares"  # stripping 'release/'
     - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
@@ -220,8 +209,7 @@ upgrade tests core deploy:
   variables:
     DEPLOY_PATH: "${DEPLOY_BASE_DIR}/upgrade_tests"
   before_script: []  # no pipenv
-  dependencies:
-    - core unix frozen debug build
+  needs: ["core unix frozen debug build"]
   script:
     - TAG=`git tag --points-at HEAD | grep "core" | sed "s/\//-/"`
     - "[[ $TAG == '' ]] && echo 'Tag is not core/*: exiting.' && exit 1"
@@ -240,8 +228,7 @@ upgrade tests legacy deploy:
   variables:
     DEPLOY_PATH: "${DEPLOY_BASE_DIR}/upgrade_tests"
   before_script: []  # no pipenv
-  dependencies:
-    - legacy emu regular build
+  needs: ["legacy emu regular build"]
   script:
     - TAG=`git tag --points-at HEAD | grep "legacy" | sed "s/\//-/"`
     - "[[ $TAG == '' ]] && echo 'Tag is not legacy/*: exiting.' && exit 1"
@@ -262,8 +249,7 @@ ui tests core fixtures deploy:
   variables:
     DEPLOY_PATH: "${DEPLOY_BASE_DIR}/ui_tests/"
   before_script: []  # no pipenv
-  dependencies:
-    - core device ui test
+  needs: ["core device ui test"]
   script:
     - echo "Deploying to $DEPLOY_PATH"
     - rsync --delete -va ci/ui_test_records/* "$DEPLOY_PATH"

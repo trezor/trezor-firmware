@@ -8,6 +8,7 @@ variables:
 
 core fw regular build:
   stage: build
+  needs: []
   script:
     - nix-shell --run "pipenv run make -C core build_boardloader"
     - nix-shell --run "pipenv run make -C core build_bootloader"
@@ -23,6 +24,7 @@ core fw regular build:
 
 core fw regular debug build:
   stage: build
+  needs: []
   script:
     - nix-shell --run "PYOPT=0 pipenv run make -C core build_firmware"
     - cp core/build/firmware/firmware.bin trezor-fw-regular-debug-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.bin
@@ -34,6 +36,7 @@ core fw regular debug build:
 
 core fw btconly build:
   stage: build
+  needs: []
   variables:
     BITCOIN_ONLY: "1"
   script:
@@ -49,6 +52,7 @@ core fw btconly build:
 
 core fw btconly t1 build:
   stage: build
+  needs: []
   variables:
     BITCOIN_ONLY: "1"
     TREZOR_MODEL: "1"
@@ -63,6 +67,7 @@ core fw btconly t1 build:
 
 core unix regular build:
   stage: build
+  needs: []
   script:
     - nix-shell --run "pipenv run make -C core build_unix"
   artifacts:
@@ -74,6 +79,7 @@ core unix regular build:
 
 core unix frozen regular build:
   stage: build
+  needs: []
   script:
     - nix-shell --run "pipenv run make -C core build_unix_frozen"
   artifacts:
@@ -84,6 +90,7 @@ core unix frozen regular build:
 
 core unix frozen btconly debug build:
   stage: build
+  needs: []
   variables:
     PYOPT: "0"
     BITCOIN_ONLY: "1"
@@ -98,6 +105,7 @@ core unix frozen btconly debug build:
 
 core unix frozen debug build:
   stage: build
+  needs: []
   variables:
     PYOPT: "0"
   script:
@@ -109,6 +117,7 @@ core unix frozen debug build:
 
 core unix frozen regular darwin:
   stage: build
+  needs: []
   tags:
     - darwin
   when: manual
@@ -129,6 +138,7 @@ core unix frozen regular darwin:
 
 crypto build:
   stage: build
+  needs: []
   only:
     changes:
       - ci/**/*
@@ -149,6 +159,7 @@ crypto build:
 
 legacy fw regular build:
   stage: build
+  needs: []
   variables:
     MEMORY_PROTECT: "0"
   script:
@@ -163,6 +174,7 @@ legacy fw regular build:
 
 legacy fw regular debug build:
   stage: build
+  needs: []
   variables:
     DEBUG_LINK: "1"
     MEMORY_PROTECT: "0"
@@ -177,6 +189,7 @@ legacy fw regular debug build:
 
 legacy fw btconly build:
   stage: build
+  needs: []
   variables:
     BITCOIN_ONLY: "1"
     MEMORY_PROTECT: "0"
@@ -193,6 +206,7 @@ legacy fw btconly build:
 
 legacy fw btconly debug build:
   stage: build
+  needs: []
   variables:
     BITCOIN_ONLY: "1"
     MEMORY_PROTECT: "0"
@@ -209,6 +223,7 @@ legacy fw btconly debug build:
 
 legacy emu regular build:
   stage: build
+  needs: []
   variables:
     DEBUG_LINK: "1"
     EMULATOR: "1"
@@ -222,6 +237,7 @@ legacy emu regular build:
 
 legacy emu btconly build:
   stage: build
+  needs: []
   variables:
     BITCOIN_ONLY: "1"
     DEBUG_LINK: "1"
