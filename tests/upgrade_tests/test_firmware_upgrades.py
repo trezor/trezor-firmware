@@ -67,6 +67,37 @@ def test_upgrade_load(gen, tag):
 
 
 @for_all("legacy")
+def test_upgrade_load_pin(gen, tag):
+    PIN = "1234"
+
+    def asserts(client):
+        assert client.features.pin_protection
+        assert not client.features.passphrase_protection
+        assert client.features.initialized
+        assert client.features.label == LABEL
+        client.use_pin_sequence([PIN])
+        assert btc.get_address(client, "Bitcoin", PATH) == ADDRESS
+
+    with EmulatorWrapper(gen, tag) as emu:
+        debuglink.load_device_by_mnemonic(
+            emu.client,
+            mnemonic=MNEMONIC,
+            pin=PIN,
+            passphrase_protection=False,
+            label=LABEL,
+            language=LANGUAGE,
+        )
+        device_id = emu.client.features.device_id
+        asserts(emu.client)
+        storage = emu.get_storage()
+
+    with EmulatorWrapper(gen, storage=storage) as emu:
+        assert device_id == emu.client.features.device_id
+        asserts(emu.client)
+        assert emu.client.features.language == LANGUAGE
+
+
+@for_all("legacy")
 def test_upgrade_reset(gen, tag):
     def asserts(client):
         assert not client.features.pin_protection
