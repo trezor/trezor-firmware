@@ -4,15 +4,13 @@ image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/trezor-firmware-en
 
 core unit test:
   stage: test
-  dependencies:
-    - core unix regular build
+  needs: ["core unix regular build"]
   script:
     - nix-shell --run "pipenv run make -C core test"
 
 core device ui test:
   stage: test
-  dependencies:
-    - core unix frozen debug build
+  needs: ["core unix frozen debug build"]
   script:
     - nix-shell --run "pipenv run make -C core test_emu_ui"
   after_script:
@@ -33,8 +31,7 @@ core device ui test:
 
 core device test:
   stage: test
-  dependencies:
-    - core unix frozen debug build
+  needs: ["core unix frozen debug build"]
   variables:
     TREZOR_PROFILING: 1
   script:
@@ -53,8 +50,7 @@ core device test:
 
 core btconly device test:
   stage: test
-  dependencies:
-    - core unix frozen btconly debug build
+  needs: ["core unix frozen btconly debug build"]
   variables:
     MICROPYTHON: "build/unix/trezor-emu-core-bitcoinonly"
     TREZOR_PYTEST_SKIP_ALTCOINS: 1
@@ -72,8 +68,7 @@ core btconly device test:
 
 core monero test:
   stage: test
-  dependencies:
-    - core unix frozen debug build
+  needs: ["core unix frozen debug build"]
   variables:
     TREZOR_PROFILING: 1
   script:
@@ -89,8 +84,7 @@ core monero test:
 
 core u2f test:
   stage: test
-  dependencies:
-    - core unix frozen debug build
+  needs: ["core unix frozen debug build"]
   variables:
     TREZOR_PROFILING: 1
   script:
@@ -107,8 +101,7 @@ core u2f test:
 
 core fido2 test:
   stage: test
-  dependencies:
-    - core unix frozen debug build
+  needs: ["core unix frozen debug build"]
   variables:
     TREZOR_PROFILING: 1
   script:
@@ -129,8 +122,7 @@ core fido2 test:
 
 core click test:
   stage: test
-  dependencies:
-    - core unix frozen debug build
+  needs: ["core unix frozen debug build"]
   script:
     - nix-shell --run "pipenv run make -C core test_emu_click"
   artifacts:
@@ -145,8 +137,7 @@ core click test:
 
 core upgrade test:
   stage: test
-  dependencies:
-    - core unix frozen debug build
+  needs: ["core unix frozen debug build"]
   variables:
     TREZOR_UPGRADE_TEST: "core"
   script:
@@ -163,8 +154,7 @@ core upgrade test:
 
 core persistence test:
   stage: test
-  dependencies:
-    - core unix frozen debug build
+  needs: ["core unix frozen debug build"]
   script:
     - nix-shell --run "pipenv run pytest --junitxml=tests/junit.xml tests/persistence_tests"
   artifacts:
@@ -185,8 +175,7 @@ crypto test:
     changes:
       - ci/**/*
       - crypto/**/*
-  dependencies:
-    - crypto build
+  needs: ["crypto build"]
   script:
     - ./crypto/tests/aestst
     - ./crypto/tests/test_check
@@ -207,8 +196,7 @@ crypto test:
 
 legacy test:
   stage: test
-  dependencies:
-    - legacy emu regular build
+  needs: ["legacy emu regular build"]
   variables:
     EMULATOR: "1"
   script:
@@ -224,8 +212,7 @@ legacy test:
 
 legacy btconly test:
   stage: test
-  dependencies:
-    - legacy emu btconly build
+  needs: ["legacy emu btconly build"]
   variables:
     EMULATOR: "1"
     EMULATOR_BINARY: "firmware/trezor-bitcoinonly.elf"
@@ -244,8 +231,7 @@ legacy btconly test:
 
 legacy upgrade test:
   stage: test
-  dependencies:
-    - legacy emu regular build
+  needs: ["legacy emu regular build"]
   variables:
     TREZOR_UPGRADE_TEST: "legacy"
   script:
@@ -265,7 +251,7 @@ legacy upgrade test:
 
 python test:
   stage: test
-  dependencies: []
+  needs: []
   variables:
     LC_ALL: "C.UTF-8"
     LANG: "C.UTF-8"
@@ -288,7 +274,7 @@ storage test:
     changes:
       - ci/**/*
       - storage/**/*
-  dependencies: []
+  needs: []
   script:
     - nix-shell --run "pipenv run make -C storage/tests build"
     - nix-shell --run "pipenv run make -C storage/tests tests_all"
@@ -310,8 +296,7 @@ hardware legacy regular device test:
     - /^release\//
   tags:
     - tpmb
-  dependencies:
-    - legacy fw regular debug build
+  needs: ["legacy fw regular debug build"]
   script:
     - cd ci/hardware_tests
     - nix-shell --run "./record_video.sh ${CI_COMMIT_SHORT_SHA} start"
@@ -337,8 +322,7 @@ hardware legacy btconly device test:
     - /^release\//
   tags:
     - tpmb
-  dependencies:
-    - legacy fw btconly debug build
+  needs: ["legacy fw btconly debug build"]
   script:
     - cd ci/hardware_tests
     - nix-shell --run "./record_video.sh ${CI_COMMIT_SHORT_SHA} start"
