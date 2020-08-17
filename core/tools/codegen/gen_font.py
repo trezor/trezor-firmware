@@ -52,7 +52,7 @@ def process_bitmap_buffer(buf, bpp):
     return res
 
 
-def process_face(name, style, size, bpp=4):
+def process_face(name, style, size, bpp=4, shave_bearingX=0):
     print("Processing ... %s %s %s" % (name, style, size))
     face = freetype.Face("fonts/%s-%s.ttf" % (name, style))
     face.set_pixel_sizes(0, size)
@@ -94,6 +94,10 @@ def process_face(name, style, size, bpp=4):
             rows = bitmap.rows
             advance = metrics.horiAdvance // 64
             bearingX = metrics.horiBearingX // 64
+            # discard space on the left side
+            if shave_bearingX > 0:
+                advance -= min(advance, bearingX, shave_bearingX)
+                bearingX -= min(advance, bearingX, shave_bearingX)
             # the following code is here just for some letters (listed below)
             # not using negative bearingX makes life so much easier; add it to advance instead
             if c in "jy}),/" and bearingX < 0:
@@ -153,6 +157,6 @@ process_face("Roboto", "Regular", 20)
 process_face("Roboto", "Bold", 20)
 process_face("RobotoMono", "Regular", 20)
 
-process_face("PixelOperator", "Regular", 8, 1)
-process_face("PixelOperator", "Bold", 8, 1)
-process_face("PixelOperatorMono", "Regular", 8, 1)
+process_face("PixelOperator", "Regular", 8, 1, 1)
+process_face("PixelOperator", "Bold", 8, 1, 1)
+process_face("PixelOperatorMono", "Regular", 8, 1, 1)
