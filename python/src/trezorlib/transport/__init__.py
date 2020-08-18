@@ -117,7 +117,7 @@ def enumerate_devices() -> Iterable[Transport]:
         name = transport.__name__
         try:
             found = list(transport.enumerate())
-            LOG.info("Enumerating {}: found {} devices".format(name, len(found)))
+            LOG.debug("Enumerating {}: found {} devices".format(name, len(found)))
             devices.extend(found)
         except NotImplementedError:
             LOG.error("{} does not implement device enumeration".format(name))

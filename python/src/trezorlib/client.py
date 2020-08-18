@@ -85,7 +85,9 @@ class TrezorClient:
     def __init__(
         self, transport, ui, session_id=None,
     ):
-        LOG.info("creating client instance for device: {}".format(transport.get_path()))
+        LOG.debug(
+            "creating client instance for device: {}".format(transport.get_path())
+        )
         self.transport = transport
         self.ui = ui
         self.session_id = session_id
