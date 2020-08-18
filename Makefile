@@ -61,7 +61,7 @@ defs_check: ## check validity of coin definitions and protobuf files
 	python3 common/protob/check.py
 	python3 common/protob/graph.py common/protob/*.proto
 
-## code generation commands:
+## code generation commands:z`
 
 mocks: ## generate mock python headers from C modules
 	./core/tools/build_mocks
