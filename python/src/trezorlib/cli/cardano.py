@@ -39,7 +39,7 @@ def cli():
 
 @cli.command()
 @click.argument("file", type=click.File("r"))
-@click.option("-f", "--file", is_flag=True, hidden=True, expose_value=False)
+@click.option("-f", "--file", "_ignore", is_flag=True, hidden=True, expose_value=False)
 @click.option(
     "-p", "--protocol-magic", type=int, default=cardano.PROTOCOL_MAGICS["mainnet"]
 )
