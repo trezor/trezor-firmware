@@ -111,7 +111,9 @@ def flags(client, flags):
 @click.argument(
     "filename", type=click.Path(dir_okay=False, readable=True), required=False
 )
-@click.option("-f", "--filename", is_flag=True, hidden=True, expose_value=False)
+@click.option(
+    "-f", "--filename", "_ignore", is_flag=True, hidden=True, expose_value=False
+)
 @with_client
 def homescreen(client, filename):
     """Set new homescreen."""
