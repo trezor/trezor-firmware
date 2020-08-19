@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - CRW addresses are properly generated.  [#1139]
+- Fix boot loop after uploading invalid homescreen.  [#1118]
 
 ### Security
 
@@ -264,6 +265,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1089]: https://github.com/trezor/trezor-firmware/issues/1089
 [#1098]: https://github.com/trezor/trezor-firmware/issues/1098
 [#1115]: https://github.com/trezor/trezor-firmware/issues/1115
+[#1118]: https://github.com/trezor/trezor-firmware/issues/1118
 [#1126]: https://github.com/trezor/trezor-firmware/issues/1126
 [#1139]: https://github.com/trezor/trezor-firmware/issues/1139
 [#1159]: https://github.com/trezor/trezor-firmware/issues/1159

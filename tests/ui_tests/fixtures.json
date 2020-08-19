@@ -11,6 +11,7 @@
 "test_basic.py-test_device_id_same": "5a80508a71a9ef64f94762b07636f90e464832f0f4a3102af8fa1a8c69e94586",
 "test_basic.py-test_features": "5a80508a71a9ef64f94762b07636f90e464832f0f4a3102af8fa1a8c69e94586",
 "test_basic.py-test_ping": "5a80508a71a9ef64f94762b07636f90e464832f0f4a3102af8fa1a8c69e94586",
+"test_msg_applysettings.py-test_apply_homescreen_toif": "d129829fe8c6c30125151b134826b6a11eb96cca2158c1cad951290ac314a5cc",
 "test_msg_applysettings.py-test_apply_settings": "2cc8bf660f3be815d19a4bf1265936162a58386fbe632ca4be01541245b79134",
 "test_msg_applysettings.py-test_apply_settings_passphrase": "5c1ed9a0be3d14475102d447da0b5d51bbb6dfaaeceff5ea9179064609db7870",
 "test_msg_applysettings.py-test_apply_settings_passphrase_on_device": "3e6527e227bdde54f51bc9c417b176d0d87fdb6c40c4761368f50eb201b4beed",
