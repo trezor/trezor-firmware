@@ -1,4 +1,4 @@
-# Trezor Optimized Image Format
+# Trezor Optimized Image Format (TOIF)
 
 All multibyte integer values are little endian!
 
