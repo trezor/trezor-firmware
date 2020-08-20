@@ -177,7 +177,6 @@ def find_best_firmware_version(
 @click.option("--bitcoin-only", is_flag=True, help="Use bitcoin-only firmware (if possible)")
 @click.option("--raw", is_flag=True, help="Push raw data to Trezor")
 @click.option("--fingerprint", help="Expected firmware fingerprint in hex")
-@click.option("--skip-vendor-header", help="Skip vendor header validation on Trezor T")
 # fmt: on
 @with_client
 def firmware_update(
@@ -187,7 +186,6 @@ def firmware_update(
     version,
     skip_check,
     fingerprint,
-    skip_vendor_header,
     raw,
     dry_run,
     beta,
@@ -205,9 +203,6 @@ def firmware_update(
     If you provide a fingerprint via the --fingerprint option, it will be checked
     against downloaded firmware fingerprint. Otherwise fingerprint is checked
     against wallet.trezor.io information, if available.
-
-    If you are customizing Model T bootloader and providing your own vendor header,
-    you can use --skip-vendor-header to ignore vendor header signatures.
     """
     if sum(bool(x) for x in (filename, url, version)) > 1:
         click.echo("You can use only one of: filename, url, version.")
