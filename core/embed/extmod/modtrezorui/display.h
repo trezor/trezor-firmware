@@ -77,6 +77,8 @@ void display_bar(int x, int y, int w, int h, uint16_t c);
 void display_bar_radius(int x, int y, int w, int h, uint16_t c, uint16_t b,
                         uint8_t r);
 
+bool display_toif_info(const uint8_t *buf, uint32_t len, uint16_t *out_w,
+                       uint16_t *out_h, bool *out_grayscale);
 void display_image(int x, int y, int w, int h, const void *data,
                    uint32_t datalen);
 void display_avatar(int x, int y, const void *data, uint32_t datalen,

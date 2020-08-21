@@ -138,10 +138,7 @@ def get_homescreen() -> Optional[bytes]:
 def set_homescreen(homescreen: bytes) -> None:
     if len(homescreen) > HOMESCREEN_MAXSIZE:
         raise ValueError  # homescreen too large
-    if homescreen[:8] == b"TOIf\x90\x00\x90\x00" or homescreen == b"":
-        common.set(_NAMESPACE, _HOMESCREEN, homescreen, public=True)
-    else:
-        raise ValueError  # invalid homescreen
+    common.set(_NAMESPACE, _HOMESCREEN, homescreen, public=True)
 
 
 def store_mnemonic_secret(

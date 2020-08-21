@@ -118,6 +118,33 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_bar_radius_obj,
                                            8, 8,
                                            mod_trezorui_Display_bar_radius);
 
+/// def toif_info(self, image: bytes) -> Tuple[int, int, bool]:
+///     """
+///     Returns tuple containing TOIF image dimensions: width, height, and
+///     whether it is grayscale.
+///     Raises an exception for corrupted images.
+///     """
+STATIC mp_obj_t mod_trezorui_Display_toif_info(mp_obj_t self, mp_obj_t image) {
+  mp_buffer_info_t buffer = {0};
+  mp_get_buffer_raise(image, &buffer, MP_BUFFER_READ);
+
+  uint16_t w = 0;
+  uint16_t h = 0;
+  bool grayscale = false;
+  bool valid = display_toif_info(buffer.buf, buffer.len, &w, &h, &grayscale);
+
+  if (!valid) {
+    mp_raise_ValueError("Invalid image format");
+  }
+  mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
+  tuple->items[0] = MP_OBJ_NEW_SMALL_INT(w);
+  tuple->items[1] = MP_OBJ_NEW_SMALL_INT(h);
+  tuple->items[2] = mp_obj_new_bool(grayscale);
+  return MP_OBJ_FROM_PTR(tuple);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorui_Display_toif_info_obj,
+                                 mod_trezorui_Display_toif_info);
+
 /// def image(self, x: int, y: int, image: bytes) -> None:
 ///     """
 ///     Renders an image at position (x,y).
@@ -131,16 +158,15 @@ STATIC mp_obj_t mod_trezorui_Display_image(size_t n_args,
   mp_buffer_info_t image = {0};
   mp_get_buffer_raise(args[3], &image, MP_BUFFER_READ);
   const uint8_t *data = image.buf;
-  if (image.len < 8 || memcmp(data, "TOIf", 4) != 0) {
+
+  uint16_t w = 0;
+  uint16_t h = 0;
+  bool grayscale = false;
+  bool valid = display_toif_info(data, image.len, &w, &h, &grayscale);
+  if (!valid || grayscale) {
     mp_raise_ValueError("Invalid image format");
   }
-  mp_int_t w = *(uint16_t *)(data + 4);
-  mp_int_t h = *(uint16_t *)(data + 6);
-  uint32_t datalen = *(uint32_t *)(data + 8);
-  if (datalen != image.len - 12) {
-    mp_raise_ValueError("Invalid size of data");
-  }
-  display_image(x, y, w, h, data + 12, datalen);
+  display_image(x, y, w, h, data + 12, image.len - 12);
   return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_image_obj, 4, 4,
@@ -162,21 +188,20 @@ STATIC mp_obj_t mod_trezorui_Display_avatar(size_t n_args,
   mp_buffer_info_t image = {0};
   mp_get_buffer_raise(args[3], &image, MP_BUFFER_READ);
   const uint8_t *data = image.buf;
-  if (image.len < 8 || memcmp(data, "TOIf", 4) != 0) {
+
+  uint16_t w = 0;
+  uint16_t h = 0;
+  bool grayscale = false;
+  bool valid = display_toif_info(data, image.len, &w, &h, &grayscale);
+  if (!valid || grayscale) {
     mp_raise_ValueError("Invalid image format");
   }
-  mp_int_t w = *(uint16_t *)(data + 4);
-  mp_int_t h = *(uint16_t *)(data + 6);
   if (w != AVATAR_IMAGE_SIZE || h != AVATAR_IMAGE_SIZE) {
     mp_raise_ValueError("Invalid image size");
   }
-  uint32_t datalen = *(uint32_t *)(data + 8);
-  if (datalen != image.len - 12) {
-    mp_raise_ValueError("Invalid size of data");
-  }
   mp_int_t fgcolor = mp_obj_get_int(args[4]);
   mp_int_t bgcolor = mp_obj_get_int(args[5]);
-  display_avatar(x, y, data + 12, datalen, fgcolor, bgcolor);
+  display_avatar(x, y, data + 12, image.len - 12, fgcolor, bgcolor);
   return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_avatar_obj, 6,
@@ -196,14 +221,13 @@ STATIC mp_obj_t mod_trezorui_Display_icon(size_t n_args, const mp_obj_t *args) {
   mp_buffer_info_t icon = {0};
   mp_get_buffer_raise(args[3], &icon, MP_BUFFER_READ);
   const uint8_t *data = icon.buf;
-  if (icon.len < 8 || memcmp(data, "TOIg", 4) != 0) {
+
+  uint16_t w = 0;
+  uint16_t h = 0;
+  bool grayscale = false;
+  bool valid = display_toif_info(data, icon.len, &w, &h, &grayscale);
+  if (!valid || !grayscale) {
     mp_raise_ValueError("Invalid image format");
-  }
-  mp_int_t w = *(uint16_t *)(data + 4);
-  mp_int_t h = *(uint16_t *)(data + 6);
-  uint32_t datalen = *(uint32_t *)(data + 8);
-  if (datalen != icon.len - 12) {
-    mp_raise_ValueError("Invalid size of data");
   }
   mp_int_t fgcolor = mp_obj_get_int(args[4]);
   mp_int_t bgcolor = mp_obj_get_int(args[5]);
@@ -545,6 +569,8 @@ STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_bar), MP_ROM_PTR(&mod_trezorui_Display_bar_obj)},
     {MP_ROM_QSTR(MP_QSTR_bar_radius),
      MP_ROM_PTR(&mod_trezorui_Display_bar_radius_obj)},
+    {MP_ROM_QSTR(MP_QSTR_toif_info),
+     MP_ROM_PTR(&mod_trezorui_Display_toif_info_obj)},
     {MP_ROM_QSTR(MP_QSTR_image), MP_ROM_PTR(&mod_trezorui_Display_image_obj)},
     {MP_ROM_QSTR(MP_QSTR_avatar), MP_ROM_PTR(&mod_trezorui_Display_avatar_obj)},
     {MP_ROM_QSTR(MP_QSTR_icon), MP_ROM_PTR(&mod_trezorui_Display_icon_obj)},
