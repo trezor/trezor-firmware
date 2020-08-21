@@ -45,6 +45,9 @@ for BITCOIN_ONLY in 0 1; do
       git submodule update --init --recursive && \
       pipenv install && \
       pipenv run make clean vendor build_firmware && \
+      pipenv run ../python/tools/firmware-fingerprint.py \
+          -o build/firmware/firmware.bin.fingerprint \
+          build/firmware/firmware.bin && \
       chown -R $USER:$GROUP /build"
 
 done
@@ -74,6 +77,24 @@ for BITCOIN_ONLY in 0 1; do
       mkdir -p build/firmware && \
       cp firmware/trezor.bin build/firmware/firmware.bin && \
       cp firmware/trezor.elf build/firmware/firmware.elf && \
+      pipenv run ../python/tools/firmware-fingerprint.py \
+          -o build/firmware/firmware.bin.fingerprint \
+          build/firmware/firmware.bin && \
       chown -R $USER:$GROUP /build"
 
+done
+
+# all built, show fingerprints
+
+echo "Fingerprints:"
+for VARIANT in core legacy; do
+  for BITCOIN_ONLY in 0 1; do
+
+    DIRSUFFIX=${BITCOIN_ONLY/1/-bitcoinonly}
+    DIRSUFFIX=${DIRSUFFIX/0/}
+
+    FWPATH=build/${VARIANT}${DIRSUFFIX}/firmware/firmware.bin
+    FINGERPRINT=$(tr -d '\n' < $FWPATH.fingerprint)
+    echo "$FINGERPRINT $FWPATH"
+  done
 done
