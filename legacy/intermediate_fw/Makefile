@@ -8,7 +8,7 @@ OBJS += bl_check.o
 OBJS += ../vendor/trezor-crypto/memzero.o
 OBJS += ../vendor/trezor-crypto/sha2.o
 
-OPTFLAGS ?= -Og
+OPTFLAGS ?= -Os
 
 
 ../vendor/trezor-crypto/bip32.o: OPTFLAGS = -O3
