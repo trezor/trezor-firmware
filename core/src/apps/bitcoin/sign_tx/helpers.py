@@ -257,6 +257,8 @@ def sanitize_tx_meta(tx: TransactionType, coin: CoinInfo) -> TransactionType:
 
 def sanitize_tx_input(tx: TransactionType, coin: CoinInfo) -> TxInputType:
     txi = tx.inputs[0]
+    if txi.amount is None:
+        txi.amount = 0
     if txi.script_type is None:
         txi.script_type = InputScriptType.SPENDADDRESS
     if txi.sequence is None:

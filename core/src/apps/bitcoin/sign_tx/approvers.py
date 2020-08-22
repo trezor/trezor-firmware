@@ -36,9 +36,9 @@ class Approver:
         self.total_out = 0  # sum of output amounts
         self.change_out = 0  # change output amount
 
-    async def add_internal_input(self, txi: TxInputType, amount: int) -> None:
+    async def add_internal_input(self, txi: TxInputType) -> None:
         self.weight.add_input(txi)
-        self.total_in += amount
+        self.total_in += txi.amount
         self.min_sequence = min(self.min_sequence, txi.sequence)
 
     def add_external_input(self, txi: TxInputType) -> None:
@@ -70,11 +70,11 @@ class BasicApprover(Approver):
         super().__init__(tx, coin)
         self.change_count = 0  # the number of change-outputs
 
-    async def add_internal_input(self, txi: TxInputType, amount: int) -> None:
+    async def add_internal_input(self, txi: TxInputType) -> None:
         if not addresses.validate_full_path(txi.address_n, self.coin, txi.script_type):
             await helpers.confirm_foreign_address(txi.address_n)
 
-        await super().add_internal_input(txi, amount)
+        await super().add_internal_input(txi)
 
     def add_change_output(self, txo: TxOutputType, script_pubkey: bytes) -> None:
         super().add_change_output(txo, script_pubkey)
@@ -143,12 +143,12 @@ class CoinJoinApprover(Approver):
         # flag indicating whether our outputs are gaining any anonymity
         self.anonymity = False
 
-    async def add_internal_input(self, txi: TxInputType, amount: int) -> None:
+    async def add_internal_input(self, txi: TxInputType) -> None:
         self.our_weight.add_input(txi)
         if not self.authorization.check_sign_tx_input(txi, self.coin):
             raise wire.ProcessError("Unauthorized path")
 
-        await super().add_internal_input(txi, amount)
+        await super().add_internal_input(txi)
 
     def add_change_output(self, txo: TxOutputType, script_pubkey: bytes) -> None:
         super().add_change_output(txo, script_pubkey)
