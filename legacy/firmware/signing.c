@@ -39,13 +39,14 @@ static CONFIDENTIAL HDNode node;
 static bool signing = false;
 enum {
   STAGE_REQUEST_1_INPUT,
-  STAGE_REQUEST_2_PREV_META,
-  STAGE_REQUEST_2_PREV_INPUT,
-  STAGE_REQUEST_2_PREV_OUTPUT,
+  STAGE_REQUEST_2_OUTPUT,
+  STAGE_REQUEST_3_INPUT,
+  STAGE_REQUEST_3_PREV_META,
+  STAGE_REQUEST_3_PREV_INPUT,
+  STAGE_REQUEST_3_PREV_OUTPUT,
 #if !BITCOIN_ONLY
-  STAGE_REQUEST_2_PREV_EXTRADATA,
+  STAGE_REQUEST_3_PREV_EXTRADATA,
 #endif
-  STAGE_REQUEST_3_OUTPUT,
   STAGE_REQUEST_4_INPUT,
   STAGE_REQUEST_4_OUTPUT,
   STAGE_REQUEST_SEGWIT_INPUT,
@@ -68,7 +69,7 @@ static uint8_t hash_prevouts[32], hash_sequence[32], hash_outputs[32];
 #if !BITCOIN_ONLY
 static uint8_t decred_hash_prefix[32];
 #endif
-static uint8_t hash_check[32];
+static uint8_t hash_inputs_check[32];
 static uint64_t to_spend, spending, change_spend;
 static uint32_t version = 1;
 static uint32_t lock_time = 0;
@@ -137,9 +138,10 @@ The STAGE_ constants describe the signing_stage when request is sent.
 I - input
 O - output
 
-Phase1 - check inputs, previous transactions, and outputs
-       - ask for confirmations
-       - check fee
+Phase1 - process inputs
+       - confirm outputs
+       - check fee and confirm totals
+       - check previous transactions
 =========================================================
 
 foreach I (idx1):
@@ -149,17 +151,9 @@ foreach I (idx1):
     Add I to TransactionChecksum (prevout and type)
     if (Decred)
         Return I
-    If not segwit, Calculate amount of I:
-        Request prevhash I, META                              STAGE_REQUEST_2_PREV_META
-        foreach prevhash I (idx2):
-            Request prevhash I                                STAGE_REQUEST_2_PREV_INPUT
-        foreach prevhash O (idx2):
-            Request prevhash O                                STAGE_REQUEST_2_PREV_OUTPUT
-            Add amount of prevhash O (which is amount of I)
-        Request prevhash extra data (if applicable)           STAGE_REQUEST_2_PREV_EXTRADATA
-        Calculate hash of streamed tx, compare to prevhash I
+
 foreach O (idx1):
-    Request O                                                 STAGE_REQUEST_3_OUTPUT
+    Request O                                                 STAGE_REQUEST_2_OUTPUT
     Add O to Decred decred_hash_prefix
     Add O to TransactionChecksum
     if (Decred)
@@ -169,6 +163,17 @@ foreach O (idx1):
 
 Check tx fee
 Ask for confirmation
+
+foreach I (idx1):
+    Request I                                                 STAGE_REQUEST_3_INPUT
+    Request prevhash I, META                                  STAGE_REQUEST_3_PREV_META
+    foreach prevhash I (idx2):
+        Request prevhash I                                    STAGE_REQUEST_3_PREV_INPUT
+    foreach prevhash O (idx2):
+        Request prevhash O                                    STAGE_REQUEST_3_PREV_OUTPUT
+        Add amount of prevhash O (which is amount of I)
+    Request prevhash extra data (if applicable)               STAGE_REQUEST_3_PREV_EXTRADATA
+    Calculate hash of streamed tx, compare to prevhash I
 
 Phase2: sign inputs, check that nothing changed
 ===============================================
@@ -239,8 +244,28 @@ void send_req_1_input(void) {
   msg_write(MessageType_MessageType_TxRequest, &resp);
 }
 
-void send_req_2_prev_meta(void) {
-  signing_stage = STAGE_REQUEST_2_PREV_META;
+void send_req_2_output(void) {
+  signing_stage = STAGE_REQUEST_2_OUTPUT;
+  resp.has_request_type = true;
+  resp.request_type = RequestType_TXOUTPUT;
+  resp.has_details = true;
+  resp.details.has_request_index = true;
+  resp.details.request_index = idx1;
+  msg_write(MessageType_MessageType_TxRequest, &resp);
+}
+
+void send_req_3_input(void) {
+  signing_stage = STAGE_REQUEST_3_INPUT;
+  resp.has_request_type = true;
+  resp.request_type = RequestType_TXINPUT;
+  resp.has_details = true;
+  resp.details.has_request_index = true;
+  resp.details.request_index = idx1;
+  msg_write(MessageType_MessageType_TxRequest, &resp);
+}
+
+void send_req_3_prev_meta(void) {
+  signing_stage = STAGE_REQUEST_3_PREV_META;
   resp.has_request_type = true;
   resp.request_type = RequestType_TXMETA;
   resp.has_details = true;
@@ -251,8 +276,8 @@ void send_req_2_prev_meta(void) {
   msg_write(MessageType_MessageType_TxRequest, &resp);
 }
 
-void send_req_2_prev_input(void) {
-  signing_stage = STAGE_REQUEST_2_PREV_INPUT;
+void send_req_3_prev_input(void) {
+  signing_stage = STAGE_REQUEST_3_PREV_INPUT;
   resp.has_request_type = true;
   resp.request_type = RequestType_TXINPUT;
   resp.has_details = true;
@@ -265,8 +290,8 @@ void send_req_2_prev_input(void) {
   msg_write(MessageType_MessageType_TxRequest, &resp);
 }
 
-void send_req_2_prev_output(void) {
-  signing_stage = STAGE_REQUEST_2_PREV_OUTPUT;
+void send_req_3_prev_output(void) {
+  signing_stage = STAGE_REQUEST_3_PREV_OUTPUT;
   resp.has_request_type = true;
   resp.request_type = RequestType_TXOUTPUT;
   resp.has_details = true;
@@ -281,8 +306,8 @@ void send_req_2_prev_output(void) {
 
 #if !BITCOIN_ONLY
 
-void send_req_2_prev_extradata(uint32_t chunk_offset, uint32_t chunk_len) {
-  signing_stage = STAGE_REQUEST_2_PREV_EXTRADATA;
+void send_req_3_prev_extradata(uint32_t chunk_offset, uint32_t chunk_len) {
+  signing_stage = STAGE_REQUEST_3_PREV_EXTRADATA;
   resp.has_request_type = true;
   resp.request_type = RequestType_TXEXTRADATA;
   resp.has_details = true;
@@ -298,16 +323,6 @@ void send_req_2_prev_extradata(uint32_t chunk_offset, uint32_t chunk_len) {
 }
 
 #endif
-
-void send_req_3_output(void) {
-  signing_stage = STAGE_REQUEST_3_OUTPUT;
-  resp.has_request_type = true;
-  resp.request_type = RequestType_TXOUTPUT;
-  resp.has_details = true;
-  resp.details.has_request_index = true;
-  resp.details.request_index = idx1;
-  msg_write(MessageType_MessageType_TxRequest, &resp);
-}
 
 void send_req_4_input(void) {
   signing_stage = STAGE_REQUEST_4_INPUT;
@@ -387,11 +402,11 @@ void phase1_request_next_input(void) {
     //  compute segwit hashPrevouts & hashSequence
     hasher_Final(&hasher_prevouts, hash_prevouts);
     hasher_Final(&hasher_sequence, hash_sequence);
-    hasher_Final(&hasher_check, hash_check);
+    hasher_Final(&hasher_check, hash_inputs_check);
     // init hashOutputs
     hasher_Reset(&hasher_outputs);
     idx1 = 0;
-    send_req_3_output();
+    send_req_2_output();
   }
 }
 
@@ -812,12 +827,8 @@ static bool signing_check_input(const TxInputType *txinput) {
     tx_serialize_input_hash(&ti, txinput);
   }
 #endif
-
-  // hash prevout and script type to check it later (relevant for fee
-  // computation)
-  tx_prevout_hash(&hasher_check, txinput);
-  hasher_Update(&hasher_check, (const uint8_t *)&txinput->script_type,
-                sizeof(&txinput->script_type));
+  // hash all input data to check it later (relevant for fee computation)
+  tx_input_check_hash(&hasher_check, txinput);
   return true;
 }
 
@@ -831,7 +842,34 @@ static bool signing_check_prevtx_hash(void) {
     signing_abort();
     return false;
   }
-  phase1_request_next_input();
+
+  if (idx1 < inputs_count - 1) {
+    idx1++;
+    send_req_3_input();
+  } else {
+    hasher_Final(&hasher_check, hash);
+    if (memcmp(hash, hash_inputs_check, 32) != 0) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Transaction has changed during signing"));
+      signing_abort();
+      return false;
+    }
+
+    // Everything was checked, now phase 2 begins and the transaction is signed.
+    progress_meta_step = progress_step / (inputs_count + outputs_count);
+    layoutProgress(_("Signing transaction"), progress);
+    idx1 = 0;
+#if !BITCOIN_ONLY
+    if (coin->decred) {
+      // Decred prefix serialized in Phase 1, skip Phase 2
+      send_req_decred_witness();
+    } else
+#endif
+    {
+      phase2_request_next_input();
+    }
+  }
+
   return true;
 }
 
@@ -986,7 +1024,7 @@ static uint32_t signing_hash_type(void) {
 static void phase1_request_next_output(void) {
   if (idx1 < outputs_count - 1) {
     idx1++;
-    send_req_3_output();
+    send_req_2_output();
   } else {
 #if !BITCOIN_ONLY
     if (coin->decred) {
@@ -998,19 +1036,8 @@ static void phase1_request_next_output(void) {
     if (!signing_confirm_tx()) {
       return;
     }
-    // Everything was checked, now phase 2 begins and the transaction is signed.
-    progress_meta_step = progress_step / (inputs_count + outputs_count);
-    layoutProgress(_("Signing transaction"), progress);
     idx1 = 0;
-#if !BITCOIN_ONLY
-    if (coin->decred) {
-      // Decred prefix serialized in Phase 1, skip Phase 2
-      send_req_decred_witness();
-    } else
-#endif
-    {
-      phase2_request_next_input();
-    }
+    send_req_3_input();
   }
 }
 
@@ -1272,14 +1299,26 @@ void signing_txack(TransactionType *tx) {
         return;
       }
 
+      if (!tx->inputs[0].has_amount) {
+        fsm_sendFailure(FailureType_Failure_DataError,
+                        _("Expected input with amount"));
+        signing_abort();
+        return;
+      }
+
+      if (to_spend + tx->inputs[0].amount < to_spend) {
+        fsm_sendFailure(FailureType_Failure_DataError, _("Value overflow"));
+        signing_abort();
+        return;
+      }
+      to_spend += tx->inputs[0].amount;
+
       tx_weight += tx_input_weight(coin, &tx->inputs[0]);
 #if !BITCOIN_ONLY
       if (coin->decred) {
         tx_weight += tx_decred_witness_weight(&tx->inputs[0]);
       }
 #endif
-
-      memcpy(&input, tx->inputs, sizeof(TxInputType));
 
       if (tx->inputs[0].script_type == InputScriptType_SPENDMULTISIG ||
           tx->inputs[0].script_type == InputScriptType_SPENDADDRESS) {
@@ -1323,9 +1362,38 @@ void signing_txack(TransactionType *tx) {
         signing_abort();
         return;
       }
-      send_req_2_prev_meta();
+      phase1_request_next_input();
       return;
-    case STAGE_REQUEST_2_PREV_META:
+    case STAGE_REQUEST_2_OUTPUT:
+      if (!signing_validate_output(&tx->outputs[0]) ||
+          !signing_check_output(&tx->outputs[0])) {
+        return;
+      }
+      tx_weight += tx_output_weight(coin, &tx->outputs[0]);
+      phase1_request_next_output();
+      return;
+    case STAGE_REQUEST_3_INPUT:
+      if (!signing_validate_input(&tx->inputs[0])) {
+        return;
+      }
+
+      if (!tx->inputs[0].has_amount) {
+        fsm_sendFailure(FailureType_Failure_DataError,
+                        _("Expected input with amount"));
+        signing_abort();
+        return;
+      }
+
+      if (idx1 == 0) {
+        hasher_Reset(&hasher_check);
+      }
+      tx_input_check_hash(&hasher_check, tx->inputs);
+
+      memcpy(&input, tx->inputs, sizeof(TxInputType));
+
+      send_req_3_prev_meta();
+      return;
+    case STAGE_REQUEST_3_PREV_META:
       if (tx->outputs_cnt <= input.prev_index) {
         fsm_sendFailure(FailureType_Failure_DataError,
                         _("Not enough outputs in previous transaction."));
@@ -1394,13 +1462,13 @@ void signing_txack(TransactionType *tx) {
       progress_meta_step = progress_step / (tp.inputs_len + tp.outputs_len);
       idx2 = 0;
       if (tp.inputs_len > 0) {
-        send_req_2_prev_input();
+        send_req_3_prev_input();
       } else {
         tx_serialize_header_hash(&tp);
-        send_req_2_prev_output();
+        send_req_3_prev_output();
       }
       return;
-    case STAGE_REQUEST_2_PREV_INPUT:
+    case STAGE_REQUEST_3_PREV_INPUT:
       if (!signing_validate_input(&tx->inputs[0])) {
         return;
       }
@@ -1414,13 +1482,13 @@ void signing_txack(TransactionType *tx) {
       }
       if (idx2 < tp.inputs_len - 1) {
         idx2++;
-        send_req_2_prev_input();
+        send_req_3_prev_input();
       } else {
         idx2 = 0;
-        send_req_2_prev_output();
+        send_req_3_prev_output();
       }
       return;
-    case STAGE_REQUEST_2_PREV_OUTPUT:
+    case STAGE_REQUEST_3_PREV_OUTPUT:
       if (!signing_validate_bin_output(&tx->bin_outputs[0])) {
         return;
       }
@@ -1434,14 +1502,9 @@ void signing_txack(TransactionType *tx) {
         return;
       }
       if (idx2 == input.prev_index) {
-        if (input.has_amount && input.amount != tx->bin_outputs[0].amount) {
+        if (input.amount != tx->bin_outputs[0].amount) {
           fsm_sendFailure(FailureType_Failure_DataError,
                           _("Invalid amount specified"));
-          signing_abort();
-          return;
-        }
-        if (to_spend + tx->bin_outputs[0].amount < to_spend) {
-          fsm_sendFailure(FailureType_Failure_DataError, _("Value overflow"));
           signing_abort();
           return;
         }
@@ -1454,15 +1517,14 @@ void signing_txack(TransactionType *tx) {
           return;
         }
 #endif
-        to_spend += tx->bin_outputs[0].amount;
       }
       if (idx2 < tp.outputs_len - 1) {
         /* Check prevtx of next input */
         idx2++;
-        send_req_2_prev_output();
+        send_req_3_prev_output();
 #if !BITCOIN_ONLY
       } else if (coin->extra_data && tp.extra_data_len > 0) {  // has extra data
-        send_req_2_prev_extradata(0, MIN(1024, tp.extra_data_len));
+        send_req_3_prev_extradata(0, MIN(1024, tp.extra_data_len));
         return;
 #endif
       } else {
@@ -1473,7 +1535,7 @@ void signing_txack(TransactionType *tx) {
       }
       return;
 #if !BITCOIN_ONLY
-    case STAGE_REQUEST_2_PREV_EXTRADATA:
+    case STAGE_REQUEST_3_PREV_EXTRADATA:
       if (!tx_serialize_extra_data_hash(&tp, tx->extra_data.bytes,
                                         tx->extra_data.size)) {
         fsm_sendFailure(FailureType_Failure_ProcessError,
@@ -1482,8 +1544,8 @@ void signing_txack(TransactionType *tx) {
         return;
       }
       if (tp.extra_data_received <
-          tp.extra_data_len) {  // still some data remanining
-        send_req_2_prev_extradata(
+          tp.extra_data_len) {  // still some data remaining
+        send_req_3_prev_extradata(
             tp.extra_data_received,
             MIN(1024, tp.extra_data_len - tp.extra_data_received));
       } else {
@@ -1493,14 +1555,6 @@ void signing_txack(TransactionType *tx) {
       }
       return;
 #endif
-    case STAGE_REQUEST_3_OUTPUT:
-      if (!signing_validate_output(&tx->outputs[0]) ||
-          !signing_check_output(&tx->outputs[0])) {
-        return;
-      }
-      tx_weight += tx_output_weight(coin, &tx->outputs[0]);
-      phase1_request_next_output();
-      return;
     case STAGE_REQUEST_4_INPUT:
       if (!signing_validate_input(&tx->inputs[0])) {
         return;
@@ -1514,10 +1568,8 @@ void signing_txack(TransactionType *tx) {
                 timestamp);
         hasher_Reset(&hasher_check);
       }
-      // check prevouts and script type
-      tx_prevout_hash(&hasher_check, tx->inputs);
-      hasher_Update(&hasher_check, (const uint8_t *)&tx->inputs[0].script_type,
-                    sizeof(&tx->inputs[0].script_type));
+      // check inputs are the same as those in phase 1
+      tx_input_check_hash(&hasher_check, tx->inputs);
       if (idx2 == idx1) {
         if (!compile_input_script_sig(&tx->inputs[0])) {
           fsm_sendFailure(FailureType_Failure_ProcessError,
@@ -1548,7 +1600,7 @@ void signing_txack(TransactionType *tx) {
       } else {
         uint8_t hash[32] = {0};
         hasher_Final(&hasher_check, hash);
-        if (memcmp(hash, hash_check, 32) != 0) {
+        if (memcmp(hash, hash_inputs_check, 32) != 0) {
           fsm_sendFailure(FailureType_Failure_DataError,
                           _("Transaction has changed during signing"));
           signing_abort();
