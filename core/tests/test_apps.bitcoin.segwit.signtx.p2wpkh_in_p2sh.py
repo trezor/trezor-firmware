@@ -78,18 +78,6 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(inputs=[inp1])),
 
-            TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=ptx1),
-
-            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=TransactionType(inputs=[pinp1])),
-
-            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=TransactionType(bin_outputs=[pout1])),
-
-            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=TransactionType(bin_outputs=[pout2])),
-
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(outputs=[out1])),
 
@@ -104,6 +92,22 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
 
             helpers.UiConfirmTotal(123445789 + 11000, 11000, coin),
             True,
+
+            # check prev tx
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(inputs=[inp1])),
+
+            TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=ptx1),
+
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(inputs=[pinp1])),
+
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(bin_outputs=[pout1])),
+
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(bin_outputs=[pout2])),
 
             # sign tx
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=TxRequestSerializedType(
@@ -200,18 +204,6 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(inputs=[inp1])),
 
-            TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=ptx1),
-
-            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=TransactionType(inputs=[pinp1])),
-
-            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=TransactionType(bin_outputs=[pout1])),
-
-            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=TransactionType(bin_outputs=[pout2])),
-
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
 
             TxAck(tx=TransactionType(outputs=[out1])),
@@ -224,6 +216,22 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
 
             helpers.UiConfirmTotal(12300000 + 11000, 11000, coin),
             True,
+
+            # check prev tx
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(inputs=[inp1])),
+
+            TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=ptx1),
+
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(inputs=[pinp1])),
+
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(bin_outputs=[pout1])),
+
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(bin_outputs=[pout2])),
 
             # sign tx
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None),
@@ -341,6 +349,22 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(inputs=[inpattack])),
 
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(outputs=[out1])),
+
+            helpers.UiConfirmOutput(out1, coin),
+            True,
+
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(outputs=[out2])),
+
+            helpers.UiConfirmTotal(9 - 1, 9 - 8 - 1, coin),
+            True,
+
+            # check prev tx
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(inputs=[inp1])),
+
             TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
             TxAck(tx=ptx1),
 
@@ -353,7 +377,13 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(bin_outputs=[pout2])),
 
-            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
+            # sign tx
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None),
+                      serialized=TxRequestSerializedType(
+                          # returned serialized header
+                          serialized_tx=unhexlify(
+                              '01000000000101'),
+            )),
         ]
 
         ns = get_namespaces_for_coin(coin)
