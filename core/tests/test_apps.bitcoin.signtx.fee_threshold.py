@@ -122,10 +122,9 @@ class TestSignTxFeeThreshold(unittest.TestCase):
                                 amount=390000)
 
         inp1 = TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
-                           # amount=390000,
+                           amount=390000,
                            prev_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882'),
                            prev_index=0,
-                           amount=None,
                            multisig=None,
                            script_type=None,
                            sequence=None)
@@ -141,14 +140,6 @@ class TestSignTxFeeThreshold(unittest.TestCase):
 
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(inputs=[inp1])),
-            TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=ptx1),
-            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=TransactionType(inputs=[pinp1])),
-            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=1, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=TransactionType(inputs=[pinp2])),
-            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=TransactionType(bin_outputs=[pout1])),
             helpers.UiConfirmForeignAddress(address_n=inp1.address_n),
             True,
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
@@ -157,6 +148,16 @@ class TestSignTxFeeThreshold(unittest.TestCase):
             True,
             helpers.UiConfirmTotal(300000 + 90000, 90000, coin_bitcoin),
             True,
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(inputs=[inp1])),
+            TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=ptx1),
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(inputs=[pinp1])),
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=1, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(inputs=[pinp2])),
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882')), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(bin_outputs=[pout1])),
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=TxRequestSerializedType(serialized_tx=unhexlify('0100000001'))),
         ]
 

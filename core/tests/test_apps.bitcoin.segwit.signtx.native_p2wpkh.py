@@ -78,18 +78,6 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(inputs=[inp1])),
 
-            TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=ptx1),
-
-            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=TransactionType(inputs=[pinp1])),
-
-            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=TransactionType(bin_outputs=[pout1])),
-
-            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=TransactionType(bin_outputs=[pout2])),
-
             helpers.UiConfirmForeignAddress(address_n=inp1.address_n),
             True,
 
@@ -107,6 +95,22 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
 
             helpers.UiConfirmTotal(12300000, 11000, coin),
             True,
+
+            # check prev tx
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(inputs=[inp1])),
+
+            TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=ptx1),
+
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(inputs=[pinp1])),
+
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(bin_outputs=[pout1])),
+
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(bin_outputs=[pout2])),
 
             # sign tx
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=TxRequestSerializedType(
@@ -204,18 +208,6 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(inputs=[inp1])),
 
-            TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=ptx1),
-
-            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=TransactionType(inputs=[pinp1])),
-
-            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=TransactionType(bin_outputs=[pout1])),
-
-            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=TransactionType(bin_outputs=[pout2])),
-
             helpers.UiConfirmForeignAddress(address_n=inp1.address_n),
             True,
 
@@ -230,6 +222,22 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
 
             helpers.UiConfirmTotal(5000000 + 11000, 11000, coin),
             True,
+
+            # check prev tx
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(inputs=[inp1])),
+
+            TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=ptx1),
+
+            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(inputs=[pinp1])),
+
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(bin_outputs=[pout1])),
+
+            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
+            TxAck(tx=TransactionType(bin_outputs=[pout2])),
 
             # sign tx
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=TxRequestSerializedType(
@@ -319,18 +327,6 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             # check fee
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(inputs=[inp1])),
-
-            TxRequest(request_type=TXMETA, details=TxRequestDetailsType(request_index=None, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=ptx1),
-
-            TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=TransactionType(inputs=[pinp1])),
-
-            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=TransactionType(bin_outputs=[pout1])),
-
-            TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=inp1.prev_hash), serialized=EMPTY_SERIALIZED),
-            TxAck(tx=TransactionType(bin_outputs=[pout2])),
 
             helpers.UiConfirmForeignAddress(address_n=inp1.address_n),
             True,
