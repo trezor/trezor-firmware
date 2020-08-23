@@ -115,23 +115,23 @@ core unix frozen debug build:
     untracked: true
     expire_in: 1 week
 
-core unix frozen regular darwin:
+core macos frozen regular build:
   stage: build
   needs: []
   tags:
     - darwin
-  when: manual
   script:
     - nix-shell --run "pipenv run make -C core build_unix_frozen"
-    - mkdir -p TrezorEmu-$CI_COMMIT_SHORT_SHA.app/Contents/{MacOS,libs}
-    - cp -v core/build/unix/trezor-emu-core TrezorEmu-$CI_COMMIT_SHORT_SHA.app/Contents/MacOS/TrezorEmu-$CI_COMMIT_SHORT_SHA
-    - dylibbundler -of -b -i /usr/lib/system -d TrezorEmu-$CI_COMMIT_SHORT_SHA.app/Contents/libs -x TrezorEmu-$CI_COMMIT_SHORT_SHA.app/Contents/MacOS/TrezorEmu-$CI_COMMIT_SHORT_SHA
-    - mv TrezorEmu-$CI_COMMIT_SHORT_SHA.app trezor-emu-regular-macos-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.app
-  allow_failure: true
+    - export NAME="trezor-emu-core.darwin"
+    - cp -v core/build/unix/trezor-emu-core ./$NAME
+    - chmod +x $NAME
+    - echo '"$(dirname "$BASH_SOURCE")"/trezor-emu-core.darwin' > trezor-emulator.command
+    - chmod u+x trezor-emulator.command
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-      - trezor-emu-regular-macos-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.app
+      - trezor-emu-core.darwin
+      - trezor-emulator.command
     expire_in: 1 week
 
 # Crypto
