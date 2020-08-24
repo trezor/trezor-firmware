@@ -294,6 +294,7 @@ hardware legacy regular device test:
     - schedules  # nightly build
     - /^legacy\//
     - /^release\//
+    - /^secfix\//
   tags:
     - tpmb
   needs: ["legacy fw regular debug build"]
@@ -320,6 +321,7 @@ hardware legacy btconly device test:
     - schedules  # nightly build
     - /^legacy\//
     - /^release\//
+    - /^secfix\//
   tags:
     - tpmb
   needs: ["legacy fw btconly debug build"]
