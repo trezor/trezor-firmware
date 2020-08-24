@@ -9,7 +9,7 @@
   "decimals": 8,
   "address_type": 58,
   "address_type_p2sh": 50,
-  "maxfee_kb": 40000000,
+  "maxfee_kb": 1000000000,
   "minfee_kb": 400000,
   "signed_message_header": "Qtum Signed Message:\n",
   "hash_genesis_block": "000075aef83cf2853580f8ae8ce6f8c3096cfa21d98334d6e3f95e5582ed986c",

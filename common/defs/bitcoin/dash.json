@@ -9,7 +9,7 @@
   "decimals": 8,
   "address_type": 76,
   "address_type_p2sh": 16,
-  "maxfee_kb": 100000,
+  "maxfee_kb": 45000000,
   "minfee_kb": 1000,
   "signed_message_header": "DarkCoin Signed Message:\n",
   "hash_genesis_block": "00000ffd590b1485b3caadc19b22e6379c733355108f107a430458cdf3407ab6",

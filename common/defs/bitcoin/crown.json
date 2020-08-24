@@ -9,7 +9,7 @@
   "decimals": 8,
   "address_type": 95495,
   "address_type_p2sh": 95473,
-  "maxfee_kb": 2000000,
+  "maxfee_kb": 52000000000,
   "minfee_kb": 1000,
   "signed_message_header": "Crown Signed Message:\n",
   "hash_genesis_block": "0000000085370d5e122f64f4ab19c68614ff3df78c8d13cb814fd7e69a1dc6da",
