@@ -9,7 +9,7 @@
   "decimals": 8,
   "address_type": 56,
   "address_type_p2sh": 60,
-  "maxfee_kb": 2000000,
+  "maxfee_kb": 5300000000,
   "minfee_kb": 1000,
   "signed_message_header": "Bitcoin Signed Message:\n",
   "hash_genesis_block": "0000ee0784c195317ac95623e22fddb8c7b8825dc3998e0bb924d66866eccf4c",

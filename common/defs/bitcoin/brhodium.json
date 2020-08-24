@@ -9,7 +9,7 @@
   "decimals": 8,
   "address_type": 61,
   "address_type_p2sh": 123,
-  "maxfee_kb": 2000000,
+  "maxfee_kb": 1000000000,
   "minfee_kb": 1000,
   "signed_message_header": "BitCoin Rhodium Signed Message:\n",
   "hash_genesis_block": "baff5bfd9dc43fb672d003ec20fd21428f9282ca46bfa1730d73e1f2c75f5fdd",

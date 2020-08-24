@@ -9,7 +9,7 @@
   "decimals": 8,
   "address_type": 36,
   "address_type_p2sh": 16,
-  "maxfee_kb": 1000000000,
+  "maxfee_kb": 35000000000000,
   "minfee_kb": 10000000,
   "signed_message_header": "FujiCoin Signed Message:\n",
   "hash_genesis_block": "adb6d9cfd74075e7f91608add4bd2a2ea636f70856183086842667a1597714a0",

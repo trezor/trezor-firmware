@@ -9,7 +9,7 @@
   "decimals": 6,
   "address_type": 55,
   "address_type_p2sh": 117,
-  "maxfee_kb": 2000000,
+  "maxfee_kb": 13000000000,
   "minfee_kb": 10000,
   "signed_message_header": "Peercoin Signed Message:\n",
   "hash_genesis_block": "0000000032fe677166d54963b62a4677d8957e87c508eaa4fd7eb1c880cd27e3",

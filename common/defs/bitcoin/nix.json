@@ -9,7 +9,7 @@
   "decimals": 8,
   "address_type": 38,
   "address_type_p2sh": 53,
-  "maxfee_kb": 40000000,
+  "maxfee_kb": 30000000000,
   "minfee_kb": 0,
   "signed_message_header": "NIX Signed Message:\n",
   "hash_genesis_block": "dd28ad86def767c3cfc34267a950d871fc7462bc57ea4a929fc3596d9b598e41",
