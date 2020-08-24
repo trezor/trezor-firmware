@@ -85,6 +85,15 @@ See docstrings for the most important functions: `coin_info()` and `support_info
 The file `coindef.py` is a protobuf definition for passing coin data to Trezor
 from the outside.
 
+### `marketcap.py`
+
+Module for obtaining market cap and price data used by `coins_details.py` and `maxfee.py`.
+
+### `maxfee.py`
+
+Updates the `maxfee_kb` coin property based on a specified maximum per-transaction fee. The command
+fetches current price data from https://coinmarketcap.com/ to convert from fiat-denominated maximum
+fee.
 
 # Release Workflow
 
