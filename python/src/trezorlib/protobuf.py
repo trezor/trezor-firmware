@@ -207,7 +207,7 @@ class MessageType:
 
     @classmethod
     def get_field_type(cls, name: str) -> Optional[FieldType]:
-        for fname, ftype, flags in cls.get_fields().values():
+        for fname, ftype, _ in cls.get_fields().values():
             if fname == name:
                 return ftype
         return None
@@ -239,7 +239,7 @@ class MessageType:
 
     def _fill_missing(self) -> None:
         # fill missing fields
-        for fname, ftype, fflags in self.get_fields().values():
+        for fname, _, fflags in self.get_fields().values():
             if not hasattr(self, fname):
                 if fflags & FLAG_REPEATED:
                     setattr(self, fname, [])
