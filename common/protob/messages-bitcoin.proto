@@ -5,6 +5,7 @@ package hw.trezor.messages.bitcoin;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageBitcoin";
 
+import "messages.proto";
 import "messages-common.proto";
 
 /**
@@ -26,13 +27,13 @@ message MultisigRedeemScriptType {
     repeated HDNodePathType pubkeys = 1;    // pubkeys from multisig address (sorted lexicographically)
     repeated bytes signatures = 2;          // existing signatures for partially signed input
     optional uint32 m = 3;                  // "m" from n, how many valid signatures is necessary for spending
-    repeated hw.trezor.messages.common.HDNodeType nodes = 4;    // simplified way how to specify pubkeys if they share the same address_n path
+    repeated common.HDNodeType nodes = 4;    // simplified way how to specify pubkeys if they share the same address_n path
     repeated uint32 address_n = 5;                              // use only field 1 or fields 4+5, if fields 4+5 are used, field 1 is ignored
     /**
     * Structure representing HDNode + Path
     */
     message HDNodePathType {
-        required hw.trezor.messages.common.HDNodeType node = 1; // BIP-32 node in deserialized form
+        required common.HDNodeType node = 1; // BIP-32 node in deserialized form
         repeated uint32 address_n = 2;                          // BIP-32 path to derive the key from node
     }
 }
@@ -56,7 +57,7 @@ message GetPublicKey {
  * @end
  */
 message PublicKey {
-    optional hw.trezor.messages.common.HDNodeType node = 1;        // BIP32 public node
+    optional common.HDNodeType node = 1;        // BIP32 public node
     optional string xpub = 2;        // serialized form of public node
 }
 
@@ -306,6 +307,8 @@ message OwnershipProof {
  * @next Failure
  */
 message AuthorizeCoinJoin {
+    option (unstable) = true;
+
     required string coordinator = 1;                                    // coordinator identifier to approve as a prefix in commitment data (max. 18 ASCII characters)
     required uint64 max_total_fee = 2;                                  // maximum total fees
     optional uint32 fee_per_anonymity = 3;                              // fee per anonymity set in units of 10^-9 percent
