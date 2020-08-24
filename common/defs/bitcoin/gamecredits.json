@@ -9,7 +9,7 @@
   "decimals": 8,
   "address_type": 38,
   "address_type_p2sh": 62,
-  "maxfee_kb": 5000000,
+  "maxfee_kb": 53000000000,
   "minfee_kb": 100000,
   "signed_message_header": "GameCredits Signed Message:\n",
   "hash_genesis_block": "91ec5f25ee9a0ffa1af7d4da4db9a552228dd2dc77cdb15b738be4e1f55f30ee",

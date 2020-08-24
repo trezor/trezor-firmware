@@ -9,7 +9,7 @@
   "decimals": 8,
   "address_type": 71,
   "address_type_p2sh": 33,
-  "maxfee_kb": 40000000,
+  "maxfee_kb": 14000000000,
   "minfee_kb": 1000,
   "signed_message_header": "Viacoin Signed Message:\n",
   "hash_genesis_block": "4e9b54001f9976049830128ec0331515eaabe35a70970d79971da1539a400ba1",
