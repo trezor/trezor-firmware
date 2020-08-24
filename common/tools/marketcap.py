@@ -10,6 +10,7 @@ COINMAKETCAP_CACHE = os.path.join(os.path.dirname(__file__), "coinmarketcap.json
 COINMARKETCAP_API_BASE = "https://pro-api.coinmarketcap.com/v1/"
 
 MARKET_CAPS = {}
+PRICES = {}
 
 
 def call(endpoint, api_key, params=None):
@@ -20,7 +21,7 @@ def call(endpoint, api_key, params=None):
 
 
 def init(api_key, refresh=None):
-    global MARKET_CAPS
+    global MARKET_CAPS, PRICES
 
     force_refresh = refresh is True
     disable_refresh = refresh is False
@@ -59,20 +60,24 @@ def init(api_key, refresh=None):
     except Exception as e:
         raise RuntimeError("market cap data unavailable") from e
 
-    coin_data = {}
+    cap_data = {}
+    price_data = {}
     for coin in coinmarketcap_data["data"]:
         slug = coin["slug"]
+        symbol = coin["symbol"]
         platform = coin["meta"]["platform"]
         market_cap = coin["quote"]["USD"]["market_cap"]
+        price = coin["quote"]["USD"]["price"]
         if market_cap is not None:
-            coin_data[slug] = int(market_cap)
+            cap_data[slug] = int(market_cap)
+            price_data[symbol] = price
             if platform is not None and platform["name"] == "Ethereum":
                 address = platform["token_address"].lower()
-                coin_data[address] = int(market_cap)
+                cap_data[address] = int(market_cap)
+                price_data[symbol] = price
 
-    MARKET_CAPS = coin_data
-
-    return coin_data
+    MARKET_CAPS = cap_data
+    PRICES = price_data
 
 
 def marketcap(coin):
@@ -89,3 +94,7 @@ def marketcap(coin):
     if cap is None:
         cap = MARKET_CAPS.get(coin["shortcut"].lower())
     return cap
+
+
+def fiat_price(coin_symbol):
+    return PRICES.get(coin_symbol)
