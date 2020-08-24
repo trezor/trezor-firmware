@@ -531,7 +531,6 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
   // m/44' : BIP44 Legacy
   // m / purpose' / coin_type' / account' / change / address_index
   if (address_n_count > 0 && address_n[0] == (0x80000000 + 44)) {
-    valid &= (script_type == InputScriptType_SPENDADDRESS);
     if (full) {
       valid &= (address_n_count == 5);
     } else {
@@ -539,6 +538,7 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
     }
     valid &= check_cointype(coin, address_n[1], full);
     if (full) {
+      valid &= (script_type == InputScriptType_SPENDADDRESS);
       valid &= (address_n[2] & 0x80000000) == 0x80000000;
       valid &= (address_n[3] & 0x80000000) == 0;
       valid &= (address_n[4] & 0x80000000) == 0;
@@ -549,8 +549,8 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
   // m/45' - BIP45 Copay Abandoned Multisig P2SH
   // m / purpose' / cosigner_index / change / address_index
   if (address_n_count > 0 && address_n[0] == (0x80000000 + 45)) {
-    valid &= (script_type == InputScriptType_SPENDMULTISIG);
     if (full) {
+      valid &= (script_type == InputScriptType_SPENDMULTISIG);
       valid &= (address_n_count == 4);
       valid &= (address_n[1] & 0x80000000) == 0;
       valid &= (address_n[2] & 0x80000000) == 0;
@@ -564,9 +564,6 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
   // Electrum:
   // m / purpose' / coin_type' / account' / type' / change / address_index
   if (address_n_count > 0 && address_n[0] == (0x80000000 + 48)) {
-    valid &= (script_type == InputScriptType_SPENDMULTISIG) ||
-             (script_type == InputScriptType_SPENDP2SHWITNESS) ||
-             (script_type == InputScriptType_SPENDWITNESS);
     if (full) {
       valid &= (address_n_count == 5) || (address_n_count == 6);
     } else {
@@ -574,6 +571,9 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
     }
     valid &= check_cointype(coin, address_n[1], full);
     if (full) {
+      valid &= (script_type == InputScriptType_SPENDMULTISIG) ||
+               (script_type == InputScriptType_SPENDP2SHWITNESS) ||
+               (script_type == InputScriptType_SPENDWITNESS);
       valid &= (address_n[2] & 0x80000000) == 0x80000000;
       valid &= (address_n[4] & 0x80000000) == 0;
     }
@@ -583,7 +583,6 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
   // m/49' : BIP49 SegWit
   // m / purpose' / coin_type' / account' / change / address_index
   if (address_n_count > 0 && address_n[0] == (0x80000000 + 49)) {
-    valid &= (script_type == InputScriptType_SPENDP2SHWITNESS);
     valid &= coin->has_segwit;
     if (full) {
       valid &= (address_n_count == 5);
@@ -592,6 +591,7 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
     }
     valid &= check_cointype(coin, address_n[1], full);
     if (full) {
+      valid &= (script_type == InputScriptType_SPENDP2SHWITNESS);
       valid &= (address_n[2] & 0x80000000) == 0x80000000;
       valid &= (address_n[3] & 0x80000000) == 0;
       valid &= (address_n[4] & 0x80000000) == 0;
@@ -602,7 +602,6 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
   // m/84' : BIP84 Native SegWit
   // m / purpose' / coin_type' / account' / change / address_index
   if (address_n_count > 0 && address_n[0] == (0x80000000 + 84)) {
-    valid &= (script_type == InputScriptType_SPENDWITNESS);
     valid &= coin->has_segwit;
     valid &= coin->bech32_prefix != NULL;
     if (full) {
@@ -612,6 +611,7 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
     }
     valid &= check_cointype(coin, address_n[1], full);
     if (full) {
+      valid &= (script_type == InputScriptType_SPENDWITNESS);
       valid &= (address_n[2] & 0x80000000) == 0x80000000;
       valid &= (address_n[3] & 0x80000000) == 0;
       valid &= (address_n[4] & 0x80000000) == 0;
