@@ -1,3 +1,4 @@
+from trezor import wire
 from trezor.crypto import random
 
 if False:
@@ -52,6 +53,19 @@ def start_session(received_session_id: bytes = None) -> bytes:
     return _active_session_id
 
 
+def end_current_session() -> None:
+    global _active_session_id
+
+    if _active_session_id is None:
+        return
+
+    current_session_id = _active_session_id
+    _active_session_id = None
+
+    _session_ids.remove(current_session_id)
+    del _caches[current_session_id]
+
+
 def is_session_started() -> bool:
     return _active_session_id is not None
 
@@ -61,7 +75,7 @@ def set(key: int, value: Any) -> None:
         _sessionless_cache[key] = value
         return
     if _active_session_id is None:
-        raise RuntimeError  # no session active
+        raise wire.ProcessError("Invalid session")
     _caches[_active_session_id][key] = value
 
 
@@ -69,7 +83,7 @@ def get(key: int) -> Any:
     if key & _SESSIONLESS_FLAG:
         return _sessionless_cache.get(key)
     if _active_session_id is None:
-        raise RuntimeError  # no session active
+        raise wire.ProcessError("Invalid session")
     return _caches[_active_session_id].get(key)
 
 
@@ -79,7 +93,7 @@ def delete(key: int) -> None:
             del _sessionless_cache[key]
         return
     if _active_session_id is None:
-        raise RuntimeError  # no session active
+        raise wire.ProcessError("Invalid session")
     if key in _caches[_active_session_id]:
         del _caches[_active_session_id][key]
 

@@ -16,6 +16,7 @@ if False:
     import protobuf
     from typing import Iterable, NoReturn, Optional, Protocol
     from trezor.messages.Initialize import Initialize
+    from trezor.messages.EndSession import EndSession
     from trezor.messages.GetFeatures import GetFeatures
     from trezor.messages.Cancel import Cancel
     from trezor.messages.LockDevice import LockDevice
@@ -116,6 +117,11 @@ async def handle_LockDevice(ctx: wire.Context, msg: LockDevice) -> Success:
     return Success()
 
 
+async def handle_EndSession(ctx: wire.Context, msg: EndSession) -> Success:
+    cache.end_current_session()
+    return Success()
+
+
 async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:
     if msg.button_protection:
         from apps.common.confirm import require_confirm
@@ -172,6 +178,7 @@ async def handle_CancelAuthorization(
 
 ALLOW_WHILE_LOCKED = (
     MessageType.Initialize,
+    MessageType.EndSession,
     MessageType.GetFeatures,
     MessageType.Cancel,
     MessageType.LockDevice,
@@ -249,6 +256,7 @@ def boot() -> None:
     wire.register(MessageType.GetFeatures, handle_GetFeatures)
     wire.register(MessageType.Cancel, handle_Cancel)
     wire.register(MessageType.LockDevice, handle_LockDevice)
+    wire.register(MessageType.EndSession, handle_EndSession)
     wire.register(MessageType.Ping, handle_Ping)
     wire.register(MessageType.DoPreauthorized, handle_DoPreauthorized)
     wire.register(MessageType.CancelAuthorization, handle_CancelAuthorization)
