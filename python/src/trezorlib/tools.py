@@ -211,13 +211,15 @@ def parse_path(nstr: str) -> Address:
         raise ValueError("Invalid BIP32 path", nstr) from e
 
 
-def normalize_nfc(txt: AnyStr) -> bytes:
+def prepare_message_bytes(txt: AnyStr) -> bytes:
     """
-    Normalize message to NFC and return bytes suitable for protobuf.
-    This seems to be bitcoin-qt standard of doing things.
+    Make message suitable for protobuf.
+    If the message is a Unicode string, normalize it.
+    If it's bytes, return the raw bytes.
     """
-    str_txt = txt.decode() if isinstance(txt, bytes) else txt
-    return unicodedata.normalize("NFC", str_txt).encode()
+    if isinstance(txt, bytes):
+        return txt
+    return unicodedata.normalize("NFC", txt).encode()
 
 
 # NOTE for type tests (mypy/pyright):

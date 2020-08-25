@@ -23,7 +23,7 @@ from typing import TYPE_CHECKING, Any, AnyStr, List, Optional, Sequence, Tuple
 from typing_extensions import Protocol, TypedDict
 
 from . import exceptions, messages
-from .tools import expect, normalize_nfc, session
+from .tools import expect, prepare_message_bytes, session
 
 if TYPE_CHECKING:
     from .client import TrezorClient
@@ -219,7 +219,7 @@ def sign_message(
         messages.SignMessage(
             coin_name=coin_name,
             address_n=n,
-            message=normalize_nfc(message),
+            message=prepare_message_bytes(message),
             script_type=script_type,
             no_script_type=no_script_type,
         )
@@ -238,7 +238,7 @@ def verify_message(
             messages.VerifyMessage(
                 address=address,
                 signature=signature,
-                message=normalize_nfc(message),
+                message=prepare_message_bytes(message),
                 coin_name=coin_name,
             )
         )
