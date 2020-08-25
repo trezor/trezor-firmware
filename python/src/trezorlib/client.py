@@ -385,7 +385,7 @@ class TrezorClient:
         The session will become invalid until `init_device()` is called again.
         If passphrase is enabled, further actions will prompt for it again.
         """
-        # XXX self.call(messages.EndSession())
+        self.call(messages.EndSession())
         self.session_id = None
 
     @tools.session
