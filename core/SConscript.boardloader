@@ -2,6 +2,8 @@
 
 import os
 
+TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
+
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
@@ -93,13 +95,13 @@ env.Replace(
     OBJCOPY='arm-none-eabi-objcopy', )
 
 env.Replace(
-    TREZOR_MODEL=env.get('ENV').get('TREZOR_MODEL', 'T'), )
+    TREZOR_MODEL=TREZOR_MODEL, )
 
-if env.get('TREZOR_MODEL') == 'T':
+if TREZOR_MODEL == 'T':
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16'
     CPU_CCFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 '
     CPU_MODEL   = 'STM32F427xx'
-elif env.get('TREZOR_MODEL') == '1':
+elif TREZOR_MODEL == '1':
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m3 -mfloat-abi=soft'
     CPU_CCFLAGS = '-mthumb -mtune=cortex-m3 -mcpu=cortex-m3 -mfloat-abi=soft '
     CPU_MODEL   = 'STM32F405xx'

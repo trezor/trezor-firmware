@@ -5,6 +5,7 @@ import os
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 RDI = ARGUMENTS.get('RDI', '1') == '1'
 EVERYTHING = BITCOIN_ONLY != '1'
+TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -365,13 +366,13 @@ env.Replace(
     OBJCOPY='arm-none-eabi-objcopy', )
 
 env.Replace(
-    TREZOR_MODEL=env.get('ENV').get('TREZOR_MODEL', 'T'), )
+    TREZOR_MODEL=TREZOR_MODEL, )
 
-if env.get('TREZOR_MODEL') == 'T':
+if TREZOR_MODEL == 'T':
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16'
     CPU_CCFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 '
     CPU_MODEL   = 'STM32F427xx'
-elif env.get('TREZOR_MODEL') == '1':
+elif TREZOR_MODEL == '1':
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m3 -mfloat-abi=soft'
     CPU_CCFLAGS = '-mthumb -mtune=cortex-m3 -mcpu=cortex-m3 -mfloat-abi=soft '
     CPU_MODEL   = 'STM32F405xx'
@@ -622,7 +623,7 @@ program_elf = env.Command(
     '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lm -lgcc',
 )
 
-if env.get('TREZOR_MODEL') == 'T':
+if TREZOR_MODEL == 'T':
     action_bin=[
         '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
         '$OBJCOPY -O binary -j .flash2 $SOURCE ${TARGET}.p2',
@@ -630,7 +631,7 @@ if env.get('TREZOR_MODEL') == 'T':
         '$HEADERTOOL $TARGET ' + ('-D' if ARGUMENTS.get('PRODUCTION', '0') == '0' else ''),
         '$DD if=$TARGET of=${TARGET}.p1 skip=0 bs=128k count=6',
     ]
-elif env.get('TREZOR_MODEL') == '1':
+elif TREZOR_MODEL == '1':
     action_bin=[
         '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
         '../legacy/bootloader/firmware_sign.py -f $TARGET',
