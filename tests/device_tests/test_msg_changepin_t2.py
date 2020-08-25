@@ -27,7 +27,7 @@ pytestmark = pytest.mark.skip_t1
 
 
 def _check_pin(client, pin):
-    client.clear_session()
+    client.lock()
     assert client.features.pin_protection is True
     assert client.features.unlocked is False
 
@@ -38,7 +38,7 @@ def _check_pin(client, pin):
 
 
 def _check_no_pin(client):
-    client.clear_session()
+    client.lock()
     assert client.features.pin_protection is False
 
     with client:

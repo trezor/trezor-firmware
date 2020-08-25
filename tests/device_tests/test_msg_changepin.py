@@ -27,7 +27,7 @@ pytestmark = pytest.mark.skip_t2
 
 
 def _check_pin(client, pin):
-    client.clear_session()
+    client.lock()
     with client:
         client.use_pin_sequence([pin])
         client.set_expected_responses([messages.PinMatrixRequest(), messages.Address()])
@@ -35,7 +35,7 @@ def _check_pin(client, pin):
 
 
 def _check_no_pin(client):
-    client.clear_session()
+    client.lock()
     with client:
         client.set_expected_responses([messages.Address()])
         client.call(messages.GetAddress())

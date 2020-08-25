@@ -35,7 +35,7 @@ def test_128bit_passphrase(client):
     client.use_passphrase("TREZOR")
     address = get_test_address(client)
     assert address == "mkKDUMRR1CcK8eLAzCZAjKnNbCquPoWPxN"
-    client.state = None
+
     client.clear_session()
     client.use_passphrase("ROZERT")
     address_compare = get_test_address(client)
@@ -54,7 +54,7 @@ def test_256bit_passphrase(client):
     client.use_passphrase("TREZOR")
     address = get_test_address(client)
     assert address == "mxVtGxUJ898WLzPMmy6PT1FDHD1GUCWGm7"
-    client.state = None
+
     client.clear_session()
     client.use_passphrase("ROZERT")
     address_compare = get_test_address(client)
