@@ -582,9 +582,13 @@ static void get_root_node_callback(uint32_t iter, uint32_t total) {
 }
 
 const uint8_t *config_getSeed(void) {
+  if (activeSessionCache == NULL) {
+    fsm_sendFailure(FailureType_Failure_ProcessError, "Invalid session");
+    return NULL;
+  }
+
   // root node is properly cached
-  if ((activeSessionCache != NULL) &&
-      (activeSessionCache->seedCached == sectrue)) {
+  if (activeSessionCache->seedCached == sectrue) {
     return activeSessionCache->seed;
   }
 
@@ -608,10 +612,6 @@ const uint8_t *config_getSeed(void) {
       }
     }
     char oldTiny = usbTiny(1);
-    if (activeSessionCache == NULL) {
-      // this should not happen if the Host behaves and sends Initialize first
-      session_startSession(NULL);
-    }
     mnemonic_to_seed(mnemonic, passphrase, activeSessionCache->seed,
                      get_root_node_callback);  // BIP-0039
     memzero(mnemonic, sizeof(mnemonic));
@@ -856,6 +856,12 @@ uint8_t *session_startSession(const uint8_t *received_session_id) {
   sessionsCache[session_index].last_use = sessionUseCounter;
   activeSessionCache = sessionsCache + session_index;
   return activeSessionCache->id;
+}
+
+void session_endCurrentSession(void) {
+  if (activeSessionCache == NULL) return;
+  session_clearCache(activeSessionCache);
+  activeSessionCache = NULL;
 }
 
 bool session_isUnlocked(void) { return sectrue == storage_is_unlocked(); }
