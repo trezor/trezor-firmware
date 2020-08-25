@@ -4,12 +4,13 @@ from typing import Sequence, Tuple
 
 import attr
 
+from . import firmware
+
 try:
     from PIL import Image
 except ImportError:
     Image = None
 
-from . import firmware
 
 RGBPixel = Tuple[int, int, int]
 
@@ -66,25 +67,28 @@ class Toif:
     size = attr.ib()  # type: Tuple[int, int]
     data = attr.ib()  # type: bytes
 
-    def _expected_data_length(self) -> int:
+    @data.validator
+    def check_data_size(self, _, value):
         width, height = self.size
         if self.mode is firmware.ToifMode.grayscale:
-            return width * height // 2
+            expected_size = width * height // 2
         else:
-            return width * height * 2
-
-    def to_image(self) -> "Image":
-        if Image is None:
-            raise RuntimeError("PIL is not available. Please install via 'pip install Pillow'")
-
+            expected_size = width * height * 2
         uncompressed = _decompress(self.data)
-        expected_size = self._expected_data_length()
         if len(uncompressed) != expected_size:
             raise ValueError(
                 "Uncompressed data is {} bytes, expected {}".format(
                     len(uncompressed), expected_size
                 )
             )
+
+    def to_image(self) -> "Image":
+        if Image is None:
+            raise RuntimeError(
+                "PIL is not available. Please install via 'pip install Pillow'"
+            )
+
+        uncompressed = _decompress(self.data)
 
         if self.mode is firmware.ToifMode.grayscale:
             pil_mode = "L"
@@ -118,7 +122,9 @@ def load(filename: str) -> Toif:
 
 def from_image(image: "Image", background=(0, 0, 0, 255)) -> Toif:
     if Image is None:
-        raise RuntimeError("PIL is not available. Please install via 'pip install Pillow'")
+        raise RuntimeError(
+            "PIL is not available. Please install via 'pip install Pillow'"
+        )
 
     if image.mode == "RGBA":
         background = Image.new("RGBA", image.size, background)

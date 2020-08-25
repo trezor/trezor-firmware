@@ -446,20 +446,6 @@ class TrezorClientDebugLink(TrezorClient):
     def _raw_read(self):
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
 
-        # if SCREENSHOT and self.debug:
-        #     from PIL import Image
-
-        #     layout = self.debug.state().layout
-        #     im = Image.new("RGB", (128, 64))
-        #     pix = im.load()
-        #     for x in range(128):
-        #         for y in range(64):
-        #             rx, ry = 127 - x, 63 - y
-        #             if (ord(layout[rx + (ry / 8) * 128]) & (1 << (ry % 8))) > 0:
-        #                 pix[x, y] = (255, 255, 255)
-        #     im.save("scr%05d.png" % self.screenshot_id)
-        #     self.screenshot_id += 1
-
         resp = super()._raw_read()
         resp = self._filter_message(resp)
         self._check_request(resp)
