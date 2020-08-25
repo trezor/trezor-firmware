@@ -354,8 +354,8 @@ void fsm_msgLockDevice(const LockDevice *msg) {
 
 void fsm_msgEndSession(const EndSession *msg) {
   (void)msg;
-  // TODO
-  fsm_sendFailure(FailureType_Failure_FirmwareError, "Not implemented");
+  session_endCurrentSession();
+  fsm_sendSuccess(_("Session ended"));
 }
 
 void fsm_msgApplySettings(const ApplySettings *msg) {
