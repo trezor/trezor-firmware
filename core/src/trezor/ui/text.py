@@ -2,14 +2,18 @@ from micropython import const
 
 from trezor import ui
 
+from .model import text as model
+from .model.text import (
+    TEXT_HEADER_HEIGHT,
+    TEXT_LINE_HEIGHT,
+    TEXT_LINE_HEIGHT_HALF,
+    TEXT_MARGIN_LEFT,
+    TEXT_MAX_LINES,
+)
+
 if False:
     from typing import List, Union
 
-TEXT_HEADER_HEIGHT = const(48)
-TEXT_LINE_HEIGHT = const(26)
-TEXT_LINE_HEIGHT_HALF = const(13)
-TEXT_MARGIN_LEFT = const(14)
-TEXT_MAX_LINES = const(5)
 
 # needs to be different from all colors and font ids
 BR = const(-256)
@@ -157,7 +161,7 @@ class Text(ui.Component):
 
     def on_render(self) -> None:
         if self.repaint:
-            ui.header(
+            model.header(
                 self.header_text,
                 self.header_icon,
                 ui.TITLE_GREY,

@@ -10,6 +10,8 @@ from trezor.ui.button import (
 )
 from trezor.ui.loader import Loader, LoaderDefault
 
+from .model import confirm as model
+
 if __debug__:
     from apps.debug import swipe_signal, confirm_signal
 
@@ -24,10 +26,10 @@ INFO = object()
 
 
 class Confirm(ui.Layout):
-    DEFAULT_CONFIRM = res.load(ui.ICON_CONFIRM)
-    DEFAULT_CONFIRM_STYLE = ButtonConfirm
-    DEFAULT_CANCEL = res.load(ui.ICON_CANCEL)
-    DEFAULT_CANCEL_STYLE = ButtonCancel
+    DEFAULT_CONFIRM = model.DEFAULT_CONFIRM
+    DEFAULT_CONFIRM_STYLE = model.DEFAULT_CONFIRM_STYLE
+    DEFAULT_CANCEL = model.DEFAULT_CANCEL
+    DEFAULT_CANCEL_STYLE = model.DEFAULT_CANCEL_STYLE
 
     def __init__(
         self,
@@ -41,12 +43,8 @@ class Confirm(ui.Layout):
         self.content = content
 
         if confirm is not None:
-            if cancel is None:
-                area = ui.grid(4, n_x=1)
-            elif major_confirm:
-                area = ui.grid(13, cells_x=2)
-            else:
-                area = ui.grid(9, n_x=2)
+
+            area = model.confirm_button_area(True, cancel is None, major_confirm)
             self.confirm = Button(
                 area, confirm, confirm_style
             )  # type: Optional[Button]
@@ -55,12 +53,7 @@ class Confirm(ui.Layout):
             self.confirm = None
 
         if cancel is not None:
-            if confirm is None:
-                area = ui.grid(4, n_x=1)
-            elif major_confirm:
-                area = ui.grid(12, cells_x=1)
-            else:
-                area = ui.grid(8, n_x=2)
+            area = model.confirm_button_area(False, confirm is None, major_confirm)
             self.cancel = Button(area, cancel, cancel_style)  # type: Optional[Button]
             self.cancel.on_click = self.on_cancel  # type: ignore
         else:
