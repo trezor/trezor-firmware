@@ -3,9 +3,13 @@ import zlib
 from typing import Sequence, Tuple
 
 import attr
-from PIL import Image
 
-from .. import firmware
+try:
+    from PIL import Image
+except ImportError:
+    Image = None
+
+from . import firmware
 
 RGBPixel = Tuple[int, int, int]
 
@@ -69,7 +73,10 @@ class Toif:
         else:
             return width * height * 2
 
-    def to_image(self) -> Image:
+    def to_image(self) -> "Image":
+        if Image is None:
+            raise RuntimeError("PIL is not available. Please install via 'pip install Pillow'")
+
         uncompressed = _decompress(self.data)
         expected_size = self._expected_data_length()
         if len(uncompressed) != expected_size:
@@ -109,7 +116,10 @@ def load(filename: str) -> Toif:
         return from_bytes(f.read())
 
 
-def from_image(image: Image, background=(0, 0, 0, 255)) -> Toif:
+def from_image(image: "Image", background=(0, 0, 0, 255)) -> Toif:
+    if Image is None:
+        raise RuntimeError("PIL is not available. Please install via 'pip install Pillow'")
+
     if image.mode == "RGBA":
         background = Image.new("RGBA", image.size, background)
         blend = Image.alpha_composite(background, image)

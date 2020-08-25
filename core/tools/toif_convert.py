@@ -3,7 +3,7 @@
 import click
 from PIL import Image
 
-from trezorlib._internal import toif
+from trezorlib import toif
 
 
 @click.command()

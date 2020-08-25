@@ -6,7 +6,7 @@ import sys
 import click
 from PIL import Image
 
-from trezorlib._internal import toif
+from trezorlib import toif
 
 HERE = Path(__file__).parent.resolve()
 ROOT = HERE.parent.parent
