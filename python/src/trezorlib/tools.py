@@ -191,7 +191,7 @@ def normalize_nfc(txt):
     This seems to be bitcoin-qt standard of doing things.
     """
     if isinstance(txt, bytes):
-        txt = txt.decode()
+        return txt
     return unicodedata.normalize("NFC", txt).encode()
 
 
