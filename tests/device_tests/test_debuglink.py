@@ -29,6 +29,7 @@ class TestDebuglink:
 
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_mnemonic(self, client):
+        client.ensure_unlocked()
         mnemonic = client.debug.state().mnemonic_secret
         assert mnemonic == MNEMONIC12.encode()
 

@@ -128,9 +128,7 @@ def client(request):
             no_backup=setup_params["no_backup"],
         )
 
-        if setup_params["pin"]:
-            # ClearSession locks the device. We only do that if the PIN is set.
-            client.clear_session()
+        client.clear_session()
 
     if run_ui_tests:
         with ui_tests.screen_recording(client, request):
