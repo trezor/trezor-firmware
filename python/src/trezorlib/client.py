@@ -88,9 +88,9 @@ class TrezorClient:
         LOG.info("creating client instance for device: {}".format(transport.get_path()))
         self.transport = transport
         self.ui = ui
-        self.session_id = session_id
         self.session_counter = 0
-        self.init_device()
+        self.session_id = session_id
+        self.init_device(session_id=session_id)
 
     def open(self):
         if self.session_counter == 0:
@@ -294,6 +294,11 @@ class TrezorClient:
         if not isinstance(resp, messages.Features):
             raise exceptions.TrezorException("Unexpected response to Initialize")
 
+        if resp.session_id == self.session_id:
+            LOG.info("Successfully resumed session")
+        elif session_id is not None:
+            LOG.info("Failed to resume session")
+
         # TT < 2.3.0 compatibility:
         # _refresh_features will clear out the session_id field. We want this function
         # to return its value, so that callers can rely on it being either a valid
@@ -385,6 +390,7 @@ class TrezorClient:
         The session will become invalid until `init_device()` is called again.
         If passphrase is enabled, further actions will prompt for it again.
         """
+        # since: 2.3.4, 1.9.4
         self.call(messages.EndSession())
         self.session_id = None
 
@@ -400,4 +406,4 @@ class TrezorClient:
         # call LockDevice manually to save one refresh_features() call
         self.call(messages.LockDevice())
         self.end_session()
-        self.init_device()
+        self.init_device(new_session=True)
