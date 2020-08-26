@@ -140,15 +140,15 @@ def _render_background(
     _ax, ay, _aw, ah = area
     if s.radius > 0:
         _bar_radius1(
-            ui.WIDTH - text_width - 2 if is_right else 0,  # x
+            ui.WIDTH - text_width - 3 if is_right else 0,  # x
             ay,  # y
-            text_width + 2,  # w
+            text_width + 3,  # w
             ah,  # h
             s.bg_color,  # fgcolor
         )
     else:
         display.bar(
-            ui.WIDTH - text_width + 2 if is_right else 0,  # x
+            ui.WIDTH - text_width + 1 if is_right else 0,  # x
             ay,  # y
             text_width - 1,  # w
             ah,  # h
@@ -159,10 +159,10 @@ def _render_background(
 def _render_content(
     text: str, s: ButtonStyleStateType, is_right: bool, _area: ui.Area,
 ) -> None:
-    h_border = 1 if s.radius > 0 else 0
+    h_border = 2 if s.radius > 0 else 0
     if is_right:
         display.text_right(
-            ui.WIDTH - 2 * h_border + 1,
+            ui.WIDTH - h_border + 1,
             ui.HEIGHT - 2,
             text,
             s.text_style,
