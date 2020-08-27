@@ -6,8 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 _At the moment, the project does **not** adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
 
-## [0.12.2] - unreleased
-[0.12.2]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.1...master
+## [0.12.2] - 2020-08-27
+[0.12.2]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.1...python/v0.12.2
 
 ### Added
 
