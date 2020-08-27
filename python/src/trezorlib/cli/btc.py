@@ -110,6 +110,7 @@ def get_address(
 
     For BIP-45 multisig:
 
+    \b
     $ trezorctl btc get-public-node -n m/45h/0
     xpub0101
     $ trezorctl btc get-address -n m/45h/0/0/7 -m 3 -x xpub0101 -x xpub0202 -x xpub0303
