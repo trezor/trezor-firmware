@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-SITE="https://firmware.corp.sldev.cz/upgrade_tests/"
+SITE="https://firmware.corp.sldev.cz/releases/emulators/"
 cd "$(dirname "$0")"
 
 # download all emulators without index files, without directories and only if not present
