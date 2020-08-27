@@ -238,7 +238,7 @@ legacy fw btconly debug build:
     - trezor-fw-btconly-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
-legacy emu regular build:
+legacy emu regular debug build:
   stage: build
   needs: []
   variables:
@@ -252,7 +252,7 @@ legacy emu regular build:
     - legacy/firmware/trezor.elf
     expire_in: 1 week
 
-legacy emu btconly build:
+legacy emu btconly debug build:
   stage: build
   needs: []
   variables:

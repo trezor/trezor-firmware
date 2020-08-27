@@ -148,19 +148,18 @@ release legacy fw btconly debug deploy:
   tags:
     - deploy
 
-# Upgrade tests
+# Emulators, used also for upgrade tests
 
-upgrade tests core deploy:
+release core unix debug deploy:
   stage: deploy
   variables:
-    DEPLOY_PATH: "${DEPLOY_BASE_DIR}/upgrade_tests"
+    DEPLOY_PATH: "${DEPLOY_BASE_DIR}/releases/emulators"
   before_script: []  # no pipenv
   needs: ["core unix frozen debug build"]
   script:
-    - TAG=`git tag --points-at HEAD | grep "core" | sed "s/\//-/"`
-    - "[[ $TAG == '' ]] && echo 'Tag is not core/*: exiting.' && exit 1"
-    - DEST=${DEPLOY_PATH}/trezor-emu-$TAG
+    - DEST="$DEPLOY_PATH/trezor-emu-core-$CORE_VERSION-$CI_COMMIT_SHORT_SHA"
     - echo "Deploying to $DEST"
+    - nix-shell -p patchelf --run "patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 core/build/unix/trezor-emu-core"
     - rsync --delete -va core/build/unix/trezor-emu-core "$DEST"
   only:
     - /^core\//
@@ -169,20 +168,36 @@ upgrade tests core deploy:
   tags:
     - deploy
 
-upgrade tests legacy deploy:
+release legacy unix debug deploy:
   stage: deploy
   variables:
-    DEPLOY_PATH: "${DEPLOY_BASE_DIR}/upgrade_tests"
+    DEPLOY_PATH: "${DEPLOY_BASE_DIR}/releases/emulators"
   before_script: []  # no pipenv
-  needs: ["legacy emu regular build"]
+  needs: ["legacy emu regular debug build"]
   script:
-    - TAG=`git tag --points-at HEAD | grep "legacy" | sed "s/\//-/"`
-    - "[[ $TAG == '' ]] && echo 'Tag is not legacy/*: exiting.' && exit 1"
-    - DEST=${DEPLOY_PATH}/trezor-emu-$TAG
+    - DEST="$DEPLOY_PATH/trezor-emu-legacy-$LEGACY_VERSION-$CI_COMMIT_SHORT_SHA"
     - echo "Deploying to $DEST"
+    - nix-shell -p patchelf --run "patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 legacy/firmware/trezor.elf"
     - rsync --delete -va legacy/firmware/trezor.elf "$DEST"
   only:
     - /^legacy\//
+  except:
+    - branches  # run for tags only
+  tags:
+    - deploy
+
+release core macos debug deploy:
+  stage: deploy
+  variables:
+    DEPLOY_PATH: "${DEPLOY_BASE_DIR}/releases/emulators/macos"
+  before_script: []  # no pipenv
+  needs: ["core unix frozen debug build"]
+  script:
+    - DEST="$DEPLOY_PATH/trezor-emu-macos-$CORE_VERSION-$CI_COMMIT_SHORT_SHA"
+    - echo "Deploying to $DEST"
+    - rsync --delete -va core/build/unix/trezor-emu-core "$DEST"
+  only:
+    - /^core\//
   except:
     - branches  # run for tags only
   tags:

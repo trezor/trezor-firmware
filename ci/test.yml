@@ -196,7 +196,7 @@ crypto test:
 
 legacy test:
   stage: test
-  needs: ["legacy emu regular build"]
+  needs: ["legacy emu regular debug build"]
   variables:
     EMULATOR: "1"
   script:
@@ -212,7 +212,7 @@ legacy test:
 
 legacy btconly test:
   stage: test
-  needs: ["legacy emu btconly build"]
+  needs: ["legacy emu btconly debug build"]
   variables:
     EMULATOR: "1"
     EMULATOR_BINARY: "firmware/trezor-bitcoinonly.elf"
@@ -231,7 +231,7 @@ legacy btconly test:
 
 legacy upgrade test:
   stage: test
-  needs: ["legacy emu regular build"]
+  needs: ["legacy emu regular debug build"]
   variables:
     TREZOR_UPGRADE_TEST: "legacy"
   script:
