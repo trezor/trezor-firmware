@@ -38,7 +38,14 @@ def image_to_t1(filename: str) -> bytes:
             "Image library is missing. Please install via 'pip install Pillow'."
         )
 
-    image = Image.open(filename)
+    if filename.endswith(".toif"):
+        raise click.ClickException("TOIF images not supported on Trezor One")
+
+    try:
+        image = Image.open(filename)
+    except Exception as e:
+        raise click.ClickException("Failed to load image") from e
+
     if image.size != (128, 64):
         raise click.ClickException("Wrong size of the image - should be 128x64")
 
@@ -73,7 +80,6 @@ def image_to_tt(filename: str) -> bytes:
     if toif_image.mode != firmware.ToifMode.full_color:
         raise click.ClickException("Wrong image mode - should be full_color")
 
-    toif_image = toif.from_image(image)
     return toif_image.to_bytes()
 
 
