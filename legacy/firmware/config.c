@@ -583,7 +583,7 @@ static void get_root_node_callback(uint32_t iter, uint32_t total) {
 
 const uint8_t *config_getSeed(void) {
   if (activeSessionCache == NULL) {
-    fsm_sendFailure(FailureType_Failure_ProcessError, "Invalid session");
+    fsm_sendFailure(FailureType_Failure_InvalidSession, "Invalid session");
     return NULL;
   }
 

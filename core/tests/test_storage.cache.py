@@ -4,7 +4,7 @@ from mock_storage import mock_storage
 from storage import cache
 from trezor.messages.Initialize import Initialize
 from trezor.messages.EndSession import EndSession
-from trezor.wire import DUMMY_CONTEXT, ProcessError
+from trezor.wire import DUMMY_CONTEXT, InvalidSession
 
 from apps.base import handle_Initialize, handle_EndSession
 
@@ -22,9 +22,9 @@ class TestStorageCache(unittest.TestCase):
         self.assertNotEqual(session_id_a, session_id_b)
 
         cache.clear_all()
-        with self.assertRaises(ProcessError):
+        with self.assertRaises(InvalidSession):
             cache.set(KEY, "something")
-        with self.assertRaises(ProcessError):
+        with self.assertRaises(InvalidSession):
             cache.get(KEY)
 
     def test_end_session(self):
@@ -33,7 +33,7 @@ class TestStorageCache(unittest.TestCase):
         cache.set(KEY, "A")
         cache.end_current_session()
         self.assertFalse(cache.is_session_started())
-        self.assertRaises(ProcessError, cache.get, KEY)
+        self.assertRaises(InvalidSession, cache.get, KEY)
 
         # ending an ended session should be a no-op
         cache.end_current_session()
@@ -80,7 +80,7 @@ class TestStorageCache(unittest.TestCase):
         self.assertEqual(cache.get(KEY), "hello")
 
         cache.clear_all()
-        with self.assertRaises(ProcessError):
+        with self.assertRaises(InvalidSession):
             cache.get(KEY)
 
     def test_decorator_mismatch(self):
@@ -162,13 +162,13 @@ class TestStorageCache(unittest.TestCase):
         self.assertEqual(cache.get(KEY), "hello")
 
     def test_EndSession(self):
-        self.assertRaises(ProcessError, cache.get, KEY)
+        self.assertRaises(InvalidSession, cache.get, KEY)
         session_id = cache.start_session()
         self.assertTrue(cache.is_session_started())
         self.assertIsNone(cache.get(KEY))
         await_result(handle_EndSession(DUMMY_CONTEXT, EndSession()))
         self.assertFalse(cache.is_session_started())
-        self.assertRaises(ProcessError, cache.get, KEY)
+        self.assertRaises(InvalidSession, cache.get, KEY)
 
 
 if __name__ == "__main__":

@@ -77,8 +77,10 @@ def test_end_session(client):
 
     client.end_session()
     assert client.session_id is None
-    with pytest.raises(TrezorFailure, match="Invalid session"):
+    with pytest.raises(TrezorFailure) as exc:
         get_test_address(client)
+    assert exc.value.code == messages.FailureType.InvalidSession
+    assert exc.value.message.endswith("Invalid session")
 
     client.init_device()
     assert client.session_id is not None
