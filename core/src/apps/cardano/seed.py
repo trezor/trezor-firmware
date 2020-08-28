@@ -4,6 +4,7 @@ from trezor.crypto import bip32
 
 from apps.common import mnemonic
 from apps.common.passphrase import get as get_passphrase
+from apps.common.seed import get_seed
 
 from .helpers import seed_namespaces
 
@@ -68,13 +69,13 @@ async def get_keychain(ctx: wire.Context) -> Keychain:
     if not device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
 
-    passphrase = await get_passphrase(ctx)
     if mnemonic.is_bip39():
+        passphrase = await get_passphrase(ctx)
         # derive the root node from mnemonic and passphrase via Cardano Icarus algorithm
         root = bip32.from_mnemonic_cardano(mnemonic.get_secret().decode(), passphrase)
     else:
         # derive the root node via SLIP-0023
-        seed = mnemonic.get_seed(passphrase)
+        seed = await get_seed(ctx)
         root = bip32.from_seed(seed, "ed25519 cardano seed")
 
     keychain = Keychain(root)
