@@ -1,0 +1,36 @@
+{
+  "setup": {
+    "mnemonic": "all all all all all all all all all all all all",
+    "passphrase": ""
+  },
+  "tests": [
+    {
+      "parameters": {
+        "path": "m/1852'/1815'/0'/0/0",
+        "address_type": "pointer",
+        "block_index": 1,
+        "tx_index": 2,
+        "certificate_index": 3,
+        "network_id": 1,
+        "protocol_magic": 764824073
+      },
+      "result": {
+        "expected_address": "addr1gxq0nckg3ekgzuqg7w5p9mvgnd9ym28qh5grlph8xd2z92spqgpsl97q83"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/1852'/1815'/0'/0/0",
+        "address_type": "pointer",
+        "block_index": 24157,
+        "tx_index": 177,
+        "certificate_index": 42,
+        "network_id": 0,
+        "protocol_magic": 764824073
+      },
+      "result": {
+        "expected_address": "addr_test1gzq0nckg3ekgzuqg7w5p9mvgnd9ym28qh5grlph8xd2z925ph3wczvf2ag2x9t"
+      }
+    }
+  ]
+}

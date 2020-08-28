@@ -1,0 +1,39 @@
+{
+  "setup": {
+    "mnemonic": [
+        "extra extend academic bishop cricket bundle tofu goat apart victim enlarge program behavior permit course armed jerky faint language modern",
+        "extra extend academic acne away best indicate impact square oasis prospect painting voting guest either argue username racism enemy eclipse",
+        "extra extend academic arcade born dive legal hush gross briefing talent drug much home firefly toxic analysis idea umbrella slice"
+    ],
+    "passphrase": "TREZOR"
+  },
+  "tests": [
+    {
+      "parameters": {
+        "path": "m/44'/1815'/0'/0/0"
+      },
+      "result": {
+        "public_key": "bc043d84b8b891d49890edb6aced6f2d78395f255c5b6aea8878b913f83e8579",
+        "chain_code": "dc3f0d2b5cccb822335ef6213fd133f4ca934151ec44a6000aee43b8a101078c"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/44'/1815'/0'/0/1"
+      },
+      "result":  {
+        "public_key": "24c4fe188a39103db88818bc191fd8571eae7b284ebcbdf2462bde97b058a95c",
+        "chain_code": "6f7a744035f4b3ddb8f861c18446169643cc3ae85e271b4b4f0eda05cf84c65b"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/44'/1815'/0'/0/2"
+      },
+      "result":  {
+        "public_key": "831a63d381a8dab1e6e1ee991a4300fc70687aae5f97f4fcf92ed1b6c2bd99de",
+        "chain_code": "672d6af4707aba201b7940231e83dd357f92f8851b3dfdc224ef311e1b64cdeb"
+      }
+    }
+  ]
+}

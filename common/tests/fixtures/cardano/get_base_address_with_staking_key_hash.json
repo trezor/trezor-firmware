@@ -1,0 +1,68 @@
+{
+  "setup": {
+    "mnemonic": "all all all all all all all all all all all all",
+    "passphrase": ""
+  },
+  "tests": [
+    {
+      "parameters": {
+        "path": "m/1852'/1815'/4'/0/0",
+        "address_type":"base",
+        "staking_key_hash": "1bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff",
+        "network_id": 1,
+        "protocol_magic": 764824073
+      },
+      "result": {
+        "expected_address": "addr1q8v42wjda8r6mpfj40d36znlgfdcqp7jtj03ah8skh6u8wsmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsydc62k"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/1852'/1815'/4'/0/0",
+        "address_type": "base",
+        "staking_key_hash": "1bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff",
+        "network_id": 0,
+        "protocol_magic": 764824073
+      },
+      "result": {
+        "expected_address": "addr_test1qrv42wjda8r6mpfj40d36znlgfdcqp7jtj03ah8skh6u8wsmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hls8m96xf"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/1852'/1815'/4'/0/0",
+        "address_type": "base",
+        "staking_key_hash": "122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277",
+        "network_id": 1,
+        "protocol_magic": 764824073
+      },
+      "result": {
+        "expected_address": "addr1q8v42wjda8r6mpfj40d36znlgfdcqp7jtj03ah8skh6u8wsj922xhxkn6twlq2wn4q50q352annk3903tj00h45mgfms06skxl"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/1852'/1815'/0'/0/0",
+        "address_type": "base",
+        "staking_key_hash": "122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277",
+        "network_id": 0,
+        "protocol_magic": 764824073
+      },
+      "result": {
+        "expected_address": "addr_test1qzq0nckg3ekgzuqg7w5p9mvgnd9ym28qh5grlph8xd2z92sj922xhxkn6twlq2wn4q50q352annk3903tj00h45mgfmsu8d9w5"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/1852'/1815'/4'/0/0",
+        "address_type": "base",
+        "staking_key_hash": "122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277",
+        "network_id": 0,
+        "protocol_magic": 764824073
+      },
+      "result": {
+        "expected_address": "addr_test1qrv42wjda8r6mpfj40d36znlgfdcqp7jtj03ah8skh6u8wsj922xhxkn6twlq2wn4q50q352annk3903tj00h45mgfmsvvdk2q"
+      }
+    }
+  ]
+}
