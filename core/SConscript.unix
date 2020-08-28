@@ -4,6 +4,7 @@ import os
 
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
 EVERYTHING = BITCOIN_ONLY != '1'
+TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -346,7 +347,7 @@ if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', 0):
         STRIP='true', )
 
 env.Replace(
-    TREZOR_MODEL=env.get('ENV').get('TREZOR_MODEL', 'T'), )
+    TREZOR_MODEL=TREZOR_MODEL, )
 
 env.Replace(
     CCFLAGS='$COPT '
