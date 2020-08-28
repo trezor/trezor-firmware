@@ -75,7 +75,7 @@ def set(key: int, value: Any) -> None:
         _sessionless_cache[key] = value
         return
     if _active_session_id is None:
-        raise wire.ProcessError("Invalid session")
+        raise wire.InvalidSession
     _caches[_active_session_id][key] = value
 
 
@@ -83,7 +83,7 @@ def get(key: int) -> Any:
     if key & _SESSIONLESS_FLAG:
         return _sessionless_cache.get(key)
     if _active_session_id is None:
-        raise wire.ProcessError("Invalid session")
+        raise wire.InvalidSession
     return _caches[_active_session_id].get(key)
 
 
@@ -93,7 +93,7 @@ def delete(key: int) -> None:
             del _sessionless_cache[key]
         return
     if _active_session_id is None:
-        raise wire.ProcessError("Invalid session")
+        raise wire.InvalidSession
     if key in _caches[_active_session_id]:
         del _caches[_active_session_id][key]
 

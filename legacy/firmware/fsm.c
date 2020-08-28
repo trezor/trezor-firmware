@@ -170,6 +170,9 @@ void fsm_sendFailure(FailureType code, const char *text)
       case FailureType_Failure_WipeCodeMismatch:
         text = _("Wipe code mismatch");
         break;
+      case FailureType_Failure_InvalidSession:
+        text = _("Invalid session");
+        break;
       case FailureType_Failure_FirmwareError:
         text = _("Firmware error");
         break;

@@ -76,6 +76,11 @@ class WipeCodeMismatch(Error):
         super().__init__(FailureType.WipeCodeMismatch, message)
 
 
+class InvalidSession(Error):
+    def __init__(self, message: str = "Invalid session") -> None:
+        super().__init__(FailureType.InvalidSession, message)
+
+
 class FirmwareError(Error):
     def __init__(self, message: str) -> None:
         super().__init__(FailureType.FirmwareError, message)
