@@ -216,11 +216,7 @@ def list_devices(no_resolve):
     for transport in enumerate_devices():
         client = TrezorClient(transport, ui=ui.ClickUI())
         click.echo("{} - {}".format(transport, format_device_name(client.features)))
-        try:
-            # firmwares <2.3.4 do not recognize EndSession
-            client.end_session()
-        except Exception:
-            pass
+        client.end_session()
 
 
 @cli.command()

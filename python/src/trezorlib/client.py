@@ -352,7 +352,7 @@ class TrezorClient:
         return self.features.device_id
 
     @tools.session
-    def lock(self):
+    def lock(self, *, _refresh_features=True):
         """Lock the device.
 
         If the device does not have a PIN configured, this will do nothing.
@@ -365,8 +365,12 @@ class TrezorClient:
         To invalidate passphrase cache, use `end_session()`. To lock _and_ invalidate
         passphrase cache, use `clear_session()`.
         """
+        # Private argument _refresh_features can be used internally to avoid
+        # refreshing in cases where we will refresh soon anyway. This is used
+        # in TrezorClient.clear_session()
         self.call(messages.LockDevice())
-        self.refresh_features()
+        if _refresh_features:
+            self.refresh_features()
 
     @tools.session
     def ensure_unlocked(self):
@@ -391,7 +395,13 @@ class TrezorClient:
         If passphrase is enabled, further actions will prompt for it again.
         """
         # since: 2.3.4, 1.9.4
-        self.call(messages.EndSession())
+        try:
+            self.call(messages.EndSession())
+        except exceptions.TrezorFailure:
+            # A failure most likely means that the FW version does not support
+            # the EndSession call. We ignore the failure and clear the local session_id.
+            # The client-side end result is identical.
+            pass
         self.session_id = None
 
     @tools.session
@@ -403,7 +413,6 @@ class TrezorClient:
 
         Equivalent to calling `lock()`, `end_session()` and `init_device()`.
         """
-        # call LockDevice manually to save one refresh_features() call
-        self.call(messages.LockDevice())
+        self.lock(_refresh_features=False)
         self.end_session()
         self.init_device(new_session=True)
