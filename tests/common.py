@@ -14,6 +14,11 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import json
+from pathlib import Path
+
+import pytest
+
 from trezorlib import btc, tools
 from trezorlib.messages import ButtonRequestType as B
 
@@ -43,6 +48,31 @@ EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 # fmt: on
 
 TEST_ADDRESS_N = tools.parse_path("m/44h/1h/0h/0/0")
+COMMON_FIXTURES_DIR = (
+    Path(__file__).parent.resolve().parent / "common" / "tests" / "fixtures"
+)
+
+
+def parametrize_using_common_fixtures(*paths):
+    fixtures = []
+    for path in paths:
+        fixtures.append(json.loads((COMMON_FIXTURES_DIR / path).read_text()))
+
+    tests = []
+    for fixture in fixtures:
+        for test in fixture["tests"]:
+            tests.append(
+                pytest.param(
+                    test["parameters"],
+                    test["result"],
+                    marks=pytest.mark.setup_client(
+                        passphrase=fixture["setup"]["passphrase"],
+                        mnemonic=fixture["setup"]["mnemonic"],
+                    ),
+                )
+            )
+
+    return pytest.mark.parametrize("parameters, result", tests)
 
 
 def generate_entropy(strength, internal_entropy, external_entropy):

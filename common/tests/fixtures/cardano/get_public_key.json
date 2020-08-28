@@ -1,0 +1,62 @@
+{
+  "setup": {
+    "mnemonic": "all all all all all all all all all all all all",
+    "passphrase": ""
+  },
+  "tests": [
+    {
+      "parameters":{
+        "path": "m/44'/1815'/0'"
+      },
+      "result":{
+        "public_key": "c0fce1839f1a84c4e770293ac2f5e0875141b29017b7f56ab135352d00ad6966",
+        "chain_code": "07faa161c9f5464315d2855f70fdf1431d5fa39eb838767bf17b69772137452f"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/44'/1815'/1'"
+      },
+      "result": {
+        "public_key": "ea5dde31b9f551e08a5b6b2f98b8c42c726f726c9ce0a7072102ead53bd8f21e",
+        "chain_code": "70f131bb799fd659c997221ad8cae7dcce4e8da701f8101cf15307fd3a3712a1"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/1852'/1815'/0'"
+      },
+      "result": {
+        "public_key": "d507c8f866691bd96e131334c355188b1a1d0b2fa0ab11545075aab332d77d9e",
+        "chain_code": "b19657ad13ee581b56b0f8d744d66ca356b93d42fe176b3de007d53e9c4c4e7a"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/1852'/1815'/1'"
+      },
+      "result": {
+        "public_key": "140791584001446365f169c82241c7c214475000180dab39fa0588fc9c3d6d80",
+        "chain_code": "7f9f812d49816844b52e319857aa75961724ad1a146701679d02d7168622233d"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/1852'/1815'/2'"
+      },
+      "result": {
+        "public_key": "ff6ccc3097ca79fc29fe92a9639c47644746780c63acae10a9e6f03bf5c919dd",
+        "chain_code": "27d985feabf40d83a30aa4645ff008c068187559dd224ba59e26d0d2dc3598ce"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/1852'/1815'/3'"
+      },
+      "result": {
+        "public_key": "be81ace1f63f4f0cae74dd274a72d7818f238bc764ab3e0dc0beb1945b756dca",
+        "chain_code": "29034f036a162ac4f9f9f397b2d1f289754bb6633915f26b199e156f81d05c88"
+      }
+    }
+  ]
+}

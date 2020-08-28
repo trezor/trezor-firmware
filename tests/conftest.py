@@ -116,17 +116,24 @@ def client(request):
     if marker:
         setup_params.update(marker.kwargs)
 
+    use_passphrase = setup_params["passphrase"] is True or isinstance(
+        setup_params["passphrase"], str
+    )
+
     if not setup_params["uninitialized"]:
         debuglink.load_device(
             client,
             mnemonic=setup_params["mnemonic"],
             pin=setup_params["pin"],
-            passphrase_protection=setup_params["passphrase"],
+            passphrase_protection=use_passphrase,
             label="test",
             language="en-US",
             needs_backup=setup_params["needs_backup"],
             no_backup=setup_params["no_backup"],
         )
+
+        if use_passphrase and isinstance(setup_params["passphrase"], str):
+            client.use_passphrase(setup_params["passphrase"])
 
         client.clear_session()
 
