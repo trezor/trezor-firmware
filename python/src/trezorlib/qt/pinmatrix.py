@@ -32,7 +32,7 @@ try:
     from PyQt5.QtGui import QRegExpValidator
     from PyQt5.QtCore import QRegExp, Qt, QT_VERSION_STR
 except Exception:
-    from PyQt4.QtGui import (
+    from PyQt4.QtGui import (  # noqa: I
         QPushButton,
         QLineEdit,
         QSizePolicy,
@@ -44,7 +44,7 @@ except Exception:
         QVBoxLayout,
         QHBoxLayout,
     )
-    from PyQt4.QtCore import QObject, SIGNAL, QRegExp, Qt, QT_VERSION_STR
+    from PyQt4.QtCore import QObject, SIGNAL, QRegExp, Qt, QT_VERSION_STR  # noqa: I
 
 
 class PinButton(QPushButton):

@@ -20,8 +20,8 @@ import subprocess
 import time
 from pathlib import Path
 
-from trezorlib.debuglink import TrezorClientDebugLink
-from trezorlib.transport.udp import UdpTransport
+from ..debuglink import TrezorClientDebugLink
+from ..transport.udp import UdpTransport
 
 LOG = logging.getLogger(__name__)
 

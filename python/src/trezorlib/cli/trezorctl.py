@@ -290,7 +290,7 @@ def usb_reset():
     This can fix LIBUSB_ERROR_PIPE and similar errors when connecting to a device
     in a messed state.
     """
-    from trezorlib.transport.webusb import WebUsbTransport
+    from ..transport.webusb import WebUsbTransport
 
     WebUsbTransport.enumerate(usb_reset=True)
 

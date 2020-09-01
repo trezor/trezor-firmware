@@ -73,6 +73,7 @@ inotify = "*"
 
 [tool.poetry.dev-dependencies]
 scan-build = "*"
+flake8-requirements = "^1.3.2"
 
 [build-system]
 requires = ["poetry>=0.12"]
