@@ -16,6 +16,6 @@ Run [Trezor emulator](https://github.com/trezor/trezor-core/blob/master/docs/emu
 
 ## Known issues
 
-Does not work with Firefox. Firefox closes hid devices upon loss of focus.
+It does not work with some older versions of Firefox. Firefox used to close hid devices upon loss of focus.
 
-Does not work with the emulator in debug mode since the emulator doesn't start the hid interface in debug mode.
+It does not work with the emulator in debug mode since the emulator doesn't start the hid interface in debug mode.
