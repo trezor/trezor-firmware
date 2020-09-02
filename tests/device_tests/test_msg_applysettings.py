@@ -161,6 +161,8 @@ class TestMsgApplysettings:
     def test_safety_checks(self, client):
         BAD_ADDRESS = parse_path("m/0")
 
+        assert client.features.safety_checks == messages.SafetyCheckLevel.Strict
+
         with pytest.raises(
             exceptions.TrezorFailure, match="Forbidden key path"
         ), client:
@@ -173,6 +175,8 @@ class TestMsgApplysettings:
                 client, safety_checks=messages.SafetyCheckLevel.Prompt
             )
 
+        assert client.features.safety_checks == messages.SafetyCheckLevel.Prompt
+
         with client:
             client.set_expected_responses(
                 [messages.ButtonRequest(), messages.Address()]
@@ -184,6 +188,8 @@ class TestMsgApplysettings:
             device.apply_settings(
                 client, safety_checks=messages.SafetyCheckLevel.Strict
             )
+
+        assert client.features.safety_checks == messages.SafetyCheckLevel.Strict
 
         with pytest.raises(
             exceptions.TrezorFailure, match="Forbidden key path"

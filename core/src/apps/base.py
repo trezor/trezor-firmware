@@ -7,6 +7,7 @@ from trezor import config, sdcard, utils, wire, workflow
 from trezor.messages import Capability, MessageType
 from trezor.messages.Features import Features
 from trezor.messages.PreauthorizedRequest import PreauthorizedRequest
+from trezor.messages.SafetyCheckLevel import Prompt, Strict
 from trezor.messages.Success import Success
 
 from apps.common import mnemonic
@@ -92,6 +93,7 @@ def get_features() -> Features:
         f.sd_protection = storage.sd_salt.is_enabled()
         f.wipe_code_protection = config.has_wipe_code()
         f.passphrase_always_on_device = storage.device.get_passphrase_always_on_device()
+        f.safety_checks = Prompt if storage.device.unsafe_prompts_allowed() else Strict
 
     return f
 
