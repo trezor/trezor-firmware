@@ -298,7 +298,7 @@ def _load_fido_apps():
 
 # ====== support info ======
 
-RELEASES_URL = "https://beta-wallet.trezor.io/data/firmware/{}/releases.json"
+RELEASES_URL = "https://data.trezor.io/firmware/{}/releases.json"
 MISSING_SUPPORT_MEANS_NO = ("connect", "webwallet")
 VERSIONED_SUPPORT_INFO = ("trezor1", "trezor2")
 
