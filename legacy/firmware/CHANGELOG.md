@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## 1.9.4 [to be released on 6th October 2020]
+## 1.9.4 [to be released on 4th November 2020]
 
 ### Added
 
@@ -18,7 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Security
 
-## 1.9.3 [to be released on 2nd September 2020]
+## 1.9.3 [2nd September 2020]
 
 ### Added
 - XVG support.  [#1165]

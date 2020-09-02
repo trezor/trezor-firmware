@@ -4,9 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## 2.3.4 [to be released on 6th October 2020]
+## 2.3.4 [to be released on 4th November 2020]
 
 ### Added
+- CoinJoin preauthorization and siging flow.  [#1053]
 
 ### Changed
 
@@ -18,11 +19,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Security
 
-## 2.3.3 [to be released on 2nd September 2020]
+## 2.3.3 [2nd September 2020]
 
 ### Added
 - Running the frozen version of the emulator doesn't need arguments.  [#1115]
-- CoinJoin preauthorization and siging flow.  [#1053]
 - XVG support.  [#1165]
 - Hard limit on transaction fees. Can be disabled using `safety-checks`. [#1087]
 
