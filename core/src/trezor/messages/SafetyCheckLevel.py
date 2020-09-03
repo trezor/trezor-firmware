@@ -4,4 +4,5 @@ if False:
     from typing_extensions import Literal
 
 Strict = 0  # type: Literal[0]
-Prompt = 1  # type: Literal[1]
+PromptAlways = 1  # type: Literal[1]
+PromptTemporarily = 2  # type: Literal[2]
