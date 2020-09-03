@@ -20,3 +20,4 @@ class RctType:
     """
 
     Bulletproof2 = 4
+    CLSAG = 5
