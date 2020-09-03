@@ -28,7 +28,7 @@ except ImportError:
 ROTATION = {"north": 0, "east": 90, "south": 180, "west": 270}
 SAFETY_LEVELS = {
     "strict": messages.SafetyCheckLevel.Strict,
-    "prompt": messages.SafetyCheckLevel.Prompt,
+    "prompt": messages.SafetyCheckLevel.PromptTemporarily,
 }
 
 
@@ -190,18 +190,23 @@ def homescreen(client, filename):
 
 
 @cli.command()
+@click.option(
+    "--always", is_flag=True, help='Persist the "prompt" setting across Trezor reboots.'
+)
 @click.argument("level", type=ChoiceType(SAFETY_LEVELS))
 @with_client
-def safety_checks(client, level):
+def safety_checks(client, always, level):
     """Set safety check level.
 
-    Set to "strict" to get the full Trezor security.
+    Set to "strict" to get the full Trezor security (default setting).
 
     Set to "prompt" if you want to be able to allow potentially unsafe actions, such as
     mismatching coin keys or extreme fees.
 
     This is a power-user feature. Use with caution.
     """
+    if always and level == messages.SafetyCheckLevel.PromptTemporarily:
+        level = messages.SafetyCheckLevel.PromptAlways
     return device.apply_settings(client, safety_checks=level)
 
 
