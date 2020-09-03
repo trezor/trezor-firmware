@@ -60,7 +60,6 @@ class TestMsgSigntxKomodo:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        trezor_core = client.features.model != "1"
         with client:
             client.set_expected_responses(
                 [
@@ -71,7 +70,7 @@ class TestMsgSigntxKomodo:
                     request_extra_data(0, 11, TXHASH_2807c),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
-                    (trezor_core, proto.ButtonRequest(code=B.SignTx)),
+                    proto.ButtonRequest(code=B.SignTx),
                     proto.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_output(0),
@@ -120,7 +119,6 @@ class TestMsgSigntxKomodo:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        trezor_core = client.features.model != "1"
         with client:
             client.set_expected_responses(
                 [
@@ -133,7 +131,7 @@ class TestMsgSigntxKomodo:
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
                     proto.ButtonRequest(code=B.ConfirmOutput),
-                    (trezor_core, proto.ButtonRequest(code=B.SignTx)),
+                    proto.ButtonRequest(code=B.SignTx),
                     proto.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_output(0),

@@ -35,6 +35,7 @@ class TestApprover(unittest.TestCase):
             TxInputType(
                 amount=denomination + 1000000 * (i + 1),
                 script_type=InputScriptType.EXTERNAL,
+                sequence=0xffffffff,
             ) for i in range(99)
         ]
 
@@ -45,6 +46,7 @@ class TestApprover(unittest.TestCase):
                 address_n=[H_(84), H_(0), H_(0), 0, 1],
                 amount=denomination + 1000000,
                 script_type=InputScriptType.SPENDWITNESS,
+                sequence=0xffffffff,
             )
         )
 

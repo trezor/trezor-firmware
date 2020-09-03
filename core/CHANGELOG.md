@@ -35,13 +35,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Deprecated
 
 ### Removed
-- ETP, GIN, PTC, ZEL support
+- Remove ETP, GIN, PTC, ZEL support.
+- Drop support for signing Zcash v3 transactions.  [#982] 
 
 ### Fixed
 - CRW addresses are properly generated.  [#1139]
 - Fix boot loop after uploading invalid homescreen.  [#1118]
+- Allow 49/x not 49/x' for Casa.  [#1190]
+- Make sure Homescreen is properly initialized.  [#1095] 
 
 ### Security
+- Show non-empty passphrase on device when it was entered on host.
+- Show warning if nLockTime is set but ineffective due to all nSequence values being 0xffffffff.
 
 ## 2.3.2 [5th August 2020]
 
@@ -268,6 +273,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 [#948]: https://github.com/trezor/trezor-firmware/issues/948
 [#958]: https://github.com/trezor/trezor-firmware/issues/958
+[#982]: https://github.com/trezor/trezor-firmware/issues/982
 [#1027]: https://github.com/trezor/trezor-firmware/issues/1027
 [#1030]: https://github.com/trezor/trezor-firmware/issues/1030
 [#1042]: https://github.com/trezor/trezor-firmware/issues/1042
@@ -278,6 +284,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1074]: https://github.com/trezor/trezor-firmware/issues/1074
 [#1087]: https://github.com/trezor/trezor-firmware/issues/1087
 [#1089]: https://github.com/trezor/trezor-firmware/issues/1089
+[#1095]: https://github.com/trezor/trezor-firmware/issues/1095
 [#1098]: https://github.com/trezor/trezor-firmware/issues/1098
 [#1115]: https://github.com/trezor/trezor-firmware/issues/1115
 [#1118]: https://github.com/trezor/trezor-firmware/issues/1118
@@ -287,3 +294,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1165]: https://github.com/trezor/trezor-firmware/pull/1165
 [#1173]: https://github.com/trezor/trezor-firmware/pull/1173
 [#1188]: https://github.com/trezor/trezor-firmware/issues/1188
+[#1190]: https://github.com/trezor/trezor-firmware/issues/1190

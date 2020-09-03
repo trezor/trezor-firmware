@@ -137,7 +137,12 @@ def test_session_recycling(client):
     session_id_orig = client.session_id
     with client:
         client.set_expected_responses(
-            [messages.PassphraseRequest(), messages.Address()]
+            [
+                messages.PassphraseRequest(),
+                messages.ButtonRequest(),
+                messages.ButtonRequest(),
+                messages.Address(),
+            ]
         )
         client.use_passphrase("TREZOR")
         address = get_test_address(client)

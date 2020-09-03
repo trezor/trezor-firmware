@@ -101,13 +101,21 @@ async def confirm_change_count_over_threshold(
     await require_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
-async def confirm_nondefault_locktime(ctx: wire.Context, lock_time: int) -> None:
-    text = Text("Confirm locktime", ui.ICON_SEND, ui.GREEN)
-    text.normal("Locktime for this transaction is set to")
-    if lock_time < _LOCKTIME_TIMESTAMP_MIN_VALUE:
-        text.normal("blockheight:")
+async def confirm_nondefault_locktime(
+    ctx: wire.Context, lock_time: int, lock_time_disabled: bool
+) -> None:
+    if lock_time_disabled:
+        text = Text("Warning", ui.ICON_SEND, ui.GREEN)
+        text.normal("Locktime is set but will", "have no effect.")
+        text.br_half()
     else:
-        text.normal("timestamp:")
-    text.bold(str(lock_time))
+        text = Text("Confirm locktime", ui.ICON_SEND, ui.GREEN)
+        text.normal("Locktime for this", "transaction is set to")
+        if lock_time < _LOCKTIME_TIMESTAMP_MIN_VALUE:
+            text.normal("blockheight:")
+        else:
+            text.normal("timestamp:")
+        text.bold(str(lock_time))
+
     text.normal("Continue?")
     await require_confirm(ctx, text, ButtonRequestType.SignTx)

@@ -14,10 +14,12 @@ from trezor.messages.TxOutputBinType import TxOutputBinType
 from trezor.messages.TxOutputType import TxOutputType
 from trezor.messages.TxRequest import TxRequest
 
+from apps.common import paths
 from apps.common.coininfo import CoinInfo
 
 from .. import common
 from ..writers import TX_HASH_SIZE
+from . import layout
 
 if False:
     from typing import Any, Awaitable
@@ -27,57 +29,86 @@ if False:
 # ===
 
 
-class UiConfirmOutput:
+class UiConfirm:
+    def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
+        raise NotImplementedError
+
+
+class UiConfirmOutput(UiConfirm):
     def __init__(self, output: TxOutputType, coin: CoinInfo):
         self.output = output
         self.coin = coin
 
+    def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
+        return layout.confirm_output(ctx, self.output, self.coin)
+
     __eq__ = utils.obj_eq
 
 
-class UiConfirmTotal:
+class UiConfirmTotal(UiConfirm):
     def __init__(self, spending: int, fee: int, coin: CoinInfo):
         self.spending = spending
         self.fee = fee
         self.coin = coin
 
+    def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
+        return layout.confirm_total(ctx, self.spending, self.fee, self.coin)
+
     __eq__ = utils.obj_eq
 
 
-class UiConfirmJointTotal:
+class UiConfirmJointTotal(UiConfirm):
     def __init__(self, spending: int, total: int, coin: CoinInfo):
         self.spending = spending
         self.total = total
         self.coin = coin
 
+    def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
+        return layout.confirm_joint_total(ctx, self.spending, self.total, self.coin)
+
     __eq__ = utils.obj_eq
 
 
-class UiConfirmFeeOverThreshold:
+class UiConfirmFeeOverThreshold(UiConfirm):
     def __init__(self, fee: int, coin: CoinInfo):
         self.fee = fee
         self.coin = coin
 
+    def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
+        return layout.confirm_feeoverthreshold(ctx, self.fee, self.coin)
+
     __eq__ = utils.obj_eq
 
 
-class UiConfirmChangeCountOverThreshold:
+class UiConfirmChangeCountOverThreshold(UiConfirm):
     def __init__(self, change_count: int):
         self.change_count = change_count
 
+    def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
+        return layout.confirm_change_count_over_threshold(ctx, self.change_count)
+
     __eq__ = utils.obj_eq
 
 
-class UiConfirmForeignAddress:
+class UiConfirmForeignAddress(UiConfirm):
     def __init__(self, address_n: list):
         self.address_n = address_n
 
+    def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
+        return paths.show_path_warning(ctx, self.address_n)
+
     __eq__ = utils.obj_eq
 
 
-class UiConfirmNonDefaultLocktime:
-    def __init__(self, lock_time: int):
+class UiConfirmNonDefaultLocktime(UiConfirm):
+    def __init__(self, lock_time: int, lock_time_disabled: bool):
         self.lock_time = lock_time
+        self.lock_time_disabled = lock_time_disabled
+
+    def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
+        return layout.confirm_nondefault_locktime(
+            ctx, self.lock_time, self.lock_time_disabled
+        )
 
     __eq__ = utils.obj_eq
 
@@ -106,8 +137,8 @@ def confirm_foreign_address(address_n: list) -> Awaitable[Any]:  # type: ignore
     return (yield UiConfirmForeignAddress(address_n))
 
 
-def confirm_nondefault_locktime(lock_time: int) -> Awaitable[Any]:  # type: ignore
-    return (yield UiConfirmNonDefaultLocktime(lock_time))
+def confirm_nondefault_locktime(lock_time: int, lock_time_disabled: bool) -> Awaitable[Any]:  # type: ignore
+    return (yield UiConfirmNonDefaultLocktime(lock_time, lock_time_disabled))
 
 
 def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[Any]:  # type: ignore

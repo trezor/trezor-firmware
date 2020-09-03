@@ -37,6 +37,8 @@
 #include "timer.h"
 #include "util.h"
 
+#define LOCKTIME_TIMESTAMP_MIN_VALUE 500000000
+
 #if !BITCOIN_ONLY
 
 static const char *slip44_extras(uint32_t coin_type) {
@@ -450,6 +452,25 @@ void layoutChangeCountOverThreshold(uint32_t change_count) {
                     _("Continue?"), NULL);
 }
 
+void layoutConfirmNondefaultLockTime(uint32_t lock_time,
+                                     bool lock_time_disabled) {
+  if (lock_time_disabled) {
+    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                      _("Warning!"), _("Locktime is set but"),
+                      _("will have no effect."), NULL, _("Continue?"), NULL);
+
+  } else {
+    char str_locktime[11] = {0};
+    snprintf(str_locktime, sizeof(str_locktime), "%" PRIu32, lock_time);
+    char *str_type = (lock_time < LOCKTIME_TIMESTAMP_MIN_VALUE) ? "blockheight:"
+                                                                : "timestamp:";
+
+    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                      _("Locktime for this"), _("transaction is set to"),
+                      str_type, str_locktime, _("Continue?"), NULL);
+  }
+}
+
 void layoutSignMessage(const uint8_t *msg, uint32_t len) {
   const char **str = NULL;
   if (!is_valid_ascii(msg, len)) {
@@ -822,6 +843,25 @@ void layoutU2FDialog(const char *verb, const char *appname) {
 }
 
 #endif
+
+void layoutShowPassphrase(const char *passphrase) {
+  if (layoutLast != layoutShowPassphrase) {
+    layoutSwipe();
+  } else {
+    oledClear();
+  }
+  const char **str =
+      split_message((const uint8_t *)passphrase, strlen(passphrase), 21);
+  for (int i = 0; i < 3; i++) {
+    oledDrawString(0, i * 9 + 4, str[i], FONT_FIXED);
+  }
+  oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 2 * 9 - 1,
+                       _("Use this passphrase?"), FONT_STANDARD);
+  oledHLine(OLED_HEIGHT - 21);
+  layoutButtonNo(_("Cancel"), &bmp_btn_cancel);
+  layoutButtonYes(_("Confirm"), &bmp_btn_confirm);
+  oledRefresh();
+}
 
 #if !BITCOIN_ONLY
 

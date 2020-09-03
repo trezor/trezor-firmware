@@ -601,6 +601,30 @@ const uint8_t *config_getSeed(void) {
       memzero(passphrase, sizeof(passphrase));
       return NULL;
     }
+    // passphrase is used - confirm on the display
+    if (passphrase[0] != 0) {
+      layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                        _("Access hidden wallet?"), NULL,
+                        _("Next screen will show"), _("the passphrase!"), NULL,
+                        NULL);
+      if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+        memzero(mnemonic, sizeof(mnemonic));
+        memzero(passphrase, sizeof(passphrase));
+        fsm_sendFailure(FailureType_Failure_ActionCancelled,
+                        _("Passphrase dismissed"));
+        layoutHome();
+        return NULL;
+      }
+      layoutShowPassphrase(passphrase);
+      if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+        memzero(mnemonic, sizeof(mnemonic));
+        memzero(passphrase, sizeof(passphrase));
+        fsm_sendFailure(FailureType_Failure_ActionCancelled,
+                        _("Passphrase dismissed"));
+        layoutHome();
+        return NULL;
+      }
+    }
     // if storage was not imported (i.e. it was properly generated or recovered)
     bool imported = false;
     config_get_bool(KEY_IMPORTED, &imported);
