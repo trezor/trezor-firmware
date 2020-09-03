@@ -6,7 +6,7 @@ if __debug__:
     try:
         from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
-        EnumTypeSafetyCheckLevel = Literal[0, 1]
+        EnumTypeSafetyCheckLevel = Literal[0, 1, 2]
     except ImportError:
         pass
 
@@ -44,5 +44,5 @@ class ApplySettings(p.MessageType):
             6: ('auto_lock_delay_ms', p.UVarintType, 0),
             7: ('display_rotation', p.UVarintType, 0),
             8: ('passphrase_always_on_device', p.BoolType, 0),
-            9: ('safety_checks', p.EnumType("SafetyCheckLevel", (0, 1)), 0),
+            9: ('safety_checks', p.EnumType("SafetyCheckLevel", (0, 1, 2)), 0),
         }

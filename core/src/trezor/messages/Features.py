@@ -8,7 +8,7 @@ if __debug__:
         from typing_extensions import Literal  # noqa: F401
         EnumTypeCapability = Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
         EnumTypeBackupType = Literal[0, 1, 2]
-        EnumTypeSafetyCheckLevel = Literal[0, 1]
+        EnumTypeSafetyCheckLevel = Literal[0, 1, 2]
     except ImportError:
         pass
 
@@ -127,5 +127,5 @@ class Features(p.MessageType):
             34: ('wipe_code_protection', p.BoolType, 0),
             35: ('session_id', p.BytesType, 0),
             36: ('passphrase_always_on_device', p.BoolType, 0),
-            37: ('safety_checks', p.EnumType("SafetyCheckLevel", (0, 1)), 0),
+            37: ('safety_checks', p.EnumType("SafetyCheckLevel", (0, 1, 2)), 0),
         }
