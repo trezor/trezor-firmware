@@ -2,22 +2,31 @@ import datetime
 import os
 import time
 
-import serial
-
 
 class Device:
-    def __init__(self, uhub_location, uhub_port, arduino_serial):
+    def __init__(self, uhub_location, device_port):
         self.uhub_location = uhub_location
-        self.uhub_port = uhub_port
-        self.arduino_serial = arduino_serial
-        self.serial = serial.Serial(arduino_serial, 9600)
+        self.device_port = device_port
+
+    def run_trezorctl(self, cmd: str):
+        full_cmd = "trezorctl "
+        full_cmd += cmd
+        print("[software/trezorctl] Running '{}'".format(full_cmd))
+        os.system(full_cmd)
+
+    def check_version(self):
+        self.run_trezorctl("get-features | grep version")
+
+    def reboot(self):
+        self.power_off()
+        self.power_on()
 
     def power_on(self):
         self.now()
         print("[hardware/usb] Turning power on...")
         os.system(
             "uhubctl -l {} -p {} -a on > /dev/null".format(
-                self.uhub_location, self.uhub_port
+                self.uhub_location, self.device_port
             )
         )
         self.wait(3)
@@ -27,7 +36,7 @@ class Device:
         print("[hardware/usb] Turning power off...")
         os.system(
             "uhubctl -l {} -p {} -r 100 -a off > /dev/null".format(
-                self.uhub_location, self.uhub_port
+                self.uhub_location, self.device_port
             )
         )
         self.wait(3)
