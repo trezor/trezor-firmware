@@ -306,7 +306,7 @@ storage test:
     when: always
 
 # Hardware
-hardware core regular device test:
+hardware core btconly device test:
   stage: test
   only:
     - schedules  # nightly build
@@ -316,7 +316,7 @@ hardware core regular device test:
     - /^hw\//
   tags:
     - tpmb
-  needs: ["core fw regular debug build"]
+  needs: ["core fw btconly debug build"]
   script:
     - cd ci/hardware_tests
     - nix-shell --run "cd ../.. && poetry install"
