@@ -68,6 +68,10 @@ async def init_transaction(
     if tsx_data.hard_fork:
         state.hard_fork = tsx_data.hard_fork
 
+    state.tx_type = (
+        signing.RctType.CLSAG if state.hard_fork >= 13 else signing.RctType.Bulletproof2
+    )
+
     # Ensure change is correct
     _check_change(state, tsx_data.outputs)
 
@@ -92,7 +96,7 @@ async def init_transaction(
 
     # Final message hasher
     state.full_message_hasher.init()
-    state.full_message_hasher.set_type_fee(signing.RctType.Bulletproof2, state.fee)
+    state.full_message_hasher.set_type_fee(state.tx_type, state.fee)
 
     # Sub address precomputation
     if tsx_data.account is not None and tsx_data.minor_indices:

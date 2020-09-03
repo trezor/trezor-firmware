@@ -71,6 +71,7 @@ class State:
 
         self.output_change = None
         self.fee = 0
+        self.tx_type = 0
 
         # wallet sub-address major index
         self.account_idx = 0

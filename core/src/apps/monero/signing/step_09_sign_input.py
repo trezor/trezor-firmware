@@ -174,6 +174,7 @@ async def sign_input(
     state.mem_trace(4, True)
 
     from apps.monero.xmr import mlsag
+    from apps.monero import signing
 
     mg_buffer = []
     ring_pubkeys = [x.key for x in src_entr.outputs if x]
@@ -182,7 +183,7 @@ async def sign_input(
 
     state.mem_trace(5, True)
 
-    if state.hard_fork and state.hard_fork >= 13:
+    if state.tx_type == signing.RctType.CLSAG:
         state.mem_trace("CLSAG")
         mlsag.generate_clsag_simple(
             state.full_message,
