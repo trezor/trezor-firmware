@@ -1356,14 +1356,21 @@ void signing_txack(TransactionType *tx) {
         signing_abort();
         return;
       }
-      if (coin->overwintered &&
-          (tx->version >= 3) != (tx->has_version_group_id)) {
-        fsm_sendFailure(FailureType_Failure_DataError,
-                        _("Version group ID must be set when version >= 3."));
-        signing_abort();
-        return;
-      }
-      if (!coin->overwintered) {
+      if (coin->overwintered) {
+        if (tx->version >= 3 && !tx->has_version_group_id) {
+          fsm_sendFailure(FailureType_Failure_DataError,
+                          _("Version group ID must be set when version >= 3."));
+          signing_abort();
+          return;
+        }
+        if (tx->version < 3 && tx->has_version_group_id) {
+          fsm_sendFailure(
+              FailureType_Failure_DataError,
+              _("Version group ID must be unset when version < 3."));
+          signing_abort();
+          return;
+        }
+      } else {  // !coin->overwintered
         if (tx->has_version_group_id) {
           fsm_sendFailure(FailureType_Failure_DataError,
                           _("Version group ID not enabled on this coin."));
