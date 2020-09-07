@@ -245,7 +245,11 @@ class Bitcoin:
     ) -> None:
         if txi.ownership_proof:
             if not verify_nonownership(
-                txi.ownership_proof, script_pubkey, bytes(), self.keychain, self.coin
+                txi.ownership_proof,
+                script_pubkey,
+                txi.commitment_data,
+                self.keychain,
+                self.coin,
             ):
                 raise wire.DataError("Invalid external input")
         else:

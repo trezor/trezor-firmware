@@ -276,6 +276,8 @@ def sanitize_tx_input(tx: TransactionType, coin: CoinInfo) -> TxInputType:
     if txi.script_type in common.SEGWIT_INPUT_SCRIPT_TYPES or txi.witness is not None:
         if not coin.segwit:
             raise wire.DataError("Segwit not enabled on this coin")
+    if txi.commitment_data and not txi.ownership_proof:
+        raise wire.DataError("commitment_data field provided but not expected.")
     return txi
 
 
