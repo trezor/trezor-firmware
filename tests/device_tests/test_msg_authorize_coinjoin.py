@@ -43,6 +43,8 @@ pytestmark = pytest.mark.skip_t1
 
 @pytest.mark.setup_client(pin=PIN)
 def test_sign_tx(client):
+    commitment_data = b"www.example.com" + (1).to_bytes(ROUND_ID_LEN, "big")
+
     with client:
         client.use_pin_sequence([PIN])
         btc.authorize_coinjoin(
@@ -67,7 +69,7 @@ def test_sign_tx(client):
             parse_path("84'/1'/0'/1/0"),
             script_type=messages.InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"www.example.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
+            commitment_data=commitment_data,
             preauthorized=True,
         )
 
@@ -81,7 +83,7 @@ def test_sign_tx(client):
             parse_path("84'/1'/0'/1/5"),
             script_type=messages.InputScriptType.SPENDWITNESS,
             user_confirmation=True,
-            commitment_data=b"www.example.com" + (1).to_bytes(ROUND_ID_LEN, "big"),
+            commitment_data=commitment_data,
             preauthorized=True,
         )
 
@@ -94,8 +96,9 @@ def test_sign_tx(client):
         prev_index=0,
         script_type=messages.InputScriptType.EXTERNAL,
         ownership_proof=bytearray.fromhex(
-            "534c001900016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c40002483045022100d4ad0374c922848c71d913fba59c81b9075e0d33e884d953f0c4b4806b8ffd0c022024740e6717a2b6a5aa03148c3a28b02c713b4e30fc8aeae67fa69eb20e8ddcd9012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
+            "534c001900016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c40002473044022072b4376c1b6c9e9e4d45158e1b6b4edfbe7b2292d8b4a60e8b0d273bcfef6b4a0220786169ab42a7663cb7d5f27ecb468da76dc2d1b7a10d1d18fbe5120e7890b9d2012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
         ),
+        commitment_data=commitment_data,
     )
     inp2 = messages.TxInputType(
         address_n=parse_path("84'/1'/0'/1/0"),
@@ -227,8 +230,9 @@ def test_unfair_fee(client):
         prev_index=0,
         script_type=messages.InputScriptType.EXTERNAL,
         ownership_proof=bytearray.fromhex(
-            "534c001900016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c40002483045022100d4ad0374c922848c71d913fba59c81b9075e0d33e884d953f0c4b4806b8ffd0c022024740e6717a2b6a5aa03148c3a28b02c713b4e30fc8aeae67fa69eb20e8ddcd9012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
+            "534c001900016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c40002473044022072b4376c1b6c9e9e4d45158e1b6b4edfbe7b2292d8b4a60e8b0d273bcfef6b4a0220786169ab42a7663cb7d5f27ecb468da76dc2d1b7a10d1d18fbe5120e7890b9d2012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
         ),
+        commitment_data=b"www.example.org" + (1).to_bytes(ROUND_ID_LEN, "big"),
     )
     inp2 = messages.TxInputType(
         address_n=parse_path("84'/1'/0'/1/0"),
@@ -303,8 +307,9 @@ def test_no_anonymity(client):
         prev_index=0,
         script_type=messages.InputScriptType.EXTERNAL,
         ownership_proof=bytearray.fromhex(
-            "534c001900016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c40002483045022100d4ad0374c922848c71d913fba59c81b9075e0d33e884d953f0c4b4806b8ffd0c022024740e6717a2b6a5aa03148c3a28b02c713b4e30fc8aeae67fa69eb20e8ddcd9012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
+            "534c001900016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c40002473044022072b4376c1b6c9e9e4d45158e1b6b4edfbe7b2292d8b4a60e8b0d273bcfef6b4a0220786169ab42a7663cb7d5f27ecb468da76dc2d1b7a10d1d18fbe5120e7890b9d2012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
         ),
+        commitment_data=b"www.example.org" + (1).to_bytes(ROUND_ID_LEN, "big"),
     )
     inp2 = messages.TxInputType(
         address_n=parse_path("84'/1'/0'/1/0"),
