@@ -28,6 +28,7 @@ class TxInputType(p.MessageType):
         decred_tree: int = None,
         witness: bytes = None,
         ownership_proof: bytes = None,
+        commitment_data: bytes = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.prev_hash = prev_hash
@@ -40,6 +41,7 @@ class TxInputType(p.MessageType):
         self.decred_tree = decred_tree
         self.witness = witness
         self.ownership_proof = ownership_proof
+        self.commitment_data = commitment_data
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -55,4 +57,5 @@ class TxInputType(p.MessageType):
             9: ('decred_tree', p.UVarintType, 0),
             13: ('witness', p.BytesType, 0),
             14: ('ownership_proof', p.BytesType, 0),
+            15: ('commitment_data', p.BytesType, 0),
         }
