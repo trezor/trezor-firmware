@@ -15,6 +15,7 @@ from ..common import BIP32_WALLET_DEPTH, SIGHASH_ALL, ecdsa_sign
 from ..ownership import verify_nonownership
 from ..verification import SignatureVerifier
 from . import approvers, helpers, progress
+from .hash143 import Hash143
 from .matchcheck import MultisigFingerprintChecker, WalletPathChecker
 
 if False:
@@ -114,19 +115,22 @@ class Bitcoin:
         self.h_inputs = None  # type: Optional[bytes]
 
         # BIP-0143 transaction hashing
-        self.init_hash143()
+        self.hash143 = self.create_hash143()
 
         progress.init(self.tx.inputs_count, self.tx.outputs_count)
 
     def create_hash_writer(self) -> HashWriter:
         return HashWriter(sha256())
 
+    def create_hash143(self) -> Hash143:
+        return Hash143()
+
     async def step1_process_inputs(self) -> None:
         for i in range(self.tx.inputs_count):
             # STAGE_REQUEST_1_INPUT in legacy
             txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
 
-            self.hash143_add_input(txi)  # all inputs are included (non-segwit as well)
+            self.hash143.add_input(txi)  # all inputs are included (non-segwit as well)
             writers.write_tx_input_check(self.h_approved, txi)
 
             if input_is_segwit(txi):
@@ -229,7 +233,7 @@ class Bitcoin:
             await self.approver.add_external_output(txo, script_pubkey)
 
         self.write_tx_output(self.h_approved, txo, script_pubkey)
-        self.hash143_add_output(txo, script_pubkey)
+        self.hash143.add_output(txo, script_pubkey)
 
     async def get_tx_digest(
         self,
@@ -240,7 +244,14 @@ class Bitcoin:
         script_pubkey: bytes,
     ) -> bytes:
         if txi.witness:
-            return self.hash143_preimage_hash(txi, public_keys, threshold)
+            return self.hash143.preimage_hash(
+                txi,
+                public_keys,
+                threshold,
+                self.tx,
+                self.coin,
+                self.get_sighash_type(txi),
+            )
         else:
             digest, _, _ = await self.get_legacy_tx_digest(i, script_pubkey)
             return digest
@@ -304,7 +315,9 @@ class Bitcoin:
         else:
             public_keys = [public_key]
             threshold = 1
-        hash143_hash = self.hash143_preimage_hash(txi, public_keys, threshold)
+        hash143_hash = self.hash143.preimage_hash(
+            txi, public_keys, threshold, self.tx, self.coin, self.get_sighash_type(txi)
+        )
 
         signature = ecdsa_sign(node, hash143_hash)
 
@@ -478,16 +491,16 @@ class Bitcoin:
         # the fork ID value.
         return self.get_sighash_type(txi) & 0xFF
 
+    @staticmethod
     def write_tx_input(
-        self,
         w: writers.Writer,
         txi: Union[TxInput, PrevInput],
         script: bytes,
     ) -> None:
         writers.write_tx_input(w, txi, script)
 
+    @staticmethod
     def write_tx_output(
-        self,
         w: writers.Writer,
         txo: Union[TxOutput, PrevOutput],
         script_pubkey: bytes,
@@ -573,74 +586,6 @@ class Bitcoin:
             pubkey,
             signature,
         )
-
-    # BIP-0143
-    # ===
-
-    def init_hash143(self) -> None:
-        self.h_prevouts = HashWriter(sha256())
-        self.h_sequence = HashWriter(sha256())
-        self.h_outputs = HashWriter(sha256())
-
-    def hash143_add_input(self, txi: TxInput) -> None:
-        writers.write_bytes_reversed(
-            self.h_prevouts, txi.prev_hash, writers.TX_HASH_SIZE
-        )
-        writers.write_uint32(self.h_prevouts, txi.prev_index)
-        writers.write_uint32(self.h_sequence, txi.sequence)
-
-    def hash143_add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
-        writers.write_tx_output(self.h_outputs, txo, script_pubkey)
-
-    def hash143_preimage_hash(
-        self, txi: TxInput, public_keys: List[bytes], threshold: int
-    ) -> bytes:
-        h_preimage = HashWriter(sha256())
-
-        # nVersion
-        writers.write_uint32(h_preimage, self.tx.version)
-
-        # hashPrevouts
-        prevouts_hash = writers.get_tx_hash(
-            self.h_prevouts, double=self.coin.sign_hash_double
-        )
-        writers.write_bytes_fixed(h_preimage, prevouts_hash, writers.TX_HASH_SIZE)
-
-        # hashSequence
-        sequence_hash = writers.get_tx_hash(
-            self.h_sequence, double=self.coin.sign_hash_double
-        )
-        writers.write_bytes_fixed(h_preimage, sequence_hash, writers.TX_HASH_SIZE)
-
-        # outpoint
-        writers.write_bytes_reversed(h_preimage, txi.prev_hash, writers.TX_HASH_SIZE)
-        writers.write_uint32(h_preimage, txi.prev_index)
-
-        # scriptCode
-        script_code = scripts.bip143_derive_script_code(
-            txi, public_keys, threshold, self.coin
-        )
-        writers.write_bytes_prefixed(h_preimage, script_code)
-
-        # amount
-        writers.write_uint64(h_preimage, txi.amount)
-
-        # nSequence
-        writers.write_uint32(h_preimage, txi.sequence)
-
-        # hashOutputs
-        outputs_hash = writers.get_tx_hash(
-            self.h_outputs, double=self.coin.sign_hash_double
-        )
-        writers.write_bytes_fixed(h_preimage, outputs_hash, writers.TX_HASH_SIZE)
-
-        # nLockTime
-        writers.write_uint32(h_preimage, self.tx.lock_time)
-
-        # nHashType
-        writers.write_uint32(h_preimage, self.get_sighash_type(txi))
-
-        return writers.get_tx_hash(h_preimage, double=self.coin.sign_hash_double)
 
 
 def input_is_segwit(txi: TxInput) -> bool:
