@@ -12,6 +12,7 @@ from .. import multisig, scripts, writers
 from ..common import ecdsa_hash_pubkey, ecdsa_sign
 from . import approvers, helpers, progress
 from .bitcoin import Bitcoin
+from .hash143 import Hash143
 
 DECRED_SERIALIZE_FULL = const(0 << 16)
 DECRED_SERIALIZE_NO_WITNESS = const(1 << 16)
@@ -33,6 +34,17 @@ if False:
     from apps.common.keychain import Keychain
 
 
+class DecredHash(Hash143):
+    def __init__(self, h_prefix: HashWriter) -> None:
+        self.h_prefix = h_prefix
+
+    def add_input(self, txi: TxInput) -> None:
+        Decred.write_tx_input(self.h_prefix, txi, bytes())
+
+    def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+        Decred.write_tx_output(self.h_prefix, txo, script_pubkey)
+
+
 class Decred(Bitcoin):
     def __init__(
         self,
@@ -42,20 +54,21 @@ class Decred(Bitcoin):
         approver: approvers.Approver,
     ) -> None:
         ensure(coin.decred)
+
+        self.h_prefix = HashWriter(blake256())
+        writers.write_uint32(self.h_prefix, tx.version | DECRED_SERIALIZE_NO_WITNESS)
+        write_bitcoin_varint(self.h_prefix, tx.inputs_count)
+
         super().__init__(tx, keychain, coin, approver)
 
         self.write_tx_header(self.serialized_tx, self.tx, witness_marker=True)
         write_bitcoin_varint(self.serialized_tx, self.tx.inputs_count)
 
-    def init_hash143(self) -> None:
-        self.h_prefix = self.create_hash_writer()
-        writers.write_uint32(
-            self.h_prefix, self.tx.version | DECRED_SERIALIZE_NO_WITNESS
-        )
-        write_bitcoin_varint(self.h_prefix, self.tx.inputs_count)
-
     def create_hash_writer(self) -> HashWriter:
         return HashWriter(blake256())
+
+    def create_hash143(self) -> Hash143:
+        return DecredHash(self.h_prefix)
 
     async def step2_approve_outputs(self) -> None:
         write_bitcoin_varint(self.serialized_tx, self.tx.outputs_count)
@@ -148,14 +161,8 @@ class Decred(Bitcoin):
         if txo_bin.decred_script_version != 0:
             raise wire.ProcessError("Cannot use utxo that has script_version != 0")
 
-    def hash143_add_input(self, txi: TxInput) -> None:
-        self.write_tx_input(self.h_prefix, txi, bytes())
-
-    def hash143_add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
-        self.write_tx_output(self.h_prefix, txo, script_pubkey)
-
+    @staticmethod
     def write_tx_input(
-        self,
         w: writers.Writer,
         txi: Union[TxInput, PrevInput],
         script: bytes,
@@ -165,8 +172,8 @@ class Decred(Bitcoin):
         writers.write_uint8(w, txi.decred_tree or 0)
         writers.write_uint32(w, txi.sequence)
 
+    @staticmethod
     def write_tx_output(
-        self,
         w: writers.Writer,
         txo: Union[TxOutput, PrevOutput],
         script_pubkey: bytes,

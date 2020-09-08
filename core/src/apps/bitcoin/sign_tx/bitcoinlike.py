@@ -49,7 +49,14 @@ class Bitcoinlike(Bitcoin):
         script_pubkey: bytes,
     ) -> bytes:
         if self.coin.force_bip143:
-            return self.hash143_preimage_hash(txi, public_keys, threshold)
+            return self.hash143.preimage_hash(
+                txi,
+                public_keys,
+                threshold,
+                self.tx,
+                self.coin,
+                self.get_sighash_type(txi),
+            )
         else:
             return await super().get_tx_digest(
                 i, txi, public_keys, threshold, script_pubkey
