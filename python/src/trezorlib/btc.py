@@ -118,7 +118,13 @@ def get_ownership_proof(
     user_confirmation=False,
     ownership_ids=None,
     commitment_data=None,
+    preauthorized=False,
 ):
+    if preauthorized:
+        res = client.call(messages.DoPreauthorized())
+        if not isinstance(res, messages.PreauthorizedRequest):
+            raise exceptions.TrezorException("Unexpected message")
+
     res = client.call(
         messages.GetOwnershipProof(
             address_n=n,
@@ -130,6 +136,7 @@ def get_ownership_proof(
             commitment_data=commitment_data,
         )
     )
+
     if not isinstance(res, messages.OwnershipProof):
         raise exceptions.TrezorException("Unexpected message")
 
@@ -165,7 +172,15 @@ def verify_message(client, coin_name, address, signature, message):
 
 
 @session
-def sign_tx(client, coin_name, inputs, outputs, details=None, prev_txes=None):
+def sign_tx(
+    client,
+    coin_name,
+    inputs,
+    outputs,
+    details=None,
+    prev_txes=None,
+    preauthorized=False,
+):
     this_tx = messages.TransactionType(inputs=inputs, outputs=outputs)
 
     if details is None:
@@ -177,13 +192,15 @@ def sign_tx(client, coin_name, inputs, outputs, details=None, prev_txes=None):
     signtx.inputs_count = len(inputs)
     signtx.outputs_count = len(outputs)
 
+    if preauthorized:
+        res = client.call(messages.DoPreauthorized())
+        if not isinstance(res, messages.PreauthorizedRequest):
+            raise exceptions.TrezorException("Unexpected message")
+
     res = client.call(signtx)
 
     # Prepare structure for signatures
-    signatures = [
-        None if i.script_type != messages.InputScriptType.EXTERNAL else ""
-        for i in inputs
-    ]
+    signatures = [None] * len(inputs)
     serialized_tx = b""
 
     def copy_tx_meta(tx):
@@ -248,7 +265,30 @@ def sign_tx(client, coin_name, inputs, outputs, details=None, prev_txes=None):
     if not isinstance(res, messages.TxRequest):
         raise exceptions.TrezorException("Unexpected message")
 
-    if None in signatures:
-        raise exceptions.TrezorException("Some signatures are missing!")
+    for i, sig in zip(inputs, signatures):
+        if i.script_type != messages.InputScriptType.EXTERNAL and sig is None:
+            raise exceptions.TrezorException("Some signatures are missing!")
 
     return signatures, serialized_tx
+
+
+@expect(messages.Success, field="message")
+def authorize_coinjoin(
+    client,
+    coordinator,
+    max_total_fee,
+    n,
+    coin_name,
+    fee_per_anonymity=None,
+    script_type=messages.InputScriptType.SPENDADDRESS,
+):
+    return client.call(
+        messages.AuthorizeCoinJoin(
+            coordinator=coordinator,
+            max_total_fee=max_total_fee,
+            address_n=n,
+            coin_name=coin_name,
+            fee_per_anonymity=fee_per_anonymity,
+            script_type=script_type,
+        )
+    )

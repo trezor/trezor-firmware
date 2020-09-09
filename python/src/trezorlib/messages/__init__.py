@@ -4,6 +4,7 @@
 from .Address import Address
 from .ApplyFlags import ApplyFlags
 from .ApplySettings import ApplySettings
+from .AuthorizeCoinJoin import AuthorizeCoinJoin
 from .BackupDevice import BackupDevice
 from .BinanceAddress import BinanceAddress
 from .BinanceCancelMsg import BinanceCancelMsg
@@ -20,6 +21,7 @@ from .BinanceTxRequest import BinanceTxRequest
 from .ButtonAck import ButtonAck
 from .ButtonRequest import ButtonRequest
 from .Cancel import Cancel
+from .CancelAuthorization import CancelAuthorization
 from .CardanoAddress import CardanoAddress
 from .CardanoAddressParametersType import CardanoAddressParametersType
 from .CardanoBlockchainPointerType import CardanoBlockchainPointerType
@@ -60,6 +62,7 @@ from .DebugMoneroDiagAck import DebugMoneroDiagAck
 from .DebugMoneroDiagRequest import DebugMoneroDiagRequest
 from .Deprecated_PassphraseStateAck import Deprecated_PassphraseStateAck
 from .Deprecated_PassphraseStateRequest import Deprecated_PassphraseStateRequest
+from .DoPreauthorized import DoPreauthorized
 from .ECDHSessionKey import ECDHSessionKey
 from .EndSession import EndSession
 from .Entropy import Entropy
@@ -210,6 +213,7 @@ from .PassphraseRequest import PassphraseRequest
 from .PinMatrixAck import PinMatrixAck
 from .PinMatrixRequest import PinMatrixRequest
 from .Ping import Ping
+from .PreauthorizedRequest import PreauthorizedRequest
 from .PublicKey import PublicKey
 from .RecoveryDevice import RecoveryDevice
 from .ResetDevice import ResetDevice

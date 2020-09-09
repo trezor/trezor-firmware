@@ -44,7 +44,7 @@
   0x009341U  // section "8.3.23 Read ID4 (D3h)" of ILI9341V datasheet
 
 static uint32_t read_display_id(uint8_t command) {
-  volatile uint8_t c;
+  volatile uint8_t c = 0;
   uint32_t id = 0;
   CMD(command);
   c = ADDR;  // first returned value is a dummy value and should be discarded

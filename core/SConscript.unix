@@ -140,15 +140,16 @@ CPPDEFINES_MOD += [
     'TREZOR_FONT_BOLD_ENABLE',
     'TREZOR_FONT_NORMAL_ENABLE',
     'TREZOR_FONT_MONO_ENABLE',
-    'TREZOR_FONT_MONO_BOLD_ENABLE',
 ]
 SOURCE_MOD += [
     'embed/extmod/modtrezorui/display.c',
     'embed/extmod/modtrezorui/font_bitmap.c',
     'embed/extmod/modtrezorui/font_roboto_bold_20.c',
     'embed/extmod/modtrezorui/font_roboto_regular_20.c',
-    'embed/extmod/modtrezorui/font_robotomono_bold_20.c',
     'embed/extmod/modtrezorui/font_robotomono_regular_20.c',
+    'embed/extmod/modtrezorui/font_pixeloperator_bold_8.c',
+    'embed/extmod/modtrezorui/font_pixeloperator_regular_8.c',
+    'embed/extmod/modtrezorui/font_pixeloperatormono_regular_8.c',
     'embed/extmod/modtrezorui/modtrezorui.c',
     'embed/extmod/modtrezorui/qr-code-generator/qrcodegen.c',
     'vendor/micropython/extmod/uzlib/adler32.c',
@@ -425,12 +426,7 @@ env.Ignore(hdr_moduledefs, qstr_generated)
 #
 
 if FROZEN:
-    if env.get('TREZOR_MODEL') == 'T':
-        SOURCE_PY_DIR = 'src/'
-    elif env.get('TREZOR_MODEL') == '1':
-        SOURCE_PY_DIR = 'src1/'
-    else:
-        raise ValueError('Unknown Trezor model')
+    SOURCE_PY_DIR = 'src/'
 
     SOURCE_PY = Glob(SOURCE_PY_DIR + '*.py')
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/*.py'))
@@ -457,7 +453,7 @@ if FROZEN:
         ])
     )
 
-    SOURCE_PY.append(SOURCE_PY_DIR + 'apps/base.py')
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/*/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/debug/*.py'))
@@ -564,6 +560,6 @@ if EVERYTHING:
     env.Depends(obj_program, secp256k1_zkp_ecmult_static_context)
 
 program = env.Command(
-    target='micropython',
+    target='trezor-emu-core',
     source=obj_program,
     action='$CC -o $TARGET $SOURCES $_LIBDIRFLAGS $_LIBFLAGS $LINKFLAGS', )

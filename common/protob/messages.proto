@@ -64,6 +64,9 @@ enum MessageType {
     MessageType_NextU2FCounter = 81 [(wire_out) = true];
     MessageType_ChangeWipeCode = 82 [(wire_in) = true];
     MessageType_EndSession = 83 [(wire_in) = true];
+    MessageType_DoPreauthorized = 84 [(wire_in) = true];
+    MessageType_PreauthorizedRequest = 85 [(wire_out) = true];
+    MessageType_CancelAuthorization = 86 [(wire_in) = true];
 
     // Deprecated messages, kept for protobuf compatibility.
     // Both are marked wire_out so that we don't need to implement incoming handler for legacy
@@ -91,6 +94,7 @@ enum MessageType {
     MessageType_OwnershipId = 44 [(wire_out) = true];
     MessageType_GetOwnershipProof = 49 [(wire_in) = true];
     MessageType_OwnershipProof = 50 [(wire_out) = true];
+    MessageType_AuthorizeCoinJoin = 51 [(wire_in) = true];
 
     // Crypto
     MessageType_CipherKeyValue = 23 [(wire_in) = true];

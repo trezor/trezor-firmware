@@ -46,7 +46,7 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_make_new(
   mp_obj_ChaCha20Poly1305_t *o =
       m_new_obj_with_finaliser(mp_obj_ChaCha20Poly1305_t);
   o->base.type = type;
-  mp_buffer_info_t key, nonce;
+  mp_buffer_info_t key = {0}, nonce = {0};
   mp_get_buffer_raise(args[0], &key, MP_BUFFER_READ);
   mp_get_buffer_raise(args[1], &nonce, MP_BUFFER_READ);
   if (key.len != 32) {
@@ -69,9 +69,9 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_make_new(
 STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_encrypt(mp_obj_t self,
                                                           mp_obj_t data) {
   mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
-  mp_buffer_info_t in;
+  mp_buffer_info_t in = {0};
   mp_get_buffer_raise(data, &in, MP_BUFFER_READ);
-  vstr_t vstr;
+  vstr_t vstr = {0};
   vstr_init_len(&vstr, in.len);
   chacha20poly1305_encrypt(&(o->ctx), in.buf, (uint8_t *)vstr.buf, in.len);
   o->plen += in.len;
@@ -88,9 +88,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_encrypt_obj,
 STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_decrypt(mp_obj_t self,
                                                           mp_obj_t data) {
   mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
-  mp_buffer_info_t in;
+  mp_buffer_info_t in = {0};
   mp_get_buffer_raise(data, &in, MP_BUFFER_READ);
-  vstr_t vstr;
+  vstr_t vstr = {0};
   vstr_init_len(&vstr, in.len);
   chacha20poly1305_decrypt(&(o->ctx), in.buf, (uint8_t *)vstr.buf, in.len);
   o->plen += in.len;
@@ -108,7 +108,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_decrypt_obj,
 STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_auth(mp_obj_t self,
                                                        mp_obj_t data) {
   mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
-  mp_buffer_info_t in;
+  mp_buffer_info_t in = {0};
   mp_get_buffer_raise(data, &in, MP_BUFFER_READ);
   rfc7539_auth(&(o->ctx), in.buf, in.len);
   o->alen += in.len;
@@ -123,7 +123,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_ChaCha20Poly1305_auth_obj,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_finish(mp_obj_t self) {
   mp_obj_ChaCha20Poly1305_t *o = MP_OBJ_TO_PTR(self);
-  uint8_t out[16];
+  uint8_t out[16] = {0};
   rfc7539_finish(&(o->ctx), o->alen, o->plen, out);
   return mp_obj_new_bytes(out, sizeof(out));
 }

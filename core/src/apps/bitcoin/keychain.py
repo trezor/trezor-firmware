@@ -12,6 +12,8 @@ if False:
 
     from apps.common.keychain import Keychain, MsgOut, Handler
 
+    from .authorization import CoinJoinAuthorization
+
     class MsgWithCoinName(MessageType, Protocol):
         coin_name = ...  # type: Optional[str]
 
@@ -41,7 +43,7 @@ def get_namespaces_for_coin(coin: coininfo.CoinInfo):
 
     if coin.coin_name in BITCOIN_NAMES:
         # compatibility namespace for Casa
-        namespaces.append([49, slip44_id])
+        namespaces.append([49, coin.slip44])
 
         # compatibility namespace for Greenaddress:
         # m/branch/address_pointer, for branch in (1, 4)
@@ -54,20 +56,33 @@ def get_namespaces_for_coin(coin: coininfo.CoinInfo):
         # m/0x4741b11e/6/pointer
         namespaces.append([0x4741B11E])
 
+    # some wallets such as Electron-Cash (BCH) store coins on Bitcoin paths
+    # we can allow spending these coins from Bitcoin paths if the coin has
+    # implemented strong replay protection via SIGHASH_FORKID
+    if coin.fork_id is not None:
+        namespaces.append([44 | HARDENED, 0 | HARDENED])
+        namespaces.append([48 | HARDENED, 0 | HARDENED])
+        if coin.segwit:
+            namespaces.append([49 | HARDENED, 0 | HARDENED])
+            namespaces.append([84 | HARDENED, 0 | HARDENED])
+
     return namespaces
+
+
+def get_coin_by_name(coin_name: Optional[str]) -> coininfo.CoinInfo:
+    if coin_name is None:
+        coin_name = "Bitcoin"
+
+    try:
+        return coininfo.by_name(coin_name)
+    except ValueError:
+        raise wire.DataError("Unsupported coin type")
 
 
 async def get_keychain_for_coin(
     ctx: wire.Context, coin_name: Optional[str]
 ) -> Tuple[Keychain, coininfo.CoinInfo]:
-    if coin_name is None:
-        coin_name = "Bitcoin"
-
-    try:
-        coin = coininfo.by_name(coin_name)
-    except ValueError:
-        raise wire.DataError("Unsupported coin type")
-
+    coin = get_coin_by_name(coin_name)
     namespaces = get_namespaces_for_coin(coin)
     slip21_namespaces = [[b"SLIP-0019"]]
     keychain = await get_keychain(ctx, coin.curve_name, namespaces, slip21_namespaces)
@@ -75,9 +90,18 @@ async def get_keychain_for_coin(
 
 
 def with_keychain(func: HandlerWithCoinInfo[MsgIn, MsgOut]) -> Handler[MsgIn, MsgOut]:
-    async def wrapper(ctx: wire.Context, msg: MsgIn) -> MsgOut:
-        keychain, coin = await get_keychain_for_coin(ctx, msg.coin_name)
-        with keychain:
-            return await func(ctx, msg, keychain, coin)
+    async def wrapper(
+        ctx: wire.Context,
+        msg: MsgIn,
+        authorization: Optional[CoinJoinAuthorization] = None,
+    ) -> MsgOut:
+        if authorization:
+            keychain = authorization.keychain
+            coin = get_coin_by_name(msg.coin_name)
+            return await func(ctx, msg, keychain, coin, authorization)
+        else:
+            keychain, coin = await get_keychain_for_coin(ctx, msg.coin_name)
+            with keychain:
+                return await func(ctx, msg, keychain, coin)
 
     return wrapper

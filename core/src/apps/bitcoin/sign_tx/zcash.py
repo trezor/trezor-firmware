@@ -24,7 +24,7 @@ from ..writers import (
     write_uint32,
     write_uint64,
 )
-from . import helpers
+from . import approvers, helpers
 from .bitcoinlike import Bitcoinlike
 
 if False:
@@ -34,32 +34,27 @@ if False:
 OVERWINTERED = const(0x80000000)
 
 
-class Overwintered(Bitcoinlike):
-    def __init__(self, tx: SignTx, keychain: Keychain, coin: CoinInfo) -> None:
+class Zcashlike(Bitcoinlike):
+    def __init__(
+        self,
+        tx: SignTx,
+        keychain: Keychain,
+        coin: CoinInfo,
+        approver: approvers.Approver,
+    ) -> None:
         ensure(coin.overwintered)
-        super().__init__(tx, keychain, coin)
+        super().__init__(tx, keychain, coin, approver)
 
-        if self.tx.version == 3:
-            if not self.tx.branch_id:
-                self.tx.branch_id = 0x5BA81B19  # Overwinter
-        elif self.tx.version == 4:
-            if not self.tx.branch_id:
-                self.tx.branch_id = 0x76B809BB  # Sapling
-        else:
-            raise wire.DataError("Unsupported version for overwintered transaction")
+        if self.tx.version != 4:
+            raise wire.DataError("Unsupported transaction version.")
 
-    async def step8_finish(self) -> None:
+    async def step7_finish(self) -> None:
         self.write_tx_footer(self.serialized_tx, self.tx)
 
-        if self.tx.version == 3:
-            write_bitcoin_varint(self.serialized_tx, 0)  # nJoinSplit
-        elif self.tx.version == 4:
-            write_uint64(self.serialized_tx, 0)  # valueBalance
-            write_bitcoin_varint(self.serialized_tx, 0)  # nShieldedSpend
-            write_bitcoin_varint(self.serialized_tx, 0)  # nShieldedOutput
-            write_bitcoin_varint(self.serialized_tx, 0)  # nJoinSplit
-        else:
-            raise wire.DataError("Unsupported version for overwintered transaction")
+        write_uint64(self.serialized_tx, 0)  # valueBalance
+        write_bitcoin_varint(self.serialized_tx, 0)  # nShieldedSpend
+        write_bitcoin_varint(self.serialized_tx, 0)  # nShieldedOutput
+        write_bitcoin_varint(self.serialized_tx, 0)  # nJoinSplit
 
         await helpers.request_tx_finish(self.tx_req)
 
@@ -121,33 +116,21 @@ class Overwintered(Bitcoinlike):
         # 5. hashOutputs
         write_bytes_fixed(h_preimage, get_tx_hash(self.h_outputs), TX_HASH_SIZE)
 
-        if self.tx.version == 3:
-            # 6. hashJoinSplits
-            write_bytes_fixed(h_preimage, b"\x00" * TX_HASH_SIZE, TX_HASH_SIZE)
-            # 7. nLockTime
-            write_uint32(h_preimage, self.tx.lock_time)
-            # 8. expiryHeight
-            write_uint32(h_preimage, self.tx.expiry)
-            # 9. nHashType
-            write_uint32(h_preimage, self.get_sighash_type(txi))
-        elif self.tx.version == 4:
-            zero_hash = b"\x00" * TX_HASH_SIZE
-            # 6. hashJoinSplits
-            write_bytes_fixed(h_preimage, zero_hash, TX_HASH_SIZE)
-            # 7. hashShieldedSpends
-            write_bytes_fixed(h_preimage, zero_hash, TX_HASH_SIZE)
-            # 8. hashShieldedOutputs
-            write_bytes_fixed(h_preimage, zero_hash, TX_HASH_SIZE)
-            # 9. nLockTime
-            write_uint32(h_preimage, self.tx.lock_time)
-            # 10. expiryHeight
-            write_uint32(h_preimage, self.tx.expiry)
-            # 11. valueBalance
-            write_uint64(h_preimage, 0)
-            # 12. nHashType
-            write_uint32(h_preimage, self.get_sighash_type(txi))
-        else:
-            raise wire.DataError("Unsupported version for overwintered transaction")
+        zero_hash = b"\x00" * TX_HASH_SIZE
+        # 6. hashJoinSplits
+        write_bytes_fixed(h_preimage, zero_hash, TX_HASH_SIZE)
+        # 7. hashShieldedSpends
+        write_bytes_fixed(h_preimage, zero_hash, TX_HASH_SIZE)
+        # 8. hashShieldedOutputs
+        write_bytes_fixed(h_preimage, zero_hash, TX_HASH_SIZE)
+        # 9. nLockTime
+        write_uint32(h_preimage, self.tx.lock_time)
+        # 10. expiryHeight
+        write_uint32(h_preimage, self.tx.expiry)
+        # 11. valueBalance
+        write_uint64(h_preimage, 0)
+        # 12. nHashType
+        write_uint32(h_preimage, self.get_sighash_type(txi))
 
         # 10a /13a. outpoint
         write_bytes_reversed(h_preimage, txi.prev_hash, TX_HASH_SIZE)

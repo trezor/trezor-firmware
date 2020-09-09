@@ -19,26 +19,48 @@
 
 #define _GNU_SOURCE
 
-#include "font_bitmap.h"
-#ifdef TREZOR_FONT_NORMAL_ENABLE
-#include "font_roboto_regular_20.h"
-#endif
-#ifdef TREZOR_FONT_BOLD_ENABLE
-#include "font_roboto_bold_20.h"
-#endif
-#ifdef TREZOR_FONT_MONO_ENABLE
-#include "font_robotomono_regular_20.h"
-#endif
-#ifdef TREZOR_FONT_MONO_BOLD_ENABLE
-#include "font_robotomono_bold_20.h"
-#endif
-
 #include "qr-code-generator/qrcodegen.h"
 
 #include "uzlib.h"
 
 #include "common.h"
 #include "display.h"
+
+#include "font_bitmap.h"
+
+#if TREZOR_MODEL == T
+
+#ifdef TREZOR_FONT_NORMAL_ENABLE
+#include "font_roboto_regular_20.h"
+#define FONT_NORMAL_DATA Font_Roboto_Regular_20
+#endif
+#ifdef TREZOR_FONT_BOLD_ENABLE
+#include "font_roboto_bold_20.h"
+#define FONT_BOLD_DATA Font_Roboto_Bold_20
+#endif
+#ifdef TREZOR_FONT_MONO_ENABLE
+#include "font_robotomono_regular_20.h"
+#define FONT_MONO_DATA Font_RobotoMono_Regular_20
+#endif
+
+#elif TREZOR_MODEL == 1
+
+#ifdef TREZOR_FONT_NORMAL_ENABLE
+#include "font_pixeloperator_regular_8.h"
+#define FONT_NORMAL_DATA Font_PixelOperator_Regular_8
+#endif
+#ifdef TREZOR_FONT_BOLD_ENABLE
+#include "font_pixeloperator_bold_8.h"
+#define FONT_BOLD_DATA Font_PixelOperator_Bold_8
+#endif
+#ifdef TREZOR_FONT_MONO_ENABLE
+#include "font_pixeloperatormono_regular_8.h"
+#define FONT_MONO_DATA Font_PixelOperatorMono_Regular_8
+#endif
+
+#else
+#error Unknown Trezor model
+#endif
 
 #include <stdarg.h>
 #include <string.h>
@@ -66,7 +88,7 @@ static struct { int x, y; } DISPLAY_OFFSET;
 
 static inline uint16_t interpolate_color(uint16_t color0, uint16_t color1,
                                          uint8_t step) {
-  uint8_t cr, cg, cb;
+  uint8_t cr = 0, cg = 0, cb = 0;
   cr = (((color0 & 0xF800) >> 11) * step +
         ((color1 & 0xF800) >> 11) * (15 - step)) /
        15;
@@ -111,7 +133,7 @@ void display_clear(void) {
 void display_bar(int x, int y, int w, int h, uint16_t c) {
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
-  int x0, y0, x1, y1;
+  int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
   clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
   display_set_window(x0, y0, x1, y1);
   for (int i = 0; i < (x1 - x0 + 1) * (y1 - y0 + 1); i++) {
@@ -145,11 +167,11 @@ void display_bar_radius(int x, int y, int w, int h, uint16_t c, uint16_t b,
   } else {
     r = 16 / r;
   }
-  uint16_t colortable[16];
+  uint16_t colortable[16] = {0};
   set_color_table(colortable, c, b);
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
-  int x0, y0, x1, y1;
+  int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
   clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
   display_set_window(x0, y0, x1, y1);
   for (int j = y0; j <= y1; j++) {
@@ -198,7 +220,7 @@ void display_image(int x, int y, int w, int h, const void *data,
 #if TREZOR_MODEL == T
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
-  int x0, y0, x1, y1;
+  int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
   clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
   display_set_window(x0, y0, x1, y1);
   x0 -= x;
@@ -206,9 +228,9 @@ void display_image(int x, int y, int w, int h, const void *data,
   y0 -= y;
   y1 -= y;
 
-  struct uzlib_uncomp decomp;
-  uint8_t decomp_window[UZLIB_WINDOW_SIZE];
-  uint8_t decomp_out[2];
+  struct uzlib_uncomp decomp = {0};
+  uint8_t decomp_window[UZLIB_WINDOW_SIZE] = {0};
+  uint8_t decomp_out[2] = {0};
   uzlib_prepare(&decomp, decomp_window, data, datalen, decomp_out,
                 sizeof(decomp_out));
 
@@ -238,7 +260,7 @@ void display_avatar(int x, int y, const void *data, uint32_t datalen,
 #if TREZOR_MODEL == T
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
-  int x0, y0, x1, y1;
+  int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
   clamp_coords(x, y, AVATAR_IMAGE_SIZE, AVATAR_IMAGE_SIZE, &x0, &y0, &x1, &y1);
   display_set_window(x0, y0, x1, y1);
   x0 -= x;
@@ -246,9 +268,9 @@ void display_avatar(int x, int y, const void *data, uint32_t datalen,
   y0 -= y;
   y1 -= y;
 
-  struct uzlib_uncomp decomp;
-  uint8_t decomp_window[UZLIB_WINDOW_SIZE];
-  uint8_t decomp_out[2];
+  struct uzlib_uncomp decomp = {0};
+  uint8_t decomp_window[UZLIB_WINDOW_SIZE] = {0};
+  uint8_t decomp_out[2] = {0};
   uzlib_prepare(&decomp, decomp_window, data, datalen, decomp_out,
                 sizeof(decomp_out));
 
@@ -273,7 +295,7 @@ void display_avatar(int x, int y, const void *data, uint32_t datalen,
 #if AVATAR_ANTIALIAS
         d = 31 * (d - AVATAR_BORDER_LOW) /
             (AVATAR_BORDER_HIGH - AVATAR_BORDER_LOW);
-        uint16_t c;
+        uint16_t c = 0;
         if (d >= 16) {
           c = interpolate_color(bgcolor, fgcolor, d - 16);
         } else {
@@ -296,7 +318,7 @@ void display_icon(int x, int y, int w, int h, const void *data,
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
   x &= ~1;  // cannot draw at odd coordinate
-  int x0, y0, x1, y1;
+  int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
   clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
   display_set_window(x0, y0, x1, y1);
   x0 -= x;
@@ -304,12 +326,12 @@ void display_icon(int x, int y, int w, int h, const void *data,
   y0 -= y;
   y1 -= y;
 
-  uint16_t colortable[16];
+  uint16_t colortable[16] = {0};
   set_color_table(colortable, fgcolor, bgcolor);
 
-  struct uzlib_uncomp decomp;
-  uint8_t decomp_window[UZLIB_WINDOW_SIZE];
-  uint8_t decomp_out;
+  struct uzlib_uncomp decomp = {0};
+  uint8_t decomp_window[UZLIB_WINDOW_SIZE] = {0};
+  uint8_t decomp_out = 0;
   uzlib_prepare(&decomp, decomp_window, data, datalen, &decomp_out,
                 sizeof(decomp_out));
 
@@ -327,6 +349,37 @@ void display_icon(int x, int y, int w, int h, const void *data,
   }
 }
 
+// see docs/misc/toif.md for defintion of the TOIF format
+bool display_toif_info(const uint8_t *data, uint32_t len, uint16_t *out_w,
+                       uint16_t *out_h, bool *out_grayscale) {
+  if (len < 12 || memcmp(data, "TOI", 3) != 0) {
+    return false;
+  }
+  bool grayscale = false;
+  if (data[3] == 'f') {
+    grayscale = false;
+  } else if (data[3] == 'g') {
+    grayscale = true;
+  } else {
+    return false;
+  }
+
+  uint16_t w = *(uint16_t *)(data + 4);
+  uint16_t h = *(uint16_t *)(data + 6);
+
+  uint32_t datalen = *(uint32_t *)(data + 8);
+  if (datalen != len - 12) {
+    return false;
+  }
+
+  if (out_w != NULL && out_h != NULL && out_grayscale != NULL) {
+    *out_w = w;
+    *out_h = h;
+    *out_grayscale = grayscale;
+  }
+  return true;
+}
+
 #if TREZOR_MODEL == T
 #include "loader.h"
 #endif
@@ -335,7 +388,7 @@ void display_loader(uint16_t progress, bool indeterminate, int yoffset,
                     uint16_t fgcolor, uint16_t bgcolor, const uint8_t *icon,
                     uint32_t iconlen, uint16_t iconfgcolor) {
 #if TREZOR_MODEL == T
-  uint16_t colortable[16], iconcolortable[16];
+  uint16_t colortable[16] = {0}, iconcolortable[16] = {0};
   set_color_table(colortable, fgcolor, bgcolor);
   if (icon) {
     set_color_table(iconcolortable, iconfgcolor, bgcolor);
@@ -352,9 +405,9 @@ void display_loader(uint16_t progress, bool indeterminate, int yoffset,
       LOADER_ICON_SIZE == *(uint16_t *)(icon + 4) &&
       LOADER_ICON_SIZE == *(uint16_t *)(icon + 6) &&
       iconlen == 12 + *(uint32_t *)(icon + 8)) {
-    uint8_t icondata[LOADER_ICON_SIZE * LOADER_ICON_SIZE / 2];
+    uint8_t icondata[(LOADER_ICON_SIZE * LOADER_ICON_SIZE) / 2] = {0};
     memzero(&icondata, sizeof(icondata));
-    struct uzlib_uncomp decomp;
+    struct uzlib_uncomp decomp = {0};
     uzlib_prepare(&decomp, NULL, icon + 12, iconlen - 12, icondata,
                   sizeof(icondata));
     uzlib_uncompress(&decomp);
@@ -365,7 +418,7 @@ void display_loader(uint16_t progress, bool indeterminate, int yoffset,
   for (int y = 0; y < img_loader_size * 2; y++) {
     for (int x = 0; x < img_loader_size * 2; x++) {
       int mx = x, my = y;
-      uint16_t a;
+      uint16_t a = 0;
       if ((mx >= img_loader_size) && (my >= img_loader_size)) {
         mx = img_loader_size * 2 - 1 - x;
         my = img_loader_size * 2 - 1 - y;
@@ -389,7 +442,7 @@ void display_loader(uint16_t progress, bool indeterminate, int yoffset,
         int i =
             (x - (img_loader_size - (LOADER_ICON_SIZE / 2))) +
             (y - (img_loader_size - (LOADER_ICON_SIZE / 2))) * LOADER_ICON_SIZE;
-        uint8_t c;
+        uint8_t c = 0;
         if (i % 2) {
           c = icon[i / 2] & 0x0F;
         } else {
@@ -397,7 +450,7 @@ void display_loader(uint16_t progress, bool indeterminate, int yoffset,
         }
         PIXELDATA(iconcolortable[c]);
       } else {
-        uint8_t c;
+        uint8_t c = 0;
         if (indeterminate) {
           uint16_t diff =
               (progress > a) ? (progress - a) : (1000 + progress - a);
@@ -483,7 +536,7 @@ void display_print(const char *text, int textlen) {
     y /= 8;
     const int k = x % 6;
     x /= 6;
-    char c;
+    char c = 0;
     if (x < DISPLAY_PRINT_COLS && y < DISPLAY_PRINT_ROWS) {
       c = display_print_buf[y][x] & 0x7F;
       // char invert = display_print_buf[y][x] & 0x80;
@@ -517,7 +570,7 @@ void display_printf(const char *fmt, ...) {
   } else {
     va_list va;
     va_start(va, fmt);
-    char buf[256];
+    char buf[256] = {0};
     int len = mini_vsnprintf(buf, sizeof(buf), fmt, va);
     display_print(buf, len);
     va_end(va);
@@ -526,15 +579,13 @@ void display_printf(const char *fmt, ...) {
 
 #endif  // TREZOR_PRINT_DISABLE
 
-#if TREZOR_MODEL == T
-
 static uint8_t convert_char(const uint8_t c) {
   static char last_was_utf8 = 0;
 
   // non-printable ASCII character
   if (c < ' ') {
     last_was_utf8 = 0;
-    return '_';
+    return 0x7F;
   }
 
   // regular ASCII character
@@ -548,7 +599,7 @@ static uint8_t convert_char(const uint8_t c) {
   // bytes 11xxxxxx are first bytes of UTF-8 characters
   if (c >= 0xC0) {
     last_was_utf8 = 1;
-    return '_';
+    return 0x7F;
   }
 
   if (last_was_utf8) {
@@ -556,7 +607,7 @@ static uint8_t convert_char(const uint8_t c) {
     return 0;  // skip glyph
   } else {
     // ... or they are just non-printable ASCII characters
-    return '_';
+    return 0x7F;
   }
 
   return 0;
@@ -565,30 +616,46 @@ static uint8_t convert_char(const uint8_t c) {
 static const uint8_t *get_glyph(int font, uint8_t c) {
   c = convert_char(c);
   if (!c) return 0;
+
+  // printable ASCII character
+  if (c >= ' ' && c < 0x7F) {
+    switch (font) {
+#ifdef TREZOR_FONT_NORMAL_ENABLE
+      case FONT_NORMAL:
+        return FONT_NORMAL_DATA[c - ' '];
+#endif
+#ifdef TREZOR_FONT_BOLD_ENABLE
+      case FONT_BOLD:
+        return FONT_BOLD_DATA[c - ' '];
+#endif
+#ifdef TREZOR_FONT_MONO_ENABLE
+      case FONT_MONO:
+        return FONT_MONO_DATA[c - ' '];
+#endif
+    }
+    return 0;
+  }
+
+// non-printable character
+#define PASTER(s) s##_glyph_nonprintable
+#define NONPRINTABLE_GLYPH(s) PASTER(s)
+
   switch (font) {
 #ifdef TREZOR_FONT_NORMAL_ENABLE
     case FONT_NORMAL:
-      return Font_Roboto_Regular_20[c - ' '];
+      return NONPRINTABLE_GLYPH(FONT_NORMAL_DATA);
 #endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
     case FONT_BOLD:
-      return Font_Roboto_Bold_20[c - ' '];
+      return NONPRINTABLE_GLYPH(FONT_BOLD_DATA);
 #endif
 #ifdef TREZOR_FONT_MONO_ENABLE
     case FONT_MONO:
-      return Font_RobotoMono_Regular_20[c - ' '];
-#endif
-#ifdef TREZOR_FONT_MONO_BOLD_ENABLE
-    case FONT_MONO_BOLD:
-      return Font_RobotoMono_Bold_20[c - ' '];
+      return NONPRINTABLE_GLYPH(FONT_MONO_DATA);
 #endif
   }
   return 0;
 }
-
-#endif
-
-#if TREZOR_MODEL == T
 
 static void display_text_render(int x, int y, const char *text, int textlen,
                                 int font, uint16_t fgcolor, uint16_t bgcolor) {
@@ -597,7 +664,7 @@ static void display_text_render(int x, int y, const char *text, int textlen,
     textlen = strlen(text);
   }
 
-  uint16_t colortable[16];
+  uint16_t colortable[16] = {0};
   set_color_table(colortable, fgcolor, bgcolor);
 
   // render glyphs
@@ -612,7 +679,7 @@ static void display_text_render(int x, int y, const char *text, int textlen,
     if (w && h) {
       const int sx = x + bearX;
       const int sy = y - bearY;
-      int x0, y0, x1, y1;
+      int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
       clamp_coords(sx, sy, w, h, &x0, &y0, &x1, &y1);
       display_set_window(x0, y0, x1, y1);
       for (int j = y0; j <= y1; j++) {
@@ -620,12 +687,16 @@ static void display_text_render(int x, int y, const char *text, int textlen,
           const int rx = i - sx;
           const int ry = j - sy;
           const int a = rx + ry * w;
-#if FONT_BPP == 2
+#if TREZOR_FONT_BPP == 1
+          const uint8_t c = ((g[5 + a / 8] >> (7 - (a % 8) * 1)) & 0x01) * 15;
+#elif TREZOR_FONT_BPP == 2
           const uint8_t c = ((g[5 + a / 4] >> (6 - (a % 4) * 2)) & 0x03) * 5;
-#elif FONT_BPP == 4
+#elif TREZOR_FONT_BPP == 4
           const uint8_t c = (g[5 + a / 2] >> (4 - (a % 2) * 4)) & 0x0F;
+#elif TREZOR_FONT_BPP == 8
+          const uint8_t c = g[5 + a / 1] >> 4;
 #else
-#error Unsupported FONT_BPP value
+#error Unsupported TREZOR_FONT_BPP value
 #endif
           PIXELDATA(colortable[c]);
         }
@@ -635,41 +706,32 @@ static void display_text_render(int x, int y, const char *text, int textlen,
   }
 }
 
-#endif
-
 void display_text(int x, int y, const char *text, int textlen, int font,
                   uint16_t fgcolor, uint16_t bgcolor) {
-#if TREZOR_MODEL == T
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
   display_text_render(x, y, text, textlen, font, fgcolor, bgcolor);
-#endif
 }
 
 void display_text_center(int x, int y, const char *text, int textlen, int font,
                          uint16_t fgcolor, uint16_t bgcolor) {
-#if TREZOR_MODEL == T
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
   int w = display_text_width(text, textlen, font);
   display_text_render(x - w / 2, y, text, textlen, font, fgcolor, bgcolor);
-#endif
 }
 
 void display_text_right(int x, int y, const char *text, int textlen, int font,
                         uint16_t fgcolor, uint16_t bgcolor) {
-#if TREZOR_MODEL == T
   x += DISPLAY_OFFSET.x;
   y += DISPLAY_OFFSET.y;
   int w = display_text_width(text, textlen, font);
   display_text_render(x - w, y, text, textlen, font, fgcolor, bgcolor);
-#endif
 }
 
 // compute the width of the text (in pixels)
 int display_text_width(const char *text, int textlen, int font) {
   int width = 0;
-#if TREZOR_MODEL == T
   // determine text length if not provided
   if (textlen < 0) {
     textlen = strlen(text);
@@ -690,7 +752,6 @@ int display_text_width(const char *text, int textlen, int font) {
     }
     */
   }
-#endif
   return width;
 }
 
@@ -698,7 +759,6 @@ int display_text_width(const char *text, int textlen, int font) {
 // the requested width. Tries to avoid breaking words if possible.
 int display_text_split(const char *text, int textlen, int font,
                        int requested_width) {
-#if TREZOR_MODEL == T
   int width = 0;
   int lastspace = 0;
   // determine text length if not provided
@@ -721,7 +781,6 @@ int display_text_split(const char *text, int textlen, int font,
       }
     }
   }
-#endif
   return textlen;
 }
 
@@ -731,8 +790,8 @@ void display_qrcode(int x, int y, const char *data, uint32_t datalen,
                     uint8_t scale) {
   if (scale < 1 || scale > 10) return;
 
-  uint8_t codedata[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)];
-  uint8_t tempdata[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)];
+  uint8_t codedata[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)] = {0};
+  uint8_t tempdata[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)] = {0};
 
   int side = 0;
   if (qrcodegen_encodeText(data, tempdata, codedata, qrcodegen_Ecc_MEDIUM,
@@ -743,7 +802,7 @@ void display_qrcode(int x, int y, const char *data, uint32_t datalen,
 
   x += DISPLAY_OFFSET.x - (side + 2) * scale / 2;
   y += DISPLAY_OFFSET.y - (side + 2) * scale / 2;
-  int x0, y0, x1, y1;
+  int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
   clamp_coords(x, y, (side + 2) * scale, (side + 2) * scale, &x0, &y0, &x1,
                &y1);
   display_set_window(x0, y0, x1, y1);

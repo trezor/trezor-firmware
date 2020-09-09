@@ -362,7 +362,7 @@ class TestMsgSigntxSegwit:
         )
         out1 = proto.TxOutputType(
             address="mhRx1CeVfaayqRwq5zgRQmD7W5aWBfD5mC",
-            amount=30998000,
+            amount=31000000 + TRUE_AMOUNT - 3456789,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 

@@ -168,7 +168,7 @@ def find_best_firmware_version(
 
 @click.command()
 # fmt: off
-@click.option("-f", "--filename")
+@click.option("-f", "--filename", type=click.File("rb"))
 @click.option("-u", "--url")
 @click.option("-v", "--version")
 @click.option("-s", "--skip-check", is_flag=True, help="Do not validate firmware integrity")
@@ -224,7 +224,7 @@ def firmware_update(
     model = client.features.model or "1"
 
     if filename:
-        data = open(filename, "rb").read()
+        data = filename.read()
     else:
         if not url:
             if version:

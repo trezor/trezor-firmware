@@ -30,7 +30,6 @@ STYLES = {
     "@@NORMAL": S.NORMAL,
     "@@BOLD": S.BOLD,
     "@@MONO": S.MONO,
-    "@@MONO_BOLD": S.MONO_BOLD,
     "@@BR": S.BR,
     "@@BR_HALF": S.BR_HALF,
 }

@@ -418,7 +418,7 @@ def release(
         nontokens = [coin for coin in missing_list if not coin_info.is_token(coin)]
         for coin in tokens:
             key = coin["key"]
-            assert not coin.get("duplicate")
+            # assert not coin.get("duplicate"), key
             if verbose:
                 print(f"Adding missing {key} ({coin['name']})")
             set_supported(device, key, version)

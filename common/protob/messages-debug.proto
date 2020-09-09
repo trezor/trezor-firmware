@@ -77,7 +77,6 @@ message DebugLinkRecordScreen {
         NORMAL = 0;
         BOLD = 1;
         MONO = 2;
-        MONO_BOLD = 3;
         BR = 4;
         BR_HALF = 5;
         SET_COLOR = 6;

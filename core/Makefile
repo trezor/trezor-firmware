@@ -7,6 +7,7 @@ SCONS = scons -Q -j $(JOBS)
 BUILD_DIR             = build
 BOARDLOADER_BUILD_DIR = $(BUILD_DIR)/boardloader
 BOOTLOADER_BUILD_DIR  = $(BUILD_DIR)/bootloader
+BOOTLOADER_CI_BUILD_DIR  = $(BUILD_DIR)/bootloader_ci
 PRODTEST_BUILD_DIR    = $(BUILD_DIR)/prodtest
 REFLASH_BUILD_DIR     = $(BUILD_DIR)/reflash
 FIRMWARE_BUILD_DIR    = $(BUILD_DIR)/firmware
@@ -67,7 +68,7 @@ res: templates ## update resources
 ## emulator commands:
 
 run: ## run unix port
-	cd src ; ../$(UNIX_BUILD_DIR)/micropython
+	cd src ; ../$(UNIX_BUILD_DIR)/trezor-emu-core
 
 emu: ## run emulator
 	$(EMU)
@@ -127,6 +128,9 @@ build_boardloader: ## build boardloader
 build_bootloader: ## build bootloader
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" $(BOOTLOADER_BUILD_DIR)/bootloader.bin
 
+build_bootloader_ci: ## build CI device testing bootloader
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" $(BOOTLOADER_CI_BUILD_DIR)/bootloader.bin
+
 build_prodtest: ## build production test firmware
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" $(PRODTEST_BUILD_DIR)/prodtest.bin
 
@@ -139,13 +143,13 @@ build_firmware: res build_cross ## build firmware with frozen modules
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" RDI="$(RDI)" $(FIRMWARE_BUILD_DIR)/firmware.bin
 
 build_unix: res ## build unix port
-	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/micropython $(UNIX_PORT_OPTS) BITCOIN_ONLY="$(BITCOIN_ONLY)"
+	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) BITCOIN_ONLY="$(BITCOIN_ONLY)"
 
 build_unix_frozen: res build_cross ## build unix port with frozen modules
-	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/micropython $(UNIX_PORT_OPTS) PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_EMULATOR_FROZEN=1
+	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_EMULATOR_FROZEN=1
 
 build_unix_debug: res ## build unix port
-	$(SCONS) --max-drift=1 CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/micropython $(UNIX_PORT_OPTS) TREZOR_EMULATOR_ASAN=1 TREZOR_EMULATOR_DEBUGGABLE=1
+	$(SCONS) --max-drift=1 CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) TREZOR_EMULATOR_ASAN=1 TREZOR_EMULATOR_DEBUGGABLE=1
 
 build_cross: ## build mpy-cross port
 	$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS)
@@ -186,6 +190,9 @@ flash_boardloader: $(BOARDLOADER_BUILD_DIR)/boardloader.bin ## flash boardloader
 flash_bootloader: $(BOOTLOADER_BUILD_DIR)/bootloader.bin ## flash bootloader using OpenOCD
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOOTLOADER_START); exit"
 
+flash_bootloader_ci: $(BOOTLOADER_CI_BUILD_DIR)/bootloader.bin ## flash CI bootloader using OpenOCD
+	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(BOOTLOADER_START); exit"
+
 flash_prodtest: $(PRODTEST_BUILD_DIR)/prodtest.bin ## flash prodtest using OpenOCD
 	$(OPENOCD) -c "init; reset halt; flash write_image erase $< $(PRODTEST_START); exit"
 
@@ -209,6 +216,9 @@ flash_erase_storage: ## erase storage sectors from flash
 
 flash_bootloader_jlink: $(BOOTLOADER_BUILD_DIR)/bootloader.bin ## flash bootloader using JLink
 	JLinkExe -commanderscript embed/bootloader/bootloader_flash.jlink
+
+flash_bootloader_ci_jlink: $(BOOTLOADER_CI_BUILD_DIR)/bootloader.bin ## flash CI bootloader using JLink
+	JLinkExe -commanderscript embed/bootloader_ci/bootloader_flash.jlink
 
 flash_firmware_jlink: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using JLink. file names must end in .bin for JLink
 	cp -f $<.p1 $<.p1.bin
@@ -271,8 +281,4 @@ upload_prodtest: ## upload prodtest using trezorctl
 	trezorctl firmware_update -f $(PRODTEST_BUILD_DIR)/prodtest.bin
 
 coverage:  # generate coverage report
-	coverage run --source=./src /dev/null 2>/dev/null && \
-	mv .coverage .coverage.empty && \
-	coverage combine .coverage.* && \
-	coverage html
-	grep pc_cov htmlcov/index.html
+	./tools/coverage-report

@@ -1,7 +1,13 @@
 {
-  "label": "Slush Pool",
+  "name": "Slush Pool",
   "u2f": [
-    "08b2a3d41939aa31668493cb36cdcc4f16c4d9b4c8238b73c2f672c033007197",
-    "38804f2eff74f228b74151c201aa82e7e8eefcacfecf23fa146b13a37666314f"
+    {
+      "app_id": "08b2a3d41939aa31668493cb36cdcc4f16c4d9b4c8238b73c2f672c033007197",
+      "label": "slushpool.com"
+    },
+    {
+      "app_id": "38804f2eff74f228b74151c201aa82e7e8eefcacfecf23fa146b13a37666314f",
+      "label": "slushpool.com"
+    }
   ]
 }

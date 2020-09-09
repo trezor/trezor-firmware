@@ -1,11 +1,10 @@
-#include "font_robotomono_regular_20.h"
-
-// first two bytes are width and height of the glyph
-// third, fourth and fifth bytes are advance
-// bearingX and bearingY of the horizontal metrics of the glyph
-// rest is packed 4-bit glyph data
+#include <stdint.h>
 
 // clang-format off
+
+// - the first two bytes are width and height of the glyph
+// - the third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph
+// - the rest is packed 4-bit glyph data
 
 /*   */ static const uint8_t Font_RobotoMono_Regular_20_glyph_32[] = { 0, 0, 12, 0, 0 };
 /* ! */ static const uint8_t Font_RobotoMono_Regular_20_glyph_33[] = { 3, 15, 12, 4, 15, 31, 177, 251, 31, 177, 251, 31, 177, 251, 31, 177, 251, 31, 177, 251, 0, 0, 0, 1, 2, 253, 30, 192 };
@@ -102,6 +101,8 @@
 /* | */ static const uint8_t Font_RobotoMono_Regular_20_glyph_124[] = { 2, 19, 12, 5, 15, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187, 187 };
 /* } */ static const uint8_t Font_RobotoMono_Regular_20_glyph_125[] = { 7, 20, 12, 3, 16, 68, 0, 0, 12, 251, 0, 0, 9, 246, 0, 0, 15, 192, 0, 0, 223, 0, 0, 12, 240, 0, 0, 207, 0, 0, 11, 242, 0, 0, 111, 128, 0, 0, 175, 182, 0, 3, 239, 192, 2, 253, 48, 0, 159, 64, 0, 11, 241, 0, 0, 207, 0, 0, 12, 240, 0, 0, 238, 0, 0, 95, 144, 0, 127, 226, 0, 10, 194, 0, 0 };
 /* ~ */ static const uint8_t Font_RobotoMono_Regular_20_glyph_126[] = { 12, 4, 12, 0, 8, 3, 223, 197, 0, 0, 115, 30, 216, 223, 144, 1, 245, 111, 16, 9, 253, 141, 224, 54, 0, 0, 93, 252, 32 };
+
+const uint8_t Font_RobotoMono_Regular_20_glyph_nonprintable[] = { 10, 15, 12, 1, 15, 255, 180, 16, 42, 255, 250, 1, 102, 32, 127, 241, 30, 255, 242, 14, 247, 159, 255, 246, 12, 255, 255, 255, 244, 13, 255, 255, 255, 208, 47, 255, 255, 254, 32, 175, 255, 255, 243, 7, 255, 255, 255, 96, 127, 255, 255, 255, 17, 255, 255, 255, 255, 53, 255, 255, 255, 255, 255, 255, 255, 255, 255, 239, 255, 255, 255, 254, 1, 255, 255, 255, 254, 19, 255, 255 };
 
 const uint8_t * const Font_RobotoMono_Regular_20[126 + 1 - 32] = {
     Font_RobotoMono_Regular_20_glyph_32,

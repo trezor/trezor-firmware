@@ -11,7 +11,6 @@ STYLES = {
     S.NORMAL: ui.NORMAL,
     S.BOLD: ui.BOLD,
     S.MONO: ui.MONO,
-    S.MONO_BOLD: ui.MONO_BOLD,
     S.BR: text.BR,
     S.BR_HALF: text.BR_HALF,
 }

@@ -12,7 +12,6 @@ class Display:
     FONT_MONO: int  # id of monospace font
     FONT_NORMAL: int  # id of normal-width font
     FONT_BOLD: int  # id of bold-width font
-    FONT_MONO_BOLD: int # id of monospace bold-width font
 
     def __init__(self) -> None:
         """
@@ -49,6 +48,13 @@ class Display:
         Renders a rounded bar at position (x,y = upper left corner) with width w
         and height h of color fgcolor. Background is set to bgcolor and corners
         are drawn with radius radius.
+        """
+
+    def toif_info(self, image: bytes) -> Tuple[int, int, bool]:
+        """
+        Returns tuple containing TOIF image dimensions: width, height, and
+        whether it is grayscale.
+        Raises an exception for corrupted images.
         """
 
     def image(self, x: int, y: int, image: bytes) -> None:
@@ -109,13 +115,11 @@ class Display:
         font: int,
         fgcolor: int,
         bgcolor: int,
-        minwidth: int = None,
-    ) -> int:
+    ) -> None:
         """
         Renders left-aligned text at position (x,y) where x is left position and
         y is baseline. Font font is used for rendering, fgcolor is used as
-        foreground color, bgcolor as background. Fills at least minwidth pixels
-        with bgcolor. Returns width of rendered text in pixels.
+        foreground color, bgcolor as background.
         """
 
     def text_center(
@@ -126,13 +130,11 @@ class Display:
         font: int,
         fgcolor: int,
         bgcolor: int,
-        minwidth: int = None,
-    ) -> int:
+    ) -> None:
         """
         Renders text centered at position (x,y) where x is text center and y is
         baseline. Font font is used for rendering, fgcolor is used as foreground
-        color, bgcolor as background. Fills at least minwidth pixels with
-        bgcolor. Returns width of rendered text in pixels.
+        color, bgcolor as background.
         """
 
     def text_right(
@@ -143,13 +145,11 @@ class Display:
         font: int,
         fgcolor: int,
         bgcolor: int,
-        minwidth: int = None,
-    ) -> int:
+    ) -> None:
         """
         Renders right-aligned text at position (x,y) where x is right position
         and y is baseline. Font font is used for rendering, fgcolor is used as
-        foreground color, bgcolor as background. Fills at least minwidth pixels
-        with bgcolor. Returns width of rendered text in pixels.
+        foreground color, bgcolor as background.
         """
 
     def text_width(self, text: str, font: int) -> int:

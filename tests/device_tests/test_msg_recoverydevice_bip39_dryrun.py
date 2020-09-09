@@ -81,6 +81,7 @@ def do_recover_core(client, mnemonic, **kwargs):
         client.debug.click(buttons.OK)
 
     with client:
+        client.watch_layout()
         client.set_input_flow(input_flow)
         return device.recover(client, dry_run=True, **kwargs)
 
@@ -160,6 +161,7 @@ def test_invalid_seed_core(client):
         client.debug.click(buttons.OK)
 
     with client:
+        client.watch_layout()
         client.set_input_flow(input_flow)
         with pytest.raises(exceptions.Cancelled):
             return device.recover(client, dry_run=True)

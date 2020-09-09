@@ -62,7 +62,7 @@ STATIC mp_obj_t mod_trezorio_HID_make_new(const mp_obj_type_t *type,
        MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_OBJ,
        {.u_obj = MP_OBJ_NULL}},
   };
-  mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)];
+  mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)] = {0};
   mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args),
                             allowed_args, vals);
 
@@ -73,7 +73,7 @@ STATIC mp_obj_t mod_trezorio_HID_make_new(const mp_obj_type_t *type,
   const mp_int_t protocol = vals[4].u_int;
   const mp_int_t polling_interval = vals[5].u_int;
   const mp_int_t max_packet_len = vals[6].u_int;
-  mp_buffer_info_t report_desc;
+  mp_buffer_info_t report_desc = {0};
   mp_get_buffer_raise(vals[7].u_obj, &report_desc, MP_BUFFER_READ);
 
   if (report_desc.buf == NULL || report_desc.len == 0 ||
@@ -122,7 +122,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_HID_iface_num_obj,
 ///     """
 STATIC mp_obj_t mod_trezorio_HID_write(mp_obj_t self, mp_obj_t msg) {
   mp_obj_HID_t *o = MP_OBJ_TO_PTR(self);
-  mp_buffer_info_t buf;
+  mp_buffer_info_t buf = {0};
   mp_get_buffer_raise(msg, &buf, MP_BUFFER_READ);
   ssize_t r = usb_hid_write(o->info.iface_num, buf.buf, buf.len);
   return MP_OBJ_NEW_SMALL_INT(r);
@@ -137,7 +137,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_HID_write_obj,
 STATIC mp_obj_t mod_trezorio_HID_write_blocking(mp_obj_t self, mp_obj_t msg,
                                                 mp_obj_t timeout_ms) {
   mp_obj_HID_t *o = MP_OBJ_TO_PTR(self);
-  mp_buffer_info_t buf;
+  mp_buffer_info_t buf = {0};
   mp_get_buffer_raise(msg, &buf, MP_BUFFER_READ);
   uint32_t timeout = trezor_obj_get_uint(timeout_ms);
   ssize_t r =

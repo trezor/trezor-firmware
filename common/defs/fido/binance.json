@@ -1,5 +1,5 @@
 {
-  "label": "Binance",
+  "name": "Binance",
   "webauthn": ["www.binance.com"],
   "use_sign_count": false,
   "use_self_attestation": true

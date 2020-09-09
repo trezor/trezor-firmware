@@ -13,8 +13,7 @@ master.
 The Trezor T screen has a _header_, with an icon and text. Below it is _body_, which
 can fit up to 5 lines of text.
 
-Text can be in one of several colors, and in one of four styles: NORMAL, BOLD, MONO
-and MONO_BOLD.
+Text can be in one of several colors, and in one of three styles: NORMAL, BOLD, MONO.
 
 It is possible to have multiple styles on the same line, but different styles must be
 separated by a space.
@@ -69,7 +68,7 @@ Better!
 ### Text styles
 
 Now let's add some style. Use `@@BOLD` to start printing in bold. Use `@@NORMAL`
-to go back to normal text. `@@MONO` and `@@MONO_BOLD` works similarly.
+to go back to normal text. `@@MONO` works similarly.
 
 ```sh
 trezorctl debug show-text "My hovercraft is @@BOLD full of @@BR eels. @@NORMAL Call the porter, @@BR there is a @@MONO frog @@NORMAL in my @@BR bidet."

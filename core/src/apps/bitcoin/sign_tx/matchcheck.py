@@ -1,17 +1,13 @@
-from micropython import const
-
 from trezor import wire
 from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputType import TxOutputType
 from trezor.utils import ensure
 
 from .. import multisig
+from ..common import BIP32_WALLET_DEPTH
 
 if False:
     from typing import Any, Union
-
-# the number of bip32 levels used in a wallet (chain and address)
-_BIP32_WALLET_DEPTH = const(2)
 
 
 class MatchChecker:
@@ -83,9 +79,9 @@ class MatchChecker:
 
 class WalletPathChecker(MatchChecker):
     def attribute_from_tx(self, txio: Union[TxInputType, TxOutputType]) -> Any:
-        if not txio.address_n:
+        if len(txio.address_n) < BIP32_WALLET_DEPTH:
             return None
-        return txio.address_n[:-_BIP32_WALLET_DEPTH]
+        return txio.address_n[:-BIP32_WALLET_DEPTH]
 
 
 class MultisigFingerprintChecker(MatchChecker):

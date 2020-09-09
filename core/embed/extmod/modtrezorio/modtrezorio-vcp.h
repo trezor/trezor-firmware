@@ -60,7 +60,7 @@ STATIC mp_obj_t mod_trezorio_VCP_make_new(const mp_obj_type_t *type,
        MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT,
        {.u_int = 0}},
   };
-  mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)];
+  mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)] = {0};
   mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args),
                             allowed_args, vals);
 

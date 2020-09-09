@@ -9,7 +9,7 @@
   "decimals": 8,
   "address_type": 63,
   "address_type_p2sh": 18,
-  "maxfee_kb": 1000000,
+  "maxfee_kb": 780000000000,
   "minfee_kb": 0,
   "signed_message_header": "SmartCash Signed Message:\n",
   "hash_genesis_block": "000007acc6970b812948d14ea5a0a13db0fdd07d5047c7e69101fa8b361e05a4",

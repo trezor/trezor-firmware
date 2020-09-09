@@ -101,7 +101,7 @@ void display_init(void) {
   }
   atexit(SDL_Quit);
 
-  char *window_title;
+  char *window_title = NULL;
   if (!asprintf(&window_title, "Trezor^emu: %s", profile_name())) {
     window_title = "Trezor^emu";
   }
@@ -191,7 +191,8 @@ void display_refresh(void) {
     display_init();
   }
   if (BACKGROUND) {
-    SDL_RenderCopy(RENDERER, BACKGROUND, NULL, NULL);
+    const SDL_Rect r = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
+    SDL_RenderCopy(RENDERER, BACKGROUND, NULL, &r);
   } else {
     SDL_RenderClear(RENDERER);
   }

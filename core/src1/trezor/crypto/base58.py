@@ -1,1 +1,0 @@
-../../../src/trezor/crypto/base58.py

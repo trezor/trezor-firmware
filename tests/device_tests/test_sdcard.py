@@ -66,6 +66,7 @@ def test_sd_protect_unlock(client):
         client.debug.press_yes()
 
     with client:
+        client.watch_layout()
         client.set_input_flow(input_flow_enable_sd_protect)
         device.sd_protect(client, Op.ENABLE)
 
@@ -91,6 +92,7 @@ def test_sd_protect_unlock(client):
         client.debug.press_yes()
 
     with client:
+        client.watch_layout()
         client.set_input_flow(input_flow_change_pin)
         device.change_pin(client)
 
@@ -110,6 +112,7 @@ def test_sd_protect_unlock(client):
         client.debug.press_no()  # close
 
     with client, pytest.raises(TrezorFailure) as e:
+        client.watch_layout()
         client.set_input_flow(input_flow_change_pin_format)
         device.change_pin(client)
 

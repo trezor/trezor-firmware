@@ -93,4 +93,4 @@
 	/* 0x7c | */ (uint8_t *)"\x03\x00\xfe\x00",
 	/* 0x7d } */ (uint8_t *)"\x04\x82\xee\x7c\x10",
 	/* 0x7e ~ */ (uint8_t *)"\x05\x18\x20\x10\x08\x30",
-	/* 0x7f _ */ (uint8_t *)"\x01\x00",
+	/* 0x7f _ */ (uint8_t *)"\x05\xff\xdf\xb5\xcf\xff",

@@ -42,7 +42,12 @@ VALID_VECTORS = [
         # ttl
         10,
         # input flow
-        [[InputAction.SWIPE, InputAction.YES], [InputAction.SWIPE, InputAction.YES]],
+        [
+            [InputAction.YES],
+            [InputAction.YES],
+            [InputAction.SWIPE, InputAction.YES],
+            [InputAction.SWIPE, InputAction.YES],
+        ],
         # tx hash
         "73e09bdebf98a9e0f17f86a2d11e0f14f4f8dae77cdf26ff1678e821f20c8db6",
         # serialized tx
@@ -64,6 +69,8 @@ VALID_VECTORS = [
         10,
         # input flow
         [
+            [InputAction.YES],
+            [InputAction.YES],
             [InputAction.SWIPE, InputAction.YES],
             [InputAction.YES],
             [InputAction.SWIPE, InputAction.YES],
@@ -89,6 +96,8 @@ VALID_VECTORS = [
         10,
         # input flow
         [
+            [InputAction.YES],
+            [InputAction.YES],
             [InputAction.SWIPE, InputAction.YES],
             [InputAction.YES],
             [InputAction.SWIPE, InputAction.YES],
@@ -127,7 +136,9 @@ def test_cardano_sign_tx(
     withdrawals = []
     metadata = bytes()
 
-    expected_responses = [messages.PassphraseRequest()]
+    expected_responses = [
+        messages.PassphraseRequest(),
+    ]
     expected_responses += [
         messages.ButtonRequest(code=messages.ButtonRequestType.Other)
         for i in range(len(input_flow_sequences))

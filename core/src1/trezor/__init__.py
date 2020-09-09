@@ -1,1 +1,0 @@
-../../src/trezor/__init__.py

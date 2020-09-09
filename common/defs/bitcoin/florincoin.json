@@ -9,7 +9,7 @@
   "decimals": 8,
   "address_type": 35,
   "address_type_p2sh": 94,
-  "maxfee_kb": 40000000,
+  "maxfee_kb": 78000000000,
   "minfee_kb": 100000,
   "signed_message_header": "Florincoin Signed Message:\n",
   "hash_genesis_block": "09c7781c9df90708e278c35d38ea5c9041d7ecfcdd1c56ba67274b7cff3e1cea",
@@ -39,7 +39,7 @@
   "negative_fee": false,
   "cooldown": 100,
   "consensus_branch_id": null,
-  "extra_data": false,
+  "extra_data": true,
   "timestamp": false,
   "confidential_assets": null
 }

@@ -20,20 +20,19 @@ def c_bytes(rp_id_hash):
 
 fido_entries = []
 for app in fido:
-    for app_id in app.u2f:
-        fido_entries.append((bytes.fromhex(app_id), "U2F", "", app))
+    for u2f in app.u2f:
+        fido_entries.append((u2f["label"], bytes.fromhex(u2f["app_id"]), "U2F", app))
     for origin in app.webauthn:
         rp_id_hash = sha256(origin.encode()).digest()
-        origin_str = " ({})".format(origin)
-        fido_entries.append((rp_id_hash, "WebAuthn", origin_str, app))
+        fido_entries.append((origin, rp_id_hash, "WebAuthn", app))
 %>\
 // clang-format off
 static const U2FWellKnown u2f_well_known[] = {
-% for rp_id_hash, type, origin_str, app in fido_entries:
+% for label, rp_id_hash, type, app in fido_entries:
 	{
-		// ${type} for ${app.label}${origin_str}
+		// ${type} for ${app.name}
 		${c_bytes(rp_id_hash)},
-		${c_str(app.label)}
+		${c_str(label)}
 	},
 % endfor
 };

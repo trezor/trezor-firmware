@@ -99,7 +99,7 @@ STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type,
       {MP_QSTR_usb21_enabled, MP_ARG_KW_ONLY | MP_ARG_BOOL, {.u_bool = true}},
       {MP_QSTR_usb21_landing, MP_ARG_KW_ONLY | MP_ARG_BOOL, {.u_bool = true}},
   };
-  mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)];
+  mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)] = {0};
   mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args),
                             allowed_args, vals);
 
@@ -186,8 +186,8 @@ STATIC mp_obj_t mod_trezorio_USB_open(mp_obj_t self) {
     mp_raise_msg(&mp_type_RuntimeError, "already initialized");
   }
 
-  size_t iface_cnt;
-  mp_obj_t *iface_objs;
+  size_t iface_cnt = 0;
+  mp_obj_t *iface_objs = NULL;
   mp_obj_get_array(MP_OBJ_FROM_PTR(&o->ifaces), &iface_cnt, &iface_objs);
 
   // Initialize the USB stack

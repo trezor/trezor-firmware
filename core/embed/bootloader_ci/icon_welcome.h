@@ -1,0 +1,1 @@
+../bootloader/icon_welcome.h

@@ -55,11 +55,6 @@ class Bitcoinlike(Bitcoin):
                 i, txi, public_keys, threshold, script_pubkey
             )
 
-    def on_negative_fee(self) -> None:
-        # some coins require negative fees for reward TX
-        if not self.coin.negative_fee:
-            super().on_negative_fee()
-
     def get_sighash_type(self, txi: TxInputType) -> int:
         hashtype = super().get_sighash_type(txi)
         if self.coin.fork_id is not None:

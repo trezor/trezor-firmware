@@ -1,11 +1,10 @@
-#include "font_roboto_bold_20.h"
-
-// first two bytes are width and height of the glyph
-// third, fourth and fifth bytes are advance
-// bearingX and bearingY of the horizontal metrics of the glyph
-// rest is packed 4-bit glyph data
+#include <stdint.h>
 
 // clang-format off
+
+// - the first two bytes are width and height of the glyph
+// - the third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph
+// - the rest is packed 4-bit glyph data
 
 /*   */ static const uint8_t Font_Roboto_Bold_20_glyph_32[] = { 0, 0, 5, 0, 0 };
 /* ! */ static const uint8_t Font_Roboto_Bold_20_glyph_33[] = { 3, 15, 5, 1, 15, 255, 223, 253, 255, 223, 253, 255, 223, 253, 255, 223, 253, 255, 223, 253, 0, 0, 0, 159, 111, 252, 159, 96 };
@@ -102,6 +101,8 @@
 /* | */ static const uint8_t Font_Roboto_Bold_20_glyph_124[] = { 2, 17, 6, 2, 15, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253, 253 };
 /* } */ static const uint8_t Font_Roboto_Bold_20_glyph_125[] = { 7, 21, 7, 0, 17, 0, 0, 0, 2, 231, 0, 0, 95, 252, 0, 0, 127, 245, 0, 1, 255, 160, 0, 15, 252, 0, 0, 255, 208, 0, 15, 253, 0, 0, 239, 240, 0, 7, 255, 162, 0, 8, 255, 128, 1, 223, 248, 0, 175, 246, 0, 15, 254, 0, 0, 255, 208, 0, 15, 253, 0, 0, 255, 192, 0, 63, 249, 0, 11, 255, 48, 6, 255, 112, 0, 25, 32, 0, 0 };
 /* ~ */ static const uint8_t Font_Roboto_Bold_20_glyph_126[] = { 11, 5, 13, 1, 9, 0, 52, 16, 0, 0, 0, 191, 255, 128, 2, 254, 127, 255, 255, 198, 207, 205, 248, 23, 255, 255, 244, 170, 16, 3, 207, 230, 0 };
+
+const uint8_t Font_Roboto_Bold_20_glyph_nonprintable[] = { 9, 15, 11, 1, 15, 253, 98, 1, 93, 252, 0, 0, 0, 29, 64, 4, 164, 0, 96, 0, 239, 224, 3, 238, 239, 254, 0, 63, 255, 255, 96, 7, 255, 255, 128, 2, 239, 255, 176, 0, 223, 255, 243, 0, 175, 255, 255, 0, 15, 255, 255, 249, 138, 255, 255, 255, 255, 255, 255, 255, 246, 9, 255, 255, 255, 0, 63, 255, 255, 246, 9, 255, 255 };
 
 const uint8_t * const Font_Roboto_Bold_20[126 + 1 - 32] = {
     Font_Roboto_Bold_20_glyph_32,

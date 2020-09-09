@@ -1,0 +1,1 @@
+../firmware/bl_check.c

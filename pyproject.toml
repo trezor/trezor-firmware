@@ -1,0 +1,79 @@
+[tool.poetry]
+name = "trezor-firmware"
+version = "0.0.0"
+description = ""
+authors = ["SatoshiLabs <info@satoshilabs.com>"]
+
+[tool.poetry.dependencies]
+# all
+python = "^3.5"
+trezor = {path = "./python"}
+scons = "*"
+protobuf = "*"
+pyblake2 = "*"
+Pyro4 = "*"
+nanopb = "0.4.1"
+virtualenv = "20.0.23"  # https://github.com/pypa/virtualenv/issues/1873
+
+## test tools
+pytest = "*"
+mock = "*"
+coverage = "<5"  # coverage 5+ uses binary sqlite format
+flaky = ">=3.6.1"  # https://github.com/box/flaky/issues/156
+pytest-ordering = "*"
+pytest-random-order = "*"
+pytest-timeout = "*"
+tox = "*"
+dominate = "*"
+
+# hardware tests
+pyserial = "*"
+
+## test requirements
+shamir-mnemonic = "*"
+fido2 = ">=0.8.0"
+
+## typing
+mypy = "*"
+typing-extensions = ">=3.7.4"
+
+## style
+isort = "<5"  # 5 changes lots of stuff that need to be addressed first: https://timothycrosley.github.io/isort/docs/upgrade_guides/5.0.0/
+flake8 = ">=3.7.0"
+black = ">=19.10b0"
+mako = ">=1.0.7"
+munch = ">=2.3.2"
+autoflake = "*"
+
+# common
+demjson = "*"
+graphviz = "*"
+
+## cointool
+click = ">=6"
+ed25519 = ">=1.4"
+requests = ">=2.19"
+termcolor = ">=0.1.2"
+Pillow = ">=5.2.0"
+
+# crypto
+ecdsa = ">=0.13.3"
+curve25519-donna = "*"
+pyasn1 = "*"
+
+# legacy
+setuptools = ">=24.2.0"
+typing = "*"
+
+# storage
+cryptography = "*"
+hypothesis = "*"
+attrs = "*"
+inotify = "*"
+
+[tool.poetry.dev-dependencies]
+scan-build = "*"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"

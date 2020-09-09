@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+# script/cibuild_intermediate_fw:
+#    Setup environment for CI to build intermediate firmware.
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+make -C vendor/libopencm3 lib/stm32/f2
+
+make libtrezor.a
+
+make -C intermediate_fw all sign
+

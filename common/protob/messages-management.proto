@@ -369,3 +369,30 @@ message GetNextU2FCounter {
 message NextU2FCounter {
     optional uint32 u2f_counter = 1;
 }
+
+/**
+ * Request: Ask device to prepare for a preauthorized operation.
+ * @start
+ * @next PreauthorizedRequest
+ * @next Failure
+ */
+message DoPreauthorized {
+}
+
+/**
+ * Request: Device awaits a preauthorized operation.
+ * @start
+ * @next SignTx
+ * @next GetOwnershipProof
+ */
+message PreauthorizedRequest {
+}
+
+/**
+ * Request: Cancel any outstanding authorization in the current session.
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message CancelAuthorization {
+}

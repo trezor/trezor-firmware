@@ -10,6 +10,7 @@ _SESSIONLESS_FLAG = 128
 APP_COMMON_SEED = 0
 APP_CARDANO_ROOT = 1
 APP_MONERO_LIVE_REFRESH = 2
+APP_BASE_AUTHORIZATION = 3
 
 # Keys that are valid across sessions
 APP_COMMON_SEED_WITHOUT_PASSPHRASE = 1 | _SESSIONLESS_FLAG
@@ -70,6 +71,17 @@ def get(key: int) -> Any:
     if _active_session_id is None:
         raise RuntimeError  # no session active
     return _caches[_active_session_id].get(key)
+
+
+def delete(key: int) -> None:
+    if key & _SESSIONLESS_FLAG:
+        if key in _sessionless_cache:
+            del _sessionless_cache[key]
+        return
+    if _active_session_id is None:
+        raise RuntimeError  # no session active
+    if key in _caches[_active_session_id]:
+        del _caches[_active_session_id][key]
 
 
 def stored(key: int) -> Callable[[F], F]:

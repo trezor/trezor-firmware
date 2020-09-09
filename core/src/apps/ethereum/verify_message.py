@@ -27,8 +27,6 @@ async def verify_message(ctx, msg):
 
     address = address_from_bytes(address_bytes)
 
-    await require_confirm_verify_message(
-        ctx, address, "Verify ETH message", msg.message
-    )
+    await require_confirm_verify_message(ctx, address, "ETH", msg.message)
 
     return Success(message="Message verified")

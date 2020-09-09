@@ -24,7 +24,7 @@ ROOT = Path(__file__).parent.parent.resolve()
 BINDIR = ROOT / "tests" / "emulators"
 
 LOCAL_BUILD_PATHS = {
-    "core": ROOT / "core" / "build" / "unix" / "micropython",
+    "core": ROOT / "core" / "build" / "unix" / "trezor-emu-core",
     "legacy": ROOT / "legacy" / "firmware" / "trezor.elf",
 }
 

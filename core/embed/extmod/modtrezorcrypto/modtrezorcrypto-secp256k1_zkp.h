@@ -152,7 +152,7 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_context_publickey(
     size_t n_args, const mp_obj_t *args) {
   const secp256k1_context *ctx =
       mod_trezorcrypto_get_secp256k1_context(args[0]);
-  mp_buffer_info_t sk;
+  mp_buffer_info_t sk = {0};
   mp_get_buffer_raise(args[1], &sk, MP_BUFFER_READ);
   secp256k1_pubkey pk;
   if (sk.len != 32) {
@@ -163,7 +163,7 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_context_publickey(
   }
 
   bool compressed = n_args < 3 || args[2] == mp_const_true;
-  uint8_t out[65];
+  uint8_t out[65] = {0};
   size_t outlen = sizeof(out);
   secp256k1_ec_pubkey_serialize(
       ctx, out, &outlen, &pk,
@@ -184,7 +184,7 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_context_sign(size_t n_args,
                                                         const mp_obj_t *args) {
   const secp256k1_context *ctx =
       mod_trezorcrypto_get_secp256k1_context(args[0]);
-  mp_buffer_info_t sk, dig;
+  mp_buffer_info_t sk = {0}, dig = {0};
   mp_get_buffer_raise(args[1], &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(args[2], &dig, MP_BUFFER_READ);
   bool compressed = n_args < 4 || args[3] == mp_const_true;
@@ -195,8 +195,8 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_context_sign(size_t n_args,
     mp_raise_ValueError("Invalid length of digest");
   }
   secp256k1_ecdsa_recoverable_signature sig;
-  uint8_t out[65];
-  int pby;
+  uint8_t out[65] = {0};
+  int pby = 0;
   if (!secp256k1_ecdsa_sign_recoverable(ctx, &sig, (const uint8_t *)dig.buf,
                                         (const uint8_t *)sk.buf, NULL, NULL)) {
     mp_raise_ValueError("Signing failed");
@@ -221,7 +221,7 @@ STATIC mp_obj_t
 mod_trezorcrypto_secp256k1_context_verify(size_t n_args, const mp_obj_t *args) {
   const secp256k1_context *ctx =
       mod_trezorcrypto_get_secp256k1_context(args[0]);
-  mp_buffer_info_t pk, sig, dig;
+  mp_buffer_info_t pk = {0}, sig = {0}, dig = {0};
   mp_get_buffer_raise(args[1], &pk, MP_BUFFER_READ);
   mp_get_buffer_raise(args[2], &sig, MP_BUFFER_READ);
   mp_get_buffer_raise(args[3], &dig, MP_BUFFER_READ);
@@ -261,7 +261,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 STATIC mp_obj_t mod_trezorcrypto_secp256k1_context_verify_recover(
     mp_obj_t self, mp_obj_t signature, mp_obj_t digest) {
   const secp256k1_context *ctx = mod_trezorcrypto_get_secp256k1_context(self);
-  mp_buffer_info_t sig, dig;
+  mp_buffer_info_t sig = {0}, dig = {0};
   mp_get_buffer_raise(signature, &sig, MP_BUFFER_READ);
   mp_get_buffer_raise(digest, &dig, MP_BUFFER_READ);
   if (sig.len != 65) {
@@ -286,7 +286,7 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_context_verify_recover(
   if (!secp256k1_ecdsa_recover(ctx, &pk, &ec_sig, (const uint8_t *)dig.buf)) {
     return mp_const_none;
   }
-  uint8_t out[65];
+  uint8_t out[65] = {0};
   size_t pklen = sizeof(out);
   secp256k1_ec_pubkey_serialize(
       ctx, out, &pklen, &pk,
@@ -314,7 +314,7 @@ static int secp256k1_ecdh_hash_passthrough(uint8_t *output, const uint8_t *x,
 STATIC mp_obj_t mod_trezorcrypto_secp256k1_context_multiply(
     mp_obj_t self, mp_obj_t secret_key, mp_obj_t public_key) {
   const secp256k1_context *ctx = mod_trezorcrypto_get_secp256k1_context(self);
-  mp_buffer_info_t sk, pk;
+  mp_buffer_info_t sk = {0}, pk = {0};
   mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(public_key, &pk, MP_BUFFER_READ);
   if (sk.len != 32) {
@@ -328,7 +328,7 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_context_multiply(
                                  pk.len)) {
     mp_raise_ValueError("Invalid public key");
   }
-  uint8_t out[65];
+  uint8_t out[65] = {0};
   if (!secp256k1_ecdh(ctx, out, &ec_pk, (const uint8_t *)sk.buf,
                       secp256k1_ecdh_hash_passthrough, NULL)) {
     mp_raise_ValueError("Multiply failed");

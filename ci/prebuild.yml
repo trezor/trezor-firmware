@@ -35,9 +35,17 @@ gen prebuild:
   script:
     - nix-shell --run "pipenv run make gen_check"
 
-#release commit messages prebuild:
-#  stage: prebuild
-#  only:
-#    - /^release\//
-#  script:
-#    - nix-shell --run "ci/check_release_commit_messages.sh"
+release commit messages prebuild:
+  stage: prebuild
+  before_script: []  # nothing needed
+  variables:
+    # We need to clone the repo properly so we can work with origin/master.
+    GIT_STRATEGY: clone
+  only:
+    refs:
+      - /^release\//
+    variables:
+      # We want this to run on gitlab.com/satoshilabs/trezor/trezor-firmware only.
+      - $CI_PROJECT_PATH_SLUG == 'satoshilabs-trezor-trezor-firmware'
+  script:
+    - nix-shell --run "ci/check_release_commit_messages.sh"

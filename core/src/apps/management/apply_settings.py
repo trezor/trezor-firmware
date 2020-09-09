@@ -12,6 +12,27 @@ if False:
     from trezor.messages.ApplySettings import ApplySettings, EnumTypeSafetyCheckLevel
 
 
+def validate_homescreen(homescreen: bytes) -> None:
+    if homescreen == b"":
+        return
+
+    if len(homescreen) > storage.device.HOMESCREEN_MAXSIZE:
+        raise wire.DataError(
+            "Homescreen is too large, maximum size is {} bytes".format(
+                storage.device.HOMESCREEN_MAXSIZE
+            )
+        )
+
+    try:
+        w, h, grayscale = ui.display.toif_info(homescreen)
+    except ValueError:
+        raise wire.DataError("Invalid homescreen")
+    if w != 144 or h != 144:
+        raise wire.DataError("Homescreen must be 144x144 pixel large")
+    if grayscale:
+        raise wire.DataError("Homescreen must be full-color TOIF image")
+
+
 async def apply_settings(ctx: wire.Context, msg: ApplySettings):
     if not storage.device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
@@ -27,8 +48,7 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings):
         raise wire.ProcessError("No setting provided")
 
     if msg.homescreen is not None:
-        if len(msg.homescreen) > storage.device.HOMESCREEN_MAXSIZE:
-            raise wire.DataError("Homescreen is too complex")
+        validate_homescreen(msg.homescreen)
         await require_confirm_change_homescreen(ctx)
         try:
             storage.device.set_homescreen(msg.homescreen)

@@ -19,6 +19,7 @@ from apps.common import coins
 from apps.common.keychain import Keychain
 from apps.bitcoin.keychain import get_namespaces_for_coin
 from apps.bitcoin.sign_tx import bitcoinlike, helpers
+from apps.bitcoin.sign_tx.approvers import BasicApprover
 
 
 EMPTY_SERIALIZED = TxRequestSerializedType(serialized_tx=bytearray())
@@ -102,7 +103,7 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
             helpers.UiConfirmOutput(out2, coin),
             True,
 
-            helpers.UiConfirmNonDefaultLocktime(tx.lock_time),
+            helpers.UiConfirmNonDefaultLocktime(tx.lock_time, lock_time_disabled=False),
             True,
 
             helpers.UiConfirmTotal(12300000, 11000, coin),
@@ -147,7 +148,8 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
 
         ns = get_namespaces_for_coin(coin)
         keychain = Keychain(seed, coin.curve_name, ns)
-        signer = bitcoinlike.Bitcoinlike(tx, keychain, coin).signer()
+        approver = BasicApprover(tx, coin)
+        signer = bitcoinlike.Bitcoinlike(tx, keychain, coin, approver).signer()
         for request, response in chunks(messages, 2):
             self.assertEqual(signer.send(request), response)
         with self.assertRaises(StopIteration):
@@ -223,7 +225,7 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAck(tx=TransactionType(outputs=[out2])),
 
-            helpers.UiConfirmNonDefaultLocktime(tx.lock_time),
+            helpers.UiConfirmNonDefaultLocktime(tx.lock_time, lock_time_disabled=False),
             True,
 
             helpers.UiConfirmTotal(5000000 + 11000, 11000, coin),
@@ -269,7 +271,8 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
 
         ns = get_namespaces_for_coin(coin)
         keychain = Keychain(seed, coin.curve_name, ns)
-        signer = bitcoinlike.Bitcoinlike(tx, keychain, coin).signer()
+        approver = BasicApprover(tx, coin)
+        signer = bitcoinlike.Bitcoinlike(tx, keychain, coin, approver).signer()
         for request, response in chunks(messages, 2):
             self.assertEqual(signer.send(request), response)
         with self.assertRaises(StopIteration):

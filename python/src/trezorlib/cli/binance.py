@@ -50,16 +50,14 @@ def get_public_key(client, address, show_display):
 
 
 @cli.command()
+@click.argument("file", type=click.File("r"))
 @click.option("-n", "--address", required=True, help=PATH_HELP)
-@click.option(
-    "-f",
-    "--file",
-    type=click.File("r"),
-    required=True,
-    help="Transaction in JSON format",
-)
+@click.option("-f", "--file", is_flag=True, hidden=True, expose_value=False)
 @with_client
 def sign_tx(client, address, file):
-    """Sign Binance transaction"""
+    """Sign Binance transaction.
+
+    Transaction must be provided as a JSON file.
+    """
     address_n = tools.parse_path(address)
     return binance.sign_tx(client, address_n, json.load(file))

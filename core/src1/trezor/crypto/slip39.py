@@ -1,1 +1,0 @@
-../../../src/trezor/crypto/slip39.py

@@ -9,7 +9,7 @@ static inline char convert(char c) {
   if (c < 0x80) {
     return c;
   } else if (c >= 0xC0) {
-    return '_';
+    return 0x7f;
   } else {
     return '\0';
   }

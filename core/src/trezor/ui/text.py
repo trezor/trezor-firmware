@@ -34,7 +34,7 @@ def render_text(
     INITIAL_OFFSET_X = offset_x
     offset_y_max = TEXT_HEADER_HEIGHT + (TEXT_LINE_HEIGHT * max_lines)
 
-    FONTS = (ui.NORMAL, ui.BOLD, ui.MONO, ui.MONO_BOLD)
+    FONTS = (ui.NORMAL, ui.BOLD, ui.MONO)
 
     # sizes of common glyphs
     SPACE = ui.display.text_width(" ", font)
@@ -149,10 +149,6 @@ class Text(ui.Component):
         self.content.append(ui.MONO)
         self.content.extend(content)
 
-    def mono_bold(self, *content: TextContent) -> None:
-        self.content.append(ui.MONO_BOLD)
-        self.content.extend(content)
-
     def br(self) -> None:
         self.content.append(BR)
 
@@ -201,18 +197,15 @@ class Label(ui.Component):
         if self.repaint:
             align = self.align
             ax, ay, aw, ah = self.area
+            ui.display.bar(ax, ay, aw, ah, ui.BG)
             tx = ax + aw // 2
             ty = ay + ah // 2 + 8
             if align is LABEL_LEFT:
-                ui.display.text(tx, ty, self.content, self.style, ui.FG, ui.BG, aw)
+                ui.display.text(tx, ty, self.content, self.style, ui.FG, ui.BG)
             elif align is LABEL_CENTER:
-                ui.display.text_center(
-                    tx, ty, self.content, self.style, ui.FG, ui.BG, aw
-                )
+                ui.display.text_center(tx, ty, self.content, self.style, ui.FG, ui.BG)
             elif align is LABEL_RIGHT:
-                ui.display.text_right(
-                    tx, ty, self.content, self.style, ui.FG, ui.BG, aw
-                )
+                ui.display.text_right(tx, ty, self.content, self.style, ui.FG, ui.BG)
             self.repaint = False
 
     if __debug__:

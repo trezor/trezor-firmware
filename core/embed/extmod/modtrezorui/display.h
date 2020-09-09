@@ -30,6 +30,7 @@
 #define MAX_DISPLAY_RESY 320
 #define DISPLAY_RESX 240
 #define DISPLAY_RESY 240
+#define TREZOR_FONT_BPP 4
 
 #elif TREZOR_MODEL == 1
 
@@ -37,12 +38,12 @@
 #define MAX_DISPLAY_RESY 64
 #define DISPLAY_RESX 128
 #define DISPLAY_RESY 64
+#define TREZOR_FONT_BPP 1
 
 #else
 #error Unknown Trezor model
 #endif
 
-#define FONT_BPP 4
 #define FONT_SIZE 20
 #define AVATAR_IMAGE_SIZE 144
 #define LOADER_ICON_SIZE 64
@@ -60,9 +61,6 @@
 #ifdef TREZOR_FONT_MONO_ENABLE
 #define FONT_MONO (-3)
 #endif
-#ifdef TREZOR_FONT_MONO_BOLD_ENABLE
-#define FONT_MONO_BOLD (-4)
-#endif
 
 // provided by port
 
@@ -79,6 +77,8 @@ void display_bar(int x, int y, int w, int h, uint16_t c);
 void display_bar_radius(int x, int y, int w, int h, uint16_t c, uint16_t b,
                         uint8_t r);
 
+bool display_toif_info(const uint8_t *buf, uint32_t len, uint16_t *out_w,
+                       uint16_t *out_h, bool *out_grayscale);
 void display_image(int x, int y, int w, int h, const void *data,
                    uint32_t datalen);
 void display_avatar(int x, int y, const void *data, uint32_t datalen,

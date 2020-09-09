@@ -75,6 +75,7 @@ static uint32_t lock_time = 0;
 static uint32_t expiry = 0;
 static uint32_t version_group_id = 0;
 static uint32_t timestamp = 0;
+static uint32_t min_sequence = 0;
 #if !BITCOIN_ONLY
 static uint32_t branch_id = 0;
 #endif
@@ -106,6 +107,10 @@ static uint32_t tx_weight;
 
 /* The maximum number of change-outputs allowed without user confirmation. */
 #define MAX_SILENT_CHANGE_COUNT 2
+
+/* Setting nSequence to this value for every input in a transaction disables
+   nLockTime. */
+#define SEQUENCE_FINAL 0xffffffff
 
 enum {
   SIGHASH_ALL = 1,
@@ -497,13 +502,8 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   memcpy(&root, _root, sizeof(HDNode));
   version = msg->version;
   lock_time = msg->lock_time;
+  min_sequence = SEQUENCE_FINAL;
 
-  if (coin->overwintered && !msg->has_version_group_id) {
-    fsm_sendFailure(FailureType_Failure_DataError,
-                    _("Version group ID must be set."));
-    signing_abort();
-    return;
-  }
   if (!coin->overwintered) {
     if (msg->has_version_group_id) {
       fsm_sendFailure(FailureType_Failure_DataError,
@@ -523,19 +523,26 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   expiry = (coin->decred || coin->overwintered) ? msg->expiry : 0;
   timestamp = coin->timestamp ? msg->timestamp : 0;
   if (coin->overwintered) {
+    if (!msg->has_version_group_id) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Version group ID must be set."));
+      signing_abort();
+      return;
+    }
+    if (!msg->has_branch_id) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Branch ID must be set."));
+      signing_abort();
+      return;
+    }
+    if (version != 4) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Unsupported transaction version."));
+      signing_abort();
+      return;
+    }
     version_group_id = msg->version_group_id;
     branch_id = msg->branch_id;
-    if (branch_id == 0) {
-      // set default values for Zcash if branch_id is unset
-      switch (version) {
-        case 3:
-          branch_id = 0x5BA81B19;  // Overwinter
-          break;
-        case 4:
-          branch_id = 0x76B809BB;  // Sapling
-          break;
-      }
-    }
   } else {
     version_group_id = 0;
     branch_id = 0;
@@ -781,12 +788,18 @@ static bool signing_check_input(const TxInputType *txinput) {
   } else {  // single signature
     multisig_fp_mismatch = true;
   }
+
   // remember the input bip32 path
   // change addresses must use the same bip32 path as all inputs
   extract_input_bip32_path(txinput);
+
+  // remember the minimum nSequence value
+  if (txinput->sequence < min_sequence) min_sequence = txinput->sequence;
+
   // compute segwit hashPrevouts & hashSequence
   tx_prevout_hash(&hasher_prevouts, txinput);
   tx_sequence_hash(&hasher_sequence, txinput);
+
 #if !BITCOIN_ONLY
   if (coin->decred) {
     // serialize Decred prefix in Phase 1
@@ -799,6 +812,7 @@ static bool signing_check_input(const TxInputType *txinput) {
     tx_serialize_input_hash(&ti, txinput);
   }
 #endif
+
   // hash prevout and script type to check it later (relevant for fee
   // computation)
   tx_prevout_hash(&hasher_check, txinput);
@@ -913,6 +927,7 @@ static bool signing_confirm_tx(void) {
       return false;
     }
   }
+
   uint64_t fee = 0;
   if (spending <= to_spend) {
     fee = to_spend - spending;
@@ -931,6 +946,16 @@ static bool signing_confirm_tx(void) {
 
   if (change_count > MAX_SILENT_CHANGE_COUNT) {
     layoutChangeCountOverThreshold(change_count);
+    if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+      signing_abort();
+      return false;
+    }
+  }
+
+  if (lock_time != 0) {
+    bool lock_time_disabled = (min_sequence == SEQUENCE_FINAL);
+    layoutConfirmNondefaultLockTime(lock_time, lock_time_disabled);
     if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
       fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
       signing_abort();
@@ -1009,40 +1034,6 @@ static void signing_hash_bip143(const TxInputType *txinput, uint8_t *hash) {
 }
 
 #if !BITCOIN_ONLY
-
-static void signing_hash_zip143(const TxInputType *txinput, uint8_t *hash) {
-  uint32_t hash_type = signing_hash_type();
-  uint8_t personal[16] = {0};
-  memcpy(personal, "ZcashSigHash", 12);
-  memcpy(personal + 12, &branch_id, 4);
-  Hasher hasher_preimage = {0};
-  hasher_InitParam(&hasher_preimage, HASHER_BLAKE2B_PERSONAL, personal,
-                   sizeof(personal));
-  uint32_t ver = version | TX_OVERWINTERED;  // 1. nVersion | fOverwintered
-  hasher_Update(&hasher_preimage, (const uint8_t *)&ver, 4);
-  hasher_Update(&hasher_preimage, (const uint8_t *)&version_group_id,
-                4);                                    // 2. nVersionGroupId
-  hasher_Update(&hasher_preimage, hash_prevouts, 32);  // 3. hashPrevouts
-  hasher_Update(&hasher_preimage, hash_sequence, 32);  // 4. hashSequence
-  hasher_Update(&hasher_preimage, hash_outputs, 32);   // 5. hashOutputs
-                                                       // 6. hashJoinSplits
-  hasher_Update(&hasher_preimage, (const uint8_t *)"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 32);
-  hasher_Update(&hasher_preimage, (const uint8_t *)&lock_time,
-                4);  // 7. nLockTime
-  hasher_Update(&hasher_preimage, (const uint8_t *)&expiry,
-                4);  // 8. expiryHeight
-  hasher_Update(&hasher_preimage, (const uint8_t *)&hash_type,
-                4);  // 9. nHashType
-
-  tx_prevout_hash(&hasher_preimage, txinput);  // 10a. outpoint
-  tx_script_hash(&hasher_preimage, txinput->script_sig.size,
-                 txinput->script_sig.bytes);  // 10b. scriptCode
-  hasher_Update(&hasher_preimage, (const uint8_t *)&txinput->amount,
-                8);                             // 10c. value
-  tx_sequence_hash(&hasher_preimage, txinput);  // 10d. nSequence
-
-  hasher_Final(&hasher_preimage, hash);
-}
 
 static void signing_hash_zip243(const TxInputType *txinput, uint8_t *hash) {
   uint32_t hash_type = signing_hash_type();
@@ -1393,8 +1384,7 @@ void signing_txack(TransactionType *tx) {
       }
       tx_init(&tp, tx->inputs_cnt, tx->outputs_cnt, tx->version, tx->lock_time,
               tx->expiry, tx->extra_data_len, coin->curve->hasher_sign,
-              coin->overwintered && tx->version >= 3, tx->version_group_id,
-              tx->timestamp);
+              coin->overwintered, tx->version_group_id, tx->timestamp);
 #if !BITCOIN_ONLY
       if (coin->decred) {
         tp.version |= (DECRED_SERIALIZE_NO_WITNESS << 16);
@@ -1644,20 +1634,14 @@ void signing_txack(TransactionType *tx) {
         uint8_t hash[32] = {0};
 #if !BITCOIN_ONLY
         if (coin->overwintered) {
-          switch (version) {
-            case 3:
-              signing_hash_zip143(&tx->inputs[0], hash);
-              break;
-            case 4:
-              signing_hash_zip243(&tx->inputs[0], hash);
-              break;
-            default:
-              fsm_sendFailure(
-                  FailureType_Failure_DataError,
-                  _("Unsupported version for overwintered transaction"));
-              signing_abort();
-              return;
+          if (version != 4) {
+            fsm_sendFailure(
+                FailureType_Failure_DataError,
+                _("Unsupported version for overwintered transaction"));
+            signing_abort();
+            return;
           }
+          signing_hash_zip243(&tx->inputs[0], hash);
         } else
 #endif
         {

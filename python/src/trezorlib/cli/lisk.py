@@ -52,11 +52,9 @@ def get_public_key(client, address, show_display):
 
 
 @cli.command()
+@click.argument("file", type=click.File("r"))
 @click.option("-n", "--address", required=True, help=PATH_HELP)
-@click.option(
-    "-f", "--file", type=click.File("r"), default="-", help="Transaction in JSON format"
-)
-# @click.option('-b', '--broadcast', help='Broadcast Lisk transaction')
+@click.option("-f", "--file", is_flag=True, hidden=True, expose_value=False)
 @with_client
 def sign_tx(client, address, file):
     """Sign Lisk transaction."""
@@ -74,7 +72,7 @@ def sign_tx(client, address, file):
 @with_client
 def sign_message(client, address, message):
     """Sign message with Lisk address."""
-    address_n = client.expand_path(address)
+    address_n = tools.parse_path(address)
     res = lisk.sign_message(client, address_n, message)
     output = {
         "message": message,

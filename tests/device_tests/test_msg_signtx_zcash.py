@@ -56,7 +56,8 @@ TXHASH_v4 = bytes.fromhex(
 @pytest.mark.altcoin
 @pytest.mark.zcash
 class TestMsgSigntxZcash:
-    def test_one_one_fee_overwinter(self, client):
+    @pytest.mark.skip_ui
+    def test_v3_not_supported(self, client):
         # prevout: aaf51e4606c264e47e5c42c958fe4cf1539c5172684721e38e69f4ef634d75dc:1
         # input 1: 3.0 TAZ
 
@@ -75,40 +76,18 @@ class TestMsgSigntxZcash:
         )
 
         with client:
-            client.set_expected_responses(
-                [
-                    request_input(0),
-                    request_meta(TXHASH_aaf51e),
-                    request_input(0, TXHASH_aaf51e),
-                    request_output(0, TXHASH_aaf51e),
-                    request_output(1, TXHASH_aaf51e),
-                    request_extra_data(0, 1, TXHASH_aaf51e),
-                    request_output(0),
-                    proto.ButtonRequest(code=B.ConfirmOutput),
-                    proto.ButtonRequest(code=B.SignTx),
-                    request_input(0),
-                    request_output(0),
-                    request_finished(),
-                ]
-            )
-
             details = proto.SignTx(
                 version=3, version_group_id=0x03C48270, branch_id=0x5BA81B19,
             )
-            _, serialized_tx = btc.sign_tx(
-                client,
-                "Zcash Testnet",
-                [inp1],
-                [out1],
-                details=details,
-                prev_txes=TX_API,
-            )
-
-        # Accepted by network: tx eda9b772c47f0c29310759960e0081c98707aa67a0a2738bcc71439fcf360675
-        assert (
-            serialized_tx.hex()
-            == "030000807082c40301dc754d63eff4698ee321476872519c53f14cfe58c9425c7ee464c206461ef5aa010000006a47304402207e45f303b4e42be824513855eb21653e1d2749cd94dcd0f0613d3f85d4efd1e20220699ffbdbcad889af7ede5ce9febf7a5ef8f5619b2464824529974c400cffaebc0121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0ffffffff016c9be111000000001976a9145b157a678a10021243307e4bb58f36375aa80e1088ac000000000000000000"
-        )
+            with pytest.raises(TrezorFailure, match="DataError"):
+                _, serialized_tx = btc.sign_tx(
+                    client,
+                    "Zcash Testnet",
+                    [inp1],
+                    [out1],
+                    details=details,
+                    prev_txes=TX_API,
+                )
 
     def test_one_one_fee_sapling(self, client):
         # prevout: e3820602226974b1dd87b7113cc8aea8c63e5ae29293991e7bfa80c126930368:0

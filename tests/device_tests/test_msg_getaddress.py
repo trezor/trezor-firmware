@@ -238,3 +238,12 @@ def test_unknown_path(client):
         )
         # account number is too high
         btc.get_address(client, "Bitcoin", parse_path("m/44'/0'/21'/0/0"))
+
+
+@pytest.mark.altcoin
+@pytest.mark.skip_ui
+def test_crw(client):
+    assert (
+        btc.get_address(client, "Crown", parse_path("44'/72'/0'/0/0"))
+        == "CRWYdvZM1yXMKQxeN3hRsAbwa7drfvTwys48"
+    )

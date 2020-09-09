@@ -44,7 +44,7 @@ typedef struct _mp_obj_HDNode_t {
 STATIC const mp_obj_type_t mod_trezorcrypto_HDNode_type;
 
 #define XPUB_MAXLEN 128
-#define ADDRESS_MAXLEN 36
+#define ADDRESS_MAXLEN 40
 
 /// def __init__(
 ///     self,
@@ -84,14 +84,14 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_make_new(const mp_obj_type_t *type,
        MP_ARG_KW_ONLY | MP_ARG_OBJ,
        {.u_obj = mp_const_empty_bytes}},
   };
-  mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)];
+  mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)] = {0};
   mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args),
                             allowed_args, vals);
 
-  mp_buffer_info_t chain_code;
-  mp_buffer_info_t private_key;
-  mp_buffer_info_t public_key;
-  mp_buffer_info_t curve_name;
+  mp_buffer_info_t chain_code = {0};
+  mp_buffer_info_t private_key = {0};
+  mp_buffer_info_t public_key = {0};
+  mp_buffer_info_t curve_name = {0};
   const uint32_t depth = trezor_obj_get_uint(vals[0].u_obj);
   const uint32_t fingerprint = trezor_obj_get_uint(vals[1].u_obj);
   const uint32_t child_num = trezor_obj_get_uint(vals[2].u_obj);
@@ -159,7 +159,7 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_derive(size_t n_args,
   uint32_t fp = hdnode_fingerprint(&o->hdnode);
   bool public = n_args > 2 && args[2] == mp_const_true;
 
-  int res;
+  int res = 0;
   if (public) {
     res = hdnode_public_ckd(&o->hdnode, i);
   } else {
@@ -198,7 +198,7 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_derive_cardano(mp_obj_t self,
   uint32_t i = mp_obj_get_int_truncated(index);
   uint32_t fp = hdnode_fingerprint(&o->hdnode);
 
-  int res;
+  int res = 0;
   // same as in derive
   if (0 ==
       memcmp(o->hdnode.private_key,
@@ -233,8 +233,8 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_derive_path(mp_obj_t self,
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
 
   // get path objects and length
-  size_t plen;
-  mp_obj_t *pitems;
+  size_t plen = 0;
+  mp_obj_t *pitems = NULL;
   mp_obj_get_array(path, &plen, &pitems);
   if (plen > 32) {
     mp_raise_ValueError("Path cannot be longer than 32 indexes");
@@ -423,29 +423,29 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_nem_encrypt(size_t n_args,
                                                     const mp_obj_t *args) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(args[0]);
 
-  mp_buffer_info_t transfer_pk;
+  mp_buffer_info_t transfer_pk = {0};
   mp_get_buffer_raise(args[1], &transfer_pk, MP_BUFFER_READ);
   if (transfer_pk.len != 32) {
     mp_raise_ValueError("transfer_public_key has invalid length");
   }
 
-  mp_buffer_info_t iv;
+  mp_buffer_info_t iv = {0};
   mp_get_buffer_raise(args[2], &iv, MP_BUFFER_READ);
   if (iv.len != 16) {
     mp_raise_ValueError("iv has invalid length");
   }
-  mp_buffer_info_t salt;
+  mp_buffer_info_t salt = {0};
   mp_get_buffer_raise(args[3], &salt, MP_BUFFER_READ);
   if (salt.len != NEM_SALT_SIZE) {
     mp_raise_ValueError("salt has invalid length");
   }
-  mp_buffer_info_t payload;
+  mp_buffer_info_t payload = {0};
   mp_get_buffer_raise(args[4], &payload, MP_BUFFER_READ);
   if (payload.len == 0) {
     mp_raise_ValueError("payload is empty");
   }
 
-  vstr_t vstr;
+  vstr_t vstr = {0};
   vstr_init_len(&vstr, NEM_ENCRYPTED_SIZE(payload.len));
   if (!hdnode_nem_encrypt(
           &o->hdnode, *(const ed25519_public_key *)transfer_pk.buf, iv.buf,
@@ -465,7 +465,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 STATIC mp_obj_t mod_trezorcrypto_HDNode_ethereum_pubkeyhash(mp_obj_t self) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
 
-  uint8_t pkh[20];
+  uint8_t pkh[20] = {0};
   hdnode_get_ethereum_pubkeyhash(&o->hdnode, pkh);
   return mp_obj_new_bytes(pkh, sizeof(pkh));
 }
@@ -546,18 +546,18 @@ STATIC const mp_obj_type_t mod_trezorcrypto_HDNode_type = {
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_bip32_from_seed(mp_obj_t seed,
                                                  mp_obj_t curve_name) {
-  mp_buffer_info_t seedb;
+  mp_buffer_info_t seedb = {0};
   mp_get_buffer_raise(seed, &seedb, MP_BUFFER_READ);
   if (seedb.len == 0) {
     mp_raise_ValueError("Invalid seed");
   }
-  mp_buffer_info_t curveb;
+  mp_buffer_info_t curveb = {0};
   mp_get_buffer_raise(curve_name, &curveb, MP_BUFFER_READ);
   if (curveb.len == 0) {
     mp_raise_ValueError("Invalid curve name");
   }
 
-  HDNode hdnode;
+  HDNode hdnode = {0};
   int res = 0;
   if (strcmp(curveb.buf, ED25519_CARDANO_NAME) != 0) {
     res = hdnode_from_seed(seedb.buf, seedb.len, curveb.buf, &hdnode);
@@ -589,14 +589,14 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip32_from_seed_obj,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_bip32_from_mnemonic_cardano(
     mp_obj_t mnemonic, mp_obj_t passphrase) {
-  mp_buffer_info_t mnemo, phrase;
+  mp_buffer_info_t mnemo = {0}, phrase = {0};
   mp_get_buffer_raise(mnemonic, &mnemo, MP_BUFFER_READ);
   mp_get_buffer_raise(passphrase, &phrase, MP_BUFFER_READ);
-  HDNode hdnode;
+  HDNode hdnode = {0};
   const char *pmnemonic = mnemo.len > 0 ? mnemo.buf : "";
   const char *ppassphrase = phrase.len > 0 ? phrase.buf : "";
 
-  uint8_t entropy[64];
+  uint8_t entropy[64] = {0};
   int entropy_len = mnemonic_to_entropy(pmnemonic, entropy);
 
   if (entropy_len == 0) {

@@ -9,7 +9,7 @@
   "decimals": 8,
   "address_type": 76,
   "address_type_p2sh": 16,
-  "maxfee_kb": 2000000,
+  "maxfee_kb": 11000000000,
   "minfee_kb": 1000,
   "signed_message_header": "DarkCoin Signed Message:\n",
   "hash_genesis_block": "00000c822abdbb23e28f79a49d29b41429737c6c7e15df40d1b1f1b35907ae34",
@@ -40,7 +40,7 @@
   "negative_fee": false,
   "cooldown": 100,
   "consensus_branch_id": null,
-  "extra_data": false,
+  "extra_data": true,
   "timestamp": false,
   "confidential_assets": null
 }

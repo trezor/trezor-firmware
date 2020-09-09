@@ -1,1 +1,0 @@
-../../../src/trezor/crypto/cashaddr.py

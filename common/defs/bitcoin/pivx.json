@@ -9,7 +9,7 @@
   "decimals": 8,
   "address_type": 30,
   "address_type_p2sh": 13,
-  "maxfee_kb": 100000,
+  "maxfee_kb": 8100000000,
   "minfee_kb": 100,
   "signed_message_header": "DarkNet Signed Message:\n",
   "hash_genesis_block": "0000041e482b9b9691d98eefb48473405c0b8ec31b76df3797c74a78680ef818",

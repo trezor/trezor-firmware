@@ -10,6 +10,7 @@ from trezor.ui.passphrase import CANCELLED, PassphraseKeyboard
 from trezor.ui.text import Text
 
 from . import button_request
+from .confirm import require_confirm
 
 _MAX_PASSPHRASE_LEN = const(50)
 
@@ -53,6 +54,22 @@ async def _request_on_host(ctx: wire.Context) -> str:
         raise wire.DataError(
             "Passphrase not provided and on_device is False. Use empty string to set an empty passphrase."
         )
+
+    # non-empty passphrase
+    if ack.passphrase:
+        text = Text("Hidden wallet", ICON_CONFIG)
+        text.normal("Access hidden wallet?")
+        text.br()
+        text.normal("Next screen will show")
+        text.normal("the passphrase!")
+        await require_confirm(ctx, text, ButtonRequestType.Other)
+
+        text = Text("Hidden wallet", ICON_CONFIG)
+        text.normal("Use this passphrase?")
+        text.br()
+        text.mono(ack.passphrase)
+        await require_confirm(ctx, text, ButtonRequestType.Other)
+
     return ack.passphrase
 
 

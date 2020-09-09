@@ -1,4 +1,4 @@
 {
-  "label": "mojeID",
+  "name": "mojeID",
   "webauthn": ["mojeid.cz"]
 }

@@ -9,7 +9,7 @@
   "decimals": 8,
   "address_type": 63,
   "address_type_p2sh": 5,
-  "maxfee_kb": 20000000,
+  "maxfee_kb": 42000000000,
   "minfee_kb": 10000,
   "signed_message_header": "Syscoin Signed Message:\n",
   "hash_genesis_block": "0000022642db0346b6e01c2a397471f4f12e65d4f4251ec96c1f85367a61a7ab",
