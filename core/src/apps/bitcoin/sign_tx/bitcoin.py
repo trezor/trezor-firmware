@@ -239,21 +239,22 @@ class Bitcoin:
         self,
         i: int,
         txi: TxInput,
+        tx: Union[SignTx, PrevTx],
+        hash143: Hash143,
+        h_approved: HashWriter,
         public_keys: List[bytes],
         threshold: int,
         script_pubkey: bytes,
+        tx_hash: Optional[bytes] = None,
     ) -> bytes:
         if txi.witness:
-            return self.hash143.preimage_hash(
-                txi,
-                public_keys,
-                threshold,
-                self.tx,
-                self.coin,
-                self.get_sighash_type(txi),
+            return hash143.preimage_hash(
+                txi, public_keys, threshold, tx, self.coin, self.get_sighash_type(txi),
             )
         else:
-            digest, _, _ = await self.get_legacy_tx_digest(i, script_pubkey)
+            digest, _, _ = await self.get_legacy_tx_digest(
+                i, tx, h_approved, script_pubkey, tx_hash
+            )
             return digest
 
     async def verify_external_input(
@@ -276,7 +277,14 @@ class Bitcoin:
             verifier.ensure_hash_type(self.get_hash_type(txi))
 
             tx_digest = await self.get_tx_digest(
-                i, txi, verifier.public_keys, verifier.threshold, script_pubkey
+                i,
+                txi,
+                self.tx,
+                self.hash143,
+                self.h_approved,
+                verifier.public_keys,
+                verifier.threshold,
+                script_pubkey,
             )
             verifier.verify(tx_digest)
 
@@ -347,27 +355,34 @@ class Bitcoin:
             )
 
     async def get_legacy_tx_digest(
-        self, index: int, script_pubkey: Optional[bytes] = None
+        self,
+        index: int,
+        tx: Union[SignTx, PrevTx],
+        h_approved: HashWriter,
+        script_pubkey: Optional[bytes] = None,
+        tx_hash: Optional[bytes] = None,
     ) -> Tuple[bytes, TxInput, Optional[bip32.HDNode]]:
+
         # the transaction digest which gets signed for this input
         h_sign = self.create_hash_writer()
         # should come out the same as h_approved, checked before signing the digest
         h_check = self.create_hash_writer()
 
-        self.write_tx_header(h_sign, self.tx, witness_marker=False)
-        write_bitcoin_varint(h_sign, self.tx.inputs_count)
+        self.write_tx_header(h_sign, tx, witness_marker=False)
+        write_bitcoin_varint(h_sign, tx.inputs_count)
 
-        for i in range(self.tx.inputs_count):
+        for i in range(tx.inputs_count):
             # STAGE_REQUEST_4_INPUT in legacy
-            txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
+            txi = await helpers.request_tx_input(self.tx_req, i, self.coin, tx_hash)
             writers.write_tx_input_check(h_check, txi)
             # Only the previous UTXO's scriptPubKey is included in h_sign.
             if i == index:
                 txi_sign = txi
                 node = None
                 if not script_pubkey:
-                    self.wallet_path.check_input(txi)
-                    self.multisig_fingerprint.check_input(txi)
+                    if isinstance(tx, SignTx):
+                        self.wallet_path.check_input(txi)
+                        self.multisig_fingerprint.check_input(txi)
                     node = self.keychain.derive(txi.address_n)
                     key_sign_pub = node.public_key()
                     if txi.multisig:
@@ -390,27 +405,29 @@ class Bitcoin:
             else:
                 self.write_tx_input(h_sign, txi, bytes())
 
-        write_bitcoin_varint(h_sign, self.tx.outputs_count)
+        write_bitcoin_varint(h_sign, tx.outputs_count)
 
-        for i in range(self.tx.outputs_count):
+        for i in range(tx.outputs_count):
             # STAGE_REQUEST_4_OUTPUT in legacy
-            txo = await helpers.request_tx_output(self.tx_req, i, self.coin)
+            txo = await helpers.request_tx_output(self.tx_req, i, self.coin, tx_hash)
             script_pubkey = self.output_derive_script(txo)
             self.write_tx_output(h_check, txo, script_pubkey)
             self.write_tx_output(h_sign, txo, script_pubkey)
 
-        writers.write_uint32(h_sign, self.tx.lock_time)
+        writers.write_uint32(h_sign, tx.lock_time)
         writers.write_uint32(h_sign, self.get_sighash_type(txi_sign))
 
         # check that the inputs were the same as those streamed for approval
-        if self.h_approved.get_digest() != h_check.get_digest():
+        if h_approved.get_digest() != h_check.get_digest():
             raise wire.ProcessError("Transaction has changed during signing")
 
         tx_digest = writers.get_tx_hash(h_sign, double=self.coin.sign_hash_double)
         return tx_digest, txi_sign, node
 
     async def sign_nonsegwit_input(self, i: int) -> None:
-        tx_digest, txi, node = await self.get_legacy_tx_digest(i)
+        tx_digest, txi, node = await self.get_legacy_tx_digest(
+            i, self.tx, self.h_approved
+        )
         assert node is not None
 
         # compute the signature from the tx digest

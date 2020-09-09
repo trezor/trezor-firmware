@@ -8,6 +8,8 @@ from trezor.messages.RequestType import (
     TXFINISHED,
     TXINPUT,
     TXMETA,
+    TXORIGINPUT,
+    TXORIGOUTPUT,
     TXOUTPUT,
 )
 from trezor.messages.SignTx import SignTx
@@ -29,7 +31,7 @@ from ..writers import TX_HASH_SIZE
 from . import layout
 
 if False:
-    from typing import Any, Awaitable
+    from typing import Any, Awaitable, Optional
 
 
 # Machine instructions
@@ -170,9 +172,13 @@ def request_tx_extra_data(  # type: ignore
     return ack.tx.extra_data_chunk
 
 
-def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo) -> Awaitable[TxInput]:  # type: ignore
+def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: Optional[bytes] = None) -> Awaitable[TxInput]:  # type: ignore
     assert tx_req.details is not None
-    tx_req.request_type = TXINPUT
+    if tx_hash:
+        tx_req.request_type = TXORIGINPUT
+        tx_req.details.tx_hash = tx_hash
+    else:
+        tx_req.request_type = TXINPUT
     tx_req.details.request_index = i
     ack = yield TxAckInput, tx_req
     _clear_tx_request(tx_req)
@@ -189,9 +195,13 @@ def request_tx_prev_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: by
     return sanitize_tx_prev_input(ack.tx.input, coin)
 
 
-def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo) -> Awaitable[TxOutput]:  # type: ignore
+def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: Optional[bytes] = None) -> Awaitable[TxOutput]:  # type: ignore
     assert tx_req.details is not None
-    tx_req.request_type = TXOUTPUT
+    if tx_hash:
+        tx_req.request_type = TXORIGOUTPUT
+        tx_req.details.tx_hash = tx_hash
+    else:
+        tx_req.request_type = TXOUTPUT
     tx_req.details.request_index = i
     ack = yield TxAckOutput, tx_req
     _clear_tx_request(tx_req)
