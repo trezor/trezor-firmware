@@ -30,7 +30,7 @@ from .hash143 import Hash143
 
 if False:
     from apps.common import coininfo
-    from typing import List, Union
+    from typing import List, Optional, Union
     from ..writers import Writer
 
 OVERWINTERED = const(0x80000000)
@@ -134,12 +134,16 @@ class Zcashlike(Bitcoinlike):
         self,
         i: int,
         txi: TxInput,
+        tx: Union[SignTx, PrevTx],
+        hash143: Hash143,
+        h_approved: HashWriter,
         public_keys: List[bytes],
         threshold: int,
         script_pubkey: bytes,
+        tx_hash: Optional[bytes] = None,
     ) -> bytes:
-        return self.hash143.preimage_hash(
-            txi, public_keys, threshold, self.tx, self.coin, self.get_sighash_type(txi)
+        return hash143.preimage_hash(
+            txi, public_keys, threshold, tx, self.coin, self.get_sighash_type(txi)
         )
 
     def write_tx_header(
