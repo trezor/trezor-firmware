@@ -623,7 +623,7 @@ uint32_t tx_serialize_input_hash(TxStruct *tx, const TxInputType *input) {
     r++;
   } else
 #endif
-  {
+  if (!tx->is_koto || tx->version < 4) {
     r += tx_script_hash(&(tx->hasher), input->script_sig.size,
                         input->script_sig.bytes);
   }
@@ -828,6 +828,7 @@ void tx_init(TxStruct *tx, uint32_t inputs_len, uint32_t outputs_len,
   tx->size = 0;
   tx->is_segwit = false;
   tx->is_decred = false;
+  tx->is_koto = false;
   tx->is_zcashlike = is_zcashlike;
   tx->version_group_id = version_group_id;
   tx->timestamp = timestamp;

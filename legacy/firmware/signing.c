@@ -611,6 +611,9 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
     ti.version |= (DECRED_SERIALIZE_NO_WITNESS << 16);
     ti.is_decred = true;
   }
+  if (strcmp(coin->coin_name, "Koto") == 0) {
+    to.is_koto = true;
+  }
 #endif
 
   // segwit hashes for hashPrevouts and hashSequence
@@ -1464,6 +1467,9 @@ void signing_txack(TransactionType *tx) {
       if (coin->decred) {
         tp.version |= (DECRED_SERIALIZE_NO_WITNESS << 16);
         tp.is_decred = true;
+      }
+      if (strcmp(coin->coin_name, "Koto") == 0) {
+        tp.is_koto = true;
       }
 #endif
       progress_meta_step = progress_step / (tp.inputs_len + tp.outputs_len);

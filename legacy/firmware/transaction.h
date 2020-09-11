@@ -41,6 +41,7 @@ typedef struct {
   uint32_t expiry;
   bool is_segwit;
   bool is_decred;
+  bool is_koto;
   bool is_zcashlike;
 
   uint32_t have_inputs;
