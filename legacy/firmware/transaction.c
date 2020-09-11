@@ -623,9 +623,10 @@ uint32_t tx_serialize_input_hash(TxStruct *tx, const TxInputType *input) {
     r++;
   } else
 #endif
-  if (!tx->is_koto || tx->version < 4) {
-    r += tx_script_hash(&(tx->hasher), input->script_sig.size,
-                        input->script_sig.bytes);
+  {
+    if (!tx->is_koto || tx->version < 4)
+      r += tx_script_hash(&(tx->hasher), input->script_sig.size,
+                          input->script_sig.bytes);
   }
   r += tx_sequence_hash(&(tx->hasher), input);
 
