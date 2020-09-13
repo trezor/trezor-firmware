@@ -18,6 +18,7 @@
 import json
 
 import click
+import decimal
 import requests
 
 from trezorlib import btc, messages, tools
@@ -72,7 +73,7 @@ def _get_inputs_interactive(blockbook_url):
         if not r.ok:
             raise click.ClickException(f"Failed to fetch URL: {tx_url}")
 
-        tx_json = r.json()
+        tx_json = r.json(parse_float=decimal.Decimal)
         if "error" in tx_json:
             raise click.ClickException(f"Transaction not found: {txhash}")
 
