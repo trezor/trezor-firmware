@@ -3,17 +3,11 @@ from micropython import const
 from trezor import wire
 from trezor.crypto.hashlib import sha256
 from trezor.messages import InputScriptType, OutputScriptType
-from trezor.messages.SignTx import SignTx
-from trezor.messages.TransactionType import TransactionType
-from trezor.messages.TxInputType import TxInputType
-from trezor.messages.TxOutputBinType import TxOutputBinType
-from trezor.messages.TxOutputType import TxOutputType
 from trezor.messages.TxRequest import TxRequest
 from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
 from trezor.utils import HashWriter, ensure
 
-from apps.common import coininfo, seed
 from apps.common.writers import write_bitcoin_varint
 
 from .. import addresses, common, multisig, scripts, writers
@@ -25,7 +19,18 @@ from .matchcheck import MultisigFingerprintChecker, WalletPathChecker
 
 if False:
     from typing import List, Optional, Set, Tuple, Union
-    from trezor.crypto.bip32 import HDNode
+    from trezor.crypto import bip32
+
+    from trezor.messages.SignTx import SignTx
+    from trezor.messages.TxAckInputType import TxAckInputType
+    from trezor.messages.TxAckOutputType import TxAckOutputType
+    from trezor.messages.TxAckPrevTxType import TxAckPrevTxType
+    from trezor.messages.TxAckPrevInputType import TxAckPrevInputType
+    from trezor.messages.TxAckPrevOutputType import TxAckPrevOutputType
+
+    from apps.common.coininfo import CoinInfo
+    from apps.common.keychain import Keychain
+
 
 # the chain id used for change
 _BIP32_CHANGE_CHAIN = const(1)
@@ -70,8 +75,8 @@ class Bitcoin:
     def __init__(
         self,
         tx: SignTx,
-        keychain: seed.Keychain,
-        coin: coininfo.CoinInfo,
+        keychain: Keychain,
+        coin: CoinInfo,
         approver: approvers.Approver,
     ) -> None:
         self.tx = helpers.sanitize_sign_tx(tx, coin)
@@ -193,7 +198,7 @@ class Bitcoin:
             if i in self.segwit:
                 if i in self.external:
                     txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
-                    self.serialized_tx.extend(txi.witness)
+                    self.serialized_tx.extend(txi.witness or b"")
                 else:
                     await self.sign_segwit_input(i)
             else:
@@ -204,7 +209,7 @@ class Bitcoin:
         self.write_tx_footer(self.serialized_tx, self.tx)
         await helpers.request_tx_finish(self.tx_req)
 
-    async def process_internal_input(self, txi: TxInputType) -> None:
+    async def process_internal_input(self, txi: TxAckInputType) -> None:
         self.wallet_path.add_input(txi)
         self.multisig_fingerprint.add_input(txi)
 
@@ -213,10 +218,10 @@ class Bitcoin:
 
         await self.approver.add_internal_input(txi)
 
-    async def process_external_input(self, txi: TxInputType) -> None:
+    async def process_external_input(self, txi: TxAckInputType) -> None:
         self.approver.add_external_input(txi)
 
-    async def approve_output(self, txo: TxOutputType, script_pubkey: bytes) -> None:
+    async def approve_output(self, txo: TxAckOutputType, script_pubkey: bytes) -> None:
         if self.output_is_change(txo):
             # output is change and does not need approval
             self.approver.add_change_output(txo, script_pubkey)
@@ -229,7 +234,7 @@ class Bitcoin:
     async def get_tx_digest(
         self,
         i: int,
-        txi: TxInputType,
+        txi: TxAckInputType,
         public_keys: List[bytes],
         threshold: int,
         script_pubkey: bytes,
@@ -241,7 +246,7 @@ class Bitcoin:
             return digest
 
     async def verify_external_input(
-        self, i: int, txi: TxInputType, script_pubkey: bytes
+        self, i: int, txi: TxAckInputType, script_pubkey: bytes
     ) -> None:
         if txi.ownership_proof:
             if not verify_nonownership(
@@ -283,10 +288,10 @@ class Bitcoin:
 
         node = self.keychain.derive(txi.address_n)
         key_sign_pub = node.public_key()
-        script_sig = self.input_derive_script(txi, key_sign_pub)
+        script_sig = self.input_derive_script(txi, key_sign_pub, b"")
         self.write_tx_input(self.serialized_tx, txi, script_sig)
 
-    def sign_bip143_input(self, txi: TxInputType) -> Tuple[bytes, bytes]:
+    def sign_bip143_input(self, txi: TxAckInputType) -> Tuple[bytes, bytes]:
         self.wallet_path.check_input(txi)
         self.multisig_fingerprint.check_input(txi)
 
@@ -330,7 +335,7 @@ class Bitcoin:
 
     async def get_legacy_tx_digest(
         self, index: int, script_pubkey: Optional[bytes] = None
-    ) -> Tuple[bytes, TxInputType, Optional[HDNode]]:
+    ) -> Tuple[bytes, TxAckInputType, Optional[bip32.HDNode]]:
         # the transaction digest which gets signed for this input
         h_sign = self.create_hash_writer()
         # should come out the same as h_approved, checked before signing the digest
@@ -357,6 +362,7 @@ class Bitcoin:
                         multisig.multisig_pubkey_index(txi.multisig, key_sign_pub)
 
                     if txi.script_type == InputScriptType.SPENDMULTISIG:
+                        assert txi.multisig is not None  # checked in sanitize_tx_input
                         script_pubkey = scripts.output_script_multisig(
                             multisig.multisig_get_pubkeys(txi.multisig), txi.multisig.m,
                         )
@@ -415,25 +421,27 @@ class Bitcoin:
         # STAGE_REQUEST_3_PREV_META in legacy
         tx = await helpers.request_tx_meta(self.tx_req, self.coin, prev_hash)
 
-        if tx.outputs_cnt <= prev_index:
+        if tx.outputs_count <= prev_index:
             raise wire.ProcessError("Not enough outputs in previous transaction.")
 
         txh = self.create_hash_writer()
 
         # witnesses are not included in txid hash
         self.write_tx_header(txh, tx, witness_marker=False)
-        write_bitcoin_varint(txh, tx.inputs_cnt)
+        write_bitcoin_varint(txh, tx.inputs_count)
 
-        for i in range(tx.inputs_cnt):
+        for i in range(tx.inputs_count):
             # STAGE_REQUEST_3_PREV_INPUT in legacy
-            txi = await helpers.request_tx_input(self.tx_req, i, self.coin, prev_hash)
+            txi = await helpers.request_tx_prev_input(
+                self.tx_req, i, self.coin, prev_hash
+            )
             self.write_tx_input(txh, txi, txi.script_sig)
 
-        write_bitcoin_varint(txh, tx.outputs_cnt)
+        write_bitcoin_varint(txh, tx.outputs_count)
 
-        for i in range(tx.outputs_cnt):
+        for i in range(tx.outputs_count):
             # STAGE_REQUEST_3_PREV_OUTPUT in legacy
-            txo_bin = await helpers.request_tx_output(
+            txo_bin = await helpers.request_tx_prev_output(
                 self.tx_req, i, self.coin, prev_hash
             )
             self.write_tx_output(txh, txo_bin, txo_bin.script_pubkey)
@@ -452,17 +460,17 @@ class Bitcoin:
 
         return amount_out, script_pubkey
 
-    def check_prevtx_output(self, txo_bin: TxOutputBinType) -> None:
+    def check_prevtx_output(self, txo_bin: TxAckPrevOutputType) -> None:
         # Validations to perform on the UTXO when checking the previous transaction output amount.
         pass
 
     # Tx Helpers
     # ===
 
-    def get_sighash_type(self, txi: TxInputType) -> int:
+    def get_sighash_type(self, txi: TxAckInputType) -> int:
         return SIGHASH_ALL
 
-    def get_hash_type(self, txi: TxInputType) -> int:
+    def get_hash_type(self, txi: TxAckInputType) -> int:
         """ Return the nHashType flags."""
         # The nHashType is the 8 least significant bits of the sighash type.
         # Some coins set the 24 most significant bits of the sighash type to
@@ -470,14 +478,17 @@ class Bitcoin:
         return self.get_sighash_type(txi) & 0xFF
 
     def write_tx_input(
-        self, w: writers.Writer, txi: TxInputType, script: bytes
+        self,
+        w: writers.Writer,
+        txi: Union[TxAckInputType, TxAckPrevInputType],
+        script: bytes,
     ) -> None:
         writers.write_tx_input(w, txi, script)
 
     def write_tx_output(
         self,
         w: writers.Writer,
-        txo: Union[TxOutputType, TxOutputBinType],
+        txo: Union[TxAckOutputType, TxAckPrevOutputType],
         script_pubkey: bytes,
     ) -> None:
         writers.write_tx_output(w, txo, script_pubkey)
@@ -485,7 +496,7 @@ class Bitcoin:
     def write_tx_header(
         self,
         w: writers.Writer,
-        tx: Union[SignTx, TransactionType],
+        tx: Union[SignTx, TxAckPrevTxType],
         witness_marker: bool,
     ) -> None:
         writers.write_uint32(w, tx.version)  # nVersion
@@ -494,17 +505,18 @@ class Bitcoin:
             write_bitcoin_varint(w, 0x01)  # segwit witness flag
 
     def write_tx_footer(
-        self, w: writers.Writer, tx: Union[SignTx, TransactionType]
+        self, w: writers.Writer, tx: Union[SignTx, TxAckPrevTxType]
     ) -> None:
         writers.write_uint32(w, tx.lock_time)
 
     async def write_prev_tx_footer(
-        self, w: writers.Writer, tx: TransactionType, prev_hash: bytes
+        self, w: writers.Writer, tx: TxAckPrevTxType, prev_hash: bytes
     ) -> None:
         self.write_tx_footer(w, tx)
 
     def set_serialized_signature(self, index: int, signature: bytes) -> None:
         # Only one signature per TxRequest can be serialized.
+        assert self.tx_req.serialized is not None
         ensure(self.tx_req.serialized.signature is None)
 
         self.tx_req.serialized.signature_index = index
@@ -513,8 +525,9 @@ class Bitcoin:
     # Tx Outputs
     # ===
 
-    def output_derive_script(self, txo: TxOutputType) -> bytes:
+    def output_derive_script(self, txo: TxAckOutputType) -> bytes:
         if txo.script_type == OutputScriptType.PAYTOOPRETURN:
+            assert txo.op_return_data is not None  # checked in sanitize_tx_output
             return scripts.output_script_paytoopreturn(txo.op_return_data)
 
         if txo.address_n:
@@ -530,9 +543,11 @@ class Bitcoin:
                 input_script_type, self.coin, node, txo.multisig
             )
 
+        assert txo.address is not None  # checked in sanitize_tx_output
+
         return scripts.output_derive_script(txo.address, self.coin)
 
-    def output_is_change(self, txo: TxOutputType) -> bool:
+    def output_is_change(self, txo: TxAckOutputType) -> bool:
         if txo.script_type not in common.CHANGE_OUTPUT_SCRIPT_TYPES:
             return False
         if txo.multisig and not self.multisig_fingerprint.output_matches(txo):
@@ -549,7 +564,7 @@ class Bitcoin:
     # ===
 
     def input_derive_script(
-        self, txi: TxInputType, pubkey: bytes, signature: bytes = None
+        self, txi: TxAckInputType, pubkey: bytes, signature: bytes
     ) -> bytes:
         return scripts.input_derive_script(
             txi.script_type,
@@ -568,18 +583,18 @@ class Bitcoin:
         self.h_sequence = HashWriter(sha256())
         self.h_outputs = HashWriter(sha256())
 
-    def hash143_add_input(self, txi: TxInputType) -> None:
+    def hash143_add_input(self, txi: TxAckInputType) -> None:
         writers.write_bytes_reversed(
             self.h_prevouts, txi.prev_hash, writers.TX_HASH_SIZE
         )
         writers.write_uint32(self.h_prevouts, txi.prev_index)
         writers.write_uint32(self.h_sequence, txi.sequence)
 
-    def hash143_add_output(self, txo: TxOutputType, script_pubkey: bytes) -> None:
+    def hash143_add_output(self, txo: TxAckOutputType, script_pubkey: bytes) -> None:
         writers.write_tx_output(self.h_outputs, txo, script_pubkey)
 
     def hash143_preimage_hash(
-        self, txi: TxInputType, public_keys: List[bytes], threshold: int
+        self, txi: TxAckInputType, public_keys: List[bytes], threshold: int
     ) -> bytes:
         h_preimage = HashWriter(sha256())
 
@@ -629,17 +644,17 @@ class Bitcoin:
         return writers.get_tx_hash(h_preimage, double=self.coin.sign_hash_double)
 
 
-def input_is_segwit(txi: TxInputType) -> bool:
+def input_is_segwit(txi: TxAckInputType) -> bool:
     return txi.script_type in common.SEGWIT_INPUT_SCRIPT_TYPES or (
         txi.script_type == InputScriptType.EXTERNAL and txi.witness is not None
     )
 
 
-def input_is_nonsegwit(txi: TxInputType) -> bool:
+def input_is_nonsegwit(txi: TxAckInputType) -> bool:
     return txi.script_type in common.NONSEGWIT_INPUT_SCRIPT_TYPES or (
         txi.script_type == InputScriptType.EXTERNAL and txi.witness is None
     )
 
 
-def input_is_external(txi: TxInputType) -> bool:
+def input_is_external(txi: TxAckInputType) -> bool:
     return txi.script_type == InputScriptType.EXTERNAL

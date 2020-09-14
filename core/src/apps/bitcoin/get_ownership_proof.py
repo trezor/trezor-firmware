@@ -5,7 +5,6 @@ from trezor.messages.GetOwnershipProof import GetOwnershipProof
 from trezor.messages.OwnershipProof import OwnershipProof
 from trezor.ui.text import Text
 
-from apps.common import coininfo
 from apps.common.confirm import require_confirm
 from apps.common.paths import validate_path
 
@@ -15,6 +14,7 @@ from .ownership import generate_proof, get_identifier
 
 if False:
     from typing import Optional
+    from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
     from .authorization import CoinJoinAuthorization
 
@@ -24,10 +24,10 @@ _MAX_MONO_LINE = 18
 
 @with_keychain
 async def get_ownership_proof(
-    ctx,
+    ctx: wire.Context,
     msg: GetOwnershipProof,
     keychain: Keychain,
-    coin: coininfo.CoinInfo,
+    coin: CoinInfo,
     authorization: Optional[CoinJoinAuthorization] = None,
 ) -> OwnershipProof:
     if authorization:

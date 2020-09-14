@@ -6,24 +6,22 @@ from apps.common.keychain import get_keychain
 from .common import BITCOIN_NAMES
 
 if False:
-    from protobuf import MessageType
-    from typing import Callable, Optional, Tuple, TypeVar
+    from typing import Awaitable, Callable, Optional, Sequence, Tuple, TypeVar
     from typing_extensions import Protocol
 
     from apps.common.keychain import Keychain, MsgOut, Handler
+    from apps.common.paths import Bip32Path
 
     from .authorization import CoinJoinAuthorization
 
-    class MsgWithCoinName(MessageType, Protocol):
-        coin_name = ...  # type: Optional[str]
+    class MsgWithCoinName(Protocol):
+        coin_name = ...  # type: str
 
     MsgIn = TypeVar("MsgIn", bound=MsgWithCoinName)
-    HandlerWithCoinInfo = Callable[
-        [wire.Context, MsgIn, Keychain, coininfo.CoinInfo], MsgOut
-    ]
+    HandlerWithCoinInfo = Callable[..., Awaitable[MsgOut]]
 
 
-def get_namespaces_for_coin(coin: coininfo.CoinInfo):
+def get_namespaces_for_coin(coin: coininfo.CoinInfo) -> Sequence[Bip32Path]:
     namespaces = []
     slip44_id = coin.slip44 | HARDENED
 
@@ -89,7 +87,7 @@ async def get_keychain_for_coin(
     return keychain, coin
 
 
-def with_keychain(func: HandlerWithCoinInfo[MsgIn, MsgOut]) -> Handler[MsgIn, MsgOut]:
+def with_keychain(func: HandlerWithCoinInfo[MsgOut]) -> Handler[MsgIn, MsgOut]:
     async def wrapper(
         ctx: wire.Context,
         msg: MsgIn,

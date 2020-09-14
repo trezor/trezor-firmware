@@ -5,8 +5,8 @@ from trezor import wire
 from trezor.crypto.hashlib import blake2b
 from trezor.messages import InputScriptType
 from trezor.messages.SignTx import SignTx
-from trezor.messages.TransactionType import TransactionType
-from trezor.messages.TxInputType import TxInputType
+from trezor.messages.TxAckInputType import TxAckInputType
+from trezor.messages.TxAckPrevTxType import TxAckPrevTxType
 from trezor.utils import HashWriter, ensure
 
 from apps.common.coininfo import CoinInfo
@@ -64,7 +64,7 @@ class Zcashlike(Bitcoinlike):
     async def get_tx_digest(
         self,
         i: int,
-        txi: TxInputType,
+        txi: TxAckInputType,
         public_keys: List[bytes],
         threshold: int,
         script_pubkey: bytes,
@@ -72,17 +72,20 @@ class Zcashlike(Bitcoinlike):
         return self.hash143_preimage_hash(txi, public_keys, threshold)
 
     def write_tx_header(
-        self, w: Writer, tx: Union[SignTx, TransactionType], witness_marker: bool
+        self, w: Writer, tx: Union[SignTx, TxAckPrevTxType], witness_marker: bool
     ) -> None:
         if tx.version < 3:
             # pre-overwinter
             write_uint32(w, tx.version)
         else:
+            if tx.version_group_id is None:
+                raise wire.DataError("Version group ID is missing")
             # nVersion | fOverwintered
             write_uint32(w, tx.version | OVERWINTERED)
             write_uint32(w, tx.version_group_id)  # nVersionGroupId
 
-    def write_tx_footer(self, w: Writer, tx: Union[SignTx, TransactionType]) -> None:
+    def write_tx_footer(self, w: Writer, tx: Union[SignTx, TxAckPrevTxType]) -> None:
+        assert tx.expiry is not None  # checked in sanitize_*
         write_uint32(w, tx.lock_time)
         if tx.version >= 3:
             write_uint32(w, tx.expiry)  # expiryHeight
@@ -96,7 +99,7 @@ class Zcashlike(Bitcoinlike):
         self.h_outputs = HashWriter(blake2b(outlen=32, personal=b"ZcashOutputsHash"))
 
     def hash143_preimage_hash(
-        self, txi: TxInputType, public_keys: List[bytes], threshold: int
+        self, txi: TxAckInputType, public_keys: List[bytes], threshold: int
     ) -> bytes:
         h_preimage = HashWriter(
             blake2b(
@@ -104,6 +107,9 @@ class Zcashlike(Bitcoinlike):
                 personal=b"ZcashSigHash" + struct.pack("<I", self.tx.branch_id),
             )
         )
+
+        assert self.tx.version_group_id is not None
+        assert self.tx.expiry is not None
 
         # 1. nVersion | fOverwintered
         write_uint32(h_preimage, self.tx.version | OVERWINTERED)
@@ -150,7 +156,7 @@ class Zcashlike(Bitcoinlike):
 
 
 def derive_script_code(
-    txi: TxInputType, public_keys: List[bytes], threshold: int, coin: CoinInfo
+    txi: TxAckInputType, public_keys: List[bytes], threshold: int, coin: CoinInfo
 ) -> bytearray:
     if len(public_keys) > 1:
         return output_script_multisig(public_keys, threshold)

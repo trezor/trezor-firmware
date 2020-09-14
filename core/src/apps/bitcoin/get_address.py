@@ -11,8 +11,10 @@ from .multisig import multisig_pubkey_index
 
 if False:
     from typing import List
-    from trezor.messages import HDNodeType
+    from trezor.messages.GetAddress import GetAddress
+    from trezor.messages.HDNodeType import HDNodeType
     from trezor import wire
+    from apps.common.keychain import Keychain
     from apps.common.coininfo import CoinInfo
 
 
@@ -38,7 +40,9 @@ async def show_xpubs(
 
 
 @with_keychain
-async def get_address(ctx, msg, keychain, coin):
+async def get_address(
+    ctx: wire.Context, msg: GetAddress, keychain: Keychain, coin: CoinInfo
+) -> Address:
     await validate_path(
         ctx,
         addresses.validate_full_path,
@@ -50,6 +54,7 @@ async def get_address(ctx, msg, keychain, coin):
     )
 
     node = keychain.derive(msg.address_n)
+
     address = addresses.get_address(msg.script_type, coin, node, msg.multisig)
     address_short = addresses.address_short(coin, address)
     if msg.script_type == InputScriptType.SPENDWITNESS:

@@ -6,8 +6,11 @@ from trezor.messages.PublicKey import PublicKey
 from apps.common import coins, layout
 from apps.common.keychain import get_keychain
 
+if False:
+    from trezor.messages.GetPublicKey import GetPublicKey
 
-async def get_public_key(ctx, msg):
+
+async def get_public_key(ctx: wire.Context, msg: GetPublicKey) -> PublicKey:
     coin_name = msg.coin_name or "Bitcoin"
     script_type = msg.script_type or InputScriptType.SPENDADDRESS
     coin = coins.by_name(coin_name)

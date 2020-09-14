@@ -2,7 +2,6 @@ from trezor import wire
 from trezor.messages.GetOwnershipId import GetOwnershipId
 from trezor.messages.OwnershipId import OwnershipId
 
-from apps.common import coininfo
 from apps.common.paths import validate_path
 
 from . import addresses, common, scripts
@@ -10,12 +9,13 @@ from .keychain import with_keychain
 from .ownership import get_identifier
 
 if False:
+    from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
 
 
 @with_keychain
 async def get_ownership_id(
-    ctx, msg: GetOwnershipId, keychain: Keychain, coin: coininfo.CoinInfo
+    ctx: wire.Context, msg: GetOwnershipId, keychain: Keychain, coin: CoinInfo
 ) -> OwnershipId:
     await validate_path(
         ctx,
