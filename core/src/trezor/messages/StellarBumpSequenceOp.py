@@ -15,6 +15,7 @@ class StellarBumpSequenceOp(p.MessageType):
 
     def __init__(
         self,
+        *,
         source_account: str = None,
         bump_to: int = None,
     ) -> None:
@@ -24,6 +25,6 @@ class StellarBumpSequenceOp(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('source_account', p.UnicodeType, 0),
-            2: ('bump_to', p.UVarintType, 0),
+            1: ('source_account', p.UnicodeType, None),
+            2: ('bump_to', p.UVarintType, None),
         }

@@ -14,6 +14,7 @@ class NEMProvisionNamespace(p.MessageType):
 
     def __init__(
         self,
+        *,
         namespace: str = None,
         parent: str = None,
         sink: str = None,
@@ -27,8 +28,8 @@ class NEMProvisionNamespace(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('namespace', p.UnicodeType, 0),
-            2: ('parent', p.UnicodeType, 0),
-            3: ('sink', p.UnicodeType, 0),
-            4: ('fee', p.UVarintType, 0),
+            1: ('namespace', p.UnicodeType, None),
+            2: ('parent', p.UnicodeType, None),
+            3: ('sink', p.UnicodeType, None),
+            4: ('fee', p.UVarintType, None),
         }

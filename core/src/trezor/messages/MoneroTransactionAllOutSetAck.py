@@ -17,6 +17,7 @@ class MoneroTransactionAllOutSetAck(p.MessageType):
 
     def __init__(
         self,
+        *,
         extra: bytes = None,
         tx_prefix_hash: bytes = None,
         rv: MoneroRingCtSig = None,
@@ -30,8 +31,8 @@ class MoneroTransactionAllOutSetAck(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('extra', p.BytesType, 0),
-            2: ('tx_prefix_hash', p.BytesType, 0),
-            4: ('rv', MoneroRingCtSig, 0),
-            5: ('full_message_hash', p.BytesType, 0),
+            1: ('extra', p.BytesType, None),
+            2: ('tx_prefix_hash', p.BytesType, None),
+            4: ('rv', MoneroRingCtSig, None),
+            5: ('full_message_hash', p.BytesType, None),
         }

@@ -15,6 +15,7 @@ class EosTxActionRequest(p.MessageType):
 
     def __init__(
         self,
+        *,
         data_size: int = None,
     ) -> None:
         self.data_size = data_size
@@ -22,5 +23,5 @@ class EosTxActionRequest(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('data_size', p.UVarintType, 0),
+            1: ('data_size', p.UVarintType, None),
         }

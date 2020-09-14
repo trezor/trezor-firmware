@@ -15,6 +15,7 @@ class StellarSetOptionsOp(p.MessageType):
 
     def __init__(
         self,
+        *,
         source_account: str = None,
         inflation_destination_account: str = None,
         clear_flags: int = None,
@@ -44,16 +45,16 @@ class StellarSetOptionsOp(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('source_account', p.UnicodeType, 0),
-            2: ('inflation_destination_account', p.UnicodeType, 0),
-            3: ('clear_flags', p.UVarintType, 0),
-            4: ('set_flags', p.UVarintType, 0),
-            5: ('master_weight', p.UVarintType, 0),
-            6: ('low_threshold', p.UVarintType, 0),
-            7: ('medium_threshold', p.UVarintType, 0),
-            8: ('high_threshold', p.UVarintType, 0),
-            9: ('home_domain', p.UnicodeType, 0),
-            10: ('signer_type', p.UVarintType, 0),
-            11: ('signer_key', p.BytesType, 0),
-            12: ('signer_weight', p.UVarintType, 0),
+            1: ('source_account', p.UnicodeType, None),
+            2: ('inflation_destination_account', p.UnicodeType, None),
+            3: ('clear_flags', p.UVarintType, None),
+            4: ('set_flags', p.UVarintType, None),
+            5: ('master_weight', p.UVarintType, None),
+            6: ('low_threshold', p.UVarintType, None),
+            7: ('medium_threshold', p.UVarintType, None),
+            8: ('high_threshold', p.UVarintType, None),
+            9: ('home_domain', p.UnicodeType, None),
+            10: ('signer_type', p.UVarintType, None),
+            11: ('signer_key', p.BytesType, None),
+            12: ('signer_weight', p.UVarintType, None),
         }

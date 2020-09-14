@@ -15,6 +15,7 @@ class DebugLinkEraseSdCard(p.MessageType):
 
     def __init__(
         self,
+        *,
         format: bool = None,
     ) -> None:
         self.format = format
@@ -22,5 +23,5 @@ class DebugLinkEraseSdCard(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('format', p.BoolType, 0),
+            1: ('format', p.BoolType, None),
         }

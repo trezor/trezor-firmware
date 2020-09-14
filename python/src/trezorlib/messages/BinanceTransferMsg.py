@@ -17,6 +17,7 @@ class BinanceTransferMsg(p.MessageType):
 
     def __init__(
         self,
+        *,
         inputs: List[BinanceInputOutput] = None,
         outputs: List[BinanceInputOutput] = None,
     ) -> None:

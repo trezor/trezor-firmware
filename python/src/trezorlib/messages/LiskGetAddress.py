@@ -15,6 +15,7 @@ class LiskGetAddress(p.MessageType):
 
     def __init__(
         self,
+        *,
         address_n: List[int] = None,
         show_display: bool = None,
     ) -> None:
@@ -25,5 +26,5 @@ class LiskGetAddress(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            2: ('show_display', p.BoolType, 0),
+            2: ('show_display', p.BoolType, None),
         }

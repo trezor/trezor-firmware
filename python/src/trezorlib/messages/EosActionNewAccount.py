@@ -16,6 +16,7 @@ class EosActionNewAccount(p.MessageType):
 
     def __init__(
         self,
+        *,
         creator: int = None,
         name: int = None,
         owner: EosAuthorization = None,
@@ -29,8 +30,8 @@ class EosActionNewAccount(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('creator', p.UVarintType, 0),
-            2: ('name', p.UVarintType, 0),
-            3: ('owner', EosAuthorization, 0),
-            4: ('active', EosAuthorization, 0),
+            1: ('creator', p.UVarintType, None),
+            2: ('name', p.UVarintType, None),
+            3: ('owner', EosAuthorization, None),
+            4: ('active', EosAuthorization, None),
         }

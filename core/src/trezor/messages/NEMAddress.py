@@ -15,12 +15,13 @@ class NEMAddress(p.MessageType):
 
     def __init__(
         self,
-        address: str = None,
+        *,
+        address: str,
     ) -> None:
         self.address = address
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('address', p.UnicodeType, 0),  # required
+            1: ('address', p.UnicodeType, p.FLAG_REQUIRED),
         }

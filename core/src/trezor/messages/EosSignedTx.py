@@ -15,6 +15,7 @@ class EosSignedTx(p.MessageType):
 
     def __init__(
         self,
+        *,
         signature: str = None,
     ) -> None:
         self.signature = signature
@@ -22,5 +23,5 @@ class EosSignedTx(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('signature', p.UnicodeType, 0),
+            1: ('signature', p.UnicodeType, None),
         }

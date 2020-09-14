@@ -15,6 +15,7 @@ class CipherKeyValue(p.MessageType):
 
     def __init__(
         self,
+        *,
         address_n: List[int] = None,
         key: str = None,
         value: bytes = None,
@@ -35,10 +36,10 @@ class CipherKeyValue(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            2: ('key', p.UnicodeType, 0),
-            3: ('value', p.BytesType, 0),
-            4: ('encrypt', p.BoolType, 0),
-            5: ('ask_on_encrypt', p.BoolType, 0),
-            6: ('ask_on_decrypt', p.BoolType, 0),
-            7: ('iv', p.BytesType, 0),
+            2: ('key', p.UnicodeType, None),
+            3: ('value', p.BytesType, None),
+            4: ('encrypt', p.BoolType, None),
+            5: ('ask_on_encrypt', p.BoolType, None),
+            6: ('ask_on_decrypt', p.BoolType, None),
+            7: ('iv', p.BytesType, None),
         }

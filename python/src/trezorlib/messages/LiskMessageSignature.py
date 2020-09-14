@@ -15,6 +15,7 @@ class LiskMessageSignature(p.MessageType):
 
     def __init__(
         self,
+        *,
         public_key: bytes = None,
         signature: bytes = None,
     ) -> None:
@@ -24,6 +25,6 @@ class LiskMessageSignature(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('public_key', p.BytesType, 0),
-            2: ('signature', p.BytesType, 0),
+            1: ('public_key', p.BytesType, None),
+            2: ('signature', p.BytesType, None),
         }

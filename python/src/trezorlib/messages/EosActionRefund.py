@@ -14,6 +14,7 @@ class EosActionRefund(p.MessageType):
 
     def __init__(
         self,
+        *,
         owner: int = None,
     ) -> None:
         self.owner = owner
@@ -21,5 +22,5 @@ class EosActionRefund(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('owner', p.UVarintType, 0),
+            1: ('owner', p.UVarintType, None),
         }

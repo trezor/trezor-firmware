@@ -17,6 +17,8 @@ class DebugLinkState(p.MessageType):
 
     def __init__(
         self,
+        *,
+        layout_lines: List[str] = None,
         layout: bytes = None,
         pin: str = None,
         matrix: str = None,
@@ -29,8 +31,8 @@ class DebugLinkState(p.MessageType):
         recovery_word_pos: int = None,
         reset_word_pos: int = None,
         mnemonic_type: int = None,
-        layout_lines: List[str] = None,
     ) -> None:
+        self.layout_lines = layout_lines if layout_lines is not None else []
         self.layout = layout
         self.pin = pin
         self.matrix = matrix
@@ -43,22 +45,21 @@ class DebugLinkState(p.MessageType):
         self.recovery_word_pos = recovery_word_pos
         self.reset_word_pos = reset_word_pos
         self.mnemonic_type = mnemonic_type
-        self.layout_lines = layout_lines if layout_lines is not None else []
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('layout', p.BytesType, 0),
-            2: ('pin', p.UnicodeType, 0),
-            3: ('matrix', p.UnicodeType, 0),
-            4: ('mnemonic_secret', p.BytesType, 0),
-            5: ('node', HDNodeType, 0),
-            6: ('passphrase_protection', p.BoolType, 0),
-            7: ('reset_word', p.UnicodeType, 0),
-            8: ('reset_entropy', p.BytesType, 0),
-            9: ('recovery_fake_word', p.UnicodeType, 0),
-            10: ('recovery_word_pos', p.UVarintType, 0),
-            11: ('reset_word_pos', p.UVarintType, 0),
-            12: ('mnemonic_type', p.UVarintType, 0),
+            1: ('layout', p.BytesType, None),
+            2: ('pin', p.UnicodeType, None),
+            3: ('matrix', p.UnicodeType, None),
+            4: ('mnemonic_secret', p.BytesType, None),
+            5: ('node', HDNodeType, None),
+            6: ('passphrase_protection', p.BoolType, None),
+            7: ('reset_word', p.UnicodeType, None),
+            8: ('reset_entropy', p.BytesType, None),
+            9: ('recovery_fake_word', p.UnicodeType, None),
+            10: ('recovery_word_pos', p.UVarintType, None),
+            11: ('reset_word_pos', p.UVarintType, None),
+            12: ('mnemonic_type', p.UVarintType, None),
             13: ('layout_lines', p.UnicodeType, p.FLAG_REPEATED),
         }

@@ -15,6 +15,7 @@ class RippleSignedTx(p.MessageType):
 
     def __init__(
         self,
+        *,
         signature: bytes = None,
         serialized_tx: bytes = None,
     ) -> None:
@@ -24,6 +25,6 @@ class RippleSignedTx(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('signature', p.BytesType, 0),
-            2: ('serialized_tx', p.BytesType, 0),
+            1: ('signature', p.BytesType, None),
+            2: ('serialized_tx', p.BytesType, None),
         }

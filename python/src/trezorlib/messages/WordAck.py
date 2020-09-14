@@ -15,12 +15,13 @@ class WordAck(p.MessageType):
 
     def __init__(
         self,
-        word: str = None,
+        *,
+        word: str,
     ) -> None:
         self.word = word
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('word', p.UnicodeType, 0),  # required
+            1: ('word', p.UnicodeType, p.FLAG_REQUIRED),
         }

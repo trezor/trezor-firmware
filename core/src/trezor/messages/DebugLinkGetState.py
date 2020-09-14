@@ -15,6 +15,7 @@ class DebugLinkGetState(p.MessageType):
 
     def __init__(
         self,
+        *,
         wait_word_list: bool = None,
         wait_word_pos: bool = None,
         wait_layout: bool = None,
@@ -26,7 +27,7 @@ class DebugLinkGetState(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('wait_word_list', p.BoolType, 0),
-            2: ('wait_word_pos', p.BoolType, 0),
-            3: ('wait_layout', p.BoolType, 0),
+            1: ('wait_word_list', p.BoolType, None),
+            2: ('wait_word_pos', p.BoolType, None),
+            3: ('wait_layout', p.BoolType, None),
         }

@@ -23,6 +23,7 @@ class NEMSignTx(p.MessageType):
 
     def __init__(
         self,
+        *,
         transaction: NEMTransactionCommon = None,
         multisig: NEMTransactionCommon = None,
         transfer: NEMTransfer = None,
@@ -46,13 +47,13 @@ class NEMSignTx(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('transaction', NEMTransactionCommon, 0),
-            2: ('multisig', NEMTransactionCommon, 0),
-            3: ('transfer', NEMTransfer, 0),
-            4: ('cosigning', p.BoolType, 0),
-            5: ('provision_namespace', NEMProvisionNamespace, 0),
-            6: ('mosaic_creation', NEMMosaicCreation, 0),
-            7: ('supply_change', NEMMosaicSupplyChange, 0),
-            8: ('aggregate_modification', NEMAggregateModification, 0),
-            9: ('importance_transfer', NEMImportanceTransfer, 0),
+            1: ('transaction', NEMTransactionCommon, None),
+            2: ('multisig', NEMTransactionCommon, None),
+            3: ('transfer', NEMTransfer, None),
+            4: ('cosigning', p.BoolType, None),
+            5: ('provision_namespace', NEMProvisionNamespace, None),
+            6: ('mosaic_creation', NEMMosaicCreation, None),
+            7: ('supply_change', NEMMosaicSupplyChange, None),
+            8: ('aggregate_modification', NEMAggregateModification, None),
+            9: ('importance_transfer', NEMImportanceTransfer, None),
         }

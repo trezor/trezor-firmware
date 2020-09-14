@@ -14,18 +14,19 @@ class EosActionVoteProducer(p.MessageType):
 
     def __init__(
         self,
+        *,
+        producers: List[int] = None,
         voter: int = None,
         proxy: int = None,
-        producers: List[int] = None,
     ) -> None:
+        self.producers = producers if producers is not None else []
         self.voter = voter
         self.proxy = proxy
-        self.producers = producers if producers is not None else []
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('voter', p.UVarintType, 0),
-            2: ('proxy', p.UVarintType, 0),
+            1: ('voter', p.UVarintType, None),
+            2: ('proxy', p.UVarintType, None),
             3: ('producers', p.UVarintType, p.FLAG_REPEATED),
         }

@@ -15,6 +15,7 @@ class EthereumTxRequest(p.MessageType):
 
     def __init__(
         self,
+        *,
         data_length: int = None,
         signature_v: int = None,
         signature_r: bytes = None,
@@ -28,8 +29,8 @@ class EthereumTxRequest(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('data_length', p.UVarintType, 0),
-            2: ('signature_v', p.UVarintType, 0),
-            3: ('signature_r', p.BytesType, 0),
-            4: ('signature_s', p.BytesType, 0),
+            1: ('data_length', p.UVarintType, None),
+            2: ('signature_v', p.UVarintType, None),
+            3: ('signature_r', p.BytesType, None),
+            4: ('signature_s', p.BytesType, None),
         }

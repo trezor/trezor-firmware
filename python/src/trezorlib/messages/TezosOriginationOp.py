@@ -14,6 +14,7 @@ class TezosOriginationOp(p.MessageType):
 
     def __init__(
         self,
+        *,
         source: bytes = None,
         fee: int = None,
         counter: int = None,
@@ -41,15 +42,15 @@ class TezosOriginationOp(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            12: ('source', p.BytesType, 0),
-            2: ('fee', p.UVarintType, 0),
-            3: ('counter', p.UVarintType, 0),
-            4: ('gas_limit', p.UVarintType, 0),
-            5: ('storage_limit', p.UVarintType, 0),
-            6: ('manager_pubkey', p.BytesType, 0),
-            7: ('balance', p.UVarintType, 0),
-            8: ('spendable', p.BoolType, 0),
-            9: ('delegatable', p.BoolType, 0),
-            10: ('delegate', p.BytesType, 0),
-            11: ('script', p.BytesType, 0),
+            12: ('source', p.BytesType, None),
+            2: ('fee', p.UVarintType, None),
+            3: ('counter', p.UVarintType, None),
+            4: ('gas_limit', p.UVarintType, None),
+            5: ('storage_limit', p.UVarintType, None),
+            6: ('manager_pubkey', p.BytesType, None),
+            7: ('balance', p.UVarintType, None),
+            8: ('spendable', p.BoolType, None),
+            9: ('delegatable', p.BoolType, None),
+            10: ('delegate', p.BytesType, None),
+            11: ('script', p.BytesType, None),
         }

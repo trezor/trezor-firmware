@@ -14,6 +14,7 @@ class NEMMosaic(p.MessageType):
 
     def __init__(
         self,
+        *,
         namespace: str = None,
         mosaic: str = None,
         quantity: int = None,
@@ -25,7 +26,7 @@ class NEMMosaic(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('namespace', p.UnicodeType, 0),
-            2: ('mosaic', p.UnicodeType, 0),
-            3: ('quantity', p.UVarintType, 0),
+            1: ('namespace', p.UnicodeType, None),
+            2: ('mosaic', p.UnicodeType, None),
+            3: ('quantity', p.UVarintType, None),
         }

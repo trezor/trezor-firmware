@@ -15,6 +15,7 @@ class BinanceSignedTx(p.MessageType):
 
     def __init__(
         self,
+        *,
         signature: bytes = None,
         public_key: bytes = None,
     ) -> None:
@@ -24,6 +25,6 @@ class BinanceSignedTx(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('signature', p.BytesType, 0),
-            2: ('public_key', p.BytesType, 0),
+            1: ('signature', p.BytesType, None),
+            2: ('public_key', p.BytesType, None),
         }

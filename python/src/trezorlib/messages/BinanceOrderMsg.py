@@ -18,6 +18,7 @@ class BinanceOrderMsg(p.MessageType):
 
     def __init__(
         self,
+        *,
         id: str = None,
         ordertype: EnumTypeBinanceOrderType = None,
         price: int = None,
@@ -39,12 +40,12 @@ class BinanceOrderMsg(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('id', p.UnicodeType, 0),
-            2: ('ordertype', p.EnumType("BinanceOrderType", (0, 1, 2, 3)), 0),
-            3: ('price', p.SVarintType, 0),
-            4: ('quantity', p.SVarintType, 0),
-            5: ('sender', p.UnicodeType, 0),
-            6: ('side', p.EnumType("BinanceOrderSide", (0, 1, 2)), 0),
-            7: ('symbol', p.UnicodeType, 0),
-            8: ('timeinforce', p.EnumType("BinanceTimeInForce", (0, 1, 2, 3)), 0),
+            1: ('id', p.UnicodeType, None),
+            2: ('ordertype', p.EnumType("BinanceOrderType", (0, 1, 2, 3)), None),
+            3: ('price', p.SVarintType, None),
+            4: ('quantity', p.SVarintType, None),
+            5: ('sender', p.UnicodeType, None),
+            6: ('side', p.EnumType("BinanceOrderSide", (0, 1, 2)), None),
+            7: ('symbol', p.UnicodeType, None),
+            8: ('timeinforce', p.EnumType("BinanceTimeInForce", (0, 1, 2, 3)), None),
         }

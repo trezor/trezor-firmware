@@ -17,12 +17,13 @@ class TxInputType(p.MessageType):
 
     def __init__(
         self,
+        *,
+        prev_hash: bytes,
+        prev_index: int,
         address_n: List[int] = None,
-        prev_hash: bytes = None,
-        prev_index: int = None,
         script_sig: bytes = None,
-        sequence: int = None,
-        script_type: EnumTypeInputScriptType = None,
+        sequence: int = 4294967295,
+        script_type: EnumTypeInputScriptType = 0,
         multisig: MultisigRedeemScriptType = None,
         amount: int = None,
         decred_tree: int = None,
@@ -47,15 +48,15 @@ class TxInputType(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            2: ('prev_hash', p.BytesType, 0),  # required
-            3: ('prev_index', p.UVarintType, 0),  # required
-            4: ('script_sig', p.BytesType, 0),
-            5: ('sequence', p.UVarintType, 0),  # default=4294967295
+            2: ('prev_hash', p.BytesType, p.FLAG_REQUIRED),
+            3: ('prev_index', p.UVarintType, p.FLAG_REQUIRED),
+            4: ('script_sig', p.BytesType, None),
+            5: ('sequence', p.UVarintType, 4294967295),  # default=4294967295
             6: ('script_type', p.EnumType("InputScriptType", (0, 1, 2, 3, 4)), 0),  # default=SPENDADDRESS
-            7: ('multisig', MultisigRedeemScriptType, 0),
-            8: ('amount', p.UVarintType, 0),
-            9: ('decred_tree', p.UVarintType, 0),
-            13: ('witness', p.BytesType, 0),
-            14: ('ownership_proof', p.BytesType, 0),
-            15: ('commitment_data', p.BytesType, 0),
+            7: ('multisig', MultisigRedeemScriptType, None),
+            8: ('amount', p.UVarintType, None),
+            9: ('decred_tree', p.UVarintType, None),
+            13: ('witness', p.BytesType, None),
+            14: ('ownership_proof', p.BytesType, None),
+            15: ('commitment_data', p.BytesType, None),
         }

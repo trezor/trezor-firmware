@@ -15,6 +15,7 @@ class ApplyFlags(p.MessageType):
 
     def __init__(
         self,
+        *,
         flags: int = None,
     ) -> None:
         self.flags = flags
@@ -22,5 +23,5 @@ class ApplyFlags(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('flags', p.UVarintType, 0),
+            1: ('flags', p.UVarintType, None),
         }

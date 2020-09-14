@@ -15,6 +15,7 @@ class DebugLinkMemoryWrite(p.MessageType):
 
     def __init__(
         self,
+        *,
         address: int = None,
         memory: bytes = None,
         flash: bool = None,
@@ -26,7 +27,7 @@ class DebugLinkMemoryWrite(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('address', p.UVarintType, 0),
-            2: ('memory', p.BytesType, 0),
-            3: ('flash', p.BoolType, 0),
+            1: ('address', p.UVarintType, None),
+            2: ('memory', p.BytesType, None),
+            3: ('flash', p.BoolType, None),
         }

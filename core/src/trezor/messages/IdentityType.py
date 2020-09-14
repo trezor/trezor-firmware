@@ -14,12 +14,13 @@ class IdentityType(p.MessageType):
 
     def __init__(
         self,
+        *,
         proto: str = None,
         user: str = None,
         host: str = None,
         port: str = None,
         path: str = None,
-        index: int = None,
+        index: int = 0,
     ) -> None:
         self.proto = proto
         self.user = user
@@ -31,10 +32,10 @@ class IdentityType(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('proto', p.UnicodeType, 0),
-            2: ('user', p.UnicodeType, 0),
-            3: ('host', p.UnicodeType, 0),
-            4: ('port', p.UnicodeType, 0),
-            5: ('path', p.UnicodeType, 0),
+            1: ('proto', p.UnicodeType, None),
+            2: ('user', p.UnicodeType, None),
+            3: ('host', p.UnicodeType, None),
+            4: ('port', p.UnicodeType, None),
+            5: ('path', p.UnicodeType, None),
             6: ('index', p.UVarintType, 0),  # default=0
         }

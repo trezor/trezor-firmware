@@ -15,6 +15,7 @@ class MoneroTransactionSetInputAck(p.MessageType):
 
     def __init__(
         self,
+        *,
         vini: bytes = None,
         vini_hmac: bytes = None,
         pseudo_out: bytes = None,
@@ -32,10 +33,10 @@ class MoneroTransactionSetInputAck(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('vini', p.BytesType, 0),
-            2: ('vini_hmac', p.BytesType, 0),
-            3: ('pseudo_out', p.BytesType, 0),
-            4: ('pseudo_out_hmac', p.BytesType, 0),
-            5: ('pseudo_out_alpha', p.BytesType, 0),
-            6: ('spend_key', p.BytesType, 0),
+            1: ('vini', p.BytesType, None),
+            2: ('vini_hmac', p.BytesType, None),
+            3: ('pseudo_out', p.BytesType, None),
+            4: ('pseudo_out_hmac', p.BytesType, None),
+            5: ('pseudo_out_alpha', p.BytesType, None),
+            6: ('spend_key', p.BytesType, None),
         }

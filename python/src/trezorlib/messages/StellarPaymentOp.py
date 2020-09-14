@@ -17,6 +17,7 @@ class StellarPaymentOp(p.MessageType):
 
     def __init__(
         self,
+        *,
         source_account: str = None,
         destination_account: str = None,
         asset: StellarAssetType = None,
@@ -30,8 +31,8 @@ class StellarPaymentOp(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('source_account', p.UnicodeType, 0),
-            2: ('destination_account', p.UnicodeType, 0),
-            3: ('asset', StellarAssetType, 0),
-            4: ('amount', p.SVarintType, 0),
+            1: ('source_account', p.UnicodeType, None),
+            2: ('destination_account', p.UnicodeType, None),
+            3: ('asset', StellarAssetType, None),
+            4: ('amount', p.SVarintType, None),
         }

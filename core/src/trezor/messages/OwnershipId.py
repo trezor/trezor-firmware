@@ -15,12 +15,13 @@ class OwnershipId(p.MessageType):
 
     def __init__(
         self,
-        ownership_id: bytes = None,
+        *,
+        ownership_id: bytes,
     ) -> None:
         self.ownership_id = ownership_id
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('ownership_id', p.BytesType, 0),  # required
+            1: ('ownership_id', p.BytesType, p.FLAG_REQUIRED),
         }

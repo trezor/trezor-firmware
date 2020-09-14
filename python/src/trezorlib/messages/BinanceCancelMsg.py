@@ -15,6 +15,7 @@ class BinanceCancelMsg(p.MessageType):
 
     def __init__(
         self,
+        *,
         refid: str = None,
         sender: str = None,
         symbol: str = None,
@@ -26,7 +27,7 @@ class BinanceCancelMsg(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('refid', p.UnicodeType, 0),
-            2: ('sender', p.UnicodeType, 0),
-            3: ('symbol', p.UnicodeType, 0),
+            1: ('refid', p.UnicodeType, None),
+            2: ('sender', p.UnicodeType, None),
+            3: ('symbol', p.UnicodeType, None),
         }
