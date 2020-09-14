@@ -15,6 +15,7 @@ class MoneroLiveRefreshStepRequest(p.MessageType):
 
     def __init__(
         self,
+        *,
         out_key: bytes = None,
         recv_deriv: bytes = None,
         real_out_idx: int = None,
@@ -30,9 +31,9 @@ class MoneroLiveRefreshStepRequest(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('out_key', p.BytesType, 0),
-            2: ('recv_deriv', p.BytesType, 0),
-            3: ('real_out_idx', p.UVarintType, 0),
-            4: ('sub_addr_major', p.UVarintType, 0),
-            5: ('sub_addr_minor', p.UVarintType, 0),
+            1: ('out_key', p.BytesType, None),
+            2: ('recv_deriv', p.BytesType, None),
+            3: ('real_out_idx', p.UVarintType, None),
+            4: ('sub_addr_major', p.UVarintType, None),
+            5: ('sub_addr_minor', p.UVarintType, None),
         }

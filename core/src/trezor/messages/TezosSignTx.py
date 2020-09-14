@@ -22,6 +22,7 @@ class TezosSignTx(p.MessageType):
 
     def __init__(
         self,
+        *,
         address_n: List[int] = None,
         branch: bytes = None,
         reveal: TezosRevealOp = None,
@@ -44,11 +45,11 @@ class TezosSignTx(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            2: ('branch', p.BytesType, 0),
-            3: ('reveal', TezosRevealOp, 0),
-            4: ('transaction', TezosTransactionOp, 0),
-            5: ('origination', TezosOriginationOp, 0),
-            6: ('delegation', TezosDelegationOp, 0),
-            7: ('proposal', TezosProposalOp, 0),
-            8: ('ballot', TezosBallotOp, 0),
+            2: ('branch', p.BytesType, None),
+            3: ('reveal', TezosRevealOp, None),
+            4: ('transaction', TezosTransactionOp, None),
+            5: ('origination', TezosOriginationOp, None),
+            6: ('delegation', TezosDelegationOp, None),
+            7: ('proposal', TezosProposalOp, None),
+            8: ('ballot', TezosBallotOp, None),
         }

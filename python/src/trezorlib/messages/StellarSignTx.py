@@ -15,6 +15,7 @@ class StellarSignTx(p.MessageType):
 
     def __init__(
         self,
+        *,
         address_n: List[int] = None,
         network_passphrase: str = None,
         source_account: str = None,
@@ -45,15 +46,15 @@ class StellarSignTx(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             2: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            3: ('network_passphrase', p.UnicodeType, 0),
-            4: ('source_account', p.UnicodeType, 0),
-            5: ('fee', p.UVarintType, 0),
-            6: ('sequence_number', p.UVarintType, 0),
-            8: ('timebounds_start', p.UVarintType, 0),
-            9: ('timebounds_end', p.UVarintType, 0),
-            10: ('memo_type', p.UVarintType, 0),
-            11: ('memo_text', p.UnicodeType, 0),
-            12: ('memo_id', p.UVarintType, 0),
-            13: ('memo_hash', p.BytesType, 0),
-            14: ('num_operations', p.UVarintType, 0),
+            3: ('network_passphrase', p.UnicodeType, None),
+            4: ('source_account', p.UnicodeType, None),
+            5: ('fee', p.UVarintType, None),
+            6: ('sequence_number', p.UVarintType, None),
+            8: ('timebounds_start', p.UVarintType, None),
+            9: ('timebounds_end', p.UVarintType, None),
+            10: ('memo_type', p.UVarintType, None),
+            11: ('memo_text', p.UnicodeType, None),
+            12: ('memo_id', p.UVarintType, None),
+            13: ('memo_hash', p.BytesType, None),
+            14: ('num_operations', p.UVarintType, None),
         }

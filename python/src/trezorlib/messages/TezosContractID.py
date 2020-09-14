@@ -15,6 +15,7 @@ class TezosContractID(p.MessageType):
 
     def __init__(
         self,
+        *,
         tag: EnumTypeTezosContractType = None,
         hash: bytes = None,
     ) -> None:
@@ -24,6 +25,6 @@ class TezosContractID(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('tag', p.EnumType("TezosContractType", (0, 1)), 0),
-            2: ('hash', p.BytesType, 0),
+            1: ('tag', p.EnumType("TezosContractType", (0, 1)), None),
+            2: ('hash', p.BytesType, None),
         }

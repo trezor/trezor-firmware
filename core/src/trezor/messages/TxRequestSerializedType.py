@@ -14,6 +14,7 @@ class TxRequestSerializedType(p.MessageType):
 
     def __init__(
         self,
+        *,
         signature_index: int = None,
         signature: bytes = None,
         serialized_tx: bytes = None,
@@ -25,7 +26,7 @@ class TxRequestSerializedType(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('signature_index', p.UVarintType, 0),
-            2: ('signature', p.BytesType, 0),
-            3: ('serialized_tx', p.BytesType, 0),
+            1: ('signature_index', p.UVarintType, None),
+            2: ('signature', p.BytesType, None),
+            3: ('serialized_tx', p.BytesType, None),
         }

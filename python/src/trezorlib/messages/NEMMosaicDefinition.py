@@ -15,6 +15,8 @@ class NEMMosaicDefinition(p.MessageType):
 
     def __init__(
         self,
+        *,
+        networks: List[int] = None,
         name: str = None,
         ticker: str = None,
         namespace: str = None,
@@ -29,8 +31,8 @@ class NEMMosaicDefinition(p.MessageType):
         mutable_supply: bool = None,
         transferable: bool = None,
         description: str = None,
-        networks: List[int] = None,
     ) -> None:
+        self.networks = networks if networks is not None else []
         self.name = name
         self.ticker = ticker
         self.namespace = namespace
@@ -45,24 +47,23 @@ class NEMMosaicDefinition(p.MessageType):
         self.mutable_supply = mutable_supply
         self.transferable = transferable
         self.description = description
-        self.networks = networks if networks is not None else []
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('name', p.UnicodeType, 0),
-            2: ('ticker', p.UnicodeType, 0),
-            3: ('namespace', p.UnicodeType, 0),
-            4: ('mosaic', p.UnicodeType, 0),
-            5: ('divisibility', p.UVarintType, 0),
-            6: ('levy', p.EnumType("NEMMosaicLevy", (1, 2)), 0),
-            7: ('fee', p.UVarintType, 0),
-            8: ('levy_address', p.UnicodeType, 0),
-            9: ('levy_namespace', p.UnicodeType, 0),
-            10: ('levy_mosaic', p.UnicodeType, 0),
-            11: ('supply', p.UVarintType, 0),
-            12: ('mutable_supply', p.BoolType, 0),
-            13: ('transferable', p.BoolType, 0),
-            14: ('description', p.UnicodeType, 0),
+            1: ('name', p.UnicodeType, None),
+            2: ('ticker', p.UnicodeType, None),
+            3: ('namespace', p.UnicodeType, None),
+            4: ('mosaic', p.UnicodeType, None),
+            5: ('divisibility', p.UVarintType, None),
+            6: ('levy', p.EnumType("NEMMosaicLevy", (1, 2)), None),
+            7: ('fee', p.UVarintType, None),
+            8: ('levy_address', p.UnicodeType, None),
+            9: ('levy_namespace', p.UnicodeType, None),
+            10: ('levy_mosaic', p.UnicodeType, None),
+            11: ('supply', p.UVarintType, None),
+            12: ('mutable_supply', p.BoolType, None),
+            13: ('transferable', p.BoolType, None),
+            14: ('description', p.UnicodeType, None),
             15: ('networks', p.UVarintType, p.FLAG_REPEATED),
         }

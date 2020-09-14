@@ -15,6 +15,7 @@ class DebugLinkLog(p.MessageType):
 
     def __init__(
         self,
+        *,
         level: int = None,
         bucket: str = None,
         text: str = None,
@@ -26,7 +27,7 @@ class DebugLinkLog(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('level', p.UVarintType, 0),
-            2: ('bucket', p.UnicodeType, 0),
-            3: ('text', p.UnicodeType, 0),
+            1: ('level', p.UVarintType, None),
+            2: ('bucket', p.UnicodeType, None),
+            3: ('text', p.UnicodeType, None),
         }

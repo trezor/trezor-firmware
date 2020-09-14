@@ -18,24 +18,25 @@ class LiskTransactionAsset(p.MessageType):
 
     def __init__(
         self,
+        *,
+        votes: List[str] = None,
         signature: LiskSignatureType = None,
         delegate: LiskDelegateType = None,
-        votes: List[str] = None,
         multisignature: LiskMultisignatureType = None,
         data: str = None,
     ) -> None:
+        self.votes = votes if votes is not None else []
         self.signature = signature
         self.delegate = delegate
-        self.votes = votes if votes is not None else []
         self.multisignature = multisignature
         self.data = data
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('signature', LiskSignatureType, 0),
-            2: ('delegate', LiskDelegateType, 0),
+            1: ('signature', LiskSignatureType, None),
+            2: ('delegate', LiskDelegateType, None),
             3: ('votes', p.UnicodeType, p.FLAG_REPEATED),
-            4: ('multisignature', LiskMultisignatureType, 0),
-            5: ('data', p.UnicodeType, 0),
+            4: ('multisignature', LiskMultisignatureType, None),
+            5: ('data', p.UnicodeType, None),
         }

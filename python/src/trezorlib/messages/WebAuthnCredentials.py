@@ -17,6 +17,7 @@ class WebAuthnCredentials(p.MessageType):
 
     def __init__(
         self,
+        *,
         credentials: List[WebAuthnCredential] = None,
     ) -> None:
         self.credentials = credentials if credentials is not None else []

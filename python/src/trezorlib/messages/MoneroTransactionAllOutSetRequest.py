@@ -17,6 +17,7 @@ class MoneroTransactionAllOutSetRequest(p.MessageType):
 
     def __init__(
         self,
+        *,
         rsig_data: MoneroTransactionRsigData = None,
     ) -> None:
         self.rsig_data = rsig_data
@@ -24,5 +25,5 @@ class MoneroTransactionAllOutSetRequest(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('rsig_data', MoneroTransactionRsigData, 0),
+            1: ('rsig_data', MoneroTransactionRsigData, None),
         }

@@ -15,6 +15,7 @@ class NEMCosignatoryModification(p.MessageType):
 
     def __init__(
         self,
+        *,
         type: EnumTypeNEMModificationType = None,
         public_key: bytes = None,
     ) -> None:
@@ -24,6 +25,6 @@ class NEMCosignatoryModification(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('type', p.EnumType("NEMModificationType", (1, 2)), 0),
-            2: ('public_key', p.BytesType, 0),
+            1: ('type', p.EnumType("NEMModificationType", (1, 2)), None),
+            2: ('public_key', p.BytesType, None),
         }

@@ -16,6 +16,7 @@ class WordRequest(p.MessageType):
 
     def __init__(
         self,
+        *,
         type: EnumTypeWordRequestType = None,
     ) -> None:
         self.type = type
@@ -23,5 +24,5 @@ class WordRequest(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('type', p.EnumType("WordRequestType", (0, 1, 2)), 0),
+            1: ('type', p.EnumType("WordRequestType", (0, 1, 2)), None),
         }

@@ -15,6 +15,7 @@ class StellarAddress(p.MessageType):
 
     def __init__(
         self,
+        *,
         address: str = None,
     ) -> None:
         self.address = address
@@ -22,5 +23,5 @@ class StellarAddress(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('address', p.UnicodeType, 0),
+            1: ('address', p.UnicodeType, None),
         }

@@ -14,6 +14,7 @@ class MoneroRingCtSig(p.MessageType):
 
     def __init__(
         self,
+        *,
         txn_fee: int = None,
         message: bytes = None,
         rv_type: int = None,
@@ -25,7 +26,7 @@ class MoneroRingCtSig(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('txn_fee', p.UVarintType, 0),
-            2: ('message', p.BytesType, 0),
-            3: ('rv_type', p.UVarintType, 0),
+            1: ('txn_fee', p.UVarintType, None),
+            2: ('message', p.BytesType, None),
+            3: ('rv_type', p.UVarintType, None),
         }

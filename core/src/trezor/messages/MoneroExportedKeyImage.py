@@ -14,6 +14,7 @@ class MoneroExportedKeyImage(p.MessageType):
 
     def __init__(
         self,
+        *,
         iv: bytes = None,
         blob: bytes = None,
     ) -> None:
@@ -23,6 +24,6 @@ class MoneroExportedKeyImage(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('iv', p.BytesType, 0),
-            3: ('blob', p.BytesType, 0),
+            1: ('iv', p.BytesType, None),
+            3: ('blob', p.BytesType, None),
         }

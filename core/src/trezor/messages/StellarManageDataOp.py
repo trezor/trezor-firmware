@@ -15,6 +15,7 @@ class StellarManageDataOp(p.MessageType):
 
     def __init__(
         self,
+        *,
         source_account: str = None,
         key: str = None,
         value: bytes = None,
@@ -26,7 +27,7 @@ class StellarManageDataOp(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('source_account', p.UnicodeType, 0),
-            2: ('key', p.UnicodeType, 0),
-            3: ('value', p.BytesType, 0),
+            1: ('source_account', p.UnicodeType, None),
+            2: ('key', p.UnicodeType, None),
+            3: ('value', p.BytesType, None),
         }

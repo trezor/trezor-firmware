@@ -20,24 +20,25 @@ class CardanoSignTx(p.MessageType):
 
     def __init__(
         self,
+        *,
         inputs: List[CardanoTxInputType] = None,
         outputs: List[CardanoTxOutputType] = None,
+        certificates: List[CardanoTxCertificateType] = None,
+        withdrawals: List[CardanoTxWithdrawalType] = None,
         protocol_magic: int = None,
         fee: int = None,
         ttl: int = None,
         network_id: int = None,
-        certificates: List[CardanoTxCertificateType] = None,
-        withdrawals: List[CardanoTxWithdrawalType] = None,
         metadata: bytes = None,
     ) -> None:
         self.inputs = inputs if inputs is not None else []
         self.outputs = outputs if outputs is not None else []
+        self.certificates = certificates if certificates is not None else []
+        self.withdrawals = withdrawals if withdrawals is not None else []
         self.protocol_magic = protocol_magic
         self.fee = fee
         self.ttl = ttl
         self.network_id = network_id
-        self.certificates = certificates if certificates is not None else []
-        self.withdrawals = withdrawals if withdrawals is not None else []
         self.metadata = metadata
 
     @classmethod
@@ -45,11 +46,11 @@ class CardanoSignTx(p.MessageType):
         return {
             1: ('inputs', CardanoTxInputType, p.FLAG_REPEATED),
             2: ('outputs', CardanoTxOutputType, p.FLAG_REPEATED),
-            5: ('protocol_magic', p.UVarintType, 0),
-            6: ('fee', p.UVarintType, 0),
-            7: ('ttl', p.UVarintType, 0),
-            8: ('network_id', p.UVarintType, 0),
+            5: ('protocol_magic', p.UVarintType, None),
+            6: ('fee', p.UVarintType, None),
+            7: ('ttl', p.UVarintType, None),
+            8: ('network_id', p.UVarintType, None),
             9: ('certificates', CardanoTxCertificateType, p.FLAG_REPEATED),
             10: ('withdrawals', CardanoTxWithdrawalType, p.FLAG_REPEATED),
-            11: ('metadata', p.BytesType, 0),
+            11: ('metadata', p.BytesType, None),
         }

@@ -15,6 +15,7 @@ class DebugLinkMemory(p.MessageType):
 
     def __init__(
         self,
+        *,
         memory: bytes = None,
     ) -> None:
         self.memory = memory
@@ -22,5 +23,5 @@ class DebugLinkMemory(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('memory', p.BytesType, 0),
+            1: ('memory', p.BytesType, None),
         }

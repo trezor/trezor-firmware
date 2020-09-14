@@ -15,6 +15,7 @@ class DebugLinkLayout(p.MessageType):
 
     def __init__(
         self,
+        *,
         lines: List[str] = None,
     ) -> None:
         self.lines = lines if lines is not None else []

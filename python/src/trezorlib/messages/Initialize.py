@@ -15,6 +15,7 @@ class Initialize(p.MessageType):
 
     def __init__(
         self,
+        *,
         session_id: bytes = None,
     ) -> None:
         self.session_id = session_id
@@ -22,5 +23,5 @@ class Initialize(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('session_id', p.BytesType, 0),
+            1: ('session_id', p.BytesType, None),
         }

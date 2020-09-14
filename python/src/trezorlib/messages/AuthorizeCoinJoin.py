@@ -16,27 +16,28 @@ class AuthorizeCoinJoin(p.MessageType):
 
     def __init__(
         self,
-        coordinator: str = None,
-        max_total_fee: int = None,
-        fee_per_anonymity: int = None,
+        *,
+        coordinator: str,
+        max_total_fee: int,
         address_n: List[int] = None,
-        coin_name: str = None,
-        script_type: EnumTypeInputScriptType = None,
+        fee_per_anonymity: int = None,
+        coin_name: str = "Bitcoin",
+        script_type: EnumTypeInputScriptType = 0,
     ) -> None:
+        self.address_n = address_n if address_n is not None else []
         self.coordinator = coordinator
         self.max_total_fee = max_total_fee
         self.fee_per_anonymity = fee_per_anonymity
-        self.address_n = address_n if address_n is not None else []
         self.coin_name = coin_name
         self.script_type = script_type
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('coordinator', p.UnicodeType, 0),  # required
-            2: ('max_total_fee', p.UVarintType, 0),  # required
-            3: ('fee_per_anonymity', p.UVarintType, 0),
+            1: ('coordinator', p.UnicodeType, p.FLAG_REQUIRED),
+            2: ('max_total_fee', p.UVarintType, p.FLAG_REQUIRED),
+            3: ('fee_per_anonymity', p.UVarintType, None),
             4: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            5: ('coin_name', p.UnicodeType, 0),  # default=Bitcoin
+            5: ('coin_name', p.UnicodeType, "Bitcoin"),  # default=Bitcoin
             6: ('script_type', p.EnumType("InputScriptType", (0, 1, 2, 3, 4)), 0),  # default=SPENDADDRESS
         }

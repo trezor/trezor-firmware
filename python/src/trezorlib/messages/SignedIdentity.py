@@ -15,6 +15,7 @@ class SignedIdentity(p.MessageType):
 
     def __init__(
         self,
+        *,
         address: str = None,
         public_key: bytes = None,
         signature: bytes = None,
@@ -26,7 +27,7 @@ class SignedIdentity(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('address', p.UnicodeType, 0),
-            2: ('public_key', p.BytesType, 0),
-            3: ('signature', p.BytesType, 0),
+            1: ('address', p.UnicodeType, None),
+            2: ('public_key', p.BytesType, None),
+            3: ('signature', p.BytesType, None),
         }

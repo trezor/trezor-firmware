@@ -15,6 +15,7 @@ class LiskSignedTx(p.MessageType):
 
     def __init__(
         self,
+        *,
         signature: bytes = None,
     ) -> None:
         self.signature = signature
@@ -22,5 +23,5 @@ class LiskSignedTx(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('signature', p.BytesType, 0),
+            1: ('signature', p.BytesType, None),
         }

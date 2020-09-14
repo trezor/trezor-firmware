@@ -17,6 +17,7 @@ class RippleSignTx(p.MessageType):
 
     def __init__(
         self,
+        *,
         address_n: List[int] = None,
         fee: int = None,
         flags: int = None,
@@ -35,9 +36,9 @@ class RippleSignTx(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            2: ('fee', p.UVarintType, 0),
-            3: ('flags', p.UVarintType, 0),
-            4: ('sequence', p.UVarintType, 0),
-            5: ('last_ledger_sequence', p.UVarintType, 0),
-            6: ('payment', RipplePayment, 0),
+            2: ('fee', p.UVarintType, None),
+            3: ('flags', p.UVarintType, None),
+            4: ('sequence', p.UVarintType, None),
+            5: ('last_ledger_sequence', p.UVarintType, None),
+            6: ('payment', RipplePayment, None),
         }

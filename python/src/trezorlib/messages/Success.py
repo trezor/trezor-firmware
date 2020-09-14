@@ -15,6 +15,7 @@ class Success(p.MessageType):
 
     def __init__(
         self,
+        *,
         message: str = None,
     ) -> None:
         self.message = message
@@ -22,5 +23,5 @@ class Success(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('message', p.UnicodeType, 0),
+            1: ('message', p.UnicodeType, None),
         }

@@ -16,6 +16,7 @@ class TezosParametersManager(p.MessageType):
 
     def __init__(
         self,
+        *,
         set_delegate: bytes = None,
         cancel_delegate: bool = None,
         transfer: TezosManagerTransfer = None,
@@ -27,7 +28,7 @@ class TezosParametersManager(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('set_delegate', p.BytesType, 0),
-            2: ('cancel_delegate', p.BoolType, 0),
-            3: ('transfer', TezosManagerTransfer, 0),
+            1: ('set_delegate', p.BytesType, None),
+            2: ('cancel_delegate', p.BoolType, None),
+            3: ('transfer', TezosManagerTransfer, None),
         }

@@ -14,6 +14,7 @@ class CardanoTxInputType(p.MessageType):
 
     def __init__(
         self,
+        *,
         address_n: List[int] = None,
         prev_hash: bytes = None,
         prev_index: int = None,
@@ -26,6 +27,6 @@ class CardanoTxInputType(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            2: ('prev_hash', p.BytesType, 0),
-            3: ('prev_index', p.UVarintType, 0),
+            2: ('prev_hash', p.BytesType, None),
+            3: ('prev_index', p.UVarintType, None),
         }

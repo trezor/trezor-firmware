@@ -15,6 +15,7 @@ class EthereumMessageSignature(p.MessageType):
 
     def __init__(
         self,
+        *,
         signature: bytes = None,
         address: str = None,
     ) -> None:
@@ -24,6 +25,6 @@ class EthereumMessageSignature(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            2: ('signature', p.BytesType, 0),
-            3: ('address', p.UnicodeType, 0),
+            2: ('signature', p.BytesType, None),
+            3: ('address', p.UnicodeType, None),
         }

@@ -15,6 +15,7 @@ class StellarAllowTrustOp(p.MessageType):
 
     def __init__(
         self,
+        *,
         source_account: str = None,
         trusted_account: str = None,
         asset_type: int = None,
@@ -30,9 +31,9 @@ class StellarAllowTrustOp(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('source_account', p.UnicodeType, 0),
-            2: ('trusted_account', p.UnicodeType, 0),
-            3: ('asset_type', p.UVarintType, 0),
-            4: ('asset_code', p.UnicodeType, 0),
-            5: ('is_authorized', p.UVarintType, 0),
+            1: ('source_account', p.UnicodeType, None),
+            2: ('trusted_account', p.UnicodeType, None),
+            3: ('asset_type', p.UVarintType, None),
+            4: ('asset_code', p.UnicodeType, None),
+            5: ('is_authorized', p.UVarintType, None),
         }

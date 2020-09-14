@@ -14,6 +14,7 @@ class EosActionUnlinkAuth(p.MessageType):
 
     def __init__(
         self,
+        *,
         account: int = None,
         code: int = None,
         type: int = None,
@@ -25,7 +26,7 @@ class EosActionUnlinkAuth(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('account', p.UVarintType, 0),
-            2: ('code', p.UVarintType, 0),
-            3: ('type', p.UVarintType, 0),
+            1: ('account', p.UVarintType, None),
+            2: ('code', p.UVarintType, None),
+            3: ('type', p.UVarintType, None),
         }

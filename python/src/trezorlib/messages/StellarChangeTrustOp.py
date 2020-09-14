@@ -17,6 +17,7 @@ class StellarChangeTrustOp(p.MessageType):
 
     def __init__(
         self,
+        *,
         source_account: str = None,
         asset: StellarAssetType = None,
         limit: int = None,
@@ -28,7 +29,7 @@ class StellarChangeTrustOp(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('source_account', p.UnicodeType, 0),
-            2: ('asset', StellarAssetType, 0),
-            3: ('limit', p.UVarintType, 0),
+            1: ('source_account', p.UnicodeType, None),
+            2: ('asset', StellarAssetType, None),
+            3: ('limit', p.UVarintType, None),
         }

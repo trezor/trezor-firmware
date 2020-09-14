@@ -18,20 +18,21 @@ class EosAuthorization(p.MessageType):
 
     def __init__(
         self,
-        threshold: int = None,
+        *,
         keys: List[EosAuthorizationKey] = None,
         accounts: List[EosAuthorizationAccount] = None,
         waits: List[EosAuthorizationWait] = None,
+        threshold: int = None,
     ) -> None:
-        self.threshold = threshold
         self.keys = keys if keys is not None else []
         self.accounts = accounts if accounts is not None else []
         self.waits = waits if waits is not None else []
+        self.threshold = threshold
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('threshold', p.UVarintType, 0),
+            1: ('threshold', p.UVarintType, None),
             2: ('keys', EosAuthorizationKey, p.FLAG_REPEATED),
             3: ('accounts', EosAuthorizationAccount, p.FLAG_REPEATED),
             4: ('waits', EosAuthorizationWait, p.FLAG_REPEATED),

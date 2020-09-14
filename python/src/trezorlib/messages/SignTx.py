@@ -15,11 +15,12 @@ class SignTx(p.MessageType):
 
     def __init__(
         self,
-        outputs_count: int = None,
-        inputs_count: int = None,
-        coin_name: str = None,
-        version: int = None,
-        lock_time: int = None,
+        *,
+        outputs_count: int,
+        inputs_count: int,
+        coin_name: str = "Bitcoin",
+        version: int = 1,
+        lock_time: int = 0,
         expiry: int = None,
         overwintered: bool = None,
         version_group_id: int = None,
@@ -40,14 +41,14 @@ class SignTx(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('outputs_count', p.UVarintType, 0),  # required
-            2: ('inputs_count', p.UVarintType, 0),  # required
-            3: ('coin_name', p.UnicodeType, 0),  # default=Bitcoin
-            4: ('version', p.UVarintType, 0),  # default=1
+            1: ('outputs_count', p.UVarintType, p.FLAG_REQUIRED),
+            2: ('inputs_count', p.UVarintType, p.FLAG_REQUIRED),
+            3: ('coin_name', p.UnicodeType, "Bitcoin"),  # default=Bitcoin
+            4: ('version', p.UVarintType, 1),  # default=1
             5: ('lock_time', p.UVarintType, 0),  # default=0
-            6: ('expiry', p.UVarintType, 0),
-            7: ('overwintered', p.BoolType, 0),
-            8: ('version_group_id', p.UVarintType, 0),
-            9: ('timestamp', p.UVarintType, 0),
-            10: ('branch_id', p.UVarintType, 0),
+            6: ('expiry', p.UVarintType, None),
+            7: ('overwintered', p.BoolType, None),
+            8: ('version_group_id', p.UVarintType, None),
+            9: ('timestamp', p.UVarintType, None),
+            10: ('branch_id', p.UVarintType, None),
         }
