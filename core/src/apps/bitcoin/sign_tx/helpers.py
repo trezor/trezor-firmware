@@ -8,10 +8,17 @@ from trezor.messages.RequestType import (
     TXOUTPUT,
 )
 from trezor.messages.SignTx import SignTx
-from trezor.messages.TransactionType import TransactionType
-from trezor.messages.TxInputType import TxInputType
-from trezor.messages.TxOutputBinType import TxOutputBinType
-from trezor.messages.TxOutputType import TxOutputType
+from trezor.messages.TxAckInput import TxAckInput
+from trezor.messages.TxAckInputType import TxAckInputType
+from trezor.messages.TxAckOutput import TxAckOutput
+from trezor.messages.TxAckOutputType import TxAckOutputType
+from trezor.messages.TxAckPrevExtraData import TxAckPrevExtraData
+from trezor.messages.TxAckPrevInput import TxAckPrevInput
+from trezor.messages.TxAckPrevInputType import TxAckPrevInputType
+from trezor.messages.TxAckPrevMeta import TxAckPrevMeta
+from trezor.messages.TxAckPrevOutput import TxAckPrevOutput
+from trezor.messages.TxAckPrevOutputType import TxAckPrevOutputType
+from trezor.messages.TxAckPrevTxType import TxAckPrevTxType
 from trezor.messages.TxRequest import TxRequest
 
 from apps.common import paths
@@ -35,7 +42,7 @@ class UiConfirm:
 
 
 class UiConfirmOutput(UiConfirm):
-    def __init__(self, output: TxOutputType, coin: CoinInfo):
+    def __init__(self, output: TxAckOutputType, coin: CoinInfo):
         self.output = output
         self.coin = coin
 
@@ -113,11 +120,11 @@ class UiConfirmNonDefaultLocktime(UiConfirm):
     __eq__ = utils.obj_eq
 
 
-def confirm_output(output: TxOutputType, coin: CoinInfo) -> Awaitable[Any]:  # type: ignore
+def confirm_output(output: TxAckOutputType, coin: CoinInfo) -> Awaitable[None]:  # type: ignore
     return (yield UiConfirmOutput(output, coin))
 
 
-def confirm_total(spending: int, fee: int, coin: CoinInfo) -> Awaitable[Any]:  # type: ignore
+def confirm_total(spending: int, fee: int, coin: CoinInfo) -> Awaitable[None]:  # type: ignore
     return (yield UiConfirmTotal(spending, fee, coin))
 
 
@@ -141,54 +148,77 @@ def confirm_nondefault_locktime(lock_time: int, lock_time_disabled: bool) -> Awa
     return (yield UiConfirmNonDefaultLocktime(lock_time, lock_time_disabled))
 
 
-def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[Any]:  # type: ignore
+def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[TxAckPrevTxType]:  # type: ignore
+    assert tx_req.details is not None
     tx_req.request_type = TXMETA
     tx_req.details.tx_hash = tx_hash
-    ack = yield tx_req
+    ack = yield TxAckPrevMeta, tx_req
     _clear_tx_request(tx_req)
     return sanitize_tx_meta(ack.tx, coin)
 
 
 def request_tx_extra_data(  # type: ignore
     tx_req: TxRequest, offset: int, size: int, tx_hash: bytes = None
-) -> Awaitable[Any]:
+) -> Awaitable[bytearray]:
+    assert tx_req.details is not None
     tx_req.request_type = TXEXTRADATA
     tx_req.details.extra_data_offset = offset
     tx_req.details.extra_data_len = size
     tx_req.details.tx_hash = tx_hash
-    ack = yield tx_req
+    ack = yield TxAckPrevExtraData, tx_req
     _clear_tx_request(tx_req)
-    return ack.tx.extra_data
+    return ack.tx.extra_data_chunk
 
 
-def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[Any]:  # type: ignore
+def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo) -> Awaitable[TxAckInputType]:  # type: ignore
+    assert tx_req.details is not None
+    tx_req.request_type = TXINPUT
+    tx_req.details.request_index = i
+    ack = yield TxAckInput, tx_req
+    _clear_tx_request(tx_req)
+    return sanitize_tx_input(ack.tx.input, coin)
+
+
+def request_tx_prev_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[TxAckPrevInputType]:  # type: ignore
+    assert tx_req.details is not None
     tx_req.request_type = TXINPUT
     tx_req.details.request_index = i
     tx_req.details.tx_hash = tx_hash
-    ack = yield tx_req
+    ack = yield TxAckPrevInput, tx_req
     _clear_tx_request(tx_req)
-    return sanitize_tx_input(ack.tx, coin)
+    return sanitize_tx_prev_input(ack.tx.input, coin)
 
 
-def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[Any]:  # type: ignore
+def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo) -> Awaitable[TxAckOutputType]:  # type: ignore  # noqa: F811
+    assert tx_req.details is not None
+    tx_req.request_type = TXOUTPUT
+    tx_req.details.request_index = i
+    ack = yield TxAckOutput, tx_req
+    _clear_tx_request(tx_req)
+    return sanitize_tx_output(ack.tx.output, coin)
+
+
+def request_tx_prev_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[TxAckPrevOutputType]:  # type: ignore  # noqa: F811
+    assert tx_req.details is not None
     tx_req.request_type = TXOUTPUT
     tx_req.details.request_index = i
     tx_req.details.tx_hash = tx_hash
-    ack = yield tx_req
+    ack = yield TxAckPrevOutput, tx_req
     _clear_tx_request(tx_req)
-    if tx_hash is None:
-        return sanitize_tx_output(ack.tx, coin)
-    else:
-        return sanitize_tx_binoutput(ack.tx, coin)
+    # return sanitize_tx_prev_output(ack.tx, coin)  # no sanitize is required
+    return ack.tx.output
 
 
-def request_tx_finish(tx_req: TxRequest) -> Awaitable[Any]:  # type: ignore
+def request_tx_finish(tx_req: TxRequest) -> Awaitable[None]:  # type: ignore
     tx_req.request_type = TXFINISHED
-    yield tx_req
+    yield None, tx_req
     _clear_tx_request(tx_req)
 
 
 def _clear_tx_request(tx_req: TxRequest) -> None:
+    assert tx_req.details is not None
+    assert tx_req.serialized is not None
+    assert tx_req.serialized.serialized_tx is not None
     tx_req.request_type = None
     tx_req.details.request_index = None
     tx_req.details.tx_hash = None
@@ -196,7 +226,8 @@ def _clear_tx_request(tx_req: TxRequest) -> None:
     tx_req.details.extra_data_offset = None
     tx_req.serialized.signature = None
     tx_req.serialized.signature_index = None
-    tx_req.serialized.serialized_tx[:] = bytes()
+    # mypy thinks serialized_tx is `bytes`, which doesn't support indexed assignment
+    tx_req.serialized.serialized_tx[:] = bytes()  # type: ignore
 
 
 # Data sanitizers
@@ -204,11 +235,6 @@ def _clear_tx_request(tx_req: TxRequest) -> None:
 
 
 def sanitize_sign_tx(tx: SignTx, coin: CoinInfo) -> SignTx:
-    tx.version = tx.version if tx.version is not None else 1
-    tx.lock_time = tx.lock_time if tx.lock_time is not None else 0
-    tx.inputs_count = tx.inputs_count if tx.inputs_count is not None else 0
-    tx.outputs_count = tx.outputs_count if tx.outputs_count is not None else 0
-    tx.coin_name = tx.coin_name if tx.coin_name is not None else "Bitcoin"
     if coin.decred or coin.overwintered:
         tx.expiry = tx.expiry if tx.expiry is not None else 0
     elif tx.expiry:
@@ -230,14 +256,8 @@ def sanitize_sign_tx(tx: SignTx, coin: CoinInfo) -> SignTx:
     return tx
 
 
-def sanitize_tx_meta(tx: TransactionType, coin: CoinInfo) -> TransactionType:
-    tx.version = tx.version if tx.version is not None else 1
-    tx.lock_time = tx.lock_time if tx.lock_time is not None else 0
-    tx.inputs_cnt = tx.inputs_cnt if tx.inputs_cnt is not None else 0
-    tx.outputs_cnt = tx.outputs_cnt if tx.outputs_cnt is not None else 0
-    if coin.extra_data:
-        tx.extra_data_len = tx.extra_data_len if tx.extra_data_len is not None else 0
-    elif tx.extra_data_len:
+def sanitize_tx_meta(tx: TxAckPrevTxType, coin: CoinInfo) -> TxAckPrevTxType:
+    if not coin.extra_data and tx.extra_data_len:
         raise wire.DataError("Extra data not enabled on this coin.")
     if coin.decred or coin.overwintered:
         tx.expiry = tx.expiry if tx.expiry is not None else 0
@@ -255,34 +275,36 @@ def sanitize_tx_meta(tx: TransactionType, coin: CoinInfo) -> TransactionType:
     return tx
 
 
-def sanitize_tx_input(tx: TransactionType, coin: CoinInfo) -> TxInputType:
-    txi = tx.inputs[0]
-    if txi.amount is None:
-        txi.amount = 0
-    if txi.script_type is None:
-        txi.script_type = InputScriptType.SPENDADDRESS
-    if txi.sequence is None:
-        txi.sequence = 0xFFFFFFFF
-    if txi.prev_index is None:
-        raise wire.DataError("Missing prev_index field.")
-    if txi.prev_hash is None or len(txi.prev_hash) != TX_HASH_SIZE:
+def sanitize_tx_input(txi: TxAckInputType, coin: CoinInfo) -> TxAckInputType:
+    if len(txi.prev_hash) != TX_HASH_SIZE:
         raise wire.DataError("Provided prev_hash is invalid.")
     if txi.multisig and txi.script_type not in common.MULTISIG_INPUT_SCRIPT_TYPES:
         raise wire.DataError("Multisig field provided but not expected.")
+    elif not txi.multisig and txi.script_type == InputScriptType.SPENDMULTISIG:
+        raise wire.DataError("Multisig details required.")
     if txi.address_n and txi.script_type not in common.INTERNAL_INPUT_SCRIPT_TYPES:
         raise wire.DataError("Input's address_n provided but not expected.")
     if not coin.decred and txi.decred_tree is not None:
         raise wire.DataError("Decred details provided but Decred coin not specified.")
     if txi.script_type in common.SEGWIT_INPUT_SCRIPT_TYPES or txi.witness is not None:
         if not coin.segwit:
-            raise wire.DataError("Segwit not enabled on this coin")
+            raise wire.DataError("Segwit not enabled on this coin.")
     if txi.commitment_data and not txi.ownership_proof:
         raise wire.DataError("commitment_data field provided but not expected.")
     return txi
 
 
-def sanitize_tx_output(tx: TransactionType, coin: CoinInfo) -> TxOutputType:
-    txo = tx.outputs[0]
+def sanitize_tx_prev_input(
+    txi: TxAckPrevInputType, coin: CoinInfo
+) -> TxAckPrevInputType:
+    if len(txi.prev_hash) != TX_HASH_SIZE:
+        raise wire.DataError("Provided prev_hash is invalid.")
+    if not coin.decred and txi.decred_tree is not None:
+        raise wire.DataError("Decred details provided but Decred coin not specified.")
+    return txi
+
+
+def sanitize_tx_output(txo: TxAckOutputType, coin: CoinInfo) -> TxAckOutputType:
     if txo.multisig and txo.script_type not in common.MULTISIG_OUTPUT_SCRIPT_TYPES:
         raise wire.DataError("Multisig field provided but not expected.")
     if txo.address_n and txo.script_type not in common.CHANGE_OUTPUT_SCRIPT_TYPES:
@@ -307,12 +329,3 @@ def sanitize_tx_output(tx: TransactionType, coin: CoinInfo) -> TxOutputType:
         if not txo.address_n and not txo.address:
             raise wire.DataError("Missing address")
     return txo
-
-
-def sanitize_tx_binoutput(tx: TransactionType, coin: CoinInfo) -> TxOutputBinType:
-    txo_bin = tx.bin_outputs[0]
-    if txo_bin.amount is None:
-        raise wire.DataError("Missing amount field.")
-    if txo_bin.script_pubkey is None:
-        raise wire.DataError("Missing script_pubkey field.")
-    return txo_bin

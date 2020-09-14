@@ -126,6 +126,7 @@ def address_p2wsh_in_p2sh(witness_script_hash: bytes, coin: CoinInfo) -> str:
 
 
 def address_p2wpkh(pubkey: bytes, coin: CoinInfo) -> str:
+    assert coin.bech32_prefix is not None
     pubkeyhash = ecdsa_hash_pubkey(pubkey, coin)
     return encode_bech32_address(coin.bech32_prefix, pubkeyhash)
 
@@ -135,6 +136,7 @@ def address_p2wsh(witness_script_hash: bytes, hrp: str) -> str:
 
 
 def address_to_cashaddr(address: str, coin: CoinInfo) -> str:
+    assert coin.cashaddr_prefix is not None
     raw = base58.decode_check(address, coin.b58_hash)
     version, data = raw[0], raw[1:]
     if version == coin.address_type:

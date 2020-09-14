@@ -9,9 +9,17 @@ from apps.common.signverify import message_digest, require_confirm_sign_message
 from .addresses import get_address, validate_full_path
 from .keychain import with_keychain
 
+if False:
+    from trezor.messages.SignMessage import SignMessage
+
+    from apps.common.coininfo import CoinInfo
+    from apps.common.keychain import Keychain
+
 
 @with_keychain
-async def sign_message(ctx, msg, keychain, coin):
+async def sign_message(
+    ctx: wire.Context, msg: SignMessage, keychain: Keychain, coin: CoinInfo
+) -> MessageSignature:
     message = msg.message
     address_n = msg.address_n
     script_type = msg.script_type or 0
