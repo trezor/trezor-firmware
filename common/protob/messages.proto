@@ -28,6 +28,7 @@ extend google.protobuf.EnumValueOptions {
 /** Options for tagging message types */
 extend google.protobuf.MessageOptions {
     optional bool unstable = 50001;   // indicate that a message definition might change at any time
+    optional uint32 wire_type = 50002;   // override wire type specified in the MessageType enum
 }
 
 
