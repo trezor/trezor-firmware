@@ -1,7 +1,6 @@
 from micropython import const
 
 from trezor.messages import MessageType
-from trezor.messages.TxInputType import TxInputType
 
 from .common import BIP32_WALLET_DEPTH
 
@@ -10,8 +9,10 @@ if False:
     from trezor.messages.AuthorizeCoinJoin import AuthorizeCoinJoin
     from trezor.messages.GetOwnershipProof import GetOwnershipProof
     from trezor.messages.SignTx import SignTx
-    from apps.common import coininfo
-    from apps.common.seed import Keychain
+    from trezor.messages.TxAckInputType import TxAckInputType
+
+    from apps.common.coininfo import CoinInfo
+    from apps.common.keychain import Keychain
 
 _ROUND_ID_LEN = const(32)
 FEE_PER_ANONYMITY_DECIMALS = const(9)
@@ -19,8 +20,8 @@ FEE_PER_ANONYMITY_DECIMALS = const(9)
 
 class CoinJoinAuthorization:
     def __init__(
-        self, msg: AuthorizeCoinJoin, keychain: Keychain, coin: coininfo.CoinInfo
-    ):
+        self, msg: AuthorizeCoinJoin, keychain: Keychain, coin: CoinInfo
+    ) -> None:
         self.coordinator = msg.coordinator
         self.remaining_fee = msg.max_total_fee
         self.fee_per_anonymity = msg.fee_per_anonymity or 0
@@ -46,7 +47,7 @@ class CoinJoinAuthorization:
             and msg.commitment_data[:-_ROUND_ID_LEN] == self.coordinator.encode()
         )
 
-    def check_sign_tx_input(self, txi: TxInputType, coin: coininfo.CoinInfo) -> bool:
+    def check_sign_tx_input(self, txi: TxAckInputType, coin: CoinInfo) -> bool:
         # Check whether the current input matches the parameters of the request.
         return (
             len(txi.address_n) >= BIP32_WALLET_DEPTH

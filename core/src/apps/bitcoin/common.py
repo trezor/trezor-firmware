@@ -83,4 +83,5 @@ def decode_bech32_address(prefix: str, address: str) -> bytes:
     witver, raw = bech32.decode(prefix, address)
     if witver != _BECH32_WITVER:
         raise wire.ProcessError("Invalid address witness program")
+    assert raw is not None
     return bytes(raw)

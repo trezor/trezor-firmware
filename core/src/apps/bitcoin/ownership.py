@@ -31,12 +31,12 @@ _OWNERSHIP_ID_KEY_PATH = [b"SLIP-0019", b"Ownership identification key"]
 def generate_proof(
     node: bip32.HDNode,
     script_type: EnumTypeInputScriptType,
-    multisig: MultisigRedeemScriptType,
+    multisig: Optional[MultisigRedeemScriptType],
     coin: CoinInfo,
     user_confirmed: bool,
     ownership_ids: List[bytes],
     script_pubkey: bytes,
-    commitment_data: Optional[bytes],
+    commitment_data: bytes,
 ) -> Tuple[bytes, bytes]:
     flags = 0
     if user_confirmed:
@@ -52,8 +52,7 @@ def generate_proof(
 
     sighash = hashlib.sha256(proof)
     sighash.update(script_pubkey)
-    if commitment_data:
-        sighash.update(commitment_data)
+    sighash.update(commitment_data)
     signature = common.ecdsa_sign(node, sighash.digest())
     public_key = node.public_key()
     write_bip322_signature_proof(

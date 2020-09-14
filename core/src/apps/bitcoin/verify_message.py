@@ -14,8 +14,12 @@ from .addresses import (
     address_to_cashaddr,
 )
 
+if False:
+    from trezor.messages.VerifyMessage import VerifyMessage
+    from trezor.messages.TxInputType import EnumTypeInputScriptType
 
-async def verify_message(ctx, msg):
+
+async def verify_message(ctx: wire.Context, msg: VerifyMessage) -> Success:
     message = msg.message
     address = msg.address
     signature = msg.signature
@@ -24,15 +28,17 @@ async def verify_message(ctx, msg):
 
     digest = message_digest(coin, message)
 
-    script_type = None
     recid = signature[0]
     if recid >= 27 and recid <= 34:
-        script_type = SPENDADDRESS  # p2pkh
+        # p2pkh
+        script_type = SPENDADDRESS  # type: EnumTypeInputScriptType
     elif recid >= 35 and recid <= 38:
-        script_type = SPENDP2SHWITNESS  # segwit-in-p2sh
+        # segwit-in-p2sh
+        script_type = SPENDP2SHWITNESS
         signature = bytes([signature[0] - 4]) + signature[1:]
     elif recid >= 39 and recid <= 42:
-        script_type = SPENDWITNESS  # native segwit
+        # native segwit
+        script_type = SPENDWITNESS
         signature = bytes([signature[0] - 8]) + signature[1:]
     else:
         raise wire.ProcessError("Invalid signature")
