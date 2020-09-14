@@ -9,7 +9,7 @@ import "messages.proto";
 import "messages-common.proto";
 
 /**
- * Type of script which will be used for transaction output
+ * Type of script which will be used for transaction input
  */
 enum InputScriptType {
     SPENDADDRESS = 0;       // standard P2PKH address
@@ -20,13 +20,25 @@ enum InputScriptType {
 }
 
 /**
+ * Type of script which will be used for transaction output
+ */
+enum OutputScriptType {
+    PAYTOADDRESS = 0;       // used for all addresses (bitcoin, p2sh, witness)
+    PAYTOSCRIPTHASH = 1;    // p2sh address (deprecated; use PAYTOADDRESS)
+    PAYTOMULTISIG = 2;      // only for change output
+    PAYTOOPRETURN = 3;      // op_return
+    PAYTOWITNESS = 4;       // only for change output
+    PAYTOP2SHWITNESS = 5;   // only for change output
+}
+
+/**
  * Type of redeem script used in input
  * @embed
  */
 message MultisigRedeemScriptType {
     repeated HDNodePathType pubkeys = 1;    // pubkeys from multisig address (sorted lexicographically)
     repeated bytes signatures = 2;          // existing signatures for partially signed input
-    optional uint32 m = 3;                  // "m" from n, how many valid signatures is necessary for spending
+    required uint32 m = 3;                  // "m" from n, how many valid signatures is necessary for spending
     repeated common.HDNodeType nodes = 4;    // simplified way how to specify pubkeys if they share the same address_n path
     repeated uint32 address_n = 5;                              // use only field 1 or fields 4+5, if fields 4+5 are used, field 1 is ignored
     /**
@@ -133,9 +145,9 @@ message MessageSignature {
  * @next Failure
  */
 message VerifyMessage {
-    optional string address = 1;                        // address to verify
-    optional bytes signature = 2;                       // signature to verify
-    optional bytes message = 3;                         // message to verify
+    required string address = 1;                        // address to verify
+    required bytes signature = 2;                       // signature to verify
+    required bytes message = 3;                         // message to verify
     optional string coin_name = 4 [default='Bitcoin'];  // coin to use for verifying
 }
 
@@ -160,10 +172,15 @@ message SignTx {
 
 /**
  * Response: Device asks for information for signing transaction or returns the last result
- * If request_index is set, device awaits TxAck message (with fields filled in according to request_type)
+ * If request_index is set, device awaits TxAck<any> matching the request type.
  * If signature_index is set, 'signature' contains signed input of signature_index's input
  * @end
- * @next TxAck
+ * @next TxAckInput
+ * @next TxAckOutput
+ * @next TxAckPrevMeta
+ * @next TxAckPrevInput
+ * @next TxAckPrevOutput
+ * @next TxAckPrevExtraData
  */
 message TxRequest {
     optional RequestType request_type = 1;              // what should be filled in TxAck message?
@@ -199,10 +216,20 @@ message TxRequest {
 }
 
 /**
- * Request: Reported transaction data
+ * Request: Reported transaction data (legacy)
+ *
+ * This message contains all possible field that can be sent in response to a TxRequest.
+ * Depending on the request_type, the host is supposed to fill some of these fields.
+ *
+ * The interface is wire-compatible with the new method of specialized TxAck subtypes,
+ * so it can be used in the old way. However, it is now recommended to use more
+ * specialized messages, which have better-configured constraints on field values.
+ *
  * @next TxRequest
  */
 message TxAck {
+    option deprecated = true;
+
     optional TransactionType tx = 1;
     /**
     * Structure representing transaction
@@ -258,21 +285,172 @@ message TxAck {
             optional string address = 1;                    // target coin address in Base58 encoding
             repeated uint32 address_n = 2;                  // BIP-32 path to derive the key from master node; has higher priority than "address"
             required uint64 amount = 3;                     // amount to spend in satoshis
-            required OutputScriptType script_type = 4;      // output script type
+            optional OutputScriptType script_type = 4 [default=PAYTOADDRESS];      // output script type
             optional MultisigRedeemScriptType multisig = 5; // defines multisig address; script_type must be PAYTOMULTISIG
             optional bytes op_return_data = 6;              // defines op_return data; script_type must be PAYTOOPRETURN, amount must be 0
             // optional uint32 decred_script_version = 7;      // only for Decred  // deprecated -> only 0 is supported
             // optional bytes block_hash_bip115 = 8;        // BIP-115 support dropped
             // optional uint32 block_height_bip115 = 9;     // BIP-115 support dropped
-            enum OutputScriptType {
-                PAYTOADDRESS = 0;       // used for all addresses (bitcoin, p2sh, witness)
-                PAYTOSCRIPTHASH = 1;    // p2sh address (deprecated; use PAYTOADDRESS)
-                PAYTOMULTISIG = 2;      // only for change output
-                PAYTOOPRETURN = 3;      // op_return
-                PAYTOWITNESS = 4;       // only for change output
-                PAYTOP2SHWITNESS = 5;   // only for change output
-            }
         }
+    }
+}
+
+/** Data type for transaction input to be signed.
+ * @embed
+ */
+message TxAckInputType {
+    repeated uint32 address_n = 1;                                      // BIP-32 path to derive the key from master node
+    required bytes prev_hash = 2;                                       // hash of previous transaction output to spend by this input
+    required uint32 prev_index = 3;                                     // index of previous output to spend
+    optional bytes script_sig = 4;                                      // script signature, only set for EXTERNAL inputs
+    optional uint32 sequence = 5 [default=0xffffffff];                  // sequence
+    optional InputScriptType script_type = 6 [default=SPENDADDRESS];    // defines template of input script
+    optional MultisigRedeemScriptType multisig = 7;                     // Filled if input is going to spend multisig tx
+    required uint64 amount = 8;                                         // amount of previous transaction output
+    optional uint32 decred_tree = 9;                                    // only for Decred
+    optional bytes witness = 13;                                        // witness data, only set for EXTERNAL inputs
+    optional bytes ownership_proof = 14;                                // SLIP-0019 proof of ownership, only set for EXTERNAL inputs
+    optional bytes commitment_data = 15;                                // optional commitment data for the SLIP-0019 proof of ownership
+
+}
+
+/** Data type for transaction output to be signed.
+ * @embed
+ */
+message TxAckOutputType {
+    optional string address = 1;                    // destination address in Base58 encoding; script_type must be PAYTOADDRESS
+    repeated uint32 address_n = 2;                  // BIP-32 path to derive the destination (used for change addresses)
+    required uint64 amount = 3;                     // amount to spend in satoshis
+    optional OutputScriptType script_type = 4 [default=PAYTOADDRESS];      // output script type
+    optional MultisigRedeemScriptType multisig = 5; // defines multisig address; script_type must be PAYTOMULTISIG
+    optional bytes op_return_data = 6;              // defines op_return data; script_type must be PAYTOOPRETURN, amount must be 0
+}
+
+/** Data type for metadata about previous transaction which contains the UTXO being spent.
+ * @embed
+ */
+message TxAckPrevTxType {
+    required uint32 version = 1;
+    required uint32 lock_time = 4;
+    required uint32 inputs_count = 6;
+    required uint32 outputs_count = 7;
+    optional uint32 extra_data_len = 9 [default=0];     // only for Dash, Zcash
+    optional uint32 expiry = 10;            // only for Decred and Zcash
+    optional uint32 version_group_id = 12;  // only for Zcash, nVersionGroupId
+    optional uint32 timestamp = 13;         // only for Peercoin
+    optional uint32 branch_id = 14;         // only for Zcash, BRANCH_ID
+}
+
+/** Data type for inputs of previous transactions.
+ * @embed
+ */
+message TxAckPrevInputType {
+    required bytes prev_hash = 2;                                       // hash of previous transaction output to spend by this input
+    required uint32 prev_index = 3;                                     // index of previous output to spend
+    required bytes script_sig = 4;                                      // script signature, unset for tx to sign
+    required uint32 sequence = 5;                                       // sequence (default=0xffffffff)
+    optional uint32 decred_tree = 9;                                    // only for Decred
+}
+
+/** Data type for outputs of previous transactions.
+ * @embed
+ */
+message TxAckPrevOutputType {
+    required uint64 amount = 1;                     // amount sent to this output
+    required bytes script_pubkey = 2;               // scriptPubkey of this output
+    optional uint32 decred_script_version = 3;      // only for Decred
+}
+
+/**
+ * Request: Data about input to be signed.
+ * Wire-alias of TxAck.
+ *
+ * @next TxRequest
+ */
+message TxAckInput {
+    option (wire_type) = 22;
+
+    required TxAckInputWrapper tx = 1;
+
+    message TxAckInputWrapper {
+        required TxAckInputType input = 2;
+    }
+}
+
+/**
+ * Request: Data about output to be signed.
+ * Wire-alias of TxAck.
+ *
+ * @next TxRequest
+ */
+message TxAckOutput {
+    option (wire_type) = 22;
+
+    required TxAckOutputWrapper tx = 1;
+
+    message TxAckOutputWrapper {
+        required TxAckOutputType output = 5;
+    }
+}
+
+/**
+ * Request: Data about previous transaction metadata
+ * Wire-alias of TxAck.
+ *
+ * @next TxRequest
+ */
+message TxAckPrevMeta {
+    option (wire_type) = 22;
+
+    required TxAckPrevTxType tx = 1;
+}
+
+/**
+ * Request: Data about previous transaction input
+ * Wire-alias of TxAck.
+ *
+ * @next TxRequest
+ */
+message TxAckPrevInput {
+    option (wire_type) = 22;
+
+    required TxAckPrevInputWrapper tx = 1;
+
+    message TxAckPrevInputWrapper {
+        required TxAckPrevInputType input = 2;
+
+    }
+}
+
+/**
+ * Request: Data about previous transaction output
+ * Wire-alias of TxAck.
+ *
+ * @next TxRequest
+ */
+message TxAckPrevOutput {
+    option (wire_type) = 22;
+
+    required TxAckPrevOutputWrapper tx = 1;
+
+    message TxAckPrevOutputWrapper {
+        required TxAckPrevOutputType output = 3;
+    }
+}
+
+/**
+ * Request: Content of the extra data of a previous transaction
+ * Wire-alias of TxAck.
+ *
+ * @next TxRequest
+ */
+ message TxAckPrevExtraData {
+    option (wire_type) = 22;
+
+    required TxAckPrevExtraDataWrapper tx = 1;
+
+    message TxAckPrevExtraDataWrapper {
+        required bytes extra_data_chunk = 8;
     }
 }
 
@@ -287,9 +465,9 @@ message GetOwnershipProof {
     optional string coin_name = 2 [default='Bitcoin'];                  // coin to use
     optional InputScriptType script_type = 3 [default=SPENDWITNESS];    // used to distinguish between various scriptPubKey types
     optional MultisigRedeemScriptType multisig = 4;                     // filled if proof is for a multisig address
-    optional bool user_confirmation = 5;                                // show a confirmation dialog and set the "user confirmation" bit in the proof
+    optional bool user_confirmation = 5 [default=false];                // show a confirmation dialog and set the "user confirmation" bit in the proof
     repeated bytes ownership_ids = 6;                                   // list of ownership identifiers in case of multisig
-    optional bytes commitment_data = 7;                                 // additional data to which the proof should commit
+    optional bytes commitment_data = 7 [default=''];                    // additional data to which the proof should commit
 }
 
 /**
