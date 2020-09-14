@@ -59,6 +59,9 @@
 
 /// WireInterface = Union[HID, WebUSB]
 
+/// if False:
+///     from . import fatfs, sdcard
+
 STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorio)},
 
