@@ -4,6 +4,9 @@ from trezor import utils
 from trezor.crypto.base58 import blake256d_32, groestl512d_32, keccak_32, sha256d_32
 from trezor.crypto.scripts import blake256_ripemd160_digest, sha256_ripemd160_digest
 
+if False:
+    from typing import Any, Dict, Optional
+
 # flake8: noqa
 
 
@@ -18,13 +21,13 @@ class CoinInfo:
         maxfee_kb: int,
         signed_message_header: str,
         xpub_magic: int,
-        xpub_magic_segwit_p2sh: int,
-        xpub_magic_segwit_native: int,
-        bech32_prefix: str,
-        cashaddr_prefix: str,
+        xpub_magic_segwit_p2sh: Optional[int],
+        xpub_magic_segwit_native: Optional[int],
+        bech32_prefix: Optional[str],
+        cashaddr_prefix: Optional[str],
         slip44: int,
         segwit: bool,
-        fork_id: int,
+        fork_id: Optional[int],
         force_bip143: bool,
         decred: bool,
         negative_fee: bool,
@@ -32,8 +35,8 @@ class CoinInfo:
         extra_data: bool,
         timestamp: bool,
         overwintered: bool,
-        confidential_assets: dict,
-    ):
+        confidential_assets: Optional[Dict[str, Any]],
+    ) -> None:
         self.coin_name = coin_name
         self.coin_shortcut = coin_shortcut
         self.decimals = decimals
@@ -74,7 +77,7 @@ class CoinInfo:
             self.sign_hash_double = True
             self.script_hash = sha256_ripemd160_digest
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, CoinInfo):
             return NotImplemented
         return self.coin_name == other.coin_name
