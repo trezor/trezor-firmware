@@ -301,7 +301,7 @@ message RecoveryDevice {
     optional uint32 word_count = 1;                     // number of words in BIP-39 mnemonic
     optional bool passphrase_protection = 2;            // enable master node encryption using passphrase
     optional bool pin_protection = 3;                   // enable PIN protection
-    optional string language = 4 [default='en-US'];     // device language (IETF BCP 47 language tag)
+    optional string language = 4;                       // device language (IETF BCP 47 language tag)
     optional string label = 5;                          // device label
     optional bool enforce_wordlist = 6;                 // enforce BIP-39 wordlist during the process
     // 7 reserved for unused recovery method
