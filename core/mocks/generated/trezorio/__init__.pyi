@@ -193,3 +193,5 @@ TOUCH_START: int  # event id of touch start event
 TOUCH_MOVE: int  # event id of touch move event
 TOUCH_END: int  # event id of touch end event
 WireInterface = Union[HID, WebUSB]
+if False:
+    from . import fatfs, sdcard
