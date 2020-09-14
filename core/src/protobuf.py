@@ -3,8 +3,6 @@ Extremely minimal streaming codec for a subset of protobuf.  Supports uint32,
 bytes, string, embedded message and repeated fields.
 """
 
-from micropython import const
-
 if False:
     from typing import Any, Dict, Iterable, List, Tuple, Type, TypeVar, Union
     from typing_extensions import Protocol
@@ -178,7 +176,8 @@ class LimitedReader:
             return nread
 
 
-FLAG_REPEATED = const(1)
+FLAG_REPEATED = object()
+FLAG_REQUIRED = object()
 
 if False:
     MessageTypeDef = Union[
@@ -190,7 +189,7 @@ if False:
         Type[UnicodeType],
         Type[MessageType],
     ]
-    FieldDef = Tuple[str, MessageTypeDef, int]
+    FieldDef = Tuple[str, MessageTypeDef, Any]
     FieldDict = Dict[int, FieldDef]
 
     FieldCache = Dict[Type[MessageType], FieldDict]
@@ -201,7 +200,6 @@ if False:
 def load_message(
     reader: Reader, msg_type: Type[LoadedMessageType], field_cache: FieldCache = None
 ) -> LoadedMessageType:
-
     if field_cache is None:
         field_cache = {}
     fields = field_cache.get(msg_type)
@@ -209,7 +207,13 @@ def load_message(
         fields = msg_type.get_fields()
         field_cache[msg_type] = fields
 
-    msg = msg_type()
+    # we need to avoid calling __init__, which enforces required arguments
+    msg = object.__new__(msg_type)  # type: LoadedMessageType
+    # pre-seed the object with defaults
+    for fname, _, fdefault in fields.values():
+        if fdefault is FLAG_REPEATED:
+            fdefault = []
+        setattr(msg, fname, fdefault)
 
     if False:
         SingularValue = Union[int, bool, bytearray, str, MessageType]
@@ -237,7 +241,7 @@ def load_message(
                 raise ValueError
             continue
 
-        fname, ftype, fflags = field
+        fname, ftype, fdefault = field
         if wtype != ftype.WIRE_TYPE:
             raise TypeError  # parsed wire type differs from the schema
 
@@ -263,17 +267,16 @@ def load_message(
         else:
             raise TypeError  # field type is unknown
 
-        if fflags & FLAG_REPEATED:
-            pvalue = getattr(msg, fname, [])
-            pvalue.append(fvalue)
-            fvalue = pvalue
-        setattr(msg, fname, fvalue)
+        if fdefault is FLAG_REPEATED:
+            getattr(msg, fname).append(fvalue)
+        else:
+            setattr(msg, fname, fvalue)
 
-    # fill missing fields
-    for tag in fields:
-        field = fields[tag]
-        if not hasattr(msg, field[0]):
-            setattr(msg, field[0], None)
+    for fname, _, _ in fields.values():
+        if getattr(msg, fname) is FLAG_REQUIRED:
+            # The message is intended to be user-facing when decoding from wire,
+            # but not when used internally.
+            raise ValueError("Required field '{}' was not received".format(fname))
 
     return msg
 
@@ -291,7 +294,7 @@ def dump_message(
         field_cache[type(msg)] = fields
 
     for ftag in fields:
-        fname, ftype, fflags = fields[ftag]
+        fname, ftype, fdefault = fields[ftag]
 
         fvalue = getattr(msg, fname, None)
         if fvalue is None:
@@ -299,7 +302,7 @@ def dump_message(
 
         fkey = (ftag << 3) | ftype.WIRE_TYPE
 
-        if not fflags & FLAG_REPEATED:
+        if fdefault is not FLAG_REPEATED:
             repvalue[0] = fvalue
             fvalue = repvalue
 
@@ -356,7 +359,7 @@ def count_message(msg: MessageType, field_cache: FieldCache = None) -> int:
         field_cache[type(msg)] = fields
 
     for ftag in fields:
-        fname, ftype, fflags = fields[ftag]
+        fname, ftype, fdefault = fields[ftag]
 
         fvalue = getattr(msg, fname, None)
         if fvalue is None:
@@ -364,7 +367,7 @@ def count_message(msg: MessageType, field_cache: FieldCache = None) -> int:
 
         fkey = (ftag << 3) | ftype.WIRE_TYPE
 
-        if not fflags & FLAG_REPEATED:
+        if fdefault is not FLAG_REPEATED:
             repvalue[0] = fvalue
             fvalue = repvalue
 

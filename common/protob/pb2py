@@ -51,7 +51,11 @@ class ProtoField:
     type_name = attr.ib()
     proto_type = attr.ib()
     py_type = attr.ib()
-    py_inner_type = attr.ib()
+    default_value = attr.ib()
+
+    @property
+    def optional(self):
+        return not self.required and not self.repeated
 
     @classmethod
     def from_field(cls, descriptor, field):
@@ -75,9 +79,18 @@ class ProtoField:
                     "Unknown field type {} for field {}".format(field.type, field.name)
                 ) from None
 
-        py_inner_type = py_type
-        if repeated:
-            py_type = "List[{}]".format(py_type)
+        if not field.HasField("default_value"):
+            default_value = None
+        elif field.type == field.TYPE_ENUM:
+            default_value = str(descriptor.enum_types[type_name][field.default_value])
+        elif field.type == field.TYPE_STRING:
+            default_value = f'"{field.default_value}"'
+        elif field.type == field.TYPE_BYTES:
+            default_value = f'b"{field.default_value}"'
+        elif field.type == field.TYPE_BOOL:
+            default_value = "True" if field.default_value == "true" else "False"
+        else:
+            default_value = field.default_value
 
         return cls(
             name=field.name,
@@ -88,7 +101,7 @@ class ProtoField:
             type_name=type_name,
             proto_type=proto_type,
             py_type=py_type,
-            py_inner_type=py_inner_type,
+            default_value=default_value,
         )
 
 
@@ -216,20 +229,26 @@ class Descriptor:
             yield self.create_message_import(name)
 
     def create_init_method(self, fields):
+        required_fields = [f for f in fields if f.required]
+        repeated_fields = [f for f in fields if f.repeated]
+        optional_fields = [f for f in fields if f.optional]
         # please keep the yields aligned
         # fmt: off
-        ... # https://github.com/ambv/black/issues/385
-        yield          "    def __init__("
-        yield          "        self,"
-        for field in fields:
-            yield     f"        {field.name}: {field.py_type} = None,"
+        yield      "    def __init__("
+        yield      "        self,"
+        yield      "        *,"
+        for field in required_fields:
+            yield f"        {field.name}: {field.py_type},"
+        for field in repeated_fields:
+            yield f"        {field.name}: List[{field.py_type}] = None,"
+        for field in optional_fields:
+            yield f"        {field.name}: {field.py_type} = {field.default_value},"
         yield          "    ) -> None:"
 
-        for field in fields:
-            if field.repeated:
-                yield f"        self.{field.name} = {field.name} if {field.name} is not None else []"
-            else:
-                yield f"        self.{field.name} = {field.name}"
+        for field in repeated_fields:
+            yield f"        self.{field.name} = {field.name} if {field.name} is not None else []"
+        for field in required_fields + optional_fields:
+            yield f"        self.{field.name} = {field.name}"
         # fmt: on
 
     def create_fields_method(self, fields):
@@ -239,10 +258,8 @@ class Descriptor:
         yield "        return {"
         for field in fields:
             comments = []
-            if field.required:
-                comments.append("required")
-            if field.orig.HasField("default_value"):
-                comments.append("default={}".format(field.orig.default_value))
+            if field.default_value is not None:
+                comments.append(f"default={field.orig.default_value}")
 
             if comments:
                 comment = "  # " + " ".join(comments)
@@ -251,8 +268,10 @@ class Descriptor:
 
             if field.repeated:
                 flags = "p.FLAG_REPEATED"
+            elif field.required:
+                flags = "p.FLAG_REQUIRED"
             else:
-                flags = "0"
+                flags = field.default_value
 
             yield "            {num}: ('{name}', {type}, {flags}),{comment}".format(
                 num=field.number,
@@ -288,7 +307,7 @@ class Descriptor:
         for field in all_enums:
             allowed_values = self.enum_types[field.type_name].values()
             valuestr = ", ".join(str(v) for v in sorted(allowed_values))
-            yield "        {} = Literal[{}]".format(field.py_inner_type, valuestr)
+            yield "        {} = Literal[{}]".format(field.py_type, valuestr)
 
         yield "    except ImportError:"
         yield "        pass"
@@ -335,7 +354,9 @@ class Descriptor:
 
     def process_messages(self, messages, include_deprecated=False):
         for message in sorted(messages, key=lambda m: m.name):
-            self.write_to_file(message.name, self.process_message(message, include_deprecated))
+            self.write_to_file(
+                message.name, self.process_message(message, include_deprecated)
+            )
 
     def process_enums(self, enums):
         for enum in sorted(enums, key=lambda e: e.name):
