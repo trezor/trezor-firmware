@@ -15,8 +15,9 @@ class OwnershipProof(p.MessageType):
 
     def __init__(
         self,
-        ownership_proof: bytes = None,
-        signature: bytes = None,
+        *,
+        ownership_proof: bytes,
+        signature: bytes,
     ) -> None:
         self.ownership_proof = ownership_proof
         self.signature = signature
@@ -24,6 +25,6 @@ class OwnershipProof(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('ownership_proof', p.BytesType, 0),  # required
-            2: ('signature', p.BytesType, 0),  # required
+            1: ('ownership_proof', p.BytesType, p.FLAG_REQUIRED),
+            2: ('signature', p.BytesType, p.FLAG_REQUIRED),
         }

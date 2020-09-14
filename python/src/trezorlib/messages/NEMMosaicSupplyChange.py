@@ -15,6 +15,7 @@ class NEMMosaicSupplyChange(p.MessageType):
 
     def __init__(
         self,
+        *,
         namespace: str = None,
         mosaic: str = None,
         type: EnumTypeNEMSupplyChangeType = None,
@@ -28,8 +29,8 @@ class NEMMosaicSupplyChange(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('namespace', p.UnicodeType, 0),
-            2: ('mosaic', p.UnicodeType, 0),
-            3: ('type', p.EnumType("NEMSupplyChangeType", (1, 2)), 0),
-            4: ('delta', p.UVarintType, 0),
+            1: ('namespace', p.UnicodeType, None),
+            2: ('mosaic', p.UnicodeType, None),
+            3: ('type', p.EnumType("NEMSupplyChangeType", (1, 2)), None),
+            4: ('delta', p.UVarintType, None),
         }

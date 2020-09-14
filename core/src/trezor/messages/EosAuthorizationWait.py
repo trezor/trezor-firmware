@@ -14,6 +14,7 @@ class EosAuthorizationWait(p.MessageType):
 
     def __init__(
         self,
+        *,
         wait_sec: int = None,
         weight: int = None,
     ) -> None:
@@ -23,6 +24,6 @@ class EosAuthorizationWait(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('wait_sec', p.UVarintType, 0),
-            2: ('weight', p.UVarintType, 0),
+            1: ('wait_sec', p.UVarintType, None),
+            2: ('weight', p.UVarintType, None),
         }

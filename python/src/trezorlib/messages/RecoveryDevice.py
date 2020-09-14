@@ -16,6 +16,7 @@ class RecoveryDevice(p.MessageType):
 
     def __init__(
         self,
+        *,
         word_count: int = None,
         passphrase_protection: bool = None,
         pin_protection: bool = None,
@@ -39,13 +40,13 @@ class RecoveryDevice(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('word_count', p.UVarintType, 0),
-            2: ('passphrase_protection', p.BoolType, 0),
-            3: ('pin_protection', p.BoolType, 0),
-            4: ('language', p.UnicodeType, 0),  # default=en-US
-            5: ('label', p.UnicodeType, 0),
-            6: ('enforce_wordlist', p.BoolType, 0),
-            8: ('type', p.EnumType("RecoveryDeviceType", (0, 1)), 0),
-            9: ('u2f_counter', p.UVarintType, 0),
-            10: ('dry_run', p.BoolType, 0),
+            1: ('word_count', p.UVarintType, None),
+            2: ('passphrase_protection', p.BoolType, None),
+            3: ('pin_protection', p.BoolType, None),
+            4: ('language', p.UnicodeType, None),
+            5: ('label', p.UnicodeType, None),
+            6: ('enforce_wordlist', p.BoolType, None),
+            8: ('type', p.EnumType("RecoveryDeviceType", (0, 1)), None),
+            9: ('u2f_counter', p.UVarintType, None),
+            10: ('dry_run', p.BoolType, None),
         }

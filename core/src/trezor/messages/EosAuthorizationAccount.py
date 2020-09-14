@@ -16,6 +16,7 @@ class EosAuthorizationAccount(p.MessageType):
 
     def __init__(
         self,
+        *,
         account: EosPermissionLevel = None,
         weight: int = None,
     ) -> None:
@@ -25,6 +26,6 @@ class EosAuthorizationAccount(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('account', EosPermissionLevel, 0),
-            2: ('weight', p.UVarintType, 0),
+            1: ('account', EosPermissionLevel, None),
+            2: ('weight', p.UVarintType, None),
         }

@@ -15,6 +15,7 @@ class CosiCommitment(p.MessageType):
 
     def __init__(
         self,
+        *,
         commitment: bytes = None,
         pubkey: bytes = None,
     ) -> None:
@@ -24,6 +25,6 @@ class CosiCommitment(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('commitment', p.BytesType, 0),
-            2: ('pubkey', p.BytesType, 0),
+            1: ('commitment', p.BytesType, None),
+            2: ('pubkey', p.BytesType, None),
         }

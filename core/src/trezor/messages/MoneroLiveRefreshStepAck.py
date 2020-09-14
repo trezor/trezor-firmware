@@ -15,6 +15,7 @@ class MoneroLiveRefreshStepAck(p.MessageType):
 
     def __init__(
         self,
+        *,
         salt: bytes = None,
         key_image: bytes = None,
     ) -> None:
@@ -24,6 +25,6 @@ class MoneroLiveRefreshStepAck(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('salt', p.BytesType, 0),
-            2: ('key_image', p.BytesType, 0),
+            1: ('salt', p.BytesType, None),
+            2: ('key_image', p.BytesType, None),
         }

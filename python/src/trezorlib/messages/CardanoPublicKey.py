@@ -17,6 +17,7 @@ class CardanoPublicKey(p.MessageType):
 
     def __init__(
         self,
+        *,
         xpub: str = None,
         node: HDNodeType = None,
     ) -> None:
@@ -26,6 +27,6 @@ class CardanoPublicKey(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('xpub', p.UnicodeType, 0),
-            2: ('node', HDNodeType, 0),
+            1: ('xpub', p.UnicodeType, None),
+            2: ('node', HDNodeType, None),
         }

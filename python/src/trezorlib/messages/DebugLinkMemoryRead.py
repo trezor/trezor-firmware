@@ -15,6 +15,7 @@ class DebugLinkMemoryRead(p.MessageType):
 
     def __init__(
         self,
+        *,
         address: int = None,
         length: int = None,
     ) -> None:
@@ -24,6 +25,6 @@ class DebugLinkMemoryRead(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('address', p.UVarintType, 0),
-            2: ('length', p.UVarintType, 0),
+            1: ('address', p.UVarintType, None),
+            2: ('length', p.UVarintType, None),
         }

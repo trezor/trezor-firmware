@@ -14,6 +14,7 @@ class EosAsset(p.MessageType):
 
     def __init__(
         self,
+        *,
         amount: int = None,
         symbol: int = None,
     ) -> None:
@@ -23,6 +24,6 @@ class EosAsset(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('amount', p.SVarintType, 0),
-            2: ('symbol', p.UVarintType, 0),
+            1: ('amount', p.SVarintType, None),
+            2: ('symbol', p.UVarintType, None),
         }

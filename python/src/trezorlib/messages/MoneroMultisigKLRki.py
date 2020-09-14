@@ -14,6 +14,7 @@ class MoneroMultisigKLRki(p.MessageType):
 
     def __init__(
         self,
+        *,
         K: bytes = None,
         L: bytes = None,
         R: bytes = None,
@@ -27,8 +28,8 @@ class MoneroMultisigKLRki(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('K', p.BytesType, 0),
-            2: ('L', p.BytesType, 0),
-            3: ('R', p.BytesType, 0),
-            4: ('ki', p.BytesType, 0),
+            1: ('K', p.BytesType, None),
+            2: ('L', p.BytesType, None),
+            3: ('R', p.BytesType, None),
+            4: ('ki', p.BytesType, None),
         }

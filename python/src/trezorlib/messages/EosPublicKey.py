@@ -15,6 +15,7 @@ class EosPublicKey(p.MessageType):
 
     def __init__(
         self,
+        *,
         wif_public_key: str = None,
         raw_public_key: bytes = None,
     ) -> None:
@@ -24,6 +25,6 @@ class EosPublicKey(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('wif_public_key', p.UnicodeType, 0),
-            2: ('raw_public_key', p.BytesType, 0),
+            1: ('wif_public_key', p.UnicodeType, None),
+            2: ('raw_public_key', p.BytesType, None),
         }

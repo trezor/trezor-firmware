@@ -17,6 +17,7 @@ class TezosTransactionOp(p.MessageType):
 
     def __init__(
         self,
+        *,
         source: bytes = None,
         fee: int = None,
         counter: int = None,
@@ -40,13 +41,13 @@ class TezosTransactionOp(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            9: ('source', p.BytesType, 0),
-            2: ('fee', p.UVarintType, 0),
-            3: ('counter', p.UVarintType, 0),
-            4: ('gas_limit', p.UVarintType, 0),
-            5: ('storage_limit', p.UVarintType, 0),
-            6: ('amount', p.UVarintType, 0),
-            7: ('destination', TezosContractID, 0),
-            8: ('parameters', p.BytesType, 0),
-            10: ('parameters_manager', TezosParametersManager, 0),
+            9: ('source', p.BytesType, None),
+            2: ('fee', p.UVarintType, None),
+            3: ('counter', p.UVarintType, None),
+            4: ('gas_limit', p.UVarintType, None),
+            5: ('storage_limit', p.UVarintType, None),
+            6: ('amount', p.UVarintType, None),
+            7: ('destination', TezosContractID, None),
+            8: ('parameters', p.BytesType, None),
+            10: ('parameters_manager', TezosParametersManager, None),
         }

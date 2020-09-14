@@ -15,6 +15,7 @@ class EthereumSignTx(p.MessageType):
 
     def __init__(
         self,
+        *,
         address_n: List[int] = None,
         nonce: bytes = None,
         gas_price: bytes = None,
@@ -41,13 +42,13 @@ class EthereumSignTx(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            2: ('nonce', p.BytesType, 0),
-            3: ('gas_price', p.BytesType, 0),
-            4: ('gas_limit', p.BytesType, 0),
-            11: ('to', p.UnicodeType, 0),
-            6: ('value', p.BytesType, 0),
-            7: ('data_initial_chunk', p.BytesType, 0),
-            8: ('data_length', p.UVarintType, 0),
-            9: ('chain_id', p.UVarintType, 0),
-            10: ('tx_type', p.UVarintType, 0),
+            2: ('nonce', p.BytesType, None),
+            3: ('gas_price', p.BytesType, None),
+            4: ('gas_limit', p.BytesType, None),
+            11: ('to', p.UnicodeType, None),
+            6: ('value', p.BytesType, None),
+            7: ('data_initial_chunk', p.BytesType, None),
+            8: ('data_length', p.UVarintType, None),
+            9: ('chain_id', p.UVarintType, None),
+            10: ('tx_type', p.UVarintType, None),
         }

@@ -14,8 +14,9 @@ class TxOutputBinType(p.MessageType):
 
     def __init__(
         self,
-        amount: int = None,
-        script_pubkey: bytes = None,
+        *,
+        amount: int,
+        script_pubkey: bytes,
         decred_script_version: int = None,
     ) -> None:
         self.amount = amount
@@ -25,7 +26,7 @@ class TxOutputBinType(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('amount', p.UVarintType, 0),  # required
-            2: ('script_pubkey', p.BytesType, 0),  # required
-            3: ('decred_script_version', p.UVarintType, 0),
+            1: ('amount', p.UVarintType, p.FLAG_REQUIRED),
+            2: ('script_pubkey', p.BytesType, p.FLAG_REQUIRED),
+            3: ('decred_script_version', p.UVarintType, None),
         }

@@ -15,12 +15,13 @@ class Entropy(p.MessageType):
 
     def __init__(
         self,
-        entropy: bytes = None,
+        *,
+        entropy: bytes,
     ) -> None:
         self.entropy = entropy
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('entropy', p.BytesType, 0),  # required
+            1: ('entropy', p.BytesType, p.FLAG_REQUIRED),
         }

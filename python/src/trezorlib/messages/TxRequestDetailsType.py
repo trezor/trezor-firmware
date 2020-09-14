@@ -14,6 +14,7 @@ class TxRequestDetailsType(p.MessageType):
 
     def __init__(
         self,
+        *,
         request_index: int = None,
         tx_hash: bytes = None,
         extra_data_len: int = None,
@@ -27,8 +28,8 @@ class TxRequestDetailsType(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('request_index', p.UVarintType, 0),
-            2: ('tx_hash', p.BytesType, 0),
-            3: ('extra_data_len', p.UVarintType, 0),
-            4: ('extra_data_offset', p.UVarintType, 0),
+            1: ('request_index', p.UVarintType, None),
+            2: ('tx_hash', p.BytesType, None),
+            3: ('extra_data_len', p.UVarintType, None),
+            4: ('extra_data_offset', p.UVarintType, None),
         }

@@ -15,6 +15,7 @@ class StellarCreateAccountOp(p.MessageType):
 
     def __init__(
         self,
+        *,
         source_account: str = None,
         new_account: str = None,
         starting_balance: int = None,
@@ -26,7 +27,7 @@ class StellarCreateAccountOp(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('source_account', p.UnicodeType, 0),
-            2: ('new_account', p.UnicodeType, 0),
-            3: ('starting_balance', p.SVarintType, 0),
+            1: ('source_account', p.UnicodeType, None),
+            2: ('new_account', p.UnicodeType, None),
+            3: ('starting_balance', p.SVarintType, None),
         }

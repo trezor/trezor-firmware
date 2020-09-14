@@ -16,16 +16,17 @@ class ResetDevice(p.MessageType):
 
     def __init__(
         self,
+        *,
         display_random: bool = None,
-        strength: int = None,
+        strength: int = 256,
         passphrase_protection: bool = None,
         pin_protection: bool = None,
-        language: str = None,
+        language: str = "en-US",
         label: str = None,
         u2f_counter: int = None,
         skip_backup: bool = None,
         no_backup: bool = None,
-        backup_type: EnumTypeBackupType = None,
+        backup_type: EnumTypeBackupType = 0,
     ) -> None:
         self.display_random = display_random
         self.strength = strength
@@ -41,14 +42,14 @@ class ResetDevice(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('display_random', p.BoolType, 0),
-            2: ('strength', p.UVarintType, 0),  # default=256
-            3: ('passphrase_protection', p.BoolType, 0),
-            4: ('pin_protection', p.BoolType, 0),
-            5: ('language', p.UnicodeType, 0),  # default=en-US
-            6: ('label', p.UnicodeType, 0),
-            7: ('u2f_counter', p.UVarintType, 0),
-            8: ('skip_backup', p.BoolType, 0),
-            9: ('no_backup', p.BoolType, 0),
+            1: ('display_random', p.BoolType, None),
+            2: ('strength', p.UVarintType, 256),  # default=256
+            3: ('passphrase_protection', p.BoolType, None),
+            4: ('pin_protection', p.BoolType, None),
+            5: ('language', p.UnicodeType, "en-US"),  # default=en-US
+            6: ('label', p.UnicodeType, None),
+            7: ('u2f_counter', p.UVarintType, None),
+            8: ('skip_backup', p.BoolType, None),
+            9: ('no_backup', p.BoolType, None),
             10: ('backup_type', p.EnumType("BackupType", (0, 1, 2)), 0),  # default=Bip39
         }

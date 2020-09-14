@@ -15,6 +15,7 @@ class Ping(p.MessageType):
 
     def __init__(
         self,
+        *,
         message: str = None,
         button_protection: bool = None,
     ) -> None:
@@ -24,6 +25,6 @@ class Ping(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('message', p.UnicodeType, 0),
-            2: ('button_protection', p.BoolType, 0),
+            1: ('message', p.UnicodeType, None),
+            2: ('button_protection', p.BoolType, None),
         }

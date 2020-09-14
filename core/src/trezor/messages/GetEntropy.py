@@ -15,12 +15,13 @@ class GetEntropy(p.MessageType):
 
     def __init__(
         self,
-        size: int = None,
+        *,
+        size: int,
     ) -> None:
         self.size = size
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('size', p.UVarintType, 0),  # required
+            1: ('size', p.UVarintType, p.FLAG_REQUIRED),
         }

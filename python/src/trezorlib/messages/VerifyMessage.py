@@ -15,10 +15,11 @@ class VerifyMessage(p.MessageType):
 
     def __init__(
         self,
-        address: str = None,
-        signature: bytes = None,
-        message: bytes = None,
-        coin_name: str = None,
+        *,
+        address: str,
+        signature: bytes,
+        message: bytes,
+        coin_name: str = "Bitcoin",
     ) -> None:
         self.address = address
         self.signature = signature
@@ -28,8 +29,8 @@ class VerifyMessage(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('address', p.UnicodeType, 0),
-            2: ('signature', p.BytesType, 0),
-            3: ('message', p.BytesType, 0),
-            4: ('coin_name', p.UnicodeType, 0),  # default=Bitcoin
+            1: ('address', p.UnicodeType, p.FLAG_REQUIRED),
+            2: ('signature', p.BytesType, p.FLAG_REQUIRED),
+            3: ('message', p.BytesType, p.FLAG_REQUIRED),
+            4: ('coin_name', p.UnicodeType, "Bitcoin"),  # default=Bitcoin
         }

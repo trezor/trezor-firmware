@@ -17,6 +17,7 @@ class EosSignTx(p.MessageType):
 
     def __init__(
         self,
+        *,
         address_n: List[int] = None,
         chain_id: bytes = None,
         header: EosTxHeader = None,
@@ -31,7 +32,7 @@ class EosSignTx(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            2: ('chain_id', p.BytesType, 0),
-            3: ('header', EosTxHeader, 0),
-            4: ('num_actions', p.UVarintType, 0),
+            2: ('chain_id', p.BytesType, None),
+            3: ('header', EosTxHeader, None),
+            4: ('num_actions', p.UVarintType, None),
         }

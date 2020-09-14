@@ -15,6 +15,7 @@ class MoneroTransactionSignInputAck(p.MessageType):
 
     def __init__(
         self,
+        *,
         signature: bytes = None,
         pseudo_out: bytes = None,
     ) -> None:
@@ -24,6 +25,6 @@ class MoneroTransactionSignInputAck(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('signature', p.BytesType, 0),
-            2: ('pseudo_out', p.BytesType, 0),
+            1: ('signature', p.BytesType, None),
+            2: ('pseudo_out', p.BytesType, None),
         }

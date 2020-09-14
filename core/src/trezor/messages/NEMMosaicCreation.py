@@ -16,6 +16,7 @@ class NEMMosaicCreation(p.MessageType):
 
     def __init__(
         self,
+        *,
         definition: NEMMosaicDefinition = None,
         sink: str = None,
         fee: int = None,
@@ -27,7 +28,7 @@ class NEMMosaicCreation(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('definition', NEMMosaicDefinition, 0),
-            2: ('sink', p.UnicodeType, 0),
-            3: ('fee', p.UVarintType, 0),
+            1: ('definition', NEMMosaicDefinition, None),
+            2: ('sink', p.UnicodeType, None),
+            3: ('fee', p.UVarintType, None),
         }

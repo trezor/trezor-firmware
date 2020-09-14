@@ -15,6 +15,7 @@ class DebugLinkReseedRandom(p.MessageType):
 
     def __init__(
         self,
+        *,
         value: int = None,
     ) -> None:
         self.value = value
@@ -22,5 +23,5 @@ class DebugLinkReseedRandom(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('value', p.UVarintType, 0),
+            1: ('value', p.UVarintType, None),
         }

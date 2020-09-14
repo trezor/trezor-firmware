@@ -15,6 +15,7 @@ class MoneroGetTxKeyRequest(p.MessageType):
 
     def __init__(
         self,
+        *,
         address_n: List[int] = None,
         network_type: int = None,
         salt1: bytes = None,
@@ -37,11 +38,11 @@ class MoneroGetTxKeyRequest(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            2: ('network_type', p.UVarintType, 0),
-            3: ('salt1', p.BytesType, 0),
-            4: ('salt2', p.BytesType, 0),
-            5: ('tx_enc_keys', p.BytesType, 0),
-            6: ('tx_prefix_hash', p.BytesType, 0),
-            7: ('reason', p.UVarintType, 0),
-            8: ('view_public_key', p.BytesType, 0),
+            2: ('network_type', p.UVarintType, None),
+            3: ('salt1', p.BytesType, None),
+            4: ('salt2', p.BytesType, None),
+            5: ('tx_enc_keys', p.BytesType, None),
+            6: ('tx_prefix_hash', p.BytesType, None),
+            7: ('reason', p.UVarintType, None),
+            8: ('view_public_key', p.BytesType, None),
         }

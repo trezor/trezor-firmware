@@ -15,6 +15,7 @@ class MoneroWatchKey(p.MessageType):
 
     def __init__(
         self,
+        *,
         watch_key: bytes = None,
         address: bytes = None,
     ) -> None:
@@ -24,6 +25,6 @@ class MoneroWatchKey(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('watch_key', p.BytesType, 0),
-            2: ('address', p.BytesType, 0),
+            1: ('watch_key', p.BytesType, None),
+            2: ('address', p.BytesType, None),
         }

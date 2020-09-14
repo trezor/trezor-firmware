@@ -14,6 +14,7 @@ class NEMTransactionCommon(p.MessageType):
 
     def __init__(
         self,
+        *,
         address_n: List[int] = None,
         network: int = None,
         timestamp: int = None,
@@ -32,9 +33,9 @@ class NEMTransactionCommon(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            2: ('network', p.UVarintType, 0),
-            3: ('timestamp', p.UVarintType, 0),
-            4: ('fee', p.UVarintType, 0),
-            5: ('deadline', p.UVarintType, 0),
-            6: ('signer', p.BytesType, 0),
+            2: ('network', p.UVarintType, None),
+            3: ('timestamp', p.UVarintType, None),
+            4: ('fee', p.UVarintType, None),
+            5: ('deadline', p.UVarintType, None),
+            6: ('signer', p.BytesType, None),
         }

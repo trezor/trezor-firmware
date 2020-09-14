@@ -15,6 +15,7 @@ class MoneroGetAddress(p.MessageType):
 
     def __init__(
         self,
+        *,
         address_n: List[int] = None,
         show_display: bool = None,
         network_type: int = None,
@@ -33,9 +34,9 @@ class MoneroGetAddress(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            2: ('show_display', p.BoolType, 0),
-            3: ('network_type', p.UVarintType, 0),
-            4: ('account', p.UVarintType, 0),
-            5: ('minor', p.UVarintType, 0),
-            6: ('payment_id', p.BytesType, 0),
+            2: ('show_display', p.BoolType, None),
+            3: ('network_type', p.UVarintType, None),
+            4: ('account', p.UVarintType, None),
+            5: ('minor', p.UVarintType, None),
+            6: ('payment_id', p.BytesType, None),
         }

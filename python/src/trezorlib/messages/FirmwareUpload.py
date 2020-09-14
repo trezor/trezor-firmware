@@ -15,7 +15,8 @@ class FirmwareUpload(p.MessageType):
 
     def __init__(
         self,
-        payload: bytes = None,
+        *,
+        payload: bytes,
         hash: bytes = None,
     ) -> None:
         self.payload = payload
@@ -24,6 +25,6 @@ class FirmwareUpload(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('payload', p.BytesType, 0),  # required
-            2: ('hash', p.BytesType, 0),
+            1: ('payload', p.BytesType, p.FLAG_REQUIRED),
+            2: ('hash', p.BytesType, None),
         }

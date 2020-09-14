@@ -31,6 +31,7 @@ class EosTxActionAck(p.MessageType):
 
     def __init__(
         self,
+        *,
         common: EosActionCommon = None,
         transfer: EosActionTransfer = None,
         delegate: EosActionDelegate = None,
@@ -66,19 +67,19 @@ class EosTxActionAck(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('common', EosActionCommon, 0),
-            2: ('transfer', EosActionTransfer, 0),
-            3: ('delegate', EosActionDelegate, 0),
-            4: ('undelegate', EosActionUndelegate, 0),
-            5: ('refund', EosActionRefund, 0),
-            6: ('buy_ram', EosActionBuyRam, 0),
-            7: ('buy_ram_bytes', EosActionBuyRamBytes, 0),
-            8: ('sell_ram', EosActionSellRam, 0),
-            9: ('vote_producer', EosActionVoteProducer, 0),
-            10: ('update_auth', EosActionUpdateAuth, 0),
-            11: ('delete_auth', EosActionDeleteAuth, 0),
-            12: ('link_auth', EosActionLinkAuth, 0),
-            13: ('unlink_auth', EosActionUnlinkAuth, 0),
-            14: ('new_account', EosActionNewAccount, 0),
-            15: ('unknown', EosActionUnknown, 0),
+            1: ('common', EosActionCommon, None),
+            2: ('transfer', EosActionTransfer, None),
+            3: ('delegate', EosActionDelegate, None),
+            4: ('undelegate', EosActionUndelegate, None),
+            5: ('refund', EosActionRefund, None),
+            6: ('buy_ram', EosActionBuyRam, None),
+            7: ('buy_ram_bytes', EosActionBuyRamBytes, None),
+            8: ('sell_ram', EosActionSellRam, None),
+            9: ('vote_producer', EosActionVoteProducer, None),
+            10: ('update_auth', EosActionUpdateAuth, None),
+            11: ('delete_auth', EosActionDeleteAuth, None),
+            12: ('link_auth', EosActionLinkAuth, None),
+            13: ('unlink_auth', EosActionUnlinkAuth, None),
+            14: ('new_account', EosActionNewAccount, None),
+            15: ('unknown', EosActionUnknown, None),
         }

@@ -18,11 +18,12 @@ class TransactionType(p.MessageType):
 
     def __init__(
         self,
-        version: int = None,
+        *,
         inputs: List[TxInputType] = None,
         bin_outputs: List[TxOutputBinType] = None,
-        lock_time: int = None,
         outputs: List[TxOutputType] = None,
+        version: int = None,
+        lock_time: int = None,
         inputs_cnt: int = None,
         outputs_cnt: int = None,
         extra_data: bytes = None,
@@ -33,11 +34,11 @@ class TransactionType(p.MessageType):
         timestamp: int = None,
         branch_id: int = None,
     ) -> None:
-        self.version = version
         self.inputs = inputs if inputs is not None else []
         self.bin_outputs = bin_outputs if bin_outputs is not None else []
-        self.lock_time = lock_time
         self.outputs = outputs if outputs is not None else []
+        self.version = version
+        self.lock_time = lock_time
         self.inputs_cnt = inputs_cnt
         self.outputs_cnt = outputs_cnt
         self.extra_data = extra_data
@@ -51,18 +52,18 @@ class TransactionType(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('version', p.UVarintType, 0),
+            1: ('version', p.UVarintType, None),
             2: ('inputs', TxInputType, p.FLAG_REPEATED),
             3: ('bin_outputs', TxOutputBinType, p.FLAG_REPEATED),
-            4: ('lock_time', p.UVarintType, 0),
+            4: ('lock_time', p.UVarintType, None),
             5: ('outputs', TxOutputType, p.FLAG_REPEATED),
-            6: ('inputs_cnt', p.UVarintType, 0),
-            7: ('outputs_cnt', p.UVarintType, 0),
-            8: ('extra_data', p.BytesType, 0),
-            9: ('extra_data_len', p.UVarintType, 0),
-            10: ('expiry', p.UVarintType, 0),
-            11: ('overwintered', p.BoolType, 0),
-            12: ('version_group_id', p.UVarintType, 0),
-            13: ('timestamp', p.UVarintType, 0),
-            14: ('branch_id', p.UVarintType, 0),
+            6: ('inputs_cnt', p.UVarintType, None),
+            7: ('outputs_cnt', p.UVarintType, None),
+            8: ('extra_data', p.BytesType, None),
+            9: ('extra_data_len', p.UVarintType, None),
+            10: ('expiry', p.UVarintType, None),
+            11: ('overwintered', p.BoolType, None),
+            12: ('version_group_id', p.UVarintType, None),
+            13: ('timestamp', p.UVarintType, None),
+            14: ('branch_id', p.UVarintType, None),
         }

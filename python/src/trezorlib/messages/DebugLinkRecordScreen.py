@@ -15,6 +15,7 @@ class DebugLinkRecordScreen(p.MessageType):
 
     def __init__(
         self,
+        *,
         target_directory: str = None,
     ) -> None:
         self.target_directory = target_directory
@@ -22,5 +23,5 @@ class DebugLinkRecordScreen(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('target_directory', p.UnicodeType, 0),
+            1: ('target_directory', p.UnicodeType, None),
         }

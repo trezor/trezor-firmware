@@ -16,6 +16,7 @@ class MoneroOutputEntry(p.MessageType):
 
     def __init__(
         self,
+        *,
         idx: int = None,
         key: MoneroRctKeyPublic = None,
     ) -> None:
@@ -25,6 +26,6 @@ class MoneroOutputEntry(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('idx', p.UVarintType, 0),
-            2: ('key', MoneroRctKeyPublic, 0),
+            1: ('idx', p.UVarintType, None),
+            2: ('key', MoneroRctKeyPublic, None),
         }

@@ -15,6 +15,7 @@ class TezosBallotOp(p.MessageType):
 
     def __init__(
         self,
+        *,
         source: bytes = None,
         period: int = None,
         proposal: bytes = None,
@@ -28,8 +29,8 @@ class TezosBallotOp(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('source', p.BytesType, 0),
-            2: ('period', p.UVarintType, 0),
-            3: ('proposal', p.BytesType, 0),
-            4: ('ballot', p.EnumType("TezosBallotType", (0, 1, 2)), 0),
+            1: ('source', p.BytesType, None),
+            2: ('period', p.UVarintType, None),
+            3: ('proposal', p.BytesType, None),
+            4: ('ballot', p.EnumType("TezosBallotType", (0, 1, 2)), None),
         }

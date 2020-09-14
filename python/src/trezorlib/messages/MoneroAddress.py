@@ -15,6 +15,7 @@ class MoneroAddress(p.MessageType):
 
     def __init__(
         self,
+        *,
         address: bytes = None,
     ) -> None:
         self.address = address
@@ -22,5 +23,5 @@ class MoneroAddress(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('address', p.BytesType, 0),
+            1: ('address', p.BytesType, None),
         }

@@ -16,10 +16,11 @@ class SignMessage(p.MessageType):
 
     def __init__(
         self,
+        *,
+        message: bytes,
         address_n: List[int] = None,
-        message: bytes = None,
-        coin_name: str = None,
-        script_type: EnumTypeInputScriptType = None,
+        coin_name: str = "Bitcoin",
+        script_type: EnumTypeInputScriptType = 0,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.message = message
@@ -30,7 +31,7 @@ class SignMessage(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            2: ('message', p.BytesType, 0),  # required
-            3: ('coin_name', p.UnicodeType, 0),  # default=Bitcoin
+            2: ('message', p.BytesType, p.FLAG_REQUIRED),
+            3: ('coin_name', p.UnicodeType, "Bitcoin"),  # default=Bitcoin
             4: ('script_type', p.EnumType("InputScriptType", (0, 1, 2, 3, 4)), 0),  # default=SPENDADDRESS
         }

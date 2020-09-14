@@ -14,12 +14,13 @@ class EosTxHeader(p.MessageType):
 
     def __init__(
         self,
-        expiration: int = None,
-        ref_block_num: int = None,
-        ref_block_prefix: int = None,
-        max_net_usage_words: int = None,
-        max_cpu_usage_ms: int = None,
-        delay_sec: int = None,
+        *,
+        expiration: int,
+        ref_block_num: int,
+        ref_block_prefix: int,
+        max_net_usage_words: int,
+        max_cpu_usage_ms: int,
+        delay_sec: int,
     ) -> None:
         self.expiration = expiration
         self.ref_block_num = ref_block_num
@@ -31,10 +32,10 @@ class EosTxHeader(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('expiration', p.UVarintType, 0),  # required
-            2: ('ref_block_num', p.UVarintType, 0),  # required
-            3: ('ref_block_prefix', p.UVarintType, 0),  # required
-            4: ('max_net_usage_words', p.UVarintType, 0),  # required
-            5: ('max_cpu_usage_ms', p.UVarintType, 0),  # required
-            6: ('delay_sec', p.UVarintType, 0),  # required
+            1: ('expiration', p.UVarintType, p.FLAG_REQUIRED),
+            2: ('ref_block_num', p.UVarintType, p.FLAG_REQUIRED),
+            3: ('ref_block_prefix', p.UVarintType, p.FLAG_REQUIRED),
+            4: ('max_net_usage_words', p.UVarintType, p.FLAG_REQUIRED),
+            5: ('max_cpu_usage_ms', p.UVarintType, p.FLAG_REQUIRED),
+            6: ('delay_sec', p.UVarintType, p.FLAG_REQUIRED),
         }

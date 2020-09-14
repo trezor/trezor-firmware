@@ -15,6 +15,7 @@ class DebugLinkFlashErase(p.MessageType):
 
     def __init__(
         self,
+        *,
         sector: int = None,
     ) -> None:
         self.sector = sector
@@ -22,5 +23,5 @@ class DebugLinkFlashErase(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('sector', p.UVarintType, 0),
+            1: ('sector', p.UVarintType, None),
         }

@@ -16,6 +16,7 @@ class ApplySettings(p.MessageType):
 
     def __init__(
         self,
+        *,
         language: str = None,
         label: str = None,
         use_passphrase: bool = None,
@@ -37,12 +38,12 @@ class ApplySettings(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('language', p.UnicodeType, 0),
-            2: ('label', p.UnicodeType, 0),
-            3: ('use_passphrase', p.BoolType, 0),
-            4: ('homescreen', p.BytesType, 0),
-            6: ('auto_lock_delay_ms', p.UVarintType, 0),
-            7: ('display_rotation', p.UVarintType, 0),
-            8: ('passphrase_always_on_device', p.BoolType, 0),
-            9: ('safety_checks', p.EnumType("SafetyCheckLevel", (0, 1, 2)), 0),
+            1: ('language', p.UnicodeType, None),
+            2: ('label', p.UnicodeType, None),
+            3: ('use_passphrase', p.BoolType, None),
+            4: ('homescreen', p.BytesType, None),
+            6: ('auto_lock_delay_ms', p.UVarintType, None),
+            7: ('display_rotation', p.UVarintType, None),
+            8: ('passphrase_always_on_device', p.BoolType, None),
+            9: ('safety_checks', p.EnumType("SafetyCheckLevel", (0, 1, 2)), None),
         }

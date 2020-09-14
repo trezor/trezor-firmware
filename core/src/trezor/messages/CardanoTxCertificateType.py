@@ -15,18 +15,19 @@ class CardanoTxCertificateType(p.MessageType):
 
     def __init__(
         self,
-        type: EnumTypeCardanoCertificateType = None,
+        *,
         path: List[int] = None,
+        type: EnumTypeCardanoCertificateType = None,
         pool: bytes = None,
     ) -> None:
-        self.type = type
         self.path = path if path is not None else []
+        self.type = type
         self.pool = pool
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('type', p.EnumType("CardanoCertificateType", (0, 1, 2)), 0),
+            1: ('type', p.EnumType("CardanoCertificateType", (0, 1, 2)), None),
             2: ('path', p.UVarintType, p.FLAG_REPEATED),
-            3: ('pool', p.BytesType, 0),
+            3: ('pool', p.BytesType, None),
         }
