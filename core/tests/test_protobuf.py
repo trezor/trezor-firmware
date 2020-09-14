@@ -5,8 +5,8 @@ from trezor.utils import BufferReader, BufferWriter
 
 
 class Message(protobuf.MessageType):
-    def __init__(self, uint_field: int = 0, enum_field: int = 0) -> None:
-        self.sint_field = uint_field
+    def __init__(self, sint_field: int = 0, enum_field: int = 0) -> None:
+        self.sint_field = sint_field
         self.enum_field = enum_field
 
     @classmethod
@@ -14,6 +14,19 @@ class Message(protobuf.MessageType):
         return {
             1: ("sint_field", protobuf.SVarintType, 0),
             2: ("enum_field", protobuf.EnumType("t", (0, 5, 25)), 0),
+        }
+
+
+class MessageWithRequiredAndDefault(protobuf.MessageType):
+    def __init__(self, required_field, default_field) -> None:
+        self.required_field = required_field
+        self.default_field = default_field
+
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ("required_field", protobuf.UVarintType, protobuf.FLAG_REQUIRED),
+            2: ("default_field", protobuf.SVarintType, -1),
         }
 
 
@@ -25,7 +38,18 @@ def load_uvarint(data: bytes) -> int:
 def dump_uvarint(value: int) -> bytearray:
     writer = BufferWriter(bytearray(16))
     protobuf.dump_uvarint(writer, value)
-    return memoryview(writer.buffer)[:writer.offset]
+    return memoryview(writer.buffer)[: writer.offset]
+
+
+def dump_message(msg: protobuf.MessageType) -> bytearray:
+    length = protobuf.count_message(msg)
+    buffer = bytearray(length)
+    protobuf.dump_message(BufferWriter(buffer), msg)
+    return buffer
+
+
+def load_message(msg_type, buffer: bytearray) -> protobuf.MessageType:
+    return protobuf.load_message(BufferReader(buffer), msg_type)
 
 
 class TestProtobuf(unittest.TestCase):
@@ -58,30 +82,47 @@ class TestProtobuf(unittest.TestCase):
             protobuf.uint_to_sint(protobuf.sint_to_uint(1234567891011)), 1234567891011
         )
         self.assertEqual(
-            protobuf.uint_to_sint(protobuf.sint_to_uint(-2 ** 32)), -2 ** 32
+            protobuf.uint_to_sint(protobuf.sint_to_uint(-(2 ** 32))), -(2 ** 32)
         )
 
     def test_validate_enum(self):
         # ok message:
         msg = Message(-42, 5)
-        length = protobuf.count_message(msg)
-        buffer_writer = BufferWriter(bytearray(length))
-        protobuf.dump_message(buffer_writer, msg)
-
-        buffer_reader = BufferReader(buffer_writer.buffer)
-        nmsg = protobuf.load_message(buffer_reader, Message)
+        msg_encoded = dump_message(msg)
+        nmsg = load_message(Message, msg_encoded)
 
         self.assertEqual(msg.sint_field, nmsg.sint_field)
         self.assertEqual(msg.enum_field, nmsg.enum_field)
 
         # bad enum value:
-        buffer_writer.seek(0)
         msg = Message(-42, 42)
-        # XXX this assumes the message will have equal size
-        protobuf.dump_message(buffer_writer, msg)
-        buffer_reader.seek(0)
+        msg_encoded = dump_message(msg)
         with self.assertRaises(TypeError):
-            protobuf.load_message(buffer_reader, Message)
+            load_message(Message, msg_encoded)
+
+    def test_required(self):
+        msg = MessageWithRequiredAndDefault(required_field=1, default_field=2)
+        msg_encoded = dump_message(msg)
+        nmsg = load_message(MessageWithRequiredAndDefault, msg_encoded)
+
+        self.assertEqual(nmsg.required_field, 1)
+        self.assertEqual(nmsg.default_field, 2)
+
+        # try a message without the required_field
+        msg = MessageWithRequiredAndDefault(required_field=None, default_field=2)
+        # encoding always succeeds
+        msg_encoded = dump_message(msg)
+        with self.assertRaises(ValueError):
+            load_message(MessageWithRequiredAndDefault, msg_encoded)
+
+        # try a message without the default field
+        msg = MessageWithRequiredAndDefault(required_field=1, default_field=None)
+        msg_encoded = dump_message(msg)
+        nmsg = load_message(MessageWithRequiredAndDefault, msg_encoded)
+
+        self.assertEqual(nmsg.required_field, 1)
+        self.assertEqual(nmsg.default_field, -1)
+
 
 
 if __name__ == "__main__":

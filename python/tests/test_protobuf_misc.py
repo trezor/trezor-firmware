@@ -31,12 +31,12 @@ class SimpleMessage(protobuf.MessageType):
     @classmethod
     def get_fields(cls):
         return {
-            1: ("uvarint", protobuf.UVarintType, 0),
-            2: ("svarint", protobuf.SVarintType, 0),
-            3: ("bool", protobuf.BoolType, 0),
-            4: ("bytes", protobuf.BytesType, 0),
-            5: ("unicode", protobuf.UnicodeType, 0),
-            6: ("enum", SimpleEnumType, 0),
+            1: ("uvarint", protobuf.UVarintType, None),
+            2: ("svarint", protobuf.SVarintType, None),
+            3: ("bool", protobuf.BoolType, None),
+            4: ("bytes", protobuf.BytesType, None),
+            5: ("unicode", protobuf.UnicodeType, None),
+            6: ("enum", SimpleEnumType, None),
             7: ("rep_int", protobuf.UVarintType, protobuf.FLAG_REPEATED),
             8: ("rep_str", protobuf.UnicodeType, protobuf.FLAG_REPEATED),
             9: ("rep_enum", SimpleEnumType, protobuf.FLAG_REPEATED),
