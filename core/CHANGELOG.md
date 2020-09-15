@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## 2.3.4 [to be released on 4th November 2020]
 
 ### Added
-- CoinJoin preauthorization and siging flow.  [#1053]
+- CoinJoin preauthorization and signing flow.  [#1053]
 
 ### Changed
 
