@@ -107,7 +107,9 @@ pylint: ## run pylint on application sources and tests
 
 mypy: res
 	mypy --config-file ../setup.cfg \
-		src/main.py
+		src/main.py \
+		src/apps/bitcoin \
+		src/apps/webauthn
 
 ## code generation:
 
