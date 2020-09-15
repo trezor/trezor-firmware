@@ -17,4 +17,4 @@ async def get_public_key(ctx, msg: BinanceGetPublicKey, keychain: Keychain):
     if msg.show_display:
         await layout.show_pubkey(ctx, pubkey)
 
-    return BinancePublicKey(pubkey)
+    return BinancePublicKey(public_key=pubkey)
