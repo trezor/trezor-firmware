@@ -150,7 +150,7 @@ def test_sign_tx_payment_op_native_explicit_asset(client):
     op = messages.StellarPaymentOp()
     op.amount = 500111000
     op.destination_account = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
-    op.asset = messages.StellarAssetType(0)
+    op.asset = messages.StellarAssetType(type=0)
 
     tx = _create_msg()
 
@@ -171,7 +171,9 @@ def test_sign_tx_payment_op_custom_asset1(client):
     op.destination_account = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
 
     op.asset = messages.StellarAssetType(
-        1, "X", "GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC"
+        type=1,
+        code="X",
+        issuer="GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC",
     )
     tx = _create_msg()
 
@@ -192,7 +194,9 @@ def test_sign_tx_payment_op_custom_asset12(client):
     op.destination_account = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
 
     op.asset = messages.StellarAssetType(
-        2, "ABCDEFGHIJKL", "GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC"
+        type=2,
+        code="ABCDEFGHIJKL",
+        issuer="GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC",
     )
     tx = _create_msg()
 

@@ -18,7 +18,7 @@ import time
 
 import pytest
 
-from trezorlib import btc, messages as proto
+from trezorlib import btc, messages
 from trezorlib.exceptions import PinException
 
 # FIXME TODO Add passphrase tests
@@ -33,14 +33,14 @@ class TestProtectCall:
 
     def test_no_protection(self, client):
         with client:
-            client.set_expected_responses([proto.Address()])
+            client.set_expected_responses([messages.Address])
             self._some_protected_call(client)
 
     @pytest.mark.setup_client(pin="1234")
     def test_pin(self, client):
         with client:
             client.use_pin_sequence(["1234"])
-            client.set_expected_responses([proto.PinMatrixRequest(), proto.Address()])
+            client.set_expected_responses([messages.PinMatrixRequest, messages.Address])
             self._some_protected_call(client)
 
     @pytest.mark.setup_client(pin="1234")

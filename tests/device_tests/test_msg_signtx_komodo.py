@@ -79,14 +79,16 @@ class TestMsgSigntxKomodo:
                 ]
             )
 
-            details = proto.SignTx(
+            _, serialized_tx = btc.sign_tx(
+                client,
+                "Komodo",
+                [inp1],
+                [out1],
                 version=4,
                 version_group_id=0x892F2085,
                 branch_id=0x76B809BB,
                 lock_time=0x5D2A30B8,
-            )
-            _, serialized_tx = btc.sign_tx(
-                client, "Komodo", [inp1], [out1], details=details, prev_txes=TX_API
+                prev_txes=TX_API,
             )
 
         # Accepted by network: tx 7b28bd91119e9776f0d4ebd80e570165818a829bbf4477cd1afe5149dbcd34b1
@@ -142,19 +144,16 @@ class TestMsgSigntxKomodo:
                 ]
             )
 
-            details = proto.SignTx(
-                version=4,
-                version_group_id=0x892F2085,
-                branch_id=0x76B809BB,
-                lock_time=0x5D2AF1F2,
-            )
             _, serialized_tx = btc.sign_tx(
                 client,
                 "Komodo",
                 [inp1],
                 [out1, out2],
-                details=details,
                 prev_txes=TX_API,
+                version=4,
+                version_group_id=0x892F2085,
+                branch_id=0x76B809BB,
+                lock_time=0x5D2AF1F2,
             )
 
         # Accepted by network: tx c775678ceb18277729b427c7acf2f8ce63ac02fc2366f47ce08a3f443ff0e059

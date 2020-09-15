@@ -61,7 +61,7 @@ def test_sign_tx(client):
 
     with client:
         client.set_expected_responses(
-            [messages.PreauthorizedRequest(), messages.OwnershipProof()]
+            [messages.PreauthorizedRequest, messages.OwnershipProof]
         )
         btc.get_ownership_proof(
             client,
@@ -75,7 +75,7 @@ def test_sign_tx(client):
 
     with client:
         client.set_expected_responses(
-            [messages.PreauthorizedRequest(), messages.OwnershipProof()]
+            [messages.PreauthorizedRequest, messages.OwnershipProof]
         )
         btc.get_ownership_proof(
             client,
