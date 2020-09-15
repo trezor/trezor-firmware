@@ -38,4 +38,4 @@ async def list_resident_credentials(
         )
         for cred in resident_credentials.find_all()
     ]
-    return WebAuthnCredentials(creds)
+    return WebAuthnCredentials(credentials=creds)

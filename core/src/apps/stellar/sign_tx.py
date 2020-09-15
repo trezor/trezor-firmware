@@ -37,7 +37,7 @@ async def sign_tx(ctx, msg: StellarSignTx, keychain):
     signature = ed25519.sign(node.private_key(), digest)
 
     # Add the public key for verification that the right account was used for signing
-    return StellarSignedTx(pubkey, signature)
+    return StellarSignedTx(public_key=pubkey, signature=signature)
 
 
 async def _final(ctx, w: bytearray, msg: StellarSignTx):

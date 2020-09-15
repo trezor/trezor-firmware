@@ -34,7 +34,7 @@ async def sign_tx(ctx, msg: RippleSignTx, keychain):
 
     signature = ecdsa_sign(node.private_key(), first_half_of_sha512(to_sign))
     tx = serialize(msg, source_address, pubkey=node.public_key(), signature=signature)
-    return RippleSignedTx(signature, tx)
+    return RippleSignedTx(signature=signature, serialized_tx=tx)
 
 
 def check_fee(fee: int):

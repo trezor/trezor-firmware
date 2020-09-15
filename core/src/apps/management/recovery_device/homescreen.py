@@ -122,7 +122,7 @@ async def _finish_recovery_dry_run(
     await layout.show_dry_run_result(ctx, result, is_slip39)
 
     if result:
-        return Success("The seed is valid and matches the one in the device")
+        return Success(message="The seed is valid and matches the one in the device")
     else:
         raise wire.ProcessError("The seed does not match the one in the device")
 
