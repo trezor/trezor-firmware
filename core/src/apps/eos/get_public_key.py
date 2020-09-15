@@ -31,4 +31,4 @@ async def get_public_key(
     wif, public_key = _get_public_key(node)
     if msg.show_display:
         await require_get_public_key(ctx, wif)
-    return EosPublicKey(wif, public_key)
+    return EosPublicKey(wif_public_key=wif, raw_public_key=public_key)

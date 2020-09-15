@@ -21,7 +21,13 @@
 """Reference implementation for Bech32 and segwit addresses."""
 
 if False:
-    from typing import Iterable, List, Optional, Tuple
+    from typing import Iterable, List, Optional, Tuple, Union, TypeVar
+
+    A = TypeVar("A")
+    B = TypeVar("B")
+    # usage: OptionalTuple[int, List[int]] is either (None, None) or (someint, somelist)
+    # but not (None, somelist)
+    OptionalTuple = Union[Tuple[None, None], Tuple[A, B]]
 
 CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 
@@ -61,9 +67,7 @@ def bech32_encode(hrp: str, data: List[int]) -> str:
     return hrp + "1" + "".join([CHARSET[d] for d in combined])
 
 
-def bech32_decode(
-    bech: str, max_bech_len: int = 90
-) -> Tuple[Optional[str], Optional[List[int]]]:
+def bech32_decode(bech: str, max_bech_len: int = 90) -> OptionalTuple[str, List[int]]:
     """Validate a Bech32 string, and determine HRP and data."""
     if (any(ord(x) < 33 or ord(x) > 126 for x in bech)) or (
         bech.lower() != bech and bech.upper() != bech
@@ -107,7 +111,7 @@ def convertbits(
     return ret
 
 
-def decode(hrp: str, addr: str) -> Tuple[Optional[int], Optional[List[int]]]:
+def decode(hrp: str, addr: str) -> OptionalTuple[int, List[int]]:
     """Decode a segwit address."""
     hrpgot, data = bech32_decode(addr)
     if data is None or hrpgot != hrp:
