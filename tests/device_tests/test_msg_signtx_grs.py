@@ -102,13 +102,12 @@ class TestMsgSigntxGRS:
             amount=123456789 - 11000 - 12300000,
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
-        details = proto.SignTx(lock_time=650756)
         _, serialized_tx = btc.sign_tx(
             client,
             "Groestlcoin Testnet",
             [inp1],
             [out1, out2],
-            details=details,
+            lock_time=650756,
             prev_txes=TX_API_TESTNET,
         )
         assert (
@@ -136,13 +135,12 @@ class TestMsgSigntxGRS:
             script_type=proto.OutputScriptType.PAYTOP2SHWITNESS,
             amount=123456789 - 11000 - 12300000,
         )
-        details = proto.SignTx(lock_time=650756)
         _, serialized_tx = btc.sign_tx(
             client,
             "Groestlcoin Testnet",
             [inp1],
             [out1, out2],
-            details=details,
+            lock_time=650756,
             prev_txes=TX_API_TESTNET,
         )
         assert (
@@ -169,13 +167,12 @@ class TestMsgSigntxGRS:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
             amount=12300000 - 11000 - 5000000,
         )
-        details = proto.SignTx(lock_time=650713)
         _, serialized_tx = btc.sign_tx(
             client,
             "Groestlcoin Testnet",
             [inp1],
             [out1, out2],
-            details=details,
+            lock_time=650713,
             prev_txes=TX_API_TESTNET,
         )
         assert (
@@ -202,13 +199,12 @@ class TestMsgSigntxGRS:
             script_type=proto.OutputScriptType.PAYTOWITNESS,
             amount=12300000 - 11000 - 5000000,
         )
-        details = proto.SignTx(lock_time=650713)
         _, serialized_tx = btc.sign_tx(
             client,
             "Groestlcoin Testnet",
             [inp1],
             [out1, out2],
-            details=details,
+            lock_time=650713,
             prev_txes=TX_API_TESTNET,
         )
         assert (

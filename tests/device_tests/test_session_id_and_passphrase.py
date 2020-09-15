@@ -365,7 +365,7 @@ def test_passphrase_length(client):
         response = client.call_raw(XPUB_REQUEST)
         assert isinstance(response, messages.PassphraseRequest)
         try:
-            response = client.call(messages.PassphraseAck(passphrase))
+            response = client.call(messages.PassphraseAck(passphrase=passphrase))
             assert expected_result is True, "Call should have failed"
             assert isinstance(response, messages.PublicKey)
         except exceptions.TrezorFailure as e:

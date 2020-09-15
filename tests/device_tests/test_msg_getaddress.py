@@ -233,7 +233,7 @@ def test_unknown_path(client):
                 messages.ButtonRequest(
                     code=messages.ButtonRequestType.UnknownDerivationPath
                 ),
-                messages.Address(),
+                messages.Address,
             ]
         )
         # account number is too high

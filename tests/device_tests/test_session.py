@@ -34,11 +34,11 @@ PIN4 = "1234"
 def test_clear_session(client):
     is_trezor1 = client.features.model == "1"
     init_responses = [
-        messages.PinMatrixRequest() if is_trezor1 else messages.ButtonRequest(),
-        messages.PassphraseRequest(),
+        messages.PinMatrixRequest if is_trezor1 else messages.ButtonRequest,
+        messages.PassphraseRequest,
     ]
 
-    cached_responses = [messages.PublicKey()]
+    cached_responses = [messages.PublicKey]
 
     with client:
         client.use_pin_sequence([PIN4])
@@ -72,7 +72,7 @@ def test_end_session(client):
 
     # get_address will succeed
     with client:
-        client.set_expected_responses([messages.Address()])
+        client.set_expected_responses([messages.Address])
         get_test_address(client)
 
     client.end_session()
@@ -85,12 +85,12 @@ def test_end_session(client):
     client.init_device()
     assert client.session_id is not None
     with client:
-        client.set_expected_responses([messages.Address()])
+        client.set_expected_responses([messages.Address])
         get_test_address(client)
 
     with client:
         # end_session should succeed on empty session too
-        client.set_expected_responses([messages.Success()] * 2)
+        client.set_expected_responses([messages.Success] * 2)
         client.end_session()
         client.end_session()
 
@@ -99,14 +99,14 @@ def test_end_session(client):
 def test_cannot_resume_ended_session(client):
     session_id = client.session_id
     with client:
-        client.set_expected_responses([messages.Features()])
+        client.set_expected_responses([messages.Features])
         client.init_device(session_id=session_id)
 
     assert session_id == client.session_id
 
     client.end_session()
     with client:
-        client.set_expected_responses([messages.Features()])
+        client.set_expected_responses([messages.Features])
         client.init_device(session_id=session_id)
 
     assert session_id != client.session_id
@@ -138,10 +138,10 @@ def test_session_recycling(client):
     with client:
         client.set_expected_responses(
             [
-                messages.PassphraseRequest(),
-                messages.ButtonRequest(),
-                messages.ButtonRequest(),
-                messages.Address(),
+                messages.PassphraseRequest,
+                messages.ButtonRequest,
+                messages.ButtonRequest,
+                messages.Address,
             ]
         )
         client.use_passphrase("TREZOR")
@@ -155,7 +155,7 @@ def test_session_recycling(client):
     # it should still be possible to resume the original session
     with client:
         # passphrase should still be cached
-        client.set_expected_responses([messages.Features(), messages.Address()])
+        client.set_expected_responses([messages.Features, messages.Address])
         client.use_passphrase("TREZOR")
         client.init_device(session_id=session_id_orig)
         assert address == get_test_address(client)

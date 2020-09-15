@@ -1225,14 +1225,13 @@ class TestMsgSigntx:
             script_type=messages.OutputScriptType.PAYTOADDRESS,
         )
 
-        details = messages.SignTx()
-        setattr(details, field, value)
+        kwargs = {field: value}
         name = field.replace("_", " ")
         with pytest.raises(
             TrezorFailure, match=r"(?i){} not enabled on this coin".format(name)
         ):
             btc.sign_tx(
-                client, "Bitcoin", [inp0], [out1], details, prev_txes=TX_CACHE_MAINNET
+                client, "Bitcoin", [inp0], [out1], prev_txes=TX_CACHE_MAINNET, **kwargs
             )
 
     @pytest.mark.parametrize(
@@ -1385,12 +1384,11 @@ class TestMsgSigntx:
                 ]
             )
 
-            details = messages.SignTx(lock_time=lock_time)
             btc.sign_tx(
                 client,
                 "Bitcoin",
                 [inp1],
                 [out1],
-                details=details,
+                lock_time=lock_time,
                 prev_txes=TX_CACHE_MAINNET,
             )

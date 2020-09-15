@@ -75,19 +75,17 @@ class TestMsgSigntxZcash:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        with client:
-            details = proto.SignTx(
-                version=3, version_group_id=0x03C48270, branch_id=0x5BA81B19,
+        with client, pytest.raises(TrezorFailure, match="DataError"):
+            btc.sign_tx(
+                client,
+                "Zcash Testnet",
+                [inp1],
+                [out1],
+                version=3,
+                version_group_id=0x03C48270,
+                branch_id=0x5BA81B19,
+                prev_txes=TX_API,
             )
-            with pytest.raises(TrezorFailure, match="DataError"):
-                _, serialized_tx = btc.sign_tx(
-                    client,
-                    "Zcash Testnet",
-                    [inp1],
-                    [out1],
-                    details=details,
-                    prev_txes=TX_API,
-                )
 
     def test_one_one_fee_sapling(self, client):
         # prevout: e3820602226974b1dd87b7113cc8aea8c63e5ae29293991e7bfa80c126930368:0
@@ -127,15 +125,14 @@ class TestMsgSigntxZcash:
                 ]
             )
 
-            details = proto.SignTx(
-                version=4, version_group_id=0x892F2085, branch_id=0x76B809BB,
-            )
             _, serialized_tx = btc.sign_tx(
                 client,
                 "Zcash Testnet",
                 [inp1],
                 [out1],
-                details=details,
+                version=4,
+                version_group_id=0x892F2085,
+                branch_id=0x76B809BB,
                 prev_txes=TX_API,
             )
 
@@ -160,15 +157,9 @@ class TestMsgSigntxZcash:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        details = proto.SignTx(version=4)
         with pytest.raises(TrezorFailure, match="Version group ID must be set."):
             btc.sign_tx(
-                client,
-                "Zcash Testnet",
-                [inp1],
-                [out1],
-                details=details,
-                prev_txes=TX_API,
+                client, "Zcash Testnet", [inp1], [out1], version=4, prev_txes=TX_API,
             )
 
     def test_spend_old_versions(self, client):
@@ -210,17 +201,15 @@ class TestMsgSigntxZcash:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        details = proto.SignTx(
-            version=4, version_group_id=0x892F2085, branch_id=0x76B809BB,
-        )
-
         with client:
             _, serialized_tx = btc.sign_tx(
                 client,
                 "Zcash Testnet",
                 inputs,
                 [output],
-                details=details,
+                version=4,
+                version_group_id=0x892F2085,
+                branch_id=0x76B809BB,
                 prev_txes=TX_API,
             )
 
@@ -285,15 +274,14 @@ class TestMsgSigntxZcash:
                 ]
             )
 
-            details = proto.SignTx(
-                version=4, version_group_id=0x892F2085, branch_id=0x76B809BB,
-            )
             _, serialized_tx = btc.sign_tx(
                 client,
                 "Zcash Testnet",
                 [inp1, inp2],
                 [out1],
-                details=details,
+                version=4,
+                version_group_id=0x892F2085,
+                branch_id=0x76B809BB,
                 prev_txes=TX_API,
             )
 
