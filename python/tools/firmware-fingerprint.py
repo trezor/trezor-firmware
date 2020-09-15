@@ -15,13 +15,13 @@ def firmware_fingerprint(filename, output):
     data = filename.read()
 
     try:
+        version, fw = firmware.parse(data)
+
         # Unsigned production builds for Trezor T do not have valid code hashes.
         # Use the internal module which recomputes them first.
-        if data[:4] == b"TRZV":
-            fw = firmware_headers.parse_image(data)
-            fingerprint = fw.digest()
+        if version == firmware.FirmwareFormat.TREZOR_T:
+            fingerprint = firmware_headers.FirmwareImage(fw).digest()
         else:
-            version, fw = firmware.parse(data)
             fingerprint = firmware.digest(version, fw)
     except Exception as e:
         click.echo(e, err=True)
