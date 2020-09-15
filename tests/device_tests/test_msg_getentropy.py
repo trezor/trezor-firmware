@@ -41,7 +41,7 @@ def entropy(data):
 def test_entropy(client, entropy_length):
     with client:
         client.set_expected_responses(
-            [m.ButtonRequest(code=m.ButtonRequestType.ProtectCall), m.Entropy()]
+            [m.ButtonRequest(code=m.ButtonRequestType.ProtectCall), m.Entropy]
         )
         ent = misc.get_entropy(client, entropy_length)
         assert len(ent) == entropy_length
