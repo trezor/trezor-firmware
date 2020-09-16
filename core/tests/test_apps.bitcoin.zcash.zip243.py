@@ -1,8 +1,8 @@
 from common import *
 from trezor.messages import InputScriptType
 from trezor.messages.SignTx import SignTx
-from trezor.messages.TxInputType import TxInputType
-from trezor.messages.TxOutputBinType import TxOutputBinType
+from trezor.messages.TxAckInputType import TxAckInputType
+from trezor.messages.TxAckPrevOutputType import TxAckPrevOutputType
 
 from apps.common import coins
 from apps.bitcoin.writers import get_tx_hash
@@ -194,17 +194,19 @@ class TestZcashZip243(unittest.TestCase):
             zip243 = Zcashlike(tx, None, coin, BasicApprover(tx, coin))
 
             for i in v["inputs"]:
-                txi = TxInputType()
-                txi.amount = i["amount"]
-                txi.prev_hash = unhexlify(i["prevout"][0])
-                txi.prev_index = i["prevout"][1]
-                txi.script_type = i["script_type"]
-                txi.sequence = i["sequence"]
+                txi = TxAckInputType(
+                    amount = i["amount"],
+                    prev_hash = unhexlify(i["prevout"][0]),
+                    prev_index = i["prevout"][1],
+                    script_type = i["script_type"],
+                    sequence = i["sequence"],
+                )
                 zip243.hash143_add_input(txi)
             for o in v["outputs"]:
-                txo = TxOutputBinType()
-                txo.amount = o["amount"]
-                txo.script_pubkey = unhexlify(o["script_pubkey"])
+                txo = TxAckPrevOutputType(
+                    amount = o["amount"],
+                    script_pubkey = unhexlify(o["script_pubkey"]),
+                )
                 zip243.hash143_add_output(txo, txo.script_pubkey)
 
             self.assertEqual(hexlify(get_tx_hash(zip243.h_prevouts)), v["prevouts_hash"])
