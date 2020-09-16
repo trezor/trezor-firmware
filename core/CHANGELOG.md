@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## 2.3.4 [to be released on 4th November 2020]
+## 2.3.5 [to be released on 4th November 2020]
 
 ### Added
 - CoinJoin preauthorization and signing flow.  [#1053]
@@ -18,6 +18,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 ### Security
+
+## 2.3.4 [to be released on 7th October 2020]
+
+### Added
+- Support for the upcoming Monero hard fork.  [#1246]
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
 
 ## 2.3.3 [2nd September 2020]
 
@@ -295,3 +311,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1173]: https://github.com/trezor/trezor-firmware/pull/1173
 [#1188]: https://github.com/trezor/trezor-firmware/issues/1188
 [#1190]: https://github.com/trezor/trezor-firmware/issues/1190
+[#1246]: https://github.com/trezor/trezor-firmware/issues/1246
