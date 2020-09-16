@@ -72,13 +72,13 @@ class TestCardanoSignTransaction(unittest.TestCase):
 
         for output_path, input_paths in outputs_to_show:
             inputs = [
-                CardanoTxInputType(input_path, "", 0) for input_path in input_paths
+                CardanoTxInputType(address_n=input_path, prev_hash=b"", prev_index=0) for input_path in input_paths
             ]
             self.assertTrue(_should_hide_output(output_path, inputs))
 
         for output_path, input_paths in outputs_to_hide:
             inputs = [
-                CardanoTxInputType(input_path, "", 0) for input_path in input_paths
+                CardanoTxInputType(address_n=input_path, prev_hash=b"", prev_index=0) for input_path in input_paths
             ]
             self.assertFalse(_should_hide_output(output_path, inputs))
 
