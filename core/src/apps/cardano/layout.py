@@ -1,3 +1,4 @@
+import math
 from ubinascii import hexlify
 
 from trezor import ui
@@ -42,6 +43,9 @@ CERTIFICATE_TYPE_NAMES = {
     CardanoCertificateType.STAKE_DEREGISTRATION: "Stake key deregistration",
     CardanoCertificateType.STAKE_DELEGATION: "Stake delegation",
 }
+
+# Maximum number of characters per line in monospace font.
+_MAX_MONO_LINE = 18
 
 
 def format_coin_amount(amount: int) -> str:
@@ -195,18 +199,37 @@ async def show_address(
     Custom show_address function is needed because cardano addresses don't
     fit on a single screen.
     """
-    path_str = address_n_to_str(path)
-    t1 = Text(path_str, ui.ICON_RECEIVE, ui.GREEN)
+
+    address_type_label = "%s address" % ADDRESS_TYPE_NAMES[address_type]
+    t1 = Text(address_type_label, ui.ICON_RECEIVE, ui.GREEN)
+
+    lines_per_page = 5
+    first_page_lines_used = 0
+
+    # assemble first page to be displayed (path + network + whatever part of the address fits)
     if network is not None:
         t1.normal("%s network" % protocol_magics.to_ui_string(network))
-    t1.normal("%s address" % ADDRESS_TYPE_NAMES[address_type])
+        first_page_lines_used += 1
+
+    path_str = address_n_to_str(path)
+    t1.mono(path_str)
+    first_page_lines_used = min(
+        first_page_lines_used + math.ceil(len(path_str) / _MAX_MONO_LINE),
+        lines_per_page,
+    )
 
     address_lines = list(chunks(address, 17))
-    t1.bold(address_lines[0])
-    t1.bold(address_lines[1])
-    t1.bold(address_lines[2])
+    for address_line in address_lines[: lines_per_page - first_page_lines_used]:
+        t1.bold(address_line)
 
-    pages = [t1] + _paginate_lines(address_lines, 3, path_str, ui.ICON_RECEIVE)
+    # append remaining pages containing the rest of the address
+    pages = [t1] + _paginate_lines(
+        address_lines,
+        lines_per_page - first_page_lines_used,
+        address_type_label,
+        ui.ICON_RECEIVE,
+        lines_per_page,
+    )
 
     return await confirm(
         ctx,
@@ -218,11 +241,11 @@ async def show_address(
 
 
 def _paginate_lines(
-    lines: List[str], offset: int, desc: str, icon: str, per_page: int = 4
+    lines: List[str], offset: int, desc: str, icon: str, lines_per_page: int = 4
 ) -> List[ui.Component]:
     pages = []
     if len(lines) > offset:
-        to_pages = list(chunks(lines[offset:], per_page))
+        to_pages = list(chunks(lines[offset:], lines_per_page))
         for page in to_pages:
             t = Text(desc, icon, ui.GREEN)
             for line in page:
