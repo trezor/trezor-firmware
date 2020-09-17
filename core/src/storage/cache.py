@@ -15,6 +15,7 @@ APP_BASE_AUTHORIZATION = 3
 
 # Keys that are valid across sessions
 APP_COMMON_SEED_WITHOUT_PASSPHRASE = 1 | _SESSIONLESS_FLAG
+APP_COMMON_SAFETY_CHECKS_TEMPORARY = 2 | _SESSIONLESS_FLAG
 
 
 _active_session_id = None  # type: Optional[bytes]

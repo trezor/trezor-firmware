@@ -8,6 +8,7 @@ from trezor.messages import BackupType
 if False:
     from trezor.messages.ResetDevice import EnumTypeBackupType
     from typing import Optional
+    from typing_extensions import Literal
 
 # Namespace:
 _NAMESPACE = common.APP_DEVICE
@@ -34,9 +35,15 @@ _SLIP39_IDENTIFIER         = const(0x10)  # bool
 _SLIP39_ITERATION_EXPONENT = const(0x11)  # int
 _SD_SALT_AUTH_KEY          = const(0x12)  # bytes
 INITIALIZED                = const(0x13)  # bool (0x01 or empty)
-_UNSAFE_PROMPTS_ALLOWED    = const(0x14)  # bool (0x01 or empty)
+_SAFETY_CHECK_LEVEL        = const(0x14)  # int
 
 _DEFAULT_BACKUP_TYPE       = BackupType.Bip39
+
+SAFETY_CHECK_LEVEL_STRICT   = const(0)  # type: Literal[0]
+SAFETY_CHECK_LEVEL_PROMPT   = const(1)  # type: Literal[1]
+_DEFAULT_SAFETY_CHECK_LEVEL = SAFETY_CHECK_LEVEL_STRICT
+if False:
+    StorageSafetyCheckLevel = Literal[0, 1]
 # fmt: on
 
 HOMESCREEN_MAXSIZE = 16384
@@ -283,9 +290,17 @@ def set_sd_salt_auth_key(auth_key: Optional[bytes]) -> None:
         return common.delete(_NAMESPACE, _SD_SALT_AUTH_KEY, public=True)
 
 
-def unsafe_prompts_allowed() -> bool:
-    return common.get_bool(_NAMESPACE, _UNSAFE_PROMPTS_ALLOWED)
+# do not use this function directly, see apps.common.safety_checks instead
+def safety_check_level() -> StorageSafetyCheckLevel:
+    level = common.get_uint8(_NAMESPACE, _SAFETY_CHECK_LEVEL)
+    if level not in (SAFETY_CHECK_LEVEL_STRICT, SAFETY_CHECK_LEVEL_PROMPT):
+        return _DEFAULT_SAFETY_CHECK_LEVEL
+    else:
+        return level  # type: ignore
 
 
-def set_unsafe_prompts_allowed(allowed: bool) -> None:
-    common.set_bool(_NAMESPACE, _UNSAFE_PROMPTS_ALLOWED, allowed)
+# do not use this function directly, see apps.common.safety_checks instead
+def set_safety_check_level(level: StorageSafetyCheckLevel) -> None:
+    if level not in (SAFETY_CHECK_LEVEL_STRICT, SAFETY_CHECK_LEVEL_PROMPT):
+        raise ValueError
+    common.set_uint8(_NAMESPACE, _SAFETY_CHECK_LEVEL, level)

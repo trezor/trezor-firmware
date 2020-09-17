@@ -8,8 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - CoinJoin preauthorization and signing flow.  [#1053]
+- Value of the `safety-checks` setting to the `Features` message.  [#1193]
 
 ### Changed
+- The `safety-checks` setting gained new possible value `PromptTemporarily` which overrides safety checks until device reboot.  [#1133]
 
 ### Deprecated
 
@@ -305,10 +307,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1115]: https://github.com/trezor/trezor-firmware/issues/1115
 [#1118]: https://github.com/trezor/trezor-firmware/issues/1118
 [#1126]: https://github.com/trezor/trezor-firmware/issues/1126
+[#1133]: https://github.com/trezor/trezor-firmware/issues/1133
 [#1139]: https://github.com/trezor/trezor-firmware/issues/1139
 [#1159]: https://github.com/trezor/trezor-firmware/issues/1159
 [#1165]: https://github.com/trezor/trezor-firmware/pull/1165
 [#1173]: https://github.com/trezor/trezor-firmware/pull/1173
 [#1188]: https://github.com/trezor/trezor-firmware/issues/1188
 [#1190]: https://github.com/trezor/trezor-firmware/issues/1190
+[#1193]: https://github.com/trezor/trezor-firmware/issues/1193
 [#1246]: https://github.com/trezor/trezor-firmware/issues/1246

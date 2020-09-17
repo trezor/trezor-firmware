@@ -159,7 +159,8 @@ class TestMsgApplysettings:
     @pytest.mark.skip_t1
     @pytest.mark.setup_client(pin=None)
     def test_safety_checks(self, client):
-        BAD_ADDRESS = parse_path("m/0")
+        def get_bad_address():
+            btc.get_address(client, "Bitcoin", parse_path("m/0"))
 
         assert client.features.safety_checks == messages.SafetyCheckLevel.Strict
 
@@ -167,21 +168,21 @@ class TestMsgApplysettings:
             exceptions.TrezorFailure, match="Forbidden key path"
         ), client:
             client.set_expected_responses([messages.Failure()])
-            btc.get_address(client, "Bitcoin", BAD_ADDRESS)
+            get_bad_address()
 
         with client:
             client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
             device.apply_settings(
-                client, safety_checks=messages.SafetyCheckLevel.Prompt
+                client, safety_checks=messages.SafetyCheckLevel.PromptAlways
             )
 
-        assert client.features.safety_checks == messages.SafetyCheckLevel.Prompt
+        assert client.features.safety_checks == messages.SafetyCheckLevel.PromptAlways
 
         with client:
             client.set_expected_responses(
                 [messages.ButtonRequest(), messages.Address()]
             )
-            btc.get_address(client, "Bitcoin", BAD_ADDRESS)
+            get_bad_address()
 
         with client:
             client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
@@ -195,4 +196,20 @@ class TestMsgApplysettings:
             exceptions.TrezorFailure, match="Forbidden key path"
         ), client:
             client.set_expected_responses([messages.Failure()])
-            btc.get_address(client, "Bitcoin", BAD_ADDRESS)
+            get_bad_address()
+
+        with client:
+            client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
+            device.apply_settings(
+                client, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
+            )
+
+        assert (
+            client.features.safety_checks == messages.SafetyCheckLevel.PromptTemporarily
+        )
+
+        with client:
+            client.set_expected_responses(
+                [messages.ButtonRequest(), messages.Address()]
+            )
+            get_bad_address()
