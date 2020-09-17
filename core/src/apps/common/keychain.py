@@ -1,8 +1,7 @@
-from storage import device
 from trezor import wire
 from trezor.crypto import bip32
 
-from . import HARDENED, paths
+from . import HARDENED, paths, safety_checks
 from .seed import Slip21Node, get_seed
 
 if False:
@@ -105,7 +104,7 @@ class Keychain:
         if "ed25519" in self.curve and not paths.path_is_hardened(path):
             raise wire.DataError("Non-hardened paths unsupported on Ed25519")
 
-        if device.unsafe_prompts_allowed():
+        if not safety_checks.is_strict():
             return
 
         if any(ns == path[: len(ns)] for ns in self.namespaces):
@@ -136,7 +135,7 @@ class Keychain:
         )
 
     def derive_slip21(self, path: paths.Slip21Path) -> Slip21Node:
-        if not device.unsafe_prompts_allowed() and not any(
+        if safety_checks.is_strict() and not any(
             ns == path[: len(ns)] for ns in self.slip21_namespaces
         ):
             raise FORBIDDEN_KEY_PATH

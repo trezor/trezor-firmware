@@ -653,8 +653,10 @@ class TestMsgSigntx:
         with pytest.raises(TrezorFailure, match="fee is unexpectedly large"):
             btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET)
 
-        # set SafetyCheckLevel to Prompt and try again
-        device.apply_settings(client, safety_checks=messages.SafetyCheckLevel.Prompt)
+        # set SafetyCheckLevel to PromptTemporarily and try again
+        device.apply_settings(
+            client, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
+        )
         with client:
             finished = False
 

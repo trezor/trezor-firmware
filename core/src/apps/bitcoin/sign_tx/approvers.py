@@ -1,12 +1,11 @@
 from micropython import const
 
-from storage import device
 from trezor import wire
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxInputType import TxInputType
 from trezor.messages.TxOutputType import TxOutputType
 
-from apps.common import coininfo
+from apps.common import coininfo, safety_checks
 
 from .. import addresses
 from ..authorization import FEE_PER_ANONYMITY_DECIMALS
@@ -100,7 +99,7 @@ class BasicApprover(Approver):
 
         # fee > (coin.maxfee per byte * tx size)
         if fee > fee_threshold:
-            if fee > 10 * fee_threshold and not device.unsafe_prompts_allowed():
+            if fee > 10 * fee_threshold and safety_checks.is_strict():
                 raise wire.DataError("The fee is unexpectedly large")
             await helpers.confirm_feeoverthreshold(fee, self.coin)
         if self.change_count > self.MAX_SILENT_CHANGE_COUNT:
