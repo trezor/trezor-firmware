@@ -6,7 +6,10 @@ coverage run --source=./src /dev/null 2>/dev/null
 mv .coverage .coverage.empty
 coverage combine .coverage.*
 
-coverage html --fail-under=${COVERAGE_THRESHOLD}
+coverage html \
+  --omit=src/trezor/messages/* \
+  --fail-under=${COVERAGE_THRESHOLD}
+
 if [ $? -eq 2 ]; then
   echo "Code coverage is less than ${COVERAGE_THRESHOLD}%"
   exit 1
