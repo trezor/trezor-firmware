@@ -207,7 +207,5 @@ class TestMsgApplysettings:
         )
 
         with client:
-            client.set_expected_responses(
-                [messages.ButtonRequest(), messages.Address()]
-            )
+            client.set_expected_responses([messages.ButtonRequest, messages.Address])
             get_bad_address()
