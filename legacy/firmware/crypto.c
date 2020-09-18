@@ -388,7 +388,7 @@ const HDNode *cryptoMultisigPubkey(const CoinInfo *coin,
     return 0;
   }
   if (node_ptr->chain_code.size != 32) return 0;
-  if (!node_ptr->has_public_key || node_ptr->public_key.size != 33) return 0;
+  if (node_ptr->public_key.size != 33) return 0;
   static HDNode node;
   if (!hdnode_from_xpub(node_ptr->depth, node_ptr->child_num,
                         node_ptr->chain_code.bytes, node_ptr->public_key.bytes,
@@ -429,7 +429,7 @@ int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig,
   if (n < 1 || n > 15) {
     return 0;
   }
-  if (!multisig->has_m || multisig->m < 1 || multisig->m > 15) {
+  if (multisig->m < 1 || multisig->m > 15) {
     return 0;
   }
   for (uint32_t i = 0; i < n; i++) {
@@ -442,8 +442,7 @@ int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig,
     }
   }
   for (uint32_t i = 0; i < n; i++) {
-    if (!pubnodes[i]->has_public_key || pubnodes[i]->public_key.size != 33)
-      return 0;
+    if (pubnodes[i]->public_key.size != 33) return 0;
     if (pubnodes[i]->chain_code.size != 32) return 0;
   }
   // minsort according to pubkey

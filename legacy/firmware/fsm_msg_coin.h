@@ -56,7 +56,6 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
   resp->node.chain_code.size = 32;
   memcpy(resp->node.chain_code.bytes, node->chain_code, 32);
   resp->node.has_private_key = false;
-  resp->node.has_public_key = true;
   resp->node.public_key.size = 33;
   memcpy(resp->node.public_key.bytes, node->public_key, 33);
   if (node->public_key[0] == 1) {
@@ -237,9 +236,6 @@ void fsm_msgSignMessage(const SignMessage *msg) {
 }
 
 void fsm_msgVerifyMessage(const VerifyMessage *msg) {
-  CHECK_PARAM(msg->has_address, _("No address provided"));
-  CHECK_PARAM(msg->has_message, _("No message provided"));
-
   const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
   if (!coin) return;
   layoutProgressSwipe(_("Verifying"), 0);

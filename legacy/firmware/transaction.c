@@ -356,7 +356,6 @@ uint32_t compile_script_sig(uint32_t address_type, const uint8_t *pubkeyhash,
 uint32_t compile_script_multisig(const CoinInfo *coin,
                                  const MultisigRedeemScriptType *multisig,
                                  uint8_t *out) {
-  if (!multisig->has_m) return 0;
   const uint32_t m = multisig->m;
   const uint32_t n = cryptoMultisigPubkeyCount(multisig);
   if (m < 1 || m > 15) return 0;
@@ -386,7 +385,6 @@ uint32_t compile_script_multisig(const CoinInfo *coin,
 uint32_t compile_script_multisig_hash(const CoinInfo *coin,
                                       const MultisigRedeemScriptType *multisig,
                                       uint8_t *hash) {
-  if (!multisig->has_m) return 0;
   const uint32_t m = multisig->m;
   const uint32_t n = cryptoMultisigPubkeyCount(multisig);
   if (m < 1 || m > 15) return 0;
