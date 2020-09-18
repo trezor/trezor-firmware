@@ -31744,7 +31744,12 @@
             "t1_enabled": "no",
             "t2_enabled": "yes",
             "type": "coin",
-            "wallet": []
+            "wallet": [
+                {
+                    "name": "Binance Wallet",
+                    "url": "https://binance.org/unlock"
+                }
+            ]
         },
         "misc:EOS": {
             "links": {

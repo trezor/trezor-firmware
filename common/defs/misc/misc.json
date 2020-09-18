@@ -196,7 +196,9 @@
         "links": {
             "Homepage": "https://binance.org"
         },
-        "wallet": {},
+        "wallet": {
+            "Binance Wallet": "https://binance.org/unlock"
+        },
         "blockchain_link": null
     },
     {
