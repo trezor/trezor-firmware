@@ -50,7 +50,7 @@ def from_json(json_dict):
 
     return messages.TransactionType(
         version=json_dict["version"],
-        lock_time=json_dict.get("locktime"),
+        lock_time=json_dict.get("locktime", 0),
         inputs=[make_input(vin) for vin in json_dict["vin"]],
         bin_outputs=[make_bin_output(vout) for vout in json_dict["vout"]],
     )
