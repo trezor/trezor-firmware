@@ -51,7 +51,6 @@ void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg) {
   resp->node.chain_code.size = 32;
   memcpy(resp->node.chain_code.bytes, node->chain_code, 32);
   resp->node.has_private_key = false;
-  resp->node.has_public_key = true;
   resp->node.public_key.size = 33;
   memcpy(resp->node.public_key.bytes, node->public_key, 33);
 

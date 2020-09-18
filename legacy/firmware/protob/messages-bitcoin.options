@@ -69,3 +69,21 @@ OwnershipId.ownership_id                                    max_size:32
 AuthorizeCoinJoin.coordinator                               max_size:18
 AuthorizeCoinJoin.address_n                                 max_count:8
 AuthorizeCoinJoin.coin_name                                 max_size:21
+
+TxAckInputType.address_n                                    max_count:8
+TxAckInputType.prev_hash                                    max_size:32
+TxAckInputType.script_sig                                   max_size:1650
+TxAckInputType.witness                                      max_size:109
+TxAckInputType.ownership_proof                              max_size:171
+TxAckInputType.commitment_data                              max_size:32
+
+TxAckOutputType.address                                     max_size:130
+TxAckOutputType.address_n                                   max_count:8
+TxAckOutputType.op_return_data                              max_size:80
+
+TxAckPrevInputType.prev_hash                                max_size:32
+TxAckPrevInputType.script_sig                               max_size:1650
+
+TxAckPrevOutputType.script_pubkey                           max_size:520
+
+TxAckPrevExtraDataWrapper.extra_data_chunk                  max_size:1024
