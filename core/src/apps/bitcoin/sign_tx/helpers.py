@@ -189,7 +189,7 @@ def request_tx_prev_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: by
     return sanitize_tx_prev_input(ack.tx.input, coin)
 
 
-def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo) -> Awaitable[TxAckOutputType]:  # type: ignore  # noqa: F811
+def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo) -> Awaitable[TxAckOutputType]:  # type: ignore
     assert tx_req.details is not None
     tx_req.request_type = TXOUTPUT
     tx_req.details.request_index = i
@@ -198,7 +198,7 @@ def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo) -> Awaitable[Tx
     return sanitize_tx_output(ack.tx.output, coin)
 
 
-def request_tx_prev_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[TxAckPrevOutputType]:  # type: ignore  # noqa: F811
+def request_tx_prev_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[TxAckPrevOutputType]:  # type: ignore
     assert tx_req.details is not None
     tx_req.request_type = TXOUTPUT
     tx_req.details.request_index = i
