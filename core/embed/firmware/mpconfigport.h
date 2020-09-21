@@ -71,9 +71,7 @@
 #define MICROPY_REPL_AUTO_INDENT    (1)
 #define MICROPY_LONGINT_IMPL        (MICROPY_LONGINT_IMPL_MPZ)
 #define MICROPY_ENABLE_SOURCE_LINE  (1)
-#ifndef MICROPY_FLOAT_IMPL // can be configured by each board via mpconfigboard.mk
 #define MICROPY_FLOAT_IMPL          (MICROPY_FLOAT_IMPL_FLOAT)
-#endif
 #define MICROPY_STREAMS_NON_BLOCK   (1)
 #define MICROPY_MODULE_WEAK_LINKS   (1)
 #define MICROPY_CAN_OVERRIDE_BUILTINS (0)
@@ -93,6 +91,7 @@
 #define MICROPY_PY_BUILTINS_MEMORYVIEW (1)
 #define MICROPY_PY_BUILTINS_FROZENSET (0)
 #define MICROPY_PY_BUILTINS_SLICE_ATTRS (1)
+#define MICROPY_PY_BUILTINS_SLICE_INDICES (0)
 #define MICROPY_PY_BUILTINS_ROUND_INT (0)
 #define MICROPY_PY_REVERSE_SPECIAL_METHODS (0)
 #define MICROPY_PY_ALL_SPECIAL_METHODS (0)
@@ -170,14 +169,9 @@
 
 #define MP_SSIZE_MAX (0x0fffffff)
 
-#define UINT_FMT "%u"
-#define INT_FMT "%d"
-
 typedef int mp_int_t; // must be pointer size
 typedef unsigned int mp_uint_t; // must be pointer size
 typedef long mp_off_t;
-
-#define MP_PLAT_PRINT_STRN(str, len) mp_hal_stdout_tx_strn_cooked(str, len)
 
 #include "irq.h"
 

@@ -9,7 +9,9 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
-SOURCE_MOD = []
+SOURCE_MOD = [
+    'vendor/micropython/extmod/vfs_posix_file.c',
+]
 if EVERYTHING:
     SOURCE_MOD_SECP256K1_ZKP = []
 
@@ -304,8 +306,8 @@ SOURCE_UNIX = [
     'embed/unix/sdcard.c',
     'embed/unix/touch.c',
     'embed/unix/usb.c',
+    'vendor/micropython/lib/utils/gchelper_generic.c',
     'vendor/micropython/ports/unix/alloc.c',
-    'vendor/micropython/ports/unix/file.c',
     'vendor/micropython/ports/unix/gccollect.c',
     'vendor/micropython/ports/unix/input.c',
     'vendor/micropython/ports/unix/unix_mphal.c',
