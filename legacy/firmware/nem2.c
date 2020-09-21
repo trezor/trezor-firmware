@@ -462,8 +462,9 @@ bool nem_fsmMosaicCreation(nem_transaction_ctx *context,
       mosaic_creation->definition.supply,
       mosaic_creation->definition.mutable_supply,
       mosaic_creation->definition.transferable,
-      mosaic_creation->definition.levy, mosaic_creation->definition.fee,
-      mosaic_creation->definition.levy_address,
+      mosaic_creation->definition.has_levy ? mosaic_creation->definition.levy
+                                           : 0,
+      mosaic_creation->definition.fee, mosaic_creation->definition.levy_address,
       mosaic_creation->definition.levy_namespace,
       mosaic_creation->definition.levy_mosaic, mosaic_creation->sink,
       mosaic_creation->fee);
