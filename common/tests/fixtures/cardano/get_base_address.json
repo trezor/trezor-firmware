@@ -22,7 +22,7 @@
         "address_type": "base",
         "staking_path": "m/1852'/1815'/4'/2/0",
         "network_id": 0,
-        "protocol_magic": 764824073
+        "protocol_magic": 42
       },
       "result": {
         "expected_address": "addr_test1qrv42wjda8r6mpfj40d36znlgfdcqp7jtj03ah8skh6u8wnrqua2vw243tmjfjt0h5wsru6appuz8c0pfd75ur7myyeqnsc9fs"

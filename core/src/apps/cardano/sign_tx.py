@@ -72,7 +72,7 @@ async def sign_tx(
         if msg.fee > LOVELACE_MAX_SUPPLY:
             raise wire.ProcessError("Fee is out of range!")
 
-        _validate_network_info(msg.network_id, msg.protocol_magic)
+        validate_network_info(msg.network_id, msg.protocol_magic)
 
         for i in msg.inputs:
             await validate_path(ctx, validate_full_path, keychain, i.address_n, CURVE)
@@ -97,7 +97,7 @@ async def sign_tx(
     return tx
 
 
-def _validate_network_info(network_id: int, protocol_magic: int) -> None:
+def validate_network_info(network_id: int, protocol_magic: int) -> None:
     """
     We are only concerned about checking that both network_id and protocol_magic
     belong to the mainnet or that both belong to a testnet. We don't need to check for

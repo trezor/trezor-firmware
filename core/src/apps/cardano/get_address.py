@@ -13,6 +13,7 @@ from .layout import (
     show_warning_address_foreign_staking_key,
     show_warning_address_pointer,
 )
+from .sign_tx import validate_network_info
 
 if False:
     from trezor.messages import CardanoAddressParametersType, CardanoGetAddress
@@ -27,6 +28,8 @@ async def get_address(
     await paths.validate_path(
         ctx, validate_full_path, keychain, address_parameters.address_n, CURVE
     )
+
+    validate_network_info(msg.network_id, msg.protocol_magic)
 
     try:
         address = derive_human_readable_address(
@@ -54,9 +57,9 @@ async def _display_address(
 ) -> None:
     await _show_staking_warnings(ctx, keychain, address_parameters)
 
-    network = None
+    network_name = None
     if not protocol_magics.is_mainnet(protocol_magic):
-        network = protocol_magic
+        network_name = protocol_magics.to_ui_string(protocol_magic)
 
     while True:
         if await show_address(
@@ -64,7 +67,7 @@ async def _display_address(
             address,
             address_parameters.address_type,
             address_parameters.address_n,
-            network=network,
+            network=network_name,
         ):
             break
         if await show_qr(

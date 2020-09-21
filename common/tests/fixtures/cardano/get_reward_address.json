@@ -20,7 +20,7 @@
         "path": "m/1852'/1815'/0'/2/0",
         "address_type": "reward",
         "network_id": 0,
-        "protocol_magic": 764824073
+        "protocol_magic": 42
       },
       "result": {
         "expected_address": "stake_test1uqfz49rtntfa9h0s98f6s28sg69weemgjhc4e8hm66d5yac643znq"
