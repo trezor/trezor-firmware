@@ -193,7 +193,7 @@ async def show_address(
     address: str,
     address_type: EnumTypeCardanoAddressType,
     path: List[int],
-    network: int = None,
+    network: str = None,
 ) -> bool:
     """
     Custom show_address function is needed because cardano addresses don't
@@ -204,28 +204,28 @@ async def show_address(
     t1 = Text(address_type_label, ui.ICON_RECEIVE, ui.GREEN)
 
     lines_per_page = 5
-    first_page_lines_used = 0
+    lines_used_on_first_page = 0
 
     # assemble first page to be displayed (path + network + whatever part of the address fits)
     if network is not None:
-        t1.normal("%s network" % protocol_magics.to_ui_string(network))
-        first_page_lines_used += 1
+        t1.normal("%s network" % network)
+        lines_used_on_first_page += 1
 
     path_str = address_n_to_str(path)
     t1.mono(path_str)
-    first_page_lines_used = min(
-        first_page_lines_used + math.ceil(len(path_str) / _MAX_MONO_LINE),
+    lines_used_on_first_page = min(
+        lines_used_on_first_page + math.ceil(len(path_str) / _MAX_MONO_LINE),
         lines_per_page,
     )
 
     address_lines = list(chunks(address, 17))
-    for address_line in address_lines[: lines_per_page - first_page_lines_used]:
+    for address_line in address_lines[: lines_per_page - lines_used_on_first_page]:
         t1.bold(address_line)
 
     # append remaining pages containing the rest of the address
     pages = [t1] + _paginate_lines(
         address_lines,
-        lines_per_page - first_page_lines_used,
+        lines_per_page - lines_used_on_first_page,
         address_type_label,
         ui.ICON_RECEIVE,
         lines_per_page,

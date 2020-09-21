@@ -42,7 +42,7 @@
         "path": "m/44'/1815'/0'/0/0",
         "address_type": "byron",
         "protocol_magic": 42,
-        "network_id": 1
+        "network_id": 0
       },
       "result": {
         "expected_address": "2657WMsDfac5F3zbgs9BwNWx3dhGAJERkAL93gPa68NJ2i8mbCHm2pLUHWSj8Mfea"
@@ -53,7 +53,7 @@
         "path": "m/44'/1815'/0'/0/1",
         "address_type": "byron",
         "protocol_magic": 42,
-        "network_id": 1
+        "network_id": 0
       },
       "result": {
         "expected_address": "2657WMsDfac6ezKWszxLFqJjSUgpg9NgxKc1koqi24sVpRaPhiwMaExk4useKn5HA"
@@ -64,7 +64,7 @@
         "path": "m/44'/1815'/0'/0/2",
         "address_type": "byron",
         "protocol_magic": 42,
-        "network_id": 1
+        "network_id": 0
       },
       "result":  {
         "expected_address": "2657WMsDfac7hr1ioJGr6g7r6JRx4r1My8Rj91tcPTeVjJDpfBYKURrPG2zVLx2Sq"
