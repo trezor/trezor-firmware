@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - The `safety-checks` setting gained new possible value `PromptTemporarily` which overrides safety checks until device reboot.  [#1133]
+- Protobuf codec now enforces `required` fields and pre-fills default values.  [#379]
+- `TxAck` messages are now decoded into "polymorphic" subtypes instead of the common `TxAck` type.
 
 ### Deprecated
 
@@ -289,6 +291,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - First public release.
 
+[#379]: https://github.com/trezor/trezor-firmware/issues/379
 [#948]: https://github.com/trezor/trezor-firmware/issues/948
 [#958]: https://github.com/trezor/trezor-firmware/issues/958
 [#982]: https://github.com/trezor/trezor-firmware/issues/982
