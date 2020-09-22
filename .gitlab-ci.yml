@@ -1,7 +1,6 @@
 variables:
-  # Using git fetch is faster
   # See https://docs.gitlab.com/ce/user/project/pipelines/settings.html#git-strategy
-  GIT_STRATEGY: "fetch"
+  GIT_STRATEGY: "clone"
 
   # Init submodules
   # See https://docs.gitlab.com/ee/ci/yaml/#git-submodule-strategy
