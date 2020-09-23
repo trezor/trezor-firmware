@@ -5,18 +5,18 @@ from trezor.crypto import bip32, bip39
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxAckInput import TxAckInput
 from trezor.messages.TxAckInputWrapper import TxAckInputWrapper
-from trezor.messages.TxAckInputType import TxAckInputType
+from trezor.messages.TxInput import TxInput
 from trezor.messages.TxAckOutput import TxAckOutput
 from trezor.messages.TxAckOutputWrapper import TxAckOutputWrapper
-from trezor.messages.TxAckOutputType import TxAckOutputType
+from trezor.messages.TxOutput import TxOutput
 from trezor.messages.TxAckPrevMeta import TxAckPrevMeta
-from trezor.messages.TxAckPrevTxType import TxAckPrevTxType
+from trezor.messages.PrevTx import PrevTx
 from trezor.messages.TxAckPrevInput import TxAckPrevInput
 from trezor.messages.TxAckPrevInputWrapper import TxAckPrevInputWrapper
-from trezor.messages.TxAckPrevInputType import TxAckPrevInputType
+from trezor.messages.PrevInput import PrevInput
 from trezor.messages.TxAckPrevOutput import TxAckPrevOutput
 from trezor.messages.TxAckPrevOutputWrapper import TxAckPrevOutputWrapper
-from trezor.messages.TxAckPrevOutputType import TxAckPrevOutputType
+from trezor.messages.PrevOutput import PrevOutput
 from trezor.messages.TxRequest import TxRequest
 from trezor.messages.RequestType import TXINPUT, TXOUTPUT, TXMETA
 from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
@@ -45,22 +45,22 @@ class TestSignTxFeeThreshold(unittest.TestCase):
     def test_over_fee_threshold(self):
         coin_bitcoin = coins.by_name('Bitcoin')
 
-        ptx1 = TxAckPrevTxType(version=1, lock_time=0, inputs_count=2, outputs_count=1, extra_data_len=0)
-        pinp1 = TxAckPrevInputType(script_sig=unhexlify('483045022072ba61305fe7cb542d142b8f3299a7b10f9ea61f6ffaab5dca8142601869d53c0221009a8027ed79eb3b9bc13577ac2853269323434558528c6b6a7e542be46e7e9a820141047a2d177c0f3626fc68c53610b0270fa6156181f46586c679ba6a88b34c6f4874686390b4d92e5769fbb89c8050b984f4ec0b257a0e5c4ff8bd3b035a51709503'),
+        ptx1 = PrevTx(version=1, lock_time=0, inputs_count=2, outputs_count=1, extra_data_len=0)
+        pinp1 = PrevInput(script_sig=unhexlify('483045022072ba61305fe7cb542d142b8f3299a7b10f9ea61f6ffaab5dca8142601869d53c0221009a8027ed79eb3b9bc13577ac2853269323434558528c6b6a7e542be46e7e9a820141047a2d177c0f3626fc68c53610b0270fa6156181f46586c679ba6a88b34c6f4874686390b4d92e5769fbb89c8050b984f4ec0b257a0e5c4ff8bd3b035a51709503'),
                             prev_hash=unhexlify('c16a03f1cf8f99f6b5297ab614586cacec784c2d259af245909dedb0e39eddcf'),
                             prev_index=1)
-        pinp2 = TxAckPrevInputType(script_sig=unhexlify('48304502200fd63adc8f6cb34359dc6cca9e5458d7ea50376cbd0a74514880735e6d1b8a4c0221008b6ead7fe5fbdab7319d6dfede3a0bc8e2a7c5b5a9301636d1de4aa31a3ee9b101410486ad608470d796236b003635718dfc07c0cac0cfc3bfc3079e4f491b0426f0676e6643a39198e8e7bdaffb94f4b49ea21baa107ec2e237368872836073668214'),
+        pinp2 = PrevInput(script_sig=unhexlify('48304502200fd63adc8f6cb34359dc6cca9e5458d7ea50376cbd0a74514880735e6d1b8a4c0221008b6ead7fe5fbdab7319d6dfede3a0bc8e2a7c5b5a9301636d1de4aa31a3ee9b101410486ad608470d796236b003635718dfc07c0cac0cfc3bfc3079e4f491b0426f0676e6643a39198e8e7bdaffb94f4b49ea21baa107ec2e237368872836073668214'),
                             prev_hash=unhexlify('1ae39a2f8d59670c8fc61179148a8e61e039d0d9e8ab08610cb69b4a19453eaf'),
                             prev_index=1)
-        pout1 = TxAckPrevOutputType(script_pubkey=unhexlify('76a91424a56db43cf6f2b02e838ea493f95d8d6047423188ac'),
+        pout1 = PrevOutput(script_pubkey=unhexlify('76a91424a56db43cf6f2b02e838ea493f95d8d6047423188ac'),
                                 amount=390000)
 
-        inp1 = TxAckInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
+        inp1 = TxInput(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
                            # amount=390000,
                            prev_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882'),
                            prev_index=0,
                            amount=None)
-        out1 = TxAckOutputType(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
+        out1 = TxOutput(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
                             amount=390000 - 100000,  # fee increased to 100000 => too high
                             multisig=None,
                             script_type=OutputScriptType.PAYTOADDRESS,
@@ -108,25 +108,25 @@ class TestSignTxFeeThreshold(unittest.TestCase):
     def test_under_threshold(self):
         coin_bitcoin = coins.by_name('Bitcoin')
 
-        ptx1 = TxAckPrevTxType(version=1, lock_time=0, inputs_count=2, outputs_count=1, extra_data_len=0)
-        pinp1 = TxAckPrevInputType(script_sig=unhexlify('483045022072ba61305fe7cb542d142b8f3299a7b10f9ea61f6ffaab5dca8142601869d53c0221009a8027ed79eb3b9bc13577ac2853269323434558528c6b6a7e542be46e7e9a820141047a2d177c0f3626fc68c53610b0270fa6156181f46586c679ba6a88b34c6f4874686390b4d92e5769fbb89c8050b984f4ec0b257a0e5c4ff8bd3b035a51709503'),
+        ptx1 = PrevTx(version=1, lock_time=0, inputs_count=2, outputs_count=1, extra_data_len=0)
+        pinp1 = PrevInput(script_sig=unhexlify('483045022072ba61305fe7cb542d142b8f3299a7b10f9ea61f6ffaab5dca8142601869d53c0221009a8027ed79eb3b9bc13577ac2853269323434558528c6b6a7e542be46e7e9a820141047a2d177c0f3626fc68c53610b0270fa6156181f46586c679ba6a88b34c6f4874686390b4d92e5769fbb89c8050b984f4ec0b257a0e5c4ff8bd3b035a51709503'),
                             prev_hash=unhexlify('c16a03f1cf8f99f6b5297ab614586cacec784c2d259af245909dedb0e39eddcf'),
                             prev_index=1,
                             sequence=0xffff_ffff)
-        pinp2 = TxAckPrevInputType(script_sig=unhexlify('48304502200fd63adc8f6cb34359dc6cca9e5458d7ea50376cbd0a74514880735e6d1b8a4c0221008b6ead7fe5fbdab7319d6dfede3a0bc8e2a7c5b5a9301636d1de4aa31a3ee9b101410486ad608470d796236b003635718dfc07c0cac0cfc3bfc3079e4f491b0426f0676e6643a39198e8e7bdaffb94f4b49ea21baa107ec2e237368872836073668214'),
+        pinp2 = PrevInput(script_sig=unhexlify('48304502200fd63adc8f6cb34359dc6cca9e5458d7ea50376cbd0a74514880735e6d1b8a4c0221008b6ead7fe5fbdab7319d6dfede3a0bc8e2a7c5b5a9301636d1de4aa31a3ee9b101410486ad608470d796236b003635718dfc07c0cac0cfc3bfc3079e4f491b0426f0676e6643a39198e8e7bdaffb94f4b49ea21baa107ec2e237368872836073668214'),
                             prev_hash=unhexlify('1ae39a2f8d59670c8fc61179148a8e61e039d0d9e8ab08610cb69b4a19453eaf'),
                             prev_index=1,
                             sequence=0xffff_ffff)
-        pout1 = TxAckPrevOutputType(script_pubkey=unhexlify('76a91424a56db43cf6f2b02e838ea493f95d8d6047423188ac'),
+        pout1 = PrevOutput(script_pubkey=unhexlify('76a91424a56db43cf6f2b02e838ea493f95d8d6047423188ac'),
                                 amount=390000)
 
-        inp1 = TxAckInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
+        inp1 = TxInput(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
                            amount=390000,
                            prev_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882'),
                            prev_index=0,
                            multisig=None,
                            sequence=0xffff_ffff)
-        out1 = TxAckOutputType(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
+        out1 = TxOutput(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
                             amount=390000 - 90000,  # fee increased to 90000, slightly less than the threshold
                             script_type=OutputScriptType.PAYTOADDRESS,
                             multisig=None,

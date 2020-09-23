@@ -13,7 +13,7 @@ if __debug__:
         pass
 
 
-class TxAckInputType(p.MessageType):
+class TxInput(p.MessageType):
 
     def __init__(
         self,

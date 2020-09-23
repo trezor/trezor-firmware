@@ -10,7 +10,7 @@ if __debug__:
         pass
 
 
-class TxAckPrevTxType(p.MessageType):
+class PrevTx(p.MessageType):
 
     def __init__(
         self,

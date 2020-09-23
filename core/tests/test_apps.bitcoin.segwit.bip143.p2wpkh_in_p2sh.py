@@ -7,9 +7,9 @@ from apps.bitcoin.writers import get_tx_hash
 from apps.common import coins
 from apps.common.keychain import Keychain
 from trezor.messages.SignTx import SignTx
-from trezor.messages.TxAckInputType import TxAckInputType
-from trezor.messages.TxAckOutputType import TxAckOutputType
-from trezor.messages.TxAckPrevOutputType import TxAckPrevOutputType
+from trezor.messages.TxInput import TxInput
+from trezor.messages.TxOutput import TxOutput
+from trezor.messages.PrevOutput import PrevOutput
 from trezor.messages import InputScriptType
 from trezor.messages import OutputScriptType
 from trezor.crypto import bip39
@@ -19,7 +19,7 @@ class TestSegwitBip143(unittest.TestCase):
     # pylint: disable=C0301
 
     tx = SignTx(coin_name='Bitcoin', version=1, lock_time=0x00000492, inputs_count=1, outputs_count=2)
-    inp1 = TxAckInputType(address_n=[0],
+    inp1 = TxInput(address_n=[0],
                        # Trezor expects hash in reversed format
                        prev_hash=unhexlify('77541aeb3c4dac9260b68f74f44c973081a9d4cb2ebe8038b2d70faa201b6bdb'),
                        prev_index=1,
@@ -27,12 +27,12 @@ class TestSegwitBip143(unittest.TestCase):
                        amount=1000000000,  # 10 btc
                        script_type=InputScriptType.SPENDP2SHWITNESS,  # TODO: is this correct?
                        sequence=0xfffffffe)
-    out1 = TxAckOutputType(address='1Fyxts6r24DpEieygQiNnWxUdb18ANa5p7',
+    out1 = TxOutput(address='1Fyxts6r24DpEieygQiNnWxUdb18ANa5p7',
                         amount=0x000000000bebb4b8,
                         script_type=OutputScriptType.PAYTOADDRESS,
                         multisig=None,
                         address_n=[])
-    out2 = TxAckOutputType(address='1Q5YjKVj5yQWHBBsyEBamkfph3cA6G9KK8',
+    out2 = TxOutput(address='1Q5YjKVj5yQWHBBsyEBamkfph3cA6G9KK8',
                         amount=0x000000002faf0800,
                         script_type=OutputScriptType.PAYTOADDRESS,
                         multisig=None,
@@ -59,7 +59,7 @@ class TestSegwitBip143(unittest.TestCase):
 
         for txo in [self.out1, self.out2]:
             script_pubkey = output_derive_script(txo.address, coin)
-            txo_bin = TxAckPrevOutputType(amount=txo.amount, script_pubkey=script_pubkey)
+            txo_bin = PrevOutput(amount=txo.amount, script_pubkey=script_pubkey)
             bip143.hash143_add_output(txo_bin, script_pubkey)
 
         outputs_hash = get_tx_hash(bip143.h_outputs, double=coin.sign_hash_double)
@@ -72,7 +72,7 @@ class TestSegwitBip143(unittest.TestCase):
         bip143.hash143_add_input(self.inp1)
         for txo in [self.out1, self.out2]:
             script_pubkey = output_derive_script(txo.address, coin)
-            txo_bin = TxAckPrevOutputType(amount=txo.amount, script_pubkey=script_pubkey)
+            txo_bin = PrevOutput(amount=txo.amount, script_pubkey=script_pubkey)
             bip143.hash143_add_output(txo_bin, script_pubkey)
 
         keychain = Keychain(seed, coin.curve_name, [[]])

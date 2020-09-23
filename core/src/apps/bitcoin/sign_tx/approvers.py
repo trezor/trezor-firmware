@@ -10,8 +10,8 @@ from . import helpers, tx_weight
 
 if False:
     from trezor.messages.SignTx import SignTx
-    from trezor.messages.TxAckInputType import TxAckInputType
-    from trezor.messages.TxAckOutputType import TxAckOutputType
+    from trezor.messages.TxInput import TxInput
+    from trezor.messages.TxOutput import TxOutput
 
     from apps.common.coininfo import CoinInfo
 
@@ -38,25 +38,23 @@ class Approver:
         self.total_out = 0  # sum of output amounts
         self.change_out = 0  # change output amount
 
-    async def add_internal_input(self, txi: TxAckInputType) -> None:
+    async def add_internal_input(self, txi: TxInput) -> None:
         self.weight.add_input(txi)
         self.total_in += txi.amount
         self.min_sequence = min(self.min_sequence, txi.sequence)
 
-    def add_external_input(self, txi: TxAckInputType) -> None:
+    def add_external_input(self, txi: TxInput) -> None:
         self.weight.add_input(txi)
         self.total_in += txi.amount
         self.external_in += txi.amount
         self.min_sequence = min(self.min_sequence, txi.sequence)
 
-    def add_change_output(self, txo: TxAckOutputType, script_pubkey: bytes) -> None:
+    def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         self.weight.add_output(script_pubkey)
         self.total_out += txo.amount
         self.change_out += txo.amount
 
-    async def add_external_output(
-        self, txo: TxAckOutputType, script_pubkey: bytes
-    ) -> None:
+    async def add_external_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         self.weight.add_output(script_pubkey)
         self.total_out += txo.amount
 
@@ -72,19 +70,17 @@ class BasicApprover(Approver):
         super().__init__(tx, coin)
         self.change_count = 0  # the number of change-outputs
 
-    async def add_internal_input(self, txi: TxAckInputType) -> None:
+    async def add_internal_input(self, txi: TxInput) -> None:
         if not addresses.validate_full_path(txi.address_n, self.coin, txi.script_type):
             await helpers.confirm_foreign_address(txi.address_n)
 
         await super().add_internal_input(txi)
 
-    def add_change_output(self, txo: TxAckOutputType, script_pubkey: bytes) -> None:
+    def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         super().add_change_output(txo, script_pubkey)
         self.change_count += 1
 
-    async def add_external_output(
-        self, txo: TxAckOutputType, script_pubkey: bytes
-    ) -> None:
+    async def add_external_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         await super().add_external_output(txo, script_pubkey)
         await helpers.confirm_output(txo, self.coin)
 
@@ -145,22 +141,20 @@ class CoinJoinApprover(Approver):
         # flag indicating whether our outputs are gaining any anonymity
         self.anonymity = False
 
-    async def add_internal_input(self, txi: TxAckInputType) -> None:
+    async def add_internal_input(self, txi: TxInput) -> None:
         self.our_weight.add_input(txi)
         if not self.authorization.check_sign_tx_input(txi, self.coin):
             raise wire.ProcessError("Unauthorized path")
 
         await super().add_internal_input(txi)
 
-    def add_change_output(self, txo: TxAckOutputType, script_pubkey: bytes) -> None:
+    def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         super().add_change_output(txo, script_pubkey)
         self._add_output(txo, script_pubkey)
         self.our_weight.add_output(script_pubkey)
         self.group_our_count += 1
 
-    async def add_external_output(
-        self, txo: TxAckOutputType, script_pubkey: bytes
-    ) -> None:
+    async def add_external_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         await super().add_external_output(txo, script_pubkey)
         self._add_output(txo, script_pubkey)
 
@@ -209,7 +203,7 @@ class CoinJoinApprover(Approver):
             / decimal_divisor
         )
 
-    def _add_output(self, txo: TxAckOutputType, script_pubkey: bytes) -> None:
+    def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         # Assumption: CoinJoin outputs are grouped by amount. (If this assumption is
         # not satisfied, then we will compute a lower coordinator fee, which may lead
         # us to wrongfully decline the transaction.)

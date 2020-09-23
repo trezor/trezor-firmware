@@ -15,7 +15,7 @@ from . import omni
 if False:
     from typing import Iterator
     from trezor import wire
-    from trezor.messages.TxAckOutputType import TxAckOutputType
+    from trezor.messages.TxOutput import TxOutput
 
     from apps.common.coininfo import CoinInfo
 
@@ -34,9 +34,7 @@ def split_op_return(data: str) -> Iterator[str]:
     return chunks(data, 18)
 
 
-async def confirm_output(
-    ctx: wire.Context, output: TxAckOutputType, coin: CoinInfo
-) -> None:
+async def confirm_output(ctx: wire.Context, output: TxOutput, coin: CoinInfo) -> None:
     if output.script_type == OutputScriptType.PAYTOOPRETURN:
         data = output.op_return_data
         assert data is not None

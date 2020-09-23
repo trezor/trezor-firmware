@@ -25,8 +25,8 @@ if False:
     from typing import List, Optional, Tuple
 
     from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
-    from trezor.messages.TxAckInputType import TxAckInputType
-    from trezor.messages.TxAckInputType import EnumTypeInputScriptType
+    from trezor.messages.TxInput import TxInput
+    from trezor.messages.TxInput import EnumTypeInputScriptType
 
     from apps.common.coininfo import CoinInfo
 
@@ -115,7 +115,7 @@ def output_derive_script(address: str, coin: CoinInfo) -> bytes:
 # see https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#specification
 # item 5 for details
 def bip143_derive_script_code(
-    txi: TxAckInputType, public_keys: List[bytes], threshold: int, coin: CoinInfo
+    txi: TxInput, public_keys: List[bytes], threshold: int, coin: CoinInfo
 ) -> bytearray:
     if len(public_keys) > 1:
         return output_script_multisig(public_keys, threshold)

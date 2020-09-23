@@ -13,7 +13,7 @@ if __debug__:
         pass
 
 
-class TxAckOutputType(p.MessageType):
+class TxOutput(p.MessageType):
 
     def __init__(
         self,

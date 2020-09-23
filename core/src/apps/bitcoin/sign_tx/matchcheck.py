@@ -7,8 +7,8 @@ from ..common import BIP32_WALLET_DEPTH
 if False:
     from typing import Any, Union, Generic, TypeVar
 
-    from trezor.messages.TxAckInputType import TxAckInputType
-    from trezor.messages.TxAckOutputType import TxAckOutputType
+    from trezor.messages.TxInput import TxInput
+    from trezor.messages.TxOutput import TxOutput
 
     T = TypeVar("T")
 else:
@@ -46,13 +46,13 @@ class MatchChecker(Generic[T]):
         self.attribute = self.UNDEFINED  # type: Union[object, T]
         self.read_only = False  # Failsafe to ensure that add_input() is not accidentally called after output_matches().
 
-    def attribute_from_tx(self, txio: Union[TxAckInputType, TxAckOutputType]) -> T:
+    def attribute_from_tx(self, txio: Union[TxInput, TxOutput]) -> T:
         # Return the attribute from the txio, which is to be used for matching.
         # If the txio is invalid for matching, then return an object which
         # evaluates as a boolean False.
         raise NotImplementedError
 
-    def add_input(self, txi: TxAckInputType) -> None:
+    def add_input(self, txi: TxInput) -> None:
         ensure(not self.read_only)
 
         if self.attribute is self.MISMATCH:
@@ -66,7 +66,7 @@ class MatchChecker(Generic[T]):
         elif self.attribute != added_attribute:
             self.attribute = self.MISMATCH
 
-    def check_input(self, txi: TxAckInputType) -> None:
+    def check_input(self, txi: TxInput) -> None:
         if self.attribute is self.MISMATCH:
             return  # There was already a mismatch when adding inputs, ignore it now.
 
@@ -75,7 +75,7 @@ class MatchChecker(Generic[T]):
         if self.attribute != self.attribute_from_tx(txi):
             raise wire.ProcessError("Transaction has changed during signing")
 
-    def output_matches(self, txo: TxAckOutputType) -> bool:
+    def output_matches(self, txo: TxOutput) -> bool:
         self.read_only = True
 
         if self.attribute is self.MISMATCH:
@@ -85,14 +85,14 @@ class MatchChecker(Generic[T]):
 
 
 class WalletPathChecker(MatchChecker):
-    def attribute_from_tx(self, txio: Union[TxAckInputType, TxAckOutputType]) -> Any:
+    def attribute_from_tx(self, txio: Union[TxInput, TxOutput]) -> Any:
         if len(txio.address_n) < BIP32_WALLET_DEPTH:
             return None
         return txio.address_n[:-BIP32_WALLET_DEPTH]
 
 
 class MultisigFingerprintChecker(MatchChecker):
-    def attribute_from_tx(self, txio: Union[TxAckInputType, TxAckOutputType]) -> Any:
+    def attribute_from_tx(self, txio: Union[TxInput, TxOutput]) -> Any:
         if not txio.multisig:
             return None
         return multisig.multisig_fingerprint(txio.multisig)
