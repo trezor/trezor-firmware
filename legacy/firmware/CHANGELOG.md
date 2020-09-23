@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 ### Changed
+- Bump nanobp dependency to 0.4.3.  [#1105]
 
 ### Deprecated
 
@@ -347,5 +348,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#965]: https://github.com/trezor/trezor-firmware/issues/965
 [#1030]: https://github.com/trezor/trezor-firmware/issues/1030
 [#1098]: https://github.com/trezor/trezor-firmware/issues/1098
+[#1105]: https://github.com/trezor/trezor-firmware/issues/1105
 [#1165]: https://github.com/trezor/trezor-firmware/pull/1165
 [#1188]: https://github.com/trezor/trezor-firmware/issues/1188
