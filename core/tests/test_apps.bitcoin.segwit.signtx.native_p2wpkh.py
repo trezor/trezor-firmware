@@ -27,7 +27,7 @@ from trezor import wire
 
 from apps.common import coins
 from apps.common.keychain import Keychain
-from apps.bitcoin.keychain import get_namespaces_for_coin
+from apps.bitcoin.keychain import get_schemas_for_coin
 from apps.bitcoin.sign_tx import helpers, bitcoin
 from apps.bitcoin.sign_tx.approvers import BasicApprover
 
@@ -157,7 +157,7 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             )),
         ]
 
-        ns = get_namespaces_for_coin(coin)
+        ns = get_schemas_for_coin(coin)
         keychain = Keychain(seed, coin.curve_name, ns)
         approver = BasicApprover(tx, coin)
         signer = bitcoin.Bitcoin(tx, keychain, coin, approver).signer()
@@ -286,7 +286,7 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             )),
         ]
 
-        ns = get_namespaces_for_coin(coin)
+        ns = get_schemas_for_coin(coin)
         keychain = Keychain(seed, coin.curve_name, ns)
         approver = BasicApprover(tx, coin)
         signer = bitcoin.Bitcoin(tx, keychain, coin, approver).signer()
@@ -347,7 +347,7 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
             None
         ]
 
-        ns = get_namespaces_for_coin(coin)
+        ns = get_schemas_for_coin(coin)
         keychain = Keychain(seed, coin.curve_name, ns)
         approver = BasicApprover(tx, coin)
         signer = bitcoin.Bitcoin(tx, keychain, coin, approver).signer()

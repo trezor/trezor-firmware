@@ -8,14 +8,8 @@ from trezor.messages.CardanoBlockchainPointerType import CardanoBlockchainPointe
 from apps.common import HARDENED, seed
 
 if not utils.BITCOIN_ONLY:
-    from apps.cardano.address import (
-        derive_human_readable_address,
-        validate_full_path,
-    )
-    from apps.cardano.byron_address import (
-        _get_address_root,
-        _address_hash,
-    )
+    from apps.cardano.address import derive_human_readable_address
+    from apps.cardano.byron_address import _address_hash
     from apps.cardano.helpers import network_ids, protocol_magics
     from apps.cardano.seed import Keychain
 
@@ -155,33 +149,6 @@ class TestCardanoAddress(unittest.TestCase):
 
         self.assertEqual(result, b'\x1c\xca\xee\xc9\x80\xaf}\xb0\x9a\xa8\x96E\xd6\xa4\xd1\xb4\x13\x85\xb9\xc2q\x1d5/{\x12"\xca')
 
-
-    def test_paths(self):
-        incorrect_derivation_paths = [
-            [HARDENED | 44],
-            [HARDENED | 44, HARDENED | 1815, HARDENED | 1815, HARDENED | 1815, HARDENED | 1815, HARDENED | 1815],
-            [HARDENED | 43, HARDENED | 1815, HARDENED | 1815, HARDENED | 1815, HARDENED | 1815],
-            [HARDENED | 44, HARDENED | 1816, HARDENED | 1815, HARDENED | 1815, HARDENED | 1815],
-            [HARDENED | 44, HARDENED | 1815, 0],
-            [HARDENED | 44, HARDENED | 1815, 0, 0],
-            [HARDENED | 44, HARDENED | 1815],
-            [HARDENED | 44, HARDENED | 1815, HARDENED | 0],
-            [HARDENED | 44, HARDENED | 1815, HARDENED | 1815, 1, 1],
-            [HARDENED | 44, HARDENED | 1815, HARDENED | 1815, 0, 0],  # a too large
-        ]
-        correct_derivation_paths = [
-            [HARDENED | 44, HARDENED | 1815, HARDENED | 0, 0, 1],
-            [HARDENED | 44, HARDENED | 1815, HARDENED | 9, 0, 4],
-            [HARDENED | 44, HARDENED | 1815, HARDENED | 0, 0, 9],
-            [HARDENED | 44, HARDENED | 1815, HARDENED | 0, 1, 1],
-            [HARDENED | 44, HARDENED | 1815, HARDENED | 0, 1, 9],
-        ]
-
-        for path in incorrect_derivation_paths:
-            self.assertFalse(validate_full_path(path))
-
-        for path in correct_derivation_paths:
-            self.assertTrue(validate_full_path(path))
 
     def test_slip39_128(self):
         mnemonics = [

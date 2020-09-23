@@ -20,15 +20,23 @@ class TestBitcoinKeychain(unittest.TestCase):
         self.assertEqual(coin.coin_name, "Bitcoin")
 
         valid_addresses = (
-            [44 | HARDENED, 0 | HARDENED],
-            [45 | HARDENED, 123456],
-            [48 | HARDENED, 0 | HARDENED],
-            [49 | HARDENED, 0 | HARDENED],
-            [84 | HARDENED, 0 | HARDENED],
+            [H_(44), H_(0), H_(0), 0, 0],
+            [H_(45), 99, 1, 1000],
+            [H_(48), H_(0), H_(0), H_(2), 1, 1000],
+            [H_(49), H_(0), H_(0), 0, 10],
+            [H_(84), H_(0), H_(0), 0, 10],
+            # Casa:
+            [49, 0, 0, 0, 10],
+            # Green:
+            [1, 1000],
+            [H_(3), H_(10), 4, 1000],
         )
         invalid_addresses = (
-            [43 | HARDENED, 0 | HARDENED],
-            [44 | HARDENED, 1 | HARDENED],
+            [H_(43), H_(0), H_(0), 0, 0],
+            [H_(44), H_(1), H_(0), 0, 0],
+            [44, 0, 0, 0, 0],
+            [H_(44), H_(0), H_(0)],
+            [H_(44), H_(0), H_(0), 0, 0, 0],
         )
 
         for addr in valid_addresses:
@@ -44,15 +52,23 @@ class TestBitcoinKeychain(unittest.TestCase):
         self.assertEqual(coin.coin_name, "Testnet")
 
         valid_addresses = (
-            [44 | HARDENED, 1 | HARDENED],
-            [45 | HARDENED, 123456],
-            [48 | HARDENED, 1 | HARDENED],
-            [49 | HARDENED, 1 | HARDENED],
-            [84 | HARDENED, 1 | HARDENED],
+            [H_(44), H_(1), H_(0), 0, 0],
+            [H_(45), 99, 1, 1000],
+            [H_(48), H_(1), H_(0), H_(2), 1, 1000],
+            [H_(49), H_(1), H_(0), 0, 10],
+            [H_(84), H_(1), H_(0), 0, 10],
+            # Casa:
+            [49, 1, 0, 0, 10],
+            # Green:
+            [1, 1000],
+            [H_(3), H_(10), 4, 1000],
         )
         invalid_addresses = (
-            [43 | HARDENED, 1 | HARDENED],
-            [44 | HARDENED, 0 | HARDENED],
+            [H_(43), H_(1), H_(0), 0, 0],
+            [H_(44), H_(0), H_(0), 0, 0],
+            [44, 1, 0, 0, 0],
+            [H_(44), H_(1), H_(0)],
+            [H_(44), H_(1), H_(0), 0, 0, 0],
         )
 
         for addr in valid_addresses:
@@ -64,7 +80,7 @@ class TestBitcoinKeychain(unittest.TestCase):
     def test_unspecified(self):
         keychain, coin = await_result(get_keychain_for_coin(wire.DUMMY_CONTEXT, None))
         self.assertEqual(coin.coin_name, "Bitcoin")
-        keychain.derive([44 | HARDENED, 0 | HARDENED])
+        keychain.derive([H_(44), H_(0), H_(0), 0, 0])
 
     def test_unknown(self):
         with self.assertRaises(wire.DataError):
@@ -85,20 +101,29 @@ class TestAltcoinKeychains(unittest.TestCase):
         self.assertEqual(coin.coin_name, "Bcash")
 
         self.assertFalse(coin.segwit)
+        self.assertIsNotNone(coin.fork_id)
+
         valid_addresses = (
-            [44 | HARDENED, 145 | HARDENED],
-            [44 | HARDENED, 0 | HARDENED],
-            [45 | HARDENED, 123456],
-            [48 | HARDENED, 145 | HARDENED],
-            [48 | HARDENED, 0 | HARDENED],
+            [H_(44), H_(145), H_(0), 0, 0],
+            # Bitcoin paths should be allowed, as Bcash has strong replay protection
+            [H_(44), H_(0), H_(0), 0, 0],
+            [H_(45), 99, 1, 1000],
+            [H_(48), H_(145), H_(0), H_(0), 1, 1000],
+            [H_(48), H_(0), H_(0), H_(0), 1, 1000],
         )
         invalid_addresses = (
-            [43 | HARDENED, 145 | HARDENED],
-            [43 | HARDENED, 0 | HARDENED],
-            [49 | HARDENED, 145 | HARDENED],
-            [49 | HARDENED, 0 | HARDENED],
-            [84 | HARDENED, 145 | HARDENED],
-            [84 | HARDENED, 0 | HARDENED],
+            [H_(43), H_(145), H_(0), 0, 0],
+            [44, 145, 0, 0, 0],
+            [H_(44), H_(145), H_(0)],
+            [H_(44), H_(145), H_(0), 0, 0, 0],
+            # segwit:
+            [H_(49), H_(145), H_(0), 0, 10],
+            [H_(84), H_(145), H_(0), 0, 10],
+            # Casa:
+            [49, 145, 0, 0, 10],
+            # Green:
+            [1, 1000],
+            [H_(3), 10, 4, 1000],
         )
 
         for addr in valid_addresses:
@@ -115,18 +140,27 @@ class TestAltcoinKeychains(unittest.TestCase):
 
         self.assertTrue(coin.segwit)
         valid_addresses = (
-            [44 | HARDENED, 2 | HARDENED],
-            [45 | HARDENED, 123456],
-            [48 | HARDENED, 2 | HARDENED],
-            [49 | HARDENED, 2 | HARDENED],
-            [84 | HARDENED, 2 | HARDENED],
+            [H_(44), H_(2), H_(0), 0, 0],
+            [H_(45), 99, 1, 1000],
+            [H_(48), H_(2), H_(0), H_(2), 1, 1000],
+            [H_(49), H_(2), H_(0), 0, 10],
+            [H_(84), H_(2), H_(0), 0, 10],
         )
         invalid_addresses = (
-            [43 | HARDENED, 2 | HARDENED],
-            [44 | HARDENED, 0 | HARDENED],
-            [48 | HARDENED, 0 | HARDENED],
-            [49 | HARDENED, 0 | HARDENED],
-            [84 | HARDENED, 0 | HARDENED],
+            [H_(43), H_(2), H_(0), 0, 0],
+            # Bitcoin paths:
+            [H_(44), H_(0), H_(0), 0, 0],
+            [H_(49), H_(0), H_(0), 0, 0],
+            [H_(84), H_(0), H_(0), 0, 0],
+
+            [44, 2, 0, 0, 0],
+            [H_(44), H_(2), H_(0)],
+            [H_(44), H_(2), H_(0), 0, 0, 0],
+            # Casa:
+            [49, 2, 0, 0, 10],
+            # Green:
+            [1, 1000],
+            [H_(3), 10, 4, 1000],
         )
 
         for addr in valid_addresses:
