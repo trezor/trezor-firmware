@@ -195,6 +195,8 @@ message TxRequest {
         TXMETA = 2;
         TXFINISHED = 3;
         TXEXTRADATA = 4;
+        TXORIGINPUT = 5;
+        TXORIGOUTPUT = 6;
     }
     /**
     * Structure representing request details
