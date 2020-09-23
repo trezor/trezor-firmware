@@ -34,10 +34,12 @@ TxInputType.script_sig                                      max_size:1650
 TxInputType.witness                                         max_size:109
 TxInputType.ownership_proof                                 max_size:171
 TxInputType.commitment_data                                 max_size:32
+TxInputType.orig_hash                                       max_size:32
 
 TxOutputType.address                                        max_size:130
 TxOutputType.address_n                                      max_count:8
 TxOutputType.op_return_data                                 max_size:80
+TxOutputType.orig_hash                                      max_size:32
 
 TxOutputBinType.script_pubkey                               max_size:520
 
@@ -76,10 +78,12 @@ TxInput.script_sig                                          max_size:1650
 TxInput.witness                                             max_size:109
 TxInput.ownership_proof                                     max_size:171
 TxInput.commitment_data                                     max_size:32
+TxInput.orig_hash                                           max_size:32
 
 TxOutput.address                                            max_size:130
 TxOutput.address_n                                          max_count:8
 TxOutput.op_return_data                                     max_size:80
+TxOutput.orig_hash                                          max_size:32
 
 PrevInput.prev_hash                                         max_size:32
 PrevInput.script_sig                                        max_size:1650
