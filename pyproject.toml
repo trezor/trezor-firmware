@@ -6,13 +6,13 @@ authors = ["SatoshiLabs <info@satoshilabs.com>"]
 
 [tool.poetry.dependencies]
 # all
-python = "^3.5"
+python = "^3.6"
 trezor = {path = "./python"}
 scons = "*"
 protobuf = "*"
 pyblake2 = "*"
 Pyro4 = "*"
-nanopb = "0.4.1"
+nanopb = "0.4.3"
 virtualenv = "20.0.23"  # https://github.com/pypa/virtualenv/issues/1873
 
 ## test tools
