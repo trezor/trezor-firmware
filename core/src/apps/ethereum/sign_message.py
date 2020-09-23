@@ -7,7 +7,7 @@ from apps.common import paths
 from apps.common.signverify import require_confirm_sign_message
 
 from . import address
-from .keychain import PATTERN_ADDRESS, with_keychain_from_path
+from .keychain import PATTERNS_ADDRESS, with_keychain_from_path
 
 
 def message_digest(message):
@@ -19,7 +19,7 @@ def message_digest(message):
     return h.get_digest()
 
 
-@with_keychain_from_path(PATTERN_ADDRESS)
+@with_keychain_from_path(*PATTERNS_ADDRESS)
 async def sign_message(ctx, msg, keychain):
     await paths.validate_path(ctx, keychain, msg.address_n)
     await require_confirm_sign_message(ctx, "ETH", msg.message)

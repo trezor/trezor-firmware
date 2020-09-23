@@ -7,10 +7,10 @@ from apps.common.layout import address_n_to_str, show_address, show_qr
 
 from . import networks
 from .address import address_from_bytes
-from .keychain import PATTERN_ADDRESS, with_keychain_from_path
+from .keychain import PATTERNS_ADDRESS, with_keychain_from_path
 
 
-@with_keychain_from_path(PATTERN_ADDRESS)
+@with_keychain_from_path(*PATTERNS_ADDRESS)
 async def get_address(ctx, msg, keychain):
     await paths.validate_path(ctx, keychain, msg.address_n)
 
