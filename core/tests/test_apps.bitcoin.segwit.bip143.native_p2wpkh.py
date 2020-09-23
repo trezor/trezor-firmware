@@ -6,6 +6,7 @@ from apps.bitcoin.sign_tx.bitcoin import Hash143
 from apps.bitcoin.writers import get_tx_hash
 from apps.common import coins
 from apps.common.keychain import Keychain
+from apps.common.paths import AlwaysMatchingSchema
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxInput import TxInput
 from trezor.messages.TxOutput import TxOutput
@@ -89,7 +90,7 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
             txo_bin = PrevOutput(amount=txo.amount, script_pubkey=script_pubkey)
             bip143.add_output(txo_bin, script_pubkey)
 
-        keychain = Keychain(seed, coin.curve_name, [[]])
+        keychain = Keychain(seed, coin.curve_name, [AlwaysMatchingSchema])
         node = keychain.derive(self.inp2.address_n)
 
         # test data public key hash

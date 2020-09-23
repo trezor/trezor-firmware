@@ -43,7 +43,7 @@ class TestPathSchemas(unittest.TestCase):
         def is_equal(a, b):
             if isinstance(a, range) and isinstance(b, range):
                 return a.start == b.start and a.step == b.step and a.stop == b.stop
-            return a == b
+            return set(a) == set(b)
 
         ensure(
             all(is_equal(a, b) for a, b in zip(schema_a.schema, schema_b.schema))
@@ -63,8 +63,8 @@ class TestPathSchemas(unittest.TestCase):
             [H_(44), H_(0), H_(0), H_(0), H_(0)] * 10,
         ]
         for path in paths:
-            self.assertMatch(SCHEMA_ANY_PATH, path)
-            self.assertMismatch(SCHEMA_NO_MATCH, path)
+            self.assertMatch(AlwaysMatchingSchema, path)
+            self.assertMismatch(NeverMatchingSchema, path)
 
     def test_pattern_fixed(self):
         pattern = "m/44'/0'/0'/0/0"
