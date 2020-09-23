@@ -298,7 +298,7 @@ message TxAck {
 /** Data type for transaction input to be signed.
  * @embed
  */
-message TxAckInputType {
+message TxInput {
     repeated uint32 address_n = 1;                                      // BIP-32 path to derive the key from master node
     required bytes prev_hash = 2;                                       // hash of previous transaction output to spend by this input
     required uint32 prev_index = 3;                                     // index of previous output to spend
@@ -317,7 +317,7 @@ message TxAckInputType {
 /** Data type for transaction output to be signed.
  * @embed
  */
-message TxAckOutputType {
+message TxOutput {
     optional string address = 1;                    // destination address in Base58 encoding; script_type must be PAYTOADDRESS
     repeated uint32 address_n = 2;                  // BIP-32 path to derive the destination (used for change addresses)
     required uint64 amount = 3;                     // amount to spend in satoshis
@@ -329,7 +329,7 @@ message TxAckOutputType {
 /** Data type for metadata about previous transaction which contains the UTXO being spent.
  * @embed
  */
-message TxAckPrevTxType {
+message PrevTx {
     required uint32 version = 1;
     required uint32 lock_time = 4;
     required uint32 inputs_count = 6;
@@ -344,7 +344,7 @@ message TxAckPrevTxType {
 /** Data type for inputs of previous transactions.
  * @embed
  */
-message TxAckPrevInputType {
+message PrevInput {
     required bytes prev_hash = 2;                                       // hash of previous transaction output to spend by this input
     required uint32 prev_index = 3;                                     // index of previous output to spend
     required bytes script_sig = 4;                                      // script signature
@@ -355,7 +355,7 @@ message TxAckPrevInputType {
 /** Data type for outputs of previous transactions.
  * @embed
  */
-message TxAckPrevOutputType {
+message PrevOutput {
     required uint64 amount = 1;                     // amount sent to this output
     required bytes script_pubkey = 2;               // scriptPubkey of this output
     optional uint32 decred_script_version = 3;      // only for Decred
@@ -373,7 +373,7 @@ message TxAckInput {
     required TxAckInputWrapper tx = 1;
 
     message TxAckInputWrapper {
-        required TxAckInputType input = 2;
+        required TxInput input = 2;
     }
 }
 
@@ -389,7 +389,7 @@ message TxAckOutput {
     required TxAckOutputWrapper tx = 1;
 
     message TxAckOutputWrapper {
-        required TxAckOutputType output = 5;
+        required TxOutput output = 5;
     }
 }
 
@@ -402,7 +402,7 @@ message TxAckOutput {
 message TxAckPrevMeta {
     option (wire_type) = 22;
 
-    required TxAckPrevTxType tx = 1;
+    required PrevTx tx = 1;
 }
 
 /**
@@ -417,7 +417,7 @@ message TxAckPrevInput {
     required TxAckPrevInputWrapper tx = 1;
 
     message TxAckPrevInputWrapper {
-        required TxAckPrevInputType input = 2;
+        required PrevInput input = 2;
 
     }
 }
@@ -434,7 +434,7 @@ message TxAckPrevOutput {
     required TxAckPrevOutputWrapper tx = 1;
 
     message TxAckPrevOutputWrapper {
-        required TxAckPrevOutputType output = 3;
+        required PrevOutput output = 3;
     }
 }
 

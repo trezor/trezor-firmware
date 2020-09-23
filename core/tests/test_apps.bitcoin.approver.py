@@ -2,8 +2,8 @@ from common import unittest, await_result, H_
 
 from trezor import wire
 from trezor.messages.AuthorizeCoinJoin import AuthorizeCoinJoin
-from trezor.messages.TxAckInputType import TxAckInputType
-from trezor.messages.TxAckOutputType import TxAckOutputType
+from trezor.messages.TxInput import TxInput
+from trezor.messages.TxOutput import TxOutput
 from trezor.messages.SignTx import SignTx
 from trezor.messages import InputScriptType, OutputScriptType
 
@@ -32,7 +32,7 @@ class TestApprover(unittest.TestCase):
 
         # Other's inputs.
         inputs = [
-            TxAckInputType(
+            TxInput(
                 prev_hash=b"",
                 prev_index=0,
                 amount=denomination + 1000000 * (i + 1),
@@ -44,7 +44,7 @@ class TestApprover(unittest.TestCase):
         # Our input.
         inputs.insert(
             30,
-            TxAckInputType(
+            TxInput(
                 prev_hash=b"",
                 prev_index=0,
                 address_n=[H_(84), H_(0), H_(0), 0, 1],
@@ -56,7 +56,7 @@ class TestApprover(unittest.TestCase):
 
         # Other's CoinJoined outputs.
         outputs = [
-            TxAckOutputType(
+            TxOutput(
                 amount=denomination,
                 script_type=OutputScriptType.PAYTOWITNESS,
             ) for i in range(99)
@@ -65,7 +65,7 @@ class TestApprover(unittest.TestCase):
         # Our CoinJoined output.
         outputs.insert(
             40,
-            TxAckOutputType(
+            TxOutput(
                 address_n=[H_(84), H_(0), H_(0), 0, 2],
                 amount=denomination,
                 script_type=OutputScriptType.PAYTOWITNESS,
@@ -78,7 +78,7 @@ class TestApprover(unittest.TestCase):
 
         # Other's change-outputs.
         outputs.extend(
-            TxAckOutputType(
+            TxOutput(
                 amount=1000000 * (i + 1) - fees,
                 script_type=OutputScriptType.PAYTOWITNESS,
             ) for i in range(99)
@@ -86,7 +86,7 @@ class TestApprover(unittest.TestCase):
 
         # Our change-output.
         outputs.append(
-            TxAckOutputType(
+            TxOutput(
                 address_n=[H_(84), H_(0), H_(0), 1, 1],
                 amount=1000000 - fees,
                 script_type=OutputScriptType.PAYTOWITNESS,
@@ -95,7 +95,7 @@ class TestApprover(unittest.TestCase):
 
         # Coordinator's output.
         outputs.append(
-            TxAckOutputType(
+            TxOutput(
                 amount=total_coordinator_fee,
                 script_type=OutputScriptType.PAYTOWITNESS,
             )
@@ -124,7 +124,7 @@ class TestApprover(unittest.TestCase):
         tx = SignTx(outputs_count=201, inputs_count=100, coin_name=self.coin.coin_name, lock_time=0)
         approver = CoinJoinApprover(tx, self.coin, authorization)
 
-        txi = TxAckInputType(
+        txi = TxInput(
             prev_hash=b"",
             prev_index=0,
             address_n=[H_(49), H_(0), H_(0), 0],
@@ -140,7 +140,7 @@ class TestApprover(unittest.TestCase):
         tx = SignTx(outputs_count=201, inputs_count=100, coin_name=self.coin.coin_name, lock_time=0)
         approver = CoinJoinApprover(tx, self.coin, authorization)
 
-        txi = TxAckInputType(
+        txi = TxInput(
             prev_hash=b"",
             prev_index=0,
             address_n=[H_(49), H_(0), H_(0), 0, 2],

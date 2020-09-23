@@ -2,7 +2,7 @@
 # fmt: off
 from .. import protobuf as p
 
-from .TxAckPrevInputType import TxAckPrevInputType
+from .PrevInput import PrevInput
 
 if __debug__:
     try:
@@ -17,12 +17,12 @@ class TxAckPrevInputWrapper(p.MessageType):
     def __init__(
         self,
         *,
-        input: TxAckPrevInputType,
+        input: PrevInput,
     ) -> None:
         self.input = input
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            2: ('input', TxAckPrevInputType, p.FLAG_REQUIRED),
+            2: ('input', PrevInput, p.FLAG_REQUIRED),
         }

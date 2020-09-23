@@ -1,8 +1,8 @@
 from common import *
 from trezor.messages import InputScriptType
 from trezor.messages.SignTx import SignTx
-from trezor.messages.TxAckInputType import TxAckInputType
-from trezor.messages.TxAckPrevOutputType import TxAckPrevOutputType
+from trezor.messages.TxInput import TxInput
+from trezor.messages.PrevOutput import PrevOutput
 
 from apps.common import coins
 from apps.bitcoin.writers import get_tx_hash
@@ -194,7 +194,7 @@ class TestZcashZip243(unittest.TestCase):
             zip243 = Zcashlike(tx, None, coin, BasicApprover(tx, coin))
 
             for i in v["inputs"]:
-                txi = TxAckInputType(
+                txi = TxInput(
                     amount = i["amount"],
                     prev_hash = unhexlify(i["prevout"][0]),
                     prev_index = i["prevout"][1],
@@ -203,7 +203,7 @@ class TestZcashZip243(unittest.TestCase):
                 )
                 zip243.hash143_add_input(txi)
             for o in v["outputs"]:
-                txo = TxAckPrevOutputType(
+                txo = PrevOutput(
                     amount = o["amount"],
                     script_pubkey = unhexlify(o["script_pubkey"]),
                 )

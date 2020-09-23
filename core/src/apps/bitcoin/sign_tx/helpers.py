@@ -1,5 +1,8 @@
 from trezor import utils, wire
 from trezor.messages import InputScriptType, OutputScriptType
+from trezor.messages.PrevInput import PrevInput
+from trezor.messages.PrevOutput import PrevOutput
+from trezor.messages.PrevTx import PrevTx
 from trezor.messages.RequestType import (
     TXEXTRADATA,
     TXFINISHED,
@@ -9,16 +12,13 @@ from trezor.messages.RequestType import (
 )
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxAckInput import TxAckInput
-from trezor.messages.TxAckInputType import TxAckInputType
 from trezor.messages.TxAckOutput import TxAckOutput
-from trezor.messages.TxAckOutputType import TxAckOutputType
 from trezor.messages.TxAckPrevExtraData import TxAckPrevExtraData
 from trezor.messages.TxAckPrevInput import TxAckPrevInput
-from trezor.messages.TxAckPrevInputType import TxAckPrevInputType
 from trezor.messages.TxAckPrevMeta import TxAckPrevMeta
 from trezor.messages.TxAckPrevOutput import TxAckPrevOutput
-from trezor.messages.TxAckPrevOutputType import TxAckPrevOutputType
-from trezor.messages.TxAckPrevTxType import TxAckPrevTxType
+from trezor.messages.TxInput import TxInput
+from trezor.messages.TxOutput import TxOutput
 from trezor.messages.TxRequest import TxRequest
 
 from apps.common import paths
@@ -42,7 +42,7 @@ class UiConfirm:
 
 
 class UiConfirmOutput(UiConfirm):
-    def __init__(self, output: TxAckOutputType, coin: CoinInfo):
+    def __init__(self, output: TxOutput, coin: CoinInfo):
         self.output = output
         self.coin = coin
 
@@ -120,7 +120,7 @@ class UiConfirmNonDefaultLocktime(UiConfirm):
     __eq__ = utils.obj_eq
 
 
-def confirm_output(output: TxAckOutputType, coin: CoinInfo) -> Awaitable[None]:  # type: ignore
+def confirm_output(output: TxOutput, coin: CoinInfo) -> Awaitable[None]:  # type: ignore
     return (yield UiConfirmOutput(output, coin))
 
 
@@ -148,7 +148,7 @@ def confirm_nondefault_locktime(lock_time: int, lock_time_disabled: bool) -> Awa
     return (yield UiConfirmNonDefaultLocktime(lock_time, lock_time_disabled))
 
 
-def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[TxAckPrevTxType]:  # type: ignore
+def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[PrevTx]:  # type: ignore
     assert tx_req.details is not None
     tx_req.request_type = TXMETA
     tx_req.details.tx_hash = tx_hash
@@ -170,7 +170,7 @@ def request_tx_extra_data(  # type: ignore
     return ack.tx.extra_data_chunk
 
 
-def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo) -> Awaitable[TxAckInputType]:  # type: ignore
+def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo) -> Awaitable[TxInput]:  # type: ignore
     assert tx_req.details is not None
     tx_req.request_type = TXINPUT
     tx_req.details.request_index = i
@@ -179,7 +179,7 @@ def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo) -> Awaitable[TxA
     return sanitize_tx_input(ack.tx.input, coin)
 
 
-def request_tx_prev_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[TxAckPrevInputType]:  # type: ignore
+def request_tx_prev_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[PrevInput]:  # type: ignore
     assert tx_req.details is not None
     tx_req.request_type = TXINPUT
     tx_req.details.request_index = i
@@ -189,7 +189,7 @@ def request_tx_prev_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: by
     return sanitize_tx_prev_input(ack.tx.input, coin)
 
 
-def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo) -> Awaitable[TxAckOutputType]:  # type: ignore
+def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo) -> Awaitable[TxOutput]:  # type: ignore
     assert tx_req.details is not None
     tx_req.request_type = TXOUTPUT
     tx_req.details.request_index = i
@@ -198,7 +198,7 @@ def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo) -> Awaitable[Tx
     return sanitize_tx_output(ack.tx.output, coin)
 
 
-def request_tx_prev_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[TxAckPrevOutputType]:  # type: ignore
+def request_tx_prev_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[PrevOutput]:  # type: ignore
     assert tx_req.details is not None
     tx_req.request_type = TXOUTPUT
     tx_req.details.request_index = i
@@ -256,7 +256,7 @@ def sanitize_sign_tx(tx: SignTx, coin: CoinInfo) -> SignTx:
     return tx
 
 
-def sanitize_tx_meta(tx: TxAckPrevTxType, coin: CoinInfo) -> TxAckPrevTxType:
+def sanitize_tx_meta(tx: PrevTx, coin: CoinInfo) -> PrevTx:
     if not coin.extra_data and tx.extra_data_len:
         raise wire.DataError("Extra data not enabled on this coin.")
     if coin.decred or coin.overwintered:
@@ -275,7 +275,7 @@ def sanitize_tx_meta(tx: TxAckPrevTxType, coin: CoinInfo) -> TxAckPrevTxType:
     return tx
 
 
-def sanitize_tx_input(txi: TxAckInputType, coin: CoinInfo) -> TxAckInputType:
+def sanitize_tx_input(txi: TxInput, coin: CoinInfo) -> TxInput:
     if len(txi.prev_hash) != TX_HASH_SIZE:
         raise wire.DataError("Provided prev_hash is invalid.")
     if txi.multisig and txi.script_type not in common.MULTISIG_INPUT_SCRIPT_TYPES:
@@ -294,9 +294,7 @@ def sanitize_tx_input(txi: TxAckInputType, coin: CoinInfo) -> TxAckInputType:
     return txi
 
 
-def sanitize_tx_prev_input(
-    txi: TxAckPrevInputType, coin: CoinInfo
-) -> TxAckPrevInputType:
+def sanitize_tx_prev_input(txi: PrevInput, coin: CoinInfo) -> PrevInput:
     if len(txi.prev_hash) != TX_HASH_SIZE:
         raise wire.DataError("Provided prev_hash is invalid.")
     if not coin.decred and txi.decred_tree is not None:
@@ -304,7 +302,7 @@ def sanitize_tx_prev_input(
     return txi
 
 
-def sanitize_tx_output(txo: TxAckOutputType, coin: CoinInfo) -> TxAckOutputType:
+def sanitize_tx_output(txo: TxOutput, coin: CoinInfo) -> TxOutput:
     if txo.multisig and txo.script_type not in common.MULTISIG_OUTPUT_SCRIPT_TYPES:
         raise wire.DataError("Multisig field provided but not expected.")
     if txo.address_n and txo.script_type not in common.CHANGE_OUTPUT_SCRIPT_TYPES:

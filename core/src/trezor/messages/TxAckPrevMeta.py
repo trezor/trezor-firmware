@@ -2,7 +2,7 @@
 # fmt: off
 import protobuf as p
 
-from .TxAckPrevTxType import TxAckPrevTxType
+from .PrevTx import PrevTx
 
 if __debug__:
     try:
@@ -18,12 +18,12 @@ class TxAckPrevMeta(p.MessageType):
     def __init__(
         self,
         *,
-        tx: TxAckPrevTxType,
+        tx: PrevTx,
     ) -> None:
         self.tx = tx
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('tx', TxAckPrevTxType, p.FLAG_REQUIRED),
+            1: ('tx', PrevTx, p.FLAG_REQUIRED),
         }

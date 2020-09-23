@@ -2,7 +2,7 @@
 # fmt: off
 import protobuf as p
 
-from .TxAckOutputType import TxAckOutputType
+from .TxOutput import TxOutput
 
 if __debug__:
     try:
@@ -17,12 +17,12 @@ class TxAckOutputWrapper(p.MessageType):
     def __init__(
         self,
         *,
-        output: TxAckOutputType,
+        output: TxOutput,
     ) -> None:
         self.output = output
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            5: ('output', TxAckOutputType, p.FLAG_REQUIRED),
+            5: ('output', TxOutput, p.FLAG_REQUIRED),
         }

@@ -5,18 +5,18 @@ from trezor.crypto import bip39
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxAckInput import TxAckInput
 from trezor.messages.TxAckInputWrapper import TxAckInputWrapper
-from trezor.messages.TxAckInputType import TxAckInputType
+from trezor.messages.TxInput import TxInput
 from trezor.messages.TxAckOutput import TxAckOutput
 from trezor.messages.TxAckOutputWrapper import TxAckOutputWrapper
-from trezor.messages.TxAckOutputType import TxAckOutputType
+from trezor.messages.TxOutput import TxOutput
 from trezor.messages.TxAckPrevMeta import TxAckPrevMeta
-from trezor.messages.TxAckPrevTxType import TxAckPrevTxType
+from trezor.messages.PrevTx import PrevTx
 from trezor.messages.TxAckPrevInput import TxAckPrevInput
 from trezor.messages.TxAckPrevInputWrapper import TxAckPrevInputWrapper
-from trezor.messages.TxAckPrevInputType import TxAckPrevInputType
+from trezor.messages.PrevInput import PrevInput
 from trezor.messages.TxAckPrevOutput import TxAckPrevOutput
 from trezor.messages.TxAckPrevOutputWrapper import TxAckPrevOutputWrapper
-from trezor.messages.TxAckPrevOutputType import TxAckPrevOutputType
+from trezor.messages.PrevOutput import PrevOutput
 from trezor.messages.TxRequest import TxRequest
 from trezor.messages.RequestType import TXINPUT, TXMETA, TXOUTPUT, TXFINISHED
 from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
@@ -44,7 +44,7 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
         coin = coins.by_name('Groestlcoin Testnet')
         seed = bip39.seed(' '.join(['all'] * 12), '')
 
-        inp1 = TxAckInputType(
+        inp1 = TxInput(
             # 84'/1'/0'/0/0" - tgrs1qkvwu9g3k2pdxewfqr7syz89r3gj557l3ued7ja
             address_n=[84 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 0, 0],
             amount=12300000,
@@ -54,24 +54,24 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
             sequence=0xfffffffe,
             multisig=None,
         )
-        ptx1 = TxAckPrevTxType(version=1, lock_time=650645, inputs_count=1, outputs_count=2, extra_data_len=0)
-        pinp1 = TxAckPrevInputType(script_sig=unhexlify('483045022100d9615361c044e91f6dd7bb4455f3ad686cd5a663d7800bb74c448b2706500ccb022026bed24b81a501e8398411c5a9a793741d9bfe39617d51c363dde0a84f44f4f9012102659a6eefcc72d6f2eff92e57095388b17db0b06034946ecd44120e5e7a830ff4'),
+        ptx1 = PrevTx(version=1, lock_time=650645, inputs_count=1, outputs_count=2, extra_data_len=0)
+        pinp1 = PrevInput(script_sig=unhexlify('483045022100d9615361c044e91f6dd7bb4455f3ad686cd5a663d7800bb74c448b2706500ccb022026bed24b81a501e8398411c5a9a793741d9bfe39617d51c363dde0a84f44f4f9012102659a6eefcc72d6f2eff92e57095388b17db0b06034946ecd44120e5e7a830ff4'),
                             prev_hash=unhexlify('1c92508b38239e5c10b23fb46dcf765ee2f3a95b835edbf0943ec21b21711160'),
                             prev_index=1,
                             sequence=4294967293)
-        pout1 = TxAckPrevOutputType(script_pubkey=unhexlify('0014b31dc2a236505a6cb9201fa0411ca38a254a7bf1'),
+        pout1 = PrevOutput(script_pubkey=unhexlify('0014b31dc2a236505a6cb9201fa0411ca38a254a7bf1'),
                                 amount=12300000)
-        pout2 = TxAckPrevOutputType(script_pubkey=unhexlify('76a91438cc090e4a4b2e458c33fe35af1c5c0094699ac288ac'),
+        pout2 = PrevOutput(script_pubkey=unhexlify('76a91438cc090e4a4b2e458c33fe35af1c5c0094699ac288ac'),
                                 amount=9887699777)
 
-        out1 = TxAckOutputType(
+        out1 = TxOutput(
             address='2N4Q5FhU2497BryFfUgbqkAJE87aKDv3V3e',
             amount=5000000,
             script_type=OutputScriptType.PAYTOADDRESS,
             address_n=[],
             multisig=None,
         )
-        out2 = TxAckOutputType(
+        out2 = TxOutput(
             address='tgrs1qejqxwzfld7zr6mf7ygqy5s5se5xq7vmt9lkd57',
             script_type=OutputScriptType.PAYTOADDRESS,
             amount=12300000 - 11000 - 5000000,
@@ -175,7 +175,7 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
         coin = coins.by_name('Groestlcoin Testnet')
         seed = bip39.seed(' '.join(['all'] * 12), '')
 
-        inp1 = TxAckInputType(
+        inp1 = TxInput(
             # 84'/1'/0'/0/0" - tgrs1qkvwu9g3k2pdxewfqr7syz89r3gj557l3ued7ja
             address_n=[84 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 0, 0],
             amount=12300000,
@@ -185,24 +185,24 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
             sequence=0xfffffffe,
             multisig=None,
         )
-        ptx1 = TxAckPrevTxType(version=1, lock_time=650645, inputs_count=1, outputs_count=2, extra_data_len=0)
-        pinp1 = TxAckPrevInputType(script_sig=unhexlify('483045022100d9615361c044e91f6dd7bb4455f3ad686cd5a663d7800bb74c448b2706500ccb022026bed24b81a501e8398411c5a9a793741d9bfe39617d51c363dde0a84f44f4f9012102659a6eefcc72d6f2eff92e57095388b17db0b06034946ecd44120e5e7a830ff4'),
+        ptx1 = PrevTx(version=1, lock_time=650645, inputs_count=1, outputs_count=2, extra_data_len=0)
+        pinp1 = PrevInput(script_sig=unhexlify('483045022100d9615361c044e91f6dd7bb4455f3ad686cd5a663d7800bb74c448b2706500ccb022026bed24b81a501e8398411c5a9a793741d9bfe39617d51c363dde0a84f44f4f9012102659a6eefcc72d6f2eff92e57095388b17db0b06034946ecd44120e5e7a830ff4'),
                             prev_hash=unhexlify('1c92508b38239e5c10b23fb46dcf765ee2f3a95b835edbf0943ec21b21711160'),
                             prev_index=1,
                             sequence=4294967293)
-        pout1 = TxAckPrevOutputType(script_pubkey=unhexlify('0014b31dc2a236505a6cb9201fa0411ca38a254a7bf1'),
+        pout1 = PrevOutput(script_pubkey=unhexlify('0014b31dc2a236505a6cb9201fa0411ca38a254a7bf1'),
                                 amount=12300000)
-        pout2 = TxAckPrevOutputType(script_pubkey=unhexlify('76a91438cc090e4a4b2e458c33fe35af1c5c0094699ac288ac'),
+        pout2 = PrevOutput(script_pubkey=unhexlify('76a91438cc090e4a4b2e458c33fe35af1c5c0094699ac288ac'),
                                 amount=9887699777)
 
-        out1 = TxAckOutputType(
+        out1 = TxOutput(
             address='2N4Q5FhU2497BryFfUgbqkAJE87aKDv3V3e',
             amount=5000000,
             script_type=OutputScriptType.PAYTOADDRESS,
             address_n=[],
             multisig=None,
         )
-        out2 = TxAckOutputType(
+        out2 = TxOutput(
             address=None,
             address_n=[84 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 1, 0],
             script_type=OutputScriptType.PAYTOWITNESS,
@@ -261,7 +261,7 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
                 serialized_tx=unhexlify('d1613f483f2086d076c82fe34674385a86beb08f052d5405fe1aed397f852f4f0000000000feffffff02'),
             )),
             # the out has to be cloned not to send the same object which was modified
-            TxAckOutput(tx=TxAckOutputWrapper(output=TxAckOutputType(**out1.__dict__))),
+            TxAckOutput(tx=TxAckOutputWrapper(output=TxOutput(**out1.__dict__))),
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None), serialized=TxRequestSerializedType(
                 # returned serialized out1
@@ -269,7 +269,7 @@ class TestSignSegwitTxNativeP2WPKH_GRS(unittest.TestCase):
                 signature_index=None,
                 signature=None,
             )),
-            TxAckOutput(tx=TxAckOutputWrapper(output=TxAckOutputType(**out2.__dict__))),
+            TxAckOutput(tx=TxAckOutputWrapper(output=TxOutput(**out2.__dict__))),
 
             # segwit
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=TxRequestSerializedType(

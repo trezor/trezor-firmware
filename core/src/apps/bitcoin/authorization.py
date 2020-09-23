@@ -9,7 +9,7 @@ if False:
     from trezor.messages.AuthorizeCoinJoin import AuthorizeCoinJoin
     from trezor.messages.GetOwnershipProof import GetOwnershipProof
     from trezor.messages.SignTx import SignTx
-    from trezor.messages.TxAckInputType import TxAckInputType
+    from trezor.messages.TxInput import TxInput
 
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
@@ -47,7 +47,7 @@ class CoinJoinAuthorization:
             and msg.commitment_data[:-_ROUND_ID_LEN] == self.coordinator.encode()
         )
 
-    def check_sign_tx_input(self, txi: TxAckInputType, coin: CoinInfo) -> bool:
+    def check_sign_tx_input(self, txi: TxInput, coin: CoinInfo) -> bool:
         # Check whether the current input matches the parameters of the request.
         return (
             len(txi.address_n) >= BIP32_WALLET_DEPTH
