@@ -30,6 +30,8 @@ class TxInput(p.MessageType):
         witness: bytes = None,
         ownership_proof: bytes = None,
         commitment_data: bytes = None,
+        orig_hash: bytes = None,
+        orig_index: int = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.prev_hash = prev_hash
@@ -43,6 +45,8 @@ class TxInput(p.MessageType):
         self.witness = witness
         self.ownership_proof = ownership_proof
         self.commitment_data = commitment_data
+        self.orig_hash = orig_hash
+        self.orig_index = orig_index
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -59,4 +63,6 @@ class TxInput(p.MessageType):
             13: ('witness', p.BytesType, None),
             14: ('ownership_proof', p.BytesType, None),
             15: ('commitment_data', p.BytesType, None),
+            16: ('orig_hash', p.BytesType, None),
+            17: ('orig_index', p.UVarintType, None),
         }
