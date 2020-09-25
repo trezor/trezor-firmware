@@ -25,6 +25,7 @@
     - [Sessions](common/communication/sessions.md)
     - [Passphrase](common/communication/passphrase.md)
       - [Migration](common/communication/passphrase-redesign-migration.md)
+    - [Bitcoin signing](common/communication/bitcoin-signing.md)
 - [Storage](storage/index.md)
 - [Tests](tests/index.md)
   - [Device Tests](tests/device-tests.md)
