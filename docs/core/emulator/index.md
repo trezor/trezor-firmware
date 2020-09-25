@@ -11,9 +11,9 @@ Emulator significantly speeds up development and has several features to help yo
 ## How to run
 
 1. [build](../build/emulator.md) the emulator
-2. run `emu.py` inside the pipenv environment:
-   - either enter `pipenv shell` first, and then use `./emu.py`
-   - or always use `pipenv run ./emu.py`
+2. run `emu.py` inside the poetry environment:
+   - either enter `poetry shell` first, and then use `./emu.py`
+   - or always use `poetry run ./emu.py`
 3. to use [bridge](https://github.com/trezor/trezord-go) with the emulator support, start it with `trezord -e 21324`
 
 Now you can use the emulator the same way as you use the device, for example you can visit our Wallet (https://wallet.trezor.io), use our Python CLI tool (`trezorctl`) etc. Simply click to emulate screen touches.

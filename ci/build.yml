@@ -10,11 +10,11 @@ core fw regular build:
   stage: build
   needs: []
   script:
-    - nix-shell --run "pipenv run make -C core build_boardloader"
-    - nix-shell --run "pipenv run make -C core build_bootloader"
-    - nix-shell --run "pipenv run make -C core build_prodtest"
-    - nix-shell --run "pipenv run make -C core build_firmware"
-    - nix-shell --run "pipenv run make -C core sizecheck"
+    - nix-shell --run "poetry run make -C core build_boardloader"
+    - nix-shell --run "poetry run make -C core build_bootloader"
+    - nix-shell --run "poetry run make -C core build_prodtest"
+    - nix-shell --run "poetry run make -C core build_firmware"
+    - nix-shell --run "poetry run make -C core sizecheck"
     - cp core/build/firmware/firmware.bin trezor-fw-regular-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -26,7 +26,7 @@ core fw regular debug build:
   stage: build
   needs: []
   script:
-    - nix-shell --run "PYOPT=0 pipenv run make -C core build_firmware"
+    - nix-shell --run "PYOPT=0 poetry run make -C core build_firmware"
     - cp core/build/firmware/firmware.bin trezor-fw-regular-debug-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -40,9 +40,9 @@ core fw btconly build:
   variables:
     BITCOIN_ONLY: "1"
   script:
-    - nix-shell --run "pipenv run make -C core build_firmware"
+    - nix-shell --run "poetry run make -C core build_firmware"
     - mv core/build/firmware/firmware.bin core/build/firmware/firmware-bitcoinonly.bin
-    - nix-shell --run "pipenv run ./tools/check-bitcoin-only core/build/firmware/firmware-bitcoinonly.bin"
+    - nix-shell --run "poetry run ./tools/check-bitcoin-only core/build/firmware/firmware-bitcoinonly.bin"
     - cp core/build/firmware/firmware-bitcoinonly.bin trezor-fw-btconly-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -57,7 +57,7 @@ core fw btconly debug build:
     BITCOIN_ONLY: "1"
     PYOPT: "0"
   script:
-    - nix-shell --run "pipenv run make -C core build_firmware"
+    - nix-shell --run "poetry run make -C core build_firmware"
     - cp core/build/firmware/firmware.bin trezor-fw-btconly-debug-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.bin
   only:  # currently used only for deploys
     - /^core\//
@@ -74,7 +74,7 @@ core fw btconly t1 build:
     BITCOIN_ONLY: "1"
     TREZOR_MODEL: "1"
   script:
-    - nix-shell --run "pipenv run make -C core build_firmware"
+    - nix-shell --run "poetry run make -C core build_firmware"
     - cp core/build/firmware/firmware.bin trezor-fw-btconly-t1-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -86,7 +86,7 @@ core unix regular build:
   stage: build
   needs: []
   script:
-    - nix-shell --run "pipenv run make -C core build_unix"
+    - nix-shell --run "poetry run make -C core build_unix"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -98,7 +98,7 @@ core unix frozen regular build:
   stage: build
   needs: []
   script:
-    - nix-shell --run "pipenv run make -C core build_unix_frozen"
+    - nix-shell --run "poetry run make -C core build_unix_frozen"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -112,7 +112,7 @@ core unix frozen btconly debug build:
     PYOPT: "0"
     BITCOIN_ONLY: "1"
   script:
-    - nix-shell --run "pipenv run make -C core build_unix_frozen"
+    - nix-shell --run "poetry run make -C core build_unix_frozen"
     - mv core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-bitcoinonly
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -126,7 +126,7 @@ core unix frozen debug build:
   variables:
     PYOPT: "0"
   script:
-    - nix-shell --run "pipenv run make -C core build_unix_frozen"
+    - nix-shell --run "poetry run make -C core build_unix_frozen"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     untracked: true
@@ -138,12 +138,13 @@ core macos frozen regular build:
   tags:
     - darwin
   script:
-    - nix-shell --run "pipenv run make -C core build_unix_frozen"
+    - nix-shell --run "poetry run make -C core build_unix_frozen"
     - export NAME="trezor-emu-core.darwin"
     - cp -v core/build/unix/trezor-emu-core ./$NAME
     - chmod +x $NAME
     - echo '"$(dirname "$BASH_SOURCE")"/trezor-emu-core.darwin' > trezor-emulator.command
     - chmod u+x trezor-emulator.command
+  allow_failure: true
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -162,7 +163,7 @@ crypto build:
       - ci/**/*
       - crypto/**/*
   script:
-    - nix-shell --run "pipenv run make -C crypto"
+    - nix-shell --run "poetry run make -C crypto"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -181,8 +182,8 @@ legacy fw regular build:
   variables:
     MEMORY_PROTECT: "0"
   script:
-    - nix-shell --run "pipenv run legacy/script/cibuild"
-    - nix-shell --run "pipenv run make -C legacy/demo"
+    - nix-shell --run "poetry run legacy/script/cibuild"
+    - nix-shell --run "poetry run make -C legacy/demo"
     - mv legacy/firmware/trezor.bin trezor-fw-regular-$LEGACY_VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -197,7 +198,7 @@ legacy fw regular debug build:
     DEBUG_LINK: "1"
     MEMORY_PROTECT: "0"
   script:
-    - nix-shell --run "pipenv run legacy/script/cibuild"
+    - nix-shell --run "poetry run legacy/script/cibuild"
     - mv legacy/firmware/trezor.bin trezor-fw-regular-debug-$LEGACY_VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -212,9 +213,9 @@ legacy fw btconly build:
     BITCOIN_ONLY: "1"
     MEMORY_PROTECT: "0"
   script:
-    - nix-shell --run "pipenv run legacy/script/cibuild"
+    - nix-shell --run "poetry run legacy/script/cibuild"
     - mv legacy/firmware/trezor.bin legacy/firmware/trezor-bitcoinonly.bin
-    - nix-shell --run "pipenv run ./tools/check-bitcoin-only legacy/firmware/trezor-bitcoinonly.bin"
+    - nix-shell --run "poetry run ./tools/check-bitcoin-only legacy/firmware/trezor-bitcoinonly.bin"
     - mv legacy/firmware/trezor-bitcoinonly.bin trezor-fw-btconly-$LEGACY_VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -230,8 +231,8 @@ legacy fw btconly debug build:
     MEMORY_PROTECT: "0"
     DEBUG_LINK: "1"
   script:
-    - nix-shell --run "pipenv run legacy/script/cibuild"
-    - nix-shell --run "pipenv run ./tools/check-bitcoin-only legacy/firmware/trezor.bin"
+    - nix-shell --run "poetry run legacy/script/cibuild"
+    - nix-shell --run "poetry run ./tools/check-bitcoin-only legacy/firmware/trezor.bin"
     - mv legacy/firmware/trezor.bin trezor-fw-btconly-debug-$LEGACY_VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -246,7 +247,7 @@ legacy emu regular debug build:
     DEBUG_LINK: "1"
     EMULATOR: "1"
   script:
-    - nix-shell --run "pipenv run legacy/script/cibuild"
+    - nix-shell --run "poetry run legacy/script/cibuild"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
@@ -261,7 +262,7 @@ legacy emu btconly debug build:
     DEBUG_LINK: "1"
     EMULATOR: "1"
   script:
-    - nix-shell --run "pipenv run legacy/script/cibuild"
+    - nix-shell --run "poetry run legacy/script/cibuild"
     - mv legacy/firmware/trezor.elf legacy/firmware/trezor-bitcoinonly.elf
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"

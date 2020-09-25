@@ -17,10 +17,6 @@ variables:
   # Apply timeout to pytest-based tests
   PYTEST_TIMEOUT: "300"
 
-  # Pipenv cache
-  PIPENV_VENV_IN_PROJECT: "true"
-  PIPENV_CACHE_DIR: ".cache/"
-
   # No need for TLS because everything runs on the same machine
   DOCKER_TLS_CERTDIR: ""
 stages:
@@ -33,7 +29,7 @@ stages:
 
 before_script:
   - . $HOME/.nix-profile/etc/profile.d/nix.sh || true
-  - nix-shell --run "pipenv sync"
+  - nix-shell --run "poetry install"
   - export LEGACY_VERSION=$(nix-shell --run "./tools/version.sh legacy/firmware/version.h")
   - export CORE_VERSION=$(nix-shell --run "./tools/version.sh core/embed/firmware/version.h")
 

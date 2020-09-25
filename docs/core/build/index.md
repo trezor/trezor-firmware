@@ -17,19 +17,19 @@ run on your computer. See [Emulator](../emulator/index.md) for more information.
 ## Existing Project
 
 If you are building from an existing checkout, do not forget to refresh the submodules
- and the pipenv environment:
+ and the poetry environment:
 
 ```sh
 git submodule update --init --recursive --force
-pipenv sync
+poetry install
 ```
 
-## Pipenv
+## Poetry
 
-We use [Pipenv](https://docs.pipenv.org/en/latest/) to install and track Python dependencies. You need to install it, sync the packages and then use `pipenv run` for every command or enter `pipenv shell` before typing any commands. **The commands in this section suppose you are in a `pipenv shell` environment!**
+We use [Poetry](https://python-poetry.org/) to install and track Python dependencies. You need to install it, sync the packages and then use `poetry run` for every command or enter `poetry shell` before typing any commands. **The commands in this section suppose you are in a `poetry shell` environment!**
 
 ```sh
-sudo pip3 install pipenv
-pipenv sync
-pipenv shell
+sudo pip3 install poetry
+poetry install
+poetry shell
 ```

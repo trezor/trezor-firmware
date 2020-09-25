@@ -6,7 +6,7 @@ release core fw regular deploy:
   stage: deploy
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares"
-  before_script: []  # no pipenv
+  before_script: []  # no poetry
   needs:
     - core fw regular build
   script:
@@ -25,7 +25,7 @@ release core fw btconly deploy:
   stage: deploy
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares"
-  before_script: []  # no pipenv
+  before_script: []  # no poetry
   needs:
     - core fw btconly build
   script:
@@ -44,7 +44,7 @@ release core fw regular debug deploy:
   stage: deploy
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares"
-  before_script: []  # no pipenv
+  before_script: []  # no poetry
   needs:
     - core fw regular debug build
   script:
@@ -63,7 +63,7 @@ release core fw btconly debug deploy:
   stage: deploy
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares"
-  before_script: []  # no pipenv
+  before_script: []  # no poetry
   needs:
     - core fw btconly debug build
   script:
@@ -84,7 +84,7 @@ release legacy fw regular deploy:
   stage: deploy
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares"
-  before_script: []  # no pipenv
+  before_script: []  # no poetry
   needs:
     - legacy fw regular build
   script:
@@ -103,7 +103,7 @@ release legacy fw btconly deploy:
   stage: deploy
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares"
-  before_script: []  # no pipenv
+  before_script: []  # no poetry
   needs:
     - legacy fw btconly build
   script:
@@ -122,7 +122,7 @@ release legacy fw regular debug deploy:
   stage: deploy
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares"
-  before_script: []  # no pipenv
+  before_script: []  # no poetry
   needs:
     - legacy fw regular debug build
   script:
@@ -141,7 +141,7 @@ release legacy fw btconly debug deploy:
   stage: deploy
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares"
-  before_script: []  # no pipenv
+  before_script: []  # no poetry
   needs:
     - legacy fw btconly debug build
   script:
@@ -162,7 +162,7 @@ release core unix debug deploy:
   stage: deploy
   variables:
     DEPLOY_PATH: "${DEPLOY_BASE_DIR}/releases/emulators"
-  before_script: []  # no pipenv
+  before_script: []  # no poetry
   needs:
     - core unix frozen debug build
   script:
@@ -181,7 +181,7 @@ release legacy unix debug deploy:
   stage: deploy
   variables:
     DEPLOY_PATH: "${DEPLOY_BASE_DIR}/releases/emulators"
-  before_script: []  # no pipenv
+  before_script: []  # no poetry
   needs:
     - legacy emu regular debug build
   script:
@@ -200,7 +200,7 @@ release core macos debug deploy:
   stage: deploy
   variables:
     DEPLOY_PATH: "${DEPLOY_BASE_DIR}/releases/emulators/macos"
-  before_script: []  # no pipenv
+  before_script: []  # no poetry
   needs:
     - core unix frozen debug build
   script:
@@ -220,7 +220,7 @@ ui tests core fixtures deploy:
   stage: deploy
   variables:
     DEPLOY_PATH: "${DEPLOY_BASE_DIR}/ui_tests/"
-  before_script: []  # no pipenv
+  before_script: []  # no poetry
   needs:
     - core device ui test
   script:

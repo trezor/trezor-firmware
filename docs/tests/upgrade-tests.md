@@ -1,9 +1,9 @@
 # Running Upgrade Tests
 
-1. As always, use pipenv environment:
+1. As always, use poetry environment:
 
 ```sh
-pipenv shell
+poetry shell
 ```
 
 2. Download the emulators, if you have not already:

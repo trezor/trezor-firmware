@@ -5,7 +5,7 @@ stdenv.mkDerivation rec {
   buildInputs = [
     uhubctl
     ffmpeg
-    pipenv
+    poetry
     libusb1
     dejavu_fonts
   ];

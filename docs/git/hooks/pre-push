@@ -8,17 +8,17 @@ echo "Running pre-push git hook."
 # Runs check for common simple errors before pushing
 echo ""
 echo "Checking templates"
-if ! pipenv run make templates_check
+if ! poetry run make templates_check
 then
-    echo >&2 "Templates not updated, run 'pipenv run make templates'. Not pushing."
+    echo >&2 "Templates not updated, run 'poetry run make templates'. Not pushing."
     exit 1
 fi
 
 echo ""
 echo "Checking style"
-if ! pipenv run make style_check
+if ! poetry run make style_check
 then
-    echo >&2 "Style invalid, run 'pipenv run make style'. Not pushing."
+    echo >&2 "Style invalid, run 'poetry run make style'. Not pushing."
     exit 2
 fi
 
