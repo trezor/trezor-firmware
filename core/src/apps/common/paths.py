@@ -1,11 +1,7 @@
 from micropython import const
 
-from trezor import ui
-from trezor.messages import ButtonRequestType
-from trezor.ui.text import Text
-
 from . import HARDENED
-from .confirm import require_confirm
+from .confirm import require_interact
 
 if False:
     from typing import Any, Callable, List, Sequence, TypeVar
@@ -33,12 +29,9 @@ async def validate_path(
 
 
 async def show_path_warning(ctx: wire.Context, path: Bip32Path) -> None:
-    text = Text("Confirm path", ui.ICON_WRONG, ui.RED)
-    text.normal("Path")
-    text.mono(*break_address_n_to_lines(path))
-    text.normal("is unknown.")
-    text.normal("Are you sure?")
-    await require_confirm(ctx, text, ButtonRequestType.UnknownDerivationPath)
+    await require_interact(
+        ctx, "confirm_path_warning", path_lines=break_address_n_to_lines(path)
+    )
 
 
 def validate_path_for_get_public_key(path: Bip32Path, slip44_id: int) -> bool:

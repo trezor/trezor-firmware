@@ -2,7 +2,8 @@ from trezor.crypto import bip32
 from trezor.messages import InputScriptType
 from trezor.messages.Address import Address
 
-from apps.common.layout import address_n_to_str, show_address, show_qr, show_xpub
+from apps.common.confirm import interact
+from apps.common.layout import address_n_to_str, show_xpub
 from apps.common.paths import validate_path
 
 from . import addresses
@@ -71,20 +72,41 @@ async def get_address(
             else:
                 pubnodes = [hd.node for hd in msg.multisig.pubkeys]
             multisig_index = multisig_pubkey_index(msg.multisig, node.public_key())
-            desc = "Multisig %d of %d" % (msg.multisig.m, len(pubnodes))
+            multisig_n = len(pubnodes)
             while True:
-                if await show_address(ctx, address_short, desc=desc):
+                if await interact(
+                    ctx,
+                    "show_address",
+                    address=address_short,
+                    multisig_m=str(msg.multisig.m),
+                    multisig_n=str(multisig_n),
+                ):
                     break
-                if await show_qr(ctx, address_qr, desc=desc, cancel="XPUBs"):
+                if await interact(
+                    ctx,
+                    "show_qr",
+                    address=address_qr,
+                    multisig_m=str(msg.multisig.m),
+                    multisig_n=str(multisig_n),
+                ):
                     break
                 if await show_xpubs(ctx, coin, pubnodes, multisig_index):
                     break
         else:
-            desc = address_n_to_str(msg.address_n)
             while True:
-                if await show_address(ctx, address_short, desc=desc):
+                if await interact(
+                    ctx,
+                    "show_address",
+                    address=address_short,
+                    address_path=address_n_to_str(msg.address_n),
+                ):
                     break
-                if await show_qr(ctx, address_qr, desc=desc):
+                if await interact(
+                    ctx,
+                    "show_qr",
+                    address=address_qr,
+                    address_path=address_n_to_str(msg.address_n),
+                ):
                     break
 
     return Address(address=address)

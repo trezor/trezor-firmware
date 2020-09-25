@@ -7,7 +7,9 @@ from trezor.messages.EntropyAck import EntropyAck
 from trezor.messages.EntropyRequest import EntropyRequest
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
+from trezor.ui.loader import LoadingAnimation
 
+from apps.common.confirm import require_interact
 from apps.management import backup_types
 from apps.management.change_pin import request_pin_confirm
 from apps.management.reset_device import layout
@@ -26,7 +28,10 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     _validate_reset_device(msg)
 
     # make sure user knows they're setting up a new wallet
-    await layout.show_reset_device_warning(ctx, msg.backup_type)
+    await require_interact(
+        ctx, "confirm_reset_device", backup_type=str(msg.backup_type)
+    )
+    await LoadingAnimation()
 
     # wipe storage to make sure the device is in a clear state
     storage.reset()

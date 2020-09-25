@@ -6,12 +6,16 @@ from trezor.messages import BackupType, ButtonRequestType
 from trezor.ui.button import Button, ButtonDefault
 from trezor.ui.checklist import Checklist
 from trezor.ui.info import InfoConfirm
-from trezor.ui.loader import LoadingAnimation
 from trezor.ui.num_input import NumInput
 from trezor.ui.scroll import Paginated
 from trezor.ui.text import Text
 
-from apps.common.confirm import confirm, require_confirm, require_hold_to_confirm
+from apps.common.confirm import (
+    confirm,
+    interact,
+    require_confirm,
+    require_hold_to_confirm,
+)
 from apps.common.layout import show_success
 
 if False:
@@ -31,44 +35,10 @@ async def show_internal_entropy(ctx, entropy: bytes):
 
 
 async def confirm_backup(ctx):
-    # First prompt
-    text = Text("Success", ui.ICON_CONFIRM, ui.GREEN, new_lines=False)
-    text.bold("New wallet created")
-    text.br()
-    text.bold("successfully!")
-    text.br()
-    text.br_half()
-    text.normal("You should back up your")
-    text.br()
-    text.normal("new wallet right now.")
-    if await confirm(
-        ctx,
-        text,
-        ButtonRequestType.ResetDevice,
-        cancel="Skip",
-        confirm="Back up",
-        major_confirm=True,
-    ):
+    if await interact(ctx, "confirm_backup1"):
         return True
 
-    # If the user selects Skip, ask again
-    text = Text("Warning", ui.ICON_WRONG, ui.RED, new_lines=False)
-    text.bold("Are you sure you want")
-    text.br()
-    text.bold("to skip the backup?")
-    text.br()
-    text.br_half()
-    text.normal("You can back up your")
-    text.br()
-    text.normal("Trezor once, at any time.")
-    return await confirm(
-        ctx,
-        text,
-        ButtonRequestType.ResetDevice,
-        cancel="Skip",
-        confirm="Back up",
-        major_confirm=True,
-    )
+    return await interact(ctx, "confirm_backup2")
 
 
 async def _show_share_words(ctx, share_words, share_index=None, group_index=None):
@@ -642,27 +612,3 @@ class MnemonicWordSelect(ui.Layout):
 
         def create_tasks(self) -> Tuple[loop.Task, ...]:
             return super().create_tasks() + (debug.input_signal(),)
-
-
-async def show_reset_device_warning(ctx, backup_type: BackupType = BackupType.Bip39):
-    text = Text("Create new wallet", ui.ICON_RESET, new_lines=False)
-    if backup_type == BackupType.Slip39_Basic:
-        text.bold("Create a new wallet")
-        text.br()
-        text.bold("with Shamir Backup?")
-    elif backup_type == BackupType.Slip39_Advanced:
-        text.bold("Create a new wallet")
-        text.br()
-        text.bold("with Super Shamir?")
-    else:
-        text.bold("Do you want to create")
-        text.br()
-        text.bold("a new wallet?")
-    text.br()
-    text.br_half()
-    text.normal("By continuing you agree")
-    text.br()
-    text.normal("to")
-    text.bold("https://trezor.io/tos")
-    await require_confirm(ctx, text, ButtonRequestType.ResetDevice, major_confirm=True)
-    await LoadingAnimation()
