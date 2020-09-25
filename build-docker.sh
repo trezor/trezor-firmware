@@ -43,9 +43,9 @@ for BITCOIN_ONLY in 0 1; do
       ln -s /build build &&
       git checkout $TAG && \
       git submodule update --init --recursive && \
-      pipenv install && \
-      pipenv run make clean vendor build_firmware && \
-      pipenv run ../python/tools/firmware-fingerprint.py \
+      poetry install && \
+      poetry run make clean vendor build_firmware && \
+      poetry run ../python/tools/firmware-fingerprint.py \
           -o build/firmware/firmware.bin.fingerprint \
           build/firmware/firmware.bin && \
       chown -R $USER:$GROUP /build"
@@ -72,12 +72,12 @@ for BITCOIN_ONLY in 0 1; do
       ln -s /build build &&
       git checkout $TAG && \
       git submodule update --init --recursive && \
-      pipenv install && \
-      pipenv run script/cibuild && \
+      poetry install && \
+      poetry run script/cibuild && \
       mkdir -p build/firmware && \
       cp firmware/trezor.bin build/firmware/firmware.bin && \
       cp firmware/trezor.elf build/firmware/firmware.elf && \
-      pipenv run ../python/tools/firmware-fingerprint.py \
+      poetry run ../python/tools/firmware-fingerprint.py \
           -o build/firmware/firmware.bin.fingerprint \
           build/firmware/firmware.bin && \
       chown -R $USER:$GROUP /build"

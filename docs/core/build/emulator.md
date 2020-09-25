@@ -1,7 +1,7 @@
 # Build instructions for Emulator (Unix port)
 
-First clone, initialize submodules, install Pipenv and enter the Pipenv shell as 
-defined [here](index.md). **Do not forget you need to be in a `pipenv shell`
+First clone, initialize submodules, install Poetry and enter the Poetry shell as 
+defined [here](index.md). **Do not forget you need to be in a `poetry shell`
 environment!**
 
 ## Dependencies

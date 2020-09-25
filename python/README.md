@@ -70,15 +70,15 @@ pip3 install "git+https://github.com/trezor/trezor-firmware#egg=trezor&subdirect
 
 ### Running from source
 
-Install the [pipenv](https://pipenv.readthedocs.io/en/latest/) tool, checkout
-`trezor-firmware` from git, and enter the pipenv shell:
+Install the [Poetry](https://python-poetry.org/) tool, checkout
+`trezor-firmware` from git, and enter the poetry shell:
 
 ```sh
-pip3 install pipenv
+pip3 install poetry
 git clone https://github.com/trezor/trezor-firmware
 cd trezor-firmware
-pipenv sync
-pipenv shell
+poetry install
+poetry shell
 ```
 
 In this environment, trezorlib and the `trezorctl` tool is running from the live

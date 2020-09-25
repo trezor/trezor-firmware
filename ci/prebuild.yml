@@ -10,7 +10,7 @@ style prebuild:
       - "**/*.h"
       - "**/*.py"
   script:
-    - nix-shell --run "pipenv run make style_check"
+    - nix-shell --run "poetry run make style_check"
 
 common prebuild:
   stage: prebuild
@@ -21,7 +21,7 @@ common prebuild:
       - "**/*.json"
       - "**/*.proto"
   script:
-    - nix-shell --run "pipenv run make defs_check"
+    - nix-shell --run "poetry run make defs_check"
 
 gen prebuild:
   stage: prebuild
@@ -36,7 +36,7 @@ gen prebuild:
       - "**/*.py"
       - "**/*.pyi"
   script:
-    - nix-shell --run "pipenv run make gen_check"
+    - nix-shell --run "poetry run make gen_check"
 
 release commit messages prebuild:
   stage: prebuild

@@ -22,17 +22,17 @@ env:
 
 install:
     - pip install --upgrade pip wheel setuptools
-    - pip install pipenv
-    - pipenv sync
-    # make sure pipenv is installable without protobuf - install protoc later
+    - pip install poetry
+    - poetry install
+    # make sure poetry is installable without protobuf - install protoc later
     - curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
     - unzip "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" -d protoc
     - export PATH="$(pwd)/protoc/bin:$PATH"
 
 script:
-    - pipenv run make style_check
-    - pipenv run make defs_check
-    - pipenv run make gen_check
+    - poetry run make style_check
+    - poetry run make defs_check
+    - poetry run make gen_check
     - ci/check_fixup.sh
 
 notifications:
