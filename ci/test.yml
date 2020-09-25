@@ -173,6 +173,7 @@ crypto test:
   stage: test
   only:
     changes:
+      - .gitlab-ci.yml
       - ci/**/*
       - crypto/**/*
   needs: ["crypto build"]
@@ -259,6 +260,7 @@ python test:
     changes:
       - Pipfile.lock
       - poetry.lock
+      - .gitlab-ci.yml
       - ci/**/*
       - common/**/*
       - python/**/*
@@ -272,6 +274,7 @@ storage test:
   stage: test
   only:
     changes:
+      - .gitlab-ci.yml
       - ci/**/*
       - storage/**/*
   needs: []

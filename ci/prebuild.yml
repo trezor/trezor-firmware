@@ -4,6 +4,7 @@ style prebuild:
   stage: prebuild
   only:
     changes:
+      - .gitlab-ci.yml
       - ci/**/*
       - "**/*.c"
       - "**/*.h"
@@ -15,6 +16,7 @@ common prebuild:
   stage: prebuild
   only:
     changes:
+      - .gitlab-ci.yml
       - ci/**/*
       - "**/*.json"
       - "**/*.proto"
@@ -25,6 +27,7 @@ gen prebuild:
   stage: prebuild
   only:
     changes:
+      - .gitlab-ci.yml
       - ci/**/*
       - "**/*.c"
       - "**/*.h"

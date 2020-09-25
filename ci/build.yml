@@ -158,6 +158,7 @@ crypto build:
   needs: []
   only:
     changes:
+      - .gitlab-ci.yml
       - ci/**/*
       - crypto/**/*
   script:
