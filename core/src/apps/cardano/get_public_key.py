@@ -20,7 +20,11 @@ async def get_public_key(
     ctx: wire.Context, msg: CardanoGetPublicKey, keychain: seed.Keychain
 ):
     await paths.validate_path(
-        ctx, _validate_path_for_get_public_key, keychain, msg.address_n, CURVE,
+        ctx,
+        _validate_path_for_get_public_key,
+        keychain,
+        msg.address_n,
+        CURVE,
     )
 
     try:

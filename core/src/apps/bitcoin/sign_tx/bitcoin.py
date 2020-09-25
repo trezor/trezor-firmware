@@ -364,7 +364,8 @@ class Bitcoin:
                     if txi.script_type == InputScriptType.SPENDMULTISIG:
                         assert txi.multisig is not None  # checked in sanitize_tx_input
                         script_pubkey = scripts.output_script_multisig(
-                            multisig.multisig_get_pubkeys(txi.multisig), txi.multisig.m,
+                            multisig.multisig_get_pubkeys(txi.multisig),
+                            txi.multisig.m,
                         )
                     elif txi.script_type == InputScriptType.SPENDADDRESS:
                         script_pubkey = scripts.output_script_p2pkh(
@@ -478,17 +479,26 @@ class Bitcoin:
         return self.get_sighash_type(txi) & 0xFF
 
     def write_tx_input(
-        self, w: writers.Writer, txi: Union[TxInput, PrevInput], script: bytes,
+        self,
+        w: writers.Writer,
+        txi: Union[TxInput, PrevInput],
+        script: bytes,
     ) -> None:
         writers.write_tx_input(w, txi, script)
 
     def write_tx_output(
-        self, w: writers.Writer, txo: Union[TxOutput, PrevOutput], script_pubkey: bytes,
+        self,
+        w: writers.Writer,
+        txo: Union[TxOutput, PrevOutput],
+        script_pubkey: bytes,
     ) -> None:
         writers.write_tx_output(w, txo, script_pubkey)
 
     def write_tx_header(
-        self, w: writers.Writer, tx: Union[SignTx, PrevTx], witness_marker: bool,
+        self,
+        w: writers.Writer,
+        tx: Union[SignTx, PrevTx],
+        witness_marker: bool,
     ) -> None:
         writers.write_uint32(w, tx.version)  # nVersion
         if witness_marker:

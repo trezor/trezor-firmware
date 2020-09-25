@@ -159,7 +159,12 @@ class TestMsgSigntxZcash:
 
         with pytest.raises(TrezorFailure, match="Version group ID must be set."):
             btc.sign_tx(
-                client, "Zcash Testnet", [inp1], [out1], version=4, prev_txes=TX_API,
+                client,
+                "Zcash Testnet",
+                [inp1],
+                [out1],
+                version=4,
+                prev_txes=TX_API,
             )
 
     def test_spend_old_versions(self, client):

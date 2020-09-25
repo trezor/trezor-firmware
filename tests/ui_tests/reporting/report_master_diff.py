@@ -178,7 +178,11 @@ def create_reports():
                     "Folder does not exist, has it been recorded?", current_screens
                 )
             diff(
-                master_screens, current_screens, test_name, master_hash, current_hash,
+                master_screens,
+                current_screens,
+                test_name,
+                master_hash,
+                current_hash,
             )
 
 

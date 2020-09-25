@@ -46,7 +46,9 @@ def emulator(gen, tag):
     with EmulatorWrapper(gen, tag) as emu:
         # set up a passphrase-protected device
         device.reset(
-            emu.client, pin_protection=False, skip_backup=True,
+            emu.client,
+            pin_protection=False,
+            skip_backup=True,
         )
         resp = emu.client.call(
             ApplySettingsCompat(use_passphrase=True, passphrase_source=SOURCE_HOST)

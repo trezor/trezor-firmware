@@ -299,7 +299,11 @@ def test_p2wpkh_presigned(client):
     # Test with second input as pre-signed external.
     with client:
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_CACHE_TESTNET,
+            client,
+            "Testnet",
+            [inp1, inp2],
+            [out1, out2],
+            prev_txes=TX_CACHE_TESTNET,
         )
 
     assert (
@@ -311,7 +315,11 @@ def test_p2wpkh_presigned(client):
     inp2.witness[10] ^= 1
     with pytest.raises(TrezorFailure, match="Invalid signature"):
         btc.sign_tx(
-            client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_CACHE_TESTNET,
+            client,
+            "Testnet",
+            [inp1, inp2],
+            [out1, out2],
+            prev_txes=TX_CACHE_TESTNET,
         )
 
 
@@ -482,7 +490,11 @@ def test_p2wpkh_with_proof(client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_CACHE_TESTNET,
+            client,
+            "Testnet",
+            [inp1, inp2],
+            [out1, out2],
+            prev_txes=TX_CACHE_TESTNET,
         )
 
     assert (
@@ -494,7 +506,11 @@ def test_p2wpkh_with_proof(client):
     inp1.ownership_proof[10] ^= 1
     with pytest.raises(TrezorFailure, match="Invalid signature"):
         btc.sign_tx(
-            client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_CACHE_TESTNET,
+            client,
+            "Testnet",
+            [inp1, inp2],
+            [out1, out2],
+            prev_txes=TX_CACHE_TESTNET,
         )
 
 
@@ -551,5 +567,9 @@ def test_p2wpkh_with_false_proof(client):
 
         with pytest.raises(TrezorFailure, match="Invalid external input"):
             btc.sign_tx(
-                client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_CACHE_TESTNET,
+                client,
+                "Testnet",
+                [inp1, inp2],
+                [out1],
+                prev_txes=TX_CACHE_TESTNET,
             )

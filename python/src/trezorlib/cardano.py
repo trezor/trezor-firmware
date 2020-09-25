@@ -152,7 +152,8 @@ def create_certificate(certificate) -> messages.CardanoTxCertificateType:
         or certificate_type == messages.CardanoCertificateType.STAKE_DEREGISTRATION
     ):
         return messages.CardanoTxCertificateType(
-            type=certificate_type, path=tools.parse_path(path),
+            type=certificate_type,
+            path=tools.parse_path(path),
         )
     else:
         raise ValueError("Unknown certificate type")
@@ -164,7 +165,8 @@ def create_withdrawal(withdrawal) -> messages.CardanoTxWithdrawalType:
 
     path = withdrawal["path"]
     return messages.CardanoTxWithdrawalType(
-        path=tools.parse_path(path), amount=int(withdrawal["amount"]),
+        path=tools.parse_path(path),
+        amount=int(withdrawal["amount"]),
     )
 
 

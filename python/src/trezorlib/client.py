@@ -83,7 +83,10 @@ class TrezorClient:
     """
 
     def __init__(
-        self, transport, ui, session_id=None,
+        self,
+        transport,
+        ui,
+        session_id=None,
     ):
         LOG.info("creating client instance for device: {}".format(transport.get_path()))
         self.transport = transport
@@ -326,7 +329,9 @@ class TrezorClient:
 
     @tools.expect(messages.Success, field="message")
     def ping(
-        self, msg, button_protection=False,
+        self,
+        msg,
+        button_protection=False,
     ):
         # We would like ping to work on any valid TrezorClient instance, but
         # due to the protection modes, we need to go through self.call, and that will
@@ -345,7 +350,7 @@ class TrezorClient:
             finally:
                 self.close()
 
-        msg = messages.Ping(message=msg, button_protection=button_protection,)
+        msg = messages.Ping(message=msg, button_protection=button_protection)
         return self.call(msg)
 
     def get_device_id(self):

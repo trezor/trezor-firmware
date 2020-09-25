@@ -83,7 +83,10 @@ class EmulatorWrapper:
 
         if gen == "legacy":
             self.emulator = LegacyEmulator(
-                executable, self.profile_dir.name, storage=storage, headless=True,
+                executable,
+                self.profile_dir.name,
+                storage=storage,
+                headless=True,
             )
         elif gen == "core":
             self.emulator = CoreEmulator(

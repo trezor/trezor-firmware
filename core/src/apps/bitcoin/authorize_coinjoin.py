@@ -21,7 +21,7 @@ if False:
 _MAX_COORDINATOR_LEN = const(18)
 
 
-async def authorize_coinjoin(ctx: wire.Context, msg: AuthorizeCoinJoin,) -> Success:
+async def authorize_coinjoin(ctx: wire.Context, msg: AuthorizeCoinJoin) -> Success:
     # We cannot use the @with_keychain decorator here, because we need the keychain
     # to survive the function exit. The ownership of the keychain is transferred to
     # the CoinJoinAuthorization object, which takes care of its destruction.

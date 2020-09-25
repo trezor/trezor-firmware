@@ -83,7 +83,8 @@ def test_apply_auto_lock_delay_valid(client, seconds):
 
 @pytest.mark.skip_ui
 @pytest.mark.parametrize(
-    "seconds", [0, 1, 9, 536871, 2 ** 22],
+    "seconds",
+    [0, 1, 9, 536871, 2 ** 22],
 )
 def test_apply_auto_lock_delay_out_of_range(client, seconds):
     with client:

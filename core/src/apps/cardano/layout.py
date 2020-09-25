@@ -80,7 +80,9 @@ async def show_warning_tx_no_staking_info(
 
 
 async def show_warning_tx_pointer_address(
-    ctx: wire.Context, pointer: CardanoBlockchainPointerType, amount: int,
+    ctx: wire.Context,
+    pointer: CardanoBlockchainPointerType,
+    amount: int,
 ):
     page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     page1.normal("Change address has a")
@@ -100,7 +102,9 @@ async def show_warning_tx_pointer_address(
 
 
 async def show_warning_tx_different_staking_account(
-    ctx: wire.Context, staking_account_path: List[int], amount: int,
+    ctx: wire.Context,
+    staking_account_path: List[int],
+    amount: int,
 ):
     page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     page1.normal("Change address staking")
@@ -117,7 +121,9 @@ async def show_warning_tx_different_staking_account(
 
 
 async def show_warning_tx_staking_key_hash(
-    ctx: wire.Context, staking_key_hash: bytes, amount: int,
+    ctx: wire.Context,
+    staking_key_hash: bytes,
+    amount: int,
 ):
     page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     page1.normal("Change address staking")
@@ -282,7 +288,9 @@ async def show_warning_address_foreign_staking_key(
         staking_key_message = ("Staking key:", hexlify(staking_key_hash).decode())
 
     await show_warning(
-        ctx, staking_key_message, button="Ok",
+        ctx,
+        staking_key_message,
+        button="Ok",
     )
 
 

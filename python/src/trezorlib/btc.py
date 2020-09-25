@@ -198,7 +198,9 @@ def sign_tx(
     and cannot be overriden by kwargs.
     """
     signtx = messages.SignTx(
-        coin_name=coin_name, inputs_count=len(inputs), outputs_count=len(outputs),
+        coin_name=coin_name,
+        inputs_count=len(inputs),
+        outputs_count=len(outputs),
     )
     for name, value in kwargs.items():
         if hasattr(signtx, name):

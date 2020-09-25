@@ -153,7 +153,7 @@ async def require_confirm_change_autolock_delay(ctx, delay_ms):
     await require_confirm(ctx, text, ButtonRequestType.ProtectCall)
 
 
-async def require_confirm_safety_checks(ctx, level: EnumTypeSafetyCheckLevel,) -> None:
+async def require_confirm_safety_checks(ctx, level: EnumTypeSafetyCheckLevel) -> None:
     if level == SafetyCheckLevel.PromptAlways:
         text = Text("Safety override", ui.ICON_CONFIG)
         text.normal(

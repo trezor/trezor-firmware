@@ -113,7 +113,10 @@ class Keychain:
         raise FORBIDDEN_KEY_PATH
 
     def _derive_with_cache(
-        self, prefix_len: int, path: paths.PathType, new_root: Callable[[], NodeType],
+        self,
+        prefix_len: int,
+        path: paths.PathType,
+        new_root: Callable[[], NodeType],
     ) -> NodeType:
         cached_prefix = tuple(path[:prefix_len])
         cached_root = self._cache.get(cached_prefix)  # type: Optional[NodeType]
@@ -141,7 +144,9 @@ class Keychain:
             raise FORBIDDEN_KEY_PATH
 
         return self._derive_with_cache(
-            prefix_len=1, path=path, new_root=lambda: Slip21Node(seed=self.seed),
+            prefix_len=1,
+            path=path,
+            new_root=lambda: Slip21Node(seed=self.seed),
         )
 
     def __enter__(self) -> "Keychain":

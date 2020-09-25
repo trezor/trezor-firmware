@@ -19,7 +19,8 @@ def request_output(n, tx_hash=None):
 
 def request_meta(tx_hash):
     return messages.TxRequest(
-        request_type=T.TXMETA, details=messages.TxRequestDetailsType(tx_hash=tx_hash),
+        request_type=T.TXMETA,
+        details=messages.TxRequestDetailsType(tx_hash=tx_hash),
     )
 
 

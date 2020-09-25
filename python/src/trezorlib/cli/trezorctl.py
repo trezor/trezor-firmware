@@ -145,7 +145,10 @@ def configure_logging(verbose: int):
     "-j", "--json", "is_json", is_flag=True, help="Print result as JSON object"
 )
 @click.option(
-    "-P", "--passphrase-on-host", is_flag=True, help="Enter passphrase on host.",
+    "-P",
+    "--passphrase-on-host",
+    is_flag=True,
+    help="Enter passphrase on host.",
 )
 @click.option(
     "-s",

@@ -67,11 +67,11 @@ class PinButton(QPushButton):
 
 class PinMatrixWidget(QWidget):
     """
-        Displays widget with nine blank buttons and password box.
-        Encodes button clicks into sequence of numbers for passing
-        into PinAck messages of Trezor.
+    Displays widget with nine blank buttons and password box.
+    Encodes button clicks into sequence of numbers for passing
+    into PinAck messages of Trezor.
 
-        show_strength=True may be useful for entering new PIN
+    show_strength=True may be useful for entering new PIN
     """
 
     def __init__(self, show_strength=True, parent=None):
@@ -142,7 +142,7 @@ class PinMatrixWidget(QWidget):
 
 if __name__ == "__main__":
     """
-        Demo application showing PinMatrix widget in action
+    Demo application showing PinMatrix widget in action
     """
     app = QApplication(sys.argv)
 

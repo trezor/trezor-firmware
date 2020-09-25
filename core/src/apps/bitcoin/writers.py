@@ -38,7 +38,7 @@ def write_bytes_prefixed(w: Writer, b: bytes) -> None:
     write_bytes_unchecked(w, b)
 
 
-def write_tx_input(w: Writer, i: Union[TxInput, PrevInput], script: bytes,) -> None:
+def write_tx_input(w: Writer, i: Union[TxInput, PrevInput], script: bytes) -> None:
     write_bytes_reversed(w, i.prev_hash, TX_HASH_SIZE)
     write_uint32(w, i.prev_index)
     write_bytes_prefixed(w, script)

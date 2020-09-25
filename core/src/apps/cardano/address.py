@@ -196,7 +196,9 @@ def _derive_byron_address(
 
 
 def _derive_shelley_address(
-    keychain: seed.Keychain, parameters: CardanoAddressParametersType, network_id: int,
+    keychain: seed.Keychain,
+    parameters: CardanoAddressParametersType,
+    network_id: int,
 ) -> bytes:
     if not is_shelley_path(parameters.address_n):
         raise wire.DataError("Invalid path for shelley address!")
@@ -213,7 +215,10 @@ def _derive_shelley_address(
         address = _derive_enterprise_address(keychain, parameters.address_n, network_id)
     elif parameters.address_type == CardanoAddressType.POINTER:
         address = _derive_pointer_address(
-            keychain, parameters.address_n, parameters.certificate_pointer, network_id,
+            keychain,
+            parameters.address_n,
+            parameters.certificate_pointer,
+            network_id,
         )
     elif parameters.address_type == CardanoAddressType.REWARD:
         address = _derive_reward_address(keychain, parameters.address_n, network_id)
@@ -249,7 +254,8 @@ def _derive_base_address(
 
 
 def _validate_base_address_staking_info(
-    staking_path: List[int], staking_key_hash: bytes,
+    staking_path: List[int],
+    staking_key_hash: bytes,
 ) -> None:
     if (staking_key_hash is None) == (not staking_path):
         raise wire.DataError(
@@ -311,7 +317,9 @@ def _encode_certificate_pointer(pointer: CardanoBlockchainPointerType) -> bytes:
 
 
 def _derive_enterprise_address(
-    keychain: seed.Keychain, path: List[int], network_id: int,
+    keychain: seed.Keychain,
+    path: List[int],
+    network_id: int,
 ) -> bytes:
     header = _create_address_header(CardanoAddressType.ENTERPRISE, network_id)
     spending_key_hash = get_public_key_hash(keychain, path)
@@ -320,7 +328,9 @@ def _derive_enterprise_address(
 
 
 def _derive_reward_address(
-    keychain: seed.Keychain, path: List[int], network_id: int,
+    keychain: seed.Keychain,
+    path: List[int],
+    network_id: int,
 ) -> bytes:
     if not is_staking_path(path):
         raise wire.DataError("Invalid path for reward address!")

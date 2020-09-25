@@ -286,7 +286,8 @@ def _build_withdrawals(
         reward_address = derive_address_bytes(
             keychain,
             CardanoAddressParametersType(
-                address_type=CardanoAddressType.REWARD, address_n=withdrawal.path,
+                address_type=CardanoAddressType.REWARD,
+                address_n=withdrawal.path,
             ),
             protocol_magic,
             network_id,
@@ -465,16 +466,22 @@ async def _show_change_output_staking_warnings(
         await show_warning_tx_no_staking_info(ctx, address_type, amount)
     elif staking_use_case == staking_use_cases.POINTER_ADDRESS:
         await show_warning_tx_pointer_address(
-            ctx, address_parameters.certificate_pointer, amount,
+            ctx,
+            address_parameters.certificate_pointer,
+            amount,
         )
     elif staking_use_case == staking_use_cases.MISMATCH:
         if address_parameters.address_n_staking:
             await show_warning_tx_different_staking_account(
-                ctx, to_account_path(address_parameters.address_n_staking), amount,
+                ctx,
+                to_account_path(address_parameters.address_n_staking),
+                amount,
             )
         else:
             await show_warning_tx_staking_key_hash(
-                ctx, address_parameters.staking_key_hash, amount,
+                ctx,
+                address_parameters.staking_key_hash,
+                amount,
             )
 
 

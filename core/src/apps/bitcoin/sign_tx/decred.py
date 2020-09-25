@@ -155,7 +155,10 @@ class Decred(Bitcoin):
         self.write_tx_output(self.h_prefix, txo, script_pubkey)
 
     def write_tx_input(
-        self, w: writers.Writer, txi: Union[TxInput, PrevInput], script: bytes,
+        self,
+        w: writers.Writer,
+        txi: Union[TxInput, PrevInput],
+        script: bytes,
     ) -> None:
         writers.write_bytes_reversed(w, txi.prev_hash, writers.TX_HASH_SIZE)
         writers.write_uint32(w, txi.prev_index or 0)
@@ -163,7 +166,10 @@ class Decred(Bitcoin):
         writers.write_uint32(w, txi.sequence)
 
     def write_tx_output(
-        self, w: writers.Writer, txo: Union[TxOutput, PrevOutput], script_pubkey: bytes,
+        self,
+        w: writers.Writer,
+        txo: Union[TxOutput, PrevOutput],
+        script_pubkey: bytes,
     ) -> None:
         writers.write_uint64(w, txo.amount)
         if isinstance(txo, PrevOutput):
@@ -175,7 +181,10 @@ class Decred(Bitcoin):
         writers.write_bytes_prefixed(w, script_pubkey)
 
     def write_tx_header(
-        self, w: writers.Writer, tx: Union[SignTx, PrevTx], witness_marker: bool,
+        self,
+        w: writers.Writer,
+        tx: Union[SignTx, PrevTx],
+        witness_marker: bool,
     ) -> None:
         # The upper 16 bits of the transaction version specify the serialization
         # format and the lower 16 bits specify the version number.

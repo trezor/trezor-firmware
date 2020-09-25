@@ -62,7 +62,10 @@ class Bitcoinlike(Bitcoin):
         return hashtype
 
     def write_tx_header(
-        self, w: writers.Writer, tx: Union[SignTx, PrevTx], witness_marker: bool,
+        self,
+        w: writers.Writer,
+        tx: Union[SignTx, PrevTx],
+        witness_marker: bool,
     ) -> None:
         writers.write_uint32(w, tx.version)  # nVersion
         if self.coin.timestamp:

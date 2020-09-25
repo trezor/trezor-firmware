@@ -957,7 +957,11 @@ class TestMsgSigntx:
             # Now run the attack, must trigger the exception
             with pytest.raises(TrezorFailure) as exc:
                 btc.sign_tx(
-                    client, "Testnet", [inp1], [out1, out2], prev_txes=TX_CACHE_TESTNET,
+                    client,
+                    "Testnet",
+                    [inp1],
+                    [out1, out2],
+                    prev_txes=TX_CACHE_TESTNET,
                 )
 
             assert exc.value.code == messages.FailureType.ProcessError
