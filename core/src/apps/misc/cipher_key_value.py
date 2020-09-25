@@ -2,7 +2,7 @@ from trezor import wire
 from trezor.crypto import aes, hmac
 from trezor.crypto.hashlib import sha512
 from trezor.messages.CipheredKeyValue import CipheredKeyValue
-from trezor.ui.text import Text
+from trezor.ui.model.tt.text import Text
 
 from apps.common.confirm import require_confirm
 from apps.common.keychain import get_keychain

@@ -7,9 +7,9 @@ from trezor.messages import (
     CardanoCertificateType,
 )
 from trezor.strings import format_amount
-from trezor.ui.button import ButtonDefault
-from trezor.ui.scroll import Paginated
-from trezor.ui.text import Text
+from trezor.ui.model.tt.button import ButtonDefault
+from trezor.ui.model.tt.scroll import Paginated
+from trezor.ui.model.tt.text import Text
 from trezor.utils import chunks
 
 from apps.common.confirm import confirm, require_confirm, require_hold_to_confirm

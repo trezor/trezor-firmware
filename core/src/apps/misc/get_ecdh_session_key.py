@@ -3,7 +3,7 @@ from ustruct import pack, unpack
 from trezor import wire
 from trezor.crypto.hashlib import sha256
 from trezor.messages.ECDHSessionKey import ECDHSessionKey
-from trezor.ui.text import Text
+from trezor.ui.model.tt.text import Text
 from trezor.utils import chunks
 
 from apps.common import HARDENED

@@ -3,12 +3,12 @@ import ubinascii
 from trezor import ui, utils
 from trezor.crypto import random
 from trezor.messages import BackupType, ButtonRequestType
-from trezor.ui.button import Button, ButtonDefault
-from trezor.ui.checklist import Checklist
-from trezor.ui.info import InfoConfirm
-from trezor.ui.num_input import NumInput
-from trezor.ui.scroll import Paginated
-from trezor.ui.text import Text
+from trezor.ui.model.tt.button import Button, ButtonDefault
+from trezor.ui.model.tt.checklist import Checklist
+from trezor.ui.model.tt.info import InfoConfirm
+from trezor.ui.model.tt.num_input import NumInput
+from trezor.ui.model.tt.scroll import Paginated
+from trezor.ui.model.tt.text import Text
 
 from apps.common.confirm import (
     confirm,

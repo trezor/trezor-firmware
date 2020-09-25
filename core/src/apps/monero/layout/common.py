@@ -1,6 +1,6 @@
 from trezor import strings, ui, utils
 from trezor.messages import ButtonRequestType
-from trezor.ui.text import Text
+from trezor.ui.model.tt.text import Text
 
 from apps.common import button_request
 
@@ -8,7 +8,7 @@ from apps.common import button_request
 async def naive_pagination(
     ctx, lines, title, icon=ui.ICON_RESET, icon_color=ui.ORANGE, per_page=5
 ):
-    from trezor.ui.scroll import CANCELLED, CONFIRMED, PaginatedWithButtons
+    from trezor.ui.model.tt.scroll import CANCELLED, CONFIRMED, PaginatedWithButtons
 
     pages = []
     page_lines = paginate_lines(lines, per_page)

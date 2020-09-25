@@ -3,11 +3,11 @@ from ubinascii import hexlify
 
 from trezor import ui
 from trezor.messages import ButtonRequestType
-from trezor.ui.button import ButtonDefault
 from trezor.ui.container import Container
+from trezor.ui.model.tt.button import ButtonDefault
+from trezor.ui.model.tt.scroll import Paginated
+from trezor.ui.model.tt.text import Text
 from trezor.ui.qr import Qr
-from trezor.ui.scroll import Paginated
-from trezor.ui.text import Text
 from trezor.utils import chunks
 
 from apps.common import HARDENED

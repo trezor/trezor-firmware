@@ -1,9 +1,10 @@
 from micropython import const
 
 from trezor import loop, res, ui, utils
-from trezor.ui.button import Button, ButtonCancel, ButtonConfirm, ButtonDefault
-from trezor.ui.confirm import CANCELLED, CONFIRMED
-from trezor.ui.swipe import SWIPE_DOWN, SWIPE_UP, SWIPE_VERTICAL, Swipe
+
+from .button import Button, ButtonCancel, ButtonConfirm, ButtonDefault
+from .confirm import CANCELLED, CONFIRMED
+from .swipe import SWIPE_DOWN, SWIPE_UP, SWIPE_VERTICAL, Swipe
 
 if __debug__:
     from apps.debug import confirm_signal, swipe_signal, notify_layout_change

@@ -1,11 +1,11 @@
 from trezor import io, loop, res, ui, workflow
 from trezor.crypto import slip39
 from trezor.ui import display
-from trezor.ui.button import Button, ButtonClear, ButtonMono, ButtonMonoConfirm
+from trezor.ui.model.tt.button import Button, ButtonClear, ButtonMono, ButtonMonoConfirm
 
 if False:
     from typing import Optional, Tuple
-    from trezor.ui.button import ButtonContent, ButtonStyleStateType
+    from trezor.ui.model.tt.button import ButtonContent, ButtonStyleStateType
 
 
 class KeyButton(Button):

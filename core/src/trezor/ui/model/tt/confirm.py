@@ -11,7 +11,7 @@ if __debug__:
 
 if False:
     from typing import Any, List, Tuple, Optional
-    from trezor.ui.button import ButtonContent, ButtonStyleType
+    from .button import ButtonContent, ButtonStyleType
     from trezor.ui.loader import LoaderStyleType
 
 
@@ -85,7 +85,7 @@ class ConfirmPageable(Confirm):
         self.pageable = pageable
 
     async def handle_paging(self) -> None:
-        from trezor.ui.swipe import SWIPE_HORIZONTAL, SWIPE_LEFT, SWIPE_RIGHT, Swipe
+        from .swipe import SWIPE_HORIZONTAL, SWIPE_LEFT, SWIPE_RIGHT, Swipe
 
         if self.pageable.is_first():
             directions = SWIPE_LEFT
