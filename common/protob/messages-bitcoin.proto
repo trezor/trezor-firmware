@@ -296,6 +296,9 @@ message TxAck {
 }
 
 /** Data type for transaction input to be signed.
+ *
+ * When adding fields, take care to not conflict with PrevInput
+ *
  * @embed
  */
 message TxInput {
@@ -312,6 +315,8 @@ message TxInput {
     optional bytes ownership_proof = 14;                                // SLIP-0019 proof of ownership, only set for EXTERNAL inputs
     optional bytes commitment_data = 15;                                // optional commitment data for the SLIP-0019 proof of ownership
 
+    // fields which are in use, or have been in the past, in TxInputType
+    reserved 10, 11, 12;
 }
 
 /** Data type for transaction output to be signed.
@@ -324,6 +329,9 @@ message TxOutput {
     optional OutputScriptType script_type = 4 [default=PAYTOADDRESS];      // output script type
     optional MultisigRedeemScriptType multisig = 5; // defines multisig address; script_type must be PAYTOMULTISIG
     optional bytes op_return_data = 6;              // defines op_return data; script_type must be PAYTOOPRETURN, amount must be 0
+
+    // fields which are in use, or have been in the past, in TxOutputType
+    reserved 7, 8, 9;
 }
 
 /** Data type for metadata about previous transaction which contains the UTXO being spent.
@@ -339,9 +347,14 @@ message PrevTx {
     optional uint32 version_group_id = 12;  // only for Zcash, nVersionGroupId
     optional uint32 timestamp = 13;         // only for Peercoin
     optional uint32 branch_id = 14;         // only for Zcash, BRANCH_ID
+
+    // fields which are in use, or have been in the past, in TransactionType
+    reserved 2, 3, 5, 8, 11;
 }
 
 /** Data type for inputs of previous transactions.
+ *
+ * When adding fields, take care to not conflict with TxInput
  * @embed
  */
 message PrevInput {
@@ -350,6 +363,9 @@ message PrevInput {
     required bytes script_sig = 4;                                      // script signature
     required uint32 sequence = 5;                                       // sequence
     optional uint32 decred_tree = 9;                                    // only for Decred
+
+    // fields that are in use, or have been in the past, in TxInputType
+    reserved 1, 6, 7, 8, 10, 11, 12, 13, 14, 15;
 }
 
 /** Data type for outputs of previous transactions.
@@ -364,6 +380,9 @@ message PrevOutput {
 /**
  * Request: Data about input to be signed.
  * Wire-alias of TxAck.
+ *
+ * Do not edit this type without considering compatibility with TxAck.
+ * Prefer to modify the inner TxInput type.
  *
  * @next TxRequest
  */
@@ -381,6 +400,9 @@ message TxAckInput {
  * Request: Data about output to be signed.
  * Wire-alias of TxAck.
  *
+ * Do not edit this type without considering compatibility with TxAck.
+ * Prefer to modify the inner TxOutput type.
+ *
  * @next TxRequest
  */
 message TxAckOutput {
@@ -397,6 +419,9 @@ message TxAckOutput {
  * Request: Data about previous transaction metadata
  * Wire-alias of TxAck.
  *
+ * Do not edit this type without considering compatibility with TxAck.
+ * Prefer to modify the inner PrevTx type.
+ *
  * @next TxRequest
  */
 message TxAckPrevMeta {
@@ -408,6 +433,9 @@ message TxAckPrevMeta {
 /**
  * Request: Data about previous transaction input
  * Wire-alias of TxAck.
+ *
+ * Do not edit this type without considering compatibility with TxAck.
+ * Prefer to modify the inner PrevInput type.
  *
  * @next TxRequest
  */
@@ -426,6 +454,9 @@ message TxAckPrevInput {
  * Request: Data about previous transaction output
  * Wire-alias of TxAck.
  *
+ * Do not edit this type without considering compatibility with TxAck.
+ * Prefer to modify the inner PrevOutput type.
+ *
  * @next TxRequest
  */
 message TxAckPrevOutput {
@@ -441,6 +472,8 @@ message TxAckPrevOutput {
 /**
  * Request: Content of the extra data of a previous transaction
  * Wire-alias of TxAck.
+ *
+ * Do not edit this type without considering compatibility with TxAck.
  *
  * @next TxRequest
  */
