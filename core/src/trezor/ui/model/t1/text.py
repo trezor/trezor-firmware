@@ -1,14 +1,11 @@
 from trezor import ui
 from trezor.ui import display, style
 
-from ..common import BR, BR_HALF, TEXT_LINE_HEIGHT, TEXT_MAX_LINES, render_text
+from ..common.text import BR, BR_HALF, TextBase  # noqa: F401
 
 if False:
     from typing import List, Optional
-    from ..common import TextContent
-
-
-NO_HEADER_TEXT_Y = TEXT_LINE_HEIGHT - 2
+    from ..common.text import TextContent
 
 
 def header(title: str, fg: int = style.FG, bg: int = style.BG) -> None:
@@ -17,36 +14,27 @@ def header(title: str, fg: int = style.FG, bg: int = style.BG) -> None:
         display.bar(x, 9, 1, 1, ui.FG)
 
 
-class Text(ui.Component):
+class Text(TextBase):
+    TEXT_HEADER_HEIGHT = 13
+    TEXT_LINE_HEIGHT = 9
+    TEXT_LINE_HEIGHT_HALF = 4
+    TEXT_MARGIN_LEFT = 0
+    TEXT_MAX_LINES = 4
+
+    NO_HEADER_TEXT_Y = TEXT_LINE_HEIGHT - 2
+
     def __init__(
         self,
         header_text: Optional[str] = None,
         max_lines: int = TEXT_MAX_LINES,
         new_lines: bool = True,
     ):
+        super().__init__()
         self.header_text = header_text
         self.max_lines = max_lines
         self.new_lines = new_lines
         self.content = []  # type: List[TextContent]
         self.repaint = True
-
-    def normal(self, *content: TextContent) -> None:
-        self.content.append(ui.NORMAL)
-        self.content.extend(content)
-
-    def bold(self, *content: TextContent) -> None:
-        self.content.append(ui.BOLD)
-        self.content.extend(content)
-
-    def mono(self, *content: TextContent) -> None:
-        self.content.append(ui.MONO)
-        self.content.extend(content)
-
-    def br(self) -> None:
-        self.content.append(BR)
-
-    def br_half(self) -> None:
-        self.content.append(BR_HALF)
 
     def on_render(self) -> None:
         if self.repaint:
@@ -54,13 +42,13 @@ class Text(ui.Component):
                 header(
                     self.header_text, ui.TITLE_GREY, ui.BG,
                 )
-                render_text(self.content, self.new_lines, self.max_lines)
+                self.render_text(self.content, self.new_lines, self.max_lines)
             else:
-                render_text(
+                self.render_text(
                     self.content,
                     self.new_lines,
                     self.max_lines,
-                    offset_y=NO_HEADER_TEXT_Y,
+                    offset_y=self.NO_HEADER_TEXT_Y,
                 )
             self.repaint = False
 

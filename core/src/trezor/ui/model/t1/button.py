@@ -56,17 +56,6 @@ _BUTTON_H = 11
 # button states
 _INITIAL = const(0)
 _PRESSED = const(1)
-_RELEASED = const(2)
-
-
-# FIXME: method
-def is_hit(is_right: bool, x: int, y: int) -> bool:
-    if y != ui.HEIGHT - 1:
-        return False
-    if is_right:
-        return x == ui.WIDTH - 1
-    else:
-        return x == 0
 
 
 def _bar_radius1(x: int, y: int, w: int, h: int, color: int) -> None:
@@ -126,7 +115,7 @@ class Button(ui.Component):
 
     def on_render(self) -> None:
         if self.repaint:
-            if self.state is _INITIAL or self.state is _RELEASED:
+            if self.state is _INITIAL:
                 s = self.normal_style
             elif self.state is _PRESSED:
                 s = self.active_style
@@ -134,30 +123,26 @@ class Button(ui.Component):
             self.render_content(s)
             self.repaint = False
 
+    def _is_hit(self, x: int, y: int) -> bool:
+        if y != ui.HEIGHT - 1:
+            return False
+        if self.is_right:
+            return x == ui.WIDTH - 1
+        else:
+            return x == 0
+
     def on_touch_start(self, x: int, y: int) -> None:
-        if is_hit(self.is_right, x, y):
+        if self._is_hit(x, y):
             self.state = _PRESSED
             self.repaint = True
             self.on_press_start()
-
-    def on_touch_move(self, x: int, y: int) -> None:
-        if is_hit(self.is_right, x, y):
-            if self.state is _RELEASED:
-                self.state = _PRESSED
-                self.repaint = True
-                self.on_press_start()
-        else:
-            if self.state is _PRESSED:
-                self.state = _RELEASED
-                self.repaint = True
-                self.on_press_end()
 
     def on_touch_end(self, x: int, y: int) -> None:
         state = self.state
         if state is not _INITIAL:
             self.state = _INITIAL
             self.repaint = True
-        if is_hit(self.is_right, x, y):
+        if self._is_hit(x, y):
             if state is _PRESSED:
                 self.on_press_end()
                 self.on_click()

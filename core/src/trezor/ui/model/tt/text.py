@@ -3,20 +3,11 @@ from micropython import const
 from trezor import res, ui
 from trezor.ui import display, style
 
-from ..common import (  # noqa: F401
-    BR,
-    BR_HALF,
-    TEXT_HEADER_HEIGHT,
-    TEXT_LINE_HEIGHT,
-    TEXT_LINE_HEIGHT_HALF,
-    TEXT_MARGIN_LEFT,
-    TEXT_MAX_LINES,
-    render_text,
-)
+from ..common.text import BR, BR_HALF, TextBase  # noqa: F401
 
 if False:
     from typing import List
-    from ..common import TextContent
+    from ..common.text import TextContent
 
 
 def header(
@@ -31,7 +22,13 @@ def header(
     display.text(44, 35, title, ui.BOLD, fg, bg)
 
 
-class Text(ui.Component):
+class Text(TextBase):
+    TEXT_HEADER_HEIGHT = 48
+    TEXT_LINE_HEIGHT = 26
+    TEXT_LINE_HEIGHT_HALF = 13
+    TEXT_MARGIN_LEFT = 14
+    TEXT_MAX_LINES = 5
+
     def __init__(
         self,
         header_text: str,
@@ -40,6 +37,7 @@ class Text(ui.Component):
         max_lines: int = TEXT_MAX_LINES,
         new_lines: bool = True,
     ):
+        super().__init__()
         self.header_text = header_text
         self.header_icon = header_icon
         self.icon_color = icon_color
@@ -48,34 +46,16 @@ class Text(ui.Component):
         self.content = []  # type: List[TextContent]
         self.repaint = True
 
-    def normal(self, *content: TextContent) -> None:
-        self.content.append(ui.NORMAL)
-        self.content.extend(content)
-
-    def bold(self, *content: TextContent) -> None:
-        self.content.append(ui.BOLD)
-        self.content.extend(content)
-
-    def mono(self, *content: TextContent) -> None:
-        self.content.append(ui.MONO)
-        self.content.extend(content)
-
-    def br(self) -> None:
-        self.content.append(BR)
-
-    def br_half(self) -> None:
-        self.content.append(BR_HALF)
-
     def on_render(self) -> None:
         if self.repaint:
-            ui.header(
+            header(
                 self.header_text,
                 self.header_icon,
                 ui.TITLE_GREY,
                 ui.BG,
                 self.icon_color,
             )
-            render_text(self.content, self.new_lines, self.max_lines)
+            self.render_text(self.content, self.new_lines, self.max_lines)
             self.repaint = False
 
     if __debug__:
@@ -123,6 +103,15 @@ class Label(ui.Component):
 
         def read_content(self) -> List[str]:
             return [self.content]
+
+
+# TODO: delete
+TEXT_HEADER_HEIGHT = Text.TEXT_HEADER_HEIGHT
+TEXT_LINE_HEIGHT = Text.TEXT_LINE_HEIGHT
+TEXT_LINE_HEIGHT_HALF = Text.TEXT_LINE_HEIGHT_HALF
+TEXT_MARGIN_LEFT = Text.TEXT_MARGIN_LEFT
+TEXT_MAX_LINES = Text.TEXT_MAX_LINES
+render_text = Text.render_text
 
 
 def text_center_trim_left(
