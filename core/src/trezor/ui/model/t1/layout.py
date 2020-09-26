@@ -19,7 +19,7 @@ def confirm_ping() -> Confirm:
 
 
 def confirm_reset_device(backup_type: str) -> Confirm:
-    text = Text(new_lines=False)  # FIXME new_lines?
+    text = Text(new_lines=False)
     if backup_type == str(BackupType.Slip39_Basic):
         text.bold("Create a new wallet")
         text.br()
