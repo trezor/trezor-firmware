@@ -32,6 +32,14 @@ enum OutputScriptType {
 }
 
 /**
+ * Type of script which will be used for decred stake transaction input
+ */
+enum DecredStakingSpendType {
+    SSGen = 0;
+    SSRTX = 1;
+}
+
+/**
  * Unit to be used when showing amounts on the display
  */
  enum AmountUnit {
@@ -171,17 +179,18 @@ message VerifyMessage {
  * @next Failure
  */
 message SignTx {
-    required uint32 outputs_count = 1;                      // number of transaction outputs
-    required uint32 inputs_count = 2;                       // number of transaction inputs
-    optional string coin_name = 3 [default='Bitcoin'];      // coin to use
-    optional uint32 version = 4 [default=1];                // transaction version
-    optional uint32 lock_time = 5 [default=0];              // transaction lock_time
-    optional uint32 expiry = 6;                             // only for Decred and Zcash
-    optional bool overwintered = 7 [deprecated=true];       // deprecated in 2.3.2, the field is not needed as it can be derived from `version`
-    optional uint32 version_group_id = 8;                   // only for Zcash, nVersionGroupId
-    optional uint32 timestamp = 9;                          // only for Peercoin
-    optional uint32 branch_id = 10;                         // only for Zcash, BRANCH_ID
-    optional AmountUnit amount_unit = 11 [default=BITCOIN]; // show amounts in
+    required uint32 outputs_count = 1;                         // number of transaction outputs
+    required uint32 inputs_count = 2;                          // number of transaction inputs
+    optional string coin_name = 3 [default='Bitcoin'];         // coin to use
+    optional uint32 version = 4 [default=1];                   // transaction version
+    optional uint32 lock_time = 5 [default=0];                 // transaction lock_time
+    optional uint32 expiry = 6;                                // only for Decred and Zcash
+    optional bool overwintered = 7 [deprecated=true];          // deprecated in 2.3.2, the field is not needed as it can be derived from `version`
+    optional uint32 version_group_id = 8;                      // only for Zcash, nVersionGroupId
+    optional uint32 timestamp = 9;                             // only for Peercoin
+    optional uint32 branch_id = 10;                            // only for Zcash, BRANCH_ID
+    optional AmountUnit amount_unit = 11 [default=BITCOIN];    // show amounts in
+    optional bool decred_staking_ticket = 12 [default=false];  // only for Decred, this is signing a ticket purchase
 }
 
 /**
@@ -277,7 +286,7 @@ message TxAck {
             optional InputScriptType script_type = 6 [default=SPENDADDRESS];    // defines template of input script
             optional MultisigRedeemScriptType multisig = 7;                     // Filled if input is going to spend multisig tx
             optional uint64 amount = 8;                                         // amount of previous transaction output (for segwit only)
-            optional uint32 decred_tree = 9;                                    // only for Decred
+            optional uint32 decred_tree = 9;                                    // only for Decred, 0 is a normal transaction while 1 is a stake transaction
             // optional uint32 decred_script_version = 10;                         // only for Decred  // deprecated -> only 0 is supported
             // optional bytes prev_block_hash_bip115 = 11;     // BIP-115 support dropped
             // optional uint32 prev_block_height_bip115 = 12;  // BIP-115 support dropped
@@ -286,6 +295,7 @@ message TxAck {
             optional bytes commitment_data = 15;                                // optional commitment data for the SLIP-0019 proof of ownership
             optional bytes orig_hash = 16;                                      // tx_hash of the original transaction where this input was spent (used when creating a replacement transaction)
             optional uint32 orig_index = 17;                                    // index of the input in the original transaction (used when creating a replacement transaction)
+            optional DecredStakingSpendType decred_staking_spend = 18;          // if not None this holds the type of stake spend: revocation or stake generation
         }
         /**
         * Structure representing compiled transaction output
@@ -293,7 +303,7 @@ message TxAck {
         message TxOutputBinType {
             required uint64 amount = 1;
             required bytes script_pubkey = 2;
-            optional uint32 decred_script_version = 3;      // only for Decred
+            optional uint32 decred_script_version = 3;      // only for Decred, currently only 0 is supported
         }
         /**
         * Structure representing transaction output
@@ -329,13 +339,14 @@ message TxInput {
     optional InputScriptType script_type = 6 [default=SPENDADDRESS];    // defines template of input script
     optional MultisigRedeemScriptType multisig = 7;                     // Filled if input is going to spend multisig tx
     required uint64 amount = 8;                                         // amount of previous transaction output
-    optional uint32 decred_tree = 9;                                    // only for Decred
+    optional uint32 decred_tree = 9;                                    // only for Decred, 0 is a normal transaction while 1 is a stake transaction
     reserved 10, 11, 12;                                                // fields which are in use, or have been in the past, in TxInputType
     optional bytes witness = 13;                                        // witness data, only set for EXTERNAL inputs
     optional bytes ownership_proof = 14;                                // SLIP-0019 proof of ownership, only set for EXTERNAL inputs
     optional bytes commitment_data = 15;                                // optional commitment data for the SLIP-0019 proof of ownership
     optional bytes orig_hash = 16;                                      // tx_hash of the original transaction where this input was spent (used when creating a replacement transaction)
     optional uint32 orig_index = 17;                                    // index of the input in the original transaction (used when creating a replacement transaction)
+    optional DecredStakingSpendType decred_staking_spend = 18; 	        // if not None this holds the type of stake spend: revocation or stake generation
 }
 
 /** Data type for transaction output to be signed.

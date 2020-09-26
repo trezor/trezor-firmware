@@ -44,6 +44,12 @@ TXHASH_3f7c39 = bytes.fromhex(
 TXHASH_16da18 = bytes.fromhex(
     "16da185052740d85a630e79c140558215b64e26c500212b90e16b55d13ca06a8"
 )
+TXHASH_8b6890 = bytes.fromhex(
+    "8b6890c10a3764fe6f378bc5b7e438148df176e9be1dde704ce866361149e254"
+)
+TXHASH_1f00fc = bytes.fromhex(
+    "1f00fc54530d7c4877f5032e91b6c507f6a1531861dede2ab134e5c0b5dfe8c8"
+)
 
 
 @pytest.mark.altcoin
@@ -90,6 +96,126 @@ class TestMsgSigntxDecred:
         assert (
             serialized_tx.hex()
             == "0100000001edd579e9462ee0e80127a817e0500d4f942a4cf8f2d6530e0c0a9ab3f04862e10100000000ffffffff01802b530b0000000000001976a914819d291a2f7fbf770e784bfd78b5ce92c58e95ea88ac00000000000000000100c2eb0b0000000000000000ffffffff6a473044022009e394c7dec76ab6988270b467839b1462ad781556bce37383b76e026418ce6302204f7f6ef535d2986b095d7c96232a0990a0b9ce3004894b39c167bb18e5833ac30121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0"
+        )
+
+    @pytest.mark.skip_t1
+    def test_purchase_ticket_decred(self, client):
+        inp1 = proto.TxInputType(
+            address_n=parse_path("m/44'/1'/0'/0/0"),
+            prev_hash=TXHASH_e16248,
+            prev_index=1,
+            amount=200000000,
+            decred_tree=0,
+            script_type=proto.InputScriptType.SPENDADDRESS,
+        )
+
+        out1 = proto.TxOutputType(
+            address="TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz",
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+            amount=199900000,
+        )
+        out2 = proto.TxOutputType(
+            address_n=parse_path("m/44'/1'/0'/0/0"),
+            amount=200000000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+        out3 = proto.TxOutputType(
+            address="TsR28UZRprhgQQhzWns2M6cAwchrNVvbYq2",
+            amount=0,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+
+        with client:
+            client.set_expected_responses(
+                [
+                    request_input(0),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    request_output(1),
+                    request_output(2),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_e16248),
+                    request_input(0, TXHASH_e16248),
+                    request_output(0, TXHASH_e16248),
+                    request_output(1, TXHASH_e16248),
+                    request_input(0),
+                    request_finished(),
+                ]
+            )
+            _, serialized_tx = btc.sign_tx(
+                client,
+                "Decred Testnet",
+                [inp1],
+                [out1, out2, out3],
+                prev_txes=TX_API,
+                decred_staking_ticket=True,
+            )
+
+        assert (
+            serialized_tx.hex()
+            == "0100000001edd579e9462ee0e80127a817e0500d4f942a4cf8f2d6530e0c0a9ab3f04862e10100000000ffffffff03603bea0b0000000000001aba76a914819d291a2f7fbf770e784bfd78b5ce92c58e95ea88ac00000000000000000000206a1edc1a98d791735eb9a8715a2a219c23680edcedad00c2eb0b000000000058000000000000000000001abd76a914000000000000000000000000000000000000000088ac00000000000000000100c2eb0b0000000000000000ffffffff6b4830450221008ced5411a6d92b761bdd8b9f7fbc5bfae3c31f9369050c218977f4540ab1ec9602206e89c821878ebfd959d1c4a63100eec5b1154c8d9508c039bb78e333498a73b40121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0"
+        )
+
+    @pytest.mark.skip_t1
+    def test_spend_from_stake_generation_and_revocation_decred(self, client):
+        inp1 = proto.TxInputType(
+            address_n=parse_path("m/44'/1'/0'/0/0"),
+            prev_hash=TXHASH_8b6890,
+            prev_index=2,
+            amount=200000000,
+            script_type=proto.InputScriptType.SPENDADDRESS,
+            decred_staking_spend=proto.DecredStakingSpendType.SSGen,
+            decred_tree=1,
+        )
+
+        inp2 = proto.TxInputType(
+            address_n=parse_path("m/44'/1'/0'/0/0"),
+            prev_hash=TXHASH_1f00fc,
+            prev_index=0,
+            amount=200000000,
+            script_type=proto.InputScriptType.SPENDADDRESS,
+            decred_staking_spend=proto.DecredStakingSpendType.SSRTX,
+            decred_tree=1,
+        )
+
+        out1 = proto.TxOutputType(
+            address="TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz",
+            amount=399900000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+
+        with client:
+            client.set_expected_responses(
+                [
+                    request_input(0),
+                    request_input(1),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_8b6890),
+                    request_input(0, TXHASH_8b6890),
+                    request_input(1, TXHASH_8b6890),
+                    request_output(0, TXHASH_8b6890),
+                    request_output(1, TXHASH_8b6890),
+                    request_output(2, TXHASH_8b6890),
+                    request_input(1),
+                    request_meta(TXHASH_1f00fc),
+                    request_input(0, TXHASH_1f00fc),
+                    request_output(0, TXHASH_1f00fc),
+                    request_input(0),
+                    request_input(1),
+                    request_finished(),
+                ]
+            )
+            _, serialized_tx = btc.sign_tx(
+                client, "Decred Testnet", [inp1, inp2], [out1], prev_txes=TX_API
+            )
+
+        assert (
+            serialized_tx.hex()
+            == "010000000254e249113666e84c70de1dbee976f18d1438e4b7c58b376ffe64370ac190688b0200000001ffffffffc8e8dfb5c0e534b12adede611853a1f607c5b6912e03f577487c0d5354fc001f0000000001ffffffff0160fdd5170000000000001976a914819d291a2f7fbf770e784bfd78b5ce92c58e95ea88ac00000000000000000200c2eb0b0000000000000000ffffffff6b483045022100bdcb877c97d72db74eca06fefa21a7f7b00afcd5d916fce2155ed7df1ca5546102201e1f9efd7d652b449474c2c70171bfc4535544927bed62021f7334447d1ea4740121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd000c2eb0b0000000000000000ffffffff6a473044022030c5743c442bd696d19dcf73d54e95526e726de965c2e2b4b9fd70248eaae21d02201305a3bcc2bb0e33122277763990e3b48f317d61264a68d190fb8acfc004cc640121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0"
         )
 
     def test_send_decred_change(self, client):

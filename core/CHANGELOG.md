@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Locking the device by holding finger on the homescreen for 2.5 seconds.  [#1404]
 - Public key to ECDHSessionKey.  [#1518]
+- Decred staking.  [#1249]
 
 ### Changed
 
@@ -360,6 +361,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1193]: https://github.com/trezor/trezor-firmware/issues/1193
 [#1206]: https://github.com/trezor/trezor-firmware/issues/1206
 [#1246]: https://github.com/trezor/trezor-firmware/issues/1246
+[#1249]: https://github.com/trezor/trezor-firmware/issues/1249
 [#1271]: https://github.com/trezor/trezor-firmware/issues/1271
 [#1292]: https://github.com/trezor/trezor-firmware/issues/1292
 [#1322]: https://github.com/trezor/trezor-firmware/issues/1322

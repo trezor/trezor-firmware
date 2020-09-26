@@ -27,10 +27,7 @@ def get_address(
         # Ensure that our public key is included in the multisig.
         multisig_pubkey_index(multisig, node.public_key())
 
-    if (
-        script_type == InputScriptType.SPENDADDRESS
-        or script_type == InputScriptType.SPENDMULTISIG
-    ):
+    if script_type in (InputScriptType.SPENDADDRESS, InputScriptType.SPENDMULTISIG):
         if multisig:  # p2sh multisig
             if coin.address_type_p2sh is None:
                 raise wire.ProcessError("Multisig not enabled on this coin")
