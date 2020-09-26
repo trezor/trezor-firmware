@@ -201,11 +201,10 @@ def confirm_change_count_over_threshold(change_count: str) -> Confirm:
     return Confirm(text)
 
 
-_LOCKTIME_TIMESTAMP_MIN_VALUE = const(500000000)
-
-
 def confirm_nondefault_locktime(
-    lock_time: str, lock_time_disabled: str = None
+    lock_time_disabled: str = None,
+    lock_time_height: str = None,
+    lock_time_stamp: str = None,
 ) -> Confirm:
     if lock_time_disabled == "True":
         text = Text("Warning", ui.ICON_SEND, ui.GREEN)
@@ -214,11 +213,14 @@ def confirm_nondefault_locktime(
     else:
         text = Text("Confirm locktime", ui.ICON_SEND, ui.GREEN)
         text.normal("Locktime for this", "transaction is set to")
-        if int(lock_time) < _LOCKTIME_TIMESTAMP_MIN_VALUE:
+        if lock_time_height is not None:
             text.normal("blockheight:")
-        else:
+            text.bold(lock_time_height)
+        elif lock_time_stamp is not None:
             text.normal("timestamp:")
-        text.bold(lock_time)
+            text.bold(lock_time_stamp)
+        else:
+            raise ValueError
 
     text.normal("Continue?")
     return Confirm(text)

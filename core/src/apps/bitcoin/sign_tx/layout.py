@@ -1,3 +1,4 @@
+from micropython import const
 from ubinascii import hexlify
 
 from trezor.messages import OutputScriptType
@@ -13,6 +14,9 @@ if False:
     from trezor.messages.TxOutput import TxOutput
 
     from apps.common.coininfo import CoinInfo
+
+
+_LOCKTIME_TIMESTAMP_MIN_VALUE = const(500000000)
 
 
 def format_coin_amount(amount: int, coin: CoinInfo) -> str:
@@ -78,9 +82,17 @@ async def confirm_change_count_over_threshold(
 async def confirm_nondefault_locktime(
     ctx: wire.Context, lock_time: int, lock_time_disabled: bool
 ) -> None:
-    await require_interact(
-        ctx,
-        "confirm_nondefault_locktime",
-        lock_time_disabled=str(lock_time_disabled),
-        lock_time=str(lock_time),
-    )
+    if int(lock_time) < _LOCKTIME_TIMESTAMP_MIN_VALUE:
+        await require_interact(
+            ctx,
+            "confirm_nondefault_locktime",
+            lock_time_disabled=str(lock_time_disabled),
+            lock_time_height=str(lock_time),
+        )
+    else:
+        await require_interact(
+            ctx,
+            "confirm_nondefault_locktime",
+            lock_time_disabled=str(lock_time_disabled),
+            lock_time_stamp=str(lock_time),
+        )
