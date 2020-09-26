@@ -27,6 +27,7 @@ class SignTx(p.MessageType):
         timestamp: int = None,
         branch_id: int = None,
         amount_unit: EnumTypeAmountUnit = 0,
+        decred_staking_ticket: bool = False,
     ) -> None:
         self.outputs_count = outputs_count
         self.inputs_count = inputs_count
@@ -38,6 +39,7 @@ class SignTx(p.MessageType):
         self.timestamp = timestamp
         self.branch_id = branch_id
         self.amount_unit = amount_unit
+        self.decred_staking_ticket = decred_staking_ticket
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -52,4 +54,5 @@ class SignTx(p.MessageType):
             9: ('timestamp', p.UVarintType, None),
             10: ('branch_id', p.UVarintType, None),
             11: ('amount_unit', p.EnumType("AmountUnit", (0, 1, 2, 3)), 0),  # default=BITCOIN
+            12: ('decred_staking_ticket', p.BoolType, False),  # default=false
         }

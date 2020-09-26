@@ -22,7 +22,7 @@ async def get_public_key(ctx: wire.Context, msg: GetPublicKey) -> PublicKey:
     node = keychain.derive(msg.address_n)
 
     if (
-        script_type in [InputScriptType.SPENDADDRESS, InputScriptType.SPENDMULTISIG]
+        script_type in (InputScriptType.SPENDADDRESS, InputScriptType.SPENDMULTISIG)
         and coin.xpub_magic is not None
     ):
         node_xpub = node.serialize_public(coin.xpub_magic)

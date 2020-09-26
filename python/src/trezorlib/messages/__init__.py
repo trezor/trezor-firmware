@@ -314,6 +314,7 @@ from . import CardanoCertificateType
 from . import CardanoPoolRelayType
 from . import DebugLinkShowTextStyle
 from . import DebugSwipeDirection
+from . import DecredStakingSpendType
 from . import FailureType
 from . import InputScriptType
 from . import LiskTransactionType

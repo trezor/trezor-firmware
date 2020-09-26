@@ -9,6 +9,7 @@ if __debug__:
         from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeInputScriptType = Literal[0, 1, 2, 3, 4]
+        EnumTypeDecredStakingSpendType = Literal[0, 1]
     except ImportError:
         pass
 
@@ -32,6 +33,7 @@ class TxInputType(p.MessageType):
         commitment_data: bytes = None,
         orig_hash: bytes = None,
         orig_index: int = None,
+        decred_staking_spend: EnumTypeDecredStakingSpendType = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.prev_hash = prev_hash
@@ -47,6 +49,7 @@ class TxInputType(p.MessageType):
         self.commitment_data = commitment_data
         self.orig_hash = orig_hash
         self.orig_index = orig_index
+        self.decred_staking_spend = decred_staking_spend
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -65,4 +68,5 @@ class TxInputType(p.MessageType):
             15: ('commitment_data', p.BytesType, None),
             16: ('orig_hash', p.BytesType, None),
             17: ('orig_index', p.UVarintType, None),
+            18: ('decred_staking_spend', p.EnumType("DecredStakingSpendType", (0, 1)), None),
         }

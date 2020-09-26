@@ -44,6 +44,7 @@ __all__ = (
     "show_xpub",
     "show_warning",
     "confirm_output",
+    "confirm_decred_sstx_submission",
     "confirm_hex",
     "confirm_total",
     "confirm_joint_total",
@@ -324,6 +325,23 @@ def confirm_output(
     text.mono(*_split_address(address))
     return interact(
         ctx, Confirm(text), "confirm_output", ButtonRequestType.ConfirmOutput
+    )
+
+
+def confirm_decred_sstx_submission(
+    ctx: wire.GenericContext,
+    address: str,
+    amount: str,
+) -> LayoutType:
+    text = Text("Purchase ticket", ui.ICON_SEND, ui.GREEN)
+    text.normal(amount)
+    text.normal("with voting rights to")
+    text.mono(*_split_address(address))
+    return interact(
+        ctx,
+        Confirm(text),
+        "confirm_decred_sstx_submission",
+        ButtonRequestType.ConfirmOutput,
     )
 
 

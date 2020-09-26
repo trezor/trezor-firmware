@@ -58,6 +58,22 @@ class UiConfirmOutput(UiConfirm):
     __eq__ = utils.obj_eq
 
 
+class UiConfirmDecredSSTXSubmission(UiConfirm):
+    def __init__(
+        self, output: TxOutput, coin: CoinInfo, amount_unit: EnumTypeAmountUnit
+    ):
+        self.output = output
+        self.coin = coin
+        self.amount_unit = amount_unit
+
+    def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
+        return layout.confirm_decred_sstx_submission(
+            ctx, self.output, self.coin, self.amount_unit
+        )
+
+    __eq__ = utils.obj_eq
+
+
 class UiConfirmReplacement(UiConfirm):
     def __init__(self, description: str, txid: bytes):
         self.description = description
@@ -173,6 +189,10 @@ class UiConfirmNonDefaultLocktime(UiConfirm):
 
 def confirm_output(output: TxOutput, coin: CoinInfo, amount_unit: EnumTypeAmountUnit) -> Awaitable[None]:  # type: ignore
     return (yield UiConfirmOutput(output, coin, amount_unit))
+
+
+def confirm_decred_sstx_submission(output: TxOutput, coin: CoinInfo, amount_unit: EnumTypeAmountUnit) -> Awaitable[None]:  # type: ignore
+    return (yield UiConfirmDecredSSTXSubmission(output, coin, amount_unit))
 
 
 def confirm_replacement(description: str, txid: bytes) -> Awaitable[Any]:  # type: ignore

@@ -73,6 +73,19 @@ async def confirm_output(
     await require(layout)
 
 
+async def confirm_decred_sstx_submission(
+    ctx: wire.Context, output: TxOutput, coin: CoinInfo, amount_unit: EnumTypeAmountUnit
+) -> None:
+    assert output.address is not None
+    address_short = addresses.address_short(coin, output.address)
+
+    await require(
+        layouts.confirm_decred_sstx_submission(
+            ctx, address_short, format_coin_amount(output.amount, coin, amount_unit)
+        )
+    )
+
+
 async def confirm_replacement(ctx: wire.Context, description: str, txid: bytes) -> None:
     await require(
         layouts.confirm_replacement(

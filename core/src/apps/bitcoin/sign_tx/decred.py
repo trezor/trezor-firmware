@@ -2,13 +2,13 @@ from micropython import const
 
 from trezor import wire
 from trezor.crypto.hashlib import blake256
-from trezor.messages import InputScriptType
+from trezor.messages import DecredStakingSpendType, InputScriptType
 from trezor.messages.PrevOutput import PrevOutput
 from trezor.utils import HashWriter, ensure
 
 from apps.common.writers import write_bitcoin_varint
 
-from .. import multisig, scripts, writers
+from .. import multisig, scripts, scripts_decred, writers
 from ..common import ecdsa_hash_pubkey, ecdsa_sign
 from . import approvers, helpers, progress
 from .bitcoin import Bitcoin
@@ -17,8 +17,10 @@ DECRED_SERIALIZE_FULL = const(0 << 16)
 DECRED_SERIALIZE_NO_WITNESS = const(1 << 16)
 DECRED_SERIALIZE_WITNESS_SIGNING = const(3 << 16)
 DECRED_SCRIPT_VERSION = const(0)
-
 DECRED_SIGHASH_ALL = const(1)
+OUTPUT_SCRIPT_NULL_SSTXCHANGE = (
+    b"\xBD\x76\xA9\x14\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x88\xAC"
+)
 
 if False:
     from typing import Optional, Union, List
@@ -87,7 +89,12 @@ class Decred(Bitcoin):
     async def step2_approve_outputs(self) -> None:
         write_bitcoin_varint(self.serialized_tx, self.tx_info.tx.outputs_count)
         write_bitcoin_varint(self.h_prefix, self.tx_info.tx.outputs_count)
-        await super().step2_approve_outputs()
+
+        if self.tx_info.tx.decred_staking_ticket:
+            await self.approve_staking_ticket()
+        else:
+            await super().step2_approve_outputs()
+
         self.write_tx_footer(self.serialized_tx, self.tx_info.tx)
         self.write_tx_footer(self.h_prefix, self.tx_info.tx)
 
@@ -127,7 +134,15 @@ class Decred(Bitcoin):
             key_sign = self.keychain.derive(txi_sign.address_n)
             key_sign_pub = key_sign.public_key()
 
-            if txi_sign.script_type == InputScriptType.SPENDMULTISIG:
+            if txi_sign.decred_staking_spend == DecredStakingSpendType.SSRTX:
+                prev_pkscript = scripts_decred.output_script_ssrtx(
+                    ecdsa_hash_pubkey(key_sign_pub, self.coin)
+                )
+            elif txi_sign.decred_staking_spend == DecredStakingSpendType.SSGen:
+                prev_pkscript = scripts_decred.output_script_ssgen(
+                    ecdsa_hash_pubkey(key_sign_pub, self.coin)
+                )
+            elif txi_sign.script_type == InputScriptType.SPENDMULTISIG:
                 assert txi_sign.multisig is not None
                 prev_pkscript = scripts.output_script_multisig(
                     multisig.multisig_get_pubkeys(txi_sign.multisig),
@@ -207,6 +222,53 @@ class Decred(Bitcoin):
         else:
             writers.write_uint16(w, DECRED_SCRIPT_VERSION)
         writers.write_bytes_prefixed(w, script_pubkey)
+
+    def process_sstx_commitment_owned(self, txo: TxOutput) -> bytearray:
+        if not self.tx_info.output_is_change(txo):
+            raise wire.DataError("Invalid sstxcommitment path.")
+        node = self.keychain.derive(txo.address_n)
+        pkh = ecdsa_hash_pubkey(node.public_key(), self.coin)
+        op_return_data = scripts_decred.sstxcommitment_pkh(pkh, txo.amount)
+        txo.amount = 0  # Clear the amount, since this is an OP_RETURN.
+        return scripts_decred.output_script_paytoopreturn(op_return_data)
+
+    async def approve_staking_ticket(self) -> None:
+        if self.tx_info.tx.outputs_count != 3:
+            raise wire.DataError("Ticket has wrong number of outputs.")
+
+        # SSTX submission
+        txo = await helpers.request_tx_output(self.tx_req, 0, self.coin)
+        if txo.address is None:
+            raise wire.DataError("Missing address.")
+        script_pubkey = scripts_decred.output_script_sstxsubmissionpkh(txo.address)
+        await self.approver.add_decred_sstx_submission(txo, script_pubkey)
+        self.tx_info.add_output(txo, script_pubkey)
+        self.write_tx_output(self.serialized_tx, txo, script_pubkey)
+
+        # SSTX commitment
+        txo = await helpers.request_tx_output(self.tx_req, 1, self.coin)
+        if txo.amount != self.approver.total_in:
+            raise wire.DataError("Wrong sstxcommitment amount.")
+        script_pubkey = self.process_sstx_commitment_owned(txo)
+        self.approver.add_change_output(txo, script_pubkey)
+        self.tx_info.add_output(txo, script_pubkey)
+        self.write_tx_output(self.serialized_tx, txo, script_pubkey)
+
+        # SSTX change
+        txo = await helpers.request_tx_output(self.tx_req, 2, self.coin)
+        if txo.address is None:
+            raise wire.DataError("Missing address.")
+        script_pubkey = scripts_decred.output_script_sstxchange(txo.address)
+        # Using change addresses is no longer common practice. Inputs are split
+        # beforehand and should be exact. SSTX change should pay zero amount to
+        # a zeroed hash.
+        if txo.amount != 0:
+            raise wire.DataError("Only value of 0 allowed for sstx change.")
+        if script_pubkey != OUTPUT_SCRIPT_NULL_SSTXCHANGE:
+            raise wire.DataError("Only zeroed addresses accepted for sstx change.")
+        self.approver.add_change_output(txo, script_pubkey)
+        self.tx_info.add_output(txo, script_pubkey)
+        self.write_tx_output(self.serialized_tx, txo, script_pubkey)
 
     def write_tx_header(
         self,
