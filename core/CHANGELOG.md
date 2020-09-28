@@ -298,3 +298,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1173]: https://github.com/trezor/trezor-firmware/pull/1173
 [#1188]: https://github.com/trezor/trezor-firmware/issues/1188
 [#1190]: https://github.com/trezor/trezor-firmware/issues/1190
+[#1246]: https://github.com/trezor/trezor-firmware/issues/1246
