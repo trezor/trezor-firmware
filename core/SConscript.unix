@@ -440,7 +440,6 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/model/tt/*.py'))
     elif TREZOR_MODEL == '1':
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/model/t1/*.py'))
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/model/tt/*.py'))
     else:
         raise ValueError('Unknown Trezor model')
 
