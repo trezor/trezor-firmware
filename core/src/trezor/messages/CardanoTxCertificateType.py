@@ -2,11 +2,13 @@
 # fmt: off
 import protobuf as p
 
+from .CardanoPoolParametersType import CardanoPoolParametersType
+
 if __debug__:
     try:
         from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
-        EnumTypeCardanoCertificateType = Literal[0, 1, 2]
+        EnumTypeCardanoCertificateType = Literal[0, 1, 2, 3]
     except ImportError:
         pass
 
@@ -19,15 +21,18 @@ class CardanoTxCertificateType(p.MessageType):
         path: List[int] = None,
         type: EnumTypeCardanoCertificateType = None,
         pool: bytes = None,
+        pool_parameters: CardanoPoolParametersType = None,
     ) -> None:
         self.path = path if path is not None else []
         self.type = type
         self.pool = pool
+        self.pool_parameters = pool_parameters
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('type', p.EnumType("CardanoCertificateType", (0, 1, 2)), None),
+            1: ('type', p.EnumType("CardanoCertificateType", (0, 1, 2, 3)), None),
             2: ('path', p.UVarintType, p.FLAG_REPEATED),
             3: ('pool', p.BytesType, None),
+            4: ('pool_parameters', CardanoPoolParametersType, None),
         }

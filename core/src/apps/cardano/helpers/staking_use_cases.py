@@ -8,7 +8,7 @@ from .utils import to_account_path
 if False:
     from typing import List
     from trezor.messages import CardanoAddressParametersType
-    from . import seed
+    from .. import seed
 
 
 """

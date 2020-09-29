@@ -29,7 +29,9 @@ pytestmark = [
 
 
 @parametrize_using_common_fixtures(
-    "cardano/sign_tx.json", "cardano/sign_tx.slip39.json"
+    "cardano/sign_tx_stake_pool_registration.json",
+    "cardano/sign_tx.json",
+    "cardano/sign_tx.slip39.json",
 )
 def test_cardano_sign_tx(client, parameters, result):
     inputs = [cardano.create_input(i) for i in parameters["inputs"]]
@@ -74,7 +76,9 @@ def test_cardano_sign_tx(client, parameters, result):
         assert response.serialized_tx.hex() == result["serialized_tx"]
 
 
-@parametrize_using_common_fixtures("cardano/sign_tx.failed.json")
+@parametrize_using_common_fixtures(
+    "cardano/sign_tx.failed.json", "cardano/sign_tx_stake_pool_registration.failed.json"
+)
 def test_cardano_sign_tx_failed(client, parameters, result):
     inputs = [cardano.create_input(i) for i in parameters["inputs"]]
     outputs = [cardano.create_output(o) for o in parameters["outputs"]]

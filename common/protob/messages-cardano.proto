@@ -29,6 +29,13 @@ enum CardanoCertificateType {
     STAKE_REGISTRATION = 0;
     STAKE_DEREGISTRATION = 1;
     STAKE_DELEGATION = 2;
+    STAKE_POOL_REGISTRATION = 3;
+}
+
+enum CardanoPoolRelayType {
+    SINGLE_HOST_IP = 0;
+    SINGLE_HOST_NAME = 1;
+    MULTIPLE_HOST_NAME = 2;
 }
 
 /**
@@ -138,13 +145,58 @@ message CardanoSignTx {
         optional uint64 amount = 3;                                     // amount to spend
         optional CardanoAddressParametersType address_parameters = 4;   // parameters used to derive the address
     }
+
+    /**
+     * Stake pool owner parameters
+     */
+    message CardanoPoolOwnerType {
+        repeated uint32 staking_key_path = 1;   // BIP-32-style path to derive staking key of the owner
+        optional bytes staking_key_hash = 2;    // owner's staking key if it is an external owner
+    }
+
+    /**
+     * Stake pool relay parameters
+     */
+    message CardanoPoolRelayParametersType {
+        required CardanoPoolRelayType type = 1;   // pool relay type
+        optional bytes ipv4_address = 2;          // ipv4 address of the relay given as 4 bytes
+        optional bytes ipv6_address = 3;          // ipv6 address of the relay given as 16 bytes
+        optional string host_name = 4;            // relay host name given as URL, at most 64 characters
+        optional uint32 port = 5;                 // relay port number in the range 0-65535
+    }
+
+    /**
+     * Stake pool metadata parameters
+     */
+    message CardanoPoolMetadataType {
+        required string url = 1;   // stake pool url hosting metadata, at most 64 characters
+        required bytes hash = 2;   // stake pool metadata hash
+    }
+
+    /**
+     * Stake pool parameters
+     */
+    message CardanoPoolParametersType {
+        required bytes pool_id = 1;                           // stake pool cold public key hash (28 bytes)
+        required bytes vrf_key_hash = 2;                      // VRF key hash (32 bytes)
+        required uint64 pledge = 3;                           // pledge amount in lovelace
+        required uint64 cost = 4;                             // cost in lovelace
+        required uint64 margin_numerator = 5;                 // pool margin numerator
+        required uint64 margin_denominator = 6;               // pool margin denominator
+        required string reward_account = 7;                   // bech32 reward address where the pool receives rewards
+        repeated CardanoPoolOwnerType owners = 8;             // pool owners list
+        repeated CardanoPoolRelayParametersType relays = 9;   // pool relays list
+        optional CardanoPoolMetadataType metadata = 10;       // pool metadata
+    }
+
     /**
      * Structure representing cardano transaction certificate
      */
-    message CardanoTxCertificateType {
-        optional CardanoCertificateType type = 1;   // certificate type
-        repeated uint32 path = 2;                   // BIP-32 path to derive (staking) key
-        optional bytes pool = 3;                    // pool hash
+     message CardanoTxCertificateType {
+        optional CardanoCertificateType type = 1;                 // certificate type
+        repeated uint32 path = 2;                                 // BIP-32 path to derive (staking) key
+        optional bytes pool = 3;                                  // pool hash
+        optional CardanoPoolParametersType pool_parameters = 4;   // used for stake pool registration certificate
     }
     /**
      * Structure representing cardano transaction withdrawals
