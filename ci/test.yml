@@ -16,12 +16,14 @@ core device ui test:
   after_script:
     - mv tests/ui_tests/reporting/reports/test/ test_ui_report
     - nix-shell --run "pipenv run python ci/prepare_ui_artifacts.py"
+    - diff tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
       - ci/ui_test_records/
       - test_ui_report
       - tests/ui_tests/screens/
+      - tests/ui_tests/fixtures.suggestion.json
       - tests/junit.xml
       - tests/trezor.log
     when: always

@@ -163,12 +163,14 @@ def pytest_sessionfinish(session, exitstatus):
     if not _should_write_ui_report(exitstatus):
         return
 
+    missing = session.config.getoption("ui_check_missing")
     if session.config.getoption("ui") == "test":
-        if session.config.getoption("ui_check_missing") and ui_tests.list_missing():
+        if missing and ui_tests.list_missing():
             session.exitstatus = pytest.ExitCode.TESTS_FAILED
+        ui_tests.write_fixtures_suggestion(missing)
         testreport.index()
     if session.config.getoption("ui") == "record":
-        ui_tests.write_fixtures(session.config.getoption("ui_check_missing"))
+        ui_tests.write_fixtures(missing)
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
@@ -180,7 +182,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
     if ui_option and _should_write_ui_report(exitstatus) and missing_tests:
         println(f"{len(missing_tests)} expected UI tests did not run.")
         if config.getoption("ui_check_missing"):
-            println("List of missing tests follows:")
+            println("-------- List of missing tests follows: --------")
             for test in missing_tests:
                 println("\t" + test)
 
@@ -190,8 +192,15 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
                 println("Removing missing tests from record.")
             println("")
 
+    if ui_option == "test" and _should_write_ui_report(exitstatus):
+        println("\n-------- Suggested fixtures.json diff: --------")
+        print("See", ui_tests.SUGGESTION_FILE)
+        println("")
+
     if _should_write_ui_report(exitstatus):
-        println(f"UI tests summary: {testreport.REPORTS_PATH / 'index.html'}")
+        println("-------- UI tests summary: --------")
+        println(f"{testreport.REPORTS_PATH / 'index.html'}")
+        println("")
 
 
 def pytest_addoption(parser):
