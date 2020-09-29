@@ -6,6 +6,8 @@ from trezor.messages import (
     ButtonRequestType,
     CardanoAddressType,
     CardanoCertificateType,
+    CardanoPoolMetadataType,
+    CardanoPoolOwnerType,
 )
 from trezor.strings import format_amount
 from trezor.ui.button import ButtonDefault
@@ -16,16 +18,23 @@ from trezor.utils import chunks
 from apps.common.confirm import confirm, require_confirm, require_hold_to_confirm
 from apps.common.layout import address_n_to_str, show_warning
 
+from . import seed
+from .address import (
+    encode_human_readable_address,
+    get_public_key_hash,
+    pack_reward_address_bytes,
+)
 from .helpers import protocol_magics
 from .helpers.utils import to_account_path
 
 if False:
-    from typing import List
+    from typing import List, Optional
     from trezor import wire
     from trezor.messages import (
         CardanoBlockchainPointerType,
         CardanoTxCertificateType,
         CardanoTxWithdrawalType,
+        CardanoPoolParametersType,
     )
     from trezor.messages.CardanoAddressParametersType import EnumTypeCardanoAddressType
 
@@ -42,6 +51,7 @@ CERTIFICATE_TYPE_NAMES = {
     CardanoCertificateType.STAKE_REGISTRATION: "Stake key registration",
     CardanoCertificateType.STAKE_DEREGISTRATION: "Stake key deregistration",
     CardanoCertificateType.STAKE_DELEGATION: "Stake delegation",
+    CardanoCertificateType.STAKE_POOL_REGISTRATION: "Stakepool registration",
 }
 
 # Maximum number of characters per line in monospace font.
@@ -52,7 +62,7 @@ def format_coin_amount(amount: int) -> str:
     return "%s %s" % (format_amount(amount, 6), "ADA")
 
 
-async def confirm_sending(ctx: wire.Context, amount: int, to: str):
+async def confirm_sending(ctx: wire.Context, amount: int, to: str) -> None:
     page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     page1.normal("Confirm sending:")
     page1.bold(format_coin_amount(amount))
@@ -68,7 +78,7 @@ async def confirm_sending(ctx: wire.Context, amount: int, to: str):
 
 async def show_warning_tx_no_staking_info(
     ctx: wire.Context, address_type: EnumTypeCardanoAddressType, amount: int
-):
+) -> None:
     page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     page1.normal("Change " + ADDRESS_TYPE_NAMES[address_type].lower())
     page1.normal("address has no stake")
@@ -83,7 +93,7 @@ async def show_warning_tx_pointer_address(
     ctx: wire.Context,
     pointer: CardanoBlockchainPointerType,
     amount: int,
-):
+) -> None:
     page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     page1.normal("Change address has a")
     page1.normal("pointer with staking")
@@ -105,7 +115,7 @@ async def show_warning_tx_different_staking_account(
     ctx: wire.Context,
     staking_account_path: List[int],
     amount: int,
-):
+) -> None:
     page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     page1.normal("Change address staking")
     page1.normal("rights do not match")
@@ -124,7 +134,7 @@ async def show_warning_tx_staking_key_hash(
     ctx: wire.Context,
     staking_key_hash: bytes,
     amount: int,
-):
+) -> None:
     page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     page1.normal("Change address staking")
     page1.normal("rights do not match")
@@ -162,7 +172,11 @@ async def confirm_transaction(
 
 async def confirm_certificate(
     ctx: wire.Context, certificate: CardanoTxCertificateType
-) -> bool:
+) -> None:
+    # stake pool registration requires custom confirmation logic not covered
+    # in this call
+    assert certificate.type != CardanoCertificateType.STAKE_POOL_REGISTRATION
+
     pages = []
 
     page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
@@ -181,9 +195,108 @@ async def confirm_certificate(
     await require_confirm(ctx, Paginated(pages))
 
 
+async def confirm_stake_pool_parameters(
+    ctx: wire.Context,
+    pool_parameters: CardanoPoolParametersType,
+    network_id: int,
+    protocol_magic: int,
+) -> None:
+    page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    page1.normal("Confirm:")
+    page1.bold("Stake pool registration")
+    page1.normal("Network:")
+    page1.bold(protocol_magics.to_ui_string(protocol_magic))
+
+    page2 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    page2.normal("Pool id:")
+    page2.bold(hexlify(pool_parameters.pool_id).decode())
+
+    page3 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    page3.normal("Pool reward account:")
+    page3.bold(pool_parameters.reward_account)
+
+    page4 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    page4.normal("Pledge: " + format_coin_amount(pool_parameters.pledge))
+    page4.normal("Cost: " + format_coin_amount(pool_parameters.cost))
+    margin_percentage = (
+        100.0 * pool_parameters.margin_numerator / pool_parameters.margin_denominator
+    )
+    percentage_formatted = ("%f" % margin_percentage).rstrip("0").rstrip(".")
+    page4.normal("Margin: %s%%" % percentage_formatted)
+
+    await require_confirm(ctx, Paginated([page1, page2, page3, page4]))
+
+
+async def confirm_stake_pool_owners(
+    ctx: wire.Context,
+    keychain: seed.keychain,
+    owners: List[CardanoPoolOwnerType],
+    network_id: int,
+) -> None:
+    pages = []
+    for index, owner in enumerate(owners, 1):
+        page = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+        page.normal("Pool owner #%d:" % (index))
+
+        if owner.staking_key_path:
+            page.bold(address_n_to_str(owner.staking_key_path))
+            page.normal(
+                encode_human_readable_address(
+                    pack_reward_address_bytes(
+                        get_public_key_hash(keychain, owner.staking_key_path),
+                        network_id,
+                    )
+                )
+            )
+        else:
+            page.bold(
+                encode_human_readable_address(
+                    pack_reward_address_bytes(owner.staking_key_hash, network_id)
+                )
+            )
+
+        pages.append(page)
+
+    await require_confirm(ctx, Paginated(pages))
+
+
+async def confirm_stake_pool_metadata(
+    ctx: wire.Context,
+    metadata: Optional[CardanoPoolMetadataType],
+) -> None:
+
+    if metadata is None:
+        page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+        page1.normal("Pool has no metadata")
+        page1.normal("(anonymous pool)")
+
+        await require_confirm(ctx, page1)
+        return
+
+    page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    page1.normal("Pool metadata url:")
+    page1.bold(metadata.url)
+
+    page2 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    page2.normal("Pool metadata hash:")
+    page2.bold(hexlify(metadata.hash).decode())
+
+    await require_confirm(ctx, Paginated([page1, page2]))
+
+
+async def confirm_stake_pool_registration_final(
+    ctx: wire.Context,
+) -> None:
+
+    page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    page1.normal("Confirm signing the stake pool registration as an owner")
+
+    await require_hold_to_confirm(ctx, page1)
+
+
 async def confirm_withdrawal(
     ctx: wire.Context, withdrawal: CardanoTxWithdrawalType
-) -> bool:
+) -> None:
     page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     page1.normal("Confirm withdrawal")
     page1.normal("for account:")

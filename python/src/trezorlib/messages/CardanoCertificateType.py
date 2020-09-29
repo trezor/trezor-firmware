@@ -6,3 +6,4 @@ if False:
 STAKE_REGISTRATION = 0  # type: Literal[0]
 STAKE_DEREGISTRATION = 1  # type: Literal[1]
 STAKE_DELEGATION = 2  # type: Literal[2]
+STAKE_POOL_REGISTRATION = 3  # type: Literal[3]

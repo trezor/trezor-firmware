@@ -27,6 +27,10 @@ from .CardanoAddressParametersType import CardanoAddressParametersType
 from .CardanoBlockchainPointerType import CardanoBlockchainPointerType
 from .CardanoGetAddress import CardanoGetAddress
 from .CardanoGetPublicKey import CardanoGetPublicKey
+from .CardanoPoolMetadataType import CardanoPoolMetadataType
+from .CardanoPoolOwnerType import CardanoPoolOwnerType
+from .CardanoPoolParametersType import CardanoPoolParametersType
+from .CardanoPoolRelayParametersType import CardanoPoolRelayParametersType
 from .CardanoPublicKey import CardanoPublicKey
 from .CardanoSignTx import CardanoSignTx
 from .CardanoSignedTx import CardanoSignedTx
@@ -303,6 +307,7 @@ from . import ButtonRequestType
 from . import Capability
 from . import CardanoAddressType
 from . import CardanoCertificateType
+from . import CardanoPoolRelayType
 from . import DebugLinkShowTextStyle
 from . import DebugSwipeDirection
 from . import FailureType
