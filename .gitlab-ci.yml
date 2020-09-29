@@ -21,6 +21,9 @@ variables:
   PIPENV_VENV_IN_PROJECT: "true"
   PIPENV_CACHE_DIR: ".cache/"
 
+  # Fix bdist-wheel problem in NixOS by setting source date epoch to a more recent date
+  SOURCE_DATE_EPOCH: 1600000000
+
   # No need for TLS because everything runs on the same machine
   DOCKER_TLS_CERTDIR: ""
 stages:
