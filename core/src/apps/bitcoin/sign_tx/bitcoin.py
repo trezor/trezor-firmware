@@ -16,7 +16,7 @@ from ..ownership import verify_nonownership
 from ..verification import SignatureVerifier
 from . import approvers, helpers, progress
 from .hash143 import Hash143
-from .tx_info import TxInfo
+from .tx_info import OriginalTxInfo, TxInfo
 
 if False:
     from typing import List, Optional, Set, Tuple, Union
@@ -47,7 +47,7 @@ class Bitcoin:
         await self.step2_approve_outputs()
 
         # Check fee, approve lock_time and total.
-        await self.approver.approve_tx(self.tx_info)
+        await self.approver.approve_tx(self.tx_info, self.orig_txs)
 
         # Verify the transaction input amounts by requesting each previous transaction
         # and checking its output amount. Verify external inputs which have already
@@ -91,6 +91,12 @@ class Bitcoin:
         self.tx_req.serialized = TxRequestSerializedType()
         self.tx_req.serialized.serialized_tx = self.serialized_tx
 
+        # List of original transactions which are being replaced by the current transaction.
+        # Note: A List is better than a Dict of TXID -> OriginalTxInfo. Dict ordering is
+        # undefined so we would need to convert to a sorted list in several places to ensure
+        # stable device tests.
+        self.orig_txs = []  # type: List[OriginalTxInfo]
+
         progress.init(tx.inputs_count, tx.outputs_count)
 
     def create_hash_writer(self) -> HashWriter:
@@ -115,14 +121,35 @@ class Bitcoin:
             else:
                 await self.process_internal_input(txi)
 
+            if txi.orig_hash:
+                await self.process_original_input(txi)
+
         self.tx_info.h_inputs = self.tx_info.h_tx_check.get_digest()
+
+        # Finalize original inputs.
+        for orig in self.orig_txs:
+            if orig.index != orig.tx.inputs_count:
+                raise wire.ProcessError("Removal of original inputs is not supported.")
+
+            orig.index = 0  # Reset counter for outputs.
 
     async def step2_approve_outputs(self) -> None:
         for i in range(self.tx_info.tx.outputs_count):
             # STAGE_REQUEST_2_OUTPUT in legacy
             txo = await helpers.request_tx_output(self.tx_req, i, self.coin)
             script_pubkey = self.output_derive_script(txo)
-            await self.approve_output(txo, script_pubkey)
+            orig_txo = None  # type: Optional[TxOutput]
+            if txo.orig_hash:
+                orig_txo = await self.get_original_output(txo, script_pubkey)
+            await self.approve_output(txo, script_pubkey, orig_txo)
+
+        # Finalize original outputs.
+        for orig in self.orig_txs:
+            # Fetch remaining removed original outputs.
+            await self.fetch_removed_original_outputs(
+                orig, orig.orig_hash, orig.tx.outputs_count
+            )
+            await orig.finalize_tx_hash()
 
     async def step3_verify_inputs(self) -> None:
         # should come out the same as h_inputs, checked before continuing
@@ -145,6 +172,9 @@ class Bitcoin:
         # check that the inputs were the same as those streamed for approval
         if h_check.get_digest() != self.tx_info.h_inputs:
             raise wire.ProcessError("Transaction has changed during signing")
+
+        # verify the signature of one SIGHASH_ALL input in each original transaction
+        await self.verify_original_txs()
 
     async def step4_serialize_inputs(self) -> None:
         self.write_tx_header(self.serialized_tx, self.tx_info.tx, bool(self.segwit))
@@ -194,12 +224,153 @@ class Bitcoin:
     async def process_external_input(self, txi: TxInput) -> None:
         self.approver.add_external_input(txi)
 
-    async def approve_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+    async def process_original_input(self, txi: TxInput) -> None:
+        assert txi.orig_hash is not None
+        assert txi.orig_index is not None
+
+        for orig in self.orig_txs:
+            if orig.orig_hash == txi.orig_hash:
+                break
+        else:
+            orig_meta = await helpers.request_tx_meta(
+                self.tx_req, self.coin, txi.orig_hash
+            )
+            orig = OriginalTxInfo(self, orig_meta, txi.orig_hash)
+            self.orig_txs.append(orig)
+
+        if txi.orig_index >= orig.tx.inputs_count:
+            raise wire.ProcessError("Not enough inputs in original transaction.")
+
+        if orig.index != txi.orig_index:
+            raise wire.ProcessError(
+                "Rearranging or removal of original inputs is not supported."
+            )
+
+        orig_txi = await helpers.request_tx_input(
+            self.tx_req, txi.orig_index, self.coin, txi.orig_hash
+        )
+
+        # Verify that the original input matches:
+        # An input is characterized by its prev_hash and prev_index. We also check that the
+        # amounts match, so that we don't have to call get_prevtx_output() twice for the same
+        # prevtx output. Verifying that script_type matches is just a sanity check, because
+        # because we count both inputs as internal or external based only on txi.script_type.
+        if (
+            orig_txi.prev_hash != txi.prev_hash
+            or orig_txi.prev_index != txi.prev_index
+            or orig_txi.amount != txi.amount
+            or orig_txi.script_type != txi.script_type
+        ):
+            raise wire.ProcessError("Original input does not match current input.")
+
+        orig.add_input(orig_txi)
+        orig.index += 1
+
+    async def fetch_removed_original_outputs(
+        self, orig: OriginalTxInfo, orig_hash: bytes, last_index: int
+    ) -> None:
+        while orig.index < last_index:
+            txo = await helpers.request_tx_output(
+                self.tx_req, orig.index, self.coin, orig_hash
+            )
+            orig.add_output(txo, self.output_derive_script(txo))
+
+            if orig.output_is_change(txo):
+                # Removal of change-outputs is allowed.
+                self.approver.add_orig_change_output(txo)
+            else:
+                # Removal of external outputs requires prompting the user. Not implemented.
+                raise wire.ProcessError(
+                    "Removal of original external outputs is not supported."
+                )
+
+            orig.index += 1
+
+    async def get_original_output(
+        self, txo: TxOutput, script_pubkey: bytes
+    ) -> TxOutput:
+        assert txo.orig_hash is not None
+        assert txo.orig_index is not None
+
+        for orig in self.orig_txs:
+            if orig.orig_hash == txo.orig_hash:
+                break
+        else:
+            raise wire.ProcessError("Unknown original transaction.")
+
+        if txo.orig_index >= orig.tx.outputs_count:
+            raise wire.ProcessError("Not enough outputs in original transaction.")
+
+        if orig.index > txo.orig_index:
+            raise wire.ProcessError("Rearranging of original outputs is not supported.")
+
+        # First fetch any removed original outputs which precede the one we want.
+        await self.fetch_removed_original_outputs(orig, txo.orig_hash, txo.orig_index)
+
+        orig_txo = await helpers.request_tx_output(
+            self.tx_req, orig.index, self.coin, txo.orig_hash
+        )
+
+        if script_pubkey != self.output_derive_script(orig_txo):
+            raise wire.ProcessError("Not an original output.")
+
+        if self.tx_info.output_is_change(txo) and not orig.output_is_change(orig_txo):
+            raise wire.ProcessError(
+                "Original output is missing change-output parameters."
+            )
+
+        orig.add_output(orig_txo, script_pubkey)
+
+        if orig.output_is_change(orig_txo):
+            self.approver.add_orig_change_output(orig_txo)
+        else:
+            self.approver.add_orig_external_output(orig_txo)
+
+        orig.index += 1
+
+        return orig_txo
+
+    async def verify_original_txs(self) -> None:
+        for orig in self.orig_txs:
+            if orig.verification_input is None:
+                raise wire.ProcessError(
+                    "Each original transaction must specify address_n for at least one input."
+                )
+
+            assert orig.verification_index is not None
+            txi = orig.verification_input
+
+            node = self.keychain.derive(txi.address_n)
+            address = addresses.get_address(
+                txi.script_type, self.coin, node, txi.multisig
+            )
+            script_pubkey = scripts.output_derive_script(address, self.coin)
+
+            verifier = SignatureVerifier(
+                script_pubkey, txi.script_sig, txi.witness, self.coin
+            )
+            verifier.ensure_hash_type(SIGHASH_ALL)
+            tx_digest = await self.get_tx_digest(
+                orig.verification_index,
+                txi,
+                orig,
+                verifier.public_keys,
+                verifier.threshold,
+                script_pubkey,
+            )
+            verifier.verify(tx_digest)
+
+    async def approve_output(
+        self,
+        txo: TxOutput,
+        script_pubkey: bytes,
+        orig_txo: Optional[TxOutput],
+    ) -> None:
         if self.tx_info.output_is_change(txo):
             # Output is change and does not need approval.
             self.approver.add_change_output(txo, script_pubkey)
         else:
-            await self.approver.add_external_output(txo, script_pubkey)
+            await self.approver.add_external_output(txo, script_pubkey, orig_txo)
 
         self.tx_info.add_output(txo, script_pubkey)
 
@@ -207,11 +378,10 @@ class Bitcoin:
         self,
         i: int,
         txi: TxInput,
-        tx_info: TxInfo,
+        tx_info: Union[TxInfo, OriginalTxInfo],
         public_keys: List[bytes],
         threshold: int,
         script_pubkey: bytes,
-        tx_hash: Optional[bytes] = None,
     ) -> bytes:
         if txi.witness:
             return tx_info.hash143.preimage_hash(
@@ -223,9 +393,7 @@ class Bitcoin:
                 self.get_sighash_type(txi),
             )
         else:
-            digest, _, _ = await self.get_legacy_tx_digest(
-                i, tx, h_approved, script_pubkey, tx_hash
-            )
+            digest, _, _ = await self.get_legacy_tx_digest(i, tx_info, script_pubkey)
             return digest
 
     async def verify_external_input(
@@ -330,8 +498,8 @@ class Bitcoin:
         index: int,
         tx_info: Union[TxInfo, OriginalTxInfo],
         script_pubkey: Optional[bytes] = None,
-        tx_hash: Optional[bytes] = None,
     ) -> Tuple[bytes, TxInput, Optional[bip32.HDNode]]:
+        tx_hash = tx_info.orig_hash if isinstance(tx_info, OriginalTxInfo) else None
 
         # the transaction digest which gets signed for this input
         h_sign = self.create_hash_writer()

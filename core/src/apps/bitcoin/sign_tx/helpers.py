@@ -334,6 +334,8 @@ def sanitize_tx_input(txi: TxInput, coin: CoinInfo) -> TxInput:
             raise wire.DataError("Segwit not enabled on this coin.")
     if txi.commitment_data and not txi.ownership_proof:
         raise wire.DataError("commitment_data field provided but not expected.")
+    if txi.orig_hash and txi.orig_index is None:
+        raise wire.DataError("Missing orig_index field.")
     return txi
 
 
@@ -369,4 +371,6 @@ def sanitize_tx_output(txo: TxOutput, coin: CoinInfo) -> TxOutput:
             raise wire.DataError("Both address and address_n provided.")
         if not txo.address_n and not txo.address:
             raise wire.DataError("Missing address")
+    if txo.orig_hash and txo.orig_index is None:
+        raise wire.DataError("Missing orig_index field.")
     return txo
