@@ -44,4 +44,7 @@ stdenv.mkDerivation {
   ];
   LD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
   NIX_ENFORCE_PURITY = 0;
+
+  # Fix bdist-wheel problem by setting source date epoch to a more recent date
+  SOURCE_DATE_EPOCH = 1600000000;
 }
