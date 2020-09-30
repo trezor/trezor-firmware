@@ -22,7 +22,7 @@ DECRED_SCRIPT_VERSION = const(0)
 DECRED_SIGHASH_ALL = const(1)
 
 if False:
-    from typing import Union
+    from typing import Optional, Union
 
     from trezor.messages.SignTx import SignTx
     from trezor.messages.TxInput import TxInput
@@ -54,15 +54,17 @@ class Decred(Bitcoin):
         approver: approvers.Approver,
     ) -> None:
         ensure(coin.decred)
-
         self.h_prefix = HashWriter(blake256())
-        writers.write_uint32(self.h_prefix, tx.version | DECRED_SERIALIZE_NO_WITNESS)
-        write_bitcoin_varint(self.h_prefix, tx.inputs_count)
 
         super().__init__(tx, keychain, coin, approver)
 
-        self.write_tx_header(self.serialized_tx, self.tx, witness_marker=True)
-        write_bitcoin_varint(self.serialized_tx, self.tx.inputs_count)
+        self.write_tx_header(self.serialized_tx, self.tx_info.tx, witness_marker=True)
+        write_bitcoin_varint(self.serialized_tx, self.tx_info.tx.inputs_count)
+
+        writers.write_uint32(
+            self.h_prefix, self.tx_info.tx.version | DECRED_SERIALIZE_NO_WITNESS
+        )
+        write_bitcoin_varint(self.h_prefix, self.tx_info.tx.inputs_count)
 
     def create_hash_writer(self) -> HashWriter:
         return HashWriter(blake256())
@@ -71,11 +73,11 @@ class Decred(Bitcoin):
         return DecredHash(self.h_prefix)
 
     async def step2_approve_outputs(self) -> None:
-        write_bitcoin_varint(self.serialized_tx, self.tx.outputs_count)
-        write_bitcoin_varint(self.h_prefix, self.tx.outputs_count)
+        write_bitcoin_varint(self.serialized_tx, self.tx_info.tx.outputs_count)
+        write_bitcoin_varint(self.h_prefix, self.tx_info.tx.outputs_count)
         await super().step2_approve_outputs()
-        self.write_tx_footer(self.serialized_tx, self.tx)
-        self.write_tx_footer(self.h_prefix, self.tx)
+        self.write_tx_footer(self.serialized_tx, self.tx_info.tx)
+        self.write_tx_footer(self.h_prefix, self.tx_info.tx)
 
     async def process_internal_input(self, txi: TxInput) -> None:
         await super().process_internal_input(txi)
@@ -86,22 +88,26 @@ class Decred(Bitcoin):
     async def process_external_input(self, txi: TxInput) -> None:
         raise wire.DataError("External inputs not supported")
 
-    async def approve_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
-        await super().approve_output(txo, script_pubkey)
+    async def approve_output(
+        self,
+        txo: TxOutput,
+        script_pubkey: bytes,
+        orig_txo: Optional[TxOutput],
+    ) -> None:
+        await super().approve_output(txo, script_pubkey, orig_txo)
         self.write_tx_output(self.serialized_tx, txo, script_pubkey)
 
     async def step4_serialize_inputs(self) -> None:
-        write_bitcoin_varint(self.serialized_tx, self.tx.inputs_count)
+        write_bitcoin_varint(self.serialized_tx, self.tx_info.tx.inputs_count)
 
         prefix_hash = self.h_prefix.get_digest()
 
-        for i_sign in range(self.tx.inputs_count):
+        for i_sign in range(self.tx_info.tx.inputs_count):
             progress.advance()
 
             txi_sign = await helpers.request_tx_input(self.tx_req, i_sign, self.coin)
 
-            self.wallet_path.check_input(txi_sign)
-            self.multisig_fingerprint.check_input(txi_sign)
+            self.tx_info.check_input(txi_sign)
 
             key_sign = self.keychain.derive(txi_sign.address_n)
             key_sign_pub = key_sign.public_key()
@@ -121,11 +127,11 @@ class Decred(Bitcoin):
 
             h_witness = self.create_hash_writer()
             writers.write_uint32(
-                h_witness, self.tx.version | DECRED_SERIALIZE_WITNESS_SIGNING
+                h_witness, self.tx_info.tx.version | DECRED_SERIALIZE_WITNESS_SIGNING
             )
-            write_bitcoin_varint(h_witness, self.tx.inputs_count)
+            write_bitcoin_varint(h_witness, self.tx_info.tx.inputs_count)
 
-            for ii in range(self.tx.inputs_count):
+            for ii in range(self.tx_info.tx.inputs_count):
                 if ii == i_sign:
                     writers.write_bytes_prefixed(h_witness, prev_pkscript)
                 else:
