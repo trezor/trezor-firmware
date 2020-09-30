@@ -8,12 +8,13 @@ from trezor.messages.TxInput import TxInput
 from apps.common.writers import write_bitcoin_varint
 
 from .. import multisig, writers
+from ..common import input_is_nonsegwit
 from . import helpers
-from .bitcoin import Bitcoin, Hash143, input_is_nonsegwit
+from .bitcoin import Bitcoin
 
 if False:
     from typing import List, Optional, Union
-    from trezor.utils import HashWriter
+    from .tx_info import OriginalTxInfo, TxInfo
 
 _SIGHASH_FORKID = const(0x40)
 
@@ -45,21 +46,24 @@ class Bitcoinlike(Bitcoin):
         self,
         i: int,
         txi: TxInput,
-        tx: Union[SignTx, PrevTx],
-        hash143: Hash143,
-        h_approved: HashWriter,
+        tx_info: Union[TxInfo, OriginalTxInfo],
         public_keys: List[bytes],
         threshold: int,
         script_pubkey: bytes,
         tx_hash: Optional[bytes] = None,
     ) -> bytes:
         if self.coin.force_bip143:
-            return hash143.preimage_hash(
-                txi, public_keys, threshold, tx, self.coin, self.get_sighash_type(txi),
+            return tx_info.hash143.preimage_hash(
+                txi,
+                public_keys,
+                threshold,
+                tx_info.tx,
+                self.coin,
+                self.get_sighash_type(txi),
             )
         else:
             return await super().get_tx_digest(
-                i, txi, tx, hash143, h_approved, public_keys, threshold, script_pubkey
+                i, txi, tx_info, public_keys, threshold, script_pubkey
             )
 
     def get_sighash_type(self, txi: TxInput) -> int:

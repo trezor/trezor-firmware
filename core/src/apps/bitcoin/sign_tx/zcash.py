@@ -31,6 +31,7 @@ from .hash143 import Hash143
 if False:
     from apps.common import coininfo
     from typing import List, Optional, Union
+    from .tx_info import OriginalTxInfo, TxInfo
     from ..writers import Writer
 
 OVERWINTERED = const(0x80000000)
@@ -111,14 +112,14 @@ class Zcashlike(Bitcoinlike):
         ensure(coin.overwintered)
         super().__init__(tx, keychain, coin, approver)
 
-        if self.tx.version != 4:
+        if tx.version != 4:
             raise wire.DataError("Unsupported transaction version.")
 
     def create_hash143(self) -> Hash143:
         return Zip243Hash()
 
     async def step7_finish(self) -> None:
-        self.write_tx_footer(self.serialized_tx, self.tx)
+        self.write_tx_footer(self.serialized_tx, self.tx_info.tx)
 
         write_uint64(self.serialized_tx, 0)  # valueBalance
         write_bitcoin_varint(self.serialized_tx, 0)  # nShieldedSpend
@@ -134,16 +135,19 @@ class Zcashlike(Bitcoinlike):
         self,
         i: int,
         txi: TxInput,
-        tx: Union[SignTx, PrevTx],
-        hash143: Hash143,
-        h_approved: HashWriter,
+        tx_info: Union[TxInfo, OriginalTxInfo],
         public_keys: List[bytes],
         threshold: int,
         script_pubkey: bytes,
         tx_hash: Optional[bytes] = None,
     ) -> bytes:
-        return hash143.preimage_hash(
-            txi, public_keys, threshold, tx, self.coin, self.get_sighash_type(txi)
+        return tx_info.hash143.preimage_hash(
+            txi,
+            public_keys,
+            threshold,
+            tx_info.tx,
+            self.coin,
+            self.get_sighash_type(txi),
         )
 
     def write_tx_header(
@@ -164,9 +168,6 @@ class Zcashlike(Bitcoinlike):
         write_uint32(w, tx.lock_time)
         if tx.version >= 3:
             write_uint32(w, tx.expiry)  # expiryHeight
-
-        assert self.tx.version_group_id is not None
-        assert self.tx.expiry is not None
 
 
 def derive_script_code(
