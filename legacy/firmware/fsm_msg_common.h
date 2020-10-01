@@ -62,6 +62,8 @@ bool get_features(Features *resp) {
   if (session_isUnlocked()) {
     resp->has_wipe_code_protection = true;
     resp->wipe_code_protection = config_hasWipeCode();
+    resp->has_auto_lock_delay_ms = true;
+    resp->auto_lock_delay_ms = config_getAutoLockDelayMs();
   }
 
 #if BITCOIN_ONLY
