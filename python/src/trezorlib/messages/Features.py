@@ -54,6 +54,8 @@ class Features(p.MessageType):
         session_id: bytes = None,
         passphrase_always_on_device: bool = None,
         safety_checks: EnumTypeSafetyCheckLevel = None,
+        auto_lock_delay_ms: int = None,
+        display_rotation: int = None,
     ) -> None:
         self.capabilities = capabilities if capabilities is not None else []
         self.vendor = vendor
@@ -90,6 +92,8 @@ class Features(p.MessageType):
         self.session_id = session_id
         self.passphrase_always_on_device = passphrase_always_on_device
         self.safety_checks = safety_checks
+        self.auto_lock_delay_ms = auto_lock_delay_ms
+        self.display_rotation = display_rotation
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -129,4 +133,6 @@ class Features(p.MessageType):
             35: ('session_id', p.BytesType, None),
             36: ('passphrase_always_on_device', p.BoolType, None),
             37: ('safety_checks', p.EnumType("SafetyCheckLevel", (0, 1, 2)), None),
+            38: ('auto_lock_delay_ms', p.UVarintType, None),
+            39: ('display_rotation', p.UVarintType, None),
         }
