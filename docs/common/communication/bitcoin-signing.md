@@ -21,8 +21,10 @@ Trezor can request the following kinds of items:
 * input of the transaction being signed
 * output of the transaction being signed
 * metadata of a _previous transaction_, i.e., the transaction whose UTXO is being spent
-* input of a previous transaction
-* output of a previous transaction
+* metadata of an _original transaction_, i.e., a transaction that is being replaced by
+  the current transaction
+* input of a previous or original transaction
+* output of a previous or original transaction
 * additional trailing data of a previous transaction
 
 As part of each `TxRequest` message, Trezor can also send a chunk of the resulting
@@ -129,8 +131,8 @@ set on `tx.input`.
 #### Normal (internal) inputs
 
 Usually, the user owns, and wants to sign, all inputs of the transaction. For that, the
-host must specify a derivation path for the key, and signature type (legacy, p2sh
-segwit, native segwit).
+host must specify a derivation path for the key, and script type `SPENDADDRESS` (legacy),
+`SPENDP2SHWITNESS` (P2SH segwit) or `SPENDWITNESS` (native segwit).
 
 #### Multisig inputs
 
@@ -141,18 +143,18 @@ segwit and native segwit multisig use the same type as non-multisig inputs, i.e.
 
 Full documentation for multisig is TBD.
 
-### Pre-signed inputs
+#### External inputs
 
-Trezor can include inputs that already have a valid signature from some other party.
-Such inputs are of type `EXTERNAL`. These must provide `script_sig` and/or `witness`
-with the signature. This data is then validated against the previous transaction.
-
-### External inputs with ownership proofs
-
-If the other signing party hasn't signed their input yet (i.e., with two Trezors, one
-must sign first so that the other can include a pre-signed input), they can instead
-provide a SLIP-19 ownership proof in the field `ownership_proof`, with optional
-commitment data in `commitment_data`. The input type is also `EXTERNAL` in this case.
+Trezor can include inputs that it will not sign, typically because they are owned by
+another party. Such inputs are of type `EXTERNAL` and the host does not specify a
+derivation path for the key. Instead, these inputs must either already have a valid
+signature or they must come with an ownership proof. If the input already has a valid
+signature, then the host provides the `script_sig` and/or `witness` fields. If the other
+signing party hasn't signed their input yet (i.e., with two Trezors, one must sign first
+so that the other can include a pre-signed input), they can instead provide a
+[SLIP-19](https://github.com/satoshilabs/slips/blob/master/slip-0019.md)
+ownership proof in the `ownership_proof` field, with optional commitment data in
+`commitment_data`.
 
 ### Transaction output
 
@@ -261,6 +263,68 @@ length. All other fields should be unset.
 
 **New style:** Host must respond with a `TxAckPrevExtraData` message. The chunk must be
 set to `tx.extra_data_chunk`.
+
+### Original transaction input
+
+Trezor sets `request_type` to `TXORIGINPUT`. `request_details.tx_hash` is the
+transaction hash of the original transaction.
+
+Host must respond with a `TxAckInput` message. All relevant data must be set in
+`tx.input`. The derivation path and `script_type` are mandatory for all original
+internal inputs. For each original transaction, one of its original internal inputs must
+be accompanied with a valid signature in the `script_sig` and/or `witness` fields.
+
+### Original transaction output
+
+Trezor sets `request_type` to `TXORIGOUTPUT`. `request_details.tx_hash` is the
+transaction hash of the original transaction.
+
+Host must respond with a `TxAckOutput` message. All relevant data must be set in
+`tx.output`. The derivation path and script type are mandatory for all original
+change-outputs.
+
+## Replacement transactions
+
+A replacement transaction is a transaction that uses the same inputs as one or more
+transactions which have already been signed (the original transactions). Replacement
+transactions can be used to securely bump the fee of an already signed transaction
+([BIP-125](https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki)) or to
+participate as a sender in PayJoin
+([BIP-78](https://github.com/bitcoin/bips/blob/master/bip-0078.mediawiki)). Trezor only
+supports signing of replacement transaction which do not increase the amount that the
+user is spending on external outputs. Thus when signing a replacement transaction the
+user only needs to confirm the fee modification and the original TXIDs without being
+shown any outputs, since the original external outputs must have already been confirmed
+by the user and any new external outputs can only be paid for by new external inputs.
+
+The host signals that a transaction is a replacement transaction by setting the
+`orig_hash` and `orig_index` fields for at least one `TxInput`. Trezor will then
+automatically request metadata about the original transaction and verify the original
+signatures.
+
+A replacement transaction in Trezor must satisfy the following requirements:
+
+* All inputs of the original transactions must be inputs of the replacement transation.
+* All _external_ outputs of the original transactions must be outputs of the replacement
+  transation and none of their output amounts may be decreased.
+* The replacement transaction must not increase the amount that the user is spending
+  on external outputs.
+* Original transactions must have the same effective `nLockTime` as the replacement
+  transaction.
+* The inputs and outputs of the original transactions must not be permuted in the
+  replacement transaction, but they can be interleaved with new inputs or with inputs
+  from another original transaction.
+* New `OP_RETURN` outputs cannot be added in the replacement transaction.
+
+So the replacement transaction is, for example, allowed to:
+
+* Increase the user's contribution to the mining fee by adding new inputs or decreasing
+  or removing change outputs.
+* Decrease the user's contribution to the mining fee by increasing or adding
+  change-outputs.
+* Add external inputs (PayJoin) and use them to introduce new outputs, increase the
+  original external outputs or even to increase the user's change outputs so as to
+  decrease the amount that the user is spending.
 
 ## Implementation notes
 
