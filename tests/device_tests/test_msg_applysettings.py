@@ -49,6 +49,16 @@ class TestMsgApplysettings:
 
         assert client.features.label == "new label"
 
+    @pytest.mark.skip_t1
+    def test_apply_settings_rotation(self, client):
+        assert client.features.display_rotation is None
+
+        with client:
+            _set_expected_responses(client)
+            device.apply_settings(client, display_rotation=270)
+
+        assert client.features.display_rotation == 270
+
     @pytest.mark.skip_t2
     def test_invalid_language(self, client):
         assert client.features.language == "en-US"

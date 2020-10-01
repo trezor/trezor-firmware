@@ -79,6 +79,16 @@ def test_apply_auto_lock_delay(client):
 )
 def test_apply_auto_lock_delay_valid(client, seconds):
     set_autolock_delay(client, seconds * 1000)
+    assert client.features.auto_lock_delay_ms == seconds * 1000
+
+
+def test_autolock_default_value(client):
+    assert client.features.auto_lock_delay_ms is None
+    with client:
+        client.use_pin_sequence([PIN4])
+        device.apply_settings(client, label="pls unlock")
+        client.refresh_features()
+    assert client.features.auto_lock_delay_ms == 60 * 10 * 1000
 
 
 @pytest.mark.skip_ui
