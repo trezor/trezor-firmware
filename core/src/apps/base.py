@@ -93,6 +93,8 @@ def get_features() -> Features:
         f.wipe_code_protection = config.has_wipe_code()
         f.passphrase_always_on_device = storage.device.get_passphrase_always_on_device()
         f.safety_checks = safety_checks.read_setting()
+        f.auto_lock_delay_ms = storage.device.get_autolock_delay_ms()
+        f.display_rotation = storage.device.get_rotation()
 
     return f
 
