@@ -102,6 +102,7 @@ message Features {
     optional SafetyCheckLevel safety_checks = 37;            // safety check level, set to Prompt to limit path namespace enforcement
     optional uint32 auto_lock_delay_ms = 38;    // number of milliseconds after which the device locks itself
     optional uint32 display_rotation = 39;      // in degrees from North
+    optional bool experimental_features = 40;   // are experimental message types enabled?
 }
 
 /**
@@ -138,6 +139,7 @@ message ApplySettings {
     optional uint32 display_rotation = 7;  // in degrees from North
     optional bool passphrase_always_on_device = 8;  // do not prompt for passphrase, enforce device entry
     optional SafetyCheckLevel safety_checks = 9;  // Safety check level, set to Prompt to limit path namespace enforcement
+    optional bool experimental_features = 10;  // enable experimental message types
 }
 
 /**
