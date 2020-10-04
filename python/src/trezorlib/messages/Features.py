@@ -56,6 +56,7 @@ class Features(p.MessageType):
         safety_checks: EnumTypeSafetyCheckLevel = None,
         auto_lock_delay_ms: int = None,
         display_rotation: int = None,
+        experimental_features: bool = None,
     ) -> None:
         self.capabilities = capabilities if capabilities is not None else []
         self.vendor = vendor
@@ -94,6 +95,7 @@ class Features(p.MessageType):
         self.safety_checks = safety_checks
         self.auto_lock_delay_ms = auto_lock_delay_ms
         self.display_rotation = display_rotation
+        self.experimental_features = experimental_features
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -135,4 +137,5 @@ class Features(p.MessageType):
             37: ('safety_checks', p.EnumType("SafetyCheckLevel", (0, 1, 2)), None),
             38: ('auto_lock_delay_ms', p.UVarintType, None),
             39: ('display_rotation', p.UVarintType, None),
+            40: ('experimental_features', p.BoolType, None),
         }
