@@ -142,6 +142,7 @@ class UnicodeType:
 
 class MessageType:
     WIRE_TYPE = 2
+    UNSTABLE = False
 
     # Type id for the wire codec.
     # Technically, not every protobuf message has this.
@@ -198,7 +199,10 @@ if False:
 
 
 def load_message(
-    reader: Reader, msg_type: Type[LoadedMessageType], field_cache: FieldCache = None
+    reader: Reader,
+    msg_type: Type[LoadedMessageType],
+    field_cache: FieldCache = None,
+    experimental_enabled: bool = True,
 ) -> LoadedMessageType:
     if field_cache is None:
         field_cache = {}
@@ -206,6 +210,9 @@ def load_message(
     if fields is None:
         fields = msg_type.get_fields()
         field_cache[msg_type] = fields
+
+    if msg_type.UNSTABLE and not experimental_enabled:
+        raise ValueError  # experimental messages not enabled
 
     # we need to avoid calling __init__, which enforces required arguments
     msg = object.__new__(msg_type)  # type: LoadedMessageType
@@ -263,7 +270,9 @@ def load_message(
             reader.readinto(fvalue)
             fvalue = bytes(fvalue).decode()
         elif issubclass(ftype, MessageType):
-            fvalue = load_message(LimitedReader(reader, ivalue), ftype, field_cache)
+            fvalue = load_message(
+                LimitedReader(reader, ivalue), ftype, field_cache, experimental_enabled
+            )
         else:
             raise TypeError  # field type is unknown
 

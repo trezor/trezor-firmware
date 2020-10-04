@@ -95,6 +95,7 @@ def get_features() -> Features:
         f.safety_checks = safety_checks.read_setting()
         f.auto_lock_delay_ms = storage.device.get_autolock_delay_ms()
         f.display_rotation = storage.device.get_rotation()
+        f.experimental_features = storage.device.get_experimental_features()
 
     return f
 
@@ -263,5 +264,7 @@ def boot() -> None:
     wire.register(MessageType.Ping, handle_Ping)
     wire.register(MessageType.DoPreauthorized, handle_DoPreauthorized)
     wire.register(MessageType.CancelAuthorization, handle_CancelAuthorization)
+
+    wire.experimental_enabled = storage.device.get_experimental_features()
 
     workflow.idle_timer.set(storage.device.get_autolock_delay_ms(), lock_device)

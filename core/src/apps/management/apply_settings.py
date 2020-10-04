@@ -45,6 +45,7 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings):
         and msg.display_rotation is None
         and msg.auto_lock_delay_ms is None
         and msg.safety_checks is None
+        and msg.experimental_features is None
     ):
         raise wire.ProcessError("No setting provided")
 
@@ -90,6 +91,11 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings):
         await require_confirm_change_display_rotation(ctx, msg.display_rotation)
         storage.device.set_rotation(msg.display_rotation)
         ui.display.orientation(storage.device.get_rotation())
+
+    if msg.experimental_features is not None:
+        await require_confirm_experimental_features(ctx, msg.experimental_features)
+        storage.device.set_experimental_features(msg.experimental_features)
+        wire.experimental_enabled = msg.experimental_features
 
     return Success(message="Settings applied")
 
@@ -182,3 +188,12 @@ async def require_confirm_safety_checks(ctx, level: EnumTypeSafetyCheckLevel) ->
         await require_confirm(ctx, text, ButtonRequestType.ProtectCall)
     else:
         raise ValueError  # enum value out of range
+
+
+async def require_confirm_experimental_features(ctx, enable: bool) -> None:
+    if enable:
+        text = Text("Experimental mode", ui.ICON_CONFIG)
+        text.normal("Enable experimental", "features?")
+        text.br_half()
+        text.bold("Only for development", "and beta testing!")
+        await require_confirm(ctx, text, ButtonRequestType.ProtectCall)

@@ -20,7 +20,7 @@ import pytest
 
 from trezorlib import debuglink, log
 from trezorlib.debuglink import TrezorClientDebugLink
-from trezorlib.device import wipe as wipe_device
+from trezorlib.device import apply_settings, wipe as wipe_device
 from trezorlib.transport import enumerate_devices, get_transport
 
 from . import ui_tests
@@ -131,6 +131,9 @@ def client(request):
             needs_backup=setup_params["needs_backup"],
             no_backup=setup_params["no_backup"],
         )
+
+        if client.features.model == "T":
+            apply_settings(client, experimental_features=True)
 
         if use_passphrase and isinstance(setup_params["passphrase"], str):
             client.use_passphrase(setup_params["passphrase"])

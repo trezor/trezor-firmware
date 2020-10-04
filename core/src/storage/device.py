@@ -36,6 +36,7 @@ _SLIP39_ITERATION_EXPONENT = const(0x11)  # int
 _SD_SALT_AUTH_KEY          = const(0x12)  # bytes
 INITIALIZED                = const(0x13)  # bool (0x01 or empty)
 _SAFETY_CHECK_LEVEL        = const(0x14)  # int
+_EXPERIMENTAL_FEATURES     = const(0x15)  # bool (0x01 or empty)
 
 _DEFAULT_BACKUP_TYPE       = BackupType.Bip39
 
@@ -304,3 +305,11 @@ def set_safety_check_level(level: StorageSafetyCheckLevel) -> None:
     if level not in (SAFETY_CHECK_LEVEL_STRICT, SAFETY_CHECK_LEVEL_PROMPT):
         raise ValueError
     common.set_uint8(_NAMESPACE, _SAFETY_CHECK_LEVEL, level)
+
+
+def get_experimental_features() -> bool:
+    return common.get_bool(_NAMESPACE, _EXPERIMENTAL_FEATURES)
+
+
+def set_experimental_features(enabled: bool) -> None:
+    common.set_true_or_delete(_NAMESPACE, _EXPERIMENTAL_FEATURES, enabled)
