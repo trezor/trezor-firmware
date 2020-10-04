@@ -210,6 +210,17 @@ def safety_checks(client, always, level):
     return device.apply_settings(client, safety_checks=level)
 
 
+@cli.command()
+@click.argument("enable", type=ChoiceType({"on": True, "off": False}))
+@with_client
+def experimental_features(client, enable):
+    """Enable or disable experimental message types.
+
+    This is a developer feature. Use with caution.
+    """
+    return device.apply_settings(client, experimental_features=enable)
+
+
 #
 # passphrase operations
 #
