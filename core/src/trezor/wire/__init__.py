@@ -73,6 +73,9 @@ workflow_handlers = {}  # type: Dict[int, Handler]
 # to be dynamically imported when such message arrives.
 workflow_packages = {}  # type: Dict[int, Tuple[str, str]]
 
+# If set to False protobuf messages marked with "unstable" option are rejected.
+experimental_enabled = False  # type: bool
+
 
 def add(wire_type: int, pkgname: str, modname: str) -> None:
     """Shortcut for registering a dynamically-imported Protobuf workflow."""
@@ -123,7 +126,9 @@ def _wrap_protobuf_load(
     field_cache: protobuf.FieldCache = None,
 ) -> protobuf.LoadedMessageType:
     try:
-        return protobuf.load_message(reader, expected_type, field_cache)
+        return protobuf.load_message(
+            reader, expected_type, field_cache, experimental_enabled
+        )
     except Exception as e:
         if e.args:
             raise DataError("Failed to decode message: {}".format(e.args[0]))
