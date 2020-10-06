@@ -159,7 +159,7 @@ def sign_interactive():
     inputs, txes = _get_inputs_interactive(blockbook_url)
     outputs = _get_outputs_interactive()
 
-    signtx = messages.SignTx()
+    signtx = messages.SignTx(outputs_count=len(outputs), inputs_count=len(inputs))
     signtx.version = prompt("Transaction version", type=int, default=2)
     signtx.lock_time = prompt("Transaction locktime", type=int, default=0)
 
