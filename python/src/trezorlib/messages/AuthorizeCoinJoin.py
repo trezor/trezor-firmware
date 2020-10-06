@@ -13,6 +13,7 @@ if __debug__:
 
 class AuthorizeCoinJoin(p.MessageType):
     MESSAGE_WIRE_TYPE = 51
+    UNSTABLE = True
 
     def __init__(
         self,

@@ -327,6 +327,8 @@ class Descriptor:
         if msg_id is None:
             msg_id = self.message_types.get(message.name)
 
+        unstable = self._get_extension(message, "unstable")
+
         # "from .. import protobuf as p"
         yield self.protobuf_import + " as p"
 
@@ -357,6 +359,9 @@ class Descriptor:
 
         if msg_id is not None:
             yield "    MESSAGE_WIRE_TYPE = {}".format(msg_id)
+
+        if unstable is not None:
+            yield "    UNSTABLE = True"
 
         if fields:
             yield ""
