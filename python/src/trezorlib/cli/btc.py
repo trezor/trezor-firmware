@@ -199,7 +199,6 @@ def sign_tx(client, json_file):
     """
     data = json.load(json_file)
     coin = data.get("coin_name", DEFAULT_COIN)
-    details = protobuf.dict_to_proto(messages.SignTx, data.get("details", {}))
     inputs = [
         protobuf.dict_to_proto(messages.TxInputType, i) for i in data.get("inputs", ())
     ]
@@ -212,7 +211,7 @@ def sign_tx(client, json_file):
         for txid, tx in data.get("prev_txes", {}).items()
     }
 
-    _, serialized_tx = btc.sign_tx(client, coin, inputs, outputs, details, prev_txes)
+    _, serialized_tx = btc.sign_tx(client, coin, inputs, outputs, prev_txes)
 
     click.echo()
     click.echo("Signed Transaction:")
