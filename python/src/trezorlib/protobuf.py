@@ -280,6 +280,7 @@ class CountingWriter:
 
 FLAG_REPEATED = object()
 FLAG_REQUIRED = object()
+FLAG_EXPERIMENTAL = object()
 
 
 def decode_packed_array_field(ftype: FieldType, reader: Reader) -> List[Any]:
@@ -334,6 +335,8 @@ def load_message(reader: Reader, msg_type: Type[MT]) -> MT:
     for fname, _, fdefault in fields.values():
         if fdefault is FLAG_REPEATED:
             msg_dict[fname] = []
+        elif fdefault is FLAG_EXPERIMENTAL:
+            msg_dict[fname] = None
         elif fdefault is not FLAG_REQUIRED:
             msg_dict[fname] = fdefault
 
