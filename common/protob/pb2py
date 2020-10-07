@@ -65,6 +65,7 @@ class ProtoField:
     orig = attr.ib()
     repeated = attr.ib()
     required = attr.ib()
+    experimental = attr.ib()
     type_name = attr.ib()
     proto_type = attr.ib()
     py_type = attr.ib()
@@ -78,6 +79,7 @@ class ProtoField:
     def from_field(cls, descriptor, field):
         repeated = field.label == field.LABEL_REPEATED
         required = field.label == field.LABEL_REQUIRED
+        experimental = bool(descriptor._get_extension(field, "experimental"))
         # ignore package path
         type_name = field.type_name.rsplit(".")[-1]
 
@@ -115,6 +117,7 @@ class ProtoField:
             orig=field,
             repeated=repeated,
             required=required,
+            experimental=experimental,
             type_name=type_name,
             proto_type=proto_type,
             py_type=py_type,
@@ -306,6 +309,8 @@ class Descriptor:
                 flags = "p.FLAG_REPEATED"
             elif field.required:
                 flags = "p.FLAG_REQUIRED"
+            elif field.experimental:
+                flags = "p.FLAG_EXPERIMENTAL"
             else:
                 flags = field.default_value
 

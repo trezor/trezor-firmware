@@ -32,6 +32,12 @@ extend google.protobuf.MessageOptions {
 }
 
 
+/** Options for tagging field types */
+extend google.protobuf.FieldOptions {
+    optional bool experimental = 52001;   // indicate that a field is intended for development and beta testing only
+}
+
+
 /**
  * Mapping between Trezor wire identifier (uint) and a protobuf message
  */

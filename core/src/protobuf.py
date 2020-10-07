@@ -179,6 +179,7 @@ class LimitedReader:
 
 FLAG_REPEATED = object()
 FLAG_REQUIRED = object()
+FLAG_EXPERIMENTAL = object()
 
 if False:
     MessageTypeDef = Union[
@@ -220,6 +221,8 @@ def load_message(
     for fname, _, fdefault in fields.values():
         if fdefault is FLAG_REPEATED:
             fdefault = []
+        elif fdefault is FLAG_EXPERIMENTAL:
+            fdefault = None
         setattr(msg, fname, fdefault)
 
     if False:
@@ -251,6 +254,9 @@ def load_message(
         fname, ftype, fdefault = field
         if wtype != ftype.WIRE_TYPE:
             raise TypeError  # parsed wire type differs from the schema
+
+        if fdefault is FLAG_EXPERIMENTAL and not experimental_enabled:
+            raise ValueError  # experimental fields not enabled
 
         ivalue = load_uvarint(reader)
 
