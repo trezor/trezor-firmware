@@ -10,7 +10,8 @@ release core fw regular deploy:
   needs:
     - core fw regular build
   script:
-    - export NAME="trezor-fw-regular-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.bin"
+    - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
+    - export NAME="trezor-fw-regular-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
     - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
     - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
     - rsync --delete -va $NAME "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}/$NAME"
@@ -29,7 +30,8 @@ release core fw btconly deploy:
   needs:
     - core fw btconly build
   script:
-    - export NAME="trezor-fw-btconly-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.bin"
+    - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
+    - export NAME="trezor-fw-btconly-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
     - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
     - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
     - rsync --delete -va $NAME "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}/$NAME"
@@ -48,7 +50,8 @@ release core fw regular debug deploy:
   needs:
     - core fw regular debug build
   script:
-    - export NAME="trezor-fw-regular-debug-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.bin"
+    - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
+    - export NAME="trezor-fw-regular-debug-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
     - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
     - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
     - rsync --delete -va $NAME "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}/$NAME"
@@ -67,7 +70,8 @@ release core fw btconly debug deploy:
   needs:
     - core fw btconly debug build
   script:
-    - export NAME="trezor-fw-btconly-debug-$CORE_VERSION-$CI_COMMIT_SHORT_SHA.bin"
+    - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
+    - export NAME="trezor-fw-btconly-debug-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
     - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
     - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
     - rsync --delete -va $NAME "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}/$NAME"
@@ -88,7 +92,8 @@ release legacy fw regular deploy:
   needs:
     - legacy fw regular build
   script:
-    - export NAME="trezor-fw-regular-$LEGACY_VERSION-$CI_COMMIT_SHORT_SHA.bin"
+    - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
+    - export NAME="trezor-fw-regular-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
     - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
     - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
     - rsync --delete -va $NAME "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}/$NAME"
@@ -107,7 +112,8 @@ release legacy fw btconly deploy:
   needs:
     - legacy fw btconly build
   script:
-    - export NAME="trezor-fw-btconly-$LEGACY_VERSION-$CI_COMMIT_SHORT_SHA.bin"
+    - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
+    - export NAME="trezor-fw-btconly-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
     - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
     - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
     - rsync --delete -va $NAME "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}/$NAME"
@@ -126,7 +132,8 @@ release legacy fw regular debug deploy:
   needs:
     - legacy fw regular debug build
   script:
-    - export NAME="trezor-fw-regular-debug-$LEGACY_VERSION-$CI_COMMIT_SHORT_SHA.bin"
+    - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
+    - export NAME="trezor-fw-regular-debug-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
     - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
     - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
     - rsync --delete -va $NAME "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}/$NAME"
@@ -145,7 +152,8 @@ release legacy fw btconly debug deploy:
   needs:
     - legacy fw btconly debug build
   script:
-    - export NAME="trezor-fw-btconly-debug-$LEGACY_VERSION-$CI_COMMIT_SHORT_SHA.bin"
+    - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
+    - export NAME="trezor-fw-btconly-debug-$VERSION-$CI_COMMIT_SHORT_SHA.bin"
     - echo "Deploying to ${DEPLOY_DIRECTORY}/$NAME"
     - mkdir -p "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}"
     - rsync --delete -va $NAME "${DEPLOY_BASE_DIR}/${DEPLOY_DIRECTORY}/$NAME"
@@ -166,7 +174,8 @@ release core unix debug deploy:
   needs:
     - core unix frozen debug build
   script:
-    - DEST="$DEPLOY_PATH/trezor-emu-core-$CORE_VERSION-$CI_COMMIT_SHORT_SHA"
+    - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
+    - DEST="$DEPLOY_PATH/trezor-emu-core-$VERSION-$CI_COMMIT_SHORT_SHA"
     - echo "Deploying to $DEST"
     - nix-shell -p patchelf --run "patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 core/build/unix/trezor-emu-core"
     - rsync --delete -va core/build/unix/trezor-emu-core "$DEST"
@@ -185,7 +194,8 @@ release legacy unix debug deploy:
   needs:
     - legacy emu regular debug build
   script:
-    - DEST="$DEPLOY_PATH/trezor-emu-legacy-$LEGACY_VERSION-$CI_COMMIT_SHORT_SHA"
+    - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
+    - DEST="$DEPLOY_PATH/trezor-emu-legacy-$VERSION-$CI_COMMIT_SHORT_SHA"
     - echo "Deploying to $DEST"
     - nix-shell -p patchelf --run "patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 legacy/firmware/trezor.elf"
     - rsync --delete -va legacy/firmware/trezor.elf "$DEST"
@@ -204,7 +214,8 @@ release core macos debug deploy:
   needs:
     - core unix frozen debug build
   script:
-    - DEST="$DEPLOY_PATH/trezor-emu-macos-$CORE_VERSION-$CI_COMMIT_SHORT_SHA"
+    - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
+    - DEST="$DEPLOY_PATH/trezor-emu-macos-$VERSION-$CI_COMMIT_SHORT_SHA"
     - echo "Deploying to $DEST"
     - rsync --delete -va core/build/unix/trezor-emu-core "$DEST"
   only:
