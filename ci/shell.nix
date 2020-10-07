@@ -1,5 +1,5 @@
-# the last successful build of nixos-unstable - 2020-07-01
-with import (builtins.fetchTarball https://github.com/NixOS/nixpkgs/archive/55668eb671b915b49bcaaeec4518cc49d8de0a99.tar.gz) {};
+# the last successful build of nixos-20.09 (stable) as of 2020-10-07
+with import (builtins.fetchTarball https://github.com/NixOS/nixpkgs/archive/7badbf18c45b7490d893452beb8950d966327831.tar.gz) {};
 
 stdenv.mkDerivation {
   name = "trezor-firmware-env";
