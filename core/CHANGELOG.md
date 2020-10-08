@@ -24,7 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Security
 
-## 2.3.4 [to be released on 7th October 2020]
+## 2.3.4 [7th October 2020]
 
 ### Added
 - Support for the upcoming Monero hard fork.  [#1246]
