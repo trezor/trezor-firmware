@@ -59,7 +59,7 @@ setup(
     entry_points={"console_scripts": ["trezorctl=trezorlib.cli.trezorctl:cli"]},
     install_requires=install_requires,
     extras_require=extras_require,
-    python_requires=">=3.5",
+    python_requires=">=3.6",
     include_package_data=True,
     zip_safe=False,
     classifiers=[
