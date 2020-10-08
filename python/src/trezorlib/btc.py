@@ -15,6 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import warnings
+from copy import copy
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, Sequence, Tuple
 
@@ -235,7 +236,7 @@ def sign_tx(
     serialized_tx = b""
 
     def copy_tx_meta(tx: messages.TransactionType) -> messages.TransactionType:
-        tx_copy = messages.TransactionType(**tx)
+        tx_copy = copy(tx)
         # clear fields
         tx_copy.inputs_cnt = len(tx.inputs)
         tx_copy.inputs = []

@@ -23,6 +23,7 @@ For serializing (dumping) protobuf types, object with `Writer` interface is requ
 """
 
 import logging
+import warnings
 from io import BytesIO
 from itertools import zip_longest
 from typing import (
@@ -30,7 +31,6 @@ from typing import (
     Callable,
     Dict,
     Iterable,
-    Iterator,
     List,
     Optional,
     Tuple,
@@ -38,7 +38,6 @@ from typing import (
     TypeVar,
     Union,
 )
-import warnings
 
 from typing_extensions import Protocol
 
@@ -279,15 +278,6 @@ class MessageType(metaclass=_MessageTypeMeta):
                 continue
             d[key] = value
         return "<%s: %s>" % (self.__class__.__name__, d)
-
-    def __iter__(self) -> Iterator[str]:
-        return iter(self.keys())
-
-    def keys(self) -> Iterator[str]:
-        return (name for name, _, _ in self.get_fields().values())
-
-    def __getitem__(self, key: str) -> Any:
-        return getattr(self, key)
 
     def ByteSize(self) -> int:
         data = BytesIO()
