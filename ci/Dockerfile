@@ -50,12 +50,10 @@ ENV FULLDEPS_TESTING=${FULLDEPS_TESTING}
 # install other python versions for tox testing
 
 RUN if [ "${FULLDEPS_TESTING}" = "1" ]; then \
-        nix-env -iP python3-3.7.7 ; \
-        nix-env --set-flag priority 6 python3-3.7.7 ; \
-        nix-env -iP python3-3.6.10 ; \
-        nix-env --set-flag priority 7 python3-3.6.10 ; \
-        nix-env -iP python3-3.5.9 ; \
-        nix-env --set-flag priority 8 python3-3.5.9 ; \
+        nix-env -iP python3-3.7.9 ; \
+        nix-env --set-flag priority 6 python3-3.7.9 ; \
+        nix-env -iP python3-3.6.12 ; \
+        nix-env --set-flag priority 7 python3-3.6.12 ; \
     fi
 
 # download monero tests binary
