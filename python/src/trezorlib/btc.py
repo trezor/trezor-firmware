@@ -199,6 +199,9 @@ def sign_tx(
     (`inputs_count`, `outputs_count`, `coin_name`) will be inferred from the arguments
     and cannot be overriden by kwargs.
     """
+    if prev_txes is None:
+        prev_txes = {}
+
     if details is not None:
         warnings.warn(
             "'details' argument is deprecated, use kwargs instead",
