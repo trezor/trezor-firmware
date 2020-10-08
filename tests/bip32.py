@@ -17,6 +17,7 @@
 import hashlib
 import hmac
 import struct
+from copy import copy
 
 import ecdsa
 from ecdsa.curves import SECP256k1
@@ -67,7 +68,7 @@ def public_ckd(public_node, n):
     if not isinstance(n, list):
         raise ValueError("Parameter must be a list")
 
-    node = messages.HDNodeType(**public_node)
+    node = copy(public_node)
 
     for i in n:
         node = get_subnode(node, i)
