@@ -53,6 +53,14 @@ class NestedMessage(protobuf.MessageType):
         }
 
 
+class RequiredFields(protobuf.MessageType):
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ("scalar", protobuf.UVarintType, protobuf.FLAG_REQUIRED),
+        }
+
+
 def test_get_field_type():
     # smoke test
     assert SimpleMessage.get_field_type("bool") is protobuf.BoolType
@@ -234,3 +242,24 @@ def test_unknown_enum_to_dict():
     simple = SimpleMessage(enum=6000)
     converted = protobuf.to_dict(simple)
     assert converted["enum"] == 6000
+
+
+def test_constructor_deprecations():
+    # ok:
+    RequiredFields(scalar=0)
+
+    # positional argument
+    with pytest.deprecated_call():
+        RequiredFields(0)
+
+    # missing required value
+    with pytest.deprecated_call():
+        RequiredFields()
+
+    # more args than fields
+    with pytest.deprecated_call(), pytest.raises(TypeError):
+        RequiredFields(0, 0)
+
+    # colliding arg and kwarg
+    with pytest.deprecated_call(), pytest.raises(TypeError):
+        RequiredFields(0, scalar=0)

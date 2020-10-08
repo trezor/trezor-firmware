@@ -239,9 +239,11 @@ def test_required():
 
     assert msg_ok == msg
 
-    with pytest.raises(ValueError):
-        # cannot construct instance without the required fields
+    with pytest.deprecated_call():
         msg = RequiredFields(uvarint=3)
+    with pytest.raises(ValueError):
+        # cannot encode instance without the required fields
+        dump_message(msg)
 
     msg = RequiredFields(uvarint=3, nested=None)
     # we can always encode an invalid message

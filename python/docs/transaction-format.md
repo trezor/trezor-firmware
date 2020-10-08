@@ -15,7 +15,7 @@ The root is an object with the following attributes:
   missing, `"Bitcoin"` is used.
 * __`inputs`__: array of `TxInputType` objects. Must be present.
 * __`outputs`__: array of `TxOutputType` objects. Must be present.
-* __`details`__: object of type `SignTx`, specifying transaction metadata. Can be
+* __`details`__: object whose keys correspond to metadata on the `SignTx` type. Can be
   omitted.
 * __`prev_txes`__: object whose keys are hex-encoded transaction hashes, and values are
   objects of type `TransactionType`. When signing a transaction with non-SegWit inputs,
@@ -112,10 +112,8 @@ set.
 
 ### Transaction metadata
 
-The following is a shortened definition of the `SignTx` protobuf message. Note that it
-is possible to set fields `outputs_count`, `inputs_count` and `coin_name`, but their
-values will be ignored. Instead, the number of elements in `outputs`, `inputs`, and the
-value of `coin_name` from root object will be used.
+The following is a shortened definition of the `SignTx` protobuf message, containing
+all possible fields that are accepted in the `details` object.
 
 All fields are optional unless required by your currency.
 
@@ -124,7 +122,6 @@ message SignTx {
     optional uint32 version = 4;           // transaction version
     optional uint32 lock_time = 5;         // transaction lock_time
     optional uint32 expiry = 6;            // only for Decred and Zcash
-    optional bool overwintered = 7;        // only for Zcash
     optional uint32 version_group_id = 8;  // only for Zcash, nVersionGroupId when overwintered is set
     optional uint32 timestamp = 9;         // only for Peercoin, transaction timestamp
     optional uint32 branch_id = 10;        // only for Zcash, BRANCH_ID when overwintered is set
