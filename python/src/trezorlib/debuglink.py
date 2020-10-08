@@ -276,11 +276,11 @@ class MessageFilter:
     @classmethod
     def from_message(cls, message):
         fields = {}
-        for field in message.keys():
-            value = getattr(message, field)
-            if value in (None, []):
+        for fname, _, _ in message.get_fields().values():
+            value = getattr(message, fname)
+            if value in (None, [], protobuf.FLAG_REQUIRED):
                 continue
-            fields[field] = value
+            fields[fname] = value
         return cls(type(message), **fields)
 
     def match(self, message):

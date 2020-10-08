@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import warnings
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, Sequence, Tuple
 
@@ -182,7 +183,8 @@ def sign_tx(
     coin_name: str,
     inputs: Sequence[messages.TxInputType],
     outputs: Sequence[messages.TxOutputType],
-    prev_txes: Dict[bytes, messages.TransactionType],
+    details: messages.SignTx = None,
+    prev_txes: Dict[bytes, messages.TransactionType] = None,
     preauthorized: bool = False,
     **kwargs: Any,
 ) -> Tuple[Sequence[bytes], bytes]:
@@ -197,14 +199,26 @@ def sign_tx(
     (`inputs_count`, `outputs_count`, `coin_name`) will be inferred from the arguments
     and cannot be overriden by kwargs.
     """
-    signtx = messages.SignTx(
-        coin_name=coin_name,
-        inputs_count=len(inputs),
-        outputs_count=len(outputs),
-    )
-    for name, value in kwargs.items():
-        if hasattr(signtx, name):
-            setattr(signtx, name, value)
+    if details is not None:
+        warnings.warn(
+            "'details' argument is deprecated, use kwargs instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        signtx = details
+        signtx.coin_name = coin_name
+        signtx.inputs_count = len(inputs)
+        signtx.outputs_count = len(outputs)
+
+    else:
+        signtx = messages.SignTx(
+            coin_name=coin_name,
+            inputs_count=len(inputs),
+            outputs_count=len(outputs),
+        )
+        for name, value in kwargs.items():
+            if hasattr(signtx, name):
+                setattr(signtx, name, value)
 
     if preauthorized:
         res = client.call(messages.DoPreauthorized())
