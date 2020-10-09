@@ -394,7 +394,7 @@ class U2fCredential(Credential):
         keypath = ustruct.pack("<8L", *path)
 
         # second half of keyhandle is a hmac of rp_id_hash and keypath
-        mac = hmac.Hmac(self.node.private_key(), self.rp_id_hash, hashlib.sha256)
+        mac = hmac(hmac.SHA256, self.node.private_key(), self.rp_id_hash)
         mac.update(keypath)
 
         self.id = keypath + mac.digest()
@@ -453,7 +453,7 @@ class U2fCredential(Credential):
         node = seed.derive_node_without_passphrase(nodepath, "nist256p1")
 
         # second half of keyhandle is a hmac of rp_id_hash and keypath
-        mac = hmac.Hmac(node.private_key(), rp_id_hash, hashlib.sha256)
+        mac = hmac(hmac.SHA256, node.private_key(), rp_id_hash)
         mac.update(keypath)
 
         # verify the hmac

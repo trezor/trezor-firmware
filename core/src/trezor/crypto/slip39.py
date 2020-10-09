@@ -33,7 +33,7 @@ See https://github.com/satoshilabs/slips/blob/master/slip-0039.md.
 from micropython import const
 from trezorcrypto import shamir, slip39
 
-from trezor.crypto import hashlib, hmac, pbkdf2, random
+from trezor.crypto import hmac, pbkdf2, random
 from trezor.errors import MnemonicError
 
 if False:
@@ -479,9 +479,7 @@ def _get_salt(identifier: int) -> bytes:
 
 
 def _create_digest(random_data: bytes, shared_secret: bytes) -> bytes:
-    return hmac.new(random_data, shared_secret, hashlib.sha256).digest()[
-        :_DIGEST_LENGTH_BYTES
-    ]
+    return hmac(hmac.SHA256, random_data, shared_secret).digest()[:_DIGEST_LENGTH_BYTES]
 
 
 def _split_secret(

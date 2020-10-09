@@ -1,6 +1,5 @@
 from trezor import wire
 from trezor.crypto import aes, hmac
-from trezor.crypto.hashlib import sha512
 from trezor.messages.CipheredKeyValue import CipheredKeyValue
 from trezor.ui.text import Text
 
@@ -34,7 +33,7 @@ def compute_cipher_key_value(msg, seckey: bytes) -> bytes:
     data = msg.key
     data += "E1" if msg.ask_on_encrypt else "E0"
     data += "D1" if msg.ask_on_decrypt else "D0"
-    data = hmac.new(seckey, data, sha512).digest()
+    data = hmac(hmac.SHA512, seckey, data).digest()
     key = data[:32]
     if msg.iv and len(msg.iv) == 16:
         iv = msg.iv

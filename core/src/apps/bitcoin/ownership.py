@@ -111,4 +111,4 @@ def get_identifier(script_pubkey: bytes, keychain: Keychain) -> bytes:
     node = keychain.derive_slip21(_OWNERSHIP_ID_KEY_PATH)
 
     # id = HMAC-SHA256(key = k, msg = scriptPubKey)
-    return hmac.Hmac(node.key(), script_pubkey, hashlib.sha256).digest()
+    return hmac(hmac.SHA256, node.key(), script_pubkey).digest()
