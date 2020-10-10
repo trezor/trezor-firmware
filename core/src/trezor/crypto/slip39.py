@@ -20,10 +20,10 @@
 
 """
 This implements the high-level functions for SLIP-39, also called "Shamir Backup".
-It uses crypto/shamir.c for the cryptographic operations and crypto.slip39.c for
+It uses crypto/shamir.c for the cryptographic operations and crypto/slip39.c for
 performance-heavy operations (mostly regarding the wordlist).
 
-This consideres the Encrypted Master Secret, as defined in SLIP-39, as what is
+This considers the Encrypted Master Secret, as defined in SLIP-39, as what is
 stored in the storage, then "decrypted" using a passphrase into a Master Secret,
 which is then fed into BIP-32 for example.
 
@@ -353,7 +353,7 @@ def decode_mnemonic(mnemonic: str) -> Share:
 
 
 """
-## Convert mnemonics or integers to incices and back
+## Convert mnemonics or integers to indices and back
 """
 
 
