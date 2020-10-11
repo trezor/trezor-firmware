@@ -77,12 +77,13 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Sha1_update_obj,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_Sha1_digest(mp_obj_t self) {
   mp_obj_Sha1_t *o = MP_OBJ_TO_PTR(self);
-  uint8_t out[SHA1_DIGEST_LENGTH] = {0};
+  vstr_t hash = {0};
+  vstr_init_len(&hash, SHA1_DIGEST_LENGTH);
   SHA1_CTX ctx = {0};
   memcpy(&ctx, &(o->ctx), sizeof(SHA1_CTX));
-  sha1_Final(&ctx, out);
+  sha1_Final(&ctx, (uint8_t *)hash.buf);
   memzero(&ctx, sizeof(SHA1_CTX));
-  return mp_obj_new_bytes(out, sizeof(out));
+  return mp_obj_new_str_from_vstr(&mp_type_bytes, &hash);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Sha1_digest_obj,
                                  mod_trezorcrypto_Sha1_digest);
