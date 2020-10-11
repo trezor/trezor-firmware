@@ -551,10 +551,10 @@ STATIC mp_obj_t mod_trezorcrypto_monero_pack256_modm(size_t n_args,
                                                      const mp_obj_t *args) {
   if (n_args == 1 || args[0] == mp_const_none) {
     assert_scalar(args[0]);
-    uint8_t buff[32] = {0};
-    contract256_modm(buff, MP_OBJ_C_SCALAR(args[0]));
-    return mp_obj_new_bytes(buff, 32);
-
+    vstr_t out = {0};
+    vstr_init_len(&out, 32);
+    contract256_modm((uint8_t *)out.buf, MP_OBJ_C_SCALAR(args[0]));
+    return mp_obj_new_str_from_vstr(&mp_type_bytes, &out);
   } else {
     mp_buffer_info_t bufm = {0};
     mp_get_buffer_raise(args[0], &bufm, MP_BUFFER_WRITE);
@@ -873,10 +873,10 @@ STATIC mp_obj_t mod_trezorcrypto_monero_ge25519_pack(size_t n_args,
                                                      const mp_obj_t *args) {
   if (n_args == 1 || args[0] == mp_const_none) {
     assert_ge25519(args[0]);
-    uint8_t buff[32] = {0};
-    ge25519_pack(buff, &MP_OBJ_C_GE25519(args[0]));
-    return mp_obj_new_bytes(buff, 32);
-
+    vstr_t out = {0};
+    vstr_init_len(&out, 32);
+    ge25519_pack((uint8_t *)out.buf, &MP_OBJ_C_GE25519(args[0]));
+    return mp_obj_new_str_from_vstr(&mp_type_bytes, &out);
   } else {
     mp_buffer_info_t bufm = {0};
     mp_get_buffer_raise(args[0], &bufm, MP_BUFFER_WRITE);
@@ -922,17 +922,20 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_monero_xmr_base58_addr_encode_check(
     size_t n_args, const mp_obj_t *args) {
-  uint8_t out[128] = {0};
+  vstr_t out = {0};
+  vstr_init_len(&out, 128);
   mp_buffer_info_t data = {0};
   mp_get_buffer_raise(args[1], &data, MP_BUFFER_READ);
 
   int sz = xmr_base58_addr_encode_check(mp_obj_get_int(args[0]), data.buf,
-                                        data.len, (char *)out, sizeof(out));
-  if (sz == 0) {
+                                        data.len, out.buf, out.alloc);
+  if (sz <= 0) {
+    vstr_clear(&out);
     mp_raise_ValueError("b58 encoding error");
   }
+  out.len = sz;
 
-  return mp_obj_new_bytes(out, sz);
+  return mp_obj_new_str_from_vstr(&mp_type_bytes, &out);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_monero_xmr_base58_addr_encode_check_obj, 2, 2,
@@ -945,20 +948,23 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_monero_xmr_base58_addr_decode_check(
     size_t n_args, const mp_obj_t *args) {
-  uint8_t out[128] = {0};
   uint64_t tag = 0;
+  vstr_t out = {0};
+  vstr_init_len(&out, 128);
 
   mp_buffer_info_t data = {0};
   mp_get_buffer_raise(args[0], &data, MP_BUFFER_READ);
 
-  int sz =
-      xmr_base58_addr_decode_check(data.buf, data.len, &tag, out, sizeof(out));
-  if (sz == 0) {
+  int sz = xmr_base58_addr_decode_check(data.buf, data.len, &tag, out.buf,
+                                        out.alloc);
+  if (sz <= 0) {
+    vstr_clear(&out);
     mp_raise_ValueError("b58 decoding error");
   }
+  out.len = sz;
 
   mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
-  tuple->items[0] = mp_obj_new_bytes(out, sz);
+  tuple->items[0] = mp_obj_new_str_from_vstr(&mp_type_bytes, &out);
   tuple->items[1] = mp_obj_new_int_from_ull(tag);
   return MP_OBJ_FROM_PTR(tuple);
 }
@@ -989,15 +995,19 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 STATIC mp_obj_t mod_trezorcrypto_monero_xmr_fast_hash(size_t n_args,
                                                       const mp_obj_t *args) {
   const int off = n_args >= 2 ? 0 : -1;
-  uint8_t buff[32] = {0};
-  uint8_t *buff_use = buff;
-  if (n_args > 1) {
+  vstr_t out = {0};
+  uint8_t *buff_use = NULL;
+  if (n_args >= 2) {
     mp_buffer_info_t odata = {0};
     mp_get_buffer_raise(args[0], &odata, MP_BUFFER_WRITE);
-    if (odata.len < 32) {
+    if (odata.len < HASHER_DIGEST_LENGTH) {
+      vstr_clear(&out);
       mp_raise_ValueError("Output buffer too small");
     }
     buff_use = odata.buf;
+  } else {
+    vstr_init_len(&out, HASHER_DIGEST_LENGTH);
+    buff_use = (uint8_t *)out.buf;
   }
 
   mp_buffer_info_t data = {0};
@@ -1010,7 +1020,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_xmr_fast_hash(size_t n_args,
     mp_raise_ValueError("Illegal offset/length");
   }
   xmr_fast_hash(buff_use, (const char *)data.buf + offset, length);
-  return n_args >= 2 ? args[0] : mp_obj_new_bytes(buff, 32);
+  return n_args >= 2 ? args[0] : mp_obj_new_str_from_vstr(&mp_type_bytes, &out);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_monero_xmr_fast_hash_obj, 1, 4,
@@ -1333,22 +1343,22 @@ STATIC mp_obj_t mod_trezorcrypto_monero_hasher_digest(size_t n_args,
   Hasher ctx = {0};
   memcpy(&ctx, &(o->h), sizeof(Hasher));
 
-  uint8_t out[SHA3_256_DIGEST_LENGTH] = {0};
-  xmr_hasher_final(&ctx, out);
-  memzero(&ctx, sizeof(SHA3_CTX));
-
   if (n_args == 1 || args[1] == mp_const_none) {
-    return mp_obj_new_bytes(out, sizeof(out));
-
+    vstr_t hash = {0};
+    vstr_init_len(&hash, SHA3_256_DIGEST_LENGTH);
+    xmr_hasher_final(&ctx, (uint8_t *)hash.buf);
+    memzero(&ctx, sizeof(SHA3_CTX));
+    return mp_obj_new_str_from_vstr(&mp_type_bytes, &hash);
   } else {
     mp_buffer_info_t bufm = {0};
     mp_get_buffer_raise(args[1], &bufm, MP_BUFFER_WRITE);
     const mp_int_t offset = n_args >= 3 ? mp_obj_get_int(args[2]) : 0;
-    if (bufm.len < 32 + offset) {
+    if (bufm.len < SHA3_256_DIGEST_LENGTH + offset) {
       mp_raise_ValueError("Buffer too small");
     }
 
-    memcpy((uint8_t *)bufm.buf + offset, out, SHA3_256_DIGEST_LENGTH);
+    xmr_hasher_final(&ctx, (uint8_t *)bufm.buf + offset);
+    memzero(&ctx, sizeof(SHA3_CTX));
     return args[1];
   }
 }
