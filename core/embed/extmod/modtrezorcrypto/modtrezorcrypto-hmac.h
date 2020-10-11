@@ -108,24 +108,23 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Hmac_update_obj,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_Hmac_digest(mp_obj_t self) {
   mp_obj_Hmac_t *o = MP_OBJ_TO_PTR(self);
+  vstr_t mac = {0};
   if (o->hashtype == SHA256) {
     HMAC_SHA256_CTX ctx = {0};
     memcpy(&ctx, &(o->ctx256), sizeof(HMAC_SHA256_CTX));
-    uint8_t out[SHA256_DIGEST_LENGTH] = {0};
-    hmac_sha256_Final(&ctx, out);
+    vstr_init_len(&mac, SHA256_DIGEST_LENGTH);
+    hmac_sha256_Final(&ctx, (uint8_t *)mac.buf);
     memzero(&ctx, sizeof(HMAC_SHA256_CTX));
-    return mp_obj_new_bytes(out, sizeof(out));
   } else if (o->hashtype == SHA512) {
     HMAC_SHA512_CTX ctx = {0};
     memcpy(&ctx, &(o->ctx512), sizeof(HMAC_SHA512_CTX));
-    uint8_t out[SHA512_DIGEST_LENGTH] = {0};
-    hmac_sha512_Final(&ctx, out);
+    vstr_init_len(&mac, SHA512_DIGEST_LENGTH);
+    hmac_sha512_Final(&ctx, (uint8_t *)mac.buf);
     memzero(&ctx, sizeof(HMAC_SHA512_CTX));
-    return mp_obj_new_bytes(out, sizeof(out));
   } else {
     mp_raise_ValueError("Invalid hashtype");
   }
-  return mp_const_none;
+  return mp_obj_new_str_from_vstr(&mp_type_bytes, &mac);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Hmac_digest_obj,
                                  mod_trezorcrypto_Hmac_digest);
