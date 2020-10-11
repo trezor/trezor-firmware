@@ -51,12 +51,12 @@ ENV FULLDEPS_TESTING=${FULLDEPS_TESTING}
 # 3.8 is already included in the default install
 
 RUN if [ "${FULLDEPS_TESTING}" = "1" ]; then \
-        nix-env -iP python3-3.6.11 ; \
-        nix-env --set-flag priority 8 python3-3.6.11 ; \
-        nix-env -iP python3-3.7.8 ; \
-        nix-env --set-flag priority 7 python3-3.7.8 ; \
-        nix-env -iP python3-3.9.0a4 ; \
-        nix-env --set-flag priority 6 python3-3.9.0a4 ; \
+        nix-env --preserve-installed -iA nixpkgs.python36 ; \
+        nix-env --set-flag priority 8 $(nix-env -q python3 | grep 'python3-3\.6\.') ; \
+        nix-env --preserve-installed -iA nixpkgs.python37 ; \
+        nix-env --set-flag priority 7 $(nix-env -q python3 | grep 'python3-3\.7\.') ; \
+        nix-env --preserve-installed -iA nixpkgs.python39 ; \
+        nix-env --set-flag priority 6 $(nix-env -q python3 | grep 'python3-3\.9\.') ; \
     fi
 
 # download monero tests binary

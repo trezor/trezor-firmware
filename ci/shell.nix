@@ -1,5 +1,10 @@
-# the last successful build of nixos-20.09 (stable) as of 2020-10-07
-with import (builtins.fetchTarball https://github.com/NixOS/nixpkgs/archive/7badbf18c45b7490d893452beb8950d966327831.tar.gz) {};
+# the last successful build of nixos-20.09 (stable) as of 2020-10-11
+with import
+  (builtins.fetchTarball {
+    url = "https://github.com/NixOS/nixpkgs/archive/0b8799ecaaf0dc6b4c11583a3c96ca5b40fcfdfb.tar.gz";
+    sha256 = "11m4aig6cv0zi3gbq2xn9by29cfvnsxgzf9qsvz67qr0yq29ryyz";
+  })
+{ };
 
 stdenv.mkDerivation {
   name = "trezor-firmware-env";
