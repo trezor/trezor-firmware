@@ -37,36 +37,11 @@ ENV \
 
 COPY shell.nix shell.nix
 
-RUN nix-shell --run "echo deps pre-installed"
-
-CMD [ "nix-shell" ]
-
-# the rest of the file only applies when docker build is called
+# to make multiple python versions and monero test suite available, run docker build
 # with the following argument: "--build-arg FULLDEPS_TESTING=1"
-
 ARG FULLDEPS_TESTING=0
 ENV FULLDEPS_TESTING=${FULLDEPS_TESTING}
 
-# install other python versions for tox testing
-# 3.8 is already included in the default install
+RUN nix-shell --arg fullDeps "$([ ${FULLDEPS_TESTING} = 1 ] && echo true || echo false)" --run "echo deps pre-installed"
 
-RUN if [ "${FULLDEPS_TESTING}" = "1" ]; then \
-        nix-env --preserve-installed -iA nixpkgs.python36 ; \
-        nix-env --set-flag priority 8 $(nix-env -q python3 | grep 'python3-3\.6\.') ; \
-        nix-env --preserve-installed -iA nixpkgs.python37 ; \
-        nix-env --set-flag priority 7 $(nix-env -q python3 | grep 'python3-3\.7\.') ; \
-        nix-env --preserve-installed -iA nixpkgs.python39 ; \
-        nix-env --set-flag priority 6 $(nix-env -q python3 | grep 'python3-3\.9\.') ; \
-    fi
-
-# download monero tests binary
-
-ENV TREZOR_MONERO_TESTS_PATH="/opt/trezor_monero_tests"
-RUN if [ "${FULLDEPS_TESTING}" = "1" ]; then \
-        TREZOR_MONERO_TESTS_SHA256SUM=1e5dfdb07de4ea46088f4a5bdb0d51f040fe479019efae30f76427eee6edb3f7 ; \
-        TREZOR_MONERO_TESTS_URL="https://github.com/ph4r05/monero/releases/download/v0.15.0.0-tests-u18.04-03/trezor_tests" ; \
-        wget --no-verbose "${TREZOR_MONERO_TESTS_URL}" -O "${TREZOR_MONERO_TESTS_PATH}" ; \
-        chmod +x "${TREZOR_MONERO_TESTS_PATH}" ; \
-        echo "${TREZOR_MONERO_TESTS_SHA256SUM} ${TREZOR_MONERO_TESTS_PATH}" | sha256sum -c ; \
-        nix-shell -p patchelf --run 'patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" "${TREZOR_MONERO_TESTS_PATH}"' ; \
-    fi
+CMD [ "nix-shell" ]

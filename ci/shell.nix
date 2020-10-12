@@ -1,3 +1,5 @@
+{ fullDeps ? false }:
+
 # the last successful build of nixos-20.09 (stable) as of 2020-10-11
 with import
   (builtins.fetchTarball {
@@ -6,9 +8,29 @@ with import
   })
 { };
 
-stdenv.mkDerivation {
+let
+  moneroTests = fetchurl {
+    url = "https://github.com/ph4r05/monero/releases/download/v0.15.0.0-tests-u18.04-03/trezor_tests";
+    sha256 = "1e5dfdb07de4ea46088f4a5bdb0d51f040fe479019efae30f76427eee6edb3f7";
+  };
+  moneroTestsPatched = runCommandCC "monero_trezor_tests" {} ''
+    cp ${moneroTests} $out
+    chmod +wx $out
+    ${patchelf}/bin/patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" "$out"
+    chmod -w $out
+  '';
+in
+stdenv.mkDerivation ({
   name = "trezor-firmware-env";
-  buildInputs = [
+  buildInputs = stdenv.lib.optionals fullDeps [
+    # install other python versions for tox testing
+    # NOTE: running e.g. "python3" in the shell runs the first version in the following list,
+    #       and poetry uses the default version (currently 3.8)
+    python38
+    python39
+    python37
+    python36
+  ] ++ [
     SDL2
     SDL2_image
     autoflake
@@ -51,4 +73,7 @@ stdenv.mkDerivation {
 
   # Fix bdist-wheel problem by setting source date epoch to a more recent date
   SOURCE_DATE_EPOCH = 1600000000;
-}
+
+} // (stdenv.lib.optionalAttrs fullDeps) {
+  TREZOR_MONERO_TESTS_PATH = moneroTestsPatched;
+})
