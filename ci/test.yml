@@ -79,7 +79,7 @@ core monero test:
   variables:
     TREZOR_PROFILING: 1
   script:
-    - nix-shell --run "poetry run make -C core test_emu_monero"
+    - nix-shell --arg fullDeps true --run "poetry run make -C core test_emu_monero"
     - mv core/src/.coverage core/.coverage.test_emu_monero
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
@@ -280,7 +280,7 @@ python test:
       - common/**/*
       - python/**/*
   script:
-    - nix-shell --run "cd python && poetry run tox"
+    - nix-shell --arg fullDeps true --run "cd python && poetry run tox"
 
 
 # Storage
