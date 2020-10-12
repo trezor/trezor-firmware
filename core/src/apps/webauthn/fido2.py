@@ -1796,7 +1796,7 @@ def cbor_get_assertion_hmac_secret(
     shared_secret = hashlib.sha256(ecdh_result[1:33]).digest()
 
     # Check the authentication tag and decrypt the salt.
-    tag = hmac.Hmac(shared_secret, salt_enc, hashlib.sha256).digest()[:16]
+    tag = hmac(hmac.SHA256, shared_secret, salt_enc).digest()[:16]
     if not utils.consteq(tag, salt_auth):
         raise CborError(_ERR_EXTENSION_FIRST)
     salt = aes(aes.CBC, shared_secret).decrypt(salt_enc)
@@ -1808,9 +1808,9 @@ def cbor_get_assertion_hmac_secret(
         return None
 
     # Compute the hmac-secret output.
-    output = hmac.Hmac(cred_random, salt[:32], hashlib.sha256).digest()
+    output = hmac(hmac.SHA256, cred_random, salt[:32]).digest()
     if len(salt) == 64:
-        output += hmac.Hmac(cred_random, salt[32:], hashlib.sha256).digest()
+        output += hmac(hmac.SHA256, cred_random, salt[32:]).digest()
 
     # Encrypt the hmac-secret output.
     return aes(aes.CBC, shared_secret).encrypt(output)

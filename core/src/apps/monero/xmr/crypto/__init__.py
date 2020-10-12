@@ -7,7 +7,7 @@
 # https://tools.ietf.org/html/draft-josefsson-eddsa-ed25519-00#section-4
 # https://github.com/monero-project/research-lab
 
-from trezor.crypto import hmac, monero as tcry, random
+from trezor.crypto import monero as tcry, random
 from trezor.crypto.hashlib import sha3_256
 
 if False:
@@ -37,9 +37,27 @@ def keccak_2hash(inp, buff=None):
     return buff
 
 
-def compute_hmac(key, msg=None):
-    h = hmac.new(key, msg=msg, digestmod=keccak_factory)
-    return h.digest()
+def compute_hmac(key, msg):
+    digestmod = keccak_factory
+    inner = digestmod()
+    block_size = inner.block_size
+    if len(key) > block_size:
+        key = digestmod(key).digest()
+    key_block = bytearray(block_size)
+    for i in range(block_size):
+        key_block[i] = 0x36
+    for i in range(len(key)):
+        key_block[i] ^= key[i]
+    inner.update(key_block)
+    inner.update(msg)
+    outer = digestmod()
+    for i in range(block_size):
+        key_block[i] = 0x5C
+    for i in range(len(key)):
+        key_block[i] ^= key[i]
+    outer.update(key_block)
+    outer.update(inner.digest())
+    return outer.digest()
 
 
 #

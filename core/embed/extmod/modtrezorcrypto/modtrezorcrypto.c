@@ -36,6 +36,7 @@
 #include "modtrezorcrypto-curve25519.h"
 #include "modtrezorcrypto-ed25519.h"
 #include "modtrezorcrypto-groestl.h"
+#include "modtrezorcrypto-hmac.h"
 #include "modtrezorcrypto-nist256p1.h"
 #include "modtrezorcrypto-pbkdf2.h"
 #include "modtrezorcrypto-random.h"
@@ -77,6 +78,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_nist256p1_module)},
     {MP_ROM_QSTR(MP_QSTR_groestl512),
      MP_ROM_PTR(&mod_trezorcrypto_Groestl512_type)},
+    {MP_ROM_QSTR(MP_QSTR_hmac), MP_ROM_PTR(&mod_trezorcrypto_Hmac_type)},
 #if !BITCOIN_ONLY
     {MP_ROM_QSTR(MP_QSTR_nem), MP_ROM_PTR(&mod_trezorcrypto_nem_module)},
 #endif

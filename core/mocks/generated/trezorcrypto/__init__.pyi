@@ -173,6 +173,35 @@ class groestl512:
         """
 
 
+# extmod/modtrezorcrypto/modtrezorcrypto-hmac.h
+class hmac:
+    """
+    HMAC context.
+    """
+    SHA256: int
+    SHA512: int
+
+    def __init__(
+        self,
+        hashtype: int,
+        key: bytes,
+        message: bytes = None
+    ) -> None:
+        """
+        Create a HMAC context.
+        """
+
+    def update(self, message: bytes) -> None:
+        """
+        Update a HMAC context.
+        """
+
+    def digest(self) -> bytes:
+        """
+        Return the digest of processed data so far.
+        """
+
+
 # extmod/modtrezorcrypto/modtrezorcrypto-pbkdf2.h
 class pbkdf2:
     """
