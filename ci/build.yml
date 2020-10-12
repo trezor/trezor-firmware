@@ -135,6 +135,7 @@ core unix frozen debug build:
 core macos frozen regular build:
   stage: build
   needs: []
+  when: manual
   tags:
     - darwin
   script:
