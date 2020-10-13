@@ -43,9 +43,6 @@ typedef struct _mp_obj_HDNode_t {
 
 STATIC const mp_obj_type_t mod_trezorcrypto_HDNode_type;
 
-#define XPUB_MAXLEN 112
-#define ADDRESS_MAXLEN 39
-
 /// def __init__(
 ///     self,
 ///     depth: int,
