@@ -1213,7 +1213,7 @@ END_TEST
 START_TEST(test_bip32_vector_1) {
   HDNode node, node2, node3;
   uint32_t fingerprint;
-  char str[112];
+  char str[XPUB_MAXLEN];
   int r;
 
   // init m
@@ -1473,7 +1473,7 @@ END_TEST
 START_TEST(test_bip32_vector_2) {
   HDNode node, node2, node3;
   uint32_t fingerprint;
-  char str[112];
+  char str[XPUB_MAXLEN];
   int r;
 
   // init m
@@ -1770,7 +1770,7 @@ END_TEST
 START_TEST(test_bip32_vector_3) {
   HDNode node, node2, node3;
   uint32_t fingerprint;
-  char str[112];
+  char str[XPUB_MAXLEN];
   int r;
 
   // init m
@@ -2758,7 +2758,7 @@ END_TEST
 START_TEST(test_bip32_decred_vector_1) {
   HDNode node, node2, node3;
   uint32_t fingerprint;
-  char str[112];
+  char str[XPUB_MAXLEN];
   int r;
 
   // init m
@@ -3028,7 +3028,7 @@ END_TEST
 START_TEST(test_bip32_decred_vector_2) {
   HDNode node, node2, node3;
   uint32_t fingerprint;
-  char str[112];
+  char str[XPUB_MAXLEN];
   int r;
 
   // init m

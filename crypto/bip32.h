@@ -31,6 +31,12 @@
 #include "ed25519-donna/ed25519.h"
 #include "options.h"
 
+// Maximum length of a Base58Check-encoded extended public or private key.
+#define XPUB_MAXLEN 112
+
+// Maximum length of a Base58Check-encoded address.
+#define ADDRESS_MAXLEN 39
+
 typedef struct {
   const char *bip32_name;     // string for generating BIP32 xprv from seed
   const ecdsa_curve *params;  // ecdsa curve parameters, null for ed25519
