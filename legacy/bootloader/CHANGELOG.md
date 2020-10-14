@@ -23,6 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Make the update process more similar to Model T process.
+- Require only left button to start the bootloader.
 
 ## 1.6.1 [December 2018]
 
