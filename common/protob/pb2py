@@ -306,10 +306,20 @@ class Descriptor:
                 comment = ""
 
             if field.repeated:
+                if field.default_value is not None:
+                    raise ValueError("Repeated fields can't have default values.")
+                if field.experimental:
+                    raise ValueError("Repeated experimental fields are currently not supported.")
                 flags = "p.FLAG_REPEATED"
             elif field.required:
+                if field.default_value is not None:
+                    raise ValueError("Required fields can't have default values.")
+                if field.experimental:
+                    raise ValueError("Required fields can't be experimental.")
                 flags = "p.FLAG_REQUIRED"
             elif field.experimental:
+                if field.default_value is not None:
+                    raise ValueError("Experimental fields can't have default values.")
                 flags = "p.FLAG_EXPERIMENTAL"
             else:
                 flags = field.default_value
