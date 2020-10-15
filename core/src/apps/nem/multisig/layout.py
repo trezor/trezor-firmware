@@ -7,7 +7,7 @@ from trezor.messages import (
     NEMSignTx,
     NEMTransactionCommon,
 )
-from trezor.ui.text import Text
+from trezor.ui.components.tt.text import Text
 
 from apps.common.layout import split_address
 

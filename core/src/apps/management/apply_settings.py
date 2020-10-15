@@ -3,7 +3,7 @@ from trezor import ui, wire, workflow
 from trezor.messages import ButtonRequestType, SafetyCheckLevel
 from trezor.messages.Success import Success
 from trezor.strings import format_duration_ms
-from trezor.ui.text import Text
+from trezor.ui.components.tt.text import Text
 
 from apps.base import lock_device
 from apps.common import safety_checks

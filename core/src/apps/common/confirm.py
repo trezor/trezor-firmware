@@ -1,17 +1,23 @@
 from trezor import wire
 from trezor.messages import ButtonRequestType
-from trezor.ui.confirm import CONFIRMED, INFO, Confirm, HoldToConfirm, InfoConfirm
+from trezor.ui.components.tt.confirm import (
+    CONFIRMED,
+    INFO,
+    Confirm,
+    HoldToConfirm,
+    InfoConfirm,
+)
 
 from . import button_request
 
 if __debug__:
-    from trezor.ui.scroll import Paginated
+    from trezor.ui.components.tt.scroll import Paginated
 
 
 if False:
     from typing import Any, Callable, Optional
     from trezor import ui
-    from trezor.ui.confirm import ButtonContent, ButtonStyleType
+    from trezor.ui.components.tt.confirm import ButtonContent, ButtonStyleType
     from trezor.ui.loader import LoaderStyleType
     from trezor.messages.ButtonRequest import EnumTypeButtonRequestType
 

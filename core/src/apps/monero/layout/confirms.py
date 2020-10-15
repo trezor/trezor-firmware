@@ -2,8 +2,8 @@ from ubinascii import hexlify
 
 from trezor import ui, wire
 from trezor.messages import ButtonRequestType
+from trezor.ui.components.tt.text import Text
 from trezor.ui.popup import Popup
-from trezor.ui.text import Text
 from trezor.utils import chunks
 
 from apps.common.confirm import require_confirm, require_hold_to_confirm
@@ -228,8 +228,8 @@ async def show_address(
 ):
     from apps.common.confirm import confirm
     from trezor.messages import ButtonRequestType
-    from trezor.ui.button import ButtonDefault
-    from trezor.ui.scroll import Paginated
+    from trezor.ui.components.tt.button import ButtonDefault
+    from trezor.ui.components.tt.scroll import Paginated
 
     pages = []
     for lines in common.paginate_lines(common.split_address(address), 5):

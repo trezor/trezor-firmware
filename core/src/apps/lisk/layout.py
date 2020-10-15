@@ -1,7 +1,7 @@
 from trezor import ui
 from trezor.messages import ButtonRequestType
 from trezor.strings import format_amount
-from trezor.ui.text import Text
+from trezor.ui.components.tt.text import Text
 from trezor.utils import chunks
 
 from apps.common.confirm import require_confirm, require_hold_to_confirm

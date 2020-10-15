@@ -8,9 +8,14 @@ import storage.resident_credentials
 from trezor import config, io, log, loop, ui, utils, workflow
 from trezor.crypto import aes, der, hashlib, hmac, random
 from trezor.crypto.curve import nist256p1
-from trezor.ui.confirm import CONFIRMED, Confirm, ConfirmPageable, Pageable
+from trezor.ui.components.tt.confirm import (
+    CONFIRMED,
+    Confirm,
+    ConfirmPageable,
+    Pageable,
+)
+from trezor.ui.components.tt.text import Text
 from trezor.ui.popup import Popup
-from trezor.ui.text import Text
 
 from apps.base import set_homescreen
 from apps.common import cbor

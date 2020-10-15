@@ -53,7 +53,7 @@ if __debug__:
             layout_change_chan.publish(current_content)
 
     async def debuglink_decision_dispatcher() -> None:
-        from trezor.ui import confirm, swipe
+        from trezor.ui.components.tt import confirm, swipe
 
         while True:
             msg = await debuglink_decision_chan.take()
