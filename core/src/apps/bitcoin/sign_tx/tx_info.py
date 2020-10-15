@@ -122,17 +122,15 @@ class TxInfoBase:
     def lock_time_disabled(self) -> bool:
         return self.min_sequence == _SEQUENCE_FINAL
 
+    def get_tx_check_digest(self) -> bytes:
+        return self.h_tx_check.get_digest()
+
 
 # Used to keep track of the transaction currently being signed.
 class TxInfo(TxInfoBase):
     def __init__(self, signer: Signer, tx: SignTx) -> None:
         super().__init__(signer)
         self.tx = tx
-
-        # h_inputs is a digest of the inputs streamed for approval in Step 1, which
-        # is used to ensure that the inputs streamed for verification in Step 3 are
-        # the same as those in Step 1.
-        self.h_inputs = None  # type: Optional[bytes]
 
 
 # Used to keep track of any original transactions which are being replaced by the current transaction.
