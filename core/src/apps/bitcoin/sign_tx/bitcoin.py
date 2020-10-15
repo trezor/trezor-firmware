@@ -97,6 +97,11 @@ class Bitcoin:
         # stable device tests.
         self.orig_txs = []  # type: List[OriginalTxInfo]
 
+        # h_inputs is a digest of the inputs streamed for approval in Step 1, which
+        # is used to ensure that the inputs streamed for verification in Step 3 are
+        # the same as those in Step 1.
+        self.h_inputs = None  # type: Optional[bytes]
+
         progress.init(tx.inputs_count, tx.outputs_count)
 
     def create_hash_writer(self) -> HashWriter:
@@ -124,7 +129,7 @@ class Bitcoin:
             if txi.orig_hash:
                 await self.process_original_input(txi)
 
-        self.tx_info.h_inputs = self.tx_info.h_tx_check.get_digest()
+        self.h_inputs = self.tx_info.get_tx_check_digest()
 
         # Finalize original inputs.
         for orig in self.orig_txs:
@@ -170,7 +175,7 @@ class Bitcoin:
                 await self.verify_external_input(i, txi, script_pubkey)
 
         # check that the inputs were the same as those streamed for approval
-        if h_check.get_digest() != self.tx_info.h_inputs:
+        if h_check.get_digest() != self.h_inputs:
             raise wire.ProcessError("Transaction has changed during signing")
 
         # verify the signature of one SIGHASH_ALL input in each original transaction
@@ -554,7 +559,7 @@ class Bitcoin:
         writers.write_uint32(h_sign, self.get_sighash_type(txi_sign))
 
         # check that the inputs were the same as those streamed for approval
-        if tx_info.h_tx_check.get_digest() != h_check.get_digest():
+        if tx_info.get_tx_check_digest() != h_check.get_digest():
             raise wire.ProcessError("Transaction has changed during signing")
 
         tx_digest = writers.get_tx_hash(h_sign, double=self.coin.sign_hash_double)
