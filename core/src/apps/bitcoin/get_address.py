@@ -1,8 +1,9 @@
 from trezor.crypto import bip32
 from trezor.messages import InputScriptType
 from trezor.messages.Address import Address
+from trezor.ui.widgets import show_address
 
-from apps.common.layout import address_n_to_str, show_address, show_qr, show_xpub
+from apps.common.layout import address_n_to_str
 from apps.common.paths import validate_path
 
 from . import addresses
@@ -18,11 +19,9 @@ if False:
     from apps.common.coininfo import CoinInfo
 
 
-async def show_xpubs(
-    ctx: wire.Context, coin: CoinInfo, pubnodes: List[HDNodeType], multisig_index: int
-) -> bool:
-    for i, pubnode in enumerate(pubnodes):
-        cancel = "Next" if i < len(pubnodes) - 1 else "Address"
+def _get_xpubs(coin: CoinInfo, pubnodes: List[HDNodeType]) -> List[str]:
+    result = []
+    for pubnode in pubnodes:
         node = bip32.HDNode(
             depth=pubnode.depth,
             fingerprint=pubnode.fingerprint,
@@ -31,12 +30,9 @@ async def show_xpubs(
             public_key=pubnode.public_key,
             curve_name=coin.curve_name,
         )
-        xpub = node.serialize_public(coin.xpub_magic)
-        desc = "XPUB #%d" % (i + 1)
-        desc += " (yours)" if i == multisig_index else " (others)"
-        if await show_xpub(ctx, xpub, desc=desc, cancel=cancel):
-            return True
-    return False
+        result.append(node.serialize_public(coin.xpub_magic))
+
+    return result
 
 
 @with_keychain
@@ -70,20 +66,20 @@ async def get_address(
             else:
                 pubnodes = [hd.node for hd in msg.multisig.pubkeys]
             multisig_index = multisig_pubkey_index(msg.multisig, node.public_key())
+
             desc = "Multisig %d of %d" % (msg.multisig.m, len(pubnodes))
-            while True:
-                if await show_address(ctx, address_short, desc=desc):
-                    break
-                if await show_qr(ctx, address_qr, desc=desc, cancel="XPUBs"):
-                    break
-                if await show_xpubs(ctx, coin, pubnodes, multisig_index):
-                    break
+            await show_address(
+                ctx,
+                address=address_short,
+                address_qr=address_qr,
+                desc=desc,
+                multisig_index=multisig_index,
+                xpubs=_get_xpubs(coin, pubnodes),
+            )
         else:
             desc = address_n_to_str(msg.address_n)
-            while True:
-                if await show_address(ctx, address_short, desc=desc):
-                    break
-                if await show_qr(ctx, address_qr, desc=desc):
-                    break
+            await show_address(
+                ctx, address=address_short, address_qr=address_qr, desc=desc
+            )
 
     return Address(address=address)

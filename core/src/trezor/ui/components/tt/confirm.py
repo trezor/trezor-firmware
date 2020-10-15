@@ -1,29 +1,21 @@
 from micropython import const
 
 from trezor import loop, res, ui, utils
-from trezor.ui.button import (
-    Button,
-    ButtonAbort,
-    ButtonCancel,
-    ButtonConfirm,
-    ButtonDefault,
-)
 from trezor.ui.loader import Loader, LoaderDefault
+
+from ..common.confirm import CANCELLED, CONFIRMED, INFO, ConfirmBase
+from .button import Button, ButtonAbort, ButtonCancel, ButtonConfirm, ButtonDefault
 
 if __debug__:
     from apps.debug import swipe_signal, confirm_signal
 
 if False:
-    from typing import Any, Optional, List, Tuple
-    from trezor.ui.button import ButtonContent, ButtonStyleType
+    from typing import Any, List, Tuple, Optional
+    from .button import ButtonContent, ButtonStyleType
     from trezor.ui.loader import LoaderStyleType
 
-CONFIRMED = object()
-CANCELLED = object()
-INFO = object()
 
-
-class Confirm(ui.Layout):
+class Confirm(ConfirmBase):
     DEFAULT_CONFIRM = res.load(ui.ICON_CONFIRM)
     DEFAULT_CONFIRM_STYLE = ButtonConfirm
     DEFAULT_CANCEL = res.load(ui.ICON_CANCEL)
@@ -38,8 +30,9 @@ class Confirm(ui.Layout):
         cancel_style: ButtonStyleType = DEFAULT_CANCEL_STYLE,
         major_confirm: bool = False,
     ) -> None:
-        super().__init__()
         self.content = content
+        button_confirm = None  # type: Optional[Button]
+        button_cancel = None  # type: Optional[Button]
 
         if confirm is not None:
             if cancel is None:
@@ -48,10 +41,8 @@ class Confirm(ui.Layout):
                 area = ui.grid(13, cells_x=2)
             else:
                 area = ui.grid(9, n_x=2)
-            self.confirm: Optional[Button] = Button(area, confirm, confirm_style)
-            self.confirm.on_click = self.on_confirm  # type: ignore
-        else:
-            self.confirm = None
+            button_confirm = Button(area, confirm, confirm_style)
+            button_confirm.on_click = self.on_confirm  # type: ignore
 
         if cancel is not None:
             if confirm is None:
@@ -60,32 +51,10 @@ class Confirm(ui.Layout):
                 area = ui.grid(12, cells_x=1)
             else:
                 area = ui.grid(8, n_x=2)
-            self.cancel: Optional[Button] = Button(area, cancel, cancel_style)
-            self.cancel.on_click = self.on_cancel  # type: ignore
-        else:
-            self.cancel = None
+            button_cancel = Button(area, cancel, cancel_style)
+            button_cancel.on_click = self.on_cancel  # type: ignore
 
-    def dispatch(self, event: int, x: int, y: int) -> None:
-        super().dispatch(event, x, y)
-        self.content.dispatch(event, x, y)
-        if self.confirm is not None:
-            self.confirm.dispatch(event, x, y)
-        if self.cancel is not None:
-            self.cancel.dispatch(event, x, y)
-
-    def on_confirm(self) -> None:
-        raise ui.Result(CONFIRMED)
-
-    def on_cancel(self) -> None:
-        raise ui.Result(CANCELLED)
-
-    if __debug__:
-
-        def read_content(self) -> List[str]:
-            return self.content.read_content()
-
-        def create_tasks(self) -> Tuple[loop.Task, ...]:
-            return super().create_tasks() + (confirm_signal(),)
+        super().__init__(content, button_confirm, button_cancel)
 
 
 class Pageable:
@@ -117,7 +86,7 @@ class ConfirmPageable(Confirm):
         self.pageable = pageable
 
     async def handle_paging(self) -> None:
-        from trezor.ui.swipe import SWIPE_HORIZONTAL, SWIPE_LEFT, SWIPE_RIGHT, Swipe
+        from .swipe import SWIPE_HORIZONTAL, SWIPE_LEFT, SWIPE_RIGHT, Swipe
 
         if self.pageable.is_first():
             directions = SWIPE_LEFT

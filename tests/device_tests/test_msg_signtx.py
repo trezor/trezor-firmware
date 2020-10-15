@@ -965,12 +965,9 @@ class TestMsgSigntx:
                 )
 
             assert exc.value.code == messages.FailureType.ProcessError
-            if client.features.model == "1":
-                assert exc.value.message.endswith("Failed to compile input")
-            else:
-                assert exc.value.message.endswith(
-                    "Transaction has changed during signing"
-                )
+            assert exc.value.message.endswith(
+                "Failed to compile input"
+            ) or exc.value.message.endswith("Transaction has changed during signing")
 
     def test_spend_coinbase(self, client):
         inp1 = messages.TxInputType(
