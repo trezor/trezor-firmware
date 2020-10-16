@@ -154,7 +154,7 @@ def scalarmult(P: Point, e: int) -> Point:
 
 
 # Bpow[i] == scalarmult(B, 2**i)
-Bpow = []  # type: List[Point]
+Bpow: List[Point] = []
 
 
 def make_Bpow() -> None:

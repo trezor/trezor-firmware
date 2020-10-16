@@ -19,7 +19,7 @@ from typing import Optional, Set, Type
 
 from . import protobuf
 
-OMITTED_MESSAGES = set()  # type: Set[Type[protobuf.MessageType]]
+OMITTED_MESSAGES: Set[Type[protobuf.MessageType]] = set()
 
 DUMP_BYTES = 5
 DUMP_PACKETS = 4

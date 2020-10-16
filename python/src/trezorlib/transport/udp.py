@@ -44,7 +44,7 @@ class UdpTransport(ProtocolBasedTransport):
             host = devparts[0]
             port = int(devparts[1]) if len(devparts) > 1 else UdpTransport.DEFAULT_PORT
         self.device = (host, port)
-        self.socket = None  # type: Optional[socket.socket]
+        self.socket: Optional[socket.socket] = None
 
         super().__init__(protocol=ProtocolV1(self))
 
