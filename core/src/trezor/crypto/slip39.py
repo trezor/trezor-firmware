@@ -229,7 +229,7 @@ def split_ems(
     # Split the Encrypted Master Secret on the group level.
     group_shares = _split_secret(group_threshold, len(groups), encrypted_master_secret)
 
-    mnemonics = []  # type: List[List[str]]
+    mnemonics: List[List[str]] = []
     for (member_threshold, member_count), (group_index, group_secret) in zip(
         groups, group_shares
     ):
@@ -599,7 +599,7 @@ def _decode_mnemonics(
     group_counts = set()
 
     # { group_index : [threshold, set_of_member_shares] }
-    groups = {}  # type: MnemonicGroups
+    groups: MnemonicGroups = {}
     for mnemonic in mnemonics:
         share = decode_mnemonic(mnemonic)
         identifiers.add(share.identifier)

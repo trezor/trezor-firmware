@@ -12,8 +12,8 @@ class LoaderDefault:
     class normal:
         bg_color = ui.BG
         fg_color = ui.GREEN
-        icon = None  # type: Optional[str]
-        icon_fg_color = None  # type: Optional[int]
+        icon: Optional[str] = None
+        icon_fg_color: Optional[int] = None
 
     class active(normal):
         bg_color = ui.BG
@@ -43,8 +43,8 @@ class Loader(ui.Component):
         self.normal_style = style.normal
         self.active_style = style.active
         self.target_ms = _TARGET_MS
-        self.start_ms = None  # type: Optional[int]
-        self.stop_ms = None  # type: Optional[int]
+        self.start_ms: Optional[int] = None
+        self.stop_ms: Optional[int] = None
 
     def start(self) -> None:
         self.start_ms = utime.ticks_ms()

@@ -67,14 +67,14 @@ if False:
 
 
 # Maps a wire type directly to a handler.
-workflow_handlers = {}  # type: Dict[int, Handler]
+workflow_handlers: Dict[int, Handler] = {}
 
 # Maps a wire type to a tuple of package and module.  This allows handlers
 # to be dynamically imported when such message arrives.
-workflow_packages = {}  # type: Dict[int, Tuple[str, str]]
+workflow_packages: Dict[int, Tuple[str, str]] = {}
 
 # If set to False protobuf messages marked with "unstable" option are rejected.
-experimental_enabled = False  # type: bool
+experimental_enabled: bool = False
 
 
 def add(wire_type: int, pkgname: str, modname: str) -> None:
@@ -163,7 +163,7 @@ class Context:
         self.buffer_reader = utils.BufferReader(self.buffer)
         self.buffer_writer = utils.BufferWriter(self.buffer)
 
-        self._field_cache = {}  # type: protobuf.FieldCache
+        self._field_cache: protobuf.FieldCache = {}
 
     async def call(
         self,
@@ -307,8 +307,8 @@ async def handle_session(
     iface: WireInterface, session_id: int, use_workflow: bool = True
 ) -> None:
     ctx = Context(iface, session_id)
-    next_msg = None  # type: Optional[codec_v1.Message]
-    res_msg = None  # type: Optional[protobuf.MessageType]
+    next_msg: Optional[codec_v1.Message] = None
+    res_msg: Optional[protobuf.MessageType] = None
     req_type = None
     req_msg = None
     while True:
@@ -361,7 +361,7 @@ async def handle_session(
                 # We found a valid handler for this message type.
 
                 # Workflow task, declared for the finally block
-                wf_task = None  # type: Optional[HandlerTask]
+                wf_task: Optional[HandlerTask] = None
 
                 # Here we make sure we always respond with a Failure response
                 # in case of any errors.

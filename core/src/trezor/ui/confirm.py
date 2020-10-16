@@ -48,9 +48,7 @@ class Confirm(ui.Layout):
                 area = ui.grid(13, cells_x=2)
             else:
                 area = ui.grid(9, n_x=2)
-            self.confirm = Button(
-                area, confirm, confirm_style
-            )  # type: Optional[Button]
+            self.confirm: Optional[Button] = Button(area, confirm, confirm_style)
             self.confirm.on_click = self.on_confirm  # type: ignore
         else:
             self.confirm = None
@@ -62,7 +60,7 @@ class Confirm(ui.Layout):
                 area = ui.grid(12, cells_x=1)
             else:
                 area = ui.grid(8, n_x=2)
-            self.cancel = Button(area, cancel, cancel_style)  # type: Optional[Button]
+            self.cancel: Optional[Button] = Button(area, cancel, cancel_style)
             self.cancel.on_click = self.on_cancel  # type: ignore
         else:
             self.cancel = None
