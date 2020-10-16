@@ -11,8 +11,10 @@ Your Pull Request should follow these criteria:
   and `make style` to do the required changes.
 - The generated files are up-to-date. Use `make gen` in repository root to make
   it happen.
-- Commits must have concise commit messages, the imperative mood is preferred
-  ([rationale](https://gist.github.com/robertpainsi/b632364184e70900af4ab688decf6f53)).
+- Commits must have concise commit messages, we endorse [Conventional Commits](https://www.conventionalcommits.org).
+
+## Review process
+
 - Multiple commits per PR are allowed, but please do not use reverts, etc.
   Use rebase.
 - Do not use merge (e.g. merge trezor/master into ...).
