@@ -159,10 +159,6 @@ class CoinJoinApprover(Approver):
         self._add_output(txo, script_pubkey)
 
     async def approve_tx(self) -> None:
-        # Ensure that at least one of the user's outputs is in a group with an external output.
-        if not self.anonymity:
-            raise wire.ProcessError("No anonymity gain")
-
         # The mining fee of the transaction as a whole.
         mining_fee = self.total_in - self.total_out
 
@@ -183,6 +179,11 @@ class CoinJoinApprover(Approver):
 
         if our_fees > our_coordinator_fee + our_max_mining_fee:
             raise wire.ProcessError("Total fee over threshold")
+
+        # Ensure that at least one of the user's outputs is in a group with an external output.
+        # Note: _get_coordinator_fee() needs to be called before checking this.
+        if not self.anonymity:
+            raise wire.ProcessError("No anonymity gain")
 
         if self.tx.lock_time > 0:
             raise wire.ProcessError("nLockTime not allowed in CoinJoin")
