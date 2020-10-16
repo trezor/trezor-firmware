@@ -19,7 +19,7 @@ if False:
     from .authorization import CoinJoinAuthorization
 
     class MsgWithCoinName(Protocol):
-        coin_name = ...  # type: str
+        coin_name: str
 
     class MsgWithAddressScriptType(Protocol):
         # XXX should be Bip32Path but that fails

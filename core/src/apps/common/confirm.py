@@ -41,7 +41,7 @@ async def confirm(
             cancel_style,
             major_confirm,
         )
-        dialog = content  # type: ui.Layout
+        dialog: ui.Layout = content
     else:
         dialog = Confirm(
             content, confirm, confirm_style, cancel, cancel_style, major_confirm
@@ -97,7 +97,7 @@ async def hold_to_confirm(
         content.pages[-1] = HoldToConfirm(
             content.pages[-1], confirm, confirm_style, loader_style, cancel
         )
-        dialog = content  # type: ui.Layout
+        dialog: ui.Layout = content
     else:
         dialog = HoldToConfirm(content, confirm, confirm_style, loader_style, cancel)
 

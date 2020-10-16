@@ -31,7 +31,7 @@ async def verify_message(ctx: wire.Context, msg: VerifyMessage) -> Success:
     recid = signature[0]
     if recid >= 27 and recid <= 34:
         # p2pkh
-        script_type = SPENDADDRESS  # type: EnumTypeInputScriptType
+        script_type: EnumTypeInputScriptType = SPENDADDRESS
     elif recid >= 35 and recid <= 38:
         # segwit-in-p2sh
         script_type = SPENDP2SHWITNESS

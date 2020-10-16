@@ -10,7 +10,7 @@ DEFAULT_ICON = "apps/webauthn/res/icon_webauthn.toif"
 
 class ConfirmInfo:
     def __init__(self) -> None:
-        self.app_icon = None  # type: Optional[bytes]
+        self.app_icon: Optional[bytes] = None
 
     def get_header(self) -> str:
         raise NotImplementedError

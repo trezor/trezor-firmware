@@ -16,7 +16,7 @@ if False:
     from apps.common.keychain import MsgOut, Handler, HandlerWithKeychain
 
     class MsgWithAddressN(MessageType, Protocol):
-        address_n = ...  # type: paths.Bip32Path
+        address_n: paths.Bip32Path
 
 
 # We believe Ethereum should use 44'/60'/a' for everything, because it is

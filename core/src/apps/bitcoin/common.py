@@ -35,12 +35,14 @@ MULTISIG_OUTPUT_SCRIPT_TYPES = (
     OutputScriptType.PAYTOWITNESS,
 )
 
-CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES = {
+CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES: Dict[
+    EnumTypeOutputScriptType, EnumTypeInputScriptType
+] = {
     OutputScriptType.PAYTOADDRESS: InputScriptType.SPENDADDRESS,
     OutputScriptType.PAYTOMULTISIG: InputScriptType.SPENDMULTISIG,
     OutputScriptType.PAYTOP2SHWITNESS: InputScriptType.SPENDP2SHWITNESS,
     OutputScriptType.PAYTOWITNESS: InputScriptType.SPENDWITNESS,
-}  # type: Dict[EnumTypeOutputScriptType, EnumTypeInputScriptType]
+}
 INTERNAL_INPUT_SCRIPT_TYPES = tuple(CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES.values())
 CHANGE_OUTPUT_SCRIPT_TYPES = tuple(CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES.keys())
 

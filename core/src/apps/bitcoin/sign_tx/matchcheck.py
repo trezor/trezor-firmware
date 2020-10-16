@@ -43,7 +43,7 @@ class MatchChecker(Generic[T]):
     UNDEFINED = object()
 
     def __init__(self) -> None:
-        self.attribute = self.UNDEFINED  # type: Union[object, T]
+        self.attribute: Union[object, T] = self.UNDEFINED
         self.read_only = False  # Failsafe to ensure that add_input() is not accidentally called after output_matches().
 
     def attribute_from_tx(self, txio: Union[TxInput, TxOutput]) -> T:

@@ -139,9 +139,9 @@ async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:
 async def handle_DoPreauthorized(
     ctx: wire.Context, msg: DoPreauthorized
 ) -> protobuf.MessageType:
-    authorization = storage.cache.get(
+    authorization: Authorization = storage.cache.get(
         storage.cache.APP_BASE_AUTHORIZATION
-    )  # type: Authorization
+    )
     if not authorization:
         raise wire.ProcessError("No preauthorized operation")
 
@@ -157,9 +157,7 @@ async def handle_DoPreauthorized(
 
 
 def set_authorization(authorization: Authorization) -> None:
-    previous = storage.cache.get(
-        storage.cache.APP_BASE_AUTHORIZATION
-    )  # type: Authorization
+    previous: Authorization = storage.cache.get(storage.cache.APP_BASE_AUTHORIZATION)
     if previous:
         previous.__del__()
     storage.cache.set(storage.cache.APP_BASE_AUTHORIZATION, authorization)
@@ -168,9 +166,9 @@ def set_authorization(authorization: Authorization) -> None:
 async def handle_CancelAuthorization(
     ctx: wire.Context, msg: CancelAuthorization
 ) -> protobuf.MessageType:
-    authorization = storage.cache.get(
+    authorization: Authorization = storage.cache.get(
         storage.cache.APP_BASE_AUTHORIZATION
-    )  # type: Authorization
+    )
     if not authorization:
         raise wire.ProcessError("No preauthorized operation")
 

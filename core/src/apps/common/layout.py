@@ -70,7 +70,7 @@ async def show_pubkey(ctx: wire.Context, pubkey: bytes) -> None:
 
 
 async def show_xpub(ctx: wire.Context, xpub: str, desc: str, cancel: str) -> bool:
-    pages = []  # type: List[ui.Component]
+    pages: List[ui.Component] = []
     for lines in chunks(list(chunks(xpub, 16)), 5):
         text = Text(desc, ui.ICON_RECEIVE, ui.GREEN)
         text.mono(*lines)

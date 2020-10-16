@@ -166,7 +166,7 @@ async def _process_words(
 
     share = None
     if not is_slip39:  # BIP-39
-        secret = recover.process_bip39(words)  # type: Optional[bytes]
+        secret: Optional[bytes] = recover.process_bip39(words)
     else:
         secret, share = recover.process_slip39(words)
 
