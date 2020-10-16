@@ -44,7 +44,7 @@ async def read_message(iface: WireInterface, buffer: utils.BufferType) -> Messag
     if msize > len(buffer):
         # allocate a new buffer to fit the message
         try:
-            mdata = bytearray(msize)  # type: utils.BufferType
+            mdata: utils.BufferType = bytearray(msize)
         except MemoryError:
             mdata = bytearray(_REP_LEN)
             read_and_throw_away = True

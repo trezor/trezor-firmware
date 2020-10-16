@@ -30,23 +30,23 @@ if False:
     Finalizer = Callable[[Task, Any], None]
 
 # function to call after every task step
-after_step_hook = None  # type: Optional[Callable[[], None]]
+after_step_hook: Optional[Callable[[], None]] = None
 
 # tasks scheduled for execution in the future
 _queue = utimeq.utimeq(64)
 
 # tasks paused on I/O
-_paused = {}  # type: Dict[int, Set[Task]]
+_paused: Dict[int, Set[Task]] = {}
 
 # functions to execute after a task is finished
-_finalizers = {}  # type: Dict[int, Finalizer]
+_finalizers: Dict[int, Finalizer] = {}
 
 # reference to the task that is currently executing
-this_task = None  # type: Optional[Task]
+this_task: Optional[Task] = None
 
 if __debug__:
     # synthetic event queue
-    synthetic_events = []  # type: List[Tuple[int, Any]]
+    synthetic_events: List[Tuple[int, Any]] = []
 
 
 class TaskClosed(Exception):
@@ -300,8 +300,8 @@ class race(Syscall):
     def __init__(self, *children: Awaitable, exit_others: bool = True) -> None:
         self.children = children
         self.exit_others = exit_others
-        self.finished = []  # type: List[Awaitable]  # children that finished
-        self.scheduled = []  # type: List[Task]  # scheduled wrapper tasks
+        self.finished: List[Awaitable] = []  # children that finished
+        self.scheduled: List[Task] = []  # scheduled wrapper tasks
 
     def handle(self, task: Task) -> None:
         """
@@ -387,7 +387,7 @@ class chan:
         def __init__(self, ch: "chan", value: Any) -> None:
             self.ch = ch
             self.value = value
-            self.task = None  # type: Optional[Task]
+            self.task: Optional[Task] = None
 
         def handle(self, task: Task) -> None:
             self.task = task
@@ -396,15 +396,15 @@ class chan:
     class Take(Syscall):
         def __init__(self, ch: "chan") -> None:
             self.ch = ch
-            self.task = None  # type: Optional[Task]
+            self.task: Optional[Task] = None
 
         def handle(self, task: Task) -> None:
             self.task = task
             self.ch._schedule_take(task)
 
     def __init__(self) -> None:
-        self.putters = []  # type: List[Tuple[Optional[Task], Any]]
-        self.takers = []  # type: List[Task]
+        self.putters: List[Tuple[Optional[Task], Any]] = []
+        self.takers: List[Task] = []
 
     def put(self, value: Any) -> Awaitable[None]:  # type: ignore
         put = chan.Put(self, value)
@@ -484,10 +484,10 @@ class spawn(Syscall):
 
     def __init__(self, task: Task) -> None:
         self.task = task
-        self.callback = None  # type: Optional[Task]
-        self.finalizer_callback = None  # type: Optional[Callable[["spawn"], None]]
+        self.callback: Optional[Task] = None
+        self.finalizer_callback: Optional[Callable[["spawn"], None]] = None
         self.finished = False
-        self.return_value = None  # type: Any
+        self.return_value: Any = None
 
         # schedule task immediately
         if __debug__:

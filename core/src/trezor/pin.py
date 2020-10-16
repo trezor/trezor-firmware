@@ -8,9 +8,9 @@ def pin_to_int(pin: str) -> int:
     return int("1" + pin)
 
 
-_previous_progress = None  # type: Optional[int]
-_previous_seconds = None  # type: Optional[int]
-keepalive_callback = None  # type: Any
+_previous_progress: Optional[int] = None
+_previous_seconds: Optional[int] = None
+keepalive_callback: Any = None
 
 
 def show_pin_timeout(seconds: int, progress: int, message: str) -> bool:

@@ -135,7 +135,7 @@ class Text(ui.Component):
         self.icon_color = icon_color
         self.max_lines = max_lines
         self.new_lines = new_lines
-        self.content = []  # type: List[TextContent]
+        self.content: List[TextContent] = []
 
     def normal(self, *content: TextContent) -> None:
         self.content.append(ui.NORMAL)

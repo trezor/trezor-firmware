@@ -16,14 +16,14 @@ if __debug__:
 
 
 # Set of workflow tasks.  Multiple workflows can be running at the same time.
-tasks = set()  # type: Set[loop.spawn]
+tasks: Set[loop.spawn] = set()
 
 # Default workflow task, if a default workflow is running.  Default workflow
 # is not contained in the `tasks` set above.
-default_task = None  # type: Optional[loop.spawn]
+default_task: Optional[loop.spawn] = None
 
 # Constructor for the default workflow.  Returns a workflow task.
-default_constructor = None  # type: Optional[Callable[[], loop.Task]]
+default_constructor: Optional[Callable[[], loop.Task]] = None
 
 
 def _on_start(workflow: loop.spawn) -> None:
@@ -159,8 +159,8 @@ class IdleTimer:
     """
 
     def __init__(self) -> None:
-        self.timeouts = {}  # type: Dict[IdleCallback, int]
-        self.tasks = {}  # type: Dict[IdleCallback, loop.Task]
+        self.timeouts: Dict[IdleCallback, int] = {}
+        self.tasks: Dict[IdleCallback, loop.Task] = {}
 
     async def _timeout_task(self, callback: IdleCallback) -> None:
         # This function is async, so the result of self._timeout_task() is an awaitable,

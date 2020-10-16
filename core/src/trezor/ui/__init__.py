@@ -308,7 +308,7 @@ class Layout(Component):
     """
 
     BACKLIGHT_LEVEL = style.BACKLIGHT_NORMAL
-    RENDER_SLEEP = loop.sleep(_RENDER_DELAY_MS)  # type: loop.Syscall
+    RENDER_SLEEP: loop.Syscall = loop.sleep(_RENDER_DELAY_MS)
 
     async def __iter__(self) -> ResultValue:
         """

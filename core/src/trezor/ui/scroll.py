@@ -98,11 +98,11 @@ class Paginated(ui.Layout):
         self.on_change()
 
     def create_tasks(self) -> Tuple[loop.Task, ...]:
-        tasks = (
+        tasks: Tuple[loop.Task, ...] = (
             self.handle_input(),
             self.handle_rendering(),
             self.handle_paging(),
-        )  # type: Tuple[loop.Task, ...]
+        )
 
         if __debug__:
             # XXX This isn't strictly correct, as it allows *any* Paginated layout to be

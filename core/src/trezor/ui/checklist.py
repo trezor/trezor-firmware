@@ -18,7 +18,7 @@ class Checklist(ui.Component):
         super().__init__()
         self.title = title
         self.icon = icon
-        self.items = []  # type: List[ChecklistItem]
+        self.items: List[ChecklistItem] = []
         self.active = 0
 
     def add(self, item: ChecklistItem) -> None:

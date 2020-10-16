@@ -40,8 +40,8 @@ _EXPERIMENTAL_FEATURES     = const(0x15)  # bool (0x01 or empty)
 
 _DEFAULT_BACKUP_TYPE       = BackupType.Bip39
 
-SAFETY_CHECK_LEVEL_STRICT   = const(0)  # type: Literal[0]
-SAFETY_CHECK_LEVEL_PROMPT   = const(1)  # type: Literal[1]
+SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
+SAFETY_CHECK_LEVEL_PROMPT  : Literal[1] = const(1)
 _DEFAULT_SAFETY_CHECK_LEVEL = SAFETY_CHECK_LEVEL_STRICT
 if False:
     StorageSafetyCheckLevel = Literal[0, 1]

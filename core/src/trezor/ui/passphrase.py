@@ -145,7 +145,7 @@ class PassphraseKeyboard(ui.Layout):
         self.done.on_click = self.on_confirm  # type: ignore
 
         self.keys = key_buttons(KEYBOARD_KEYS[self.page], self)
-        self.pending_button = None  # type: Optional[KeyButton]
+        self.pending_button: Optional[KeyButton] = None
         self.pending_index = 0
 
     def dispatch(self, event: int, x: int, y: int) -> None:
@@ -246,11 +246,11 @@ class PassphraseKeyboard(ui.Layout):
         raise ui.Result(self.input.text)
 
     def create_tasks(self) -> Tuple[loop.Task, ...]:
-        tasks = (
+        tasks: Tuple[loop.Task, ...] = (
             self.handle_input(),
             self.handle_rendering(),
             self.handle_paging(),
-        )  # type: Tuple[loop.Task, ...]
+        )
 
         if __debug__:
             from apps.debug import input_signal
