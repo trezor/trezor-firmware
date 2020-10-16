@@ -584,7 +584,7 @@ def dict_to_proto(message_type: Type[MT], d: Dict[str, Any]) -> MT:
             value = [value]
 
         if isinstance(ftype, type) and issubclass(ftype, MessageType):
-            function = dict_to_proto  # type: Callable[[Any, Any], Any]
+            function: Callable[[Any, Any], Any] = dict_to_proto
         else:
             function = value_to_proto
 

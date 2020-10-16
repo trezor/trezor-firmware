@@ -42,7 +42,7 @@ class HidHandle:
     ) -> None:
         self.path = path
         self.serial = serial
-        self.handle = None  # type: HidDeviceHandle
+        self.handle: HidDeviceHandle = None
         self.hid_version = None if probe_hid_version else 2
 
     def open(self) -> None:

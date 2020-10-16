@@ -63,9 +63,9 @@ def _to_grayscale(data: bytes) -> bytes:
 
 @attr.s
 class Toif:
-    mode = attr.ib()  # type: firmware.ToifMode
-    size = attr.ib()  # type: Tuple[int, int]
-    data = attr.ib()  # type: bytes
+    mode: firmware.ToifMode = attr.ib()
+    size: Tuple[int, int] = attr.ib()
+    data: bytes = attr.ib()
 
     @data.validator
     def check_data_size(self, _, value):
