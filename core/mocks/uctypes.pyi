@@ -1,25 +1,25 @@
-ARRAY = ...  # type: int
-NATIVE = ...  # type: int
-LITTLE_ENDIAN = ...  # type: int
-BIG_ENDIAN = ...  # type: int
-VOID = ...  # type: int
-UINT8 = ...  # type: int
-INT8 = ...  # type: int
-UINT16 = ...  # type: int
-INT16 = ...  # type: int
-UINT32 = ...  # type: int
-INT32 = ...  # type: int
-UINT64 = ...  # type: int
-INT64 = ...  # type: int
-BFUINT8 = ...  # type: int
-BFINT8 = ...  # type: int
-BFUINT16 = ...  # type: int
-BFINT16 = ...  # type: int
-BFUINT32 = ...  # type: int
-BFINT32 = ...  # type: int
-BF_POS = ...  # type: int
-BF_LEN = ...  # type: int
-FLOAT32 = ...  # type: int
+ARRAY: int
+NATIVE: int
+LITTLE_ENDIAN: int
+BIG_ENDIAN: int
+VOID: int
+UINT8: int
+INT8: int
+UINT16: int
+INT16: int
+UINT32: int
+INT32: int
+UINT64: int
+INT64: int
+BFUINT8: int
+BFINT8: int
+BFUINT16: int
+BFINT16: int
+BFUINT32: int
+BFINT32: int
+BF_POS: int
+BF_LEN: int
+FLOAT32: int
 
 class struct:
     def __init__(self, addr: int, descriptor: dict, layout_type: int = ...) -> None: ...
