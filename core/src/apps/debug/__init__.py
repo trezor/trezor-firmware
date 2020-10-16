@@ -23,7 +23,7 @@ if __debug__:
     save_screen = False
     save_screen_directory = "."
 
-    reset_internal_entropy = None  # type: Optional[bytes]
+    reset_internal_entropy: Optional[bytes] = None
     reset_current_words = loop.chan()
     reset_word_index = loop.chan()
 
@@ -37,7 +37,7 @@ if __debug__:
     debuglink_decision_chan = loop.chan()
 
     layout_change_chan = loop.chan()
-    current_content = []  # type: List[str]
+    current_content: List[str] = []
     watch_layout_changes = False
 
     def screenshot() -> bool:

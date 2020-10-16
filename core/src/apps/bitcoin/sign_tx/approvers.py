@@ -293,7 +293,7 @@ class CoinJoinApprover(Approver):
         # Add the coordinator fee for the last group of outputs.
         self._new_group(0)
 
-        decimal_divisor = pow(10, FEE_PER_ANONYMITY_DECIMALS + 2)  # type: float
+        decimal_divisor: float = pow(10, FEE_PER_ANONYMITY_DECIMALS + 2)
         return (
             self.coordinator_fee_base
             * self.authorization.fee_per_anonymity

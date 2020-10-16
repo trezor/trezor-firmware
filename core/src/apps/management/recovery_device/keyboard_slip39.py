@@ -28,8 +28,8 @@ class InputButton(Button):
     def __init__(self, area: ui.Area, keyboard: "Slip39Keyboard") -> None:
         super().__init__(area, "")
         self.word = ""
-        self.pending_button = None  # type: Optional[Button]
-        self.pending_index = None  # type: Optional[int]
+        self.pending_button: Optional[Button] = None
+        self.pending_index: Optional[int] = None
         self.keyboard = keyboard
         self.disable()
 
@@ -118,7 +118,7 @@ class Slip39Keyboard(ui.Layout):
                 ("ab", "cd", "ef", "ghij", "klm", "nopq", "rs", "tuv", "wxyz")
             )
         ]
-        self.pending_button = None  # type: Optional[Button]
+        self.pending_button: Optional[Button] = None
         self.pending_index = 0
         self.button_sequence = ""
         self.mask = slip39.KEYBOARD_FULL_MASK

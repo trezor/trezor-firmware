@@ -31,8 +31,8 @@ class SignatureVerifier:
         coin: CoinInfo,
     ):
         self.threshold = 1
-        self.public_keys = []  # type: List[bytes]
-        self.signatures = []  # type: List[Tuple[bytes, int]]
+        self.public_keys: List[bytes] = []
+        self.signatures: List[Tuple[bytes, int]] = []
 
         if not script_sig:
             if not witness:

@@ -54,8 +54,8 @@ FORBIDDEN_KEY_PATH = wire.DataError("Forbidden key path")
 class LRUCache:
     def __init__(self, size: int) -> None:
         self.size = size
-        self.cache_keys = []  # type: List[Any]
-        self.cache = {}  # type: Dict[Any, Deletable]
+        self.cache_keys: List[Any] = []
+        self.cache: Dict[Any, Deletable] = {}
 
     def insert(self, key: Any, value: Deletable) -> None:
         if key in self.cache_keys:
@@ -126,7 +126,7 @@ class Keychain:
         new_root: Callable[[], NodeType],
     ) -> NodeType:
         cached_prefix = tuple(path[:prefix_len])
-        cached_root = self._cache.get(cached_prefix)  # type: Optional[NodeType]
+        cached_root: Optional[NodeType] = self._cache.get(cached_prefix)
         if cached_root is None:
             cached_root = new_root()
             cached_root.derive_path(cached_prefix)

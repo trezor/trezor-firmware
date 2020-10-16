@@ -46,9 +46,9 @@ async def sign_tx(
     authorization: Optional[CoinJoinAuthorization] = None,
 ) -> TxRequest:
     if authorization:
-        approver = approvers.CoinJoinApprover(
+        approver: approvers.Approver = approvers.CoinJoinApprover(
             msg, coin, authorization
-        )  # type: approvers.Approver
+        )
     else:
         approver = approvers.BasicApprover(msg, coin)
 
@@ -64,8 +64,8 @@ async def sign_tx(
 
     signer = signer_class(msg, keychain, coin, approver).signer()
 
-    res = None  # type: Union[TxAckType, bool, None]
-    field_cache = {}  # type: FieldCache
+    res: Union[TxAckType, bool, None] = None
+    field_cache: FieldCache = {}
     while True:
         req = signer.send(res)
         if isinstance(req, tuple):

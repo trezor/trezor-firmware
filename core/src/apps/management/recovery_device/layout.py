@@ -53,12 +53,12 @@ async def request_mnemonic(
 ) -> Optional[str]:
     await button_request(ctx, code=ButtonRequestType.MnemonicInput)
 
-    words = []  # type: List[str]
+    words: List[str] = []
     for i in range(word_count):
         if backup_types.is_slip39_word_count(word_count):
-            keyboard = Slip39Keyboard(
+            keyboard: Union[Slip39Keyboard, Bip39Keyboard] = Slip39Keyboard(
                 "Type word %s of %s:" % (i + 1, word_count)
-            )  # type: Union[Slip39Keyboard, Bip39Keyboard]
+            )
         else:
             keyboard = Bip39Keyboard("Type word %s of %s:" % (i + 1, word_count))
 
@@ -86,7 +86,7 @@ async def show_remaining_shares(
     shares_remaining: List[int],
     group_threshold: int,
 ) -> None:
-    pages = []  # type: List[ui.Component]
+    pages: List[ui.Component] = []
     for remaining, group in groups:
         if 0 < remaining < MAX_SHARE_COUNT:
             text = Text("Remaining Shares")

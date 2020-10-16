@@ -563,7 +563,7 @@ async def handle_reports(iface: io.HID) -> None:
                 dialog_mgr.get_cid(),
                 _CID_BROADCAST,
             ):
-                resp = cmd_error(req.cid, _ERR_CHANNEL_BUSY)  # type: Optional[Cmd]
+                resp: Optional[Cmd] = cmd_error(req.cid, _ERR_CHANNEL_BUSY)
             else:
                 resp = dispatch_cmd(req, dialog_mgr)
             if resp is not None:
@@ -771,7 +771,7 @@ class Fido2Unlock(Fido2State):
         super().__init__(req.cid, dialog_mgr.iface)
         self.process_func = process_func
         self.req = req
-        self.resp = None  # type: Optional[Cmd]
+        self.resp: Optional[Cmd] = None
         self.dialog_mgr = dialog_mgr
 
     async def confirm_dialog(self) -> Union[bool, "State"]:
@@ -992,11 +992,11 @@ class DialogManager:
         self._clear()
 
     def _clear(self) -> None:
-        self.state = None  # type: Optional[State]
+        self.state: Optional[State] = None
         self.deadline = 0
         self.result = _RESULT_NONE
-        self.workflow = None  # type: Optional[loop.spawn]
-        self.keepalive = None  # type: Optional[Coroutine]
+        self.workflow: Optional[loop.spawn] = None
+        self.keepalive: Optional[Coroutine] = None
 
     def _workflow_is_running(self) -> bool:
         return self.workflow is not None and not self.workflow.finished
@@ -1211,7 +1211,7 @@ def cmd_wink(req: Cmd) -> Cmd:
 
 def msg_register(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     if not config.is_unlocked():
-        new_state = U2fUnlock(req.cid, dialog_mgr.iface)  # type: State
+        new_state: State = U2fUnlock(req.cid, dialog_mgr.iface)
         dialog_mgr.set_state(new_state)
         return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
 
@@ -1292,7 +1292,7 @@ def msg_register_sign(challenge: bytes, cred: U2fCredential) -> bytes:
 
 def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     if not config.is_unlocked():
-        new_state = U2fUnlock(req.cid, dialog_mgr.iface)  # type: State
+        new_state: State = U2fUnlock(req.cid, dialog_mgr.iface)
         dialog_mgr.set_state(new_state)
         return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
 
@@ -1427,7 +1427,7 @@ def credentials_from_descriptor_list(
 def distinguishable_cred_list(credentials: Iterable[Credential]) -> List[Credential]:
     """Reduces the input to a list of credentials which can be distinguished by
     the user. It is assumed that all input credentials share the same RP ID."""
-    cred_list = []  # type: List[Credential]
+    cred_list: List[Credential] = []
     for cred in credentials:
         for i, prev_cred in enumerate(cred_list):
             if prev_cred.account_name() == cred.account_name():
