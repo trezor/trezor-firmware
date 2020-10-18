@@ -2,7 +2,7 @@
   "coin_name": "GoldBCR",
   "coin_shortcut": "GBCR",
   "coin_label": "GoldBCR",
-  "website": "https://goldbcr.io/",
+  "website": "https://goldbcr.io",
   "github": "https://github.com/gold-bcr/gold-bcr",
   "maintainer": "GoldBCR Team <support@goldbcr.io>",
   "curve_name": "secp256k1",
