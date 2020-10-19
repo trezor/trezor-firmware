@@ -391,8 +391,11 @@ class Descriptor:
         logging.debug("Processing enum {}".format(enum.name))
 
         # file header
-        yield "if False:"
-        yield "    from typing_extensions import Literal"
+        yield "if __debug__:"
+        yield "    try:"
+        yield "        from typing_extensions import Literal  # noqa: F401"
+        yield "    except ImportError:"
+        yield "        pass"
         yield ""
 
         for value in enum.value:
@@ -409,7 +412,7 @@ class Descriptor:
                 name = strip_leader(name, enum_prefix)
 
             self.enum_types[enum.name][value.name] = value.number
-            yield f"{name} = {value.number}  # type: Literal[{value.number}]"
+            yield f"{name}: Literal[{value.number}] = {value.number}"
 
     def process_messages(self, messages, include_deprecated=False):
         for message in sorted(messages, key=lambda m: m.name):
