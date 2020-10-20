@@ -44,7 +44,7 @@ def validate_full_path(path: List[int]) -> bool:
         return False
     if path[1] != 1815 | HARDENED:
         return False
-    if path[2] < HARDENED or path[2] > 20 | HARDENED:
+    if path[2] < HARDENED or path[2] > 100 | HARDENED:
         return False
     if path[3] not in (0, 1, 2):
         return False

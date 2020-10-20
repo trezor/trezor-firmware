@@ -73,7 +73,7 @@ def _validate_path_for_get_public_key(path: List[int]) -> bool:
         return False
     if path[1] != 1815 | HARDENED:
         return False
-    if path[2] < HARDENED or path[2] > 20 | HARDENED:
+    if path[2] < HARDENED or path[2] > 100 | HARDENED:
         return False
     if length > 3 and paths.is_hardened(path[3]):
         return False
