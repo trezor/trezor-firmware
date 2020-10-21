@@ -178,7 +178,16 @@ class BasicApprover(Approver):
             for orig in orig_txs:
                 await helpers.confirm_replacement(description, orig.orig_hash)
 
-            await helpers.confirm_modify_fee(spending - orig_spending, fee, self.coin)
+            # Always ask the user to confirm when they are paying more towards the fee.
+            # If they are not spending more, then ask for confirmation only if it's not
+            # a PayJoin. In complex scenarios where the user is not spending more and
+            # there are new external inputs the scenario can be open to multiple
+            # interpretations and the dialog would likely cause more confusion than
+            # what it's worth, see PR #1292.
+            if spending > orig_spending or self.external_in == self.orig_external_in:
+                await helpers.confirm_modify_fee(
+                    spending - orig_spending, fee, self.coin
+                )
         else:
             # Standard transaction.
             if tx_info.tx.lock_time > 0:

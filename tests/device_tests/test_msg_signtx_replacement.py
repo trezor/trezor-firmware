@@ -140,13 +140,14 @@ def test_p2pkh_fee_bump(client):
 
 @pytest.mark.skip_t1
 @pytest.mark.parametrize(
-    "out1_amount, out2_amount, copayer_witness, expected_tx",
+    "out1_amount, out2_amount, copayer_witness, fee_confirm, expected_tx",
     (
         (
             # Scenario 1: No fee bump by sender or receiver.
             10000 + 19899859,  # out1: Receiver does not contribute to fee.
             100000 - 10000 - 141,  # out2: Original change.
             "02483045022100eb74abb36f317d707c36d6fe1f4f73192d54417b9d5cd274e0077590833aad0a02206cf26621706aaf232c48a139910de71f7dbf17f3fb6af52a7222d19d88041e8b012102d587bc96e0ceab05f27401d66dc3e596ba02f2c0d7b018b5f80eebfaeb011012",
+            False,
             "010000000001026bb504f52d634e67966da4c0c3f930634a3bda329881b58aa16e855941b2b5e400000000005a2417009e506939e23ad82a559f2c5e812d13788644e1e0017afd5c40383ab01e87f9700100000000ffffffff02e3cc2f0100000000160014fb7e49f4017dc951615dea221b66626189aa43b9035f0100000000001600141d03a4d2167961b853d6cadfeab08e4937c5dfe802483045022100fd695bb0b5d07f0578ba56cb385b7662b98a1eb7d61ac25eaa565376ebd042de02201dc5209206d5d4c1bb79f9278a330767bf73afa774cd6a8331068d430bc95e50012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86202483045022100eb74abb36f317d707c36d6fe1f4f73192d54417b9d5cd274e0077590833aad0a02206cf26621706aaf232c48a139910de71f7dbf17f3fb6af52a7222d19d88041e8b012102d587bc96e0ceab05f27401d66dc3e596ba02f2c0d7b018b5f80eebfaeb0110125a241700",
         ),
         (
@@ -154,6 +155,7 @@ def test_p2pkh_fee_bump(client):
             10000 + 19899859,  # out1: Receiver does not contribute to fee.
             100000 - 10000 - 200,  # out2: Sender bumps fee from 141 to 200.
             "02483045022100af3a874c966ee595321e8699e7157f0b21f2542ddcdcafd06a9c2b4fd75e998b02206daecf235b5eb3c9dac088c904774cc0a61ac601c840efc5cbe00f99e1979a09012102d587bc96e0ceab05f27401d66dc3e596ba02f2c0d7b018b5f80eebfaeb011012",
+            True,
             "010000000001026bb504f52d634e67966da4c0c3f930634a3bda329881b58aa16e855941b2b5e400000000005a2417009e506939e23ad82a559f2c5e812d13788644e1e0017afd5c40383ab01e87f9700100000000ffffffff02e3cc2f0100000000160014fb7e49f4017dc951615dea221b66626189aa43b9c85e0100000000001600141d03a4d2167961b853d6cadfeab08e4937c5dfe8024730440220524e0f020a4ed910fa8e654feca8a2d54962e9691b2e1be9648685fbe84d900402203971dbba53400ed93d69dc5811cc0c7b3d368ffa9ba92c746fda8925bd5f556f012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86202483045022100af3a874c966ee595321e8699e7157f0b21f2542ddcdcafd06a9c2b4fd75e998b02206daecf235b5eb3c9dac088c904774cc0a61ac601c840efc5cbe00f99e1979a09012102d587bc96e0ceab05f27401d66dc3e596ba02f2c0d7b018b5f80eebfaeb0110125a241700",
         ),
         (
@@ -161,6 +163,7 @@ def test_p2pkh_fee_bump(client):
             10000 + 19899859 - 59,  # out1: Receiver contributes 59 to fee.
             100000 - 10000 - 141,  # out2: Sender does not bump fee.
             "0248304502210097a42b35d3d16fa169667cd85a007eaf6b674495634b120d9fb62d72a0df872402203d0cdf746fd7a668276f93f660a9d052bc8a5d7cd8fea36073de38da463ece85012102d587bc96e0ceab05f27401d66dc3e596ba02f2c0d7b018b5f80eebfaeb011012",
+            False,
             "010000000001026bb504f52d634e67966da4c0c3f930634a3bda329881b58aa16e855941b2b5e400000000005a2417009e506939e23ad82a559f2c5e812d13788644e1e0017afd5c40383ab01e87f9700100000000ffffffff02a8cc2f0100000000160014fb7e49f4017dc951615dea221b66626189aa43b9035f0100000000001600141d03a4d2167961b853d6cadfeab08e4937c5dfe802473044022002bdb052c49648cd7a9488080c5489f89cff52b752acfcabf6e130d2e9f9fe3902202433f50b8b2a0cc4d463c44c0f24812e0b7f2f5c8f2ec67137694a934335b60f012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f8620248304502210097a42b35d3d16fa169667cd85a007eaf6b674495634b120d9fb62d72a0df872402203d0cdf746fd7a668276f93f660a9d052bc8a5d7cd8fea36073de38da463ece85012102d587bc96e0ceab05f27401d66dc3e596ba02f2c0d7b018b5f80eebfaeb0110125a241700",
         ),
         (
@@ -168,6 +171,7 @@ def test_p2pkh_fee_bump(client):
             10000 + 19899859 - 141,  # out1: Receiver pays entire original fee of 141.
             100000 - 10000,  # out2: Sender pays no fee.
             "024730440220753f53049ca43d55f65633d3f1a8fe0464f24f780070db27474fd48d161b958302204a08e2956ac9bf1bdc762eb19f77cab5aa22ab24e058f31b8db2b878c875be74012102d587bc96e0ceab05f27401d66dc3e596ba02f2c0d7b018b5f80eebfaeb011012",
+            False,
             "010000000001026bb504f52d634e67966da4c0c3f930634a3bda329881b58aa16e855941b2b5e400000000005a2417009e506939e23ad82a559f2c5e812d13788644e1e0017afd5c40383ab01e87f9700100000000ffffffff0256cc2f0100000000160014fb7e49f4017dc951615dea221b66626189aa43b9905f0100000000001600141d03a4d2167961b853d6cadfeab08e4937c5dfe802483045022100e7f8b2d226cf98ab342c99d1bd51728661c8a81c94b0e198ea423c3cf704c29402203f522364bd1e4221bd5aa2db2364f1618b67fcddf54a838d8994b9f51f0c1c0c012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f862024730440220753f53049ca43d55f65633d3f1a8fe0464f24f780070db27474fd48d161b958302204a08e2956ac9bf1bdc762eb19f77cab5aa22ab24e058f31b8db2b878c875be74012102d587bc96e0ceab05f27401d66dc3e596ba02f2c0d7b018b5f80eebfaeb0110125a241700",
         ),
         (
@@ -175,11 +179,14 @@ def test_p2pkh_fee_bump(client):
             10000 + 19899859 - 200,  # out1: Receiver bumps fee from 141 to 200.
             100000 - 10000,  # out2: Sender pays no fee.
             "02483045022100aa1b91fb25cc9a0ace45db3dfae5d0beffdda4b76ccd4f362b460729efdf78b502206ed6de7fb6cdacdddd90f184416a46ea692f4a656a26702665bf2db1ef080a03012102d587bc96e0ceab05f27401d66dc3e596ba02f2c0d7b018b5f80eebfaeb011012",
+            False,
             "010000000001026bb504f52d634e67966da4c0c3f930634a3bda329881b58aa16e855941b2b5e400000000005a2417009e506939e23ad82a559f2c5e812d13788644e1e0017afd5c40383ab01e87f9700100000000ffffffff021bcc2f0100000000160014fb7e49f4017dc951615dea221b66626189aa43b9905f0100000000001600141d03a4d2167961b853d6cadfeab08e4937c5dfe802473044022075c504c90351394d0d019bc5022f860ecb33c0fcbf3b448b97d03169d1605427022007f0330591652a9a4a36417dc1477c8242abcc5110b312dfffc04df06901979c012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86202483045022100aa1b91fb25cc9a0ace45db3dfae5d0beffdda4b76ccd4f362b460729efdf78b502206ed6de7fb6cdacdddd90f184416a46ea692f4a656a26702665bf2db1ef080a03012102d587bc96e0ceab05f27401d66dc3e596ba02f2c0d7b018b5f80eebfaeb0110125a241700",
         ),
     ),
 )
-def test_p2wpkh_payjoin(client, out1_amount, out2_amount, copayer_witness, expected_tx):
+def test_p2wpkh_payjoin(
+    client, out1_amount, out2_amount, copayer_witness, fee_confirm, expected_tx
+):
     # Original input.
     inp1 = messages.TxInputType(
         address_n=parse_path("84h/1h/0h/0/0"),
@@ -220,38 +227,42 @@ def test_p2wpkh_payjoin(client, out1_amount, out2_amount, copayer_witness, expec
         orig_index=1,
     )
 
+    responses = [
+        resp
+        for resp in [
+            request_input(0),
+            request_meta(TXHASH_65b768),
+            request_orig_input(0, TXHASH_65b768),
+            request_input(1),
+            request_output(0),
+            request_orig_output(0, TXHASH_65b768),
+            request_output(1),
+            request_orig_output(1, TXHASH_65b768),
+            messages.ButtonRequest(code=B.SignTx),
+            messages.ButtonRequest(code=B.SignTx) if fee_confirm else None,
+            request_input(0),
+            request_meta(TXHASH_e4b5b2),
+            request_input(0, TXHASH_e4b5b2),
+            request_output(0, TXHASH_e4b5b2),
+            request_output(1, TXHASH_e4b5b2),
+            request_input(1),
+            request_meta(TXHASH_70f987),
+            request_input(0, TXHASH_70f987),
+            request_output(0, TXHASH_70f987),
+            request_output(1, TXHASH_70f987),
+            request_input(0),
+            request_input(1),
+            request_output(0),
+            request_output(1),
+            request_input(0),
+            request_input(1),
+            request_finished(),
+        ]
+        if resp is not None
+    ]
+
     with client:
-        client.set_expected_responses(
-            [
-                request_input(0),
-                request_meta(TXHASH_65b768),
-                request_orig_input(0, TXHASH_65b768),
-                request_input(1),
-                request_output(0),
-                request_orig_output(0, TXHASH_65b768),
-                request_output(1),
-                request_orig_output(1, TXHASH_65b768),
-                messages.ButtonRequest(code=B.SignTx),
-                messages.ButtonRequest(code=B.SignTx),
-                request_input(0),
-                request_meta(TXHASH_e4b5b2),
-                request_input(0, TXHASH_e4b5b2),
-                request_output(0, TXHASH_e4b5b2),
-                request_output(1, TXHASH_e4b5b2),
-                request_input(1),
-                request_meta(TXHASH_70f987),
-                request_input(0, TXHASH_70f987),
-                request_output(0, TXHASH_70f987),
-                request_output(1, TXHASH_70f987),
-                request_input(0),
-                request_input(1),
-                request_output(0),
-                request_output(1),
-                request_input(0),
-                request_input(1),
-                request_finished(),
-            ]
-        )
+        client.set_expected_responses(responses)
         _, serialized_tx = btc.sign_tx(
             client,
             "Testnet",
