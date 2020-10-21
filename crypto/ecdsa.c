@@ -917,7 +917,8 @@ int ecdsa_read_pubkey(const ecdsa_curve *curve, const uint8_t *pub_key,
 //   - pub is not the point at infinity.
 //   - pub->x and pub->y are in range [0,p-1].
 //   - pub is on the curve.
-
+// We assume that all curves using this code have cofactor 1, so there is no
+// need to verify that pub is a scalar multiple of G.
 int ecdsa_validate_pubkey(const ecdsa_curve *curve, const curve_point *pub) {
   bignum256 y_2 = {0}, x3_ax_b = {0};
 
@@ -1026,43 +1027,53 @@ int ecdsa_verify_digest(const ecdsa_curve *curve, const uint8_t *pub_key,
                         const uint8_t *sig, const uint8_t *digest) {
   curve_point pub = {0}, res = {0};
   bignum256 r = {0}, s = {0}, z = {0};
+  int result = 0;
 
   if (!ecdsa_read_pubkey(curve, pub_key, &pub)) {
-    return 1;
-  }
-
-  bn_read_be(sig, &r);
-  bn_read_be(sig + 32, &s);
-
-  bn_read_be(digest, &z);
-
-  if (bn_is_zero(&r) || bn_is_zero(&s) || (!bn_is_less(&r, &curve->order)) ||
-      (!bn_is_less(&s, &curve->order)))
-    return 2;
-
-  bn_inverse(&s, &curve->order);       // s^-1
-  bn_multiply(&s, &z, &curve->order);  // z*s^-1
-  bn_mod(&z, &curve->order);
-  bn_multiply(&r, &s, &curve->order);  // r*s^-1
-  bn_mod(&s, &curve->order);
-
-  int result = 0;
-  if (bn_is_zero(&z)) {
-    // our message hashes to zero
-    // I don't expect this to happen any time soon
-    result = 3;
-  } else {
-    scalar_multiply(curve, &z, &res);
+    result = 1;
   }
 
   if (result == 0) {
-    // both pub and res can be infinity, can have y = 0 OR can be equal -> false
-    // negative
-    point_multiply(curve, &s, &pub, &pub);
-    point_add(curve, &pub, &res);
+    bn_read_be(sig, &r);
+    bn_read_be(sig + 32, &s);
+    if (bn_is_zero(&r) || bn_is_zero(&s) || (!bn_is_less(&r, &curve->order)) ||
+        (!bn_is_less(&s, &curve->order))) {
+      result = 2;
+    }
+  }
+
+  if (result == 0) {
+    bn_read_be(digest, &z);
+    bn_inverse(&s, &curve->order);       // s = s^-1
+    bn_multiply(&s, &z, &curve->order);  // z = z * s  [u1 = z * s^-1 mod n]
+    bn_mod(&z, &curve->order);
+    if (bn_is_zero(&z)) {
+      // The digest was all-zero. The probability of this happening by chance is
+      // infinitesimal. In this case the signature (r,s) can be forged by taking
+      // r := (t * Q).x mod n and s := r * t^-1 mod n for any t in [1, n-1]. We
+      // fail verification, because there is no guarantee that the signature was
+      // created by the owner of the private key.
+      result = 3;
+    }
+  }
+
+  if (result == 0) {
+    bn_multiply(&r, &s, &curve->order);  // s = r * s  [u2 = r * s^-1 mod n]
+    bn_mod(&s, &curve->order);
+    scalar_multiply(curve, &z, &res);       // res = z * G    [= u1 * G]
+    point_multiply(curve, &s, &pub, &pub);  // pub = s * pub  [= u2 * Q]
+    point_add(curve, &pub, &res);  // res = pub + res  [R = u1 * G + u2 * Q]
+    if (point_is_infinity(&res)) {
+      // R == Infinity
+      result = 4;
+    }
+  }
+
+  if (result == 0) {
     bn_mod(&(res.x), &curve->order);
-    // signature does not match
     if (!bn_is_equal(&res.x, &r)) {
+      // R.x != r
+      // signature does not match
       result = 5;
     }
   }
