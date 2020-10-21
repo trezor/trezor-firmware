@@ -13,16 +13,4 @@ Your Pull Request should follow these criteria:
   it happen.
 - Commits must have concise commit messages, we endorse [Conventional Commits](https://www.conventionalcommits.org).
 
-## Review process
-
-- Multiple commits per PR are allowed, but please do not use reverts, etc.
-  Use rebase.
-- Do not use merge (e.g. merge trezor/master into ...).
-  Again, use rebase.
-- Do not force push to PRs. If you are implementing some comments from a
-  review, use _fixup_ commits (e.g. `git commit --fixup HEAD`) and push those.
-- After the PR is finally approved _autosquash_ these commits and force push
-  (`git rebase -i master --autosquash`).
-- Do not resolve review comments. Inform the reviewer that you have fixed the
-  issue (simply by commenting "Done" or similar). The reviewer will resolve the
-  discussion after reviewing your fix.
+### Please read and follow our [review procedure](review.md).

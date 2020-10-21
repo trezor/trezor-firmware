@@ -42,4 +42,5 @@
   - [Generated Files](misc/generated-files.md)
   - [Git Hooks](misc/git-hooks.md)
   - [Monorepo Notes](misc/monorepo.md)
+  - [Review Process](misc/review.md)
   - [TOIF Image Format](misc/toif.md)
