@@ -8,6 +8,8 @@ from trezor.ui.text import Text
 
 from apps.common.confirm import require_hold_to_confirm
 
+from .apply_settings import reload_settings_from_storage
+
 
 async def wipe_device(ctx, msg):
     text = Text("Wipe device", ui.ICON_WIPE, ui.RED)
@@ -22,5 +24,6 @@ async def wipe_device(ctx, msg):
     )
 
     storage.wipe()
+    reload_settings_from_storage()
 
     return Success(message="Device wiped")

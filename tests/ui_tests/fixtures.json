@@ -411,6 +411,7 @@
 "test_msg_verifymessage_segwit_native.py-test_message_verify": "818b8c38b040ac45e1525ca2bc90507092b57380b220503ad11f7c1e03a5ee62",
 "test_msg_verifymessage_segwit_native.py-test_verify_utf": "f89d64e7ca25daa7ad180294d45d01d40e4265679dd327c5a23579a261622d24",
 "test_msg_webauthn.py::test_add_remove": "a9cdefeb089f197427257e097d07179b23de4fcad4ee91af0191ed767f80577c",
+"test_msg_wipedevice.py::test_autolock_not_retained": "b519a86b80151e5c1a4849fc5d6e8e6c8f2953c80befee8dd05f7caec254b464",
 "test_msg_wipedevice.py::test_wipe_device": "bc6acd0386b9d009e6550519917d6e08632b3badde0b0cf04c95abe5f773038a",
 "test_multisig.py-test_15_of_15": "9d1799a199b45785ac69ae6af715c251b10aebb60f981c9b73d78e53e1a91374",
 "test_multisig.py-test_2_of_3": "2be92556edf4ff8eed340d535f379ee6915eae34fef25d669ce865848e7b4705",
