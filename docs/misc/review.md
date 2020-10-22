@@ -1,7 +1,7 @@
 # Review Process
 
 - File a Pull Request with a number of well-defined clearly described commits.
-  Multiple commits per PR are allowed, but please do not use reverts, etc. Use rebase.
+  Multiple commits per PR are allowed, but please do not include revert commits, etc. Use rebase.
 - Do not use merge (e.g. merge trezor/master into ...). Again, use rebase.
 - The general review workflow goes as follows:
   1. Someones makes a PR. They should make sure it passes lints and anything that can be run
