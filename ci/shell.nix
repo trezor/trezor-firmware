@@ -31,6 +31,11 @@ stdenv.mkDerivation ({
     python37
     python36
   ] ++ [
+    python3Packages.click
+    python3Packages.munch
+    python3Packages.Mako
+    python3Packages.trezor
+    scons
     SDL2
     SDL2_image
     autoflake
