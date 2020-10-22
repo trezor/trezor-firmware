@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 
 - Path warning is not shown on `GetAddress(show_display=False)` call  [#1206]
+- Settings are also erased from RAM when device is wiped  [#1322]
 
 ### Security
 
@@ -326,3 +327,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1193]: https://github.com/trezor/trezor-firmware/issues/1193
 [#1206]: https://github.com/trezor/trezor-firmware/issues/1206
 [#1246]: https://github.com/trezor/trezor-firmware/issues/1246
+[#1322]: https://github.com/trezor/trezor-firmware/issues/1322
