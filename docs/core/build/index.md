@@ -6,7 +6,9 @@ Run the following to checkout the project:
 
 ```sh
 git clone --recurse-submodules https://github.com/trezor/trezor-firmware.git
-cd trezor-firmware/core
+cd trezor-firmware
+poetry install
+cd core
 ```
 
 After this you will need to install some software dependencies based on what flavor
