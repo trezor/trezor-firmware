@@ -50,37 +50,6 @@ class TestMsgLiskSignTx:
                 },
             )
 
-    @pytest.mark.skip_t1
-    def test_lisk_sign_tx_send_wrong_path(self, client):
-        with client:
-            client.set_expected_responses(
-                [
-                    proto.ButtonRequest(
-                        code=proto.ButtonRequestType.UnknownDerivationPath
-                    ),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-                    proto.LiskSignedTx(
-                        signature=bytes.fromhex(
-                            "cdce9eba2ea8fa75f90fbc725f0d9de6152c7189a3044ab2fe307d9ff54754856e09125d7a15376eaf4bb5451b63881821948222ccd9ffb5da4d9b1aa8bd4904"
-                        )
-                    ),
-                ]
-            )
-
-            lisk.sign_tx(
-                client,
-                parse_path("m/44'/134'/123456'/123456'/123456'/123456'/123456'"),
-                {
-                    "amount": "10000000",
-                    "recipientId": "9971262264659915921L",
-                    "timestamp": 57525937,
-                    "type": 0,
-                    "fee": "10000000",
-                    "asset": {},
-                },
-            )
-
     def test_lisk_sign_tx_send_with_data(self, client):
         with client:
             client.set_expected_responses(

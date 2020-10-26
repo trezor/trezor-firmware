@@ -54,7 +54,7 @@ def test_show(client, path, script_type, address):
 @pytest.mark.multisig
 def test_show_multisig_3(client):
     node = btc.get_public_node(
-        client, tools.parse_path("44h/0h/0h/0"), coin_name="Bitcoin"
+        client, tools.parse_path("45h/0/0"), coin_name="Bitcoin"
     ).node
     multisig = messages.MultisigRedeemScriptType(
         pubkeys=[
@@ -71,11 +71,11 @@ def test_show_multisig_3(client):
             btc.get_address(
                 client,
                 "Bitcoin",
-                tools.parse_path(f"44h/0h/0h/0/{i}"),
+                tools.parse_path(f"45h/0/0/{i}"),
                 show_display=True,
                 multisig=multisig,
             )
-            == "36AvLYugbb9CsN8sQ5k7kJ2diWF54msYKs"
+            == "35Q3tgZZfr9GhVpaqz7fbDK8WXV1V1KxfD"
         )
 
 
@@ -84,7 +84,7 @@ def test_show_multisig_3(client):
 def test_show_multisig_xpubs(client):
     nodes = [
         btc.get_public_node(
-            client, tools.parse_path(f"48h/0h/{i}h"), coin_name="Bitcoin"
+            client, tools.parse_path(f"48h/0h/{i}h/0h"), coin_name="Bitcoin"
         )
         for i in range(3)
     ]
@@ -103,8 +103,8 @@ def test_show_multisig_xpubs(client):
             yield  # show address
             assert client.debug.wait_layout().lines == [
                 "Multisig 2 of 3",
-                "34yJV2b2GtbmxfZNw",
-                "jPyuyUYkUbUnogqa8",
+                "33TU5DyVi2kFSGQUf",
+                "mZxNHgPDPqruwdesY",
             ]
 
             client.debug.press_no()
@@ -146,7 +146,7 @@ def test_show_multisig_xpubs(client):
             btc.get_address(
                 client,
                 "Bitcoin",
-                tools.parse_path(f"48h/0h/{i}h/0/0"),
+                tools.parse_path(f"48h/0h/{i}h/0h/0/0"),
                 show_display=True,
                 multisig=multisig,
                 script_type=messages.InputScriptType.SPENDMULTISIG,
@@ -156,7 +156,7 @@ def test_show_multisig_xpubs(client):
 @pytest.mark.multisig
 def test_show_multisig_15(client):
     node = btc.get_public_node(
-        client, tools.parse_path("44h/0h/0h/0"), coin_name="Bitcoin"
+        client, tools.parse_path("45h/0/0"), coin_name="Bitcoin"
     ).node
 
     pubs = [messages.HDNodePathType(node=node, address_n=[x]) for x in range(15)]
@@ -170,9 +170,9 @@ def test_show_multisig_15(client):
             btc.get_address(
                 client,
                 "Bitcoin",
-                tools.parse_path(f"44h/0h/0h/0/{i}"),
+                tools.parse_path(f"45h/0/0/{i}"),
                 show_display=True,
                 multisig=multisig,
             )
-            == "3D9EDNTZde5KizWdjidELFzx7xtrcdM7AG"
+            == "3GG78bp1hA3mu9xv1vZLXiENmeabmi7WKQ"
         )
