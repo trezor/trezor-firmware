@@ -43,12 +43,14 @@ async def show_xpubs(
 async def get_address(
     ctx: wire.Context, msg: GetAddress, keychain: Keychain, coin: CoinInfo
 ) -> Address:
-    await validate_path(
-        ctx,
-        keychain,
-        msg.address_n,
-        validate_path_against_script_type(coin, msg),
-    )
+    if msg.show_display:
+        # skip soft-validation for silent calls
+        await validate_path(
+            ctx,
+            keychain,
+            msg.address_n,
+            validate_path_against_script_type(coin, msg),
+        )
 
     node = keychain.derive(msg.address_n)
 
