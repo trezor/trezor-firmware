@@ -52,16 +52,21 @@ XpubStruct = c.Struct(
 def xpub_deserialize(xpubstr):
     xpub_bytes = tools.b58check_decode(xpubstr)
     data = XpubStruct.parse(xpub_bytes)
+    if data.key[0] == 0:
+        private_key = data.key[1:]
+        public_key = None
+    else:
+        public_key = data.key
+        private_key = None
+
     node = messages.HDNodeType(
         depth=data.depth,
         fingerprint=data.fingerprint,
         child_num=data.child_num,
         chain_code=data.chain_code,
+        public_key=public_key,
+        private_key=private_key,
     )
-    if data.key[0] == 0:
-        node.private_key = data.key[1:]
-    else:
-        node.public_key = data.key
 
     return data.version, node
 
