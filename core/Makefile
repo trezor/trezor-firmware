@@ -22,6 +22,7 @@ PYOPT      ?= 1
 BITCOIN_ONLY ?= 0
 RDI        ?= 1
 TREZOR_MODEL ?= T
+TREZOR_MEMPERF ?= 0
 
 STLINK_VER ?= v2
 OPENOCD = openocd -f interface/stlink-$(STLINK_VER).cfg -c "transport select hla_swd" -f target/stm32f4x.cfg
@@ -149,7 +150,7 @@ build_unix: res ## build unix port
 	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) TREZOR_MODEL="$(TREZOR_MODEL)" BITCOIN_ONLY="$(BITCOIN_ONLY)"
 
 build_unix_frozen: res build_cross ## build unix port with frozen modules
-	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) TREZOR_MODEL="$(TREZOR_MODEL)" PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_EMULATOR_FROZEN=1
+	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) TREZOR_MODEL="$(TREZOR_MODEL)" PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_MEMPERF=$(TREZOR_MEMPERF) TREZOR_EMULATOR_FROZEN=1
 
 build_unix_debug: res ## build unix port
 	$(SCONS) --max-drift=1 CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) TREZOR_MODEL="$(TREZOR_MODEL)" TREZOR_EMULATOR_ASAN=1 TREZOR_EMULATOR_DEBUGGABLE=1
