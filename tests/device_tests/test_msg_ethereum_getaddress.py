@@ -17,42 +17,25 @@
 import pytest
 
 from trezorlib import ethereum
-from trezorlib.tools import H_
+from trezorlib.tools import parse_path
 
-from ..common import MNEMONIC12
+VECTORS = (  # path, address
+    ("m/44'/60'/0'", "0xdA0b608bdb1a4A154325C854607c68950b4F1a34"),
+    ("m/44'/60'/100'", "0x93Fb0Ff84F5BB6E7b6a9835C7AA6dE7a76794266"),
+    ("m/44'/60'/0'/0/0", "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8"),
+    ("m/44'/60'/0'/0/100", "0x1e6E3708a059aEa1241a81c7aAe84b6CDbC54d59"),
+    # ETC
+    ("m/44'/61'/0'/0/0", "0xF410e37E9C8BCf8CF319c84Ae9dCEbe057804a04"),
+    # GoChain
+    ("m/44'/6060'/0'/0/0", "0xA26a450ef46a5f11a510eBA2119A3236fa0Aca92"),
+    # Wanchain
+    ("m/44'/5718350'/0'/0/0", "0xe432a7533D689ceed00B7EE91d9368b8A1693bD2"),
+)
 
 
 @pytest.mark.altcoin
 @pytest.mark.ethereum
-class TestMsgEthereumGetaddress:
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_ethereum_getaddress(self, client):
-        assert (
-            ethereum.get_address(client, [H_(44), H_(60)])
-            == "0xE025dfbE2C53638E547C6487DED34Add7b8Aafc1"
-        )
-        assert (
-            ethereum.get_address(client, [H_(44), H_(60), 1])
-            == "0xeD46C856D0c79661cF7d40FFE0C0C5077c00E898"
-        )
-        assert (
-            ethereum.get_address(client, [H_(44), H_(60), 0, H_(1)])
-            == "0x6682Fa7F3eC58581b1e576268b5463B4b5c93839"
-        )
-        assert (
-            ethereum.get_address(client, [H_(44), H_(60), H_(9), 0])
-            == "0xFb3BE0F9717fF5fCF3C58EB49a9Ed67F1BD89D4E"
-        )
-        assert (
-            ethereum.get_address(client, [H_(44), H_(60), 0, 9999999])
-            == "0x6b909b50d88c9A8E02453A87b3662E3e7a5E0CF1"
-        )
-        assert (
-            ethereum.get_address(client, [H_(44), H_(6060), 0, 9999999])
-            == "0x98b8e926bd224764De2A0E4f4CBe1521474050AF"
-        )
-        # Wanchain SLIP44 id
-        assert (
-            ethereum.get_address(client, [H_(44), H_(5718350), H_(0)])
-            == "0x4d643B1b556E14A27143a38bcE61230FFf5AFca8"
-        )
+@pytest.mark.parametrize("path, address", VECTORS)
+def test_ethereum_getaddress(client, path, address):
+    address_n = parse_path(path)
+    assert ethereum.get_address(client, address_n) == address

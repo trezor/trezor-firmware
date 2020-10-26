@@ -101,31 +101,31 @@ class TestMsgGetaddressSegwitNative:
             for index in range(1, 4)
         ]
         multisig1 = proto.MultisigRedeemScriptType(
-            nodes=nodes, address_n=[2, 0], signatures=[b"", b"", b""], m=2
+            nodes=nodes, address_n=[0, 0], signatures=[b"", b"", b""], m=2
         )
         multisig2 = proto.MultisigRedeemScriptType(
-            nodes=nodes, address_n=[2, 1], signatures=[b"", b"", b""], m=2
+            nodes=nodes, address_n=[0, 1], signatures=[b"", b"", b""], m=2
         )
         for i in [1, 2, 3]:
             assert (
                 btc.get_address(
                     client,
                     "Testnet",
-                    parse_path("84'/1'/%d'/2/1" % i),
+                    parse_path("84'/1'/%d'/0/1" % i),
                     False,
                     multisig2,
                     script_type=proto.InputScriptType.SPENDWITNESS,
                 )
-                == "tb1qnqlw0gwzpcdken0sarskrgxf7l36pprlfy4uk7yf98jz9rfd36ss2tc6ja"
+                == "tb1qauuv4e2pwjkr4ws5f8p20hu562jlqpe5h74whxqrwf7pufsgzcms9y8set"
             )
             assert (
                 btc.get_address(
                     client,
                     "Testnet",
-                    parse_path("84'/1'/%d'/2/0" % i),
+                    parse_path("84'/1'/%d'/0/0" % i),
                     False,
                     multisig1,
                     script_type=proto.InputScriptType.SPENDWITNESS,
                 )
-                == "tb1qaqrlzu8unz58p77d30ej85n3gv5574alkqw0qcjsyd2hs9frp2vstew67z"
+                == "tb1qgvn67p4twmpqhs8c39tukmu9geamtf7x0z3flwf9rrw4ff3h6d2qt0czq3"
             )

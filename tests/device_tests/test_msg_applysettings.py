@@ -189,7 +189,7 @@ class TestMsgApplysettings:
         assert client.features.safety_checks == messages.SafetyCheckLevel.PromptAlways
 
         with client:
-            client.set_expected_responses([messages.ButtonRequest, messages.Address])
+            client.set_expected_responses([messages.Address])
             get_bad_address()
 
         with client:
@@ -217,7 +217,7 @@ class TestMsgApplysettings:
         )
 
         with client:
-            client.set_expected_responses([messages.ButtonRequest, messages.Address])
+            client.set_expected_responses([messages.Address])
             get_bad_address()
 
     @pytest.mark.skip_t1

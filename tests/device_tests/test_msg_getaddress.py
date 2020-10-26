@@ -16,8 +16,9 @@
 
 import pytest
 
-from trezorlib import btc, messages
+from trezorlib import btc, messages, device
 from trezorlib.exceptions import TrezorFailure
+from trezorlib.messages import SafetyCheckLevel
 from trezorlib.tools import parse_path
 
 from .. import bip32
@@ -227,6 +228,13 @@ def test_invalid_path(client):
 
 @pytest.mark.skip_t1
 def test_unknown_path(client):
+    with pytest.raises(TrezorFailure, match="Forbidden key path"):
+        # account number is too high
+        btc.get_address(client, "Bitcoin", parse_path("m/44'/0'/101'/0/0"))
+
+    # disable safety checks
+    device.apply_settings(client, safety_checks=SafetyCheckLevel.PromptTemporarily)
+
     with client:
         client.set_expected_responses(
             [
@@ -236,8 +244,8 @@ def test_unknown_path(client):
                 messages.Address,
             ]
         )
-        # account number is too high
-        btc.get_address(client, "Bitcoin", parse_path("m/44'/0'/21'/0/0"))
+        # try again with a warning
+        btc.get_address(client, "Bitcoin", parse_path("m/44'/0'/101'/0/0"))
 
 
 @pytest.mark.altcoin
