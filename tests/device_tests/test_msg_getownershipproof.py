@@ -38,6 +38,44 @@ def test_ownership_id(client):
 
 
 @pytest.mark.skip_ui
+def test_attack_ownership_id(client):
+    # Multisig with global suffix specification.
+    # Use account numbers 1, 2 and 3 to create a valid multisig,
+    # but not containing the keys from account 0 used below.
+    nodes = [
+        btc.get_public_node(client, parse_path("84'/0'/%d'" % i)).node
+        for i in range(1, 4)
+    ]
+    multisig1 = messages.MultisigRedeemScriptType(
+        nodes=nodes, address_n=[0, 0], signatures=[b"", b"", b""], m=2
+    )
+
+    # Multisig with per-node suffix specification.
+    node = btc.get_public_node(
+        client, parse_path("84h/0h/0h/0"), coin_name="Bitcoin"
+    ).node
+    multisig2 = messages.MultisigRedeemScriptType(
+        pubkeys=[
+            messages.HDNodePathType(node=node, address_n=[1]),
+            messages.HDNodePathType(node=node, address_n=[2]),
+            messages.HDNodePathType(node=node, address_n=[3]),
+        ],
+        signatures=[b"", b"", b""],
+        m=2,
+    )
+
+    for multisig in (multisig1, multisig2):
+        with pytest.raises(TrezorFailure):
+            btc.get_ownership_id(
+                client,
+                "Bitcoin",
+                parse_path("84'/0'/0'/0/0"),
+                multisig=multisig,
+                script_type=messages.InputScriptType.SPENDWITNESS,
+            )
+
+
+@pytest.mark.skip_ui
 def test_p2wpkh_ownership_proof(client):
     ownership_proof, _ = btc.get_ownership_proof(
         client,

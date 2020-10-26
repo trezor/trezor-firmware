@@ -145,30 +145,42 @@ class TestMsgGetaddress:
             )
 
     @pytest.mark.multisig
-    def test_multisig_missing(self, client):
-        xpubs = []
-        for n in range(1, 4):
-            # shift account numbers by 10 to create valid multisig,
-            # but not containing the keys used below
-            n = n + 10
-            node = btc.get_public_node(client, parse_path("44'/0'/%d'" % n))
-            xpubs.append(node.xpub)
-        for nr in range(1, 4):
+    @pytest.mark.parametrize("show_display", (True, False))
+    def test_multisig_missing(self, client, show_display):
+        # Multisig with global suffix specification.
+        # Use account numbers 1, 2 and 3 to create a valid multisig,
+        # but not containing the keys from account 0 used below.
+        nodes = [
+            btc.get_public_node(client, parse_path("44'/0'/%d'" % i)).node
+            for i in range(1, 4)
+        ]
+        multisig1 = messages.MultisigRedeemScriptType(
+            nodes=nodes, address_n=[0, 0], signatures=[b"", b"", b""], m=2
+        )
+
+        # Multisig with per-node suffix specification.
+        node = btc.get_public_node(
+            client, parse_path("44h/0h/0h/0"), coin_name="Bitcoin"
+        ).node
+
+        multisig2 = messages.MultisigRedeemScriptType(
+            pubkeys=[
+                messages.HDNodePathType(node=node, address_n=[1]),
+                messages.HDNodePathType(node=node, address_n=[2]),
+                messages.HDNodePathType(node=node, address_n=[3]),
+            ],
+            signatures=[b"", b"", b""],
+            m=2,
+        )
+
+        for multisig in (multisig1, multisig2):
             with pytest.raises(TrezorFailure):
                 btc.get_address(
                     client,
                     "Bitcoin",
-                    parse_path("44'/0'/%d'/0/0" % nr),
-                    show_display=(nr == 1),
-                    multisig=getmultisig(0, 0, xpubs=xpubs),
-                )
-            with pytest.raises(TrezorFailure):
-                btc.get_address(
-                    client,
-                    "Bitcoin",
-                    parse_path("44'/0'/%d'/1/0" % nr),
-                    show_display=(nr == 1),
-                    multisig=getmultisig(1, 0, xpubs=xpubs),
+                    parse_path("44'/0'/0'/0/0"),
+                    show_display=show_display,
+                    multisig=multisig,
                 )
 
     @pytest.mark.altcoin
