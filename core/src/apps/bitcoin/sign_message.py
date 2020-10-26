@@ -24,8 +24,8 @@ async def sign_message(
     address_n = msg.address_n
     script_type = msg.script_type or 0
 
+    await validate_path(ctx, keychain, address_n)
     await require_confirm_sign_message(ctx, coin.coin_shortcut, message)
-    await validate_path(ctx, keychain, msg.address_n)
 
     node = keychain.derive(address_n)
     seckey = node.private_key()
