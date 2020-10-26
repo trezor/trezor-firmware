@@ -23,16 +23,15 @@ def get_address(
     node: bip32.HDNode,
     multisig: MultisigRedeemScriptType = None,
 ) -> str:
+    if multisig:
+        # Ensure that our public key is included in the multisig.
+        multisig_pubkey_index(multisig, node.public_key())
 
     if (
         script_type == InputScriptType.SPENDADDRESS
         or script_type == InputScriptType.SPENDMULTISIG
     ):
         if multisig:  # p2sh multisig
-            pubkey = node.public_key()
-            index = multisig_pubkey_index(multisig, pubkey)
-            if index is None:
-                raise wire.ProcessError("Public key not found")
             if coin.address_type_p2sh is None:
                 raise wire.ProcessError("Multisig not enabled on this coin")
 
