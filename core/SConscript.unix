@@ -348,6 +348,11 @@ if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', 0):
         COPT=' -O0 -ggdb',
         STRIP='true', )
 
+if ARGUMENTS.get('TREZOR_MEMPERF', '0') == '1':
+    CPPDEFINES_MOD += [
+        ('MICROPY_TREZOR_MEMPERF', '\(1\)')
+    ]
+
 env.Replace(
     TREZOR_MODEL=TREZOR_MODEL, )
 

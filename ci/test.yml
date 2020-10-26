@@ -359,3 +359,24 @@ hardware legacy btconly device test:
       - ci/hardware_tests/video*.mp4
     expire_in: 2 days
     when: always
+
+core unix memory profiler:
+  stage: test
+  when: manual
+  needs: []
+  variables:
+    PYOPT: "0"
+    TREZOR_MEMPERF: "1"
+    PYTEST_TIMEOUT: "600"
+  script:
+    - nix-shell --run "poetry run make -C core build_unix_frozen"
+    - nix-shell --run "poetry run make -C core test_emu"
+    - nix-shell --run "mkdir core/prof/memperf-html"
+    - nix-shell --run "poetry run core/tools/alloc.py --alloc-data=core/src/alloc_data.txt html core/prof/memperf-html"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - tests/trezor.log
+      - core/prof/memperf-html
+    expire_in: 1 week
+    when: always
