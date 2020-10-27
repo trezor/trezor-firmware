@@ -367,5 +367,25 @@
     "rskip60": false,
     "url": "https://pirl.io",
     "blockbook": []
+  },
+{
+    "chain": "volta",
+    "chain_id": 73799,
+    "slip44": 44,
+    "shortcut": "VT",
+    "name": "Volta",
+    "rskip60": false,
+    "url": "https://www.energyweb.org/",
+    "blockbook": []
+  },
+  {
+    "chain": "energyweb",
+    "chain_id": 246,
+    "slip44": 44,
+    "shortcut": "EWT",
+    "name": "Energyweb chain",
+    "rskip60": false,
+    "url": "https://www.energyweb.org/technology/energy-web-chain/",
+    "blockbook": []
   }
 ]
