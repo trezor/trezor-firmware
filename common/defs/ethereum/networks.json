@@ -371,7 +371,7 @@
 {
     "chain": "volta",
     "chain_id": 73799,
-    "slip44": 44,
+    "slip44": 1,
     "shortcut": "VT",
     "name": "Volta",
     "rskip60": false,
@@ -381,7 +381,7 @@
   {
     "chain": "energyweb",
     "chain_id": 246,
-    "slip44": 44,
+    "slip44": 246,
     "shortcut": "EWT",
     "name": "Energyweb chain",
     "rskip60": false,
