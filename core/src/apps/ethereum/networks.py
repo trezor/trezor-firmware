@@ -173,6 +173,13 @@ NETWORKS = [
         rskip60=False,
     ),
     NetworkInfo(
+        chain_id=100,
+        slip44=700,
+        shortcut="XDAI",
+        name="xDai",
+        rskip60=False,
+    ),
+    NetworkInfo(
         chain_id=101,
         slip44=464,
         shortcut="ETI",

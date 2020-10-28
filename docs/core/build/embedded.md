@@ -14,6 +14,12 @@ You will also need Python dependencies for signing.
 sudo apt-get install scons gcc-arm-none-eabi libnewlib-arm-none-eabi
 ```
 
+### Fedora
+
+```sh
+sudo dnf install scons arm-none-eabi-gcc arm-none-eabi-newlib
+```
+
 ### NixOS
 
 There is a `shell.nix` file in the root of the project. Just run the following

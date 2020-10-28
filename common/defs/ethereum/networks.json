@@ -169,6 +169,16 @@
     "blockbook": []
   },
   {
+    "chain": "xdai",
+    "chain_id": 100,
+    "slip44": 700,
+    "shortcut": "XDAI",
+    "name": "xDai",
+    "rskip60": false,
+    "url": "https://www.xdaichain.com/",
+    "blockbook": []
+  },
+  {
     "chain": "eti",
     "chain_id": 101,
     "slip44": 464,
