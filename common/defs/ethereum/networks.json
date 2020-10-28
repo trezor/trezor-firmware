@@ -179,6 +179,16 @@
     "blockbook": []
   },
   {
+    "chain": "tt",
+    "chain_id": 108,
+    "slip44": 1001,
+    "shortcut": "TT",
+    "name": "ThunderCore",
+    "rskip60": false,
+    "url": "https://www.thundercore.com/",
+    "blockbook": []
+  },
+  {
     "chain": "ask",
     "chain_id": 222,
     "slip44": 2221,
