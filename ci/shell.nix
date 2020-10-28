@@ -54,6 +54,7 @@ stdenv.mkDerivation ({
     valgrind
     wget
     zlib
+    rsync
   ] ++ stdenv.lib.optionals (!stdenv.isDarwin) [
     procps
   ] ++ stdenv.lib.optionals (stdenv.isDarwin) [
