@@ -206,25 +206,6 @@ release legacy unix debug deploy:
   tags:
     - deploy
 
-release core macos debug deploy:
-  stage: deploy
-  variables:
-    DEPLOY_PATH: "${DEPLOY_BASE_DIR}/releases/emulators/macos"
-  before_script: []  # no poetry
-  needs:
-    - core unix frozen debug build
-  script:
-    - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
-    - DEST="$DEPLOY_PATH/trezor-emu-macos-$VERSION-$CI_COMMIT_SHORT_SHA"
-    - echo "Deploying to $DEST"
-    - rsync --delete -va core/build/unix/trezor-emu-core "$DEST"
-  only:
-    - /^core\//
-  except:
-    - branches  # run for tags only
-  tags:
-    - deploy
-
 # UI tests
 
 ui tests core fixtures deploy:
