@@ -152,22 +152,31 @@ async def show_warning_tx_staking_key_hash(
 
 
 async def confirm_transaction(
-    ctx, amount: int, fee: int, protocol_magic: int, has_metadata: bool
+    ctx, amount: int, fee: int, protocol_magic: int, ttl: int, has_metadata: bool
 ) -> None:
+    pages = []
+
     page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     page1.normal("Transaction amount:")
     page1.bold(format_coin_amount(amount))
     page1.normal("Transaction fee:")
     page1.bold(format_coin_amount(fee))
+    pages.append(page1)
 
     page2 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     page2.normal("Network:")
     page2.bold(protocol_magics.to_ui_string(protocol_magic))
-    if has_metadata:
-        page2.normal("Transaction contains")
-        page2.normal("metadata")
+    page2.normal("Transaction TTL:")
+    page2.bold(str(ttl))
+    pages.append(page2)
 
-    await require_hold_to_confirm(ctx, Paginated([page1, page2]))
+    if has_metadata:
+        page3 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+        page3.normal("Transaction contains")
+        page3.normal("metadata")
+        pages.append(page3)
+
+    await require_hold_to_confirm(ctx, Paginated(pages))
 
 
 async def confirm_certificate(
@@ -202,29 +211,24 @@ async def confirm_stake_pool_parameters(
     protocol_magic: int,
 ) -> None:
     page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
-    page1.normal("Confirm:")
     page1.bold("Stake pool registration")
-    page1.normal("Network:")
-    page1.bold(protocol_magics.to_ui_string(protocol_magic))
+    page1.normal("Pool id:")
+    page1.bold(hexlify(pool_parameters.pool_id).decode())
 
     page2 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
-    page2.normal("Pool id:")
-    page2.bold(hexlify(pool_parameters.pool_id).decode())
+    page2.normal("Pool reward account:")
+    page2.bold(pool_parameters.reward_account)
 
     page3 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
-    page3.normal("Pool reward account:")
-    page3.bold(pool_parameters.reward_account)
-
-    page4 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
-    page4.normal("Pledge: " + format_coin_amount(pool_parameters.pledge))
-    page4.normal("Cost: " + format_coin_amount(pool_parameters.cost))
+    page3.normal("Pledge: " + format_coin_amount(pool_parameters.pledge))
+    page3.normal("Cost: " + format_coin_amount(pool_parameters.cost))
     margin_percentage = (
         100.0 * pool_parameters.margin_numerator / pool_parameters.margin_denominator
     )
     percentage_formatted = ("%f" % margin_percentage).rstrip("0").rstrip(".")
-    page4.normal("Margin: %s%%" % percentage_formatted)
+    page3.normal("Margin: %s%%" % percentage_formatted)
 
-    await require_confirm(ctx, Paginated([page1, page2, page3, page4]))
+    await require_confirm(ctx, Paginated([page1, page2, page3]))
 
 
 async def confirm_stake_pool_owners(
@@ -282,6 +286,16 @@ async def confirm_stake_pool_metadata(
     page2.bold(hexlify(metadata.hash).decode())
 
     await require_confirm(ctx, Paginated([page1, page2]))
+
+
+async def confirm_transaction_network_ttl(ctx, protocol_magic: int, ttl: int) -> None:
+    page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    page1.normal("Network:")
+    page1.bold(protocol_magics.to_ui_string(protocol_magic))
+    page1.normal("Transaction TTL:")
+    page1.bold(str(ttl))
+
+    await require_confirm(ctx, page1)
 
 
 async def confirm_stake_pool_registration_final(

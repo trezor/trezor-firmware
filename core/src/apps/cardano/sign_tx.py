@@ -40,6 +40,7 @@ from .layout import (
     confirm_stake_pool_parameters,
     confirm_stake_pool_registration_final,
     confirm_transaction,
+    confirm_transaction_network_ttl,
     confirm_withdrawal,
     show_warning_tx_different_staking_account,
     show_warning_tx_no_staking_info,
@@ -475,7 +476,7 @@ async def _show_standard_tx(
 
     has_metadata = bool(msg.metadata)
     await confirm_transaction(
-        ctx, total_amount, msg.fee, msg.protocol_magic, has_metadata
+        ctx, total_amount, msg.fee, msg.protocol_magic, msg.ttl, has_metadata
     )
 
 
@@ -493,6 +494,7 @@ async def _show_stake_pool_registration_tx(
         ctx, keychain, pool_parameters.owners, msg.network_id
     )
     await confirm_stake_pool_metadata(ctx, pool_parameters.metadata)
+    await confirm_transaction_network_ttl(ctx, msg.protocol_magic, msg.ttl)
     await confirm_stake_pool_registration_final(ctx)
 
 
