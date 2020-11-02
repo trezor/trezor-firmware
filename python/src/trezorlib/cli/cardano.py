@@ -47,6 +47,7 @@ def cli():
 @click.option("-t", "--testnet", is_flag=True)
 @with_client
 def sign_tx(client, file, protocol_magic, network_id, testnet):
+    print("AAAAA")
     """Sign Cardano transaction."""
     transaction = json.load(file)
 
