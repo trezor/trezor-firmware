@@ -1,7 +1,7 @@
 from micropython import const
 from ubinascii import hexlify
 
-from trezor.messages import OutputScriptType
+from trezor.messages import ButtonRequestType, OutputScriptType
 from trezor.strings import format_amount
 from trezor.ui import widgets
 from trezor.ui.widgets import require
@@ -10,8 +10,11 @@ from .. import addresses
 from . import omni
 
 if False:
+    from typing import Awaitable
+
     from trezor import wire
     from trezor.messages.TxOutput import TxOutput
+    from trezor.ui import WidgetType
 
     from apps.common.coininfo import CoinInfo
 
@@ -28,24 +31,26 @@ async def confirm_output(ctx: wire.Context, output: TxOutput, coin: CoinInfo) ->
         assert data is not None
         if omni.is_valid(data):
             # OMNI transaction
-            title = "OMNI transaction"
-            await require(widgets.confirm_output(ctx, title, data=omni.parse(data)))
+            widget: WidgetType = widgets.confirm_metadata(
+                ctx,
+                "omni_transaction",
+                "OMNI transaction",
+                omni.parse(data),
+                br_code=ButtonRequestType.ConfirmOutput,
+            )
         else:
             # generic OP_RETURN
-            hex_data = hexlify(data).decode()
-            await require(widgets.confirm_output(ctx, "OP_RETURN", hex_data=hex_data))
-    else:
-        address = output.address
-        assert address is not None
-        address_short = addresses.address_short(coin, address)
-        await require(
-            widgets.confirm_output(
-                ctx,
-                "Confirm sending",
-                address=address_short,
-                amount=format_coin_amount(output.amount, coin),
+            widget = widgets.confirm_hex(
+                ctx, "op_return", "OP_RETURN", data, ButtonRequestType.ConfirmOutput
             )
+    else:
+        assert output.address is not None
+        address_short = addresses.address_short(coin, output.address)
+        widget = widgets.confirm_output(
+            ctx, address_short, format_coin_amount(output.amount, coin)
         )
+
+    await require(widget)
 
 
 async def confirm_replacement(ctx: wire.Context, description: str, txid: bytes) -> None:
@@ -101,8 +106,16 @@ async def confirm_total(
 
 
 async def confirm_feeoverthreshold(ctx: wire.Context, fee: int, coin: CoinInfo) -> None:
+    fee_amount = format_coin_amount(fee, coin)
     await require(
-        widgets.confirm_feeoverthreshold(ctx, fee_amount=format_coin_amount(fee, coin))
+        widgets.confirm_metadata(
+            ctx,
+            "fee_over_threshold",
+            "High fee",
+            "The fee of {} is unexpectedly high.",
+            fee_amount,
+            ButtonRequestType.FeeOverThreshold,
+        )
     )
 
 
@@ -110,26 +123,40 @@ async def confirm_change_count_over_threshold(
     ctx: wire.Context, change_count: int
 ) -> None:
     await require(
-        widgets.confirm_change_count_over_threshold(ctx, change_count=change_count)
+        widgets.confirm_metadata(
+            ctx,
+            "change_count_over_threshold",
+            "Warning",
+            "There are {} change-outputs.",
+            str(change_count),
+            ButtonRequestType.SignTx,
+        )
     )
 
 
 async def confirm_nondefault_locktime(
     ctx: wire.Context, lock_time: int, lock_time_disabled: bool
 ) -> None:
-    if int(lock_time) < _LOCKTIME_TIMESTAMP_MIN_VALUE:
-        await require(
-            widgets.confirm_nondefault_locktime(
-                ctx,
-                lock_time_disabled=lock_time_disabled,
-                lock_time_height=lock_time,
-            ),
-        )
+    if lock_time_disabled:
+        title = "Warning"
+        text = "Locktime is set but will\nhave no effect."
+        param: Optional[str] = None
+    elif lock_time < _LOCKTIME_TIMESTAMP_MIN_VALUE:
+        title = "Confirm locktime"
+        text = "Locktime for this\ntransaction is set to\nblockheight:\n{}"
+        param = str(lock_time)
     else:
-        await require(
-            widgets.confirm_nondefault_locktime(
-                ctx,
-                lock_time_disabled=lock_time_disabled,
-                lock_time_stamp=lock_time,
-            ),
+        title = "Confirm locktime"
+        text = "Locktime for this\ntransaction is set to\ntimestamp:\n{}"
+        param = str(lock_time)
+
+    await require(
+        widgets.confirm_metadata(
+            ctx,
+            "nondefault_locktime",
+            title,
+            text,
+            param,
+            br_code=ButtonRequestType.SignTx,
         )
+    )

@@ -1,4 +1,5 @@
 from micropython import const
+from ubinascii import hexlify
 
 from trezor import ui
 from trezor.messages import ButtonRequestType
@@ -15,29 +16,31 @@ from .scroll import Paginated
 from .text import Text
 
 if False:
-    from typing import Iterator, Iterable, Awaitable, List, Sequence, Union
+    from typing import Iterator, Iterable, List, Sequence, Union
 
     from trezor import wire
     from trezor.messages.ButtonRequest import EnumTypeButtonRequestType
+
+    from . import WidgetType
 
 
 def confirm_action(
     ctx: wire.GenericContext,
     br_type: str,
     title: str,
-    action: Iterable[str] = None,
-    description: Iterable[str] = None,
+    action: str = None,
+    description: str = None,
     verb: Union[str, bytes] = Confirm.DEFAULT_CONFIRM,
     icon: str = None,
     br_code: EnumTypeButtonRequestType = ButtonRequestType.Other,
     **kwargs,
-) -> Awaitable:
+) -> WidgetType:
     text = Text(title, icon if icon is not None else ui.ICON_CONFIRM, new_lines=False)
     if action:
         for line in action:
             text.bold(line)
             text.br()
-        if not kwargs.get('compact', False):
+        if not kwargs.get("compact", False):
             text.br_half()
     if description:
         for line in description:
@@ -47,7 +50,7 @@ def confirm_action(
     return interact(ctx, Confirm(text, confirm=verb), br_type, br_code)
 
 
-def confirm_wipe(ctx: wire.GenericContext) -> Awaitable:
+def confirm_wipe(ctx: wire.GenericContext) -> WidgetType:
     text = Text("Wipe device", ui.ICON_WIPE, ui.RED)
     text.normal("Do you really want to", "wipe the device?", "")
     text.bold("All data will be lost.")
@@ -59,7 +62,7 @@ def confirm_wipe(ctx: wire.GenericContext) -> Awaitable:
     )
 
 
-def confirm_reset_device(ctx: wire.GenericContext, prompt: str) -> Awaitable:
+def confirm_reset_device(ctx: wire.GenericContext, prompt: str) -> WidgetType:
     text = Text("Create new wallet", ui.ICON_RESET, new_lines=False)
     for line in prompt:
         text.bold(line)
@@ -110,7 +113,7 @@ async def confirm_backup(ctx: wire.GenericContext) -> bool:
     return confirmed
 
 
-def confirm_path_warning(ctx: wire.GenericContext, path: str) -> Awaitable:
+def confirm_path_warning(ctx: wire.GenericContext, path: str) -> WidgetType:
     text = Text("Confirm path", ui.ICON_WRONG, ui.RED)
     text.normal("Path")
     text.mono(*break_path_to_lines(path, 17))
@@ -142,10 +145,11 @@ def _split_address(address: str) -> Iterator[str]:
     return chunks(address, 17)  # 18 on T1
 
 
-def _split_op_return(data: str) -> Iterator[str]:
-    if len(data) >= 18 * 5:
-        data = data[: (18 * 5 - 3)] + "..."
-    return chunks(data, 18)
+def _hex_lines(data: bytes) -> Iterator[str]:
+    hex_data = hexlify(data).decode()
+    if len(hex_data) >= 18 * 5:
+        hex_data = hex_data[: (18 * 5 - 3)] + "..."
+    return chunks(hex_data, 18)
 
 
 def _show_address(
@@ -232,31 +236,32 @@ async def show_address(
 
 def confirm_output(
     ctx: wire.GenericContext,
-    title: str,
-    address: str = None,
-    amount: str = None,
-    data: str = None,
-    hex_data: str = None,
-) -> Awaitable:
-    text = Text(title, ui.ICON_SEND, ui.GREEN)
-    if address is not None and amount is not None:
-        text.normal(amount + " to")
-        text.mono(*_split_address(address))
-    elif data is not None:
-        text.normal(data)
-    elif hex_data is not None:
-        text.mono(*_split_op_return(hex_data))
-    else:
-        raise ValueError
-
+    address: str,
+    amount: str,
+) -> WidgetType:
+    text = Text("Confirm sending", ui.ICON_SEND, ui.GREEN)
+    text.normal(amount + " to")
+    text.mono(*_split_address(address))
     return interact(
         ctx, Confirm(text), "confirm_output", ButtonRequestType.ConfirmOutput
     )
 
 
+def confirm_hex(
+    ctx: wire.GenericContext,
+    br_type: str,
+    title: str,
+    data: bytes,
+    br_code: EnumTypeButtonRequestType = ButtonRequestType.Other,
+) -> WidgetType:
+    text = Text(title, ui.ICON_SEND, ui.GREEN)
+    text.mono(*_hex_lines(data))
+    return interact(ctx, Confirm(text), br_type, br_code)
+
+
 def confirm_total(
     ctx: wire.GenericContext, total_amount: str, fee_amount: str
-) -> Awaitable:
+) -> WidgetType:
     text = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     text.normal("Total amount:")
     text.bold(total_amount)
@@ -267,7 +272,7 @@ def confirm_total(
 
 def confirm_joint_total(
     ctx: wire.GenericContext, spending_amount: str, total_amount: str
-) -> Awaitable:
+) -> WidgetType:
     text = Text("Joint transaction", ui.ICON_SEND, ui.GREEN)
     text.normal("You are contributing:")
     text.bold(spending_amount)
@@ -278,58 +283,34 @@ def confirm_joint_total(
     )
 
 
-def confirm_feeoverthreshold(ctx: wire.GenericContext, fee_amount: str) -> Awaitable:
-    text = Text("High fee", ui.ICON_SEND, ui.GREEN)
-    text.normal("The fee of")
-    text.bold(fee_amount)
-    text.normal("is unexpectedly high.", "Continue?")
-    return interact(
-        ctx,
-        Confirm(text),
-        "confirm_fee_over_threshold",
-        ButtonRequestType.FeeOverThreshold,
-    )
-
-
-def confirm_change_count_over_threshold(
-    ctx: wire.GenericContext, change_count: int
-) -> Awaitable:
-    text = Text("Warning", ui.ICON_SEND, ui.GREEN)
-    text.normal("There are {}".format(change_count))
-    text.normal("change-outputs.")
-    text.br_half()
-    text.normal("Continue?")
-    return interact(
-        ctx,
-        Confirm(text),
-        "confirm_change_count_over_threshold",
-        ButtonRequestType.SignTx,
-    )
-
-
-def confirm_nondefault_locktime(
+def confirm_metadata(
     ctx: wire.GenericContext,
-    lock_time_disabled: bool = False,
-    lock_time_height: int = None,
-    lock_time_stamp: int = None,
-) -> Awaitable:
-    if lock_time_disabled:
-        text = Text("Warning", ui.ICON_SEND, ui.GREEN)
-        text.normal("Locktime is set but will", "have no effect.")
-        text.br_half()
-    else:
-        text = Text("Confirm locktime", ui.ICON_SEND, ui.GREEN)
-        text.normal("Locktime for this", "transaction is set to")
-        if lock_time_height is not None:
-            text.normal("blockheight:")
-            text.bold(str(lock_time_height))
-        elif lock_time_stamp is not None:
-            text.normal("timestamp:")
-            text.bold(str(lock_time_stamp))
+    br_type: str,
+    title: str,
+    content: str,
+    param: str = None,
+    br_code: EnumTypeButtonRequestType = ButtonRequestType.SignTx,
+) -> WidgetType:
+    # specify `param` only together with the {} symbol
+    assert ("{}" in content) == (param is not None)
+
+    text = Text(title, ui.ICON_SEND, ui.GREEN, new_lines=False)
+    lines = content.split("\n")
+    for line in lines:
+        if "{}" in line:
+            assert param is not None
+            a, b = line.split("{}", 1)
+            text.normal(a.rstrip())
+            text.bold(param)
+            text.normal(b.lstrip())
+            text.br()
         else:
-            raise ValueError
+            text.normal(line)
+            text.br()
+
+    if len(lines) <= 3:
+        text.br_half()
 
     text.normal("Continue?")
-    return interact(
-        ctx, Confirm(text), "confirm_nondefault_locktime", ButtonRequestType.SignTx
-    )
+
+    return interact(ctx, Confirm(text), br_type, br_code)
