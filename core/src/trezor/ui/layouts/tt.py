@@ -29,24 +29,17 @@ def confirm_action(
     ctx: wire.GenericContext,
     br_type: str,
     title: str,
-    action: str = None,
+    action: str,
     description: str = None,
     verb: Union[str, bytes] = Confirm.DEFAULT_CONFIRM,
     icon: str = None,
     br_code: EnumTypeButtonRequestType = ButtonRequestType.Other,
-    **kwargs,
 ) -> LayoutType:
     text = Text(title, icon if icon is not None else ui.ICON_CONFIRM, new_lines=False)
-    if action:
-        for line in action:
-            text.bold(line)
-            text.br()
-        if not kwargs.get("compact", False):
-            text.br_half()
+    text.format_parametrized(action, font=ui.BOLD)
+    text.br_half()
     if description:
-        for line in description:
-            text.normal(line)
-            text.br()
+        text.format_parametrized(description)
 
     return interact(ctx, Confirm(text, confirm=verb), br_type, br_code)
 
@@ -65,9 +58,7 @@ def confirm_wipe(ctx: wire.GenericContext) -> LayoutType:
 
 def confirm_reset_device(ctx: wire.GenericContext, prompt: str) -> LayoutType:
     text = Text("Create new wallet", ui.ICON_RESET, new_lines=False)
-    for line in prompt:
-        text.bold(line)
-        text.br()
+    text.format_parametrized(prompt, font=ui.BOLD)
     text.br_half()
     text.normal("By continuing you agree")
     text.br()

@@ -74,8 +74,7 @@ async def _warn(ctx: wire.Context):
             ctx,
             "warn_loading_seed",
             "Loading seed",
-            ["Loading private seed", "is not recommended."],
-            ["Continue only if you", "know what you are doing!"],
-            compact=True,
+            "Loading private seed\nis not recommended.",
+            "Continue only if you\nknow what you are doing!",
         )
     )

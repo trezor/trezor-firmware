@@ -29,11 +29,11 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
 
     # make sure user knows they're setting up a new wallet
     if msg.backup_type == BackupType.Slip39_Basic:
-        prompt = ["Create a new wallet", "with Shamir Backup?"]
+        prompt = "Create a new wallet\nwith Shamir Backup?"
     elif msg.backup_type == BackupType.Slip39_Advanced:
-        prompt = ["Create a new wallet", "with Super Shamir?"]
+        prompt = "Create a new wallet\nwith Super Shamir?"
     else:
-        prompt = ["Do you want to create", "a new wallet?"]
+        prompt = "Do you want to create\na new wallet?"
     await require(confirm_reset_device(ctx, prompt))
     await LoadingAnimation()
 
