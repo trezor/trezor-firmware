@@ -128,7 +128,7 @@ async def handle_EndSession(ctx: wire.Context, msg: EndSession) -> Success:
 
 async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:
     if msg.button_protection:
-        from trezor.ui.widgets import require, confirm_action
+        from trezor.ui.layouts import require, confirm_action
         from trezor.messages.ButtonRequestType import ProtectCall
 
         await require(confirm_action(ctx, "ping", "Confirm", br_code=ProtectCall))

@@ -3,8 +3,8 @@ from ubinascii import hexlify
 
 from trezor.messages import ButtonRequestType, OutputScriptType
 from trezor.strings import format_amount
-from trezor.ui import widgets
-from trezor.ui.widgets import require
+from trezor.ui import layouts
+from trezor.ui.layouts import require
 
 from .. import addresses
 from . import omni
@@ -14,7 +14,7 @@ if False:
 
     from trezor import wire
     from trezor.messages.TxOutput import TxOutput
-    from trezor.ui import WidgetType
+    from trezor.ui.layouts import LayoutType
 
     from apps.common.coininfo import CoinInfo
 
@@ -31,7 +31,7 @@ async def confirm_output(ctx: wire.Context, output: TxOutput, coin: CoinInfo) ->
         assert data is not None
         if omni.is_valid(data):
             # OMNI transaction
-            widget: WidgetType = widgets.confirm_metadata(
+            layout: LayoutType = layouts.confirm_metadata(
                 ctx,
                 "omni_transaction",
                 "OMNI transaction",
@@ -40,17 +40,17 @@ async def confirm_output(ctx: wire.Context, output: TxOutput, coin: CoinInfo) ->
             )
         else:
             # generic OP_RETURN
-            widget = widgets.confirm_hex(
+            layout = layouts.confirm_hex(
                 ctx, "op_return", "OP_RETURN", data, ButtonRequestType.ConfirmOutput
             )
     else:
         assert output.address is not None
         address_short = addresses.address_short(coin, output.address)
-        widget = widgets.confirm_output(
+        layout = layouts.confirm_output(
             ctx, address_short, format_coin_amount(output.amount, coin)
         )
 
-    await require(widget)
+    await require(layout)
 
 
 async def confirm_replacement(ctx: wire.Context, description: str, txid: bytes) -> None:
@@ -85,7 +85,7 @@ async def confirm_joint_total(
     ctx: wire.Context, spending: int, total: int, coin: CoinInfo
 ) -> None:
     await require(
-        widgets.confirm_joint_total(
+        layouts.confirm_joint_total(
             ctx,
             spending_amount=format_coin_amount(spending, coin),
             total_amount=format_coin_amount(total, coin),
@@ -97,7 +97,7 @@ async def confirm_total(
     ctx: wire.Context, spending: int, fee: int, coin: CoinInfo
 ) -> None:
     await require(
-        widgets.confirm_total(
+        layouts.confirm_total(
             ctx,
             total_amount=format_coin_amount(spending, coin),
             fee_amount=format_coin_amount(fee, coin),
@@ -108,7 +108,7 @@ async def confirm_total(
 async def confirm_feeoverthreshold(ctx: wire.Context, fee: int, coin: CoinInfo) -> None:
     fee_amount = format_coin_amount(fee, coin)
     await require(
-        widgets.confirm_metadata(
+        layouts.confirm_metadata(
             ctx,
             "fee_over_threshold",
             "High fee",
@@ -123,7 +123,7 @@ async def confirm_change_count_over_threshold(
     ctx: wire.Context, change_count: int
 ) -> None:
     await require(
-        widgets.confirm_metadata(
+        layouts.confirm_metadata(
             ctx,
             "change_count_over_threshold",
             "Warning",
@@ -151,7 +151,7 @@ async def confirm_nondefault_locktime(
         param = str(lock_time)
 
     await require(
-        widgets.confirm_metadata(
+        layouts.confirm_metadata(
             ctx,
             "nondefault_locktime",
             title,

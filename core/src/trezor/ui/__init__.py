@@ -15,7 +15,6 @@ if False:
     Area = Tuple[int, int, int, int]
     ResultValue = TypeVar("ResultValue")
 
-    WidgetType = Awaitable[ResultValue]
 
 # all rendering is done through a singleton of `Display`
 display = Display()

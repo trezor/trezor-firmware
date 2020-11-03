@@ -1,4 +1,4 @@
-from trezor.ui.widgets import confirm_path_warning, require
+from trezor.ui.layouts import confirm_path_warning, require
 
 from . import HARDENED
 from .layout import address_n_to_str

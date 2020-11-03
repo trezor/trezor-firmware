@@ -1,6 +1,6 @@
 import storage
 from trezor.messages.Success import Success
-from trezor.ui.widgets import confirm_wipe, require
+from trezor.ui.layouts import confirm_wipe, require
 
 from .apply_settings import reload_settings_from_storage
 

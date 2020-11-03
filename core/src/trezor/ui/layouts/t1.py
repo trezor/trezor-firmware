@@ -4,13 +4,14 @@ from trezor.messages import ButtonRequestType
 from trezor.ui.qr import Qr
 from trezor.utils import chunks
 
-from ..common import break_path_to_lines, interact
-from ..common.confirm import CONFIRMED
-from .confirm import Confirm
-from .text import Text
+from .common import interact
+from ..components.common import break_path_to_lines
+from ..components.common.confirm import CONFIRMED
+from ..components.t1.confirm import Confirm
+from ..components.t1.text import Text
 
 if False:
-    from typing import Iterator, Iterable, Awaitable, Sequence, Union
+    from typing import Iterator, Iterable, LayoutType, Sequence, Union
 
     from trezor import wire
     from trezor.messages.ButtonRequest import EnumTypeButtonRequestType
@@ -26,7 +27,7 @@ def confirm_action(
     icon: str = None,
     br_code: EnumTypeButtonRequestType = ButtonRequestType.Other,
     **kwargs,
-) -> Awaitable:
+) -> LayoutType:
     text = Text(title.upper(), new_lines=False)
     if action:
         for line in action:
@@ -43,7 +44,7 @@ def confirm_action(
     return interact(ctx, Confirm(text, confirm=confirm), br_type, br_code)
 
 
-def confirm_wipe(ctx: wire.GenericContext) -> Awaitable:
+def confirm_wipe(ctx: wire.GenericContext) -> LayoutType:
     text = Text()
     text.bold("Do you want to wipe", "the device?")
     text.br_half()
@@ -56,7 +57,7 @@ def confirm_wipe(ctx: wire.GenericContext) -> Awaitable:
     )
 
 
-def confirm_reset_device(ctx: wire.GenericContext, prompt: str) -> Awaitable:
+def confirm_reset_device(ctx: wire.GenericContext, prompt: str) -> LayoutType:
     text = Text(new_lines=False)
     for line in prompt:
         text.bold(line)
@@ -105,7 +106,7 @@ async def confirm_backup(ctx: wire.GenericContext) -> bool:
     return confirmed
 
 
-def confirm_path_warning(ctx: wire.GenericContext, path: str) -> Awaitable:
+def confirm_path_warning(ctx: wire.GenericContext, path: str) -> LayoutType:
     text = Text("WRONG ADDRESS PATH")
     text.br_half()
     text.mono(*break_path_to_lines(path, 16))
@@ -212,7 +213,7 @@ def confirm_output(
     amount: str = None,
     data: str = None,
     hex_data: str = None,
-) -> Awaitable:
+) -> LayoutType:
     if address is not None and amount is not None:
         text = Text("TRANSACTION")
         text.normal("Send " + amount + " to")
@@ -233,7 +234,7 @@ def confirm_output(
 
 def confirm_total(
     ctx: wire.GenericContext, total_amount: str, fee_amount: str
-) -> Awaitable:
+) -> LayoutType:
     text = Text("TRANSACTION")
     text.bold("Total amount:")
     text.mono(total_amount)
@@ -249,7 +250,7 @@ def confirm_total(
 
 def confirm_joint_total(
     ctx: wire.GenericContext, spending_amount: str, total_amount: str
-) -> Awaitable:
+) -> LayoutType:
     text = Text("JOINT TRANSACTION")
     text.bold("You are contributing:")
     text.mono(spending_amount)
@@ -263,7 +264,7 @@ def confirm_joint_total(
     )
 
 
-def confirm_feeoverthreshold(ctx: wire.GenericContext, fee_amount: str) -> Awaitable:
+def confirm_feeoverthreshold(ctx: wire.GenericContext, fee_amount: str) -> LayoutType:
     text = Text("HIGH FEE")
     text.normal("The fee of")
     text.bold(fee_amount)
@@ -278,7 +279,7 @@ def confirm_feeoverthreshold(ctx: wire.GenericContext, fee_amount: str) -> Await
 
 def confirm_change_count_over_threshold(
     ctx: wire.GenericContext, change_count: int
-) -> Awaitable:
+) -> LayoutType:
     text = Text("WARNING!")
     text.normal("There are {}".format(change_count))
     text.normal("change-outputs.")
@@ -297,7 +298,7 @@ def confirm_nondefault_locktime(
     lock_time_disabled: bool = False,
     lock_time_height: int = None,
     lock_time_stamp: int = None,
-) -> Awaitable:
+) -> LayoutType:
     if lock_time_disabled:
         text = Text("WARNING!")
         text.normal("Locktime is set but will", "have no effect.")

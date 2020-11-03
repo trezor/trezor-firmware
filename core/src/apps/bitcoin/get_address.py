@@ -1,7 +1,7 @@
 from trezor.crypto import bip32
 from trezor.messages import InputScriptType
 from trezor.messages.Address import Address
-from trezor.ui.widgets import show_address
+from trezor.ui.layouts import show_address
 
 from apps.common.layout import address_n_to_str
 from apps.common.paths import validate_path

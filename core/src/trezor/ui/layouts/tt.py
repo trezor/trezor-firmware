@@ -8,12 +8,13 @@ from trezor.ui.loader import LoaderDanger
 from trezor.ui.qr import Qr
 from trezor.utils import chunks
 
-from ..common import break_path_to_lines, interact
-from ..common.confirm import CONFIRMED
-from .button import ButtonCancel, ButtonDefault
-from .confirm import Confirm, HoldToConfirm
-from .scroll import Paginated
-from .text import Text
+from .common import interact
+from ..components.common import break_path_to_lines
+from ..components.common.confirm import CONFIRMED
+from ..components.tt.button import ButtonCancel, ButtonDefault
+from ..components.tt.confirm import Confirm, HoldToConfirm
+from ..components.tt.scroll import Paginated
+from ..components.tt.text import Text
 
 if False:
     from typing import Iterator, Iterable, List, Sequence, Union
@@ -21,7 +22,7 @@ if False:
     from trezor import wire
     from trezor.messages.ButtonRequest import EnumTypeButtonRequestType
 
-    from . import WidgetType
+    from . import LayoutType
 
 
 def confirm_action(
@@ -34,7 +35,7 @@ def confirm_action(
     icon: str = None,
     br_code: EnumTypeButtonRequestType = ButtonRequestType.Other,
     **kwargs,
-) -> WidgetType:
+) -> LayoutType:
     text = Text(title, icon if icon is not None else ui.ICON_CONFIRM, new_lines=False)
     if action:
         for line in action:
@@ -50,7 +51,7 @@ def confirm_action(
     return interact(ctx, Confirm(text, confirm=verb), br_type, br_code)
 
 
-def confirm_wipe(ctx: wire.GenericContext) -> WidgetType:
+def confirm_wipe(ctx: wire.GenericContext) -> LayoutType:
     text = Text("Wipe device", ui.ICON_WIPE, ui.RED)
     text.normal("Do you really want to", "wipe the device?", "")
     text.bold("All data will be lost.")
@@ -62,7 +63,7 @@ def confirm_wipe(ctx: wire.GenericContext) -> WidgetType:
     )
 
 
-def confirm_reset_device(ctx: wire.GenericContext, prompt: str) -> WidgetType:
+def confirm_reset_device(ctx: wire.GenericContext, prompt: str) -> LayoutType:
     text = Text("Create new wallet", ui.ICON_RESET, new_lines=False)
     for line in prompt:
         text.bold(line)
@@ -113,7 +114,7 @@ async def confirm_backup(ctx: wire.GenericContext) -> bool:
     return confirmed
 
 
-def confirm_path_warning(ctx: wire.GenericContext, path: str) -> WidgetType:
+def confirm_path_warning(ctx: wire.GenericContext, path: str) -> LayoutType:
     text = Text("Confirm path", ui.ICON_WRONG, ui.RED)
     text.normal("Path")
     text.mono(*break_path_to_lines(path, 17))
@@ -238,7 +239,7 @@ def confirm_output(
     ctx: wire.GenericContext,
     address: str,
     amount: str,
-) -> WidgetType:
+) -> LayoutType:
     text = Text("Confirm sending", ui.ICON_SEND, ui.GREEN)
     text.normal(amount + " to")
     text.mono(*_split_address(address))
@@ -253,7 +254,7 @@ def confirm_hex(
     title: str,
     data: bytes,
     br_code: EnumTypeButtonRequestType = ButtonRequestType.Other,
-) -> WidgetType:
+) -> LayoutType:
     text = Text(title, ui.ICON_SEND, ui.GREEN)
     text.mono(*_hex_lines(data))
     return interact(ctx, Confirm(text), br_type, br_code)
@@ -261,7 +262,7 @@ def confirm_hex(
 
 def confirm_total(
     ctx: wire.GenericContext, total_amount: str, fee_amount: str
-) -> WidgetType:
+) -> LayoutType:
     text = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     text.normal("Total amount:")
     text.bold(total_amount)
@@ -272,7 +273,7 @@ def confirm_total(
 
 def confirm_joint_total(
     ctx: wire.GenericContext, spending_amount: str, total_amount: str
-) -> WidgetType:
+) -> LayoutType:
     text = Text("Joint transaction", ui.ICON_SEND, ui.GREEN)
     text.normal("You are contributing:")
     text.bold(spending_amount)
@@ -290,7 +291,7 @@ def confirm_metadata(
     content: str,
     param: str = "",
     br_code: EnumTypeButtonRequestType = ButtonRequestType.SignTx,
-) -> WidgetType:
+) -> LayoutType:
     text = Text(title, ui.ICON_SEND, ui.GREEN, new_lines=False)
     text.format_parametrized(content, param)
     if text.count_lines() <= 3:
