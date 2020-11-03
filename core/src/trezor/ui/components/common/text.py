@@ -40,6 +40,40 @@ class TextBase(ui.Component):
     def br_half(self) -> None:
         self.content.append(BR_HALF)
 
+    def format_parametrized(self, format_string: str, *params: str) -> None:
+        param_iter = iter(params)
+        for line in format_string.split("\n"):
+            if "{}" in line:
+                param = next(param_iter)
+                l, r = line.split("{}", 1)
+                if l:
+                    self.content.append(l.rstrip())
+                self.content.append(ui.BOLD)
+                self.content.append(param)
+                self.content.append(ui.NORMAL)
+                if r:
+                    self.content.append(r.lstrip())
+            else:
+                self.content.append(line)
+            self.content.append(BR)
+
+    def count_lines(self)-> int:
+        # TODO: more accurately count lines that are not pre-broken?
+        line_count = 0
+        item_on_this_line = False
+        for item in self.content:
+            if isinstance(item, str):
+                item_on_this_line = True
+            if item == BR:
+                line_count += 1
+                item_on_this_line = False
+
+        if item_on_this_line:
+            # trailing line did not have BR
+            line_count += 1
+
+        return line_count
+
     def on_render(self) -> None:
         pass
 

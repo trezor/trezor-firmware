@@ -288,27 +288,12 @@ def confirm_metadata(
     br_type: str,
     title: str,
     content: str,
-    param: str = None,
+    param: str = "",
     br_code: EnumTypeButtonRequestType = ButtonRequestType.SignTx,
 ) -> WidgetType:
-    # specify `param` only together with the {} symbol
-    assert ("{}" in content) == (param is not None)
-
     text = Text(title, ui.ICON_SEND, ui.GREEN, new_lines=False)
-    lines = content.split("\n")
-    for line in lines:
-        if "{}" in line:
-            assert param is not None
-            a, b = line.split("{}", 1)
-            text.normal(a.rstrip())
-            text.bold(param)
-            text.normal(b.lstrip())
-            text.br()
-        else:
-            text.normal(line)
-            text.br()
-
-    if len(lines) <= 3:
+    text.format_parametrized(content, param)
+    if text.count_lines() <= 3:
         text.br_half()
 
     text.normal("Continue?")
