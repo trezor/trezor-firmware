@@ -2,6 +2,8 @@ image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/trezor-firmware-en
 
 style prebuild:
   stage: prebuild
+  variables:
+    GIT_SUBMODULE_STRATEGY: "none"
   only:
     changes:
       - .gitlab-ci.yml

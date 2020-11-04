@@ -6,6 +6,7 @@ release core fw regular deploy:
   stage: deploy
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares/tt"
+    GIT_SUBMODULE_STRATEGY: "none"
   before_script: []  # no poetry
   needs:
     - core fw regular build
@@ -26,6 +27,7 @@ release core fw btconly deploy:
   stage: deploy
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares/tt"
+    GIT_SUBMODULE_STRATEGY: "none"
   before_script: []  # no poetry
   needs:
     - core fw btconly build
@@ -46,6 +48,7 @@ release core fw regular debug deploy:
   stage: deploy
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares/tt"
+    GIT_SUBMODULE_STRATEGY: "none"
   before_script: []  # no poetry
   needs:
     - core fw regular debug build
@@ -66,6 +69,7 @@ release core fw btconly debug deploy:
   stage: deploy
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares/tt"
+    GIT_SUBMODULE_STRATEGY: "none"
   before_script: []  # no poetry
   needs:
     - core fw btconly debug build
@@ -88,6 +92,7 @@ release legacy fw regular deploy:
   stage: deploy
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares/t1"
+    GIT_SUBMODULE_STRATEGY: "none"
   before_script: []  # no poetry
   needs:
     - legacy fw regular build
@@ -108,6 +113,7 @@ release legacy fw btconly deploy:
   stage: deploy
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares/t1"
+    GIT_SUBMODULE_STRATEGY: "none"
   before_script: []  # no poetry
   needs:
     - legacy fw btconly build
@@ -128,6 +134,7 @@ release legacy fw regular debug deploy:
   stage: deploy
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares/t1"
+    GIT_SUBMODULE_STRATEGY: "none"
   before_script: []  # no poetry
   needs:
     - legacy fw regular debug build
@@ -148,6 +155,7 @@ release legacy fw btconly debug deploy:
   stage: deploy
   variables:
     DEPLOY_DIRECTORY: "releases/firmwares/t1"
+    GIT_SUBMODULE_STRATEGY: "none"
   before_script: []  # no poetry
   needs:
     - legacy fw btconly debug build
@@ -170,6 +178,7 @@ release core unix debug deploy:
   stage: deploy
   variables:
     DEPLOY_PATH: "${DEPLOY_BASE_DIR}/releases/emulators"
+    GIT_SUBMODULE_STRATEGY: "none"
   before_script: []  # no poetry
   needs:
     - core unix frozen debug build
@@ -190,6 +199,7 @@ release legacy unix debug deploy:
   stage: deploy
   variables:
     DEPLOY_PATH: "${DEPLOY_BASE_DIR}/releases/emulators"
+    GIT_SUBMODULE_STRATEGY: "none"
   before_script: []  # no poetry
   needs:
     - legacy emu regular debug build
@@ -212,6 +222,7 @@ ui tests core fixtures deploy:
   stage: deploy
   variables:
     DEPLOY_PATH: "${DEPLOY_BASE_DIR}/ui_tests/"
+    GIT_SUBMODULE_STRATEGY: "none"
   before_script: []  # no poetry
   needs:
     - core device ui test
