@@ -29,12 +29,19 @@ if False:
     MsgIn = TypeVar("MsgIn", bound=MsgWithCoinName)
     HandlerWithCoinInfo = Callable[..., Awaitable[MsgOut]]
 
-# common patterns
+
+# BIP-45 for multisig: https://github.com/bitcoin/bips/blob/master/bip-0045.mediawiki
 PATTERN_BIP45 = "m/45'/[0-100]/change/address_index"
-PATTERN_PURPOSE48_LEGACY = "m/48'/coin_type'/account'/0'/change/address_index"
+
+# Electrum Purpose48. See docs/misc/purpose48.md
+# Electrum does not seem to use the raw script type, it is included here for completeness.
+PATTERN_PURPOSE48_RAW = "m/48'/coin_type'/account'/0'/change/address_index"
 PATTERN_PURPOSE48_P2SHSEGWIT = "m/48'/coin_type'/account'/1'/change/address_index"
 PATTERN_PURPOSE48_SEGWIT = "m/48'/coin_type'/account'/2'/change/address_index"
+
+# BIP-49 for segwit-in-P2SH: https://github.com/bitcoin/bips/blob/master/bip-0049.mediawiki
 PATTERN_BIP49 = "m/49'/coin_type'/account'/change/address_index"
+# BIP-84 for segwit: https://github.com/bitcoin/bips/blob/master/bip-0084.mediawiki
 PATTERN_BIP84 = "m/84'/coin_type'/account'/change/address_index"
 
 # compatibility patterns, will be removed in the future
@@ -72,7 +79,7 @@ def validate_path_against_script_type(
 
     elif script_type in (I.SPENDADDRESS, I.SPENDMULTISIG) and multisig:
         patterns.append(PATTERN_BIP45)
-        patterns.append(PATTERN_PURPOSE48_LEGACY)
+        patterns.append(PATTERN_PURPOSE48_RAW)
         if coin.coin_name in BITCOIN_NAMES:
             patterns.append(PATTERN_GREENADDRESS_A)
             patterns.append(PATTERN_GREENADDRESS_B)
@@ -104,7 +111,7 @@ def get_schemas_for_coin(coin: coininfo.CoinInfo) -> Iterable[PathSchema]:
     patterns = [
         PATTERN_BIP44,
         PATTERN_BIP45,
-        PATTERN_PURPOSE48_LEGACY,
+        PATTERN_PURPOSE48_RAW,
     ]
 
     # compatibility patterns

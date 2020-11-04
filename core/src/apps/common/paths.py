@@ -238,8 +238,13 @@ class _NeverMatchingSchema:
 AlwaysMatchingSchema: PathSchemaType = _AlwaysMatchingSchema  # type: ignore
 NeverMatchingSchema: PathSchemaType = _NeverMatchingSchema  # type: ignore
 
+# BIP-44 for basic (legacy) Bitcoin accounts, and widely used for other currencies:
+# https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
 PATTERN_BIP44 = "m/44'/coin_type'/account'/change/address_index"
+# BIP-44 public key export, starting at end of the hardened part
 PATTERN_BIP44_PUBKEY = "m/44'/coin_type'/account'/*"
+# SEP-0005 for non-UTXO-based currencies, defined by Stellar:
+# https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0005.md
 PATTERN_SEP5 = "m/44'/coin_type'/account'"
 
 
