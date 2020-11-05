@@ -4,39 +4,16 @@ style prebuild:
   stage: prebuild
   variables:
     GIT_SUBMODULE_STRATEGY: "none"
-  only:
-    changes:
-      - .gitlab-ci.yml
-      - ci/**/*
-      - "**/*.c"
-      - "**/*.h"
-      - "**/*.py"
   script:
     - nix-shell --run "poetry run make style_check"
 
 common prebuild:
   stage: prebuild
-  only:
-    changes:
-      - .gitlab-ci.yml
-      - ci/**/*
-      - "**/*.json"
-      - "**/*.proto"
   script:
     - nix-shell --run "poetry run make defs_check"
 
 gen prebuild:
   stage: prebuild
-  only:
-    changes:
-      - .gitlab-ci.yml
-      - ci/**/*
-      - "**/*.c"
-      - "**/*.h"
-      - "**/*.json"
-      - "**/*.proto"
-      - "**/*.py"
-      - "**/*.pyi"
   script:
     - nix-shell --run "poetry run make gen_check"
 
