@@ -15,12 +15,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Protobuf codec now enforces `required` fields and pre-fills default values.  [#379]
 - `TxAck` messages are now decoded into "polymorphic" subtypes instead of the common `TxAck` type.
 - Bump nanobp dependency to 0.4.3.  [#1105]
+- BIP-32 paths must now match a pre-defined path schema to be considered valid  [#1184]
 
 ### Deprecated
 
 ### Removed
 
 ### Fixed
+
+- Path warning is not shown on `GetAddress(show_display=False)` call  [#1206]
 
 ### Security
 
@@ -317,7 +320,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1159]: https://github.com/trezor/trezor-firmware/issues/1159
 [#1165]: https://github.com/trezor/trezor-firmware/pull/1165
 [#1173]: https://github.com/trezor/trezor-firmware/pull/1173
+[#1184]: https://github.com/trezor/trezor-firmware/issues/1184
 [#1188]: https://github.com/trezor/trezor-firmware/issues/1188
 [#1190]: https://github.com/trezor/trezor-firmware/issues/1190
 [#1193]: https://github.com/trezor/trezor-firmware/issues/1193
+[#1206]: https://github.com/trezor/trezor-firmware/issues/1206
 [#1246]: https://github.com/trezor/trezor-firmware/issues/1246
