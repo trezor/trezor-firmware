@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Bump nanobp dependency to 0.4.3.  [#1105]
 - BIP-32 paths must now match a pre-defined path schema to be considered valid.  [#1184]
 - Minimum auto-lock delay to 1 minute. The former value of 10 seconds still applies for debug builds.  [#1351]
+- It is again possible to sign for Ethereum clones that are not officially supported.  [#1335]
 
 ### Deprecated
 
@@ -25,7 +26,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - PIVX support
 
 ### Fixed
-
 - Path warning is not shown on `GetAddress(show_display=False)` call.  [#1206]
 - Settings are also erased from RAM when device is wiped.  [#1322]
 
@@ -300,6 +300,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - First public release.
 
 [#379]: https://github.com/trezor/trezor-firmware/issues/379
+[#800]: https://github.com/trezor/trezor-firmware/issues/800
 [#948]: https://github.com/trezor/trezor-firmware/issues/948
 [#958]: https://github.com/trezor/trezor-firmware/issues/958
 [#982]: https://github.com/trezor/trezor-firmware/issues/982
@@ -331,4 +332,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1206]: https://github.com/trezor/trezor-firmware/issues/1206
 [#1246]: https://github.com/trezor/trezor-firmware/issues/1246
 [#1322]: https://github.com/trezor/trezor-firmware/issues/1322
+[#1335]: https://github.com/trezor/trezor-firmware/issues/1335
 [#1351]: https://github.com/trezor/trezor-firmware/issues/1351
