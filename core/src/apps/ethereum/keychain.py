@@ -69,9 +69,9 @@ def _schemas_from_chain_id(msg: EthereumSignTx) -> Iterable[paths.PathSchema]:
 
     info = networks.by_chain_id(msg.chain_id)
     if info is None:
-        return ()
-
-    if networks.is_wanchain(msg.chain_id, msg.tx_type):
+        # allow Ethereum or testnet paths for unknown networks
+        slip44_id = (60, 1)
+    elif networks.is_wanchain(msg.chain_id, msg.tx_type):
         slip44_id = (networks.SLIP44_WANCHAIN,)
     elif info.slip44 != 60 and info.slip44 != 1:
         # allow cross-signing with Ethereum unless it's testnet

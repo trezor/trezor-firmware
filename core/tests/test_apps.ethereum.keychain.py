@@ -144,18 +144,6 @@ class TestEthereumKeychain(unittest.TestCase):
             )
         )
 
-
-        with self.assertRaises(wire.DataError):
-            await_result(  # unknown chain_id
-                handler_chain_id(
-                    wire.DUMMY_CONTEXT,
-                    EthereumSignTx(
-                        address_n=[44 | HARDENED, 60 | HARDENED, 0 | HARDENED],
-                        chain_id=123456789,
-                    ),
-                )
-            )
-
         with self.assertRaises(wire.DataError):
             await_result(  # chain_id and network mismatch
                 handler_chain_id(
