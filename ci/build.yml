@@ -19,7 +19,7 @@ core fw regular build:
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - trezor-fw-regular-*.*.*-$CI_COMMIT_SHORT_SHA.bin
+      - trezor-fw-regular-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
 core fw regular debug build:
@@ -31,7 +31,7 @@ core fw regular debug build:
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - trezor-fw-regular-debug-*.*.*-$CI_COMMIT_SHORT_SHA.bin
+      - trezor-fw-regular-debug-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
 core fw btconly build:
@@ -47,7 +47,7 @@ core fw btconly build:
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - trezor-fw-btconly-*.*.*-$CI_COMMIT_SHORT_SHA.bin
+      - trezor-fw-btconly-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
 core fw btconly debug build:
@@ -64,7 +64,7 @@ core fw btconly debug build:
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - trezor-fw-btconly-*.*.*-$CI_COMMIT_SHORT_SHA.bin
+      - trezor-fw-btconly-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
 core fw btconly t1 build:
@@ -79,7 +79,7 @@ core fw btconly t1 build:
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - trezor-fw-btconly-t1-*.*.*-$CI_COMMIT_SHORT_SHA.bin
+      - trezor-fw-btconly-t1-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
 core unix regular build:
@@ -90,8 +90,8 @@ core unix regular build:
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - core/build/unix/trezor-emu-core
-    - core/src/trezor/res/resources.py
+      - core/build/unix/trezor-emu-core
+      - core/src/trezor/res/resources.py
     expire_in: 1 week
 
 core unix frozen regular build:
@@ -102,7 +102,7 @@ core unix frozen regular build:
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - core/build/unix/trezor-emu-core
+      - core/build/unix/trezor-emu-core
     expire_in: 1 week
 
 core unix frozen btconly debug build:
@@ -117,7 +117,7 @@ core unix frozen btconly debug build:
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - core/build/unix/trezor-emu-core-bitcoinonly
+      - core/build/unix/trezor-emu-core-bitcoinonly
     expire_in: 1 week
 
 core unix frozen debug build:
@@ -168,10 +168,10 @@ crypto build:
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - crypto/tests/aestst
-    - crypto/tests/libtrezor-crypto.so
-    - crypto/tests/test_check
-    - crypto/tests/test_openssl
+      - crypto/tests/aestst
+      - crypto/tests/libtrezor-crypto.so
+      - crypto/tests/test_check
+      - crypto/tests/test_openssl
     expire_in: 1 week
 
 
@@ -189,7 +189,7 @@ legacy fw regular build:
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - trezor-fw-regular-*.*.*-$CI_COMMIT_SHORT_SHA.bin
+      - trezor-fw-regular-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
 legacy fw regular debug build:
@@ -204,7 +204,7 @@ legacy fw regular debug build:
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - trezor-fw-regular-debug-*.*.*-$CI_COMMIT_SHORT_SHA.bin
+      - trezor-fw-regular-debug-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
 legacy fw btconly build:
@@ -221,7 +221,7 @@ legacy fw btconly build:
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - trezor-fw-btconly-*.*.*-$CI_COMMIT_SHORT_SHA.bin
+      - trezor-fw-btconly-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
 legacy fw btconly debug build:
@@ -238,7 +238,7 @@ legacy fw btconly debug build:
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - trezor-fw-btconly-*.*.*-$CI_COMMIT_SHORT_SHA.bin
+      - trezor-fw-btconly-*.*.*-$CI_COMMIT_SHORT_SHA.bin
     expire_in: 1 week
 
 legacy emu regular debug build:
@@ -252,7 +252,7 @@ legacy emu regular debug build:
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - legacy/firmware/trezor.elf
+      - legacy/firmware/trezor.elf
     expire_in: 1 week
 
 legacy emu btconly debug build:
@@ -268,5 +268,5 @@ legacy emu btconly debug build:
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-    - legacy/firmware/trezor-bitcoinonly.elf
+      - legacy/firmware/trezor-bitcoinonly.elf
     expire_in: 1 week
