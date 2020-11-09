@@ -2,16 +2,16 @@
 name: "trezor-mcu"
 enable_cache: true
 suites:
-- "trusty"
+  - "trusty"
 architectures:
-- "amd64"
+  - "amd64"
 packages:
-- "build-essential"
-- "gcc-arm-none-eabi"
+  - "build-essential"
+  - "gcc-arm-none-eabi"
 reference_datetime: "2015-06-01 00:00:00"
 remotes:
-- "url": "https://github.com/trezor/trezor-mcu.git"
-  "dir": "trezor-mcu"
+  - "url": "https://github.com/trezor/trezor-mcu.git"
+"dir": "trezor-mcu"
 files: []
 script: |
   make -C vendor/libopencm3

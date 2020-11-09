@@ -16,8 +16,8 @@ core unix coverage posttest:
   artifacts:
     name: core-unix-coverage-posttest
     paths:
-    - core/.coverage.*
-    - core/htmlcov
+      - core/.coverage.*
+      - core/htmlcov
     when: always
     expire_in: 1 week
 
@@ -33,5 +33,5 @@ core unix ui changes:
   artifacts:
     name: core-unix-ui-changes
     paths:
-    - master_diff
+      - master_diff
     expire_in: 1 week

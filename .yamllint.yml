@@ -1,0 +1,10 @@
+extends: default
+
+ignore: |
+  vendor/
+
+rules:
+  # skip line length
+  line-length: disable
+  # skip "---" at the beginning
+  document-start: disable

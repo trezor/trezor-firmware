@@ -68,6 +68,7 @@ cryptography = "*"
 hypothesis = "*"
 attrs = "*"
 inotify = "*"
+yamllint = "^1.25.0"
 
 [tool.poetry.dev-dependencies]
 scan-build = "*"
