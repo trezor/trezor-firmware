@@ -331,7 +331,11 @@ def check_dups(buckets, print_at_level=logging.WARNING):
             continue
 
         supported = [coin for coin in bucket if not coin["unsupported"]]
-        nontokens = [coin for coin in bucket if not coin_info.is_token(coin)]
+        nontokens = [
+            coin
+            for coin in bucket
+            if coin.get("duplicate") and not coin_info.is_token(coin)
+        ]  # we do not count override-marked coins as duplicates here
         cleared = not any(coin.get("duplicate") for coin in bucket)
 
         # string generation
@@ -347,7 +351,7 @@ def check_dups(buckets, print_at_level=logging.WARNING):
                 # some previous step has explicitly marked them as non-duplicate
                 level = logging.INFO
             else:
-                # at most 1 non-token - we tenatively allow token collisions
+                # at most 1 non-token - we tentatively allow token collisions
                 # when explicitly marked as supported
                 level = logging.WARNING
         else:
