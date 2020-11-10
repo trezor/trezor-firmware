@@ -24,3 +24,6 @@
 [submodule "vendor/fido2-tests"]
 	path = vendor/fido2-tests
 	url = https://github.com/trezor/fido2-tests.git
+[submodule "common/defs/ethereum/chains"]
+	path = common/defs/ethereum/chains
+	url = https://github.com/ethereum-lists/chains

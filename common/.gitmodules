@@ -1,3 +1,6 @@
 [submodule "defs/ethereum/tokens"]
 	path = defs/ethereum/tokens
 	url = https://github.com/ethereum-lists/tokens.git
+[submodule "defs/ethereum/chains"]
+	path = defs/ethereum/chains
+	url = https://github.com/ethereum-lists/chains
