@@ -32,13 +32,6 @@
   "uri_prefix": "monacoin",
   "min_address_length": 27,
   "max_address_length": 34,
-  "bitcore": [
-    "https://mona.chainsight.info",
-    "https://insight.electrum-mona.org"
-  ],
-  "blockbook": [
-    "https://blockbook.electrum-mona.org"
-  ],
   "negative_fee": false,
   "cooldown": 100,
   "consensus_branch_id": null,

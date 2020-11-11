@@ -147,8 +147,6 @@ BTC_CHECKS = [
     check_key("max_address_length", int),
     check_key("bech32_prefix", str, regex=r"^[a-z-\.\+]+$", nullable=True),
     check_key("cashaddr_prefix", str, regex=r"^[a-z-\.\+]+$", nullable=True),
-    check_key("bitcore", list, empty=True),
-    check_key("blockbook", list, empty=True),
 ]
 
 
@@ -198,13 +196,6 @@ def validate_btc(coin):
             errors.append(
                 "xpub_magic_segwit_p2sh must not be defined for segwit-disabled coin"
             )
-
-    for bc in coin["bitcore"] + coin["blockbook"]:
-        if not bc.startswith("https://"):
-            errors.append("make sure URLs start with https://")
-
-        if bc.endswith("/"):
-            errors.append("make sure URLs don't end with '/'")
 
     return errors
 
@@ -527,6 +518,19 @@ def deduplicate_keys(all_coins):
                 coin["dup_key_nontoken"] = True
 
 
+def fill_blockchain_links(all_coins):
+    blockchain_links = load_json("blockchain_link.json")
+    for coins in all_coins.values():
+        for coin in coins:
+            link = blockchain_links.get(coin["key"])
+            coin["blockchain_link"] = link
+            if link and link["type"] == "blockbook":
+                coin["blockbook"] = link["url"]
+            else:
+                coin["blockbook"] = []
+
+
+
 def _btc_sort_key(coin):
     if coin["name"] in ("Bitcoin", "Testnet", "Regtest"):
         return "000000" + coin["name"]
@@ -550,8 +554,10 @@ def collect_coin_info():
         misc=_load_misc(),
     )
 
-    for k, coins in all_coins.items():
+    for coins in all_coins.values():
         _ensure_mandatory_values(coins)
+
+    fill_blockchain_links(all_coins)
 
     return all_coins
 
