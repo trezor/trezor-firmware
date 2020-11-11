@@ -223,9 +223,34 @@ def _load_btc_coins():
 
 def _load_ethereum_networks():
     """Load ethereum networks from `ethereum/networks.json`"""
-    networks = load_json("ethereum", "networks.json")
-    for network in networks:
-        network.update(key="eth:{}".format(network["shortcut"]))
+    chains_path = DEFS_DIR / "ethereum" / "chains" / "_data" / "chains"
+    networks = []
+    for chain in sorted(chains_path.glob("*.json"), key=lambda x: int(x.stem)):
+        chain_data = load_json(chain)
+        shortcut = chain_data["nativeCurrency"]["symbol"]
+        is_testnet = "testnet" in chain_data["name"].lower()
+        if is_testnet:
+            slip44 = 1
+        else:
+            slip44 = chain_data.get("slip44", 60)
+
+        if is_testnet and not shortcut.lower().startswith("t"):
+            shortcut = "t" + shortcut
+
+        rskip60 = shortcut in ("RBTC", "TRBTC")
+
+        network = dict(
+            chain=chain_data["shortName"],
+            chain_id=chain_data["chainId"],
+            slip44=slip44,
+            shortcut=shortcut,
+            name=chain_data["name"],
+            rskip60=rskip60,
+            url=chain_data["infoURL"],
+            key=f"eth:{shortcut}",
+        )
+        networks.append(network)
+
     return networks
 
 
@@ -517,6 +542,8 @@ def deduplicate_keys(all_coins):
         for i, coin in enumerate(coins):
             if is_token(coin):
                 coin["key"] += ":" + coin["address"][2:6].lower()  # first 4 hex chars
+            elif "chain_id" in coin:
+                coin["key"] += ":" + str(coin["chain_id"])
             else:
                 coin["key"] += ":{}".format(i)
                 coin["dup_key_nontoken"] = True
