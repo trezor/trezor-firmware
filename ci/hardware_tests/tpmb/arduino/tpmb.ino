@@ -12,22 +12,22 @@ Servo servo_left;
 
 void setup() {
     // Starting the serial console
-    Serial.begin(9600); 
-    
+    Serial.begin(9600);
+
     // Attaching both servos
     servo_right.attach(7);
     servo_left.attach(8);
-    
+
     // Setting them un unpressed position
     servo_right.write(right_unpressed);
     servo_left.write(left_unpressed);
     Serial.println("Ready for commands, press my buttons!");
 }
- 
+
 void loop() {
     if(Serial.available()){
         command = Serial.readStringUntil('\n');
-        
+
         if(command.equals("right press")){
           Serial.println("Pressing right button.");
           servo_right.write(right_pressed);

@@ -8,7 +8,7 @@ update.
 The device gets **wiped**:
 - If the firmware to be installed is unsigned.
 - If the present firmware is unsigned.
-- If the firmware to be installed has lower version than the current firmware's 
+- If the firmware to be installed has lower version than the current firmware's
 _fix_version_ [1].
 
 The device gets **wiped on every reboot**:
@@ -41,8 +41,8 @@ The device gets **wiped on every reboot**:
 
 ----
 
-[1] Firmware contains a _fix_version_, which is the lowest version to which that 
-particular firmware can be downgraded without wiping storage. This is typically used in 
+[1] Firmware contains a _fix_version_, which is the lowest version to which that
+particular firmware can be downgraded without wiping storage. This is typically used in
 case the internal storage format is changed. For example, in version 2.2.0, we have
 introduced Wipe Code, which introduced some changes to storage that the older firmwares
 (e.g. 2.1.8) would not understand. It can also be used to enforce security fixes.

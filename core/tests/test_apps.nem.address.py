@@ -44,7 +44,7 @@ class TestNemAddress(unittest.TestCase):
         self.assertTrue(check_path([44 | HARDENED, 1 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED], NEM_NETWORK_TESTNET))
         # short path (check_path does not validate pattern match):
         self.assertTrue(check_path([44 | HARDENED, 43 | HARDENED], NEM_NETWORK_MAINNET))
-    
+
         # testnet path on mainnet:
         self.assertFalse(check_path([44 | HARDENED, 1 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED], NEM_NETWORK_MAINNET))
         # mainnet path on testnet:

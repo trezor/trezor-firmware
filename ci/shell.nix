@@ -37,6 +37,7 @@ stdenv.mkDerivation ({
     bash
     check
     clang-tools
+    editorconfig-checker
     gcc
     gcc-arm-embedded
     git

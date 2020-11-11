@@ -132,7 +132,7 @@ def cli(
 
     If -c is specified, extra arguments are treated as a command that is executed with
     the running emulator. This command can access the following environment variables:
-    
+
     \b
     TREZOR_PROFILE_DIR - path to storage directory
     TREZOR_PATH - trezorlib connection string

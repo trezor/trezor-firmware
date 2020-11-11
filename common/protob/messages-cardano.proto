@@ -127,7 +127,7 @@ message CardanoSignTx {
         optional bytes prev_hash = 2;   // hash of previous transaction output to spend by this input
         optional uint32 prev_index = 3; // index of previous output to spend
         // left as a comment so we know to skip the id 4 in the future
-        // optional uint32 type = 4;    
+        // optional uint32 type = 4;
     }
     /**
      * Structure representing cardano transaction output

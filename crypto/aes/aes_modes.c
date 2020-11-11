@@ -80,7 +80,7 @@ aligned_array(unsigned long, dec_hybrid_table, 12, 16) = NEH_DEC_HYBRID_DATA;
 #elif NEH_KEY_TYPE == NEH_HYBRID
 #define kd_adr(c)   ((uint8_t*)(c)->ks + ((c)->inf.b[0] == 160 ? 160 : 0))
 #else
-#error no key type defined for VIA ACE 
+#error no key type defined for VIA ACE
 #endif
 
 #else
@@ -117,7 +117,7 @@ AES_RETURN aes_test_alignment_detection(unsigned int n)	/* 4 <= n <= 16 */
     {
         uint8_t *qf = ALIGN_FLOOR(p + i, n),
                 *qh =  ALIGN_CEIL(p + i, n);
-        
+
         if(qh == qf)
             ++count_eq;
         else if(qh == qf + n)

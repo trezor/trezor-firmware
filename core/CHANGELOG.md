@@ -61,13 +61,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 - Remove ETP, GIN, PTC, ZEL support.
-- Drop support for signing Zcash v3 transactions.  [#982] 
+- Drop support for signing Zcash v3 transactions.  [#982]
 
 ### Fixed
 - CRW addresses are properly generated.  [#1139]
 - Fix boot loop after uploading invalid homescreen.  [#1118]
 - Allow 49/x not 49/x' for Casa.  [#1190]
-- Make sure Homescreen is properly initialized.  [#1095] 
+- Make sure Homescreen is properly initialized.  [#1095]
 
 ### Security
 - Show non-empty passphrase on device when it was entered on host.
@@ -89,7 +89,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `Features.pin_cached` renamed to `unlocked`.
 - Forbid all settings if the device is not yet initialized.  [#1056]
 - Rewrite USB codec and Protobuf decoder to be more memory-efficient.  [#1089]
-- Allow compatibility namespaces for Casa and Green Address. 
+- Allow compatibility namespaces for Casa and Green Address.
 
 ### Deprecated
 - Deprecate `overwintered` field in `SignTx` and `TxAck`.

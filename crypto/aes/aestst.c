@@ -58,7 +58,7 @@ void out_state(long s0, long s1, long s2, long s3)
 
 void oblk(char m[], unsigned char v[], unsigned long n)
 {   unsigned long i;
-    
+
     printf("\n%s", m);
 
     for(i = 0; i < n; ++i)

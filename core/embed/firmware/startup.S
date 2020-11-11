@@ -7,7 +7,7 @@
 reset_handler:
 
 // The following loading of VTOR address only works if T1 bootloader was built with MEMORY_PROTECT=0
-// or the firmware was properly signed. All other variants end up in hard fault due to MPU 
+// or the firmware was properly signed. All other variants end up in hard fault due to MPU
 // (cf mpu_config_firmware in legacy bootloader)
 
 #if TREZOR_MODEL == 1

@@ -646,9 +646,9 @@ void bn_multiply_reduce_step(uint32_t res[2 * BN_LIMBS], const bignum256 *prime,
   // clang-format off
   // acc == 1 << shift
   // Proof:
-  //   acc 
-  //     == (1 << BITS_PER_LIMB * (LIMBS + 1) + shift) + res[d : d + LIMBS + 1] - coef * prime[:LIMBS] >> BITS_PER_LIMB * (LIMBS + 1) 
-  //     == (1 << BITS_PER_LIMB * (LIMBS + 1) + shift) + res[d : d + LIMBS + 1] - coef * prime >> BITS_PER_LIMB * (LIMBS + 1) 
+  //   acc
+  //     == (1 << BITS_PER_LIMB * (LIMBS + 1) + shift) + res[d : d + LIMBS + 1] - coef * prime[:LIMBS] >> BITS_PER_LIMB * (LIMBS + 1)
+  //     == (1 << BITS_PER_LIMB * (LIMBS + 1) + shift) + res[d : d + LIMBS + 1] - coef * prime >> BITS_PER_LIMB * (LIMBS + 1)
 
   //     == (1 << BITS_PER_LIMB * (LIMBS + 1) + shift) + (res[d : d + LIMBS + 1] - coef * prime) >> BITS_PER_LIMB * (LIMBS + 1)
   //     <= (1 << BITS_PER_LIMB * (LIMBS + 1) + shift) + (res[:d] + BASE**d * res[d : d + LIMBS + 1] - BASE**d * coef * prime)//BASE**d >> BITS_PER_LIMB * (LIMBS + 1)

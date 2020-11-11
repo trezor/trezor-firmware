@@ -1,4 +1,4 @@
-#!/usr/bin/env bash 
+#!/usr/bin/env bash
 if [ $# -ne 2 ]
   then
     echo "Usage: $0 commit_id [start|stop]"

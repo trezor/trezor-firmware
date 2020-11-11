@@ -340,7 +340,7 @@ void ge25519_double_scalarmult_vartime2(ge25519 *r, const ge25519 *p1, const big
 	ge25519_full_to_pniels(pre2, p2);
 	for (i = 0; i < S1_TABLE_SIZE - 1; i++)
 		ge25519_pnielsadd(&pre2[i+1], &dp, &pre2[i]);
-	
+
 	ge25519_set_neutral(r);
 
 	i = 255;
@@ -520,7 +520,7 @@ void ge25519_scalarmult_base_niels(ge25519 *r, const uint8_t basepoint_table[256
 	curve25519_add_reduce(r->y, t.xaddy, t.ysubx);
 	memzero(r->z, sizeof(bignum25519));
 	curve25519_copy(r->t, t.t2d);
-	r->z[0] = 2;	
+	r->z[0] = 2;
 	for (i = 3; i < 64; i += 2) {
 		ge25519_scalarmult_base_choose_niels(&t, basepoint_table, i / 2, b[i]);
 		ge25519_nielsadd2(r, &t);

@@ -20,7 +20,7 @@
      `git commit --fixup [commithash]` which creates a new commit with the message "fixup! [orig_message]",
      where orig_message is the commit message of the `commithash` it "fixes". If the fixes are across
      multiple earlier commits, then they need to be split into multiple fixup commits.
-  5. The author informs the reviewer with a simple comment "done" or similar to tell the reviewer 
+  5. The author informs the reviewer with a simple comment "done" or similar to tell the reviewer
      their comment was implemented. Bonus points for including a revision of the fixup commit.
   6. The reviewer reviews the modifications and when they are finally satisfied they resolve the Github
      comment.
@@ -35,7 +35,7 @@
 If you find the description too difficult, then here is an example to make it more clear.
 
 Andrew tries to add a number of commits very well structured and with nice and consistent commit
-messages. These will _not_ be squashed together. 
+messages. These will _not_ be squashed together.
 
 ![](review-1.png)
 
@@ -43,7 +43,7 @@ Matějčík starts to review and finds something he would like to improve:
 
 ![](review-2.png)
 
-Andrew responds with a commit hash 55d883b informing that he has accepted and implemented the 
+Andrew responds with a commit hash 55d883b informing that he has accepted and implemented the
 comment.
 
 This commit is a fixup commit. Since it is a new commit he does not have to force-push. In the

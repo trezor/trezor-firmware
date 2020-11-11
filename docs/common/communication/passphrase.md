@@ -1,7 +1,7 @@
-# Passphrase 
+# Passphrase
 
 As of 1.9.0 / 2.3.0 we have changed how [passphrase](https://wiki.trezor.io/Passphrase) is communicated between the host and the device. For migration information for existing Hosts communicating with Trezor please see this [document](passphrase-redesign-migration.md).
- 
+
 Passphrase is very tightly coupled with _sessions_. The reader is encouraged to read on that topic first in the [sessions.md](sessions.md) section.
 
 ## Scheme
@@ -9,11 +9,11 @@ Passphrase is very tightly coupled with _sessions_. The reader is encouraged to 
 As soon as Trezor needs the passphrase to do BIP-39/SLIP-39 derivations it prompts the user for passphrase.
 
 ```
-GetAddress(...) 
+GetAddress(...)
 --------->          PassphraseRequest()
                        <---------
 PassphraseAck
-(str passphrase, bool on_device)  
+(str passphrase, bool on_device)
 --------->          Address(...)
                        <---------
 ```
@@ -30,7 +30,7 @@ On an initialized device with passphrase enabled a common communication starts l
 Initialize()
 --------->          Features(..., session_id)
                        <---------
-GetAddress(...) 
+GetAddress(...)
 --------->          PassphraseRequest()
                        <---------
 PassphraseAck(...)
@@ -38,7 +38,7 @@ PassphraseAck(...)
                        <---------
 ```
 
-The device requested the passphrase since the BIP-39/SLIP-39 seed is not yet cached. After this workflow the seed is cached and the passphrase will therefore never be requested again unless the session is cleared*. 
+The device requested the passphrase since the BIP-39/SLIP-39 seed is not yet cached. After this workflow the seed is cached and the passphrase will therefore never be requested again unless the session is cleared*.
 
 Since we do not have sessions, the Host can not be sure that someone else has not used the device and applied another session id (e.g. changed the Passphrase). To work around this we send the session id again on every subsequent message. See more on that in [session.md]().
 
@@ -46,7 +46,7 @@ Since we do not have sessions, the Host can not be sure that someone else has no
 Initialize(session_id)
 --------->          Features(..., session_id)
                        <---------
-GetPublicKey(...) 
+GetPublicKey(...)
 --------->          PublicKey(...)
                        <---------
 ```

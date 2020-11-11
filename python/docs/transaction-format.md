@@ -92,7 +92,6 @@ message TxOutputType {
     optional MultisigRedeemScriptType multisig = 5; // multisig output definition
     optional bytes op_return_data = 6;              // defines op_return data
     optional uint32 decred_script_version = 7;      // only for Decred
- 
 ```
 
 All outputs must have an `amount` and a `script_type`.
@@ -190,13 +189,13 @@ Otherwise the encoding is identical:
 
 The JSON below encodes a transaction with the following inputs:
 
-* [e9cec1644db8fa95fe639a9b503a63ea587d2f4e480d3847703e3ec73adf6b5a](https://btc5.trezor.io/tx/e9cec1644db8fa95fe639a9b503a63ea587d2f4e480d3847703e3ec73adf6b5a)  
-  output **0** (P2PKH address 1Jw5FrKhi2aWbbF4h3QRWLog5AjsJYGswv)  
-  at derivation path **m/44'/0'/0'/0/282**  
+* [e9cec1644db8fa95fe639a9b503a63ea587d2f4e480d3847703e3ec73adf6b5a](https://btc5.trezor.io/tx/e9cec1644db8fa95fe639a9b503a63ea587d2f4e480d3847703e3ec73adf6b5a)
+  output **0** (P2PKH address 1Jw5FrKhi2aWbbF4h3QRWLog5AjsJYGswv)
+  at derivation path **m/44'/0'/0'/0/282**
   amount **85 170** sat
-* [1f545c0ca1f2c055e199c70457025c1e393edd013a274a976187115a5c601155](https://btc5.trezor.io/tx/1f545c0ca1f2c055e199c70457025c1e393edd013a274a976187115a5c601155)  
-  output **0** (P2SH-SegWit address 3DEAk9KGrgvj2gHQ1hyfCXus9hZr9K8Beh)  
-  at derivation path **m/49'/0'/0'/0/55**  
+* [1f545c0ca1f2c055e199c70457025c1e393edd013a274a976187115a5c601155](https://btc5.trezor.io/tx/1f545c0ca1f2c055e199c70457025c1e393edd013a274a976187115a5c601155)
+  output **0** (P2SH-SegWit address 3DEAk9KGrgvj2gHQ1hyfCXus9hZr9K8Beh)
+  at derivation path **m/49'/0'/0'/0/55**
   amount **500 000** sat
 
 And the following outputs:

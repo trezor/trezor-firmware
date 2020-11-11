@@ -15,4 +15,4 @@ class TestSomething(unittest.TestCase):
         self.assertTrue(True)
 ```
 
-Usage of `assert` is discouraged because it is not evaluated in production code (when `PYOPT=1`). Use `self.assertXY` instead, see `unittest.py`. 
+Usage of `assert` is discouraged because it is not evaluated in production code (when `PYOPT=1`). Use `self.assertXY` instead, see `unittest.py`.
