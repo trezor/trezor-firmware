@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-import glob
 import json
 import logging
 import os
 import re
 from collections import OrderedDict, defaultdict
+from pathlib import Path
 
 try:
     import requests
@@ -13,20 +13,22 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
-DEFS_DIR = os.path.abspath(
-    os.environ.get("DEFS_DIR") or os.path.join(os.path.dirname(__file__), "..", "defs")
-)
+ROOT = (Path(__file__).parent / "..").resolve()
+
+if os.environ.get("DEFS_DIR"):
+    DEFS_DIR = Path(os.environ.get("DEFS_DIR")).resolve()
+else:
+    DEFS_DIR = ROOT / "defs"
 
 
 def load_json(*path):
     """Convenience function to load a JSON file from DEFS_DIR."""
-    if len(path) == 1 and path[0].startswith("/"):
-        filename = path[0]
+    if len(path) == 1 and isinstance(path[0], Path):
+        file = path[0]
     else:
-        filename = os.path.join(DEFS_DIR, *path)
+        file = Path(DEFS_DIR, *path)
 
-    with open(filename) as f:
-        return json.load(f, object_pairs_hook=OrderedDict)
+    return json.loads(file.read_text(), object_pairs_hook=OrderedDict)
 
 
 # ====== CoinsInfo ======
@@ -206,13 +208,13 @@ def validate_btc(coin):
 def _load_btc_coins():
     """Load btc-like coins from `bitcoin/*.json`"""
     coins = []
-    for filename in glob.glob(os.path.join(DEFS_DIR, "bitcoin", "*.json")):
-        coin = load_json(filename)
+    for file in DEFS_DIR.glob("bitcoin/*.json"):
+        coin = load_json(file)
         coin.update(
             name=coin["coin_label"],
             shortcut=coin["coin_shortcut"],
             key="bitcoin:{}".format(coin["coin_shortcut"]),
-            icon=filename.replace(".json", ".png"),
+            icon=str(file.with_suffix(".png")),
         )
         coins.append(coin)
 
@@ -234,9 +236,9 @@ def _load_erc20_tokens():
     for network in networks:
         chain = network["chain"]
 
-        chain_path = os.path.join(DEFS_DIR, "ethereum", "tokens", "tokens", chain)
-        for filename in sorted(glob.glob(os.path.join(chain_path, "*.json"))):
-            token = load_json(filename)
+        chain_path = DEFS_DIR / "ethereum" / "tokens" / "tokens" / chain
+        for file in sorted(chain_path.glob("*.json")):
+            token = load_json(file)
             token.update(
                 chain=chain,
                 chain_id=network["chain_id"],
@@ -251,7 +253,7 @@ def _load_erc20_tokens():
 
 def _load_nem_mosaics():
     """Loads NEM mosaics from `nem/nem_mosaics.json`"""
-    mosaics = load_json("nem", "nem_mosaics.json")
+    mosaics = load_json("nem/nem_mosaics.json")
     for mosaic in mosaics:
         shortcut = mosaic["ticker"].strip()
         mosaic.update(shortcut=shortcut, key="nem:{}".format(shortcut))
@@ -269,17 +271,19 @@ def _load_misc():
 def _load_fido_apps():
     """Load FIDO apps from `fido/*.json`"""
     apps = []
-    for filename in sorted(glob.glob(os.path.join(DEFS_DIR, "fido", "*.json"))):
-        app_name = os.path.basename(filename)[:-5].lower()
-        app = load_json(filename)
+    for file in sorted(DEFS_DIR.glob("fido/*.json")):
+        app_name = file.stem.lower()
+        app = load_json(file)
         app.setdefault("use_sign_count", None)
         app.setdefault("use_self_attestation", None)
         app.setdefault("u2f", [])
         app.setdefault("webauthn", [])
 
-        icon_path = os.path.join(DEFS_DIR, "fido", app_name + ".png")
-        if not os.path.exists(icon_path):
+        icon_file = file.with_suffix(".png")
+        if not icon_file.exists():
             icon_path = None
+        else:
+            icon_path = str(icon_file)
 
         app.update(key=app_name, icon=icon_path)
         apps.append(app)
@@ -528,7 +532,6 @@ def fill_blockchain_links(all_coins):
                 coin["blockbook"] = link["url"]
             else:
                 coin["blockbook"] = []
-
 
 
 def _btc_sort_key(coin):
