@@ -17,6 +17,11 @@ gen prebuild:
   script:
     - nix-shell --run "poetry run make gen_check"
 
+yaml prebuild:
+  stage: prebuild
+  script:
+    - nix-shell --run "poetry run make yaml_check"
+
 release commit messages prebuild:
   stage: prebuild
   before_script: []  # nothing needed

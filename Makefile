@@ -39,13 +39,13 @@ pystyle: ## apply code style on application sources and tests
 	@flake8 $(PY_FILES)
 	make -C python style
 
-changelog_check:  # check changelog format
+changelog_check: ## check changelog format
 	./tools/linkify-changelogs.py --check
 
-yaml_check:
+yaml_check: ## check yaml formatting
 	yamllint .
 
-changelog:  # fill out issue links in changelog
+changelog: ## fill out issue links in changelog
 	./tools/linkify-changelogs.py
 
 cstyle_check: ## run code style check on low-level C code
