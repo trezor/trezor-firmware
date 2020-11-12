@@ -7,15 +7,16 @@ from trezor.ui.button import ButtonDefault
 from trezor.ui.container import Container
 from trezor.ui.qr import Qr
 from trezor.ui.scroll import Paginated
-from trezor.ui.text import Text
+from trezor.ui.text import TEXT_MAX_LINES, Text, break_lines
 from trezor.utils import chunks
 
 from apps.common import HARDENED
 from apps.common.confirm import confirm, require_confirm
 
 if False:
-    from typing import Iterable, Iterator, List
+    from typing import Iterable, Iterator, List, Union
     from trezor import wire
+    from trezor.ui.text import TextContent
 
 
 async def show_address(
@@ -136,3 +137,47 @@ async def show_success(
     await require_confirm(
         ctx, text, ButtonRequestType.Success, confirm=button, cancel=None
     )
+
+
+def paginate_content(
+    content: List[TextContent],
+    header: str,
+    header_icon: str = ui.ICON_DEFAULT,
+    icon_color: int = ui.ORANGE_ICON,
+    break_spaces: bool = False,
+) -> Union[Text, Paginated]:
+    breaks = list(break_lines(content, False, 65535, break_spaces=break_spaces))
+    n_lines = len(breaks) + 1
+
+    if n_lines <= TEXT_MAX_LINES:
+        result = Text(
+            header,
+            header_icon=header_icon,
+            icon_color=icon_color,
+            new_lines=False,
+        )
+        result.content = content
+        result.breaks = breaks
+        return result
+    else:
+        breaks = list(
+            break_lines(
+                content, False, 65535, offset_x_max=220, break_spaces=break_spaces
+            )
+        )
+        n_lines = len(breaks) + 1
+        n_pages = n_lines // TEXT_MAX_LINES + (1 if n_lines % TEXT_MAX_LINES > 0 else 0)
+        assert n_pages > 1
+        result_pages = []  # type: List[ui.Component]
+        for page_no in range(n_pages):
+            c = Text(
+                header,
+                header_icon=header_icon,
+                icon_color=icon_color,
+                new_lines=False,
+            )
+            c.content = content
+            c.breaks = breaks
+            c.line_offset = page_no * TEXT_MAX_LINES
+            result_pages.append(c)
+        return Paginated(result_pages)

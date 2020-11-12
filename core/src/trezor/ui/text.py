@@ -174,25 +174,29 @@ def render_text(
     bg: int = ui.BG,
     offset_x: int = TEXT_MARGIN_LEFT,
     offset_y: int = TEXT_HEADER_HEIGHT + TEXT_LINE_HEIGHT,
+    line_offset: int = 0,
 ) -> None:
     # initial rendering state
     INITIAL_OFFSET_X = offset_x
     offset_y_max = TEXT_HEADER_HEIGHT + (TEXT_LINE_HEIGHT * max_lines)
 
+    line_no = 0
     breaks_it = iter(breaks)
-    break_word_index, break_index, break_split = next_sentinel(breaks_it)
+    break_word_index, break_char_index, break_split = next_sentinel(breaks_it)
 
     def next_line() -> None:
-        nonlocal offset_x, offset_y, break_word_index, break_index, break_split
-        break_word_index, break_index, break_split = next_sentinel(breaks_it)
-        offset_x = INITIAL_OFFSET_X
-        offset_y += TEXT_LINE_HEIGHT
+        nonlocal offset_x, offset_y, break_word_index, break_char_index, break_split, line_no
+        break_word_index, break_char_index, break_split = next_sentinel(breaks_it)
+        if line_no >= line_offset:
+            offset_x = INITIAL_OFFSET_X
+            offset_y += TEXT_LINE_HEIGHT
+        line_no += 1
 
     for word_index, word in enumerate(words):
         if isinstance(word, int):
             if word is BR or word is BR_HALF:
                 # line break or half-line break
-                if offset_y > offset_y_max:
+                if offset_y > offset_y_max and line_no >= line_offset:
                     ui.display.text(offset_x, offset_y, "...", ui.BOLD, ui.GREY, bg)
                     return
                 if word is BR:
@@ -213,18 +217,19 @@ def render_text(
 
         begin = 0
         while break_word_index == word_index:
-            span = word[begin:break_index]
+            span = word[begin:break_char_index]
             width = ui.display.text_width(span, font)
 
-            ui.display.text(offset_x, offset_y, span, font, fg, bg)
-            if break_split is not None:
-                ui.display.text(
-                    offset_x + width, offset_y, break_split, ui.BOLD, ui.GREY, bg
-                )
+            if line_no >= line_offset:
+                ui.display.text(offset_x, offset_y, span, font, fg, bg)
+                if break_split is not None:
+                    ui.display.text(
+                        offset_x + width, offset_y, break_split, ui.BOLD, ui.GREY, bg
+                    )
 
             if offset_y >= offset_y_max:
                 return
-            begin = break_index
+            begin = break_char_index
             next_line()
 
         word = word[begin:]
@@ -232,9 +237,10 @@ def render_text(
             continue
 
         # render word
-        ui.display.text(offset_x, offset_y, word, font, fg, bg)
-        offset_x += ui.display.text_width(word, font)
-        offset_x += ui.display.text_width(" ", font)
+        if line_no >= line_offset:
+            ui.display.text(offset_x, offset_y, word, font, fg, bg)
+            offset_x += ui.display.text_width(word, font)
+            offset_x += ui.display.text_width(" ", font)
 
 
 class Text(ui.Component):
@@ -252,25 +258,32 @@ class Text(ui.Component):
         self.max_lines = max_lines
         self.new_lines = new_lines
         self.content = []  # type: List[TextContent]
+        self.breaks = None  # type: Optional[List[BreakIndex]]
+        self.line_offset = 0
         self.repaint = True
 
     def normal(self, *content: TextContent) -> None:
         self.content.append(ui.NORMAL)
         self.content.extend(content)
+        self.breaks = None
 
     def bold(self, *content: TextContent) -> None:
         self.content.append(ui.BOLD)
         self.content.extend(content)
+        self.breaks = None
 
     def mono(self, *content: TextContent) -> None:
         self.content.append(ui.MONO)
         self.content.extend(content)
+        self.breaks = None
 
     def br(self) -> None:
         self.content.append(BR)
+        self.breaks = None
 
     def br_half(self) -> None:
         self.content.append(BR_HALF)
+        self.breaks = None
 
     def on_render(self) -> None:
         if self.repaint:
@@ -281,11 +294,16 @@ class Text(ui.Component):
                 ui.BG,
                 self.icon_color,
             )
+            if self.breaks is None:
+                self.breaks = list(
+                    break_lines(self.content, self.new_lines, self.max_lines)
+                )
             render_text(
                 self.content,
                 self.new_lines,
                 self.max_lines,
-                breaks=break_lines(self.content, self.new_lines, self.max_lines),
+                breaks=self.breaks,
+                line_offset=self.line_offset,
             )
             self.repaint = False
 
