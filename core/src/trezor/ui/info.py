@@ -1,7 +1,7 @@
 from trezor import res, ui
 from trezor.ui.button import Button, ButtonConfirm
 from trezor.ui.confirm import CONFIRMED
-from trezor.ui.text import TEXT_LINE_HEIGHT, TEXT_MARGIN_LEFT, render_text
+from trezor.ui.text import TEXT_LINE_HEIGHT, TEXT_MARGIN_LEFT, break_lines, render_text
 
 if False:
     from typing import Type
@@ -59,13 +59,21 @@ class InfoConfirm(ui.Layout):
             ui.display.bar_radius(x, y, w, h, bg_color, ui.BG, ui.RADIUS)
 
             # render the info text
-            render_text(  # type: ignore
+            breaks = break_lines(
                 self.text,
                 new_lines=False,
                 max_lines=6,
                 offset_y=y + TEXT_LINE_HEIGHT,
                 offset_x=x + TEXT_MARGIN_LEFT - ui.VIEWX,
                 offset_x_max=x + w - ui.VIEWX,
+            )
+            render_text(  # type: ignore
+                self.text,
+                new_lines=False,
+                max_lines=6,
+                breaks=breaks,
+                offset_y=y + TEXT_LINE_HEIGHT,
+                offset_x=x + TEXT_MARGIN_LEFT - ui.VIEWX,
                 fg=fg_color,
                 bg=bg_color,
             )
