@@ -24375,26 +24375,6 @@
                 }
             ]
         },
-        "erc20:eth:ZIL": {
-            "address": "0x05f4a42e251f2d52b8ed15E9FEdAacFcEF1FAD27",
-            "links": {
-                "Github": "https://github.com/zilliqa",
-                "Homepage": "https://www.zilliqa.com/"
-            },
-            "marketcap_usd": 0,
-            "name": "Zilliqa",
-            "network": "eth",
-            "shortcut": "ZIL",
-            "t1_enabled": "yes",
-            "t2_enabled": "yes",
-            "type": "erc20",
-            "wallet": [
-                {
-                    "name": "Trezor Beta",
-                    "url": "https://beta-wallet.trezor.io/next/"
-                }
-            ]
-        },
         "erc20:eth:ZINC": {
             "address": "0x4AaC461C86aBfA71e9d00d9a2cde8d74E4E1aeEa",
             "links": {
@@ -33209,12 +33189,12 @@
         }
     },
     "info": {
-        "marketcap_supported": "83.65 %",
+        "marketcap_supported": "84.32 %",
         "marketcap_usd": 383239302330,
-        "t1_coins": 1613,
-        "t2_coins": 1619,
-        "total_marketcap_usd": 458133016637,
-        "updated_at": 1605190491,
-        "updated_at_readable": "Thu Nov 12 15:14:51 2020"
+        "t1_coins": 1612,
+        "t2_coins": 1618,
+        "total_marketcap_usd": 454514068384,
+        "updated_at": 1605193008,
+        "updated_at_readable": "Thu Nov 12 15:56:48 2020"
     }
 }
