@@ -2,6 +2,8 @@ extends: default
 
 ignore: |
   vendor/
+  common/defs/ethereum/chains/
+  common/defs/ethereum/tokens/
 
 rules:
   # skip line length
