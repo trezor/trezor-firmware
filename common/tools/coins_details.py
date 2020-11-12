@@ -105,7 +105,7 @@ def _webwallet_support(coin, support):
     """
     if not support.get("webwallet"):
         return False
-    return any(".trezor.io" in url for url in coin["blockbook"] + coin["bitcore"])
+    return any(".trezor.io" in url for url in coin["blockbook"])
 
 
 def dict_merge(orig, new):
