@@ -65,8 +65,6 @@ help: ## show this help
 vendor: ## update git submodules
 	git submodule update --init --recursive --force
 
-res: templates ## update resources
-
 ## emulator commands:
 
 run: ## run unix port
@@ -106,7 +104,7 @@ test_emu_ui_record: ## record and hash screens for ui integration tests
 pylint: ## run pylint on application sources and tests
 	pylint -E $(shell find src tests -name *.py)
 
-mypy: res
+mypy:
 	mypy --config-file ../setup.cfg \
 		src/main.py \
 		src/apps/bitcoin \
@@ -143,16 +141,16 @@ build_reflash: ## build reflash firmware + reflash image
 	dd if=build/boardloader/boardloader.bin of=$(REFLASH_BUILD_DIR)/sdimage.bin bs=1 seek=0
 	dd if=build/bootloader/bootloader.bin of=$(REFLASH_BUILD_DIR)/sdimage.bin bs=1 seek=49152
 
-build_firmware: res build_cross ## build firmware with frozen modules
+build_firmware: templates build_cross ## build firmware with frozen modules
 	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" RDI="$(RDI)" $(FIRMWARE_BUILD_DIR)/firmware.bin
 
-build_unix: res ## build unix port
+build_unix: templates ## build unix port
 	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) TREZOR_MODEL="$(TREZOR_MODEL)" BITCOIN_ONLY="$(BITCOIN_ONLY)"
 
-build_unix_frozen: res build_cross ## build unix port with frozen modules
+build_unix_frozen: templates build_cross ## build unix port with frozen modules
 	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) TREZOR_MODEL="$(TREZOR_MODEL)" PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_MEMPERF=$(TREZOR_MEMPERF) TREZOR_EMULATOR_FROZEN=1
 
-build_unix_debug: res ## build unix port
+build_unix_debug: templates ## build unix port
 	$(SCONS) --max-drift=1 CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) TREZOR_MODEL="$(TREZOR_MODEL)" TREZOR_EMULATOR_ASAN=1 TREZOR_EMULATOR_DEBUGGABLE=1
 
 build_cross: ## build mpy-cross port
