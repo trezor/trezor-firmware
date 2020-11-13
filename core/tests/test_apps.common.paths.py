@@ -41,8 +41,8 @@ class TestPathSchemas(unittest.TestCase):
 
     def assertEqualSchema(self, schema_a, schema_b):
         def is_equal(a, b):
-            if isinstance(a, range) and isinstance(b, range):
-                return a.start == b.start and a.step == b.step and a.stop == b.stop
+            if isinstance(a, Interval) and isinstance(b, Interval):
+                return a.min == b.min and a.max == b.max
             return set(a) == set(b)
 
         ensure(

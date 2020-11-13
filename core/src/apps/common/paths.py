@@ -12,6 +12,7 @@ if False:
         Any,
         Callable,
         Collection,
+        Container,
         Iterable,
         List,
         Sequence,
@@ -33,25 +34,17 @@ if False:
             ...
 
 
-class _FastInclusiveRange(range):
-    """Inclusive range with a fast membership test, suitable for PathSchema use.
-
-    Micropython's `range` does not implement the `__contains__` method. This makes
-    checking whether `x in range(BIG_NUMBER)` slow. This class fixes the problem.
-
-    In addition, convenience modifications have been made:
-    * both `min` and `max` belong to the range (so `stop == max + 1`).
-    * both `min` and `max` must be set, `step` is not allowed (we don't need it and it
-      would make the `__contains__` method more complex)
-    """
+class Interval:
+    """Helper for testing membership in an interval."""
 
     def __init__(self, min: int, max: int) -> None:
-        super().__init__(min, max + 1)
+        self.min = min
+        self.max = max
 
     def __contains__(self, x: object) -> bool:
         if not isinstance(x, int):
             return False
-        return self.start <= x < self.stop
+        return self.min <= x <= self.max
 
 
 class PathSchema:
@@ -107,9 +100,9 @@ class PathSchema:
     }
 
     WILDCARD_RANGES = {
-        "*": _FastInclusiveRange(0, HARDENED - 1),
-        "*'": _FastInclusiveRange(HARDENED, 0xFFFF_FFFF),
-        "**": _FastInclusiveRange(0, 0xFFFF_FFFF),
+        "*": Interval(0, HARDENED - 1),
+        "*'": Interval(HARDENED, 0xFFFF_FFFF),
+        "**": Interval(0, 0xFFFF_FFFF),
     }
 
     def __init__(self, pattern: str, slip44_id: Union[int, Iterable[int]]) -> None:
@@ -120,8 +113,8 @@ class PathSchema:
         if isinstance(slip44_id, int):
             slip44_id = (slip44_id,)
 
-        self.schema: List[Collection[int]] = []
-        self.trailing_components: Collection[int] = ()
+        self.schema: List[Container[int]] = []
+        self.trailing_components: Container[int] = ()
 
         for component in components:
             if component in self.WILDCARD_RANGES:
@@ -151,7 +144,7 @@ class PathSchema:
             if "-" in component:
                 # parse as a range
                 a, b = [parse(s) for s in component.split("-", 1)]
-                self.schema.append(_FastInclusiveRange(a, b))
+                self.schema.append(Interval(a, b))
 
             elif "," in component:
                 # parse as a list of values
@@ -193,18 +186,23 @@ class PathSchema:
                 return item ^ (item & HARDENED)
 
             for component in self.schema:
-                if isinstance(component, range):
-                    a, b = component.start, component.stop - 1
+                if isinstance(component, Interval):
+                    a, b = component.min, component.max
                     components.append(
                         "[{}-{}]{}".format(
                             unharden(a), unharden(b), "'" if a & HARDENED else ""
                         )
                     )
                 else:
-                    component_str = ",".join(str(unharden(i)) for i in component)
-                    if len(component) > 1:
+                    # mypy thinks component is a Contanier but we're using it as a Collection.
+                    # Which in practice it is, the only non-Collection is Interval.
+                    # But we're not going to introduce an additional type requirement
+                    # for the sake of __repr__ that doesn't exist in production anyway
+                    collection: Collection[int] = component  # type: ignore
+                    component_str = ",".join(str(unharden(i)) for i in collection)
+                    if len(collection) > 1:
                         component_str = "[" + component_str + "]"
-                    if next(iter(component)) & HARDENED:
+                    if next(iter(collection)) & HARDENED:
                         component_str += "'"
                     components.append(component_str)
 
