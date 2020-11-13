@@ -10,7 +10,6 @@ core unix coverage posttest:
     - core u2f test
     - core fido2 test
   script:
-    - nix-shell --run "poetry run make -C core res"  # we need to regenerate resources.py
     - nix-shell --run "poetry run make -C core coverage"
   coverage: '/COVERAGE: \d+%/'
   artifacts:
