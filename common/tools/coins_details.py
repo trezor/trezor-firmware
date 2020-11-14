@@ -34,10 +34,9 @@ WALLETS_ETH_3RDPARTY = {
 
 
 TREZOR_KNOWN_URLS = (
+    "https://suite.trezor.io",
     "https://wallet.trezor.io",
     "https://beta-wallet.trezor.io/next/",
-    "https://trezor.io/stellar/",
-    "https://omnitrezor.com/",
 )
 
 
