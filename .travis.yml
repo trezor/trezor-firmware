@@ -27,7 +27,9 @@ install:
   # make sure poetry is installable without protobuf - install protoc later
   - curl -LO "https://github.com/google/protobuf/releases/download/v${PROTOBUF_VERSION}/protoc-${PROTOBUF_VERSION}-linux-x86_64.zip"
   - unzip "protoc-${PROTOBUF_VERSION}-linux-x86_64.zip" -d protoc
-  - export PATH="$(pwd)/protoc/bin:$PATH"
+  - curl -LO "https://github.com/editorconfig-checker/editorconfig-checker/releases/download/2.2.0/ec-linux-amd64.tar.gz"
+  - tar xfz ec-linux-amd64.tar.gz && mv bin/ec-linux-amd64 bin/editorconfig-checker
+  - export PATH="$(pwd)/bin:$(pwd)/protoc/bin:$PATH"
 
 script:
   - poetry run make style_check
