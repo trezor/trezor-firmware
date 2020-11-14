@@ -25,6 +25,17 @@ class TestDisplay(unittest.TestCase):
 
     def test_text(self):
         display.text(120, 120, 'Test', 0, 0xFFFF, 0x0000)
+        display.text(120, 120, 'Test', 0, 0xFFFF, 0x0000, 2)
+        display.text(120, 120, 'Test', 0, 0xFFFF, 0x0000, 2, 1)
+        display.text(120, 120, 'Těst', 0, 0xFFFF, 0x0000, 2, 2)
+
+        display.text(120, 120, "ǑǑǑǑǑǑǑǑ", 0, 0xFFFF, 0x0000)
+        for off in (0, 2, 3, 8, 16):
+            display.text(120, 120, "ǑǑǑǑǑǑǑǑ", 0, 0xFFFF, 0x0000, off)
+            display.text(120, 120, "ǑǑǑǑǑǑǑǑ", 0, 0xFFFF, 0x0000, off, 0)
+
+        for off, tlen in ((2, 5), (2, 14), (3, 5), (3, 13), (8, 1), (8, 8)):
+            display.text(120, 120, "ǑǑǑǑǑǑǑǑ", 0, 0xFFFF, 0x0000, off, tlen)
 
     def test_text_center(self):
         display.text_center(120, 120, 'Test', 0, 0xFFFF, 0x0000)
@@ -34,6 +45,24 @@ class TestDisplay(unittest.TestCase):
 
     def test_text_width(self):
         display.text_width('Test', 0)
+        display.text_width('Test', 0, 2)
+        display.text_width('Test', 0, 2, 1)
+        display.text_width('Těst', 0, 2, 2)
+
+        display.text_width("ǑǑǑǑǑǑǑǑ", 0)
+        for off in (0, 2, 3, 8, 16):
+            display.text_width("ǑǑǑǑǑǑǑǑ", 0, off)
+            self.assertEqual(display.text_width("ǑǑǑǑǑǑǑǑ", 0, off, 0), 0)
+
+        for off, tlen in ((0, 8), (0, 16), (2, 5), (2, 14), (3, 5), (3, 13)):
+            display.text_width("ǑǑǑǑǑǑǑǑ", 0, off, tlen)
+
+        self.assertEqual(display.text_width("ǑǑǑǑǑǑǑǑ", 8), 0)
+        self.assertEqual(display.text_width("ǑǑǑǑǑǑǑǑ", 8, 1), 0)
+        self.assertEqual(display.text_width("ǑǑǑǑǑǑǑǑ", 8, 8), 0)
+        self.assertEqual(display.text_width("ǑǑǑǑǑǑǑǑ", 9), 0)
+        self.assertEqual(display.text_width("ǑǑǑǑǑǑǑǑ", 9, 1), 0)
+        self.assertEqual(display.text_width("ǑǑǑǑǑǑǑǑ", 15, 1), 0)
 
     def test_qrcode(self):
         display.qrcode(0, 0, 'Test', 4)
