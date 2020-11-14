@@ -56,7 +56,7 @@
             "Github": "https://github.com/ripple/rippled"
         },
         "wallet": {
-            "Trezor Beta": "https://beta-wallet.trezor.io/next/",
+            "Trezor Beta": "https://suite.trezor.io",
             "Exodus": "https://www.exodus.io",
             "Magnum": "https://magnumwallet.co"
         },
@@ -80,7 +80,7 @@
             "Github": "https://github.com/ripple/rippled"
         },
         "wallet": {
-            "Trezor Beta": "https://beta-wallet.trezor.io/next/"
+            "Trezor Suite": "https://suite.trezor.io"
         },
         "blockchain_link": {
             "type": "ripple",

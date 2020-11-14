@@ -21,8 +21,8 @@ OVERRIDES = coin_info.load_json("coins_details.override.json")
 VERSIONS = coin_info.latest_releases()
 
 # automatic wallet entries
-WALLET_TREZOR = {"Trezor": "https://wallet.trezor.io"}
-WALLET_ETH_TREZOR = {"Trezor Beta": "https://beta-wallet.trezor.io/next/"}
+WALLET_TREZOR = {"Trezor Wallet": "https://wallet.trezor.io"}
+WALLET_ETH_TREZOR = {"Trezor Suite": "https://suite.trezor.io"}
 WALLET_NEM = {
     "Nano Wallet": "https://nem.io/downloads/",
     "Magnum": "https://magnumwallet.co",
@@ -36,7 +36,6 @@ WALLETS_ETH_3RDPARTY = {
 TREZOR_KNOWN_URLS = (
     "https://suite.trezor.io",
     "https://wallet.trezor.io",
-    "https://beta-wallet.trezor.io/next/",
 )
 
 
