@@ -120,7 +120,7 @@ def break_lines(
 
             nchars, width = measure_line(
                 word,
-                0,
+                char_index,
                 offset_x_max - offset_x,
                 font,
                 ELLIPSIS if last_line else DASH,
@@ -132,11 +132,11 @@ def break_lines(
                 yield word_index, char_index, None
                 offset_x = INITIAL_OFFSET_X
                 offset_y += TEXT_LINE_HEIGHT
-                width = ui.display.text_width(word, font)
+                width = ui.display.text_width(word, font, char_index)
                 continue
 
             # break up word
-            if break_spaces and word[nchars - 1] == " ":
+            if break_spaces and word[char_index + nchars - 1] == " ":
                 split = None
             elif last_line:
                 split = "..."
@@ -149,13 +149,12 @@ def break_lines(
             offset_y += TEXT_LINE_HEIGHT
 
             # continue with the rest
-            word = word[nchars:]
-            width = ui.display.text_width(word, font)
             char_index += nchars
+            width = ui.display.text_width(word, font, char_index)
 
         if new_lines and has_next_word:
             # line break
-            yield word_index, char_index + len(word), None
+            yield word_index, len(word), None
             offset_x = INITIAL_OFFSET_X
             offset_y += TEXT_LINE_HEIGHT
         else:
@@ -217,11 +216,11 @@ def render_text(
 
         begin = 0
         while break_word_index == word_index:
-            span = word[begin:break_char_index]
-            width = ui.display.text_width(span, font)
+            span_len = break_char_index - begin
+            width = ui.display.text_width(word, font, begin, span_len)
 
             if line_no >= line_offset:
-                ui.display.text(offset_x, offset_y, span, font, fg, bg)
+                ui.display.text(offset_x, offset_y, word, font, fg, bg, begin, span_len)
                 if break_split is not None:
                     ui.display.text(
                         offset_x + width, offset_y, break_split, ui.BOLD, ui.GREY, bg
@@ -232,14 +231,13 @@ def render_text(
             begin = break_char_index
             next_line()
 
-        word = word[begin:]
-        if len(word) == 0:
+        if begin == len(word):
             continue
 
         # render word
         if line_no >= line_offset:
-            ui.display.text(offset_x, offset_y, word, font, fg, bg)
-            offset_x += ui.display.text_width(word, font)
+            ui.display.text(offset_x, offset_y, word, font, fg, bg, begin)
+            offset_x += ui.display.text_width(word, font, begin)
             offset_x += ui.display.text_width(" ", font)
 
 

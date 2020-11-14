@@ -25,6 +25,9 @@ class TestDisplay(unittest.TestCase):
 
     def test_text(self):
         display.text(120, 120, 'Test', 0, 0xFFFF, 0x0000)
+        display.text(120, 120, 'Test', 0, 0xFFFF, 0x0000, 2)
+        display.text(120, 120, 'Test', 0, 0xFFFF, 0x0000, 2, 1)
+        display.text(120, 120, 'Těst', 0, 0xFFFF, 0x0000, 2, 2)
 
     def test_text_center(self):
         display.text_center(120, 120, 'Test', 0, 0xFFFF, 0x0000)
@@ -34,6 +37,9 @@ class TestDisplay(unittest.TestCase):
 
     def test_text_width(self):
         display.text_width('Test', 0)
+        display.text_width('Test', 0, 2)
+        display.text_width('Test', 0, 2, 1)
+        display.text_width('Těst', 0, 2, 2)
 
     def test_qrcode(self):
         display.qrcode(0, 0, 'Test', 4)
