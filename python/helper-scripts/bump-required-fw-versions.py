@@ -2,7 +2,7 @@
 import os
 import requests
 
-RELEASES_URL = "https://beta-wallet.trezor.io/data/firmware/{}/releases.json"
+RELEASES_URL = "https://data.trezor.io/firmware/{}/releases.json"
 MODELS = ("1", "T")
 
 FILENAME = os.path.join(os.path.dirname(__file__), "..", "trezorlib", "__init__.py")
