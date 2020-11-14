@@ -14,11 +14,10 @@ static void send_msg_success(usbd_device *dev) {
   }
 }
 
-static void send_msg_failure(usbd_device *dev) {
+static void send_msg_failure(usbd_device *dev, uint8_t code) {
   uint8_t response[64];
   memzero(response, sizeof(response));
   // response: Failure message (id 3), payload len 2
-  //           - code = 99 (Failure_FirmwareError)
   memcpy(response,
          // header
          "?##"
@@ -26,10 +25,11 @@ static void send_msg_failure(usbd_device *dev) {
          "\x00\x03"
          // msg_size
          "\x00\x00\x00\x02"
-         // data
-         "\x08"
-         "\x63",
-         11);
+         // code field id
+         "\x08",
+         10);
+  // assign code value
+  response[10] = code;
   while (usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN, response, 64) != 64) {
   }
 }
