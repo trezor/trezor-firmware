@@ -317,11 +317,16 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorui_Display_print_obj,
 ///     font: int,
 ///     fgcolor: int,
 ///     bgcolor: int,
+///     text_offset: int = None,
+///     text_len: int = None,
 /// ) -> None:
 ///     """
 ///     Renders left-aligned text at position (x,y) where x is left position and
 ///     y is baseline. Font font is used for rendering, fgcolor is used as
 ///     foreground color, bgcolor as background.
+///
+///     Arguments text_offset and text_len can be used to render a substring of
+///     the text.
 ///     """
 STATIC mp_obj_t mod_trezorui_Display_text(size_t n_args, const mp_obj_t *args) {
   mp_int_t x = mp_obj_get_int(args[1]);
@@ -331,10 +336,25 @@ STATIC mp_obj_t mod_trezorui_Display_text(size_t n_args, const mp_obj_t *args) {
   mp_int_t font = mp_obj_get_int(args[4]);
   mp_int_t fgcolor = mp_obj_get_int(args[5]);
   mp_int_t bgcolor = mp_obj_get_int(args[6]);
-  display_text(x, y, text.buf, text.len, font, fgcolor, bgcolor);
+
+  const char *buf_start = text.buf;
+  int buf_len = text.len;
+  if (n_args > 7) {
+    mp_int_t off = mp_obj_get_int(args[7]);
+    mp_int_t len = n_args > 8 ? mp_obj_get_int(args[8]) : text.len - off;
+    if (off < 0 || off > text.len) {
+      mp_raise_ValueError("Invalid text_offset");
+    }
+    if (len < 0 || len + off > text.len) {
+      mp_raise_ValueError("Invalid text_len");
+    }
+    display_utf8_substr(text.buf, text.len, off, len, &buf_start, &buf_len);
+  }
+
+  display_text(x, y, buf_start, buf_len, font, fgcolor, bgcolor);
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_obj, 7, 7,
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_obj, 7, 9,
                                            mod_trezorui_Display_text);
 
 /// def text_center(
@@ -397,20 +417,45 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_right_obj,
                                            7, 7,
                                            mod_trezorui_Display_text_right);
 
-/// def text_width(self, text: str, font: int) -> int:
+/// def text_width(
+///     self,
+///     text: str,
+///     font: int,
+///     text_offset: int = None,
+///     text_len: int = None,
+/// ) -> int:
 ///     """
 ///     Returns a width of text in pixels. Font font is used for rendering.
+///
+///     Arguments text_offset and text_len can be used to render a substring of
+///     the text.
 ///     """
-STATIC mp_obj_t mod_trezorui_Display_text_width(mp_obj_t self, mp_obj_t text,
-                                                mp_obj_t font) {
+STATIC mp_obj_t mod_trezorui_Display_text_width(size_t n_args,
+                                                const mp_obj_t *args) {
   mp_buffer_info_t txt = {0};
-  mp_get_buffer_raise(text, &txt, MP_BUFFER_READ);
-  mp_int_t f = mp_obj_get_int(font);
-  int w = display_text_width(txt.buf, txt.len, f);
+  mp_get_buffer_raise(args[1], &txt, MP_BUFFER_READ);
+  mp_int_t f = mp_obj_get_int(args[2]);
+
+  const char *buf_start = txt.buf;
+  int buf_len = txt.len;
+  if (n_args > 3) {
+    mp_int_t off = mp_obj_get_int(args[3]);
+    mp_int_t len = n_args > 4 ? mp_obj_get_int(args[4]) : txt.len - off;
+    if (off < 0 || off > txt.len) {
+      mp_raise_ValueError("Invalid text_offset");
+    }
+    if (len < 0 || len + off > txt.len) {
+      mp_raise_ValueError("Invalid text_len");
+    }
+    display_utf8_substr(txt.buf, txt.len, off, len, &buf_start, &buf_len);
+  }
+
+  int w = display_text_width(buf_start, buf_len, f);
   return mp_obj_new_int(w);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorui_Display_text_width_obj,
-                                 mod_trezorui_Display_text_width);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_width_obj,
+                                           3, 5,
+                                           mod_trezorui_Display_text_width);
 
 /// def text_split(self, text: str, font: int, requested_width: int) -> int:
 ///     """
