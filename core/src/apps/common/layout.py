@@ -146,7 +146,7 @@ def paginate_content(
     icon_color: int = ui.ORANGE_ICON,
     break_spaces: bool = False,
 ) -> Union[Text, Paginated]:
-    breaks = list(break_lines(content, False, 65535, break_spaces=break_spaces))
+    breaks = break_lines(content, False, 65535, break_spaces=break_spaces)
     n_lines = len(breaks) + 1
 
     if n_lines <= TEXT_MAX_LINES:
@@ -160,10 +160,8 @@ def paginate_content(
         result.breaks = breaks
         return result
     else:
-        breaks = list(
-            break_lines(
-                content, False, 65535, offset_x_max=220, break_spaces=break_spaces
-            )
+        breaks = break_lines(
+            content, False, 65535, offset_x_max=220, break_spaces=break_spaces
         )
         n_lines = len(breaks) + 1
         n_pages = n_lines // TEXT_MAX_LINES + (1 if n_lines % TEXT_MAX_LINES > 0 else 0)

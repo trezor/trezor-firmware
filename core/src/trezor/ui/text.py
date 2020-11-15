@@ -74,7 +74,7 @@ def break_lines(
     offset_y: int = TEXT_HEADER_HEIGHT + TEXT_LINE_HEIGHT,
     offset_x_max: int = ui.WIDTH,
     break_spaces: bool = False,
-) -> Iterator[BreakIndex]:
+) -> List[BreakIndex]:
     # initial rendering state
     INITIAL_OFFSET_X = offset_x
     offset_y_max = TEXT_HEADER_HEIGHT + (TEXT_LINE_HEIGHT * max_lines)
@@ -83,6 +83,7 @@ def break_lines(
     DASH = ui.display.text_width("-", ui.BOLD)
     ELLIPSIS = ui.display.text_width("...", ui.BOLD)
 
+    result = []  # type: List[BreakIndex]
     word_index = -1
     for word in words:
         word_index += 1
@@ -94,7 +95,7 @@ def break_lines(
                 # line break
                 offset_x = INITIAL_OFFSET_X
                 offset_y += TEXT_LINE_HEIGHT
-                yield word_index, 0, None
+                result.append((word_index, 0, None))
             elif word is BR_HALF:
                 # half-line break
                 offset_x = INITIAL_OFFSET_X
@@ -116,7 +117,7 @@ def break_lines(
 
             # avoid breaking the word if it fits on the next line
             if word_fits_in_one_line and not beginning_of_line and not last_line:
-                yield word_index, 0, None
+                result.append((word_index, 0, None))
                 offset_x = INITIAL_OFFSET_X
                 offset_y += TEXT_LINE_HEIGHT
                 break
@@ -132,7 +133,7 @@ def break_lines(
 
             # avoid rendering "-" with empty span
             if nchars == 0 and not last_line and not beginning_of_line:
-                yield word_index, char_index, None
+                result.append((word_index, char_index, None))
                 offset_x = INITIAL_OFFSET_X
                 offset_y += TEXT_LINE_HEIGHT
                 width = ui.display.text_width(word, font, char_index)
@@ -145,9 +146,9 @@ def break_lines(
                 split = "..."
             else:
                 split = "-"
-            yield word_index, char_index + nchars, split
+            result.append((word_index, char_index + nchars, split))
             if last_line:
-                return
+                return result
             offset_x = INITIAL_OFFSET_X
             offset_y += TEXT_LINE_HEIGHT
 
@@ -157,13 +158,15 @@ def break_lines(
 
         if new_lines and has_next_word:
             # line break
-            yield word_index, len(word), None
+            result.append((word_index, len(word), None))
             offset_x = INITIAL_OFFSET_X
             offset_y += TEXT_LINE_HEIGHT
         else:
             # shift cursor
             offset_x += width
             offset_x += ui.display.text_width(" ", font)
+
+    return result
 
 
 def render_text(
@@ -299,9 +302,7 @@ class Text(ui.Component):
                 self.icon_color,
             )
             if self.breaks is None:
-                self.breaks = list(
-                    break_lines(self.content, self.new_lines, self.max_lines)
-                )
+                self.breaks = break_lines(self.content, self.new_lines, self.max_lines)
             render_text(
                 self.content,
                 self.new_lines,
