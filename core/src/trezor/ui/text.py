@@ -189,14 +189,6 @@ def render_text(
     breaks_it = iter(breaks)
     break_word_index, break_char_index, break_split = next_sentinel(breaks_it)
 
-    def next_line() -> None:
-        nonlocal offset_x, offset_y, break_word_index, break_char_index, break_split, line_no
-        break_word_index, break_char_index, break_split = next_sentinel(breaks_it)
-        if line_no >= line_offset:
-            offset_x = INITIAL_OFFSET_X
-            offset_y += TEXT_LINE_HEIGHT
-        line_no += 1
-
     word_index = -1
     for word in words:
         word_index += 1
@@ -209,7 +201,11 @@ def render_text(
                     return
                 if word is BR:
                     assert break_word_index == word_index
-                    next_line()
+                    break_word_index, break_char_index, break_split = next_sentinel(breaks_it)
+                    if line_no >= line_offset:
+                        offset_x = INITIAL_OFFSET_X
+                        offset_y += TEXT_LINE_HEIGHT
+                    line_no += 1
                 else:
                     offset_x = INITIAL_OFFSET_X
                     offset_y += TEXT_LINE_HEIGHT_HALF
@@ -238,7 +234,11 @@ def render_text(
             if offset_y >= offset_y_max:
                 return
             begin = break_char_index
-            next_line()
+            break_word_index, break_char_index, break_split = next_sentinel(breaks_it)
+            if line_no >= line_offset:
+                offset_x = INITIAL_OFFSET_X
+                offset_y += TEXT_LINE_HEIGHT
+            line_no += 1
 
         if begin == len(word):
             continue
