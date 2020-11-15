@@ -83,7 +83,10 @@ def break_lines(
     DASH = ui.display.text_width("-", ui.BOLD)
     ELLIPSIS = ui.display.text_width("...", ui.BOLD)
 
-    for word_index, word in enumerate(words):
+    word_index = -1
+    for word in words:
+        word_index += 1
+
         has_next_word = word_index < len(words) - 1
 
         if isinstance(word, int):
@@ -191,7 +194,10 @@ def render_text(
             offset_y += TEXT_LINE_HEIGHT
         line_no += 1
 
-    for word_index, word in enumerate(words):
+    word_index = -1
+    for word in words:
+        word_index += 1
+
         if isinstance(word, int):
             if word is BR or word is BR_HALF:
                 # line break or half-line break
