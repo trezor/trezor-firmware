@@ -201,7 +201,9 @@ def render_text(
                     return
                 if word is BR:
                     assert break_word_index == word_index
-                    break_word_index, break_char_index, break_split = next_sentinel(breaks_it)
+                    break_word_index, break_char_index, break_split = next_sentinel(
+                        breaks_it
+                    )
                     if line_no >= line_offset:
                         offset_x = INITIAL_OFFSET_X
                         offset_y += TEXT_LINE_HEIGHT
