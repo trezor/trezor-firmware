@@ -23,7 +23,7 @@ We currently recognize five categories of coins.
 #### `bitcoin`
 
 The [`bitcoin/`](bitcoin) subdirectory contains definitions for Bitcoin and altcoins
-based on Bitcoin code. The `coins/` subdirectory is a compatibility link to `bitcoin`.
+based on Bitcoin code.
 
 Each Bitcoin-like coin must have a single JSON file in the `bitcoin/` subdirectory,
 and a corresponding PNG image with the same name. The PNG must be 96x96 pixels and
