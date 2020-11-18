@@ -8,14 +8,13 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 
 FEATURE_FLAGS = {
     "RDI": True,
+    "SECP256K1_ZKP": True,
 }
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
 SOURCE_MOD = []
-if EVERYTHING:
-    SOURCE_MOD_SECP256K1_ZKP = []
 
 PYOPT = ARGUMENTS.get('PYOPT', '1')
 FROZEN = True
@@ -107,7 +106,7 @@ if EVERYTHING:
     ]
 
 # libsecp256k1-zkp
-if EVERYTHING:
+if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
     CPPPATH_MOD += [
         'vendor/secp256k1-zkp',
         'vendor/secp256k1-zkp/src',
@@ -130,7 +129,7 @@ if EVERYTHING:
         'ENABLE_MODULE_RECOVERY',
         'ENABLE_MODULE_ECDH',
     ]
-    SOURCE_MOD_SECP256K1_ZKP += [
+    SOURCE_MOD_SECP256K1_ZKP = [
         'vendor/secp256k1-zkp/src/secp256k1.c',
         'vendor/secp256k1-zkp/src/asm/field_10x26_arm.s'
     ]
@@ -565,8 +564,7 @@ if FROZEN:
 #
 # static secp256-zkp ecmult context
 #
-
-if EVERYTHING:
+if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
     host_env = Environment(ENV=os.environ)
     host_env.Replace(
         CC=os.getenv('CC_FOR_BUILD') or 'gcc',
@@ -589,7 +587,7 @@ if EVERYTHING:
 
 obj_program = []
 obj_program.extend(env.Object(source=SOURCE_MOD))
-if EVERYTHING:
+if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
     obj_program.extend(env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function'))
 obj_program.extend(env.Object(source=SOURCE_FIRMWARE))
 obj_program.extend(env.Object(source=SOURCE_MICROPYTHON))
@@ -618,7 +616,7 @@ obj_program.extend(
         ' $SOURCE $TARGET', ))
 
 env.Depends(obj_program, qstr_generated)
-if EVERYTHING:
+if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
     env.Depends(obj_program, secp256k1_zkp_ecmult_static_context)
 
 program_elf = env.Command(

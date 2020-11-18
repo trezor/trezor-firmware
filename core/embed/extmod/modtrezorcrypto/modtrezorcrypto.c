@@ -52,7 +52,9 @@
 #if !BITCOIN_ONLY
 #include "modtrezorcrypto-monero.h"
 #include "modtrezorcrypto-nem.h"
+#ifdef SECP256K1_BUILD
 #include "modtrezorcrypto-secp256k1_zkp.h"
+#endif
 #endif
 
 STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
@@ -89,8 +91,10 @@ STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_secp256k1),
      MP_ROM_PTR(&mod_trezorcrypto_secp256k1_module)},
 #if !BITCOIN_ONLY
+#ifdef SECP256K1_BUILD
     {MP_ROM_QSTR(MP_QSTR_secp256k1_zkp),
      MP_ROM_PTR(&mod_trezorcrypto_secp256k1_zkp_module)},
+#endif
 #endif
     {MP_ROM_QSTR(MP_QSTR_sha1), MP_ROM_PTR(&mod_trezorcrypto_Sha1_type)},
     {MP_ROM_QSTR(MP_QSTR_sha256), MP_ROM_PTR(&mod_trezorcrypto_Sha256_type)},
