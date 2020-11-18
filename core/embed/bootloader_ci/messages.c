@@ -352,7 +352,7 @@ void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size,
   } else {
     // invalid firmware size
     MSG_SEND_INIT(Failure);
-    MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_DataError);
+    MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
     MSG_SEND_ASSIGN_STRING(message, "Wrong firmware size");
     MSG_SEND(Failure);
   }
@@ -468,7 +468,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 
   if (sectrue != r || chunk_size != (chunk_requested + read_offset)) {
     MSG_SEND_INIT(Failure);
-    MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_DataError);
+    MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
     MSG_SEND_ASSIGN_STRING(message, "Invalid chunk size");
     MSG_SEND(Failure);
     return -1;
