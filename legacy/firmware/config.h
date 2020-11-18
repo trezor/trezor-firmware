@@ -85,8 +85,13 @@ extern Storage configUpdate;
 #define MAX_MNEMONIC_LEN 240
 #define HOMESCREEN_SIZE 1024
 #define UUID_SIZE 12
+
+#if DEBUG_LINK
 #define MIN_AUTOLOCK_DELAY_MS (10 * 1000U)  // 10 seconds
-#define MAX_AUTOLOCK_DELAY_MS 0x20000000U   // ~6 days
+#else
+#define MIN_AUTOLOCK_DELAY_MS (60 * 1000U)  // 1 minute
+#endif
+#define MAX_AUTOLOCK_DELAY_MS 0x20000000U  // ~6 days
 
 void config_init(void);
 void session_clear(bool lock);

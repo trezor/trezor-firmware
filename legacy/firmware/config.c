@@ -962,6 +962,7 @@ uint32_t config_getAutoLockDelayMs() {
   if (sectrue != config_get_uint32(KEY_AUTO_LOCK_DELAY_MS, &autoLockDelayMs)) {
     autoLockDelayMs = autoLockDelayMsDefault;
   }
+  autoLockDelayMs = MAX(autoLockDelayMs, MIN_AUTOLOCK_DELAY_MS);
   autoLockDelayMsCached = sectrue;
   return autoLockDelayMs;
 }
