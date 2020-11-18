@@ -3,9 +3,12 @@
 import os
 
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
-RDI = ARGUMENTS.get('RDI', '1') == '1'
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
+
+FEATURE_FLAGS = {
+    "RDI": True,
+}
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -343,7 +346,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/vectortable.s',
 ]
 
-if RDI:
+if FEATURE_FLAGS["RDI"]:
     SOURCE_TREZORHAL += [
         'embed/trezorhal/rdi.c',
     ]
