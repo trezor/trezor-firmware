@@ -69,6 +69,10 @@ _BIP32_MAX_LAST_ELEMENT = const(1000000)
 # Setting nSequence to this value for every input in a transaction disables nLockTime.
 _SEQUENCE_FINAL = const(0xFFFFFFFF)
 
+# Setting nSequence to a value greater than this for every input in a transaction
+# disables replace-by-fee opt-in.
+_MAX_BIP125_RBF_SEQUENCE = const(0xFFFFFFFD)
+
 
 class TxInfoBase:
     def __init__(self, signer: Signer) -> None:
@@ -121,6 +125,9 @@ class TxInfoBase:
 
     def lock_time_disabled(self) -> bool:
         return self.min_sequence == _SEQUENCE_FINAL
+
+    def rbf_disabled(self) -> bool:
+        return self.min_sequence > _MAX_BIP125_RBF_SEQUENCE
 
     def get_tx_check_digest(self) -> bytes:
         return self.h_tx_check.get_digest()
