@@ -170,6 +170,10 @@ class BasicApprover(Approver):
 
             if self.external_in > self.orig_external_in:
                 description = "PayJoin"
+            elif tx_info.rbf_disabled() and any(
+                not orig.rbf_disabled() for orig in orig_txs
+            ):
+                description = "Finalize transaction"
             elif len(orig_txs) > 1:
                 description = "Transaction meld"
             else:
