@@ -68,6 +68,9 @@ TXHASH_6673b7 = bytes.fromhex(
 TXHASH_927784 = bytes.fromhex(
     "927784e07bbcefc4c738f5c31c7a739978fc86f35514edf7e7da25d53d83030b"
 )
+TXHASH_43d273 = bytes.fromhex(
+    "43d273d3caf41759ad843474f960fbf80ff2ec961135d018b61e9fab3ad1fc06"
+)
 
 
 @pytest.mark.skip_t1
@@ -135,6 +138,78 @@ def test_p2pkh_fee_bump(client):
     assert (
         serialized_tx.hex()
         == "01000000017a1ebb08f129fb1cc814b59d63284286d58a7602708ae8be6dd073d8cbc7afbe000000006b483045022100a8c1c118d61259f8df463deb538a10d9e9f42bbdfff28bb1337ee5426e5098f8022060e7464f7a63a83fd93dbd268f319133cb03452764afd601db063ff3eede9207012103f54094da6a0b2e0799286268bb59ca7c83538e81c78e64f6333f40f9e0e222c0ffffffff02aead0100000000001976a914902c642ba3a22f5c6cfa30a1790c133ddf15cc8888ac50c30000000000001976a914a6450f1945831a81912616691e721b787383f4ed88ac00000000"
+    )
+
+
+@pytest.mark.skip_t1
+def test_p2wpkh_finalize(client):
+    # Original input with disabled RBF opt-in, i.e. we finalize the transaction.
+    inp1 = messages.TxInputType(
+        address_n=parse_path("84h/1h/0h/0/2"),
+        amount=20000000,
+        script_type=messages.InputScriptType.SPENDWITNESS,
+        prev_hash=TXHASH_43d273,
+        prev_index=1,
+        orig_hash=TXHASH_70f987,
+        orig_index=0,
+        sequence=4294967294,
+    )
+
+    # Original external output (actually 84h/1h/0h/0/0).
+    out1 = messages.TxOutputType(
+        address="tb1qkvwu9g3k2pdxewfqr7syz89r3gj557l3uuf9r9",
+        amount=100000,
+        script_type=messages.OutputScriptType.PAYTOWITNESS,
+        orig_hash=TXHASH_70f987,
+        orig_index=0,
+    )
+
+    # Change output. We bump the fee from 141 to 200.
+    out2 = messages.TxOutputType(
+        address_n=parse_path("84h/1h/0h/1/1"),
+        amount=20000000 - 100000 - 200,
+        script_type=messages.OutputScriptType.PAYTOWITNESS,
+        orig_hash=TXHASH_70f987,
+        orig_index=1,
+    )
+
+    with client:
+        client.set_expected_responses(
+            [
+                request_input(0),
+                request_meta(TXHASH_70f987),
+                request_orig_input(0, TXHASH_70f987),
+                request_output(0),
+                request_orig_output(0, TXHASH_70f987),
+                request_output(1),
+                request_orig_output(1, TXHASH_70f987),
+                messages.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.SignTx),
+                request_input(0),
+                request_meta(TXHASH_43d273),
+                request_input(0, TXHASH_43d273),
+                request_output(0, TXHASH_43d273),
+                request_output(1, TXHASH_43d273),
+                request_output(2, TXHASH_43d273),
+                request_input(0),
+                request_output(0),
+                request_output(1),
+                request_input(0),
+                request_finished(),
+            ]
+        )
+        _, serialized_tx = btc.sign_tx(
+            client,
+            "Testnet",
+            [inp1],
+            [out1, out2],
+            lock_time=1348713,
+            prev_txes=TX_CACHE_TESTNET,
+        )
+
+    assert (
+        serialized_tx.hex()
+        == "0100000000010106fcd13aab9f1eb618d0351196ecf20ff8fb60f9743484ad5917f4cad373d2430100000000feffffff02a086010000000000160014b31dc2a236505a6cb9201fa0411ca38a254a7bf198a52f0100000000160014167dae080bca35c9ea49c0c8335dcc4b252a1d700247304402201ee1828ab0ca7f8113989399edda8394c65e5c3c9fe597a78890c5d2c9bd2aeb022010e76ad6abe171e5cded6b374a344ee18a51d38477b76a4b6fb30289ed24beff01210357cb3a5918d15d224f14a89f0eb54478272108f6cbb9c473c1565e55260f6e9369941400"
     )
 
 
