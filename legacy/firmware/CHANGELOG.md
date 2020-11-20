@@ -10,11 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Bump nanobp dependency to 0.4.3.  [#1105]
+- Minimum auto-lock delay to 1 minute. The former value of 10 seconds still applies for debug builds.  [#1351]
 
 ### Deprecated
 
 ### Removed
-- PIVX support
+- PIVX support.
 
 ### Fixed
 
@@ -33,7 +34,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Deprecated
 
 ### Removed
-- ETP, GIN, PTC, ZEL support
+- ETP, GIN, PTC, ZEL support.
 
 ### Fixed
 
@@ -352,3 +353,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1105]: https://github.com/trezor/trezor-firmware/issues/1105
 [#1165]: https://github.com/trezor/trezor-firmware/pull/1165
 [#1188]: https://github.com/trezor/trezor-firmware/issues/1188
+[#1351]: https://github.com/trezor/trezor-firmware/issues/1351
