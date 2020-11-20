@@ -584,28 +584,6 @@
                 }
             ]
         },
-        "bitcoin:PIVX": {
-            "links": {
-                "Github": "https://github.com/PIVX-Project/PIVX",
-                "Homepage": "https://pivx.org"
-            },
-            "marketcap_usd": 21756795,
-            "name": "PIVX",
-            "shortcut": "PIVX",
-            "t1_enabled": "yes",
-            "t2_enabled": "yes",
-            "type": "coin",
-            "wallet": [
-                {
-                    "name": "SPMT",
-                    "url": "https://github.com/PIVX-Project/PIVX-SPMT/"
-                },
-                {
-                    "name": "Zephyr",
-                    "url": "https://github.com/mrcarlanthony/Zephyr-wallet"
-                }
-            ]
-        },
         "bitcoin:POLIS": {
             "links": {
                 "Github": "https://github.com/polispay/polis",
