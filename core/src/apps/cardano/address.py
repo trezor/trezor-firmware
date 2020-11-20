@@ -5,8 +5,8 @@ from trezor.messages import CardanoAddressParametersType, CardanoAddressType
 from apps.common.seed import remove_ed25519_prefix
 
 from .byron_address import derive_byron_address, validate_byron_address
-from .helpers import INVALID_ADDRESS, NETWORK_MISMATCH, bech32, network_ids
-from .helpers.paths import SCHEMA_STAKING
+from .helpers import INVALID_ADDRESS, NETWORK_MISMATCH, bech32, network_ids, INVALID_SHELLEY_ADDRESS_PATH, INVALID_BYRON_ADDRESS_PATH
+from .helpers.paths import SCHEMA_STAKING, SCHEMA_SPENDING, SCHEMA_STAKING, SCHEMA_BYRON, SCHEMA_SHELLEY
 from .helpers.utils import variable_length_encode
 from .seed import is_byron_path, is_shelley_path
 
@@ -194,8 +194,8 @@ def derive_address_bytes(
 def _derive_byron_address(
     keychain: seed.Keychain, path: List[int], protocol_magic: int
 ) -> bytes:
-    if not is_byron_path(path):
-        raise wire.DataError("Invalid path for byron address!")
+    if not SCHEMA_BYRON.match(path):
+        raise INVALID_BYRON_ADDRESS_PATH
 
     address = derive_byron_address(keychain, path, protocol_magic)
     return address
@@ -206,10 +206,12 @@ def _derive_shelley_address(
     parameters: CardanoAddressParametersType,
     network_id: int,
 ) -> bytes:
-    if not is_shelley_path(parameters.address_n):
-        raise wire.DataError("Invalid path for shelley address!")
-
     if parameters.address_type == CardanoAddressType.BASE:
+        if not SCHEMA_SPENDING.match(parameters.address_n):
+            raise INVALID_SHELLEY_ADDRESS_PATH
+        if not SCHEMA_STAKING.match(parameters.address_n_staking):
+            raise INVALID_SHELLEY_ADDRESS_PATH
+
         address = _derive_base_address(
             keychain,
             parameters.address_n,
@@ -218,8 +220,14 @@ def _derive_shelley_address(
             network_id,
         )
     elif parameters.address_type == CardanoAddressType.ENTERPRISE:
+        if not SCHEMA_SPENDING.match(parameters.address_n):
+            raise INVALID_SHELLEY_ADDRESS_PATH
+
         address = _derive_enterprise_address(keychain, parameters.address_n, network_id)
     elif parameters.address_type == CardanoAddressType.POINTER:
+        if not SCHEMA_SHELLEY.match(parameters.address_n):
+            raise INVALID_SHELLEY_ADDRESS_PATH
+
         address = _derive_pointer_address(
             keychain,
             parameters.address_n,
@@ -227,6 +235,9 @@ def _derive_shelley_address(
             network_id,
         )
     elif parameters.address_type == CardanoAddressType.REWARD:
+        if not SCHEMA_STAKING.match(parameters.address_n):
+            raise INVALID_SHELLEY_ADDRESS_PATH
+
         address = _derive_reward_address(keychain, parameters.address_n, network_id)
     else:
         raise wire.DataError("Invalid address type!")

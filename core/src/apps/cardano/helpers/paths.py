@@ -10,5 +10,8 @@ SHELLEY_ROOT = [1852 | HARDENED, SLIP44_ID | HARDENED]
 SCHEMA_PUBKEY = PathSchema("m/[44,1852]'/coin_type'/account'/*", SLIP44_ID)
 SCHEMA_ADDRESS = PathSchema("m/[44,1852]'/coin_type'/account'/[0,1,2]/address_index", SLIP44_ID)
 # staking is only allowed on Shelley paths with suffix /2/0
-SCHEMA_STAKING = PathSchema("m/1852'/coin_type'/account'/2/0", SLIP44_ID)
+SCHEMA_STAKING = PathSchema(f"m/1852'/coin_type'/account'/2/0", SLIP44_ID)
+SCHEMA_SPENDING = PathSchema(f"m/[44,1852]'/coin_type'/account'/[0,1]/address_index", SLIP44_ID)
+SCHEMA_SHELLEY = PathSchema(f"m/1852'/coin_type'/account'/[0,1,2]/address_index", SLIP44_ID)
+SCHEMA_BYRON = PathSchema(f"m/44'/coin_type'/account'/[0,1]/address_index", SLIP44_ID)
 # fmt: on

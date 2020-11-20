@@ -30,7 +30,6 @@ async def get_address(
         ctx,
         keychain,
         address_parameters.address_n,
-        # path must match the ADDRESS schema
         SCHEMA_ADDRESS.match(address_parameters.address_n),
     )
 

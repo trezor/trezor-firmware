@@ -25,12 +25,19 @@ from .helpers import (
     INVALID_STAKE_POOL_REGISTRATION_TX_STRUCTURE,
     INVALID_STAKEPOOL_REGISTRATION_TX_INPUTS,
     INVALID_WITHDRAWAL,
+    INVALID_DERIVATION_PATH,
     LOVELACE_MAX_SUPPLY,
     network_ids,
     protocol_magics,
     staking_use_cases,
 )
-from .helpers.paths import SCHEMA_ADDRESS, SCHEMA_STAKING
+from .helpers.paths import (
+    SCHEMA_ADDRESS,
+    SCHEMA_SPENDING,
+    SCHEMA_STAKING,
+    SCHEMA_SHELLEY,
+    SCHEMA_BYRON
+)
 from .helpers.utils import to_account_path
 from .layout import (
     confirm_certificate,
@@ -47,7 +54,6 @@ from .layout import (
     show_warning_tx_pointer_address,
     show_warning_tx_staking_key_hash,
 )
-from .seed import is_byron_path, is_shelley_path
 
 if False:
     from trezor.messages.CardanoSignTx import CardanoSignTx
@@ -87,6 +93,8 @@ async def _sign_standard_tx(
 ) -> CardanoSignedTx:
     try:
         for i in msg.inputs:
+            if not SCHEMA_SPENDING.match(i.address_n):
+                raise INVALID_DERIVATION_PATH
             await validate_path(
                 ctx, keychain, i.address_n, SCHEMA_ADDRESS.match(i.address_n)
             )
@@ -399,7 +407,7 @@ def _cborize_shelley_witnesses(
     # include only one witness for each path
     paths = set()
     for tx_input in inputs:
-        if is_shelley_path(tx_input.address_n):
+        if SCHEMA_SHELLEY.match(tx_input.address_n):
             paths.add(tuple(tx_input.address_n))
     for certificate in certificates:
         if certificate.type in (
@@ -445,7 +453,7 @@ def _cborize_byron_witnesses(
     # include only one witness for each path
     paths = set()
     for tx_input in inputs:
-        if is_byron_path(tx_input.address_n):
+        if SCHEMA_BYRON.match(tx_input.address_n):
             paths.add(tuple(tx_input.address_n))
 
     for path in paths:
