@@ -15,7 +15,7 @@ from ..common import SIGHASH_ALL, ecdsa_sign, input_is_external, input_is_segwit
 from ..ownership import verify_nonownership
 from ..verification import SignatureVerifier
 from . import approvers, helpers, progress
-from .hash143 import Hash143
+from .hash143 import Bip143Hash
 from .tx_info import OriginalTxInfo, TxInfo
 
 if False:
@@ -31,6 +31,8 @@ if False:
 
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
+
+    from .hash143 import Hash143
 
 
 # the number of bytes to preallocate for serialized transaction chunks
@@ -108,7 +110,7 @@ class Bitcoin:
         return HashWriter(sha256())
 
     def create_hash143(self) -> Hash143:
-        return Hash143()
+        return Bip143Hash()
 
     async def step1_process_inputs(self) -> None:
         for i in range(self.tx_info.tx.inputs_count):

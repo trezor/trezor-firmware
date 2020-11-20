@@ -280,6 +280,7 @@ class Result(Exception):
     """
 
     def __init__(self, value: ResultValue) -> None:
+        super().__init__()
         self.value = value
 
 
