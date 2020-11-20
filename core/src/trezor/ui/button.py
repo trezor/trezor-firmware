@@ -133,6 +133,7 @@ class Button(ui.Component):
         content: ButtonContent,
         style: ButtonStyleType = ButtonDefault,
     ) -> None:
+        super().__init__()
         if isinstance(content, str):
             self.text = content
             self.icon = b""
@@ -146,7 +147,6 @@ class Button(ui.Component):
         self.active_style = style.active
         self.disabled_style = style.disabled
         self.state = _INITIAL
-        self.repaint = True
 
     def enable(self) -> None:
         if self.state is not _INITIAL:

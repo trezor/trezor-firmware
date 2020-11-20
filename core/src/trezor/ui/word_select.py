@@ -10,6 +10,7 @@ if False:
 
 class WordSelector(ui.Layout):
     def __init__(self, content: ui.Component) -> None:
+        super().__init__()
         self.content = content
         self.w12 = Button(ui.grid(6, n_y=4), "12")
         self.w12.on_click = self.on_w12  # type: ignore

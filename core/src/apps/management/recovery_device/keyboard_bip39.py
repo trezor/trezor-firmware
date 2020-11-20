@@ -87,8 +87,8 @@ class InputButton(Button):
 
 class Prompt(ui.Component):
     def __init__(self, prompt: str) -> None:
+        super().__init__()
         self.prompt = prompt
-        self.repaint = True
 
     def on_render(self) -> None:
         if self.repaint:
@@ -99,6 +99,7 @@ class Prompt(ui.Component):
 
 class Bip39Keyboard(ui.Layout):
     def __init__(self, prompt: str) -> None:
+        super().__init__()
         self.prompt = Prompt(prompt)
 
         icon_back = res.load(ui.ICON_BACK)

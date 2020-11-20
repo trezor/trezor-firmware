@@ -34,8 +34,8 @@ class ConfirmInfo:
 
 class ConfirmContent(ui.Component):
     def __init__(self, info: ConfirmInfo) -> None:
+        super().__init__()
         self.info = info
-        self.repaint = True
 
     def on_render(self) -> None:
         if self.repaint:

@@ -32,10 +32,10 @@ def generate_digits() -> Iterable[int]:
 
 class PinInput(ui.Component):
     def __init__(self, prompt: str, subprompt: Optional[str], pin: str) -> None:
+        super().__init__()
         self.prompt = prompt
         self.subprompt = subprompt
         self.pin = pin
-        self.repaint = True
 
     def on_render(self) -> None:
         if self.repaint:

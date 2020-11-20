@@ -5,6 +5,7 @@ from trezor.ui.text import LABEL_CENTER, Label
 
 class NumInput(ui.Component):
     def __init__(self, count: int = 5, max_count: int = 16, min_count: int = 1) -> None:
+        super().__init__()
         self.count = count
         self.max_count = max_count
         self.min_count = min_count

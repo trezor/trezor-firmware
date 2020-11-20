@@ -38,6 +38,7 @@ class Confirm(ui.Layout):
         cancel_style: ButtonStyleType = DEFAULT_CANCEL_STYLE,
         major_confirm: bool = False,
     ) -> None:
+        super().__init__()
         self.content = content
 
         if confirm is not None:
@@ -192,6 +193,7 @@ class InfoConfirm(ui.Layout):
         info: ButtonContent = DEFAULT_INFO,
         info_style: ButtonStyleType = DEFAULT_INFO_STYLE,
     ) -> None:
+        super().__init__()
         self.content = content
 
         self.confirm = Button(ui.grid(14), confirm, confirm_style)
@@ -243,6 +245,7 @@ class HoldToConfirm(ui.Layout):
         loader_style: LoaderStyleType = DEFAULT_LOADER_STYLE,
         cancel: bool = True,
     ):
+        super().__init__()
         self.content = content
 
         self.loader = Loader(loader_style)
