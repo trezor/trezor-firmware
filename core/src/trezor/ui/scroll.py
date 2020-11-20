@@ -51,10 +51,10 @@ class Paginated(ui.Layout):
     def __init__(
         self, pages: List[ui.Component], page: int = 0, one_by_one: bool = False
     ):
+        super().__init__()
         self.pages = pages
         self.page = page
         self.one_by_one = one_by_one
-        self.repaint = True
 
     def dispatch(self, event: int, x: int, y: int) -> None:
         pages = self.pages
@@ -131,6 +131,7 @@ class PageWithButtons(ui.Component):
         index: int,
         count: int,
     ) -> None:
+        super().__init__()
         self.content = content
         self.paginated = paginated
         self.index = index
@@ -188,6 +189,7 @@ class PaginatedWithButtons(ui.Layout):
     def __init__(
         self, pages: List[ui.Component], page: int = 0, one_by_one: bool = False
     ) -> None:
+        super().__init__()
         self.pages = [
             PageWithButtons(p, self, i, len(pages)) for i, p in enumerate(pages)
         ]

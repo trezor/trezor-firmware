@@ -238,6 +238,9 @@ class Component:
     an instance of `Result`.
     """
 
+    def __init__(self) -> None:
+        self.repaint = True
+
     def dispatch(self, event: int, x: int, y: int) -> None:
         if event is RENDER:
             self.on_render()

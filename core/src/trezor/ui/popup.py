@@ -6,6 +6,7 @@ if False:
 
 class Popup(ui.Layout):
     def __init__(self, content: ui.Component, time_ms: int = 0) -> None:
+        super().__init__()
         self.content = content
         if utils.DISABLE_ANIMATION:
             self.time_ms = 0

@@ -18,6 +18,7 @@ if False:
 
 class ConfirmRemoveCredential(ConfirmInfo):
     def __init__(self, cred: Fido2Credential):
+        super().__init__()
         self._cred = cred
         self.load_icon(cred.rp_id_hash)
 

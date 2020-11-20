@@ -524,10 +524,10 @@ class Slip39NumInput(ui.Component):
     SET_GROUP_THRESHOLD = object()
 
     def __init__(self, step, count, min_count, max_count, group_id=None):
+        super().__init__()
         self.step = step
         self.input = NumInput(count, min_count=min_count, max_count=max_count)
         self.input.on_change = self.on_change
-        self.repaint = True
         self.group_id = group_id
 
     def dispatch(self, event, x, y):
@@ -605,6 +605,7 @@ class MnemonicWordSelect(ui.Layout):
     NUM_OF_CHOICES = 3
 
     def __init__(self, words, share_index, word_index, count, group_index=None):
+        super().__init__()
         self.words = words
         self.share_index = share_index
         self.word_index = word_index

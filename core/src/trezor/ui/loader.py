@@ -39,6 +39,7 @@ _TARGET_MS = const(1000)
 
 class Loader(ui.Component):
     def __init__(self, style: LoaderStyleType = LoaderDefault) -> None:
+        super().__init__()
         self.normal_style = style.normal
         self.active_style = style.active
         self.target_ms = _TARGET_MS
@@ -98,6 +99,7 @@ class Loader(ui.Component):
 
 class LoadingAnimation(ui.Layout):
     def __init__(self, style: LoaderStyleType = LoaderDefault) -> None:
+        super().__init__()
         self.loader = Loader(style)
         self.loader.on_finish = self.on_finish  # type: ignore
         self.loader.start()

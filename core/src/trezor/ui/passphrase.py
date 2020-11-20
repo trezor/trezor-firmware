@@ -115,8 +115,8 @@ class Input(Button):
 
 class Prompt(ui.Component):
     def __init__(self, text: str) -> None:
+        super().__init__()
         self.text = text
-        self.repaint = True
 
     def on_render(self) -> None:
         if self.repaint:
@@ -130,6 +130,7 @@ CANCELLED = object()
 
 class PassphraseKeyboard(ui.Layout):
     def __init__(self, prompt: str, max_length: int, page: int = 1) -> None:
+        super().__init__()
         self.prompt = Prompt(prompt)
         self.max_length = max_length
         self.page = page

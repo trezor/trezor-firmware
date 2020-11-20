@@ -206,10 +206,10 @@ async def show_group_threshold_reached(ctx: wire.GenericContext) -> None:
 
 class RecoveryHomescreen(ui.Component):
     def __init__(self, text: str, subtext: str = None):
+        super().__init__()
         self.text = text
         self.subtext = subtext
         self.dry_run = storage.recovery.is_dry_run()
-        self.repaint = True
 
     def on_render(self) -> None:
         if not self.repaint:

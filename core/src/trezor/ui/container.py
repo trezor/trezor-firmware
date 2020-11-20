@@ -6,6 +6,7 @@ if False:
 
 class Container(ui.Component):
     def __init__(self, *children: ui.Component):
+        super().__init__()
         self.children = children
 
     def dispatch(self, event: int, x: int, y: int) -> None:

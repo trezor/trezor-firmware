@@ -35,6 +35,7 @@ class InfoConfirm(ui.Layout):
         confirm: ButtonContent = DEFAULT_CONFIRM,
         style: InfoConfirmStyleType = DEFAULT_STYLE,
     ) -> None:
+        super().__init__()
         self.text = text.split()
         self.style = style
         panel_area = ui.grid(0, n_x=1, n_y=1)
@@ -42,7 +43,6 @@ class InfoConfirm(ui.Layout):
         confirm_area = ui.grid(4, n_x=1)
         self.confirm = Button(confirm_area, confirm, style.button)
         self.confirm.on_click = self.on_confirm  # type: ignore
-        self.repaint = True
 
     def dispatch(self, event: int, x: int, y: int) -> None:
         if event == ui.RENDER:
