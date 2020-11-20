@@ -237,6 +237,7 @@ _last_good_auth_check_cid = 0
 
 class CborError(Exception):
     def __init__(self, code: int):
+        super().__init__()
         self.code = code
 
 

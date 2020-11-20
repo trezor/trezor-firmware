@@ -7,6 +7,7 @@ from trezor.messages import InputScriptType
 from trezor.messages.PrevTx import PrevTx
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxInput import TxInput
+from trezor.messages.TxOutput import TxOutput
 from trezor.utils import HashWriter, ensure
 
 from apps.common.coininfo import CoinInfo
@@ -21,27 +22,36 @@ from ..writers import (
     write_bytes_fixed,
     write_bytes_prefixed,
     write_bytes_reversed,
+    write_tx_output,
     write_uint32,
     write_uint64,
 )
 from . import approvers, helpers
 from .bitcoinlike import Bitcoinlike
-from .hash143 import Hash143
 
 if False:
     from apps.common import coininfo
     from typing import List, Optional, Union
+    from .hash143 import Hash143
     from .tx_info import OriginalTxInfo, TxInfo
     from ..writers import Writer
 
 OVERWINTERED = const(0x8000_0000)
 
 
-class Zip243Hash(Hash143):
+class Zip243Hash:
     def __init__(self) -> None:
         self.h_prevouts = HashWriter(blake2b(outlen=32, personal=b"ZcashPrevoutHash"))
         self.h_sequence = HashWriter(blake2b(outlen=32, personal=b"ZcashSequencHash"))
         self.h_outputs = HashWriter(blake2b(outlen=32, personal=b"ZcashOutputsHash"))
+
+    def add_input(self, txi: TxInput) -> None:
+        write_bytes_reversed(self.h_prevouts, txi.prev_hash, TX_HASH_SIZE)
+        write_uint32(self.h_prevouts, txi.prev_index)
+        write_uint32(self.h_sequence, txi.sequence)
+
+    def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+        write_tx_output(self.h_outputs, txo, script_pubkey)
 
     def preimage_hash(
         self,

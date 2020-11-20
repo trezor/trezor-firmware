@@ -299,6 +299,7 @@ class Context:
 
 class UnexpectedMessageError(Exception):
     def __init__(self, msg: codec_v1.Message) -> None:
+        super().__init__()
         self.msg = msg
 
 

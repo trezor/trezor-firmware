@@ -152,10 +152,6 @@ class MessageType:
     def get_fields(cls) -> "FieldDict":
         return {}
 
-    def __init__(self, **kwargs: Any) -> None:
-        for kw in kwargs:
-            setattr(self, kw, kwargs[kw])
-
     def __eq__(self, rhs: Any) -> bool:
         return self.__class__ is rhs.__class__ and self.__dict__ == rhs.__dict__
 

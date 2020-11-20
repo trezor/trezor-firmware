@@ -12,7 +12,6 @@ from .. import multisig, scripts, writers
 from ..common import ecdsa_hash_pubkey, ecdsa_sign
 from . import approvers, helpers, progress
 from .bitcoin import Bitcoin
-from .hash143 import Hash143
 
 DECRED_SERIALIZE_FULL = const(0 << 16)
 DECRED_SERIALIZE_NO_WITNESS = const(1 << 16)
@@ -22,7 +21,7 @@ DECRED_SCRIPT_VERSION = const(0)
 DECRED_SIGHASH_ALL = const(1)
 
 if False:
-    from typing import Optional, Union
+    from typing import Optional, Union, List
 
     from trezor.messages.SignTx import SignTx
     from trezor.messages.TxInput import TxInput
@@ -33,8 +32,10 @@ if False:
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
 
+    from .hash143 import Hash143
 
-class DecredHash(Hash143):
+
+class DecredHash:
     def __init__(self, h_prefix: HashWriter) -> None:
         self.h_prefix = h_prefix
 
@@ -43,6 +44,17 @@ class DecredHash(Hash143):
 
     def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         Decred.write_tx_output(self.h_prefix, txo, script_pubkey)
+
+    def preimage_hash(
+        self,
+        txi: TxInput,
+        public_keys: List[bytes],
+        threshold: int,
+        tx: Union[SignTx, PrevTx],
+        coin: CoinInfo,
+        sighash_type: int,
+    ) -> bytes:
+        raise NotImplementedError
 
 
 class Decred(Bitcoin):

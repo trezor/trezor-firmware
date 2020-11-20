@@ -10,11 +10,29 @@ from apps.common import coininfo
 from .. import scripts, writers
 
 if False:
-    from typing import List, Union
+    from typing import List, Union, Protocol
+
+    class Hash143(Protocol):
+        def add_input(self, txi: TxInput) -> None:
+            ...
+
+        def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+            ...
+
+        def preimage_hash(
+            self,
+            txi: TxInput,
+            public_keys: List[bytes],
+            threshold: int,
+            tx: Union[SignTx, PrevTx],
+            coin: coininfo.CoinInfo,
+            sighash_type: int,
+        ) -> bytes:
+            ...
 
 
 # BIP-0143 hash
-class Hash143:
+class Bip143Hash:
     def __init__(self) -> None:
         self.h_prevouts = HashWriter(sha256())
         self.h_sequence = HashWriter(sha256())
