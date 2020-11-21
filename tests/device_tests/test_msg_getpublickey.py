@@ -123,30 +123,42 @@ def test_invalid_path(client, coin_name, path):
         btc.get_public_node(client, path, coin_name=coin_name)
 
 
-VECTORS_SCRIPT_TYPES = (  # script_type, xpub
+VECTORS_SCRIPT_TYPES = (  # script_type, xpub, xpub_ignored_magic
     (
         None,
+        "xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXFD3YS797S55Y42sm2raxPrXQWAJodn7aXnHJdhz433ZJDhyUztHW55WatHeoYUVqui8cYNX8y",
         "xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXFD3YS797S55Y42sm2raxPrXQWAJodn7aXnHJdhz433ZJDhyUztHW55WatHeoYUVqui8cYNX8y",
     ),
     (
         messages.InputScriptType.SPENDADDRESS,
         "xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXFD3YS797S55Y42sm2raxPrXQWAJodn7aXnHJdhz433ZJDhyUztHW55WatHeoYUVqui8cYNX8y",
+        "xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXFD3YS797S55Y42sm2raxPrXQWAJodn7aXnHJdhz433ZJDhyUztHW55WatHeoYUVqui8cYNX8y",
     ),
     (
         messages.InputScriptType.SPENDP2SHWITNESS,
         "ypub6WYmBsV2xgQueQwhduAUQTFzUuXzQ2HEidmRpwKzX7ox8dsG8RCRD23zYcTkJiHhXDeb2nEGSiPbSaqGhBQu5jkgNvaiEiMxmZyMXEvfNco",
+        "xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXFD3YS797S55Y42sm2raxPrXQWAJodn7aXnHJdhz433ZJDhyUztHW55WatHeoYUVqui8cYNX8y",
     ),
     (
         messages.InputScriptType.SPENDWITNESS,
         "zpub6qP2VY9x7MxPVi8pUFx6cYMVesgSLeGjdkHecLDsu8BqBjgVP5Myq5i8ZpRLJcwcvrmPnFppuNk9KsSqQspusySHFGH8pdBT3J2zujqcVuz",
+        "xpub6BiVtCp7ozsRo7kaoYNrCNAVJwPYTQHjoXFD3YS797S55Y42sm2raxPrXQWAJodn7aXnHJdhz433ZJDhyUztHW55WatHeoYUVqui8cYNX8y",
     ),
 )
 
 
-@pytest.mark.parametrize("script_type, xpub", VECTORS_SCRIPT_TYPES)
-def test_script_type(client, script_type, xpub):
+@pytest.mark.parametrize("script_type, xpub, xpub_ignored_magic", VECTORS_SCRIPT_TYPES)
+def test_script_type(client, script_type, xpub, xpub_ignored_magic):
     path = parse_path("m/44h/0h/0")
     res = btc.get_public_node(
         client, path, coin_name="Bitcoin", script_type=script_type
     )
     assert res.xpub == xpub
+    res = btc.get_public_node(
+        client,
+        path,
+        coin_name="Bitcoin",
+        script_type=script_type,
+        ignore_xpub_magic=True,
+    )
+    assert res.xpub == xpub_ignored_magic
