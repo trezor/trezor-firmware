@@ -62,6 +62,7 @@ message GetPublicKey {
     optional bool show_display = 3;                                     // optionally show on display before sending the result
     optional string coin_name = 4 [default='Bitcoin'];                  // coin to use for verifying
     optional InputScriptType script_type = 5 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
+    optional bool ignore_xpub_magic = 6;                                // ignore SLIP-0132 XPUB magic, use xpub/tpub prefix for all account types
 }
 
 /**
@@ -70,7 +71,8 @@ message GetPublicKey {
  */
 message PublicKey {
     optional common.HDNodeType node = 1;        // BIP32 public node
-    optional string xpub = 2;        // serialized form of public node
+    optional string xpub = 2;                   // serialized form of public node
+    optional uint32 root_fingerprint = 3;       // master root node fingerprint
 }
 
 /**
