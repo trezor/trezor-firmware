@@ -21,12 +21,14 @@ class GetPublicKey(p.MessageType):
         show_display: bool = None,
         coin_name: str = None,
         script_type: EnumTypeInputScriptType = None,
+        ignore_xpub_magic: bool = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.ecdsa_curve_name = ecdsa_curve_name
         self.show_display = show_display
         self.coin_name = coin_name
         self.script_type = script_type
+        self.ignore_xpub_magic = ignore_xpub_magic
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -36,4 +38,5 @@ class GetPublicKey(p.MessageType):
             3: ('show_display', p.BoolType, 0),
             4: ('coin_name', p.UnicodeType, 0),  # default=Bitcoin
             5: ('script_type', p.EnumType("InputScriptType", (0, 1, 2, 3, 4)), 0),  # default=SPENDADDRESS
+            6: ('ignore_xpub_magic', p.BoolType, 0),
         }
