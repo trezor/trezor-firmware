@@ -59,14 +59,24 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
                            script_type == InputScriptType_SPENDMULTISIG)) {
     hdnode_serialize_public(node, fingerprint, coin->xpub_magic, resp->xpub,
                             sizeof(resp->xpub));
-  } else if (coin->has_segwit && coin->xpub_magic_segwit_p2sh &&
-             script_type == InputScriptType_SPENDP2SHWITNESS) {
+  } else if (coin->has_segwit &&
+             script_type == InputScriptType_SPENDP2SHWITNESS &&
+             !msg->ignore_xpub_magic && coin->xpub_magic_segwit_p2sh) {
     hdnode_serialize_public(node, fingerprint, coin->xpub_magic_segwit_p2sh,
                             resp->xpub, sizeof(resp->xpub));
-  } else if (coin->has_segwit && coin->xpub_magic_segwit_native &&
-             script_type == InputScriptType_SPENDWITNESS) {
+  } else if (coin->has_segwit &&
+             script_type == InputScriptType_SPENDP2SHWITNESS &&
+             msg->ignore_xpub_magic && coin->xpub_magic) {
+    hdnode_serialize_public(node, fingerprint, coin->xpub_magic, resp->xpub,
+                            sizeof(resp->xpub));
+  } else if (coin->has_segwit && script_type == InputScriptType_SPENDWITNESS &&
+             !msg->ignore_xpub_magic && coin->xpub_magic_segwit_native) {
     hdnode_serialize_public(node, fingerprint, coin->xpub_magic_segwit_native,
                             resp->xpub, sizeof(resp->xpub));
+  } else if (coin->has_segwit && script_type == InputScriptType_SPENDWITNESS &&
+             msg->ignore_xpub_magic && coin->xpub_magic) {
+    hdnode_serialize_public(node, fingerprint, coin->xpub_magic, resp->xpub,
+                            sizeof(resp->xpub));
   } else {
     fsm_sendFailure(FailureType_Failure_DataError,
                     _("Invalid combination of coin and script_type"));
