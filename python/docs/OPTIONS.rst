@@ -101,6 +101,7 @@ Bitcoin and Bitcoin-like coins commands.
 
   Commands:
     get-address      Get address for specified path.
+    get-descriptor   Get descriptor of given account.
     get-public-node  Get public node of given path.
     sign-message     Sign message using address of given path.
     sign-tx          Sign transaction.
