@@ -66,6 +66,7 @@ def get_public_node(
     show_display=False,
     coin_name=None,
     script_type=messages.InputScriptType.SPENDADDRESS,
+    ignore_xpub_magic=False,
 ):
     return client.call(
         messages.GetPublicKey(
@@ -74,6 +75,7 @@ def get_public_node(
             show_display=show_display,
             coin_name=coin_name,
             script_type=script_type,
+            ignore_xpub_magic=ignore_xpub_magic,
         )
     )
 
