@@ -28,15 +28,21 @@ async def get_public_key(ctx: wire.Context, msg: GetPublicKey) -> PublicKey:
     elif (
         coin.segwit
         and script_type == InputScriptType.SPENDP2SHWITNESS
-        and coin.xpub_magic_segwit_p2sh is not None
+        and (msg.ignore_xpub_magic or coin.xpub_magic_segwit_p2sh is not None)
     ):
-        node_xpub = node.serialize_public(coin.xpub_magic_segwit_p2sh)
+        # TODO: resolve type: ignore below
+        node_xpub = node.serialize_public(
+            coin.xpub_magic if msg.ignore_xpub_magic else coin.xpub_magic_segwit_p2sh  # type: ignore
+        )
     elif (
         coin.segwit
         and script_type == InputScriptType.SPENDWITNESS
-        and coin.xpub_magic_segwit_native is not None
+        and (msg.ignore_xpub_magic or coin.xpub_magic_segwit_native is not None)
     ):
-        node_xpub = node.serialize_public(coin.xpub_magic_segwit_native)
+        # TODO: resolve type: ignore below
+        node_xpub = node.serialize_public(
+            coin.xpub_magic if msg.ignore_xpub_magic else coin.xpub_magic_segwit_native  # type: ignore
+        )
     else:
         raise wire.DataError("Invalid combination of coin and script_type")
 
