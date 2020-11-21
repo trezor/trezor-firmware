@@ -284,7 +284,7 @@ static bool fsm_layoutAddress(const char *address, const char *desc,
                                     coin->xpub_magic, xpub, sizeof(xpub));
           }
         }
-        layoutXPUB(xpub, index, page, multisig_index == index);
+        layoutXPUBMultisig(xpub, index, page, multisig_index == index);
         break;
       }
     }

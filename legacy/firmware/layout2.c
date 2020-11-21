@@ -641,7 +641,7 @@ void layoutResetWord(const char *word, int pass, int word_pos, bool last) {
 void layoutAddress(const char *address, const char *desc, bool qrcode,
                    bool ignorecase, const uint32_t *address_n,
                    size_t address_n_count, bool address_is_account) {
-  if (layoutLast != layoutAddress && layoutLast != layoutXPUB) {
+  if (layoutLast != layoutAddress && layoutLast != layoutXPUBMultisig) {
     layoutSwipe();
   } else {
     oledClear();
@@ -734,13 +734,39 @@ void layoutPublicKey(const uint8_t *pubkey) {
                     str[1], str[2], str[3], NULL);
 }
 
-void layoutXPUB(const char *xpub, int index, int page, bool ours) {
+static void _layout_xpub(const char *xpub, const char *desc, int page) {
+  // 21 characters per line, 4 lines, minus 3 chars for "..." = 81
+  // skip 81 characters per page
+  xpub += page * 81;
+  const char **str = split_message((const uint8_t *)xpub, strlen(xpub), 21);
+  oledDrawString(0, 0 * 9, desc, FONT_STANDARD);
+  for (int i = 0; i < 4; i++) {
+    oledDrawString(0, (i + 1) * 9 + 4, str[i], FONT_FIXED);
+  }
+}
+
+void layoutXPUB(const char *xpub, int page) {
   if (layoutLast != layoutAddress && layoutLast != layoutXPUB) {
     layoutSwipe();
   } else {
     oledClear();
   }
   layoutLast = layoutXPUB;
+  char desc[] = "XPUB _/2";
+  desc[5] = '1' + page;
+  _layout_xpub(xpub, desc, page);
+  layoutButtonNo(_("Cancel"), &bmp_btn_cancel);
+  layoutButtonYes(_("Confirm"), &bmp_btn_confirm);
+  oledRefresh();
+}
+
+void layoutXPUBMultisig(const char *xpub, int index, int page, bool ours) {
+  if (layoutLast != layoutAddress && layoutLast != layoutXPUBMultisig) {
+    layoutSwipe();
+  } else {
+    oledClear();
+  }
+  layoutLast = layoutXPUBMultisig;
   char desc[] = "XPUB #__ _/2 (______)";
   if (index + 1 >= 10) {
     desc[6] = '0' + (((index + 1) / 10) % 10);
@@ -766,15 +792,7 @@ void layoutXPUB(const char *xpub, int index, int page, bool ours) {
     desc[18] = 'r';
     desc[19] = 's';
   }
-
-  // 21 characters per line, 4 lines, minus 3 chars for "..." = 81
-  // skip 81 characters per page
-  xpub += page * 81;
-  const char **str = split_message((const uint8_t *)xpub, strlen(xpub), 21);
-  oledDrawString(0, 0 * 9, desc, FONT_STANDARD);
-  for (int i = 0; i < 4; i++) {
-    oledDrawString(0, (i + 1) * 9 + 4, str[i], FONT_FIXED);
-  }
+  _layout_xpub(xpub, desc, page);
   layoutButtonNo(_("Next"), NULL);
   layoutButtonYes(_("Confirm"), &bmp_btn_confirm);
   oledRefresh();

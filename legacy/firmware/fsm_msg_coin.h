@@ -40,15 +40,6 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
   if (!node) return;
   hdnode_fill_public_key(node);
 
-  if (msg->has_show_display && msg->show_display) {
-    layoutPublicKey(node->public_key);
-    if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
-      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-      layoutHome();
-      return;
-    }
-  }
-
   resp->has_node = true;
   resp->node.depth = node->depth;
   resp->node.fingerprint = fingerprint;
@@ -81,6 +72,18 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
                     _("Invalid combination of coin and script_type"));
     layoutHome();
     return;
+  }
+
+  if (msg->has_show_display && msg->show_display) {
+    for (int page = 0; page < 2; page++) {
+      layoutXPUB(resp->xpub, page);
+      if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
+        memzero(resp, sizeof(PublicKey));
+        fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+        layoutHome();
+        return;
+      }
+    }
   }
 
   msg_write(MessageType_MessageType_PublicKey, resp);
