@@ -21,6 +21,7 @@ from trezor.messages.TxRequest import TxRequest
 from trezor.messages.RequestType import TXINPUT, TXOUTPUT, TXMETA, TXFINISHED
 from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
+from trezor.messages import AmountUnit
 from trezor.messages import OutputScriptType
 
 from apps.common import coins
@@ -67,9 +68,9 @@ class TestSignTx_GRS(unittest.TestCase):
             TxAckInput(tx=TxAckInputWrapper(input=inp1)),
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(out1, coin),
+            helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN),
             True,
-            helpers.UiConfirmTotal(210016, 192, coin),
+            helpers.UiConfirmTotal(210016, 192, coin, AmountUnit.BITCOIN),
             True,
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAckInput(tx=TxAckInputWrapper(input=inp1)),

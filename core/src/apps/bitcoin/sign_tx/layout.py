@@ -2,7 +2,7 @@ from micropython import const
 from ubinascii import hexlify
 
 from trezor import ui
-from trezor.messages import ButtonRequestType, OutputScriptType
+from trezor.messages import AmountUnit, ButtonRequestType, OutputScriptType
 from trezor.strings import format_amount
 from trezor.ui.text import Text
 from trezor.utils import chunks
@@ -15,6 +15,7 @@ from . import omni
 if False:
     from typing import Iterator
     from trezor import wire
+    from trezor.messages.SignTx import EnumTypeAmountUnit
     from trezor.messages.TxOutput import TxOutput
 
     from apps.common.coininfo import CoinInfo
@@ -22,8 +23,21 @@ if False:
 _LOCKTIME_TIMESTAMP_MIN_VALUE = const(500_000_000)
 
 
-def format_coin_amount(amount: int, coin: CoinInfo) -> str:
-    return "%s %s" % (format_amount(amount, coin.decimals), coin.coin_shortcut)
+def format_coin_amount(
+    amount: int, coin: CoinInfo, amount_unit: EnumTypeAmountUnit
+) -> str:
+    decimals, shortcut = coin.decimals, coin.coin_shortcut
+    if amount_unit == AmountUnit.SATOSHI:
+        decimals = 0
+        shortcut = "sat " + shortcut
+    elif amount_unit == AmountUnit.MICROBITCOIN and decimals >= 6:
+        decimals -= 6
+        shortcut = "u" + shortcut
+    elif amount_unit == AmountUnit.MILLIBITCOIN and decimals >= 3:
+        decimals -= 3
+        shortcut = "m" + shortcut
+    # we don't need to do anything for AmountUnit.BITCOIN
+    return "%s %s" % (format_amount(amount, decimals), shortcut)
 
 
 def split_address(address: str) -> Iterator[str]:
@@ -34,7 +48,9 @@ def split_op_return(data: str) -> Iterator[str]:
     return chunks(data, 18)
 
 
-async def confirm_output(ctx: wire.Context, output: TxOutput, coin: CoinInfo) -> None:
+async def confirm_output(
+    ctx: wire.Context, output: TxOutput, coin: CoinInfo, amount_unit: EnumTypeAmountUnit
+) -> None:
     if output.script_type == OutputScriptType.PAYTOOPRETURN:
         data = output.op_return_data
         assert data is not None
@@ -54,7 +70,7 @@ async def confirm_output(ctx: wire.Context, output: TxOutput, coin: CoinInfo) ->
         assert address is not None
         address_short = addresses.address_short(coin, address)
         text = Text("Confirm sending", ui.ICON_SEND, ui.GREEN)
-        text.normal(format_coin_amount(output.amount, coin) + " to")
+        text.normal(format_coin_amount(output.amount, coin, amount_unit) + " to")
         text.mono(*split_address(address_short))
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
@@ -70,7 +86,11 @@ async def confirm_replacement(ctx: wire.Context, description: str, txid: bytes) 
 
 
 async def confirm_modify_fee(
-    ctx: wire.Context, user_fee_change: int, total_fee_new: int, coin: CoinInfo
+    ctx: wire.Context,
+    user_fee_change: int,
+    total_fee_new: int,
+    coin: CoinInfo,
+    amount_unit: EnumTypeAmountUnit,
 ) -> None:
     text = Text("Fee modification", ui.ICON_SEND, ui.GREEN)
     if user_fee_change == 0:
@@ -80,39 +100,49 @@ async def confirm_modify_fee(
             text.normal("Decrease your fee by:")
         else:
             text.normal("Increase your fee by:")
-        text.bold(format_coin_amount(abs(user_fee_change), coin))
+        text.bold(format_coin_amount(abs(user_fee_change), coin, amount_unit))
     text.br_half()
     text.normal("Transaction fee:")
-    text.bold(format_coin_amount(total_fee_new, coin))
+    text.bold(format_coin_amount(total_fee_new, coin, amount_unit))
     await require_hold_to_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 async def confirm_joint_total(
-    ctx: wire.Context, spending: int, total: int, coin: CoinInfo
+    ctx: wire.Context,
+    spending: int,
+    total: int,
+    coin: CoinInfo,
+    amount_unit: EnumTypeAmountUnit,
 ) -> None:
     text = Text("Joint transaction", ui.ICON_SEND, ui.GREEN)
     text.normal("You are contributing:")
-    text.bold(format_coin_amount(spending, coin))
+    text.bold(format_coin_amount(spending, coin, amount_unit))
     text.normal("to the total amount:")
-    text.bold(format_coin_amount(total, coin))
+    text.bold(format_coin_amount(total, coin, amount_unit))
     await require_hold_to_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
 async def confirm_total(
-    ctx: wire.Context, spending: int, fee: int, coin: CoinInfo
+    ctx: wire.Context,
+    spending: int,
+    fee: int,
+    coin: CoinInfo,
+    amount_unit: EnumTypeAmountUnit,
 ) -> None:
     text = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     text.normal("Total amount:")
-    text.bold(format_coin_amount(spending, coin))
+    text.bold(format_coin_amount(spending, coin, amount_unit))
     text.normal("including fee:")
-    text.bold(format_coin_amount(fee, coin))
+    text.bold(format_coin_amount(fee, coin, amount_unit))
     await require_hold_to_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
-async def confirm_feeoverthreshold(ctx: wire.Context, fee: int, coin: CoinInfo) -> None:
+async def confirm_feeoverthreshold(
+    ctx: wire.Context, fee: int, coin: CoinInfo, amount_unit: EnumTypeAmountUnit
+) -> None:
     text = Text("High fee", ui.ICON_SEND, ui.GREEN)
     text.normal("The fee of")
-    text.bold(format_coin_amount(fee, coin))
+    text.bold(format_coin_amount(fee, coin, amount_unit))
     text.normal("is unexpectedly high.", "Continue?")
     await require_confirm(ctx, text, ButtonRequestType.FeeOverThreshold)
 

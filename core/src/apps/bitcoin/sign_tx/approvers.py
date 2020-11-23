@@ -42,6 +42,8 @@ class Approver:
         self.orig_total_out = 0  # sum of original output amounts
         self.orig_change_out = 0  # sum of original change output amounts
 
+        self.amount_unit = tx.amount_unit
+
     async def add_internal_input(self, txi: TxInput) -> None:
         self.weight.add_input(txi)
         self.total_in += txi.amount
@@ -121,7 +123,7 @@ class BasicApprover(Approver):
                     "Adding new OP_RETURN outputs in replacement transactions is not supported."
                 )
         else:
-            await helpers.confirm_output(txo, self.coin)
+            await helpers.confirm_output(txo, self.coin, self.amount_unit)
 
     async def approve_tx(self, tx_info: TxInfo, orig_txs: List[OriginalTxInfo]) -> None:
         fee = self.total_in - self.total_out
@@ -139,7 +141,7 @@ class BasicApprover(Approver):
         if fee > fee_threshold:
             if fee > 10 * fee_threshold and safety_checks.is_strict():
                 raise wire.DataError("The fee is unexpectedly large")
-            await helpers.confirm_feeoverthreshold(fee, self.coin)
+            await helpers.confirm_feeoverthreshold(fee, self.coin, self.amount_unit)
 
         if self.change_count > self.MAX_SILENT_CHANGE_COUNT:
             await helpers.confirm_change_count_over_threshold(self.change_count)
@@ -195,7 +197,7 @@ class BasicApprover(Approver):
             # what it's worth, see PR #1292.
             if spending > orig_spending or self.external_in == self.orig_external_in:
                 await helpers.confirm_modify_fee(
-                    spending - orig_spending, fee, self.coin
+                    spending - orig_spending, fee, self.coin, self.amount_unit
                 )
         else:
             # Standard transaction.
@@ -205,9 +207,11 @@ class BasicApprover(Approver):
                 )
 
             if not self.external_in:
-                await helpers.confirm_total(total, fee, self.coin)
+                await helpers.confirm_total(total, fee, self.coin, self.amount_unit)
             else:
-                await helpers.confirm_joint_total(spending, total, self.coin)
+                await helpers.confirm_joint_total(
+                    spending, total, self.coin, self.amount_unit
+                )
 
 
 class CoinJoinApprover(Approver):

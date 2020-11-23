@@ -21,6 +21,7 @@ from trezor.messages.TxRequest import TxRequest
 from trezor.messages.RequestType import TXINPUT, TXOUTPUT, TXMETA
 from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
+from trezor.messages import AmountUnit
 from trezor.messages import OutputScriptType
 
 from apps.common import coins
@@ -85,11 +86,11 @@ class TestSignTxFeeThreshold(unittest.TestCase):
             TxAckPrevOutput(tx=TxAckPrevOutputWrapper(output=pout1)),
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(out1, coin_bitcoin),
+            helpers.UiConfirmOutput(out1, coin_bitcoin, AmountUnit.BITCOIN),
             True,
             helpers.UiConfirmFeeOverThreshold(100000, coin_bitcoin),
             True,
-            helpers.UiConfirmTotal(290000 + 100000, 100000, coin_bitcoin),
+            helpers.UiConfirmTotal(290000 + 100000, 100000, coin_bitcoin, AmountUnit.BITCOIN),
             True,
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=None),
         ]
@@ -143,9 +144,9 @@ class TestSignTxFeeThreshold(unittest.TestCase):
             True,
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(out1, coin_bitcoin),
+            helpers.UiConfirmOutput(out1, coin_bitcoin, AmountUnit.BITCOIN),
             True,
-            helpers.UiConfirmTotal(300000 + 90000, 90000, coin_bitcoin),
+            helpers.UiConfirmTotal(300000 + 90000, 90000, coin_bitcoin, AmountUnit.BITCOIN),
             True,
             TxRequest(request_type=TXINPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAckInput(tx=TxAckInputWrapper(input=inp1)),

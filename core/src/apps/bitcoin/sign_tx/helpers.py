@@ -32,6 +32,7 @@ from . import layout
 
 if False:
     from typing import Any, Awaitable, Optional
+    from trezor.messages.SignTx import EnumTypeAmountUnit
 
 
 # Machine instructions
@@ -44,12 +45,15 @@ class UiConfirm:
 
 
 class UiConfirmOutput(UiConfirm):
-    def __init__(self, output: TxOutput, coin: CoinInfo):
+    def __init__(
+        self, output: TxOutput, coin: CoinInfo, amount_unit: EnumTypeAmountUnit
+    ):
         self.output = output
         self.coin = coin
+        self.amount_unit = amount_unit
 
     def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
-        return layout.confirm_output(ctx, self.output, self.coin)
+        return layout.confirm_output(ctx, self.output, self.coin, self.amount_unit)
 
     __eq__ = utils.obj_eq
 
@@ -66,50 +70,70 @@ class UiConfirmReplacement(UiConfirm):
 
 
 class UiConfirmModifyFee(UiConfirm):
-    def __init__(self, user_fee_change: int, total_fee_new: int, coin: CoinInfo):
+    def __init__(
+        self,
+        user_fee_change: int,
+        total_fee_new: int,
+        coin: CoinInfo,
+        amount_unit: EnumTypeAmountUnit,
+    ):
         self.user_fee_change = user_fee_change
         self.total_fee_new = total_fee_new
         self.coin = coin
+        self.amount_unit = amount_unit
 
     def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
         return layout.confirm_modify_fee(
-            ctx, self.user_fee_change, self.total_fee_new, self.coin
+            ctx, self.user_fee_change, self.total_fee_new, self.coin, self.amount_unit
         )
 
     __eq__ = utils.obj_eq
 
 
 class UiConfirmTotal(UiConfirm):
-    def __init__(self, spending: int, fee: int, coin: CoinInfo):
+    def __init__(
+        self, spending: int, fee: int, coin: CoinInfo, amount_unit: EnumTypeAmountUnit
+    ):
         self.spending = spending
         self.fee = fee
         self.coin = coin
+        self.amount_unit = amount_unit
 
     def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
-        return layout.confirm_total(ctx, self.spending, self.fee, self.coin)
+        return layout.confirm_total(
+            ctx, self.spending, self.fee, self.coin, self.amount_unit
+        )
 
     __eq__ = utils.obj_eq
 
 
 class UiConfirmJointTotal(UiConfirm):
-    def __init__(self, spending: int, total: int, coin: CoinInfo):
+    def __init__(
+        self, spending: int, total: int, coin: CoinInfo, amount_unit: EnumTypeAmountUnit
+    ):
         self.spending = spending
         self.total = total
         self.coin = coin
+        self.amount_unit = amount_unit
 
     def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
-        return layout.confirm_joint_total(ctx, self.spending, self.total, self.coin)
+        return layout.confirm_joint_total(
+            ctx, self.spending, self.total, self.coin, self.amount_unit
+        )
 
     __eq__ = utils.obj_eq
 
 
 class UiConfirmFeeOverThreshold(UiConfirm):
-    def __init__(self, fee: int, coin: CoinInfo):
+    def __init__(self, fee: int, coin: CoinInfo, amount_unit: EnumTypeAmountUnit):
         self.fee = fee
         self.coin = coin
+        self.amount_unit = amount_unit
 
     def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
-        return layout.confirm_feeoverthreshold(ctx, self.fee, self.coin)
+        return layout.confirm_feeoverthreshold(
+            ctx, self.fee, self.coin, self.amount_unit
+        )
 
     __eq__ = utils.obj_eq
 
@@ -147,28 +171,28 @@ class UiConfirmNonDefaultLocktime(UiConfirm):
     __eq__ = utils.obj_eq
 
 
-def confirm_output(output: TxOutput, coin: CoinInfo) -> Awaitable[None]:  # type: ignore
-    return (yield UiConfirmOutput(output, coin))
+def confirm_output(output: TxOutput, coin: CoinInfo, amount_unit: EnumTypeAmountUnit) -> Awaitable[None]:  # type: ignore
+    return (yield UiConfirmOutput(output, coin, amount_unit))
 
 
 def confirm_replacement(description: str, txid: bytes) -> Awaitable[Any]:  # type: ignore
     return (yield UiConfirmReplacement(description, txid))
 
 
-def confirm_modify_fee(user_fee_change: int, total_fee_new: int, coin: CoinInfo) -> Awaitable[Any]:  # type: ignore
-    return (yield UiConfirmModifyFee(user_fee_change, total_fee_new, coin))
+def confirm_modify_fee(user_fee_change: int, total_fee_new: int, coin: CoinInfo, amount_unit: EnumTypeAmountUnit) -> Awaitable[Any]:  # type: ignore
+    return (yield UiConfirmModifyFee(user_fee_change, total_fee_new, coin, amount_unit))
 
 
-def confirm_total(spending: int, fee: int, coin: CoinInfo) -> Awaitable[None]:  # type: ignore
-    return (yield UiConfirmTotal(spending, fee, coin))
+def confirm_total(spending: int, fee: int, coin: CoinInfo, amount_unit: EnumTypeAmountUnit) -> Awaitable[None]:  # type: ignore
+    return (yield UiConfirmTotal(spending, fee, coin, amount_unit))
 
 
-def confirm_joint_total(spending: int, total: int, coin: CoinInfo) -> Awaitable[Any]:  # type: ignore
-    return (yield UiConfirmJointTotal(spending, total, coin))
+def confirm_joint_total(spending: int, total: int, coin: CoinInfo, amount_unit: EnumTypeAmountUnit) -> Awaitable[Any]:  # type: ignore
+    return (yield UiConfirmJointTotal(spending, total, coin, amount_unit))
 
 
-def confirm_feeoverthreshold(fee: int, coin: CoinInfo) -> Awaitable[Any]:  # type: ignore
-    return (yield UiConfirmFeeOverThreshold(fee, coin))
+def confirm_feeoverthreshold(fee: int, coin: CoinInfo, amount_unit: EnumTypeAmountUnit) -> Awaitable[Any]:  # type: ignore
+    return (yield UiConfirmFeeOverThreshold(fee, coin, amount_unit))
 
 
 def confirm_change_count_over_threshold(change_count: int) -> Awaitable[Any]:  # type: ignore

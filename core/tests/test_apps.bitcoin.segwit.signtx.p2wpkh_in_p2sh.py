@@ -21,6 +21,7 @@ from trezor.messages.TxRequest import TxRequest
 from trezor.messages.RequestType import TXINPUT, TXMETA, TXOUTPUT, TXFINISHED
 from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
 from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
+from trezor.messages import AmountUnit
 from trezor.messages import InputScriptType
 from trezor.messages import OutputScriptType
 from trezor import wire
@@ -89,16 +90,16 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
 
-            helpers.UiConfirmOutput(out1, coin),
+            helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN),
             True,
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAckOutput(tx=TxAckOutputWrapper(output=out2)),
 
-            helpers.UiConfirmOutput(out2, coin),
+            helpers.UiConfirmOutput(out2, coin, AmountUnit.BITCOIN),
             True,
 
-            helpers.UiConfirmTotal(123445789 + 11000, 11000, coin),
+            helpers.UiConfirmTotal(123445789 + 11000, 11000, coin, AmountUnit.BITCOIN),
             True,
 
             # check prev tx
@@ -218,13 +219,13 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
 
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
 
-            helpers.UiConfirmOutput(out1, coin),
+            helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN),
             True,
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAckOutput(tx=TxAckOutputWrapper(output=out2)),
 
-            helpers.UiConfirmTotal(12300000 + 11000, 11000, coin),
+            helpers.UiConfirmTotal(12300000 + 11000, 11000, coin, AmountUnit.BITCOIN),
             True,
 
             # check prev tx
@@ -364,13 +365,13 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=0, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
 
-            helpers.UiConfirmOutput(out1, coin),
+            helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN),
             True,
 
             TxRequest(request_type=TXOUTPUT, details=TxRequestDetailsType(request_index=1, tx_hash=None), serialized=EMPTY_SERIALIZED),
             TxAckOutput(tx=TxAckOutputWrapper(output=out2)),
 
-            helpers.UiConfirmTotal(9 - 1, 9 - 8 - 1, coin),
+            helpers.UiConfirmTotal(9 - 1, 9 - 8 - 1, coin, AmountUnit.BITCOIN),
             True,
 
             # check prev tx
