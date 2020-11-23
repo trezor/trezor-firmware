@@ -32,6 +32,16 @@ enum OutputScriptType {
 }
 
 /**
+ * Unit to be used when showing amounts on the display
+ */
+ enum AmountUnit {
+    BITCOIN = 0;        // BTC
+    MILLIBITCOIN = 1;   // mBTC
+    MICROBITCOIN = 2;   // uBTC
+    SATOSHI = 3;        // sat
+}
+
+/**
  * Type of redeem script used in input
  * @embed
  */
@@ -161,16 +171,17 @@ message VerifyMessage {
  * @next Failure
  */
 message SignTx {
-    required uint32 outputs_count = 1;                  // number of transaction outputs
-    required uint32 inputs_count = 2;                   // number of transaction inputs
-    optional string coin_name = 3 [default='Bitcoin'];  // coin to use
-    optional uint32 version = 4 [default=1];            // transaction version
-    optional uint32 lock_time = 5 [default=0];          // transaction lock_time
-    optional uint32 expiry = 6;                         // only for Decred and Zcash
-    optional bool overwintered = 7 [deprecated=true];   // deprecated in 2.3.2, the field is not needed as it can be derived from `version`
-    optional uint32 version_group_id = 8;               // only for Zcash, nVersionGroupId
-    optional uint32 timestamp = 9;                      // only for Peercoin
-    optional uint32 branch_id = 10;                     // only for Zcash, BRANCH_ID
+    required uint32 outputs_count = 1;                      // number of transaction outputs
+    required uint32 inputs_count = 2;                       // number of transaction inputs
+    optional string coin_name = 3 [default='Bitcoin'];      // coin to use
+    optional uint32 version = 4 [default=1];                // transaction version
+    optional uint32 lock_time = 5 [default=0];              // transaction lock_time
+    optional uint32 expiry = 6;                             // only for Decred and Zcash
+    optional bool overwintered = 7 [deprecated=true];       // deprecated in 2.3.2, the field is not needed as it can be derived from `version`
+    optional uint32 version_group_id = 8;                   // only for Zcash, nVersionGroupId
+    optional uint32 timestamp = 9;                          // only for Peercoin
+    optional uint32 branch_id = 10;                         // only for Zcash, BRANCH_ID
+    optional AmountUnit amount_unit = 11 [default=BITCOIN]; // show amounts in
 }
 
 /**
@@ -535,4 +546,5 @@ message AuthorizeCoinJoin {
     repeated uint32 address_n = 4;                                      // prefix of the BIP-32 path leading to the account (m / purpose' / coin_type' / account')
     optional string coin_name = 5 [default='Bitcoin'];                  // coin to use
     optional InputScriptType script_type = 6 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
+    optional AmountUnit amount_unit = 11 [default=BITCOIN];             // show amounts in
 }
