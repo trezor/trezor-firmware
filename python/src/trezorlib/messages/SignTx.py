@@ -6,6 +6,7 @@ if __debug__:
     try:
         from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
+        EnumTypeAmountUnit = Literal[0, 1, 2, 3]
     except ImportError:
         pass
 
@@ -26,6 +27,7 @@ class SignTx(p.MessageType):
         version_group_id: int = None,
         timestamp: int = None,
         branch_id: int = None,
+        amount_unit: EnumTypeAmountUnit = 0,
     ) -> None:
         self.outputs_count = outputs_count
         self.inputs_count = inputs_count
@@ -37,6 +39,7 @@ class SignTx(p.MessageType):
         self.version_group_id = version_group_id
         self.timestamp = timestamp
         self.branch_id = branch_id
+        self.amount_unit = amount_unit
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -51,4 +54,5 @@ class SignTx(p.MessageType):
             8: ('version_group_id', p.UVarintType, None),
             9: ('timestamp', p.UVarintType, None),
             10: ('branch_id', p.UVarintType, None),
+            11: ('amount_unit', p.EnumType("AmountUnit", (0, 1, 2, 3)), 0),  # default=BITCOIN
         }

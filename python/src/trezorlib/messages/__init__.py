@@ -299,6 +299,7 @@ from .WebAuthnRemoveResidentCredential import WebAuthnRemoveResidentCredential
 from .WipeDevice import WipeDevice
 from .WordAck import WordAck
 from .WordRequest import WordRequest
+from . import AmountUnit
 from . import BackupType
 from . import BinanceOrderSide
 from . import BinanceOrderType

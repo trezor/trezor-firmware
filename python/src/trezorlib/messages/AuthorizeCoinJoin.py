@@ -7,6 +7,7 @@ if __debug__:
         from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeInputScriptType = Literal[0, 1, 2, 3, 4]
+        EnumTypeAmountUnit = Literal[0, 1, 2, 3]
     except ImportError:
         pass
 
@@ -24,6 +25,7 @@ class AuthorizeCoinJoin(p.MessageType):
         fee_per_anonymity: int = None,
         coin_name: str = "Bitcoin",
         script_type: EnumTypeInputScriptType = 0,
+        amount_unit: EnumTypeAmountUnit = 0,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.coordinator = coordinator
@@ -31,6 +33,7 @@ class AuthorizeCoinJoin(p.MessageType):
         self.fee_per_anonymity = fee_per_anonymity
         self.coin_name = coin_name
         self.script_type = script_type
+        self.amount_unit = amount_unit
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -41,4 +44,5 @@ class AuthorizeCoinJoin(p.MessageType):
             4: ('address_n', p.UVarintType, p.FLAG_REPEATED),
             5: ('coin_name', p.UnicodeType, "Bitcoin"),  # default=Bitcoin
             6: ('script_type', p.EnumType("InputScriptType", (0, 1, 2, 3, 4)), 0),  # default=SPENDADDRESS
+            11: ('amount_unit', p.EnumType("AmountUnit", (0, 1, 2, 3)), 0),  # default=BITCOIN
         }
