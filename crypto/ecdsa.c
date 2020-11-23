@@ -1147,3 +1147,52 @@ int ecdsa_sig_to_der(const uint8_t *sig, uint8_t *der) {
   *len = *len1 + *len2 + 4;
   return *len + 2;
 }
+
+// Parse a DER-encoded signature. We don't check whether the encoded integers
+// satisfy DER requirements regarding leading zeros.
+int ecdsa_sig_from_der(const uint8_t *der, size_t der_len, uint8_t sig[64]) {
+  memzero(sig, 64);
+
+  // Check sequence header.
+  if (der_len < 2 || der_len > 72 || der[0] != 0x30 || der[1] != der_len - 2) {
+    return 1;
+  }
+
+  // Read two DER-encoded integers.
+  size_t pos = 2;
+  for (int i = 0; i < 2; ++i) {
+    // Check integer header.
+    if (der_len < pos + 2 || der[pos] != 0x02) {
+      return 1;
+    }
+
+    // Locate the integer.
+    size_t int_len = der[pos + 1];
+    pos += 2;
+    if (pos + int_len > der_len) {
+      return 1;
+    }
+
+    // Skip a possible leading zero.
+    if (int_len != 0 && der[pos] == 0) {
+      int_len--;
+      pos++;
+    }
+
+    // Copy the integer to the output, making sure it fits.
+    if (int_len > 32) {
+      return 1;
+    }
+    memcpy(sig + 32 * (i + 1) - int_len, der + pos, int_len);
+
+    // Move on to the next one.
+    pos += int_len;
+  }
+
+  // Check that there are no trailing elements in the sequence.
+  if (pos != der_len) {
+    return 1;
+  }
+
+  return 0;
+}
