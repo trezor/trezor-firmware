@@ -216,7 +216,7 @@ def set_flags(flags: int) -> None:
         i = 0
     else:
         i = int.from_bytes(b, "big")
-    flags = (flags | i) & 0xFFFFFFFF
+    flags = (flags | i) & 0xFFFF_FFFF
     if flags != i:
         common.set(_NAMESPACE, _FLAGS, flags.to_bytes(4, "big"))
 

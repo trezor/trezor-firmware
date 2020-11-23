@@ -35,7 +35,7 @@ def write_uint16_be(w: Writer, n: int) -> int:
 
 
 def write_uint32_le(w: Writer, n: int) -> int:
-    ensure(0 <= n <= 0xFFFFFFFF)
+    ensure(0 <= n <= 0xFFFF_FFFF)
     w.append(n & 0xFF)
     w.append((n >> 8) & 0xFF)
     w.append((n >> 16) & 0xFF)
@@ -44,7 +44,7 @@ def write_uint32_le(w: Writer, n: int) -> int:
 
 
 def write_uint32_be(w: Writer, n: int) -> int:
-    ensure(0 <= n <= 0xFFFFFFFF)
+    ensure(0 <= n <= 0xFFFF_FFFF)
     w.append((n >> 24) & 0xFF)
     w.append((n >> 16) & 0xFF)
     w.append((n >> 8) & 0xFF)
@@ -53,7 +53,7 @@ def write_uint32_be(w: Writer, n: int) -> int:
 
 
 def write_uint64_le(w: Writer, n: int) -> int:
-    ensure(0 <= n <= 0xFFFFFFFFFFFFFFFF)
+    ensure(0 <= n <= 0xFFFF_FFFF_FFFF_FFFF)
     w.append(n & 0xFF)
     w.append((n >> 8) & 0xFF)
     w.append((n >> 16) & 0xFF)
@@ -66,7 +66,7 @@ def write_uint64_le(w: Writer, n: int) -> int:
 
 
 def write_uint64_be(w: Writer, n: int) -> int:
-    ensure(0 <= n <= 0xFFFFFFFFFFFFFFFF)
+    ensure(0 <= n <= 0xFFFF_FFFF_FFFF_FFFF)
     w.append((n >> 56) & 0xFF)
     w.append((n >> 48) & 0xFF)
     w.append((n >> 40) & 0xFF)
@@ -96,10 +96,10 @@ def write_bytes_reversed(w: Writer, b: bytes, length: int) -> int:
 
 
 def write_bitcoin_varint(w: Writer, n: int) -> None:
-    ensure(n >= 0 and n <= 0xFFFFFFFF)
+    ensure(n >= 0 and n <= 0xFFFF_FFFF)
     if n < 253:
         w.append(n & 0xFF)
-    elif n < 0x10000:
+    elif n < 0x1_0000:
         w.append(253)
         w.append(n & 0xFF)
         w.append((n >> 8) & 0xFF)

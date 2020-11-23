@@ -64,14 +64,14 @@ _BIP32_CHANGE_CHAIN = const(1)
 
 # The maximum allowed change address. This should be large enough for normal
 # use and still allow to quickly brute-force the correct BIP32 path.
-_BIP32_MAX_LAST_ELEMENT = const(1000000)
+_BIP32_MAX_LAST_ELEMENT = const(1_000_000)
 
 # Setting nSequence to this value for every input in a transaction disables nLockTime.
-_SEQUENCE_FINAL = const(0xFFFFFFFF)
+_SEQUENCE_FINAL = const(0xFFFF_FFFF)
 
 # Setting nSequence to a value greater than this for every input in a transaction
 # disables replace-by-fee opt-in.
-_MAX_BIP125_RBF_SEQUENCE = const(0xFFFFFFFD)
+_MAX_BIP125_RBF_SEQUENCE = const(0xFFFF_FFFD)
 
 
 class TxInfoBase:

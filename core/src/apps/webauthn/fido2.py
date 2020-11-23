@@ -33,7 +33,7 @@ if False:
         Union,
     )
 
-_CID_BROADCAST = const(0xFFFFFFFF)  # broadcast channel id
+_CID_BROADCAST = const(0xFFFF_FFFF)  # broadcast channel id
 
 # types of frame
 _TYPE_MASK = const(0x80)  # frame type mask
@@ -1180,8 +1180,8 @@ def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
 
 def cmd_init(req: Cmd) -> Cmd:
     if req.cid == _CID_BROADCAST:
-        # uint32_t except 0 and 0xffffffff
-        resp_cid = random.uniform(0xFFFFFFFE) + 1
+        # uint32_t except 0 and 0xffff_ffff
+        resp_cid = random.uniform(0xFFFF_FFFE) + 1
     else:
         resp_cid = req.cid
 

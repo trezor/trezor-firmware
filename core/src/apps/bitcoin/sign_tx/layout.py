@@ -19,7 +19,7 @@ if False:
 
     from apps.common.coininfo import CoinInfo
 
-_LOCKTIME_TIMESTAMP_MIN_VALUE = const(500000000)
+_LOCKTIME_TIMESTAMP_MIN_VALUE = const(500_000_000)
 
 
 def format_coin_amount(amount: int, coin: CoinInfo) -> str:

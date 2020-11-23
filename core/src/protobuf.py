@@ -55,19 +55,19 @@ def count_uvarint(n: int) -> int:
         return 1
     if n <= 0x3FFF:
         return 2
-    if n <= 0x1FFFFF:
+    if n <= 0x1F_FFFF:
         return 3
-    if n <= 0xFFFFFFF:
+    if n <= 0xFFF_FFFF:
         return 4
-    if n <= 0x7FFFFFFFF:
+    if n <= 0x7_FFFF_FFFF:
         return 5
-    if n <= 0x3FFFFFFFFFF:
+    if n <= 0x3FF_FFFF_FFFF:
         return 6
-    if n <= 0x1FFFFFFFFFFFF:
+    if n <= 0x1_FFFF_FFFF_FFFF:
         return 7
-    if n <= 0xFFFFFFFFFFFFFF:
+    if n <= 0xFF_FFFF_FFFF_FFFF:
         return 8
-    if n <= 0x7FFFFFFFFFFFFFFF:
+    if n <= 0x7FFF_FFFF_FFFF_FFFF:
         return 9
     raise ValueError
 

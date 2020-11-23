@@ -101,7 +101,7 @@ class TxWeightCalculator:
     def ser_length_size(length: int) -> int:
         if length < 253:
             return 1
-        if length < 0x10000:
+        if length < 0x1_0000:
             return 3
         return 5
 
@@ -111,6 +111,6 @@ class TxWeightCalculator:
             return 1
         if length < 0x100:
             return 2
-        if length < 0x10000:
+        if length < 0x1_0000:
             return 3
         return 5

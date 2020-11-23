@@ -221,5 +221,5 @@ class Decred(Bitcoin):
     ) -> None:
         writers.write_uint64(w, i.amount)
         writers.write_uint32(w, 0)  # block height fraud proof
-        writers.write_uint32(w, 0xFFFFFFFF)  # block index fraud proof
+        writers.write_uint32(w, 0xFFFF_FFFF)  # block index fraud proof
         writers.write_bytes_prefixed(w, script_sig)

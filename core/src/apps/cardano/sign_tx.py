@@ -59,7 +59,7 @@ if False:
 
 # the maximum allowed change address.  this should be large enough for normal
 # use and still allow to quickly brute-force the correct bip32 path
-MAX_CHANGE_ADDRESS_INDEX = const(1000000)
+MAX_CHANGE_ADDRESS_INDEX = const(1_000_000)
 ACCOUNT_PATH_INDEX = const(2)
 BIP_PATH_LENGTH = const(5)
 

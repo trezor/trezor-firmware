@@ -20,7 +20,7 @@ async def get_address(ctx, msg, keychain):
     address_bytes = sha3_256(public_key[1:], keccak=True).digest()[12:]
 
     if len(msg.address_n) > 1:  # path has slip44 network identifier
-        network = networks.by_slip44(msg.address_n[1] & 0x7FFFFFFF)
+        network = networks.by_slip44(msg.address_n[1] & 0x7FFF_FFFF)
     else:
         network = None
     address = address_from_bytes(address_bytes, network)

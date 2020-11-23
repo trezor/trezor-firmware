@@ -34,7 +34,7 @@ if False:
     from .tx_info import OriginalTxInfo, TxInfo
     from ..writers import Writer
 
-OVERWINTERED = const(0x80000000)
+OVERWINTERED = const(0x8000_0000)
 
 
 class Zip243Hash(Hash143):

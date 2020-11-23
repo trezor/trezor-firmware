@@ -151,7 +151,7 @@ class ConfirmPageable(Confirm):
             return tasks
 
     def on_render(self) -> None:
-        PULSE_PERIOD = const(1200000)
+        PULSE_PERIOD = const(1_200_000)
 
         super().on_render()
 

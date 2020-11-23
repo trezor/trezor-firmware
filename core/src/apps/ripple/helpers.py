@@ -4,22 +4,22 @@ from trezor.crypto.hashlib import ripemd160, sha256
 
 from . import base58_ripple
 
-# HASH_TX_ID = const(0x54584E00)  # 'TXN'
-HASH_TX_SIGN = const(0x53545800)  # 'STX'
-# HASH_TX_SIGN_TESTNET = const(0x73747800)  # 'stx'
+# HASH_TX_ID = const(0x5458_4E00)  # 'TXN'
+HASH_TX_SIGN = const(0x5354_5800)  # 'STX'
+# HASH_TX_SIGN_TESTNET = const(0x7374_7800)  # 'stx'
 
 # https://developers.ripple.com/basic-data-types.html#specifying-currency-amounts
-DECIMALS = const(6)  # 1000000 drops equal 1 XRP
+DECIMALS = const(6)  # 1_000_000 drops equal 1 XRP
 
 # https://developers.ripple.com/transaction-cost.html
 MIN_FEE = const(10)
 # max is not defined officially but we check to make sure
-MAX_FEE = const(1000000)  # equals 1 XRP
+MAX_FEE = const(1_000_000)  # equals 1 XRP
 # https://xrpl.org/basic-data-types.html#specifying-currency-amounts
 # the value in docs is in XRP, we declare it here in drops
-MAX_ALLOWED_AMOUNT = const(100000000000000000)
+MAX_ALLOWED_AMOUNT = const(100_000_000_000_000_000)
 
-FLAG_FULLY_CANONICAL = 0x80000000
+FLAG_FULLY_CANONICAL = 0x8000_0000
 
 
 def address_from_public_key(pubkey: bytes) -> str:

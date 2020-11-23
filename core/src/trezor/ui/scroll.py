@@ -35,7 +35,7 @@ def render_swipe_icon() -> None:
     if utils.DISABLE_ANIMATION:
         c = ui.GREY
     else:
-        PULSE_PERIOD = const(1200000)
+        PULSE_PERIOD = const(1_200_000)
         t = ui.pulse(PULSE_PERIOD)
         c = ui.blend(ui.GREY, ui.DARK_GREY, t)
 

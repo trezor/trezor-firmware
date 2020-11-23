@@ -64,7 +64,7 @@ def write_tx_output(
 
 
 def write_op_push(w: Writer, n: int) -> None:
-    ensure(n >= 0 and n <= 0xFFFFFFFF)
+    ensure(n >= 0 and n <= 0xFFFF_FFFF)
     if n < 0x4C:
         w.append(n & 0xFF)
     elif n < 0xFF:

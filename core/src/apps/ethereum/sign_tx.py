@@ -116,9 +116,9 @@ def get_total_length(msg: EthereumSignTx, data_total: int) -> int:
     if msg.chain_id:  # forks replay protection
         if msg.chain_id < 0x100:
             l = 1
-        elif msg.chain_id < 0x10000:
+        elif msg.chain_id < 0x1_0000:
             l = 2
-        elif msg.chain_id < 0x1000000:
+        elif msg.chain_id < 0x100_0000:
             l = 3
         else:
             l = 4
@@ -172,7 +172,7 @@ def check(msg: EthereumSignTx):
             raise wire.DataError("Data length provided, but no initial chunk")
         # Our encoding only supports transactions up to 2^24 bytes. To
         # prevent exceeding the limit we use a stricter limit on data length.
-        if msg.data_length > 16000000:
+        if msg.data_length > 16_000_000:
             raise wire.DataError("Data length exceeds limit")
         if len(msg.data_initial_chunk) > msg.data_length:
             raise wire.DataError("Invalid size of initial chunk")
