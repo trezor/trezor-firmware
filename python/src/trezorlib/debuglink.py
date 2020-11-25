@@ -163,7 +163,7 @@ class DebugLink:
         self._call(messages.DebugLinkStop(), nowait=True)
 
     def reseed(self, value):
-        self._call(messages.DebugLinkReseedRandom(value=value))
+        return self._call(messages.DebugLinkReseedRandom(value=value))
 
     def start_recording(self, directory):
         self._call(messages.DebugLinkRecordScreen(target_directory=directory))

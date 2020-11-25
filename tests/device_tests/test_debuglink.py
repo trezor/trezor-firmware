@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import debuglink, device, messages, misc
+from trezorlib.transport import udp
 
 from ..common import MNEMONIC12
 
@@ -63,7 +64,11 @@ def test_softlock_instability(client):
         )
 
     # start from a clean slate:
-    client.debug.reseed(0)
+    resp = client.debug.reseed(0)
+    if isinstance(resp, messages.Failure) and not isinstance(
+        client.transport, udp.UdpTransport
+    ):
+        pytest.xfail("reseed only supported on emulator")
     device.wipe(client)
     entropy_after_wipe = misc.get_entropy(client, 16)
 
