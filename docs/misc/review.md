@@ -28,7 +28,9 @@
   8. The author runs `git rebase -i [main branch] --autosquash` which squashes the fixup commits into
      their respective parents and then force-pushes the rebase branch.
   9. The author makes a final check and merges the PR. If the rebase involved resolving some complicated
-     merge conflicts, then the author may ask the reviewer for a final check.
+     merge conflicts, then the author may ask the reviewer for a final check. GitHub's _Rebase and merge_
+     should be used, not _Squash and merge_.
+  10. The author deletes their branch.
 
 ## Example
 
