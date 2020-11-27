@@ -358,6 +358,7 @@ if SYSTEM_VIEW:
         'embed/segger/SEGGER/SEGGER_SYSVIEW.c',
         'embed/segger/SEGGER/SEGGER_RTT.c',
         'embed/segger/SEGGER/SEGGER_RTT_ASM_ARMv7M.S',
+        'embed/firmware/systemview.c',
     ]
     CPPPATH_MOD += [
         'embed/segger/SEGGER/',
