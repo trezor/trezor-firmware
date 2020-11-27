@@ -43,6 +43,9 @@
 #ifdef RDI
 #include "rdi.h"
 #endif
+#ifdef SYSTEM_VIEW
+#include "systemview.h"
+#endif
 #include "rng.h"
 #include "sdcard.h"
 #include "supervise.h"
@@ -61,6 +64,10 @@ int main(void) {
 #endif
 
   collect_hw_entropy();
+
+#ifdef SYSTEM_VIEW
+  enable_systemview();
+#endif
 
 #if TREZOR_MODEL == T
 #if PRODUCTION
