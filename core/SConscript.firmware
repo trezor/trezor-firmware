@@ -3,6 +3,7 @@
 import os
 
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
+SYSTEM_VIEW = ARGUMENTS.get('SYSTEM_VIEW', '1') == '1'
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 
@@ -350,6 +351,19 @@ if FEATURE_FLAGS["RDI"]:
         'embed/trezorhal/rdi.c',
     ]
     CPPDEFINES_MOD += ['RDI']
+
+if SYSTEM_VIEW:
+    SOURCE_FIRMWARE += [
+        'embed/segger/SEGGER/SEGGER_SYSVIEW_Config_NoOS.c',
+        'embed/segger/SEGGER/SEGGER_SYSVIEW.c',
+        'embed/segger/SEGGER/SEGGER_RTT.c',
+        'embed/segger/SEGGER/SEGGER_RTT_ASM_ARMv7M.S',
+    ]
+    CPPPATH_MOD += [
+        'embed/segger/SEGGER/',
+        'embed/segger/Config/',
+    ]
+    CPPDEFINES_MOD += ['SYSTEM_VIEW']
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED
 
