@@ -1036,25 +1036,26 @@ int ecdsa_verify_digest(const ecdsa_curve *curve, const uint8_t *pub_key,
   if (result == 0) {
     bn_read_be(sig, &r);
     bn_read_be(sig + 32, &s);
+    bn_read_be(digest, &z);
     if (bn_is_zero(&r) || bn_is_zero(&s) || (!bn_is_less(&r, &curve->order)) ||
         (!bn_is_less(&s, &curve->order))) {
       result = 2;
     }
+    if (bn_is_zero(&z)) {
+      // The digest was all-zero. The probability of this happening by chance is
+      // infinitesimal, but it could be induced by a fault injection. In this
+      // case the signature (r,s) can be forged by taking r := (t * Q).x mod n
+      // and s := r * t^-1 mod n for any t in [1, n-1]. We fail verification,
+      // because there is no guarantee that the signature was created by the
+      // owner of the private key.
+      result = 3;
+    }
   }
 
   if (result == 0) {
-    bn_read_be(digest, &z);
     bn_inverse(&s, &curve->order);       // s = s^-1
     bn_multiply(&s, &z, &curve->order);  // z = z * s  [u1 = z * s^-1 mod n]
     bn_mod(&z, &curve->order);
-    if (bn_is_zero(&z)) {
-      // The digest was all-zero. The probability of this happening by chance is
-      // infinitesimal. In this case the signature (r,s) can be forged by taking
-      // r := (t * Q).x mod n and s := r * t^-1 mod n for any t in [1, n-1]. We
-      // fail verification, because there is no guarantee that the signature was
-      // created by the owner of the private key.
-      result = 3;
-    }
   }
 
   if (result == 0) {
