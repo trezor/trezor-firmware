@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## 1.9.4 [to be released on 13th January 2021]
 
 ### Added
+- Replacement transaction signing for replace-by-fee.  [#1367]
 
 ### Changed
 - Bump nanobp dependency to 0.4.3.  [#1105]
@@ -354,3 +355,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1165]: https://github.com/trezor/trezor-firmware/pull/1165
 [#1188]: https://github.com/trezor/trezor-firmware/issues/1188
 [#1351]: https://github.com/trezor/trezor-firmware/issues/1351
+[#1367]: https://github.com/trezor/trezor-firmware/issues/1367

@@ -435,6 +435,37 @@ void layoutConfirmTx(const CoinInfo *coin, uint64_t amount_out,
                     _("Fee included:"), str_fee, NULL);
 }
 
+void layoutConfirmReplacement(const char *description, uint8_t txid[32]) {
+  const char **str = split_message_hex(txid, 32);
+  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                    description, str[0], str[1], str[2], str[3], NULL);
+}
+
+void layoutConfirmModifyFee(const CoinInfo *coin, uint64_t fee_old,
+                            uint64_t fee_new) {
+  char str_fee_change[32] = {0};
+  char str_fee_new[32] = {0};
+  char *question = NULL;
+
+  uint64_t fee_change = 0;
+  if (fee_old < fee_new) {
+    question = _("Increase your fee by:");
+    fee_change = fee_new - fee_old;
+  } else {
+    question = _("Decrease your fee by:");
+    fee_change = fee_old - fee_new;
+  }
+  bn_format_uint64(fee_change, NULL, coin->coin_shortcut, coin->decimals, 0,
+                   false, str_fee_change, sizeof(str_fee_change));
+
+  bn_format_uint64(fee_new, NULL, coin->coin_shortcut, coin->decimals, 0, false,
+                   str_fee_new, sizeof(str_fee_new));
+
+  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                    question, str_fee_change, NULL, _("Transaction fee:"),
+                    str_fee_new, NULL);
+}
+
 void layoutFeeOverThreshold(const CoinInfo *coin, uint64_t fee) {
   char str_fee[32] = {0};
   bn_format_uint64(fee, NULL, coin->coin_shortcut, coin->decimals, 0, false,

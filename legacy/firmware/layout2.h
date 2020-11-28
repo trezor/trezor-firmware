@@ -51,6 +51,9 @@ void layoutConfirmOmni(const uint8_t *data, uint32_t size);
 void layoutConfirmOpReturn(const uint8_t *data, uint32_t size);
 void layoutConfirmTx(const CoinInfo *coin, uint64_t amount_out,
                      uint64_t amount_fee);
+void layoutConfirmReplacement(const char *description, uint8_t txid[32]);
+void layoutConfirmModifyFee(const CoinInfo *coin, uint64_t fee_old,
+                            uint64_t fee_new);
 void layoutFeeOverThreshold(const CoinInfo *coin, uint64_t fee);
 void layoutChangeCountOverThreshold(uint32_t change_count);
 void layoutConfirmNondefaultLockTime(uint32_t lock_time,
