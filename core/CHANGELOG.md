@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - CoinJoin preauthorization and signing flow.  [#1053]
 - Value of the `safety-checks` setting to the `Features` message.  [#1193]
 - ERC20 tokens show contract address for confirmation. Unknown ERC20 tokens show wei amount.  [#800]
+- Replacement transaction signing for replace-by-fee and PayJoin.  [#1292]
 
 ### Changed
 - The `safety-checks` setting gained new possible value `PromptTemporarily` which overrides safety checks until device reboot.  [#1133]
@@ -331,6 +332,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1193]: https://github.com/trezor/trezor-firmware/issues/1193
 [#1206]: https://github.com/trezor/trezor-firmware/issues/1206
 [#1246]: https://github.com/trezor/trezor-firmware/issues/1246
+[#1292]: https://github.com/trezor/trezor-firmware/issues/1292
 [#1322]: https://github.com/trezor/trezor-firmware/issues/1322
 [#1335]: https://github.com/trezor/trezor-firmware/issues/1335
 [#1351]: https://github.com/trezor/trezor-firmware/issues/1351
