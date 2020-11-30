@@ -35,6 +35,8 @@ Examples:
 To be determined:
 * `-DNDEBUG`
 * `-DUSE_BIP39_CACHE=0 -DUSE_BIP32_CACHE=0`
+* `-D_FORTIFY_SOURCE=2`
+* `-fstack-protector-strong` or `-fstack-protector-all`
 
 ## Operation
 

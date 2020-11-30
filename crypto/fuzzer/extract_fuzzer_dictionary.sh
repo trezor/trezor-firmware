@@ -24,6 +24,8 @@ done
 
 # extract and convert binary input data from the unit tests
 # find each file, cat it, concatenate multiline strings, look for hex strings in quotes
+# note that this returns multiple megabyte of result strings due to the large amount
+# of test cases in the wycheproof project subfolder
 find $TARGET_DIR -type f | xargs cat | perl -p0e 's/"\s*\n\s*\"//smg' | grep -P -o "\"([0-9a-fA-F][0-9a-fA-F])+\"" | grep -P -o "([0-9a-fA-F][0-9a-fA-F])+" | sort | uniq | while read -r line ; do
   # turn ascii hex strings AA into \xaa for the fuzzer format and add quotes
   # extra backslash escape due to the bash nesting
