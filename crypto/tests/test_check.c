@@ -3336,7 +3336,29 @@ START_TEST(test_ecdsa_signature) {
   int res;
   uint8_t digest[32];
   uint8_t pubkey[65];
+  uint8_t sig[64];
   const ecdsa_curve *curve = &secp256k1;
+
+  // Signature verification for a digest which is equal to the group order.
+  // https://github.com/trezor/trezor-firmware/pull/1374
+  memcpy(
+      pubkey,
+      fromhex(
+          "0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f8179848"
+          "3ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8"),
+      sizeof(pubkey));
+  memcpy(
+      digest,
+      fromhex(
+          "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"),
+      sizeof(digest));
+  memcpy(sig,
+         fromhex(
+             "a0b37f8fba683cc68f6574cd43b39f0343a50008bf6ccea9d13231d9e7e2e1e41"
+             "1edc8d307254296264aebfc3dc76cd8b668373a072fd64665b50000e9fcce52"),
+         sizeof(sig));
+  res = ecdsa_verify_digest(curve, pubkey, sig, digest);
+  ck_assert_int_eq(res, 0);
 
   // sha2(sha2("\x18Bitcoin Signed Message:\n\x0cHello World!"))
   memcpy(
