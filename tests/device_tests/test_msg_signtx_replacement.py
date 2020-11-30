@@ -810,3 +810,57 @@ def test_attack_fake_ext_input_amount(client):
             [out1, out2],
             prev_txes=prev_txes,
         )
+
+
+@pytest.mark.skip_ui
+def test_p2wpkh_invalid_signature(client):
+    # Ensure that transaction replacement fails when the original signature is invalid.
+
+    # Original input with disabled RBF opt-in, i.e. we finalize the transaction.
+    inp1 = messages.TxInputType(
+        address_n=parse_path("84h/1h/0h/0/2"),
+        amount=20000000,
+        script_type=messages.InputScriptType.SPENDWITNESS,
+        prev_hash=TXHASH_43d273,
+        prev_index=1,
+        orig_hash=TXHASH_70f987,
+        orig_index=0,
+        sequence=4294967294,
+    )
+
+    # Original external output (actually 84h/1h/0h/0/0).
+    out1 = messages.TxOutputType(
+        address="tb1qkvwu9g3k2pdxewfqr7syz89r3gj557l3uuf9r9",
+        amount=100000,
+        script_type=messages.OutputScriptType.PAYTOWITNESS,
+        orig_hash=TXHASH_70f987,
+        orig_index=0,
+    )
+
+    # Change output. We bump the fee from 141 to 200.
+    out2 = messages.TxOutputType(
+        address_n=parse_path("84h/1h/0h/1/1"),
+        amount=20000000 - 100000 - 200,
+        script_type=messages.OutputScriptType.PAYTOWITNESS,
+        orig_hash=TXHASH_70f987,
+        orig_index=1,
+    )
+
+    # Invalidate the signature in the original witness.
+    prev_tx_invalid = TX_CACHE_TESTNET[TXHASH_70f987]
+    prev_tx_invalid.inputs[0].witness = bytearray(prev_tx_invalid.inputs[0].witness)
+    prev_tx_invalid.inputs[0].witness[10] ^= 1
+    prev_txes = {
+        TXHASH_70f987: prev_tx_invalid,
+        TXHASH_43d273: TX_CACHE_TESTNET[TXHASH_43d273],
+    }
+
+    with pytest.raises(TrezorFailure, match="Invalid signature"):
+        _, serialized_tx = btc.sign_tx(
+            client,
+            "Testnet",
+            [inp1],
+            [out1, out2],
+            lock_time=1348713,
+            prev_txes=prev_txes,
+        )
