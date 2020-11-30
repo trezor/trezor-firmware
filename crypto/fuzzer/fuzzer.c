@@ -60,6 +60,11 @@
 #include "shamir.h"
 #include "slip39.h"
 #include "slip39_wordlist.h"
+#include "hasher.h"
+#include "nist256p1.h"
+#include "rand.h"
+#include "secp256k1.h"
+
 
 /* fuzzer input data handling */
 const uint8_t *fuzzer_ptr;
@@ -83,6 +88,11 @@ void fuzzer_reset_state(void) {
   random_reseed(0);
 }
 
+void crash(void) {
+  // intentionally exit the program, which is picked up as a crash by the fuzzer framework
+  exit(1);
+}
+
 /* individual fuzzer harness functions */
 
 int fuzz_bn_format(void) {
@@ -92,8 +102,9 @@ int fuzz_bn_format(void) {
     return 0;
   }
 
-  char buf[512] = {0};
-  int r;
+#define FUZZ_BN_FORMAT_OUTPUT_BUFFER_SIZE 512
+  char buf[FUZZ_BN_FORMAT_OUTPUT_BUFFER_SIZE] = {0};
+  int ret;
 
   // mutate the struct contents
   memcpy(&target_bignum, fuzzer_ptr, sizeof(target_bignum));
@@ -145,8 +156,14 @@ int fuzz_bn_format(void) {
     return 0;
   }
 
-  r = bn_format(&target_bignum, prefix, suffix, decimals, exponent, trailing,
-                buf, sizeof(buf));
+  ret = bn_format(&target_bignum, prefix, suffix, decimals, exponent, trailing,
+                buf, FUZZ_BN_FORMAT_OUTPUT_BUFFER_SIZE);
+
+  // basic sanity checks for r
+  if(ret > FUZZ_BN_FORMAT_OUTPUT_BUFFER_SIZE) {
+    crash();
+  }
+
   return 0;
 }
 
@@ -378,7 +395,12 @@ int fuzz_nem_get_address(void) {
 
   nem_get_address(ed25519_public_key, network, address);
 
-  // TODO check return address for memory info leakage?
+#if defined(__has_feature)
+#if __has_feature(memory_sanitizer)
+  // TODO check `address` for memory info leakage
+#endif
+#endif
+
   return 0;
 }
 
@@ -506,35 +528,22 @@ int fuzz_ecdsa_sign_digest(void) {
     curve = &nist256p1;
   }
 
-  // TODO optionally set a function for is_canonical()
+  // TODO optionally set a function for is_canonical() callback
   int res = ecdsa_sign_digest(curve, priv_key, digest, sig, &pby, NULL);
 
   // successful signing
   if (res == 0) {
     uint8_t pub_key[33] = {0};
-    ecdsa_get_public_key33(curve, priv_key, pub_key);
-    res = ecdsa_verify_digest(curve, pub_key, sig, digest);
+    res = ecdsa_get_public_key33(curve, priv_key, pub_key);
+    if (res != 0) {
+      // pubkey derivation did not succeed
+      crash();
+    }
 
+    res = ecdsa_verify_digest(curve, pub_key, sig, digest);
     if (res != 0) {
       // verification did not succeed
-
-      // case: all zero pubkey value
-      uint8_t pub_key_zero[33] =
-          "\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-          "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
-
-      // case: all zero digest value
-      uint8_t digest_zero[32] =
-          "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-          "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
-
-      if (memcmp(&pub_key, &pub_key_zero, sizeof(pub_key_zero)) == 0 ||
-          memcmp(&digest, &digest_zero, sizeof(digest_zero)) == 0) {
-        return 0;
-      }
-
-      // handle as crash
-      exit(1);
+      crash();
     }
   }
   return 0;
@@ -570,7 +579,7 @@ int fuzz_ecdsa_verify_digest(void) {
     // See if the fuzzer ever manages to get find a correct verification
     // intentionally trigger a crash to make this case observable
     // TODO this is not an actual problem, remove in the future
-    exit(1);
+    crash();
   }
 
   return 0;
@@ -739,7 +748,7 @@ int fuzz_b58gph_encode_decode(void) {
     if (ret == 0) {
       // mark as exception
       // TODO POTENTIAL BUG - followup
-      // exit(1);
+      // crash();
     }
   }
 
@@ -774,9 +783,10 @@ int fuzz_schnorr_verify_digest(void) {
   if (pub_key[0] != 0x04) {
     int ret = schnorr_verify_digest(curve, pub_key, digest, signature);
     if (ret == 0) {
-      // assuming that the fuzzer can't puzzle together validly signed inputs,
       // exit with a forced crash if a successful verification is observed
-      exit(1);
+      // TODO this assumes that the fuzzer can't puzzle together validly signed 
+      // inputs and needs to be revisited
+      crash();
     }
   }
 
@@ -811,23 +821,16 @@ int fuzz_schnorr_sign_digest(void) {
   ret = schnorr_sign_digest(curve, priv_key, digest, signature);
 
   if (ret == 0) {
-    // signing was successful, check if the verification works
+    // signing was successful, now check if the verification works
 
     // compute matching pubkey
     uint8_t pub_key[33] = {0};
-    ecdsa_get_public_key33(curve, priv_key, pub_key);
-
+    ret = ecdsa_get_public_key33(curve, priv_key, pub_key);
+    if(ret != 0) {
+      crash();
+    } 
     if (schnorr_verify_digest(curve, pub_key, digest, signature) != 0) {
-      // ignore known case
-      uint8_t pub_key_null[33] =
-          "\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-          "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
-      if (memcmp(&pub_key, &pub_key_null, 33) == 0) {
-        return 0;
-      }
-
-      // something is wrong, mark as crash
-      exit(1);
+      crash();
     }
   }
   return 0;
@@ -892,8 +895,7 @@ int fuzz_ed25519_sign_verify(void) {
 
   // TODO are there other error values?
   if (ret == -1) {
-    // mark as exception
-    exit(1);
+    crash();
   }
 
   return 0;
