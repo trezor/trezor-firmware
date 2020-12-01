@@ -322,3 +322,24 @@ def test_manage_data(client):
         == b"MTa8fmhM7BxYYo9kY1RKQFFrg/MVfzsgiPSuP7+SJZjhQ3P1ucN5JUnfmD5484ULRPjVTd+0YYjS6hScLupbCQ=="
         # 3136bc7e684cec1c58628f6463544a40516b83f3157f3b2088f4ae3fbf922598e14373f5b9c3792549df983e78f3850b44f8d54ddfb46188d2ea149c2eea5b09
     )
+
+
+def test_sign_tx_manage_buy_offer_op(client):
+    op = messages.StellarManageBuyOfferOp()
+    op.buying_asset = messages.StellarAssetType(0)
+    op.amount = 200
+    op.selling_asset = messages.StellarAssetType(
+        1, "X", "GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC"
+    )
+    op.price_n = 10
+    op.price_d = 1
+    op.offer_id = 0
+
+    tx = _create_msg()
+
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
+
+    assert (
+        b64encode(response.signature)
+        == b"JBd7YKhZYqRho0nvO6w+r0XD8RiJsNQXrQgWjmo8NimxaEblpOloAHTTA1JMATh0kbhBxbyRnJ1yLAfdzrSBAw=="
+    )
