@@ -151,6 +151,11 @@ class BasicApprover(Approver):
             )
             orig_fee = self.orig_total_in - self.orig_total_out
 
+            if fee < 0 or orig_fee < 0:
+                raise wire.ProcessError(
+                    "Negative fees not supported in transaction replacement."
+                )
+
             # Replacement transactions are only allowed to make amendments which
             # do not increase the amount that we are spending on external outputs.
             # In other words, the total amount being sent out of the wallet must
