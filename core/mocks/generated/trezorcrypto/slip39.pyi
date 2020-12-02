@@ -2,7 +2,7 @@ from typing import *
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-slip39.h
-def compute_mask(prefix: int) -> int:
+def word_completion_mask(prefix: int) -> int:
     """
     Calculates which buttons still can be pressed after some already were.
     Returns a 9-bit bitmask, where each bit specifies which buttons

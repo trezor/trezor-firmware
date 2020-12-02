@@ -114,10 +114,10 @@ KEYBOARD_FULL_MASK = const(0x1FF)
 """All buttons are allowed. 9-bit bitmap all set to 1."""
 
 
-def compute_mask(prefix: str) -> int:
+def word_completion_mask(prefix: str) -> int:
     if not prefix:
         return KEYBOARD_FULL_MASK
-    return slip39.compute_mask(int(prefix))
+    return slip39.word_completion_mask(int(prefix))
 
 
 def button_sequence_to_word(prefix: str) -> str:
