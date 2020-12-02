@@ -37,7 +37,7 @@ const char* get_word(uint16_t index) {
     return NULL;
   }
 
-  return wordlist[index];
+  return slip39_wordlist[index];
 }
 
 /**
@@ -51,13 +51,13 @@ bool word_index(uint16_t* index, const char* word, uint8_t word_length) {
 
   while ((hi - lo) > 1) {
     mid = (hi + lo) / 2;
-    if (strncmp(wordlist[mid], word, word_length) > 0) {
+    if (strncmp(slip39_wordlist[mid], word, word_length) > 0) {
       hi = mid;
     } else {
       lo = mid;
     }
   }
-  if (strncmp(wordlist[lo], word, word_length) != 0) {
+  if (strncmp(slip39_wordlist[lo], word, word_length) != 0) {
     return false;
   }
   *index = lo;
