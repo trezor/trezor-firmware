@@ -5856,154 +5856,81 @@ START_TEST(test_address_decode) {
 END_TEST
 
 START_TEST(test_ecdsa_der) {
-  uint8_t sig[64], der[72];
-  int res;
+  static const struct {
+    const char *r;
+    const char *s;
+    const char *der;
+  } vectors[] = {
+      {
+          "9a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8b70771",
+          "2b79ab1e7736219387dffe8d615bbdba87e11477104b867ef47afed1a5ede781",
+          "30450221009a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8"
+          "b7077102202b79ab1e7736219387dffe8d615bbdba87e11477104b867ef47afed1a5"
+          "ede781",
+      },
+      {
+          "6666666666666666666666666666666666666666666666666666666666666666",
+          "7777777777777777777777777777777777777777777777777777777777777777",
+          "30440220666666666666666666666666666666666666666666666666666666666666"
+          "66660220777777777777777777777777777777777777777777777777777777777777"
+          "7777",
+      },
+      {
+          "6666666666666666666666666666666666666666666666666666666666666666",
+          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "30450220666666666666666666666666666666666666666666666666666666666666"
+          "6666022100eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          "eeeeee",
+      },
+      {
+          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "7777777777777777777777777777777777777777777777777777777777777777",
+          "3045022100eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          "eeeeee02207777777777777777777777777777777777777777777777777777777777"
+          "777777",
+      },
+      {
+          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "3046022100eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          "eeeeee022100ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+          "ffffffff",
+      },
+      {
+          "0000000000000000000000000000000000000000000000000000000000000066",
+          "0000000000000000000000000000000000000000000000000000000000000077",
+          "3006020166020177",
+      },
+      {
+          "0000000000000000000000000000000000000000000000000000000000000066",
+          "00000000000000000000000000000000000000000000000000000000000000ee",
+          "3007020166020200ee",
+      },
+      {
+          "00000000000000000000000000000000000000000000000000000000000000ee",
+          "0000000000000000000000000000000000000000000000000000000000000077",
+          "3007020200ee020177",
+      },
+      {
+          "00000000000000000000000000000000000000000000000000000000000000ee",
+          "00000000000000000000000000000000000000000000000000000000000000ff",
+          "3008020200ee020200ff",
+      },
+  };
 
-  memcpy(
-      sig,
-      fromhex(
-          "9a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8b70771"),
-      32);
-  memcpy(
-      sig + 32,
-      fromhex(
-          "2b79ab1e7736219387dffe8d615bbdba87e11477104b867ef47afed1a5ede781"),
-      32);
-  res = ecdsa_sig_to_der(sig, der);
-  ck_assert_int_eq(res, 71);
-  ck_assert_mem_eq(der,
-                   fromhex("30450221009a0b7be0d4ed3146ee262b42202841834698bb3ee"
-                           "39c24e7437df208b8b7077102202b79ab1e7736219387dffe8d"
-                           "615bbdba87e11477104b867ef47afed1a5ede781"),
-                   71);
-
-  memcpy(
-      sig,
-      fromhex(
-          "6666666666666666666666666666666666666666666666666666666666666666"),
-      32);
-  memcpy(
-      sig + 32,
-      fromhex(
-          "7777777777777777777777777777777777777777777777777777777777777777"),
-      32);
-  res = ecdsa_sig_to_der(sig, der);
-  ck_assert_int_eq(res, 70);
-  ck_assert_mem_eq(der,
-                   fromhex("304402206666666666666666666666666666666666666666666"
-                           "666666666666666666666022077777777777777777777777777"
-                           "77777777777777777777777777777777777777"),
-                   70);
-
-  memcpy(
-      sig,
-      fromhex(
-          "6666666666666666666666666666666666666666666666666666666666666666"),
-      32);
-  memcpy(
-      sig + 32,
-      fromhex(
-          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"),
-      32);
-  res = ecdsa_sig_to_der(sig, der);
-  ck_assert_int_eq(res, 71);
-  ck_assert_mem_eq(der,
-                   fromhex("304502206666666666666666666666666666666666666666666"
-                           "666666666666666666666022100eeeeeeeeeeeeeeeeeeeeeeee"
-                           "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"),
-                   71);
-
-  memcpy(
-      sig,
-      fromhex(
-          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"),
-      32);
-  memcpy(
-      sig + 32,
-      fromhex(
-          "7777777777777777777777777777777777777777777777777777777777777777"),
-      32);
-  res = ecdsa_sig_to_der(sig, der);
-  ck_assert_int_eq(res, 71);
-  ck_assert_mem_eq(der,
-                   fromhex("3045022100eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-                           "eeeeeeeeeeeeeeeeeeeeeee0220777777777777777777777777"
-                           "7777777777777777777777777777777777777777"),
-                   71);
-
-  memcpy(
-      sig,
-      fromhex(
-          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"),
-      32);
-  memcpy(
-      sig + 32,
-      fromhex(
-          "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
-      32);
-  res = ecdsa_sig_to_der(sig, der);
-  ck_assert_int_eq(res, 72);
-  ck_assert_mem_eq(der,
-                   fromhex("3046022100eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-                           "eeeeeeeeeeeeeeeeeeeeeee022100ffffffffffffffffffffff"
-                           "ffffffffffffffffffffffffffffffffffffffffff"),
-                   72);
-
-  memcpy(
-      sig,
-      fromhex(
-          "0000000000000000000000000000000000000000000000000000000000000066"),
-      32);
-  memcpy(
-      sig + 32,
-      fromhex(
-          "0000000000000000000000000000000000000000000000000000000000000077"),
-      32);
-  res = ecdsa_sig_to_der(sig, der);
-  ck_assert_int_eq(res, 8);
-  ck_assert_mem_eq(der, fromhex("3006020166020177"), 8);
-
-  memcpy(
-      sig,
-      fromhex(
-          "0000000000000000000000000000000000000000000000000000000000000066"),
-      32);
-  memcpy(
-      sig + 32,
-      fromhex(
-          "00000000000000000000000000000000000000000000000000000000000000ee"),
-      32);
-  res = ecdsa_sig_to_der(sig, der);
-  ck_assert_int_eq(res, 9);
-  ck_assert_mem_eq(der, fromhex("3007020166020200ee"), 9);
-
-  memcpy(
-      sig,
-      fromhex(
-          "00000000000000000000000000000000000000000000000000000000000000ee"),
-      32);
-  memcpy(
-      sig + 32,
-      fromhex(
-          "0000000000000000000000000000000000000000000000000000000000000077"),
-      32);
-  res = ecdsa_sig_to_der(sig, der);
-  ck_assert_int_eq(res, 9);
-  ck_assert_mem_eq(der, fromhex("3007020200ee020177"), 9);
-
-  memcpy(
-      sig,
-      fromhex(
-          "00000000000000000000000000000000000000000000000000000000000000ee"),
-      32);
-  memcpy(
-      sig + 32,
-      fromhex(
-          "00000000000000000000000000000000000000000000000000000000000000ff"),
-      32);
-  res = ecdsa_sig_to_der(sig, der);
-  ck_assert_int_eq(res, 10);
-  ck_assert_mem_eq(der, fromhex("3008020200ee020200ff"), 10);
+  uint8_t sig[64];
+  uint8_t der[72];
+  uint8_t out[72];
+  for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); ++i) {
+    size_t der_len = strlen(vectors[i].der) / 2;
+    memcpy(der, fromhex(vectors[i].der), der_len);
+    memcpy(sig, fromhex(vectors[i].r), 32);
+    memcpy(sig + 32, fromhex(vectors[i].s), 32);
+    ck_assert_int_eq(ecdsa_sig_to_der(sig, out), der_len);
+    ck_assert_mem_eq(out, der, der_len);
+    ck_assert_int_eq(ecdsa_sig_from_der(der, der_len, out), 0);
+    ck_assert_mem_eq(out, sig, 64);
+  }
 }
 END_TEST
 
