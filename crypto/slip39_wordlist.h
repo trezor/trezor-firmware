@@ -22,11 +22,14 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifndef __SLIP39_WORDLIST_H__
+#define __SLIP39_WORDLIST_H__
+
 #include <stdint.h>
 
 #define WORDS_COUNT 1024
 
-static const char* const wordlist[WORDS_COUNT] = {
+static const char* const slip39_wordlist[WORDS_COUNT] = {
     "academic", "acid",     "acne",     "acquire",  "acrobat",  "activity",
     "actress",  "adapt",    "adequate", "adjust",   "admit",    "adorn",
     "adult",    "advance",  "advocate", "afraid",   "again",    "agency",
@@ -1236,3 +1239,5 @@ static const uint16_t words_button_seq[WORDS_COUNT] = {
     9641,  // yoga
     9376,  // zero
 };
+
+#endif
