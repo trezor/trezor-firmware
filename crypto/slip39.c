@@ -27,8 +27,6 @@
 #include <string.h>
 #include "slip39_wordlist.h"
 
-static uint16_t find(uint16_t prefix, bool find_index);
-
 /**
  * Returns word at position `index`.
  */
@@ -65,6 +63,55 @@ bool word_index(uint16_t* index, const char* word, uint8_t word_length) {
 }
 
 /**
+ * Returns the index of the first sequence in words_button_seq[] which is not
+ * less than the given sequence. Returns WORDS_COUNT if there is no such
+ * sequence.
+ */
+static uint16_t find_sequence(uint16_t sequence) {
+  if (sequence <= words_button_seq[0].sequence) {
+    return 0;
+  }
+
+  uint16_t lo = 0;
+  uint16_t hi = WORDS_COUNT;
+
+  while (hi - lo > 1) {
+    uint16_t mid = (hi + lo) / 2;
+    if (words_button_seq[mid].sequence >= sequence) {
+      hi = mid;
+    } else {
+      lo = mid;
+    }
+  }
+
+  return hi;
+}
+
+/**
+ * Returns a word matching the button sequence prefix or NULL if no match is
+ * found.
+ */
+const char* button_sequence_to_word(uint16_t sequence) {
+  if (sequence == 0) {
+    return slip39_wordlist[words_button_seq[0].index];
+  }
+
+  uint16_t multiplier = 1;
+  while (sequence < 1000) {
+    sequence *= 10;
+    multiplier *= 10;
+  }
+
+  uint16_t i = find_sequence(sequence);
+  if (i >= WORDS_COUNT ||
+      words_button_seq[i].sequence - sequence >= multiplier) {
+    return NULL;
+  }
+
+  return slip39_wordlist[words_button_seq[i].index];
+}
+
+/**
  * Calculates which buttons on the T9 keyboard can still be pressed after the
  * prefix was entered. Returns a 9-bit bitmask, where each bit specifies which
  * buttons can be pressed (there are still words in this combination). The least
@@ -74,25 +121,9 @@ bool word_index(uint16_t* index, const char* word, uint8_t word_length) {
  * pressed.
  */
 uint16_t slip39_word_completion_mask(uint16_t prefix) {
-  return find(prefix, false);
-}
-
-/**
- * Returns the first word matching the button sequence prefix or NULL if no
- * match is found.
- */
-const char* button_sequence_to_word(uint16_t prefix) {
-  return get_word(find(prefix, true));
-}
-
-/**
- * Computes mask if find_index is false.
- * Otherwise finds the first word index that matches the prefix. Returns
- * WORDS_COUNT if no match is found.
- */
-static uint16_t find(uint16_t prefix, bool find_index) {
-  if (prefix == 0) {
-    return find_index ? 0 : 0x1ff;
+  if (prefix >= 1000) {
+    // Four char prefix -> the mask is zero.
+    return 0;
   }
 
   // Determine the range of sequences [min, max), which have the given prefix.
@@ -106,36 +137,15 @@ static uint16_t find(uint16_t prefix, bool find_index) {
   }
   divider /= 10;
 
-  // Four char prefix -> the mask is zero
-  if (!divider && !find_index) {
-    return 0;
-  }
+  // Determine the range we will be searching in words_button_seq[].
+  min = find_sequence(min);
+  max = find_sequence(max);
 
-  // We can't use binary search because the numbers are not sorted.
-  // They are sorted using the words' alphabet (so we can use the index).
-  // Example: axle (1953), beam (1315)
-  // The first digit is sorted so we only need to search up to `max_search`.
-  uint16_t max_search = min - (min % 1000) + 1000;
   uint16_t bitmap = 0;
-  for (uint16_t i = 0; i < WORDS_COUNT; i++) {
-    if (words_button_seq[i] >= max_search) {
-      break;
-    }
-
-    if (words_button_seq[i] >= min && words_button_seq[i] < max) {
-      if (find_index) {
-        return i;
-      }
-
-      uint8_t digit = (words_button_seq[i] / divider) % 10;
-      bitmap |= 1 << (digit - 1);
-    }
+  for (uint16_t i = min; i < max; ++i) {
+    uint8_t digit = (words_button_seq[i].sequence / divider) % 10;
+    bitmap |= 1 << (digit - 1);
   }
 
-  if (find_index) {
-    // Index not found.
-    return WORDS_COUNT;
-  } else {
-    return bitmap;
-  }
+  return bitmap;
 }
