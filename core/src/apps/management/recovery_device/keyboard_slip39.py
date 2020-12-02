@@ -171,7 +171,7 @@ class Slip39Keyboard(ui.Layout):
 
         # find the completions
         word = ""
-        self.mask = slip39.compute_mask(self.button_sequence)
+        self.mask = slip39.word_completion_mask(self.button_sequence)
         if self.is_input_final():
             word = slip39.button_sequence_to_word(self.button_sequence)
 
