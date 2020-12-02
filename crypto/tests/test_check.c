@@ -5263,36 +5263,50 @@ START_TEST(test_slip39_word_index) {
 }
 END_TEST
 
-START_TEST(test_slip39_compute_mask) {
+START_TEST(test_slip39_word_completion_mask) {
   static const struct {
     const uint16_t prefix;
     const uint16_t expected_mask;
-  } vectors[] = {{
-                     12,
-                     0xFD  // 011111101
-                 },
-                 {
-                     21,
-                     0xF8  // 011111000
-                 },
-                 {
-                     75,
-                     0xAD  // 010101101
-                 },
-                 {
-                     4,
-                     0x1F7  // 111110111
-                 },
-                 {
-                     738,
-                     0x6D  // 001101101
-                 },
-                 {
-                     9,
-                     0x6D  // 001101101
-                 }};
+  } vectors[] = {
+      {
+          12,
+          0xFD  // 011111101
+      },
+      {
+          21,
+          0xF8  // 011111000
+      },
+      {
+          75,
+          0xAD  // 010101101
+      },
+      {
+          4,
+          0x1F7  // 111110111
+      },
+      {
+          738,
+          0x6D  // 001101101
+      },
+      {
+          9,
+          0x6D  // 001101101
+      },
+      {
+          0,
+          0x1FF  // 111111111
+      },
+      {
+          9999,
+          0x00  // 000000000
+      },
+      {
+          20000,
+          0x00  // 000000000
+      },
+  };
   for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); i++) {
-    uint16_t mask = compute_mask(vectors[i].prefix);
+    uint16_t mask = slip39_word_completion_mask(vectors[i].prefix);
     ck_assert_int_eq(mask, vectors[i].expected_mask);
   }
 }
@@ -5302,15 +5316,16 @@ START_TEST(test_slip39_sequence_to_word) {
   static const struct {
     const uint16_t prefix;
     const char *expected_word;
-  } vectors[] = {{7945, "swimming"},
-                 {646, "photo"},
-                 {5, "kernel"},
-                 {34, "either"},
-                 {62, "ocean"}};
+  } vectors[] = {
+      {7945, "swimming"}, {646, "photo"}, {5, "kernel"},
+      {34, "either"},     {62, "ocean"},  {0, "academic"},
+  };
   for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); i++) {
     const char *word = button_sequence_to_word(vectors[i].prefix);
     ck_assert_str_eq(word, vectors[i].expected_word);
   }
+  ck_assert_ptr_eq(button_sequence_to_word(9999), NULL);
+  ck_assert_ptr_eq(button_sequence_to_word(20000), NULL);
 }
 END_TEST
 
@@ -8904,7 +8919,7 @@ Suite *test_suite(void) {
   tc = tcase_create("slip39");
   tcase_add_test(tc, test_slip39_get_word);
   tcase_add_test(tc, test_slip39_word_index);
-  tcase_add_test(tc, test_slip39_compute_mask);
+  tcase_add_test(tc, test_slip39_word_completion_mask);
   tcase_add_test(tc, test_slip39_sequence_to_word);
   suite_add_tcase(s, tc);
 
