@@ -69,6 +69,7 @@
 #include "sha3.h"
 #include "shamir.h"
 #include "slip39.h"
+#include "slip39_wordlist.h"
 
 #if VALGRIND
 /*
@@ -5329,6 +5330,23 @@ START_TEST(test_slip39_sequence_to_word) {
 }
 END_TEST
 
+START_TEST(test_slip39_word_completion) {
+  const char t9[] = {1, 1, 2, 2, 3, 3, 4, 4, 4, 4, 5, 5, 5,
+                     6, 6, 6, 6, 7, 7, 8, 8, 8, 9, 9, 9, 9};
+  for (size_t i = 0; i < WORDS_COUNT; ++i) {
+    const char *word = slip39_wordlist[i];
+    uint16_t prefix = t9[word[0] - 'a'];
+    for (size_t j = 1; j < 4; ++j) {
+      uint16_t mask = slip39_word_completion_mask(prefix);
+      uint8_t next = t9[word[j] - 'a'];
+      ck_assert_uint_ne(mask & (1 << (next - 1)), 0);
+      prefix = prefix * 10 + next;
+    }
+    ck_assert_str_eq(button_sequence_to_word(prefix), word);
+  }
+}
+END_TEST
+
 START_TEST(test_shamir) {
 #define SHAMIR_MAX_COUNT 16
   static const struct {
@@ -8921,6 +8939,7 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_slip39_word_index);
   tcase_add_test(tc, test_slip39_word_completion_mask);
   tcase_add_test(tc, test_slip39_sequence_to_word);
+  tcase_add_test(tc, test_slip39_word_completion);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("shamir");
