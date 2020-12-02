@@ -5318,8 +5318,8 @@ START_TEST(test_slip39_sequence_to_word) {
     const uint16_t prefix;
     const char *expected_word;
   } vectors[] = {
-      {7945, "swimming"}, {646, "photo"}, {5, "kernel"},
-      {34, "either"},     {62, "ocean"},  {0, "academic"},
+      {7945, "swimming"}, {646, "pipeline"}, {5, "laden"},
+      {34, "fiber"},      {62, "ocean"},     {0, "academic"},
   };
   for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); i++) {
     const char *word = button_sequence_to_word(vectors[i].prefix);
