@@ -27,13 +27,21 @@
 #include <string.h>
 #include "slip39_wordlist.h"
 
-/**
- * Returns word on position `index`.
- */
-const char* get_word(uint16_t index) { return wordlist[index]; }
+static uint16_t find(uint16_t prefix, bool find_index);
 
 /**
- * Finds index of given word, if found.
+ * Returns word at position `index`.
+ */
+const char* get_word(uint16_t index) {
+  if (index >= WORDS_COUNT) {
+    return NULL;
+  }
+
+  return wordlist[index];
+}
+
+/**
+ * Finds the index of a given word.
  * Returns true on success and stores result in `index`.
  */
 bool word_index(uint16_t* index, const char* word, uint8_t word_length) {
@@ -57,80 +65,77 @@ bool word_index(uint16_t* index, const char* word, uint8_t word_length) {
 }
 
 /**
- * Calculates which buttons still can be pressed after some already were.
- * Returns a 9-bit bitmask, where each bit specifies which buttons
- * can be further pressed (there are still words in this combination).
- * LSB denotes first button.
+ * Calculates which buttons on the T9 keyboard can still be pressed after the
+ * prefix was entered. Returns a 9-bit bitmask, where each bit specifies which
+ * buttons can be pressed (there are still words in this combination). The least
+ * significant bit corresponds to the first button.
  *
  * Example: 110000110 - second, third, eighth and ninth button still can be
  * pressed.
  */
-uint16_t compute_mask(uint16_t prefix) { return find(prefix, false); }
+uint16_t slip39_word_completion_mask(uint16_t prefix) {
+  return find(prefix, false);
+}
 
 /**
- * Converts sequence to word index.
+ * Returns the first word matching the button sequence prefix or NULL if no
+ * match is found.
  */
 const char* button_sequence_to_word(uint16_t prefix) {
-  return wordlist[find(prefix, true)];
+  return get_word(find(prefix, true));
 }
 
 /**
  * Computes mask if find_index is false.
- * Finds the first word index that suits the prefix otherwise.
+ * Otherwise finds the first word index that matches the prefix. Returns
+ * WORDS_COUNT if no match is found.
  */
-uint16_t find(uint16_t prefix, bool find_index) {
-  uint16_t min = prefix;
-  uint16_t max = 0;
-  uint16_t for_max = 0;
-  uint8_t multiplier = 0;
-  uint8_t divider = 0;
-  uint16_t bitmap = 0;
-  uint8_t digit = 0;
-  uint16_t i = 0;
-
-  max = prefix + 1;
-  while (min < 1000) {
-    min = min * 10;
-    max = max * 10;
-    multiplier++;
+static uint16_t find(uint16_t prefix, bool find_index) {
+  if (prefix == 0) {
+    return find_index ? 0 : 0x1ff;
   }
+
+  // Determine the range of sequences [min, max), which have the given prefix.
+  uint16_t min = prefix;
+  uint16_t max = prefix + 1;
+  uint16_t divider = 1;
+  while (max <= 1000) {
+    min *= 10;
+    max *= 10;
+    divider *= 10;
+  }
+  divider /= 10;
 
   // Four char prefix -> the mask is zero
-  if (!multiplier && !find_index) {
+  if (!divider && !find_index) {
     return 0;
   }
-  for_max = min - (min % 1000) + 1000;
 
   // We can't use binary search because the numbers are not sorted.
   // They are sorted using the words' alphabet (so we can use the index).
   // Example: axle (1953), beam (1315)
-  // The first digit is sorted so we can loop only upto `for_max`.
-  while (words_button_seq[i] < for_max) {
+  // The first digit is sorted so we only need to search up to `max_search`.
+  uint16_t max_search = min - (min % 1000) + 1000;
+  uint16_t bitmap = 0;
+  for (uint16_t i = 0; i < WORDS_COUNT; i++) {
+    if (words_button_seq[i] >= max_search) {
+      break;
+    }
+
     if (words_button_seq[i] >= min && words_button_seq[i] < max) {
       if (find_index) {
         return i;
       }
 
-      switch (multiplier) {
-        case 1:
-          divider = 1;
-          break;
-        case 2:
-          divider = 10;
-          break;
-        case 3:
-          divider = 100;
-          break;
-        default:
-          divider = 1;
-          break;
-      }
-
-      digit = (words_button_seq[i] / divider) % 10;
+      uint8_t digit = (words_button_seq[i] / divider) % 10;
       bitmap |= 1 << (digit - 1);
     }
-    i++;
   }
 
-  return bitmap;
+  if (find_index) {
+    // Index not found.
+    return WORDS_COUNT;
+  } else {
+    return bitmap;
+  }
 }

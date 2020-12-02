@@ -22,6 +22,9 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifndef __SLIP39_H__
+#define __SLIP39_H__
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -29,8 +32,8 @@ const char* get_word(uint16_t index);
 
 bool word_index(uint16_t* index, const char* word, uint8_t word_length);
 
-uint16_t compute_mask(uint16_t prefix);
+uint16_t slip39_word_completion_mask(uint16_t prefix);
 
 const char* button_sequence_to_word(uint16_t prefix);
 
-uint16_t find(uint16_t prefix, bool find_index);
+#endif

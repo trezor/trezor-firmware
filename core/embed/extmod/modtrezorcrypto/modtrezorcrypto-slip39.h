@@ -54,11 +54,10 @@ STATIC mp_obj_t
 mod_trezorcrypto_slip39_button_sequence_to_word(mp_obj_t _prefix) {
   uint16_t prefix = mp_obj_get_int(_prefix);
 
-  if (prefix < 1 || prefix > 9999) {
-    mp_raise_ValueError(
-        "Invalid button prefix (range between 1 and 9999 is allowed)");
-  }
   const char *word = button_sequence_to_word(prefix);
+  if (word == NULL) {
+    mp_raise_ValueError("Invalid button prefix");
+  }
   return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)word, strlen(word));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(
