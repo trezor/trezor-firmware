@@ -53,7 +53,7 @@ click = "^7"
 ed25519 = "^1.4"
 requests = "^2.19"
 termcolor = "*"
-Pillow = "*"
+Pillow = "^8.0"
 
 # crypto
 ecdsa = "^0.16"
