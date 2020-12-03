@@ -43,6 +43,7 @@ from .layout import (
     confirm_transaction_network_ttl,
     confirm_withdrawal,
     show_warning_tx_different_staking_account,
+    show_warning_tx_network_unverifiable,
     show_warning_tx_no_staking_info,
     show_warning_tx_pointer_address,
     show_warning_tx_staking_key_hash,
@@ -183,9 +184,6 @@ def _validate_outputs(
     protocol_magic: int,
     network_id: int,
 ) -> None:
-    if not outputs:
-        raise wire.ProcessError("Transaction has no outputs!")
-
     total_amount = 0
     for output in outputs:
         total_amount += output.amount
@@ -466,6 +464,10 @@ def _cborize_byron_witnesses(
 async def _show_standard_tx(
     ctx: wire.Context, keychain: seed.Keychain, msg: CardanoSignTx
 ) -> None:
+    is_network_id_verifiable = _is_network_id_verifiable(msg)
+
+    if not is_network_id_verifiable:
+        await show_warning_tx_network_unverifiable(ctx)
     total_amount = await _show_outputs(ctx, keychain, msg)
 
     for certificate in msg.certificates:
@@ -476,7 +478,13 @@ async def _show_standard_tx(
 
     has_metadata = bool(msg.metadata)
     await confirm_transaction(
-        ctx, total_amount, msg.fee, msg.protocol_magic, msg.ttl, has_metadata
+        ctx=ctx,
+        amount=total_amount,
+        fee=msg.fee,
+        protocol_magic=msg.protocol_magic,
+        ttl=msg.ttl,
+        has_metadata=has_metadata,
+        is_network_id_verifiable=is_network_id_verifiable,
     )
 
 
@@ -569,3 +577,16 @@ def _should_hide_output(output: List[int], inputs: List[CardanoTxInputType]) -> 
         ):
             return False
     return True
+
+
+def _is_network_id_verifiable(msg: CardanoSignTx) -> bool:
+    """
+    checks whether there is at least one element that contains
+    information about network ID, otherwise Trezor cannot
+    guarantee that the tx is actually meant for the given network
+    """
+    return (
+        len(msg.outputs) != 0
+        or len(msg.withdrawals) != 0
+        or _has_stake_pool_registration(msg)
+    )
