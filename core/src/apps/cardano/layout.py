@@ -152,7 +152,13 @@ async def show_warning_tx_staking_key_hash(
 
 
 async def confirm_transaction(
-    ctx, amount: int, fee: int, protocol_magic: int, ttl: int, has_metadata: bool
+    ctx,
+    amount: int,
+    fee: int,
+    protocol_magic: int,
+    ttl: int,
+    has_metadata: bool,
+    is_network_id_verifiable: bool,
 ) -> None:
     pages = []
 
@@ -164,8 +170,9 @@ async def confirm_transaction(
     pages.append(page1)
 
     page2 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
-    page2.normal("Network:")
-    page2.bold(protocol_magics.to_ui_string(protocol_magic))
+    if is_network_id_verifiable:
+        page2.normal("Network:")
+        page2.bold(protocol_magics.to_ui_string(protocol_magic))
     page2.normal("Transaction TTL:")
     page2.bold(str(ttl))
     pages.append(page2)
@@ -419,6 +426,15 @@ async def show_warning_address_foreign_staking_key(
         staking_key_message,
         button="Ok",
     )
+
+
+async def show_warning_tx_network_unverifiable(ctx: wire.Context) -> None:
+    page1 = Text("Warning", ui.ICON_SEND, ui.GREEN)
+    page1.normal("Transaction has no outputs, network cannot be verified.")
+    page1.br_half()
+    page1.normal("Continue?")
+
+    await require_confirm(ctx, page1)
 
 
 async def show_warning_address_pointer(
