@@ -345,19 +345,11 @@ hardware legacy regular device test:
     - legacy fw regular debug build
   script:
     - cd ci/hardware_tests
-    - nix-shell --run "./record_video.sh ${CI_COMMIT_SHORT_SHA} start"
-    - nix-shell --run "cd ../.. && poetry install"
-    - nix-shell --run "poetry run trezorctl list"
-    - export TREZOR_PATH=$(./get_trezor_path.sh 'Trezor 1')
-    - nix-shell --run "echo $TREZOR_PATH"
-    - nix-shell --run "poetry run python bootstrap.py t1"
-    - nix-shell --run "poetry run python bootstrap.py t1 ../../trezor-*.bin"
-    - nix-shell --run "poetry run pytest ../../tests/device_tests"
-    - nix-shell --run "./record_video.sh ${CI_COMMIT_SHORT_SHA} stop"
+    - nix-shell --run "./t1_hw_test.sh"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-      - ci/hardware_tests/video*.mp4
+      - ci/hardware_tests/*.mp4
     expire_in: 2 days
     when: always
 
@@ -377,19 +369,11 @@ hardware legacy btconly device test:
     - legacy fw btconly debug build
   script:
     - cd ci/hardware_tests
-    - nix-shell --run "./record_video.sh ${CI_COMMIT_SHORT_SHA} start"
-    - nix-shell --run "cd ../.. && poetry install"
-    - nix-shell --run "poetry run trezorctl list"
-    - export TREZOR_PATH=$(./get_trezor_path.sh 'Trezor 1')
-    - nix-shell --run "echo $TREZOR_PATH"
-    - nix-shell --run "poetry run python bootstrap.py t1"
-    - nix-shell --run "poetry run python bootstrap.py t1 ../../trezor-*.bin"
-    - nix-shell --run "poetry run pytest ../../tests/device_tests"
-    - nix-shell --run "./record_video.sh ${CI_COMMIT_SHORT_SHA} stop"
+    - nix-shell --run "./t1_hw_test.sh"
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
-      - ci/hardware_tests/video*.mp4
+      - ci/hardware_tests/*.mp4
     expire_in: 2 days
     when: always
 
