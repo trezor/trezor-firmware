@@ -14,8 +14,8 @@ class TrezorT(Device):
 
         self.wait(5)
         print("[software] Updating the firmware to {}".format(file))
-        self.run_trezorctl("firmware-update -s -f {} &".format(file))
+        self.run_trezorctl("firmware-update -s -f {}".format(file))
 
-        # upgrading to 2.3.2 took about 80s
-        self.wait(80)
+        # after firmware-update finishes wait for reboot
+        self.wait(15)
         self.check_version()

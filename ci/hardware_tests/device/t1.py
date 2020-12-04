@@ -31,7 +31,7 @@ class TrezorOne(Device):
         self.run_trezorctl(trezorctlcmd)
         self.wait(3)
         self.touch("right", "click")
-        self.wait(20)
+        self.wait(25)
         if unofficial:
             self.touch("right", "click")
         self.wait(10)
