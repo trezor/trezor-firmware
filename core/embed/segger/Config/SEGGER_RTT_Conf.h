@@ -71,6 +71,8 @@ Revision: $Rev: 13430 $
   #include <intrinsics.h>
 #endif
 
+#define __TI_ARM__
+
 /*********************************************************************
 *
 *       Defines, configurable
