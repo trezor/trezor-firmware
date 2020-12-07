@@ -269,7 +269,7 @@ extern uint32_t svc_get_dwt_cyccnt();
 *    1024
 */
 #ifndef   SEGGER_SYSVIEW_RTT_BUFFER_SIZE
-  #define SEGGER_SYSVIEW_RTT_BUFFER_SIZE          1024
+  #define SEGGER_SYSVIEW_RTT_BUFFER_SIZE          4096
 #endif
 
 /*********************************************************************
@@ -364,7 +364,7 @@ extern uint32_t svc_get_dwt_cyccnt();
 *    128
 */
 #ifndef   SEGGER_SYSVIEW_MAX_STRING_LEN
-  #define SEGGER_SYSVIEW_MAX_STRING_LEN           128
+  #define SEGGER_SYSVIEW_MAX_STRING_LEN           1024
 #endif
 
 /*********************************************************************
