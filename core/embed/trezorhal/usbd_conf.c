@@ -56,6 +56,7 @@
 #include "usb.h"
 #include "irq.h"
 #include "supervise.h"
+#include "systemview.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -702,20 +703,24 @@ void  USBD_LL_Delay(uint32_t Delay)
   */
 #if defined(USE_USB_FS)
 void OTG_FS_IRQHandler(void) {
+    SEGGER_SYSVIEW_RecordEnterISR();
     IRQ_ENTER(OTG_FS_IRQn);
     if (pcd_fs_handle.Instance) {
         HAL_PCD_IRQHandler(&pcd_fs_handle);
     }
     IRQ_EXIT(OTG_FS_IRQn);
+    SEGGER_SYSVIEW_RecordExitISR();
 }
 #endif
 #if defined(USE_USB_HS)
 void OTG_HS_IRQHandler(void) {
+    SEGGER_SYSVIEW_RecordEnterISR();
     IRQ_ENTER(OTG_HS_IRQn);
     if (pcd_hs_handle.Instance) {
         HAL_PCD_IRQHandler(&pcd_hs_handle);
     }
     IRQ_EXIT(OTG_HS_IRQn);
+    SEGGER_SYSVIEW_RecordExitISR();
 }
 #endif
 
