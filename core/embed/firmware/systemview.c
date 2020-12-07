@@ -1,12 +1,16 @@
 #ifdef SYSTEM_VIEW
 
 #include <stdint.h>
+#include "systemview.h"
 
 #include "SEGGER_SYSVIEW_Conf.h"
 #include "SEGGER_SYSVIEW.h"
 
 #define SYSTICK ((SYSTICK_REGS*)0xE000E010)
 #define SCS     ((SCS_REGS*)0xE000ED00)
+
+// for storing DWT CYCCNT from SVC call
+volatile uint32_t cyccnt_cycles;
 
 typedef struct {
     volatile unsigned int CSR;
@@ -42,17 +46,23 @@ typedef struct {
 
 extern uint32_t SystemCoreClock;
 
-U32 SEGGER_SYSVIEW_X_GetTimestamp ()
-{
-//    static U32 i = 0;
-//    return i++;
-    return (*(U32 *)(0xE0001004));
+static inline uint32_t is_mode_unprivileged(void) {
+    uint32_t r0;
+    __asm__ volatile("mrs %0, control" : "=r"(r0));
+    return r0 & 1;
+}
+
+uint32_t svc_get_dwt_cyccnt() {
+    if (is_mode_unprivileged()) {
+        __asm__ __volatile__("svc %0" ::"i"(SVC_GET_DWT_CYCCNT));
+        } else {
+        cyccnt_cycles = *DWT_CYCCNT_ADDR;
+    }
+    return cyccnt_cycles;
 }
 
 U32 SEGGER_SYSVIEW_X_GetInterruptId()
 {
-//    static U32 i = 0;
-//    return (i++) % 200;
     return ((*(U32*)(0xE000ED04)) & 0x1FF);
 }
 

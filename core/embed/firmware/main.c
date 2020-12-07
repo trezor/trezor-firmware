@@ -51,6 +51,7 @@
 #include "supervise.h"
 #include "touch.h"
 
+
 int main(void) {
   // initialize pseudo-random number generator
   drbg_init();
@@ -176,6 +177,11 @@ void SVC_C_Handler(uint32_t *stack) {
     case SVC_SET_PRIORITY:
       NVIC_SetPriority(stack[0], stack[1]);
       break;
+#ifdef SYSTEM_VIEW
+    case SVC_GET_DWT_CYCCNT:
+      cyccnt_cycles = *DWT_CYCCNT_ADDR;
+      break;
+#endif
     default:
       stack[0] = 0xffffffff;
       break;
