@@ -367,7 +367,7 @@ core unix memory profiler:
   variables:
     PYOPT: "0"
     TREZOR_MEMPERF: "1"
-    PYTEST_TIMEOUT: "600"
+    PYTEST_TIMEOUT: "900"
   script:
     - nix-shell --run "poetry run make -C core build_unix_frozen"
     - nix-shell --run "poetry run make -C core test_emu"
