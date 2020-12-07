@@ -79,6 +79,7 @@ Additional information:
 **********************************************************************
 */
 
+#define SEGGER_SYSVIEW_BUFFER_SECTION "CCMRAM"
 
 #endif  // SEGGER_SYSVIEW_CONF_H
 
