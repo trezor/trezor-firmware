@@ -17,24 +17,14 @@
 *                                                                    *
 * SEGGER strongly recommends to not make any changes                 *
 * to or modify the source code of this software in order to stay     *
-* compatible with the RTT protocol and J-Link.                       *
+* compatible with the SystemView and RTT protocol, and J-Link.       *
 *                                                                    *
 * Redistribution and use in source and binary forms, with or         *
 * without modification, are permitted provided that the following    *
-* conditions are met:                                                *
+* condition is met:                                                  *
 *                                                                    *
 * o Redistributions of source code must retain the above copyright   *
-*   notice, this list of conditions and the following disclaimer.    *
-*                                                                    *
-* o Redistributions in binary form must reproduce the above          *
-*   copyright notice, this list of conditions and the following      *
-*   disclaimer in the documentation and/or other materials provided  *
-*   with the distribution.                                           *
-*                                                                    *
-* o Neither the name of SEGGER Microcontroller GmbH         *
-*   nor the names of its contributors may be used to endorse or      *
-*   promote products derived from this software without specific     *
-*   prior written permission.                                        *
+*   notice, this condition and the following disclaimer.             *
 *                                                                    *
 * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND             *
 * CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,        *
@@ -52,7 +42,7 @@
 *                                                                    *
 **********************************************************************
 *                                                                    *
-*       SystemView version: V2.52h                                    *
+*       SystemView version: 3.20                                    *
 *                                                                    *
 **********************************************************************
 ---------------------------END-OF-HEADER------------------------------
@@ -60,7 +50,7 @@ File    : SEGGER_RTT.h
 Purpose : Implementation of SEGGER real-time transfer which allows
           real-time communication on targets which support debugger 
           memory accesses while the CPU is running.
-Revision: $Rev: 13430 $
+Revision: $Rev: 20869 $
 ----------------------------------------------------------------------
 */
 
@@ -69,8 +59,6 @@ Revision: $Rev: 13430 $
 
 #include "SEGGER_RTT_Conf.h"
 
-
-
 /*********************************************************************
 *
 *       Defines, defaults
@@ -78,10 +66,126 @@ Revision: $Rev: 13430 $
 **********************************************************************
 */
 #ifndef RTT_USE_ASM
-  #if ((defined __SES_ARM) || (defined __CROSSWORKS_ARM) || (defined __GNUC__) || (defined __clang__)) && (defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_7EM__) || defined(__ARM_ARCH_8M_MAIN__))
+  #if (defined __SES_ARM)                       // SEGGER Embedded Studio
+    #define _CC_HAS_RTT_ASM_SUPPORT 1
+  #elif (defined __CROSSWORKS_ARM)              // Rowley Crossworks
+    #define _CC_HAS_RTT_ASM_SUPPORT 1
+  #elif (defined __ARMCC_VERSION)               // ARM compiler
+		#if (__ARMCC_VERSION >= 6000000)						// ARM compiler V6.0 and later is clang based
+      #define _CC_HAS_RTT_ASM_SUPPORT 1
+		#else
+      #define _CC_HAS_RTT_ASM_SUPPORT 0
+		#endif
+  #elif (defined __GNUC__)                      // GCC
+    #define _CC_HAS_RTT_ASM_SUPPORT 1
+  #elif (defined __clang__)                     // Clang compiler
+    #define _CC_HAS_RTT_ASM_SUPPORT 1
+  #elif ((defined __IASMARM__) || (defined __ICCARM__))  // IAR assembler/compiler
+    #define _CC_HAS_RTT_ASM_SUPPORT 1
+  #else
+    #define _CC_HAS_RTT_ASM_SUPPORT 0
+  #endif
+  #if ((defined __IASMARM__) || (defined __ICCARM__))  // IAR assembler/compiler
+    //
+    // IAR assembler / compiler
+    //
+    #if (__VER__ < 6300000)
+      #define VOLATILE
+    #else
+      #define VOLATILE volatile
+    #endif
+    #if (defined __ARM7M__)                            // Needed for old versions that do not know the define yet
+      #if (__CORE__ == __ARM7M__)                      // Cortex-M3
+        #define _CORE_HAS_RTT_ASM_SUPPORT 1
+      #endif
+    #endif
+    #if (defined __ARM7EM__)                           // Needed for old versions that do not know the define yet
+      #if (__CORE__ == __ARM7EM__)                     // Cortex-M4/M7
+        #define _CORE_HAS_RTT_ASM_SUPPORT 1
+        #define _CORE_NEEDS_DMB 1
+        #define RTT__DMB() asm VOLATILE ("DMB");
+      #endif
+    #endif
+    #if (defined __ARM8M_BASELINE__)                   // Needed for old versions that do not know the define yet
+      #if (__CORE__ == __ARM8M_BASELINE__)             // Cortex-M23
+        #define _CORE_HAS_RTT_ASM_SUPPORT 0
+        #define _CORE_NEEDS_DMB 1
+        #define RTT__DMB() asm VOLATILE ("DMB");
+      #endif
+    #endif
+    #if (defined __ARM8M_MAINLINE__)                   // Needed for old versions that do not know the define yet
+      #if (__CORE__ == __ARM8M_MAINLINE__)             // Cortex-M33
+        #define _CORE_HAS_RTT_ASM_SUPPORT 1
+        #define _CORE_NEEDS_DMB 1
+        #define RTT__DMB() asm VOLATILE ("DMB");
+      #endif
+    #endif
+  #else
+    //
+    // GCC / Clang
+    //
+    #if (defined __ARM_ARCH_7M__)                 // Cortex-M3
+      #define _CORE_HAS_RTT_ASM_SUPPORT 1
+    #elif (defined __ARM_ARCH_7EM__)              // Cortex-M4/M7
+      #define _CORE_HAS_RTT_ASM_SUPPORT 1
+      #define _CORE_NEEDS_DMB           1
+      #define RTT__DMB() __asm volatile ("dmb\n" : : :);
+    #elif (defined __ARM_ARCH_8M_BASE__)          // Cortex-M23
+      #define _CORE_HAS_RTT_ASM_SUPPORT 0
+      #define _CORE_NEEDS_DMB           1
+      #define RTT__DMB() __asm volatile ("dmb\n" : : :);
+    #elif (defined __ARM_ARCH_8M_MAIN__)          // Cortex-M33
+      #define _CORE_HAS_RTT_ASM_SUPPORT 1
+      #define _CORE_NEEDS_DMB           1
+      #define RTT__DMB() __asm volatile ("dmb\n" : : :);
+    #else
+      #define _CORE_HAS_RTT_ASM_SUPPORT 0
+    #endif
+  #endif
+  //
+  // If IDE and core support the ASM version, enable ASM version by default
+  //
+  #ifndef _CORE_HAS_RTT_ASM_SUPPORT
+    #define _CORE_HAS_RTT_ASM_SUPPORT 0              // Default for unknown cores
+  #endif
+  #if (_CC_HAS_RTT_ASM_SUPPORT && _CORE_HAS_RTT_ASM_SUPPORT)
     #define RTT_USE_ASM                           (1)
   #else
     #define RTT_USE_ASM                           (0)
+  #endif
+#endif
+
+//
+// We need to know if a DMB is needed to make sure that on Cortex-M7 etc.
+// the order of accesses to the ring buffers is guaranteed
+// Needed for: Cortex-M7, Cortex-M23, Cortex-M33
+//
+#ifndef _CORE_NEEDS_DMB
+  #define _CORE_NEEDS_DMB 0
+#endif
+
+#ifndef RTT__DMB
+  #if _CORE_NEEDS_DMB
+    #error "Don't know how to place inline assembly for DMB"
+  #else
+    #define RTT__DMB()
+  #endif
+#endif
+
+#ifndef SEGGER_RTT_CPU_CACHE_LINE_SIZE
+  #define SEGGER_RTT_CPU_CACHE_LINE_SIZE (0)   // On most target systems where RTT is used, we do not have a CPU cache, therefore 0 is a good default here
+#endif
+
+#ifndef SEGGER_RTT_UNCACHED_OFF
+  #if SEGGER_RTT_CPU_CACHE_LINE_SIZE
+    #error "SEGGER_RTT_UNCACHED_OFF must be defined when setting SEGGER_RTT_CPU_CACHE_LINE_SIZE != 0"
+  #else
+    #define SEGGER_RTT_UNCACHED_OFF (0)
+  #endif
+#endif
+#if RTT_USE_ASM
+  #if SEGGER_RTT_CPU_CACHE_LINE_SIZE
+    #error "RTT_USE_ASM is not available if SEGGER_RTT_CPU_CACHE_LINE_SIZE != 0"
   #endif
 #endif
 
@@ -95,6 +199,21 @@ Revision: $Rev: 13430 $
 *
 **********************************************************************
 */
+
+//
+// Determine how much we must pad the control block to make it a multiple of a cache line in size
+// Assuming: U8 = 1B
+//           U16 = 2B
+//           U32 = 4B
+//           U8/U16/U32* = 4B
+//
+#if SEGGER_RTT_CPU_CACHE_LINE_SIZE    // Avoid division by zero in case we do not have any cache
+  #define SEGGER_RTT__ROUND_UP_2_CACHE_LINE_SIZE(NumBytes) (((NumBytes + SEGGER_RTT_CPU_CACHE_LINE_SIZE - 1) / SEGGER_RTT_CPU_CACHE_LINE_SIZE) * SEGGER_RTT_CPU_CACHE_LINE_SIZE)
+#else
+  #define SEGGER_RTT__ROUND_UP_2_CACHE_LINE_SIZE(NumBytes) (NumBytes)
+#endif
+#define SEGGER_RTT__CB_SIZE                              (16 + 4 + 4 + (SEGGER_RTT_MAX_NUM_UP_BUFFERS * 24) + (SEGGER_RTT_MAX_NUM_DOWN_BUFFERS * 24))
+#define SEGGER_RTT__CB_PADDING                           (SEGGER_RTT__ROUND_UP_2_CACHE_LINE_SIZE(SEGGER_RTT__CB_SIZE) - SEGGER_RTT__CB_SIZE)
 
 /*********************************************************************
 *
@@ -140,6 +259,9 @@ typedef struct {
   int                     MaxNumDownBuffers;                        // Initialized to SEGGER_RTT_MAX_NUM_DOWN_BUFFERS (type. 2)
   SEGGER_RTT_BUFFER_UP    aUp[SEGGER_RTT_MAX_NUM_UP_BUFFERS];       // Up buffers, transferring information up from target via debug probe to host
   SEGGER_RTT_BUFFER_DOWN  aDown[SEGGER_RTT_MAX_NUM_DOWN_BUFFERS];   // Down buffers, transferring information down from host via debug probe to target
+#if SEGGER_RTT__CB_PADDING
+  unsigned char           aDummy[SEGGER_RTT__CB_PADDING];
+#endif
 } SEGGER_RTT_CB;
 
 /*********************************************************************
@@ -184,10 +306,12 @@ void         SEGGER_RTT_WriteWithOverwriteNoLock(unsigned BufferIndex, const voi
 unsigned     SEGGER_RTT_PutChar                 (unsigned BufferIndex, char c);
 unsigned     SEGGER_RTT_PutCharSkip             (unsigned BufferIndex, char c);
 unsigned     SEGGER_RTT_PutCharSkipNoLock       (unsigned BufferIndex, char c);
+unsigned     SEGGER_RTT_GetAvailWriteSpace      (unsigned BufferIndex);
+unsigned     SEGGER_RTT_GetBytesInBuffer        (unsigned BufferIndex);
 //
 // Function macro for performance optimization
 //
-#define      SEGGER_RTT_HASDATA(n)       (_SEGGER_RTT.aDown[n].WrOff - _SEGGER_RTT.aDown[n].RdOff)
+#define      SEGGER_RTT_HASDATA(n)       (((SEGGER_RTT_BUFFER_DOWN*)((char*)&_SEGGER_RTT.aDown[n] + SEGGER_RTT_UNCACHED_OFF))->WrOff - ((SEGGER_RTT_BUFFER_DOWN*)((char*)&_SEGGER_RTT.aDown[n] + SEGGER_RTT_UNCACHED_OFF))->RdOff)
 
 #if RTT_USE_ASM
   #define SEGGER_RTT_WriteSkipNoLock  SEGGER_RTT_ASM_WriteSkipNoLock
@@ -195,12 +319,25 @@ unsigned     SEGGER_RTT_PutCharSkipNoLock       (unsigned BufferIndex, char c);
 
 /*********************************************************************
 *
+*       RTT transfer functions to send RTT data via other channels.
+*
+**********************************************************************
+*/
+unsigned     SEGGER_RTT_ReadUpBuffer            (unsigned BufferIndex, void* pBuffer, unsigned BufferSize);
+unsigned     SEGGER_RTT_ReadUpBufferNoLock      (unsigned BufferIndex, void* pData, unsigned BufferSize);
+unsigned     SEGGER_RTT_WriteDownBuffer         (unsigned BufferIndex, const void* pBuffer, unsigned NumBytes);
+unsigned     SEGGER_RTT_WriteDownBufferNoLock   (unsigned BufferIndex, const void* pBuffer, unsigned NumBytes);
+
+#define      SEGGER_RTT_HASDATA_UP(n)    (((SEGGER_RTT_BUFFER_UP*)((char*)&_SEGGER_RTT.aUp[n] + SEGGER_RTT_UNCACHED_OFF))->WrOff - ((SEGGER_RTT_BUFFER_UP*)((char*)&_SEGGER_RTT.aUp[n] + SEGGER_RTT_UNCACHED_OFF))->RdOff)   // Access uncached to make sure we see changes made by the J-Link side and all of our changes go into HW directly
+
+/*********************************************************************
+*
 *       RTT "Terminal" API functions
 *
 **********************************************************************
 */
-int     SEGGER_RTT_SetTerminal        (char TerminalId);
-int     SEGGER_RTT_TerminalOut        (char TerminalId, const char* s);
+int     SEGGER_RTT_SetTerminal        (unsigned char TerminalId);
+int     SEGGER_RTT_TerminalOut        (unsigned char TerminalId, const char* s);
 
 /*********************************************************************
 *

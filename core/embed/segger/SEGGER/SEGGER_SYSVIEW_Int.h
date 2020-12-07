@@ -17,24 +17,14 @@
 *                                                                    *
 * SEGGER strongly recommends to not make any changes                 *
 * to or modify the source code of this software in order to stay     *
-* compatible with the RTT protocol and J-Link.                       *
+* compatible with the SystemView and RTT protocol, and J-Link.       *
 *                                                                    *
 * Redistribution and use in source and binary forms, with or         *
 * without modification, are permitted provided that the following    *
-* conditions are met:                                                *
+* condition is met:                                                  *
 *                                                                    *
 * o Redistributions of source code must retain the above copyright   *
-*   notice, this list of conditions and the following disclaimer.    *
-*                                                                    *
-* o Redistributions in binary form must reproduce the above          *
-*   copyright notice, this list of conditions and the following      *
-*   disclaimer in the documentation and/or other materials provided  *
-*   with the distribution.                                           *
-*                                                                    *
-* o Neither the name of SEGGER Microcontroller GmbH         *
-*   nor the names of its contributors may be used to endorse or      *
-*   promote products derived from this software without specific     *
-*   prior written permission.                                        *
+*   notice, this condition and the following disclaimer.             *
 *                                                                    *
 * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND             *
 * CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,        *
@@ -52,13 +42,13 @@
 *                                                                    *
 **********************************************************************
 *                                                                    *
-*       SystemView version: V2.52h                                    *
+*       SystemView version: 3.20                                    *
 *                                                                    *
 **********************************************************************
 -------------------------- END-OF-HEADER -----------------------------
 File    : SEGGER_SYSVIEW_Int.h
 Purpose : SEGGER SystemView internal header.
-Revision: $Rev: 12706 $
+Revision: $Rev: 21281 $
 */
 
 #ifndef SEGGER_SYSVIEW_INT_H
@@ -72,8 +62,6 @@ Revision: $Rev: 12706 $
 */
 
 #include "SEGGER_SYSVIEW.h"
-#include "SEGGER_SYSVIEW_Conf.h"
-#include "SEGGER_SYSVIEW_ConfDefaults.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -97,6 +85,7 @@ typedef enum {
   SEGGER_SYSVIEW_COMMAND_ID_GET_SYSDESC,
   SEGGER_SYSVIEW_COMMAND_ID_GET_NUMMODULES,
   SEGGER_SYSVIEW_COMMAND_ID_GET_MODULEDESC,
+  SEGGER_SYSVIEW_COMMAND_ID_HEARTBEAT = 127,
   // Extended commands: Commands >= 128 have a second parameter
   SEGGER_SYSVIEW_COMMAND_ID_GET_MODULE = 128
 } SEGGER_SYSVIEW_COMMAND_ID;
