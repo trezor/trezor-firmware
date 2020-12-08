@@ -1,7 +1,13 @@
 # isort:skip_file
 
+import utime
+
+_start_ticks = utime.ticks_ms()
+
 # unlock the device
 import boot  # noqa: F401
+
+_boot_ticks = utime.ticks_ms()
 
 # prepare the USB interfaces, but do not connect to the host yet
 import usb
@@ -10,6 +16,8 @@ from trezor import loop, utils, wire, workflow
 
 # start the USB
 usb.bus.open()
+
+_usb_ticks = utime.ticks_ms()
 
 
 def _boot_apps() -> None:
@@ -66,6 +74,15 @@ _boot_apps()
 wire.setup(usb.iface_wire)
 if __debug__:
     wire.setup(usb.iface_debug, use_workflow=False)
+
+_wire_ticks = utime.ticks_ms()
+
+import apps.base
+apps.base.timings = "boot:%d, usb:%d, wire:%d (total %d)" % (
+    utime.ticks_diff(_boot_ticks, _start_ticks),
+    utime.ticks_diff(_usb_ticks, _boot_ticks),
+    utime.ticks_diff(_wire_ticks, _usb_ticks),
+    utime.ticks_diff(_wire_ticks, _start_ticks))
 
 loop.run()
 
