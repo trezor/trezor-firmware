@@ -20,4 +20,4 @@ uint32_t svc_get_dwt_cyccnt();
 #define SEGGER_SYSVIEW_RecordExitISR()
 #endif
 
-#endif //CORE_SYSTEMVIEW_H
+#endif  // CORE_SYSTEMVIEW_H

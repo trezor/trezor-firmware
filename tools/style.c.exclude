@@ -13,3 +13,4 @@
 ^\./crypto/sha2
 ^\./crypto/sha3
 ^\./legacy/vendor
+^\./core/embed/segger

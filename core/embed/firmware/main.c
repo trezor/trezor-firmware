@@ -51,7 +51,6 @@
 #include "supervise.h"
 #include "touch.h"
 
-
 int main(void) {
   // initialize pseudo-random number generator
   drbg_init();
