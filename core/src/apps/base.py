@@ -131,7 +131,9 @@ async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:
         from trezor.ui.layouts import require, confirm_action
         from trezor.messages.ButtonRequestType import ProtectCall
 
-        await require(confirm_action(ctx, "ping", "Confirm", br_code=ProtectCall))
+        await require(
+            confirm_action(ctx, "ping", "Confirm", "ping", br_code=ProtectCall)
+        )
     return Success(message=msg.message)
 
 

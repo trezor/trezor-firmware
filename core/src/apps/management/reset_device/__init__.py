@@ -7,8 +7,8 @@ from trezor.messages.EntropyAck import EntropyAck
 from trezor.messages.EntropyRequest import EntropyRequest
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
-from trezor.ui.loader import LoadingAnimation
 from trezor.ui.layouts import confirm_backup, confirm_reset_device, require
+from trezor.ui.loader import LoadingAnimation
 
 from .. import backup_types
 from ..change_pin import request_pin_confirm

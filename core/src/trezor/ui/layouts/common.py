@@ -5,7 +5,6 @@ from trezor.messages.ButtonRequest import ButtonRequest
 
 from ..components.common.confirm import CONFIRMED
 
-
 if False:
     from typing import Any, Awaitable
 

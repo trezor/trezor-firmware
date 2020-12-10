@@ -8,16 +8,16 @@ from trezor.ui.loader import LoaderDanger
 from trezor.ui.qr import Qr
 from trezor.utils import chunks
 
-from .common import interact
 from ..components.common import break_path_to_lines
 from ..components.common.confirm import CONFIRMED
 from ..components.tt.button import ButtonCancel, ButtonDefault
 from ..components.tt.confirm import Confirm, HoldToConfirm
 from ..components.tt.scroll import Paginated
 from ..components.tt.text import Text
+from .common import interact
 
 if False:
-    from typing import Iterator, Iterable, List, Sequence, Union
+    from typing import Iterator, Iterable, List, Sequence, Union, Optional
 
     from trezor import wire
     from trezor.messages.ButtonRequest import EnumTypeButtonRequestType
@@ -280,11 +280,11 @@ def confirm_metadata(
     br_type: str,
     title: str,
     content: str,
-    param: str = "",
+    param: Optional[str] = None,
     br_code: EnumTypeButtonRequestType = ButtonRequestType.SignTx,
 ) -> LayoutType:
     text = Text(title, ui.ICON_SEND, ui.GREEN, new_lines=False)
-    text.format_parametrized(content, param)
+    text.format_parametrized(content, param if param is not None else "")
     if text.count_lines() <= 3:
         text.br_half()
 

@@ -4,17 +4,19 @@ from trezor.messages import ButtonRequestType
 from trezor.ui.qr import Qr
 from trezor.utils import chunks
 
-from .common import interact
 from ..components.common import break_path_to_lines
 from ..components.common.confirm import CONFIRMED
 from ..components.t1.confirm import Confirm
 from ..components.t1.text import Text
+from .common import interact
 
 if False:
-    from typing import Iterator, Iterable, LayoutType, Sequence, Union
+    from typing import Any, Iterator, Iterable, Sequence, Union
 
     from trezor import wire
     from trezor.messages.ButtonRequest import EnumTypeButtonRequestType
+
+    from .common import LayoutType
 
 
 def confirm_action(
@@ -26,14 +28,14 @@ def confirm_action(
     verb: Union[str, bytes] = "CONFIRM",
     icon: str = None,
     br_code: EnumTypeButtonRequestType = ButtonRequestType.Other,
-    **kwargs,
+    **kwargs: Any,
 ) -> LayoutType:
     text = Text(title.upper(), new_lines=False)
     if action:
         for line in action:
             text.bold(line)
             text.br()
-        if not kwargs.get('compact', False):
+        if not kwargs.get("compact", False):
             text.br_half()
     if description:
         for line in description:
