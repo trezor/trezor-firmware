@@ -291,3 +291,37 @@ def confirm_metadata(
     text.normal("Continue?")
 
     return interact(ctx, Confirm(text), br_type, br_code)
+
+
+def confirm_replacement(
+    ctx: wire.GenericContext, description: str, txid: str
+) -> LayoutType:
+    text = Text(description, ui.ICON_SEND, ui.GREEN)
+    text.normal("Confirm transaction ID:")
+    if len(txid) >= 18 * 4:
+        txid = txid[: (18 * 4 - 3)] + "..."
+    text.mono(*chunks(txid, 18))  # FIXME CHARS_PER_LINE
+    return interact(ctx, Confirm(text), "confirm_replacement", ButtonRequestType.SignTx)
+
+
+def confirm_modify_fee(
+    ctx: wire.GenericContext,
+    sign: int,
+    user_fee_change: str,
+    total_fee_new: str,
+) -> LayoutType:
+    text = Text("Fee modification", ui.ICON_SEND, ui.GREEN)
+    if sign == 0:
+        text.normal("Your fee did not change.")
+    else:
+        if sign < 0:
+            text.normal("Decrease your fee by:")
+        else:
+            text.normal("Increase your fee by:")
+        text.bold(user_fee_change)
+    text.br_half()
+    text.normal("Transaction fee:")
+    text.bold(total_fee_new)
+    return interact(
+        ctx, HoldToConfirm(text), "confirm_modify_fee", ButtonRequestType.SignTx
+    )

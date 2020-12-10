@@ -10,7 +10,7 @@ from .. import addresses
 from . import omni
 
 if False:
-    from typing import Awaitable
+    from typing import Awaitable, Optional
 
     from trezor import wire
     from trezor.messages.TxOutput import TxOutput
@@ -54,31 +54,26 @@ async def confirm_output(ctx: wire.Context, output: TxOutput, coin: CoinInfo) ->
 
 
 async def confirm_replacement(ctx: wire.Context, description: str, txid: bytes) -> None:
-    text = Text(description, ui.ICON_SEND, ui.GREEN)
-    text.normal("Confirm transaction ID:")
-    hex_data = hexlify(txid).decode()
-    if len(hex_data) >= 18 * 4:
-        hex_data = hex_data[: (18 * 4 - 3)] + "..."
-    text.mono(*split_op_return(hex_data))
-    await require_confirm(ctx, text, ButtonRequestType.SignTx)
+    await require(
+        layouts.confirm_replacement(
+            ctx,
+            description,
+            hexlify(txid).decode(),
+        )
+    )
 
 
 async def confirm_modify_fee(
     ctx: wire.Context, user_fee_change: int, total_fee_new: int, coin: CoinInfo
 ) -> None:
-    text = Text("Fee modification", ui.ICON_SEND, ui.GREEN)
-    if user_fee_change == 0:
-        text.normal("Your fee did not change.")
-    else:
-        if user_fee_change < 0:
-            text.normal("Decrease your fee by:")
-        else:
-            text.normal("Increase your fee by:")
-        text.bold(format_coin_amount(abs(user_fee_change), coin))
-    text.br_half()
-    text.normal("Transaction fee:")
-    text.bold(format_coin_amount(total_fee_new, coin))
-    await require_hold_to_confirm(ctx, text, ButtonRequestType.SignTx)
+    await require(
+        layouts.confirm_modify_fee(
+            ctx,
+            user_fee_change,
+            format_coin_amount(abs(user_fee_change), coin),
+            format_coin_amount(total_fee_new, coin),
+        )
+    )
 
 
 async def confirm_joint_total(
