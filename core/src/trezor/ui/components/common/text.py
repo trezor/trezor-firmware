@@ -2,11 +2,18 @@ from micropython import const
 
 from trezor import ui
 
+from ...constants import (
+    TEXT_HEADER_HEIGHT,
+    TEXT_LINE_HEIGHT,
+    TEXT_LINE_HEIGHT_HALF,
+    TEXT_MARGIN_LEFT,
+    TEXT_MAX_LINES,
+)
+
 if False:
-    from typing import List, Union, Dict
+    from typing import List, Union, Dict, Optional
 
     TextContent = Union[str, int]
-    ListsArg = Dict[str, List[str]]
 
 # needs to be different from all colors and font ids
 BR = const(-256)
@@ -14,13 +21,11 @@ BR_HALF = const(-257)
 
 
 class TextBase(ui.Component):
-    TEXT_HEADER_HEIGHT = None  # type: int
-    TEXT_LINE_HEIGHT = None  # type: int
-    TEXT_LINE_HEIGHT_HALF = None  # type: int
-    TEXT_MARGIN_LEFT = None  # type: int
-
     def __init__(self) -> None:
+        super().__init__()
         self.content = []  # type: List[TextContent]
+        self.header_text = None  # type: Optional[str]
+        self.max_lines = TEXT_MAX_LINES
 
     def normal(self, *content: TextContent) -> None:
         self.content.append(ui.NORMAL)
@@ -84,113 +89,112 @@ class TextBase(ui.Component):
     def on_render(self) -> None:
         pass
 
-    @classmethod
-    def render_text(
-        cls,
-        words: List[TextContent],
-        new_lines: bool,
-        max_lines: int,
-        font: int = ui.NORMAL,
-        fg: int = ui.FG,
-        bg: int = ui.BG,
-        offset_x: int = None,
-        offset_y: int = None,
-        offset_x_max: int = ui.WIDTH,
-    ) -> None:
-        if offset_x is None:
-            offset_x = cls.TEXT_MARGIN_LEFT
-        if offset_y is None:
-            offset_y = cls.TEXT_HEADER_HEIGHT + cls.TEXT_LINE_HEIGHT
+    if __debug__:
 
-        # initial rendering state
-        INITIAL_OFFSET_X = offset_x
-        offset_y_max = cls.TEXT_HEADER_HEIGHT + (cls.TEXT_LINE_HEIGHT * max_lines)
+        def read_content(self) -> List[str]:
+            lines = [w for w in self.content if isinstance(w, str)]
+            header_text = [self.header_text] if self.header_text is not None else []
+            return (
+                header_text + lines[: self.max_lines]
+            )  # FIXME elements of content do not always map to lines
 
-        FONTS = (ui.NORMAL, ui.BOLD, ui.MONO)
 
-        # sizes of common glyphs
-        SPACE = ui.display.text_width(" ", font)
-        DASH = ui.display.text_width("-", ui.BOLD)
-        ELLIPSIS = ui.display.text_width("...", ui.BOLD)
+def render_text(
+    words: List[TextContent],
+    new_lines: bool,
+    max_lines: int,
+    font: int = ui.NORMAL,
+    fg: int = ui.FG,
+    bg: int = ui.BG,
+    offset_x: int = TEXT_MARGIN_LEFT,
+    offset_y: int = TEXT_HEADER_HEIGHT + TEXT_LINE_HEIGHT,
+    offset_x_max: int = ui.WIDTH,
+) -> None:
+    # initial rendering state
+    INITIAL_OFFSET_X = offset_x
+    offset_y_max = TEXT_HEADER_HEIGHT + (TEXT_LINE_HEIGHT * max_lines)
 
-        for word_index, word in enumerate(words):
-            has_next_word = word_index < len(words) - 1
+    FONTS = (ui.NORMAL, ui.BOLD, ui.MONO)
 
-            if isinstance(word, int):
-                if word is BR or word is BR_HALF:
-                    # line break or half-line break
-                    if offset_y > offset_y_max:
-                        ui.display.text(offset_x, offset_y, "...", ui.BOLD, ui.GREY, bg)
-                        return
-                    offset_x = INITIAL_OFFSET_X
-                    offset_y += (
-                        cls.TEXT_LINE_HEIGHT
-                        if word is BR
-                        else cls.TEXT_LINE_HEIGHT_HALF
-                    )
-                elif word in FONTS:
-                    # change of font style
-                    font = word
-                else:
-                    # change of foreground color
-                    fg = word
-                continue
+    # sizes of common glyphs
+    SPACE = ui.display.text_width(" ", font)
+    DASH = ui.display.text_width("-", ui.BOLD)
+    ELLIPSIS = ui.display.text_width("...", ui.BOLD)
 
-            width = ui.display.text_width(word, font)
+    for word_index, word in enumerate(words):
+        has_next_word = word_index < len(words) - 1
 
-            while offset_x + width > offset_x_max or (
-                has_next_word and offset_y >= offset_y_max
-            ):
-                beginning_of_line = offset_x == INITIAL_OFFSET_X
-                word_fits_in_one_line = width < (offset_x_max - INITIAL_OFFSET_X)
-                if (
-                    offset_y < offset_y_max
-                    and word_fits_in_one_line
-                    and not beginning_of_line
-                ):
-                    # line break
-                    offset_x = INITIAL_OFFSET_X
-                    offset_y += cls.TEXT_LINE_HEIGHT
-                    break
-                # word split
-                if offset_y < offset_y_max:
-                    split = "-"
-                    splitw = DASH
-                else:
-                    split = "..."
-                    splitw = ELLIPSIS
-                # find span that fits
-                for index in range(len(word) - 1, 0, -1):
-                    letter = word[index]
-                    width -= ui.display.text_width(letter, font)
-                    if offset_x + width + splitw < offset_x_max:
-                        break
-                else:
-                    index = 0
-                span = word[:index]
-                # render word span
-                ui.display.text(offset_x, offset_y, span, font, fg, bg)
-                ui.display.text(offset_x + width, offset_y, split, ui.BOLD, ui.GREY, bg)
-                # line break
-                if offset_y >= offset_y_max:
-                    return
-                offset_x = INITIAL_OFFSET_X
-                offset_y += cls.TEXT_LINE_HEIGHT
-                # continue with the rest
-                word = word[index:]
-                width = ui.display.text_width(word, font)
-
-            # render word
-            ui.display.text(offset_x, offset_y, word, font, fg, bg)
-
-            if new_lines and has_next_word:
-                # line break
-                if offset_y >= offset_y_max:
+        if isinstance(word, int):
+            if word is BR or word is BR_HALF:
+                # line break or half-line break
+                if offset_y > offset_y_max:
                     ui.display.text(offset_x, offset_y, "...", ui.BOLD, ui.GREY, bg)
                     return
                 offset_x = INITIAL_OFFSET_X
-                offset_y += cls.TEXT_LINE_HEIGHT
+                offset_y += TEXT_LINE_HEIGHT if word is BR else TEXT_LINE_HEIGHT_HALF
+            elif word in FONTS:
+                # change of font style
+                font = word
             else:
-                # shift cursor
-                offset_x += width
-                offset_x += SPACE
+                # change of foreground color
+                fg = word
+            continue
+
+        width = ui.display.text_width(word, font)
+
+        while offset_x + width > offset_x_max or (
+            has_next_word and offset_y >= offset_y_max
+        ):
+            beginning_of_line = offset_x == INITIAL_OFFSET_X
+            word_fits_in_one_line = width < (offset_x_max - INITIAL_OFFSET_X)
+            if (
+                offset_y < offset_y_max
+                and word_fits_in_one_line
+                and not beginning_of_line
+            ):
+                # line break
+                offset_x = INITIAL_OFFSET_X
+                offset_y += TEXT_LINE_HEIGHT
+                break
+            # word split
+            if offset_y < offset_y_max:
+                split = "-"
+                splitw = DASH
+            else:
+                split = "..."
+                splitw = ELLIPSIS
+            # find span that fits
+            for index in range(len(word) - 1, 0, -1):
+                letter = word[index]
+                width -= ui.display.text_width(letter, font)
+                if offset_x + width + splitw < offset_x_max:
+                    break
+            else:
+                index = 0
+            span = word[:index]
+            # render word span
+            ui.display.text(offset_x, offset_y, span, font, fg, bg)
+            ui.display.text(offset_x + width, offset_y, split, ui.BOLD, ui.GREY, bg)
+            # line break
+            if offset_y >= offset_y_max:
+                return
+            offset_x = INITIAL_OFFSET_X
+            offset_y += TEXT_LINE_HEIGHT
+            # continue with the rest
+            word = word[index:]
+            width = ui.display.text_width(word, font)
+
+        # render word
+        ui.display.text(offset_x, offset_y, word, font, fg, bg)
+
+        if new_lines and has_next_word:
+            # line break
+            if offset_y >= offset_y_max:
+                ui.display.text(offset_x, offset_y, "...", ui.BOLD, ui.GREY, bg)
+                return
+            offset_x = INITIAL_OFFSET_X
+            offset_y += TEXT_LINE_HEIGHT
+        else:
+            # shift cursor
+            offset_x += width
+            offset_x += SPACE

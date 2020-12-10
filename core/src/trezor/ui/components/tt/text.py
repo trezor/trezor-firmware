@@ -3,7 +3,13 @@ from micropython import const
 from trezor import res, ui
 from trezor.ui import display, style
 
-from ..common.text import BR, BR_HALF, TextBase  # noqa: F401
+from ..common.text import (  # noqa: F401
+    BR,
+    BR_HALF,
+    TEXT_MAX_LINES,
+    TextBase,
+    render_text,
+)
 
 if False:
     from typing import List
@@ -23,12 +29,6 @@ def header(
 
 
 class Text(TextBase):
-    TEXT_HEADER_HEIGHT = 48
-    TEXT_LINE_HEIGHT = 26
-    TEXT_LINE_HEIGHT_HALF = 13
-    TEXT_MARGIN_LEFT = 14
-    TEXT_MAX_LINES = 5
-
     def __init__(
         self,
         header_text: str,
@@ -38,13 +38,12 @@ class Text(TextBase):
         new_lines: bool = True,
     ):
         super().__init__()
-        self.header_text = header_text
+        self.header_text = header_text  # type: str
         self.header_icon = header_icon
         self.icon_color = icon_color
         self.max_lines = max_lines
         self.new_lines = new_lines
         self.content = []  # type: List[TextContent]
-        self.repaint = True
 
     def on_render(self) -> None:
         if self.repaint:
@@ -55,14 +54,8 @@ class Text(TextBase):
                 ui.BG,
                 self.icon_color,
             )
-            self.render_text(self.content, self.new_lines, self.max_lines)
+            render_text(self.content, self.new_lines, self.max_lines)
             self.repaint = False
-
-    if __debug__:
-
-        def read_content(self) -> List[str]:
-            lines = [w for w in self.content if isinstance(w, str)]
-            return [self.header_text] + lines[: self.max_lines]
 
 
 LABEL_LEFT = const(0)
@@ -103,15 +96,6 @@ class Label(ui.Component):
 
         def read_content(self) -> List[str]:
             return [self.content]
-
-
-# TODO: delete
-TEXT_HEADER_HEIGHT = Text.TEXT_HEADER_HEIGHT
-TEXT_LINE_HEIGHT = Text.TEXT_LINE_HEIGHT
-TEXT_LINE_HEIGHT_HALF = Text.TEXT_LINE_HEIGHT_HALF
-TEXT_MARGIN_LEFT = Text.TEXT_MARGIN_LEFT
-TEXT_MAX_LINES = Text.TEXT_MAX_LINES
-render_text = Text.render_text
 
 
 def text_center_trim_left(

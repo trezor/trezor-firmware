@@ -1,3 +1,4 @@
+from trezor.ui.constants import CHARS_PER_LINE
 from trezor.ui.layouts import confirm_path_warning, require
 
 from . import HARDENED
@@ -266,7 +267,7 @@ def break_address_n_to_lines(address_n: Bip32Path) -> List[str]:
     lines = []
     path_str = address_n_to_str(address_n)
 
-    per_line = const(17)
+    per_line = CHARS_PER_LINE
     while len(path_str) > per_line:
         i = path_str[:per_line].rfind("/")
         lines.append(path_str[:i])

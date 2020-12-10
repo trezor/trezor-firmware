@@ -1,7 +1,14 @@
 from trezor import ui
 from trezor.ui import display, style
 
-from ..common.text import BR, BR_HALF, TextBase  # noqa: F401
+from ..common.text import (  # noqa: F401
+    BR,
+    BR_HALF,
+    TEXT_LINE_HEIGHT,
+    TEXT_MAX_LINES,
+    TextBase,
+    render_text,
+)
 
 if False:
     from typing import List, Optional
@@ -15,12 +22,6 @@ def header(title: str, fg: int = style.FG, bg: int = style.BG) -> None:
 
 
 class Text(TextBase):
-    TEXT_HEADER_HEIGHT = 13
-    TEXT_LINE_HEIGHT = 9
-    TEXT_LINE_HEIGHT_HALF = 4
-    TEXT_MARGIN_LEFT = 0
-    TEXT_MAX_LINES = 4
-
     NO_HEADER_TEXT_Y = TEXT_LINE_HEIGHT - 2
 
     def __init__(
@@ -34,25 +35,17 @@ class Text(TextBase):
         self.max_lines = max_lines
         self.new_lines = new_lines
         self.content = []  # type: List[TextContent]
-        self.repaint = True
 
     def on_render(self) -> None:
         if self.repaint:
             if self.header_text:
                 header(self.header_text, ui.TITLE_GREY, ui.BG)
-                self.render_text(self.content, self.new_lines, self.max_lines)
+                render_text(self.content, self.new_lines, self.max_lines)
             else:
-                self.render_text(
+                render_text(
                     self.content,
                     self.new_lines,
                     self.max_lines,
                     offset_y=self.NO_HEADER_TEXT_Y,
                 )
             self.repaint = False
-
-    if __debug__:
-
-        def read_content(self) -> List[str]:
-            lines = [w for w in self.content if isinstance(w, str)]
-            header_text = [self.header_text] if self.header_text is not None else []
-            return header_text + lines[: self.max_lines]
