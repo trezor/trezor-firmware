@@ -260,6 +260,15 @@ def pytest_runtest_setup(item):
         pytest.skip("Skipping altcoin test")
 
 
+def pytest_runtest_teardown(item):
+    """Called after a test item finishes.
+
+    Dumps the current UI test report HTML.
+    """
+    if item.session.config.getoption("ui") == "test":
+        testreport.index()
+
+
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     # Make test results available in fixtures.
