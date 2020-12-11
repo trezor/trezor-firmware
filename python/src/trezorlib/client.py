@@ -398,10 +398,13 @@ class TrezorClient:
 
         The session will become invalid until `init_device()` is called again.
         If passphrase is enabled, further actions will prompt for it again.
+
+        This is a no-op in bootloader mode, as it does not support session management.
         """
         # since: 2.3.4, 1.9.4
         try:
-            self.call(messages.EndSession())
+            if not self.features.bootloader_mode:
+                self.call(messages.EndSession())
         except exceptions.TrezorFailure:
             # A failure most likely means that the FW version does not support
             # the EndSession call. We ignore the failure and clear the local session_id.
