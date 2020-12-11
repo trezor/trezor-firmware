@@ -1,8 +1,9 @@
 from trezor import res, ui
 
+from ...constants import TEXT_LINE_HEIGHT, TEXT_MARGIN_LEFT
 from .button import Button, ButtonConfirm
 from .confirm import CONFIRMED
-from .text import TEXT_LINE_HEIGHT, TEXT_MARGIN_LEFT, render_text
+from .text import render_text
 
 if False:
     from typing import Type
