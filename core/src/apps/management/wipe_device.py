@@ -2,9 +2,9 @@ import storage
 from trezor import ui
 from trezor.messages import ButtonRequestType
 from trezor.messages.Success import Success
-from trezor.ui.button import ButtonCancel
+from trezor.ui.components.tt.button import ButtonCancel
+from trezor.ui.components.tt.text import Text
 from trezor.ui.loader import LoaderDanger
-from trezor.ui.text import Text
 
 from apps.common.confirm import require_hold_to_confirm
 

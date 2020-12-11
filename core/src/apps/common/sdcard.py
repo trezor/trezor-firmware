@@ -1,7 +1,7 @@
 import storage.sd_salt
 from storage.sd_salt import SD_CARD_HOT_SWAPPABLE
 from trezor import fatfs, sdcard, ui, wire
-from trezor.ui.text import Text
+from trezor.ui.components.tt.text import Text
 
 from apps.common.confirm import confirm, hold_to_confirm
 

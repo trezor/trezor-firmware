@@ -9,7 +9,7 @@ from trezor.messages import (
     NEMTransfer,
 )
 from trezor.strings import format_amount
-from trezor.ui.text import Text
+from trezor.ui.components.tt.text import Text
 
 from apps.common.confirm import require_confirm
 from apps.common.layout import split_address

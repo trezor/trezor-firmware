@@ -1,6 +1,6 @@
 from trezor import ui, wire
 from trezor.messages import ButtonRequestType
-from trezor.ui.text import Text
+from trezor.ui.components.tt.text import Text
 
 from apps.common.confirm import require_confirm
 

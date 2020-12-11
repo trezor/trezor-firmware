@@ -5,7 +5,7 @@ from trezor.crypto import bip39, slip39
 from trezor.messages import BackupType
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
-from trezor.ui.text import Text
+from trezor.ui.components.tt.text import Text
 
 from apps.common.confirm import require_confirm
 from apps.management import backup_types

@@ -2,24 +2,24 @@ from micropython import const
 
 from trezor import ui
 
+from ...constants import (
+    TEXT_HEADER_HEIGHT,
+    TEXT_LINE_HEIGHT,
+    TEXT_LINE_HEIGHT_HALF,
+    TEXT_MARGIN_LEFT,
+    TEXT_MAX_LINES,
+)
+
 if False:
     from typing import Any, List, Optional, Union
 
-TEXT_HEADER_HEIGHT = const(48)
-TEXT_LINE_HEIGHT = const(26)
-TEXT_LINE_HEIGHT_HALF = const(13)
-TEXT_MARGIN_LEFT = const(14)
-TEXT_MAX_LINES = const(5)
+    TextContent = Union[str, int]
 
 # needs to be different from all colors and font ids
 BR = const(-256)
 BR_HALF = const(-257)
 
 _FONTS = (ui.NORMAL, ui.BOLD, ui.MONO)
-
-if False:
-    TextContent = Union[str, int]
-
 
 DASH_WIDTH = ui.display.text_width("-", ui.BOLD)
 
@@ -360,7 +360,7 @@ if __debug__:
             self.screen_contents.append(string[start : start + length])
 
 
-class Text(ui.Component):
+class TextBase(ui.Component):
     def __init__(
         self,
         header_text: str,
@@ -406,25 +406,7 @@ class Text(ui.Component):
         self.content.append(BR_HALF)
 
     def on_render(self) -> None:
-        if self.repaint:
-            ui.header(
-                self.header_text,
-                self.header_icon,
-                ui.TITLE_GREY,
-                ui.BG,
-                self.icon_color,
-            )
-            render_text(
-                self.content,
-                self.new_lines,
-                self.max_lines,
-                item_offset=self.content_offset,
-                char_offset=self.char_offset,
-                break_words=self.break_words,
-                line_width=self.line_width,
-                render_page_overflow=self.render_page_overflow,
-            )
-            self.repaint = False
+        pass
 
     if __debug__:
 
@@ -437,7 +419,7 @@ class Text(ui.Component):
                     self.on_render()
             finally:
                 self.repaint = should_repaint
-            return display_mock.screen_contents
+            return [self.header_text] + display_mock.screen_contents
 
 
 LABEL_LEFT = const(0)

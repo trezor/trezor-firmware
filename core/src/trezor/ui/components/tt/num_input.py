@@ -1,6 +1,7 @@
 from trezor import ui
-from trezor.ui.button import Button
-from trezor.ui.text import LABEL_CENTER, Label
+
+from .button import Button
+from .text import LABEL_CENTER, Label
 
 
 class NumInput(ui.Component):

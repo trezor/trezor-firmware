@@ -8,8 +8,8 @@ from trezor.messages import (
     ButtonRequestType,
 )
 from trezor.strings import format_amount
-from trezor.ui.scroll import Paginated
-from trezor.ui.text import Text
+from trezor.ui.components.tt.scroll import Paginated
+from trezor.ui.components.tt.text import Text
 
 from apps.common.confirm import require_hold_to_confirm
 from apps.common.layout import split_address

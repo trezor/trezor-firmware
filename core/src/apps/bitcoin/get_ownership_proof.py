@@ -3,7 +3,7 @@ from ubinascii import hexlify
 from trezor import ui, wire
 from trezor.messages.GetOwnershipProof import GetOwnershipProof
 from trezor.messages.OwnershipProof import OwnershipProof
-from trezor.ui.text import Text
+from trezor.ui.components.tt.text import Text
 
 from apps.common.confirm import require_confirm
 from apps.common.paths import validate_path

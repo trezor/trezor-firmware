@@ -1,5 +1,6 @@
 from trezor import ui
-from trezor.ui.button import Button
+
+from .button import Button
 
 if False:
     from trezor import loop

@@ -2,7 +2,8 @@ import mock
 from common import *
 
 from trezor import ui
-from trezor.ui import text, display
+from trezor.ui import display
+from trezor.ui.components.common import text
 
 if False:
     from typing import List, Tuple
