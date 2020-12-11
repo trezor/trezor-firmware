@@ -1,5 +1,6 @@
 """
-The model/common module contains code that is used by both model/tt and model/t1.
+The components/common module contains code that is used by both components/tt
+and components/t1.
 """
 
 if False:
