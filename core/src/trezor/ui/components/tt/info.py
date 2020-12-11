@@ -1,11 +1,13 @@
 from trezor import res, ui
-from trezor.ui.button import Button, ButtonConfirm
-from trezor.ui.confirm import CONFIRMED
-from trezor.ui.text import TEXT_LINE_HEIGHT, TEXT_MARGIN_LEFT, render_text
+
+from ...constants import TEXT_LINE_HEIGHT, TEXT_MARGIN_LEFT
+from .button import Button, ButtonConfirm
+from .confirm import CONFIRMED
+from .text import render_text
 
 if False:
     from typing import Type
-    from trezor.ui.button import ButtonContent
+    from .button import ButtonContent
 
 
 class DefaultInfoConfirm:

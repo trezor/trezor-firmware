@@ -1,7 +1,7 @@
 from trezor import wire
 from trezor.crypto import aes, hmac
 from trezor.messages.CipheredKeyValue import CipheredKeyValue
-from trezor.ui.text import Text
+from trezor.ui.components.tt.text import Text
 
 from apps.common.confirm import require_confirm
 from apps.common.keychain import get_keychain

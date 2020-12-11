@@ -1,5 +1,5 @@
 from trezor import ui
-from trezor.ui.text import text_center_trim_left, text_center_trim_right
+from trezor.ui.components.tt.text import text_center_trim_left, text_center_trim_right
 
 if False:
     from typing import Optional

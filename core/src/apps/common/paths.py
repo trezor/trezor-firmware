@@ -2,7 +2,7 @@ from micropython import const
 
 from trezor import ui
 from trezor.messages import ButtonRequestType
-from trezor.ui.text import Text
+from trezor.ui.components.tt.text import Text
 
 from . import HARDENED
 from .confirm import require_confirm

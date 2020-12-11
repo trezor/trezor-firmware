@@ -3,7 +3,7 @@ from trezor import ui, wire
 from trezor.messages.DebugLinkShowText import DebugLinkShowText
 from trezor.messages.Success import Success
 from trezor.ui import style, text
-from trezor.ui.text import Text
+from trezor.ui.components.tt.text import Text
 
 from apps.common.confirm import confirm
 

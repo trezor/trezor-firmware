@@ -2,7 +2,7 @@ import storage.device
 from trezor import ui, utils, workflow
 from trezor.crypto import bip39, slip39
 from trezor.messages import BackupType
-from trezor.ui.text import Text
+from trezor.ui.components.tt.text import Text
 
 if False:
     from typing import Optional, Tuple

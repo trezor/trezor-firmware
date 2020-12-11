@@ -8,8 +8,8 @@ from trezor.messages import (
     NEMSupplyChangeType,
     NEMTransactionCommon,
 )
-from trezor.ui.scroll import Paginated
-from trezor.ui.text import Text
+from trezor.ui.components.tt.scroll import Paginated
+from trezor.ui.components.tt.text import Text
 
 from apps.common.layout import require_confirm, split_address
 

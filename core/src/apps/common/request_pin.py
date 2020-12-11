@@ -4,9 +4,9 @@ import storage.sd_salt
 from trezor import config, ui, wire
 from trezor.messages import ButtonRequestType
 from trezor.pin import pin_to_int
-from trezor.ui.pin import CANCELLED, PinDialog
+from trezor.ui.components.tt.pin import CANCELLED, PinDialog
+from trezor.ui.components.tt.text import Text
 from trezor.ui.popup import Popup
-from trezor.ui.text import Text
 
 from . import button_request
 from .sdcard import SdCardUnavailable, request_sd_salt

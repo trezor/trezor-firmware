@@ -2,9 +2,9 @@ import storage.recovery
 from trezor import strings, ui, wire
 from trezor.crypto.slip39 import MAX_SHARE_COUNT
 from trezor.messages import ButtonRequestType
-from trezor.ui.scroll import Paginated
-from trezor.ui.text import Text
-from trezor.ui.word_select import WordSelector
+from trezor.ui.components.tt.scroll import Paginated
+from trezor.ui.components.tt.text import Text
+from trezor.ui.components.tt.word_select import WordSelector
 
 from apps.common import button_request
 from apps.common.confirm import confirm, info_confirm, require_confirm

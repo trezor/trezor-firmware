@@ -2,7 +2,7 @@ from ubinascii import hexlify
 
 from trezor import ui, utils, wire
 from trezor.crypto.hashlib import blake256, sha256
-from trezor.ui.text import Text
+from trezor.ui.components.tt.text import Text
 
 from apps.common.confirm import require_confirm
 from apps.common.layout import paginate_text, split_address

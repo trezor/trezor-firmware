@@ -3,7 +3,7 @@ from ustruct import pack, unpack
 from trezor import ui, wire
 from trezor.crypto.hashlib import sha256
 from trezor.messages.SignedIdentity import SignedIdentity
-from trezor.ui.text import Text
+from trezor.ui.components.tt.text import Text
 from trezor.utils import chunks
 
 from apps.common import HARDENED, coininfo
@@ -16,7 +16,7 @@ if False:
 
     from trezor.messages.IdentityType import IdentityType
     from trezor.messages.SignIdentity import SignIdentity
-    from trezor.ui.text import TextContent
+    from trezor.ui.components.common.text import TextContent
 
     from apps.common.paths import Bip32Path
 

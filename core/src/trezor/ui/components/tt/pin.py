@@ -3,13 +3,8 @@ from micropython import const
 from trezor import config, res, ui
 from trezor.crypto import random
 from trezor.ui import display
-from trezor.ui.button import (
-    Button,
-    ButtonCancel,
-    ButtonClear,
-    ButtonConfirm,
-    ButtonMono,
-)
+
+from .button import Button, ButtonCancel, ButtonClear, ButtonConfirm, ButtonMono
 
 if False:
     from trezor import loop

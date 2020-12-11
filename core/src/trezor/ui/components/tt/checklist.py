@@ -1,7 +1,8 @@
 from micropython import const
 
 from trezor import res, ui
-from trezor.ui.text import TEXT_HEADER_HEIGHT, TEXT_LINE_HEIGHT
+
+from ...constants import TEXT_HEADER_HEIGHT, TEXT_LINE_HEIGHT
 
 if False:
     from typing import Iterable, List, Union
