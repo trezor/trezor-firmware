@@ -64,7 +64,7 @@ async def _request_on_host(ctx: wire.Context) -> str:
         text.normal("the passphrase!")
         await require_confirm(ctx, text, ButtonRequestType.Other)
 
-        text = Text("Hidden wallet", ICON_CONFIG)
+        text = Text("Hidden wallet", ICON_CONFIG, break_words=True)
         text.normal("Use this passphrase?")
         text.br()
         text.mono(ack.passphrase)
