@@ -1,16 +1,16 @@
 #ifdef SYSTEM_VIEW
 
 #include "systemview.h"
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 #include "mpconfigport.h"
 
 #include "SEGGER_SYSVIEW.h"
 #include "SEGGER_SYSVIEW_Conf.h"
 
-#define SYSTICK ((SYSTICK_REGS*)0xE000E010)
-#define SCS ((SCS_REGS*)0xE000ED00)
+#define SYSTICK ((SYSTICK_REGS *)0xE000E010)
+#define SCS ((SCS_REGS *)0xE000ED00)
 
 // for storing DWT CYCCNT from SVC call
 volatile uint32_t cyccnt_cycles;
@@ -66,7 +66,7 @@ uint32_t svc_get_dwt_cyccnt() {
 }
 
 U32 SEGGER_SYSVIEW_X_GetInterruptId() {
-  return ((*(U32*)(0xE000ED04)) & 0x1FF);
+  return ((*(U32 *)(0xE000ED04)) & 0x1FF);
 }
 
 void enable_systemview() {
