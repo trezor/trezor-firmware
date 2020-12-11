@@ -19,9 +19,8 @@
 
 #include "common.h"
 #include "py/mphal.h"
-#include "usb.h"
-#include "systemview.h"
 #include "string.h"
+#include "usb.h"
 
 static int vcp_iface_num = -1;
 
@@ -43,15 +42,3 @@ void mp_hal_stdout_tx_strn(const char *str, size_t len) {
 }
 
 void mp_hal_set_vcp_iface(int iface_num) { vcp_iface_num = iface_num; }
-
-#ifdef SYSTEM_VIEW
-int segger_print(const char* str, size_t len) {
-    static char str_copy[1024];
-    size_t copylen = len > 1023 ? 1023 : len;
-    memcpy(str_copy, str, copylen);
-    str_copy[copylen] = 0;
-    SEGGER_SYSVIEW_Print(str_copy);
-    return len;
-}
-#endif
-
