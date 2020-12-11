@@ -5269,42 +5269,18 @@ START_TEST(test_slip39_word_completion_mask) {
     const uint16_t prefix;
     const uint16_t expected_mask;
   } vectors[] = {
-      {
-          12,
-          0xFD  // 011111101
-      },
-      {
-          21,
-          0xF8  // 011111000
-      },
-      {
-          75,
-          0xAD  // 010101101
-      },
-      {
-          4,
-          0x1F7  // 111110111
-      },
-      {
-          738,
-          0x6D  // 001101101
-      },
-      {
-          9,
-          0x6D  // 001101101
-      },
-      {
-          0,
-          0x1FF  // 111111111
-      },
-      {
-          9999,
-          0x00  // 000000000
-      },
-      {
-          20000,
-          0x00  // 000000000
-      },
+      {12, 0xFD},     // 011111101
+      {21, 0xF8},     // 011111000
+      {75, 0xAD},     // 010101101
+      {4, 0x1F7},     // 111110111
+      {738, 0x6D},    // 001101101
+      {9, 0x6D},      // 001101101
+      {0, 0x1FF},     // 111111111
+      {10, 0x00},     // 000000000
+      {255, 0x00},    // 000000000
+      {203, 0x00},    // 000000000
+      {9999, 0x00},   // 000000000
+      {20000, 0x00},  // 000000000
   };
   for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); i++) {
     uint16_t mask = slip39_word_completion_mask(vectors[i].prefix);
@@ -5318,15 +5294,18 @@ START_TEST(test_slip39_sequence_to_word) {
     const uint16_t prefix;
     const char *expected_word;
   } vectors[] = {
-      {7945, "swimming"}, {646, "pipeline"}, {5, "laden"},
-      {34, "fiber"},      {62, "ocean"},     {0, "academic"},
+      {7945, "swimming"}, {646, "pipeline"}, {5, "laden"},  {34, "fiber"},
+      {62, "ocean"},      {0, "academic"},   {10, NULL},    {255, NULL},
+      {203, NULL},        {9999, NULL},      {20000, NULL},
   };
   for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); i++) {
     const char *word = button_sequence_to_word(vectors[i].prefix);
-    ck_assert_str_eq(word, vectors[i].expected_word);
+    if (vectors[i].expected_word != NULL) {
+      ck_assert_str_eq(word, vectors[i].expected_word);
+    } else {
+      ck_assert_ptr_eq(word, NULL);
+    }
   }
-  ck_assert_ptr_eq(button_sequence_to_word(9999), NULL);
-  ck_assert_ptr_eq(button_sequence_to_word(20000), NULL);
 }
 END_TEST
 
