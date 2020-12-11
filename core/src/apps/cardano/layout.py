@@ -142,7 +142,7 @@ async def show_warning_tx_staking_key_hash(
 
     page2 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     page2.normal("Staking key hash:")
-    page2.mono(*chunks(hexlify(staking_key_hash), 17))
+    page2.mono(*chunks(hexlify(staking_key_hash).decode(), 17))
 
     page3 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     page3.normal("Change amount:")
