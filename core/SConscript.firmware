@@ -358,6 +358,7 @@ if SYSTEM_VIEW:
         'embed/segger/SEGGER/SEGGER_SYSVIEW.c',
         'embed/segger/SEGGER/SEGGER_RTT.c',
         'embed/segger/SEGGER/SEGGER_RTT_ASM_ARMv7M.S',
+        'embed/segger/SEGGER/Syscalls/SEGGER_RTT_Syscalls_GCC.c',
         'embed/firmware/systemview.c',
     ]
     CPPPATH_MOD += [
@@ -365,6 +366,7 @@ if SYSTEM_VIEW:
         'embed/segger/Config/',
     ]
     CPPDEFINES_MOD += ['SYSTEM_VIEW']
+    CCFLAGS_MOD += '-DSYSTEM_VIEW '
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED
 

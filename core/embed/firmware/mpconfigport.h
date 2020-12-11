@@ -156,6 +156,13 @@
 #define MICROPY_PY_TREZORUI         (1)
 #define MICROPY_PY_TREZORUTILS      (1)
 
+#ifdef SYSTEM_VIEW
+#define MP_PLAT_PRINT_STRN(str, len) segger_print(str, len)
+// set following to 0 if you want to print to RTT instead of SystemView
+// openocd supports only the RTT output method
+#define SYSTEMVIEW_DEST_SYSTEMVIEW  (1)
+#endif
+
 #define MP_STATE_PORT MP_STATE_VM
 
 // ============= this ends common config section ===================
