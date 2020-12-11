@@ -49,7 +49,7 @@ def do_recover_core(client, mnemonic, **kwargs):
     def input_flow():
         yield
         layout = client.debug.wait_layout()
-        assert "check the recovery seed" in layout.text
+        assert "check the recovery seed" in layout.text.replace("\n", " ")
         client.debug.click(buttons.OK)
 
         yield
@@ -118,7 +118,7 @@ def test_invalid_seed_core(client):
     def input_flow():
         yield
         layout = client.debug.wait_layout()
-        assert "check the recovery seed" in layout.text
+        assert "check the recovery seed" in layout.text.replace("\n", " ")
         client.debug.click(buttons.OK)
 
         yield
