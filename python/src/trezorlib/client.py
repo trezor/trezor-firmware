@@ -297,7 +297,7 @@ class TrezorClient:
         if not isinstance(resp, messages.Features):
             raise exceptions.TrezorException("Unexpected response to Initialize")
 
-        if resp.session_id == self.session_id:
+        if self.session_id is not None and resp.session_id == self.session_id:
             LOG.info("Successfully resumed session")
         elif session_id is not None:
             LOG.info("Failed to resume session")
