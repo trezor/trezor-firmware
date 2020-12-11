@@ -177,6 +177,7 @@ async def show_address(
                 ctx,
                 _show_address(address, desc, network),
                 "show_address",
+                ButtonRequestType.Address,
             )
             is CONFIRMED
         ):
@@ -186,6 +187,7 @@ async def show_address(
                 ctx,
                 _show_qr(address if address_qr is None else address_qr),
                 "show_qr",
+                ButtonRequestType.Address,
             )
             is CONFIRMED
         ):

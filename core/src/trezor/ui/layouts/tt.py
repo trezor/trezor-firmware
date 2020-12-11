@@ -191,6 +191,7 @@ async def show_address(
                 ctx,
                 _show_address(address, desc, network),
                 "show_address",
+                ButtonRequestType.Address,
             )
             is CONFIRMED
         ):
@@ -204,6 +205,7 @@ async def show_address(
                     cancel="XPUBs" if is_multisig else "Address",
                 ),
                 "show_qr",
+                ButtonRequestType.Address,
             )
             is CONFIRMED
         ):
