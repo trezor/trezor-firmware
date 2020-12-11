@@ -278,4 +278,16 @@ enum MessageType {
     MessageType_WebAuthnCredentials = 801 [(wire_out) = true];
     MessageType_WebAuthnAddResidentCredential = 802 [(wire_in) = true];
     MessageType_WebAuthnRemoveResidentCredential = 803 [(wire_in) = true];
+
+    // 420coin
+    MessageType_FourtwentycoinGetPublicKey = 900 [(wire_in) = true];
+    MessageType_FourtwentycoinPublicKey = 901 [(wire_out) = true];
+    MessageType_FourtwentycoinGetAddress = 902 [(wire_in) = true];
+    MessageType_FourtwentycoinAddress = 903 [(wire_out) = true];
+    MessageType_FourtwentycoinSignTx = 904 [(wire_in) = true];
+    MessageType_FourtwentycoinTxRequest = 905 [(wire_out) = true];
+    MessageType_FourtwentycoinTxAck = 906 [(wire_in) = true];
+    MessageType_FourtwentycoinSignMessage = 907 [(wire_in) = true];
+    MessageType_FourtwentycoinVerifyMessage = 908 [(wire_in) = true];
+    MessageType_FourtwentycoinMessageSignature = 909 [(wire_out) = true];
 }
