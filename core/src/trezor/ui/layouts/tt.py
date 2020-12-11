@@ -17,7 +17,7 @@ from ..components.tt.text import Text
 from .common import interact
 
 if False:
-    from typing import Iterator, Iterable, List, Sequence, Union, Optional
+    from typing import Any, Iterator, Iterable, List, Sequence, Union, Optional
 
     from trezor import wire
     from trezor.messages.ButtonRequest import EnumTypeButtonRequestType
@@ -34,6 +34,7 @@ def confirm_action(
     verb: Union[str, bytes] = Confirm.DEFAULT_CONFIRM,
     icon: str = None,
     br_code: EnumTypeButtonRequestType = ButtonRequestType.Other,
+    **kwargs: Any,
 ) -> LayoutType:
     text = Text(title, icon if icon is not None else ui.ICON_CONFIRM, new_lines=False)
     text.format_parametrized(action, font=ui.BOLD)

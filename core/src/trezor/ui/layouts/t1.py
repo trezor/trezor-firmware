@@ -23,24 +23,21 @@ def confirm_action(
     ctx: wire.GenericContext,
     br_type: str,
     title: str,
-    action: Iterable[str] = None,
-    description: Iterable[str] = None,
-    verb: Union[str, bytes] = "CONFIRM",
+    action: str,
+    description: str = None,
+    verb: Union[str, bytes] = Confirm.DEFAULT_CONFIRM,
     icon: str = None,
     br_code: EnumTypeButtonRequestType = ButtonRequestType.Other,
     **kwargs: Any,
 ) -> LayoutType:
     text = Text(title.upper(), new_lines=False)
-    if action:
-        for line in action:
-            text.bold(line)
-            text.br()
-        if not kwargs.get("compact", False):
-            text.br_half()
+    text.bold(action)
+    text.br()
+    if not kwargs.get("compact", False):
+        text.br_half()
     if description:
-        for line in description:
-            text.normal(line)
-            text.br()
+        text.normal(description)
+        text.br()
 
     confirm = "icon" if isinstance(verb, bytes) else verb  # type: str
     return interact(ctx, Confirm(text, confirm=confirm), br_type, br_code)
@@ -212,24 +209,20 @@ async def show_address(
 
 def confirm_output(
     ctx: wire.GenericContext,
-    title: str,
-    address: str = None,
-    amount: str = None,
-    data: str = None,
-    hex_data: str = None,
+    address: str,
+    amount: str,
 ) -> LayoutType:
-    if address is not None and amount is not None:
-        text = Text("TRANSACTION")
-        text.normal("Send " + amount + " to")
-        text.mono(*_split_address(address))
-    elif data is not None:
-        text = Text("OMNI TRANSACTION")
-        text.normal(data)
-    elif hex_data is not None:
-        text = Text("OP_RETURN")
-        text.mono(*_split_op_return(hex_data))
-    else:
-        raise ValueError
+    text = Text("TRANSACTION")
+    text.normal("Send " + amount + " to")
+    text.mono(*_split_address(address))
+    #    if data is not None:
+    #        text = Text("OMNI TRANSACTION")
+    #        text.normal(data)
+    #    elif hex_data is not None:
+    #        text = Text("OP_RETURN")
+    #        text.mono(*_split_op_return(hex_data))
+    #    else:
+    #        raise ValueError
 
     return interact(
         ctx, Confirm(text), "confirm_output", ButtonRequestType.ConfirmOutput
