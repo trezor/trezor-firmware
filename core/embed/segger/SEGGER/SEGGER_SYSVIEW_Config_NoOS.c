@@ -101,7 +101,7 @@ extern unsigned int SystemCoreClock;
 #define NOCYCCNT_BIT              (1uL << 25)                                   // Cycle counter support bit
 #define CYCCNTENA_BIT             (1uL << 0)                                    // Cycle counter enable bit
 
-/********************************************************************* 
+/*********************************************************************
 *
 *       _cbSendSystemDesc()
 *
@@ -140,7 +140,7 @@ void SEGGER_SYSVIEW_Conf(void) {
     }
   }
 #endif
-  SEGGER_SYSVIEW_Init(SYSVIEW_TIMESTAMP_FREQ, SYSVIEW_CPU_FREQ, 
+  SEGGER_SYSVIEW_Init(SYSVIEW_TIMESTAMP_FREQ, SYSVIEW_CPU_FREQ,
                       0, _cbSendSystemDesc);
   SEGGER_SYSVIEW_SetRAMBase(SYSVIEW_RAM_BASE);
 }

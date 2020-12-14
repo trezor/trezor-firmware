@@ -49,7 +49,7 @@
 
 File    : SEGGER_SYSVIEW_Conf.h
 Purpose : SEGGER SystemView configuration file.
-          Set defines which deviate from the defaults (see SEGGER_SYSVIEW_ConfDefaults.h) here.          
+          Set defines which deviate from the defaults (see SEGGER_SYSVIEW_ConfDefaults.h) here.
 Revision: $Rev: 21292 $
 
 Additional information:
@@ -58,7 +58,7 @@ Additional information:
     SEGGER_SYSVIEW_GET_INTERRUPT_ID
   For known compilers and cores, these might be set to good defaults
   in SEGGER_SYSVIEW_ConfDefaults.h.
-  
+
   SystemView needs a (nestable) locking mechanism.
   If not defined, the RTT locking mechanism is used,
   which then needs to be properly configured.
