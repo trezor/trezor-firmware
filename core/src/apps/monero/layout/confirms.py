@@ -119,7 +119,7 @@ async def _require_confirm_output(
 async def _require_confirm_payment_id(ctx, payment_id: bytes):
     if not await common.naive_pagination(
         ctx,
-        [ui.MONO] + list(chunks(hexlify(payment_id), 16)),
+        [ui.MONO] + list(chunks(hexlify(payment_id).decode(), 16)),
         "Payment ID",
         ui.ICON_SEND,
         ui.GREEN,
