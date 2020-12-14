@@ -175,7 +175,7 @@ extern uint32_t svc_get_dwt_cyccnt();
 *  Default
 *    Call user-supplied function SEGGER_SYSVIEW_X_GetInterruptId().
 *  Notes
-*    For some known compilers and cores, a ready-to-use, core-specific 
+*    For some known compilers and cores, a ready-to-use, core-specific
 *    default is set.
 *    ARMv7M: Read ICSR[8:0] (active vector)
 *    ARMv6M: Read ICSR[5:0] (active vector)
@@ -207,7 +207,7 @@ extern uint32_t svc_get_dwt_cyccnt();
 *  Default
 *    Call user-supplied function SEGGER_SYSVIEW_X_GetTimestamp().
 *  Notes
-*    For some known compilers and cores, a ready-to-use, core-specific 
+*    For some known compilers and cores, a ready-to-use, core-specific
 *    default is set.
 *    ARMv7M: Read Cortex-M Cycle Count register.
 *
@@ -281,7 +281,7 @@ extern uint32_t svc_get_dwt_cyccnt();
 *  Default
 *    undefined: Do not place into a specific section.
 *  Notes
-*    If SEGGER_RTT_SECTION is defined, the default changes to use 
+*    If SEGGER_RTT_SECTION is defined, the default changes to use
 *    this section for the SystemView RTT Buffer, too.
 */
 #if !(defined SEGGER_SYSVIEW_SECTION) && (defined SEGGER_RTT_SECTION)
@@ -313,11 +313,11 @@ extern uint32_t svc_get_dwt_cyccnt();
 *  Default
 *    0
 *  Notes
-*    Value is usually subtracted from mailboxes, semaphores, tasks, 
+*    Value is usually subtracted from mailboxes, semaphores, tasks,
 *    .... addresses, to compress event parameters.
 *    Should be the lowest RAM address of the system.
 */
-#ifndef   SEGGER_SYSVIEW_ID_BASE 
+#ifndef   SEGGER_SYSVIEW_ID_BASE
   #define SEGGER_SYSVIEW_ID_BASE                  0
 #endif
 
@@ -372,8 +372,8 @@ extern uint32_t svc_get_dwt_cyccnt();
 *       Define: SEGGER_SYSVIEW_PRINTF_IMPLICIT_FORMAT
 *
 *  Description
-*    If enabled, on SEGGER_SYSVIEW_PrintHost, check the format string 
-*    and if it includes unsupported formatters, use formatting on the 
+*    If enabled, on SEGGER_SYSVIEW_PrintHost, check the format string
+*    and if it includes unsupported formatters, use formatting on the
 *    target instead.
 *  Default
 *    0: Disabled.
@@ -440,10 +440,10 @@ extern uint32_t svc_get_dwt_cyccnt();
 *    1: Enabled.
 *  Notes
 *    If enabled, the static memory use by SystemView is increased by
-*    the maximum packet size. SystemView is locked on entry of a 
+*    the maximum packet size. SystemView is locked on entry of a
 *    recording function.
-*    If disabled, the stack usage by SystemView recording functions 
-*    might be increased by up to the maximum packet size. SystemView 
+*    If disabled, the stack usage by SystemView recording functions
+*    might be increased by up to the maximum packet size. SystemView
 *    is locked when writing the packet to the RTT buffer.
 */
 #ifndef   SEGGER_SYSVIEW_USE_STATIC_BUFFER
@@ -459,7 +459,7 @@ extern uint32_t svc_get_dwt_cyccnt();
 *  Default
 *    Automatically calculated.
 *  Notes
-*    The maximum packet size is mainly defined by the maximum string 
+*    The maximum packet size is mainly defined by the maximum string
 *    length and the maximum number of arguments.
 */
 #ifndef   SEGGER_SYSVIEW_MAX_PACKET_SIZE
@@ -471,12 +471,12 @@ extern uint32_t svc_get_dwt_cyccnt();
 *       Define: SEGGER_SYSVIEW_POST_MORTEM_MODE
 *
 *  Description
-*    If enabled, SystemView records for post-mortem analysis instead 
+*    If enabled, SystemView records for post-mortem analysis instead
 *    of real-time analysis.
 *  Default
 *    0: Disabled.
 *  Notes
-*    For more information refer to 
+*    For more information refer to
 *    https://www.segger.com/products/development-tools/systemview/technology/post-mortem-mode
 */
 #ifndef   SEGGER_SYSVIEW_POST_MORTEM_MODE
@@ -488,14 +488,14 @@ extern uint32_t svc_get_dwt_cyccnt();
 *       Define: SEGGER_SYSVIEW_SYNC_PERIOD_SHIFT
 *
 *  Description
-*    Configure how frequently syncronization is sent in post-mortem 
+*    Configure how frequently syncronization is sent in post-mortem
 *    mode.
 *  Default
 *    8: (1 << 8) = Every 256 Events.
 *  Notes
 *    In post-mortem mode, at least one sync has to be in the RTT buffer.
 *    Recommended sync frequency: Buffer Size / 16
-*    For more information refer to 
+*    For more information refer to
 *    https://www.segger.com/products/development-tools/systemview/technology/post-mortem-mode
 */
 #ifndef   SEGGER_SYSVIEW_SYNC_PERIOD_SHIFT
@@ -527,8 +527,8 @@ extern uint32_t svc_get_dwt_cyccnt();
 *  Default
 *    Use RTT Locking mechanism (defined by SEGGER_RTT_LOCK()).
 *  Notes
-*    If SystemView recording is not locked, recording events from 
-*    interrupts and tasks may lead to unpredictable, undefined, event 
+*    If SystemView recording is not locked, recording events from
+*    interrupts and tasks may lead to unpredictable, undefined, event
 *    data.
 */
 #ifndef   SEGGER_SYSVIEW_LOCK

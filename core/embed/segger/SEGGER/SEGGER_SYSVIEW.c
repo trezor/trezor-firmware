@@ -60,7 +60,7 @@ Additional information:
     Packets with IDs 24..31 are standard packets with extendible
     structure and contain a length field.
     <ID><Lenght><Data><TimeStampDelta>
-    
+
     Packet ID 31 is used for SystemView extended events.
     <ID><Lenght><ID_EX><Data><TimeStampDelta>
 
@@ -509,7 +509,7 @@ static U8 *_EncodeStr(U8 *pPayload, const char *pText, unsigned int Limit) {
   // Write Len
   //
   if (Len < 255)  {
-    *pPayload++ = Len; 
+    *pPayload++ = Len;
   } else {
     *pPayload++ = 255;
     *pPayload++ = (Len & 255);
@@ -666,7 +666,7 @@ static int _TrySendOverflowPacket(void) {
 *       _SendSyncInfo()
 *
 *  Function description
-*    Send SystemView sync packet and system information in 
+*    Send SystemView sync packet and system information in
 *    post mortem mode.
 *
 *  Additional information
@@ -884,9 +884,9 @@ static int _VPrintHost(const char* s, U32 Options, va_list* pParamList) {
   U8*         pPayloadStart;
 #if SEGGER_SYSVIEW_PRINTF_IMPLICIT_FORMAT
   U8 HasNonScalar;
-  
+
   HasNonScalar = 0;
-#endif  
+#endif
   //
   // Count number of arguments by counting '%' characters in string.
   // If enabled, check for non-scalar modifier flags to format string on the target.
@@ -986,7 +986,7 @@ static void _StoreChar(SEGGER_SYSVIEW_PRINTF_DESC * p, char c) {
 *       _PrintUnsigned()
 *
 *  Function description
-*    Print an unsigned integer with the given formatting into the 
+*    Print an unsigned integer with the given formatting into the
 *     formatted string.
 *
 *  Parameters
@@ -1077,7 +1077,7 @@ static void _PrintUnsigned(SEGGER_SYSVIEW_PRINTF_DESC * pBufferDesc, unsigned in
 *       _PrintInt()
 *
 *  Function description
-*    Print a signed integer with the given formatting into the 
+*    Print a signed integer with the given formatting into the
 *     formatted string.
 *
 *  Parameters
@@ -1320,7 +1320,7 @@ static void _VPrintTarget(const char* sFormat, U32 Options, va_list* pParamList)
 *
 *  Function description
 *    Initializes the SYSVIEW module.
-*    Must be called before the Systemview Application connects to 
+*    Must be called before the Systemview Application connects to
 *    the system.
 *
 *  Parameters
@@ -1330,9 +1330,9 @@ static void _VPrintTarget(const char* sFormat, U32 Options, va_list* pParamList)
 *    pfSendSysDesc  - Pointer to record system description callback function.
 *
 *  Additional information
-*    This function initializes the RTT channel used to transport 
-*    SEGGER SystemView packets. 
-*    The channel is assigned the label "SysView" for client software 
+*    This function initializes the RTT channel used to transport
+*    SEGGER SystemView packets.
+*    The channel is assigned the label "SysView" for client software
 *    to identify the SystemView channel.
 *
 *    The channel is configured with the macro SEGGER_SYSVIEW_RTT_CHANNEL.
@@ -1929,7 +1929,7 @@ void SEGGER_SYSVIEW_SendTaskList(void) {
 *
 *    The system description is usually called by the system description
 *    callback, to ensure it is only sent when the SystemView Application
-*    is connected.  
+*    is connected.
 *
 *  Parameters
 *    sSysDesc - Pointer to the 0-terminated system description string.
@@ -2047,7 +2047,7 @@ void SEGGER_SYSVIEW_RecordExitISRToScheduler(void) {
 *
 *  Function description
 *    Format and send a Timer entry event.
-*  
+*
 *  Parameters
 *    TimerId - Id of the timer which starts.
 */
@@ -2083,7 +2083,7 @@ void SEGGER_SYSVIEW_RecordExitTimer(void) {
 *
 *  Function description
 *    Format and send an End API Call event without return value.
-*  
+*
 *  Parameters
 *    EventID - Id of API function which ends.
 */
@@ -2104,7 +2104,7 @@ void SEGGER_SYSVIEW_RecordEndCall(unsigned int EventID) {
 *
 *  Function description
 *    Format and send an End API Call event with return value.
-*  
+*
 *  Parameters
 *    EventID      - Id of API function which ends.
 *    Para0        - Return value which will be returned by the API function.
@@ -2164,9 +2164,9 @@ void SEGGER_SYSVIEW_OnTaskCreate(U32 TaskId) {
 *       SEGGER_SYSVIEW_OnTaskTerminate()
 *
 *  Function description
-*    Record a Task termination event.  
-*    The Task termination event corresponds to terminating a task in 
-*    the OS. If the TaskId is the currently active task, 
+*    Record a Task termination event.
+*    The Task termination event corresponds to terminating a task in
+*    the OS. If the TaskId is the currently active task,
 *    SEGGER_SYSVIEW_OnTaskStopExec may be used, either.
 *
 *  Parameters
@@ -2343,7 +2343,7 @@ void SEGGER_SYSVIEW_Mark(unsigned int MarkerId) {
 *
 *    Marker names are usually set in the system description
 *    callback, to ensure it is only sent when the SystemView Application
-*    is connected.  
+*    is connected.
 *
 *  Parameters
 *    MarkerId   - User defined ID for the marker.
@@ -2371,7 +2371,7 @@ void SEGGER_SYSVIEW_NameMarker(unsigned int MarkerId, const char* sName) {
 *
 *    Marker names are usually set in the system description
 *    callback, to ensure it is only sent when the SystemView Application
-*    is connected.  
+*    is connected.
 *
 *  Parameters
 *    ResourceId - Id of the resource to be named. i.e. its address.
@@ -2793,7 +2793,7 @@ void SEGGER_SYSVIEW_PrintfHost(const char* s, ...) {
 *       SEGGER_SYSVIEW_WarnfHost()
 *
 *  Function description
-*    Print a warnin string which is formatted on the host by 
+*    Print a warnin string which is formatted on the host by
 *    the SystemView Application.
 *
 *  Parameters
@@ -2828,7 +2828,7 @@ void SEGGER_SYSVIEW_WarnfHost(const char* s, ...) {
 *       SEGGER_SYSVIEW_ErrorfHost()
 *
 *  Function description
-*    Print an error string which is formatted on the host by 
+*    Print an error string which is formatted on the host by
 *    the SystemView Application.
 *
 *  Parameters
@@ -2863,7 +2863,7 @@ void SEGGER_SYSVIEW_ErrorfHost(const char* s, ...) {
 *       SEGGER_SYSVIEW_PrintfTargetEx()
 *
 *  Function description
-*    Print a string which is formatted on the target before sent to 
+*    Print a string which is formatted on the target before sent to
 *    the host with Additional information.
 *
 *  Parameters
@@ -2883,7 +2883,7 @@ void SEGGER_SYSVIEW_PrintfTargetEx(const char* s, U32 Options, ...) {
 *       SEGGER_SYSVIEW_PrintfTarget()
 *
 *  Function description
-*    Print a string which is formatted on the target before sent to 
+*    Print a string which is formatted on the target before sent to
 *    the host.
 *
 *  Parameters
