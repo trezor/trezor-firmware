@@ -405,6 +405,22 @@ class TextBase(ui.Component):
     def br_half(self) -> None:
         self.content.append(BR_HALF)
 
+    def format_parametrized(
+        self,
+        format_string: str,
+        *params: str,
+        font: int = ui.NORMAL,
+        param_font: int = ui.BOLD,
+    ) -> None:
+        parts = format_string.split("{}", len(params))
+        for i in range(len(parts)):
+            self.content.append(font)
+            self.content.append(parts[i].strip(" "))
+            if i < len(parts) - 1 and i < len(params):
+                param = params[i]
+                self.content.append(param_font)
+                self.content.append(param)
+
     def on_render(self) -> None:
         pass
 
