@@ -1,11 +1,8 @@
-from micropython import const
-
-from trezor import ui
-from trezor.messages import ButtonRequestType
-from trezor.ui.components.tt.text import Text
+from trezor.ui.constants import MONO_CHARS_PER_LINE
+from trezor.ui.layouts import confirm_path_warning, require
 
 from . import HARDENED
-from .confirm import require_confirm
+from .layout import address_n_to_str
 
 if False:
     from typing import (
@@ -262,12 +259,7 @@ async def validate_path(
 
 
 async def show_path_warning(ctx: wire.Context, path: Bip32Path) -> None:
-    text = Text("Confirm path", ui.ICON_WRONG, ui.RED)
-    text.normal("Path")
-    text.mono(*break_address_n_to_lines(path))
-    text.normal("is unknown.")
-    text.normal("Are you sure?")
-    await require_confirm(ctx, text, ButtonRequestType.UnknownDerivationPath)
+    await require(confirm_path_warning(ctx, address_n_to_str(path)))
 
 
 def is_hardened(i: int) -> bool:
@@ -278,21 +270,11 @@ def path_is_hardened(address_n: Bip32Path) -> bool:
     return all(is_hardened(n) for n in address_n)
 
 
-def address_n_to_str(address_n: Bip32Path) -> str:
-    def path_item(i: int) -> str:
-        if i & HARDENED:
-            return str(i ^ HARDENED) + "'"
-        else:
-            return str(i)
-
-    return "m/" + "/".join([path_item(i) for i in address_n])
-
-
 def break_address_n_to_lines(address_n: Bip32Path) -> List[str]:
     lines = []
     path_str = address_n_to_str(address_n)
 
-    per_line = const(17)
+    per_line = MONO_CHARS_PER_LINE
     while len(path_str) > per_line:
         i = path_str[:per_line].rfind("/")
         lines.append(path_str[:i])
