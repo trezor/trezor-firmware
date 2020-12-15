@@ -1,22 +1,21 @@
 from micropython import const
 from ubinascii import hexlify
 
-from trezor import ui
 from trezor.messages import AmountUnit, ButtonRequestType, OutputScriptType
 from trezor.strings import format_amount
-from trezor.ui.components.tt.text import Text
-from trezor.utils import chunks
-
-from apps.common.confirm import require_confirm, require_hold_to_confirm
+from trezor.ui import layouts
+from trezor.ui.layouts import require
 
 from .. import addresses
 from . import omni
 
 if False:
-    from typing import Iterator
+    from typing import Optional
+
     from trezor import wire
     from trezor.messages.SignTx import EnumTypeAmountUnit
     from trezor.messages.TxOutput import TxOutput
+    from trezor.ui.layouts import LayoutType
 
     from apps.common.coininfo import CoinInfo
 
@@ -40,14 +39,6 @@ def format_coin_amount(
     return "%s %s" % (format_amount(amount, decimals), shortcut)
 
 
-def split_address(address: str) -> Iterator[str]:
-    return chunks(address, 17)
-
-
-def split_op_return(data: str) -> Iterator[str]:
-    return chunks(data, 18)
-
-
 async def confirm_output(
     ctx: wire.Context, output: TxOutput, coin: CoinInfo, amount_unit: EnumTypeAmountUnit
 ) -> None:
@@ -56,33 +47,40 @@ async def confirm_output(
         assert data is not None
         if omni.is_valid(data):
             # OMNI transaction
-            text = Text("OMNI transaction", ui.ICON_SEND, ui.GREEN)
-            text.normal(omni.parse(data))
+            layout: LayoutType = layouts.confirm_metadata(
+                ctx,
+                "omni_transaction",
+                "OMNI transaction",
+                omni.parse(data),
+                br_code=ButtonRequestType.ConfirmOutput,
+            )
         else:
             # generic OP_RETURN
-            hex_data = hexlify(data).decode()
-            if len(hex_data) >= 18 * 5:
-                hex_data = hex_data[: (18 * 5 - 3)] + "..."
-            text = Text("OP_RETURN", ui.ICON_SEND, ui.GREEN)
-            text.mono(*split_op_return(hex_data))
+            layout = layouts.confirm_hex(
+                ctx,
+                "op_return",
+                "OP_RETURN",
+                hexlify(data).decode(),
+                ButtonRequestType.ConfirmOutput,
+            )
     else:
-        address = output.address
-        assert address is not None
-        address_short = addresses.address_short(coin, address)
-        text = Text("Confirm sending", ui.ICON_SEND, ui.GREEN)
-        text.normal(format_coin_amount(output.amount, coin, amount_unit) + " to")
-        text.mono(*split_address(address_short))
-    await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
+        assert output.address is not None
+        address_short = addresses.address_short(coin, output.address)
+        layout = layouts.confirm_output(
+            ctx, address_short, format_coin_amount(output.amount, coin, amount_unit)
+        )
+
+    await require(layout)
 
 
 async def confirm_replacement(ctx: wire.Context, description: str, txid: bytes) -> None:
-    text = Text(description, ui.ICON_SEND, ui.GREEN)
-    text.normal("Confirm transaction ID:")
-    hex_data = hexlify(txid).decode()
-    if len(hex_data) >= 18 * 4:
-        hex_data = hex_data[: (18 * 4 - 3)] + "..."
-    text.mono(*split_op_return(hex_data))
-    await require_confirm(ctx, text, ButtonRequestType.SignTx)
+    await require(
+        layouts.confirm_replacement(
+            ctx,
+            description,
+            hexlify(txid).decode(),
+        )
+    )
 
 
 async def confirm_modify_fee(
@@ -92,19 +90,14 @@ async def confirm_modify_fee(
     coin: CoinInfo,
     amount_unit: EnumTypeAmountUnit,
 ) -> None:
-    text = Text("Fee modification", ui.ICON_SEND, ui.GREEN)
-    if user_fee_change == 0:
-        text.normal("Your fee did not change.")
-    else:
-        if user_fee_change < 0:
-            text.normal("Decrease your fee by:")
-        else:
-            text.normal("Increase your fee by:")
-        text.bold(format_coin_amount(abs(user_fee_change), coin, amount_unit))
-    text.br_half()
-    text.normal("Transaction fee:")
-    text.bold(format_coin_amount(total_fee_new, coin, amount_unit))
-    await require_hold_to_confirm(ctx, text, ButtonRequestType.SignTx)
+    await require(
+        layouts.confirm_modify_fee(
+            ctx,
+            user_fee_change,
+            format_coin_amount(abs(user_fee_change), coin, amount_unit),
+            format_coin_amount(total_fee_new, coin, amount_unit),
+        )
+    )
 
 
 async def confirm_joint_total(
@@ -114,12 +107,13 @@ async def confirm_joint_total(
     coin: CoinInfo,
     amount_unit: EnumTypeAmountUnit,
 ) -> None:
-    text = Text("Joint transaction", ui.ICON_SEND, ui.GREEN)
-    text.normal("You are contributing:")
-    text.bold(format_coin_amount(spending, coin, amount_unit))
-    text.normal("to the total amount:")
-    text.bold(format_coin_amount(total, coin, amount_unit))
-    await require_hold_to_confirm(ctx, text, ButtonRequestType.SignTx)
+    await require(
+        layouts.confirm_joint_total(
+            ctx,
+            spending_amount=format_coin_amount(spending, coin, amount_unit),
+            total_amount=format_coin_amount(total, coin, amount_unit),
+        ),
+    )
 
 
 async def confirm_total(
@@ -129,50 +123,69 @@ async def confirm_total(
     coin: CoinInfo,
     amount_unit: EnumTypeAmountUnit,
 ) -> None:
-    text = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
-    text.normal("Total amount:")
-    text.bold(format_coin_amount(spending, coin, amount_unit))
-    text.normal("including fee:")
-    text.bold(format_coin_amount(fee, coin, amount_unit))
-    await require_hold_to_confirm(ctx, text, ButtonRequestType.SignTx)
+    await require(
+        layouts.confirm_total(
+            ctx,
+            total_amount=format_coin_amount(spending, coin, amount_unit),
+            fee_amount=format_coin_amount(fee, coin, amount_unit),
+        ),
+    )
 
 
 async def confirm_feeoverthreshold(
     ctx: wire.Context, fee: int, coin: CoinInfo, amount_unit: EnumTypeAmountUnit
 ) -> None:
-    text = Text("High fee", ui.ICON_SEND, ui.GREEN)
-    text.normal("The fee of")
-    text.bold(format_coin_amount(fee, coin, amount_unit))
-    text.normal("is unexpectedly high.", "Continue?")
-    await require_confirm(ctx, text, ButtonRequestType.FeeOverThreshold)
+    fee_amount = format_coin_amount(fee, coin, amount_unit)
+    await require(
+        layouts.confirm_metadata(
+            ctx,
+            "fee_over_threshold",
+            "High fee",
+            "The fee of\n{}is unexpectedly high.",
+            fee_amount,
+            ButtonRequestType.FeeOverThreshold,
+        )
+    )
 
 
 async def confirm_change_count_over_threshold(
     ctx: wire.Context, change_count: int
 ) -> None:
-    text = Text("Warning", ui.ICON_SEND, ui.GREEN)
-    text.normal("There are {}".format(change_count))
-    text.normal("change-outputs.")
-    text.br_half()
-    text.normal("Continue?")
-    await require_confirm(ctx, text, ButtonRequestType.SignTx)
+    await require(
+        layouts.confirm_metadata(
+            ctx,
+            "change_count_over_threshold",
+            "Warning",
+            "There are {}\nchange-outputs.\n",
+            str(change_count),
+            ButtonRequestType.SignTx,
+        )
+    )
 
 
 async def confirm_nondefault_locktime(
     ctx: wire.Context, lock_time: int, lock_time_disabled: bool
 ) -> None:
     if lock_time_disabled:
-        text = Text("Warning", ui.ICON_SEND, ui.GREEN)
-        text.normal("Locktime is set but will", "have no effect.")
-        text.br_half()
+        title = "Warning"
+        text = "Locktime is set but will\nhave no effect.\n"
+        param: Optional[str] = None
+    elif lock_time < _LOCKTIME_TIMESTAMP_MIN_VALUE:
+        title = "Confirm locktime"
+        text = "Locktime for this\ntransaction is set to\nblockheight:\n{}"
+        param = str(lock_time)
     else:
-        text = Text("Confirm locktime", ui.ICON_SEND, ui.GREEN)
-        text.normal("Locktime for this", "transaction is set to")
-        if lock_time < _LOCKTIME_TIMESTAMP_MIN_VALUE:
-            text.normal("blockheight:")
-        else:
-            text.normal("timestamp:")
-        text.bold(str(lock_time))
+        title = "Confirm locktime"
+        text = "Locktime for this\ntransaction is set to\ntimestamp:\n{}"
+        param = str(lock_time)
 
-    text.normal("Continue?")
-    await require_confirm(ctx, text, ButtonRequestType.SignTx)
+    await require(
+        layouts.confirm_metadata(
+            ctx,
+            "nondefault_locktime",
+            title,
+            text,
+            param,
+            br_code=ButtonRequestType.SignTx,
+        )
+    )
