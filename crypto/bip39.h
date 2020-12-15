@@ -36,7 +36,7 @@ void mnemonic_clear(void);
 
 int mnemonic_check(const char *mnemonic);
 
-int mnemonic_to_entropy(const char *mnemonic, uint8_t *entropy);
+int mnemonic_to_bits(const char *mnemonic, uint8_t *bits);
 
 // passphrase must be at most 256 characters otherwise it would be truncated
 void mnemonic_to_seed(const char *mnemonic, const char *passphrase,

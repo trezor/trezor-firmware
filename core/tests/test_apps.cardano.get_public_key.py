@@ -7,7 +7,7 @@ from trezor.crypto import bip32, slip39
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestCardanoGetPublicKey(unittest.TestCase):
-    def test_get_public_key_scheme(self):
+    def test_get_public_key_scheme_12_words(self):
         mnemonic = "all all all all all all all all all all all all"
         passphrase = ""
         node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
@@ -67,6 +67,74 @@ class TestCardanoGetPublicKey(unittest.TestCase):
             self.assertEqual(hexlify(key.node.public_key), public_keys[index])
             self.assertEqual(hexlify(key.node.chain_code), chain_codes[index])
             self.assertEqual(key.xpub, xpub_keys[index])
+
+    def test_get_public_key_scheme_18_words(self):
+        mnemonic = "found differ bulb shadow wrist blue bind vessel deposit tip pelican action surprise weapon check fiction muscle this"
+        passphrase = ""
+        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
+        keychain = Keychain(node)
+
+        derivation_paths = [
+            [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 0x80000000],
+            [0x80000000 | 1852, 0x80000000 | 1815, 0x80000000, 0, 0],
+        ]
+
+        public_keys = [
+            b'82f12f1916c0c35a412291e72204f17f033b0b7edf148dfd7d75acd3975c9ac0',
+            b'd92d0590e76bbf0300112a9f283fba2f7f8af5cf1054d634b610d1e4f541df90',
+        ]
+
+        chain_codes = [
+            b'974f9cd4336e23b976f934752026a2d4c32d2e23f0532f4f87152b45fa5ca81f',
+            b'352499ed19b47f2bc8c164b47df0d55f428cc8c12f96b7e65d7563114ddfd75b',
+        ]
+
+        xpub_keys = [
+            '82f12f1916c0c35a412291e72204f17f033b0b7edf148dfd7d75acd3975c9ac0974f9cd4336e23b976f934752026a2d4c32d2e23f0532f4f87152b45fa5ca81f',
+            'd92d0590e76bbf0300112a9f283fba2f7f8af5cf1054d634b610d1e4f541df90352499ed19b47f2bc8c164b47df0d55f428cc8c12f96b7e65d7563114ddfd75b',
+       ]
+
+        for index, derivation_path in enumerate(derivation_paths):
+            key = _get_public_key(keychain, derivation_path)
+
+            self.assertEqual(hexlify(key.node.public_key), public_keys[index])
+            self.assertEqual(hexlify(key.node.chain_code), chain_codes[index])
+            self.assertEqual(key.xpub, xpub_keys[index])
+
+
+    def test_get_public_key_scheme_24_words(self):
+        mnemonic = "balance exotic ranch knife glory slow tape favorite yard gym awake ill exist useless parent aim pig stay effort into square gasp credit butter"
+        passphrase = ""
+        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
+        keychain = Keychain(node)
+
+        derivation_paths = [
+            [0x80000000 | 44, 0x80000000 | 1815, 0x80000000, 0, 0x80000000],
+            [0x80000000 | 1852, 0x80000000 | 1815, 0x80000000, 0, 0],
+        ]
+
+        public_keys = [
+            b'9d45d1e979bd0b942adb1896019c85d08fbc562f012775a1f72fc7be8fe9e4b6',
+            b'a85a339897354931d584f828f6d79d4227ed16f3468990687ab42f13a87c9ea8',
+        ]
+
+        chain_codes = [
+            b'aad67fd6d620f7af88ad816a229de09cfacff3e28008a528759b2e2cf28d859a',
+            b'e6f844931e7e2ec724e6e62efde662ae2669355322dc3eb9b307bc1c8e75e219',
+        ]
+
+        xpub_keys = [
+            '9d45d1e979bd0b942adb1896019c85d08fbc562f012775a1f72fc7be8fe9e4b6aad67fd6d620f7af88ad816a229de09cfacff3e28008a528759b2e2cf28d859a',
+            'a85a339897354931d584f828f6d79d4227ed16f3468990687ab42f13a87c9ea8e6f844931e7e2ec724e6e62efde662ae2669355322dc3eb9b307bc1c8e75e219',
+       ]
+
+        for index, derivation_path in enumerate(derivation_paths):
+            key = _get_public_key(keychain, derivation_path)
+
+            self.assertEqual(hexlify(key.node.public_key), public_keys[index])
+            self.assertEqual(hexlify(key.node.chain_code), chain_codes[index])
+            self.assertEqual(key.xpub, xpub_keys[index])
+
 
     def test_slip39_128(self):
         mnemonics = [

@@ -600,16 +600,22 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_from_mnemonic_cardano(
   const char *pmnemonic = mnemo.len > 0 ? mnemo.buf : "";
   const char *ppassphrase = phrase.len > 0 ? phrase.buf : "";
 
-  uint8_t entropy[64] = {0};
-  int entropy_len = mnemonic_to_entropy(pmnemonic, entropy);
+  uint8_t mnemonic_bits[64] = {0};
+  int mnemonic_bits_len = mnemonic_to_bits(pmnemonic, mnemonic_bits);
 
-  if (entropy_len == 0) {
+  if (mnemonic_bits_len == 0) {
     mp_raise_ValueError("Invalid mnemonic");
   }
 
+  // BEWARE: passing of mnemonic_bits (i.e. entropy + checksum bits) into
+  // hdnode_from_entropy_cardano_icarus() is actually not correct and we should
+  // be passing the entropy alone. However, the bug is there since Cardano
+  // support has been launched for Trezor and its reversal would result in
+  // people with a 24-word mnemonic on Trezor losing access to their Cardano
+  // funds. More info at https://github.com/trezor/trezor-firmware/issues/1387
   const int res = hdnode_from_entropy_cardano_icarus(
-      (const uint8_t *)ppassphrase, phrase.len, entropy, entropy_len / 8,
-      &hdnode);
+      (const uint8_t *)ppassphrase, phrase.len, mnemonic_bits,
+      mnemonic_bits_len / 8, &hdnode);
 
   if (!res) {
     mp_raise_ValueError(

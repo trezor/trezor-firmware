@@ -5114,7 +5114,7 @@ START_TEST(test_mnemonic_check) {
 }
 END_TEST
 
-START_TEST(test_mnemonic_to_entropy) {
+START_TEST(test_mnemonic_to_bits) {
   static const char *vectors[] = {
       "00000000000000000000000000000000",
       "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
@@ -5198,16 +5198,16 @@ START_TEST(test_mnemonic_to_entropy) {
   };
 
   const char **a, **b;
-  uint8_t entropy[64];
+  uint8_t mnemonic_bits[64];
 
   a = vectors;
   b = vectors + 1;
   while (*a && *b) {
-    int seed_len = mnemonic_to_entropy(*b, entropy);
-    ck_assert_int_eq(seed_len % 33, 0);
-    seed_len = seed_len * 4 / 33;
-    ck_assert_int_eq(seed_len, strlen(*a) / 2);
-    ck_assert_mem_eq(entropy, fromhex(*a), seed_len);
+    int mnemonic_bits_len = mnemonic_to_bits(*b, mnemonic_bits);
+    ck_assert_int_eq(mnemonic_bits_len % 33, 0);
+    mnemonic_bits_len = mnemonic_bits_len * 4 / 33;
+    ck_assert_int_eq(mnemonic_bits_len, strlen(*a) / 2);
+    ck_assert_mem_eq(mnemonic_bits, fromhex(*a), mnemonic_bits_len);
     a += 2;
     b += 2;
   }
@@ -8836,7 +8836,7 @@ Suite *test_suite(void) {
   tc = tcase_create("bip39");
   tcase_add_test(tc, test_mnemonic);
   tcase_add_test(tc, test_mnemonic_check);
-  tcase_add_test(tc, test_mnemonic_to_entropy);
+  tcase_add_test(tc, test_mnemonic_to_bits);
   tcase_add_test(tc, test_mnemonic_find_word);
   suite_add_tcase(s, tc);
 
@@ -8965,6 +8965,8 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_bip32_cardano_hdnode_vector_5);
   tcase_add_test(tc, test_bip32_cardano_hdnode_vector_6);
   tcase_add_test(tc, test_bip32_cardano_hdnode_vector_7);
+  tcase_add_test(tc, test_bip32_cardano_hdnode_vector_8);
+  tcase_add_test(tc, test_bip32_cardano_hdnode_vector_9);
 
   tcase_add_test(tc, test_ed25519_cardano_sign_vectors);
   suite_add_tcase(s, tc);
