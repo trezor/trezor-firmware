@@ -381,7 +381,8 @@ where
 }
 
 impl Obj {
-    /// Conversion to Rust types with typed `None`.
+    /// Conversion to Rust types with typed `None`. Conversion errors are
+    /// propagated.
     pub fn try_into_option<T>(self) -> Result<Option<T>, Error>
     where
         T: TryFrom<Obj>,

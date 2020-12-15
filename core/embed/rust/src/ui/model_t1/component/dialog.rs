@@ -14,20 +14,25 @@ pub enum DialogMsg<T> {
     RightClicked,
 }
 
-pub struct Dialog<T, U> {
-    header: Option<(U, Rect)>,
+pub struct Dialog<T, U, V> {
+    header: Option<(V, Rect)>,
     content: Child<T>,
     left_btn: Option<Child<Button<U>>>,
     right_btn: Option<Child<Button<U>>>,
 }
 
-impl<T: Component, U: AsRef<[u8]>> Dialog<T, U> {
+impl<T, U, V> Dialog<T, U, V>
+where
+    T: Component,
+    U: AsRef<[u8]>,
+    V: AsRef<[u8]>,
+{
     pub fn new(
         area: Rect,
         content: impl FnOnce(Rect) -> T,
         left: Option<impl FnOnce(Rect, ButtonPos) -> Button<U>>,
         right: Option<impl FnOnce(Rect, ButtonPos) -> Button<U>>,
-        header: Option<U>,
+        header: Option<V>,
     ) -> Self {
         let (header_area, content_area, button_area) = Self::areas(area, &header);
         let content = Child::new(content(content_area));
@@ -54,7 +59,7 @@ impl<T: Component, U: AsRef<[u8]>> Dialog<T, U> {
         }
     }
 
-    fn areas(area: Rect, header: &Option<U>) -> (Option<Rect>, Rect, Rect) {
+    fn areas(area: Rect, header: &Option<V>) -> (Option<Rect>, Rect, Rect) {
         const HEADER_SPACE: i32 = 4;
         let button_height = theme::FONT_BOLD.line_height() + 2;
         let header_height = theme::FONT_BOLD.line_height();
@@ -70,7 +75,12 @@ impl<T: Component, U: AsRef<[u8]>> Dialog<T, U> {
     }
 }
 
-impl<T: Component, U: AsRef<[u8]>> Component for Dialog<T, U> {
+impl<T, U, V> Component for Dialog<T, U, V>
+where
+    T: Component,
+    U: AsRef<[u8]>,
+    V: AsRef<[u8]>,
+{
     type Msg = DialogMsg<T::Msg>;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
@@ -98,10 +108,11 @@ impl<T: Component, U: AsRef<[u8]>> Component for Dialog<T, U> {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T, U> crate::trace::Trace for Dialog<T, U>
+impl<T, U, V> crate::trace::Trace for Dialog<T, U, V>
 where
     T: crate::trace::Trace,
     U: crate::trace::Trace + AsRef<[u8]>,
+    V: crate::trace::Trace + AsRef<[u8]>,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Dialog");

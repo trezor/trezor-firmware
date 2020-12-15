@@ -19,7 +19,6 @@ async def wipe_device(ctx: wire.GenericContext, msg: WipeDevice) -> Success:
         description="Do you really want to\nwipe the device?\n",
         action="All data will be lost.",
         reverse=True,
-        verb="Hold to confirm",
         hold=True,
         hold_danger=True,
         icon=ui.ICON_WIPE,

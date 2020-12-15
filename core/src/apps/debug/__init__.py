@@ -62,13 +62,15 @@ if __debug__:
     async def dispatch_debuglink_decision(msg: DebugLinkDecision) -> None:
         from trezor.enums import DebugSwipeDirection
         from trezor.ui import Result
-        from trezor.ui.components.tt import confirm, swipe
+        from trezor.ui.components.common import confirm
 
         if msg.yes_no is not None:
             await confirm_chan.put(
                 Result(confirm.CONFIRMED if msg.yes_no else confirm.CANCELLED)
             )
         if msg.swipe is not None:
+            from trezor.ui.components.tt import swipe
+
             if msg.swipe == DebugSwipeDirection.UP:
                 await swipe_chan.put(swipe.SWIPE_UP)
             elif msg.swipe == DebugSwipeDirection.DOWN:

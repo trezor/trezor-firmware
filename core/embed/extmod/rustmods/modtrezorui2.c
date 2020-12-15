@@ -30,7 +30,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui2_layout_new_example_obj,
                                  ui_layout_new_example);
 #elif TREZOR_MODEL == 1
 /// def layout_new_confirm_action(
-///     title: str,
+///     title: str | None,
 ///     action: str | None,
 ///     description: str | None,
 ///     verb: str | None,
@@ -38,9 +38,106 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui2_layout_new_example_obj,
 ///     hold: bool | None,
 ///     reverse: bool,
 /// ) -> int:
-///     """Example layout. All arguments must be passed as kwargs."""
+///     """Confirm generic action. All arguments must be passed as kwargs."""
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorui2_layout_new_confirm_action_obj,
                                   0, ui_layout_new_confirm_action);
+
+/// def layout_new_confirm_reset(
+///     prompt: str,
+/// ) -> int:
+///     """Confirm device setup. All arguments must be passed as kwargs."""
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorui2_layout_new_confirm_reset_obj, 0,
+                                  ui_layout_new_confirm_reset);
+
+/// def layout_new_path_warning(
+///     path: str,
+///     title: str,
+/// ) -> int:
+///     """Show invalid derivation path warning. All arguments must be passed as
+///     kwargs."""
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorui2_layout_new_path_warning_obj, 0,
+                                  ui_layout_new_path_warning);
+
+/// def layout_new_show_address(
+///     title: str,
+///     address: str,
+///     network: str | None,
+///     extra: str | None,
+/// ) -> int:
+///     """Show address. All arguments must be passed as kwargs."""
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorui2_layout_new_show_address_obj, 0,
+                                  ui_layout_new_show_address);
+
+/// def layout_new_show_modal(
+///     title: str | None,
+///     subtitle: str | None,
+///     content: str,
+///     button_confirm: str | None,
+///     button_cancel: str | None,
+/// ) -> int:
+///     """Show success/error/warning. All arguments must be passed as
+///     kwargs."""
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorui2_layout_new_show_modal_obj, 0,
+                                  ui_layout_new_show_modal);
+
+/// def layout_new_confirm_output(
+///     title: str,
+///     subtitle: str | None,
+///     address: str,
+///     amount: str,
+/// ) -> int:
+///     """Confirm output/recipient. All arguments must be passed as kwargs."""
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorui2_layout_new_confirm_output_obj,
+                                  0, ui_layout_new_confirm_output);
+
+/// def layout_new_confirm_total(
+///     title: str,
+///     label1: str,
+///     amount1: str,
+///     label2: str,
+///     amount2: str,
+/// ) -> int:
+///     """Final tx confirm. All arguments must be passed as kwargs."""
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorui2_layout_new_confirm_total_obj, 0,
+                                  ui_layout_new_confirm_total);
+
+/// def layout_new_confirm_metadata(
+///     title: str,
+///     content: str,
+///     show_continue: bool,
+/// ) -> int:
+///     """Confirm tx metadata. All arguments must be passed as kwargs."""
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorui2_layout_new_confirm_metadata_obj,
+                                  0, ui_layout_new_confirm_metadata);
+
+/// def layout_new_confirm_blob(
+///     title: str,
+///     description: str | None,
+///     data: str,
+/// ) -> int:
+///     """Confirm arbitrary data. All arguments must be passed as kwargs."""
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorui2_layout_new_confirm_blob_obj, 0,
+                                  ui_layout_new_confirm_blob);
+
+/// def layout_new_confirm_modify_fee(
+///     title: str,
+///     sign: int,
+///     user_fee_change: str,
+///     total_fee_new: str,
+/// ) -> int:
+///     """Confirm fee change. All arguments must be passed as kwargs."""
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(
+    mod_trezorui2_layout_new_confirm_modify_fee_obj, 0,
+    ui_layout_new_confirm_modify_fee);
+
+/// def layout_new_confirm_coinjoin(
+///     title: str,
+///     fee_per_anonymity: str | None,
+///     total_fee: str,
+/// ) -> int:
+///     """Confirm coinjoin. All arguments must be passed as kwargs."""
+STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorui2_layout_new_confirm_coinjoin_obj,
+                                  0, ui_layout_new_confirm_coinjoin);
 #endif
 
 STATIC const mp_rom_map_elem_t mp_module_trezorui2_globals_table[] = {
@@ -52,6 +149,26 @@ STATIC const mp_rom_map_elem_t mp_module_trezorui2_globals_table[] = {
 #elif TREZOR_MODEL == 1
     {MP_ROM_QSTR(MP_QSTR_layout_new_confirm_action),
      MP_ROM_PTR(&mod_trezorui2_layout_new_confirm_action_obj)},
+    {MP_ROM_QSTR(MP_QSTR_layout_new_confirm_reset),
+     MP_ROM_PTR(&mod_trezorui2_layout_new_confirm_reset_obj)},
+    {MP_ROM_QSTR(MP_QSTR_layout_new_path_warning),
+     MP_ROM_PTR(&mod_trezorui2_layout_new_path_warning_obj)},
+    {MP_ROM_QSTR(MP_QSTR_layout_new_show_address),
+     MP_ROM_PTR(&mod_trezorui2_layout_new_show_address_obj)},
+    {MP_ROM_QSTR(MP_QSTR_layout_new_show_modal),
+     MP_ROM_PTR(&mod_trezorui2_layout_new_show_modal_obj)},
+    {MP_ROM_QSTR(MP_QSTR_layout_new_confirm_output),
+     MP_ROM_PTR(&mod_trezorui2_layout_new_confirm_output_obj)},
+    {MP_ROM_QSTR(MP_QSTR_layout_new_confirm_total),
+     MP_ROM_PTR(&mod_trezorui2_layout_new_confirm_total_obj)},
+    {MP_ROM_QSTR(MP_QSTR_layout_new_confirm_metadata),
+     MP_ROM_PTR(&mod_trezorui2_layout_new_confirm_metadata_obj)},
+    {MP_ROM_QSTR(MP_QSTR_layout_new_confirm_blob),
+     MP_ROM_PTR(&mod_trezorui2_layout_new_confirm_blob_obj)},
+    {MP_ROM_QSTR(MP_QSTR_layout_new_confirm_modify_fee),
+     MP_ROM_PTR(&mod_trezorui2_layout_new_confirm_modify_fee_obj)},
+    {MP_ROM_QSTR(MP_QSTR_layout_new_confirm_coinjoin),
+     MP_ROM_PTR(&mod_trezorui2_layout_new_confirm_coinjoin_obj)},
 #endif
 
 };

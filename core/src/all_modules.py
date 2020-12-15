@@ -148,6 +148,10 @@ trezor.ui.components.common.confirm
 import trezor.ui.components.common.confirm
 trezor.ui.components.common.text
 import trezor.ui.components.common.text
+trezor.ui.components.t1
+import trezor.ui.components.t1
+trezor.ui.components.t1.homescreen
+import trezor.ui.components.t1.homescreen
 trezor.ui.components.tt.button
 import trezor.ui.components.tt.button
 trezor.ui.components.tt.checklist
