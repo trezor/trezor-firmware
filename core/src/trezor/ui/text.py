@@ -133,13 +133,13 @@ class Span:
                     # do not continue over newline
                     break
 
-            elif width + nextchar_width >= line_width:
+            elif width + nextchar_width > line_width:
                 # this char would overflow the line. end loop, use last result
                 break
 
             elif (
                 break_words or word_break
-            ) and width + nextchar_width + DASH_WIDTH < line_width:
+            ) and width + nextchar_width + DASH_WIDTH <= line_width:
                 # Trying a possible break in the middle of a word.
                 # We can do this if:
                 # - we haven't found a space yet (word_break is still True) -- if a word
