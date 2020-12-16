@@ -108,7 +108,11 @@ void cycles(volatile uint64_t *rtn)
         cpuid
     }
 #elif defined( __GNUC__ )
+#if defined(__aarch64__)
+    __asm__ __volatile__("mrs %0, cntvct_el0": "=r" (*rtn));
+#else
     __asm__ __volatile__("rdtsc": "=A" (*rtn));
+#endif
 #endif
 }
 

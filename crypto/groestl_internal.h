@@ -106,6 +106,14 @@ typedef int64_t sph_s64;
 #define SPH_DETECT_LITTLE_ENDIAN     1
 #define SPH_DETECT_BIG_ENDIAN        0
 
+/*
+ * ARM64, little-endian.
+ */
+#elif defined __aarch64__
+
+#define SPH_DETECT_LITTLE_ENDIAN     1
+#define SPH_DETECT_BIG_ENDIAN        0
+
 #endif
 
 
