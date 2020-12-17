@@ -1,5 +1,3 @@
-from micropython import const
-
 from trezor import log, wire
 from trezor.crypto import hashlib
 from trezor.crypto.curve import ed25519
@@ -30,7 +28,13 @@ from .helpers import (
     protocol_magics,
     staking_use_cases,
 )
-from .helpers.paths import SCHEMA_ADDRESS, SCHEMA_STAKING
+from .helpers.paths import (
+    ACCOUNT_PATH_INDEX,
+    BIP_PATH_LENGTH,
+    MAX_CHANGE_ADDRESS_INDEX,
+    SCHEMA_ADDRESS,
+    SCHEMA_STAKING,
+)
 from .helpers.utils import to_account_path
 from .layout import (
     confirm_certificate,
@@ -57,12 +61,6 @@ if False:
     from trezor.messages.CardanoTxOutputType import CardanoTxOutputType
     from trezor.messages.CardanoTxWithdrawalType import CardanoTxWithdrawalType
     from typing import Dict, List, Tuple
-
-# the maximum allowed change address.  this should be large enough for normal
-# use and still allow to quickly brute-force the correct bip32 path
-MAX_CHANGE_ADDRESS_INDEX = const(1_000_000)
-ACCOUNT_PATH_INDEX = const(2)
-BIP_PATH_LENGTH = const(5)
 
 METADATA_HASH_SIZE = 32
 MAX_METADATA_LENGTH = 500

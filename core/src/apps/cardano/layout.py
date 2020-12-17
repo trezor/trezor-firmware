@@ -16,7 +16,7 @@ from trezor.ui.text import Text
 from trezor.utils import chunks
 
 from apps.common.confirm import confirm, require_confirm, require_hold_to_confirm
-from apps.common.layout import address_n_to_str, show_warning
+from apps.common.layout import address_n_to_str
 
 from . import seed
 from .address import (
@@ -25,7 +25,7 @@ from .address import (
     pack_reward_address_bytes,
 )
 from .helpers import protocol_magics
-from .helpers.utils import to_account_path
+from .helpers.utils import format_account_number, to_account_path
 
 if False:
     from typing import List, Optional
@@ -122,7 +122,7 @@ async def show_warning_tx_different_staking_account(
     page1.normal("the current account.")
 
     page2 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
-    page2.normal("Staking account:")
+    page2.normal("Staking account %s:" % format_account_number(staking_account_path))
     page2.bold(address_n_to_str(staking_account_path))
     page2.normal("Change amount:")
     page2.bold(format_coin_amount(amount))
@@ -198,7 +198,7 @@ async def confirm_certificate(
     page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     page1.normal("Confirm:")
     page1.bold(CERTIFICATE_TYPE_NAMES[certificate.type])
-    page1.normal("for account:")
+    page1.normal("for account %s:" % format_account_number(certificate.path))
     page1.bold(address_n_to_str(to_account_path(certificate.path)))
     pages.append(page1)
 
@@ -320,7 +320,7 @@ async def confirm_withdrawal(
 ) -> None:
     page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     page1.normal("Confirm withdrawal")
-    page1.normal("for account:")
+    page1.normal("for account %s:" % format_account_number(withdrawal.path))
     page1.bold(address_n_to_str(to_account_path(withdrawal.path)))
     page1.normal("Amount:")
     page1.bold(format_coin_amount(withdrawal.amount))
@@ -401,31 +401,24 @@ async def show_warning_address_foreign_staking_key(
     staking_account_path: List[int],
     staking_key_hash: bytes,
 ) -> None:
-    await show_warning(
-        ctx,
-        (
-            "Stake rights associated",
-            "with this address do",
-            "not match your",
-            "account",
-            address_n_to_str(account_path),
-        ),
-        button="Ok",
-    )
+    page1 = Text("Warning", ui.ICON_WRONG, ui.RED)
+    page1.normal("Stake rights associated")
+    page1.normal("with this address do")
+    page1.normal("not match your")
+    page1.normal("account %s:" % format_account_number(account_path))
+    page1.bold(address_n_to_str(account_path))
 
+    page2 = Text("Warning", ui.ICON_WRONG, ui.RED)
     if staking_account_path:
-        staking_key_message = (
-            "Stake account path:",
-            address_n_to_str(staking_account_path),
-        )
+        page2.normal("Stake account %s:" % format_account_number(staking_account_path))
+        page2.bold(address_n_to_str(staking_account_path))
+        page2.br_half()
     else:
-        staking_key_message = ("Staking key:", hexlify(staking_key_hash).decode())
+        page2.normal("Staking key:")
+        page2.bold(hexlify(staking_key_hash).decode())
+    page2.normal("Continue?")
 
-    await show_warning(
-        ctx,
-        staking_key_message,
-        button="Ok",
-    )
+    await require_confirm(ctx, Paginated([page1, page2]))
 
 
 async def show_warning_tx_network_unverifiable(ctx: wire.Context) -> None:
@@ -440,13 +433,10 @@ async def show_warning_tx_network_unverifiable(ctx: wire.Context) -> None:
 async def show_warning_address_pointer(
     ctx: wire.Context, pointer: CardanoBlockchainPointerType
 ) -> None:
-    await show_warning(
-        ctx,
-        (
-            "Pointer address:",
-            "Block: %s" % pointer.block_index,
-            "Transaction: %s" % pointer.tx_index,
-            "Certificate: %s" % pointer.certificate_index,
-        ),
-        button="Ok",
-    )
+    text = Text("Warning", ui.ICON_WRONG, ui.RED)
+    text.normal("Pointer address:")
+    text.normal("Block: %s" % pointer.block_index)
+    text.normal("Transaction: %s" % pointer.tx_index)
+    text.normal("Certificate: %s" % pointer.certificate_index)
+    text.normal("Continue?")
+    await require_confirm(ctx, text)
