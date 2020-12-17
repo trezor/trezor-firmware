@@ -5198,16 +5198,16 @@ START_TEST(test_mnemonic_to_bits) {
   };
 
   const char **a, **b;
-  uint8_t entropy[64];
+  uint8_t mnemonic_bits[64];
 
   a = vectors;
   b = vectors + 1;
   while (*a && *b) {
-    int seed_len = mnemonic_to_bits(*b, entropy);
-    ck_assert_int_eq(seed_len % 33, 0);
-    seed_len = seed_len * 4 / 33;
-    ck_assert_int_eq(seed_len, strlen(*a) / 2);
-    ck_assert_mem_eq(entropy, fromhex(*a), seed_len);
+    int mnemonic_bits_len = mnemonic_to_bits(*b, mnemonic_bits);
+    ck_assert_int_eq(mnemonic_bits_len % 33, 0);
+    mnemonic_bits_len = mnemonic_bits_len * 4 / 33;
+    ck_assert_int_eq(mnemonic_bits_len, strlen(*a) / 2);
+    ck_assert_mem_eq(mnemonic_bits, fromhex(*a), mnemonic_bits_len);
     a += 2;
     b += 2;
   }

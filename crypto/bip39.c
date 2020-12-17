@@ -155,35 +155,19 @@ int mnemonic_to_bits(const char *mnemonic, uint8_t *bits) {
     return 0;
   }
   memcpy(bits, result, sizeof(result));
+  memzero(result, sizeof(result));
 
   // returns amount of entropy + checksum BITS
   return n * 11;
 }
 
-int mnemonic_to_entropy(const char *mnemonic, uint8_t *entropy) {
-  uint8_t mnemonic_bits[32 + 1] = {0};
-  int mnemonic_bits_len = mnemonic_to_bits(mnemonic, mnemonic_bits);
-
-  if (mnemonic_bits_len == 0) {
-    return 0;
-  }
-
-  int entropy_bytes_len = ((mnemonic_bits_len * 4) / 3) - 1;
-
-  // strip checksum from mnemonic transformed into bits
-  memcpy(entropy, mnemonic_bits, entropy_bytes_len);
-
-  // returns amount of entropy BYTES
-  return entropy_bytes_len;
-}
-
 int mnemonic_check(const char *mnemonic) {
   uint8_t bits[32 + 1] = {0};
-  int seed_len = mnemonic_to_bits(mnemonic, bits);
-  if (seed_len != (12 * 11) && seed_len != (18 * 11) && seed_len != (24 * 11)) {
+  int mnemonic_bits_len = mnemonic_to_bits(mnemonic, bits);
+  if (mnemonic_bits_len != (12 * 11) && mnemonic_bits_len != (18 * 11) && mnemonic_bits_len != (24 * 11)) {
     return 0;
   }
-  int words = seed_len / 11;
+  int words = mnemonic_bits_len / 11;
 
   uint8_t checksum = bits[words * 4 / 3];
   sha256_Raw(bits, words * 4 / 3, bits);
