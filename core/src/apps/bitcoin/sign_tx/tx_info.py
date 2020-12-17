@@ -185,4 +185,8 @@ class OriginalTxInfo(TxInfoBase):
         if self.orig_hash != writers.get_tx_hash(
             self.h_tx, double=self.signer.coin.sign_hash_double, reverse=True
         ):
+            # This may happen if incorrect information is supplied in the TXORIGINPUT
+            # or TXORIGOUTPUT responses or if the device is loaded with the wrong seed,
+            # because we derive the scriptPubKeys of change-outputs from the seed using
+            # the provided path.
             raise wire.ProcessError("Invalid original TXID.")
