@@ -118,8 +118,8 @@ START_TEST(test_bip32_cardano_hdnode_vector_1) {
       "junk",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 132);
-  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits, mnemonic_bits_len / 8,
-                                     &node);
+  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+                                     mnemonic_bits_len / 8, &node);
 
   ck_assert_mem_eq(
       node.chain_code,
@@ -154,8 +154,8 @@ START_TEST(test_bip32_cardano_hdnode_vector_2) {
       "junk",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 132);
-  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits, mnemonic_bits_len / 8,
-                                     &node);
+  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+                                     mnemonic_bits_len / 8, &node);
 
   hdnode_private_ckd_cardano(&node, 0x80000000);
 
@@ -192,8 +192,8 @@ START_TEST(test_bip32_cardano_hdnode_vector_3) {
       "junk",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 132);
-  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits, mnemonic_bits_len / 8,
-                                     &node);
+  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+                                     mnemonic_bits_len / 8, &node);
 
   hdnode_private_ckd_cardano(&node, 0x80000001);
 
@@ -230,8 +230,8 @@ START_TEST(test_bip32_cardano_hdnode_vector_4) {
       "junk",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 132);
-  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits, mnemonic_bits_len / 8,
-                                     &node);
+  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+                                     mnemonic_bits_len / 8, &node);
 
   hdnode_private_ckd_cardano(&node, 0x80000000);
   hdnode_private_ckd_cardano(&node, 0x80000001);
@@ -269,8 +269,8 @@ START_TEST(test_bip32_cardano_hdnode_vector_5) {
       "junk",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 132);
-  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits, mnemonic_bits_len / 8,
-                                     &node);
+  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+                                     mnemonic_bits_len / 8, &node);
 
   hdnode_private_ckd_cardano(&node, 0x80000000);
   hdnode_private_ckd_cardano(&node, 0x80000001);
@@ -309,8 +309,8 @@ START_TEST(test_bip32_cardano_hdnode_vector_6) {
       "junk",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 132);
-  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits, mnemonic_bits_len / 8,
-                                     &node);
+  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+                                     mnemonic_bits_len / 8, &node);
 
   hdnode_private_ckd_cardano(&node, 0x80000000);
   hdnode_private_ckd_cardano(&node, 0x80000001);
@@ -350,8 +350,8 @@ START_TEST(test_bip32_cardano_hdnode_vector_7) {
       "junk",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 132);
-  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits, mnemonic_bits_len / 8,
-                                     &node);
+  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+                                     mnemonic_bits_len / 8, &node);
 
   hdnode_private_ckd_cardano(&node, 0x80000000);
   hdnode_private_ckd_cardano(&node, 0x80000001);
@@ -392,8 +392,8 @@ START_TEST(test_bip32_cardano_hdnode_vector_8) {
       "action surprise weapon check fiction muscle this",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 198);
-  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits, mnemonic_bits_len / 8,
-                                     &node);
+  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+                                     mnemonic_bits_len / 8, &node);
 
   hdnode_private_ckd_cardano(&node, 0x80000000);
   hdnode_private_ckd_cardano(&node, 0x80000001);
@@ -435,8 +435,8 @@ START_TEST(test_bip32_cardano_hdnode_vector_9) {
       "butter",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 264);
-  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits, mnemonic_bits_len / 8,
-                                     &node);
+  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+                                     mnemonic_bits_len / 8, &node);
 
   hdnode_private_ckd_cardano(&node, 0x80000000);
   hdnode_private_ckd_cardano(&node, 0x80000001);

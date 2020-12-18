@@ -164,7 +164,8 @@ int mnemonic_to_bits(const char *mnemonic, uint8_t *bits) {
 int mnemonic_check(const char *mnemonic) {
   uint8_t bits[32 + 1] = {0};
   int mnemonic_bits_len = mnemonic_to_bits(mnemonic, bits);
-  if (mnemonic_bits_len != (12 * 11) && mnemonic_bits_len != (18 * 11) && mnemonic_bits_len != (24 * 11)) {
+  if (mnemonic_bits_len != (12 * 11) && mnemonic_bits_len != (18 * 11) &&
+      mnemonic_bits_len != (24 * 11)) {
     return 0;
   }
   int words = mnemonic_bits_len / 11;
