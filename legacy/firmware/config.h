@@ -114,6 +114,9 @@ void config_setLanguage(const char *lang);
 void config_setPassphraseProtection(bool passphrase_protection);
 bool config_getPassphraseProtection(bool *passphrase_protection);
 
+void config_setPassphraseAlwaysOnDevice(bool passphrase_always_on_device);
+bool config_getPassphraseAlwaysOnDevice(void);
+
 bool config_getHomescreen(uint8_t *dest, uint16_t dest_size);
 void config_setHomescreen(const uint8_t *data, uint32_t size);
 

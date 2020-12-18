@@ -112,6 +112,7 @@ bool protectButton(ButtonRequestType type, bool confirm_only) {
 
 const char *requestPin(PinMatrixRequestType type, const char *text) {
   return pin_keyboard(text);
+
   PinMatrixRequest resp = {0};
   memzero(&resp, sizeof(PinMatrixRequest));
   resp.has_type = true;
@@ -352,15 +353,18 @@ bool protectChangeWipeCode(bool removal) {
   return ret;
 }
 
-bool protectPassphrase(char *passphrase) {
-  memzero(passphrase, MAX_PASSPHRASE_LEN + 1);
-  bool passphrase_protection = false;
-  config_getPassphraseProtection(&passphrase_protection);
-  if (!passphrase_protection) {
-    // passphrase already set to empty by memzero above
+static bool protectPassphraseOnDevice(char *passphrase) {
+  const char *input = passphrase_keyboard(_("Please enter passphrase"));
+  if (input) {
+    strlcpy(passphrase, input, MAX_PASSPHRASE_LEN);
     return true;
+  } else {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    return false;
   }
+}
 
+static bool protectPassphraseOnHost(char *passphrase) {
   PassphraseRequest resp = {0};
   memzero(&resp, sizeof(PassphraseRequest));
   usbTiny(1);
@@ -377,10 +381,13 @@ bool protectPassphrase(char *passphrase) {
       msg_tiny_id = 0xFFFF;
       PassphraseAck *ppa = (PassphraseAck *)msg_tiny;
       if (ppa->has_on_device && ppa->on_device == true) {
-        fsm_sendFailure(
-            FailureType_Failure_DataError,
-            _("This firmware is incapable of passphrase entry on the device."));
-        result = false;
+        if (ppa->has_passphrase) {
+          fsm_sendFailure(FailureType_Failure_DataError,
+                          _("Passphrase provided when it should not be"));
+          result = false;
+          break;
+        }
+        result = protectPassphraseOnDevice(passphrase);
         break;
       }
       if (!ppa->has_passphrase) {
@@ -391,6 +398,26 @@ bool protectPassphrase(char *passphrase) {
         break;
       }
       strlcpy(passphrase, ppa->passphrase, sizeof(ppa->passphrase));
+      if (passphrase[0] != '\0') {
+        // passphrase is used - confirm on the display
+        layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                          _("Access hidden wallet?"), NULL,
+                          _("Next screen will show"), _("the passphrase!"),
+                          NULL, NULL);
+        if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+          fsm_sendFailure(FailureType_Failure_ActionCancelled,
+                          _("Passphrase dismissed"));
+          result = false;
+          break;
+        }
+        layoutShowPassphrase(passphrase);
+        if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+          fsm_sendFailure(FailureType_Failure_ActionCancelled,
+                          _("Passphrase dismissed"));
+          result = false;
+          break;
+        }
+      }
       result = true;
       break;
     }
@@ -408,4 +435,20 @@ bool protectPassphrase(char *passphrase) {
   usbTiny(0);
   layoutHome();
   return result;
+}
+
+bool protectPassphrase(char *passphrase) {
+  memzero(passphrase, MAX_PASSPHRASE_LEN + 1);
+  bool passphrase_protection = false;
+  config_getPassphraseProtection(&passphrase_protection);
+  if (!passphrase_protection) {
+    // passphrase already set to empty by memzero above
+    return true;
+  }
+
+  if (config_getPassphraseAlwaysOnDevice()) {
+    return protectPassphraseOnDevice(passphrase);
+  } else {
+    return protectPassphraseOnHost(passphrase);
+  }
 }

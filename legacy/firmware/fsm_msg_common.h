@@ -64,6 +64,8 @@ bool get_features(Features *resp) {
     resp->wipe_code_protection = config_hasWipeCode();
     resp->has_auto_lock_delay_ms = true;
     resp->auto_lock_delay_ms = config_getAutoLockDelayMs();
+    resp->has_passphrase_always_on_device = true;
+    resp->passphrase_always_on_device = config_getPassphraseAlwaysOnDevice();
   }
 
 #if BITCOIN_ONLY
@@ -71,7 +73,7 @@ bool get_features(Features *resp) {
   resp->capabilities[0] = Capability_Capability_Bitcoin;
   resp->capabilities[1] = Capability_Capability_Crypto;
 #else
-  resp->capabilities_count = 8;
+  resp->capabilities_count = 9;
   resp->capabilities[0] = Capability_Capability_Bitcoin;
   resp->capabilities[1] = Capability_Capability_Bitcoin_like;
   resp->capabilities[2] = Capability_Capability_Crypto;
@@ -80,6 +82,7 @@ bool get_features(Features *resp) {
   resp->capabilities[5] = Capability_Capability_NEM;
   resp->capabilities[6] = Capability_Capability_Stellar;
   resp->capabilities[7] = Capability_Capability_U2F;
+  resp->capabilities[8] = Capability_Capability_PassphraseEntry;
 #endif
   return resp;
 }
@@ -361,10 +364,6 @@ void fsm_msgEndSession(const EndSession *msg) {
 }
 
 void fsm_msgApplySettings(const ApplySettings *msg) {
-  CHECK_PARAM(
-      !msg->has_passphrase_always_on_device,
-      _("This firmware is incapable of passphrase entry on the device."));
-
   CHECK_PARAM(msg->has_label || msg->has_language || msg->has_use_passphrase ||
                   msg->has_homescreen || msg->has_auto_lock_delay_ms,
               _("No setting provided"));
@@ -397,6 +396,35 @@ void fsm_msgApplySettings(const ApplySettings *msg) {
         _("Do you really want to"),
         msg->use_passphrase ? _("enable passphrase") : _("disable passphrase"),
         _("protection?"), NULL, NULL, NULL);
+    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+      layoutHome();
+      return;
+    }
+  }
+  if (msg->has_passphrase_always_on_device) {
+    bool use_passphrase = false;
+    if (msg->has_use_passphrase) {
+      use_passphrase = msg->use_passphrase;
+    } else {
+      config_getPassphraseProtection(&use_passphrase);
+    }
+    if (use_passphrase == false) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Passphrase is not enabled"));
+      layoutHome();
+      return;
+    }
+    if (msg->passphrase_always_on_device) {
+      layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                        _("Do you really want to"), _("restrict passphrase"),
+                        _("entry to be only"), _("allowed on the"),
+                        _("device?"), NULL);
+    } else {
+      layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                        _("Do you really want to"), _("allow passphrase"),
+                        _("entry on the host?"), NULL, NULL, NULL);
+    }
     if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
       fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
       layoutHome();
@@ -443,6 +471,9 @@ void fsm_msgApplySettings(const ApplySettings *msg) {
   }
   if (msg->has_use_passphrase) {
     config_setPassphraseProtection(msg->use_passphrase);
+  }
+  if (msg->has_passphrase_always_on_device) {
+    config_setPassphraseAlwaysOnDevice(msg->passphrase_always_on_device);
   }
   if (msg->has_homescreen) {
     config_setHomescreen(msg->homescreen.bytes, msg->homescreen.size);
