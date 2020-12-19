@@ -101,7 +101,7 @@ static void drawBtnLeft(const char *label) {
     oledDrawStringCenter(KBD_X_OFFSET / 2 - 1, OLED_HEIGHT - 8, label,
                          FONT_STANDARD);
   else
-    oledDrawBitmap(3, OLED_HEIGHT - 7, &bmp_btn_up);
+    oledDrawBitmap(3, OLED_HEIGHT - 7, &bmp_btn_down);
   oledInvert(0, OLED_HEIGHT - 9, x, OLED_HEIGHT - 1);
 }
 
@@ -335,12 +335,7 @@ const char *pin_keyboard(const char *text) {
         invertBtn(i, j);
         if (button.YesDown > button.NoDown) {
           // Right
-          if (i == KBD_COLS - 1) {
-            i = 0;
-            j = (j + 1) % KBD_ROWS;
-          } else {
-            i = i + 1;
-          }
+          i = (i + 1) % KBD_COLS;
           select_index = -1;
           drawCursor();
           drawBtnLeft(NULL);
@@ -365,8 +360,7 @@ const char *pin_keyboard(const char *text) {
         invertBtn(i, j);
         if (button.NoDown > button.YesDown) {
           // Left
-          i = 0;
-          j = (j - 1 + KBD_ROWS) % KBD_ROWS;
+          j = (j + 1) % KBD_ROWS;
           select_index = -1;
           drawCursor();
           drawBtnLeft(NULL);
@@ -478,12 +472,7 @@ const char *passphrase_keyboard(const char *text) {
         invertBtn(i, j);
         if (button.YesDown > button.NoDown) {
           // Right
-          if (i == KBD_COLS - 1) {
-            i = 0;
-            j = (j + 1) % KBD_ROWS;
-          } else {
-            i = i + 1;
-          }
+          i = (i + 1) % KBD_COLS;
           select_index = -1;
           drawCursor();
           drawBtnLeft(NULL);
@@ -508,8 +497,7 @@ const char *passphrase_keyboard(const char *text) {
         invertBtn(i, j);
         if (button.NoDown > button.YesDown) {
           // Left
-          i = 0;
-          j = (j - 1 + KBD_ROWS) % KBD_ROWS;
+          j = (j + 1) % KBD_ROWS;
           select_index = -1;
           drawCursor();
           drawBtnLeft(NULL);
