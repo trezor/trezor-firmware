@@ -21,6 +21,9 @@
 #include <string.h>
 #include "buttons.h"
 #include "memzero.h"
+#include "messages-common.pb.h"
+#include "messages.h"
+#include "messages.pb.h"
 #include "oled.h"
 #include "usb.h"
 
@@ -57,6 +60,7 @@ const char *KBD_LABELS[KBD_COUNT][KBD_SIZE] = {
 #define CURSOR_HEIGHT 2
 static int select_index = -1;
 static int kbd_layout = 0;
+static char oldTiny = '\0';
 
 enum {
   STATUS_IN_PROGRESS = 0,
@@ -184,11 +188,49 @@ static void pressBtn(int btn) {
   if (select_index < 0) drawCursor();
 }
 
+static bool host_cancelled(void) {
+  return (msg_tiny_id == MessageType_MessageType_Cancel) ||
+         (msg_tiny_id == MessageType_MessageType_Initialize);
+}
+
+static void usb_begin(ButtonRequestType type) {
+  ButtonRequest resp = {0};
+
+  memzero(&resp, sizeof(ButtonRequest));
+  resp.has_code = true;
+  resp.code = type;
+  oldTiny = usbTiny(1);
+  msg_write(MessageType_MessageType_ButtonRequest, &resp);
+
+  while (!host_cancelled()) {
+    usbPoll();
+
+    // wait for ButtonAck
+    if (msg_tiny_id == MessageType_MessageType_ButtonAck) {
+      msg_tiny_id = 0xFFFF;
+      break;
+    }
+  }
+}
+
+static bool usb_cancelled(void) {
+  usbPoll();
+  if (host_cancelled()) {
+    msg_tiny_id = 0xFFFF;
+    return true;
+  }
+  return false;
+}
+
+static void usb_finish(void) { usbTiny(oldTiny); }
+
 const char *pin_keyboard(const char *text) {
   input[0] = '\0';
   select_index = -1;
   status = STATUS_IN_PROGRESS;
   kbd_layout = 3;
+
+  usb_begin(ButtonRequestType_ButtonRequest_PinEntry);
 
   oledClear();
   oledDrawString(TEXT_OFFSET, 0, text, FONT_STANDARD);
@@ -203,6 +245,11 @@ const char *pin_keyboard(const char *text) {
   invertBtn(i, j);
   while (status == STATUS_IN_PROGRESS) {
     usbSleep(5);
+    if (usb_cancelled()) {
+      status = STATUS_CANCELLED;
+      break;
+    }
+
     bool refresh = false;
 
     buttonUpdate();
@@ -305,6 +352,8 @@ const char *pin_keyboard(const char *text) {
     }
   }
 
+  usb_finish();
+
   // Wait for buttons to be released.
   while (button.NoDown || button.YesDown) {
     usbSleep(5);
@@ -324,6 +373,8 @@ const char *passphrase_keyboard(const char *text) {
   status = STATUS_IN_PROGRESS;
   kbd_layout = 0;
 
+  usb_begin(ButtonRequestType_ButtonRequest_PassphraseEntry);
+
   oledClear();
   oledDrawString(TEXT_OFFSET, 0, text, FONT_STANDARD);
   drawKeyboard();
@@ -337,6 +388,11 @@ const char *passphrase_keyboard(const char *text) {
   invertBtn(i, j);
   while (status == STATUS_IN_PROGRESS) {
     usbSleep(5);
+    if (usb_cancelled()) {
+      status = STATUS_CANCELLED;
+      break;
+    }
+
     bool refresh = false;
 
     buttonUpdate();
@@ -426,6 +482,8 @@ const char *passphrase_keyboard(const char *text) {
       oledRefresh();
     }
   }
+
+  usb_finish();
 
   // Wait for buttons to be released.
   while (button.NoDown || button.YesDown) {
