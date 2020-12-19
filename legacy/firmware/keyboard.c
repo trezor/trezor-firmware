@@ -72,6 +72,14 @@ enum {
 #define TEXT_OFFSET 0
 CONFIDENTIAL char input[MAX_INPUT_LEN + 1] = "";
 
+typedef struct {
+  int select_index;
+  bool input_done;
+  int kbd_layout;
+  bool left_shift;
+  bool right_shift;
+} State;
+
 static void drawBtn(int i, const char *text) {
   int x = KBD_X_OFFSET + (i % KBD_COLS) * (BTN_WIDTH + BTN_X_SEP);
   int y = KBD_Y_OFFSET + (i / KBD_COLS) * (BTN_HEIGHT + BTN_Y_SEP);
@@ -186,6 +194,69 @@ static void pressBtn(int btn) {
   oledBox(TEXT_OFFSET, 0, OLED_WIDTH - 1, FONT_HEIGHT, false);
   oledDrawString(INPUT_OFFSET, 0, input, FONT_STANDARD);
   if (select_index < 0) drawCursor();
+}
+
+#define STATE_NONE 0
+#define STATE_LEFT_DOWN 1
+#define STATE_RIGHT_DOWN 2
+#define STATE_SHIFT 4
+#define STATE_LEFT_SHIFT (STATE_LEFT_DOWN | STATE_SHIFT)
+#define STATE_RIGHT_SHIFT (STATE_RIGHT_DOWN | STATE_SHIFT)
+
+#define EVENT_NONE 0
+#define EVENT_LEFT 1
+#define EVENT_RIGHT 2
+#define EVENT_SHIFTED_LEFT 4
+#define EVENT_SHIFTED_RIGHT 8
+#define EVENT_LEFT_SHIFT 16
+#define EVENT_RIGHT_SHIFT 32
+#define EVENT_SHIFT_RELEASE 64
+
+int button_handler(State *state) {
+  int events = 0;
+
+  buttonUpdate();
+  if (button.YesReleased) {
+    if (state->right_shift) {
+      state->right_shift = false;
+      events |= EVENT_SHIFT_RELEASE;
+    } else {
+      if (button.YesDown > button.NoDown) {
+        // Right
+        events |= EVENT_RIGHT;
+      } else {
+        // Shift + Right
+        events |= EVENT_SHIFTED_RIGHT;
+        state->left_shift = true;
+      }
+    }
+  }
+
+  if (button.NoReleased) {
+    if (state->left_shift) {
+      state->left_shift = false;
+      events |= EVENT_SHIFT_RELEASE;
+    } else {
+      if (button.NoDown > button.YesDown) {
+        // Left
+        events |= EVENT_LEFT;
+      } else {
+        // Shift + Left
+        events |= EVENT_SHIFTED_LEFT;
+        state->right_shift = true;
+      }
+    }
+  }
+
+  if (button.NoDown == 1 && button.YesDown <= 1) {
+    events |= EVENT_LEFT_SHIFT;
+  }
+
+  if (button.YesDown == 1 && button.NoDown <= 1) {
+    events |= EVENT_RIGHT_SHIFT;
+  }
+
+  return events;
 }
 
 static bool host_cancelled(void) {
