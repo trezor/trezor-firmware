@@ -15,7 +15,7 @@
       "prev_index": 0,
       "address_n": [2147483697, 2147483649, 2147483648, 0, 8],
       "amount": 4973340,
-      "script_type": 4,
+      "script_type": "SPENDP2SHWITNESS",
       "script_sig": "160014adbbadefe594e9e4bfccb9c699ae5d4f18716772",
       "witness": "02483045022100e01560fee1583c8009c24ff431ecb1e21ac17852e0e8fc6cadee05472b135312022048943a660b52988362320211e91ca08bd35f28b8b7e55cf2b2c15692c662d8fa012102a52d8cf5a89c284bacff90a3d7c30a0166e0074ca3fc385f3efce638c50493b3",
       "sequence": 4294967295
@@ -25,7 +25,7 @@
       "prev_index": 0,
       "address_n": [2147483697, 2147483649, 2147483648, 0, 9],
       "amount": 839318869,
-      "script_type": 4,
+      "script_type": "SPENDP2SHWITNESS",
       "script_sig": "160014681ea49259abb892460bf3373e8a0b43d877fa18",
       "sequence": 4294967295
     }
@@ -35,7 +35,7 @@
     {
       "address_n": [2147483697, 2147483649, 2147483648, 1, 6],
       "amount": 744201489,
-      "script_type": 5
+      "script_type": "PAYTOP2SHWITNESS"
     },
     {
       "address": "moE1dVYvebvtaMuNdXQKvu4UxUftLmS1Gt",
