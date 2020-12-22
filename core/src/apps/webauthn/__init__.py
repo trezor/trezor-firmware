@@ -20,4 +20,5 @@ def boot() -> None:
     )
     import usb
 
-    loop.schedule(handle_reports(usb.iface_webauthn))
+    if usb.ENABLE_IFACE_WEBAUTHN:
+        loop.schedule(handle_reports(usb.iface_webauthn))
