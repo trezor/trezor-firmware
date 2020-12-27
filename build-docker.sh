@@ -7,7 +7,7 @@ CONTAINER_NAME=${CONTAINER_NAME:-trezor-firmware-env.nix}
 ALPINE_CDN=${ALPINE_CDN:-http://dl-cdn.alpinelinux.org/alpine}
 ALPINE_RELEASE=${ALPINE_RELEASE:-3.12}
 ALPINE_ARCH=${ALPINE_ARCH:-x86_64}
-ALPINE_VERSION=${ALPINE_VERSION:-3.12.0}
+ALPINE_VERSION=${ALPINE_VERSION:-3.12.3}
 CONTAINER_FS_URL=${CONTAINER_FS_URL:-"$ALPINE_CDN/v$ALPINE_RELEASE/releases/$ALPINE_ARCH/alpine-minirootfs-$ALPINE_VERSION-$ALPINE_ARCH.tar.gz"}
 
 TAG=${1:-master}
@@ -16,7 +16,7 @@ PRODUCTION=${PRODUCTION:-1}
 MEMORY_PROTECT=${MEMORY_PROTECT:-1}
 
 wget --no-config -nc -P ci/ "$CONTAINER_FS_URL"
-docker build -t "$CONTAINER_NAME" ci/
+docker build --platform "linux/$ALPINE_ARCH" --build-arg ALPINE_VERSION="$ALPINE_VERSION" --build-arg ALPINE_ARCH="$ALPINE_ARCH" -t "$CONTAINER_NAME" ci/
 
 # stat under macOS has slightly different cli interface
 USER=$(stat -c "%u" . 2>/dev/null || stat -f "%u" .)
@@ -54,7 +54,7 @@ for BITCOIN_ONLY in 0 1; do
     chown -R $USER:$GROUP /build
 EOF
 
-  docker run -it --rm \
+  docker run --platform "linux/$ALPINE_ARCH" -it --rm \
     -v "$DIR:/local" \
     -v "$DIR/build/core$DIRSUFFIX":/build:z \
     --env BITCOIN_ONLY="$BITCOIN_ONLY" \
@@ -94,7 +94,7 @@ for BITCOIN_ONLY in 0 1; do
     chown -R $USER:$GROUP /build
 EOF
 
-  docker run -it --rm \
+  docker run --platform "linux/$ALPINE_ARCH" -it --rm \
     -v "$DIR:/local" \
     -v "$DIR/build/legacy$DIRSUFFIX":/build:z \
     --env BITCOIN_ONLY="$BITCOIN_ONLY" \
