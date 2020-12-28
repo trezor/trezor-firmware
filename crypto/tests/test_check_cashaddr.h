@@ -55,8 +55,9 @@ START_TEST(test_cashaddr) {
     rawdata_len = base58_decode_check(valid_cashaddr[i].legacy, HASHER_SHA2D,
                                       rawdata, sizeof(rawdata));
     ck_assert_int_eq(rawdata_len, 21);
-    ck_assert_int_eq(prog[0],
-                     rawdata[0] == 0 ? 0x00 : rawdata[0] == 5 ? 0x08 : -1);
+    ck_assert_int_eq(prog[0], rawdata[0] == 0   ? 0x00
+                              : rawdata[0] == 5 ? 0x08
+                                                : -1);
     ck_assert_int_eq(memcmp(rawdata + 1, prog + 1, 20), 0);
     ret = cash_addr_encode(rebuild, hrp, prog, 21);
     ck_assert_int_eq(ret, 1);
