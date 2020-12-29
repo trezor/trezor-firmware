@@ -30,8 +30,8 @@ void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg) {
 
   const char *curve = coin->curve_name;
   uint32_t fingerprint;
-  HDNode *node = node = fsm_getDerivedNode(curve, msg->address_n,
-                                           msg->address_n_count, &fingerprint);
+  HDNode *node = fsm_getDerivedNode(curve, msg->address_n, msg->address_n_count,
+                                    &fingerprint);
   if (!node) return;
   hdnode_fill_public_key(node);
 

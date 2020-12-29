@@ -35,8 +35,8 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
     curve = msg->ecdsa_curve_name;
   }
   uint32_t fingerprint;
-  HDNode *node = node = fsm_getDerivedNode(curve, msg->address_n,
-                                           msg->address_n_count, &fingerprint);
+  HDNode *node = fsm_getDerivedNode(curve, msg->address_n, msg->address_n_count,
+                                    &fingerprint);
   if (!node) return;
   hdnode_fill_public_key(node);
 
