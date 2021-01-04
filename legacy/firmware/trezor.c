@@ -50,8 +50,8 @@ void check_lock_screen(void) {
     return;
   }
 
-  // button held for long enough (2 seconds)
-  if (layoutLast == layoutHome && button.NoDown >= 285000 * 2) {
+  // button held for long enough (5 seconds)
+  if (layoutLast == layoutHome && button.NoDown >= 114000 * 5) {
     layoutDialog(&bmp_icon_question, _("Cancel"), _("Lock Device"), NULL,
                  _("Do you really want to"), _("lock your Trezor?"), NULL, NULL,
                  NULL, NULL);
