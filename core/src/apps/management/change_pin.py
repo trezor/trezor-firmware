@@ -3,9 +3,9 @@ from trezor import config, ui, wire
 from trezor.messages.Success import Success
 from trezor.pin import pin_to_int
 from trezor.ui.components.tt.text import Text
+from trezor.ui.layouts import require, show_success
 
 from apps.common.confirm import require_confirm
-from apps.common.layout import show_success
 from apps.common.request_pin import (
     error_pin_invalid,
     error_pin_matches_wipe_code,
@@ -47,16 +47,16 @@ async def change_pin(ctx: wire.Context, msg: ChangePin) -> Success:
 
     if newpin:
         if curpin:
-            msg_screen = "changed your PIN."
+            msg_screen = "You have successfully changed your PIN."
             msg_wire = "PIN changed"
         else:
-            msg_screen = "enabled PIN protection."
+            msg_screen = "You have successfully enabled PIN protection."
             msg_wire = "PIN enabled"
     else:
-        msg_screen = "disabled PIN protection."
+        msg_screen = "You have successfully disabled PIN protection."
         msg_wire = "PIN removed"
 
-    await show_success(ctx, ("You have successfully", msg_screen))
+    await require(show_success(ctx, "success_pin", msg_screen))
     return Success(message=msg_wire)
 
 
