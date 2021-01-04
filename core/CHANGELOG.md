@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Bump nanopb dependency to 0.4.4.  [#1402]
 - Automatic breaking text on whitespace.  [#1384]
+- Introduced limit of 32 characters for device label.  [#1399]
 
 ### Deprecated
 
@@ -357,4 +358,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1351]: https://github.com/trezor/trezor-firmware/issues/1351
 [#1363]: https://github.com/trezor/trezor-firmware/pull/1363
 [#1384]: https://github.com/trezor/trezor-firmware/issues/1384
+[#1399]: https://github.com/trezor/trezor-firmware/issues/1399
 [#1402]: https://github.com/trezor/trezor-firmware/pull/1402

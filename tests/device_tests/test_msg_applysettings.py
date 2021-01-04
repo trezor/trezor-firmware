@@ -257,3 +257,9 @@ class TestMsgApplysettings:
         with pytest.raises(exceptions.TrezorFailure, match="DataError"), client:
             client.set_expected_responses([messages.Failure])
             experimental_call()
+
+    @pytest.mark.setup_client(pin=None)
+    def test_label_too_long(self, client):
+        with pytest.raises(exceptions.TrezorFailure), client:
+            client.set_expected_responses([messages.Failure])
+            device.apply_settings(client, label="A" * 33)

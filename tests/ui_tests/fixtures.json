@@ -81,6 +81,7 @@
 "test_msg_applysettings.py-test_apply_settings_passphrase_on_device": "3e6527e227bdde54f51bc9c417b176d0d87fdb6c40c4761368f50eb201b4beed",
 "test_msg_applysettings.py-test_apply_settings_rotation": "6f0fa323dd2c82d01994273c023d3ed5e43d43c9c562664a10266f4a7f7ba4cc",
 "test_msg_applysettings.py-test_experimental_features": "3127d41bd8615097295b917110ece9dd364986809288c7f958ff71d52106e346",
+"test_msg_applysettings.py-test_label_too_long": "5a80508a71a9ef64f94762b07636f90e464832f0f4a3102af8fa1a8c69e94586",
 "test_msg_applysettings.py-test_safety_checks": "4d37de3654678b7f16643cf4ef912a0bced545e0e0526e41ea0c9b820560344e",
 "test_msg_authorize_coinjoin.py::test_cancel_authorization": "d8a608beb6165f5667cc44dcff6bdc17ebb4638ddd3bd09e7f0e1e75d1e21135",
 "test_msg_authorize_coinjoin.py::test_no_anonymity": "fd09da284b650e893990b95047b63a35b6b695fc5301d595f17a6d2cf9d90bcb",

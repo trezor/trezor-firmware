@@ -48,6 +48,7 @@ if False:
 # fmt: on
 
 HOMESCREEN_MAXSIZE = 16384
+LABEL_MAXLENGTH = 32
 
 if __debug__:
     AUTOLOCK_DELAY_MINIMUM = 10 * 1000  # 10 seconds
@@ -111,6 +112,8 @@ def get_label() -> Optional[str]:
 
 
 def set_label(label: str) -> None:
+    if len(label) > LABEL_MAXLENGTH:
+        raise ValueError  # label too long
     common.set(_NAMESPACE, _LABEL, label.encode(), True)  # public
 
 

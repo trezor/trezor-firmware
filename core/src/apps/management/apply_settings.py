@@ -58,6 +58,8 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings):
             raise wire.DataError("Invalid homescreen")
 
     if msg.label is not None:
+        if len(msg.label) > storage.device.LABEL_MAXLENGTH:
+            raise wire.DataError("Label too long")
         await require_confirm_change_label(ctx, msg.label)
         storage.device.set_label(msg.label)
 
