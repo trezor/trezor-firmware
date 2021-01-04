@@ -9,9 +9,6 @@
         "Electron Cash": "https://electroncash.org",
         "Exodus": "https://www.exodus.io"
     },
-    "bitcoin:BELL": {
-        "Electrum-BELL": "https://bell.electrum-jp.net"
-    },
     "bitcoin:BTC": {
         "Electrum": "https://electrum.org",
         "Exodus": "https://www.exodus.io",
@@ -144,8 +141,5 @@
     },
     "bitcoin:ZCR": {
         "Electrum-ZCR": "https://github.com/zcore-coin/electrum-wallet/"
-    },
-    "bitcoin:ZNY": {
-        "Electrum-ZNY": "https://zny.electrum-jp.net"
     }
 }
