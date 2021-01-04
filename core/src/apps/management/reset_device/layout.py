@@ -9,9 +9,9 @@ from trezor.ui.components.tt.info import InfoConfirm
 from trezor.ui.components.tt.num_input import NumInput
 from trezor.ui.components.tt.scroll import Paginated
 from trezor.ui.components.tt.text import Text
+from trezor.ui.layouts import require, show_success
 
 from apps.common.confirm import confirm, require_confirm, require_hold_to_confirm
-from apps.common.layout import show_success
 
 if False:
     from trezor import loop
@@ -155,36 +155,33 @@ async def _show_confirmation_success(
     ctx, share_index=None, num_of_shares=None, group_index=None
 ):
     if share_index is None:  # it is a BIP39 backup
-        subheader = ("You have finished", "verifying your", "recovery seed.")
-        text = []
+        subheader = "You have finished\nverifying your\nrecovery seed."
+        text = ""
 
     elif share_index == num_of_shares - 1:
         if group_index is None:
-            subheader = ("You have finished", "verifying your", "recovery shares.")
+            subheader = "You have finished\nverifying your\nrecovery shares."
         else:
             subheader = (
-                "You have finished",
-                "verifying your",
-                "recovery shares",
-                "for group %s." % (group_index + 1),
+                "You have finished\nverifying your\nrecovery shares\nfor group %s."
+                % (group_index + 1)
             )
-        text = []
+        text = ""
 
     else:
         if group_index is None:
-            subheader = (
-                "Recovery share #%s" % (share_index + 1),
-                "checked successfully.",
-            )
-            text = ["Continue with share #%s." % (share_index + 2)]
+            subheader = "Recovery share #%s\nchecked successfully." % (share_index + 1)
+            text = "Continue with share #%s." % (share_index + 2)
         else:
-            subheader = (
-                "Group %s - Share %s" % ((group_index + 1), (share_index + 1)),
-                "checked successfully.",
+            subheader = "Group %s - Share %s\nchecked successfully." % (
+                (group_index + 1),
+                (share_index + 1),
             )
-            text = ("Continue with the next ", "share.")
+            text = "Continue with the next\nshare."
 
-    return await show_success(ctx, text, subheader=subheader)
+    return await require(
+        show_success(ctx, "success_recovery", text, subheader=subheader)
+    )
 
 
 async def _show_confirmation_failure(ctx, share_index):
@@ -221,8 +218,10 @@ async def show_backup_warning(ctx, slip39=False):
 
 
 async def show_backup_success(ctx):
-    text = ("Use your backup", "when you need to", "recover your wallet.")
-    await show_success(ctx, text, subheader=["Your backup is done."])
+    text = "Use your backup\nwhen you need to\nrecover your wallet."
+    await require(
+        show_success(ctx, "success_backup", text, subheader="Your backup is done.")
+    )
 
 
 # BIP39

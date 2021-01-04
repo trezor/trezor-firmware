@@ -5,10 +5,10 @@ from trezor.messages import ButtonRequestType
 from trezor.ui.components.tt.scroll import Paginated
 from trezor.ui.components.tt.text import Text
 from trezor.ui.components.tt.word_select import WordSelector
+from trezor.ui.layouts import require, show_success, show_warning
 
 from apps.common import button_request
 from apps.common.confirm import confirm, info_confirm, require_confirm
-from apps.common.layout import show_success, show_warning
 
 from .. import backup_types
 from . import word_validity
@@ -131,36 +131,20 @@ async def show_dry_run_result(
 ) -> None:
     if result:
         if is_slip39:
-            text = (
-                "The entered recovery",
-                "shares are valid and",
-                "match what is currently",
-                "in the device.",
-            )
+            text = "The entered recovery\nshares are valid and\nmatch what is currently\nin the device."
         else:
-            text = (
-                "The entered recovery",
-                "seed is valid and",
-                "matches the one",
-                "in the device.",
-            )
-        await show_success(ctx, text, button="Continue")
+            text = "The entered recovery\nseed is valid and\nmatches the one\nin the device."
+        await require(
+            show_success(ctx, "success_dry_recovery", text, button="Continue")
+        )
     else:
         if is_slip39:
-            text = (
-                "The entered recovery",
-                "shares are valid but",
-                "do not match what is",
-                "currently in the device.",
-            )
+            text = "The entered recovery\nshares are valid but\ndo not match what is\ncurrently in the device."
         else:
-            text = (
-                "The entered recovery",
-                "seed is valid but does",
-                "not match the one",
-                "in the device.",
-            )
-        await show_warning(ctx, text, button="Continue")
+            text = "The entered recovery\nseed is valid but does\nnot match the one\nin the device."
+        await require(
+            show_warning(ctx, "warning_dry_recovery", text, button="Continue")
+        )
 
 
 async def show_dry_run_different_type(ctx: wire.GenericContext) -> None:
@@ -175,32 +159,50 @@ async def show_dry_run_different_type(ctx: wire.GenericContext) -> None:
 
 async def show_invalid_mnemonic(ctx: wire.GenericContext, word_count: int) -> None:
     if backup_types.is_slip39_word_count(word_count):
-        await show_warning(ctx, ("You have entered", "an invalid recovery", "share."))
+        await require(
+            show_warning(
+                ctx,
+                "warning_invalid_share",
+                "You have entered\nan invalid recovery\nshare.",
+            )
+        )
     else:
-        await show_warning(ctx, ("You have entered", "an invalid recovery", "seed."))
+        await require(
+            show_warning(
+                ctx,
+                "warning_invalid_seed",
+                "You have entered\nan invalid recovery\nseed.",
+            )
+        )
 
 
 async def show_share_already_added(ctx: wire.GenericContext) -> None:
-    await show_warning(
-        ctx, ("Share already entered,", "please enter", "a different share.")
+    await require(
+        show_warning(
+            ctx,
+            "warning_known_share",
+            "Share already entered,\nplease enter\na different share.",
+        )
     )
 
 
 async def show_identifier_mismatch(ctx: wire.GenericContext) -> None:
-    await show_warning(
-        ctx, ("You have entered", "a share from another", "Shamir Backup.")
+    await require(
+        show_warning(
+            ctx,
+            "warning_mismatched_share",
+            "You have entered\na share from another\nShamir Backup.",
+        )
     )
 
 
 async def show_group_threshold_reached(ctx: wire.GenericContext) -> None:
-    await show_warning(
-        ctx,
-        (
-            "Threshold of this",
-            "group has been reached.",
-            "Input share from",
-            "different group",
-        ),
+    await require(
+        show_warning(
+            ctx,
+            "warning_group_threshold",
+            "Threshold of this\ngroup has been reached.\nInput share from\ndifferent group.",
+        )
     )
 
 

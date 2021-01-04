@@ -86,42 +86,6 @@ def address_n_to_str(address_n: Iterable[int]) -> str:
     return "m/" + "/".join([path_item(i) for i in address_n])
 
 
-async def show_warning(
-    ctx: wire.GenericContext,
-    content: Iterable[str],
-    subheader: Iterable[str] = [],
-    button: str = "Try again",
-) -> None:
-    text = Text("Warning", ui.ICON_WRONG, ui.RED)
-    if subheader:
-        for row in subheader:
-            text.bold(row)
-        text.br_half()
-    for row in content:
-        text.normal(row)
-    await require_confirm(
-        ctx, text, ButtonRequestType.Warning, confirm=button, cancel=None
-    )
-
-
-async def show_success(
-    ctx: wire.GenericContext,
-    content: Iterable[str] = [],
-    subheader: Iterable[str] = [],
-    button: str = "Continue",
-) -> None:
-    text = Text("Success", ui.ICON_CONFIRM, ui.GREEN)
-    if subheader:
-        for row in subheader:
-            text.bold(row)
-        text.br_half()
-    for row in content:
-        text.normal(row)
-    await require_confirm(
-        ctx, text, ButtonRequestType.Success, confirm=button, cancel=None
-    )
-
-
 def paginate_text(
     text: str,
     header: str,

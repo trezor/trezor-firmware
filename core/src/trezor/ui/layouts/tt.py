@@ -39,6 +39,8 @@ __all__ = (
     "confirm_backup",
     "confirm_path_warning",
     "show_address",
+    "show_success",
+    "show_warning",
     "confirm_output",
     "confirm_hex",
     "confirm_total",
@@ -248,6 +250,48 @@ async def show_address(
                     is CONFIRMED
                 ):
                     return
+
+
+def show_warning(
+    ctx: wire.GenericContext,
+    br_type: str,
+    content: str,
+    subheader: Optional[str] = None,
+    button: str = "Try again",
+) -> LayoutType:
+    text = Text("Warning", ui.ICON_WRONG, ui.RED, new_lines=False)
+    if subheader:
+        text.bold(subheader)
+        text.br()
+        text.br_half()
+    text.normal(content)
+    return interact(
+        ctx,
+        Confirm(text, confirm=button, cancel=None),
+        br_type,
+        ButtonRequestType.Warning,
+    )
+
+
+def show_success(
+    ctx: wire.GenericContext,
+    br_type: str,
+    content: str,
+    subheader: Optional[str] = None,
+    button: str = "Continue",
+) -> LayoutType:
+    text = Text("Success", ui.ICON_CONFIRM, ui.GREEN, new_lines=False)
+    if subheader:
+        text.bold(subheader)
+        text.br()
+        text.br_half()
+    text.normal(content)
+    return interact(
+        ctx,
+        Confirm(text, confirm=button, cancel=None),
+        br_type,
+        ButtonRequestType.Success,
+    )
 
 
 def confirm_output(
