@@ -221,7 +221,6 @@ def render_text(
     the first character of the indicated item which should be considered.
     The purpose is to allow rendering different "pages" of text, using the same `items`
     argument (slicing the list could be expensive in terms of memory).
-    The item selected by `item_offset` must be a string.
 
     If `break_words` is false (default), linebreaks will only be rendered (a) at
     whitespace, or (b) in case a word does not fit on a single line. If true, whitespace
@@ -229,9 +228,22 @@ def render_text(
     """
     # initial rendering state
     INITIAL_OFFSET_X = offset_x
-    SPACE = ui.display.text_width(" ", font)
     offset_y_max = TEXT_HEADER_HEIGHT + (TEXT_LINE_HEIGHT * max_lines)
     span = _WORKING_SPAN
+
+    # scan through up to item_offset so that the current font & color is up to date
+    for item_index in range(item_offset):
+        item = items[item_index]
+        if isinstance(item, int):
+            if item is BR or item is BR_HALF:
+                # do nothing
+                pass
+            elif item in _FONTS:
+                font = item
+            else:
+                fg = item
+
+    SPACE = ui.display.text_width(" ", font)
 
     for item_index in range(item_offset, len(items)):
         # load current item
