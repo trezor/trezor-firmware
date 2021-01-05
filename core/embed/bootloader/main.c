@@ -246,8 +246,6 @@ int main(void) {
   check_bootloader_version();
 #endif
 
-main_start:
-
   display_clear();
 
   // delay to detect touch
@@ -263,6 +261,7 @@ main_start:
   vendor_header vhdr;
   image_header hdr;
   secbool firmware_present;
+  secbool debug_always_enter_bootloader = sectrue; // debug flag to always enter bootloader if true
 
   // detect whether the devices contains a valid firmware
 
@@ -310,48 +309,16 @@ main_start:
     if (bootloader_usb_loop(NULL, NULL) != sectrue) {
       return 1;
     }
-  } else
-      // ... or if user touched the screen on start
-      if (touched) {
-    // show firmware info with connect buttons
+  } else {
+      // ... or if user touched the screen on start or we have debug flag to force it
+    if (touched || debug_always_enter_bootloader == sectrue) {
+      ui_screen_info(secfalse, &vhdr, &hdr);
+      ui_fadein();
 
-    // no ui_fadeout(); - we already start from black screen
-    ui_screen_info(sectrue, &vhdr, &hdr);
-    ui_fadein();
-
-    for (;;) {
-      int response = ui_user_input(INPUT_CONFIRM | INPUT_CANCEL | INPUT_INFO);
-      ui_fadeout();
-
-      // if cancel was pressed -> restart
-      if (INPUT_CANCEL == response) {
-        goto main_start;
+      // and start the usb loop
+      if (bootloader_usb_loop(&vhdr, &hdr) != sectrue) {
+        return 1;
       }
-
-      // if confirm was pressed -> jump out
-      if (INPUT_CONFIRM == response) {
-        // show firmware info without connect buttons
-        ui_screen_info(secfalse, &vhdr, &hdr);
-        ui_fadein();
-        break;
-      }
-
-      // if info icon was pressed -> show fingerprint
-      if (INPUT_INFO == response) {
-        // show fingerprint
-        ui_screen_info_fingerprint(&hdr);
-        ui_fadein();
-        while (INPUT_LONG_CONFIRM != ui_user_input(INPUT_LONG_CONFIRM)) {
-        }
-        ui_fadeout();
-        ui_screen_info(sectrue, &vhdr, &hdr);
-        ui_fadein();
-      }
-    }
-
-    // and start the usb loop
-    if (bootloader_usb_loop(&vhdr, &hdr) != sectrue) {
-      return 1;
     }
   }
 
