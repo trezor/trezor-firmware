@@ -277,6 +277,17 @@ class Fido2Credential(Credential):
         else:
             return None
 
+    def user(self) -> dict:
+        return {
+            key: value
+            for key, value in (
+                ("id", self.user_id),
+                ("name", self.user_name),
+                ("displayName", self.user_display_name),
+            )
+            if value is not None
+        }
+
     def _private_key(self) -> bytes:
         path = [HARDENED | 10022, HARDENED | int.from_bytes(self.id[:4], "big")] + [
             HARDENED | i for i in ustruct.unpack(">4L", self.id[-16:])

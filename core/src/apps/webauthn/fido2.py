@@ -18,7 +18,13 @@ from apps.common import cbor
 from . import common
 from .confirm import ConfirmContent, ConfirmInfo
 from .credential import CRED_ID_MAX_LENGTH, Credential, Fido2Credential, U2fCredential
-from .resident_credentials import find_by_rp_id_hash, store_resident_credential
+from .resident_credentials import (
+    MAX_RESIDENT_CREDENTIALS,
+    find_all,
+    find_by_cred_id,
+    find_by_rp_id_hash,
+    store_resident_credential,
+)
 
 if False:
     from typing import (
@@ -70,6 +76,7 @@ _CBOR_GET_INFO = const(0x04)  # report AAGUID and device capabilities
 _CBOR_CLIENT_PIN = const(0x06)  # PIN and pinToken management
 _CBOR_RESET = const(0x07)  # factory reset, invalidating all generated credentials
 _CBOR_GET_NEXT_ASSERTION = const(0x08)  # obtain the next per-credential signature
+_CBOR_CREDENTIAL_MANAGEMENT = const(0x0A)  # manage resident credentials
 
 # CBOR MakeCredential command parameter keys
 _MAKECRED_CMD_CLIENT_DATA_HASH = const(0x01)  # bytes, required
@@ -114,10 +121,57 @@ _GETINFO_RESP_MAX_CRED_ID_LEN = const(0x08)  # int, optional
 # CBOR ClientPin command parameter keys
 _CLIENTPIN_CMD_PIN_PROTOCOL = const(0x01)  # unsigned int, required
 _CLIENTPIN_CMD_SUBCOMMAND = const(0x02)  # unsigned int, required
+_CLIENTPIN_CMD_KEY_AGREEMENT = const(0x03)  # platform key agreement key
+_CLIENTPIN_CMD_PERMISSIONS = const(0x09)  # unsigned int
+_CLIENTPIN_CMD_PERMISSIONS_RPID = const(0x0A)  # unsigned int
 _CLIENTPIN_SUBCMD_GET_KEY_AGREEMENT = const(0x02)
+_CLIENTPIN_SUBCMD_GET_TOKEN_USING_UV = const(0x06)
 
 # CBOR ClientPin response member keys
 _CLIENTPIN_RESP_KEY_AGREEMENT = const(0x01)  # COSE_Key, optional
+
+# pinUvAuthToken permission flags
+_PERM_FLAG_MC = const(0x01)  # MakeCredential
+_PERM_FLAG_GA = const(0x02)  # GetAssertion
+_PERM_FLAG_CM = const(0x04)  # Credential Management
+_PERM_FLAG_BE = const(0x08)  # Bio Enrollment
+_PERM_FLAG_LBW = const(0x10)  # Large Blob Write
+_PERM_FLAG_ACFG = const(0x20)  # Authenticator Configuration
+
+# CBOR CredentialManagement command parameter keys
+_CREDMGMT_CMD_SUBCOMMAND = const(0x01)  # unsigned int
+_CREDMGMT_CMD_SUBCOMMAND_PARAMS = const(0x02)  # map
+_CREDMGMT_CMD_PIN_PROTOCOL = const(0x03)  # unsigned int
+_CREDMGMT_CMD_PIN_AUTH = const(0x04)  # bytes
+_CREDMGMT_SUBCMD_CRED_METADATA = const(0x01)
+_CREDMGMT_SUBCMD_RP_BEGIN = const(0x02)
+_CREDMGMT_SUBCMD_RP_NEXT = const(0x03)
+_CREDMGMT_SUBCMD_RK_BEGIN = const(0x04)
+_CREDMGMT_SUBCMD_RK_NEXT = const(0x05)
+_CREDMGMT_SUBCMD_DELETE_CRED = const(0x06)
+_CREDMGMT_SUBCMD_UPDATE_CRED = const(0x07)
+_CREDMGMT_PARAMS_RPID_HASH = const(0x01)  # bytes
+_CREDMGMT_PARAMS_CRED_ID = const(0x02)  # map (PublicKeyCredentialDescriptor)
+_CREDMGMT_PARAMS_USER = const(0x03)  # map
+
+# CBOR CredentialManagement response member keys
+_CREDMGMT_RESP_RESIDENT_CRED_COUNT = const(
+    0x01
+)  # unsigned int, number of occupied slots
+_CREDMGMT_RESP_MAX_REM_RESIDENT_CRED_COUNT = const(
+    0x02
+)  # unsigned int, number of free slots
+_CREDMGMT_RESP_RP = const(0x03)  # PublicKeyCredentialRpEntity, RP Information
+_CREDMGMT_RESP_RPID_HASH = const(0x04)  # bytes, RPID SHA-256 hash
+_CREDMGMT_RESP_RP_COUNT = const(0x05)  # unsigned int, total number of RPs stored
+_CREDMGMT_RESP_USER = const(0x06)  # PublicKeyCredentialUserEntity, user information
+_CREDMGMT_RESP_CRED_ID = const(0x07)  # PublicKeyCredentialDescriptor
+_CREDMGMT_RESP_CRED_PUBLIC_KEY = const(0x08)  # COSE_Key
+_CREDMGMT_RESP_RP_CRED_COUNT = const(
+    0x09
+)  # unsigned int, number of credentials stored for the RP
+_CREDMGMT_RESP_CRED_PROTECT = const(0x0A)  # unsigned int, credential protection policy
+_CREDMGMT_RESP_LARGE_BLOB_KEY = const(0x0B)  # bytes, large blob encryption key
 
 # status codes for the keepalive cmd
 _KEEPALIVE_STATUS_NONE = const(0x00)
@@ -159,6 +213,10 @@ _ERR_KEEPALIVE_CANCEL = const(0x2D)  # pending keep alive was cancelled
 _ERR_NO_CREDENTIALS = const(0x2E)  # no valid credentials provided
 _ERR_NOT_ALLOWED = const(0x30)  # continuation command not allowed
 _ERR_PIN_AUTH_INVALID = const(0x33)  # pinAuth verification failed
+_ERR_PUAT_REQUIRED = const(0x36)  # pinUvAuthToken required for the operation
+_ERR_UNAUTHORIZED_PERMISSION = const(
+    0x40
+)  # permissions parameter contains an unauthorized permission
 _ERR_OTHER = const(0x7F)  # other unspecified error
 _ERR_EXTENSION_FIRST = const(0xE0)  # extension specific error
 
@@ -233,6 +291,20 @@ _last_wink_cid = 0
 
 # The CID of the last successful U2F_AUTHENTICATE check-only request.
 _last_good_auth_check_cid = 0
+
+
+class AuthTokenState:
+    def __init__(self):
+        self.permissions_rp_id = None
+        self.permissions = 0
+        self.user_present_limit_seconds = 30
+        self.max_usage_time_seconds = 600
+        self.user_verified = False
+        self.user_present = False
+
+
+# pinUvAuthTokens
+pinUvAuthTokens = {}  # Dict[bytes, AuthTokenState]
 
 
 class CborError(Exception):
@@ -1162,6 +1234,10 @@ def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
             if __debug__:
                 log.debug(__name__, "_CBOR_GET_NEXT_ASSERTION")
             return cbor_error(req.cid, _ERR_NOT_ALLOWED)
+        elif req.data[0] == _CBOR_CREDENTIAL_MANAGEMENT:
+            if __debug__:
+                log.debug(__name__, "_CBOR_CREDENTIAL_MANAGEMENT")
+            return cbor_cred_mgmt(req)
         else:
             if __debug__:
                 log.warning(__name__, "_ERR_INVALID_CMD _CMD_CBOR %d", req.data[0])
@@ -1870,13 +1946,15 @@ def cbor_get_info(req: Cmd) -> Cmd:
     # Note: We claim that the PIN is set even when it's not, because otherwise
     # login.live.com shows an error, but doesn't instruct the user to set a PIN.
     response_data = {
-        _GETINFO_RESP_VERSIONS: ["U2F_V2", "FIDO_2_0"],
+        _GETINFO_RESP_VERSIONS: ["U2F_V2", "FIDO_2_0", "FIDO_2_1"],
         _GETINFO_RESP_EXTENSIONS: ["hmac-secret"],
         _GETINFO_RESP_AAGUID: _AAGUID,
         _GETINFO_RESP_OPTIONS: {
             "rk": _ALLOW_RESIDENT_CREDENTIALS,
             "up": True,
             "uv": True,
+            "pinUvAuthToken": True,
+            "credMgmt": True,
         },
         _GETINFO_RESP_PIN_PROTOCOLS: [1],
         _GETINFO_RESP_MAX_CRED_COUNT_IN_LIST: _MAX_CRED_COUNT_IN_LIST,
@@ -1894,27 +1972,45 @@ def cbor_client_pin(req: Cmd) -> Cmd:
         return cbor_error(req.cid, _ERR_INVALID_CBOR)
 
     if pin_protocol != 1:
-        return cbor_error(req.cid, _ERR_PIN_AUTH_INVALID)
+        return cbor_error(req.cid, _ERR_INVALID_PAR)
 
     # We only support the get key agreement command which is required for the hmac-secret extension.
-    if subcommand != _CLIENTPIN_SUBCMD_GET_KEY_AGREEMENT:
-        return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
-
-    # Encode the public key of the authenticator key agreement key.
-    # NOTE: There is currently no valid value for COSE_KEY_ALG which describes the actual
-    # key agreement algorithm as specified, but COSE_ALG_ECDH_ES_HKDF_256 is allegedly
-    # recommended by the latest draft of the CTAP2 spec.
-    response_data = {
-        _CLIENTPIN_RESP_KEY_AGREEMENT: {
-            common.COSE_KEY_ALG: common.COSE_ALG_ECDH_ES_HKDF_256,
-            common.COSE_KEY_KTY: common.COSE_KEYTYPE_EC2,
-            common.COSE_KEY_CRV: common.COSE_CURVE_P256,
-            common.COSE_KEY_X: _KEY_AGREEMENT_PUBKEY[1:33],
-            common.COSE_KEY_Y: _KEY_AGREEMENT_PUBKEY[33:],
+    if subcommand == _CLIENTPIN_SUBCMD_GET_KEY_AGREEMENT:
+        # Encode the public key of the authenticator key agreement key.
+        # NOTE: There is currently no valid value for COSE_KEY_ALG which describes the actual
+        # key agreement algorithm as specified, but COSE_ALG_ECDH_ES_HKDF_256 is allegedly
+        # recommended by the latest draft of the CTAP2 spec.
+        response_data = {
+            _CLIENTPIN_RESP_KEY_AGREEMENT: {
+                common.COSE_KEY_ALG: common.COSE_ALG_ECDH_ES_HKDF_256,
+                common.COSE_KEY_KTY: common.COSE_KEYTYPE_EC2,
+                common.COSE_KEY_CRV: common.COSE_CURVE_P256,
+                common.COSE_KEY_X: _KEY_AGREEMENT_PUBKEY[1:33],
+                common.COSE_KEY_Y: _KEY_AGREEMENT_PUBKEY[33:],
+            }
         }
-    }
-
-    return Cmd(req.cid, _CMD_CBOR, bytes([_ERR_NONE]) + cbor.encode(response_data))
+        return Cmd(req.cid, _CMD_CBOR, bytes([_ERR_NONE]) + cbor.encode(response_data))
+    elif subcommand == _CLIENTPIN_SUBCMD_GET_TOKEN_USING_UV:
+        try:
+            key_agreement = param[_CLIENTPIN_CMD_KEY_AGREEMENT]
+            permissions = param[_CLIENTPIN_CMD_PERMISSIONS]
+        except Exception:
+            return cbor_error(req.cid, _ERR_MISSING_PARAMETER)
+        permissions_rp_id = param.get(_CLIENTPIN_CMD_PERMISSIONS_RPID, None)
+        if (
+            permissions & (_PERM_FLAG_CM | _PERM_FLAG_GA)
+        ) and permissions_rp_id is None:
+            return cbor_error(req.cid, _ERR_MISSING_PARAMETER)
+        if permissions == 0:
+            return cbor_error(req.cid, _ERR_INVALID_PAR)
+        if permissions & (_PERM_FLAG_BE | _PERM_FLAG_LBW | _PERM_FLAG_ACFG):
+            return cbor_error(req.cid, _ERR_UNAUTHORIZED_PERMISSION)
+        if not config.has_pin():
+            pass  # TODO Fido2ConfirmNoPin and return _ERR_NOT_ALLOWED
+        # TODO request user consent for the requested permissions
+        # TODO perform user verification repeatedly
+    else:
+        return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
 
 
 def cbor_reset(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
@@ -1927,6 +2023,91 @@ def cbor_reset(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
     if not dialog_mgr.set_state(Fido2ConfirmReset(req.cid, dialog_mgr.iface)):
         return cmd_error(req.cid, _ERR_CHANNEL_BUSY)
     return None
+
+
+def cbor_cred_mgmt(req: Cmd) -> Cmd:
+    global _rp_iter, _cred_iter
+    try:
+        param = cbor.decode(req.data[1:])
+        subcommand = param[_CREDMGMT_CMD_SUBCOMMAND]
+    except Exception:
+        return cbor_error(req.cid, _ERR_INVALID_CBOR)
+
+    if subcommand == _CREDMGMT_SUBCMD_CRED_METADATA:
+        count = sum(1 for _ in find_all())
+        response_data = {
+            _CREDMGMT_RESP_RESIDENT_CRED_COUNT: count,
+            _CREDMGMT_RESP_MAX_REM_RESIDENT_CRED_COUNT: MAX_RESIDENT_CREDENTIALS
+            - count,
+        }
+    elif subcommand == _CREDMGMT_SUBCMD_RP_BEGIN:
+        rp_ids = set((cred.rp_id, cred.rp_id_hash) for cred in find_all())
+        if rp_ids:
+            _rp_iter = iter(rp_ids)
+            rp_id, rp_id_hash = next(_rp_iter)
+            response_data = {
+                _CREDMGMT_RESP_RP: {"id": rp_id},
+                _CREDMGMT_RESP_RPID_HASH: rp_id_hash,
+                _CREDMGMT_RESP_RP_COUNT: len(rp_ids),
+            }
+        else:
+            response_data = {_CREDMGMT_RESP_RP_COUNT: 0}
+    elif subcommand == _CREDMGMT_SUBCMD_RP_NEXT:
+        try:
+            rp_id, rp_id_hash = next(_rp_iter)
+            response_data = {
+                _CREDMGMT_RESP_RP: {"id": rp_id},
+                _CREDMGMT_RESP_RPID_HASH: rp_id_hash,
+            }
+        except Exception:
+            return cbor_error(req.cid, _ERR_NOT_ALLOWED)
+    elif subcommand == _CREDMGMT_SUBCMD_RK_BEGIN:
+        rp_id_hash = param[_CREDMGMT_CMD_SUBCOMMAND_PARAMS][_CREDMGMT_PARAMS_RPID_HASH]
+        if not isinstance(rp_id_hash, bytes):
+            raise TypeError
+
+        creds = set(cred for cred in find_by_rp_id_hash(rp_id_hash))
+        if creds:
+            _cred_iter = iter(creds)
+            cred = next(_cred_iter)
+            response_data = {
+                _CREDMGMT_RESP_USER: cred.user(),
+                _CREDMGMT_RESP_CRED_ID: {"type": "public-key", "id": cred.id},
+                _CREDMGMT_RESP_CRED_PUBLIC_KEY: cred.public_key(),  # TODO might need to be cbor-decoded
+                _CREDMGMT_RESP_RP_CRED_COUNT: len(creds),
+            }
+        else:
+            return cbor_error(req.cid, _ERR_NO_CREDENTIALS)
+    elif subcommand == _CREDMGMT_SUBCMD_RK_NEXT:
+        try:
+            cred = next(_cred_iter)
+            response_data = {
+                _CREDMGMT_RESP_USER: cred.user(),
+                _CREDMGMT_RESP_CRED_ID: {"type": "public-key", "id": cred.id},
+                _CREDMGMT_RESP_CRED_PUBLIC_KEY: cred.public_key(),  # TODO might need to be cbor-decoded
+            }
+        except Exception:
+            return cbor_error(req.cid, _ERR_NOT_ALLOWED)
+    elif subcommand == _CREDMGMT_SUBCMD_DELETE_CRED:
+        credential_descriptor = param[_CREDMGMT_CMD_SUBCOMMAND_PARAMS][
+            _CREDMGMT_PARAMS_CRED_ID
+        ]
+        credential_type = credential_descriptor["type"]
+        if not isinstance(credential_type, str) or credential_type != "public-key":
+            raise TypeError
+
+        credential_id = credential_descriptor["id"]
+        if not isinstance(credential_id, bytes):
+            raise TypeError
+        cred = find_by_cred_id(credential_id)
+        if cred is None:
+            return cbor_error(req.cid, _ERR_NO_CREDENTIALS)
+        assert cred.index is not None
+        storage.resident_credentials.delete(cred.index)
+    else:
+        return cbor_error(req.cid, _ERR_UNSUPPORTED_OPTION)
+
+    return Cmd(req.cid, _CMD_CBOR, bytes([_ERR_NONE]) + cbor.encode(response_data))
 
 
 def cmd_keepalive(cid: int, status: int) -> Cmd:

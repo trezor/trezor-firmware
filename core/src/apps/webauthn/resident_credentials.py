@@ -42,6 +42,14 @@ def find_by_rp_id_hash(rp_id_hash: bytes) -> Iterator[Fido2Credential]:
         yield _credential_from_data(index, data)
 
 
+def find_by_cred_id(cred_id: bytes) -> Optional[Fido2Credential]:
+    for index in range(MAX_RESIDENT_CREDENTIALS):
+        data = storage.resident_credentials.get(index)
+        if data is not None and data[RP_ID_HASH_LENGTH:] == cred_id:
+            return _credential_from_data(index, data)
+    return None
+
+
 def get_resident_credential(index: int) -> Optional[Fido2Credential]:
     if not (0 <= index < MAX_RESIDENT_CREDENTIALS):
         return None
