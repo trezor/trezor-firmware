@@ -98,6 +98,7 @@ class Keychain:
         self.slip21_namespaces = tuple(slip21_namespaces)
 
         self._cache = LRUCache(10)
+        self._root_fingerprint: Optional[int] = None
 
     def __del__(self) -> None:
         self._cache.__del__()
@@ -135,6 +136,17 @@ class Keychain:
         node = cached_root.clone()
         node.derive_path(path[prefix_len:])
         return node
+
+    def root_fingerprint(self) -> int:
+        if self._root_fingerprint is None:
+            # derive m/0' to obtain root_fingerprint
+            n = self._derive_with_cache(
+                prefix_len=0,
+                path=[0 | paths.HARDENED],
+                new_root=lambda: bip32.from_seed(self.seed, self.curve),
+            )
+            self._root_fingerprint = n.fingerprint()
+        return self._root_fingerprint
 
     def derive(self, path: paths.Bip32Path) -> bip32.HDNode:
         self.verify_path(path)

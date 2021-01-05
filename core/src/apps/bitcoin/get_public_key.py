@@ -60,4 +60,8 @@ async def get_public_key(ctx: wire.Context, msg: GetPublicKey) -> PublicKey:
     if msg.show_display:
         await layout.show_xpub(ctx, node_xpub, "XPUB", "Cancel")
 
-    return PublicKey(node=node_type, xpub=node_xpub)
+    return PublicKey(
+        node=node_type,
+        xpub=node_xpub,
+        root_fingerprint=keychain.root_fingerprint(),
+    )
