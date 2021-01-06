@@ -30,7 +30,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - The `safety-checks` setting gained new possible value `PromptTemporarily` which overrides safety checks until device reboot.  [#1133]
 - Protobuf codec now enforces `required` fields and pre-fills default values.  [#379]
 - `TxAck` messages are now decoded into "polymorphic" subtypes instead of the common `TxAck` type.
-- Bump nanobp dependency to 0.4.3.  [#1105]
+- Bump nanopb dependency to 0.4.3.  [#1105]
+- Bump nanopb dependency to 0.4.4.  [#1402]
 - BIP-32 paths must now match a pre-defined path schema to be considered valid.  [#1184]
 - Minimum auto-lock delay to 1 minute. The former value of 10 seconds still applies for debug builds.  [#1351]
 - It is again possible to sign for Ethereum clones that are not officially supported.  [#1335]
@@ -350,3 +351,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1322]: https://github.com/trezor/trezor-firmware/issues/1322
 [#1335]: https://github.com/trezor/trezor-firmware/issues/1335
 [#1351]: https://github.com/trezor/trezor-firmware/issues/1351
+[#1402]: https://github.com/trezor/trezor-firmware/pull/1402

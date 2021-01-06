@@ -24,7 +24,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Replacement transaction signing for replace-by-fee.  [#1367]
 
 ### Changed
-- Bump nanobp dependency to 0.4.3.  [#1105]
+- Bump nanopb dependency to 0.4.3.  [#1105]
+- Bump nanopb dependency to 0.4.4.  [#1402]
 - Minimum auto-lock delay to 1 minute. The former value of 10 seconds still applies for debug builds.  [#1351]
 
 ### Deprecated
@@ -370,3 +371,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1188]: https://github.com/trezor/trezor-firmware/issues/1188
 [#1351]: https://github.com/trezor/trezor-firmware/issues/1351
 [#1367]: https://github.com/trezor/trezor-firmware/issues/1367
+[#1402]: https://github.com/trezor/trezor-firmware/pull/1402
