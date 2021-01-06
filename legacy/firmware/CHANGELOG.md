@@ -18,7 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Security
 
-## 1.9.4 [to be released on 13th January 2021]
+## 1.9.4 [to be released on 10th February 2021]
 
 ### Added
 - Replacement transaction signing for replace-by-fee.  [#1367]

@@ -18,7 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Security
 
-## 2.3.5 [to be released on 13th January 2021]
+## 2.3.5 [to be released on 10th February 2021]
 
 ### Added
 - CoinJoin preauthorization and signing flow.  [#1053]
