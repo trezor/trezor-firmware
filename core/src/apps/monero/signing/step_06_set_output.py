@@ -45,7 +45,7 @@ async def set_output(
 
     state.mem_trace(1, True)
 
-    dst_entr = await _validate(state, dst_entr, dst_entr_hmac, is_offloaded_bp)
+    dst_entr = _validate(state, dst_entr, dst_entr_hmac, is_offloaded_bp)
     state.mem_trace(2, True)
 
     if not state.is_processing_offloaded:
@@ -121,7 +121,7 @@ async def set_output(
     )
 
 
-async def _validate(
+def _validate(
     state: State,
     dst_entr: MoneroTransactionDestinationEntry,
     dst_entr_hmac: bytes,

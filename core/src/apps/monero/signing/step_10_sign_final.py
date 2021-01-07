@@ -21,7 +21,7 @@ if False:
     from apps.monero.xmr.types import Sc25519
 
 
-async def final_msg(state: State) -> MoneroTransactionFinalAck:
+def final_msg(state: State) -> MoneroTransactionFinalAck:
     if state.last_step != state.STEP_SIGN:
         raise ValueError("Invalid state transition")
     if state.current_input_index != state.input_count - 1:

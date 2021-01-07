@@ -135,7 +135,7 @@ async def sign_tx_dispatch(state, msg, keychain):
     elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionFinalRequest:
         from apps.monero.signing import step_10_sign_final
 
-        return await step_10_sign_final.final_msg(state), None
+        return step_10_sign_final.final_msg(state), None
 
     else:
         raise wire.DataError("Unknown message")
