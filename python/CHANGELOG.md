@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Enabled session management via `EndSession`  [#1227]
 - Support for temporary or permanent `safety-checks` setting
+- Support for Output Descriptors export [#1363]
 
 ### Changed
 
@@ -512,3 +513,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#1227]: https://github.com/trezor/trezor-firmware/issues/1227
 [#1232]: https://github.com/trezor/trezor-firmware/issues/1232
 [#1266]: https://github.com/trezor/trezor-firmware/issues/1266
+[#1363]: https://github.com/trezor/trezor-firmware/pull/1363
