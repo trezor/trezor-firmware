@@ -9,8 +9,12 @@ from apps.common.seed import get_seed
 from .helpers import paths
 
 if False:
+    from typing import Callable, Awaitable
+
     from apps.common.paths import Bip32Path
-    from apps.common.keychain import MsgIn, MsgOut, Handler, HandlerWithKeychain
+    from apps.common.keychain import MsgIn, MsgOut, Handler
+
+    HandlerWithKeychain = Callable[[wire.Context, MsgIn, "Keychain"], Awaitable[MsgOut]]
 
 
 class Keychain:
@@ -52,11 +56,11 @@ class Keychain:
     #     self.root.__del__()
 
 
-def is_byron_path(path: Bip32Path):
+def is_byron_path(path: Bip32Path) -> bool:
     return path[: len(paths.BYRON_ROOT)] == paths.BYRON_ROOT
 
 
-def is_shelley_path(path: Bip32Path):
+def is_shelley_path(path: Bip32Path) -> bool:
     return path[: len(paths.SHELLEY_ROOT)] == paths.SHELLEY_ROOT
 
 
@@ -75,7 +79,9 @@ async def get_keychain(ctx: wire.Context) -> Keychain:
     if mnemonic.is_bip39():
         passphrase = await get_passphrase(ctx)
         # derive the root node from mnemonic and passphrase via Cardano Icarus algorithm
-        root = bip32.from_mnemonic_cardano(mnemonic.get_secret().decode(), passphrase)
+        secret_bytes = mnemonic.get_secret()
+        assert secret_bytes is not None
+        root = bip32.from_mnemonic_cardano(secret_bytes.decode(), passphrase)
     else:
         # derive the root node via SLIP-0023
         seed = await get_seed(ctx)

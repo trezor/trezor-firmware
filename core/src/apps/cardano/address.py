@@ -1,6 +1,6 @@
 from trezor import wire
 from trezor.crypto import base58, hashlib
-from trezor.messages import CardanoAddressParametersType, CardanoAddressType
+from trezor.messages import CardanoAddressType
 
 from apps.common.seed import remove_ed25519_prefix
 
@@ -11,9 +11,14 @@ from .helpers.utils import variable_length_encode
 from .seed import is_byron_path, is_shelley_path
 
 if False:
-    from typing import List
-    from trezor.messages import CardanoBlockchainPointerType
-    from trezor.messages.CardanoAddressParametersType import EnumTypeCardanoAddressType
+    from typing import List, Optional
+    from trezor.messages.CardanoBlockchainPointerType import (
+        CardanoBlockchainPointerType,
+    )
+    from trezor.messages.CardanoAddressParametersType import (
+        CardanoAddressParametersType,
+        EnumTypeCardanoAddressType,
+    )
     from . import seed
 
 ADDRESS_TYPES_SHELLEY = (
@@ -84,8 +89,8 @@ def get_address_bytes_unsafe(address: str) -> bytes:
     return address_bytes
 
 
-def _get_address_type(address: bytes) -> int:
-    return address[0] >> 4
+def _get_address_type(address: bytes) -> EnumTypeCardanoAddressType:
+    return address[0] >> 4  # type: ignore
 
 
 def _validate_shelley_address(
@@ -93,14 +98,12 @@ def _validate_shelley_address(
 ) -> None:
     address_type = _get_address_type(address_bytes)
 
-    _validate_address_size(address_bytes, address_type)
+    _validate_address_size(address_bytes)
     _validate_address_bech32_hrp(address_str, address_type, network_id)
     _validate_address_network_id(address_bytes, network_id)
 
 
-def _validate_address_size(
-    address_bytes: bytes, address_type: EnumTypeCardanoAddressType
-) -> None:
+def _validate_address_size(address_bytes: bytes) -> None:
     if not (MIN_ADDRESS_BYTES_LENGTH <= len(address_bytes) <= MAX_ADDRESS_BYTES_LENGTH):
         raise INVALID_ADDRESS
 
@@ -220,6 +223,8 @@ def _derive_shelley_address(
     elif parameters.address_type == CardanoAddressType.ENTERPRISE:
         address = _derive_enterprise_address(keychain, parameters.address_n, network_id)
     elif parameters.address_type == CardanoAddressType.POINTER:
+        if parameters.certificate_pointer is None:
+            raise wire.DataError("Certificate pointer data missing!")
         address = _derive_pointer_address(
             keychain,
             parameters.address_n,
@@ -245,7 +250,7 @@ def _derive_base_address(
     keychain: seed.Keychain,
     path: List[int],
     staking_path: List[int],
-    staking_key_hash: bytes,
+    staking_key_hash: Optional[bytes],
     network_id: int,
 ) -> bytes:
     header = _create_address_header(CardanoAddressType.BASE, network_id)
@@ -261,7 +266,7 @@ def _derive_base_address(
 
 def _validate_base_address_staking_info(
     staking_path: List[int],
-    staking_key_hash: bytes,
+    staking_key_hash: Optional[bytes],
 ) -> None:
     if (staking_key_hash is None) == (not staking_path):
         raise wire.DataError(
@@ -286,14 +291,6 @@ def _derive_pointer_address(
 
 
 def _encode_certificate_pointer(pointer: CardanoBlockchainPointerType) -> bytes:
-    if (
-        pointer is None
-        or pointer.block_index is None
-        or pointer.tx_index is None
-        or pointer.certificate_index is None
-    ):
-        raise wire.DataError("Invalid pointer!")
-
     block_index_encoded = variable_length_encode(pointer.block_index)
     tx_index_encoded = variable_length_encode(pointer.tx_index)
     certificate_index_encoded = variable_length_encode(pointer.certificate_index)

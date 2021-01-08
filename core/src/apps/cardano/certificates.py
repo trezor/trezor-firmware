@@ -11,6 +11,8 @@ from .helpers import INVALID_CERTIFICATE, LOVELACE_MAX_SUPPLY
 from .helpers.paths import SCHEMA_STAKING
 
 if False:
+    from typing import List, Optional
+
     from trezor.messages.CardanoTxCertificateType import CardanoTxCertificateType
     from trezor.messages.CardanoPoolParametersType import CardanoPoolParametersType
     from trezor.messages.CardanoPoolRelayParametersType import (
@@ -18,10 +20,10 @@ if False:
     )
     from trezor.messages.CardanoPoolOwnerType import CardanoPoolOwnerType
     from trezor.messages.CardanoPoolMetadataType import CardanoPoolMetadataType
-    from typing import List, Optional, Union, Tuple, Any
-    from . import seed
 
-    CborSequence = Union[List[Any], Tuple[Any, ...]]
+    from apps.common.cbor import CborSequence
+
+    from . import seed
 
 POOL_HASH_SIZE = 28
 VRF_KEY_HASH_SIZE = 32

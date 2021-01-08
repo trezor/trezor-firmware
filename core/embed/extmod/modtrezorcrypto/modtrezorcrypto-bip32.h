@@ -586,7 +586,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip32_from_seed_obj,
 
 #if !BITCOIN_ONLY
 
-/// def from_mnemonic_cardano(mnemonic: str, passphrase: str) -> bytes:
+/// def from_mnemonic_cardano(mnemonic: str, passphrase: str) -> HDNode:
 ///     """
 ///     Construct a HD node from a BIP-0039 mnemonic using the Icarus derivation
 ///     scheme, aka v2 derivation scheme.

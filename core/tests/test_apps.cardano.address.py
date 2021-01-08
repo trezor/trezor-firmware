@@ -419,33 +419,6 @@ class TestCardanoAddress(unittest.TestCase):
             )
             derive_human_readable_address(keychain, address_parameters, 0, 0)
 
-        # block index is None
-        with self.assertRaises(wire.DataError):
-            address_parameters = CardanoAddressParametersType(
-                address_type=CardanoAddressType.POINTER,
-                address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
-                certificate_pointer=CardanoBlockchainPointerType(block_index=None, tx_index=2, certificate_index=3),
-            )
-            derive_human_readable_address(keychain, address_parameters, 0, 0)
-
-        # tx index is None
-        with self.assertRaises(wire.DataError):
-            address_parameters = CardanoAddressParametersType(
-                address_type=CardanoAddressType.POINTER,
-                address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
-                certificate_pointer=CardanoBlockchainPointerType(block_index=1, tx_index=None, certificate_index=3),
-            )
-            derive_human_readable_address(keychain, address_parameters, 0, 0)
-
-        # certificate index is None
-        with self.assertRaises(wire.DataError):
-            address_parameters = CardanoAddressParametersType(
-                address_type=CardanoAddressType.POINTER,
-                address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
-                certificate_pointer=CardanoBlockchainPointerType(block_index=1, tx_index=2, certificate_index=None),
-            )
-            derive_human_readable_address(keychain, address_parameters, 0, 0)
-
     def test_reward_address(self):
         mnemonic = "test walk nut penalty hip pave soap entry language right filter choice"
         passphrase = ""

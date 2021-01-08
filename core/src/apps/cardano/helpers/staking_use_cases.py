@@ -7,8 +7,10 @@ from .utils import to_account_path
 
 if False:
     from typing import List
-    from trezor.messages import CardanoAddressParametersType
-    from .. import seed
+    from trezor.messages.CardanoAddressParametersType import (
+        CardanoAddressParametersType,
+    )
+    from ..seed import Keychain
 
 
 """
@@ -24,9 +26,7 @@ MISMATCH = 2
 POINTER_ADDRESS = 3
 
 
-def get(
-    keychain: seed.Keychain, address_parameters: CardanoAddressParametersType
-) -> int:
+def get(keychain: Keychain, address_parameters: CardanoAddressParametersType) -> int:
     address_type = address_parameters.address_type
     if address_type == CardanoAddressType.BASE:
         if not SCHEMA_ADDRESS.match(address_parameters.address_n):
