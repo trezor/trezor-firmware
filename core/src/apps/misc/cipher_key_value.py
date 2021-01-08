@@ -7,8 +7,12 @@ from apps.common.confirm import require_confirm
 from apps.common.keychain import get_keychain
 from apps.common.paths import AlwaysMatchingSchema
 
+if False:
+    from trezor.messages.CipherKeyValue import CipherKeyValue
+    from trezor.wire import Context
 
-async def cipher_key_value(ctx, msg):
+
+async def cipher_key_value(ctx: Context, msg: CipherKeyValue) -> CipheredKeyValue:
     keychain = await get_keychain(ctx, "secp256k1", [AlwaysMatchingSchema])
 
     if len(msg.value) % 16 > 0:
@@ -30,10 +34,10 @@ async def cipher_key_value(ctx, msg):
     return CipheredKeyValue(value=value)
 
 
-def compute_cipher_key_value(msg, seckey: bytes) -> bytes:
-    data = msg.key
-    data += "E1" if msg.ask_on_encrypt else "E0"
-    data += "D1" if msg.ask_on_decrypt else "D0"
+def compute_cipher_key_value(msg: CipherKeyValue, seckey: bytes) -> bytes:
+    data = msg.key.encode()
+    data += b"E1" if msg.ask_on_encrypt else b"E0"
+    data += b"D1" if msg.ask_on_decrypt else b"D0"
     data = hmac(hmac.SHA512, seckey, data).digest()
     key = data[:32]
     if msg.iv and len(msg.iv) == 16:

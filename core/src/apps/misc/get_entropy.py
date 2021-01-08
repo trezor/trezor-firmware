@@ -5,8 +5,12 @@ from trezor.ui.text import Text
 
 from apps.common.confirm import require_confirm
 
+if False:
+    from trezor.wire import Context
+    from trezor.messages.GetEntropy import GetEntropy
 
-async def get_entropy(ctx, msg):
+
+async def get_entropy(ctx: Context, msg: GetEntropy) -> Entropy:
     text = Text("Confirm entropy")
     text.bold("Do you really want", "to send entropy?")
     text.normal("Continue only if you", "know what you are doing!")
