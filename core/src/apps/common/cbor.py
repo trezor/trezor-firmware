@@ -8,9 +8,10 @@ from micropython import const
 from trezor import log
 
 if False:
-    from typing import Any, Iterable, List, Tuple
+    from typing import Any, Iterable, List, Tuple, Union
 
     Value = Any
+    CborSequence = Union[List[Value], Tuple[Value, ...]]
 
 _CBOR_TYPE_MASK = const(0xE0)
 _CBOR_INFO_BITS = const(0x1F)

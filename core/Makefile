@@ -107,6 +107,7 @@ mypy:
 	mypy --config-file ../setup.cfg \
 		src/main.py \
 		src/apps/bitcoin \
+		src/apps/cardano \
 		src/apps/webauthn
 
 ## code generation:

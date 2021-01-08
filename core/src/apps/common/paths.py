@@ -22,15 +22,19 @@ if False:
     from typing_extensions import Protocol
     from trezor import wire
 
-    # XXX this is a circular import, but it's only for typing
-    from .keychain import Keychain
-
     Bip32Path = Sequence[int]
     Slip21Path = Sequence[bytes]
     PathType = TypeVar("PathType", Bip32Path, Slip21Path)
 
     class PathSchemaType(Protocol):
         def match(self, path: Bip32Path) -> bool:
+            ...
+
+    class KeychainValidatorType(Protocol):
+        def is_in_keychain(self, path: Bip32Path) -> bool:
+            ...
+
+        def verify_path(self, path: Bip32Path) -> None:
             ...
 
 
@@ -247,7 +251,10 @@ PATTERN_SEP5 = "m/44'/coin_type'/account'"
 
 
 async def validate_path(
-    ctx: wire.Context, keychain: Keychain, path: Bip32Path, *additional_checks: bool
+    ctx: wire.Context,
+    keychain: KeychainValidatorType,
+    path: Bip32Path,
+    *additional_checks: bool,
 ) -> None:
     keychain.verify_path(path)
     if not keychain.is_in_keychain(path) or not all(additional_checks):

@@ -57,13 +57,16 @@ from .layout import (
 from .seed import is_byron_path, is_shelley_path
 
 if False:
+    from typing import Any, Dict, List, Optional, Tuple, Union
+
     from trezor.messages.CardanoSignTx import CardanoSignTx
     from trezor.messages.CardanoTxCertificateType import CardanoTxCertificateType
     from trezor.messages.CardanoTxInputType import CardanoTxInputType
     from trezor.messages.CardanoTxOutputType import CardanoTxOutputType
     from trezor.messages.CardanoTxWithdrawalType import CardanoTxWithdrawalType
     from trezor.messages.CardanoAssetGroupType import CardanoAssetGroupType
-    from typing import Dict, List, Tuple, Union
+
+    from apps.common.cbor import CborSequence
 
     CborizedTokenBundle = Dict[bytes, Dict[bytes, int]]
     CborizedTxOutput = Tuple[bytes, Union[int, Tuple[int, CborizedTokenBundle]]]
@@ -156,7 +159,7 @@ async def _sign_stake_pool_registration_tx(
     return tx
 
 
-def _has_stake_pool_registration(msg: CardanoSignTx):
+def _has_stake_pool_registration(msg: CardanoSignTx) -> bool:
     return any(
         cert.type == CardanoCertificateType.STAKE_POOL_REGISTRATION
         for cert in msg.certificates
@@ -176,7 +179,9 @@ def validate_network_info(network_id: int, protocol_magic: int) -> None:
         raise wire.ProcessError("Invalid network id/protocol magic combination!")
 
 
-def _validate_stake_pool_registration_tx_structure(msg: CardanoSignTx):
+def _validate_stake_pool_registration_tx_structure(msg: CardanoSignTx) -> None:
+    # ensures that there is exactly one certificate, which is stake pool registration,
+    # and no withdrawals
     if (
         len(msg.certificates) != 1
         or not _has_stake_pool_registration(msg)
@@ -264,7 +269,7 @@ def _validate_max_tx_output_size(
         )
 
 
-def _ensure_no_signing_inputs(inputs: List[CardanoTxInputType]):
+def _ensure_no_signing_inputs(inputs: List[CardanoTxInputType]) -> None:
     if any(i.address_n for i in inputs):
         raise INVALID_STAKEPOOL_REGISTRATION_TX_INPUTS
 
@@ -285,7 +290,7 @@ def _validate_withdrawals(withdrawals: List[CardanoTxWithdrawalType]) -> None:
             raise INVALID_WITHDRAWAL
 
 
-def _validate_metadata(metadata: bytes) -> None:
+def _validate_metadata(metadata: Optional[bytes]) -> None:
     if not metadata:
         return
 
@@ -388,7 +393,7 @@ def _cborize_output(
             keychain, output.address_parameters, protocol_magic, network_id
         )
     else:
-        # output address is validated in _validate_outputs before this happens
+        assert output.address is not None  # _validate_outputs
         address = get_address_bytes_unsafe(output.address)
 
     if not output.token_bundle:
@@ -400,11 +405,11 @@ def _cborize_output(
 def _cborize_token_bundle(
     token_bundle: List[CardanoAssetGroupType],
 ) -> CborizedTokenBundle:
-    result = {}
+    result: CborizedTokenBundle = {}
 
     for token_group in token_bundle:
         cborized_policy_id = bytes(token_group.policy_id)
-        result[cborized_policy_id] = cborized_token_group = {}
+        cborized_token_group = result[cborized_policy_id] = {}
 
         for token in token_group.tokens:
             cborized_asset_name = bytes(token.asset_name_bytes)
@@ -416,7 +421,7 @@ def _cborize_token_bundle(
 def _cborize_certificates(
     keychain: seed.Keychain,
     certificates: List[CardanoTxCertificateType],
-) -> List[Tuple]:
+) -> List[CborSequence]:
     return [cborize_certificate(keychain, cert) for cert in certificates]
 
 
@@ -469,7 +474,7 @@ def _cborize_witnesses(
 
     # use key 0 for shelley witnesses and key 2 for byron witnesses
     # according to the spec in shelley.cddl in cardano-ledger-specs
-    witnesses = {}
+    witnesses: Dict[Any, Any] = {}
     if shelley_witnesses:
         witnesses[0] = shelley_witnesses
     if byron_witnesses:
@@ -499,6 +504,8 @@ def _cborize_shelley_witnesses(
         ):
             paths.add(tuple(certificate.path))
         elif certificate.type == CardanoCertificateType.STAKE_POOL_REGISTRATION:
+            # ensured by validate_certificate:
+            assert certificate.pool_parameters is not None  # validate_certificate
             for pool_owner in certificate.pool_parameters.owners:
                 if pool_owner.staking_key_path:
                     paths.add(tuple(pool_owner.staking_key_path))
@@ -514,7 +521,7 @@ def _cborize_shelley_witnesses(
 
 def _cborize_shelley_witness(
     keychain: seed.Keychain, tx_body_hash: bytes, path: List[int]
-) -> List[Tuple[bytes, bytes]]:
+) -> Tuple[bytes, bytes]:
     node = keychain.derive(path)
 
     signature = ed25519.sign_ext(
@@ -587,6 +594,9 @@ async def _show_stake_pool_registration_tx(
 ) -> None:
     stake_pool_registration_certificate = msg.certificates[0]
     pool_parameters = stake_pool_registration_certificate.pool_parameters
+    # _validate_stake_pool_registration_tx_structure ensures that there is only one
+    # certificate, and validate_certificate ensures that the structure is valid
+    assert pool_parameters is not None
 
     # display the transaction (certificate) in UI
     await confirm_stake_pool_parameters(
@@ -619,6 +629,7 @@ async def _show_outputs(
             if _should_hide_output(output.address_parameters.address_n, msg.inputs):
                 continue
         else:
+            assert output.address is not None  # _validate_outputs
             address = output.address
 
         total_amount += output.amount
@@ -637,13 +648,15 @@ async def _show_change_output_staking_warnings(
     address_parameters: CardanoAddressParametersType,
     address: str,
     amount: int,
-):
+) -> None:
     address_type = address_parameters.address_type
 
     staking_use_case = staking_use_cases.get(keychain, address_parameters)
     if staking_use_case == staking_use_cases.NO_STAKING:
         await show_warning_tx_no_staking_info(ctx, address_type, amount)
     elif staking_use_case == staking_use_cases.POINTER_ADDRESS:
+        # ensured in _derive_shelley_address:
+        assert address_parameters.certificate_pointer is not None
         await show_warning_tx_pointer_address(
             ctx,
             address_parameters.certificate_pointer,
@@ -657,6 +670,8 @@ async def _show_change_output_staking_warnings(
                 amount,
             )
         else:
+            # ensured in _validate_base_address_staking_info:
+            assert address_parameters.staking_key_hash
             await show_warning_tx_staking_key_hash(
                 ctx,
                 address_parameters.staking_key_hash,

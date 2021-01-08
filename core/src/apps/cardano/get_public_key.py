@@ -12,13 +12,13 @@ from .helpers.paths import SCHEMA_PUBKEY
 
 if False:
     from typing import List
-    from trezor.messages import CardanoGetPublicKey
+    from trezor.messages.CardanoGetPublicKey import CardanoGetPublicKey
 
 
 @seed.with_keychain
 async def get_public_key(
     ctx: wire.Context, msg: CardanoGetPublicKey, keychain: seed.Keychain
-):
+) -> CardanoPublicKey:
     await paths.validate_path(
         ctx,
         keychain,
