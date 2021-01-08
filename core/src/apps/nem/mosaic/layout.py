@@ -11,7 +11,8 @@ from trezor.messages import (
 from trezor.ui.components.tt.scroll import Paginated
 from trezor.ui.components.tt.text import Text
 
-from apps.common.layout import require_confirm, split_address
+from apps.common.confirm import require_confirm
+from apps.common.layout import split_address
 
 from ..layout import (
     require_confirm_content,

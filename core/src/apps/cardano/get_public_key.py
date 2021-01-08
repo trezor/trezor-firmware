@@ -3,8 +3,9 @@ from ubinascii import hexlify
 from trezor import log, wire
 from trezor.messages.CardanoPublicKey import CardanoPublicKey
 from trezor.messages.HDNodeType import HDNodeType
+from trezor.ui.layouts import require, show_pubkey
 
-from apps.common import layout, paths
+from apps.common import paths
 from apps.common.seed import remove_ed25519_prefix
 
 from . import seed
@@ -35,7 +36,7 @@ async def get_public_key(
         raise wire.ProcessError("Deriving public key failed")
 
     if msg.show_display:
-        await layout.show_pubkey(ctx, key.node.public_key)
+        await require(show_pubkey(ctx, hexlify(key.node.public_key).decode()))
     return key
 
 

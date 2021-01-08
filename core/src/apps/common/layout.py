@@ -1,5 +1,4 @@
 from micropython import const
-from ubinascii import hexlify
 
 from trezor import ui
 from trezor.messages import ButtonRequestType
@@ -11,32 +10,11 @@ from trezor.ui.qr import Qr
 from trezor.utils import chunks
 
 from apps.common import HARDENED
-from apps.common.confirm import confirm, require_confirm
+from apps.common.confirm import confirm
 
 if False:
     from typing import Iterable, Iterator, List, Union
     from trezor import wire
-
-
-async def show_address(
-    ctx: wire.Context,
-    address: str,
-    desc: str = "Confirm address",
-    cancel: str = "QR",
-    network: str = None,
-) -> bool:
-    text = Text(desc, ui.ICON_RECEIVE, ui.GREEN)
-    if network is not None:
-        text.normal("%s network" % network)
-    text.mono(*split_address(address))
-
-    return await confirm(
-        ctx,
-        text,
-        code=ButtonRequestType.Address,
-        cancel=cancel,
-        cancel_style=ButtonDefault,
-    )
 
 
 async def show_qr(
@@ -60,13 +38,6 @@ async def show_qr(
         cancel=cancel,
         cancel_style=ButtonDefault,
     )
-
-
-async def show_pubkey(ctx: wire.Context, pubkey: bytes) -> None:
-    lines = chunks(hexlify(pubkey).decode(), 18)
-    text = Text("Confirm public key", ui.ICON_RECEIVE, ui.GREEN)
-    text.mono(*lines)
-    await require_confirm(ctx, text, ButtonRequestType.PublicKey)
 
 
 def split_address(address: str) -> Iterator[str]:
