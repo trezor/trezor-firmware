@@ -2,8 +2,9 @@ from trezor import wire
 from trezor.messages import InputScriptType
 from trezor.messages.HDNodeType import HDNodeType
 from trezor.messages.PublicKey import PublicKey
+from trezor.ui.layouts import require, show_xpub
 
-from apps.common import coins, layout, paths
+from apps.common import coins, paths
 from apps.common.keychain import get_keychain
 
 if False:
@@ -58,7 +59,7 @@ async def get_public_key(ctx: wire.Context, msg: GetPublicKey) -> PublicKey:
     )
 
     if msg.show_display:
-        await layout.show_xpub(ctx, node_xpub, "XPUB", "Cancel")
+        await require(show_xpub(ctx, node_xpub, "XPUB", "Cancel"))
 
     return PublicKey(
         node=node_type,

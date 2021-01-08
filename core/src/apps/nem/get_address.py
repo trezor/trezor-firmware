@@ -1,7 +1,8 @@
 from trezor.messages.NEMAddress import NEMAddress
+from trezor.ui.layouts import show_address
 
 from apps.common.keychain import with_slip44_keychain
-from apps.common.layout import address_n_to_str, show_address, show_qr
+from apps.common.layout import address_n_to_str
 from apps.common.paths import validate_path
 
 from . import CURVE, PATTERNS, SLIP44_ID
@@ -21,12 +22,12 @@ async def get_address(ctx, msg, keychain):
 
     if msg.show_display:
         desc = address_n_to_str(msg.address_n)
-        while True:
-            if await show_address(
-                ctx, address, desc=desc, network=get_network_str(network)
-            ):
-                break
-            if await show_qr(ctx, address.upper(), desc=desc):
-                break
+        await show_address(
+            ctx,
+            address=address,
+            address_qr=address.upper(),
+            desc=desc,
+            network=get_network_str(network),
+        )
 
     return NEMAddress(address=address)

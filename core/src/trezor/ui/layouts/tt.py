@@ -39,7 +39,9 @@ __all__ = (
     "confirm_backup",
     "confirm_path_warning",
     "show_address",
+    "show_pubkey",
     "show_success",
+    "show_xpub",
     "show_warning",
     "confirm_output",
     "confirm_hex",
@@ -199,6 +201,14 @@ def _show_xpub(xpub: str, desc: str, cancel: str) -> Paginated:
     return content
 
 
+def show_xpub(
+    ctx: wire.GenericContext, xpub: str, desc: str, cancel: str
+) -> LayoutType:
+    return interact(
+        ctx, _show_xpub(xpub, desc, cancel), "show_xpub", ButtonRequestType.PublicKey
+    )
+
+
 async def show_address(
     ctx: wire.GenericContext,
     address: str,
@@ -250,6 +260,16 @@ async def show_address(
                     is CONFIRMED
                 ):
                     return
+
+
+# FIXME: this is basically same as confirm_hex
+# TODO: pagination for long keys
+def show_pubkey(
+    ctx: wire.Context, pubkey: str, title: str = "Confirm public key"
+) -> LayoutType:
+    text = Text(title, ui.ICON_RECEIVE, ui.GREEN)
+    text.mono(*_hex_lines(pubkey))
+    return interact(ctx, Confirm(text), "show_pubkey", ButtonRequestType.PublicKey)
 
 
 def show_warning(
