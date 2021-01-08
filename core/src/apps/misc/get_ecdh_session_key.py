@@ -13,8 +13,16 @@ from apps.common.paths import AlwaysMatchingSchema
 
 from .sign_identity import serialize_identity, serialize_identity_without_proto
 
+if False:
+    from trezor.messages.GetECDHSessionKey import GetECDHSessionKey
+    from trezor.messages.IdentityType import IdentityType
 
-async def get_ecdh_session_key(ctx, msg):
+    from apps.common.paths import Bip32Path
+
+
+async def get_ecdh_session_key(
+    ctx: wire.Context, msg: GetECDHSessionKey
+) -> ECDHSessionKey:
     if msg.ecdsa_curve_name is None:
         msg.ecdsa_curve_name = "secp256k1"
 
@@ -34,7 +42,9 @@ async def get_ecdh_session_key(ctx, msg):
     return ECDHSessionKey(session_key=session_key)
 
 
-async def require_confirm_ecdh_session_key(ctx, identity):
+async def require_confirm_ecdh_session_key(
+    ctx: wire.Context, identity: IdentityType
+) -> None:
     lines = chunks(serialize_identity_without_proto(identity), 18)
     proto = identity.proto.upper() if identity.proto else "identity"
     text = Text("Decrypt %s" % proto)
@@ -42,11 +52,10 @@ async def require_confirm_ecdh_session_key(ctx, identity):
     await require_confirm(ctx, text)
 
 
-def get_ecdh_path(identity: str, index: int):
-    identity_hash = sha256(pack("<I", index) + identity).digest()
+def get_ecdh_path(identity: str, index: int) -> Bip32Path:
+    identity_hash = sha256(pack("<I", index) + identity.encode()).digest()
 
-    address_n = (17,) + unpack("<IIII", identity_hash[:16])
-    address_n = [HARDENED | x for x in address_n]
+    address_n = [HARDENED | x for x in (17,) + unpack("<IIII", identity_hash[:16])]
 
     return address_n
 
