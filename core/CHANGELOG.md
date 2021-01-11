@@ -7,10 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## 2.3.6 [unreleased]
 
 ### Added
-- Support for Output Descriptors export [#1363]
+- Support for Output Descriptors export.  [#1363]
+- Paginated display for signing/verifying long messages.  [#1271]
 
 ### Changed
 - Bump nanopb dependency to 0.4.4.  [#1402]
+- Automatic breaking text on whitespace.  [#1384]
 
 ### Deprecated
 
@@ -348,9 +350,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1193]: https://github.com/trezor/trezor-firmware/issues/1193
 [#1206]: https://github.com/trezor/trezor-firmware/issues/1206
 [#1246]: https://github.com/trezor/trezor-firmware/issues/1246
+[#1271]: https://github.com/trezor/trezor-firmware/issues/1271
 [#1292]: https://github.com/trezor/trezor-firmware/issues/1292
 [#1322]: https://github.com/trezor/trezor-firmware/issues/1322
 [#1335]: https://github.com/trezor/trezor-firmware/issues/1335
 [#1351]: https://github.com/trezor/trezor-firmware/issues/1351
 [#1363]: https://github.com/trezor/trezor-firmware/pull/1363
+[#1384]: https://github.com/trezor/trezor-firmware/issues/1384
 [#1402]: https://github.com/trezor/trezor-firmware/pull/1402
