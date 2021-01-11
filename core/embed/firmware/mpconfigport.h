@@ -158,6 +158,8 @@
 
 #define MP_STATE_PORT MP_STATE_VM
 
+#define MICROPY_PORT_ROOT_POINTERS mp_obj_t trezorconfig_ui_wait_callback;
+
 // ============= this ends common config section ===================
 
 
