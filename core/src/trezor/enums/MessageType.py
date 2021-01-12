@@ -23,6 +23,8 @@ ApplySettings = 25
 ButtonRequest = 26
 ButtonAck = 27
 ApplyFlags = 28
+GetNonce = 31
+Nonce = 33
 BackupDevice = 34
 EntropyRequest = 35
 EntropyAck = 36
@@ -86,6 +88,7 @@ if not utils.BITCOIN_ONLY:
     SetU2FCounter = 63
     GetNextU2FCounter = 80
     NextU2FCounter = 81
+    TxAckPaymentRequest = 37
     EthereumGetPublicKey = 450
     EthereumPublicKey = 451
     EthereumGetAddress = 56
