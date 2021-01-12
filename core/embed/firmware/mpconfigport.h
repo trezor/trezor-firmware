@@ -158,8 +158,6 @@
 
 #define MP_STATE_PORT MP_STATE_VM
 
-#define MICROPY_PORT_ROOT_POINTERS mp_obj_t trezorconfig_ui_wait_callback;
-
 // ============= this ends common config section ===================
 
 
@@ -192,6 +190,9 @@ typedef long mp_off_t;
 #define malloc(n) m_malloc(n)
 #define free(p) m_free(p)
 #define realloc(p, n) m_realloc(p, n)
+
+#define MICROPY_PORT_ROOT_POINTERS \
+    mp_obj_t trezorconfig_ui_wait_callback; \
 
 // We need to provide a declaration/definition of alloca()
 #include <alloca.h>

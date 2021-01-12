@@ -38,8 +38,8 @@ STATIC secbool wrapped_ui_wait_callback(uint32_t wait, uint32_t progress,
     args[0] = mp_obj_new_int(wait);
     args[1] = mp_obj_new_int(progress);
     args[2] = mp_obj_new_str(message, strlen(message));
-    if (mp_call_function_n_kw(MP_STATE_VM(trezorconfig_ui_wait_callback), 3, 0, args) ==
-        mp_const_true) {
+    if (mp_call_function_n_kw(MP_STATE_VM(trezorconfig_ui_wait_callback), 3, 0,
+                              args) == mp_const_true) {
       return sectrue;
     }
   }
