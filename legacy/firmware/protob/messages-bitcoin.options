@@ -91,3 +91,7 @@ PrevInput.script_sig                                        max_size:1650
 PrevOutput.script_pubkey                                    max_size:520
 
 TxAckPrevExtraDataWrapper.extra_data_chunk                  max_size:1024
+
+TxAckPaymentRequest                                         skip_message:true
+
+PaymentRequestMemo                                          skip_message:true

@@ -34,3 +34,5 @@ RecoveryDevice.language                 max_size:17
 RecoveryDevice.label                    max_size:33
 
 WordAck.word                            max_size:12
+
+Nonce.nonce                             max_size:32
