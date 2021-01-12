@@ -13,3 +13,4 @@ TXFINISHED: Literal[3] = 3
 TXEXTRADATA: Literal[4] = 4
 TXORIGINPUT: Literal[5] = 5
 TXORIGOUTPUT: Literal[6] = 6
+TXPAYMENTREQ: Literal[7] = 7

@@ -195,6 +195,7 @@ message SignTx {
  * @next TxAckPrevInput
  * @next TxAckPrevOutput
  * @next TxAckPrevExtraData
+ * @next TxAckPaymentRequest
  */
 message TxRequest {
     optional RequestType request_type = 1;              // what should be filled in TxAck message?
@@ -211,6 +212,7 @@ message TxRequest {
         TXEXTRADATA = 4;
         TXORIGINPUT = 5;
         TXORIGOUTPUT = 6;
+        TXPAYMENTREQ = 7;
     }
     /**
     * Structure representing request details
@@ -351,6 +353,7 @@ message TxOutput {
     reserved 7, 8, 9;                               // fields which are in use, or have been in the past, in TxOutputType
     optional bytes orig_hash = 10;                  // tx_hash of the original transaction where this output was present (used when creating a replacement transaction)
     optional uint32 orig_index = 11;                // index of the output in the original transaction (used when creating a replacement transaction)
+    optional uint32 payment_request = 12;           // index of the PaymentRequest containing this output
 }
 
 /** Data type for metadata about previous transaction which contains the UTXO being spent.
@@ -394,6 +397,26 @@ message PrevOutput {
     required uint64 amount = 1;                     // amount sent to this output
     required bytes script_pubkey = 2;               // scriptPubkey of this output
     optional uint32 decred_script_version = 3;      // only for Decred
+}
+
+/** Data type of a payment request for a set of outputs.
+ * @embed
+ */
+message TxAckPaymentRequest {
+    required string recipient_name = 1; // merchant's name or coordinator's name in case of CoinJoin
+    required bytes hash_outputs = 2;    // BIP-143 hashOutputs of the recipient's outputs and the amounts requested
+    required uint64 amount = 3;         // the sum of the amounts requested in hash_outputs
+    repeated Memo memos = 4;            // any memos that were signed as part of the request
+    optional bytes nonce = 5;           // the nonce used in the signature computation
+    required bytes signature = 6;       // the recipient’s signature of the paymentRequestDigest
+
+    message Memo {
+        required uint32 type = 1;      // identifier of the type of data in the data field
+        required bytes data = 2;       // encoded memo data, as included in the paymentRequestDigest
+        repeated uint32 address_n = 3; // if the data is a scriptPubKey, the BIP-32 path to the user’s key
+        optional string coin_name = 4; // if the data is a scriptPubKey, the coin to use
+        optional InputScriptType script_type = 5; // if the data is a scriptPubKey
+    }
 }
 
 /**

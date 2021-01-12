@@ -120,6 +120,7 @@ from .GetECDHSessionKey import GetECDHSessionKey
 from .GetEntropy import GetEntropy
 from .GetFeatures import GetFeatures
 from .GetNextU2FCounter import GetNextU2FCounter
+from .GetNonce import GetNonce
 from .GetOwnershipId import GetOwnershipId
 from .GetOwnershipProof import GetOwnershipProof
 from .GetPublicKey import GetPublicKey
@@ -143,6 +144,7 @@ from .LiskTransactionCommon import LiskTransactionCommon
 from .LiskVerifyMessage import LiskVerifyMessage
 from .LoadDevice import LoadDevice
 from .LockDevice import LockDevice
+from .Memo import Memo
 from .MessageSignature import MessageSignature
 from .MoneroAccountPublicAddress import MoneroAccountPublicAddress
 from .MoneroAddress import MoneroAddress
@@ -210,6 +212,7 @@ from .NEMSignedTx import NEMSignedTx
 from .NEMTransactionCommon import NEMTransactionCommon
 from .NEMTransfer import NEMTransfer
 from .NextU2FCounter import NextU2FCounter
+from .Nonce import Nonce
 from .OwnershipId import OwnershipId
 from .OwnershipProof import OwnershipProof
 from .PassphraseAck import PassphraseAck
@@ -275,6 +278,7 @@ from .TxAckInput import TxAckInput
 from .TxAckInputWrapper import TxAckInputWrapper
 from .TxAckOutput import TxAckOutput
 from .TxAckOutputWrapper import TxAckOutputWrapper
+from .TxAckPaymentRequest import TxAckPaymentRequest
 from .TxAckPrevExtraData import TxAckPrevExtraData
 from .TxAckPrevExtraDataWrapper import TxAckPrevExtraDataWrapper
 from .TxAckPrevInput import TxAckPrevInput
