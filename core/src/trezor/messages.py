@@ -683,6 +683,7 @@ if TYPE_CHECKING:
         op_return_data: "bytes | None"
         orig_hash: "bytes | None"
         orig_index: "int | None"
+        payment_req_index: "int | None"
 
         def __init__(
             self,
@@ -695,6 +696,7 @@ if TYPE_CHECKING:
             op_return_data: "bytes | None" = None,
             orig_hash: "bytes | None" = None,
             orig_index: "int | None" = None,
+            payment_req_index: "int | None" = None,
         ) -> None:
             pass
 
@@ -770,6 +772,28 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["PrevOutput"]:
+            return isinstance(msg, cls)
+
+    class TxAckPaymentRequest(protobuf.MessageType):
+        nonce: "bytes | None"
+        recipient_name: "str"
+        memos: "list[PaymentRequestMemo]"
+        amount: "int | None"
+        signature: "bytes"
+
+        def __init__(
+            self,
+            *,
+            recipient_name: "str",
+            signature: "bytes",
+            memos: "list[PaymentRequestMemo] | None" = None,
+            nonce: "bytes | None" = None,
+            amount: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TxAckPaymentRequest"]:
             return isinstance(msg, cls)
 
     class TxAckInput(protobuf.MessageType):
@@ -976,6 +1000,74 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TxRequestSerializedType"]:
+            return isinstance(msg, cls)
+
+    class PaymentRequestMemo(protobuf.MessageType):
+        text_memo: "TextMemo | None"
+        refund_memo: "RefundMemo | None"
+        coin_purchase_memo: "CoinPurchaseMemo | None"
+
+        def __init__(
+            self,
+            *,
+            text_memo: "TextMemo | None" = None,
+            refund_memo: "RefundMemo | None" = None,
+            coin_purchase_memo: "CoinPurchaseMemo | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["PaymentRequestMemo"]:
+            return isinstance(msg, cls)
+
+    class TextMemo(protobuf.MessageType):
+        text: "str"
+
+        def __init__(
+            self,
+            *,
+            text: "str",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["TextMemo"]:
+            return isinstance(msg, cls)
+
+    class RefundMemo(protobuf.MessageType):
+        address: "str"
+        mac: "bytes"
+
+        def __init__(
+            self,
+            *,
+            address: "str",
+            mac: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["RefundMemo"]:
+            return isinstance(msg, cls)
+
+    class CoinPurchaseMemo(protobuf.MessageType):
+        coin_type: "int"
+        amount: "str"
+        address: "str"
+        mac: "bytes"
+
+        def __init__(
+            self,
+            *,
+            coin_type: "int",
+            amount: "str",
+            address: "str",
+            mac: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CoinPurchaseMemo"]:
             return isinstance(msg, cls)
 
     class TxAckInputWrapper(protobuf.MessageType):
@@ -2256,6 +2348,26 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["RebootToBootloader"]:
+            return isinstance(msg, cls)
+
+    class GetNonce(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["GetNonce"]:
+            return isinstance(msg, cls)
+
+    class Nonce(protobuf.MessageType):
+        nonce: "bytes"
+
+        def __init__(
+            self,
+            *,
+            nonce: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["Nonce"]:
             return isinstance(msg, cls)
 
     class DebugLinkDecision(protobuf.MessageType):

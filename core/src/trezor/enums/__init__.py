@@ -23,6 +23,8 @@ if TYPE_CHECKING:
         ButtonRequest = 26
         ButtonAck = 27
         ApplyFlags = 28
+        GetNonce = 31
+        Nonce = 33
         BackupDevice = 34
         EntropyRequest = 35
         EntropyAck = 36
@@ -55,6 +57,7 @@ if TYPE_CHECKING:
         TxAck = 22
         GetAddress = 29
         Address = 30
+        TxAckPaymentRequest = 37
         SignMessage = 38
         VerifyMessage = 39
         MessageSignature = 40
@@ -324,6 +327,7 @@ if TYPE_CHECKING:
         TXEXTRADATA = 4
         TXORIGINPUT = 5
         TXORIGOUTPUT = 6
+        TXPAYMENTREQ = 7
 
     class CardanoDerivationType(IntEnum):
         LEDGER = 0

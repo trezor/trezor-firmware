@@ -83,3 +83,5 @@ GetOwnershipId                                              skip_message:true
 OwnershipId                                                 skip_message:true
 GetOwnershipProof                                           skip_message:true
 OwnershipProof                                              skip_message:true
+TxAckPaymentRequest                                         skip_message:true
+PaymentRequestMemo                                          skip_message:true
