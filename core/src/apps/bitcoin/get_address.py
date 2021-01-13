@@ -19,7 +19,11 @@ if False:
 
 
 async def show_xpubs(
-    ctx: wire.Context, coin: CoinInfo, pubnodes: List[HDNodeType], multisig_index: int
+    ctx: wire.Context,
+    coin: CoinInfo,
+    xpub_magic: int,
+    pubnodes: List[HDNodeType],
+    multisig_index: int,
 ) -> bool:
     for i, pubnode in enumerate(pubnodes):
         cancel = "Next" if i < len(pubnodes) - 1 else "Address"
@@ -31,7 +35,7 @@ async def show_xpubs(
             public_key=pubnode.public_key,
             curve_name=coin.curve_name,
         )
-        xpub = node.serialize_public(coin.xpub_magic)
+        xpub = node.serialize_public(xpub_magic)
         desc = "XPUB #%d" % (i + 1)
         desc += " (yours)" if i == multisig_index else " (others)"
         if await show_xpub(ctx, xpub, desc=desc, cancel=cancel):
@@ -56,12 +60,26 @@ async def get_address(
 
     address = addresses.get_address(msg.script_type, coin, node, msg.multisig)
     address_short = addresses.address_short(coin, address)
-    if msg.script_type == InputScriptType.SPENDWITNESS:
+    if coin.segwit and msg.script_type == InputScriptType.SPENDWITNESS:
         address_qr = address.upper()  # bech32 address
     elif coin.cashaddr_prefix is not None:
         address_qr = address.upper()  # cashaddr address
     else:
         address_qr = address  # base58 address
+
+    if msg.multisig:
+        multisig_xpub_magic = coin.xpub_magic
+        if coin.segwit and not msg.ignore_xpub_magic:
+            if (
+                msg.script_type == InputScriptType.SPENDWITNESS
+                and coin.xpub_magic_multisig_segwit_native is not None
+            ):
+                multisig_xpub_magic = coin.xpub_magic_multisig_segwit_native
+            elif (
+                msg.script_type == InputScriptType.SPENDP2SHWITNESS
+                and coin.xpub_magic_multisig_segwit_p2sh is not None
+            ):
+                multisig_xpub_magic = coin.xpub_magic_multisig_segwit_p2sh
 
     if msg.show_display:
         if msg.multisig:
@@ -76,7 +94,9 @@ async def get_address(
                     break
                 if await show_qr(ctx, address_qr, desc=desc, cancel="XPUBs"):
                     break
-                if await show_xpubs(ctx, coin, pubnodes, multisig_index):
+                if await show_xpubs(
+                    ctx, coin, multisig_xpub_magic, pubnodes, multisig_index
+                ):
                     break
         else:
             desc = address_n_to_str(msg.address_n)
