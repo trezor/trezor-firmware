@@ -1,4 +1,4 @@
-import configparser
+import os
 import sys
 
 from device.t1 import TrezorOne
@@ -6,14 +6,12 @@ from device.tt import TrezorT
 
 
 def main(model: str, file: str = None):
-    config = configparser.ConfigParser()
-    config.read_file(open("hardware.cfg"))
     t1 = TrezorOne(
-        config["t1"]["uhub_location"],
-        config["t1"]["arduino_serial"],
-        config["t1"]["port"],
+        os.environ["T1_UHUB_LOCATION"],
+        os.environ["T1_ARDUINO_SERIAL"],
+        os.environ["T1_UHUB_PORT"],
     )
-    tt = TrezorT(config["tt"]["uhub_location"], config["tt"]["port"])
+    tt = TrezorT(os.environ["TT_UHUB_LOCATION"], os.environ["TT_UHUB_PORT"])
 
     if model == "t1":
         tt.power_off()
