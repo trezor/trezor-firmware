@@ -10,8 +10,8 @@ with import
 
 let
   moneroTests = fetchurl {
-    url = "https://github.com/ph4r05/monero/releases/download/v0.15.0.0-tests-u18.04-03/trezor_tests";
-    sha256 = "1e5dfdb07de4ea46088f4a5bdb0d51f040fe479019efae30f76427eee6edb3f7";
+    url = "https://github.com/ph4r05/monero/releases/download/v0.17.1.9-tests/trezor_tests";
+    sha256 = "410bc4ff2ff1edc65e17f15b549bd1bf8a3776cf67abdea86aed52cf4bce8d9d";
   };
   moneroTestsPatched = runCommandCC "monero_trezor_tests" {} ''
     cp ${moneroTests} $out
