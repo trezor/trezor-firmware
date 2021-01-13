@@ -1,0 +1,15 @@
+name: "lint"
+
+on: [push, pull_request]
+
+jobs:
+  editor-checker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: editorconfig-checker/action-editorconfig-checker@v1.0.0
+  clang-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: jidicula/clang-format-action@v3.0.0
