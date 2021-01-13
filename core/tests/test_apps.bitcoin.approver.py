@@ -1,17 +1,22 @@
 from common import unittest, await_result, H_
 
 from trezor import wire
+from trezor.crypto.curve import secp256k1
+from trezor.crypto.hashlib import sha256
 from trezor.messages.AuthorizeCoinJoin import AuthorizeCoinJoin
+from trezor.messages.TxAckPaymentRequest import TxAckPaymentRequest
 from trezor.messages.TxInput import TxInput
 from trezor.messages.TxOutput import TxOutput
 from trezor.messages.SignTx import SignTx
 from trezor.messages import InputScriptType, OutputScriptType
+from trezor.utils import HashWriter
 
 from apps.common import coins
 from apps.bitcoin.authorization import CoinJoinAuthorization
 from apps.bitcoin.sign_tx.approvers import CoinJoinApprover
 from apps.bitcoin.sign_tx.bitcoin import Bitcoin
 from apps.bitcoin.sign_tx.tx_info import TxInfo
+from apps.bitcoin import writers
 
 
 class TestApprover(unittest.TestCase):
@@ -19,9 +24,10 @@ class TestApprover(unittest.TestCase):
     def setUp(self):
         self.coin = coins.by_name('Bitcoin')
         self.fee_per_anonymity_percent = 0.003
+        self.coordinator_name = "www.example.com"
 
         self.msg_auth = AuthorizeCoinJoin(
-            coordinator="www.example.com",
+            coordinator=self.coordinator_name,
             max_total_fee=40000,
             fee_per_anonymity=self.fee_per_anonymity_percent * 10**9,
             address_n=[H_(84), H_(0), H_(0)],
@@ -61,6 +67,7 @@ class TestApprover(unittest.TestCase):
             TxOutput(
                 amount=denomination,
                 script_type=OutputScriptType.PAYTOWITNESS,
+                payment_request=0,
             ) for i in range(99)
         ]
 
@@ -71,10 +78,11 @@ class TestApprover(unittest.TestCase):
                 address_n=[H_(84), H_(0), H_(0), 0, 2],
                 amount=denomination,
                 script_type=OutputScriptType.PAYTOWITNESS,
+                payment_request=0,
             )
         )
 
-        coordinator_fee = self.fee_per_anonymity_percent / 100 * len(outputs) * denomination
+        coordinator_fee = int(self.fee_per_anonymity_percent / 100 * len(outputs) * denomination)
         fees = coordinator_fee + 10000
         total_coordinator_fee = coordinator_fee * len(outputs)
 
@@ -83,6 +91,7 @@ class TestApprover(unittest.TestCase):
             TxOutput(
                 amount=1000000 * (i + 1) - fees,
                 script_type=OutputScriptType.PAYTOWITNESS,
+                payment_request=0,
             ) for i in range(99)
         )
 
@@ -92,6 +101,7 @@ class TestApprover(unittest.TestCase):
                 address_n=[H_(84), H_(0), H_(0), 1, 1],
                 amount=1000000 - fees,
                 script_type=OutputScriptType.PAYTOWITNESS,
+                payment_request=0,
             )
         )
 
@@ -100,6 +110,7 @@ class TestApprover(unittest.TestCase):
             TxOutput(
                 amount=total_coordinator_fee,
                 script_type=OutputScriptType.PAYTOWITNESS,
+                payment_request=0,
             )
         )
 
@@ -107,6 +118,32 @@ class TestApprover(unittest.TestCase):
         tx = SignTx(outputs_count=len(outputs), inputs_count=len(inputs), coin_name=self.coin.coin_name, lock_time=0)
         approver = CoinJoinApprover(tx, self.coin, authorization)
         signer = Bitcoin(tx, None, self.coin, approver)
+
+        h_outputs = HashWriter(sha256())
+        for txo in outputs:
+            writers.write_tx_output(h_outputs, txo, script_pubkey=bytes(22))
+        hash_outputs = writers.get_tx_hash(h_outputs, double=True)
+
+        # Compute payment request signature.
+        # Private key of m/0h for "all all ... all" seed.
+        private_key = b'?S\ti\x8b\xc5o{,\xab\x03\x194\xea\xa8[_:\xeb\xdf\xce\xef\xe50\xf17D\x98`\xb9dj'
+        h_pr = HashWriter(sha256())
+        writers.write_bytes_fixed(h_pr, b"Payment request:", 16)
+        writers.write_bytes_prefixed(h_pr, self.coordinator_name.encode())
+        writers.write_uint32(h_pr, self.coin.slip44)
+        writers.write_bytes_fixed(h_pr, hash_outputs, 32)
+        writers.write_bitcoin_varint(h_pr, 0)  # No memos.
+        writers.write_bytes_prefixed(h_pr, b"")  # Empty nonce.
+        signature = secp256k1.sign(private_key, h_pr.get_digest())
+
+        tx_ack_payment_req = TxAckPaymentRequest(
+            recipient_name=self.coordinator_name,
+            hash_outputs=hash_outputs,
+            amount=sum(txo.amount for txo in outputs),
+            signature=signature,
+        )
+
+        await_result(approver.add_payment_request(0, tx_ack_payment_req))
 
         for txi in inputs:
             if txi.script_type == InputScriptType.EXTERNAL:

@@ -373,6 +373,17 @@ class Bitcoin:
         script_pubkey: bytes,
         orig_txo: Optional[TxOutput],
     ) -> None:
+        if (
+            txo.payment_request is not None
+            and txo.payment_request not in self.approver.payment_requests
+        ):
+            tx_ack_payment_req = await helpers.request_payment_req(
+                self.tx_req, txo.payment_request
+            )
+            await self.approver.add_payment_request(
+                txo.payment_request, tx_ack_payment_req
+            )
+
         if self.tx_info.output_is_change(txo):
             # Output is change and does not need approval.
             self.approver.add_change_output(txo, script_pubkey)

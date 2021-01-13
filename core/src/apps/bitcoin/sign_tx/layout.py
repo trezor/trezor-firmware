@@ -10,13 +10,14 @@ from trezor.utils import chunks
 from apps.common.confirm import require_confirm, require_hold_to_confirm
 
 from .. import addresses
-from . import omni
+from . import omni, payment_request
 
 if False:
-    from typing import Iterator
+    from typing import Iterator, Optional
     from trezor import wire
     from trezor.messages.SignTx import EnumTypeAmountUnit
     from trezor.messages.TxOutput import TxOutput
+    from trezor.messages.TxAckPaymentRequest import TxAckPaymentRequest
 
     from apps.common.coininfo import CoinInfo
 
@@ -72,6 +73,28 @@ async def confirm_output(
         text = Text("Confirm sending", ui.ICON_SEND, ui.GREEN)
         text.normal(format_coin_amount(output.amount, coin, amount_unit) + " to")
         text.mono(*split_address(address_short))
+    await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
+
+
+async def confirm_payment_request(
+    ctx: wire.Context, msg: TxAckPaymentRequest, coin: CoinInfo
+) -> None:
+    # Verify ownership of scriptPubKeys in case of non-text memos.
+    await payment_request.verify_memos(ctx, msg.memos)
+
+    text_memo: Optional[str] = None
+    for memo in msg.memos:
+        if memo.type == payment_request.MEMO_TYPE_UTF8:
+            if text_memo is not None:
+                raise wire.DataError("Multiple text memos in payment request.")
+            text_memo = memo.data.decode()
+
+    text = Text("Confirm sending", ui.ICON_SEND, ui.GREEN)
+    text.normal(format_coin_amount(msg.amount, coin) + " to")
+    text.normal(msg.recipient_name)
+    if text_memo:
+        text.br_half()
+        text.normal(text_memo)
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
 
