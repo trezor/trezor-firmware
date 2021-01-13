@@ -324,6 +324,9 @@ hardware core btconly device test:
     PYTEST_TIMEOUT: "1200"
   script:
     - cd ci/hardware_tests
+    - set -a
+    - source hardware.cfg
+    - set +a
     - nix-shell --run "cd ../.. && poetry install"
     - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin"
     - nix-shell --run "poetry run pytest ../../tests/device_tests -m 'not sd_card' -k 'not 15_of_15 and not test_multisig_mismatch_inputs'"
