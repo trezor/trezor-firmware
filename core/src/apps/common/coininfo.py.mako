@@ -23,6 +23,8 @@ class CoinInfo:
         xpub_magic: int,
         xpub_magic_segwit_p2sh: Optional[int],
         xpub_magic_segwit_native: Optional[int],
+        xpub_magic_multisig_segwit_p2sh: Optional[int],
+        xpub_magic_multisig_segwit_native: Optional[int],
         bech32_prefix: Optional[str],
         cashaddr_prefix: Optional[str],
         slip44: int,
@@ -47,6 +49,8 @@ class CoinInfo:
         self.xpub_magic = xpub_magic
         self.xpub_magic_segwit_p2sh = xpub_magic_segwit_p2sh
         self.xpub_magic_segwit_native = xpub_magic_segwit_native
+        self.xpub_magic_multisig_segwit_p2sh = xpub_magic_multisig_segwit_p2sh
+        self.xpub_magic_multisig_segwit_native = xpub_magic_multisig_segwit_native
         self.bech32_prefix = bech32_prefix
         self.cashaddr_prefix = cashaddr_prefix
         self.slip44 = slip44
@@ -107,6 +111,8 @@ ATTRIBUTES = (
     ("xpub_magic", hexfmt),
     ("xpub_magic_segwit_p2sh", hexfmt),
     ("xpub_magic_segwit_native", hexfmt),
+    ("xpub_magic_multisig_segwit_p2sh", hexfmt),
+    ("xpub_magic_multisig_segwit_native", hexfmt),
     ("bech32_prefix", black_repr),
     ("cashaddr_prefix", black_repr),
     ("slip44", int),

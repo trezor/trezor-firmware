@@ -448,6 +448,8 @@ def check_segwit(coins):
             "bech32_prefix",
             "xpub_magic_segwit_native",
             "xpub_magic_segwit_p2sh",
+            "xpub_magic_multisig_segwit_native",
+            "xpub_magic_multisig_segwit_p2sh",
         ]
         if segwit:
             for field in segwit_fields:
