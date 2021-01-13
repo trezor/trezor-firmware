@@ -237,7 +237,8 @@ static bool fsm_layoutAddress(const char *address, const char *desc,
                               const uint32_t *address_n, size_t address_n_count,
                               bool address_is_account,
                               const MultisigRedeemScriptType *multisig,
-                              int multisig_index, const CoinInfo *coin) {
+                              int multisig_index, uint32_t multisig_xpub_magic,
+                              const CoinInfo *coin) {
   int screen = 0, screens = 2;
   if (multisig) {
     screens += 2 * cryptoMultisigPubkeyCount(multisig);
@@ -281,7 +282,7 @@ static bool fsm_layoutAddress(const char *address, const char *desc,
             strlcat(xpub, "ERROR", sizeof(xpub));
           } else {
             hdnode_serialize_public(&node, node_ptr->fingerprint,
-                                    coin->xpub_magic, xpub, sizeof(xpub));
+                                    multisig_xpub_magic, xpub, sizeof(xpub));
           }
         }
         layoutXPUBMultisig(xpub, index, page, multisig_index == index);

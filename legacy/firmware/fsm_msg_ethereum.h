@@ -120,7 +120,7 @@ void fsm_msgEthereumGetAddress(const EthereumGetAddress *msg) {
     strlcpy(desc, "Address:", sizeof(desc));
 
     if (!fsm_layoutAddress(resp->address, desc, false, 0, msg->address_n,
-                           msg->address_n_count, true, NULL, 0, NULL)) {
+                           msg->address_n_count, true, NULL, 0, 0, NULL)) {
       return;
     }
   }
