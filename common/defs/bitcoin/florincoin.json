@@ -17,6 +17,8 @@
   "xpub_magic": 1526049,
   "xpub_magic_segwit_p2sh": 28471030,
   "xpub_magic_segwit_native": 78792518,
+  "xpub_magic_multisig_segwit_p2sh": 1526049,
+  "xpub_magic_multisig_segwit_native": 1526049,
   "bech32_prefix": "flo",
   "cashaddr_prefix": null,
   "slip44": 216,

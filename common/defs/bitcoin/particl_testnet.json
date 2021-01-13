@@ -17,6 +17,8 @@
   "xpub_magic": 76059768,
   "xpub_magic_segwit_p2sh": 71979618,
   "xpub_magic_segwit_native": 73342198,
+  "xpub_magic_multisig_segwit_p2sh": 76059768,
+  "xpub_magic_multisig_segwit_native": 76059768,
   "bech32_prefix": "tb",
   "cashaddr_prefix": null,
   "slip44": 1,
