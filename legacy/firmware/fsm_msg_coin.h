@@ -197,13 +197,26 @@ void fsm_msgGetAddress(const GetAddress *msg) {
       }
     }
 
+    uint32_t multisig_xpub_magic = coin->xpub_magic;
+    if (msg->has_multisig && coin->has_segwit) {
+      if (!msg->has_ignore_xpub_magic || !msg->ignore_xpub_magic) {
+        if (msg->script_type == InputScriptType_SPENDWITNESS &&
+            coin->xpub_magic_segwit_native) {
+          multisig_xpub_magic = coin->xpub_magic_segwit_native;
+        } else if (msg->script_type == InputScriptType_SPENDP2SHWITNESS &&
+                   coin->xpub_magic_segwit_p2sh) {
+          multisig_xpub_magic = coin->xpub_magic_segwit_p2sh;
+        }
+      }
+    }
+
     bool is_cashaddr = coin->cashaddr_prefix != NULL;
     bool is_bech32 = msg->script_type == InputScriptType_SPENDWITNESS;
     if (!fsm_layoutAddress(address, desc, is_cashaddr || is_bech32,
                            is_cashaddr ? strlen(coin->cashaddr_prefix) + 1 : 0,
                            msg->address_n, msg->address_n_count, false,
                            msg->has_multisig ? &(msg->multisig) : NULL,
-                           multisig_index, coin)) {
+                           multisig_index, multisig_xpub_magic, coin)) {
       return;
     }
   }

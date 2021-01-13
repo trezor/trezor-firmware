@@ -35,7 +35,7 @@ void fsm_msgLiskGetAddress(const LiskGetAddress *msg) {
   if (msg->has_show_display && msg->show_display) {
     if (!fsm_layoutAddress(resp->address, _("Address:"), true, 0,
                            msg->address_n, msg->address_n_count, false, NULL, 0,
-                           NULL)) {
+                           0, NULL)) {
       return;
     }
   }
