@@ -53,7 +53,7 @@
             "Github": "https://github.com/ripple/rippled"
         },
         "wallet": {
-            "Trezor Beta": "https://suite.trezor.io",
+            "Trezor Suite": "https://suite.trezor.io",
             "Exodus": "https://www.exodus.io",
             "Magnum": "https://magnumwallet.co"
         }
