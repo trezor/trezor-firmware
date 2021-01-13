@@ -47,6 +47,8 @@ def find_message_handler_module(msg_type: int) -> str:
         return "apps.management.change_pin"
     if msg_type == MessageType.ChangeWipeCode:
         return "apps.management.change_wipe_code"
+    elif msg_type == MessageType.GetNonce:
+        return "apps.management.get_nonce"
 
     if utils.MODEL == "T" and msg_type == MessageType.SdProtect:
         return "apps.management.sd_protect"
