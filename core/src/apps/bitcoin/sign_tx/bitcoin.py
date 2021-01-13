@@ -104,6 +104,9 @@ class Bitcoin:
         # the same as those in Step 1.
         self.h_inputs: Optional[bytes] = None
 
+        # The index of the payment request being processed.
+        self.payment_req_index: Optional[int] = None
+
         progress.init(tx.inputs_count, tx.outputs_count)
 
     def create_hash_writer(self) -> HashWriter:
@@ -373,6 +376,18 @@ class Bitcoin:
         script_pubkey: bytes,
         orig_txo: Optional[TxOutput],
     ) -> None:
+        if txo.payment_req_index != self.payment_req_index:
+            if txo.payment_req_index is None:
+                self.approver.finish_payment_request()
+            else:
+                tx_ack_payment_req = await helpers.request_payment_req(
+                    self.tx_req, txo.payment_req_index
+                )
+                await self.approver.add_payment_request(
+                    tx_ack_payment_req, self.keychain
+                )
+            self.payment_req_index = txo.payment_req_index
+
         if self.tx_info.output_is_change(txo):
             # Output is change and does not need approval.
             self.approver.add_change_output(txo, script_pubkey)

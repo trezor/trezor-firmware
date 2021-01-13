@@ -10,7 +10,7 @@ from trezor.utils import chunks
 from ..components.common import break_path_to_lines
 from ..components.common.confirm import CONFIRMED
 from ..components.tt.button import ButtonCancel, ButtonDefault
-from ..components.tt.confirm import Confirm, HoldToConfirm
+from ..components.tt.confirm import Confirm, HoldToConfirm, InfoConfirm
 from ..components.tt.scroll import Paginated
 from ..components.tt.text import Text
 from ..constants.tt import (
@@ -44,6 +44,7 @@ __all__ = (
     "show_xpub",
     "show_warning",
     "confirm_output",
+    "confirm_payment_request",
     "confirm_hex",
     "confirm_total",
     "confirm_joint_total",
@@ -318,12 +319,37 @@ def confirm_output(
     ctx: wire.GenericContext,
     address: str,
     amount: str,
+    has_payment_req: bool,
 ) -> LayoutType:
-    text = Text("Confirm sending", ui.ICON_SEND, ui.GREEN)
+    if has_payment_req:
+        text = Text("Confirm details", ui.ICON_CONFIRM, ui.GREEN)
+    else:
+        text = Text("Confirm sending", ui.ICON_SEND, ui.GREEN)
     text.normal(amount + " to")
     text.mono(*_split_address(address))
     return interact(
         ctx, Confirm(text), "confirm_output", ButtonRequestType.ConfirmOutput
+    )
+
+
+def confirm_payment_request(
+    ctx: wire.GenericContext,
+    recipient_name: str,
+    amount: str,
+    memos: List[str],
+) -> LayoutType:
+    text = Text("Confirm sending", ui.ICON_SEND, ui.GREEN)
+    text.normal(amount + " to")
+    text.normal(recipient_name)
+    text.br_half()
+    for memo in memos:
+        text.normal(memo)
+
+    return interact(
+        ctx,
+        InfoConfirm(text, info="Details"),
+        "confirm_payment_request",
+        ButtonRequestType.ConfirmOutput,
     )
 
 

@@ -1,10 +1,13 @@
 from micropython import const
 from ubinascii import hexlify
 
-from trezor.messages import AmountUnit, ButtonRequestType, OutputScriptType
+from trezor.messages import AmountUnit, ButtonRequestType, MemoType, OutputScriptType
 from trezor.strings import format_amount
 from trezor.ui import layouts
+from trezor.ui.components.common.confirm import CONFIRMED, INFO
 from trezor.ui.layouts import require
+
+from apps.common import coininfo
 
 from .. import addresses
 from . import omni
@@ -15,6 +18,7 @@ if False:
     from trezor import wire
     from trezor.messages.SignTx import EnumTypeAmountUnit
     from trezor.messages.TxOutput import TxOutput
+    from trezor.messages.TxAckPaymentRequest import TxAckPaymentRequest
     from trezor.ui.layouts import LayoutType
 
     from apps.common.coininfo import CoinInfo
@@ -67,10 +71,51 @@ async def confirm_output(
         assert output.address is not None
         address_short = addresses.address_short(coin, output.address)
         layout = layouts.confirm_output(
-            ctx, address_short, format_coin_amount(output.amount, coin, amount_unit)
+            ctx,
+            address_short,
+            format_coin_amount(output.amount, coin, amount_unit),
+            output.payment_req_index is not None,
         )
 
     await require(layout)
+
+
+async def confirm_payment_request(
+    ctx: wire.Context,
+    msg: TxAckPaymentRequest,
+    amount_unit: EnumTypeAmountUnit,
+    coin: CoinInfo,
+) -> bool:
+    memo_texts = []
+    for memo in msg.memos:
+        if memo.type == MemoType.UTF8_TEXT:
+            memo_texts.append(memo.data.decode())
+        elif memo.type == MemoType.COIN_PURCHASE:
+            assert memo.amount is not None  # checked by sanitizer
+            assert memo.coin_name is not None  # checked by sanitizer
+            memo_coin = coininfo.by_name(memo.coin_name)
+            memo_texts.append(
+                "Buying "
+                + format_coin_amount(memo.amount, memo_coin, amount_unit)
+                + "."
+            )
+
+    layout = layouts.confirm_payment_request(
+        ctx,
+        msg.recipient_name,
+        format_coin_amount(msg.amount, coin, amount_unit),
+        memo_texts,
+    )
+
+    result = await layout
+
+    if result is INFO:
+        return True  # show details
+
+    if result is CONFIRMED:
+        return False  # don't show details
+
+    raise wire.ActionCancelled
 
 
 async def confirm_replacement(ctx: wire.Context, description: str, txid: bytes) -> None:

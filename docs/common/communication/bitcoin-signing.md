@@ -283,6 +283,14 @@ Host must respond with a `TxAckOutput` message. All relevant data must be set in
 `tx.output`. The derivation path and script type are mandatory for all original
 change-outputs.
 
+### Payment request
+
+Trezor sets `request_type` to `TXPAYMENTREQ`, and `request_details.tx_hash` is unset.
+`request_details.request_index` is the index of the payment request in the transaction:
+0 is the first payment request, 1 is second, etc.
+
+The host must respond with a `TxAckPaymentRequest` message.
+
 ## Replacement transactions
 
 A replacement transaction is a transaction that uses the same inputs as one or more
@@ -325,6 +333,22 @@ So the replacement transaction is, for example, allowed to:
 * Add external inputs (PayJoin) and use them to introduce new outputs, increase the
   original external outputs or even to increase the user's change outputs so as to
   decrease the amount that the user is spending.
+
+## Payment requests
+
+A set of transaction outputs can be accompanied by a payment request. Multiple payment
+requests per transaction are possible. A payment request is a message signed by a trusted
+party requesting payment of certain amounts to a set of outputs, similar in principle to
+[BIP-70](https://github.com/bitcoin/bips/blob/master/bip-0070.mediawiki). The user then
+does not have to verify the output addresses, but only confirms the payment of the
+requested amount to the recipient.
+
+The host signals that an output belongs to a payment request by setting the
+`payment_req_index` field in the `TxOutput` message. When Trezor encounters the first
+output that has this field set to a particular index, it will ask for the payment request
+that has the given index.
+
+All outputs belonging to one payment request must be consecutive in the transaction.
 
 ## Implementation notes
 
