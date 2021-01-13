@@ -9,6 +9,7 @@ from trezor.messages import (
     SignTx,
     TxAckInput,
     TxAckOutput,
+    TxAckPaymentRequest,
     TxAckPrevExtraData,
     TxAckPrevInput,
     TxAckPrevMeta,
@@ -61,6 +62,25 @@ class UiConfirmDecredSSTXSubmission(UiConfirm):
         return layout.confirm_decred_sstx_submission(
             ctx, self.output, self.coin, self.amount_unit
         )
+
+
+class UiConfirmPaymentRequest(UiConfirm):
+    def __init__(
+        self,
+        payment_req: TxAckPaymentRequest,
+        coin: CoinInfo,
+        amount_unit: AmountUnit,
+    ):
+        self.payment_req = payment_req
+        self.amount_unit = amount_unit
+        self.coin = coin
+
+    def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
+        return layout.confirm_payment_request(
+            ctx, self.payment_req, self.coin, self.amount_unit
+        )
+
+    __eq__ = utils.obj_eq
 
 
 class UiConfirmReplacement(UiConfirm):
@@ -187,6 +207,10 @@ def confirm_decred_sstx_submission(output: TxOutput, coin: CoinInfo, amount_unit
     return (yield UiConfirmDecredSSTXSubmission(output, coin, amount_unit))
 
 
+def confirm_payment_request(payment_req: TxAckPaymentRequest, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[Any]:  # type: ignore
+    return (yield UiConfirmPaymentRequest(payment_req, coin, amount_unit))
+
+
 def confirm_replacement(description: str, txid: bytes) -> Awaitable[Any]:  # type: ignore
     return (yield UiConfirmReplacement(description, txid))
 
@@ -290,6 +314,15 @@ def request_tx_prev_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: b
     _clear_tx_request(tx_req)
     # return sanitize_tx_prev_output(ack.tx, coin)  # no sanitize is required
     return ack.tx.output
+
+
+def request_payment_req(tx_req: TxRequest, i: int) -> Awaitable[TxAckPaymentRequest]:  # type: ignore
+    assert tx_req.details is not None
+    tx_req.request_type = RequestType.TXPAYMENTREQ
+    tx_req.details.request_index = i
+    ack = yield TxAckPaymentRequest, tx_req
+    _clear_tx_request(tx_req)
+    return sanitize_payment_req(ack)
 
 
 def request_tx_finish(tx_req: TxRequest) -> Awaitable[None]:  # type: ignore
@@ -459,3 +492,13 @@ def sanitize_tx_output(txo: TxOutput, coin: CoinInfo) -> TxOutput:
         raise wire.DataError("Missing orig_index field.")
 
     return txo
+
+
+def sanitize_payment_req(payment_req: TxAckPaymentRequest) -> TxAckPaymentRequest:
+    for memo in payment_req.memos:
+        if (memo.text_memo, memo.refund_memo, memo.coin_purchase_memo).count(None) != 2:
+            raise wire.DataError(
+                "Exactly one memo type must be specified in each PaymentRequestMemo."
+            )
+
+    return payment_req

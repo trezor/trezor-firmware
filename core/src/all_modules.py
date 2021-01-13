@@ -276,6 +276,8 @@ apps.bitcoin.sign_tx.matchcheck
 import apps.bitcoin.sign_tx.matchcheck
 apps.bitcoin.sign_tx.omni
 import apps.bitcoin.sign_tx.omni
+apps.bitcoin.sign_tx.payment_request
+import apps.bitcoin.sign_tx.payment_request
 apps.bitcoin.sign_tx.progress
 import apps.bitcoin.sign_tx.progress
 apps.bitcoin.sign_tx.sig_hasher
