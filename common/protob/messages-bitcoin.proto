@@ -87,6 +87,7 @@ message GetAddress {
     optional bool show_display = 3;                                     // optionally show on display before sending the result
     optional MultisigRedeemScriptType multisig = 4;                     // filled if we are showing a multisig address
     optional InputScriptType script_type = 5 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
+    optional bool ignore_xpub_magic = 6;                                // ignore SLIP-0132 XPUB magic, use xpub/tpub prefix for all account types
 }
 
 /**
