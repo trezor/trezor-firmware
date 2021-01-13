@@ -332,8 +332,6 @@ apps.homescreen.homescreen
 import apps.homescreen.homescreen
 apps.homescreen.lockscreen
 import apps.homescreen.lockscreen
-apps.management
-import apps.management
 apps.management.apply_flags
 import apps.management.apply_flags
 apps.management.apply_settings
@@ -348,6 +346,8 @@ apps.management.change_wipe_code
 import apps.management.change_wipe_code
 apps.management.get_next_u2f_counter
 import apps.management.get_next_u2f_counter
+apps.management.get_nonce
+import apps.management.get_nonce
 apps.management.recovery_device
 import apps.management.recovery_device
 apps.management.recovery_device.homescreen
