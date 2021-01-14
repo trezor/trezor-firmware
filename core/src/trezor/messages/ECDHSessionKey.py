@@ -16,12 +16,12 @@ class ECDHSessionKey(p.MessageType):
     def __init__(
         self,
         *,
-        session_key: bytes = None,
+        session_key: bytes,
     ) -> None:
         self.session_key = session_key
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('session_key', p.BytesType, None),
+            1: ('session_key', p.BytesType, p.FLAG_REQUIRED),
         }

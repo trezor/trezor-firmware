@@ -16,12 +16,12 @@ class NEMDecryptedMessage(p.MessageType):
     def __init__(
         self,
         *,
-        payload: bytes = None,
+        payload: bytes,
     ) -> None:
         self.payload = payload
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('payload', p.BytesType, None),
+            1: ('payload', p.BytesType, p.FLAG_REQUIRED),
         }

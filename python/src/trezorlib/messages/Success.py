@@ -16,12 +16,12 @@ class Success(p.MessageType):
     def __init__(
         self,
         *,
-        message: str = None,
+        message: str = "",
     ) -> None:
         self.message = message
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('message', p.UnicodeType, None),
+            1: ('message', p.UnicodeType, ""),  # default=
         }

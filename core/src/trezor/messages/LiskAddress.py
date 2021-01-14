@@ -16,12 +16,12 @@ class LiskAddress(p.MessageType):
     def __init__(
         self,
         *,
-        address: str = None,
+        address: str,
     ) -> None:
         self.address = address
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('address', p.UnicodeType, None),
+            1: ('address', p.UnicodeType, p.FLAG_REQUIRED),
         }

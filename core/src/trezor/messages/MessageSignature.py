@@ -16,8 +16,8 @@ class MessageSignature(p.MessageType):
     def __init__(
         self,
         *,
-        address: str = None,
-        signature: bytes = None,
+        address: str,
+        signature: bytes,
     ) -> None:
         self.address = address
         self.signature = signature
@@ -25,6 +25,6 @@ class MessageSignature(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('address', p.UnicodeType, None),
-            2: ('signature', p.BytesType, None),
+            1: ('address', p.UnicodeType, p.FLAG_REQUIRED),
+            2: ('signature', p.BytesType, p.FLAG_REQUIRED),
         }

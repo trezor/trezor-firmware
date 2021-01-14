@@ -16,12 +16,12 @@ class EosSignedTx(p.MessageType):
     def __init__(
         self,
         *,
-        signature: str = None,
+        signature: str,
     ) -> None:
         self.signature = signature
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('signature', p.UnicodeType, None),
+            1: ('signature', p.UnicodeType, p.FLAG_REQUIRED),
         }

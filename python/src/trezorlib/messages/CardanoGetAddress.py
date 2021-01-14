@@ -18,21 +18,21 @@ class CardanoGetAddress(p.MessageType):
     def __init__(
         self,
         *,
-        show_display: bool = None,
-        protocol_magic: int = None,
-        network_id: int = None,
-        address_parameters: CardanoAddressParametersType = None,
+        protocol_magic: int,
+        network_id: int,
+        address_parameters: CardanoAddressParametersType,
+        show_display: bool = False,
     ) -> None:
-        self.show_display = show_display
         self.protocol_magic = protocol_magic
         self.network_id = network_id
         self.address_parameters = address_parameters
+        self.show_display = show_display
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            2: ('show_display', p.BoolType, None),
-            3: ('protocol_magic', p.UVarintType, None),
-            4: ('network_id', p.UVarintType, None),
-            5: ('address_parameters', CardanoAddressParametersType, None),
+            2: ('show_display', p.BoolType, False),  # default=false
+            3: ('protocol_magic', p.UVarintType, p.FLAG_REQUIRED),
+            4: ('network_id', p.UVarintType, p.FLAG_REQUIRED),
+            5: ('address_parameters', CardanoAddressParametersType, p.FLAG_REQUIRED),
         }

@@ -18,8 +18,8 @@ class LiskSignTx(p.MessageType):
     def __init__(
         self,
         *,
+        transaction: LiskTransactionCommon,
         address_n: List[int] = None,
-        transaction: LiskTransactionCommon = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.transaction = transaction
@@ -28,5 +28,5 @@ class LiskSignTx(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            2: ('transaction', LiskTransactionCommon, None),
+            2: ('transaction', LiskTransactionCommon, p.FLAG_REQUIRED),
         }

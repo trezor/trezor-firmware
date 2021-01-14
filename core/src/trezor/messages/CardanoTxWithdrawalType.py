@@ -15,8 +15,8 @@ class CardanoTxWithdrawalType(p.MessageType):
     def __init__(
         self,
         *,
+        amount: int,
         path: List[int] = None,
-        amount: int = None,
     ) -> None:
         self.path = path if path is not None else []
         self.amount = amount
@@ -25,5 +25,5 @@ class CardanoTxWithdrawalType(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('path', p.UVarintType, p.FLAG_REPEATED),
-            2: ('amount', p.UVarintType, None),
+            2: ('amount', p.UVarintType, p.FLAG_REQUIRED),
         }
