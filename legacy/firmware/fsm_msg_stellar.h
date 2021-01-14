@@ -43,7 +43,6 @@ void fsm_msgStellarGetAddress(const StellarGetAddress *msg) {
     }
   }
 
-  resp->has_address = true;
   stellar_publicAddressAsStr(node->public_key + 1, resp->address,
                              sizeof(resp->address));
 

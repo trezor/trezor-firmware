@@ -69,9 +69,7 @@ void lisk_sign_message(const HDNode *node, const LiskSignMessage *msg,
   memcpy(resp->signature.bytes, signature, sizeof(signature));
   memcpy(resp->public_key.bytes, &node->public_key[1], 32);
 
-  resp->has_signature = true;
   resp->signature.size = 64;
-  resp->has_public_key = true;
   resp->public_key.size = 32;
 }
 
@@ -173,97 +171,94 @@ static void lisk_format_value(uint64_t value, char *formated_value) {
 void lisk_sign_tx(const HDNode *node, LiskSignTx *msg, LiskSignedTx *resp) {
   lisk_update_raw_tx(node, msg);
 
-  if (msg->has_transaction) {
-    SHA256_CTX ctx = {0};
-    sha256_Init(&ctx);
+  SHA256_CTX ctx = {0};
+  sha256_Init(&ctx);
 
-    switch (msg->transaction.type) {
-      case LiskTransactionType_Transfer:
-        layoutRequireConfirmTx(msg->transaction.recipient_id,
-                               msg->transaction.amount);
-        break;
-      case LiskTransactionType_RegisterDelegate:
-        layoutRequireConfirmDelegateRegistration(&msg->transaction.asset);
-        break;
-      case LiskTransactionType_CastVotes:
-        layoutRequireConfirmCastVotes(&msg->transaction.asset);
-        break;
-      case LiskTransactionType_RegisterSecondPassphrase:
-        layoutLiskPublicKey(msg->transaction.asset.signature.public_key.bytes);
-        break;
-      case LiskTransactionType_RegisterMultisignatureAccount:
-        layoutRequireConfirmMultisig(&msg->transaction.asset);
-        break;
-      default:
-        fsm_sendFailure(FailureType_Failure_DataError,
-                        _("Invalid transaction type"));
-        layoutHome();
-        break;
-    }
-    if (!protectButton((msg->transaction.type ==
-                                LiskTransactionType_RegisterSecondPassphrase
-                            ? ButtonRequestType_ButtonRequest_PublicKey
-                            : ButtonRequestType_ButtonRequest_SignTx),
-                       false)) {
-      fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing cancelled");
+  switch (msg->transaction.type) {
+    case LiskTransactionType_Transfer:
+      layoutRequireConfirmTx(msg->transaction.recipient_id,
+                             msg->transaction.amount);
+      break;
+    case LiskTransactionType_RegisterDelegate:
+      layoutRequireConfirmDelegateRegistration(&msg->transaction.asset);
+      break;
+    case LiskTransactionType_CastVotes:
+      layoutRequireConfirmCastVotes(&msg->transaction.asset);
+      break;
+    case LiskTransactionType_RegisterSecondPassphrase:
+      layoutLiskPublicKey(msg->transaction.asset.signature.public_key.bytes);
+      break;
+    case LiskTransactionType_RegisterMultisignatureAccount:
+      layoutRequireConfirmMultisig(&msg->transaction.asset);
+      break;
+    default:
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Invalid transaction type"));
       layoutHome();
-      return;
-    }
-
-    layoutRequireConfirmFee(msg->transaction.fee, msg->transaction.amount);
-    if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
-      fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing cancelled");
-      layoutHome();
-      return;
-    }
-    layoutProgressSwipe(_("Signing transaction"), 0);
-
-    sha256_Update(&ctx, (const uint8_t *)&msg->transaction.type, 1);
-
-    lisk_hashupdate_uint32(&ctx, msg->transaction.timestamp);
-
-    sha256_Update(&ctx, msg->transaction.sender_public_key.bytes, 32);
-
-    if (msg->transaction.has_requester_public_key) {
-      sha256_Update(&ctx, msg->transaction.requester_public_key.bytes,
-                    msg->transaction.requester_public_key.size);
-    }
-
-    uint64_t recipient_id = 0;
-    if (msg->transaction.has_recipient_id &&
-        msg->transaction.recipient_id[0] != 0) {
-      // parse integer from lisk address ("123L" -> 123)
-      for (size_t i = 0; i < strlen(msg->transaction.recipient_id) - 1; i++) {
-        if (msg->transaction.recipient_id[i] < '0' ||
-            msg->transaction.recipient_id[i] > '9') {
-          fsm_sendFailure(FailureType_Failure_DataError,
-                          _("Invalid recipient_id"));
-          layoutHome();
-          return;
-        }
-        recipient_id *= 10;
-        recipient_id += (msg->transaction.recipient_id[i] - '0');
-      }
-    }
-    lisk_hashupdate_uint64_be(&ctx, recipient_id);
-    lisk_hashupdate_uint64_le(&ctx, msg->transaction.amount);
-
-    lisk_hashupdate_asset(&ctx, msg->transaction.type, &msg->transaction.asset);
-
-    // if signature exist calculate second signature
-    if (msg->transaction.has_signature) {
-      sha256_Update(&ctx, msg->transaction.signature.bytes,
-                    msg->transaction.signature.size);
-    }
-
-    uint8_t hash[32] = {0};
-    sha256_Final(&ctx, hash);
-    ed25519_sign(hash, 32, node->private_key, &node->public_key[1],
-                 resp->signature.bytes);
-
-    resp->has_signature = true;
-    resp->signature.size = 64;
+      break;
   }
+  if (!protectButton(
+          (msg->transaction.type == LiskTransactionType_RegisterSecondPassphrase
+               ? ButtonRequestType_ButtonRequest_PublicKey
+               : ButtonRequestType_ButtonRequest_SignTx),
+          false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing cancelled");
+    layoutHome();
+    return;
+  }
+
+  layoutRequireConfirmFee(msg->transaction.fee, msg->transaction.amount);
+  if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, "Signing cancelled");
+    layoutHome();
+    return;
+  }
+  layoutProgressSwipe(_("Signing transaction"), 0);
+
+  sha256_Update(&ctx, (const uint8_t *)&msg->transaction.type, 1);
+
+  lisk_hashupdate_uint32(&ctx, msg->transaction.timestamp);
+
+  sha256_Update(&ctx, msg->transaction.sender_public_key.bytes, 32);
+
+  if (msg->transaction.has_requester_public_key) {
+    sha256_Update(&ctx, msg->transaction.requester_public_key.bytes,
+                  msg->transaction.requester_public_key.size);
+  }
+
+  uint64_t recipient_id = 0;
+  if (msg->transaction.has_recipient_id &&
+      msg->transaction.recipient_id[0] != 0) {
+    // parse integer from lisk address ("123L" -> 123)
+    for (size_t i = 0; i < strlen(msg->transaction.recipient_id) - 1; i++) {
+      if (msg->transaction.recipient_id[i] < '0' ||
+          msg->transaction.recipient_id[i] > '9') {
+        fsm_sendFailure(FailureType_Failure_DataError,
+                        _("Invalid recipient_id"));
+        layoutHome();
+        return;
+      }
+      recipient_id *= 10;
+      recipient_id += (msg->transaction.recipient_id[i] - '0');
+    }
+  }
+  lisk_hashupdate_uint64_be(&ctx, recipient_id);
+  lisk_hashupdate_uint64_le(&ctx, msg->transaction.amount);
+
+  lisk_hashupdate_asset(&ctx, msg->transaction.type, &msg->transaction.asset);
+
+  // if signature exist calculate second signature
+  if (msg->transaction.has_signature) {
+    sha256_Update(&ctx, msg->transaction.signature.bytes,
+                  msg->transaction.signature.size);
+  }
+
+  uint8_t hash[32] = {0};
+  sha256_Final(&ctx, hash);
+  ed25519_sign(hash, 32, node->private_key, &node->public_key[1],
+               resp->signature.bytes);
+
+  resp->signature.size = 64;
 }
 
 // Layouts

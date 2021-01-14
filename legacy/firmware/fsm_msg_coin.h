@@ -47,7 +47,6 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
   if (!node) return;
   hdnode_fill_public_key(node);
 
-  resp->has_node = true;
   resp->node.depth = node->depth;
   resp->node.fingerprint = fingerprint;
   resp->node.child_num = node->child_num;
@@ -61,7 +60,6 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
     resp->node.public_key.bytes[0] = 0;
   }
 
-  resp->has_xpub = true;
   if (coin->xpub_magic && (script_type == InputScriptType_SPENDADDRESS ||
                            script_type == InputScriptType_SPENDMULTISIG)) {
     hdnode_serialize_public(node, fingerprint, coin->xpub_magic, resp->xpub,
@@ -252,7 +250,6 @@ void fsm_msgSignMessage(const SignMessage *msg) {
   layoutProgressSwipe(_("Signing"), 0);
   if (cryptoMessageSign(coin, node, msg->script_type, msg->message.bytes,
                         msg->message.size, resp->signature.bytes) == 0) {
-    resp->has_address = true;
     hdnode_fill_public_key(node);
     if (!compute_address(coin, msg->script_type, node, false, NULL,
                          resp->address)) {
@@ -261,7 +258,6 @@ void fsm_msgSignMessage(const SignMessage *msg) {
       layoutHome();
       return;
     }
-    resp->has_signature = true;
     resp->signature.size = 65;
     msg_write(MessageType_MessageType_MessageSignature, resp);
   } else {

@@ -1150,7 +1150,6 @@ void stellar_fillSignedTx(StellarSignedTx *resp) {
   // signing
   memcpy(resp->public_key.bytes, stellar_activeTx.signing_pubkey, 32);
   resp->public_key.size = 32;
-  resp->has_public_key = true;
 
   // Add the signature (note that this does not include the 4-byte hint since it
   // can be calculated from the public key)
@@ -1159,7 +1158,6 @@ void stellar_fillSignedTx(StellarSignedTx *resp) {
   stellar_getSignatureForActiveTx(signature);
   memcpy(resp->signature.bytes, signature, sizeof(signature));
   resp->signature.size = sizeof(signature);
-  resp->has_signature = true;
 }
 
 bool stellar_allOperationsConfirmed() {
