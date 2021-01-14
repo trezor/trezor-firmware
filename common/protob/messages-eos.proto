@@ -21,8 +21,8 @@ message EosGetPublicKey {
  * @end
  */
 message EosPublicKey {
-    optional string wif_public_key = 1; // EOS pub key in Base58 encoding
-    optional bytes raw_public_key = 2;  // Raw public key
+    required string wif_public_key = 1; // EOS pub key in Base58 encoding
+    required bytes raw_public_key = 2;  // Raw public key
 }
 
 /**
@@ -101,10 +101,10 @@ message EosTxActionAck {
      * Structure representing auth key
      */
     message EosAuthorizationKey {
-        optional uint32 type = 1;
+        required uint32 type = 1;
         optional bytes key = 2;        // Explicit public key bytes; when present, address_n must be empty
         repeated uint32 address_n = 3; // BIP-32 path to derive key; when filled out, key must not be present
-        optional uint32 weight = 4;
+        required uint32 weight = 4;
     }
 
     /**
@@ -266,7 +266,7 @@ message EosTxActionAck {
      * Structure representing actions not implemented above.
      */
     message EosActionUnknown {
-        optional uint32 data_size = 1;
+        required uint32 data_size = 1;
         optional bytes data_chunk = 2;
     }
 }
@@ -277,5 +277,5 @@ message EosTxActionAck {
  * @end
  */
 message EosSignedTx {
-    optional string signature = 1; // Computed signature
+    required string signature = 1; // Computed signature
 }

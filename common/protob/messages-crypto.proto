@@ -123,5 +123,5 @@ message CosiSign {
  * @end
  */
 message CosiSignature {
-    optional bytes signature = 1;   // Signature
+    required bytes signature = 1;   // Signature
 }

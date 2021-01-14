@@ -21,7 +21,7 @@ message LiskGetAddress {
  * @end
  */
 message LiskAddress {
-    optional string address = 1;    // Lisk address
+    required string address = 1;    // Lisk address
 }
 
 /**
@@ -39,7 +39,7 @@ message LiskGetPublicKey {
  * @end
  */
 message LiskPublicKey {
-    optional bytes public_key = 1;  // Lisk public key
+    required bytes public_key = 1;  // Lisk public key
 }
 
 /**
@@ -50,7 +50,7 @@ message LiskPublicKey {
  */
 message LiskSignTx {
     repeated uint32 address_n = 1;                  // BIP-32 path to derive the key from master node
-    optional LiskTransactionCommon transaction = 2; // Lisk transaction structure
+    required LiskTransactionCommon transaction = 2; // Lisk transaction structure
     /**
      * Structure representing the common part for Lisk transactions
      */
@@ -115,7 +115,7 @@ message LiskSignTx {
  * @end
  */
 message LiskSignedTx {
-    optional bytes signature = 1;
+    required bytes signature = 1;
 }
 
 /**
@@ -126,7 +126,7 @@ message LiskSignedTx {
  */
 message LiskSignMessage {
     repeated uint32 address_n = 1;
-    optional bytes message = 2;
+    required bytes message = 2;
 }
 
 /**
@@ -134,8 +134,8 @@ message LiskSignMessage {
  * @end
  */
 message LiskMessageSignature {
-    optional bytes public_key = 1;
-    optional bytes signature = 2;
+    required bytes public_key = 1;
+    required bytes signature = 2;
 }
 
 /**
@@ -145,7 +145,7 @@ message LiskMessageSignature {
  * @next Failure
  */
 message LiskVerifyMessage {
-    optional bytes public_key = 1;
-    optional bytes signature = 2;
-    optional bytes message = 3;
+    required bytes public_key = 1;
+    required bytes signature = 2;
+    required bytes message = 3;
 }

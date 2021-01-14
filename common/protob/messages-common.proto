@@ -10,7 +10,7 @@ option java_outer_classname = "TrezorMessageCommon";
  * @end
  */
 message Success {
-    optional string message = 1;    // human readable description of action or request-specific payload
+    optional string message = 1 [default=""]; // human readable description of action or request-specific payload
 }
 
 /**

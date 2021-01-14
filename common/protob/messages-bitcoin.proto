@@ -80,8 +80,8 @@ message GetPublicKey {
  * @end
  */
 message PublicKey {
-    optional common.HDNodeType node = 1;        // BIP32 public node
-    optional string xpub = 2;                   // serialized form of public node
+    required common.HDNodeType node = 1;        // BIP32 public node
+    required string xpub = 2;                   // serialized form of public node
     optional uint32 root_fingerprint = 3;       // master root node fingerprint
 }
 
@@ -147,8 +147,8 @@ message SignMessage {
  * @end
  */
 message MessageSignature {
-    optional string address = 1;    // address used to sign the message
-    optional bytes signature = 2;   // signature of the message
+    required string address = 1;    // address used to sign the message
+    required bytes signature = 2;   // signature of the message
 }
 
 /**

@@ -21,7 +21,7 @@ message BinanceGetAddress {
  * @end
  */
 message BinanceAddress {
-    optional string address = 1;    // prefixed bech32 Binance address
+    required string address = 1;    // prefixed bech32 Binance address
 }
 
 /**
@@ -39,7 +39,7 @@ message BinanceGetPublicKey {
  * @end
  */
 message BinancePublicKey {
-    optional bytes public_key = 1;
+    required bytes public_key = 1;
 }
 
 /**
@@ -141,7 +141,7 @@ message BinanceCancelMsg {
  * @end
  */
 message BinanceSignedTx {
-	optional bytes signature = 1;
-    optional bytes public_key = 2;
+	required bytes signature = 1;
+    required bytes public_key = 2;
 }
 
