@@ -1,4 +1,9 @@
-from apps.common.writers import write_bytes_unchecked, write_uint32_be, write_uint64_be
+from apps.common.writers import (
+    write_bytes_fixed,
+    write_bytes_unchecked,
+    write_uint32_be,
+    write_uint64_be,
+)
 
 from .helpers import public_key_from_address
 
@@ -18,9 +23,9 @@ def write_string(w, s: AnyStr) -> None:
     write_uint32(w, len(buf))
     write_bytes_unchecked(w, buf)
     # if len isn't a multiple of 4, add padding bytes
-    reminder = len(buf) % 4
-    if reminder:
-        write_bytes_unchecked(w, bytes([0] * (4 - reminder)))
+    remainder = len(buf) % 4
+    if remainder:
+        write_bytes_unchecked(w, bytes([0] * (4 - remainder)))
 
 
 def write_bool(w, val: bool):
@@ -33,4 +38,4 @@ def write_bool(w, val: bool):
 def write_pubkey(w, address: str):
     # first 4 bytes of an address are the type, there's only one type (0)
     write_uint32(w, 0)
-    write_bytes_unchecked(w, public_key_from_address(address))
+    write_bytes_fixed(w, public_key_from_address(address), 32)
