@@ -172,8 +172,8 @@ message NEMSignTx {
  * @end
  */
 message NEMSignedTx {
-    optional bytes data = 1;        // Transaction data
-    optional bytes signature = 2;   // Signature for the transaction
+    required bytes data = 1;        // Transaction data
+    required bytes signature = 2;   // Signature for the transaction
 }
 
 /**
@@ -194,5 +194,5 @@ message NEMDecryptMessage {
  * @end
  */
 message NEMDecryptedMessage {
-    optional bytes payload = 1;     // Actual message data (unencrypted)
+    required bytes payload = 1;     // Actual message data (unencrypted)
 }

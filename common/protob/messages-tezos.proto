@@ -21,7 +21,7 @@ message TezosGetAddress {
  * @end
  */
 message TezosAddress {
-    optional string address = 1;        // Coin address in Base58 encoding
+    required string address = 1;        // Coin address in Base58 encoding
 }
 
 /**
@@ -39,7 +39,7 @@ message TezosGetPublicKey {
  * @end
  */
 message TezosPublicKey {
-    optional string public_key = 1;          // b58 encoded Tezos public key with prefix
+    required string public_key = 1;          // b58 encoded Tezos public key with prefix
 }
 
 /**
@@ -49,7 +49,7 @@ message TezosPublicKey {
  */
 message TezosSignTx {
     repeated uint32 address_n = 1;                  // BIP-32 path to derive the key from master node
-    optional bytes branch = 2;
+    required bytes branch = 2;
 
     optional TezosRevealOp reveal = 3;              // Tezos reveal operation (may be bundled with other op)
     optional TezosTransactionOp transaction = 4;    // Tezos transaction operation
@@ -61,8 +61,8 @@ message TezosSignTx {
      * Tezos contract ID
      */
     message TezosContractID {
-        optional TezosContractType tag = 1;
-        optional bytes hash = 2;                    // Implicit = 21B, originated = 20B + 1B padding
+        required TezosContractType tag = 1;
+        required bytes hash = 2;                    // Implicit = 21B, originated = 20B + 1B padding
         /*
          * Type of Tezos Contract type
          */
@@ -75,24 +75,24 @@ message TezosSignTx {
      * Structure representing information for reveal
      */
     message TezosRevealOp {
-        optional bytes source = 7;
-        optional uint64 fee = 2;
-        optional uint64 counter = 3;
-        optional uint64 gas_limit = 4;
-        optional uint64 storage_limit = 5;
-        optional bytes public_key = 6;
+        required bytes source = 7;
+        required uint64 fee = 2;
+        required uint64 counter = 3;
+        required uint64 gas_limit = 4;
+        required uint64 storage_limit = 5;
+        required bytes public_key = 6;
     }
     /**
      * Structure representing information for transaction
      */
     message TezosTransactionOp {
-        optional bytes source = 9;
-        optional uint64 fee = 2;
-        optional uint64 counter = 3;
-        optional uint64 gas_limit = 4;
-        optional uint64 storage_limit = 5;
-        optional uint64 amount = 6;
-        optional TezosContractID destination = 7;
+        required bytes source = 9;
+        required uint64 fee = 2;
+        required uint64 counter = 3;
+        required uint64 gas_limit = 4;
+        required uint64 storage_limit = 5;
+        required uint64 amount = 6;
+        required TezosContractID destination = 7;
         optional bytes parameters = 8;
         optional TezosParametersManager parameters_manager = 10;
 
@@ -111,28 +111,28 @@ message TezosSignTx {
      * Structure representing information for origination
      */
     message TezosOriginationOp {
-        optional bytes source = 12;
-        optional uint64 fee = 2;
-        optional uint64 counter = 3;
-        optional uint64 gas_limit = 4;
-        optional uint64 storage_limit = 5;
+        required bytes source = 12;
+        required uint64 fee = 2;
+        required uint64 counter = 3;
+        required uint64 gas_limit = 4;
+        required uint64 storage_limit = 5;
         optional bytes manager_pubkey = 6;
-        optional uint64 balance = 7;
+        required uint64 balance = 7;
         optional bool spendable = 8;
         optional bool delegatable = 9;
         optional bytes delegate = 10;
-        optional bytes script = 11;
+        required bytes script = 11;
     }
     /**
      * Structure representing information for delegation
      */
     message TezosDelegationOp {
-        optional bytes source = 7;
-        optional uint64 fee = 2;
-        optional uint64 counter = 3;
-        optional uint64 gas_limit = 4;
-        optional uint64 storage_limit = 5;
-        optional bytes delegate = 6;
+        required bytes source = 7;
+        required uint64 fee = 2;
+        required uint64 counter = 3;
+        required uint64 gas_limit = 4;
+        required uint64 storage_limit = 5;
+        required bytes delegate = 6;
     }
     /**
      * Structure representing information for proposal
@@ -164,7 +164,7 @@ message TezosSignTx {
  * @end
  */
 message TezosSignedTx {
-    optional string signature = 1;          // Tezos b58 encoded transaction signature with prefix
-    optional bytes sig_op_contents = 2;     // operation_bytes + signed operation_bytes
-    optional string operation_hash = 3;     // b58 encoded hashed operation contents with prefix
+    required string signature = 1;          // Tezos b58 encoded transaction signature with prefix
+    required bytes sig_op_contents = 2;     // operation_bytes + signed operation_bytes
+    required string operation_hash = 3;     // b58 encoded hashed operation contents with prefix
 }
