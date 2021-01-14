@@ -16,12 +16,12 @@ class TezosPublicKey(p.MessageType):
     def __init__(
         self,
         *,
-        public_key: str = None,
+        public_key: str,
     ) -> None:
         self.public_key = public_key
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('public_key', p.UnicodeType, None),
+            1: ('public_key', p.UnicodeType, p.FLAG_REQUIRED),
         }

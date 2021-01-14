@@ -16,8 +16,8 @@ class StellarSignedTx(p.MessageType):
     def __init__(
         self,
         *,
-        public_key: bytes = None,
-        signature: bytes = None,
+        public_key: bytes,
+        signature: bytes,
     ) -> None:
         self.public_key = public_key
         self.signature = signature
@@ -25,6 +25,6 @@ class StellarSignedTx(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('public_key', p.BytesType, None),
-            2: ('signature', p.BytesType, None),
+            1: ('public_key', p.BytesType, p.FLAG_REQUIRED),
+            2: ('signature', p.BytesType, p.FLAG_REQUIRED),
         }

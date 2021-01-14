@@ -18,9 +18,9 @@ class SignIdentity(p.MessageType):
     def __init__(
         self,
         *,
-        identity: IdentityType = None,
-        challenge_hidden: bytes = None,
-        challenge_visual: str = None,
+        identity: IdentityType,
+        challenge_hidden: bytes = b"",
+        challenge_visual: str = "",
         ecdsa_curve_name: str = None,
     ) -> None:
         self.identity = identity
@@ -31,8 +31,8 @@ class SignIdentity(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('identity', IdentityType, None),
-            2: ('challenge_hidden', p.BytesType, None),
-            3: ('challenge_visual', p.UnicodeType, None),
+            1: ('identity', IdentityType, p.FLAG_REQUIRED),
+            2: ('challenge_hidden', p.BytesType, b""),  # default=
+            3: ('challenge_visual', p.UnicodeType, ""),  # default=
             4: ('ecdsa_curve_name', p.UnicodeType, None),
         }

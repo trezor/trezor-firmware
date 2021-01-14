@@ -15,42 +15,42 @@ class TezosOriginationOp(p.MessageType):
     def __init__(
         self,
         *,
-        source: bytes = None,
-        fee: int = None,
-        counter: int = None,
-        gas_limit: int = None,
-        storage_limit: int = None,
+        source: bytes,
+        fee: int,
+        counter: int,
+        gas_limit: int,
+        storage_limit: int,
+        balance: int,
+        script: bytes,
         manager_pubkey: bytes = None,
-        balance: int = None,
         spendable: bool = None,
         delegatable: bool = None,
         delegate: bytes = None,
-        script: bytes = None,
     ) -> None:
         self.source = source
         self.fee = fee
         self.counter = counter
         self.gas_limit = gas_limit
         self.storage_limit = storage_limit
-        self.manager_pubkey = manager_pubkey
         self.balance = balance
+        self.script = script
+        self.manager_pubkey = manager_pubkey
         self.spendable = spendable
         self.delegatable = delegatable
         self.delegate = delegate
-        self.script = script
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            12: ('source', p.BytesType, None),
-            2: ('fee', p.UVarintType, None),
-            3: ('counter', p.UVarintType, None),
-            4: ('gas_limit', p.UVarintType, None),
-            5: ('storage_limit', p.UVarintType, None),
+            12: ('source', p.BytesType, p.FLAG_REQUIRED),
+            2: ('fee', p.UVarintType, p.FLAG_REQUIRED),
+            3: ('counter', p.UVarintType, p.FLAG_REQUIRED),
+            4: ('gas_limit', p.UVarintType, p.FLAG_REQUIRED),
+            5: ('storage_limit', p.UVarintType, p.FLAG_REQUIRED),
             6: ('manager_pubkey', p.BytesType, None),
-            7: ('balance', p.UVarintType, None),
+            7: ('balance', p.UVarintType, p.FLAG_REQUIRED),
             8: ('spendable', p.BoolType, None),
             9: ('delegatable', p.BoolType, None),
             10: ('delegate', p.BytesType, None),
-            11: ('script', p.BytesType, None),
+            11: ('script', p.BytesType, p.FLAG_REQUIRED),
         }

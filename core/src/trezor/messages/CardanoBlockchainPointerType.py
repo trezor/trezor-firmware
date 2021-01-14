@@ -15,9 +15,9 @@ class CardanoBlockchainPointerType(p.MessageType):
     def __init__(
         self,
         *,
-        block_index: int = None,
-        tx_index: int = None,
-        certificate_index: int = None,
+        block_index: int,
+        tx_index: int,
+        certificate_index: int,
     ) -> None:
         self.block_index = block_index
         self.tx_index = tx_index
@@ -26,7 +26,7 @@ class CardanoBlockchainPointerType(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('block_index', p.UVarintType, None),
-            2: ('tx_index', p.UVarintType, None),
-            3: ('certificate_index', p.UVarintType, None),
+            1: ('block_index', p.UVarintType, p.FLAG_REQUIRED),
+            2: ('tx_index', p.UVarintType, p.FLAG_REQUIRED),
+            3: ('certificate_index', p.UVarintType, p.FLAG_REQUIRED),
         }

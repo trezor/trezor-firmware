@@ -18,8 +18,8 @@ class EthereumPublicKey(p.MessageType):
     def __init__(
         self,
         *,
-        node: HDNodeType = None,
-        xpub: str = None,
+        node: HDNodeType,
+        xpub: str,
     ) -> None:
         self.node = node
         self.xpub = xpub
@@ -27,6 +27,6 @@ class EthereumPublicKey(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('node', HDNodeType, None),
-            2: ('xpub', p.UnicodeType, None),
+            1: ('node', HDNodeType, p.FLAG_REQUIRED),
+            2: ('xpub', p.UnicodeType, p.FLAG_REQUIRED),
         }

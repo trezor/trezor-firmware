@@ -16,8 +16,8 @@ class LiskSignMessage(p.MessageType):
     def __init__(
         self,
         *,
+        message: bytes,
         address_n: List[int] = None,
-        message: bytes = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.message = message
@@ -26,5 +26,5 @@ class LiskSignMessage(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            2: ('message', p.BytesType, None),
+            2: ('message', p.BytesType, p.FLAG_REQUIRED),
         }

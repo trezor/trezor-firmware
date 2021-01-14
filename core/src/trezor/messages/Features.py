@@ -19,11 +19,11 @@ class Features(p.MessageType):
     def __init__(
         self,
         *,
+        major_version: int,
+        minor_version: int,
+        patch_version: int,
         capabilities: List[EnumTypeCapability] = None,
         vendor: str = None,
-        major_version: int = None,
-        minor_version: int = None,
-        patch_version: int = None,
         bootloader_mode: bool = None,
         device_id: str = None,
         pin_protection: bool = None,
@@ -59,10 +59,10 @@ class Features(p.MessageType):
         experimental_features: bool = None,
     ) -> None:
         self.capabilities = capabilities if capabilities is not None else []
-        self.vendor = vendor
         self.major_version = major_version
         self.minor_version = minor_version
         self.patch_version = patch_version
+        self.vendor = vendor
         self.bootloader_mode = bootloader_mode
         self.device_id = device_id
         self.pin_protection = pin_protection
@@ -101,9 +101,9 @@ class Features(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('vendor', p.UnicodeType, None),
-            2: ('major_version', p.UVarintType, None),
-            3: ('minor_version', p.UVarintType, None),
-            4: ('patch_version', p.UVarintType, None),
+            2: ('major_version', p.UVarintType, p.FLAG_REQUIRED),
+            3: ('minor_version', p.UVarintType, p.FLAG_REQUIRED),
+            4: ('patch_version', p.UVarintType, p.FLAG_REQUIRED),
             5: ('bootloader_mode', p.BoolType, None),
             6: ('device_id', p.UnicodeType, None),
             7: ('pin_protection', p.BoolType, None),

@@ -15,7 +15,7 @@ class EosActionUnknown(p.MessageType):
     def __init__(
         self,
         *,
-        data_size: int = None,
+        data_size: int,
         data_chunk: bytes = None,
     ) -> None:
         self.data_size = data_size
@@ -24,6 +24,6 @@ class EosActionUnknown(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('data_size', p.UVarintType, None),
+            1: ('data_size', p.UVarintType, p.FLAG_REQUIRED),
             2: ('data_chunk', p.BytesType, None),
         }

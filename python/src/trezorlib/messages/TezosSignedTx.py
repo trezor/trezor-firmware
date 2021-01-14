@@ -16,9 +16,9 @@ class TezosSignedTx(p.MessageType):
     def __init__(
         self,
         *,
-        signature: str = None,
-        sig_op_contents: bytes = None,
-        operation_hash: str = None,
+        signature: str,
+        sig_op_contents: bytes,
+        operation_hash: str,
     ) -> None:
         self.signature = signature
         self.sig_op_contents = sig_op_contents
@@ -27,7 +27,7 @@ class TezosSignedTx(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('signature', p.UnicodeType, None),
-            2: ('sig_op_contents', p.BytesType, None),
-            3: ('operation_hash', p.UnicodeType, None),
+            1: ('signature', p.UnicodeType, p.FLAG_REQUIRED),
+            2: ('sig_op_contents', p.BytesType, p.FLAG_REQUIRED),
+            3: ('operation_hash', p.UnicodeType, p.FLAG_REQUIRED),
         }

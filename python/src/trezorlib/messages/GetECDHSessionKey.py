@@ -18,8 +18,8 @@ class GetECDHSessionKey(p.MessageType):
     def __init__(
         self,
         *,
-        identity: IdentityType = None,
-        peer_public_key: bytes = None,
+        identity: IdentityType,
+        peer_public_key: bytes,
         ecdsa_curve_name: str = None,
     ) -> None:
         self.identity = identity
@@ -29,7 +29,7 @@ class GetECDHSessionKey(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('identity', IdentityType, None),
-            2: ('peer_public_key', p.BytesType, None),
+            1: ('identity', IdentityType, p.FLAG_REQUIRED),
+            2: ('peer_public_key', p.BytesType, p.FLAG_REQUIRED),
             3: ('ecdsa_curve_name', p.UnicodeType, None),
         }
