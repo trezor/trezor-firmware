@@ -137,6 +137,14 @@ def by_rp_id_hash(rp_id_hash: bytes) -> Optional[FIDOApp]:
             use_sign_count=False,
             use_self_attestation=None,
         )
+    elif rp_id_hash == b"\x86\x06\xc1\x68\xe5\x1f\xc1\x31\xe5\x46\xad\x57\xa1\x9f\x32\x97\xb1\x1e\x0e\x5c\xe8\x3e\x8e\x89\x31\xb2\x85\x08\x11\xcf\xa8\x81":
+        # WebAuthn key for Gemini
+        return FIDOApp(
+            label="gemini.com",
+            icon="apps/webauthn/res/icon_gemini.toif",
+            use_sign_count=False,
+            use_self_attestation=True,
+        )
     elif rp_id_hash == b"\x70\x61\x7d\xfe\xd0\x65\x86\x3a\xf4\x7c\x15\x55\x6c\x91\x79\x88\x80\x82\x8c\xc4\x07\xfd\xf7\x0a\xe8\x50\x11\x56\x94\x65\xa0\x75":
         # U2F key for GitHub
         return FIDOApp(
