@@ -67,8 +67,7 @@ async def process_action(
         await process_unknown_action(ctx, w, action)
 
     writers.write_action_common(sha, action.common)
-    writers.write_variant32(sha, len(w))
-    writers.write_bytes_unchecked(sha, w)
+    writers.write_bytes_prefixed(sha, w)
 
 
 async def process_unknown_action(
