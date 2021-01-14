@@ -28,7 +28,6 @@ void fsm_msgLiskGetAddress(const LiskGetAddress *msg) {
                                     msg->address_n_count, NULL);
   if (!node) return;
 
-  resp->has_address = true;
   hdnode_fill_public_key(node);
   lisk_get_address_from_public_key(&node->public_key[1], resp->address);
 
@@ -58,7 +57,6 @@ void fsm_msgLiskGetPublicKey(const LiskGetPublicKey *msg) {
 
   hdnode_fill_public_key(node);
 
-  resp->has_public_key = true;
   resp->public_key.size = 32;
 
   if (msg->has_show_display && msg->show_display) {
