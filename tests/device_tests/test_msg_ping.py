@@ -19,7 +19,7 @@ from trezorlib import messages
 
 def test_ping(client):
     with client:
-        client.set_expected_responses([messages.Success()])
+        client.set_expected_responses([messages.Success])
         res = client.ping("random data")
         assert res == "random data"
 
@@ -27,7 +27,7 @@ def test_ping(client):
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
-                messages.Success(),
+                messages.Success,
             ]
         )
         res = client.ping("random data", button_protection=True)

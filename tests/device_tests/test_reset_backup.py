@@ -57,8 +57,8 @@ def backup_flow_bip39(client):
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
                 messages.ButtonRequest(code=B.Success),
-                messages.Success(),
-                messages.Features(),
+                messages.Success,
+                messages.Features,
             ]
         )
         client.set_input_flow(input_flow)
@@ -102,8 +102,8 @@ def backup_flow_slip39_basic(client):
             * 5  # individual shares
             + [
                 messages.ButtonRequest(code=B.Success),
-                messages.Success(),
-                messages.Features(),
+                messages.Success,
+                messages.Features,
             ]
         )
         device.backup(client)
@@ -163,8 +163,8 @@ def backup_flow_slip39_advanced(client):
             * 25  # individual shares
             + [
                 messages.ButtonRequest(code=B.Success),
-                messages.Success(),
-                messages.Features(),
+                messages.Success,
+                messages.Features,
             ]
         )
         device.backup(client)
@@ -240,8 +240,8 @@ def test_skip_backup_manual(client, backup_type, backup_flow):
                 messages.EntropyRequest(),
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.ResetDevice),
-                messages.Success(),
-                messages.Features(),
+                messages.Success,
+                messages.Features,
             ]
         )
         device.reset(

@@ -59,7 +59,7 @@ def test_set_remove_wipe_code(client):
 
     with client:
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 5 + [messages.Success(), messages.Features()]
+            [messages.ButtonRequest()] * 5 + [messages.Success, messages.Features]
         )
         client.use_pin_sequence([PIN4, WIPE_CODE4, WIPE_CODE4])
         device.change_wipe_code(client)
@@ -71,7 +71,7 @@ def test_set_remove_wipe_code(client):
     # Test change wipe code.
     with client:
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 5 + [messages.Success(), messages.Features()]
+            [messages.ButtonRequest()] * 5 + [messages.Success, messages.Features]
         )
         client.use_pin_sequence([PIN4, WIPE_CODE6, WIPE_CODE6])
         device.change_wipe_code(client)
@@ -83,7 +83,7 @@ def test_set_remove_wipe_code(client):
     # Test remove wipe code.
     with client:
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 3 + [messages.Success(), messages.Features()]
+            [messages.ButtonRequest()] * 3 + [messages.Success, messages.Features]
         )
         client.use_pin_sequence([PIN4])
         device.change_wipe_code(client, remove=True)
@@ -125,7 +125,7 @@ def test_set_wipe_code_to_pin(client):
 
     with client:
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 6 + [messages.Success(), messages.Features()]
+            [messages.ButtonRequest()] * 6 + [messages.Success, messages.Features]
         )
         client.use_pin_sequence([PIN4, PIN4, WIPE_CODE4, WIPE_CODE4])
         device.change_wipe_code(client)
@@ -139,7 +139,7 @@ def test_set_pin_to_wipe_code(client):
     # Set wipe code.
     with client:
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 4 + [messages.Success(), messages.Features()]
+            [messages.ButtonRequest()] * 4 + [messages.Success, messages.Features]
         )
         client.use_pin_sequence([WIPE_CODE4, WIPE_CODE4])
         device.change_wipe_code(client)

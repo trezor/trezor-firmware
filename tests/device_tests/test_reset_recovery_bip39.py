@@ -75,8 +75,8 @@ def reset(client, strength=128, skip_backup=False):
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
                 messages.ButtonRequest(code=B.Success),
-                messages.Success(),
-                messages.Features(),
+                messages.Success,
+                messages.Features,
             ]
         )
         client.set_input_flow(input_flow)
@@ -136,8 +136,8 @@ def recover(client, mnemonic):
                 messages.ButtonRequest(code=B.RecoveryHomepage),
                 messages.ButtonRequest(code=B.MnemonicInput),
                 messages.ButtonRequest(code=B.Success),
-                messages.Success(),
-                messages.Features(),
+                messages.Success,
+                messages.Features,
             ]
         )
         ret = device.recover(client, pin_protection=False, label="label")
