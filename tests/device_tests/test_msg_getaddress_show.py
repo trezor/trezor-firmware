@@ -79,12 +79,89 @@ def test_show_multisig_3(client):
         )
 
 
+VECTORS_MULTISIG = (  # script_type, purpose48_type, address, xpubs, ignore_xpub_magic
+    (
+        messages.InputScriptType.SPENDMULTISIG,
+        0,
+        "33TU5DyVi2kFSGQUfmZxNHgPDPqruwdesY",
+        [
+            "xpub6EgGHjcvovyMw8xyoJw9ZRUfjGLS1KUmbjVqMKSNfM6E8hq4EbQ3CpBxfGCPsdxzXtCFuKCxYarzY1TYCG1cmPwq9ep548cM9Ws9rB8V8E8",
+            "xpub6EexEtC6c2rN5QCpzrL2nUNGDfxizCi3kM1C2Mk5a6PfQs4H3F72C642M3XbnzycvvtD4U6vzn1nYPpH8VUmiREc2YuXP3EFgN1uLTrVEj4",
+            "xpub6F6Tq7sVLDrhuV3SpvsVKrKofF6Hx7oKxWLFkN6dbepuMhuYueKUnQo7E972GJyeRHqPKu44V1C9zBL6KW47GXjuprhbNrPQahWAFKoL2rN",
+        ],
+        False,
+    ),
+    (
+        messages.InputScriptType.SPENDMULTISIG,
+        0,
+        "33TU5DyVi2kFSGQUfmZxNHgPDPqruwdesY",
+        [
+            "xpub6EgGHjcvovyMw8xyoJw9ZRUfjGLS1KUmbjVqMKSNfM6E8hq4EbQ3CpBxfGCPsdxzXtCFuKCxYarzY1TYCG1cmPwq9ep548cM9Ws9rB8V8E8",
+            "xpub6EexEtC6c2rN5QCpzrL2nUNGDfxizCi3kM1C2Mk5a6PfQs4H3F72C642M3XbnzycvvtD4U6vzn1nYPpH8VUmiREc2YuXP3EFgN1uLTrVEj4",
+            "xpub6F6Tq7sVLDrhuV3SpvsVKrKofF6Hx7oKxWLFkN6dbepuMhuYueKUnQo7E972GJyeRHqPKu44V1C9zBL6KW47GXjuprhbNrPQahWAFKoL2rN",
+        ],
+        True,
+    ),
+    (
+        messages.InputScriptType.SPENDP2SHWITNESS,
+        1,
+        "3PwoNRb1v7HxofcH6xfiq52nFrDarsn1ap",
+        [
+            "Ypub6kQcie2HXa5DFqmgCmad1Lg18pn3UwtXXyTKJkW3bGbQJuTYn55s7x4SVCSTRkjDzawFYP2rL9VkS2YChaN47d2XFyWsbEPevN9n9NXc3T3",
+            "Ypub6kPJfnbTKfxDNwYqbNAijySLYe7ixrVZHn9QksvtwrqCbUoemq5x74A4bH33FWe8p8udC5F2B78JV4EfHYaMupWZhoQRXJ32Z2y7fhowkPA",
+            "Ypub6kppG2Gr3rxZChPFhkMdPdLChewkPwLybPirJGBcJW1mRXeWdWvXLRP7xUcjJgTiGEQcJPKu8PTQMTtLXeiEjP7N2KGpamQnGUvBikJZvvP",
+        ],
+        False,
+    ),
+    (
+        messages.InputScriptType.SPENDP2SHWITNESS,
+        1,
+        "3PwoNRb1v7HxofcH6xfiq52nFrDarsn1ap",
+        [
+            "xpub6EgGHjcvovyMyyRBRkL1yBEhF4bLKyDSJbHRc6LcqVP7dd5Qm1Y2QmYNfHXPsQrQMUkTvKSAzGkhRaJsgeo6AuEFZAi3bv7AkupGAt826Mt",
+            "xpub6EexEtC6c2rN75CLpLv7hp12esw1ospU4PyX4DmUC5cuvCRWkmY7PsdzmN7yhAmKB2iqa1eLqEPFUc1LGd1Py6iHzzbbXykYPadbh8xQonD",
+            "xpub6F6Tq7sVLDrhvq2kvj72MTttotm3ExftN1Yxbc2BYioUkFGNcTNgdEs48ZhfkLatd8DpgKjDnWiMM1f1Wj9GnfK6KWTzbT8J72afkGf7Y9T",
+        ],
+        True,
+    ),
+    (
+        messages.InputScriptType.SPENDWITNESS,
+        2,
+        "bc1qqn9s63wly66rhzyz36hwzsa83augj5lve3ucqk5cpt5yvvze5ctsdfcg88",
+        [
+            "Zpub75Et2JhCgFchAwrkdQ2PWeCiEnLmQ8R8a8aANPL5r9a6L4VC9amvLtbmnZaEnS7m3YHd1ZnSYjKp1rFTZLm2cQ2CAuiEyNYaYWyeWEFGEmP",
+            "Zpub75DZyTGNUMVhGRgG7GsoF2FrsAAM48dPMMfYSo9G7iRxUg9FyuG3nMUSeYMXSF2rHtDNpv8skZZyDNzBq5x5znFtsPSDoaAXk5zBUBfdhSh",
+            "Zpub75f5ZgwmCYW37REirFNaE8DBg9qKJznqD498DsTAbX89Lk6tA98huCGM29mHAhwYTo1PSbWLQHXvsmMhDB8W9dFt3Eb2o6hT7HLDrcPebM5",
+        ],
+        False,
+    ),
+    (
+        messages.InputScriptType.SPENDWITNESS,
+        2,
+        "bc1qqn9s63wly66rhzyz36hwzsa83augj5lve3ucqk5cpt5yvvze5ctsdfcg88",
+        [
+            "xpub6EgGHjcvovyN3nK921zAGPfuB41cJXkYRdt3tLGmiMyvbgHpss4X1eRZwShbEBb1znz2e2bCkCED87QZpin3sSYKbmCzQ9Sc7LaV98ngdeX",
+            "xpub6EexEtC6c2rN9G8eVtqZzmj3oRqBxXxoCryRxk5wyvqnkHwtiBYeT7JEoRUsszW7F8unTNwdx2UNKe9J6Ty7Fpn2JEvyEM4ZJub274iiT1V",
+            "xpub6F6Tq7sVLDrhzFh7EsLLysgNcRWADQ8F4ZT1jpPrTjXycMuWtRRJZx69B2tdcTQoR3ho54K6bkSKz2WoUZ9XQfn1U65nDsbUg6w4VZ5HWdA",
+        ],
+        True,
+    ),
+)
+
+
 @pytest.mark.skip_t1
 @pytest.mark.multisig
-def test_show_multisig_xpubs(client):
+@pytest.mark.parametrize(
+    "script_type, purpose48_type, address, xpubs, ignore_xpub_magic", VECTORS_MULTISIG
+)
+def test_show_multisig_xpubs(
+    client, script_type, purpose48_type, address, xpubs, ignore_xpub_magic
+):
     nodes = [
         btc.get_public_node(
-            client, tools.parse_path(f"48h/0h/{i}h/0h"), coin_name="Bitcoin"
+            client,
+            tools.parse_path(f"48h/0h/{i}h/{purpose48_type}h"),
+            coin_name="Bitcoin",
         )
         for i in range(3)
     ]
@@ -95,17 +172,13 @@ def test_show_multisig_xpubs(client):
         m=2,
     )
 
-    xpubs = [[n.xpub[i * 16 : (i + 1) * 16] for i in range(5)] for n in nodes]
-
     for i in range(3):
 
         def input_flow():
             yield  # show address
-            assert client.debug.wait_layout().lines == [
-                "Multisig 2 of 3",
-                "33TU5DyVi2kFSGQUf",
-                "mZxNHgPDPqruwdesY",
-            ]
+            lines = client.debug.wait_layout().lines
+            assert lines[0] == "Multisig 2 of 3"
+            assert "".join(lines[1:]) == address
 
             client.debug.press_no()
             yield  # show QR code
@@ -113,30 +186,30 @@ def test_show_multisig_xpubs(client):
 
             client.debug.press_no()
             yield  # show XPUB#1
-            lines = client.debug.wait_layout().lines
-            assert lines[0] == "XPUB #1 " + ("(yours)" if i == 0 else "(others)")
-            assert lines[1:] == xpubs[0]
-            # just for UI test
+            lines1 = client.debug.wait_layout().lines
+            assert lines1[0] == "XPUB #1 " + ("(yours)" if i == 0 else "(others)")
             client.debug.swipe_up()
-            client.debug.wait_layout()
+            lines2 = client.debug.wait_layout().lines
+            assert lines2[0] == "XPUB #1 " + ("(yours)" if i == 0 else "(others)")
+            assert "".join(lines1[1:] + lines2[1:]) == xpubs[0]
 
             client.debug.press_no()
             yield  # show XPUB#2
-            lines = client.debug.wait_layout().lines
-            assert lines[0] == "XPUB #2 " + ("(yours)" if i == 1 else "(others)")
-            assert lines[1:] == xpubs[1]
-            # just for UI test
+            lines1 = client.debug.wait_layout().lines
+            assert lines1[0] == "XPUB #2 " + ("(yours)" if i == 1 else "(others)")
             client.debug.swipe_up()
-            client.debug.wait_layout()
+            lines2 = client.debug.wait_layout().lines
+            assert lines2[0] == "XPUB #2 " + ("(yours)" if i == 1 else "(others)")
+            assert "".join(lines1[1:] + lines2[1:]) == xpubs[1]
 
             client.debug.press_no()
             yield  # show XPUB#3
-            lines = client.debug.wait_layout().lines
-            assert lines[0] == "XPUB #3 " + ("(yours)" if i == 2 else "(others)")
-            assert lines[1:] == xpubs[2]
-            # just for UI test
+            lines1 = client.debug.wait_layout().lines
+            assert lines1[0] == "XPUB #3 " + ("(yours)" if i == 2 else "(others)")
             client.debug.swipe_up()
-            client.debug.wait_layout()
+            lines2 = client.debug.wait_layout().lines
+            assert lines2[0] == "XPUB #3 " + ("(yours)" if i == 2 else "(others)")
+            assert "".join(lines1[1:] + lines2[1:]) == xpubs[2]
 
             client.debug.press_yes()
 
@@ -146,10 +219,11 @@ def test_show_multisig_xpubs(client):
             btc.get_address(
                 client,
                 "Bitcoin",
-                tools.parse_path(f"48h/0h/{i}h/0h/0/0"),
+                tools.parse_path(f"48h/0h/{i}h/{purpose48_type}h/0/0"),
                 show_display=True,
                 multisig=multisig,
-                script_type=messages.InputScriptType.SPENDMULTISIG,
+                script_type=script_type,
+                ignore_xpub_magic=ignore_xpub_magic,
             )
 
 
