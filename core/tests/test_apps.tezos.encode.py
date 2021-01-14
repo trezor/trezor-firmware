@@ -25,12 +25,12 @@ class TestTezosEncoding(unittest.TestCase):
 
     def test_tezos_encode_data_with_bool_prefix(self):
         w = bytearray()
-        _encode_data_with_bool_prefix(w, None)
+        _encode_data_with_bool_prefix(w, None, 0)
         self.assertEqual(bytes(w), bytes([0]))
 
         data = "afffeb1dc3c0"
         w = bytearray()
-        _encode_data_with_bool_prefix(w, unhexlify(data))
+        _encode_data_with_bool_prefix(w, unhexlify(data), 6)
         self.assertEqual(bytes(w), unhexlify("ff" + data))
 
     def test_tezos_encode_bool(self):
