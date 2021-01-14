@@ -35,19 +35,20 @@ if False:
 
 
 def get_features() -> Features:
-    f = Features()
-    f.vendor = "trezor.io"
-    f.language = "en-US"
-    f.major_version = utils.VERSION_MAJOR
-    f.minor_version = utils.VERSION_MINOR
-    f.patch_version = utils.VERSION_PATCH
-    f.revision = utils.GITREV.encode()
-    f.model = utils.MODEL
-    f.device_id = storage.device.get_device_id()
-    f.label = storage.device.get_label()
-    f.pin_protection = config.has_pin()
-    f.unlocked = config.is_unlocked()
-    f.passphrase_protection = storage.device.is_passphrase_enabled()
+    f = Features(
+        vendor="trezor.io",
+        language="en-US",
+        major_version=utils.VERSION_MAJOR,
+        minor_version=utils.VERSION_MINOR,
+        patch_version=utils.VERSION_PATCH,
+        revision=utils.GITREV.encode(),
+        model=utils.MODEL,
+        device_id=storage.device.get_device_id(),
+        label=storage.device.get_label(),
+        pin_protection=config.has_pin(),
+        unlocked=config.is_unlocked(),
+        passphrase_protection=storage.device.is_passphrase_enabled(),
+    )
 
     if utils.BITCOIN_ONLY:
         f.capabilities = [

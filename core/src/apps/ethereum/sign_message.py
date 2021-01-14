@@ -32,7 +32,7 @@ async def sign_message(ctx, msg, keychain):
         secp256k1.CANONICAL_SIG_ETHEREUM,
     )
 
-    sig = EthereumMessageSignature()
-    sig.address = address.address_from_bytes(node.ethereum_pubkeyhash())
-    sig.signature = signature[1:] + bytearray([signature[0]])
-    return sig
+    return EthereumMessageSignature(
+        address=address.address_from_bytes(node.ethereum_pubkeyhash()),
+        signature=signature[1:] + bytearray([signature[0]]),
+    )
