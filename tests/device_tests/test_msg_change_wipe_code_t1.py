@@ -48,7 +48,7 @@ def _set_wipe_code(client, pin, wipe_code):
         client.set_expected_responses(
             [messages.ButtonRequest()]
             + pin_matrices
-            + [messages.Success(), messages.Features()]
+            + [messages.Success, messages.Features]
         )
         device.change_wipe_code(client)
 

@@ -37,7 +37,7 @@ class TestMsgNEMSignTx:
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     # Confirm recipient
                     proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.NEMSignedTx(),
+                    proto.NEMSignedTx,
                 ]
             )
 
@@ -79,7 +79,7 @@ class TestMsgNEMSignTx:
                     proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
                     # Confirm recipient
                     proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                    proto.NEMSignedTx(),
+                    proto.NEMSignedTx,
                 ]
             )
 

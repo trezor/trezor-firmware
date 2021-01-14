@@ -92,8 +92,8 @@ def reset_device(client, strength):
                 proto.ButtonRequest(code=B.ResetDevice),
                 proto.ButtonRequest(code=B.Success),
                 proto.ButtonRequest(code=B.Success),
-                proto.Success(),
-                proto.Features(),
+                proto.Success,
+                proto.Features,
             ]
         )
         client.set_input_flow(input_flow)

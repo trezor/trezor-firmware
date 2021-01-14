@@ -21,8 +21,8 @@ from trezorlib.tools import parse_path
 
 EXPECTED_RESPONSES_NOPIN = [
     messages.ButtonRequest(),
-    messages.Success(),
-    messages.Features(),
+    messages.Success,
+    messages.Features,
 ]
 EXPECTED_RESPONSES_PIN_T1 = [messages.PinMatrixRequest()] + EXPECTED_RESPONSES_NOPIN
 EXPECTED_RESPONSES_PIN_TT = [messages.ButtonRequest()] + EXPECTED_RESPONSES_NOPIN
