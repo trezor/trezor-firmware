@@ -53,6 +53,7 @@ stdenv.mkDerivation ({
     protobuf3_6
     wget
     zlib
+    rsync
   ] ++ stdenv.lib.optionals (!stdenv.isDarwin) [
     procps
     valgrind
