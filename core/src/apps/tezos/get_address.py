@@ -15,7 +15,7 @@ async def get_address(ctx, msg, keychain):
     node = keychain.derive(msg.address_n)
 
     pk = seed.remove_ed25519_prefix(node.public_key())
-    pkh = hashlib.blake2b(pk, outlen=20).digest()
+    pkh = hashlib.blake2b(pk, outlen=helpers.PUBLIC_KEY_HASH_SIZE).digest()
     address = helpers.base58_encode_check(
         pkh, prefix=helpers.TEZOS_ED25519_ADDRESS_PREFIX
     )
