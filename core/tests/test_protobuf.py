@@ -36,9 +36,9 @@ def load_uvarint(data: bytes) -> int:
 
 
 def dump_uvarint(value: int) -> bytearray:
-    writer = BufferWriter(bytearray(16))
-    protobuf.dump_uvarint(writer, value)
-    return memoryview(writer.buffer)[: writer.offset]
+    w = bytearray()
+    protobuf.dump_uvarint(w.extend, value)
+    return w
 
 
 def dump_message(msg: protobuf.MessageType) -> bytearray:

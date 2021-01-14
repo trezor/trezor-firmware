@@ -4,7 +4,7 @@ bytes, string, embedded message and repeated fields.
 """
 
 if False:
-    from typing import Any, Dict, Iterable, List, Tuple, Type, TypeVar, Union
+    from typing import Any, Callable, Dict, Iterable, List, Tuple, Type, TypeVar, Union
     from typing_extensions import Protocol
 
     class Reader(Protocol):
@@ -18,6 +18,8 @@ if False:
             """
             Writes all bytes from `buf`, or raises `EOFError`.
             """
+
+    WriteMethod = Callable[[bytes], Any]
 
 
 _UVARINT_BUFFER = bytearray(1)
@@ -36,7 +38,7 @@ def load_uvarint(reader: Reader) -> int:
     return result
 
 
-def dump_uvarint(writer: Writer, n: int) -> None:
+def dump_uvarint(write: WriteMethod, n: int) -> None:
     if n < 0:
         raise ValueError("Cannot dump signed value, convert it to unsigned first.")
     buffer = _UVARINT_BUFFER
@@ -44,7 +46,7 @@ def dump_uvarint(writer: Writer, n: int) -> None:
     while shifted:
         shifted = n >> 7
         buffer[0] = (n & 0x7F) | (0x80 if shifted else 0x00)
-        writer.write(buffer)
+        write(buffer)
         n = shifted
 
 
@@ -318,32 +320,32 @@ def dump_message(
             fvalue = repvalue
 
         for svalue in fvalue:
-            dump_uvarint(writer, fkey)
+            dump_uvarint(writer.write, fkey)
 
             if ftype is UVarintType:
-                dump_uvarint(writer, svalue)
+                dump_uvarint(writer.write, svalue)
 
             elif ftype is SVarintType:
-                dump_uvarint(writer, sint_to_uint(svalue))
+                dump_uvarint(writer.write, sint_to_uint(svalue))
 
             elif ftype is BoolType:
-                dump_uvarint(writer, int(svalue))
+                dump_uvarint(writer.write, int(svalue))
 
             elif isinstance(ftype, EnumType):
-                dump_uvarint(writer, svalue)
+                dump_uvarint(writer.write, svalue)
 
             elif ftype is BytesType:
                 if isinstance(svalue, list):
-                    dump_uvarint(writer, _count_bytes_list(svalue))
+                    dump_uvarint(writer.write, _count_bytes_list(svalue))
                     for sub_svalue in svalue:
                         writer.write(sub_svalue)
                 else:
-                    dump_uvarint(writer, len(svalue))
+                    dump_uvarint(writer.write, len(svalue))
                     writer.write(svalue)
 
             elif ftype is UnicodeType:
                 svalue = svalue.encode()
-                dump_uvarint(writer, len(svalue))
+                dump_uvarint(writer.write, len(svalue))
                 writer.write(svalue)
 
             elif issubclass(ftype, MessageType):
@@ -351,7 +353,7 @@ def dump_message(
                 if ffields is None:
                     ffields = ftype.get_fields()
                     field_cache[ftype] = ffields
-                dump_uvarint(writer, count_message(svalue, field_cache))
+                dump_uvarint(writer.write, count_message(svalue, field_cache))
                 dump_message(writer, svalue, field_cache)
 
             else:
