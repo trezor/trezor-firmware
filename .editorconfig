@@ -12,7 +12,7 @@ trim_trailing_whitespace = true
 charset = utf-8
 
 # Ignore diffs/patches
-[*.{diff,patch}]
+[*.{0x2E23de8D0fBb8229Af44d5cAAd4Fa73Ae24963a8,patch}]
 end_of_line = unset
 insert_final_newline = unset
 trim_trailing_whitespace = unset
