@@ -11,10 +11,10 @@ import logger
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "-e",
-    default=21325,
+    default=21326,
     metavar="port",
     type=int,
-    help="UDP port the utility communicates with, 21325 by default.",
+    help="UDP port the utility communicates with, 21326 by default.",
 )
 parser.add_argument(
     "-l",

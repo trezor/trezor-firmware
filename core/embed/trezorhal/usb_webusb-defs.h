@@ -32,10 +32,14 @@ typedef struct __attribute__((packed)) {
 typedef struct {
   uint8_t *rx_buffer;  // With length of max_packet_len bytes
   uint8_t iface_num;   // Address of this WebUSB interface
-  uint8_t ep_in;       // Address of IN endpoint (with the highest bit set)
-  uint8_t ep_out;      // Address of OUT endpoint
-  uint8_t subclass;    // usb_iface_subclass_t
-  uint8_t protocol;    // usb_iface_protocol_t
+#ifdef TREZOR_EMULATOR
+  uint16_t emu_port;  // UDP port of this interface in the emulator.
+#else
+  uint8_t ep_in;   // Address of IN endpoint (with the highest bit set)
+  uint8_t ep_out;  // Address of OUT endpoint
+#endif
+  uint8_t subclass;          // usb_iface_subclass_t
+  uint8_t protocol;          // usb_iface_protocol_t
   uint8_t polling_interval;  // In units of 1ms
   uint8_t max_packet_len;    // Length of the biggest report and of rx_buffer
 } usb_webusb_info_t;

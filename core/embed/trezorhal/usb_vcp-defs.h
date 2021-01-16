@@ -105,9 +105,13 @@ typedef struct {
   uint8_t iface_num;         // Address of this VCP interface
   uint8_t data_iface_num;    // Address of data interface of the VCP interface
                              // association
+#ifdef TREZOR_EMULATOR
+  uint16_t emu_port;  // UDP port of this interface in the emulator.
+#else
   uint8_t ep_cmd;  // Address of IN CMD endpoint (with the highest bit set)
   uint8_t ep_in;   // Address of IN endpoint (with the highest bit set)
   uint8_t ep_out;  // Address of OUT endpoint
+#endif
   uint8_t polling_interval;  // In units of 1ms
   uint8_t max_packet_len;  // Length of the biggest packet, and of tx_packet and
                            // rx_packet
