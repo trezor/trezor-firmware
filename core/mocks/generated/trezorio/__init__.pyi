@@ -42,6 +42,7 @@ class HID:
         iface_num: int,
         ep_in: int,
         ep_out: int,
+        emu_port: int,
         report_desc: bytes,
         subclass: int = 0,
         protocol: int = 0,
@@ -148,6 +149,7 @@ class VCP:
         ep_in: int,
         ep_out: int,
         ep_cmd: int,
+        emu_port: int,
     ) -> None:
         """
         """
@@ -169,6 +171,7 @@ class WebUSB:
         iface_num: int,
         ep_in: int,
         ep_out: int,
+        emu_port: int,
         subclass: int = 0,
         protocol: int = 0,
         polling_interval: int = 1,
