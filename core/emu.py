@@ -223,7 +223,7 @@ def cli(
         TREZOR_PATH=f"udp:127.0.0.1:{emulator.port}",
         TREZOR_PROFILE_DIR=str(profile_dir.resolve()),
         TREZOR_UDP_PORT=str(emulator.port),
-        TREZOR_FIDO2_UDP_PORT=str(emulator.port + 2),
+        TREZOR_FIDO2_UDP_PORT=str(emulator.port + 1),
         TREZOR_SRC=str(SRC_DIR),
     )
     os.environ.update(emulator_env)

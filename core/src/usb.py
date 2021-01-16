@@ -36,15 +36,6 @@ iface_wire = io.WebUSB(
 # Therefore, each of the following needs to include the respective static expression
 # so that it can be correctly excluded from the resulting build.
 
-if __debug__ and ENABLE_IFACE_DEBUG:
-    # interface used for debug messages with trezor wire protocol
-    id_debug = next(_iface_iter)
-    iface_debug = io.WebUSB(
-        iface_num=id_debug,
-        ep_in=0x81 + id_debug,
-        ep_out=0x01 + id_debug,
-    )
-
 if not utils.BITCOIN_ONLY and ENABLE_IFACE_WEBAUTHN:
     # interface used for FIDO/U2F and FIDO2/WebAuthn HID transport
     id_webauthn = next(_iface_iter)
@@ -74,6 +65,15 @@ if not utils.BITCOIN_ONLY and ENABLE_IFACE_WEBAUTHN:
         # fmt: on
     )
 
+if __debug__ and ENABLE_IFACE_DEBUG:
+    # interface used for debug messages with trezor wire protocol
+    id_debug = next(_iface_iter)
+    iface_debug = io.WebUSB(
+        iface_num=id_debug,
+        ep_in=0x81 + id_debug,
+        ep_out=0x01 + id_debug,
+    )
+
 if __debug__ and ENABLE_IFACE_VCP:
     # interface used for cdc/vcp console emulation (debug messages)
     id_vcp = next(_iface_iter)
@@ -97,9 +97,9 @@ bus = io.USB(
     usb21_landing=False,
 )
 bus.add(iface_wire)
-if __debug__ and ENABLE_IFACE_DEBUG:
-    bus.add(iface_debug)
 if not utils.BITCOIN_ONLY and ENABLE_IFACE_WEBAUTHN:
     bus.add(iface_webauthn)
+if __debug__ and ENABLE_IFACE_DEBUG:
+    bus.add(iface_debug)
 if __debug__ and ENABLE_IFACE_VCP:
     bus.add(iface_vcp)
