@@ -3,9 +3,9 @@ from trezor import io, utils
 
 _iface_iter = iter(range(5))
 
-ENABLE_IFACE_DEBUG = __debug__
+ENABLE_IFACE_DEBUG = True
 # change to False to enable VCP, see below
-ENABLE_IFACE_WEBAUTHN = not utils.BITCOIN_ONLY
+ENABLE_IFACE_WEBAUTHN = True
 
 # We only have 10 available USB endpoints on real HW, of which 2 are taken up by the USB descriptor.
 # iface_wire, iface_debug and iface_webauthn also consume 2 each, iface_vcp uses 3.
@@ -13,9 +13,7 @@ ENABLE_IFACE_WEBAUTHN = not utils.BITCOIN_ONLY
 # By default, iface_vcp is only enabled on bitcoin_only firmware, where iface_webauthn
 # is disabled. Implementation-wise, we check if any of the previous ifaces is disabled
 # in order to enable VCP.
-ENABLE_IFACE_VCP = __debug__ and (
-    utils.EMULATOR or not ENABLE_IFACE_DEBUG or not ENABLE_IFACE_WEBAUTHN
-)
+ENABLE_IFACE_VCP = True
 
 # interface used for trezor wire protocol
 id_wire = next(_iface_iter)
@@ -65,7 +63,7 @@ if not utils.BITCOIN_ONLY and ENABLE_IFACE_WEBAUTHN:
         # fmt: on
     )
 
-if __debug__ and ENABLE_IFACE_DEBUG:
+if ENABLE_IFACE_DEBUG:
     # interface used for debug messages with trezor wire protocol
     id_debug = next(_iface_iter)
     iface_debug = io.WebUSB(
@@ -74,7 +72,7 @@ if __debug__ and ENABLE_IFACE_DEBUG:
         ep_out=0x01 + id_debug,
     )
 
-if __debug__ and ENABLE_IFACE_VCP:
+if ENABLE_IFACE_VCP:
     # interface used for cdc/vcp console emulation (debug messages)
     id_vcp = next(_iface_iter)
     id_vcp_data = next(_iface_iter)
@@ -99,7 +97,7 @@ bus = io.USB(
 bus.add(iface_wire)
 if not utils.BITCOIN_ONLY and ENABLE_IFACE_WEBAUTHN:
     bus.add(iface_webauthn)
-if __debug__ and ENABLE_IFACE_DEBUG:
+if ENABLE_IFACE_DEBUG:
     bus.add(iface_debug)
-if __debug__ and ENABLE_IFACE_VCP:
+if ENABLE_IFACE_VCP:
     bus.add(iface_vcp)
