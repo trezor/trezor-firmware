@@ -191,8 +191,9 @@ bool compute_address(const CoinInfo *coin, InputScriptType script_type,
   return 1;
 }
 
-int compile_output(const CoinInfo *coin, const HDNode *root, TxOutputType *in,
-                   TxOutputBinType *out, bool needs_confirm) {
+int compile_output(const CoinInfo *coin, AmountUnit amount_unit,
+                   const HDNode *root, TxOutputType *in, TxOutputBinType *out,
+                   bool needs_confirm) {
   memzero(out, sizeof(TxOutputBinType));
   out->amount = in->amount;
   out->decred_script_version = DECRED_SCRIPT_VERSION;
@@ -328,7 +329,7 @@ int compile_output(const CoinInfo *coin, const HDNode *root, TxOutputType *in,
   }
 
   if (needs_confirm) {
-    layoutConfirmOutput(coin, in);
+    layoutConfirmOutput(coin, amount_unit, in);
     if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput, false)) {
       return -1;  // user aborted
     }

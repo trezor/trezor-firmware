@@ -92,18 +92,18 @@ static const char *address_n_str(const uint32_t *address_n,
     const char *abbr = 0;
     if (native_segwit) {
       if (coin && coin->has_segwit && coin->bech32_prefix) {
-        abbr = coin->coin_shortcut + 1;
+        abbr = coin->coin_shortcut;
       }
     } else if (p2sh_segwit) {
       if (coin && coin->has_segwit) {
-        abbr = coin->coin_shortcut + 1;
+        abbr = coin->coin_shortcut;
       }
     } else {
       if (coin) {
         if (coin->has_segwit) {
           legacy = true;
         }
-        abbr = coin->coin_shortcut + 1;
+        abbr = coin->coin_shortcut;
 #if !BITCOIN_ONLY
       } else {
         abbr = slip44_extras(address_n[1]);
@@ -346,10 +346,51 @@ static void render_address_dialog(const CoinInfo *coin, const char *address,
   oledRefresh();
 }
 
-void layoutConfirmOutput(const CoinInfo *coin, const TxOutputType *out) {
+static size_t format_coin_amount(uint64_t amount, const char *prefix,
+                                 const CoinInfo *coin, AmountUnit amount_unit,
+                                 char *output, size_t output_len) {
+  // " " + (optional "m"/u") + shortcut + ending zero -> 16 should suffice
+  char suffix[16];
+  memzero(suffix, sizeof(suffix));
+  suffix[0] = ' ';
+  uint32_t decimals = coin->decimals;
+  switch (amount_unit) {
+    case AmountUnit_SATOSHI:
+      decimals = 0;
+      strlcpy(suffix + 1, "sat ", sizeof(suffix) - 1);
+      strlcpy(suffix + 5, coin->coin_shortcut, sizeof(suffix) - 5);
+      break;
+    case AmountUnit_MILLIBITCOIN:
+      if (decimals >= 6) {
+        decimals -= 6;
+        suffix[1] = 'u';
+        strlcpy(suffix + 2, coin->coin_shortcut, sizeof(suffix) - 2);
+      } else {
+        strlcpy(suffix + 1, coin->coin_shortcut, sizeof(suffix) - 1);
+      }
+      break;
+    case AmountUnit_MICROBITCOIN:
+      if (decimals >= 3) {
+        decimals -= 3;
+        suffix[1] = 'm';
+        strlcpy(suffix + 2, coin->coin_shortcut, sizeof(suffix) - 2);
+      } else {
+        strlcpy(suffix + 1, coin->coin_shortcut, sizeof(suffix) - 1);
+      }
+      break;
+    default:  // AmountUnit_BITCOIN
+      strlcpy(suffix + 1, coin->coin_shortcut, sizeof(suffix) - 1);
+      break;
+  }
+  return bn_format_uint64(amount, prefix, suffix, decimals, 0, false, output,
+                          output_len);
+}
+
+void layoutConfirmOutput(const CoinInfo *coin, AmountUnit amount_unit,
+                         const TxOutputType *out) {
   char str_out[32 + 3] = {0};
-  bn_format_uint64(out->amount, NULL, coin->coin_shortcut, coin->decimals, 0,
-                   false, str_out, sizeof(str_out) - 3);
+  format_coin_amount(out->amount, NULL, coin, amount_unit, str_out,
+                     sizeof(str_out) - 3);
   strlcat(str_out, " to", sizeof(str_out));
   const char *address = out->address;
   const char *extra_line =
@@ -423,9 +464,9 @@ void layoutConfirmOpReturn(const uint8_t *data, uint32_t size) {
                     NULL);
 }
 
-static bool formatAmountDifference(const CoinInfo *coin, uint64_t amount1,
-                                   uint64_t amount2, char *output,
-                                   size_t output_length) {
+static bool formatAmountDifference(const CoinInfo *coin, AmountUnit amount_unit,
+                                   uint64_t amount1, uint64_t amount2,
+                                   char *output, size_t output_length) {
   uint64_t abs_diff = 0;
   const char *sign = NULL;
   if (amount1 >= amount2) {
@@ -435,17 +476,20 @@ static bool formatAmountDifference(const CoinInfo *coin, uint64_t amount1,
     sign = "-";
   }
 
-  return bn_format_uint64(abs_diff, sign, coin->coin_shortcut, coin->decimals,
-                          0, false, output, output_length) != 0;
+  return format_coin_amount(abs_diff, sign, coin, amount_unit, output,
+                            output_length) != 0;
 }
 
-void layoutConfirmTx(const CoinInfo *coin, uint64_t total_in,
-                     uint64_t total_out, uint64_t change_out) {
+void layoutConfirmTx(const CoinInfo *coin, AmountUnit amount_unit,
+                     uint64_t total_in, uint64_t total_out,
+                     uint64_t change_out) {
   char str_out[32] = {0};
-  formatAmountDifference(coin, total_in, change_out, str_out, sizeof(str_out));
+  formatAmountDifference(coin, amount_unit, total_in, change_out, str_out,
+                         sizeof(str_out));
 
   char str_fee[32] = {0};
-  formatAmountDifference(coin, total_in, total_out, str_fee, sizeof(str_fee));
+  formatAmountDifference(coin, amount_unit, total_in, total_out, str_fee,
+                         sizeof(str_fee));
 
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Really send"), str_out, _("from your wallet?"),
@@ -458,8 +502,8 @@ void layoutConfirmReplacement(const char *description, uint8_t txid[32]) {
                     description, str[0], str[1], str[2], str[3], NULL);
 }
 
-void layoutConfirmModifyFee(const CoinInfo *coin, uint64_t fee_old,
-                            uint64_t fee_new) {
+void layoutConfirmModifyFee(const CoinInfo *coin, AmountUnit amount_unit,
+                            uint64_t fee_old, uint64_t fee_new) {
   char str_fee_change[32] = {0};
   char str_fee_new[32] = {0};
   char *question = NULL;
@@ -472,21 +516,21 @@ void layoutConfirmModifyFee(const CoinInfo *coin, uint64_t fee_old,
     question = _("Decrease your fee by:");
     fee_change = fee_old - fee_new;
   }
-  bn_format_uint64(fee_change, NULL, coin->coin_shortcut, coin->decimals, 0,
-                   false, str_fee_change, sizeof(str_fee_change));
+  format_coin_amount(fee_change, NULL, coin, amount_unit, str_fee_change,
+                     sizeof(str_fee_change));
 
-  bn_format_uint64(fee_new, NULL, coin->coin_shortcut, coin->decimals, 0, false,
-                   str_fee_new, sizeof(str_fee_new));
+  format_coin_amount(fee_new, NULL, coin, amount_unit, str_fee_new,
+                     sizeof(str_fee_new));
 
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     question, str_fee_change, NULL, _("Transaction fee:"),
                     str_fee_new, NULL);
 }
 
-void layoutFeeOverThreshold(const CoinInfo *coin, uint64_t fee) {
+void layoutFeeOverThreshold(const CoinInfo *coin, AmountUnit amount_unit,
+                            uint64_t fee) {
   char str_fee[32] = {0};
-  bn_format_uint64(fee, NULL, coin->coin_shortcut, coin->decimals, 0, false,
-                   str_fee, sizeof(str_fee));
+  format_coin_amount(fee, NULL, coin, amount_unit, str_fee, sizeof(str_fee));
   layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                     _("Fee"), str_fee, _("is unexpectedly high."), NULL,
                     _("Send anyway?"), NULL);

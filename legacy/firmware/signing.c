@@ -32,6 +32,7 @@
 
 static uint32_t change_count;
 static const CoinInfo *coin;
+static AmountUnit amount_unit;
 static CONFIDENTIAL HDNode root;
 static CONFIDENTIAL HDNode node;
 static bool signing = false;
@@ -799,6 +800,7 @@ static bool tx_info_init(TxInfo *tx_info, uint32_t inputs_count,
 void signing_init(const SignTx *msg, const CoinInfo *_coin,
                   const HDNode *_root) {
   coin = _coin;
+  amount_unit = msg->has_amount_unit ? msg->amount_unit : AmountUnit_BITCOIN;
   memcpy(&root, _root, sizeof(HDNode));
 
   if (!tx_info_init(&info, msg->inputs_count, msg->outputs_count, msg->version,
@@ -1229,7 +1231,8 @@ static bool signing_check_output(TxOutputType *txoutput) {
   // Skip confirmation of change-outputs and skip output confirmation altogether
   // in replacement transactions.
   bool skip_confirm = is_change || is_replacement;
-  int co = compile_output(coin, &root, txoutput, &bin_output, !skip_confirm);
+  int co = compile_output(coin, amount_unit, &root, txoutput, &bin_output,
+                          !skip_confirm);
   if (!skip_confirm) {
     layoutProgress(_("Signing transaction"), progress);
   }
@@ -1375,7 +1378,8 @@ static bool signing_check_orig_input(TxInputType *orig_input) {
 static bool signing_check_orig_output(TxOutputType *orig_output) {
   // Compute scriptPubKey.
   TxOutputBinType orig_bin_output;
-  if (compile_output(coin, &root, orig_output, &orig_bin_output, false) <= 0) {
+  if (compile_output(coin, amount_unit, &root, orig_output, &orig_bin_output,
+                     false) <= 0) {
     fsm_sendFailure(FailureType_Failure_ProcessError,
                     _("Failed to compile output"));
     signing_abort();
@@ -1480,7 +1484,7 @@ static bool signing_confirm_tx(void) {
   if (total_out <= total_in) {
     fee = total_in - total_out;
     if (fee > ((uint64_t)tx_weight * coin->maxfee_kb) / 4000) {
-      layoutFeeOverThreshold(coin, fee);
+      layoutFeeOverThreshold(coin, amount_unit, fee);
       if (!protectButton(ButtonRequestType_ButtonRequest_FeeOverThreshold,
                          false)) {
         fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
@@ -1565,7 +1569,7 @@ static bool signing_confirm_tx(void) {
 
     // Fee modification.
     if (fee != orig_fee) {
-      layoutConfirmModifyFee(coin, orig_fee, fee);
+      layoutConfirmModifyFee(coin, amount_unit, orig_fee, fee);
       if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
         fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
         signing_abort();
@@ -1586,7 +1590,7 @@ static bool signing_confirm_tx(void) {
     }
 
     // last confirmation
-    layoutConfirmTx(coin, total_in, total_out, change_out);
+    layoutConfirmTx(coin, amount_unit, total_in, total_out, change_out);
     if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
       fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
       signing_abort();
@@ -2431,7 +2435,8 @@ void signing_txack(TransactionType *tx) {
       progress = 500 + ((signatures * progress_step +
                          (info.inputs_count + idx2) * progress_meta_step) >>
                         PROGRESS_PRECISION);
-      if (compile_output(coin, &root, tx->outputs, &bin_output, false) <= 0) {
+      if (compile_output(coin, amount_unit, &root, tx->outputs, &bin_output,
+                         false) <= 0) {
         fsm_sendFailure(FailureType_Failure_ProcessError,
                         _("Failed to compile output"));
         signing_abort();
@@ -2573,7 +2578,8 @@ void signing_txack(TransactionType *tx) {
       if (!signing_validate_output(&tx->outputs[0])) {
         return;
       }
-      if (compile_output(coin, &root, tx->outputs, &bin_output, false) <= 0) {
+      if (compile_output(coin, amount_unit, &root, tx->outputs, &bin_output,
+                         false) <= 0) {
         fsm_sendFailure(FailureType_Failure_ProcessError,
                         _("Failed to compile output"));
         signing_abort();

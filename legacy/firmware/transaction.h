@@ -72,8 +72,9 @@ uint32_t serialize_script_sig(const uint8_t *signature, uint32_t signature_len,
 uint32_t serialize_script_multisig(const CoinInfo *coin,
                                    const MultisigRedeemScriptType *multisig,
                                    uint8_t sighash, uint8_t *out);
-int compile_output(const CoinInfo *coin, const HDNode *root, TxOutputType *in,
-                   TxOutputBinType *out, bool needs_confirm);
+int compile_output(const CoinInfo *coin, AmountUnit amount_unit,
+                   const HDNode *root, TxOutputType *in, TxOutputBinType *out,
+                   bool needs_confirm);
 
 void tx_input_check_hash(Hasher *hasher, const TxInputType *input);
 uint32_t tx_prevout_hash(Hasher *hasher, const TxInputType *input);
