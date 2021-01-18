@@ -1,4 +1,4 @@
-from trezor import res, ui, wire
+from trezor import loop, res, ui, wire
 
 from . import HomescreenBase
 
@@ -21,6 +21,7 @@ async def lockscreen() -> None:
 
 class Lockscreen(HomescreenBase):
     BACKLIGHT_LEVEL = ui.BACKLIGHT_LOW
+    RENDER_SLEEP = loop.SLEEP_FOREVER
 
     def __init__(self, bootscreen: bool = False) -> None:
         if bootscreen:
@@ -34,6 +35,9 @@ class Lockscreen(HomescreenBase):
         super().__init__()
 
     def on_render(self) -> None:
+        if not self.repaint:
+            return
+
         # homescreen with label text on top
         ui.display.text_center(
             ui.WIDTH // 2, 35, self.label, ui.BOLD, ui.TITLE_GREY, ui.BG
@@ -53,5 +57,7 @@ class Lockscreen(HomescreenBase):
         )
         ui.display.icon(45, 202, res.load(ui.ICON_CLICK), ui.TITLE_GREY, ui.BG)
 
-    def on_tap(self) -> None:
+        self.repaint = False
+
+    def on_touch_end(self, _x: int, _y: int) -> None:
         raise ui.Result(None)

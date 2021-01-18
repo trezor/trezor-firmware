@@ -79,6 +79,10 @@ if __debug__:
         content = await layout_change_chan.take()
         await ctx.write(DebugLinkLayout(lines=content))
 
+    async def touch_hold(x: int, y: int, duration_ms: int) -> None:
+        await loop.sleep(duration_ms)
+        loop.synthetic_events.append((io.TOUCH, (io.TOUCH_END, x, y)))
+
     async def dispatch_DebugLinkWatchLayout(
         ctx: wire.Context, msg: DebugLinkWatchLayout
     ) -> Success:
@@ -94,11 +98,14 @@ if __debug__:
         if debuglink_decision_chan.putters:
             log.warning(__name__, "DebugLinkDecision queue is not empty")
 
-        if msg.x is not None:
+        if msg.x is not None and msg.y is not None:
             evt_down = io.TOUCH_START, msg.x, msg.y
             evt_up = io.TOUCH_END, msg.x, msg.y
             loop.synthetic_events.append((io.TOUCH, evt_down))
-            loop.synthetic_events.append((io.TOUCH, evt_up))
+            if msg.hold_ms is not None:
+                loop.schedule(touch_hold(msg.x, msg.y, msg.hold_ms))
+            else:
+                loop.synthetic_events.append((io.TOUCH, evt_up))
         else:
             debuglink_decision_chan.publish(msg)
 

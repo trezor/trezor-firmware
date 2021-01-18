@@ -122,7 +122,16 @@ class DebugLink:
         state = self._call(messages.DebugLinkGetState(wait_word_pos=True))
         return state.reset_word_pos
 
-    def input(self, word=None, button=None, swipe=None, x=None, y=None, wait=False):
+    def input(
+        self,
+        word=None,
+        button=None,
+        swipe=None,
+        x=None,
+        y=None,
+        wait=False,
+        hold_ms=None,
+    ):
         if not self.allow_interactions:
             return
 
@@ -131,7 +140,7 @@ class DebugLink:
             raise ValueError("Invalid input - must use one of word, button, swipe")
 
         decision = messages.DebugLinkDecision(
-            yes_no=button, swipe=swipe, input=word, x=x, y=y, wait=wait
+            yes_no=button, swipe=swipe, input=word, x=x, y=y, wait=wait, hold_ms=hold_ms
         )
         ret = self._call(decision, nowait=not wait)
         if ret is not None:
