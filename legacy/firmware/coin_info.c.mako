@@ -26,7 +26,7 @@ const CoinInfo coins[COINS_COUNT] = {
 % for c in supported_on("trezor1", bitcoin):
 {
 	.coin_name = ${c_str(c.coin_name)},
-	.coin_shortcut = ${c_str(" " + c.coin_shortcut)},
+	.coin_shortcut = ${c_str(c.coin_shortcut)},
 	.maxfee_kb = ${c_int(c.maxfee_kb)},
 	.signed_message_header = ${signed_message_header(c.signed_message_header)},
 	.has_segwit = ${c_bool(c.segwit)},
