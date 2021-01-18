@@ -426,13 +426,13 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
     /* Initialize LL Driver */
     HAL_PCD_Init(&pcd_hs_handle);
 
-    HAL_PCDEx_SetRxFiFo(&pcd_hs_handle, 0x2e);
-    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 0, 0xa3);
-    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 1, 0xa3);
-    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 2, 0xa3);
-    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 3, 0xa3);
-    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 4, 0xa3);
-    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 5, 0xa3);
+    HAL_PCDEx_SetRxFiFo(&pcd_hs_handle, 1024); // 1024 32-bit words (4KiB)
+    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 0, 256); // 256 32-bit words (1KiB)
+    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 1, 512); // 512 32-bit words (2KiB)
+    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 2, 512); // 512 32-bit words (2KiB)
+    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 3, 512); // 512 32-bit words (2KiB)
+    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 4, 512); // 512 32-bit words (2KiB)
+    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 5, 512); // 512 32-bit words (2KiB)
   }
   return USBD_OK;
 }
