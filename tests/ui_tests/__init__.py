@@ -26,7 +26,9 @@ def get_test_name(node_id):
     # remove ::TestClass:: if present because it is usually the same as the test file name
     new_name = re.sub(r"::.*?::", "-", new_name)
     new_name = new_name.replace("/", "-")  # in case there is "/"
-    return new_name[:100]
+    if len(new_name) <= 100:
+        return new_name
+    return new_name[:91] + "-" + hashlib.sha256(new_name.encode()).hexdigest()[:8]
 
 
 def _process_recorded(screen_path, test_name):
