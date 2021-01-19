@@ -427,7 +427,7 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
     HAL_PCD_Init(&pcd_hs_handle);
 
     // use 130 + 149 * 6 = the 1024 32-bit words in the USB OTG_HS data RAM
-    HAL_PCDEx_SetRxFiFo(&pcd_hs_handle, 130); // 128 32-bit words
+    HAL_PCDEx_SetRxFiFo(&pcd_hs_handle, 130); // 130 32-bit words
     HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 0, 149); // 149 32-bit words
     HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 1, 149); // 149 32-bit words
     HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 2, 149); // 149 32-bit words
