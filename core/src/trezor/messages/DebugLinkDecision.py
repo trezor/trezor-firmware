@@ -23,6 +23,7 @@ class DebugLinkDecision(p.MessageType):
         x: int = None,
         y: int = None,
         wait: bool = None,
+        hold_ms: int = None,
     ) -> None:
         self.yes_no = yes_no
         self.swipe = swipe
@@ -30,6 +31,7 @@ class DebugLinkDecision(p.MessageType):
         self.x = x
         self.y = y
         self.wait = wait
+        self.hold_ms = hold_ms
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -40,4 +42,5 @@ class DebugLinkDecision(p.MessageType):
             4: ('x', p.UVarintType, None),
             5: ('y', p.UVarintType, None),
             6: ('wait', p.BoolType, None),
+            7: ('hold_ms', p.UVarintType, None),
         }
