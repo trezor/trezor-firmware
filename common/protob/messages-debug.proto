@@ -26,9 +26,10 @@ message DebugLinkDecision {
         RIGHT = 3;
     }
 
-    optional uint32 x = 4;   // touch X coordinate
-    optional uint32 y = 5;   // touch Y coordinate
-    optional bool wait = 6;  // wait for layout change
+    optional uint32 x = 4;        // touch X coordinate
+    optional uint32 y = 5;        // touch Y coordinate
+    optional bool wait = 6;       // wait for layout change
+    optional uint32 hold_ms = 7;  // touch hold duration
 }
 
 /**
