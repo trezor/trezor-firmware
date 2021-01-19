@@ -426,13 +426,14 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
     /* Initialize LL Driver */
     HAL_PCD_Init(&pcd_hs_handle);
 
-    HAL_PCDEx_SetRxFiFo(&pcd_hs_handle, 1024); // 1024 32-bit words (4KiB)
-    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 0, 256); // 256 32-bit words (1KiB)
-    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 1, 512); // 512 32-bit words (2KiB)
-    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 2, 512); // 512 32-bit words (2KiB)
-    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 3, 512); // 512 32-bit words (2KiB)
-    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 4, 512); // 512 32-bit words (2KiB)
-    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 5, 512); // 512 32-bit words (2KiB)
+    // use 130 + 149 * 6 = the 1024 32-bit words in the USB OTG_HS data RAM
+    HAL_PCDEx_SetRxFiFo(&pcd_hs_handle, 130); // 128 32-bit words
+    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 0, 149); // 149 32-bit words
+    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 1, 149); // 149 32-bit words
+    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 2, 149); // 149 32-bit words
+    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 3, 149); // 149 32-bit words
+    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 4, 149); // 149 32-bit words
+    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 5, 149); // 149 32-bit words
   }
   return USBD_OK;
 }
