@@ -426,14 +426,20 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
     /* Initialize LL Driver */
     HAL_PCD_Init(&pcd_hs_handle);
 
-    // use 130 + 149 * 6 = the 1024 32-bit words in the USB OTG_HS data RAM
-    HAL_PCDEx_SetRxFiFo(&pcd_hs_handle, 130); // 130 32-bit words
-    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 0, 149); // 149 32-bit words
-    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 1, 149); // 149 32-bit words
-    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 2, 149); // 149 32-bit words
-    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 3, 149); // 149 32-bit words
-    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 4, 149); // 149 32-bit words
-    HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 5, 149); // 149 32-bit words
+    // the OTG_HS peripheral has a dedicated 4KiB data RAM from which we
+    // allocate an area for each transmit FIFO and the single shared receive FIFO.
+    // the configuration is in terms of 32-bit words, so we have 1024 32-bit words
+    // in this dedicated 4KiB data RAM to use. see section 35.10.1 and 34.11 in RM0090.
+    // the reference to section 34.11 is for the OTG_FS device, but the FIFO architecture
+    // diagram seems to apply similarly to the FIFO in the OTG_HS that we are using.
+    // USB packets that we deal with are 64 bytes in size which equates to 16 32-bit words.
+    // we size the transmit FIFO's equally and give the rest of the space to the receive FIFO.
+    const uint16_t transmit_fifo_size = 144; // 144 = 16 * 9 meaning that we give 9 packets of space for each transmit fifo
+    const uint16_t receive_fifo_zie = 160; // 160 = 1024 - 6 * 144 section 35.10.1 details what some of this is used for besides storing packets
+    HAL_PCDEx_SetRxFiFo(&pcd_hs_handle, receive_fifo_zie);
+    for (uint16_t i = 0; i < 6; i++) {
+      HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, i, transmit_fifo_size);
+    }
   }
   return USBD_OK;
 }
