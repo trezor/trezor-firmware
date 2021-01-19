@@ -22,7 +22,7 @@ let
 in
 stdenv.mkDerivation ({
   name = "trezor-firmware-env";
-  buildInputs = stdenv.lib.optionals fullDeps [
+  buildInputs = lib.optionals fullDeps [
     # install other python versions for tox testing
     # NOTE: running e.g. "python3" in the shell runs the first version in the following list,
     #       and poetry uses the default version (currently 3.8)
@@ -53,10 +53,10 @@ stdenv.mkDerivation ({
     protobuf3_6
     wget
     zlib
-  ] ++ stdenv.lib.optionals (!stdenv.isDarwin) [
+  ] ++ lib.optionals (!stdenv.isDarwin) [
     procps
     valgrind
-  ] ++ stdenv.lib.optionals (stdenv.isDarwin) [
+  ] ++ lib.optionals (stdenv.isDarwin) [
     darwin.apple_sdk.frameworks.CoreAudio
     darwin.apple_sdk.frameworks.AudioToolbox
     darwin.apple_sdk.frameworks.ForceFeedback
@@ -75,6 +75,6 @@ stdenv.mkDerivation ({
   # Fix bdist-wheel problem by setting source date epoch to a more recent date
   SOURCE_DATE_EPOCH = 1600000000;
 
-} // (stdenv.lib.optionalAttrs fullDeps) {
+} // (lib.optionalAttrs fullDeps) {
   TREZOR_MONERO_TESTS_PATH = moneroTestsPatched;
 })
