@@ -258,6 +258,7 @@ void mp_unix_mark_exec(void);
 #define MICROPY_PORT_ROOT_POINTERS \
     const char *readline_hist[50]; \
     void *mmap_region_head; \
+    mp_obj_t trezorconfig_ui_wait_callback; \
 
 // We need to provide a declaration/definition of alloca()
 // unless support for it is disabled.
