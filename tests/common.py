@@ -61,6 +61,12 @@ def parametrize_using_common_fixtures(*paths):
     tests = []
     for fixture in fixtures:
         for test in fixture["tests"]:
+            test_id = test.get("name")
+            if not test_id:
+                test_id = test.get("description")
+                if test_id is not None:
+                    test_id = test_id.lower().replace(" ", "_")
+
             tests.append(
                 pytest.param(
                     test["parameters"],
@@ -69,6 +75,7 @@ def parametrize_using_common_fixtures(*paths):
                         passphrase=fixture["setup"]["passphrase"],
                         mnemonic=fixture["setup"]["mnemonic"],
                     ),
+                    id=test_id,
                 )
             )
 
