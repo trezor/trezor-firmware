@@ -104,3 +104,8 @@ def decrypt_keyvalue(
             iv=iv,
         )
     )
+
+
+@expect(messages.Nonce, field="nonce")
+def get_nonce(client):
+    return client.call(messages.GetNonce())
