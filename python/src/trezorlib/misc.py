@@ -108,3 +108,8 @@ def decrypt_keyvalue(
             iv=iv,
         )
     )
+
+
+@expect(messages.Nonce, field="nonce", ret_type=bytes)
+def get_nonce(client: "TrezorClient"):
+    return client.call(messages.GetNonce())

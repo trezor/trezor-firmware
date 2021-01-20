@@ -255,6 +255,7 @@ def sign_tx(
     outputs: Sequence[messages.TxOutputType],
     details: Optional[messages.SignTx] = None,
     prev_txes: Optional["TxCacheType"] = None,
+    payment_reqs: Sequence[messages.TxAckPaymentRequest] = (),
     preauthorized: bool = False,
     **kwargs: Any,
 ) -> Tuple[Sequence[Optional[bytes]], bytes]:
@@ -354,34 +355,40 @@ def sign_tx(
         else:
             current_tx = this_tx
 
-        msg = messages.TransactionType()
-
-        if res.request_type == R.TXMETA:
-            msg = copy_tx_meta(current_tx)
-        elif res.request_type in (R.TXINPUT, R.TXORIGINPUT):
+        if res.request_type == R.TXPAYMENTREQ:
             assert res.details.request_index is not None
-            msg.inputs = [current_tx.inputs[res.details.request_index]]
-        elif res.request_type == R.TXOUTPUT:
-            assert res.details.request_index is not None
-            if res.details.tx_hash:
-                msg.bin_outputs = [current_tx.bin_outputs[res.details.request_index]]
-            else:
-                msg.outputs = [current_tx.outputs[res.details.request_index]]
-        elif res.request_type == R.TXORIGOUTPUT:
-            assert res.details.request_index is not None
-            msg.outputs = [current_tx.outputs[res.details.request_index]]
-        elif res.request_type == R.TXEXTRADATA:
-            assert res.details.extra_data_offset is not None
-            assert res.details.extra_data_len is not None
-            assert current_tx.extra_data is not None
-            o, l = res.details.extra_data_offset, res.details.extra_data_len
-            msg.extra_data = current_tx.extra_data[o : o + l]
+            msg = payment_reqs[res.details.request_index]
+            res = client.call(msg)
         else:
-            raise exceptions.TrezorException(
-                f"Unknown request type - {res.request_type}."
-            )
+            msg = messages.TransactionType()
+            if res.request_type == R.TXMETA:
+                msg = copy_tx_meta(current_tx)
+            elif res.request_type in (R.TXINPUT, R.TXORIGINPUT):
+                assert res.details.request_index is not None
+                msg.inputs = [current_tx.inputs[res.details.request_index]]
+            elif res.request_type == R.TXOUTPUT:
+                assert res.details.request_index is not None
+                if res.details.tx_hash:
+                    msg.bin_outputs = [
+                        current_tx.bin_outputs[res.details.request_index]
+                    ]
+                else:
+                    msg.outputs = [current_tx.outputs[res.details.request_index]]
+            elif res.request_type == R.TXORIGOUTPUT:
+                assert res.details.request_index is not None
+                msg.outputs = [current_tx.outputs[res.details.request_index]]
+            elif res.request_type == R.TXEXTRADATA:
+                assert res.details.extra_data_offset is not None
+                assert res.details.extra_data_len is not None
+                assert current_tx.extra_data is not None
+                o, l = res.details.extra_data_offset, res.details.extra_data_len
+                msg.extra_data = current_tx.extra_data[o : o + l]
+            else:
+                raise exceptions.TrezorException(
+                    f"Unknown request type - {res.request_type}."
+                )
 
-        res = client.call(messages.TxAck(tx=msg))
+            res = client.call(messages.TxAck(tx=msg))
 
     if not isinstance(res, messages.TxRequest):
         raise exceptions.TrezorException("Unexpected message")
