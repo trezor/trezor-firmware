@@ -17,7 +17,7 @@
 import warnings
 from copy import copy
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Dict, Sequence, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Sequence, Tuple
 
 from . import exceptions, messages
 from .tools import expect, normalize_nfc, session
@@ -154,6 +154,11 @@ def get_ownership_proof(
     return res.ownership_proof, res.signature
 
 
+@expect(messages.Nonce, field="nonce")
+def get_nonce(client):
+    return client.call(messages.GetNonce())
+
+
 @expect(messages.MessageSignature)
 def sign_message(
     client, coin_name, n, message, script_type=messages.InputScriptType.SPENDADDRESS
@@ -190,6 +195,7 @@ def sign_tx(
     outputs: Sequence[messages.TxOutputType],
     details: messages.SignTx = None,
     prev_txes: Dict[bytes, messages.TransactionType] = None,
+    payment_reqs: List[messages.TxAckPaymentRequest] = [],
     preauthorized: bool = False,
     **kwargs: Any,
 ) -> Tuple[Sequence[bytes], bytes]:
@@ -311,6 +317,10 @@ def sign_tx(
             msg = messages.TransactionType()
             msg.extra_data = current_tx.extra_data[o : o + l]
             res = client.call(messages.TxAck(tx=msg))
+
+        elif res.request_type == R.TXPAYMENTREQ:
+            msg = payment_reqs[res.details.request_index]
+            res = client.call(msg)
 
     if not isinstance(res, messages.TxRequest):
         raise exceptions.TrezorException("Unexpected message")
