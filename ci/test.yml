@@ -325,9 +325,6 @@ hardware core btconly device test:
   script:
     - cd ci/hardware_tests
     - nix-shell --run "cd ../.. && poetry install"
-    - nix-shell --run "poetry run trezorctl list"
-    - export TREZOR_PATH=$(./get_trezor_path.sh 'Trezor T')
-    - nix-shell --run "echo $TREZOR_PATH"
     - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin"
     - nix-shell --run "poetry run pytest ../../tests/device_tests -m 'not sd_card' -k 'not 15_of_15 and not test_multisig_mismatch_inputs'"
   timeout: 4h

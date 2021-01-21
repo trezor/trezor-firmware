@@ -7,15 +7,17 @@ class TrezorT(Device):
         self.power_off()
         self.power_on()
 
+        self.run_trezorctl("list")
+
         if not file:
             raise ValueError(
                 "Uploading production firmware will replace the bootloader, it is not allowed!"
             )
 
         self.wait(5)
-        print("[software] Updating the firmware to {}".format(file))
+        self.log("[software] Updating the firmware to {}".format(file))
         self.run_trezorctl("firmware-update -s -f {}".format(file))
 
         # after firmware-update finishes wait for reboot
         self.wait(15)
-        self.check_version()
+        return self.check_model("Trezor T")

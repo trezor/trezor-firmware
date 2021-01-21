@@ -10,7 +10,7 @@ class TrezorOne(Device):
 
     def touch(self, location, action):
         self.now()
-        print(
+        self.log(
             "[hardware/trezor] Touching the {} button by {}...".format(location, action)
         )
         self.serial.write(("{} {}\n".format(location, action)).encode())
@@ -19,13 +19,15 @@ class TrezorOne(Device):
         if file:
             unofficial = True
             trezorctlcmd = "firmware-update -s -f {} &".format(file)
-            print("[software] Updating the firmware to {}".format(file))
+            self.log("[software] Updating the firmware to {}".format(file))
         else:
             unofficial = False
             trezorctlcmd = "firmware-update &"
-            print("[software] Updating the firmware to latest")
+            self.log("[software] Updating the firmware to latest")
         self.wait(3)
         self._enter_bootloader()
+
+        self.run_trezorctl("list")
 
         self.wait(3)
         self.run_trezorctl(trezorctlcmd)
@@ -42,7 +44,7 @@ class TrezorOne(Device):
             self.wait(5)
             self.touch("right", "click")
         self.wait(5)
-        self.check_version()
+        return self.check_model("Trezor 1")
 
     def _enter_bootloader(self):
         self.power_off()
