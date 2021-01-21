@@ -140,6 +140,15 @@ async def show_warning_tx_output_contains_tokens(ctx: wire.Context) -> None:
     await require_confirm(ctx, page1)
 
 
+async def show_warning_path(ctx: wire.Context, path: List[int], title: str) -> None:
+    page1 = Text("Confirm path", ui.ICON_WRONG, ui.RED)
+    page1.normal(title)
+    page1.bold(address_n_to_str(path))
+    page1.normal("is unknown.")
+    page1.normal("Are you sure?")
+    await require_confirm(ctx, page1)
+
+
 async def show_warning_tx_no_staking_info(
     ctx: wire.Context, address_type: EnumTypeCardanoAddressType, amount: int
 ) -> None:

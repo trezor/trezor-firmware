@@ -5,7 +5,7 @@ from trezor.messages import CardanoAddressType, CardanoCertificateType
 from trezor.messages.CardanoAddressParametersType import CardanoAddressParametersType
 from trezor.messages.CardanoSignedTx import CardanoSignedTx
 
-from apps.common import cbor
+from apps.common import cbor, safety_checks
 from apps.common.paths import validate_path
 from apps.common.seed import remove_ed25519_prefix
 
@@ -32,9 +32,15 @@ from .helpers import (
 from .helpers.paths import (
     ACCOUNT_PATH_INDEX,
     BIP_PATH_LENGTH,
+    CERTIFICATE_PATH_NAME,
+    CHANGE_OUTPUT_PATH_NAME,
+    CHANGE_OUTPUT_STAKING_PATH_NAME,
+    MAX_ACCOUNT_INDEX,
     MAX_CHANGE_ADDRESS_INDEX,
+    POOL_OWNER_STAKING_PATH_NAME,
     SCHEMA_ADDRESS,
     SCHEMA_STAKING,
+    SCHEMA_STAKING_ANY_ACCOUNT,
 )
 from .helpers.utils import to_account_path
 from .layout import (
@@ -47,6 +53,7 @@ from .layout import (
     confirm_transaction,
     confirm_transaction_network_ttl,
     confirm_withdrawal,
+    show_warning_path,
     show_warning_tx_different_staking_account,
     show_warning_tx_network_unverifiable,
     show_warning_tx_no_staking_info,
@@ -67,9 +74,11 @@ if False:
     from trezor.messages.CardanoAssetGroupType import CardanoAssetGroupType
 
     from apps.common.cbor import CborSequence
+    from apps.common.paths import PathSchema
 
     CborizedTokenBundle = Dict[bytes, Dict[bytes, int]]
     CborizedTxOutput = Tuple[bytes, Union[int, Tuple[int, CborizedTokenBundle]]]
+
 
 METADATA_HASH_SIZE = 32
 MINTING_POLICY_ID_LENGTH = 28
@@ -283,7 +292,7 @@ def _validate_certificates(
 
 def _validate_withdrawals(withdrawals: List[CardanoTxWithdrawalType]) -> None:
     for withdrawal in withdrawals:
-        if not SCHEMA_STAKING.match(withdrawal.path):
+        if not SCHEMA_STAKING_ANY_ACCOUNT.match(withdrawal.path):
             raise INVALID_WITHDRAWAL
 
         if not 0 <= withdrawal.amount < LOVELACE_MAX_SUPPLY:
@@ -568,9 +577,13 @@ async def _show_standard_tx(
 
     if not is_network_id_verifiable:
         await show_warning_tx_network_unverifiable(ctx)
+
     total_amount = await _show_outputs(ctx, keychain, msg)
 
     for certificate in msg.certificates:
+        await _fail_or_warn_if_invalid_path(
+            ctx, SCHEMA_STAKING, certificate.path, CERTIFICATE_PATH_NAME
+        )
         await confirm_certificate(ctx, certificate)
 
     for withdrawal in msg.withdrawals:
@@ -602,6 +615,16 @@ async def _show_stake_pool_registration_tx(
     await confirm_stake_pool_parameters(
         ctx, pool_parameters, msg.network_id, msg.protocol_magic
     )
+
+    for owner in pool_parameters.owners:
+        if owner.staking_key_path:
+            await _fail_or_warn_if_invalid_path(
+                ctx,
+                SCHEMA_STAKING,
+                owner.staking_key_path,
+                POOL_OWNER_STAKING_PATH_NAME,
+            )
+
     await confirm_stake_pool_owners(
         ctx, keychain, pool_parameters.owners, msg.network_id
     )
@@ -618,16 +641,23 @@ async def _show_outputs(
     total_amount = 0
     for output in msg.outputs:
         if output.address_parameters:
-            address = derive_human_readable_address(
-                keychain, output.address_parameters, msg.protocol_magic, msg.network_id
+            await _fail_or_warn_if_invalid_path(
+                ctx,
+                SCHEMA_ADDRESS,
+                output.address_parameters.address_n,
+                CHANGE_OUTPUT_PATH_NAME,
             )
 
             await _show_change_output_staking_warnings(
-                ctx, keychain, output.address_parameters, address, output.amount
+                ctx, keychain, output.address_parameters, output.amount
             )
 
             if _should_hide_output(output.address_parameters.address_n, msg.inputs):
                 continue
+
+            address = derive_human_readable_address(
+                keychain, output.address_parameters, msg.protocol_magic, msg.network_id
+            )
         else:
             assert output.address is not None  # _validate_outputs
             address = output.address
@@ -646,10 +676,20 @@ async def _show_change_output_staking_warnings(
     ctx: wire.Context,
     keychain: seed.Keychain,
     address_parameters: CardanoAddressParametersType,
-    address: str,
     amount: int,
 ) -> None:
     address_type = address_parameters.address_type
+
+    if (
+        address_type == CardanoAddressType.BASE
+        and not address_parameters.staking_key_hash
+    ):
+        await _fail_or_warn_if_invalid_path(
+            ctx,
+            SCHEMA_STAKING,
+            address_parameters.address_n_staking,
+            CHANGE_OUTPUT_STAKING_PATH_NAME,
+        )
 
     staking_use_case = staking_use_cases.get(keychain, address_parameters)
     if staking_use_case == staking_use_cases.NO_STAKING:
@@ -686,6 +726,7 @@ def _should_hide_output(output: List[int], inputs: List[CardanoTxInputType]) -> 
         if (
             len(output) != BIP_PATH_LENGTH
             or output[: (ACCOUNT_PATH_INDEX + 1)] != inp[: (ACCOUNT_PATH_INDEX + 1)]
+            or output[(ACCOUNT_PATH_INDEX + 1)] > MAX_ACCOUNT_INDEX
             or output[-2] >= 2
             or output[-1] >= MAX_CHANGE_ADDRESS_INDEX
         ):
@@ -704,3 +745,13 @@ def _is_network_id_verifiable(msg: CardanoSignTx) -> bool:
         or len(msg.withdrawals) != 0
         or _has_stake_pool_registration(msg)
     )
+
+
+async def _fail_or_warn_if_invalid_path(
+    ctx: wire.Context, schema: PathSchema, path: List[int], path_name: str
+) -> None:
+    if not schema.match(path):
+        if safety_checks.is_strict():
+            raise wire.DataError("Invalid %s" % path_name.lower())
+        else:
+            await show_warning_path(ctx, path, path_name)
