@@ -2,7 +2,6 @@ from trezor.messages import CardanoAddressType
 
 from ..address import get_public_key_hash
 from ..seed import is_shelley_path
-from .paths import SCHEMA_ADDRESS
 from .utils import to_account_path
 
 if False:
@@ -29,8 +28,6 @@ POINTER_ADDRESS = 3
 def get(keychain: Keychain, address_parameters: CardanoAddressParametersType) -> int:
     address_type = address_parameters.address_type
     if address_type == CardanoAddressType.BASE:
-        if not SCHEMA_ADDRESS.match(address_parameters.address_n):
-            return MISMATCH
         if not is_shelley_path(address_parameters.address_n):
             return MISMATCH
 

@@ -187,6 +187,80 @@
       }
     },
     {
+      "description": "transaction with base address change output path larger than 100",
+      "parameters": {
+        "security_checks": "prompt",
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "metadata": "",
+        "input_flow": [["SWIPE", "YES"], ["YES"], ["YES"], ["SWIPE", "YES"], ["SWIPE", "YES"]],
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          },
+          {
+            "addressType": 0,
+            "path": "m/1852'/1815'/190'/0/0",
+            "stakingPath": "m/1852'/1815'/0'/2/0",
+            "amount": "7120787"
+          }
+        ]
+      },
+      "result": {
+        "tx_hash": "1fc82ce2420c173a0947eaf49af76fcd6f4e400e2bfb5fa152a482ea12dde24b",
+        "serialized_tx": "83a400818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018282583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff0182583901606898e71f1e144b3a13b7dd355aa64472837b40eb5d11ed1e732112122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b42771a006ca79302182a030aa100818258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c158404d8f0fd9798b62937b1739dcb893dfc6a0abd9eb2ad98244ced00d78949a2fd2751fac4bb2ebe5577688e5d9f47da79a52b5c571c3082996514ab5995dc2580df6"
+      }
+    },
+    {
+      "description": "transaction with base address change output staking path account larger than 100",
+      "parameters": {
+        "security_checks": "prompt",
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "metadata": "",
+        "input_flow": [["SWIPE", "YES"], ["YES"], ["SWIPE", "YES"], ["SWIPE", "YES"]],
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          },
+          {
+            "addressType": 0,
+            "path": "m/1852'/1815'/0'/0/0",
+            "stakingPath": "m/1852'/1815'/190'/2/0",
+            "amount": "7120787"
+          }
+        ]
+      },
+      "result": {
+        "tx_hash": "abd1b24ac0638251398444ee136110f952738df32a512ce35894f8453d0e8edf",
+        "serialized_tx": "83a400818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018282583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff018258390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa58e438148441c6409537ebd82bb04924362cce2912f3494693fcb0001a006ca79302182a030aa100818258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c158402de6b2f4651ad503abfb171a7ced0d88505b57a336dd3a8d2428f6584337e318f9bae2e7a0b2f76f96f5667b6c181a0e5e3e7a0592d541883893c6d43232d50ff6"
+      }
+    },
+    {
       "description": "simple transaction with base address change output with staking key hash",
       "parameters": {
         "protocol_magic": 764824073,
@@ -471,6 +545,42 @@
       "result": {
         "tx_hash": "22c67f12e6f6aa0f2f09fd27d472b19c7208ccd7c3af4b09604fd5d462c1de2b",
         "serialized_tx": "83a600818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018182583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff0102182a030a048182018200581c122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b427705a1581de1122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b42771903e8a10082825820bc65be1b0b9d7531778a1317c2aa6de936963c3f9ac7d5ee9e9eda25e0c97c5e58400202826a8b9688cf978000e7d1591582c65b149bb9f55dc883ae1acf85432618ca32be8a06fef37e69df503a294e7093006f63ababf9fcea639390226934020a8258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c158407efa634e42fa844cad5f60bf005d645817cc674f30eaab0da398b99034850780b40ab5a1028da033330a0f82b01648ec92cff8ca85a072594efb298016f38d0df6"
+      }
+    },
+    {
+      "description": "transaction with stake deregistration with account larger than 100",
+      "parameters": {
+        "security_checks": "prompt",
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [
+          {
+            "type": 1,
+            "path": "m/1852'/1815'/190'/2/0"
+          }
+        ],
+        "withdrawals": [],
+        "metadata": "",
+        "input_flow": [["SWIPE", "YES"], ["YES"], ["YES"], ["SWIPE", "YES"]],
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ]
+      },
+      "result": {
+        "tx_hash": "cc068a25994ef6a90cdab8adfbe302d6f742de9901ba2495dd64a09f2ef951f5",
+        "serialized_tx": "83a500818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018182583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff0102182a030a048182018200581c58e438148441c6409537ebd82bb04924362cce2912f3494693fcb000a10082825820d1a07f06b872c68120def0203d0fc3d582ac4ce3897d5eaf448026960875f76d5840b67d2af9de2bdfcf552f92ae12a16ed9f9cce9e34adbfe492ff75917a8a0277e125bac8f0dbdd0c4f11fd95ab6d94cb937a5b708f47ec338a00cab2931ba14038258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1584019b71c5b97a188cf9ff479b6ef7a45a0df94a917845d15c03a5fa508042724dcee1e8f944b91141ed91e6faa228806b3644e2560cb231470d09788ac5065ff00f6"
       }
     },
     {

@@ -6,7 +6,7 @@ from apps.common.seed import remove_ed25519_prefix
 
 from .byron_address import derive_byron_address, validate_byron_address
 from .helpers import INVALID_ADDRESS, NETWORK_MISMATCH, bech32, network_ids
-from .helpers.paths import SCHEMA_STAKING
+from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 from .helpers.utils import variable_length_encode
 from .seed import is_byron_path, is_shelley_path
 
@@ -273,7 +273,7 @@ def _validate_base_address_staking_info(
             "Base address needs either a staking path or a staking key hash!"
         )
 
-    if staking_key_hash is None and not SCHEMA_STAKING.match(staking_path):
+    if staking_key_hash is None and not SCHEMA_STAKING_ANY_ACCOUNT.match(staking_path):
         raise wire.DataError("Invalid staking path!")
 
 
@@ -314,7 +314,7 @@ def _derive_reward_address(
     path: List[int],
     network_id: int,
 ) -> bytes:
-    if not SCHEMA_STAKING.match(path):
+    if not SCHEMA_STAKING_ANY_ACCOUNT.match(path):
         raise wire.DataError("Invalid path for reward address!")
 
     staking_key_hash = get_public_key_hash(keychain, path)
