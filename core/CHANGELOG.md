@@ -7,13 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## 2.3.6 [unreleased]
 
 ### Added
-- Support for Output Descriptors export.  [#1363]
-- Paginated display for signing/verifying long messages.  [#1271]
 
 ### Changed
-- Bump nanopb dependency to 0.4.4.  [#1402]
-- Automatic breaking text on whitespace.  [#1384]
-- Introduced limit of 32 characters for device label.  [#1399]
 
 ### Deprecated
 
@@ -30,6 +25,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Value of the `safety-checks` setting to the `Features` message.  [#1193]
 - ERC20 tokens show contract address for confirmation. Unknown ERC20 tokens show wei amount.  [#800]
 - Replacement transaction signing for replace-by-fee and PayJoin.  [#1292]
+- Support for Output Descriptors export.  [#1363]
+- Paginated display for signing/verifying long messages.  [#1271]
+- Show Ypub/Zpub correctly for multisig GetAddress.  [#1415]
+- Show amounts in mBTC, uBTC and sat denominations.  [#1369]
 
 ### Changed
 - The `safety-checks` setting gained new possible value `PromptTemporarily` which overrides safety checks until device reboot.  [#1133]
@@ -39,6 +38,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - BIP-32 paths must now match a pre-defined path schema to be considered valid.  [#1184]
 - Minimum auto-lock delay to 1 minute. The former value of 10 seconds still applies for debug builds.  [#1351]
 - It is again possible to sign for Ethereum clones that are not officially supported.  [#1335]
+- Bump nanopb dependency to 0.4.4.  [#1402]
+- Automatic breaking text on whitespace.  [#1384]
+- Introduced limit of 32 characters for device label.  [#1399]
 
 ### Deprecated
 
@@ -357,6 +359,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1335]: https://github.com/trezor/trezor-firmware/issues/1335
 [#1351]: https://github.com/trezor/trezor-firmware/issues/1351
 [#1363]: https://github.com/trezor/trezor-firmware/pull/1363
+[#1369]: https://github.com/trezor/trezor-firmware/pull/1369
 [#1384]: https://github.com/trezor/trezor-firmware/issues/1384
 [#1399]: https://github.com/trezor/trezor-firmware/issues/1399
 [#1402]: https://github.com/trezor/trezor-firmware/pull/1402
+[#1415]: https://github.com/trezor/trezor-firmware/pull/1415
