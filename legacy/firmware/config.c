@@ -422,7 +422,7 @@ void config_init(void) {
     storage_set(KEY_UUID, config_uuid, sizeof(config_uuid));
     storage_set(KEY_VERSION, &CONFIG_VERSION, sizeof(CONFIG_VERSION));
   }
-  data2hex(config_uuid, sizeof(config_uuid), config_uuid_str);
+  data2hex((const uint8_t *)config_uuid, sizeof(config_uuid), config_uuid_str);
 
   session_clear(false);
 
@@ -986,7 +986,7 @@ void config_wipe(void) {
   }
   usbTiny(oldTiny);
   random_buffer((uint8_t *)config_uuid, sizeof(config_uuid));
-  data2hex(config_uuid, sizeof(config_uuid), config_uuid_str);
+  data2hex((const uint8_t *)config_uuid, sizeof(config_uuid), config_uuid_str);
   autoLockDelayMsCached = secfalse;
   storage_set(KEY_UUID, config_uuid, sizeof(config_uuid));
   storage_set(KEY_VERSION, &CONFIG_VERSION, sizeof(CONFIG_VERSION));
