@@ -7,10 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## 1.9.5 [unreleased]
 
 ### Added
-- Support for Output Descriptors export [#1363]
 
 ### Changed
-- Bump nanopb dependency to 0.4.4.  [#1402]
 
 ### Deprecated
 
@@ -24,9 +22,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - Replacement transaction signing for replace-by-fee.  [#1367]
+- Support for Output Descriptors export.  [#1363]
+- Show Ypub/Zpub correctly for multisig GetAddress.  [#1415]
+- Show amounts in mBTC, uBTC and sat denominations.  [#1369]
 
 ### Changed
 - Bump nanopb dependency to 0.4.3.  [#1105]
+- Bump nanopb dependency to 0.4.4.  [#1402]
 - Minimum auto-lock delay to 1 minute. The former value of 10 seconds still applies for debug builds.  [#1351]
 
 ### Deprecated
@@ -373,4 +375,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1351]: https://github.com/trezor/trezor-firmware/issues/1351
 [#1363]: https://github.com/trezor/trezor-firmware/pull/1363
 [#1367]: https://github.com/trezor/trezor-firmware/issues/1367
+[#1369]: https://github.com/trezor/trezor-firmware/pull/1369
 [#1402]: https://github.com/trezor/trezor-firmware/pull/1402
+[#1415]: https://github.com/trezor/trezor-firmware/pull/1415
