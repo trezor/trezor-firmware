@@ -1,4 +1,4 @@
-with import <nixpkgs> {};
+with import ../nixpkgs.nix;
 
 stdenv.mkDerivation rec {
   name = "trezor-firmware-hardware-tests";
