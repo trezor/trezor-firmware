@@ -25,9 +25,9 @@ environment:
 poetry shell
 ```
 
-If you want to test against the emulator, run it in a separate terminal:
+If you want to test against the emulator, run it with disabled animation in a separate terminal:
 ```sh
-./core/emu.py
+./core/emu.py -a
 ```
 
 Now you can run the test suite with `pytest` from the root directory:
