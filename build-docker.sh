@@ -16,7 +16,7 @@ PRODUCTION=${PRODUCTION:-1}
 MEMORY_PROTECT=${MEMORY_PROTECT:-1}
 
 wget --no-config -nc -P ci/ "$CONTAINER_FS_URL"
-docker build --platform "linux/$ALPINE_ARCH" --build-arg ALPINE_VERSION="$ALPINE_VERSION" --build-arg ALPINE_ARCH="$ALPINE_ARCH" -t "$CONTAINER_NAME" ci/
+docker build --build-arg ALPINE_VERSION="$ALPINE_VERSION" --build-arg ALPINE_ARCH="$ALPINE_ARCH" -t "$CONTAINER_NAME" ci/
 
 # stat under macOS has slightly different cli interface
 USER=$(stat -c "%u" . 2>/dev/null || stat -f "%u" .)
@@ -54,7 +54,7 @@ for BITCOIN_ONLY in 0 1; do
     chown -R $USER:$GROUP /build
 EOF
 
-  docker run --platform "linux/$ALPINE_ARCH" -it --rm \
+  docker run -it --rm \
     -v "$DIR:/local" \
     -v "$DIR/build/core$DIRSUFFIX":/build:z \
     --env BITCOIN_ONLY="$BITCOIN_ONLY" \
@@ -94,7 +94,7 @@ for BITCOIN_ONLY in 0 1; do
     chown -R $USER:$GROUP /build
 EOF
 
-  docker run --platform "linux/$ALPINE_ARCH" -it --rm \
+  docker run -it --rm \
     -v "$DIR:/local" \
     -v "$DIR/build/legacy$DIRSUFFIX":/build:z \
     --env BITCOIN_ONLY="$BITCOIN_ONLY" \
