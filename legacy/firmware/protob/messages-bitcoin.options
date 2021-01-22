@@ -93,7 +93,6 @@ PrevOutput.script_pubkey                                    max_size:520
 TxAckPrevExtraDataWrapper.extra_data_chunk                  max_size:1024
 
 TxAckPaymentRequest.recipient_name                          max_size:0
-TxAckPaymentRequest.hash_outputs                            max_size:0
 TxAckPaymentRequest.memos                                   max_count:0
 TxAckPaymentRequest.nonce                                   max_size:0
 TxAckPaymentRequest.signature                               max_size:0

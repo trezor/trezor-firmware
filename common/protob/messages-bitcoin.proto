@@ -404,11 +404,9 @@ message PrevOutput {
  */
 message TxAckPaymentRequest {
     required string recipient_name = 1; // merchant's name or coordinator's name in case of CoinJoin
-    required bytes hash_outputs = 2;    // BIP-143 hashOutputs of the recipient's outputs and the amounts requested
-    required uint64 amount = 3;         // the sum of the amounts requested in hash_outputs
-    repeated Memo memos = 4;            // any memos that were signed as part of the request
-    optional bytes nonce = 5;           // the nonce used in the signature computation
-    required bytes signature = 6;       // the recipient’s signature of the paymentRequestDigest
+    repeated Memo memos = 2;            // any memos that were signed as part of the request
+    optional bytes nonce = 3;           // the nonce used in the signature computation
+    required bytes signature = 4;       // the recipient’s signature of the paymentRequestDigest
 
     message Memo {
         required uint32 type = 1;      // identifier of the type of data in the data field
