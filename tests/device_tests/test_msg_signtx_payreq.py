@@ -61,8 +61,6 @@ def make_payment_request(outputs, hash_outputs, memos=[], nonce=None):
 
     return messages.TxAckPaymentRequest(
         recipient_name=recipient_name,
-        hash_outputs=hash_outputs,
-        amount=sum(txo.amount for txo in outputs),
         memos=memos,
         nonce=nonce,
         signature=payment_req_signer.sign_digest_deterministic(h_pr.digest()),
