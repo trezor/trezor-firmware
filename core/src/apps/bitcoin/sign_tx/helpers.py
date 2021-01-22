@@ -62,12 +62,22 @@ class UiConfirmOutput(UiConfirm):
 
 
 class UiConfirmPaymentRequest(UiConfirm):
-    def __init__(self, payment_req: TxAckPaymentRequest, coin: CoinInfo):
+    def __init__(
+        self,
+        payment_req: TxAckPaymentRequest,
+        amount: int,
+        amount_unit: EnumTypeAmountUnit,
+        coin: CoinInfo,
+    ):
         self.payment_req = payment_req
+        self.amount = amount
+        self.amount_unit = amount_unit
         self.coin = coin
 
     def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
-        return layout.confirm_payment_request(ctx, self.payment_req, self.coin)
+        return layout.confirm_payment_request(
+            ctx, self.payment_req, self.amount, self.amount_unit, self.coin
+        )
 
     __eq__ = utils.obj_eq
 
@@ -189,8 +199,8 @@ def confirm_output(output: TxOutput, coin: CoinInfo, amount_unit: EnumTypeAmount
     return (yield UiConfirmOutput(output, coin, amount_unit))
 
 
-def confirm_payment_req(payment_req: TxAckPaymentRequest, coin: CoinInfo) -> Awaitable[None]:  # type: ignore
-    return (yield UiConfirmPaymentRequest(payment_req, coin))
+def confirm_payment_request(payment_req: TxAckPaymentRequest, amount: int, amount_unit: EnumTypeAmountUnit, coin: CoinInfo) -> Awaitable[None]:  # type: ignore
+    return (yield UiConfirmPaymentRequest(payment_req, amount, amount_unit, coin))
 
 
 def confirm_replacement(description: str, txid: bytes) -> Awaitable[Any]:  # type: ignore

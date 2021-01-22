@@ -31,19 +31,17 @@ class PaymentRequest:
     else:
         PUBLIC_KEY = b""
 
-    def __init__(self, tx_ack: TxAckPaymentRequest, coin: CoinInfo):
-        self._verify(tx_ack, coin)
+    def __init__(self) -> None:
         self.h_outputs = HashWriter(sha256())
         self.amount = 0
-        self.expected_amount = tx_ack.amount
-        self.expected_hash_outputs = tx_ack.hash_outputs
 
-    def _verify(self, tx_ack: TxAckPaymentRequest, coin: CoinInfo) -> None:
+    def verify(self, tx_ack: TxAckPaymentRequest, coin: CoinInfo) -> None:
+        hash_outputs = writers.get_tx_hash(self.h_outputs, double=True)
         h_pr = HashWriter(sha256())
         writers.write_bytes_fixed(h_pr, b"Payment request:", 16)
         writers.write_bytes_prefixed(h_pr, tx_ack.recipient_name.encode())
         writers.write_uint32(h_pr, coin.slip44)
-        writers.write_bytes_fixed(h_pr, tx_ack.hash_outputs, 32)
+        writers.write_bytes_fixed(h_pr, hash_outputs, 32)
         writers.write_bitcoin_varint(h_pr, len(tx_ack.memos))
         for memo in tx_ack.memos:
             writers.write_uint32(h_pr, memo.type)
@@ -63,25 +61,12 @@ class PaymentRequest:
         if not secp256k1.verify(self.PUBLIC_KEY, tx_ack.signature, h_pr.get_digest()):
             raise wire.DataError("Invalid signature in payment request.")
 
-    def add_output(self, txo: TxOutput, script_pubkey: bytes) -> bool:
-        """Returns True for last output, otherwise False."""
-
+    def add_external_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         writers.write_tx_output(self.h_outputs, txo, script_pubkey)
         self.amount += txo.amount
 
-        if self.amount < self.expected_amount:
-            return False
-
-        if self.amount != self.expected_amount:
-            raise wire.DataError("Invalid amount in payment request.")
-
-        if (
-            writers.get_tx_hash(self.h_outputs, double=True)
-            != self.expected_hash_outputs
-        ):
-            raise wire.DataError("Invalid hashOutputs in payment request.")
-
-        return True
+    def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+        writers.write_tx_output(self.h_outputs, txo, script_pubkey)
 
 
 async def verify_memos(ctx: wire.Context, memos: List[Memo]) -> None:

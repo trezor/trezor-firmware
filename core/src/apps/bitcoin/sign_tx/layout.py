@@ -77,7 +77,11 @@ async def confirm_output(
 
 
 async def confirm_payment_request(
-    ctx: wire.Context, msg: TxAckPaymentRequest, coin: CoinInfo
+    ctx: wire.Context,
+    msg: TxAckPaymentRequest,
+    amount: int,
+    amount_unit: EnumTypeAmountUnit,
+    coin: CoinInfo,
 ) -> None:
     # Verify ownership of scriptPubKeys in case of non-text memos.
     await payment_request.verify_memos(ctx, msg.memos)
@@ -90,7 +94,7 @@ async def confirm_payment_request(
             text_memo = memo.data.decode()
 
     text = Text("Confirm sending", ui.ICON_SEND, ui.GREEN)
-    text.normal(format_coin_amount(msg.amount, coin) + " to")
+    text.normal(format_coin_amount(amount, coin, amount_unit) + " to")
     text.normal(msg.recipient_name)
     if text_memo:
         text.br_half()

@@ -138,12 +138,8 @@ class TestApprover(unittest.TestCase):
 
         tx_ack_payment_req = TxAckPaymentRequest(
             recipient_name=self.coordinator_name,
-            hash_outputs=hash_outputs,
-            amount=sum(txo.amount for txo in outputs),
             signature=signature,
         )
-
-        await_result(approver.add_payment_request(0, tx_ack_payment_req))
 
         for txi in inputs:
             if txi.script_type == InputScriptType.EXTERNAL:
@@ -156,6 +152,8 @@ class TestApprover(unittest.TestCase):
                 approver.add_change_output(txo, script_pubkey=bytes(22))
             else:
                 await_result(approver.add_external_output(txo, script_pubkey=bytes(22)))
+
+        await_result(approver.approve_payment_request(0, tx_ack_payment_req))
 
         await_result(approver.approve_tx(TxInfo(signer, tx), []))
 

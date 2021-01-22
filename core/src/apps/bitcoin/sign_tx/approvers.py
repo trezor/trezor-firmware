@@ -31,7 +31,7 @@ class Approver:
     def __init__(self, tx: SignTx, coin: CoinInfo) -> None:
         self.coin = coin
         self.weight = tx_weight.TxWeightCalculator(tx.inputs_count, tx.outputs_count)
-        self.payment_requests: Dict[int, Optional[PaymentRequest]] = {}
+        self.payment_requests: Dict[int, PaymentRequest] = {}
 
         # amounts in the current transaction
         self.total_in = 0  # sum of input amounts
@@ -61,27 +61,27 @@ class Approver:
             self.orig_total_in += txi.amount
             self.orig_external_in += txi.amount
 
-    def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+    def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         self.weight.add_output(script_pubkey)
         self.total_out += txo.amount
+        if (
+            txo.payment_request is not None
+            and txo.payment_request not in self.payment_requests
+        ):
+            self.payment_requests[txo.payment_request] = PaymentRequest()
 
-        if txo.payment_request is not None:
-            payment_req = self.payment_requests[txo.payment_request]
-            if payment_req is None:
-                raise wire.DataError("Depleted payment request.")
-
-            if payment_req.add_output(txo, script_pubkey):
-                # Last output of the payment request. Invalidate the payment request index.
-                self.payment_requests[txo.payment_request] = None
-
-    async def add_payment_request(
+    async def approve_payment_request(
         self, index: int, tx_ack_payment_req: TxAckPaymentRequest
     ) -> None:
-        self.payment_requests[index] = PaymentRequest(tx_ack_payment_req, self.coin)
+        raise NotImplementedError
 
     def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
-        self.add_output(txo, script_pubkey)
+        self._add_output(txo, script_pubkey)
         self.change_out += txo.amount
+        if txo.payment_request is not None:
+            self.payment_requests[txo.payment_request].add_change_output(
+                txo, script_pubkey
+            )
 
     def add_orig_change_output(self, txo: TxOutput) -> None:
         self.orig_total_out += txo.amount
@@ -93,14 +93,17 @@ class Approver:
         script_pubkey: bytes,
         orig_txo: Optional[TxOutput] = None,
     ) -> None:
-        self.add_output(txo, script_pubkey)
+        self._add_output(txo, script_pubkey)
+        if txo.payment_request is not None:
+            self.payment_requests[txo.payment_request].add_external_output(
+                txo, script_pubkey
+            )
 
     def add_orig_external_output(self, txo: TxOutput) -> None:
         self.orig_total_out += txo.amount
 
     async def approve_tx(self, tx_info: TxInfo, orig_txs: List[OriginalTxInfo]) -> None:
-        if any(pr is not None for pr in self.payment_requests.values()):
-            raise wire.DataError("Unfulfilled payment request.")
+        raise NotImplementedError
 
 
 class BasicApprover(Approver):
@@ -110,7 +113,6 @@ class BasicApprover(Approver):
     def __init__(self, tx: SignTx, coin: CoinInfo) -> None:
         super().__init__(tx, coin)
         self.change_count = 0  # the number of change-outputs
-        self.payment_requests: Dict[int, Optional[PaymentRequest]] = {}
 
     async def add_internal_input(self, txi: TxInput) -> None:
         if not keychain.validate_path_against_script_type(self.coin, txi):
@@ -144,19 +146,20 @@ class BasicApprover(Approver):
                     "Adding new OP_RETURN outputs in replacement transactions is not supported."
                 )
         elif txo.payment_request is None:
-            # Ask user to confirm output, unless it was part of a payment
+            # Ask user to confirm output, unless it is part of a payment
             # request, which gets confirmed separately.
             await helpers.confirm_output(txo, self.coin, self.amount_unit)
 
-    async def add_payment_request(
+    async def approve_payment_request(
         self, index: int, tx_ack_payment_req: TxAckPaymentRequest
     ) -> None:
-        await super().add_payment_request(index, tx_ack_payment_req)
-        await helpers.confirm_payment_req(tx_ack_payment_req, self.coin)
+        payment_req = self.payment_requests[index]
+        payment_req.verify(tx_ack_payment_req, self.coin)
+        await helpers.confirm_payment_request(
+            tx_ack_payment_req, payment_req.amount, self.amount_unit, self.coin
+        )
 
     async def approve_tx(self, tx_info: TxInfo, orig_txs: List[OriginalTxInfo]) -> None:
-        await super().approve_tx(tx_info, orig_txs)
-
         fee = self.total_in - self.total_out
 
         # some coins require negative fees for reward TX
@@ -284,10 +287,12 @@ class CoinJoinApprover(Approver):
         self.our_weight.add_output(script_pubkey)
         self.group_our_count += 1
 
-    async def add_payment_request(
+    async def approve_payment_request(
         self, index: int, tx_ack_payment_req: TxAckPaymentRequest
     ) -> None:
-        await super().add_payment_request(index, tx_ack_payment_req)
+        payment_req = self.payment_requests[index]
+        payment_req.verify(tx_ack_payment_req, self.coin)
+
         if tx_ack_payment_req.recipient_name != self.authorization.coordinator:
             raise wire.DataError("CoinJoin coordinator mismatch in payment request.")
 
@@ -295,8 +300,6 @@ class CoinJoinApprover(Approver):
             raise wire.DataError("Memos not allowed in CoinJoin payment request.")
 
     async def approve_tx(self, tx_info: TxInfo, orig_txs: List[OriginalTxInfo]) -> None:
-        await super().approve_tx(tx_info, orig_txs)
-
         # The mining fee of the transaction as a whole.
         mining_fee = self.total_in - self.total_out
 
@@ -342,8 +345,8 @@ class CoinJoinApprover(Approver):
             / decimal_divisor
         )
 
-    def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
-        super().add_output(txo, script_pubkey)
+    def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
+        super()._add_output(txo, script_pubkey)
 
         # All CoinJoin outputs must be accompanied by a signed payment request.
         if txo.payment_request is None:
