@@ -15,6 +15,12 @@ class TrezorT(Device):
             )
 
         self.wait(5)
+        self.run_trezorctl("device wipe --bootloader || true")
+        self.wait(5)
+        self.power_off()
+        self.power_on()
+
+        self.wait(5)
         self.log("[software] Updating the firmware to {}".format(file))
         self.run_trezorctl("firmware-update -s -f {}".format(file))
 
