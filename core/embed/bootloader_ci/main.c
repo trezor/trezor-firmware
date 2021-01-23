@@ -115,17 +115,6 @@ static secbool bootloader_usb_loop(const vendor_header *const vhdr,
         break;
       case 5:  // WipeDevice
         ui_fadeout();
-        ui_screen_wipe_confirm();
-        ui_fadein();
-        int response = ui_user_input(INPUT_CONFIRM | INPUT_CANCEL);
-        if (INPUT_CANCEL == response) {
-          ui_fadeout();
-          ui_screen_info(secfalse, vhdr, hdr);
-          ui_fadein();
-          send_user_abort(USB_IFACE_NUM, "Wipe cancelled");
-          break;
-        }
-        ui_fadeout();
         ui_screen_wipe();
         ui_fadein();
         r = process_msg_WipeDevice(USB_IFACE_NUM, msg_size, buf);
