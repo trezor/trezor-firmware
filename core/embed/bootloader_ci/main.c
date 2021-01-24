@@ -114,21 +114,15 @@ static secbool bootloader_usb_loop(const vendor_header *const vhdr,
         process_msg_Ping(USB_IFACE_NUM, msg_size, buf);
         break;
       case 5:  // WipeDevice
-        ui_fadeout();
         ui_screen_wipe();
-        ui_fadein();
         r = process_msg_WipeDevice(USB_IFACE_NUM, msg_size, buf);
         if (r < 0) {  // error
-          ui_fadeout();
           ui_screen_fail();
-          ui_fadein();
           usb_stop();
           usb_deinit();
           return secfalse;  // shutdown
         } else {            // success
-          ui_fadeout();
           ui_screen_done(0, sectrue);
-          ui_fadein();
           usb_stop();
           usb_deinit();
           return secfalse;  // shutdown
@@ -140,17 +134,13 @@ static secbool bootloader_usb_loop(const vendor_header *const vhdr,
       case 7:  // FirmwareUpload
         r = process_msg_FirmwareUpload(USB_IFACE_NUM, msg_size, buf);
         if (r < 0 && r != -4) {  // error, but not user abort (-4)
-          ui_fadeout();
           ui_screen_fail();
-          ui_fadein();
           usb_stop();
           usb_deinit();
           return secfalse;    // shutdown
         } else if (r == 0) {  // last chunk received
           ui_screen_install_progress_upload(1000);
-          ui_fadeout();
           ui_screen_done(4, sectrue);
-          ui_fadein();
           ui_screen_done(3, secfalse);
           hal_delay(1000);
           ui_screen_done(2, secfalse);
@@ -159,7 +149,6 @@ static secbool bootloader_usb_loop(const vendor_header *const vhdr,
           hal_delay(1000);
           usb_stop();
           usb_deinit();
-          ui_fadeout();
           return sectrue;  // jump to firmware
         }
         break;
