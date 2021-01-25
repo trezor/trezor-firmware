@@ -1,10 +1,8 @@
 # Cardano
 
-MAINTAINER = Gabriel Kerekeš <gabriel.kerekes@vacuumlabs.com>
+MAINTAINER = Rafael Korbaš <rafael.korbas@vacuumlabs.com>
 
 ORIGINAL AUTHOR = Juraj Muravský <juraj.muravsky@vacuumlabs.com>
-
-SHELLEY UPDATE AUTHOR = Gabriel Kerekeš <gabriel.kerekes@vacuumlabs.com>
 
 REVIEWER = Jan Matejek <jan.matejek@satoshilabs.com>, Tomas Susanka <tomas.susanka@satoshilabs.com>
 
@@ -13,15 +11,16 @@ REVIEWER = Jan Matejek <jan.matejek@satoshilabs.com>, Tomas Susanka <tomas.susan
 ## Useful links
 
 [Cardano documentation](https://docs.cardano.org/en/latest/) - official documentation.
+[Cardano developer documentation](https://developers.cardano.org/) - official developer documentation.
 [Delegation Design Spec](https://hydra.iohk.io/build/2006688/download/1/delegation_design_spec.pdf) - contains information about delegation (addresses, certificates, withdrawals, ...).
-[Shelley CDDL spec](https://github.com/input-output-hk/cardano-ledger-specs/blob/460ee17d22cacb3ac4d90536ebe90500a356a1c9/shelley/chain-and-ledger/shelley-spec-ledger-test/cddl-files/shelley.cddl).
+[Multi Asset CDDL spec](https://github.com/input-output-hk/cardano-ledger-specs/blob/097890495cbb0e8b62106bcd090a5721c3f4b36f/shelley-ma/shelley-ma-test/cddl-files/shelley-ma.cddl).
 [Byron address format](https://github.com/input-output-hk/cardano-wallet/wiki/About-Address-Format---Byron).
 [The Shelley 1852' purpose and staking path](https://github.com/input-output-hk/implementation-decisions/blob/e2d1bed5e617f0907bc5e12cf1c3f3302a4a7c42/text/1852-hd-chimeric.md).
 [cbor.me](http://cbor.me/) - very useful tool for CBOR inspection.
 
 ## Important notes
 
-Unfortunately we are aware of the fact that currently at most ~14 inputs are supported per transaction. We suspect this is due to the memory heavy CBOR implementation. This should be fixed in the near future.
+Unfortunately we are aware of the fact that currently at most ~14 inputs are supported per transaction. To resolve this, the cardano app will have to be rewritten to support transaction streaming.
 
 Cardano requires a custom `seed.py` file and `Keychain` class. This is because the original Cardano derivation schemes don't separate seed generation from key tree derivation and also because we need to support both Byron (44') and Shelley (1852') purposes. More on this can be found [here](https://github.com/satoshilabs/slips/blob/master/slip-0023.md) and [here](https://github.com/input-output-hk/implementation-decisions/blob/e2d1bed5e617f0907bc5e12cf1c3f3302a4a7c42/text/1852-hd-chimeric.md).
 
@@ -93,7 +92,7 @@ Testnet: `stake_test1uqfz49rtntfa9h0s98f6s28sg69weemgjhc4e8hm66d5yac643znq`
 
 Transactions don't have a distinct type. Every transaction may transfer funds, post a certificate, withdraw funds or do all at once (to a point).
 
-_Unfortunately we are aware of the fact that currently at most ~14 inputs are supported per transaction. We suspect this is due to the memory heavy CBOR implementation. This should be fixed in the near future._
+_Unfortunately we are aware of the fact that currently at most ~14 inputs are supported per transaction. This should be resolved when the cardano app is updated to support transaction streaming._
 
 #### Witnesses
 
@@ -105,7 +104,29 @@ They only need to contain the public key (not the extended public key) and the s
 _Byron witnesses_:
 In order to be able to properly verify them, Byron witnesses need to contain the public key, signature, chain code and address attributes (which are empty on mainnet or contain the protocol magic on testnet).
 
-More on witness structure can be found [here](https://github.com/input-output-hk/cardano-ledger-specs/blob/460ee17d22cacb3ac4d90536ebe90500a356a1c9/shelley/chain-and-ledger/shelley-spec-ledger-test/cddl-files/shelley.cddl#L213).
+More on witness structure can be found [here](https://github.com/input-output-hk/cardano-ledger-specs/blob/097890495cbb0e8b62106bcd090a5721c3f4b36f/shelley-ma/shelley-ma-test/cddl-files/shelley-ma.cddl#L219).
+
+#### Multi Asset support
+
+_Multi Asset support has been added in the Cardano Mary era_
+
+_Quote from [developer docs](https://developers.cardano.org/en/development-environments/native-tokens/multi-asset-tokens-explainer/):_
+> This feature extends the existing accounting infrastructure defined in the ledger model, which is designed for processing ada-only transactions, to accommodate transactions that simultaneously use a range of assets. These assets include ada and a variety of user-define custom token types.
+
+Transaction outputs may include custom tokens on top of ADA tokens:
+```
+1: [
+ [
+  address, [
+   ADA_amount, {
+    policy_id: {
+     asset_name: asset_amount
+    }}]]]
+```
+
+Please see the transaction below for more details.
+
+**The serialized transaction output size is currently limited to 512 bytes. This limitation is a mitigation measure to prevent sending large (especially change) outputs containing many tokens that Trezor would not be able to spend given that currently the full Cardano transaction is held in-memory. Once Cardano-transaction signing is refactored to be streamed, this limit can be lifted**
 
 #### Certificates
 
@@ -122,7 +143,7 @@ And these three which are not supported by Trezor at the moment:
 Stake key de-registration and delegation certificates both need to be witnessed by the corresponding staking key.
 
 You can read more on certificates in the [delegation design spec](https://hydra.iohk.io/build/2006688/download/1/delegation_design_spec.pdf#subsection.3.4).
-Info about their structure can be found [here](https://github.com/input-output-hk/cardano-ledger-specs/blob/460ee17d22cacb3ac4d90536ebe90500a356a1c9/shelley/chain-and-ledger/shelley-spec-ledger-test/cddl-files/shelley.cddl#L102).
+Info about their structure can be found [here](https://github.com/input-output-hk/cardano-ledger-specs/blob/097890495cbb0e8b62106bcd090a5721c3f4b36f/shelley-ma/shelley-ma-test/cddl-files/shelley-ma.cddl#L102).
 
 #### Withdrawals
 
@@ -132,7 +153,7 @@ You can read more on withdrawals in the [delegation design spec](https://hydra.i
 
 #### Metadata
 
-Each transaction may contain metadata. Metadata format can be found [here](https://github.com/input-output-hk/cardano-ledger-specs/blob/460ee17d22cacb3ac4d90536ebe90500a356a1c9/shelley/chain-and-ledger/shelley-spec-ledger-test/cddl-files/shelley.cddl#L210). It's basically a CBOR serialized map and can contain numbers, bytes, strings or nested maps/lists.
+Each transaction may contain metadata. Metadata format can be found [here](https://github.com/input-output-hk/cardano-ledger-specs/blob/097890495cbb0e8b62106bcd090a5721c3f4b36f/shelley-ma/shelley-ma-test/cddl-files/shelley-ma.cddl#L212). It's basically a CBOR serialized map and can contain numbers, bytes, strings or nested maps/lists.
 
 Due to memory limitations we currently enforce a maximum size of 500 bytes for metadata.
 
@@ -145,12 +166,11 @@ Due to memory limitations we currently enforce a maximum size of 500 bytes for m
 You can use a combination of [cardano-node](https://github.com/input-output-hk/cardano-node) and cardano-cli (part of the cardano-node repo) to submit a transaction.
 
 ## Serialization format
-Cardano uses [CBOR](https://www.rfc-editor.org/info/rfc7049) as a serialization format. [Here](https://github.com/input-output-hk/cardano-ledger-specs/blob/460ee17d22cacb3ac4d90536ebe90500a356a1c9/shelley/chain-and-ledger/shelley-spec-ledger-test/cddl-files/shelley.cddl) is the [CDDL](https://tools.ietf.org/html/rfc8610) specification for Shelley.
-
+Cardano uses [CBOR](https://www.rfc-editor.org/info/rfc7049) as a serialization format. [Here](https://github.com/input-output-hk/cardano-ledger-specs/blob/097890495cbb0e8b62106bcd090a5721c3f4b36f/shelley-ma/shelley-ma-test/cddl-files/shelley-ma.cddl) is the [CDDL](https://tools.ietf.org/html/rfc8610) specification for after Multi Asset support has been added.
 
 #### Raw transaction example
 ```
-83a600818258200d4a5315236df09f331158cae0f78d3df6cdb952a387bcd160dcb1bd2c708c6b00018182583900667ee84f714720123b92dd159bc306925020c460d464cea40eebc59f6c72a09118a3307789bc6d79e3b2149468f62df586085bcee687ca4d1b00000018fab759cd021a00030d40031a0007a120048182018200581cf228837e81c3baaa1879dbeff94e86fa5eba342aa05cd6d1c3bf23ed05a1581de06c72a09118a3307789bc6d79e3b2149468f62df586085bcee687ca4d1b00000001ad72b9d4a10082825820d198d009e0e482bc940331c3709c7ccdc1decbf0675e7c06380c1da3e129e7265840f62f02511ac77eebdbd87221a3bc9c93cf0971a13107ff41b6ea4ea14d720b361f41ab4994b91022763a10ebe1edf8174ca31ec2c7f56be72759d7e75303b603825820f1cea7b5d7f81e6e7858681634d957117ffe4e78bf9d475dbae9101baddda49858407ac236ad5684d22848a725246e83a043611c8ecebf04864d1b9fae6a33f23684790bc05d44a49b1c0a48df00151acafdcc93c29faf93663c9ed704cefd1a4b0df6
+83a700818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018282583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff821904d2a1581c95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39a14874652474436f696e1910e18258390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b427719115c02182a030a048182008200581c122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b427705a1581de1122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b42771903e80814a10082825820bc65be1b0b9d7531778a1317c2aa6de936963c3f9ac7d5ee9e9eda25e0c97c5e5840c6e85c7eec254f765ddc119b1f40ef50944dcb1882822c3d61641785bbc312d1049ed0a92ded74745986f5d464d0d0caafc9f0c66285a056309d3d39cf19b20e8258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c158401feabb9e56bca7d3cb75f0942d1ebaec92f167193c70fb9b416e9ae3d3e0f368f49fde3f4a862eb6a02f9a27834d0b7c1f6dd689616809432c99f3ab7249ad0ef6
 ```
 
 #### The same transactions with structure description
@@ -163,27 +183,46 @@ Cardano uses [CBOR](https://www.rfc-editor.org/info/rfc7049) as a serialization 
  {
    # inputs [id, index]
    # uint(0), array(1), array(2), bytes(32), uint(0)
-   0: [[h'0D4...', 0]],
+   0: [[h'3B4...', 0]],
 
-   # outputs [address, amount]
-   # uint(1), array(1), array(2), bytes(57), uint(107285535181)
-   1: [[h'006...', 107285535181]],
+   # outputs [address, [ada_amount, { policy_id => { asset_name => asset_amount }}]]
+   # uint(1), array(2)
+   1: [
+    # multi asset output
+    # array(2), bytes(57), uint(1234), map(1), bytes(28), map(1), bytes(8), uint(4321)
+    [
+     h'01E...', [
+      1234, {
+       h'95A...': {
+        h'74652474436F696E': 4321
+       }
+      }
+     ]
+    ],
+    # output containing only ADA [address, ada_amount]
+    # array(2), bytes(57), uint(4444)
+    [h'018...', 4444],
+   ]
 
    # fee
-   # uint(2), uint(200000)
-   2: 200000,
+   # uint(2), uint(42)
+   2: 42,
 
    # ttl
-   # uint(3), uint(500000)
-   3: 500000,
+   # uint(3), uint(10)
+   3: 10,
 
    # certificates [[type, [keyhash/scripthash, keyhash]]]
-   # uint(4), array(1), array(2), uint(1), array(2), uint(0), bytes(28)
-   4: [[1,[0, h'F22...']]],
+   # uint(4), array(1), array(2), uint(0), array(2), uint(0), bytes(28)
+   4: [[0,[0, h'122...']]],
 
    # withdrawal [reward_address: amount]
    # uint(5), map(1), bytes(29), uint(7204944340)
-   5: {h'E06...': 7204944340}
+   5: {h'E11...': 1000},
+
+   # validity_interval_start
+   # uint(8), uint(20)
+   8: 20
  },
   # witnesses
   # map(1)
@@ -192,9 +231,9 @@ Cardano uses [CBOR](https://www.rfc-editor.org/info/rfc7049) as a serialization 
    # uint(0), array(2)
    0: [
        # array(2), bytes(32), bytes(64)
-       [h'D19...', h'F62...'],
+       [h'BC6...', h'C6E...'],
        # array(2), bytes(32), bytes(64)
-       [h'F1C...', h'7AC...']
+       [h'5D0...', h'1FE...']
    ]
  },
 

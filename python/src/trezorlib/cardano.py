@@ -15,7 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from ipaddress import ip_address
-from typing import List
+from typing import List, Optional
 
 from . import messages, tools
 from .tools import expect
@@ -36,8 +36,12 @@ REQUIRED_FIELDS_POOL_PARAMETERS = (
     "owners",
 )
 REQUIRED_FIELDS_WITHDRAWAL = ("path", "amount")
+REQUIRED_FIELDS_TOKEN_GROUP = ("policy_id", "tokens")
+REQUIRED_FIELDS_TOKEN = ("asset_name_bytes", "amount")
 
 INCOMPLETE_OUTPUT_ERROR_MESSAGE = "The output is missing some fields"
+
+INVALID_OUTPUT_TOKEN_BUNDLE_ENTRY = "The output's token_bundle entry is invalid"
 
 ADDRESS_TYPES = (
     messages.CardanoAddressType.BYRON,
@@ -107,15 +111,61 @@ def create_output(output) -> messages.CardanoTxOutputType:
     if not (contains_address or contains_address_type):
         raise ValueError(INCOMPLETE_OUTPUT_ERROR_MESSAGE)
 
+    address = None
+    address_parameters = None
+    token_bundle = None
+
     if contains_address:
-        return messages.CardanoTxOutputType(
-            address=output["address"], amount=int(output["amount"])
-        )
+        address = output["address"]
     else:
-        return _create_change_output(output)
+        address_parameters = _create_change_output_address_parameters(output)
+
+    if "token_bundle" in output:
+        token_bundle = _create_token_bundle(output["token_bundle"])
+
+    return messages.CardanoTxOutputType(
+        address=address,
+        address_parameters=address_parameters,
+        amount=int(output["amount"]),
+        token_bundle=token_bundle,
+    )
 
 
-def _create_change_output(output) -> messages.CardanoTxOutputType:
+def _create_token_bundle(token_bundle) -> List[messages.CardanoAssetGroupType]:
+    result = []
+    for token_group in token_bundle:
+        if not all(k in token_group for k in REQUIRED_FIELDS_TOKEN_GROUP):
+            raise ValueError(INVALID_OUTPUT_TOKEN_BUNDLE_ENTRY)
+
+        result.append(
+            messages.CardanoAssetGroupType(
+                policy_id=bytes.fromhex(token_group["policy_id"]),
+                tokens=_create_tokens(token_group["tokens"]),
+            )
+        )
+
+    return result
+
+
+def _create_tokens(tokens) -> List[messages.CardanoTokenType]:
+    result = []
+    for token in tokens:
+        if not all(k in token for k in REQUIRED_FIELDS_TOKEN):
+            raise ValueError(INVALID_OUTPUT_TOKEN_BUNDLE_ENTRY)
+
+        result.append(
+            messages.CardanoTokenType(
+                asset_name_bytes=bytes.fromhex(token["asset_name_bytes"]),
+                amount=int(token["amount"]),
+            )
+        )
+
+    return result
+
+
+def _create_change_output_address_parameters(
+    output,
+) -> messages.CardanoAddressParametersType:
     if "path" not in output:
         raise ValueError(INCOMPLETE_OUTPUT_ERROR_MESSAGE)
 
@@ -123,7 +173,7 @@ def _create_change_output(output) -> messages.CardanoTxOutputType:
     if "stakingKeyHash" in output:
         staking_key_hash_bytes = bytes.fromhex(output.get("stakingKeyHash"))
 
-    address_parameters = create_address_parameters(
+    return create_address_parameters(
         int(output["addressType"]),
         tools.parse_path(output["path"]),
         tools.parse_path(output.get("stakingPath")),
@@ -131,10 +181,6 @@ def _create_change_output(output) -> messages.CardanoTxOutputType:
         output.get("blockIndex"),
         output.get("txIndex"),
         output.get("certificateIndex"),
-    )
-
-    return messages.CardanoTxOutputType(
-        address_parameters=address_parameters, amount=int(output["amount"])
     )
 
 
@@ -301,7 +347,8 @@ def sign_tx(
     inputs: List[messages.CardanoTxInputType],
     outputs: List[messages.CardanoTxOutputType],
     fee: int,
-    ttl: int,
+    ttl: Optional[int],
+    validity_interval_start: Optional[int],
     certificates: List[messages.CardanoTxCertificateType] = (),
     withdrawals: List[messages.CardanoTxWithdrawalType] = (),
     metadata: bytes = None,
@@ -314,6 +361,7 @@ def sign_tx(
             outputs=outputs,
             fee=fee,
             ttl=ttl,
+            validity_interval_start=validity_interval_start,
             certificates=certificates,
             withdrawals=withdrawals,
             metadata=metadata,
