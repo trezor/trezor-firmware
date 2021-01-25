@@ -811,7 +811,7 @@ void layoutXPUBMultisig(const char *xpub, int index, int page, bool ours) {
     oledClear();
   }
   layoutLast = layoutXPUBMultisig;
-  char desc[] = "XPUB #__ _/2 (______)";
+  char desc[] = "XPUB #__ _/2 (________)";
   if (index + 1 >= 10) {
     desc[6] = '0' + (((index + 1) / 10) % 10);
     desc[7] = '0' + ((index + 1) % 10);
@@ -829,12 +829,14 @@ void layoutXPUBMultisig(const char *xpub, int index, int page, bool ours) {
     desc[19] = ')';
     desc[20] = 0;
   } else {
-    desc[14] = 'o';
-    desc[15] = 't';
-    desc[16] = 'h';
-    desc[17] = 'e';
-    desc[18] = 'r';
-    desc[19] = 's';
+    desc[14] = 'c';
+    desc[15] = 'o';
+    desc[16] = 's';
+    desc[17] = 'i';
+    desc[18] = 'g';
+    desc[19] = 'n';
+    desc[20] = 'e';
+    desc[21] = 'r';
   }
   _layout_xpub(xpub, desc, page);
   layoutButtonNo(_("Next"), NULL);

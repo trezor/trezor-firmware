@@ -37,7 +37,7 @@ async def show_xpubs(
         )
         xpub = node.serialize_public(xpub_magic)
         desc = "XPUB #%d" % (i + 1)
-        desc += " (yours)" if i == multisig_index else " (others)"
+        desc += " (yours)" if i == multisig_index else " (cosigner)"
         if await show_xpub(ctx, xpub, desc=desc, cancel=cancel):
             return True
     return False
