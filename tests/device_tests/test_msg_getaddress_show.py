@@ -187,28 +187,28 @@ def test_show_multisig_xpubs(
             client.debug.press_no()
             yield  # show XPUB#1
             lines1 = client.debug.wait_layout().lines
-            assert lines1[0] == "XPUB #1 " + ("(yours)" if i == 0 else "(others)")
+            assert lines1[0] == "XPUB #1 " + ("(yours)" if i == 0 else "(cosigner)")
             client.debug.swipe_up()
             lines2 = client.debug.wait_layout().lines
-            assert lines2[0] == "XPUB #1 " + ("(yours)" if i == 0 else "(others)")
+            assert lines2[0] == "XPUB #1 " + ("(yours)" if i == 0 else "(cosigner)")
             assert "".join(lines1[1:] + lines2[1:]) == xpubs[0]
 
             client.debug.press_no()
             yield  # show XPUB#2
             lines1 = client.debug.wait_layout().lines
-            assert lines1[0] == "XPUB #2 " + ("(yours)" if i == 1 else "(others)")
+            assert lines1[0] == "XPUB #2 " + ("(yours)" if i == 1 else "(cosigner)")
             client.debug.swipe_up()
             lines2 = client.debug.wait_layout().lines
-            assert lines2[0] == "XPUB #2 " + ("(yours)" if i == 1 else "(others)")
+            assert lines2[0] == "XPUB #2 " + ("(yours)" if i == 1 else "(cosigner)")
             assert "".join(lines1[1:] + lines2[1:]) == xpubs[1]
 
             client.debug.press_no()
             yield  # show XPUB#3
             lines1 = client.debug.wait_layout().lines
-            assert lines1[0] == "XPUB #3 " + ("(yours)" if i == 2 else "(others)")
+            assert lines1[0] == "XPUB #3 " + ("(yours)" if i == 2 else "(cosigner)")
             client.debug.swipe_up()
             lines2 = client.debug.wait_layout().lines
-            assert lines2[0] == "XPUB #3 " + ("(yours)" if i == 2 else "(others)")
+            assert lines2[0] == "XPUB #3 " + ("(yours)" if i == 2 else "(cosigner)")
             assert "".join(lines1[1:] + lines2[1:]) == xpubs[2]
 
             client.debug.press_yes()
