@@ -541,6 +541,146 @@
         "tx_hash": "47cf79f20c6c62edb4162b3b232a57afc1bd0b57c7fd8389555276408a004776",
         "serialized_tx": "83a400818258201af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc00018382582f82d818582583581cc817d85b524e3d073795819a25cdbb84cff6aa2bbb3a081980d248cba10242182a001a0fb6fc611a002dd2e882581d60cb03849e268f989b5a843107bad7fa2908246986a8f3d643f8c184800182582f82d818582583581c98c3a558f39d1d993cc8770e8825c70a6d0f5a9eb243501c4526c29da10242182a001aa8566c011a000f424002182a030aa1028184582089053545a6c254b0d9b1464e48d2b5fcf91d4e25c128afb1fcfc61d0843338ea5840cc11adf81cb3c3b75a438325f8577666f5cbb4d5d6b73fa6dbbcf5ab36897df34eecacdb54c3bc3ce7fc594ebb2c7aa4db4700f4290facad9b611a035af8710a582026308151516f3b0e02bb1638142747863c520273ce9bd3e5cd91e1d46fe2a63545a10242182af6"
       }
+    },
+    {
+      "description": "Mary era transaction with multiasset output",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": 47,
+        "certificates": [],
+        "withdrawals": [],
+        "metadata": "",
+        "input_flow": [["YES"], ["YES"], ["YES"], ["SWIPE", "YES"], ["SWIPE", "YES"]],
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+              "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+              "amount": "1234",
+              "token_bundle": [
+                {
+                  "policy_id": "95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+                  "tokens": [
+                    {
+                      "asset_name_bytes": "74652474436f696e",
+                      "amount": "7878754"
+                    }
+                  ]
+                }
+              ]
+          },
+          {
+            "addressType": 0,
+            "path": "m/1852'/1815'/0'/0/0",
+            "stakingPath": "m/1852'/1815'/0'/2/0",
+            "amount": "7120787"
+          }
+        ]
+      },
+      "result": {
+        "tx_hash": "b7269ddc59e4094a6581c653e0d5dc1e553e3a5fb6ffae47d3d094dff1cfe87b",
+        "serialized_tx": "83a500818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018282583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff821904d2a1581c95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39a14874652474436f696e1a007838628258390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b42771a006ca79302182a030a08182fa100818258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c15840e9ab9920f24f7fdf10c90c9c1794cd9efea03dd4b3add405e5f9ffb61874d2704d376269649f8f5c57ec69b2df74fa94f73191fbeb21987b4b887743af454c06f6"
+      }
+    },
+    {
+      "description": "Mary era transaction with different policies and tokens",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": 47,
+        "certificates": [],
+        "withdrawals": [],
+        "metadata": "",
+        "input_flow": [["YES"], ["YES"], ["YES"], ["SWIPE", "YES"], ["YES"], ["SWIPE", "YES"], ["SWIPE", "SWIPE", "YES"], ["YES"]],
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+              "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+              "amount": "1234",
+              "token_bundle": [
+                {
+                  "policy_id": "95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+                  "tokens": [
+                    {
+                      "asset_name_bytes": "74652474436f696e",
+                      "amount": "7878754"
+                    },
+                    {
+                      "asset_name_bytes": "456c204e69c3b16f",
+                      "amount": "1234"
+                    }
+                  ]
+                },
+                {
+                  "policy_id": "75a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+                  "tokens": [
+                    {
+                      "asset_name_bytes": "7564247542686911",
+                      "amount": "47"
+                    }
+                  ]
+                }
+              ]
+          },
+          {
+            "addressType": 0,
+            "path": "m/1852'/1815'/0'/0/0",
+            "stakingPath": "m/1852'/1815'/0'/2/0",
+            "amount": "7120787"
+          }
+        ]
+      },
+      "result": {
+        "tx_hash": "0b929def7bd9f44f5602f809bc0f9be30521f6b93d625525cf33b956993bfb22",
+        "serialized_tx": "83a500818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018282583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff821904d2a2581c75a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39a1487564247542686911182f581c95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39a248456c204e69c3b16f1904d24874652474436f696e1a007838628258390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b42771a006ca79302182a030a08182fa100818258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c158408751e397bd9610735a92e65eab02c04aa61507f425e53c0119ddc06047bfac279439ee2bf6e0d572defa9e5649a1ea1fc2b8144041ab4970f39cd6850d4d670ef6"
+      }
+    },
+    {
+      "description": "Mary era transaction with no TTL/validity start",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "certificates": [],
+        "withdrawals": [],
+        "metadata": "",
+        "input_flow": [["YES"]],
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "addressType": 0,
+            "path": "m/1852'/1815'/0'/0/0",
+            "stakingPath": "m/1852'/1815'/0'/2/0",
+            "amount": "7120787"
+          }
+        ]
+      },
+      "result": {
+        "tx_hash": "b621e22f7cb9aac1a70a3362fde88bdfd31fc100e20f3f3c24a7b853536b4f50",
+        "serialized_tx": "83a300818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b70001818258390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b42771a006ca79302182aa100818258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1584088c35c125664935117d9aa1173cae5f01967b02f6b716b1a135570b2fee74728f2f3e39d56b748302c36e2407d7bfefc4054ca1e60dd857e461734ae41d00500f6"
+      }
     }
   ]
 }
