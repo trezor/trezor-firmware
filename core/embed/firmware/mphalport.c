@@ -19,7 +19,6 @@
 
 #include "common.h"
 #include "py/mphal.h"
-#include "string.h"
 #include "usb.h"
 
 static int vcp_iface_num = -1;
