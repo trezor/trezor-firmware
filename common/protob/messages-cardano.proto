@@ -126,6 +126,8 @@ message CardanoSignTx {
     repeated CardanoTxCertificateType certificates = 9; // transaction certificates - added in shelley
     repeated CardanoTxWithdrawalType withdrawals = 10;  // transaction withdrawals - added in shelley
     optional bytes metadata = 11;                       // transaction metadata - added in shelley
+    optional uint64 validity_interval_start = 12;       // transaction validity start - added in allegra
+
     /**
      * Structure representing cardano transaction input
      */
@@ -144,6 +146,17 @@ message CardanoSignTx {
         // repeated uint32 address_n = 2;                               // moved to address_parameters
         optional uint64 amount = 3;                                     // amount to spend
         optional CardanoAddressParametersType address_parameters = 4;   // parameters used to derive the address
+        repeated CardanoAssetGroupType token_bundle = 5;                // custom assets - added in mary
+    }
+
+    message CardanoAssetGroupType {
+        required bytes policy_id = 1;                  // asset group policy id
+        repeated CardanoTokenType tokens = 2;          // asset name-amount pair
+    }
+
+    message CardanoTokenType {
+        required bytes asset_name_bytes = 1;     // asset name as bytestring (may be either ascii string or hash)
+        required uint64 amount = 2;        // asset amount
     }
 
     /**

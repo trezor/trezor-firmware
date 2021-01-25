@@ -30,6 +30,7 @@ class CardanoSignTx(p.MessageType):
         ttl: int = None,
         network_id: int = None,
         metadata: bytes = None,
+        validity_interval_start: int = None,
     ) -> None:
         self.inputs = inputs if inputs is not None else []
         self.outputs = outputs if outputs is not None else []
@@ -40,6 +41,7 @@ class CardanoSignTx(p.MessageType):
         self.ttl = ttl
         self.network_id = network_id
         self.metadata = metadata
+        self.validity_interval_start = validity_interval_start
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -53,4 +55,5 @@ class CardanoSignTx(p.MessageType):
             9: ('certificates', CardanoTxCertificateType, p.FLAG_REPEATED),
             10: ('withdrawals', CardanoTxWithdrawalType, p.FLAG_REPEATED),
             11: ('metadata', p.BytesType, None),
+            12: ('validity_interval_start', p.UVarintType, None),
         }

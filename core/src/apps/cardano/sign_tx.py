@@ -22,6 +22,7 @@ from .helpers import (
     INVALID_METADATA,
     INVALID_STAKE_POOL_REGISTRATION_TX_STRUCTURE,
     INVALID_STAKEPOOL_REGISTRATION_TX_INPUTS,
+    INVALID_TOKEN_BUNDLE_OUTPUT,
     INVALID_WITHDRAWAL,
     LOVELACE_MAX_SUPPLY,
     network_ids,
@@ -49,6 +50,7 @@ from .layout import (
     show_warning_tx_different_staking_account,
     show_warning_tx_network_unverifiable,
     show_warning_tx_no_staking_info,
+    show_warning_tx_output_contains_tokens,
     show_warning_tx_pointer_address,
     show_warning_tx_staking_key_hash,
 )
@@ -60,10 +62,17 @@ if False:
     from trezor.messages.CardanoTxInputType import CardanoTxInputType
     from trezor.messages.CardanoTxOutputType import CardanoTxOutputType
     from trezor.messages.CardanoTxWithdrawalType import CardanoTxWithdrawalType
-    from typing import Dict, List, Tuple
+    from trezor.messages.CardanoAssetGroupType import CardanoAssetGroupType
+    from typing import Dict, List, Tuple, Union
+
+    CborizedTokenBundle = Dict[bytes, Dict[bytes, int]]
+    CborizedTxOutput = Tuple[bytes, Union[int, Tuple[int, CborizedTokenBundle]]]
 
 METADATA_HASH_SIZE = 32
+MINTING_POLICY_ID_LENGTH = 28
 MAX_METADATA_LENGTH = 500
+MAX_ASSET_NAME_LENGTH = 32
+MAX_TX_OUTPUT_SIZE = 512
 
 
 @seed.with_keychain
@@ -197,8 +206,62 @@ def _validate_outputs(
                 "Each output must have an address field or address_parameters!"
             )
 
+        _validate_token_bundle(output.token_bundle)
+        _validate_max_tx_output_size(keychain, output, protocol_magic, network_id)
+
     if total_amount > LOVELACE_MAX_SUPPLY:
         raise wire.ProcessError("Total transaction amount is out of range!")
+
+
+def _validate_token_bundle(token_bundle: List[CardanoAssetGroupType]) -> None:
+    seen_policy_ids = set()
+    for token_group in token_bundle:
+        policy_id = bytes(token_group.policy_id)
+
+        if len(policy_id) != MINTING_POLICY_ID_LENGTH:
+            raise INVALID_TOKEN_BUNDLE_OUTPUT
+
+        if policy_id in seen_policy_ids:
+            raise INVALID_TOKEN_BUNDLE_OUTPUT
+        else:
+            seen_policy_ids.add(policy_id)
+
+        if not token_group.tokens:
+            raise INVALID_TOKEN_BUNDLE_OUTPUT
+
+        seen_asset_name_bytes = set()
+        for token in token_group.tokens:
+            asset_name_bytes = bytes(token.asset_name_bytes)
+            if len(asset_name_bytes) > MAX_ASSET_NAME_LENGTH:
+                raise INVALID_TOKEN_BUNDLE_OUTPUT
+
+            if asset_name_bytes in seen_asset_name_bytes:
+                raise INVALID_TOKEN_BUNDLE_OUTPUT
+            else:
+                seen_asset_name_bytes.add(asset_name_bytes)
+
+
+def _validate_max_tx_output_size(
+    keychain: seed.Keychain,
+    output: CardanoTxOutputType,
+    protocol_magic: int,
+    network_id: int,
+) -> None:
+    """
+    This limitation is a mitigation measure to prevent sending
+    large (especially change) outputs containing many tokens that Trezor
+    would not be able to spend reliably given that
+    currently the full Cardano transaction is held in-memory.
+    Once Cardano-transaction signing is refactored to be streamed, this
+    limit can be lifted
+    """
+    cborized_output = _cborize_output(keychain, output, protocol_magic, network_id)
+    serialized_output = cbor.encode(cborized_output)
+
+    if len(serialized_output) > MAX_TX_OUTPUT_SIZE:
+        raise wire.ProcessError(
+            "Maximum tx output size (%s bytes) exceeded!" % MAX_TX_OUTPUT_SIZE
+        )
 
 
 def _ensure_no_signing_inputs(inputs: List[CardanoTxInputType]):
@@ -271,8 +334,10 @@ def _cborize_tx_body(keychain: seed.Keychain, msg: CardanoSignTx) -> Dict:
         0: inputs_for_cbor,
         1: outputs_for_cbor,
         2: msg.fee,
-        3: msg.ttl,
     }
+
+    if msg.ttl:
+        tx_body[3] = msg.ttl
 
     if msg.certificates:
         certificates_for_cbor = _cborize_certificates(keychain, msg.certificates)
@@ -289,6 +354,9 @@ def _cborize_tx_body(keychain: seed.Keychain, msg: CardanoSignTx) -> Dict:
     if msg.metadata:
         tx_body[7] = _hash_metadata(bytes(msg.metadata))
 
+    if msg.validity_interval_start:
+        tx_body[8] = msg.validity_interval_start
+
     return tx_body
 
 
@@ -301,19 +369,46 @@ def _cborize_outputs(
     outputs: List[CardanoTxOutputType],
     protocol_magic: int,
     network_id: int,
-) -> List[Tuple[bytes, int]]:
-    result = []
-    for output in outputs:
-        amount = output.amount
-        if output.address_parameters:
-            address = derive_address_bytes(
-                keychain, output.address_parameters, protocol_magic, network_id
-            )
-        else:
-            # output address is validated in _validate_outputs before this happens
-            address = get_address_bytes_unsafe(output.address)
+) -> List[CborizedTxOutput]:
+    return [
+        _cborize_output(keychain, output, protocol_magic, network_id)
+        for output in outputs
+    ]
 
-        result.append((address, amount))
+
+def _cborize_output(
+    keychain: seed.Keychain,
+    output: CardanoTxOutputType,
+    protocol_magic: int,
+    network_id: int,
+) -> CborizedTxOutput:
+    amount = output.amount
+    if output.address_parameters:
+        address = derive_address_bytes(
+            keychain, output.address_parameters, protocol_magic, network_id
+        )
+    else:
+        # output address is validated in _validate_outputs before this happens
+        address = get_address_bytes_unsafe(output.address)
+
+    if not output.token_bundle:
+        return (address, amount)
+    else:
+        return (address, (amount, _cborize_token_bundle(output.token_bundle)))
+
+
+def _cborize_token_bundle(
+    token_bundle: List[CardanoAssetGroupType],
+) -> CborizedTokenBundle:
+    result = {}
+
+    for token_group in token_bundle:
+        cborized_policy_id = bytes(token_group.policy_id)
+        result[cborized_policy_id] = cborized_token_group = {}
+
+        for token in token_group.tokens:
+            cborized_asset_name = bytes(token.asset_name_bytes)
+            cborized_token_group[cborized_asset_name] = token.amount
 
     return result
 
@@ -481,6 +576,7 @@ async def _show_standard_tx(
         fee=msg.fee,
         protocol_magic=msg.protocol_magic,
         ttl=msg.ttl,
+        validity_interval_start=msg.validity_interval_start,
         has_metadata=has_metadata,
         is_network_id_verifiable=is_network_id_verifiable,
     )
@@ -500,7 +596,9 @@ async def _show_stake_pool_registration_tx(
         ctx, keychain, pool_parameters.owners, msg.network_id
     )
     await confirm_stake_pool_metadata(ctx, pool_parameters.metadata)
-    await confirm_transaction_network_ttl(ctx, msg.protocol_magic, msg.ttl)
+    await confirm_transaction_network_ttl(
+        ctx, msg.protocol_magic, msg.ttl, msg.validity_interval_start
+    )
     await confirm_stake_pool_registration_final(ctx)
 
 
@@ -525,7 +623,10 @@ async def _show_outputs(
 
         total_amount += output.amount
 
-        await confirm_sending(ctx, output.amount, address)
+        if len(output.token_bundle) > 0:
+            await show_warning_tx_output_contains_tokens(ctx)
+
+        await confirm_sending(ctx, output.amount, output.token_bundle, address)
 
     return total_amount
 

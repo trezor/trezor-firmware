@@ -1,7 +1,7 @@
 from apps.cardano.helpers.paths import ACCOUNT_PATH_INDEX, unharden
 
 if False:
-    from typing import List
+    from typing import List, Optional
 
 
 def variable_length_encode(number: int) -> bytes:
@@ -35,3 +35,10 @@ def format_account_number(path: List[int]) -> str:
         raise ValueError("Path is too short.")
 
     return "#%d" % (unharden(path[ACCOUNT_PATH_INDEX]) + 1)
+
+
+def format_optional_int(number: Optional[int]) -> str:
+    if number is None:
+        return "n/a"
+
+    return str(number)
