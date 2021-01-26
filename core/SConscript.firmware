@@ -3,13 +3,13 @@
 import os
 
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
-SYSTEM_VIEW = ARGUMENTS.get('SYSTEM_VIEW', '0') == '1'
 EVERYTHING = BITCOIN_ONLY != '1'
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 
 FEATURE_FLAGS = {
     "RDI": True,
     "SECP256K1_ZKP": False,
+    "SYSTEM_VIEW": False,
 }
 
 CCFLAGS_MOD = ''
@@ -352,7 +352,7 @@ if FEATURE_FLAGS["RDI"]:
     ]
     CPPDEFINES_MOD += ['RDI']
 
-if SYSTEM_VIEW:
+if FEATURE_FLAGS["SYSTEM_VIEW"]:
     SOURCE_FIRMWARE += [
         'embed/segger/SEGGER/SEGGER_SYSVIEW_Config_NoOS.c',
         'embed/segger/SEGGER/SEGGER_SYSVIEW.c',
