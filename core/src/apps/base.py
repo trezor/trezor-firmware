@@ -216,6 +216,11 @@ def lock_device() -> None:
         workflow.close_others()
 
 
+def lock_device_if_unlocked() -> None:
+    if config.is_unlocked():
+        lock_device()
+
+
 async def unlock_device(ctx: wire.GenericContext = wire.DUMMY_CONTEXT) -> None:
     """Ensure the device is in unlocked state.
 
@@ -267,4 +272,6 @@ def boot() -> None:
 
     wire.experimental_enabled = storage.device.get_experimental_features()
 
-    workflow.idle_timer.set(storage.device.get_autolock_delay_ms(), lock_device)
+    workflow.idle_timer.set(
+        storage.device.get_autolock_delay_ms(), lock_device_if_unlocked
+    )
