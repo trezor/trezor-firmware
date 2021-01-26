@@ -158,8 +158,10 @@
 
 #ifdef SYSTEM_VIEW
 #define MP_PLAT_PRINT_STRN(str, len) segger_print(str, len)
-// set following to 0 if you want to print to RTT instead of SystemView
-// openocd supports only the RTT output method
+// uncomment DEST_RTT and comment DEST_SYSTEMVIEW
+// if you want to print to RTT instead of SystemView
+// OpenOCD supports only the RTT output method
+// #define SYSTEMVIEW_DEST_RTT         (1)
 #define SYSTEMVIEW_DEST_SYSTEMVIEW  (1)
 #endif
 

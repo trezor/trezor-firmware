@@ -93,17 +93,20 @@ void enable_systemview() {
   SYSTICK->CSR = 0x07;                          // enable systick
 }
 
+#ifdef SYSTEMVIEW_DEST_RTT
 size_t _write(int file, const void *ptr, size_t len);
+#endif
 
 size_t segger_print(const char *str, size_t len) {
-#if SYSTEMVIEW_DEST_SYSTEMVIEW
+#ifdef SYSTEMVIEW_DEST_SYSTEMVIEW
   static char str_copy[1024];
   size_t copylen = len > 1023 ? 1023 : len;
   memcpy(str_copy, str, copylen);
   str_copy[copylen] = 0;
   SEGGER_SYSVIEW_Print(str_copy);
   return len;
-#else
+#endif
+#ifdef SYSTEMVIEW_DEST_RTT
   _write(0, str, len);
   return len;
 #endif
