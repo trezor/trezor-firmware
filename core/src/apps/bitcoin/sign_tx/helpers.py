@@ -326,10 +326,12 @@ def sanitize_sign_tx(tx: SignTx, coin: CoinInfo) -> SignTx:
         tx.expiry = tx.expiry if tx.expiry is not None else 0
     elif tx.expiry:
         raise wire.DataError("Expiry not enabled on this coin.")
+
     if coin.timestamp and not tx.timestamp:
         raise wire.DataError("Timestamp must be set.")
     elif not coin.timestamp and tx.timestamp:
         raise wire.DataError("Timestamp not enabled on this coin.")
+
     if coin.overwintered:
         if tx.version_group_id is None:
             raise wire.DataError("Version group ID must be set.")
@@ -340,16 +342,19 @@ def sanitize_sign_tx(tx: SignTx, coin: CoinInfo) -> SignTx:
             raise wire.DataError("Version group ID not enabled on this coin.")
         if tx.branch_id is not None:
             raise wire.DataError("Branch ID not enabled on this coin.")
+
     return tx
 
 
 def sanitize_tx_meta(tx: PrevTx, coin: CoinInfo) -> PrevTx:
     if not coin.extra_data and tx.extra_data_len:
         raise wire.DataError("Extra data not enabled on this coin.")
+
     if coin.decred or coin.overwintered:
         tx.expiry = tx.expiry if tx.expiry is not None else 0
     elif tx.expiry:
         raise wire.DataError("Expiry not enabled on this coin.")
+
     if coin.timestamp and not tx.timestamp:
         raise wire.DataError("Timestamp must be set.")
     elif not coin.timestamp and tx.timestamp:
@@ -359,45 +364,66 @@ def sanitize_tx_meta(tx: PrevTx, coin: CoinInfo) -> PrevTx:
             raise wire.DataError("Version group ID not enabled on this coin.")
         if tx.branch_id is not None:
             raise wire.DataError("Branch ID not enabled on this coin.")
+
     return tx
 
 
 def sanitize_tx_input(txi: TxInput, coin: CoinInfo) -> TxInput:
     if len(txi.prev_hash) != TX_HASH_SIZE:
         raise wire.DataError("Provided prev_hash is invalid.")
+
     if txi.multisig and txi.script_type not in common.MULTISIG_INPUT_SCRIPT_TYPES:
         raise wire.DataError("Multisig field provided but not expected.")
-    elif not txi.multisig and txi.script_type == InputScriptType.SPENDMULTISIG:
+
+    if not txi.multisig and txi.script_type == InputScriptType.SPENDMULTISIG:
         raise wire.DataError("Multisig details required.")
+
     if txi.address_n and txi.script_type not in common.INTERNAL_INPUT_SCRIPT_TYPES:
         raise wire.DataError("Input's address_n provided but not expected.")
+
     if not coin.decred and txi.decred_tree is not None:
         raise wire.DataError("Decred details provided but Decred coin not specified.")
+
     if txi.script_type in common.SEGWIT_INPUT_SCRIPT_TYPES or txi.witness is not None:
         if not coin.segwit:
             raise wire.DataError("Segwit not enabled on this coin.")
+
     if txi.commitment_data and not txi.ownership_proof:
         raise wire.DataError("commitment_data field provided but not expected.")
+
     if txi.orig_hash and txi.orig_index is None:
         raise wire.DataError("Missing orig_index field.")
+
     return txi
 
 
 def sanitize_tx_prev_input(txi: PrevInput, coin: CoinInfo) -> PrevInput:
     if len(txi.prev_hash) != TX_HASH_SIZE:
         raise wire.DataError("Provided prev_hash is invalid.")
+
     if not coin.decred and txi.decred_tree is not None:
         raise wire.DataError("Decred details provided but Decred coin not specified.")
+
     return txi
 
 
 def sanitize_tx_output(txo: TxOutput, coin: CoinInfo) -> TxOutput:
     if txo.multisig and txo.script_type not in common.MULTISIG_OUTPUT_SCRIPT_TYPES:
         raise wire.DataError("Multisig field provided but not expected.")
+
+    if not txo.multisig and txo.script_type == OutputScriptType.PAYTOMULTISIG:
+        raise wire.DataError("Multisig details required.")
+
     if txo.address_n and txo.script_type not in common.CHANGE_OUTPUT_SCRIPT_TYPES:
         raise wire.DataError("Output's address_n provided but not expected.")
+
     if txo.amount is None:
         raise wire.DataError("Missing amount field.")
+
+    if txo.script_type in common.SEGWIT_OUTPUT_SCRIPT_TYPES:
+        if not coin.segwit:
+            raise wire.DataError("Segwit not enabled on this coin.")
+
     if txo.script_type == OutputScriptType.PAYTOOPRETURN:
         # op_return output
         if txo.op_return_data is None:
@@ -415,6 +441,8 @@ def sanitize_tx_output(txo: TxOutput, coin: CoinInfo) -> TxOutput:
             raise wire.DataError("Both address and address_n provided.")
         if not txo.address_n and not txo.address:
             raise wire.DataError("Missing address")
+
     if txo.orig_hash and txo.orig_index is None:
         raise wire.DataError("Missing orig_index field.")
+
     return txo
