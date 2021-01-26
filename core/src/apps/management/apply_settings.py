@@ -5,7 +5,7 @@ from trezor.messages.Success import Success
 from trezor.strings import format_duration_ms
 from trezor.ui.components.tt.text import Text
 
-from apps.base import lock_device
+from apps.base import lock_device_if_unlocked
 from apps.common import safety_checks
 from apps.common.confirm import require_confirm, require_hold_to_confirm
 
@@ -101,7 +101,9 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings):
 
 
 def reload_settings_from_storage() -> None:
-    workflow.idle_timer.set(storage.device.get_autolock_delay_ms(), lock_device)
+    workflow.idle_timer.set(
+        storage.device.get_autolock_delay_ms(), lock_device_if_unlocked
+    )
     ui.display.orientation(storage.device.get_rotation())
     wire.experimental_enabled = storage.device.get_experimental_features()
 
