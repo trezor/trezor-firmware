@@ -396,20 +396,17 @@ def input_script_multisig(
     redeem_script_length = output_script_multisig_length(pubkeys, multisig.m)
 
     # length of the result
-    total_length = 0
-    if utils.BITCOIN_ONLY or not coin.decred:
-        total_length += 1  # OP_FALSE
+    total_length = 1  # OP_FALSE
     for s in signatures:
         total_length += 1 + len(s) + 1  # length, signature, hash_type
     total_length += 1 + redeem_script_length  # length, script
 
     w = empty_bytearray(total_length)
 
-    if utils.BITCOIN_ONLY or not coin.decred:
-        # Starts with OP_FALSE because of an old OP_CHECKMULTISIG bug, which
-        # consumes one additional item on the stack:
-        # https://bitcoin.org/en/developer-guide#standard-transactions
-        w.append(0x00)
+    # Starts with OP_FALSE because of an old OP_CHECKMULTISIG bug, which
+    # consumes one additional item on the stack:
+    # https://bitcoin.org/en/developer-guide#standard-transactions
+    w.append(0x00)
 
     for s in signatures:
         if len(s):

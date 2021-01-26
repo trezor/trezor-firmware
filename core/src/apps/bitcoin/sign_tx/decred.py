@@ -8,7 +8,7 @@ from trezor.utils import HashWriter, ensure
 
 from apps.common.writers import write_bitcoin_varint
 
-from .. import multisig, scripts, scripts_decred, writers
+from .. import multisig, scripts_decred, writers
 from ..common import ecdsa_hash_pubkey, ecdsa_sign
 from . import approvers, helpers, progress
 from .bitcoin import Bitcoin
@@ -144,12 +144,12 @@ class Decred(Bitcoin):
                 )
             elif txi_sign.script_type == InputScriptType.SPENDMULTISIG:
                 assert txi_sign.multisig is not None
-                prev_pkscript = scripts.output_script_multisig(
+                prev_pkscript = scripts_decred.output_script_multisig(
                     multisig.multisig_get_pubkeys(txi_sign.multisig),
                     txi_sign.multisig.m,
                 )
             elif txi_sign.script_type == InputScriptType.SPENDADDRESS:
-                prev_pkscript = scripts.output_script_p2pkh(
+                prev_pkscript = scripts_decred.output_script_p2pkh(
                     ecdsa_hash_pubkey(key_sign_pub, self.coin)
                 )
             else:
@@ -297,3 +297,15 @@ class Decred(Bitcoin):
         writers.write_uint32(w, 0)  # block height fraud proof
         writers.write_uint32(w, 0xFFFF_FFFF)  # block index fraud proof
         writers.write_bytes_prefixed(w, script_sig)
+
+    def input_derive_script(
+        self, txi: TxInput, pubkey: bytes, signature: bytes
+    ) -> bytes:
+        return scripts_decred.input_derive_script(
+            txi.script_type,
+            txi.multisig,
+            self.coin,
+            self.get_hash_type(txi),
+            pubkey,
+            signature,
+        )
