@@ -32,6 +32,7 @@ class Homescreen(HomescreenBase):
             style=LoaderNeutral,
             target_ms=_LOADER_TOTAL_MS - _LOADER_DELAY_MS,
             offset_y=-10,
+            reverse_speedup=3,
         )
         self.touch_ms: Optional[int] = None
 
