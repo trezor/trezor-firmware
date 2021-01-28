@@ -13,7 +13,7 @@ from ..keychain import get_keychain_for_coin, validate_path_against_script_type
 from ..scripts import output_derive_script
 
 if False:
-    from typing import List, Set
+    from typing import List
     from trezor.messages.TxOutput import TxOutput
     from trezor.messages.TxAckPaymentRequest import TxAckPaymentRequest
     from trezor.messages.PaymentRequestMemo import PaymentRequestMemo
@@ -49,12 +49,12 @@ class PaymentRequestVerifier:
 
         if tx_ack.nonce:
             nonce = bytes(tx_ack.nonce)
-            nonces: Set[bytes] = cache.get(cache.APP_COMMON_NONCES)
-            if nonces and nonce in nonces:
-                writers.write_bytes_prefixed(h_pr, nonce)
+            nonces: List[bytes] = cache.get(cache.APP_COMMON_NONCES)
+            try:
                 nonces.remove(nonce)
-            else:
+            except (AttributeError, ValueError):
                 raise wire.DataError("Invalid nonce in payment request.")
+            writers.write_bytes_prefixed(h_pr, nonce)
         else:
             writers.write_bytes_prefixed(h_pr, b"")
 
