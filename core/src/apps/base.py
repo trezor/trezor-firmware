@@ -3,7 +3,7 @@ import storage.device
 import storage.recovery
 import storage.sd_salt
 from storage import cache
-from trezor import config, sdcard, utils, wire, workflow
+from trezor import config, sdcard, ui, utils, wire, workflow
 from trezor.messages import Capability, MessageType
 from trezor.messages.Features import Features
 from trezor.messages.PreauthorizedRequest import PreauthorizedRequest
@@ -260,6 +260,15 @@ def get_pinlocked_handler(
     return wrapper
 
 
+# this function is also called when handling ApplySettings
+def reload_settings_from_storage() -> None:
+    workflow.idle_timer.set(
+        storage.device.get_autolock_delay_ms(), lock_device_if_unlocked
+    )
+    wire.experimental_enabled = storage.device.get_experimental_features()
+    ui.display.orientation(storage.device.get_rotation())
+
+
 def boot() -> None:
     wire.register(MessageType.Initialize, handle_Initialize)
     wire.register(MessageType.GetFeatures, handle_GetFeatures)
@@ -270,8 +279,4 @@ def boot() -> None:
     wire.register(MessageType.DoPreauthorized, handle_DoPreauthorized)
     wire.register(MessageType.CancelAuthorization, handle_CancelAuthorization)
 
-    wire.experimental_enabled = storage.device.get_experimental_features()
-
-    workflow.idle_timer.set(
-        storage.device.get_autolock_delay_ms(), lock_device_if_unlocked
-    )
+    reload_settings_from_storage()
