@@ -144,7 +144,6 @@ from .LiskTransactionCommon import LiskTransactionCommon
 from .LiskVerifyMessage import LiskVerifyMessage
 from .LoadDevice import LoadDevice
 from .LockDevice import LockDevice
-from .Memo import Memo
 from .MessageSignature import MessageSignature
 from .MoneroAccountPublicAddress import MoneroAccountPublicAddress
 from .MoneroAddress import MoneroAddress
@@ -217,6 +216,7 @@ from .OwnershipId import OwnershipId
 from .OwnershipProof import OwnershipProof
 from .PassphraseAck import PassphraseAck
 from .PassphraseRequest import PassphraseRequest
+from .PaymentRequestMemo import PaymentRequestMemo
 from .PinMatrixAck import PinMatrixAck
 from .PinMatrixRequest import PinMatrixRequest
 from .Ping import Ping

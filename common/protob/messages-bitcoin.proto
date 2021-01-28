@@ -403,12 +403,12 @@ message PrevOutput {
  * @embed
  */
 message TxAckPaymentRequest {
-    required string recipient_name = 1; // merchant's name or coordinator's name in case of CoinJoin
-    repeated Memo memos = 2;            // any memos that were signed as part of the request
-    optional bytes nonce = 3;           // the nonce used in the signature computation
-    required bytes signature = 4;       // the recipient’s signature of the paymentRequestDigest
+    required string recipient_name = 1;    // merchant's name or coordinator's name in case of CoinJoin
+    repeated PaymentRequestMemo memos = 2; // any memos that were signed as part of the request
+    optional bytes nonce = 3;              // the nonce used in the signature computation
+    required bytes signature = 4;          // the recipient’s signature of the paymentRequestDigest
 
-    message Memo {
+    message PaymentRequestMemo {
         required uint32 type = 1;      // identifier of the type of data in the data field
         required bytes data = 2;       // encoded memo data, as included in the paymentRequestDigest
         repeated uint32 address_n = 3; // if the data is a scriptPubKey, the BIP-32 path to the user’s key

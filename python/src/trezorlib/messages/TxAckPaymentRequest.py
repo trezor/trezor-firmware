@@ -2,7 +2,7 @@
 # fmt: off
 from .. import protobuf as p
 
-from .Memo import Memo
+from .PaymentRequestMemo import PaymentRequestMemo
 
 if __debug__:
     try:
@@ -20,7 +20,7 @@ class TxAckPaymentRequest(p.MessageType):
         *,
         recipient_name: str,
         signature: bytes,
-        memos: List[Memo] = None,
+        memos: List[PaymentRequestMemo] = None,
         nonce: bytes = None,
     ) -> None:
         self.memos = memos if memos is not None else []
@@ -32,7 +32,7 @@ class TxAckPaymentRequest(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('recipient_name', p.UnicodeType, p.FLAG_REQUIRED),
-            2: ('memos', Memo, p.FLAG_REPEATED),
+            2: ('memos', PaymentRequestMemo, p.FLAG_REPEATED),
             3: ('nonce', p.BytesType, None),
             4: ('signature', p.BytesType, p.FLAG_REQUIRED),
         }
