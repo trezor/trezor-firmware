@@ -16,7 +16,7 @@ if False:
     from typing import List, Set
     from trezor.messages.TxOutput import TxOutput
     from trezor.messages.TxAckPaymentRequest import TxAckPaymentRequest
-    from trezor.messages.Memo import Memo
+    from trezor.messages.PaymentRequestMemo import PaymentRequestMemo
     from apps.common.coininfo import CoinInfo
 
 MEMO_TYPE_UTF8 = const(1)
@@ -24,7 +24,7 @@ MEMO_TYPE_COIN_FLAG = const(0x8000_0000)
 MEMO_TYPE_COIN_MASK = const(0x7FFF_FFFF)
 
 
-class PaymentRequest:
+class PaymentRequestVerifier:
     if __debug__:
         # secp256k1 public key of m/0h for "all all ... all" seed.
         PUBLIC_KEY = b"\x03\x0f\xdf^(\x9bZ\xefSb\x90\x95:\xe8\x1c\xe6\x0e\x84\x1f\xf9V\xf3f\xac\x12?\xa6\x9d\xb3\xc7\x9f!\xb0"
@@ -69,7 +69,7 @@ class PaymentRequest:
         writers.write_tx_output(self.h_outputs, txo, script_pubkey)
 
 
-async def verify_memos(ctx: wire.Context, memos: List[Memo]) -> None:
+async def verify_memos(ctx: wire.Context, memos: List[PaymentRequestMemo]) -> None:
     for memo in memos:
         if memo.type & MEMO_TYPE_COIN_FLAG:
             keychain, coin = await get_keychain_for_coin(ctx, memo.coin_name)

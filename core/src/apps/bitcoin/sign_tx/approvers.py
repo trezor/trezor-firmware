@@ -8,7 +8,7 @@ from apps.common import safety_checks
 from .. import keychain
 from ..authorization import FEE_PER_ANONYMITY_DECIMALS
 from . import helpers, tx_weight
-from .payment_request import PaymentRequest
+from .payment_request import PaymentRequestVerifier
 from .tx_info import OriginalTxInfo, TxInfo
 
 if False:
@@ -31,7 +31,7 @@ class Approver:
     def __init__(self, tx: SignTx, coin: CoinInfo) -> None:
         self.coin = coin
         self.weight = tx_weight.TxWeightCalculator(tx.inputs_count, tx.outputs_count)
-        self.payment_requests: Dict[int, PaymentRequest] = {}
+        self.payment_req_verifiers: Dict[int, PaymentRequestVerifier] = {}
 
         # amounts in the current transaction
         self.total_in = 0  # sum of input amounts
@@ -66,9 +66,9 @@ class Approver:
         self.total_out += txo.amount
         if (
             txo.payment_request is not None
-            and txo.payment_request not in self.payment_requests
+            and txo.payment_request not in self.payment_req_verifiers
         ):
-            self.payment_requests[txo.payment_request] = PaymentRequest()
+            self.payment_req_verifiers[txo.payment_request] = PaymentRequestVerifier()
 
     async def approve_payment_request(
         self, index: int, tx_ack_payment_req: TxAckPaymentRequest
@@ -79,7 +79,7 @@ class Approver:
         self._add_output(txo, script_pubkey)
         self.change_out += txo.amount
         if txo.payment_request is not None:
-            self.payment_requests[txo.payment_request].add_change_output(
+            self.payment_req_verifiers[txo.payment_request].add_change_output(
                 txo, script_pubkey
             )
 
@@ -95,7 +95,7 @@ class Approver:
     ) -> None:
         self._add_output(txo, script_pubkey)
         if txo.payment_request is not None:
-            self.payment_requests[txo.payment_request].add_external_output(
+            self.payment_req_verifiers[txo.payment_request].add_external_output(
                 txo, script_pubkey
             )
 
@@ -153,7 +153,7 @@ class BasicApprover(Approver):
     async def approve_payment_request(
         self, index: int, tx_ack_payment_req: TxAckPaymentRequest
     ) -> None:
-        payment_req = self.payment_requests[index]
+        payment_req = self.payment_req_verifiers[index]
         payment_req.verify(tx_ack_payment_req, self.coin)
         await helpers.confirm_payment_request(
             tx_ack_payment_req, payment_req.amount, self.amount_unit, self.coin
@@ -290,7 +290,7 @@ class CoinJoinApprover(Approver):
     async def approve_payment_request(
         self, index: int, tx_ack_payment_req: TxAckPaymentRequest
     ) -> None:
-        payment_req = self.payment_requests[index]
+        payment_req = self.payment_req_verifiers[index]
         payment_req.verify(tx_ack_payment_req, self.coin)
 
         if tx_ack_payment_req.recipient_name != self.authorization.coordinator:

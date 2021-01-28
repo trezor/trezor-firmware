@@ -151,7 +151,7 @@ class Bitcoin:
             await self.approve_output(txo, script_pubkey, orig_txo)
 
         # Approve payment requests.
-        for index in self.approver.payment_requests:
+        for index in self.approver.payment_req_verifiers:
             tx_ack_payment_req = await helpers.request_payment_req(self.tx_req, index)
             await self.approver.approve_payment_request(index, tx_ack_payment_req)
 
