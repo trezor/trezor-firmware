@@ -63,6 +63,8 @@ struct RichText {
     style: Style,
     /// A bounding box restricting the layout and rendering.
     bounds: Rect,
+    /// Optional callable object overriding the `render_text` fn of shaping.
+    render_text_fn: Option<Obj>,
 }
 
 enum Op {
@@ -86,6 +88,13 @@ impl RichText {
             x: self.bounds.x0,
             y: self.bounds.y0 + LINE_HEIGHT, // Advance to the baseline.
         };
+
+        // Construct a `Shaper` impl with overridable `render_text` fn.
+        let mut shaper = Override {
+            inner: TrezorHal,
+            render_text_fn: self.render_text_fn,
+        };
+
         // Iterate and interpret the `ops`. We're skipping all `Op::Render` bellow
         // `op_offset`, but the styling ops still need to be applied.
         let mut ops_buf = IterBuf::new();
@@ -108,7 +117,7 @@ impl RichText {
                     } else {
                         &buffer
                     };
-                    render_text(text, &self.style, &self.bounds, &mut cursor, &mut TrezorHal)?;
+                    render_text(text, &self.style, &self.bounds, &mut cursor, &mut shaper)?;
                 }
             }
         }
@@ -148,6 +157,45 @@ impl Shaper for TrezorHal {
     fn text_width(&mut self, text: &[u8], font: i32) -> i32 {
         display::text_width(text, font)
     }
+}
+
+struct Override<T: Shaper> {
+    inner: T,
+    render_text_fn: Option<Obj>,
+}
+
+impl<T: Shaper> Shaper for Override<T> {
+    fn render_text(&mut self, x: i32, y: i32, text: &[u8], font: i32, fg: u16, bg: u16) {
+        if let Some(obj) = self.render_text_fn {
+            call_render_text_obj(obj, x, y, text, font, fg, bg)
+        } else {
+            self.inner.render_text(x, y, text, font, fg, bg)
+        }
+    }
+
+    fn text_width(&mut self, text: &[u8], font: i32) -> i32 {
+        self.inner.text_width(text, font)
+    }
+}
+
+fn call_render_text_obj(
+    render_text: Obj,
+    x: i32,
+    y: i32,
+    text: &[u8],
+    font: i32,
+    fg: u16,
+    bg: u16,
+) {
+    let args = [
+        isize::try_from(x).unwrap().try_into().unwrap(),
+        isize::try_from(y).unwrap().try_into().unwrap(),
+        text.try_into().unwrap(),
+        isize::try_from(font).unwrap().try_into().unwrap(),
+        isize::try_from(fg).unwrap().try_into().unwrap(),
+        isize::try_from(bg).unwrap().try_into().unwrap(),
+    ];
+    render_text.call_with_n_args(&args);
 }
 
 const ASCII_LF: u8 = 10;
@@ -401,6 +449,7 @@ impl TryFrom<&Map> for RichText {
             char_offset: map.get_qstr(Qstr::MP_QSTR_char_offset)?.try_into()?,
             style: map.try_into()?,
             bounds: map.try_into()?,
+            render_text_fn: map.get_qstr(Qstr::MP_QSTR_render_text_fn).ok(),
         })
     }
 }

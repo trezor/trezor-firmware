@@ -1,4 +1,4 @@
-use core::convert::TryFrom;
+use core::convert::{TryFrom, TryInto};
 
 use crate::error::Error;
 
@@ -9,12 +9,24 @@ pub struct Obj(cty::uintptr_t);
 
 extern "C" {
     // micropython/py/obj.h
+    // Can raise if allocation fails.
+    fn mp_obj_new_int(value: cty::intptr_t) -> Obj;
+
+    // micropython/py/objstr.h
+    // Can raise if allocation fails.
+    fn mp_obj_new_bytes(data: *const u8, len: usize) -> Obj;
+
+    // micropython/py/obj.h
     // Can raise if `arg` is int but cannot fit into `cty::uintptr_t`.
     fn mp_obj_get_int_maybe(arg: Obj, value: *mut cty::intptr_t) -> bool;
 
     // micropython/py/obj.h
     // Can call python code and therefore raise.
     fn mp_obj_is_true(arg: Obj) -> bool;
+
+    // micropython/py/runtime.h
+    // Can call python code and therefore raise.
+    fn mp_call_function_n_kw(fun: Obj, n_args: usize, n_kw: usize, args: *const Obj) -> Obj;
 }
 
 impl Obj {
@@ -60,6 +72,36 @@ impl Obj {
         //    micropython/py/obj.h #define MP_OBJ_NEW_IMMEDIATE_OBJ(val)
         //    ((mp_obj_t)(((val) << 3) | 6))
         Self::from_raw((val << 3) | 2)
+    }
+
+    pub fn call_with_n_args(&self, args: &[Obj]) -> Obj {
+        // SAFETY:
+        //  - `mp_call_function_n_kw` binding corresponds to the C source.
+        //  - Each of `args` has no lifetime bounds.
+        unsafe { mp_call_function_n_kw(*self, args.len(), 0, args.as_ptr()) }
+    }
+}
+
+impl TryInto<Obj> for &[u8] {
+    type Error = Error;
+
+    fn try_into(self) -> Result<Obj, Self::Error> {
+        // SAFETY:
+        //  - `mp_obj_new_bytes` binding corresponds to the C source.
+        let obj = unsafe { mp_obj_new_bytes(self.as_ptr(), self.len()) };
+        Ok(obj)
+    }
+}
+
+impl TryInto<Obj> for isize {
+    type Error = Error;
+
+    fn try_into(self) -> Result<Obj, Self::Error> {
+        let int = cty::intptr_t::try_from(self).map_err(|_| Error::OutOfRange)?;
+        // SAFETY:
+        //  - `mp_obj_new_int` binding corresponds to the C source.
+        let obj = unsafe { mp_obj_new_int(int) };
+        Ok(obj)
     }
 }
 

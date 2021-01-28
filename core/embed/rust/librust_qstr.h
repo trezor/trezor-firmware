@@ -13,3 +13,4 @@ typeof(MP_QSTR_font);
 typeof(MP_QSTR_break_words);
 typeof(MP_QSTR_insert_new_lines);
 typeof(MP_QSTR_render_page_overflow);
+typeof(MP_QSTR_render_text_fn);
