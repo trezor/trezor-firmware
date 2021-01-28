@@ -14,12 +14,13 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from collections import namedtuple
 from hashlib import sha256
 
 import pytest
 from ecdsa import SECP256k1, SigningKey
 
-from trezorlib import btc, messages
+from trezorlib import btc, messages, misc
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -105,8 +106,8 @@ outputs = [
 ]
 
 memos1 = [
-    messages.Memo(type=1, data=b"Buying 15.9636 DASH."),
-    messages.Memo(
+    messages.PaymentRequestMemo(type=1, data=b"Buying 15.9636 DASH."),
+    messages.PaymentRequestMemo(
         type=0x80000005,
         data=bytes.fromhex("76a914fd61dd017dad1f505c0511142cc9ac51ef3a5beb88ac"),
         address_n=parse_path("44'/5'/0'/1/0"),
@@ -116,15 +117,17 @@ memos1 = [
 ]
 
 memos2 = [
-    messages.Memo(type=1, data=b"Buying 3.1896 DASH and 831.57080247 GRS."),
-    messages.Memo(
+    messages.PaymentRequestMemo(
+        type=1, data=b"Buying 3.1896 DASH and 831.57080247 GRS."
+    ),
+    messages.PaymentRequestMemo(
         type=0x80000005,
         data=bytes.fromhex("76a914fd61dd017dad1f505c0511142cc9ac51ef3a5beb88ac"),
         address_n=parse_path("44'/5'/0'/1/0"),
         coin_name="Dash",
         script_type=messages.InputScriptType.SPENDADDRESS,
     ),
-    messages.Memo(
+    messages.PaymentRequestMemo(
         type=0x80000011,
         data=bytes.fromhex("76a914fe40329c95c5598ac60752a5310b320cb52d18e688ac"),
         address_n=parse_path("44'/17'/0'/0/3"),
@@ -132,6 +135,10 @@ memos2 = [
         script_type=messages.InputScriptType.SPENDADDRESS,
     ),
 ]
+
+PaymentRequestParams = namedtuple(
+    "PaymentRequestParams", ["txo_indices", "hash_outputs", "memos"]
+)
 
 
 @pytest.mark.skip_t1
@@ -141,7 +148,7 @@ memos2 = [
         case(
             "out0",
             (
-                (
+                PaymentRequestParams(
                     [0],
                     "30181c1811618206cb6656ae4fa77e9e95459e85be295a63ea6d034bda39d507",
                     memos1,
@@ -152,7 +159,7 @@ memos2 = [
         case(
             "out1",
             (
-                (
+                PaymentRequestParams(
                     [1],
                     "ab1f485f678a4176b5d77f5f6316321cb90d34e53c4503a5d7931211512e4e7d",
                     memos2,
@@ -163,7 +170,7 @@ memos2 = [
         case(
             "out2",
             (
-                (
+                PaymentRequestParams(
                     [2],
                     "b5b957549c9756b4b9a4521f49db96b77bac9fba6e0d4b47f875374beadb1276",
                     [],
@@ -173,12 +180,12 @@ memos2 = [
         case(
             "out0+out1",
             (
-                (
+                PaymentRequestParams(
                     [0],
                     "30181c1811618206cb6656ae4fa77e9e95459e85be295a63ea6d034bda39d507",
                     [],
                 ),
-                (
+                PaymentRequestParams(
                     [1],
                     "ab1f485f678a4176b5d77f5f6316321cb90d34e53c4503a5d7931211512e4e7d",
                     [],
@@ -188,7 +195,7 @@ memos2 = [
         case(
             "out01",
             (
-                (
+                PaymentRequestParams(
                     [0, 1],
                     "4615b15d83d31d8250c5c078896b4186a02b6cd201fe211e2adf9793452f290d",
                     [],
@@ -198,7 +205,7 @@ memos2 = [
         case(
             "out012",
             (
-                (
+                PaymentRequestParams(
                     [0, 1, 2],
                     "7e53bc48fb6cf8e8b4ea8416c523cb6a6a35e24effac335a1d5384a1f0b63df0",
                     [],
@@ -208,12 +215,12 @@ memos2 = [
         case(
             "out02+out1",
             (
-                (
+                PaymentRequestParams(
                     [0, 2],
                     "31e0436be0ad5fe5a1b81f0f8278f57d401eedea60cd48df49281c99eb415878",
                     [],
                 ),
-                (
+                PaymentRequestParams(
                     [1],
                     "ab1f485f678a4176b5d77f5f6316321cb90d34e53c4503a5d7931211512e4e7d",
                     [],
@@ -223,7 +230,7 @@ memos2 = [
         case(
             "out12",
             (
-                (
+                PaymentRequestParams(
                     [1, 2],
                     "75d0a1389303f3334e838e0d8ed046741a1ae6bfdd523835331f61fa8247ad53",
                     [],
@@ -237,17 +244,17 @@ def test_payment_request(client, payment_request_params):
         txo.payment_request = None
 
     payment_reqs = []
-    for i, (txo_indices, hash_outputs, memos) in enumerate(payment_request_params):
+    for i, params in enumerate(payment_request_params):
         request_outputs = []
-        for txo_index in txo_indices:
+        for txo_index in params.txo_indices:
             outputs[txo_index].payment_request = i
             request_outputs.append(outputs[txo_index])
         payment_reqs.append(
             make_payment_request(
                 outputs=request_outputs,
-                hash_outputs=bytes.fromhex(hash_outputs),
-                memos=memos,
-                nonce=btc.get_nonce(client),
+                hash_outputs=bytes.fromhex(params.hash_outputs),
+                memos=params.memos,
+                nonce=misc.get_nonce(client),
             )
         )
 
