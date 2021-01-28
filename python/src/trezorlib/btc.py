@@ -154,11 +154,6 @@ def get_ownership_proof(
     return res.ownership_proof, res.signature
 
 
-@expect(messages.Nonce, field="nonce")
-def get_nonce(client):
-    return client.call(messages.GetNonce())
-
-
 @expect(messages.MessageSignature)
 def sign_message(
     client, coin_name, n, message, script_type=messages.InputScriptType.SPENDADDRESS
