@@ -725,7 +725,7 @@ def _should_hide_output(output: List[int], inputs: List[CardanoTxInputType]) -> 
         inp = tx_input.address_n
         if (
             len(output) != BIP_PATH_LENGTH
-            or output[: (ACCOUNT_PATH_INDEX + 1)] != inp[: (ACCOUNT_PATH_INDEX + 1)]
+            or output[ACCOUNT_PATH_INDEX] != inp[ACCOUNT_PATH_INDEX]
             or output[(ACCOUNT_PATH_INDEX + 1)] > MAX_ACCOUNT_INDEX
             or output[-2] >= 2
             or output[-1] >= MAX_CHANGE_ADDRESS_INDEX

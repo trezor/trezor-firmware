@@ -791,6 +791,46 @@
         "tx_hash": "b621e22f7cb9aac1a70a3362fde88bdfd31fc100e20f3f3c24a7b853536b4f50",
         "serialized_tx": "83a300818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b70001818258390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b42771a006ca79302182aa100818258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1584088c35c125664935117d9aa1173cae5f01967b02f6b716b1a135570b2fee74728f2f3e39d56b748302c36e2407d7bfefc4054ca1e60dd857e461734ae41d00500f6"
       }
+    },
+    {
+      "description": "Byron to Shelley transfer",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "certificates": [],
+        "withdrawals": [],
+        "metadata": "",
+        "input_flow": [["YES"], ["YES"]],
+        "inputs": [
+          {
+            "path": "m/44'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          },
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 1
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1z90z7zqwhya6mpk5q929ur897g3pp9kkgalpreny8y304r2dcrtx0sf3dluyu4erzr3xtmdnzvcyfzekkuteu2xagx0qeva0pr",
+            "amount": "1"
+          },
+          {
+            "addressType": 0,
+            "path": "m/1852'/1815'/0'/0/0",
+            "stakingPath": "m/1852'/1815'/0'/2/0",
+            "amount": "7120787"
+          }
+        ]
+      },
+      "result": {
+        "tx_hash": "00d393f7fc9a8c17b3efccb44dad9d7e15fdaf2d942a3a455b52b5be016066dd",
+        "serialized_tx": "83a300828258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7008258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7010182825839115e2f080eb93bad86d401545e0ce5f2221096d6477e11e6643922fa8d4dc0d667c1316ff84e572310e265edb31330448b36b7179e28dd419e018258390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b42771a006ca79302182aa200818258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c158408393ba106a791a55ea588a124f539a02e149cc259df703ccc29f12f2ddc2734e6a07e37d645b4d0c9cc633493cb99ed7a0057b046dc18113685a1ae6d36686080281845820b90fb812a2268e9569ff1172e8daed1da3dc7e72c7bded7c5bcb7282039f90d558407782cdec14dcc5f506bb17275988771fce6ab4b744774d562c7aa120a008a9b9c28220b39382fbc8b70ef3d8a2fb2ba6aa55d732eaea1a3c71e568b387f5f40c5820fd8e71c1543de2cdc7f7623130c5f2cceb53549055fa1f5bc88199989e08cce741a0f6"
+      }
     }
   ]
 }
