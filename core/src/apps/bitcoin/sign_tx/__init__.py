@@ -10,7 +10,7 @@ if not utils.BITCOIN_ONLY:
     from . import bitcoinlike, decred, zcash
 
 if False:
-    from typing import Optional, Union
+    from typing import Protocol, Optional, Type, Union
 
     from protobuf import FieldCache
 
@@ -36,6 +36,19 @@ if False:
         TxAckPrevExtraData,
     ]
 
+    class SignerClass(Protocol):
+        def __init__(
+            self,
+            tx: SignTx,
+            keychain: Keychain,
+            coin: CoinInfo,
+            approver: Optional[approvers.Approver],
+        ) -> None:
+            ...
+
+        async def signer(self) -> None:
+            ...
+
 
 @with_keychain
 async def sign_tx(
@@ -45,15 +58,12 @@ async def sign_tx(
     coin: CoinInfo,
     authorization: Optional[CoinJoinAuthorization] = None,
 ) -> TxRequest:
+    approver: Optional[approvers.Approver] = None
     if authorization:
-        approver: approvers.Approver = approvers.CoinJoinApprover(
-            msg, coin, authorization
-        )
-    else:
-        approver = approvers.BasicApprover(msg, coin)
+        approver = approvers.CoinJoinApprover(msg, coin, authorization)
 
     if utils.BITCOIN_ONLY or coin.coin_name in BITCOIN_NAMES:
-        signer_class = bitcoin.Bitcoin
+        signer_class: Type[SignerClass] = bitcoin.Bitcoin
     else:
         if coin.decred:
             signer_class = decred.Decred

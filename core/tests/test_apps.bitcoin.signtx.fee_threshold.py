@@ -28,7 +28,6 @@ from apps.common import coins
 from apps.common.keychain import Keychain
 from apps.common.paths import AlwaysMatchingSchema
 from apps.bitcoin.sign_tx import bitcoin, helpers
-from apps.bitcoin.sign_tx.approvers import BasicApprover
 
 
 EMPTY_SERIALIZED = TxRequestSerializedType(serialized_tx=bytearray())
@@ -164,8 +163,7 @@ class TestSignTxFeeThreshold(unittest.TestCase):
         seed = bip39.seed('alcohol woman abuse must during monitor noble actual mixed trade anger aisle', '')
 
         keychain = Keychain(seed, coin_bitcoin.curve_name, [AlwaysMatchingSchema])
-        approver = BasicApprover(tx, coin_bitcoin)
-        signer = bitcoin.Bitcoin(tx, keychain, coin_bitcoin, approver).signer()
+        signer = bitcoin.Bitcoin(tx, keychain, coin_bitcoin, None).signer()
         for request, response in chunks(messages, 2):
             res = signer.send(request)
             if isinstance(res, tuple):

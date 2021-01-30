@@ -30,7 +30,6 @@ from apps.common import coins
 from apps.common.keychain import Keychain
 from apps.bitcoin.keychain import get_schemas_for_coin
 from apps.bitcoin.sign_tx import bitcoin, helpers
-from apps.bitcoin.sign_tx.approvers import BasicApprover
 
 
 EMPTY_SERIALIZED = TxRequestSerializedType(serialized_tx=bytearray())
@@ -157,8 +156,7 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
 
         ns = get_schemas_for_coin(coin)
         keychain = Keychain(seed, coin.curve_name, ns)
-        approver = BasicApprover(tx, coin)
-        signer = bitcoin.Bitcoin(tx, keychain, coin, approver).signer()
+        signer = bitcoin.Bitcoin(tx, keychain, coin, None).signer()
         for request, expected_response in chunks(messages, 2):
             response = signer.send(request)
             if isinstance(response, tuple):
@@ -294,8 +292,7 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
 
         ns = get_schemas_for_coin(coin)
         keychain = Keychain(seed, coin.curve_name, ns)
-        approver = BasicApprover(tx, coin)
-        signer = bitcoin.Bitcoin(tx, keychain, coin, approver).signer()
+        signer = bitcoin.Bitcoin(tx, keychain, coin, None).signer()
         for request, expected_response in chunks(messages, 2):
             response = signer.send(request)
             if isinstance(response, tuple):
@@ -401,8 +398,7 @@ class TestSignSegwitTxP2WPKHInP2SH(unittest.TestCase):
 
         ns = get_schemas_for_coin(coin)
         keychain = Keychain(seed, coin.curve_name, ns)
-        approver = BasicApprover(tx, coin)
-        signer = bitcoin.Bitcoin(tx, keychain, coin, approver).signer()
+        signer = bitcoin.Bitcoin(tx, keychain, coin, None).signer()
         i = 0
         messages_count = int(len(messages) / 2)
         for request, expected_response in chunks(messages, 2):
