@@ -521,6 +521,19 @@
                 }
             ]
         },
+        "bitcoin:NEWYORKCOIN": {
+            "links": {
+                "Github": "https://github.com/NewYorkCoinNYC/newyorkcoin",
+                "Homepage": "https://newyorkcoin.net"
+            },
+            "marketcap_usd": 0,
+            "name": "Newyorkcoin",
+            "shortcut": "NYC",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin",
+            "wallet": []
+        },
         "bitcoin:NIX": {
             "links": {
                 "Github": "https://github.com/nixplatform/nixcore",
