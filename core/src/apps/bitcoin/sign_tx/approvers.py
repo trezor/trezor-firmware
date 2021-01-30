@@ -2,7 +2,6 @@ from micropython import const
 
 from trezor import wire
 from trezor.messages import OutputScriptType
-from trezor.utils import ensure
 
 from apps.common import safety_checks
 
@@ -77,11 +76,6 @@ class Approver:
         self.weight.add_output(script_pubkey)
         self.total_out += txo.amount
 
-    async def add_decred_sstx_submission(
-        self, txo: TxOutput, script_pubkey: bytes
-    ) -> None:
-        raise NotImplementedError
-
     def add_orig_external_output(self, txo: TxOutput) -> None:
         self.orig_total_out += txo.amount
 
@@ -130,13 +124,6 @@ class BasicApprover(Approver):
                 )
         else:
             await helpers.confirm_output(txo, self.coin, self.amount_unit)
-
-    async def add_decred_sstx_submission(
-        self, txo: TxOutput, script_pubkey: bytes
-    ) -> None:
-        ensure(self.coin.decred)
-        await super().add_external_output(txo, script_pubkey, None)
-        await helpers.confirm_decred_sstx_submission(txo, self.coin, self.amount_unit)
 
     async def approve_tx(self, tx_info: TxInfo, orig_txs: List[OriginalTxInfo]) -> None:
         fee = self.total_in - self.total_out

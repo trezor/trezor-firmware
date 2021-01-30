@@ -1,7 +1,7 @@
 from common import *
 
 from trezor.utils import chunks
-from trezor.crypto import bip32, bip39
+from trezor.crypto import bip39
 from trezor.messages.SignTx import SignTx
 from trezor.messages.TxAckInput import TxAckInput
 from trezor.messages.TxAckInputWrapper import TxAckInputWrapper
@@ -28,7 +28,6 @@ from apps.common import coins
 from apps.common.keychain import Keychain
 from apps.bitcoin.keychain import get_schemas_for_coin
 from apps.bitcoin.sign_tx import decred, helpers
-from apps.bitcoin.sign_tx.approvers import BasicApprover
 
 
 EMPTY_SERIALIZED = TxRequestSerializedType(serialized_tx=bytearray())
@@ -190,8 +189,7 @@ class TestSignTxDecred(unittest.TestCase):
         )
         ns = get_schemas_for_coin(coin_decred)
         keychain = Keychain(seed, coin_decred.curve_name, ns)
-        approver = BasicApprover(tx, coin_decred)
-        signer = decred.Decred(tx, keychain, coin_decred, approver).signer()
+        signer = decred.Decred(tx, keychain, coin_decred, None).signer()
 
         for request, response in chunks(messages, 2):
             res = signer.send(request)
@@ -353,8 +351,7 @@ class TestSignTxDecred(unittest.TestCase):
         )
         ns = get_schemas_for_coin(coin_decred)
         keychain = Keychain(seed, coin_decred.curve_name, ns)
-        approver = BasicApprover(tx, coin_decred)
-        signer = decred.Decred(tx, keychain, coin_decred, approver).signer()
+        signer = decred.Decred(tx, keychain, coin_decred, None).signer()
 
         for request, response in chunks(messages, 2):
             res = signer.send(request)

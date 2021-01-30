@@ -11,6 +11,7 @@ from apps.common.writers import write_bitcoin_varint
 from .. import multisig, scripts_decred, writers
 from ..common import ecdsa_hash_pubkey, ecdsa_sign
 from . import approvers, helpers, progress
+from .approvers import BasicApprover
 from .bitcoin import Bitcoin
 
 DECRED_SERIALIZE_FULL = const(0 << 16)
@@ -35,6 +36,16 @@ if False:
     from apps.common.keychain import Keychain
 
     from .hash143 import Hash143
+
+
+class DecredApprover(BasicApprover):
+    async def add_decred_sstx_submission(
+        self, txo: TxOutput, script_pubkey: bytes
+    ) -> None:
+        # NOTE: The following calls Approver.add_external_output(), not BasicApprover.add_external_output().
+        # This is needed to skip calling helpers.confirm_output(), which is what BasicApprover would do.
+        await super(BasicApprover, self).add_external_output(txo, script_pubkey, None)
+        await helpers.confirm_decred_sstx_submission(txo, self.coin, self.amount_unit)
 
 
 class DecredHash:
@@ -65,11 +76,13 @@ class Decred(Bitcoin):
         tx: SignTx,
         keychain: Keychain,
         coin: CoinInfo,
-        approver: approvers.Approver,
+        approver: Optional[approvers.Approver],
     ) -> None:
         ensure(coin.decred)
         self.h_prefix = HashWriter(blake256())
 
+        ensure(approver is None)
+        approver = DecredApprover(tx, coin)
         super().__init__(tx, keychain, coin, approver)
 
         self.write_tx_header(self.serialized_tx, self.tx_info.tx, witness_marker=True)
@@ -233,6 +246,8 @@ class Decred(Bitcoin):
         return scripts_decred.output_script_paytoopreturn(op_return_data)
 
     async def approve_staking_ticket(self) -> None:
+        assert isinstance(self.approver, DecredApprover)
+
         if self.tx_info.tx.outputs_count != 3:
             raise wire.DataError("Ticket has wrong number of outputs.")
 

@@ -73,12 +73,16 @@ class Bitcoin:
         tx: SignTx,
         keychain: Keychain,
         coin: CoinInfo,
-        approver: approvers.Approver,
+        approver: Optional[approvers.Approver],
     ) -> None:
         self.tx_info = TxInfo(self, helpers.sanitize_sign_tx(tx, coin))
         self.keychain = keychain
         self.coin = coin
-        self.approver = approver
+
+        if approver is not None:
+            self.approver = approver
+        else:
+            self.approver = approvers.BasicApprover(tx, coin)
 
         # set of indices of inputs which are segwit
         self.segwit: Set[int] = set()
