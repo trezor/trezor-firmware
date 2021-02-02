@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enabled session management via `EndSession`  [#1227]
 - Support for temporary or permanent `safety-checks` setting
 - Support for Output Descriptors export [#1363]
+- Raises `ValueError` when the txid for an input is not present in `prev_txes` during `btc.sign_tx` [#1442]
 
 ### Changed
 
