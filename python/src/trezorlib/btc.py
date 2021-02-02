@@ -334,6 +334,10 @@ def sign_tx(
 
         # Device asked for one more information, let's process it.
         if res.details.tx_hash is not None:
+            if res.details.tx_hash not in prev_txes:
+                raise ValueError(
+                    f"Previous transaction {res.details.tx_hash.hex()} not available"
+                )
             current_tx = prev_txes[res.details.tx_hash]
         else:
             current_tx = this_tx
