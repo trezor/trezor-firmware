@@ -1,0 +1,1 @@
+Raise `ValueError` when the txid for an input is not present in `prev_txes` during `btc.sign_tx`
