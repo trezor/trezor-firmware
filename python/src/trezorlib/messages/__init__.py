@@ -318,6 +318,7 @@ from . import DebugSwipeDirection
 from . import FailureType
 from . import InputScriptType
 from . import LiskTransactionType
+from . import MemoType
 from . import MessageType
 from . import NEMImportanceTransferMode
 from . import NEMModificationType

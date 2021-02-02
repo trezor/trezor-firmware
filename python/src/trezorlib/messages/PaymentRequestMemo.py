@@ -6,7 +6,7 @@ if __debug__:
     try:
         from typing import Dict, List  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
-        EnumTypeInputScriptType = Literal[0, 1, 2, 3, 4]
+        EnumTypeMemoType = Literal[0, 1]
     except ImportError:
         pass
 
@@ -16,24 +16,24 @@ class PaymentRequestMemo(p.MessageType):
     def __init__(
         self,
         *,
-        type: int,
+        type: EnumTypeMemoType,
         data: bytes,
-        address_n: List[int] = None,
+        amount: int = None,
         coin_name: str = None,
-        script_type: EnumTypeInputScriptType = None,
+        mac: bytes = None,
     ) -> None:
-        self.address_n = address_n if address_n is not None else []
         self.type = type
         self.data = data
+        self.amount = amount
         self.coin_name = coin_name
-        self.script_type = script_type
+        self.mac = mac
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('type', p.UVarintType, p.FLAG_REQUIRED),
+            1: ('type', p.EnumType("MemoType", (0, 1)), p.FLAG_REQUIRED),
             2: ('data', p.BytesType, p.FLAG_REQUIRED),
-            3: ('address_n', p.UVarintType, p.FLAG_REPEATED),
+            3: ('amount', p.UVarintType, None),
             4: ('coin_name', p.UnicodeType, None),
-            5: ('script_type', p.EnumType("InputScriptType", (0, 1, 2, 3, 4)), None),
+            5: ('mac', p.BytesType, None),
         }

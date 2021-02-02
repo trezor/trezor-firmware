@@ -353,7 +353,7 @@ message TxOutput {
     reserved 7, 8, 9;                               // fields which are in use, or have been in the past, in TxOutputType
     optional bytes orig_hash = 10;                  // tx_hash of the original transaction where this output was present (used when creating a replacement transaction)
     optional uint32 orig_index = 11;                // index of the output in the original transaction (used when creating a replacement transaction)
-    optional uint32 payment_request = 12;           // index of the PaymentRequest containing this output
+    optional uint32 payment_req_index  = 12;        // index of the PaymentRequest containing this output
 }
 
 /** Data type for metadata about previous transaction which contains the UTXO being spent.
@@ -404,16 +404,22 @@ message PrevOutput {
  */
 message TxAckPaymentRequest {
     required string recipient_name = 1;    // merchant's name or coordinator's name in case of CoinJoin
-    repeated PaymentRequestMemo memos = 2; // any memos that were signed as part of the request
-    optional bytes nonce = 3;              // the nonce used in the signature computation
-    required bytes signature = 4;          // the recipient’s signature of the paymentRequestDigest
+    required uint64 amount = 2;            // the sum of the external output amounts requested
+    repeated PaymentRequestMemo memos = 3; // any memos that were signed as part of the request
+    optional bytes nonce = 4;              // the nonce used in the signature computation
+    required bytes signature = 5;          // the recipient’s signature of the paymentRequestDigest
+
+    enum MemoType {
+        UTF8_TEXT = 0;
+        COIN_PURCHASE = 1;
+    }
 
     message PaymentRequestMemo {
-        required uint32 type = 1;      // identifier of the type of data in the data field
+        required MemoType type = 1;    // the type of data in the data field
         required bytes data = 2;       // encoded memo data, as included in the paymentRequestDigest
-        repeated uint32 address_n = 3; // if the data is a scriptPubKey, the BIP-32 path to the user’s key
-        optional string coin_name = 4; // if the data is a scriptPubKey, the coin to use
-        optional InputScriptType script_type = 5; // if the data is a scriptPubKey
+        optional uint64 amount = 3;    // if the data is an address, the amount it will receive
+        optional string coin_name = 4; // if the data is an address, the coin it belongs to
+        optional bytes mac = 5;        // if the data is an address, the MAC returned by GetAddress
     }
 }
 
