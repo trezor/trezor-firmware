@@ -2,18 +2,19 @@ from micropython import const
 from ubinascii import hexlify
 
 from trezor import ui
-from trezor.messages import AmountUnit, ButtonRequestType, OutputScriptType
+from trezor.messages import AmountUnit, ButtonRequestType, MemoType, OutputScriptType
 from trezor.strings import format_amount
 from trezor.ui.text import Text
 from trezor.utils import chunks
 
+from apps.common import coininfo
 from apps.common.confirm import require_confirm, require_hold_to_confirm
 
 from .. import addresses
-from . import omni, payment_request
+from . import omni
 
 if False:
-    from typing import Iterator, Optional
+    from typing import Iterator
     from trezor import wire
     from trezor.messages.SignTx import EnumTypeAmountUnit
     from trezor.messages.TxOutput import TxOutput
@@ -79,26 +80,25 @@ async def confirm_output(
 async def confirm_payment_request(
     ctx: wire.Context,
     msg: TxAckPaymentRequest,
-    amount: int,
     amount_unit: EnumTypeAmountUnit,
     coin: CoinInfo,
 ) -> None:
-    # Verify ownership of scriptPubKeys in case of non-text memos.
-    await payment_request.verify_memos(ctx, msg.memos)
-
-    text_memo: Optional[str] = None
-    for memo in msg.memos:
-        if memo.type == payment_request.MEMO_TYPE_UTF8:
-            if text_memo is not None:
-                raise wire.DataError("Multiple text memos in payment request.")
-            text_memo = memo.data.decode()
-
     text = Text("Confirm sending", ui.ICON_SEND, ui.GREEN)
-    text.normal(format_coin_amount(amount, coin, amount_unit) + " to")
+    text.normal(format_coin_amount(msg.amount, coin, amount_unit) + " to")
     text.normal(msg.recipient_name)
-    if text_memo:
-        text.br_half()
-        text.normal(text_memo)
+    text.br_half()
+    for memo in msg.memos:
+        if memo.type == MemoType.UTF8_TEXT:
+            text.normal(memo.data.decode())
+        elif memo.type == MemoType.COIN_PURCHASE:
+            assert memo.amount is not None  # checked by sanitizer
+            assert memo.coin_name is not None  # checked by sanitizer
+            memo_coin = coininfo.by_name(memo.coin_name)
+            text.normal(
+                "Buying "
+                + format_coin_amount(memo.amount, memo_coin, amount_unit)
+                + "."
+            )
     await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
 
 

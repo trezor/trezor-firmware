@@ -1,27 +1,21 @@
-from micropython import const
-
 from storage import cache
 from trezor import wire
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha256
+from trezor.messages import MemoType
 from trezor.utils import HashWriter
 
-from apps.common.paths import validate_path
+from apps.common import coininfo
+from apps.common.address_mac import check_address_mac
+from apps.common.keychain import Keychain
 
-from .. import addresses, writers
-from ..keychain import get_keychain_for_coin, validate_path_against_script_type
-from ..scripts import output_derive_script
+from .. import writers
 
 if False:
     from typing import List
     from trezor.messages.TxOutput import TxOutput
     from trezor.messages.TxAckPaymentRequest import TxAckPaymentRequest
-    from trezor.messages.PaymentRequestMemo import PaymentRequestMemo
     from apps.common.coininfo import CoinInfo
-
-MEMO_TYPE_UTF8 = const(1)
-MEMO_TYPE_COIN_FLAG = const(0x8000_0000)
-MEMO_TYPE_COIN_MASK = const(0x7FFF_FFFF)
 
 
 class PaymentRequestVerifier:
@@ -31,34 +25,51 @@ class PaymentRequestVerifier:
     else:
         PUBLIC_KEY = b""
 
-    def __init__(self) -> None:
+    def __init__(
+        self, msg: TxAckPaymentRequest, coin: CoinInfo, keychain: Keychain
+    ) -> None:
         self.h_outputs = HashWriter(sha256())
         self.amount = 0
+        self.expected_amount = msg.amount
+        self.signature = msg.signature
+        self.h_pr = HashWriter(sha256())
 
-    def verify(self, tx_ack: TxAckPaymentRequest, coin: CoinInfo) -> None:
-        hash_outputs = writers.get_tx_hash(self.h_outputs, double=True)
-        h_pr = HashWriter(sha256())
-        writers.write_bytes_fixed(h_pr, b"Payment request:", 16)
-        writers.write_bytes_prefixed(h_pr, tx_ack.recipient_name.encode())
-        writers.write_uint32(h_pr, coin.slip44)
-        writers.write_bytes_fixed(h_pr, hash_outputs, 32)
-        writers.write_bitcoin_varint(h_pr, len(tx_ack.memos))
-        for memo in tx_ack.memos:
-            writers.write_uint32(h_pr, memo.type)
-            writers.write_bytes_prefixed(h_pr, memo.data)
-
-        if tx_ack.nonce:
-            nonce = bytes(tx_ack.nonce)
+        if msg.nonce:
+            nonce = bytes(msg.nonce)
             nonces: List[bytes] = cache.get(cache.APP_COMMON_NONCES)
             try:
                 nonces.remove(nonce)
             except (AttributeError, ValueError):
                 raise wire.DataError("Invalid nonce in payment request.")
-            writers.write_bytes_prefixed(h_pr, nonce)
         else:
-            writers.write_bytes_prefixed(h_pr, b"")
+            nonce = b""
 
-        if not secp256k1.verify(self.PUBLIC_KEY, tx_ack.signature, h_pr.get_digest()):
+        writers.write_bytes_fixed(self.h_pr, b"Payment request:", 16)
+        writers.write_bytes_prefixed(self.h_pr, nonce)
+        writers.write_bytes_prefixed(self.h_pr, msg.recipient_name.encode())
+        writers.write_bitcoin_varint(self.h_pr, len(msg.memos))
+        for memo in msg.memos:
+            writers.write_uint32(self.h_pr, memo.type)
+            if memo.type == MemoType.COIN_PURCHASE:
+                assert memo.amount is not None  # checked by sanitizer
+                assert memo.coin_name is not None  # checked by sanitizer
+                memo_coin = coininfo.by_name(memo.coin_name)
+                writers.write_uint64(self.h_pr, memo.amount)
+                writers.write_uint32(self.h_pr, memo_coin.slip44)
+                check_address_mac(memo, memo_coin, keychain)
+            writers.write_bytes_prefixed(self.h_pr, memo.data)
+        writers.write_uint32(self.h_pr, coin.slip44)
+
+    def verify(self) -> None:
+        if self.amount != self.expected_amount:
+            raise wire.DataError("Invalid amount in payment request.")
+
+        hash_outputs = writers.get_tx_hash(self.h_outputs, double=True)
+        writers.write_bytes_fixed(self.h_pr, hash_outputs, 32)
+
+        if not secp256k1.verify(
+            self.PUBLIC_KEY, self.signature, self.h_pr.get_digest()
+        ):
             raise wire.DataError("Invalid signature in payment request.")
 
     def add_external_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
@@ -67,23 +78,3 @@ class PaymentRequestVerifier:
 
     def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         writers.write_tx_output(self.h_outputs, txo, script_pubkey)
-
-
-async def verify_memos(ctx: wire.Context, memos: List[PaymentRequestMemo]) -> None:
-    for memo in memos:
-        if memo.type & MEMO_TYPE_COIN_FLAG:
-            keychain, coin = await get_keychain_for_coin(ctx, memo.coin_name)
-            if coin.slip44 != memo.type & MEMO_TYPE_COIN_MASK:
-                raise wire.DataError("Coin type mismatch in payment request.")
-            with keychain:
-                assert memo.script_type is not None
-                await validate_path(
-                    ctx,
-                    keychain,
-                    memo.address_n,
-                    validate_path_against_script_type(coin, memo),
-                )
-                node = keychain.derive(memo.address_n)
-                address = addresses.get_address(memo.script_type, coin, node)
-                if memo.data != output_derive_script(address, coin):
-                    raise wire.DataError("Invalid sciptPubKey in payment request.")

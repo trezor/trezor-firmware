@@ -1,5 +1,5 @@
 from trezor import utils, wire
-from trezor.messages import InputScriptType, OutputScriptType
+from trezor.messages import InputScriptType, MemoType, OutputScriptType
 from trezor.messages.PrevInput import PrevInput
 from trezor.messages.PrevOutput import PrevOutput
 from trezor.messages.PrevTx import PrevTx
@@ -31,7 +31,6 @@ from apps.common.coininfo import CoinInfo
 from .. import common
 from ..writers import TX_HASH_SIZE
 from . import layout
-from .payment_request import MEMO_TYPE_COIN_FLAG, MEMO_TYPE_UTF8
 
 if False:
     from typing import Any, Awaitable, Optional
@@ -65,18 +64,16 @@ class UiConfirmPaymentRequest(UiConfirm):
     def __init__(
         self,
         payment_req: TxAckPaymentRequest,
-        amount: int,
         amount_unit: EnumTypeAmountUnit,
         coin: CoinInfo,
     ):
         self.payment_req = payment_req
-        self.amount = amount
         self.amount_unit = amount_unit
         self.coin = coin
 
     def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
         return layout.confirm_payment_request(
-            ctx, self.payment_req, self.amount, self.amount_unit, self.coin
+            ctx, self.payment_req, self.amount_unit, self.coin
         )
 
     __eq__ = utils.obj_eq
@@ -199,8 +196,8 @@ def confirm_output(output: TxOutput, coin: CoinInfo, amount_unit: EnumTypeAmount
     return (yield UiConfirmOutput(output, coin, amount_unit))
 
 
-def confirm_payment_request(payment_req: TxAckPaymentRequest, amount: int, amount_unit: EnumTypeAmountUnit, coin: CoinInfo) -> Awaitable[None]:  # type: ignore
-    return (yield UiConfirmPaymentRequest(payment_req, amount, amount_unit, coin))
+def confirm_payment_request(payment_req: TxAckPaymentRequest, amount_unit: EnumTypeAmountUnit, coin: CoinInfo) -> Awaitable[None]:  # type: ignore
+    return (yield UiConfirmPaymentRequest(payment_req, amount_unit, coin))
 
 
 def confirm_replacement(description: str, txid: bytes) -> Awaitable[Any]:  # type: ignore
@@ -439,21 +436,21 @@ def sanitize_tx_output(txo: TxOutput, coin: CoinInfo) -> TxOutput:
 
 def sanitize_payment_req(payment_req: TxAckPaymentRequest) -> TxAckPaymentRequest:
     for memo in payment_req.memos:
-        if memo.type & MEMO_TYPE_COIN_FLAG:
-            if not memo.address_n:
-                raise wire.DataError("Missing address_n in payment request memo.")
+        if memo.type == MemoType.COIN_PURCHASE:
+            if not memo.amount:
+                raise wire.DataError("Missing amount in payment request memo.")
             if not memo.coin_name:
                 raise wire.DataError("Missing coin_name in payment request memo.")
-            if memo.script_type not in common.INTERNAL_INPUT_SCRIPT_TYPES:
-                raise wire.DataError("Invalid script_type in payment request memo.")
+            if not memo.mac:
+                raise wire.DataError("Missing MAC in payment request memo.")
         else:
-            if memo.type != MEMO_TYPE_UTF8:
+            if memo.type != MemoType.UTF8_TEXT:
                 raise wire.DataError("Invalid memo type in payment request memo.")
-            if memo.address_n:
-                raise wire.DataError("Memo address_n provided but not expected.")
+            if memo.amount:
+                raise wire.DataError("Memo amount provided but not expected.")
             if memo.coin_name:
                 raise wire.DataError("Memo coin_name provided but not expected.")
-            if memo.script_type is not None:
-                raise wire.DataError("Memo script_type provided but not expected.")
+            if memo.mac:
+                raise wire.DataError("Memo mac provided but not expected.")
 
     return payment_req
