@@ -81,7 +81,12 @@ def get_public_node(
 
 
 @expect(messages.Address, field="address")
-def get_address(
+def get_address(*args, **kwargs):
+    return get_authenticated_address(*args, **kwargs)
+
+
+@expect(messages.Address)
+def get_authenticated_address(
     client,
     coin_name,
     n,

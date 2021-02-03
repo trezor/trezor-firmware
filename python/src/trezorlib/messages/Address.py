@@ -17,11 +17,14 @@ class Address(p.MessageType):
         self,
         *,
         address: str,
+        mac: bytes = None,
     ) -> None:
         self.address = address
+        self.mac = mac
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
             1: ('address', p.UnicodeType, p.FLAG_REQUIRED),
+            2: ('mac', p.BytesType, None),
         }
