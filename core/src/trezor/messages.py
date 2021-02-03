@@ -474,11 +474,13 @@ if TYPE_CHECKING:
 
     class Address(protobuf.MessageType):
         address: "str"
+        mac: "bytes | None"
 
         def __init__(
             self,
             *,
             address: "str",
+            mac: "bytes | None" = None,
         ) -> None:
             pass
 

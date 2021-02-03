@@ -5,6 +5,7 @@ from trezor.enums import InputScriptType
 from trezor.messages import Address
 from trezor.ui.layouts import show_address
 
+from apps.common.address_mac import get_address_mac
 from apps.common.paths import address_n_to_str, validate_path
 
 from . import addresses
@@ -64,6 +65,7 @@ async def get_address(
     else:
         address_qr = address  # base58 address
 
+    mac: bytes | None = None
     multisig_xpub_magic = coin.xpub_magic
     if msg.multisig:
         if coin.segwit and not msg.ignore_xpub_magic:
@@ -77,6 +79,14 @@ async def get_address(
                 and coin.xpub_magic_multisig_segwit_p2sh is not None
             ):
                 multisig_xpub_magic = coin.xpub_magic_multisig_segwit_p2sh
+    else:
+        # Attach a MAC for single-sig addresses, but only if the path is standard
+        # or if the user explicitly confirms a non-standard path.
+        if msg.show_display or (
+            keychain.is_in_keychain(msg.address_n)
+            and validate_path_against_script_type(coin, msg)
+        ):
+            mac = get_address_mac(address, coin.slip44, keychain)
 
     if msg.show_display:
         if msg.multisig:
@@ -101,4 +111,4 @@ async def get_address(
                 ctx, address=address_short, address_qr=address_qr, title=title
             )
 
-    return Address(address=address)
+    return Address(address=address, mac=mac)

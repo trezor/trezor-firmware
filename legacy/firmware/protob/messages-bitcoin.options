@@ -8,6 +8,7 @@ GetAddress.address_n                                        max_count:8
 GetAddress.coin_name                                        max_size:21
 
 Address.address                                             max_size:130
+Address.mac                                                 type:FT_IGNORE
 
 SignTx.coin_name                                            max_size:21
 
