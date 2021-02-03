@@ -30,7 +30,7 @@ class TestMsgGetaddressSegwitNative:
                 True,
                 None,
                 script_type=proto.InputScriptType.SPENDWITNESS,
-            )
+            ).address
             == "tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s"
         )
         assert (
@@ -41,7 +41,7 @@ class TestMsgGetaddressSegwitNative:
                 False,
                 None,
                 script_type=proto.InputScriptType.SPENDWITNESS,
-            )
+            ).address
             == "tb1q694ccp5qcc0udmfwgp692u2s2hjpq5h407urtu"
         )
         assert (
@@ -52,7 +52,7 @@ class TestMsgGetaddressSegwitNative:
                 False,
                 None,
                 script_type=proto.InputScriptType.SPENDWITNESS,
-            )
+            ).address
             == "tb1q54un3q39sf7e7tlfq99d6ezys7qgc62a6rxllc"
         )
         assert (
@@ -63,7 +63,7 @@ class TestMsgGetaddressSegwitNative:
                 False,
                 None,
                 script_type=proto.InputScriptType.SPENDADDRESS,
-            )
+            ).address
             == "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q"
         )
 
@@ -77,7 +77,7 @@ class TestMsgGetaddressSegwitNative:
                 False,
                 None,
                 script_type=proto.InputScriptType.SPENDWITNESS,
-            )
+            ).address
             == "grs1qw4teyraux2s77nhjdwh9ar8rl9dt7zww8r6lne"
         )
         assert (
@@ -88,7 +88,7 @@ class TestMsgGetaddressSegwitNative:
                 False,
                 None,
                 script_type=proto.InputScriptType.SPENDWITNESS,
-            )
+            ).address
             == "ert1qkvwu9g3k2pdxewfqr7syz89r3gj557l3xp9k2v"
         )
 
@@ -115,7 +115,7 @@ class TestMsgGetaddressSegwitNative:
                     False,
                     multisig2,
                     script_type=proto.InputScriptType.SPENDWITNESS,
-                )
+                ).address
                 == "tb1qauuv4e2pwjkr4ws5f8p20hu562jlqpe5h74whxqrwf7pufsgzcms9y8set"
             )
             assert (
@@ -126,6 +126,6 @@ class TestMsgGetaddressSegwitNative:
                     False,
                     multisig1,
                     script_type=proto.InputScriptType.SPENDWITNESS,
-                )
+                ).address
                 == "tb1qgvn67p4twmpqhs8c39tukmu9geamtf7x0z3flwf9rrw4ff3h6d2qt0czq3"
             )

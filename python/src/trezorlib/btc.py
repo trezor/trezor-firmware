@@ -80,7 +80,7 @@ def get_public_node(
     )
 
 
-@expect(messages.Address, field="address")
+@expect(messages.Address)
 def get_address(
     client,
     coin_name,

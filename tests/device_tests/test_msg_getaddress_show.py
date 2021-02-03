@@ -46,7 +46,7 @@ def test_show(client, path, script_type, address):
             tools.parse_path(path),
             script_type=script_type,
             show_display=True,
-        )
+        ).address
         == address
     )
 
@@ -74,7 +74,7 @@ def test_show_multisig_3(client):
                 tools.parse_path(f"45h/0/0/{i}"),
                 show_display=True,
                 multisig=multisig,
-            )
+            ).address
             == "35Q3tgZZfr9GhVpaqz7fbDK8WXV1V1KxfD"
         )
 
@@ -247,6 +247,6 @@ def test_show_multisig_15(client):
                 tools.parse_path(f"45h/0/0/{i}"),
                 show_display=True,
                 multisig=multisig,
-            )
+            ).address
             == "3GG78bp1hA3mu9xv1vZLXiENmeabmi7WKQ"
         )
