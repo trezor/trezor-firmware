@@ -77,18 +77,6 @@ class TrezorClient:
     This class allows you to manage connection state, send and receive protobuf
     messages, handle user interactions, and perform some generic tasks
     (send a cancel message, initialize or clear a session, ping the device).
-
-    You have to provide a transport, i.e., a raw connection to the device. You can use
-    `trezorlib.transport.get_transport` to find one.
-
-    You have to provide an UI implementation for the three kinds of interaction:
-    - button request (notify the user that their interaction is needed)
-    - PIN request (on T1, ask the user to input numbers for a PIN matrix)
-    - passphrase request (ask the user to enter a passphrase)
-    See `trezorlib.ui` for details.
-
-    You can supply a `session_id` you might have saved in the previous session.
-    If you do, the user might not need to enter their passphrase again.
     """
 
     def __init__(
@@ -97,13 +85,37 @@ class TrezorClient:
         ui: "TrezorClientUI",
         session_id: Optional[bytes] = None,
         derive_cardano: Optional[bool] = None,
+        _init_device: bool = True,
     ) -> None:
+        """Create a TrezorClient instance.
+
+        You have to provide a `transport`, i.e., a raw connection to the device. You can
+        use `trezorlib.transport.get_transport` to find one.
+
+        You have to provide an UI implementation for the three kinds of interaction:
+        - button request (notify the user that their interaction is needed)
+        - PIN request (on T1, ask the user to input numbers for a PIN matrix)
+        - passphrase request (ask the user to enter a passphrase) See `trezorlib.ui` for
+          details.
+
+        You can supply a `session_id` you might have saved in the previous session. If
+        you do, the user might not need to enter their passphrase again.
+
+        By default, the instance will open a connection to the Trezor device, send an
+        `Initialize` message, set up the `features` field from the response, and connect
+        to a session. By specifying `_init_device=False`, this step is skipped. Notably,
+        this means that `client.features` is unset. Use `client.init_device()` or
+        `client.refresh_features()` to fix that, otherwise A LOT OF THINGS will break.
+        Only use this if you are _sure_ that you know what you are doing. This feature
+        might be removed at any time.
+        """
         LOG.info(f"creating client instance for device: {transport.get_path()}")
         self.transport = transport
         self.ui = ui
         self.session_counter = 0
         self.session_id = session_id
-        self.init_device(session_id=session_id, derive_cardano=derive_cardano)
+        if _init_device:
+            self.init_device(session_id=session_id, derive_cardano=derive_cardano)
 
     def open(self) -> None:
         if self.session_counter == 0:
