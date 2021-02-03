@@ -238,7 +238,7 @@ async def get_keychain_for_coin(
 ) -> tuple[Keychain, coininfo.CoinInfo]:
     coin = get_coin_by_name(coin_name)
     schemas = get_schemas_for_coin(coin)
-    slip21_namespaces = [[b"SLIP-0019"]]
+    slip21_namespaces = [[b"SLIP-0019"], [b"SLIP-0024"]]
     keychain = await get_keychain(ctx, coin.curve_name, schemas, slip21_namespaces)
     return keychain, coin
 

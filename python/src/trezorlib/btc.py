@@ -128,7 +128,12 @@ def get_public_node(
 
 
 @expect(messages.Address, field="address", ret_type=str)
-def get_address(
+def get_address(*args: Any, **kwargs: Any):
+    return get_authenticated_address(*args, **kwargs)
+
+
+@expect(messages.Address)
+def get_authenticated_address(
     client: "TrezorClient",
     coin_name: str,
     n: "Address",

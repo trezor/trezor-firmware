@@ -118,6 +118,7 @@ message GetAddress {
  */
 message Address {
     required string address = 1;    // Coin address in Base58 encoding
+    optional bytes mac = 2;         // Address authentication code
 }
 
 /**

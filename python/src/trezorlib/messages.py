@@ -1024,14 +1024,17 @@ class Address(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 30
     FIELDS = {
         1: protobuf.Field("address", "string", repeated=False, required=True),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
         address: "str",
+        mac: Optional["bytes"] = None,
     ) -> None:
         self.address = address
+        self.mac = mac
 
 
 class GetOwnershipId(protobuf.MessageType):
