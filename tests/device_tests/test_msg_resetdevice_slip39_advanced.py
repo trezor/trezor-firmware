@@ -17,7 +17,7 @@
 from unittest import mock
 
 import pytest
-import shamir_mnemonic as shamir
+from shamir_mnemonic import shamir
 
 from trezorlib import device, messages as proto
 from trezorlib.exceptions import TrezorFailure
@@ -186,7 +186,6 @@ def validate_mnemonics(mnemonics, threshold, expected_ems):
     # 3of5 shares 3of5 groups
     # TODO: test all possible group+share combinations?
     test_combination = mnemonics[0:3] + mnemonics[5:8] + mnemonics[10:13]
-    ms = shamir.combine_mnemonics(test_combination)
-    identifier, iteration_exponent, _, _, _ = shamir._decode_mnemonics(test_combination)
-    ems = shamir._encrypt(ms, b"", iteration_exponent, identifier)
-    assert ems == expected_ems
+    groups = shamir.decode_mnemonics(test_combination)
+    ems = shamir.recover_ems(groups)
+    assert expected_ems == ems.ciphertext
