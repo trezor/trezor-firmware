@@ -31,7 +31,6 @@ from ..common import (
 
 
 @pytest.mark.skip_t1
-@pytest.mark.skip_ui
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_recovery(client):
     mnemonics = reset(client)

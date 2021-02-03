@@ -15,6 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import itertools
+from unittest import mock
 
 import pytest
 
@@ -24,10 +25,13 @@ from trezorlib.tools import parse_path
 
 from ..common import click_through, read_and_confirm_mnemonic, recovery_enter_shares
 
+EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
+MOCK_OS_URANDOM = mock.Mock(return_value=EXTERNAL_ENTROPY)
+
 
 @pytest.mark.skip_t1
-@pytest.mark.skip_ui
 @pytest.mark.setup_client(uninitialized=True)
+@mock.patch("os.urandom", MOCK_OS_URANDOM)
 def test_reset_recovery(client):
     mnemonics = reset(client)
     address_before = btc.get_address(client, "Bitcoin", parse_path("44'/0'/0'/0/0"))

@@ -423,7 +423,6 @@ def test_cancel_authorization(client):
         )
 
 
-@pytest.mark.skip_ui
 def test_multisession_authorization(client):
     # Authorize CoinJoin with www.example1.com in session 1.
     btc.authorize_coinjoin(

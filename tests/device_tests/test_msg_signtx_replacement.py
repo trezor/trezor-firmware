@@ -561,7 +561,6 @@ def test_tx_meld(client):
     )
 
 
-@pytest.mark.skip_ui
 def test_attack_steal_change(client):
     # Attempt to steal amount equivalent to the change in the original transaction by
     # hiding the fact that an output in the original transaction is a change-output.
@@ -633,7 +632,6 @@ def test_attack_steal_change(client):
 
 
 @pytest.mark.skip_t1
-@pytest.mark.skip_ui
 def test_attack_false_internal(client):
     # Falsely claim that an external input is internal in the original transaction.
     # If this were possible, it would allow an attacker to make it look like the
@@ -685,7 +683,6 @@ def test_attack_false_internal(client):
         )
 
 
-@pytest.mark.skip_ui
 def test_attack_fake_int_input_amount(client):
     # Give a fake input amount for an original internal input while giving the correct
     # amount for the replacement input. If an attacker could increase the amount of an
@@ -741,7 +738,6 @@ def test_attack_fake_int_input_amount(client):
 
 
 @pytest.mark.skip_t1
-@pytest.mark.skip_ui
 def test_attack_fake_ext_input_amount(client):
     # Give a fake input amount for an original external input while giving the correct
     # amount for the replacement input. If an attacker could decrease the amount of an
@@ -812,7 +808,6 @@ def test_attack_fake_ext_input_amount(client):
         )
 
 
-@pytest.mark.skip_ui
 def test_p2wpkh_invalid_signature(client):
     # Ensure that transaction replacement fails when the original signature is invalid.
 
