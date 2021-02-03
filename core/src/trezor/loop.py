@@ -184,9 +184,7 @@ def _step(task: Task, value: Any) -> None:
     this_task = task
     try:
         if isinstance(value, BaseException):
-            result = task.throw(value)  # type: ignore
-            # error: Argument 1 to "throw" of "Coroutine" has incompatible type "Exception"; expected "Type[BaseException]"
-            # rationale: In micropython, generator.throw() accepts the exception object directly.
+            result = task.throw(value)
         else:
             result = task.send(value)
     except StopIteration as e:
