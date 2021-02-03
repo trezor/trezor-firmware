@@ -1,4 +1,4 @@
-import shamir_mnemonic as shamir
+from shamir_mnemonic import shamir
 
 from trezorlib import messages
 
@@ -72,7 +72,6 @@ def confirm_words(debug, words):
 def validate_mnemonics(mnemonics, expected_ems):
     # We expect these combinations to recreate the secret properly
     # In case of click tests the mnemonics are always XofX so no need for combinations
-    ms = shamir.combine_mnemonics(mnemonics)
-    identifier, iteration_exponent, _, _, _ = shamir._decode_mnemonics(mnemonics)
-    ems = shamir._encrypt(ms, b"", iteration_exponent, identifier)
-    assert ems == expected_ems
+    groups = shamir.decode_mnemonics(mnemonics)
+    ems = shamir.recover_ems(groups)
+    assert expected_ems == ems.ciphertext
