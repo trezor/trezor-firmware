@@ -14,8 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import pytest
-
 from trezorlib import btc, messages
 from trezorlib.tools import parse_path
 
@@ -37,7 +35,6 @@ TXHASH_31bc1c = bytes.fromhex(
 )
 
 
-@pytest.mark.skip_ui
 def test_non_segwit_segwit_inputs(client):
     # First is non-segwit, second is segwit.
 
@@ -80,7 +77,6 @@ def test_non_segwit_segwit_inputs(client):
     )
 
 
-@pytest.mark.skip_ui
 def test_segwit_non_segwit_inputs(client):
     # First is segwit, second is non-segwit.
 
@@ -123,7 +119,6 @@ def test_segwit_non_segwit_inputs(client):
     )
 
 
-@pytest.mark.skip_ui
 def test_segwit_non_segwit_segwit_inputs(client):
     # First is segwit, second is non-segwit and third is segwit again.
 
@@ -177,7 +172,6 @@ def test_segwit_non_segwit_segwit_inputs(client):
     )
 
 
-@pytest.mark.skip_ui
 def test_non_segwit_segwit_non_segwit_inputs(client):
     # First is non-segwit, second is segwit and third is non-segwit again.
 

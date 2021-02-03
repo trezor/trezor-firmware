@@ -51,7 +51,6 @@ class TestDebuglink:
         assert isinstance(resp, messages.Address)
 
 
-@pytest.mark.skip_ui
 @pytest.mark.skip_t1
 def test_softlock_instability(client):
     def load_device():
