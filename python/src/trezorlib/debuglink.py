@@ -42,6 +42,7 @@ class DebugLink:
     def __init__(self, transport, auto_interact=True):
         self.transport = transport
         self.allow_interactions = auto_interact
+        self.msg_type_to_class_override = {}
 
     def open(self):
         self.transport.begin_session()
@@ -72,7 +73,7 @@ class DebugLink:
                 msg_type, len(msg_bytes), msg_bytes.hex()
             ),
         )
-        msg = mapping.decode(ret_type, ret_bytes)
+        msg = mapping.decode(ret_type, ret_bytes, self.msg_type_to_class_override)
         LOG.debug(
             "received message: {}".format(msg.__class__.__name__),
             extra={"protobuf": msg},

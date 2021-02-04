@@ -15,7 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import io
-from typing import Tuple
+from typing import Dict, Tuple
 
 from . import messages, protobuf
 
@@ -62,8 +62,8 @@ def get_type(msg):
     return map_class_to_type[msg.__class__]
 
 
-def get_class(t):
-    return map_type_to_class[t]
+def get_class(t, map_override={}):
+    return map_override.get(t, map_type_to_class[t])
 
 
 def encode(msg: protobuf.MessageType) -> Tuple[int, bytes]:
@@ -73,8 +73,8 @@ def encode(msg: protobuf.MessageType) -> Tuple[int, bytes]:
     return message_type, buf.getvalue()
 
 
-def decode(message_type: int, message_bytes: bytes) -> protobuf.MessageType:
-    cls = get_class(message_type)
+def decode(message_type: int, message_bytes: bytes, map_override: Dict = {}) -> protobuf.MessageType:
+    cls = get_class(message_type, map_override)
     buf = io.BytesIO(message_bytes)
     return protobuf.load_message(buf, cls)
 

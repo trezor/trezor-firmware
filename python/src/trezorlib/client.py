@@ -93,6 +93,7 @@ class TrezorClient:
         self.ui = ui
         self.session_counter = 0
         self.session_id = session_id
+        self.msg_type_to_class_override = {}
         self.init_device(session_id=session_id)
 
     def open(self):
@@ -138,7 +139,7 @@ class TrezorClient:
                 msg_type, len(msg_bytes), msg_bytes.hex()
             ),
         )
-        msg = mapping.decode(msg_type, msg_bytes)
+        msg = mapping.decode(msg_type, msg_bytes, self.msg_type_to_class_override)
         LOG.debug(
             "received message: {}".format(msg.__class__.__name__),
             extra={"protobuf": msg},
