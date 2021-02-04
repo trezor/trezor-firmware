@@ -94,6 +94,7 @@ class TrezorClient:
         self.session_counter = 0
         self.session_id = session_id
         self.msg_type_to_class_override = {}
+        self.vendors = VENDORS
         self.init_device(session_id=session_id)
 
     def open(self):
@@ -230,7 +231,7 @@ class TrezorClient:
 
     def _refresh_features(self, features: messages.Features) -> None:
         """Update internal fields based on passed-in Features message."""
-        if features.vendor not in VENDORS:
+        if features.vendor not in self.vendors:
             raise RuntimeError("Unsupported device")
 
         self.features = features
