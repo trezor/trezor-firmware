@@ -18,7 +18,7 @@ import atexit
 import logging
 import sys
 import time
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Set, Tuple
 
 from ..log import DUMP_PACKETS
 from . import TREZORS, UDEV_RULES_STR, TransportException
@@ -109,7 +109,7 @@ class WebUsbTransport(ProtocolBasedTransport):
         return "%s:%s" % (self.PATH_PREFIX, dev_to_str(self.device))
 
     @classmethod
-    def enumerate(cls, usb_reset=False) -> Iterable["WebUsbTransport"]:
+    def enumerate(cls, usb_reset=False, usb_ids: Optional[Set[Tuple[int, int]]] = TREZORS) -> Iterable["WebUsbTransport"]:
         if cls.context is None:
             cls.context = usb1.USBContext()
             cls.context.open()
@@ -117,7 +117,7 @@ class WebUsbTransport(ProtocolBasedTransport):
         devices = []
         for dev in cls.context.getDeviceIterator(skip_on_error=True):
             usb_id = (dev.getVendorID(), dev.getProductID())
-            if usb_id not in TREZORS:
+            if usb_ds is not None and usb_id not in usb_ids:
                 continue
             if not is_vendor_class(dev):
                 continue
