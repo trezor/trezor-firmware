@@ -21,6 +21,7 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ..tx_cache import TxCache
+from .payment_req import make_payment_request
 from .signtx import (
     request_finished,
     request_input,
@@ -122,42 +123,44 @@ def test_sign_tx(client):
             address="tb1qk7j3ahs2v6hrv4v282cf0tvxh0vqq7rpt3zcml",
             amount=50000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
-            payment_request=0,
+            payment_req_index=0,
         ),
         # Our coinjoined output.
         messages.TxOutput(
             address_n=parse_path("84'/1'/0'/1/1"),
             amount=50000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
-            payment_request=0,
+            payment_req_index=0,
         ),
         # Our change output.
         messages.TxOutput(
             address_n=parse_path("84'/1'/0'/1/2"),
             amount=7289000 - 50000 - 5 - 5000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
-            payment_request=0,
+            payment_req_index=0,
         ),
         # Other's change output.
         messages.TxOutput(
             address="tb1q9cqhdr9ydetjzrct6tyeuccws9505hl96azwxk",
             amount=100000 - 50000 - 5 - 5000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
-            payment_request=0,
+            payment_req_index=0,
         ),
         # Coordinator's output.
         messages.TxOutput(
             address="mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
             amount=10,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
-            payment_request=0,
+            payment_req_index=0,
         ),
     ]
 
-    payment_req = messages.TxAckPaymentRequest(
+    payment_req = make_payment_request(
+        client,
         recipient_name="www.example.com",
-        signature=bytes.fromhex(
-            "e814f7e2c857a9ac5e9331ac3543a50445c0182df9e94b794ba0acc90fe6803e1d828fc7f4e0a22093cc59dfe418c0eee3a562c86c6e142e97d52b1642bf9a34"
+        outputs=outputs,
+        hash_outputs=bytes.fromhex(
+            "506e16d4ed7807957dd8eaa2be8f0ab64cacc3205cca95335b847aed3493135c"
         ),
     )
 
@@ -168,11 +171,11 @@ def test_sign_tx(client):
                 request_input(0),
                 request_input(1),
                 request_output(0),
+                request_payment_req(0),
                 request_output(1),
                 request_output(2),
                 request_output(3),
                 request_output(4),
-                request_payment_req(0),
                 request_input(0),
                 request_meta(TXHASH_e5b7e2),
                 request_input(0, TXHASH_e5b7e2),
@@ -276,42 +279,44 @@ def test_unfair_fee(client):
             address="tb1qk7j3ahs2v6hrv4v282cf0tvxh0vqq7rpt3zcml",
             amount=50000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
-            payment_request=0,
+            payment_req_index=0,
         ),
         # Our coinjoined output.
         messages.TxOutput(
             address_n=parse_path("84'/1'/0'/1/1"),
             amount=50000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
-            payment_request=0,
+            payment_req_index=0,
         ),
         # Our change output.
         messages.TxOutput(
             address_n=parse_path("84'/1'/0'/1/2"),
             amount=7289000 - 50000 - 5 - 6000,  # unfair mining fee
             script_type=messages.OutputScriptType.PAYTOWITNESS,
-            payment_request=0,
+            payment_req_index=0,
         ),
         # Other's change output.
         messages.TxOutput(
             address="tb1q9cqhdr9ydetjzrct6tyeuccws9505hl96azwxk",
             amount=100000 - 50000 - 5 - 4000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
-            payment_request=0,
+            payment_req_index=0,
         ),
         # Coordinator's output.
         messages.TxOutput(
             address="mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
             amount=10,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
-            payment_request=0,
+            payment_req_index=0,
         ),
     ]
 
-    payment_req = messages.TxAckPaymentRequest(
+    payment_req = make_payment_request(
+        client,
         recipient_name="www.example.com",
-        signature=bytes.fromhex(
-            "94b55e20e8db2ddcc6c53ed337bf629ce114d102ebf0027b72773be114c2ac173cb5205bd14dc24accb8773872b7bf850b9b161b5691d319881cd4c0e583558d"
+        outputs=outputs,
+        hash_outputs=bytes.fromhex(
+            "698fa785e3b573514b207d066b15e89ebdcea6adc799e8ce005088ab2f91fa5d"
         ),
     )
 
@@ -370,56 +375,58 @@ def test_no_anonymity(client):
             address="tb1qk7j3ahs2v6hrv4v282cf0tvxh0vqq7rpt3zcml",
             amount=30000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
-            payment_request=0,
+            payment_req_index=0,
         ),
         # Other's coinjoined output.
         messages.TxOutput(
             address="tb1q9cqhdr9ydetjzrct6tyeuccws9505hl96azwxk",
             amount=30000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
-            payment_request=0,
+            payment_req_index=0,
         ),
         # Our coinjoined output.
         messages.TxOutput(
             address_n=parse_path("84'/1'/0'/1/1"),
             amount=50000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
-            payment_request=0,
+            payment_req_index=0,
         ),
         # Our coinjoined output.
         messages.TxOutput(
             address_n=parse_path("84'/1'/0'/1/2"),
             amount=50000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
-            payment_request=0,
+            payment_req_index=0,
         ),
         # Our change output.
         messages.TxOutput(
             address_n=parse_path("84'/1'/0'/1/2"),
             amount=7289000 - 50000 - 50000 - 10 - 5000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
-            payment_request=0,
+            payment_req_index=0,
         ),
         # Other's change output.
         messages.TxOutput(
             address="tb1q9cqhdr9ydetjzrct6tyeuccws9505hl96azwxk",
             amount=100000 - 30000 - 30000 - 6 - 5000,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
-            payment_request=0,
+            payment_req_index=0,
         ),
         # Coordinator's output.
         messages.TxOutput(
             address="mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
             amount=16,
             script_type=messages.OutputScriptType.PAYTOWITNESS,
-            payment_request=0,
+            payment_req_index=0,
         ),
     ]
 
-    payment_req = messages.TxAckPaymentRequest(
+    payment_req = make_payment_request(
+        client,
         recipient_name="www.example.com",
-        signature=bytes.fromhex(
-            "1f08a93c65257a17ed2633479871df928fbf81d2292d6d546e29b42c89bc15ef824235788c5c212704d25aa1c91de5fe47ed7bfce08b39915857408ff57c899d61"
+        outputs=outputs,
+        hash_outputs=bytes.fromhex(
+            "70696235d1fca0b6a6ed7c8684e7b3b017cba9b00d9b8fcc086f33963c1827a4"
         ),
     )
 
