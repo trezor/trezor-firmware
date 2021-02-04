@@ -15,57 +15,21 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from collections import namedtuple
-from hashlib import sha256
 
 import pytest
-from ecdsa import SECP256k1, SigningKey
 
 from trezorlib import btc, messages, misc
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ..tx_cache import TxCache
+from .payment_req import CoinPurchaseMemo, TextMemo, make_payment_request
 
-B = messages.ButtonRequestType
 TX_API = TxCache("Testnet")
 
 TXHASH_091446 = bytes.fromhex(
     "09144602765ce3dd8f4329445b20e3684e948709c5cdcaf12da3bb079c99448a"
 )
-
-payment_req_signer = SigningKey.from_string(
-    b"?S\ti\x8b\xc5o{,\xab\x03\x194\xea\xa8[_:\xeb\xdf\xce\xef\xe50\xf17D\x98`\xb9dj",
-    curve=SECP256k1,
-)
-
-
-def make_payment_request(outputs, hash_outputs, memos=[], nonce=None):
-    recipient_name = "trezor.io"
-    slip44 = 1  # Testnet
-
-    h_pr = sha256(b"Payment request:")
-    h_pr.update(bytes([len(recipient_name)]))
-    h_pr.update(recipient_name.encode())
-    h_pr.update(slip44.to_bytes(4, "little"))
-    h_pr.update(hash_outputs)
-    h_pr.update(bytes([len(memos)]))
-    for memo in memos:
-        h_pr.update(memo.type.to_bytes(4, "little"))
-        h_pr.update(bytes([len(memo.data)]))
-        h_pr.update(memo.data)
-
-    if nonce:
-        h_pr.update(bytes([len(nonce)]))
-        h_pr.update(nonce)
-    else:
-        h_pr.update(b"\0")
-
-    return messages.TxAckPaymentRequest(
-        recipient_name=recipient_name,
-        memos=memos,
-        nonce=nonce,
-        signature=payment_req_signer.sign_digest_deterministic(h_pr.digest()),
-    )
 
 
 def case(id, *args, altcoin=False):
@@ -91,7 +55,6 @@ outputs = [
         address="2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp",
         amount=5000000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
-        payment_request=0,
     ),
     messages.TxOutput(
         address="tb1q694ccp5qcc0udmfwgp692u2s2hjpq5h407urtu",
@@ -106,33 +69,26 @@ outputs = [
 ]
 
 memos1 = [
-    messages.PaymentRequestMemo(type=1, data=b"Buying 15.9636 DASH."),
-    messages.PaymentRequestMemo(
-        type=0x80000005,
-        data=bytes.fromhex("76a914fd61dd017dad1f505c0511142cc9ac51ef3a5beb88ac"),
-        address_n=parse_path("44'/5'/0'/1/0"),
+    CoinPurchaseMemo(
+        amount=1596360000,
         coin_name="Dash",
-        script_type=messages.InputScriptType.SPENDADDRESS,
+        slip44=5,
+        address_n=parse_path("44'/5'/0'/1/0"),
     ),
 ]
 
 memos2 = [
-    messages.PaymentRequestMemo(
-        type=1, data=b"Buying 3.1896 DASH and 831.57080247 GRS."
-    ),
-    messages.PaymentRequestMemo(
-        type=0x80000005,
-        data=bytes.fromhex("76a914fd61dd017dad1f505c0511142cc9ac51ef3a5beb88ac"),
-        address_n=parse_path("44'/5'/0'/1/0"),
+    CoinPurchaseMemo(
+        amount=318960000,
         coin_name="Dash",
-        script_type=messages.InputScriptType.SPENDADDRESS,
+        slip44=5,
+        address_n=parse_path("44'/5'/0'/1/0"),
     ),
-    messages.PaymentRequestMemo(
-        type=0x80000011,
-        data=bytes.fromhex("76a914fe40329c95c5598ac60752a5310b320cb52d18e688ac"),
-        address_n=parse_path("44'/17'/0'/0/3"),
+    CoinPurchaseMemo(
+        amount=83157080247,
         coin_name="Groestlcoin",
-        script_type=messages.InputScriptType.SPENDADDRESS,
+        slip44=17,
+        address_n=parse_path("44'/17'/0'/0/3"),
     ),
 ]
 
@@ -198,7 +154,7 @@ PaymentRequestParams = namedtuple(
                 PaymentRequestParams(
                     [0, 1],
                     "4615b15d83d31d8250c5c078896b4186a02b6cd201fe211e2adf9793452f290d",
-                    [],
+                    [TextMemo("Invoice #87654321.")],
                 ),
             ),
         ),
@@ -208,21 +164,6 @@ PaymentRequestParams = namedtuple(
                 PaymentRequestParams(
                     [0, 1, 2],
                     "7e53bc48fb6cf8e8b4ea8416c523cb6a6a35e24effac335a1d5384a1f0b63df0",
-                    [],
-                ),
-            ),
-        ),
-        case(
-            "out02+out1",
-            (
-                PaymentRequestParams(
-                    [0, 2],
-                    "31e0436be0ad5fe5a1b81f0f8278f57d401eedea60cd48df49281c99eb415878",
-                    [],
-                ),
-                PaymentRequestParams(
-                    [1],
-                    "ab1f485f678a4176b5d77f5f6316321cb90d34e53c4503a5d7931211512e4e7d",
                     [],
                 ),
             ),
@@ -241,16 +182,18 @@ PaymentRequestParams = namedtuple(
 )
 def test_payment_request(client, payment_request_params):
     for txo in outputs:
-        txo.payment_request = None
+        txo.payment_req_index = None
 
     payment_reqs = []
     for i, params in enumerate(payment_request_params):
         request_outputs = []
         for txo_index in params.txo_indices:
-            outputs[txo_index].payment_request = i
+            outputs[txo_index].payment_req_index = i
             request_outputs.append(outputs[txo_index])
         payment_reqs.append(
             make_payment_request(
+                client,
+                recipient_name="trezor.io",
                 outputs=request_outputs,
                 hash_outputs=bytes.fromhex(params.hash_outputs),
                 memos=params.memos,
