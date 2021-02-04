@@ -67,7 +67,7 @@ class TestApprover(unittest.TestCase):
             TxOutput(
                 amount=denomination,
                 script_type=OutputScriptType.PAYTOWITNESS,
-                payment_request=0,
+                payment_req_index=0,
             ) for i in range(99)
         ]
 
@@ -78,7 +78,7 @@ class TestApprover(unittest.TestCase):
                 address_n=[H_(84), H_(0), H_(0), 0, 2],
                 amount=denomination,
                 script_type=OutputScriptType.PAYTOWITNESS,
-                payment_request=0,
+                payment_req_index=0,
             )
         )
 
@@ -91,7 +91,7 @@ class TestApprover(unittest.TestCase):
             TxOutput(
                 amount=1000000 * (i + 1) - fees,
                 script_type=OutputScriptType.PAYTOWITNESS,
-                payment_request=0,
+                payment_req_index=0,
             ) for i in range(99)
         )
 
@@ -101,7 +101,7 @@ class TestApprover(unittest.TestCase):
                 address_n=[H_(84), H_(0), H_(0), 1, 1],
                 amount=1000000 - fees,
                 script_type=OutputScriptType.PAYTOWITNESS,
-                payment_request=0,
+                payment_req_index=0,
             )
         )
 
@@ -110,7 +110,7 @@ class TestApprover(unittest.TestCase):
             TxOutput(
                 amount=total_coordinator_fee,
                 script_type=OutputScriptType.PAYTOWITNESS,
-                payment_request=0,
+                payment_req_index=0,
             )
         )
 
@@ -119,25 +119,23 @@ class TestApprover(unittest.TestCase):
         approver = CoinJoinApprover(tx, self.coin, authorization)
         signer = Bitcoin(tx, None, self.coin, approver)
 
-        h_outputs = HashWriter(sha256())
-        for txo in outputs:
-            writers.write_tx_output(h_outputs, txo, script_pubkey=bytes(22))
-        hash_outputs = writers.get_tx_hash(h_outputs, double=True)
+        hash_outputs = b's\xe3\xda\x1b;\x8c\x99*\xf5X\xbf(\xe52R\xa2A\x87 \xae\xf1:H=\xa8\x9c\x80\xf1\xe6\xb6%('
 
         # Compute payment request signature.
         # Private key of m/0h for "all all ... all" seed.
         private_key = b'?S\ti\x8b\xc5o{,\xab\x03\x194\xea\xa8[_:\xeb\xdf\xce\xef\xe50\xf17D\x98`\xb9dj'
         h_pr = HashWriter(sha256())
         writers.write_bytes_fixed(h_pr, b"Payment request:", 16)
+        writers.write_bytes_prefixed(h_pr, b"")  # Empty nonce.
         writers.write_bytes_prefixed(h_pr, self.coordinator_name.encode())
+        writers.write_bitcoin_varint(h_pr, 0)  # No memos.
         writers.write_uint32(h_pr, self.coin.slip44)
         writers.write_bytes_fixed(h_pr, hash_outputs, 32)
-        writers.write_bitcoin_varint(h_pr, 0)  # No memos.
-        writers.write_bytes_prefixed(h_pr, b"")  # Empty nonce.
         signature = secp256k1.sign(private_key, h_pr.get_digest())
 
         tx_ack_payment_req = TxAckPaymentRequest(
             recipient_name=self.coordinator_name,
+            amount=5929040000,
             signature=signature,
         )
 
@@ -147,13 +145,14 @@ class TestApprover(unittest.TestCase):
             else:
                 await_result(approver.add_internal_input(txi))
 
-        for txo in outputs:
+        for i, txo in enumerate(outputs):
             if txo.address_n:
                 approver.add_change_output(txo, script_pubkey=bytes(22))
             else:
                 await_result(approver.add_external_output(txo, script_pubkey=bytes(22)))
 
-        await_result(approver.approve_payment_request(0, tx_ack_payment_req))
+            if i == 0:
+                await_result(approver.add_payment_request(tx_ack_payment_req, None))
 
         await_result(approver.approve_tx(TxInfo(signer, tx), []))
 
