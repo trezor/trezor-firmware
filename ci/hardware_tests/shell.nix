@@ -3,7 +3,7 @@ with import ../nixpkgs.nix;
 stdenv.mkDerivation rec {
   name = "trezor-firmware-hardware-tests";
   buildInputs = [
-    uhubctl
+    (callPackage ./uhubctl.nix { }) # HACK FIXME replace this with just uhubctl once pinned version of nixpkgs is updated
     ffmpeg
     poetry
     libusb1
