@@ -30,7 +30,7 @@ class TestMsgGetaddressSegwit:
                 True,
                 None,
                 script_type=proto.InputScriptType.SPENDP2SHWITNESS,
-            ).address
+            )
             == "2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX"
         )
         assert (
@@ -41,7 +41,7 @@ class TestMsgGetaddressSegwit:
                 False,
                 None,
                 script_type=proto.InputScriptType.SPENDP2SHWITNESS,
-            ).address
+            )
             == "2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp"
         )
         assert (
@@ -52,7 +52,7 @@ class TestMsgGetaddressSegwit:
                 False,
                 None,
                 script_type=proto.InputScriptType.SPENDP2SHWITNESS,
-            ).address
+            )
             == "2N6UeBoqYEEnybg4cReFYDammpsyDw8R2Mc"
         )
         assert (
@@ -63,7 +63,7 @@ class TestMsgGetaddressSegwit:
                 False,
                 None,
                 script_type=proto.InputScriptType.SPENDADDRESS,
-            ).address
+            )
             == "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q"
         )
 
@@ -77,7 +77,7 @@ class TestMsgGetaddressSegwit:
                 False,
                 None,
                 script_type=proto.InputScriptType.SPENDP2SHWITNESS,
-            ).address
+            )
             == "2N4Q5FhU2497BryFfUgbqkAJE87aKDv3V3e"
         )
         assert (
@@ -88,7 +88,7 @@ class TestMsgGetaddressSegwit:
                 False,
                 None,
                 script_type=proto.InputScriptType.SPENDP2SHWITNESS,
-            ).address
+            )
             == "XNW67ZQA9K3AuXPBWvJH4zN2y5QBDTwy2Z"
         )
 
@@ -118,6 +118,6 @@ class TestMsgGetaddressSegwit:
                     False,
                     multisig1,
                     script_type=proto.InputScriptType.SPENDP2SHWITNESS,
-                ).address
+                )
                 == "2MwuUwUzPG17wiKQpfXmzfxJEoe7RXZDRad"
             )

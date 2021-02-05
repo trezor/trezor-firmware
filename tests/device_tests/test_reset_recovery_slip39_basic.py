@@ -30,17 +30,13 @@ from ..common import click_through, read_and_confirm_mnemonic, recovery_enter_sh
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_recovery(client):
     mnemonics = reset(client)
-    address_before = btc.get_address(
-        client, "Bitcoin", parse_path("44'/0'/0'/0/0")
-    ).address
+    address_before = btc.get_address(client, "Bitcoin", parse_path("44'/0'/0'/0/0"))
 
     for share_subset in itertools.combinations(mnemonics, 3):
         device.wipe(client)
         selected_mnemonics = share_subset
         recover(client, selected_mnemonics)
-        address_after = btc.get_address(
-            client, "Bitcoin", parse_path("44'/0'/0'/0/0")
-        ).address
+        address_after = btc.get_address(client, "Bitcoin", parse_path("44'/0'/0'/0/0"))
         assert address_before == address_after
 
 

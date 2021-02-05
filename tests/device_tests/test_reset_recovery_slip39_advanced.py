@@ -35,9 +35,7 @@ from ..common import (
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_recovery(client):
     mnemonics = reset(client)
-    address_before = btc.get_address(
-        client, "Bitcoin", parse_path("44'/0'/0'/0/0")
-    ).address
+    address_before = btc.get_address(client, "Bitcoin", parse_path("44'/0'/0'/0/0"))
     # we're generating 3of5 groups 3of5 shares each
     test_combinations = [
         mnemonics[0:3]  # shares 1-3 from groups 1-3
@@ -56,9 +54,7 @@ def test_reset_recovery(client):
     for combination in test_combinations:
         device.wipe(client)
         recover(client, combination)
-        address_after = btc.get_address(
-            client, "Bitcoin", parse_path("44'/0'/0'/0/0")
-        ).address
+        address_after = btc.get_address(client, "Bitcoin", parse_path("44'/0'/0'/0/0"))
         assert address_before == address_after
 
 

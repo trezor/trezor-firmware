@@ -29,7 +29,7 @@ class TestProtectCall:
     def _some_protected_call(self, client):
         # This method perform any call which have protection in the device
         res = btc.get_address(client, "Testnet", [0])
-        assert res.address == "mndoQDWatQhfeQbprzZxD43mZ75Z94D6vz"
+        assert res == "mndoQDWatQhfeQbprzZxD43mZ75Z94D6vz"
 
     def test_no_protection(self, client):
         with client:
