@@ -196,7 +196,7 @@ def confirm_output(output: TxOutput, coin: CoinInfo, amount_unit: EnumTypeAmount
     return (yield UiConfirmOutput(output, coin, amount_unit))
 
 
-def confirm_payment_request(payment_req: TxAckPaymentRequest, amount_unit: EnumTypeAmountUnit, coin: CoinInfo) -> Awaitable[None]:  # type: ignore
+def confirm_payment_request(payment_req: TxAckPaymentRequest, amount_unit: EnumTypeAmountUnit, coin: CoinInfo) -> Awaitable[bool]:  # type: ignore
     return (yield UiConfirmPaymentRequest(payment_req, amount_unit, coin))
 
 

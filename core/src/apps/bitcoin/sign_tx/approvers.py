@@ -33,6 +33,7 @@ class Approver:
         self.coin = coin
         self.weight = tx_weight.TxWeightCalculator(tx.inputs_count, tx.outputs_count)
         self.payment_req_verifier: Optional[PaymentRequestVerifier] = None
+        self.show_payment_req_details = False
 
         # amounts in the current transaction
         self.total_in = 0  # sum of input amounts
@@ -75,7 +76,8 @@ class Approver:
     def finish_payment_request(self) -> None:
         if self.payment_req_verifier:
             self.payment_req_verifier.verify()
-            self.payment_req_verifier = None
+        self.payment_req_verifier = None
+        self.show_payment_req_details = False
 
     def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         self._add_output(txo, script_pubkey)
@@ -143,7 +145,7 @@ class BasicApprover(Approver):
                 raise wire.ProcessError(
                     "Adding new OP_RETURN outputs in replacement transactions is not supported."
                 )
-        elif txo.payment_req_index is None:
+        elif txo.payment_req_index is None or self.show_payment_req_details:
             # Ask user to confirm output, unless it is part of a payment
             # request, which gets confirmed separately.
             await helpers.confirm_output(txo, self.coin, self.amount_unit)
@@ -152,7 +154,9 @@ class BasicApprover(Approver):
         self, msg: TxAckPaymentRequest, keychain: Keychain
     ) -> None:
         await super().add_payment_request(msg, keychain)
-        await helpers.confirm_payment_request(msg, self.amount_unit, self.coin)
+        self.show_payment_req_details = await helpers.confirm_payment_request(
+            msg, self.amount_unit, self.coin
+        )
 
     async def approve_tx(self, tx_info: TxInfo, orig_txs: List[OriginalTxInfo]) -> None:
         await super().approve_tx(tx_info, orig_txs)
