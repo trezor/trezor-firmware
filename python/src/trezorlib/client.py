@@ -110,6 +110,7 @@ class TrezorClient:
         might be removed at any time.
         """
         LOG.info(f"creating client instance for device: {transport.get_path()}")
+        self.mapping = mapping.DEFAULT_MAPPING
         self.transport = transport
         self.ui = ui
         self.session_counter = 0
@@ -142,7 +143,7 @@ class TrezorClient:
             f"sending message: {msg.__class__.__name__}",
             extra={"protobuf": msg},
         )
-        msg_type, msg_bytes = mapping.encode(msg)
+        msg_type, msg_bytes = self.mapping.encode(msg)
         LOG.log(
             DUMP_BYTES,
             f"encoded as type {msg_type} ({len(msg_bytes)} bytes): {msg_bytes.hex()}",
@@ -156,7 +157,7 @@ class TrezorClient:
             DUMP_BYTES,
             f"received type {msg_type} ({len(msg_bytes)} bytes): {msg_bytes.hex()}",
         )
-        msg = mapping.decode(msg_type, msg_bytes)
+        msg = self.mapping.decode(msg_type, msg_bytes)
         LOG.debug(
             f"received message: {msg.__class__.__name__}",
             extra={"protobuf": msg},
