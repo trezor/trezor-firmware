@@ -49,10 +49,6 @@ emulator? This is most likely it.**
 
 Same as above but regular version (not only Bitcoin) without debug mode enabled.
 
-### core unix frozen regular darwin
-
-Same as above for MacOS.
-
 ### core unix regular build
 
 Non-frozen emulator build. This means you still need Python files present which get
@@ -93,7 +89,3 @@ build? This is most likely it.**
 
 UI tests for Core. See artifacts for a comprehensive report of UI. See [tests/ui-tests](../tests/ui-tests.html#reports)
 for more info.
-
----
-
-TODO: document others if needed
