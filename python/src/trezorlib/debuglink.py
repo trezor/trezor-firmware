@@ -67,6 +67,7 @@ class DebugLink:
     def __init__(self, transport: "Transport", auto_interact: bool = True) -> None:
         self.transport = transport
         self.allow_interactions = auto_interact
+        self.mapping = mapping.DEFAULT_MAPPING
 
     def open(self) -> None:
         self.transport.begin_session()
@@ -79,7 +80,7 @@ class DebugLink:
             f"sending message: {msg.__class__.__name__}",
             extra={"protobuf": msg},
         )
-        msg_type, msg_bytes = mapping.encode(msg)
+        msg_type, msg_bytes = self.mapping.encode(msg)
         LOG.log(
             DUMP_BYTES,
             f"encoded as type {msg_type} ({len(msg_bytes)} bytes): {msg_bytes.hex()}",
@@ -93,7 +94,7 @@ class DebugLink:
             DUMP_BYTES,
             f"received type {msg_type} ({len(msg_bytes)} bytes): {msg_bytes.hex()}",
         )
-        msg = mapping.decode(ret_type, ret_bytes)
+        msg = self.mapping.decode(ret_type, ret_bytes)
         LOG.debug(
             f"received message: {msg.__class__.__name__}",
             extra={"protobuf": msg},

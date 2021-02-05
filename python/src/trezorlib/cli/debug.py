@@ -69,7 +69,7 @@ def send_bytes(
     click.echo(f"Response data: {response_data.hex()}")
 
     try:
-        msg = mapping.decode(response_type, response_data)
+        msg = mapping.DEFAULT_MAPPING.decode(response_type, response_data)
         click.echo("Parsed message:")
         click.echo(protobuf.format_message(msg))
     except Exception as e:

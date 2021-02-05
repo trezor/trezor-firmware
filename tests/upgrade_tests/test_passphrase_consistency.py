@@ -36,7 +36,7 @@ class ApplySettingsCompat(protobuf.MessageType):
     }
 
 
-mapping.map_class_to_type[ApplySettingsCompat] = ApplySettingsCompat.MESSAGE_WIRE_TYPE
+mapping.DEFAULT_MAPPING.register(ApplySettingsCompat)
 
 
 @pytest.fixture
