@@ -74,6 +74,13 @@ class TxCache:
     def __getitem__(self, key):
         return self.get_tx(key.hex())
 
+    def __contains__(self, key):
+        try:
+            self.get_tx(key.hex())
+            return True
+        except Exception:
+            return False
+
 
 @click.command()
 @click.argument("coin_name")
