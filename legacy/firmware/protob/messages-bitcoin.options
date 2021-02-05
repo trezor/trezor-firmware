@@ -99,5 +99,5 @@ TxAckPaymentRequest.nonce                                   max_size:0
 TxAckPaymentRequest.signature                               max_size:0
 
 PaymentRequestMemo.data                                     max_size:0
-PaymentRequestMemo.address_n                                max_count:0
 PaymentRequestMemo.coin_name                                max_size:0
+PaymentRequestMemo.mac                                      max_size:0
