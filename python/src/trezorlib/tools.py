@@ -272,23 +272,22 @@ def dict_from_camelcase(d, renames=None):
 # adapted from https://github.com/bitcoin-core/HWI/blob/master/hwilib/descriptor.py
 
 
-def _polymod(c: int, val: int) -> int:
-    c0 = c >> 35
-    c = ((c & 0x7FFFFFFFF) << 5) ^ val
-    if c0 & 1:
-        c ^= 0xF5DEE51989
-    if c0 & 2:
-        c ^= 0xA9FDCA3312
-    if c0 & 4:
-        c ^= 0x1BAB10E32D
-    if c0 & 8:
-        c ^= 0x3706B1677A
-    if c0 & 16:
-        c ^= 0x644D626FFD
-    return c
-
-
 def descriptor_checksum(desc: str) -> str:
+    def _polymod(c: int, val: int) -> int:
+        c0 = c >> 35
+        c = ((c & 0x7FFFFFFFF) << 5) ^ val
+        if c0 & 1:
+            c ^= 0xF5DEE51989
+        if c0 & 2:
+            c ^= 0xA9FDCA3312
+        if c0 & 4:
+            c ^= 0x1BAB10E32D
+        if c0 & 8:
+            c ^= 0x3706B1677A
+        if c0 & 16:
+            c ^= 0x644D626FFD
+        return c
+
     INPUT_CHARSET = "0123456789()[],'/*abcdefgh@:$%{}IJKLMNOPQRSTUVWXYZ&+-.;<=>?!^_|~ijklmnopqrstuvwxyzABCDEFGH`#\"\\ "
     CHECKSUM_CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 
