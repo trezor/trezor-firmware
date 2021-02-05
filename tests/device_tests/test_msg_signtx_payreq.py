@@ -85,7 +85,7 @@ memos2 = [
         address_n=parse_path("44'/5'/0'/1/0"),
     ),
     CoinPurchaseMemo(
-        amount=83157080247,
+        amount=83157080200,
         coin_name="Groestlcoin",
         slip44=17,
         address_n=parse_path("44'/17'/0'/0/3"),

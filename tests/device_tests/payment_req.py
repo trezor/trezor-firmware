@@ -36,7 +36,9 @@ def make_payment_request(
     msg_memos = []
     for memo in memos:
         if isinstance(memo, CoinPurchaseMemo):
-            address_resp = btc.get_address(client, memo.coin_name, memo.address_n)
+            address_resp = btc.get_authenticated_address(
+                client, memo.coin_name, memo.address_n
+            )
             msg_memo = messages.PaymentRequestMemo(
                 type=messages.MemoType.COIN_PURCHASE,
                 data=address_resp.address.encode(),
