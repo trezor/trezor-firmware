@@ -2,7 +2,7 @@
 
 ## Environment
 
-### Environment
+### environment
 
 Environment job builds the `ci/Dockerfile` and pushes the built docker image
 into our GitLab registry. Since modifications of this Dockerfile are very rare
@@ -89,3 +89,27 @@ build? This is most likely it.**
 
 UI tests for Core. See artifacts for a comprehensive report of UI. See [tests/ui-tests](../tests/ui-tests.html#reports)
 for more info.
+
+### hardware core regular device test
+
+[Device tests](../tests/device-tests.md) that run against an actual physical Trezor T.
+The device needs to have special bootloader, found in `core/embed/bootloader_ci`, that
+makes it possible to flash firmware without confirmation on the touchscreen.
+
+All hardware tests are run nightly on the `master` branch, as well as on push to branches
+with whitelisted prefix. If you want hardware tests ran on your branch, make sure its
+name starts with `hw/`.
+
+### hardware core btconly device test
+
+Also device tests on physical Trezor T but with Bitcoin-only firmware.
+
+### hardware legacy regular device test
+
+[Device tests](../tests/device-tests.md) executed on physical Trezor 1.
+This works thanks to [tpmb](https://github.com/mmahut/tpmb), which is a small arduino
+device capable of pushing an actual buttons on the device.
+
+### hardware legacy btconly device test
+
+Also device tests on physical Trezor 1 but with Bitcoin-only firmware.

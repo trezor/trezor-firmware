@@ -2,6 +2,12 @@ image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/trezor-firmware-en
 
 # Hardware
 
+# Currently it's not possible to run all regular TT tests without getting into
+# a state where the micropython heap is too fragmented and allocations fail
+# (often manifesting as a stuck test case). For that reason some tests are
+# skipped and the rest is divided into several groups with device reboots in
+# between them.
+# See also: https://github.com/trezor/trezor-firmware/issues/1371
 hardware core regular device test:
   stage: test
   only:
