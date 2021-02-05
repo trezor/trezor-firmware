@@ -8,7 +8,16 @@ from apps.common.paths import PATTERN_BIP44, PathSchema
 from .common import BITCOIN_NAMES
 
 if False:
-    from typing import Awaitable, Callable, Iterable, List, Optional, Tuple, TypeVar
+    from typing import (
+        Awaitable,
+        Callable,
+        Iterable,
+        List,
+        Optional,
+        Tuple,
+        TypeVar,
+        Union,
+    )
     from typing_extensions import Protocol
 
     from trezor.messages.TxInputType import EnumTypeInputScriptType
@@ -21,11 +30,19 @@ if False:
     class MsgWithCoinName(Protocol):
         coin_name: str
 
-    class MsgWithAddressScriptType(Protocol):
+    class _MsgWithAddressScriptType(Protocol):
         # XXX should be Bip32Path but that fails
         address_n = ...  # type: List[int]
         script_type = ...  # type: EnumTypeInputScriptType
 
+    class _MsgWithAddressOptScriptType(Protocol):
+        # XXX should be Bip32Path but that fails
+        address_n = ...  # type: List[int]
+        script_type = ...  # type: Optional[EnumTypeInputScriptType]
+
+    MsgWithAddressScriptType = Union[
+        _MsgWithAddressScriptType, _MsgWithAddressOptScriptType
+    ]
     MsgIn = TypeVar("MsgIn", bound=MsgWithCoinName)
     HandlerWithCoinInfo = Callable[..., Awaitable[MsgOut]]
 

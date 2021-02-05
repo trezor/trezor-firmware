@@ -26,6 +26,7 @@ class TxOutput(p.MessageType):
         op_return_data: bytes = None,
         orig_hash: bytes = None,
         orig_index: int = None,
+        payment_req_index: int = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.amount = amount
@@ -35,6 +36,7 @@ class TxOutput(p.MessageType):
         self.op_return_data = op_return_data
         self.orig_hash = orig_hash
         self.orig_index = orig_index
+        self.payment_req_index = payment_req_index
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -47,4 +49,5 @@ class TxOutput(p.MessageType):
             6: ('op_return_data', p.BytesType, None),
             10: ('orig_hash', p.BytesType, None),
             11: ('orig_index', p.UVarintType, None),
+            12: ('payment_req_index', p.UVarintType, None),
         }

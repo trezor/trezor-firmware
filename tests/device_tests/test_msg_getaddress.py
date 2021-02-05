@@ -37,81 +37,81 @@ def getmultisig(chain, nr, xpubs, signatures=[b"", b"", b""]):
 class TestMsgGetaddress:
     def test_btc(self, client):
         assert (
-            btc.get_address(client, "Bitcoin", parse_path("m/44'/0'/0'/0/0"))
+            btc.get_address(client, "Bitcoin", parse_path("m/44'/0'/0'/0/0")).address
             == "1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL"
         )
         assert (
-            btc.get_address(client, "Bitcoin", parse_path("m/44'/0'/0'/0/1"))
+            btc.get_address(client, "Bitcoin", parse_path("m/44'/0'/0'/0/1")).address
             == "1GWFxtwWmNVqotUPXLcKVL2mUKpshuJYo"
         )
         assert (
-            btc.get_address(client, "Bitcoin", parse_path("m/44'/0'/0'/1/0"))
+            btc.get_address(client, "Bitcoin", parse_path("m/44'/0'/0'/1/0")).address
             == "1DyHzbQUoQEsLxJn6M7fMD8Xdt1XvNiwNE"
         )
 
     @pytest.mark.altcoin
     def test_ltc(self, client):
         assert (
-            btc.get_address(client, "Litecoin", parse_path("m/44'/2'/0'/0/0"))
+            btc.get_address(client, "Litecoin", parse_path("m/44'/2'/0'/0/0")).address
             == "LcubERmHD31PWup1fbozpKuiqjHZ4anxcL"
         )
         assert (
-            btc.get_address(client, "Litecoin", parse_path("m/44'/2'/0'/0/1"))
+            btc.get_address(client, "Litecoin", parse_path("m/44'/2'/0'/0/1")).address
             == "LVWBmHBkCGNjSPHucvL2PmnuRAJnucmRE6"
         )
         assert (
-            btc.get_address(client, "Litecoin", parse_path("m/44'/2'/0'/1/0"))
+            btc.get_address(client, "Litecoin", parse_path("m/44'/2'/0'/1/0")).address
             == "LWj6ApswZxay4cJEJES2sGe7fLMLRvvv8h"
         )
 
     def test_tbtc(self, client):
         assert (
-            btc.get_address(client, "Testnet", parse_path("m/44'/1'/0'/0/0"))
+            btc.get_address(client, "Testnet", parse_path("m/44'/1'/0'/0/0")).address
             == "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q"
         )
         assert (
-            btc.get_address(client, "Testnet", parse_path("m/44'/1'/0'/0/1"))
+            btc.get_address(client, "Testnet", parse_path("m/44'/1'/0'/0/1")).address
             == "mopZWqZZyQc3F2Sy33cvDtJchSAMsnLi7b"
         )
         assert (
-            btc.get_address(client, "Testnet", parse_path("m/44'/1'/0'/1/0"))
+            btc.get_address(client, "Testnet", parse_path("m/44'/1'/0'/1/0")).address
             == "mm6kLYbGEL1tGe4ZA8xacfgRPdW1NLjCbZ"
         )
 
     @pytest.mark.altcoin
     def test_bch(self, client):
         assert (
-            btc.get_address(client, "Bcash", parse_path("44'/145'/0'/0/0"))
+            btc.get_address(client, "Bcash", parse_path("44'/145'/0'/0/0")).address
             == "bitcoincash:qr08q88p9etk89wgv05nwlrkm4l0urz4cyl36hh9sv"
         )
         assert (
-            btc.get_address(client, "Bcash", parse_path("44'/145'/0'/0/1"))
+            btc.get_address(client, "Bcash", parse_path("44'/145'/0'/0/1")).address
             == "bitcoincash:qr23ajjfd9wd73l87j642puf8cad20lfmqdgwvpat4"
         )
         assert (
-            btc.get_address(client, "Bcash", parse_path("44'/145'/0'/1/0"))
+            btc.get_address(client, "Bcash", parse_path("44'/145'/0'/1/0")).address
             == "bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw"
         )
 
     @pytest.mark.altcoin
     def test_grs(self, client):
         assert (
-            btc.get_address(client, "Groestlcoin", parse_path("44'/17'/0'/0/0"))
+            btc.get_address(client, "Groestlcoin", parse_path("44'/17'/0'/0/0")).address
             == "Fj62rBJi8LvbmWu2jzkaUX1NFXLEqDLoZM"
         )
         assert (
-            btc.get_address(client, "Groestlcoin", parse_path("44'/17'/0'/1/0"))
+            btc.get_address(client, "Groestlcoin", parse_path("44'/17'/0'/1/0")).address
             == "FmRaqvVBRrAp2Umfqx9V1ectZy8gw54QDN"
         )
         assert (
-            btc.get_address(client, "Groestlcoin", parse_path("44'/17'/0'/1/1"))
+            btc.get_address(client, "Groestlcoin", parse_path("44'/17'/0'/1/1")).address
             == "Fmhtxeh7YdCBkyQF7AQG4QnY8y3rJg89di"
         )
 
     @pytest.mark.altcoin
     def test_elements(self, client):
         assert (
-            btc.get_address(client, "Elements", parse_path("m/44'/1'/0'/0/0"))
+            btc.get_address(client, "Elements", parse_path("m/44'/1'/0'/0/0")).address
             == "2dpWh6jbhAowNsQ5agtFzi7j6nKscj6UnEr"
         )
 
@@ -130,7 +130,7 @@ class TestMsgGetaddress:
                     parse_path("44'/0'/%d'/0/0" % nr),
                     show_display=(nr == 1),
                     multisig=getmultisig(0, 0, xpubs=xpubs),
-                )
+                ).address
                 == "3Pdz86KtfJBuHLcSv4DysJo4aQfanTqCzG"
             )
             assert (
@@ -140,7 +140,7 @@ class TestMsgGetaddress:
                     parse_path("44'/0'/%d'/1/0" % nr),
                     show_display=(nr == 1),
                     multisig=getmultisig(1, 0, xpubs=xpubs),
-                )
+                ).address
                 == "36gP3KVx1ooStZ9quZDXbAF3GCr42b2zzd"
             )
 
@@ -189,7 +189,7 @@ class TestMsgGetaddress:
                     parse_path("44'/145'/%d'/0/0" % nr),
                     show_display=(nr == 1),
                     multisig=getmultisig(0, 0, xpubs=xpubs),
-                )
+                ).address
                 == "bitcoincash:pqguz4nqq64jhr5v3kvpq4dsjrkda75hwy86gq0qzw"
             )
             assert (
@@ -199,7 +199,7 @@ class TestMsgGetaddress:
                     parse_path("44'/145'/%d'/1/0" % nr),
                     show_display=(nr == 1),
                     multisig=getmultisig(1, 0, xpubs=xpubs),
-                )
+                ).address
                 == "bitcoincash:pp6kcpkhua7789g2vyj0qfkcux3yvje7euhyhltn0a"
             )
 
@@ -211,7 +211,9 @@ class TestMsgGetaddress:
         assert node_sub1.chain_code == node_sub2.chain_code
         assert node_sub1.public_key == node_sub2.public_key
 
-        address1 = btc.get_address(client, "Bitcoin", parse_path("m/44'/0'/0'/1/0"))
+        address1 = btc.get_address(
+            client, "Bitcoin", parse_path("m/44'/0'/0'/1/0")
+        ).address
         address2 = bip32.get_address(node_sub2, 0)
 
         assert address2 == "1DyHzbQUoQEsLxJn6M7fMD8Xdt1XvNiwNE"
@@ -279,6 +281,6 @@ def test_unknown_path_t1(client):
 @pytest.mark.skip_ui
 def test_crw(client):
     assert (
-        btc.get_address(client, "Crown", parse_path("44'/72'/0'/0/0"))
+        btc.get_address(client, "Crown", parse_path("44'/72'/0'/0/0")).address
         == "CRWYdvZM1yXMKQxeN3hRsAbwa7drfvTwys48"
     )

@@ -122,6 +122,7 @@ from .GetECDHSessionKey import GetECDHSessionKey
 from .GetEntropy import GetEntropy
 from .GetFeatures import GetFeatures
 from .GetNextU2FCounter import GetNextU2FCounter
+from .GetNonce import GetNonce
 from .GetOwnershipId import GetOwnershipId
 from .GetOwnershipProof import GetOwnershipProof
 from .GetPublicKey import GetPublicKey
@@ -212,10 +213,12 @@ from .NEMSignedTx import NEMSignedTx
 from .NEMTransactionCommon import NEMTransactionCommon
 from .NEMTransfer import NEMTransfer
 from .NextU2FCounter import NextU2FCounter
+from .Nonce import Nonce
 from .OwnershipId import OwnershipId
 from .OwnershipProof import OwnershipProof
 from .PassphraseAck import PassphraseAck
 from .PassphraseRequest import PassphraseRequest
+from .PaymentRequestMemo import PaymentRequestMemo
 from .PinMatrixAck import PinMatrixAck
 from .PinMatrixRequest import PinMatrixRequest
 from .Ping import Ping
@@ -277,6 +280,7 @@ from .TxAckInput import TxAckInput
 from .TxAckInputWrapper import TxAckInputWrapper
 from .TxAckOutput import TxAckOutput
 from .TxAckOutputWrapper import TxAckOutputWrapper
+from .TxAckPaymentRequest import TxAckPaymentRequest
 from .TxAckPrevExtraData import TxAckPrevExtraData
 from .TxAckPrevExtraDataWrapper import TxAckPrevExtraDataWrapper
 from .TxAckPrevInput import TxAckPrevInput
@@ -316,6 +320,7 @@ from . import DebugSwipeDirection
 from . import FailureType
 from . import InputScriptType
 from . import LiskTransactionType
+from . import MemoType
 from . import MessageType
 from . import NEMImportanceTransferMode
 from . import NEMModificationType

@@ -10,21 +10,18 @@ if __debug__:
         pass
 
 
-class Address(p.MessageType):
-    MESSAGE_WIRE_TYPE = 30
+class Nonce(p.MessageType):
+    MESSAGE_WIRE_TYPE = 33
 
     def __init__(
         self,
         *,
-        address: str,
-        mac: bytes = None,
+        nonce: bytes,
     ) -> None:
-        self.address = address
-        self.mac = mac
+        self.nonce = nonce
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('address', p.UnicodeType, p.FLAG_REQUIRED),
-            2: ('mac', p.BytesType, None),
+            1: ('nonce', p.BytesType, p.FLAG_REQUIRED),
         }

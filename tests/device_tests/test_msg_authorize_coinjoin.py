@@ -21,7 +21,14 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ..tx_cache import TxCache
-from .signtx import request_finished, request_input, request_meta, request_output
+from .payment_req import make_payment_request
+from .signtx import (
+    request_finished,
+    request_input,
+    request_meta,
+    request_output,
+    request_payment_req,
+)
 
 B = messages.ButtonRequestType
 
@@ -87,56 +94,74 @@ def test_sign_tx(client):
             preauthorized=True,
         )
 
-    inp1 = messages.TxInputType(
-        # seed "alcohol woman abuse must during monitor noble actual mixed trade anger aisle"
-        # 84'/1'/0'/0/0
-        # tb1qnspxpr2xj9s2jt6qlhuvdnxw6q55jvygcf89r2
-        amount=100000,
-        prev_hash=TXHASH_e5b7e2,
-        prev_index=0,
-        script_type=messages.InputScriptType.EXTERNAL,
-        ownership_proof=bytearray.fromhex(
-            "534c001900016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c40002473044022072b4376c1b6c9e9e4d45158e1b6b4edfbe7b2292d8b4a60e8b0d273bcfef6b4a0220786169ab42a7663cb7d5f27ecb468da76dc2d1b7a10d1d18fbe5120e7890b9d2012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
+    inputs = [
+        messages.TxInput(
+            # seed "alcohol woman abuse must during monitor noble actual mixed trade anger aisle"
+            # 84'/1'/0'/0/0
+            # tb1qnspxpr2xj9s2jt6qlhuvdnxw6q55jvygcf89r2
+            amount=100000,
+            prev_hash=TXHASH_e5b7e2,
+            prev_index=0,
+            script_type=messages.InputScriptType.EXTERNAL,
+            ownership_proof=bytearray.fromhex(
+                "534c001900016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c40002473044022072b4376c1b6c9e9e4d45158e1b6b4edfbe7b2292d8b4a60e8b0d273bcfef6b4a0220786169ab42a7663cb7d5f27ecb468da76dc2d1b7a10d1d18fbe5120e7890b9d2012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
+            ),
+            commitment_data=commitment_data,
         ),
-        commitment_data=commitment_data,
-    )
-    inp2 = messages.TxInputType(
-        address_n=parse_path("84'/1'/0'/1/0"),
-        amount=7289000,
-        prev_hash=TXHASH_65b811,
-        prev_index=1,
-        script_type=messages.InputScriptType.SPENDWITNESS,
-    )
+        messages.TxInput(
+            address_n=parse_path("84'/1'/0'/1/0"),
+            amount=7289000,
+            prev_hash=TXHASH_65b811,
+            prev_index=1,
+            script_type=messages.InputScriptType.SPENDWITNESS,
+        ),
+    ]
 
-    # Other's coinjoined output.
-    out1 = messages.TxOutputType(
-        address="tb1qk7j3ahs2v6hrv4v282cf0tvxh0vqq7rpt3zcml",
-        amount=50000,
-        script_type=messages.OutputScriptType.PAYTOWITNESS,
-    )
-    # Our coinjoined output.
-    out2 = messages.TxOutputType(
-        address_n=parse_path("84'/1'/0'/1/1"),
-        amount=50000,
-        script_type=messages.OutputScriptType.PAYTOWITNESS,
-    )
-    # Our change output.
-    out3 = messages.TxOutputType(
-        address_n=parse_path("84'/1'/0'/1/2"),
-        amount=7289000 - 50000 - 5 - 5000,
-        script_type=messages.OutputScriptType.PAYTOWITNESS,
-    )
-    # Other's change output.
-    out4 = messages.TxOutputType(
-        address="tb1q9cqhdr9ydetjzrct6tyeuccws9505hl96azwxk",
-        amount=100000 - 50000 - 5 - 5000,
-        script_type=messages.OutputScriptType.PAYTOWITNESS,
-    )
-    # Coordinator's output.
-    out5 = messages.TxOutputType(
-        address="mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
-        amount=10,
-        script_type=messages.OutputScriptType.PAYTOWITNESS,
+    outputs = [
+        # Other's coinjoined output.
+        messages.TxOutput(
+            address="tb1qk7j3ahs2v6hrv4v282cf0tvxh0vqq7rpt3zcml",
+            amount=50000,
+            script_type=messages.OutputScriptType.PAYTOWITNESS,
+            payment_req_index=0,
+        ),
+        # Our coinjoined output.
+        messages.TxOutput(
+            address_n=parse_path("84'/1'/0'/1/1"),
+            amount=50000,
+            script_type=messages.OutputScriptType.PAYTOWITNESS,
+            payment_req_index=0,
+        ),
+        # Our change output.
+        messages.TxOutput(
+            address_n=parse_path("84'/1'/0'/1/2"),
+            amount=7289000 - 50000 - 5 - 5000,
+            script_type=messages.OutputScriptType.PAYTOWITNESS,
+            payment_req_index=0,
+        ),
+        # Other's change output.
+        messages.TxOutput(
+            address="tb1q9cqhdr9ydetjzrct6tyeuccws9505hl96azwxk",
+            amount=100000 - 50000 - 5 - 5000,
+            script_type=messages.OutputScriptType.PAYTOWITNESS,
+            payment_req_index=0,
+        ),
+        # Coordinator's output.
+        messages.TxOutput(
+            address="mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
+            amount=10,
+            script_type=messages.OutputScriptType.PAYTOWITNESS,
+            payment_req_index=0,
+        ),
+    ]
+
+    payment_req = make_payment_request(
+        client,
+        recipient_name="www.example.com",
+        outputs=outputs,
+        hash_outputs=bytes.fromhex(
+            "506e16d4ed7807957dd8eaa2be8f0ab64cacc3205cca95335b847aed3493135c"
+        ),
     )
 
     with client:
@@ -146,6 +171,7 @@ def test_sign_tx(client):
                 request_input(0),
                 request_input(1),
                 request_output(0),
+                request_payment_req(0),
                 request_output(1),
                 request_output(2),
                 request_output(3),
@@ -174,9 +200,10 @@ def test_sign_tx(client):
         _, serialized_tx = btc.sign_tx(
             client,
             "Testnet",
-            [inp1, inp2],
-            [out1, out2, out3, out4, out5],
+            inputs,
+            outputs,
             prev_txes=TX_CACHE_TESTNET,
+            payment_reqs=[payment_req],
             preauthorized=True,
         )
 
@@ -189,9 +216,10 @@ def test_sign_tx(client):
     btc.sign_tx(
         client,
         "Testnet",
-        [inp1, inp2],
-        [out1, out2, out3, out4, out5],
+        inputs,
+        outputs,
         prev_txes=TX_CACHE_TESTNET,
+        payment_reqs=[payment_req],
         preauthorized=True,
     )
 
@@ -200,9 +228,10 @@ def test_sign_tx(client):
         btc.sign_tx(
             client,
             "Testnet",
-            [inp1, inp2],
-            [out1, out2, out3, out4, out5],
+            inputs,
+            outputs,
             prev_txes=TX_CACHE_TESTNET,
+            payment_reqs=[payment_req],
             preauthorized=True,
         )
 
@@ -221,65 +250,84 @@ def test_unfair_fee(client):
             script_type=messages.InputScriptType.SPENDWITNESS,
         )
 
-    inp1 = messages.TxInputType(
-        # seed "alcohol woman abuse must during monitor noble actual mixed trade anger aisle"
-        # 84'/1'/0'/0/0
-        # tb1qnspxpr2xj9s2jt6qlhuvdnxw6q55jvygcf89r2
-        amount=100000,
-        prev_hash=TXHASH_e5b7e2,
-        prev_index=0,
-        script_type=messages.InputScriptType.EXTERNAL,
-        ownership_proof=bytearray.fromhex(
-            "534c001900016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c40002473044022072b4376c1b6c9e9e4d45158e1b6b4edfbe7b2292d8b4a60e8b0d273bcfef6b4a0220786169ab42a7663cb7d5f27ecb468da76dc2d1b7a10d1d18fbe5120e7890b9d2012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
+    inputs = [
+        messages.TxInputType(
+            # seed "alcohol woman abuse must during monitor noble actual mixed trade anger aisle"
+            # 84'/1'/0'/0/0
+            # tb1qnspxpr2xj9s2jt6qlhuvdnxw6q55jvygcf89r2
+            amount=100000,
+            prev_hash=TXHASH_e5b7e2,
+            prev_index=0,
+            script_type=messages.InputScriptType.EXTERNAL,
+            ownership_proof=bytearray.fromhex(
+                "534c001900016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c40002473044022072b4376c1b6c9e9e4d45158e1b6b4edfbe7b2292d8b4a60e8b0d273bcfef6b4a0220786169ab42a7663cb7d5f27ecb468da76dc2d1b7a10d1d18fbe5120e7890b9d2012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
+            ),
+            commitment_data=b"www.example.org" + (1).to_bytes(ROUND_ID_LEN, "big"),
         ),
-        commitment_data=b"www.example.org" + (1).to_bytes(ROUND_ID_LEN, "big"),
-    )
-    inp2 = messages.TxInputType(
-        address_n=parse_path("84'/1'/0'/1/0"),
-        amount=7289000,
-        prev_hash=TXHASH_65b811,
-        prev_index=1,
-        script_type=messages.InputScriptType.SPENDWITNESS,
-    )
+        messages.TxInputType(
+            address_n=parse_path("84'/1'/0'/1/0"),
+            amount=7289000,
+            prev_hash=TXHASH_65b811,
+            prev_index=1,
+            script_type=messages.InputScriptType.SPENDWITNESS,
+        ),
+    ]
 
-    # Other's coinjoined output.
-    out1 = messages.TxOutputType(
-        address="tb1qk7j3ahs2v6hrv4v282cf0tvxh0vqq7rpt3zcml",
-        amount=50000,
-        script_type=messages.OutputScriptType.PAYTOWITNESS,
-    )
-    # Our coinjoined output.
-    out2 = messages.TxOutputType(
-        address_n=parse_path("84'/1'/0'/1/1"),
-        amount=50000,
-        script_type=messages.OutputScriptType.PAYTOWITNESS,
-    )
-    # Our change output.
-    out3 = messages.TxOutputType(
-        address_n=parse_path("84'/1'/0'/1/2"),
-        amount=7289000 - 50000 - 5 - 6000,  # unfair mining fee
-        script_type=messages.OutputScriptType.PAYTOWITNESS,
-    )
-    # Other's change output.
-    out4 = messages.TxOutputType(
-        address="tb1q9cqhdr9ydetjzrct6tyeuccws9505hl96azwxk",
-        amount=100000 - 50000 - 5 - 4000,
-        script_type=messages.OutputScriptType.PAYTOWITNESS,
-    )
-    # Coordinator's output.
-    out5 = messages.TxOutputType(
-        address="mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
-        amount=10,
-        script_type=messages.OutputScriptType.PAYTOWITNESS,
+    outputs = [
+        # Other's coinjoined output.
+        messages.TxOutput(
+            address="tb1qk7j3ahs2v6hrv4v282cf0tvxh0vqq7rpt3zcml",
+            amount=50000,
+            script_type=messages.OutputScriptType.PAYTOWITNESS,
+            payment_req_index=0,
+        ),
+        # Our coinjoined output.
+        messages.TxOutput(
+            address_n=parse_path("84'/1'/0'/1/1"),
+            amount=50000,
+            script_type=messages.OutputScriptType.PAYTOWITNESS,
+            payment_req_index=0,
+        ),
+        # Our change output.
+        messages.TxOutput(
+            address_n=parse_path("84'/1'/0'/1/2"),
+            amount=7289000 - 50000 - 5 - 6000,  # unfair mining fee
+            script_type=messages.OutputScriptType.PAYTOWITNESS,
+            payment_req_index=0,
+        ),
+        # Other's change output.
+        messages.TxOutput(
+            address="tb1q9cqhdr9ydetjzrct6tyeuccws9505hl96azwxk",
+            amount=100000 - 50000 - 5 - 4000,
+            script_type=messages.OutputScriptType.PAYTOWITNESS,
+            payment_req_index=0,
+        ),
+        # Coordinator's output.
+        messages.TxOutput(
+            address="mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
+            amount=10,
+            script_type=messages.OutputScriptType.PAYTOWITNESS,
+            payment_req_index=0,
+        ),
+    ]
+
+    payment_req = make_payment_request(
+        client,
+        recipient_name="www.example.com",
+        outputs=outputs,
+        hash_outputs=bytes.fromhex(
+            "698fa785e3b573514b207d066b15e89ebdcea6adc799e8ce005088ab2f91fa5d"
+        ),
     )
 
     with pytest.raises(TrezorFailure, match="fee over threshold"):
         btc.sign_tx(
             client,
             "Testnet",
-            [inp1, inp2],
-            [out1, out2, out3, out4, out5],
+            inputs,
+            outputs,
             prev_txes=TX_CACHE_TESTNET,
+            payment_reqs=[payment_req],
             preauthorized=True,
         )
 
@@ -298,77 +346,98 @@ def test_no_anonymity(client):
             script_type=messages.InputScriptType.SPENDWITNESS,
         )
 
-    inp1 = messages.TxInputType(
-        # seed "alcohol woman abuse must during monitor noble actual mixed trade anger aisle"
-        # 84'/1'/0'/0/0
-        # tb1qnspxpr2xj9s2jt6qlhuvdnxw6q55jvygcf89r2
-        amount=100000,
-        prev_hash=TXHASH_e5b7e2,
-        prev_index=0,
-        script_type=messages.InputScriptType.EXTERNAL,
-        ownership_proof=bytearray.fromhex(
-            "534c001900016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c40002473044022072b4376c1b6c9e9e4d45158e1b6b4edfbe7b2292d8b4a60e8b0d273bcfef6b4a0220786169ab42a7663cb7d5f27ecb468da76dc2d1b7a10d1d18fbe5120e7890b9d2012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
+    inputs = [
+        messages.TxInputType(
+            # seed "alcohol woman abuse must during monitor noble actual mixed trade anger aisle"
+            # 84'/1'/0'/0/0
+            # tb1qnspxpr2xj9s2jt6qlhuvdnxw6q55jvygcf89r2
+            amount=100000,
+            prev_hash=TXHASH_e5b7e2,
+            prev_index=0,
+            script_type=messages.InputScriptType.EXTERNAL,
+            ownership_proof=bytearray.fromhex(
+                "534c001900016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c40002473044022072b4376c1b6c9e9e4d45158e1b6b4edfbe7b2292d8b4a60e8b0d273bcfef6b4a0220786169ab42a7663cb7d5f27ecb468da76dc2d1b7a10d1d18fbe5120e7890b9d2012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
+            ),
+            commitment_data=b"www.example.org" + (1).to_bytes(ROUND_ID_LEN, "big"),
         ),
-        commitment_data=b"www.example.org" + (1).to_bytes(ROUND_ID_LEN, "big"),
-    )
-    inp2 = messages.TxInputType(
-        address_n=parse_path("84'/1'/0'/1/0"),
-        amount=7289000,
-        prev_hash=TXHASH_65b811,
-        prev_index=1,
-        script_type=messages.InputScriptType.SPENDWITNESS,
-    )
+        messages.TxInputType(
+            address_n=parse_path("84'/1'/0'/1/0"),
+            amount=7289000,
+            prev_hash=TXHASH_65b811,
+            prev_index=1,
+            script_type=messages.InputScriptType.SPENDWITNESS,
+        ),
+    ]
 
-    # Other's coinjoined output.
-    out1 = messages.TxOutputType(
-        address="tb1qk7j3ahs2v6hrv4v282cf0tvxh0vqq7rpt3zcml",
-        amount=30000,
-        script_type=messages.OutputScriptType.PAYTOWITNESS,
-    )
-    # Other's coinjoined output.
-    out2 = messages.TxOutputType(
-        address="tb1q9cqhdr9ydetjzrct6tyeuccws9505hl96azwxk",
-        amount=30000,
-        script_type=messages.OutputScriptType.PAYTOWITNESS,
-    )
-    # Our coinjoined output.
-    out3 = messages.TxOutputType(
-        address_n=parse_path("84'/1'/0'/1/1"),
-        amount=50000,
-        script_type=messages.OutputScriptType.PAYTOWITNESS,
-    )
-    # Our coinjoined output.
-    out4 = messages.TxOutputType(
-        address_n=parse_path("84'/1'/0'/1/2"),
-        amount=50000,
-        script_type=messages.OutputScriptType.PAYTOWITNESS,
-    )
-    # Our change output.
-    out5 = messages.TxOutputType(
-        address_n=parse_path("84'/1'/0'/1/2"),
-        amount=7289000 - 50000 - 50000 - 10 - 5000,
-        script_type=messages.OutputScriptType.PAYTOWITNESS,
-    )
-    # Other's change output.
-    out6 = messages.TxOutputType(
-        address="tb1q9cqhdr9ydetjzrct6tyeuccws9505hl96azwxk",
-        amount=100000 - 30000 - 30000 - 6 - 5000,
-        script_type=messages.OutputScriptType.PAYTOWITNESS,
-    )
-    # Coordinator's output.
-    out7 = messages.TxOutputType(
-        address="mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
-        amount=16,
-        script_type=messages.OutputScriptType.PAYTOWITNESS,
+    outputs = [
+        # Other's coinjoined output.
+        messages.TxOutput(
+            address="tb1qk7j3ahs2v6hrv4v282cf0tvxh0vqq7rpt3zcml",
+            amount=30000,
+            script_type=messages.OutputScriptType.PAYTOWITNESS,
+            payment_req_index=0,
+        ),
+        # Other's coinjoined output.
+        messages.TxOutput(
+            address="tb1q9cqhdr9ydetjzrct6tyeuccws9505hl96azwxk",
+            amount=30000,
+            script_type=messages.OutputScriptType.PAYTOWITNESS,
+            payment_req_index=0,
+        ),
+        # Our coinjoined output.
+        messages.TxOutput(
+            address_n=parse_path("84'/1'/0'/1/1"),
+            amount=50000,
+            script_type=messages.OutputScriptType.PAYTOWITNESS,
+            payment_req_index=0,
+        ),
+        # Our coinjoined output.
+        messages.TxOutput(
+            address_n=parse_path("84'/1'/0'/1/2"),
+            amount=50000,
+            script_type=messages.OutputScriptType.PAYTOWITNESS,
+            payment_req_index=0,
+        ),
+        # Our change output.
+        messages.TxOutput(
+            address_n=parse_path("84'/1'/0'/1/2"),
+            amount=7289000 - 50000 - 50000 - 10 - 5000,
+            script_type=messages.OutputScriptType.PAYTOWITNESS,
+            payment_req_index=0,
+        ),
+        # Other's change output.
+        messages.TxOutput(
+            address="tb1q9cqhdr9ydetjzrct6tyeuccws9505hl96azwxk",
+            amount=100000 - 30000 - 30000 - 6 - 5000,
+            script_type=messages.OutputScriptType.PAYTOWITNESS,
+            payment_req_index=0,
+        ),
+        # Coordinator's output.
+        messages.TxOutput(
+            address="mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
+            amount=16,
+            script_type=messages.OutputScriptType.PAYTOWITNESS,
+            payment_req_index=0,
+        ),
+    ]
+
+    payment_req = make_payment_request(
+        client,
+        recipient_name="www.example.com",
+        outputs=outputs,
+        hash_outputs=bytes.fromhex(
+            "70696235d1fca0b6a6ed7c8684e7b3b017cba9b00d9b8fcc086f33963c1827a4"
+        ),
     )
 
     with pytest.raises(TrezorFailure, match="No anonymity gain"):
         btc.sign_tx(
             client,
             "Testnet",
-            [inp1, inp2],
-            [out1, out2, out3, out4, out5, out6, out7],
+            inputs,
+            outputs,
             prev_txes=TX_CACHE_TESTNET,
+            payment_reqs=[payment_req],
             preauthorized=True,
         )
 

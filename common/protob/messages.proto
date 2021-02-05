@@ -63,6 +63,8 @@ enum MessageType {
     MessageType_ButtonRequest = 26 [(wire_out) = true];
     MessageType_ButtonAck = 27 [(wire_in) = true, (wire_tiny) = true, (wire_no_fsm) = true];
     MessageType_ApplyFlags = 28 [(wire_in) = true];
+    MessageType_GetNonce = 31 [(wire_in) = true];
+    MessageType_Nonce = 33 [(wire_out) = true];
     MessageType_BackupDevice = 34 [(wire_in) = true];
     MessageType_EntropyRequest = 35 [(wire_out) = true];
     MessageType_EntropyAck = 36 [(wire_in) = true];
@@ -101,6 +103,7 @@ enum MessageType {
     MessageType_TxAck = 22 [(wire_in) = true];
     MessageType_GetAddress = 29 [(wire_in) = true];
     MessageType_Address = 30 [(wire_out) = true];
+    MessageType_TxAckPaymentRequest = 37 [(wire_in) = true];
     MessageType_SignMessage = 38 [(wire_in) = true];
     MessageType_VerifyMessage = 39 [(wire_in) = true];
     MessageType_MessageSignature = 40 [(wire_out) = true];

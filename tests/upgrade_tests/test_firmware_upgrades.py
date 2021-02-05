@@ -45,7 +45,7 @@ def test_upgrade_load(gen, tag):
         assert not client.features.passphrase_protection
         assert client.features.initialized
         assert client.features.label == LABEL
-        assert btc.get_address(client, "Bitcoin", PATH) == ADDRESS
+        assert btc.get_address(client, "Bitcoin", PATH).address == ADDRESS
 
     with EmulatorWrapper(gen, tag) as emu:
         debuglink.load_device_by_mnemonic(
@@ -89,14 +89,14 @@ def test_upgrade_reset(gen, tag):
         )
         device_id = emu.client.features.device_id
         asserts(emu.client)
-        address = btc.get_address(emu.client, "Bitcoin", PATH)
+        address = btc.get_address(emu.client, "Bitcoin", PATH).address
         storage = emu.get_storage()
 
     with EmulatorWrapper(gen, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(emu.client)
         assert emu.client.features.language == LANGUAGE
-        assert btc.get_address(emu.client, "Bitcoin", PATH) == address
+        assert btc.get_address(emu.client, "Bitcoin", PATH).address == address
 
 
 @for_all()
@@ -123,14 +123,14 @@ def test_upgrade_reset_skip_backup(gen, tag):
         )
         device_id = emu.client.features.device_id
         asserts(emu.client)
-        address = btc.get_address(emu.client, "Bitcoin", PATH)
+        address = btc.get_address(emu.client, "Bitcoin", PATH).address
         storage = emu.get_storage()
 
     with EmulatorWrapper(gen, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(emu.client)
         assert emu.client.features.language == LANGUAGE
-        assert btc.get_address(emu.client, "Bitcoin", PATH) == address
+        assert btc.get_address(emu.client, "Bitcoin", PATH).address == address
 
 
 @for_all(legacy_minimum_version=(1, 7, 2))
@@ -157,14 +157,14 @@ def test_upgrade_reset_no_backup(gen, tag):
         )
         device_id = emu.client.features.device_id
         asserts(emu.client)
-        address = btc.get_address(emu.client, "Bitcoin", PATH)
+        address = btc.get_address(emu.client, "Bitcoin", PATH).address
         storage = emu.get_storage()
 
     with EmulatorWrapper(gen, storage=storage) as emu:
         assert device_id == emu.client.features.device_id
         asserts(emu.client)
         assert emu.client.features.language == LANGUAGE
-        assert btc.get_address(emu.client, "Bitcoin", PATH) == address
+        assert btc.get_address(emu.client, "Bitcoin", PATH).address == address
 
 
 # Although Shamir was introduced in 2.1.2 already, the debug instrumentation was not present until 2.1.9.

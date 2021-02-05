@@ -31,6 +31,13 @@ def request_orig_output(n, tx_hash):
     )
 
 
+def request_payment_req(n):
+    return messages.TxRequest(
+        request_type=T.TXPAYMENTREQ,
+        details=messages.TxRequestDetailsType(request_index=n),
+    )
+
+
 def request_meta(tx_hash):
     return messages.TxRequest(
         request_type=T.TXMETA,

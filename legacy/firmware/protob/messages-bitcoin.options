@@ -8,6 +8,7 @@ GetAddress.address_n                                        max_count:8
 GetAddress.coin_name                                        max_size:21
 
 Address.address                                             max_size:130
+Address.mac                                                 max_size:0
 
 SignTx.coin_name                                            max_size:21
 
@@ -91,3 +92,12 @@ PrevInput.script_sig                                        max_size:1650
 PrevOutput.script_pubkey                                    max_size:520
 
 TxAckPrevExtraDataWrapper.extra_data_chunk                  max_size:1024
+
+TxAckPaymentRequest.recipient_name                          max_size:0
+TxAckPaymentRequest.memos                                   max_count:0
+TxAckPaymentRequest.nonce                                   max_size:0
+TxAckPaymentRequest.signature                               max_size:0
+
+PaymentRequestMemo.data                                     max_size:0
+PaymentRequestMemo.coin_name                                max_size:0
+PaymentRequestMemo.mac                                      max_size:0
