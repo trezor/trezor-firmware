@@ -73,7 +73,7 @@ hardware core btconly device test:
     - set +a
     - nix-shell --run "cd ../.. && poetry install"
     - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin"
-    - nix-shell --run "poetry run pytest -x ../../tests/device_tests -k 'not 15_of_15 and not test_multisig_mismatch_inputs'"
+    - nix-shell --run "poetry run pytest --random-order-bucket=none -x ../../tests/device_tests -k 'not 15_of_15 and not test_multisig_mismatch_inputs'"
   timeout: 4h
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
