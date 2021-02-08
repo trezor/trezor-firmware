@@ -47,6 +47,8 @@ def make_payment_request(
                 mac=address_resp.mac,
             )
             h_pr.update(msg_memo.type.to_bytes(4, "little"))
+            h_pr.update(bytes([len(msg_memo.data)]))
+            h_pr.update(msg_memo.data)
             h_pr.update(memo.amount.to_bytes(8, "little"))
             h_pr.update(memo.slip44.to_bytes(4, "little"))
         else:
@@ -55,8 +57,8 @@ def make_payment_request(
                 data=memo.text.encode(),
             )
             h_pr.update(msg_memo.type.to_bytes(4, "little"))
-        h_pr.update(bytes([len(msg_memo.data)]))
-        h_pr.update(msg_memo.data)
+            h_pr.update(bytes([len(msg_memo.data)]))
+            h_pr.update(msg_memo.data)
         msg_memos.append(msg_memo)
 
     h_pr.update(slip44.to_bytes(4, "little"))

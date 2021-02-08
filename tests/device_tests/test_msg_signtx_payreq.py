@@ -96,88 +96,38 @@ PaymentRequestParams = namedtuple(
     "PaymentRequestParams", ["txo_indices", "hash_outputs", "memos"]
 )
 
+hash_outputs0 = "30181c1811618206cb6656ae4fa77e9e95459e85be295a63ea6d034bda39d507"
+hash_outputs1 = "ab1f485f678a4176b5d77f5f6316321cb90d34e53c4503a5d7931211512e4e7d"
+hash_outputs2 = "b5b957549c9756b4b9a4521f49db96b77bac9fba6e0d4b47f875374beadb1276"
+hash_outputs01 = "4615b15d83d31d8250c5c078896b4186a02b6cd201fe211e2adf9793452f290d"
+hash_outputs12 = "75d0a1389303f3334e838e0d8ed046741a1ae6bfdd523835331f61fa8247ad53"
+hash_outputs012 = "7e53bc48fb6cf8e8b4ea8416c523cb6a6a35e24effac335a1d5384a1f0b63df0"
+
 
 @pytest.mark.skip_t1
 @pytest.mark.parametrize(
     "payment_request_params",
     (
-        case(
-            "out0",
-            (
-                PaymentRequestParams(
-                    [0],
-                    "30181c1811618206cb6656ae4fa77e9e95459e85be295a63ea6d034bda39d507",
-                    memos1,
-                ),
-            ),
-            altcoin=True,
-        ),
-        case(
-            "out1",
-            (
-                PaymentRequestParams(
-                    [1],
-                    "ab1f485f678a4176b5d77f5f6316321cb90d34e53c4503a5d7931211512e4e7d",
-                    memos2,
-                ),
-            ),
-            altcoin=True,
-        ),
-        case(
-            "out2",
-            (
-                PaymentRequestParams(
-                    [2],
-                    "b5b957549c9756b4b9a4521f49db96b77bac9fba6e0d4b47f875374beadb1276",
-                    [],
-                ),
-            ),
-        ),
+        case("out0", (PaymentRequestParams([0], hash_outputs0, memos1),), altcoin=True),
+        case("out1", (PaymentRequestParams([1], hash_outputs1, memos2),), altcoin=True),
+        case("out2", (PaymentRequestParams([2], hash_outputs2, []),)),
         case(
             "out0+out1",
             (
-                PaymentRequestParams(
-                    [0],
-                    "30181c1811618206cb6656ae4fa77e9e95459e85be295a63ea6d034bda39d507",
-                    [],
-                ),
-                PaymentRequestParams(
-                    [1],
-                    "ab1f485f678a4176b5d77f5f6316321cb90d34e53c4503a5d7931211512e4e7d",
-                    [],
-                ),
+                PaymentRequestParams([0], hash_outputs0, []),
+                PaymentRequestParams([1], hash_outputs1, []),
             ),
         ),
         case(
             "out01",
             (
                 PaymentRequestParams(
-                    [0, 1],
-                    "4615b15d83d31d8250c5c078896b4186a02b6cd201fe211e2adf9793452f290d",
-                    [TextMemo("Invoice #87654321.")],
+                    [0, 1], hash_outputs01, [TextMemo("Invoice #87654321.")]
                 ),
             ),
         ),
-        case(
-            "out012",
-            (
-                PaymentRequestParams(
-                    [0, 1, 2],
-                    "7e53bc48fb6cf8e8b4ea8416c523cb6a6a35e24effac335a1d5384a1f0b63df0",
-                    [],
-                ),
-            ),
-        ),
-        case(
-            "out12",
-            (
-                PaymentRequestParams(
-                    [1, 2],
-                    "75d0a1389303f3334e838e0d8ed046741a1ae6bfdd523835331f61fa8247ad53",
-                    [],
-                ),
-            ),
-        ),
+        case("out012", (PaymentRequestParams([0, 1, 2], hash_outputs012, []),)),
+        case("out12", (PaymentRequestParams([1, 2], hash_outputs12, []),)),
     ),
 )
 def test_payment_request(client, payment_request_params):
@@ -217,11 +167,120 @@ def test_payment_request(client, payment_request_params):
 
     # Ensure that the nonce has been invalidated.
     with pytest.raises(TrezorFailure, match="Invalid nonce in payment request"):
-        _, serialized_tx = btc.sign_tx(
+        btc.sign_tx(
             client,
             "Testnet",
             inputs,
             outputs,
             prev_txes=TX_API,
             payment_reqs=payment_reqs,
+        )
+
+
+def test_payment_req_wrong_amount(client):
+    # Test wrong total amount in payment request.
+
+    for txo in outputs:
+        txo.payment_req_index = None
+
+    outputs[0].payment_req_index = 0
+    outputs[1].payment_req_index = 0
+    payment_req = make_payment_request(
+        client,
+        recipient_name="trezor.io",
+        outputs=outputs[:2],
+        hash_outputs=bytes.fromhex(hash_outputs01),
+        nonce=misc.get_nonce(client),
+    )
+
+    # Decrease the total amount of the payment request.
+    payment_req.amount -= 1
+
+    with pytest.raises(TrezorFailure, match="Invalid amount in payment request"):
+        btc.sign_tx(
+            client,
+            "Testnet",
+            inputs,
+            outputs,
+            prev_txes=TX_API,
+            payment_reqs=[payment_req],
+        )
+
+
+@pytest.mark.altcoin
+def test_payment_req_wrong_mac(client):
+    # Test wrong MAC in payment request memo.
+
+    for txo in outputs:
+        txo.payment_req_index = None
+
+    memo = CoinPurchaseMemo(
+        amount=2234904000,
+        coin_name="Dash",
+        slip44=5,
+        address_n=parse_path("44'/5'/0'/1/0"),
+    )
+
+    outputs[0].payment_req_index = 0
+    outputs[1].payment_req_index = 0
+    payment_req = make_payment_request(
+        client,
+        recipient_name="trezor.io",
+        outputs=outputs[:2],
+        hash_outputs=bytes.fromhex(hash_outputs01),
+        memos=[memo],
+        nonce=misc.get_nonce(client),
+    )
+
+    # Corrupt the MAC value.
+    payment_req.memos[0].mac = bytearray(payment_req.memos[0].mac)
+    payment_req.memos[0].mac[0] ^= 1
+
+    with pytest.raises(TrezorFailure, match="Invalid address MAC"):
+        btc.sign_tx(
+            client,
+            "Testnet",
+            inputs,
+            outputs,
+            prev_txes=TX_API,
+            payment_reqs=[payment_req],
+        )
+
+
+def test_payment_req_wrong_output(client):
+    # Test wrong output in payment request.
+
+    for txo in outputs:
+        txo.payment_req_index = None
+
+    outputs[0].payment_req_index = 0
+    outputs[1].payment_req_index = 0
+    payment_req = make_payment_request(
+        client,
+        recipient_name="trezor.io",
+        outputs=outputs[:2],
+        hash_outputs=bytes.fromhex(hash_outputs01),
+        nonce=misc.get_nonce(client),
+    )
+
+    # Use a different address in the second output.
+    fake_outputs = [
+        outputs[0],
+        messages.TxOutput(
+            address="tb1qnspxpr2xj9s2jt6qlhuvdnxw6q55jvygcf89r2",
+            script_type=outputs[1].script_type,
+            amount=outputs[1].amount,
+            payment_req_index=outputs[1].payment_req_index,
+        ),
+        outputs[2],
+    ]
+
+    with pytest.raises(TrezorFailure, match="Invalid signature in payment request"):
+        btc.sign_tx(
+            client,
+            "Testnet",
+            inputs,
+            fake_outputs,
+            prev_txes=TX_API,
+            payment_reqs=[payment_req],
         )
