@@ -23,7 +23,12 @@ from .address import (
     pack_reward_address_bytes,
 )
 from .helpers import protocol_magics
-from .helpers.utils import format_account_number, format_optional_int, to_account_path
+from .helpers.utils import (
+    format_account_number,
+    format_optional_int,
+    format_stake_pool_id,
+    to_account_path,
+)
 
 if False:
     from typing import List, Optional
@@ -271,7 +276,7 @@ async def confirm_certificate(
         assert certificate.pool is not None  # validate_certificate
         page2 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
         page2.normal("to pool:")
-        page2.bold(hexlify(certificate.pool).decode())
+        page2.bold(format_stake_pool_id(certificate.pool))
         pages.append(page2)
 
     await require_confirm(ctx, Paginated(pages))
@@ -285,8 +290,8 @@ async def confirm_stake_pool_parameters(
 ) -> None:
     page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     page1.bold("Stake pool registration")
-    page1.normal("Pool id:")
-    page1.bold(hexlify(pool_parameters.pool_id).decode())
+    page1.normal("Pool ID:")
+    page1.bold(format_stake_pool_id(pool_parameters.pool_id))
 
     page2 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     page2.normal("Pool reward account:")

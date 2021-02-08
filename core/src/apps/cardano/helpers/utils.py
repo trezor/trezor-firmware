@@ -1,5 +1,7 @@
 from apps.cardano.helpers.paths import ACCOUNT_PATH_INDEX, unharden
 
+from . import bech32
+
 if False:
     from typing import List, Optional
 
@@ -42,3 +44,7 @@ def format_optional_int(number: Optional[int]) -> str:
         return "n/a"
 
     return str(number)
+
+
+def format_stake_pool_id(pool_id_bytes: bytes) -> str:
+    return bech32.encode("pool", pool_id_bytes)
