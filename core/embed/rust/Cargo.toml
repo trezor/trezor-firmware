@@ -19,10 +19,11 @@ codegen-units = 1
 
 [dependencies]
 cty = "0.2.1"
+staticvec = "0.10.5"
 
 [dependencies.cstr_core]
 version = "0.2.2"
 default_features = false
 
 [build-dependencies]
-bindgen = "0.56.0"
+bindgen = "0.57.0"

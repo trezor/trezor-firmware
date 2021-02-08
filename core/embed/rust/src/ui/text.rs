@@ -13,22 +13,7 @@ use crate::micropython::{
 };
 use crate::trezorhal::display;
 
-/// A point in 2D space defined by the the `x` and `y` coordinate.
-#[derive(Copy, Clone, PartialEq, Eq)]
-struct Point {
-    x: i32,
-    y: i32,
-}
-
-/// A rectangle in 2D space defined by the top-left point `x0`,`y0` and the
-/// bottom-right point `x1`,`y1`.
-#[derive(Copy, Clone, PartialEq, Eq)]
-struct Rect {
-    x0: i32,
-    y0: i32,
-    x1: i32,
-    y1: i32,
-}
+use super::geometry::{Point, Rect};
 
 /// Visual instructions for layout out and rendering of a `RichText` block.
 struct Style {
@@ -77,22 +62,19 @@ enum Op {
     Render(Buffer),
 }
 
-const LINE_HEIGHT: i32 = 26;
-const LINE_HEIGHT_HALF: i32 = 13;
-
 impl RichText {
     fn render(&mut self) -> Result<(), Error> {
-        // Current position of the drawing cursor in the global coordinate space. We
-        // start drawing in the top-left corner of our bounds.
-        let mut cursor = Point {
-            x: self.bounds.x0,
-            y: self.bounds.y0 + LINE_HEIGHT, // Advance to the baseline.
-        };
-
         // Construct a `Shaper` impl with overridable `render_text` fn.
         let mut shaper = Override {
             inner: TrezorHal,
             render_text_fn: self.render_text_fn,
+        };
+
+        // Current position of the drawing cursor in the global coordinate space. We
+        // start drawing in the top-left corner of our bounds.
+        let mut cursor = Point {
+            x: self.bounds.x0,
+            y: self.bounds.y0 + shaper.line_height(), // Advance to the baseline.
         };
 
         // Iterate and interpret the `ops`. We're skipping all `Op::Render` bellow
@@ -145,6 +127,7 @@ struct Span {
 trait Shaper {
     fn render_text(&mut self, x: i32, y: i32, text: &[u8], font: i32, fg: u16, bg: u16);
     fn text_width(&mut self, text: &[u8], font: i32) -> i32;
+    fn line_height(&mut self) -> i32;
 }
 
 struct TrezorHal;
@@ -156,6 +139,10 @@ impl Shaper for TrezorHal {
 
     fn text_width(&mut self, text: &[u8], font: i32) -> i32 {
         display::text_width(text, font)
+    }
+
+    fn line_height(&mut self) -> i32 {
+        display::line_height()
     }
 }
 
@@ -175,6 +162,10 @@ impl<T: Shaper> Shaper for Override<T> {
 
     fn text_width(&mut self, text: &[u8], font: i32) -> i32 {
         self.inner.text_width(text, font)
+    }
+
+    fn line_height(&mut self) -> i32 {
+        self.inner.line_height()
     }
 }
 
@@ -269,7 +260,7 @@ fn render_text(
     if !text_is_all_whitespace {
         if style.insert_new_lines {
             cursor.x = bounds.x0;
-            cursor.y += LINE_HEIGHT;
+            cursor.y += shaper.line_height();
         } else {
             cursor.x += shaper.text_width(&[ASCII_SPACE], style.font);
         }
@@ -316,7 +307,7 @@ fn find_fitting_span(
     let mut line = Span {
         range: 0..0,
         advance_x: 0,
-        advance_y: LINE_HEIGHT,
+        advance_y: shaper.line_height(),
         draw_hyphen_before_line_break: false,
         skip_next_leading_whitespace: false,
     };
@@ -351,7 +342,7 @@ fn find_fitting_span(
             if ch == ASCII_CR {
                 // We'll be breaking the line, but advancing the cursor only by a half of the
                 // regular line height.
-                line.advance_y = LINE_HEIGHT_HALF;
+                line.advance_y = shaper.line_height() / 2;
             }
             if ch == ASCII_LF || ch == ASCII_CR {
                 // End of line, break immediately.
@@ -385,19 +376,6 @@ fn find_fitting_span(
 
 fn is_whitespace(ch: u8) -> bool {
     ch == ASCII_SPACE || ch == ASCII_LF || ch == ASCII_CR
-}
-
-impl TryFrom<&Map> for Rect {
-    type Error = Error;
-
-    fn try_from(map: &Map) -> Result<Self, Self::Error> {
-        Ok(Self {
-            x0: map.get_qstr(Qstr::MP_QSTR_x0)?.try_into()?,
-            y0: map.get_qstr(Qstr::MP_QSTR_y0)?.try_into()?,
-            x1: map.get_qstr(Qstr::MP_QSTR_x1)?.try_into()?,
-            y1: map.get_qstr(Qstr::MP_QSTR_y1)?.try_into()?,
-        })
-    }
 }
 
 impl TryFrom<&Map> for Style {
