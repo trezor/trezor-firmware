@@ -5,8 +5,8 @@ from trezor.messages import OutputScriptType
 
 from apps.common import safety_checks
 
-from .. import keychain
 from ..authorization import FEE_PER_ANONYMITY_DECIMALS
+from ..keychain import validate_path_against_script_type
 from . import helpers, tx_weight
 from .payment_request import PaymentRequestVerifier
 from .tx_info import OriginalTxInfo, TxInfo
@@ -115,7 +115,7 @@ class BasicApprover(Approver):
         self.change_count = 0  # the number of change-outputs
 
     async def add_internal_input(self, txi: TxInput) -> None:
-        if not keychain.validate_path_against_script_type(self.coin, txi):
+        if not validate_path_against_script_type(self.coin, txi):
             await helpers.confirm_foreign_address(txi.address_n)
 
         await super().add_internal_input(txi)

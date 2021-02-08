@@ -50,6 +50,7 @@ class PaymentRequestVerifier:
         writers.write_bitcoin_varint(self.h_pr, len(msg.memos))
         for memo in msg.memos:
             writers.write_uint32(self.h_pr, memo.type)
+            writers.write_bytes_prefixed(self.h_pr, memo.data)
             if memo.type == MemoType.COIN_PURCHASE:
                 assert memo.amount is not None  # checked by sanitizer
                 assert memo.coin_name is not None  # checked by sanitizer
@@ -57,7 +58,6 @@ class PaymentRequestVerifier:
                 writers.write_uint64(self.h_pr, memo.amount)
                 writers.write_uint32(self.h_pr, memo_coin.slip44)
                 check_address_mac(memo, memo_coin, keychain)
-            writers.write_bytes_prefixed(self.h_pr, memo.data)
         writers.write_uint32(self.h_pr, coin.slip44)
 
     def verify(self) -> None:
