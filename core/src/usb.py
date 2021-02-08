@@ -1,5 +1,9 @@
-from storage.device import get_device_id
+# from storage.device import get_device_id
 from trezor import io, utils
+
+def get_device_id():
+    return b"trezor"
+
 
 # interface used for trezor wire protocol
 iface_wire = io.WebUSB(iface_num=0, ep_in=0x81, ep_out=0x01)

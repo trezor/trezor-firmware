@@ -1,5 +1,4 @@
-import storage.cache
-import storage.device
+from storage import cache, device
 from storage.cache import APP_COMMON_SAFETY_CHECKS_TEMPORARY
 from storage.device import SAFETY_CHECK_LEVEL_PROMPT, SAFETY_CHECK_LEVEL_STRICT
 from trezor.messages import SafetyCheckLevel
@@ -15,11 +14,11 @@ def read_setting() -> EnumTypeSafetyCheckLevel:
     """
     temporary_safety_check_level: Optional[
         EnumTypeSafetyCheckLevel
-    ] = storage.cache.get(APP_COMMON_SAFETY_CHECKS_TEMPORARY)
+    ] = cache.get(APP_COMMON_SAFETY_CHECKS_TEMPORARY)
     if temporary_safety_check_level is not None:
         return temporary_safety_check_level
     else:
-        stored = storage.device.safety_check_level()
+        stored = device.safety_check_level()
         if stored == SAFETY_CHECK_LEVEL_STRICT:
             return SafetyCheckLevel.Strict
         elif stored == SAFETY_CHECK_LEVEL_PROMPT:
@@ -33,14 +32,14 @@ def apply_setting(level: EnumTypeSafetyCheckLevel) -> None:
     Changes the safety level settings.
     """
     if level == SafetyCheckLevel.Strict:
-        storage.cache.delete(APP_COMMON_SAFETY_CHECKS_TEMPORARY)
-        storage.device.set_safety_check_level(SAFETY_CHECK_LEVEL_STRICT)
+        cache.delete(APP_COMMON_SAFETY_CHECKS_TEMPORARY)
+        device.set_safety_check_level(SAFETY_CHECK_LEVEL_STRICT)
     elif level == SafetyCheckLevel.PromptAlways:
-        storage.cache.delete(APP_COMMON_SAFETY_CHECKS_TEMPORARY)
-        storage.device.set_safety_check_level(SAFETY_CHECK_LEVEL_PROMPT)
+        cache.delete(APP_COMMON_SAFETY_CHECKS_TEMPORARY)
+        device.set_safety_check_level(SAFETY_CHECK_LEVEL_PROMPT)
     elif level == SafetyCheckLevel.PromptTemporarily:
-        storage.device.set_safety_check_level(SAFETY_CHECK_LEVEL_STRICT)
-        storage.cache.set(APP_COMMON_SAFETY_CHECKS_TEMPORARY, level)
+        device.set_safety_check_level(SAFETY_CHECK_LEVEL_STRICT)
+        cache.set(APP_COMMON_SAFETY_CHECKS_TEMPORARY, level)
     else:
         raise ValueError("Unknown SafetyCheckLevel")
 

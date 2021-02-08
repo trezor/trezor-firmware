@@ -1,4 +1,4 @@
-from trezor import wire
+from trezor.wire.errors import InvalidSession
 from trezor.crypto import random
 
 if False:
@@ -17,11 +17,26 @@ APP_BASE_AUTHORIZATION = 3
 APP_COMMON_SEED_WITHOUT_PASSPHRASE = 1 | _SESSIONLESS_FLAG
 APP_COMMON_SAFETY_CHECKS_TEMPORARY = 2 | _SESSIONLESS_FLAG
 
+state: Dict = {}
 
-_active_session_id: Optional[bytes] = None
-_caches: Dict[bytes, Dict[int, Any]] = {}
-_session_ids: List[bytes] = []
-_sessionless_cache: Dict[int, Any] = {}
+
+def set_state(new_state: Dict) -> None:
+    global state
+    state = new_state
+    if 'active_session_id' not in state:
+        reset_state()
+
+
+def reset_state():
+    # active_session_id: Optional[bytes] = None
+    # caches: Dict[bytes, Dict[int, Any]] = {}
+    # session_ids: List[bytes] = []
+    # sessionless_cache: Dict[int, Any] = {}
+    state['active_session_id'] = None
+    state['caches'] = {}
+    state['session_ids'] = []
+    state['sessionless_cache'] = {}
+
 
 if False:
     from typing import Any, Callable, TypeVar
@@ -31,72 +46,67 @@ if False:
 
 def _move_session_ids_queue(session_id: bytes) -> None:
     # Move the LRU session ids queue.
-    if session_id in _session_ids:
-        _session_ids.remove(session_id)
+    if session_id in state['session_ids']:
+        state['session_ids'].remove(session_id)
 
-    while len(_session_ids) >= _MAX_SESSIONS_COUNT:
-        remove_session_id = _session_ids.pop()
-        del _caches[remove_session_id]
+    while len(state['session_ids']) >= _MAX_SESSIONS_COUNT:
+        remove_session_id = state['session_ids'].pop()
+        del state['caches'][remove_session_id]
 
-    _session_ids.insert(0, session_id)
+    state['session_ids'].insert(0, session_id)
 
 
 def start_session(received_session_id: bytes = None) -> bytes:
-    if received_session_id and received_session_id in _session_ids:
+    if received_session_id and received_session_id in state['session_ids']:
         session_id = received_session_id
     else:
         session_id = random.bytes(32)
-        _caches[session_id] = {}
+        state['caches'][session_id] = {}
 
-    global _active_session_id
-    _active_session_id = session_id
+    state['active_session_id'] = session_id
     _move_session_ids_queue(session_id)
-    return _active_session_id
+    return state['active_session_id']
 
 
 def end_current_session() -> None:
-    global _active_session_id
-
-    if _active_session_id is None:
+    if state['active_session_id'] is None:
         return
-
-    current_session_id = _active_session_id
-    _active_session_id = None
-
-    _session_ids.remove(current_session_id)
-    del _caches[current_session_id]
+    current_session_id = state['active_session_id']
+    state['active_session_id'] = None
+    state['session_ids'].remove(current_session_id)
+    del state['caches'][current_session_id]
 
 
 def is_session_started() -> bool:
-    return _active_session_id is not None
+    return state['active_session_id'] is not None
 
 
 def set(key: int, value: Any) -> None:
     if key & _SESSIONLESS_FLAG:
-        _sessionless_cache[key] = value
+        state['sessionless_cache'][key] = value
         return
-    if _active_session_id is None:
+    if state['active_session_id'] is None:
         raise wire.InvalidSession
-    _caches[_active_session_id][key] = value
+    state['caches'][state['active_session_id']][key] = value
 
 
 def get(key: int) -> Any:
     if key & _SESSIONLESS_FLAG:
-        return _sessionless_cache.get(key)
-    if _active_session_id is None:
+        return state['sessionless_cache'].get(key)
+    if state['active_session_id'] is None:
         raise wire.InvalidSession
-    return _caches[_active_session_id].get(key)
+    return state['caches'][state['active_session_id']].get(key)
 
 
 def delete(key: int) -> None:
     if key & _SESSIONLESS_FLAG:
-        if key in _sessionless_cache:
-            del _sessionless_cache[key]
+        if key in state['sessionless_cache']:
+            del state['sessionless_cache'][key]
         return
-    if _active_session_id is None:
+    if state['active_session_id'] is None:
         raise wire.InvalidSession
-    if key in _caches[_active_session_id]:
-        del _caches[_active_session_id][key]
+    if key in state['caches'][state['active_session_id']]:
+        del state['caches'][state['active_session_id']][key]
 
 
 def stored(key: int) -> Callable[[F], F]:
@@ -137,12 +147,7 @@ def stored_async(key: int) -> Callable[[F], F]:
 
 
 def clear_all() -> None:
-    global _active_session_id
-    global _caches
-    global _session_ids
-    global _sessionless_cache
-
-    _active_session_id = None
-    _caches.clear()
-    _session_ids.clear()
-    _sessionless_cache.clear()
+    state['active_session_id'] = None
+    state['caches'].clear()
+    state['session_ids'].clear()
+    state['sessionless_cache'].clear()

@@ -41,8 +41,8 @@ timings = "-"
 def get_features() -> Features:
     f = Features()
     f.vendor = "trezor.io"
-    # f.language = "en-US"
-    f.language = "times %s, alloc %d, free %d, frag %f" % (timings, gc.mem_alloc(), gc.mem_free(), gc.mem_frag())
+    f.language = "en-US"
+    # f.language = "times %s, alloc %d, free %d, frag %f" % (timings, gc.mem_alloc(), gc.mem_free(), gc.mem_frag())
     f.major_version = utils.VERSION_MAJOR
     f.minor_version = utils.VERSION_MINOR
     f.patch_version = utils.VERSION_PATCH

@@ -3,7 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 from trezorlib.client import PASSPHRASE_ON_DEVICE
 from trezorlib.transport import udp
 
-udp.SOCKET_TIMEOUT = 0.1
+udp.SOCKET_TIMEOUT = 1.5
 
 
 class NullUI:

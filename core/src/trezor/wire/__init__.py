@@ -346,7 +346,7 @@ async def handle_session(
 
             # Take a mark of modules that are imported at this point, so we can
             # roll back and un-import any others.  Should not raise.
-            modules = utils.unimport_begin()
+            # modules = utils.unimport_begin()
 
             # We need to find a handler for this message type.  Should not
             # raise.
@@ -444,7 +444,12 @@ async def handle_session(
             wf_task = None
 
             # Unload modules imported by the workflow.  Should not raise.
-            utils.unimport_end(modules)
+            # utils.unimport_end(modules)
+
+            # Quit
+            if use_workflow and next_msg is None and msg.type != 0:  # Initialize
+                loop.clear()
+                return
 
         except Exception as exc:
             # The session handling should never exit, just log and continue.
