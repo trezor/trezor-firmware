@@ -32,6 +32,9 @@ TXHASH_091446 = bytes.fromhex(
 )
 
 
+pytestmark = pytest.mark.skip_t1
+
+
 def case(id, *args, altcoin=False):
     if altcoin:
         marks = pytest.mark.altcoin
@@ -104,7 +107,6 @@ hash_outputs12 = "75d0a1389303f3334e838e0d8ed046741a1ae6bfdd523835331f61fa8247ad
 hash_outputs012 = "7e53bc48fb6cf8e8b4ea8416c523cb6a6a35e24effac335a1d5384a1f0b63df0"
 
 
-@pytest.mark.skip_t1
 @pytest.mark.parametrize(
     "payment_request_params",
     (
