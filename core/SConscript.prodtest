@@ -68,6 +68,7 @@ SOURCE_PRODTEST = [
 SOURCE_TREZORHAL = [
     'embed/trezorhal/common.c',
     'embed/trezorhal/dma.c',
+    'embed/trezorhal/drbg.c',
     'embed/trezorhal/flash.c',
     'embed/trezorhal/mini_printf.c',
     'embed/trezorhal/random_delays.c',

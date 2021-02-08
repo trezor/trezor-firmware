@@ -20,8 +20,6 @@
 #ifndef __TREZORHAL_COMMON_H__
 #define __TREZORHAL_COMMON_H__
 
-#include <stddef.h>
-#include <stdint.h>
 #include "secbool.h"
 
 #define XSTR(s) STR(s)
@@ -69,11 +67,6 @@ void hal_delay(uint32_t ms);
 void clear_otg_hs_memory(void);
 
 extern uint32_t __stack_chk_guard;
-
-void drbg_init(void);
-void drbg_reseed(const uint8_t *entropy, size_t len);
-void drbg_generate(uint8_t *buf, size_t len);
-uint32_t drbg_random32(void);
 
 // the following functions are defined in util.s
 

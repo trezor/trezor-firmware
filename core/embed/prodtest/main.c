@@ -25,6 +25,7 @@
 
 #include "common.h"
 #include "display.h"
+#include "drbg.h"
 #include "flash.h"
 #include "mini_printf.h"
 #include "rng.h"

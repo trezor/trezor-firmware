@@ -301,6 +301,7 @@ SOURCE_MICROPYTHON = [
 SOURCE_UNIX = [
     'embed/unix/common.c',
     'embed/unix/entropy.c',
+    'embed/unix/drbg.c',
     'embed/unix/flash.c',
     'embed/unix/main.c',
     'embed/unix/profile.c',

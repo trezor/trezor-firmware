@@ -40,6 +40,7 @@ https://link.springer.com/content/pdf/10.1007%2F978-3-540-72354-7_3.pdf
 
 #include "chacha_drbg.h"
 #include "common.h"
+#include "drbg.h"
 #include "memzero.h"
 #include "rand.h"
 
