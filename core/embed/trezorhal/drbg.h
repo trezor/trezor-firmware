@@ -50,12 +50,15 @@ _Static_assert(CHACHA_DRBG_DERIVATION_FUNCTION_BLOCK_LENGTH -
                        CHACHA_DRBG_DERIVATION_FUNCTION_PADDING ==
                    DRBG_RESEED_TRNG_ENTROPY_LENGTH + SW_ENTROPY_LEN,
                "");
-
 #define DRBG_RESEED_MAX_TRNG_ENTROPY 32
+
+#define DRBG_RESEED_INTERVAL_CALLS 1024
+#define DRBG_RESEED_INTERVAL_MS 1000
 
 void drbg_init(const uint8_t *nonce, size_t nonce_length);
 void drbg_mix_hw_entropy();
 void drbg_reseed();
 void drbg_generate(uint8_t *buffer, size_t length);
 uint32_t drbg_random32(void);
+void drbg_reseed_handler(uint32_t uw_tick);
 #endif

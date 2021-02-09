@@ -51,6 +51,12 @@ void drbg_reseed() {
 
 void drbg_generate(uint8_t *buffer, size_t length) {
   ensure(initialized, "drbg not initialized");
+
+  if ((DRBG_RESEED_INTERVAL_CALLS != 0) &
+      (drbg_ctx.reseed_counter > DRBG_RESEED_INTERVAL_CALLS)) {
+    drbg_reseed();
+  }
+
   chacha_drbg_generate(&drbg_ctx, buffer, length);
 }
 

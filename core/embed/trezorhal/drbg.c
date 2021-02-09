@@ -21,12 +21,18 @@
 
 #include "chacha_drbg.h"
 #include "common.h"
+#include "irq.h"
 #include "memzero.h"
 #include "rand.h"
 #include "secbool.h"
+#include "systick.h"
+
+extern __IO uint32_t uwTick;
 
 static CHACHA_DRBG_CTX drbg_ctx;
 static secbool initialized = secfalse;
+static uint32_t last_reseeded_ms = 0;
+static secbool reseeding_not_needed = sectrue;
 
 void drbg_init(const uint8_t *nonce, size_t nonce_length) {
   assert(nonce_length == DRBG_INIT_NONCE_LENGTH);
@@ -36,6 +42,7 @@ void drbg_init(const uint8_t *nonce, size_t nonce_length) {
   chacha_drbg_init(&drbg_ctx, entropy, sizeof(entropy), nonce, nonce_length);
   memzero(entropy, sizeof(entropy));
 
+  systick_enable_dispatch(SYSTICK_DISPATCH_DRBG, drbg_reseed_handler);
   initialized = sectrue;
 }
 
@@ -64,6 +71,15 @@ void drbg_reseed() {
 
 void drbg_generate(uint8_t *buffer, size_t length) {
   ensure(initialized, NULL);
+
+  if ((reseeding_not_needed != sectrue) ||
+      ((DRBG_RESEED_INTERVAL_CALLS != 0) &
+       (drbg_ctx.reseed_counter > DRBG_RESEED_INTERVAL_CALLS))) {
+    drbg_reseed();
+    reseeding_not_needed = sectrue;
+    last_reseeded_ms = uwTick;
+  }
+
   chacha_drbg_generate(&drbg_ctx, buffer, length);
 }
 
@@ -71,4 +87,11 @@ uint32_t drbg_random32(void) {
   uint32_t value;
   drbg_generate((uint8_t *)&value, sizeof(value));
   return value;
+}
+
+void drbg_reseed_handler(uint32_t uw_tick) {
+  if ((DRBG_RESEED_INTERVAL_MS != 0) &
+      (last_reseeded_ms + DRBG_RESEED_INTERVAL_MS >= uw_tick)) {
+    reseeding_not_needed = secfalse;
+  }
 }

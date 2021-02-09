@@ -43,6 +43,8 @@ _Static_assert(CHACHA_DRBG_DERIVATION_FUNCTION_BLOCK_LENGTH -
                    DRBG_RESEED_ENTROPY_LENGTH,
                "");
 
+#define DRBG_RESEED_INTERVAL_CALLS 1024
+
 void drbg_init(const uint8_t *nonce, size_t nonce_length);
 void drbg_set_seed(uint32_t seed);
 void drbg_reseed();
