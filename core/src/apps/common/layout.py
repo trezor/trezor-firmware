@@ -7,7 +7,7 @@ from trezor.ui.button import ButtonDefault
 from trezor.ui.container import Container
 from trezor.ui.qr import Qr
 from trezor.ui.scroll import Paginated
-from trezor.ui.text import TEXT_MAX_LINES, Span, Text
+from trezor.ui.text import TEXT_MAX_LINES, Span, Text, calculate_text_pages
 from trezor.utils import chunks
 
 from apps.common import HARDENED
@@ -146,38 +146,44 @@ def paginate_text(
     icon_color: int = ui.ORANGE_ICON,
     break_words: bool = False,
 ) -> Union[Text, Paginated]:
-    span = Span(text, 0, font, break_words=break_words)
-    if span.count_lines() <= TEXT_MAX_LINES:
-        result = Text(
+    items = [font, text]
+   
+    page_breaks = calculate_text_pages(
+        items=items,
+        new_lines=False,
+        break_words=break_words,
+        line_width=204,
+    )
+
+    if len(page_breaks) == 1:
+        text = Text(
             header,
             header_icon=header_icon,
             icon_color=icon_color,
+            break_words=break_words,
             new_lines=False,
+            line_width=204,
+            render_page_overflow=False,
         )
-        result.content = [font, text]
-        return result
+        text.content = items
+        return text
 
     else:
         pages: List[ui.Component] = []
-        span.reset(text, 0, font, break_words=break_words, line_width=204)
-        while span.has_more_content():
-            # advance to first line of the page
-            span.next_line()
+
+        for item_offset, char_offset in page_breaks:
             page = Text(
                 header,
                 header_icon=header_icon,
                 icon_color=icon_color,
+                break_words=break_words,
                 new_lines=False,
-                content_offset=0,
-                char_offset=span.start,
                 line_width=204,
+                content_offset=item_offset,
+                char_offset=char_offset,
                 render_page_overflow=False,
             )
-            page.content = [font, text]
+            page.content = items
             pages.append(page)
-
-            # roll over the remaining lines on the page
-            for _ in range(TEXT_MAX_LINES - 1):
-                span.next_line()
 
         return Paginated(pages)

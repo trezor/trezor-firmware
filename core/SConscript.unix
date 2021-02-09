@@ -558,7 +558,7 @@ if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
 #
 
 RUST_TOOLCHAIN = 'nightly'
-RUST_PROFILE = 'release'
+RUST_PROFILE = 'debug'
 RUST_LIB = 'trezor_lib'
 RUST_LIBDIR = f'embed/rust/target/{RUST_PROFILE}'
 RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'

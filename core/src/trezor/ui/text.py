@@ -170,30 +170,83 @@ class Span:
 _WORKING_SPAN = Span()
 
 
+def calculate_text_pages(
+    items: List[TextContent],
+    new_lines: bool,
+    max_lines: int = TEXT_MAX_LINES,
+    font: int = ui.NORMAL,
+    offset_x: int = TEXT_MARGIN_LEFT,
+    offset_y: int = TEXT_HEADER_HEIGHT,
+    line_width: int = ui.WIDTH - TEXT_MARGIN_LEFT,
+    break_words: bool = False,
+) -> List[Tuple[int, int]]:
+    pages = [(0, 0)]
+
+    def render_text_fn(_x, _y, _text, _font, _fg, _bg):
+        pass
+
+    def page_end_fn(op, char):
+        pages.append((op, char))
+
+    result = ui.display.text_rich(
+        items=items,
+        item_offset=0,
+        char_offset=0,
+        # bounds
+        x0=offset_x,
+        y0=offset_y,
+        x1=offset_x + line_width,
+        y1=offset_y + (TEXT_LINE_HEIGHT * max_lines),
+        # style
+        fg=0,
+        bg=0,
+        font=font,
+        break_words=break_words,
+        insert_new_lines=new_lines,
+        render_page_overflow=False,
+        # callbacks
+        render_text_fn=render_text_fn,
+        page_end_fn=page_end_fn,
+    )
+    if result is None:
+        raise RuntimeError("failed to paginate text")
+    return pages
+
+
 def render_text(
     items: List[TextContent],
     new_lines: bool,
-    max_lines: int,
+    max_lines: int = TEXT_MAX_LINES,
     font: int = ui.NORMAL,
     fg: int = ui.FG,
     bg: int = ui.BG,
     offset_x: int = TEXT_MARGIN_LEFT,
-    offset_y: int = TEXT_HEADER_HEIGHT + TEXT_LINE_HEIGHT,
+    offset_y: int = TEXT_HEADER_HEIGHT,
     line_width: int = ui.WIDTH - TEXT_MARGIN_LEFT,
-    item_offset: int = 0,
-    char_offset: int = 0,
     break_words: bool = False,
     render_page_overflow: bool = True,
+    item_offset: int = 0,
+    char_offset: int = 0,
+    debug: bool = False,
 ) -> None:
+    if __debug__ and debug:
+        lines = []
+
+        def render_text_fn(_x, _y, text, _font, _fg, _bg):
+            lines.append(text.decode())
+
+    else:
+        render_text_fn = None
+
     result = ui.display.text_rich(
         items=items,
         item_offset=item_offset,
         char_offset=char_offset,
         # bounds
-        x0=TEXT_MARGIN_LEFT,
-        y0=TEXT_HEADER_HEIGHT,
-        x1=ui.WIDTH,
-        y1=TEXT_HEADER_HEIGHT + (TEXT_LINE_HEIGHT * max_lines),
+        x0=offset_x,
+        y0=offset_y,
+        x1=offset_x + line_width,
+        y1=offset_y + (TEXT_LINE_HEIGHT * max_lines),
         # style
         fg=fg,
         bg=bg,
@@ -201,15 +254,20 @@ def render_text(
         break_words=break_words,
         insert_new_lines=new_lines,
         render_page_overflow=render_page_overflow,
+        render_text_fn=render_text_fn,
     )
+
     if result is None:
         raise RuntimeError("failed to render text")
+
+    if __debug__ and debug:
+        return lines
 
 
 def render_text_python(
     items: List[TextContent],
     new_lines: bool,
-    max_lines: int,
+    max_lines: int = TEXT_MAX_LINES,
     font: int = ui.NORMAL,
     fg: int = ui.FG,
     bg: int = ui.BG,
@@ -358,43 +416,6 @@ def render_text_python(
             offset_x += span.width + SPACE
 
 
-if __debug__:
-
-    class DisplayMock:
-        """Mock Display class that stores rendered text in an array.
-
-        Used to extract data for unit tests.
-        """
-
-        def __init__(self) -> None:
-            self.screen_contents: List[str] = []
-            self.orig_display = ui.display
-
-        def __getattr__(self, key: str) -> Any:
-            return getattr(self.orig_display, key)
-
-        def __enter__(self) -> None:
-            ui.display = self  # type: ignore
-
-        def __exit__(self, exc: Any, exc_type: Any, tb: Any) -> None:
-            ui.display = self.orig_display
-
-        def text(
-            self,
-            offset_x: int,
-            offset_y: int,
-            string: str,
-            font: int,
-            fg: int,
-            bg: int,
-            start: int = 0,
-            length: Optional[int] = None,
-        ) -> None:
-            if length is None:
-                length = len(string) - start
-            self.screen_contents.append(string[start : start + length])
-
-
 class Text(ui.Component):
     def __init__(
         self,
@@ -464,15 +485,17 @@ class Text(ui.Component):
     if __debug__:
 
         def read_content(self) -> List[str]:
-            display_mock = DisplayMock()
-            should_repaint = self.repaint
-            try:
-                with display_mock:
-                    self.repaint = True
-                    self.on_render()
-            finally:
-                self.repaint = should_repaint
-            return display_mock.screen_contents
+            return [self.header_text] + render_text(
+                self.content,
+                self.new_lines,
+                self.max_lines,
+                item_offset=self.content_offset,
+                char_offset=self.char_offset,
+                break_words=self.break_words,
+                line_width=self.line_width,
+                render_page_overflow=self.render_page_overflow,
+                debug=True,
+            )
 
 
 LABEL_LEFT = const(0)

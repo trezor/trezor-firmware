@@ -152,15 +152,14 @@ async def require_confirm_change_display_rotation(ctx, rotation):
     else:
         raise wire.DataError("Unsupported display rotation")
     text = Text("Change rotation", ui.ICON_CONFIG, new_lines=False)
-    text.normal("Do you really want to", "change display rotation")
-    text.normal("to")
+    text.normal("Do you really want to change display rotation to")
     text.bold("%s?" % label)
     await require_confirm(ctx, text, ButtonRequestType.ProtectCall)
 
 
 async def require_confirm_change_autolock_delay(ctx, delay_ms):
     text = Text("Auto-lock delay", ui.ICON_CONFIG, new_lines=False)
-    text.normal("Do you really want to", "auto-lock your device", "after")
+    text.normal("Do you really want to auto-lock your device after")
     text.bold("{}?".format(format_duration_ms(delay_ms)))
     await require_confirm(ctx, text, ButtonRequestType.ProtectCall)
 

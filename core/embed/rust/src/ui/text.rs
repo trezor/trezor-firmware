@@ -13,7 +13,7 @@ use crate::micropython::{
 };
 use crate::trezorhal::display;
 
-use super::geometry::{Point, Rect};
+use super::math::{Point, Rect};
 
 /// Visual instructions for layout out and rendering of a `RichText` block.
 struct Style {
@@ -50,6 +50,12 @@ struct RichText {
     bounds: Rect,
     /// Optional callable object overriding the `render_text` fn of shaping.
     render_text_fn: Option<Obj>,
+    /// Optional callable object. If set, it is called when the rendering cannot
+    /// longer fit in the given `bounds`, and index of the current `op`,
+    /// together with the char offset is given as arguments. Rendering will also
+    /// not end in such case, cursor is reset to the beginning and next `op` (or
+    /// part of it) is processed, as if rendering the next page.
+    page_end_fn: Option<Obj>,
 }
 
 enum Op {
@@ -72,16 +78,17 @@ impl RichText {
 
         // Current position of the drawing cursor in the global coordinate space. We
         // start drawing in the top-left corner of our bounds.
-        let mut cursor = Point {
+        let initial_cursor = Point {
             x: self.bounds.x0,
             y: self.bounds.y0 + shaper.line_height(), // Advance to the baseline.
         };
+        let mut cursor = initial_cursor;
 
         // Iterate and interpret the `ops`. We're skipping all `Op::Render` bellow
         // `op_offset`, but the styling ops still need to be applied.
         let mut ops_buf = IterBuf::new();
         let ops = Iter::try_from_obj_with_buf(self.ops, &mut ops_buf)?;
-        for (i, op) in ops.into_iter().enumerate() {
+        for (op_index, op) in ops.into_iter().enumerate() {
             match Op::try_from(op)? {
                 Op::SetFg(fg) => {
                     self.style.fg = fg;
@@ -90,16 +97,41 @@ impl RichText {
                     self.style.font = font;
                 }
                 Op::Render(buffer) => {
-                    if i < self.op_offset {
+                    if op_index < self.op_offset {
                         continue;
                     }
                     // If this is the first text op, seek to the correct starting char.
-                    let text = if i == self.op_offset {
+                    let text = if op_index == self.op_offset {
                         &buffer[self.char_offset..]
                     } else {
                         &buffer
                     };
-                    render_text(text, &self.style, &self.bounds, &mut cursor, &mut shaper)?;
+                    let cont = render_text(
+                        text,
+                        &self.style,
+                        &self.bounds,
+                        &mut cursor,
+                        &mut shaper,
+                        |processed| {
+                            // If we have a `page_end_fn`, call it to report a page end, reset the
+                            // cursor to the beginning and continue, as if rendering the next page.
+                            // If not, quit, because we're out of bounds.
+                            if let Some(obj) = self.page_end_fn {
+                                let char_offset = if op_index == self.op_offset {
+                                    self.char_offset + processed
+                                } else {
+                                    processed
+                                };
+                                call_page_end_obj(obj, op_index, char_offset);
+                                Some(initial_cursor)
+                            } else {
+                                None
+                            }
+                        },
+                    )?;
+                    if let Continuation::Break = cont {
+                        break;
+                    }
                 }
             }
         }
@@ -118,9 +150,9 @@ struct Span {
     /// If we are breaking the line, should we draw a hyphen right after this
     /// span to indicate a word-break?
     draw_hyphen_before_line_break: bool,
-    /// Should we skip the first leading whitespace character before fitting the
+    /// How many chars from the input text should we skip before fitting the
     /// next span?
-    skip_next_leading_whitespace: bool,
+    skip_next_chars: usize,
 }
 
 /// Encapsulation of the underlying text API primitives.
@@ -153,10 +185,11 @@ struct Override<T: Shaper> {
 
 impl<T: Shaper> Shaper for Override<T> {
     fn render_text(&mut self, x: i32, y: i32, text: &[u8], font: i32, fg: u16, bg: u16) {
-        if let Some(obj) = self.render_text_fn {
-            call_render_text_obj(obj, x, y, text, font, fg, bg)
-        } else {
-            self.inner.render_text(x, y, text, font, fg, bg)
+        match self.render_text_fn {
+            Some(obj) if obj != Obj::const_none() => {
+                call_render_text_obj(obj, x, y, text, font, fg, bg)
+            }
+            _ => self.inner.render_text(x, y, text, font, fg, bg),
         }
     }
 
@@ -189,12 +222,27 @@ fn call_render_text_obj(
     render_text.call_with_n_args(&args);
 }
 
+fn call_page_end_obj(page_end: Obj, op_offset: usize, char_offset: usize) {
+    let args = [
+        op_offset.try_into().unwrap(),
+        char_offset.try_into().unwrap(),
+    ];
+    page_end.call_with_n_args(&args);
+}
+
 const ASCII_LF: u8 = 10;
 const ASCII_CR: u8 = 13;
 const ASCII_SPACE: u8 = 32;
 const ASCII_HYPHEN: u8 = 45;
 const HYPHEN_FONT: i32 = -2; // FONT_BOLD
-const ELLIPSIS_FONT: i32 = -1; // FONT_NORMAL
+const HYPHEN_COLOR: u16 = 40179; // GREY
+const ELLIPSIS_FONT: i32 = -2; // FONT_BOLD
+const ELLIPSIS_COLOR: u16 = 40179; // GREY
+
+enum Continuation {
+    Continue,
+    Break,
+}
 
 fn render_text(
     text: &[u8],
@@ -202,8 +250,8 @@ fn render_text(
     bounds: &Rect,
     cursor: &mut Point,
     shaper: &mut impl Shaper,
-) -> Result<(), Error> {
-    let mut skip_leading_whitespace = false;
+    page_end_fn: impl Fn(usize) -> Option<Point>,
+) -> Result<Continuation, Error> {
     let mut remaining_text = text;
 
     while !remaining_text.is_empty() {
@@ -212,7 +260,6 @@ fn render_text(
             bounds.x1 - cursor.x,
             style.font,
             style.break_words,
-            skip_leading_whitespace,
             shaper,
         );
 
@@ -226,38 +273,47 @@ fn render_text(
             style.bg,
         );
 
+        // Continue with the rest of the text.
+        remaining_text = &remaining_text[span.range.end + span.skip_next_chars..];
+
         // Advance the cursor horizontally.
         cursor.x += span.advance_x;
 
         if span.advance_y > 0 {
-            // We're advacing to the next line, so we need to check the amount of vertical
-            // space we have left. If we would be overflowing it, we might want to draw a
-            // symbol indicating that more content is available. Because we do not really
-            // check if the symbol fits on the horizontal axis, we might be painting out of
-            // the horizontal bounds. This is intentional.
-            if style.render_page_overflow && cursor.y + span.advance_y > bounds.y1 {
-                render_page_overflow(cursor, style, shaper);
-                // We're out of both horizontal and vertical space, quit.
-                break;
-            }
-            // We have space to advance to the next line, check if we should be drawing a
-            // hyphen at this point.
+            // We're advacing to the next line.
+
+            // Check if we should be drawing a hyphen at this point.
             if span.draw_hyphen_before_line_break {
                 render_hyphen(cursor, style, shaper);
+            }
+            // Check the amount of vertical space we have left.
+            if cursor.y + span.advance_y > bounds.y1 {
+                if !remaining_text.is_empty() {
+                    // Draw ellipsis to indicate more content is available, but only if we haven't
+                    // already drawn a hyphen.
+                    if style.render_page_overflow && !span.draw_hyphen_before_line_break {
+                        render_page_overflow(cursor, style, shaper);
+                    }
+                    // Count how many chars we have processed out of `text` and call `page_end_fn`.
+                    // If it returns the next cursor, move to it and continue as if nothing
+                    // happened.
+                    let processed = text.len() - remaining_text.len();
+                    if let Some(new_cursor) = page_end_fn(processed) {
+                        *cursor = new_cursor;
+                        continue;
+                    }
+                }
+                // Quit, there is not enough space for a line break.
+                return Ok(Continuation::Break);
             }
             // Advance the cursor to the beginning of the next line.
             cursor.x = bounds.x0;
             cursor.y += span.advance_y;
         }
-
-        // Continue with the rest of the text.
-        remaining_text = &remaining_text[span.range.end..];
-        skip_leading_whitespace = span.skip_next_leading_whitespace;
     }
 
-    // After each printable text item, we insert either a new line or a space.
-    let text_is_all_whitespace = text.iter().all(|&ch| is_whitespace(ch));
-    if !text_is_all_whitespace {
+    // After each text item, we insert either a new line or a space.
+    if text != "\n".as_bytes() && text != "\r".as_bytes() {
         if style.insert_new_lines {
             cursor.x = bounds.x0;
             cursor.y += shaper.line_height();
@@ -266,7 +322,7 @@ fn render_text(
         }
     }
 
-    Ok(())
+    Ok(Continuation::Continue)
 }
 
 fn render_page_overflow(pos: &Point, style: &Style, shaper: &mut impl Shaper) {
@@ -275,7 +331,7 @@ fn render_page_overflow(pos: &Point, style: &Style, shaper: &mut impl Shaper) {
         pos.y,
         "...".as_bytes(),
         ELLIPSIS_FONT,
-        style.fg,
+        ELLIPSIS_COLOR,
         style.bg,
     );
 }
@@ -286,7 +342,7 @@ fn render_hyphen(pos: &Point, style: &Style, shaper: &mut impl Shaper) {
         pos.y,
         &[ASCII_HYPHEN],
         HYPHEN_FONT,
-        style.fg,
+        HYPHEN_COLOR,
         style.bg,
     );
 }
@@ -296,7 +352,6 @@ fn find_fitting_span(
     max_width: i32,
     font: i32,
     break_words: bool,
-    skip_leading_whitespace: bool,
     shaper: &mut impl Shaper,
 ) -> Span {
     let hyphen_width = shaper.text_width(&[ASCII_HYPHEN], HYPHEN_FONT);
@@ -309,26 +364,14 @@ fn find_fitting_span(
         advance_x: 0,
         advance_y: shaper.line_height(),
         draw_hyphen_before_line_break: false,
-        skip_next_leading_whitespace: false,
+        skip_next_chars: 0,
     };
 
     let mut span_width = 0;
-    let mut skipping_whitespace = skip_leading_whitespace;
+    let mut found_any_whitespace = false;
 
     for i in 0..text.len() {
         let ch = text[i];
-
-        // Usually, spans start at the beginning of `text`, with one exception: after we
-        // break the text before a whitespace, we need to skip this whitespace when
-        // fitting the next span.
-        if skipping_whitespace {
-            if is_whitespace(ch) {
-                continue;
-            } else {
-                line.range.start = i;
-                skipping_whitespace = false;
-            }
-        }
 
         let char_width = shaper.text_width(&[ch], font);
 
@@ -338,7 +381,7 @@ fn find_fitting_span(
             line.range.end = i;
             line.advance_x = span_width;
             line.draw_hyphen_before_line_break = false;
-            line.skip_next_leading_whitespace = true;
+            line.skip_next_chars = 1;
             if ch == ASCII_CR {
                 // We'll be breaking the line, but advancing the cursor only by a half of the
                 // regular line height.
@@ -348,17 +391,20 @@ fn find_fitting_span(
                 // End of line, break immediately.
                 return line;
             }
-        } else if break_words && span_width + char_width + hyphen_width < max_width {
-            // Break after this character, append hyphen.
-            line.range.end = i + 1;
-            line.advance_x = span_width + char_width;
-            line.draw_hyphen_before_line_break = true;
-            line.skip_next_leading_whitespace = false;
-        }
-
-        if span_width + char_width > max_width {
+            found_any_whitespace = true;
+        } else if span_width + char_width > max_width {
             // Return the last breakpoint.
             return line;
+        } else {
+            let have_space_for_break = span_width + char_width + hyphen_width <= max_width;
+            let can_break_word = break_words || !found_any_whitespace;
+            if have_space_for_break && can_break_word {
+                // Break after this character, append hyphen.
+                line.range.end = i + 1;
+                line.advance_x = span_width + char_width;
+                line.draw_hyphen_before_line_break = true;
+                line.skip_next_chars = 0;
+            }
         }
 
         span_width += char_width;
@@ -370,7 +416,7 @@ fn find_fitting_span(
         advance_x: span_width,
         advance_y: 0,
         draw_hyphen_before_line_break: false,
-        skip_next_leading_whitespace: false,
+        skip_next_chars: 0,
     }
 }
 
@@ -428,6 +474,7 @@ impl TryFrom<&Map> for RichText {
             style: map.try_into()?,
             bounds: map.try_into()?,
             render_text_fn: map.get_qstr(Qstr::MP_QSTR_render_text_fn).ok(),
+            page_end_fn: map.get_qstr(Qstr::MP_QSTR_page_end_fn).ok(),
         })
     }
 }

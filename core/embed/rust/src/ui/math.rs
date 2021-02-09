@@ -5,7 +5,8 @@ use core::{
 
 use crate::error::Error;
 use crate::micropython::{map::Map, qstr::Qstr};
-use crate::trezorhal::display;
+
+use super::display;
 
 /// Relative offset in 2D space.
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -17,6 +18,10 @@ pub struct Offset {
 impl Offset {
     pub fn new(x: i32, y: i32) -> Self {
         Self { x, y }
+    }
+
+    pub fn zero() -> Self {
+        Self::new(0, 0)
     }
 
     pub fn abs(self) -> Self {
@@ -34,6 +39,10 @@ pub struct Point {
 impl Point {
     pub fn new(x: i32, y: i32) -> Self {
         Self { x, y }
+    }
+
+    pub fn origin() -> Self {
+        Self::new(0, 0)
     }
 
     pub fn midpoint(self, rhs: Self) -> Self {
@@ -85,13 +94,12 @@ impl Rect {
         }
     }
 
-    pub fn screen() -> Self {
-        Self {
-            x0: 0,
-            y0: 0,
-            x1: display::width(),
-            y1: display::height(),
-        }
+    pub fn with_size(p0: Point, size: Offset) -> Self {
+        Self::new(p0, p0 + size)
+    }
+
+    pub fn for_screen() -> Self {
+        Self::with_size(Point::origin(), display::size())
     }
 
     pub fn width(&self) -> i32 {
@@ -177,8 +185,8 @@ impl Grid {
         }
     }
 
-    pub fn screen(rows: usize, cols: usize) -> Self {
-        Self::new(Rect::screen(), rows, cols)
+    pub fn for_screen(rows: usize, cols: usize) -> Self {
+        Self::new(Rect::for_screen(), rows, cols)
     }
 
     pub fn row_col(&self, row: usize, col: usize) -> Rect {

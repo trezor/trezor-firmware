@@ -33,25 +33,3 @@ class Homescreen(HomescreenBase):
         # homescreen with shifted avatar and text on bottom
         ui.display.avatar(48, 48 - 10, self.image, ui.WHITE, ui.BLACK)
         ui.display.text_center(ui.WIDTH // 2, 220, self.label, ui.BOLD, ui.FG, ui.BG)
-
-        def render_text(x, y, text, font, fg, bg):
-            print("render", x, y, text, font, fg, bg)
-
-        ui.display.text_rich(
-            items=["abc"],
-            item_offset=0,
-            char_offset=0,
-            # bounds
-            x0=20,
-            y0=20,
-            x1=ui.WIDTH,
-            y1=220,
-            # style
-            fg=0xffff,
-            bg=0x0000,
-            font=-1,
-            break_words=True,
-            insert_new_lines=True,
-            render_page_overflow=True,
-            render_text_fn=render_text
-        )

@@ -92,17 +92,12 @@ def _validate(msg: RecoveryDevice) -> None:
 async def _continue_dialog(ctx: wire.Context, msg: RecoveryDevice) -> None:
     if not msg.dry_run:
         text = Text("Recovery mode", ui.ICON_RECOVERY, new_lines=False)
-        text.bold("Do you really want to")
-        text.br()
-        text.bold("recover a wallet?")
-
+        text.bold("Do you really want to recover a wallet?")
         text.br()
         text.br_half()
-        text.normal("By continuing you agree")
-        text.br()
-        text.normal("to")
+        text.normal("By continuing you agree to")
         text.bold("https://trezor.io/tos")
     else:
         text = Text("Seed check", ui.ICON_RECOVERY, new_lines=False)
-        text.normal("Do you really want to", "check the recovery", "seed?")
+        text.normal("Do you really want to check the recovery seed?")
     await require_confirm(ctx, text, code=ButtonRequestType.ProtectCall)

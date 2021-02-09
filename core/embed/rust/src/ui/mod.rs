@@ -1,4 +1,5 @@
 pub mod component;
-pub mod geometry;
+pub mod display;
+pub mod math;
 pub mod text;
 pub mod theme;
