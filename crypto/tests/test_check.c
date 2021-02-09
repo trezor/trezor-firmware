@@ -4628,21 +4628,42 @@ START_TEST(test_blake2s) {
 }
 END_TEST
 
-START_TEST(test_chacha_drbg) {
-  char entropy[] = "8a09b482de30c12ee1d2eb69dd49753d4252b3d36128ee1e";
-  char reseed[] = "9ec4b991f939dbb44355392d05cd793a2e281809d2ed7139";
-  char expected[] =
-      "4caaeb7db073d34b37b5b26f8a3863849f298dab754966e0f75526823216057c2626e044"
-      "9f7ffda7c3dba8841c06af01029eebfd4d4cae951c19c9f6ff6812783e58438840883401"
-      "2a05cd24c38cd22d18296aceed6829299190ebb9455eb8fd8d1cac1d";
-  uint8_t result[100];
+#include <stdio.h>
 
+START_TEST(test_chacha_drbg) {
+  char entropy[] =
+      "06032cd5eed33f39265f49ecb142c511da9aff2af71203bffaf34a9ca5bd9c0d";
+  char nonce[] = "0e66f71edc43e42a45ad3c6fc6cdc4df";
+  char reseed[] =
+      "01920a4e669ed3a85ae8a33b35a74ad7fb2a6bb4cf395ce00334a9c9a5a5d552";
+  char expected[] =
+      "a5a658d47f553f16ae2b9865f56d93ee35fd44a72607678d55d891c496bdfd815b47b8b1"
+      "04224a6d52ffb3bac5d6bcc6d036937979d9e6723686dc87c5d182e24ebf05504f5546d8"
+      "9d31bc2813b859e6d5deb2a75235a9279251d0310e979864d54c46f237fdd8320420ccb5"
+      "e7d8e001e09416476b2cc30d12ba2aae26c12cb0";
+  uint8_t result[128];
+  uint8_t null_bytes[128] = {0};
+
+  uint8_t nonce_bytes[16];
+  memcpy(nonce_bytes, fromhex(nonce), sizeof(nonce_bytes));
   CHACHA_DRBG_CTX ctx;
-  chacha_drbg_init(&ctx, fromhex(entropy));
-  chacha_drbg_reseed(&ctx, fromhex(reseed));
+  chacha_drbg_init(&ctx, fromhex(entropy), strlen(entropy) / 2, nonce_bytes,
+                   strlen(nonce) / 2);
+  chacha_drbg_reseed(&ctx, fromhex(reseed), strlen(reseed) / 2, NULL, 0);
   chacha_drbg_generate(&ctx, result, sizeof(result));
   chacha_drbg_generate(&ctx, result, sizeof(result));
   ck_assert_mem_eq(result, fromhex(expected), sizeof(result));
+
+  for (size_t i = 0; i <= sizeof(result); ++i) {
+    chacha_drbg_init(&ctx, fromhex(entropy), strlen(entropy) / 2, nonce_bytes,
+                     strlen(nonce) / 2);
+    chacha_drbg_reseed(&ctx, fromhex(reseed), strlen(reseed) / 2, NULL, 0);
+    chacha_drbg_generate(&ctx, result, sizeof(result) - 13);
+    memset(result, 0, sizeof(result));
+    chacha_drbg_generate(&ctx, result, i);
+    ck_assert_mem_eq(result, fromhex(expected), i);
+    ck_assert_mem_eq(result + i, null_bytes, sizeof(result) - i);
+  }
 }
 END_TEST
 
