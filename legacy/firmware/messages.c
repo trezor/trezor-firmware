@@ -308,14 +308,28 @@ const uint8_t *msg_debug_out_data(void) {
 
 CONFIDENTIAL uint8_t msg_tiny[128];
 _Static_assert(sizeof(msg_tiny) >= sizeof(Cancel), "msg_tiny too tiny");
+_Static_assert(USB_PACKET_SIZE >= MSG_HEADER_SIZE + Cancel_size,
+               "msg_tiny too tiny");
 _Static_assert(sizeof(msg_tiny) >= sizeof(Initialize), "msg_tiny too tiny");
+_Static_assert(USB_PACKET_SIZE >= MSG_HEADER_SIZE + Initialize_size,
+               "msg_tiny too tiny");
 _Static_assert(sizeof(msg_tiny) >= sizeof(PassphraseAck), "msg_tiny too tiny");
+_Static_assert(USB_PACKET_SIZE >= MSG_HEADER_SIZE + PassphraseAck_size,
+               "msg_tiny too tiny");
 _Static_assert(sizeof(msg_tiny) >= sizeof(ButtonAck), "msg_tiny too tiny");
+_Static_assert(USB_PACKET_SIZE >= MSG_HEADER_SIZE + ButtonAck_size,
+               "msg_tiny too tiny");
 _Static_assert(sizeof(msg_tiny) >= sizeof(PinMatrixAck), "msg_tiny too tiny");
+_Static_assert(USB_PACKET_SIZE >= MSG_HEADER_SIZE + PinMatrixAck_size,
+               "msg_tiny too tiny");
 #if DEBUG_LINK
 _Static_assert(sizeof(msg_tiny) >= sizeof(DebugLinkDecision),
                "msg_tiny too tiny");
+_Static_assert(USB_PACKET_SIZE >= MSG_HEADER_SIZE + DebugLinkDecision_size,
+               "msg_tiny too tiny");
 _Static_assert(sizeof(msg_tiny) >= sizeof(DebugLinkGetState),
+               "msg_tiny too tiny");
+_Static_assert(USB_PACKET_SIZE >= MSG_HEADER_SIZE + DebugLinkGetState_size,
                "msg_tiny too tiny");
 #endif
 uint16_t msg_tiny_id = 0xFFFF;
