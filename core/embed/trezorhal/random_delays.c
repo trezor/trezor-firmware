@@ -59,7 +59,7 @@ static secbool rdi_disabled = sectrue;
 static void rdi_reseed(void) {
   uint8_t entropy[CHACHA_DRBG_SEED_LENGTH];
   random_buffer(entropy, CHACHA_DRBG_SEED_LENGTH);
-  chacha_drbg_reseed(&drbg_ctx, entropy);
+  chacha_drbg_reseed(&drbg_ctx, entropy, sizeof(entropy), NULL, 0);
 }
 
 static void buffer_refill(void) {
@@ -128,7 +128,7 @@ void rdi_start(void) {
   if (rdi_disabled == sectrue) {  // if rdi disabled
     uint8_t entropy[CHACHA_DRBG_SEED_LENGTH];
     random_buffer(entropy, CHACHA_DRBG_SEED_LENGTH);
-    chacha_drbg_init(&drbg_ctx, entropy);
+    chacha_drbg_init(&drbg_ctx, entropy, sizeof(entropy), NULL, 0);
     buffer_refill();
     buffer_index = 0;
     refresh_session_delay = true;
