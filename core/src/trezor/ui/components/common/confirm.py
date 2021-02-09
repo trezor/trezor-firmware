@@ -4,11 +4,15 @@ if __debug__:
     from apps.debug import confirm_signal
 
 if False:
-    from typing import List, Tuple, Optional
+    from typing import List, Tuple, Optional, Any
 
 CONFIRMED = object()
 CANCELLED = object()
 INFO = object()
+
+
+def is_confirmed(x: Any) -> bool:
+    return x is CONFIRMED
 
 
 class ConfirmBase(ui.Layout):
