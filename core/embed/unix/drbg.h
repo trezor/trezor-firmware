@@ -17,14 +17,35 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TREZORUNIX_DRBG_H__
-#define __TREZORUNIX_DRBG_H__
+#ifndef __UNIX_DRBG_H__
+#define __UNIX_DRBG_H__
 
 #include <stddef.h>
 #include <stdint.h>
 
-void drbg_init(void);
-void drbg_reseed(const uint8_t *entropy, size_t len);
-void drbg_generate(uint8_t *buf, size_t len);
+#include "assert.h"
+#include "chacha_drbg.h"
+
+#define DRBG_INIT_NONCE_LENGTH 0
+#define DRBG_INIT_ENTROPY_LENGTH 50
+_Static_assert(CHACHA_DRBG_DERIVATION_FUNCTION_BLOCK_LENGTH -
+                       CHACHA_DRBG_DERIVATION_FUNCTION_PREFIX_LENGTH -
+                       CHACHA_DRBG_DERIVATION_FUNCTION_PADDING ==
+                   DRBG_INIT_ENTROPY_LENGTH + DRBG_INIT_NONCE_LENGTH,
+               "");
+// Make sure entropy in chacha_drbg derivation function fills exactly one block
+// of hashing function. This is not needed it's just an optimalization.
+
+#define DRBG_RESEED_ENTROPY_LENGTH 50
+_Static_assert(CHACHA_DRBG_DERIVATION_FUNCTION_BLOCK_LENGTH -
+                       CHACHA_DRBG_DERIVATION_FUNCTION_PREFIX_LENGTH -
+                       CHACHA_DRBG_DERIVATION_FUNCTION_PADDING ==
+                   DRBG_RESEED_ENTROPY_LENGTH,
+               "");
+
+void drbg_init(const uint8_t *nonce, size_t nonce_length);
+void drbg_set_seed(uint32_t seed);
+void drbg_reseed();
+void drbg_generate(uint8_t *buffer, size_t length);
 uint32_t drbg_random32(void);
 #endif

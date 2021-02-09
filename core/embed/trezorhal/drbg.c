@@ -20,22 +20,51 @@
 #include "drbg.h"
 
 #include "chacha_drbg.h"
+#include "common.h"
+#include "memzero.h"
 #include "rand.h"
+#include "secbool.h"
 
 static CHACHA_DRBG_CTX drbg_ctx;
+static secbool initialized = secfalse;
 
-void drbg_init(void) {
-  uint8_t entropy[48];
+void drbg_init(const uint8_t *nonce, size_t nonce_length) {
+  assert(nonce_length == DRBG_INIT_NONCE_LENGTH);
+
+  uint8_t entropy[DRBG_INIT_TRNG_ENTROPY_LENGTH] = {0};
   random_buffer(entropy, sizeof(entropy));
-  chacha_drbg_init(&drbg_ctx, entropy, sizeof(entropy), NULL, 0);
+  chacha_drbg_init(&drbg_ctx, entropy, sizeof(entropy), nonce, nonce_length);
+  memzero(entropy, sizeof(entropy));
+
+  initialized = sectrue;
 }
 
-void drbg_reseed(const uint8_t *entropy, size_t len) {
-  chacha_drbg_reseed(&drbg_ctx, entropy, len, NULL, 0);
+static void drbg_reseed_with_trng(size_t trng_entropy_length,
+                                  uint8_t *additional_input,
+                                  size_t additional_input_length) {
+  ensure(initialized, NULL);
+  assert(trng_entropy_length <= DRBG_RESEED_MAX_TRNG_ENTROPY);
+
+  uint8_t entropy[DRBG_RESEED_MAX_TRNG_ENTROPY] = {0};
+  random_buffer(entropy, trng_entropy_length);
+  chacha_drbg_reseed(&drbg_ctx, entropy, trng_entropy_length, additional_input,
+                     additional_input_length);
+  memzero(entropy, sizeof(entropy));
 }
 
-void drbg_generate(uint8_t *buf, size_t len) {
-  chacha_drbg_generate(&drbg_ctx, buf, len);
+void drbg_mix_hw_entropy() {
+  drbg_reseed_with_trng(DRBG_MIX_HW_ENTROPY_TRNG_ENTROPY_LENGTH,
+                        HW_ENTROPY_DATA, HW_ENTROPY_LEN);
+}
+
+void drbg_reseed() {
+  drbg_reseed_with_trng(DRBG_RESEED_TRNG_ENTROPY_LENGTH, SW_ENTROPY_DATA,
+                        SW_ENTROPY_LEN);
+}
+
+void drbg_generate(uint8_t *buffer, size_t length) {
+  ensure(initialized, NULL);
+  chacha_drbg_generate(&drbg_ctx, buffer, length);
 }
 
 uint32_t drbg_random32(void) {

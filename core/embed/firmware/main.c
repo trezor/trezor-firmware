@@ -55,7 +55,7 @@
 
 int main(void) {
   // initialize pseudo-random number generator
-  drbg_init();
+  drbg_init(NULL, 0);
 #ifdef RDI
   rdi_start();
 #endif
@@ -66,6 +66,7 @@ int main(void) {
 #endif
 
   collect_hw_entropy();
+  drbg_mix_hw_entropy();
 
 #ifdef SYSTEM_VIEW
   enable_systemview();

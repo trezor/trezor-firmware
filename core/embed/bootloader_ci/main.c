@@ -214,7 +214,7 @@ static void check_bootloader_version(void) {
 #endif
 
 int main(void) {
-  drbg_init();
+  drbg_init(NULL, 0);
   touch_init();
   touch_power_on();
 
