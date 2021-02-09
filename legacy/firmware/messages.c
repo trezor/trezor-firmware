@@ -25,11 +25,15 @@
 #include "memzero.h"
 #include "messages.h"
 #include "trezor.h"
+#include "usb.h"
 #include "util.h"
 
 #include "messages.pb.h"
 #include "pb_decode.h"
 #include "pb_encode.h"
+
+// The size of the message header "?##<2 bytes msg_id><4 bytes msg_size>".
+#define MSG_HEADER_SIZE 9
 
 struct MessagesMap_t {
   char type;  // n = normal, d = debug
@@ -84,14 +88,14 @@ static uint8_t msg_debug_out[MSG_DEBUG_OUT_SIZE];
 
 static inline void msg_out_append(uint8_t c) {
   if (msg_out_cur == 0) {
-    msg_out[msg_out_end * 64] = '?';
+    msg_out[msg_out_end * USB_PACKET_SIZE] = '?';
     msg_out_cur = 1;
   }
-  msg_out[msg_out_end * 64 + msg_out_cur] = c;
+  msg_out[msg_out_end * USB_PACKET_SIZE + msg_out_cur] = c;
   msg_out_cur++;
-  if (msg_out_cur == 64) {
+  if (msg_out_cur == USB_PACKET_SIZE) {
     msg_out_cur = 0;
-    msg_out_end = (msg_out_end + 1) % (MSG_OUT_SIZE / 64);
+    msg_out_end = (msg_out_end + 1) % (MSG_OUT_SIZE / USB_PACKET_SIZE);
   }
 }
 
@@ -99,14 +103,15 @@ static inline void msg_out_append(uint8_t c) {
 
 static inline void msg_debug_out_append(uint8_t c) {
   if (msg_debug_out_cur == 0) {
-    msg_debug_out[msg_debug_out_end * 64] = '?';
+    msg_debug_out[msg_debug_out_end * USB_PACKET_SIZE] = '?';
     msg_debug_out_cur = 1;
   }
-  msg_debug_out[msg_debug_out_end * 64 + msg_debug_out_cur] = c;
+  msg_debug_out[msg_debug_out_end * USB_PACKET_SIZE + msg_debug_out_cur] = c;
   msg_debug_out_cur++;
-  if (msg_debug_out_cur == 64) {
+  if (msg_debug_out_cur == USB_PACKET_SIZE) {
     msg_debug_out_cur = 0;
-    msg_debug_out_end = (msg_debug_out_end + 1) % (MSG_DEBUG_OUT_SIZE / 64);
+    msg_debug_out_end =
+        (msg_debug_out_end + 1) % (MSG_DEBUG_OUT_SIZE / USB_PACKET_SIZE);
   }
 }
 
@@ -114,24 +119,25 @@ static inline void msg_debug_out_append(uint8_t c) {
 
 static inline void msg_out_pad(void) {
   if (msg_out_cur == 0) return;
-  while (msg_out_cur < 64) {
-    msg_out[msg_out_end * 64 + msg_out_cur] = 0;
+  while (msg_out_cur < USB_PACKET_SIZE) {
+    msg_out[msg_out_end * USB_PACKET_SIZE + msg_out_cur] = 0;
     msg_out_cur++;
   }
   msg_out_cur = 0;
-  msg_out_end = (msg_out_end + 1) % (MSG_OUT_SIZE / 64);
+  msg_out_end = (msg_out_end + 1) % (MSG_OUT_SIZE / USB_PACKET_SIZE);
 }
 
 #if DEBUG_LINK
 
 static inline void msg_debug_out_pad(void) {
   if (msg_debug_out_cur == 0) return;
-  while (msg_debug_out_cur < 64) {
-    msg_debug_out[msg_debug_out_end * 64 + msg_debug_out_cur] = 0;
+  while (msg_debug_out_cur < USB_PACKET_SIZE) {
+    msg_debug_out[msg_debug_out_end * USB_PACKET_SIZE + msg_debug_out_cur] = 0;
     msg_debug_out_cur++;
   }
   msg_debug_out_cur = 0;
-  msg_debug_out_end = (msg_debug_out_end + 1) % (MSG_DEBUG_OUT_SIZE / 64);
+  msg_debug_out_end =
+      (msg_debug_out_end + 1) % (MSG_DEBUG_OUT_SIZE / USB_PACKET_SIZE);
 }
 
 #endif
@@ -233,7 +239,7 @@ void msg_read_common(char type, const uint8_t *buf, uint32_t len) {
   static uint32_t msg_pos = 0;
   static const pb_msgdesc_t *fields = 0;
 
-  if (len != 64) return;
+  if (len != USB_PACKET_SIZE) return;
 
   if (read_state == READSTATE_IDLE) {
     if (buf[0] != '?' || buf[1] != '#' ||
@@ -257,8 +263,8 @@ void msg_read_common(char type, const uint8_t *buf, uint32_t len) {
 
     read_state = READSTATE_READING;
 
-    memcpy(msg_in, buf + 9, len - 9);
-    msg_pos = len - 9;
+    memcpy(msg_in, buf + MSG_HEADER_SIZE, len - MSG_HEADER_SIZE);
+    msg_pos = len - MSG_HEADER_SIZE;
   } else if (read_state == READSTATE_READING) {
     if (buf[0] != '?') {  // invalid contents
       read_state = READSTATE_IDLE;
@@ -281,8 +287,8 @@ void msg_read_common(char type, const uint8_t *buf, uint32_t len) {
 
 const uint8_t *msg_out_data(void) {
   if (msg_out_start == msg_out_end) return 0;
-  uint8_t *data = msg_out + (msg_out_start * 64);
-  msg_out_start = (msg_out_start + 1) % (MSG_OUT_SIZE / 64);
+  uint8_t *data = msg_out + (msg_out_start * USB_PACKET_SIZE);
+  msg_out_start = (msg_out_start + 1) % (MSG_OUT_SIZE / USB_PACKET_SIZE);
   debugLog(0, "", "msg_out_data");
   return data;
 }
@@ -291,8 +297,9 @@ const uint8_t *msg_out_data(void) {
 
 const uint8_t *msg_debug_out_data(void) {
   if (msg_debug_out_start == msg_debug_out_end) return 0;
-  uint8_t *data = msg_debug_out + (msg_debug_out_start * 64);
-  msg_debug_out_start = (msg_debug_out_start + 1) % (MSG_DEBUG_OUT_SIZE / 64);
+  uint8_t *data = msg_debug_out + (msg_debug_out_start * USB_PACKET_SIZE);
+  msg_debug_out_start =
+      (msg_debug_out_start + 1) % (MSG_DEBUG_OUT_SIZE / USB_PACKET_SIZE);
   debugLog(0, "", "msg_debug_out_data");
   return data;
 }
@@ -314,19 +321,19 @@ _Static_assert(sizeof(msg_tiny) >= sizeof(DebugLinkGetState),
 uint16_t msg_tiny_id = 0xFFFF;
 
 void msg_read_tiny(const uint8_t *buf, int len) {
-  if (len != 64) return;
+  if (len != USB_PACKET_SIZE) return;
   if (buf[0] != '?' || buf[1] != '#' || buf[2] != '#') {
     return;
   }
   uint16_t msg_id = (buf[3] << 8) + buf[4];
   uint32_t msg_size =
       ((uint32_t)buf[5] << 24) + (buf[6] << 16) + (buf[7] << 8) + buf[8];
-  if (msg_size > 64 || len - msg_size < 9) {
+  if (msg_size > USB_PACKET_SIZE || len - msg_size < MSG_HEADER_SIZE) {
     return;
   }
 
   const pb_msgdesc_t *fields = 0;
-  pb_istream_t stream = pb_istream_from_buffer(buf + 9, msg_size);
+  pb_istream_t stream = pb_istream_from_buffer(buf + MSG_HEADER_SIZE, msg_size);
 
   switch (msg_id) {
     case MessageType_MessageType_PinMatrixAck:

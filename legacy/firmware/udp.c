@@ -38,7 +38,7 @@ void usbInit(void) { emulatorSocketInit(); }
 void usbPoll(void) {
   emulatorPoll();
 
-  static uint8_t buffer[64];
+  static uint8_t buffer[USB_PACKET_SIZE];
 
   int iface = 0;
   if (emulatorSocketRead(&iface, buffer, sizeof(buffer)) > 0) {
@@ -51,13 +51,13 @@ void usbPoll(void) {
 
   const uint8_t *data = msg_out_data();
   if (data != NULL) {
-    emulatorSocketWrite(0, data, 64);
+    emulatorSocketWrite(0, data, USB_PACKET_SIZE);
   }
 
 #if DEBUG_LINK
   data = msg_debug_out_data();
   if (data != NULL) {
-    emulatorSocketWrite(1, data, 64);
+    emulatorSocketWrite(1, data, USB_PACKET_SIZE);
   }
 #endif
 }
