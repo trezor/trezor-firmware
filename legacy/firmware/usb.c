@@ -91,7 +91,7 @@ static const struct usb_device_descriptor dev_descr = {
     .bDeviceClass = 0,
     .bDeviceSubClass = 0,
     .bDeviceProtocol = 0,
-    .bMaxPacketSize0 = 64,
+    .bMaxPacketSize0 = USB_PACKET_SIZE,
     .idVendor = 0x1209,
     .idProduct = 0x53c1,
     .bcdDevice = 0x0100,
@@ -148,7 +148,7 @@ static const struct usb_endpoint_descriptor hid_endpoints_u2f[2] = {
         .bDescriptorType = USB_DT_ENDPOINT,
         .bEndpointAddress = ENDPOINT_ADDRESS_U2F_IN,
         .bmAttributes = USB_ENDPOINT_ATTR_INTERRUPT,
-        .wMaxPacketSize = 64,
+        .wMaxPacketSize = USB_PACKET_SIZE,
         .bInterval = 1,
     },
     {
@@ -156,7 +156,7 @@ static const struct usb_endpoint_descriptor hid_endpoints_u2f[2] = {
         .bDescriptorType = USB_DT_ENDPOINT,
         .bEndpointAddress = ENDPOINT_ADDRESS_U2F_OUT,
         .bmAttributes = USB_ENDPOINT_ATTR_INTERRUPT,
-        .wMaxPacketSize = 64,
+        .wMaxPacketSize = USB_PACKET_SIZE,
         .bInterval = 1,
     }};
 
@@ -185,7 +185,7 @@ static const struct usb_endpoint_descriptor webusb_endpoints_debug[2] = {
         .bDescriptorType = USB_DT_ENDPOINT,
         .bEndpointAddress = ENDPOINT_ADDRESS_DEBUG_IN,
         .bmAttributes = USB_ENDPOINT_ATTR_INTERRUPT,
-        .wMaxPacketSize = 64,
+        .wMaxPacketSize = USB_PACKET_SIZE,
         .bInterval = 1,
     },
     {
@@ -193,7 +193,7 @@ static const struct usb_endpoint_descriptor webusb_endpoints_debug[2] = {
         .bDescriptorType = USB_DT_ENDPOINT,
         .bEndpointAddress = ENDPOINT_ADDRESS_DEBUG_OUT,
         .bmAttributes = USB_ENDPOINT_ATTR_INTERRUPT,
-        .wMaxPacketSize = 64,
+        .wMaxPacketSize = USB_PACKET_SIZE,
         .bInterval = 1,
     }};
 
@@ -220,7 +220,7 @@ static const struct usb_endpoint_descriptor webusb_endpoints_main[2] = {
         .bDescriptorType = USB_DT_ENDPOINT,
         .bEndpointAddress = ENDPOINT_ADDRESS_MAIN_IN,
         .bmAttributes = USB_ENDPOINT_ATTR_INTERRUPT,
-        .wMaxPacketSize = 64,
+        .wMaxPacketSize = USB_PACKET_SIZE,
         .bInterval = 1,
     },
     {
@@ -228,7 +228,7 @@ static const struct usb_endpoint_descriptor webusb_endpoints_main[2] = {
         .bDescriptorType = USB_DT_ENDPOINT,
         .bEndpointAddress = ENDPOINT_ADDRESS_MAIN_OUT,
         .bmAttributes = USB_ENDPOINT_ATTR_INTERRUPT,
-        .wMaxPacketSize = 64,
+        .wMaxPacketSize = USB_PACKET_SIZE,
         .bInterval = 1,
     }};
 
@@ -303,10 +303,12 @@ static enum usbd_request_return_codes hid_control_request(
 
 static void u2f_rx_callback(usbd_device *dev, uint8_t ep) {
   (void)ep;
-  static CONFIDENTIAL uint8_t buf[64] __attribute__((aligned(4)));
+  static CONFIDENTIAL uint8_t buf[USB_PACKET_SIZE] __attribute__((aligned(4)));
 
   debugLog(0, "", "u2f_rx_callback");
-  if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_U2F_OUT, buf, 64) != 64) return;
+  if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_U2F_OUT, buf, sizeof(buf)) !=
+      USB_PACKET_SIZE)
+    return;
   u2fhid_read(tiny, (const U2FHID_FRAME *)(void *)buf);
 }
 
@@ -314,14 +316,15 @@ static void u2f_rx_callback(usbd_device *dev, uint8_t ep) {
 
 static void main_rx_callback(usbd_device *dev, uint8_t ep) {
   (void)ep;
-  static CONFIDENTIAL uint8_t buf[64] __attribute__((aligned(4)));
-  if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_MAIN_OUT, buf, 64) != 64)
+  static CONFIDENTIAL uint8_t buf[USB_PACKET_SIZE] __attribute__((aligned(4)));
+  if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_MAIN_OUT, buf, sizeof(buf)) !=
+      USB_PACKET_SIZE)
     return;
   debugLog(0, "", "main_rx_callback");
   if (!tiny) {
-    msg_read(buf, 64);
+    msg_read(buf, sizeof(buf));
   } else {
-    msg_read_tiny(buf, 64);
+    msg_read_tiny(buf, sizeof(buf));
   }
 }
 
@@ -329,14 +332,15 @@ static void main_rx_callback(usbd_device *dev, uint8_t ep) {
 
 static void debug_rx_callback(usbd_device *dev, uint8_t ep) {
   (void)ep;
-  static uint8_t buf[64] __attribute__((aligned(4)));
-  if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_DEBUG_OUT, buf, 64) != 64)
+  static uint8_t buf[USB_PACKET_SIZE] __attribute__((aligned(4)));
+  if (usbd_ep_read_packet(dev, ENDPOINT_ADDRESS_DEBUG_OUT, buf, sizeof(buf)) !=
+      USB_PACKET_SIZE)
     return;
   debugLog(0, "", "debug_rx_callback");
   if (!tiny) {
-    msg_debug_read(buf, 64);
+    msg_debug_read(buf, sizeof(buf));
   } else {
-    msg_read_tiny(buf, 64);
+    msg_read_tiny(buf, sizeof(buf));
   }
 }
 
@@ -345,21 +349,21 @@ static void debug_rx_callback(usbd_device *dev, uint8_t ep) {
 static void set_config(usbd_device *dev, uint16_t wValue) {
   (void)wValue;
 
-  usbd_ep_setup(dev, ENDPOINT_ADDRESS_MAIN_IN, USB_ENDPOINT_ATTR_INTERRUPT, 64,
-                0);
-  usbd_ep_setup(dev, ENDPOINT_ADDRESS_MAIN_OUT, USB_ENDPOINT_ATTR_INTERRUPT, 64,
-                main_rx_callback);
+  usbd_ep_setup(dev, ENDPOINT_ADDRESS_MAIN_IN, USB_ENDPOINT_ATTR_INTERRUPT,
+                USB_PACKET_SIZE, 0);
+  usbd_ep_setup(dev, ENDPOINT_ADDRESS_MAIN_OUT, USB_ENDPOINT_ATTR_INTERRUPT,
+                USB_PACKET_SIZE, main_rx_callback);
 #if U2F_ENABLED
-  usbd_ep_setup(dev, ENDPOINT_ADDRESS_U2F_IN, USB_ENDPOINT_ATTR_INTERRUPT, 64,
-                0);
-  usbd_ep_setup(dev, ENDPOINT_ADDRESS_U2F_OUT, USB_ENDPOINT_ATTR_INTERRUPT, 64,
-                u2f_rx_callback);
+  usbd_ep_setup(dev, ENDPOINT_ADDRESS_U2F_IN, USB_ENDPOINT_ATTR_INTERRUPT,
+                USB_PACKET_SIZE, 0);
+  usbd_ep_setup(dev, ENDPOINT_ADDRESS_U2F_OUT, USB_ENDPOINT_ATTR_INTERRUPT,
+                USB_PACKET_SIZE, u2f_rx_callback);
 #endif
 #if DEBUG_LINK
-  usbd_ep_setup(dev, ENDPOINT_ADDRESS_DEBUG_IN, USB_ENDPOINT_ATTR_INTERRUPT, 64,
-                0);
+  usbd_ep_setup(dev, ENDPOINT_ADDRESS_DEBUG_IN, USB_ENDPOINT_ATTR_INTERRUPT,
+                USB_PACKET_SIZE, 0);
   usbd_ep_setup(dev, ENDPOINT_ADDRESS_DEBUG_OUT, USB_ENDPOINT_ATTR_INTERRUPT,
-                64, debug_rx_callback);
+                USB_PACKET_SIZE, debug_rx_callback);
 #endif
 #if U2F_ENABLED
   usbd_register_control_callback(
@@ -406,15 +410,15 @@ void usbPoll(void) {
   // write pending data
   data = msg_out_data();
   if (data) {
-    while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_MAIN_IN, data, 64) !=
-           64) {
+    while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_MAIN_IN, data,
+                                USB_PACKET_SIZE) != USB_PACKET_SIZE) {
     }
   }
 #if U2F_ENABLED
   data = u2f_out_data();
   if (data) {
-    while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_U2F_IN, data, 64) !=
-           64) {
+    while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_U2F_IN, data,
+                                USB_PACKET_SIZE) != USB_PACKET_SIZE) {
     }
   }
 #endif
@@ -423,7 +427,7 @@ void usbPoll(void) {
   data = msg_debug_out_data();
   if (data) {
     while (usbd_ep_write_packet(usbd_dev, ENDPOINT_ADDRESS_DEBUG_IN, data,
-                                64) != 64) {
+                                USB_PACKET_SIZE) != USB_PACKET_SIZE) {
     }
   }
 #endif

@@ -20,6 +20,8 @@
 #ifndef __USB_H__
 #define __USB_H__
 
+#define USB_PACKET_SIZE 64
+
 void usbInit(void);
 void usbPoll(void);
 void usbReconnect(void);
