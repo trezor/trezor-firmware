@@ -394,7 +394,12 @@ def upload_firmware_into_device(
         if f.major_version == 1 and f.firmware_present is not False:
             # Trezor One does not send ButtonRequest
             click.echo("Please confirm the action on your Trezor device")
-        firmware.update(client, firmware_data)
+
+        click.echo("Uploading...\r", nl=False)
+        with click.progressbar(
+            label="Uploading", length=len(firmware_data), show_eta=False
+        ) as bar:
+            firmware.update(client, firmware_data, bar.update)
     except exceptions.Cancelled:
         click.echo("Update aborted on device.")
     except exceptions.TrezorException as e:
@@ -582,7 +587,4 @@ def update(
     if dry_run:
         click.echo("Dry run. Not uploading firmware to device.")
     else:
-        upload_firmware_into_device(
-            client=client,
-            firmware_data=firmware_data,
-        )
+        upload_firmware_into_device(client=client, firmware_data=firmware_data)
