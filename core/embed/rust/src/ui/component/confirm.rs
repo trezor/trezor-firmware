@@ -1,4 +1,4 @@
-use crate::ui::geometry::Grid;
+use crate::ui::math::Grid;
 
 use super::{
     button::{Button, ButtonContent, ButtonMsg, ButtonStyleSheet},
@@ -26,7 +26,7 @@ impl<T> Confirm<T> {
         right: ButtonContent,
         right_styles: ButtonStyleSheet,
     ) -> Self {
-        let grid = Grid::screen(5, 2);
+        let grid = Grid::for_screen(5, 2);
         Self {
             widget: Widget::new(grid.area),
             content,

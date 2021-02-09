@@ -1,6 +1,5 @@
-use crate::trezorhal::display;
-
-use crate::ui::geometry::{Point, Rect};
+use crate::ui::display;
+use crate::ui::math::{Point, Rect};
 
 use super::component::{Component, Event, Widget};
 
@@ -41,7 +40,7 @@ impl Button {
         self.set(State::Disabled);
     }
 
-    pub fn disabled(&self) -> bool {
+    pub fn is_disabled(&self) -> bool {
         matches!(self.state, State::Disabled)
     }
 

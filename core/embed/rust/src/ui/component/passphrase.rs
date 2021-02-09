@@ -1,7 +1,7 @@
 use staticvec::StaticVec;
 
 use crate::ui::{
-    geometry::{Grid, Rect},
+    math::{Grid, Rect},
     theme,
 };
 
@@ -35,9 +35,9 @@ pub struct PassphraseKeyboard {
 
 impl PassphraseKeyboard {
     fn new(prompt: &'static [u8]) -> Self {
-        let grid = Grid::screen(5, 1);
+        let grid = Grid::for_screen(5, 1);
         let input = Input::new(grid.row_col(0, 0), prompt);
-        let grid = Grid::screen(5, 3);
+        let grid = Grid::for_screen(5, 3);
         let back_content = "Back".as_bytes();
         let enter_content = "Enter".as_bytes();
         let back_btn = Button::with_text(grid.cell(12), back_content, theme::button_clear());
@@ -79,7 +79,7 @@ impl PassphraseKeyboard {
     fn generate_key(page: usize, key: usize) -> Button {
         // Assign the keys in each page to buttons on a 5x3 grid, starting from the
         // second row.
-        let grid = Grid::screen(5, 3);
+        let grid = Grid::for_screen(5, 3);
         let area = grid.cell(if key < 9 {
             // The grid has 3 columns, and we skip the first row.
             key + 3
@@ -94,8 +94,7 @@ impl PassphraseKeyboard {
 
 struct Input {
     content: StaticVec<u8, MAX_LENGTH>,
-
-    prompt: Label<'static>,
+    prompt: Label<&'static [u8]>,
 }
 
 impl Input {

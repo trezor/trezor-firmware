@@ -1,7 +1,7 @@
 use core::ops::Deref;
 
-use crate::trezorhal::display;
-use crate::ui::geometry::{Align, Point, Rect};
+use crate::ui::display;
+use crate::ui::math::{Align, Point, Rect};
 
 use super::component::{Component, Widget};
 
@@ -63,9 +63,9 @@ impl<T: Deref<Target = [u8]>> Label<T> {
 }
 
 pub struct LabelStyle {
-    font: i32,
-    text_color: u16,
-    background_color: u16,
+    pub font: i32,
+    pub text_color: u16,
+    pub background_color: u16,
 }
 
 impl<T: Deref<Target = [u8]>> Component for Label<T> {
@@ -78,7 +78,7 @@ impl<T: Deref<Target = [u8]>> Component for Label<T> {
     fn paint(&mut self) {
         display::text(
             self.area().top_left(),
-            self.text,
+            &self.text,
             self.style.font,
             self.style.text_color,
             self.style.background_color,

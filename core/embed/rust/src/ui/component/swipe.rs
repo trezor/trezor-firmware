@@ -1,8 +1,8 @@
 use core::ops::RangeInclusive;
 
-use crate::trezorhal::display;
+use crate::ui::display;
 use crate::ui::{
-    geometry::{Point, Rect},
+    math::{Point, Rect},
     theme,
 };
 

@@ -1,9 +1,9 @@
 use staticvec::StaticVec;
 
-use crate::trezorhal::display;
 use crate::trezorhal::random;
 use crate::ui::{
-    geometry::{Grid, Point, Rect},
+    display,
+    math::{Grid, Offset, Point, Rect},
     theme,
 };
 
@@ -37,9 +37,9 @@ impl PinDialog {
     pub fn new(major_prompt: &'static [u8], minor_prompt: &'static [u8]) -> Self {
         let grid = if minor_prompt.is_empty() {
             // Make the major prompt bigger if the minor one is empty.
-            Grid::screen(5, 1)
+            Grid::for_screen(5, 1)
         } else {
-            Grid::screen(6, 1)
+            Grid::for_screen(6, 1)
         };
         let major_center = grid.row_col(0, 0).midpoint();
         let minor_center = grid.row_col(0, 1).midpoint();
@@ -47,7 +47,7 @@ impl PinDialog {
         let minor_prompt = Label::centered(minor_prompt, theme::label_default(), minor_center);
         let dots = PinLabel::new(0, major_center, theme::label_default());
 
-        let grid = Grid::screen(5, 3);
+        let grid = Grid::for_screen(5, 3);
         let reset_content = "Reset".as_bytes();
         let cancel_content = "Cancel".as_bytes();
         let confirm_content = "Confirm".as_bytes();
@@ -56,7 +56,7 @@ impl PinDialog {
         let confirm_btn = Button::with_text(grid.cell(14), confirm_content, theme::button_clear());
 
         Self {
-            widget: Widget::new(Rect::screen()),
+            widget: Widget::new(Rect::for_screen()),
             pin: StaticVec::new(),
             major_prompt,
             minor_prompt,
@@ -85,7 +85,7 @@ impl PinDialog {
         random::shuffle(&mut digits);
 
         // Assign the digits to buttons on a 5x3 grid, starting from the second row.
-        let grid = Grid::screen(5, 3);
+        let grid = Grid::for_screen(5, 3);
         let btn = |i| {
             let area = grid.cell(if i < 9 {
                 // The grid has 3 columns, and we skip the first row.
@@ -111,7 +111,7 @@ impl PinDialog {
     }
 
     fn pin_modified(&mut self) {
-        for btn in &self.digit_btns {
+        for btn in &mut self.digit_btns {
             if self.pin.is_full() {
                 btn.disable();
             } else {
@@ -150,10 +150,13 @@ impl Component for PinDialog {
             self.pin_modified();
             return None;
         }
-        for btn in &self.digit_btns {
+        for btn in &mut self.digit_btns {
             if let Some(Clicked) = btn.event(event) {
                 if let ButtonContent::Text(text) = btn.content() {
-                    self.pin.try_extend_from_slice(text);
+                    if self.pin.try_extend_from_slice(text).is_err() {
+                        // `self.pin` is full and wasn't able to accept all of
+                        // `text`. Should not happen.
+                    }
                     self.pin_modified();
                     return None;
                 }
@@ -171,7 +174,7 @@ impl Component for PinDialog {
             self.reset_btn.paint();
         }
         self.confirm_btn.paint();
-        for btn in &self.digit_btns {
+        for btn in &mut self.digit_btns {
             btn.paint();
         }
     }
@@ -195,12 +198,15 @@ impl PinLabel {
         }
     }
 
-    fn layout(length: usize, center: Point) -> Rect {}
+    fn layout(length: usize, center: Point) -> Rect {
+        todo!()
+    }
 
     fn update(&mut self, length: usize) {
         if length != self.length {
             self.length = length;
-            self.set_area(Self::layout(length, self.center));
+            let center = self.area().midpoint();
+            self.set_area(Self::layout(length, center));
         }
     }
 }
@@ -214,26 +220,17 @@ impl Component for PinLabel {
 
     fn paint(&mut self) {
         let area = self.area();
-        let style = self.style();
-        display::bar(
-            area.x0,
-            area.y0,
-            area.width(),
-            area.height(),
-            style.background_color,
-        );
+        display::rect(area, self.style.background_color);
         for i in 0..self.length {
             let pos = Point {
-                x: area.x0 + i * (Self::DOT + Self::PADDING),
-                y: self.center.y,
+                x: area.x0 + i as i32 * (Self::DOT + Self::PADDING),
+                y: area.midpoint().y,
             };
-            display::bar_radius(
-                pos.x,
-                pos.y,
-                Self::DOT,
-                Self::DOT,
-                style.text_color,
-                style.background_color,
+            let size = Offset::new(Self::DOT, Self::DOT);
+            display::rounded_rect(
+                Rect::with_size(pos, size),
+                self.style.text_color,
+                self.style.background_color,
                 4,
             );
         }
