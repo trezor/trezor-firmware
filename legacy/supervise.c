@@ -64,7 +64,7 @@ static uint32_t svhandler_flash_lock(void) {
 }
 
 static void __attribute__((noreturn)) svhandler_reboot_to_bootloader(void) {
-  __asm__ __volatile__("ldr r12, =0x55aa55aa");
+  *RETURN_TO_BOOTLOADER_FLAG_ADDR = RETURN_TO_BOOTLOADER_FLAG;
   scb_reset_system();
 }
 

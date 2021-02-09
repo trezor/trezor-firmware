@@ -31,6 +31,9 @@
 #define SVC_TIMER_MS 4
 #define SVC_REBOOT_TO_BOOTLOADER 5
 
+#define RETURN_TO_BOOTLOADER_FLAG_ADDR ((uint32_t *)0x20010000)
+#define RETURN_TO_BOOTLOADER_FLAG 0x11
+
 /* Unlocks flash.  This function needs to be called before programming
  * or erasing. Multiple calls of flash_program and flash_erase can
  * follow and should be completed with flash_lock().
@@ -73,7 +76,7 @@ inline uint32_t svc_timer_ms(void) {
 }
 
 /* Reboot to bootloader.
- * Sets a flag in register and reboots. When bootloader runs, it will recognize
+ * Sets a flag in memory and reboots. When bootloader runs, it will recognize
  * flag and won't run firmware, but enter bootloader mode.
  */
 inline void svc_reboot_to_bootloader(void) {
