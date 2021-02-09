@@ -8,7 +8,7 @@ from trezor.ui.qr import Qr
 from trezor.utils import chunks
 
 from ..components.common import break_path_to_lines
-from ..components.common.confirm import CONFIRMED
+from ..components.common.confirm import is_confirmed
 from ..components.tt.button import ButtonCancel, ButtonDefault
 from ..components.tt.confirm import Confirm, HoldToConfirm
 from ..components.tt.scroll import Paginated
@@ -28,8 +28,6 @@ if False:
 
     from trezor import wire
     from trezor.messages.ButtonRequest import EnumTypeButtonRequestType
-
-    from . import LayoutType
 
 
 __all__ = (
@@ -55,39 +53,49 @@ __all__ = (
 )
 
 
-def confirm_action(
+async def confirm_action(
     ctx: wire.GenericContext,
     br_type: str,
     title: str,
     action: str,
     description: str = None,
     verb: Union[str, bytes] = Confirm.DEFAULT_CONFIRM,
+    verb_cancel: Union[str, bytes] = Confirm.DEFAULT_CANCEL,
     icon: str = None,
     br_code: EnumTypeButtonRequestType = ButtonRequestType.Other,
     **kwargs: Any,
-) -> LayoutType:
+) -> bool:
     text = Text(title, icon if icon is not None else ui.ICON_DEFAULT, new_lines=False)
     text.bold(action)
     text.br()
     if description:
         text.normal(description)
 
-    return interact(ctx, Confirm(text, confirm=verb), br_type, br_code)
-
-
-def confirm_wipe(ctx: wire.GenericContext) -> LayoutType:
-    text = Text("Wipe device", ui.ICON_WIPE, ui.RED)
-    text.normal("Do you really want to", "wipe the device?", "")
-    text.bold("All data will be lost.")
-    return interact(
-        ctx,
-        HoldToConfirm(text, confirm_style=ButtonCancel, loader_style=LoaderDanger),
-        "wipe_device",
-        ButtonRequestType.WipeDevice,
+    return is_confirmed(
+        await interact(
+            ctx,
+            Confirm(text, confirm=verb, cancel=verb_cancel),
+            br_type,
+            br_code,
+        )
     )
 
 
-def confirm_reset_device(ctx: wire.GenericContext, prompt: str) -> LayoutType:
+async def confirm_wipe(ctx: wire.GenericContext) -> bool:
+    text = Text("Wipe device", ui.ICON_WIPE, ui.RED)
+    text.normal("Do you really want to", "wipe the device?", "")
+    text.bold("All data will be lost.")
+    return is_confirmed(
+        await interact(
+            ctx,
+            HoldToConfirm(text, confirm_style=ButtonCancel, loader_style=LoaderDanger),
+            "wipe_device",
+            ButtonRequestType.WipeDevice,
+        )
+    )
+
+
+async def confirm_reset_device(ctx: wire.GenericContext, prompt: str) -> bool:
     text = Text("Create new wallet", ui.ICON_RESET, new_lines=False)
     text.bold(prompt)
     text.br()
@@ -96,11 +104,13 @@ def confirm_reset_device(ctx: wire.GenericContext, prompt: str) -> LayoutType:
     text.br()
     text.normal("to")
     text.bold("https://trezor.io/tos")
-    return interact(
-        ctx,
-        Confirm(text, major_confirm=True),
-        "setup_device",
-        ButtonRequestType.ResetDevice,
+    return is_confirmed(
+        await interact(
+            ctx,
+            Confirm(text, major_confirm=True),
+            "setup_device",
+            ButtonRequestType.ResetDevice,
+        )
     )
 
 
@@ -115,38 +125,39 @@ async def confirm_backup(ctx: wire.GenericContext) -> bool:
     text2.br_half()
     text2.normal("You can back up your", "Trezor once, at any time.")
 
-    if (
+    if is_confirmed(
         await interact(
             ctx,
             Confirm(text1, cancel="Skip", confirm="Back up", major_confirm=True),
             "backup_device",
             ButtonRequestType.ResetDevice,
         )
-        is CONFIRMED
     ):
         return True
 
-    confirmed = (
+    confirmed = is_confirmed(
         await interact(
             ctx,
             Confirm(text2, cancel="Skip", confirm="Back up", major_confirm=True),
             "backup_device",
             ButtonRequestType.ResetDevice,
         )
-    ) is CONFIRMED
+    )
     return confirmed
 
 
-def confirm_path_warning(ctx: wire.GenericContext, path: str) -> LayoutType:
+async def confirm_path_warning(ctx: wire.GenericContext, path: str) -> bool:
     text = Text("Confirm path", ui.ICON_WRONG, ui.RED)
     text.normal("Path")
     text.mono(*break_path_to_lines(path, MONO_CHARS_PER_LINE))
     text.normal("is unknown.", "Are you sure?")
-    return interact(
-        ctx,
-        Confirm(text),
-        "path_warning",
-        ButtonRequestType.UnknownDerivationPath,
+    return is_confirmed(
+        await interact(
+            ctx,
+            Confirm(text),
+            "path_warning",
+            ButtonRequestType.UnknownDerivationPath,
+        )
     )
 
 
@@ -203,11 +214,16 @@ def _show_xpub(xpub: str, desc: str, cancel: str) -> Paginated:
     return content
 
 
-def show_xpub(
+async def show_xpub(
     ctx: wire.GenericContext, xpub: str, desc: str, cancel: str
-) -> LayoutType:
-    return interact(
-        ctx, _show_xpub(xpub, desc, cancel), "show_xpub", ButtonRequestType.PublicKey
+) -> bool:
+    return is_confirmed(
+        await interact(
+            ctx,
+            _show_xpub(xpub, desc, cancel),
+            "show_xpub",
+            ButtonRequestType.PublicKey,
+        )
     )
 
 
@@ -222,17 +238,16 @@ async def show_address(
 ) -> None:
     is_multisig = len(xpubs) > 0
     while True:
-        if (
+        if is_confirmed(
             await interact(
                 ctx,
                 _show_address(address, desc, network),
                 "show_address",
                 ButtonRequestType.Address,
             )
-            is CONFIRMED
         ):
             break
-        if (
+        if is_confirmed(
             await interact(
                 ctx,
                 _show_qr(
@@ -243,7 +258,6 @@ async def show_address(
                 "show_qr",
                 ButtonRequestType.Address,
             )
-            is CONFIRMED
         ):
             break
 
@@ -252,169 +266,188 @@ async def show_address(
                 cancel = "Next" if i < len(xpubs) - 1 else "Address"
                 desc_xpub = "XPUB #%d" % (i + 1)
                 desc_xpub += " (yours)" if i == multisig_index else " (cosigner)"
-                if (
+                if is_confirmed(
                     await interact(
                         ctx,
                         _show_xpub(xpub, desc=desc_xpub, cancel=cancel),
                         "show_xpub",
                         ButtonRequestType.PublicKey,
                     )
-                    is CONFIRMED
                 ):
                     return
 
 
 # FIXME: this is basically same as confirm_hex
 # TODO: pagination for long keys
-def show_pubkey(
+async def show_pubkey(
     ctx: wire.Context, pubkey: str, title: str = "Confirm public key"
-) -> LayoutType:
+) -> bool:
     text = Text(title, ui.ICON_RECEIVE, ui.GREEN)
     text.mono(*_hex_lines(pubkey))
-    return interact(ctx, Confirm(text), "show_pubkey", ButtonRequestType.PublicKey)
+    return is_confirmed(
+        await interact(ctx, Confirm(text), "show_pubkey", ButtonRequestType.PublicKey)
+    )
 
 
-def show_warning(
+async def show_warning(
     ctx: wire.GenericContext,
     br_type: str,
     content: str,
     subheader: Optional[str] = None,
     button: str = "Try again",
-) -> LayoutType:
+) -> bool:
     text = Text("Warning", ui.ICON_WRONG, ui.RED, new_lines=False)
     if subheader:
         text.bold(subheader)
         text.br()
         text.br_half()
     text.normal(content)
-    return interact(
-        ctx,
-        Confirm(text, confirm=button, cancel=None),
-        br_type,
-        ButtonRequestType.Warning,
+    return is_confirmed(
+        await interact(
+            ctx,
+            Confirm(text, confirm=button, cancel=None),
+            br_type,
+            ButtonRequestType.Warning,
+        )
     )
 
 
-def show_success(
+async def show_success(
     ctx: wire.GenericContext,
     br_type: str,
     content: str,
     subheader: Optional[str] = None,
     button: str = "Continue",
-) -> LayoutType:
+) -> bool:
     text = Text("Success", ui.ICON_CONFIRM, ui.GREEN, new_lines=False)
     if subheader:
         text.bold(subheader)
         text.br()
         text.br_half()
     text.normal(content)
-    return interact(
-        ctx,
-        Confirm(text, confirm=button, cancel=None),
-        br_type,
-        ButtonRequestType.Success,
+    return is_confirmed(
+        await interact(
+            ctx,
+            Confirm(text, confirm=button, cancel=None),
+            br_type,
+            ButtonRequestType.Success,
+        )
     )
 
 
-def confirm_output(
+async def confirm_output(
     ctx: wire.GenericContext,
     address: str,
     amount: str,
-) -> LayoutType:
+) -> bool:
     text = Text("Confirm sending", ui.ICON_SEND, ui.GREEN)
     text.normal(amount + " to")
     text.mono(*_split_address(address))
-    return interact(
-        ctx, Confirm(text), "confirm_output", ButtonRequestType.ConfirmOutput
+    return is_confirmed(
+        await interact(
+            ctx, Confirm(text), "confirm_output", ButtonRequestType.ConfirmOutput
+        )
     )
 
 
-def confirm_decred_sstx_submission(
+async def confirm_decred_sstx_submission(
     ctx: wire.GenericContext,
     address: str,
     amount: str,
-) -> LayoutType:
+) -> bool:
     text = Text("Purchase ticket", ui.ICON_SEND, ui.GREEN)
     text.normal(amount)
     text.normal("with voting rights to")
     text.mono(*_split_address(address))
-    return interact(
-        ctx,
-        Confirm(text),
-        "confirm_decred_sstx_submission",
-        ButtonRequestType.ConfirmOutput,
+    return is_confirmed(
+        await interact(
+            ctx,
+            Confirm(text),
+            "confirm_decred_sstx_submission",
+            ButtonRequestType.ConfirmOutput,
+        )
     )
 
 
-def confirm_hex(
+async def confirm_hex(
     ctx: wire.GenericContext,
     br_type: str,
     title: str,
     data: str,
     br_code: EnumTypeButtonRequestType = ButtonRequestType.Other,
-) -> LayoutType:
+) -> bool:
     text = Text(title, ui.ICON_SEND, ui.GREEN)
     text.mono(*_hex_lines(data))
-    return interact(ctx, Confirm(text), br_type, br_code)
+    return is_confirmed(await interact(ctx, Confirm(text), br_type, br_code))
 
 
-def confirm_total(
+async def confirm_total(
     ctx: wire.GenericContext, total_amount: str, fee_amount: str
-) -> LayoutType:
+) -> bool:
     text = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     text.normal("Total amount:")
     text.bold(total_amount)
     text.normal("including fee:")
     text.bold(fee_amount)
-    return interact(ctx, HoldToConfirm(text), "confirm_total", ButtonRequestType.SignTx)
+    return is_confirmed(
+        await interact(
+            ctx, HoldToConfirm(text), "confirm_total", ButtonRequestType.SignTx
+        )
+    )
 
 
-def confirm_joint_total(
+async def confirm_joint_total(
     ctx: wire.GenericContext, spending_amount: str, total_amount: str
-) -> LayoutType:
+) -> bool:
     text = Text("Joint transaction", ui.ICON_SEND, ui.GREEN)
     text.normal("You are contributing:")
     text.bold(spending_amount)
     text.normal("to the total amount:")
     text.bold(total_amount)
-    return interact(
-        ctx, HoldToConfirm(text), "confirm_joint_total", ButtonRequestType.SignTx
+    return is_confirmed(
+        await interact(
+            ctx, HoldToConfirm(text), "confirm_joint_total", ButtonRequestType.SignTx
+        )
     )
 
 
-def confirm_metadata(
+async def confirm_metadata(
     ctx: wire.GenericContext,
     br_type: str,
     title: str,
     content: str,
     param: Optional[str] = None,
     br_code: EnumTypeButtonRequestType = ButtonRequestType.SignTx,
-) -> LayoutType:
+) -> bool:
     text = Text(title, ui.ICON_SEND, ui.GREEN, new_lines=False)
     text.format_parametrized(content, param if param is not None else "")
     text.br()
 
     text.normal("Continue?")
 
-    return interact(ctx, Confirm(text), br_type, br_code)
+    return is_confirmed(await interact(ctx, Confirm(text), br_type, br_code))
 
 
-def confirm_replacement(
+async def confirm_replacement(
     ctx: wire.GenericContext, description: str, txid: str
-) -> LayoutType:
+) -> bool:
     text = Text(description, ui.ICON_SEND, ui.GREEN)
     text.normal("Confirm transaction ID:")
     text.mono(*_hex_lines(txid, TEXT_MAX_LINES - 1))
-    return interact(ctx, Confirm(text), "confirm_replacement", ButtonRequestType.SignTx)
+    return is_confirmed(
+        await interact(
+            ctx, Confirm(text), "confirm_replacement", ButtonRequestType.SignTx
+        )
+    )
 
 
-def confirm_modify_output(
+async def confirm_modify_output(
     ctx: wire.GenericContext,
     address: str,
     sign: int,
     amount_change: str,
     amount_new: str,
-) -> LayoutType:
+) -> bool:
     page1 = Text("Modify amount", ui.ICON_SEND, ui.GREEN)
     page1.normal("Address:")
     page1.br_half()
@@ -430,20 +463,22 @@ def confirm_modify_output(
     page2.normal("New amount:")
     page2.bold(amount_new)
 
-    return interact(
-        ctx,
-        Paginated([page1, Confirm(page2)]),
-        "modify_output",
-        ButtonRequestType.ConfirmOutput,
+    return is_confirmed(
+        interact(
+            ctx,
+            Paginated([page1, Confirm(page2)]),
+            "modify_output",
+            ButtonRequestType.ConfirmOutput,
+        )
     )
 
 
-def confirm_modify_fee(
+async def confirm_modify_fee(
     ctx: wire.GenericContext,
     sign: int,
     user_fee_change: str,
     total_fee_new: str,
-) -> LayoutType:
+) -> bool:
     text = Text("Modify fee", ui.ICON_SEND, ui.GREEN)
     if sign == 0:
         text.normal("Your fee did not change.")
@@ -456,4 +491,6 @@ def confirm_modify_fee(
     text.br_half()
     text.normal("Transaction fee:")
     text.bold(total_fee_new)
-    return interact(ctx, HoldToConfirm(text), "modify_fee", ButtonRequestType.SignTx)
+    return is_confirmed(
+        await interact(ctx, HoldToConfirm(text), "modify_fee", ButtonRequestType.SignTx)
+    )

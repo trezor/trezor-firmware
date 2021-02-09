@@ -3,8 +3,6 @@ from trezor.messages import ButtonRequestType
 from trezor.messages.ButtonAck import ButtonAck
 from trezor.messages.ButtonRequest import ButtonRequest
 
-from ..components.common.confirm import CONFIRMED
-
 if False:
     from typing import Any, Awaitable
 
@@ -13,9 +11,9 @@ if False:
     LayoutType = Awaitable[Any]
 
 
-async def require(a: LayoutType) -> None:
+async def require(a: Awaitable[bool]) -> None:
     result = await a
-    if result is not CONFIRMED:
+    if not result:
         raise wire.ActionCancelled
 
 
