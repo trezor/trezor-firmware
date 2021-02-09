@@ -485,7 +485,11 @@ def validate(
 
 
 @session
-def update(client: "TrezorClient", data: bytes) -> None:
+def update(
+    client: "TrezorClient",
+    data: bytes,
+    progress_update: Callable[[int], Any] = lambda _: None,
+):
     if client.features.bootloader_mode is False:
         raise RuntimeError("Device must be in bootloader mode")
 
@@ -494,6 +498,7 @@ def update(client: "TrezorClient", data: bytes) -> None:
     # TREZORv1 method
     if isinstance(resp, messages.Success):
         resp = client.call(messages.FirmwareUpload(payload=data))
+        progress_update(len(data))
         if isinstance(resp, messages.Success):
             return
         else:
@@ -503,9 +508,11 @@ def update(client: "TrezorClient", data: bytes) -> None:
     while isinstance(resp, messages.FirmwareRequest):
         assert resp.offset is not None
         assert resp.length is not None
-        payload = data[resp.offset : resp.offset + resp.length]
+        length = resp.length
+        payload = data[resp.offset : resp.offset + length]
         digest = blake2s(payload).digest()
         resp = client.call(messages.FirmwareUpload(payload=payload, hash=digest))
+        progress_update(length)
 
     if isinstance(resp, messages.Success):
         return
