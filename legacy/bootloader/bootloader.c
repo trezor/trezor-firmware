@@ -31,6 +31,7 @@
 #include "rng.h"
 #include "setup.h"
 #include "signatures.h"
+#include "supervise.h"
 #include "usb.h"
 #include "util.h"
 
@@ -123,6 +124,12 @@ int main(void) {
 
   mpu_config_bootloader();
 
+  register uint32_t go_to_bootloader_flag __asm__("r11");
+
+  if (go_to_bootloader_flag == RETURN_TO_BOOTLOADER_FLAG) {
+    goto bootloader_loop_start;
+  }
+
 #ifndef APPVER
   bool left_pressed = (buttonRead() & BTN_PIN_NO) == 0;
 
@@ -148,6 +155,8 @@ int main(void) {
     load_app(signed_firmware);
   }
 #endif
+
+bootloader_loop_start:
 
   bootloader_loop();
 
