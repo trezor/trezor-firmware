@@ -153,6 +153,8 @@ static secbool _send_msg(uint8_t iface_num, uint16_t msg_id,
 }
 
 #define MSG_SEND_INIT(TYPE) TYPE msg_send = TYPE##_init_default
+#define MSG_SEND_ASSIGN_REQUIRED_VALUE(FIELD, VALUE) \
+  { msg_send.FIELD = VALUE; }
 #define MSG_SEND_ASSIGN_VALUE(FIELD, VALUE) \
   {                                         \
     msg_send.has_##FIELD = true;            \
@@ -281,9 +283,9 @@ static void send_msg_features(uint8_t iface_num,
                               const image_header *const hdr) {
   MSG_SEND_INIT(Features);
   MSG_SEND_ASSIGN_STRING(vendor, "trezor.io");
-  MSG_SEND_ASSIGN_VALUE(major_version, VERSION_MAJOR);
-  MSG_SEND_ASSIGN_VALUE(minor_version, VERSION_MINOR);
-  MSG_SEND_ASSIGN_VALUE(patch_version, VERSION_PATCH);
+  MSG_SEND_ASSIGN_REQUIRED_VALUE(major_version, VERSION_MAJOR);
+  MSG_SEND_ASSIGN_REQUIRED_VALUE(minor_version, VERSION_MINOR);
+  MSG_SEND_ASSIGN_REQUIRED_VALUE(patch_version, VERSION_PATCH);
   MSG_SEND_ASSIGN_VALUE(bootloader_mode, true);
   MSG_SEND_ASSIGN_STRING(model, "T");
   if (vhdr && hdr) {
