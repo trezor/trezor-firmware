@@ -103,6 +103,7 @@ async def confirm_action(
     )
 
 
+# TODO cleanup @ redesign
 async def confirm_wipe(ctx: wire.GenericContext) -> bool:
     text = Text("Wipe device", ui.ICON_WIPE, ui.RED)
     text.normal("Do you really want to", "wipe the device?", "")
@@ -136,6 +137,7 @@ async def confirm_reset_device(ctx: wire.GenericContext, prompt: str) -> bool:
     )
 
 
+# TODO cleanup @ redesign
 async def confirm_backup(ctx: wire.GenericContext) -> bool:
     text1 = Text("Success", ui.ICON_CONFIRM, ui.GREEN)
     text1.bold("New wallet created", "successfully!")
@@ -299,15 +301,16 @@ async def show_address(
                     return
 
 
-# FIXME: this is basically same as confirm_hex
-# TODO: pagination for long keys
-async def show_pubkey(
+def show_pubkey(
     ctx: wire.Context, pubkey: str, title: str = "Confirm public key"
-) -> bool:
-    text = Text(title, ui.ICON_RECEIVE, ui.GREEN)
-    text.mono(*_hex_lines(pubkey))
-    return is_confirmed(
-        await interact(ctx, Confirm(text), "show_pubkey", ButtonRequestType.PublicKey)
+) -> Awaitable[bool]:
+    return confirm_hex(
+        ctx,
+        br_type="show_pubkey",
+        title="Confirm public key",
+        data=pubkey,
+        br_code=ButtonRequestType.PublicKey,
+        icon=ui.ICON_RECEIVE,
     )
 
 
@@ -443,8 +446,10 @@ async def confirm_hex(
     title: str,
     data: str,
     br_code: EnumTypeButtonRequestType = ButtonRequestType.Other,
+    icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
+    icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
 ) -> bool:
-    text = Text(title, ui.ICON_SEND, ui.GREEN)
+    text = Text(title, icon, icon_color)
     text.mono(*_hex_lines(data))
     return is_confirmed(await interact(ctx, Confirm(text), br_type, br_code))
 
