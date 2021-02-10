@@ -1,10 +1,8 @@
 from storage.device import is_initialized
-from trezor import config, ui, wire
+from trezor import config, wire
 from trezor.messages.Success import Success
-from trezor.ui.components.tt.text import Text
-from trezor.ui.layouts import require, show_success
+from trezor.ui.layouts import confirm_action, require, show_success
 
-from apps.common.confirm import require_confirm
 from apps.common.request_pin import (
     error_pin_invalid,
     error_pin_matches_wipe_code,
@@ -63,22 +61,40 @@ def require_confirm_change_pin(ctx: wire.Context, msg: ChangePin) -> None:
     has_pin = config.has_pin()
 
     if msg.remove and has_pin:  # removing pin
-        text = Text("Remove PIN", ui.ICON_CONFIG)
-        text.normal("Do you really want to")
-        text.bold("disable PIN protection?")
-        return require_confirm(ctx, text)
+        return require(
+            confirm_action(
+                ctx,
+                "set_pin",
+                "Remove PIN",
+                description="Do you really want to",
+                action="disable PIN protection?",
+                reverse=True,
+            )
+        )
 
     if not msg.remove and has_pin:  # changing pin
-        text = Text("Change PIN", ui.ICON_CONFIG)
-        text.normal("Do you really want to")
-        text.bold("change your PIN?")
-        return require_confirm(ctx, text)
+        return require(
+            confirm_action(
+                ctx,
+                "set_pin",
+                "Change PIN",
+                description="Do you really want to",
+                action="change your PIN?",
+                reverse=True,
+            )
+        )
 
     if not msg.remove and not has_pin:  # setting new pin
-        text = Text("Enable PIN", ui.ICON_CONFIG)
-        text.normal("Do you really want to")
-        text.bold("enable PIN protection?")
-        return require_confirm(ctx, text)
+        return require(
+            confirm_action(
+                ctx,
+                "set_pin",
+                "Enable PIN",
+                description="Do you really want to",
+                action="enable PIN protection?",
+                reverse=True,
+            )
+        )
 
     # removing non-existing PIN
     raise wire.ProcessError("PIN protection already disabled")

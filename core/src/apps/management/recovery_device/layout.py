@@ -5,7 +5,7 @@ from trezor.messages import ButtonRequestType
 from trezor.ui.components.tt.scroll import Paginated
 from trezor.ui.components.tt.text import Text
 from trezor.ui.components.tt.word_select import WordSelector
-from trezor.ui.layouts import require, show_success, show_warning
+from trezor.ui.layouts import confirm_action, require, show_success, show_warning
 
 from apps.common import button_request
 from apps.common.confirm import confirm, info_confirm, require_confirm
@@ -23,13 +23,25 @@ if False:
 
 async def confirm_abort(ctx: wire.GenericContext, dry_run: bool = False) -> bool:
     if dry_run:
-        text = Text("Abort seed check", ui.ICON_WIPE)
-        text.normal("Do you really want to", "abort the seed check?")
+        return await confirm_action(
+            ctx,
+            "abort_recovery",
+            "Abort seed check",
+            description="Do you really want to abort the seed check?",
+            icon=ui.ICON_WIPE,
+            br_code=ButtonRequestType.ProtectCall,
+        )
     else:
-        text = Text("Abort recovery", ui.ICON_WIPE)
-        text.normal("Do you really want to", "abort the recovery", "process?")
-        text.bold("All progress will be lost.")
-    return await confirm(ctx, text, code=ButtonRequestType.ProtectCall)
+        return await confirm_action(
+            ctx,
+            "abort_recovery",
+            "Abort recovery",
+            description="Do you really want to abort the recovery process?",
+            action="All progress will be lost.",
+            reverse=True,
+            icon=ui.ICON_WIPE,
+            br_code=ButtonRequestType.ProtectCall,
+        )
 
 
 async def request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
