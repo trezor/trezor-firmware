@@ -217,6 +217,91 @@ class TestMsgResetDeviceT2:
         assert resp.passphrase_protection is True
 
     @pytest.mark.setup_client(uninitialized=True)
+    def test_reset_failed_check(self, client):
+        mnemonic = None
+        strength = 256  # 24 words
+
+        def input_flow():
+            nonlocal mnemonic
+            # 1. Confirm Reset
+            # 2. Backup your seed
+            # 3. Confirm warning
+            yield from click_through(client.debug, screens=3, code=B.ResetDevice)
+
+            # mnemonic phrases, wrong answer
+            btn_code = yield
+            assert btn_code == B.ResetDevice
+            mnemonic = read_and_confirm_mnemonic(
+                client.debug, words=24, choose_wrong=True
+            )
+
+            # warning screen
+            btn_code = yield
+            assert btn_code == B.ResetDevice
+            client.debug.press_yes()
+
+            # mnemonic phrases
+            btn_code = yield
+            assert btn_code == B.ResetDevice
+            mnemonic = read_and_confirm_mnemonic(client.debug, words=24)
+
+            # confirm recovery seed check
+            btn_code = yield
+            assert btn_code == B.Success
+            client.debug.press_yes()
+
+            # confirm success
+            btn_code = yield
+            assert btn_code == B.Success
+            client.debug.press_yes()
+
+        os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
+        with mock.patch("os.urandom", os_urandom), client:
+            client.set_expected_responses(
+                [
+                    proto.ButtonRequest(code=B.ResetDevice),
+                    proto.EntropyRequest(),
+                    proto.ButtonRequest(code=B.ResetDevice),
+                    proto.ButtonRequest(code=B.ResetDevice),
+                    proto.ButtonRequest(code=B.ResetDevice),
+                    proto.ButtonRequest(code=B.ResetDevice),
+                    proto.ButtonRequest(code=B.ResetDevice),
+                    proto.ButtonRequest(code=B.Success),
+                    proto.ButtonRequest(code=B.Success),
+                    proto.Success,
+                    proto.Features,
+                ]
+            )
+            client.set_input_flow(input_flow)
+
+            # PIN, passphrase, display random
+            device.reset(
+                client,
+                display_random=False,
+                strength=strength,
+                passphrase_protection=False,
+                pin_protection=False,
+                label="test",
+                language="en-US",
+            )
+
+        # generate mnemonic locally
+        internal_entropy = client.debug.state().reset_entropy
+        entropy = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
+        expected_mnemonic = Mnemonic("english").to_mnemonic(entropy)
+
+        # Compare that device generated proper mnemonic for given entropies
+        assert mnemonic == expected_mnemonic
+
+        # Check if device is properly initialized
+        resp = client.call_raw(proto.Initialize())
+        assert resp.initialized is True
+        assert resp.needs_backup is False
+        assert resp.pin_protection is False
+        assert resp.passphrase_protection is False
+        assert resp.backup_type is proto.BackupType.Bip39
+
+    @pytest.mark.setup_client(uninitialized=True)
     def test_failed_pin(self, client):
         # external_entropy = b'zlutoucky kun upel divoke ody' * 2
         strength = 128

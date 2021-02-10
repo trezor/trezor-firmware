@@ -62,6 +62,7 @@ async def confirm_action(
     title: str,
     action: str = None,
     description: str = None,
+    description_param: str = None,
     verb: Union[str, bytes, None] = Confirm.DEFAULT_CONFIRM,
     verb_cancel: Union[str, bytes, None] = Confirm.DEFAULT_CANCEL,
     hold: bool = False,
@@ -80,7 +81,9 @@ async def confirm_action(
     )
 
     if reverse and description is not None:
-        text.normal(description)
+        text.format_parametrized(
+            description, description_param if description_param is not None else ""
+        )
     elif action is not None:
         text.bold(action)
 
@@ -92,7 +95,9 @@ async def confirm_action(
     if reverse and action is not None:
         text.bold(action)
     elif description is not None:
-        text.normal(description)
+        text.format_parametrized(
+            description, description_param if description_param is not None else ""
+        )
 
     cls = HoldToConfirm if hold else Confirm
     return is_confirmed(
@@ -203,10 +208,12 @@ def _split_address(address: str) -> Iterator[str]:
     return chunks(address, MONO_CHARS_PER_LINE)
 
 
-def _hex_lines(hex_data: str, lines: int = TEXT_MAX_LINES) -> Iterator[str]:
-    if len(hex_data) >= MONO_HEX_PER_LINE * lines:
-        hex_data = hex_data[: (MONO_HEX_PER_LINE * lines - 3)] + "..."
-    return chunks(hex_data, MONO_HEX_PER_LINE)
+def _hex_lines(
+    hex_data: str, lines: int = TEXT_MAX_LINES, width: int = MONO_HEX_PER_LINE
+) -> Iterator[str]:
+    if len(hex_data) >= width * lines:
+        hex_data = hex_data[: (width * lines - 3)] + "..."
+    return chunks(hex_data, width)
 
 
 def _show_address(
@@ -370,14 +377,16 @@ def show_warning(
     ctx: wire.GenericContext,
     br_type: str,
     content: str,
+    header: str = "Warning",
     subheader: Optional[str] = None,
     button: str = "Try again",
+    br_code: EnumTypeButtonRequestType = ButtonRequestType.Warning,
 ) -> Awaitable[bool]:
     return _show_modal(
         ctx,
         br_type=br_type,
-        br_code=ButtonRequestType.Warning,
-        header="Warning",
+        br_code=br_code,
+        header=header,
         subheader=subheader,
         content=content,
         button_confirm=button,
@@ -450,9 +459,10 @@ async def confirm_hex(
     br_code: EnumTypeButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
+    width: int = MONO_HEX_PER_LINE,
 ) -> bool:
     text = Text(title, icon, icon_color)
-    text.mono(*_hex_lines(data))
+    text.mono(*_hex_lines(data, width=width))
     return is_confirmed(await interact(ctx, Confirm(text), br_type, br_code))
 
 

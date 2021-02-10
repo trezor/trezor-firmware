@@ -9,9 +9,15 @@ from trezor.ui.components.tt.info import InfoConfirm
 from trezor.ui.components.tt.num_input import NumInput
 from trezor.ui.components.tt.scroll import Paginated
 from trezor.ui.components.tt.text import Text
-from trezor.ui.layouts import require, show_success
+from trezor.ui.layouts import (
+    confirm_action,
+    confirm_hex,
+    require,
+    show_success,
+    show_warning,
+)
 
-from apps.common.confirm import confirm, require_confirm, require_hold_to_confirm
+from apps.common.confirm import confirm, require_hold_to_confirm
 
 if False:
     from trezor import loop
@@ -22,11 +28,18 @@ if __debug__:
 
 
 async def show_internal_entropy(ctx, entropy: bytes):
-    entropy_str = ubinascii.hexlify(entropy).decode()
-    lines = utils.chunks(entropy_str, 16)
-    text = Text("Internal entropy", ui.ICON_RESET)
-    text.mono(*lines)
-    await require_confirm(ctx, text, ButtonRequestType.ResetDevice)
+    await require(
+        confirm_hex(
+            ctx,
+            "entropy",
+            "Internal entropy",
+            data=ubinascii.hexlify(entropy).decode(),
+            icon=ui.ICON_RESET,
+            icon_color=ui.ORANGE_ICON,
+            width=16,
+            br_code=ButtonRequestType.ResetDevice,
+        )
+    )
 
 
 async def _show_share_words(ctx, share_words, share_index=None, group_index=None):
@@ -186,34 +199,38 @@ async def _show_confirmation_success(
 
 async def _show_confirmation_failure(ctx, share_index):
     if share_index is None:
-        text = Text("Recovery seed", ui.ICON_WRONG, ui.RED)
+        header = "Recovery seed"
     else:
-        text = Text("Recovery share #%s" % (share_index + 1), ui.ICON_WRONG, ui.RED)
-    text.bold("That is the wrong word.")
-    text.normal("Please check again.")
-    await require_confirm(
-        ctx, text, ButtonRequestType.ResetDevice, confirm="Check again", cancel=None
+        header = "Recovery share #%s" % (share_index + 1)
+    await require(
+        show_warning(
+            ctx,
+            "warning_backup_check",
+            header=header,
+            subheader="That is the wrong word.",
+            content="Please check again.",
+            button="Check again",
+            br_code=ButtonRequestType.ResetDevice,
+        )
     )
 
 
 async def show_backup_warning(ctx, slip39=False):
-    text = Text("Caution", ui.ICON_NOCOPY)
     if slip39:
-        text.normal(
-            "Never make a digital",
-            "copy of your recovery",
-            "shares and never upload",
-            "them online!",
-        )
+        description = "Never make a digital copy of your recovery shares and never upload them online!"
     else:
-        text.normal(
-            "Never make a digital",
-            "copy of your recovery",
-            "seed and never upload",
-            "it online!",
+        description = "Never make a digital copy of your recovery seed and never upload\nit online!"
+    await require(
+        confirm_action(
+            ctx,
+            "backup_warning",
+            "Caution",
+            description=description,
+            verb="I understand",
+            verb_cancel=None,
+            icon=ui.ICON_NOCOPY,
+            br_code=ButtonRequestType.ResetDevice,
         )
-    await require_confirm(
-        ctx, text, ButtonRequestType.ResetDevice, "I understand", cancel=None
     )
 
 
