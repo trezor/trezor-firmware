@@ -4,6 +4,10 @@ import os
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 
+FEATURE_FLAGS = {
+    "SW_ENTROPY" : True,
+}
+
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
@@ -90,6 +94,7 @@ SOURCE_BOOTLOADER = [
 
 SOURCE_TREZORHAL = [
     'embed/trezorhal/common.c',
+    'embed/trezorhal/entropy.c',
     'embed/trezorhal/image.c',
     'embed/trezorhal/flash.c',
     'embed/trezorhal/mini_printf.c',
@@ -106,6 +111,9 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/util.s',
     'embed/trezorhal/vectortable.s',
 ]
+
+if FEATURE_FLAGS["SW_ENTROPY"]:
+    CPPDEFINES_MOD += ['SW_ENTROPY']
 
 env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
 

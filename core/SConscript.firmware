@@ -8,6 +8,7 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 
 FEATURE_FLAGS = {
     "RDI": True,
+    "SW_ENTROPY" : True,
     "SECP256K1_ZKP": False,
     "SYSTEM_VIEW": False,
 }
@@ -352,6 +353,9 @@ if FEATURE_FLAGS["RDI"]:
         'embed/trezorhal/rdi.c',
     ]
     CPPDEFINES_MOD += ['RDI']
+
+if FEATURE_FLAGS["SW_ENTROPY"]:
+    CPPDEFINES_MOD += ['SW_ENTROPY']
 
 if FEATURE_FLAGS["SYSTEM_VIEW"]:
     SOURCE_FIRMWARE += [

@@ -21,6 +21,7 @@
 
 #include "usb.h"
 #include "common.h"
+#include "entropy.h"
 #include "rdi.h"
 #include "usbd_core.h"
 
@@ -469,6 +470,9 @@ static uint8_t usb_class_setup(USBD_HandleTypeDef *dev,
 }
 
 static uint8_t usb_class_data_in(USBD_HandleTypeDef *dev, uint8_t ep_num) {
+#ifdef SW_ENTROPY
+  add_sw_entropy(NULL, 0);
+#endif
 #ifdef RDI
   rdi_refresh_session_delay();
 #endif

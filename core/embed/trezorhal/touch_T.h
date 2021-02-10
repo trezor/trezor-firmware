@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "common.h"
+#include "entropy.h"
 #include "secbool.h"
 
 #define TOUCH_ADDRESS \
@@ -262,6 +263,10 @@ uint32_t touch_read(void) {
   } else {
     memcpy(previous_touch_data, touch_data, TOUCH_PACKET_SIZE);
   }
+
+#ifdef SW_ENTROPY
+  add_sw_entropy(NULL, 0);
+#endif
 
   const uint32_t number_of_touch_points =
       touch_data[2] & 0x0F;  // valid values are 0, 1, 2 (invalid 0xF before

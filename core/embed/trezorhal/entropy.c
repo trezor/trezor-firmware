@@ -27,7 +27,11 @@
 
 #include "stm32f4xx_ll_utils.h"
 
+extern __IO uint32_t uwTick;
+
 uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
+uint8_t SW_ENTROPY_DATA[SW_ENTROPY_LEN] = {0};
+static size_t sw_entropy_index = {0};
 
 void collect_hw_entropy(void) {
   // collect entropy from UUID
@@ -51,4 +55,20 @@ void collect_hw_entropy(void) {
   ensure(flash_otp_read(FLASH_OTP_BLOCK_RANDOMNESS, 0, HW_ENTROPY_DATA + 12,
                         FLASH_OTP_BLOCK_SIZE),
          NULL);
+}
+
+void add_sw_entropy(uint8_t *data, size_t data_length) {
+  size_t sw_entropy_index_local = sw_entropy_index % sizeof(SW_ENTROPY_DATA);
+
+  SW_ENTROPY_DATA[sw_entropy_index_local] ^= uwTick & 0xff;
+  sw_entropy_index_local =
+      (sw_entropy_index_local + 1) % sizeof(SW_ENTROPY_DATA);
+
+  for (size_t i = 0; i < data_length; i++) {
+    SW_ENTROPY_DATA[sw_entropy_index_local] ^= data[i];
+    sw_entropy_index_local =
+        (sw_entropy_index_local + 1) % sizeof(SW_ENTROPY_DATA);
+  }
+
+  sw_entropy_index = sw_entropy_index_local;
 }
