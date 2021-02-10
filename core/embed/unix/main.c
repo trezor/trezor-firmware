@@ -37,6 +37,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "drbg.h"
 #include "entropy.h"
 #include "extmod/misc.h"
 #include "extmod/vfs_posix.h"
@@ -474,6 +475,7 @@ MP_NOINLINE int main_(int argc, char **argv);
 
 int main(int argc, char **argv) {
   collect_hw_entropy();
+  drbg_init(NULL, 0);
 
 #if MICROPY_PY_THREAD
   mp_thread_init();

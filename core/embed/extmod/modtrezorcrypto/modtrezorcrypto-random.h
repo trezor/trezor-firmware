@@ -21,6 +21,7 @@
 
 #include "embed/extmod/trezorobj.h"
 
+#include "drbg.h"
 #include "rand.h"
 
 /// package: trezorcrypto.random
@@ -90,7 +91,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_shuffle_obj,
 ///     Re-seed the RNG with given value.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_random_reseed(mp_obj_t data) {
-  random_reseed(trezor_obj_get_uint(data));
+  drbg_set_seed(trezor_obj_get_uint(data));
   return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_random_reseed_obj,

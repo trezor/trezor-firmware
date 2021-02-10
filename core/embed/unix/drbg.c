@@ -23,6 +23,7 @@
 #include "common.h"
 #include "memzero.h"
 #include "secbool.h"
+#include "trng.h"
 
 static CHACHA_DRBG_CTX drbg_ctx;
 static secbool initialized = secfalse;

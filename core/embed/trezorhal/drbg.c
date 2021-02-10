@@ -26,6 +26,7 @@
 #include "rand.h"
 #include "secbool.h"
 #include "systick.h"
+#include "trng.h"
 
 extern __IO uint32_t uwTick;
 
@@ -38,7 +39,7 @@ void drbg_init(const uint8_t *nonce, size_t nonce_length) {
   assert(nonce_length == DRBG_INIT_NONCE_LENGTH);
 
   uint8_t entropy[DRBG_INIT_TRNG_ENTROPY_LENGTH] = {0};
-  random_buffer(entropy, sizeof(entropy));
+  trng_random_buffer(entropy, sizeof(entropy));
   chacha_drbg_init(&drbg_ctx, entropy, sizeof(entropy), nonce, nonce_length);
   memzero(entropy, sizeof(entropy));
 
@@ -53,7 +54,7 @@ static void drbg_reseed_with_trng(size_t trng_entropy_length,
   assert(trng_entropy_length <= DRBG_RESEED_MAX_TRNG_ENTROPY);
 
   uint8_t entropy[DRBG_RESEED_MAX_TRNG_ENTROPY] = {0};
-  random_buffer(entropy, trng_entropy_length);
+  trng_random_buffer(entropy, trng_entropy_length);
   chacha_drbg_reseed(&drbg_ctx, entropy, trng_entropy_length, additional_input,
                      additional_input_length);
   memzero(entropy, sizeof(entropy));

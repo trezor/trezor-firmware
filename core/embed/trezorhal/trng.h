@@ -20,10 +20,12 @@
 #ifndef TREZORHAL_TRNG_H
 #define TREZORHAL_TRNG_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 void trng_init(void);
 uint32_t trng_read(const uint32_t previous, const uint32_t compare_previous);
 uint32_t trng_random32(void);
+void trng_random_buffer(uint8_t *buf, size_t len);
 
 #endif

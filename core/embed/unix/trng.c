@@ -23,14 +23,17 @@
 #include "common.h"
 #include "trng.h"
 
-uint32_t trng_random32(void) {
+void trng_random_buffer(uint8_t *buf, size_t len) {
   static FILE *frand = NULL;
   if (!frand) {
     frand = fopen("/dev/urandom", "r");
   }
   ensure(sectrue * (frand != NULL), "fopen failed");
-  uint32_t r;
-  ensure(sectrue * (sizeof(r) == fread(&r, 1, sizeof(r), frand)),
-         "fread failed");
-  return r;
+  ensure(sectrue * (len == fread(buf, 1, len, frand)), "fread failed");
+}
+
+uint32_t trng_random32(void) {
+  uint32_t value;
+  trng_random_buffer((uint8_t *)&value, sizeof(value));
+  return value;
 }
