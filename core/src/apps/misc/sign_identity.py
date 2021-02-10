@@ -1,22 +1,19 @@
 from ustruct import pack, unpack
 
-from trezor import ui, wire
+from trezor import wire
 from trezor.crypto.hashlib import sha256
 from trezor.messages.SignedIdentity import SignedIdentity
-from trezor.ui.components.tt.text import Text
-from trezor.utils import chunks
+from trezor.ui.layouts import confirm_sign_identity, require
 
 from apps.common import HARDENED, coininfo
-from apps.common.confirm import require_confirm
 from apps.common.keychain import get_keychain
 from apps.common.paths import AlwaysMatchingSchema
 
 if False:
-    from typing import List, Optional, Union
+    from typing import Optional, Union
 
     from trezor.messages.IdentityType import IdentityType
     from trezor.messages.SignIdentity import SignIdentity
-    from trezor.ui.components.common.text import TextContent
 
     from apps.common.paths import Bip32Path
 
@@ -86,17 +83,12 @@ async def sign_identity(ctx: wire.Context, msg: SignIdentity) -> SignedIdentity:
 async def require_confirm_sign_identity(
     ctx: wire.Context, identity: IdentityType, challenge_visual: Optional[str]
 ) -> None:
-    lines: List[TextContent] = []
-    if challenge_visual:
-        lines.append(challenge_visual)
-
-    lines.append(ui.MONO)
-    lines.extend(chunks(serialize_identity_without_proto(identity), 18))
-
     proto = identity.proto.upper() if identity.proto else "identity"
-    text = Text("Sign %s" % proto)
-    text.normal(*lines)
-    await require_confirm(ctx, text)
+    await require(
+        confirm_sign_identity(
+            ctx, proto, serialize_identity_without_proto(identity), challenge_visual
+        )
+    )
 
 
 def serialize_identity(identity: IdentityType) -> str:

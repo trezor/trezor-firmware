@@ -1,9 +1,8 @@
 from trezor import wire
 from trezor.crypto import aes, hmac
 from trezor.messages.CipheredKeyValue import CipheredKeyValue
-from trezor.ui.components.tt.text import Text
+from trezor.ui.layouts import confirm_action, require
 
-from apps.common.confirm import require_confirm
 from apps.common.keychain import get_keychain
 from apps.common.paths import AlwaysMatchingSchema
 
@@ -28,9 +27,9 @@ async def cipher_key_value(ctx: Context, msg: CipherKeyValue) -> CipheredKeyValu
             title = "Encrypt value"
         else:
             title = "Decrypt value"
-        text = Text(title)
-        text.normal(msg.key)
-        await require_confirm(ctx, text)
+        await require(
+            confirm_action(ctx, "cipher_key_value", title, description=msg.key)
+        )
 
     node = keychain.derive(msg.address_n)
     value = compute_cipher_key_value(msg, node.private_key())
