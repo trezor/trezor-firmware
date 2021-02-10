@@ -147,30 +147,35 @@ def paginate_text(
     break_words: bool = False,
 ) -> Union[Text, Paginated]:
     items = [font, text]
-   
+
+    # Try to fit the text into one page, with full width.
     page_breaks = calculate_text_pages(
         items=items,
-        new_lines=False,
         break_words=break_words,
-        line_width=204,
+        new_lines=False,
     )
-
     if len(page_breaks) == 1:
+        # Text fits, return just one text component.
         text = Text(
             header,
             header_icon=header_icon,
             icon_color=icon_color,
             break_words=break_words,
             new_lines=False,
-            line_width=204,
             render_page_overflow=False,
         )
         text.content = items
         return text
-
     else:
+        # Text doesn't fit, we need to paginate it. We also need to leave space for
+        # the pagination dots, so let's break it again with shorter `line_width`.
+        page_breaks = calculate_text_pages(
+            items=items,
+            break_words=break_words,
+            new_lines=False,
+            line_width=204,
+        )
         pages: List[ui.Component] = []
-
         for item_offset, char_offset in page_breaks:
             page = Text(
                 header,
@@ -185,5 +190,4 @@ def paginate_text(
             )
             page.content = items
             pages.append(page)
-
         return Paginated(pages)
