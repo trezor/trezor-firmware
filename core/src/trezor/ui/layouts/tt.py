@@ -24,7 +24,7 @@ from ..constants.tt import (
 from .common import interact
 
 if False:
-    from typing import Any, Iterator, List, Sequence, Union, Optional
+    from typing import Any, Iterator, List, Sequence, Union, Optional, Awaitable
 
     from trezor import wire
     from trezor.messages.ButtonRequest import EnumTypeButtonRequestType
@@ -37,6 +37,7 @@ __all__ = (
     "confirm_backup",
     "confirm_path_warning",
     "show_address",
+    "show_error",
     "show_pubkey",
     "show_success",
     "show_xpub",
@@ -57,24 +58,45 @@ async def confirm_action(
     ctx: wire.GenericContext,
     br_type: str,
     title: str,
-    action: str,
+    action: str = None,
     description: str = None,
-    verb: Union[str, bytes] = Confirm.DEFAULT_CONFIRM,
-    verb_cancel: Union[str, bytes] = Confirm.DEFAULT_CANCEL,
-    icon: str = None,
+    verb: Union[str, bytes, None] = Confirm.DEFAULT_CONFIRM,
+    verb_cancel: Union[str, bytes, None] = Confirm.DEFAULT_CANCEL,
+    hold: bool = False,
+    icon: str = None,  # TODO cleanup @ redesign
+    icon_color: int = None,  # TODO cleanup @ redesign
+    reverse: bool = False,  # TODO cleanup @ redesign
+    larger_vspace: bool = False,  # TODO cleanup @ redesign
     br_code: EnumTypeButtonRequestType = ButtonRequestType.Other,
     **kwargs: Any,
 ) -> bool:
-    text = Text(title, icon if icon is not None else ui.ICON_DEFAULT, new_lines=False)
-    text.bold(action)
-    text.br()
-    if description:
+    text = Text(
+        title,
+        icon if icon is not None else ui.ICON_DEFAULT,
+        icon_color if icon_color is not None else ui.ORANGE_ICON,
+        new_lines=False,
+    )
+
+    if reverse and description is not None:
+        text.normal(description)
+    elif action is not None:
+        text.bold(action)
+
+    if action is not None and description is not None:
+        text.br()
+        if larger_vspace:
+            text.br_half()
+
+    if reverse and action is not None:
+        text.bold(action)
+    elif description is not None:
         text.normal(description)
 
+    cls = HoldToConfirm if hold else Confirm
     return is_confirmed(
         await interact(
             ctx,
-            Confirm(text, confirm=verb, cancel=verb_cancel),
+            cls(text, confirm=verb, cancel=verb_cancel),
             br_type,
             br_code,
         )
@@ -289,49 +311,95 @@ async def show_pubkey(
     )
 
 
-async def show_warning(
+async def _show_modal(
+    ctx: wire.GenericContext,
+    br_type: str,
+    br_code: EnumTypeButtonRequestType,
+    header: str,
+    subheader: Optional[str],
+    content: str,
+    button_confirm: Optional[str],
+    button_cancel: Optional[str],
+    icon: str,
+    icon_color: int,
+) -> bool:
+    text = Text(header, icon, icon_color, new_lines=False)
+    if subheader:
+        text.bold(subheader)
+        text.br()
+        text.br_half()
+    text.normal(content)
+    return is_confirmed(
+        await interact(
+            ctx,
+            Confirm(text, confirm=button_confirm, cancel=button_cancel),
+            br_type,
+            br_code,
+        )
+    )
+
+
+def show_error(
+    ctx: wire.GenericContext,
+    br_type: str,
+    content: str,
+    header: str = "Error",
+    subheader: Optional[str] = None,
+    button: str = "Close",
+) -> Awaitable[bool]:
+    return _show_modal(
+        ctx,
+        br_type=br_type,
+        br_code=ButtonRequestType.Other,
+        header=header,
+        subheader=subheader,
+        content=content,
+        button_confirm=None,
+        button_cancel=button,
+        icon=ui.ICON_WRONG,
+        icon_color=ui.ORANGE_ICON,
+    )
+
+
+def show_warning(
     ctx: wire.GenericContext,
     br_type: str,
     content: str,
     subheader: Optional[str] = None,
     button: str = "Try again",
-) -> bool:
-    text = Text("Warning", ui.ICON_WRONG, ui.RED, new_lines=False)
-    if subheader:
-        text.bold(subheader)
-        text.br()
-        text.br_half()
-    text.normal(content)
-    return is_confirmed(
-        await interact(
-            ctx,
-            Confirm(text, confirm=button, cancel=None),
-            br_type,
-            ButtonRequestType.Warning,
-        )
+) -> Awaitable[bool]:
+    return _show_modal(
+        ctx,
+        br_type=br_type,
+        br_code=ButtonRequestType.Warning,
+        header="Warning",
+        subheader=subheader,
+        content=content,
+        button_confirm=button,
+        button_cancel=None,
+        icon=ui.ICON_WRONG,
+        icon_color=ui.RED,
     )
 
 
-async def show_success(
+def show_success(
     ctx: wire.GenericContext,
     br_type: str,
     content: str,
     subheader: Optional[str] = None,
     button: str = "Continue",
-) -> bool:
-    text = Text("Success", ui.ICON_CONFIRM, ui.GREEN, new_lines=False)
-    if subheader:
-        text.bold(subheader)
-        text.br()
-        text.br_half()
-    text.normal(content)
-    return is_confirmed(
-        await interact(
-            ctx,
-            Confirm(text, confirm=button, cancel=None),
-            br_type,
-            ButtonRequestType.Success,
-        )
+) -> Awaitable[bool]:
+    return _show_modal(
+        ctx,
+        br_type=br_type,
+        br_code=ButtonRequestType.Success,
+        header="Success",
+        subheader=subheader,
+        content=content,
+        button_confirm=button,
+        button_cancel=None,
+        icon=ui.ICON_CONFIRM,
+        icon_color=ui.GREEN,
     )
 
 
