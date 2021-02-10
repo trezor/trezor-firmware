@@ -52,6 +52,9 @@ PATTERN_GREENADDRESS_SIGN_B = "m/1195487518/6/address_index"
 
 PATTERN_CASA = "m/49/coin_type/account/change/address_index"
 
+PATTERN_UNCHAINED_HARDENED = "m/45'/coin_type'/account'/[0-1000000]/change/address_index"
+PATTERN_UNCAINED_UNHARDENED = "m/45'/coin_type/account/[0-1000000]/change/address_index"
+PATTERN_UNCHAINED_DEPRECATED = "m/45'/coin_type’/account’/[0-1000000]/address_index"
 
 def validate_path_against_script_type(
     coin: coininfo.CoinInfo,
@@ -83,6 +86,9 @@ def validate_path_against_script_type(
         if coin.coin_name in BITCOIN_NAMES:
             patterns.append(PATTERN_GREENADDRESS_A)
             patterns.append(PATTERN_GREENADDRESS_B)
+            patterns.append(PATTERN_UNCHAINED_HARDENED)
+            patterns.append(PATTERN_UNCAINED_UNHARDENED)
+            patterns.append(PATTERN_UNCHAINED_DEPRECATED)
 
     elif coin.segwit and script_type == I.SPENDP2SHWITNESS:
         patterns.append(PATTERN_BIP49)
@@ -123,6 +129,9 @@ def get_schemas_for_coin(coin: coininfo.CoinInfo) -> Iterable[PathSchema]:
                 PATTERN_GREENADDRESS_SIGN_A,
                 PATTERN_GREENADDRESS_SIGN_B,
                 PATTERN_CASA,
+                PATTERN_UNCHAINED_HARDENED,
+                PATTERN_UNCAINED_UNHARDENED,
+                PATTERN_UNCHAINED_DEPRECATED,
             )
         )
 
