@@ -29,6 +29,7 @@ if False:
     from trezor import wire
     from trezor.messages.ButtonRequest import EnumTypeButtonRequestType
 
+    from ..components.common.text import TextContent
 
 __all__ = (
     "confirm_action",
@@ -36,6 +37,7 @@ __all__ = (
     "confirm_reset_device",
     "confirm_backup",
     "confirm_path_warning",
+    "confirm_sign_identity",
     "show_address",
     "show_error",
     "show_pubkey",
@@ -566,4 +568,22 @@ async def confirm_modify_fee(
     text.bold(total_fee_new)
     return is_confirmed(
         await interact(ctx, HoldToConfirm(text), "modify_fee", ButtonRequestType.SignTx)
+    )
+
+
+# TODO cleanup @ redesign
+async def confirm_sign_identity(
+    ctx: wire.GenericContext, proto: str, identity: str, challenge_visual: Optional[str]
+) -> bool:
+    lines: List[TextContent] = []
+    if challenge_visual:
+        lines.append(challenge_visual)
+
+    lines.append(ui.MONO)
+    lines.extend(chunks(identity, 18))
+
+    text = Text("Sign %s" % proto)
+    text.normal(*lines)
+    return is_confirmed(
+        await interact(ctx, Confirm(text), "sign_identity", ButtonRequestType.Other)
     )
