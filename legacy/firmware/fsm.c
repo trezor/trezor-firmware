@@ -67,7 +67,7 @@
 
 // message methods
 
-static uint8_t msg_resp[MSG_OUT_SIZE] __attribute__((aligned));
+static uint8_t msg_resp[MSG_OUT_DECODED_SIZE] __attribute__((aligned));
 
 #define RESP_INIT(TYPE)                                                    \
   TYPE *resp = (TYPE *)(void *)msg_resp;                                   \
