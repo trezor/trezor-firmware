@@ -82,18 +82,29 @@ def handle_message(fh, fl, skipped, message):
         )
     )
 
-    bufsize = None
+    encoded_size = None
+    decoded_size = None
     t = interface + direction
     if t == "ni":
-        bufsize = "MSG_IN_SIZE"
+        encoded_size = "MSG_IN_ENCODED_SIZE"
+        decoded_size = "MSG_IN_DECODED_SIZE"
     elif t == "no":
-        bufsize = "MSG_OUT_SIZE"
+        encoded_size = "MSG_OUT_ENCODED_SIZE"
+        decoded_size = "MSG_OUT_DECODED_SIZE"
     elif t == "do":
-        bufsize = "MSG_DEBUG_OUT_SIZE"
-    if bufsize:
+        encoded_size = "MSG_DEBUG_OUT_ENCODED_SIZE"
+        decoded_size = "MSG_OUT_DECODED_SIZE"
+
+    if encoded_size:
+        fl.write(
+            '_Static_assert(%s >= sizeof(%s_size), "msg buffer too small");\n'
+            % (encoded_size, short_name)
+        )
+
+    if decoded_size:
         fl.write(
             '_Static_assert(%s >= sizeof(%s), "msg buffer too small");\n'
-            % (bufsize, short_name)
+            % (decoded_size, short_name)
         )
 
 
