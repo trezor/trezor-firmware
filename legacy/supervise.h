@@ -80,7 +80,7 @@ inline uint32_t svc_timer_ms(void) {
  * flag and won't run firmware, but enter bootloader mode.
  */
 inline void svc_reboot_to_bootloader(void) {
-    __asm__ __volatile__("svc %0" ::"i"(SVC_REBOOT_TO_BOOTLOADER) : "memory");
+  __asm__ __volatile__("svc %0" ::"i"(SVC_REBOOT_TO_BOOTLOADER) : "memory");
 }
 
 #else

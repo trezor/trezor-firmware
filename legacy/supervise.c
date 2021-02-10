@@ -19,8 +19,8 @@
 
 #include "supervise.h"
 #include <libopencm3/stm32/flash.h>
-#include <vendor/libopencm3/include/libopencmsis/core_cm3.h>
 #include <stdint.h>
+#include <vendor/libopencm3/include/libopencmsis/core_cm3.h>
 #include "memory.h"
 
 #if !EMULATOR
