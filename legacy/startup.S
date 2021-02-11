@@ -32,7 +32,7 @@ reset_handler:
   isb
 #endif
 
-  ldr r0, =_go_to_bootloader_flag_addr  // r0 - address of storage for "go to bootloader" flag
+  ldr r0, =_stay_in_bootloader_flag_addr  // r0 - address of storage for "stay in bootloader" flag
   ldr r11, [r0]        // r11 - keep in register and hope it gets to main
 
   ldr r0, =_ram_start // r0 - point to beginning of SRAM

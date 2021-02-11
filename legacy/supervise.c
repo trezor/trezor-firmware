@@ -66,7 +66,7 @@ static uint32_t svhandler_flash_lock(void) {
 }
 
 static void __attribute__((noreturn)) svhandler_reboot_to_bootloader(void) {
-  *RETURN_TO_BOOTLOADER_FLAG_ADDR = RETURN_TO_BOOTLOADER_FLAG;
+  *STAY_IN_BOOTLOADER_FLAG_ADDR = STAY_IN_BOOTLOADER_FLAG;
   scb_reset_system();
 }
 

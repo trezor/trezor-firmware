@@ -112,9 +112,9 @@ static void bootloader_loop(void) {
 }
 
 int main(void) {
-  // grab go to bootloader flag as soon as possible
+  // grab "stay in bootloader" flag as soon as possible
   register uint32_t r11 __asm__("r11");
-  volatile uint32_t go_to_bootloader_flag = r11;
+  volatile uint32_t stay_in_bootloader_flag = r11;
 
 #ifndef APPVER
   setup();
@@ -128,7 +128,7 @@ int main(void) {
 
   mpu_config_bootloader();
 
-  if (go_to_bootloader_flag == RETURN_TO_BOOTLOADER_FLAG) {
+  if (stay_in_bootloader_flag == STAY_IN_BOOTLOADER_FLAG) {
     goto bootloader_loop_start;
   }
 
