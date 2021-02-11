@@ -12,6 +12,7 @@ core fw regular build:
   script:
     - nix-shell --run "poetry run make -C core build_boardloader"
     - nix-shell --run "poetry run make -C core build_bootloader"
+    - nix-shell --run "poetry run make -C core build_bootloader_ci"
     - nix-shell --run "poetry run make -C core build_prodtest"
     - nix-shell --run "poetry run make -C core build_firmware"
     - nix-shell --run "poetry run make -C core sizecheck"
