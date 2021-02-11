@@ -35,8 +35,8 @@ from .helpers.paths import (
     CERTIFICATE_PATH_NAME,
     CHANGE_OUTPUT_PATH_NAME,
     CHANGE_OUTPUT_STAKING_PATH_NAME,
-    MAX_ACCOUNT_INDEX,
-    MAX_CHANGE_ADDRESS_INDEX,
+    MAX_SAFE_ACCOUNT_INDEX,
+    MAX_SAFE_CHANGE_ADDRESS_INDEX,
     POOL_OWNER_STAKING_PATH_NAME,
     SCHEMA_ADDRESS,
     SCHEMA_STAKING,
@@ -726,9 +726,9 @@ def _should_hide_output(output: List[int], inputs: List[CardanoTxInputType]) -> 
         if (
             len(output) != BIP_PATH_LENGTH
             or output[ACCOUNT_PATH_INDEX] != inp[ACCOUNT_PATH_INDEX]
-            or output[(ACCOUNT_PATH_INDEX + 1)] > MAX_ACCOUNT_INDEX
+            or output[ACCOUNT_PATH_INDEX] > MAX_SAFE_ACCOUNT_INDEX
             or output[-2] >= 2
-            or output[-1] >= MAX_CHANGE_ADDRESS_INDEX
+            or output[-1] >= MAX_SAFE_CHANGE_ADDRESS_INDEX
         ):
             return False
     return True

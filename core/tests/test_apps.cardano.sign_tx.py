@@ -9,7 +9,7 @@ if not utils.BITCOIN_ONLY:
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestCardanoSignTransaction(unittest.TestCase):
     def test_should_show_outputs(self):
-        outputs_to_show = [
+        outputs_to_hide = [
             # output is from the same address as input
             (
                 [44 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
@@ -33,8 +33,23 @@ class TestCardanoSignTransaction(unittest.TestCase):
                     [44 | HARDENED, 1815 | HARDENED, 2 | HARDENED, 0, 2],
                 ],
             ),
+            # byron input and shelley output
+            (
+                [1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                [
+                    [44 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                ],
+            ),
+            # mixed byron and shelley inputs
+            (
+                [1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                [
+                    [1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                    [44 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                ],
+            ),
         ]
-        outputs_to_hide = [
+        outputs_to_show = [
             # output is from different account
             (
                 [44 | HARDENED, 1815 | HARDENED, 2 | HARDENED, 0, 0],
@@ -68,15 +83,22 @@ class TestCardanoSignTransaction(unittest.TestCase):
                 [44 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 1000001],
                 [[44 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0]],
             ),
+            # max safe account number exceeded
+            (
+                [1852 | HARDENED, 1815 | HARDENED, 101 | HARDENED, 0, 0],
+                [
+                    [1852 | HARDENED, 1815 | HARDENED, 101 | HARDENED, 0, 0]
+                ],
+            ),
         ]
 
-        for output_path, input_paths in outputs_to_show:
+        for output_path, input_paths in outputs_to_hide:
             inputs = [
                 CardanoTxInputType(address_n=input_path, prev_hash=b"", prev_index=0) for input_path in input_paths
             ]
             self.assertTrue(_should_hide_output(output_path, inputs))
 
-        for output_path, input_paths in outputs_to_hide:
+        for output_path, input_paths in outputs_to_show:
             inputs = [
                 CardanoTxInputType(address_n=input_path, prev_hash=b"", prev_index=0) for input_path in input_paths
             ]

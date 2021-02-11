@@ -18,8 +18,8 @@ SCHEMA_STAKING_ANY_ACCOUNT = PathSchema("m/1852'/coin_type'/[0-%s]'/2/0" % (HARD
 
 # the maximum allowed change address.  this should be large enough for normal
 # use and still allow to quickly brute-force the correct bip32 path
-MAX_CHANGE_ADDRESS_INDEX = const(1_000_000)
-MAX_ACCOUNT_INDEX = const(100)
+MAX_SAFE_CHANGE_ADDRESS_INDEX = const(1_000_000)
+MAX_SAFE_ACCOUNT_INDEX = const(100) | HARDENED
 ACCOUNT_PATH_INDEX = const(2)
 BIP_PATH_LENGTH = const(5)
 
