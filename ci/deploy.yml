@@ -184,7 +184,7 @@ release core unix debug deploy:
     - core unix frozen debug build
   script:
     - export VERSION=$(./tools/version.sh core/embed/firmware/version.h)
-    - DEST="$DEPLOY_PATH/trezor-emu-core-$VERSION-$CI_COMMIT_SHORT_SHA"
+    - DEST="$DEPLOY_PATH/trezor-emu-core-v$VERSION"
     - echo "Deploying to $DEST"
     - nix-shell -p patchelf --run "patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 core/build/unix/trezor-emu-core"
     - rsync --delete -va core/build/unix/trezor-emu-core "$DEST"
@@ -205,7 +205,7 @@ release legacy unix debug deploy:
     - legacy emu regular debug build
   script:
     - export VERSION=$(./tools/version.sh legacy/firmware/version.h)
-    - DEST="$DEPLOY_PATH/trezor-emu-legacy-$VERSION-$CI_COMMIT_SHORT_SHA"
+    - DEST="$DEPLOY_PATH/trezor-emu-legacy-v$VERSION"
     - echo "Deploying to $DEST"
     - nix-shell -p patchelf --run "patchelf --set-interpreter /lib64/ld-linux-x86-64.so.2 legacy/firmware/trezor.elf"
     - rsync --delete -va legacy/firmware/trezor.elf "$DEST"
