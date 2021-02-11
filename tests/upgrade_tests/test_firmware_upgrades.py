@@ -14,7 +14,9 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from trezorlib import MINIMUM_FIRMWARE_VERSION, btc, debuglink, device, fido
+import pytest
+
+from trezorlib import MINIMUM_FIRMWARE_VERSION, btc, debuglink, device, exceptions, fido
 from trezorlib.messages import BackupType
 from trezorlib.tools import H_
 
@@ -141,6 +143,51 @@ def test_storage_upgrade_progressive(gen, tags):
         assert device_id == emu.client.features.device_id
         asserts(emu.client)
         assert emu.client.features.language == LANGUAGE
+
+
+@for_all("legacy", legacy_minimum_version=(1, 9, 0))
+def test_upgrade_wipe_code(gen, tag):
+    PIN = "1234"
+    WIPE_CODE = "4321"
+
+    def asserts(client):
+        assert client.features.pin_protection
+        assert not client.features.passphrase_protection
+        assert client.features.initialized
+        assert client.features.label == LABEL
+        client.use_pin_sequence([PIN])
+        assert btc.get_address(client, "Bitcoin", PATH) == ADDRESS
+
+    with EmulatorWrapper(gen, tag) as emu:
+        debuglink.load_device_by_mnemonic(
+            emu.client,
+            mnemonic=MNEMONIC,
+            pin=PIN,
+            passphrase_protection=False,
+            label=LABEL,
+            language=LANGUAGE,
+        )
+
+        # Set wipe code.
+        emu.client.use_pin_sequence([PIN, WIPE_CODE, WIPE_CODE])
+        device.change_wipe_code(emu.client)
+
+        device_id = emu.client.features.device_id
+        asserts(emu.client)
+        storage = emu.get_storage()
+
+    with EmulatorWrapper(gen, storage=storage) as emu:
+        assert device_id == emu.client.features.device_id
+        asserts(emu.client)
+        assert emu.client.features.language == LANGUAGE
+
+        # Check that wipe code is set by changing the PIN to it.
+        emu.client.use_pin_sequence([PIN, WIPE_CODE, WIPE_CODE])
+        with pytest.raises(
+            exceptions.TrezorFailure,
+            match="The new PIN must be different from your wipe code",
+        ):
+            return device.change_pin(emu.client)
 
 
 @for_all("legacy")
