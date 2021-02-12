@@ -34,7 +34,7 @@ https://link.springer.com/content/pdf/10.1007%2F3-540-44499-8_20.pdf
 https://link.springer.com/content/pdf/10.1007%2F978-3-540-72354-7_3.pdf
 */
 
-#include "rdi.h"
+#include "random_delays.h"
 
 #include <stdbool.h>
 
@@ -42,7 +42,9 @@ https://link.springer.com/content/pdf/10.1007%2F978-3-540-72354-7_3.pdf
 #include "common.h"
 #include "memzero.h"
 #include "rand.h"
-#include "secbool.h"
+
+// from util.s
+extern void shutdown(void);
 
 #define BUFFER_LENGTH 64
 #define RESEED_INTERVAL 65536
@@ -139,5 +141,26 @@ void rdi_stop(void) {
     rdi_disabled = sectrue;
     session_delay = 0;
     memzero(&drbg_ctx, sizeof(drbg_ctx));
+  }
+}
+
+/*
+ * Generates a delay of random length. Use this to protect sensitive code
+ * against fault injection.
+ */
+void wait_random(void) {
+  int wait = drbg_random32() & 0xff;
+  volatile int i = 0;
+  volatile int j = wait;
+  while (i < wait) {
+    if (i + j != wait) {
+      shutdown();
+    }
+    ++i;
+    --j;
+  }
+  // Double-check loop completion.
+  if (i != wait || j != 0) {
+    shutdown();
   }
 }

@@ -17,13 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TREZORHAL_RDI_H__
-#define __TREZORHAL_RDI_H__
+#ifndef __TREZORHAL_RANDOM_DELAYS_H__
+#define __TREZORHAL_RANDOM_DELAYS_H__
 
-#include <stdint.h>
+void wait_random(void);
 
-void rdi_start(void);
-void rdi_stop(void);
-void rdi_refresh_session_delay(void);
-void rdi_handler(uint32_t uw_tick);
 #endif
