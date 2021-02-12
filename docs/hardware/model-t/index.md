@@ -3,39 +3,39 @@
 
 ## Photo
 
-![Photo Front](assets/photo-front.jpg)
+![Photo Front](photo-front.jpg)
 
 ## Photo of assembled board (top)
 
-![Assembled Board Top](assets/model-t-top-v12.jpg)
+![Assembled Board Top](model-t-top-v12.jpg)
 
 ## Photo of assembled board (bottom)
 
-![Assembled Board Bottom](assets/model-t-bottom-v12.jpg)
+![Assembled Board Bottom](model-t-bottom-v12.jpg)
 
 ## Photo of assembled TFT LCD display + capacitive touch panel module (top)
 
-![Display Module Top](assets/model-t-display-module-top.jpg)
+![Display Module Top](model-t-display-module-top.jpg)
 
 ## Photo of assembled TFT LCD display + capacitive touch panel module (bottom)
 
-![Display Module Bottom](assets/model-t-display-module-bottom.jpg)
+![Display Module Bottom](model-t-display-module-bottom.jpg)
 
 ## Photo of disassembled TFT LCD display + capacitive touch panel module (top) (CTPM on left) (TFT LCD broken glass removed)
 
-![Display Module Disassembled Top](assets/model-t-display-module-disassembled-top.jpg)
+![Display Module Disassembled Top](model-t-display-module-disassembled-top.jpg)
 
 ## Photo of disassembled TFT LCD display + capacitive touch panel module (bottom) (CTPM on left) (TFT LCD broken glass removed)
 
-![Display Module Disassembled Bottom](assets/model-t-display-module-disassembled-bottom.jpg)
+![Display Module Disassembled Bottom](model-t-display-module-disassembled-bottom.jpg)
 
 ## Bill of Materials / BOM
 
-[BOM](assets/bom.txt)
+[BOM](bom.txt)
 
 ## Schematic
 
-![Schematic](assets/schematic.png)
+![Schematic](schematic.png)
 
 ## Developer Kit
 
@@ -139,11 +139,11 @@ The metal tray is attached to the board with double stick tape. You just have to
 
 ## Photo of dev board before modifications (top)
 
-![Dev Board Top Before](assets/dev-board-top-before.jpg)
+![Dev Board Top Before](dev-board-top-before.jpg)
 
 ## Photo of dev board before modifications (bottom)
 
-![Dev Board Bottom Before](assets/dev-board-bottom-before.jpg)
+![Dev Board Bottom Before](dev-board-bottom-before.jpg)
 
 Minimum MCU requirements:
 
@@ -157,4 +157,4 @@ Minimum MCU requirements:
 
 ### Clock Tree
 
-![Clock Tree](assets/clock-tree.png)
+![Clock Tree](clock-tree.png)
