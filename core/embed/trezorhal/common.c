@@ -23,11 +23,8 @@
 
 #include "common.h"
 #include "display.h"
-#include "flash.h"
 #include "hmac_drbg.h"
 #include "rand.h"
-
-#include "stm32f4xx_ll_utils.h"
 
 // from util.s
 extern void shutdown(void);
@@ -164,32 +161,6 @@ uint32_t __stack_chk_guard = 0;
 
 void __attribute__((noreturn)) __stack_chk_fail(void) {
   error_shutdown("Internal error", "(SS)", NULL, NULL);
-}
-
-uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
-
-void collect_hw_entropy(void) {
-  // collect entropy from UUID
-  uint32_t w = LL_GetUID_Word0();
-  memcpy(HW_ENTROPY_DATA, &w, 4);
-  w = LL_GetUID_Word1();
-  memcpy(HW_ENTROPY_DATA + 4, &w, 4);
-  w = LL_GetUID_Word2();
-  memcpy(HW_ENTROPY_DATA + 8, &w, 4);
-
-  // set entropy in the OTP randomness block
-  if (secfalse == flash_otp_is_locked(FLASH_OTP_BLOCK_RANDOMNESS)) {
-    uint8_t entropy[FLASH_OTP_BLOCK_SIZE];
-    random_buffer(entropy, FLASH_OTP_BLOCK_SIZE);
-    ensure(flash_otp_write(FLASH_OTP_BLOCK_RANDOMNESS, 0, entropy,
-                           FLASH_OTP_BLOCK_SIZE),
-           NULL);
-    ensure(flash_otp_lock(FLASH_OTP_BLOCK_RANDOMNESS), NULL);
-  }
-  // collect entropy from OTP randomness block
-  ensure(flash_otp_read(FLASH_OTP_BLOCK_RANDOMNESS, 0, HW_ENTROPY_DATA + 12,
-                        FLASH_OTP_BLOCK_SIZE),
-         NULL);
 }
 
 void drbg_init(void) {

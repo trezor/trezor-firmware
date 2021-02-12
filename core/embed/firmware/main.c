@@ -38,6 +38,7 @@
 #include "bl_check.h"
 #include "common.h"
 #include "display.h"
+#include "entropy.h"
 #include "flash.h"
 #include "mpu.h"
 #ifdef RDI

@@ -328,6 +328,7 @@ SOURCE_FIRMWARE = [
 SOURCE_TREZORHAL = [
     'embed/trezorhal/common.c',
     'embed/trezorhal/dma.c',
+    'embed/trezorhal/entropy.c',
     'embed/trezorhal/flash.c',
     'embed/trezorhal/mini_printf.c',
     'embed/trezorhal/mpu.c',

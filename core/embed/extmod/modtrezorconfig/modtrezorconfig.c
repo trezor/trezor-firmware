@@ -27,7 +27,7 @@
 
 #include "embed/extmod/trezorobj.h"
 
-#include "common.h"
+#include "entropy.h"
 #include "memzero.h"
 #include "storage.h"
 

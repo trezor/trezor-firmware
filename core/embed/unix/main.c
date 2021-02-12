@@ -37,6 +37,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "entropy.h"
 #include "extmod/misc.h"
 #include "extmod/vfs_posix.h"
 #include "genhdr/mpversion.h"

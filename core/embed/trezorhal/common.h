@@ -72,10 +72,6 @@ void clear_otg_hs_memory(void);
 
 extern uint32_t __stack_chk_guard;
 
-void collect_hw_entropy(void);
-#define HW_ENTROPY_LEN (12 + 32)
-extern uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
-
 void drbg_init(void);
 void drbg_reseed(const uint8_t *entropy, size_t len);
 void drbg_generate(uint8_t *buf, size_t len);
