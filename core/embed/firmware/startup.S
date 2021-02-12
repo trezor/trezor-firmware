@@ -39,7 +39,7 @@ reset_handler:
   bl memcpy
 
   // setup the stack protector (see build script "-fstack-protector-all") with an unpredictable value
-  bl rng_get
+  bl trng_random32
   ldr r1, = __stack_chk_guard
   str r0, [r1]
 

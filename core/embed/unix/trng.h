@@ -1,0 +1,1 @@
+../trezorhal/trng.h

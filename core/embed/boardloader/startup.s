@@ -10,12 +10,12 @@ reset_handler:
   // read the first rng data and save it
   ldr r0, =0            // r0 - previous value
   ldr r1, =0            // r1 - whether to compare the previous value
-  bl rng_read
+  bl trng_read
 
   // read the next rng data and make sure it is different than previous
   // r0 - value returned from previous call
   ldr r1, =1            // r1 - whether to compare the previous value
-  bl rng_read
+  bl trng_read
   mov r4, r0            // save TRNG output in r4
 
   // wipe memory to remove any possible vestiges of sensitive data
@@ -48,7 +48,7 @@ reset_handler:
   bl memcpy
 
   // setup the stack protector (see build script "-fstack-protector-all") with an unpredictable value
-  bl rng_get
+  bl trng_random32
   ldr r1, = __stack_chk_guard
   str r0, [r1]
 

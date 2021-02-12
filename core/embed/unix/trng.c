@@ -17,13 +17,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_RNG_H
-#define TREZORHAL_RNG_H
+#include <stdio.h>
+#include <stdlib.h>
 
-#include <stdint.h>
+#include "common.h"
+#include "trng.h"
 
-void rng_init(void);
-uint32_t rng_read(const uint32_t previous, const uint32_t compare_previous);
-uint32_t rng_get(void);
-
-#endif
+uint32_t trng_random32(void) {
+  static FILE *frand = NULL;
+  if (!frand) {
+    frand = fopen("/dev/urandom", "r");
+  }
+  ensure(sectrue * (frand != NULL), "fopen failed");
+  uint32_t r;
+  ensure(sectrue * (sizeof(r) == fread(&r, 1, sizeof(r), frand)),
+         "fread failed");
+  return r;
+}

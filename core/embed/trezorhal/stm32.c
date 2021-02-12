@@ -19,7 +19,7 @@
 
 #include STM32_HAL_H
 
-#include "rng.h"
+#include "trng.h"
 
 const uint8_t AHBPrescTable[16] = {0, 0, 0, 0, 0, 0, 0, 0,
                                    1, 2, 3, 4, 6, 7, 8, 9};
@@ -80,7 +80,7 @@ void SystemInit(void) {
   while ((RCC->CR & RCC_CR_HSION) == RCC_CR_HSION)
     ;
   // init the TRNG peripheral
-  rng_init();
+  trng_init();
   // set CP10 and CP11 to enable full access to the fpu coprocessor; ARMv7-M
   // Architecture Reference Manual section B3.2.20
   SCB->CPACR |= ((3U << 22) | (3U << 20));

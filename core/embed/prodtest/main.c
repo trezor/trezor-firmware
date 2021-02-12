@@ -28,11 +28,11 @@
 #include "drbg.h"
 #include "flash.h"
 #include "mini_printf.h"
-#include "rng.h"
 #include "sbu.h"
 #include "sdcard.h"
 #include "secbool.h"
 #include "touch.h"
+#include "trng.h"
 #include "usb.h"
 
 #include "memzero.h"

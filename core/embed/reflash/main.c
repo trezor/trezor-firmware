@@ -27,11 +27,11 @@
 #include "display.h"
 #include "flash.h"
 #include "image.h"
-#include "rng.h"
 #include "sbu.h"
 #include "sdcard.h"
 #include "secbool.h"
 #include "touch.h"
+#include "trng.h"
 
 static void progress_callback(int pos, int len) { display_printf("."); }
 

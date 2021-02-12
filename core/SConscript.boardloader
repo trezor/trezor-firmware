@@ -78,7 +78,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/sdcard.c',
     'embed/trezorhal/stm32.c',
     'embed/trezorhal/systick.c',
-    'embed/trezorhal/rng.c',
+    'embed/trezorhal/trng.c',
     'embed/trezorhal/util.s',
     'embed/trezorhal/vectortable.s',
 ]

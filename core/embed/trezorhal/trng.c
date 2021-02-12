@@ -19,12 +19,12 @@
 
 #include STM32_HAL_H
 
-#include "rng.h"
+#include "trng.h"
 
 #pragma GCC optimize( \
     "no-stack-protector")  // applies to all functions in this file
 
-void rng_init(void) {
+void trng_init(void) {
   // enable TRNG peripheral clock
   // use the HAL version due to section 2.1.6 of STM32F42xx Errata sheet
   // "Delay after an RCC peripheral clock enabling"
@@ -32,7 +32,7 @@ void rng_init(void) {
   RNG->CR = RNG_CR_RNGEN;  // enable TRNG
 }
 
-uint32_t rng_read(const uint32_t previous, const uint32_t compare_previous) {
+uint32_t trng_read(const uint32_t previous, const uint32_t compare_previous) {
   uint32_t temp = previous;
   do {
     while ((RNG->SR & (RNG_SR_SECS | RNG_SR_CECS | RNG_SR_DRDY)) != RNG_SR_DRDY)
@@ -44,15 +44,15 @@ uint32_t rng_read(const uint32_t previous, const uint32_t compare_previous) {
   return temp;
 }
 
-uint32_t rng_get(void) {
+uint32_t trng_random32(void) {
   // reason for keeping history: RM0090 section 24.3.1 FIPS continuous random
   // number generator test
   static uint32_t previous = 0, current = 0;
   if (previous == current) {
-    previous = rng_read(previous, 0);
+    previous = trng_read(previous, 0);
   } else {
     previous = current;
   }
-  current = rng_read(previous, 1);
+  current = trng_read(previous, 1);
   return current;
 }

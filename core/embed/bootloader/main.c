@@ -27,9 +27,9 @@
 #include "image.h"
 #include "mini_printf.h"
 #include "mpu.h"
-#include "rng.h"
 #include "secbool.h"
 #include "touch.h"
+#include "trng.h"
 #include "usb.h"
 #include "version.h"
 
