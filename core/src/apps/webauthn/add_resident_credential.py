@@ -1,8 +1,8 @@
 import storage.device
-from trezor import ui, wire
+from trezor import wire
 from trezor.messages.Success import Success
 from trezor.messages.WebAuthnAddResidentCredential import WebAuthnAddResidentCredential
-from trezor.ui.components.tt.text import Text
+from trezor.ui.layouts import require, show_error
 
 from apps.common.confirm import require_confirm
 
@@ -41,14 +41,16 @@ async def add_resident_credential(
     try:
         cred = Fido2Credential.from_cred_id(bytes(msg.credential_id), None)
     except Exception:
-        text = Text("Import credential", ui.ICON_WRONG, ui.RED)
-        text.normal(
-            "The credential you are",
-            "trying to import does",
-            "not belong to this",
-            "authenticator.",
+        await require(
+            show_error(
+                ctx,
+                "warning_credential",
+                header="Import credential",
+                button="Close",
+                content="The credential you are trying to import does\nnot belong to this authenticator.",
+                red=True,
+            )
         )
-        await require_confirm(ctx, text, confirm=None, cancel="Close")
         raise wire.ActionCancelled
 
     content = ConfirmContent(ConfirmAddCredential(cred))
