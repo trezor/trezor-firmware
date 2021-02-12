@@ -70,6 +70,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/dma.c',
     'embed/trezorhal/flash.c',
     'embed/trezorhal/mini_printf.c',
+    'embed/trezorhal/random_delays.c',
     'embed/trezorhal/rng.c',
     'embed/trezorhal/sbu.c',
     'embed/trezorhal/sdcard.c',

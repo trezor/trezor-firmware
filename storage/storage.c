@@ -27,6 +27,7 @@
 #include "norcow.h"
 #include "pbkdf2.h"
 #include "rand.h"
+#include "random_delays.h"
 #include "sha2.h"
 #include "storage.h"
 

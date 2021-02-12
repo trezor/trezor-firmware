@@ -119,27 +119,6 @@ void __assert_func(const char *file, int line, const char *func,
 
 void hal_delay(uint32_t ms) { HAL_Delay(ms); }
 
-/*
- * Generates a delay of random length. Use this to protect sensitive code
- * against fault injection.
- */
-void wait_random(void) {
-  int wait = drbg_random32() & 0xff;
-  volatile int i = 0;
-  volatile int j = wait;
-  while (i < wait) {
-    if (i + j != wait) {
-      shutdown();
-    }
-    ++i;
-    --j;
-  }
-  // Double-check loop completion.
-  if (i != wait || j != 0) {
-    shutdown();
-  }
-}
-
 // reference RM0090 section 35.12.1 Figure 413
 #define USB_OTG_HS_DATA_FIFO_RAM (USB_OTG_HS_PERIPH_BASE + 0x20000U)
 #define USB_OTG_HS_DATA_FIFO_SIZE (4096U)

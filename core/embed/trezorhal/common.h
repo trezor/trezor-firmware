@@ -66,8 +66,6 @@ error_shutdown(const char *line1, const char *line2, const char *line3,
 
 void hal_delay(uint32_t ms);
 
-void wait_random(void);
-
 void clear_otg_hs_memory(void);
 
 extern uint32_t __stack_chk_guard;

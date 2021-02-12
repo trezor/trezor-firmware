@@ -99,6 +99,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/flash.c',
     'embed/trezorhal/mini_printf.c',
     'embed/trezorhal/mpu.c',
+    'embed/trezorhal/random_delays.c',
     'embed/trezorhal/rng.c',
     'embed/trezorhal/stm32.c',
     'embed/trezorhal/systick.c',

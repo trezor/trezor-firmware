@@ -22,7 +22,7 @@
 #include "usb.h"
 #include "common.h"
 #include "entropy.h"
-#include "rdi.h"
+#include "random_delays.h"
 #include "usbd_core.h"
 
 #define USB_MAX_CONFIG_DESC_SIZE 256
