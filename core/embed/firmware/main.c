@@ -41,7 +41,7 @@
 #include "flash.h"
 #include "mpu.h"
 #ifdef RDI
-#include "rdi.h"
+#include "random_delays.h"
 #endif
 #ifdef SYSTEM_VIEW
 #include "systemview.h"
