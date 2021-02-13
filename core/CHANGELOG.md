@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## 2.3.6 [unreleased]
+## 2.3.7 [unreleased]
 
 ### Added
 
@@ -18,7 +18,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Security
 
-## 2.3.5 [to be released on 10th February 2021]
+## 2.3.6 [to be released 17th February 2021]
+
+### Added
+- Compatibility paths for Unchained Capital.  [#1467]
+
+## 2.3.5 [10th February 2021]
 
 ### Added
 - CoinJoin preauthorization and signing flow.  [#1053]
@@ -364,3 +369,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1399]: https://github.com/trezor/trezor-firmware/issues/1399
 [#1402]: https://github.com/trezor/trezor-firmware/pull/1402
 [#1415]: https://github.com/trezor/trezor-firmware/pull/1415
+[#1467]: https://github.com/trezor/trezor-firmware/issues/1467
