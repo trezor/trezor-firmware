@@ -18,7 +18,7 @@ import pytest
 
 from trezorlib import btc, device, messages
 from trezorlib.client import MAX_PIN_LENGTH, PASSPHRASE_TEST_PATH
-from trezorlib.exceptions import Cancelled
+from trezorlib.exceptions import Cancelled, TrezorFailure
 
 PIN4 = "1234"
 PIN60 = "789456" * 10
@@ -164,6 +164,34 @@ def test_change_failed(client):
 
     with client, pytest.raises(Cancelled):
         client.set_expected_responses([messages.ButtonRequest] * 5 + [messages.Failure])
+        client.set_input_flow(input_flow)
+
+        device.change_pin(client)
+
+    # Check that there's still old PIN protection
+    client.init_device()
+    assert client.features.pin_protection is True
+    _check_pin(client, PIN4)
+
+
+@pytest.mark.setup_client(pin=PIN4)
+def test_change_invalid_current(client):
+    assert client.features.pin_protection is True
+
+    # Check current PIN value
+    _check_pin(client, PIN4)
+
+    # Let's set new PIN
+    def input_flow():
+        yield  # do you want to change pin?
+        client.debug.press_yes()
+        yield  # enter wrong current pin
+        client.debug.input(PIN60)
+        yield
+        client.debug.press_no()
+
+    with client, pytest.raises(TrezorFailure):
+        client.set_expected_responses([messages.ButtonRequest] * 3 + [messages.Failure])
         client.set_input_flow(input_flow)
 
         device.change_pin(client)

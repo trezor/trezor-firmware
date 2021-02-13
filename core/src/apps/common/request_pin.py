@@ -123,18 +123,26 @@ async def verify_user_pin(
 
 
 async def error_pin_invalid(ctx: wire.Context) -> NoReturn:
-    from apps.common.confirm import confirm
+    from trezor.ui.layouts import show_error
 
-    text = Text("Wrong PIN", ui.ICON_WRONG, ui.RED)
-    text.normal("The PIN you entered is", "invalid.")
-    await confirm(ctx, text, confirm=None, cancel="Close")
+    await show_error(
+        ctx,
+        "warning_wrong_pin",
+        header="Wrong PIN",
+        content="The PIN you entered is invalid.",
+        red=True,
+    )
     raise wire.PinInvalid
 
 
 async def error_pin_matches_wipe_code(ctx: wire.Context) -> NoReturn:
-    from apps.common.confirm import confirm
+    from trezor.ui.layouts import show_error
 
-    text = Text("Invalid PIN", ui.ICON_WRONG, ui.RED)
-    text.normal("The new PIN must be", "different from your", "wipe code.")
-    await confirm(ctx, text, confirm=None, cancel="Close")
+    await show_error(
+        ctx,
+        "warning_invalid_new_pin",
+        header="Invalid PIN",
+        content="The new PIN must be different from your\nwipe code.",
+        red=True,
+    )
     raise wire.PinInvalid
