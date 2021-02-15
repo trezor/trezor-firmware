@@ -6,6 +6,7 @@ from trezor.strings import format_duration_ms
 from trezor.ui.text import Text
 
 from apps.base import lock_device
+from apps.common import safety_checks
 from apps.common.confirm import require_confirm, require_hold_to_confirm
 
 if False:
@@ -44,6 +45,7 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings):
         and msg.display_rotation is None
         and msg.auto_lock_delay_ms is None
         and msg.safety_checks is None
+        and msg.experimental_features is None
     ):
         raise wire.ProcessError("No setting provided")
 
@@ -56,6 +58,8 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings):
             raise wire.DataError("Invalid homescreen")
 
     if msg.label is not None:
+        if len(msg.label) > storage.device.LABEL_MAXLENGTH:
+            raise wire.DataError("Label too long")
         await require_confirm_change_label(ctx, msg.label)
         storage.device.set_label(msg.label)
 
@@ -78,21 +82,28 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings):
             raise wire.ProcessError("Auto-lock delay too long")
         await require_confirm_change_autolock_delay(ctx, msg.auto_lock_delay_ms)
         storage.device.set_autolock_delay_ms(msg.auto_lock_delay_ms)
-        # use the value that was stored, not the one that was supplied by the user
-        workflow.idle_timer.set(storage.device.get_autolock_delay_ms(), lock_device)
 
     if msg.safety_checks is not None:
         await require_confirm_safety_checks(ctx, msg.safety_checks)
-        storage.device.set_unsafe_prompts_allowed(
-            msg.safety_checks == SafetyCheckLevel.Prompt
-        )
+        safety_checks.apply_setting(msg.safety_checks)
 
     if msg.display_rotation is not None:
         await require_confirm_change_display_rotation(ctx, msg.display_rotation)
         storage.device.set_rotation(msg.display_rotation)
-        ui.display.orientation(storage.device.get_rotation())
+
+    if msg.experimental_features is not None:
+        await require_confirm_experimental_features(ctx, msg.experimental_features)
+        storage.device.set_experimental_features(msg.experimental_features)
+
+    reload_settings_from_storage()
 
     return Success(message="Settings applied")
+
+
+def reload_settings_from_storage() -> None:
+    workflow.idle_timer.set(storage.device.get_autolock_delay_ms(), lock_device)
+    ui.display.orientation(storage.device.get_rotation())
+    wire.experimental_enabled = storage.device.get_experimental_features()
 
 
 async def require_confirm_change_homescreen(ctx):
@@ -155,17 +166,40 @@ async def require_confirm_change_autolock_delay(ctx, delay_ms):
 
 
 async def require_confirm_safety_checks(ctx, level: EnumTypeSafetyCheckLevel) -> None:
-    if level == SafetyCheckLevel.Prompt:
-        text = Text("Unsafe prompts", ui.ICON_WIPE)
+    if level == SafetyCheckLevel.PromptAlways:
+        text = Text("Safety override", ui.ICON_CONFIG)
         text.normal(
-            "Trezor will allow you to", "confirm actions which", "might be dangerous."
+            "Trezor will allow you to",
+            "approve some actions",
+            "which might be unsafe.",
         )
         text.br_half()
-        text.bold("Allow unsafe prompts?")
+        text.bold("Are you sure?")
+        await require_hold_to_confirm(ctx, text, ButtonRequestType.ProtectCall)
+    elif level == SafetyCheckLevel.PromptTemporarily:
+        text = Text("Safety override", ui.ICON_CONFIG)
+        text.normal(
+            "Trezor will temporarily",
+            "allow you to approve",
+            "some actions which",
+            "might be unsafe.",
+        )
+        text.bold("Are you sure?")
         await require_hold_to_confirm(ctx, text, ButtonRequestType.ProtectCall)
     elif level == SafetyCheckLevel.Strict:
-        text = Text("Unsafe prompts", ui.ICON_CONFIG)
-        text.normal("Do you really want to", "disable unsafe prompts?")
+        text = Text("Safety checks", ui.ICON_CONFIG)
+        text.normal(
+            "Do you really want to", "enforce strict safety", "checks (recommended)?"
+        )
         await require_confirm(ctx, text, ButtonRequestType.ProtectCall)
     else:
         raise ValueError  # enum value out of range
+
+
+async def require_confirm_experimental_features(ctx, enable: bool) -> None:
+    if enable:
+        text = Text("Experimental mode", ui.ICON_CONFIG)
+        text.normal("Enable experimental", "features?")
+        text.br_half()
+        text.bold("Only for development", "and beta testing!")
+        await require_confirm(ctx, text, ButtonRequestType.ProtectCall)

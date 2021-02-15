@@ -4,7 +4,7 @@ from apps.common.paths import HARDENED
 from trezor.crypto.curve import secp256k1
 
 if not utils.BITCOIN_ONLY:
-    from apps.binance.helpers import address_from_public_key, validate_full_path
+    from apps.binance.helpers import address_from_public_key
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -18,34 +18,6 @@ class TestBinanceAddress(unittest.TestCase):
         address = address_from_public_key(pubkey, "tbnb")
 
         self.assertEqual(address, expected_address)
-
-
-    def test_paths(self):
-    # 44'/714'/a'/0/0 is correct
-        incorrect_paths = [
-            [44 | HARDENED],
-            [44 | HARDENED, 714 | HARDENED],
-            [44 | HARDENED, 714 | HARDENED, 0],
-            [44 | HARDENED, 714 | HARDENED, 0 | HARDENED, 0 | HARDENED],
-            [44 | HARDENED, 714 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED],
-            [44 | HARDENED, 714 | HARDENED, 0 | HARDENED, 1, 0],
-            [44 | HARDENED, 714 | HARDENED, 0 | HARDENED, 0, 5],
-            [44 | HARDENED, 714 | HARDENED, 9999 | HARDENED],
-            [44 | HARDENED, 714 | HARDENED, 9999000 | HARDENED, 0, 0],
-            [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0, 0],
-            [1 | HARDENED, 1 | HARDENED, 1 | HARDENED],
-        ]
-        correct_paths = [
-            [44 | HARDENED, 714 | HARDENED, 0 | HARDENED, 0, 0],
-            [44 | HARDENED, 714 | HARDENED, 3 | HARDENED, 0, 0],
-            [44 | HARDENED, 714 | HARDENED, 9 | HARDENED, 0, 0],
-        ]
-
-        for path in incorrect_paths:
-            self.assertFalse(validate_full_path(path))
-
-        for path in correct_paths:
-            self.assertTrue(validate_full_path(path))
 
 
 if __name__ == '__main__':

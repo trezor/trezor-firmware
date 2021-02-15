@@ -3,16 +3,17 @@ from trezor.messages.NEMAddress import NEMAddress
 from apps.common.keychain import with_slip44_keychain
 from apps.common.layout import address_n_to_str, show_address, show_qr
 from apps.common.paths import validate_path
-from apps.nem import CURVE, SLIP44_ID
-from apps.nem.helpers import check_path, get_network_str
-from apps.nem.validators import validate_network
+
+from . import CURVE, PATTERNS, SLIP44_ID
+from .helpers import check_path, get_network_str
+from .validators import validate_network
 
 
-@with_slip44_keychain(SLIP44_ID, CURVE, allow_testnet=True)
+@with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
 async def get_address(ctx, msg, keychain):
     network = validate_network(msg.network)
     await validate_path(
-        ctx, check_path, keychain, msg.address_n, CURVE, network=network
+        ctx, keychain, msg.address_n, check_path(msg.address_n, msg.network)
     )
 
     node = keychain.derive(msg.address_n)

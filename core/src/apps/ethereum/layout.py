@@ -8,8 +8,9 @@ from trezor.utils import chunks
 
 from apps.common.confirm import require_confirm, require_hold_to_confirm
 from apps.common.layout import split_address
-from apps.ethereum import networks, tokens
-from apps.ethereum.address import address_from_bytes
+
+from . import networks, tokens
+from .address import address_from_bytes
 
 
 async def require_confirm_tx(ctx, to_bytes, value, chain_id, token=None, tx_type=None):
@@ -39,6 +40,14 @@ async def require_confirm_fee(
     await require_hold_to_confirm(ctx, text, ButtonRequestType.SignTx)
 
 
+async def require_confirm_unknown_token(ctx, address_bytes):
+    text = Text("Unknown token", ui.ICON_SEND, ui.ORANGE, new_lines=False)
+    text.normal(ui.GREY, "Contract:", ui.FG)
+    contract_address_hex = "0x" + hexlify(address_bytes).decode()
+    text.mono(*split_data(contract_address_hex))
+    await require_confirm(ctx, text, ButtonRequestType.SignTx)
+
+
 def split_data(data):
     return chunks(data, 18)
 
@@ -55,9 +64,10 @@ async def require_confirm_data(ctx, data, data_total):
 
 
 def format_ethereum_amount(value: int, token, chain_id: int, tx_type=None):
-    if token:
-        if token is tokens.UNKNOWN_TOKEN:
-            return "Unknown token value"
+    if token is tokens.UNKNOWN_TOKEN:
+        suffix = "Wei UNKN"
+        decimals = 0
+    elif token:
         suffix = token[2]
         decimals = token[3]
     else:

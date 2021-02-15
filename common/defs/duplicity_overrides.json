@@ -4,5 +4,7 @@
     "erc20:eth:LINK Platform": true,
     "erc20:eth:NXX": false,
     "erc20:eth:Hdp": true,
-    "erc20:eth:Hdp.ф": true
+    "erc20:eth:Hdp.ф": true,
+    "misc:BNB": false,
+    "eth:BNB": false
 }

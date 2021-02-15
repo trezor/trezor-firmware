@@ -2,27 +2,27 @@
 
 ## 1. Running the full test suite
 
-_Note: You need Pipenv, as mentioned in the core's [documentation](https://docs.trezor.io/trezor-firmware/core/) section._
+_Note: You need Poetry, as mentioned in the core's [documentation](https://docs.trezor.io/trezor-firmware/core/) section._
 
 In the `trezor-firmware` checkout, in the root of the monorepo, install the environment:
 
 ```sh
-pipenv sync
+poetry install
 ```
 
 And run the tests:
 
 ```sh
-pipenv run make -C core test_emu_ui
+poetry run make -C core test_emu_ui
 ```
 
 ## 2. Running tests manually
 
-Install the pipenv environment as outlined above. Then switch to a shell inside the
+Install the poetry environment as outlined above. Then switch to a shell inside the
 environment:
 
 ```sh
-pipenv shell
+poetry shell
 ```
 
 If you want to test against the emulator, run it in a separate terminal:
@@ -51,7 +51,7 @@ pytest tests/device_tests --ui=test -m "not skip_ui"
 
 Short version:
 ```sh
-pipenv run make -C core test_emu_ui_record
+poetry run make -C core test_emu_ui_record
 ```
 
 Long version:

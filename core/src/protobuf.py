@@ -3,10 +3,8 @@ Extremely minimal streaming codec for a subset of protobuf.  Supports uint32,
 bytes, string, embedded message and repeated fields.
 """
 
-from micropython import const
-
 if False:
-    from typing import Any, Dict, Iterable, List, Tuple, Type, TypeVar, Union
+    from typing import Any, Callable, Dict, Iterable, List, Tuple, Type, TypeVar, Union
     from typing_extensions import Protocol
 
     class Reader(Protocol):
@@ -20,6 +18,8 @@ if False:
             """
             Writes all bytes from `buf`, or raises `EOFError`.
             """
+
+    WriteMethod = Callable[[bytes], Any]
 
 
 _UVARINT_BUFFER = bytearray(1)
@@ -38,7 +38,7 @@ def load_uvarint(reader: Reader) -> int:
     return result
 
 
-def dump_uvarint(writer: Writer, n: int) -> None:
+def dump_uvarint(write: WriteMethod, n: int) -> None:
     if n < 0:
         raise ValueError("Cannot dump signed value, convert it to unsigned first.")
     buffer = _UVARINT_BUFFER
@@ -46,7 +46,7 @@ def dump_uvarint(writer: Writer, n: int) -> None:
     while shifted:
         shifted = n >> 7
         buffer[0] = (n & 0x7F) | (0x80 if shifted else 0x00)
-        writer.write(buffer)
+        write(buffer)
         n = shifted
 
 
@@ -57,19 +57,19 @@ def count_uvarint(n: int) -> int:
         return 1
     if n <= 0x3FFF:
         return 2
-    if n <= 0x1FFFFF:
+    if n <= 0x1F_FFFF:
         return 3
-    if n <= 0xFFFFFFF:
+    if n <= 0xFFF_FFFF:
         return 4
-    if n <= 0x7FFFFFFFF:
+    if n <= 0x7_FFFF_FFFF:
         return 5
-    if n <= 0x3FFFFFFFFFF:
+    if n <= 0x3FF_FFFF_FFFF:
         return 6
-    if n <= 0x1FFFFFFFFFFFF:
+    if n <= 0x1_FFFF_FFFF_FFFF:
         return 7
-    if n <= 0xFFFFFFFFFFFFFF:
+    if n <= 0xFF_FFFF_FFFF_FFFF:
         return 8
-    if n <= 0x7FFFFFFFFFFFFFFF:
+    if n <= 0x7FFF_FFFF_FFFF_FFFF:
         return 9
     raise ValueError
 
@@ -144,6 +144,7 @@ class UnicodeType:
 
 class MessageType:
     WIRE_TYPE = 2
+    UNSTABLE = False
 
     # Type id for the wire codec.
     # Technically, not every protobuf message has this.
@@ -152,10 +153,6 @@ class MessageType:
     @classmethod
     def get_fields(cls) -> "FieldDict":
         return {}
-
-    def __init__(self, **kwargs: Any) -> None:
-        for kw in kwargs:
-            setattr(self, kw, kwargs[kw])
 
     def __eq__(self, rhs: Any) -> bool:
         return self.__class__ is rhs.__class__ and self.__dict__ == rhs.__dict__
@@ -178,7 +175,9 @@ class LimitedReader:
             return nread
 
 
-FLAG_REPEATED = const(1)
+FLAG_REPEATED = object()
+FLAG_REQUIRED = object()
+FLAG_EXPERIMENTAL = object()
 
 if False:
     MessageTypeDef = Union[
@@ -190,7 +189,7 @@ if False:
         Type[UnicodeType],
         Type[MessageType],
     ]
-    FieldDef = Tuple[str, MessageTypeDef, int]
+    FieldDef = Tuple[str, MessageTypeDef, Any]
     FieldDict = Dict[int, FieldDef]
 
     FieldCache = Dict[Type[MessageType], FieldDict]
@@ -199,9 +198,11 @@ if False:
 
 
 def load_message(
-    reader: Reader, msg_type: Type[LoadedMessageType], field_cache: FieldCache = None
+    reader: Reader,
+    msg_type: Type[LoadedMessageType],
+    field_cache: FieldCache = None,
+    experimental_enabled: bool = True,
 ) -> LoadedMessageType:
-
     if field_cache is None:
         field_cache = {}
     fields = field_cache.get(msg_type)
@@ -209,12 +210,23 @@ def load_message(
         fields = msg_type.get_fields()
         field_cache[msg_type] = fields
 
-    msg = msg_type()
+    if msg_type.UNSTABLE and not experimental_enabled:
+        raise ValueError  # experimental messages not enabled
+
+    # we need to avoid calling __init__, which enforces required arguments
+    msg: LoadedMessageType = object.__new__(msg_type)
+    # pre-seed the object with defaults
+    for fname, _, fdefault in fields.values():
+        if fdefault is FLAG_REPEATED:
+            fdefault = []
+        elif fdefault is FLAG_EXPERIMENTAL:
+            fdefault = None
+        setattr(msg, fname, fdefault)
 
     if False:
         SingularValue = Union[int, bool, bytearray, str, MessageType]
         Value = Union[SingularValue, List[SingularValue]]
-        fvalue = 0  # type: Value
+        fvalue: Value = 0
 
     while True:
         try:
@@ -237,9 +249,12 @@ def load_message(
                 raise ValueError
             continue
 
-        fname, ftype, fflags = field
+        fname, ftype, fdefault = field
         if wtype != ftype.WIRE_TYPE:
             raise TypeError  # parsed wire type differs from the schema
+
+        if fdefault is FLAG_EXPERIMENTAL and not experimental_enabled:
+            raise ValueError  # experimental fields not enabled
 
         ivalue = load_uvarint(reader)
 
@@ -259,21 +274,22 @@ def load_message(
             reader.readinto(fvalue)
             fvalue = bytes(fvalue).decode()
         elif issubclass(ftype, MessageType):
-            fvalue = load_message(LimitedReader(reader, ivalue), ftype, field_cache)
+            fvalue = load_message(
+                LimitedReader(reader, ivalue), ftype, field_cache, experimental_enabled
+            )
         else:
             raise TypeError  # field type is unknown
 
-        if fflags & FLAG_REPEATED:
-            pvalue = getattr(msg, fname, [])
-            pvalue.append(fvalue)
-            fvalue = pvalue
-        setattr(msg, fname, fvalue)
+        if fdefault is FLAG_REPEATED:
+            getattr(msg, fname).append(fvalue)
+        else:
+            setattr(msg, fname, fvalue)
 
-    # fill missing fields
-    for tag in fields:
-        field = fields[tag]
-        if not hasattr(msg, field[0]):
-            setattr(msg, field[0], None)
+    for fname, _, _ in fields.values():
+        if getattr(msg, fname) is FLAG_REQUIRED:
+            # The message is intended to be user-facing when decoding from wire,
+            # but not when used internally.
+            raise ValueError("Required field '{}' was not received".format(fname))
 
     return msg
 
@@ -291,7 +307,7 @@ def dump_message(
         field_cache[type(msg)] = fields
 
     for ftag in fields:
-        fname, ftype, fflags = fields[ftag]
+        fname, ftype, fdefault = fields[ftag]
 
         fvalue = getattr(msg, fname, None)
         if fvalue is None:
@@ -299,37 +315,37 @@ def dump_message(
 
         fkey = (ftag << 3) | ftype.WIRE_TYPE
 
-        if not fflags & FLAG_REPEATED:
+        if fdefault is not FLAG_REPEATED:
             repvalue[0] = fvalue
             fvalue = repvalue
 
         for svalue in fvalue:
-            dump_uvarint(writer, fkey)
+            dump_uvarint(writer.write, fkey)
 
             if ftype is UVarintType:
-                dump_uvarint(writer, svalue)
+                dump_uvarint(writer.write, svalue)
 
             elif ftype is SVarintType:
-                dump_uvarint(writer, sint_to_uint(svalue))
+                dump_uvarint(writer.write, sint_to_uint(svalue))
 
             elif ftype is BoolType:
-                dump_uvarint(writer, int(svalue))
+                dump_uvarint(writer.write, int(svalue))
 
             elif isinstance(ftype, EnumType):
-                dump_uvarint(writer, svalue)
+                dump_uvarint(writer.write, svalue)
 
             elif ftype is BytesType:
                 if isinstance(svalue, list):
-                    dump_uvarint(writer, _count_bytes_list(svalue))
+                    dump_uvarint(writer.write, _count_bytes_list(svalue))
                     for sub_svalue in svalue:
                         writer.write(sub_svalue)
                 else:
-                    dump_uvarint(writer, len(svalue))
+                    dump_uvarint(writer.write, len(svalue))
                     writer.write(svalue)
 
             elif ftype is UnicodeType:
                 svalue = svalue.encode()
-                dump_uvarint(writer, len(svalue))
+                dump_uvarint(writer.write, len(svalue))
                 writer.write(svalue)
 
             elif issubclass(ftype, MessageType):
@@ -337,7 +353,7 @@ def dump_message(
                 if ffields is None:
                     ffields = ftype.get_fields()
                     field_cache[ftype] = ffields
-                dump_uvarint(writer, count_message(svalue, field_cache))
+                dump_uvarint(writer.write, count_message(svalue, field_cache))
                 dump_message(writer, svalue, field_cache)
 
             else:
@@ -356,7 +372,7 @@ def count_message(msg: MessageType, field_cache: FieldCache = None) -> int:
         field_cache[type(msg)] = fields
 
     for ftag in fields:
-        fname, ftype, fflags = fields[ftag]
+        fname, ftype, fdefault = fields[ftag]
 
         fvalue = getattr(msg, fname, None)
         if fvalue is None:
@@ -364,7 +380,7 @@ def count_message(msg: MessageType, field_cache: FieldCache = None) -> int:
 
         fkey = (ftag << 3) | ftype.WIRE_TYPE
 
-        if not fflags & FLAG_REPEATED:
+        if fdefault is not FLAG_REPEATED:
             repvalue[0] = fvalue
             fvalue = repvalue
 

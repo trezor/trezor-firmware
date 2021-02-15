@@ -14,6 +14,7 @@ class EosActionBuyRamBytes(p.MessageType):
 
     def __init__(
         self,
+        *,
         payer: int = None,
         receiver: int = None,
         bytes: int = None,
@@ -25,7 +26,7 @@ class EosActionBuyRamBytes(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('payer', p.UVarintType, 0),
-            2: ('receiver', p.UVarintType, 0),
-            3: ('bytes', p.UVarintType, 0),
+            1: ('payer', p.UVarintType, None),
+            2: ('receiver', p.UVarintType, None),
+            3: ('bytes', p.UVarintType, None),
         }

@@ -2,8 +2,6 @@ from trezor import wire
 from trezor.crypto import base58
 from trezor.messages.EosAsset import EosAsset
 
-from apps.common import HARDENED
-
 
 def base58_encode(prefix: str, sig_prefix: str, data: bytes) -> str:
     b58 = base58.encode(data + base58.ripemd160_32(data + sig_prefix.encode()))
@@ -40,28 +38,6 @@ def eos_asset_to_string(asset: EosAsset) -> str:
         return "{}.{} {}".format(integer, fraction, symbol)
     else:
         return "{} {}".format(amount_digits, symbol)
-
-
-def validate_full_path(path: list) -> bool:
-    """
-    Validates derivation path to equal 44'/194'/a'/0/0,
-    where `a` is an account index from 0 to 1 000 000.
-    Similar to Ethereum this should be 44'/194'/a', but for
-    compatibility with other HW vendors we use 44'/194'/a'/0/0.
-    """
-    if len(path) != 5:
-        return False
-    if path[0] != 44 | HARDENED:
-        return False
-    if path[1] != 194 | HARDENED:
-        return False
-    if path[2] < HARDENED or path[2] > 1000000 | HARDENED:
-        return False
-    if path[3] != 0:
-        return False
-    if path[4] != 0:
-        return False
-    return True
 
 
 def public_key_to_wif(pub_key: bytes) -> str:

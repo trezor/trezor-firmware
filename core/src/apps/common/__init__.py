@@ -9,7 +9,7 @@ if False:
     from trezor import wire
     from trezor.messages.ButtonRequest import EnumTypeButtonRequestType
 
-HARDENED = const(0x80000000)
+HARDENED = const(0x8000_0000)
 
 
 async def button_request(

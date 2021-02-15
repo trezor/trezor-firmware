@@ -1,7 +1,7 @@
-from micropython import const
+from apps.cardano.helpers.paths import ACCOUNT_PATH_INDEX, unharden
 
 if False:
-    from typing import List
+    from typing import List, Optional
 
 
 def variable_length_encode(number: int) -> bytes:
@@ -27,5 +27,18 @@ def variable_length_encode(number: int) -> bytes:
 
 
 def to_account_path(path: List[int]) -> List[int]:
-    ACCOUNT_PATH_LENGTH = const(3)
-    return path[:ACCOUNT_PATH_LENGTH]
+    return path[: ACCOUNT_PATH_INDEX + 1]
+
+
+def format_account_number(path: List[int]) -> str:
+    if len(path) <= ACCOUNT_PATH_INDEX:
+        raise ValueError("Path is too short.")
+
+    return "#%d" % (unharden(path[ACCOUNT_PATH_INDEX]) + 1)
+
+
+def format_optional_int(number: Optional[int]) -> str:
+    if number is None:
+        return "n/a"
+
+    return str(number)

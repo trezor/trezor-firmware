@@ -23,6 +23,8 @@
 
 See [CONTRIBUTING.md](docs/misc/contributing.md).
 
+Using [Conventional Commits](COMMITS.md) is strongly recommended and might be enforced in future.
+
 Also please have a look at the docs, either in the `docs` folder or at  [docs.trezor.io](https://docs.trezor.io) before contributing. The [misc](docs/misc/index.md) chapter should be read in particular because it contains some useful assorted knowledge.
 
 ## Security vulnerability disclosure

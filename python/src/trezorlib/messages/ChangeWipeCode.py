@@ -15,6 +15,7 @@ class ChangeWipeCode(p.MessageType):
 
     def __init__(
         self,
+        *,
         remove: bool = None,
     ) -> None:
         self.remove = remove
@@ -22,5 +23,5 @@ class ChangeWipeCode(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('remove', p.BoolType, 0),
+            1: ('remove', p.BoolType, None),
         }

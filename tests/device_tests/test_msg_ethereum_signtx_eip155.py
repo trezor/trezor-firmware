@@ -61,16 +61,6 @@ VECTORS_CHAIN_IDS = (  # chain_id, slip44, sig_v, sig_r, sig_s
             "2b8c8def7534e7bc692ee2975a674a0e31c0dbd9137e53d27dee6b15e121c210",
         ),
     ),
-    # EOS Classic
-    (
-        2018,
-        2018,
-        (
-            4071,
-            "2a890f3e4ae40614dd093e0696b99da02bb25ec03cdd3e7c1a77c425b8dc010b",
-            "33db0e15ab3d6d02f7c4e0ed39e496c0e5859b998e1258ce8d17a7f254e2c967",
-        ),
-    ),
     # Auxilium
     (
         28945486,
@@ -89,6 +79,26 @@ VECTORS_CHAIN_IDS = (  # chain_id, slip44, sig_v, sig_r, sig_s
             6251318340,
             "a876d3cf19f4f6b51fb980aac49e8bd378b88f11adbebc1be33d7b86eb84a054",
             "3bee0e5a07661e78c9c4af49c8a42f4735f80cbb82931607ac35fc78f8d5b113",
+        ),
+    ),
+    # Unknown chain id with Ethereum path
+    (
+        609112567,
+        60,
+        (
+            1218225170,
+            "0b0f20dc9202db0653a827b9dc924653bc83d67eec9e43d678e0fb6bb3eb6d9e",
+            "5fdbae16da0ffc4d888e915ff210393e5c7655a3c48eaffbbe97d6db428fc277",
+        ),
+    ),
+    # Unknown chain id with testnet path
+    (
+        609112567,
+        1,
+        (
+            1218225169,
+            "f699de96e886995e460e760839d4f2c7b9f1c98f2d3c108d0add4e8663a679d8",
+            "1447ba45be9fca42bcbf250389403245c8c1b0476e60b96dea320b0a596b5528",
         ),
     ),
 )

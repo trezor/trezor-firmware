@@ -15,6 +15,7 @@ class CipheredKeyValue(p.MessageType):
 
     def __init__(
         self,
+        *,
         value: bytes = None,
     ) -> None:
         self.value = value
@@ -22,5 +23,5 @@ class CipheredKeyValue(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('value', p.BytesType, 0),
+            1: ('value', p.BytesType, None),
         }

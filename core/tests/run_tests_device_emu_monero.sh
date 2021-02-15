@@ -34,6 +34,7 @@ if [[ "$OSTYPE" != "linux-gnu" && "$OSTYPE" != "darwin"* ]]; then
   exit 0
 fi
 
+# When updating URL and sha256sum also update the URL in ci/shell.nix.
 error=1
 : "${TREZOR_MONERO_TESTS_URL:=https://github.com/ph4r05/monero/releases/download/v0.15.0.0-tests-u18.04-03/trezor_tests}"
 : "${TREZOR_MONERO_TESTS_SHA256SUM:=1e5dfdb07de4ea46088f4a5bdb0d51f040fe479019efae30f76427eee6edb3f7}"

@@ -186,18 +186,6 @@ def check_eth(coins):
         chain_name_str = "colliding chain name " + crayon(None, key, bold=True) + ":"
         print_log(logging.ERROR, chain_name_str, bucket_str)
         check_passed = False
-    for coin in coins:
-        icon_file = coin["chain"] + ".png"
-        try:
-            icon = Image.open(os.path.join(coin_info.DEFS_DIR, "ethereum", icon_file))
-        except Exception:
-            print(coin["key"], ": failed to open icon file", icon_file)
-            check_passed = False
-            continue
-
-        if icon.size != (128, 128) or icon.mode != "RGBA":
-            print(coin["key"], ": bad icon format (must be RGBA 128x128)")
-            check_passed = False
     return check_passed
 
 
@@ -331,7 +319,13 @@ def check_dups(buckets, print_at_level=logging.WARNING):
             continue
 
         supported = [coin for coin in bucket if not coin["unsupported"]]
-        nontokens = [coin for coin in bucket if not coin_info.is_token(coin)]
+        nontokens = [
+            coin
+            for coin in bucket
+            if not coin["unsupported"]
+            and coin.get("duplicate")
+            and not coin_info.is_token(coin)
+        ]  # we do not count override-marked coins as duplicates here
         cleared = not any(coin.get("duplicate") for coin in bucket)
 
         # string generation
@@ -347,7 +341,7 @@ def check_dups(buckets, print_at_level=logging.WARNING):
                 # some previous step has explicitly marked them as non-duplicate
                 level = logging.INFO
             else:
-                # at most 1 non-token - we tenatively allow token collisions
+                # at most 1 non-token - we tentatively allow token collisions
                 # when explicitly marked as supported
                 level = logging.WARNING
         else:
@@ -454,6 +448,8 @@ def check_segwit(coins):
             "bech32_prefix",
             "xpub_magic_segwit_native",
             "xpub_magic_segwit_p2sh",
+            "xpub_magic_multisig_segwit_native",
+            "xpub_magic_multisig_segwit_p2sh",
         ]
         if segwit:
             for field in segwit_fields:
@@ -470,7 +466,7 @@ def check_segwit(coins):
                     print_log(
                         logging.ERROR,
                         coin["name"],
-                        "segwit is True => %s should NOT be set" % field,
+                        "segwit is False => %s should NOT be set" % field,
                     )
                     return False
     return True

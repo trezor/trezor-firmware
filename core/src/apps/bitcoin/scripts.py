@@ -2,11 +2,8 @@ from trezor import utils, wire
 from trezor.crypto import base58, cashaddr
 from trezor.crypto.hashlib import sha256
 from trezor.messages import InputScriptType
-from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
-from trezor.messages.TxInputType import TxInputType
 
 from apps.common import address_type
-from apps.common.coininfo import CoinInfo
 from apps.common.readers import read_bitcoin_varint
 from apps.common.writers import empty_bytearray, write_bitcoin_varint
 
@@ -26,17 +23,23 @@ from .writers import (
 
 if False:
     from typing import List, Optional, Tuple
-    from trezor.messages.TxInputType import EnumTypeInputScriptType
+
+    from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
+    from trezor.messages.TxInput import TxInput
+    from trezor.messages.TxInput import EnumTypeInputScriptType
+
+    from apps.common.coininfo import CoinInfo
+
     from .writers import Writer
 
 
 def input_derive_script(
     script_type: EnumTypeInputScriptType,
-    multisig: MultisigRedeemScriptType,
+    multisig: Optional[MultisigRedeemScriptType],
     coin: CoinInfo,
     hash_type: int,
     pubkey: bytes,
-    signature: Optional[bytes],
+    signature: bytes,
 ) -> bytes:
     if script_type == InputScriptType.SPENDADDRESS:
         # p2pkh or p2sh
@@ -45,7 +48,7 @@ def input_derive_script(
     if script_type == InputScriptType.SPENDP2SHWITNESS:
         # p2wpkh or p2wsh using p2sh
 
-        if multisig:
+        if multisig is not None:
             # p2wsh in p2sh
             pubkeys = multisig_get_pubkeys(multisig)
             witness_script_hasher = utils.HashWriter(sha256())
@@ -60,6 +63,7 @@ def input_derive_script(
         return input_script_native_p2wpkh_or_p2wsh()
     elif script_type == InputScriptType.SPENDMULTISIG:
         # p2sh multisig
+        assert multisig is not None  # checked in sanitize_tx_input
         signature_index = multisig_pubkey_index(multisig, pubkey)
         return input_script_multisig(
             multisig, signature, signature_index, hash_type, coin
@@ -111,7 +115,7 @@ def output_derive_script(address: str, coin: CoinInfo) -> bytes:
 # see https://github.com/bitcoin/bips/blob/master/bip-0143.mediawiki#specification
 # item 5 for details
 def bip143_derive_script_code(
-    txi: TxInputType, public_keys: List[bytes], threshold: int, coin: CoinInfo
+    txi: TxInput, public_keys: List[bytes], threshold: int, coin: CoinInfo
 ) -> bytearray:
     if len(public_keys) > 1:
         return output_script_multisig(public_keys, threshold)
@@ -299,8 +303,8 @@ def witness_multisig(
     signature_index: int,
     hash_type: int,
 ) -> bytearray:
-    # get other signatures, stretch with None to the number of the pubkeys
-    signatures = multisig.signatures + [None] * (
+    # get other signatures, stretch with empty bytes to the number of the pubkeys
+    signatures = multisig.signatures + [b""] * (
         multisig_get_pubkey_count(multisig) - len(multisig.signatures)
     )
     # fill in our signature
@@ -523,7 +527,7 @@ def output_script_paytoopreturn(data: bytes) -> bytearray:
 def write_bip322_signature_proof(
     w: Writer,
     script_type: EnumTypeInputScriptType,
-    multisig: MultisigRedeemScriptType,
+    multisig: Optional[MultisigRedeemScriptType],
     coin: CoinInfo,
     public_key: bytes,
     signature: bytes,

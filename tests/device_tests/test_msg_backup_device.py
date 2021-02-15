@@ -262,6 +262,7 @@ def test_backup_slip39_advanced(client):
 # we only test this with bip39 because the code path is always the same
 @pytest.mark.setup_client(no_backup=True)
 def test_no_backup_fails(client):
+    client.ensure_unlocked()
     assert client.features.initialized is True
     assert client.features.no_backup is True
     assert client.features.needs_backup is False
@@ -274,6 +275,7 @@ def test_no_backup_fails(client):
 # we only test this with bip39 because the code path is always the same
 @pytest.mark.setup_client(needs_backup=True)
 def test_interrupt_backup_fails(client):
+    client.ensure_unlocked()
     assert client.features.initialized is True
     assert client.features.needs_backup is True
     assert client.features.unfinished_backup is False

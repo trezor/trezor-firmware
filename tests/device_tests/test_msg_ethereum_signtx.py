@@ -117,13 +117,18 @@ class TestMsgEthereumSigntx:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_ethereum_signtx_unknown_erc20_token(self, client):
         with client:
-            client.set_expected_responses(
-                [
-                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
-                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
-                    messages.EthereumTxRequest(data_length=None),
-                ]
-            )
+            expected_responses = [
+                messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+            ]
+            # TT asks for contract address confirmation
+            if client.features.model == "T":
+                expected_responses.append(
+                    messages.ButtonRequest(code=messages.ButtonRequestType.SignTx)
+                )
+
+            expected_responses.append(messages.EthereumTxRequest(data_length=None))
+            client.set_expected_responses(expected_responses)
 
             data = bytearray()
             # method id signalizing `transfer(address _to, uint256 _value)` function

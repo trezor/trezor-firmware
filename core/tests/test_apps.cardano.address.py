@@ -8,14 +8,8 @@ from trezor.messages.CardanoBlockchainPointerType import CardanoBlockchainPointe
 from apps.common import HARDENED, seed
 
 if not utils.BITCOIN_ONLY:
-    from apps.cardano.address import (
-        derive_human_readable_address,
-        validate_full_path,
-    )
-    from apps.cardano.byron_address import (
-        _get_address_root,
-        _address_hash,
-    )
+    from apps.cardano.address import derive_human_readable_address
+    from apps.cardano.byron_address import _address_hash
     from apps.cardano.helpers import network_ids, protocol_magics
     from apps.cardano.seed import Keychain
 
@@ -155,33 +149,6 @@ class TestCardanoAddress(unittest.TestCase):
 
         self.assertEqual(result, b'\x1c\xca\xee\xc9\x80\xaf}\xb0\x9a\xa8\x96E\xd6\xa4\xd1\xb4\x13\x85\xb9\xc2q\x1d5/{\x12"\xca')
 
-
-    def test_paths(self):
-        incorrect_derivation_paths = [
-            [HARDENED | 44],
-            [HARDENED | 44, HARDENED | 1815, HARDENED | 1815, HARDENED | 1815, HARDENED | 1815, HARDENED | 1815],
-            [HARDENED | 43, HARDENED | 1815, HARDENED | 1815, HARDENED | 1815, HARDENED | 1815],
-            [HARDENED | 44, HARDENED | 1816, HARDENED | 1815, HARDENED | 1815, HARDENED | 1815],
-            [HARDENED | 44, HARDENED | 1815, 0],
-            [HARDENED | 44, HARDENED | 1815, 0, 0],
-            [HARDENED | 44, HARDENED | 1815],
-            [HARDENED | 44, HARDENED | 1815, HARDENED | 0],
-            [HARDENED | 44, HARDENED | 1815, HARDENED | 1815, 1, 1],
-            [HARDENED | 44, HARDENED | 1815, HARDENED | 1815, 0, 0],  # a too large
-        ]
-        correct_derivation_paths = [
-            [HARDENED | 44, HARDENED | 1815, HARDENED | 0, 0, 1],
-            [HARDENED | 44, HARDENED | 1815, HARDENED | 9, 0, 4],
-            [HARDENED | 44, HARDENED | 1815, HARDENED | 0, 0, 9],
-            [HARDENED | 44, HARDENED | 1815, HARDENED | 0, 1, 1],
-            [HARDENED | 44, HARDENED | 1815, HARDENED | 0, 1, 9],
-        ]
-
-        for path in incorrect_derivation_paths:
-            self.assertFalse(validate_full_path(path))
-
-        for path in correct_derivation_paths:
-            self.assertTrue(validate_full_path(path))
 
     def test_slip39_128(self):
         mnemonics = [
@@ -423,8 +390,8 @@ class TestCardanoAddress(unittest.TestCase):
 
         test_vectors = [
             # network id, pointer, expected result
-            (network_ids.MAINNET, CardanoBlockchainPointerType(1, 2, 3), "addr1gx2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzerspqgpse33frd"),
-            (network_ids.TESTNET, CardanoBlockchainPointerType(24157, 177, 42), "addr_test1gz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer5ph3wczvf2pfz4ly")
+            (network_ids.MAINNET, CardanoBlockchainPointerType(block_index=1, tx_index=2, certificate_index=3), "addr1gx2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzerspqgpse33frd"),
+            (network_ids.TESTNET, CardanoBlockchainPointerType(block_index=24157, tx_index=177, certificate_index=42), "addr_test1gz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer5ph3wczvf2pfz4ly")
         ]
 
         for network_id, pointer, expected_address in test_vectors:
@@ -457,7 +424,7 @@ class TestCardanoAddress(unittest.TestCase):
             address_parameters = CardanoAddressParametersType(
                 address_type=CardanoAddressType.POINTER,
                 address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
-                certificate_pointer=CardanoBlockchainPointerType(None, 2, 3),
+                certificate_pointer=CardanoBlockchainPointerType(block_index=None, tx_index=2, certificate_index=3),
             )
             derive_human_readable_address(keychain, address_parameters, 0, 0)
 
@@ -466,7 +433,7 @@ class TestCardanoAddress(unittest.TestCase):
             address_parameters = CardanoAddressParametersType(
                 address_type=CardanoAddressType.POINTER,
                 address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
-                certificate_pointer=CardanoBlockchainPointerType(1, None, 3),
+                certificate_pointer=CardanoBlockchainPointerType(block_index=1, tx_index=None, certificate_index=3),
             )
             derive_human_readable_address(keychain, address_parameters, 0, 0)
 
@@ -475,7 +442,7 @@ class TestCardanoAddress(unittest.TestCase):
             address_parameters = CardanoAddressParametersType(
                 address_type=CardanoAddressType.POINTER,
                 address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
-                certificate_pointer=CardanoBlockchainPointerType(1, 2, None),
+                certificate_pointer=CardanoBlockchainPointerType(block_index=1, tx_index=2, certificate_index=None),
             )
             derive_human_readable_address(keychain, address_parameters, 0, 0)
 
@@ -534,7 +501,7 @@ class TestCardanoAddress(unittest.TestCase):
             address_parameters = CardanoAddressParametersType(
                 address_type=CardanoAddressType.POINTER,
                 address_n=[44 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
-                certificate_pointer=CardanoBlockchainPointerType(0, 0, 0)
+                certificate_pointer=CardanoBlockchainPointerType(block_index=0, tx_index=0, certificate_index=0)
             )
             derive_human_readable_address(keychain, address_parameters, 0, 0)
 

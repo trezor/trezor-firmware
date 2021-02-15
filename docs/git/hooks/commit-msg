@@ -1,0 +1,6 @@
+#!/bin/sh
+
+if ! grep -qE "^(build|ci|docs|feat|fix|perf|refactor|style|test|chore|revert)(\((common|core|crypto|legacy|python|storage|tools|vendor)\))?: " "$1" ; then
+  echo "Conventional Commits validation failed"
+  exit 1
+fi

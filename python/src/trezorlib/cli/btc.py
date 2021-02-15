@@ -27,12 +27,18 @@ INPUT_SCRIPTS = {
     "address": messages.InputScriptType.SPENDADDRESS,
     "segwit": messages.InputScriptType.SPENDWITNESS,
     "p2shsegwit": messages.InputScriptType.SPENDP2SHWITNESS,
+    "pkh": messages.InputScriptType.SPENDADDRESS,
+    "wpkh": messages.InputScriptType.SPENDWITNESS,
+    "sh-wpkh": messages.InputScriptType.SPENDP2SHWITNESS,
 }
 
 OUTPUT_SCRIPTS = {
     "address": messages.OutputScriptType.PAYTOADDRESS,
     "segwit": messages.OutputScriptType.PAYTOWITNESS,
     "p2shsegwit": messages.OutputScriptType.PAYTOP2SHWITNESS,
+    "pkh": messages.OutputScriptType.PAYTOADDRESS,
+    "wpkh": messages.OutputScriptType.PAYTOWITNESS,
+    "sh-wpkh": messages.OutputScriptType.PAYTOP2SHWITNESS,
 }
 
 DEFAULT_COIN = "Bitcoin"
@@ -52,16 +58,21 @@ XpubStruct = c.Struct(
 def xpub_deserialize(xpubstr):
     xpub_bytes = tools.b58check_decode(xpubstr)
     data = XpubStruct.parse(xpub_bytes)
+    if data.key[0] == 0:
+        private_key = data.key[1:]
+        public_key = None
+    else:
+        public_key = data.key
+        private_key = None
+
     node = messages.HDNodeType(
         depth=data.depth,
         fingerprint=data.fingerprint,
         child_num=data.child_num,
         chain_code=data.chain_code,
+        public_key=public_key,
+        private_key=private_key,
     )
-    if data.key[0] == 0:
-        node.private_key = data.key[1:]
-    else:
-        node.public_key = data.key
 
     return data.version, node
 
@@ -110,6 +121,7 @@ def get_address(
 
     For BIP-45 multisig:
 
+    \b
     $ trezorctl btc get-public-node -n m/45h/0
     xpub0101
     $ trezorctl btc get-address -n m/45h/0/0/7 -m 3 -x xpub0101 -x xpub0202 -x xpub0303
@@ -178,6 +190,63 @@ def get_public_node(client, coin, address, curve, script_type, show_display):
     }
 
 
+def _get_descriptor(client, coin, account, script_type, show_display):
+    coin = coin or DEFAULT_COIN
+    if script_type == messages.InputScriptType.SPENDADDRESS:
+        acc_type = 44
+        fmt = "pkh({})"
+    elif script_type == messages.InputScriptType.SPENDP2SHWITNESS:
+        acc_type = 49
+        fmt = "sh(wpkh({}))"
+    elif script_type == messages.InputScriptType.SPENDWITNESS:
+        acc_type = 84
+        fmt = "wpkh({})"
+    else:
+        raise ValueError("Unsupported account type")
+
+    if coin is None or coin == "Bitcoin":
+        coin_type = 0
+    elif coin == "Testnet":
+        coin_type = 1
+    else:
+        raise ValueError("Unsupported coin")
+
+    path = f"m/{acc_type}'/{coin_type}'/{account}'"
+    n = tools.parse_path(path)
+    pub = btc.get_public_node(
+        client,
+        n,
+        show_display=show_display,
+        coin_name=coin,
+        script_type=script_type,
+        ignore_xpub_magic=True,
+    )
+
+    fingerprint = pub.root_fingerprint if pub.root_fingerprint is not None else 0
+    external = f"[{fingerprint:08x}{path[1:]}]{pub.xpub}/0/*"
+    internal = f"[{fingerprint:08x}{path[1:]}]{pub.xpub}/1/*"
+    return fmt.format(external), fmt.format(internal)
+
+
+@cli.command()
+@click.option("-c", "--coin")
+@click.option(
+    "-n", "--account", required=True, type=int, help="account index (0 = first account)"
+)
+@click.option("-t", "--script-type", type=ChoiceType(INPUT_SCRIPTS), default="address")
+@click.option("-d", "--show-display", is_flag=True)
+@with_client
+def get_descriptor(client, coin, account, script_type, show_display):
+    """Get descriptor of given account."""
+    try:
+        ds = _get_descriptor(client, coin, account, script_type, show_display)
+        click.echo()
+        for d in ds:
+            click.echo(d)
+    except ValueError as e:
+        raise click.ClickException(e.msg)
+
+
 #
 # Signing functions
 #
@@ -198,7 +267,7 @@ def sign_tx(client, json_file):
     """
     data = json.load(json_file)
     coin = data.get("coin_name", DEFAULT_COIN)
-    details = protobuf.dict_to_proto(messages.SignTx, data.get("details", {}))
+    details = data.get("details", {})
     inputs = [
         protobuf.dict_to_proto(messages.TxInputType, i) for i in data.get("inputs", ())
     ]
@@ -211,7 +280,14 @@ def sign_tx(client, json_file):
         for txid, tx in data.get("prev_txes", {}).items()
     }
 
-    _, serialized_tx = btc.sign_tx(client, coin, inputs, outputs, details, prev_txes)
+    _, serialized_tx = btc.sign_tx(
+        client,
+        coin,
+        inputs,
+        outputs,
+        prev_txes=prev_txes,
+        **details,
+    )
 
     click.echo()
     click.echo("Signed Transaction:")

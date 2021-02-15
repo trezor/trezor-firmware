@@ -54,8 +54,7 @@ DEFAULT_NETWORK_PASSPHRASE = "Public Global Stellar Network ; September 2015"
 
 
 def address_from_public_key(pk_bytes):
-    """Returns the base32-encoded version of pk_bytes (G...)
-    """
+    """Returns the base32-encoded version of pk_bytes (G...)"""
     final_bytes = bytearray()
 
     # version
@@ -80,8 +79,8 @@ def address_to_public_key(address_str):
 
 def parse_transaction_bytes(tx_bytes):
     """Parses base64data into a map with the following keys:
-        tx - a StellarSignTx describing the transaction header
-        operations - an array of protobuf message objects for each operation
+    tx - a StellarSignTx describing the transaction header
+    operations - an array of protobuf message objects for each operation
     """
     tx = messages.StellarSignTx()
     unpacker = xdrlib.Unpacker(tx_bytes)

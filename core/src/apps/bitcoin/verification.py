@@ -18,18 +18,26 @@ from .scripts import (
 )
 
 if False:
-    from typing import List, Tuple
+    from typing import List, Optional, Tuple
     from apps.common.coininfo import CoinInfo
 
 
 class SignatureVerifier:
     def __init__(
-        self, script_pubkey: bytes, script_sig: bytes, witness: bytes, coin: CoinInfo,
+        self,
+        script_pubkey: bytes,
+        script_sig: Optional[bytes],
+        witness: Optional[bytes],
+        coin: CoinInfo,
     ):
         self.threshold = 1
-        self.public_keys = []  # type: List[bytes]
-        self.signatures = []  # type: List[Tuple[bytes, int]]
+        self.public_keys: List[bytes] = []
+        self.signatures: List[Tuple[bytes, int]] = []
+
         if not script_sig:
+            if not witness:
+                raise wire.DataError("Signature data not provided")
+
             if len(script_pubkey) == 22:  # P2WPKH
                 public_key, signature, hash_type = parse_witness_p2wpkh(witness)
                 pubkey_hash = ecdsa_hash_pubkey(public_key, coin)

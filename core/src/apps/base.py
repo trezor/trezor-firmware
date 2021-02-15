@@ -9,13 +9,14 @@ from trezor.messages.Features import Features
 from trezor.messages.PreauthorizedRequest import PreauthorizedRequest
 from trezor.messages.Success import Success
 
-from apps.common import mnemonic
+from apps.common import mnemonic, safety_checks
 from apps.common.request_pin import verify_user_pin
 
 if False:
     import protobuf
     from typing import Iterable, NoReturn, Optional, Protocol
     from trezor.messages.Initialize import Initialize
+    from trezor.messages.EndSession import EndSession
     from trezor.messages.GetFeatures import GetFeatures
     from trezor.messages.Cancel import Cancel
     from trezor.messages.LockDevice import LockDevice
@@ -91,6 +92,10 @@ def get_features() -> Features:
         f.sd_protection = storage.sd_salt.is_enabled()
         f.wipe_code_protection = config.has_wipe_code()
         f.passphrase_always_on_device = storage.device.get_passphrase_always_on_device()
+        f.safety_checks = safety_checks.read_setting()
+        f.auto_lock_delay_ms = storage.device.get_autolock_delay_ms()
+        f.display_rotation = storage.device.get_rotation()
+        f.experimental_features = storage.device.get_experimental_features()
 
     return f
 
@@ -116,6 +121,11 @@ async def handle_LockDevice(ctx: wire.Context, msg: LockDevice) -> Success:
     return Success()
 
 
+async def handle_EndSession(ctx: wire.Context, msg: EndSession) -> Success:
+    cache.end_current_session()
+    return Success()
+
+
 async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:
     if msg.button_protection:
         from apps.common.confirm import require_confirm
@@ -129,9 +139,9 @@ async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:
 async def handle_DoPreauthorized(
     ctx: wire.Context, msg: DoPreauthorized
 ) -> protobuf.MessageType:
-    authorization = storage.cache.get(
+    authorization: Authorization = storage.cache.get(
         storage.cache.APP_BASE_AUTHORIZATION
-    )  # type: Authorization
+    )
     if not authorization:
         raise wire.ProcessError("No preauthorized operation")
 
@@ -147,9 +157,7 @@ async def handle_DoPreauthorized(
 
 
 def set_authorization(authorization: Authorization) -> None:
-    previous = storage.cache.get(
-        storage.cache.APP_BASE_AUTHORIZATION
-    )  # type: Authorization
+    previous: Authorization = storage.cache.get(storage.cache.APP_BASE_AUTHORIZATION)
     if previous:
         previous.__del__()
     storage.cache.set(storage.cache.APP_BASE_AUTHORIZATION, authorization)
@@ -158,9 +166,9 @@ def set_authorization(authorization: Authorization) -> None:
 async def handle_CancelAuthorization(
     ctx: wire.Context, msg: CancelAuthorization
 ) -> protobuf.MessageType:
-    authorization = storage.cache.get(
+    authorization: Authorization = storage.cache.get(
         storage.cache.APP_BASE_AUTHORIZATION
-    )  # type: Authorization
+    )
     if not authorization:
         raise wire.ProcessError("No preauthorized operation")
 
@@ -172,6 +180,7 @@ async def handle_CancelAuthorization(
 
 ALLOW_WHILE_LOCKED = (
     MessageType.Initialize,
+    MessageType.EndSession,
     MessageType.GetFeatures,
     MessageType.Cancel,
     MessageType.LockDevice,
@@ -249,8 +258,11 @@ def boot() -> None:
     wire.register(MessageType.GetFeatures, handle_GetFeatures)
     wire.register(MessageType.Cancel, handle_Cancel)
     wire.register(MessageType.LockDevice, handle_LockDevice)
+    wire.register(MessageType.EndSession, handle_EndSession)
     wire.register(MessageType.Ping, handle_Ping)
     wire.register(MessageType.DoPreauthorized, handle_DoPreauthorized)
     wire.register(MessageType.CancelAuthorization, handle_CancelAuthorization)
+
+    wire.experimental_enabled = storage.device.get_experimental_features()
 
     workflow.idle_timer.set(storage.device.get_autolock_delay_ms(), lock_device)

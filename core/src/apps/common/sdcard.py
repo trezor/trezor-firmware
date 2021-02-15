@@ -19,7 +19,7 @@ async def _wrong_card_dialog(ctx: wire.GenericContext) -> bool:
     text.br_half()
     if SD_CARD_HOT_SWAPPABLE:
         text.normal("Please insert the", "correct SD card for", "this device.")
-        btn_confirm = "Retry"  # type: Optional[str]
+        btn_confirm: Optional[str] = "Retry"
         btn_cancel = "Abort"
     else:
         text.normal("Please unplug the", "device and insert the", "correct SD card.")
@@ -35,7 +35,7 @@ async def insert_card_dialog(ctx: wire.GenericContext) -> bool:
     text.br_half()
     if SD_CARD_HOT_SWAPPABLE:
         text.normal("Please insert your", "SD card.")
-        btn_confirm = "Retry"  # type: Optional[str]
+        btn_confirm: Optional[str] = "Retry"
         btn_cancel = "Abort"
     else:
         text.normal("Please unplug the", "device and insert your", "SD card.")

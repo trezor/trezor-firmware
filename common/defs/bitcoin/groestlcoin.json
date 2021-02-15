@@ -17,6 +17,8 @@
   "xpub_magic": 76067358,
   "xpub_magic_segwit_p2sh": 77429938,
   "xpub_magic_segwit_native": 78792518,
+  "xpub_magic_multisig_segwit_p2sh": 76067358,
+  "xpub_magic_multisig_segwit_native": 76067358,
   "bech32_prefix": "grs",
   "cashaddr_prefix": null,
   "slip44": 17,
@@ -32,13 +34,6 @@
   "uri_prefix": "groestlcoin",
   "min_address_length": 27,
   "max_address_length": 34,
-  "bitcore": [
-    "https://groestlsight.groestlcoin.org",
-    "https://grsblocks.com"
-  ],
-  "blockbook": [
-    "https://blockbook.groestlcoin.org"
-  ],
   "negative_fee": false,
   "cooldown": 100,
   "consensus_branch_id": null,

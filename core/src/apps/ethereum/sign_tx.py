@@ -8,13 +8,14 @@ from trezor.messages.EthereumTxRequest import EthereumTxRequest
 from trezor.utils import HashWriter
 
 from apps.common import paths
-from apps.ethereum import CURVE, address, tokens
-from apps.ethereum.address import validate_full_path
-from apps.ethereum.keychain import with_keychain_from_chain_id
-from apps.ethereum.layout import (
+
+from . import address, tokens
+from .keychain import with_keychain_from_chain_id
+from .layout import (
     require_confirm_data,
     require_confirm_fee,
     require_confirm_tx,
+    require_confirm_unknown_token,
 )
 
 # maximum supported chain id
@@ -25,7 +26,7 @@ MAX_CHAIN_ID = 2147483629
 async def sign_tx(ctx, msg, keychain):
     msg = sanitize(msg)
     check(msg)
-    await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n, CURVE)
+    await paths.validate_path(ctx, keychain, msg.address_n)
 
     data_total = msg.data_length
 
@@ -44,6 +45,9 @@ async def sign_tx(ctx, msg, keychain):
         token = tokens.token_by_chain_address(msg.chain_id, address_bytes)
         recipient = msg.data_initial_chunk[16:36]
         value = int.from_bytes(msg.data_initial_chunk[36:68], "big")
+
+        if token is tokens.UNKNOWN_TOKEN:
+            await require_confirm_unknown_token(ctx, address_bytes)
 
     await require_confirm_tx(ctx, recipient, value, msg.chain_id, token, msg.tx_type)
     if token is None and msg.data_length > 0:
@@ -112,9 +116,9 @@ def get_total_length(msg: EthereumSignTx, data_total: int) -> int:
     if msg.chain_id:  # forks replay protection
         if msg.chain_id < 0x100:
             l = 1
-        elif msg.chain_id < 0x10000:
+        elif msg.chain_id < 0x1_0000:
             l = 2
-        elif msg.chain_id < 0x1000000:
+        elif msg.chain_id < 0x100_0000:
             l = 3
         else:
             l = 4
@@ -168,7 +172,7 @@ def check(msg: EthereumSignTx):
             raise wire.DataError("Data length provided, but no initial chunk")
         # Our encoding only supports transactions up to 2^24 bytes. To
         # prevent exceeding the limit we use a stricter limit on data length.
-        if msg.data_length > 16000000:
+        if msg.data_length > 16_000_000:
             raise wire.DataError("Data length exceeds limit")
         if len(msg.data_initial_chunk) > msg.data_length:
             raise wire.DataError("Invalid size of initial chunk")

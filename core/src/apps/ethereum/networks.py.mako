@@ -25,7 +25,7 @@ def shortcut_by_chain_id(chain_id: int, tx_type: int = None) -> str:
 
 
 def by_chain_id(chain_id: int) -> Optional["NetworkInfo"]:
-    for n in NETWORKS:
+    for n in _networks_iterator():
         if n.chain_id == chain_id:
             return n
     return None
@@ -35,14 +35,14 @@ def by_slip44(slip44: int) -> Optional["NetworkInfo"]:
     if slip44 == SLIP44_WANCHAIN:
         # Coerce to Ethereum
         slip44 = SLIP44_ETHEREUM
-    for n in NETWORKS:
+    for n in _networks_iterator():
         if n.slip44 == slip44:
             return n
     return None
 
 
 def all_slip44_ids_hardened() -> Iterator[int]:
-    for n in NETWORKS:
+    for n in _networks_iterator():
         yield n.slip44 | HARDENED
     yield SLIP44_WANCHAIN | HARDENED
 
@@ -59,14 +59,13 @@ class NetworkInfo:
 
 
 # fmt: off
-NETWORKS = [
+def _networks_iterator() -> Iterator[NetworkInfo]:
 % for n in supported_on("trezor2", eth):
-    NetworkInfo(
+    yield NetworkInfo(
         chain_id=${n.chain_id},
         slip44=${n.slip44},
         shortcut="${n.shortcut}",
         name="${n.name}",
         rskip60=${n.rskip60},
-    ),
+    )
 % endfor
-]

@@ -1,0 +1,6 @@
+{
+  "name": "Gemini",
+  "webauthn": ["gemini.com"],
+  "use_sign_count": false,
+  "use_self_attestation": true
+}

@@ -36,7 +36,10 @@ def test_timestamp_included(client):
     # input 0: 0.1 PPC
 
     inp1 = messages.TxInputType(
-        address_n=parse_path("m/44'/6'/0'/0/0"), prev_hash=TXHASH_41b29a, prev_index=0
+        address_n=parse_path("m/44'/6'/0'/0/0"),
+        amount=100000,
+        prev_hash=TXHASH_41b29a,
+        prev_index=0,
     )
 
     out1 = messages.TxOutputType(
@@ -45,9 +48,14 @@ def test_timestamp_included(client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    details = messages.SignTx(version=1, timestamp=0x5DC5448A)
     _, timestamp_tx = btc.sign_tx(
-        client, "Peercoin", [inp1], [out1], details=details, prev_txes=TX_CACHE,
+        client,
+        "Peercoin",
+        [inp1],
+        [out1],
+        version=1,
+        timestamp=0x5DC5448A,
+        prev_txes=TX_CACHE,
     )
 
     # Accepted by network https://explorer.peercoin.net/api/getrawtransaction?txid=f7e3624c143b6a170cc44f9337d0fa8ea8564a211de9c077c6889d8c78f80909&decrypt=1
@@ -60,7 +68,10 @@ def test_timestamp_included(client):
 @pytest.mark.skip_ui
 def test_timestamp_missing(client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("m/44'/6'/0'/0/0"), prev_hash=TXHASH_41b29a, prev_index=0
+        address_n=parse_path("m/44'/6'/0'/0/0"),
+        amount=100000,
+        prev_hash=TXHASH_41b29a,
+        prev_index=0,
     )
     out1 = messages.TxOutputType(
         address="PXtfyTjzgXSgTwK5AbszdHQSSxyQN3BLM5",
@@ -68,16 +79,26 @@ def test_timestamp_missing(client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    details = messages.SignTx(version=1, timestamp=None)
     with pytest.raises(TrezorFailure, match="Timestamp must be set."):
         btc.sign_tx(
-            client, "Peercoin", [inp1], [out1], details=details, prev_txes=TX_CACHE,
+            client,
+            "Peercoin",
+            [inp1],
+            [out1],
+            version=1,
+            timestamp=None,
+            prev_txes=TX_CACHE,
         )
 
-    details = messages.SignTx(version=1, timestamp=0)
     with pytest.raises(TrezorFailure, match="Timestamp must be set."):
         btc.sign_tx(
-            client, "Peercoin", [inp1], [out1], details=details, prev_txes=TX_CACHE,
+            client,
+            "Peercoin",
+            [inp1],
+            [out1],
+            version=1,
+            timestamp=0,
+            prev_txes=TX_CACHE,
         )
 
 
@@ -86,14 +107,16 @@ def test_timestamp_missing(client):
 @pytest.mark.skip_ui
 def test_timestamp_missing_prevtx(client):
     inp1 = messages.TxInputType(
-        address_n=parse_path("m/44'/6'/0'/0/0"), prev_hash=TXHASH_41b29a, prev_index=0
+        address_n=parse_path("m/44'/6'/0'/0/0"),
+        amount=100000,
+        prev_hash=TXHASH_41b29a,
+        prev_index=0,
     )
     out1 = messages.TxOutputType(
         address="PXtfyTjzgXSgTwK5AbszdHQSSxyQN3BLM5",
         amount=100000 - 10000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    details = messages.SignTx(version=1, timestamp=0x5DC5448A)
 
     prevtx = TX_CACHE[TXHASH_41b29a]
     prevtx.timestamp = 0
@@ -104,7 +127,8 @@ def test_timestamp_missing_prevtx(client):
             "Peercoin",
             [inp1],
             [out1],
-            details=details,
+            version=1,
+            timestamp=0x5DC5448A,
             prev_txes={TXHASH_41b29a: prevtx},
         )
 
@@ -115,6 +139,7 @@ def test_timestamp_missing_prevtx(client):
             "Peercoin",
             [inp1],
             [out1],
-            details=details,
+            version=1,
+            timestamp=0x5DC5448A,
             prev_txes={TXHASH_41b29a: prevtx},
         )

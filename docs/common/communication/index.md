@@ -12,4 +12,5 @@ Protobuf messages are defined in the [Common](https://github.com/trezor/trezor-f
 
 - [Sessions](sessions.md)
 - [Passphrase](passphrase.md)
+- [Bitcoin transaction signing](bitcoin-signing.md)
 

@@ -2,16 +2,62 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-_At the moment, the project does **not** adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html). That is expected to change with version 1.0._
+## [0.13.0] - Unreleased
+[0.13.0]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.2...master
 
-## [0.12.2] - unreleased
-[0.12.2]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.1...master
+### Added
+
+- Enabled session management via `EndSession`  [#1227]
+- Support for temporary or permanent `safety-checks` setting
+- Support for Output Descriptors export [#1363]
+
+### Changed
+
+- protobuf is aware of `required` fields and default values
+- `btc.sign_tx()` accepts keyword arguments for transaction metadata  [#1266]
+
+### Deprecated
+
+- instantiating protobuf objects with positional arguments is deprecated
+- values of required fields must be supplied at instantiation time. Omitting them is deprecated.
+- `details` argument to `btc.sign_tx()` is deprecated. Use keyword arguments instead.
 
 ### Fixed
 
-- fix `UnboundLocalError` in `trezorctl btc get-address`  [#1179]
+- added missing dependency on `attrs`  [#1232]
+- fixed number imprecision in `build_tx.py` that could cause "invalid prevhash" errors
+
+### Removed
+
+- dropped Python 3.5 support  [#810]
+
+
+## [0.12.2] - 2020-08-27
+[0.12.2]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.1...python/v0.12.2
+
+### Added
+
+- `trezorlib.toif` module (moved from internal) can encode and decode TOIF image format
+- `trezorctl set homescreen` was improved and extended to support PNG images for Trezor T
+
+### Changed
+
+- trezorctl will correctly notify the user if the image decoding library is missing
+
+### Fixed
+
+- fix exception in `trezorctl btc get-address`  [#1179]
+- fix exception in `trezorctl lisk sign-message`
+- fix exception in trezorctl commands that accept filenames  [#1196]
+- fix "Invalid homescreen" error when un-setting homescreen
+
+### Removed
+
+- removed option `--skip-vendor-header` from `trezorctl firmware-update` which did nothing  [#1210]
+
 
 ## [0.12.1] - 2020-08-05
 [0.12.1]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.0...python/v0.12.1
@@ -36,6 +82,7 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 - correctly calculate hashes for very small firmwares  [f#1082]
 - unified file arguments in trezorctl
 - `TrezorClient.ping()` does not crash when device is PIN-locked
+
 
 ## [0.12.0] - 2020-04-01
 [0.12.0]: https://github.com/trezor/trezor-firmware/compare/python/v0.11.6...python/v0.12.0
@@ -456,7 +503,14 @@ _At the moment, the project does **not** adhere to [Semantic Versioning](https:/
 [#349]: https://github.com/trezor/python-trezor/issues/349
 [#351]: https://github.com/trezor/python-trezor/issues/351
 [#352]: https://github.com/trezor/python-trezor/issues/352
+[#810]: https://github.com/trezor/trezor-firmware/issues/810
 [#948]: https://github.com/trezor/trezor-firmware/issues/948
 [#1052]: https://github.com/trezor/trezor-firmware/issues/1052
 [#1126]: https://github.com/trezor/trezor-firmware/issues/1126
 [#1179]: https://github.com/trezor/trezor-firmware/issues/1179
+[#1196]: https://github.com/trezor/trezor-firmware/issues/1196
+[#1210]: https://github.com/trezor/trezor-firmware/issues/1210
+[#1227]: https://github.com/trezor/trezor-firmware/issues/1227
+[#1232]: https://github.com/trezor/trezor-firmware/issues/1232
+[#1266]: https://github.com/trezor/trezor-firmware/issues/1266
+[#1363]: https://github.com/trezor/trezor-firmware/pull/1363

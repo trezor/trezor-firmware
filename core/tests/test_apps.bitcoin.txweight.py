@@ -1,7 +1,7 @@
 from common import *
 
-from trezor.messages.TxOutputType import TxOutputType
-from trezor.messages.SignTx import SignTx
+from trezor.messages.TxInput import TxInput
+from trezor.messages.TxOutput import TxOutput
 from trezor.messages import OutputScriptType
 from trezor.crypto import bip32, bip39
 
@@ -18,15 +18,15 @@ class TestCalculateTxWeight(unittest.TestCase):
         coin = coins.by_name('Bitcoin')
         seed = bip39.seed(' '.join(['all'] * 12), '')
 
-        inp1 = TxInputType(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
+        inp1 = TxInput(address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
                            # amount=390000,
                            prev_hash=unhexlify('d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882'),
                            prev_index=0,
                            amount=None,
                            script_type=InputScriptType.SPENDADDRESS,
-                           sequence=None,
+                           sequence=0xffff_ffff,
                            multisig=None)
-        out1 = TxOutputType(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
+        out1 = TxOutput(address='1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1',
                             amount=390000 - 10000,
                             script_type=OutputScriptType.PAYTOADDRESS,
                             address_n=[],
@@ -46,7 +46,7 @@ class TestCalculateTxWeight(unittest.TestCase):
         coin = coins.by_name('Testnet')
         seed = bip39.seed(' '.join(['all'] * 12), '')
 
-        inp1 = TxInputType(
+        inp1 = TxInput(
             # 49'/1'/0'/1/0" - 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
             address_n=[49 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 1, 0],
             amount=123456789,
@@ -56,14 +56,14 @@ class TestCalculateTxWeight(unittest.TestCase):
             sequence=0xffffffff,
             multisig=None,
         )
-        out1 = TxOutputType(
+        out1 = TxOutput(
             address='mhRx1CeVfaayqRwq5zgRQmD7W5aWBfD5mC',
             amount=12300000,
             script_type=OutputScriptType.PAYTOADDRESS,
             address_n=[],
             multisig=None,
         )
-        out2 = TxOutputType(
+        out2 = TxOutput(
             address='2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX',
             script_type=OutputScriptType.PAYTOADDRESS,
             amount=123456789 - 11000 - 12300000,
@@ -86,7 +86,7 @@ class TestCalculateTxWeight(unittest.TestCase):
         coin = coins.by_name('Testnet')
         seed = bip39.seed(' '.join(['all'] * 12), '')
 
-        inp1 = TxInputType(
+        inp1 = TxInput(
             # 49'/1'/0'/0/0" - tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s
             address_n=[49 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 0, 0],
             amount=12300000,
@@ -96,14 +96,14 @@ class TestCalculateTxWeight(unittest.TestCase):
             sequence=0xffffffff,
             multisig=None,
         )
-        out1 = TxOutputType(
+        out1 = TxOutput(
             address='2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp',
             amount=5000000,
             script_type=OutputScriptType.PAYTOADDRESS,
             address_n=[],
             multisig=None,
         )
-        out2 = TxOutputType(
+        out2 = TxOutput(
             address='tb1q694ccp5qcc0udmfwgp692u2s2hjpq5h407urtu',
             script_type=OutputScriptType.PAYTOADDRESS,
             amount=12300000 - 11000 - 5000000,

@@ -61,7 +61,7 @@ def test_p2pkh_presigned(client):
         address_n=parse_path("m/44h/1h/0h/0/0"),
         prev_hash=TXHASH_e5040e,
         prev_index=0,
-        # amount=31000000,
+        amount=31000000,
     )
 
     inp1ext = proto.TxInputType(
@@ -81,7 +81,7 @@ def test_p2pkh_presigned(client):
         address_n=parse_path("m/44h/1h/0h/0/1"),
         prev_hash=TXHASH_d830b8,
         prev_index=1,
-        # amount=600000000,
+        amount=600000000,
     )
 
     inp2ext = proto.TxInputType(
@@ -187,10 +187,6 @@ def test_p2wpkh_in_p2sh_presigned(client):
             [
                 request_input(0),
                 request_input(1),
-                request_meta(TXHASH_65b811),
-                request_input(0, TXHASH_65b811),
-                request_output(0, TXHASH_65b811),
-                request_output(1, TXHASH_65b811),
                 request_output(0),
                 proto.ButtonRequest(code=B.ConfirmOutput),
                 request_output(1),
@@ -203,6 +199,11 @@ def test_p2wpkh_in_p2sh_presigned(client):
                 request_input(0, TXHASH_091446),
                 request_output(0, TXHASH_091446),
                 request_output(1, TXHASH_091446),
+                request_input(1),
+                request_meta(TXHASH_65b811),
+                request_input(0, TXHASH_65b811),
+                request_output(0, TXHASH_65b811),
+                request_output(1, TXHASH_65b811),
                 request_input(0),
                 request_input(1),
                 request_output(0),
@@ -233,10 +234,6 @@ def test_p2wpkh_in_p2sh_presigned(client):
             [
                 request_input(0),
                 request_input(1),
-                request_meta(TXHASH_65b811),
-                request_input(0, TXHASH_65b811),
-                request_output(0, TXHASH_65b811),
-                request_output(1, TXHASH_65b811),
                 request_output(0),
                 proto.ButtonRequest(code=B.ConfirmOutput),
                 request_output(1),
@@ -302,7 +299,11 @@ def test_p2wpkh_presigned(client):
     # Test with second input as pre-signed external.
     with client:
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_CACHE_TESTNET,
+            client,
+            "Testnet",
+            [inp1, inp2],
+            [out1, out2],
+            prev_txes=TX_CACHE_TESTNET,
         )
 
     assert (
@@ -314,7 +315,11 @@ def test_p2wpkh_presigned(client):
     inp2.witness[10] ^= 1
     with pytest.raises(TrezorFailure, match="Invalid signature"):
         btc.sign_tx(
-            client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_CACHE_TESTNET,
+            client,
+            "Testnet",
+            [inp1, inp2],
+            [out1, out2],
+            prev_txes=TX_CACHE_TESTNET,
         )
 
 
@@ -352,14 +357,15 @@ def test_p2wsh_external_presigned(client):
         client.set_expected_responses(
             [
                 request_input(0),
-                request_meta(TXHASH_091446),
-                request_input(0, TXHASH_091446),
-                request_output(0, TXHASH_091446),
-                request_output(1, TXHASH_091446),
                 request_input(1),
                 request_output(0),
                 proto.ButtonRequest(code=B.ConfirmOutput),
                 proto.ButtonRequest(code=B.SignTx),
+                request_input(0),
+                request_meta(TXHASH_091446),
+                request_input(0, TXHASH_091446),
+                request_output(0, TXHASH_091446),
+                request_output(1, TXHASH_091446),
                 request_input(1),
                 request_meta(TXHASH_a345b8),
                 request_input(0, TXHASH_a345b8),
@@ -388,14 +394,15 @@ def test_p2wsh_external_presigned(client):
         client.set_expected_responses(
             [
                 request_input(0),
-                request_meta(TXHASH_091446),
-                request_input(0, TXHASH_091446),
-                request_output(0, TXHASH_091446),
-                request_output(1, TXHASH_091446),
                 request_input(1),
                 request_output(0),
                 proto.ButtonRequest(code=B.ConfirmOutput),
                 proto.ButtonRequest(code=B.SignTx),
+                request_input(0),
+                request_meta(TXHASH_091446),
+                request_input(0, TXHASH_091446),
+                request_output(0, TXHASH_091446),
+                request_output(1, TXHASH_091446),
                 request_input(1),
                 request_meta(TXHASH_a345b8),
                 request_input(0, TXHASH_a345b8),
@@ -459,10 +466,6 @@ def test_p2wpkh_with_proof(client):
             [
                 request_input(0),
                 request_input(1),
-                request_meta(TXHASH_65b811),
-                request_input(0, TXHASH_65b811),
-                request_output(0, TXHASH_65b811),
-                request_output(1, TXHASH_65b811),
                 request_output(0),
                 proto.ButtonRequest(code=B.ConfirmOutput),
                 request_output(1),
@@ -473,6 +476,11 @@ def test_p2wpkh_with_proof(client):
                 request_input(0, TXHASH_e5b7e2),
                 request_output(0, TXHASH_e5b7e2),
                 request_output(1, TXHASH_e5b7e2),
+                request_input(1),
+                request_meta(TXHASH_65b811),
+                request_input(0, TXHASH_65b811),
+                request_output(0, TXHASH_65b811),
+                request_output(1, TXHASH_65b811),
                 request_input(0),
                 request_input(1),
                 request_output(0),
@@ -482,7 +490,11 @@ def test_p2wpkh_with_proof(client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_CACHE_TESTNET,
+            client,
+            "Testnet",
+            [inp1, inp2],
+            [out1, out2],
+            prev_txes=TX_CACHE_TESTNET,
         )
 
     assert (
@@ -494,7 +506,11 @@ def test_p2wpkh_with_proof(client):
     inp1.ownership_proof[10] ^= 1
     with pytest.raises(TrezorFailure, match="Invalid signature"):
         btc.sign_tx(
-            client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_CACHE_TESTNET,
+            client,
+            "Testnet",
+            [inp1, inp2],
+            [out1, out2],
+            prev_txes=TX_CACHE_TESTNET,
         )
 
 
@@ -531,14 +547,15 @@ def test_p2wpkh_with_false_proof(client):
         client.set_expected_responses(
             [
                 request_input(0),
-                request_meta(TXHASH_70f987),
-                request_input(0, TXHASH_70f987),
-                request_output(0, TXHASH_70f987),
-                request_output(1, TXHASH_70f987),
                 request_input(1),
                 request_output(0),
                 proto.ButtonRequest(code=B.ConfirmOutput),
                 proto.ButtonRequest(code=B.SignTx),
+                request_input(0),
+                request_meta(TXHASH_70f987),
+                request_input(0, TXHASH_70f987),
+                request_output(0, TXHASH_70f987),
+                request_output(1, TXHASH_70f987),
                 request_input(1),
                 request_meta(TXHASH_65b768),
                 request_input(0, TXHASH_65b768),
@@ -550,5 +567,9 @@ def test_p2wpkh_with_false_proof(client):
 
         with pytest.raises(TrezorFailure, match="Invalid external input"):
             btc.sign_tx(
-                client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_CACHE_TESTNET,
+                client,
+                "Testnet",
+                [inp1, inp2],
+                [out1],
+                prev_txes=TX_CACHE_TESTNET,
             )

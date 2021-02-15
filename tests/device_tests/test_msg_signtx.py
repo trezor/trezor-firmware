@@ -80,7 +80,7 @@ class TestMsgSigntx:
 
         inp1 = messages.TxInputType(
             address_n=parse_path("44h/0h/0h/0/0"),
-            # amount=390000,
+            amount=390000,
             prev_hash=TXHASH_d5f65e,
             prev_index=0,
         )
@@ -95,13 +95,14 @@ class TestMsgSigntx:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_output(0),
+                    messages.ButtonRequest(code=B.ConfirmOutput),
+                    messages.ButtonRequest(code=B.SignTx),
+                    request_input(0),
                     request_meta(TXHASH_d5f65e),
                     request_input(0, TXHASH_d5f65e),
                     request_input(1, TXHASH_d5f65e),
                     request_output(0, TXHASH_d5f65e),
-                    request_output(0),
-                    messages.ButtonRequest(code=B.ConfirmOutput),
-                    messages.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_output(0),
                     request_output(0),
@@ -125,7 +126,7 @@ class TestMsgSigntx:
         # input 0: 0.31 BTC
         inp1 = messages.TxInputType(
             address_n=parse_path("44'/1'/0'/0/0"),
-            # amount=31000000,
+            amount=31000000,
             prev_hash=TXHASH_e5040e,
             prev_index=0,
         )
@@ -146,14 +147,15 @@ class TestMsgSigntx:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_e5040e),
-                    request_input(0, TXHASH_e5040e),
-                    request_output(0, TXHASH_e5040e),
-                    request_output(1, TXHASH_e5040e),
                     request_output(0),
                     messages.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
                     messages.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_e5040e),
+                    request_input(0, TXHASH_e5040e),
+                    request_output(0, TXHASH_e5040e),
+                    request_output(1, TXHASH_e5040e),
                     request_input(0),
                     request_output(0),
                     request_output(1),
@@ -176,7 +178,7 @@ class TestMsgSigntx:
         # input 1: 10.00000000 BTC
         inp1 = messages.TxInputType(
             address_n=parse_path("44'/1'/0'/0/0"),
-            # amount=1000000000,
+            amount=1000000000,
             prev_hash=TXHASH_6f90f3,
             prev_index=1,
         )
@@ -197,16 +199,17 @@ class TestMsgSigntx:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_6f90f3),
-                    request_input(0, TXHASH_6f90f3),
-                    request_input(1, TXHASH_6f90f3),
-                    request_output(0, TXHASH_6f90f3),
-                    request_output(1, TXHASH_6f90f3),
                     request_output(0),
                     messages.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
                     messages.ButtonRequest(code=B.FeeOverThreshold),
                     messages.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_6f90f3),
+                    request_input(0, TXHASH_6f90f3),
+                    request_input(1, TXHASH_6f90f3),
+                    request_output(0, TXHASH_6f90f3),
+                    request_output(1, TXHASH_6f90f3),
                     request_input(0),
                     request_output(0),
                     request_output(1),
@@ -231,7 +234,7 @@ class TestMsgSigntx:
             address_n=parse_path(
                 "m/44'/0'/0'/0/5"
             ),  # 1GA9u9TfCG7SWmKCveBumdA1TZpfom6ZdJ
-            # amount=50000,
+            amount=50000,
             prev_hash=TXHASH_50f6f1,
             prev_index=1,
         )
@@ -254,14 +257,15 @@ class TestMsgSigntx:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_50f6f1),
-                    request_input(0, TXHASH_50f6f1),
-                    request_output(0, TXHASH_50f6f1),
-                    request_output(1, TXHASH_50f6f1),
                     request_output(0),
                     request_output(1),
                     messages.ButtonRequest(code=B.ConfirmOutput),
                     messages.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_50f6f1),
+                    request_input(0, TXHASH_50f6f1),
+                    request_output(0, TXHASH_50f6f1),
+                    request_output(1, TXHASH_50f6f1),
                     request_input(0),
                     request_output(0),
                     request_output(1),
@@ -285,7 +289,7 @@ class TestMsgSigntx:
 
         inp1 = messages.TxInputType(
             address_n=parse_path("44'/0'/0'/0/0"),
-            # amount=390000,
+            amount=390000,
             prev_hash=TXHASH_d5f65e,
             prev_index=0,
         )
@@ -312,16 +316,17 @@ class TestMsgSigntx:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_d5f65e),
-                    request_input(0, TXHASH_d5f65e),
-                    request_input(1, TXHASH_d5f65e),
-                    request_output(0, TXHASH_d5f65e),
                     request_output(0),
                     messages.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
                     messages.ButtonRequest(code=B.ConfirmOutput),
                     request_output(2),
                     messages.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_d5f65e),
+                    request_input(0, TXHASH_d5f65e),
+                    request_input(1, TXHASH_d5f65e),
+                    request_output(0, TXHASH_d5f65e),
                     request_input(0),
                     request_output(0),
                     request_output(1),
@@ -353,14 +358,14 @@ class TestMsgSigntx:
 
         inp1 = messages.TxInputType(
             address_n=parse_path("44h/0h/0h/0/0"),
-            # amount=100000,
+            amount=100000,
             prev_hash=TXHASH_c6be22,
             prev_index=1,
         )
 
         inp2 = messages.TxInputType(
             address_n=parse_path("44h/0h/0h/0/1"),
-            # amount=110000,
+            amount=110000,
             prev_hash=TXHASH_58497a,
             prev_index=1,
         )
@@ -381,6 +386,12 @@ class TestMsgSigntx:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_input(1),
+                    request_output(0),
+                    messages.ButtonRequest(code=B.ConfirmOutput),
+                    request_output(1),
+                    messages.ButtonRequest(code=B.SignTx),
+                    request_input(0),
                     request_meta(TXHASH_c6be22),
                     request_input(0, TXHASH_c6be22),
                     request_output(0, TXHASH_c6be22),
@@ -390,10 +401,6 @@ class TestMsgSigntx:
                     request_input(0, TXHASH_58497a),
                     request_output(0, TXHASH_58497a),
                     request_output(1, TXHASH_58497a),
-                    request_output(0),
-                    messages.ButtonRequest(code=B.ConfirmOutput),
-                    request_output(1),
-                    messages.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_input(1),
                     request_output(0),
@@ -433,6 +440,7 @@ class TestMsgSigntx:
             inputs.append(
                 messages.TxInputType(
                     address_n=parse_path(f"44h/0h/0h/0/{i}"),
+                    amount=26000,
                     prev_hash=TXHASH_4a7b7e,
                     prev_index=i,
                 )
@@ -462,14 +470,14 @@ class TestMsgSigntx:
 
         inp1 = messages.TxInputType(
             address_n=parse_path("44h/0h/1h/0/0"),
-            # amount=100000,
+            amount=100000,
             prev_hash=TXHASH_c63e24,
             prev_index=1,
         )
 
         inp2 = messages.TxInputType(
             address_n=parse_path("44h/0h/1h/0/1"),
-            # amount=2540000,
+            amount=2540000,
             prev_hash=TXHASH_39a29e,
             prev_index=1,
         )
@@ -504,14 +512,14 @@ class TestMsgSigntx:
 
         inp1 = messages.TxInputType(
             address_n=parse_path("44h/0h/1h/0/0"),
-            # amount=100000,
+            amount=100000,
             prev_hash=TXHASH_c63e24,
             prev_index=1,
         )
 
         inp2 = messages.TxInputType(
             address_n=parse_path("44h/0h/1h/0/1"),
-            # amount=2540000,
+            amount=2540000,
             prev_hash=TXHASH_39a29e,
             prev_index=1,
         )
@@ -539,6 +547,15 @@ class TestMsgSigntx:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_input(1),
+                    request_output(0),
+                    messages.ButtonRequest(code=B.ConfirmOutput),
+                ]
+                + request_change_outputs
+                + [
+                    messages.ButtonRequest(code=B.SignTx),
+                    messages.ButtonRequest(code=B.SignTx),
+                    request_input(0),
                     request_meta(TXHASH_c63e24),
                     request_input(0, TXHASH_c63e24),
                     request_input(1, TXHASH_c63e24),
@@ -549,13 +566,6 @@ class TestMsgSigntx:
                     request_input(0, TXHASH_39a29e),
                     request_output(0, TXHASH_39a29e),
                     request_output(1, TXHASH_39a29e),
-                    request_output(0),
-                    messages.ButtonRequest(code=B.ConfirmOutput),
-                ]
-                + request_change_outputs
-                + [
-                    messages.ButtonRequest(code=B.SignTx),
-                    messages.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_input(1),
                     request_output(0),
@@ -583,7 +593,7 @@ class TestMsgSigntx:
 
         inp1 = messages.TxInputType(
             address_n=parse_path("44h/0h/0h/0/0"),
-            # amount=100000000,
+            amount=100000000,
             prev_hash=TXHASH_157041,
             prev_index=0,
         )
@@ -598,14 +608,15 @@ class TestMsgSigntx:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_157041),
-                    request_input(0, TXHASH_157041),
-                    request_output(0, TXHASH_157041),
-                    request_output(1, TXHASH_157041),
                     request_output(0),
                     messages.ButtonRequest(code=B.ConfirmOutput),
                     messages.ButtonRequest(code=B.FeeOverThreshold),
                     messages.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_157041),
+                    request_input(0, TXHASH_157041),
+                    request_output(0, TXHASH_157041),
+                    request_output(1, TXHASH_157041),
                     request_input(0),
                     request_output(0),
                     request_output(0),
@@ -628,7 +639,7 @@ class TestMsgSigntx:
 
         inp1 = messages.TxInputType(
             address_n=parse_path("44h/0h/0h/0/0"),
-            # amount=100000000,
+            amount=100000000,
             prev_hash=TXHASH_157041,
             prev_index=0,
         )
@@ -642,8 +653,10 @@ class TestMsgSigntx:
         with pytest.raises(TrezorFailure, match="fee is unexpectedly large"):
             btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET)
 
-        # set SafetyCheckLevel to Prompt and try again
-        device.apply_settings(client, safety_checks=messages.SafetyCheckLevel.Prompt)
+        # set SafetyCheckLevel to PromptTemporarily and try again
+        device.apply_settings(
+            client, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
+        )
         with client:
             finished = False
 
@@ -673,7 +686,7 @@ class TestMsgSigntx:
 
         inp1 = messages.TxInputType(
             address_n=parse_path("44h/0h/0h/0/0"),
-            # amount=390000,
+            amount=390000,
             prev_hash=TXHASH_d5f65e,
             prev_index=0,
         )
@@ -688,10 +701,6 @@ class TestMsgSigntx:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_d5f65e),
-                    request_input(0, TXHASH_d5f65e),
-                    request_input(1, TXHASH_d5f65e),
-                    request_output(0, TXHASH_d5f65e),
                     request_output(0),
                     messages.ButtonRequest(code=B.ConfirmOutput),
                     messages.Failure(code=messages.FailureType.NotEnoughFunds),
@@ -705,7 +714,7 @@ class TestMsgSigntx:
     def test_p2sh(self, client):
         inp1 = messages.TxInputType(
             address_n=parse_path("44h/0h/0h/0/0"),
-            # amount=400000,
+            amount=400000,
             prev_hash=TXHASH_54aa56,
             prev_index=1,
         )
@@ -720,13 +729,14 @@ class TestMsgSigntx:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_output(0),
+                    messages.ButtonRequest(code=B.ConfirmOutput),
+                    messages.ButtonRequest(code=B.SignTx),
+                    request_input(0),
                     request_meta(TXHASH_54aa56),
                     request_input(0, TXHASH_54aa56),
                     request_output(0, TXHASH_54aa56),
                     request_output(1, TXHASH_54aa56),
-                    request_output(0),
-                    messages.ButtonRequest(code=B.ConfirmOutput),
-                    messages.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_output(0),
                     request_output(0),
@@ -771,14 +781,14 @@ class TestMsgSigntx:
     def test_attack_change_outputs(self, client):
         inp1 = messages.TxInputType(
             address_n=parse_path("44h/0h/0h/0/0"),
-            # amount=100000,
+            amount=100000,
             prev_hash=TXHASH_c6be22,
             prev_index=1,
         )
 
         inp2 = messages.TxInputType(
             address_n=parse_path("44h/0h/0h/0/1"),
-            # amount=110000,
+            amount=110000,
             prev_hash=TXHASH_58497a,
             prev_index=1,
         )
@@ -841,7 +851,7 @@ class TestMsgSigntx:
         # input 0: 0.31 BTC
         inp1 = messages.TxInputType(
             address_n=parse_path("44'/1'/0'/0/0"),
-            # amount=31000000,
+            amount=31000000,
             prev_hash=TXHASH_e5040e,
             prev_index=0,
         )
@@ -886,6 +896,7 @@ class TestMsgSigntx:
             address_n=parse_path("44'/1'/4'/0/0"),
             # moUJnmge8SRXuediK7bW6t4YfrPqbE6hD7
             prev_hash=TXHASH_d2dcda,
+            amount=123400000,
             prev_index=1,
             script_type=messages.InputScriptType.SPENDADDRESS,
         )
@@ -912,13 +923,13 @@ class TestMsgSigntx:
             == "0100000001243e15b53cc553d93ec4e27e16984adc3d885ef107c613a7577fea47f5dadcd2010000006b483045022100eedaadde3a771967beee39f1daa9e9450f72fccdec63488a96d71eeae4224b4002203a22be3c1677d3451c93a49550b69e8f8fc06328823c7e0f633dde13d67ef96b01210364430c9122948e525e2f1c6d88f00f47679274f0810fd8c63754954f310995c1ffffffff02a0860100000000001976a914b3cc67f3349974d0f1b50e9bb5dfdf226f888fa088ac18555907000000001976a914f80fb232a1e54b1fa732bc120cae72eabd7fcf6888ac00000000"
         )
 
-        run_attack = False
+        attack_count = 2
 
         def attack_processor(msg):
-            nonlocal run_attack
+            nonlocal attack_count
             if msg.tx.inputs and msg.tx.inputs[0] == inp1:
-                if not run_attack:
-                    run_attack = True
+                if attack_count > 0:
+                    attack_count -= 1
                 else:
                     msg.tx.inputs[0].address_n[2] = H_(12)
 
@@ -930,14 +941,15 @@ class TestMsgSigntx:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_d2dcda),
-                    request_input(0, TXHASH_d2dcda),
-                    request_output(0, TXHASH_d2dcda),
-                    request_output(1, TXHASH_d2dcda),
                     request_output(0),
                     messages.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
                     messages.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_d2dcda),
+                    request_input(0, TXHASH_d2dcda),
+                    request_output(0, TXHASH_d2dcda),
+                    request_output(1, TXHASH_d2dcda),
                     request_input(0),
                     messages.Failure(code=messages.FailureType.ProcessError),
                 ]
@@ -945,7 +957,11 @@ class TestMsgSigntx:
             # Now run the attack, must trigger the exception
             with pytest.raises(TrezorFailure) as exc:
                 btc.sign_tx(
-                    client, "Testnet", [inp1], [out1, out2], prev_txes=TX_CACHE_TESTNET,
+                    client,
+                    "Testnet",
+                    [inp1],
+                    [out1, out2],
+                    prev_txes=TX_CACHE_TESTNET,
                 )
 
             assert exc.value.code == messages.FailureType.ProcessError
@@ -959,7 +975,7 @@ class TestMsgSigntx:
     def test_spend_coinbase(self, client):
         inp1 = messages.TxInputType(
             address_n=parse_path("44h/1h/0h/0/0"),
-            # amount=390000,
+            amount=2500278230,
             prev_hash=TXHASH_d6da21,
             prev_index=0,
         )
@@ -974,12 +990,13 @@ class TestMsgSigntx:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_d6da21),
-                    request_input(0, TXHASH_d6da21),
-                    request_output(0, TXHASH_d6da21),
                     request_output(0),
                     messages.ButtonRequest(code=B.ConfirmOutput),
                     messages.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_d6da21),
+                    request_input(0, TXHASH_d6da21),
+                    request_output(0, TXHASH_d6da21),
                     request_input(0),
                     request_output(0),
                     request_output(0),
@@ -1003,7 +1020,7 @@ class TestMsgSigntx:
         # input 0: 0.31 BTC
         inp1 = messages.TxInputType(
             address_n=parse_path("44'/1'/0'/0/0"),
-            # amount=31000000,
+            amount=31000000,
             prev_hash=TXHASH_e5040e,
             prev_index=0,
         )
@@ -1030,15 +1047,16 @@ class TestMsgSigntx:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_e5040e),
-                    request_input(0, TXHASH_e5040e),
-                    request_output(0, TXHASH_e5040e),
-                    request_output(1, TXHASH_e5040e),
                     request_output(0),
                     messages.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
                     request_output(2),
                     messages.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_e5040e),
+                    request_input(0, TXHASH_e5040e),
+                    request_output(0, TXHASH_e5040e),
+                    request_output(1, TXHASH_e5040e),
                     request_input(0),
                     request_output(0),
                     request_output(1),
@@ -1065,7 +1083,7 @@ class TestMsgSigntx:
         # input 0: 0.31 BTC
         inp1 = messages.TxInputType(
             address_n=parse_path("44'/1'/0'/0/0"),
-            # amount=31000000,
+            amount=31000000,
             prev_hash=TXHASH_e5040e,
             prev_index=0,
         )
@@ -1087,14 +1105,15 @@ class TestMsgSigntx:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_e5040e),
-                    request_input(0, TXHASH_e5040e),
-                    request_output(0, TXHASH_e5040e),
-                    request_output(1, TXHASH_e5040e),
                     request_output(0),
                     messages.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
                     messages.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_e5040e),
+                    request_input(0, TXHASH_e5040e),
+                    request_output(0, TXHASH_e5040e),
+                    request_output(1, TXHASH_e5040e),
                     request_input(0),
                     request_output(0),
                     request_output(1),
@@ -1121,20 +1140,29 @@ class TestMsgSigntx:
 
         # vout[0] and vout[1] exist
         inp0 = messages.TxInputType(
-            address_n=parse_path("44h/0h/0h/0/0"), prev_hash=TXHASH_157041, prev_index=0
+            address_n=parse_path("44h/0h/0h/0/0"),
+            prev_hash=TXHASH_157041,
+            amount=100000000,
+            prev_index=0,
         )
         inp1 = messages.TxInputType(
-            address_n=parse_path("44h/0h/0h/0/1"), prev_hash=TXHASH_157041, prev_index=1
+            address_n=parse_path("44h/0h/0h/0/1"),
+            prev_hash=TXHASH_157041,
+            amount=120160000,
+            prev_index=1,
         )
         # vout[2] does not exist
         inp2 = messages.TxInputType(
-            address_n=parse_path("44h/0h/0h/1/0"), prev_hash=TXHASH_157041, prev_index=2
+            address_n=parse_path("44h/0h/0h/1/0"),
+            prev_hash=TXHASH_157041,
+            amount=100000000,
+            prev_index=2,
         )
 
         # try to spend the sum of existing vouts
         out1 = messages.TxOutputType(
             address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
-            amount=220160000,
+            amount=100000000 + 120160000 + 100000000 - 10000,
             script_type=messages.OutputScriptType.PAYTOADDRESS,
         )
 
@@ -1162,11 +1190,14 @@ class TestMsgSigntx:
     @pytest.mark.skip_ui
     def test_prevtx_forbidden_fields(self, client, field, value):
         inp0 = messages.TxInputType(
-            address_n=parse_path("44h/0h/0h/0/0"), prev_hash=TXHASH_157041, prev_index=0
+            address_n=parse_path("44h/0h/0h/0/0"),
+            prev_hash=TXHASH_157041,
+            amount=100000000,
+            prev_index=0,
         )
         out1 = messages.TxOutputType(
             address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
-            amount=1000,
+            amount=100000000 - 1000,
             script_type=messages.OutputScriptType.PAYTOADDRESS,
         )
 
@@ -1187,7 +1218,10 @@ class TestMsgSigntx:
     @pytest.mark.skip_ui
     def test_signtx_forbidden_fields(self, client, field, value):
         inp0 = messages.TxInputType(
-            address_n=parse_path("44h/0h/0h/0/0"), prev_hash=TXHASH_157041, prev_index=0
+            address_n=parse_path("44h/0h/0h/0/0"),
+            prev_hash=TXHASH_157041,
+            amount=100000000,
+            prev_index=0,
         )
         out1 = messages.TxOutputType(
             address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
@@ -1195,14 +1229,13 @@ class TestMsgSigntx:
             script_type=messages.OutputScriptType.PAYTOADDRESS,
         )
 
-        details = messages.SignTx()
-        setattr(details, field, value)
+        kwargs = {field: value}
         name = field.replace("_", " ")
         with pytest.raises(
             TrezorFailure, match=r"(?i){} not enabled on this coin".format(name)
         ):
             btc.sign_tx(
-                client, "Bitcoin", [inp0], [out1], details, prev_txes=TX_CACHE_MAINNET
+                client, "Bitcoin", [inp0], [out1], prev_txes=TX_CACHE_MAINNET, **kwargs
             )
 
     @pytest.mark.parametrize(
@@ -1232,6 +1265,7 @@ class TestMsgSigntx:
         )
         inp1 = messages.TxInputType(
             address_n=address_n,
+            amount=142920000,
             prev_index=1,
             sequence=0xFFFFFFFF,
             script_type=script_type,  # incorrect script type
@@ -1287,6 +1321,7 @@ class TestMsgSigntx:
         )
         inp1 = messages.TxInputType(
             address_n=address_n,
+            amount=142920000,
             prev_index=1,
             sequence=0xFFFFFFFF,
             script_type=messages.InputScriptType.SPENDADDRESS,
@@ -1321,7 +1356,7 @@ class TestMsgSigntx:
 
         inp1 = messages.TxInputType(
             address_n=parse_path("44h/0h/0h/0/0"),
-            # amount=390000,
+            amount=390000,
             prev_hash=TXHASH_d5f65e,
             prev_index=0,
             sequence=sequence,
@@ -1337,14 +1372,15 @@ class TestMsgSigntx:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_d5f65e),
-                    request_input(0, TXHASH_d5f65e),
-                    request_input(1, TXHASH_d5f65e),
-                    request_output(0, TXHASH_d5f65e),
                     request_output(0),
                     messages.ButtonRequest(code=B.ConfirmOutput),
                     messages.ButtonRequest(code=B.SignTx),
                     messages.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_d5f65e),
+                    request_input(0, TXHASH_d5f65e),
+                    request_input(1, TXHASH_d5f65e),
+                    request_output(0, TXHASH_d5f65e),
                     request_input(0),
                     request_output(0),
                     request_output(0),
@@ -1352,12 +1388,11 @@ class TestMsgSigntx:
                 ]
             )
 
-            details = messages.SignTx(lock_time=lock_time)
             btc.sign_tx(
                 client,
                 "Bitcoin",
                 [inp1],
                 [out1],
-                details=details,
+                lock_time=lock_time,
                 prev_txes=TX_CACHE_MAINNET,
             )

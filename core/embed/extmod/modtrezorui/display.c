@@ -594,7 +594,7 @@ static uint8_t convert_char(const uint8_t c) {
     return c;
   }
 
-  // UTF-8 handling: https://en.wikipedia.org/wiki/UTF-8#Description
+  // UTF-8 handling: https://en.wikipedia.org/wiki/UTF-8#Encoding
 
   // bytes 11xxxxxx are first bytes of UTF-8 characters
   if (c >= 0xC0) {
@@ -866,4 +866,39 @@ void display_fade(int start, int end, int delay) {
     hal_delay(delay / 100);
   }
   display_backlight(end);
+}
+
+#define UTF8_IS_CONT(ch) (((ch)&0xC0) == 0x80)
+
+void display_utf8_substr(const char *buf_start, size_t buf_len, int char_off,
+                         int char_len, const char **out_start, int *out_len) {
+  size_t i = 0;
+
+  for (; i < buf_len; i++) {
+    if (char_off == 0) {
+      break;
+    }
+    if (!UTF8_IS_CONT(buf_start[i])) {
+      char_off--;
+    }
+  }
+  size_t i_start = i;
+
+  for (; i < buf_len; i++) {
+    if (char_len == 0) {
+      break;
+    }
+    if (!UTF8_IS_CONT(buf_start[i])) {
+      char_len--;
+    }
+  }
+
+  for (; i < buf_len; i++) {
+    if (!UTF8_IS_CONT(buf_start[i])) {
+      break;
+    }
+  }
+
+  *out_start = buf_start + i_start;
+  *out_len = i - i_start;
 }

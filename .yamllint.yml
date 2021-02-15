@@ -1,0 +1,15 @@
+extends: default
+
+ignore: |
+  vendor/
+  common/defs/ethereum/chains/
+  common/defs/ethereum/tokens/
+
+rules:
+  # skip line length
+  line-length: disable
+  # skip "---" at the beginning
+  document-start: disable
+  comments-indentation: disable
+  indentation:
+    spaces: 2

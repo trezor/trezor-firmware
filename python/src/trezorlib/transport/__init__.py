@@ -58,7 +58,7 @@ class Transport:
     a Trezor device to a computer.
     """
 
-    PATH_PREFIX = None  # type: str
+    PATH_PREFIX: str = None
     ENABLED = False
 
     def __str__(self) -> str:
@@ -112,7 +112,7 @@ def all_transports() -> Iterable[Type[Transport]]:
 
 
 def enumerate_devices() -> Iterable[Transport]:
-    devices = []  # type: List[Transport]
+    devices: List[Transport] = []
     for transport in all_transports():
         name = transport.__name__
         try:

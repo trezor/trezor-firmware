@@ -2,8 +2,8 @@ from common import *
 from apps.common.paths import HARDENED
 
 if not utils.BITCOIN_ONLY:
-    from apps.ethereum.address import address_from_bytes, bytes_from_address, validate_full_path
-    from apps.ethereum.networks import NetworkInfo, by_chain_id
+    from apps.ethereum.address import address_from_bytes
+    from apps.ethereum.networks import NetworkInfo
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -53,34 +53,6 @@ class TestEthereumGetAddress(unittest.TestCase):
             b = bytes([int(s[i:i + 2], 16) for i in range(0, len(s), 2)])
             h = address_from_bytes(b, n)
             self.assertEqual(h, '0x' + s)
-
-    def test_paths(self):
-        # 44'/60'/0'/0/i is correct
-        incorrect_paths = [
-            [44 | HARDENED],
-            [44 | HARDENED, 60 | HARDENED],
-            [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0, 0, 0],
-            [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0 | HARDENED],
-            [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED],
-            [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 1, 0],
-            [44 | HARDENED, 60 | HARDENED, 1 | HARDENED, 0, 0],
-            [44 | HARDENED, 160 | HARDENED, 0 | HARDENED, 0, 0],
-            [44 | HARDENED, 199 | HARDENED, 0 | HARDENED, 0, 9999],  # slip44 not one of ETH chains
-        ]
-        correct_paths = [
-            [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0, 0],
-            [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0, 9],
-            [44 | HARDENED, 60 | HARDENED, 0 | HARDENED, 0, 9999],
-            [44 | HARDENED, 6060 | HARDENED, 0 | HARDENED, 0, 0],
-            [44 | HARDENED, 1 | HARDENED, 0 | HARDENED, 0, 0],
-            [44 | HARDENED, 5718350 | HARDENED, 0 | HARDENED, 0, 0],
-        ]
-
-        for path in incorrect_paths:
-            self.assertFalse(validate_full_path(path))
-
-        for path in correct_paths:
-            self.assertTrue(validate_full_path(path))
 
 
 if __name__ == '__main__':

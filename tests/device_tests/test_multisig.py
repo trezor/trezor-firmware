@@ -42,7 +42,7 @@ class TestMultisig:
     @pytest.mark.multisig
     def test_2_of_3(self, client):
         nodes = [
-            btc.get_public_node(client, parse_path("48'/0'/%d'" % index)).node
+            btc.get_public_node(client, parse_path(f"48'/0'/{index}'/0'")).node
             for index in range(1, 4)
         ]
 
@@ -51,7 +51,8 @@ class TestMultisig:
         )
         # Let's go to sign with key 1
         inp1 = proto.TxInputType(
-            address_n=parse_path("48'/0'/1'/0/0"),
+            address_n=parse_path("48'/0'/1'/0'/0/0"),
+            amount=100000,
             prev_hash=TXHASH_c6091a,
             prev_index=1,
             script_type=proto.InputScriptType.SPENDMULTISIG,
@@ -68,13 +69,14 @@ class TestMultisig:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
                     request_meta(TXHASH_c6091a),
                     request_input(0, TXHASH_c6091a),
                     request_output(0, TXHASH_c6091a),
                     request_output(1, TXHASH_c6091a),
-                    request_output(0),
-                    proto.ButtonRequest(code=B.ConfirmOutput),
-                    proto.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_output(0),
                     request_output(0),
@@ -89,7 +91,7 @@ class TestMultisig:
 
         assert (
             signatures1[0].hex()
-            == "3044022052f4a3dc5ca3e86ed66abb1e2b4d9b9ace7d96f5615944beea19e58280847c2902201bd3ff32a38366a4eed0373e27da26ebc0d2a4c2bbeffd83e8a60e313d95b9e3"
+            == "30450221009276eea820aa54a24bd9f1a056cb09a15f50c0816570a7c7878bd1c5ee7248540220677d200aec5e2f25bcf4000bdfab3faa9e1746d7f80c4ae4bfa1f5892eb5dcbf"
         )
 
         # ---------------------------------------
@@ -108,7 +110,8 @@ class TestMultisig:
 
         # Let's do a second signature with key 3
         inp3 = proto.TxInputType(
-            address_n=parse_path("48'/0'/3'/0/0"),
+            address_n=parse_path("48'/0'/3'/0'/0/0"),
+            amount=100000,
             prev_hash=TXHASH_c6091a,
             prev_index=1,
             script_type=proto.InputScriptType.SPENDMULTISIG,
@@ -119,13 +122,14 @@ class TestMultisig:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
                     request_meta(TXHASH_c6091a),
                     request_input(0, TXHASH_c6091a),
                     request_output(0, TXHASH_c6091a),
                     request_output(1, TXHASH_c6091a),
-                    request_output(0),
-                    proto.ButtonRequest(code=B.ConfirmOutput),
-                    proto.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_output(0),
                     request_output(0),
@@ -138,21 +142,21 @@ class TestMultisig:
 
         assert (
             signatures2[0].hex()
-            == "304402203828fd48540811be6a1b12967e7012587c46e6f05c78d42471e7b25c06bc7afc0220749274bc1aa698335b00400c5ba946a70b6b46c711324fbc4989279737a57f49"
+            == "3045022100c2a9fbfbff1be87036d8a6a22745512b158154f7f3d8f4cad4ba7ed130b37b83022058f5299b4c26222588dcc669399bd88b6f2bc6e04b48276373683853187a4fd6"
         )
 
         assert (
             serialized_tx.hex()
-            == "010000000152ba4dfcde9c4bed88f55479cdea03e711ae586e9a89352a98230c4cdf1a09c601000000fc00473044022052f4a3dc5ca3e86ed66abb1e2b4d9b9ace7d96f5615944beea19e58280847c2902201bd3ff32a38366a4eed0373e27da26ebc0d2a4c2bbeffd83e8a60e313d95b9e30147304402203828fd48540811be6a1b12967e7012587c46e6f05c78d42471e7b25c06bc7afc0220749274bc1aa698335b00400c5ba946a70b6b46c711324fbc4989279737a57f49014c6952210203ed6187880ae932660086e55d4561a57952dd200aa3ed2aa66b73e5723a0ce7210360e7f32fd3c8dee27a166f6614c598929699ee66acdcbda5fb24571bf2ae1ca021037c4c7e5d3293ab0f97771dcfdf83caadab341f427f54713da8b2c590a834f03b53aeffffffff01a0860100000000001976a91412e8391ad256dcdc023365978418d658dfecba1c88ac00000000"
+            == "010000000152ba4dfcde9c4bed88f55479cdea03e711ae586e9a89352a98230c4cdf1a09c601000000fdfe00004830450221009276eea820aa54a24bd9f1a056cb09a15f50c0816570a7c7878bd1c5ee7248540220677d200aec5e2f25bcf4000bdfab3faa9e1746d7f80c4ae4bfa1f5892eb5dcbf01483045022100c2a9fbfbff1be87036d8a6a22745512b158154f7f3d8f4cad4ba7ed130b37b83022058f5299b4c26222588dcc669399bd88b6f2bc6e04b48276373683853187a4fd6014c69522103dc0ff15b9c85c0d2c87099758bf47d36229c2514aeefcf8dea123f0f93c679762102bfe426e8671601ad46d54d09ee15aa035610d36d411961c87474908d403fbc122102a5d57129c6c96df663ad29492aa18605dad97231e043be8a92f9406073815c5d53aeffffffff01a0860100000000001976a91412e8391ad256dcdc023365978418d658dfecba1c88ac00000000"
         )
 
     @pytest.mark.multisig
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_15_of_15(self, client):
         node = btc.get_public_node(
-            client, parse_path("48h/0h/1h/0"), coin_name="Bitcoin"
+            client, parse_path("48h/0h/1h/0h"), coin_name="Bitcoin"
         ).node
-        pubs = [proto.HDNodePathType(node=node, address_n=[x]) for x in range(15)]
+        pubs = [proto.HDNodePathType(node=node, address_n=[0, x]) for x in range(15)]
 
         signatures = [b""] * 15
 
@@ -168,7 +172,8 @@ class TestMultisig:
             )
 
             inp1 = proto.TxInputType(
-                address_n=parse_path(f"48h/0h/1h/0/{x}"),
+                address_n=parse_path(f"48h/0h/1h/0h/0/{x}"),
+                amount=20000,
                 prev_hash=TXHASH_6189e3,
                 prev_index=1,
                 script_type=proto.InputScriptType.SPENDMULTISIG,
@@ -183,14 +188,14 @@ class TestMultisig:
 
         assert (
             tx_hash(serialized_tx).hex()
-            == "3bffdb495711c57b0e2cd4e0dbd0ddbccf28052aa67466eafa2d4f666e797e5f"
+            == "63b16e3107df552c5c74bb5d91bb8fcd0069bac461fb42ebef982c5b2cfc4cf4"
         )
 
     @pytest.mark.multisig
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_missing_pubkey(self, client):
         node = btc.get_public_node(
-            client, parse_path("48h/0h/1h/0"), coin_name="Bitcoin"
+            client, parse_path("48h/0h/1h/0h/0"), coin_name="Bitcoin"
         ).node
 
         multisig = proto.MultisigRedeemScriptType(
@@ -205,7 +210,8 @@ class TestMultisig:
 
         # Let's go to sign with key 10, which is NOT in pubkeys
         inp1 = proto.TxInputType(
-            address_n=parse_path("48h/0h/1h/0/10"),
+            address_n=parse_path("48h/0h/1h/0h/0/10"),
+            amount=100000,
             prev_hash=TXHASH_c6091a,
             prev_index=1,
             script_type=proto.InputScriptType.SPENDMULTISIG,
@@ -228,7 +234,7 @@ class TestMultisig:
         attacker to provide a 1-of-2 multisig change address. When `input_real`
         is provided in the signing phase, an error must occur.
         """
-        address_n = parse_path("48'/1'/0'/0/0")
+        address_n = parse_path("48'/1'/0'/1'/0/0")
         attacker_multisig_public_key = bytes.fromhex(
             "03653a148b68584acb97947344a7d4fd6a6f8b8485cad12987ff8edac874268088"
         )
@@ -278,7 +284,7 @@ class TestMultisig:
             multisig=multisig_fake,
         )
 
-        attack_count = 2
+        attack_count = 3
 
         def attack_processor(msg):
             nonlocal attack_count
@@ -293,14 +299,15 @@ class TestMultisig:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_fbbff7),
-                    request_input(0, TXHASH_fbbff7),
-                    request_output(0, TXHASH_fbbff7),
-                    request_output(1, TXHASH_fbbff7),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
                     proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_fbbff7),
+                    request_input(0, TXHASH_fbbff7),
+                    request_output(0, TXHASH_fbbff7),
+                    request_output(1, TXHASH_fbbff7),
                     request_input(0),
                     request_output(0),
                     request_output(1),

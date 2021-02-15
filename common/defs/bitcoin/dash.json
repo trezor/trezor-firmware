@@ -17,6 +17,8 @@
   "xpub_magic": 50221772,
   "xpub_magic_segwit_p2sh": null,
   "xpub_magic_segwit_native": null,
+  "xpub_magic_multisig_segwit_p2sh": null,
+  "xpub_magic_multisig_segwit_native": null,
   "bech32_prefix": null,
   "cashaddr_prefix": null,
   "slip44": 5,
@@ -32,14 +34,6 @@
   "uri_prefix": "dash",
   "min_address_length": 27,
   "max_address_length": 34,
-  "bitcore": [],
-  "blockbook": [
-    "https://dash1.trezor.io",
-    "https://dash2.trezor.io",
-    "https://dash3.trezor.io",
-    "https://dash4.trezor.io",
-    "https://dash5.trezor.io"
-  ],
   "negative_fee": false,
   "cooldown": 100,
   "consensus_branch_id": null,

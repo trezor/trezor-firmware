@@ -1,0 +1,273 @@
+{
+  "bitcoin:BCH": {
+    "type": "blockbook",
+    "url": [
+      "https://bch1.trezor.io",
+      "https://bch2.trezor.io",
+      "https://bch3.trezor.io",
+      "https://bch4.trezor.io",
+      "https://bch5.trezor.io"
+    ]
+  },
+  "bitcoin:BELL": {
+    "type": "blockbook",
+    "url": [
+      "https://bellcoin-blockbook.ilmango.work",
+      "https://bell.blockbook.ovh"
+    ]
+  },
+  "bitcoin:BTC": {
+    "type": "blockbook",
+    "url": [
+      "https://btc1.trezor.io",
+      "https://btc2.trezor.io",
+      "https://btc3.trezor.io",
+      "https://btc4.trezor.io",
+      "https://btc5.trezor.io"
+    ]
+  },
+  "bitcoin:BTG": {
+    "type": "blockbook",
+    "url": [
+      "https://btg1.trezor.io",
+      "https://btg2.trezor.io",
+      "https://btg3.trezor.io",
+      "https://btg4.trezor.io",
+      "https://btg5.trezor.io"
+    ]
+  },
+  "bitcoin:CPU": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook.cpuchain.org"
+    ]
+  },
+  "bitcoin:DASH": {
+    "type": "blockbook",
+    "url": [
+      "https://dash1.trezor.io",
+      "https://dash2.trezor.io",
+      "https://dash3.trezor.io",
+      "https://dash4.trezor.io",
+      "https://dash5.trezor.io"
+    ]
+  },
+  "bitcoin:DGB": {
+    "type": "blockbook",
+    "url": [
+      "https://dgb1.trezor.io",
+      "https://dgb2.trezor.io"
+    ]
+  },
+  "bitcoin:DOGE": {
+    "type": "blockbook",
+    "url": [
+      "https://doge1.trezor.io",
+      "https://doge2.trezor.io",
+      "https://doge3.trezor.io",
+      "https://doge4.trezor.io",
+      "https://doge5.trezor.io"
+    ]
+  },
+  "bitcoin:FJC": {
+    "type": "blockbook",
+    "url": [
+      "https://explorer.fujicoin.org"
+    ]
+  },
+  "bitcoin:GAME": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook.gamecredits.network"
+    ]
+  },
+  "bitcoin:GRS": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook.groestlcoin.org"
+    ]
+  },
+  "bitcoin:KOTO": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook.kotocoin.info"
+    ]
+  },
+  "bitcoin:LTC": {
+    "type": "blockbook",
+    "url": [
+      "https://ltc1.trezor.io",
+      "https://ltc2.trezor.io",
+      "https://ltc3.trezor.io",
+      "https://ltc4.trezor.io",
+      "https://ltc5.trezor.io"
+    ]
+  },
+  "bitcoin:MONA": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook.electrum-mona.org"
+    ]
+  },
+  "bitcoin:MUE": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook.monetaryunit.org"
+    ]
+  },
+  "bitcoin:NMC": {
+    "type": "blockbook",
+    "url": [
+      "https://nmc1.trezor.io",
+      "https://nmc2.trezor.io"
+    ]
+  },
+  "bitcoin:PIVX": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook.pivx.link"
+    ]
+  },
+  "bitcoin:POLIS": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook.polispay.org"
+    ]
+  },
+  "bitcoin:PPC": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook.peercoin.net"
+    ]
+  },
+  "bitcoin:RITO": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook.ritocoin.org"
+    ]
+  },
+  "bitcoin:RVN": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook.ravencoin.org"
+    ]
+  },
+  "bitcoin:SYS": {
+    "type": "blockbook",
+    "url": [
+      "https://sys1.bcfn.ca"
+    ]
+  },
+  "bitcoin:TEST": {
+    "type": "blockbook",
+    "url": [
+      "https://tbtc1.trezor.io",
+      "https://tbtc2.trezor.io"
+    ]
+  },
+  "bitcoin:UNO": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook.flurbo.xyz",
+      "https://blockbook.unobtanium.uno"
+    ]
+  },
+  "bitcoin:VIPS": {
+    "type": "blockbook",
+    "url": [
+      "https://vips.blockbook.japanesecoin-pool.work"
+    ]
+  },
+  "bitcoin:VTC": {
+    "type": "blockbook",
+    "url": [
+      "https://vtc1.trezor.io",
+      "https://vtc2.trezor.io",
+      "https://vtc3.trezor.io",
+      "https://vtc4.trezor.io",
+      "https://vtc5.trezor.io"
+    ]
+  },
+  "bitcoin:XRC": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook1.bitcoinrh.org",
+      "https://blockbook2.bitcoinrh.org"
+    ]
+  },
+  "bitcoin:ZCR": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook.zcore.cash"
+    ]
+  },
+  "bitcoin:ZEC": {
+    "type": "blockbook",
+    "url": [
+      "https://zec1.trezor.io",
+      "https://zec2.trezor.io",
+      "https://zec3.trezor.io",
+      "https://zec4.trezor.io",
+      "https://zec5.trezor.io"
+    ]
+  },
+  "bitcoin:ZNY": {
+    "type": "blockbook",
+    "url": [
+      "https://zny.blockbook.ovh"
+    ]
+  },
+  "bitcoin:tGRS": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook-test.groestlcoin.org"
+    ]
+  },
+  "bitcoin:tPIVX": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook-testnet.pivx.link"
+    ]
+  },
+  "bitcoin:tPPC": {
+    "type": "blockbook",
+    "url": [
+      "https://tblockbook.peercoin.net"
+    ]
+  },
+  "eth:ETC": {
+    "type": "blockbook",
+    "url": [
+      "https://etc1.trezor.io",
+      "https://etc2.trezor.io"
+    ]
+  },
+  "eth:ETH": {
+    "type": "blockbook",
+    "url": [
+      "https://eth1.trezor.io",
+      "https://eth2.trezor.io"
+    ]
+  },
+  "eth:ROP": {
+    "type": "blockbook",
+    "url": [
+      "https://ropsten1.trezor.io",
+      "https://ropsten2.trezor.io"
+    ]
+  },
+  "misc:XRP": {
+    "type": "ripple",
+    "url": [
+      "wss://s1.ripple.com",
+      "wss://s-east.ripple.com",
+      "wss://s-west.ripple.com"
+    ]
+  },
+  "misc:tXRP": {
+    "type": "ripple",
+    "url": [
+      "wss://s.altnet.rippletest.net"
+    ]
+  }
+}

@@ -15,6 +15,15 @@ enum BackupType {
 }
 
 /**
+ * Level of safety checks for unsafe actions like spending from invalid path namespace or setting high transaction fee.
+ */
+enum SafetyCheckLevel {
+    Strict = 0;             // disallow unsafe actions, this is the default
+    PromptAlways = 1;       // ask user before unsafe action
+    PromptTemporarily = 2;  // like PromptAlways but reverts to Strict after reboot
+}
+
+/**
  * Request: Reset device to default state and ask for device details
  * @start
  * @next Features
@@ -90,6 +99,10 @@ message Features {
     optional bool wipe_code_protection = 34;    // is wipe code protection enabled
     optional bytes session_id = 35;
     optional bool passphrase_always_on_device = 36;  // device enforces passphrase entry on Trezor
+    optional SafetyCheckLevel safety_checks = 37;            // safety check level, set to Prompt to limit path namespace enforcement
+    optional uint32 auto_lock_delay_ms = 38;    // number of milliseconds after which the device locks itself
+    optional uint32 display_rotation = 39;      // in degrees from North
+    optional bool experimental_features = 40;   // are experimental message types enabled?
 }
 
 /**
@@ -126,11 +139,7 @@ message ApplySettings {
     optional uint32 display_rotation = 7;  // in degrees from North
     optional bool passphrase_always_on_device = 8;  // do not prompt for passphrase, enforce device entry
     optional SafetyCheckLevel safety_checks = 9;  // Safety check level, set to Prompt to limit path namespace enforcement
-
-    enum SafetyCheckLevel {
-        Strict = 0;
-        Prompt = 1;
-    }
+    optional bool experimental_features = 10;  // enable experimental message types
 }
 
 /**
@@ -296,7 +305,7 @@ message RecoveryDevice {
     optional uint32 word_count = 1;                     // number of words in BIP-39 mnemonic
     optional bool passphrase_protection = 2;            // enable master node encryption using passphrase
     optional bool pin_protection = 3;                   // enable PIN protection
-    optional string language = 4 [default='en-US'];     // device language (IETF BCP 47 language tag)
+    optional string language = 4;                       // device language (IETF BCP 47 language tag)
     optional string label = 5;                          // device label
     optional bool enforce_wordlist = 6;                 // enforce BIP-39 wordlist during the process
     // 7 reserved for unused recovery method

@@ -16,15 +16,16 @@ class HDNodePathType(p.MessageType):
 
     def __init__(
         self,
-        node: HDNodeType = None,
+        *,
+        node: HDNodeType,
         address_n: List[int] = None,
     ) -> None:
-        self.node = node
         self.address_n = address_n if address_n is not None else []
+        self.node = node
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('node', HDNodeType, 0),  # required
+            1: ('node', HDNodeType, p.FLAG_REQUIRED),
             2: ('address_n', p.UVarintType, p.FLAG_REPEATED),
         }

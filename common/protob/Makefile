@@ -6,7 +6,7 @@ check: messages.pb messages-binance.pb messages-bitcoin.pb messages-bootloader.p
 combine:
 	echo 'syntax = "proto2";' > combined.proto
 	echo 'import "google/protobuf/descriptor.proto";' >> combined.proto
-	grep -hv -e '^import ' -e '^syntax' -e '^package' -e 'option java_' messages*.proto | sed 's/hw\.trezor\.messages\.common\.//' >> combined.proto
+	grep -hv -e '^import ' -e '^syntax' -e '^package' -e 'option java_' messages*.proto | sed 's/ hw\.trezor\.messages\.common\./ /' | sed 's/ common\./ /' | grep -v '    reserved '>> combined.proto
 
 clean:
 	rm -f *.pb

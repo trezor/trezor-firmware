@@ -15,11 +15,11 @@ _CHECKLIST_OFFSET_X_ICON = const(0)
 
 class Checklist(ui.Component):
     def __init__(self, title: str, icon: str) -> None:
+        super().__init__()
         self.title = title
         self.icon = icon
-        self.items = []  # type: List[ChecklistItem]
+        self.items: List[ChecklistItem] = []
         self.active = 0
-        self.repaint = True
 
     def add(self, item: ChecklistItem) -> None:
         self.items.append(item)

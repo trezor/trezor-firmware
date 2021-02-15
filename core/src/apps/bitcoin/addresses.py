@@ -4,7 +4,7 @@ from trezor.crypto.hashlib import sha256
 from trezor.messages import InputScriptType
 from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
 
-from apps.common import HARDENED, address_type
+from apps.common import address_type
 from apps.common.coininfo import CoinInfo
 
 from .common import ecdsa_hash_pubkey, encode_bech32_address
@@ -23,16 +23,15 @@ def get_address(
     node: bip32.HDNode,
     multisig: MultisigRedeemScriptType = None,
 ) -> str:
+    if multisig:
+        # Ensure that our public key is included in the multisig.
+        multisig_pubkey_index(multisig, node.public_key())
 
     if (
         script_type == InputScriptType.SPENDADDRESS
         or script_type == InputScriptType.SPENDMULTISIG
     ):
         if multisig:  # p2sh multisig
-            pubkey = node.public_key()
-            index = multisig_pubkey_index(multisig, pubkey)
-            if index is None:
-                raise wire.ProcessError("Public key not found")
             if coin.address_type_p2sh is None:
                 raise wire.ProcessError("Multisig not enabled on this coin")
 
@@ -126,6 +125,7 @@ def address_p2wsh_in_p2sh(witness_script_hash: bytes, coin: CoinInfo) -> str:
 
 
 def address_p2wpkh(pubkey: bytes, coin: CoinInfo) -> str:
+    assert coin.bech32_prefix is not None
     pubkeyhash = ecdsa_hash_pubkey(pubkey, coin)
     return encode_bech32_address(coin.bech32_prefix, pubkeyhash)
 
@@ -135,6 +135,7 @@ def address_p2wsh(witness_script_hash: bytes, hrp: str) -> str:
 
 
 def address_to_cashaddr(address: str, coin: CoinInfo) -> str:
+    assert coin.cashaddr_prefix is not None
     raw = base58.decode_check(address, coin.b58_hash)
     version, data = raw[0], raw[1:]
     if version == coin.address_type:
@@ -153,82 +154,3 @@ def address_short(coin: CoinInfo, address: str) -> str:
         return address[len(coin.cashaddr_prefix) + 1 :]
     else:
         return address
-
-
-def validate_full_path(
-    path: list,
-    coin: CoinInfo,
-    script_type: EnumTypeInputScriptType,
-    validate_script_type: bool = True,
-) -> bool:
-    """
-    Validates derivation path to fit Bitcoin-like coins. We mostly use
-    44', but for segwit-enabled coins we use either 49' (P2WPKH-nested-in-P2SH)
-    or 84' (native P2WPKH). Electrum uses m/45' for legacy addresses and
-    m/48' for segwit, so those two are allowed as well.
-
-    See docs/coins for what paths are allowed. Please note that this is not
-    a comprehensive check, some nuances are omitted for simplification.
-    """
-    if len(path) not in (4, 5, 6):
-        return False
-
-    if not validate_purpose(path[0], coin):
-        return False
-    if validate_script_type and not validate_purpose_against_script_type(
-        path[0], script_type
-    ):
-        return False
-
-    if path[1] > 20 and path[1] != coin.slip44 | HARDENED:
-        return False
-    if (20 < path[2] < HARDENED) or path[2] > 20 | HARDENED:
-        return False
-    if path[3] not in (0, 1, 0 | HARDENED, 1 | HARDENED, 2 | HARDENED):
-        return False
-    if len(path) > 4 and path[4] > 1000000:
-        return False
-    if len(path) > 5 and path[5] > 1000000:
-        return False
-    return True
-
-
-def validate_purpose(purpose: int, coin: CoinInfo) -> bool:
-    if purpose not in (
-        44 | HARDENED,
-        45 | HARDENED,
-        48 | HARDENED,
-        49 | HARDENED,
-        84 | HARDENED,
-    ):
-        return False
-    if not coin.segwit and purpose not in (44 | HARDENED, 45 | HARDENED, 48 | HARDENED):
-        return False
-    return True
-
-
-def validate_purpose_against_script_type(
-    purpose: int, script_type: EnumTypeInputScriptType
-) -> bool:
-    """
-    Validates purpose against provided input's script type:
-    - 44 for spending address (script_type == SPENDADDRESS)
-    - 45, 48 for multisig (script_type == SPENDMULTISIG)
-    - 49 for p2wsh-nested-in-p2sh spend (script_type == SPENDP2SHWITNESS)
-    - 84 for p2wsh native segwit spend (script_type == SPENDWITNESS)
-    """
-    if purpose == 44 | HARDENED and script_type != InputScriptType.SPENDADDRESS:
-        return False
-    if purpose == 45 | HARDENED and script_type != InputScriptType.SPENDMULTISIG:
-        return False
-    if purpose == 48 | HARDENED and script_type not in (
-        InputScriptType.SPENDMULTISIG,
-        InputScriptType.SPENDP2SHWITNESS,
-        InputScriptType.SPENDWITNESS,
-    ):
-        return False
-    if purpose == 49 | HARDENED and script_type != InputScriptType.SPENDP2SHWITNESS:
-        return False
-    if purpose == 84 | HARDENED and script_type != InputScriptType.SPENDWITNESS:
-        return False
-    return True

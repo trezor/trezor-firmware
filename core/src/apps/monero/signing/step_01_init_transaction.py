@@ -4,7 +4,7 @@ Initializes a new transaction.
 
 import gc
 
-from apps.monero import CURVE, misc, signing
+from apps.monero import misc, signing
 from apps.monero.layout import confirms
 from apps.monero.signing.state import State
 from apps.monero.xmr import crypto, monero
@@ -31,9 +31,7 @@ async def init_transaction(
     from apps.monero.signing import offloading_keys
     from apps.common import paths
 
-    await paths.validate_path(
-        state.ctx, misc.validate_full_path, keychain, address_n, CURVE
-    )
+    await paths.validate_path(state.ctx, keychain, address_n)
 
     state.creds = misc.get_creds(keychain, address_n, network_type)
     state.client_version = tsx_data.client_version or 0
@@ -68,6 +66,10 @@ async def init_transaction(
     if tsx_data.hard_fork:
         state.hard_fork = tsx_data.hard_fork
 
+    state.tx_type = (
+        signing.RctType.CLSAG if state.hard_fork >= 13 else signing.RctType.Bulletproof2
+    )
+
     # Ensure change is correct
     _check_change(state, tsx_data.outputs)
 
@@ -92,7 +94,7 @@ async def init_transaction(
 
     # Final message hasher
     state.full_message_hasher.init()
-    state.full_message_hasher.set_type_fee(signing.RctType.Bulletproof2, state.fee)
+    state.full_message_hasher.set_type_fee(state.tx_type, state.fee)
 
     # Sub address precomputation
     if tsx_data.account is not None and tsx_data.minor_indices:

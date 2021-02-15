@@ -1,7 +1,7 @@
 # Build instructions for Embedded (ARM port)
 
-First clone, initialize submodules and install Pipenv as defined [here](index.md).
-**Do not forget you need to be in a `pipenv shell` environment!**
+First clone, initialize submodules and install Poetry as defined [here](index.md).
+**Do not forget you need to be in a `poetry shell` environment!**
 
 ## Requirements
 

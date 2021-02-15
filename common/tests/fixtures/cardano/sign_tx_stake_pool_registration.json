@@ -1,0 +1,194 @@
+{
+  "setup": {
+    "mnemonic": "all all all all all all all all all all all all",
+    "passphrase": ""
+  },
+  "tests": [
+    {
+      "description": "Sample stake pool registration certificate",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [
+          {
+            "type": 3,
+            "pool_parameters": {
+              "pool_id": "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973",
+              "vrf_key_hash": "198890ad6c92e80fbdab554dda02da9fb49d001bbd96181f3e07f7a6ab0d0640",
+              "pledge": 500000000,
+              "cost": 340000000,
+              "margin": {
+                "numerator": 1,
+                "denominator": 2
+              },
+              "reward_account": "stake1uya87zwnmax0v6nnn8ptqkl6ydx4522kpsc3l3wmf3yswygwx45el",
+              "owners": [
+                {
+                  "staking_key_path": "m/1852'/1815'/0'/2/0"
+                },
+                {
+                  "staking_key_hash": "3a7f09d3df4cf66a7399c2b05bfa234d5a29560c311fc5db4c490711"
+                }
+              ],
+              "relays": [
+                {
+                  "type": 0,
+                  "ipv4_address": "192.168.0.1",
+                  "ipv6_address": "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+                  "port": 1234
+                },
+                {
+                  "type": 0,
+                  "ipv6_address": "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
+                  "port": 1234
+                },
+                {
+                  "type": 0,
+                  "ipv4_address": "192.168.0.1",
+                  "port": 1234
+                },
+                {
+                  "type": 1,
+                  "host_name": "www.test.test",
+                  "port": 1234
+                },
+                {
+                  "type": 2,
+                  "host_name": "www.test2.test"
+                }
+              ],
+              "metadata": {
+                "url": "https://www.test.test",
+                "hash": "914c57c1f12bbf4a82b12d977d4f274674856a11ed4b9b95bd70f5d41c5064a6"
+              }
+            }
+          }
+        ],
+        "withdrawals": [],
+        "metadata": "",
+        "input_flow": [["SWIPE", "SWIPE", "YES"], ["SWIPE", "YES"], ["SWIPE", "YES"], ["YES"], ["YES"]],
+        "inputs": [
+          {
+            "path": null,
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ]
+      },
+      "result": {
+        "tx_hash": "e3b9a5657bf62609465a930c8359d774c73944973cfc5a104a0f0ed1e1e8db21",
+        "serialized_tx": "83a500818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018182583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff0102182a030a04818a03581cf61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb49735820198890ad6c92e80fbdab554dda02da9fb49d001bbd96181f3e07f7a6ab0d06401a1dcd65001a1443fd00d81e820102581de13a7f09d3df4cf66a7399c2b05bfa234d5a29560c311fc5db4c49071182581c122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277581c3a7f09d3df4cf66a7399c2b05bfa234d5a29560c311fc5db4c4907118584001904d244c0a8000150b80d01200000a3852e8a00003473700384001904d2f650b80d01200000a3852e8a00003473700384001904d244c0a80001f683011904d26d7777772e746573742e7465737482026e7777772e74657374322e74657374827568747470733a2f2f7777772e746573742e746573745820914c57c1f12bbf4a82b12d977d4f274674856a11ed4b9b95bd70f5d41c5064a6a10081825820bc65be1b0b9d7531778a1317c2aa6de936963c3f9ac7d5ee9e9eda25e0c97c5e584006305b52f76d2d2da6925c02036a9a28456976009f8c6432513f273110d09ea26db79c696cec322b010e5cbb7d90a6b473b157e65df846a1487062569a5f5a04f6"
+      }
+    },
+    {
+      "description": "Stake pool registration certificate with no pool metadata",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [
+          {
+            "type": 3,
+            "pool_parameters": {
+              "pool_id": "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973",
+              "vrf_key_hash": "198890ad6c92e80fbdab554dda02da9fb49d001bbd96181f3e07f7a6ab0d0640",
+              "pledge": 500000000,
+              "cost": 340000000,
+              "margin": {
+                "numerator": 1,
+                "denominator": 2
+              },
+              "reward_account": "stake1uya87zwnmax0v6nnn8ptqkl6ydx4522kpsc3l3wmf3yswygwx45el",
+              "owners": [
+                {
+                  "staking_key_path": "m/1852'/1815'/0'/2/0"
+                }
+              ],
+              "relays": []
+            }
+          }
+        ],
+        "withdrawals": [],
+        "metadata": "",
+        "input_flow": [["SWIPE", "SWIPE", "YES"], ["YES"], ["YES"], ["YES"], ["YES"]],
+        "inputs": [
+          {
+            "path": null,
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ]
+      },
+      "result": {
+        "tx_hash": "504f9214142996e0b7e315103b25d88a4afa3d01dd5be22376921b52b01483c3",
+        "serialized_tx": "83a500818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018182583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff0102182a030a04818a03581cf61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb49735820198890ad6c92e80fbdab554dda02da9fb49d001bbd96181f3e07f7a6ab0d06401a1dcd65001a1443fd00d81e820102581de13a7f09d3df4cf66a7399c2b05bfa234d5a29560c311fc5db4c49071181581c122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b427780f6a10081825820bc65be1b0b9d7531778a1317c2aa6de936963c3f9ac7d5ee9e9eda25e0c97c5e5840aa2099208399fcc27c18d7ef0c7e873f9e22f0935b7e912cddd34b33b8cafd541a878dc01c042ce490e4c9bad3c62c2f59acaa009d336c9ff875c5f153d34900f6"
+      }
+    },
+    {
+      "description": "Stake pool registration on testnet",
+      "parameters": {
+        "protocol_magic": 42,
+        "network_id": 0,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [
+          {
+            "type": 3,
+            "pool_parameters": {
+              "pool_id": "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973",
+              "vrf_key_hash": "198890ad6c92e80fbdab554dda02da9fb49d001bbd96181f3e07f7a6ab0d0640",
+              "pledge": 500000000,
+              "cost": 340000000,
+              "margin": {
+                "numerator": 1,
+                "denominator": 2
+              },
+              "reward_account": "stake_test1uqa87zwnmax0v6nnn8ptqkl6ydx4522kpsc3l3wmf3yswygfvlkaz",
+              "owners": [
+                {
+                  "staking_key_path": "m/1852'/1815'/0'/2/0"
+                }
+              ],
+              "relays": []
+            }
+          }
+        ],
+        "withdrawals": [],
+        "metadata": "",
+        "input_flow": [["SWIPE", "SWIPE", "YES"], ["YES"], ["YES"], ["YES"], ["YES"]],
+        "inputs": [
+          {
+            "path": null,
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr_test1vr9s8py7y68e3x66sscs0wkhlg5ssfrfs65084jrlrqcfqqtmut0e",
+            "amount": "1"
+          }
+        ]
+      },
+      "result": {
+        "tx_hash": "12921b4f8e77f815e0c8ed97c541fbd5ba38a6d3323f4ff1af0cb934b8ac6b39",
+        "serialized_tx": "83a500818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018182581d60cb03849e268f989b5a843107bad7fa2908246986a8f3d643f8c184800102182a030a04818a03581cf61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb49735820198890ad6c92e80fbdab554dda02da9fb49d001bbd96181f3e07f7a6ab0d06401a1dcd65001a1443fd00d81e820102581de03a7f09d3df4cf66a7399c2b05bfa234d5a29560c311fc5db4c49071181581c122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b427780f6a10081825820bc65be1b0b9d7531778a1317c2aa6de936963c3f9ac7d5ee9e9eda25e0c97c5e584027cab81902d04b2491d7aa2bf57bd9db59d33c2df1502dae0412d5225c6b0b8f7b057de6a7e7eae25016ed6ea1f6e6239fb36a285216c6ee4a3cb3376287a300f6"
+      }
+    }
+  ]
+}

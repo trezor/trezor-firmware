@@ -197,7 +197,7 @@ Trezor computes spending keys, `TxinToKey`, `pseudo_out`, HMACs for offloaded da
 UTXOs have to be sorted by the key image in the valid blockchain transaction.
 This message caries permutation on the key images so they are sorted in the desired way.
 
-In Client version 3+ sending the permutation is deprecated. Original sort index is sent from the host 
+In Client version 3+ sending the permutation is deprecated. Original sort index is sent from the host
 when needed (to verify HMACs built on the original ordering). Moreover, permutation correctness is checked by
 the set size, HMAC validity and strict ordering on the key images.
 

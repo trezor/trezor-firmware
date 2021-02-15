@@ -6,6 +6,7 @@
     }
   ],
   "branch_id": 1991772603,
+  "extra_data": "0000000000000000000000",
   "inputs": [
     {
       "prev_hash": "340d478f0c5750057d5f5028db8c10993578849e63f5cf8500e33ddefcd5334f",
@@ -14,7 +15,6 @@
       "sequence": 4294967295
     }
   ],
-  "extra_data": "0000000000000000000000",
   "lock_time": 0,
   "version": 4,
   "version_group_id": 2301567109

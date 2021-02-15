@@ -1,4 +1,7 @@
+from protobuf import dump_uvarint
+
 from apps.common.writers import (
+    write_bytes_fixed,
     write_bytes_unchecked,
     write_uint8,
     write_uint16_le,
@@ -31,7 +34,7 @@ def write_auth(w: Writer, auth: EosAuthorization) -> None:
     write_variant32(w, len(auth.keys))
     for key in auth.keys:
         write_variant32(w, key.type)
-        write_bytes_unchecked(w, key.key)
+        write_bytes_fixed(w, key.key, 33)
         write_uint16_le(w, key.weight)
 
     write_variant32(w, len(auth.accounts))
@@ -59,8 +62,7 @@ def write_action_transfer(w: Writer, msg: EosActionTransfer) -> None:
     write_uint64_le(w, msg.sender)
     write_uint64_le(w, msg.receiver)
     write_asset(w, msg.quantity)
-    write_variant32(w, len(msg.memo))
-    write_bytes_unchecked(w, msg.memo)
+    write_bytes_prefixed(w, msg.memo)
 
 
 def write_action_buyram(w: Writer, msg: EosActionBuyRam) -> None:
@@ -154,12 +156,9 @@ def write_asset(w: Writer, asset: EosAsset) -> None:
 
 
 def write_variant32(w: Writer, value: int) -> None:
-    variant = bytearray()
-    while True:
-        b = value & 0x7F
-        value >>= 7
-        b |= (value > 0) << 7
-        variant.append(b)
-        if value == 0:
-            break
-    write_bytes_unchecked(w, bytes(variant))
+    dump_uvarint(w.extend, value)
+
+
+def write_bytes_prefixed(w: Writer, data: bytes) -> None:
+    write_variant32(w, len(data))
+    write_bytes_unchecked(w, data)

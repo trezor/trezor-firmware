@@ -8,9 +8,9 @@ if not utils.BITCOIN_ONLY:
 class TestCardanoUtils(unittest.TestCase):
     def test_variable_length_encode(self):
         test_vectors = [
-            (0, bytes([0x00])), 
-            (42, bytes([0x2A])), 
-            (127, bytes([0x7F])), 
+            (0, bytes([0x00])),
+            (42, bytes([0x2A])),
+            (127, bytes([0x7F])),
             (128, bytes([0x81, 0x00])),
             (129, bytes([0x81, 0x01])),
             (255, bytes([0x81, 0x7F])),

@@ -124,8 +124,8 @@ fuzzer: fuzzer/fuzzer.o $(OBJS)
 	$(CC) $(CFLAGS) fuzzer/fuzzer.o $(OBJS) -o fuzzer/fuzzer
 
 clean:
-	rm -f *.o aes/*.o chacha20poly1305/*.o ed25519-donna/*.o
-	rm -f tests/test_check tests/test_speed tests/test_openssl tests/libtrezor-crypto.so tests/aestst
+	rm -f *.o aes/*.o chacha20poly1305/*.o ed25519-donna/*.o monero/*.o
+	rm -f tests/*.o tests/test_check tests/test_speed tests/test_openssl tests/libtrezor-crypto.so tests/aestst
 	rm -f tools/*.o tools/xpubaddrgen tools/mktable tools/bip39bruteforce
 	rm -f fuzzer/*.o fuzzer/fuzzer
 

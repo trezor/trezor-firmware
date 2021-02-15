@@ -16,6 +16,7 @@ class EosActionUpdateAuth(p.MessageType):
 
     def __init__(
         self,
+        *,
         account: int = None,
         permission: int = None,
         parent: int = None,
@@ -29,8 +30,8 @@ class EosActionUpdateAuth(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('account', p.UVarintType, 0),
-            2: ('permission', p.UVarintType, 0),
-            3: ('parent', p.UVarintType, 0),
-            4: ('auth', EosAuthorization, 0),
+            1: ('account', p.UVarintType, None),
+            2: ('permission', p.UVarintType, None),
+            3: ('parent', p.UVarintType, None),
+            4: ('auth', EosAuthorization, None),
         }

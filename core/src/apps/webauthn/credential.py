@@ -8,7 +8,8 @@ from trezor.crypto import bip32, chacha20poly1305, der, hashlib, hmac, random
 from trezor.crypto.curve import ed25519, nist256p1
 
 from apps.common import HARDENED, cbor, seed
-from apps.webauthn import common
+
+from . import common
 
 if False:
     from typing import Iterable, Optional
@@ -49,16 +50,16 @@ _CURVE_NAME = {
 }
 
 # Key paths
-_U2F_KEY_PATH = const(0x80553246)
+_U2F_KEY_PATH = const(0x8055_3246)
 
 
 class Credential:
     def __init__(self) -> None:
-        self.index = None  # type: Optional[int]
-        self.id = b""  # type: bytes
-        self.rp_id = ""  # type: str
-        self.rp_id_hash = b""  # type: bytes
-        self.user_id = None  # type: Optional[bytes]
+        self.index: Optional[int] = None
+        self.id: bytes = b""
+        self.rp_id: str = ""
+        self.rp_id_hash: bytes = b""
+        self.user_id: Optional[bytes] = None
 
     def __lt__(self, other: "Credential") -> bool:
         raise NotImplementedError
@@ -106,14 +107,14 @@ class Credential:
 class Fido2Credential(Credential):
     def __init__(self) -> None:
         super().__init__()
-        self.rp_name = None  # type: Optional[str]
-        self.user_name = None  # type: Optional[str]
-        self.user_display_name = None  # type: Optional[str]
-        self.creation_time = 0  # type: int
-        self.hmac_secret = False  # type: bool
-        self.use_sign_count = False  # type: bool
-        self.algorithm = _DEFAULT_ALGORITHM  # type: int
-        self.curve = _DEFAULT_CURVE  # type: int
+        self.rp_name: Optional[str] = None
+        self.user_name: Optional[str] = None
+        self.user_display_name: Optional[str] = None
+        self.creation_time: int = 0
+        self.hmac_secret: bool = False
+        self.use_sign_count: bool = False
+        self.algorithm: int = _DEFAULT_ALGORITHM
+        self.curve: int = _DEFAULT_CURVE
 
     def __lt__(self, other: Credential) -> bool:
         # Sort FIDO2 credentials newest first amongst each other.
@@ -258,7 +259,7 @@ class Fido2Credential(Credential):
         )
 
     def app_name(self) -> str:
-        from apps.webauthn import knownapps
+        from . import knownapps
 
         app = knownapps.by_rp_id_hash(self.rp_id_hash)
         if app is not None:
@@ -358,7 +359,7 @@ class Fido2Credential(Credential):
 class U2fCredential(Credential):
     def __init__(self) -> None:
         super().__init__()
-        self.node = None  # type: Optional[bip32.HDNode]
+        self.node: Optional[bip32.HDNode] = None
 
     def __lt__(self, other: "Credential") -> bool:
         # Sort U2F credentials after FIDO2 credentials.
@@ -384,7 +385,7 @@ class U2fCredential(Credential):
 
     def generate_key_handle(self) -> None:
         # derivation path is m/U2F'/r'/r'/r'/r'/r'/r'/r'/r'
-        path = [HARDENED | random.uniform(0x80000000) for _ in range(0, 8)]
+        path = [HARDENED | random.uniform(0x8000_0000) for _ in range(0, 8)]
         nodepath = [_U2F_KEY_PATH] + path
 
         # prepare signing key from random path, compute decompressed public key
@@ -394,13 +395,13 @@ class U2fCredential(Credential):
         keypath = ustruct.pack("<8L", *path)
 
         # second half of keyhandle is a hmac of rp_id_hash and keypath
-        mac = hmac.Hmac(self.node.private_key(), self.rp_id_hash, hashlib.sha256)
+        mac = hmac(hmac.SHA256, self.node.private_key(), self.rp_id_hash)
         mac.update(keypath)
 
         self.id = keypath + mac.digest()
 
     def app_name(self) -> str:
-        from apps.webauthn import knownapps
+        from . import knownapps
 
         app = knownapps.by_rp_id_hash(self.rp_id_hash)
         if app is not None:
@@ -453,7 +454,7 @@ class U2fCredential(Credential):
         node = seed.derive_node_without_passphrase(nodepath, "nist256p1")
 
         # second half of keyhandle is a hmac of rp_id_hash and keypath
-        mac = hmac.Hmac(node.private_key(), rp_id_hash, hashlib.sha256)
+        mac = hmac(hmac.SHA256, node.private_key(), rp_id_hash)
         mac.update(keypath)
 
         # verify the hmac

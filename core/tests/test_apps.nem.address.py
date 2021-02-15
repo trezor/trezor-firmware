@@ -3,7 +3,7 @@ from apps.common import HARDENED
 
 if not utils.BITCOIN_ONLY:
     from trezor.crypto import nem
-    from apps.nem.helpers import check_path, NEM_NETWORK_MAINNET, NEM_NETWORK_TESTNET
+    from apps.nem.helpers import check_path, NEM_NETWORK_MAINNET, NEM_NETWORK_TESTNET, NEM_NETWORK_MIJIN
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -35,46 +35,26 @@ class TestNemAddress(unittest.TestCase):
         validity = nem.validate_address('NCUKWDY3J3THKQHAKOK5ALF6ANJQABZHCH7VN6DP', NEM_NETWORK_TESTNET)
         self.assertFalse(validity)
 
-    def test_paths(self):
-        # 44'/43'/0'/0'/0'
-        self.assertTrue(check_path([44 | HARDENED, 43 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED]))
-        # 44'/43'/0'/0'/0'
-        self.assertTrue(check_path([44 | HARDENED, 43 | HARDENED, 3 | HARDENED, 0 | HARDENED, 0 | HARDENED]))
-        # 44'/1'/0'/0'/0'  testnet
-        self.assertTrue(check_path([44 | HARDENED, 1 | HARDENED, 3 | HARDENED, 0 | HARDENED, 0 | HARDENED], network=0x98))
-        # 44'/43'/0'
-        self.assertTrue(check_path([44 | HARDENED, 43 | HARDENED, 0 | HARDENED]))
-        # 44'/43'/2'
-        self.assertTrue(check_path([44 | HARDENED, 43 | HARDENED, 2 | HARDENED]))
-        # 44'/1'/0'  testnet
-        self.assertTrue(check_path([44 | HARDENED, 1 | HARDENED, 0 | HARDENED], network=0x98))
+    def test_check_path(self):
+        # mainnet path:
+        self.assertTrue(check_path([44 | HARDENED, 43 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED], NEM_NETWORK_MAINNET))
+        # should be valid on mijin as well:
+        self.assertTrue(check_path([44 | HARDENED, 43 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED], NEM_NETWORK_MIJIN))
+        # testnet path:
+        self.assertTrue(check_path([44 | HARDENED, 1 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED], NEM_NETWORK_TESTNET))
+        # short path (check_path does not validate pattern match):
+        self.assertTrue(check_path([44 | HARDENED, 43 | HARDENED], NEM_NETWORK_MAINNET))
 
-        # 44'/43'/0'/0'/1'
-        self.assertFalse(check_path([44 | HARDENED, 43 | HARDENED, 0 | HARDENED, 0 | HARDENED, 1 | HARDENED]))
-        # 44'/43'/0'/1'/1'
-        self.assertFalse(check_path([44 | HARDENED, 43 | HARDENED, 0 | HARDENED, 1 | HARDENED, 1 | HARDENED]))
-        # 44'/43'/0'/1'/0'
-        self.assertFalse(check_path([44 | HARDENED, 43 | HARDENED, 0 | HARDENED, 1 | HARDENED, 0 | HARDENED]))
-        # 44'/43'/99999'/0'/0'
-        self.assertFalse(check_path([44 | HARDENED, 43 | HARDENED, 99999000 | HARDENED, 0 | HARDENED, 0 | HARDENED]))
-        # 44'/99'/0'/0'/0'
-        self.assertFalse(check_path([44 | HARDENED, 99 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED]))
-        # 1'/43'/0'/0'/0'
-        self.assertFalse(check_path([1 | HARDENED, 43 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED]))
-        # 44'/43'/0'/0/0
-        self.assertFalse(check_path([44 | HARDENED, 43 | HARDENED, 0 | HARDENED, 0, 0]))
-        # 44'/43'/0'/0/5
-        self.assertFalse(check_path([44 | HARDENED, 43 | HARDENED, 0 | HARDENED, 0, 5]))
-        # 44'/1'/3'/0'/1'  testnet
-        self.assertFalse(check_path([44 | HARDENED, 1 | HARDENED, 3 | HARDENED, 0 | HARDENED, 1 | HARDENED], network=0x98))
-
-        # 44'/43'/0/0/1
-        self.assertFalse(check_path([44 | HARDENED, 43 | HARDENED, 0, 0, 1]))
-        # 44'/43'/0/0/0
-        self.assertFalse(check_path([44 | HARDENED, 43 | HARDENED, 0, 0, 0]))
-        # 44'/43'/0/0'/0'
-        self.assertFalse(check_path([44 | HARDENED, 43 | HARDENED, 0, 0 | HARDENED, 0 | HARDENED]))
-
+        # testnet path on mainnet:
+        self.assertFalse(check_path([44 | HARDENED, 1 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED], NEM_NETWORK_MAINNET))
+        # mainnet path on testnet:
+        self.assertFalse(check_path([44 | HARDENED, 43 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED], NEM_NETWORK_TESTNET))
+        # path too short to extract SLIP44:
+        self.assertFalse(check_path([44 | HARDENED], NEM_NETWORK_TESTNET))
+        # unknown SLIP44:
+        self.assertFalse(check_path([44 | HARDENED, 0 | HARDENED], NEM_NETWORK_MAINNET))
+        # unhardened SLIP44:
+        self.assertFalse(check_path([44 | HARDENED, 43, 0], NEM_NETWORK_MAINNET))
 
 
 if __name__ == '__main__':

@@ -4,10 +4,10 @@ from trezor.messages.EosGetPublicKey import EosGetPublicKey
 from trezor.messages.EosPublicKey import EosPublicKey
 
 from apps.common import paths
-from apps.common.keychain import Keychain, with_slip44_keychain
-from apps.eos import CURVE, SLIP44_ID
-from apps.eos.helpers import public_key_to_wif, validate_full_path
-from apps.eos.layout import require_get_public_key
+from apps.common.keychain import Keychain, auto_keychain
+
+from .helpers import public_key_to_wif
+from .layout import require_get_public_key
 
 if False:
     from typing import Tuple
@@ -21,14 +21,14 @@ def _get_public_key(node: bip32.HDNode) -> Tuple[str, bytes]:
     return wif, public_key
 
 
-@with_slip44_keychain(SLIP44_ID, CURVE)
+@auto_keychain(__name__)
 async def get_public_key(
     ctx: wire.Context, msg: EosGetPublicKey, keychain: Keychain
 ) -> EosPublicKey:
-    await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n, CURVE)
+    await paths.validate_path(ctx, keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)
     wif, public_key = _get_public_key(node)
     if msg.show_display:
         await require_get_public_key(ctx, wif)
-    return EosPublicKey(wif, public_key)
+    return EosPublicKey(wif_public_key=wif, raw_public_key=public_key)

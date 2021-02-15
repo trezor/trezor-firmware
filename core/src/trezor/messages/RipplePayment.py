@@ -14,6 +14,7 @@ class RipplePayment(p.MessageType):
 
     def __init__(
         self,
+        *,
         amount: int = None,
         destination: str = None,
         destination_tag: int = None,
@@ -25,7 +26,7 @@ class RipplePayment(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('amount', p.UVarintType, 0),
-            2: ('destination', p.UnicodeType, 0),
-            3: ('destination_tag', p.UVarintType, 0),
+            1: ('amount', p.UVarintType, None),
+            2: ('destination', p.UnicodeType, None),
+            3: ('destination_tag', p.UVarintType, None),
         }

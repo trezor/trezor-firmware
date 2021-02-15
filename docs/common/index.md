@@ -10,6 +10,6 @@ JSON coin definitions and support tables.
 
 Common Protobuf definitions for the Trezor protocol. Also see [Communication](communication/index.md).
 
-## Tools 
+## Tools
 
 Tools for managing coin definitions and related data.

@@ -76,7 +76,7 @@ class BridgeHandleModern(BridgeHandle):
 class BridgeHandleLegacy(BridgeHandle):
     def __init__(self, transport: "BridgeTransport") -> None:
         super().__init__(transport)
-        self.request = None  # type: Optional[str]
+        self.request: Optional[str] = None
 
     def write_buf(self, buf: bytes) -> None:
         if self.request is not None:
@@ -110,12 +110,12 @@ class BridgeTransport(Transport):
             raise TransportException("Debugging not supported on legacy Bridge")
 
         self.device = device
-        self.session = None  # type: Optional[str]
+        self.session: Optional[str] = None
         self.debug = debug
         self.legacy = legacy
 
         if legacy:
-            self.handle = BridgeHandleLegacy(self)  # type: BridgeHandle
+            self.handle: BridgeHandle = BridgeHandleLegacy(self)
         else:
             self.handle = BridgeHandleModern(self)
 

@@ -31,12 +31,12 @@ _OWNERSHIP_ID_KEY_PATH = [b"SLIP-0019", b"Ownership identification key"]
 def generate_proof(
     node: bip32.HDNode,
     script_type: EnumTypeInputScriptType,
-    multisig: MultisigRedeemScriptType,
+    multisig: Optional[MultisigRedeemScriptType],
     coin: CoinInfo,
     user_confirmed: bool,
     ownership_ids: List[bytes],
     script_pubkey: bytes,
-    commitment_data: Optional[bytes],
+    commitment_data: bytes,
 ) -> Tuple[bytes, bytes]:
     flags = 0
     if user_confirmed:
@@ -52,8 +52,7 @@ def generate_proof(
 
     sighash = hashlib.sha256(proof)
     sighash.update(script_pubkey)
-    if commitment_data:
-        sighash.update(commitment_data)
+    sighash.update(commitment_data)
     signature = common.ecdsa_sign(node, sighash.digest())
     public_key = node.public_key()
     write_bip322_signature_proof(
@@ -66,7 +65,7 @@ def generate_proof(
 def verify_nonownership(
     proof: bytes,
     script_pubkey: bytes,
-    commitment_data: bytes,
+    commitment_data: Optional[bytes],
     keychain: Keychain,
     coin: CoinInfo,
 ) -> bool:
@@ -92,7 +91,8 @@ def verify_nonownership(
         proof_body = proof[: r.offset]
         sighash = hashlib.sha256(proof_body)
         sighash.update(script_pubkey)
-        sighash.update(commitment_data)
+        if commitment_data:
+            sighash.update(commitment_data)
         script_sig, witness = read_bip322_signature_proof(r)
 
         # We don't call verifier.ensure_hash_type() to avoid possible compatibility
@@ -111,4 +111,4 @@ def get_identifier(script_pubkey: bytes, keychain: Keychain) -> bytes:
     node = keychain.derive_slip21(_OWNERSHIP_ID_KEY_PATH)
 
     # id = HMAC-SHA256(key = k, msg = scriptPubKey)
-    return hmac.Hmac(node.key(), script_pubkey, hashlib.sha256).digest()
+    return hmac(hmac.SHA256, node.key(), script_pubkey).digest()

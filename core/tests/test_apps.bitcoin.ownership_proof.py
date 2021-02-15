@@ -6,7 +6,7 @@ from trezor.messages.HDNodeType import HDNodeType
 
 from apps.common import coins
 from apps.common.keychain import Keychain
-from apps.common.paths import HARDENED
+from apps.common.paths import HARDENED, AlwaysMatchingSchema
 from apps.bitcoin import ownership, scripts
 from apps.bitcoin.addresses import address_p2wpkh, address_p2wpkh_in_p2sh, address_multisig_p2wsh, address_multisig_p2wsh_in_p2sh, address_multisig_p2sh
 from apps.bitcoin.multisig import multisig_get_pubkeys
@@ -17,7 +17,7 @@ class TestOwnershipProof(unittest.TestCase):
     def test_p2wpkh_gen_proof(self):
         coin = coins.by_name('Bitcoin')
         seed = bip39.seed(' '.join(['all'] * 12), '')
-        keychain = Keychain(seed, coin.curve_name, [[84 | HARDENED]], [[b"SLIP-0019"]])
+        keychain = Keychain(seed, coin.curve_name, [AlwaysMatchingSchema], slip21_namespaces=[[b"SLIP-0019"]])
         commitment_data = b""
 
         node = keychain.derive([84 | HARDENED, 0 | HARDENED, 0 | HARDENED, 1, 0])
@@ -43,7 +43,7 @@ class TestOwnershipProof(unittest.TestCase):
     def test_p2wpkh_in_p2sh_gen_proof(self):
         coin = coins.by_name('Bitcoin')
         seed = bip39.seed(' '.join(['all'] * 12), '')
-        keychain = Keychain(seed, coin.curve_name, [[49 | HARDENED]], [[b"SLIP-0019"]])
+        keychain = Keychain(seed, coin.curve_name, [AlwaysMatchingSchema], slip21_namespaces=[[b"SLIP-0019"]])
         commitment_data = b""
 
         node = keychain.derive([49 | HARDENED, 0 | HARDENED, 0 | HARDENED, 1, 0])
@@ -70,7 +70,7 @@ class TestOwnershipProof(unittest.TestCase):
     def test_p2pkh_gen_proof(self):
         coin = coins.by_name('Bitcoin')
         seed = bip39.seed(' '.join(['all'] * 12), 'TREZOR')
-        keychain = Keychain(seed, coin.curve_name, [[44 | HARDENED]], [[b"SLIP-0019"]])
+        keychain = Keychain(seed, coin.curve_name, [AlwaysMatchingSchema], slip21_namespaces=[[b"SLIP-0019"]])
         commitment_data = b""
 
         node = keychain.derive([44 | HARDENED, 0 | HARDENED, 0 | HARDENED, 1, 0])
@@ -96,7 +96,7 @@ class TestOwnershipProof(unittest.TestCase):
     def test_p2wpkh_verify_proof(self):
         coin = coins.by_name('Bitcoin')
         seed = bip39.seed(' '.join(['all'] * 12), 'TREZOR')
-        keychain = Keychain(seed, coin.curve_name, [], [[b"SLIP-0019"]])
+        keychain = Keychain(seed, coin.curve_name, [AlwaysMatchingSchema], slip21_namespaces=[[b"SLIP-0019"]])
         commitment_data = b""
 
         # Proof for "all all ... all" seed without passphrase.
@@ -107,7 +107,7 @@ class TestOwnershipProof(unittest.TestCase):
     def test_p2wsh_gen_proof(self):
         coin = coins.by_name('Bitcoin')
         seed = bip39.seed(' '.join(['all'] * 12), '')
-        keychain = Keychain(seed, coin.curve_name, [[84 | HARDENED]], [[b"SLIP-0019"]])
+        keychain = Keychain(seed, coin.curve_name, [AlwaysMatchingSchema], slip21_namespaces=[[b"SLIP-0019"]])
         commitment_data = b"TREZOR"
 
         nodes = []
@@ -167,7 +167,7 @@ class TestOwnershipProof(unittest.TestCase):
     def test_p2wsh_in_p2sh_gen_proof(self):
         coin = coins.by_name('Bitcoin')
         seed = bip39.seed(' '.join(['all'] * 12), '')
-        keychain = Keychain(seed, coin.curve_name, [[49 | HARDENED]], [[b"SLIP-0019"]])
+        keychain = Keychain(seed, coin.curve_name, [AlwaysMatchingSchema], slip21_namespaces=[[b"SLIP-0019"]])
         commitment_data = b""
 
         nodes = []
@@ -241,7 +241,7 @@ class TestOwnershipProof(unittest.TestCase):
     def test_p2sh_gen_proof(self):
         coin = coins.by_name('Bitcoin')
         seed = bip39.seed(' '.join(['all'] * 12), '')
-        keychain = Keychain(seed, coin.curve_name, [[48 | HARDENED]], [[b"SLIP-0019"]])
+        keychain = Keychain(seed, coin.curve_name, [AlwaysMatchingSchema], slip21_namespaces=[[b"SLIP-0019"]])
         commitment_data = b"TREZOR"
 
         nodes = []

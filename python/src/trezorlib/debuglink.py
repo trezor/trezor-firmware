@@ -15,6 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import logging
+import textwrap
 from collections import namedtuple
 from copy import deepcopy
 
@@ -162,7 +163,7 @@ class DebugLink:
         self._call(messages.DebugLinkStop(), nowait=True)
 
     def reseed(self, value):
-        self._call(messages.DebugLinkReseedRandom(value=value))
+        return self._call(messages.DebugLinkReseedRandom(value=value))
 
     def start_recording(self, directory):
         self._call(messages.DebugLinkRecordScreen(target_directory=directory))
@@ -243,6 +244,96 @@ class DebugUI:
 
     def get_passphrase(self, available_on_device):
         return self.passphrase
+
+
+class MessageFilter:
+    def __init__(self, message_type, **fields):
+        self.message_type = message_type
+        self.fields = {}
+        self.update_fields(**fields)
+
+    def update_fields(self, **fields):
+        for name, value in fields.items():
+            try:
+                self.fields[name] = self.from_message_or_type(value)
+            except TypeError:
+                self.fields[name] = value
+
+        return self
+
+    @classmethod
+    def from_message_or_type(cls, message_or_type):
+        if isinstance(message_or_type, cls):
+            return message_or_type
+        if isinstance(message_or_type, protobuf.MessageType):
+            return cls.from_message(message_or_type)
+        if isinstance(message_or_type, type) and issubclass(
+            message_or_type, protobuf.MessageType
+        ):
+            return cls(message_or_type)
+        raise TypeError("Invalid kind of expected response")
+
+    @classmethod
+    def from_message(cls, message):
+        fields = {}
+        for fname, _, _ in message.get_fields().values():
+            value = getattr(message, fname)
+            if value in (None, [], protobuf.FLAG_REQUIRED):
+                continue
+            fields[fname] = value
+        return cls(type(message), **fields)
+
+    def match(self, message):
+        if type(message) != self.message_type:
+            return False
+
+        for field, expected_value in self.fields.items():
+            actual_value = getattr(message, field, None)
+            if isinstance(expected_value, MessageFilter):
+                if not expected_value.match(actual_value):
+                    return False
+            elif expected_value != actual_value:
+                return False
+
+        return True
+
+    def format(self, maxwidth=80):
+        fields = []
+        for fname, ftype, _ in self.message_type.get_fields().values():
+            if fname not in self.fields:
+                continue
+            value = self.fields[fname]
+            if isinstance(ftype, protobuf.EnumType) and isinstance(value, int):
+                field_str = ftype.to_str(value)
+            elif isinstance(value, MessageFilter):
+                field_str = value.format(maxwidth - 4)
+            elif isinstance(value, protobuf.MessageType):
+                field_str = protobuf.format_message(value)
+            else:
+                field_str = repr(value)
+            field_str = textwrap.indent(field_str, "    ").lstrip()
+            fields.append((fname, field_str))
+
+        pairs = ["{}={}".format(k, v) for k, v in fields]
+        oneline_str = ", ".join(pairs)
+        if len(oneline_str) < maxwidth:
+            return "{}({})".format(self.message_type.__name__, oneline_str)
+        else:
+            item = []
+            item.append("{}(".format(self.message_type.__name__))
+            for pair in pairs:
+                item.append("    {}".format(pair))
+            item.append(")")
+            return "\n".join(item)
+
+
+class MessageFilterGenerator:
+    def __getattr__(self, key):
+        message_type = getattr(messages, key)
+        return MessageFilter(message_type).update_fields
+
+
+message_filters = MessageFilterGenerator()
 
 
 class TrezorClientDebugLink(TrezorClient):
@@ -417,13 +508,15 @@ class TrezorClientDebugLink(TrezorClient):
             raise RuntimeError("Must be called inside 'with' statement")
 
         # make sure all items are (bool, message) tuples
-        expected_with_validity = [
+        expected_with_validity = (
             e if isinstance(e, tuple) else (True, e) for e in expected
-        ]
+        )
 
         # only apply those items that are (True, message)
         self.expected_responses = [
-            expected for valid, expected in expected_with_validity if valid
+            MessageFilter.from_message_or_type(expected)
+            for valid, expected in expected_with_validity
+            if valid
         ]
 
         self.current_response = 0
@@ -445,20 +538,6 @@ class TrezorClientDebugLink(TrezorClient):
 
     def _raw_read(self):
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
-
-        # if SCREENSHOT and self.debug:
-        #     from PIL import Image
-
-        #     layout = self.debug.state().layout
-        #     im = Image.new("RGB", (128, 64))
-        #     pix = im.load()
-        #     for x in range(128):
-        #         for y in range(64):
-        #             rx, ry = 127 - x, 63 - y
-        #             if (ord(layout[rx + (ry / 8) * 128]) & (1 << (ry % 8))) > 0:
-        #                 pix[x, y] = (255, 255, 255)
-        #     im.save("scr%05d.png" % self.screenshot_id)
-        #     self.screenshot_id += 1
 
         resp = super()._raw_read()
         resp = self._filter_message(resp)
@@ -483,23 +562,7 @@ class TrezorClientDebugLink(TrezorClient):
         for i in range(start_at, stop_at):
             exp = self.expected_responses[i]
             prefix = "    " if i != self.current_response else ">>> "
-            set_fields = {
-                key: value
-                for key, value in exp.__dict__.items()
-                if value is not None and value != []
-            }
-            oneline_str = ", ".join("{}={!r}".format(*i) for i in set_fields.items())
-            if len(oneline_str) < 60:
-                output.append(
-                    "{}{}({})".format(prefix, exp.__class__.__name__, oneline_str)
-                )
-            else:
-                item = []
-                item.append("{}{}(".format(prefix, exp.__class__.__name__))
-                for key, value in set_fields.items():
-                    item.append("{}    {}={!r}".format(prefix, key, value))
-                item.append("{})".format(prefix))
-                output.append("\n".join(item))
+            output.append(textwrap.indent(exp.format(), prefix))
         if stop_at < len(self.expected_responses):
             omitted = len(self.expected_responses) - stop_at
             output.append("    (...{} following responses omitted)".format(omitted))
@@ -507,7 +570,7 @@ class TrezorClientDebugLink(TrezorClient):
         output.append("")
         if msg is not None:
             output.append("Actually received:")
-            output.append(protobuf.format_message(msg))
+            output.append(textwrap.indent(protobuf.format_message(msg), "    "))
         else:
             output.append("This message was never received.")
         raise AssertionError("\n".join(output))
@@ -525,14 +588,8 @@ class TrezorClientDebugLink(TrezorClient):
 
         expected = self.expected_responses[self.current_response]
 
-        if msg.__class__ != expected.__class__:
+        if not expected.match(msg):
             self._raise_unexpected_response(msg)
-
-        for field, value in expected.__dict__.items():
-            if value is None or value == []:
-                continue
-            if getattr(msg, field) != value:
-                self._raise_unexpected_response(msg)
 
         self.current_response += 1
 

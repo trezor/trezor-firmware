@@ -4,8 +4,8 @@
 
 ### Environment
 
-Environment job builds the `ci/Dockerfile` and pushes the built docker image 
-into our GitLab registry. Since modifications of this Dockerfile are very rare 
+Environment job builds the `ci/Dockerfile` and pushes the built docker image
+into our GitLab registry. Since modifications of this Dockerfile are very rare
 this si a _manual_ job which needs to be triggered on GitLab.
 
 Almost all CI jobs run inside this docker image.

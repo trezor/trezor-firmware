@@ -110,8 +110,8 @@ def verify(
 
 def pubkey_from_privkey(privkey: Ed25519PrivateKey) -> Ed25519PublicPoint:
     """Interpret 32 bytes of data as an Ed25519 private key.
-     Calculate and return the corresponding public key.
-     """
+    Calculate and return the corresponding public key.
+    """
     return Ed25519PublicPoint(_ed25519.publickey_unsafe(privkey))
 
 

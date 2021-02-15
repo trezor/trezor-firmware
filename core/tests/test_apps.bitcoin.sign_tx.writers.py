@@ -1,6 +1,6 @@
 from common import *
 
-from trezor.messages.TxInputType import TxInputType
+from trezor.messages.TxInput import TxInput
 from trezor.messages import InputScriptType
 
 from apps.bitcoin import writers
@@ -8,7 +8,7 @@ from apps.bitcoin import writers
 
 class TestWriters(unittest.TestCase):
     def test_tx_input(self):
-        inp = TxInputType(
+        inp = TxInput(
             address_n=[0],
             amount=390000,
             prev_hash=unhexlify(
@@ -28,7 +28,7 @@ class TestWriters(unittest.TestCase):
             self.assertRaises(AssertionError, writers.write_tx_input, b, inp, inp.script_sig)
 
     def test_tx_input_check(self):
-        inp = TxInputType(
+        inp = TxInput(
             address_n=[0],
             amount=390000,
             prev_hash=unhexlify(

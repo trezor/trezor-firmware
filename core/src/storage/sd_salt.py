@@ -3,7 +3,6 @@ from micropython import const
 import storage.device
 from trezor import fatfs
 from trezor.crypto import hmac
-from trezor.crypto.hashlib import sha256
 from trezor.sdcard import with_filesystem
 from trezor.utils import consteq
 
@@ -26,7 +25,7 @@ def is_enabled() -> bool:
 
 
 def compute_auth_tag(salt: bytes, auth_key: bytes) -> bytes:
-    digest = hmac.new(auth_key, salt, sha256).digest()
+    digest = hmac(hmac.SHA256, auth_key, salt).digest()
     return digest[:SD_SALT_AUTH_TAG_LEN_BYTES]
 
 

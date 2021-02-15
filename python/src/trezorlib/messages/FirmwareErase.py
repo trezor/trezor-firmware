@@ -15,6 +15,7 @@ class FirmwareErase(p.MessageType):
 
     def __init__(
         self,
+        *,
         length: int = None,
     ) -> None:
         self.length = length
@@ -22,5 +23,5 @@ class FirmwareErase(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('length', p.UVarintType, 0),
+            1: ('length', p.UVarintType, None),
         }

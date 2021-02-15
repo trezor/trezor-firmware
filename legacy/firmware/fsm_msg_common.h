@@ -62,6 +62,8 @@ bool get_features(Features *resp) {
   if (session_isUnlocked()) {
     resp->has_wipe_code_protection = true;
     resp->wipe_code_protection = config_hasWipeCode();
+    resp->has_auto_lock_delay_ms = true;
+    resp->auto_lock_delay_ms = config_getAutoLockDelayMs();
   }
 
 #if BITCOIN_ONLY
@@ -354,8 +356,8 @@ void fsm_msgLockDevice(const LockDevice *msg) {
 
 void fsm_msgEndSession(const EndSession *msg) {
   (void)msg;
-  // TODO
-  fsm_sendFailure(FailureType_Failure_FirmwareError, "Not implemented");
+  session_endCurrentSession();
+  fsm_sendSuccess(_("Session ended"));
 }
 
 void fsm_msgApplySettings(const ApplySettings *msg) {

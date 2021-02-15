@@ -19,4 +19,4 @@ async def get_next_u2f_counter(
     text.normal("the U2F counter?")
     await require_confirm(ctx, text, code=ButtonRequestType.ProtectCall)
 
-    return NextU2FCounter(storage.device.next_u2f_counter())
+    return NextU2FCounter(u2f_counter=storage.device.next_u2f_counter())

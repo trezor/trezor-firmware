@@ -397,7 +397,9 @@ def validate_code_hashes(fw: c.Container, version: FirmwareFormat) -> None:
 def validate_onev2(fw: c.Container, allow_unsigned: bool = False) -> None:
     try:
         check_sig_v1(
-            digest_onev2(fw), fw.header.v1_key_indexes, fw.header.v1_signatures,
+            digest_onev2(fw),
+            fw.header.v1_key_indexes,
+            fw.header.v1_signatures,
         )
     except Unsigned:
         if not allow_unsigned:

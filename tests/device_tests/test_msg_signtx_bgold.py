@@ -62,14 +62,15 @@ class TestMsgSigntxBitcoinGold:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_25526b),
-                    request_input(0, TXHASH_25526b),
-                    request_output(0, TXHASH_25526b),
-                    request_output(1, TXHASH_25526b),
                     request_output(0),
                     request_output(1),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_25526b),
+                    request_input(0, TXHASH_25526b),
+                    request_output(0, TXHASH_25526b),
+                    request_output(1, TXHASH_25526b),
                     request_input(0),
                     request_output(0),
                     request_output(1),
@@ -110,6 +111,11 @@ class TestMsgSigntxBitcoinGold:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_input(1),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
                     request_meta(TXHASH_25526b),
                     request_input(0, TXHASH_25526b),
                     request_output(0, TXHASH_25526b),
@@ -119,9 +125,6 @@ class TestMsgSigntxBitcoinGold:
                     request_input(0, TXHASH_db77c2),
                     request_input(1, TXHASH_db77c2),
                     request_output(0, TXHASH_db77c2),
-                    request_output(0),
-                    proto.ButtonRequest(code=B.ConfirmOutput),
-                    proto.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_input(1),
                     request_output(0),
@@ -156,16 +159,16 @@ class TestMsgSigntxBitcoinGold:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
 
-        run_attack = False
+        attack_count = 2
 
         def attack_processor(msg):
-            nonlocal run_attack
+            nonlocal attack_count
 
             if msg.tx.inputs and msg.tx.inputs[0] == inp1:
-                if run_attack:
-                    msg.tx.inputs[0].address_n[2] = H_(1)
+                if attack_count > 0:
+                    attack_count -= 1
                 else:
-                    run_attack = True
+                    msg.tx.inputs[0].address_n[2] = H_(1)
 
             return msg
 
@@ -174,14 +177,15 @@ class TestMsgSigntxBitcoinGold:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_25526b),
-                    request_input(0, TXHASH_25526b),
-                    request_output(0, TXHASH_25526b),
-                    request_output(1, TXHASH_25526b),
                     request_output(0),
                     request_output(1),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_25526b),
+                    request_input(0, TXHASH_25526b),
+                    request_output(0, TXHASH_25526b),
+                    request_output(1, TXHASH_25526b),
                     request_input(0),
                     proto.Failure(code=proto.FailureType.ProcessError),
                 ]
@@ -193,7 +197,7 @@ class TestMsgSigntxBitcoinGold:
     def test_send_btg_multisig_change(self, client):
         nodes = [
             btc.get_public_node(
-                client, parse_path(f"48'/156'/{i}'"), coin_name="Bgold"
+                client, parse_path(f"48'/156'/{i}'/0'"), coin_name="Bgold"
             ).node
             for i in range(1, 4)
         ]
@@ -204,7 +208,7 @@ class TestMsgSigntxBitcoinGold:
             )
 
         inp1 = proto.TxInputType(
-            address_n=parse_path("48'/156'/3'/0/0"),
+            address_n=parse_path("48'/156'/3'/0'/0/0"),
             multisig=getmultisig(0, 0),
             # 33Ju286QvonBz5N1V754ZekQv4GLJqcc5R
             amount=1252382934,
@@ -218,7 +222,7 @@ class TestMsgSigntxBitcoinGold:
             script_type=proto.OutputScriptType.PAYTOADDRESS,
         )
         out2 = proto.TxOutputType(
-            address_n=parse_path("48'/156'/3'/1/0"),
+            address_n=parse_path("48'/156'/3'/0'/1/0"),
             multisig=getmultisig(1, 0),
             script_type=proto.OutputScriptType.PAYTOMULTISIG,
             amount=1252382934 - 24000 - 1000,
@@ -227,14 +231,15 @@ class TestMsgSigntxBitcoinGold:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_25526b),
-                    request_input(0, TXHASH_25526b),
-                    request_output(0, TXHASH_25526b),
-                    request_output(1, TXHASH_25526b),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
                     proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_25526b),
+                    request_input(0, TXHASH_25526b),
+                    request_output(0, TXHASH_25526b),
+                    request_output(1, TXHASH_25526b),
                     request_input(0),
                     request_output(0),
                     request_output(1),
@@ -247,11 +252,11 @@ class TestMsgSigntxBitcoinGold:
 
         assert (
             signatures[0].hex()
-            == "30440220271c46ef3d7c37bd499804128623da3aa0014f3b4447dd39c4573b23c4537f6902205329167b9eb48427af62b04bf5138295f4c38613f6ba955934d15c499bff0d8a"
+            == "30440220263c427e6e889c161206edee39b9b969350c154ddd8eb76d2ab8ca8e0fc083b702200fb1d0ef430fa2d0293dcbb0b237775d4f9748222a6ed9fc3ff747837b99020a"
         )
 
         inp1 = proto.TxInputType(
-            address_n=parse_path("48'/156'/1'/0/0"),
+            address_n=parse_path("48'/156'/1'/0'/0/0"),
             multisig=getmultisig(0, 0, [b"", b"", signatures[0]]),
             amount=1252382934,
             prev_hash=TXHASH_25526b,
@@ -264,14 +269,15 @@ class TestMsgSigntxBitcoinGold:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_25526b),
-                    request_input(0, TXHASH_25526b),
-                    request_output(0, TXHASH_25526b),
-                    request_output(1, TXHASH_25526b),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
                     proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_25526b),
+                    request_input(0, TXHASH_25526b),
+                    request_output(0, TXHASH_25526b),
+                    request_output(1, TXHASH_25526b),
                     request_input(0),
                     request_output(0),
                     request_output(1),
@@ -284,11 +290,11 @@ class TestMsgSigntxBitcoinGold:
 
         assert (
             signatures[0].hex()
-            == "3045022100bdf8c4bd14217c183612c7e8f79691f6479bcb35aa403f77d70182f58633ac6e02205b10a79b7894bb40248a120c8fcb7096a46950593e4c5b48a20bc5ebe53d85fa"
+            == "3045022100c9094b060b4b095e78403493912b0e06ca12ffbdc0f2fbeec20b02d7eaa73f8702206813e33e04a2b9c4493ecfa2024f2e9d69b5a2ab5c10433d9ab762add5bdde27"
         )
         assert (
             btc_hash(serialized_tx)[::-1].hex()
-            == "b45ba21b69e1e1c6ad79f5408fe70d92fb861742d239cb6a952213f60c253e40"
+            == "2677130ec0c5eea2249787fe17b85770cfb35dfce550830a7fb6c6acd9375114"
         )
 
     def test_send_p2sh(self, client):
@@ -313,15 +319,16 @@ class TestMsgSigntxBitcoinGold:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_25526b),
-                    request_input(0, TXHASH_25526b),
-                    request_output(0, TXHASH_25526b),
-                    request_output(1, TXHASH_25526b),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_25526b),
+                    request_input(0, TXHASH_25526b),
+                    request_output(0, TXHASH_25526b),
+                    request_output(1, TXHASH_25526b),
                     request_input(0),
                     request_output(0),
                     request_output(1),
@@ -360,14 +367,15 @@ class TestMsgSigntxBitcoinGold:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_25526b),
-                    request_input(0, TXHASH_25526b),
-                    request_output(0, TXHASH_25526b),
-                    request_output(1, TXHASH_25526b),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
                     proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_25526b),
+                    request_input(0, TXHASH_25526b),
+                    request_output(0, TXHASH_25526b),
+                    request_output(1, TXHASH_25526b),
                     request_input(0),
                     request_output(0),
                     request_output(1),
@@ -415,13 +423,14 @@ class TestMsgSigntxBitcoinGold:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
                     request_meta(TXHASH_25526b),
                     request_input(0, TXHASH_25526b),
                     request_output(0, TXHASH_25526b),
                     request_output(1, TXHASH_25526b),
-                    request_output(0),
-                    proto.ButtonRequest(code=B.ConfirmOutput),
-                    proto.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_output(0),
                     request_input(0),
@@ -438,13 +447,14 @@ class TestMsgSigntxBitcoinGold:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
                     request_meta(TXHASH_25526b),
                     request_input(0, TXHASH_25526b),
                     request_output(0, TXHASH_25526b),
                     request_output(1, TXHASH_25526b),
-                    request_output(0),
-                    proto.ButtonRequest(code=B.ConfirmOutput),
-                    proto.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_output(0),
                     request_input(0),
@@ -523,14 +533,15 @@ class TestMsgSigntxBitcoinGold:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_25526b),
-                    request_input(0, TXHASH_25526b),
-                    request_output(0, TXHASH_25526b),
-                    request_output(1, TXHASH_25526b),
                     request_input(1),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_25526b),
+                    request_input(0, TXHASH_25526b),
+                    request_output(0, TXHASH_25526b),
+                    request_output(1, TXHASH_25526b),
                     request_input(1),
                     request_meta(TXHASH_f55c5b),
                     request_input(0, TXHASH_f55c5b),

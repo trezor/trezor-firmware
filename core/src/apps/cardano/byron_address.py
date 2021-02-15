@@ -52,7 +52,7 @@ def get_address_attributes(protocol_magic: int) -> dict:
     return address_attributes
 
 
-def validate_output_byron_address(address: bytes, protocol_magic: int) -> None:
+def validate_byron_address(address: bytes, protocol_magic: int) -> None:
     address_data_encoded = _decode_address_raw(address)
     _validate_address_data_protocol_magic(address_data_encoded, protocol_magic)
 

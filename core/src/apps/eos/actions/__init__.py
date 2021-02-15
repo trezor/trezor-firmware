@@ -3,8 +3,8 @@ from trezor.messages.EosTxActionAck import EosTxActionAck
 from trezor.messages.EosTxActionRequest import EosTxActionRequest
 from trezor.utils import HashWriter
 
-from apps.eos import helpers, writers
-from apps.eos.actions import layout
+from .. import helpers, writers
+from . import layout
 
 if False:
     from trezor import wire
@@ -67,8 +67,7 @@ async def process_action(
         await process_unknown_action(ctx, w, action)
 
     writers.write_action_common(sha, action.common)
-    writers.write_variant32(sha, len(w))
-    writers.write_bytes_unchecked(sha, w)
+    writers.write_bytes_prefixed(sha, w)
 
 
 async def process_unknown_action(

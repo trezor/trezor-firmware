@@ -25,12 +25,14 @@ def list_credentials(client):
 
 @expect(messages.Success, field="message")
 def add_credential(client, credential_id):
-    return client.call(messages.WebAuthnAddResidentCredential(credential_id))
+    return client.call(
+        messages.WebAuthnAddResidentCredential(credential_id=credential_id)
+    )
 
 
 @expect(messages.Success, field="message")
 def remove_credential(client, index):
-    return client.call(messages.WebAuthnRemoveResidentCredential(index))
+    return client.call(messages.WebAuthnRemoveResidentCredential(index=index))
 
 
 @expect(messages.Success, field="message")

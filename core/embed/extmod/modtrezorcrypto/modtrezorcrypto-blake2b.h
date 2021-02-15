@@ -131,12 +131,13 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Blake2b_update_obj,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_Blake2b_digest(mp_obj_t self) {
   mp_obj_Blake2b_t *o = MP_OBJ_TO_PTR(self);
-  uint8_t out[BLAKE2B_DIGEST_LENGTH] = {0};
   BLAKE2B_CTX ctx = {0};
   memcpy(&ctx, &(o->ctx), sizeof(BLAKE2B_CTX));
-  blake2b_Final(&ctx, out, ctx.outlen);
+  vstr_t hash = {0};
+  vstr_init_len(&hash, ctx.outlen);
+  blake2b_Final(&ctx, (uint8_t *)hash.buf, hash.len);
   memzero(&ctx, sizeof(BLAKE2B_CTX));
-  return mp_obj_new_bytes(out, o->ctx.outlen);
+  return mp_obj_new_str_from_vstr(&mp_type_bytes, &hash);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Blake2b_digest_obj,
                                  mod_trezorcrypto_Blake2b_digest);

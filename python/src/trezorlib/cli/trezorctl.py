@@ -145,7 +145,10 @@ def configure_logging(verbose: int):
     "-j", "--json", "is_json", is_flag=True, help="Print result as JSON object"
 )
 @click.option(
-    "-P", "--passphrase-on-host", is_flag=True, help="Enter passphrase on host.",
+    "-P",
+    "--passphrase-on-host",
+    is_flag=True,
+    help="Enter passphrase on host.",
 )
 @click.option(
     "-s",
@@ -159,7 +162,7 @@ def configure_logging(verbose: int):
 def cli(ctx, path, verbose, is_json, passphrase_on_host, session_id):
     configure_logging(verbose)
 
-    if session_id:
+    if session_id is not None:
         try:
             session_id = bytes.fromhex(session_id)
         except ValueError:
@@ -216,6 +219,7 @@ def list_devices(no_resolve):
     for transport in enumerate_devices():
         client = TrezorClient(transport, ui=ui.ClickUI())
         click.echo("{} - {}".format(transport, format_device_name(client.features)))
+        client.end_session()
 
 
 @cli.command()
@@ -241,8 +245,8 @@ def ping(client, message, button_protection):
 
 
 @cli.command()
-@with_client
-def get_session(client):
+@click.pass_obj
+def get_session(obj):
     """Get a session ID for subsequent commands.
 
     Unlocks Trezor with a passphrase and returns a session ID. Use this session ID with
@@ -252,17 +256,20 @@ def get_session(client):
     The session ID is valid until another client starts using Trezor, until the next
     get-session call, or until Trezor is disconnected.
     """
-    from ..btc import get_address
-    from ..client import PASSPHRASE_TEST_PATH
+    # make sure session is not resumed
+    obj.session_id = None
 
-    if client.features.model == "1" and client.version < (1, 9, 0):
-        raise click.ClickException("Upgrade your firmware to enable session support.")
+    with obj.client_context() as client:
+        if client.features.model == "1" and client.version < (1, 9, 0):
+            raise click.ClickException(
+                "Upgrade your firmware to enable session support."
+            )
 
-    get_address(client, "Testnet", PASSPHRASE_TEST_PATH)
-    if client.session_id is None:
-        raise click.ClickException("Passphrase not enabled or firmware too old.")
-    else:
-        return client.session_id.hex()
+        client.ensure_unlocked()
+        if client.session_id is None:
+            raise click.ClickException("Passphrase not enabled or firmware too old.")
+        else:
+            return client.session_id.hex()
 
 
 @cli.command()
@@ -286,7 +293,7 @@ def usb_reset():
     This can fix LIBUSB_ERROR_PIPE and similar errors when connecting to a device
     in a messed state.
     """
-    from trezorlib.transport.webusb import WebUsbTransport
+    from ..transport.webusb import WebUsbTransport
 
     WebUsbTransport.enumerate(usb_reset=True)
 

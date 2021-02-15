@@ -9,8 +9,8 @@ from trezor.ui.word_select import WordSelector
 from apps.common import button_request
 from apps.common.confirm import confirm, info_confirm, require_confirm
 from apps.common.layout import show_success, show_warning
-from apps.management import backup_types
 
+from .. import backup_types
 from . import word_validity
 from .keyboard_bip39 import Bip39Keyboard
 from .keyboard_slip39 import Slip39Keyboard
@@ -53,12 +53,12 @@ async def request_mnemonic(
 ) -> Optional[str]:
     await button_request(ctx, code=ButtonRequestType.MnemonicInput)
 
-    words = []  # type: List[str]
+    words: List[str] = []
     for i in range(word_count):
         if backup_types.is_slip39_word_count(word_count):
-            keyboard = Slip39Keyboard(
+            keyboard: Union[Slip39Keyboard, Bip39Keyboard] = Slip39Keyboard(
                 "Type word %s of %s:" % (i + 1, word_count)
-            )  # type: Union[Slip39Keyboard, Bip39Keyboard]
+            )
         else:
             keyboard = Bip39Keyboard("Type word %s of %s:" % (i + 1, word_count))
 
@@ -86,7 +86,7 @@ async def show_remaining_shares(
     shares_remaining: List[int],
     group_threshold: int,
 ) -> None:
-    pages = []  # type: List[ui.Component]
+    pages: List[ui.Component] = []
     for remaining, group in groups:
         if 0 < remaining < MAX_SHARE_COUNT:
             text = Text("Remaining Shares")
@@ -206,10 +206,10 @@ async def show_group_threshold_reached(ctx: wire.GenericContext) -> None:
 
 class RecoveryHomescreen(ui.Component):
     def __init__(self, text: str, subtext: str = None):
+        super().__init__()
         self.text = text
         self.subtext = subtext
         self.dry_run = storage.recovery.is_dry_run()
-        self.repaint = True
 
     def on_render(self) -> None:
         if not self.repaint:

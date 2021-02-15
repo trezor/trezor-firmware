@@ -5,9 +5,10 @@ from trezor.messages.WebAuthnAddResidentCredential import WebAuthnAddResidentCre
 from trezor.ui.text import Text
 
 from apps.common.confirm import require_confirm
-from apps.webauthn.confirm import ConfirmContent, ConfirmInfo
-from apps.webauthn.credential import Fido2Credential
-from apps.webauthn.resident_credentials import store_resident_credential
+
+from .confirm import ConfirmContent, ConfirmInfo
+from .credential import Fido2Credential
+from .resident_credentials import store_resident_credential
 
 if False:
     from typing import Optional
@@ -15,6 +16,7 @@ if False:
 
 class ConfirmAddCredential(ConfirmInfo):
     def __init__(self, cred: Fido2Credential):
+        super().__init__()
         self._cred = cred
         self.load_icon(cred.rp_id_hash)
 

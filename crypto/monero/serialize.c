@@ -37,7 +37,7 @@ int xmr_read_varint(uint8_t *buff, size_t buff_size, uint64_t *val) {
 
   for (int shift = 0; read < buff_size; shift += 7, ++read) {
     uint8_t byte = buff[read];
-    if (byte == 0 && shift != 0) {
+    if ((byte == 0 && shift != 0) || (shift >= 63 && byte > 1)) {
       return -1;
     }
 

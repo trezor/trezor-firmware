@@ -4,16 +4,19 @@ core unix coverage posttest:
   stage: posttest
   variables:
     COVERAGE_THRESHOLD: "78"
-  needs: ["core device test", "core monero test", "core u2f test", "core fido2 test"]
+  needs:
+    - core device test
+    - core monero test
+    - core u2f test
+    - core fido2 test
   script:
-    - nix-shell --run "pipenv run make -C core res"  # we need to regenerate resources.py
-    - nix-shell --run "pipenv run make -C core coverage"
+    - nix-shell --run "poetry run make -C core coverage"
   coverage: '/COVERAGE: \d+%/'
   artifacts:
     name: core-unix-coverage-posttest
     paths:
-    - core/.coverage.*
-    - core/htmlcov
+      - core/.coverage.*
+      - core/htmlcov
     when: always
     expire_in: 1 week
 
@@ -21,12 +24,13 @@ core unix ui changes:
   stage: posttest
   except:
     - master
-  needs: ["core device ui test"]
+  needs:
+    - core device ui test
   script:
-    - nix-shell --run "cd tests/ui_tests ; pipenv run python reporting/report_master_diff.py"
+    - nix-shell --run "cd tests/ui_tests ; poetry run python reporting/report_master_diff.py"
     - mv tests/ui_tests/reporting/reports/master_diff/ .
   artifacts:
     name: core-unix-ui-changes
     paths:
-    - master_diff
+      - master_diff
     expire_in: 1 week

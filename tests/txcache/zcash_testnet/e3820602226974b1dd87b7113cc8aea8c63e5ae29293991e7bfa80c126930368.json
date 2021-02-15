@@ -9,6 +9,8 @@
       "script_pubkey": "76a91474374446b18916decd3292384ea73006ebd268ba88ac"
     }
   ],
+  "expiry": 261318,
+  "extra_data": "00",
   "inputs": [
     {
       "prev_hash": "4e8e8c5a5524cb8b20d05aefd5b1fd004d6c8c584e3e314876f13edb5ba0eead",
@@ -23,8 +25,6 @@
       "sequence": 4294967294
     }
   ],
-  "expiry": 261318,
-  "extra_data": "00",
   "lock_time": 261287,
   "version": 3,
   "version_group_id": 63210096

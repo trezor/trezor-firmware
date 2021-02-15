@@ -15,6 +15,7 @@ class CosiSign(p.MessageType):
 
     def __init__(
         self,
+        *,
         address_n: List[int] = None,
         data: bytes = None,
         global_commitment: bytes = None,
@@ -29,7 +30,7 @@ class CosiSign(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            2: ('data', p.BytesType, 0),
-            3: ('global_commitment', p.BytesType, 0),
-            4: ('global_pubkey', p.BytesType, 0),
+            2: ('data', p.BytesType, None),
+            3: ('global_commitment', p.BytesType, None),
+            4: ('global_pubkey', p.BytesType, None),
         }

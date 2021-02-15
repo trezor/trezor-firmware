@@ -15,6 +15,7 @@ class NextU2FCounter(p.MessageType):
 
     def __init__(
         self,
+        *,
         u2f_counter: int = None,
     ) -> None:
         self.u2f_counter = u2f_counter
@@ -22,5 +23,5 @@ class NextU2FCounter(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('u2f_counter', p.UVarintType, 0),
+            1: ('u2f_counter', p.UVarintType, None),
         }

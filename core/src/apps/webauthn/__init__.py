@@ -1,7 +1,7 @@
 from trezor import loop, wire
 from trezor.messages import MessageType
 
-from apps.webauthn.fido2 import handle_reports
+from .fido2 import handle_reports
 
 
 def boot() -> None:
@@ -20,4 +20,5 @@ def boot() -> None:
     )
     import usb
 
-    loop.schedule(handle_reports(usb.iface_webauthn))
+    if usb.ENABLE_IFACE_WEBAUTHN:
+        loop.schedule(handle_reports(usb.iface_webauthn))

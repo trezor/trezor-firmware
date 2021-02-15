@@ -17,6 +17,7 @@ class MoneroTransactionSetOutputAck(p.MessageType):
 
     def __init__(
         self,
+        *,
         tx_out: bytes = None,
         vouti_hmac: bytes = None,
         rsig_data: MoneroTransactionRsigData = None,
@@ -32,9 +33,9 @@ class MoneroTransactionSetOutputAck(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('tx_out', p.BytesType, 0),
-            2: ('vouti_hmac', p.BytesType, 0),
-            3: ('rsig_data', MoneroTransactionRsigData, 0),
-            4: ('out_pk', p.BytesType, 0),
-            5: ('ecdh_info', p.BytesType, 0),
+            1: ('tx_out', p.BytesType, None),
+            2: ('vouti_hmac', p.BytesType, None),
+            3: ('rsig_data', MoneroTransactionRsigData, None),
+            4: ('out_pk', p.BytesType, None),
+            5: ('ecdh_info', p.BytesType, None),
         }

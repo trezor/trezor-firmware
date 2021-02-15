@@ -119,7 +119,7 @@ async def _require_confirm_output(
 async def _require_confirm_payment_id(ctx, payment_id: bytes):
     if not await common.naive_pagination(
         ctx,
-        [ui.MONO] + list(chunks(hexlify(payment_id), 16)),
+        [ui.MONO] + list(chunks(hexlify(payment_id).decode(), 16)),
         "Payment ID",
         ui.ICON_SEND,
         ui.GREEN,
@@ -143,6 +143,7 @@ async def _require_confirm_unlock_time(ctx, unlock_time):
 
 class TransactionStep(ui.Component):
     def __init__(self, state, info):
+        super().__init__()
         self.state = state
         self.info = info
 
@@ -159,6 +160,7 @@ class TransactionStep(ui.Component):
 
 class KeyImageSyncStep(ui.Component):
     def __init__(self, current, total_num):
+        super().__init__()
         self.current = current
         self.total_num = total_num
 
@@ -172,6 +174,7 @@ class KeyImageSyncStep(ui.Component):
 
 class LiveRefreshStep(ui.Component):
     def __init__(self, current):
+        super().__init__()
         self.current = current
 
     def on_render(self):

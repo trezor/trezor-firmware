@@ -19,6 +19,8 @@ import pytest
 from trezorlib import device, messages
 from trezorlib.exceptions import TrezorFailure
 
+from ..common import get_test_address
+
 PIN4 = "1234"
 PIN6 = "789456"
 
@@ -27,18 +29,18 @@ pytestmark = pytest.mark.skip_t2
 
 
 def _check_pin(client, pin):
-    client.clear_session()
+    client.lock()
     with client:
         client.use_pin_sequence([pin])
-        client.set_expected_responses([messages.PinMatrixRequest(), messages.Address()])
-        client.call(messages.GetAddress())
+        client.set_expected_responses([messages.PinMatrixRequest, messages.Address])
+        get_test_address(client)
 
 
 def _check_no_pin(client):
-    client.clear_session()
+    client.lock()
     with client:
-        client.set_expected_responses([messages.Address()])
-        client.call(messages.GetAddress())
+        client.set_expected_responses([messages.Address])
+        get_test_address(client)
 
 
 def test_set_pin(client):
@@ -53,10 +55,10 @@ def test_set_pin(client):
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
-                messages.PinMatrixRequest(),
-                messages.PinMatrixRequest(),
-                messages.Success(),
-                messages.Features(),
+                messages.PinMatrixRequest,
+                messages.PinMatrixRequest,
+                messages.Success,
+                messages.Features,
             ]
         )
         device.change_pin(client)
@@ -79,11 +81,11 @@ def test_change_pin(client):
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
-                messages.PinMatrixRequest(),
-                messages.PinMatrixRequest(),
-                messages.PinMatrixRequest(),
-                messages.Success(),
-                messages.Features(),
+                messages.PinMatrixRequest,
+                messages.PinMatrixRequest,
+                messages.PinMatrixRequest,
+                messages.Success,
+                messages.Features,
             ]
         )
         device.change_pin(client)
@@ -106,9 +108,9 @@ def test_remove_pin(client):
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
-                messages.PinMatrixRequest(),
-                messages.Success(),
-                messages.Features(),
+                messages.PinMatrixRequest,
+                messages.Success,
+                messages.Features,
             ]
         )
         device.change_pin(client, remove=True)
@@ -130,9 +132,9 @@ def test_set_mismatch(client):
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
-                messages.PinMatrixRequest(),
-                messages.PinMatrixRequest(),
-                messages.Failure(),
+                messages.PinMatrixRequest,
+                messages.PinMatrixRequest,
+                messages.Failure,
             ]
         )
         device.change_pin(client)
@@ -153,10 +155,10 @@ def test_change_mismatch(client):
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
-                messages.PinMatrixRequest(),
-                messages.PinMatrixRequest(),
-                messages.PinMatrixRequest(),
-                messages.Failure(),
+                messages.PinMatrixRequest,
+                messages.PinMatrixRequest,
+                messages.PinMatrixRequest,
+                messages.Failure,
             ]
         )
         device.change_pin(client)

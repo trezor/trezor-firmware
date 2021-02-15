@@ -28,6 +28,10 @@ def build_map():
         if msg_name.startswith("__"):
             continue
 
+        if msg_name == "Literal":
+            # TODO: remove this when we have a good implementation of enums
+            continue
+
         try:
             msg_class = getattr(messages, msg_name)
         except AttributeError:

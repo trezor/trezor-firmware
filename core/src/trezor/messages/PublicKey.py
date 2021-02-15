@@ -17,15 +17,19 @@ class PublicKey(p.MessageType):
 
     def __init__(
         self,
+        *,
         node: HDNodeType = None,
         xpub: str = None,
+        root_fingerprint: int = None,
     ) -> None:
         self.node = node
         self.xpub = xpub
+        self.root_fingerprint = root_fingerprint
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('node', HDNodeType, 0),
-            2: ('xpub', p.UnicodeType, 0),
+            1: ('node', HDNodeType, None),
+            2: ('xpub', p.UnicodeType, None),
+            3: ('root_fingerprint', p.UVarintType, None),
         }

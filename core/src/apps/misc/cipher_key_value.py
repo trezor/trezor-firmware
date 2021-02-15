@@ -1,15 +1,15 @@
 from trezor import wire
 from trezor.crypto import aes, hmac
-from trezor.crypto.hashlib import sha512
 from trezor.messages.CipheredKeyValue import CipheredKeyValue
 from trezor.ui.text import Text
 
 from apps.common.confirm import require_confirm
 from apps.common.keychain import get_keychain
+from apps.common.paths import AlwaysMatchingSchema
 
 
 async def cipher_key_value(ctx, msg):
-    keychain = await get_keychain(ctx, "secp256k1", [[]])
+    keychain = await get_keychain(ctx, "secp256k1", [AlwaysMatchingSchema])
 
     if len(msg.value) % 16 > 0:
         raise wire.DataError("Value length must be a multiple of 16")
@@ -34,7 +34,7 @@ def compute_cipher_key_value(msg, seckey: bytes) -> bytes:
     data = msg.key
     data += "E1" if msg.ask_on_encrypt else "E0"
     data += "D1" if msg.ask_on_decrypt else "D0"
-    data = hmac.new(seckey, data, sha512).digest()
+    data = hmac(hmac.SHA512, seckey, data).digest()
     key = data[:32]
     if msg.iv and len(msg.iv) == 16:
         iv = msg.iv

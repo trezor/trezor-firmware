@@ -15,6 +15,7 @@ class WebAuthnRemoveResidentCredential(p.MessageType):
 
     def __init__(
         self,
+        *,
         index: int = None,
     ) -> None:
         self.index = index
@@ -22,5 +23,5 @@ class WebAuthnRemoveResidentCredential(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('index', p.UVarintType, 0),
+            1: ('index', p.UVarintType, None),
         }

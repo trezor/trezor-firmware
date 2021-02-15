@@ -19,7 +19,7 @@
  * ==========================(LICENSE BEGIN)============================
  *
  * Copyright (c) 2007-2010  Projet RNRT SAPHIR
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -27,10 +27,10 @@
  * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -102,6 +102,14 @@ typedef int64_t sph_s64;
  * ARM, little-endian.
  */
 #elif defined __arm__ && __ARMEL__
+
+#define SPH_DETECT_LITTLE_ENDIAN     1
+#define SPH_DETECT_BIG_ENDIAN        0
+
+/*
+ * ARM64, little-endian.
+ */
+#elif defined __aarch64__
 
 #define SPH_DETECT_LITTLE_ENDIAN     1
 #define SPH_DETECT_BIG_ENDIAN        0

@@ -16,6 +16,7 @@ class MoneroTransactionDestinationEntry(p.MessageType):
 
     def __init__(
         self,
+        *,
         amount: int = None,
         addr: MoneroAccountPublicAddress = None,
         is_subaddress: bool = None,
@@ -31,9 +32,9 @@ class MoneroTransactionDestinationEntry(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('amount', p.UVarintType, 0),
-            2: ('addr', MoneroAccountPublicAddress, 0),
-            3: ('is_subaddress', p.BoolType, 0),
-            4: ('original', p.BytesType, 0),
-            5: ('is_integrated', p.BoolType, 0),
+            1: ('amount', p.UVarintType, None),
+            2: ('addr', MoneroAccountPublicAddress, None),
+            3: ('is_subaddress', p.BoolType, None),
+            4: ('original', p.BytesType, None),
+            5: ('is_integrated', p.BoolType, None),
         }

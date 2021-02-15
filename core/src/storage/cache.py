@@ -1,7 +1,8 @@
+from trezor import wire
 from trezor.crypto import random
 
 if False:
-    from typing import Optional, Dict, List
+    from typing import Optional, Dict, List, Any
 
 _MAX_SESSIONS_COUNT = 10
 _SESSIONLESS_FLAG = 128
@@ -14,12 +15,13 @@ APP_BASE_AUTHORIZATION = 3
 
 # Keys that are valid across sessions
 APP_COMMON_SEED_WITHOUT_PASSPHRASE = 1 | _SESSIONLESS_FLAG
+APP_COMMON_SAFETY_CHECKS_TEMPORARY = 2 | _SESSIONLESS_FLAG
 
 
-_active_session_id = None  # type: Optional[bytes]
-_caches = {}  # type: Dict[bytes, Dict[int, Any]]
-_session_ids = []  # type: List[bytes]
-_sessionless_cache = {}  # type: Dict[int, Any]
+_active_session_id: Optional[bytes] = None
+_caches: Dict[bytes, Dict[int, Any]] = {}
+_session_ids: List[bytes] = []
+_sessionless_cache: Dict[int, Any] = {}
 
 if False:
     from typing import Any, Callable, TypeVar
@@ -52,6 +54,19 @@ def start_session(received_session_id: bytes = None) -> bytes:
     return _active_session_id
 
 
+def end_current_session() -> None:
+    global _active_session_id
+
+    if _active_session_id is None:
+        return
+
+    current_session_id = _active_session_id
+    _active_session_id = None
+
+    _session_ids.remove(current_session_id)
+    del _caches[current_session_id]
+
+
 def is_session_started() -> bool:
     return _active_session_id is not None
 
@@ -61,7 +76,7 @@ def set(key: int, value: Any) -> None:
         _sessionless_cache[key] = value
         return
     if _active_session_id is None:
-        raise RuntimeError  # no session active
+        raise wire.InvalidSession
     _caches[_active_session_id][key] = value
 
 
@@ -69,7 +84,7 @@ def get(key: int) -> Any:
     if key & _SESSIONLESS_FLAG:
         return _sessionless_cache.get(key)
     if _active_session_id is None:
-        raise RuntimeError  # no session active
+        raise wire.InvalidSession
     return _caches[_active_session_id].get(key)
 
 
@@ -79,7 +94,7 @@ def delete(key: int) -> None:
             del _sessionless_cache[key]
         return
     if _active_session_id is None:
-        raise RuntimeError  # no session active
+        raise wire.InvalidSession
     if key in _caches[_active_session_id]:
         del _caches[_active_session_id][key]
 

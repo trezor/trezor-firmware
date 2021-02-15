@@ -2,7 +2,7 @@
 
 _This documentation can also be found at [docs.trezor.io](https://docs.trezor.io) where it is available in a HTML-built version compiled using [mdBook](https://github.com/rust-lang/mdBook)._
 
-Welcome to the Trezor Firmware repository. This repository is so called _monorepo_, it contains several different yet very related projects that together form the Trezor Firmware ecosystem. 
+Welcome to the Trezor Firmware repository. This repository is so called _monorepo_, it contains several different yet very related projects that together form the Trezor Firmware ecosystem.
 
 ## Repository Structure
 

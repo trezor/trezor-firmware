@@ -145,5 +145,5 @@ both T1 and TT with both older and newer firmwares.
    of `state` as `stored_session_id`, and respond with `Deprecated_PassphraseStateAck`
    with no fields set.
 
-Note: up to 64 bytes may be required to store the session ID. Firmwares < 2.3.0 use a 
+Note: up to 64 bytes may be required to store the session ID. Firmwares < 2.3.0 use a
 64-byte value, newer firmwares use a 32-byte value.

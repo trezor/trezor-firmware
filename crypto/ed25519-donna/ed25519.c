@@ -142,7 +142,7 @@ ED25519_FN(ed25519_sign_ext) (const unsigned char *m, size_t mlen, const ed25519
 	hash_512bits extsk = {0}, hashr = {0}, hram = {0};
 
 	/* we don't stretch the key through hashing first since its already 64 bytes */
-	
+
 	memcpy(extsk, sk, 32);
 	memcpy(extsk+32, skext, 32);
 

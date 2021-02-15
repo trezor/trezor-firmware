@@ -15,7 +15,7 @@ The root is an object with the following attributes:
   missing, `"Bitcoin"` is used.
 * __`inputs`__: array of `TxInputType` objects. Must be present.
 * __`outputs`__: array of `TxOutputType` objects. Must be present.
-* __`details`__: object of type `SignTx`, specifying transaction metadata. Can be
+* __`details`__: object whose keys correspond to metadata on the `SignTx` type. Can be
   omitted.
 * __`prev_txes`__: object whose keys are hex-encoded transaction hashes, and values are
   objects of type `TransactionType`. When signing a transaction with non-SegWit inputs,
@@ -92,7 +92,6 @@ message TxOutputType {
     optional MultisigRedeemScriptType multisig = 5; // multisig output definition
     optional bytes op_return_data = 6;              // defines op_return data
     optional uint32 decred_script_version = 7;      // only for Decred
- 
 ```
 
 All outputs must have an `amount` and a `script_type`.
@@ -112,10 +111,8 @@ set.
 
 ### Transaction metadata
 
-The following is a shortened definition of the `SignTx` protobuf message. Note that it
-is possible to set fields `outputs_count`, `inputs_count` and `coin_name`, but their
-values will be ignored. Instead, the number of elements in `outputs`, `inputs`, and the
-value of `coin_name` from root object will be used.
+The following is a shortened definition of the `SignTx` protobuf message, containing
+all possible fields that are accepted in the `details` object.
 
 All fields are optional unless required by your currency.
 
@@ -124,7 +121,6 @@ message SignTx {
     optional uint32 version = 4;           // transaction version
     optional uint32 lock_time = 5;         // transaction lock_time
     optional uint32 expiry = 6;            // only for Decred and Zcash
-    optional bool overwintered = 7;        // only for Zcash
     optional uint32 version_group_id = 8;  // only for Zcash, nVersionGroupId when overwintered is set
     optional uint32 timestamp = 9;         // only for Peercoin, transaction timestamp
     optional uint32 branch_id = 10;        // only for Zcash, BRANCH_ID when overwintered is set
@@ -193,13 +189,13 @@ Otherwise the encoding is identical:
 
 The JSON below encodes a transaction with the following inputs:
 
-* [e9cec1644db8fa95fe639a9b503a63ea587d2f4e480d3847703e3ec73adf6b5a](https://btc5.trezor.io/tx/e9cec1644db8fa95fe639a9b503a63ea587d2f4e480d3847703e3ec73adf6b5a)  
-  output **0** (P2PKH address 1Jw5FrKhi2aWbbF4h3QRWLog5AjsJYGswv)  
-  at derivation path **m/44'/0'/0'/0/282**  
+* [e9cec1644db8fa95fe639a9b503a63ea587d2f4e480d3847703e3ec73adf6b5a](https://btc5.trezor.io/tx/e9cec1644db8fa95fe639a9b503a63ea587d2f4e480d3847703e3ec73adf6b5a)
+  output **0** (P2PKH address 1Jw5FrKhi2aWbbF4h3QRWLog5AjsJYGswv)
+  at derivation path **m/44'/0'/0'/0/282**
   amount **85 170** sat
-* [1f545c0ca1f2c055e199c70457025c1e393edd013a274a976187115a5c601155](https://btc5.trezor.io/tx/1f545c0ca1f2c055e199c70457025c1e393edd013a274a976187115a5c601155)  
-  output **0** (P2SH-SegWit address 3DEAk9KGrgvj2gHQ1hyfCXus9hZr9K8Beh)  
-  at derivation path **m/49'/0'/0'/0/55**  
+* [1f545c0ca1f2c055e199c70457025c1e393edd013a274a976187115a5c601155](https://btc5.trezor.io/tx/1f545c0ca1f2c055e199c70457025c1e393edd013a274a976187115a5c601155)
+  output **0** (P2SH-SegWit address 3DEAk9KGrgvj2gHQ1hyfCXus9hZr9K8Beh)
+  at derivation path **m/49'/0'/0'/0/55**
   amount **500 000** sat
 
 And the following outputs:

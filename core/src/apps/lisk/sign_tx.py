@@ -8,14 +8,15 @@ from trezor.messages.LiskSignedTx import LiskSignedTx
 from trezor.utils import HashWriter
 
 from apps.common import paths
-from apps.common.keychain import with_slip44_keychain
-from apps.lisk import CURVE, SLIP44_ID, layout
-from apps.lisk.helpers import get_address_from_public_key, validate_full_path
+from apps.common.keychain import auto_keychain
+
+from . import layout
+from .helpers import get_address_from_public_key
 
 
-@with_slip44_keychain(SLIP44_ID, CURVE, allow_testnet=True)
+@auto_keychain(__name__)
 async def sign_tx(ctx, msg, keychain):
-    await paths.validate_path(ctx, validate_full_path, keychain, msg.address_n, CURVE)
+    await paths.validate_path(ctx, keychain, msg.address_n)
 
     pubkey, seckey = _get_keys(keychain, msg)
     transaction = _update_raw_tx(msg.transaction, pubkey)

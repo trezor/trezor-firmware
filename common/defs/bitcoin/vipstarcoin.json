@@ -17,6 +17,8 @@
   "xpub_magic": 76067358,
   "xpub_magic_segwit_p2sh": 77429938,
   "xpub_magic_segwit_native": 78792518,
+  "xpub_magic_multisig_segwit_p2sh": 76067358,
+  "xpub_magic_multisig_segwit_native": 76067358,
   "bech32_prefix": "vips",
   "cashaddr_prefix": null,
   "slip44": 1919,
@@ -35,12 +37,6 @@
   "uri_prefix": "vipstarcoin",
   "min_address_length": 27,
   "max_address_length": 36,
-  "bitcore": [
-    "https://insight.vipstarco.in"
-  ],
-  "blockbook": [
-    "https://vips.blockbook.japanesecoin-pool.work"
-  ],
   "negative_fee": false,
   "cooldown": 100,
   "consensus_branch_id": null,

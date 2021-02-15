@@ -39,7 +39,7 @@ def cli():
 
 @cli.command()
 @click.argument("file", type=click.File("r"))
-@click.option("-f", "--file", is_flag=True, hidden=True, expose_value=False)
+@click.option("-f", "--file", "_ignore", is_flag=True, hidden=True, expose_value=False)
 @click.option(
     "-p", "--protocol-magic", type=int, default=cardano.PROTOCOL_MAGICS["mainnet"]
 )
@@ -57,7 +57,8 @@ def sign_tx(client, file, protocol_magic, network_id, testnet):
     inputs = [cardano.create_input(input) for input in transaction["inputs"]]
     outputs = [cardano.create_output(output) for output in transaction["outputs"]]
     fee = transaction["fee"]
-    ttl = transaction["ttl"]
+    ttl = transaction.get("ttl")
+    validity_interval_start = transaction.get("validity_interval_start")
     certificates = [
         cardano.create_certificate(certificate)
         for certificate in transaction.get("certificates", ())
@@ -76,6 +77,7 @@ def sign_tx(client, file, protocol_magic, network_id, testnet):
         outputs,
         fee,
         ttl,
+        validity_interval_start,
         certificates,
         withdrawals,
         metadata,

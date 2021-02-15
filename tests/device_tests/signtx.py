@@ -17,9 +17,24 @@ def request_output(n, tx_hash=None):
     )
 
 
+def request_orig_input(n, tx_hash):
+    return messages.TxRequest(
+        request_type=T.TXORIGINPUT,
+        details=messages.TxRequestDetailsType(request_index=n, tx_hash=tx_hash),
+    )
+
+
+def request_orig_output(n, tx_hash):
+    return messages.TxRequest(
+        request_type=T.TXORIGOUTPUT,
+        details=messages.TxRequestDetailsType(request_index=n, tx_hash=tx_hash),
+    )
+
+
 def request_meta(tx_hash):
     return messages.TxRequest(
-        request_type=T.TXMETA, details=messages.TxRequestDetailsType(tx_hash=tx_hash),
+        request_type=T.TXMETA,
+        details=messages.TxRequestDetailsType(tx_hash=tx_hash),
     )
 
 

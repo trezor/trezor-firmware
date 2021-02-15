@@ -12,10 +12,9 @@ from trezor.messages.Success import Success
 from apps.common import mnemonic
 from apps.common.layout import show_success
 from apps.homescreen.homescreen import homescreen
-from apps.management import backup_types
-from apps.management.recovery_device import layout
 
-from . import recover
+from .. import backup_types
+from . import layout, recover
 
 if False:
     from typing import Optional, Tuple
@@ -122,7 +121,7 @@ async def _finish_recovery_dry_run(
     await layout.show_dry_run_result(ctx, result, is_slip39)
 
     if result:
-        return Success("The seed is valid and matches the one in the device")
+        return Success(message="The seed is valid and matches the one in the device")
     else:
         raise wire.ProcessError("The seed does not match the one in the device")
 
@@ -167,7 +166,7 @@ async def _process_words(
 
     share = None
     if not is_slip39:  # BIP-39
-        secret = recover.process_bip39(words)  # type: Optional[bytes]
+        secret: Optional[bytes] = recover.process_bip39(words)
     else:
         secret, share = recover.process_slip39(words)
 

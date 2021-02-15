@@ -5,7 +5,7 @@ from typing import Any, List, Optional
 import click
 import construct as c
 
-from trezorlib import cosi, firmware
+from .. import cosi, firmware
 
 try:
     from hashlib import blake2s

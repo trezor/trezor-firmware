@@ -170,6 +170,9 @@ void fsm_sendFailure(FailureType code, const char *text)
       case FailureType_Failure_WipeCodeMismatch:
         text = _("Wipe code mismatch");
         break;
+      case FailureType_Failure_InvalidSession:
+        text = _("Invalid session");
+        break;
       case FailureType_Failure_FirmwareError:
         text = _("Firmware error");
         break;
@@ -234,7 +237,8 @@ static bool fsm_layoutAddress(const char *address, const char *desc,
                               const uint32_t *address_n, size_t address_n_count,
                               bool address_is_account,
                               const MultisigRedeemScriptType *multisig,
-                              int multisig_index, const CoinInfo *coin) {
+                              int multisig_index, uint32_t multisig_xpub_magic,
+                              const CoinInfo *coin) {
   int screen = 0, screens = 2;
   if (multisig) {
     screens += 2 * cryptoMultisigPubkeyCount(multisig);
@@ -259,7 +263,7 @@ static bool fsm_layoutAddress(const char *address, const char *desc,
       default: {  // show XPUBs
         int index = (screen - 2) / 2;
         int page = (screen - 2) % 2;
-        char xpub[112] = {0};
+        char xpub[XPUB_MAXLEN] = {0};
         const HDNodeType *node_ptr = NULL;
         if (multisig->nodes_count) {  // use multisig->nodes
           node_ptr = &(multisig->nodes[index]);
@@ -278,10 +282,10 @@ static bool fsm_layoutAddress(const char *address, const char *desc,
             strlcat(xpub, "ERROR", sizeof(xpub));
           } else {
             hdnode_serialize_public(&node, node_ptr->fingerprint,
-                                    coin->xpub_magic, xpub, sizeof(xpub));
+                                    multisig_xpub_magic, xpub, sizeof(xpub));
           }
         }
-        layoutXPUB(xpub, index, page, multisig_index == index);
+        layoutXPUBMultisig(xpub, index, page, multisig_index == index);
         break;
       }
     }

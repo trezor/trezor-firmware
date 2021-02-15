@@ -43,9 +43,6 @@ typedef struct _mp_obj_HDNode_t {
 
 STATIC const mp_obj_type_t mod_trezorcrypto_HDNode_type;
 
-#define XPUB_MAXLEN 128
-#define ADDRESS_MAXLEN 40
-
 /// def __init__(
 ///     self,
 ///     depth: int,
@@ -266,15 +263,18 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_serialize_public(mp_obj_t self,
                                                          mp_obj_t version) {
   uint32_t ver = trezor_obj_get_uint(version);
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
-  char xpub[XPUB_MAXLEN] = {0};
+  vstr_t xpub = {0};
+  vstr_init_len(&xpub, XPUB_MAXLEN);
   hdnode_fill_public_key(&o->hdnode);
-  int written = hdnode_serialize_public(&o->hdnode, o->fingerprint, ver, xpub,
-                                        XPUB_MAXLEN);
+  int written = hdnode_serialize_public(&o->hdnode, o->fingerprint, ver,
+                                        xpub.buf, xpub.alloc);
   if (written <= 0) {
+    vstr_clear(&xpub);
     mp_raise_ValueError("Failed to serialize");
   }
   // written includes NULL at the end of the string
-  return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)xpub, written - 1);
+  xpub.len = written - 1;
+  return mp_obj_new_str_from_vstr(&mp_type_str, &xpub);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_serialize_public_obj,
                                  mod_trezorcrypto_HDNode_serialize_public);
@@ -383,10 +383,11 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_address(mp_obj_t self,
 
   uint32_t v = trezor_obj_get_uint(version);
 
-  char address[ADDRESS_MAXLEN] = {0};
-  hdnode_get_address(&o->hdnode, v, address, ADDRESS_MAXLEN);
-  return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)address,
-                             strlen(address));
+  vstr_t address = {0};
+  vstr_init_len(&address, ADDRESS_MAXLEN);
+  hdnode_get_address(&o->hdnode, v, address.buf, address.alloc);
+  address.len = strlen(address.buf);
+  return mp_obj_new_str_from_vstr(&mp_type_str, &address);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_address_obj,
                                  mod_trezorcrypto_HDNode_address);
@@ -403,12 +404,14 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_nem_address(mp_obj_t self,
 
   uint8_t n = trezor_obj_get_uint8(network);
 
-  char address[NEM_ADDRESS_SIZE + 1] = {0};  // + 1 for the 0 byte
-  if (!hdnode_get_nem_address(&o->hdnode, n, address)) {
+  vstr_t address = {0};
+  vstr_init_len(&address, NEM_ADDRESS_SIZE);
+  if (!hdnode_get_nem_address(&o->hdnode, n, address.buf)) {
+    vstr_clear(&address);
     mp_raise_ValueError("Failed to compute a NEM address");
   }
-  return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)address,
-                             strlen(address));
+  address.len = strlen(address.buf);
+  return mp_obj_new_str_from_vstr(&mp_type_str, &address);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_HDNode_nem_address_obj,
                                  mod_trezorcrypto_HDNode_nem_address);
@@ -465,9 +468,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 STATIC mp_obj_t mod_trezorcrypto_HDNode_ethereum_pubkeyhash(mp_obj_t self) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
 
-  uint8_t pkh[20] = {0};
-  hdnode_get_ethereum_pubkeyhash(&o->hdnode, pkh);
-  return mp_obj_new_bytes(pkh, sizeof(pkh));
+  vstr_t pkh = {0};
+  vstr_init_len(&pkh, 20);
+  hdnode_get_ethereum_pubkeyhash(&o->hdnode, (uint8_t *)pkh.buf);
+  return mp_obj_new_str_from_vstr(&mp_type_bytes, &pkh);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(
     mod_trezorcrypto_HDNode_ethereum_pubkeyhash_obj,
@@ -596,16 +600,22 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_from_mnemonic_cardano(
   const char *pmnemonic = mnemo.len > 0 ? mnemo.buf : "";
   const char *ppassphrase = phrase.len > 0 ? phrase.buf : "";
 
-  uint8_t entropy[64] = {0};
-  int entropy_len = mnemonic_to_entropy(pmnemonic, entropy);
+  uint8_t mnemonic_bits[64] = {0};
+  int mnemonic_bits_len = mnemonic_to_bits(pmnemonic, mnemonic_bits);
 
-  if (entropy_len == 0) {
+  if (mnemonic_bits_len == 0) {
     mp_raise_ValueError("Invalid mnemonic");
   }
 
+  // BEWARE: passing of mnemonic_bits (i.e. entropy + checksum bits) into
+  // hdnode_from_entropy_cardano_icarus() is actually not correct and we should
+  // be passing the entropy alone. However, the bug is there since Cardano
+  // support has been launched for Trezor and its reversal would result in
+  // people with a 24-word mnemonic on Trezor losing access to their Cardano
+  // funds. More info at https://github.com/trezor/trezor-firmware/issues/1387
   const int res = hdnode_from_entropy_cardano_icarus(
-      (const uint8_t *)ppassphrase, phrase.len, entropy, entropy_len / 8,
-      &hdnode);
+      (const uint8_t *)ppassphrase, phrase.len, mnemonic_bits,
+      mnemonic_bits_len / 8, &hdnode);
 
   if (!res) {
     mp_raise_ValueError(

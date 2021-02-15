@@ -9,9 +9,6 @@
         "Electron Cash": "https://electroncash.org",
         "Exodus": "https://www.exodus.io"
     },
-    "bitcoin:BELL": {
-        "Electrum-BELL": "https://bell.electrum-jp.net"
-    },
     "bitcoin:BTC": {
         "Electrum": "https://electrum.org",
         "Exodus": "https://www.exodus.io",
@@ -90,10 +87,6 @@
     "bitcoin:PART": {
         "Particl Core": "https://github.com/particl/particl-core/releases"
     },
-    "bitcoin:PIVX": {
-        "SPMT": "https://github.com/PIVX-Project/PIVX-SPMT/",
-        "Zephyr": "https://github.com/mrcarlanthony/Zephyr-wallet"
-    },
     "bitcoin:POLIS": {
         "PolisPay": "https://polispay.com"
     },
@@ -148,8 +141,5 @@
     },
     "bitcoin:ZCR": {
         "Electrum-ZCR": "https://github.com/zcore-coin/electrum-wallet/"
-    },
-    "bitcoin:ZNY": {
-        "Electrum-ZNY": "https://zny.electrum-jp.net"
     }
 }

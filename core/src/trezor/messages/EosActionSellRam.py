@@ -14,6 +14,7 @@ class EosActionSellRam(p.MessageType):
 
     def __init__(
         self,
+        *,
         account: int = None,
         bytes: int = None,
     ) -> None:
@@ -23,6 +24,6 @@ class EosActionSellRam(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('account', p.UVarintType, 0),
-            2: ('bytes', p.UVarintType, 0),
+            1: ('account', p.UVarintType, None),
+            2: ('bytes', p.UVarintType, None),
         }

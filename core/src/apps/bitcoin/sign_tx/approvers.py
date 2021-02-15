@@ -1,22 +1,24 @@
 from micropython import const
 
-from storage import device
 from trezor import wire
-from trezor.messages.SignTx import SignTx
-from trezor.messages.TxInputType import TxInputType
-from trezor.messages.TxOutputType import TxOutputType
+from trezor.messages import OutputScriptType
 
-from apps.common import coininfo
+from apps.common import safety_checks
 
-from .. import addresses
+from .. import keychain
 from ..authorization import FEE_PER_ANONYMITY_DECIMALS
 from . import helpers, tx_weight
+from .tx_info import OriginalTxInfo, TxInfo
 
 if False:
-    from ..authorization import CoinJoinAuthorization
+    from typing import List, Optional
+    from trezor.messages.SignTx import SignTx
+    from trezor.messages.TxInput import TxInput
+    from trezor.messages.TxOutput import TxOutput
 
-# Setting nSequence to this value for every input in a transaction disables nLockTime.
-_SEQUENCE_FINAL = const(0xFFFFFFFF)
+    from apps.common.coininfo import CoinInfo
+
+    from ..authorization import CoinJoinAuthorization
 
 
 # An Approver object computes the transaction totals and either prompts the user
@@ -24,41 +26,60 @@ _SEQUENCE_FINAL = const(0xFFFFFFFF)
 # an Authorization object to verify that the user authorized a transaction with
 # these parameters to be executed.
 class Approver:
-    def __init__(self, tx: SignTx, coin: coininfo.CoinInfo) -> None:
-        self.tx = tx
+    def __init__(self, tx: SignTx, coin: CoinInfo) -> None:
         self.coin = coin
         self.weight = tx_weight.TxWeightCalculator(tx.inputs_count, tx.outputs_count)
-        self.min_sequence = _SEQUENCE_FINAL  # the minimum nSequence of all inputs
 
-        # amounts
+        # amounts in the current transaction
         self.total_in = 0  # sum of input amounts
         self.external_in = 0  # sum of external input amounts
         self.total_out = 0  # sum of output amounts
-        self.change_out = 0  # change output amount
+        self.change_out = 0  # sum of change output amounts
 
-    async def add_internal_input(self, txi: TxInputType, amount: int) -> None:
+        # amounts in original transactions when this is a replacement transaction
+        self.orig_total_in = 0  # sum of original input amounts
+        self.orig_external_in = 0  # sum of original external input amounts
+        self.orig_total_out = 0  # sum of original output amounts
+        self.orig_change_out = 0  # sum of original change output amounts
+
+        self.amount_unit = tx.amount_unit
+
+    async def add_internal_input(self, txi: TxInput) -> None:
         self.weight.add_input(txi)
-        self.total_in += amount
-        self.min_sequence = min(self.min_sequence, txi.sequence)
+        self.total_in += txi.amount
+        if txi.orig_hash:
+            self.orig_total_in += txi.amount
 
-    def add_external_input(self, txi: TxInputType) -> None:
+    def add_external_input(self, txi: TxInput) -> None:
         self.weight.add_input(txi)
         self.total_in += txi.amount
         self.external_in += txi.amount
-        self.min_sequence = min(self.min_sequence, txi.sequence)
+        if txi.orig_hash:
+            self.orig_total_in += txi.amount
+            self.orig_external_in += txi.amount
 
-    def add_change_output(self, txo: TxOutputType, script_pubkey: bytes) -> None:
+    def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         self.weight.add_output(script_pubkey)
         self.total_out += txo.amount
         self.change_out += txo.amount
 
+    def add_orig_change_output(self, txo: TxOutput) -> None:
+        self.orig_total_out += txo.amount
+        self.orig_change_out += txo.amount
+
     async def add_external_output(
-        self, txo: TxOutputType, script_pubkey: bytes
+        self,
+        txo: TxOutput,
+        script_pubkey: bytes,
+        orig_txo: Optional[TxOutput] = None,
     ) -> None:
         self.weight.add_output(script_pubkey)
         self.total_out += txo.amount
 
-    async def approve_tx(self) -> None:
+    def add_orig_external_output(self, txo: TxOutput) -> None:
+        self.orig_total_out += txo.amount
+
+    async def approve_tx(self, tx_info: TxInfo, orig_txs: List[OriginalTxInfo]) -> None:
         raise NotImplementedError
 
 
@@ -66,27 +87,45 @@ class BasicApprover(Approver):
     # the maximum number of change-outputs allowed without user confirmation
     MAX_SILENT_CHANGE_COUNT = const(2)
 
-    def __init__(self, tx: SignTx, coin: coininfo.CoinInfo) -> None:
+    def __init__(self, tx: SignTx, coin: CoinInfo) -> None:
         super().__init__(tx, coin)
         self.change_count = 0  # the number of change-outputs
 
-    async def add_internal_input(self, txi: TxInputType, amount: int) -> None:
-        if not addresses.validate_full_path(txi.address_n, self.coin, txi.script_type):
+    async def add_internal_input(self, txi: TxInput) -> None:
+        if not keychain.validate_path_against_script_type(self.coin, txi):
             await helpers.confirm_foreign_address(txi.address_n)
 
-        await super().add_internal_input(txi, amount)
+        await super().add_internal_input(txi)
 
-    def add_change_output(self, txo: TxOutputType, script_pubkey: bytes) -> None:
+    def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         super().add_change_output(txo, script_pubkey)
         self.change_count += 1
 
     async def add_external_output(
-        self, txo: TxOutputType, script_pubkey: bytes
+        self,
+        txo: TxOutput,
+        script_pubkey: bytes,
+        orig_txo: Optional[TxOutput] = None,
     ) -> None:
-        await super().add_external_output(txo, script_pubkey)
-        await helpers.confirm_output(txo, self.coin)
+        await super().add_external_output(txo, script_pubkey, orig_txo)
 
-    async def approve_tx(self) -> None:
+        # Replacement transactions must not decrease the value of any external outputs.
+        if orig_txo and txo.amount < orig_txo.amount:
+            raise wire.ProcessError(
+                "Reducing original output amounts is not supported."
+            )
+
+        if self.orig_total_in:
+            # Skip output confirmation for replacement transactions,
+            # but don't allow adding new OP_RETURN outputs.
+            if txo.script_type == OutputScriptType.PAYTOOPRETURN and not orig_txo:
+                raise wire.ProcessError(
+                    "Adding new OP_RETURN outputs in replacement transactions is not supported."
+                )
+        else:
+            await helpers.confirm_output(txo, self.coin, self.amount_unit)
+
+    async def approve_tx(self, tx_info: TxInfo, orig_txs: List[OriginalTxInfo]) -> None:
         fee = self.total_in - self.total_out
 
         # some coins require negative fees for reward TX
@@ -100,25 +139,84 @@ class BasicApprover(Approver):
 
         # fee > (coin.maxfee per byte * tx size)
         if fee > fee_threshold:
-            if fee > 10 * fee_threshold and not device.unsafe_prompts_allowed():
+            if fee > 10 * fee_threshold and safety_checks.is_strict():
                 raise wire.DataError("The fee is unexpectedly large")
-            await helpers.confirm_feeoverthreshold(fee, self.coin)
+            await helpers.confirm_feeoverthreshold(fee, self.coin, self.amount_unit)
+
         if self.change_count > self.MAX_SILENT_CHANGE_COUNT:
             await helpers.confirm_change_count_over_threshold(self.change_count)
-        if self.tx.lock_time > 0:
-            lock_time_disabled = self.min_sequence == _SEQUENCE_FINAL
-            await helpers.confirm_nondefault_locktime(
-                self.tx.lock_time, lock_time_disabled
+
+        if orig_txs:
+            # Replacement transaction.
+            orig_spending = (
+                self.orig_total_in - self.orig_change_out - self.orig_external_in
             )
-        if not self.external_in:
-            await helpers.confirm_total(total, fee, self.coin)
+            orig_fee = self.orig_total_in - self.orig_total_out
+
+            if fee < 0 or orig_fee < 0:
+                raise wire.ProcessError(
+                    "Negative fees not supported in transaction replacement."
+                )
+
+            # Replacement transactions are only allowed to make amendments which
+            # do not increase the amount that we are spending on external outputs.
+            # In other words, the total amount being sent out of the wallet must
+            # not increase by more than the fee difference (so additional funds
+            # can only go towards the fee, which is confirmed by the user).
+            if spending - orig_spending > fee - orig_fee:
+                raise wire.ProcessError("Invalid replacement transaction.")
+
+            # Replacement transactions must not change the effective nLockTime.
+            lock_time = 0 if tx_info.lock_time_disabled() else tx_info.tx.lock_time
+            for orig in orig_txs:
+                orig_lock_time = 0 if orig.lock_time_disabled() else orig.tx.lock_time
+                if lock_time != orig_lock_time:
+                    raise wire.ProcessError(
+                        "Original transactions must have same effective nLockTime as replacement transaction."
+                    )
+
+            if self.external_in > self.orig_external_in:
+                description = "PayJoin"
+            elif tx_info.rbf_disabled() and any(
+                not orig.rbf_disabled() for orig in orig_txs
+            ):
+                description = "Finalize transaction"
+            elif len(orig_txs) > 1:
+                description = "Transaction meld"
+            else:
+                description = "Fee modification"
+
+            for orig in orig_txs:
+                await helpers.confirm_replacement(description, orig.orig_hash)
+
+            # Always ask the user to confirm when they are paying more towards the fee.
+            # If they are not spending more, then ask for confirmation only if it's not
+            # a PayJoin. In complex scenarios where the user is not spending more and
+            # there are new external inputs the scenario can be open to multiple
+            # interpretations and the dialog would likely cause more confusion than
+            # what it's worth, see PR #1292.
+            if spending > orig_spending or self.external_in == self.orig_external_in:
+                await helpers.confirm_modify_fee(
+                    spending - orig_spending, fee, self.coin, self.amount_unit
+                )
         else:
-            await helpers.confirm_joint_total(spending, total, self.coin)
+            # Standard transaction.
+            if tx_info.tx.lock_time > 0:
+                await helpers.confirm_nondefault_locktime(
+                    tx_info.tx.lock_time, tx_info.lock_time_disabled()
+                )
+
+            if not self.external_in:
+                await helpers.confirm_total(total, fee, self.coin, self.amount_unit)
+            else:
+                await helpers.confirm_joint_total(
+                    spending, total, self.coin, self.amount_unit
+                )
 
 
 class CoinJoinApprover(Approver):
     def __init__(
-        self, tx: SignTx, coin: coininfo.CoinInfo, authorization: CoinJoinAuthorization
+        self, tx: SignTx, coin: CoinInfo, authorization: CoinJoinAuthorization
     ) -> None:
         super().__init__(tx, coin)
         self.authorization = authorization
@@ -143,30 +241,29 @@ class CoinJoinApprover(Approver):
         # flag indicating whether our outputs are gaining any anonymity
         self.anonymity = False
 
-    async def add_internal_input(self, txi: TxInputType, amount: int) -> None:
+    async def add_internal_input(self, txi: TxInput) -> None:
         self.our_weight.add_input(txi)
         if not self.authorization.check_sign_tx_input(txi, self.coin):
             raise wire.ProcessError("Unauthorized path")
 
-        await super().add_internal_input(txi, amount)
+        await super().add_internal_input(txi)
 
-    def add_change_output(self, txo: TxOutputType, script_pubkey: bytes) -> None:
+    def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         super().add_change_output(txo, script_pubkey)
         self._add_output(txo, script_pubkey)
         self.our_weight.add_output(script_pubkey)
         self.group_our_count += 1
 
     async def add_external_output(
-        self, txo: TxOutputType, script_pubkey: bytes
+        self,
+        txo: TxOutput,
+        script_pubkey: bytes,
+        orig_txo: Optional[TxOutput] = None,
     ) -> None:
-        await super().add_external_output(txo, script_pubkey)
+        await super().add_external_output(txo, script_pubkey, orig_txo)
         self._add_output(txo, script_pubkey)
 
-    async def approve_tx(self) -> None:
-        # Ensure that at least one of the user's outputs is in a group with an external output.
-        if not self.anonymity:
-            raise wire.ProcessError("No anonymity gain")
-
+    async def approve_tx(self, tx_info: TxInfo, orig_txs: List[OriginalTxInfo]) -> None:
         # The mining fee of the transaction as a whole.
         mining_fee = self.total_in - self.total_out
 
@@ -188,10 +285,15 @@ class CoinJoinApprover(Approver):
         if our_fees > our_coordinator_fee + our_max_mining_fee:
             raise wire.ProcessError("Total fee over threshold")
 
-        if self.tx.lock_time > 0:
+        # Ensure that at least one of the user's outputs is in a group with an external output.
+        # Note: _get_coordinator_fee() needs to be called before checking this.
+        if not self.anonymity:
+            raise wire.ProcessError("No anonymity gain")
+
+        if tx_info.tx.lock_time > 0:
             raise wire.ProcessError("nLockTime not allowed in CoinJoin")
 
-        if not self.authorization.approve_sign_tx(self.tx, our_fees):
+        if not self.authorization.approve_sign_tx(tx_info.tx, our_fees):
             raise wire.ProcessError("Fees exceed authorized limit")
 
     # Coordinator fee calculation.
@@ -200,13 +302,14 @@ class CoinJoinApprover(Approver):
         # Add the coordinator fee for the last group of outputs.
         self._new_group(0)
 
+        decimal_divisor: float = pow(10, FEE_PER_ANONYMITY_DECIMALS + 2)
         return (
             self.coordinator_fee_base
             * self.authorization.fee_per_anonymity
-            / pow(10, FEE_PER_ANONYMITY_DECIMALS + 2)
+            / decimal_divisor
         )
 
-    def _add_output(self, txo: TxOutputType, script_pubkey: bytes):
+    def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         # Assumption: CoinJoin outputs are grouped by amount. (If this assumption is
         # not satisfied, then we will compute a lower coordinator fee, which may lead
         # us to wrongfully decline the transaction.)
@@ -215,7 +318,7 @@ class CoinJoinApprover(Approver):
 
         self.group_size += 1
 
-    def _new_group(self, amount: int):
+    def _new_group(self, amount: int) -> None:
         # Add the base coordinator fee for the previous group of outputs.
         # Skip groups of size 1, because those must be change-outputs.
         if self.group_size > 1:

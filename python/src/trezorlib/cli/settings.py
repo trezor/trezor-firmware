@@ -16,14 +16,71 @@
 
 import click
 
-from .. import device, messages
+from .. import device, firmware, messages, toif
 from . import ChoiceType, with_client
+
+try:
+    from PIL import Image
+except ImportError:
+    Image = None
+
 
 ROTATION = {"north": 0, "east": 90, "south": 180, "west": 270}
 SAFETY_LEVELS = {
     "strict": messages.SafetyCheckLevel.Strict,
-    "prompt": messages.SafetyCheckLevel.Prompt,
+    "prompt": messages.SafetyCheckLevel.PromptTemporarily,
 }
+
+
+def image_to_t1(filename: str) -> bytes:
+    if Image is None:
+        raise click.ClickException(
+            "Image library is missing. Please install via 'pip install Pillow'."
+        )
+
+    if filename.endswith(".toif"):
+        raise click.ClickException("TOIF images not supported on Trezor One")
+
+    try:
+        image = Image.open(filename)
+    except Exception as e:
+        raise click.ClickException("Failed to load image") from e
+
+    if image.size != (128, 64):
+        raise click.ClickException("Wrong size of the image - should be 128x64")
+
+    image = image.convert("1")
+    return image.tobytes("raw", "1")
+
+
+def image_to_tt(filename: str) -> bytes:
+    if filename.endswith(".toif"):
+        try:
+            toif_image = toif.load(filename)
+        except Exception as e:
+            raise click.ClickException("TOIF file is corrupted") from e
+
+    elif Image is None:
+        raise click.ClickException(
+            "Image library is missing. Please install via 'pip install Pillow'."
+        )
+
+    else:
+        try:
+            image = Image.open(filename)
+            toif_image = toif.from_image(image)
+        except Exception as e:
+            raise click.ClickException(
+                "Failed to convert image to Trezor format"
+            ) from e
+
+    if toif_image.size != (144, 144):
+        raise click.ClickException("Wrong size of image - should be 144x144")
+
+    if toif_image.mode != firmware.ToifMode.full_color:
+        raise click.ClickException("Wrong image mode - should be full_color")
+
+    return toif_image.to_bytes()
 
 
 @click.group(name="set")
@@ -108,51 +165,60 @@ def flags(client, flags):
 
 
 @cli.command()
-@click.argument(
-    "filename", type=click.Path(dir_okay=False, readable=True), required=False
+@click.argument("filename")
+@click.option(
+    "-f", "--filename", "_ignore", is_flag=True, hidden=True, expose_value=False
 )
-@click.option("-f", "--filename", is_flag=True, hidden=True, expose_value=False)
 @with_client
 def homescreen(client, filename):
-    """Set new homescreen."""
-    if filename is None:
-        img = b"\x00"
-    elif filename.endswith(".toif"):
-        img = open(filename, "rb").read()
-        if img[:8] != b"TOIf\x90\x00\x90\x00":
-            raise click.ClickException("File is not a TOIF file with size of 144x144")
-    else:
-        from PIL import Image
+    """Set new homescreen.
 
-        im = Image.open(filename)
-        if im.size != (128, 64):
-            raise click.ClickException("Wrong size of the image")
-        im = im.convert("1")
-        pix = im.load()
-        img = bytearray(1024)
-        for j in range(64):
-            for i in range(128):
-                if pix[i, j]:
-                    o = i + j * 128
-                    img[o // 8] |= 1 << (7 - o % 8)
-        img = bytes(img)
+    To revert to default homescreen, use 'trezorctl set homescreen default'
+    """
+    if filename == "default":
+        img = b""
+    else:
+        # use Click's facility to validate the path for us
+        param = click.Path(dir_okay=False, readable=True, exists=True)
+        param.convert(filename, None, None)
+        if client.features.model == "1":
+            img = image_to_t1(filename)
+        else:
+            img = image_to_tt(filename)
+
     return device.apply_settings(client, homescreen=img)
 
 
 @cli.command()
+@click.option(
+    "--always", is_flag=True, help='Persist the "prompt" setting across Trezor reboots.'
+)
 @click.argument("level", type=ChoiceType(SAFETY_LEVELS))
 @with_client
-def safety_checks(client, level):
+def safety_checks(client, always, level):
     """Set safety check level.
 
-    Set to "strict" to get the full Trezor security.
+    Set to "strict" to get the full Trezor security (default setting).
 
     Set to "prompt" if you want to be able to allow potentially unsafe actions, such as
     mismatching coin keys or extreme fees.
 
     This is a power-user feature. Use with caution.
     """
+    if always and level == messages.SafetyCheckLevel.PromptTemporarily:
+        level = messages.SafetyCheckLevel.PromptAlways
     return device.apply_settings(client, safety_checks=level)
+
+
+@cli.command()
+@click.argument("enable", type=ChoiceType({"on": True, "off": False}))
+@with_client
+def experimental_features(client, enable):
+    """Enable or disable experimental message types.
+
+    This is a developer feature. Use with caution.
+    """
+    return device.apply_settings(client, experimental_features=enable)
 
 
 #

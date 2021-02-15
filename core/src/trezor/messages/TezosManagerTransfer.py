@@ -16,6 +16,7 @@ class TezosManagerTransfer(p.MessageType):
 
     def __init__(
         self,
+        *,
         destination: TezosContractID = None,
         amount: int = None,
     ) -> None:
@@ -25,6 +26,6 @@ class TezosManagerTransfer(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('destination', TezosContractID, 0),
-            2: ('amount', p.UVarintType, 0),
+            1: ('destination', TezosContractID, None),
+            2: ('amount', p.UVarintType, None),
         }

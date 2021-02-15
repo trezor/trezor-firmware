@@ -23,13 +23,14 @@ For serializing (dumping) protobuf types, object with `Writer` interface is requ
 """
 
 import logging
+import warnings
 from io import BytesIO
+from itertools import zip_longest
 from typing import (
     Any,
     Callable,
     Dict,
     Iterable,
-    Iterator,
     List,
     Optional,
     Tuple,
@@ -49,7 +50,7 @@ FieldType = Union[
     Type["UnicodeType"],
     Type["BytesType"],
 ]
-FieldInfo = Tuple[str, FieldType, int]
+FieldInfo = Tuple[str, FieldType, Any]
 MT = TypeVar("MT", bound="MessageType")
 
 
@@ -198,24 +199,74 @@ class UnicodeType:
     WIRE_TYPE = 2
 
 
-class MessageType:
+class _MessageTypeMeta(type):
+    def __init__(cls, name, bases, d) -> None:
+        super().__init__(name, bases, d)
+        if name != "MessageType":
+            cls.__init__ = MessageType.__init__
+
+
+class MessageType(metaclass=_MessageTypeMeta):
     WIRE_TYPE = 2
 
     @classmethod
     def get_fields(cls) -> Dict[int, FieldInfo]:
+        """Return a field descriptor.
+
+        The descriptor is a mapping:
+            field_id -> (field_name, field_type, default_value)
+
+        `default_value` can also be one of the special values:
+        * `FLAG_REQUIRED` indicates that the field value has no default and _must_ be
+          provided by caller/sender.
+        * `FLAG_REPEATED` indicates that the field is a list of `field_type` values. In
+          that case the default value is an empty list.
+        """
         return {}
 
     @classmethod
     def get_field_type(cls, name: str) -> Optional[FieldType]:
-        for fname, ftype, flags in cls.get_fields().values():
+        for fname, ftype, _ in cls.get_fields().values():
             if fname == name:
                 return ftype
         return None
 
-    def __init__(self, **kwargs: Any) -> None:
-        for kw in kwargs:
-            setattr(self, kw, kwargs[kw])
-        self._fill_missing()
+    def __init__(self, *args, **kwargs: Any) -> None:
+        fields = self.get_fields()
+        if args:
+            warnings.warn(
+                "Positional arguments for MessageType are deprecated",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        # process fields one by one
+        NOT_PROVIDED = object()
+        for field, val in zip_longest(fields.values(), args, fillvalue=NOT_PROVIDED):
+            if field is NOT_PROVIDED:
+                raise TypeError("too many positional arguments")
+            fname, _, fdefault = field
+            if fname in kwargs and val is not NOT_PROVIDED:
+                # both *args and **kwargs specify the same thing
+                raise TypeError(f"got multiple values for argument '{fname}'")
+            elif fname in kwargs:
+                # set in kwargs but not in args
+                setattr(self, fname, kwargs[fname])
+            elif val is not NOT_PROVIDED:
+                # set in args but not in kwargs
+                setattr(self, fname, val)
+            else:
+                # not set at all, pick a default
+                if fdefault is FLAG_REPEATED:
+                    fdefault = []
+                elif fdefault is FLAG_EXPERIMENTAL:
+                    fdefault = None
+                elif fdefault is FLAG_REQUIRED:
+                    warnings.warn(
+                        f"Value of required field '{fname}' must be provided in constructor",
+                        DeprecationWarning,
+                        stacklevel=2,
+                    )
+                setattr(self, fname, fdefault)
 
     def __eq__(self, rhs: Any) -> bool:
         return self.__class__ is rhs.__class__ and self.__dict__ == rhs.__dict__
@@ -227,24 +278,6 @@ class MessageType:
                 continue
             d[key] = value
         return "<%s: %s>" % (self.__class__.__name__, d)
-
-    def __iter__(self) -> Iterator[str]:
-        return iter(self.keys())
-
-    def keys(self) -> Iterator[str]:
-        return (name for name, _, _ in self.get_fields().values())
-
-    def __getitem__(self, key: str) -> Any:
-        return getattr(self, key)
-
-    def _fill_missing(self) -> None:
-        # fill missing fields
-        for fname, ftype, fflags in self.get_fields().values():
-            if not hasattr(self, fname):
-                if fflags & FLAG_REPEATED:
-                    setattr(self, fname, [])
-                else:
-                    setattr(self, fname, None)
 
     def ByteSize(self) -> int:
         data = BytesIO()
@@ -276,7 +309,9 @@ class CountingWriter:
         return nwritten
 
 
-FLAG_REPEATED = 1
+FLAG_REPEATED = object()
+FLAG_REQUIRED = object()
+FLAG_EXPERIMENTAL = object()
 
 
 def decode_packed_array_field(ftype: FieldType, reader: Reader) -> List[Any]:
@@ -325,7 +360,16 @@ def decode_length_delimited_field(
 
 def load_message(reader: Reader, msg_type: Type[MT]) -> MT:
     fields = msg_type.get_fields()
-    msg = msg_type()
+
+    msg_dict = {}
+    # pre-seed the dict
+    for fname, _, fdefault in fields.values():
+        if fdefault is FLAG_REPEATED:
+            msg_dict[fname] = []
+        elif fdefault is FLAG_EXPERIMENTAL:
+            msg_dict[fname] = None
+        elif fdefault is not FLAG_REQUIRED:
+            msg_dict[fname] = fdefault
 
     while True:
         try:
@@ -348,9 +392,9 @@ def load_message(reader: Reader, msg_type: Type[MT]) -> MT:
                 raise ValueError
             continue
 
-        fname, ftype, fflags = field
+        fname, ftype, fdefault = field
 
-        if wtype == 2 and ftype.WIRE_TYPE == 0 and fflags & FLAG_REPEATED:
+        if wtype == 2 and ftype.WIRE_TYPE == 0 and fdefault is FLAG_REPEATED:
             # packed array
             fvalues = decode_packed_array_field(ftype, reader)
 
@@ -366,18 +410,17 @@ def load_message(reader: Reader, msg_type: Type[MT]) -> MT:
         else:
             raise TypeError  # unknown wire type
 
-        if fflags & FLAG_REPEATED:
-            pvalue = getattr(msg, fname)
-            pvalue.extend(fvalues)
-            fvalue = pvalue
+        if fdefault is FLAG_REPEATED:
+            msg_dict[fname].extend(fvalues)
         elif len(fvalues) != 1:
             raise ValueError("Unexpected multiple values in non-repeating field")
         else:
-            fvalue = fvalues[0]
+            msg_dict[fname] = fvalues[0]
 
-        setattr(msg, fname, fvalue)
-
-    return msg
+    for fname, _, fdefault in fields.values():
+        if fdefault is FLAG_REQUIRED and fname not in msg_dict:
+            raise ValueError  # required field was not received
+    return msg_type(**msg_dict)
 
 
 def dump_message(writer: Writer, msg: MessageType) -> None:
@@ -386,15 +429,17 @@ def dump_message(writer: Writer, msg: MessageType) -> None:
     fields = mtype.get_fields()
 
     for ftag in fields:
-        fname, ftype, fflags = fields[ftag]
+        fname, ftype, fdefault = fields[ftag]
 
         fvalue = getattr(msg, fname, None)
         if fvalue is None:
             continue
+        if fvalue is FLAG_REQUIRED:
+            raise ValueError  # required value was not provided
 
         fkey = (ftag << 3) | ftype.WIRE_TYPE
 
-        if not fflags & FLAG_REPEATED:
+        if fdefault is not FLAG_REPEATED:
             repvalue[0] = fvalue
             fvalue = repvalue
 
@@ -529,8 +574,8 @@ def value_to_proto(ftype: FieldType, value: Any) -> Any:
 
 def dict_to_proto(message_type: Type[MT], d: Dict[str, Any]) -> MT:
     params = {}
-    for fname, ftype, fflags in message_type.get_fields().values():
-        repeated = fflags & FLAG_REPEATED
+    for fname, ftype, fdefault in message_type.get_fields().values():
+        repeated = fdefault is FLAG_REPEATED
         value = d.get(fname)
         if value is None:
             continue
@@ -539,7 +584,7 @@ def dict_to_proto(message_type: Type[MT], d: Dict[str, Any]) -> MT:
             value = [value]
 
         if isinstance(ftype, type) and issubclass(ftype, MessageType):
-            function = dict_to_proto  # type: Callable[[Any, Any], Any]
+            function: Callable[[Any, Any], Any] = dict_to_proto
         else:
             function = value_to_proto
 

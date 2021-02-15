@@ -21,18 +21,24 @@
 """Reference implementation for Bech32 and segwit addresses."""
 
 if False:
-    from typing import Iterable, List, Optional, Tuple
+    from typing import Iterable, List, Optional, Tuple, Union, TypeVar
+
+    A = TypeVar("A")
+    B = TypeVar("B")
+    # usage: OptionalTuple[int, List[int]] is either (None, None) or (someint, somelist)
+    # but not (None, somelist)
+    OptionalTuple = Union[Tuple[None, None], Tuple[A, B]]
 
 CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 
 
 def bech32_polymod(values: List[int]) -> int:
     """Internal function that computes the Bech32 checksum."""
-    generator = [0x3B6A57B2, 0x26508E6D, 0x1EA119FA, 0x3D4233DD, 0x2A1462B3]
+    generator = [0x3B6A_57B2, 0x2650_8E6D, 0x1EA1_19FA, 0x3D42_33DD, 0x2A14_62B3]
     chk = 1
     for value in values:
         top = chk >> 25
-        chk = (chk & 0x1FFFFFF) << 5 ^ value
+        chk = (chk & 0x1FF_FFFF) << 5 ^ value
         for i in range(5):
             chk ^= generator[i] if ((top >> i) & 1) else 0
     return chk
@@ -61,9 +67,7 @@ def bech32_encode(hrp: str, data: List[int]) -> str:
     return hrp + "1" + "".join([CHARSET[d] for d in combined])
 
 
-def bech32_decode(
-    bech: str, max_bech_len: int = 90
-) -> Tuple[Optional[str], Optional[List[int]]]:
+def bech32_decode(bech: str, max_bech_len: int = 90) -> OptionalTuple[str, List[int]]:
     """Validate a Bech32 string, and determine HRP and data."""
     if (any(ord(x) < 33 or ord(x) > 126 for x in bech)) or (
         bech.lower() != bech and bech.upper() != bech
@@ -107,7 +111,7 @@ def convertbits(
     return ret
 
 
-def decode(hrp: str, addr: str) -> Tuple[Optional[int], Optional[List[int]]]:
+def decode(hrp: str, addr: str) -> OptionalTuple[int, List[int]]:
     """Decode a segwit address."""
     hrpgot, data = bech32_decode(addr)
     if data is None or hrpgot != hrp:

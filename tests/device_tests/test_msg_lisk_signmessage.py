@@ -19,36 +19,28 @@ import pytest
 from trezorlib import lisk
 from trezorlib.tools import parse_path
 
-from ..common import MNEMONIC12
-
-LISK_PATH = parse_path("m/44h/134h/0h/0h")
+LISK_PATH = parse_path("m/44h/134h/0h")
+LISK_PUBKEY = "68ffcc8fd29675264ba2c01e0926697b66b197179e130d4996ee07cd13892c1c"
 
 
 @pytest.mark.altcoin
 @pytest.mark.lisk
-class TestMsgLiskSignmessage:
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_sign(self, client):
-        sig = lisk.sign_message(
-            client, LISK_PATH, "This is an example of a signed message."
-        )
-        assert (
-            sig.public_key.hex()
-            == "eb56d7bbb5e8ea9269405f7a8527fe126023d1db2c973cfac6f760b60ae27294"
-        )
-        assert (
-            sig.signature.hex()
-            == "7858ae7cd52ea6d4b17e800ca60144423db5560bfd618b663ffbf26ab66758563df45cbffae8463db22dc285dd94309083b8c807776085b97d05374d79867d05"
-        )
-
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_sign_long(self, client):
-        sig = lisk.sign_message(client, LISK_PATH, "VeryLongMessage!" * 64)
-        assert (
-            sig.public_key.hex()
-            == "eb56d7bbb5e8ea9269405f7a8527fe126023d1db2c973cfac6f760b60ae27294"
-        )
-        assert (
-            sig.signature.hex()
-            == "19c26f4b6f2ecf2feef57d22237cf97eb7862fdc2fb8c303878843f5dd728191f7837cf8d0ed41f8e470b15181223a3a5131881add9c22b2453b01be4edef104"
-        )
+@pytest.mark.parametrize(
+    "message, signature",
+    (
+        pytest.param(
+            "This is an example of a signed message.",
+            "96dbdc588b6ec21a17b3d6d6c3c323179376302094c1125f106c9df2d44df9e8f579c8ea241caed7796feb490a7f3ffb8ff4a54a1f8cc437fa59381c32a01408",
+            id="short",
+        ),
+        pytest.param(
+            "VeryLongMessage!" * 64,
+            "fdac2a32d0d2f39a5ad189daa843ccae6816f0cee17f54667edbbc4119aea2dbce2877e4c660ec4d9a916cb122674efdb435ff0de08a1950e71958b4ae450609",
+            id="long",
+        ),
+    ),
+)
+def test_sign(client, message, signature):
+    sig = lisk.sign_message(client, LISK_PATH, message)
+    assert sig.public_key.hex() == LISK_PUBKEY
+    assert sig.signature.hex() == signature

@@ -20,10 +20,10 @@
 
 """
 This implements the high-level functions for SLIP-39, also called "Shamir Backup".
-It uses crypto/shamir.c for the cryptographic operations and crypto.slip39.c for
+It uses crypto/shamir.c for the cryptographic operations and crypto/slip39.c for
 performance-heavy operations (mostly regarding the wordlist).
 
-This consideres the Encrypted Master Secret, as defined in SLIP-39, as what is
+This considers the Encrypted Master Secret, as defined in SLIP-39, as what is
 stored in the storage, then "decrypted" using a passphrase into a Master Secret,
 which is then fed into BIP-32 for example.
 
@@ -33,7 +33,7 @@ See https://github.com/satoshilabs/slips/blob/master/slip-0039.md.
 from micropython import const
 from trezorcrypto import shamir, slip39
 
-from trezor.crypto import hashlib, hmac, pbkdf2, random
+from trezor.crypto import hmac, pbkdf2, random
 from trezor.errors import MnemonicError
 
 if False:
@@ -93,7 +93,7 @@ _MIN_STRENGTH_BITS = const(128)
 _MIN_MNEMONIC_LENGTH_WORDS = _METADATA_LENGTH_WORDS + _bits_to_words(_MIN_STRENGTH_BITS)
 """The minimum allowed length of the mnemonic in words."""
 
-_BASE_ITERATION_COUNT = const(10000)
+_BASE_ITERATION_COUNT = const(10_000)
 """The minimum number of iterations to use in PBKDF2."""
 
 _ROUND_COUNT = const(4)
@@ -114,10 +114,10 @@ KEYBOARD_FULL_MASK = const(0x1FF)
 """All buttons are allowed. 9-bit bitmap all set to 1."""
 
 
-def compute_mask(prefix: str) -> int:
+def word_completion_mask(prefix: str) -> int:
     if not prefix:
         return KEYBOARD_FULL_MASK
-    return slip39.compute_mask(int(prefix))
+    return slip39.word_completion_mask(int(prefix))
 
 
 def button_sequence_to_word(prefix: str) -> str:
@@ -229,7 +229,7 @@ def split_ems(
     # Split the Encrypted Master Secret on the group level.
     group_shares = _split_secret(group_threshold, len(groups), encrypted_master_secret)
 
-    mnemonics = []  # type: List[List[str]]
+    mnemonics: List[List[str]] = []
     for (member_threshold, member_count), (group_index, group_secret) in zip(
         groups, group_shares
     ):
@@ -353,7 +353,7 @@ def decode_mnemonic(mnemonic: str) -> Share:
 
 
 """
-## Convert mnemonics or integers to incices and back
+## Convert mnemonics or integers to indices and back
 """
 
 
@@ -399,21 +399,21 @@ def _rs1024_create_checksum(data: Indices) -> Indices:
 
 def _rs1024_polymod(values: Indices) -> int:
     GEN = (
-        0xE0E040,
-        0x1C1C080,
-        0x3838100,
-        0x7070200,
-        0xE0E0009,
-        0x1C0C2412,
-        0x38086C24,
-        0x3090FC48,
-        0x21B1F890,
-        0x3F3F120,
+        0xE0_E040,
+        0x1C1_C080,
+        0x383_8100,
+        0x707_0200,
+        0xE0E_0009,
+        0x1C0C_2412,
+        0x3808_6C24,
+        0x3090_FC48,
+        0x21B1_F890,
+        0x3F3_F120,
     )
     chk = 1
     for v in values:
         b = chk >> 20
-        chk = (chk & 0xFFFFF) << 10 ^ v
+        chk = (chk & 0xF_FFFF) << 10 ^ v
         for i in range(10):
             chk ^= GEN[i] if ((b >> i) & 1) else 0
     return chk
@@ -432,16 +432,16 @@ def _rs1024_error_index(data: Indices) -> Optional[int]:
     Currently unused.
     """
     GEN = (
-        0x91F9F87,
-        0x122F1F07,
-        0x244E1E07,
-        0x81C1C07,
-        0x10281C0E,
-        0x20401C1C,
-        0x103838,
-        0x207070,
-        0x40E0E0,
-        0x81C1C0,
+        0x91F_9F87,
+        0x122F_1F07,
+        0x244E_1E07,
+        0x81C_1C07,
+        0x1028_1C0E,
+        0x2040_1C1C,
+        0x10_3838,
+        0x20_7070,
+        0x40_E0E0,
+        0x81_C1C0,
     )
     chk = _rs1024_polymod(tuple(_CUSTOMIZATION_STRING) + data) ^ 1
     if chk == 0:
@@ -479,9 +479,7 @@ def _get_salt(identifier: int) -> bytes:
 
 
 def _create_digest(random_data: bytes, shared_secret: bytes) -> bytes:
-    return hmac.new(random_data, shared_secret, hashlib.sha256).digest()[
-        :_DIGEST_LENGTH_BYTES
-    ]
+    return hmac(hmac.SHA256, random_data, shared_secret).digest()[:_DIGEST_LENGTH_BYTES]
 
 
 def _split_secret(
@@ -601,7 +599,7 @@ def _decode_mnemonics(
     group_counts = set()
 
     # { group_index : [threshold, set_of_member_shares] }
-    groups = {}  # type: MnemonicGroups
+    groups: MnemonicGroups = {}
     for mnemonic in mnemonics:
         share = decode_mnemonic(mnemonic)
         identifiers.add(share.identifier)

@@ -44,7 +44,7 @@ def get_address(client, address, network, show_display):
 @cli.command()
 @click.argument("file", type=click.File("r"))
 @click.option("-n", "--address", required=True, help=PATH_HELP)
-@click.option("-f", "--file", is_flag=True, hidden=True, expose_value=False)
+@click.option("-f", "--file", "_ignore", is_flag=True, hidden=True, expose_value=False)
 @click.option("-b", "--broadcast", help="NIS to announce transaction to")
 @with_client
 def sign_tx(client, address, file, broadcast):

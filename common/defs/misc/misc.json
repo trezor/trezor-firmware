@@ -11,8 +11,7 @@
         },
         "wallet": {
             "Liskish Wallet": "https://github.com/hirishh/liskish-wallet/releases"
-        },
-        "blockchain_link": null
+        }
     },
     {
         "name": "Stellar",
@@ -25,9 +24,9 @@
             "Github": "https://github.com/stellar/stellar-core"
         },
         "wallet": {
+            "Account Viewer": "https://accountviewer.stellar.org/",
             "Exodus": "https://www.exodus.io"
-        },
-        "blockchain_link": null
+        }
     },
     {
         "name": "Monero",
@@ -41,8 +40,7 @@
         },
         "wallet": {
             "Monero CLI/GUI": "https://www.getmonero.org/downloads/"
-        },
-        "blockchain_link": null
+        }
     },
     {
         "name": "Ripple",
@@ -55,17 +53,9 @@
             "Github": "https://github.com/ripple/rippled"
         },
         "wallet": {
-            "Trezor Beta": "https://beta-wallet.trezor.io/next/",
+            "Trezor Suite": "https://suite.trezor.io",
             "Exodus": "https://www.exodus.io",
             "Magnum": "https://magnumwallet.co"
-        },
-        "blockchain_link": {
-            "type": "ripple",
-            "url": [
-                "wss://s1.ripple.com",
-                "wss://s-east.ripple.com",
-                "wss://s-west.ripple.com"
-            ]
         }
     },
     {
@@ -79,11 +69,7 @@
             "Github": "https://github.com/ripple/rippled"
         },
         "wallet": {
-            "Trezor Beta": "https://beta-wallet.trezor.io/next/"
-        },
-        "blockchain_link": {
-            "type": "ripple",
-            "url": ["wss://s.altnet.rippletest.net"]
+            "Trezor Suite": "https://suite.trezor.io"
         }
     },
     {
@@ -99,8 +85,7 @@
         "wallet": {
             "AdaLite": "https://adalite.io/app",
             "Yoroi": "https://yoroi-wallet.com"
-        },
-        "blockchain_link": null
+        }
     },
     {
         "name": "Tezos",
@@ -115,8 +100,7 @@
         "wallet": {
             "SimpleStaking": "https://simplestaking.com",
             "Magnum": "https://magnumwallet.co"
-        },
-        "blockchain_link": null
+        }
     },
     {
         "name": "Ontology",
@@ -128,8 +112,7 @@
             "Homepage": "https://ont.io",
             "Github": "https://github.com/ontio/ontology"
         },
-        "wallet": {},
-        "blockchain_link": null
+        "wallet": {}
     },
     {
         "name": "Wanchain",
@@ -143,8 +126,7 @@
         },
         "wallet": {
             "Wanchain Wallet": "https://www.wanchain.org/getstarted/"
-        },
-        "blockchain_link": null
+        }
     },
     {
         "name": "EOS",
@@ -158,8 +140,7 @@
         },
         "wallet": {
             "Bloks.io": "https://bloks.io/wallet"
-        },
-        "blockchain_link": null
+        }
     },
     {
         "name": "Omni",
@@ -171,8 +152,7 @@
             "Homepage": "https://www.omnilayer.org",
             "Github": "https://github.com/OmniLayer"
         },
-        "wallet": {},
-        "blockchain_link": null
+        "wallet": {}
     },
     {
         "name": "MaidSafeCoin",
@@ -184,8 +164,7 @@
             "Homepage": "https://maidsafe.net",
             "Github": "https://github.com/maidsafe"
         },
-        "wallet": {},
-        "blockchain_link": null
+        "wallet": {}
     },
     {
         "name": "Binance Chain",
@@ -196,8 +175,9 @@
         "links": {
             "Homepage": "https://binance.org"
         },
-        "wallet": {},
-        "blockchain_link": null
+        "wallet": {
+            "Binance Wallet": "https://binance.org/unlock"
+        }
     },
     {
         "name": "Tether",
@@ -208,7 +188,6 @@
         "links": {
             "Homepage": "https://tether.to"
         },
-        "wallet": {},
-        "blockchain_link": null
+        "wallet": {}
     }
 ]

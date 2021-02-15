@@ -81,12 +81,13 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_Groestl512_update_obj,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_Groestl512_digest(mp_obj_t self) {
   mp_obj_Groestl512_t *o = MP_OBJ_TO_PTR(self);
-  uint8_t out[GROESTL512_DIGEST_LENGTH] = {0};
+  vstr_t hash = {0};
+  vstr_init_len(&hash, GROESTL512_DIGEST_LENGTH);
   GROESTL512_CTX ctx = {0};
   memcpy(&ctx, &(o->ctx), sizeof(GROESTL512_CTX));
-  groestl512_Final(&ctx, out);
+  groestl512_Final(&ctx, (uint8_t *)hash.buf);
   memzero(&ctx, sizeof(GROESTL512_CTX));
-  return mp_obj_new_bytes(out, sizeof(out));
+  return mp_obj_new_str_from_vstr(&mp_type_bytes, &hash);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Groestl512_digest_obj,
                                  mod_trezorcrypto_Groestl512_digest);

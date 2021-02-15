@@ -18,6 +18,7 @@
 import json
 
 import click
+import decimal
 import requests
 
 from trezorlib import btc, messages, tools
@@ -72,7 +73,7 @@ def _get_inputs_interactive(blockbook_url):
         if not r.ok:
             raise click.ClickException(f"Failed to fetch URL: {tx_url}")
 
-        tx_json = r.json()
+        tx_json = r.json(parse_float=decimal.Decimal)
         if "error" in tx_json:
             raise click.ClickException(f"Transaction not found: {txhash}")
 
@@ -158,15 +159,17 @@ def sign_interactive():
     inputs, txes = _get_inputs_interactive(blockbook_url)
     outputs = _get_outputs_interactive()
 
-    signtx = messages.SignTx()
-    signtx.version = prompt("Transaction version", type=int, default=2)
-    signtx.lock_time = prompt("Transaction locktime", type=int, default=0)
+    version = prompt("Transaction version", type=int, default=2)
+    lock_time = prompt("Transaction locktime", type=int, default=0)
 
     result = {
         "coin_name": coin,
         "inputs": [to_dict(i, hexlify_bytes=True) for i in inputs],
         "outputs": [to_dict(o, hexlify_bytes=True) for o in outputs],
-        "details": to_dict(signtx, hexlify_bytes=True),
+        "details": {
+            "version": version,
+            "lock_time": lock_time,
+        },
         "prev_txes": {
             txhash: to_dict(txdata, hexlify_bytes=True)
             for txhash, txdata in txes.items()

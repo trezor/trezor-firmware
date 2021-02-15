@@ -40,7 +40,7 @@ from trezor import log, loop, messages, ui, utils, workflow
 from trezor.messages import FailureType
 from trezor.messages.Failure import Failure
 from trezor.wire import codec_v1
-from trezor.wire.errors import ActionCancelled, Error
+from trezor.wire.errors import ActionCancelled, DataError, Error
 
 # Import all errors into namespace, so that `wire.Error` is available from
 # other packages.
@@ -67,11 +67,14 @@ if False:
 
 
 # Maps a wire type directly to a handler.
-workflow_handlers = {}  # type: Dict[int, Handler]
+workflow_handlers: Dict[int, Handler] = {}
 
 # Maps a wire type to a tuple of package and module.  This allows handlers
 # to be dynamically imported when such message arrives.
-workflow_packages = {}  # type: Dict[int, Tuple[str, str]]
+workflow_packages: Dict[int, Tuple[str, str]] = {}
+
+# If set to False protobuf messages marked with "unstable" option are rejected.
+experimental_enabled: bool = False
 
 
 def add(wire_type: int, pkgname: str, modname: str) -> None:
@@ -117,6 +120,22 @@ if False:
             ...
 
 
+def _wrap_protobuf_load(
+    reader: protobuf.Reader,
+    expected_type: Type[protobuf.LoadedMessageType],
+    field_cache: protobuf.FieldCache = None,
+) -> protobuf.LoadedMessageType:
+    try:
+        return protobuf.load_message(
+            reader, expected_type, field_cache, experimental_enabled
+        )
+    except Exception as e:
+        if e.args:
+            raise DataError("Failed to decode message: {}".format(e.args[0]))
+        else:
+            raise DataError("Failed to decode message")
+
+
 class DummyContext:
     async def call(self, *argv: Any) -> None:
         pass
@@ -144,7 +163,7 @@ class Context:
         self.buffer_reader = utils.BufferReader(self.buffer)
         self.buffer_writer = utils.BufferWriter(self.buffer)
 
-        self._field_cache = {}  # type: protobuf.FieldCache
+        self._field_cache: protobuf.FieldCache = {}
 
     async def call(
         self,
@@ -201,8 +220,7 @@ class Context:
         workflow.idle_timer.touch()
 
         # look up the protobuf class and parse the message
-        pbtype = messages.get_type(msg.type)
-        return protobuf.load_message(msg.data, pbtype, field_cache)  # type: ignore
+        return _wrap_protobuf_load(msg.data, expected_type, field_cache)
 
     async def read_any(
         self, expected_wire_types: Iterable[int]
@@ -235,7 +253,7 @@ class Context:
         workflow.idle_timer.touch()
 
         # parse the message and return it
-        return protobuf.load_message(msg.data, exptype)
+        return _wrap_protobuf_load(msg.data, exptype)
 
     async def write(
         self, msg: protobuf.MessageType, field_cache: protobuf.FieldCache = None
@@ -281,6 +299,7 @@ class Context:
 
 class UnexpectedMessageError(Exception):
     def __init__(self, msg: codec_v1.Message) -> None:
+        super().__init__()
         self.msg = msg
 
 
@@ -288,8 +307,8 @@ async def handle_session(
     iface: WireInterface, session_id: int, use_workflow: bool = True
 ) -> None:
     ctx = Context(iface, session_id)
-    next_msg = None  # type: Optional[codec_v1.Message]
-    res_msg = None  # type: Optional[protobuf.MessageType]
+    next_msg: Optional[codec_v1.Message] = None
+    res_msg: Optional[protobuf.MessageType] = None
     req_type = None
     req_msg = None
     while True:
@@ -342,7 +361,7 @@ async def handle_session(
                 # We found a valid handler for this message type.
 
                 # Workflow task, declared for the finally block
-                wf_task = None  # type: Optional[HandlerTask]
+                wf_task: Optional[HandlerTask] = None
 
                 # Here we make sure we always respond with a Failure response
                 # in case of any errors.
@@ -353,7 +372,7 @@ async def handle_session(
 
                     # Try to decode the message according to schema from
                     # `req_type`. Raises if the message is malformed.
-                    req_msg = protobuf.load_message(msg.data, req_type)
+                    req_msg = _wrap_protobuf_load(msg.data, req_type)
 
                     # At this point, message reports are all processed and
                     # correctly parsed into `req_msg`.

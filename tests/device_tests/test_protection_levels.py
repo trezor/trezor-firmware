@@ -16,14 +16,14 @@
 
 import pytest
 
-from trezorlib import btc, device, messages as proto, misc
+from trezorlib import btc, device, messages, misc
 from trezorlib.exceptions import TrezorFailure
 
 from ..common import MNEMONIC12
 from ..tx_cache import TxCache
 from .signtx import request_finished, request_input, request_meta, request_output
 
-B = proto.ButtonRequestType
+B = messages.ButtonRequestType
 
 TXHASH_d5f65e = bytes.fromhex(
     "d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"
@@ -37,7 +37,7 @@ class TestProtectionLevels:
     @pytest.mark.setup_client(pin=PIN4, passphrase=True)
     def test_initialize(self, client):
         with client:
-            client.set_expected_responses([proto.Features()])
+            client.set_expected_responses([messages.Features])
             client.init_device()
 
     @pytest.mark.setup_client(pin=PIN4, passphrase=True)
@@ -46,10 +46,10 @@ class TestProtectionLevels:
             client.use_pin_sequence([PIN4])
             client.set_expected_responses(
                 [
-                    proto.PinMatrixRequest(),
-                    proto.ButtonRequest(),
-                    proto.Success(),
-                    proto.Features(),
+                    messages.PinMatrixRequest,
+                    messages.ButtonRequest,
+                    messages.Success,
+                    messages.Features,
                 ]
             )  # TrezorClient reinitializes device
             device.apply_settings(client, label="nazdar")
@@ -60,25 +60,25 @@ class TestProtectionLevels:
             client.use_pin_sequence([PIN4, PIN4, PIN4])
             client.set_expected_responses(
                 [
-                    proto.ButtonRequest(),
-                    proto.PinMatrixRequest(),
-                    proto.PinMatrixRequest(),
-                    proto.PinMatrixRequest(),
-                    proto.Success(),
-                    proto.Features(),
+                    messages.ButtonRequest,
+                    messages.PinMatrixRequest,
+                    messages.PinMatrixRequest,
+                    messages.PinMatrixRequest,
+                    messages.Success,
+                    messages.Features,
                 ]
             )
             device.change_pin(client)
 
     def test_ping(self, client):
         with client:
-            client.set_expected_responses([proto.ButtonRequest(), proto.Success()])
+            client.set_expected_responses([messages.ButtonRequest, messages.Success])
             client.ping("msg", True)
 
     @pytest.mark.setup_client(pin=PIN4, passphrase=True)
     def test_get_entropy(self, client):
         with client:
-            client.set_expected_responses([proto.ButtonRequest(), proto.Entropy()])
+            client.set_expected_responses([messages.ButtonRequest, messages.Entropy])
             misc.get_entropy(client, 10)
 
     @pytest.mark.setup_client(pin=PIN4, passphrase=True)
@@ -86,7 +86,11 @@ class TestProtectionLevels:
         with client:
             client.use_pin_sequence([PIN4])
             client.set_expected_responses(
-                [proto.PinMatrixRequest(), proto.PassphraseRequest(), proto.PublicKey()]
+                [
+                    messages.PinMatrixRequest,
+                    messages.PassphraseRequest,
+                    messages.PublicKey,
+                ]
             )
             btc.get_public_node(client, [])
 
@@ -95,7 +99,11 @@ class TestProtectionLevels:
         with client:
             client.use_pin_sequence([PIN4])
             client.set_expected_responses(
-                [proto.PinMatrixRequest(), proto.PassphraseRequest(), proto.Address()]
+                [
+                    messages.PinMatrixRequest,
+                    messages.PassphraseRequest,
+                    messages.Address,
+                ]
             )
             btc.get_address(client, "Bitcoin", [])
 
@@ -103,7 +111,7 @@ class TestProtectionLevels:
     def test_wipe_device(self, client):
         with client:
             client.set_expected_responses(
-                [proto.ButtonRequest(), proto.Success(), proto.Features()]
+                [messages.ButtonRequest, messages.Success, messages.Features]
             )
             device.wipe(client)
 
@@ -111,10 +119,10 @@ class TestProtectionLevels:
     def test_reset_device(self, client):
         with client:
             client.set_expected_responses(
-                [proto.ButtonRequest()]
-                + [proto.EntropyRequest()]
-                + [proto.ButtonRequest()] * 24
-                + [proto.Success(), proto.Features()]
+                [messages.ButtonRequest]
+                + [messages.EntropyRequest]
+                + [messages.ButtonRequest] * 24
+                + [messages.Success, messages.Features]
             )
             device.reset(client, False, 128, True, False, "label", "en-US")
 
@@ -122,7 +130,7 @@ class TestProtectionLevels:
             # This must fail, because device is already initialized
             # Using direct call because `device.reset` has its own check
             client.call(
-                proto.ResetDevice(
+                messages.ResetDevice(
                     display_random=False,
                     strength=128,
                     passphrase_protection=True,
@@ -137,9 +145,9 @@ class TestProtectionLevels:
         client.use_mnemonic(MNEMONIC12)
         with client:
             client.set_expected_responses(
-                [proto.ButtonRequest()]
-                + [proto.WordRequest()] * 24
-                + [proto.Success(), proto.Features()]
+                [messages.ButtonRequest]
+                + [messages.WordRequest] * 24
+                + [messages.Success, messages.Features]
             )
 
             device.recover(
@@ -150,7 +158,7 @@ class TestProtectionLevels:
             # This must fail, because device is already initialized
             # Using direct call because `device.reset` has its own check
             client.call(
-                proto.RecoveryDevice(
+                messages.RecoveryDevice(
                     word_count=12,
                     passphrase_protection=False,
                     pin_protection=False,
@@ -165,10 +173,10 @@ class TestProtectionLevels:
             client.use_pin_sequence([PIN4])
             client.set_expected_responses(
                 [
-                    proto.ButtonRequest(),
-                    proto.PinMatrixRequest(),
-                    proto.PassphraseRequest(),
-                    proto.MessageSignature(),
+                    messages.ButtonRequest,
+                    messages.PinMatrixRequest,
+                    messages.PassphraseRequest,
+                    messages.MessageSignature,
                 ]
             )
             btc.sign_message(client, "Bitcoin", [], "testing message")
@@ -177,7 +185,7 @@ class TestProtectionLevels:
     def test_verify_message(self, client):
         with client:
             client.set_expected_responses(
-                [proto.ButtonRequest(), proto.ButtonRequest(), proto.Success()]
+                [messages.ButtonRequest, messages.ButtonRequest, messages.Success]
             )
             btc.verify_message(
                 client,
@@ -191,16 +199,17 @@ class TestProtectionLevels:
 
     @pytest.mark.setup_client(pin=PIN4, passphrase=True)
     def test_signtx(self, client):
-        inp1 = proto.TxInputType(
+        inp1 = messages.TxInputType(
             address_n=[0],  # 14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e
             prev_hash=TXHASH_d5f65e,
             prev_index=0,
+            amount=390000,
         )
 
-        out1 = proto.TxOutputType(
+        out1 = messages.TxOutputType(
             address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
             amount=390000 - 10000,
-            script_type=proto.OutputScriptType.PAYTOADDRESS,
+            script_type=messages.OutputScriptType.PAYTOADDRESS,
         )
 
         with client:
@@ -208,16 +217,17 @@ class TestProtectionLevels:
             client.use_pin_sequence([PIN4])
             client.set_expected_responses(
                 [
-                    proto.PinMatrixRequest(),
-                    proto.PassphraseRequest(),
+                    messages.PinMatrixRequest,
+                    messages.PassphraseRequest,
+                    request_input(0),
+                    request_output(0),
+                    messages.ButtonRequest(code=B.ConfirmOutput),
+                    messages.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_meta(TXHASH_d5f65e),
                     request_input(0, TXHASH_d5f65e),
                     request_input(1, TXHASH_d5f65e),
                     request_output(0, TXHASH_d5f65e),
-                    request_output(0),
-                    proto.ButtonRequest(code=B.ConfirmOutput),
-                    proto.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_output(0),
                     request_output(0),
@@ -238,21 +248,23 @@ class TestProtectionLevels:
 
         with client:
             client.use_pin_sequence([PIN4])
-            client.set_expected_responses([proto.PinMatrixRequest(), proto.Address()])
+            client.set_expected_responses([messages.PinMatrixRequest, messages.Address])
             btc.get_address(client, "Testnet", [0])
 
         client.init_device()
         assert client.features.unlocked is True
         with client:
-            client.set_expected_responses([proto.Address()])
+            client.set_expected_responses([messages.Address])
             btc.get_address(client, "Testnet", [0])
 
     @pytest.mark.setup_client(passphrase=True)
     def test_passphrase_cached(self, client):
         with client:
-            client.set_expected_responses([proto.PassphraseRequest(), proto.Address()])
+            client.set_expected_responses(
+                [messages.PassphraseRequest, messages.Address]
+            )
             btc.get_address(client, "Testnet", [0])
 
         with client:
-            client.set_expected_responses([proto.Address()])
+            client.set_expected_responses([messages.Address])
             btc.get_address(client, "Testnet", [0])

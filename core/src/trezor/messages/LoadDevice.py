@@ -15,10 +15,11 @@ class LoadDevice(p.MessageType):
 
     def __init__(
         self,
+        *,
         mnemonics: List[str] = None,
         pin: str = None,
         passphrase_protection: bool = None,
-        language: str = None,
+        language: str = "en-US",
         label: str = None,
         skip_checksum: bool = None,
         u2f_counter: int = None,
@@ -39,12 +40,12 @@ class LoadDevice(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('mnemonics', p.UnicodeType, p.FLAG_REPEATED),
-            3: ('pin', p.UnicodeType, 0),
-            4: ('passphrase_protection', p.BoolType, 0),
-            5: ('language', p.UnicodeType, 0),  # default=en-US
-            6: ('label', p.UnicodeType, 0),
-            7: ('skip_checksum', p.BoolType, 0),
-            8: ('u2f_counter', p.UVarintType, 0),
-            9: ('needs_backup', p.BoolType, 0),
-            10: ('no_backup', p.BoolType, 0),
+            3: ('pin', p.UnicodeType, None),
+            4: ('passphrase_protection', p.BoolType, None),
+            5: ('language', p.UnicodeType, "en-US"),  # default=en-US
+            6: ('label', p.UnicodeType, None),
+            7: ('skip_checksum', p.BoolType, None),
+            8: ('u2f_counter', p.UVarintType, None),
+            9: ('needs_backup', p.BoolType, None),
+            10: ('no_backup', p.BoolType, None),
         }

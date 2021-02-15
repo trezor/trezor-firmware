@@ -87,8 +87,8 @@ class InputButton(Button):
 
 class Prompt(ui.Component):
     def __init__(self, prompt: str) -> None:
+        super().__init__()
         self.prompt = prompt
-        self.repaint = True
 
     def on_render(self) -> None:
         if self.repaint:
@@ -99,6 +99,7 @@ class Prompt(ui.Component):
 
 class Bip39Keyboard(ui.Layout):
     def __init__(self, prompt: str) -> None:
+        super().__init__()
         self.prompt = Prompt(prompt)
 
         icon_back = res.load(ui.ICON_BACK)
@@ -114,7 +115,7 @@ class Bip39Keyboard(ui.Layout):
                 ("abc", "def", "ghi", "jkl", "mno", "pqr", "stu", "vwx", "yz")
             )
         ]
-        self.pending_button = None  # type: Optional[Button]
+        self.pending_button: Optional[Button] = None
         self.pending_index = 0
 
     def dispatch(self, event: int, x: int, y: int) -> None:

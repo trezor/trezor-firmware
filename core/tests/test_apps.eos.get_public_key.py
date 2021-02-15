@@ -5,7 +5,7 @@ from apps.common.paths import HARDENED
 
 if not utils.BITCOIN_ONLY:
     from apps.eos.get_public_key import _get_public_key
-    from apps.eos.helpers import validate_full_path, public_key_to_wif
+    from apps.eos.helpers import public_key_to_wif
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
@@ -43,31 +43,6 @@ class TestEosGetPublicKey(unittest.TestCase):
             self.assertEqual(hexlify(public_key), public_keys[index])
             self.assertEqual(wif, wif_keys[index])
             self.assertEqual(public_key_to_wif(public_key), wif_keys[index])
-
-    def test_paths(self):
-        # 44'/194'/a'/0/0 is correct
-        incorrect_paths = [
-            [44 | HARDENED],
-            [44 | HARDENED, 194 | HARDENED],
-            [44 | HARDENED, 194 | HARDENED, 0 | HARDENED, 0, 0, 0],
-            [44 | HARDENED, 194 | HARDENED, 0 | HARDENED, 0 | HARDENED],
-            [44 | HARDENED, 194 | HARDENED, 0 | HARDENED, 0 | HARDENED, 0 | HARDENED],
-            [44 | HARDENED, 194 | HARDENED, 0 | HARDENED, 1, 0],
-            [44 | HARDENED, 194 | HARDENED, 0 | HARDENED, 0, 1],
-            [44 | HARDENED, 160 | HARDENED, 0 | HARDENED, 0, 0],
-            [44 | HARDENED, 199 | HARDENED, 0 | HARDENED, 0, 9999],
-        ]
-        correct_paths = [
-            [44 | HARDENED, 194 | HARDENED, 0 | HARDENED, 0, 0],
-            [44 | HARDENED, 194 | HARDENED, 9 | HARDENED, 0, 0],
-            [44 | HARDENED, 194 | HARDENED, 9999 | HARDENED, 0, 0],
-        ]
-
-        for path in incorrect_paths:
-            self.assertFalse(validate_full_path(path))
-
-        for path in correct_paths:
-            self.assertTrue(validate_full_path(path))
 
 
 if __name__ == '__main__':

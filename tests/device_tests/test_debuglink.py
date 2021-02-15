@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import debuglink, device, messages, misc
+from trezorlib.transport import udp
 
 from ..common import MNEMONIC12
 
@@ -29,6 +30,7 @@ class TestDebuglink:
 
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_mnemonic(self, client):
+        client.ensure_unlocked()
         mnemonic = client.debug.state().mnemonic_secret
         assert mnemonic == MNEMONIC12.encode()
 
@@ -62,7 +64,11 @@ def test_softlock_instability(client):
         )
 
     # start from a clean slate:
-    client.debug.reseed(0)
+    resp = client.debug.reseed(0)
+    if isinstance(resp, messages.Failure) and not isinstance(
+        client.transport, udp.UdpTransport
+    ):
+        pytest.xfail("reseed only supported on emulator")
     device.wipe(client)
     entropy_after_wipe = misc.get_entropy(client, 16)
 

@@ -15,6 +15,7 @@ class BinanceSignTx(p.MessageType):
 
     def __init__(
         self,
+        *,
         address_n: List[int] = None,
         msg_count: int = None,
         account_number: int = None,
@@ -35,10 +36,10 @@ class BinanceSignTx(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            2: ('msg_count', p.UVarintType, 0),
-            3: ('account_number', p.SVarintType, 0),
-            4: ('chain_id', p.UnicodeType, 0),
-            5: ('memo', p.UnicodeType, 0),
-            6: ('sequence', p.SVarintType, 0),
-            7: ('source', p.SVarintType, 0),
+            2: ('msg_count', p.UVarintType, None),
+            3: ('account_number', p.SVarintType, None),
+            4: ('chain_id', p.UnicodeType, None),
+            5: ('memo', p.UnicodeType, None),
+            6: ('sequence', p.SVarintType, None),
+            7: ('source', p.SVarintType, None),
         }

@@ -12,8 +12,8 @@ class LoaderDefault:
     class normal:
         bg_color = ui.BG
         fg_color = ui.GREEN
-        icon = None  # type: Optional[str]
-        icon_fg_color = None  # type: Optional[int]
+        icon: Optional[str] = None
+        icon_fg_color: Optional[int] = None
 
     class active(normal):
         bg_color = ui.BG
@@ -39,11 +39,12 @@ _TARGET_MS = const(1000)
 
 class Loader(ui.Component):
     def __init__(self, style: LoaderStyleType = LoaderDefault) -> None:
+        super().__init__()
         self.normal_style = style.normal
         self.active_style = style.active
         self.target_ms = _TARGET_MS
-        self.start_ms = None  # type: Optional[int]
-        self.stop_ms = None  # type: Optional[int]
+        self.start_ms: Optional[int] = None
+        self.stop_ms: Optional[int] = None
 
     def start(self) -> None:
         self.start_ms = utime.ticks_ms()
@@ -98,6 +99,7 @@ class Loader(ui.Component):
 
 class LoadingAnimation(ui.Layout):
     def __init__(self, style: LoaderStyleType = LoaderDefault) -> None:
+        super().__init__()
         self.loader = Loader(style)
         self.loader.on_finish = self.on_finish  # type: ignore
         self.loader.start()

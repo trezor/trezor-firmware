@@ -43,7 +43,7 @@ def test_non_segwit_segwit_inputs(client):
 
     inp1 = messages.TxInputType(
         address_n=parse_path("44'/1'/0'/0/0"),
-        # amount=31000000,
+        amount=31000000,
         prev_hash=TXHASH_e5040e,
         prev_index=0,
     )
@@ -93,7 +93,7 @@ def test_segwit_non_segwit_inputs(client):
     )
     inp2 = messages.TxInputType(
         address_n=parse_path("44'/1'/0'/0/0"),
-        # amount=31000000,
+        amount=31000000,
         prev_hash=TXHASH_e5040e,
         prev_index=0,
     )
@@ -136,7 +136,7 @@ def test_segwit_non_segwit_segwit_inputs(client):
     )
     inp2 = messages.TxInputType(
         address_n=parse_path("44'/1'/0'/0/0"),
-        # amount=31000000,
+        amount=31000000,
         prev_hash=TXHASH_e5040e,
         prev_index=0,
     )
@@ -183,7 +183,7 @@ def test_non_segwit_segwit_non_segwit_inputs(client):
 
     inp1 = messages.TxInputType(
         address_n=parse_path("44'/1'/0'/0/0"),
-        # amount=31000000,
+        amount=31000000,
         prev_hash=TXHASH_e5040e,
         prev_index=0,
     )
@@ -195,7 +195,10 @@ def test_non_segwit_segwit_non_segwit_inputs(client):
         script_type=messages.InputScriptType.SPENDWITNESS,
     )
     inp3 = messages.TxInputType(
-        address_n=parse_path("44'/1'/1'/0/0"), prev_hash=TXHASH_2bac7a, prev_index=0,
+        address_n=parse_path("44'/1'/1'/0/0"),
+        amount=9226912,
+        prev_hash=TXHASH_2bac7a,
+        prev_index=0,
     )
     out1 = messages.TxOutputType(
         address="tb1q54un3q39sf7e7tlfq99d6ezys7qgc62a6rxllc",

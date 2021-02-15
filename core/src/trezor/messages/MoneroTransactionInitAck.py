@@ -17,6 +17,7 @@ class MoneroTransactionInitAck(p.MessageType):
 
     def __init__(
         self,
+        *,
         hmacs: List[bytes] = None,
         rsig_data: MoneroTransactionRsigData = None,
     ) -> None:
@@ -27,5 +28,5 @@ class MoneroTransactionInitAck(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('hmacs', p.BytesType, p.FLAG_REPEATED),
-            2: ('rsig_data', MoneroTransactionRsigData, 0),
+            2: ('rsig_data', MoneroTransactionRsigData, None),
         }

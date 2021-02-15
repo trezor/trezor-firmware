@@ -8,8 +8,6 @@ from trezor.messages.BinanceOrderMsg import BinanceOrderMsg
 from trezor.messages.BinanceSignTx import BinanceSignTx
 from trezor.messages.BinanceTransferMsg import BinanceTransferMsg
 
-from apps.common import HARDENED
-
 ENVELOPE_BLUEPRINT = '{{"account_number":"{account_number}","chain_id":"{chain_id}","data":null,"memo":"{memo}","msgs":[{msgs}],"sequence":"{sequence}","source":"{source}"}}'
 MSG_TRANSFER_BLUEPRINT = '{{"inputs":[{inputs}],"outputs":[{outputs}]}}'
 MSG_NEWORDER_BLUEPRINT = '{{"id":"{id}","ordertype":{ordertype},"price":{price},"quantity":{quantity},"sender":"{sender}","side":{side},"symbol":"{symbol}","timeinforce":{timeinforce}}}'
@@ -91,25 +89,3 @@ def address_from_public_key(pubkey: bytes, hrp: str) -> str:
     convertedbits = bech32.convertbits(h, 8, 5, False)
 
     return bech32.bech32_encode(hrp, convertedbits)
-
-
-def validate_full_path(path: list) -> bool:
-    """
-    Validates derivation path to equal 44'/714'/a'/0/0,
-    where `a` is an account index from 0 to 1 000 000.
-    Similar to Ethereum this should be 44'/714'/a', but for
-    compatibility with other HW vendors we use 44'/714'/a'/0/0.
-    """
-    if len(path) != 5:
-        return False
-    if path[0] != 44 | HARDENED:
-        return False
-    if path[1] != 714 | HARDENED:
-        return False
-    if path[2] < HARDENED or path[2] > 1000000 | HARDENED:
-        return False
-    if path[3] != 0:
-        return False
-    if path[4] != 0:
-        return False
-    return True

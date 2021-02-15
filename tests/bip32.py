@@ -17,6 +17,7 @@
 import hashlib
 import hmac
 import struct
+from copy import copy
 
 import ecdsa
 from ecdsa.curves import SECP256k1
@@ -67,7 +68,7 @@ def public_ckd(public_node, n):
     if not isinstance(n, list):
         raise ValueError("Parameter must be a list")
 
-    node = messages.HDNodeType(**public_node)
+    node = copy(public_node)
 
     for i in n:
         node = get_subnode(node, i)
@@ -88,12 +89,6 @@ def get_subnode(node, i):
     I64 = hmac.HMAC(key=node.chain_code, msg=data, digestmod=hashlib.sha512).digest()
     I_left_as_exponent = string_to_number(I64[:32])
 
-    node_out = messages.HDNodeType()
-    node_out.depth = node.depth + 1
-    node_out.child_num = i
-    node_out.chain_code = I64[32:]
-    node_out.fingerprint = fingerprint(node.public_key)
-
     # BIP32 magic converts old public key to new public point
     x, y = sec_to_public_pair(node.public_key)
     point = I_left_as_exponent * SECP256k1.generator + Point(
@@ -103,10 +98,14 @@ def get_subnode(node, i):
     if point == INFINITY:
         raise ValueError("Point cannot be INFINITY")
 
-    # Convert public point to compressed public key
-    node_out.public_key = point_to_pubkey(point)
-
-    return node_out
+    return messages.HDNodeType(
+        depth=node.depth + 1,
+        child_num=i,
+        chain_code=I64[32:],
+        fingerprint=fingerprint(node.public_key),
+        # Convert public point to compressed public key
+        public_key=point_to_pubkey(point),
+    )
 
 
 def serialize(node, version=0x0488B21E):
@@ -130,11 +129,13 @@ def deserialize(xpub):
     if tools.btc_hash(data[:-4])[:4] != data[-4:]:
         raise ValueError("Checksum failed")
 
-    node = messages.HDNodeType()
-    node.depth = struct.unpack(">B", data[4:5])[0]
-    node.fingerprint = struct.unpack(">I", data[5:9])[0]
-    node.child_num = struct.unpack(">I", data[9:13])[0]
-    node.chain_code = data[13:45]
+    node = messages.HDNodeType(
+        depth=struct.unpack(">B", data[4:5])[0],
+        fingerprint=struct.unpack(">I", data[5:9])[0],
+        child_num=struct.unpack(">I", data[9:13])[0],
+        chain_code=data[13:45],
+        public_key=None,
+    )
 
     key = data[45:-4]
     if key[0] == 0:

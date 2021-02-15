@@ -14,7 +14,17 @@ install_requires = [
     "construct>=2.9",
     "typing_extensions>=3.7.4",
     "pyblake2>=0.9.3 ; python_version<'3.6'",
+    "attrs",
 ]
+
+extras_require = {
+    "hidapi": ["hidapi>=0.7.99.post20"],
+    "ethereum": ["rlp>=1.1.0", "web3>=4.8"],
+    "qt-widgets": ["PyQt5"],
+    "extra": ["Pillow"],
+}
+
+extras_require["full"] = sum(extras_require.values(), [])
 
 CWD = os.path.dirname(os.path.realpath(__file__))
 
@@ -48,11 +58,8 @@ setup(
     package_dir={"": "src"},
     entry_points={"console_scripts": ["trezorctl=trezorlib.cli.trezorctl:cli"]},
     install_requires=install_requires,
-    extras_require={
-        "hidapi": ["hidapi>=0.7.99.post20"],
-        "ethereum": ["rlp>=1.1.0", "web3>=4.8"],
-    },
-    python_requires=">=3.5",
+    extras_require=extras_require,
+    python_requires=">=3.6",
     include_package_data=True,
     zip_safe=False,
     classifiers=[

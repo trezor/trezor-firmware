@@ -54,7 +54,7 @@ def get_tags():
     result = defaultdict(list)
     for f in sorted(files):
         try:
-            # example: "trezor-emu-core-v2.1.1"
+            # example: "trezor-emu-core-v2.1.1" or "trezor-emu-core-v2.1.1-46ab42fw"
             _, _, gen, tag = f.name.split("-", maxsplit=3)
             result[gen].append(tag)
         except ValueError:
@@ -83,7 +83,10 @@ class EmulatorWrapper:
 
         if gen == "legacy":
             self.emulator = LegacyEmulator(
-                executable, self.profile_dir.name, storage=storage, headless=True,
+                executable,
+                self.profile_dir.name,
+                storage=storage,
+                headless=True,
             )
         elif gen == "core":
             self.emulator = CoreEmulator(

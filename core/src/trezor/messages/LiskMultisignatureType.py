@@ -14,18 +14,19 @@ class LiskMultisignatureType(p.MessageType):
 
     def __init__(
         self,
+        *,
+        keys_group: List[str] = None,
         min: int = None,
         life_time: int = None,
-        keys_group: List[str] = None,
     ) -> None:
+        self.keys_group = keys_group if keys_group is not None else []
         self.min = min
         self.life_time = life_time
-        self.keys_group = keys_group if keys_group is not None else []
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('min', p.UVarintType, 0),
-            2: ('life_time', p.UVarintType, 0),
+            1: ('min', p.UVarintType, None),
+            2: ('life_time', p.UVarintType, None),
             3: ('keys_group', p.UnicodeType, p.FLAG_REPEATED),
         }

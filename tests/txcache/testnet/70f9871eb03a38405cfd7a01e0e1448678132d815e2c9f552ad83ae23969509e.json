@@ -13,10 +13,26 @@
     {
       "prev_hash": "43d273d3caf41759ad843474f960fbf80ff2ec961135d018b61e9fab3ad1fc06",
       "prev_index": 1,
+      "address_n": [2147483732, 2147483649, 2147483648, 0, 2],
+      "amount": 20000000,
+      "script_type": "SPENDWITNESS",
       "script_sig": "",
+      "witness": "0247304402207da4ce78bf9175ad4764794013360be569d3902861a54922aad6239659422f86022050145fc897a806b4ef06777a58471d39e9a10482cd8e61819ee18d6d22eaa6be01210357cb3a5918d15d224f14a89f0eb54478272108f6cbb9c473c1565e55260f6e93",
       "sequence": 4294967293
     }
   ],
   "lock_time": 1348713,
+  "outputs": [
+    {
+      "address": "tb1qkvwu9g3k2pdxewfqr7syz89r3gj557l3uuf9r9",
+      "amount": 100000,
+      "script_type": "PAYTOWITNESS"
+    },
+    {
+      "address_n": [2147483732, 2147483649, 2147483648, 1, 1],
+      "amount": 19899859,
+      "script_type": "PAYTOWITNESS"
+    }
+  ],
   "version": 1
 }

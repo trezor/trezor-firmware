@@ -3,14 +3,18 @@ from mock_storage import mock_storage
 
 from storage import cache
 from trezor.messages.Initialize import Initialize
-from trezor.wire import DUMMY_CONTEXT
+from trezor.messages.EndSession import EndSession
+from trezor.wire import DUMMY_CONTEXT, InvalidSession
 
-from apps.base import handle_Initialize
+from apps.base import handle_Initialize, handle_EndSession
 
 KEY = 99
 
 
 class TestStorageCache(unittest.TestCase):
+    def setUp(self):
+        cache.clear_all()
+
     def test_start_session(self):
         session_id_a = cache.start_session()
         self.assertIsNotNone(session_id_a)
@@ -18,10 +22,39 @@ class TestStorageCache(unittest.TestCase):
         self.assertNotEqual(session_id_a, session_id_b)
 
         cache.clear_all()
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(InvalidSession):
             cache.set(KEY, "something")
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(InvalidSession):
             cache.get(KEY)
+
+    def test_end_session(self):
+        session_id = cache.start_session()
+        self.assertTrue(cache.is_session_started())
+        cache.set(KEY, "A")
+        cache.end_current_session()
+        self.assertFalse(cache.is_session_started())
+        self.assertRaises(InvalidSession, cache.get, KEY)
+
+        # ending an ended session should be a no-op
+        cache.end_current_session()
+        self.assertFalse(cache.is_session_started())
+
+        session_id_a = cache.start_session(session_id)
+        # original session no longer exists
+        self.assertNotEqual(session_id_a, session_id)
+        # original session data no longer exists
+        self.assertIsNone(cache.get(KEY))
+
+        # create a new session
+        session_id_b = cache.start_session()
+        # switch back to original session
+        session_id = cache.start_session(session_id_a)
+        self.assertEqual(session_id, session_id_a)
+        # end original session
+        cache.end_current_session()
+        # switch back to B
+        session_id = cache.start_session(session_id_b)
+        self.assertEqual(session_id, session_id_b)
 
     def test_session_queue(self):
         session_id = cache.start_session()
@@ -47,7 +80,7 @@ class TestStorageCache(unittest.TestCase):
         self.assertEqual(cache.get(KEY), "hello")
 
         cache.clear_all()
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(InvalidSession):
             cache.get(KEY)
 
     def test_decorator_mismatch(self):
@@ -127,6 +160,15 @@ class TestStorageCache(unittest.TestCase):
         # but resuming a session loads the previous one
         call_Initialize(session_id=session_id)
         self.assertEqual(cache.get(KEY), "hello")
+
+    def test_EndSession(self):
+        self.assertRaises(InvalidSession, cache.get, KEY)
+        session_id = cache.start_session()
+        self.assertTrue(cache.is_session_started())
+        self.assertIsNone(cache.get(KEY))
+        await_result(handle_EndSession(DUMMY_CONTEXT, EndSession()))
+        self.assertFalse(cache.is_session_started())
+        self.assertRaises(InvalidSession, cache.get, KEY)
 
 
 if __name__ == "__main__":

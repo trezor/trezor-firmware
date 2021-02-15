@@ -3,7 +3,8 @@ from trezor.messages import ButtonRequestType
 from trezor.ui.text import Text
 
 from apps.common.confirm import require_confirm, require_hold_to_confirm
-from apps.stellar import consts
+
+from . import consts
 
 
 async def require_confirm_init(

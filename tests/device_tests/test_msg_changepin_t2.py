@@ -27,22 +27,22 @@ pytestmark = pytest.mark.skip_t1
 
 
 def _check_pin(client, pin):
-    client.clear_session()
+    client.lock()
     assert client.features.pin_protection is True
     assert client.features.unlocked is False
 
     with client:
         client.use_pin_sequence([pin])
-        client.set_expected_responses([messages.ButtonRequest(), messages.Address()])
+        client.set_expected_responses([messages.ButtonRequest, messages.Address])
         btc.get_address(client, "Testnet", PASSPHRASE_TEST_PATH)
 
 
 def _check_no_pin(client):
-    client.clear_session()
+    client.lock()
     assert client.features.pin_protection is False
 
     with client:
-        client.set_expected_responses([messages.Address()])
+        client.set_expected_responses([messages.Address])
         btc.get_address(client, "Testnet", PASSPHRASE_TEST_PATH)
 
 
@@ -56,7 +56,7 @@ def test_set_pin(client):
     with client:
         client.use_pin_sequence([PIN6, PIN6])
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 4 + [messages.Success(), messages.Features()]
+            [messages.ButtonRequest] * 4 + [messages.Success, messages.Features]
         )
         device.change_pin(client)
 
@@ -76,7 +76,7 @@ def test_change_pin(client):
     with client:
         client.use_pin_sequence([PIN4, PIN6, PIN6])
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 5 + [messages.Success(), messages.Features()]
+            [messages.ButtonRequest] * 5 + [messages.Success, messages.Features]
         )
         device.change_pin(client)
 
@@ -98,7 +98,7 @@ def test_remove_pin(client):
     with client:
         client.use_pin_sequence([PIN4])
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 3 + [messages.Success(), messages.Features()]
+            [messages.ButtonRequest] * 3 + [messages.Success, messages.Features]
         )
         device.change_pin(client, remove=True)
 
@@ -128,9 +128,7 @@ def test_set_failed(client):
         client.cancel()
 
     with client, pytest.raises(Cancelled):
-        client.set_expected_responses(
-            [messages.ButtonRequest()] * 4 + [messages.Failure()]
-        )
+        client.set_expected_responses([messages.ButtonRequest] * 4 + [messages.Failure])
         client.set_input_flow(input_flow)
 
         device.change_pin(client)
@@ -164,9 +162,7 @@ def test_change_failed(client):
         client.cancel()
 
     with client, pytest.raises(Cancelled):
-        client.set_expected_responses(
-            [messages.ButtonRequest()] * 5 + [messages.Failure()]
-        )
+        client.set_expected_responses([messages.ButtonRequest] * 5 + [messages.Failure])
         client.set_input_flow(input_flow)
 
         device.change_pin(client)

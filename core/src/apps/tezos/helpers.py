@@ -1,8 +1,10 @@
 from micropython import const
 
+from trezor import wire
 from trezor.crypto import base58
+from trezor.utils import BufferReader, ensure
 
-from apps.common import HARDENED
+from apps.common.readers import read_uint32_be
 from apps.common.writers import write_bytes_unchecked, write_uint8
 
 TEZOS_AMOUNT_DECIMALS = const(6)
@@ -50,6 +52,34 @@ MICHELSON_INSTRUCTION_BYTES = {
 
 DO_ENTRYPOINT_TAG = const(2)
 MICHELSON_SEQUENCE_TAG = const(2)
+BRANCH_HASH_SIZE = const(32)
+PROPOSAL_HASH_SIZE = const(32)
+PUBLIC_KEY_HASH_SIZE = const(20)
+TAGGED_PUBKEY_HASH_SIZE = 1 + PUBLIC_KEY_HASH_SIZE
+CONTRACT_ID_SIZE = const(22)
+ED25519_PUBLIC_KEY_SIZE = const(32)
+SECP256K1_PUBLIC_KEY_SIZE = const(33)
+P256_PUBLIC_KEY_SIZE = const(33)
+
+PUBLIC_KEY_TAG_TO_SIZE = {
+    0: ED25519_PUBLIC_KEY_SIZE,
+    1: SECP256K1_PUBLIC_KEY_SIZE,
+    2: P256_PUBLIC_KEY_SIZE,
+}
+
+OP_TAG_ENDORSEMENT = const(0)
+OP_TAG_SEED_NONCE_REVELATION = const(1)
+OP_TAG_DOUBLE_ENDORSEMENT_EVIDENCE = const(2)
+OP_TAG_DOUBLE_BAKING_EVIDENCE = const(3)
+OP_TAG_ACTIVATE_ACCOUNT = const(4)
+OP_TAG_PROPOSALS = const(5)
+OP_TAG_BALLOT = const(6)
+OP_TAG_REVEAL = const(107)
+OP_TAG_TRANSACTION = const(108)
+OP_TAG_ORIGINATION = const(109)
+OP_TAG_DELEGATION = const(110)
+
+EP_TAG_NAMED = const(255)
 
 
 def base58_encode_check(payload, prefix=None):
@@ -66,31 +96,6 @@ def base58_decode_check(enc, prefix=None):
     return decoded
 
 
-def validate_full_path(path: list) -> bool:
-    """
-    Validates derivation path to equal 44'/1729'/a',
-    where `a` is an account index from 0 to 1 000 000.
-    Additional component added to allow ledger migration
-    44'/1729'/0'/b' where `b` is an account index from 0 to 1 000 000
-    """
-    length = len(path)
-    if length < 3 or length > 4:
-        return False
-    if path[0] != 44 | HARDENED:
-        return False
-    if path[1] != 1729 | HARDENED:
-        return False
-    if length == 3:
-        if path[2] < HARDENED or path[2] > 1000000 | HARDENED:
-            return False
-    if length == 4:
-        if path[2] != 0 | HARDENED:
-            return False
-        if path[3] < HARDENED or path[3] > 1000000 | HARDENED:
-            return False
-    return True
-
-
 def write_bool(w: bytearray, boolean: bool):
     if boolean:
         write_uint8(w, 255)
@@ -100,3 +105,29 @@ def write_bool(w: bytearray, boolean: bool):
 
 def write_instruction(w: bytearray, instruction: str) -> int:
     write_bytes_unchecked(w, MICHELSON_INSTRUCTION_BYTES[instruction])
+
+
+def check_script_size(script: bytes) -> None:
+    try:
+        r = BufferReader(script)
+        n = read_uint32_be(r)
+        r.read(n)
+        n = read_uint32_be(r)
+        ensure(r.remaining_count() == n)
+    except (AssertionError, EOFError):
+        raise wire.DataError("Invalid script")
+
+
+def check_tx_params_size(params: bytes) -> None:
+    try:
+        r = BufferReader(params)
+        tag = r.get()
+        if tag == EP_TAG_NAMED:
+            n = r.get()
+            r.read(n)
+        elif tag > 4:
+            raise wire.DataError("Unknown entrypoint tag")
+        n = read_uint32_be(r)
+        ensure(r.remaining_count() == n)
+    except (AssertionError, EOFError):
+        raise wire.DataError("Invalid transaction parameters")

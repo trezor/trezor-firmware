@@ -4,11 +4,75 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## 2.3.3 [to be released on 2nd September 2020]
+## 2.3.6 [unreleased]
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## 2.3.5 [to be released on 10th February 2021]
+
+### Added
+- CoinJoin preauthorization and signing flow.  [#1053]
+- Value of the `safety-checks` setting to the `Features` message.  [#1193]
+- ERC20 tokens show contract address for confirmation. Unknown ERC20 tokens show wei amount.  [#800]
+- Replacement transaction signing for replace-by-fee and PayJoin.  [#1292]
+- Support for Output Descriptors export.  [#1363]
+- Paginated display for signing/verifying long messages.  [#1271]
+- Show Ypub/Zpub correctly for multisig GetAddress.  [#1415]
+- Show amounts in mBTC, uBTC and sat denominations.  [#1369]
+
+### Changed
+- The `safety-checks` setting gained new possible value `PromptTemporarily` which overrides safety checks until device reboot.  [#1133]
+- Protobuf codec now enforces `required` fields and pre-fills default values.  [#379]
+- `TxAck` messages are now decoded into "polymorphic" subtypes instead of the common `TxAck` type.
+- Bump nanopb dependency to 0.4.3.  [#1105]
+- BIP-32 paths must now match a pre-defined path schema to be considered valid.  [#1184]
+- Minimum auto-lock delay to 1 minute. The former value of 10 seconds still applies for debug builds.  [#1351]
+- It is again possible to sign for Ethereum clones that are not officially supported.  [#1335]
+- Bump nanopb dependency to 0.4.4.  [#1402]
+- Automatic breaking text on whitespace.  [#1384]
+- Introduced limit of 32 characters for device label.  [#1399]
+
+### Deprecated
+
+### Removed
+- PIVX support
+
+### Fixed
+- Path warning is not shown on `GetAddress(show_display=False)` call.  [#1206]
+- Settings are also erased from RAM when device is wiped.  [#1322]
+
+### Security
+
+## 2.3.4 [7th October 2020]
+
+### Added
+- Support for the upcoming Monero hard fork.  [#1246]
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+
+## 2.3.3 [2nd September 2020]
 
 ### Added
 - Running the frozen version of the emulator doesn't need arguments.  [#1115]
-- CoinJoin preauthorization and siging flow.  [#1053]
 - XVG support.  [#1165]
 - Hard limit on transaction fees. Can be disabled using `safety-checks`. [#1087]
 
@@ -22,13 +86,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 - Remove ETP, GIN, PTC, ZEL support.
-- Drop support for signing Zcash v3 transactions.  [#982] 
+- Drop support for signing Zcash v3 transactions.  [#982]
 
 ### Fixed
 - CRW addresses are properly generated.  [#1139]
 - Fix boot loop after uploading invalid homescreen.  [#1118]
 - Allow 49/x not 49/x' for Casa.  [#1190]
-- Make sure Homescreen is properly initialized.  [#1095] 
+- Make sure Homescreen is properly initialized.  [#1095]
 
 ### Security
 - Show non-empty passphrase on device when it was entered on host.
@@ -50,7 +114,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `Features.pin_cached` renamed to `unlocked`.
 - Forbid all settings if the device is not yet initialized.  [#1056]
 - Rewrite USB codec and Protobuf decoder to be more memory-efficient.  [#1089]
-- Allow compatibility namespaces for Casa and Green Address. 
+- Allow compatibility namespaces for Casa and Green Address.
 
 ### Deprecated
 - Deprecate `overwintered` field in `SignTx` and `TxAck`.
@@ -257,6 +321,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - First public release.
 
+[#379]: https://github.com/trezor/trezor-firmware/issues/379
+[#800]: https://github.com/trezor/trezor-firmware/issues/800
 [#948]: https://github.com/trezor/trezor-firmware/issues/948
 [#958]: https://github.com/trezor/trezor-firmware/issues/958
 [#982]: https://github.com/trezor/trezor-firmware/issues/982
@@ -272,12 +338,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1089]: https://github.com/trezor/trezor-firmware/issues/1089
 [#1095]: https://github.com/trezor/trezor-firmware/issues/1095
 [#1098]: https://github.com/trezor/trezor-firmware/issues/1098
+[#1105]: https://github.com/trezor/trezor-firmware/issues/1105
 [#1115]: https://github.com/trezor/trezor-firmware/issues/1115
 [#1118]: https://github.com/trezor/trezor-firmware/issues/1118
 [#1126]: https://github.com/trezor/trezor-firmware/issues/1126
+[#1133]: https://github.com/trezor/trezor-firmware/issues/1133
 [#1139]: https://github.com/trezor/trezor-firmware/issues/1139
 [#1159]: https://github.com/trezor/trezor-firmware/issues/1159
 [#1165]: https://github.com/trezor/trezor-firmware/pull/1165
 [#1173]: https://github.com/trezor/trezor-firmware/pull/1173
+[#1184]: https://github.com/trezor/trezor-firmware/issues/1184
 [#1188]: https://github.com/trezor/trezor-firmware/issues/1188
 [#1190]: https://github.com/trezor/trezor-firmware/issues/1190
+[#1193]: https://github.com/trezor/trezor-firmware/issues/1193
+[#1206]: https://github.com/trezor/trezor-firmware/issues/1206
+[#1246]: https://github.com/trezor/trezor-firmware/issues/1246
+[#1271]: https://github.com/trezor/trezor-firmware/issues/1271
+[#1292]: https://github.com/trezor/trezor-firmware/issues/1292
+[#1322]: https://github.com/trezor/trezor-firmware/issues/1322
+[#1335]: https://github.com/trezor/trezor-firmware/issues/1335
+[#1351]: https://github.com/trezor/trezor-firmware/issues/1351
+[#1363]: https://github.com/trezor/trezor-firmware/pull/1363
+[#1369]: https://github.com/trezor/trezor-firmware/pull/1369
+[#1384]: https://github.com/trezor/trezor-firmware/issues/1384
+[#1399]: https://github.com/trezor/trezor-firmware/issues/1399
+[#1402]: https://github.com/trezor/trezor-firmware/pull/1402
+[#1415]: https://github.com/trezor/trezor-firmware/pull/1415

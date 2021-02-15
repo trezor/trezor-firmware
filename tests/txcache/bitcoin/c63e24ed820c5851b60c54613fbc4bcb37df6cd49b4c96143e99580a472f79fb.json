@@ -11,6 +11,7 @@
   ],
   "inputs": [
     {
+      "address_n": [2147483692, 2147483648, 2147483648, 0, 0],
       "prev_hash": "c6be22d34946593bcad1d2b013e12f74159e69574ffea21581dad115572e031c",
       "prev_index": 1,
       "script_sig": "493046022100f773c403b2f85a5c1d6c9c4ad69c43de66930fff4b1bc818eb257af98305546a022100bbc421b41bc60d89593186c99b4b9ca6ac8dce1fe62342d38a8e14e0cbf279dc01210338d78612e990f2eea0c426b5e48a8db70b9d7ed66282b3b26511e0b1c75515a6",
@@ -23,5 +24,6 @@
       "sequence": 4294967295
     }
   ],
+  "lock_time": 0,
   "version": 1
 }

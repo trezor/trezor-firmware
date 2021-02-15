@@ -84,16 +84,24 @@ def validate_firmware(version, fw, expected_fingerprint=None):
 def find_best_firmware_version(
     bootloader_version, requested_version=None, beta=False, bitcoin_only=False
 ):
-    if beta:
-        url = "https://beta-wallet.trezor.io/data/firmware/{}/releases.json"
-    else:
-        url = "https://wallet.trezor.io/data/firmware/{}/releases.json"
+    url = "https://data.trezor.io/firmware/{}/releases.json"
     releases = requests.get(url.format(bootloader_version[0])).json()
     if not releases:
         raise click.ClickException("Failed to get list of releases")
 
     if bitcoin_only:
         releases = [r for r in releases if "url_bitcoinonly" in r]
+
+    # filter releases according to channel field
+    releases_stable = [
+        r for r in releases if "channel" not in r or r["channel"] == "stable"
+    ]
+    releases_beta = [r for r in releases if "channel" in r and r["channel"] == "beta"]
+    if beta:
+        releases = releases_stable + releases_beta
+    else:
+        releases = releases_stable
+
     releases.sort(key=lambda r: r["version"], reverse=True)
 
     def version_str(version):
@@ -158,10 +166,10 @@ def find_best_firmware_version(
     else:
         url = release["url"]
         fingerprint = release["fingerprint"]
-    if beta:
-        url = "https://beta-wallet.trezor.io/" + url
-    else:
-        url = "https://wallet.trezor.io/" + url
+    if not url.startswith("data/"):
+        click.echo("Unsupported URL found: {}".format(url))
+        sys.exit(1)
+    url = "https://data.trezor.io/" + url[5:]
 
     return url, fingerprint
 
@@ -177,7 +185,6 @@ def find_best_firmware_version(
 @click.option("--bitcoin-only", is_flag=True, help="Use bitcoin-only firmware (if possible)")
 @click.option("--raw", is_flag=True, help="Push raw data to Trezor")
 @click.option("--fingerprint", help="Expected firmware fingerprint in hex")
-@click.option("--skip-vendor-header", help="Skip vendor header validation on Trezor T")
 # fmt: on
 @with_client
 def firmware_update(
@@ -187,7 +194,6 @@ def firmware_update(
     version,
     skip_check,
     fingerprint,
-    skip_vendor_header,
     raw,
     dry_run,
     beta,
@@ -205,9 +211,6 @@ def firmware_update(
     If you provide a fingerprint via the --fingerprint option, it will be checked
     against downloaded firmware fingerprint. Otherwise fingerprint is checked
     against wallet.trezor.io information, if available.
-
-    If you are customizing Model T bootloader and providing your own vendor header,
-    you can use --skip-vendor-header to ignore vendor header signatures.
     """
     if sum(bool(x) for x in (filename, url, version)) > 1:
         click.echo("You can use only one of: filename, url, version.")

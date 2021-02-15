@@ -8,6 +8,7 @@ if __debug__:
         from typing_extensions import Literal  # noqa: F401
         EnumTypeCapability = Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
         EnumTypeBackupType = Literal[0, 1, 2]
+        EnumTypeSafetyCheckLevel = Literal[0, 1, 2]
     except ImportError:
         pass
 
@@ -17,6 +18,8 @@ class Features(p.MessageType):
 
     def __init__(
         self,
+        *,
+        capabilities: List[EnumTypeCapability] = None,
         vendor: str = None,
         major_version: int = None,
         minor_version: int = None,
@@ -44,14 +47,18 @@ class Features(p.MessageType):
         unfinished_backup: bool = None,
         no_backup: bool = None,
         recovery_mode: bool = None,
-        capabilities: List[EnumTypeCapability] = None,
         backup_type: EnumTypeBackupType = None,
         sd_card_present: bool = None,
         sd_protection: bool = None,
         wipe_code_protection: bool = None,
         session_id: bytes = None,
         passphrase_always_on_device: bool = None,
+        safety_checks: EnumTypeSafetyCheckLevel = None,
+        auto_lock_delay_ms: int = None,
+        display_rotation: int = None,
+        experimental_features: bool = None,
     ) -> None:
+        self.capabilities = capabilities if capabilities is not None else []
         self.vendor = vendor
         self.major_version = major_version
         self.minor_version = minor_version
@@ -79,49 +86,56 @@ class Features(p.MessageType):
         self.unfinished_backup = unfinished_backup
         self.no_backup = no_backup
         self.recovery_mode = recovery_mode
-        self.capabilities = capabilities if capabilities is not None else []
         self.backup_type = backup_type
         self.sd_card_present = sd_card_present
         self.sd_protection = sd_protection
         self.wipe_code_protection = wipe_code_protection
         self.session_id = session_id
         self.passphrase_always_on_device = passphrase_always_on_device
+        self.safety_checks = safety_checks
+        self.auto_lock_delay_ms = auto_lock_delay_ms
+        self.display_rotation = display_rotation
+        self.experimental_features = experimental_features
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('vendor', p.UnicodeType, 0),
-            2: ('major_version', p.UVarintType, 0),
-            3: ('minor_version', p.UVarintType, 0),
-            4: ('patch_version', p.UVarintType, 0),
-            5: ('bootloader_mode', p.BoolType, 0),
-            6: ('device_id', p.UnicodeType, 0),
-            7: ('pin_protection', p.BoolType, 0),
-            8: ('passphrase_protection', p.BoolType, 0),
-            9: ('language', p.UnicodeType, 0),
-            10: ('label', p.UnicodeType, 0),
-            12: ('initialized', p.BoolType, 0),
-            13: ('revision', p.BytesType, 0),
-            14: ('bootloader_hash', p.BytesType, 0),
-            15: ('imported', p.BoolType, 0),
-            16: ('unlocked', p.BoolType, 0),
-            18: ('firmware_present', p.BoolType, 0),
-            19: ('needs_backup', p.BoolType, 0),
-            20: ('flags', p.UVarintType, 0),
-            21: ('model', p.UnicodeType, 0),
-            22: ('fw_major', p.UVarintType, 0),
-            23: ('fw_minor', p.UVarintType, 0),
-            24: ('fw_patch', p.UVarintType, 0),
-            25: ('fw_vendor', p.UnicodeType, 0),
-            26: ('fw_vendor_keys', p.BytesType, 0),
-            27: ('unfinished_backup', p.BoolType, 0),
-            28: ('no_backup', p.BoolType, 0),
-            29: ('recovery_mode', p.BoolType, 0),
+            1: ('vendor', p.UnicodeType, None),
+            2: ('major_version', p.UVarintType, None),
+            3: ('minor_version', p.UVarintType, None),
+            4: ('patch_version', p.UVarintType, None),
+            5: ('bootloader_mode', p.BoolType, None),
+            6: ('device_id', p.UnicodeType, None),
+            7: ('pin_protection', p.BoolType, None),
+            8: ('passphrase_protection', p.BoolType, None),
+            9: ('language', p.UnicodeType, None),
+            10: ('label', p.UnicodeType, None),
+            12: ('initialized', p.BoolType, None),
+            13: ('revision', p.BytesType, None),
+            14: ('bootloader_hash', p.BytesType, None),
+            15: ('imported', p.BoolType, None),
+            16: ('unlocked', p.BoolType, None),
+            18: ('firmware_present', p.BoolType, None),
+            19: ('needs_backup', p.BoolType, None),
+            20: ('flags', p.UVarintType, None),
+            21: ('model', p.UnicodeType, None),
+            22: ('fw_major', p.UVarintType, None),
+            23: ('fw_minor', p.UVarintType, None),
+            24: ('fw_patch', p.UVarintType, None),
+            25: ('fw_vendor', p.UnicodeType, None),
+            26: ('fw_vendor_keys', p.BytesType, None),
+            27: ('unfinished_backup', p.BoolType, None),
+            28: ('no_backup', p.BoolType, None),
+            29: ('recovery_mode', p.BoolType, None),
             30: ('capabilities', p.EnumType("Capability", (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17)), p.FLAG_REPEATED),
-            31: ('backup_type', p.EnumType("BackupType", (0, 1, 2)), 0),
-            32: ('sd_card_present', p.BoolType, 0),
-            33: ('sd_protection', p.BoolType, 0),
-            34: ('wipe_code_protection', p.BoolType, 0),
-            35: ('session_id', p.BytesType, 0),
-            36: ('passphrase_always_on_device', p.BoolType, 0),
+            31: ('backup_type', p.EnumType("BackupType", (0, 1, 2)), None),
+            32: ('sd_card_present', p.BoolType, None),
+            33: ('sd_protection', p.BoolType, None),
+            34: ('wipe_code_protection', p.BoolType, None),
+            35: ('session_id', p.BytesType, None),
+            36: ('passphrase_always_on_device', p.BoolType, None),
+            37: ('safety_checks', p.EnumType("SafetyCheckLevel", (0, 1, 2)), None),
+            38: ('auto_lock_delay_ms', p.UVarintType, None),
+            39: ('display_rotation', p.UVarintType, None),
+            40: ('experimental_features', p.BoolType, None),
         }

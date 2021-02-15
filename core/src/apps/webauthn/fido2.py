@@ -14,18 +14,11 @@ from trezor.ui.text import Text
 
 from apps.base import set_homescreen
 from apps.common import cbor
-from apps.webauthn import common
-from apps.webauthn.confirm import ConfirmContent, ConfirmInfo
-from apps.webauthn.credential import (
-    CRED_ID_MAX_LENGTH,
-    Credential,
-    Fido2Credential,
-    U2fCredential,
-)
-from apps.webauthn.resident_credentials import (
-    find_by_rp_id_hash,
-    store_resident_credential,
-)
+
+from . import common
+from .confirm import ConfirmContent, ConfirmInfo
+from .credential import CRED_ID_MAX_LENGTH, Credential, Fido2Credential, U2fCredential
+from .resident_credentials import find_by_rp_id_hash, store_resident_credential
 
 if False:
     from typing import (
@@ -40,7 +33,7 @@ if False:
         Union,
     )
 
-_CID_BROADCAST = const(0xFFFFFFFF)  # broadcast channel id
+_CID_BROADCAST = const(0xFFFF_FFFF)  # broadcast channel id
 
 # types of frame
 _TYPE_MASK = const(0x80)  # frame type mask
@@ -244,6 +237,7 @@ _last_good_auth_check_cid = 0
 
 class CborError(Exception):
     def __init__(self, code: int):
+        super().__init__()
         self.code = code
 
 
@@ -569,7 +563,7 @@ async def handle_reports(iface: io.HID) -> None:
                 dialog_mgr.get_cid(),
                 _CID_BROADCAST,
             ):
-                resp = cmd_error(req.cid, _ERR_CHANNEL_BUSY)  # type: Optional[Cmd]
+                resp: Optional[Cmd] = cmd_error(req.cid, _ERR_CHANNEL_BUSY)
             else:
                 resp = dispatch_cmd(req, dialog_mgr)
             if resp is not None:
@@ -777,7 +771,7 @@ class Fido2Unlock(Fido2State):
         super().__init__(req.cid, dialog_mgr.iface)
         self.process_func = process_func
         self.req = req
-        self.resp = None  # type: Optional[Cmd]
+        self.resp: Optional[Cmd] = None
         self.dialog_mgr = dialog_mgr
 
     async def confirm_dialog(self) -> Union[bool, "State"]:
@@ -998,11 +992,11 @@ class DialogManager:
         self._clear()
 
     def _clear(self) -> None:
-        self.state = None  # type: Optional[State]
+        self.state: Optional[State] = None
         self.deadline = 0
         self.result = _RESULT_NONE
-        self.workflow = None  # type: Optional[loop.spawn]
-        self.keepalive = None  # type: Optional[Coroutine]
+        self.workflow: Optional[loop.spawn] = None
+        self.keepalive: Optional[Coroutine] = None
 
     def _workflow_is_running(self) -> bool:
         return self.workflow is not None and not self.workflow.finished
@@ -1187,8 +1181,8 @@ def dispatch_cmd(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
 
 def cmd_init(req: Cmd) -> Cmd:
     if req.cid == _CID_BROADCAST:
-        # uint32_t except 0 and 0xffffffff
-        resp_cid = random.uniform(0xFFFFFFFE) + 1
+        # uint32_t except 0 and 0xffff_ffff
+        resp_cid = random.uniform(0xFFFF_FFFE) + 1
     else:
         resp_cid = req.cid
 
@@ -1217,7 +1211,7 @@ def cmd_wink(req: Cmd) -> Cmd:
 
 def msg_register(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     if not config.is_unlocked():
-        new_state = U2fUnlock(req.cid, dialog_mgr.iface)  # type: State
+        new_state: State = U2fUnlock(req.cid, dialog_mgr.iface)
         dialog_mgr.set_state(new_state)
         return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
 
@@ -1298,7 +1292,7 @@ def msg_register_sign(challenge: bytes, cred: U2fCredential) -> bytes:
 
 def msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
     if not config.is_unlocked():
-        new_state = U2fUnlock(req.cid, dialog_mgr.iface)  # type: State
+        new_state: State = U2fUnlock(req.cid, dialog_mgr.iface)
         dialog_mgr.set_state(new_state)
         return msg_error(req.cid, _SW_CONDITIONS_NOT_SATISFIED)
 
@@ -1433,7 +1427,7 @@ def credentials_from_descriptor_list(
 def distinguishable_cred_list(credentials: Iterable[Credential]) -> List[Credential]:
     """Reduces the input to a list of credentials which can be distinguished by
     the user. It is assumed that all input credentials share the same RP ID."""
-    cred_list = []  # type: List[Credential]
+    cred_list: List[Credential] = []
     for cred in credentials:
         for i, prev_cred in enumerate(cred_list):
             if prev_cred.account_name() == cred.account_name():
@@ -1481,7 +1475,7 @@ def cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Optional[Cmd]:
 def cbor_make_credential_process(
     req: Cmd, dialog_mgr: DialogManager
 ) -> Union[State, Cmd]:
-    from apps.webauthn import knownapps
+    from . import knownapps
 
     if not storage.device.is_initialized():
         if __debug__:
@@ -1588,7 +1582,7 @@ def cbor_make_credential_process(
 
 
 def use_self_attestation(rp_id_hash: bytes) -> bool:
-    from apps.webauthn import knownapps
+    from . import knownapps
 
     app = knownapps.by_rp_id_hash(rp_id_hash)
     if app is not None and app.use_self_attestation is not None:
@@ -1796,7 +1790,7 @@ def cbor_get_assertion_hmac_secret(
     shared_secret = hashlib.sha256(ecdh_result[1:33]).digest()
 
     # Check the authentication tag and decrypt the salt.
-    tag = hmac.Hmac(shared_secret, salt_enc, hashlib.sha256).digest()[:16]
+    tag = hmac(hmac.SHA256, shared_secret, salt_enc).digest()[:16]
     if not utils.consteq(tag, salt_auth):
         raise CborError(_ERR_EXTENSION_FIRST)
     salt = aes(aes.CBC, shared_secret).decrypt(salt_enc)
@@ -1808,9 +1802,9 @@ def cbor_get_assertion_hmac_secret(
         return None
 
     # Compute the hmac-secret output.
-    output = hmac.Hmac(cred_random, salt[:32], hashlib.sha256).digest()
+    output = hmac(hmac.SHA256, cred_random, salt[:32]).digest()
     if len(salt) == 64:
-        output += hmac.Hmac(cred_random, salt[32:], hashlib.sha256).digest()
+        output += hmac(hmac.SHA256, cred_random, salt[32:]).digest()
 
     # Encrypt the hmac-secret output.
     return aes(aes.CBC, shared_secret).encrypt(output)

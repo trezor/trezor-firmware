@@ -30,13 +30,14 @@
 ///     Generate secret key.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_curve25519_generate_secret() {
-  uint8_t out[32] = {0};
-  random_buffer(out, 32);
+  vstr_t sk = {0};
+  vstr_init_len(&sk, 32);
+  random_buffer((uint8_t *)sk.buf, sk.len);
   // taken from https://cr.yp.to/ecdh.html
-  out[0] &= 248;
-  out[31] &= 127;
-  out[31] |= 64;
-  return mp_obj_new_bytes(out, sizeof(out));
+  sk.buf[0] &= 248;
+  sk.buf[31] &= 127;
+  sk.buf[31] |= 64;
+  return mp_obj_new_str_from_vstr(&mp_type_bytes, &sk);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(
     mod_trezorcrypto_curve25519_generate_secret_obj,
@@ -52,9 +53,10 @@ STATIC mp_obj_t mod_trezorcrypto_curve25519_publickey(mp_obj_t secret_key) {
   if (sk.len != 32) {
     mp_raise_ValueError("Invalid length of secret key");
   }
-  uint8_t out[32] = {0};
-  curve25519_scalarmult_basepoint(out, (const uint8_t *)sk.buf);
-  return mp_obj_new_bytes(out, sizeof(out));
+  vstr_t pk = {0};
+  vstr_init_len(&pk, 32);
+  curve25519_scalarmult_basepoint((uint8_t *)pk.buf, (const uint8_t *)sk.buf);
+  return mp_obj_new_str_from_vstr(&mp_type_bytes, &pk);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_curve25519_publickey_obj,
                                  mod_trezorcrypto_curve25519_publickey);
@@ -75,9 +77,11 @@ STATIC mp_obj_t mod_trezorcrypto_curve25519_multiply(mp_obj_t secret_key,
   if (pk.len != 32) {
     mp_raise_ValueError("Invalid length of public key");
   }
-  uint8_t out[32] = {0};
-  curve25519_scalarmult(out, (const uint8_t *)sk.buf, (const uint8_t *)pk.buf);
-  return mp_obj_new_bytes(out, sizeof(out));
+  vstr_t out = {0};
+  vstr_init_len(&out, 32);
+  curve25519_scalarmult((uint8_t *)out.buf, (const uint8_t *)sk.buf,
+                        (const uint8_t *)pk.buf);
+  return mp_obj_new_str_from_vstr(&mp_type_bytes, &out);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_curve25519_multiply_obj,
                                  mod_trezorcrypto_curve25519_multiply);

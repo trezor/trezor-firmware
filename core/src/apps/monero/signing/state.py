@@ -37,11 +37,11 @@ class State:
         - spend private/public key
         - and its corresponding address
         """
-        self.creds = None  # type: Optional[AccountCreds]
+        self.creds: Optional[AccountCreds] = None
 
         # HMAC/encryption keys used to protect offloaded data
-        self.key_hmac = None  # type: Optional[bytes]
-        self.key_enc = None  # type: Optional[bytes]
+        self.key_hmac: Optional[bytes] = None
+        self.key_enc: Optional[bytes] = None
 
         """
         Transaction keys
@@ -51,8 +51,8 @@ class State:
         - for subaddresses the `r` is commonly denoted as `s`, however it is still just a random number
         - the keys are used to derive the one time address and its keys (P = H(A*r)*G + B)
         """
-        self.tx_priv = None  # type: Sc25519
-        self.tx_pub = None  # type: Ge25519
+        self.tx_priv: Sc25519 = None
+        self.tx_pub: Ge25519 = None
 
         """
         In some cases when subaddresses are used we need more tx_keys
@@ -71,13 +71,14 @@ class State:
 
         self.output_change = None
         self.fee = 0
+        self.tx_type = 0
 
         # wallet sub-address major index
         self.account_idx = 0
 
         # contains additional tx keys if need_additional_tx_keys is True
-        self.additional_tx_private_keys = []  # type: List[Sc25519]
-        self.additional_tx_public_keys = []  # type: List[bytes]
+        self.additional_tx_private_keys: List[Sc25519] = []
+        self.additional_tx_public_keys: List[bytes] = []
 
         # currently processed input/output index
         self.current_input_index = -1
@@ -91,36 +92,36 @@ class State:
         self.summary_outs_money = 0
 
         # output commitments
-        self.output_pk_commitments = []  # type: List[bytes]
+        self.output_pk_commitments: List[bytes] = []
 
-        self.output_amounts = []  # type: List[int]
+        self.output_amounts: List[int] = []
         # output *range proof* masks. HP10+ makes them deterministic.
-        self.output_masks = []  # type: List[Sc25519]
+        self.output_masks: List[Sc25519] = []
 
         # the range proofs are calculated in batches, this denotes the grouping
-        self.rsig_grouping = []  # type: List[int]
+        self.rsig_grouping: List[int] = []
         # is range proof computing offloaded or not
         self.rsig_offload = False
 
         # sum of all inputs' pseudo out masks
-        self.sumpouts_alphas = crypto.sc_0()  # type: Sc25519
+        self.sumpouts_alphas: Sc25519 = crypto.sc_0()
         # sum of all output' pseudo out masks
-        self.sumout = crypto.sc_0()  # type: Sc25519
+        self.sumout: Sc25519 = crypto.sc_0()
 
-        self.subaddresses = {}  # type: Subaddresses
+        self.subaddresses: Subaddresses = {}
 
         # TX_EXTRA_NONCE extra field for tx.extra, due to sort_tx_extra()
         self.extra_nonce = None
 
         # contains an array where each item denotes the input's position
         # (inputs are sorted by key images)
-        self.source_permutation = []  # type: List[int]
+        self.source_permutation: List[int] = []
 
         # Last key image seen. Used for input permutation correctness check
-        self.last_ki = None  # type: Optional[bytes]
+        self.last_ki: Optional[bytes] = None
 
         # Encryption key to release to host after protocol ends without error
-        self.opening_key = None  # type: Optional[bytes]
+        self.opening_key: Optional[bytes] = None
 
         # Step transition automaton
         self.last_step = self.STEP_INIT
@@ -131,7 +132,7 @@ class State:
         See Monero-Trezor documentation section 3.3 for more details.
         """
         self.tx_prefix_hasher = KeccakXmrArchive()
-        self.tx_prefix_hash = None  # type: Optional[bytes]
+        self.tx_prefix_hash: Optional[bytes] = None
 
         """
         Full message hasher/hash that is to be signed using MLSAG.
@@ -139,7 +140,7 @@ class State:
         See Monero-Trezor documentation section 3.3 for more details.
         """
         self.full_message_hasher = PreMlsagHasher()
-        self.full_message = None  # type: Optional[bytes]
+        self.full_message: Optional[bytes] = None
 
     def mem_trace(self, x=None, collect=False):
         if __debug__:

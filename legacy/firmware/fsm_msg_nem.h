@@ -43,7 +43,7 @@ void fsm_msgNEMGetAddress(NEMGetAddress *msg) {
     strlcat(desc, ":", sizeof(desc));
 
     if (!fsm_layoutAddress(resp->address, desc, true, 0, msg->address_n,
-                           msg->address_n_count, false, NULL, 0, NULL)) {
+                           msg->address_n_count, false, NULL, 0, 0, NULL)) {
       return;
     }
   }

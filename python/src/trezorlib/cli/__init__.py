@@ -16,6 +16,7 @@
 
 import functools
 import sys
+from contextlib import contextmanager
 
 import click
 
@@ -61,25 +62,59 @@ class TrezorConnection:
         ui = self.get_ui()
         return TrezorClient(transport, ui=ui, session_id=self.session_id)
 
+    @contextmanager
+    def client_context(self):
+        """Get a client instance as a context manager. Handle errors in a manner
+        appropriate for end-users.
 
-def with_client(func):
-    @click.pass_obj
-    @functools.wraps(func)
-    def trezorctl_command_with_client(obj, *args, **kwargs):
+        Usage:
+        >>> with obj.client_context() as client:
+        >>>     do_your_actions_here()
+        """
         try:
-            client = obj.get_client()
+            client = self.get_client()
         except Exception:
             click.echo("Failed to find a Trezor device.")
-            if obj.path is not None:
-                click.echo("Using path: {}".format(obj.path))
+            if self.path is not None:
+                click.echo("Using path: {}".format(self.path))
             sys.exit(1)
 
         try:
-            return func(client, *args, **kwargs)
+            yield client
         except exceptions.Cancelled:
+            # handle cancel action
             click.echo("Action was cancelled.")
             sys.exit(1)
         except exceptions.TrezorException as e:
+            # handle any Trezor-sent exceptions as user-readable
             raise click.ClickException(str(e)) from e
+            # other exceptions may cause a traceback
+
+
+def with_client(func):
+    """Wrap a Click command in `with obj.client_context() as client`.
+
+    Sessions are handled transparently. The user is warned when session did not resume
+    cleanly. The session is closed after the command completes - unless the session
+    was resumed, in which case it should remain open.
+    """
+
+    @click.pass_obj
+    @functools.wraps(func)
+    def trezorctl_command_with_client(obj, *args, **kwargs):
+        with obj.client_context() as client:
+            session_was_resumed = obj.session_id == client.session_id
+            if not session_was_resumed and obj.session_id is not None:
+                # tried to resume but failed
+                click.echo("Warning: failed to resume session.", err=True)
+
+            try:
+                return func(client, *args, **kwargs)
+            finally:
+                if not session_was_resumed:
+                    try:
+                        client.end_session()
+                    except Exception:
+                        pass
 
     return trezorctl_command_with_client

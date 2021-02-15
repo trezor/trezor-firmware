@@ -3,12 +3,11 @@ import gc
 from trezor import log, utils, wire
 from trezor.messages import MessageType
 
-from apps.common.keychain import with_slip44_keychain
-from apps.monero import CURVE, SLIP44_ID
+from apps.common.keychain import auto_keychain
 from apps.monero.signing.state import State
 
 
-@with_slip44_keychain(SLIP44_ID, CURVE, allow_testnet=True)
+@auto_keychain(__name__)
 async def sign_tx(ctx, received_msg, keychain):
     state = State(ctx)
     mods = utils.unimport_begin()
@@ -136,7 +135,7 @@ async def sign_tx_dispatch(state, msg, keychain):
     elif msg.MESSAGE_WIRE_TYPE == MessageType.MoneroTransactionFinalRequest:
         from apps.monero.signing import step_10_sign_final
 
-        return await step_10_sign_final.final_msg(state), None
+        return step_10_sign_final.final_msg(state), None
 
     else:
         raise wire.DataError("Unknown message")

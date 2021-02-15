@@ -29,11 +29,17 @@ ADDRESS_TYPE_P2SH = 8
 
 
 def cashaddr_polymod(values: List[int]) -> int:
-    generator = [0x98F2BC8E61, 0x79B76D99E2, 0xF33E5FB3C4, 0xAE2EABE2A8, 0x1E4F43E470]
+    generator = [
+        0x98_F2BC_8E61,
+        0x79_B76D_99E2,
+        0xF3_3E5F_B3C4,
+        0xAE_2EAB_E2A8,
+        0x1E_4F43_E470,
+    ]
     chk = 1
     for value in values:
         top = chk >> 35
-        chk = ((chk & 0x07FFFFFFFF) << 5) ^ value
+        chk = ((chk & 0x07_FFFF_FFFF) << 5) ^ value
         for i in range(5):
             chk ^= generator[i] if (top & (1 << i)) else 0
     return chk ^ 1

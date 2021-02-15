@@ -207,8 +207,12 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       } else {
         flash_state = STATE_END;
         show_unplug("Device wipe", "aborted.");
-        send_msg_failure(dev);
+        send_msg_failure(dev, 4);  // Failure_ActionCancelled
       }
+      return;
+    }
+    if (msg_id != 0x0006) {
+      send_msg_failure(dev, 1);  // Failure_UnexpectedMessage
       return;
     }
   }
@@ -240,19 +244,20 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
         send_msg_success(dev);
         flash_state = STATE_FLASHSTART;
       } else {
-        send_msg_failure(dev);
+        send_msg_failure(dev, 4);  // Failure_ActionCancelled
         flash_state = STATE_END;
         show_unplug("Firmware installation", "aborted.");
       }
       return;
     }
+    send_msg_failure(dev, 1);  // Failure_UnexpectedMessage
     return;
   }
 
   if (flash_state == STATE_FLASHSTART) {
-    if (msg_id == 0x0007) {  // FirmwareUpload message (id 7)
-      if (buf[9] != 0x0a) {  // invalid contents
-        send_msg_failure(dev);
+    if (msg_id == 0x0007) {        // FirmwareUpload message (id 7)
+      if (buf[9] != 0x0a) {        // invalid contents
+        send_msg_failure(dev, 9);  // Failure_ProcessError
         flash_state = STATE_END;
         show_halt("Error installing", "firmware.");
         return;
@@ -260,27 +265,27 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       // read payload length
       const uint8_t *p = buf + 10;
       if (readprotobufint(&p, &flash_len) != sectrue) {  // integer too large
-        send_msg_failure(dev);
+        send_msg_failure(dev, 9);                        // Failure_ProcessError
         flash_state = STATE_END;
         show_halt("Firmware is", "too big.");
         return;
       }
       if (flash_len <= FLASH_FWHEADER_LEN) {  // firmware is too small
-        send_msg_failure(dev);
+        send_msg_failure(dev, 9);             // Failure_ProcessError
         flash_state = STATE_END;
         show_halt("Firmware is", "too small.");
         return;
       }
       if (flash_len >
           FLASH_FWHEADER_LEN + FLASH_APP_LEN) {  // firmware is too big
-        send_msg_failure(dev);
+        send_msg_failure(dev, 9);                // Failure_ProcessError
         flash_state = STATE_END;
         show_halt("Firmware is", "too big.");
         return;
       }
       // check firmware magic
       if (memcmp(p, &FIRMWARE_MAGIC_NEW, 4) != 0) {
-        send_msg_failure(dev);
+        send_msg_failure(dev, 9);  // Failure_ProcessError
         flash_state = STATE_END;
         show_halt("Wrong firmware", "header.");
         return;
@@ -304,12 +309,13 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       }
       return;
     }
+    send_msg_failure(dev, 1);  // Failure_UnexpectedMessage
     return;
   }
 
   if (flash_state == STATE_FLASHING) {
-    if (buf[0] != '?') {  // invalid contents
-      send_msg_failure(dev);
+    if (buf[0] != '?') {         // invalid contents
+      send_msg_failure(dev, 9);  // Failure_ProcessError
       flash_state = STATE_END;
       show_halt("Error installing", "firmware.");
       return;
@@ -394,7 +400,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
                  "\x75\x12\x5e\x5c\xa2\xcd\x52\x7f\x35\x82\xec\x87\xff\xd9\x40"
                  "\x76\xbc",
                  32) != 0) {
-        send_msg_failure(dev);
+        send_msg_failure(dev, 9);  // Failure_ProcessError
         show_halt("Error installing", "firmware.");
         return;
       }
@@ -432,7 +438,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Firmware installation",
                    "aborted.", NULL, "You need to repeat", "the procedure with",
                    "the correct firmware.");
-      send_msg_failure(dev);
+      send_msg_failure(dev, 9);  // Failure_ProcessError
       shutdown();
     }
     return;

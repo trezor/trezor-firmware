@@ -28,12 +28,18 @@
 #include "slip39_wordlist.h"
 
 /**
- * Returns word on position `index`.
+ * Returns word at position `index`.
  */
-const char* get_word(uint16_t index) { return wordlist[index]; }
+const char* get_word(uint16_t index) {
+  if (index >= WORDS_COUNT) {
+    return NULL;
+  }
+
+  return slip39_wordlist[index];
+}
 
 /**
- * Finds index of given word, if found.
+ * Finds the index of a given word.
  * Returns true on success and stores result in `index`.
  */
 bool word_index(uint16_t* index, const char* word, uint8_t word_length) {
@@ -43,13 +49,13 @@ bool word_index(uint16_t* index, const char* word, uint8_t word_length) {
 
   while ((hi - lo) > 1) {
     mid = (hi + lo) / 2;
-    if (strncmp(wordlist[mid], word, word_length) > 0) {
+    if (strncmp(slip39_wordlist[mid], word, word_length) > 0) {
       hi = mid;
     } else {
       lo = mid;
     }
   }
-  if (strncmp(wordlist[lo], word, word_length) != 0) {
+  if (strncmp(slip39_wordlist[lo], word, word_length) != 0) {
     return false;
   }
   *index = lo;
@@ -57,79 +63,88 @@ bool word_index(uint16_t* index, const char* word, uint8_t word_length) {
 }
 
 /**
- * Calculates which buttons still can be pressed after some already were.
- * Returns a 9-bit bitmask, where each bit specifies which buttons
- * can be further pressed (there are still words in this combination).
- * LSB denotes first button.
+ * Returns the index of the first sequence in words_button_seq[] which is not
+ * less than the given sequence. Returns WORDS_COUNT if there is no such
+ * sequence.
+ */
+static uint16_t find_sequence(uint16_t sequence) {
+  if (sequence <= words_button_seq[0].sequence) {
+    return 0;
+  }
+
+  uint16_t lo = 0;
+  uint16_t hi = WORDS_COUNT;
+
+  while (hi - lo > 1) {
+    uint16_t mid = (hi + lo) / 2;
+    if (words_button_seq[mid].sequence >= sequence) {
+      hi = mid;
+    } else {
+      lo = mid;
+    }
+  }
+
+  return hi;
+}
+
+/**
+ * Returns a word matching the button sequence prefix or NULL if no match is
+ * found.
+ */
+const char* button_sequence_to_word(uint16_t sequence) {
+  if (sequence == 0) {
+    return slip39_wordlist[words_button_seq[0].index];
+  }
+
+  uint16_t multiplier = 1;
+  while (sequence < 1000) {
+    sequence *= 10;
+    multiplier *= 10;
+  }
+
+  uint16_t i = find_sequence(sequence);
+  if (i >= WORDS_COUNT ||
+      words_button_seq[i].sequence - sequence >= multiplier) {
+    return NULL;
+  }
+
+  return slip39_wordlist[words_button_seq[i].index];
+}
+
+/**
+ * Calculates which buttons on the T9 keyboard can still be pressed after the
+ * prefix was entered. Returns a 9-bit bitmask, where each bit specifies which
+ * buttons can be pressed (there are still words in this combination). The least
+ * significant bit corresponds to the first button.
  *
  * Example: 110000110 - second, third, eighth and ninth button still can be
  * pressed.
  */
-uint16_t compute_mask(uint16_t prefix) { return find(prefix, false); }
-
-/**
- * Converts sequence to word index.
- */
-const char* button_sequence_to_word(uint16_t prefix) {
-  return wordlist[find(prefix, true)];
-}
-
-/**
- * Computes mask if find_index is false.
- * Finds the first word index that suits the prefix otherwise.
- */
-uint16_t find(uint16_t prefix, bool find_index) {
-  uint16_t min = prefix;
-  uint16_t max = 0;
-  uint16_t for_max = 0;
-  uint8_t multiplier = 0;
-  uint8_t divider = 0;
-  uint16_t bitmap = 0;
-  uint8_t digit = 0;
-  uint16_t i = 0;
-
-  max = prefix + 1;
-  while (min < 1000) {
-    min = min * 10;
-    max = max * 10;
-    multiplier++;
-  }
-
-  // Four char prefix -> the mask is zero
-  if (!multiplier && !find_index) {
+uint16_t slip39_word_completion_mask(uint16_t prefix) {
+  if (prefix >= 1000) {
+    // Four char prefix -> the mask is zero.
     return 0;
   }
-  for_max = min - (min % 1000) + 1000;
 
-  // We can't use binary search because the numbers are not sorted.
-  // They are sorted using the words' alphabet (so we can use the index).
-  // Example: axle (1953), beam (1315)
-  // The first digit is sorted so we can loop only upto `for_max`.
-  while (words_button_seq[i] < for_max) {
-    if (words_button_seq[i] >= min && words_button_seq[i] < max) {
-      if (find_index) {
-        return i;
-      }
+  // Determine the range of sequences [min, max), which have the given prefix.
+  uint16_t min = prefix;
+  uint16_t max = prefix + 1;
+  uint16_t divider = 1;
+  while (max <= 1000) {
+    min *= 10;
+    max *= 10;
+    divider *= 10;
+  }
+  divider /= 10;
 
-      switch (multiplier) {
-        case 1:
-          divider = 1;
-          break;
-        case 2:
-          divider = 10;
-          break;
-        case 3:
-          divider = 100;
-          break;
-        default:
-          divider = 1;
-          break;
-      }
+  // Determine the range we will be searching in words_button_seq[].
+  min = find_sequence(min);
+  max = find_sequence(max);
 
-      digit = (words_button_seq[i] / divider) % 10;
-      bitmap |= 1 << (digit - 1);
-    }
-    i++;
+  uint16_t bitmap = 0;
+  for (uint16_t i = min; i < max; ++i) {
+    uint8_t digit = (words_button_seq[i].sequence / divider) % 10;
+    bitmap |= 1 << (digit - 1);
   }
 
   return bitmap;

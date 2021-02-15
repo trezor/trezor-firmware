@@ -130,15 +130,17 @@ static const secp256k1_context *mod_trezorcrypto_get_secp256k1_context(
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_secp256k1_zkp_generate_secret(mp_obj_t self) {
   const secp256k1_context *ctx = mod_trezorcrypto_get_secp256k1_context(self);
-  uint8_t out[32] = {0};
+  vstr_t sk = {0};
+  vstr_init_len(&sk, 32);
+
   for (;;) {
-    random_buffer(out, 32);
+    random_buffer((uint8_t *)sk.buf, sk.len);
     // check whether secret > 0 && secret < curve_order
-    if (secp256k1_ec_seckey_verify(ctx, out) == 1) {
+    if (secp256k1_ec_seckey_verify(ctx, (uint8_t *)sk.buf) == 1) {
       break;
     }
   }
-  return mp_obj_new_bytes(out, sizeof(out));
+  return mp_obj_new_str_from_vstr(&mp_type_bytes, &sk);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(
     mod_trezorcrypto_secp256k1_zkp_generate_secret_obj,
@@ -163,12 +165,13 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_context_publickey(
   }
 
   bool compressed = n_args < 3 || args[2] == mp_const_true;
-  uint8_t out[65] = {0};
-  size_t outlen = sizeof(out);
+  vstr_t out = {0};
+  vstr_init_len(&out, 65);
+
   secp256k1_ec_pubkey_serialize(
-      ctx, out, &outlen, &pk,
+      ctx, (uint8_t *)out.buf, &out.len, &pk,
       compressed ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
-  return mp_obj_new_bytes(out, outlen);
+  return mp_obj_new_str_from_vstr(&mp_type_bytes, &out);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_secp256k1_context_publickey_obj, 2, 3,
@@ -195,16 +198,18 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_context_sign(size_t n_args,
     mp_raise_ValueError("Invalid length of digest");
   }
   secp256k1_ecdsa_recoverable_signature sig;
-  uint8_t out[65] = {0};
+  vstr_t out = {0};
+  vstr_init_len(&out, 65);
   int pby = 0;
   if (!secp256k1_ecdsa_sign_recoverable(ctx, &sig, (const uint8_t *)dig.buf,
                                         (const uint8_t *)sk.buf, NULL, NULL)) {
+    vstr_clear(&out);
     mp_raise_ValueError("Signing failed");
   }
-  secp256k1_ecdsa_recoverable_signature_serialize_compact(ctx, &out[1], &pby,
-                                                          &sig);
-  out[0] = 27 + pby + compressed * 4;
-  return mp_obj_new_bytes(out, sizeof(out));
+  secp256k1_ecdsa_recoverable_signature_serialize_compact(
+      ctx, (uint8_t *)&out.buf[1], &pby, &sig);
+  out.buf[0] = 27 + pby + compressed * 4;
+  return mp_obj_new_str_from_vstr(&mp_type_bytes, &out);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_secp256k1_context_sign_obj, 3, 4,
@@ -286,12 +291,12 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_context_verify_recover(
   if (!secp256k1_ecdsa_recover(ctx, &pk, &ec_sig, (const uint8_t *)dig.buf)) {
     return mp_const_none;
   }
-  uint8_t out[65] = {0};
-  size_t pklen = sizeof(out);
+  vstr_t out = {0};
+  vstr_init_len(&out, 65);
   secp256k1_ec_pubkey_serialize(
-      ctx, out, &pklen, &pk,
+      ctx, (uint8_t *)out.buf, &out.len, &pk,
       compressed ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED);
-  return mp_obj_new_bytes(out, pklen);
+  return mp_obj_new_str_from_vstr(&mp_type_bytes, &out);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(
     mod_trezorcrypto_secp256k1_context_verify_recover_obj,
@@ -328,12 +333,14 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_context_multiply(
                                  pk.len)) {
     mp_raise_ValueError("Invalid public key");
   }
-  uint8_t out[65] = {0};
-  if (!secp256k1_ecdh(ctx, out, &ec_pk, (const uint8_t *)sk.buf,
+  vstr_t out = {0};
+  vstr_init_len(&out, 65);
+  if (!secp256k1_ecdh(ctx, (uint8_t *)out.buf, &ec_pk, (const uint8_t *)sk.buf,
                       secp256k1_ecdh_hash_passthrough, NULL)) {
+    vstr_clear(&out);
     mp_raise_ValueError("Multiply failed");
   }
-  return mp_obj_new_bytes(out, sizeof(out));
+  return mp_obj_new_str_from_vstr(&mp_type_bytes, &out);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(
     mod_trezorcrypto_secp256k1_context_multiply_obj,

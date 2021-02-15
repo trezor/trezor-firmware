@@ -38,6 +38,7 @@ class Confirm(ui.Layout):
         cancel_style: ButtonStyleType = DEFAULT_CANCEL_STYLE,
         major_confirm: bool = False,
     ) -> None:
+        super().__init__()
         self.content = content
 
         if confirm is not None:
@@ -47,9 +48,7 @@ class Confirm(ui.Layout):
                 area = ui.grid(13, cells_x=2)
             else:
                 area = ui.grid(9, n_x=2)
-            self.confirm = Button(
-                area, confirm, confirm_style
-            )  # type: Optional[Button]
+            self.confirm: Optional[Button] = Button(area, confirm, confirm_style)
             self.confirm.on_click = self.on_confirm  # type: ignore
         else:
             self.confirm = None
@@ -61,7 +60,7 @@ class Confirm(ui.Layout):
                 area = ui.grid(12, cells_x=1)
             else:
                 area = ui.grid(8, n_x=2)
-            self.cancel = Button(area, cancel, cancel_style)  # type: Optional[Button]
+            self.cancel: Optional[Button] = Button(area, cancel, cancel_style)
             self.cancel.on_click = self.on_cancel  # type: ignore
         else:
             self.cancel = None
@@ -151,7 +150,7 @@ class ConfirmPageable(Confirm):
             return tasks
 
     def on_render(self) -> None:
-        PULSE_PERIOD = const(1200000)
+        PULSE_PERIOD = const(1_200_000)
 
         super().on_render()
 
@@ -192,6 +191,7 @@ class InfoConfirm(ui.Layout):
         info: ButtonContent = DEFAULT_INFO,
         info_style: ButtonStyleType = DEFAULT_INFO_STYLE,
     ) -> None:
+        super().__init__()
         self.content = content
 
         self.confirm = Button(ui.grid(14), confirm, confirm_style)
@@ -243,6 +243,7 @@ class HoldToConfirm(ui.Layout):
         loader_style: LoaderStyleType = DEFAULT_LOADER_STYLE,
         cancel: bool = True,
     ):
+        super().__init__()
         self.content = content
 
         self.loader = Loader(loader_style)

@@ -1,0 +1,47 @@
+{
+  "bin_outputs": [
+    {
+      "amount": 4973340,
+      "script_pubkey": "a914d1164e63e196b54842402da4704e6a3e523fe67387"
+    }
+  ],
+  "inputs": [
+    {
+      "prev_hash": "a36f2b752bcba7b4136394195831e3ed2c42d3a7ae94f8db9e2b4ac438423765",
+      "prev_index": 1,
+      "script_sig": "16001450e725578c7f0819e4c839cb55c15682e846daa8",
+      "script_type": "SPENDADDRESS",
+      "sequence": 4294967295
+    },
+    {
+      "prev_hash": "a36f2b752bcba7b4136394195831e3ed2c42d3a7ae94f8db9e2b4ac438423765",
+      "prev_index": 0,
+      "script_sig": "160014310888a340bf653c71ee48ec0dd78304a31428f5",
+      "script_type": "SPENDADDRESS",
+      "sequence": 4294967295
+    },
+    {
+      "prev_hash": "55c0e481f06b14365a6c7cd4f5c0bd1ee658a0fb413d0e7ff37716c1deaf8acc",
+      "prev_index": 0,
+      "script_sig": "160014468fc62d24e2fb5a65b61859434e983eb7372469",
+      "script_type": "SPENDADDRESS",
+      "sequence": 4294967295
+    },
+    {
+      "prev_hash": "334cd7ad982b3b15d07dd1c84e939e95efb0803071648048a7f289492e7b4c8a",
+      "prev_index": 0,
+      "script_sig": "160014ed6e3c049de3a9f3b6d876394f7846f67e8c6577",
+      "script_type": "SPENDADDRESS",
+      "sequence": 4294967295
+    },
+    {
+      "prev_hash": "5e7667690076ae4737e2f872005de6f6b57592f32108ed9b301eeece6de24ad6",
+      "prev_index": 0,
+      "script_sig": "16001468b91d44b164c5595a9fe9c772cf1539a1b35819",
+      "script_type": "SPENDADDRESS",
+      "sequence": 4294967295
+    }
+  ],
+  "lock_time": 0,
+  "version": 1
+}

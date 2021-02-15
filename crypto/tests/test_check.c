@@ -69,6 +69,7 @@
 #include "sha3.h"
 #include "shamir.h"
 #include "slip39.h"
+#include "slip39_wordlist.h"
 
 #if VALGRIND
 /*
@@ -1213,7 +1214,7 @@ END_TEST
 START_TEST(test_bip32_vector_1) {
   HDNode node, node2, node3;
   uint32_t fingerprint;
-  char str[112];
+  char str[XPUB_MAXLEN];
   int r;
 
   // init m
@@ -1473,7 +1474,7 @@ END_TEST
 START_TEST(test_bip32_vector_2) {
   HDNode node, node2, node3;
   uint32_t fingerprint;
-  char str[112];
+  char str[XPUB_MAXLEN];
   int r;
 
   // init m
@@ -1770,7 +1771,7 @@ END_TEST
 START_TEST(test_bip32_vector_3) {
   HDNode node, node2, node3;
   uint32_t fingerprint;
-  char str[112];
+  char str[XPUB_MAXLEN];
   int r;
 
   // init m
@@ -2758,7 +2759,7 @@ END_TEST
 START_TEST(test_bip32_decred_vector_1) {
   HDNode node, node2, node3;
   uint32_t fingerprint;
-  char str[112];
+  char str[XPUB_MAXLEN];
   int r;
 
   // init m
@@ -3028,7 +3029,7 @@ END_TEST
 START_TEST(test_bip32_decred_vector_2) {
   HDNode node, node2, node3;
   uint32_t fingerprint;
-  char str[112];
+  char str[XPUB_MAXLEN];
   int r;
 
   // init m
@@ -3336,7 +3337,29 @@ START_TEST(test_ecdsa_signature) {
   int res;
   uint8_t digest[32];
   uint8_t pubkey[65];
+  uint8_t sig[64];
   const ecdsa_curve *curve = &secp256k1;
+
+  // Signature verification for a digest which is equal to the group order.
+  // https://github.com/trezor/trezor-firmware/pull/1374
+  memcpy(
+      pubkey,
+      fromhex(
+          "0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f8179848"
+          "3ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8"),
+      sizeof(pubkey));
+  memcpy(
+      digest,
+      fromhex(
+          "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141"),
+      sizeof(digest));
+  memcpy(sig,
+         fromhex(
+             "a0b37f8fba683cc68f6574cd43b39f0343a50008bf6ccea9d13231d9e7e2e1e41"
+             "1edc8d307254296264aebfc3dc76cd8b668373a072fd64665b50000e9fcce52"),
+         sizeof(sig));
+  res = ecdsa_verify_digest(curve, pubkey, sig, digest);
+  ck_assert_int_eq(res, 0);
 
   // sha2(sha2("\x18Bitcoin Signed Message:\n\x0cHello World!"))
   memcpy(
@@ -5091,7 +5114,7 @@ START_TEST(test_mnemonic_check) {
 }
 END_TEST
 
-START_TEST(test_mnemonic_to_entropy) {
+START_TEST(test_mnemonic_to_bits) {
   static const char *vectors[] = {
       "00000000000000000000000000000000",
       "abandon abandon abandon abandon abandon abandon abandon abandon abandon "
@@ -5175,16 +5198,16 @@ START_TEST(test_mnemonic_to_entropy) {
   };
 
   const char **a, **b;
-  uint8_t entropy[64];
+  uint8_t mnemonic_bits[64];
 
   a = vectors;
   b = vectors + 1;
   while (*a && *b) {
-    int seed_len = mnemonic_to_entropy(*b, entropy);
-    ck_assert_int_eq(seed_len % 33, 0);
-    seed_len = seed_len * 4 / 33;
-    ck_assert_int_eq(seed_len, strlen(*a) / 2);
-    ck_assert_mem_eq(entropy, fromhex(*a), seed_len);
+    int mnemonic_bits_len = mnemonic_to_bits(*b, mnemonic_bits);
+    ck_assert_int_eq(mnemonic_bits_len % 33, 0);
+    mnemonic_bits_len = mnemonic_bits_len * 4 / 33;
+    ck_assert_int_eq(mnemonic_bits_len, strlen(*a) / 2);
+    ck_assert_mem_eq(mnemonic_bits, fromhex(*a), mnemonic_bits_len);
     a += 2;
     b += 2;
   }
@@ -5241,36 +5264,26 @@ START_TEST(test_slip39_word_index) {
 }
 END_TEST
 
-START_TEST(test_slip39_compute_mask) {
+START_TEST(test_slip39_word_completion_mask) {
   static const struct {
     const uint16_t prefix;
     const uint16_t expected_mask;
-  } vectors[] = {{
-                     12,
-                     0xFD  // 011111101
-                 },
-                 {
-                     21,
-                     0xF8  // 011111000
-                 },
-                 {
-                     75,
-                     0xAD  // 010101101
-                 },
-                 {
-                     4,
-                     0x1F7  // 111110111
-                 },
-                 {
-                     738,
-                     0x6D  // 001101101
-                 },
-                 {
-                     9,
-                     0x6D  // 001101101
-                 }};
+  } vectors[] = {
+      {12, 0xFD},     // 011111101
+      {21, 0xF8},     // 011111000
+      {75, 0xAD},     // 010101101
+      {4, 0x1F7},     // 111110111
+      {738, 0x6D},    // 001101101
+      {9, 0x6D},      // 001101101
+      {0, 0x1FF},     // 111111111
+      {10, 0x00},     // 000000000
+      {255, 0x00},    // 000000000
+      {203, 0x00},    // 000000000
+      {9999, 0x00},   // 000000000
+      {20000, 0x00},  // 000000000
+  };
   for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); i++) {
-    uint16_t mask = compute_mask(vectors[i].prefix);
+    uint16_t mask = slip39_word_completion_mask(vectors[i].prefix);
     ck_assert_int_eq(mask, vectors[i].expected_mask);
   }
 }
@@ -5280,14 +5293,35 @@ START_TEST(test_slip39_sequence_to_word) {
   static const struct {
     const uint16_t prefix;
     const char *expected_word;
-  } vectors[] = {{7945, "swimming"},
-                 {646, "photo"},
-                 {5, "kernel"},
-                 {34, "either"},
-                 {62, "ocean"}};
+  } vectors[] = {
+      {7945, "swimming"}, {646, "pipeline"}, {5, "laden"},  {34, "fiber"},
+      {62, "ocean"},      {0, "academic"},   {10, NULL},    {255, NULL},
+      {203, NULL},        {9999, NULL},      {20000, NULL},
+  };
   for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); i++) {
     const char *word = button_sequence_to_word(vectors[i].prefix);
-    ck_assert_str_eq(word, vectors[i].expected_word);
+    if (vectors[i].expected_word != NULL) {
+      ck_assert_str_eq(word, vectors[i].expected_word);
+    } else {
+      ck_assert_ptr_eq(word, NULL);
+    }
+  }
+}
+END_TEST
+
+START_TEST(test_slip39_word_completion) {
+  const char t9[] = {1, 1, 2, 2, 3, 3, 4, 4, 4, 4, 5, 5, 5,
+                     6, 6, 6, 6, 7, 7, 8, 8, 8, 9, 9, 9, 9};
+  for (size_t i = 0; i < WORDS_COUNT; ++i) {
+    const char *word = slip39_wordlist[i];
+    uint16_t prefix = t9[word[0] - 'a'];
+    for (size_t j = 1; j < 4; ++j) {
+      uint16_t mask = slip39_word_completion_mask(prefix);
+      uint8_t next = t9[word[j] - 'a'];
+      ck_assert_uint_ne(mask & (1 << (next - 1)), 0);
+      prefix = prefix * 10 + next;
+    }
+    ck_assert_str_eq(button_sequence_to_word(prefix), word);
   }
 }
 END_TEST
@@ -5822,154 +5856,81 @@ START_TEST(test_address_decode) {
 END_TEST
 
 START_TEST(test_ecdsa_der) {
-  uint8_t sig[64], der[72];
-  int res;
+  static const struct {
+    const char *r;
+    const char *s;
+    const char *der;
+  } vectors[] = {
+      {
+          "9a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8b70771",
+          "2b79ab1e7736219387dffe8d615bbdba87e11477104b867ef47afed1a5ede781",
+          "30450221009a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8"
+          "b7077102202b79ab1e7736219387dffe8d615bbdba87e11477104b867ef47afed1a5"
+          "ede781",
+      },
+      {
+          "6666666666666666666666666666666666666666666666666666666666666666",
+          "7777777777777777777777777777777777777777777777777777777777777777",
+          "30440220666666666666666666666666666666666666666666666666666666666666"
+          "66660220777777777777777777777777777777777777777777777777777777777777"
+          "7777",
+      },
+      {
+          "6666666666666666666666666666666666666666666666666666666666666666",
+          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "30450220666666666666666666666666666666666666666666666666666666666666"
+          "6666022100eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          "eeeeee",
+      },
+      {
+          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "7777777777777777777777777777777777777777777777777777777777777777",
+          "3045022100eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          "eeeeee02207777777777777777777777777777777777777777777777777777777777"
+          "777777",
+      },
+      {
+          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+          "3046022100eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          "eeeeee022100ffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+          "ffffffff",
+      },
+      {
+          "0000000000000000000000000000000000000000000000000000000000000066",
+          "0000000000000000000000000000000000000000000000000000000000000077",
+          "3006020166020177",
+      },
+      {
+          "0000000000000000000000000000000000000000000000000000000000000066",
+          "00000000000000000000000000000000000000000000000000000000000000ee",
+          "3007020166020200ee",
+      },
+      {
+          "00000000000000000000000000000000000000000000000000000000000000ee",
+          "0000000000000000000000000000000000000000000000000000000000000077",
+          "3007020200ee020177",
+      },
+      {
+          "00000000000000000000000000000000000000000000000000000000000000ee",
+          "00000000000000000000000000000000000000000000000000000000000000ff",
+          "3008020200ee020200ff",
+      },
+  };
 
-  memcpy(
-      sig,
-      fromhex(
-          "9a0b7be0d4ed3146ee262b42202841834698bb3ee39c24e7437df208b8b70771"),
-      32);
-  memcpy(
-      sig + 32,
-      fromhex(
-          "2b79ab1e7736219387dffe8d615bbdba87e11477104b867ef47afed1a5ede781"),
-      32);
-  res = ecdsa_sig_to_der(sig, der);
-  ck_assert_int_eq(res, 71);
-  ck_assert_mem_eq(der,
-                   fromhex("30450221009a0b7be0d4ed3146ee262b42202841834698bb3ee"
-                           "39c24e7437df208b8b7077102202b79ab1e7736219387dffe8d"
-                           "615bbdba87e11477104b867ef47afed1a5ede781"),
-                   71);
-
-  memcpy(
-      sig,
-      fromhex(
-          "6666666666666666666666666666666666666666666666666666666666666666"),
-      32);
-  memcpy(
-      sig + 32,
-      fromhex(
-          "7777777777777777777777777777777777777777777777777777777777777777"),
-      32);
-  res = ecdsa_sig_to_der(sig, der);
-  ck_assert_int_eq(res, 70);
-  ck_assert_mem_eq(der,
-                   fromhex("304402206666666666666666666666666666666666666666666"
-                           "666666666666666666666022077777777777777777777777777"
-                           "77777777777777777777777777777777777777"),
-                   70);
-
-  memcpy(
-      sig,
-      fromhex(
-          "6666666666666666666666666666666666666666666666666666666666666666"),
-      32);
-  memcpy(
-      sig + 32,
-      fromhex(
-          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"),
-      32);
-  res = ecdsa_sig_to_der(sig, der);
-  ck_assert_int_eq(res, 71);
-  ck_assert_mem_eq(der,
-                   fromhex("304502206666666666666666666666666666666666666666666"
-                           "666666666666666666666022100eeeeeeeeeeeeeeeeeeeeeeee"
-                           "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"),
-                   71);
-
-  memcpy(
-      sig,
-      fromhex(
-          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"),
-      32);
-  memcpy(
-      sig + 32,
-      fromhex(
-          "7777777777777777777777777777777777777777777777777777777777777777"),
-      32);
-  res = ecdsa_sig_to_der(sig, der);
-  ck_assert_int_eq(res, 71);
-  ck_assert_mem_eq(der,
-                   fromhex("3045022100eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-                           "eeeeeeeeeeeeeeeeeeeeeee0220777777777777777777777777"
-                           "7777777777777777777777777777777777777777"),
-                   71);
-
-  memcpy(
-      sig,
-      fromhex(
-          "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"),
-      32);
-  memcpy(
-      sig + 32,
-      fromhex(
-          "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
-      32);
-  res = ecdsa_sig_to_der(sig, der);
-  ck_assert_int_eq(res, 72);
-  ck_assert_mem_eq(der,
-                   fromhex("3046022100eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-                           "eeeeeeeeeeeeeeeeeeeeeee022100ffffffffffffffffffffff"
-                           "ffffffffffffffffffffffffffffffffffffffffff"),
-                   72);
-
-  memcpy(
-      sig,
-      fromhex(
-          "0000000000000000000000000000000000000000000000000000000000000066"),
-      32);
-  memcpy(
-      sig + 32,
-      fromhex(
-          "0000000000000000000000000000000000000000000000000000000000000077"),
-      32);
-  res = ecdsa_sig_to_der(sig, der);
-  ck_assert_int_eq(res, 8);
-  ck_assert_mem_eq(der, fromhex("3006020166020177"), 8);
-
-  memcpy(
-      sig,
-      fromhex(
-          "0000000000000000000000000000000000000000000000000000000000000066"),
-      32);
-  memcpy(
-      sig + 32,
-      fromhex(
-          "00000000000000000000000000000000000000000000000000000000000000ee"),
-      32);
-  res = ecdsa_sig_to_der(sig, der);
-  ck_assert_int_eq(res, 9);
-  ck_assert_mem_eq(der, fromhex("3007020166020200ee"), 9);
-
-  memcpy(
-      sig,
-      fromhex(
-          "00000000000000000000000000000000000000000000000000000000000000ee"),
-      32);
-  memcpy(
-      sig + 32,
-      fromhex(
-          "0000000000000000000000000000000000000000000000000000000000000077"),
-      32);
-  res = ecdsa_sig_to_der(sig, der);
-  ck_assert_int_eq(res, 9);
-  ck_assert_mem_eq(der, fromhex("3007020200ee020177"), 9);
-
-  memcpy(
-      sig,
-      fromhex(
-          "00000000000000000000000000000000000000000000000000000000000000ee"),
-      32);
-  memcpy(
-      sig + 32,
-      fromhex(
-          "00000000000000000000000000000000000000000000000000000000000000ff"),
-      32);
-  res = ecdsa_sig_to_der(sig, der);
-  ck_assert_int_eq(res, 10);
-  ck_assert_mem_eq(der, fromhex("3008020200ee020200ff"), 10);
+  uint8_t sig[64];
+  uint8_t der[72];
+  uint8_t out[72];
+  for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); ++i) {
+    size_t der_len = strlen(vectors[i].der) / 2;
+    memcpy(der, fromhex(vectors[i].der), der_len);
+    memcpy(sig, fromhex(vectors[i].r), 32);
+    memcpy(sig + 32, fromhex(vectors[i].s), 32);
+    ck_assert_int_eq(ecdsa_sig_to_der(sig, out), der_len);
+    ck_assert_mem_eq(out, der, der_len);
+    ck_assert_int_eq(ecdsa_sig_from_der(der, der_len, out), 0);
+    ck_assert_mem_eq(out, sig, 64);
+  }
 }
 END_TEST
 
@@ -8875,15 +8836,16 @@ Suite *test_suite(void) {
   tc = tcase_create("bip39");
   tcase_add_test(tc, test_mnemonic);
   tcase_add_test(tc, test_mnemonic_check);
-  tcase_add_test(tc, test_mnemonic_to_entropy);
+  tcase_add_test(tc, test_mnemonic_to_bits);
   tcase_add_test(tc, test_mnemonic_find_word);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("slip39");
   tcase_add_test(tc, test_slip39_get_word);
   tcase_add_test(tc, test_slip39_word_index);
-  tcase_add_test(tc, test_slip39_compute_mask);
+  tcase_add_test(tc, test_slip39_word_completion_mask);
   tcase_add_test(tc, test_slip39_sequence_to_word);
+  tcase_add_test(tc, test_slip39_word_completion);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("shamir");
@@ -9003,6 +8965,8 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_bip32_cardano_hdnode_vector_5);
   tcase_add_test(tc, test_bip32_cardano_hdnode_vector_6);
   tcase_add_test(tc, test_bip32_cardano_hdnode_vector_7);
+  tcase_add_test(tc, test_bip32_cardano_hdnode_vector_8);
+  tcase_add_test(tc, test_bip32_cardano_hdnode_vector_9);
 
   tcase_add_test(tc, test_ed25519_cardano_sign_vectors);
   suite_add_tcase(s, tc);

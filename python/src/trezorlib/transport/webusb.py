@@ -44,7 +44,7 @@ class WebUsbHandle:
         self.interface = DEBUG_INTERFACE if debug else INTERFACE
         self.endpoint = DEBUG_ENDPOINT if debug else ENDPOINT
         self.count = 0
-        self.handle = None  # type: Optional[usb1.USBDeviceHandle]
+        self.handle: Optional[usb1.USBDeviceHandle] = None
 
     def open(self) -> None:
         self.handle = self.device.open()

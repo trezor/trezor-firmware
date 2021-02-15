@@ -31,12 +31,12 @@ class SimpleMessage(protobuf.MessageType):
     @classmethod
     def get_fields(cls):
         return {
-            1: ("uvarint", protobuf.UVarintType, 0),
-            2: ("svarint", protobuf.SVarintType, 0),
-            3: ("bool", protobuf.BoolType, 0),
-            4: ("bytes", protobuf.BytesType, 0),
-            5: ("unicode", protobuf.UnicodeType, 0),
-            6: ("enum", SimpleEnumType, 0),
+            1: ("uvarint", protobuf.UVarintType, None),
+            2: ("svarint", protobuf.SVarintType, None),
+            3: ("bool", protobuf.BoolType, None),
+            4: ("bytes", protobuf.BytesType, None),
+            5: ("unicode", protobuf.UnicodeType, None),
+            6: ("enum", SimpleEnumType, None),
             7: ("rep_int", protobuf.UVarintType, protobuf.FLAG_REPEATED),
             8: ("rep_str", protobuf.UnicodeType, protobuf.FLAG_REPEATED),
             9: ("rep_enum", SimpleEnumType, protobuf.FLAG_REPEATED),
@@ -50,6 +50,14 @@ class NestedMessage(protobuf.MessageType):
             1: ("scalar", protobuf.UVarintType, 0),
             2: ("nested", SimpleMessage, 0),
             3: ("repeated", SimpleMessage, protobuf.FLAG_REPEATED),
+        }
+
+
+class RequiredFields(protobuf.MessageType):
+    @classmethod
+    def get_fields(cls):
+        return {
+            1: ("scalar", protobuf.UVarintType, protobuf.FLAG_REQUIRED),
         }
 
 
@@ -234,3 +242,24 @@ def test_unknown_enum_to_dict():
     simple = SimpleMessage(enum=6000)
     converted = protobuf.to_dict(simple)
     assert converted["enum"] == 6000
+
+
+def test_constructor_deprecations():
+    # ok:
+    RequiredFields(scalar=0)
+
+    # positional argument
+    with pytest.deprecated_call():
+        RequiredFields(0)
+
+    # missing required value
+    with pytest.deprecated_call():
+        RequiredFields()
+
+    # more args than fields
+    with pytest.deprecated_call(), pytest.raises(TypeError):
+        RequiredFields(0, 0)
+
+    # colliding arg and kwarg
+    with pytest.deprecated_call(), pytest.raises(TypeError):
+        RequiredFields(0, scalar=0)

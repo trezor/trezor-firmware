@@ -10,7 +10,7 @@ DEFAULT_ICON = "apps/webauthn/res/icon_webauthn.toif"
 
 class ConfirmInfo:
     def __init__(self) -> None:
-        self.app_icon = None  # type: Optional[bytes]
+        self.app_icon: Optional[bytes] = None
 
     def get_header(self) -> str:
         raise NotImplementedError
@@ -23,7 +23,7 @@ class ConfirmInfo:
 
     def load_icon(self, rp_id_hash: bytes) -> None:
         from trezor import res
-        from apps.webauthn import knownapps
+        from . import knownapps
 
         fido_app = knownapps.by_rp_id_hash(rp_id_hash)
         if fido_app is not None and fido_app.icon is not None:
@@ -34,8 +34,8 @@ class ConfirmInfo:
 
 class ConfirmContent(ui.Component):
     def __init__(self, info: ConfirmInfo) -> None:
+        super().__init__()
         self.info = info
-        self.repaint = True
 
     def on_render(self) -> None:
         if self.repaint:

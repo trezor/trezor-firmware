@@ -146,11 +146,9 @@ static void recovery_request(void) {
   WordRequest resp = {0};
   memzero(&resp, sizeof(WordRequest));
   resp.has_type = true;
-  resp.type = awaiting_word == 1
-                  ? WordRequestType_WordRequestType_Plain
-                  : (word_index % 4 == 3)
-                        ? WordRequestType_WordRequestType_Matrix6
-                        : WordRequestType_WordRequestType_Matrix9;
+  resp.type = awaiting_word == 1      ? WordRequestType_WordRequestType_Plain
+              : (word_index % 4 == 3) ? WordRequestType_WordRequestType_Matrix6
+                                      : WordRequestType_WordRequestType_Matrix9;
   msg_write(MessageType_MessageType_WordRequest, &resp);
 }
 

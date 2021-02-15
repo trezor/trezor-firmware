@@ -56,10 +56,13 @@ void ui_screen_fail(void);
 void ui_fadein(void);
 void ui_fadeout(void);
 
+// clang-format off
 #define INPUT_CANCEL 0x01        // Cancel button
 #define INPUT_CONFIRM 0x02       // Confirm button
 #define INPUT_LONG_CONFIRM 0x04  // Long Confirm button
 #define INPUT_INFO 0x08          // Info icon
+// clang-format on
+
 int ui_user_input(int zones);
 
 #endif

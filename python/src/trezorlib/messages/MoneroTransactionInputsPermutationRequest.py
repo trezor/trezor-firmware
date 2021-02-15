@@ -15,6 +15,7 @@ class MoneroTransactionInputsPermutationRequest(p.MessageType):
 
     def __init__(
         self,
+        *,
         perm: List[int] = None,
     ) -> None:
         self.perm = perm if perm is not None else []

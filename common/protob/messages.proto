@@ -24,6 +24,20 @@ extend google.protobuf.EnumValueOptions {
     optional bool wire_no_fsm = 50008;          // message is not handled by Trezor unless the USB stack is in tiny mode
 }
 
+
+/** Options for tagging message types */
+extend google.protobuf.MessageOptions {
+    optional bool unstable = 50001;   // indicate that a message definition might change at any time
+    optional uint32 wire_type = 50002;   // override wire type specified in the MessageType enum
+}
+
+
+/** Options for tagging field types */
+extend google.protobuf.FieldOptions {
+    optional bool experimental = 52001;   // indicate that a field is intended for development and beta testing only
+}
+
+
 /**
  * Mapping between Trezor wire identifier (uint) and a protobuf message
  */

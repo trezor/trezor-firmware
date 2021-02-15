@@ -6,11 +6,11 @@ class HomescreenBase(ui.Layout):
     RENDER_SLEEP = loop.SLEEP_FOREVER
 
     def __init__(self) -> None:
+        super().__init__()
         self.label = storage.device.get_label() or "My Trezor"
         self.image = storage.device.get_homescreen() or res.load(
             "apps/homescreen/res/bg.toif"
         )
-        self.repaint = True
 
     def on_tap(self) -> None:
         """Called when the user taps the screen."""

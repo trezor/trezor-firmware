@@ -1,3 +1,4 @@
 hidapi >= 0.7.99.post20
 rlp >= 1.1.0
 web3 >= 4.8
+Pillow

@@ -1,6 +1,6 @@
 from storage import cache, device
 from trezor import wire
-from trezor.crypto import bip32, hashlib, hmac
+from trezor.crypto import bip32, hmac
 
 from . import mnemonic
 from .passphrase import get as get_passphrase
@@ -15,7 +15,7 @@ class Slip21Node:
         if data is not None:
             self.data = data
         elif seed is not None:
-            self.data = hmac.new(b"Symmetric key seed", seed, hashlib.sha512).digest()
+            self.data = hmac(hmac.SHA512, b"Symmetric key seed", seed).digest()
         else:
             raise ValueError  # neither seed nor data specified
 
@@ -24,7 +24,7 @@ class Slip21Node:
 
     def derive_path(self, path: Slip21Path) -> None:
         for label in path:
-            h = hmac.new(self.data[0:32], b"\x00", hashlib.sha512)
+            h = hmac(hmac.SHA512, self.data[0:32], b"\x00")
             h.update(label)
             self.data = h.digest()
 

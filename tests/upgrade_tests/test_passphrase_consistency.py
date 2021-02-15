@@ -46,7 +46,9 @@ def emulator(gen, tag):
     with EmulatorWrapper(gen, tag) as emu:
         # set up a passphrase-protected device
         device.reset(
-            emu.client, pin_protection=False, skip_backup=True,
+            emu.client,
+            pin_protection=False,
+            skip_backup=True,
         )
         resp = emu.client.call(
             ApplySettingsCompat(use_passphrase=True, passphrase_source=SOURCE_HOST)
@@ -64,9 +66,9 @@ def test_passphrase_works(emulator):
     """Check that passphrase handling in trezorlib works correctly in all versions."""
     if emulator.client.features.model == "T" and emulator.client.version < (2, 3, 0):
         expected_responses = [
-            messages.PassphraseRequest(),
-            messages.Deprecated_PassphraseStateRequest(),
-            messages.Address(),
+            messages.PassphraseRequest,
+            messages.Deprecated_PassphraseStateRequest,
+            messages.Address,
         ]
     elif (
         emulator.client.features.model == "T" and emulator.client.version < (2, 3, 3)
@@ -74,15 +76,15 @@ def test_passphrase_works(emulator):
         emulator.client.features.model == "1" and emulator.client.version < (1, 9, 3)
     ):
         expected_responses = [
-            messages.PassphraseRequest(),
-            messages.Address(),
+            messages.PassphraseRequest,
+            messages.Address,
         ]
     else:
         expected_responses = [
-            messages.PassphraseRequest(),
-            messages.ButtonRequest(),
-            messages.ButtonRequest(),
-            messages.Address(),
+            messages.PassphraseRequest,
+            messages.ButtonRequest,
+            messages.ButtonRequest,
+            messages.Address,
         ]
 
     with emulator.client:
@@ -101,11 +103,11 @@ def test_init_device(emulator):
     """
     if emulator.client.features.model == "T" and emulator.client.version < (2, 3, 0):
         expected_responses = [
-            messages.PassphraseRequest(),
-            messages.Deprecated_PassphraseStateRequest(),
-            messages.Address(),
-            messages.Features(),
-            messages.Address(),
+            messages.PassphraseRequest,
+            messages.Deprecated_PassphraseStateRequest,
+            messages.Address,
+            messages.Features,
+            messages.Address,
         ]
     elif (
         emulator.client.features.model == "T" and emulator.client.version < (2, 3, 3)
@@ -113,19 +115,19 @@ def test_init_device(emulator):
         emulator.client.features.model == "1" and emulator.client.version < (1, 9, 3)
     ):
         expected_responses = [
-            messages.PassphraseRequest(),
-            messages.Address(),
-            messages.Features(),
-            messages.Address(),
+            messages.PassphraseRequest,
+            messages.Address,
+            messages.Features,
+            messages.Address,
         ]
     else:
         expected_responses = [
-            messages.PassphraseRequest(),
-            messages.ButtonRequest(),
-            messages.ButtonRequest(),
-            messages.Address(),
-            messages.Features(),
-            messages.Address(),
+            messages.PassphraseRequest,
+            messages.ButtonRequest,
+            messages.ButtonRequest,
+            messages.Address,
+            messages.Features,
+            messages.Address,
         ]
 
     with emulator.client:

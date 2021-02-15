@@ -10,10 +10,10 @@ from apps.base import set_authorization
 from apps.common.confirm import require_confirm, require_hold_to_confirm
 from apps.common.paths import validate_path
 
-from . import addresses
 from .authorization import FEE_PER_ANONYMITY_DECIMALS, CoinJoinAuthorization
 from .common import BIP32_WALLET_DEPTH
-from .keychain import get_keychain_for_coin
+from .keychain import get_keychain_for_coin, validate_path_against_script_type
+from .sign_tx.layout import format_coin_amount
 
 if False:
     from trezor import wire
@@ -21,7 +21,7 @@ if False:
 _MAX_COORDINATOR_LEN = const(18)
 
 
-async def authorize_coinjoin(ctx: wire.Context, msg: AuthorizeCoinJoin,) -> Success:
+async def authorize_coinjoin(ctx: wire.Context, msg: AuthorizeCoinJoin) -> Success:
     # We cannot use the @with_keychain decorator here, because we need the keychain
     # to survive the function exit. The ownership of the keychain is transferred to
     # the CoinJoinAuthorization object, which takes care of its destruction.
@@ -36,14 +36,14 @@ async def authorize_coinjoin(ctx: wire.Context, msg: AuthorizeCoinJoin,) -> Succ
         if not msg.address_n:
             raise wire.DataError("Empty path not allowed.")
 
+        validation_path = msg.address_n + [0] * BIP32_WALLET_DEPTH
         await validate_path(
             ctx,
-            addresses.validate_full_path,
             keychain,
-            msg.address_n + [0] * BIP32_WALLET_DEPTH,
-            coin.curve_name,
-            coin=coin,
-            script_type=msg.script_type,
+            validation_path,
+            validate_path_against_script_type(
+                coin, address_n=validation_path, script_type=msg.script_type
+            ),
         )
 
         text = Text("Authorize CoinJoin", ui.ICON_RECOVERY)
@@ -63,8 +63,10 @@ async def authorize_coinjoin(ctx: wire.Context, msg: AuthorizeCoinJoin,) -> Succ
             )
         text.normal("Maximum total fees:")
         text.bold(
-            "{} {}".format(
-                format_amount(msg.max_total_fee, coin.decimals), coin.coin_shortcut
+            format_coin_amount(
+                msg.max_total_fee,
+                coin,
+                msg.amount_unit,
             )
         )
         await require_hold_to_confirm(ctx, text)

@@ -8,7 +8,6 @@ class Display:
     """
     WIDTH: int  # display width in pixels
     HEIGHT: int  # display height in pixels
-    FONT_SIZE: int  # font height in pixels
     FONT_MONO: int  # id of monospace font
     FONT_NORMAL: int  # id of normal-width font
     FONT_BOLD: int  # id of bold-width font
@@ -115,11 +114,15 @@ class Display:
         font: int,
         fgcolor: int,
         bgcolor: int,
+        text_offset: int = None,
+        text_len: int = None,
     ) -> None:
         """
         Renders left-aligned text at position (x,y) where x is left position and
         y is baseline. Font font is used for rendering, fgcolor is used as
         foreground color, bgcolor as background.
+        Arguments text_offset and text_len can be used to render a substring of
+        the text.
         """
 
     def text_center(
@@ -152,9 +155,17 @@ class Display:
         foreground color, bgcolor as background.
         """
 
-    def text_width(self, text: str, font: int) -> int:
+    def text_width(
+        self,
+        text: str,
+        font: int,
+        text_offset: int = None,
+        text_len: int = None,
+    ) -> int:
         """
         Returns a width of text in pixels. Font font is used for rendering.
+        Arguments text_offset and text_len can be used to render a substring of
+        the text.
         """
 
     def text_split(self, text: str, font: int, requested_width: int) -> int:

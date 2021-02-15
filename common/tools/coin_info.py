@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-import glob
 import json
 import logging
 import os
 import re
 from collections import OrderedDict, defaultdict
+from pathlib import Path
 
 try:
     import requests
@@ -13,20 +13,22 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
-DEFS_DIR = os.path.abspath(
-    os.environ.get("DEFS_DIR") or os.path.join(os.path.dirname(__file__), "..", "defs")
-)
+ROOT = (Path(__file__).parent / "..").resolve()
+
+if os.environ.get("DEFS_DIR"):
+    DEFS_DIR = Path(os.environ.get("DEFS_DIR")).resolve()
+else:
+    DEFS_DIR = ROOT / "defs"
 
 
 def load_json(*path):
     """Convenience function to load a JSON file from DEFS_DIR."""
-    if len(path) == 1 and path[0].startswith("/"):
-        filename = path[0]
+    if len(path) == 1 and isinstance(path[0], Path):
+        file = path[0]
     else:
-        filename = os.path.join(DEFS_DIR, *path)
+        file = Path(DEFS_DIR, *path)
 
-    with open(filename) as f:
-        return json.load(f, object_pairs_hook=OrderedDict)
+    return json.loads(file.read_text(), object_pairs_hook=OrderedDict)
 
 
 # ====== CoinsInfo ======
@@ -147,8 +149,6 @@ BTC_CHECKS = [
     check_key("max_address_length", int),
     check_key("bech32_prefix", str, regex=r"^[a-z-\.\+]+$", nullable=True),
     check_key("cashaddr_prefix", str, regex=r"^[a-z-\.\+]+$", nullable=True),
-    check_key("bitcore", list, empty=True),
-    check_key("blockbook", list, empty=True),
 ]
 
 
@@ -199,13 +199,6 @@ def validate_btc(coin):
                 "xpub_magic_segwit_p2sh must not be defined for segwit-disabled coin"
             )
 
-    for bc in coin["bitcore"] + coin["blockbook"]:
-        if not bc.startswith("https://"):
-            errors.append("make sure URLs start with https://")
-
-        if bc.endswith("/"):
-            errors.append("make sure URLs don't end with '/'")
-
     return errors
 
 
@@ -215,13 +208,13 @@ def validate_btc(coin):
 def _load_btc_coins():
     """Load btc-like coins from `bitcoin/*.json`"""
     coins = []
-    for filename in glob.glob(os.path.join(DEFS_DIR, "bitcoin", "*.json")):
-        coin = load_json(filename)
+    for file in DEFS_DIR.glob("bitcoin/*.json"):
+        coin = load_json(file)
         coin.update(
             name=coin["coin_label"],
             shortcut=coin["coin_shortcut"],
             key="bitcoin:{}".format(coin["coin_shortcut"]),
-            icon=filename.replace(".json", ".png"),
+            icon=str(file.with_suffix(".png")),
         )
         coins.append(coin)
 
@@ -230,9 +223,34 @@ def _load_btc_coins():
 
 def _load_ethereum_networks():
     """Load ethereum networks from `ethereum/networks.json`"""
-    networks = load_json("ethereum", "networks.json")
-    for network in networks:
-        network.update(key="eth:{}".format(network["shortcut"]))
+    chains_path = DEFS_DIR / "ethereum" / "chains" / "_data" / "chains"
+    networks = []
+    for chain in sorted(chains_path.glob("*.json"), key=lambda x: int(x.stem)):
+        chain_data = load_json(chain)
+        shortcut = chain_data["nativeCurrency"]["symbol"]
+        is_testnet = "testnet" in chain_data["name"].lower()
+        if is_testnet:
+            slip44 = 1
+        else:
+            slip44 = chain_data.get("slip44", 60)
+
+        if is_testnet and not shortcut.lower().startswith("t"):
+            shortcut = "t" + shortcut
+
+        rskip60 = shortcut in ("RBTC", "TRBTC")
+
+        network = dict(
+            chain=chain_data["shortName"],
+            chain_id=chain_data["chainId"],
+            slip44=slip44,
+            shortcut=shortcut,
+            name=chain_data["name"],
+            rskip60=rskip60,
+            url=chain_data["infoURL"],
+            key=f"eth:{shortcut}",
+        )
+        networks.append(network)
+
     return networks
 
 
@@ -243,9 +261,9 @@ def _load_erc20_tokens():
     for network in networks:
         chain = network["chain"]
 
-        chain_path = os.path.join(DEFS_DIR, "ethereum", "tokens", "tokens", chain)
-        for filename in sorted(glob.glob(os.path.join(chain_path, "*.json"))):
-            token = load_json(filename)
+        chain_path = DEFS_DIR / "ethereum" / "tokens" / "tokens" / chain
+        for file in sorted(chain_path.glob("*.json")):
+            token = load_json(file)
             token.update(
                 chain=chain,
                 chain_id=network["chain_id"],
@@ -260,7 +278,7 @@ def _load_erc20_tokens():
 
 def _load_nem_mosaics():
     """Loads NEM mosaics from `nem/nem_mosaics.json`"""
-    mosaics = load_json("nem", "nem_mosaics.json")
+    mosaics = load_json("nem/nem_mosaics.json")
     for mosaic in mosaics:
         shortcut = mosaic["ticker"].strip()
         mosaic.update(shortcut=shortcut, key="nem:{}".format(shortcut))
@@ -278,17 +296,19 @@ def _load_misc():
 def _load_fido_apps():
     """Load FIDO apps from `fido/*.json`"""
     apps = []
-    for filename in sorted(glob.glob(os.path.join(DEFS_DIR, "fido", "*.json"))):
-        app_name = os.path.basename(filename)[:-5].lower()
-        app = load_json(filename)
+    for file in sorted(DEFS_DIR.glob("fido/*.json")):
+        app_name = file.stem.lower()
+        app = load_json(file)
         app.setdefault("use_sign_count", None)
         app.setdefault("use_self_attestation", None)
         app.setdefault("u2f", [])
         app.setdefault("webauthn", [])
 
-        icon_path = os.path.join(DEFS_DIR, "fido", app_name + ".png")
-        if not os.path.exists(icon_path):
+        icon_file = file.with_suffix(".png")
+        if not icon_file.exists():
             icon_path = None
+        else:
+            icon_path = str(icon_file)
 
         app.update(key=app_name, icon=icon_path)
         apps.append(app)
@@ -298,7 +318,7 @@ def _load_fido_apps():
 
 # ====== support info ======
 
-RELEASES_URL = "https://beta-wallet.trezor.io/data/firmware/{}/releases.json"
+RELEASES_URL = "https://data.trezor.io/firmware/{}/releases.json"
 MISSING_SUPPORT_MEANS_NO = ("connect", "webwallet")
 VERSIONED_SUPPORT_INFO = ("trezor1", "trezor2")
 
@@ -522,9 +542,23 @@ def deduplicate_keys(all_coins):
         for i, coin in enumerate(coins):
             if is_token(coin):
                 coin["key"] += ":" + coin["address"][2:6].lower()  # first 4 hex chars
+            elif "chain_id" in coin:
+                coin["key"] += ":" + str(coin["chain_id"])
             else:
                 coin["key"] += ":{}".format(i)
                 coin["dup_key_nontoken"] = True
+
+
+def fill_blockchain_links(all_coins):
+    blockchain_links = load_json("blockchain_link.json")
+    for coins in all_coins.values():
+        for coin in coins:
+            link = blockchain_links.get(coin["key"])
+            coin["blockchain_link"] = link
+            if link and link["type"] == "blockbook":
+                coin["blockbook"] = link["url"]
+            else:
+                coin["blockbook"] = []
 
 
 def _btc_sort_key(coin):
@@ -550,8 +584,10 @@ def collect_coin_info():
         misc=_load_misc(),
     )
 
-    for k, coins in all_coins.items():
+    for coins in all_coins.values():
         _ensure_mandatory_values(coins)
+
+    fill_blockchain_links(all_coins)
 
     return all_coins
 

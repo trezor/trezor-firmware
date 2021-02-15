@@ -2,6 +2,8 @@
 
 import os
 
+TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
+
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
@@ -26,7 +28,6 @@ SOURCE_MOD += [
     'embed/extmod/modtrezorui/display.c',
     'embed/extmod/modtrezorui/font_bitmap.c',
     'embed/extmod/modtrezorui/font_roboto_bold_20.c',
-    'embed/extmod/modtrezorui/qr-code-generator/qrcodegen.c',
     'vendor/micropython/extmod/uzlib/adler32.c',
     'vendor/micropython/extmod/uzlib/crc32.c',
     'vendor/micropython/extmod/uzlib/tinflate.c',
@@ -34,6 +35,7 @@ SOURCE_MOD += [
 
 SOURCE_STMHAL = [
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_cortex.c',
+    'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash_ex.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_flash.c',
     'vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_gpio.c',
@@ -61,11 +63,13 @@ SOURCE_REFLASH = [
 
 SOURCE_TREZORHAL = [
     'embed/trezorhal/common.c',
+    'embed/trezorhal/dma.c',
     'embed/trezorhal/flash.c',
     'embed/trezorhal/mini_printf.c',
     'embed/trezorhal/rng.c',
     'embed/trezorhal/sbu.c',
     'embed/trezorhal/sdcard.c',
+    'embed/trezorhal/systick.c',
     'embed/trezorhal/stm32.c',
     'embed/trezorhal/touch.c',
     'embed/trezorhal/usb.c',
@@ -89,13 +93,13 @@ env.Replace(
     OBJCOPY='arm-none-eabi-objcopy', )
 
 env.Replace(
-    TREZOR_MODEL=env.get('ENV').get('TREZOR_MODEL', 'T'), )
+    TREZOR_MODEL=TREZOR_MODEL, )
 
-if env.get('TREZOR_MODEL') == 'T':
+if TREZOR_MODEL == 'T':
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16'
     CPU_CCFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 '
     CPU_MODEL   = 'STM32F427xx'
-elif env.get('TREZOR_MODEL') == '1':
+elif TREZOR_MODEL == '1':
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m3 -mfloat-abi=soft'
     CPU_CCFLAGS = '-mthumb -mtune=cortex-m3 -mcpu=cortex-m3 -mfloat-abi=soft '
     CPU_MODEL   = 'STM32F405xx'

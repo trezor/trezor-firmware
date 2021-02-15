@@ -1,16 +1,23 @@
 from trezor import wire
-from trezor.messages.TxInputType import TxInputType
-from trezor.messages.TxOutputType import TxOutputType
 from trezor.utils import ensure
 
 from .. import multisig
 from ..common import BIP32_WALLET_DEPTH
 
 if False:
-    from typing import Any, Union
+    from typing import Any, Union, Generic, TypeVar
+
+    from trezor.messages.TxInput import TxInput
+    from trezor.messages.TxOutput import TxOutput
+
+    T = TypeVar("T")
+else:
+    # mypy cheat: Generic[T] will be `object` which is a valid parent type
+    Generic = [object]  # type: ignore
+    T = 0  # type: ignore
 
 
-class MatchChecker:
+class MatchChecker(Generic[T]):
     """
     MatchCheckers are used to identify the change-output in a transaction. An output is
     a change-output if it has a certain matching attribute with all inputs.
@@ -36,16 +43,16 @@ class MatchChecker:
     UNDEFINED = object()
 
     def __init__(self) -> None:
-        self.attribute = self.UNDEFINED  # type: Any
+        self.attribute: Union[object, T] = self.UNDEFINED
         self.read_only = False  # Failsafe to ensure that add_input() is not accidentally called after output_matches().
 
-    def attribute_from_tx(self, txio: Union[TxInputType, TxOutputType]) -> Any:
+    def attribute_from_tx(self, txio: Union[TxInput, TxOutput]) -> T:
         # Return the attribute from the txio, which is to be used for matching.
         # If the txio is invalid for matching, then return an object which
         # evaluates as a boolean False.
         raise NotImplementedError
 
-    def add_input(self, txi: TxInputType) -> None:
+    def add_input(self, txi: TxInput) -> None:
         ensure(not self.read_only)
 
         if self.attribute is self.MISMATCH:
@@ -59,7 +66,7 @@ class MatchChecker:
         elif self.attribute != added_attribute:
             self.attribute = self.MISMATCH
 
-    def check_input(self, txi: TxInputType) -> None:
+    def check_input(self, txi: TxInput) -> None:
         if self.attribute is self.MISMATCH:
             return  # There was already a mismatch when adding inputs, ignore it now.
 
@@ -68,7 +75,7 @@ class MatchChecker:
         if self.attribute != self.attribute_from_tx(txi):
             raise wire.ProcessError("Transaction has changed during signing")
 
-    def output_matches(self, txo: TxOutputType) -> bool:
+    def output_matches(self, txo: TxOutput) -> bool:
         self.read_only = True
 
         if self.attribute is self.MISMATCH:
@@ -78,14 +85,14 @@ class MatchChecker:
 
 
 class WalletPathChecker(MatchChecker):
-    def attribute_from_tx(self, txio: Union[TxInputType, TxOutputType]) -> Any:
+    def attribute_from_tx(self, txio: Union[TxInput, TxOutput]) -> Any:
         if len(txio.address_n) < BIP32_WALLET_DEPTH:
             return None
         return txio.address_n[:-BIP32_WALLET_DEPTH]
 
 
 class MultisigFingerprintChecker(MatchChecker):
-    def attribute_from_tx(self, txio: Union[TxInputType, TxOutputType]) -> Any:
+    def attribute_from_tx(self, txio: Union[TxInput, TxOutput]) -> Any:
         if not txio.multisig:
             return None
         return multisig.multisig_fingerprint(txio.multisig)

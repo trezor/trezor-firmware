@@ -17,6 +17,8 @@
   "xpub_magic": 76067358,
   "xpub_magic_segwit_p2sh": null,
   "xpub_magic_segwit_native": null,
+  "xpub_magic_multisig_segwit_p2sh": null,
+  "xpub_magic_multisig_segwit_native": null,
   "bech32_prefix": null,
   "cashaddr_prefix": null,
   "slip44": 133,
@@ -32,14 +34,6 @@
   "uri_prefix": "zcash",
   "min_address_length": 35,
   "max_address_length": 95,
-  "bitcore": [],
-  "blockbook": [
-    "https://zec1.trezor.io",
-    "https://zec2.trezor.io",
-    "https://zec3.trezor.io",
-    "https://zec4.trezor.io",
-    "https://zec5.trezor.io"
-  ],
   "negative_fee": false,
   "cooldown": 100,
   "consensus_branch_id": {

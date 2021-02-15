@@ -64,15 +64,16 @@ class TestMsgSigntxSegwit:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_20912f),
-                    request_input(0, TXHASH_20912f),
-                    request_output(0, TXHASH_20912f),
-                    request_output(1, TXHASH_20912f),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_20912f),
+                    request_input(0, TXHASH_20912f),
+                    request_output(0, TXHASH_20912f),
+                    request_output(1, TXHASH_20912f),
                     request_input(0),
                     request_output(0),
                     request_output(1),
@@ -112,14 +113,15 @@ class TestMsgSigntxSegwit:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_20912f),
-                    request_input(0, TXHASH_20912f),
-                    request_output(0, TXHASH_20912f),
-                    request_output(1, TXHASH_20912f),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
                     proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_20912f),
+                    request_input(0, TXHASH_20912f),
+                    request_output(0, TXHASH_20912f),
+                    request_output(1, TXHASH_20912f),
                     request_input(0),
                     request_output(0),
                     request_output(1),
@@ -155,11 +157,12 @@ class TestMsgSigntxSegwit:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_dee13c),
-                    request_output(0, TXHASH_dee13c),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_dee13c),
+                    request_output(0, TXHASH_dee13c),
                     request_input(0),
                     request_output(0),
                     request_input(0),
@@ -206,13 +209,14 @@ class TestMsgSigntxSegwit:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
                     request_meta(TXHASH_9c3192),
                     request_input(0, TXHASH_9c3192),
                     request_output(0, TXHASH_9c3192),
                     request_output(1, TXHASH_9c3192),
-                    request_output(0),
-                    proto.ButtonRequest(code=B.ConfirmOutput),
-                    proto.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_output(0),
                     request_input(0),
@@ -229,13 +233,14 @@ class TestMsgSigntxSegwit:
             client.set_expected_responses(
                 [
                     request_input(0),
+                    request_output(0),
+                    proto.ButtonRequest(code=B.ConfirmOutput),
+                    proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
                     request_meta(TXHASH_9c3192),
                     request_input(0, TXHASH_9c3192),
                     request_output(0, TXHASH_9c3192),
                     request_output(1, TXHASH_9c3192),
-                    request_output(0),
-                    proto.ButtonRequest(code=B.ConfirmOutput),
-                    proto.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_output(0),
                     request_input(0),
@@ -276,15 +281,16 @@ class TestMsgSigntxSegwit:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_20912f),
-                    request_input(0, TXHASH_20912f),
-                    request_output(0, TXHASH_20912f),
-                    request_output(1, TXHASH_20912f),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_20912f),
+                    request_input(0, TXHASH_20912f),
+                    request_output(0, TXHASH_20912f),
+                    request_output(1, TXHASH_20912f),
                     request_input(0),
                     request_output(0),
                     request_output(1),
@@ -301,13 +307,13 @@ class TestMsgSigntxSegwit:
             == "0100000000010137c361fb8f2d9056ba8c98c5611930fcb48cacfdd0fe2e0449d83eea982f91200000000017160014d16b8c0680c61fc6ed2e407455715055e41052f5ffffffff02e0aebb00000000001976a91414fdede0ddc3be652a0ce1afbc1b509a55b6b94888ac3df39f060000000017a9142f98413cb83ff8b3eaf1926192e68973cbd68a3a8702473044022013cbce7c575337ca05dbe03b5920a0805b510cd8dfd3180bd7c5d01cec6439cd0220050001be4bcefb585caf973caae0ffec682347f2127cc22f26efd93ee54fd852012103e7bfe10708f715e8538c92d46ca50db6f657bbc455b7494e6a0303ccdb868b7900000000"
         )
 
-        run_attack = True
+        attack_count = 2
 
         def attack_processor(msg):
-            nonlocal run_attack
+            nonlocal attack_count
 
-            if run_attack and msg.tx.inputs and msg.tx.inputs[0] == inp1:
-                run_attack = False
+            if attack_count > 0 and msg.tx.inputs and msg.tx.inputs[0] == inp1:
+                attack_count -= 1
                 msg.tx.inputs[0].address_n[2] = H_(12)
 
             return msg
@@ -318,14 +324,15 @@ class TestMsgSigntxSegwit:
             client.set_expected_responses(
                 [
                     request_input(0),
-                    request_meta(TXHASH_20912f),
-                    request_input(0, TXHASH_20912f),
-                    request_output(0, TXHASH_20912f),
-                    request_output(1, TXHASH_20912f),
                     request_output(0),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     request_output(1),
                     proto.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_meta(TXHASH_20912f),
+                    request_input(0, TXHASH_20912f),
+                    request_output(0, TXHASH_20912f),
+                    request_output(1, TXHASH_20912f),
                     request_input(0),
                     proto.Failure(code=proto.FailureType.ProcessError),
                 ]
@@ -342,7 +349,7 @@ class TestMsgSigntxSegwit:
 
     def test_attack_mixed_inputs(self, client):
         TRUE_AMOUNT = 123456789
-        FAKE_AMOUNT = 123
+        FAKE_AMOUNT = 120000000
 
         inp1 = proto.TxInputType(
             address_n=parse_path("44'/1'/0'/0/0"),
@@ -368,6 +375,12 @@ class TestMsgSigntxSegwit:
 
         expected_responses = [
             request_input(0),
+            request_input(1),
+            request_output(0),
+            proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+            proto.ButtonRequest(code=proto.ButtonRequestType.FeeOverThreshold),
+            proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
+            request_input(0),
             request_meta(TXHASH_e5040e),
             request_input(0, TXHASH_e5040e),
             request_output(0, TXHASH_e5040e),
@@ -377,10 +390,6 @@ class TestMsgSigntxSegwit:
             request_input(0, TXHASH_20912f),
             request_output(0, TXHASH_20912f),
             request_output(1, TXHASH_20912f),
-            request_output(0),
-            proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
-            proto.ButtonRequest(code=proto.ButtonRequestType.FeeOverThreshold),
-            proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
             request_input(0),
             request_input(1),
             request_output(0),
@@ -399,7 +408,11 @@ class TestMsgSigntxSegwit:
             # "Fee over threshold" warning is displayed - fee is the whole TRUE_AMOUNT
             client.set_expected_responses(expected_responses)
             btc.sign_tx(
-                client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_API,
+                client,
+                "Testnet",
+                [inp1, inp2],
+                [out1],
+                prev_txes=TX_API,
             )
 
         # In Phase 1 make the user confirm a lower value of the segwit input.
@@ -407,14 +420,22 @@ class TestMsgSigntxSegwit:
 
         if client.features.model == "1":
             # T1 fails as soon as it encounters the fake amount.
-            expected_responses = expected_responses[:9] + [proto.Failure()]
+            expected_responses = (
+                expected_responses[:4] + expected_responses[5:15] + [proto.Failure()]
+            )
         else:
-            expected_responses = expected_responses[:10] + [proto.Failure()]
+            expected_responses = (
+                expected_responses[:4] + expected_responses[5:16] + [proto.Failure()]
+            )
 
         with pytest.raises(TrezorFailure) as e, client:
             client.set_expected_responses(expected_responses)
             btc.sign_tx(
-                client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_API,
+                client,
+                "Testnet",
+                [inp1, inp2],
+                [out1],
+                prev_txes=TX_API,
             )
 
         assert e.value.failure.message.endswith("Invalid amount specified")

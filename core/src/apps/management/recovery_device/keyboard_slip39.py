@@ -28,8 +28,8 @@ class InputButton(Button):
     def __init__(self, area: ui.Area, keyboard: "Slip39Keyboard") -> None:
         super().__init__(area, "")
         self.word = ""
-        self.pending_button = None  # type: Optional[Button]
-        self.pending_index = None  # type: Optional[int]
+        self.pending_button: Optional[Button] = None
+        self.pending_index: Optional[int] = None
         self.keyboard = keyboard
         self.disable()
 
@@ -90,8 +90,8 @@ class InputButton(Button):
 
 class Prompt(ui.Component):
     def __init__(self, prompt: str) -> None:
+        super().__init__()
         self.prompt = prompt
-        self.repaint = True
 
     def on_render(self) -> None:
         if self.repaint:
@@ -102,6 +102,7 @@ class Prompt(ui.Component):
 
 class Slip39Keyboard(ui.Layout):
     def __init__(self, prompt: str) -> None:
+        super().__init__()
         self.prompt = Prompt(prompt)
 
         icon_back = res.load(ui.ICON_BACK)
@@ -117,7 +118,7 @@ class Slip39Keyboard(ui.Layout):
                 ("ab", "cd", "ef", "ghij", "klm", "nopq", "rs", "tuv", "wxyz")
             )
         ]
-        self.pending_button = None  # type: Optional[Button]
+        self.pending_button: Optional[Button] = None
         self.pending_index = 0
         self.button_sequence = ""
         self.mask = slip39.KEYBOARD_FULL_MASK
@@ -170,7 +171,7 @@ class Slip39Keyboard(ui.Layout):
 
         # find the completions
         word = ""
-        self.mask = slip39.compute_mask(self.button_sequence)
+        self.mask = slip39.word_completion_mask(self.button_sequence)
         if self.is_input_final():
             word = slip39.button_sequence_to_word(self.button_sequence)
 

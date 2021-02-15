@@ -14,6 +14,7 @@ class MoneroRctKeyPublic(p.MessageType):
 
     def __init__(
         self,
+        *,
         dest: bytes = None,
         commitment: bytes = None,
     ) -> None:
@@ -23,6 +24,6 @@ class MoneroRctKeyPublic(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('dest', p.BytesType, 0),
-            2: ('commitment', p.BytesType, 0),
+            1: ('dest', p.BytesType, None),
+            2: ('commitment', p.BytesType, None),
         }

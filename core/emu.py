@@ -89,6 +89,7 @@ def _from_env(name):
 @click.option("-D", "--debugger", is_flag=True, help="Run emulator in debugger (gdb/lldb)")
 @click.option("--executable", type=click.Path(exists=True, dir_okay=False), default=os.environ.get("MICROPYTHON"), help="Alternate emulator executable")
 @click.option("-g", "--profiling/--no-profiling", default=_from_env("TREZOR_PROFILING"), help="Run with profiler wrapper")
+@click.option("-G", "--alloc-profiling/--no-alloc-profiling", default=_from_env("TREZOR_MEMPERF"), help="Profile memory allocation (requires special micropython build)")
 @click.option("-h", "--headless", is_flag=True, help="Headless mode (no display)")
 @click.option("--heap-size", metavar="SIZE", default="20M", help="Configure heap size")
 @click.option("--main", help="Path to python main file")
@@ -111,6 +112,7 @@ def cli(
     debugger,
     executable,
     profiling,
+    alloc_profiling,
     headless,
     heap_size,
     main,
@@ -130,7 +132,7 @@ def cli(
 
     If -c is specified, extra arguments are treated as a command that is executed with
     the running emulator. This command can access the following environment variables:
-    
+
     \b
     TREZOR_PROFILE_DIR - path to storage directory
     TREZOR_PATH - trezorlib connection string
@@ -154,7 +156,7 @@ def cli(
     if watch and inotify is None:
         raise click.ClickException("inotify module is missing, install with pip")
 
-    if main and profiling:
+    if main and (profiling or alloc_profiling):
         raise click.ClickException("Cannot use --main and -g together")
 
     if slip0014 and mnemonics:
@@ -169,7 +171,7 @@ def cli(
     if mnemonics and production:
         raise click.ClickException("Cannot load mnemonics in production mode")
 
-    if profiling:
+    if profiling or alloc_profiling:
         main_args = [str(PROFILING_WRAPPER)]
     elif main:
         main_args = [main]
@@ -230,6 +232,9 @@ def cli(
 
     if log_memory:
         os.environ["TREZOR_LOG_MEMORY"] = "1"
+
+    if alloc_profiling:
+        os.environ["TREZOR_MEMPERF"] = "1"
 
     if debugger:
         run_debugger(emulator)

@@ -15,6 +15,7 @@ class FirmwareRequest(p.MessageType):
 
     def __init__(
         self,
+        *,
         offset: int = None,
         length: int = None,
     ) -> None:
@@ -24,6 +25,6 @@ class FirmwareRequest(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('offset', p.UVarintType, 0),
-            2: ('length', p.UVarintType, 0),
+            1: ('offset', p.UVarintType, None),
+            2: ('length', p.UVarintType, None),
         }

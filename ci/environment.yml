@@ -5,13 +5,15 @@ environment:
   variables:
     GIT_SUBMODULE_STRATEGY: none  # no need to fetch submodules
     CONTAINER_NAME: "$CI_REGISTRY/satoshilabs/trezor/trezor-firmware/trezor-firmware-env.nix"
+    ALPINE_RELEASE: "3.12"
+    ALPINE_ARCH: "x86_64"
+    ALPINE_VERSION: "3.12.3"
   services:
     - docker:dind
   before_script:
     - docker login $CI_REGISTRY -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
   script:
-    - docker pull $CONTAINER_NAME:latest || true
-    - wget -nc -P ci/ http://dl-cdn.alpinelinux.org/alpine/v3.12/releases/x86_64/alpine-minirootfs-3.12.0-x86_64.tar.gz
-    - docker build --cache-from $CONTAINER_NAME:latest --tag $CONTAINER_NAME:$CI_COMMIT_SHA --tag $CONTAINER_NAME:latest --build-arg FULLDEPS_TESTING=1 ci/
+    - wget -nc -P ci/ http://dl-cdn.alpinelinux.org/alpine/v$ALPINE_RELEASE/releases/$ALPINE_ARCH/alpine-minirootfs-$ALPINE_VERSION-$ALPINE_ARCH.tar.gz
+    - docker build --tag $CONTAINER_NAME:$CI_COMMIT_SHA --tag $CONTAINER_NAME:latest --build-arg ALPINE_VERSION="$ALPINE_VERSION" --build-arg ALPINE_ARCH="$ALPINE_ARCH" --build-arg FULLDEPS_TESTING=1 ci/
     - docker push $CONTAINER_NAME:$CI_COMMIT_SHA
     - docker push $CONTAINER_NAME:latest

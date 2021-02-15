@@ -31,16 +31,15 @@
 #include "memzero.h"
 #include "storage.h"
 
-STATIC mp_obj_t ui_wait_callback = mp_const_none;
-
 STATIC secbool wrapped_ui_wait_callback(uint32_t wait, uint32_t progress,
                                         const char *message) {
-  if (mp_obj_is_callable(ui_wait_callback)) {
+  if (mp_obj_is_callable(MP_STATE_VM(trezorconfig_ui_wait_callback))) {
     mp_obj_t args[3] = {0};
     args[0] = mp_obj_new_int(wait);
     args[1] = mp_obj_new_int(progress);
     args[2] = mp_obj_new_str(message, strlen(message));
-    if (mp_call_function_n_kw(ui_wait_callback, 3, 0, args) == mp_const_true) {
+    if (mp_call_function_n_kw(MP_STATE_VM(trezorconfig_ui_wait_callback), 3, 0,
+                              args) == mp_const_true) {
       return sectrue;
     }
   }
@@ -56,7 +55,7 @@ STATIC secbool wrapped_ui_wait_callback(uint32_t wait, uint32_t progress,
 ///     """
 STATIC mp_obj_t mod_trezorconfig_init(size_t n_args, const mp_obj_t *args) {
   if (n_args > 0) {
-    ui_wait_callback = args[0];
+    MP_STATE_VM(trezorconfig_ui_wait_callback) = args[0];
     storage_init(wrapped_ui_wait_callback, HW_ENTROPY_DATA, HW_ENTROPY_LEN);
   } else {
     storage_init(NULL, HW_ENTROPY_DATA, HW_ENTROPY_LEN);

@@ -30,9 +30,9 @@ pytestmark = pytest.mark.setup_client(pin=PIN4)
 
 def pin_request(client):
     return (
-        messages.PinMatrixRequest()
+        messages.PinMatrixRequest
         if client.features.model == "1"
-        else messages.ButtonRequest()
+        else messages.ButtonRequest
     )
 
 
@@ -42,9 +42,9 @@ def set_autolock_delay(client, delay):
         client.set_expected_responses(
             [
                 pin_request(client),
-                messages.ButtonRequest(),
-                messages.Success(),
-                messages.Features(),
+                messages.ButtonRequest,
+                messages.Success,
+                messages.Features,
             ]
         )
         device.apply_settings(client, auto_lock_delay_ms=delay)
@@ -56,13 +56,13 @@ def test_apply_auto_lock_delay(client):
     time.sleep(0.1)  # sleep less than auto-lock delay
     with client:
         # No PIN protection is required.
-        client.set_expected_responses([messages.Address()])
+        client.set_expected_responses([messages.Address])
         get_test_address(client)
 
     time.sleep(10.1)  # sleep more than auto-lock delay
     with client:
         client.use_pin_sequence([PIN4])
-        client.set_expected_responses([pin_request(client), messages.Address()])
+        client.set_expected_responses([pin_request(client), messages.Address])
         get_test_address(client)
 
 
@@ -79,11 +79,22 @@ def test_apply_auto_lock_delay(client):
 )
 def test_apply_auto_lock_delay_valid(client, seconds):
     set_autolock_delay(client, seconds * 1000)
+    assert client.features.auto_lock_delay_ms == seconds * 1000
+
+
+def test_autolock_default_value(client):
+    assert client.features.auto_lock_delay_ms is None
+    with client:
+        client.use_pin_sequence([PIN4])
+        device.apply_settings(client, label="pls unlock")
+        client.refresh_features()
+    assert client.features.auto_lock_delay_ms == 60 * 10 * 1000
 
 
 @pytest.mark.skip_ui
 @pytest.mark.parametrize(
-    "seconds", [0, 1, 9, 536871, 2 ** 22],
+    "seconds",
+    [0, 1, 9, 536871, 2 ** 22],
 )
 def test_apply_auto_lock_delay_out_of_range(client, seconds):
     with client:

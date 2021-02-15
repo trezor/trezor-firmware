@@ -32,7 +32,7 @@ try:
     from PyQt5.QtGui import QRegExpValidator
     from PyQt5.QtCore import QRegExp, Qt, QT_VERSION_STR
 except Exception:
-    from PyQt4.QtGui import (
+    from PyQt4.QtGui import (  # noqa: I
         QPushButton,
         QLineEdit,
         QSizePolicy,
@@ -44,7 +44,7 @@ except Exception:
         QVBoxLayout,
         QHBoxLayout,
     )
-    from PyQt4.QtCore import QObject, SIGNAL, QRegExp, Qt, QT_VERSION_STR
+    from PyQt4.QtCore import QObject, SIGNAL, QRegExp, Qt, QT_VERSION_STR  # noqa: I
 
 
 class PinButton(QPushButton):
@@ -67,11 +67,11 @@ class PinButton(QPushButton):
 
 class PinMatrixWidget(QWidget):
     """
-        Displays widget with nine blank buttons and password box.
-        Encodes button clicks into sequence of numbers for passing
-        into PinAck messages of Trezor.
+    Displays widget with nine blank buttons and password box.
+    Encodes button clicks into sequence of numbers for passing
+    into PinAck messages of Trezor.
 
-        show_strength=True may be useful for entering new PIN
+    show_strength=True may be useful for entering new PIN
     """
 
     def __init__(self, show_strength=True, parent=None):
@@ -142,7 +142,7 @@ class PinMatrixWidget(QWidget):
 
 if __name__ == "__main__":
     """
-        Demo application showing PinMatrix widget in action
+    Demo application showing PinMatrix widget in action
     """
     app = QApplication(sys.argv)
 

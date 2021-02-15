@@ -15,6 +15,7 @@ class MoneroGetTxKeyAck(p.MessageType):
 
     def __init__(
         self,
+        *,
         salt: bytes = None,
         tx_keys: bytes = None,
         tx_derivations: bytes = None,
@@ -26,7 +27,7 @@ class MoneroGetTxKeyAck(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('salt', p.BytesType, 0),
-            2: ('tx_keys', p.BytesType, 0),
-            3: ('tx_derivations', p.BytesType, 0),
+            1: ('salt', p.BytesType, None),
+            2: ('tx_keys', p.BytesType, None),
+            3: ('tx_derivations', p.BytesType, None),
         }

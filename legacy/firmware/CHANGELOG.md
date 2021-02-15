@@ -4,7 +4,43 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## 1.9.3 [to be released on 2nd September 2020]
+## 1.9.5 [unreleased]
+
+### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+## 1.9.4 [to be released on 10th February 2021]
+
+### Added
+- Replacement transaction signing for replace-by-fee.  [#1367]
+- Support for Output Descriptors export.  [#1363]
+- Show Ypub/Zpub correctly for multisig GetAddress.  [#1415]
+- Show amounts in mBTC, uBTC and sat denominations.  [#1369]
+
+### Changed
+- Bump nanopb dependency to 0.4.3.  [#1105]
+- Bump nanopb dependency to 0.4.4.  [#1402]
+- Minimum auto-lock delay to 1 minute. The former value of 10 seconds still applies for debug builds.  [#1351]
+
+### Deprecated
+
+### Removed
+- PIVX support.
+
+### Fixed
+
+### Security
+
+## 1.9.3 [2nd September 2020]
 
 ### Added
 - XVG support.  [#1165]
@@ -17,7 +53,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Deprecated
 
 ### Removed
-- ETP, GIN, PTC, ZEL support
+- ETP, GIN, PTC, ZEL support.
 
 ### Fixed
 
@@ -333,5 +369,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#965]: https://github.com/trezor/trezor-firmware/issues/965
 [#1030]: https://github.com/trezor/trezor-firmware/issues/1030
 [#1098]: https://github.com/trezor/trezor-firmware/issues/1098
+[#1105]: https://github.com/trezor/trezor-firmware/issues/1105
 [#1165]: https://github.com/trezor/trezor-firmware/pull/1165
 [#1188]: https://github.com/trezor/trezor-firmware/issues/1188
+[#1351]: https://github.com/trezor/trezor-firmware/issues/1351
+[#1363]: https://github.com/trezor/trezor-firmware/pull/1363
+[#1367]: https://github.com/trezor/trezor-firmware/issues/1367
+[#1369]: https://github.com/trezor/trezor-firmware/pull/1369
+[#1402]: https://github.com/trezor/trezor-firmware/pull/1402
+[#1415]: https://github.com/trezor/trezor-firmware/pull/1415

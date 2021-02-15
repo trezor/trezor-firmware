@@ -15,6 +15,7 @@ class DebugLinkWatchLayout(p.MessageType):
 
     def __init__(
         self,
+        *,
         watch: bool = None,
     ) -> None:
         self.watch = watch
@@ -22,5 +23,5 @@ class DebugLinkWatchLayout(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('watch', p.BoolType, 0),
+            1: ('watch', p.BoolType, None),
         }

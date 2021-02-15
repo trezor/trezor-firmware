@@ -7,9 +7,9 @@ import sys
 import time
 
 import click
-import requests
 
 import coin_info
+import marketcap
 
 LOG = logging.getLogger(__name__)
 
@@ -20,14 +20,9 @@ WALLETS = coin_info.load_json("wallets.json")
 OVERRIDES = coin_info.load_json("coins_details.override.json")
 VERSIONS = coin_info.latest_releases()
 
-COINMAKETCAP_CACHE = os.path.join(os.path.dirname(__file__), "coinmarketcap.json")
-COINMARKETCAP_API_BASE = "https://pro-api.coinmarketcap.com/v1/"
-
-MARKET_CAPS = {}
-
 # automatic wallet entries
-WALLET_TREZOR = {"Trezor": "https://wallet.trezor.io"}
-WALLET_ETH_TREZOR = {"Trezor Beta": "https://beta-wallet.trezor.io/next/"}
+WALLET_TREZOR = {"Trezor Wallet": "https://wallet.trezor.io"}
+WALLET_ETH_TREZOR = {"Trezor Suite": "https://suite.trezor.io"}
 WALLET_NEM = {
     "Nano Wallet": "https://nem.io/downloads/",
     "Magnum": "https://magnumwallet.co",
@@ -39,95 +34,14 @@ WALLETS_ETH_3RDPARTY = {
 
 
 TREZOR_KNOWN_URLS = (
+    "https://suite.trezor.io",
     "https://wallet.trezor.io",
-    "https://beta-wallet.trezor.io/next/",
-    "https://trezor.io/stellar/",
-    "https://omnitrezor.com/",
 )
-
-
-def coinmarketcap_call(endpoint, api_key, params=None):
-    url = COINMARKETCAP_API_BASE + endpoint
-    r = requests.get(url, params=params, headers={"X-CMC_PRO_API_KEY": api_key})
-    r.raise_for_status()
-    return r.json()
-
-
-def coinmarketcap_init(api_key, refresh=None):
-    global MARKET_CAPS
-
-    force_refresh = refresh is True
-    disable_refresh = refresh is False
-    try:
-        try:
-            mtime = os.path.getmtime(COINMAKETCAP_CACHE)
-        except FileNotFoundError:
-            mtime = 0
-        cache_is_fresh = mtime > time.time() - 3600
-        if disable_refresh or (cache_is_fresh and not force_refresh):
-            print("Using cached market cap data")
-            with open(COINMAKETCAP_CACHE) as f:
-                coinmarketcap_data = json.load(f)
-        else:
-            print("Fetching market cap data")
-            coinmarketcap_data = coinmarketcap_call(
-                "cryptocurrency/listings/latest",
-                api_key,
-                params={"limit": 5000, "convert": "USD"},
-            )
-            by_id = {str(coin["id"]): coin for coin in coinmarketcap_data["data"]}
-            all_ids = list(by_id.keys())
-            while all_ids:
-                first_100 = all_ids[:100]
-                all_ids = all_ids[100:]
-                time.sleep(1)
-                print("Fetching metadata, {} coins remaining...".format(len(all_ids)))
-                metadata = coinmarketcap_call(
-                    "cryptocurrency/info", api_key, params={"id": ",".join(first_100)}
-                )
-                for coin_id, meta in metadata["data"].items():
-                    by_id[coin_id]["meta"] = meta
-
-            with open(COINMAKETCAP_CACHE, "w") as f:
-                json.dump(coinmarketcap_data, f)
-    except Exception as e:
-        raise RuntimeError("market cap data unavailable") from e
-
-    coin_data = {}
-    for coin in coinmarketcap_data["data"]:
-        slug = coin["slug"]
-        platform = coin["meta"]["platform"]
-        market_cap = coin["quote"]["USD"]["market_cap"]
-        if market_cap is not None:
-            coin_data[slug] = int(market_cap)
-            if platform is not None and platform["name"] == "Ethereum":
-                address = platform["token_address"].lower()
-                coin_data[address] = int(market_cap)
-
-    MARKET_CAPS = coin_data
-
-    return coin_data
-
-
-def marketcap(coin):
-    cap = None
-    if coin["type"] == "erc20":
-        address = coin["address"].lower()
-        return MARKET_CAPS.get(address)
-
-    if "coinmarketcap_alias" in coin:
-        cap = MARKET_CAPS.get(coin["coinmarketcap_alias"])
-    if cap is None:
-        slug = coin["name"].replace(" ", "-").lower()
-        cap = MARKET_CAPS.get(slug)
-    if cap is None:
-        cap = MARKET_CAPS.get(coin["shortcut"].lower())
-    return cap
 
 
 def update_marketcaps(coins):
     for coin in coins.values():
-        coin["marketcap_usd"] = marketcap(coin) or 0
+        coin["marketcap_usd"] = marketcap.marketcap(coin) or 0
 
 
 def summary(coins, api_key):
@@ -149,7 +63,7 @@ def summary(coins, api_key):
 
     total_marketcap = None
     try:
-        ret = coinmarketcap_call("global-metrics/quotes/latest", api_key)
+        ret = marketcap.call("global-metrics/quotes/latest", api_key)
         total_marketcap = int(ret["data"]["quote"]["USD"]["total_market_cap"])
     except Exception:
         pass
@@ -191,7 +105,7 @@ def _webwallet_support(coin, support):
     """
     if not support.get("webwallet"):
         return False
-    return any(".trezor.io" in url for url in coin["blockbook"] + coin["bitcore"])
+    return any(".trezor.io" in url for url in coin["blockbook"])
 
 
 def dict_merge(orig, new):
@@ -398,7 +312,7 @@ def main(refresh, api_key, verbose):
     handler.setLevel(log_level)
     root.addHandler(handler)
 
-    coinmarketcap_init(api_key, refresh=refresh)
+    marketcap.init(api_key, refresh=refresh)
 
     defs = coin_info.coin_info()
     support_info = coin_info.support_info(defs)

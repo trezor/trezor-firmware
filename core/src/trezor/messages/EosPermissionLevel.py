@@ -14,6 +14,7 @@ class EosPermissionLevel(p.MessageType):
 
     def __init__(
         self,
+        *,
         actor: int = None,
         permission: int = None,
     ) -> None:
@@ -23,6 +24,6 @@ class EosPermissionLevel(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('actor', p.UVarintType, 0),
-            2: ('permission', p.UVarintType, 0),
+            1: ('actor', p.UVarintType, None),
+            2: ('permission', p.UVarintType, None),
         }

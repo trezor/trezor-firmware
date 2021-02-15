@@ -1,0 +1,112 @@
+{
+  "setup": {
+    "mnemonic": [
+        "extra extend academic bishop cricket bundle tofu goat apart victim enlarge program behavior permit course armed jerky faint language modern",
+        "extra extend academic acne away best indicate impact square oasis prospect painting voting guest either argue username racism enemy eclipse",
+        "extra extend academic arcade born dive legal hush gross briefing talent drug much home firefly toxic analysis idea umbrella slice"
+    ],
+    "passphrase": "TREZOR"
+  },
+  "tests": [
+    {
+      "description": "Mainnet transaction without change",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "metadata": "",
+        "input_flow": [["YES"], ["YES"], ["SWIPE", "YES"], ["SWIPE", "YES"]],
+        "inputs": [
+          {
+            "path": "m/44'/1815'/0'/0/1",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          }
+        ]
+      },
+      "result": {
+        "tx_hash": "73e09bdebf98a9e0f17f86a2d11e0f14f4f8dae77cdf26ff1678e821f20c8db6",
+        "serialized_tx": "83a400818258201af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc00018182582b82d818582183581c9e1c71de652ec8b85fec296f0685ca3988781c94a2e1a5d89d92f45fa0001a0d0c25611a002dd2e802182a030aa1028184582024c4fe188a39103db88818bc191fd8571eae7b284ebcbdf2462bde97b058a95c584055c179ff2beca2c6a78d66de3dea5a6e3134ca3430447c9b73ede73d9b6ae524cde73db59d93a4dfccbbd42b4f4dbacbb655b27171d0f248fdd2d0dc16e0130458206f7a744035f4b3ddb8f861c18446169643cc3ae85e271b4b4f0eda05cf84c65b41a0f6"
+      }
+    },
+    {
+      "description": "Mainnet transaction with change",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "metadata": "",
+        "input_flow": [["YES"], ["YES"], ["SWIPE", "YES"], ["YES"], ["SWIPE", "YES"]],
+        "inputs": [
+          {
+            "path": "m/44'/1815'/0'/0/1",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          },
+          {
+            "addressType": 8,
+            "path": "m/44'/1815'/0'/0/1",
+            "amount": "1000000"
+          }
+        ]
+      },
+      "result": {
+        "tx_hash": "4c43ce4c72f145b145ae7add414722735e250d048f61c4585a5becafcbffa6ae",
+        "serialized_tx": "83a400818258201af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc00018282582b82d818582183581c9e1c71de652ec8b85fec296f0685ca3988781c94a2e1a5d89d92f45fa0001a0d0c25611a002dd2e882582b82d818582183581c2ea63b3db3a1865f59c11762a5aede800ed8f2dc0605d75df2ed7c9ca0001ae82668161a000f424002182a030aa1028184582024c4fe188a39103db88818bc191fd8571eae7b284ebcbdf2462bde97b058a95c5840594c986290cc5cddf3c242f2d650fcbfd0705949c9990569798c29e42ca7b0d6e92a589be6962dcce9c53c63de973d84c38cf53374b5329e20973a280abec00d58206f7a744035f4b3ddb8f861c18446169643cc3ae85e271b4b4f0eda05cf84c65b41a0f6"
+      }
+    },
+    {
+      "description": "Testnet transaction",
+      "parameters": {
+        "protocol_magic": 42,
+        "network_id": 0,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "metadata": "",
+        "input_flow": [["YES"], ["YES"], ["SWIPE", "YES"], ["YES"], ["SWIPE", "YES"]],
+        "inputs": [
+          {
+            "path": "m/44'/1815'/0'/0/1",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+              "address": "2657WMsDfac7BteXkJq5Jzdog4h47fPbkwUM49isuWbYAr2cFRHa3rURP236h9PBe",
+              "amount": "3003112"
+          },
+          {
+              "addressType": 8,
+              "path": "m/44'/1815'/0'/0/1",
+              "amount": "1000000"
+          }
+        ]
+      },
+      "result": {
+        "tx_hash": "93a2c3cfb67ef1e4bae167b0f443c3370664bdb9171bc9cd41bad98e5cc049b2",
+        "serialized_tx": "83a400818258201af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc00018282582f82d818582583581cc817d85b524e3d073795819a25cdbb84cff6aa2bbb3a081980d248cba10242182a001a0fb6fc611a002dd2e882582f82d818582583581c709bfb5d9733cbdd72f520cd2c8b9f8f942da5e6cd0b6994e1803b0aa10242182a001aef14e76d1a000f424002182a030aa1028184582024c4fe188a39103db88818bc191fd8571eae7b284ebcbdf2462bde97b058a95c5840552d1d66972598532fa539faa98cdc7889c8dce00577626a62fb22d0e244d9f49732b6ab65593352a7486123077b7e36308c5048cc8ee6dc465e576f065cb70558206f7a744035f4b3ddb8f861c18446169643cc3ae85e271b4b4f0eda05cf84c65b45a10242182af6"
+      }
+    }
+  ]
+}

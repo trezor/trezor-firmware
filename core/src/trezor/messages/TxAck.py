@@ -17,6 +17,7 @@ class TxAck(p.MessageType):
 
     def __init__(
         self,
+        *,
         tx: TransactionType = None,
     ) -> None:
         self.tx = tx
@@ -24,5 +25,5 @@ class TxAck(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('tx', TransactionType, 0),
+            1: ('tx', TransactionType, None),
         }

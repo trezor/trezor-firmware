@@ -8,6 +8,7 @@ from trezor.messages import BackupType
 if False:
     from trezor.messages.ResetDevice import EnumTypeBackupType
     from typing import Optional
+    from typing_extensions import Literal
 
 # Namespace:
 _NAMESPACE = common.APP_DEVICE
@@ -34,13 +35,25 @@ _SLIP39_IDENTIFIER         = const(0x10)  # bool
 _SLIP39_ITERATION_EXPONENT = const(0x11)  # int
 _SD_SALT_AUTH_KEY          = const(0x12)  # bytes
 INITIALIZED                = const(0x13)  # bool (0x01 or empty)
-_UNSAFE_PROMPTS_ALLOWED    = const(0x14)  # bool (0x01 or empty)
+_SAFETY_CHECK_LEVEL        = const(0x14)  # int
+_EXPERIMENTAL_FEATURES     = const(0x15)  # bool (0x01 or empty)
 
 _DEFAULT_BACKUP_TYPE       = BackupType.Bip39
+
+SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
+SAFETY_CHECK_LEVEL_PROMPT  : Literal[1] = const(1)
+_DEFAULT_SAFETY_CHECK_LEVEL = SAFETY_CHECK_LEVEL_STRICT
+if False:
+    StorageSafetyCheckLevel = Literal[0, 1]
 # fmt: on
 
 HOMESCREEN_MAXSIZE = 16384
-AUTOLOCK_DELAY_MINIMUM = 10 * 1000  # 10 seconds
+LABEL_MAXLENGTH = 32
+
+if __debug__:
+    AUTOLOCK_DELAY_MINIMUM = 10 * 1000  # 10 seconds
+else:
+    AUTOLOCK_DELAY_MINIMUM = 60 * 1000  # 1 minute
 AUTOLOCK_DELAY_DEFAULT = 10 * 60 * 1000  # 10 minutes
 # autolock intervals larger than AUTOLOCK_DELAY_MAXIMUM cause issues in the scheduler
 AUTOLOCK_DELAY_MAXIMUM = 0x2000_0000  # ~6 days
@@ -99,6 +112,8 @@ def get_label() -> Optional[str]:
 
 
 def set_label(label: str) -> None:
+    if len(label) > LABEL_MAXLENGTH:
+        raise ValueError  # label too long
     common.set(_NAMESPACE, _LABEL, label.encode(), True)  # public
 
 
@@ -204,9 +219,15 @@ def set_flags(flags: int) -> None:
         i = 0
     else:
         i = int.from_bytes(b, "big")
-    flags = (flags | i) & 0xFFFFFFFF
+    flags = (flags | i) & 0xFFFF_FFFF
     if flags != i:
         common.set(_NAMESPACE, _FLAGS, flags.to_bytes(4, "big"))
+
+
+def _normalize_autolock_delay(delay_ms: int) -> int:
+    delay_ms = max(delay_ms, AUTOLOCK_DELAY_MINIMUM)
+    delay_ms = min(delay_ms, AUTOLOCK_DELAY_MAXIMUM)
+    return delay_ms
 
 
 def get_autolock_delay_ms() -> int:
@@ -214,12 +235,11 @@ def get_autolock_delay_ms() -> int:
     if b is None:
         return AUTOLOCK_DELAY_DEFAULT
     else:
-        return int.from_bytes(b, "big")
+        return _normalize_autolock_delay(int.from_bytes(b, "big"))
 
 
 def set_autolock_delay_ms(delay_ms: int) -> None:
-    delay_ms = max(delay_ms, AUTOLOCK_DELAY_MINIMUM)
-    delay_ms = min(delay_ms, AUTOLOCK_DELAY_MAXIMUM)
+    delay_ms = _normalize_autolock_delay(delay_ms)
     common.set(_NAMESPACE, _AUTOLOCK_DELAY_MS, delay_ms.to_bytes(4, "big"))
 
 
@@ -283,9 +303,25 @@ def set_sd_salt_auth_key(auth_key: Optional[bytes]) -> None:
         return common.delete(_NAMESPACE, _SD_SALT_AUTH_KEY, public=True)
 
 
-def unsafe_prompts_allowed() -> bool:
-    return common.get_bool(_NAMESPACE, _UNSAFE_PROMPTS_ALLOWED)
+# do not use this function directly, see apps.common.safety_checks instead
+def safety_check_level() -> StorageSafetyCheckLevel:
+    level = common.get_uint8(_NAMESPACE, _SAFETY_CHECK_LEVEL)
+    if level not in (SAFETY_CHECK_LEVEL_STRICT, SAFETY_CHECK_LEVEL_PROMPT):
+        return _DEFAULT_SAFETY_CHECK_LEVEL
+    else:
+        return level  # type: ignore
 
 
-def set_unsafe_prompts_allowed(allowed: bool) -> None:
-    common.set_bool(_NAMESPACE, _UNSAFE_PROMPTS_ALLOWED, allowed)
+# do not use this function directly, see apps.common.safety_checks instead
+def set_safety_check_level(level: StorageSafetyCheckLevel) -> None:
+    if level not in (SAFETY_CHECK_LEVEL_STRICT, SAFETY_CHECK_LEVEL_PROMPT):
+        raise ValueError
+    common.set_uint8(_NAMESPACE, _SAFETY_CHECK_LEVEL, level)
+
+
+def get_experimental_features() -> bool:
+    return common.get_bool(_NAMESPACE, _EXPERIMENTAL_FEATURES)
+
+
+def set_experimental_features(enabled: bool) -> None:
+    common.set_true_or_delete(_NAMESPACE, _EXPERIMENTAL_FEATURES, enabled)

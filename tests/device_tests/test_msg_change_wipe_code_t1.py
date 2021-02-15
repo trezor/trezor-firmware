@@ -106,6 +106,7 @@ def test_set_remove_wipe_code(client):
 
 def test_set_wipe_code_mismatch(client):
     # Check that there is no wipe code protection.
+    client.ensure_unlocked()
     assert client.features.wipe_code_protection is False
 
     # Let's set a new wipe code.
@@ -196,4 +197,5 @@ def test_set_wipe_code_invalid(client, invalid_wipe_code):
 
     # Check that there's still no wipe code protection.
     client.init_device()
+    client.ensure_unlocked()
     assert client.features.wipe_code_protection is False

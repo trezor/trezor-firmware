@@ -15,6 +15,7 @@ class EthereumAddress(p.MessageType):
 
     def __init__(
         self,
+        *,
         address: str = None,
     ) -> None:
         self.address = address
@@ -22,5 +23,5 @@ class EthereumAddress(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            2: ('address', p.UnicodeType, 0),
+            2: ('address', p.UnicodeType, None),
         }

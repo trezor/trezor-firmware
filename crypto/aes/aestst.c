@@ -58,7 +58,7 @@ void out_state(long s0, long s1, long s2, long s3)
 
 void oblk(char m[], unsigned char v[], unsigned long n)
 {   unsigned long i;
-    
+
     printf("\n%s", m);
 
     for(i = 0; i < n; ++i)
@@ -108,7 +108,11 @@ void cycles(volatile uint64_t *rtn)
         cpuid
     }
 #elif defined( __GNUC__ )
+#if defined(__aarch64__)
+    __asm__ __volatile__("mrs %0, cntvct_el0": "=r" (*rtn));
+#else
     __asm__ __volatile__("rdtsc": "=A" (*rtn));
+#endif
 #endif
 }
 

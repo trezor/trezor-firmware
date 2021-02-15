@@ -3,15 +3,18 @@
 import os
 
 BITCOIN_ONLY = ARGUMENTS.get('BITCOIN_ONLY', '0')
-RDI = ARGUMENTS.get('RDI', '1') == '1'
 EVERYTHING = BITCOIN_ONLY != '1'
+TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
+
+FEATURE_FLAGS = {
+    "RDI": True,
+    "SECP256K1_ZKP": False,
+}
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
 CPPDEFINES_MOD = []
 SOURCE_MOD = []
-if EVERYTHING:
-    SOURCE_MOD_SECP256K1_ZKP = []
 
 PYOPT = ARGUMENTS.get('PYOPT', '1')
 FROZEN = True
@@ -103,7 +106,7 @@ if EVERYTHING:
     ]
 
 # libsecp256k1-zkp
-if EVERYTHING:
+if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
     CPPPATH_MOD += [
         'vendor/secp256k1-zkp',
         'vendor/secp256k1-zkp/src',
@@ -126,7 +129,7 @@ if EVERYTHING:
         'ENABLE_MODULE_RECOVERY',
         'ENABLE_MODULE_ECDH',
     ]
-    SOURCE_MOD_SECP256K1_ZKP += [
+    SOURCE_MOD_SECP256K1_ZKP = [
         'vendor/secp256k1-zkp/src/secp256k1.c',
         'vendor/secp256k1-zkp/src/asm/field_10x26_arm.s'
     ]
@@ -182,6 +185,7 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/lib/embed/abort_.c',
     #'vendor/micropython/lib/mp-readline/readline.c',
     'vendor/micropython/lib/utils/gchelper_m3.s',
+    'vendor/micropython/lib/utils/gchelper_native.c',
     'vendor/micropython/lib/utils/interrupt_char.c',
     'vendor/micropython/lib/utils/printf.c',
     'vendor/micropython/lib/utils/pyexec.c',
@@ -270,6 +274,7 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/py/repl.c',
     'vendor/micropython/py/runtime.c',
     'vendor/micropython/py/runtime_utils.c',
+    'vendor/micropython/py/scheduler.c',
     'vendor/micropython/py/scope.c',
     'vendor/micropython/py/sequence.c',
     'vendor/micropython/py/showbc.c',
@@ -340,7 +345,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/vectortable.s',
 ]
 
-if RDI:
+if FEATURE_FLAGS["RDI"]:
     SOURCE_TREZORHAL += [
         'embed/trezorhal/rdi.c',
     ]
@@ -365,16 +370,18 @@ env.Replace(
     OBJCOPY='arm-none-eabi-objcopy', )
 
 env.Replace(
-    TREZOR_MODEL=env.get('ENV').get('TREZOR_MODEL', 'T'), )
+    TREZOR_MODEL=TREZOR_MODEL, )
 
-if env.get('TREZOR_MODEL') == 'T':
+if TREZOR_MODEL == 'T':
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16'
     CPU_CCFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 '
     CPU_MODEL   = 'STM32F427xx'
-elif env.get('TREZOR_MODEL') == '1':
+    LD_VARIANT  = '_zkp' if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"] else ''
+elif TREZOR_MODEL == '1':
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m3 -mfloat-abi=soft'
     CPU_CCFLAGS = '-mthumb -mtune=cortex-m3 -mcpu=cortex-m3 -mfloat-abi=soft '
     CPU_MODEL   = 'STM32F405xx'
+    LD_VARIANT  = '' if EVERYTHING else '_min'
 else:
     raise ValueError('Unknown Trezor model')
 
@@ -389,7 +396,7 @@ env.Replace(
     '-fstack-protector-all '
     + CPU_CCFLAGS + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS='-T embed/firmware/memory_${TREZOR_MODEL}%s.ld -Wl,--gc-sections -Wl,-Map=build/firmware/firmware.map -Wl,--warn-common' % ('' if EVERYTHING else '_min'),
+    LINKFLAGS='-T embed/firmware/memory_${TREZOR_MODEL}%s.ld -Wl,--gc-sections -Wl,-Map=build/firmware/firmware.map -Wl,--warn-common' % LD_VARIANT,
     CPPPATH=[
         '.',
         'embed/firmware',
@@ -559,8 +566,7 @@ if FROZEN:
 #
 # static secp256-zkp ecmult context
 #
-
-if EVERYTHING:
+if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
     host_env = Environment(ENV=os.environ)
     host_env.Replace(
         CC=os.getenv('CC_FOR_BUILD') or 'gcc',
@@ -583,7 +589,7 @@ if EVERYTHING:
 
 obj_program = []
 obj_program.extend(env.Object(source=SOURCE_MOD))
-if EVERYTHING:
+if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
     obj_program.extend(env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function'))
 obj_program.extend(env.Object(source=SOURCE_FIRMWARE))
 obj_program.extend(env.Object(source=SOURCE_MICROPYTHON))
@@ -612,7 +618,7 @@ obj_program.extend(
         ' $SOURCE $TARGET', ))
 
 env.Depends(obj_program, qstr_generated)
-if EVERYTHING:
+if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
     env.Depends(obj_program, secp256k1_zkp_ecmult_static_context)
 
 program_elf = env.Command(
@@ -622,15 +628,15 @@ program_elf = env.Command(
     '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lm -lgcc',
 )
 
-if env.get('TREZOR_MODEL') == 'T':
+if TREZOR_MODEL == 'T':
     action_bin=[
         '$OBJCOPY -O binary -j .vendorheader -j .header -j .flash -j .data --pad-to 0x08100000 $SOURCE ${TARGET}.p1',
         '$OBJCOPY -O binary -j .flash2 $SOURCE ${TARGET}.p2',
         '$CAT ${TARGET}.p1 ${TARGET}.p2 > $TARGET',
-        '$HEADERTOOL $TARGET ' + ('-D' if ARGUMENTS.get('PRODUCTION', '0') == '0' else ''),
+        '$HEADERTOOL -h $TARGET ' + ('-D' if ARGUMENTS.get('PRODUCTION', '0') == '0' else ''),
         '$DD if=$TARGET of=${TARGET}.p1 skip=0 bs=128k count=6',
     ]
-elif env.get('TREZOR_MODEL') == '1':
+elif TREZOR_MODEL == '1':
     action_bin=[
         '$OBJCOPY -O binary -j .header -j .flash -j .data $SOURCE $TARGET',
         '../legacy/bootloader/firmware_sign.py -f $TARGET',

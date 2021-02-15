@@ -62,24 +62,26 @@ static const uint32_t META_MAGIC_V10 = 0xFFFFFFFF;
 #define FLAG_PUBLIC_SHIFTED (FLAG_PUBLIC << 8)
 #define FLAGS_WRITE_SHIFTED (FLAGS_WRITE << 8)
 
-#define KEY_UUID (0 | APP | FLAG_PUBLIC_SHIFTED)      // bytes(12)
-#define KEY_VERSION (1 | APP)                         // uint32
-#define KEY_MNEMONIC (2 | APP)                        // string(241)
-#define KEY_LANGUAGE (3 | APP | FLAG_PUBLIC_SHIFTED)  // string(17)
-#define KEY_LABEL (4 | APP | FLAG_PUBLIC_SHIFTED)     // string(33)
+// clang-format off
+#define KEY_UUID (0 | APP | FLAG_PUBLIC_SHIFTED)                   // bytes(12)
+#define KEY_VERSION (1 | APP)                                      // uint32
+#define KEY_MNEMONIC (2 | APP)                                     // string(241)
+#define KEY_LANGUAGE (3 | APP | FLAG_PUBLIC_SHIFTED)               // string(17)
+#define KEY_LABEL (4 | APP | FLAG_PUBLIC_SHIFTED)                  // string(33)
 #define KEY_PASSPHRASE_PROTECTION (5 | APP | FLAG_PUBLIC_SHIFTED)  // bool
-#define KEY_HOMESCREEN (6 | APP | FLAG_PUBLIC_SHIFTED)        // bytes(1024)
-#define KEY_NEEDS_BACKUP (7 | APP)                            // bool
-#define KEY_FLAGS (8 | APP)                                   // uint32
-#define KEY_U2F_COUNTER (9 | APP | FLAGS_WRITE_SHIFTED)       // uint32
-#define KEY_UNFINISHED_BACKUP (11 | APP)                      // bool
-#define KEY_AUTO_LOCK_DELAY_MS (12 | APP)                     // uint32
-#define KEY_NO_BACKUP (13 | APP)                              // bool
-#define KEY_INITIALIZED (14 | APP | FLAG_PUBLIC_SHIFTED)      // uint32
-#define KEY_NODE (15 | APP)                                   // node
-#define KEY_IMPORTED (16 | APP)                               // bool
-#define KEY_U2F_ROOT (17 | APP | FLAG_PUBLIC_SHIFTED)         // node
-#define KEY_DEBUG_LINK_PIN (255 | APP | FLAG_PUBLIC_SHIFTED)  // string(10)
+#define KEY_HOMESCREEN (6 | APP | FLAG_PUBLIC_SHIFTED)             // bytes(1024)
+#define KEY_NEEDS_BACKUP (7 | APP)                                 // bool
+#define KEY_FLAGS (8 | APP)                                        // uint32
+#define KEY_U2F_COUNTER (9 | APP | FLAGS_WRITE_SHIFTED)            // uint32
+#define KEY_UNFINISHED_BACKUP (11 | APP)                           // bool
+#define KEY_AUTO_LOCK_DELAY_MS (12 | APP)                          // uint32
+#define KEY_NO_BACKUP (13 | APP)                                   // bool
+#define KEY_INITIALIZED (14 | APP | FLAG_PUBLIC_SHIFTED)           // uint32
+#define KEY_NODE (15 | APP)                                        // node
+#define KEY_IMPORTED (16 | APP)                                    // bool
+#define KEY_U2F_ROOT (17 | APP | FLAG_PUBLIC_SHIFTED)              // node
+#define KEY_DEBUG_LINK_PIN (255 | APP | FLAG_PUBLIC_SHIFTED)       // string(10)
+// clang-format on
 
 #define MAX_SESSIONS_COUNT 10
 
@@ -582,9 +584,13 @@ static void get_root_node_callback(uint32_t iter, uint32_t total) {
 }
 
 const uint8_t *config_getSeed(void) {
+  if (activeSessionCache == NULL) {
+    fsm_sendFailure(FailureType_Failure_InvalidSession, "Invalid session");
+    return NULL;
+  }
+
   // root node is properly cached
-  if ((activeSessionCache != NULL) &&
-      (activeSessionCache->seedCached == sectrue)) {
+  if (activeSessionCache->seedCached == sectrue) {
     return activeSessionCache->seed;
   }
 
@@ -632,10 +638,6 @@ const uint8_t *config_getSeed(void) {
       }
     }
     char oldTiny = usbTiny(1);
-    if (activeSessionCache == NULL) {
-      // this should not happen if the Host behaves and sends Initialize first
-      session_startSession(NULL);
-    }
     mnemonic_to_seed(mnemonic, passphrase, activeSessionCache->seed,
                      get_root_node_callback);  // BIP-0039
     memzero(mnemonic, sizeof(mnemonic));
@@ -882,6 +884,12 @@ uint8_t *session_startSession(const uint8_t *received_session_id) {
   return activeSessionCache->id;
 }
 
+void session_endCurrentSession(void) {
+  if (activeSessionCache == NULL) return;
+  session_clearCache(activeSessionCache);
+  activeSessionCache = NULL;
+}
+
 bool session_isUnlocked(void) { return sectrue == storage_is_unlocked(); }
 
 bool config_isInitialized(void) {
@@ -956,6 +964,7 @@ uint32_t config_getAutoLockDelayMs() {
   if (sectrue != config_get_uint32(KEY_AUTO_LOCK_DELAY_MS, &autoLockDelayMs)) {
     autoLockDelayMs = autoLockDelayMsDefault;
   }
+  autoLockDelayMs = MAX(autoLockDelayMs, MIN_AUTOLOCK_DELAY_MS);
   autoLockDelayMsCached = sectrue;
   return autoLockDelayMs;
 }
