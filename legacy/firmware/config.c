@@ -31,6 +31,7 @@
 #include "config.h"
 #include "curves.h"
 #include "debug.h"
+#include "entropy.h"
 #include "fsm.h"
 #include "gettext.h"
 #include "hmac.h"

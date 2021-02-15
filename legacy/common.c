@@ -27,8 +27,6 @@
 #include "rng.h"
 #include "util.h"
 
-uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
-
 static HMAC_DRBG_CTX drbg_ctx;
 
 void __attribute__((noreturn))

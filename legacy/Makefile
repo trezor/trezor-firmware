@@ -4,6 +4,7 @@ endif
 
 OBJS += buttons.o
 OBJS += common.o
+OBJS += entropy.o
 OBJS += flash.o
 OBJS += layout.o
 OBJS += oled.o
