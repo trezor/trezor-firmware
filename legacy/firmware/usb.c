@@ -24,6 +24,7 @@
 #include "config.h"
 #include "debug.h"
 #include "messages.h"
+#include "random_delays.h"
 #include "timer.h"
 #include "trezor.h"
 #if U2F_ENABLED
