@@ -20,11 +20,11 @@ case "$1" in
     exit
     ;;
   "-pizero")
-    export PATH=/opt/poky/2.4.1/sysroots/x86_64-pokysdk-linux/usr/bin:/opt/poky/2.4.1/sysroots/x86_64-pokysdk-linux/usr/bin/arm-poky-linux-gnueabi:$PATH
-    export PKG_CONFIG_SYSROOT_DIR=/opt/poky/2.4.1/sysroots/arm1176jzfshf-vfp-poky-linux-gnueabi
-    export PKG_CONFIG_PATH=/opt/poky/2.4.1/sysroots/arm1176jzfshf-vfp-poky-linux-gnueabi/usr/lib/pkgconfig
+    export PATH=/opt/poky/3.1.4/sysroots/x86_64-pokysdk-linux/usr/bin:/opt/poky/3.1.4/sysroots/x86_64-pokysdk-linux/usr/bin/arm-poky-linux-gnueabi:$PATH
+    export PKG_CONFIG_SYSROOT_DIR=/opt/poky/3.1.4/sysroots/arm1176jzfshf-vfp-poky-linux-gnueabi
+    export PKG_CONFIG_PATH=/opt/poky/3.1.4/sysroots/arm1176jzfshf-vfp-poky-linux-gnueabi/usr/lib/pkgconfig
     export CC=arm-poky-linux-gnueabi-gcc
-    export CPUFLAGS="-march=armv6 -mfpu=vfp -mfloat-abi=hard -mtune=arm1176jzf-s -mfpu=vfp --sysroot=/opt/poky/2.4.1/sysroots/arm1176jzfshf-vfp-poky-linux-gnueabi"
+    export CPUFLAGS="-march=armv6 -mfpu=vfp -mfloat-abi=hard -mtune=arm1176jzf-s -mfpu=vfp --sysroot=/opt/poky/3.1.4/sysroots/arm1176jzfshf-vfp-poky-linux-gnueabi"
     ;;
   *)
     ;;

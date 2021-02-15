@@ -23,6 +23,8 @@
 #include <endian.h>
 #include <stdint.h>
 
+static inline void ignore_result(ssize_t unused) { (void)unused; }
+
 /* borrowed from libusb/libusb.h */
 #define usb_gadget_bswap16(x) (((x & 0xFF) << 8) | (x >> 8))
 #define usb_gadget_bswap32(x) ((usb_gadget_bswap16(x & 0xFFFF) << 16) | usb_gadget_bswap16(x >> 16))

@@ -199,7 +199,7 @@ static int usbd_event_dispatch(usb_gadget_dev_handle *gadget, struct usb_gadget_
 						uint16_t len = usbd_dev->control_buffer_size;
 						int ret = callback_entry->cb(usbd_dev, request, &buf, &len, &complete);
 						if (ret == USBD_REQ_HANDLED) {
-							write(usb_gadget_control_fd(gadget), buf, len);
+							ignore_result(write(usb_gadget_control_fd(gadget), buf, len));
 							return ret;
 						}
 					}

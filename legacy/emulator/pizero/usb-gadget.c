@@ -691,7 +691,7 @@ setup (struct usb_gadget_dev_handle *handle, struct usb_ctrlrequest *ctrl)
 	      ret = sizeof(struct usb_device_descriptor);
 	      if (ret > length)
 		ret = length;
-	      write (handle->ep0->fd, handle->device->device, ret);
+	      ignore_result(write (handle->ep0->fd, handle->device->device, ret));
 	      break;
 	    case USB_DT_CONFIG:
 	      ret = config_buf (buf, value >> 8,
@@ -700,7 +700,7 @@ setup (struct usb_gadget_dev_handle *handle, struct usb_ctrlrequest *ctrl)
 				handle->device->config);
 	      if (ret < 0)
 		goto stall;
-	      write (handle->ep0->fd, buf, ret);
+	      ignore_result(write (handle->ep0->fd, buf, ret));
 	      break;
 	    case USB_DT_STRING:
 	      ret = usb_gadget_get_string (handle->device->strings, value & 0xff, buf);
@@ -708,7 +708,7 @@ setup (struct usb_gadget_dev_handle *handle, struct usb_ctrlrequest *ctrl)
 		goto stall;
 	      if (ret > length)
 		ret = length;
-	      write (handle->ep0->fd, buf, ret);
+	      ignore_result(write (handle->ep0->fd, buf, ret));
 	      break;
 	    default:
 	      goto stall;
@@ -724,7 +724,7 @@ setup (struct usb_gadget_dev_handle *handle, struct usb_ctrlrequest *ctrl)
 	      goto stall;
 	    }
 
-	  read (handle->ep0->fd, &ret, 0);
+	  ignore_result(read (handle->ep0->fd, &ret, 0));
 	  return;
 	case USB_REQ_GET_INTERFACE:
 	  if (ctrl->bRequestType != (USB_DIR_IN|USB_RECIP_INTERFACE)
@@ -733,7 +733,7 @@ setup (struct usb_gadget_dev_handle *handle, struct usb_ctrlrequest *ctrl)
 	    goto stall;
 
 	  buf[0] = 0;
-	  write (handle->ep0->fd, buf, length);
+	  ignore_result(write (handle->ep0->fd, buf, length));
 	  return;
 	case USB_REQ_SET_INTERFACE:
 	  if (ctrl->bRequestType != USB_RECIP_INTERFACE
@@ -757,7 +757,7 @@ setup (struct usb_gadget_dev_handle *handle, struct usb_ctrlrequest *ctrl)
 	  if (ret < 0)
 	    goto stall;
 
-	  read (handle->ep0->fd, &ret, 0);
+	  ignore_result(read (handle->ep0->fd, &ret, 0));
 	  return;
 	default:
 	  goto stall;
@@ -767,9 +767,9 @@ setup (struct usb_gadget_dev_handle *handle, struct usb_ctrlrequest *ctrl)
 
 stall:
   if (ctrl->bRequestType & USB_DIR_IN)
-    read (handle->ep0->fd, &ret, 0);
+    ignore_result(read (handle->ep0->fd, &ret, 0));
   else
-    write (handle->ep0->fd, &ret, 0);
+    ignore_result(write (handle->ep0->fd, &ret, 0));
 }
 
 int
