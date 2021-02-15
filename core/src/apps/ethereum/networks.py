@@ -124,6 +124,13 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         rskip60=False,
     )
     yield NetworkInfo(
+        chain_id=10,
+        slip44=60,
+        shortcut="OETH",
+        name="Optimistic Ethereum",
+        rskip60=False,
+    )
+    yield NetworkInfo(
         chain_id=11,
         slip44=916,
         shortcut="META",
@@ -140,15 +147,36 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
     yield NetworkInfo(
         chain_id=13,
         slip44=1,
-        shortcut="tsDIO",
+        shortcut="tsDIODE",
         name="Diode Testnet Staging",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=14,
+        slip44=554,
+        shortcut="FLR",
+        name="Flare Mainnet",
         rskip60=False,
     )
     yield NetworkInfo(
         chain_id=15,
         slip44=60,
-        shortcut="DIO",
+        shortcut="DIODE",
         name="Diode Prenet",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=16,
+        slip44=1,
+        shortcut="tCFLR",
+        name="Flare Testnet Coston",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=17,
+        slip44=60,
+        shortcut="TFI",
+        name="ThaiChain 2.0 ThaiFi",
         rskip60=False,
     )
     yield NetworkInfo(
@@ -187,6 +215,13 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         rskip60=False,
     )
     yield NetworkInfo(
+        chain_id=35,
+        slip44=60,
+        shortcut="TBG",
+        name="TBWG Chain",
+        rskip60=False,
+    )
+    yield NetworkInfo(
         chain_id=38,
         slip44=538,
         shortcut="VAL",
@@ -198,6 +233,20 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         slip44=1,
         shortcut="tKOV",
         name="Ethereum Testnet Kovan",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=50,
+        slip44=60,
+        shortcut="XDC",
+        name="XinFin Network Mainnet",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=51,
+        slip44=1,
+        shortcut="TXDC",
+        name="XinFin Apothem Testnet",
         rskip60=False,
     )
     yield NetworkInfo(
@@ -243,10 +292,38 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         rskip60=False,
     )
     yield NetworkInfo(
+        chain_id=65,
+        slip44=1,
+        shortcut="TOKT",
+        name="OKExChain Testnet",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=66,
+        slip44=60,
+        shortcut="OKT",
+        name="OKExChain Mainnet",
+        rskip60=False,
+    )
+    yield NetworkInfo(
         chain_id=67,
         slip44=1,
         shortcut="tDBM",
         name="DBChain Testnet",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=68,
+        slip44=60,
+        shortcut="SOTER",
+        name="SoterOne Mainnet",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=69,
+        slip44=1,
+        shortcut="tKOR",
+        name="Optimistic Ethereum Testnet Kovan",
         rskip60=False,
     )
     yield NetworkInfo(
@@ -261,6 +338,13 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         slip44=60,
         shortcut="POA",
         name="POA Network Sokol",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=82,
+        slip44=60,
+        shortcut="MTR",
+        name="Meter Mainnet",
         rskip60=False,
     )
     yield NetworkInfo(
@@ -313,6 +397,13 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         rskip60=False,
     )
     yield NetworkInfo(
+        chain_id=128,
+        slip44=60,
+        shortcut="HT",
+        name="Huobi ECO Chain Mainnet",
+        rskip60=False,
+    )
+    yield NetworkInfo(
         chain_id=137,
         slip44=60,
         shortcut="MATIC",
@@ -342,7 +433,7 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
     )
     yield NetworkInfo(
         chain_id=246,
-        slip44=60,
+        slip44=246,
         shortcut="EWT",
         name="Energy Web Chain",
         rskip60=False,
@@ -352,6 +443,13 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         slip44=60,
         shortcut="FTM",
         name="Fantom Opera",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=256,
+        slip44=1,
+        shortcut="thtt",
+        name="Huobi ECO Chain Testnet",
         rskip60=False,
     )
     yield NetworkInfo(
@@ -370,9 +468,16 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
     )
     yield NetworkInfo(
         chain_id=420,
-        slip44=60,
-        shortcut="OETH",
-        name="Optimistic Ethereum",
+        slip44=1,
+        shortcut="tGOR",
+        name="Optimistic Ethereum Testnet Goerli",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=499,
+        slip44=499,
+        shortcut="RUPX",
+        name="Rupaya",
         rskip60=False,
     )
     yield NetworkInfo(
@@ -380,6 +485,27 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         slip44=60,
         shortcut="TAO",
         name="Tao Network",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=595,
+        slip44=1,
+        shortcut="tmACA",
+        name="Acala Mandala Testnet",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=686,
+        slip44=686,
+        shortcut="KAR",
+        name="Karura Network",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=787,
+        slip44=787,
+        shortcut="ACA",
+        name="Acala Network",
         rskip60=False,
     )
     yield NetworkInfo(
@@ -404,6 +530,41 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         rskip60=False,
     )
     yield NetworkInfo(
+        chain_id=1001,
+        slip44=1,
+        shortcut="tKLAY",
+        name="Klaytn Testnet Baobab",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=1007,
+        slip44=1,
+        shortcut="tNEW",
+        name="Newton Testnet",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=1012,
+        slip44=60,
+        shortcut="NEW",
+        name="Newton",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=1139,
+        slip44=60,
+        shortcut="MATH",
+        name="MathChain",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=1140,
+        slip44=1,
+        shortcut="tMATH",
+        name="MathChain Testnet",
+        rskip60=False,
+    )
+    yield NetworkInfo(
         chain_id=1856,
         slip44=60,
         shortcut="TSF",
@@ -418,10 +579,24 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         rskip60=False,
     )
     yield NetworkInfo(
+        chain_id=2020,
+        slip44=60,
+        shortcut="420",
+        name="420coin",
+        rskip60=False,
+    )
+    yield NetworkInfo(
         chain_id=5869,
         slip44=60,
         shortcut="RBD",
         name="Wegochain Rubidium Mainnet",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=8217,
+        slip44=8217,
+        shortcut="KLAY",
+        name="Klaytn Mainnet Cypress",
         rskip60=False,
     )
     yield NetworkInfo(
@@ -453,10 +628,52 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         rskip60=False,
     )
     yield NetworkInfo(
+        chain_id=42069,
+        slip44=60,
+        shortcut="peggle",
+        name="pegglecoin",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=42220,
+        slip44=60,
+        shortcut="CELO",
+        name="Celo Mainnet",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=43113,
+        slip44=1,
+        shortcut="tAVAX",
+        name="Avalanche Fuji Testnet",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=43114,
+        slip44=60,
+        shortcut="AVAX",
+        name="Avalanche Mainnet",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=44787,
+        slip44=1,
+        shortcut="tCELO",
+        name="Celo Alfajores Testnet",
+        rskip60=False,
+    )
+    yield NetworkInfo(
         chain_id=49797,
         slip44=1,
         shortcut="tNRG",
         name="Energi Testnet",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=62320,
+        slip44=1,
+        shortcut="tCELO",
+        name="Celo Baklava Testnet",
         rskip60=False,
     )
     yield NetworkInfo(
@@ -544,10 +761,24 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         rskip60=False,
     )
     yield NetworkInfo(
+        chain_id=35855456,
+        slip44=60,
+        shortcut="JOYS",
+        name="Joys Digital Mainnet",
+        rskip60=False,
+    )
+    yield NetworkInfo(
         chain_id=61717561,
         slip44=61717561,
         shortcut="AQUA",
         name="Aquachain",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=99415706,
+        slip44=1,
+        shortcut="TOYS",
+        name="Joys Digital TestNet",
         rskip60=False,
     )
     yield NetworkInfo(
@@ -569,6 +800,41 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         slip44=1,
         shortcut="tNEAR",
         name="NEAR TestNet",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=1313161556,
+        slip44=60,
+        shortcut="bNEAR",
+        name="NEAR BetaNet",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=1666600000,
+        slip44=60,
+        shortcut="ONE",
+        name="Harmony Mainnet Shard 0",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=1666600001,
+        slip44=60,
+        shortcut="ONE",
+        name="Harmony Mainnet Shard 1",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=1666600002,
+        slip44=60,
+        shortcut="ONE",
+        name="Harmony Mainnet Shard 2",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=1666600003,
+        slip44=60,
+        shortcut="ONE",
+        name="Harmony Mainnet Shard 3",
         rskip60=False,
     )
     yield NetworkInfo(
