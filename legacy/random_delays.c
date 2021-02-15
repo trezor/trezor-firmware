@@ -17,30 +17,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TREZORHAL_COMMON_H__
-#define __TREZORHAL_COMMON_H__
+#include "random_delays.h"
 
-#include <stddef.h>
-#include <stdint.h>
-#include "secbool.h"
+#include "common.h"
+#include "rng.h"
+#include "util.h"
 
-void __attribute__((noreturn))
-__fatal_error(const char *expr, const char *msg, const char *file, int line,
-              const char *func);
-void __attribute__((noreturn))
-error_shutdown(const char *line1, const char *line2, const char *line3,
-               const char *line4);
-
-#define ensure(expr, msg) \
-  (((expr) == sectrue)    \
-       ? (void)0          \
-       : __fatal_error(#expr, msg, __FILE__, __LINE__, __func__))
-
-void hal_delay(uint32_t ms);
-
-void drbg_init(void);
-void drbg_reseed(const uint8_t *entropy, size_t len);
-void drbg_generate(uint8_t *buf, size_t len);
-uint32_t drbg_random32(void);
-
-#endif
+void wait_random(void) {
+  int wait = random32() & 0xff;
+  volatile int i = 0;
+  volatile int j = wait;
+  while (i < wait) {
+    if (i + j != wait) {
+      shutdown();
+    }
+    ++i;
+    --j;
+  }
+  // Double-check loop completion.
+  if (i != wait || j != 0) {
+    shutdown();
+  }
+}
