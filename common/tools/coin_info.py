@@ -225,7 +225,10 @@ def _load_ethereum_networks():
     """Load ethereum networks from `ethereum/networks.json`"""
     chains_path = DEFS_DIR / "ethereum" / "chains" / "_data" / "chains"
     networks = []
-    for chain in sorted(chains_path.glob("*.json"), key=lambda x: int(x.stem)):
+    for chain in sorted(
+        chains_path.glob("eip155-*.json"),
+        key=lambda x: int(x.stem.replace("eip155-", "")),
+    ):
         chain_data = load_json(chain)
         shortcut = chain_data["nativeCurrency"]["symbol"]
         is_testnet = "testnet" in chain_data["name"].lower()

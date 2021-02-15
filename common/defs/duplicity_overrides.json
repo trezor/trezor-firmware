@@ -6,5 +6,13 @@
     "erc20:eth:Hdp": true,
     "erc20:eth:Hdp.ф": true,
     "misc:BNB": false,
-    "eth:BNB": false
+    "eth:BNB": false,
+    "eth:ONE:1666600000": false,
+    "eth:ONE:1666600001": false,
+    "eth:ONE:1666600002": false,
+    "eth:ONE:1666600003": false,
+    "eth:tGOR:5": false,
+    "eth:tGOR:420": false,
+    "eth:tCELO:44787": false,
+    "eth:tCELO:62320": false
 }
