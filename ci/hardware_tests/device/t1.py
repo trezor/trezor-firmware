@@ -27,9 +27,9 @@ class TrezorOne(Device):
         self.wait(3)
         self._enter_bootloader()
 
-        self.run_trezorctl("list")
-
         self.wait(3)
+        self.check_model("Trezor 1 bootloader")
+
         self.run_trezorctl(trezorctlcmd)
         self.wait(3)
         self.touch("right", "click")

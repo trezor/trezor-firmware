@@ -20,10 +20,11 @@ class Device:
         return run(full_cmd, shell=True, check=True, **kwargs)
 
     def check_model(self, model=None):
-        res = self.run_trezorctl("list", capture_output=True, text=True).stdout
-        self.log(res)
+        res = self.run_trezorctl("list", capture_output=True, text=True)
+        self.log(res.stdout)
+        self.log(res.stderr)
         self.run_trezorctl("get-features | grep version")
-        lines = res.splitlines()
+        lines = res.stdout.splitlines()
         if len(lines) != 1:
             raise RuntimeError("{} trezors connected".format(len(lines)))
         if model and model not in lines[0]:
