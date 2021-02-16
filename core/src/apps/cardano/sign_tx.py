@@ -1,4 +1,4 @@
-from trezor import log, wire
+from trezor import log, wire, utils
 from trezor.crypto import hashlib
 from trezor.crypto.curve import ed25519
 from trezor.messages import CardanoAddressType, CardanoCertificateType
@@ -333,9 +333,37 @@ def _serialize_tx(keychain: seed.Keychain, msg: CardanoSignTx) -> Tuple[bytes, b
     if msg.metadata:
         metadata = cbor.Raw(bytes(msg.metadata))
 
-    serialized_tx = cbor.encode([tx_body, witnesses, metadata])
+    MAX_CHUNK_SIZE = 512
+    serialized_tx_stream = cbor.encode_streamed([tx_body, witnesses, metadata])
 
-    return serialized_tx, tx_hash
+    total_len = 0
+    for token in serialized_tx_stream:
+        total_len += len(token)
+    
+    remaining_len = total_len
+
+    it = cbor.encode_streamed([tx_body, witnesses, metadata])
+    current_token = b""
+    last_buf = bytearray()
+    while remaining_len > 0:
+        chunk_len = min(remaining_len, MAX_CHUNK_SIZE)
+        chunk = utils.BufferWriter(bytearray(chunk_len))
+
+        while chunk.offset < chunk_len:
+            if len(current_token) == 0:
+                current_token = next(it)
+
+            if chunk.offset + len(current_token) <= chunk_len:
+                chunk.write(current_token)
+                current_token = b""
+            else:
+                chunk.write(current_token[:(chunk_len - chunk.offset)])
+                current_token = current_token[(chunk_len - chunk.offset):len(current_token)]
+
+        remaining_len -= chunk_len
+        last_buf = chunk.buffer
+        
+    return last_buf, tx_hash
 
 
 def _cborize_tx_body(keychain: seed.Keychain, msg: CardanoSignTx) -> Dict:
@@ -462,8 +490,13 @@ def _hash_metadata(metadata: bytes) -> bytes:
 
 
 def _hash_tx_body(tx_body: Dict) -> bytes:
-    tx_body_cbor = cbor.encode(tx_body)
-    return hashlib.blake2b(data=tx_body_cbor, outlen=32).digest()
+    tx_body_cbor_bytes = cbor.encode_streamed(tx_body)
+
+    hashfn = hashlib.blake2b(outlen=32)
+    for chunk in tx_body_cbor_bytes:
+        hashfn.update(chunk)
+    
+    return hashfn.digest()
 
 
 def _cborize_witnesses(

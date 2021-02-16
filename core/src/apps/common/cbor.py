@@ -229,6 +229,9 @@ class IndefiniteLengthArray:
 def encode(value: Value) -> bytes:
     return b"".join(_cbor_encode(value))
 
+def encode_streamed(value: Value) -> Iterable[bytes]:
+    return _cbor_encode(value)
+
 
 def decode(cbor: bytes) -> Value:
     r = utils.BufferReader(cbor)
