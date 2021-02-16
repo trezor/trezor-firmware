@@ -38,7 +38,7 @@
 
 #define RCC_CSR_ADDR 0x40023874
 #define RCC_CSR *((volatile uint32_t*)RCC_CSR_ADDR)
-#define RCC_FLAG_SFTRST (1<<27) // software reset bit
+#define RCC_FLAG_SFTRST (1<<28) // software reset bit
 
 const uint8_t BOOTLOADER_KEY_M = 2;
 const uint8_t BOOTLOADER_KEY_N = 3;
