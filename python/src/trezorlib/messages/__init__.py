@@ -35,6 +35,7 @@ from .CardanoPoolRelayParametersType import CardanoPoolRelayParametersType
 from .CardanoPublicKey import CardanoPublicKey
 from .CardanoSignTx import CardanoSignTx
 from .CardanoSignedTx import CardanoSignedTx
+from .CardanoSignedTxAck import CardanoSignedTxAck
 from .CardanoTokenType import CardanoTokenType
 from .CardanoTxCertificateType import CardanoTxCertificateType
 from .CardanoTxInputType import CardanoTxInputType

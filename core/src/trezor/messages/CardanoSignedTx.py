@@ -18,13 +18,16 @@ class CardanoSignedTx(p.MessageType):
         *,
         tx_hash: bytes,
         serialized_tx: bytes,
+        remaining_len: int,
     ) -> None:
         self.tx_hash = tx_hash
         self.serialized_tx = serialized_tx
+        self.remaining_len = remaining_len
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
             1: ('tx_hash', p.BytesType, p.FLAG_REQUIRED),
             2: ('serialized_tx', p.BytesType, p.FLAG_REQUIRED),
+            3: ('remaining_len', p.UVarintType, p.FLAG_REQUIRED),
         }

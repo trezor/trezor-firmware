@@ -4,6 +4,7 @@ from trezor.crypto.curve import ed25519
 from trezor.messages import CardanoAddressType, CardanoCertificateType
 from trezor.messages.CardanoAddressParametersType import CardanoAddressParametersType
 from trezor.messages.CardanoSignedTx import CardanoSignedTx
+from trezor.messages.CardanoSignedTxAck import CardanoSignedTxAck
 
 from apps.common import cbor, safety_checks
 from apps.common.paths import validate_path
@@ -90,21 +91,21 @@ MAX_TX_OUTPUT_SIZE = 512
 @seed.with_keychain
 async def sign_tx(
     ctx: wire.Context, msg: CardanoSignTx, keychain: seed.Keychain
-) -> CardanoSignedTx:
+) -> None:
     if msg.fee > LOVELACE_MAX_SUPPLY:
         raise wire.ProcessError("Fee is out of range!")
 
     validate_network_info(msg.network_id, msg.protocol_magic)
 
     if _has_stake_pool_registration(msg):
-        return await _sign_stake_pool_registration_tx(ctx, msg, keychain)
+        await _sign_stake_pool_registration_tx(ctx, msg, keychain)
     else:
-        return await _sign_standard_tx(ctx, msg, keychain)
+        await _sign_standard_tx(ctx, msg, keychain)
 
 
 async def _sign_standard_tx(
     ctx: wire.Context, msg: CardanoSignTx, keychain: seed.Keychain
-) -> CardanoSignedTx:
+) -> None:
     try:
         for i in msg.inputs:
             await validate_path(
@@ -120,20 +121,17 @@ async def _sign_standard_tx(
         await _show_standard_tx(ctx, keychain, msg)
 
         # sign the transaction bundle and prepare the result
-        serialized_tx, tx_hash = _serialize_tx(keychain, msg)
-        tx = CardanoSignedTx(serialized_tx=serialized_tx, tx_hash=tx_hash)
+        await _serialize_tx(ctx, keychain, msg)
 
     except ValueError as e:
         if __debug__:
             log.exception(__name__, e)
         raise wire.ProcessError("Signing failed")
 
-    return tx
-
 
 async def _sign_stake_pool_registration_tx(
     ctx: wire.Context, msg: CardanoSignTx, keychain: seed.Keychain
-) -> CardanoSignedTx:
+) -> None:
     """
     We have a separate tx signing flow for stake pool registration because it's a
     transaction where the witnessable entries (i.e. inputs, withdrawals, etc.)
@@ -157,15 +155,14 @@ async def _sign_stake_pool_registration_tx(
         await _show_stake_pool_registration_tx(ctx, keychain, msg)
 
         # sign the transaction bundle and prepare the result
-        serialized_tx, tx_hash = _serialize_tx(keychain, msg)
-        tx = CardanoSignedTx(serialized_tx=serialized_tx, tx_hash=tx_hash)
+        await _serialize_tx(ctx, keychain, msg)
 
     except ValueError as e:
         if __debug__:
             log.exception(__name__, e)
         raise wire.ProcessError("Signing failed")
 
-    return tx
+    return None
 
 
 def _has_stake_pool_registration(msg: CardanoSignTx) -> bool:
@@ -316,7 +313,7 @@ def _validate_metadata(metadata: Optional[bytes]) -> None:
         raise INVALID_METADATA
 
 
-def _serialize_tx(keychain: seed.Keychain, msg: CardanoSignTx) -> Tuple[bytes, bytes]:
+async def _serialize_tx(ctx, keychain: seed.Keychain, msg: CardanoSignTx) -> bytes:
     tx_body = _cborize_tx_body(keychain, msg)
     tx_hash = _hash_tx_body(tx_body)
 
@@ -361,9 +358,15 @@ def _serialize_tx(keychain: seed.Keychain, msg: CardanoSignTx) -> Tuple[bytes, b
                 current_token = current_token[(chunk_len - chunk.offset):len(current_token)]
 
         remaining_len -= chunk_len
-        last_buf = chunk.buffer
+        await send_request_chunk(ctx, tx_hash, chunk.buffer, remaining_len)
         
-    return last_buf, tx_hash
+    return tx_hash
+
+
+async def send_request_chunk(ctx, tx_hash: bytes, serialized_tx_chunk: bytes, remaining_len: int):
+    req = CardanoSignedTx(tx_hash=tx_hash, serialized_tx=serialized_tx_chunk, remaining_len=remaining_len)
+
+    return await ctx.call(req, CardanoSignedTxAck)
 
 
 def _cborize_tx_body(keychain: seed.Keychain, msg: CardanoSignTx) -> Dict:

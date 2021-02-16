@@ -222,9 +222,18 @@ message CardanoSignTx {
 
 /**
  * Response: Serialised signed cardano transaction
- * @end
+ * @next CardanoSignedTxAck
  */
 message CardanoSignedTx {
     required bytes tx_hash = 1;         // hash of the transaction body
     required bytes serialized_tx = 2;   // serialized, signed transaction
+    required uint64 remaining_len = 3;
+}
+
+/**
+ * Request: Serialised signed cardano transaction acknowledgement
+ * @end
+ */
+message CardanoSignedTxAck {
+    required uint64 received_data_len = 1;
 }
