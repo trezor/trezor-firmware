@@ -36,6 +36,10 @@
 #include "messages.h"
 // #include "mpu.h"
 
+#define RCC_CSR_ADDR 0x40023874
+#define RCC_CSR *((volatile uint32_t*)RCC_CSR_ADDR)
+#define RCC_FLAG_SFTRST (1<<27) // software reset bit
+
 const uint8_t BOOTLOADER_KEY_M = 2;
 const uint8_t BOOTLOADER_KEY_N = 3;
 static const uint8_t * const BOOTLOADER_KEYS[] = {
@@ -236,6 +240,7 @@ static void check_bootloader_version(void) {
 #endif
 
 int main(void) {
+  bool was_reset_by_software = ((RCC_CSR & RCC_FLAG_SFTRST) != 0);
   drbg_init();
   touch_init();
   touch_power_on();
@@ -311,8 +316,8 @@ main_start:
       return 1;
     }
   } else
-      // ... or if user touched the screen on start
-      if (touched) {
+      // ... or if user touched the screen on start or software reset caused boot
+      if (touched || was_reset_by_software) {
     // show firmware info with connect buttons
 
     // no ui_fadeout(); - we already start from black screen

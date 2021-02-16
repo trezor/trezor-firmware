@@ -51,7 +51,18 @@
 #include "supervise.h"
 #include "touch.h"
 
+void scb_reset_core(void)
+{
+  volatile uint32_t *AIRCR = (uint32_t*)0xE000ED0C;
+  uint32_t SCB_AIRCR_VECTKEY = 0x5fa0000;
+  uint32_t SCB_AIRCR_SYSRESETREQ =  1 << 2;
+  *AIRCR = SCB_AIRCR_VECTKEY | SCB_AIRCR_SYSRESETREQ;
+
+  while (1);
+}
+
 int main(void) {
+  scb_reset_core();
   // initialize pseudo-random number generator
   drbg_init();
 #ifdef RDI
