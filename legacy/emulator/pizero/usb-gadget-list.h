@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2009 Daiki Ueno <ueno@unixuser.org>
- * Modified Copyright (C) 2018, 2019, 2020 Yannick Heneault <yheneaul@gmail.com>
+ * Modified Copyright (C) 2018, 2019, 2020, 2021 Yannick Heneault <yheneaul@gmail.com>
  * This file is part of libusb-gadget.
  *
  * libusb-gadget is free software: you can redistribute it and/or modify

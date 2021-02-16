@@ -2,7 +2,7 @@
  * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (C) 2017 Saleem Rashid <trezor@saleemrashid.com>
- * Modified Copyright (C) 2018, 2019, 2020 Yannick Heneault <yheneaul@gmail.com>
+ * Modified Copyright (C) 2018, 2019, 2020, 2021 Yannick Heneault <yheneaul@gmail.com>
  *
  * This library is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
