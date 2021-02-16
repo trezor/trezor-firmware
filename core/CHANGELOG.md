@@ -18,7 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Security
 
-## 2.3.6 [to be released 17th February 2021]
+## 2.3.6 [15th February 2021]
 
 ### Added
 - Compatibility paths for Unchained Capital.  [#1467]
