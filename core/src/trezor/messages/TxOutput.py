@@ -49,5 +49,5 @@ class TxOutput(p.MessageType):
             6: ('op_return_data', p.BytesType, None),
             10: ('orig_hash', p.BytesType, None),
             11: ('orig_index', p.UVarintType, None),
-            12: ('payment_req_index', p.UVarintType, None),
+            12: ('payment_req_index', p.UVarintType, p.FLAG_EXPERIMENTAL),
         }

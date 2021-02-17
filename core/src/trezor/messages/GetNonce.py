@@ -12,3 +12,4 @@ if __debug__:
 
 class GetNonce(p.MessageType):
     MESSAGE_WIRE_TYPE = 31
+    UNSTABLE = True

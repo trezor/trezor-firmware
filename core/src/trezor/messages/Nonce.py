@@ -12,6 +12,7 @@ if __debug__:
 
 class Nonce(p.MessageType):
     MESSAGE_WIRE_TYPE = 33
+    UNSTABLE = True
 
     def __init__(
         self,

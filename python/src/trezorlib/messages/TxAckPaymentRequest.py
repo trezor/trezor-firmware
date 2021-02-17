@@ -14,6 +14,7 @@ if __debug__:
 
 class TxAckPaymentRequest(p.MessageType):
     MESSAGE_WIRE_TYPE = 37
+    UNSTABLE = True
 
     def __init__(
         self,
