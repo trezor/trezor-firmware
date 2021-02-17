@@ -36,6 +36,49 @@
 #include "messages.h"
 // #include "mpu.h"
 
+char *ranges[][3] = {
+        {(char*)0x50060400, (char*)0x500607ff, "HASH"},
+        {(char*)0x50060000, (char*)0x500603ff, "CRYP"},
+        {(char*)0x50050000, (char*)0x500503ff, "DCMI"},
+        {(char*)0xE0042000, (char*)0xe00423ff, "DBG"},
+        {(char*)0x40026400, (char*)0x400267ff, "DMA2"},
+        {(char*)0x40023800, (char*)0x40023bff, "RCC"},
+        {(char*)0x40022000, (char*)0x400223ff, "GPIOI"},
+        {(char*)0x40020400, (char*)0x400207ff, "GPIOB"},
+        {(char*)0x40020000, (char*)0x400203ff, "GPIOA"},
+        {(char*)0x40013800, (char*)0x40013bff, "SYSCFG"},
+        {(char*)0x40013000, (char*)0x400133ff, "SPI1"},
+        {(char*)0x40012C00, (char*)0x40012fff, "SDIO"},
+        {(char*)0x40012000, (char*)0x40012050, "ADC1"},
+        {(char*)0x40011400, (char*)0x400117ff, "USART6"},
+        {(char*)0x40007400, (char*)0x400077ff, "DAC"},
+        {(char*)0x40002800, (char*)0x40002bff, "RTC"},
+        {(char*)0x40004C00, (char*)0x40004fff, "UART4"},
+        {(char*)0x40012300, (char*)0x4001230c, "C_ADC"},
+        {(char*)0x40010000, (char*)0x400103ff, "TIM1"},
+        {(char*)0x40000000, (char*)0x400003ff, "TIM2"},
+        {(char*)0x40000400, (char*)0x400007ff, "TIM3"},
+        {(char*)0x40000C00, (char*)0x40000fff, "TIM5"},
+        {(char*)0x40014000, (char*)0x400143ff, "TIM9"},
+        {(char*)0x40014400, (char*)0x400147ff, "TIM10"},
+        {(char*)0x40014800, (char*)0x40014bff, "TIM11"},
+        {(char*)0x40001000, (char*)0x400013ff, "TIM6"},
+        {(char*)0x40028000, (char*)0x40028060, "Ethernet_MAC"},
+        {(char*)0x40028100, (char*)0x400284ff, "Ethernet_MMC"},
+        {(char*)0x40028700, (char*)0x40028aff, "Ethernet_PTP"},
+        {(char*)0x40029000, (char*)0x400293ff, "Ethernet_DMA"},
+        {(char*)0x40023000, (char*)0x400233ff, "CRC"},
+        {(char*)0x40006400, (char*)0x400067ff, "CAN1"},
+        {(char*)0x40013C00, (char*)0x40013fff, "EXTI"},
+        {(char*)0x40005C00, (char*)0x40005fff, "I2C3"},
+        {(char*)0x40015800, (char*)0x40015bff, "SAI1"},
+        {(char*)0x40016800, (char*)0x40016bff, "LTDC"},
+        {(char*)0x4002B000, (char*)0x4002bbff, "DMA2D"},
+        {(char*)0xE000ED00, (char*)0xe000ed40, "SCB"}
+
+};
+volatile uint32_t *addr_counter_ptr = (uint32_t*)0x20010000;
+
 const uint8_t BOOTLOADER_KEY_M = 2;
 const uint8_t BOOTLOADER_KEY_N = 3;
 static const uint8_t * const BOOTLOADER_KEYS[] = {
@@ -235,7 +278,13 @@ static void check_bootloader_version(void) {
 
 #endif
 
+void write_meh() {
+  uint32_t *scb_reg = (uint32_t*)0xE000ED34;
+  *scb_reg = 0x1234;
+}
+
 int main(void) {
+  //write_meh();
   drbg_init();
   touch_init();
   touch_power_on();
@@ -313,6 +362,7 @@ int main(void) {
       // ... or if user touched the screen on start or we have debug flag to force it
     if (touched || debug_always_enter_bootloader == sectrue) {
       ui_screen_info(secfalse, &vhdr, &hdr);
+      ui_show_range(ranges[0][2], (uint8_t *)ranges[0][0]);
       ui_fadein();
 
       // and start the usb loop

@@ -32,6 +32,7 @@ void ui_screen_first(void);
 void ui_screen_second(void);
 void ui_screen_third(void);
 
+void ui_show_range(const char* periph, uint8_t* addr);
 void ui_screen_info(secbool buttons, const vendor_header* const vhdr,
                     const image_header* const hdr);
 void ui_screen_info_fingerprint(const image_header* const hdr);

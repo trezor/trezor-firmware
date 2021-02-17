@@ -161,6 +161,15 @@ static int display_vendor_string(const char *text, int textlen,
   }
 }
 
+void ui_show_range(const char* periph, uint8_t* addr) {
+  display_text_center(120, 170, periph, -1, FONT_NORMAL,
+  COLOR_BLACK, COLOR_WHITE);
+  char addr_str[20];
+  mini_snprintf(addr_str, 20, "%x", (unsigned )addr);
+  display_text_center(120, 190, addr_str, -1, FONT_NORMAL,
+                      COLOR_BLACK, COLOR_WHITE);
+}
+
 void ui_screen_info(secbool buttons, const vendor_header *const vhdr,
                     const image_header *const hdr) {
   display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
