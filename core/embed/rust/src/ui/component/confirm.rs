@@ -1,12 +1,12 @@
-use crate::ui::math::Grid;
+use crate::ui::math::{Grid, Rect};
 
 use super::{
-    button::{Button, ButtonContent, ButtonMsg, ButtonStyleSheet},
-    component::{Component, Event, Widget},
+    button::{Button, ButtonContent, ButtonMsg::Clicked, ButtonStyleSheet},
+    component::{Component, Event, EventCtx, Widget},
 };
 
-pub enum ConfirmMsg<T> {
-    Content(T),
+pub enum ConfirmMsg<T: Component> {
+    Content(T::Msg),
     LeftClicked,
     RightClicked,
 }
@@ -14,41 +14,48 @@ pub enum ConfirmMsg<T> {
 pub struct Confirm<T> {
     widget: Widget,
     content: T,
-    left_btn: Button,
-    right_btn: Button,
+    left_btn: Option<Button>,
+    right_btn: Option<Button>,
 }
 
 impl<T> Confirm<T> {
     pub fn new(
+        area: Rect,
         content: T,
-        left: ButtonContent,
+        left: Option<ButtonContent>,
         left_styles: ButtonStyleSheet,
-        right: ButtonContent,
+        right: Option<ButtonContent>,
         right_styles: ButtonStyleSheet,
     ) -> Self {
-        let grid = Grid::for_screen(5, 2);
+        let grid = if left.is_some() && right.is_some() {
+            Grid::new(area, 5, 2)
+        } else {
+            Grid::new(area, 5, 1)
+        };
+        let left_btn = left.map(|left| Button::new(grid.row_col(4, 0), left, left_styles));
+        let right_btn = right.map(|right| Button::new(grid.row_col(4, 1), right, right_styles));
         Self {
             widget: Widget::new(grid.area),
             content,
-            left_btn: Button::new(grid.row_col(4, 0), left, left_styles),
-            right_btn: Button::new(grid.row_col(4, 1), right, right_styles),
+            left_btn,
+            right_btn,
         }
     }
 }
 
 impl<T: Component> Component for Confirm<T> {
-    type Msg = ConfirmMsg<T::Msg>;
+    type Msg = ConfirmMsg<T>;
 
     fn widget(&mut self) -> &mut Widget {
         &mut self.widget
     }
 
-    fn event(&mut self, event: Event) -> Option<Self::Msg> {
-        if let Some(msg) = self.content.event(event) {
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        if let Some(msg) = self.content.event(ctx, event) {
             Some(ConfirmMsg::Content(msg))
-        } else if let Some(ButtonMsg::Clicked) = self.left_btn.event(event) {
+        } else if let Some(Clicked) = self.left_btn.as_mut().and_then(|b| b.event(ctx, event)) {
             Some(ConfirmMsg::LeftClicked)
-        } else if let Some(ButtonMsg::Clicked) = self.right_btn.event(event) {
+        } else if let Some(Clicked) = self.right_btn.as_mut().and_then(|b| b.event(ctx, event)) {
             Some(ConfirmMsg::RightClicked)
         } else {
             None
@@ -56,8 +63,8 @@ impl<T: Component> Component for Confirm<T> {
     }
 
     fn paint(&mut self) {
-        self.content.paint();
-        self.left_btn.paint();
-        self.right_btn.paint();
+        self.content.paint_if_requested();
+        self.left_btn.as_mut().map(|b| b.paint_if_requested());
+        self.right_btn.as_mut().map(|b| b.paint_if_requested());
     }
 }

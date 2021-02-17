@@ -3,24 +3,52 @@ use core::{
     ops::Range,
 };
 
-use crate::error::Error;
-use crate::micropython::{
-    buffer::Buffer,
-    iter::{Iter, IterBuf},
-    map::Map,
-    obj::Obj,
-    qstr::Qstr,
+use crate::{
+    error::Error,
+    micropython::{
+        buffer::Buffer,
+        iter::{Iter, IterBuf},
+        map::Map,
+        obj::Obj,
+        qstr::Qstr,
+    },
+    ui::{
+        display,
+        math::{Color, Point, Rect},
+        theme,
+    },
+    util,
 };
-use crate::trezorhal::display;
 
-use super::math::{Point, Rect};
+/// A structure describing a block of rich text.
+pub struct Text {
+    /// An iterable object yielding items decodable into the `Op` enum.
+    ops: Obj,
+    /// Specifies the first element of `ops` which should be considered.
+    op_offset: usize,
+    /// Specifies the first character of the item indicated in `op_offset`
+    /// which should be considered.
+    char_offset: usize,
+    /// Layout style, specifying the visual and layout parameters of the text.
+    style: TextStyle,
+    /// A bounding box restricting the layout and rendering.
+    bounds: Rect,
+    /// Optional callable object overriding the `render_text` fn of shaping.
+    render_text_fn: Option<Obj>,
+    /// Optional callable object. If set, it is called when the rendering cannot
+    /// longer fit in the given `bounds`, and index of the current `op`,
+    /// together with the char offset is given as arguments. Rendering will also
+    /// not end in such case, cursor is reset to the beginning and next `op` (or
+    /// part of it) is processed, as if rendering the next page.
+    page_end_fn: Option<Obj>,
+}
 
-/// Visual instructions for layout out and rendering of a `RichText` block.
-struct Style {
+/// Visual instructions for layout out and rendering of a `Text` block.
+pub struct TextStyle {
     /// Foreground (text) color. Can be overriden by `Op::SetFg` opcode.
-    fg: u16,
+    fg: Color,
     /// Background color.
-    bg: u16,
+    bg: Color,
     /// Font descriptor. Can be overridden by `Op::SetFont` opcode. Specific
     /// values depends on used `Shaper` impl.
     font: i32,
@@ -35,32 +63,9 @@ struct Style {
     render_page_overflow: bool,
 }
 
-/// A structure describing a block of rich text.
-struct RichText {
-    /// An iterable object yielding items decodable into the `Op` enum.
-    ops: Obj,
-    /// Specifies the first element of `ops` which should be considered.
-    op_offset: usize,
-    /// Specifies the first character of the item indicated in `op_offset`
-    /// which should be considered.
-    char_offset: usize,
-    /// Layout style, specifying the visual and layout parameters of the text.
-    style: Style,
-    /// A bounding box restricting the layout and rendering.
-    bounds: Rect,
-    /// Optional callable object overriding the `render_text` fn of shaping.
-    render_text_fn: Option<Obj>,
-    /// Optional callable object. If set, it is called when the rendering cannot
-    /// longer fit in the given `bounds`, and index of the current `op`,
-    /// together with the char offset is given as arguments. Rendering will also
-    /// not end in such case, cursor is reset to the beginning and next `op` (or
-    /// part of it) is processed, as if rendering the next page.
-    page_end_fn: Option<Obj>,
-}
-
 enum Op {
     /// Set current text color.
-    SetFg(u16),
+    SetFg(Color),
     /// Set currently used font.
     SetFont(i32),
     /// Render text with current color and font, breaking lines according to
@@ -68,7 +73,7 @@ enum Op {
     Render(Buffer),
 }
 
-impl RichText {
+impl Text {
     fn render(&mut self) -> Result<(), Error> {
         // Construct a `Shaper` impl with overridable `render_text` fn.
         let mut shaper = Override {
@@ -157,7 +162,7 @@ struct Span {
 
 /// Encapsulation of the underlying text API primitives.
 trait Shaper {
-    fn render_text(&mut self, x: i32, y: i32, text: &[u8], font: i32, fg: u16, bg: u16);
+    fn render_text(&mut self, baseline: Point, text: &[u8], font: i32, fg: Color, bg: Color);
     fn text_width(&mut self, text: &[u8], font: i32) -> i32;
     fn line_height(&mut self) -> i32;
 }
@@ -165,8 +170,8 @@ trait Shaper {
 struct TrezorHal;
 
 impl Shaper for TrezorHal {
-    fn render_text(&mut self, x: i32, y: i32, text: &[u8], font: i32, fg: u16, bg: u16) {
-        display::text(x, y, text, font, fg, bg);
+    fn render_text(&mut self, baseline: Point, text: &[u8], font: i32, fg: Color, bg: Color) {
+        display::text(baseline, text, font, fg, bg);
     }
 
     fn text_width(&mut self, text: &[u8], font: i32) -> i32 {
@@ -184,12 +189,12 @@ struct Override<T: Shaper> {
 }
 
 impl<T: Shaper> Shaper for Override<T> {
-    fn render_text(&mut self, x: i32, y: i32, text: &[u8], font: i32, fg: u16, bg: u16) {
+    fn render_text(&mut self, baseline: Point, text: &[u8], font: i32, fg: Color, bg: Color) {
         match self.render_text_fn {
             Some(obj) if obj != Obj::const_none() => {
-                call_render_text_obj(obj, x, y, text, font, fg, bg)
+                call_render_text_obj(obj, baseline, text, font, fg, bg)
             }
-            _ => self.inner.render_text(x, y, text, font, fg, bg),
+            _ => self.inner.render_text(baseline, text, font, fg, bg),
         }
     }
 
@@ -204,20 +209,19 @@ impl<T: Shaper> Shaper for Override<T> {
 
 fn call_render_text_obj(
     render_text: Obj,
-    x: i32,
-    y: i32,
+    baseline: Point,
     text: &[u8],
     font: i32,
-    fg: u16,
-    bg: u16,
+    fg: Color,
+    bg: Color,
 ) {
     let args = [
-        isize::try_from(x).unwrap().try_into().unwrap(),
-        isize::try_from(y).unwrap().try_into().unwrap(),
+        baseline.x.try_into().unwrap(),
+        baseline.y.try_into().unwrap(),
         text.try_into().unwrap(),
-        isize::try_from(font).unwrap().try_into().unwrap(),
-        isize::try_from(fg).unwrap().try_into().unwrap(),
-        isize::try_from(bg).unwrap().try_into().unwrap(),
+        font.try_into().unwrap(),
+        fg.to_u16().try_into().unwrap(),
+        bg.to_u16().try_into().unwrap(),
     ];
     render_text.call_with_n_args(&args);
 }
@@ -234,10 +238,10 @@ const ASCII_LF: u8 = 10;
 const ASCII_CR: u8 = 13;
 const ASCII_SPACE: u8 = 32;
 const ASCII_HYPHEN: u8 = 45;
-const HYPHEN_FONT: i32 = -2; // FONT_BOLD
-const HYPHEN_COLOR: u16 = 40179; // GREY
-const ELLIPSIS_FONT: i32 = -2; // FONT_BOLD
-const ELLIPSIS_COLOR: u16 = 40179; // GREY
+const HYPHEN_FONT: i32 = theme::FONT_BOLD;
+const HYPHEN_COLOR: Color = theme::GREY_LIGHT;
+const ELLIPSIS_FONT: i32 = theme::FONT_BOLD;
+const ELLIPSIS_COLOR: Color = theme::GREY_LIGHT;
 
 enum Continuation {
     Continue,
@@ -246,7 +250,7 @@ enum Continuation {
 
 fn render_text(
     text: &[u8],
-    style: &Style,
+    style: &TextStyle,
     bounds: &Rect,
     cursor: &mut Point,
     shaper: &mut impl Shaper,
@@ -265,8 +269,7 @@ fn render_text(
 
         // Render the span at the cursor position.
         shaper.render_text(
-            cursor.x,
-            cursor.y,
+            *cursor,
             &remaining_text[span.range.start..span.range.end],
             style.font,
             style.fg,
@@ -284,7 +287,7 @@ fn render_text(
 
             // Check if we should be drawing a hyphen at this point.
             if span.draw_hyphen_before_line_break {
-                render_hyphen(cursor, style, shaper);
+                render_hyphen(*cursor, style, shaper);
             }
             // Check the amount of vertical space we have left.
             if cursor.y + span.advance_y > bounds.y1 {
@@ -292,7 +295,7 @@ fn render_text(
                     // Draw ellipsis to indicate more content is available, but only if we haven't
                     // already drawn a hyphen.
                     if style.render_page_overflow && !span.draw_hyphen_before_line_break {
-                        render_page_overflow(cursor, style, shaper);
+                        render_page_overflow(*cursor, style, shaper);
                     }
                     // Count how many chars we have processed out of `text` and call `page_end_fn`.
                     // If it returns the next cursor, move to it and continue as if nothing
@@ -325,10 +328,9 @@ fn render_text(
     Ok(Continuation::Continue)
 }
 
-fn render_page_overflow(pos: &Point, style: &Style, shaper: &mut impl Shaper) {
+fn render_page_overflow(pos: Point, style: &TextStyle, shaper: &mut impl Shaper) {
     shaper.render_text(
-        pos.x,
-        pos.y,
+        pos,
         "...".as_bytes(),
         ELLIPSIS_FONT,
         ELLIPSIS_COLOR,
@@ -336,15 +338,8 @@ fn render_page_overflow(pos: &Point, style: &Style, shaper: &mut impl Shaper) {
     );
 }
 
-fn render_hyphen(pos: &Point, style: &Style, shaper: &mut impl Shaper) {
-    shaper.render_text(
-        pos.x,
-        pos.y,
-        &[ASCII_HYPHEN],
-        HYPHEN_FONT,
-        HYPHEN_COLOR,
-        style.bg,
-    );
+fn render_hyphen(pos: Point, style: &TextStyle, shaper: &mut impl Shaper) {
+    shaper.render_text(pos, &[ASCII_HYPHEN], HYPHEN_FONT, HYPHEN_COLOR, style.bg);
 }
 
 fn find_fitting_span(
@@ -424,13 +419,13 @@ fn is_whitespace(ch: u8) -> bool {
     ch == ASCII_SPACE || ch == ASCII_LF || ch == ASCII_CR
 }
 
-impl TryFrom<&Map> for Style {
+impl TryFrom<&Map> for TextStyle {
     type Error = Error;
 
     fn try_from(map: &Map) -> Result<Self, Self::Error> {
         Ok(Self {
-            fg: map.get_qstr(Qstr::MP_QSTR_fg)?.try_into()?,
-            bg: map.get_qstr(Qstr::MP_QSTR_bg)?.try_into()?,
+            fg: Color::from_u16(map.get_qstr(Qstr::MP_QSTR_fg)?.try_into()?),
+            bg: Color::from_u16(map.get_qstr(Qstr::MP_QSTR_bg)?.try_into()?),
             font: map.get_qstr(Qstr::MP_QSTR_font)?.try_into()?,
             break_words: map.get_qstr(Qstr::MP_QSTR_break_words)?.try_into()?,
             insert_new_lines: map.get_qstr(Qstr::MP_QSTR_insert_new_lines)?.try_into()?,
@@ -455,15 +450,16 @@ impl TryFrom<Obj> for Op {
             if val < 0 {
                 Ok(Self::SetFont(val))
             } else {
-                Ok(Self::SetFg(val.try_into().map_err(|_| Error::OutOfRange)?))
+                let color = Color::from_u16(val.try_into()?);
+                Ok(Self::SetFg(color))
             }
         } else {
-            Err(Error::Missing)
+            Err(Error::InvalidType)
         }
     }
 }
 
-impl TryFrom<&Map> for RichText {
+impl TryFrom<&Map> for Text {
     type Error = Error;
 
     fn try_from(map: &Map) -> Result<Self, Self::Error> {
@@ -481,15 +477,9 @@ impl TryFrom<&Map> for RichText {
 
 #[no_mangle]
 pub extern "C" fn ui_render_rich_text(kw: *const Map) -> Obj {
-    try_with_kw(kw, |kw| {
-        let mut rich_text = RichText::try_from(kw)?;
+    util::try_with_kw(kw, |kw| {
+        let mut rich_text = Text::try_from(kw)?;
         rich_text.render()?;
         Ok(Obj::const_true())
     })
-}
-
-fn try_with_kw(kw: *const Map, func: impl FnOnce(&Map) -> Result<Obj, Error>) -> Obj {
-    unsafe { kw.as_ref() }
-        .and_then(|kw| func(kw).ok())
-        .unwrap_or(Obj::const_none())
 }

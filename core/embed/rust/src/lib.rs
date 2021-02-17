@@ -1,13 +1,17 @@
 #![no_std]
-#![feature(extern_types)]
+#![feature(never_type)]
+#![feature(unsize)]
+#![feature(coerce_unsized)]
+#![feature(dispatch_from_dyn)]
+#![feature(once_cell)]
 #![deny(clippy::all)]
+#![deny(clippy::pedantic)]
+#![allow(dead_code)]
 
-/// cbindgen:ignore
 mod error;
-/// cbindgen:ignore
 mod micropython;
-/// cbindgen:ignore
 mod trezorhal;
+mod util;
 
 mod ui;
 

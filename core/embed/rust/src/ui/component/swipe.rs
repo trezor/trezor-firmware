@@ -6,9 +6,9 @@ use crate::ui::{
     theme,
 };
 
-use super::component::{Component, Event, Widget};
+use super::component::{Component, Event, EventCtx, Widget};
 
-pub enum SwipeMsg {
+pub enum SwipeDirection {
     Up,
     Down,
     Left,
@@ -82,13 +82,13 @@ impl Swipe {
 }
 
 impl Component for Swipe {
-    type Msg = SwipeMsg;
+    type Msg = SwipeDirection;
 
     fn widget(&mut self) -> &mut Widget {
         &mut self.widget
     }
 
-    fn event(&mut self, event: Event) -> Option<Self::Msg> {
+    fn event(&mut self, _ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         let area = self.area();
         match (event, self.origin) {
             (Event::TouchStart(pos), _) if area.contains(pos) => {
@@ -124,18 +124,18 @@ impl Component for Swipe {
                     // Horizontal direction.
                     if self.ratio(abs.x) >= Self::THRESHOLD {
                         if ofs.x < 0 && self.allow_left {
-                            return Some(SwipeMsg::Left);
+                            return Some(SwipeDirection::Left);
                         } else if ofs.x > 0 && self.allow_right {
-                            return Some(SwipeMsg::Right);
+                            return Some(SwipeDirection::Right);
                         }
                     }
                 } else if abs.x < abs.y && (self.allow_up || self.allow_down) {
                     // Vertical direction.
                     if self.ratio(abs.y) >= Self::THRESHOLD {
                         if ofs.y < 0 && self.allow_up {
-                            return Some(SwipeMsg::Up);
+                            return Some(SwipeDirection::Up);
                         } else if ofs.y > 0 && self.allow_down {
-                            return Some(SwipeMsg::Down);
+                            return Some(SwipeDirection::Down);
                         }
                     }
                 };
@@ -149,4 +149,6 @@ impl Component for Swipe {
         }
         None
     }
+
+    fn paint(&mut self) {}
 }

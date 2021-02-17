@@ -1,9 +1,9 @@
 use core::ops::Deref;
 
-use crate::ui::display;
 use crate::ui::math::{Align, Point, Rect};
+use crate::ui::{display, math::Color};
 
-use super::component::{Component, Widget};
+use super::component::{Component, Event, EventCtx, Widget};
 
 pub struct Label<T> {
     widget: Widget,
@@ -12,7 +12,7 @@ pub struct Label<T> {
 }
 
 impl<T: Deref<Target = [u8]>> Label<T> {
-    pub fn new(text: T, style: LabelStyle, origin: Point, align: Align) -> Self {
+    pub fn new(origin: Point, align: Align, text: T, style: LabelStyle) -> Self {
         let width = display::text_width(&text, style.font);
         let height = display::line_height();
         let area = match align {
@@ -45,16 +45,16 @@ impl<T: Deref<Target = [u8]>> Label<T> {
         }
     }
 
-    pub fn left_aligned(text: T, style: LabelStyle, origin: Point) -> Self {
-        Self::new(text, style, origin, Align::Left)
+    pub fn left_aligned(origin: Point, text: T, style: LabelStyle) -> Self {
+        Self::new(origin, Align::Left, text, style)
     }
 
-    pub fn right_aligned(text: T, style: LabelStyle, origin: Point) -> Self {
-        Self::new(text, style, origin, Align::Right)
+    pub fn right_aligned(origin: Point, text: T, style: LabelStyle) -> Self {
+        Self::new(origin, Align::Right, text, style)
     }
 
-    pub fn centered(text: T, style: LabelStyle, origin: Point) -> Self {
-        Self::new(text, style, origin, Align::Center)
+    pub fn centered(origin: Point, text: T, style: LabelStyle) -> Self {
+        Self::new(origin, Align::Center, text, style)
     }
 
     pub fn text(&self) -> &T {
@@ -64,20 +64,24 @@ impl<T: Deref<Target = [u8]>> Label<T> {
 
 pub struct LabelStyle {
     pub font: i32,
-    pub text_color: u16,
-    pub background_color: u16,
+    pub text_color: Color,
+    pub background_color: Color,
 }
 
 impl<T: Deref<Target = [u8]>> Component for Label<T> {
-    type Msg = ();
+    type Msg = !;
 
     fn widget(&mut self) -> &mut Widget {
         &mut self.widget
     }
 
+    fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
+        None
+    }
+
     fn paint(&mut self) {
         display::text(
-            self.area().top_left(),
+            self.area().bottom_left(),
             &self.text,
             self.style.font,
             self.style.text_color,

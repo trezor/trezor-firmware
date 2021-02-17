@@ -1,28 +1,83 @@
-use super::component::{button::ButtonStyleSheet, label::LabelStyle};
+use super::{
+    component::{ButtonStyle, ButtonStyleSheet, LabelStyle},
+    math::Color,
+};
 
+// Font constants.
+pub const FONT_NORMAL: i32 = -1;
+pub const FONT_BOLD: i32 = -2;
+pub const FONT_MONO: i32 = -3;
+
+// Typical backlight values.
 pub const BACKLIGHT_NORMAL: i32 = 150;
 pub const BACKLIGHT_LOW: i32 = 45;
 pub const BACKLIGHT_DIM: i32 = 5;
 pub const BACKLIGHT_NONE: i32 = 2;
 pub const BACKLIGHT_MAX: i32 = 255;
 
+// Color pallette.
+pub const WHITE: Color = Color::rgb(255, 255, 255);
+pub const BLACK: Color = Color::rgb(0, 0, 0);
+pub const FG: Color = WHITE; // Default foreground (text & icon) color.
+pub const BG: Color = BLACK; // Default background color.
+pub const RED: Color = Color::rgb(205, 73, 73); // dark-coral
+pub const YELLOW: Color = Color::rgb(193, 144, 9); // ochre
+pub const GREEN: Color = Color::rgb(57, 168, 20); // grass-green
+pub const BLUE: Color = Color::rgb(0, 86, 190); // blue
+pub const GREY_LIGHT: Color = Color::rgb(168, 168, 168); // greyish
+pub const GREY_DARK: Color = Color::rgb(51, 51, 51); // black
+
+// Commonly used corner radius (i.e. for buttons).
+const RADIUS: u8 = 4;
+
 pub fn label_default() -> LabelStyle {
     LabelStyle {
-        font: -1,
-        text_color: 0,
-        background_color: 0,
+        font: FONT_NORMAL,
+        text_color: FG,
+        background_color: BG,
     }
 }
 
 pub fn button_default() -> ButtonStyleSheet {
-    todo!();
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: FONT_NORMAL,
+            text_color: FG,
+            button_color: GREY_DARK,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 2,
+        },
+        active: &ButtonStyle {
+            font: FONT_NORMAL,
+            text_color: BG,
+            button_color: FG,
+            background_color: BG,
+            border_color: FG,
+            border_radius: RADIUS,
+            border_width: 2,
+        },
+        disabled: &ButtonStyle {
+            font: FONT_NORMAL,
+            text_color: GREY_LIGHT,
+            button_color: GREY_DARK,
+            background_color: BG,
+            border_color: BG,
+            border_radius: RADIUS,
+            border_width: 2,
+        },
+    }
 }
+
 pub fn button_confirm() -> ButtonStyleSheet {
-    todo!();
+    button_default()
 }
+
 pub fn button_cancel() -> ButtonStyleSheet {
-    todo!();
+    button_default()
 }
+
 pub fn button_clear() -> ButtonStyleSheet {
-    todo!();
+    button_default()
 }

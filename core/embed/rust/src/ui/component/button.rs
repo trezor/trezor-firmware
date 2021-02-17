@@ -1,7 +1,7 @@
-use crate::ui::display;
-use crate::ui::math::{Point, Rect};
+use crate::ui::math::{Offset, Point, Rect};
+use crate::ui::{display, math::Color};
 
-use super::component::{Component, Event, Widget};
+use super::component::{Component, Event, EventCtx, Widget};
 
 pub enum ButtonMsg {
     Clicked,
@@ -59,6 +59,7 @@ impl Button {
     fn set(&mut self, state: State) {
         if self.state != state {
             self.state = state;
+            self.request_paint();
         }
     }
 }
@@ -70,58 +71,7 @@ impl Component for Button {
         &mut self.widget
     }
 
-    fn paint(&mut self) {
-        let area = self.area();
-        let style = self.style();
-
-        if style.border_width > 0 {
-            // Paint the border and a smaller background on top of it.
-            display::rounded_rect(
-                area,
-                style.border_color,
-                style.background_color,
-                style.border_radius,
-            );
-            display::rounded_rect(
-                area.inset(style.border_width),
-                style.button_color,
-                style.border_color,
-                style.border_radius,
-            );
-        } else {
-            // We do not need to draw an explicit border in this case, just a
-            // bigger background.
-            display::rounded_rect(
-                area,
-                style.button_color,
-                style.background_color,
-                style.border_radius,
-            );
-        }
-
-        match &self.content {
-            ButtonContent::Text(text) => {
-                let width = display::text_width(text, style.font);
-                let height = display::line_height();
-                let start_of_baseline = Point {
-                    x: area.x0 + area.width() / 2 - width / 2,
-                    y: area.y0 + height,
-                };
-                display::text(
-                    start_of_baseline,
-                    text,
-                    style.font,
-                    style.text_color,
-                    style.background_color,
-                );
-            }
-            ButtonContent::Image(image) => {
-                todo!();
-            }
-        }
-    }
-
-    fn event(&mut self, event: Event) -> Option<Self::Msg> {
+    fn event(&mut self, _ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         match event {
             Event::TouchStart(pos) => {
                 match self.state {
@@ -168,8 +118,57 @@ impl Component for Button {
                     }
                 }
             }
+            _ => {}
         };
         None
+    }
+
+    fn paint(&mut self) {
+        let area = self.area();
+        let style = self.style();
+
+        if style.border_width > 0 {
+            // Paint the border and a smaller background on top of it.
+            display::rounded_rect(
+                area,
+                style.border_color,
+                style.background_color,
+                style.border_radius,
+            );
+            display::rounded_rect(
+                area.inset(style.border_width),
+                style.button_color,
+                style.border_color,
+                style.border_radius,
+            );
+        } else {
+            // We do not need to draw an explicit border in this case, just a
+            // bigger background.
+            display::rounded_rect(
+                area,
+                style.button_color,
+                style.background_color,
+                style.border_radius,
+            );
+        }
+
+        match &self.content {
+            ButtonContent::Text(text) => {
+                let width = display::text_width(text, style.font);
+                let height = display::text_height();
+                let start_of_baseline = area.midpoint() + Offset::new(-width / 2, height / 2);
+                display::text(
+                    start_of_baseline,
+                    text,
+                    style.font,
+                    style.text_color,
+                    style.button_color,
+                );
+            }
+            ButtonContent::Image(image) => {
+                todo!();
+            }
+        }
     }
 }
 
@@ -187,17 +186,17 @@ pub enum ButtonContent {
 }
 
 pub struct ButtonStyleSheet {
-    normal: &'static ButtonStyle,
-    active: &'static ButtonStyle,
-    disabled: &'static ButtonStyle,
+    pub normal: &'static ButtonStyle,
+    pub active: &'static ButtonStyle,
+    pub disabled: &'static ButtonStyle,
 }
 
 pub struct ButtonStyle {
-    font: i32,
-    text_color: u16,
-    button_color: u16,
-    background_color: u16,
-    border_color: u16,
-    border_radius: u8,
-    border_width: i32,
+    pub font: i32,
+    pub text_color: Color,
+    pub button_color: Color,
+    pub background_color: Color,
+    pub border_color: Color,
+    pub border_radius: u8,
+    pub border_width: i32,
 }

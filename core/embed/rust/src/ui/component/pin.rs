@@ -9,7 +9,7 @@ use crate::ui::{
 
 use super::{
     button::{Button, ButtonContent, ButtonMsg::Clicked},
-    component::{Component, Event, Widget},
+    component::{Component, Event, EventCtx, Widget},
     label::{Label, LabelStyle},
 };
 
@@ -18,36 +18,38 @@ pub enum PinDialogMsg {
     Cancelled,
 }
 
-const MAX_LENGTH: usize = 9;
-const DIGIT_COUNT: usize = 10; // 0..10
-
 pub struct PinDialog {
     widget: Widget,
-    pin: StaticVec<u8, MAX_LENGTH>,
+    digits: StaticVec<u8, MAX_LENGTH>,
     major_prompt: Label<&'static [u8]>,
     minor_prompt: Label<&'static [u8]>,
-    dots: PinLabel,
+    dots: PinDots,
     reset_btn: Button,
     cancel_btn: Button,
     confirm_btn: Button,
     digit_btns: [Button; DIGIT_COUNT],
 }
 
+const MAX_LENGTH: usize = 9;
+const DIGIT_COUNT: usize = 10; // 0..10
+
 impl PinDialog {
-    pub fn new(major_prompt: &'static [u8], minor_prompt: &'static [u8]) -> Self {
+    pub fn new(area: Rect, major_prompt: &'static [u8], minor_prompt: &'static [u8]) -> Self {
+        let digits = StaticVec::new();
+
         let grid = if minor_prompt.is_empty() {
             // Make the major prompt bigger if the minor one is empty.
-            Grid::for_screen(5, 1)
+            Grid::new(area, 5, 1)
         } else {
-            Grid::for_screen(6, 1)
+            Grid::new(area, 6, 1)
         };
         let major_center = grid.row_col(0, 0).midpoint();
         let minor_center = grid.row_col(0, 1).midpoint();
-        let major_prompt = Label::centered(major_prompt, theme::label_default(), major_center);
-        let minor_prompt = Label::centered(minor_prompt, theme::label_default(), minor_center);
-        let dots = PinLabel::new(0, major_center, theme::label_default());
+        let major_prompt = Label::centered(major_center, major_prompt, theme::label_default());
+        let minor_prompt = Label::centered(minor_center, minor_prompt, theme::label_default());
+        let dots = PinDots::new(major_center, digits.len(), theme::label_default());
 
-        let grid = Grid::for_screen(5, 3);
+        let grid = Grid::new(area, 5, 3);
         let reset_content = "Reset".as_bytes();
         let cancel_content = "Cancel".as_bytes();
         let confirm_content = "Confirm".as_bytes();
@@ -56,19 +58,19 @@ impl PinDialog {
         let confirm_btn = Button::with_text(grid.cell(14), confirm_content, theme::button_clear());
 
         Self {
-            widget: Widget::new(Rect::for_screen()),
-            pin: StaticVec::new(),
+            widget: Widget::new(area),
+            digits,
             major_prompt,
             minor_prompt,
             dots,
             reset_btn,
             cancel_btn,
             confirm_btn,
-            digit_btns: Self::generate_digit_buttons(),
+            digit_btns: Self::generate_digit_buttons(&grid),
         }
     }
 
-    fn generate_digit_buttons() -> [Button; DIGIT_COUNT] {
+    fn generate_digit_buttons(grid: &Grid) -> [Button; DIGIT_COUNT] {
         // Generate a random sequence of digits from 0 to 9.
         let mut digits = [
             "0".as_bytes(),
@@ -85,7 +87,6 @@ impl PinDialog {
         random::shuffle(&mut digits);
 
         // Assign the digits to buttons on a 5x3 grid, starting from the second row.
-        let grid = Grid::for_screen(5, 3);
         let btn = |i| {
             let area = grid.cell(if i < 9 {
                 // The grid has 3 columns, and we skip the first row.
@@ -112,13 +113,13 @@ impl PinDialog {
 
     fn pin_modified(&mut self) {
         for btn in &mut self.digit_btns {
-            if self.pin.is_full() {
+            if self.digits.is_full() {
                 btn.disable();
             } else {
                 btn.enable();
             }
         }
-        if self.pin.is_empty() {
+        if self.digits.is_empty() {
             self.reset_btn.disable();
             self.cancel_btn.disable();
             self.confirm_btn.disable();
@@ -127,7 +128,11 @@ impl PinDialog {
             self.cancel_btn.enable();
             self.confirm_btn.enable();
         }
-        self.dots.update(self.pin.len());
+        self.dots.update(self.digits.len());
+    }
+
+    pub fn pin(&self) -> &[u8] {
+        &self.digits
     }
 }
 
@@ -138,22 +143,22 @@ impl Component for PinDialog {
         &mut self.widget
     }
 
-    fn event(&mut self, event: Event) -> Option<Self::Msg> {
-        if let Some(Clicked) = self.confirm_btn.event(event) {
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        if let Some(Clicked) = self.confirm_btn.event(ctx, event) {
             return Some(PinDialogMsg::Confirmed);
         }
-        if let Some(Clicked) = self.cancel_btn.event(event) {
+        if let Some(Clicked) = self.cancel_btn.event(ctx, event) {
             return Some(PinDialogMsg::Cancelled);
         }
-        if let Some(Clicked) = self.reset_btn.event(event) {
-            self.pin.clear();
+        if let Some(Clicked) = self.reset_btn.event(ctx, event) {
+            self.digits.clear();
             self.pin_modified();
             return None;
         }
         for btn in &mut self.digit_btns {
-            if let Some(Clicked) = btn.event(event) {
+            if let Some(Clicked) = btn.event(ctx, event) {
                 if let ButtonContent::Text(text) = btn.content() {
-                    if self.pin.try_extend_from_slice(text).is_err() {
+                    if self.digits.try_extend_from_slice(text).is_err() {
                         // `self.pin` is full and wasn't able to accept all of
                         // `text`. Should not happen.
                     }
@@ -166,62 +171,71 @@ impl Component for PinDialog {
     }
 
     fn paint(&mut self) {
-        self.major_prompt.paint();
-        self.minor_prompt.paint();
-        if self.pin.is_empty() {
-            self.cancel_btn.paint();
+        self.major_prompt.paint_if_requested();
+        self.minor_prompt.paint_if_requested();
+        if self.digits.is_empty() {
+            self.cancel_btn.paint_if_requested();
         } else {
-            self.reset_btn.paint();
+            self.reset_btn.paint_if_requested();
         }
-        self.confirm_btn.paint();
+        self.confirm_btn.paint_if_requested();
         for btn in &mut self.digit_btns {
-            btn.paint();
+            btn.paint_if_requested();
         }
     }
 }
 
-struct PinLabel {
+struct PinDots {
     widget: Widget,
-    length: usize,
     style: LabelStyle,
+    digit_count: usize,
 }
 
-impl PinLabel {
+impl PinDots {
     const DOT: i32 = 10;
     const PADDING: i32 = 4;
 
-    fn new(length: usize, center: Point, style: LabelStyle) -> Self {
+    fn new(center: Point, digit_count: usize, style: LabelStyle) -> Self {
         Self {
-            widget: Widget::new(Self::layout(length, center)),
-            length,
+            widget: Widget::new(Self::layout(center, digit_count)),
             style,
+            digit_count,
         }
     }
 
-    fn layout(length: usize, center: Point) -> Rect {
+    fn layout(center: Point, digit_count: usize) -> Rect {
         todo!()
     }
 
-    fn update(&mut self, length: usize) {
-        if length != self.length {
-            self.length = length;
-            let center = self.area().midpoint();
-            self.set_area(Self::layout(length, center));
+    fn update(&mut self, digit_count: usize) {
+        if digit_count != self.digit_count {
+            self.digit_count = digit_count;
+            let area = Self::layout(self.area().midpoint(), digit_count);
+            self.set_area(area);
+            self.request_paint();
         }
     }
 }
 
-impl Component for PinLabel {
-    type Msg = ();
+impl Component for PinDots {
+    type Msg = !;
 
     fn widget(&mut self) -> &mut Widget {
         &mut self.widget
     }
 
+    fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
+        None
+    }
+
     fn paint(&mut self) {
         let area = self.area();
+
+        // Clear the area with the background color.
         display::rect(area, self.style.background_color);
-        for i in 0..self.length {
+
+        // Draw a dot for each PIN digit.
+        for i in 0..self.digit_count {
             let pos = Point {
                 x: area.x0 + i as i32 * (Self::DOT + Self::PADDING),
                 y: area.midpoint().y,

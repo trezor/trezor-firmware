@@ -60,12 +60,6 @@ pub fn text_width(text: &[u8], font: i32) -> i32 {
     unsafe { display_text_width(text.as_ptr() as _, text.len() as _, font) }
 }
 
-pub fn line_height() -> i32 {
-    const LINE_HEIGHT: i32 = 26;
-
-    return LINE_HEIGHT;
-}
-
 pub fn bar(x: i32, y: i32, w: i32, h: i32, fgcolor: u16) {
     unsafe { display_bar(x, y, w, h, fgcolor) }
 }

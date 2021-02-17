@@ -570,15 +570,8 @@ def cargo_build():
         profile = '--release'
     else:
         profile = ''
-    # Pass the absolute path to the generated QSTR table to cargo.
-    qstr_path = qstr_generated[0].get_abspath()
-    return f'cd embed/rust; env QSTR_GENERATED={qstr_path} cargo +{RUST_TOOLCHAIN} build {profile}'
+    return f'cd embed/rust; cargo +{RUST_TOOLCHAIN} build {profile}'
 
-# cbindgen = env.Command(
-#     target=RUST_HEADERPATH,
-#     source='',
-#     action='cd embed/rust; ./build_header.sh',
-# )
 rust = env.Command(
     target=RUST_LIBPATH,
     source='',

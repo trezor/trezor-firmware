@@ -6,8 +6,6 @@ use core::{
 use crate::error::Error;
 use crate::micropython::{map::Map, qstr::Qstr};
 
-use super::display;
-
 /// Relative offset in 2D space.
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct Offset {
@@ -41,7 +39,7 @@ impl Point {
         Self { x, y }
     }
 
-    pub fn origin() -> Self {
+    pub fn zero() -> Self {
         Self::new(0, 0)
     }
 
@@ -96,10 +94,6 @@ impl Rect {
 
     pub fn with_size(p0: Point, size: Offset) -> Self {
         Self::new(p0, p0 + size)
-    }
-
-    pub fn for_screen() -> Self {
-        Self::with_size(Point::origin(), display::size())
     }
 
     pub fn width(&self) -> i32 {
@@ -185,15 +179,11 @@ impl Grid {
         }
     }
 
-    pub fn for_screen(rows: usize, cols: usize) -> Self {
-        Self::new(Rect::for_screen(), rows, cols)
-    }
-
     pub fn row_col(&self, row: usize, col: usize) -> Rect {
         let cell_width = self.area.width() / self.cols as i32;
         let cell_height = self.area.height() / self.rows as i32;
         let x = col as i32 * cell_width;
-        let y = row as i32 * cell_width;
+        let y = row as i32 * cell_height;
         Rect {
             x0: self.area.x0 + x,
             y0: self.area.y0 + y,
@@ -205,4 +195,60 @@ impl Grid {
     pub fn cell(&self, index: usize) -> Rect {
         self.row_col(index / self.rows, index % self.cols)
     }
+}
+
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub struct Color(u16);
+
+impl Color {
+    pub const fn from_u16(val: u16) -> Self {
+        Self(val)
+    }
+
+    pub const fn rgb(r: u8, g: u8, b: u8) -> Self {
+        let r = (r as u16 & 0xF8) << 8;
+        let g = (g as u16 & 0xFC) << 3;
+        let b = (b as u16 & 0xF8) >> 3;
+        Self(r | g | b)
+    }
+
+    pub const fn r(self) -> u8 {
+        (self.0 >> 8) as u8 & 0xF8
+    }
+
+    pub const fn g(self) -> u8 {
+        (self.0 >> 3) as u8 & 0xFC
+    }
+
+    pub const fn b(self) -> u8 {
+        (self.0 << 3) as u8 & 0xF8
+    }
+
+    pub fn blend(self, other: Self, t: f32) -> Self {
+        Self::rgb(
+            lerp(self.r(), other.r(), t),
+            lerp(self.g(), other.g(), t),
+            lerp(self.b(), other.b(), t),
+        )
+    }
+
+    pub fn to_u16(self) -> u16 {
+        self.0
+    }
+}
+
+impl From<u16> for Color {
+    fn from(val: u16) -> Self {
+        Self(val)
+    }
+}
+
+impl Into<u16> for Color {
+    fn into(self) -> u16 {
+        self.0
+    }
+}
+
+fn lerp(a: u8, b: u8, t: f32) -> u8 {
+    (a as f32 + t * (b - a) as f32) as u8
 }

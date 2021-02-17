@@ -1,5 +1,5 @@
 enum Qstr {
 #define QDEF(id, str) id,
-#include QSTR_GENERATED_PATH
+#include "genhdr/qstrdefs.generated.h"
 #undef QDEF
 };
