@@ -47,9 +47,8 @@ async def require_confirm_verify_message(
     ctx: wire.Context, address: str, coin: str, message: bytes
 ) -> None:
     header = "Verify {} message".format(coin)
-    text = Text(header, new_lines=False)
+    text = Text(header)
     text.bold("Confirm address:")
-    text.br()
     text.mono(*split_address(address))
     await require_confirm(ctx, text)
 

@@ -243,8 +243,6 @@ def render_text(
             else:
                 fg = item
 
-    SPACE = ui.display.text_width(" ", font)
-
     for item_index in range(item_offset, len(items)):
         # load current item
         item = items[item_index]
@@ -261,7 +259,6 @@ def render_text(
             elif item in _FONTS:
                 # change of font style
                 font = item
-                SPACE = ui.display.text_width(" ", font)
             else:
                 # change of foreground color
                 fg = item
@@ -278,7 +275,7 @@ def render_text(
         ):
             offset_y += TEXT_LINE_HEIGHT
             ui.display.text(INITIAL_OFFSET_X, offset_y, item, font, fg, bg)
-            offset_x = INITIAL_OFFSET_X + item_width + SPACE
+            offset_x = INITIAL_OFFSET_X + item_width
             continue
 
         span.reset(
@@ -320,7 +317,7 @@ def render_text(
             offset_y += TEXT_LINE_HEIGHT
         elif span.width > 0:
             # only advance cursor if we actually rendered anything
-            offset_x += span.width + SPACE
+            offset_x += span.width
 
 
 if __debug__:
@@ -415,7 +412,7 @@ class TextBase(ui.Component):
         parts = format_string.split("{}", len(params))
         for i in range(len(parts)):
             self.content.append(font)
-            self.content.append(parts[i].strip(" "))
+            self.content.append(parts[i])
             if i < len(parts) - 1 and i < len(params):
                 param = params[i]
                 self.content.append(param_font)

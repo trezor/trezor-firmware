@@ -99,9 +99,9 @@ async def _continue_dialog(ctx: wire.Context, msg: RecoveryDevice) -> None:
         text.br_half()
         text.normal("By continuing you agree")
         text.br()
-        text.normal("to")
+        text.normal("to ")
         text.bold("https://trezor.io/tos")
     else:
         text = Text("Seed check", ui.ICON_RECOVERY, new_lines=False)
-        text.normal("Do you really want to", "check the recovery", "seed?")
+        text.normal("Do you really want to check the recovery seed?")
     await require_confirm(ctx, text, code=ButtonRequestType.ProtectCall)

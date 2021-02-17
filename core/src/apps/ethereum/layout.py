@@ -20,7 +20,7 @@ async def require_confirm_tx(ctx, to_bytes, value, chain_id, token=None, tx_type
         to_str = "new contract?"
     text = Text("Confirm sending", ui.ICON_SEND, ui.GREEN, new_lines=False)
     text.bold(format_ethereum_amount(value, token, chain_id, tx_type))
-    text.normal(ui.GREY, "to", ui.FG)
+    text.normal(ui.GREY, " to ", ui.FG)
     for to_line in split_address(to_str):
         text.br()
         text.mono(to_line)
@@ -33,9 +33,9 @@ async def require_confirm_fee(
 ):
     text = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN, new_lines=False)
     text.bold(format_ethereum_amount(spending, token, chain_id, tx_type))
-    text.normal(ui.GREY, "Gas price:", ui.FG)
+    text.normal(" ", ui.GREY, "Gas price:", ui.FG)
     text.bold(format_ethereum_amount(gas_price, None, chain_id, tx_type))
-    text.normal(ui.GREY, "Maximum fee:", ui.FG)
+    text.normal(" ", ui.GREY, "Maximum fee:", ui.FG)
     text.bold(format_ethereum_amount(gas_price * gas_limit, None, chain_id, tx_type))
     await require_hold_to_confirm(ctx, text, ButtonRequestType.SignTx)
 
