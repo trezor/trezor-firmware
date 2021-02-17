@@ -132,7 +132,7 @@ async def confirm_reset_device(ctx: wire.GenericContext, prompt: str) -> bool:
     text.br_half()
     text.normal("By continuing you agree")
     text.br()
-    text.normal("to")
+    text.normal("to ")
     text.bold("https://trezor.io/tos")
     return is_confirmed(
         await interact(
