@@ -93,7 +93,8 @@ static void __attribute__((noreturn)) load_app(int signed_firmware) {
 
 static void bootloader_loop(void) {
   oledClear();
-  oledDrawBitmap(0, 0, &bmp_logo64);
+  oledDrawBitmap(0, 0, &bmp_logo64_half);
+  oledDrawBitmapFlip(24, 0, &bmp_logo64_half);
   if (firmware_present_new()) {
     oledDrawStringCenter(90, 10, "Trezor", FONT_STANDARD);
     oledDrawStringCenter(90, 30, "Bootloader", FONT_STANDARD);
@@ -137,7 +138,8 @@ int main(void) {
 
   if (firmware_present_new() && !left_pressed) {
     oledClear();
-    oledDrawBitmap(40, 0, &bmp_logo64_empty);
+    oledDrawBitmap(40, 0, &bmp_logo64_empty_half);
+    oledDrawBitmapFlip(40 + 24, 0, &bmp_logo64_empty_half);
     oledRefresh();
 
     const image_header *hdr =

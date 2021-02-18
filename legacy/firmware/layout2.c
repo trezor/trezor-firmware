@@ -277,7 +277,8 @@ void layoutHome(void) {
       oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, label,
                            FONT_STANDARD);
     } else {
-      oledDrawBitmap(40, 0, &bmp_logo64);
+      oledDrawBitmap(40, 0, &bmp_logo64_half);
+      oledDrawBitmapFlip(40 + 24, 0, &bmp_logo64_half);
     }
   }
 

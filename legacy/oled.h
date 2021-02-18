@@ -49,6 +49,7 @@ void oledDrawString(int x, int y, const char *text, uint8_t font);
 void oledDrawStringCenter(int x, int y, const char *text, uint8_t font);
 void oledDrawStringRight(int x, int y, const char *text, uint8_t font);
 void oledDrawBitmap(int x, int y, const BITMAP *bmp);
+void oledDrawBitmapFlip(int x, int y, const BITMAP *bmp);
 void oledInvert(int x1, int y1, int x2, int y2);
 void oledBox(int x1, int y1, int x2, int y2, bool set);
 void oledHLine(int y);
