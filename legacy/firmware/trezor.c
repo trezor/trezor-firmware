@@ -149,7 +149,8 @@ int main(void) {
 #endif
 #endif
 
-  oledDrawBitmap(40, 0, &bmp_logo64);
+  oledDrawBitmap(40, 0, &bmp_logo64_half);
+  oledDrawBitmapFlip(40 + 24, 0, &bmp_logo64_half);
   oledRefresh();
 
   config_init();
