@@ -38,6 +38,6 @@
   "cooldown": 100,
   "consensus_branch_id": null,
   "extra_data": false,
-  "timestamp": false,
+  "timestamp": true,
   "confidential_assets": null
 }
