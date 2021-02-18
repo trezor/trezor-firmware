@@ -403,8 +403,9 @@ def wait_until_layout_is_running() -> Awaitable[None]:  # type: ignore
 
 
 class RustLayout(Layout):
-    def __init__(self, fn, *args):
-        self.layout = fn(self.set_timer, *args)
+    def __init__(self, layout):
+        self.layout = layout
+        self.layout.set_timer_fn(self.set_timer)
 
     def set_timer(self, token: int, deadline: int) -> None:
         # TODO: schedule a timer tick with `token` in `deadline` ms

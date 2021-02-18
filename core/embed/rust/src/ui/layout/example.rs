@@ -31,17 +31,14 @@ impl From<!> for Obj {
 }
 
 #[no_mangle]
-extern "C" fn ui_layout_new_example(timer_callback: Obj) -> Obj {
-    LayoutObj::new(
-        Confirm::new(
-            display::screen(),
-            Empty::new(),
-            Some(ButtonContent::Text("Left".as_bytes())),
-            theme::button_default(),
-            Some(ButtonContent::Text("Right".as_bytes())),
-            theme::button_default(),
-        ),
-        timer_callback,
-    )
+extern "C" fn ui_layout_new_example() -> Obj {
+    LayoutObj::new(Confirm::new(
+        display::screen(),
+        Empty::new(),
+        Some(ButtonContent::Text("Left".as_bytes())),
+        theme::button_default(),
+        Some(ButtonContent::Text("Right".as_bytes())),
+        theme::button_default(),
+    ))
     .into()
 }

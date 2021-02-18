@@ -27,7 +27,7 @@
 
 #include "modtrezorui-display.h"
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorui_layout_new_example_obj,
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorui_layout_new_example_obj,
                                  ui_layout_new_example);
 
 STATIC const mp_rom_map_elem_t mp_module_trezorui_globals_table[] = {

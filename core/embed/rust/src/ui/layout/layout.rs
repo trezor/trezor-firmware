@@ -1,5 +1,5 @@
 use core::{
-    cell::RefCell,
+    cell::{Cell, RefCell},
     convert::{TryFrom, TryInto},
     lazy::Lazy,
     time::Duration,
@@ -47,28 +47,32 @@ where
     }
 }
 
-/// `LayoutObj` is a GC-allocated object export to MicroPython, with type
+/// `LayoutObj` is a GC-allocated object exported to MicroPython, with type
 /// `LayoutObj::obj_type()`. It wraps a root component through the
 /// `ObjComponent` trait.
 #[repr(C)]
 pub struct LayoutObj {
     base: ObjBase,
-    timer_callback: Obj,
+    timer_fn: Cell<Obj>,
     event_ctx: RefCell<EventCtx>,
     root: Gc<RefCell<dyn ObjComponent>>,
 }
 
 impl LayoutObj {
-    /// Create a new `LayoutObj` with a root component and a `timer_callback`.
-    /// Timer callback is expected to be a callable object of the following
-    /// form: `def timer(token: int, deadline_in_ms: int)`.
-    pub fn new(root: impl ObjComponent + 'static, timer_callback: Obj) -> Gc<Self> {
+    /// Create a new `LayoutObj`, wrapping a root component.
+    pub fn new(root: impl ObjComponent + 'static) -> Gc<Self> {
         Gc::new(Self {
             base: Self::obj_type().in_base(),
-            timer_callback,
+            timer_fn: Cell::new(Obj::const_none()),
             event_ctx: RefCell::new(EventCtx::new()),
             root: Gc::new(RefCell::new(root)),
         })
+    }
+
+    /// Timer callback is expected to be a callable object of the following
+    /// form: `def timer(token: int, deadline_in_ms: int)`.
+    fn obj_set_timer_fn(&self, timer_fn: Obj) {
+        self.timer_fn.set(timer_fn);
     }
 
     /// Run an event pass over the component tree. After the traversal, any
@@ -76,6 +80,7 @@ impl LayoutObj {
     fn obj_event(&self, event: Event) -> Obj {
         let mut event_ctx = self.event_ctx.borrow_mut();
         let mut root = self.root.borrow_mut();
+        let timer_fn = self.timer_fn.get();
 
         let msg = root.obj_event(&mut event_ctx, event);
 
@@ -85,7 +90,7 @@ impl LayoutObj {
             let deadline = deadline.try_into();
             match (token, deadline) {
                 (Ok(token), Ok(deadline)) => {
-                    self.timer_callback.call_with_n_args(&[token, deadline]);
+                    timer_fn.call_with_n_args(&[token, deadline]);
                 }
                 _ => {
                     // Failed to convert token or deadline into `Obj`, skip.
@@ -103,13 +108,15 @@ impl LayoutObj {
 
     fn obj_type() -> &'static Type {
         // TODO: Remove `Lazy`, generate with a macro into `static`, not `static mut`.
+        static mut SET_TIMER_FN: Lazy<Func> = Lazy::new(|| Func::extern_2(ui_layout_set_timer_fn));
         static mut TOUCH_START: Lazy<Func> = Lazy::new(|| Func::extern_3(ui_layout_touch_start));
         static mut TOUCH_MOVE: Lazy<Func> = Lazy::new(|| Func::extern_3(ui_layout_touch_move));
         static mut TOUCH_END: Lazy<Func> = Lazy::new(|| Func::extern_3(ui_layout_touch_end));
         static mut TIMER: Lazy<Func> = Lazy::new(|| Func::extern_2(ui_layout_timer));
         static mut PAINT: Lazy<Func> = Lazy::new(|| Func::extern_1(ui_layout_paint));
-        static mut TABLE: Lazy<[MapElem; 5]> = Lazy::new(|| {
+        static mut TABLE: Lazy<[MapElem; 6]> = Lazy::new(|| {
             [
+                Map::at(Qstr::MP_QSTR_set_timer_fn, unsafe { SET_TIMER_FN.to_obj() }),
                 Map::at(Qstr::MP_QSTR_touch_start, unsafe { TOUCH_START.to_obj() }),
                 Map::at(Qstr::MP_QSTR_touch_move, unsafe { TOUCH_MOVE.to_obj() }),
                 Map::at(Qstr::MP_QSTR_touch_end, unsafe { TOUCH_END.to_obj() }),
@@ -143,7 +150,7 @@ impl TryFrom<Obj> for Gc<LayoutObj> {
     fn try_from(value: Obj) -> Result<Self, Self::Error> {
         if LayoutObj::obj_type().is_type_of(value) {
             // SAFETY: We assume that if `value` is an object pointer with the correct type,
-            // it always is GC-allocated.
+            // it is always GC-allocated.
             let this = unsafe { Gc::from_raw(value.as_ptr().cast()) };
             Ok(this)
         } else {
@@ -181,6 +188,14 @@ impl TryInto<Obj> for Duration {
 
 fn try_or_none(f: impl FnOnce() -> Result<Obj, Error>) -> Obj {
     f().unwrap_or(Obj::const_none())
+}
+
+extern "C" fn ui_layout_set_timer_fn(this: Obj, timer_fn: Obj) -> Obj {
+    try_or_none(|| {
+        let this: Gc<LayoutObj> = this.try_into()?;
+        this.obj_set_timer_fn(timer_fn);
+        Ok(Obj::const_true())
+    })
 }
 
 extern "C" fn ui_layout_touch_start(this: Obj, x: Obj, y: Obj) -> Obj {
@@ -223,6 +238,6 @@ extern "C" fn ui_layout_paint(this: Obj) -> Obj {
     try_or_none(|| {
         let this: Gc<LayoutObj> = this.try_into()?;
         this.obj_paint_if_requested();
-        Ok(Obj::const_none())
+        Ok(Obj::const_true())
     })
 }
