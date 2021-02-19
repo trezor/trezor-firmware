@@ -17,7 +17,7 @@ class CardanoSignedTx(p.MessageType):
         self,
         *,
         tx_hash: bytes,
-        serialized_tx: bytes,
+        serialized_tx: bytes = None,
     ) -> None:
         self.tx_hash = tx_hash
         self.serialized_tx = serialized_tx
@@ -26,5 +26,5 @@ class CardanoSignedTx(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('tx_hash', p.BytesType, p.FLAG_REQUIRED),
-            2: ('serialized_tx', p.BytesType, p.FLAG_REQUIRED),
+            2: ('serialized_tx', p.BytesType, None),
         }
