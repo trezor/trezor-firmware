@@ -98,6 +98,49 @@ def test_cardano_sign_tx_failed(client, parameters, result):
             )
 
 
+@parametrize_using_common_fixtures("cardano/sign_tx.chunked.json")
+def test_cardano_sign_tx_with_multiple_chunks(client, parameters, result):
+    inputs = [cardano.create_input(i) for i in parameters["inputs"]]
+    outputs = [cardano.create_output(o) for o in parameters["outputs"]]
+    certificates = [cardano.create_certificate(c) for c in parameters["certificates"]]
+    withdrawals = [cardano.create_withdrawal(w) for w in parameters["withdrawals"]]
+
+    input_flow = parameters.get("input_flow", ())
+
+    expected_responses = [
+        messages.PassphraseRequest(),
+        messages.ButtonRequest(),
+        messages.ButtonRequest(),
+    ]
+    expected_responses += [
+        messages.CardanoSignedTxChunk(signed_tx_chunk=bytes.fromhex(signed_tx_chunk))
+        for signed_tx_chunk in result["signed_tx_chunks"]
+    ]
+    expected_responses += [
+        messages.CardanoSignedTx(tx_hash=bytes.fromhex(result["tx_hash"]))
+    ]
+
+    with client:
+        client.set_input_flow(_to_device_actions(client, input_flow))
+        client.set_expected_responses(expected_responses)
+
+        response = cardano.sign_tx(
+            client=client,
+            inputs=inputs,
+            outputs=outputs,
+            fee=parameters["fee"],
+            ttl=parameters.get("ttl"),
+            validity_interval_start=parameters.get("validity_interval_start"),
+            certificates=certificates,
+            withdrawals=withdrawals,
+            metadata=bytes.fromhex(parameters["metadata"]),
+            protocol_magic=parameters["protocol_magic"],
+            network_id=parameters["network_id"],
+        )
+        assert response.tx_hash.hex() == result["tx_hash"]
+        assert response.serialized_tx.hex() == result["serialized_tx"]
+
+
 def _to_device_actions(client, input_flow):
     if not input_flow:
         yield

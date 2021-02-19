@@ -145,6 +145,8 @@ if not utils.BITCOIN_ONLY:
     CardanoGetAddress: Literal[307] = 307
     CardanoAddress: Literal[308] = 308
     CardanoSignedTx: Literal[310] = 310
+    CardanoSignedTxChunk: Literal[311] = 311
+    CardanoSignedTxChunkAck: Literal[312] = 312
     RippleGetAddress: Literal[400] = 400
     RippleAddress: Literal[401] = 401
     RippleSignTx: Literal[402] = 402
