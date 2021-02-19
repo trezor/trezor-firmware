@@ -31,30 +31,6 @@ Also please have a look at the docs, either in the `docs` folder or at  [docs.tr
 
 Please report suspected security vulnerabilities in private to [security@satoshilabs.com](mailto:security@satoshilabs.com), also see [the disclosure section on the Trezor.io website](https://trezor.io/security/). Please do NOT create publicly viewable issues for suspected security vulnerabilities.
 
-## Issue Labels
-
-### Priority
-
-Label     | Meaning (SLA)
-----------|--------------
-P1 Urgent | The current release + potentially immediate hotfix (30 days)
-P2 High   | The next release (60 days)
-P3 Medium | Within the next 3 releases (90 days)
-P4 Low    | Anything outside the next 3 releases (120 days)
-
-#### Severity
-
-Label       | Impact
-------------|-------
-S1 Blocker  | Outage, broken feature with no workaround
-S2 Critical | Broken feature, workaround too complex & unacceptable
-S3 Major    | Broken feature, workaround acceptable
-S4 Low      | Functionality inconvenience or cosmetic issue
-
-## CI
-
-The complete test suite is running on a public [GitLab CI](https://gitlab.com/satoshilabs/trezor/trezor-firmware). If you are an external contributor, we also have a [Travis instance](https://travis-ci.org/trezor/trezor-firmware) where a small subset of tests is running as well - mostly style and easy fast checks, which are quite common to fail for new contributors.
-
 ## Documentation
 
 See the `docs` folder or visit [docs.trezor.io](https://docs.trezor.io).
