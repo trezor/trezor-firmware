@@ -166,6 +166,17 @@ impl Into<Obj> for &[u8] {
     }
 }
 
+impl Into<Obj> for &str {
+    fn into(self) -> Obj {
+        // SAFETY:
+        //  - Can raise if allocation fails.
+        //  - `str` is guaranteed to be UTF-8.
+        //  - Will return a QSTR if the string is already interned.
+        let obj = unsafe { ffi::mp_obj_new_str(self.as_ptr().cast(), self.len()) };
+        obj
+    }
+}
+
 //
 // Additional conversions based on the methods above.
 //

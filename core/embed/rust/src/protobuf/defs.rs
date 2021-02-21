@@ -1,10 +1,8 @@
-use core::{iter, mem, slice};
+use core::{mem, slice};
 
 pub struct Msg {
-    field_count: usize,
-    default_count: usize,
-    fields_ptr: *const u8,
-    defaults_ptr: *const u8,
+    pub fields: &'static [Field],
+    pub defaults: &'static [u8],
 }
 
 impl Msg {
@@ -17,31 +15,7 @@ impl Msg {
     }
 
     pub fn field(&self, tag: u8) -> Option<&Field> {
-        self.fields().iter().find(|field| field.tag == tag)
-    }
-
-    pub fn fields(&self) -> &[Field] {
-        unsafe { slice::from_raw_parts(self.fields_ptr.cast(), self.field_count) }
-    }
-
-    pub fn defaults(&self) -> impl Iterator<Item = Default> + '_ {
-        let mut ptr = self.defaults_ptr;
-        let mut i = 0;
-        iter::from_fn(move || unsafe {
-            if i < self.default_count {
-                let tag = ptr.offset(0).read();
-                let len = ptr.offset(1).read() as usize;
-                let val = ptr.offset(2);
-                ptr = val.add(len);
-                i += 1;
-                Some(Default {
-                    tag,
-                    value: slice::from_raw_parts(val, len),
-                })
-            } else {
-                None
-            }
-        })
+        self.fields.iter().find(|field| field.tag == tag)
     }
 }
 
@@ -98,11 +72,6 @@ pub enum FieldType {
     Msg(Msg),
 }
 
-pub struct Default {
-    pub tag: u8,
-    pub value: &'static [u8],
-}
-
 pub struct Enum {
     pub values: &'static [u16],
 }
@@ -135,45 +104,29 @@ fn find_msg_index(wire_id: u16) -> Option<u16> {
 unsafe fn find_msg(msg_index: u16) -> Msg {
     // #[repr(C, packed)]
     // struct MsgDef {
-    //     field_count: u8,
-    //     default_count: u8,
+    //     fields_count: u8,
+    //     defaults_size: u8,
     //     fields: [Field],
-    //     defaults: [DefaultDef],
-    // }
-    // #[repr(C, packed)]
-    // struct DefaultDef {
-    //     field_tag: u8,
-    //     len: u8,
-    //     value: [u8],
+    //     defaults: [u8],
     // }
 
     let mut ptr = MSG_DEFS.as_ptr();
     let mut i = 0;
     loop {
-        let field_count = ptr.offset(0).read() as usize;
-        let default_count = ptr.offset(1).read() as usize;
+        let fields_count = ptr.offset(0).read() as usize;
+        let defaults_size = ptr.offset(1).read() as usize;
 
-        let fields_size = field_count * mem::size_of::<Field>();
+        let fields_size = fields_count * mem::size_of::<Field>();
         let fields_ptr = ptr.offset(2);
         let defaults_ptr = ptr.offset(2).add(fields_size);
 
         if i == msg_index {
             break Msg {
-                field_count,
-                default_count,
-                fields_ptr,
-                defaults_ptr,
+                fields: slice::from_raw_parts(fields_ptr.cast(), fields_count),
+                defaults: slice::from_raw_parts(defaults_ptr.cast(), defaults_size),
             };
         } else {
-            ptr = defaults_ptr;
-            let mut idef = 0;
-            while idef < default_count {
-                let _tag = ptr.offset(0);
-                let len = ptr.offset(1).read() as usize;
-                let val = ptr.offset(2);
-                ptr = val.add(len);
-                idef += 1;
-            }
+            ptr = defaults_ptr.add(defaults_size);
             i += 1;
         }
     }

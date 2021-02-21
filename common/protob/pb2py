@@ -491,11 +491,11 @@ class Descriptor:
             "msgs"
             / c.GreedyRange(
                 c.Struct(
-                    "field_count" / c.Byte,
-                    "default_count" / c.Byte,
+                    "fields_count" / c.Byte,
+                    "defaults_size" / c.Byte,
                     "fields"
                     / c.Array(
-                        c.this.field_count,
+                        c.this.fields_count,
                         c.Struct(
                             "tag" / c.Byte,
                             "flags_and_type"
@@ -513,13 +513,8 @@ class Descriptor:
                     ),
                     "defaults"
                     / c.Array(
-                        c.this.default_count,
-                        c.Struct(
-                            "field_tag" / c.Byte,
-                            "len" / c.Byte,
-                            # TODO: Deduplicate vals or store a QSTR for str/bytes values.
-                            "val" / c.Bytes(c.this.len),
-                        ),
+                        c.this.defaults_size,
+                        c.Byte,
                     ),
                 )
             ),
@@ -604,18 +599,13 @@ class Descriptor:
                     )
                 )
                 if field.default_value != None:
-                    val = self.encode_field_default(field)
-                    defaults.append(
-                        dict(
-                            field_tag=field.number,
-                            len=len(val),
-                            val=val,
-                        )
-                    )
+                    item = self.encode_field_default(field)
+                    defaults.append(item)
+            defaults = b"".join(defaults)
             msgs.append(
                 dict(
-                    field_count=len(fields),
-                    default_count=len(defaults),
+                    fields_count=len(fields),
+                    defaults_size=len(defaults),
                     fields=fields,
                     defaults=defaults,
                 )
