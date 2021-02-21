@@ -130,6 +130,15 @@ impl TryInto<Obj> for isize {
     }
 }
 
+impl Into<Obj> for i64 {
+    fn into(self) -> Obj {
+        // SAFETY:
+        //  - Can raise if allocation fails.
+        let obj = unsafe { ffi::mp_obj_new_int_from_ll(self) };
+        obj
+    }
+}
+
 impl TryFrom<Obj> for isize {
     type Error = Error;
 
@@ -148,20 +157,28 @@ impl TryFrom<Obj> for isize {
     }
 }
 
-impl TryInto<Obj> for &[u8] {
-    type Error = Error;
-
-    fn try_into(self) -> Result<Obj, Self::Error> {
+impl Into<Obj> for &[u8] {
+    fn into(self) -> Obj {
         // SAFETY:
         //  - Can raise if allocation fails.
         let obj = unsafe { ffi::mp_obj_new_bytes(self.as_ptr(), self.len()) };
-        Ok(obj)
+        obj
     }
 }
 
 //
 // Additional conversions based on the methods above.
 //
+
+impl Into<Obj> for bool {
+    fn into(self) -> Obj {
+        if self {
+            Obj::const_true()
+        } else {
+            Obj::const_false()
+        }
+    }
+}
 
 impl TryInto<Obj> for u8 {
     type Error = Error;
@@ -189,6 +206,16 @@ impl TryInto<Obj> for u32 {
     fn try_into(self) -> Result<Obj, Self::Error> {
         let int = isize::try_from(self)?;
         let obj = int.try_into()?;
+        Ok(obj)
+    }
+}
+
+impl TryInto<Obj> for u64 {
+    type Error = Error;
+
+    fn try_into(self) -> Result<Obj, Self::Error> {
+        let int = i64::try_from(self)?;
+        let obj = int.into();
         Ok(obj)
     }
 }

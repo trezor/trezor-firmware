@@ -424,14 +424,12 @@ impl TryFrom<&Map> for TextStyle {
 
     fn try_from(map: &Map) -> Result<Self, Self::Error> {
         Ok(Self {
-            fg: Color::from_u16(map.get_qstr(Qstr::MP_QSTR_fg)?.try_into()?),
-            bg: Color::from_u16(map.get_qstr(Qstr::MP_QSTR_bg)?.try_into()?),
-            font: map.get_qstr(Qstr::MP_QSTR_font)?.try_into()?,
-            break_words: map.get_qstr(Qstr::MP_QSTR_break_words)?.try_into()?,
-            insert_new_lines: map.get_qstr(Qstr::MP_QSTR_insert_new_lines)?.try_into()?,
-            render_page_overflow: map
-                .get_qstr(Qstr::MP_QSTR_render_page_overflow)?
-                .try_into()?,
+            fg: Color::from_u16(map.get(Qstr::MP_QSTR_fg)?.try_into()?),
+            bg: Color::from_u16(map.get(Qstr::MP_QSTR_bg)?.try_into()?),
+            font: map.get(Qstr::MP_QSTR_font)?.try_into()?,
+            break_words: map.get(Qstr::MP_QSTR_break_words)?.try_into()?,
+            insert_new_lines: map.get(Qstr::MP_QSTR_insert_new_lines)?.try_into()?,
+            render_page_overflow: map.get(Qstr::MP_QSTR_render_page_overflow)?.try_into()?,
         })
     }
 }
@@ -464,13 +462,13 @@ impl TryFrom<&Map> for Text {
 
     fn try_from(map: &Map) -> Result<Self, Self::Error> {
         Ok(Self {
-            ops: map.get_qstr(Qstr::MP_QSTR_items)?,
-            op_offset: map.get_qstr(Qstr::MP_QSTR_item_offset)?.try_into()?,
-            char_offset: map.get_qstr(Qstr::MP_QSTR_char_offset)?.try_into()?,
+            ops: map.get(Qstr::MP_QSTR_items)?,
+            op_offset: map.get(Qstr::MP_QSTR_item_offset)?.try_into()?,
+            char_offset: map.get(Qstr::MP_QSTR_char_offset)?.try_into()?,
             style: map.try_into()?,
             bounds: map.try_into()?,
-            render_text_fn: map.get_qstr(Qstr::MP_QSTR_render_text_fn).ok(),
-            page_end_fn: map.get_qstr(Qstr::MP_QSTR_page_end_fn).ok(),
+            render_text_fn: map.get(Qstr::MP_QSTR_render_text_fn).ok(),
+            page_end_fn: map.get(Qstr::MP_QSTR_page_end_fn).ok(),
         })
     }
 }

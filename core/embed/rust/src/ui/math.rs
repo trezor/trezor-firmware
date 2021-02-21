@@ -143,10 +143,10 @@ impl TryFrom<&Map> for Rect {
 
     fn try_from(map: &Map) -> Result<Self, Self::Error> {
         Ok(Self {
-            x0: map.get_qstr(Qstr::MP_QSTR_x0)?.try_into()?,
-            y0: map.get_qstr(Qstr::MP_QSTR_y0)?.try_into()?,
-            x1: map.get_qstr(Qstr::MP_QSTR_x1)?.try_into()?,
-            y1: map.get_qstr(Qstr::MP_QSTR_y1)?.try_into()?,
+            x0: map.get(Qstr::MP_QSTR_x0)?.try_into()?,
+            y0: map.get(Qstr::MP_QSTR_y0)?.try_into()?,
+            x1: map.get(Qstr::MP_QSTR_x1)?.try_into()?,
+            y1: map.get(Qstr::MP_QSTR_y1)?.try_into()?,
         })
     }
 }

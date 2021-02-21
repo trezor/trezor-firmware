@@ -18,6 +18,23 @@ impl Qstr {
         // TODO: Change the internal representation of Qstr to u16.
         self.0 as _
     }
+
+    pub const fn from_u16(val: u16) -> Self {
+        // TODO: Change the internal representation of Qstr to u16.
+        Self(val as _)
+    }
+}
+
+impl From<u16> for Qstr {
+    fn from(val: u16) -> Self {
+        Self::from_u16(val)
+    }
+}
+
+impl Into<Obj> for Qstr {
+    fn into(self) -> Obj {
+        self.to_obj()
+    }
 }
 
 include!(concat!(env!("OUT_DIR"), "/qstr.rs"));

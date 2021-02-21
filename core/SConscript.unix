@@ -401,13 +401,14 @@ env.Replace(
 #
 
 qstr_micropython = 'vendor/micropython/py/qstrdefs.h'
+qstr_protobuf = 'src/trezor/messages/pbuf_qstr.h'
 
 qstr_collected = env.CollectQstr(
     target='genhdr/qstrdefs.collected.h', source=SOURCE_QSTR)
 
 qstr_preprocessed = env.PreprocessQstr(
     target='genhdr/qstrdefs.preprocessed.h',
-    source=[qstr_micropython, qstr_collected])
+    source=[qstr_micropython, qstr_protobuf, qstr_collected])
 
 qstr_generated = env.GenerateQstrDefs(
     target='genhdr/qstrdefs.generated.h', source=qstr_preprocessed)

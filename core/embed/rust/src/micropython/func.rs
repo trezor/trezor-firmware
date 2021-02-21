@@ -52,7 +52,7 @@ impl Func {
         // SAFETY:
         //  - We are an object struct with a base and a type.
         //  - 'static lifetime holds us in place.
-        //  - Micropython is smart enough not tu mutate builtin function objects.
+        //  - Micropython is smart enough not to mutate builtin function objects.
         unsafe { Obj::from_ptr(self as *const _ as *mut _) }
     }
 }

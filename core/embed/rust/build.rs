@@ -44,6 +44,7 @@ fn generate_micropython_bindings() {
         .whitelist_type("mp_obj_type_t")
         .whitelist_type("mp_obj_base_t")
         .whitelist_function("mp_obj_new_int")
+        .whitelist_function("mp_obj_new_int_from_ll")
         .whitelist_function("mp_obj_new_bytes")
         .whitelist_function("mp_obj_get_int_maybe")
         .whitelist_function("mp_obj_is_true")
@@ -55,6 +56,8 @@ fn generate_micropython_bindings() {
         .whitelist_var("MP_BUFFER_RW")
         // dict
         .whitelist_type("mp_obj_dict_t")
+        .whitelist_function("mp_obj_new_dict")
+        .whitelist_function("mp_obj_dict_store")
         .whitelist_var("mp_type_dict")
         // fun
         .whitelist_type("mp_obj_fun_builtin_fixed_t")
@@ -67,6 +70,11 @@ fn generate_micropython_bindings() {
         .whitelist_type("mp_obj_iter_buf_t")
         .whitelist_function("mp_getiter")
         .whitelist_function("mp_iternext")
+        // list
+        .whitelist_type("mp_obj_list_t")
+        .whitelist_function("mp_obj_new_list")
+        .whitelist_function("mp_obj_list_append")
+        .whitelist_var("mp_type_list")
         // map
         .whitelist_type("mp_map_elem_t")
         .whitelist_type("mp_map_lookup_kind_t")

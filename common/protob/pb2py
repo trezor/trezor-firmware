@@ -450,6 +450,238 @@ class Descriptor:
         if init_py:
             self.write_init_py()
 
+    def write_qstrs(self, qstr_path, include_deprecated=False):
+        logging.debug("Writing qstrings to {}".format(qstr_path))
+        with open(qstr_path, "w") as f:
+            for field in self.collect_field_names(include_deprecated):
+                f.write("Q({})\n".format(field))
+
+    def collect_field_names(self, include_deprecated=False):
+        names = set()
+        for message in self.messages:
+            for field in message.field:
+                if not include_deprecated and field.options.deprecated:
+                    continue
+                names.add(field.name)
+        return sorted(names)
+
+    def write_blobs(self, blob_dir, qstr_defs, include_deprecated=False):
+        logging.debug("Writing blobs to {}".format(blob_dir))
+        blob_enums, blob_msgs, blob_wire = self.build_blobs(
+            qstr_defs, include_deprecated
+        )
+        with open(os.path.join(blob_dir, "proto_enums.data"), "wb") as f:
+            f.write(blob_enums)
+        with open(os.path.join(blob_dir, "proto_msgs.data"), "wb") as f:
+            f.write(blob_msgs)
+        with open(os.path.join(blob_dir, "proto_wire.data"), "wb") as f:
+            f.write(blob_wire)
+
+    def build_blobs(self, qstr_defs, include_deprecated=False):
+        enums_type = c.Struct(
+            "enums"
+            / c.GreedyRange(
+                c.Struct(
+                    "count" / c.Byte,
+                    "vals" / c.Array(c.this.count, c.Int16ul),
+                )
+            ),
+        )
+        msgs_type = c.Struct(
+            "msgs"
+            / c.GreedyRange(
+                c.Struct(
+                    "field_count" / c.Byte,
+                    "default_count" / c.Byte,
+                    "fields"
+                    / c.Array(
+                        c.this.field_count,
+                        c.Struct(
+                            "tag" / c.Byte,
+                            "flags_and_type"
+                            / c.BitStruct(
+                                "is_required" / c.Flag,
+                                "is_repeated" / c.Flag,
+                                "is_experimental" / c.Flag,
+                                c.Padding(1),
+                                "type" / c.BitsInteger(4),
+                            ),
+                            # TODO: Get rid of indexing and use byte offsets.
+                            "enum_or_msg_index" / c.Int16ul,
+                            "name" / c.Int16ul,
+                        ),
+                    ),
+                    "defaults"
+                    / c.Array(
+                        c.this.default_count,
+                        c.Struct(
+                            "field_tag" / c.Byte,
+                            "len" / c.Byte,
+                            # TODO: Deduplicate vals or store a QSTR for str/bytes values.
+                            "val" / c.Bytes(c.this.len),
+                        ),
+                    ),
+                )
+            ),
+        )
+        wire_type = c.Struct(
+            "msgs"
+            / c.GreedyRange(
+                c.Struct(  # sorted by wire_id
+                    "wire_id" / c.Int16ul,
+                    # TODO: Get rid of indexing and use byte offsets.
+                    "msg_index" / c.Int16ul,
+                )
+            )
+        )
+        qstr_map = self.build_qstr_map(qstr_defs)
+        enums = enums_type.build(
+            dict(
+                enums=self.build_blob_enums(),
+            )
+        )
+        msgs = msgs_type.build(
+            dict(
+                msgs=self.build_blob_msgs(qstr_map, include_deprecated),
+            )
+        )
+        wire = wire_type.build(
+            dict(
+                msgs=self.build_blob_wire(),
+            )
+        )
+
+        return enums, msgs, wire
+
+    def build_qstr_map(self, qstr_defs):
+        index = {}
+        qstr = 0
+        with open(qstr_defs, "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line.startswith("QDEF"):
+                    continue
+                # Example:
+                # QDEF(MP_QSTR_copysign, (const byte*)"\x33\x14\x08" "copysign")
+                quote = line.rindex('"', 0, -2)
+                name = line[quote + 1 : -2]
+                index[name] = qstr
+                # QSTR defs are rolled out into an enum in py/qstr.h, the numeric
+                # value is simply an incremented integer.
+                qstr += 1
+        return index
+
+    def build_blob_enums(self):
+        enums = []
+        for enum in sorted(self.enums, key=lambda e: e.name):
+            vals = []
+            for val in enum.value:
+                vals.append(val.number)
+            enums.append(dict(count=len(vals), vals=vals))
+        return enums
+
+    def build_blob_msgs(self, qstr_map, include_deprecated):
+        msgs = []
+        for msg in sorted(self.messages, key=lambda m: m.name):
+            defaults = []
+            fields = []
+            for field in sorted(msg.field, key=lambda f: f.number):
+                if not include_deprecated and field.options.deprecated:
+                    continue
+                field_type, ref_index = self.encode_field_type(field)
+                proto_field = ProtoField.from_field(self, field)
+                fields.append(
+                    dict(
+                        tag=field.number,
+                        flags_and_type=dict(
+                            is_required=proto_field.required,
+                            is_repeated=proto_field.repeated,
+                            is_experimental=proto_field.experimental,
+                            type=field_type,
+                        ),
+                        enum_or_msg_index=ref_index,
+                        name=qstr_map[field.name],
+                    )
+                )
+                if field.default_value != None:
+                    val = self.encode_field_default(field)
+                    defaults.append(
+                        dict(
+                            field_tag=field.number,
+                            len=len(val),
+                            val=val,
+                        )
+                    )
+            msgs.append(
+                dict(
+                    field_count=len(fields),
+                    default_count=len(defaults),
+                    fields=fields,
+                    defaults=defaults,
+                )
+            )
+        return msgs
+
+    def encode_field_type(self, field):
+        T_UVARINT = 0
+        T_SVARINT = 1
+        T_BOOL = 2
+        T_BYTES = 3
+        T_STRING = 4
+        T_ENUM = 5
+        T_MSG = 6
+        if field.type == field.TYPE_UINT32 or field.type == field.TYPE_UINT64:
+            return (T_UVARINT, 0)
+        elif field.type == field.TYPE_SINT32 or field.type == field.TYPE_SINT64:
+            return (T_SVARINT, 0)
+        elif field.type == field.TYPE_BOOL:
+            return (T_BOOL, 0)
+        elif field.type == field.TYPE_BYTES:
+            return (T_BYTES, 0)
+        elif field.type == field.TYPE_STRING:
+            return (T_STRING, 0)
+        elif field.type == field.TYPE_ENUM:
+            return (T_ENUM, self.find_enum_index(field.type_name))
+        elif field.type == field.TYPE_MESSAGE:
+            return (T_MSG, self.find_msg_index(field.type_name))
+        else:
+            raise ValueError(
+                "Unknown field type {} for field {}".format(field.type, field.name)
+            )
+
+    def find_enum_index(self, name):
+        name = name.rsplit(".")[-1]  # ignore package
+        for index, enum in enumerate(sorted(self.enums, key=lambda e: e.name)):
+            if enum.name == name:
+                return index
+        raise KeyError("Unknown enum {}".format(name))
+
+    def find_msg_index(self, name):
+        name = name.rsplit(".")[-1]  # ignore package
+        for index, msg in enumerate(sorted(self.messages, key=lambda m: m.name)):
+            if msg.name == name:
+                return index
+        raise KeyError("Unknown message {}".format(name))
+
+    def encode_field_default(self, field):
+        # TODO: encode the default field value as protobuf
+        return b""
+
+    def build_blob_wire(self):
+        msgs = []
+        for index, msg in enumerate(sorted(self.messages, key=lambda m: m.name)):
+            wire_id = self._get_extension(msg, "wire_type")
+            if wire_id is None:
+                wire_id = self.message_types.get(msg.name)
+            if wire_id is not None:
+                msgs.append(
+                    dict(
+                        wire_id=wire_id,
+                        msg_index=index,
+                    )
+                )
+        return sorted(msgs, key=lambda m: m["wire_id"])
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -462,6 +694,9 @@ if __name__ == "__main__":
     parser.add_argument("-I", "--protoc-include", action="append", help="protoc include path")
     parser.add_argument("-v", "--verbose", action="store_true", help="Print debug messages")
     parser.add_argument("-d", "--include-deprecated", action="store_true", help="Include deprecated fields")
+    parser.add_argument("--qstr-file", help="Collect QSTRs into a file")
+    parser.add_argument("--qstr-defs", help="Input file specifying QSTR values for blob dumping")
+    parser.add_argument("--blob", action="store_true", help="Dump the definitions in a compact format, needs --qstr-defs")
     # fmt: on
     args = parser.parse_args()
 
@@ -487,3 +722,13 @@ if __name__ == "__main__":
         for filename in os.listdir(tmpdir):
             src = os.path.join(tmpdir, filename)
             shutil.copy(src, args.out_dir)
+
+        if args.qstr_file:
+            qstr_path = os.path.join(args.out_dir, args.qstr_file)
+            qstr_path = os.path.abspath(qstr_path)
+            descriptor.write_qstrs(qstr_path, args.include_deprecated)
+
+        if args.blob and args.qstr_defs:
+            descriptor.write_blobs(
+                args.out_dir, args.qstr_defs, args.include_deprecated
+            )

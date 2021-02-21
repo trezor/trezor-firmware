@@ -27,14 +27,22 @@ impl Map {
 
     pub fn at(key: Qstr, value: Obj) -> MapElem {
         MapElem {
-            key: key.to_obj(),
+            key: key.into(),
             value,
         }
     }
 }
 
 impl Map {
-    pub fn get(&self, index: Obj) -> Result<Obj, Error> {
+    pub fn contains_key(&self, index: impl Into<Obj>) -> bool {
+        self.get_obj(index.into()).is_ok()
+    }
+
+    pub fn get(&self, index: impl Into<Obj>) -> Result<Obj, Error> {
+        self.get_obj(index.into())
+    }
+
+    pub fn get_obj(&self, index: Obj) -> Result<Obj, Error> {
         // SAFETY:
         //  - `mp_map_lookup` returns either NULL or a pointer to a `mp_map_elem_t`
         //    value with a lifetime valid for the whole lifetime of the passed immutable
@@ -50,8 +58,20 @@ impl Map {
         }
     }
 
-    pub fn get_qstr(&self, index: Qstr) -> Result<Obj, Error> {
-        self.get(index.to_obj())
+    pub unsafe fn set(&self, index: impl Into<Obj>, value: impl Into<Obj>) {
+        self.set_obj(index.into(), value.into())
+    }
+
+    pub unsafe fn set_obj(&self, index: Obj, value: Obj) {
+        let map = self as *const Map as *mut Map;
+        let elem = ffi::mp_map_lookup(
+            map,
+            index,
+            ffi::_mp_map_lookup_kind_t_MP_MAP_LOOKUP_ADD_IF_NOT_FOUND,
+        )
+        .as_mut()
+        .unwrap();
+        elem.value = value;
     }
 }
 

@@ -20,6 +20,7 @@ use crate::{
         component::{Component, Event, EventCtx, TimerToken},
         math::Point,
     },
+    util,
 };
 
 /// In order to store any type of component in a layout, we need to access it
@@ -124,7 +125,7 @@ impl LayoutObj {
                 Map::at(Qstr::MP_QSTR_paint, unsafe { PAINT.to_obj() }),
             ]
         });
-        static mut DICT: Lazy<Dict> = Lazy::new(|| Dict::new(Map::fixed(unsafe { &TABLE })));
+        static mut DICT: Lazy<Dict> = Lazy::new(|| Dict::with_map(Map::fixed(unsafe { &TABLE })));
         static mut TYPE: Lazy<Type> = Lazy::new(|| {
             Type::new()
                 .with_name(Qstr::MP_QSTR_Layout)
@@ -186,12 +187,8 @@ impl TryInto<Obj> for Duration {
     }
 }
 
-fn try_or_none(f: impl FnOnce() -> Result<Obj, Error>) -> Obj {
-    f().unwrap_or(Obj::const_none())
-}
-
 extern "C" fn ui_layout_set_timer_fn(this: Obj, timer_fn: Obj) -> Obj {
-    try_or_none(|| {
+    util::try_or_none(|| {
         let this: Gc<LayoutObj> = this.try_into()?;
         this.obj_set_timer_fn(timer_fn);
         Ok(Obj::const_true())
@@ -199,7 +196,7 @@ extern "C" fn ui_layout_set_timer_fn(this: Obj, timer_fn: Obj) -> Obj {
 }
 
 extern "C" fn ui_layout_touch_start(this: Obj, x: Obj, y: Obj) -> Obj {
-    try_or_none(|| {
+    util::try_or_none(|| {
         let this: Gc<LayoutObj> = this.try_into()?;
         let event = Event::TouchStart(Point::new(x.try_into()?, y.try_into()?));
         let msg = this.obj_event(event);
@@ -208,7 +205,7 @@ extern "C" fn ui_layout_touch_start(this: Obj, x: Obj, y: Obj) -> Obj {
 }
 
 extern "C" fn ui_layout_touch_move(this: Obj, x: Obj, y: Obj) -> Obj {
-    try_or_none(|| {
+    util::try_or_none(|| {
         let this: Gc<LayoutObj> = this.try_into()?;
         let event = Event::TouchMove(Point::new(x.try_into()?, y.try_into()?));
         let msg = this.obj_event(event);
@@ -217,7 +214,7 @@ extern "C" fn ui_layout_touch_move(this: Obj, x: Obj, y: Obj) -> Obj {
 }
 
 extern "C" fn ui_layout_touch_end(this: Obj, x: Obj, y: Obj) -> Obj {
-    try_or_none(|| {
+    util::try_or_none(|| {
         let this: Gc<LayoutObj> = this.try_into()?;
         let event = Event::TouchEnd(Point::new(x.try_into()?, y.try_into()?));
         let msg = this.obj_event(event);
@@ -226,7 +223,7 @@ extern "C" fn ui_layout_touch_end(this: Obj, x: Obj, y: Obj) -> Obj {
 }
 
 extern "C" fn ui_layout_timer(this: Obj, token: Obj) -> Obj {
-    try_or_none(|| {
+    util::try_or_none(|| {
         let this: Gc<LayoutObj> = this.try_into()?;
         let event = Event::Timer(token.try_into()?);
         let msg = this.obj_event(event);
@@ -235,7 +232,7 @@ extern "C" fn ui_layout_timer(this: Obj, token: Obj) -> Obj {
 }
 
 extern "C" fn ui_layout_paint(this: Obj) -> Obj {
-    try_or_none(|| {
+    util::try_or_none(|| {
         let this: Gc<LayoutObj> = this.try_into()?;
         this.obj_paint_if_requested();
         Ok(Obj::const_true())
