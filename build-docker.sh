@@ -3,19 +3,42 @@ set -e -o pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
+if [ -z "$ALPINE_ARCH" ]; then
+  arch="$(uname -m)"
+  case "$arch" in
+    aarch64|arm64)
+      ALPINE_ARCH="aarch64"
+      ;;
+    x86_64)
+      ALPINE_ARCH="x86_64"
+      ;;
+    *)
+      echo "Unsupported arch"
+      exit
+  esac
+fi
+
 CONTAINER_NAME=${CONTAINER_NAME:-trezor-firmware-env.nix}
 ALPINE_CDN=${ALPINE_CDN:-http://dl-cdn.alpinelinux.org/alpine}
-ALPINE_RELEASE=${ALPINE_RELEASE:-3.12}
-ALPINE_ARCH=${ALPINE_ARCH:-x86_64}
-ALPINE_VERSION=${ALPINE_VERSION:-3.12.3}
-CONTAINER_FS_URL=${CONTAINER_FS_URL:-"$ALPINE_CDN/v$ALPINE_RELEASE/releases/$ALPINE_ARCH/alpine-minirootfs-$ALPINE_VERSION-$ALPINE_ARCH.tar.gz"}
+ALPINE_RELEASE=${ALPINE_RELEASE:-3.13}
+ALPINE_VERSION=${ALPINE_VERSION:-3.13.2}
+ALPINE_TARBALL=${ALPINE_FILE:-alpine-minirootfs-$ALPINE_VERSION-$ALPINE_ARCH.tar.gz}
+CONTAINER_FS_URL=${CONTAINER_FS_URL:-"$ALPINE_CDN/v$ALPINE_RELEASE/releases/$ALPINE_ARCH/$ALPINE_TARBALL"}
 
 TAG=${1:-master}
 REPOSITORY=${2:-/local}
 PRODUCTION=${PRODUCTION:-1}
 MEMORY_PROTECT=${MEMORY_PROTECT:-1}
 
-wget --no-config -nc -P ci/ "$CONTAINER_FS_URL"
+
+if which wget > /dev/null ; then
+  wget --no-config -nc -P ci/ "$CONTAINER_FS_URL"
+else
+  if ! [ -f "ci/$ALPINE_TARBALL" ]; then
+    curl -L -o "ci/$ALPINE_TARBALL" "$CONTAINER_FS_URL"
+  fi
+fi
+
 docker build --build-arg ALPINE_VERSION="$ALPINE_VERSION" --build-arg ALPINE_ARCH="$ALPINE_ARCH" -t "$CONTAINER_NAME" ci/
 
 # stat under macOS has slightly different cli interface
