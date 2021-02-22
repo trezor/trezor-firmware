@@ -1,11 +1,11 @@
 use core::{mem, slice};
 
-pub struct Msg {
-    pub fields: &'static [Field],
+pub struct MsgDef {
+    pub fields: &'static [FieldDef],
     pub defaults: &'static [u8],
 }
 
-impl Msg {
+impl MsgDef {
     pub fn for_wire_id(wire_id: u16) -> Option<Self> {
         find_msg_index(wire_id).map(|msg_index| unsafe {
             // SAFETY: We are taking the index right out of `find_msg_index` so we can be
@@ -14,20 +14,20 @@ impl Msg {
         })
     }
 
-    pub fn field(&self, tag: u8) -> Option<&Field> {
+    pub fn field(&self, tag: u8) -> Option<&FieldDef> {
         self.fields.iter().find(|field| field.tag == tag)
     }
 }
 
 #[repr(C, packed)]
-pub struct Field {
+pub struct FieldDef {
     pub tag: u8,
     flags_and_type: u8,
     enum_or_msg_index: u16,
     pub name: u16,
 }
 
-impl Field {
+impl FieldDef {
     pub fn get_type(&self) -> FieldType {
         match self.ftype() {
             0 => FieldType::UVarInt,
@@ -68,11 +68,25 @@ pub enum FieldType {
     Bool,
     Bytes,
     String,
-    Enum(Enum),
-    Msg(Msg),
+    Enum(EnumDef),
+    Msg(MsgDef),
 }
 
-pub struct Enum {
+pub const WIRE_TYPE_VARINT: u8 = 0;
+pub const WIRE_TYPE_LENGTH_DELIMITED: u8 = 2;
+
+impl FieldType {
+    pub fn wire_type(&self) -> u8 {
+        match self {
+            FieldType::UVarInt | FieldType::SVarInt | FieldType::Bool | FieldType::Enum(_) => {
+                WIRE_TYPE_VARINT
+            }
+            FieldType::Bytes | FieldType::String | FieldType::Msg(_) => WIRE_TYPE_LENGTH_DELIMITED,
+        }
+    }
+}
+
+pub struct EnumDef {
     pub values: &'static [u16],
 }
 
@@ -101,7 +115,7 @@ fn find_msg_index(wire_id: u16) -> Option<u16> {
     None
 }
 
-unsafe fn find_msg(msg_index: u16) -> Msg {
+unsafe fn find_msg(msg_index: u16) -> MsgDef {
     // #[repr(C, packed)]
     // struct MsgDef {
     //     fields_count: u8,
@@ -116,12 +130,12 @@ unsafe fn find_msg(msg_index: u16) -> Msg {
         let fields_count = ptr.offset(0).read() as usize;
         let defaults_size = ptr.offset(1).read() as usize;
 
-        let fields_size = fields_count * mem::size_of::<Field>();
+        let fields_size = fields_count * mem::size_of::<FieldDef>();
         let fields_ptr = ptr.offset(2);
         let defaults_ptr = ptr.offset(2).add(fields_size);
 
         if i == msg_index {
-            break Msg {
+            break MsgDef {
                 fields: slice::from_raw_parts(fields_ptr.cast(), fields_count),
                 defaults: slice::from_raw_parts(defaults_ptr.cast(), defaults_size),
             };
@@ -132,7 +146,7 @@ unsafe fn find_msg(msg_index: u16) -> Msg {
     }
 }
 
-unsafe fn find_enum(enum_index: u16) -> Enum {
+unsafe fn find_enum(enum_index: u16) -> EnumDef {
     // #[repr(C, packed)]
     // struct EnumDef {
     //     count: u8,
@@ -145,7 +159,7 @@ unsafe fn find_enum(enum_index: u16) -> Enum {
         let count = ptr.offset(0).read() as usize;
         let vals = ptr.offset(1);
         if i == enum_index {
-            break Enum {
+            break EnumDef {
                 values: slice::from_raw_parts(vals.cast(), count),
             };
         } else {

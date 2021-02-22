@@ -170,11 +170,9 @@ impl TryFrom<Obj> for TimerToken {
     }
 }
 
-impl TryInto<Obj> for TimerToken {
-    type Error = Error;
-
-    fn try_into(self) -> Result<Obj, Self::Error> {
-        self.into_raw().try_into()
+impl Into<Obj> for TimerToken {
+    fn into(self) -> Obj {
+        self.into_raw().into()
     }
 }
 
@@ -182,8 +180,8 @@ impl TryInto<Obj> for Duration {
     type Error = Error;
 
     fn try_into(self) -> Result<Obj, Self::Error> {
-        let int: usize = self.as_millis().try_into()?;
-        int.try_into()
+        let millis: usize = self.as_millis().try_into()?;
+        Ok(millis.into())
     }
 }
 

@@ -18,8 +18,8 @@ where
     fn into(self) -> Obj {
         match self {
             ConfirmMsg::Content(c) => c.into(),
-            ConfirmMsg::LeftClicked => 1isize.try_into().unwrap(),
-            ConfirmMsg::RightClicked => 2isize.try_into().unwrap(),
+            ConfirmMsg::LeftClicked => 1.try_into().unwrap(),
+            ConfirmMsg::RightClicked => 2.try_into().unwrap(),
         }
     }
 }

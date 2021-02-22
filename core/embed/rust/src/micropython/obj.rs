@@ -118,28 +118,7 @@ impl TryFrom<Obj> for bool {
     }
 }
 
-impl TryInto<Obj> for isize {
-    type Error = Error;
-
-    fn try_into(self) -> Result<Obj, Self::Error> {
-        let int = ffi::mp_int_t::try_from(self)?;
-        // SAFETY:
-        //  - Can raise if allocation fails.
-        let obj = unsafe { ffi::mp_obj_new_int(int) };
-        Ok(obj)
-    }
-}
-
-impl Into<Obj> for i64 {
-    fn into(self) -> Obj {
-        // SAFETY:
-        //  - Can raise if allocation fails.
-        let obj = unsafe { ffi::mp_obj_new_int_from_ll(self) };
-        obj
-    }
-}
-
-impl TryFrom<Obj> for isize {
+impl TryFrom<Obj> for i32 {
     type Error = Error;
 
     fn try_from(obj: Obj) -> Result<Self, Self::Error> {
@@ -157,33 +136,9 @@ impl TryFrom<Obj> for isize {
     }
 }
 
-impl Into<Obj> for &[u8] {
-    fn into(self) -> Obj {
-        // SAFETY:
-        //  - Can raise if allocation fails.
-        let obj = unsafe { ffi::mp_obj_new_bytes(self.as_ptr(), self.len()) };
-        obj
-    }
-}
-
-impl Into<Obj> for &str {
-    fn into(self) -> Obj {
-        // SAFETY:
-        //  - Can raise if allocation fails.
-        //  - `str` is guaranteed to be UTF-8.
-        //  - Will return a QSTR if the string is already interned.
-        let obj = unsafe { ffi::mp_obj_new_str(self.as_ptr().cast(), self.len()) };
-        obj
-    }
-}
-
-//
-// Additional conversions based on the methods above.
-//
-
-impl Into<Obj> for bool {
-    fn into(self) -> Obj {
-        if self {
+impl From<bool> for Obj {
+    fn from(val: bool) -> Self {
+        if val {
             Obj::const_true()
         } else {
             Obj::const_false()
@@ -191,63 +146,103 @@ impl Into<Obj> for bool {
     }
 }
 
-impl TryInto<Obj> for u8 {
-    type Error = Error;
+impl From<i32> for Obj {
+    fn from(val: i32) -> Self {
+        // `mp_obj_new_int` accepts a `mp_int_t` argument, which is word-sized. We
+        // primarily target 32-bit architecture, and therefore keep the primary signed
+        // conversion type as `i32`, but convert through `into()` if the types differ.
 
-    fn try_into(self) -> Result<Obj, Self::Error> {
-        let int = isize::from(self);
-        let obj = int.try_into()?;
-        Ok(obj)
+        // SAFETY:
+        //  - Can raise if allocation fails.
+        unsafe { ffi::mp_obj_new_int(val.into()) }
     }
 }
 
-impl TryInto<Obj> for u16 {
-    type Error = Error;
-
-    fn try_into(self) -> Result<Obj, Self::Error> {
-        let int = isize::try_from(self)?;
-        let obj = int.try_into()?;
-        Ok(obj)
+impl From<i64> for Obj {
+    fn from(val: i64) -> Self {
+        // Because `mp_obj_new_int_from_ll` allocates even if `val` fits into small-int,
+        // we try to go through `mp_obj_new_int` first.
+        match i32::try_from(val) {
+            Ok(smaller_val) => smaller_val.into(),
+            // SAFETY:
+            //  - Can raise if allocation fails.
+            Err(_) => unsafe { ffi::mp_obj_new_int_from_ll(val) },
+        }
     }
 }
 
-impl TryInto<Obj> for u32 {
-    type Error = Error;
+impl From<u32> for Obj {
+    fn from(val: u32) -> Self {
+        extern "C" {
+            fn mp_obj_new_int_from_uint(value: ffi::mp_uint_t) -> ffi::mp_obj_t;
+        }
 
-    fn try_into(self) -> Result<Obj, Self::Error> {
-        let int = isize::try_from(self)?;
-        let obj = int.try_into()?;
-        Ok(obj)
+        // `mp_obj_new_int_from_uint` accepts a `mp_uint_t` argument, which is
+        // word-sized. We primarily target 32-bit architecture, and therefore keep
+        // the primary unsigned conversion type as `u32`, but convert through `into()`
+        // if the types differ.
+
+        // SAFETY:
+        //  - Can raise if allocation fails.
+        unsafe { mp_obj_new_int_from_uint(val.into()) }
     }
 }
 
-impl TryInto<Obj> for u64 {
-    type Error = Error;
-
-    fn try_into(self) -> Result<Obj, Self::Error> {
-        let int = i64::try_from(self)?;
-        let obj = int.into();
-        Ok(obj)
+impl From<u64> for Obj {
+    fn from(val: u64) -> Self {
+        // Because `mp_obj_new_int_from_ull` allocates even if `val` fits into
+        // small-int, we try to go through `mp_obj_new_int_from_uint` first.
+        match u32::try_from(val) {
+            Ok(smaller_val) => smaller_val.into(),
+            // SAFETY:
+            //  - Can raise if allocation fails.
+            Err(_) => unsafe { ffi::mp_obj_new_int_from_ull(val) },
+        }
     }
 }
 
-impl TryInto<Obj> for usize {
-    type Error = Error;
-
-    fn try_into(self) -> Result<Obj, Self::Error> {
-        let int = isize::try_from(self)?;
-        let obj = int.try_into()?;
-        Ok(obj)
+/// Byte slices are converted into `bytes` uPy objects, by allocating new space
+/// on the heap and copying.
+impl From<&[u8]> for Obj {
+    fn from(val: &[u8]) -> Self {
+        // SAFETY:
+        //  - Can raise if allocation fails.
+        unsafe { ffi::mp_obj_new_bytes(val.as_ptr(), val.len()) }
     }
 }
 
-impl TryInto<Obj> for i32 {
-    type Error = Error;
+/// String slices are converted into `str` uPy objects. Strings that are already
+/// interned will turn up as QSTRs, strings not found in the QSTR pool will be
+/// allocated on the heap and copied.
+impl From<&str> for Obj {
+    fn from(val: &str) -> Self {
+        // SAFETY:
+        //  - Can raise if allocation fails.
+        //  - `str` is guaranteed to be UTF-8.
+        unsafe { ffi::mp_obj_new_str(val.as_ptr().cast(), val.len()) }
+    }
+}
 
-    fn try_into(self) -> Result<Obj, Self::Error> {
-        let int = isize::try_from(self)?;
-        let obj = int.try_into()?;
-        Ok(obj)
+//
+// Additional conversions based on the methods above.
+//
+
+impl From<u8> for Obj {
+    fn from(val: u8) -> Self {
+        u32::from(val).into()
+    }
+}
+
+impl From<u16> for Obj {
+    fn from(val: u16) -> Self {
+        u32::from(val).into()
+    }
+}
+
+impl From<usize> for Obj {
+    fn from(val: usize) -> Self {
+        // Willingly truncate the bits on 128-bit architectures.
+        (val as u64).into()
     }
 }
 
@@ -255,8 +250,8 @@ impl TryFrom<Obj> for u8 {
     type Error = Error;
 
     fn try_from(obj: Obj) -> Result<Self, Self::Error> {
-        let int = isize::try_from(obj)?;
-        let this = Self::try_from(int)?;
+        let val = i32::try_from(obj)?;
+        let this = Self::try_from(val)?;
         Ok(this)
     }
 }
@@ -265,8 +260,8 @@ impl TryFrom<Obj> for u16 {
     type Error = Error;
 
     fn try_from(obj: Obj) -> Result<Self, Self::Error> {
-        let int = isize::try_from(obj)?;
-        let this = Self::try_from(int)?;
+        let val = i32::try_from(obj)?;
+        let this = Self::try_from(val)?;
         Ok(this)
     }
 }
@@ -275,8 +270,20 @@ impl TryFrom<Obj> for u32 {
     type Error = Error;
 
     fn try_from(obj: Obj) -> Result<Self, Self::Error> {
-        let int = isize::try_from(obj)?;
-        let this = Self::try_from(int)?;
+        // TODO: Support full range.
+        let val = i32::try_from(obj)?;
+        let this = Self::try_from(val)?;
+        Ok(this)
+    }
+}
+
+impl TryFrom<Obj> for u64 {
+    type Error = Error;
+
+    fn try_from(obj: Obj) -> Result<Self, Self::Error> {
+        // TODO: Support full range.
+        let val = i32::try_from(obj)?;
+        let this = Self::try_from(val)?;
         Ok(this)
     }
 }
@@ -285,18 +292,20 @@ impl TryFrom<Obj> for usize {
     type Error = Error;
 
     fn try_from(obj: Obj) -> Result<Self, Self::Error> {
-        let int = isize::try_from(obj)?;
-        let this = Self::try_from(int)?;
+        // TODO: Support full range.
+        let val = i32::try_from(obj)?;
+        let this = Self::try_from(val)?;
         Ok(this)
     }
 }
 
-impl TryFrom<Obj> for i32 {
+impl TryFrom<Obj> for i64 {
     type Error = Error;
 
     fn try_from(obj: Obj) -> Result<Self, Self::Error> {
-        let int = isize::try_from(obj)?;
-        let this = Self::try_from(int)?;
+        // TODO: Support full range.
+        let val = i32::try_from(obj)?;
+        let this = Self::from(val);
         Ok(this)
     }
 }
