@@ -55,7 +55,7 @@ def test_autolock_not_retained(client):
         client.use_pin_sequence([PIN4, PIN4])
         device.reset(client, skip_backup=True, pin_protection=True)
 
-    time.sleep(10.1)
+    time.sleep(10.5)
     with client:
         # after sleeping for the pre-wipe autolock amount, Trezor must still be unlocked
         client.set_expected_responses([messages.Address])
