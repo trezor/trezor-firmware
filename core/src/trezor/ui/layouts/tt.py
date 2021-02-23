@@ -50,6 +50,7 @@ __all__ = (
     "confirm_joint_total",
     "confirm_metadata",
     "confirm_replacement",
+    "confirm_modify_output",
     "confirm_modify_fee",
 )
 
@@ -407,13 +408,43 @@ def confirm_replacement(
     return interact(ctx, Confirm(text), "confirm_replacement", ButtonRequestType.SignTx)
 
 
+def confirm_modify_output(
+    ctx: wire.GenericContext,
+    address: str,
+    sign: int,
+    amount_change: str,
+    amount_new: str,
+) -> LayoutType:
+    page1 = Text("Modify amount", ui.ICON_SEND, ui.GREEN)
+    page1.normal("Address:")
+    page1.br_half()
+    page1.mono(*_split_address(address))
+
+    page2 = Text("Modify amount", ui.ICON_SEND, ui.GREEN)
+    if sign < 0:
+        page2.normal("Decrease amount by:")
+    else:
+        page2.normal("Increase amount by:")
+    page2.bold(amount_change)
+    page2.br_half()
+    page2.normal("New amount:")
+    page2.bold(amount_new)
+
+    return interact(
+        ctx,
+        Paginated([page1, Confirm(page2)]),
+        "modify_output",
+        ButtonRequestType.ConfirmOutput,
+    )
+
+
 def confirm_modify_fee(
     ctx: wire.GenericContext,
     sign: int,
     user_fee_change: str,
     total_fee_new: str,
 ) -> LayoutType:
-    text = Text("Fee modification", ui.ICON_SEND, ui.GREEN)
+    text = Text("Modify fee", ui.ICON_SEND, ui.GREEN)
     if sign == 0:
         text.normal("Your fee did not change.")
     else:

@@ -85,6 +85,27 @@ class UiConfirmReplacement(UiConfirm):
     __eq__ = utils.obj_eq
 
 
+class UiConfirmModifyOutput(UiConfirm):
+    def __init__(
+        self,
+        txo: TxOutput,
+        orig_txo: TxOutput,
+        coin: CoinInfo,
+        amount_unit: EnumTypeAmountUnit,
+    ):
+        self.txo = txo
+        self.orig_txo = orig_txo
+        self.coin = coin
+        self.amount_unit = amount_unit
+
+    def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
+        return layout.confirm_modify_output(
+            ctx, self.txo, self.orig_txo, self.coin, self.amount_unit
+        )
+
+    __eq__ = utils.obj_eq
+
+
 class UiConfirmModifyFee(UiConfirm):
     def __init__(
         self,
@@ -197,6 +218,10 @@ def confirm_decred_sstx_submission(output: TxOutput, coin: CoinInfo, amount_unit
 
 def confirm_replacement(description: str, txid: bytes) -> Awaitable[Any]:  # type: ignore
     return (yield UiConfirmReplacement(description, txid))
+
+
+def confirm_modify_output(txo: TxOutput, orig_txo: TxOutput, coin: CoinInfo, amount_unit: EnumTypeAmountUnit) -> Awaitable[Any]:  # type: ignore
+    return (yield UiConfirmModifyOutput(txo, orig_txo, coin, amount_unit))
 
 
 def confirm_modify_fee(user_fee_change: int, total_fee_new: int, coin: CoinInfo, amount_unit: EnumTypeAmountUnit) -> Awaitable[Any]:  # type: ignore

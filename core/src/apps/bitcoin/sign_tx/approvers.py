@@ -44,6 +44,12 @@ class Approver:
 
         self.amount_unit = tx.amount_unit
 
+    def is_payjoin(self) -> bool:
+        # A PayJoin is a replacement transaction which manipulates the external inputs of the
+        # original transaction. A replacement transaction is not allowed to remove any inputs from
+        # the original, so the condition below is equivalent to external_in > orig_external_in.
+        return self.external_in != self.orig_external_in
+
     async def add_internal_input(self, txi: TxInput) -> None:
         self.weight.add_input(txi)
         self.total_in += txi.amount
@@ -79,6 +85,11 @@ class Approver:
     def add_orig_external_output(self, txo: TxOutput) -> None:
         self.orig_total_out += txo.amount
 
+    async def approve_orig_txids(
+        self, tx_info: TxInfo, orig_txs: List[OriginalTxInfo]
+    ) -> None:
+        raise NotImplementedError
+
     async def approve_tx(self, tx_info: TxInfo, orig_txs: List[OriginalTxInfo]) -> None:
         raise NotImplementedError
 
@@ -109,11 +120,28 @@ class BasicApprover(Approver):
     ) -> None:
         await super().add_external_output(txo, script_pubkey, orig_txo)
 
-        # Replacement transactions must not decrease the value of any external outputs.
-        if orig_txo and txo.amount < orig_txo.amount:
-            raise wire.ProcessError(
-                "Reducing original output amounts is not supported."
-            )
+        if orig_txo:
+            if txo.amount < orig_txo.amount:
+                # Replacement transactions may need to decrease the value of external outputs to
+                # bump the fee. This is needed if the original transaction transfers the entire
+                # account balance ("Send Max").
+                if self.is_payjoin():
+                    # In case of PayJoin the above could be used to increase other external
+                    # outputs, which would create too much UI complexity.
+                    raise wire.ProcessError(
+                        "Reducing original output amounts is not supported."
+                    )
+                await helpers.confirm_modify_output(
+                    txo, orig_txo, self.coin, self.amount_unit
+                )
+            elif txo.amount > orig_txo.amount:
+                # PayJoin transactions may increase the value of external outputs without
+                # confirmation, because approve_tx() together with the branch above ensures that
+                # the increase is paid by external inputs.
+                if not self.is_payjoin():
+                    raise wire.ProcessError(
+                        "Increasing original output amounts is not supported."
+                    )
 
         if self.orig_total_in:
             # Skip output confirmation for replacement transactions,
@@ -124,6 +152,26 @@ class BasicApprover(Approver):
                 )
         else:
             await helpers.confirm_output(txo, self.coin, self.amount_unit)
+
+    async def approve_orig_txids(
+        self, tx_info: TxInfo, orig_txs: List[OriginalTxInfo]
+    ) -> None:
+        if not orig_txs:
+            return
+
+        if self.is_payjoin():
+            description = "PayJoin"
+        elif tx_info.rbf_disabled() and any(
+            not orig.rbf_disabled() for orig in orig_txs
+        ):
+            description = "Finalize transaction"
+        elif len(orig_txs) > 1:
+            description = "Meld transactions"
+        else:
+            description = "Update transaction"
+
+        for orig in orig_txs:
+            await helpers.confirm_replacement(description, orig.orig_hash)
 
     async def approve_tx(self, tx_info: TxInfo, orig_txs: List[OriginalTxInfo]) -> None:
         fee = self.total_in - self.total_out
@@ -175,30 +223,25 @@ class BasicApprover(Approver):
                         "Original transactions must have same effective nLockTime as replacement transaction."
                     )
 
-            if self.external_in > self.orig_external_in:
-                description = "PayJoin"
-            elif tx_info.rbf_disabled() and any(
-                not orig.rbf_disabled() for orig in orig_txs
-            ):
-                description = "Finalize transaction"
-            elif len(orig_txs) > 1:
-                description = "Transaction meld"
-            else:
-                description = "Fee modification"
-
-            for orig in orig_txs:
-                await helpers.confirm_replacement(description, orig.orig_hash)
-
-            # Always ask the user to confirm when they are paying more towards the fee.
-            # If they are not spending more, then ask for confirmation only if it's not
-            # a PayJoin. In complex scenarios where the user is not spending more and
-            # there are new external inputs the scenario can be open to multiple
-            # interpretations and the dialog would likely cause more confusion than
-            # what it's worth, see PR #1292.
-            if spending > orig_spending or self.external_in == self.orig_external_in:
+            if not self.is_payjoin():
+                # Not a PayJoin: Show the actual fee difference, since any difference in the fee is
+                # coming entirely from the user's own funds and from decreases of external outputs.
+                # We consider the decreases as belonging to the user.
+                await helpers.confirm_modify_fee(
+                    fee - orig_fee, fee, self.coin, self.amount_unit
+                )
+            elif spending > orig_spending:
+                # PayJoin and user is spending more: Show the increase in the user's contribution
+                # to the fee, ignoring any contribution from external inputs. Decreasing of
+                # external outputs is not allowed in PayJoin, so there is no need to handle those.
                 await helpers.confirm_modify_fee(
                     spending - orig_spending, fee, self.coin, self.amount_unit
                 )
+            else:
+                # PayJoin and user is not spending more: When new external inputs are involved and
+                # the user is paying less, the scenario can be open to multiple interpretations and
+                # the dialog would likely cause more confusion than what it's worth, see PR #1292.
+                pass
         else:
             # Standard transaction.
             if tx_info.tx.lock_time > 0:
@@ -262,6 +305,11 @@ class CoinJoinApprover(Approver):
     ) -> None:
         await super().add_external_output(txo, script_pubkey, orig_txo)
         self._add_output(txo, script_pubkey)
+
+    async def approve_orig_txids(
+        self, tx_info: TxInfo, orig_txs: List[OriginalTxInfo]
+    ) -> None:
+        pass
 
     async def approve_tx(self, tx_info: TxInfo, orig_txs: List[OriginalTxInfo]) -> None:
         # The mining fee of the transaction as a whole.
