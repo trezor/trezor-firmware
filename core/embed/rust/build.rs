@@ -45,6 +45,7 @@ fn generate_micropython_bindings() {
         .whitelist_type("mp_obj_base_t")
         .whitelist_function("mp_obj_new_int")
         .whitelist_function("mp_obj_new_int_from_ll")
+        .whitelist_function("mp_obj_new_int_from_ull")
         .whitelist_function("mp_obj_new_bytes")
         .whitelist_function("mp_obj_new_str")
         .whitelist_function("mp_obj_get_int_maybe")

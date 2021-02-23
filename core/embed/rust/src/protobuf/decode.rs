@@ -104,7 +104,20 @@ impl Decoder {
             let field = msg.field(field_tag).ok_or(Error::Missing)?;
             let field_name = Qstr::from(field.name);
             if dict.map().contains_key(field_name) {
-                // Field already has a value, do nothing.
+                // Field already has a value assigned, skip it.
+                match field.get_type().wire_type() {
+                    defs::WIRE_TYPE_VARINT => {
+                        stream.read_uvarint()?;
+                    }
+                    defs::WIRE_TYPE_LENGTH_DELIMITED => {
+                        let num = stream.read_uvarint()?;
+                        let len = num.try_into()?;
+                        stream.read(len)?;
+                    }
+                    _ => {
+                        return Err(Error::InvalidType);
+                    }
+                }
             } else {
                 // Decode the value and assign it.
                 let field_value = self.decode_field(default_stream, field)?;
