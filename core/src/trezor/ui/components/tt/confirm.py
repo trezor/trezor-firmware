@@ -252,6 +252,8 @@ class HoldToConfirm(ui.Layout):
 
     def dispatch(self, event: int, x: int, y: int) -> None:
         if self.loader.start_ms is not None:
+            if utils.DISABLE_ANIMATION:
+                self.on_confirm()
             self.loader.dispatch(event, x, y)
         else:
             self.content.dispatch(event, x, y)
