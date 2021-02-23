@@ -15,7 +15,8 @@ use super::{
 #[no_mangle]
 pub extern "C" fn protobuf_decode(buf: Obj, wire_id: Obj) -> Obj {
     util::try_or_none(|| {
-        let msg = MsgDef::for_wire_id(wire_id.try_into()?).ok_or(Error::Missing)?;
+        let wire_id = wire_id.try_into()?;
+        let msg = MsgDef::for_wire_id(wire_id).ok_or(Error::Missing)?;
         let buf = Buffer::try_from(buf)?;
         let mut stream = InputStream::new(&buf);
         let decoder = Decoder {
@@ -54,16 +55,19 @@ impl Decoder {
                         // this field's value and assign it.
                         if let Ok(obj) = dict.map().get(field_name) {
                             let list = Gc::<List>::try_from(obj)?;
+                            // SAFETY: There are not any other refs into `list`.
                             unsafe {
                                 list.append(field_value);
                             }
                         } else {
                             let list = List::alloc(&[field_value]);
+                            // SAFETY: There are not any other refs into `dict.map()`.
                             unsafe {
                                 dict.map().set(field_name, list);
                             }
                         }
                     } else {
+                        // SAFETY: There are not any other refs into `dict.map()`.
                         // Singular field, assign the value directly.
                         unsafe {
                             dict.map().set(field_name, field_value);
@@ -121,21 +125,29 @@ impl Decoder {
             } else {
                 // Decode the value and assign it.
                 let field_value = self.decode_field(default_stream, field)?;
+                // SAFETY: There are not any other refs into `dict.map()`.
                 unsafe {
                     dict.map().set(field_name, field_value);
                 }
             }
         }
 
-        // Walk the fields again and make sure that all required fields are assigned.
+        // Walk the fields again and make sure that all required fields are assigned and
+        // all optional missing fields are set to None.
         for field in msg.fields {
-            if field.is_required() {
-                let field_name = Qstr::from(field.name);
-                if dict.map().contains_key(field_name) {
-                    // Field is assigned.
-                } else {
-                    // Field is not assigned, abort.
+            let field_name = Qstr::from(field.name);
+            if dict.map().contains_key(field_name) {
+                // Field is assigned.
+            } else {
+                if field.is_required() {
+                    // Required field is missing, abort.
                     return Err(Error::Missing);
+                } else {
+                    // Optional field, set to None.
+                    // SAFETY: There are not any other refs into `dict.map()`.
+                    unsafe {
+                        dict.map().set(field_name, Obj::const_none());
+                    }
                 }
             }
         }
