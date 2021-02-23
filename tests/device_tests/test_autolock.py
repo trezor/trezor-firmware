@@ -59,7 +59,7 @@ def test_apply_auto_lock_delay(client):
         client.set_expected_responses([messages.Address])
         get_test_address(client)
 
-    time.sleep(10.1)  # sleep more than auto-lock delay
+    time.sleep(10.5)  # sleep more than auto-lock delay
     with client:
         client.use_pin_sequence([PIN4])
         client.set_expected_responses([pin_request(client), messages.Address])
@@ -127,7 +127,7 @@ def test_autolock_cancels_ui(client):
     # send an ack, do not read response
     client._raw_write(messages.ButtonAck())
     # sleep more than auto-lock delay
-    time.sleep(10.1)
+    time.sleep(10.5)
     resp = client._raw_read()
 
     assert isinstance(resp, messages.Failure)
