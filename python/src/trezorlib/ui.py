@@ -25,10 +25,13 @@ from .exceptions import Cancelled
 from .messages import PinMatrixRequestType, WordRequestType
 
 PIN_MATRIX_DESCRIPTION = """
-Use the numeric keypad to describe number positions. The layout is:
-    7 8 9
-    4 5 6
-    1 2 3
+Use the numeric keypad or lowercase letters to describe number positions.
+
+The layout is:
+
+    7 8 9        e r t
+    4 5 6  -or-  d f g
+    1 2 3        c v b
 """.strip()
 
 RECOVERY_MATRIX_DESCRIPTION = """
@@ -95,8 +98,15 @@ class ClickUI:
                 pin = prompt("Please enter {}".format(desc), hide_input=True)
             except click.Abort:
                 raise Cancelled from None
+
+            # translate letters to numbers if letters were used
+            if all(d in "cvbdfgert" for d in pin):
+                pin = pin.translate(str.maketrans("cvbdfgert", "123456789"))
+
             if any(d not in "123456789" for d in pin):
-                echo("The value may only consist of digits 1 to 9.")
+                echo(
+                    "The value may only consist of digits 1 to 9 or letters cvbdfgert."
+                )
             elif len(pin) > 9:
                 echo("The value must be at most 9 digits in length.")
             else:
