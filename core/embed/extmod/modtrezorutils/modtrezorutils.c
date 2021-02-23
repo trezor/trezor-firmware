@@ -119,6 +119,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_halt_obj, 0, 1,
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorutils_protobuf_decode_obj,
                                  protobuf_decode);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorutils_protobuf_encode_obj,
+                                 protobuf_encode);
 
 #define PASTER(s) MP_QSTR_##s
 #define MP_QSTR(s) PASTER(s)
@@ -138,6 +140,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_halt), MP_ROM_PTR(&mod_trezorutils_halt_obj)},
     {MP_ROM_QSTR(MP_QSTR_protobuf_decode),
      MP_ROM_PTR(&mod_trezorutils_protobuf_decode_obj)},
+    {MP_ROM_QSTR(MP_QSTR_protobuf_encode),
+     MP_ROM_PTR(&mod_trezorutils_protobuf_encode_obj)},
     // various built-in constants
     {MP_ROM_QSTR(MP_QSTR_GITREV), MP_ROM_QSTR(MP_QSTR(GITREV))},
     {MP_ROM_QSTR(MP_QSTR_VERSION_MAJOR), MP_ROM_INT(VERSION_MAJOR)},

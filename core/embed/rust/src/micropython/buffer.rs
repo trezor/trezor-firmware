@@ -5,7 +5,7 @@ use crate::{error::Error, micropython::obj::Obj};
 use super::ffi;
 
 pub struct Buffer {
-    ptr: *const u8,
+    ptr: *mut u8,
     len: usize,
 }
 
@@ -33,18 +33,12 @@ impl Deref for Buffer {
     type Target = [u8];
 
     fn deref(&self) -> &Self::Target {
-        self.to_slice()
+        self.as_ref()
     }
 }
 
 impl AsRef<[u8]> for Buffer {
     fn as_ref(&self) -> &[u8] {
-        self.to_slice()
-    }
-}
-
-impl Buffer {
-    fn to_slice(&self) -> &[u8] {
         if self.ptr.is_null() {
             // `ptr` can be null if len == 0.
             &[]
@@ -53,6 +47,20 @@ impl Buffer {
             //  - immutable for the whole lifetime of immutable ref of `self`.
             //  - of length `len` bytes.
             unsafe { slice::from_raw_parts(self.ptr, self.len) }
+        }
+    }
+}
+
+impl Buffer {
+    pub unsafe fn as_mut(&mut self) -> &mut [u8] {
+        if self.ptr.is_null() {
+            // `ptr` can be null if len == 0.
+            &mut []
+        } else {
+            // SAFETY: We assume that `ptr` is pointing to memory:
+            //  - without any live references.
+            //  - of length `len` bytes.
+            unsafe { slice::from_raw_parts_mut(self.ptr, self.len) }
         }
     }
 }

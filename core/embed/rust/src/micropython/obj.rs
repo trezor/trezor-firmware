@@ -126,7 +126,7 @@ impl TryFrom<Obj> for i32 {
 
         // TODO: Avoid type casts on the Python side.
         // SAFETY:
-        //  - Can raise if `arg` is int but cannot fit into `cty::uintptr_t`.
+        //  - Can raise if `arg` is int but cannot fit into `cty::mp_int_t`.
         if unsafe { ffi::mp_obj_get_int_maybe(obj.as_ptr(), &mut int) } {
             let int = int.try_into()?;
             Ok(int)

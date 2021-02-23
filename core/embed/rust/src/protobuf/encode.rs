@@ -1,4 +1,4 @@
-use core::convert::TryFrom;
+use core::convert::{TryFrom, TryInto};
 
 use crate::{
     error::Error,
@@ -11,12 +11,32 @@ use crate::{
         obj::Obj,
         qstr::Qstr,
     },
+    util,
 };
 
 use super::{
     defs::{FieldDef, FieldType, MsgDef},
     zigzag,
 };
+
+#[no_mangle]
+pub extern "C" fn protobuf_encode(buf: Obj, wire_id: Obj, obj: Obj) -> Obj {
+    util::try_or_none(|| {
+        let wire_id = wire_id.try_into()?;
+        let msg = MsgDef::for_wire_id(wire_id).ok_or(Error::Missing)?;
+
+        let buf = &mut Buffer::try_from(buf)?;
+        let stream = &mut BufferStream::new(unsafe {
+            // SAFETY: We assume there are no others refs into `buf` at this point. This
+            // specifically means that no fields of `obj` should reference `buf` memory.
+            buf.as_mut()
+        });
+
+        Encoder.encode_message(stream, &msg, obj)?;
+
+        Ok(stream.len().into())
+    })
+}
 
 pub struct Encoder;
 
@@ -138,8 +158,12 @@ pub trait OutputStream {
         loop {
             let shifted = num >> 7;
             let byte = (num & 0x7F) as u8;
-            self.write_byte(if shifted != 0 { byte | 0x80 } else { byte })?;
-            num = shifted;
+            if shifted != 0 {
+                num = shifted;
+                self.write_byte(byte | 0x80)?;
+            } else {
+                break self.write_byte(byte);
+            }
         }
     }
 }
