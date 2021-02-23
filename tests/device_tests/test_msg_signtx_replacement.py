@@ -107,11 +107,11 @@ def test_p2pkh_fee_bump(client):
                 request_input(0),
                 request_meta(TXHASH_50f6f1),
                 request_orig_input(0, TXHASH_50f6f1),
+                messages.ButtonRequest(code=B.SignTx),
                 request_output(0),
                 request_orig_output(0, TXHASH_50f6f1),
                 request_output(1),
                 request_orig_output(1, TXHASH_50f6f1),
-                messages.ButtonRequest(code=B.SignTx),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_beafc7),
@@ -179,11 +179,11 @@ def test_p2wpkh_finalize(client):
                 request_input(0),
                 request_meta(TXHASH_70f987),
                 request_orig_input(0, TXHASH_70f987),
+                messages.ButtonRequest(code=B.SignTx),
                 request_output(0),
                 request_orig_output(0, TXHASH_70f987),
                 request_output(1),
                 request_orig_output(1, TXHASH_70f987),
-                messages.ButtonRequest(code=B.SignTx),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_43d273),
@@ -309,11 +309,11 @@ def test_p2wpkh_payjoin(
                 request_meta(TXHASH_65b768),
                 request_orig_input(0, TXHASH_65b768),
                 request_input(1),
+                messages.ButtonRequest(code=B.SignTx),
                 request_output(0),
                 request_orig_output(0, TXHASH_65b768),
                 request_output(1),
                 request_orig_output(1, TXHASH_65b768),
-                messages.ButtonRequest(code=B.SignTx),
                 (fee_confirm, messages.ButtonRequest(code=B.SignTx)),
                 request_input(0),
                 request_meta(TXHASH_e4b5b2),
@@ -385,10 +385,10 @@ def test_p2wpkh_in_p2sh_remove_change(client):
                 request_orig_input(0, TXHASH_334cd7),
                 request_input(1),
                 request_orig_input(1, TXHASH_334cd7),
+                messages.ButtonRequest(code=B.SignTx),
                 request_output(0),
                 request_orig_output(0, TXHASH_334cd7),
                 request_orig_output(1, TXHASH_334cd7),
-                messages.ButtonRequest(code=B.SignTx),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_5e7667),
@@ -418,6 +418,87 @@ def test_p2wpkh_in_p2sh_remove_change(client):
     assert (
         serialized_tx.hex()
         == "01000000000102d64ae26dceee1e309bed0821f39275b5f6e65d0072f8e23747ae76006967765e0100000017160014039ba06270e6c6c1ad4e6940515aa5cdbad33f9effffffff35ac1adc9e0cf408013090c52527d3cf9468d51e1a6c8408f5ed673eff41aaef0000000017160014209297fb46272a0b7e05139440dbd39daea3e25affffffff0140420f000000000017a9142369da13fee80c9d7fd8043bf1275c04deb360e68702483045022100c28eceaade3d0bc82e4b634d2c6d06feed4afe37c77b04b379eaf8c058b7190702202b7a369dd6104c13c60821c1ad4e7c2d8d37cf1962a9b3f5d70717709c021d63012103bb0e339d7495b1f355c49d385b79343e52e68d99de2fe1f7f476c465c9ccd16702483045022100f6a447b7f95fb067c87453c408aa648262adaf2472a7ccc754518cd06353b87502202e00359dd663eda24d381e070b92a5e41f1d047d276f685ff549a03659842b1b012103c2c2e65556ca4b7371549324b99390725493c8a6792e093a0bdcbb3e2d7df4ab00000000"
+    )
+
+
+def test_p2wpkh_in_p2sh_fee_bump_from_external(client):
+    # Use the change output and an external output to bump the fee.
+    # Originally fee was 3780, now 108060 (94280 from change and 10000 from external).
+
+    inp1 = messages.TxInputType(
+        address_n=parse_path("49h/1h/0h/0/4"),
+        amount=100000,
+        script_type=messages.InputScriptType.SPENDP2SHWITNESS,
+        prev_hash=TXHASH_5e7667,
+        prev_index=1,
+        orig_hash=TXHASH_334cd7,
+        orig_index=0,
+    )
+
+    inp2 = messages.TxInputType(
+        address_n=parse_path("49h/1h/0h/0/3"),
+        amount=998060,
+        script_type=messages.InputScriptType.SPENDP2SHWITNESS,
+        prev_hash=TXHASH_efaa41,
+        prev_index=0,
+        orig_hash=TXHASH_334cd7,
+        orig_index=1,
+    )
+
+    out1 = messages.TxOutputType(
+        # Actually m/49'/1'/0'/0/5.
+        address="2MvUUSiQZDSqyeSdofKX9KrSCio1nANPDTe",
+        amount=990000,
+        orig_hash=TXHASH_334cd7,
+        orig_index=0,
+    )
+
+    with client:
+        client.set_expected_responses(
+            [
+                request_input(0),
+                request_meta(TXHASH_334cd7),
+                request_orig_input(0, TXHASH_334cd7),
+                request_input(1),
+                request_orig_input(1, TXHASH_334cd7),
+                messages.ButtonRequest(code=B.SignTx),
+                request_output(0),
+                request_orig_output(0, TXHASH_334cd7),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                (
+                    client.features.model == "1",
+                    messages.ButtonRequest(code=B.ConfirmOutput),
+                ),
+                request_orig_output(1, TXHASH_334cd7),
+                messages.ButtonRequest(code=B.SignTx),
+                request_input(0),
+                request_meta(TXHASH_5e7667),
+                request_input(0, TXHASH_5e7667),
+                request_output(0, TXHASH_5e7667),
+                request_output(1, TXHASH_5e7667),
+                request_input(1),
+                request_meta(TXHASH_efaa41),
+                request_input(0, TXHASH_efaa41),
+                request_output(0, TXHASH_efaa41),
+                request_input(0),
+                request_input(1),
+                request_output(0),
+                request_input(0),
+                request_input(1),
+                request_finished(),
+            ]
+        )
+        _, serialized_tx = btc.sign_tx(
+            client,
+            "Testnet",
+            [inp1, inp2],
+            [out1],
+            prev_txes=TX_CACHE_TESTNET,
+        )
+
+    assert (
+        serialized_tx.hex()
+        == "01000000000102d64ae26dceee1e309bed0821f39275b5f6e65d0072f8e23747ae76006967765e0100000017160014039ba06270e6c6c1ad4e6940515aa5cdbad33f9effffffff35ac1adc9e0cf408013090c52527d3cf9468d51e1a6c8408f5ed673eff41aaef0000000017160014209297fb46272a0b7e05139440dbd39daea3e25affffffff01301b0f000000000017a9142369da13fee80c9d7fd8043bf1275c04deb360e68702483045022100bd303aa0d923e73300e37971d43b9cd134230f8287e0e3b702aacd19ba8ef97b02202b4368b3e9d7478b8529ea2aeea23f6612ec05854510794958d6ce58c19082ad012103bb0e339d7495b1f355c49d385b79343e52e68d99de2fe1f7f476c465c9ccd1670247304402204869b27aa926d98bfd36912f71e335c1d6afb2c1a28102407066db5257e1b8810220197bcac3c85a721547974bd7309a6ea2b809810a595cbdca2da9599af4038ba2012103c2c2e65556ca4b7371549324b99390725493c8a6792e093a0bdcbb3e2d7df4ab00000000"
     )
 
 
@@ -500,6 +581,8 @@ def test_tx_meld(client):
                 request_orig_input(1, TXHASH_334cd7),
                 request_input(3),
                 request_orig_input(1, TXHASH_ed89ac),
+                messages.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.SignTx),
                 request_output(0),
                 request_orig_output(0, TXHASH_ed89ac),
                 request_orig_output(1, TXHASH_ed89ac),
@@ -507,8 +590,6 @@ def test_tx_meld(client):
                 request_orig_output(0, TXHASH_334cd7),
                 request_output(2),
                 request_orig_output(1, TXHASH_334cd7),
-                messages.ButtonRequest(code=B.SignTx),
-                messages.ButtonRequest(code=B.SignTx),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_5e7667),
