@@ -11,8 +11,8 @@ from ..components.common import break_path_to_lines
 from ..components.common.confirm import is_confirmed
 from ..components.tt.button import ButtonCancel, ButtonDefault
 from ..components.tt.confirm import Confirm, HoldToConfirm
-from ..components.tt.scroll import Paginated
-from ..components.tt.text import Text
+from ..components.tt.scroll import Paginated, paginate_text
+from ..components.tt.text import Span, Text
 from ..constants.tt import (
     MONO_CHARS_PER_LINE,
     MONO_HEX_PER_LINE,
@@ -38,6 +38,7 @@ __all__ = (
     "confirm_backup",
     "confirm_path_warning",
     "confirm_sign_identity",
+    "confirm_signverify",
     "show_address",
     "show_error",
     "show_pubkey",
@@ -53,6 +54,7 @@ __all__ = (
     "confirm_replacement",
     "confirm_modify_output",
     "confirm_modify_fee",
+    "confirm_coinjoin",
 )
 
 
@@ -63,6 +65,7 @@ async def confirm_action(
     action: str = None,
     description: str = None,
     description_param: str = None,
+    description_param_font: int = ui.BOLD,
     verb: Union[str, bytes, None] = Confirm.DEFAULT_CONFIRM,
     verb_cancel: Union[str, bytes, None] = Confirm.DEFAULT_CANCEL,
     hold: bool = False,
@@ -82,7 +85,9 @@ async def confirm_action(
 
     if reverse and description is not None:
         text.format_parametrized(
-            description, description_param if description_param is not None else ""
+            description,
+            description_param if description_param is not None else "",
+            param_font=description_param_font,
         )
     elif action is not None:
         text.bold(action)
@@ -96,7 +101,9 @@ async def confirm_action(
         text.bold(action)
     elif description is not None:
         text.format_parametrized(
-            description, description_param if description_param is not None else ""
+            description,
+            description_param if description_param is not None else "",
+            param_font=description_param_font,
         )
 
     cls = HoldToConfirm if hold else Confirm
@@ -208,11 +215,21 @@ def _split_address(address: str) -> Iterator[str]:
     return chunks(address, MONO_CHARS_PER_LINE)
 
 
-def _hex_lines(
-    hex_data: str, lines: int = TEXT_MAX_LINES, width: int = MONO_HEX_PER_LINE
+def _truncate_hex(
+    hex_data: str,
+    lines: int = TEXT_MAX_LINES,
+    width: int = MONO_HEX_PER_LINE,
+    middle: bool = False,
 ) -> Iterator[str]:
     if len(hex_data) >= width * lines:
-        hex_data = hex_data[: (width * lines - 3)] + "..."
+        if middle:
+            hex_data = (
+                hex_data[: lines * width // 2 - 1]
+                + "..."
+                + hex_data[-lines * width // 2 + 2 :]
+            )
+        else:
+            hex_data = hex_data[: (width * lines - 3)] + "..."
     return chunks(hex_data, width)
 
 
@@ -457,14 +474,29 @@ async def confirm_hex(
     br_type: str,
     title: str,
     data: str,
+    description: str = None,
     br_code: EnumTypeButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
     width: int = MONO_HEX_PER_LINE,
+    truncate_middle: bool = False,
 ) -> bool:
-    text = Text(title, icon, icon_color)
-    text.mono(*_hex_lines(data, width=width))
-    return is_confirmed(await interact(ctx, Confirm(text), br_type, br_code))
+    text = Text(title, icon, icon_color, new_lines=False)
+    description_lines = 0
+    if description is not None:
+        description_lines = Span(description, 0, ui.NORMAL).count_lines()
+        text.normal(description)
+        text.br()
+    text.mono(
+        *_truncate_hex(
+            data,
+            lines=TEXT_MAX_LINES - description_lines,
+            width=width,
+            middle=truncate_middle,
+        )
+    )
+    content: ui.Layout = Confirm(text)
+    return is_confirmed(await interact(ctx, content, br_type, br_code))
 
 
 async def confirm_total(
@@ -519,7 +551,7 @@ async def confirm_replacement(
 ) -> bool:
     text = Text(description, ui.ICON_SEND, ui.GREEN)
     text.normal("Confirm transaction ID:")
-    text.mono(*_hex_lines(txid, TEXT_MAX_LINES - 1))
+    text.mono(*_truncate_hex(txid, TEXT_MAX_LINES - 1))
     return is_confirmed(
         await interact(
             ctx, Confirm(text), "confirm_replacement", ButtonRequestType.SignTx
@@ -582,6 +614,22 @@ async def confirm_modify_fee(
     )
 
 
+async def confirm_coinjoin(
+    ctx: wire.GenericContext, fee_per_anonymity: Optional[str], total_fee: str
+) -> bool:
+    text = Text("Authorize CoinJoin", ui.ICON_RECOVERY, new_lines=False)
+    if fee_per_anonymity is not None:
+        text.normal("Fee per anonymity set:\n")
+        text.bold("{} %\n".format(fee_per_anonymity))
+    text.normal("Maximum total fees:\n")
+    text.bold(total_fee)
+    return is_confirmed(
+        await interact(
+            ctx, HoldToConfirm(text), "coinjoin_final", ButtonRequestType.Other
+        )
+    )
+
+
 # TODO cleanup @ redesign
 async def confirm_sign_identity(
     ctx: wire.GenericContext, proto: str, identity: str, challenge_visual: Optional[str]
@@ -597,4 +645,34 @@ async def confirm_sign_identity(
     text.normal(*lines)
     return is_confirmed(
         await interact(ctx, Confirm(text), "sign_identity", ButtonRequestType.Other)
+    )
+
+
+async def confirm_signverify(
+    ctx: wire.GenericContext, coin: str, message: str, address: str = None
+) -> bool:
+    if address:
+        header = "Verify {} message".format(coin)
+        font = ui.MONO
+        br_type = "verify_message"
+
+        text = Text(header)
+        text.bold("Confirm address:")
+        text.mono(*_split_address(address))
+        if not is_confirmed(
+            await interact(ctx, Confirm(text), br_type, ButtonRequestType.Other)
+        ):
+            return False
+    else:
+        header = "Sign {} message".format(coin)
+        font = ui.NORMAL
+        br_type = "sign_message"
+
+    return is_confirmed(
+        await interact(
+            ctx,
+            paginate_text(message, header, font=font),
+            br_type,
+            ButtonRequestType.Other,
+        )
     )
