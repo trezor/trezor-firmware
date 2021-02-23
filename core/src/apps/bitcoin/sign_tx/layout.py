@@ -96,6 +96,27 @@ async def confirm_replacement(ctx: wire.Context, description: str, txid: bytes) 
     )
 
 
+async def confirm_modify_output(
+    ctx: wire.Context,
+    txo: TxOutput,
+    orig_txo: TxOutput,
+    coin: CoinInfo,
+    amount_unit: EnumTypeAmountUnit,
+) -> None:
+    assert txo.address is not None
+    address_short = addresses.address_short(coin, txo.address)
+    amount_change = txo.amount - orig_txo.amount
+    await require(
+        layouts.confirm_modify_output(
+            ctx,
+            address_short,
+            amount_change,
+            format_coin_amount(abs(amount_change), coin, amount_unit),
+            format_coin_amount(txo.amount, coin, amount_unit),
+        )
+    )
+
+
 async def confirm_modify_fee(
     ctx: wire.Context,
     user_fee_change: int,

@@ -44,6 +44,9 @@ class Bitcoin:
         # Add inputs to hash143 and h_tx_check and compute the sum of input amounts.
         await self.step1_process_inputs()
 
+        # Approve the original TXIDs in case of a replacement transaction.
+        await self.approver.approve_orig_txids(self.tx_info, self.orig_txs)
+
         # Add outputs to hash143 and h_tx_check, approve outputs and compute
         # sum of output amounts.
         await self.step2_approve_outputs()

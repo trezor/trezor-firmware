@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Decred staking.  [#1249]
 
 ### Changed
+- Allow decreasing the output value in RBF transactions.  [#1491]
 
 ### Deprecated
 
@@ -376,3 +377,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1415]: https://github.com/trezor/trezor-firmware/pull/1415
 [#1467]: https://github.com/trezor/trezor-firmware/issues/1467
 [#1518]: https://github.com/trezor/trezor-firmware/pull/1518
+[#1491]: https://github.com/trezor/trezor-firmware/issues/1491
