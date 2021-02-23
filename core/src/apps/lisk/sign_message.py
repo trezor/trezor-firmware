@@ -1,11 +1,12 @@
 from trezor.crypto.curve import ed25519
 from trezor.crypto.hashlib import sha256
 from trezor.messages.LiskMessageSignature import LiskMessageSignature
+from trezor.ui.layouts import confirm_signverify, require
 from trezor.utils import HashWriter
 
 from apps.common import paths
 from apps.common.keychain import auto_keychain
-from apps.common.signverify import require_confirm_sign_message
+from apps.common.signverify import decode_message
 from apps.common.writers import write_bitcoin_varint
 
 
@@ -22,7 +23,7 @@ def message_digest(message):
 @auto_keychain(__name__)
 async def sign_message(ctx, msg, keychain):
     await paths.validate_path(ctx, keychain, msg.address_n)
-    await require_confirm_sign_message(ctx, "Lisk", msg.message)
+    await require(confirm_signverify(ctx, "Lisk", decode_message(msg.message)))
 
     node = keychain.derive(msg.address_n)
     seckey = node.private_key()

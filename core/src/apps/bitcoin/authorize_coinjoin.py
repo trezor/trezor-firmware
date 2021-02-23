@@ -4,10 +4,9 @@ from trezor import ui
 from trezor.messages.AuthorizeCoinJoin import AuthorizeCoinJoin
 from trezor.messages.Success import Success
 from trezor.strings import format_amount
-from trezor.ui.components.tt.text import Text
+from trezor.ui.layouts import confirm_action, confirm_coinjoin, require
 
 from apps.base import set_authorization
-from apps.common.confirm import require_confirm, require_hold_to_confirm
 from apps.common.paths import validate_path
 
 from .authorization import FEE_PER_ANONYMITY_DECIMALS, CoinJoinAuthorization
@@ -46,30 +45,30 @@ async def authorize_coinjoin(ctx: wire.Context, msg: AuthorizeCoinJoin) -> Succe
             ),
         )
 
-        text = Text("Authorize CoinJoin", ui.ICON_RECOVERY)
-        text.normal("Do you really want to")
-        text.normal("take part in a CoinJoin")
-        text.normal("transaction at:")
-        text.mono(msg.coordinator)
-        await require_confirm(ctx, text)
-
-        text = Text("Authorize CoinJoin", ui.ICON_RECOVERY)
-        if msg.fee_per_anonymity is not None:
-            text.normal("Fee per anonymity set:")
-            text.bold(
-                "{} %".format(
-                    format_amount(msg.fee_per_anonymity, FEE_PER_ANONYMITY_DECIMALS)
-                )
-            )
-        text.normal("Maximum total fees:")
-        text.bold(
-            format_coin_amount(
-                msg.max_total_fee,
-                coin,
-                msg.amount_unit,
+        await require(
+            confirm_action(
+                ctx,
+                "coinjoin_coordinator",
+                title="Authorize CoinJoin",
+                description="Do you really want to take part in a CoinJoin transaction at:\n{}",
+                description_param=msg.coordinator,
+                description_param_font=ui.MONO,
+                icon=ui.ICON_RECOVERY,
             )
         )
-        await require_hold_to_confirm(ctx, text)
+
+        fee_per_anonymity = None
+        if msg.fee_per_anonymity is not None:
+            fee_per_anonymity = format_amount(
+                msg.fee_per_anonymity, FEE_PER_ANONYMITY_DECIMALS
+            )
+        await require(
+            confirm_coinjoin(
+                ctx,
+                fee_per_anonymity,
+                format_coin_amount(msg.max_total_fee, coin, msg.amount_unit),
+            )
+        )
 
         set_authorization(CoinJoinAuthorization(msg, keychain, coin))
 

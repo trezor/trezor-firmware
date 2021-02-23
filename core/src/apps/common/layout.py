@@ -3,8 +3,7 @@ from micropython import const
 from trezor import ui
 from trezor.messages import ButtonRequestType
 from trezor.ui.components.tt.button import ButtonDefault
-from trezor.ui.components.tt.scroll import Paginated
-from trezor.ui.components.tt.text import TEXT_MAX_LINES, Span, Text
+from trezor.ui.components.tt.text import Text
 from trezor.ui.container import Container
 from trezor.ui.qr import Qr
 from trezor.utils import chunks
@@ -13,7 +12,7 @@ from apps.common import HARDENED
 from apps.common.confirm import confirm
 
 if False:
-    from typing import Iterable, Iterator, List, Union
+    from typing import Iterable, Iterator
     from trezor import wire
 
 
@@ -55,48 +54,3 @@ def address_n_to_str(address_n: Iterable[int]) -> str:
         return "m"
 
     return "m/" + "/".join([path_item(i) for i in address_n])
-
-
-def paginate_text(
-    text: str,
-    header: str,
-    font: int = ui.NORMAL,
-    header_icon: str = ui.ICON_DEFAULT,
-    icon_color: int = ui.ORANGE_ICON,
-    break_words: bool = False,
-) -> Union[Text, Paginated]:
-    span = Span(text, 0, font, break_words=break_words)
-    if span.count_lines() <= TEXT_MAX_LINES:
-        result = Text(
-            header,
-            header_icon=header_icon,
-            icon_color=icon_color,
-            new_lines=False,
-        )
-        result.content = [font, text]
-        return result
-
-    else:
-        pages: List[ui.Component] = []
-        span.reset(text, 0, font, break_words=break_words, line_width=204)
-        while span.has_more_content():
-            # advance to first line of the page
-            span.next_line()
-            page = Text(
-                header,
-                header_icon=header_icon,
-                icon_color=icon_color,
-                new_lines=False,
-                content_offset=0,
-                char_offset=span.start,
-                line_width=204,
-                render_page_overflow=False,
-            )
-            page.content = [font, text]
-            pages.append(page)
-
-            # roll over the remaining lines on the page
-            for _ in range(TEXT_MAX_LINES - 1):
-                span.next_line()
-
-        return Paginated(pages)

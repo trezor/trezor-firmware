@@ -3,14 +3,18 @@ from micropython import const
 from trezor import loop, res, ui, utils
 
 from .button import Button, ButtonCancel, ButtonConfirm, ButtonDefault
-from .confirm import CANCELLED, CONFIRMED
+from .confirm import CANCELLED, CONFIRMED, Confirm
 from .swipe import SWIPE_DOWN, SWIPE_UP, SWIPE_VERTICAL, Swipe
+from .text import TEXT_MAX_LINES, Span, Text
 
 if __debug__:
     from apps.debug import confirm_signal, swipe_signal, notify_layout_change
 
 if False:
-    from typing import List, Tuple
+    from typing import List, Tuple, Union
+
+
+_PAGINATED_LINE_WIDTH = const(204)
 
 
 def render_scrollbar(pages: int, page: int) -> None:
@@ -231,3 +235,53 @@ class PaginatedWithButtons(ui.Layout):
 
         def create_tasks(self) -> Tuple[loop.Task, ...]:
             return super().create_tasks() + (confirm_signal(),)
+
+
+def paginate_text(
+    text: str,
+    header: str,
+    font: int = ui.NORMAL,
+    header_icon: str = ui.ICON_DEFAULT,
+    icon_color: int = ui.ORANGE_ICON,
+    break_words: bool = False,
+) -> Union[Confirm, Paginated]:
+    span = Span(text, 0, font, break_words=break_words)
+    if span.count_lines() <= TEXT_MAX_LINES:
+        result = Text(
+            header,
+            header_icon=header_icon,
+            icon_color=icon_color,
+            new_lines=False,
+            break_words=break_words,
+        )
+        result.content = [font, text]
+        return Confirm(result)
+
+    else:
+        pages: List[ui.Component] = []
+        span.reset(
+            text, 0, font, break_words=break_words, line_width=_PAGINATED_LINE_WIDTH
+        )
+        while span.has_more_content():
+            # advance to first line of the page
+            span.next_line()
+            page = Text(
+                header,
+                header_icon=header_icon,
+                icon_color=icon_color,
+                new_lines=False,
+                content_offset=0,
+                char_offset=span.start,
+                line_width=_PAGINATED_LINE_WIDTH,
+                break_words=break_words,
+                render_page_overflow=False,
+            )
+            page.content = [font, text]
+            pages.append(page)
+
+            # roll over the remaining lines on the page
+            for _ in range(TEXT_MAX_LINES - 1):
+                span.next_line()
+
+        pages[-1] = Confirm(pages[-1])
+        return Paginated(pages)
