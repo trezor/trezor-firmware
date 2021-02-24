@@ -20,6 +20,7 @@
 #include "py/objstr.h"
 
 #include "vendor/trezor-crypto/ecdsa.h"
+#include "vendor/trezor-crypto/schnorr.h"
 #include "vendor/trezor-crypto/secp256k1.h"
 
 /// package: trezorcrypto.secp256k1
@@ -159,6 +160,42 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_secp256k1_sign_obj,
                                            2, 4,
                                            mod_trezorcrypto_secp256k1_sign);
 
+/// def sign_schnorr(
+///     secret_key: bytes,
+///     digest: bytes,
+/// ) -> bytes:
+///     """
+///     Uses secret key to produce the Schnorr signature (BCH variant) of the
+///     digest.
+///     """
+STATIC mp_obj_t mod_trezorcrypto_secp256k1_sign_schnorr(mp_obj_t secret_key,
+                                                        mp_obj_t digest) {
+  mp_buffer_info_t sk = {0};
+  mp_buffer_info_t dig = {0};
+  mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
+  mp_get_buffer_raise(digest, &dig, MP_BUFFER_READ);
+
+  if (sk.len != 32) {
+    mp_raise_ValueError("Invalid length of secret key");
+  }
+  if (dig.len != 32) {
+    mp_raise_ValueError("Invalid length of digest");
+  }
+
+  vstr_t sig = {0};
+  vstr_init_len(&sig, SCHNORR_SIG_LENGTH);
+
+  if (0 != schnorr_sign_digest(&secp256k1, (const uint8_t *)sk.buf,
+                             (const uint8_t *)dig.buf, (uint8_t *)sig.buf)) {
+    vstr_clear(&sig);
+    mp_raise_ValueError("Schnorr signing failed");
+  }
+
+  return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_secp256k1_sign_schnorr_obj,
+                                 mod_trezorcrypto_secp256k1_sign_schnorr);
+
 /// def verify(public_key: bytes, signature: bytes, digest: bytes) -> bool:
 ///     """
 ///     Uses public key to verify the signature of the digest.
@@ -228,6 +265,38 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_verify_recover(mp_obj_t signature,
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_secp256k1_verify_recover_obj,
                                  mod_trezorcrypto_secp256k1_verify_recover);
 
+/// def verify_schnorr(public_key: bytes, signature: bytes, digest: bytes) -> bool:
+///     """
+///     Uses public key to verify the Schnorr signature (BCH variant) of the
+///     digest.
+///     Returns True on success.
+///     """
+STATIC mp_obj_t mod_trezorcrypto_secp256k1_verify_schnorr (mp_obj_t public_key,
+                                                           mp_obj_t signature,
+                                                           mp_obj_t digest) {
+  mp_buffer_info_t pk = {0}, sig = {0}, dig = {0};
+  mp_get_buffer_raise(public_key, &pk, MP_BUFFER_READ);
+  mp_get_buffer_raise(signature, &sig, MP_BUFFER_READ);
+  mp_get_buffer_raise(digest, &dig, MP_BUFFER_READ);
+
+  if (pk.len != 33 && pk.len != 65) {
+    return mp_const_false;
+  }
+  if (sig.len != SCHNORR_SIG_LENGTH) {
+    return mp_const_false;
+  }
+  if (dig.len != 32) {
+    return mp_const_false;
+  }
+
+  return mp_obj_new_bool(
+      0 == schnorr_verify_digest(&secp256k1, (const uint8_t *)pk.buf,
+                                 (const uint8_t *)dig.buf,
+                                 (const uint8_t *)sig.buf));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_secp256k1_verify_schnorr_obj,
+                                 mod_trezorcrypto_secp256k1_verify_schnorr);
+
 /// def multiply(secret_key: bytes, public_key: bytes) -> bytes:
 ///     """
 ///     Multiplies point defined by public_key with scalar defined by
@@ -264,10 +333,14 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_secp256k1_globals_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_secp256k1_publickey_obj)},
     {MP_ROM_QSTR(MP_QSTR_sign),
      MP_ROM_PTR(&mod_trezorcrypto_secp256k1_sign_obj)},
+    {MP_ROM_QSTR(MP_QSTR_sign_schnorr),
+     MP_ROM_PTR(&mod_trezorcrypto_secp256k1_sign_schnorr_obj)},
     {MP_ROM_QSTR(MP_QSTR_verify),
      MP_ROM_PTR(&mod_trezorcrypto_secp256k1_verify_obj)},
     {MP_ROM_QSTR(MP_QSTR_verify_recover),
      MP_ROM_PTR(&mod_trezorcrypto_secp256k1_verify_recover_obj)},
+    {MP_ROM_QSTR(MP_QSTR_verify_schnorr),
+     MP_ROM_PTR(&mod_trezorcrypto_secp256k1_verify_schnorr_obj)},
     {MP_ROM_QSTR(MP_QSTR_multiply),
      MP_ROM_PTR(&mod_trezorcrypto_secp256k1_multiply_obj)},
 #if !BITCOIN_ONLY
