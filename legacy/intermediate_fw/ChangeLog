@@ -20,7 +20,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Older changelog:
 
-Version 1.8.0 [Jun 2020]
+Version 1.9.0 [February 2021]
+* Updates bootloader to 1.9.0
+
+Version 1.8.0 [June 2020]
 * Initial version of intermediate firmware
 * Updates bootloader to 1.8.0
 * Deletes storage and the intermediate firmware code

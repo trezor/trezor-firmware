@@ -19,6 +19,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Security
 
+## 1.9.0 [February 2021]
+
+### Added
+- "Stay in bootloader" flag
+
 ## 1.8.0 [February 2019]
 
 ### Changed
