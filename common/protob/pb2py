@@ -506,8 +506,7 @@ class Descriptor:
                                 c.Padding(1),
                                 "type" / c.BitsInteger(4),
                             ),
-                            # TODO: Get rid of indexing and use byte offsets.
-                            "enum_or_msg_index" / c.Int16ul,
+                            "enum_or_msg_offset" / c.Int16ul,
                             "name" / c.Int16ul,
                         ),
                     ),
@@ -524,12 +523,15 @@ class Descriptor:
             / c.GreedyRange(
                 c.Struct(  # sorted by wire_id
                     "wire_id" / c.Int16ul,
-                    # TODO: Get rid of indexing and use byte offsets.
-                    "msg_index" / c.Int16ul,
+                    "msg_offset" / c.Int16ul,
                 )
             )
         )
+
         qstr_map = self.build_qstr_map(qstr_defs)
+        enum_map = self.build_enum_offset_map()
+        msg_map = self.build_msg_offset_map(include_deprecated)
+
         enums = enums_type.build(
             dict(
                 enums=self.build_blob_enums(),
@@ -537,19 +539,21 @@ class Descriptor:
         )
         msgs = msgs_type.build(
             dict(
-                msgs=self.build_blob_msgs(qstr_map, include_deprecated),
+                msgs=self.build_blob_msgs(
+                    qstr_map, enum_map, msg_map, include_deprecated
+                ),
             )
         )
         wire = wire_type.build(
             dict(
-                msgs=self.build_blob_wire(),
+                msgs=self.build_blob_wire(msg_map),
             )
         )
 
         return enums, msgs, wire
 
     def build_qstr_map(self, qstr_defs):
-        index = {}
+        qstr_map = {}
         qstr = 0
         with open(qstr_defs, "r") as f:
             for line in f:
@@ -560,11 +564,42 @@ class Descriptor:
                 # QDEF(MP_QSTR_copysign, (const byte*)"\x33\x14\x08" "copysign")
                 quote = line.rindex('"', 0, -2)
                 name = line[quote + 1 : -2]
-                index[name] = qstr
+                qstr_map[name] = qstr
                 # QSTR defs are rolled out into an enum in py/qstr.h, the numeric
                 # value is simply an incremented integer.
                 qstr += 1
-        return index
+        return qstr_map
+
+    def build_enum_offset_map(self):
+        enum_map = {}
+        cursor = 0
+        for enum in sorted(self.enums, key=lambda e: e.name):
+            enum_map[enum.name] = cursor
+            # TODO: calculate from the actual EnumDef type
+            count = len(enum.value)
+            enum_size = 1 + count * 2
+            cursor += enum_size
+        return enum_map
+
+    def build_msg_offset_map(self, include_deprecated):
+        msg_map = {}
+        cursor = 0
+        for msg in sorted(self.messages, key=lambda m: m.name):
+            msg_map[msg.name] = cursor
+            fields_count = 0
+            defaults_size = 0
+            for field in sorted(msg.field, key=lambda f: f.number):
+                if not include_deprecated and field.options.deprecated:
+                    continue
+                fields_count += 1
+                if field.default_value != "":
+                    item = self.encode_field_default(field)
+                    defaults_size += len(item)
+            # TODO: calculate from the actual MsgDef type
+            fields_size = fields_count * (1 + 1 + 2 + 2)
+            msg_size = 1 + 1 + fields_size + defaults_size
+            cursor += msg_size
+        return msg_map
 
     def build_blob_enums(self):
         enums = []
@@ -575,7 +610,7 @@ class Descriptor:
             enums.append(dict(count=len(vals), vals=vals))
         return enums
 
-    def build_blob_msgs(self, qstr_map, include_deprecated):
+    def build_blob_msgs(self, qstr_map, enum_map, msg_map, include_deprecated):
         msgs = []
         for msg in sorted(self.messages, key=lambda m: m.name):
             defaults = []
@@ -583,7 +618,9 @@ class Descriptor:
             for field in sorted(msg.field, key=lambda f: f.number):
                 if not include_deprecated and field.options.deprecated:
                     continue
-                field_type, ref_index = self.encode_field_type(field)
+                field_type, ref_offset = self.encode_field_type(
+                    field, enum_map, msg_map
+                )
                 proto_field = ProtoField.from_field(self, field)
                 fields.append(
                     dict(
@@ -594,11 +631,11 @@ class Descriptor:
                             is_experimental=proto_field.experimental,
                             type=field_type,
                         ),
-                        enum_or_msg_index=ref_index,
+                        enum_or_msg_offset=ref_offset,
                         name=qstr_map[field.name],
                     )
                 )
-                if field.default_value != None:
+                if field.default_value != "":
                     item = self.encode_field_default(field)
                     defaults.append(item)
             defaults = b"".join(defaults)
@@ -612,7 +649,7 @@ class Descriptor:
             )
         return msgs
 
-    def encode_field_type(self, field):
+    def encode_field_type(self, field, enum_map, msg_map):
         T_UVARINT = 0
         T_SVARINT = 1
         T_BOOL = 2
@@ -620,6 +657,7 @@ class Descriptor:
         T_STRING = 4
         T_ENUM = 5
         T_MSG = 6
+        type_name = field.type_name.rsplit(".")[-1]  # ignore package
         if field.type == field.TYPE_UINT32 or field.type == field.TYPE_UINT64:
             return (T_UVARINT, 0)
         elif field.type == field.TYPE_SINT32 or field.type == field.TYPE_SINT64:
@@ -631,35 +669,21 @@ class Descriptor:
         elif field.type == field.TYPE_STRING:
             return (T_STRING, 0)
         elif field.type == field.TYPE_ENUM:
-            return (T_ENUM, self.find_enum_index(field.type_name))
+            return (T_ENUM, enum_map[type_name])
         elif field.type == field.TYPE_MESSAGE:
-            return (T_MSG, self.find_msg_index(field.type_name))
+            return (T_MSG, msg_map[type_name])
         else:
             raise ValueError(
                 "Unknown field type {} for field {}".format(field.type, field.name)
             )
 
-    def find_enum_index(self, name):
-        name = name.rsplit(".")[-1]  # ignore package
-        for index, enum in enumerate(sorted(self.enums, key=lambda e: e.name)):
-            if enum.name == name:
-                return index
-        raise KeyError("Unknown enum {}".format(name))
-
-    def find_msg_index(self, name):
-        name = name.rsplit(".")[-1]  # ignore package
-        for index, msg in enumerate(sorted(self.messages, key=lambda m: m.name)):
-            if msg.name == name:
-                return index
-        raise KeyError("Unknown message {}".format(name))
-
     def encode_field_default(self, field):
         # TODO: encode the default field value as protobuf
         return b""
 
-    def build_blob_wire(self):
+    def build_blob_wire(self, msg_map):
         msgs = []
-        for index, msg in enumerate(sorted(self.messages, key=lambda m: m.name)):
+        for msg in sorted(self.messages, key=lambda m: m.name):
             wire_id = self._get_extension(msg, "wire_type")
             if wire_id is None:
                 wire_id = self.message_types.get(msg.name)
@@ -667,7 +691,7 @@ class Descriptor:
                 msgs.append(
                     dict(
                         wire_id=wire_id,
-                        msg_index=index,
+                        msg_offset=msg_map[msg.name],
                     )
                 )
         return sorted(msgs, key=lambda m: m["wire_id"])
