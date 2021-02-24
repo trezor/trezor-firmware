@@ -503,6 +503,37 @@ void layoutConfirmReplacement(const char *description, uint8_t txid[32]) {
                     description, str[0], str[1], str[2], str[3], NULL);
 }
 
+void layoutConfirmModifyOutput(const CoinInfo *coin, AmountUnit amount_unit,
+                               TxOutputType *out, TxOutputType *orig_out,
+                               int page) {
+  if (page == 0) {
+    render_address_dialog(coin, out->address, _("Modify amount for"),
+                          _("address:"), NULL);
+  } else {
+    char *question = NULL;
+    uint64_t amount_change = 0;
+    if (orig_out->amount < out->amount) {
+      question = _("Increase amount by:");
+      amount_change = out->amount - orig_out->amount;
+    } else {
+      question = _("Decrease amount by:");
+      amount_change = orig_out->amount - out->amount;
+    }
+
+    char str_amount_change[32] = {0};
+    format_coin_amount(amount_change, NULL, coin, amount_unit,
+                       str_amount_change, sizeof(str_amount_change));
+
+    char str_amount_new[32] = {0};
+    format_coin_amount(out->amount, NULL, coin, amount_unit, str_amount_new,
+                       sizeof(str_amount_new));
+
+    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                      question, str_amount_change, NULL, _("New amount:"),
+                      str_amount_new, NULL);
+  }
+}
+
 void layoutConfirmModifyFee(const CoinInfo *coin, AmountUnit amount_unit,
                             uint64_t fee_old, uint64_t fee_new) {
   char str_fee_change[32] = {0};
