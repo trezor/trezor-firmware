@@ -296,6 +296,10 @@ static bool add_amount(uint64_t *dest, uint64_t amount) {
   return true;
 }
 
+static bool is_rbf_enabled(TxInfo *tx_info) {
+  return tx_info->min_sequence <= MAX_BIP125_RBF_SEQUENCE;
+}
+
 void send_req_1_input(void) {
   signing_stage = STAGE_REQUEST_1_INPUT;
   resp.has_request_type = true;
@@ -523,6 +527,21 @@ void phase1_request_next_input(void) {
       if (idx2 != orig_info.inputs_count) {
         fsm_sendFailure(FailureType_Failure_DataError,
                         _("Removal of original inputs is not supported."));
+        signing_abort();
+        return;
+      }
+
+      char *description = NULL;
+      if (!is_rbf_enabled(&info) && is_rbf_enabled(&orig_info)) {
+        description = _("Finalize TXID:");
+      } else {
+        description = _("Update TXID:");
+      }
+
+      // Confirm original TXID.
+      layoutConfirmReplacement(description, orig_hash);
+      if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+        fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
         signing_abort();
         return;
       }
@@ -1449,15 +1468,28 @@ static bool signing_check_orig_output(TxOutputType *orig_output) {
       return false;
     }
 
-    // Replacement transactions must not decrease the value of any external
-    // outputs. Furthermore, the only way to increase the amount would be by
-    // supplying an external input, which is currently not supported, so the
-    // external output amounts must remain unchanged.
     if (!is_change) {
-      if (output.amount != orig_output->amount) {
+      if (output.amount < orig_output->amount) {
+        // Replacement transactions may need to decrease the value of external
+        // outputs to bump the fee. This is needed if the original transaction
+        // transfers the entire account balance ("Send Max").
+        for (int page = 0; page < 2; ++page) {
+          layoutConfirmModifyOutput(coin, amount_unit, &output, orig_output,
+                                    page);
+          if (!protectButton(ButtonRequestType_ButtonRequest_ConfirmOutput,
+                             false)) {
+            fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+            signing_abort();
+            return false;
+          }
+        }
+      } else if (output.amount > orig_output->amount) {
+        // Only PayJoin transactions may increase the value of external outputs
+        // by supplying an external input. However, external inputs are
+        // currently not supported.
         fsm_sendFailure(
             FailureType_Failure_ProcessError,
-            _("Changing original output amounts is not supported."));
+            _("Increasing original output amounts is not supported."));
         signing_abort();
         return false;
       }
@@ -1540,29 +1572,6 @@ static bool signing_confirm_tx(void) {
       fsm_sendFailure(FailureType_Failure_ProcessError,
                       _("Original transactions must have same effective "
                         "nLockTime as replacement transaction."));
-      signing_abort();
-      return false;
-    }
-
-    bool rbf_disabled = info.min_sequence > MAX_BIP125_RBF_SEQUENCE;
-    bool orig_rbf_disabled = orig_info.min_sequence > MAX_BIP125_RBF_SEQUENCE;
-    char *description = NULL;
-    if (rbf_disabled && !orig_rbf_disabled) {
-      description = _("Finalize TXID:");
-    } else if (fee != orig_fee) {
-      description = _("Modify fee for TXID:");
-    } else {
-      // The host might want to modify nSequence on some inputs (e.g. to
-      // re-enable RBF on a transaction that was dropped from the mempool), add
-      // more inputs and consolidate them in a change-output or use a different
-      // change-output address.
-      description = _("Update TXID:");
-    }
-
-    // Confirm original TXID.
-    layoutConfirmReplacement(description, orig_hash);
-    if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
-      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
       signing_abort();
       return false;
     }

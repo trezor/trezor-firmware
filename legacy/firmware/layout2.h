@@ -54,6 +54,9 @@ void layoutConfirmTx(const CoinInfo *coin, AmountUnit amount_unit,
                      uint64_t total_in, uint64_t total_out,
                      uint64_t change_out);
 void layoutConfirmReplacement(const char *description, uint8_t txid[32]);
+void layoutConfirmModifyOutput(const CoinInfo *coin, AmountUnit amount_unit,
+                               TxOutputType *out, TxOutputType *orig_out,
+                               int page);
 void layoutConfirmModifyFee(const CoinInfo *coin, AmountUnit amount_unit,
                             uint64_t fee_old, uint64_t fee_new);
 void layoutFeeOverThreshold(const CoinInfo *coin, AmountUnit amount_unit,
