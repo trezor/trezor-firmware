@@ -117,7 +117,7 @@ def _validate_pool_parameters(
     assert_certificate_cond(len(pool_parameters.vrf_key_hash) == VRF_KEY_HASH_SIZE)
     assert_certificate_cond(0 <= pool_parameters.pledge <= LOVELACE_MAX_SUPPLY)
     assert_certificate_cond(0 <= pool_parameters.cost <= LOVELACE_MAX_SUPPLY)
-    assert_certificate_cond(pool_parameters.margin_numerator > 0)
+    assert_certificate_cond(pool_parameters.margin_numerator >= 0)
     assert_certificate_cond(pool_parameters.margin_denominator > 0)
     assert_certificate_cond(
         pool_parameters.margin_numerator <= pool_parameters.margin_denominator
