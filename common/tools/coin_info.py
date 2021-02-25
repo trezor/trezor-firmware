@@ -443,26 +443,25 @@ def mark_duplicate_shortcuts(coins):
         dup_symbols[symbol].append(coin)
 
     dup_symbols = {k: v for k, v in dup_symbols.items() if len(v) > 1}
-
-    # load overrides and put them into their own bucket
-    overrides = load_json("duplicity_overrides.json")
-    override_bucket = []
-    for coin in coins:
-        if overrides.get(coin["key"], False):
-            coin["duplicate"] = True
-            override_bucket.append(coin)
-
     # mark duplicate symbols
     for values in dup_symbols.values():
         for coin in values:
-            # allow overrides to skip this; if not listed in overrides, assume True
-            is_dup = overrides.get(coin["key"], True)
-            if is_dup:
-                coin["duplicate"] = True
-            # again: still in dups, but not marked as duplicate and not deleted
+            coin["duplicate"] = True
 
-    dup_symbols["_override"] = override_bucket
     return dup_symbols
+
+
+def apply_duplicity_overrides(coins):
+    overrides = load_json("duplicity_overrides.json")
+    override_bucket = []
+    for coin in coins:
+        override_value = overrides.get(coin["key"])
+        if override_value is True:
+            override_bucket.append(coin)
+        if override_value is not None:
+            coin["duplicate"] = override_value
+
+    return override_bucket
 
 
 def deduplicate_erc20(buckets, networks):
@@ -489,13 +488,11 @@ def deduplicate_erc20(buckets, networks):
     """
 
     testnet_networks = {n["chain"] for n in networks if "Testnet" in n["name"]}
-    overrides = buckets["_override"]
 
     def clear_bucket(bucket):
         # allow all coins, except those that are explicitly marked through overrides
         for coin in bucket:
-            if coin not in overrides:
-                coin["duplicate"] = False
+            coin["duplicate"] = False
 
     for bucket in buckets.values():
         # Only check buckets that contain purely ERC20 tokens. Collision with
@@ -615,9 +612,15 @@ def coin_info_with_duplicates():
     Returns the CoinsInfo object and duplicate buckets.
     """
     all_coins = collect_coin_info()
+    coin_list = all_coins.as_list()
+    # generate duplicity buckets based on shortcuts
     buckets = mark_duplicate_shortcuts(all_coins.as_list())
+    # apply further processing to ERC20 tokens, generate deprecations etc.
     deduplicate_erc20(buckets, all_coins.eth)
-    deduplicate_keys(all_coins.as_list())
+    # ensure the whole list has unique keys (taking into account changes from deduplicate_erc20)
+    deduplicate_keys(coin_list)
+    # apply duplicity overrides
+    buckets["_override"] = apply_duplicity_overrides(coin_list)
     sort_coin_infos(all_coins)
 
     return all_coins, buckets
