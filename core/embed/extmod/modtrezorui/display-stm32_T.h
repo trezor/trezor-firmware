@@ -173,7 +173,7 @@ static void display_set_backlight(int val) {
   TIM1->CCR1 = LED_PWM_TIM_PERIOD * val / 255;
 }
 
-static void display_hardware_reset(void) {
+void display_init_seq(void) {
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);  // LCD_RST/PC14
   // wait 10 milliseconds. only needs to be low for 10 microseconds.
   // my dev display module ties display reset and touch panel reset together.
@@ -181,128 +181,11 @@ static void display_hardware_reset(void) {
   // development and does not hurt.
   HAL_Delay(10);
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_SET);  // LCD_RST/PC14
-  HAL_Delay(120);  // max wait time for hardware reset is 120 milliseconds
-                   // (experienced display flakiness using only 5ms wait before
-                   // sending commands)
-                   // identify the controller we will communicate with
-}
+  // max wait time for hardware reset is 120 milliseconds
+  // (experienced display flakiness using only 5ms wait before sending commands)
+  HAL_Delay(120);
 
-void display_init(void) {
-  // init peripherials
-  __HAL_RCC_GPIOE_CLK_ENABLE();
-  __HAL_RCC_TIM1_CLK_ENABLE();
-  __HAL_RCC_FMC_CLK_ENABLE();
-
-  GPIO_InitTypeDef GPIO_InitStructure;
-
-  // LCD_PWM/PA7 (backlight control)
-  GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStructure.Alternate = GPIO_AF1_TIM1;
-  GPIO_InitStructure.Pin = GPIO_PIN_7;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
-
-  // enable PWM timer
-  TIM_HandleTypeDef TIM1_Handle;
-  TIM1_Handle.Instance = TIM1;
-  TIM1_Handle.Init.Period = LED_PWM_TIM_PERIOD - 1;
-  // TIM1/APB2 source frequency equals to SystemCoreClock in our configuration,
-  // we want 1 MHz
-  TIM1_Handle.Init.Prescaler = SystemCoreClock / 1000000 - 1;
-  TIM1_Handle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  TIM1_Handle.Init.CounterMode = TIM_COUNTERMODE_UP;
-  TIM1_Handle.Init.RepetitionCounter = 0;
-  HAL_TIM_PWM_Init(&TIM1_Handle);
-
-  TIM_OC_InitTypeDef TIM_OC_InitStructure;
-  TIM_OC_InitStructure.Pulse = 0;
-  TIM_OC_InitStructure.OCMode = TIM_OCMODE_PWM2;
-  TIM_OC_InitStructure.OCPolarity = TIM_OCPOLARITY_HIGH;
-  TIM_OC_InitStructure.OCFastMode = TIM_OCFAST_DISABLE;
-  TIM_OC_InitStructure.OCNPolarity = TIM_OCNPOLARITY_HIGH;
-  TIM_OC_InitStructure.OCIdleState = TIM_OCIDLESTATE_SET;
-  TIM_OC_InitStructure.OCNIdleState = TIM_OCNIDLESTATE_SET;
-  HAL_TIM_PWM_ConfigChannel(&TIM1_Handle, &TIM_OC_InitStructure, TIM_CHANNEL_1);
-
-  display_backlight(0);
-
-  HAL_TIM_PWM_Start(&TIM1_Handle, TIM_CHANNEL_1);
-  HAL_TIMEx_PWMN_Start(&TIM1_Handle, TIM_CHANNEL_1);
-
-  // LCD_RST/PC14
-  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure.Alternate = 0;
-  GPIO_InitStructure.Pin = GPIO_PIN_14;
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14,
-                    GPIO_PIN_RESET);  // default to keeping display in reset
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
-
-  // LCD_FMARK/PD12 (tearing effect)
-  GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStructure.Alternate = 0;
-  GPIO_InitStructure.Pin = GPIO_PIN_12;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
-
-  GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStructure.Alternate = GPIO_AF12_FMC;
-  //                             LCD_CS/PD7   LCD_RS/PD11   LCD_RD/PD4
-  //                             LCD_WR/PD5
-  GPIO_InitStructure.Pin = GPIO_PIN_7 | GPIO_PIN_11 | GPIO_PIN_4 | GPIO_PIN_5;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
-  //                             LCD_D0/PD14   LCD_D1/PD15   LCD_D2/PD0
-  //                             LCD_D3/PD1
-  GPIO_InitStructure.Pin = GPIO_PIN_14 | GPIO_PIN_15 | GPIO_PIN_0 | GPIO_PIN_1;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
-  //                             LCD_D4/PE7   LCD_D5/PE8   LCD_D6/PE9
-  //                             LCD_D7/PE10
-  GPIO_InitStructure.Pin = GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10;
-  HAL_GPIO_Init(GPIOE, &GPIO_InitStructure);
-
-  // Reference UM1725 "Description of STM32F4 HAL and LL drivers",
-  // section 64.2.1 "How to use this driver"
-  SRAM_HandleTypeDef external_display_data_sram;
-  external_display_data_sram.Instance = FMC_NORSRAM_DEVICE;
-  external_display_data_sram.Init.NSBank = FMC_NORSRAM_BANK1;
-  external_display_data_sram.Init.DataAddressMux = FMC_DATA_ADDRESS_MUX_DISABLE;
-  external_display_data_sram.Init.MemoryType = FMC_MEMORY_TYPE_SRAM;
-  external_display_data_sram.Init.MemoryDataWidth = FMC_NORSRAM_MEM_BUS_WIDTH_8;
-  external_display_data_sram.Init.BurstAccessMode =
-      FMC_BURST_ACCESS_MODE_DISABLE;
-  external_display_data_sram.Init.WaitSignalPolarity =
-      FMC_WAIT_SIGNAL_POLARITY_LOW;
-  external_display_data_sram.Init.WrapMode = FMC_WRAP_MODE_DISABLE;
-  external_display_data_sram.Init.WaitSignalActive = FMC_WAIT_TIMING_BEFORE_WS;
-  external_display_data_sram.Init.WriteOperation = FMC_WRITE_OPERATION_ENABLE;
-  external_display_data_sram.Init.WaitSignal = FMC_WAIT_SIGNAL_DISABLE;
-  external_display_data_sram.Init.ExtendedMode = FMC_EXTENDED_MODE_DISABLE;
-  external_display_data_sram.Init.AsynchronousWait =
-      FMC_ASYNCHRONOUS_WAIT_DISABLE;
-  external_display_data_sram.Init.WriteBurst = FMC_WRITE_BURST_DISABLE;
-  external_display_data_sram.Init.ContinuousClock =
-      FMC_CONTINUOUS_CLOCK_SYNC_ONLY;
-  external_display_data_sram.Init.PageSize = FMC_PAGE_SIZE_NONE;
-
-  // reference RM0090 section 37.5 Table 259, 37.5.4, Mode 1 SRAM, and 37.5.6
-  FMC_NORSRAM_TimingTypeDef normal_mode_timing;
-  normal_mode_timing.AddressSetupTime = 4;
-  normal_mode_timing.AddressHoldTime = 1;
-  normal_mode_timing.DataSetupTime = 4;
-  normal_mode_timing.BusTurnAroundDuration = 0;
-  normal_mode_timing.CLKDivision = 2;
-  normal_mode_timing.DataLatency = 2;
-  normal_mode_timing.AccessMode = FMC_ACCESS_MODE_A;
-
-  HAL_SRAM_Init(&external_display_data_sram, &normal_mode_timing, NULL);
-
-  display_hardware_reset();
-
+  // identify the controller we will communicate with
   uint32_t id = display_identify();
   if (id == DISPLAY_ID_GC9307) {
     CMD(0xFE);  // Inter Register Enable1
@@ -484,6 +367,123 @@ void display_init(void) {
 
   display_clear();
   display_unsleep();
+}
+
+void display_init(void) {
+  // init peripherials
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_TIM1_CLK_ENABLE();
+  __HAL_RCC_FMC_CLK_ENABLE();
+
+  GPIO_InitTypeDef GPIO_InitStructure;
+
+  // LCD_PWM/PA7 (backlight control)
+  GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStructure.Alternate = GPIO_AF1_TIM1;
+  GPIO_InitStructure.Pin = GPIO_PIN_7;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+  // enable PWM timer
+  TIM_HandleTypeDef TIM1_Handle;
+  TIM1_Handle.Instance = TIM1;
+  TIM1_Handle.Init.Period = LED_PWM_TIM_PERIOD - 1;
+  // TIM1/APB2 source frequency equals to SystemCoreClock in our configuration,
+  // we want 1 MHz
+  TIM1_Handle.Init.Prescaler = SystemCoreClock / 1000000 - 1;
+  TIM1_Handle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  TIM1_Handle.Init.CounterMode = TIM_COUNTERMODE_UP;
+  TIM1_Handle.Init.RepetitionCounter = 0;
+  HAL_TIM_PWM_Init(&TIM1_Handle);
+
+  TIM_OC_InitTypeDef TIM_OC_InitStructure;
+  TIM_OC_InitStructure.Pulse = 0;
+  TIM_OC_InitStructure.OCMode = TIM_OCMODE_PWM2;
+  TIM_OC_InitStructure.OCPolarity = TIM_OCPOLARITY_HIGH;
+  TIM_OC_InitStructure.OCFastMode = TIM_OCFAST_DISABLE;
+  TIM_OC_InitStructure.OCNPolarity = TIM_OCNPOLARITY_HIGH;
+  TIM_OC_InitStructure.OCIdleState = TIM_OCIDLESTATE_SET;
+  TIM_OC_InitStructure.OCNIdleState = TIM_OCNIDLESTATE_SET;
+  HAL_TIM_PWM_ConfigChannel(&TIM1_Handle, &TIM_OC_InitStructure, TIM_CHANNEL_1);
+
+  display_backlight(0);
+
+  HAL_TIM_PWM_Start(&TIM1_Handle, TIM_CHANNEL_1);
+  HAL_TIMEx_PWMN_Start(&TIM1_Handle, TIM_CHANNEL_1);
+
+  // LCD_RST/PC14
+  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Alternate = 0;
+  GPIO_InitStructure.Pin = GPIO_PIN_14;
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14,
+                    GPIO_PIN_RESET);  // default to keeping display in reset
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+  // LCD_FMARK/PD12 (tearing effect)
+  GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStructure.Alternate = 0;
+  GPIO_InitStructure.Pin = GPIO_PIN_12;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
+
+  GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStructure.Alternate = GPIO_AF12_FMC;
+  //                             LCD_CS/PD7   LCD_RS/PD11   LCD_RD/PD4
+  //                             LCD_WR/PD5
+  GPIO_InitStructure.Pin = GPIO_PIN_7 | GPIO_PIN_11 | GPIO_PIN_4 | GPIO_PIN_5;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
+  //                             LCD_D0/PD14   LCD_D1/PD15   LCD_D2/PD0
+  //                             LCD_D3/PD1
+  GPIO_InitStructure.Pin = GPIO_PIN_14 | GPIO_PIN_15 | GPIO_PIN_0 | GPIO_PIN_1;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStructure);
+  //                             LCD_D4/PE7   LCD_D5/PE8   LCD_D6/PE9
+  //                             LCD_D7/PE10
+  GPIO_InitStructure.Pin = GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStructure);
+
+  // Reference UM1725 "Description of STM32F4 HAL and LL drivers",
+  // section 64.2.1 "How to use this driver"
+  SRAM_HandleTypeDef external_display_data_sram;
+  external_display_data_sram.Instance = FMC_NORSRAM_DEVICE;
+  external_display_data_sram.Init.NSBank = FMC_NORSRAM_BANK1;
+  external_display_data_sram.Init.DataAddressMux = FMC_DATA_ADDRESS_MUX_DISABLE;
+  external_display_data_sram.Init.MemoryType = FMC_MEMORY_TYPE_SRAM;
+  external_display_data_sram.Init.MemoryDataWidth = FMC_NORSRAM_MEM_BUS_WIDTH_8;
+  external_display_data_sram.Init.BurstAccessMode =
+      FMC_BURST_ACCESS_MODE_DISABLE;
+  external_display_data_sram.Init.WaitSignalPolarity =
+      FMC_WAIT_SIGNAL_POLARITY_LOW;
+  external_display_data_sram.Init.WrapMode = FMC_WRAP_MODE_DISABLE;
+  external_display_data_sram.Init.WaitSignalActive = FMC_WAIT_TIMING_BEFORE_WS;
+  external_display_data_sram.Init.WriteOperation = FMC_WRITE_OPERATION_ENABLE;
+  external_display_data_sram.Init.WaitSignal = FMC_WAIT_SIGNAL_DISABLE;
+  external_display_data_sram.Init.ExtendedMode = FMC_EXTENDED_MODE_DISABLE;
+  external_display_data_sram.Init.AsynchronousWait =
+      FMC_ASYNCHRONOUS_WAIT_DISABLE;
+  external_display_data_sram.Init.WriteBurst = FMC_WRITE_BURST_DISABLE;
+  external_display_data_sram.Init.ContinuousClock =
+      FMC_CONTINUOUS_CLOCK_SYNC_ONLY;
+  external_display_data_sram.Init.PageSize = FMC_PAGE_SIZE_NONE;
+
+  // reference RM0090 section 37.5 Table 259, 37.5.4, Mode 1 SRAM, and 37.5.6
+  FMC_NORSRAM_TimingTypeDef normal_mode_timing;
+  normal_mode_timing.AddressSetupTime = 4;
+  normal_mode_timing.AddressHoldTime = 1;
+  normal_mode_timing.DataSetupTime = 4;
+  normal_mode_timing.BusTurnAroundDuration = 0;
+  normal_mode_timing.CLKDivision = 2;
+  normal_mode_timing.DataLatency = 2;
+  normal_mode_timing.AccessMode = FMC_ACCESS_MODE_A;
+
+  HAL_SRAM_Init(&external_display_data_sram, &normal_mode_timing, NULL);
+
+  display_init_seq();
 }
 
 void display_refresh(void) {
