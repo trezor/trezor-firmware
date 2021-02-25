@@ -19,6 +19,8 @@
 
 #include STM32_HAL_H
 
+#define DISPLAY_ST7789V_INVERT_COLORS 0
+
 // FSMC/FMC Bank 1 - NOR/PSRAM 1
 #define DISPLAY_MEMORY_BASE 0x60000000
 #define DISPLAY_MEMORY_PIN 16
@@ -34,14 +36,17 @@
 
 #define LED_PWM_TIM_PERIOD (10000)
 
-#define DISPLAY_ID_ST7789V \
-  0x858552U  // section "9.1.3 RDDID (04h): Read Display ID" of ST7789V
-             // datasheet
-#define DISPLAY_ID_GC9307 \
-  0x009307U  // section "6.2.1. Read display identification information (04h)"
-             // of GC9307 datasheet
-#define DISPLAY_ID_ILI9341V \
-  0x009341U  // section "8.3.23 Read ID4 (D3h)" of ILI9341V datasheet
+// section "9.1.3 RDDID (04h): Read Display ID"
+// of ST7789V datasheet
+#define DISPLAY_ID_ST7789V 0x858552U
+
+// section "6.2.1. Read display identification information (04h)"
+// of GC9307 datasheet
+#define DISPLAY_ID_GC9307 0x009307U
+
+// section "8.3.23 Read ID4 (D3h)"
+// of ILI9341V datasheet
+#define DISPLAY_ID_ILI9341V 0x009341U
 
 static uint32_t read_display_id(uint8_t command) {
   volatile uint8_t c = 0;
@@ -251,6 +256,8 @@ void display_init_seq(void) {
     DATA(0x37);
     DATA(0x8F);
   } else if (id == DISPLAY_ID_ST7789V) {
+    // most recent manual:
+    // https://www.newhavendisplay.com/appnotes/datasheets/LCDs/ST7789V.pdf
     CMD(0x35);
     DATA(0x00);  // TEON: Tearing Effect Line On; V-blanking only
     CMD(0x3A);
@@ -269,6 +276,9 @@ void display_init_seq(void) {
     DATA(0x0A);
     DATA(0x11);  // GATECTRL: Gate Control; NL = 240 gate lines, first scan line
                  // is gate 80.; gate scan direction 319 -> 0
+    // INVOFF (20h): Display Inversion Off
+    // INVON  (21h): Display Inversion On
+    CMD(0x20 | DISPLAY_ST7789V_INVERT_COLORS);
     // the above config is the most important and definitely necessary
     CMD(0xD0);
     DATA(0xA4);
