@@ -51,7 +51,7 @@ async def _init_step(
 
     if not storage.cache.get(storage.cache.APP_MONERO_LIVE_REFRESH):
         await confirms.require_confirm_live_refresh(ctx)
-        storage.cache.set(storage.cache.APP_MONERO_LIVE_REFRESH, True)
+        storage.cache.set(storage.cache.APP_MONERO_LIVE_REFRESH, b"\x01")
 
     s.creds = misc.get_creds(keychain, msg.address_n, msg.network_type)
 
