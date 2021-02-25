@@ -65,7 +65,7 @@ _boot_apps()
 # initialize the wire codec
 wire.setup(usb.iface_wire)
 if __debug__:
-    wire.setup(usb.iface_debug, use_workflow=False)
+    wire.setup(usb.iface_debug, is_debug_session=True)
 
 loop.run()
 
