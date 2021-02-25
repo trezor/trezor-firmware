@@ -173,7 +173,7 @@ async def handle_CancelAuthorization(
         raise wire.ProcessError("No preauthorized operation")
 
     authorization.__del__()
-    storage.cache.delete(storage.cache.APP_BASE_AUTHORIZATION)
+    storage.cache.set(storage.cache.APP_BASE_AUTHORIZATION, b"")
 
     return Success(message="Authorization cancelled")
 

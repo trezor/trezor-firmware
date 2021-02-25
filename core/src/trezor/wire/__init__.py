@@ -36,6 +36,7 @@ reads the message's header. When the message type is known the first handler is 
 """
 
 import protobuf
+from storage.cache import InvalidSessionError
 from trezor import log, loop, messages, ui, utils, workflow
 from trezor.messages import FailureType
 from trezor.messages.Failure import Failure
@@ -492,6 +493,8 @@ def failure(exc: BaseException) -> Failure:
         return Failure(code=exc.code, message=exc.message)
     elif isinstance(exc, loop.TaskClosed):
         return Failure(code=FailureType.ActionCancelled, message="Cancelled")
+    elif isinstance(exc, InvalidSessionError):
+        return Failure(code=FailureType.InvalidSession, message="Invalid session")
     else:
         return Failure(code=FailureType.FirmwareError, message="Firmware error")
 
