@@ -61,6 +61,10 @@
 #include "stellar.h"
 #endif
 
+#if EMULATOR
+#include <stdio.h>
+#endif
+
 // message methods
 
 static uint8_t msg_resp[MSG_OUT_SIZE] __attribute__((aligned));
@@ -304,6 +308,8 @@ static bool fsm_layoutAddress(const char *address, const char *desc,
 void fsm_msgRebootToBootloader(void) {
 #if !EMULATOR
   svc_reboot_to_bootloader();
+#else
+  printf("Reboot!\n");
 #endif
 }
 
