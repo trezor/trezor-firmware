@@ -215,6 +215,7 @@ from .PinMatrixRequest import PinMatrixRequest
 from .Ping import Ping
 from .PreauthorizedRequest import PreauthorizedRequest
 from .PublicKey import PublicKey
+from .RebootToBootloader import RebootToBootloader
 from .RecoveryDevice import RecoveryDevice
 from .ResetDevice import ResetDevice
 from .RippleAddress import RippleAddress

@@ -297,6 +297,12 @@ static bool fsm_layoutAddress(const char *address, const char *desc,
   }
 }
 
+void fsm_msgRebootToBootloader(void) {
+#if !EMULATOR
+  svc_reboot_to_bootloader();
+#endif
+}
+
 #include "fsm_msg_coin.h"
 #include "fsm_msg_common.h"
 #include "fsm_msg_crypto.h"

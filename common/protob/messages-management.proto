@@ -401,3 +401,11 @@ message PreauthorizedRequest {
  */
 message CancelAuthorization {
 }
+
+/**
+ * Request: Reboot firmware to bootloader
+ * @start
+ * Can't have response.
+ */
+message RebootToBootloader {
+}
