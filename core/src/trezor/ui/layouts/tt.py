@@ -53,6 +53,7 @@ __all__ = (
     "confirm_decred_sstx_submission",
     "confirm_hex",
     "confirm_total",
+    "confirm_total_ethereum",
     "confirm_joint_total",
     "confirm_metadata",
     "confirm_replacement",
@@ -215,7 +216,7 @@ def _truncate_hex(
     width: int = MONO_HEX_PER_LINE,
     middle: bool = False,
 ) -> Iterator[str]:
-    if len(hex_data) >= width * lines:
+    if len(hex_data) > width * lines:
         if middle:
             hex_data = (
                 hex_data[: lines * width // 2 - 1]
@@ -438,12 +439,15 @@ async def confirm_output(
     ctx: wire.GenericContext,
     address: str,
     amount: str,
+    font_amount: int = ui.NORMAL,  # TODO cleanup @ redesign
+    color_to: int = ui.FG,  # TODO cleanup @ redesign
+    br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> None:
     text = Text("Confirm sending", ui.ICON_SEND, ui.GREEN, new_lines=False)
-    text.normal(amount + " to\n")
+    text.content = [font_amount, amount, ui.NORMAL, color_to, " to\n", ui.FG]
     text.mono(*_split_address(address))
     await raise_if_cancelled(
-        interact(ctx, Confirm(text), "confirm_output", ButtonRequestType.ConfirmOutput)
+        interact(ctx, Confirm(text), "confirm_output", br_code)
     )
 
 
@@ -475,14 +479,18 @@ async def confirm_hex(
     br_code: ButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
+    font_description: int = ui.NORMAL,  # TODO cleanup @ redesign
+    color_description: int = ui.FG,  # TODO cleanup @ redesign
     width: int = MONO_HEX_PER_LINE,
     truncate_middle: bool = False,
 ) -> None:
     text = Text(title, icon, icon_color, new_lines=False)
     description_lines = 0
     if description is not None:
-        description_lines = Span(description, 0, ui.NORMAL).count_lines()
-        text.normal(description)
+        description_lines = Span(description, 0, font_description).count_lines()
+        text.content.extend(
+            (font_description, color_description, description, ui.FG)
+        )
         text.br()
     text.mono(
         *_truncate_hex(
@@ -504,6 +512,21 @@ async def confirm_total(
     text.bold(total_amount)
     text.normal("\nincluding fee:\n")
     text.bold(fee_amount)
+    await raise_if_cancelled(
+        interact(ctx, HoldToConfirm(text), "confirm_total", ButtonRequestType.SignTx)
+    )
+
+
+# TODO cleanup @ redesign
+async def confirm_total_ethereum(
+    ctx: wire.GenericContext, total_amount: str, gas_price: str, fee_max: str
+) -> None:
+    text = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN, new_lines=False)
+    text.bold(total_amount)
+    text.normal(" ", ui.GREY, "Gas price:", ui.FG)
+    text.bold(gas_price)
+    text.normal(" ", ui.GREY, "Maximum fee:", ui.FG)
+    text.bold(fee_max)
     await raise_if_cancelled(
         interact(ctx, HoldToConfirm(text), "confirm_total", ButtonRequestType.SignTx)
     )
