@@ -306,7 +306,10 @@ A replacement transaction in Trezor must satisfy the following requirements:
 
 * All inputs of the original transactions must be inputs of the replacement transation.
 * All _external_ outputs of the original transactions must be outputs of the replacement
-  transation and none of their output amounts may be decreased.
+  transation.
+* The value of an external output may be decreased only if there are no new external
+  inputs. This should only be used to bump the fee if the original transaction transfers
+  the entire account balance and there is no other source available to bump the fee.
 * The replacement transaction must not increase the amount that the user is spending
   on external outputs.
 * Original transactions must have the same effective `nLockTime` as the replacement
