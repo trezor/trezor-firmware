@@ -224,6 +224,7 @@ from .PrevInput import PrevInput
 from .PrevOutput import PrevOutput
 from .PrevTx import PrevTx
 from .PublicKey import PublicKey
+from .RebootToBootloader import RebootToBootloader
 from .RecoveryDevice import RecoveryDevice
 from .ResetDevice import ResetDevice
 from .RippleAddress import RippleAddress

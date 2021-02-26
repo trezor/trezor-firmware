@@ -204,3 +204,4 @@ WebAuthnListResidentCredentials: Literal[800] = 800
 WebAuthnCredentials: Literal[801] = 801
 WebAuthnAddResidentCredential: Literal[802] = 802
 WebAuthnRemoveResidentCredential: Literal[803] = 803
+RebootToBootloader: Literal[804] = 804
