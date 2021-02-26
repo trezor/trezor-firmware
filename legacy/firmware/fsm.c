@@ -306,6 +306,7 @@ static bool fsm_layoutAddress(const char *address, const char *desc,
 }
 
 void fsm_msgRebootToBootloader(void) {
+  fsm_sendSuccess("You are being rebooted");
 #if !EMULATOR
   svc_reboot_to_bootloader();
 #else

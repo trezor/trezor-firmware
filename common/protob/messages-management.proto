@@ -409,7 +409,7 @@ message CancelAuthorization {
 /**
  * Request: Reboot firmware to bootloader
  * @start
- * Can't have response.
+ * @next Success
  */
 message RebootToBootloader {
 }
