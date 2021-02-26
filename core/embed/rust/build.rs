@@ -81,6 +81,8 @@ fn generate_micropython_bindings() {
         .whitelist_type("mp_map_elem_t")
         .whitelist_type("mp_map_lookup_kind_t")
         .whitelist_function("mp_map_lookup")
+        // runtime
+        .whitelist_function("mp_raise_ValueError")
         // typ
         .whitelist_var("mp_type_type")
         // Pass in correct include paths.

@@ -453,12 +453,13 @@ class Descriptor:
     def write_qstrs(self, qstr_path, include_deprecated=False):
         logging.debug("Writing qstrings to {}".format(qstr_path))
         with open(qstr_path, "w") as f:
-            for field in self.collect_field_names(include_deprecated):
-                f.write("Q({})\n".format(field))
+            for name in self.collect_msg_and_field_names(include_deprecated):
+                f.write("Q({})\n".format(name))
 
-    def collect_field_names(self, include_deprecated=False):
+    def collect_msg_and_field_names(self, include_deprecated=False):
         names = set()
         for message in self.messages:
+            names.add(message.name)
             for field in message.field:
                 if not include_deprecated and field.options.deprecated:
                     continue
@@ -467,13 +468,15 @@ class Descriptor:
 
     def write_blobs(self, blob_dir, qstr_defs, include_deprecated=False):
         logging.debug("Writing blobs to {}".format(blob_dir))
-        blob_enums, blob_msgs, blob_wire = self.build_blobs(
+        blob_enums, blob_msgs, blob_names, blob_wire = self.build_blobs(
             qstr_defs, include_deprecated
         )
         with open(os.path.join(blob_dir, "proto_enums.data"), "wb") as f:
             f.write(blob_enums)
         with open(os.path.join(blob_dir, "proto_msgs.data"), "wb") as f:
             f.write(blob_msgs)
+        with open(os.path.join(blob_dir, "proto_names.data"), "wb") as f:
+            f.write(blob_names)
         with open(os.path.join(blob_dir, "proto_wire.data"), "wb") as f:
             f.write(blob_wire)
 
@@ -518,6 +521,15 @@ class Descriptor:
                 )
             ),
         )
+        names_type = c.Struct(
+            "msgs"
+            / c.GreedyRange(
+                c.Struct(  # sorted by msg_name
+                    "msg_name" / c.Int16ul,
+                    "msg_offset" / c.Int16ul,
+                )
+            )
+        )
         wire_type = c.Struct(
             "msgs"
             / c.GreedyRange(
@@ -544,13 +556,18 @@ class Descriptor:
                 ),
             )
         )
+        names = names_type.build(
+            dict(
+                msgs=self.build_blob_names(qstr_map, msg_map),
+            )
+        )
         wire = wire_type.build(
             dict(
                 msgs=self.build_blob_wire(msg_map),
             )
         )
 
-        return enums, msgs, wire
+        return enums, msgs, names, wire
 
     def build_qstr_map(self, qstr_defs):
         qstr_map = {}
@@ -680,6 +697,17 @@ class Descriptor:
     def encode_field_default(self, field):
         # TODO: encode the default field value as protobuf
         return b""
+
+    def build_blob_names(self, qstr_map, msg_map):
+        msgs = []
+        for msg in sorted(self.messages, key=lambda m: m.name):
+            msgs.append(
+                dict(
+                    msg_name=qstr_map[msg.name],
+                    msg_offset=msg_map[msg.name],
+                )
+            )
+        return sorted(msgs, key=lambda m: m["msg_name"])
 
     def build_blob_wire(self, msg_map):
         msgs = []

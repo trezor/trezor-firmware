@@ -27,7 +27,7 @@ pub extern "C" fn protobuf_encode(buf: Obj, wire_id: Obj, obj: Obj) -> Obj {
 
         let buf = &mut Buffer::try_from(buf)?;
         let stream = &mut BufferStream::new(unsafe {
-            // SAFETY: We assume there are no others refs into `buf` at this point. This
+            // SAFETY: We assume there are no other refs into `buf` at this point. This
             // specifically means that no fields of `obj` should reference `buf` memory.
             buf.as_mut()
         });

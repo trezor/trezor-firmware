@@ -1,3 +1,5 @@
+use core::slice;
+
 use crate::{
     error::Error,
     micropython::{obj::Obj, qstr::Qstr},
@@ -34,6 +36,16 @@ impl Map {
 }
 
 impl Map {
+    pub fn len(&self) -> usize {
+        self.used()
+    }
+
+    pub fn elems(&self) -> &[MapElem] {
+        // SAFETY: `self.table` should always point to an array of `MapElem` of
+        // `self.len()` items valid at least for the lifetime of `self`.
+        unsafe { slice::from_raw_parts(self.table, self.len()) }
+    }
+
     pub fn contains_key(&self, index: impl Into<Obj>) -> bool {
         self.get_obj(index.into()).is_ok()
     }

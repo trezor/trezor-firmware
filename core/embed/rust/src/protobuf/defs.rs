@@ -6,9 +6,17 @@ pub struct MsgDef {
 }
 
 impl MsgDef {
+    pub fn for_name(msg_name: u16) -> Option<Self> {
+        find_msg_offset_by_name(msg_name).map(|msg_offset| unsafe {
+            // SAFETY: We are taking the offset right out of the definitions so we can be
+            // sure it's to be trusted.
+            get_msg(msg_offset)
+        })
+    }
+
     pub fn for_wire_id(wire_id: u16) -> Option<Self> {
-        find_msg_offset(wire_id).map(|msg_offset| unsafe {
-            // SAFETY: We are taking the offset right out of `find_msg_offset` so we can be
+        find_msg_offset_by_wire(wire_id).map(|msg_offset| unsafe {
+            // SAFETY: We are taking the offset right out of the definitions so we can be
             // sure it's to be trusted.
             get_msg(msg_offset)
         })
@@ -92,9 +100,29 @@ pub struct EnumDef {
 
 static ENUM_DEFS: &[u8] = include_bytes!("../../../../src/trezor/messages/proto_enums.data");
 static MSG_DEFS: &[u8] = include_bytes!("../../../../src/trezor/messages/proto_msgs.data");
+static NAME_DEFS: &[u8] = include_bytes!("../../../../src/trezor/messages/proto_names.data");
 static WIRE_DEFS: &[u8] = include_bytes!("../../../../src/trezor/messages/proto_wire.data");
 
-fn find_msg_offset(wire_id: u16) -> Option<u16> {
+fn find_msg_offset_by_name(msg_name: u16) -> Option<u16> {
+    #[repr(C, packed)]
+    struct NameDef {
+        msg_name: u16,
+        msg_offset: u16,
+    }
+
+    let name_defs: &[NameDef] = unsafe {
+        slice::from_raw_parts(
+            NAME_DEFS.as_ptr().cast(),
+            NAME_DEFS.len() / mem::size_of::<NameDef>(),
+        )
+    };
+    name_defs
+        .binary_search_by_key(&msg_name, |def| def.msg_name)
+        .map(|i| name_defs[i].msg_offset)
+        .ok()
+}
+
+fn find_msg_offset_by_wire(wire_id: u16) -> Option<u16> {
     #[repr(C, packed)]
     struct WireDef {
         wire_id: u16,
