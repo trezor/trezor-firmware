@@ -2,7 +2,7 @@
 #![allow(non_upper_case_globals)]
 #![allow(dead_code)]
 
-use core::convert::{TryFrom, TryInto};
+use core::convert::TryFrom;
 
 use crate::{error::Error, micropython::obj::Obj};
 

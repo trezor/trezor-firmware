@@ -28,6 +28,10 @@ impl Dict {
     pub fn map(&self) -> &Map {
         &self.map
     }
+
+    pub fn map_mut(&mut self) -> &mut Map {
+        &mut self.map
+    }
 }
 
 impl Into<Obj> for Gc<Dict> {

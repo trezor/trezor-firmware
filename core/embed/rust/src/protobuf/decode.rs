@@ -53,8 +53,9 @@ impl Decoder {
         stream: &mut InputStream,
         msg: &MsgDef,
     ) -> Result<Obj, Error> {
-        let dict = self.empty_message(msg);
-        let map = dict.map();
+        let mut dict = self.empty_message(msg);
+        // SAFETY: We assume that `dict` is not alised here.
+        let map = unsafe { dict.as_mut() }.map_mut();
         self.decode_fields_into(stream, msg, map)?;
         self.decode_defaults_into(msg, map)?;
         self.assign_required_into(msg, map)?;
@@ -64,11 +65,11 @@ impl Decoder {
     /// Create a new message instance and fill it from `values`, handling the
     /// default and required fields correctly.
     pub fn message_from_values(&self, values: &Map, msg: &MsgDef) -> Result<Obj, Error> {
-        let dict = self.empty_message(msg);
-        let map = dict.map();
+        let mut dict = self.empty_message(msg);
+        // SAFETY: We assume that `dict` is not alised here.
+        let map = unsafe { dict.as_mut() }.map_mut();
         for elem in values.elems() {
-            // SAFETY: There are not any other refs into `map`.
-            unsafe { map.set(elem.key, elem.value) };
+            map.set(elem.key, elem.value);
         }
         self.decode_defaults_into(msg, map)?;
         self.assign_required_into(msg, map)?;
@@ -87,7 +88,7 @@ impl Decoder {
         &self,
         stream: &mut InputStream,
         msg: &MsgDef,
-        map: &Map,
+        map: &mut Map,
     ) -> Result<(), Error> {
         loop {
             let field_key = match stream.read_uvarint() {
@@ -106,24 +107,16 @@ impl Decoder {
                         // object. If it exists, append to it. If it doesn't, create a new list with
                         // this field's value and assign it.
                         if let Ok(obj) = map.get(field_name) {
-                            let list = Gc::<List>::try_from(obj)?;
-                            // SAFETY: There are not any other refs into `list`.
-                            unsafe {
-                                list.append(field_value);
-                            }
+                            let mut list = Gc::<List>::try_from(obj)?;
+                            // SAFETY: We assume that `list` is not aliased here.
+                            unsafe { list.as_mut() }.append(field_value);
                         } else {
                             let list = List::alloc(&[field_value]);
-                            // SAFETY: There are not any other refs into `map`.
-                            unsafe {
-                                map.set(field_name, list);
-                            }
+                            map.set(field_name, list);
                         }
                     } else {
-                        // SAFETY: There are not any other refs into `map`.
                         // Singular field, assign the value directly.
-                        unsafe {
-                            map.set(field_name, field_value);
-                        }
+                        map.set(field_name, field_value);
                     }
                 }
                 None => {
@@ -150,7 +143,7 @@ impl Decoder {
     /// Fill in the default values by decoding them from the default stream.
     /// Only singular fields are allowed to have a default value, this is
     /// enforced in the blob compilation.
-    pub fn decode_defaults_into(&self, msg: &MsgDef, map: &Map) -> Result<(), Error> {
+    pub fn decode_defaults_into(&self, msg: &MsgDef, map: &mut Map) -> Result<(), Error> {
         let stream = &mut InputStream::new(msg.defaults);
         loop {
             // Because we are sure that our field tags fit in one byte, and because this is
@@ -180,10 +173,7 @@ impl Decoder {
             } else {
                 // Decode the value and assign it.
                 let field_value = self.decode_field(stream, field)?;
-                // SAFETY: There are not any other refs into `map`.
-                unsafe {
-                    map.set(field_name, field_value);
-                }
+                map.set(field_name, field_value);
             }
         }
         Ok(())
@@ -191,7 +181,7 @@ impl Decoder {
 
     /// Walk the fields definitions and make sure that all required fields are
     /// assigned and all optional missing fields are set to `None`.
-    pub fn assign_required_into(&self, msg: &MsgDef, map: &Map) -> Result<(), Error> {
+    pub fn assign_required_into(&self, msg: &MsgDef, map: &mut Map) -> Result<(), Error> {
         for field in msg.fields {
             let field_name = Qstr::from(field.name);
             if map.contains_key(field_name) {
@@ -202,10 +192,7 @@ impl Decoder {
                     return Err(Error::Missing);
                 } else {
                     // Optional field, set to None.
-                    // SAFETY: There are not any other refs into `map`.
-                    unsafe {
-                        map.set(field_name, Obj::const_none());
-                    }
+                    map.set(field_name, Obj::const_none());
                 }
             }
         }

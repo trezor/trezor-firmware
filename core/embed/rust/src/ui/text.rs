@@ -474,9 +474,9 @@ impl TryFrom<&Map> for Text {
 }
 
 #[no_mangle]
-pub extern "C" fn ui_render_rich_text(kw: *const Map) -> Obj {
-    util::try_with_kw(kw, |kw| {
-        let mut rich_text = Text::try_from(kw)?;
+pub extern "C" fn ui_render_rich_text(kwargs: *const Map) -> Obj {
+    util::try_with_kwargs(kwargs, |kwargs| {
+        let mut rich_text = Text::try_from(kwargs)?;
         rich_text.render()?;
         Ok(Obj::const_true())
     })

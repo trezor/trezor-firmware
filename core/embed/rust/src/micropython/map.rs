@@ -70,20 +70,22 @@ impl Map {
         }
     }
 
-    pub unsafe fn set(&self, index: impl Into<Obj>, value: impl Into<Obj>) {
+    pub fn set(&mut self, index: impl Into<Obj>, value: impl Into<Obj>) {
         self.set_obj(index.into(), value.into())
     }
 
-    pub unsafe fn set_obj(&self, index: Obj, value: Obj) {
-        let map = self as *const Map as *mut Map;
-        let elem = ffi::mp_map_lookup(
-            map,
-            index,
-            ffi::_mp_map_lookup_kind_t_MP_MAP_LOOKUP_ADD_IF_NOT_FOUND,
-        )
-        .as_mut()
-        .unwrap();
-        elem.value = value;
+    pub fn set_obj(&mut self, index: Obj, value: Obj) {
+        unsafe {
+            let map = self as *mut Map;
+            let elem = ffi::mp_map_lookup(
+                map,
+                index,
+                ffi::_mp_map_lookup_kind_t_MP_MAP_LOOKUP_ADD_IF_NOT_FOUND,
+            )
+            .as_mut()
+            .unwrap();
+            elem.value = value;
+        }
     }
 }
 

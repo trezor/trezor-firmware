@@ -16,10 +16,12 @@ impl List {
         }
     }
 
-    pub unsafe fn append(&self, value: Obj) {
-        let ptr = self as *const List as *mut List;
-        let list = Obj::from_ptr(ptr.cast());
-        ffi::mp_obj_list_append(list, value);
+    pub fn append(&mut self, value: Obj) {
+        unsafe {
+            let ptr = self as *mut List;
+            let list = Obj::from_ptr(ptr.cast());
+            ffi::mp_obj_list_append(list, value);
+        }
     }
 }
 

@@ -27,6 +27,10 @@ impl<T> Gc<T> {
             Self::from_raw(raw)
         }
     }
+
+    pub unsafe fn as_mut(&mut self) -> &mut T {
+        self.0.as_mut()
+    }
 }
 
 impl<T: ?Sized> Gc<T> {
