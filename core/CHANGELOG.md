@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - Locking the device by holding finger on the homescreen for 2.5 seconds.  [#1404]
+- Solana support.
 
 ### Changed
 

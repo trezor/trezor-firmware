@@ -48,6 +48,7 @@ from . import (
     stellar,
     tezos,
     with_client,
+    solana,
 )
 
 LOG = logging.getLogger(__name__)
@@ -76,6 +77,7 @@ COMMAND_ALIASES = {
     "xrp": ripple.cli,
     "xlm": stellar.cli,
     "xtz": tezos.cli,
+    "sol": solana.cli,
     # firmware-update aliases:
     "update-firmware": firmware.firmware_update,
     "upgrade-firmware": firmware.firmware_update,
@@ -339,6 +341,7 @@ cli.add_command(ripple.cli)
 cli.add_command(settings.cli)
 cli.add_command(stellar.cli)
 cli.add_command(tezos.cli)
+cli.add_command(solana.cli)
 
 cli.add_command(firmware.firmware_update)
 cli.add_command(debug.cli)

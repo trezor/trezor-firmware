@@ -20,6 +20,7 @@ Ripple: Literal[11] = 11
 Stellar: Literal[12] = 12
 Tezos: Literal[13] = 13
 U2F: Literal[14] = 14
+Solana: Literal[18] = 18
 Shamir: Literal[15] = 15
 ShamirGroups: Literal[16] = 16
 PassphraseEntry: Literal[17] = 17

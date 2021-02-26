@@ -77,6 +77,7 @@ def get_features() -> Features:
             Capability.Shamir,
             Capability.ShamirGroups,
             Capability.PassphraseEntry,
+            Capability.Solana,
         ]
     f.sd_card_present = sdcard.is_present()
     f.initialized = storage.device.is_initialized()

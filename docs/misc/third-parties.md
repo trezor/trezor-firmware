@@ -72,3 +72,4 @@ firmwares.
 - manager.balance.io
 - faa.st
 - beta.shapeshift.com
+- solana.com

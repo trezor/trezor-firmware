@@ -30,6 +30,7 @@ algorithm, extended to work on other curves.
 | NEM      | ed25519   | `44'/43'/a'`       |             | [5](#NEM)      |
 | Monero   | ed25519   | `44'/128'/a'`      |             |                |
 | Tezos    | ed25519   | `44'/1729'/a'`     |             | [6](#Tezos)    |
+| Solana   | ed25519   | `44'/501'/a'`      |             |                |
 
 `c` stands for the [SLIP-44 id] of the currency, when multiple currencies are handled
 by the same code. `a` is an account number, `y` is change address indicator (must be

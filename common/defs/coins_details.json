@@ -34118,6 +34118,24 @@
                     "url": "https://nem.io/downloads/"
                 }
             ]
+        },
+        "misc:SOL": {
+            "links": {
+                "Github": "https://github.com/solana-labs/solana",
+                "Homepage": "https://solana.com/"
+            },
+            "marketcap_usd": 3372131284,
+            "name": "Solana",
+            "shortcut": "SOL",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin",
+            "wallet": [
+                {
+                    "name": "Sollet Wallet",
+                    "url": "https://www.sollet.io"
+                }
+            ]
         }
     },
     "info": {

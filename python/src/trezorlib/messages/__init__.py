@@ -239,6 +239,10 @@ from .SignIdentity import SignIdentity
 from .SignMessage import SignMessage
 from .SignTx import SignTx
 from .SignedIdentity import SignedIdentity
+from .SolanaAddress import SolanaAddress
+from .SolanaGetAddress import SolanaGetAddress
+from .SolanaSignTxHash import SolanaSignTxHash
+from .SolanaSignedTx import SolanaSignedTx
 from .StellarAccountMergeOp import StellarAccountMergeOp
 from .StellarAddress import StellarAddress
 from .StellarAllowTrustOp import StellarAllowTrustOp

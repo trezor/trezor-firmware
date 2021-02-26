@@ -208,3 +208,7 @@ if not utils.BITCOIN_ONLY:
     WebAuthnCredentials: Literal[801] = 801
     WebAuthnAddResidentCredential: Literal[802] = 802
     WebAuthnRemoveResidentCredential: Literal[803] = 803
+    SolanaGetAddress: Literal[900] = 900
+    SolanaAddress: Literal[901] = 901
+    SolanaSignTxHash: Literal[902] = 902
+    SolanaSignedTx: Literal[903] = 903
