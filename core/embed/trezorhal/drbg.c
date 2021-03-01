@@ -35,12 +35,10 @@ static secbool initialized = secfalse;
 static uint32_t last_reseeded_ms = 0;
 static secbool reseeding_not_needed = sectrue;
 
-void drbg_init(const uint8_t *nonce, size_t nonce_length) {
-  assert(nonce_length == DRBG_INIT_NONCE_LENGTH);
-
+void drbg_init() {
   uint8_t entropy[DRBG_INIT_TRNG_ENTROPY_LENGTH] = {0};
   trng_random_buffer(entropy, sizeof(entropy));
-  chacha_drbg_init(&drbg_ctx, entropy, sizeof(entropy), nonce, nonce_length);
+  chacha_drbg_init(&drbg_ctx, entropy, sizeof(entropy), NULL, 0);
   memzero(entropy, sizeof(entropy));
 
   systick_enable_dispatch(SYSTICK_DISPATCH_DRBG, drbg_reseed_handler);
@@ -66,7 +64,7 @@ void drbg_mix_hw_entropy() {
 }
 
 void drbg_reseed() {
-  drbg_reseed_with_trng(DRBG_RESEED_TRNG_ENTROPY_LENGTH, SW_ENTROPY_DATA,
+  drbg_reseed_with_trng(DRBG_RESEED_TRNG_ENTROPY_LENGTH, SW_ENTROPY_POOL,
                         SW_ENTROPY_LEN);
 }
 
@@ -92,7 +90,7 @@ uint32_t drbg_random32(void) {
 
 void drbg_reseed_handler(uint32_t uw_tick) {
   if ((DRBG_RESEED_INTERVAL_MS != 0) &
-      (last_reseeded_ms + DRBG_RESEED_INTERVAL_MS >= uw_tick)) {
+      (last_reseeded_ms + DRBG_RESEED_INTERVAL_MS <= uw_tick)) {
     reseeding_not_needed = secfalse;
   }
 }

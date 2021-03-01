@@ -475,7 +475,7 @@ MP_NOINLINE int main_(int argc, char **argv);
 
 int main(int argc, char **argv) {
   collect_hw_entropy();
-  drbg_init(NULL, 0);
+  drbg_init();
 
 #if MICROPY_PY_THREAD
   mp_thread_init();

@@ -55,7 +55,7 @@
 
 int main(void) {
   // initialize pseudo-random number generator
-  drbg_init(NULL, 0);
+  drbg_init();
 #ifdef RDI
   rdi_start();
 #endif

@@ -21,19 +21,15 @@
 
 #include "chacha_drbg.h"
 #include "common.h"
-#include "memzero.h"
 #include "secbool.h"
 #include "trng.h"
 
 static CHACHA_DRBG_CTX drbg_ctx;
 static secbool initialized = secfalse;
 
-void drbg_init(const uint8_t *nonce, size_t nonce_length) {
-  assert(nonce_length == DRBG_INIT_NONCE_LENGTH);
-
+void drbg_init() {
   uint8_t entropy[DRBG_INIT_ENTROPY_LENGTH] = {0};
-  chacha_drbg_init(&drbg_ctx, entropy, sizeof(entropy), nonce, nonce_length);
-  memzero(entropy, sizeof(entropy));
+  chacha_drbg_init(&drbg_ctx, entropy, sizeof(entropy), NULL, 0);
 
   initialized = sectrue;
 }
