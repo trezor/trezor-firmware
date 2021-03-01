@@ -69,7 +69,7 @@ def init(api_key, refresh=None):
         market_cap = coin["quote"]["USD"]["market_cap"]
         price = coin["quote"]["USD"]["price"]
         if market_cap is not None:
-            cap_data[slug] = int(market_cap)
+            cap_data[slug] = cap_data[symbol] = int(market_cap)
             price_data[symbol] = price
             if platform is not None and platform["name"] == "Ethereum":
                 address = platform["token_address"].lower()
