@@ -1,5 +1,18 @@
 [
     {
+        "name": "Hbar",
+        "shortcut": "HBAR",
+        "slip44": 3030,
+        "decimals": 8,
+        "links": {
+            "Homepage": "https://www.hedera.com/",
+            "Github": "https://github.com/hashgraph/"
+        },
+        "wallet": {
+            "MyHbarWallet": "https://myhbarwallet.com/"
+        }
+    },
+    {
         "name": "Lisk",
         "shortcut": "LSK",
         "slip44": 134,

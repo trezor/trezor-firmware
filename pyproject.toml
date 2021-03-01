@@ -72,6 +72,7 @@ yamllint = "^1.25.0"
 
 [tool.poetry.dev-dependencies]
 scan-build = "*"
+autopep8 = "^1.5.5"
 
 [build-system]
 requires = ["poetry>=1;<1.1", "pip>=20"]

@@ -102,6 +102,10 @@ if not utils.BITCOIN_ONLY:
     EthereumSignMessage: Literal[64] = 64
     EthereumVerifyMessage: Literal[65] = 65
     EthereumMessageSignature: Literal[66] = 66
+    HederaGetPublicKey: Literal[804] = 804
+    HederaSignTx: Literal[805] = 805
+    HederaPublicKey: Literal[806] = 806
+    HederaSignedTx: Literal[807] = 807
     NEMGetAddress: Literal[67] = 67
     NEMAddress: Literal[68] = 68
     NEMSignTx: Literal[69] = 69
