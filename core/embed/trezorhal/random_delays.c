@@ -73,7 +73,7 @@ void rdi_refresh_session_delay(void) {
     refresh_session_delay = true;
 }
 
-void wait(uint32_t delay) {
+static void wait(uint32_t delay) {
   // wait (30 + delay) ticks
   asm volatile(
       "ldr r0, %0;"  // r0 = delay
