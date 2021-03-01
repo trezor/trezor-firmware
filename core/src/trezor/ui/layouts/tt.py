@@ -54,6 +54,7 @@ __all__ = (
     "confirm_hex",
     "confirm_total",
     "confirm_total_ethereum",
+    "confirm_total_ripple",
     "confirm_joint_total",
     "confirm_metadata",
     "confirm_replacement",
@@ -552,6 +553,23 @@ async def confirm_total_ethereum(
     text.bold(fee_max)
     await raise_if_cancelled(
         interact(ctx, HoldToConfirm(text), "confirm_total", ButtonRequestType.SignTx)
+    )
+
+
+# TODO cleanup @ redesign
+async def confirm_total_ripple(
+    ctx: wire.GenericContext,
+    address: str,
+    amount: str,
+) -> None:
+    title = "Confirm sending"
+    text = Text(title, ui.ICON_SEND, ui.GREEN, new_lines=False)
+    text.bold("{} XRP\n".format(amount))
+    text.normal("to\n")
+    text.mono(*_split_address(address))
+
+    await raise_if_cancelled(
+        interact(ctx, HoldToConfirm(text), "confirm_output", ButtonRequestType.SignTx)
     )
 
 
