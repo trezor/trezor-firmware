@@ -53,6 +53,7 @@ async def require_confirm_ecdh_session_key(
         serialize_identity_without_proto(identity),
         icon=ui.ICON_DEFAULT,
         icon_color=ui.ORANGE_ICON,
+        truncate=True,  # uri without protocol, probably should show entire
     )
 
 

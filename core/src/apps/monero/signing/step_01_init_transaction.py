@@ -4,8 +4,7 @@ Initializes a new transaction.
 
 import gc
 
-from apps.monero import misc, signing
-from apps.monero.layout import confirms
+from apps.monero import layout, misc, signing
 from apps.monero.signing.state import State
 from apps.monero.xmr import crypto, monero
 
@@ -48,7 +47,7 @@ async def init_transaction(
     state.progress_cur = 0
 
     # Ask for confirmation
-    await confirms.require_confirm_transaction(
+    await layout.require_confirm_transaction(
         state.ctx, state, tsx_data, state.creds.network_type
     )
     state.creds.address = None

@@ -1,14 +1,14 @@
 from ubinascii import hexlify
 
-from trezor import ui, wire
+from trezor import strings, ui
 from trezor.enums import ButtonRequestType
-from trezor.ui.components.tt.text import Text
-from trezor.ui.layouts import confirm_action
+from trezor.ui.layouts import (
+    confirm_action,
+    confirm_hex,
+    confirm_metadata,
+    confirm_output,
+)
 from trezor.ui.popup import Popup
-from trezor.utils import chunks
-
-from apps.common.confirm import require_confirm, require_hold_to_confirm
-from apps.monero.layout import common
 
 DUMMY_PAYMENT_ID = b"\x00\x00\x00\x00\x00\x00\x00\x00"
 
@@ -19,6 +19,10 @@ if False:
         MoneroTransactionData,
         MoneroTransactionDestinationEntry,
     )
+
+
+def _format_amount(value):
+    return "%s XMR" % strings.format_amount(value, 12)
 
 
 async def require_confirm_watchkey(ctx):
@@ -123,43 +127,46 @@ async def _require_confirm_output(
         version, dst.addr.spend_public_key, dst.addr.view_public_key, payment_id
     )
 
-    text_addr = common.split_address(addr.decode())
-    text_amount = common.format_amount(dst.amount)
-
-    if not await common.naive_pagination(
+    await confirm_output(
         ctx,
-        [ui.BOLD, text_amount, ui.MONO] + list(text_addr),
-        "Confirm send",
-        ui.ICON_SEND,
-        ui.GREEN,
-        4,
-    ):
-        raise wire.ActionCancelled
+        address=addr.decode(),
+        amount=_format_amount(dst.amount),
+        font_amount=ui.BOLD,
+        br_code=ButtonRequestType.SignTx,
+    )
 
 
 async def _require_confirm_payment_id(ctx, payment_id: bytes):
-    if not await common.naive_pagination(
+    await confirm_hex(
         ctx,
-        [ui.MONO] + list(chunks(hexlify(payment_id).decode(), 16)),
-        "Payment ID",
-        ui.ICON_SEND,
-        ui.GREEN,
-    ):
-        raise wire.ActionCancelled
+        "confirm_payment_id",
+        title="Payment ID",
+        data=hexlify(payment_id).decode(),
+        br_code=ButtonRequestType.SignTx,
+    )
 
 
 async def _require_confirm_fee(ctx, fee):
-    content = Text("Confirm fee", ui.ICON_SEND, ui.GREEN)
-    content.bold(common.format_amount(fee))
-    await require_hold_to_confirm(ctx, content, ButtonRequestType.ConfirmOutput)
+    await confirm_metadata(
+        ctx,
+        "confirm_final",
+        title="Confirm fee",
+        content="{}",
+        param=_format_amount(fee),
+        hide_continue=True,
+        hold=True,
+    )
 
 
 async def _require_confirm_unlock_time(ctx, unlock_time):
-    content = Text("Confirm unlock time", ui.ICON_SEND, ui.GREEN)
-    content.normal("Unlock time for this transaction is set to")
-    content.bold(str(unlock_time))
-    content.normal("Continue?")
-    await require_confirm(ctx, content, ButtonRequestType.SignTx)
+    await confirm_metadata(
+        ctx,
+        "confirm_locktime",
+        "Confirm unlock time",
+        "Unlock time for this transaction is set to {}",
+        str(unlock_time),
+        br_code=ButtonRequestType.SignTx,
+    )
 
 
 class TransactionStep(ui.Component):
@@ -242,28 +249,3 @@ async def live_refresh_step(ctx, current):
     if current is None:
         return
     await Popup(LiveRefreshStep(current))
-
-
-async def show_address(
-    ctx, address: str, desc: str = "Confirm address", network: str = None
-):
-    from apps.common.confirm import confirm
-    from trezor.enums import ButtonRequestType
-    from trezor.ui.components.tt.button import ButtonDefault
-    from trezor.ui.components.tt.scroll import Paginated
-
-    pages = []
-    for lines in common.paginate_lines(common.split_address(address), 5):
-        text = Text(desc, ui.ICON_RECEIVE, ui.GREEN)
-        if network is not None:
-            text.normal("%s network" % network)
-        text.mono(*lines)
-        pages.append(text)
-
-    return await confirm(
-        ctx,
-        Paginated(pages),
-        code=ButtonRequestType.Address,
-        cancel="QR",
-        cancel_style=ButtonDefault,
-    )

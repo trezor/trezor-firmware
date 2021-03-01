@@ -14,7 +14,7 @@ import gc
 
 from trezor import utils
 
-from apps.monero.layout import confirms
+from apps.monero import layout
 from apps.monero.xmr import crypto
 
 from .state import State
@@ -48,9 +48,7 @@ async def sign_input(
     :param orig_idx: original index of the src_entr before sorting (HMAC check)
     :return: Generated signature MGs[i]
     """
-    await confirms.transaction_step(
-        state, state.STEP_SIGN, state.current_input_index + 1
-    )
+    await layout.transaction_step(state, state.STEP_SIGN, state.current_input_index + 1)
 
     state.current_input_index += 1
     if state.last_step not in (state.STEP_ALL_OUT, state.STEP_SIGN):

@@ -56,6 +56,7 @@ async def confirm_output(
                 title="OP_RETURN",
                 data=hexlify(data).decode(),
                 br_code=ButtonRequestType.ConfirmOutput,
+                truncate=True,  # 80 bytes - not truncated 2 screens max
             )
     else:
         assert output.address is not None

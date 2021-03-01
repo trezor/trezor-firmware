@@ -3,7 +3,7 @@ This step serves for an incremental hashing of tx.vin[i] to the tx_prefix_hasher
 after the sorting on tx.vin[i].ki. The sorting order was received in the previous step.
 """
 
-from apps.monero.layout import confirms
+from apps.monero import layout
 from apps.monero.signing import offloading_keys
 from apps.monero.xmr import crypto
 
@@ -25,9 +25,7 @@ async def input_vini(
 ) -> MoneroTransactionInputViniAck:
     from trezor.messages import MoneroTransactionInputViniAck
 
-    await confirms.transaction_step(
-        state, state.STEP_VINI, state.current_input_index + 1
-    )
+    await layout.transaction_step(state, state.STEP_VINI, state.current_input_index + 1)
     if state.last_step not in (state.STEP_INP, state.STEP_PERM, state.STEP_VINI):
         raise ValueError("Invalid state transition")
     if state.current_input_index >= state.input_count:

@@ -11,7 +11,7 @@ If number of inputs is small, in-memory mode is used = alpha, pseudo_outs are ke
 Otherwise pseudo_outs are offloaded with HMAC, alpha is offloaded encrypted under chacha_poly with
 key derived for exactly this purpose.
 """
-from apps.monero.layout import confirms
+from apps.monero import layout
 from apps.monero.xmr import crypto, monero, serialize
 
 from .state import State
@@ -32,7 +32,7 @@ async def set_input(
 
     state.current_input_index += 1
 
-    await confirms.transaction_step(state, state.STEP_INP, state.current_input_index)
+    await layout.transaction_step(state, state.STEP_INP, state.current_input_index)
 
     if state.last_step > state.STEP_INP:
         raise ValueError("Invalid state transition")

@@ -16,7 +16,7 @@ HMAC correctness (host sends original sort idx) and ordering check
 on the key images. This step is skipped.
 """
 
-from apps.monero.layout.confirms import transaction_step
+from apps.monero.layout import transaction_step
 
 from .state import State
 

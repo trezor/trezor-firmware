@@ -13,8 +13,7 @@ from trezor.messages import (
 
 from apps.common import paths
 from apps.common.keychain import auto_keychain
-from apps.monero import misc
-from apps.monero.layout import confirms
+from apps.monero import layout, misc
 from apps.monero.xmr import crypto, key_image, monero
 from apps.monero.xmr.crypto import chacha_poly
 
@@ -52,7 +51,7 @@ async def _init_step(
     await paths.validate_path(ctx, keychain, msg.address_n)
 
     if not storage.cache.get(storage.cache.APP_MONERO_LIVE_REFRESH):
-        await confirms.require_confirm_live_refresh(ctx)
+        await layout.require_confirm_live_refresh(ctx)
         storage.cache.set(storage.cache.APP_MONERO_LIVE_REFRESH, b"\x01")
 
     s.creds = misc.get_creds(keychain, msg.address_n, msg.network_type)
@@ -64,7 +63,7 @@ async def _refresh_step(s: LiveRefreshState, ctx, msg: MoneroLiveRefreshStepRequ
     buff = bytearray(32 * 3)
     buff_mv = memoryview(buff)
 
-    await confirms.live_refresh_step(ctx, s.current_output)
+    await layout.live_refresh_step(ctx, s.current_output)
     s.current_output += 1
 
     if __debug__:
