@@ -19,21 +19,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "common.h"
 #include "trng.h"
 
-void trng_random_buffer(uint8_t *buf, size_t len) {
-  static FILE *frand = NULL;
-  if (!frand) {
-    frand = fopen("/dev/urandom", "r");
-  }
-  ensure(sectrue * (frand != NULL), "fopen failed");
-  ensure(sectrue * (len == fread(buf, 1, len, frand)), "fread failed");
-}
+void trng_random_buffer(uint8_t *buf, size_t len) { memset(buf, 0, len); }
 
-uint32_t trng_random32(void) {
-  uint32_t value;
-  trng_random_buffer((uint8_t *)&value, sizeof(value));
-  return value;
-}
+void trng_random_buffer_xor(uint8_t *buf, size_t len) {}
+
+uint32_t trng_random32(void) { return 0; }

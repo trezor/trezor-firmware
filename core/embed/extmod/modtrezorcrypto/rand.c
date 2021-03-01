@@ -19,6 +19,11 @@
 
 #include "rand.h"
 #include "drbg.h"
+#include "trng.h"
 
-uint32_t random32(void) { return drbg_random32(); }
-void random_buffer(uint8_t *buf, size_t len) { drbg_generate(buf, len); }
+uint32_t random32(void) { return drbg_random32() ^ trng_random32(); }
+
+void random_buffer(uint8_t *buf, size_t len) {
+  drbg_generate(buf, len);
+  trng_random_buffer_xor(buf, len);
+}

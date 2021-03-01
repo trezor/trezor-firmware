@@ -60,7 +60,8 @@ void __attribute__((weak)) random_buffer(uint8_t *buf, size_t len) {
     if (i % 4 == 0) {
       r = random32();
     }
-    buf[i] = (r >> ((i % 4) * 8)) & 0xFF;
+    buf[i] = r & 0xFF;
+    r >>= 8;
   }
 }
 

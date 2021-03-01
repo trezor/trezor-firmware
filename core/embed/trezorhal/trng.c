@@ -21,6 +21,8 @@
 
 #include "trng.h"
 
+#include <string.h>
+
 #pragma GCC optimize( \
     "no-stack-protector")  // applies to all functions in this file
 
@@ -57,12 +59,18 @@ uint32_t trng_random32(void) {
   return current;
 }
 
-void trng_random_buffer(uint8_t *buf, size_t len) {
+void trng_random_buffer_xor(uint8_t *buf, size_t len) {
   uint32_t r = 0;
   for (size_t i = 0; i < len; i++) {
     if (i % 4 == 0) {
       r = trng_random32();
     }
-    buf[i] = (r >> ((i % 4) * 8)) & 0xFF;
+    buf[i] = r & 0xFF;
+    r >>= 8;
   }
+}
+
+void trng_random_buffer(uint8_t *buf, size_t len) {
+  memset(buf, 0, len);
+  trng_random_buffer_xor(buf, len);
 }
