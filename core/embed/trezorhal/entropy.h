@@ -29,5 +29,5 @@ extern uint8_t HW_ENTROPY_DATA[HW_ENTROPY_LEN];
 
 #define SW_ENTROPY_LEN 18
 void add_sw_entropy(uint8_t *data, size_t data_length);
-extern uint8_t SW_ENTROPY_DATA[SW_ENTROPY_LEN];
+extern uint8_t SW_ENTROPY_POOL[SW_ENTROPY_LEN];
 #endif
