@@ -231,7 +231,8 @@ def _load_ethereum_networks():
     ):
         chain_data = load_json(chain)
         shortcut = chain_data["nativeCurrency"]["symbol"]
-        is_testnet = "testnet" in chain_data["name"].lower()
+        name = chain_data["name"]
+        is_testnet = "testnet" in name.lower()
         if is_testnet:
             slip44 = 1
         else:
@@ -242,12 +243,16 @@ def _load_ethereum_networks():
 
         rskip60 = shortcut in ("RBTC", "TRBTC")
 
+        # strip out bullcrap in network naming
+        if "mainnet" in name.lower():
+            name = re.sub(r" mainnet.*$", "", name, flags=re.IGNORECASE)
+
         network = dict(
             chain=chain_data["shortName"],
             chain_id=chain_data["chainId"],
             slip44=slip44,
             shortcut=shortcut,
-            name=chain_data["name"],
+            name=name,
             rskip60=rskip60,
             url=chain_data["infoURL"],
             key=f"eth:{shortcut}",
