@@ -11,10 +11,10 @@ from ..components.common import break_path_to_lines
 from ..components.common.confirm import is_confirmed, raise_if_cancelled
 from ..components.tt.button import ButtonCancel, ButtonDefault
 from ..components.tt.confirm import Confirm, HoldToConfirm
-from ..components.tt.scroll import Paginated, paginate_text
+from ..components.tt.scroll import Paginated, paginate_paragraphs, paginate_text
 from ..components.tt.text import Span, Text
 from ..constants.tt import (
-    MONO_CHARS_PER_LINE,
+    MONO_ADDR_PER_LINE,
     MONO_HEX_PER_LINE,
     QR_SIZE_THRESHOLD,
     QR_X,
@@ -182,7 +182,7 @@ async def confirm_backup(ctx: wire.GenericContext) -> bool:
 async def confirm_path_warning(ctx: wire.GenericContext, path: str) -> None:
     text = Text("Confirm path", ui.ICON_WRONG, ui.RED)
     text.normal("Path")
-    text.mono(*break_path_to_lines(path, MONO_CHARS_PER_LINE))
+    text.mono(*break_path_to_lines(path, MONO_ADDR_PER_LINE))
     text.normal("is unknown.", "Are you sure?")
     await raise_if_cancelled(
         interact(
@@ -207,7 +207,7 @@ def _show_qr(
 
 
 def _split_address(address: str) -> Iterator[str]:
-    return chunks_intersperse(address, MONO_CHARS_PER_LINE)
+    return chunks_intersperse(address, MONO_ADDR_PER_LINE)
 
 
 def _truncate_hex(
@@ -232,13 +232,18 @@ def _show_address(
     address: str,
     desc: str,
     network: str | None = None,
-) -> Confirm:
-    text = Text(desc, ui.ICON_RECEIVE, ui.GREEN, new_lines=False)
-    if network is not None:
-        text.normal("%s network\n" % network)
-    text.mono(*_split_address(address))
-
-    return Confirm(text, cancel="QR", cancel_style=ButtonDefault)
+) -> Confirm | Paginated:
+    para = [(ui.NORMAL, "%s network" % network)] if network is not None else []
+    para.extend(
+        (ui.MONO, address_line) for address_line in chunks(address, MONO_ADDR_PER_LINE)
+    )
+    return paginate_paragraphs(
+        para,
+        header=desc,
+        header_icon=ui.ICON_RECEIVE,
+        icon_color=ui.GREEN,
+        confirm_kwargs={"cancel": "QR", "cancel_style": ButtonDefault},
+    )
 
 
 def _show_xpub(xpub: str, desc: str, cancel: str) -> Paginated:
@@ -332,6 +337,7 @@ def show_pubkey(
         data=pubkey,
         br_code=ButtonRequestType.PublicKey,
         icon=ui.ICON_RECEIVE,
+        truncate=True,  # should fit?
     )
 
 
@@ -441,14 +447,22 @@ async def confirm_output(
     amount: str,
     font_amount: int = ui.NORMAL,  # TODO cleanup @ redesign
     color_to: int = ui.FG,  # TODO cleanup @ redesign
+    width: int = MONO_ADDR_PER_LINE,
+    width_paginated: int = MONO_ADDR_PER_LINE - 1,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> None:
-    text = Text("Confirm sending", ui.ICON_SEND, ui.GREEN, new_lines=False)
-    text.content = [font_amount, amount, ui.NORMAL, color_to, " to\n", ui.FG]
-    text.mono(*_split_address(address))
-    await raise_if_cancelled(
-        interact(ctx, Confirm(text), "confirm_output", br_code)
-    )
+    title = "Confirm sending"
+    if len(address) > (TEXT_MAX_LINES - 1) * width:
+        para = [(font_amount, amount)]
+        para.extend((ui.MONO, line) for line in chunks(address, width_paginated))
+        content: ui.Layout = paginate_paragraphs(para, title, ui.ICON_SEND, ui.GREEN)
+    else:
+        text = Text(title, ui.ICON_SEND, ui.GREEN, new_lines=False)
+        text.content = [font_amount, amount, ui.NORMAL, color_to, " to\n", ui.FG]
+        text.mono(*chunks_intersperse(address, width))
+        content = Confirm(text)
+
+    await raise_if_cancelled(interact(ctx, content, "confirm_output", br_code))
 
 
 async def confirm_decred_sstx_submission(
@@ -482,25 +496,34 @@ async def confirm_hex(
     font_description: int = ui.NORMAL,  # TODO cleanup @ redesign
     color_description: int = ui.FG,  # TODO cleanup @ redesign
     width: int = MONO_HEX_PER_LINE,
+    width_paginated: int = MONO_HEX_PER_LINE - 2,
+    truncate: bool = False,
     truncate_middle: bool = False,
 ) -> None:
-    text = Text(title, icon, icon_color, new_lines=False)
-    description_lines = 0
-    if description is not None:
-        description_lines = Span(description, 0, font_description).count_lines()
-        text.content.extend(
-            (font_description, color_description, description, ui.FG)
+    if truncate:
+        text = Text(title, icon, icon_color, new_lines=False)
+        description_lines = 0
+        if description is not None:
+            description_lines = Span(description, 0, font_description).count_lines()
+            text.content.extend(
+                (font_description, color_description, description, ui.FG)
+            )
+            text.br()
+        text.mono(
+            *_truncate_hex(
+                data,
+                lines=TEXT_MAX_LINES - description_lines,
+                width=width,
+                middle=truncate_middle,
+            )
         )
-        text.br()
-    text.mono(
-        *_truncate_hex(
-            data,
-            lines=TEXT_MAX_LINES - description_lines,
-            width=width,
-            middle=truncate_middle,
-        )
-    )
-    content: ui.Layout = Confirm(text)
+        content: ui.Layout = Confirm(text)
+    else:
+        width_paginated = min(width, MONO_HEX_PER_LINE - 2)
+        assert color_description == ui.FG  # only ethereum uses this and it truncates
+        para = [(font_description, description)] if description is not None else []
+        para.extend((ui.MONO, line) for line in chunks(data, width_paginated))
+        content = paginate_paragraphs(para, title, icon, icon_color)
     await raise_if_cancelled(interact(ctx, content, br_type, br_code))
 
 
@@ -554,14 +577,19 @@ async def confirm_metadata(
     content: str,
     param: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
+    hide_continue: bool = False,
+    hold: bool = False,
 ) -> None:
     text = Text(title, ui.ICON_SEND, ui.GREEN, new_lines=False)
     text.format_parametrized(content, param if param is not None else "")
-    text.br()
 
-    text.normal("Continue?")
+    if not hide_continue:
+        text.br()
+        text.normal("Continue?")
 
-    await raise_if_cancelled(interact(ctx, Confirm(text), br_type, br_code))
+    cls = HoldToConfirm if hold else Confirm
+
+    await raise_if_cancelled(interact(ctx, cls(text), br_type, br_code))
 
 
 async def confirm_replacement(

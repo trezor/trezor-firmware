@@ -6,8 +6,7 @@ import gc
 
 from trezor import utils
 
-from apps.monero import signing
-from apps.monero.layout import confirms
+from apps.monero import layout, signing
 from apps.monero.signing import offloading_keys
 from apps.monero.xmr import crypto, serialize
 
@@ -36,7 +35,7 @@ async def set_output(
 
     # Progress update only for master message (skip for offloaded BP msg)
     if not is_offloaded_bp:
-        await confirms.transaction_step(
+        await layout.transaction_step(
             state, state.STEP_OUT, state.current_output_index + 1
         )
 

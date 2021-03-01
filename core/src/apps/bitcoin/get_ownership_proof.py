@@ -78,6 +78,7 @@ async def get_ownership_proof(
                 data=hexlify(msg.commitment_data).decode(),
                 icon=ui.ICON_CONFIG,
                 icon_color=ui.ORANGE_ICON,
+                truncate=True,  # commitment data, probably should show all
                 truncate_middle=True,
             )
 

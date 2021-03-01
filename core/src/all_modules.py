@@ -514,10 +514,8 @@ if utils.BITCOIN_ONLY:
     import apps.monero.get_watch_only
     apps.monero.key_image_sync
     import apps.monero.key_image_sync
-    apps.monero.layout.common
-    import apps.monero.layout.common
-    apps.monero.layout.confirms
-    import apps.monero.layout.confirms
+    apps.monero.layout
+    import apps.monero.layout
     apps.monero.live_refresh
     import apps.monero.live_refresh
     apps.monero.misc
