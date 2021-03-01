@@ -27,24 +27,33 @@
 #include "chacha20poly1305/ecrypt-portable.h"
 #include "memzero.h"
 
+#define CHACHA_DRBG_KEY_LENGTH 32
+#define CHACHA_DRBG_COUNTER_LENGTH 8
+#define CHACHA_DRBG_IV_LENGTH 8
+#define CHACHA_DRBG_SEED_LENGTH \
+  (CHACHA_DRBG_KEY_LENGTH + CHACHA_DRBG_COUNTER_LENGTH + CHACHA_DRBG_IV_LENGTH)
+
 #define MAX(a, b) (a) > (b) ? (a) : (b)
 
 static void derivation_function(const uint8_t *input1, size_t input1_length,
                                 const uint8_t *input2, size_t input2_length,
-                                uint8_t *output, uint32_t output_length) {
-  uint32_t blocks_number = (output_length - 1) / SHA256_DIGEST_LENGTH + 1;
-  assert(blocks_number <= 255);
+                                uint8_t *output, size_t output_length) {
+  uint32_t block_count = (output_length - 1) / SHA256_DIGEST_LENGTH + 1;
+  assert(block_count <= 255);
 
   SHA256_CTX ctx = {0};
 
-  for (uint8_t counter = 1; counter <= blocks_number; counter++) {
+  for (uint8_t counter = 1; counter <= block_count; counter++) {
+    uint32_t output_length_bits = output_length * 8;
+
     sha256_Init(&ctx);
     sha256_Update(&ctx, &counter, sizeof(counter));
-    sha256_Update(&ctx, (uint8_t *)&output_length, sizeof(output_length));
+    sha256_Update(&ctx, (uint8_t *)&output_length_bits,
+                  sizeof(output_length_bits));
     sha256_Update(&ctx, input1, input1_length);
     sha256_Update(&ctx, input2, input2_length);
 
-    if (counter != blocks_number) {
+    if (counter != block_count) {
       sha256_Final(&ctx, output);
       output += SHA256_DIGEST_LENGTH;
     } else {  // the last block
@@ -84,9 +93,7 @@ static void chacha_drbg_update(CHACHA_DRBG_CTX *ctx,
   ECRYPT_ivsetup(&ctx->chacha_ctx,
                  seed + CHACHA_DRBG_KEY_LENGTH + CHACHA_DRBG_COUNTER_LENGTH);
 
-  // Set chacha block counter
-  ctx->chacha_ctx.input[12] = U8TO32_LITTLE(seed + CHACHA_DRBG_KEY_LENGTH);
-  ctx->chacha_ctx.input[13] = U8TO32_LITTLE(seed + CHACHA_DRBG_KEY_LENGTH + 4);
+  ECRYPT_ctrsetup(&ctx->chacha_ctx, seed + CHACHA_DRBG_KEY_LENGTH);
 
   memzero(seed, sizeof(seed));
 }

@@ -28,12 +28,6 @@
 // is used as a derivation function. The highest supported security strength is
 // at least 256 bits. Reseeding is left up to caller.
 
-#define CHACHA_DRBG_KEY_LENGTH 32
-#define CHACHA_DRBG_COUNTER_LENGTH 8
-#define CHACHA_DRBG_IV_LENGTH 8
-#define CHACHA_DRBG_SEED_LENGTH \
-  (CHACHA_DRBG_KEY_LENGTH + CHACHA_DRBG_COUNTER_LENGTH + CHACHA_DRBG_IV_LENGTH)
-
 #define CHACHA_DRBG_DERIVATION_FUNCTION_PREFIX_LENGTH (1 + 4)
 // 1 = sizeof(counter), 4 = sizeof(output_length) in derivation_function
 #define CHACHA_DRBG_DERIVATION_FUNCTION_PADDING 9
