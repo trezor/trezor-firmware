@@ -49,17 +49,16 @@ extern void shutdown(void);
 
 #define BUFFER_LENGTH 64
 
-static uint8_t buffer[BUFFER_LENGTH];
-static size_t buffer_index = 0;
 static uint8_t session_delay;
 static bool refresh_session_delay;
 static secbool rdi_disabled = sectrue;
 
-static void buffer_refill(void) { drbg_generate(buffer, BUFFER_LENGTH); }
-
 static uint32_t random8(void) {
+  static size_t buffer_index = 0;
+  static uint8_t buffer[BUFFER_LENGTH];
+
   if (buffer_index == 0) {
-    buffer_refill();
+    drbg_generate(buffer, sizeof(buffer));
   }
 
   uint8_t value = buffer[buffer_index];
