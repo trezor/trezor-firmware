@@ -181,7 +181,7 @@ def find_best_firmware_version(
 @click.option("-v", "--version")
 @click.option("-s", "--skip-check", is_flag=True, help="Do not validate firmware integrity")
 @click.option("-n", "--dry-run", is_flag=True, help="Perform all steps but do not actually upload the firmware")
-@click.option("--beta", is_flag=True, help="Use firmware from BETA wallet")
+@click.option("--beta", is_flag=True, help="Use firmware from BETA channel")
 @click.option("--bitcoin-only", is_flag=True, help="Use bitcoin-only firmware (if possible)")
 @click.option("--raw", is_flag=True, help="Push raw data to Trezor")
 @click.option("--fingerprint", help="Expected firmware fingerprint in hex")
