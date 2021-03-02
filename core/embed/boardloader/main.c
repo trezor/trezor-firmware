@@ -24,7 +24,6 @@
 #include "flash.h"
 #include "image.h"
 #include "sdcard.h"
-#include "trng.h"
 
 #include "lowlevel.h"
 #include "version.h"

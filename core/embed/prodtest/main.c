@@ -32,7 +32,6 @@
 #include "sdcard.h"
 #include "secbool.h"
 #include "touch.h"
-#include "trng.h"
 #include "usb.h"
 
 #include "memzero.h"

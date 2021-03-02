@@ -31,7 +31,6 @@
 #include "sdcard.h"
 #include "secbool.h"
 #include "touch.h"
-#include "trng.h"
 
 static void progress_callback(int pos, int len) { display_printf("."); }
 

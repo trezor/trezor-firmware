@@ -29,7 +29,6 @@
 #include "mpu.h"
 #include "secbool.h"
 #include "touch.h"
-#include "trng.h"
 #include "usb.h"
 #include "version.h"
 

@@ -51,7 +51,6 @@
 #include "sdcard.h"
 #include "supervise.h"
 #include "touch.h"
-#include "trng.h"
 
 int main(void) {
   // initialize pseudo-random number generator
