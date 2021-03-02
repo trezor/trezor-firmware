@@ -40,9 +40,9 @@ uint64_t cashaddr_polymod_step(uint64_t pre) {
          (-((b >> 4) & 1) & 0x1e4f43e470ULL);
 }
 
-static const char* charset = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+char* charset = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
-static const int8_t charset_rev[128] = {
+int8_t charset_rev[128] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 15, -1, 10, 17, 21, 20, 26, 30, 7,
@@ -142,7 +142,7 @@ int cash_decode(char* hrp, uint8_t* data, size_t* data_len, const char* input) {
   return chk == 1;
 }
 
-static int convert_bits(uint8_t* out, size_t* outlen, int outbits,
+int convert_bits(uint8_t* out, size_t* outlen, int outbits,
                         const uint8_t* in, size_t inlen, int inbits, int pad) {
   uint32_t val = 0;
   int bits = 0;

@@ -37,7 +37,7 @@
 // own secure code. There is also a possibility to replace the random_buffer()
 // function as it is defined as a weak symbol.
 
-static uint32_t seed = 0;
+uint32_t seed = 0;
 
 void random_reseed(const uint32_t value) { seed = value; }
 

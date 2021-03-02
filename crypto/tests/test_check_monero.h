@@ -1,6 +1,6 @@
 #if USE_MONERO
 START_TEST(test_xmr_base58) {
-  static const struct {
+  static struct {
     uint64_t tag;
     char *v1;
     char *v2;
@@ -47,7 +47,7 @@ START_TEST(test_xmr_base58) {
 END_TEST
 
 START_TEST(test_xmr_getset256_modm) {
-  static const struct {
+  static struct {
     uint64_t val;
     int r;
     char *a;
@@ -89,7 +89,7 @@ START_TEST(test_xmr_getset256_modm) {
 END_TEST
 
 START_TEST(test_xmr_cmp256_modm) {
-  static const struct {
+  static struct {
     char *a;
     char *b;
     int res_eq;
@@ -136,7 +136,7 @@ START_TEST(test_xmr_cmp256_modm) {
 END_TEST
 
 START_TEST(test_xmr_copy_check_modm) {
-  static const struct {
+  static struct {
     int check;
     char *a;
   } tests[] = {
@@ -159,7 +159,7 @@ START_TEST(test_xmr_copy_check_modm) {
 END_TEST
 
 START_TEST(test_xmr_mulsub256_modm) {
-  static const struct {
+  static struct {
     char *a;
     char *b;
     char *c;
@@ -199,7 +199,7 @@ START_TEST(test_xmr_mulsub256_modm) {
 END_TEST
 
 START_TEST(test_xmr_muladd256_modm) {
-  static const struct {
+  static struct {
     char *a;
     char *b;
     char *c;
@@ -239,7 +239,7 @@ START_TEST(test_xmr_muladd256_modm) {
 END_TEST
 
 START_TEST(test_xmr_curve25519_set) {
-  static const struct {
+  static struct {
     uint32_t val;
     char *a;
   } tests[] = {
@@ -284,7 +284,7 @@ START_TEST(test_xmr_curve25519_consts) {
 END_TEST
 
 START_TEST(test_xmr_curve25519_tests) {
-  static const struct {
+  static struct {
     char *a;
     int res_neg;
     int res_nonzero;
@@ -327,7 +327,7 @@ START_TEST(test_xmr_curve25519_tests) {
 END_TEST
 
 START_TEST(test_xmr_curve25519_expand_reduce) {
-  static const struct {
+  static struct {
     char *a;
     char *b;
   } tests[] = {
@@ -364,7 +364,7 @@ START_TEST(test_xmr_ge25519_base) {
 END_TEST
 
 START_TEST(test_xmr_ge25519_check) {
-  static const struct {
+  static struct {
     char *x;
     char *y;
     char *z;
@@ -406,7 +406,7 @@ START_TEST(test_xmr_ge25519_check) {
 END_TEST
 
 START_TEST(test_xmr_ge25519_scalarmult_base_wrapper) {
-  static const struct {
+  static struct {
     char *sc;
     char *pt;
   } tests[] = {
@@ -453,7 +453,7 @@ START_TEST(test_xmr_ge25519_scalarmult_base_wrapper) {
 END_TEST
 
 START_TEST(test_xmr_ge25519_scalarmult) {
-  static const struct {
+  static struct {
     char *sc;
     char *pt;
     char *pt2;
@@ -548,7 +548,7 @@ START_TEST(test_xmr_ge25519_ops) {
 END_TEST
 
 START_TEST(test_xmr_check_point) {
-  static const struct {
+  static struct {
     char *p;
     bool on;
   } tests[] = {
@@ -641,7 +641,7 @@ START_TEST(test_xmr_hasher) {
   Hasher hasher;
   uint8_t hash[32];
 
-  static const struct {
+  static struct {
     char *chunk[3];
     char *hash;
   } tests[] = {
@@ -725,7 +725,7 @@ START_TEST(test_xmr_hash_to_ec) {
 END_TEST
 
 START_TEST(test_xmr_derivation_to_scalar) {
-  static const struct {
+  static struct {
     char *pt;
     uint32_t idx;
     char *sc;
@@ -769,7 +769,7 @@ START_TEST(test_xmr_derivation_to_scalar) {
 END_TEST
 
 START_TEST(test_xmr_generate_key_derivation) {
-  static const struct {
+  static struct {
     char *pt;
     char *sc;
     char *r;
@@ -806,7 +806,7 @@ START_TEST(test_xmr_generate_key_derivation) {
 END_TEST
 
 START_TEST(test_xmr_derive_private_key) {
-  static const struct {
+  static struct {
     char *pt;
     uint32_t idx;
     char *base;
@@ -848,7 +848,7 @@ START_TEST(test_xmr_derive_private_key) {
 END_TEST
 
 START_TEST(test_xmr_derive_public_key) {
-  static const struct {
+  static struct {
     char *pt;
     uint32_t idx;
     char *base;
@@ -890,7 +890,7 @@ START_TEST(test_xmr_derive_public_key) {
 END_TEST
 
 START_TEST(test_xmr_add_keys2) {
-  static const struct {
+  static struct {
     char *a;
     char *b;
     char *B;
@@ -937,7 +937,7 @@ START_TEST(test_xmr_add_keys2) {
 END_TEST
 
 START_TEST(test_xmr_add_keys3) {
-  static const struct {
+  static struct {
     char *a;
     char *A;
     char *b;
@@ -989,7 +989,7 @@ START_TEST(test_xmr_add_keys3) {
 END_TEST
 
 START_TEST(test_xmr_get_subaddress_secret_key) {
-  static const struct {
+  static struct {
     uint32_t major, minor;
     char *m;
     char *r;
@@ -1028,7 +1028,7 @@ START_TEST(test_xmr_get_subaddress_secret_key) {
 END_TEST
 
 START_TEST(test_xmr_gen_c) {
-  static const struct {
+  static struct {
     char *a;
     uint64_t amount;
     char *r;
@@ -1069,7 +1069,7 @@ START_TEST(test_xmr_gen_c) {
 END_TEST
 
 START_TEST(test_xmr_varint) {
-  static const struct {
+  static struct {
     uint64_t x;
     char *r;
   } tests[] = {

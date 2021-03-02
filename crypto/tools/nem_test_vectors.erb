@@ -1,7 +1,7 @@
 // test vectors from <%= source_url %>
 START_TEST(<%= test_name %>)
 {
-	static const struct {
+	static struct {
 <% fields.each do |(name, type)| -%>
 		<%= if type.nil? then 'const char *' else "#{type} " end %><%= name %>;
 <% end -%>

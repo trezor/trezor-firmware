@@ -34,9 +34,9 @@ uint32_t bech32_polymod_step(uint32_t pre) {
         (-((b >> 4) & 1) & 0x2a1462b3UL);
 }
 
-static const char* charset = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+char* segwit_charset = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
-static const int8_t charset_rev[128] = {
+int8_t segwit_charset_rev[128] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -70,14 +70,14 @@ int bech32_encode(char *output, const char *hrp, const uint8_t *data, size_t dat
     for (i = 0; i < data_len; ++i) {
         if (*data >> 5) return 0;
         chk = bech32_polymod_step(chk) ^ (*data);
-        *(output++) = charset[*(data++)];
+        *(output++) = segwit_charset[*(data++)];
     }
     for (i = 0; i < 6; ++i) {
         chk = bech32_polymod_step(chk);
     }
     chk ^= 1;
     for (i = 0; i < 6; ++i) {
-        *(output++) = charset[(chk >> ((5 - i) * 5)) & 0x1f];
+        *(output++) = segwit_charset[(chk >> ((5 - i) * 5)) & 0x1f];
     }
     *output = 0;
     return 1;
@@ -122,7 +122,7 @@ int bech32_decode(char* hrp, uint8_t *data, size_t *data_len, const char *input)
     }
     ++i;
     while (i < input_len) {
-        int v = (input[i] & 0x80) ? -1 : charset_rev[(int)input[i]];
+        int v = (input[i] & 0x80) ? -1 : segwit_charset_rev[(int)input[i]];
         if (input[i] >= 'a' && input[i] <= 'z') have_lower = 1;
         if (input[i] >= 'A' && input[i] <= 'Z') have_upper = 1;
         if (v == -1) {

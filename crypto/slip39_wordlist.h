@@ -29,7 +29,7 @@
 
 #define WORDS_COUNT 1024
 
-static const char* const slip39_wordlist[WORDS_COUNT] = {
+char* const slip39_wordlist[WORDS_COUNT] = {
     "academic", "acid",     "acne",     "acquire",  "acrobat",  "activity",
     "actress",  "adapt",    "adequate", "adjust",   "admit",    "adorn",
     "adult",    "advance",  "advocate", "afraid",   "again",    "agency",
@@ -213,7 +213,7 @@ static const char* const slip39_wordlist[WORDS_COUNT] = {
  *
  * Each word is uniquely defined by four buttons.
  */
-static const struct {
+struct {
   uint16_t sequence;
   uint16_t index;
 } words_button_seq[WORDS_COUNT] = {
