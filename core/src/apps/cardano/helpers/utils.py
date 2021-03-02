@@ -1,3 +1,5 @@
+from trezor.crypto import hashlib
+
 from apps.cardano.helpers.paths import ACCOUNT_PATH_INDEX, unharden
 
 from . import bech32
@@ -48,3 +50,14 @@ def format_optional_int(number: Optional[int]) -> str:
 
 def format_stake_pool_id(pool_id_bytes: bytes) -> str:
     return bech32.encode("pool", pool_id_bytes)
+
+
+def format_asset_fingerprint(policy_id: bytes, asset_name_bytes: bytes) -> str:
+    fingerprint = hashlib.blake2b(
+        # bytearrays are being promoted to bytes: https://github.com/python/mypy/issues/654
+        # but bytearrays are not concatenable, this casting works around this limitation
+        data=bytes(policy_id) + bytes(asset_name_bytes),
+        outlen=20,
+    ).digest()
+
+    return bech32.encode("asset", fingerprint)
