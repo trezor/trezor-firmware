@@ -61,6 +61,7 @@ __all__ = (
     "confirm_modify_output",
     "confirm_modify_fee",
     "confirm_coinjoin",
+    "confirm_timebounds_stellar",
 )
 
 
@@ -216,16 +217,18 @@ def _truncate_hex(
     lines: int = TEXT_MAX_LINES,
     width: int = MONO_HEX_PER_LINE,
     middle: bool = False,
+    ellipsis: str = "...",  # TODO: cleanup @ redesign
 ) -> Iterator[str]:
+    ell_len = len(ellipsis)
     if len(hex_data) > width * lines:
         if middle:
             hex_data = (
-                hex_data[: lines * width // 2 - 1]
-                + "..."
-                + hex_data[-lines * width // 2 + 2 :]
+                hex_data[: lines * width // 2 - (ell_len // 2)]
+                + ellipsis
+                + hex_data[-lines * width // 2 + (ell_len - ell_len // 2) :]
             )
         else:
-            hex_data = hex_data[: (width * lines - 3)] + "..."
+            hex_data = hex_data[: (width * lines - ell_len)] + ellipsis
     return chunks_intersperse(hex_data, width)
 
 
@@ -490,40 +493,55 @@ async def confirm_hex(
     br_type: str,
     title: str,
     data: str,
+    subtitle: str | None = None,
     description: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
-    font_description: int = ui.NORMAL,  # TODO cleanup @ redesign
     color_description: int = ui.FG,  # TODO cleanup @ redesign
-    width: int = MONO_HEX_PER_LINE,
+    width: int | None = MONO_HEX_PER_LINE,
     width_paginated: int = MONO_HEX_PER_LINE - 2,
     truncate: bool = False,
     truncate_middle: bool = False,
+    truncate_ellipsis: str = "...",
 ) -> None:
     if truncate:
         text = Text(title, icon, icon_color, new_lines=False)
         description_lines = 0
-        if description is not None:
-            description_lines = Span(description, 0, font_description).count_lines()
-            text.content.extend(
-                (font_description, color_description, description, ui.FG)
-            )
+        if subtitle is not None:
+            description_lines += Span(subtitle, 0, ui.BOLD).count_lines()
+            text.bold(subtitle)
             text.br()
-        text.mono(
-            *_truncate_hex(
-                data,
-                lines=TEXT_MAX_LINES - description_lines,
-                width=width,
-                middle=truncate_middle,
+        if description is not None:
+            description_lines += Span(description, 0, ui.NORMAL).count_lines()
+            text.content.extend((ui.NORMAL, color_description, description, ui.FG))
+            text.br()
+        if width is not None:
+            text.mono(
+                *_truncate_hex(
+                    data,
+                    lines=TEXT_MAX_LINES - description_lines,
+                    width=width,
+                    middle=truncate_middle,
+                    ellipsis=truncate_ellipsis,
+                )
             )
-        )
+        else:
+            text.mono(data)
         content: ui.Layout = Confirm(text)
     else:
-        width_paginated = min(width, MONO_HEX_PER_LINE - 2)
-        assert color_description == ui.FG  # only ethereum uses this and it truncates
-        para = [(font_description, description)] if description is not None else []
-        para.extend((ui.MONO, line) for line in chunks(data, width_paginated))
+        para = []
+        if subtitle is not None:
+            para.append((ui.BOLD, subtitle))
+        if description is not None:
+            assert (
+                color_description == ui.FG
+            )  # only ethereum uses this and it truncates
+            para.append((ui.NORMAL, description))
+        if width is not None:
+            para.extend((ui.MONO, line) for line in chunks(data, width_paginated))
+        else:
+            para.append((ui.MONO, data))
         content = paginate_paragraphs(para, title, icon, icon_color)
     await raise_if_cancelled(interact(ctx, content, br_type, br_code))
 
@@ -597,8 +615,9 @@ async def confirm_metadata(
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
     hide_continue: bool = False,
     hold: bool = False,
+    icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
 ) -> None:
-    text = Text(title, ui.ICON_SEND, ui.GREEN, new_lines=False)
+    text = Text(title, icon, ui.GREEN, new_lines=False)
     text.format_parametrized(content, param if param is not None else "")
 
     if not hide_continue:
@@ -730,5 +749,29 @@ async def confirm_signverify(
             paginate_text(message, header, font=font),
             br_type,
             ButtonRequestType.Other,
+        )
+    )
+
+
+# TODO cleanup @ redesign
+async def confirm_timebounds_stellar(
+    ctx: wire.GenericContext, start: int, end: int
+) -> None:
+    text = Text("Confirm timebounds", ui.ICON_SEND, ui.GREEN)
+    text.bold("Valid from (UTC):")
+    if start:
+        text.normal(str(start))
+    else:
+        text.mono("[no restriction]")
+
+    text.bold("Valid to (UTC):")
+    if end:
+        text.normal(str(end))
+    else:
+        text.mono("[no restriction]")
+
+    await raise_if_cancelled(
+        interact(
+            ctx, Confirm(text), "confirm_timebounds", ButtonRequestType.ConfirmOutput
         )
     )

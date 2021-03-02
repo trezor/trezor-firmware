@@ -67,12 +67,15 @@ ADDRESS_N = parse_path(stellar.DEFAULT_BIP32_PATH)
 NETWORK_PASSPHRASE = "Test SDF Network ; September 2015"
 
 
-def _create_msg() -> messages.StellarSignTx:
+def _create_msg(memo=False) -> messages.StellarSignTx:
+    kwargs = {"memo_type": 0}
+    if memo:
+        kwargs = {"memo_type": 1, "memo_text": "hi"}
     return messages.StellarSignTx(
         source_account="GAK5MSF74TJW6GLM7NLTL76YZJKM2S4CGP3UH4REJHPHZ4YBZW2GSBPW",
         fee=100,
         sequence_number=0x100000000,
-        memo_type=0,
+        **kwargs,
     )
 
 
@@ -209,6 +212,131 @@ def test_sign_tx_payment_op_custom_asset12(client):
     )
 
 
+# testcase added for UI code coverage, may not normally make sense
+def test_sign_tx_allow_trust_op(client):
+
+    op = messages.StellarAllowTrustOp()
+    op.is_authorized = True
+    op.trusted_account = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
+    op.asset_type = 1
+    op.asset_code = "X"
+    tx = _create_msg(memo=True)
+
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
+
+    assert (
+        b64encode(response.signature)
+        == b"JLLwaDvPAomcDnljhlM3LF6WQvlQzI+V/afI95X41HGRYgwbYrxXOplzzdBhbRxd09VxDkb3nQ271l6MEqn/CQ=="
+    )
+
+
+# testcase added for UI code coverage, may not normally make sense
+def test_sign_tx_change_trust_op(client):
+
+    op = messages.StellarChangeTrustOp()
+    op.limit = 500111000
+    op.source_account = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
+
+    op.asset = messages.StellarAssetType(
+        type=2,
+        code="ABCDEFGHIJKL",
+        issuer="GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC",
+    )
+    tx = _create_msg()
+
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
+
+    assert (
+        b64encode(response.signature)
+        == b"OZdDO/qW8o/xbV6nZaDM/D7z9/fqbrk+P4lSzzCqeD3C8nGOg+Jl33JqHek0zNNOW9Pn+tPpfdoQnuZWJzocCw=="
+    )
+
+
+# testcase added for UI code coverage, may not normally make sense
+def test_sign_tx_passive_offer_op(client):
+
+    op = messages.StellarCreatePassiveOfferOp()
+    op.selling_asset = messages.StellarAssetType(
+        type=2,
+        code="ABCDEFGHIJKL",
+        issuer="GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC",
+    )
+    op.buing_asset = messages.StellarAssetType(
+        type=1,
+        code="X",
+        issuer="GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC",
+    )
+    op.amount = 4
+    op.price_n = 5
+    op.price_d = 6
+
+    tx = _create_msg()
+
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
+
+    assert (
+        b64encode(response.signature)
+        == b"78/YNz3U4PZmKubPgl+PIm/Jr8omISshJtwJuqXp4rSo9bAxxYRvMSa2IGFIy9PfIe2kDxnqSajTwiUFGOOtAw=="
+    )
+
+
+# testcase added for UI code coverage, may not normally make sense
+def test_sign_tx_manage_offer_op(client):
+
+    op = messages.StellarManageOfferOp()
+    op.selling_asset = messages.StellarAssetType(
+        type=2,
+        code="ABCDEFGHIJKL",
+        issuer="GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC",
+    )
+    op.buing_asset = messages.StellarAssetType(
+        type=1,
+        code="X",
+        issuer="GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC",
+    )
+    op.amount = 4
+    op.price_n = 5
+    op.price_d = 6
+    op.offer_id = 1337
+
+    tx = _create_msg()
+
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
+
+    assert (
+        b64encode(response.signature)
+        == b"tkCta8G5dmxOVYJ+/mGve1lzNyIKZB83DwWdZH2A6zGI7KF2VYGG8RNHmlMpMqeBFcit9o+/Ss+IAQ86CZBTAw=="
+    )
+
+
+# testcase added for UI code coverage, may not normally make sense
+def test_sign_tx_path_payment_op(client):
+
+    op = messages.StellarPathPaymentOp()
+    op.send = messages.StellarAssetType(
+        type=1,
+        code="X",
+        issuer="GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC",
+    )
+    op.send_max = 50000
+    op.destination_account = "GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC"
+    op.destination_asset = messages.StellarAssetType(
+        type=1,
+        code="X",
+        issuer="GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC",
+    )
+    op.destination_amount = 6667
+
+    tx = _create_msg()
+
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
+
+    assert (
+        b64encode(response.signature)
+        == b"KMUKub6SRXS4R86ux74bSSJXtMMQ1tEWhxc71jcAozKRX/db5dJC7oBVSeijSCT+hJOG/wTw6Jd1UBkJC0JgCw=="
+    )
+
+
 def test_sign_tx_set_options(client):
     """Set inflation destination"""
 
@@ -276,6 +404,30 @@ def test_sign_tx_set_options(client):
         b64encode(response.signature)
         == b"22rfcOrxBiE5akpNsnWX8yPgAOpclbajVqXUaXMNeL000p1OhFhi050t1+GNRpoSNyfVsJGNvtlICGpH4ksDAQ=="
         # db6adf70eaf10621396a4a4db27597f323e000ea5c95b6a356a5d469730d78bd34d29d4e845862d39d2dd7e18d469a123727d5b0918dbed948086a47e24b0301
+    )
+
+    op = messages.StellarSetOptionsOp()
+    op.signer_type = 1
+    op.signer_key = bytes.fromhex(
+        "72187adb879c414346d77c71af8cce7b6eaa57b528e999fd91feae6b6418628e"
+    )
+    op.signer_weight = 0
+
+    tx = _create_msg()
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
+    assert (
+        b64encode(response.signature)
+        == b"fvZ8rzZPkJwa1lsr4/z/wXZLT6cBwFmwY861nmEnhy57Stw1dxCipo5PJeXk/EhyLxlAwL99+m7qWtdW38EZBg=="
+    )
+
+    op = messages.StellarSetOptionsOp()
+    op.clear_flags = 4
+
+    tx = _create_msg()
+    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
+    assert (
+        b64encode(response.signature)
+        == b"ZObGPxqyavv1fjXnlVQJM35FZu8zkJBAWkuOaI+KqyHTB8rOI4oXb27tohAnxiAzMn7e/tiNfqZwzQQS6RqmBg=="
     )
 
 
