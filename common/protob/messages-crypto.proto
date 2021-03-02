@@ -83,6 +83,7 @@ message GetECDHSessionKey {
  */
 message ECDHSessionKey {
     required bytes session_key = 1;     // ECDH session key
+    optional bytes public_key = 2;  // identity public key
 }
 
 /**

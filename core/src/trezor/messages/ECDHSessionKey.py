@@ -17,11 +17,14 @@ class ECDHSessionKey(p.MessageType):
         self,
         *,
         session_key: bytes,
+        public_key: bytes = None,
     ) -> None:
         self.session_key = session_key
+        self.public_key = public_key
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
             1: ('session_key', p.BytesType, p.FLAG_REQUIRED),
+            2: ('public_key', p.BytesType, None),
         }
