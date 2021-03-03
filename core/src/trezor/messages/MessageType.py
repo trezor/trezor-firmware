@@ -45,6 +45,7 @@ EndSession: Literal[83] = 83
 DoPreauthorized: Literal[84] = 84
 PreauthorizedRequest: Literal[85] = 85
 CancelAuthorization: Literal[86] = 86
+RebootToBootloader: Literal[87] = 87
 Deprecated_PassphraseStateRequest: Literal[77] = 77
 Deprecated_PassphraseStateAck: Literal[78] = 78
 FirmwareErase: Literal[6] = 6
@@ -207,4 +208,3 @@ if not utils.BITCOIN_ONLY:
     WebAuthnCredentials: Literal[801] = 801
     WebAuthnAddResidentCredential: Literal[802] = 802
     WebAuthnRemoveResidentCredential: Literal[803] = 803
-RebootToBootloader: Literal[804] = 804

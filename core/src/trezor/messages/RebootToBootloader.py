@@ -11,4 +11,4 @@ if __debug__:
 
 
 class RebootToBootloader(p.MessageType):
-    MESSAGE_WIRE_TYPE = 804
+    MESSAGE_WIRE_TYPE = 87
