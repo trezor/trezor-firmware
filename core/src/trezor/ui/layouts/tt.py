@@ -62,6 +62,7 @@ __all__ = (
     "confirm_modify_fee",
     "confirm_coinjoin",
     "confirm_timebounds_stellar",
+    "confirm_proposals_tezos",
 )
 
 
@@ -451,6 +452,7 @@ async def confirm_output(
     amount: str,
     font_amount: int = ui.NORMAL,  # TODO cleanup @ redesign
     color_to: int = ui.FG,  # TODO cleanup @ redesign
+    to_str: str = " to\n",  # TODO cleanup @ redesign
     width: int = MONO_ADDR_PER_LINE,
     width_paginated: int = MONO_ADDR_PER_LINE - 1,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
@@ -462,7 +464,7 @@ async def confirm_output(
         content: ui.Layout = paginate_paragraphs(para, title, ui.ICON_SEND, ui.GREEN)
     else:
         text = Text(title, ui.ICON_SEND, ui.GREEN, new_lines=False)
-        text.content = [font_amount, amount, ui.NORMAL, color_to, " to\n", ui.FG]
+        text.content = [font_amount, amount, ui.NORMAL, color_to, to_str, ui.FG]
         text.mono(*chunks_intersperse(address, width))
         content = Confirm(text)
 
@@ -547,15 +549,22 @@ async def confirm_hex(
 
 
 async def confirm_total(
-    ctx: wire.GenericContext, total_amount: str, fee_amount: str
+    ctx: wire.GenericContext,
+    total_amount: str,
+    fee_amount: str,
+    title: str = "Confirm transaction",
+    total_label: str = "Total amount:\n",
+    fee_label: str = "\nincluding fee:\n",
+    icon_color: int = ui.GREEN,
+    br_type: str = "confirm_total",
 ) -> None:
-    text = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN, new_lines=False)
-    text.normal("Total amount:\n")
+    text = Text(title, ui.ICON_SEND, icon_color, new_lines=False)
+    text.normal(total_label)
     text.bold(total_amount)
-    text.normal("\nincluding fee:\n")
+    text.normal(fee_label)
     text.bold(fee_amount)
     await raise_if_cancelled(
-        interact(ctx, HoldToConfirm(text), "confirm_total", ButtonRequestType.SignTx)
+        interact(ctx, HoldToConfirm(text), br_type, ButtonRequestType.SignTx)
     )
 
 
@@ -616,8 +625,9 @@ async def confirm_metadata(
     hide_continue: bool = False,
     hold: bool = False,
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
+    icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
 ) -> None:
-    text = Text(title, icon, ui.GREEN, new_lines=False)
+    text = Text(title, icon, icon_color, new_lines=False)
     text.format_parametrized(content, param if param is not None else "")
 
     if not hide_continue:
@@ -774,4 +784,28 @@ async def confirm_timebounds_stellar(
         interact(
             ctx, Confirm(text), "confirm_timebounds", ButtonRequestType.ConfirmOutput
         )
+    )
+
+
+# TODO cleanup @ redesign
+async def confirm_proposals_tezos(
+    ctx: wire.GenericContext, proposals: Sequence[str]
+) -> None:
+    if len(proposals) > 1:
+        title = "Submit proposals"
+    else:
+        title = "Submit proposal"
+
+    pages: list[ui.Component] = []
+    for page, proposal in enumerate(proposals):
+        text = Text(title, ui.ICON_SEND, icon_color=ui.PURPLE, new_lines=False)
+        text.bold("Proposal {}:\n".format(page + 1))
+        text.mono(*chunks_intersperse(proposal, 17))
+        pages.append(text)
+
+    pages[-1] = Confirm(pages[-1])
+    paginated = Paginated(pages)
+
+    await raise_if_cancelled(
+        interact(ctx, paginated, "confirm_proposals", ButtonRequestType.SignTx)
     )
