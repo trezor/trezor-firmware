@@ -62,7 +62,7 @@ impl Map {
         //  - with `_mp_map_lookup_kind_t_MP_MAP_LOOKUP`, `map` stays unmodified and the
         //    cast to mut ptr is therefore safe.
         unsafe {
-            let map = self as *const Map as *mut Map;
+            let map = self as *const Self as *mut Self;
             let elem = ffi::mp_map_lookup(map, index, ffi::_mp_map_lookup_kind_t_MP_MAP_LOOKUP)
                 .as_ref()
                 .ok_or(Error::Missing)?;
@@ -76,7 +76,7 @@ impl Map {
 
     pub fn set_obj(&mut self, index: Obj, value: Obj) {
         unsafe {
-            let map = self as *mut Map;
+            let map = self as *mut Self;
             let elem = ffi::mp_map_lookup(
                 map,
                 index,

@@ -6,13 +6,13 @@ use crate::{
 };
 
 pub fn try_or_none(f: impl FnOnce() -> Result<Obj, Error>) -> Obj {
-    f().unwrap_or(Obj::const_none())
+    f().ok().unwrap_or_else(Obj::const_none)
 }
 
 pub fn try_with_kwargs(kw: *const Map, func: impl FnOnce(&Map) -> Result<Obj, Error>) -> Obj {
     unsafe { kw.as_ref() }
         .and_then(|kw| func(kw).ok())
-        .unwrap_or(Obj::const_none())
+        .unwrap_or_else(Obj::const_none)
 }
 
 pub fn try_with_args_and_kwargs(

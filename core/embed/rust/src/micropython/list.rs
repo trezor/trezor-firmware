@@ -18,19 +18,19 @@ impl List {
 
     pub fn append(&mut self, value: Obj) {
         unsafe {
-            let ptr = self as *mut List;
+            let ptr = self as *mut Self;
             let list = Obj::from_ptr(ptr.cast());
             ffi::mp_obj_list_append(list, value);
         }
     }
 }
 
-impl Into<Obj> for Gc<List> {
-    fn into(self) -> Obj {
+impl From<Gc<List>> for Obj {
+    fn from(value: Gc<List>) -> Self {
         // SAFETY:
-        //  - We are an object struct with a base and a type.
-        //  - We are GC-allocated.
-        unsafe { Obj::from_ptr(Self::into_raw(self).cast()) }
+        //  - `value` is an object struct with a base and a type.
+        //  - `value` is GC-allocated.
+        unsafe { Obj::from_ptr(Gc::into_raw(value).cast()) }
     }
 }
 

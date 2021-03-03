@@ -1,7 +1,9 @@
 use core::ops::Deref;
 
-use crate::ui::math::{Align, Point, Rect};
-use crate::ui::{display, math::Color};
+use crate::ui::{
+    display,
+    math::{Align, Color, Point, Rect},
+};
 
 use super::component::{Component, Event, EventCtx, Widget};
 

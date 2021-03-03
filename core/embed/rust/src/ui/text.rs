@@ -134,7 +134,7 @@ impl Text {
                             }
                         },
                     )?;
-                    if let Continuation::Break = cont {
+                    if let ControlFlow::Break = cont {
                         break;
                     }
                 }
@@ -243,7 +243,7 @@ const HYPHEN_COLOR: Color = theme::GREY_LIGHT;
 const ELLIPSIS_FONT: i32 = theme::FONT_BOLD;
 const ELLIPSIS_COLOR: Color = theme::GREY_LIGHT;
 
-enum Continuation {
+enum ControlFlow {
     Continue,
     Break,
 }
@@ -255,7 +255,7 @@ fn render_text(
     cursor: &mut Point,
     shaper: &mut impl Shaper,
     page_end_fn: impl Fn(usize) -> Option<Point>,
-) -> Result<Continuation, Error> {
+) -> Result<ControlFlow, Error> {
     let mut remaining_text = text;
 
     while !remaining_text.is_empty() {
@@ -307,7 +307,7 @@ fn render_text(
                     }
                 }
                 // Quit, there is not enough space for a line break.
-                return Ok(Continuation::Break);
+                return Ok(ControlFlow::Break);
             }
             // Advance the cursor to the beginning of the next line.
             cursor.x = bounds.x0;
@@ -325,7 +325,7 @@ fn render_text(
         }
     }
 
-    Ok(Continuation::Continue)
+    Ok(ControlFlow::Continue)
 }
 
 fn render_page_overflow(pos: Point, style: &TextStyle, shaper: &mut impl Shaper) {

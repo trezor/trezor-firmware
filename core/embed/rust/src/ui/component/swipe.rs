@@ -1,7 +1,7 @@
 use core::ops::RangeInclusive;
 
-use crate::ui::display;
 use crate::ui::{
+    display,
     math::{Point, Rect},
     theme,
 };

@@ -55,12 +55,10 @@ pub fn text_width(text: &[u8], font: i32) -> i32 {
 
 pub fn text_height() -> i32 {
     const TEXT_HEIGHT: i32 = 16;
-
-    return TEXT_HEIGHT;
+    TEXT_HEIGHT
 }
 
 pub fn line_height() -> i32 {
     const LINE_HEIGHT: i32 = 26;
-
-    return LINE_HEIGHT;
+    LINE_HEIGHT
 }

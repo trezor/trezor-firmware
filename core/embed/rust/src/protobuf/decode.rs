@@ -90,11 +90,9 @@ impl Decoder {
         msg: &MsgDef,
         map: &mut Map,
     ) -> Result<(), Error> {
-        loop {
-            let field_key = match stream.read_uvarint() {
-                Ok(key) => key,
-                Err(_) => break, // End of stream.
-            };
+        // Loop, trying to read the field key that contains the tag and primitive value
+        // type. If we fail to read the key, we are at the end of stream.
+        while let Ok(field_key) = stream.read_uvarint() {
             let field_tag = u8::try_from(field_key >> 3)?;
             let wire_type = u8::try_from(field_key & 7)?;
 
@@ -145,14 +143,11 @@ impl Decoder {
     /// enforced in the blob compilation.
     pub fn decode_defaults_into(&self, msg: &MsgDef, map: &mut Map) -> Result<(), Error> {
         let stream = &mut InputStream::new(msg.defaults);
-        loop {
-            // Because we are sure that our field tags fit in one byte, and because this is
-            // a trusted stream, we encode the field tag directly as u8, without the wire
-            // type.
-            let field_tag = match stream.read_byte() {
-                Ok(tag) => tag,
-                Err(_) => break, // End of stream.
-            };
+
+        // Because we are sure that our field tags fit in one byte, and because this is
+        // a trusted stream, we encode the field tag directly as u8, without the wire
+        // type.
+        while let Ok(field_tag) = stream.read_byte() {
             let field = msg.field(field_tag).ok_or(Error::Missing)?;
             let field_name = Qstr::from(field.name);
             if map.contains_key(field_name) {
@@ -185,16 +180,15 @@ impl Decoder {
         for field in msg.fields {
             let field_name = Qstr::from(field.name);
             if map.contains_key(field_name) {
-                // Field is assigned.
-            } else {
-                if field.is_required() {
-                    // Required field is missing, abort.
-                    return Err(Error::Missing);
-                } else {
-                    // Optional field, set to None.
-                    map.set(field_name, Obj::const_none());
-                }
+                // Field is assigned, skip.
+                continue;
             }
+            if field.is_required() {
+                // Required field is missing, abort.
+                return Err(Error::Missing);
+            }
+            // Optional field, set to None.
+            map.set(field_name, Obj::const_none());
         }
         Ok(())
     }

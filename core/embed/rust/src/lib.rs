@@ -5,7 +5,6 @@
 #![feature(dispatch_from_dyn)]
 #![feature(once_cell)]
 #![deny(clippy::all)]
-#![deny(clippy::pedantic)]
 #![allow(dead_code)]
 
 mod error;

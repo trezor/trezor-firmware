@@ -1,5 +1,7 @@
-use crate::ui::math::{Offset, Point, Rect};
-use crate::ui::{display, math::Color};
+use crate::ui::{
+    display,
+    math::{Color, Offset, Rect},
+};
 
 use super::component::{Component, Event, EventCtx, Widget};
 

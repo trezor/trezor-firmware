@@ -34,12 +34,12 @@ impl Dict {
     }
 }
 
-impl Into<Obj> for Gc<Dict> {
-    fn into(self) -> Obj {
+impl From<Gc<Dict>> for Obj {
+    fn from(value: Gc<Dict>) -> Self {
         // SAFETY:
-        //  - We are an object struct with a base and a type.
-        //  - We are GC-allocated.
-        unsafe { Obj::from_ptr(Gc::into_raw(self).cast()) }
+        //  - `value` is an object struct with a base and a type.
+        //  - `value` is GC-allocated.
+        unsafe { Obj::from_ptr(Gc::into_raw(value).cast()) }
     }
 }
 
