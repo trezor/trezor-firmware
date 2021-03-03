@@ -9,7 +9,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 ### Changed
-- Use Trezor instead of TREZOR.
 
 ### Deprecated
 
@@ -19,10 +18,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Security
 
-## 1.9.0 [February 2021]
+## 1.9.0 [to be released soon]
 
 ### Added
-- "Stay in bootloader" flag
+- "Stay in bootloader" flag.
+
+### Changed
+- Use Trezor instead of TREZOR.
 
 ## 1.8.0 [February 2019]
 
