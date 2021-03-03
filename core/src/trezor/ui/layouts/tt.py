@@ -557,15 +557,14 @@ async def confirm_total(
     fee_label: str = "\nincluding fee:\n",
     icon_color: int = ui.GREEN,
     br_type: str = "confirm_total",
+    br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> None:
     text = Text(title, ui.ICON_SEND, icon_color, new_lines=False)
     text.normal(total_label)
     text.bold(total_amount)
     text.normal(fee_label)
     text.bold(fee_amount)
-    await raise_if_cancelled(
-        interact(ctx, HoldToConfirm(text), br_type, ButtonRequestType.SignTx)
-    )
+    await raise_if_cancelled(interact(ctx, HoldToConfirm(text), br_type, br_code))
 
 
 # TODO cleanup @ redesign
@@ -624,11 +623,14 @@ async def confirm_metadata(
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
     hide_continue: bool = False,
     hold: bool = False,
+    param_font: int = ui.BOLD,
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
 ) -> None:
     text = Text(title, icon, icon_color, new_lines=False)
-    text.format_parametrized(content, param if param is not None else "")
+    text.format_parametrized(
+        content, param if param is not None else "", param_font=param_font
+    )
 
     if not hide_continue:
         text.br()
