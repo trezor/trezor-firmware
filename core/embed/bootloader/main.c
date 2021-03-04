@@ -312,7 +312,6 @@ int main(void) {
     // ... or if user touched the screen on start
     // ... or we have stay_in_bootloader flag to force it
     if (touched || stay_in_bootloader == sectrue) {
-
       // no ui_fadeout(); - we already start from black screen
       ui_screen_info(secfalse, &vhdr, &hdr);
       ui_fadein();
