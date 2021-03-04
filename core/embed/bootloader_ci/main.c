@@ -228,11 +228,10 @@ int main(void) {
 
   vendor_header vhdr;
   image_header hdr;
-  secbool firmware_present;
 
   // detect whether the devices contains a valid firmware
 
-  firmware_present =
+  secbool firmware_present =
       load_vendor_header_keys((const uint8_t *)FIRMWARE_START, &vhdr);
   if (sectrue == firmware_present) {
     firmware_present = check_vendor_keys_lock(&vhdr);
