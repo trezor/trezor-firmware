@@ -153,13 +153,13 @@ static secbool _send_msg(uint8_t iface_num, uint16_t msg_id,
 }
 
 #define MSG_SEND_INIT(TYPE) TYPE msg_send = TYPE##_init_default
+#define MSG_SEND_ASSIGN_REQUIRED_VALUE(FIELD, VALUE) \
+  { msg_send.FIELD = VALUE; }
 #define MSG_SEND_ASSIGN_VALUE(FIELD, VALUE) \
   {                                         \
     msg_send.has_##FIELD = true;            \
     msg_send.FIELD = VALUE;                 \
   }
-#define MSG_SEND_ASSIGN_REQUIRED_VALUE(FIELD, VALUE) \
-  { msg_send.FIELD = VALUE; }
 #define MSG_SEND_ASSIGN_STRING(FIELD, VALUE)                    \
   {                                                             \
     msg_send.has_##FIELD = true;                                \
@@ -466,7 +466,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
                                uint8_t *buf) {
   MSG_RECV_INIT(FirmwareUpload);
   MSG_RECV_CALLBACK(payload, _read_payload, read_offset);
-  secbool r = MSG_RECV(FirmwareUpload);
+  const secbool r = MSG_RECV(FirmwareUpload);
 
   if (sectrue != r || chunk_size != (chunk_requested + read_offset)) {
     MSG_SEND_INIT(Failure);
