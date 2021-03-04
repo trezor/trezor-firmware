@@ -4,6 +4,8 @@
 # Import always-active modules
 import storage
 import storage.device
+if __debug__:
+    import storage.debug
 from trezor import config, pin, utils  # noqa: F401
 
 # Prepare the USB interfaces first. Do not connect to the host yet.
