@@ -1,4 +1,4 @@
-use core::fmt::Debug;
+use core::{convert::Infallible, fmt::Debug};
 
 pub enum Error {
     Missing,
@@ -17,5 +17,11 @@ impl Debug for Error {
             Error::NotBuffer => f.write_str("NotBuffer"),
             Error::NotInt => f.write_str("NotInt"),
         }
+    }
+}
+
+impl From<Infallible> for Error {
+    fn from(_: Infallible) -> Self {
+        unreachable!()
     }
 }

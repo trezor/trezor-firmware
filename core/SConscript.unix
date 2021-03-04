@@ -559,7 +559,7 @@ if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
 #
 
 RUST_TOOLCHAIN = 'nightly'
-RUST_PROFILE = 'debug'
+RUST_PROFILE = 'release'
 RUST_LIB = 'trezor_lib'
 RUST_LIBDIR = f'embed/rust/target/{RUST_PROFILE}'
 RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
@@ -580,8 +580,8 @@ rust = env.Command(
 
 env.Depends(rust, qstr_generated)
 
-env.Append(LINKFLAGS=f'-L{RUST_LIBDIR}')
-env.Append(LINKFLAGS=f'-l{RUST_LIB}')
+env.Append(LINKFLAGS=f' -L{RUST_LIBDIR}')
+env.Append(LINKFLAGS=f' -l{RUST_LIB}')
 
 #
 # Program objects

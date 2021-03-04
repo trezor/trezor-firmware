@@ -399,6 +399,7 @@ env.Replace(
     LINKFLAGS='-T embed/firmware/memory_${TREZOR_MODEL}%s.ld -Wl,--gc-sections -Wl,-Map=build/firmware/firmware.map -Wl,--warn-common' % LD_VARIANT,
     CPPPATH=[
         '.',
+        'embed/rust',
         'embed/firmware',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
@@ -431,13 +432,14 @@ env.Replace(
 #
 
 qstr_micropython = 'vendor/micropython/py/qstrdefs.h'
+qstr_protobuf = 'src/trezor/messages/pbuf_qstr.h'
 
 qstr_collected = env.CollectQstr(
     target='genhdr/qstrdefs.collected.h', source=SOURCE_QSTR)
 
 qstr_preprocessed = env.PreprocessQstr(
     target='genhdr/qstrdefs.preprocessed.h',
-    source=[qstr_micropython, qstr_collected])
+    source=[qstr_micropython, qstr_protobuf, qstr_collected])
 
 qstr_generated = env.GenerateQstrDefs(
     target='genhdr/qstrdefs.generated.h', source=qstr_preprocessed)
@@ -584,6 +586,36 @@ if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
     )
 
 #
+# Rust library
+#
+
+RUST_TOOLCHAIN = 'nightly'
+RUST_PROFILE = 'release'
+RUST_LIB = 'trezor_lib'
+RUST_TARGET = 'thumbv7em-none-eabihf'
+RUST_LIBDIR = f'embed/rust/target/{RUST_TARGET}/{RUST_PROFILE}'
+RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
+RUST_HEADERPATH = f'embed/rust/librust.h'
+
+def cargo_build():
+    # Determine the profile build flags.
+    if RUST_PROFILE == 'release':
+        profile = '--release'
+    else:
+        profile = ''
+    return f'cd embed/rust; cargo +{RUST_TOOLCHAIN} build {profile} --target={RUST_TARGET}'
+
+rust = env.Command(
+    target=RUST_LIBPATH,
+    source='',
+    action=cargo_build(), )
+
+env.Depends(rust, qstr_generated)
+
+env.Append(LINKFLAGS=f' -L{RUST_LIBDIR}')
+env.Append(LINKFLAGS=f' -l{RUST_LIB}')
+
+#
 # Program objects
 #
 
@@ -625,8 +657,10 @@ program_elf = env.Command(
     target='firmware.elf',
     source=obj_program,
     action=
-    '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lm -lgcc',
+    '$LINK -o $TARGET $CCFLAGS $CFLAGS $SOURCES $LINKFLAGS -lc_nano -lm -lgcc',
 )
+
+env.Depends(program_elf, rust)
 
 if TREZOR_MODEL == 'T':
     action_bin=[
