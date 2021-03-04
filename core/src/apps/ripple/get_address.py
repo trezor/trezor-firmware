@@ -17,7 +17,7 @@ async def get_address(ctx, msg: RippleGetAddress, keychain):
     address = address_from_public_key(pubkey)
 
     if msg.show_display:
-        desc = address_n_to_str(msg.address_n)
-        await show_address(ctx, address=address, address_qr=address, desc=desc)
+        title = address_n_to_str(msg.address_n)
+        await show_address(ctx, address=address, address_qr=address, title=title)
 
     return RippleAddress(address=address)

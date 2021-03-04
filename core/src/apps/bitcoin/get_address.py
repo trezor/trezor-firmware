@@ -82,19 +82,19 @@ async def get_address(
                 pubnodes = [hd.node for hd in msg.multisig.pubkeys]
             multisig_index = multisig_pubkey_index(msg.multisig, node.public_key())
 
-            desc = "Multisig %d of %d" % (msg.multisig.m, len(pubnodes))
+            title = "Multisig %d of %d" % (msg.multisig.m, len(pubnodes))
             await show_address(
                 ctx,
                 address=address_short,
                 address_qr=address_qr,
-                desc=desc,
+                title=title,
                 multisig_index=multisig_index,
                 xpubs=_get_xpubs(coin, multisig_xpub_magic, pubnodes),
             )
         else:
-            desc = address_n_to_str(msg.address_n)
+            title = address_n_to_str(msg.address_n)
             await show_address(
-                ctx, address=address_short, address_qr=address_qr, desc=desc
+                ctx, address=address_short, address_qr=address_qr, title=title
             )
 
     return Address(address=address)

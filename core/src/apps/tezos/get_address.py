@@ -22,7 +22,7 @@ async def get_address(ctx, msg, keychain):
     )
 
     if msg.show_display:
-        desc = address_n_to_str(msg.address_n)
-        await show_address(ctx, address=address, address_qr=address, desc=desc)
+        title = address_n_to_str(msg.address_n)
+        await show_address(ctx, address=address, address_qr=address, title=title)
 
     return TezosAddress(address=address)
