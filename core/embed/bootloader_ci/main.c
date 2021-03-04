@@ -251,7 +251,7 @@ int main(void) {
   // show intro animation
 
   // no ui_fadeout(); - we already start from black screen
-  ui_screen_third();
+  ui_screen_welcome_third();
   ui_fadein();
 
   // and start the usb loop

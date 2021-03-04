@@ -285,19 +285,19 @@ int main(void) {
     // show intro animation
 
     // no ui_fadeout(); - we already start from black screen
-    ui_screen_first();
+    ui_screen_welcome_first();
     ui_fadein();
 
     hal_delay(1000);
 
     ui_fadeout();
-    ui_screen_second();
+    ui_screen_welcome_second();
     ui_fadein();
 
     hal_delay(1000);
 
     ui_fadeout();
-    ui_screen_third();
+    ui_screen_welcome_third();
     ui_fadein();
 
     // erase storage

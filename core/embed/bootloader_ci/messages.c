@@ -527,7 +527,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
       read_offset = 0;
 
       ui_fadeout();
-      ui_screen_install();
+      ui_screen_install_start();
       ui_fadein();
 
       ensure(flash_erase_sectors(FIRMWARE_SECTORS, FIRMWARE_SECTORS_COUNT,

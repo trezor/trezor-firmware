@@ -19,24 +19,23 @@
 
 #include <string.h>
 
-#include "display.h"
-#include "mini_printf.h"
 
 #include "bootui.h"
-#include "touch.h"
-#include "version.h"
-
+#include "display.h"
 #include "icon_cancel.h"
 #include "icon_confirm.h"
 #include "icon_done.h"
 #include "icon_fail.h"
 #include "icon_info.h"
 #include "icon_install.h"
-#include "icon_wipe.h"
-
 #include "icon_logo.h"
 #include "icon_safeplace.h"
 #include "icon_welcome.h"
+#include "icon_wipe.h"
+#include "mini_printf.h"
+#include "touch.h"
+#include "version.h"
+
 
 #define BACKLIGHT_NORMAL 150
 
@@ -121,19 +120,19 @@ void ui_screen_boot_click(void) {
 
 // welcome UI
 
-void ui_screen_first(void) {
+void ui_screen_welcome_first(void) {
   display_icon(0, 0, 240, 240, toi_icon_logo + 12, sizeof(toi_icon_logo) - 12,
                COLOR_BLACK, COLOR_WHITE);
 }
 
-void ui_screen_second(void) {
+void ui_screen_welcome_second(void) {
   display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
   display_icon((DISPLAY_RESX - 200) / 2, (DISPLAY_RESY - 60) / 2, 200, 60,
                toi_icon_safeplace + 12, sizeof(toi_icon_safeplace) - 12,
                COLOR_BLACK, COLOR_WHITE);
 }
 
-void ui_screen_third(void) {
+void ui_screen_welcome_third(void) {
   display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
   display_icon((DISPLAY_RESX - 180) / 2, (DISPLAY_RESY - 30) / 2 - 5, 180, 30,
                toi_icon_welcome + 12, sizeof(toi_icon_welcome) - 12,
@@ -250,7 +249,7 @@ void ui_screen_install_confirm_newvendor_or_downgrade_wipe(
   ui_confirm_cancel_buttons();
 }
 
-void ui_screen_install(void) {
+void ui_screen_install_start(void) {
   display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
   display_loader(0, false, -20, COLOR_BL_PROCESS, COLOR_WHITE, toi_icon_install,
                  sizeof(toi_icon_install), COLOR_BLACK);
