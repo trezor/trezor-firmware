@@ -466,7 +466,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
                                uint8_t *buf) {
   MSG_RECV_INIT(FirmwareUpload);
   MSG_RECV_CALLBACK(payload, _read_payload, read_offset);
-  secbool r = MSG_RECV(FirmwareUpload);
+  const secbool r = MSG_RECV(FirmwareUpload);
 
   if (sectrue != r || chunk_size != (chunk_requested + read_offset)) {
     MSG_SEND_INIT(Failure);
