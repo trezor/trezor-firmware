@@ -3,12 +3,13 @@ use core::str;
 
 use crate::{
     error::Error,
-    micropython::{buffer::Buffer, dict::Dict, gc::Gc, list::List, map::Map, obj::Obj, qstr::Qstr},
-    util::{self},
+    micropython::{buffer::Buffer, gc::Gc, list::List, map::Map, obj::Obj, qstr::Qstr},
+    util,
 };
 
 use super::{
     defs::{self, FieldDef, FieldType, MsgDef},
+    msg::MsgObj,
     zigzag,
 };
 
@@ -54,7 +55,7 @@ impl Decoder {
         msg: &MsgDef,
     ) -> Result<Obj, Error> {
         let mut dict = self.empty_message(msg);
-        // SAFETY: We assume that `dict` is not alised here.
+        // SAFETY: We assume that `obj` is not alised here.
         let map = unsafe { dict.as_mut() }.map_mut();
         self.decode_fields_into(stream, msg, map)?;
         self.decode_defaults_into(msg, map)?;
@@ -65,21 +66,21 @@ impl Decoder {
     /// Create a new message instance and fill it from `values`, handling the
     /// default and required fields correctly.
     pub fn message_from_values(&self, values: &Map, msg: &MsgDef) -> Result<Obj, Error> {
-        let mut dict = self.empty_message(msg);
-        // SAFETY: We assume that `dict` is not alised here.
-        let map = unsafe { dict.as_mut() }.map_mut();
+        let mut obj = self.empty_message(msg);
+        // SAFETY: We assume that `obj` is not alised here.
+        let map = unsafe { obj.as_mut() }.map_mut();
         for elem in values.elems() {
             map.set(elem.key, elem.value);
         }
         self.decode_defaults_into(msg, map)?;
         self.assign_required_into(msg, map)?;
-        Ok(dict.into())
+        Ok(obj.into())
     }
 
-    /// Allocate the backing dict with enough pre-allocated space for all
-    /// fields.
-    pub fn empty_message(&self, msg: &MsgDef) -> Gc<Dict> {
-        Dict::alloc_with_capacity(msg.fields.len())
+    /// Allocate the backing message object with enough pre-allocated space for
+    /// all fields.
+    pub fn empty_message(&self, msg: &MsgDef) -> Gc<MsgObj> {
+        MsgObj::alloc_with_capacity(msg.fields.len())
     }
 
     /// Decode message fields one-by-one from the input stream, assigning them

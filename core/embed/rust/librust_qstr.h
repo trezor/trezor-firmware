@@ -2,6 +2,9 @@
 #pragma GCC diagnostic ignored "-Wunused-function"
 
 static void _librust_qstrs(void) {
+  // protobuf
+  MP_QSTR_Msg;
+
   // text
   MP_QSTR_items;
   MP_QSTR_item_offset;

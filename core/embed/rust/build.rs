@@ -89,6 +89,7 @@ fn generate_micropython_bindings() {
         // map
         .whitelist_type("mp_map_elem_t")
         .whitelist_type("mp_map_lookup_kind_t")
+        .whitelist_function("mp_map_init")
         .whitelist_function("mp_map_lookup")
         // runtime
         .whitelist_function("mp_raise_ValueError")
