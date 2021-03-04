@@ -296,6 +296,11 @@ async def handle_session(
     req_type = None
     req_msg = None
 
+    if __debug__ and is_debug_session:
+        import apps.debug
+
+        apps.debug.DEBUG_CONTEXT = ctx
+
     modules = utils.unimport_begin()
     while True:
         try:

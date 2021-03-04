@@ -14,7 +14,7 @@ from ..change_pin import request_pin_confirm
 from . import layout
 
 if __debug__:
-    from apps import debug
+    import storage.debug
 
 if False:
     from trezor.messages.ResetDevice import ResetDevice
@@ -48,7 +48,7 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
     # generate and display internal entropy
     int_entropy = random.bytes(32)
     if __debug__:
-        debug.reset_internal_entropy = int_entropy
+        storage.debug.reset_internal_entropy = int_entropy
     if msg.display_random:
         await layout.show_internal_entropy(ctx, int_entropy)
 
