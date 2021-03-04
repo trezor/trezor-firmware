@@ -1,4 +1,4 @@
-use core::slice;
+use core::{mem::MaybeUninit, slice};
 
 use crate::{
     error::Error,
@@ -8,10 +8,11 @@ use crate::{
 use super::ffi;
 
 pub type Map = ffi::mp_map_t;
+pub type MapElem = ffi::mp_map_elem_t;
 
 impl Map {
-    pub fn fixed<const N: usize>(table: &'static [MapElem; N]) -> Self {
-        // micropython/py/ob.h MP_DEFINE_CONST_DICT
+    pub const fn fixed<const N: usize>(table: &'static [MapElem; N]) -> Self {
+        // micropython/py/obj.h MP_DEFINE_CONST_DICT
         // .all_keys_are_qstrs = 1,
         // .is_fixed = 1,
         // .is_ordered = 1,
@@ -27,10 +28,22 @@ impl Map {
         }
     }
 
-    pub fn at(key: Qstr, value: Obj) -> MapElem {
+    pub const fn at(key: Qstr, value: Obj) -> MapElem {
         MapElem {
-            key: key.into(),
+            key: key.to_obj(),
             value,
+        }
+    }
+}
+
+impl Map {
+    pub fn new_with_capacity(capacity: usize) -> Self {
+        let mut map = MaybeUninit::uninit();
+        // SAFETY: `mp_map_init` completely initializes all fields of `map`, allocating
+        // the backing storage for `capacity` items on the heap.
+        unsafe {
+            ffi::mp_map_init(map.as_mut_ptr(), capacity);
+            map.assume_init()
         }
     }
 }
@@ -87,6 +100,23 @@ impl Map {
             elem.value = value;
         }
     }
+
+    pub fn delete(&mut self, index: impl Into<Obj>) {
+        self.delete_obj(index.into())
+    }
+
+    pub fn delete_obj(&mut self, index: Obj) {
+        unsafe {
+            let map = self as *mut Self;
+            ffi::mp_map_lookup(
+                map,
+                index,
+                ffi::_mp_map_lookup_kind_t_MP_MAP_LOOKUP_REMOVE_IF_FOUND,
+            );
+        }
+    }
 }
 
-pub type MapElem = ffi::mp_map_elem_t;
+// SAFETY: We are in a single-threaded environment.
+unsafe impl Sync for Map {}
+unsafe impl Sync for MapElem {}

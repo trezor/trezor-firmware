@@ -57,3 +57,6 @@ impl TryFrom<Obj> for Gc<Dict> {
         }
     }
 }
+
+// SAFETY: We are in a single-threaded environment.
+unsafe impl Sync for Dict {}

@@ -3,11 +3,11 @@
 #![feature(unsize)]
 #![feature(coerce_unsized)]
 #![feature(dispatch_from_dyn)]
-#![feature(once_cell)]
 #![deny(clippy::all)]
 #![allow(dead_code)]
 
 mod error;
+#[macro_use]
 mod micropython;
 mod trezorhal;
 mod util;

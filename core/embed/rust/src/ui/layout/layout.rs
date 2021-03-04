@@ -1,17 +1,14 @@
 use core::{
     cell::{Cell, RefCell},
     convert::{TryFrom, TryInto},
-    lazy::Lazy,
     time::Duration,
 };
 
 use crate::{
     error::Error,
     micropython::{
-        dict::Dict,
-        func::Func,
         gc::Gc,
-        map::{Map, MapElem},
+        map::Map,
         obj::{Obj, ObjBase},
         qstr::Qstr,
         typ::Type,
@@ -63,7 +60,7 @@ impl LayoutObj {
     /// Create a new `LayoutObj`, wrapping a root component.
     pub fn new(root: impl ObjComponent + 'static) -> Gc<Self> {
         Gc::new(Self {
-            base: Self::obj_type().in_base(),
+            base: Self::obj_type().to_base(),
             timer_fn: Cell::new(Obj::const_none()),
             event_ctx: RefCell::new(EventCtx::new()),
             root: Gc::new(RefCell::new(root)),
@@ -108,30 +105,18 @@ impl LayoutObj {
     }
 
     fn obj_type() -> &'static Type {
-        // TODO: Remove `Lazy`, generate with a macro into `static`, not `static mut`.
-        static mut SET_TIMER_FN: Lazy<Func> = Lazy::new(|| Func::extern_2(ui_layout_set_timer_fn));
-        static mut TOUCH_START: Lazy<Func> = Lazy::new(|| Func::extern_3(ui_layout_touch_start));
-        static mut TOUCH_MOVE: Lazy<Func> = Lazy::new(|| Func::extern_3(ui_layout_touch_move));
-        static mut TOUCH_END: Lazy<Func> = Lazy::new(|| Func::extern_3(ui_layout_touch_end));
-        static mut TIMER: Lazy<Func> = Lazy::new(|| Func::extern_2(ui_layout_timer));
-        static mut PAINT: Lazy<Func> = Lazy::new(|| Func::extern_1(ui_layout_paint));
-        static mut TABLE: Lazy<[MapElem; 6]> = Lazy::new(|| {
-            [
-                Map::at(Qstr::MP_QSTR_set_timer_fn, unsafe { SET_TIMER_FN.to_obj() }),
-                Map::at(Qstr::MP_QSTR_touch_start, unsafe { TOUCH_START.to_obj() }),
-                Map::at(Qstr::MP_QSTR_touch_move, unsafe { TOUCH_MOVE.to_obj() }),
-                Map::at(Qstr::MP_QSTR_touch_end, unsafe { TOUCH_END.to_obj() }),
-                Map::at(Qstr::MP_QSTR_timer, unsafe { TIMER.to_obj() }),
-                Map::at(Qstr::MP_QSTR_paint, unsafe { PAINT.to_obj() }),
-            ]
-        });
-        static mut DICT: Lazy<Dict> = Lazy::new(|| Dict::with_map(Map::fixed(unsafe { &TABLE })));
-        static mut TYPE: Lazy<Type> = Lazy::new(|| {
-            Type::new()
-                .with_name(Qstr::MP_QSTR_Layout)
-                .with_locals(unsafe { &DICT })
-        });
-        Lazy::force(unsafe { &TYPE })
+        static TYPE: Type = obj_type! {
+            name: Qstr::MP_QSTR_Layout,
+            locals: &obj_dict!(obj_map! {
+                Qstr::MP_QSTR_set_timer_fn => obj_fn_2!(ui_layout_set_timer_fn).to_obj(),
+                Qstr::MP_QSTR_touch_start => obj_fn_3!(ui_layout_touch_start).to_obj(),
+                Qstr::MP_QSTR_touch_move => obj_fn_3!(ui_layout_touch_move).to_obj(),
+                Qstr::MP_QSTR_touch_end => obj_fn_3!(ui_layout_touch_end).to_obj(),
+                Qstr::MP_QSTR_timer => obj_fn_2!(ui_layout_timer).to_obj(),
+                Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).to_obj()
+            }),
+        };
+        &TYPE
     }
 }
 
