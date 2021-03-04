@@ -248,12 +248,12 @@ async def show_address(
         if is_multisig:
             for i, xpub in enumerate(xpubs):
                 cancel = "Next" if i < len(xpubs) - 1 else "Address"
-                desc = "XPUB #%d" % (i + 1)
-                desc += " (yours)" if i == multisig_index else " (cosigner)"
+                desc_xpub = "XPUB #%d" % (i + 1)
+                desc_xpub += " (yours)" if i == multisig_index else " (cosigner)"
                 if (
                     await interact(
                         ctx,
-                        _show_xpub(xpub, desc=desc, cancel=cancel),
+                        _show_xpub(xpub, desc=desc_xpub, cancel=cancel),
                         "show_xpub",
                         ButtonRequestType.PublicKey,
                     )
