@@ -199,12 +199,12 @@ async def confirm_path_warning(ctx: wire.GenericContext, path: str) -> None:
 
 def _show_qr(
     address: str,
-    desc: str,
+    title: str,
     cancel: str = "Address",
 ) -> Confirm:
     QR_COEF = const(4) if len(address) < QR_SIZE_THRESHOLD else const(3)
     qr = Qr(address, QR_X, QR_Y, QR_COEF)
-    text = Text(desc, ui.ICON_RECEIVE, ui.GREEN)
+    text = Text(title, ui.ICON_RECEIVE, ui.GREEN)
 
     return Confirm(Container(qr, text), cancel=cancel, cancel_style=ButtonDefault)
 
@@ -235,7 +235,7 @@ def _truncate_hex(
 
 def _show_address(
     address: str,
-    desc: str,
+    title: str,
     network: str | None = None,
 ) -> Confirm | Paginated:
     para = [(ui.NORMAL, "%s network" % network)] if network is not None else []
@@ -244,17 +244,17 @@ def _show_address(
     )
     return paginate_paragraphs(
         para,
-        header=desc,
+        header=title,
         header_icon=ui.ICON_RECEIVE,
         icon_color=ui.GREEN,
         confirm_kwargs={"cancel": "QR", "cancel_style": ButtonDefault},
     )
 
 
-def _show_xpub(xpub: str, desc: str, cancel: str) -> Paginated:
+def _show_xpub(xpub: str, title: str, cancel: str) -> Paginated:
     pages: list[ui.Component] = []
     for lines in chunks(list(chunks_intersperse(xpub, 16)), TEXT_MAX_LINES * 2):
-        text = Text(desc, ui.ICON_RECEIVE, ui.GREEN, new_lines=False)
+        text = Text(title, ui.ICON_RECEIVE, ui.GREEN, new_lines=False)
         text.mono(*lines)
         pages.append(text)
 
@@ -270,12 +270,12 @@ def _show_xpub(xpub: str, desc: str, cancel: str) -> Paginated:
 
 
 async def show_xpub(
-    ctx: wire.GenericContext, xpub: str, desc: str, cancel: str
+    ctx: wire.GenericContext, xpub: str, title: str, cancel: str
 ) -> None:
     await raise_if_cancelled(
         interact(
             ctx,
-            _show_xpub(xpub, desc, cancel),
+            _show_xpub(xpub, title, cancel),
             "show_xpub",
             ButtonRequestType.PublicKey,
         )
@@ -286,7 +286,7 @@ async def show_address(
     ctx: wire.GenericContext,
     address: str,
     address_qr: str | None = None,
-    desc: str = "Confirm address",
+    title: str = "Confirm address",
     network: str | None = None,
     multisig_index: int | None = None,
     xpubs: Sequence[str] = [],
@@ -296,7 +296,11 @@ async def show_address(
         if is_confirmed(
             await interact(
                 ctx,
-                _show_address(address, desc, network),
+                _show_address(
+                    address,
+                    title,
+                    network,
+                ),
                 "show_address",
                 ButtonRequestType.Address,
             )
@@ -307,7 +311,7 @@ async def show_address(
                 ctx,
                 _show_qr(
                     address if address_qr is None else address_qr,
-                    desc,
+                    title,
                     cancel="XPUBs" if is_multisig else "Address",
                 ),
                 "show_qr",
@@ -319,12 +323,12 @@ async def show_address(
         if is_multisig:
             for i, xpub in enumerate(xpubs):
                 cancel = "Next" if i < len(xpubs) - 1 else "Address"
-                desc_xpub = "XPUB #%d" % (i + 1)
-                desc_xpub += " (yours)" if i == multisig_index else " (cosigner)"
+                title_xpub = "XPUB #%d" % (i + 1)
+                title_xpub += " (yours)" if i == multisig_index else " (cosigner)"
                 if is_confirmed(
                     await interact(
                         ctx,
-                        _show_xpub(xpub, desc=desc_xpub, cancel=cancel),
+                        _show_xpub(xpub, title=title_xpub, cancel=cancel),
                         "show_xpub",
                         ButtonRequestType.PublicKey,
                     )
