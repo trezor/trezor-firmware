@@ -19,7 +19,6 @@
 
 #include <string.h>
 
-
 #include "bootui.h"
 #include "display.h"
 #include "icon_cancel.h"
@@ -35,7 +34,6 @@
 #include "mini_printf.h"
 #include "touch.h"
 #include "version.h"
-
 
 #define BACKLIGHT_NORMAL 150
 
