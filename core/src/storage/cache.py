@@ -12,7 +12,7 @@ _SESSION_ID_LENGTH = 32
 
 # Traditional cache keys
 APP_COMMON_SEED = 0
-APP_CARDANO_ROOT = 1
+APP_CARDANO_PASSPHRASE = 1
 APP_MONERO_LIVE_REFRESH = 2
 APP_BASE_AUTHORIZATION = 3
 
@@ -50,7 +50,7 @@ class SessionCache(DataCache):
         self.session_id = bytearray(_SESSION_ID_LENGTH)
         self.fields = (
             64,  # APP_COMMON_SEED
-            128,  # APP_CARDANO_ROOT
+            50,  # APP_CARDANO_PASSPHRASE
             1,  # APP_MONERO_LIVE_REFRESH
             128,  # APP_BASE_AUTHORIZATION
         )

@@ -71,24 +71,31 @@ def derive_path_cardano(root: bip32.HDNode, path: Bip32Path) -> bip32.HDNode:
     return node
 
 
-@cache.stored_async(cache.APP_CARDANO_ROOT)
-async def get_keychain(ctx: wire.Context) -> Keychain:
+@cache.stored_async(cache.APP_CARDANO_PASSPHRASE)
+async def _get_passphrase(ctx: wire.Context) -> bytes:
+    return (await get_passphrase(ctx)).encode()
+
+
+async def _get_keychain_bip39(ctx: wire.Context) -> Keychain:
     if not device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
 
+    # ask for passphrase, loading from cache if necessary
+    passphrase = await _get_passphrase(ctx)
+    # derive the root node from mnemonic and passphrase via Cardano Icarus algorithm
+    secret_bytes = mnemonic.get_secret()
+    assert secret_bytes is not None
+    root = bip32.from_mnemonic_cardano(secret_bytes.decode(), passphrase.decode())
+    return Keychain(root)
+
+
+async def get_keychain(ctx: wire.Context) -> Keychain:
     if mnemonic.is_bip39():
-        passphrase = await get_passphrase(ctx)
-        # derive the root node from mnemonic and passphrase via Cardano Icarus algorithm
-        secret_bytes = mnemonic.get_secret()
-        assert secret_bytes is not None
-        root = bip32.from_mnemonic_cardano(secret_bytes.decode(), passphrase)
+        return await _get_keychain_bip39(ctx)
     else:
         # derive the root node via SLIP-0023 https://github.com/satoshilabs/slips/blob/master/slip-0022.md
         seed = await get_seed(ctx)
-        root = bip32.from_seed(seed, "ed25519 cardano seed")
-
-    keychain = Keychain(root)
-    return keychain
+        return Keychain(bip32.from_seed(seed, "ed25519 cardano seed"))
 
 
 def with_keychain(func: HandlerWithKeychain[MsgIn, MsgOut]) -> Handler[MsgIn, MsgOut]:
