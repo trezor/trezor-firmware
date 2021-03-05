@@ -46,6 +46,10 @@ class TestMsgGetECDHSessionKey:
             result.session_key.hex()
             == "0495e5d8c9e5cc09e7cf4908774f52decb381ce97f2fc9ba56e959c13f03f9f47a03dd151cbc908bc1db84d46e2c33e7bbb9daddc800f985244c924fd64adf6647"
         )
+        assert (
+            result.public_key.hex()
+            == "02a3b34db999f994aa91accb7b73ecafe0ce8ce228e17a45525ccbf73feeb7c809"
+        )
 
         peer_public_key = bytes.fromhex(
             "04811a6c2bd2a547d0dd84747297fec47719e7c3f9b0024f027c2b237be99aac39a9230acbd163d0cb1524a0f5ea4bfed6058cec6f18368f72a12aa0c4d083ff64"
@@ -60,6 +64,10 @@ class TestMsgGetECDHSessionKey:
             result.session_key.hex()
             == "046d1f5c48af2cf2c57076ac2c9d7808db2086f614cb7b8107119ff2c6270cd209749809efe0196f01a0cc633788cef1f4a2bd650c99570d06962f923fca6d8fdf"
         )
+        assert (
+            result.public_key.hex()
+            == "03fda61bc6e6be9b1dd99f7f9d04836d1bf2a6ea2426095210c8ce65091b09000a"
+        )
 
         peer_public_key = bytes.fromhex(
             "40a8cf4b6a64c4314e80f15a8ea55812bd735fbb365936a48b2d78807b575fa17a"
@@ -73,4 +81,8 @@ class TestMsgGetECDHSessionKey:
         assert (
             result.session_key.hex()
             == "04e24516669e0b7d3d72e5129fddd07b6644c30915f5c8b7f1f62324afb3624311"
+        )
+        assert (
+            result.public_key.hex()
+            == "019753a0738c55c7ba7c17dd4a9a975ce9b0d2b62e8a1ecef4a76767fad99d3c71"
         )
