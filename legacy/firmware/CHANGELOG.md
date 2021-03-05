@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## 1.9.5 [unreleased]
+## 1.10.0 [unreleased]
 
 ### Added
 
@@ -18,7 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Security
 
-## 1.9.4 [to be released on 10th February 2021]
+## 1.9.4 [10th February 2021]
 
 ### Added
 - Replacement transaction signing for replace-by-fee.  [#1367]
