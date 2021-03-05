@@ -39,7 +39,7 @@ async def get_ecdh_session_key(
         peer_public_key=msg.peer_public_key,
         curve=msg.ecdsa_curve_name,
     )
-    return ECDHSessionKey(session_key=session_key)
+    return ECDHSessionKey(session_key=session_key, public_key=node.public_key())
 
 
 async def require_confirm_ecdh_session_key(
