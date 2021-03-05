@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## 2.3.7 [unreleased]
+## 2.4.0 [unreleased]
 
 ### Added
 - Locking the device by holding finger on the homescreen for 2.5 seconds.  [#1404]
