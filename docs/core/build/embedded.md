@@ -57,12 +57,14 @@ You can also build firmware in debug mode to see log output or run tests.
 PYOPT=0 make build_firmware
 ```
 
+To get a full debug build, use:
+
+```sh
+make build_firmware BITCOIN_ONLY=0 PYOPT=0
+```
+
 You can then use `screen` to enter the device's console. Do not forget to add your user to the `dialout` group or use `sudo`. Note that both the group and the tty name can differ, use `ls -l` to find out proper names on your machine.
 
 ```sh
 screen /dev/ttyACM0
 ```
-
-Debug console via serial port is enabled only for the Bitcoin-only firmware.
-If you need the console to debug non-Bitcoin features, please edit `src/usb.py`,
-disable WebAuthn USB interface and enable the VCP USB interface.
