@@ -260,7 +260,6 @@ int main(void) {
 
   vendor_header vhdr;
   image_header hdr;
-  secbool stay_in_bootloader = sectrue;  // flag to stay in bootloader
 
   // detect whether the devices contains a valid firmware
 
@@ -308,18 +307,17 @@ int main(void) {
     if (bootloader_usb_loop(NULL, NULL) != sectrue) {
       return 1;
     }
-  } else {
-    // ... or if user touched the screen on start
-    // ... or we have stay_in_bootloader flag to force it
-    if (touched || stay_in_bootloader == sectrue) {
-      // no ui_fadeout(); - we already start from black screen
-      ui_screen_info(secfalse, &vhdr, &hdr);
-      ui_fadein();
+  }
 
-      // and start the usb loop
-      if (bootloader_usb_loop(&vhdr, &hdr) != sectrue) {
-        return 1;
-      }
+  // stay in bootloader if user touched the screen on start
+  if (touched) {
+    // no ui_fadeout(); - we already start from black screen
+    ui_screen_info(secfalse, &vhdr, &hdr);
+    ui_fadein();
+
+    // and start the usb loop
+    if (bootloader_usb_loop(&vhdr, &hdr) != sectrue) {
+      return 1;
     }
   }
 
