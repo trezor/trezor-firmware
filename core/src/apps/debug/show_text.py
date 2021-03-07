@@ -1,8 +1,9 @@
 import trezor.messages.DebugLinkShowTextStyle as S
+import trezor.ui.components.common.text as text
 from trezor import ui, wire
 from trezor.messages.DebugLinkShowText import DebugLinkShowText
 from trezor.messages.Success import Success
-from trezor.ui import style, text
+from trezor.ui import style
 from trezor.ui.components.tt.text import Text
 
 from apps.common.confirm import confirm
@@ -46,4 +47,4 @@ async def show_text(ctx: wire.Context, msg: DebugLinkShowText) -> Success:
             dlg.content.append(item.content)
 
     await confirm(ctx, dlg)
-    return Success("text shown")
+    return Success(message="text shown")
