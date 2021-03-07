@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for temporary or permanent `safety-checks` setting
 - Support for Output Descriptors export [#1363]
 - PIN entry via letters  [#1496]
+- Solana support [#1504]
 
 ### Changed
 

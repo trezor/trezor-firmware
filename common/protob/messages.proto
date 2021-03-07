@@ -279,4 +279,10 @@ enum MessageType {
     MessageType_WebAuthnCredentials = 801 [(wire_out) = true];
     MessageType_WebAuthnAddResidentCredential = 802 [(wire_in) = true];
     MessageType_WebAuthnRemoveResidentCredential = 803 [(wire_in) = true];
+
+    // Solana
+    MessageType_SolanaGetAddress = 900 [(wire_in) = true];
+    MessageType_SolanaAddress = 901 [(wire_out) = true];
+    MessageType_SolanaSignTxHash = 902 [(wire_in) = true];
+    MessageType_SolanaSignedTx = 903 [(wire_out) = true];
 }

@@ -1,0 +1,44 @@
+syntax = "proto2";
+package hw.trezor.messages.solana;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageSolana";
+
+/**
+ * Request: Ask device for Solana address corresponding to address_n path
+ * @start
+ * @next SolanaAddress
+ * @next Failure
+ */
+message SolanaGetAddress {
+    repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
+    optional bool show_display = 2; // Optionally show on display before sending the result
+}
+
+/**
+ * Response: Contains Solana address derived from device private seed
+ * @end
+ */
+message SolanaAddress {
+    required string address = 1;    // Solana address
+}
+
+/**
+ * Request: Ask device to sign Solana transaction hash
+ * @start
+ * @next SolanaSignedTxHash
+ * @next Failure
+ */
+message SolanaSignTxHash {
+    repeated uint32 address_n = 1; // BIP-32 path to derive the key from master node
+    required bytes hash = 2;
+}
+
+/**
+ * Response: Contains Solana transaction signature
+ * @end
+ */
+message SolanaSignedTx {
+    required bytes signature = 1;
+}

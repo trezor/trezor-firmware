@@ -31,6 +31,7 @@ def _boot_apps() -> None:
         import apps.eos
         import apps.binance
         import apps.webauthn
+        import apps.solana
 
     if __debug__:
         import apps.debug
@@ -52,6 +53,7 @@ def _boot_apps() -> None:
         apps.eos.boot()
         apps.binance.boot()
         apps.webauthn.boot()
+        apps.solana.boot()
     if __debug__:
         apps.debug.boot()
 

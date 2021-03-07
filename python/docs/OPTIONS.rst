@@ -56,6 +56,7 @@ on one page here.
     ping               Send ping message.
     ripple             Ripple commands.
     set                Device settings.
+    solana             Solana commands.
     stellar            Stellar commands.
     tezos              Tezos commands.
     usb-reset          Perform USB reset on stuck devices.
@@ -427,3 +428,22 @@ Tezos commands.
     get-public-key  Get Tezos public key.
     sign-tx         Sign Tezos transaction.
 
+Solana commands.
+~~~~~~~~~~~~~~
+
+.. code::
+
+  trezorctl solana --help
+
+.. code::
+
+  Usage: trezorctl solana [OPTIONS] COMMAND [ARGS]...
+
+    Solana commands.
+
+  Options:
+    --help  Show this message and exit.
+
+  Commands:
+    get-address     Get Solana address for specified path.
+    sign-tx         Sign Solana transaction.

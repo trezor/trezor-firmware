@@ -31,6 +31,7 @@ from trezorlib import (
     ripple,
     stellar,
     tezos,
+    solana,
 )
 from trezorlib.cli.trezorctl import cli as main
 
@@ -59,6 +60,7 @@ MODULES = (
     ripple,
     stellar,
     tezos,
+    solana,
 )
 
 
