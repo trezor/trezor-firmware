@@ -200,13 +200,17 @@ void fsm_msgGetECDHSessionKey(const GetECDHSessionKey *msg) {
     curve = msg->ecdsa_curve_name;
   }
 
-  const HDNode *node = fsm_getDerivedNode(curve, address_n, 5, NULL);
+  HDNode *node = fsm_getDerivedNode(curve, address_n, 5, NULL);
   if (!node) return;
 
   int result_size = 0;
   if (hdnode_get_shared_key(node, msg->peer_public_key.bytes,
                             resp->session_key.bytes, &result_size) == 0) {
     resp->session_key.size = result_size;
+    hdnode_fill_public_key(node);
+    memcpy(resp->public_key.bytes, node->public_key, 33);
+    resp->public_key.size = 33;
+    resp->has_public_key = true;
     msg_write(MessageType_MessageType_ECDHSessionKey, resp);
   } else {
     fsm_sendFailure(FailureType_Failure_ProcessError,
