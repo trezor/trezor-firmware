@@ -55,13 +55,13 @@ def _get_xpub(client, passphrase=None):
     """Get XPUB and check that the appropriate passphrase flow has happened."""
     if passphrase is not None:
         expected_responses = [
-            messages.PassphraseRequest(),
-            messages.ButtonRequest(),
-            messages.ButtonRequest(),
-            messages.PublicKey(),
+            messages.PassphraseRequest,
+            messages.ButtonRequest,
+            messages.ButtonRequest,
+            messages.PublicKey,
         ]
     else:
-        expected_responses = [messages.PublicKey()]
+        expected_responses = [messages.PublicKey]
 
     with client:
         client.use_passphrase(passphrase or "")
