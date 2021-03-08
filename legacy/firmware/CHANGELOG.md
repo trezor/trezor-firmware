@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## 1.10.0 [unreleased]
 
 ### Added
+- Public key to ECDHSessionKey.  [#1518]
 
 ### Changed
 
@@ -378,3 +379,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1369]: https://github.com/trezor/trezor-firmware/pull/1369
 [#1402]: https://github.com/trezor/trezor-firmware/pull/1402
 [#1415]: https://github.com/trezor/trezor-firmware/pull/1415
+[#1518]: https://github.com/trezor/trezor-firmware/pull/1518
