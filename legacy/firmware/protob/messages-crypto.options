@@ -36,3 +36,4 @@ GetECDHSessionKey.peer_public_key       max_size:65
 GetECDHSessionKey.ecdsa_curve_name      max_size:32
 
 ECDHSessionKey.session_key              max_size:65
+ECDHSessionKey.public_key               max_size:33
