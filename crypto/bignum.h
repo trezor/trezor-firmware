@@ -94,18 +94,12 @@ void bn_mult_half(bignum256 *x, const bignum256 *prime);
 void bn_mult_k(bignum256 *x, uint8_t k, const bignum256 *prime);
 void bn_mod(bignum256 *x, const bignum256 *prime);
 void bn_multiply(const bignum256 *k, bignum256 *x, const bignum256 *prime);
-void bn_fast_mod_old(bignum256 *x, const bignum256 *prime);
 void bn_fast_mod(bignum256 *x, const bignum256 *prime);
 void bn_power_mod(const bignum256 *x, const bignum256 *e,
                   const bignum256 *prime, bignum256 *res);
 void bn_sqrt(bignum256 *x, const bignum256 *prime);
 uint32_t inverse_mod_power_two(uint32_t a, uint32_t n);
 void bn_divide_base(bignum256 *x, const bignum256 *prime);
-void bn_inverse_slow(bignum256 *x, const bignum256 *prime);
-void bn_inverse_fast_1(bignum256 *x, const bignum256 *prime);
-void bn_inverse_fast_2(bignum256 *x, const bignum256 *prime);
-void bn_inverse_fast_3(bignum256 *x, const bignum256 *prime);
-void bn_inverse_old(bignum256 *x, const bignum256 *prime);
 void bn_normalize(bignum256 *x);
 void bn_add(bignum256 *x, const bignum256 *y);
 void bn_addmod(bignum256 *x, const bignum256 *y, const bignum256 *prime);
