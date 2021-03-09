@@ -83,7 +83,7 @@ async def get_keychain(ctx: wire.Context) -> Keychain:
         assert secret_bytes is not None
         root = bip32.from_mnemonic_cardano(secret_bytes.decode(), passphrase)
     else:
-        # derive the root node via SLIP-0023
+        # derive the root node via SLIP-0023 https://github.com/satoshilabs/slips/blob/master/slip-0022.md
         seed = await get_seed(ctx)
         root = bip32.from_seed(seed, "ed25519 cardano seed")
 

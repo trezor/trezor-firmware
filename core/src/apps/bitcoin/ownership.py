@@ -20,7 +20,9 @@ if False:
     from trezor.messages.TxInputType import EnumTypeInputScriptType
     from apps.common.coininfo import CoinInfo
 
-# This module implements the SLIP-0019 proof of ownership format.
+# This module implements the SLIP-0019 proof of ownership format, see
+# https://github.com/satoshilabs/slips/blob/master/slip-0019.md.
+
 
 _VERSION_MAGIC = b"SL\x00\x19"
 _FLAG_USER_CONFIRMED = 0x01

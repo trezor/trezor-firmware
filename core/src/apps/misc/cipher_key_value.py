@@ -11,6 +11,9 @@ if False:
     from trezor.messages.CipherKeyValue import CipherKeyValue
     from trezor.wire import Context
 
+# This module implements the SLIP-0011 symmetric encryption of key-value pairs using a
+# deterministic hierarchy, see https://github.com/satoshilabs/slips/blob/master/slip-0011.md.
+
 
 async def cipher_key_value(ctx: Context, msg: CipherKeyValue) -> CipheredKeyValue:
     keychain = await get_keychain(ctx, "secp256k1", [AlwaysMatchingSchema])

@@ -103,8 +103,12 @@ class Credential:
             return U2fCredential.from_key_handle(data, rp_id_hash)
 
 
-# SLIP-0022: FIDO2 credential ID format for HD wallets
 class Fido2Credential(Credential):
+    """
+    This class implements the SLIP-0022 FIDO2 Credential ID format for HD wallets, see
+    https://github.com/satoshilabs/slips/blob/master/slip-0022.md.
+    """
+
     def __init__(self) -> None:
         super().__init__()
         self.rp_name: Optional[str] = None
