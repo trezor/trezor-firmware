@@ -259,7 +259,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 ///     value fails.
 ///     """
 STATIC mp_obj_t mod_trezorconfig_get(size_t n_args, const mp_obj_t *args) {
-  uint8_t app = trezor_obj_get_uint8(args[0]) & FLAGS_APPID;
+  uint8_t app = trezor_obj_get_uint8(args[0]);
+  if (app == 0 || app > MAX_APPID) {
+    mp_raise_msg(&mp_type_ValueError, "Invalid app ID.");
+  }
   uint8_t key = trezor_obj_get_uint8(args[1]);
   if (n_args > 2 && args[2] == mp_const_true) {
     app |= FLAG_PUBLIC;
@@ -288,7 +291,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_get_obj, 2, 3,
 ///     Sets a value of given key for given app.
 ///     """
 STATIC mp_obj_t mod_trezorconfig_set(size_t n_args, const mp_obj_t *args) {
-  uint8_t app = trezor_obj_get_uint8(args[0]) & FLAGS_APPID;
+  uint8_t app = trezor_obj_get_uint8(args[0]);
+  if (app == 0 || app > MAX_APPID) {
+    mp_raise_msg(&mp_type_ValueError, "Invalid app ID.");
+  }
   uint8_t key = trezor_obj_get_uint8(args[1]);
   if (n_args > 3 && args[3] == mp_const_true) {
     app |= FLAG_PUBLIC;
@@ -296,7 +302,8 @@ STATIC mp_obj_t mod_trezorconfig_set(size_t n_args, const mp_obj_t *args) {
   uint16_t appkey = (app << 8) | key;
   mp_buffer_info_t value;
   mp_get_buffer_raise(args[2], &value, MP_BUFFER_READ);
-  if (sectrue != storage_set(appkey, value.buf, value.len)) {
+  if (value.len > UINT16_MAX ||
+      sectrue != storage_set(appkey, value.buf, value.len)) {
     mp_raise_msg(&mp_type_RuntimeError, "Could not save value");
   }
   return mp_const_none;
@@ -304,15 +311,26 @@ STATIC mp_obj_t mod_trezorconfig_set(size_t n_args, const mp_obj_t *args) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_set_obj, 3, 4,
                                            mod_trezorconfig_set);
 
-/// def delete(app: int, key: int, public: bool = False) -> bool:
+/// def delete(
+///     app: int, key: int, public: bool = False, writable_locked: bool = False
+/// ) -> bool:
 ///     """
 ///     Deletes the given key of the given app.
 ///     """
 STATIC mp_obj_t mod_trezorconfig_delete(size_t n_args, const mp_obj_t *args) {
-  uint8_t app = trezor_obj_get_uint8(args[0]) & FLAGS_APPID;
+  uint8_t app = trezor_obj_get_uint8(args[0]);
+  if (app == 0 || app > MAX_APPID) {
+    mp_raise_msg(&mp_type_ValueError, "Invalid app ID.");
+  }
   uint8_t key = trezor_obj_get_uint8(args[1]);
   if (n_args > 2 && args[2] == mp_const_true) {
     app |= FLAG_PUBLIC;
+  }
+  if (n_args > 3 && args[3] == mp_const_true) {
+    app |= FLAGS_WRITE;
+    if (args[2] != mp_const_true) {
+      mp_raise_msg(&mp_type_ValueError, "Writable entry must be public.");
+    }
   }
   uint16_t appkey = (app << 8) | key;
   if (sectrue != storage_delete(appkey)) {
@@ -320,18 +338,21 @@ STATIC mp_obj_t mod_trezorconfig_delete(size_t n_args, const mp_obj_t *args) {
   }
   return mp_const_true;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_delete_obj, 2, 3,
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_delete_obj, 2, 4,
                                            mod_trezorconfig_delete);
 
 /// def set_counter(
 ///     app: int, key: int, count: int, writable_locked: bool = False
-/// ) -> bool:
+/// ) -> None:
 ///     """
 ///     Sets the given key of the given app as a counter with the given value.
 ///     """
 STATIC mp_obj_t mod_trezorconfig_set_counter(size_t n_args,
                                              const mp_obj_t *args) {
-  uint8_t app = trezor_obj_get_uint8(args[0]) & FLAGS_APPID;
+  uint8_t app = trezor_obj_get_uint8(args[0]);
+  if (app == 0 || app > MAX_APPID) {
+    mp_raise_msg(&mp_type_ValueError, "Invalid app ID.");
+  }
   uint8_t key = trezor_obj_get_uint8(args[1]);
   if (n_args > 3 && args[3] == mp_const_true) {
     app |= FLAGS_WRITE;
@@ -339,31 +360,28 @@ STATIC mp_obj_t mod_trezorconfig_set_counter(size_t n_args,
     app |= FLAG_PUBLIC;
   }
   uint16_t appkey = (app << 8) | key;
-  if (args[2] == mp_const_none) {
-    if (sectrue != storage_delete(appkey)) {
-      return mp_const_false;
-    }
-  } else {
-    uint32_t count = trezor_obj_get_uint(args[2]);
-    if (sectrue != storage_set_counter(appkey, count)) {
-      return mp_const_false;
-    }
+  mp_uint_t count = trezor_obj_get_uint(args[2]);
+  if (count > UINT32_MAX || sectrue != storage_set_counter(appkey, count)) {
+    mp_raise_msg(&mp_type_RuntimeError, "Failed to set value in storage.");
   }
-  return mp_const_true;
+  return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_set_counter_obj, 3,
                                            4, mod_trezorconfig_set_counter);
 
 /// def next_counter(
 ///    app: int, key: int, writable_locked: bool = False,
-/// ) -> Optional[int]:
+/// ) -> int:
 ///     """
 ///     Increments the counter stored under the given key of the given app and
 ///     returns the new value.
 ///     """
 STATIC mp_obj_t mod_trezorconfig_next_counter(size_t n_args,
                                               const mp_obj_t *args) {
-  uint8_t app = trezor_obj_get_uint8(args[0]) & FLAGS_APPID;
+  uint8_t app = trezor_obj_get_uint8(args[0]);
+  if (app == 0 || app > MAX_APPID) {
+    mp_raise_msg(&mp_type_ValueError, "Invalid app ID.");
+  }
   uint8_t key = trezor_obj_get_uint8(args[1]);
   if (n_args > 2 && args[2] == mp_const_true) {
     app |= FLAGS_WRITE;
@@ -373,7 +391,7 @@ STATIC mp_obj_t mod_trezorconfig_next_counter(size_t n_args,
   uint16_t appkey = (app << 8) | key;
   uint32_t count = 0;
   if (sectrue != storage_next_counter(appkey, &count)) {
-    return mp_const_none;
+    mp_raise_msg(&mp_type_RuntimeError, "Failed to set value in storage.");
   }
   return mp_obj_new_int_from_uint(count);
 }

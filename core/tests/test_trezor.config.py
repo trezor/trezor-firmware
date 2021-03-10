@@ -92,7 +92,7 @@ class TestConfig(unittest.TestCase):
 
             # The APP namespace which is reserved for storage related values is inaccessible even
             # when unlocked.
-            with self.assertRaises(RuntimeError):
+            with self.assertRaises(ValueError):
                 config.set(PINAPP, PINKEY, b'value')
 
             self.assertTrue(config.change_pin(old_pin, new_pin, None, None))
@@ -106,7 +106,8 @@ class TestConfig(unittest.TestCase):
 
             # The APP namespace which is reserved for storage related values is inaccessible even
             # when unlocked.
-            self.assertEqual(config.get(PINAPP, PINKEY), None)
+            with self.assertRaises(ValueError):
+                config.get(PINAPP, PINKEY)
 
             # Old PIN cannot be used to unlock storage.
             if old_pin != new_pin:
@@ -168,6 +169,25 @@ class TestConfig(unittest.TestCase):
             config.set(appid, key, value)
             value2 = config.get(appid, key)
             self.assertEqual(value, value2)
+
+        # Test value deletion.
+        self.assertTrue(config.delete(appid, key))
+        self.assertIsNone(config.get(appid, key))
+        self.assertFalse(config.delete(appid, key))
+
+        # Test get/set for APP out ouf range.
+
+        with self.assertRaises(ValueError):
+            config.set(0, 1, b'test')
+
+        with self.assertRaises(ValueError):
+            config.get(0, 1)
+
+        with self.assertRaises(ValueError):
+            config.set(192, 1, b'test')
+
+        with self.assertRaises(ValueError):
+            config.get(192, 1)
 
     def test_compact(self):
         config.init()
