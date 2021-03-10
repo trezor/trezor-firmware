@@ -8,7 +8,7 @@ from trezor.crypto.hashlib import sha256
 from trezor.errors import MnemonicError
 from trezor.messages import BackupType
 from trezor.messages.Success import Success
-from trezor.ui.layouts import require, show_success
+from trezor.ui.layouts import show_success
 
 from apps.common import mnemonic
 from apps.homescreen.homescreen import homescreen
@@ -146,10 +146,8 @@ async def _finish_recovery(
 
     storage.recovery.end_progress()
 
-    await require(
-        show_success(
-            ctx, "success_recovery", "You have successfully recovered your wallet."
-        )
+    await show_success(
+        ctx, "success_recovery", "You have successfully recovered your wallet."
     )
     return Success(message="Device recovered")
 

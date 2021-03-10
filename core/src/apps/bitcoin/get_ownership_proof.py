@@ -3,7 +3,7 @@ from ubinascii import hexlify
 from trezor import ui, wire
 from trezor.messages.GetOwnershipProof import GetOwnershipProof
 from trezor.messages.OwnershipProof import OwnershipProof
-from trezor.ui.layouts import confirm_action, confirm_hex, require
+from trezor.ui.layouts import confirm_action, confirm_hex
 
 from apps.common.paths import validate_path
 
@@ -65,26 +65,22 @@ async def get_ownership_proof(
     # In order to set the "user confirmation" bit in the proof, the user must actually confirm.
     if msg.user_confirmation and not authorization:
         if not msg.commitment_data:
-            await require(
-                confirm_action(
-                    ctx,
-                    "confirm_ownership_proof",
-                    title="Proof of ownership",
-                    description="Do you want to create a proof of ownership?",
-                )
+            await confirm_action(
+                ctx,
+                "confirm_ownership_proof",
+                title="Proof of ownership",
+                description="Do you want to create a proof of ownership?",
             )
         else:
-            await require(
-                confirm_hex(
-                    ctx,
-                    "confirm_ownership_proof",
-                    title="Proof of ownership",
-                    description="Do you want to create a proof of ownership for:",
-                    data=hexlify(msg.commitment_data).decode(),
-                    icon=ui.ICON_CONFIG,
-                    icon_color=ui.ORANGE_ICON,
-                    truncate_middle=True,
-                )
+            await confirm_hex(
+                ctx,
+                "confirm_ownership_proof",
+                title="Proof of ownership",
+                description="Do you want to create a proof of ownership for:",
+                data=hexlify(msg.commitment_data).decode(),
+                icon=ui.ICON_CONFIG,
+                icon_color=ui.ORANGE_ICON,
+                truncate_middle=True,
             )
 
     ownership_proof, signature = generate_proof(

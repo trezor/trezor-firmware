@@ -3,7 +3,7 @@ from trezor import ui, wire
 from trezor.messages import ButtonRequestType, SafetyCheckLevel
 from trezor.messages.Success import Success
 from trezor.strings import format_duration_ms
-from trezor.ui.layouts import confirm_action, require
+from trezor.ui.layouts import confirm_action
 
 from apps.base import reload_settings_from_storage
 from apps.common import safety_checks
@@ -100,27 +100,23 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings):
 
 
 async def require_confirm_change_homescreen(ctx):
-    await require(
-        confirm_action(
-            ctx,
-            "set_homescreen",
-            "Set homescreen",
-            description="Do you really want to change the homescreen image?",
-            br_code=ButtonRequestType.ProtectCall,
-        )
+    await confirm_action(
+        ctx,
+        "set_homescreen",
+        "Set homescreen",
+        description="Do you really want to change the homescreen image?",
+        br_code=ButtonRequestType.ProtectCall,
     )
 
 
 async def require_confirm_change_label(ctx, label):
-    await require(
-        confirm_action(
-            ctx,
-            "set_label",
-            "Change label",
-            description="Do you really want to change the label to {}?",
-            description_param=label,
-            br_code=ButtonRequestType.ProtectCall,
-        )
+    await confirm_action(
+        ctx,
+        "set_label",
+        "Change label",
+        description="Do you really want to change the label to {}?",
+        description_param=label,
+        br_code=ButtonRequestType.ProtectCall,
     )
 
 
@@ -129,14 +125,12 @@ async def require_confirm_change_passphrase(ctx, use):
         description = "Do you really want to enable passphrase encryption?"
     else:
         description = "Do you really want to disable passphrase encryption?"
-    await require(
-        confirm_action(
-            ctx,
-            "set_passphrase",
-            "Enable passphrase" if use else "Disable passphrase",
-            description=description,
-            br_code=ButtonRequestType.ProtectCall,
-        )
+    await confirm_action(
+        ctx,
+        "set_passphrase",
+        "Enable passphrase" if use else "Disable passphrase",
+        description=description,
+        br_code=ButtonRequestType.ProtectCall,
     )
 
 
@@ -147,14 +141,12 @@ async def require_confirm_change_passphrase_source(
         description = "Do you really want to enter passphrase always on the device?"
     else:
         description = "Do you want to revoke the passphrase on device setting?"
-    await require(
-        confirm_action(
-            ctx,
-            "set_passphrase_source",
-            "Passphrase source",
-            description=description,
-            br_code=ButtonRequestType.ProtectCall,
-        )
+    await confirm_action(
+        ctx,
+        "set_passphrase_source",
+        "Passphrase source",
+        description=description,
+        br_code=ButtonRequestType.ProtectCall,
     )
 
 
@@ -169,70 +161,60 @@ async def require_confirm_change_display_rotation(ctx, rotation):
         label = "west"
     else:
         raise wire.DataError("Unsupported display rotation")
-    await require(
-        confirm_action(
-            ctx,
-            "set_rotation",
-            "Change rotation",
-            description="Do you really want to change display rotation to {}?",
-            description_param=label,
-            br_code=ButtonRequestType.ProtectCall,
-        )
+    await confirm_action(
+        ctx,
+        "set_rotation",
+        "Change rotation",
+        description="Do you really want to change display rotation to {}?",
+        description_param=label,
+        br_code=ButtonRequestType.ProtectCall,
     )
 
 
 async def require_confirm_change_autolock_delay(ctx, delay_ms):
-    await require(
-        confirm_action(
-            ctx,
-            "set_autolock_delay",
-            "Auto-lock delay",
-            description="Do you really want to auto-lock your device after {}?",
-            description_param=format_duration_ms(delay_ms),
-            br_code=ButtonRequestType.ProtectCall,
-        )
+    await confirm_action(
+        ctx,
+        "set_autolock_delay",
+        "Auto-lock delay",
+        description="Do you really want to auto-lock your device after {}?",
+        description_param=format_duration_ms(delay_ms),
+        br_code=ButtonRequestType.ProtectCall,
     )
 
 
 async def require_confirm_safety_checks(ctx, level: EnumTypeSafetyCheckLevel) -> None:
     if level == SafetyCheckLevel.PromptAlways:
-        await require(
-            confirm_action(
-                ctx,
-                "set_safety_checks",
-                "Safety override",
-                hold=True,
-                verb="Hold to confirm",
-                description="Trezor will allow you to approve some actions which might be unsafe.",
-                action="Are you sure?",
-                reverse=True,
-                larger_vspace=True,
-                br_code=ButtonRequestType.ProtectCall,
-            )
+        await confirm_action(
+            ctx,
+            "set_safety_checks",
+            "Safety override",
+            hold=True,
+            verb="Hold to confirm",
+            description="Trezor will allow you to approve some actions which might be unsafe.",
+            action="Are you sure?",
+            reverse=True,
+            larger_vspace=True,
+            br_code=ButtonRequestType.ProtectCall,
         )
     elif level == SafetyCheckLevel.PromptTemporarily:
-        await require(
-            confirm_action(
-                ctx,
-                "set_safety_checks",
-                "Safety override",
-                hold=True,
-                verb="Hold to confirm",
-                description="Trezor will temporarily allow you to approve some actions which might be unsafe.",
-                action="Are you sure?",
-                reverse=True,
-                br_code=ButtonRequestType.ProtectCall,
-            )
+        await confirm_action(
+            ctx,
+            "set_safety_checks",
+            "Safety override",
+            hold=True,
+            verb="Hold to confirm",
+            description="Trezor will temporarily allow you to approve some actions which might be unsafe.",
+            action="Are you sure?",
+            reverse=True,
+            br_code=ButtonRequestType.ProtectCall,
         )
     elif level == SafetyCheckLevel.Strict:
-        await require(
-            confirm_action(
-                ctx,
-                "set_safety_checks",
-                "Safety checks",
-                description="Do you really want to enforce strict safety checks (recommended)?",
-                br_code=ButtonRequestType.ProtectCall,
-            )
+        await confirm_action(
+            ctx,
+            "set_safety_checks",
+            "Safety checks",
+            description="Do you really want to enforce strict safety checks (recommended)?",
+            br_code=ButtonRequestType.ProtectCall,
         )
     else:
         raise ValueError  # enum value out of range
@@ -240,14 +222,12 @@ async def require_confirm_safety_checks(ctx, level: EnumTypeSafetyCheckLevel) ->
 
 async def require_confirm_experimental_features(ctx, enable: bool) -> None:
     if enable:
-        await require(
-            confirm_action(
-                ctx,
-                "set_experimental_features",
-                "Experimental mode",
-                description="Enable experimental features?",
-                action="Only for development and beta testing!",
-                reverse=True,
-                br_code=ButtonRequestType.ProtectCall,
-            )
+        await confirm_action(
+            ctx,
+            "set_experimental_features",
+            "Experimental mode",
+            description="Enable experimental features?",
+            action="Only for development and beta testing!",
+            reverse=True,
+            br_code=ButtonRequestType.ProtectCall,
         )

@@ -3,7 +3,7 @@ from ubinascii import hexlify
 from trezor import ui, wire
 from trezor.messages import ButtonRequestType
 from trezor.ui.components.tt.text import Text
-from trezor.ui.layouts import confirm_action, require
+from trezor.ui.layouts import confirm_action
 from trezor.ui.popup import Popup
 from trezor.utils import chunks
 
@@ -23,44 +23,38 @@ if False:
 
 
 async def require_confirm_watchkey(ctx):
-    await require(
-        confirm_action(
-            ctx,
-            "get_watchkey",
-            "Confirm export",
-            description="Do you really want to export watch-only credentials?",
-            icon=ui.ICON_SEND,
-            icon_color=ui.GREEN,
-            br_code=ButtonRequestType.SignTx,
-        )
+    await confirm_action(
+        ctx,
+        "get_watchkey",
+        "Confirm export",
+        description="Do you really want to export watch-only credentials?",
+        icon=ui.ICON_SEND,
+        icon_color=ui.GREEN,
+        br_code=ButtonRequestType.SignTx,
     )
 
 
 async def require_confirm_keyimage_sync(ctx):
-    await require(
-        confirm_action(
-            ctx,
-            "key_image_sync",
-            "Confirm ki sync",
-            description="Do you really want to\nsync key images?",
-            icon=ui.ICON_SEND,
-            icon_color=ui.GREEN,
-            br_code=ButtonRequestType.SignTx,
-        )
+    await confirm_action(
+        ctx,
+        "key_image_sync",
+        "Confirm ki sync",
+        description="Do you really want to\nsync key images?",
+        icon=ui.ICON_SEND,
+        icon_color=ui.GREEN,
+        br_code=ButtonRequestType.SignTx,
     )
 
 
 async def require_confirm_live_refresh(ctx):
-    await require(
-        confirm_action(
-            ctx,
-            "live_refresh",
-            "Confirm refresh",
-            description="Do you really want to\nstart refresh?",
-            icon=ui.ICON_SEND,
-            icon_color=ui.GREEN,
-            br_code=ButtonRequestType.SignTx,
-        )
+    await confirm_action(
+        ctx,
+        "live_refresh",
+        "Confirm refresh",
+        description="Do you really want to\nstart refresh?",
+        icon=ui.ICON_SEND,
+        icon_color=ui.GREEN,
+        br_code=ButtonRequestType.SignTx,
     )
 
 
@@ -69,16 +63,14 @@ async def require_confirm_tx_key(ctx, export_key=False):
         description = "Do you really want to export tx_key?"
     else:
         description = "Do you really want to export tx_der\nfor tx_proof?"
-    await require(
-        confirm_action(
-            ctx,
-            "export_tx_key",
-            "Confirm export",
-            description=description,
-            icon=ui.ICON_SEND,
-            icon_color=ui.GREEN,
-            br_code=ButtonRequestType.SignTx,
-        )
+    await confirm_action(
+        ctx,
+        "export_tx_key",
+        "Confirm export",
+        description=description,
+        icon=ui.ICON_SEND,
+        icon_color=ui.GREEN,
+        br_code=ButtonRequestType.SignTx,
     )
 
 

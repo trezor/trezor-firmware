@@ -6,7 +6,7 @@ from trezor.messages import BackupType
 from trezor.messages.EntropyAck import EntropyAck
 from trezor.messages.EntropyRequest import EntropyRequest
 from trezor.messages.Success import Success
-from trezor.ui.layouts import confirm_backup, confirm_reset_device, require
+from trezor.ui.layouts import confirm_backup, confirm_reset_device
 from trezor.ui.loader import LoadingAnimation
 
 from .. import backup_types
@@ -33,7 +33,7 @@ async def reset_device(ctx: wire.Context, msg: ResetDevice) -> Success:
         prompt = "Create a new wallet\nwith Super Shamir?"
     else:
         prompt = "Do you want to create\na new wallet?"
-    await require(confirm_reset_device(ctx, prompt))
+    await confirm_reset_device(ctx, prompt)
     await LoadingAnimation()
 
     # wipe storage to make sure the device is in a clear state

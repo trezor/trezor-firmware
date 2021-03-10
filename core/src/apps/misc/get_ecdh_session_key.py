@@ -3,7 +3,7 @@ from ustruct import pack, unpack
 from trezor import ui, wire
 from trezor.crypto.hashlib import sha256
 from trezor.messages.ECDHSessionKey import ECDHSessionKey
-from trezor.ui.layouts import confirm_hex, require
+from trezor.ui.layouts import confirm_hex
 
 from apps.common import HARDENED
 from apps.common.keychain import get_keychain
@@ -47,15 +47,13 @@ async def require_confirm_ecdh_session_key(
     ctx: wire.Context, identity: IdentityType
 ) -> None:
     proto = identity.proto.upper() if identity.proto else "identity"
-    await require(
-        confirm_hex(
-            ctx,
-            "ecdh_session_key",
-            "Decrypt %s" % proto,
-            serialize_identity_without_proto(identity),
-            icon=ui.ICON_DEFAULT,
-            icon_color=ui.ORANGE_ICON,
-        )
+    await confirm_hex(
+        ctx,
+        "ecdh_session_key",
+        "Decrypt %s" % proto,
+        serialize_identity_without_proto(identity),
+        icon=ui.ICON_DEFAULT,
+        icon_color=ui.ORANGE_ICON,
     )
 
 

@@ -5,7 +5,7 @@ from trezor.messages import ButtonRequestType
 from trezor.ui.components.tt.scroll import Paginated
 from trezor.ui.components.tt.text import Text
 from trezor.ui.components.tt.word_select import WordSelector
-from trezor.ui.layouts import confirm_action, require, show_success, show_warning
+from trezor.ui.layouts import confirm_action, show_success, show_warning
 
 from apps.common import button_request
 from apps.common.confirm import confirm, info_confirm, require_confirm
@@ -21,9 +21,9 @@ if False:
     from trezor.messages.ResetDevice import EnumTypeBackupType
 
 
-async def confirm_abort(ctx: wire.GenericContext, dry_run: bool = False) -> bool:
+async def confirm_abort(ctx: wire.GenericContext, dry_run: bool = False) -> None:
     if dry_run:
-        return await confirm_action(
+        await confirm_action(
             ctx,
             "abort_recovery",
             "Abort seed check",
@@ -32,7 +32,7 @@ async def confirm_abort(ctx: wire.GenericContext, dry_run: bool = False) -> bool
             br_code=ButtonRequestType.ProtectCall,
         )
     else:
-        return await confirm_action(
+        await confirm_action(
             ctx,
             "abort_recovery",
             "Abort recovery",
@@ -146,17 +146,13 @@ async def show_dry_run_result(
             text = "The entered recovery\nshares are valid and\nmatch what is currently\nin the device."
         else:
             text = "The entered recovery\nseed is valid and\nmatches the one\nin the device."
-        await require(
-            show_success(ctx, "success_dry_recovery", text, button="Continue")
-        )
+        await show_success(ctx, "success_dry_recovery", text, button="Continue")
     else:
         if is_slip39:
             text = "The entered recovery\nshares are valid but\ndo not match what is\ncurrently in the device."
         else:
             text = "The entered recovery\nseed is valid but does\nnot match the one\nin the device."
-        await require(
-            show_warning(ctx, "warning_dry_recovery", text, button="Continue")
-        )
+        await show_warning(ctx, "warning_dry_recovery", text, button="Continue")
 
 
 async def show_dry_run_different_type(ctx: wire.GenericContext) -> None:
@@ -171,50 +167,40 @@ async def show_dry_run_different_type(ctx: wire.GenericContext) -> None:
 
 async def show_invalid_mnemonic(ctx: wire.GenericContext, word_count: int) -> None:
     if backup_types.is_slip39_word_count(word_count):
-        await require(
-            show_warning(
-                ctx,
-                "warning_invalid_share",
-                "You have entered\nan invalid recovery\nshare.",
-            )
+        await show_warning(
+            ctx,
+            "warning_invalid_share",
+            "You have entered\nan invalid recovery\nshare.",
         )
     else:
-        await require(
-            show_warning(
-                ctx,
-                "warning_invalid_seed",
-                "You have entered\nan invalid recovery\nseed.",
-            )
+        await show_warning(
+            ctx,
+            "warning_invalid_seed",
+            "You have entered\nan invalid recovery\nseed.",
         )
 
 
 async def show_share_already_added(ctx: wire.GenericContext) -> None:
-    await require(
-        show_warning(
-            ctx,
-            "warning_known_share",
-            "Share already entered,\nplease enter\na different share.",
-        )
+    await show_warning(
+        ctx,
+        "warning_known_share",
+        "Share already entered,\nplease enter\na different share.",
     )
 
 
 async def show_identifier_mismatch(ctx: wire.GenericContext) -> None:
-    await require(
-        show_warning(
-            ctx,
-            "warning_mismatched_share",
-            "You have entered\na share from another\nShamir Backup.",
-        )
+    await show_warning(
+        ctx,
+        "warning_mismatched_share",
+        "You have entered\na share from another\nShamir Backup.",
     )
 
 
 async def show_group_threshold_reached(ctx: wire.GenericContext) -> None:
-    await require(
-        show_warning(
-            ctx,
-            "warning_group_threshold",
-            "Threshold of this\ngroup has been reached.\nInput share from\ndifferent group.",
-        )
+    await show_warning(
+        ctx,
+        "warning_group_threshold",
+        "Threshold of this\ngroup has been reached.\nInput share from\ndifferent group.",
     )
 
 
@@ -288,5 +274,9 @@ async def homescreen_dialog(
             break
         # user has chosen to abort, confirm the choice
         dry_run = storage.recovery.is_dry_run()
-        if await confirm_abort(ctx, dry_run):
+        try:
+            await confirm_abort(ctx, dry_run)
+        except wire.ActionCancelled:
+            pass
+        else:
             raise RecoveryAborted

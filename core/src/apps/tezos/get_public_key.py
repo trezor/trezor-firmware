@@ -1,5 +1,5 @@
 from trezor.messages.TezosPublicKey import TezosPublicKey
-from trezor.ui.layouts import require, show_pubkey
+from trezor.ui.layouts import show_pubkey
 
 from apps.common import paths, seed
 from apps.common.keychain import with_slip44_keychain
@@ -16,6 +16,6 @@ async def get_public_key(ctx, msg, keychain):
     pk_prefixed = helpers.base58_encode_check(pk, prefix=helpers.TEZOS_PUBLICKEY_PREFIX)
 
     if msg.show_display:
-        await require(show_pubkey(ctx, pk_prefixed))
+        await show_pubkey(ctx, pk_prefixed)
 
     return TezosPublicKey(public_key=pk_prefixed)

@@ -3,7 +3,7 @@ from ustruct import pack, unpack
 from trezor import wire
 from trezor.crypto.hashlib import sha256
 from trezor.messages.SignedIdentity import SignedIdentity
-from trezor.ui.layouts import confirm_sign_identity, require
+from trezor.ui.layouts import confirm_sign_identity
 
 from apps.common import HARDENED, coininfo
 from apps.common.keychain import get_keychain
@@ -84,10 +84,8 @@ async def require_confirm_sign_identity(
     ctx: wire.Context, identity: IdentityType, challenge_visual: Optional[str]
 ) -> None:
     proto = identity.proto.upper() if identity.proto else "identity"
-    await require(
-        confirm_sign_identity(
-            ctx, proto, serialize_identity_without_proto(identity), challenge_visual
-        )
+    await confirm_sign_identity(
+        ctx, proto, serialize_identity_without_proto(identity), challenge_visual
     )
 
 

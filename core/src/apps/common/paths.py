@@ -1,5 +1,5 @@
 from trezor.ui.constants import MONO_CHARS_PER_LINE
-from trezor.ui.layouts import confirm_path_warning, require
+from trezor.ui.layouts import confirm_path_warning
 
 from . import HARDENED
 from .layout import address_n_to_str
@@ -259,7 +259,7 @@ async def validate_path(
 
 
 async def show_path_warning(ctx: wire.Context, path: Bip32Path) -> None:
-    await require(confirm_path_warning(ctx, address_n_to_str(path)))
+    await confirm_path_warning(ctx, address_n_to_str(path))
 
 
 def is_hardened(i: int) -> bool:
