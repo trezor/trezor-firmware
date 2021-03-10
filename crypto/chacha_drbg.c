@@ -20,12 +20,12 @@
 #include "chacha_drbg.h"
 
 #include <assert.h>
-#include <sha2.h>
 #include <stdint.h>
 #include <string.h>
 
 #include "chacha20poly1305/ecrypt-portable.h"
 #include "memzero.h"
+#include "sha2.h"
 
 #define CHACHA_DRBG_KEY_LENGTH 32
 #define CHACHA_DRBG_COUNTER_LENGTH 8
@@ -38,6 +38,7 @@
 static void derivation_function(const uint8_t *input1, size_t input1_length,
                                 const uint8_t *input2, size_t input2_length,
                                 uint8_t *output, size_t output_length) {
+  // Implementation of Hash_df from NIST SP 800-90A
   uint32_t block_count = (output_length - 1) / SHA256_DIGEST_LENGTH + 1;
   assert(block_count <= 255);
 
@@ -45,6 +46,9 @@ static void derivation_function(const uint8_t *input1, size_t input1_length,
 
   for (uint8_t counter = 1; counter <= block_count; counter++) {
     uint32_t output_length_bits = output_length * 8;
+#if BYTE_ORDER == LITTLE_ENDIAN
+    REVERSE32(output_length_bits, output_length_bits);
+#endif
 
     sha256_Init(&ctx);
     sha256_Update(&ctx, &counter, sizeof(counter));
