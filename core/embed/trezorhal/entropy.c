@@ -62,7 +62,7 @@ void collect_hw_entropy(void) {
       (sw_entropy_index_local + 1) % sizeof(SW_ENTROPY_POOL)
 
 void add_sw_entropy(uint8_t *data, size_t data_length) {
-  static size_t sw_entropy_index = {0};
+  volatile static size_t sw_entropy_index = 0;
 
   // Since the function is expected to be called from an interrupt handler, a
   // race condition could occur here. To prevent a buffer overflow, a local copy
