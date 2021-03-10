@@ -25,15 +25,18 @@ from .common import interact
 
 if False:
     from typing import (
+        Awaitable,
         Iterator,
+        NoReturn,
+        Optional,
         Sequence,
+        Tuple,
         Type,
         Union,
-        Awaitable,
-        NoReturn,
     )
 
     ExceptionType = Union[BaseException, Type[BaseException]]
+    PropertyType = Tuple[str, Optional[str]]
 
 
 __all__ = (
@@ -52,6 +55,7 @@ __all__ = (
     "confirm_output",
     "confirm_decred_sstx_submission",
     "confirm_hex",
+    "confirm_properties",
     "confirm_total",
     "confirm_total_ethereum",
     "confirm_total_ripple",
@@ -182,9 +186,11 @@ async def confirm_backup(ctx: wire.GenericContext) -> bool:
     return confirmed
 
 
-async def confirm_path_warning(ctx: wire.GenericContext, path: str) -> None:
+async def confirm_path_warning(
+    ctx: wire.GenericContext, path: str, path_type: str = "Path"
+) -> None:
     text = Text("Confirm path", ui.ICON_WRONG, ui.RED)
-    text.normal("Path")
+    text.normal(path_type)
     text.mono(*break_path_to_lines(path, MONO_ADDR_PER_LINE))
     text.normal("is unknown.", "Are you sure?")
     await raise_if_cancelled(
@@ -237,8 +243,11 @@ def _show_address(
     address: str,
     title: str,
     network: str | None = None,
-) -> Confirm | Paginated:
+    extra: str | None = None,
+) -> ui.Layout:
     para = [(ui.NORMAL, "%s network" % network)] if network is not None else []
+    if extra is not None:
+        para.append((ui.BOLD, extra))
     para.extend(
         (ui.MONO, address_line) for address_line in chunks(address, MONO_ADDR_PER_LINE)
     )
@@ -247,7 +256,9 @@ def _show_address(
         header=title,
         header_icon=ui.ICON_RECEIVE,
         icon_color=ui.GREEN,
-        confirm_kwargs={"cancel": "QR", "cancel_style": ButtonDefault},
+        confirm=lambda content: Confirm(
+            content, cancel="QR", cancel_style=ButtonDefault
+        ),
     )
 
 
@@ -290,6 +301,8 @@ async def show_address(
     network: str | None = None,
     multisig_index: int | None = None,
     xpubs: Sequence[str] = [],
+    address_extra: str | None = None,
+    title_qr: str | None = None,
 ) -> None:
     is_multisig = len(xpubs) > 0
     while True:
@@ -300,6 +313,7 @@ async def show_address(
                     address,
                     title,
                     network,
+                    extra=address_extra,
                 ),
                 "show_address",
                 ButtonRequestType.Address,
@@ -311,7 +325,7 @@ async def show_address(
                 ctx,
                 _show_qr(
                     address if address_qr is None else address_qr,
-                    title,
+                    title if title_qr is None else title_qr,
                     cancel="XPUBs" if is_multisig else "Address",
                 ),
                 "show_qr",
@@ -455,19 +469,29 @@ async def confirm_output(
     address: str,
     amount: str,
     font_amount: int = ui.NORMAL,  # TODO cleanup @ redesign
+    title: str = "Confirm sending",
+    subtitle: str | None = None,  # TODO cleanup @ redesign
     color_to: int = ui.FG,  # TODO cleanup @ redesign
     to_str: str = " to\n",  # TODO cleanup @ redesign
+    to_paginated: bool = False,  # TODO cleanup @ redesign
     width: int = MONO_ADDR_PER_LINE,
     width_paginated: int = MONO_ADDR_PER_LINE - 1,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> None:
-    title = "Confirm sending"
-    if len(address) > (TEXT_MAX_LINES - 1) * width:
-        para = [(font_amount, amount)]
+    header_lines = to_str.count("\n") + int(subtitle is not None)
+    if len(address) > (TEXT_MAX_LINES - header_lines) * width:
+        para = []
+        if subtitle is not None:
+            para.append((ui.NORMAL, subtitle))
+        para.append((font_amount, amount))
+        if to_paginated:
+            para.append((ui.NORMAL, "to"))
         para.extend((ui.MONO, line) for line in chunks(address, width_paginated))
         content: ui.Layout = paginate_paragraphs(para, title, ui.ICON_SEND, ui.GREEN)
     else:
         text = Text(title, ui.ICON_SEND, ui.GREEN, new_lines=False)
+        if subtitle is not None:
+            text.normal(subtitle, "\n")
         text.content = [font_amount, amount, ui.NORMAL, color_to, to_str, ui.FG]
         text.mono(*chunks_intersperse(address, width))
         content = Confirm(text)
@@ -552,6 +576,28 @@ async def confirm_hex(
     await raise_if_cancelled(interact(ctx, content, br_type, br_code))
 
 
+# TODO keep name and value on the same page if possible
+async def confirm_properties(
+    ctx: wire.GenericContext,
+    br_type: str,
+    title: str,
+    props: Sequence[PropertyType],
+    icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
+    icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
+    hold: bool = False,
+    br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
+) -> None:
+    para = []
+    for p in props:
+        para.append((ui.NORMAL, p[0]))
+        if p[1] is not None:
+            para.append((ui.BOLD, p[1]))
+    content = paginate_paragraphs(
+        para, title, icon, icon_color, confirm=HoldToConfirm if hold else Confirm
+    )
+    await raise_if_cancelled(interact(ctx, content, br_type, br_code))
+
+
 async def confirm_total(
     ctx: wire.GenericContext,
     total_amount: str,
@@ -630,6 +676,7 @@ async def confirm_metadata(
     param_font: int = ui.BOLD,
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
+    larger_vspace: bool = False,  # TODO cleanup @ redesign
 ) -> None:
     text = Text(title, icon, icon_color, new_lines=False)
     text.format_parametrized(
@@ -638,6 +685,8 @@ async def confirm_metadata(
 
     if not hide_continue:
         text.br()
+        if larger_vspace:
+            text.br_half()
         text.normal("Continue?")
 
     cls = HoldToConfirm if hold else Confirm

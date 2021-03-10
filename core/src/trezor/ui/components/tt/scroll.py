@@ -10,7 +10,7 @@ from .swipe import SWIPE_DOWN, SWIPE_UP, SWIPE_VERTICAL, Swipe
 from .text import TEXT_MAX_LINES, Span, Text
 
 if False:
-    from typing import Iterable, Any
+    from typing import Callable, Iterable
 
     from ..common.text import TextContent
 
@@ -266,7 +266,8 @@ def paginate_text(
     header_icon: str = ui.ICON_DEFAULT,
     icon_color: int = ui.ORANGE_ICON,
     break_words: bool = False,
-) -> Confirm | Paginated:
+    confirm: Callable[[ui.Component], ui.Layout] = Confirm,
+) -> ui.Layout:
     span = Span(text, 0, font, break_words=break_words)
     if span.count_lines() <= TEXT_MAX_LINES:
         result = Text(
@@ -277,7 +278,7 @@ def paginate_text(
             break_words=break_words,
         )
         result.content = [font, text]
-        return Confirm(result)
+        return confirm(result)
 
     else:
         pages: list[ui.Component] = []
@@ -305,7 +306,7 @@ def paginate_text(
             for _ in range(TEXT_MAX_LINES - 1):
                 span.next_line()
 
-        pages[-1] = Confirm(pages[-1])
+        pages[-1] = confirm(pages[-1])
         return Paginated(pages)
 
 
@@ -315,8 +316,8 @@ def paginate_paragraphs(
     header_icon: str = ui.ICON_DEFAULT,
     icon_color: int = ui.ORANGE_ICON,
     break_words: bool = False,
-    confirm_kwargs: Dict[str, Any] = {},
-) -> Union[Confirm, Paginated]:
+    confirm: Callable[[ui.Component], ui.Layout] = Confirm,
+) -> ui.Layout:
     span = Span("", 0, ui.NORMAL, break_words=break_words)
     lines = 0
     content: list[TextContent] = []
@@ -343,7 +344,7 @@ def paginate_paragraphs(
                 result.content.append("\n")
             result.content.append(font)
             result.content.append(text)
-        return Confirm(result, **confirm_kwargs)
+        return confirm(result)
 
     else:
         pages: list[ui.Component] = []
@@ -373,5 +374,5 @@ def paginate_paragraphs(
                 else:
                     lines_left -= 1
 
-        pages[-1] = Confirm(pages[-1], **confirm_kwargs)
+        pages[-1] = confirm(pages[-1])
         return Paginated(pages)
