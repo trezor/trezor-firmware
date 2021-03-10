@@ -166,9 +166,7 @@ static secbool copy_sdcard(void) {
 }
 
 int main(void) {
-  if (sectrue != reset_flags_check()) {
-    return 1;
-  }
+  reset_flags_reset();
 
   // need the systick timer running before many HAL operations.
   // want the PVD enabled before flash operations too.
