@@ -28,8 +28,10 @@ def get(app: int, key: int, public: bool = False) -> Optional[bytes]:
     return config.get(app, key, public)
 
 
-def delete(app: int, key: int, public: bool = False) -> None:
-    config.delete(app, key, public)
+def delete(
+    app: int, key: int, public: bool = False, writable_locked: bool = False
+) -> None:
+    config.delete(app, key, public, writable_locked)
 
 
 def set_true_or_delete(app: int, key: int, value: bool) -> None:
@@ -72,9 +74,9 @@ def get_uint16(app: int, key: int) -> Optional[int]:
     return int.from_bytes(val, "big")
 
 
-def next_counter(app: int, key: int, public: bool = False) -> Optional[int]:
-    return config.next_counter(app, key, public)
+def next_counter(app: int, key: int, writable_locked: bool = False) -> int:
+    return config.next_counter(app, key, writable_locked)
 
 
-def set_counter(app: int, key: int, count: int, public: bool = False) -> None:
-    config.set_counter(app, key, count, public)
+def set_counter(app: int, key: int, count: int, writable_locked: bool = False) -> None:
+    config.set_counter(app, key, count, writable_locked)

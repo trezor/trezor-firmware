@@ -109,7 +109,9 @@ def set(app: int, key: int, value: bytes, public: bool = False) -> None:
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
-def delete(app: int, key: int, public: bool = False) -> bool:
+def delete(
+    app: int, key: int, public: bool = False, writable_locked: bool = False
+) -> bool:
     """
     Deletes the given key of the given app.
     """
@@ -118,7 +120,7 @@ def delete(app: int, key: int, public: bool = False) -> bool:
 # extmod/modtrezorconfig/modtrezorconfig.c
 def set_counter(
     app: int, key: int, count: int, writable_locked: bool = False
-) -> bool:
+) -> None:
     """
     Sets the given key of the given app as a counter with the given value.
     """
@@ -127,7 +129,7 @@ def set_counter(
 # extmod/modtrezorconfig/modtrezorconfig.c
 def next_counter(
    app: int, key: int, writable_locked: bool = False,
-) -> Optional[int]:
+) -> int:
     """
     Increments the counter stored under the given key of the given app and
     returns the new value.

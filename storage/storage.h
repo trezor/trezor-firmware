@@ -34,8 +34,8 @@
 // can be written even when the storage is locked.
 #define FLAGS_WRITE 0xC0
 
-// Mask for extracting the "real" app_id.
-#define FLAGS_APPID 0x3F
+// The maximum value of app_id which is the six least significant bits of APP.
+#define MAX_APPID 0x3F
 
 // The PIN value corresponding to an empty PIN.
 extern const uint8_t *PIN_EMPTY;
