@@ -1,10 +1,10 @@
-from trezor import loop, ui
+from trezor import loop, ui, wire
 
 if __debug__:
     from apps.debug import confirm_signal
 
 if False:
-    from typing import List, Tuple, Optional, Any
+    from typing import List, Tuple, Optional, Any, Awaitable
 
 CONFIRMED = object()
 CANCELLED = object()
@@ -13,6 +13,12 @@ INFO = object()
 
 def is_confirmed(x: Any) -> bool:
     return x is CONFIRMED
+
+
+async def raise_if_cancelled(a: Awaitable, exc: Any = wire.ActionCancelled) -> None:
+    result = await a
+    if result is CANCELLED:
+        raise exc
 
 
 class ConfirmBase(ui.Layout):

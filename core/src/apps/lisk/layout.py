@@ -4,7 +4,7 @@ from trezor import ui
 from trezor.messages import ButtonRequestType
 from trezor.strings import format_amount
 from trezor.ui.components.tt.text import Text
-from trezor.ui.layouts import require, show_pubkey
+from trezor.ui.layouts import show_pubkey
 from trezor.utils import chunks
 
 from apps.common.confirm import require_confirm, require_hold_to_confirm
@@ -36,7 +36,7 @@ async def require_confirm_vote_tx(ctx, votes):
 
 
 async def require_confirm_public_key(ctx, public_key):
-    return await require(show_pubkey(ctx, hexlify(public_key).decode()))
+    return await show_pubkey(ctx, hexlify(public_key).decode())
 
 
 async def require_confirm_multisig(ctx, multisignature):

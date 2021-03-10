@@ -4,7 +4,7 @@ from trezor import ui
 from trezor.messages.AuthorizeCoinJoin import AuthorizeCoinJoin
 from trezor.messages.Success import Success
 from trezor.strings import format_amount
-from trezor.ui.layouts import confirm_action, confirm_coinjoin, require
+from trezor.ui.layouts import confirm_action, confirm_coinjoin
 
 from apps.base import set_authorization
 from apps.common.paths import validate_path
@@ -45,16 +45,14 @@ async def authorize_coinjoin(ctx: wire.Context, msg: AuthorizeCoinJoin) -> Succe
             ),
         )
 
-        await require(
-            confirm_action(
-                ctx,
-                "coinjoin_coordinator",
-                title="Authorize CoinJoin",
-                description="Do you really want to take part in a CoinJoin transaction at:\n{}",
-                description_param=msg.coordinator,
-                description_param_font=ui.MONO,
-                icon=ui.ICON_RECOVERY,
-            )
+        await confirm_action(
+            ctx,
+            "coinjoin_coordinator",
+            title="Authorize CoinJoin",
+            description="Do you really want to take part in a CoinJoin transaction at:\n{}",
+            description_param=msg.coordinator,
+            description_param_font=ui.MONO,
+            icon=ui.ICON_RECOVERY,
         )
 
         fee_per_anonymity = None
@@ -62,12 +60,10 @@ async def authorize_coinjoin(ctx: wire.Context, msg: AuthorizeCoinJoin) -> Succe
             fee_per_anonymity = format_amount(
                 msg.fee_per_anonymity, FEE_PER_ANONYMITY_DECIMALS
             )
-        await require(
-            confirm_coinjoin(
-                ctx,
-                fee_per_anonymity,
-                format_coin_amount(msg.max_total_fee, coin, msg.amount_unit),
-            )
+        await confirm_coinjoin(
+            ctx,
+            fee_per_anonymity,
+            format_coin_amount(msg.max_total_fee, coin, msg.amount_unit),
         )
 
         set_authorization(CoinJoinAuthorization(msg, keychain, coin))

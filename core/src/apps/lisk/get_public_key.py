@@ -1,7 +1,7 @@
 from ubinascii import hexlify
 
 from trezor.messages.LiskPublicKey import LiskPublicKey
-from trezor.ui.layouts import require, show_pubkey
+from trezor.ui.layouts import show_pubkey
 
 from apps.common import paths
 from apps.common.keychain import auto_keychain
@@ -16,6 +16,6 @@ async def get_public_key(ctx, msg, keychain):
     pubkey = pubkey[1:]  # skip ed25519 pubkey marker
 
     if msg.show_display:
-        await require(show_pubkey(ctx, hexlify(pubkey).decode()))
+        await show_pubkey(ctx, hexlify(pubkey).decode())
 
     return LiskPublicKey(public_key=pubkey)

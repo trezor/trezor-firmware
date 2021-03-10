@@ -9,13 +9,7 @@ from trezor.ui.components.tt.info import InfoConfirm
 from trezor.ui.components.tt.num_input import NumInput
 from trezor.ui.components.tt.scroll import Paginated
 from trezor.ui.components.tt.text import Text
-from trezor.ui.layouts import (
-    confirm_action,
-    confirm_hex,
-    require,
-    show_success,
-    show_warning,
-)
+from trezor.ui.layouts import confirm_action, confirm_hex, show_success, show_warning
 
 from apps.common.confirm import confirm, require_hold_to_confirm
 
@@ -28,17 +22,15 @@ if __debug__:
 
 
 async def show_internal_entropy(ctx, entropy: bytes):
-    await require(
-        confirm_hex(
-            ctx,
-            "entropy",
-            "Internal entropy",
-            data=ubinascii.hexlify(entropy).decode(),
-            icon=ui.ICON_RESET,
-            icon_color=ui.ORANGE_ICON,
-            width=16,
-            br_code=ButtonRequestType.ResetDevice,
-        )
+    await confirm_hex(
+        ctx,
+        "entropy",
+        "Internal entropy",
+        data=ubinascii.hexlify(entropy).decode(),
+        icon=ui.ICON_RESET,
+        icon_color=ui.ORANGE_ICON,
+        width=16,
+        br_code=ButtonRequestType.ResetDevice,
     )
 
 
@@ -192,9 +184,7 @@ async def _show_confirmation_success(
             )
             text = "Continue with the next\nshare."
 
-    return await require(
-        show_success(ctx, "success_recovery", text, subheader=subheader)
-    )
+    return await show_success(ctx, "success_recovery", text, subheader=subheader)
 
 
 async def _show_confirmation_failure(ctx, share_index):
@@ -202,16 +192,14 @@ async def _show_confirmation_failure(ctx, share_index):
         header = "Recovery seed"
     else:
         header = "Recovery share #%s" % (share_index + 1)
-    await require(
-        show_warning(
-            ctx,
-            "warning_backup_check",
-            header=header,
-            subheader="That is the wrong word.",
-            content="Please check again.",
-            button="Check again",
-            br_code=ButtonRequestType.ResetDevice,
-        )
+    await show_warning(
+        ctx,
+        "warning_backup_check",
+        header=header,
+        subheader="That is the wrong word.",
+        content="Please check again.",
+        button="Check again",
+        br_code=ButtonRequestType.ResetDevice,
     )
 
 
@@ -220,25 +208,21 @@ async def show_backup_warning(ctx, slip39=False):
         description = "Never make a digital copy of your recovery shares and never upload them online!"
     else:
         description = "Never make a digital copy of your recovery seed and never upload\nit online!"
-    await require(
-        confirm_action(
-            ctx,
-            "backup_warning",
-            "Caution",
-            description=description,
-            verb="I understand",
-            verb_cancel=None,
-            icon=ui.ICON_NOCOPY,
-            br_code=ButtonRequestType.ResetDevice,
-        )
+    await confirm_action(
+        ctx,
+        "backup_warning",
+        "Caution",
+        description=description,
+        verb="I understand",
+        verb_cancel=None,
+        icon=ui.ICON_NOCOPY,
+        br_code=ButtonRequestType.ResetDevice,
     )
 
 
 async def show_backup_success(ctx):
     text = "Use your backup\nwhen you need to\nrecover your wallet."
-    await require(
-        show_success(ctx, "success_backup", text, subheader="Your backup is done.")
-    )
+    await show_success(ctx, "success_backup", text, subheader="Your backup is done.")
 
 
 # BIP39

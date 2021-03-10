@@ -2,7 +2,7 @@ from trezor import wire
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha3_256
 from trezor.messages.Success import Success
-from trezor.ui.layouts import confirm_signverify, require
+from trezor.ui.layouts import confirm_signverify
 
 from apps.common.signverify import decode_message
 
@@ -29,8 +29,6 @@ async def verify_message(ctx, msg):
 
     address = address_from_bytes(address_bytes)
 
-    await require(
-        confirm_signverify(ctx, "ETH", decode_message(msg.message), address=address)
-    )
+    await confirm_signverify(ctx, "ETH", decode_message(msg.message), address=address)
 
     return Success(message="Message verified")

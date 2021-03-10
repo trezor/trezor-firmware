@@ -11,12 +11,6 @@ if False:
     LayoutType = Awaitable[Any]
 
 
-async def require(a: Awaitable[bool]) -> None:
-    result = await a
-    if not result:
-        raise wire.ActionCancelled
-
-
 async def interact(
     ctx: wire.GenericContext,
     layout: LayoutType,

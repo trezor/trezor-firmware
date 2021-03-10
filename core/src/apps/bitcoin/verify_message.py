@@ -2,7 +2,7 @@ from trezor import wire
 from trezor.crypto.curve import secp256k1
 from trezor.messages.InputScriptType import SPENDADDRESS, SPENDP2SHWITNESS, SPENDWITNESS
 from trezor.messages.Success import Success
-from trezor.ui.layouts import confirm_signverify, require
+from trezor.ui.layouts import confirm_signverify
 
 from apps.common import coins
 from apps.common.signverify import decode_message, message_digest
@@ -63,13 +63,11 @@ async def verify_message(ctx: wire.Context, msg: VerifyMessage) -> Success:
     if addr != address:
         raise wire.ProcessError("Invalid signature")
 
-    await require(
-        confirm_signverify(
-            ctx,
-            coin.coin_shortcut,
-            decode_message(message),
-            address=address_short(coin, address),
-        )
+    await confirm_signverify(
+        ctx,
+        coin.coin_shortcut,
+        decode_message(message),
+        address=address_short(coin, address),
     )
 
     return Success(message="Message verified")

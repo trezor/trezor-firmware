@@ -2,7 +2,7 @@ from trezor import wire
 from trezor.crypto.curve import secp256k1
 from trezor.messages.InputScriptType import SPENDADDRESS, SPENDP2SHWITNESS, SPENDWITNESS
 from trezor.messages.MessageSignature import MessageSignature
-from trezor.ui.layouts import confirm_signverify, require
+from trezor.ui.layouts import confirm_signverify
 
 from apps.common.paths import validate_path
 from apps.common.signverify import decode_message, message_digest
@@ -26,7 +26,7 @@ async def sign_message(
     script_type = msg.script_type or 0
 
     await validate_path(ctx, keychain, address_n)
-    await require(confirm_signverify(ctx, coin.coin_shortcut, decode_message(message)))
+    await confirm_signverify(ctx, coin.coin_shortcut, decode_message(message))
 
     node = keychain.derive(address_n)
     seckey = node.private_key()
