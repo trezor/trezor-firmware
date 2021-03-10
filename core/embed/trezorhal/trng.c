@@ -35,6 +35,8 @@ void trng_init(void) {
 }
 
 uint32_t trng_read(const uint32_t previous, const uint32_t compare_previous) {
+  // Compared to trng_random32, trng_read doesn't depend on static variables.
+  // Therefore, it is used in the boardloader before the memory is initialized.
   uint32_t temp = previous;
   do {
     while ((RNG->SR & (RNG_SR_SECS | RNG_SR_CECS | RNG_SR_DRDY)) != RNG_SR_DRDY)
