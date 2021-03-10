@@ -65,7 +65,7 @@ void trng_random_buffer_xor(uint8_t *buf, size_t len) {
     if (i % 4 == 0) {
       r = trng_random32();
     }
-    buf[i] = r & 0xFF;
+    buf[i] ^= r & 0xFF;
     r >>= 8;
   }
 }
