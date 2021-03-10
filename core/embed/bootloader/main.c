@@ -120,7 +120,7 @@ static secbool bootloader_usb_loop(const vendor_header *const vhdr,
         int response = ui_user_input(INPUT_CONFIRM | INPUT_CANCEL);
         if (INPUT_CANCEL == response) {
           ui_fadeout();
-          ui_screen_info(secfalse, vhdr, hdr);
+          ui_screen_firmware_info(vhdr, hdr);
           ui_fadein();
           send_user_abort(USB_IFACE_NUM, "Wipe cancelled");
           break;
@@ -315,7 +315,7 @@ int main(void) {
   // ... or we have stay_in_bootloader flag to force it
   if (touched || stay_in_bootloader == sectrue) {
     // no ui_fadeout(); - we already start from black screen
-    ui_screen_info(secfalse, &vhdr, &hdr);
+    ui_screen_firmware_info(&vhdr, &hdr);
     ui_fadein();
 
     // and start the usb loop

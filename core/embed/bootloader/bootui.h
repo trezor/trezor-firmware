@@ -32,9 +32,9 @@ void ui_screen_welcome_first(void);
 void ui_screen_welcome_second(void);
 void ui_screen_welcome_third(void);
 
-void ui_screen_info(secbool buttons, const vendor_header* const vhdr,
-                    const image_header* const hdr);
-void ui_screen_info_fingerprint(const image_header* const hdr);
+void ui_screen_firmware_info(const vendor_header* const vhdr,
+                             const image_header* const hdr);
+void ui_screen_firmware_fingerprint(const image_header* const hdr);
 
 void ui_screen_install_confirm_upgrade(const vendor_header* const vhdr,
                                        const image_header* const hdr);

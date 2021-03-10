@@ -158,8 +158,8 @@ static int display_vendor_string(const char *text, int textlen,
   }
 }
 
-void ui_screen_info(secbool buttons, const vendor_header *const vhdr,
-                    const image_header *const hdr) {
+void ui_screen_firmware_info(const vendor_header *const vhdr,
+                             const image_header *const hdr) {
   display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
   const char *ver_str = format_ver("Bootloader %d.%d.%d", VERSION_UINT32);
   display_text(16, 32, ver_str, -1, FONT_NORMAL, COLOR_BLACK, COLOR_WHITE);
@@ -174,18 +174,11 @@ void ui_screen_info(secbool buttons, const vendor_header *const vhdr,
     display_text(55, 70, "No Firmware", -1, FONT_NORMAL, COLOR_BL_GRAY,
                  COLOR_WHITE);
   }
-
-  if (sectrue == buttons) {
-    display_text_center(120, 170, "Connect to host?", -1, FONT_NORMAL,
-                        COLOR_BLACK, COLOR_WHITE);
-    ui_confirm_cancel_buttons();
-  } else {
-    display_text_center(120, 220, "Go to trezor.io/start", -1, FONT_NORMAL,
-                        COLOR_BLACK, COLOR_WHITE);
-  }
+  display_text_center(120, 220, "Go to trezor.io/start", -1, FONT_NORMAL,
+                      COLOR_BLACK, COLOR_WHITE);
 }
 
-void ui_screen_info_fingerprint(const image_header *const hdr) {
+void ui_screen_firmware_fingerprint(const image_header *const hdr) {
   display_bar(0, 0, DISPLAY_RESX, DISPLAY_RESY, COLOR_WHITE);
   display_text(16, 32, "Firmware fingerprint", -1, FONT_NORMAL, COLOR_BLACK,
                COLOR_WHITE);

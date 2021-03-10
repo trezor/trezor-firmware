@@ -529,7 +529,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
 
       if (INPUT_CANCEL == response) {
         ui_fadeout();
-        ui_screen_info(secfalse, &current_vhdr, &current_hdr);
+        ui_screen_firmware_info(&current_vhdr, &current_hdr);
         ui_fadein();
         send_user_abort(iface_num, "Firmware install cancelled");
         return -4;
