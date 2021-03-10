@@ -107,7 +107,6 @@ def test_cardano_sign_tx_with_multiple_chunks(client, parameters, result):
         # If that changes, we'll need to figure out something else.
         messages.ButtonRequest(page_number=1),
         messages.ButtonRequest(page_number=2),
-        messages.ButtonRequest(page_number=3),
         messages.ButtonRequest(page_number=1),
         messages.ButtonRequest(page_number=2),
     ]
