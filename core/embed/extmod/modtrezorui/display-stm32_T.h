@@ -19,7 +19,12 @@
 
 #include STM32_HAL_H
 
-#define DISPLAY_ST7789V_INVERT_COLORS 0
+// using const volatile instead of #define results in binaries that change
+// only in 1-byte when the flag changes.
+// using #define leads compiler to over-optimize the code leading to bigger
+// differencies in the resulting binaries.
+
+const volatile uint8_t DISPLAY_ST7789V_INVERT_COLORS = 0;
 
 // FSMC/FMC Bank 1 - NOR/PSRAM 1
 #define DISPLAY_MEMORY_BASE 0x60000000
