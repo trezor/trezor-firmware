@@ -67,6 +67,7 @@ __all__ = (
     "confirm_coinjoin",
     "confirm_timebounds_stellar",
     "confirm_proposals_tezos",
+    "confirm_transfer_binance",
 )
 
 
@@ -863,4 +864,25 @@ async def confirm_proposals_tezos(
 
     await raise_if_cancelled(
         interact(ctx, paginated, "confirm_proposals", ButtonRequestType.SignTx)
+    )
+
+
+# TODO cleanup @ redesign
+async def confirm_transfer_binance(
+    ctx: wire.GenericContext, inputs_outputs: Sequence[Tuple[str, str, str]]
+) -> None:
+    pages: list[ui.Component] = []
+    for title, amount, address in inputs_outputs:
+        coin_page = Text(title, ui.ICON_SEND, icon_color=ui.GREEN, new_lines=False)
+        coin_page.bold(amount)
+        coin_page.normal("\nto\n")
+        coin_page.mono(*_split_address(address))
+        pages.append(coin_page)
+
+    pages[-1] = HoldToConfirm(pages[-1])
+
+    await raise_if_cancelled(
+        interact(
+            ctx, Paginated(pages), "confirm_transfer", ButtonRequestType.ConfirmOutput
+        )
     )
