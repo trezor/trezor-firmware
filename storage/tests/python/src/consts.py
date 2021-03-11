@@ -1,3 +1,6 @@
+# ----- General ----- #
+UINT32_MAX = 0xFFFF_FFFF
+
 # ----- PIN and encryption related ----- #
 
 # App ID where PIN log is stored.

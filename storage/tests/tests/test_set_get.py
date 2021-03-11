@@ -1,5 +1,7 @@
 import pytest
 
+from python.src import consts
+
 from . import common
 
 # Strings for testing ChaCha20 encryption.
@@ -182,4 +184,18 @@ def test_counter():
     for i in range(501, 700):
         for s in (sc, sp):
             assert i == s.next_counter(0xC001)
+    assert common.memory_equals(sc, sp)
+
+    for s in (sc, sp):
+        with pytest.raises(RuntimeError):
+            s.set_counter(0xC001, consts.UINT32_MAX + 1)
+
+        start = consts.UINT32_MAX - 100
+        s.set_counter(0xC001, start)
+        for i in range(start, consts.UINT32_MAX):
+            assert i + 1 == s.next_counter(0xC001)
+
+        with pytest.raises(RuntimeError):
+            s.next_counter(0xC001)
+
     assert common.memory_equals(sc, sp)

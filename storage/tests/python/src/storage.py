@@ -149,6 +149,10 @@ class Storage:
         app = key >> 8
         if not consts.is_app_public(app):
             raise RuntimeError("Counter can be set only for public items")
+
+        if val > consts.UINT32_MAX:
+            raise RuntimeError("Failed to set value in storage.")
+
         counter = val.to_bytes(4, sys.byteorder) + bytearray(
             b"\xFF" * consts.COUNTER_TAIL_SIZE
         )
@@ -167,6 +171,8 @@ class Storage:
         tail = helpers.to_int_by_words(current[4:])
         tail_count = "{0:064b}".format(tail).count("0")
         increased_count = base + tail_count + 1
+        if increased_count > consts.UINT32_MAX:
+            raise RuntimeError("Failed to set value in storage.")
 
         if tail_count == consts.COUNTER_MAX_TAIL:
             self.set_counter(key, increased_count)

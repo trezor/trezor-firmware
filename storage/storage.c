@@ -1363,9 +1363,17 @@ secbool storage_next_counter(const uint16_t key, uint32_t *count) {
   }
 
   *count = val_stored[0] + 1 + 32 * (i - 1);
+  if (*count < val_stored[0]) {
+    // Value overflow.
+    return secfalse;
+  }
 
   if (i < len_words) {
     *count += hamming_weight(~val_stored[i]);
+    if (*count < val_stored[0]) {
+      // Value overflow.
+      return secfalse;
+    }
     return norcow_update_word(key, sizeof(uint32_t) * i, val_stored[i] >> 1);
   } else {
     return storage_set_counter(key, *count);
