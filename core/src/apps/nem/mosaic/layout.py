@@ -1,16 +1,12 @@
 from trezor import ui
-from trezor.enums import ButtonRequestType, NEMMosaicLevy, NEMSupplyChangeType
+from trezor.enums import NEMMosaicLevy, NEMSupplyChangeType
 from trezor.messages import (
     NEMMosaicCreation,
     NEMMosaicDefinition,
     NEMMosaicSupplyChange,
     NEMTransactionCommon,
 )
-from trezor.ui.components.tt.scroll import Paginated
-from trezor.ui.components.tt.text import Text
-
-from apps.common.confirm import require_confirm
-from apps.common.layout import split_address
+from trezor.ui.layouts import confirm_properties
 
 from ..layout import (
     require_confirm_content,
@@ -47,27 +43,15 @@ async def ask_supply_change(
 
 def _creation_message(mosaic_creation):
     return [
-        ui.NORMAL,
-        "Create mosaic",
-        ui.BOLD,
-        mosaic_creation.definition.mosaic,
-        ui.NORMAL,
-        "under namespace",
-        ui.BOLD,
-        mosaic_creation.definition.namespace,
+        ("Create mosaic", mosaic_creation.definition.mosaic),
+        ("under namespace", mosaic_creation.definition.namespace),
     ]
 
 
 def _supply_message(supply_change):
     return [
-        ui.NORMAL,
-        "Modify supply for",
-        ui.BOLD,
-        supply_change.mosaic,
-        ui.NORMAL,
-        "under namespace",
-        ui.BOLD,
-        supply_change.namespace,
+        ("Modify supply for", supply_change.mosaic),
+        ("under namespace", supply_change.namespace),
     ]
 
 
@@ -76,21 +60,14 @@ async def require_confirm_properties(ctx, definition: NEMMosaicDefinition):
 
     # description
     if definition.description:
-        t = Text("Confirm properties", ui.ICON_SEND, new_lines=False)
-        t.bold("Description:")
-        t.br()
-        t.normal(*definition.description.split(" "))
-        properties.append(t)
+        properties.append(("Description:", definition.description))
 
     # transferable
     if definition.transferable:
         transferable = "Yes"
     else:
         transferable = "No"
-    t = Text("Confirm properties", ui.ICON_SEND)
-    t.bold("Transferable?")
-    t.normal(transferable)
-    properties.append(t)
+    properties.append(("Transferable?", transferable))
 
     # mutable_supply
     if definition.mutable_supply:
@@ -98,45 +75,30 @@ async def require_confirm_properties(ctx, definition: NEMMosaicDefinition):
     else:
         imm = "immutable"
     if definition.supply:
-        t = Text("Confirm properties", ui.ICON_SEND)
-        t.bold("Initial supply:")
-        t.normal(str(definition.supply), imm)
+        properties.append(("Initial supply:", str(definition.supply) + "\n" + imm))
     else:
-        t = Text("Confirm properties", ui.ICON_SEND)
-        t.bold("Initial supply:")
-        t.normal(imm)
-    properties.append(t)
+        properties.append(("Initial supply:", imm))
 
     # levy
     if definition.levy:
+        properties.append(("Levy recipient:", definition.levy_address))
 
-        t = Text("Confirm properties", ui.ICON_SEND)
-        t.bold("Levy recipient:")
-        t.mono(*split_address(definition.levy_address))
-        properties.append(t)
+        properties.append(("Levy fee:", str(definition.fee)))
+        properties.append(("Levy divisibility:", str(definition.divisibility)))
 
-        t = Text("Confirm properties", ui.ICON_SEND)
-        t.bold("Levy fee:")
-        t.normal(str(definition.fee))
-        t.bold("Levy divisibility:")
-        t.normal(str(definition.divisibility))
-        properties.append(t)
-
-        t = Text("Confirm properties", ui.ICON_SEND)
-        t.bold("Levy namespace:")
-        t.normal(definition.levy_namespace)
-        t.bold("Levy mosaic:")
-        t.normal(definition.levy_mosaic)
-        properties.append(t)
+        properties.append(("Levy namespace:", definition.levy_namespace))
+        properties.append(("Levy mosaic:", definition.levy_mosaic))
 
         if definition.levy == NEMMosaicLevy.MosaicLevy_Absolute:
             levy_type = "absolute"
         else:
             levy_type = "percentile"
-        t = Text("Confirm properties", ui.ICON_SEND)
-        t.bold("Levy type:")
-        t.normal(levy_type)
-        properties.append(t)
+        properties.append(("Levy type:", levy_type))
 
-    paginated = Paginated(properties)
-    await require_confirm(ctx, paginated, ButtonRequestType.ConfirmOutput)
+    await confirm_properties(
+        ctx,
+        "confirm_properties",
+        title="Confirm properties",
+        props=properties,
+        icon_color=ui.ORANGE_ICON,
+    )

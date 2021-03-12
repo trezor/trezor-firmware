@@ -7,10 +7,7 @@ from trezor.messages import (
     NEMTransfer,
 )
 from trezor.strings import format_amount
-from trezor.ui.components.tt.text import Text
-
-from apps.common.confirm import require_confirm
-from apps.common.layout import split_address
+from trezor.ui.layouts import confirm_action, confirm_output, confirm_properties
 
 from ..helpers import (
     NEM_LEVY_PERCENTILE_DIVISOR_ABSOLUTE,
@@ -46,37 +43,52 @@ async def ask_transfer_mosaic(
     mosaic_quantity = mosaic.quantity * transfer.amount / NEM_MOSAIC_AMOUNT_DIVISOR
 
     if definition:
-        msg = Text("Confirm mosaic", ui.ICON_SEND, ui.GREEN)
-        msg.normal("Confirm transfer of")
-        msg.bold(
-            format_amount(mosaic_quantity, definition["divisibility"])
-            + definition["ticker"]
+        await confirm_properties(
+            ctx,
+            "confirm_mosaic",
+            title="Confirm mosaic",
+            props=[
+                (
+                    "Confirm transfer of",
+                    format_amount(mosaic_quantity, definition["divisibility"])
+                    + definition["ticker"],
+                ),
+                ("of", definition["name"]),
+            ],
         )
-        msg.normal("of")
-        msg.bold(definition["name"])
-        await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
 
         if "levy" in definition and "fee" in definition:
             levy_msg = _get_levy_msg(definition, mosaic_quantity, common.network)
-            msg = Text("Confirm mosaic", ui.ICON_SEND, ui.GREEN)
-            msg.normal("Confirm mosaic", "levy fee of")
-            msg.bold(levy_msg)
-            await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
+            await confirm_properties(
+                ctx,
+                "confirm_mosaic_levy",
+                title="Confirm mosaic",
+                props=[
+                    ("Confirm mosaic\nlevy fee of", levy_msg),
+                ],
+            )
 
     else:
-        msg = Text("Confirm mosaic", ui.ICON_SEND, ui.RED)
-        msg.bold("Unknown mosaic!")
-        msg.normal("Divisibility and levy")
-        msg.normal("cannot be shown for")
-        msg.normal("unknown mosaics")
-        await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
+        await confirm_action(
+            ctx,
+            "confirm_mosaic_unknown",
+            title="Confirm mosaic",
+            action="Unknown mosaic!",
+            description="Divisibility and levy cannot be shown for unknown mosaics",
+            icon=ui.ICON_SEND,
+            icon_color=ui.RED,
+            br_code=ButtonRequestType.ConfirmOutput,
+        )
 
-        msg = Text("Confirm mosaic", ui.ICON_SEND, ui.GREEN)
-        msg.normal("Confirm transfer of")
-        msg.bold("%s raw units" % mosaic_quantity)
-        msg.normal("of")
-        msg.bold("%s.%s" % (mosaic.namespace, mosaic.mosaic))
-        await require_confirm(ctx, msg, ButtonRequestType.ConfirmOutput)
+        await confirm_properties(
+            ctx,
+            "confirm_mosaic_transfer",
+            title="Confirm mosaic",
+            props=[
+                ("Confirm transfer of", "%s raw units" % mosaic_quantity),
+                ("of", "%s.%s" % (mosaic.namespace, mosaic.mosaic)),
+            ],
+        )
 
 
 def _get_xem_amount(transfer: NEMTransfer):
@@ -119,22 +131,27 @@ async def ask_importance_transfer(
 
 
 async def _require_confirm_transfer(ctx, recipient, value):
-    text = Text("Confirm transfer", ui.ICON_SEND, ui.GREEN)
-    text.bold("Send %s XEM" % format_amount(value, NEM_MAX_DIVISIBILITY))
-    text.normal("to")
-    text.mono(*split_address(recipient))
-    await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
+    await confirm_output(
+        ctx,
+        recipient,
+        amount="Send {} XEM".format(format_amount(value, NEM_MAX_DIVISIBILITY)),
+        font_amount=ui.BOLD,
+        title="Confirm transfer",
+        to_str="\nto\n",
+    )
 
 
 async def _require_confirm_payload(ctx, payload: bytearray, encrypt=False):
     payload = bytes(payload).decode()
+    subtitle = "Encrypted:" if encrypt else "Unencrypted:"
 
-    if encrypt:
-        text = Text("Confirm payload", ui.ICON_SEND, ui.GREEN)
-        text.bold("Encrypted:")
-        text.normal(payload)
-    else:
-        text = Text("Confirm payload", ui.ICON_SEND, ui.RED)
-        text.bold("Unencrypted:")
-        text.normal(payload)
-    await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
+    await confirm_properties(
+        ctx,
+        "confirm_payload",
+        title="Confirm payload",
+        props=[
+            (None, subtitle),
+            (payload, None),
+        ],
+        icon_color=ui.GREEN if encrypt else ui.RED,
+    )
