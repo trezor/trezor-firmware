@@ -2,16 +2,10 @@ from trezor import ui
 from trezor.crypto import nem
 from trezor.enums import ButtonRequestType, NEMModificationType
 from trezor.messages import NEMAggregateModification, NEMSignTx, NEMTransactionCommon
-from trezor.ui.components.tt.text import Text
+from trezor.ui.constants import MONO_ADDR_PER_LINE
+from trezor.ui.layouts import confirm_hex
 
-from apps.common.layout import split_address
-
-from ..layout import (
-    require_confirm,
-    require_confirm_fee,
-    require_confirm_final,
-    require_confirm_text,
-)
+from ..layout import require_confirm_fee, require_confirm_final, require_confirm_text
 
 
 async def ask_multisig(ctx, msg: NEMSignTx):
@@ -48,7 +42,14 @@ async def ask_aggregate_modification(
 
 
 async def _require_confirm_address(ctx, action: str, address: str):
-    text = Text("Confirm address", ui.ICON_SEND, ui.GREEN)
-    text.normal(action)
-    text.mono(*split_address(address))
-    await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
+    await confirm_hex(
+        ctx,
+        br_type="confirm_multisig",
+        title="Confirm address",
+        description=action,
+        data=address,
+        br_code=ButtonRequestType.ConfirmOutput,
+        icon=ui.ICON_SEND,
+        width=MONO_ADDR_PER_LINE,
+        truncate=True,
+    )
