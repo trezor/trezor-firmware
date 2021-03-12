@@ -189,6 +189,49 @@ class TestConfig(unittest.TestCase):
         with self.assertRaises(ValueError):
             config.get(192, 1)
 
+    def test_counter(self):
+        config.init()
+        config.wipe()
+
+        # Test writable_locked when storage is locked.
+
+        config.lock()
+
+        with self.assertRaises(RuntimeError):
+            config.set_counter(1, 2, 0, False)
+
+        with self.assertRaises(RuntimeError):
+            config.next_counter(1, 2, False)
+
+        config.set_counter(1, 2, 100, True)
+        for i in range(100, 200):
+            self.assertEqual(config.next_counter(1, 2, True), i + 1)
+
+        # Test increment with storage unlocked.
+
+        self.assertEqual(config.unlock('', None), True)
+
+        for i in range(200, 300):
+            self.assertEqual(config.next_counter(1, 2, True), i + 1)
+
+        # Test counter deletion.
+
+        config.delete(1, 2, True, True)
+        self.assertEqual(config.next_counter(1, 2, True), 0)
+
+        # Test overflow protection.
+
+        with self.assertRaises(RuntimeError):
+            config.set_counter(1, 2, 0x1_0000_0000, True)
+
+        start = 0xFFFF_FFFF - 100
+        config.set_counter(1, 2, start, True)
+        for i in range(start, 0xFFFF_FFFF):
+            self.assertEqual(config.next_counter(1, 2, True), i + 1)
+
+        with self.assertRaises(RuntimeError):
+            config.next_counter(1, 2, True)
+
     def test_compact(self):
         config.init()
         config.wipe()
