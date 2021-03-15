@@ -225,6 +225,14 @@ def by_rp_id_hash(rp_id_hash: bytes) -> Optional[FIDOApp]:
             use_sign_count=None,
             use_self_attestation=None,
         )
+    elif rp_id_hash == b"\x85\x71\x01\x36\x1b\x20\xa9\x54\x4c\xdb\x9b\xef\x65\x85\x8b\x6b\xac\x70\x13\x55\x0d\x8f\x84\xf7\xef\xee\x25\x2b\x96\xfa\x7c\x1e":
+        # WebAuthn key for Namecheap
+        return FIDOApp(
+            label="www.namecheap.com",
+            icon="apps/webauthn/res/icon_namecheap.toif",
+            use_sign_count=None,
+            use_self_attestation=None,
+        )
     elif rp_id_hash == b"\x08\xb2\xa3\xd4\x19\x39\xaa\x31\x66\x84\x93\xcb\x36\xcd\xcc\x4f\x16\xc4\xd9\xb4\xc8\x23\x8b\x73\xc2\xf6\x72\xc0\x33\x00\x71\x97":
         # U2F key for Slush Pool
         return FIDOApp(
