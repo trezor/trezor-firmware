@@ -4,7 +4,6 @@ use crate::{
     error::Error,
     micropython::{
         buffer::Buffer,
-        dict::Dict,
         gc::Gc,
         iter::{Iter, IterBuf},
         list::List,
@@ -16,6 +15,7 @@ use crate::{
 
 use super::{
     defs::{FieldDef, FieldType, MsgDef},
+    obj::MsgObj,
     zigzag,
 };
 
@@ -47,13 +47,13 @@ impl Encoder {
         msg: &MsgDef,
         obj: Obj,
     ) -> Result<(), Error> {
-        let dict = Gc::<Dict>::try_from(obj)?;
+        let obj = Gc::<MsgObj>::try_from(obj)?;
 
         for field in msg.fields {
             let field_name = Qstr::from(field.name);
 
             // Lookup the field by name. If not set or None, skip.
-            let field_value = match dict.map().get(field_name) {
+            let field_value = match obj.map().get(field_name) {
                 Ok(value) => value,
                 Err(_) => continue,
             };
@@ -62,10 +62,10 @@ impl Encoder {
             }
 
             let field_key = {
-                let wire_type = field.get_type().wire_type();
-                let wire_type = wire_type as u64;
+                let prim_type = field.get_type().primitive_type();
+                let prim_type = prim_type as u64;
                 let field_tag = field.tag as u64;
-                field_tag << 3 | wire_type
+                field_tag << 3 | prim_type
             };
 
             if field.is_repeated() {

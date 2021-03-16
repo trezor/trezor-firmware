@@ -4,6 +4,8 @@
 static void _librust_qstrs(void) {
   // protobuf
   MP_QSTR_Msg;
+  MP_QSTR_MsgDef;
+  MP_QSTR_MESSAGE_WIRE_TYPE;
 
   // text
   MP_QSTR_items;

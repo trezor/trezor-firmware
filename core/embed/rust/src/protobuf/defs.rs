@@ -3,6 +3,7 @@ use core::{mem, slice};
 pub struct MsgDef {
     pub fields: &'static [FieldDef],
     pub defaults: &'static [u8],
+    pub wire_id: Option<u16>,
 }
 
 impl MsgDef {
@@ -80,16 +81,18 @@ pub enum FieldType {
     Msg(MsgDef),
 }
 
-pub const WIRE_TYPE_VARINT: u8 = 0;
-pub const WIRE_TYPE_LENGTH_DELIMITED: u8 = 2;
+pub const PRIMITIVE_TYPE_VARINT: u8 = 0;
+pub const PRIMITIVE_TYPE_LENGTH_DELIMITED: u8 = 2;
 
 impl FieldType {
-    pub fn wire_type(&self) -> u8 {
+    pub fn primitive_type(&self) -> u8 {
         match self {
             FieldType::UVarInt | FieldType::SVarInt | FieldType::Bool | FieldType::Enum(_) => {
-                WIRE_TYPE_VARINT
+                PRIMITIVE_TYPE_VARINT
             }
-            FieldType::Bytes | FieldType::String | FieldType::Msg(_) => WIRE_TYPE_LENGTH_DELIMITED,
+            FieldType::Bytes | FieldType::String | FieldType::Msg(_) => {
+                PRIMITIVE_TYPE_LENGTH_DELIMITED
+            }
         }
     }
 }
@@ -146,6 +149,7 @@ unsafe fn get_msg(msg_offset: u16) -> MsgDef {
     // struct MsgDef {
     //     fields_count: u8,
     //     defaults_size: u8,
+    //     wire_id: u16,
     //     fields: [Field],
     //     defaults: [u8],
     // }
@@ -154,13 +158,21 @@ unsafe fn get_msg(msg_offset: u16) -> MsgDef {
     let fields_count = ptr.offset(0).read() as usize;
     let defaults_size = ptr.offset(1).read() as usize;
 
+    let wire_id_lo = ptr.offset(2).read();
+    let wire_id_hi = ptr.offset(3).read();
+    let wire_id = match u16::from_le_bytes([wire_id_lo, wire_id_hi]) {
+        0xFFFF => None,
+        some_wire_id => Some(some_wire_id),
+    };
+
     let fields_size = fields_count * mem::size_of::<FieldDef>();
-    let fields_ptr = ptr.offset(2);
-    let defaults_ptr = ptr.offset(2).add(fields_size);
+    let fields_ptr = ptr.offset(4);
+    let defaults_ptr = ptr.offset(4).add(fields_size);
 
     MsgDef {
         fields: slice::from_raw_parts(fields_ptr.cast(), fields_count),
         defaults: slice::from_raw_parts(defaults_ptr.cast(), defaults_size),
+        wire_id,
     }
 }
 

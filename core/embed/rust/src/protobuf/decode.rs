@@ -9,20 +9,29 @@ use crate::{
 
 use super::{
     defs::{self, FieldDef, FieldType, MsgDef},
-    msg::MsgObj,
+    obj::{MsgDefObj, MsgObj, MSG_WIRE_ID_ATTR},
     zigzag,
 };
 
 #[no_mangle]
-pub extern "C" fn protobuf_new(n_args: usize, args: *const Obj, kwargs: *const Map) -> Obj {
-    util::try_with_args_and_kwargs(n_args, args, kwargs, |args, kwargs| {
-        let msg_name = args.get(0).copied().ok_or(Error::Missing)?;
+pub extern "C" fn protobuf_type(msg_name: Obj) -> Obj {
+    util::try_or_none(|| {
         let msg_name = Qstr::try_from(msg_name)?;
         let msg = MsgDef::for_name(msg_name.to_u16()).ok_or(Error::Missing)?;
+        let obj = MsgDefObj::alloc(msg).into();
+        Ok(obj)
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn protobuf_new(n_args: usize, args: *const Obj, kwargs: *const Map) -> Obj {
+    util::try_with_args_and_kwargs(n_args, args, kwargs, |args, kwargs| {
+        let msg = args.get(0).copied().ok_or(Error::Missing)?;
+        let msg: Gc<MsgDefObj> = msg.try_into()?;
         let decoder = Decoder {
             enable_experimental: false,
         };
-        let obj = decoder.message_from_values(kwargs, &msg)?;
+        let obj = decoder.message_from_values(kwargs, msg.msg())?;
         Ok(obj)
     })
 }
@@ -60,6 +69,7 @@ impl Decoder {
         self.decode_fields_into(stream, msg, map)?;
         self.decode_defaults_into(msg, map)?;
         self.assign_required_into(msg, map)?;
+        self.assign_wire_id(msg, map);
         Ok(dict.into())
     }
 
@@ -74,6 +84,7 @@ impl Decoder {
         }
         self.decode_defaults_into(msg, map)?;
         self.assign_required_into(msg, map)?;
+        self.assign_wire_id(msg, map);
         Ok(obj.into())
     }
 
@@ -92,10 +103,10 @@ impl Decoder {
         map: &mut Map,
     ) -> Result<(), Error> {
         // Loop, trying to read the field key that contains the tag and primitive value
-        // type. If we fail to read the key, we are at the end of stream.
+        // type. If we fail to read the key, we are at the end of the stream.
         while let Ok(field_key) = stream.read_uvarint() {
             let field_tag = u8::try_from(field_key >> 3)?;
-            let wire_type = u8::try_from(field_key & 7)?;
+            let prim_type = u8::try_from(field_key & 7)?;
 
             match msg.field(field_tag) {
                 Some(field) => {
@@ -120,11 +131,11 @@ impl Decoder {
                 }
                 None => {
                     // Unknown field, skip it.
-                    match wire_type {
-                        defs::WIRE_TYPE_VARINT => {
+                    match prim_type {
+                        defs::PRIMITIVE_TYPE_VARINT => {
                             stream.read_uvarint()?;
                         }
-                        defs::WIRE_TYPE_LENGTH_DELIMITED => {
+                        defs::PRIMITIVE_TYPE_LENGTH_DELIMITED => {
                             let num = stream.read_uvarint()?;
                             let len = num.try_into()?;
                             stream.read(len)?;
@@ -146,18 +157,18 @@ impl Decoder {
         let stream = &mut InputStream::new(msg.defaults);
 
         // Because we are sure that our field tags fit in one byte, and because this is
-        // a trusted stream, we encode the field tag directly as u8, without the wire
-        // type.
+        // a trusted stream, we encode the field tag directly as u8, without the
+        // primitive type.
         while let Ok(field_tag) = stream.read_byte() {
             let field = msg.field(field_tag).ok_or(Error::Missing)?;
             let field_name = Qstr::from(field.name);
             if map.contains_key(field_name) {
                 // Field already has a value assigned, skip it.
-                match field.get_type().wire_type() {
-                    defs::WIRE_TYPE_VARINT => {
+                match field.get_type().primitive_type() {
+                    defs::PRIMITIVE_TYPE_VARINT => {
                         stream.read_uvarint()?;
                     }
-                    defs::WIRE_TYPE_LENGTH_DELIMITED => {
+                    defs::PRIMITIVE_TYPE_LENGTH_DELIMITED => {
                         let num = stream.read_uvarint()?;
                         let len = num.try_into()?;
                         stream.read(len)?;
@@ -192,6 +203,16 @@ impl Decoder {
             map.set(field_name, Obj::const_none());
         }
         Ok(())
+    }
+
+    /// Assign the wire ID of this message def into the map, under the "wire_id"
+    /// key.
+    pub fn assign_wire_id(&self, msg: &MsgDef, map: &mut Map) {
+        if let Some(wire_id) = msg.wire_id {
+            map.set(MSG_WIRE_ID_ATTR, wire_id);
+        } else {
+            map.set(MSG_WIRE_ID_ATTR, Obj::const_none());
+        }
     }
 
     /// Decode one field value from the input stream.

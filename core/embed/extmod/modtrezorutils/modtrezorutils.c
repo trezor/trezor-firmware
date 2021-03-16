@@ -117,12 +117,17 @@ STATIC mp_obj_t mod_trezorutils_halt(size_t n_args, const mp_obj_t *args) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_halt_obj, 0, 1,
                                            mod_trezorutils_halt);
 
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_protobuf_type_obj,
+                                 protobuf_type);
 STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorutils_protobuf_new_obj, 1,
                                   protobuf_new);
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorutils_protobuf_decode_obj,
                                  protobuf_decode);
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorutils_protobuf_encode_obj,
                                  protobuf_encode);
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_ui_layout_new_example_obj,
+                                 ui_layout_new_example);
 
 #define PASTER(s) MP_QSTR_##s
 #define MP_QSTR(s) PASTER(s)
@@ -141,12 +146,17 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_memcpy), MP_ROM_PTR(&mod_trezorutils_memcpy_obj)},
     {MP_ROM_QSTR(MP_QSTR_halt), MP_ROM_PTR(&mod_trezorutils_halt_obj)},
     // protobuf
+    {MP_ROM_QSTR(MP_QSTR_protobuf_type),
+     MP_ROM_PTR(&mod_trezorutils_protobuf_type_obj)},
     {MP_ROM_QSTR(MP_QSTR_protobuf_new),
      MP_ROM_PTR(&mod_trezorutils_protobuf_new_obj)},
     {MP_ROM_QSTR(MP_QSTR_protobuf_decode),
      MP_ROM_PTR(&mod_trezorutils_protobuf_decode_obj)},
     {MP_ROM_QSTR(MP_QSTR_protobuf_encode),
      MP_ROM_PTR(&mod_trezorutils_protobuf_encode_obj)},
+    // layouts
+    {MP_ROM_QSTR(MP_QSTR_ui_layout_new_example),
+     MP_ROM_PTR(&mod_trezorutils_ui_layout_new_example_obj)},
     // various built-in constants
     {MP_ROM_QSTR(MP_QSTR_GITREV), MP_ROM_QSTR(MP_QSTR(GITREV))},
     {MP_ROM_QSTR(MP_QSTR_VERSION_MAJOR), MP_ROM_INT(VERSION_MAJOR)},

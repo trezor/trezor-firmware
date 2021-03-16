@@ -496,6 +496,7 @@ class Descriptor:
                 c.Struct(
                     "fields_count" / c.Byte,
                     "defaults_size" / c.Byte,
+                    "wire_id" / c.Int16ul,  # 0xFFFF iff unset
                     "fields"
                     / c.Array(
                         c.this.fields_count,
@@ -614,7 +615,7 @@ class Descriptor:
                     defaults_size += len(item)
             # TODO: calculate from the actual MsgDef type
             fields_size = fields_count * (1 + 1 + 2 + 2)
-            msg_size = 1 + 1 + fields_size + defaults_size
+            msg_size = 1 + 1 + 2 + fields_size + defaults_size
             cursor += msg_size
         return msg_map
 
@@ -632,9 +633,22 @@ class Descriptor:
         for msg in sorted(self.messages, key=lambda m: m.name):
             defaults = []
             fields = []
+
+            wire_id = self._get_extension(msg, "wire_type")
+            if wire_id is None:
+                wire_id = self.message_types.get(msg.name)
+            if wire_id == 0xFFFF:
+                raise ValueError("Forbidden wire ID")
+            elif wire_id is None:
+                wire_id = 0xFFFF
+
             for field in sorted(msg.field, key=lambda f: f.number):
                 if not include_deprecated and field.options.deprecated:
                     continue
+                if field.name == "wire_id":
+                    # Message wire IDs are kept under the "wire_id" field name, forbid
+                    # regular fields from colliding.
+                    raise ValueError("Forbidden field name")
                 field_type, ref_offset = self.encode_field_type(
                     field, enum_map, msg_map
                 )
@@ -660,6 +674,7 @@ class Descriptor:
                 dict(
                     fields_count=len(fields),
                     defaults_size=len(defaults),
+                    wire_id=wire_id,
                     fields=fields,
                     defaults=defaults,
                 )
