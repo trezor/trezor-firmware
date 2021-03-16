@@ -71,16 +71,16 @@ async def confirm_action(
     ctx: wire.GenericContext,
     br_type: str,
     title: str,
-    action: str = None,
-    description: str = None,
-    description_param: str = None,
+    action: Optional[str] = None,
+    description: Optional[str] = None,
+    description_param: Optional[str] = None,
     description_param_font: int = ui.BOLD,
     verb: Union[str, bytes, None] = Confirm.DEFAULT_CONFIRM,
     verb_cancel: Union[str, bytes, None] = Confirm.DEFAULT_CANCEL,
     hold: bool = False,
     hold_danger: bool = False,
-    icon: str = None,  # TODO cleanup @ redesign
-    icon_color: int = None,  # TODO cleanup @ redesign
+    icon: Optional[str] = None,  # TODO cleanup @ redesign
+    icon_color: Optional[int] = None,  # TODO cleanup @ redesign
     reverse: bool = False,  # TODO cleanup @ redesign
     larger_vspace: bool = False,  # TODO cleanup @ redesign
     exc: ExceptionType = wire.ActionCancelled,
@@ -235,7 +235,7 @@ def _truncate_hex(
 def _show_address(
     address: str,
     desc: str,
-    network: str = None,
+    network: Optional[str] = None,
 ) -> Confirm:
     text = Text(desc, ui.ICON_RECEIVE, ui.GREEN)
     if network is not None:
@@ -279,10 +279,10 @@ async def show_xpub(
 async def show_address(
     ctx: wire.GenericContext,
     address: str,
-    address_qr: str = None,
+    address_qr: Optional[str] = None,
     desc: str = "Confirm address",
-    network: str = None,
-    multisig_index: int = None,
+    network: Optional[str] = None,
+    multisig_index: Optional[int] = None,
     xpubs: Sequence[str] = [],
 ) -> None:
     is_multisig = len(xpubs) > 0
@@ -476,7 +476,7 @@ async def confirm_hex(
     br_type: str,
     title: str,
     data: str,
-    description: str = None,
+    description: Optional[str] = None,
     br_code: EnumTypeButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
@@ -645,7 +645,7 @@ async def confirm_sign_identity(
 
 
 async def confirm_signverify(
-    ctx: wire.GenericContext, coin: str, message: str, address: str = None
+    ctx: wire.GenericContext, coin: str, message: str, address: Optional[str] = None
 ) -> None:
     if address:
         header = "Verify {} message".format(coin)
