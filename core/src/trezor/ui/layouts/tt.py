@@ -43,7 +43,6 @@ if False:
 
 __all__ = (
     "confirm_action",
-    "confirm_wipe",
     "confirm_reset_device",
     "confirm_backup",
     "confirm_path_warning",
@@ -79,13 +78,13 @@ async def confirm_action(
     verb: Union[str, bytes, None] = Confirm.DEFAULT_CONFIRM,
     verb_cancel: Union[str, bytes, None] = Confirm.DEFAULT_CANCEL,
     hold: bool = False,
+    hold_danger: bool = False,
     icon: str = None,  # TODO cleanup @ redesign
     icon_color: int = None,  # TODO cleanup @ redesign
     reverse: bool = False,  # TODO cleanup @ redesign
     larger_vspace: bool = False,  # TODO cleanup @ redesign
     exc: ExceptionType = wire.ActionCancelled,
     br_code: EnumTypeButtonRequestType = ButtonRequestType.Other,
-    **kwargs: Any,
 ) -> None:
     text = Text(
         title,
@@ -118,29 +117,17 @@ async def confirm_action(
         )
 
     cls = HoldToConfirm if hold else Confirm
+    kwargs = {}
+    if hold_danger:
+        kwargs = {"loader_style": LoaderDanger, "confirm_style": ButtonCancel}
     await raise_if_cancelled(
         interact(
             ctx,
-            cls(text, confirm=verb, cancel=verb_cancel),
+            cls(text, confirm=verb, cancel=verb_cancel, **kwargs),
             br_type,
             br_code,
         ),
         exc,
-    )
-
-
-# TODO cleanup @ redesign
-async def confirm_wipe(ctx: wire.GenericContext) -> None:
-    text = Text("Wipe device", ui.ICON_WIPE, ui.RED)
-    text.normal("Do you really want to", "wipe the device?", "")
-    text.bold("All data will be lost.")
-    await raise_if_cancelled(
-        interact(
-            ctx,
-            HoldToConfirm(text, confirm_style=ButtonCancel, loader_style=LoaderDanger),
-            "wipe_device",
-            ButtonRequestType.WipeDevice,
-        )
     )
 
 
