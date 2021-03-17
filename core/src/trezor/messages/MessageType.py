@@ -89,7 +89,6 @@ DebugLinkFlashErase: Literal[113] = 113
 DebugLinkLayout: Literal[9001] = 9001
 DebugLinkReseedRandom: Literal[9002] = 9002
 DebugLinkRecordScreen: Literal[9003] = 9003
-DebugLinkShowText: Literal[9004] = 9004
 DebugLinkEraseSdCard: Literal[9005] = 9005
 DebugLinkWatchLayout: Literal[9006] = 9006
 if not utils.BITCOIN_ONLY:

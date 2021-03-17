@@ -185,7 +185,6 @@ if __debug__:
             config.wipe()
 
         wire.add(MessageType.LoadDevice, __name__, "load_device")
-        wire.add(MessageType.DebugLinkShowText, __name__, "show_text")
         wire.register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)  # type: ignore
         wire.register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)
         wire.register(MessageType.DebugLinkReseedRandom, dispatch_DebugLinkReseedRandom)

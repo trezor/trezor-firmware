@@ -59,8 +59,6 @@ from .DebugLinkMemoryRead import DebugLinkMemoryRead
 from .DebugLinkMemoryWrite import DebugLinkMemoryWrite
 from .DebugLinkRecordScreen import DebugLinkRecordScreen
 from .DebugLinkReseedRandom import DebugLinkReseedRandom
-from .DebugLinkShowText import DebugLinkShowText
-from .DebugLinkShowTextItem import DebugLinkShowTextItem
 from .DebugLinkState import DebugLinkState
 from .DebugLinkStop import DebugLinkStop
 from .DebugLinkWatchLayout import DebugLinkWatchLayout
@@ -312,7 +310,6 @@ from . import Capability
 from . import CardanoAddressType
 from . import CardanoCertificateType
 from . import CardanoPoolRelayType
-from . import DebugLinkShowTextStyle
 from . import DebugSwipeDirection
 from . import DecredStakingSpendType
 from . import FailureType

@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - dropped Python 3.5 support  [#810]
+- dropped debug-only `trezorctl debug show-text` functionality
 
 
 ## [0.12.2] - 2020-08-27

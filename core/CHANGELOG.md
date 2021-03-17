@@ -57,6 +57,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 - PIVX support
+- dropped debug-only `DebugLinkShowText` functionality
 
 ### Fixed
 - Path warning is not shown on `GetAddress(show_display=False)` call.  [#1206]
