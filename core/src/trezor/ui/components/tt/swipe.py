@@ -3,7 +3,7 @@ from micropython import const
 from trezor import io, loop, ui
 
 if False:
-    from typing import Generator
+    from typing import Generator, Optional
 
 SWIPE_UP = const(0x01)
 SWIPE_DOWN = const(0x02)
@@ -18,7 +18,9 @@ _SWIPE_TRESHOLD = const(30)
 
 
 class Swipe(ui.Component):
-    def __init__(self, directions: int = SWIPE_ALL, area: ui.Area = None) -> None:
+    def __init__(
+        self, directions: int = SWIPE_ALL, area: Optional[ui.Area] = None
+    ) -> None:
         super().__init__()
         if area is None:
             area = (0, 0, ui.WIDTH, ui.HEIGHT)

@@ -399,7 +399,7 @@ async def show_address(
     address: str,
     address_type: EnumTypeCardanoAddressType,
     path: List[int],
-    network: str = None,
+    network: Optional[str] = None,
 ) -> bool:
     """
     Custom show_address function is needed because cardano addresses don't

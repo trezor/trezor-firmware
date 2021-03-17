@@ -41,7 +41,7 @@ def _move_session_ids_queue(session_id: bytes) -> None:
     _session_ids.insert(0, session_id)
 
 
-def start_session(received_session_id: bytes = None) -> bytes:
+def start_session(received_session_id: Optional[bytes] = None) -> bytes:
     if received_session_id and received_session_id in _session_ids:
         session_id = received_session_id
     else:

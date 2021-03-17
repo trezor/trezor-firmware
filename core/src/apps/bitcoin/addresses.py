@@ -12,7 +12,7 @@ from .multisig import multisig_get_pubkeys, multisig_pubkey_index
 from .scripts import output_script_multisig, output_script_native_p2wpkh_or_p2wsh
 
 if False:
-    from typing import List
+    from typing import List, Optional
     from trezor.crypto import bip32
     from trezor.messages.TxInputType import EnumTypeInputScriptType
 
@@ -21,7 +21,7 @@ def get_address(
     script_type: EnumTypeInputScriptType,
     coin: CoinInfo,
     node: bip32.HDNode,
-    multisig: MultisigRedeemScriptType = None,
+    multisig: Optional[MultisigRedeemScriptType] = None,
 ) -> str:
     if multisig:
         # Ensure that our public key is included in the multisig.

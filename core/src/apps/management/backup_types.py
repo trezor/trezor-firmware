@@ -2,6 +2,8 @@ from trezor.crypto.slip39 import Share
 from trezor.messages import BackupType
 
 if False:
+    from typing import Optional
+
     from trezor.messages.ResetDevice import EnumTypeBackupType
 
 
@@ -26,7 +28,9 @@ def is_slip39_backup_type(backup_type: EnumTypeBackupType) -> bool:
     return backup_type in (BackupType.Slip39_Basic, BackupType.Slip39_Advanced)
 
 
-def infer_backup_type(is_slip39: bool, share: Share = None) -> EnumTypeBackupType:
+def infer_backup_type(
+    is_slip39: bool, share: Optional[Share] = None
+) -> EnumTypeBackupType:
     if not is_slip39:  # BIP-39
         return BackupType.Bip39
     elif not share or share.group_count < 1:  # invalid parameters

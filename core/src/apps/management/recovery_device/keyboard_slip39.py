@@ -170,7 +170,7 @@ class Slip39Keyboard(ui.Layout):
         # Word was confirmed by the user.
         raise ui.Result(word)
 
-    def edit(self, button: Button = None, index: int = 0) -> None:
+    def edit(self, button: Optional[Button] = None, index: int = 0) -> None:
         self.pending_button = button
         self.pending_index = index
 

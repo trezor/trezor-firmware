@@ -17,7 +17,7 @@ def memcpy(
     dst_ofs: int,
     src: bytes,
     src_ofs: int,
-    n: int = None,
+    n: Optional[int] = None,
 ) -> int:
     """
     Copies at most `n` bytes from `src` at offset `src_ofs` to
@@ -28,7 +28,7 @@ def memcpy(
 
 
 # extmod/modtrezorutils/modtrezorutils.c
-def halt(msg: str = None) -> None:
+def halt(msg: Optional[str] = None) -> None:
     """
     Halts execution.
     """

@@ -62,7 +62,7 @@ def unimport_end(mods: Iterable[str]) -> None:
     gc.collect()
 
 
-def ensure(cond: bool, msg: str = None) -> None:
+def ensure(cond: bool, msg: Optional[str] = None) -> None:
     if not cond:
         if msg is None:
             raise AssertionError

@@ -123,7 +123,7 @@ if False:
 def _wrap_protobuf_load(
     reader: protobuf.Reader,
     expected_type: Type[protobuf.LoadedMessageType],
-    field_cache: protobuf.FieldCache = None,
+    field_cache: Optional[protobuf.FieldCache] = None,
 ) -> protobuf.LoadedMessageType:
     try:
         return protobuf.load_message(
@@ -169,7 +169,7 @@ class Context:
         self,
         msg: protobuf.MessageType,
         expected_type: Type[protobuf.LoadedMessageType],
-        field_cache: protobuf.FieldCache = None,
+        field_cache: Optional[protobuf.FieldCache] = None,
     ) -> protobuf.LoadedMessageType:
         await self.write(msg, field_cache)
         del msg
@@ -189,7 +189,7 @@ class Context:
     async def read(
         self,
         expected_type: Type[protobuf.LoadedMessageType],
-        field_cache: protobuf.FieldCache = None,
+        field_cache: Optional[protobuf.FieldCache] = None,
     ) -> protobuf.LoadedMessageType:
         if __debug__:
             log.debug(
@@ -256,7 +256,9 @@ class Context:
         return _wrap_protobuf_load(msg.data, exptype)
 
     async def write(
-        self, msg: protobuf.MessageType, field_cache: protobuf.FieldCache = None
+        self,
+        msg: protobuf.MessageType,
+        field_cache: Optional[protobuf.FieldCache] = None,
     ) -> None:
         if __debug__:
             log.debug(

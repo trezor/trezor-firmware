@@ -62,7 +62,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorutils_consteq_obj,
 ///     dst_ofs: int,
 ///     src: bytes,
 ///     src_ofs: int,
-///     n: int = None,
+///     n: Optional[int] = None,
 /// ) -> int:
 ///     """
 ///     Copies at most `n` bytes from `src` at offset `src_ofs` to
@@ -99,7 +99,7 @@ STATIC mp_obj_t mod_trezorutils_memcpy(size_t n_args, const mp_obj_t *args) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_memcpy_obj, 4, 5,
                                            mod_trezorutils_memcpy);
 
-/// def halt(msg: str = None) -> None:
+/// def halt(msg: Optional[str] = None) -> None:
 ///     """
 ///     Halts execution.
 ///     """

@@ -4,7 +4,18 @@ bytes, string, embedded message and repeated fields.
 """
 
 if False:
-    from typing import Any, Callable, Dict, Iterable, List, Tuple, Type, TypeVar, Union
+    from typing import (
+        Any,
+        Callable,
+        Dict,
+        Iterable,
+        List,
+        Optional,
+        Tuple,
+        Type,
+        TypeVar,
+        Union,
+    )
     from typing_extensions import Protocol
 
     class Reader(Protocol):
@@ -200,7 +211,7 @@ if False:
 def load_message(
     reader: Reader,
     msg_type: Type[LoadedMessageType],
-    field_cache: FieldCache = None,
+    field_cache: Optional[FieldCache] = None,
     experimental_enabled: bool = True,
 ) -> LoadedMessageType:
     if field_cache is None:
@@ -295,7 +306,7 @@ def load_message(
 
 
 def dump_message(
-    writer: Writer, msg: MessageType, field_cache: FieldCache = None
+    writer: Writer, msg: MessageType, field_cache: Optional[FieldCache] = None
 ) -> None:
     repvalue = [0]
 
@@ -360,7 +371,7 @@ def dump_message(
                 raise TypeError
 
 
-def count_message(msg: MessageType, field_cache: FieldCache = None) -> int:
+def count_message(msg: MessageType, field_cache: Optional[FieldCache] = None) -> int:
     nbytes = 0
     repvalue = [0]
 

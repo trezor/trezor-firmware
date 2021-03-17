@@ -40,8 +40,8 @@ class Display:
         w: int,
         h: int,
         fgcolor: int,
-        bgcolor: int = None,
-        radius: int = None,
+        bgcolor: Optional[int] = None,
+        radius: Optional[int] = None,
     ) -> None:
         """
         Renders a rounded bar at position (x,y = upper left corner) with width w
@@ -89,8 +89,8 @@ class Display:
         yoffset: int,
         fgcolor: int,
         bgcolor: int,
-        icon: bytes = None,
-        iconfgcolor: int = None,
+        icon: Optional[bytes] = None,
+        iconfgcolor: Optional[int] = None,
     ) -> None:
         """
         Renders a rotating loader graphic.
@@ -114,8 +114,8 @@ class Display:
         font: int,
         fgcolor: int,
         bgcolor: int,
-        text_offset: int = None,
-        text_len: int = None,
+        text_offset: Optional[int] = None,
+        text_len: Optional[int] = None,
     ) -> None:
         """
         Renders left-aligned text at position (x,y) where x is left position and
@@ -159,8 +159,8 @@ class Display:
         self,
         text: str,
         font: int,
-        text_offset: int = None,
-        text_len: int = None,
+        text_offset: Optional[int] = None,
+        text_len: Optional[int] = None,
     ) -> int:
         """
         Returns a width of text in pixels. Font font is used for rendering.
@@ -181,7 +181,7 @@ class Display:
         Scale determines a zoom factor.
         """
 
-    def orientation(self, degrees: int = None) -> int:
+    def orientation(self, degrees: Optional[int] = None) -> int:
         """
         Sets display orientation to 0, 90, 180 or 270 degrees.
         Everything needs to be redrawn again when this function is used.
@@ -189,13 +189,13 @@ class Display:
         value.
         """
 
-    def backlight(self, val: int = None) -> int:
+    def backlight(self, val: Optional[int] = None) -> int:
         """
         Sets backlight intensity to the value specified in val.
         Call without the val parameter to just perform the read of the value.
         """
 
-    def offset(self, xy: Tuple[int, int] = None) -> Tuple[int, int]:
+    def offset(self, xy: Optional[Tuple[int, int]] = None) -> Tuple[int, int]:
         """
         Sets offset (x, y) for all subsequent drawing calls.
         Call without the xy parameter to just perform the read of the value.

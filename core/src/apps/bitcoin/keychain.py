@@ -63,9 +63,9 @@ PATTERN_UNCHAINED_DEPRECATED = "m/45'/coin_type'/account'/[0-1000000]/address_in
 
 def validate_path_against_script_type(
     coin: coininfo.CoinInfo,
-    msg: MsgWithAddressScriptType = None,
-    address_n: Bip32Path = None,
-    script_type: EnumTypeInputScriptType = None,
+    msg: Optional[MsgWithAddressScriptType] = None,
+    address_n: Optional[Bip32Path] = None,
+    script_type: Optional[EnumTypeInputScriptType] = None,
     multisig: bool = False,
 ) -> bool:
     patterns = []

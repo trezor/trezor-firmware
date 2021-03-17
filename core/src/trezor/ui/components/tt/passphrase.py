@@ -191,7 +191,9 @@ class PassphraseKeyboard(ui.Layout):
         # Timeout occurred, let's just reset the pending marker.
         self.edit(self.input.text)
 
-    def edit(self, text: str, button: KeyButton = None, index: int = 0) -> None:
+    def edit(
+        self, text: str, button: Optional[KeyButton] = None, index: int = 0
+    ) -> None:
         if len(text) > self.max_length:
             return
 

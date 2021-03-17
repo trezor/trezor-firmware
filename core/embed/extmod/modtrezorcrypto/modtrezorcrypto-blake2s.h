@@ -41,10 +41,10 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2s_update(mp_obj_t self, mp_obj_t data);
 
 /// def __init__(
 ///     self,
-///     data: bytes = None,
+///     data: Optional[bytes] = None,
 ///     outlen: int = blake2s.digest_size,
-///     key: bytes = None,
-///     personal: bytes = None,
+///     key: Optional[bytes] = None,
+///     personal: Optional[bytes] = None,
 /// ) -> None:
 ///     """
 ///     Creates a hash context object.
