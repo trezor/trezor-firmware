@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeDebugSwipeDirection = Literal[0, 1, 2, 3]
     except ImportError:
@@ -17,13 +17,13 @@ class DebugLinkDecision(p.MessageType):
     def __init__(
         self,
         *,
-        yes_no: bool = None,
-        swipe: EnumTypeDebugSwipeDirection = None,
-        input: str = None,
-        x: int = None,
-        y: int = None,
-        wait: bool = None,
-        hold_ms: int = None,
+        yes_no: Optional[bool] = None,
+        swipe: Optional[EnumTypeDebugSwipeDirection] = None,
+        input: Optional[str] = None,
+        x: Optional[int] = None,
+        y: Optional[int] = None,
+        wait: Optional[bool] = None,
+        hold_ms: Optional[int] = None,
     ) -> None:
         self.yes_no = yes_no
         self.swipe = swipe

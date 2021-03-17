@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,14 +16,14 @@ class MoneroGetTxKeyRequest(p.MessageType):
     def __init__(
         self,
         *,
-        address_n: List[int] = None,
-        network_type: int = None,
-        salt1: bytes = None,
-        salt2: bytes = None,
-        tx_enc_keys: bytes = None,
-        tx_prefix_hash: bytes = None,
-        reason: int = None,
-        view_public_key: bytes = None,
+        address_n: Optional[List[int]] = None,
+        network_type: Optional[int] = None,
+        salt1: Optional[bytes] = None,
+        salt2: Optional[bytes] = None,
+        tx_enc_keys: Optional[bytes] = None,
+        tx_prefix_hash: Optional[bytes] = None,
+        reason: Optional[int] = None,
+        view_public_key: Optional[bytes] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.network_type = network_type

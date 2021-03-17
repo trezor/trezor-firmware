@@ -6,7 +6,7 @@ from .MultisigRedeemScriptType import MultisigRedeemScriptType
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeInputScriptType = Literal[0, 1, 2, 3, 4]
     except ImportError:
@@ -19,12 +19,12 @@ class GetAddress(p.MessageType):
     def __init__(
         self,
         *,
-        address_n: List[int] = None,
+        address_n: Optional[List[int]] = None,
         coin_name: str = "Bitcoin",
-        show_display: bool = None,
-        multisig: MultisigRedeemScriptType = None,
+        show_display: Optional[bool] = None,
+        multisig: Optional[MultisigRedeemScriptType] = None,
         script_type: EnumTypeInputScriptType = 0,
-        ignore_xpub_magic: bool = None,
+        ignore_xpub_magic: Optional[bool] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.coin_name = coin_name

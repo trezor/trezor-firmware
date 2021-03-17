@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,13 +16,13 @@ class BinanceSignTx(p.MessageType):
     def __init__(
         self,
         *,
-        address_n: List[int] = None,
-        msg_count: int = None,
-        account_number: int = None,
-        chain_id: str = None,
-        memo: str = None,
-        sequence: int = None,
-        source: int = None,
+        address_n: Optional[List[int]] = None,
+        msg_count: Optional[int] = None,
+        account_number: Optional[int] = None,
+        chain_id: Optional[str] = None,
+        memo: Optional[str] = None,
+        sequence: Optional[int] = None,
+        source: Optional[int] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.msg_count = msg_count

@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -22,10 +22,10 @@ class TezosOriginationOp(p.MessageType):
         storage_limit: int,
         balance: int,
         script: bytes,
-        manager_pubkey: bytes = None,
-        spendable: bool = None,
-        delegatable: bool = None,
-        delegate: bytes = None,
+        manager_pubkey: Optional[bytes] = None,
+        spendable: Optional[bool] = None,
+        delegatable: Optional[bool] = None,
+        delegate: Optional[bytes] = None,
     ) -> None:
         self.source = source
         self.fee = fee

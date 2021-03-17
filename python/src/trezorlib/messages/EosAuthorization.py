@@ -8,7 +8,7 @@ from .EosAuthorizationWait import EosAuthorizationWait
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -19,10 +19,10 @@ class EosAuthorization(p.MessageType):
     def __init__(
         self,
         *,
-        keys: List[EosAuthorizationKey] = None,
-        accounts: List[EosAuthorizationAccount] = None,
-        waits: List[EosAuthorizationWait] = None,
-        threshold: int = None,
+        keys: Optional[List[EosAuthorizationKey]] = None,
+        accounts: Optional[List[EosAuthorizationAccount]] = None,
+        waits: Optional[List[EosAuthorizationWait]] = None,
+        threshold: Optional[int] = None,
     ) -> None:
         self.keys = keys if keys is not None else []
         self.accounts = accounts if accounts is not None else []

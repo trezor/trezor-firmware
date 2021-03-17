@@ -8,7 +8,7 @@ from .CardanoPoolRelayParametersType import CardanoPoolRelayParametersType
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -26,9 +26,9 @@ class CardanoPoolParametersType(p.MessageType):
         margin_numerator: int,
         margin_denominator: int,
         reward_account: str,
-        owners: List[CardanoPoolOwnerType] = None,
-        relays: List[CardanoPoolRelayParametersType] = None,
-        metadata: CardanoPoolMetadataType = None,
+        owners: Optional[List[CardanoPoolOwnerType]] = None,
+        relays: Optional[List[CardanoPoolRelayParametersType]] = None,
+        metadata: Optional[CardanoPoolMetadataType] = None,
     ) -> None:
         self.owners = owners if owners is not None else []
         self.relays = relays if relays is not None else []

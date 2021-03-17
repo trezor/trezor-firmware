@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -15,9 +15,9 @@ class TxRequestSerializedType(p.MessageType):
     def __init__(
         self,
         *,
-        signature_index: int = None,
-        signature: bytes = None,
-        serialized_tx: bytes = None,
+        signature_index: Optional[int] = None,
+        signature: Optional[bytes] = None,
+        serialized_tx: Optional[bytes] = None,
     ) -> None:
         self.signature_index = signature_index
         self.signature = signature

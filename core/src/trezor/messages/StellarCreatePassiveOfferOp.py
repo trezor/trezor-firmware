@@ -6,7 +6,7 @@ from .StellarAssetType import StellarAssetType
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -18,12 +18,12 @@ class StellarCreatePassiveOfferOp(p.MessageType):
     def __init__(
         self,
         *,
-        source_account: str = None,
-        selling_asset: StellarAssetType = None,
-        buying_asset: StellarAssetType = None,
-        amount: int = None,
-        price_n: int = None,
-        price_d: int = None,
+        source_account: Optional[str] = None,
+        selling_asset: Optional[StellarAssetType] = None,
+        buying_asset: Optional[StellarAssetType] = None,
+        amount: Optional[int] = None,
+        price_n: Optional[int] = None,
+        price_d: Optional[int] = None,
     ) -> None:
         self.source_account = source_account
         self.selling_asset = selling_asset

@@ -6,7 +6,7 @@ from .EosAuthorization import EosAuthorization
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -17,10 +17,10 @@ class EosActionUpdateAuth(p.MessageType):
     def __init__(
         self,
         *,
-        account: int = None,
-        permission: int = None,
-        parent: int = None,
-        auth: EosAuthorization = None,
+        account: Optional[int] = None,
+        permission: Optional[int] = None,
+        parent: Optional[int] = None,
+        auth: Optional[EosAuthorization] = None,
     ) -> None:
         self.account = account
         self.permission = permission

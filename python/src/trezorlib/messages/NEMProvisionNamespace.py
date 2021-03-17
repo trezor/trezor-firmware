@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -15,10 +15,10 @@ class NEMProvisionNamespace(p.MessageType):
     def __init__(
         self,
         *,
-        namespace: str = None,
-        parent: str = None,
-        sink: str = None,
-        fee: int = None,
+        namespace: Optional[str] = None,
+        parent: Optional[str] = None,
+        sink: Optional[str] = None,
+        fee: Optional[int] = None,
     ) -> None:
         self.namespace = namespace
         self.parent = parent

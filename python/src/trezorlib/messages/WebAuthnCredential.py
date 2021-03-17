@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -15,18 +15,18 @@ class WebAuthnCredential(p.MessageType):
     def __init__(
         self,
         *,
-        index: int = None,
-        id: bytes = None,
-        rp_id: str = None,
-        rp_name: str = None,
-        user_id: bytes = None,
-        user_name: str = None,
-        user_display_name: str = None,
-        creation_time: int = None,
-        hmac_secret: bool = None,
-        use_sign_count: bool = None,
-        algorithm: int = None,
-        curve: int = None,
+        index: Optional[int] = None,
+        id: Optional[bytes] = None,
+        rp_id: Optional[str] = None,
+        rp_name: Optional[str] = None,
+        user_id: Optional[bytes] = None,
+        user_name: Optional[str] = None,
+        user_display_name: Optional[str] = None,
+        creation_time: Optional[int] = None,
+        hmac_secret: Optional[bool] = None,
+        use_sign_count: Optional[bool] = None,
+        algorithm: Optional[int] = None,
+        curve: Optional[int] = None,
     ) -> None:
         self.index = index
         self.id = id

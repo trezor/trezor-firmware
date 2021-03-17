@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -17,7 +17,7 @@ class ECDHSessionKey(p.MessageType):
         self,
         *,
         session_key: bytes,
-        public_key: bytes = None,
+        public_key: Optional[bytes] = None,
     ) -> None:
         self.session_key = session_key
         self.public_key = public_key

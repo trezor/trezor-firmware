@@ -6,7 +6,7 @@ from .NEMMosaic import NEMMosaic
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -17,11 +17,11 @@ class NEMTransfer(p.MessageType):
     def __init__(
         self,
         *,
-        mosaics: List[NEMMosaic] = None,
-        recipient: str = None,
-        amount: int = None,
-        payload: bytes = None,
-        public_key: bytes = None,
+        mosaics: Optional[List[NEMMosaic]] = None,
+        recipient: Optional[str] = None,
+        amount: Optional[int] = None,
+        payload: Optional[bytes] = None,
+        public_key: Optional[bytes] = None,
     ) -> None:
         self.mosaics = mosaics if mosaics is not None else []
         self.recipient = recipient

@@ -6,7 +6,7 @@ from .TezosManagerTransfer import TezosManagerTransfer
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -17,9 +17,9 @@ class TezosParametersManager(p.MessageType):
     def __init__(
         self,
         *,
-        set_delegate: bytes = None,
-        cancel_delegate: bool = None,
-        transfer: TezosManagerTransfer = None,
+        set_delegate: Optional[bytes] = None,
+        cancel_delegate: Optional[bool] = None,
+        transfer: Optional[TezosManagerTransfer] = None,
     ) -> None:
         self.set_delegate = set_delegate
         self.cancel_delegate = cancel_delegate

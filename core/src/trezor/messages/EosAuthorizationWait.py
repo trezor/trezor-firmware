@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -15,8 +15,8 @@ class EosAuthorizationWait(p.MessageType):
     def __init__(
         self,
         *,
-        wait_sec: int = None,
-        weight: int = None,
+        wait_sec: Optional[int] = None,
+        weight: Optional[int] = None,
     ) -> None:
         self.wait_sec = wait_sec
         self.weight = weight

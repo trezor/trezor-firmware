@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,12 +16,12 @@ class DebugMoneroDiagRequest(p.MessageType):
     def __init__(
         self,
         *,
-        pd: List[int] = None,
-        ins: int = None,
-        p1: int = None,
-        p2: int = None,
-        data1: bytes = None,
-        data2: bytes = None,
+        pd: Optional[List[int]] = None,
+        ins: Optional[int] = None,
+        p1: Optional[int] = None,
+        p2: Optional[int] = None,
+        data1: Optional[bytes] = None,
+        data2: Optional[bytes] = None,
     ) -> None:
         self.pd = pd if pd is not None else []
         self.ins = ins

@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -18,7 +18,7 @@ class SignedIdentity(p.MessageType):
         *,
         public_key: bytes,
         signature: bytes,
-        address: str = None,
+        address: Optional[str] = None,
     ) -> None:
         self.public_key = public_key
         self.signature = signature

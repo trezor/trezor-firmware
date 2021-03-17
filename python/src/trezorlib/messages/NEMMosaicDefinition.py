@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeNEMMosaicLevy = Literal[1, 2]
     except ImportError:
@@ -16,21 +16,21 @@ class NEMMosaicDefinition(p.MessageType):
     def __init__(
         self,
         *,
-        networks: List[int] = None,
-        name: str = None,
-        ticker: str = None,
-        namespace: str = None,
-        mosaic: str = None,
-        divisibility: int = None,
-        levy: EnumTypeNEMMosaicLevy = None,
-        fee: int = None,
-        levy_address: str = None,
-        levy_namespace: str = None,
-        levy_mosaic: str = None,
-        supply: int = None,
-        mutable_supply: bool = None,
-        transferable: bool = None,
-        description: str = None,
+        networks: Optional[List[int]] = None,
+        name: Optional[str] = None,
+        ticker: Optional[str] = None,
+        namespace: Optional[str] = None,
+        mosaic: Optional[str] = None,
+        divisibility: Optional[int] = None,
+        levy: Optional[EnumTypeNEMMosaicLevy] = None,
+        fee: Optional[int] = None,
+        levy_address: Optional[str] = None,
+        levy_namespace: Optional[str] = None,
+        levy_mosaic: Optional[str] = None,
+        supply: Optional[int] = None,
+        mutable_supply: Optional[bool] = None,
+        transferable: Optional[bool] = None,
+        description: Optional[str] = None,
     ) -> None:
         self.networks = networks if networks is not None else []
         self.name = name

@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,11 +16,11 @@ class StellarAllowTrustOp(p.MessageType):
     def __init__(
         self,
         *,
-        source_account: str = None,
-        trusted_account: str = None,
-        asset_type: int = None,
-        asset_code: str = None,
-        is_authorized: int = None,
+        source_account: Optional[str] = None,
+        trusted_account: Optional[str] = None,
+        asset_type: Optional[int] = None,
+        asset_code: Optional[str] = None,
+        is_authorized: Optional[int] = None,
     ) -> None:
         self.source_account = source_account
         self.trusted_account = trusted_account

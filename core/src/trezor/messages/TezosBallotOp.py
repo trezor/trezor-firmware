@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeTezosBallotType = Literal[0, 1, 2]
     except ImportError:
@@ -16,10 +16,10 @@ class TezosBallotOp(p.MessageType):
     def __init__(
         self,
         *,
-        source: bytes = None,
-        period: int = None,
-        proposal: bytes = None,
-        ballot: EnumTypeTezosBallotType = None,
+        source: Optional[bytes] = None,
+        period: Optional[int] = None,
+        proposal: Optional[bytes] = None,
+        ballot: Optional[EnumTypeTezosBallotType] = None,
     ) -> None:
         self.source = source
         self.period = period

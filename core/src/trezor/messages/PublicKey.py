@@ -6,7 +6,7 @@ from .HDNodeType import HDNodeType
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -20,7 +20,7 @@ class PublicKey(p.MessageType):
         *,
         node: HDNodeType,
         xpub: str,
-        root_fingerprint: int = None,
+        root_fingerprint: Optional[int] = None,
     ) -> None:
         self.node = node
         self.xpub = xpub

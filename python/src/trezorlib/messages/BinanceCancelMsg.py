@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,9 +16,9 @@ class BinanceCancelMsg(p.MessageType):
     def __init__(
         self,
         *,
-        refid: str = None,
-        sender: str = None,
-        symbol: str = None,
+        refid: Optional[str] = None,
+        sender: Optional[str] = None,
+        symbol: Optional[str] = None,
     ) -> None:
         self.refid = refid
         self.sender = sender

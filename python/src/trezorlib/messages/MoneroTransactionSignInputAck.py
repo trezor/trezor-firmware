@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,8 +16,8 @@ class MoneroTransactionSignInputAck(p.MessageType):
     def __init__(
         self,
         *,
-        signature: bytes = None,
-        pseudo_out: bytes = None,
+        signature: Optional[bytes] = None,
+        pseudo_out: Optional[bytes] = None,
     ) -> None:
         self.signature = signature
         self.pseudo_out = pseudo_out

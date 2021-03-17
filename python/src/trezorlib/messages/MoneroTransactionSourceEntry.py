@@ -7,7 +7,7 @@ from .MoneroOutputEntry import MoneroOutputEntry
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -18,16 +18,16 @@ class MoneroTransactionSourceEntry(p.MessageType):
     def __init__(
         self,
         *,
-        outputs: List[MoneroOutputEntry] = None,
-        real_out_additional_tx_keys: List[bytes] = None,
-        real_output: int = None,
-        real_out_tx_key: bytes = None,
-        real_output_in_tx_index: int = None,
-        amount: int = None,
-        rct: bool = None,
-        mask: bytes = None,
-        multisig_kLRki: MoneroMultisigKLRki = None,
-        subaddr_minor: int = None,
+        outputs: Optional[List[MoneroOutputEntry]] = None,
+        real_out_additional_tx_keys: Optional[List[bytes]] = None,
+        real_output: Optional[int] = None,
+        real_out_tx_key: Optional[bytes] = None,
+        real_output_in_tx_index: Optional[int] = None,
+        amount: Optional[int] = None,
+        rct: Optional[bool] = None,
+        mask: Optional[bytes] = None,
+        multisig_kLRki: Optional[MoneroMultisigKLRki] = None,
+        subaddr_minor: Optional[int] = None,
     ) -> None:
         self.outputs = outputs if outputs is not None else []
         self.real_out_additional_tx_keys = real_out_additional_tx_keys if real_out_additional_tx_keys is not None else []

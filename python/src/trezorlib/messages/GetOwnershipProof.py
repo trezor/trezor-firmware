@@ -6,7 +6,7 @@ from .MultisigRedeemScriptType import MultisigRedeemScriptType
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeInputScriptType = Literal[0, 1, 2, 3, 4]
     except ImportError:
@@ -19,11 +19,11 @@ class GetOwnershipProof(p.MessageType):
     def __init__(
         self,
         *,
-        address_n: List[int] = None,
-        ownership_ids: List[bytes] = None,
+        address_n: Optional[List[int]] = None,
+        ownership_ids: Optional[List[bytes]] = None,
         coin_name: str = "Bitcoin",
         script_type: EnumTypeInputScriptType = 3,
-        multisig: MultisigRedeemScriptType = None,
+        multisig: Optional[MultisigRedeemScriptType] = None,
         user_confirmation: bool = False,
         commitment_data: bytes = b"",
     ) -> None:

@@ -6,7 +6,7 @@ from .NEMMosaicDefinition import NEMMosaicDefinition
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -17,9 +17,9 @@ class NEMMosaicCreation(p.MessageType):
     def __init__(
         self,
         *,
-        definition: NEMMosaicDefinition = None,
-        sink: str = None,
-        fee: int = None,
+        definition: Optional[NEMMosaicDefinition] = None,
+        sink: Optional[str] = None,
+        fee: Optional[int] = None,
     ) -> None:
         self.definition = definition
         self.sink = sink

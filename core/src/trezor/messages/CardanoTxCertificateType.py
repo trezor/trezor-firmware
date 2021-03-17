@@ -6,7 +6,7 @@ from .CardanoPoolParametersType import CardanoPoolParametersType
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeCardanoCertificateType = Literal[0, 1, 2, 3]
     except ImportError:
@@ -19,9 +19,9 @@ class CardanoTxCertificateType(p.MessageType):
         self,
         *,
         type: EnumTypeCardanoCertificateType,
-        path: List[int] = None,
-        pool: bytes = None,
-        pool_parameters: CardanoPoolParametersType = None,
+        path: Optional[List[int]] = None,
+        pool: Optional[bytes] = None,
+        pool_parameters: Optional[CardanoPoolParametersType] = None,
     ) -> None:
         self.path = path if path is not None else []
         self.type = type

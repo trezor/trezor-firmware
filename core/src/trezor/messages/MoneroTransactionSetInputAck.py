@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,12 +16,12 @@ class MoneroTransactionSetInputAck(p.MessageType):
     def __init__(
         self,
         *,
-        vini: bytes = None,
-        vini_hmac: bytes = None,
-        pseudo_out: bytes = None,
-        pseudo_out_hmac: bytes = None,
-        pseudo_out_alpha: bytes = None,
-        spend_key: bytes = None,
+        vini: Optional[bytes] = None,
+        vini_hmac: Optional[bytes] = None,
+        pseudo_out: Optional[bytes] = None,
+        pseudo_out_hmac: Optional[bytes] = None,
+        pseudo_out_alpha: Optional[bytes] = None,
+        spend_key: Optional[bytes] = None,
     ) -> None:
         self.vini = vini
         self.vini_hmac = vini_hmac

@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -17,7 +17,7 @@ class CardanoSignedTx(p.MessageType):
         self,
         *,
         tx_hash: bytes,
-        serialized_tx: bytes = None,
+        serialized_tx: Optional[bytes] = None,
     ) -> None:
         self.tx_hash = tx_hash
         self.serialized_tx = serialized_tx

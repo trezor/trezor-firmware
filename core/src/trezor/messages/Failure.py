@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeFailureType = Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 99]
     except ImportError:
@@ -17,8 +17,8 @@ class Failure(p.MessageType):
     def __init__(
         self,
         *,
-        code: EnumTypeFailureType = None,
-        message: str = None,
+        code: Optional[EnumTypeFailureType] = None,
+        message: Optional[str] = None,
     ) -> None:
         self.code = code
         self.message = message

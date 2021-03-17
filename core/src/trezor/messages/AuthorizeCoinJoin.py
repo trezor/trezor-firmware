@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeInputScriptType = Literal[0, 1, 2, 3, 4]
         EnumTypeAmountUnit = Literal[0, 1, 2, 3]
@@ -21,8 +21,8 @@ class AuthorizeCoinJoin(p.MessageType):
         *,
         coordinator: str,
         max_total_fee: int,
-        address_n: List[int] = None,
-        fee_per_anonymity: int = None,
+        address_n: Optional[List[int]] = None,
+        fee_per_anonymity: Optional[int] = None,
         coin_name: str = "Bitcoin",
         script_type: EnumTypeInputScriptType = 0,
         amount_unit: EnumTypeAmountUnit = 0,

@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -15,9 +15,9 @@ class TezosProposalOp(p.MessageType):
     def __init__(
         self,
         *,
-        proposals: List[bytes] = None,
-        source: bytes = None,
-        period: int = None,
+        proposals: Optional[List[bytes]] = None,
+        source: Optional[bytes] = None,
+        period: Optional[int] = None,
     ) -> None:
         self.proposals = proposals if proposals is not None else []
         self.source = source

@@ -6,7 +6,7 @@ from .MoneroTransactionSourceEntry import MoneroTransactionSourceEntry
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -18,14 +18,14 @@ class MoneroTransactionSignInputRequest(p.MessageType):
     def __init__(
         self,
         *,
-        src_entr: MoneroTransactionSourceEntry = None,
-        vini: bytes = None,
-        vini_hmac: bytes = None,
-        pseudo_out: bytes = None,
-        pseudo_out_hmac: bytes = None,
-        pseudo_out_alpha: bytes = None,
-        spend_key: bytes = None,
-        orig_idx: int = None,
+        src_entr: Optional[MoneroTransactionSourceEntry] = None,
+        vini: Optional[bytes] = None,
+        vini_hmac: Optional[bytes] = None,
+        pseudo_out: Optional[bytes] = None,
+        pseudo_out_hmac: Optional[bytes] = None,
+        pseudo_out_alpha: Optional[bytes] = None,
+        spend_key: Optional[bytes] = None,
+        orig_idx: Optional[int] = None,
     ) -> None:
         self.src_entr = src_entr
         self.vini = vini

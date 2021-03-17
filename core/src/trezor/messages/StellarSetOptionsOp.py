@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,18 +16,18 @@ class StellarSetOptionsOp(p.MessageType):
     def __init__(
         self,
         *,
-        source_account: str = None,
-        inflation_destination_account: str = None,
-        clear_flags: int = None,
-        set_flags: int = None,
-        master_weight: int = None,
-        low_threshold: int = None,
-        medium_threshold: int = None,
-        high_threshold: int = None,
-        home_domain: str = None,
-        signer_type: int = None,
-        signer_key: bytes = None,
-        signer_weight: int = None,
+        source_account: Optional[str] = None,
+        inflation_destination_account: Optional[str] = None,
+        clear_flags: Optional[int] = None,
+        set_flags: Optional[int] = None,
+        master_weight: Optional[int] = None,
+        low_threshold: Optional[int] = None,
+        medium_threshold: Optional[int] = None,
+        high_threshold: Optional[int] = None,
+        home_domain: Optional[str] = None,
+        signer_type: Optional[int] = None,
+        signer_key: Optional[bytes] = None,
+        signer_weight: Optional[int] = None,
     ) -> None:
         self.source_account = source_account
         self.inflation_destination_account = inflation_destination_account

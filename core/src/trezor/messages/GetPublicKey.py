@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeInputScriptType = Literal[0, 1, 2, 3, 4]
     except ImportError:
@@ -17,12 +17,12 @@ class GetPublicKey(p.MessageType):
     def __init__(
         self,
         *,
-        address_n: List[int] = None,
-        ecdsa_curve_name: str = None,
-        show_display: bool = None,
+        address_n: Optional[List[int]] = None,
+        ecdsa_curve_name: Optional[str] = None,
+        show_display: Optional[bool] = None,
         coin_name: str = "Bitcoin",
         script_type: EnumTypeInputScriptType = 0,
-        ignore_xpub_magic: bool = None,
+        ignore_xpub_magic: Optional[bool] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.ecdsa_curve_name = ecdsa_curve_name

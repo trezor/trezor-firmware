@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,11 +16,11 @@ class MoneroLiveRefreshStepRequest(p.MessageType):
     def __init__(
         self,
         *,
-        out_key: bytes = None,
-        recv_deriv: bytes = None,
-        real_out_idx: int = None,
-        sub_addr_major: int = None,
-        sub_addr_minor: int = None,
+        out_key: Optional[bytes] = None,
+        recv_deriv: Optional[bytes] = None,
+        real_out_idx: Optional[int] = None,
+        sub_addr_major: Optional[int] = None,
+        sub_addr_minor: Optional[int] = None,
     ) -> None:
         self.out_key = out_key
         self.recv_deriv = recv_deriv

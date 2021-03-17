@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -15,10 +15,10 @@ class EosActionLinkAuth(p.MessageType):
     def __init__(
         self,
         *,
-        account: int = None,
-        code: int = None,
-        type: int = None,
-        requirement: int = None,
+        account: Optional[int] = None,
+        code: Optional[int] = None,
+        type: Optional[int] = None,
+        requirement: Optional[int] = None,
     ) -> None:
         self.account = account
         self.code = code

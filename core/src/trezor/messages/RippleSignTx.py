@@ -6,7 +6,7 @@ from .RipplePayment import RipplePayment
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -18,12 +18,12 @@ class RippleSignTx(p.MessageType):
     def __init__(
         self,
         *,
-        address_n: List[int] = None,
-        fee: int = None,
-        flags: int = None,
-        sequence: int = None,
-        last_ledger_sequence: int = None,
-        payment: RipplePayment = None,
+        address_n: Optional[List[int]] = None,
+        fee: Optional[int] = None,
+        flags: Optional[int] = None,
+        sequence: Optional[int] = None,
+        last_ledger_sequence: Optional[int] = None,
+        payment: Optional[RipplePayment] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.fee = fee

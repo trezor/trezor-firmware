@@ -6,7 +6,7 @@ from .EosAsset import EosAsset
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -17,9 +17,9 @@ class EosActionBuyRam(p.MessageType):
     def __init__(
         self,
         *,
-        payer: int = None,
-        receiver: int = None,
-        quantity: EosAsset = None,
+        payer: Optional[int] = None,
+        receiver: Optional[int] = None,
+        quantity: Optional[EosAsset] = None,
     ) -> None:
         self.payer = payer
         self.receiver = receiver
