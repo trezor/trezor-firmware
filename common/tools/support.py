@@ -464,7 +464,7 @@ def set_support_value(key, entries, reason):
     """Set a support info variable.
 
     Examples:
-    support.py set coin:BTC trezor1=soon trezor2=2.0.7 webwallet=yes connect=no
+    support.py set coin:BTC trezor1=soon trezor2=2.0.7 suite=yes connect=no
     support.py set coin:LTC trezor1=yes connect=
 
     Setting a variable to "yes", "true" or "1" sets support to true.

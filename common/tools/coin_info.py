@@ -327,7 +327,7 @@ def _load_fido_apps():
 # ====== support info ======
 
 RELEASES_URL = "https://data.trezor.io/firmware/{}/releases.json"
-MISSING_SUPPORT_MEANS_NO = ("connect", "webwallet")
+MISSING_SUPPORT_MEANS_NO = ("connect", "suite")
 VERSIONED_SUPPORT_INFO = ("trezor1", "trezor2")
 
 
@@ -362,7 +362,7 @@ def support_info_single(support_data, coin):
     * if the coin is a duplicate ERC20 token, all support values are `None`
     * if the coin has an entry in `unsupported`, its support is `None`
     * if the coin has an entry in `supported` its support is that entry
-      (usually a version string, or `True` for connect/webwallet)
+      (usually a version string, or `True` for connect/suite)
     * otherwise support is presumed "soon"
     """
     support_info = {}
@@ -393,7 +393,7 @@ def support_info(coins):
 
     Takes a collection of coins and generates a support-info entry for each.
     The support-info is a dict with keys based on `support.json` keys.
-    These are usually: "trezor1", "trezor2", "connect" and "webwallet".
+    These are usually: "trezor1", "trezor2", "connect" and "suite".
 
     The `coins` argument can be a `CoinsInfo` object, a list or a dict of
     coin items.

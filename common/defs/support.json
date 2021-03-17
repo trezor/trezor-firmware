@@ -4523,7 +4523,7 @@
       "eth:ATH:43110": "duplicate key"
     }
   },
-  "webwallet": {
+  "suite": {
     "supported": {
       "bitcoin:ACM": true,
       "bitcoin:BCH": true,

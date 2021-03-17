@@ -5,10 +5,6 @@
     "erc20:eth:LINK (Chainlink)": {
         "name": "Chainlink"
     },
-    "erc20:eth:YUPIE": {
-        "hidden": 1,
-        "notes": "Replaced by YUP"
-    },
     "eth:CLO": {
         "coinmarketcap_alias": "callisto-network"
     },

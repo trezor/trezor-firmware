@@ -113,14 +113,14 @@ misc:ONT - Ontology (ONT)
  * connect : NO
  * trezor1 : support info missing
  * trezor2 : support info missing
- * webwallet : NO
+ * suite : NO
 
 $ ./support.py set misc:ONT trezor1=no -r "not planned on T1" trezor2=soon
 misc:ONT - Ontology (ONT)
  * connect : NO
  * trezor1 : NO (reason: not planned on T1)
  * trezor2 : SOON
- * webwallet : NO
+ * suite : NO
 ```
 
 Afterwards, review and commit changes to `defs/support.json`, and update the `trezor-common`
