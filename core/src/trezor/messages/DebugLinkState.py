@@ -6,7 +6,7 @@ from .HDNodeType import HDNodeType
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -18,19 +18,19 @@ class DebugLinkState(p.MessageType):
     def __init__(
         self,
         *,
-        layout_lines: List[str] = None,
-        layout: bytes = None,
-        pin: str = None,
-        matrix: str = None,
-        mnemonic_secret: bytes = None,
-        node: HDNodeType = None,
-        passphrase_protection: bool = None,
-        reset_word: str = None,
-        reset_entropy: bytes = None,
-        recovery_fake_word: str = None,
-        recovery_word_pos: int = None,
-        reset_word_pos: int = None,
-        mnemonic_type: int = None,
+        layout_lines: Optional[List[str]] = None,
+        layout: Optional[bytes] = None,
+        pin: Optional[str] = None,
+        matrix: Optional[str] = None,
+        mnemonic_secret: Optional[bytes] = None,
+        node: Optional[HDNodeType] = None,
+        passphrase_protection: Optional[bool] = None,
+        reset_word: Optional[str] = None,
+        reset_entropy: Optional[bytes] = None,
+        recovery_fake_word: Optional[str] = None,
+        recovery_word_pos: Optional[int] = None,
+        reset_word_pos: Optional[int] = None,
+        mnemonic_type: Optional[int] = None,
     ) -> None:
         self.layout_lines = layout_lines if layout_lines is not None else []
         self.layout = layout

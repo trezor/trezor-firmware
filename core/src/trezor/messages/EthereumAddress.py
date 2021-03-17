@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,7 +16,7 @@ class EthereumAddress(p.MessageType):
     def __init__(
         self,
         *,
-        address: str = None,
+        address: Optional[str] = None,
     ) -> None:
         self.address = address
 

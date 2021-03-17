@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -20,7 +20,7 @@ class HDNodeType(p.MessageType):
         child_num: int,
         chain_code: bytes,
         public_key: bytes,
-        private_key: bytes = None,
+        private_key: Optional[bytes] = None,
     ) -> None:
         self.depth = depth
         self.fingerprint = fingerprint

@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,15 +16,15 @@ class LoadDevice(p.MessageType):
     def __init__(
         self,
         *,
-        mnemonics: List[str] = None,
-        pin: str = None,
-        passphrase_protection: bool = None,
+        mnemonics: Optional[List[str]] = None,
+        pin: Optional[str] = None,
+        passphrase_protection: Optional[bool] = None,
         language: str = "en-US",
-        label: str = None,
-        skip_checksum: bool = None,
-        u2f_counter: int = None,
-        needs_backup: bool = None,
-        no_backup: bool = None,
+        label: Optional[str] = None,
+        skip_checksum: Optional[bool] = None,
+        u2f_counter: Optional[int] = None,
+        needs_backup: Optional[bool] = None,
+        no_backup: Optional[bool] = None,
     ) -> None:
         self.mnemonics = mnemonics if mnemonics is not None else []
         self.pin = pin

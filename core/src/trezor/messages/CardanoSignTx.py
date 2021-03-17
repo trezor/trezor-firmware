@@ -9,7 +9,7 @@ from .CardanoTxWithdrawalType import CardanoTxWithdrawalType
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -24,13 +24,13 @@ class CardanoSignTx(p.MessageType):
         protocol_magic: int,
         fee: int,
         network_id: int,
-        inputs: List[CardanoTxInputType] = None,
-        outputs: List[CardanoTxOutputType] = None,
-        certificates: List[CardanoTxCertificateType] = None,
-        withdrawals: List[CardanoTxWithdrawalType] = None,
-        ttl: int = None,
-        metadata: bytes = None,
-        validity_interval_start: int = None,
+        inputs: Optional[List[CardanoTxInputType]] = None,
+        outputs: Optional[List[CardanoTxOutputType]] = None,
+        certificates: Optional[List[CardanoTxCertificateType]] = None,
+        withdrawals: Optional[List[CardanoTxWithdrawalType]] = None,
+        ttl: Optional[int] = None,
+        metadata: Optional[bytes] = None,
+        validity_interval_start: Optional[int] = None,
     ) -> None:
         self.inputs = inputs if inputs is not None else []
         self.outputs = outputs if outputs is not None else []

@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeBackupType = Literal[0, 1, 2]
     except ImportError:
@@ -17,15 +17,15 @@ class ResetDevice(p.MessageType):
     def __init__(
         self,
         *,
-        display_random: bool = None,
+        display_random: Optional[bool] = None,
         strength: int = 256,
-        passphrase_protection: bool = None,
-        pin_protection: bool = None,
+        passphrase_protection: Optional[bool] = None,
+        pin_protection: Optional[bool] = None,
         language: str = "en-US",
-        label: str = None,
-        u2f_counter: int = None,
-        skip_backup: bool = None,
-        no_backup: bool = None,
+        label: Optional[str] = None,
+        u2f_counter: Optional[int] = None,
+        skip_backup: Optional[bool] = None,
+        no_backup: Optional[bool] = None,
         backup_type: EnumTypeBackupType = 0,
     ) -> None:
         self.display_random = display_random

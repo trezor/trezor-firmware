@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -19,7 +19,7 @@ class PrevInput(p.MessageType):
         prev_index: int,
         script_sig: bytes,
         sequence: int,
-        decred_tree: int = None,
+        decred_tree: Optional[int] = None,
     ) -> None:
         self.prev_hash = prev_hash
         self.prev_index = prev_index

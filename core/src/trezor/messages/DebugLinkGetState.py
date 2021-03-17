@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,9 +16,9 @@ class DebugLinkGetState(p.MessageType):
     def __init__(
         self,
         *,
-        wait_word_list: bool = None,
-        wait_word_pos: bool = None,
-        wait_layout: bool = None,
+        wait_word_list: Optional[bool] = None,
+        wait_word_pos: Optional[bool] = None,
+        wait_layout: Optional[bool] = None,
     ) -> None:
         self.wait_word_list = wait_word_list
         self.wait_word_pos = wait_word_pos

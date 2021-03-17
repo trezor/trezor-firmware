@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -15,10 +15,10 @@ class TxRequestDetailsType(p.MessageType):
     def __init__(
         self,
         *,
-        request_index: int = None,
-        tx_hash: bytes = None,
-        extra_data_len: int = None,
-        extra_data_offset: int = None,
+        request_index: Optional[int] = None,
+        tx_hash: Optional[bytes] = None,
+        extra_data_len: Optional[int] = None,
+        extra_data_offset: Optional[int] = None,
     ) -> None:
         self.request_index = request_index
         self.tx_hash = tx_hash

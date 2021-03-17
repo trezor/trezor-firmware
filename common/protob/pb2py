@@ -279,9 +279,12 @@ class Descriptor:
         for field in required_fields:
             yield f"        {field.name}: {field.py_type},"
         for field in repeated_fields:
-            yield f"        {field.name}: List[{field.py_type}] = None,"
+            yield f"        {field.name}: Optional[List[{field.py_type}]] = None,"
         for field in optional_fields:
-            yield f"        {field.name}: {field.py_type} = {field.default_value},"
+            if field.default_value is None:
+                yield f"        {field.name}: Optional[{field.py_type}] = None,"
+            else:
+                yield f"        {field.name}: {field.py_type} = {field.default_value},"
         yield          "    ) -> None:"
 
         for field in repeated_fields:
@@ -356,7 +359,7 @@ class Descriptor:
         yield ""
         yield "if __debug__:"
         yield "    try:"
-        yield "        from typing import Dict, List  # noqa: F401"
+        yield "        from typing import Dict, List, Optional  # noqa: F401"
         yield "        from typing_extensions import Literal  # noqa: F401"
 
         all_enums = [field for field in fields if field.type_name in self.enum_types]

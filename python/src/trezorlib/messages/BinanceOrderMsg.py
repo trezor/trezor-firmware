@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeBinanceOrderType = Literal[0, 1, 2, 3]
         EnumTypeBinanceOrderSide = Literal[0, 1, 2]
@@ -19,14 +19,14 @@ class BinanceOrderMsg(p.MessageType):
     def __init__(
         self,
         *,
-        id: str = None,
-        ordertype: EnumTypeBinanceOrderType = None,
-        price: int = None,
-        quantity: int = None,
-        sender: str = None,
-        side: EnumTypeBinanceOrderSide = None,
-        symbol: str = None,
-        timeinforce: EnumTypeBinanceTimeInForce = None,
+        id: Optional[str] = None,
+        ordertype: Optional[EnumTypeBinanceOrderType] = None,
+        price: Optional[int] = None,
+        quantity: Optional[int] = None,
+        sender: Optional[str] = None,
+        side: Optional[EnumTypeBinanceOrderSide] = None,
+        symbol: Optional[str] = None,
+        timeinforce: Optional[EnumTypeBinanceTimeInForce] = None,
     ) -> None:
         self.id = id
         self.ordertype = ordertype

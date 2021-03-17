@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,8 +16,8 @@ class CosiCommitment(p.MessageType):
     def __init__(
         self,
         *,
-        commitment: bytes = None,
-        pubkey: bytes = None,
+        commitment: Optional[bytes] = None,
+        pubkey: Optional[bytes] = None,
     ) -> None:
         self.commitment = commitment
         self.pubkey = pubkey

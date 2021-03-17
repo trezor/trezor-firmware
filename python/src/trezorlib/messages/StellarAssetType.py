@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,8 +16,8 @@ class StellarAssetType(p.MessageType):
         self,
         *,
         type: int,
-        code: str = None,
-        issuer: str = None,
+        code: Optional[str] = None,
+        issuer: Optional[str] = None,
     ) -> None:
         self.type = type
         self.code = code

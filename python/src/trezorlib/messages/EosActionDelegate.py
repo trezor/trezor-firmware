@@ -6,7 +6,7 @@ from .EosAsset import EosAsset
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -17,11 +17,11 @@ class EosActionDelegate(p.MessageType):
     def __init__(
         self,
         *,
-        sender: int = None,
-        receiver: int = None,
-        net_quantity: EosAsset = None,
-        cpu_quantity: EosAsset = None,
-        transfer: bool = None,
+        sender: Optional[int] = None,
+        receiver: Optional[int] = None,
+        net_quantity: Optional[EosAsset] = None,
+        cpu_quantity: Optional[EosAsset] = None,
+        transfer: Optional[bool] = None,
     ) -> None:
         self.sender = sender
         self.receiver = receiver

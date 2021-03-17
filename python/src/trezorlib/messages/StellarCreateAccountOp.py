@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,9 +16,9 @@ class StellarCreateAccountOp(p.MessageType):
     def __init__(
         self,
         *,
-        source_account: str = None,
-        new_account: str = None,
-        starting_balance: int = None,
+        source_account: Optional[str] = None,
+        new_account: Optional[str] = None,
+        starting_balance: Optional[int] = None,
     ) -> None:
         self.source_account = source_account
         self.new_account = new_account

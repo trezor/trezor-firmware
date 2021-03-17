@@ -6,7 +6,7 @@ from .NEMCosignatoryModification import NEMCosignatoryModification
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -17,8 +17,8 @@ class NEMAggregateModification(p.MessageType):
     def __init__(
         self,
         *,
-        modifications: List[NEMCosignatoryModification] = None,
-        relative_change: int = None,
+        modifications: Optional[List[NEMCosignatoryModification]] = None,
+        relative_change: Optional[int] = None,
     ) -> None:
         self.modifications = modifications if modifications is not None else []
         self.relative_change = relative_change

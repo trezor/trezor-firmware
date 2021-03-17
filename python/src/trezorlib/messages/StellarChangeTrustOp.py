@@ -6,7 +6,7 @@ from .StellarAssetType import StellarAssetType
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -18,9 +18,9 @@ class StellarChangeTrustOp(p.MessageType):
     def __init__(
         self,
         *,
-        source_account: str = None,
-        asset: StellarAssetType = None,
-        limit: int = None,
+        source_account: Optional[str] = None,
+        asset: Optional[StellarAssetType] = None,
+        limit: Optional[int] = None,
     ) -> None:
         self.source_account = source_account
         self.asset = asset

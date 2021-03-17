@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeAmountUnit = Literal[0, 1, 2, 3]
     except ImportError:
@@ -22,10 +22,10 @@ class SignTx(p.MessageType):
         coin_name: str = "Bitcoin",
         version: int = 1,
         lock_time: int = 0,
-        expiry: int = None,
-        version_group_id: int = None,
-        timestamp: int = None,
-        branch_id: int = None,
+        expiry: Optional[int] = None,
+        version_group_id: Optional[int] = None,
+        timestamp: Optional[int] = None,
+        branch_id: Optional[int] = None,
         amount_unit: EnumTypeAmountUnit = 0,
         decred_staking_ticket: bool = False,
     ) -> None:

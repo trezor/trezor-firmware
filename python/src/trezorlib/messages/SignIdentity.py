@@ -6,7 +6,7 @@ from .IdentityType import IdentityType
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -21,7 +21,7 @@ class SignIdentity(p.MessageType):
         identity: IdentityType,
         challenge_hidden: bytes = b"",
         challenge_visual: str = "",
-        ecdsa_curve_name: str = None,
+        ecdsa_curve_name: Optional[str] = None,
     ) -> None:
         self.identity = identity
         self.challenge_hidden = challenge_hidden

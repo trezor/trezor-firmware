@@ -7,7 +7,7 @@ from .HDNodeType import HDNodeType
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -19,10 +19,10 @@ class MultisigRedeemScriptType(p.MessageType):
         self,
         *,
         m: int,
-        pubkeys: List[HDNodePathType] = None,
-        signatures: List[bytes] = None,
-        nodes: List[HDNodeType] = None,
-        address_n: List[int] = None,
+        pubkeys: Optional[List[HDNodePathType]] = None,
+        signatures: Optional[List[bytes]] = None,
+        nodes: Optional[List[HDNodeType]] = None,
+        address_n: Optional[List[int]] = None,
     ) -> None:
         self.pubkeys = pubkeys if pubkeys is not None else []
         self.signatures = signatures if signatures is not None else []

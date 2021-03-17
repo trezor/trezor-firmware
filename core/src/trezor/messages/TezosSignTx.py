@@ -11,7 +11,7 @@ from .TezosTransactionOp import TezosTransactionOp
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -24,13 +24,13 @@ class TezosSignTx(p.MessageType):
         self,
         *,
         branch: bytes,
-        address_n: List[int] = None,
-        reveal: TezosRevealOp = None,
-        transaction: TezosTransactionOp = None,
-        origination: TezosOriginationOp = None,
-        delegation: TezosDelegationOp = None,
-        proposal: TezosProposalOp = None,
-        ballot: TezosBallotOp = None,
+        address_n: Optional[List[int]] = None,
+        reveal: Optional[TezosRevealOp] = None,
+        transaction: Optional[TezosTransactionOp] = None,
+        origination: Optional[TezosOriginationOp] = None,
+        delegation: Optional[TezosDelegationOp] = None,
+        proposal: Optional[TezosProposalOp] = None,
+        ballot: Optional[TezosBallotOp] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.branch = branch

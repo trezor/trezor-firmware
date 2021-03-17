@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -15,7 +15,7 @@ class EosActionRefund(p.MessageType):
     def __init__(
         self,
         *,
-        owner: int = None,
+        owner: Optional[int] = None,
     ) -> None:
         self.owner = owner
 

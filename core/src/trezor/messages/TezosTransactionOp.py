@@ -7,7 +7,7 @@ from .TezosParametersManager import TezosParametersManager
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -25,8 +25,8 @@ class TezosTransactionOp(p.MessageType):
         storage_limit: int,
         amount: int,
         destination: TezosContractID,
-        parameters: bytes = None,
-        parameters_manager: TezosParametersManager = None,
+        parameters: Optional[bytes] = None,
+        parameters_manager: Optional[TezosParametersManager] = None,
     ) -> None:
         self.source = source
         self.fee = fee

@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -15,9 +15,9 @@ class MoneroRingCtSig(p.MessageType):
     def __init__(
         self,
         *,
-        txn_fee: int = None,
-        message: bytes = None,
-        rv_type: int = None,
+        txn_fee: Optional[int] = None,
+        message: Optional[bytes] = None,
+        rv_type: Optional[int] = None,
     ) -> None:
         self.txn_fee = txn_fee
         self.message = message

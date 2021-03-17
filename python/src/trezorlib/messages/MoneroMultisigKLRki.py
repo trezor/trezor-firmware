@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -15,10 +15,10 @@ class MoneroMultisigKLRki(p.MessageType):
     def __init__(
         self,
         *,
-        K: bytes = None,
-        L: bytes = None,
-        R: bytes = None,
-        ki: bytes = None,
+        K: Optional[bytes] = None,
+        L: Optional[bytes] = None,
+        R: Optional[bytes] = None,
+        ki: Optional[bytes] = None,
     ) -> None:
         self.K = K
         self.L = L

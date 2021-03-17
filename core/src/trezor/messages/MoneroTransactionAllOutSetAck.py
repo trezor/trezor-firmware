@@ -6,7 +6,7 @@ from .MoneroRingCtSig import MoneroRingCtSig
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -18,10 +18,10 @@ class MoneroTransactionAllOutSetAck(p.MessageType):
     def __init__(
         self,
         *,
-        extra: bytes = None,
-        tx_prefix_hash: bytes = None,
-        rv: MoneroRingCtSig = None,
-        full_message_hash: bytes = None,
+        extra: Optional[bytes] = None,
+        tx_prefix_hash: Optional[bytes] = None,
+        rv: Optional[MoneroRingCtSig] = None,
+        full_message_hash: Optional[bytes] = None,
     ) -> None:
         self.extra = extra
         self.tx_prefix_hash = tx_prefix_hash

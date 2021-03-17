@@ -6,7 +6,7 @@ from .MoneroTransferDetails import MoneroTransferDetails
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -18,7 +18,7 @@ class MoneroKeyImageSyncStepRequest(p.MessageType):
     def __init__(
         self,
         *,
-        tdis: List[MoneroTransferDetails] = None,
+        tdis: Optional[List[MoneroTransferDetails]] = None,
     ) -> None:
         self.tdis = tdis if tdis is not None else []
 

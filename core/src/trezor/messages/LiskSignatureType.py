@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -15,7 +15,7 @@ class LiskSignatureType(p.MessageType):
     def __init__(
         self,
         *,
-        public_key: bytes = None,
+        public_key: Optional[bytes] = None,
     ) -> None:
         self.public_key = public_key
 

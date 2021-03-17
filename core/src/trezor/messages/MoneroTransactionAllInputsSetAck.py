@@ -6,7 +6,7 @@ from .MoneroTransactionRsigData import MoneroTransactionRsigData
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -18,7 +18,7 @@ class MoneroTransactionAllInputsSetAck(p.MessageType):
     def __init__(
         self,
         *,
-        rsig_data: MoneroTransactionRsigData = None,
+        rsig_data: Optional[MoneroTransactionRsigData] = None,
     ) -> None:
         self.rsig_data = rsig_data
 

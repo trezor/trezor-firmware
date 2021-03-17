@@ -6,7 +6,7 @@ from .StellarAssetType import StellarAssetType
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -18,13 +18,13 @@ class StellarPathPaymentOp(p.MessageType):
     def __init__(
         self,
         *,
-        paths: List[StellarAssetType] = None,
-        source_account: str = None,
-        send_asset: StellarAssetType = None,
-        send_max: int = None,
-        destination_account: str = None,
-        destination_asset: StellarAssetType = None,
-        destination_amount: int = None,
+        paths: Optional[List[StellarAssetType]] = None,
+        source_account: Optional[str] = None,
+        send_asset: Optional[StellarAssetType] = None,
+        send_max: Optional[int] = None,
+        destination_account: Optional[str] = None,
+        destination_asset: Optional[StellarAssetType] = None,
+        destination_amount: Optional[int] = None,
     ) -> None:
         self.paths = paths if paths is not None else []
         self.source_account = source_account

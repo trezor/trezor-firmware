@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -15,8 +15,8 @@ class MoneroExportedKeyImage(p.MessageType):
     def __init__(
         self,
         *,
-        iv: bytes = None,
-        blob: bytes = None,
+        iv: Optional[bytes] = None,
+        blob: Optional[bytes] = None,
     ) -> None:
         self.iv = iv
         self.blob = blob

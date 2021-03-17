@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -17,7 +17,7 @@ class PrevOutput(p.MessageType):
         *,
         amount: int,
         script_pubkey: bytes,
-        decred_script_version: int = None,
+        decred_script_version: Optional[int] = None,
     ) -> None:
         self.amount = amount
         self.script_pubkey = script_pubkey

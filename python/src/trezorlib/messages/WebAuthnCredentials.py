@@ -6,7 +6,7 @@ from .WebAuthnCredential import WebAuthnCredential
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -18,7 +18,7 @@ class WebAuthnCredentials(p.MessageType):
     def __init__(
         self,
         *,
-        credentials: List[WebAuthnCredential] = None,
+        credentials: Optional[List[WebAuthnCredential]] = None,
     ) -> None:
         self.credentials = credentials if credentials is not None else []
 

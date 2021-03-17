@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -15,13 +15,13 @@ class MoneroTransactionRsigData(p.MessageType):
     def __init__(
         self,
         *,
-        grouping: List[int] = None,
-        rsig_parts: List[bytes] = None,
-        rsig_type: int = None,
-        offload_type: int = None,
-        mask: bytes = None,
-        rsig: bytes = None,
-        bp_version: int = None,
+        grouping: Optional[List[int]] = None,
+        rsig_parts: Optional[List[bytes]] = None,
+        rsig_type: Optional[int] = None,
+        offload_type: Optional[int] = None,
+        mask: Optional[bytes] = None,
+        rsig: Optional[bytes] = None,
+        bp_version: Optional[int] = None,
     ) -> None:
         self.grouping = grouping if grouping is not None else []
         self.rsig_parts = rsig_parts if rsig_parts is not None else []

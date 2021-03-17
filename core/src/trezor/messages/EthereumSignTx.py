@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,16 +16,16 @@ class EthereumSignTx(p.MessageType):
     def __init__(
         self,
         *,
-        address_n: List[int] = None,
-        nonce: bytes = None,
-        gas_price: bytes = None,
-        gas_limit: bytes = None,
-        to: str = None,
-        value: bytes = None,
-        data_initial_chunk: bytes = None,
-        data_length: int = None,
-        chain_id: int = None,
-        tx_type: int = None,
+        address_n: Optional[List[int]] = None,
+        nonce: Optional[bytes] = None,
+        gas_price: Optional[bytes] = None,
+        gas_limit: Optional[bytes] = None,
+        to: Optional[str] = None,
+        value: Optional[bytes] = None,
+        data_initial_chunk: Optional[bytes] = None,
+        data_length: Optional[int] = None,
+        chain_id: Optional[int] = None,
+        tx_type: Optional[int] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.nonce = nonce

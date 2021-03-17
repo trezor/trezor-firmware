@@ -7,7 +7,7 @@ from .MoneroTransactionRsigData import MoneroTransactionRsigData
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -18,21 +18,21 @@ class MoneroTransactionData(p.MessageType):
     def __init__(
         self,
         *,
-        outputs: List[MoneroTransactionDestinationEntry] = None,
-        minor_indices: List[int] = None,
-        integrated_indices: List[int] = None,
-        version: int = None,
-        payment_id: bytes = None,
-        unlock_time: int = None,
-        change_dts: MoneroTransactionDestinationEntry = None,
-        num_inputs: int = None,
-        mixin: int = None,
-        fee: int = None,
-        account: int = None,
-        rsig_data: MoneroTransactionRsigData = None,
-        client_version: int = None,
-        hard_fork: int = None,
-        monero_version: bytes = None,
+        outputs: Optional[List[MoneroTransactionDestinationEntry]] = None,
+        minor_indices: Optional[List[int]] = None,
+        integrated_indices: Optional[List[int]] = None,
+        version: Optional[int] = None,
+        payment_id: Optional[bytes] = None,
+        unlock_time: Optional[int] = None,
+        change_dts: Optional[MoneroTransactionDestinationEntry] = None,
+        num_inputs: Optional[int] = None,
+        mixin: Optional[int] = None,
+        fee: Optional[int] = None,
+        account: Optional[int] = None,
+        rsig_data: Optional[MoneroTransactionRsigData] = None,
+        client_version: Optional[int] = None,
+        hard_fork: Optional[int] = None,
+        monero_version: Optional[bytes] = None,
     ) -> None:
         self.outputs = outputs if outputs is not None else []
         self.minor_indices = minor_indices if minor_indices is not None else []

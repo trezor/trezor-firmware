@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -20,10 +20,10 @@ class PrevTx(p.MessageType):
         inputs_count: int,
         outputs_count: int,
         extra_data_len: int = 0,
-        expiry: int = None,
-        version_group_id: int = None,
-        timestamp: int = None,
-        branch_id: int = None,
+        expiry: Optional[int] = None,
+        version_group_id: Optional[int] = None,
+        timestamp: Optional[int] = None,
+        branch_id: Optional[int] = None,
     ) -> None:
         self.version = version
         self.lock_time = lock_time
