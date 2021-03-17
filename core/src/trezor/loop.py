@@ -59,8 +59,8 @@ TASK_CLOSED = TaskClosed()
 def schedule(
     task: Task,
     value: Any = None,
-    deadline: int = None,
-    finalizer: Finalizer = None,
+    deadline: Optional[int] = None,
+    finalizer: Optional[Finalizer] = None,
     reschedule: bool = False,
 ) -> None:
     """
@@ -322,7 +322,7 @@ class race(Syscall):
             scheduled.append(child_task)
             # TODO: document the types here
 
-    def exit(self, except_for: Task = None) -> None:
+    def exit(self, except_for: Optional[Task] = None) -> None:
         for task in self.scheduled:
             if task != except_for:
                 close(task)

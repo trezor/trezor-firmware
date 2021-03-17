@@ -252,7 +252,7 @@ def confirm_nondefault_locktime(lock_time: int, lock_time_disabled: bool) -> Awa
     return (yield UiConfirmNonDefaultLocktime(lock_time, lock_time_disabled))
 
 
-def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[PrevTx]:  # type: ignore
+def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: Optional[bytes] = None) -> Awaitable[PrevTx]:  # type: ignore
     assert tx_req.details is not None
     tx_req.request_type = TXMETA
     tx_req.details.tx_hash = tx_hash
@@ -262,7 +262,7 @@ def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes = None) ->
 
 
 def request_tx_extra_data(  # type: ignore
-    tx_req: TxRequest, offset: int, size: int, tx_hash: bytes = None
+    tx_req: TxRequest, offset: int, size: int, tx_hash: Optional[bytes] = None
 ) -> Awaitable[bytearray]:
     assert tx_req.details is not None
     tx_req.request_type = TXEXTRADATA
@@ -287,7 +287,7 @@ def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: Optiona
     return sanitize_tx_input(ack.tx.input, coin)
 
 
-def request_tx_prev_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[PrevInput]:  # type: ignore
+def request_tx_prev_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: Optional[bytes] = None) -> Awaitable[PrevInput]:  # type: ignore
     assert tx_req.details is not None
     tx_req.request_type = TXINPUT
     tx_req.details.request_index = i
@@ -310,7 +310,7 @@ def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: Option
     return sanitize_tx_output(ack.tx.output, coin)
 
 
-def request_tx_prev_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes = None) -> Awaitable[PrevOutput]:  # type: ignore
+def request_tx_prev_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: Optional[bytes] = None) -> Awaitable[PrevOutput]:  # type: ignore
     assert tx_req.details is not None
     tx_req.request_type = TXOUTPUT
     tx_req.details.request_index = i

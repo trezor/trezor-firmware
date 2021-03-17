@@ -42,7 +42,7 @@ def check(mnemonic: str) -> bool:
 def seed(
     mnemonic: str,
     passphrase: str,
-    callback: Callable[[int, int], None] = None,
+    callback: Optional[Callable[[int, int], None]] = None,
 ) -> bytes:
     """
     Generate seed from mnemonic and passphrase.
