@@ -1362,12 +1362,12 @@ class TestMsgSigntx:
         )
 
         def input_flow():
-            yield   # show confirm sending
+            yield  # show confirm sending
             lines1 = client.debug.wait_layout().lines
             assert lines1[0] == "Confirm sending"
 
             client.debug.press_yes()
-            yield   # show confirm locktime
+            yield  # show confirm locktime
             lines2 = client.debug.wait_layout().lines
             assert lines2[0] == "Confirm locktime"
             assert lines2[1] == "Locktime for this"
@@ -1377,7 +1377,7 @@ class TestMsgSigntx:
             assert lines2[7] == "Continue?"
 
             client.debug.press_yes()
-            yield   # show confirm transaction
+            yield  # show confirm transaction
             lines3 = client.debug.wait_layout().lines
             assert lines3[0] == "Confirm transaction"
 

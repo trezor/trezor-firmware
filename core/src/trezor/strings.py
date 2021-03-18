@@ -1,5 +1,8 @@
 import utime
 
+if False:
+    from typing import Tuple
+
 
 def format_amount(amount: int, decimals: int) -> str:
     if amount < 0:
@@ -69,7 +72,7 @@ def format_duration_ms(milliseconds: int) -> str:
     return format_plural("{count} {plural}", milliseconds // divisor, unit)
 
 
-def _calculate_timestamp_correction(timestamp: int) -> int:
+def _calculate_timestamp_correction(timestamp: int) -> (Tuple[tuple, int]):
     """
     utime module can't convert timestamp to datetime with seconds precision.
     returns date in tuple format and correction in seconds
@@ -114,10 +117,10 @@ def format_timestamp_to_human(timestamp: int) -> str:
     precise_datetime = date[:3] + correction_tuple[3:6]
 
     return "{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(
-        precise_datetime[0],    # year
-        precise_datetime[1],    # month
-        precise_datetime[2],    # mday
-        precise_datetime[3],    # hour
-        precise_datetime[4],    # minute
-        precise_datetime[5],    # second
+        precise_datetime[0],  # year
+        precise_datetime[1],  # month
+        precise_datetime[2],  # mday
+        precise_datetime[3],  # hour
+        precise_datetime[4],  # minute
+        precise_datetime[5],  # second
     )
