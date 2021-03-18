@@ -11,7 +11,6 @@ if __debug__:
     from trezor.messages.Success import Success
 
     if False:
-        from typing import List, Optional
         from trezor.messages.DebugLinkDecision import DebugLinkDecision
         from trezor.messages.DebugLinkGetState import DebugLinkGetState
         from trezor.messages.DebugLinkRecordScreen import DebugLinkRecordScreen
@@ -23,7 +22,7 @@ if __debug__:
     save_screen = False
     save_screen_directory = "."
 
-    reset_internal_entropy: Optional[bytes] = None
+    reset_internal_entropy: bytes | None = None
     reset_current_words = loop.chan()
     reset_word_index = loop.chan()
 
@@ -37,7 +36,7 @@ if __debug__:
     debuglink_decision_chan = loop.chan()
 
     layout_change_chan = loop.chan()
-    current_content: List[str] = []
+    current_content: list[str] = []
     watch_layout_changes = False
 
     def screenshot() -> bool:

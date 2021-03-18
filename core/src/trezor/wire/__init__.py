@@ -52,11 +52,7 @@ if False:
         Awaitable,
         Callable,
         Coroutine,
-        Dict,
         Iterable,
-        Optional,
-        Tuple,
-        Type,
         TypeVar,
     )
     from trezorio import WireInterface
@@ -67,11 +63,11 @@ if False:
 
 
 # Maps a wire type directly to a handler.
-workflow_handlers: Dict[int, Handler] = {}
+workflow_handlers: dict[int, Handler] = {}
 
 # Maps a wire type to a tuple of package and module.  This allows handlers
 # to be dynamically imported when such message arrives.
-workflow_packages: Dict[int, Tuple[str, str]] = {}
+workflow_packages: dict[int, tuple[str, str]] = {}
 
 # If set to False protobuf messages marked with "unstable" option are rejected.
 experimental_enabled: bool = False
@@ -105,11 +101,11 @@ if False:
         async def call(
             self,
             msg: protobuf.MessageType,
-            expected_type: Type[protobuf.LoadedMessageType],
+            expected_type: type[protobuf.LoadedMessageType],
         ) -> Any:
             ...
 
-        async def read(self, expected_type: Type[protobuf.LoadedMessageType]) -> Any:
+        async def read(self, expected_type: type[protobuf.LoadedMessageType]) -> Any:
             ...
 
         async def write(self, msg: protobuf.MessageType) -> None:
@@ -122,8 +118,8 @@ if False:
 
 def _wrap_protobuf_load(
     reader: protobuf.Reader,
-    expected_type: Type[protobuf.LoadedMessageType],
-    field_cache: Optional[protobuf.FieldCache] = None,
+    expected_type: type[protobuf.LoadedMessageType],
+    field_cache: protobuf.FieldCache | None = None,
 ) -> protobuf.LoadedMessageType:
     try:
         return protobuf.load_message(
@@ -168,8 +164,8 @@ class Context:
     async def call(
         self,
         msg: protobuf.MessageType,
-        expected_type: Type[protobuf.LoadedMessageType],
-        field_cache: Optional[protobuf.FieldCache] = None,
+        expected_type: type[protobuf.LoadedMessageType],
+        field_cache: protobuf.FieldCache | None = None,
     ) -> protobuf.LoadedMessageType:
         await self.write(msg, field_cache)
         del msg
@@ -188,8 +184,8 @@ class Context:
 
     async def read(
         self,
-        expected_type: Type[protobuf.LoadedMessageType],
-        field_cache: Optional[protobuf.FieldCache] = None,
+        expected_type: type[protobuf.LoadedMessageType],
+        field_cache: protobuf.FieldCache | None = None,
     ) -> protobuf.LoadedMessageType:
         if __debug__:
             log.debug(
@@ -258,7 +254,7 @@ class Context:
     async def write(
         self,
         msg: protobuf.MessageType,
-        field_cache: Optional[protobuf.FieldCache] = None,
+        field_cache: protobuf.FieldCache | None = None,
     ) -> None:
         if __debug__:
             log.debug(
@@ -309,8 +305,8 @@ async def handle_session(
     iface: WireInterface, session_id: int, use_workflow: bool = True
 ) -> None:
     ctx = Context(iface, session_id)
-    next_msg: Optional[codec_v1.Message] = None
-    res_msg: Optional[protobuf.MessageType] = None
+    next_msg: codec_v1.Message | None = None
+    res_msg: protobuf.MessageType | None = None
     req_type = None
     req_msg = None
     while True:
@@ -363,7 +359,7 @@ async def handle_session(
                 # We found a valid handler for this message type.
 
                 # Workflow task, declared for the finally block
-                wf_task: Optional[HandlerTask] = None
+                wf_task: HandlerTask | None = None
 
                 # Here we make sure we always respond with a Failure response
                 # in case of any errors.
@@ -456,7 +452,7 @@ async def handle_session(
 
 def find_registered_workflow_handler(
     iface: WireInterface, msg_type: int
-) -> Optional[Handler]:
+) -> Handler | None:
     if msg_type in workflow_handlers:
         # Message has a handler available, return it directly.
         handler = workflow_handlers[msg_type]

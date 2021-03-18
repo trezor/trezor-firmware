@@ -53,7 +53,7 @@ typedef struct _mp_obj_AES_t {
 ///     self,
 ///     mode: int,
 ///     key: bytes,
-///     iv: Optional[bytes] = None,
+///     iv: bytes | None = None,
 /// ) -> None:
 ///     """
 ///     Initialize AES context.

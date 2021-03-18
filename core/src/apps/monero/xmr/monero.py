@@ -1,11 +1,10 @@
 from apps.monero.xmr import crypto
 
 if False:
-    from typing import List, Tuple, Optional, Dict
     from apps.monero.xmr.types import Ge25519, Sc25519
     from apps.monero.xmr.credentials import AccountCreds
 
-    Subaddresses = Dict[bytes, Tuple[int, int]]
+    Subaddresses = dict[bytes, tuple[int, int]]
 
 
 class XmrException(Exception):
@@ -70,7 +69,7 @@ def is_out_to_account(
     derivation: Ge25519,
     additional_derivation: Ge25519,
     output_index: int,
-    creds: Optional[AccountCreds] = None,
+    creds: AccountCreds | None = None,
     sub_addr_major: int = None,
     sub_addr_minor: int = None,
 ):
@@ -125,8 +124,8 @@ def generate_tx_spend_and_key_image(
     out_key: Ge25519,
     recv_derivation: Ge25519,
     real_output_index: int,
-    received_index: Tuple[int, int],
-) -> Optional[Tuple[Sc25519, Ge25519]]:
+    received_index: tuple[int, int],
+) -> tuple[Sc25519, Ge25519] | None:
     """
     Generates UTXO spending key and key image.
     Corresponds to generate_key_image_helper_precomp() in the Monero codebase.
@@ -191,7 +190,7 @@ def generate_tx_spend_and_key_image_and_derivation(
     real_output_index: int,
     sub_addr_major: int = None,
     sub_addr_minor: int = None,
-) -> Tuple[Sc25519, Ge25519, Ge25519]:
+) -> tuple[Sc25519, Ge25519, Ge25519]:
     """
     Generates UTXO spending key and key image and corresponding derivation.
     Supports subaddresses.
@@ -239,8 +238,8 @@ def generate_tx_spend_and_key_image_and_derivation(
 def compute_subaddresses(
     creds: AccountCreds,
     account: int,
-    indices: List[int],
-    subaddresses: Optional[Subaddresses] = None,
+    indices: list[int],
+    subaddresses: Subaddresses | None = None,
 ) -> Subaddresses:
     """
     Computes subaddress public spend key for receiving transactions.
@@ -267,12 +266,12 @@ def compute_subaddresses(
     return subaddresses
 
 
-def generate_keys(recovery_key: Sc25519) -> Tuple[Sc25519, Ge25519]:
+def generate_keys(recovery_key: Sc25519) -> tuple[Sc25519, Ge25519]:
     pub = crypto.scalarmult_base(recovery_key)
     return recovery_key, pub
 
 
-def generate_monero_keys(seed: bytes) -> Tuple[Sc25519, Ge25519, Sc25519, Ge25519]:
+def generate_monero_keys(seed: bytes) -> tuple[Sc25519, Ge25519, Sc25519, Ge25519]:
     """
     Generates spend key / view key from the seed in the same manner as Monero code does.
 
@@ -287,7 +286,7 @@ def generate_monero_keys(seed: bytes) -> Tuple[Sc25519, Ge25519, Sc25519, Ge2551
 
 def generate_sub_address_keys(
     view_sec: Sc25519, spend_pub: Ge25519, major: int, minor: int
-) -> Tuple[Ge25519, Ge25519]:
+) -> tuple[Ge25519, Ge25519]:
     if major == 0 and minor == 0:  # special case, Monero-defined
         return spend_pub, crypto.scalarmult_base(view_sec)
 
@@ -298,7 +297,7 @@ def generate_sub_address_keys(
     return D, C
 
 
-def commitment_mask(key: bytes, buff: Optional[Sc25519] = None) -> Sc25519:
+def commitment_mask(key: bytes, buff: Sc25519 | None = None) -> Sc25519:
     """
     Generates deterministic commitment mask for Bulletproof2
     """

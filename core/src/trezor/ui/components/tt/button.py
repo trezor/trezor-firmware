@@ -4,7 +4,7 @@ from trezor import ui
 from trezor.ui import display, in_area
 
 if False:
-    from typing import List, Optional, Type, Union
+    from typing import Union
 
 
 class ButtonDefault:
@@ -110,9 +110,9 @@ class ButtonMonoConfirm(ButtonDefault):
 
 
 if False:
-    ButtonContent = Optional[Union[str, bytes]]
-    ButtonStyleType = Type[ButtonDefault]
-    ButtonStyleStateType = Type[ButtonDefault.normal]
+    ButtonContent = Union[str, bytes, None]
+    ButtonStyleType = type[ButtonDefault]
+    ButtonStyleStateType = type[ButtonDefault.normal]
 
 
 # button states
@@ -250,5 +250,5 @@ class Button(ui.Component):
 
     if __debug__:
 
-        def read_content(self) -> List[str]:
+        def read_content(self) -> list[str]:
             return ["<Button: {}>".format(self.text)]

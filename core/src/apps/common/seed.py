@@ -6,8 +6,6 @@ from . import mnemonic
 from .passphrase import get as get_passphrase
 
 if False:
-    from typing import Optional
-
     from .paths import Bip32Path, Slip21Path
 
 
@@ -17,9 +15,7 @@ class Slip21Node:
     https://github.com/satoshilabs/slips/blob/master/slip-0021.md.
     """
 
-    def __init__(
-        self, seed: Optional[bytes] = None, data: Optional[bytes] = None
-    ) -> None:
+    def __init__(self, seed: bytes | None = None, data: bytes | None = None) -> None:
         assert seed is None or data is None, "Specify exactly one of: seed, data"
         if data is not None:
             self.data = data

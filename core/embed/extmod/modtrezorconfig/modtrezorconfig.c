@@ -47,7 +47,7 @@ STATIC secbool wrapped_ui_wait_callback(uint32_t wait, uint32_t progress,
 }
 
 /// def init(
-///    ui_wait_callback: Optional[Callable[[int, int, str], bool]] = None
+///    ui_wait_callback: Callable[[int, int, str], bool] | None = None
 /// ) -> None:
 ///     """
 ///     Initializes the storage.  Must be called before any other method is
@@ -66,7 +66,7 @@ STATIC mp_obj_t mod_trezorconfig_init(size_t n_args, const mp_obj_t *args) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_init_obj, 0, 1,
                                            mod_trezorconfig_init);
 
-/// def unlock(pin: str, ext_salt: Optional[bytes]) -> bool:
+/// def unlock(pin: str, ext_salt: bytes | None) -> bool:
 ///     """
 ///     Attempts to unlock the storage with the given PIN and external salt.
 ///     Returns True on success, False on failure.
@@ -91,7 +91,7 @@ STATIC mp_obj_t mod_trezorconfig_unlock(mp_obj_t pin, mp_obj_t ext_salt) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorconfig_unlock_obj,
                                  mod_trezorconfig_unlock);
 
-/// def check_pin(pin: str, ext_salt: Optional[bytes]) -> bool:
+/// def check_pin(pin: str, ext_salt: bytes | None) -> bool:
 ///     """
 ///     Check the given PIN with the given external salt.
 ///     Returns True on success, False on failure.
@@ -152,8 +152,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_get_pin_rem_obj,
 /// def change_pin(
 ///     oldpin: str,
 ///     newpin: str,
-///     old_ext_salt: Optional[bytes],
-///     new_ext_salt: Optional[bytes],
+///     old_ext_salt: bytes | None,
+///     new_ext_salt: bytes | None,
 /// ) -> bool:
 ///     """
 ///     Change PIN and external salt. Returns True on success, False on failure.
@@ -219,7 +219,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_has_wipe_code_obj,
 
 /// def change_wipe_code(
 ///     pin: str,
-///     ext_salt: Optional[bytes],
+///     ext_salt: bytes | None,
 ///     wipe_code: str,
 /// ) -> bool:
 ///     """
@@ -252,7 +252,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorconfig_change_wipe_code_obj, 3, 3,
     mod_trezorconfig_change_wipe_code);
 
-/// def get(app: int, key: int, public: bool = False) -> Optional[bytes]:
+/// def get(app: int, key: int, public: bool = False) -> bytes | None:
 ///     """
 ///     Gets the value of the given key for the given app (or None if not set).
 ///     Raises a RuntimeError if decryption or authentication of the stored

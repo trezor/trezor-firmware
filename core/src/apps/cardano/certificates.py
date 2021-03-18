@@ -11,8 +11,6 @@ from .helpers import INVALID_CERTIFICATE, LOVELACE_MAX_SUPPLY
 from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 
 if False:
-    from typing import List, Optional
-
     from trezor.messages.CardanoTxCertificateType import CardanoTxCertificateType
     from trezor.messages.CardanoPoolParametersType import CardanoPoolParametersType
     from trezor.messages.CardanoPoolRelayParametersType import (
@@ -135,7 +133,7 @@ def _validate_pool_parameters(
         _validate_pool_metadata(pool_parameters.metadata)
 
 
-def _validate_pool_owners(owners: List[CardanoPoolOwnerType]) -> None:
+def _validate_pool_owners(owners: list[CardanoPoolOwnerType]) -> None:
     owners_as_path_count = 0
     for owner in owners:
         assert_certificate_cond(
@@ -190,8 +188,8 @@ def _validate_pool_metadata(pool_metadata: CardanoPoolMetadataType) -> None:
 
 
 def _cborize_pool_owners(
-    keychain: seed.Keychain, pool_owners: List[CardanoPoolOwnerType]
-) -> List[bytes]:
+    keychain: seed.Keychain, pool_owners: list[CardanoPoolOwnerType]
+) -> list[bytes]:
     result = []
 
     for pool_owner in pool_owners:
@@ -205,7 +203,7 @@ def _cborize_pool_owners(
     return result
 
 
-def _cborize_ipv6_address(ipv6_address: Optional[bytes]) -> Optional[bytes]:
+def _cborize_ipv6_address(ipv6_address: bytes | None) -> bytes | None:
     if ipv6_address is None:
         return None
 
@@ -220,9 +218,9 @@ def _cborize_ipv6_address(ipv6_address: Optional[bytes]) -> Optional[bytes]:
 
 
 def _cborize_pool_relays(
-    pool_relays: List[CardanoPoolRelayParametersType],
-) -> List[CborSequence]:
-    result: List[CborSequence] = []
+    pool_relays: list[CardanoPoolRelayParametersType],
+) -> list[CborSequence]:
+    result: list[CborSequence] = []
 
     for pool_relay in pool_relays:
         if pool_relay.type == CardanoPoolRelayType.SINGLE_HOST_IP:
@@ -254,8 +252,8 @@ def _cborize_pool_relays(
 
 
 def _cborize_pool_metadata(
-    pool_metadata: Optional[CardanoPoolMetadataType],
-) -> Optional[CborSequence]:
+    pool_metadata: CardanoPoolMetadataType | None,
+) -> CborSequence | None:
     if not pool_metadata:
         return None
 

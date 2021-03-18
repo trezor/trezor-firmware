@@ -11,7 +11,6 @@ from .. import helpers
 from ..layout import require_confirm
 
 if False:
-    from typing import List
     from trezor import wire
     from trezor.messages.EosAuthorization import EosAuthorization
     from trezor.messages.EosActionBuyRam import EosActionBuyRam
@@ -39,7 +38,7 @@ _FIVE_FIELDS_PER_PAGE = const(5)
 
 
 async def _require_confirm_paginated(
-    ctx: wire.Context, header: str, fields: List[str], per_page: int
+    ctx: wire.Context, header: str, fields: list[str], per_page: int
 ) -> None:
     pages = []
     for page in chunks(fields, per_page):
@@ -265,7 +264,7 @@ async def confirm_action_unknown(
     await _require_confirm_paginated(ctx, text, fields, _FIVE_FIELDS_PER_PAGE)
 
 
-def authorization_fields(auth: EosAuthorization) -> List[str]:
+def authorization_fields(auth: EosAuthorization) -> list[str]:
     fields = []
 
     fields.append("Threshold:")
@@ -311,7 +310,7 @@ def authorization_fields(auth: EosAuthorization) -> List[str]:
     return fields
 
 
-def split_data(data: str) -> List[str]:
+def split_data(data: str) -> list[str]:
     lines = []
     while data:
         lines.append("{} ".format(data[:_LINE_LENGTH]))

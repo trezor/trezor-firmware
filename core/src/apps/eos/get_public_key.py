@@ -10,11 +10,10 @@ from .helpers import public_key_to_wif
 from .layout import require_get_public_key
 
 if False:
-    from typing import Tuple
     from trezor.crypto import bip32
 
 
-def _get_public_key(node: bip32.HDNode) -> Tuple[str, bytes]:
+def _get_public_key(node: bip32.HDNode) -> tuple[str, bytes]:
     seckey = node.private_key()
     public_key = secp256k1.publickey(seckey, True)
     wif = public_key_to_wif(public_key)

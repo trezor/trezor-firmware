@@ -9,9 +9,6 @@ from apps.common import paths
 
 from .writers import write_bytes_fixed, write_uint32
 
-if False:
-    from typing import List
-
 
 def multisig_fingerprint(multisig: MultisigRedeemScriptType) -> bytes:
     if multisig.nodes:
@@ -78,7 +75,7 @@ def multisig_get_pubkey(n: HDNodeType, p: paths.Bip32Path) -> bytes:
     return node.public_key()
 
 
-def multisig_get_pubkeys(multisig: MultisigRedeemScriptType) -> List[bytes]:
+def multisig_get_pubkeys(multisig: MultisigRedeemScriptType) -> list[bytes]:
     validate_multisig(multisig)
     if multisig.nodes:
         return [multisig_get_pubkey(hd, multisig.address_n) for hd in multisig.nodes]

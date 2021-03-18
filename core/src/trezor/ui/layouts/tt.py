@@ -26,11 +26,9 @@ from .common import interact
 if False:
     from typing import (
         Iterator,
-        List,
         Sequence,
         Type,
         Union,
-        Optional,
         Awaitable,
         NoReturn,
     )
@@ -71,16 +69,16 @@ async def confirm_action(
     ctx: wire.GenericContext,
     br_type: str,
     title: str,
-    action: Optional[str] = None,
-    description: Optional[str] = None,
-    description_param: Optional[str] = None,
+    action: str | None = None,
+    description: str | None = None,
+    description_param: str | None = None,
     description_param_font: int = ui.BOLD,
-    verb: Union[str, bytes, None] = Confirm.DEFAULT_CONFIRM,
-    verb_cancel: Union[str, bytes, None] = Confirm.DEFAULT_CANCEL,
+    verb: str | bytes | None = Confirm.DEFAULT_CONFIRM,
+    verb_cancel: str | bytes | None = Confirm.DEFAULT_CANCEL,
     hold: bool = False,
     hold_danger: bool = False,
-    icon: Optional[str] = None,  # TODO cleanup @ redesign
-    icon_color: Optional[int] = None,  # TODO cleanup @ redesign
+    icon: str | None = None,  # TODO cleanup @ redesign
+    icon_color: int | None = None,  # TODO cleanup @ redesign
     reverse: bool = False,  # TODO cleanup @ redesign
     larger_vspace: bool = False,  # TODO cleanup @ redesign
     exc: ExceptionType = wire.ActionCancelled,
@@ -235,7 +233,7 @@ def _truncate_hex(
 def _show_address(
     address: str,
     desc: str,
-    network: Optional[str] = None,
+    network: str | None = None,
 ) -> Confirm:
     text = Text(desc, ui.ICON_RECEIVE, ui.GREEN)
     if network is not None:
@@ -246,7 +244,7 @@ def _show_address(
 
 
 def _show_xpub(xpub: str, desc: str, cancel: str) -> Paginated:
-    pages: List[ui.Component] = []
+    pages: list[ui.Component] = []
     for lines in chunks(list(chunks(xpub, 16)), 5):
         text = Text(desc, ui.ICON_RECEIVE, ui.GREEN)
         text.mono(*lines)
@@ -279,10 +277,10 @@ async def show_xpub(
 async def show_address(
     ctx: wire.GenericContext,
     address: str,
-    address_qr: Optional[str] = None,
+    address_qr: str | None = None,
     desc: str = "Confirm address",
-    network: Optional[str] = None,
-    multisig_index: Optional[int] = None,
+    network: str | None = None,
+    multisig_index: int | None = None,
     xpubs: Sequence[str] = [],
 ) -> None:
     is_multisig = len(xpubs) > 0
@@ -344,10 +342,10 @@ async def _show_modal(
     br_type: str,
     br_code: EnumTypeButtonRequestType,
     header: str,
-    subheader: Optional[str],
+    subheader: str | None,
     content: str,
-    button_confirm: Optional[str],
-    button_cancel: Optional[str],
+    button_confirm: str | None,
+    button_cancel: str | None,
     icon: str,
     icon_color: int,
     exc: ExceptionType = wire.ActionCancelled,
@@ -374,7 +372,7 @@ async def show_error_and_raise(
     br_type: str,
     content: str,
     header: str = "Error",
-    subheader: Optional[str] = None,
+    subheader: str | None = None,
     button: str = "Close",
     red: bool = False,
     exc: ExceptionType = wire.ActionCancelled,
@@ -400,7 +398,7 @@ def show_warning(
     br_type: str,
     content: str,
     header: str = "Warning",
-    subheader: Optional[str] = None,
+    subheader: str | None = None,
     button: str = "Try again",
     br_code: EnumTypeButtonRequestType = ButtonRequestType.Warning,
 ) -> Awaitable[None]:
@@ -422,7 +420,7 @@ def show_success(
     ctx: wire.GenericContext,
     br_type: str,
     content: str,
-    subheader: Optional[str] = None,
+    subheader: str | None = None,
     button: str = "Continue",
 ) -> Awaitable[None]:
     return _show_modal(
@@ -476,7 +474,7 @@ async def confirm_hex(
     br_type: str,
     title: str,
     data: str,
-    description: Optional[str] = None,
+    description: str | None = None,
     br_code: EnumTypeButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
@@ -534,7 +532,7 @@ async def confirm_metadata(
     br_type: str,
     title: str,
     content: str,
-    param: Optional[str] = None,
+    param: str | None = None,
     br_code: EnumTypeButtonRequestType = ButtonRequestType.SignTx,
 ) -> None:
     text = Text(title, ui.ICON_SEND, ui.GREEN, new_lines=False)
@@ -613,7 +611,7 @@ async def confirm_modify_fee(
 
 
 async def confirm_coinjoin(
-    ctx: wire.GenericContext, fee_per_anonymity: Optional[str], total_fee: str
+    ctx: wire.GenericContext, fee_per_anonymity: str | None, total_fee: str
 ) -> None:
     text = Text("Authorize CoinJoin", ui.ICON_RECOVERY, new_lines=False)
     if fee_per_anonymity is not None:
@@ -628,9 +626,9 @@ async def confirm_coinjoin(
 
 # TODO cleanup @ redesign
 async def confirm_sign_identity(
-    ctx: wire.GenericContext, proto: str, identity: str, challenge_visual: Optional[str]
+    ctx: wire.GenericContext, proto: str, identity: str, challenge_visual: str | None
 ) -> None:
-    lines: List[TextContent] = []
+    lines: list[TextContent] = []
     if challenge_visual:
         lines.append(challenge_visual)
 
@@ -645,7 +643,7 @@ async def confirm_sign_identity(
 
 
 async def confirm_signverify(
-    ctx: wire.GenericContext, coin: str, message: str, address: Optional[str] = None
+    ctx: wire.GenericContext, coin: str, message: str, address: str | None = None
 ) -> None:
     if address:
         header = "Verify {} message".format(coin)

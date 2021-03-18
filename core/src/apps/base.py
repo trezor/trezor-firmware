@@ -14,7 +14,7 @@ from apps.common.request_pin import verify_user_pin
 
 if False:
     import protobuf
-    from typing import Iterable, NoReturn, Optional, Protocol
+    from typing import Iterable, NoReturn, Protocol
     from trezor.messages.Initialize import Initialize
     from trezor.messages.EndSession import EndSession
     from trezor.messages.GetFeatures import GetFeatures
@@ -235,7 +235,7 @@ async def unlock_device(ctx: wire.GenericContext = wire.DUMMY_CONTEXT) -> None:
 
 def get_pinlocked_handler(
     iface: wire.WireInterface, msg_type: int
-) -> Optional[wire.Handler[wire.Msg]]:
+) -> wire.Handler[wire.Msg] | None:
     orig_handler = wire.find_registered_workflow_handler(iface, msg_type)
     if orig_handler is None:
         return None

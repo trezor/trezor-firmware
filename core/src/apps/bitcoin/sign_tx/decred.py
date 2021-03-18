@@ -24,8 +24,6 @@ OUTPUT_SCRIPT_NULL_SSTXCHANGE = (
 )
 
 if False:
-    from typing import Optional, Union, List
-
     from trezor.messages.SignTx import SignTx
     from trezor.messages.TxInput import TxInput
     from trezor.messages.TxOutput import TxOutput
@@ -61,9 +59,9 @@ class DecredHash:
     def preimage_hash(
         self,
         txi: TxInput,
-        public_keys: List[bytes],
+        public_keys: list[bytes],
         threshold: int,
-        tx: Union[SignTx, PrevTx],
+        tx: SignTx | PrevTx,
         coin: CoinInfo,
         sighash_type: int,
     ) -> bytes:
@@ -76,7 +74,7 @@ class Decred(Bitcoin):
         tx: SignTx,
         keychain: Keychain,
         coin: CoinInfo,
-        approver: Optional[approvers.Approver],
+        approver: approvers.Approver | None,
     ) -> None:
         ensure(coin.decred)
         self.h_prefix = HashWriter(blake256())
@@ -127,7 +125,7 @@ class Decred(Bitcoin):
         self,
         txo: TxOutput,
         script_pubkey: bytes,
-        orig_txo: Optional[TxOutput],
+        orig_txo: TxOutput | None,
     ) -> None:
         await super().approve_output(txo, script_pubkey, orig_txo)
         self.write_tx_output(self.serialized_tx, txo, script_pubkey)
@@ -213,7 +211,7 @@ class Decred(Bitcoin):
     @staticmethod
     def write_tx_input(
         w: writers.Writer,
-        txi: Union[TxInput, PrevInput],
+        txi: TxInput | PrevInput,
         script: bytes,
     ) -> None:
         writers.write_bytes_reversed(w, txi.prev_hash, writers.TX_HASH_SIZE)
@@ -224,7 +222,7 @@ class Decred(Bitcoin):
     @staticmethod
     def write_tx_output(
         w: writers.Writer,
-        txo: Union[TxOutput, PrevOutput],
+        txo: TxOutput | PrevOutput,
         script_pubkey: bytes,
     ) -> None:
         writers.write_uint64(w, txo.amount)
@@ -288,7 +286,7 @@ class Decred(Bitcoin):
     def write_tx_header(
         self,
         w: writers.Writer,
-        tx: Union[SignTx, PrevTx],
+        tx: SignTx | PrevTx,
         witness_marker: bool,
     ) -> None:
         # The upper 16 bits of the transaction version specify the serialization
@@ -300,7 +298,7 @@ class Decred(Bitcoin):
 
         writers.write_uint32(w, version)
 
-    def write_tx_footer(self, w: writers.Writer, tx: Union[SignTx, PrevTx]) -> None:
+    def write_tx_footer(self, w: writers.Writer, tx: SignTx | PrevTx) -> None:
         assert tx.expiry is not None  # checked in sanitize_*
         writers.write_uint32(w, tx.lock_time)
         writers.write_uint32(w, tx.expiry)

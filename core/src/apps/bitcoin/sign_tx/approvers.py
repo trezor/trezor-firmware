@@ -11,7 +11,6 @@ from . import helpers, tx_weight
 from .tx_info import OriginalTxInfo, TxInfo
 
 if False:
-    from typing import List, Optional
     from trezor.messages.SignTx import SignTx
     from trezor.messages.TxInput import TxInput
     from trezor.messages.TxOutput import TxOutput
@@ -77,7 +76,7 @@ class Approver:
         self,
         txo: TxOutput,
         script_pubkey: bytes,
-        orig_txo: Optional[TxOutput] = None,
+        orig_txo: TxOutput | None = None,
     ) -> None:
         self.weight.add_output(script_pubkey)
         self.total_out += txo.amount
@@ -86,11 +85,11 @@ class Approver:
         self.orig_total_out += txo.amount
 
     async def approve_orig_txids(
-        self, tx_info: TxInfo, orig_txs: List[OriginalTxInfo]
+        self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]
     ) -> None:
         raise NotImplementedError
 
-    async def approve_tx(self, tx_info: TxInfo, orig_txs: List[OriginalTxInfo]) -> None:
+    async def approve_tx(self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]) -> None:
         raise NotImplementedError
 
 
@@ -116,7 +115,7 @@ class BasicApprover(Approver):
         self,
         txo: TxOutput,
         script_pubkey: bytes,
-        orig_txo: Optional[TxOutput] = None,
+        orig_txo: TxOutput | None = None,
     ) -> None:
         await super().add_external_output(txo, script_pubkey, orig_txo)
 
@@ -154,7 +153,7 @@ class BasicApprover(Approver):
             await helpers.confirm_output(txo, self.coin, self.amount_unit)
 
     async def approve_orig_txids(
-        self, tx_info: TxInfo, orig_txs: List[OriginalTxInfo]
+        self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]
     ) -> None:
         if not orig_txs:
             return
@@ -173,7 +172,7 @@ class BasicApprover(Approver):
         for orig in orig_txs:
             await helpers.confirm_replacement(description, orig.orig_hash)
 
-    async def approve_tx(self, tx_info: TxInfo, orig_txs: List[OriginalTxInfo]) -> None:
+    async def approve_tx(self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]) -> None:
         fee = self.total_in - self.total_out
 
         # some coins require negative fees for reward TX
@@ -301,17 +300,17 @@ class CoinJoinApprover(Approver):
         self,
         txo: TxOutput,
         script_pubkey: bytes,
-        orig_txo: Optional[TxOutput] = None,
+        orig_txo: TxOutput | None = None,
     ) -> None:
         await super().add_external_output(txo, script_pubkey, orig_txo)
         self._add_output(txo, script_pubkey)
 
     async def approve_orig_txids(
-        self, tx_info: TxInfo, orig_txs: List[OriginalTxInfo]
+        self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]
     ) -> None:
         pass
 
-    async def approve_tx(self, tx_info: TxInfo, orig_txs: List[OriginalTxInfo]) -> None:
+    async def approve_tx(self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]) -> None:
         # The mining fee of the transaction as a whole.
         mining_fee = self.total_in - self.total_out
 

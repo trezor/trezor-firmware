@@ -7,7 +7,7 @@ from .button import Button, ButtonClear, ButtonConfirm
 from .swipe import SWIPE_HORIZONTAL, SWIPE_LEFT, Swipe
 
 if False:
-    from typing import Iterable, List, Optional, Tuple
+    from typing import Iterable
     from .button import ButtonContent, ButtonStyleStateType
 
 SPACE = res.load(ui.ICON_SPACE)
@@ -67,7 +67,7 @@ class KeyButton(Button):
 
 def key_buttons(
     keys: Iterable[ButtonContent], keyboard: "PassphraseKeyboard"
-) -> List[KeyButton]:
+) -> list[KeyButton]:
     return [KeyButton(digit_area(i), k, keyboard) for i, k in enumerate(keys)]
 
 
@@ -146,7 +146,7 @@ class PassphraseKeyboard(ui.Layout):
         self.done.on_click = self.on_confirm  # type: ignore
 
         self.keys = key_buttons(KEYBOARD_KEYS[self.page], self)
-        self.pending_button: Optional[KeyButton] = None
+        self.pending_button: KeyButton | None = None
         self.pending_index = 0
 
     def dispatch(self, event: int, x: int, y: int) -> None:
@@ -191,9 +191,7 @@ class PassphraseKeyboard(ui.Layout):
         # Timeout occurred, let's just reset the pending marker.
         self.edit(self.input.text)
 
-    def edit(
-        self, text: str, button: Optional[KeyButton] = None, index: int = 0
-    ) -> None:
+    def edit(self, text: str, button: KeyButton | None = None, index: int = 0) -> None:
         if len(text) > self.max_length:
             return
 
@@ -248,8 +246,8 @@ class PassphraseKeyboard(ui.Layout):
     def on_confirm(self) -> None:
         raise ui.Result(self.input.text)
 
-    def create_tasks(self) -> Tuple[loop.Task, ...]:
-        tasks: Tuple[loop.Task, ...] = (
+    def create_tasks(self) -> tuple[loop.Task, ...]:
+        tasks: tuple[loop.Task, ...] = (
             self.handle_input(),
             self.handle_rendering(),
             self.handle_paging(),

@@ -40,7 +40,7 @@ STATIC mp_obj_t mod_trezorcrypto_Sha3_512_update(mp_obj_t self, mp_obj_t data);
 
 /// def __init__(
 ///     self,
-///     data: Optional[bytes] = None,
+///     data: bytes | None = None,
 ///     keccak: bool = False,
 /// ) -> None:
 ///     """

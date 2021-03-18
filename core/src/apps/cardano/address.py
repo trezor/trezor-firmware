@@ -11,7 +11,6 @@ from .helpers.utils import variable_length_encode
 from .seed import is_byron_path, is_shelley_path
 
 if False:
-    from typing import List, Optional
     from trezor.messages.CardanoBlockchainPointerType import (
         CardanoBlockchainPointerType,
     )
@@ -146,7 +145,7 @@ def _get_address_network_id(address: bytes) -> int:
     return address[0] & 0x0F
 
 
-def get_public_key_hash(keychain: seed.Keychain, path: List[int]) -> bytes:
+def get_public_key_hash(keychain: seed.Keychain, path: list[int]) -> bytes:
     node = keychain.derive(path)
     public_key = remove_ed25519_prefix(node.public_key())
     return hashlib.blake2b(data=public_key, outlen=28).digest()
@@ -195,7 +194,7 @@ def derive_address_bytes(
 
 
 def _derive_byron_address(
-    keychain: seed.Keychain, path: List[int], protocol_magic: int
+    keychain: seed.Keychain, path: list[int], protocol_magic: int
 ) -> bytes:
     if not is_byron_path(path):
         raise wire.DataError("Invalid path for byron address!")
@@ -248,9 +247,9 @@ def _create_address_header(
 
 def _derive_base_address(
     keychain: seed.Keychain,
-    path: List[int],
-    staking_path: List[int],
-    staking_key_hash: Optional[bytes],
+    path: list[int],
+    staking_path: list[int],
+    staking_key_hash: bytes | None,
     network_id: int,
 ) -> bytes:
     header = _create_address_header(CardanoAddressType.BASE, network_id)
@@ -265,8 +264,8 @@ def _derive_base_address(
 
 
 def _validate_base_address_staking_info(
-    staking_path: List[int],
-    staking_key_hash: Optional[bytes],
+    staking_path: list[int],
+    staking_key_hash: bytes | None,
 ) -> None:
     if (staking_key_hash is None) == (not staking_path):
         raise wire.DataError(
@@ -279,7 +278,7 @@ def _validate_base_address_staking_info(
 
 def _derive_pointer_address(
     keychain: seed.Keychain,
-    path: List[int],
+    path: list[int],
     pointer: CardanoBlockchainPointerType,
     network_id: int,
 ) -> bytes:
@@ -300,7 +299,7 @@ def _encode_certificate_pointer(pointer: CardanoBlockchainPointerType) -> bytes:
 
 def _derive_enterprise_address(
     keychain: seed.Keychain,
-    path: List[int],
+    path: list[int],
     network_id: int,
 ) -> bytes:
     header = _create_address_header(CardanoAddressType.ENTERPRISE, network_id)
@@ -311,7 +310,7 @@ def _derive_enterprise_address(
 
 def _derive_reward_address(
     keychain: seed.Keychain,
-    path: List[int],
+    path: list[int],
     network_id: int,
 ) -> bytes:
     if not SCHEMA_STAKING_ANY_ACCOUNT.match(path):

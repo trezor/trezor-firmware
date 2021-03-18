@@ -12,7 +12,6 @@ from .multisig import multisig_get_pubkeys, multisig_pubkey_index
 from .scripts import output_script_multisig, output_script_native_p2wpkh_or_p2wsh
 
 if False:
-    from typing import List, Optional
     from trezor.crypto import bip32
     from trezor.messages.TxInputType import EnumTypeInputScriptType
 
@@ -21,7 +20,7 @@ def get_address(
     script_type: EnumTypeInputScriptType,
     coin: CoinInfo,
     node: bip32.HDNode,
-    multisig: Optional[MultisigRedeemScriptType] = None,
+    multisig: MultisigRedeemScriptType | None = None,
 ) -> str:
     if multisig:
         # Ensure that our public key is included in the multisig.
@@ -74,7 +73,7 @@ def get_address(
         raise wire.ProcessError("Invalid script type")
 
 
-def address_multisig_p2sh(pubkeys: List[bytes], m: int, coin: CoinInfo) -> str:
+def address_multisig_p2sh(pubkeys: list[bytes], m: int, coin: CoinInfo) -> str:
     if coin.address_type_p2sh is None:
         raise wire.ProcessError("Multisig not enabled on this coin")
     redeem_script = output_script_multisig(pubkeys, m)
@@ -82,7 +81,7 @@ def address_multisig_p2sh(pubkeys: List[bytes], m: int, coin: CoinInfo) -> str:
     return address_p2sh(redeem_script_hash, coin)
 
 
-def address_multisig_p2wsh_in_p2sh(pubkeys: List[bytes], m: int, coin: CoinInfo) -> str:
+def address_multisig_p2wsh_in_p2sh(pubkeys: list[bytes], m: int, coin: CoinInfo) -> str:
     if coin.address_type_p2sh is None:
         raise wire.ProcessError("Multisig not enabled on this coin")
     witness_script = output_script_multisig(pubkeys, m)
@@ -90,7 +89,7 @@ def address_multisig_p2wsh_in_p2sh(pubkeys: List[bytes], m: int, coin: CoinInfo)
     return address_p2wsh_in_p2sh(witness_script_hash, coin)
 
 
-def address_multisig_p2wsh(pubkeys: List[bytes], m: int, hrp: str) -> str:
+def address_multisig_p2wsh(pubkeys: list[bytes], m: int, hrp: str) -> str:
     if not hrp:
         raise wire.ProcessError("Multisig not enabled on this coin")
     witness_script = output_script_multisig(pubkeys, m)

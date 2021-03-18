@@ -66,7 +66,7 @@ from .layout import (
 from .seed import is_byron_path, is_shelley_path
 
 if False:
-    from typing import Any, Dict, List, Optional, Tuple, Union
+    from typing import Any, Optional, Union
 
     from trezor.messages.CardanoSignTx import CardanoSignTx
     from trezor.messages.CardanoTxCertificateType import CardanoTxCertificateType
@@ -78,9 +78,9 @@ if False:
     from apps.common.cbor import CborSequence
     from apps.common.paths import PathSchema
 
-    CborizedTokenBundle = Dict[bytes, Dict[bytes, int]]
-    CborizedTxOutput = Tuple[bytes, Union[int, Tuple[int, CborizedTokenBundle]]]
-    CborizedSignedTx = Tuple[Dict, Dict, Optional[cbor.Raw]]
+    CborizedTokenBundle = dict[bytes, dict[bytes, int]]
+    CborizedTxOutput = tuple[bytes, Union[int, tuple[int, CborizedTokenBundle]]]
+    CborizedSignedTx = tuple[dict, dict, Optional[cbor.Raw]]
     TxHash = bytes
 
 METADATA_HASH_SIZE = 32
@@ -123,7 +123,7 @@ async def sign_tx(
 
 async def _sign_ordinary_tx(
     ctx: wire.Context, msg: CardanoSignTx, keychain: seed.Keychain
-) -> Tuple[CborizedSignedTx, TxHash]:
+) -> tuple[CborizedSignedTx, TxHash]:
     for i in msg.inputs:
         await validate_path(
             ctx, keychain, i.address_n, SCHEMA_ADDRESS.match(i.address_n)
@@ -142,7 +142,7 @@ async def _sign_ordinary_tx(
 
 async def _sign_stake_pool_registration_tx(
     ctx: wire.Context, msg: CardanoSignTx, keychain: seed.Keychain
-) -> Tuple[CborizedSignedTx, TxHash]:
+) -> tuple[CborizedSignedTx, TxHash]:
     """
     We have a separate tx signing flow for stake pool registration because it's a
     transaction where the witnessable entries (i.e. inputs, withdrawals, etc.)
@@ -200,7 +200,7 @@ def _validate_stake_pool_registration_tx_structure(msg: CardanoSignTx) -> None:
 
 def _validate_outputs(
     keychain: seed.Keychain,
-    outputs: List[CardanoTxOutputType],
+    outputs: list[CardanoTxOutputType],
     protocol_magic: int,
     network_id: int,
 ) -> None:
@@ -225,7 +225,7 @@ def _validate_outputs(
         raise wire.ProcessError("Total transaction amount is out of range!")
 
 
-def _validate_token_bundle(token_bundle: List[CardanoAssetGroupType]) -> None:
+def _validate_token_bundle(token_bundle: list[CardanoAssetGroupType]) -> None:
     seen_policy_ids = set()
     for token_group in token_bundle:
         policy_id = bytes(token_group.policy_id)
@@ -253,19 +253,19 @@ def _validate_token_bundle(token_bundle: List[CardanoAssetGroupType]) -> None:
                 seen_asset_name_bytes.add(asset_name_bytes)
 
 
-def _ensure_no_signing_inputs(inputs: List[CardanoTxInputType]) -> None:
+def _ensure_no_signing_inputs(inputs: list[CardanoTxInputType]) -> None:
     if any(i.address_n for i in inputs):
         raise INVALID_STAKEPOOL_REGISTRATION_TX_INPUTS
 
 
 def _validate_certificates(
-    certificates: List[CardanoTxCertificateType], protocol_magic: int, network_id: int
+    certificates: list[CardanoTxCertificateType], protocol_magic: int, network_id: int
 ) -> None:
     for certificate in certificates:
         validate_certificate(certificate, protocol_magic, network_id)
 
 
-def _validate_withdrawals(withdrawals: List[CardanoTxWithdrawalType]) -> None:
+def _validate_withdrawals(withdrawals: list[CardanoTxWithdrawalType]) -> None:
     for withdrawal in withdrawals:
         if not SCHEMA_STAKING_ANY_ACCOUNT.match(withdrawal.path):
             raise INVALID_WITHDRAWAL
@@ -274,7 +274,7 @@ def _validate_withdrawals(withdrawals: List[CardanoTxWithdrawalType]) -> None:
             raise INVALID_WITHDRAWAL
 
 
-def _validate_metadata(metadata: Optional[bytes]) -> None:
+def _validate_metadata(metadata: bytes | None) -> None:
     if not metadata:
         return
 
@@ -293,7 +293,7 @@ def _validate_metadata(metadata: Optional[bytes]) -> None:
 
 def _cborize_signed_tx(
     keychain: seed.Keychain, msg: CardanoSignTx
-) -> Tuple[CborizedSignedTx, TxHash]:
+) -> tuple[CborizedSignedTx, TxHash]:
     tx_body = _cborize_tx_body(keychain, msg)
     tx_hash = _hash_tx_body(tx_body)
 
@@ -313,7 +313,7 @@ def _cborize_signed_tx(
     return (tx_body, witnesses, metadata), tx_hash
 
 
-def _cborize_tx_body(keychain: seed.Keychain, msg: CardanoSignTx) -> Dict:
+def _cborize_tx_body(keychain: seed.Keychain, msg: CardanoSignTx) -> dict:
     inputs_for_cbor = _cborize_inputs(msg.inputs)
     outputs_for_cbor = _cborize_outputs(
         keychain, msg.outputs, msg.protocol_magic, msg.network_id
@@ -349,16 +349,16 @@ def _cborize_tx_body(keychain: seed.Keychain, msg: CardanoSignTx) -> Dict:
     return tx_body
 
 
-def _cborize_inputs(inputs: List[CardanoTxInputType]) -> List[Tuple[bytes, int]]:
+def _cborize_inputs(inputs: list[CardanoTxInputType]) -> list[tuple[bytes, int]]:
     return [(tx_input.prev_hash, tx_input.prev_index) for tx_input in inputs]
 
 
 def _cborize_outputs(
     keychain: seed.Keychain,
-    outputs: List[CardanoTxOutputType],
+    outputs: list[CardanoTxOutputType],
     protocol_magic: int,
     network_id: int,
-) -> List[CborizedTxOutput]:
+) -> list[CborizedTxOutput]:
     return [
         _cborize_output(keychain, output, protocol_magic, network_id)
         for output in outputs
@@ -387,7 +387,7 @@ def _cborize_output(
 
 
 def _cborize_token_bundle(
-    token_bundle: List[CardanoAssetGroupType],
+    token_bundle: list[CardanoAssetGroupType],
 ) -> CborizedTokenBundle:
     result: CborizedTokenBundle = {}
 
@@ -404,17 +404,17 @@ def _cborize_token_bundle(
 
 def _cborize_certificates(
     keychain: seed.Keychain,
-    certificates: List[CardanoTxCertificateType],
-) -> List[CborSequence]:
+    certificates: list[CardanoTxCertificateType],
+) -> list[CborSequence]:
     return [cborize_certificate(keychain, cert) for cert in certificates]
 
 
 def _cborize_withdrawals(
     keychain: seed.Keychain,
-    withdrawals: List[CardanoTxWithdrawalType],
+    withdrawals: list[CardanoTxWithdrawalType],
     protocol_magic: int,
     network_id: int,
-) -> Dict[bytes, int]:
+) -> dict[bytes, int]:
     result = {}
     for withdrawal in withdrawals:
         reward_address = derive_address_bytes(
@@ -436,7 +436,7 @@ def _hash_metadata(metadata: bytes) -> bytes:
     return hashlib.blake2b(data=metadata, outlen=METADATA_HASH_SIZE).digest()
 
 
-def _hash_tx_body(tx_body: Dict) -> bytes:
+def _hash_tx_body(tx_body: dict) -> bytes:
     tx_body_cbor_chunks = cbor.encode_streamed(tx_body)
 
     hashfn = hashlib.blake2b(outlen=32)
@@ -448,12 +448,12 @@ def _hash_tx_body(tx_body: Dict) -> bytes:
 
 def _cborize_witnesses(
     keychain: seed.Keychain,
-    inputs: List[CardanoTxInputType],
-    certificates: List[CardanoTxCertificateType],
-    withdrawals: List[CardanoTxWithdrawalType],
+    inputs: list[CardanoTxInputType],
+    certificates: list[CardanoTxCertificateType],
+    withdrawals: list[CardanoTxWithdrawalType],
     tx_body_hash: bytes,
     protocol_magic: int,
-) -> Dict:
+) -> dict:
     shelley_witnesses = _cborize_shelley_witnesses(
         keychain, inputs, certificates, withdrawals, tx_body_hash
     )
@@ -463,7 +463,7 @@ def _cborize_witnesses(
 
     # use key 0 for shelley witnesses and key 2 for byron witnesses
     # according to the spec in shelley.cddl in cardano-ledger-specs
-    witnesses: Dict[Any, Any] = {}
+    witnesses: dict[Any, Any] = {}
     if shelley_witnesses:
         witnesses[0] = shelley_witnesses
     if byron_witnesses:
@@ -474,11 +474,11 @@ def _cborize_witnesses(
 
 def _cborize_shelley_witnesses(
     keychain: seed.Keychain,
-    inputs: List[CardanoTxInputType],
-    certificates: List[CardanoTxCertificateType],
-    withdrawals: List[CardanoTxWithdrawalType],
+    inputs: list[CardanoTxInputType],
+    certificates: list[CardanoTxCertificateType],
+    withdrawals: list[CardanoTxWithdrawalType],
     tx_body_hash: bytes,
-) -> List[Tuple[bytes, bytes]]:
+) -> list[tuple[bytes, bytes]]:
     shelley_witnesses = []
 
     # include only one witness for each path
@@ -511,8 +511,8 @@ def _cborize_shelley_witnesses(
 
 
 def _cborize_shelley_witness(
-    keychain: seed.Keychain, tx_body_hash: bytes, path: List[int]
-) -> Tuple[bytes, bytes]:
+    keychain: seed.Keychain, tx_body_hash: bytes, path: list[int]
+) -> tuple[bytes, bytes]:
     node = keychain.derive(path)
 
     signature = ed25519.sign_ext(
@@ -525,10 +525,10 @@ def _cborize_shelley_witness(
 
 def _cborize_byron_witnesses(
     keychain: seed.Keychain,
-    inputs: List[CardanoTxInputType],
+    inputs: list[CardanoTxInputType],
     tx_body_hash: bytes,
     protocol_magic: int,
-) -> List[Tuple[bytes, bytes, bytes, bytes]]:
+) -> list[tuple[bytes, bytes, bytes, bytes]]:
     byron_witnesses = []
 
     # include only one witness for each path
@@ -704,7 +704,7 @@ async def _show_change_output_staking_warnings(
 
 
 # addresses from the same account as inputs should be hidden
-def _should_hide_output(output: List[int], inputs: List[CardanoTxInputType]) -> bool:
+def _should_hide_output(output: list[int], inputs: list[CardanoTxInputType]) -> bool:
     for tx_input in inputs:
         inp = tx_input.address_n
         if (
@@ -732,7 +732,7 @@ def _is_network_id_verifiable(msg: CardanoSignTx) -> bool:
 
 
 async def _fail_or_warn_if_invalid_path(
-    ctx: wire.Context, schema: PathSchema, path: List[int], path_name: str
+    ctx: wire.Context, schema: PathSchema, path: list[int], path_name: str
 ) -> None:
     if not schema.match(path):
         if safety_checks.is_strict():

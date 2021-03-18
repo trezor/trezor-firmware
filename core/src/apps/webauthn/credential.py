@@ -12,7 +12,7 @@ from apps.common import HARDENED, cbor, seed
 from . import common
 
 if False:
-    from typing import Iterable, Optional
+    from typing import Iterable
 
 # Credential ID values
 _CRED_ID_VERSION = b"\xf1\xd0\x02\x00"
@@ -55,11 +55,11 @@ _U2F_KEY_PATH = const(0x8055_3246)
 
 class Credential:
     def __init__(self) -> None:
-        self.index: Optional[int] = None
+        self.index: int | None = None
         self.id: bytes = b""
         self.rp_id: str = ""
         self.rp_id_hash: bytes = b""
-        self.user_id: Optional[bytes] = None
+        self.user_id: bytes | None = None
 
     def __lt__(self, other: "Credential") -> bool:
         raise NotImplementedError
@@ -67,7 +67,7 @@ class Credential:
     def app_name(self) -> str:
         raise NotImplementedError
 
-    def account_name(self) -> Optional[str]:
+    def account_name(self) -> str | None:
         return None
 
     def public_key(self) -> bytes:
@@ -89,7 +89,7 @@ class Credential:
     def bogus_signature(self) -> bytes:
         raise NotImplementedError
 
-    def hmac_secret_key(self) -> Optional[bytes]:
+    def hmac_secret_key(self) -> bytes | None:
         return None
 
     def next_signature_counter(self) -> int:
@@ -111,9 +111,9 @@ class Fido2Credential(Credential):
 
     def __init__(self) -> None:
         super().__init__()
-        self.rp_name: Optional[str] = None
-        self.user_name: Optional[str] = None
-        self.user_display_name: Optional[str] = None
+        self.rp_name: str | None = None
+        self.user_name: str | None = None
+        self.user_display_name: str | None = None
         self.creation_time: int = 0
         self.hmac_secret: bool = False
         self.use_sign_count: bool = False
@@ -168,7 +168,7 @@ class Fido2Credential(Credential):
 
     @classmethod
     def from_cred_id(
-        cls, cred_id: bytes, rp_id_hash: Optional[bytes]
+        cls, cred_id: bytes, rp_id_hash: bytes | None
     ) -> "Fido2Credential":
         if len(cred_id) < CRED_ID_MIN_LENGTH or cred_id[0:4] != _CRED_ID_VERSION:
             raise ValueError  # invalid length or version
@@ -271,7 +271,7 @@ class Fido2Credential(Credential):
 
         return self.rp_id
 
-    def account_name(self) -> Optional[str]:
+    def account_name(self) -> str | None:
         if self.user_name:
             return self.user_name
         elif self.user_display_name:
@@ -342,7 +342,7 @@ class Fido2Credential(Credential):
 
         raise TypeError
 
-    def hmac_secret_key(self) -> Optional[bytes]:
+    def hmac_secret_key(self) -> bytes | None:
         # Returns the symmetric key for the hmac-secret extension also known as CredRandom.
 
         if not self.hmac_secret:
@@ -363,7 +363,7 @@ class Fido2Credential(Credential):
 class U2fCredential(Credential):
     def __init__(self) -> None:
         super().__init__()
-        self.node: Optional[bip32.HDNode] = None
+        self.node: bip32.HDNode | None = None
 
     def __lt__(self, other: "Credential") -> bool:
         # Sort U2F credentials after FIDO2 credentials.
@@ -441,7 +441,7 @@ class U2fCredential(Credential):
     @staticmethod
     def _node_from_key_handle(
         rp_id_hash: bytes, keyhandle: bytes, pathformat: str
-    ) -> Optional[bip32.HDNode]:
+    ) -> bip32.HDNode | None:
         # unpack the keypath from the first half of keyhandle
         keypath = keyhandle[:32]
         path = ustruct.unpack(pathformat, keypath)

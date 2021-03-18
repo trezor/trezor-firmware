@@ -11,7 +11,7 @@ from . import button_request
 from .sdcard import SdCardUnavailable, request_sd_salt
 
 if False:
-    from typing import Any, NoReturn, Optional, Tuple
+    from typing import Any, NoReturn
 
 
 _last_successful_unlock = 0
@@ -25,7 +25,7 @@ def can_lock_device() -> bool:
 async def request_pin(
     ctx: wire.GenericContext,
     prompt: str = "Enter your PIN",
-    attempts_remaining: Optional[int] = None,
+    attempts_remaining: int | None = None,
     allow_cancel: bool = True,
 ) -> str:
     await button_request(ctx, code=ButtonRequestType.PinEntry)
@@ -67,7 +67,7 @@ async def pin_mismatch() -> None:
 
 async def request_pin_and_sd_salt(
     ctx: wire.Context, prompt: str = "Enter your PIN", allow_cancel: bool = True
-) -> Tuple[str, Optional[bytearray]]:
+) -> tuple[str, bytearray | None]:
     if config.has_pin():
         pin = await request_pin(ctx, prompt, config.get_pin_rem(), allow_cancel)
         config.ensure_not_wipe_code(pin)

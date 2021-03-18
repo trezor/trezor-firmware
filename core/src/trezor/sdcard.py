@@ -1,13 +1,13 @@
 from trezorio import fatfs, sdcard
 
 if False:
-    from typing import Any, Callable, Optional, TypeVar
+    from typing import Any, Callable, TypeVar
 
     T = TypeVar("T", bound=Callable)
 
 
 class FilesystemWrapper:
-    _INSTANCE = None  # type: Optional[FilesystemWrapper]
+    _INSTANCE: "FilesystemWrapper" | None = None
 
     def __init__(self, mounted: bool) -> None:
         self.mounted = mounted

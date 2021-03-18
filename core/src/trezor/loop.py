@@ -18,35 +18,30 @@ if False:
         Awaitable,
         Callable,
         Coroutine,
-        Dict,
         Generator,
-        List,
-        Optional,
-        Set,
-        Tuple,
     )
 
     Task = Coroutine
     Finalizer = Callable[[Task, Any], None]
 
 # function to call after every task step
-after_step_hook: Optional[Callable[[], None]] = None
+after_step_hook: Callable[[], None] | None = None
 
 # tasks scheduled for execution in the future
 _queue = utimeq.utimeq(64)
 
 # tasks paused on I/O
-_paused: Dict[int, Set[Task]] = {}
+_paused: dict[int, set[Task]] = {}
 
 # functions to execute after a task is finished
-_finalizers: Dict[int, Finalizer] = {}
+_finalizers: dict[int, Finalizer] = {}
 
 # reference to the task that is currently executing
-this_task: Optional[Task] = None
+this_task: Task | None = None
 
 if __debug__:
     # synthetic event queue
-    synthetic_events: List[Tuple[int, Any]] = []
+    synthetic_events: list[tuple[int, Any]] = []
 
 
 class TaskClosed(Exception):
@@ -59,8 +54,8 @@ TASK_CLOSED = TaskClosed()
 def schedule(
     task: Task,
     value: Any = None,
-    deadline: Optional[int] = None,
-    finalizer: Optional[Finalizer] = None,
+    deadline: int | None = None,
+    finalizer: Finalizer | None = None,
     reschedule: bool = False,
 ) -> None:
     """
@@ -298,8 +293,8 @@ class race(Syscall):
     def __init__(self, *children: Awaitable, exit_others: bool = True) -> None:
         self.children = children
         self.exit_others = exit_others
-        self.finished: List[Awaitable] = []  # children that finished
-        self.scheduled: List[Task] = []  # scheduled wrapper tasks
+        self.finished: list[Awaitable] = []  # children that finished
+        self.scheduled: list[Task] = []  # scheduled wrapper tasks
 
     def handle(self, task: Task) -> None:
         """
@@ -322,7 +317,7 @@ class race(Syscall):
             scheduled.append(child_task)
             # TODO: document the types here
 
-    def exit(self, except_for: Optional[Task] = None) -> None:
+    def exit(self, except_for: Task | None = None) -> None:
         for task in self.scheduled:
             if task != except_for:
                 close(task)
@@ -385,7 +380,7 @@ class chan:
         def __init__(self, ch: "chan", value: Any) -> None:
             self.ch = ch
             self.value = value
-            self.task: Optional[Task] = None
+            self.task: Task | None = None
 
         def handle(self, task: Task) -> None:
             self.task = task
@@ -394,15 +389,15 @@ class chan:
     class Take(Syscall):
         def __init__(self, ch: "chan") -> None:
             self.ch = ch
-            self.task: Optional[Task] = None
+            self.task: Task | None = None
 
         def handle(self, task: Task) -> None:
             self.task = task
             self.ch._schedule_take(task)
 
     def __init__(self) -> None:
-        self.putters: List[Tuple[Optional[Task], Any]] = []
-        self.takers: List[Task] = []
+        self.putters: list[tuple[Task | None, Any]] = []
+        self.takers: list[Task] = []
 
     def put(self, value: Any) -> Awaitable[None]:  # type: ignore
         put = chan.Put(self, value)
@@ -482,8 +477,8 @@ class spawn(Syscall):
 
     def __init__(self, task: Task) -> None:
         self.task = task
-        self.callback: Optional[Task] = None
-        self.finalizer_callback: Optional[Callable[["spawn"], None]] = None
+        self.callback: Task | None = None
+        self.finalizer_callback: Callable[["spawn"], None] | None = None
         self.finished = False
         self.return_value: Any = None
 

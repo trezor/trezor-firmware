@@ -5,7 +5,6 @@ from ..seed import is_shelley_path
 from .utils import to_account_path
 
 if False:
-    from typing import List
     from trezor.messages.CardanoAddressParametersType import (
         CardanoAddressParametersType,
     )
@@ -53,5 +52,5 @@ def get(keychain: Keychain, address_parameters: CardanoAddressParametersType) ->
         return NO_STAKING
 
 
-def _path_to_staking_path(path: List[int]) -> List[int]:
+def _path_to_staking_path(path: list[int]) -> list[int]:
     return to_account_path(path) + [2, 0]

@@ -2,7 +2,7 @@ from trezor import wire
 from trezor.crypto import random
 
 if False:
-    from typing import Optional, Dict, List, Any
+    from typing import Any
 
 _MAX_SESSIONS_COUNT = 10
 _SESSIONLESS_FLAG = 128
@@ -18,10 +18,10 @@ APP_COMMON_SEED_WITHOUT_PASSPHRASE = 1 | _SESSIONLESS_FLAG
 APP_COMMON_SAFETY_CHECKS_TEMPORARY = 2 | _SESSIONLESS_FLAG
 
 
-_active_session_id: Optional[bytes] = None
-_caches: Dict[bytes, Dict[int, Any]] = {}
-_session_ids: List[bytes] = []
-_sessionless_cache: Dict[int, Any] = {}
+_active_session_id: bytes | None = None
+_caches: dict[bytes, dict[int, Any]] = {}
+_session_ids: list[bytes] = []
+_sessionless_cache: dict[int, Any] = {}
 
 if False:
     from typing import Any, Callable, TypeVar
@@ -41,7 +41,7 @@ def _move_session_ids_queue(session_id: bytes) -> None:
     _session_ids.insert(0, session_id)
 
 
-def start_session(received_session_id: Optional[bytes] = None) -> bytes:
+def start_session(received_session_id: bytes | None = None) -> bytes:
     if received_session_id and received_session_id in _session_ids:
         session_id = received_session_id
     else:

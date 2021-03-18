@@ -4,22 +4,19 @@ from micropython import const
 from trezor import res, ui, utils
 from trezor.ui import display
 
-if False:
-    from typing import Optional, Type
-
 
 class LoaderDefault:
     class normal:
         bg_color = ui.BG
         fg_color = ui.GREEN
-        icon: Optional[str] = None
-        icon_fg_color: Optional[int] = None
+        icon: str | None = None
+        icon_fg_color: int | None = None
 
     class active(normal):
         bg_color = ui.BG
         fg_color = ui.GREEN
-        icon: Optional[str] = ui.ICON_CHECK
-        icon_fg_color: Optional[int] = ui.WHITE
+        icon: str | None = ui.ICON_CHECK
+        icon_fg_color: int | None = ui.WHITE
 
 
 class LoaderDanger(LoaderDefault):
@@ -39,7 +36,7 @@ class LoaderNeutral(LoaderDefault):
 
 
 if False:
-    LoaderStyleType = Type[LoaderDefault]
+    LoaderStyleType = type[LoaderDefault]
 
 
 _TARGET_MS = const(1000)
@@ -59,8 +56,8 @@ class Loader(ui.Component):
         self.normal_style = style.normal
         self.active_style = style.active
         self.target_ms = target_ms
-        self.start_ms: Optional[int] = None
-        self.stop_ms: Optional[int] = None
+        self.start_ms: int | None = None
+        self.stop_ms: int | None = None
         self.offset_y = offset_y
         self.reverse_speedup = reverse_speedup
 

@@ -14,7 +14,6 @@ DUMMY_PAYMENT_ID = b"\x00\x00\x00\x00\x00\x00\x00\x00"
 
 
 if False:
-    from typing import Optional
     from apps.monero.signing.state import State
     from trezor.messages.MoneroTransactionData import MoneroTransactionData
     from trezor.messages.MoneroTransactionDestinationEntry import (
@@ -209,7 +208,7 @@ class LiveRefreshStep(ui.Component):
         )
 
 
-async def transaction_step(state: State, step: int, sub_step: Optional[int] = None):
+async def transaction_step(state: State, step: int, sub_step: int | None = None):
     if step == 0:
         info = ["Signing..."]
     elif step == state.STEP_INP:

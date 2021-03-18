@@ -9,10 +9,10 @@ if __debug__:
     from apps.debug import notify_layout_change
 
 if False:
-    from typing import Any, Awaitable, Generator, List, Tuple, TypeVar
+    from typing import Any, Awaitable, Generator, TypeVar
 
-    Pos = Tuple[int, int]
-    Area = Tuple[int, int, int, int]
+    Pos = tuple[int, int]
+    Area = tuple[int, int, int, int]
     ResultValue = TypeVar("ResultValue")
 
 # all rendering is done through a singleton of `Display`
@@ -267,7 +267,7 @@ class Component:
 
     if __debug__:
 
-        def read_content(self) -> List[str]:
+        def read_content(self) -> list[str]:
             return [self.__class__.__name__]
 
 
@@ -343,7 +343,7 @@ class Layout(Component):
     def __await__(self) -> Generator[Any, Any, ResultValue]:
         return self.__iter__()  # type: ignore
 
-    def create_tasks(self) -> Tuple[loop.Task, ...]:
+    def create_tasks(self) -> tuple[loop.Task, ...]:
         """
         Called from `__iter__`.  Creates and returns a sequence of tasks that
         run this layout.  Tasks are executed in parallel.  When one of them

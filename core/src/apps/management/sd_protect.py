@@ -14,11 +14,11 @@ from apps.common.request_pin import (
 from apps.common.sdcard import confirm_retry_sd, ensure_sdcard
 
 if False:
-    from typing import Awaitable, Tuple
+    from typing import Awaitable
     from trezor.messages.SdProtect import SdProtect
 
 
-def _make_salt() -> Tuple[bytes, bytes, bytes]:
+def _make_salt() -> tuple[bytes, bytes, bytes]:
     salt = random.bytes(storage.sd_salt.SD_SALT_LEN_BYTES)
     auth_key = random.bytes(storage.device.SD_SALT_AUTH_KEY_LEN_BYTES)
     tag = storage.sd_salt.compute_auth_tag(salt, auth_key)

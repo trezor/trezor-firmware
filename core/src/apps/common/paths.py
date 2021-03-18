@@ -11,10 +11,8 @@ if False:
         Collection,
         Container,
         Iterable,
-        List,
         Sequence,
         TypeVar,
-        Union,
     )
     from typing_extensions import Protocol
     from trezor import wire
@@ -106,7 +104,7 @@ class PathSchema:
         "**": Interval(0, 0xFFFF_FFFF),
     }
 
-    def __init__(self, pattern: str, slip44_id: Union[int, Iterable[int]]) -> None:
+    def __init__(self, pattern: str, slip44_id: int | Iterable[int]) -> None:
         if not pattern.startswith("m/"):
             raise ValueError  # unsupported path template
         components = pattern[2:].split("/")
@@ -114,7 +112,7 @@ class PathSchema:
         if isinstance(slip44_id, int):
             slip44_id = (slip44_id,)
 
-        self.schema: List[Container[int]] = []
+        self.schema: list[Container[int]] = []
         self.trailing_components: Container[int] = ()
 
         for component in components:
@@ -270,7 +268,7 @@ def path_is_hardened(address_n: Bip32Path) -> bool:
     return all(is_hardened(n) for n in address_n)
 
 
-def break_address_n_to_lines(address_n: Bip32Path) -> List[str]:
+def break_address_n_to_lines(address_n: Bip32Path) -> list[str]:
     lines = []
     path_str = address_n_to_str(address_n)
 

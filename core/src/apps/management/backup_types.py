@@ -2,8 +2,6 @@ from trezor.crypto.slip39 import Share
 from trezor.messages import BackupType
 
 if False:
-    from typing import Optional
-
     from trezor.messages.ResetDevice import EnumTypeBackupType
 
 
@@ -29,7 +27,7 @@ def is_slip39_backup_type(backup_type: EnumTypeBackupType) -> bool:
 
 
 def infer_backup_type(
-    is_slip39: bool, share: Optional[Share] = None
+    is_slip39: bool, share: Share | None = None
 ) -> EnumTypeBackupType:
     if not is_slip39:  # BIP-39
         return BackupType.Bip39

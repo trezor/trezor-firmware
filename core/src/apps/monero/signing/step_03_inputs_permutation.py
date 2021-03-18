@@ -21,14 +21,13 @@ from apps.monero.layout.confirms import transaction_step
 from .state import State
 
 if False:
-    from typing import List
     from trezor.messages.MoneroTransactionInputsPermutationAck import (
         MoneroTransactionInputsPermutationAck,
     )
 
 
 async def tsx_inputs_permutation(
-    state: State, permutation: List[int]
+    state: State, permutation: list[int]
 ) -> MoneroTransactionInputsPermutationAck:
     from trezor.messages.MoneroTransactionInputsPermutationAck import (
         MoneroTransactionInputsPermutationAck,
@@ -54,7 +53,7 @@ async def tsx_inputs_permutation(
     return MoneroTransactionInputsPermutationAck()
 
 
-def _check_permutation(permutation: List[int]):
+def _check_permutation(permutation: list[int]):
     for n in range(len(permutation)):
         if n not in permutation:
             raise ValueError("Invalid permutation")

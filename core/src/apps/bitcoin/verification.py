@@ -18,7 +18,6 @@ from .scripts import (
 )
 
 if False:
-    from typing import List, Optional, Tuple
     from apps.common.coininfo import CoinInfo
 
 
@@ -26,13 +25,13 @@ class SignatureVerifier:
     def __init__(
         self,
         script_pubkey: bytes,
-        script_sig: Optional[bytes],
-        witness: Optional[bytes],
+        script_sig: bytes | None,
+        witness: bytes | None,
         coin: CoinInfo,
     ):
         self.threshold = 1
-        self.public_keys: List[bytes] = []
-        self.signatures: List[Tuple[bytes, int]] = []
+        self.public_keys: list[bytes] = []
+        self.signatures: list[tuple[bytes, int]] = []
 
         if not script_sig:
             if not witness:

@@ -5,7 +5,7 @@ from trezor.crypto.base58 import blake256d_32, groestl512d_32, keccak_32, sha256
 from trezor.crypto.scripts import blake256_ripemd160_digest, sha256_ripemd160_digest
 
 if False:
-    from typing import Any, Dict, Optional
+    from typing import Any
 
 # flake8: noqa
 
@@ -21,15 +21,15 @@ class CoinInfo:
         maxfee_kb: int,
         signed_message_header: str,
         xpub_magic: int,
-        xpub_magic_segwit_p2sh: Optional[int],
-        xpub_magic_segwit_native: Optional[int],
-        xpub_magic_multisig_segwit_p2sh: Optional[int],
-        xpub_magic_multisig_segwit_native: Optional[int],
-        bech32_prefix: Optional[str],
-        cashaddr_prefix: Optional[str],
+        xpub_magic_segwit_p2sh: int | None,
+        xpub_magic_segwit_native: int | None,
+        xpub_magic_multisig_segwit_p2sh: int | None,
+        xpub_magic_multisig_segwit_native: int | None,
+        bech32_prefix: str | None,
+        cashaddr_prefix: str | None,
         slip44: int,
         segwit: bool,
-        fork_id: Optional[int],
+        fork_id: int | None,
         force_bip143: bool,
         decred: bool,
         negative_fee: bool,
@@ -37,7 +37,7 @@ class CoinInfo:
         extra_data: bool,
         timestamp: bool,
         overwintered: bool,
-        confidential_assets: Optional[Dict[str, Any]],
+        confidential_assets: dict[str, Any] | None,
     ) -> None:
         self.coin_name = coin_name
         self.coin_shortcut = coin_shortcut

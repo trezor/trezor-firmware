@@ -5,7 +5,7 @@ from trezor import res, ui
 from ...constants import TEXT_HEADER_HEIGHT, TEXT_LINE_HEIGHT
 
 if False:
-    from typing import Iterable, List, Union
+    from typing import Iterable, Union
 
     ChecklistItem = Union[str, Iterable[str]]
 
@@ -19,7 +19,7 @@ class Checklist(ui.Component):
         super().__init__()
         self.title = title
         self.icon = icon
-        self.items: List[ChecklistItem] = []
+        self.items: list[ChecklistItem] = []
         self.active = 0
 
     def add(self, item: ChecklistItem) -> None:

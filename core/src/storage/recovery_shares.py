@@ -1,9 +1,6 @@
 from storage import common
 from trezor.crypto import slip39
 
-if False:
-    from typing import List, Optional
-
 # Mnemonics stored during SLIP-39 recovery process.
 # Each mnemonic is stored under key = index.
 
@@ -16,7 +13,7 @@ def set(index: int, group_index: int, mnemonic: str) -> None:
     )
 
 
-def get(index: int, group_index: int) -> Optional[str]:
+def get(index: int, group_index: int) -> str | None:
     m = common.get(
         common.APP_RECOVERY_SHARES, index + group_index * slip39.MAX_SHARE_COUNT
     )
@@ -25,7 +22,7 @@ def get(index: int, group_index: int) -> Optional[str]:
     return None
 
 
-def fetch_group(group_index: int) -> List[str]:
+def fetch_group(group_index: int) -> list[str]:
     mnemonics = []
     for index in range(slip39.MAX_SHARE_COUNT):
         m = get(index, group_index)

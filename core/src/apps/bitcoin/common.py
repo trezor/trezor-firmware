@@ -8,7 +8,6 @@ from trezor.utils import ensure
 
 if False:
     from apps.common.coininfo import CoinInfo
-    from typing import Dict
     from trezor.messages.TxInput import EnumTypeInputScriptType, TxInput
     from trezor.messages.TxOutput import EnumTypeOutputScriptType
 
@@ -35,7 +34,7 @@ MULTISIG_OUTPUT_SCRIPT_TYPES = (
     OutputScriptType.PAYTOWITNESS,
 )
 
-CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES: Dict[
+CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES: dict[
     EnumTypeOutputScriptType, EnumTypeInputScriptType
 ] = {
     OutputScriptType.PAYTOADDRESS: InputScriptType.SPENDADDRESS,

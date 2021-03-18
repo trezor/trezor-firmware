@@ -15,8 +15,6 @@ from .scripts import (  # noqa: F401
 from .writers import write_op_push
 
 if False:
-    from typing import Optional
-
     from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
     from trezor.messages.TxInput import EnumTypeInputScriptType
 
@@ -25,7 +23,7 @@ if False:
 
 def input_derive_script(
     script_type: EnumTypeInputScriptType,
-    multisig: Optional[MultisigRedeemScriptType],
+    multisig: MultisigRedeemScriptType | None,
     coin: CoinInfo,
     hash_type: int,
     pubkey: bytes,

@@ -12,7 +12,6 @@ from . import seed
 from .helpers.paths import SCHEMA_PUBKEY
 
 if False:
-    from typing import List
     from trezor.messages.CardanoGetPublicKey import CardanoGetPublicKey
 
 
@@ -41,7 +40,7 @@ async def get_public_key(
 
 
 def _get_public_key(
-    keychain: seed.Keychain, derivation_path: List[int]
+    keychain: seed.Keychain, derivation_path: list[int]
 ) -> CardanoPublicKey:
     node = keychain.derive(derivation_path)
 
