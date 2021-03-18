@@ -2,7 +2,7 @@ from micropython import const
 from ubinascii import hexlify
 
 from trezor.messages import AmountUnit, ButtonRequestType, OutputScriptType
-from trezor.strings import format_amount
+from trezor.strings import format_amount, format_timestamp_to_human
 from trezor.ui import layouts
 from trezor.ui.layouts import require
 
@@ -176,8 +176,8 @@ async def confirm_nondefault_locktime(
         param = str(lock_time)
     else:
         title = "Confirm locktime"
-        text = "Locktime for this\ntransaction is set to\ntimestamp:\n{}"
-        param = str(lock_time)
+        text = "Locktime for this\ntransaction is set to\ndate & time:\n{}"
+        param = format_timestamp_to_human(lock_time)
 
     await require(
         layouts.confirm_metadata(

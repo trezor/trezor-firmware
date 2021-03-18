@@ -1361,6 +1361,28 @@ class TestMsgSigntx:
             script_type=messages.OutputScriptType.PAYTOADDRESS,
         )
 
+        def input_flow():
+            yield   # show confirm sending
+            lines1 = client.debug.wait_layout().lines
+            assert lines1[0] == "Confirm sending"
+
+            client.debug.press_yes()
+            yield   # show confirm locktime
+            lines2 = client.debug.wait_layout().lines
+            assert lines2[0] == "Confirm locktime"
+            assert lines2[1] == "Locktime for this"
+            assert lines2[2] == "transaction is set to"
+            assert lines2[3] == "date & time:"
+            assert lines2[5] == "1985-11-05 00:53:20"
+            assert lines2[7] == "Continue?"
+
+            client.debug.press_yes()
+            yield   # show confirm transaction
+            lines3 = client.debug.wait_layout().lines
+            assert lines3[0] == "Confirm transaction"
+
+            client.debug.press_yes()
+
         with client:
             client.set_expected_responses(
                 [
@@ -1380,6 +1402,10 @@ class TestMsgSigntx:
                     request_finished(),
                 ]
             )
+            # assertion with input flow only for date & time lock
+            if lock_time == 500000000:
+                client.watch_layout()
+                client.set_input_flow(input_flow)
 
             btc.sign_tx(
                 client,
