@@ -119,8 +119,6 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_halt_obj, 0, 1,
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_protobuf_type_obj,
                                  protobuf_type);
-STATIC MP_DEFINE_CONST_FUN_OBJ_KW(mod_trezorutils_protobuf_new_obj, 1,
-                                  protobuf_new);
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorutils_protobuf_decode_obj,
                                  protobuf_decode);
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorutils_protobuf_encode_obj,
@@ -148,8 +146,6 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     // protobuf
     {MP_ROM_QSTR(MP_QSTR_protobuf_type),
      MP_ROM_PTR(&mod_trezorutils_protobuf_type_obj)},
-    {MP_ROM_QSTR(MP_QSTR_protobuf_new),
-     MP_ROM_PTR(&mod_trezorutils_protobuf_new_obj)},
     {MP_ROM_QSTR(MP_QSTR_protobuf_decode),
      MP_ROM_PTR(&mod_trezorutils_protobuf_decode_obj)},
     {MP_ROM_QSTR(MP_QSTR_protobuf_encode),

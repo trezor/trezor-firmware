@@ -171,7 +171,7 @@ impl TryInto<Obj> for Duration {
 }
 
 extern "C" fn ui_layout_set_timer_fn(this: Obj, timer_fn: Obj) -> Obj {
-    util::try_or_none(|| {
+    util::try_or_raise(|| {
         let this: Gc<LayoutObj> = this.try_into()?;
         this.obj_set_timer_fn(timer_fn);
         Ok(Obj::const_true())
@@ -179,7 +179,7 @@ extern "C" fn ui_layout_set_timer_fn(this: Obj, timer_fn: Obj) -> Obj {
 }
 
 extern "C" fn ui_layout_touch_start(this: Obj, x: Obj, y: Obj) -> Obj {
-    util::try_or_none(|| {
+    util::try_or_raise(|| {
         let this: Gc<LayoutObj> = this.try_into()?;
         let event = Event::TouchStart(Point::new(x.try_into()?, y.try_into()?));
         let msg = this.obj_event(event);
@@ -188,7 +188,7 @@ extern "C" fn ui_layout_touch_start(this: Obj, x: Obj, y: Obj) -> Obj {
 }
 
 extern "C" fn ui_layout_touch_move(this: Obj, x: Obj, y: Obj) -> Obj {
-    util::try_or_none(|| {
+    util::try_or_raise(|| {
         let this: Gc<LayoutObj> = this.try_into()?;
         let event = Event::TouchMove(Point::new(x.try_into()?, y.try_into()?));
         let msg = this.obj_event(event);
@@ -197,7 +197,7 @@ extern "C" fn ui_layout_touch_move(this: Obj, x: Obj, y: Obj) -> Obj {
 }
 
 extern "C" fn ui_layout_touch_end(this: Obj, x: Obj, y: Obj) -> Obj {
-    util::try_or_none(|| {
+    util::try_or_raise(|| {
         let this: Gc<LayoutObj> = this.try_into()?;
         let event = Event::TouchEnd(Point::new(x.try_into()?, y.try_into()?));
         let msg = this.obj_event(event);
@@ -206,7 +206,7 @@ extern "C" fn ui_layout_touch_end(this: Obj, x: Obj, y: Obj) -> Obj {
 }
 
 extern "C" fn ui_layout_timer(this: Obj, token: Obj) -> Obj {
-    util::try_or_none(|| {
+    util::try_or_raise(|| {
         let this: Gc<LayoutObj> = this.try_into()?;
         let event = Event::Timer(token.try_into()?);
         let msg = this.obj_event(event);
@@ -215,7 +215,7 @@ extern "C" fn ui_layout_timer(this: Obj, token: Obj) -> Obj {
 }
 
 extern "C" fn ui_layout_paint(this: Obj) -> Obj {
-    util::try_or_none(|| {
+    util::try_or_raise(|| {
         let this: Gc<LayoutObj> = this.try_into()?;
         this.obj_paint_if_requested();
         Ok(Obj::const_true())

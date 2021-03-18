@@ -10,9 +10,10 @@ use crate::{
         qstr::Qstr,
         typ::Type,
     },
+    util,
 };
 
-use super::defs::MsgDef;
+use super::{decode::Decoder, defs::MsgDef};
 
 pub const MSG_WIRE_ID_ATTR: Qstr = Qstr::MP_QSTR_MESSAGE_WIRE_TYPE;
 
@@ -41,9 +42,6 @@ impl MsgObj {
     fn obj_type() -> &'static Type {
         static TYPE: Type = obj_type! {
             name: Qstr::MP_QSTR_Msg,
-            locals: &obj_dict!(obj_map! {
-                // TODO: Pass null.
-            }),
             attr_fn: msg_obj_attr,
         };
         &TYPE
@@ -76,10 +74,8 @@ impl TryFrom<Obj> for Gc<MsgObj> {
 }
 
 unsafe extern "C" fn msg_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut Obj) {
-    let mut this: Gc<MsgObj> = match self_in.try_into() {
-        Ok(obj) => obj,
-        Err(_) => return,
-    };
+    let mut this: Gc<MsgObj> = self_in.try_into().unwrap();
+
     let attr = Qstr::from_u16(attr as _);
 
     if dest.read() == Obj::const_null() {
@@ -122,10 +118,8 @@ impl MsgDefObj {
     fn obj_type() -> &'static Type {
         static TYPE: Type = obj_type! {
             name: Qstr::MP_QSTR_MsgDef,
-            locals: &obj_dict!(obj_map! {
-                // TODO: Pass null.
-            }),
             attr_fn: msg_def_obj_attr,
+            call_fn: msg_def_obj_call,
         };
         &TYPE
     }
@@ -157,10 +151,8 @@ impl TryFrom<Obj> for Gc<MsgDefObj> {
 }
 
 unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut Obj) {
-    let mut this: Gc<MsgDefObj> = match self_in.try_into() {
-        Ok(obj) => obj,
-        Err(_) => return,
-    };
+    let this: Gc<MsgDefObj> = self_in.try_into().unwrap();
+
     let attr = Qstr::from_u16(attr as _);
 
     if dest.read() == Obj::const_null() {
@@ -175,4 +167,20 @@ unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut 
         };
         dest.write(value);
     }
+}
+
+unsafe extern "C" fn msg_def_obj_call(
+    self_in: Obj,
+    n_args: usize,
+    n_kw: usize,
+    args: *const Obj,
+) -> Obj {
+    util::try_with_args_and_kwargs_inline(n_args, n_kw, args, |_args, kwargs| {
+        let this = Gc::<MsgDefObj>::try_from(self_in)?;
+        let decoder = Decoder {
+            enable_experimental: false,
+        };
+        let obj = decoder.message_from_values(kwargs, this.msg())?;
+        Ok(obj)
+    })
 }

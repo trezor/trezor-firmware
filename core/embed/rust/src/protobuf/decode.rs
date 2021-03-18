@@ -14,39 +14,25 @@ use super::{
 };
 
 #[no_mangle]
-pub extern "C" fn protobuf_type(msg_name: Obj) -> Obj {
-    util::try_or_none(|| {
-        let msg_name = Qstr::try_from(msg_name)?;
-        let msg = MsgDef::for_name(msg_name.to_u16()).ok_or(Error::Missing)?;
-        let obj = MsgDefObj::alloc(msg).into();
+pub extern "C" fn protobuf_type(name: Obj) -> Obj {
+    util::try_or_raise(|| {
+        let name = Qstr::try_from(name)?;
+        let def = MsgDef::for_name(name.to_u16()).ok_or(Error::Missing)?;
+        let obj = MsgDefObj::alloc(def).into();
         Ok(obj)
     })
 }
 
 #[no_mangle]
-pub extern "C" fn protobuf_new(n_args: usize, args: *const Obj, kwargs: *const Map) -> Obj {
-    util::try_with_args_and_kwargs(n_args, args, kwargs, |args, kwargs| {
-        let msg = args.get(0).copied().ok_or(Error::Missing)?;
-        let msg: Gc<MsgDefObj> = msg.try_into()?;
-        let decoder = Decoder {
-            enable_experimental: false,
-        };
-        let obj = decoder.message_from_values(kwargs, msg.msg())?;
-        Ok(obj)
-    })
-}
-
-#[no_mangle]
-pub extern "C" fn protobuf_decode(buf: Obj, wire_id: Obj) -> Obj {
-    util::try_or_none(|| {
-        let wire_id = wire_id.try_into()?;
-        let msg = MsgDef::for_wire_id(wire_id).ok_or(Error::Missing)?;
+pub extern "C" fn protobuf_decode(buf: Obj, msg_def: Obj) -> Obj {
+    util::try_or_raise(|| {
+        let def = Gc::<MsgDefObj>::try_from(msg_def)?;
         let buf = Buffer::try_from(buf)?;
         let stream = &mut InputStream::new(&buf);
         let decoder = Decoder {
             enable_experimental: false,
         };
-        let obj = decoder.message_from_stream(stream, &msg)?;
+        let obj = decoder.message_from_stream(stream, def.msg())?;
         Ok(obj)
     })
 }
@@ -89,9 +75,9 @@ impl Decoder {
     }
 
     /// Allocate the backing message object with enough pre-allocated space for
-    /// all fields.
+    /// all fields, including the special `MSG_WIRE_ID_ATTR` field.
     pub fn empty_message(&self, msg: &MsgDef) -> Gc<MsgObj> {
-        MsgObj::alloc_with_capacity(msg.fields.len())
+        MsgObj::alloc_with_capacity(msg.fields.len() + 1)
     }
 
     /// Decode message fields one-by-one from the input stream, assigning them
@@ -205,8 +191,8 @@ impl Decoder {
         Ok(())
     }
 
-    /// Assign the wire ID of this message def into the map, under the "wire_id"
-    /// key.
+    /// Assign the wire ID of this message def into the map, under a key
+    /// designated by the `MSG_WIRE_ID_ATTR` QSTR.
     pub fn assign_wire_id(&self, msg: &MsgDef, map: &mut Map) {
         if let Some(wire_id) = msg.wire_id {
             map.set(MSG_WIRE_ID_ATTR, wire_id);

@@ -49,7 +49,7 @@ macro_rules! obj_fn_3 {
 /// Construct fixed static const `Map` from `key` => `val` pairs.
 macro_rules! obj_map {
     ($($key:expr => $val:expr),*) => ({
-        Map::fixed(&[
+        Map::from_fixed_static(&[
             $(
                 Map::at($key, $val),
             )*
@@ -78,7 +78,11 @@ macro_rules! obj_dict {
 }
 
 macro_rules! obj_type {
-    (name: $name:expr, locals: $locals:expr, $(attr_fn: $attr_fn:ident,)? ) => {{
+    (name: $name:expr,
+     $(locals: $locals:expr,)?
+     $(attr_fn: $attr_fn:ident,)?
+     $(call_fn: $call_fn:ident,)?
+    ) => {{
         #[allow(unused_unsafe)]
         unsafe {
             use $crate::micropython::ffi;
@@ -90,10 +94,18 @@ macro_rules! obj_type {
             let mut attr: ffi::mp_attr_fun_t = None;
             $(attr = Some($attr_fn);)?
 
+            #[allow(unused_mut)]
+            #[allow(unused_assignments)]
+            let mut call: ffi::mp_call_fun_t = None;
+            $(call = Some($call_fn);)?
+
             // TODO: This is safe only if we pass in `Dict` with fixed `Map` (created by
             // `Map::fixed()`), because only then will Micropython treat `locals_dict` as
-            // immutable, and make the mutable cast safe. Encode this in the type system.
-            let locals_dict = $locals as *const _ as *mut _;
+            // immutable, and make the mutable cast safe.
+            #[allow(unused_mut)]
+            #[allow(unused_assignments)]
+            let mut locals_dict = ::core::ptr::null_mut();
+            $(locals_dict = $locals as *const _ as *mut _;)?
 
             ffi::mp_obj_type_t {
                 base: ffi::mp_obj_base_t {
@@ -103,7 +115,7 @@ macro_rules! obj_type {
                 name,
                 print: None,
                 make_new: None,
-                call: None,
+                call,
                 unary_op: None,
                 binary_op: None,
                 attr,

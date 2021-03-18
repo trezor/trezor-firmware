@@ -1,4 +1,4 @@
-use core::convert::{TryFrom, TryInto};
+use core::convert::TryFrom;
 
 use crate::{
     error::Error,
@@ -15,15 +15,14 @@ use crate::{
 
 use super::{
     defs::{FieldDef, FieldType, MsgDef},
-    obj::MsgObj,
+    obj::{MsgDefObj, MsgObj},
     zigzag,
 };
 
 #[no_mangle]
-pub extern "C" fn protobuf_encode(buf: Obj, wire_id: Obj, obj: Obj) -> Obj {
-    util::try_or_none(|| {
-        let wire_id = wire_id.try_into()?;
-        let msg = MsgDef::for_wire_id(wire_id).ok_or(Error::Missing)?;
+pub extern "C" fn protobuf_encode(buf: Obj, def: Obj, obj: Obj) -> Obj {
+    util::try_or_raise(|| {
+        let def = Gc::<MsgDefObj>::try_from(def)?;
 
         let buf = &mut Buffer::try_from(buf)?;
         let stream = &mut BufferStream::new(unsafe {
@@ -32,7 +31,7 @@ pub extern "C" fn protobuf_encode(buf: Obj, wire_id: Obj, obj: Obj) -> Obj {
             buf.as_mut()
         });
 
-        Encoder.encode_message(stream, &msg, obj)?;
+        Encoder.encode_message(stream, def.msg(), obj)?;
 
         Ok(stream.len().into())
     })
