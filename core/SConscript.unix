@@ -9,7 +9,7 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 NEW_UI = TREZOR_MODEL == '1' or ARGUMENTS.get('NEW_UI', '0') == '1'
 
 FEATURE_FLAGS = {
-    "SECP256K1_ZKP": False,
+    "SECP256K1_ZKP": True,
 }
 
 CCFLAGS_MOD = ''
