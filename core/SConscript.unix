@@ -123,6 +123,7 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
         'USE_SCALAR_8X32',
         'USE_ECMULT_STATIC_PRECOMPUTATION',
         'USE_EXTERNAL_DEFAULT_CALLBACKS',
+        ('ECMULT_GEN_PREC_BITS', '4'),
         ('ECMULT_WINDOW_SIZE', '8'),
         'ENABLE_MODULE_GENERATOR',
         'ENABLE_MODULE_RANGEPROOF',
@@ -601,6 +602,9 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
         CC=os.getenv('CC_FOR_BUILD') or 'gcc',
         COPT='-O2',
         CPPPATH='vendor/secp256k1-zkp',
+        CPPDEFINES=[
+            ('ECMULT_GEN_PREC_BITS', '4'),
+        ]
     )
     gen_context = host_env.Program(
         target='vendor/secp256k1-zkp/gen_context',
