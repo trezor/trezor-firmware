@@ -105,7 +105,7 @@ if EVERYTHING:
     ]
 
 # libsecp256k1-zkp
-if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
+if FEATURE_FLAGS["SECP256K1_ZKP"]:
     CPPPATH_MOD += [
         'vendor/secp256k1-zkp',
         'vendor/secp256k1-zkp/src',
@@ -550,7 +550,7 @@ if FROZEN:
 #
 # static secp256-zkp ecmult context
 #
-if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
+if FEATURE_FLAGS["SECP256K1_ZKP"]:
     host_env = Environment(ENV=os.environ)
     host_env.Replace(
         CC=os.getenv('CC_FOR_BUILD') or 'gcc',
@@ -573,7 +573,7 @@ if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
 
 obj_program = []
 obj_program.extend(env.Object(source=SOURCE_MOD))
-if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
+if FEATURE_FLAGS["SECP256K1_ZKP"]:
     obj_program.extend(env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function'))
 obj_program.extend(env.Object(source=SOURCE_MICROPYTHON))
 obj_program.extend(env.Object(source=SOURCE_UNIX))
@@ -581,7 +581,7 @@ if FROZEN:
     obj_program.extend(env.Object(source=source_mpyc))
 
 env.Depends(obj_program, qstr_generated)
-if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
+if FEATURE_FLAGS["SECP256K1_ZKP"]:
     env.Depends(obj_program, secp256k1_zkp_ecmult_static_context)
 
 program = env.Command(

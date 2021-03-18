@@ -107,7 +107,7 @@ if EVERYTHING:
     ]
 
 # libsecp256k1-zkp
-if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
+if FEATURE_FLAGS["SECP256K1_ZKP"]:
     CPPPATH_MOD += [
         'vendor/secp256k1-zkp',
         'vendor/secp256k1-zkp/src',
@@ -393,7 +393,7 @@ if TREZOR_MODEL == 'T':
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16'
     CPU_CCFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 '
     CPU_MODEL   = 'STM32F427xx'
-    LD_VARIANT  = '_zkp' if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"] else ''
+    LD_VARIANT  = '_zkp' if FEATURE_FLAGS["SECP256K1_ZKP"] else ''
 elif TREZOR_MODEL == '1':
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m3 -mfloat-abi=soft'
     CPU_CCFLAGS = '-mthumb -mtune=cortex-m3 -mcpu=cortex-m3 -mfloat-abi=soft '
@@ -599,7 +599,7 @@ if FROZEN:
 #
 # static secp256-zkp ecmult context
 #
-if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
+if FEATURE_FLAGS["SECP256K1_ZKP"]:
     host_env = Environment(ENV=os.environ)
     host_env.Replace(
         CC=os.getenv('CC_FOR_BUILD') or 'gcc',
@@ -622,7 +622,7 @@ if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
 
 obj_program = []
 obj_program.extend(env.Object(source=SOURCE_MOD))
-if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
+if FEATURE_FLAGS["SECP256K1_ZKP"]:
     obj_program.extend(env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function'))
 obj_program.extend(env.Object(source=SOURCE_FIRMWARE))
 obj_program.extend(env.Object(source=SOURCE_MICROPYTHON))
@@ -651,7 +651,7 @@ obj_program.extend(
         ' $SOURCE $TARGET', ))
 
 env.Depends(obj_program, qstr_generated)
-if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
+if FEATURE_FLAGS["SECP256K1_ZKP"]:
     env.Depends(obj_program, secp256k1_zkp_ecmult_static_context)
 
 program_elf = env.Command(
