@@ -10,9 +10,6 @@ from apps.base import lock_device
 
 from . import HomescreenBase
 
-if False:
-    from typing import Optional
-
 _LOADER_DELAY_MS = const(500)
 _LOADER_TOTAL_MS = const(2500)
 
@@ -34,7 +31,7 @@ class Homescreen(HomescreenBase):
             offset_y=-10,
             reverse_speedup=3,
         )
-        self.touch_ms: Optional[int] = None
+        self.touch_ms: int | None = None
 
     def on_render(self) -> None:
         if not self.repaint:

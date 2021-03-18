@@ -158,7 +158,7 @@ STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type,
   return MP_OBJ_FROM_PTR(o);
 }
 
-/// def add(self, iface: Union[HID, VCP, WebUSB]) -> None:
+/// def add(self, iface: HID | VCP | WebUSB) -> None:
 ///     """
 ///     Registers passed interface into the USB stack.
 ///     """

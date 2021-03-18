@@ -17,7 +17,6 @@ from apps.monero.xmr import crypto, monero, serialize
 from .state import State
 
 if False:
-    from typing import List, Tuple, Optional
     from apps.monero.xmr.types import Sc25519, Ge25519
     from trezor.messages.MoneroTransactionSourceEntry import (
         MoneroTransactionSourceEntry,
@@ -139,7 +138,7 @@ async def set_input(
     )
 
 
-def _gen_commitment(state: State, in_amount: int) -> Tuple[Sc25519, Ge25519]:
+def _gen_commitment(state: State, in_amount: int) -> tuple[Sc25519, Ge25519]:
     """
     Computes Pedersen commitment - pseudo outs
     Here is slight deviation from the original protocol.
@@ -155,7 +154,7 @@ def _gen_commitment(state: State, in_amount: int) -> Tuple[Sc25519, Ge25519]:
     return alpha, crypto.gen_commitment(alpha, in_amount)
 
 
-def _absolute_output_offsets_to_relative(off: List[int]) -> List[int]:
+def _absolute_output_offsets_to_relative(off: list[int]) -> list[int]:
     """
     Mixin outputs are specified in relative numbers. First index is absolute
     and the rest is an offset of a previous one.
@@ -173,7 +172,7 @@ def _absolute_output_offsets_to_relative(off: List[int]) -> List[int]:
 
 def _get_additional_public_key(
     src_entr: MoneroTransactionSourceEntry,
-) -> Optional[Ge25519]:
+) -> Ge25519 | None:
     additional_tx_pub_key = None
     if len(src_entr.real_out_additional_tx_keys) == 1:  # compression
         additional_tx_pub_key = crypto.decodepoint(

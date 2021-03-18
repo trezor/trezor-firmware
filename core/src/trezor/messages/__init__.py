@@ -4,13 +4,12 @@ if __debug__:
     from trezor import log
 
 if False:
-    from typing import Dict, Type  # noqa: F401
     from protobuf import MessageType as MessageType_  # noqa: F401
 
-    MessageClass = Type[MessageType_]
+    MessageClass = type[MessageType_]
 
-type_to_name = {}  # type: Dict[int, str]  # reverse table of wire_type mapping
-registered = {}  # type: Dict[int, MessageClass]  # dynamically registered types
+type_to_name: dict[int, str] = {}  # reverse table of wire_type mapping
+registered: dict[int, MessageClass] = {}  # dynamically registered types
 
 
 def register(msg_type: MessageClass) -> None:

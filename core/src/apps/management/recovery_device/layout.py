@@ -17,7 +17,7 @@ from .keyboard_slip39 import Slip39Keyboard
 from .recover import RecoveryAborted
 
 if False:
-    from typing import List, Optional, Callable, Iterable, Tuple, Union
+    from typing import Callable, Iterable
     from trezor.messages.ResetDevice import EnumTypeBackupType
 
 
@@ -61,14 +61,14 @@ async def request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
 
 
 async def request_mnemonic(
-    ctx: wire.GenericContext, word_count: int, backup_type: Optional[EnumTypeBackupType]
-) -> Optional[str]:
+    ctx: wire.GenericContext, word_count: int, backup_type: EnumTypeBackupType | None
+) -> str | None:
     await button_request(ctx, code=ButtonRequestType.MnemonicInput)
 
-    words: List[str] = []
+    words: list[str] = []
     for i in range(word_count):
         if backup_types.is_slip39_word_count(word_count):
-            keyboard: Union[Slip39Keyboard, Bip39Keyboard] = Slip39Keyboard(
+            keyboard: Slip39Keyboard | Bip39Keyboard = Slip39Keyboard(
                 "Type word %s of %s:" % (i + 1, word_count)
             )
         else:
@@ -94,11 +94,11 @@ async def request_mnemonic(
 
 async def show_remaining_shares(
     ctx: wire.GenericContext,
-    groups: Iterable[Tuple[int, Tuple[str, ...]]],  # remaining + list 3 words
-    shares_remaining: List[int],
+    groups: Iterable[tuple[int, tuple[str, ...]]],  # remaining + list 3 words
+    shares_remaining: list[int],
     group_threshold: int,
 ) -> None:
-    pages: List[ui.Component] = []
+    pages: list[ui.Component] = []
     for remaining, group in groups:
         if 0 < remaining < MAX_SHARE_COUNT:
             text = Text("Remaining Shares")
@@ -205,7 +205,7 @@ async def show_group_threshold_reached(ctx: wire.GenericContext) -> None:
 
 
 class RecoveryHomescreen(ui.Component):
-    def __init__(self, text: str, subtext: Optional[str] = None):
+    def __init__(self, text: str, subtext: str | None = None):
         super().__init__()
         self.text = text
         self.subtext = subtext
@@ -240,7 +240,7 @@ class RecoveryHomescreen(ui.Component):
 
     if __debug__:
 
-        def read_content(self) -> List[str]:
+        def read_content(self) -> list[str]:
             return [self.__class__.__name__, self.text, self.subtext or ""]
 
 
@@ -248,7 +248,7 @@ async def homescreen_dialog(
     ctx: wire.GenericContext,
     homepage: RecoveryHomescreen,
     button_label: str,
-    info_func: Optional[Callable] = None,
+    info_func: Callable | None = None,
 ) -> None:
     while True:
         if info_func:

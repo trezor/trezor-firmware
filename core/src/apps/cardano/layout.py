@@ -32,7 +32,6 @@ from .helpers.utils import (
 )
 
 if False:
-    from typing import List, Optional
     from trezor import wire
     from trezor.messages.CardanoBlockchainPointerType import (
         CardanoBlockchainPointerType,
@@ -76,7 +75,7 @@ def is_printable_ascii_bytestring(bytestr: bytes) -> bool:
 async def confirm_sending(
     ctx: wire.Context,
     ada_amount: int,
-    token_bundle: List[CardanoAssetGroupType],
+    token_bundle: list[CardanoAssetGroupType],
     to: str,
 ) -> None:
     await confirm_sending_token_bundle(ctx, token_bundle)
@@ -96,7 +95,7 @@ async def confirm_sending(
 
 
 async def confirm_sending_token_bundle(
-    ctx: wire.Context, token_bundle: List[CardanoAssetGroupType]
+    ctx: wire.Context, token_bundle: list[CardanoAssetGroupType]
 ) -> None:
     for token_group in token_bundle:
         for token in token_group.tokens:
@@ -125,7 +124,7 @@ async def show_warning_tx_output_contains_tokens(ctx: wire.Context) -> None:
     await require_confirm(ctx, page1)
 
 
-async def show_warning_path(ctx: wire.Context, path: List[int], title: str) -> None:
+async def show_warning_path(ctx: wire.Context, path: list[int], title: str) -> None:
     page1 = Text("Confirm path", ui.ICON_WRONG, ui.RED)
     page1.normal(title)
     page1.bold(address_n_to_str(path))
@@ -171,7 +170,7 @@ async def show_warning_tx_pointer_address(
 
 async def show_warning_tx_different_staking_account(
     ctx: wire.Context,
-    staking_account_path: List[int],
+    staking_account_path: list[int],
     amount: int,
 ) -> None:
     page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
@@ -214,12 +213,12 @@ async def confirm_transaction(
     amount: int,
     fee: int,
     protocol_magic: int,
-    ttl: Optional[int],
-    validity_interval_start: Optional[int],
+    ttl: int | None,
+    validity_interval_start: int | None,
     has_metadata: bool,
     is_network_id_verifiable: bool,
 ) -> None:
-    pages: List[ui.Component] = []
+    pages: list[ui.Component] = []
 
     page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     page1.normal("Transaction amount:")
@@ -252,7 +251,7 @@ async def confirm_certificate(
     # in this call
     assert certificate.type != CardanoCertificateType.STAKE_POOL_REGISTRATION
 
-    pages: List[ui.Component] = []
+    pages: list[ui.Component] = []
 
     page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     page1.normal("Confirm:")
@@ -301,10 +300,10 @@ async def confirm_stake_pool_parameters(
 async def confirm_stake_pool_owners(
     ctx: wire.Context,
     keychain: seed.Keychain,
-    owners: List[CardanoPoolOwnerType],
+    owners: list[CardanoPoolOwnerType],
     network_id: int,
 ) -> None:
-    pages: List[ui.Component] = []
+    pages: list[ui.Component] = []
     for index, owner in enumerate(owners, 1):
         page = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
         page.normal("Pool owner #%d:" % (index))
@@ -334,7 +333,7 @@ async def confirm_stake_pool_owners(
 
 async def confirm_stake_pool_metadata(
     ctx: wire.Context,
-    metadata: Optional[CardanoPoolMetadataType],
+    metadata: CardanoPoolMetadataType | None,
 ) -> None:
 
     if metadata is None:
@@ -359,8 +358,8 @@ async def confirm_stake_pool_metadata(
 async def confirm_transaction_network_ttl(
     ctx: wire.Context,
     protocol_magic: int,
-    ttl: Optional[int],
-    validity_interval_start: Optional[int],
+    ttl: int | None,
+    validity_interval_start: int | None,
 ) -> None:
     page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     page1.normal("Network:")
@@ -398,8 +397,8 @@ async def show_address(
     ctx: wire.Context,
     address: str,
     address_type: EnumTypeCardanoAddressType,
-    path: List[int],
-    network: Optional[str] = None,
+    path: list[int],
+    network: str | None = None,
 ) -> bool:
     """
     Custom show_address function is needed because cardano addresses don't
@@ -428,7 +427,7 @@ async def show_address(
     for address_line in address_lines[: lines_per_page - lines_used_on_first_page]:
         page1.bold(address_line)
 
-    pages: List[ui.Component] = []
+    pages: list[ui.Component] = []
     pages.append(page1)
     # append remaining pages containing the rest of the address
     pages.extend(
@@ -451,9 +450,9 @@ async def show_address(
 
 
 def _paginate_lines(
-    lines: List[str], offset: int, desc: str, icon: str, lines_per_page: int = 4
-) -> List[ui.Component]:
-    pages: List[ui.Component] = []
+    lines: list[str], offset: int, desc: str, icon: str, lines_per_page: int = 4
+) -> list[ui.Component]:
+    pages: list[ui.Component] = []
     if len(lines) > offset:
         to_pages = list(chunks(lines[offset:], lines_per_page))
         for page in to_pages:
@@ -467,9 +466,9 @@ def _paginate_lines(
 
 async def show_warning_address_foreign_staking_key(
     ctx: wire.Context,
-    account_path: List[int],
-    staking_account_path: List[int],
-    staking_key_hash: Optional[bytes],
+    account_path: list[int],
+    staking_account_path: list[int],
+    staking_key_hash: bytes | None,
 ) -> None:
     page1 = Text("Warning", ui.ICON_WRONG, ui.RED)
     page1.normal("Stake rights associated")

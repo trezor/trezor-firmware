@@ -10,10 +10,10 @@ from trezor import log, utils
 from . import readers, writers
 
 if False:
-    from typing import Any, List, Tuple, Union, Iterator
+    from typing import Any, Union, Iterator, Tuple
 
     Value = Any
-    CborSequence = Union[List[Value], Tuple[Value, ...]]
+    CborSequence = Union[list[Value], Tuple[Value, ...]]
 
 _CBOR_TYPE_MASK = const(0xE0)
 _CBOR_INFO_BITS = const(0x1F)
@@ -214,7 +214,7 @@ class Raw:
 
 
 class IndefiniteLengthArray:
-    def __init__(self, array: List[Value]) -> None:
+    def __init__(self, array: list[Value]) -> None:
         self.array = array
 
     def __eq__(self, other: object) -> bool:

@@ -8,7 +8,7 @@ from .button import Button, ButtonCancel, ButtonClear, ButtonConfirm, ButtonMono
 
 if False:
     from trezor import loop
-    from typing import Iterable, Optional, Tuple
+    from typing import Iterable
 
 
 def digit_area(i: int) -> ui.Area:
@@ -26,7 +26,7 @@ def generate_digits() -> Iterable[int]:
 
 
 class PinInput(ui.Component):
-    def __init__(self, prompt: str, subprompt: Optional[str], pin: str) -> None:
+    def __init__(self, prompt: str, subprompt: str | None, pin: str) -> None:
         super().__init__()
         self.prompt = prompt
         self.subprompt = subprompt
@@ -104,7 +104,7 @@ class PinDialog(ui.Layout):
     def __init__(
         self,
         prompt: str,
-        subprompt: Optional[str],
+        subprompt: str | None,
         allow_cancel: bool = True,
         maxlength: int = 50,
     ) -> None:
@@ -175,7 +175,7 @@ class PinDialog(ui.Layout):
 
     if __debug__:
 
-        def create_tasks(self) -> Tuple[loop.Task, ...]:
+        def create_tasks(self) -> tuple[loop.Task, ...]:
             from apps.debug import input_signal
 
             return super().create_tasks() + (input_signal(),)

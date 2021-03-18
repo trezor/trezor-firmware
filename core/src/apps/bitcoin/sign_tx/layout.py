@@ -9,8 +9,6 @@ from .. import addresses
 from . import omni
 
 if False:
-    from typing import Optional
-
     from trezor import wire
     from trezor.messages.SignTx import EnumTypeAmountUnit
     from trezor.messages.TxOutput import TxOutput
@@ -186,7 +184,7 @@ async def confirm_nondefault_locktime(
     if lock_time_disabled:
         title = "Warning"
         text = "Locktime is set but will\nhave no effect.\n"
-        param: Optional[str] = None
+        param: str | None = None
     elif lock_time < _LOCKTIME_TIMESTAMP_MIN_VALUE:
         title = "Confirm locktime"
         text = "Locktime for this\ntransaction is set to\nblockheight:\n{}"

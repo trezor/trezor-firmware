@@ -5,15 +5,14 @@ from trezor.messages import BackupType
 from trezor.ui.components.tt.text import Text
 
 if False:
-    from typing import Optional, Tuple
     from trezor.messages.ResetDevice import EnumTypeBackupType
 
 
-def get() -> Tuple[Optional[bytes], int]:
+def get() -> tuple[bytes | None, int]:
     return get_secret(), get_type()
 
 
-def get_secret() -> Optional[bytes]:
+def get_secret() -> bytes | None:
     return storage.device.get_mnemonic_secret()
 
 

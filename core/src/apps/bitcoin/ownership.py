@@ -15,7 +15,6 @@ from .scripts import read_bip322_signature_proof, write_bip322_signature_proof
 from .verification import SignatureVerifier
 
 if False:
-    from typing import List, Optional, Tuple
     from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
     from trezor.messages.TxInputType import EnumTypeInputScriptType
     from apps.common.coininfo import CoinInfo
@@ -33,13 +32,13 @@ _OWNERSHIP_ID_KEY_PATH = [b"SLIP-0019", b"Ownership identification key"]
 def generate_proof(
     node: bip32.HDNode,
     script_type: EnumTypeInputScriptType,
-    multisig: Optional[MultisigRedeemScriptType],
+    multisig: MultisigRedeemScriptType | None,
     coin: CoinInfo,
     user_confirmed: bool,
-    ownership_ids: List[bytes],
+    ownership_ids: list[bytes],
     script_pubkey: bytes,
     commitment_data: bytes,
-) -> Tuple[bytes, bytes]:
+) -> tuple[bytes, bytes]:
     flags = 0
     if user_confirmed:
         flags |= _FLAG_USER_CONFIRMED
@@ -67,7 +66,7 @@ def generate_proof(
 def verify_nonownership(
     proof: bytes,
     script_pubkey: bytes,
-    commitment_data: Optional[bytes],
+    commitment_data: bytes | None,
     keychain: Keychain,
     coin: CoinInfo,
 ) -> bool:

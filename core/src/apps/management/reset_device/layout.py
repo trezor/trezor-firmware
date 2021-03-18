@@ -15,7 +15,6 @@ from apps.common.confirm import confirm, require_hold_to_confirm
 
 if False:
     from trezor import loop
-    from typing import List, Tuple
 
 if __debug__:
     from apps import debug
@@ -596,8 +595,8 @@ class MnemonicWordSelect(ui.Layout):
 
     if __debug__:
 
-        def read_content(self) -> List[str]:
+        def read_content(self) -> list[str]:
             return self.text.read_content() + [b.text for b in self.buttons]
 
-        def create_tasks(self) -> Tuple[loop.Task, ...]:
+        def create_tasks(self) -> tuple[loop.Task, ...]:
             return super().create_tasks() + (debug.input_signal(),)

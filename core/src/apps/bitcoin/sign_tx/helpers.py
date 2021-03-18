@@ -31,7 +31,7 @@ from ..writers import TX_HASH_SIZE
 from . import layout
 
 if False:
-    from typing import Any, Awaitable, Optional
+    from typing import Any, Awaitable
     from trezor.messages.SignTx import EnumTypeAmountUnit
 
 
@@ -252,7 +252,7 @@ def confirm_nondefault_locktime(lock_time: int, lock_time_disabled: bool) -> Awa
     return (yield UiConfirmNonDefaultLocktime(lock_time, lock_time_disabled))
 
 
-def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: Optional[bytes] = None) -> Awaitable[PrevTx]:  # type: ignore
+def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[PrevTx]:  # type: ignore
     assert tx_req.details is not None
     tx_req.request_type = TXMETA
     tx_req.details.tx_hash = tx_hash
@@ -262,7 +262,7 @@ def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: Optional[bytes] 
 
 
 def request_tx_extra_data(  # type: ignore
-    tx_req: TxRequest, offset: int, size: int, tx_hash: Optional[bytes] = None
+    tx_req: TxRequest, offset: int, size: int, tx_hash: bytes | None = None
 ) -> Awaitable[bytearray]:
     assert tx_req.details is not None
     tx_req.request_type = TXEXTRADATA
@@ -274,7 +274,7 @@ def request_tx_extra_data(  # type: ignore
     return ack.tx.extra_data_chunk
 
 
-def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: Optional[bytes] = None) -> Awaitable[TxInput]:  # type: ignore
+def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[TxInput]:  # type: ignore
     assert tx_req.details is not None
     if tx_hash:
         tx_req.request_type = TXORIGINPUT
@@ -287,7 +287,7 @@ def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: Optiona
     return sanitize_tx_input(ack.tx.input, coin)
 
 
-def request_tx_prev_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: Optional[bytes] = None) -> Awaitable[PrevInput]:  # type: ignore
+def request_tx_prev_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[PrevInput]:  # type: ignore
     assert tx_req.details is not None
     tx_req.request_type = TXINPUT
     tx_req.details.request_index = i
@@ -297,7 +297,7 @@ def request_tx_prev_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: Op
     return sanitize_tx_prev_input(ack.tx.input, coin)
 
 
-def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: Optional[bytes] = None) -> Awaitable[TxOutput]:  # type: ignore
+def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[TxOutput]:  # type: ignore
     assert tx_req.details is not None
     if tx_hash:
         tx_req.request_type = TXORIGOUTPUT
@@ -310,7 +310,7 @@ def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: Option
     return sanitize_tx_output(ack.tx.output, coin)
 
 
-def request_tx_prev_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: Optional[bytes] = None) -> Awaitable[PrevOutput]:  # type: ignore
+def request_tx_prev_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[PrevOutput]:  # type: ignore
     assert tx_req.details is not None
     tx_req.request_type = TXOUTPUT
     tx_req.details.request_index = i

@@ -12,7 +12,6 @@ from .keychain import validate_path_against_script_type, with_keychain
 from .ownership import generate_proof, get_identifier
 
 if False:
-    from typing import Optional
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
     from .authorization import CoinJoinAuthorization
@@ -27,7 +26,7 @@ async def get_ownership_proof(
     msg: GetOwnershipProof,
     keychain: Keychain,
     coin: CoinInfo,
-    authorization: Optional[CoinJoinAuthorization] = None,
+    authorization: CoinJoinAuthorization | None = None,
 ) -> OwnershipProof:
     if authorization:
         if not authorization.check_get_ownership_proof(msg):

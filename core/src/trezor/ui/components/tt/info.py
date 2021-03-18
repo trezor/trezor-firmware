@@ -6,7 +6,6 @@ from .confirm import CONFIRMED
 from .text import render_text
 
 if False:
-    from typing import Type
     from .button import ButtonContent
 
 
@@ -24,7 +23,7 @@ class DefaultInfoConfirm:
 
 
 if False:
-    InfoConfirmStyleType = Type[DefaultInfoConfirm]
+    InfoConfirmStyleType = type[DefaultInfoConfirm]
 
 
 class InfoConfirm(ui.Layout):

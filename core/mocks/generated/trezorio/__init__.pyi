@@ -69,7 +69,7 @@ class HID:
 
 
 # extmod/modtrezorio/modtrezorio-poll.h
-def poll(ifaces: Iterable[int], list_ref: List, timeout_ms: int) -> bool:
+def poll(ifaces: Iterable[int], list_ref: list, timeout_ms: int) -> bool:
     """
     Wait until one of `ifaces` is ready to read or write (using masks
     `list_ref`:
@@ -120,7 +120,7 @@ class USB:
         """
         """
 
-    def add(self, iface: Union[HID, VCP, WebUSB]) -> None:
+    def add(self, iface: HID | VCP | WebUSB) -> None:
         """
         Registers passed interface into the USB stack.
         """

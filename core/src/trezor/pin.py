@@ -1,11 +1,11 @@
 from trezor import ui, utils
 
 if False:
-    from typing import Any, Optional
+    from typing import Any
 
 
-_previous_progress: Optional[int] = None
-_previous_seconds: Optional[int] = None
+_previous_progress: int | None = None
+_previous_seconds: int | None = None
 keepalive_callback: Any = None
 
 

@@ -12,9 +12,6 @@ from ..common.text import (  # noqa: F401
     render_text,
 )
 
-if False:
-    from typing import List
-
 
 def header(
     title: str,
@@ -87,7 +84,7 @@ class Label(ui.Component):
 
     if __debug__:
 
-        def read_content(self) -> List[str]:
+        def read_content(self) -> list[str]:
             return [self.content]
 
 

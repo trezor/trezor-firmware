@@ -10,10 +10,6 @@ from .text import TEXT_MAX_LINES, Span, Text
 if __debug__:
     from apps.debug import confirm_signal, swipe_signal, notify_layout_change
 
-if False:
-    from typing import List, Tuple, Union
-
-
 _PAGINATED_LINE_WIDTH = const(204)
 
 
@@ -54,7 +50,7 @@ def render_swipe_text() -> None:
 
 class Paginated(ui.Layout):
     def __init__(
-        self, pages: List[ui.Component], page: int = 0, one_by_one: bool = False
+        self, pages: list[ui.Component], page: int = 0, one_by_one: bool = False
     ):
         super().__init__()
         self.pages = pages
@@ -102,8 +98,8 @@ class Paginated(ui.Layout):
 
         self.on_change()
 
-    def create_tasks(self) -> Tuple[loop.Task, ...]:
-        tasks: Tuple[loop.Task, ...] = (
+    def create_tasks(self) -> tuple[loop.Task, ...]:
+        tasks: tuple[loop.Task, ...] = (
             self.handle_input(),
             self.handle_rendering(),
             self.handle_paging(),
@@ -124,7 +120,7 @@ class Paginated(ui.Layout):
 
     if __debug__:
 
-        def read_content(self) -> List[str]:
+        def read_content(self) -> list[str]:
             return self.pages[self.page].read_content()
 
 
@@ -186,13 +182,13 @@ class PageWithButtons(ui.Component):
 
     if __debug__:
 
-        def read_content(self) -> List[str]:
+        def read_content(self) -> list[str]:
             return self.content.read_content()
 
 
 class PaginatedWithButtons(ui.Layout):
     def __init__(
-        self, pages: List[ui.Component], page: int = 0, one_by_one: bool = False
+        self, pages: list[ui.Component], page: int = 0, one_by_one: bool = False
     ) -> None:
         super().__init__()
         self.pages = [
@@ -230,10 +226,10 @@ class PaginatedWithButtons(ui.Layout):
 
     if __debug__:
 
-        def read_content(self) -> List[str]:
+        def read_content(self) -> list[str]:
             return self.pages[self.page].read_content()
 
-        def create_tasks(self) -> Tuple[loop.Task, ...]:
+        def create_tasks(self) -> tuple[loop.Task, ...]:
             return super().create_tasks() + (confirm_signal(),)
 
 
@@ -244,7 +240,7 @@ def paginate_text(
     header_icon: str = ui.ICON_DEFAULT,
     icon_color: int = ui.ORANGE_ICON,
     break_words: bool = False,
-) -> Union[Confirm, Paginated]:
+) -> Confirm | Paginated:
     span = Span(text, 0, font, break_words=break_words)
     if span.count_lines() <= TEXT_MAX_LINES:
         result = Text(
@@ -258,7 +254,7 @@ def paginate_text(
         return Confirm(result)
 
     else:
-        pages: List[ui.Component] = []
+        pages: list[ui.Component] = []
         span.reset(
             text, 0, font, break_words=break_words, line_width=_PAGINATED_LINE_WIDTH
         )

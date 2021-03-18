@@ -28,7 +28,7 @@
 
 /// package: trezorio.__init__
 
-/// def poll(ifaces: Iterable[int], list_ref: List, timeout_ms: int) -> bool:
+/// def poll(ifaces: Iterable[int], list_ref: list, timeout_ms: int) -> bool:
 ///     """
 ///     Wait until one of `ifaces` is ready to read or write (using masks
 //      `io.POLL_READ` and `io.POLL_WRITE`) and assign the result into

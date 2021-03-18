@@ -3,9 +3,6 @@ from storage.sd_salt import SD_CARD_HOT_SWAPPABLE
 from trezor import fatfs, sdcard, ui, wire
 from trezor.ui.layouts import confirm_action, show_error_and_raise
 
-if False:
-    from typing import Optional
-
 
 class SdCardUnavailable(wire.ProcessError):
     pass
@@ -160,7 +157,7 @@ async def ensure_sdcard(
 
 async def request_sd_salt(
     ctx: wire.GenericContext = wire.DUMMY_CONTEXT,
-) -> Optional[bytearray]:
+) -> bytearray | None:
     if not storage.sd_salt.is_enabled():
         return None
 

@@ -10,7 +10,7 @@ if __debug__:
     from apps.debug import swipe_signal, confirm_signal
 
 if False:
-    from typing import Any, List, Tuple, Optional
+    from typing import Any
     from .button import ButtonContent, ButtonStyleType
     from trezor.ui.loader import LoaderStyleType
 
@@ -24,15 +24,15 @@ class Confirm(ConfirmBase):
     def __init__(
         self,
         content: ui.Component,
-        confirm: Optional[ButtonContent] = DEFAULT_CONFIRM,
+        confirm: ButtonContent | None = DEFAULT_CONFIRM,
         confirm_style: ButtonStyleType = DEFAULT_CONFIRM_STYLE,
-        cancel: Optional[ButtonContent] = DEFAULT_CANCEL,
+        cancel: ButtonContent | None = DEFAULT_CANCEL,
         cancel_style: ButtonStyleType = DEFAULT_CANCEL_STYLE,
         major_confirm: bool = False,
     ) -> None:
         self.content = content
-        button_confirm: Optional[Button] = None
-        button_cancel: Optional[Button] = None
+        button_confirm: Button | None = None
+        button_cancel: Button | None = None
 
         if confirm is not None:
             if cancel is None:
@@ -111,7 +111,7 @@ class ConfirmPageable(Confirm):
         if self.cancel is not None:
             self.cancel.repaint = True
 
-    def create_tasks(self) -> Tuple[loop.Task, ...]:
+    def create_tasks(self) -> tuple[loop.Task, ...]:
         tasks = super().create_tasks()
         if self.pageable.page_count() > 1:
             return tasks + (self.handle_paging(),)
@@ -192,10 +192,10 @@ class InfoConfirm(ui.Layout):
 
     if __debug__:
 
-        def read_content(self) -> List[str]:
+        def read_content(self) -> list[str]:
             return self.content.read_content()
 
-        def create_tasks(self) -> Tuple[loop.Task, ...]:
+        def create_tasks(self) -> tuple[loop.Task, ...]:
             return super().create_tasks() + (confirm_signal(),)
 
 
@@ -269,8 +269,8 @@ class HoldToConfirm(ui.Layout):
 
     if __debug__:
 
-        def read_content(self) -> List[str]:
+        def read_content(self) -> list[str]:
             return self.content.read_content()
 
-        def create_tasks(self) -> Tuple[loop.Task, ...]:
+        def create_tasks(self) -> tuple[loop.Task, ...]:
             return super().create_tasks() + (confirm_signal(),)

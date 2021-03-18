@@ -29,7 +29,6 @@ if False:
         Any,
         Iterable,
         Iterator,
-        Optional,
         Protocol,
         Union,
         TypeVar,
@@ -62,7 +61,7 @@ def unimport_end(mods: Iterable[str]) -> None:
     gc.collect()
 
 
-def ensure(cond: bool, msg: Optional[str] = None) -> None:
+def ensure(cond: bool, msg: str | None = None) -> None:
     if not cond:
         if msg is None:
             raise AssertionError
@@ -182,7 +181,7 @@ class BufferReader:
         self.offset += nread
         return nread
 
-    def read(self, length: Optional[int] = None) -> bytes:
+    def read(self, length: int | None = None) -> bytes:
         """Read and return exactly `length` bytes, or raise EOFError.
 
         If `length` is unspecified, reads all remaining data.

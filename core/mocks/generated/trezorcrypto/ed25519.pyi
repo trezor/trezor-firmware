@@ -40,14 +40,14 @@ def verify(public_key: bytes, signature: bytes, message: bytes) -> bool:
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-ed25519.h
-def cosi_combine_publickeys(public_keys: List[bytes]) -> bytes:
+def cosi_combine_publickeys(public_keys: list[bytes]) -> bytes:
     """
     Combines a list of public keys used in COSI cosigning scheme.
     """
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-ed25519.h
-def cosi_combine_signatures(R: bytes, signatures: List[bytes]) -> bytes:
+def cosi_combine_signatures(R: bytes, signatures: list[bytes]) -> bytes:
     """
     Combines a list of signatures used in COSI cosigning scheme.
     """

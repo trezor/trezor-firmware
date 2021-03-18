@@ -11,7 +11,7 @@ from ...constants import (
 )
 
 if False:
-    from typing import Any, List, Optional, Union
+    from typing import Any, Union
 
     TextContent = Union[str, int]
 
@@ -172,7 +172,7 @@ _WORKING_SPAN = Span()
 
 
 def render_text(
-    items: List[TextContent],
+    items: list[TextContent],
     new_lines: bool,
     max_lines: int,
     font: int = ui.NORMAL,
@@ -329,7 +329,7 @@ if __debug__:
         """
 
         def __init__(self) -> None:
-            self.screen_contents: List[str] = []
+            self.screen_contents: list[str] = []
             self.orig_display = ui.display
 
         def __getattr__(self, key: str) -> Any:
@@ -350,7 +350,7 @@ if __debug__:
             fg: int,
             bg: int,
             start: int = 0,
-            length: Optional[int] = None,
+            length: int | None = None,
         ) -> None:
             if length is None:
                 length = len(string) - start
@@ -379,7 +379,7 @@ class TextBase(ui.Component):
         self.new_lines = new_lines
         self.break_words = break_words
         self.render_page_overflow = render_page_overflow
-        self.content: List[TextContent] = []
+        self.content: list[TextContent] = []
         self.content_offset = content_offset
         self.char_offset = char_offset
         self.line_width = line_width
@@ -423,7 +423,7 @@ class TextBase(ui.Component):
 
     if __debug__:
 
-        def read_content(self) -> List[str]:
+        def read_content(self) -> list[str]:
             display_mock = DisplayMock()
             should_repaint = self.repaint
             try:
@@ -471,7 +471,7 @@ class Label(ui.Component):
 
     if __debug__:
 
-        def read_content(self) -> List[str]:
+        def read_content(self) -> list[str]:
             return [self.content]
 
 

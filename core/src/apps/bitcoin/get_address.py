@@ -11,7 +11,6 @@ from .keychain import validate_path_against_script_type, with_keychain
 from .multisig import multisig_pubkey_index
 
 if False:
-    from typing import List
     from trezor.messages.GetAddress import GetAddress
     from trezor.messages.HDNodeType import HDNodeType
     from trezor import wire
@@ -20,8 +19,8 @@ if False:
 
 
 def _get_xpubs(
-    coin: CoinInfo, xpub_magic: int, pubnodes: List[HDNodeType]
-) -> List[str]:
+    coin: CoinInfo, xpub_magic: int, pubnodes: list[HDNodeType]
+) -> list[str]:
     result = []
     for pubnode in pubnodes:
         node = bip32.HDNode(

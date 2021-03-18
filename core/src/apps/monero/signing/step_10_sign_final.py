@@ -17,7 +17,6 @@ from apps.monero.xmr.crypto import chacha_poly
 from .state import State
 
 if False:
-    from typing import Tuple
     from apps.monero.xmr.types import Sc25519
 
 
@@ -48,7 +47,7 @@ def final_msg(state: State) -> MoneroTransactionFinalAck:
 
 def _compute_tx_key(
     spend_key_private: Sc25519, tx_prefix_hash: bytes
-) -> Tuple[bytes, bytes, bytes]:
+) -> tuple[bytes, bytes, bytes]:
     salt = crypto.random_bytes(32)
 
     rand_mult_num = crypto.random_scalar()

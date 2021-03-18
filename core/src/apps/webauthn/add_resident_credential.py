@@ -10,9 +10,6 @@ from .confirm import ConfirmContent, ConfirmInfo
 from .credential import Fido2Credential
 from .resident_credentials import store_resident_credential
 
-if False:
-    from typing import Optional
-
 
 class ConfirmAddCredential(ConfirmInfo):
     def __init__(self, cred: Fido2Credential):
@@ -26,7 +23,7 @@ class ConfirmAddCredential(ConfirmInfo):
     def app_name(self) -> str:
         return self._cred.app_name()
 
-    def account_name(self) -> Optional[str]:
+    def account_name(self) -> str | None:
         return self._cred.account_name()
 
 

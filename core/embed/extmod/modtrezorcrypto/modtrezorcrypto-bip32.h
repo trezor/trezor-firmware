@@ -49,9 +49,9 @@ STATIC const mp_obj_type_t mod_trezorcrypto_HDNode_type;
 ///     fingerprint: int,
 ///     child_num: int,
 ///     chain_code: bytes,
-///     private_key: Optional[bytes] = None,
-///     public_key: Optional[bytes] = None,
-///     curve_name: Optional[str] = None,
+///     private_key: bytes | None = None,
+///     public_key: bytes | None = None,
+///     curve_name: str | None = None,
 /// ) -> None:
 ///     """
 ///     """

@@ -10,7 +10,7 @@ from apps.common import coininfo
 from .. import scripts, writers
 
 if False:
-    from typing import List, Union, Protocol
+    from typing import Protocol
 
     class Hash143(Protocol):
         def add_input(self, txi: TxInput) -> None:
@@ -22,9 +22,9 @@ if False:
         def preimage_hash(
             self,
             txi: TxInput,
-            public_keys: List[bytes],
+            public_keys: list[bytes],
             threshold: int,
-            tx: Union[SignTx, PrevTx],
+            tx: SignTx | PrevTx,
             coin: coininfo.CoinInfo,
             sighash_type: int,
         ) -> bytes:
@@ -51,9 +51,9 @@ class Bip143Hash:
     def preimage_hash(
         self,
         txi: TxInput,
-        public_keys: List[bytes],
+        public_keys: list[bytes],
         threshold: int,
-        tx: Union[SignTx, PrevTx],
+        tx: SignTx | PrevTx,
         coin: coininfo.CoinInfo,
         sighash_type: int,
     ) -> bytes:

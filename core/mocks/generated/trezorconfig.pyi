@@ -3,7 +3,7 @@ from typing import *
 
 # extmod/modtrezorconfig/modtrezorconfig.c
 def init(
-   ui_wait_callback: Optional[Callable[[int, int, str], bool]] = None
+   ui_wait_callback: Callable[[int, int, str], bool] | None = None
 ) -> None:
     """
     Initializes the storage.  Must be called before any other method is
@@ -12,7 +12,7 @@ def init(
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
-def unlock(pin: str, ext_salt: Optional[bytes]) -> bool:
+def unlock(pin: str, ext_salt: bytes | None) -> bool:
     """
     Attempts to unlock the storage with the given PIN and external salt.
     Returns True on success, False on failure.
@@ -20,7 +20,7 @@ def unlock(pin: str, ext_salt: Optional[bytes]) -> bool:
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
-def check_pin(pin: str, ext_salt: Optional[bytes]) -> bool:
+def check_pin(pin: str, ext_salt: bytes | None) -> bool:
     """
     Check the given PIN with the given external salt.
     Returns True on success, False on failure.
@@ -59,8 +59,8 @@ def get_pin_rem() -> int:
 def change_pin(
     oldpin: str,
     newpin: str,
-    old_ext_salt: Optional[bytes],
-    new_ext_salt: Optional[bytes],
+    old_ext_salt: bytes | None,
+    new_ext_salt: bytes | None,
 ) -> bool:
     """
     Change PIN and external salt. Returns True on success, False on failure.
@@ -84,7 +84,7 @@ def has_wipe_code() -> bool:
 # extmod/modtrezorconfig/modtrezorconfig.c
 def change_wipe_code(
     pin: str,
-    ext_salt: Optional[bytes],
+    ext_salt: bytes | None,
     wipe_code: str,
 ) -> bool:
     """
@@ -93,7 +93,7 @@ def change_wipe_code(
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
-def get(app: int, key: int, public: bool = False) -> Optional[bytes]:
+def get(app: int, key: int, public: bool = False) -> bytes | None:
     """
     Gets the value of the given key for the given app (or None if not set).
     Raises a RuntimeError if decryption or authentication of the stored

@@ -1,8 +1,5 @@
 from trezor import ui
 
-if False:
-    from typing import List
-
 
 class Container(ui.Component):
     def __init__(self, *children: ui.Component):
@@ -15,5 +12,5 @@ class Container(ui.Component):
 
     if __debug__:
 
-        def read_content(self) -> List[str]:
+        def read_content(self) -> list[str]:
             return sum((c.read_content() for c in self.children), [])

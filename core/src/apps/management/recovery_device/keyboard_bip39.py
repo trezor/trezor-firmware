@@ -9,7 +9,6 @@ from trezor.ui.components.tt.button import (
 )
 
 if False:
-    from typing import Optional, Tuple
     from trezor.ui.components.tt.button import ButtonContent, ButtonStyleStateType
 
 
@@ -120,7 +119,7 @@ class Bip39Keyboard(ui.Layout):
                 ("abc", "def", "ghi", "jkl", "mno", "pqr", "stu", "vwx", "yz")
             )
         ]
-        self.pending_button: Optional[Button] = None
+        self.pending_button: Button | None = None
         self.pending_index = 0
 
     def dispatch(self, event: int, x: int, y: int) -> None:
@@ -172,7 +171,7 @@ class Bip39Keyboard(ui.Layout):
         # Word was confirmed by the user.
         raise ui.Result(word)
 
-    def edit(self, text: str, button: Optional[Button] = None, index: int = 0) -> None:
+    def edit(self, text: str, button: Button | None = None, index: int = 0) -> None:
         self.pending_button = button
         self.pending_index = index
 
@@ -217,7 +216,7 @@ class Bip39Keyboard(ui.Layout):
 
     if __debug__:
 
-        def create_tasks(self) -> Tuple[loop.Task, ...]:
+        def create_tasks(self) -> tuple[loop.Task, ...]:
             from apps.debug import input_signal
 
             return super().create_tasks() + (input_signal(),)

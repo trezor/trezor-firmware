@@ -20,7 +20,6 @@ from apps.monero.xmr import crypto
 from .state import State
 
 if False:
-    from typing import List
     from trezor.messages.MoneroTransactionSourceEntry import (
         MoneroTransactionSourceEntry,
     )
@@ -225,7 +224,7 @@ async def sign_input(
     )
 
 
-def _protect_signature(state: State, mg_buffer: List[bytes]) -> List[bytes]:
+def _protect_signature(state: State, mg_buffer: list[bytes]) -> list[bytes]:
     """
     Encrypts the signature with keys derived from state.opening_key.
     After protocol finishes without error, opening_key is sent to the

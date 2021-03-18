@@ -1,8 +1,5 @@
 from trezor.utils import BufferReader
 
-if False:
-    from typing import List
-
 
 def encode_length(l: int) -> bytes:
     if l < 0x80:
@@ -75,7 +72,7 @@ def encode_seq(seq: tuple) -> bytes:
     return b"\x30" + encode_length(len(res)) + res
 
 
-def decode_seq(data: bytes) -> List[bytes]:
+def decode_seq(data: bytes) -> list[bytes]:
     r = BufferReader(data)
 
     if r.get() != 0x30:

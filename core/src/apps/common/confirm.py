@@ -15,7 +15,7 @@ if __debug__:
 
 
 if False:
-    from typing import Any, Callable, Optional
+    from typing import Any, Callable
     from trezor import ui
     from trezor.ui.components.tt.confirm import ButtonContent, ButtonStyleType
     from trezor.ui.loader import LoaderStyleType
@@ -26,9 +26,9 @@ async def confirm(
     ctx: wire.GenericContext,
     content: ui.Component,
     code: EnumTypeButtonRequestType = ButtonRequestType.Other,
-    confirm: Optional[ButtonContent] = Confirm.DEFAULT_CONFIRM,
+    confirm: ButtonContent | None = Confirm.DEFAULT_CONFIRM,
     confirm_style: ButtonStyleType = Confirm.DEFAULT_CONFIRM_STYLE,
-    cancel: Optional[ButtonContent] = Confirm.DEFAULT_CANCEL,
+    cancel: ButtonContent | None = Confirm.DEFAULT_CANCEL,
     cancel_style: ButtonStyleType = Confirm.DEFAULT_CANCEL_STYLE,
     major_confirm: bool = False,
 ) -> bool:

@@ -51,9 +51,9 @@ class FatFSFile:
     from types import TracebackType
 
     def __exit__(
-        self, type: Optional[Type[BaseException]],
-        value: Optional[BaseException],
-        traceback: Optional[TracebackType],
+        self, type: type[BaseException] | None,
+        value: BaseException | None,
+        traceback: TracebackType | None,
     ) -> None:
         """
         Close an open file object
@@ -69,7 +69,7 @@ class FatFSFile:
         Read data from the file
         """
 
-    def write(self, data: Union[bytes, bytearray]) -> int:
+    def write(self, data: bytes | bytearray) -> int:
         """
         Write data to the file
         """
@@ -91,12 +91,12 @@ class FatFSFile:
 
 
 # extmod/modtrezorio/modtrezorio-fatfs.h
-class FatFSDir(Iterator[Tuple[int, str, str]]):
+class FatFSDir(Iterator[tuple[int, str, str]]):
     """
     Class encapsulating directory
     """
 
-    def __next__(self) -> Tuple[int, str, str]:
+    def __next__(self) -> tuple[int, str, str]:
         """
         Read an entry in the directory
         """
@@ -131,7 +131,7 @@ def unlink(path: str) -> None:
 
 
 # extmod/modtrezorio/modtrezorio-fatfs.h
-def stat(path: str) -> Tuple[int, str, str]:
+def stat(path: str) -> tuple[int, str, str]:
     """
     Get file status
     """

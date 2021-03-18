@@ -10,8 +10,6 @@ from apps.common.keychain import get_keychain
 from apps.common.paths import AlwaysMatchingSchema
 
 if False:
-    from typing import Optional, Union
-
     from trezor.messages.IdentityType import IdentityType
     from trezor.messages.SignIdentity import SignIdentity
 
@@ -36,7 +34,7 @@ async def sign_identity(ctx: wire.Context, msg: SignIdentity) -> SignedIdentity:
     coin = coininfo.by_name("Bitcoin")
     if msg.ecdsa_curve_name == "secp256k1":
         # hardcoded bitcoin address type
-        address: Optional[str] = node.address(coin.address_type)
+        address: str | None = node.address(coin.address_type)
     else:
         address = None
     pubkey = node.public_key()
@@ -81,7 +79,7 @@ async def sign_identity(ctx: wire.Context, msg: SignIdentity) -> SignedIdentity:
 
 
 async def require_confirm_sign_identity(
-    ctx: wire.Context, identity: IdentityType, challenge_visual: Optional[str]
+    ctx: wire.Context, identity: IdentityType, challenge_visual: str | None
 ) -> None:
     proto = identity.proto.upper() if identity.proto else "identity"
     await confirm_sign_identity(
@@ -124,7 +122,7 @@ def sign_challenge(
     seckey: bytes,
     challenge_hidden: bytes,
     challenge_visual: str,
-    sigtype: Union[str, coininfo.CoinInfo],
+    sigtype: str | coininfo.CoinInfo,
     curve: str,
 ) -> bytes:
     from trezor.crypto.hashlib import sha256
