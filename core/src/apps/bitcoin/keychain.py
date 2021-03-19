@@ -1,3 +1,5 @@
+import gc
+
 from trezor import wire
 from trezor.messages import InputScriptType as I
 
@@ -113,7 +115,7 @@ def validate_path_against_script_type(
             patterns.append(PATTERN_GREENADDRESS_B)
 
     return any(
-        PathSchema(pattern, coin.slip44).match(address_n) for pattern in patterns
+        PathSchema.parse(pattern, coin.slip44).match(address_n) for pattern in patterns
     )
 
 
@@ -151,15 +153,16 @@ def get_schemas_for_coin(coin: coininfo.CoinInfo) -> Iterable[PathSchema]:
             )
         )
 
-    schemas = [PathSchema(pattern, coin.slip44) for pattern in patterns]
+    schemas = [PathSchema.parse(pattern, coin.slip44) for pattern in patterns]
 
     # some wallets such as Electron-Cash (BCH) store coins on Bitcoin paths
     # we can allow spending these coins from Bitcoin paths if the coin has
     # implemented strong replay protection via SIGHASH_FORKID
     if coin.fork_id is not None:
-        schemas.extend(PathSchema(pattern, 0) for pattern in patterns)
+        schemas.extend(PathSchema.parse(pattern, 0) for pattern in patterns)
 
-    return schemas
+    gc.collect()
+    return [schema.copy() for schema in schemas]
 
 
 def get_coin_by_name(coin_name: str | None) -> coininfo.CoinInfo:

@@ -41,7 +41,8 @@ def _schemas_from_address_n(
         return ()
 
     slip44_id = slip44_hardened - HARDENED
-    return (paths.PathSchema(pattern, slip44_id) for pattern in patterns)
+    schemas = [paths.PathSchema.parse(pattern, slip44_id) for pattern in patterns]
+    return [s.copy() for s in schemas]
 
 
 def with_keychain_from_path(
@@ -79,7 +80,10 @@ def _schemas_from_chain_id(msg: EthereumSignTx) -> Iterable[paths.PathSchema]:
     else:
         slip44_id = (info.slip44,)
 
-    return (paths.PathSchema(pattern, slip44_id) for pattern in PATTERNS_ADDRESS)
+    schemas = [
+        paths.PathSchema.parse(pattern, slip44_id) for pattern in PATTERNS_ADDRESS
+    ]
+    return [s.copy() for s in schemas]
 
 
 def with_keychain_from_chain_id(
