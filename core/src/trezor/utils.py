@@ -146,6 +146,9 @@ def chunks_intersperse(
 if False:
 
     class HashContext(Protocol):
+        def __init__(self, data: bytes = None) -> None:
+            ...
+
         def update(self, buf: bytes) -> None:
             ...
 

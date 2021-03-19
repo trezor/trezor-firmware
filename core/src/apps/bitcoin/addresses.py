@@ -97,7 +97,7 @@ def address_multisig_p2wsh(pubkeys: list[bytes], m: int, hrp: str) -> str:
 
 
 def address_pkh(pubkey: bytes, coin: CoinInfo) -> str:
-    s = address_type.tobytes(coin.address_type) + coin.script_hash(pubkey)
+    s = address_type.tobytes(coin.address_type) + coin.script_hash(pubkey).digest()
     return base58.encode_check(bytes(s), coin.b58_hash)
 
 
@@ -109,13 +109,13 @@ def address_p2sh(redeem_script_hash: bytes, coin: CoinInfo) -> str:
 def address_p2wpkh_in_p2sh(pubkey: bytes, coin: CoinInfo) -> str:
     pubkey_hash = ecdsa_hash_pubkey(pubkey, coin)
     redeem_script = output_script_native_p2wpkh_or_p2wsh(pubkey_hash)
-    redeem_script_hash = coin.script_hash(redeem_script)
+    redeem_script_hash = coin.script_hash(redeem_script).digest()
     return address_p2sh(redeem_script_hash, coin)
 
 
 def address_p2wsh_in_p2sh(witness_script_hash: bytes, coin: CoinInfo) -> str:
     redeem_script = output_script_native_p2wpkh_or_p2wsh(witness_script_hash)
-    redeem_script_hash = coin.script_hash(redeem_script)
+    redeem_script_hash = coin.script_hash(redeem_script).digest()
     return address_p2sh(redeem_script_hash, coin)
 
 

@@ -60,7 +60,7 @@ class SignatureVerifier:
                 write_input_script_p2wpkh_in_p2sh(w, pubkey_hash)
                 if w != script_sig:
                     raise wire.DataError("Invalid public key hash")
-                script_hash = coin.script_hash(script_sig[1:])
+                script_hash = coin.script_hash(script_sig[1:]).digest()
                 if output_script_p2sh(script_hash) != script_pubkey:
                     raise wire.DataError("Invalid script hash")
                 self.public_keys = [public_key]
@@ -72,7 +72,7 @@ class SignatureVerifier:
                 write_input_script_p2wsh_in_p2sh(w, script_hash)
                 if w != script_sig:
                     raise wire.DataError("Invalid script hash")
-                script_hash = coin.script_hash(script_sig[1:])
+                script_hash = coin.script_hash(script_sig[1:]).digest()
                 if output_script_p2sh(script_hash) != script_pubkey:
                     raise wire.DataError("Invalid script hash")
                 self.public_keys, self.threshold = parse_output_script_multisig(script)
@@ -88,7 +88,7 @@ class SignatureVerifier:
                 self.signatures = [(signature, hash_type)]
             elif len(script_pubkey) == 23:  # P2SH
                 script, self.signatures = parse_input_script_multisig(script_sig)
-                script_hash = coin.script_hash(script)
+                script_hash = coin.script_hash(script).digest()
                 if output_script_p2sh(script_hash) != script_pubkey:
                     raise wire.DataError("Invalid script hash")
                 self.public_keys, self.threshold = parse_output_script_multisig(script)
