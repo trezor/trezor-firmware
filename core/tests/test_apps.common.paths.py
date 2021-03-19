@@ -68,7 +68,7 @@ class TestPathSchemas(unittest.TestCase):
 
     def test_pattern_fixed(self):
         pattern = "m/44'/0'/0'/0/0"
-        schema = PathSchema(pattern, 0)
+        schema = PathSchema.parse(pattern, 0)
 
         self.assertMatch(schema, [H_(44), H_(0), H_(0), 0, 0])
 
@@ -88,8 +88,8 @@ class TestPathSchemas(unittest.TestCase):
     def test_ranges_sets(self):
         pattern_ranges = "m/44'/[100-109]'/[0-20]"
         pattern_sets = "m/44'/[100,105,109]'/[0,10,20]"
-        schema_ranges = PathSchema(pattern_ranges, 0)
-        schema_sets = PathSchema(pattern_sets, 0)
+        schema_ranges = PathSchema.parse(pattern_ranges, 0)
+        schema_sets = PathSchema.parse(pattern_sets, 0)
 
         paths_good = [
             [H_(44), H_(100), 0],
@@ -125,13 +125,13 @@ class TestPathSchemas(unittest.TestCase):
     def test_brackets(self):
         pattern_a = "m/[0]'/[0-5]'/[0,1,2]'/[0]/[0-5]/[0,1,2]"
         pattern_b = "m/0'/0-5'/0,1,2'/0/0-5/0,1,2"
-        schema_a = PathSchema(pattern_a, 0)
-        schema_b = PathSchema(pattern_b, 0)
+        schema_a = PathSchema.parse(pattern_a, 0)
+        schema_b = PathSchema.parse(pattern_b, 0)
         self.assertEqualSchema(schema_a, schema_b)
 
     def test_wildcard(self):
         pattern = "m/44'/0'/*"
-        schema = PathSchema(pattern, 0)
+        schema = PathSchema.parse(pattern, 0)
 
         paths_good = [
             [H_(44), H_(0)],
@@ -152,11 +152,31 @@ class TestPathSchemas(unittest.TestCase):
     def test_substitutes(self):
         pattern_sub = "m/44'/coin_type'/account'/change/address_index"
         pattern_plain = "m/44'/19'/0-100'/0,1/0-1000000"
-        schema_sub = PathSchema(pattern_sub, slip44_id=19)
+        schema_sub = PathSchema.parse(pattern_sub, slip44_id=19)
         # use wrong slip44 id to ensure it doesn't affect anything
-        schema_plain = PathSchema(pattern_plain, slip44_id=0)
+        schema_plain = PathSchema.parse(pattern_plain, slip44_id=0)
 
         self.assertEqualSchema(schema_sub, schema_plain)
+
+    def test_copy(self):
+        schema_normal = PathSchema.parse("m/44'/0'/0'/0/0", slip44_id=0)
+        self.assertEqualSchema(schema_normal, schema_normal.copy())
+
+        schema_wildcard = PathSchema.parse("m/44'/0'/0'/0/**", slip44_id=0)
+        self.assertEqualSchema(schema_wildcard, schema_wildcard.copy())
+
+    def test_parse(self):
+        schema_parsed = PathSchema.parse("m/44'/0-5'/0,1,2'/0/**", slip44_id=0)
+        schema_manual = PathSchema(
+            [
+                (H_(44),),
+                Interval(H_(0), H_(5)),
+                set((H_(0), H_(1), H_(2))),
+                (0,),
+            ],
+            trailing_components=Interval(0, 0xFFFF_FFFF),
+        )
+        self.assertEqualSchema(schema_manual, schema_parsed)
 
 
 if __name__ == "__main__":

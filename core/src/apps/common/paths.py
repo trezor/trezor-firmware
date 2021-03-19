@@ -104,7 +104,63 @@ class PathSchema:
         "**": Interval(0, 0xFFFF_FFFF),
     }
 
-    def __init__(self, pattern: str, slip44_id: int | Iterable[int]) -> None:
+    _EMPTY_TUPLE = ()
+
+    @staticmethod
+    def _parse_hardened(s: str) -> int:
+        return int(s) | HARDENED
+
+    @staticmethod
+    def _copy_container(container: Container[int]) -> Container[int]:
+        if isinstance(container, Interval):
+            return Interval(container.min, container.max)
+        if isinstance(container, set):
+            return set(container)
+        if isinstance(container, tuple):
+            return container[:]
+        raise RuntimeError("Unsupported container for copy")
+
+    def __init__(
+        self,
+        schema: list[Container[int]],
+        trailing_components: Container[int] = (),
+        compact: bool = False,
+    ) -> None:
+        """Create a new PathSchema from a list of containers and trailing components.
+
+        Mainly for internal use in `PathSchema.parse`, which is the method you should
+        be using.
+
+        Can be used to create a schema manually without parsing a path string:
+
+        >>> SCHEMA_MINE = PathSchema([
+        >>>         (44 | HARDENED,),
+        >>>         (0 | HARDENED,),
+        >>>         Interval(0 | HARDENED, 10 | HARDENED),
+        >>>     ],
+        >>>     trailing_components=Interval(0, 0xFFFF_FFFF),
+        >>> )
+
+        Setting `compact=True` creates a compact copy of the provided components, so
+        as to prevent memory fragmentation.
+        """
+        if compact:
+            self.schema: list[Container[int]] = [self._EMPTY_TUPLE] * len(schema)
+            for i in range(len(schema)):
+                self.schema[i] = self._copy_container(schema[i])
+            self.trailing_components = self._copy_container(trailing_components)
+
+        else:
+            self.schema = schema
+            self.trailing_components = trailing_components
+
+    @classmethod
+    def parse(cls, pattern: str, slip44_id: int | Iterable[int]) -> "PathSchema":
+        """Parse a path schema string into a PathSchema instance.
+
+        The parsing process trashes the memory layout, so at the end a compact-allocated
+        copy of the resulting structures is returned.
+        """
         if not pattern.startswith("m/"):
             raise ValueError  # unsupported path template
         components = pattern[2:].split("/")
@@ -112,24 +168,24 @@ class PathSchema:
         if isinstance(slip44_id, int):
             slip44_id = (slip44_id,)
 
-        self.schema: list[Container[int]] = []
-        self.trailing_components: Container[int] = ()
+        schema: list[Container[int]] = []
+        trailing_components: Container[int] = ()
 
         for component in components:
-            if component in self.WILDCARD_RANGES:
-                if len(self.schema) != len(components) - 1:
-                    # every component should have resulted in extending self.schema
-                    # so if self.schema does not have the appropriate length (yet),
+            if component in cls.WILDCARD_RANGES:
+                if len(schema) != len(components) - 1:
+                    # every component should have resulted in extending schema
+                    # so if schema does not have the appropriate length (yet),
                     # the asterisk is not the last item
                     raise ValueError  # asterisk is not last item of pattern
 
-                self.trailing_components = self.WILDCARD_RANGES[component]
+                trailing_components = cls.WILDCARD_RANGES[component]
                 break
 
             # figure out if the component is hardened
             if component[-1] == "'":
                 component = component[:-1]
-                parse: Callable[[Any], int] = lambda s: int(s) | HARDENED  # noqa: E731
+                parse: Callable[[Any], int] = cls._parse_hardened
             else:
                 parse = int
 
@@ -138,24 +194,37 @@ class PathSchema:
                 component = component[1:-1]
 
             # optionally replace a keyword
-            component = self.REPLACEMENTS.get(component, component)
+            component = cls.REPLACEMENTS.get(component, component)
 
             if "-" in component:
                 # parse as a range
                 a, b = [parse(s) for s in component.split("-", 1)]
-                self.schema.append(Interval(a, b))
+                schema.append(Interval(a, b))
 
             elif "," in component:
                 # parse as a list of values
-                self.schema.append(set(parse(s) for s in component.split(",")))
+                schema.append(set(parse(s) for s in component.split(",")))
 
             elif component == "coin_type":
                 # substitute SLIP-44 ids
-                self.schema.append(set(parse(s) for s in slip44_id))
+                schema.append(set(parse(s) for s in slip44_id))
 
             else:
                 # plain constant
-                self.schema.append((parse(component),))
+                schema.append((parse(component),))
+
+        return cls(schema, trailing_components, compact=True)
+
+    def copy(self) -> "PathSchema":
+        """Create a compact copy of the schema.
+
+        Useful when creating multiple schemas in a row. The following code ensures
+        that the set of schemas is allocated in a contiguous block of memory:
+
+        >>> some_schemas = make_multiple_schemas()
+        >>> some_schemas = [s.copy() for s in some_schemas]
+        """
+        return PathSchema(self.schema, self.trailing_components, compact=True)
 
     def match(self, path: Bip32Path) -> bool:
         # The path must not be _shorter_ than schema. It may be longer.
