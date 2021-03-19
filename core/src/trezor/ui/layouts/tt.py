@@ -5,13 +5,15 @@ from trezor import ui, wire
 from trezor.enums import ButtonRequestType
 from trezor.ui.container import Container
 from trezor.ui.loader import LoaderDanger
+from trezor.ui.popup import Popup
 from trezor.ui.qr import Qr
 from trezor.utils import chunks, chunks_intersperse
 
 from ..components.common import break_path_to_lines
 from ..components.common.confirm import is_confirmed, raise_if_cancelled
+from ..components.common.webauthn import ConfirmInfo
 from ..components.tt.button import ButtonCancel, ButtonDefault
-from ..components.tt.confirm import Confirm, HoldToConfirm
+from ..components.tt.confirm import Confirm, ConfirmPageable, HoldToConfirm, Pageable
 from ..components.tt.scroll import (
     PAGEBREAK,
     Paginated,
@@ -19,6 +21,7 @@ from ..components.tt.scroll import (
     paginate_text,
 )
 from ..components.tt.text import LINE_WIDTH_PAGINATED, Span, Text
+from ..components.tt.webauthn import ConfirmContent
 from ..constants.tt import (
     MONO_ADDR_PER_LINE,
     MONO_HEX_PER_LINE,
@@ -72,6 +75,9 @@ __all__ = (
     "confirm_coinjoin",
     "confirm_timebounds_stellar",
     "confirm_transfer_binance",
+    "show_popup",
+    "confirm_webauthn",
+    "confirm_webauthn_reset",
 )
 
 
@@ -1009,3 +1015,43 @@ async def confirm_transfer_binance(
             ctx, Paginated(pages), "confirm_transfer", ButtonRequestType.ConfirmOutput
         )
     )
+
+
+async def show_popup(
+    title: str,
+    description: str,
+    subtitle: Optional[str] = None,
+    description_param: str = "",
+    timeout_ms: int = 3000,
+) -> None:
+    text = Text(title, ui.ICON_WRONG, ui.RED)
+    if subtitle is not None:
+        text.bold(subtitle)
+        text.br_half()
+    text.format_parametrized(description, description_param)
+    await Popup(text, timeout_ms)
+
+
+async def confirm_webauthn(
+    ctx: Optional[wire.GenericContext],
+    info: ConfirmInfo,
+    pageable: Optional[Pageable] = None,
+) -> bool:
+    if pageable is not None:
+        confirm: ui.Layout = ConfirmPageable(pageable, ConfirmContent(info))
+    else:
+        confirm = Confirm(ConfirmContent(info))
+
+    if ctx is None:
+        return is_confirmed(await confirm)
+    else:
+        return is_confirmed(
+            await interact(ctx, confirm, "confirm_webauthn", ButtonRequestType.Other)
+        )
+
+
+async def confirm_webauthn_reset() -> bool:
+    text = Text("FIDO2 Reset", ui.ICON_CONFIG)
+    text.normal("Do you really want to")
+    text.bold("erase all credentials?")
+    return is_confirmed(await Confirm(text))

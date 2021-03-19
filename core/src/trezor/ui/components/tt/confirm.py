@@ -3,7 +3,7 @@ from micropython import const
 from trezor import loop, res, ui, utils
 from trezor.ui.loader import Loader, LoaderDefault
 
-from ..common.confirm import CANCELLED, CONFIRMED, INFO, ConfirmBase
+from ..common.confirm import CANCELLED, CONFIRMED, INFO, ConfirmBase, Pageable
 from .button import Button, ButtonAbort, ButtonCancel, ButtonConfirm, ButtonDefault
 
 if False:
@@ -52,29 +52,6 @@ class Confirm(ConfirmBase):
             button_cancel.on_click = self.on_cancel  # type: ignore
 
         super().__init__(content, button_confirm, button_cancel)
-
-
-class Pageable:
-    def __init__(self) -> None:
-        self._page = 0
-
-    def page(self) -> int:
-        return self._page
-
-    def page_count(self) -> int:
-        raise NotImplementedError
-
-    def is_first(self) -> bool:
-        return self._page == 0
-
-    def is_last(self) -> bool:
-        return self._page == self.page_count() - 1
-
-    def next(self) -> None:
-        self._page = min(self._page + 1, self.page_count() - 1)
-
-    def prev(self) -> None:
-        self._page = max(self._page - 1, 0)
 
 
 class ConfirmPageable(Confirm):

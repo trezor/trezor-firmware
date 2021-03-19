@@ -719,5 +719,5 @@
 "test_session_id_and_passphrase.py::test_passphrase_on_device": "c9ca2c9cf6dd416dad4de311266690ec2266b551d74f9d3619301305b3dbe81e",
 "test_session_id_and_passphrase.py::test_session_enable_passphrase": "b27321ed372b8ade7c4941a80f1f945851046b039a1b43c43a6953106bd1619e",
 "test_session_id_and_passphrase.py::test_session_with_passphrase": "a044d7a42229ab7cd74651e03dd64edcceb86d72d50bd63a40336decf0b25d3d",
-"test_u2f_counter.py::test_u2f_counter": "7d96a4d262b9d8a2c1158ac1e5f0f7b2c3ed5f2ba9d6235a014320313f9488fe"
+"test_u2f_counter.py::test_u2f_counter": "15865e4364347ac56ea45bbff5ded28fd72f58ad2427d1ef190f125dea10ece0"
 }
