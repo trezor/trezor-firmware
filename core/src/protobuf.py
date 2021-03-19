@@ -148,6 +148,24 @@ class UnicodeType:
     WIRE_TYPE = 2
 
 
+if False:
+    MessageTypeDef = Union[
+        type[UVarintType],
+        type[SVarintType],
+        type[BoolType],
+        EnumType,
+        type[BytesType],
+        type[UnicodeType],
+        type["MessageType"],
+    ]
+    FieldDef = tuple[str, MessageTypeDef, Any]
+    FieldDict = dict[int, FieldDef]
+
+    FieldCache = dict[type["MessageType"], FieldDict]
+
+    LoadedMessageType = TypeVar("LoadedMessageType", bound="MessageType")
+
+
 class MessageType:
     WIRE_TYPE = 2
     UNSTABLE = False
@@ -157,8 +175,20 @@ class MessageType:
     MESSAGE_WIRE_TYPE = -1
 
     @classmethod
-    def get_fields(cls) -> "FieldDict":
+    def get_fields(cls) -> FieldDict:
         return {}
+
+    @classmethod
+    def cache_subordinate_types(cls, field_cache: FieldCache) -> None:
+        if cls in field_cache:
+            fields = field_cache[cls]
+        else:
+            fields = cls.get_fields()
+            field_cache[cls] = fields
+
+        for _, field_type, _ in fields.values():
+            if isinstance(field_type, MessageType):
+                field_type.cache_subordinate_types(field_cache)
 
     def __eq__(self, rhs: Any) -> bool:
         return self.__class__ is rhs.__class__ and self.__dict__ == rhs.__dict__
@@ -184,23 +214,6 @@ class LimitedReader:
 FLAG_REPEATED = object()
 FLAG_REQUIRED = object()
 FLAG_EXPERIMENTAL = object()
-
-if False:
-    MessageTypeDef = Union[
-        type[UVarintType],
-        type[SVarintType],
-        type[BoolType],
-        EnumType,
-        type[BytesType],
-        type[UnicodeType],
-        type[MessageType],
-    ]
-    FieldDef = tuple[str, MessageTypeDef, Any]
-    FieldDict = dict[int, FieldDef]
-
-    FieldCache = dict[type[MessageType], FieldDict]
-
-    LoadedMessageType = TypeVar("LoadedMessageType", bound=MessageType)
 
 
 def load_message(
