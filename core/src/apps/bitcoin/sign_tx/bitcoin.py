@@ -17,6 +17,8 @@ from .hash143 import Bip143Hash
 from .tx_info import OriginalTxInfo, TxInfo
 
 if False:
+    from typing import Sequence
+
     from trezor.crypto import bip32
 
     from trezor.messages import (
@@ -396,7 +398,7 @@ class Bitcoin:
         i: int,
         txi: TxInput,
         tx_info: TxInfo | OriginalTxInfo,
-        public_keys: list[bytes],
+        public_keys: Sequence[bytes | memoryview],
         threshold: int,
         script_pubkey: bytes,
     ) -> bytes:
