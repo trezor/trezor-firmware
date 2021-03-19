@@ -24,6 +24,7 @@ from . import approvers, helpers
 from .bitcoinlike import Bitcoinlike
 
 if False:
+    from typing import Sequence
     from apps.common import coininfo
     from .hash143 import Hash143
     from .tx_info import OriginalTxInfo, TxInfo
@@ -49,7 +50,7 @@ class Zip243Hash:
     def preimage_hash(
         self,
         txi: TxInput,
-        public_keys: list[bytes],
+        public_keys: Sequence[bytes | memoryview],
         threshold: int,
         tx: SignTx | PrevTx,
         coin: coininfo.CoinInfo,
@@ -138,7 +139,7 @@ class Zcashlike(Bitcoinlike):
         i: int,
         txi: TxInput,
         tx_info: TxInfo | OriginalTxInfo,
-        public_keys: list[bytes],
+        public_keys: Sequence[bytes | memoryview],
         threshold: int,
         script_pubkey: bytes,
         tx_hash: bytes | None = None,

@@ -219,8 +219,11 @@ class BufferWriter:
 class BufferReader:
     """Seekable and readable view into a buffer."""
 
-    def __init__(self, buffer: bytes) -> None:
-        self.buffer = buffer
+    def __init__(self, buffer: Union[bytes, memoryview]) -> None:
+        if isinstance(buffer, memoryview):
+            self.buffer = buffer
+        else:
+            self.buffer = memoryview(buffer)
         self.offset = 0
 
     def seek(self, offset: int) -> None:
@@ -251,7 +254,15 @@ class BufferReader:
         If `length` is unspecified, reads all remaining data.
 
         Note that this method makes a copy of the data. To avoid allocation, use
-        `readinto()`.
+        `readinto()`. To avoid copying use `read_memoryview()`.
+        """
+        return bytes(self.read_memoryview(length))
+
+    def read_memoryview(self, length: int | None = None) -> memoryview:
+        """Read and return a memoryview of exactly `length` bytes, or raise
+        EOFError.
+
+        If `length` is unspecified, reads all remaining data.
         """
         if length is None:
             ret = self.buffer[self.offset :]

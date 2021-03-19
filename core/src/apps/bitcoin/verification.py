@@ -30,8 +30,8 @@ class SignatureVerifier:
         coin: CoinInfo,
     ):
         self.threshold = 1
-        self.public_keys: list[bytes] = []
-        self.signatures: list[tuple[bytes, int]] = []
+        self.public_keys: list[memoryview] = []
+        self.signatures: list[tuple[memoryview, int]] = []
 
         if not script_sig:
             if not witness:
@@ -118,7 +118,7 @@ class SignatureVerifier:
             raise wire.DataError("Invalid signature")
 
 
-def decode_der_signature(der_signature: bytes) -> bytearray:
+def decode_der_signature(der_signature: memoryview) -> bytearray:
     seq = der.decode_seq(der_signature)
     if len(seq) != 2 or any(len(i) > 32 for i in seq):
         raise ValueError

@@ -67,7 +67,7 @@ def verify_nonownership(
 ) -> bool:
     try:
         r = utils.BufferReader(proof)
-        if r.read(4) != _VERSION_MAGIC:
+        if r.read_memoryview(4) != _VERSION_MAGIC:
             raise wire.DataError("Unknown format of proof of ownership")
 
         flags = r.get()
@@ -79,7 +79,7 @@ def verify_nonownership(
         ownership_id = get_identifier(script_pubkey, keychain)
         not_owned = True
         for _ in range(id_count):
-            if utils.consteq(ownership_id, r.read(_OWNERSHIP_ID_LEN)):
+            if utils.consteq(ownership_id, r.read_memoryview(_OWNERSHIP_ID_LEN)):
                 not_owned = False
 
         # Verify the BIP-322 SignatureProof.

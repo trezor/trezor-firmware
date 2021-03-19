@@ -42,7 +42,7 @@ def encode_int(i: bytes) -> bytes:
     return b"\x02" + encode_length(len(i)) + i
 
 
-def decode_int(r: BufferReader) -> bytes:
+def decode_int(r: BufferReader) -> memoryview:
     if r.get() != 0x02:
         raise ValueError
 
@@ -62,7 +62,7 @@ def decode_int(r: BufferReader) -> bytes:
         if r.peek() == 0x00:
             raise ValueError  # excessive zero-padding
 
-    return r.read(n)
+    return r.read_memoryview(n)
 
 
 def encode_seq(seq: tuple) -> bytes:
@@ -72,7 +72,7 @@ def encode_seq(seq: tuple) -> bytes:
     return b"\x30" + encode_length(len(res)) + res
 
 
-def decode_seq(data: bytes) -> list[bytes]:
+def decode_seq(data: memoryview) -> list[memoryview]:
     r = BufferReader(data)
 
     if r.get() != 0x30:
