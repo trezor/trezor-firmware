@@ -418,7 +418,7 @@ if TREZOR_MODEL == 'T':
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16'
     CPU_CCFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 '
     CPU_MODEL   = 'STM32F427xx'
-    LD_VARIANT  = '_zkp' if FEATURE_FLAGS["SECP256K1_ZKP"] else ''
+    LD_VARIANT  = ''
     RUST_TARGET = 'thumbv7em-none-eabihf'
 elif TREZOR_MODEL == '1':
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m3 -mfloat-abi=soft'
