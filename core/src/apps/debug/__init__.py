@@ -10,6 +10,8 @@ if __debug__:
     from trezor import config, crypto, log, loop, utils
     from trezor.messages.Success import Success
 
+    from apps import workflow_handlers
+
     if False:
         from trezor.messages.DebugLinkDecision import DebugLinkDecision
         from trezor.messages.DebugLinkGetState import DebugLinkGetState
@@ -183,10 +185,19 @@ if __debug__:
         if not utils.EMULATOR:
             config.wipe()
 
-        wire.add(MessageType.LoadDevice, __name__, "load_device")
-        wire.register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)  # type: ignore
-        wire.register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)
-        wire.register(MessageType.DebugLinkReseedRandom, dispatch_DebugLinkReseedRandom)
-        wire.register(MessageType.DebugLinkRecordScreen, dispatch_DebugLinkRecordScreen)
-        wire.register(MessageType.DebugLinkEraseSdCard, dispatch_DebugLinkEraseSdCard)
-        wire.register(MessageType.DebugLinkWatchLayout, dispatch_DebugLinkWatchLayout)
+        workflow_handlers.register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)  # type: ignore
+        workflow_handlers.register(
+            MessageType.DebugLinkGetState, dispatch_DebugLinkGetState
+        )
+        workflow_handlers.register(
+            MessageType.DebugLinkReseedRandom, dispatch_DebugLinkReseedRandom
+        )
+        workflow_handlers.register(
+            MessageType.DebugLinkRecordScreen, dispatch_DebugLinkRecordScreen
+        )
+        workflow_handlers.register(
+            MessageType.DebugLinkEraseSdCard, dispatch_DebugLinkEraseSdCard
+        )
+        workflow_handlers.register(
+            MessageType.DebugLinkWatchLayout, dispatch_DebugLinkWatchLayout
+        )

@@ -63,36 +63,13 @@ if False:
     Handler = Callable[["Context", Msg], HandlerTask]
 
 
-# Maps a wire type directly to a handler.
-workflow_handlers: dict[int, Handler] = {}
-
-# Maps a wire type to a tuple of package and module.  This allows handlers
-# to be dynamically imported when such message arrives.
-workflow_packages: dict[int, tuple[str, str]] = {}
-
 # If set to False protobuf messages marked with "unstable" option are rejected.
 experimental_enabled: bool = False
-
-
-def add(wire_type: int, pkgname: str, modname: str) -> None:
-    """Shortcut for registering a dynamically-imported Protobuf workflow."""
-    workflow_packages[wire_type] = (pkgname, modname)
-
-
-def register(wire_type: int, handler: Handler) -> None:
-    """Register `handler` to get scheduled after `wire_type` message is received."""
-    workflow_handlers[wire_type] = handler
 
 
 def setup(iface: WireInterface, is_debug_session: bool = False) -> None:
     """Initialize the wire stack on passed USB interface."""
     loop.schedule(handle_session(iface, codec_v1.SESSION_ID, is_debug_session))
-
-
-def clear() -> None:
-    """Remove all registered handlers."""
-    workflow_handlers.clear()
-    workflow_packages.clear()
 
 
 if False:
@@ -459,33 +436,12 @@ async def handle_session(
                 log.exception(__name__, exc)
 
 
-def find_registered_workflow_handler(
-    iface: WireInterface, msg_type: int
-) -> Handler | None:
-    if msg_type in workflow_handlers:
-        # Message has a handler available, return it directly.
-        handler = workflow_handlers[msg_type]
-
-    elif msg_type in workflow_packages:
-        # Message needs a dynamically imported handler, import it.
-        pkgname, modname = workflow_packages[msg_type]
-        handler = import_workflow(pkgname, modname)
-
-    else:
-        # Message does not have any registered handler.
-        return None
-
-    return handler
+def _find_handler_placeholder(iface: WireInterface, msg_type: int) -> Handler | None:
+    """Placeholder handler lookup before a proper one is registered."""
+    return None
 
 
-find_handler = find_registered_workflow_handler
-
-
-def import_workflow(pkgname: str, modname: str) -> Any:
-    modpath = "%s.%s" % (pkgname, modname)
-    module = __import__(modpath, None, None, (modname,), 0)
-    handler = getattr(module, modname)
-    return handler
+find_handler = _find_handler_placeholder
 
 
 def failure(exc: BaseException) -> Failure:
