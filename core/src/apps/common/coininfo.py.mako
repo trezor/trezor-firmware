@@ -2,10 +2,10 @@
 # do not edit manually!
 from trezor import utils
 from trezor.crypto.base58 import blake256d_32, groestl512d_32, keccak_32, sha256d_32
-from trezor.crypto.scripts import blake256_ripemd160_digest, sha256_ripemd160_digest
+from trezor.crypto.scripts import blake256_ripemd160, sha256_ripemd160
 
 if False:
-    from typing import Any
+    from typing import Any, Type
 
 # flake8: noqa
 
@@ -67,19 +67,19 @@ class CoinInfo:
         if curve_name == "secp256k1-groestl":
             self.b58_hash = groestl512d_32
             self.sign_hash_double = False
-            self.script_hash = sha256_ripemd160_digest
+            self.script_hash: Type[utils.HashContext] = sha256_ripemd160
         elif curve_name == "secp256k1-decred":
             self.b58_hash = blake256d_32
             self.sign_hash_double = False
-            self.script_hash = blake256_ripemd160_digest
+            self.script_hash = blake256_ripemd160
         elif curve_name == "secp256k1-smart":
             self.b58_hash = keccak_32
             self.sign_hash_double = False
-            self.script_hash = sha256_ripemd160_digest
+            self.script_hash = sha256_ripemd160
         else:
             self.b58_hash = sha256d_32
             self.sign_hash_double = True
-            self.script_hash = sha256_ripemd160_digest
+            self.script_hash = sha256_ripemd160
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, CoinInfo):

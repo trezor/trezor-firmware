@@ -1,7 +1,7 @@
 from micropython import const
 
 from trezor.crypto import bech32
-from trezor.crypto.scripts import sha256_ripemd160_digest
+from trezor.crypto.scripts import sha256_ripemd160
 from trezor.messages import (
     BinanceCancelMsg,
     BinanceInputOutput,
@@ -86,7 +86,7 @@ def address_from_public_key(pubkey: bytes, hrp: str) -> str:
     HRP - bnb for productions, tbnb for tests
     """
 
-    h = sha256_ripemd160_digest(pubkey)
+    h = sha256_ripemd160(pubkey).digest()
 
     convertedbits = bech32.convertbits(h, 8, 5, False)
 
