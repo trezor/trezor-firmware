@@ -54,8 +54,7 @@
         },
         "wallet": {
             "Trezor Suite": "https://suite.trezor.io",
-            "Exodus": "https://www.exodus.io",
-            "Magnum": "https://magnumwallet.co"
+            "Exodus": "https://www.exodus.io"
         }
     },
     {
@@ -98,8 +97,7 @@
             "Github": "https://github.com/tezos/tezos"
         },
         "wallet": {
-            "SimpleStaking": "https://simplestaking.com",
-            "Magnum": "https://magnumwallet.co"
+            "SimpleStaking": "https://simplestaking.com"
         }
     },
     {
