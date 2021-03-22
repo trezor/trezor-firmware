@@ -79,6 +79,18 @@ def write_op_push(w: Writer, n: int) -> None:
         w.append((n >> 24) & 0xFF)
 
 
+def op_push_length(n: int) -> int:
+    ensure(n >= 0 and n <= 0xFFFF_FFFF)
+    if n < 0x4C:
+        return 1
+    elif n < 0xFF:
+        return 2
+    elif n < 0xFFFF:
+        return 3
+    else:
+        return 4
+
+
 def get_tx_hash(w: HashWriter, double: bool = False, reverse: bool = False) -> bytes:
     d = w.get_digest()
     if double:
