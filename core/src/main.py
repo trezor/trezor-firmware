@@ -1,73 +1,25 @@
 # isort:skip_file
+# fmt: off
 
-# unlock the device
-import boot  # noqa: F401
+# Import always-active modules
+import storage
+import storage.device
+from trezor import config, pin, utils  # noqa: F401
 
-# prepare the USB interfaces, but do not connect to the host yet
+# Prepare the USB interfaces first. Do not connect to the host yet.
 import usb
 
-from trezor import loop, utils, wire, workflow
+unimport_manager = utils.unimport()
+
+# unlock the device, unload the boot module afterwards
+with unimport_manager:
+    import boot
+    del boot
 
 # start the USB
-usb.bus.open()
+usb.bus.open(storage.device.get_device_id())
 
-
-def _boot_apps() -> None:
-    # load applications
-    import apps.base
-    import apps.management
-    import apps.bitcoin
-    import apps.misc
-
-    if not utils.BITCOIN_ONLY:
-        import apps.ethereum
-        import apps.lisk
-        import apps.monero
-        import apps.nem
-        import apps.stellar
-        import apps.ripple
-        import apps.cardano
-        import apps.tezos
-        import apps.eos
-        import apps.binance
-        import apps.webauthn
-
-    if __debug__:
-        import apps.debug
-
-    # boot applications
-    apps.base.boot()
-    apps.management.boot()
-    apps.bitcoin.boot()
-    apps.misc.boot()
-    if not utils.BITCOIN_ONLY:
-        apps.ethereum.boot()
-        apps.lisk.boot()
-        apps.monero.boot()
-        apps.nem.boot()
-        apps.stellar.boot()
-        apps.ripple.boot()
-        apps.cardano.boot()
-        apps.tezos.boot()
-        apps.eos.boot()
-        apps.binance.boot()
-        apps.webauthn.boot()
-    if __debug__:
-        apps.debug.boot()
-
-    # run main event loop and specify which screen is the default
-    apps.base.set_homescreen()
-    workflow.start_default()
-
-
-_boot_apps()
-
-# initialize the wire codec
-wire.setup(usb.iface_wire)
-if __debug__:
-    wire.setup(usb.iface_debug, is_debug_session=True)
-
-loop.run()
-
-# loop is empty. That should not happen
-utils.halt("All tasks have died.")
+while True:
+    with unimport_manager:
+        import session  # noqa: F401
+        del session
