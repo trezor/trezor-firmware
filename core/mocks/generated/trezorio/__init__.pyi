@@ -112,7 +112,6 @@ class USB:
         device_protocol: int = 0,
         manufacturer: str = "",
         product: str = "",
-        serial_number: str = "",
         interface: str = "",
         usb21_enabled: bool = True,
         usb21_landing: bool = True,
@@ -125,7 +124,7 @@ class USB:
         Registers passed interface into the USB stack.
         """
 
-    def open(self) -> None:
+    def open(self, serial_number: str) -> None:
         """
         Initializes the USB stack.
         """
