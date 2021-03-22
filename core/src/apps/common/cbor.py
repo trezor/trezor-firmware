@@ -302,8 +302,9 @@ def encode_chunked(value: Value, max_chunk_size: int) -> Iterator[bytes]:
             yield chunk_buffer
 
 
-def decode(cbor: bytes) -> Value:
+def decode(cbor: bytes, offset: int = 0) -> Value:
     r = utils.BufferReader(cbor)
+    r.seek(offset)
     res = _cbor_decode(r)
     if r.remaining_count():
         raise ValueError
