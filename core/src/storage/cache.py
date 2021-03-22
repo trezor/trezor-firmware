@@ -1,7 +1,7 @@
 import gc
+from trezorcrypto import random  # avoid pulling in trezor.crypto
 
 from trezor import utils
-from trezor.crypto import random
 
 if False:
     from typing import Sequence

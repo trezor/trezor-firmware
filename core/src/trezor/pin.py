@@ -1,4 +1,4 @@
-from trezor import ui, utils
+from trezor import utils
 
 if False:
     from typing import Any
@@ -10,6 +10,8 @@ keepalive_callback: Any = None
 
 
 def show_pin_timeout(seconds: int, progress: int, message: str) -> bool:
+    from trezor import ui
+
     global _previous_progress
     global _previous_seconds
 
