@@ -5,9 +5,6 @@ from trezorui import Display
 
 from trezor import io, loop, res, utils, workflow
 
-if __debug__:
-    from apps.debug import notify_layout_change
-
 if False:
     from typing import Any, Awaitable, Generator, TypeVar
 
@@ -37,9 +34,10 @@ _alert_in_progress = False
 
 # in debug mode, display an indicator in top right corner
 if __debug__:
-    from apps.debug import screenshot
 
     def refresh() -> None:
+        from apps.debug import screenshot
+
         if not screenshot():
             display.bar(Display.WIDTH - 8, 0, 8, 8, 0xF800)
         display.refresh()
@@ -376,6 +374,8 @@ class Layout(Component):
         self.dispatch(RENDER, 0, 0)
 
         if __debug__ and self.should_notify_layout_change:
+            from apps.debug import notify_layout_change
+
             # notify about change and do not notify again until next await.
             # (handle_rendering might be called multiple times in a single await,
             # because of the endless loop in __iter__)

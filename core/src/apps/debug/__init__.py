@@ -4,17 +4,19 @@ if not __debug__:
     halt("debug mode inactive")
 
 if __debug__:
-    from trezor import io, ui, wire
-    from trezor.messages import MessageType, DebugSwipeDirection
+    from trezor import config, log, loop, utils, wire
+    from trezor.ui import display
+    from trezor.messages import MessageType
     from trezor.messages.DebugLinkLayout import DebugLinkLayout
-    from trezor import config, crypto, log, loop, utils
     from trezor.messages.Success import Success
 
     from apps import workflow_handlers
 
     if False:
+        from trezor.ui import Layout
         from trezor.messages.DebugLinkDecision import DebugLinkDecision
         from trezor.messages.DebugLinkGetState import DebugLinkGetState
+        from trezor.messages.DebugLinkLayout import DebugLinkLayout
         from trezor.messages.DebugLinkRecordScreen import DebugLinkRecordScreen
         from trezor.messages.DebugLinkReseedRandom import DebugLinkReseedRandom
         from trezor.messages.DebugLinkState import DebugLinkState
@@ -43,36 +45,41 @@ if __debug__:
 
     def screenshot() -> bool:
         if save_screen:
-            ui.display.save(save_screen_directory + "/refresh-")
+            display.save(save_screen_directory + "/refresh-")
             return True
         return False
 
-    def notify_layout_change(layout: ui.Layout) -> None:
+    def notify_layout_change(layout: Layout) -> None:
         global current_content
         current_content = layout.read_content()
         if watch_layout_changes:
             layout_change_chan.publish(current_content)
 
-    async def debuglink_decision_dispatcher() -> None:
+    async def dispatch_debuglink_decision(msg: DebugLinkDecision) -> None:
+        from trezor.messages import DebugSwipeDirection
+        from trezor.ui import Result
         from trezor.ui.components.tt import confirm, swipe
 
+        if msg.yes_no is not None:
+            await confirm_chan.put(
+                Result(confirm.CONFIRMED if msg.yes_no else confirm.CANCELLED)
+            )
+        if msg.swipe is not None:
+            if msg.swipe == DebugSwipeDirection.UP:
+                await swipe_chan.put(swipe.SWIPE_UP)
+            elif msg.swipe == DebugSwipeDirection.DOWN:
+                await swipe_chan.put(swipe.SWIPE_DOWN)
+            elif msg.swipe == DebugSwipeDirection.LEFT:
+                await swipe_chan.put(swipe.SWIPE_LEFT)
+            elif msg.swipe == DebugSwipeDirection.RIGHT:
+                await swipe_chan.put(swipe.SWIPE_RIGHT)
+        if msg.input is not None:
+            await input_chan.put(Result(msg.input))
+
+    async def debuglink_decision_dispatcher() -> None:
         while True:
             msg = await debuglink_decision_chan.take()
-            if msg.yes_no is not None:
-                await confirm_chan.put(
-                    ui.Result(confirm.CONFIRMED if msg.yes_no else confirm.CANCELLED)
-                )
-            if msg.swipe is not None:
-                if msg.swipe == DebugSwipeDirection.UP:
-                    await swipe_chan.put(swipe.SWIPE_UP)
-                elif msg.swipe == DebugSwipeDirection.DOWN:
-                    await swipe_chan.put(swipe.SWIPE_DOWN)
-                elif msg.swipe == DebugSwipeDirection.LEFT:
-                    await swipe_chan.put(swipe.SWIPE_LEFT)
-                elif msg.swipe == DebugSwipeDirection.RIGHT:
-                    await swipe_chan.put(swipe.SWIPE_RIGHT)
-            if msg.input is not None:
-                await input_chan.put(ui.Result(msg.input))
+            await dispatch_debuglink_decision(msg)
 
     loop.schedule(debuglink_decision_dispatcher())
 
@@ -81,6 +88,8 @@ if __debug__:
         await ctx.write(DebugLinkLayout(lines=content))
 
     async def touch_hold(x: int, y: int, duration_ms: int) -> None:
+        from trezor import io
+
         await loop.sleep(duration_ms)
         loop.synthetic_events.append((io.TOUCH, (io.TOUCH_END, x, y)))
 
@@ -96,6 +105,8 @@ if __debug__:
     async def dispatch_DebugLinkDecision(
         ctx: wire.Context, msg: DebugLinkDecision
     ) -> None:
+        from trezor import io
+
         if debuglink_decision_chan.putters:
             log.warning(__name__, "DebugLinkDecision queue is not empty")
 
@@ -149,7 +160,7 @@ if __debug__:
             save_screen = True
         else:
             save_screen = False
-            ui.display.clear_save()  # clear C buffers
+            display.clear_save()  # clear C buffers
 
         return Success()
 
@@ -157,12 +168,16 @@ if __debug__:
         ctx: wire.Context, msg: DebugLinkReseedRandom
     ) -> Success:
         if msg.value is not None:
-            crypto.random.reseed(msg.value)
+            from trezor.crypto import random
+
+            random.reseed(msg.value)
         return Success()
 
     async def dispatch_DebugLinkEraseSdCard(
         ctx: wire.Context, msg: DebugLinkEraseSdCard
     ) -> Success:
+        from trezor import io
+
         try:
             io.sdcard.power_on()
             if msg.format:

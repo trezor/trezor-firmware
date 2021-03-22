@@ -1,7 +1,6 @@
 from micropython import const
 
-from storage import common, recovery_shares
-from trezor.crypto import slip39
+from storage import common
 
 # Namespace:
 _NAMESPACE = common.APP_RECOVERY
@@ -86,22 +85,26 @@ def set_slip39_remaining_shares(shares_remaining: int, group_index: int) -> None
     0x10 (16) was chosen as the default value because it's the max
     share count for a group.
     """
+    from trezor.crypto.slip39 import MAX_SHARE_COUNT
+
     _require_progress()
     remaining = common.get(_NAMESPACE, _REMAINING)
     group_count = get_slip39_group_count()
     if not group_count:
         raise RuntimeError
     if remaining is None:
-        remaining = bytearray([slip39.MAX_SHARE_COUNT] * group_count)
+        remaining = bytearray([MAX_SHARE_COUNT] * group_count)
     remaining = bytearray(remaining)
     remaining[group_index] = shares_remaining
     common.set(_NAMESPACE, _REMAINING, remaining)
 
 
 def get_slip39_remaining_shares(group_index: int) -> int | None:
+    from trezor.crypto.slip39 import MAX_SHARE_COUNT
+
     _require_progress()
     remaining = common.get(_NAMESPACE, _REMAINING)
-    if remaining is None or remaining[group_index] == slip39.MAX_SHARE_COUNT:
+    if remaining is None or remaining[group_index] == MAX_SHARE_COUNT:
         return None
     else:
         return remaining[group_index]
@@ -120,6 +123,8 @@ def fetch_slip39_remaining_shares() -> list[int] | None:
 
 
 def end_progress() -> None:
+    from . import recovery_shares
+
     _require_progress()
     common.delete(_NAMESPACE, _IN_PROGRESS)
     common.delete(_NAMESPACE, _DRY_RUN)
