@@ -27,20 +27,20 @@ if __debug__:
 if False:
     from typing import (
         Any,
-        Iterable,
         Iterator,
         Protocol,
         Union,
         TypeVar,
         Sequence,
+        Set,
     )
 
 
-def unimport_begin() -> Iterable[str]:
+def unimport_begin() -> Set[str]:
     return set(sys.modules)
 
 
-def unimport_end(mods: Iterable[str]) -> None:
+def unimport_end(mods: Set[str], collect: bool = True) -> None:
     for mod in sys.modules:
         if mod not in mods:
             # remove reference from sys.modules
@@ -58,7 +58,23 @@ def unimport_end(mods: Iterable[str]) -> None:
                 # referenced from the parent package. both is fine.
                 pass
     # collect removed modules
-    gc.collect()
+    if collect:
+        gc.collect()
+
+
+class unimport:
+    def __init__(self) -> None:
+        self.mods: Set[str] | None = None
+
+    def __enter__(self) -> None:
+        self.mods = unimport_begin()
+
+    def __exit__(self, _exc_type: Any, _exc_value: Any, _tb: Any) -> None:
+        assert self.mods is not None
+        unimport_end(self.mods, collect=False)
+        self.mods.clear()
+        self.mods = None
+        gc.collect()
 
 
 def ensure(cond: bool, msg: str | None = None) -> None:
