@@ -33,5 +33,9 @@ async def bootscreen() -> None:
 ui.display.backlight(ui.BACKLIGHT_NONE)
 ui.backlight_fade(ui.BACKLIGHT_NORMAL)
 config.init(show_pin_timeout)
+
+if __debug__ and not utils.EMULATOR:
+    config.wipe()
+
 loop.schedule(bootscreen())
 loop.run()
