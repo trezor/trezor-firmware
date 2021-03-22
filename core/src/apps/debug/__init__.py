@@ -205,10 +205,6 @@ if __debug__:
         return Success()
 
     def boot() -> None:
-        # wipe storage when debug build is used on real hardware
-        if not utils.EMULATOR:
-            config.wipe()
-
         workflow_handlers.register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)  # type: ignore
         workflow_handlers.register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)  # type: ignore
         workflow_handlers.register(
