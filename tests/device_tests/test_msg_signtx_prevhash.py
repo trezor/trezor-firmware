@@ -63,10 +63,7 @@ def hash_tx(data: bytes) -> bytes:
 def _check_error_message(value: bytes, model: str, message: str):
     if model != "1":
         if value is None:
-            assert re.match(
-                r"^Failed to decode message: Required field '\w+' was not received$",
-                message,
-            )
+            assert message == "Failed to decode message: Missing"
         else:
             assert message == "Provided prev_hash is invalid."
         return
