@@ -525,6 +525,8 @@ def _cborize_shelley_witnesses(
         witness = _cborize_shelley_witness(keychain, tx_body_hash, list(path))
         shelley_witnesses.append(witness)
 
+    shelley_witnesses.sort()
+
     return shelley_witnesses
 
 
@@ -566,6 +568,8 @@ def _cborize_byron_witnesses(
         address_attributes = cbor.encode(get_address_attributes(protocol_magic))
 
         byron_witnesses.append((public_key, signature, chain_code, address_attributes))
+
+    byron_witnesses.sort()
 
     return byron_witnesses
 
