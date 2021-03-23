@@ -26,7 +26,8 @@ sram_end = ORIGIN(SRAM) + LENGTH(SRAM);
 _ram_start = sram_start;
 _ram_end = sram_end;
 
-_codelen = SIZEOF(.flash) + SIZEOF(.data);
+/* .ARM.exidx.text.__aeabi_ui2f is probably not needed as long as we are using panic = "abort" */
+_codelen = SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.ARM.exidx.text.__aeabi_ui2f);
 _flash_start = ORIGIN(FLASH);
 _flash_end = ORIGIN(FLASH) + LENGTH(FLASH);
 _heap_start = ADDR(.heap);
