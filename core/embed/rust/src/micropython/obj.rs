@@ -90,7 +90,7 @@ impl Obj {
         //  - Micropython compiled with `MICROPY_OBJ_IMMEDIATE_OBJS`.
         //    micropython/py/obj.h #define MP_OBJ_NEW_IMMEDIATE_OBJ(val)
         //    ((mp_obj_t)(((val) << 3) | 6))
-        Self::from_bits((val << 3) | 6)
+        unsafe { Self::from_bits((val << 3) | 6) }
     }
 }
 
@@ -102,6 +102,10 @@ impl Obj {
         unsafe { ffi::mp_call_function_n_kw(self, args.len(), 0, args.as_ptr()) }
     }
 }
+
+//
+// # Converting `Obj` into plain data.
+//
 
 impl TryFrom<Obj> for bool {
     type Error = Error;
@@ -135,6 +139,24 @@ impl TryFrom<Obj> for i32 {
         }
     }
 }
+
+impl TryFrom<Obj> for i64 {
+    type Error = Error;
+
+    fn try_from(obj: Obj) -> Result<Self, Self::Error> {
+        let mut ll: cty::c_longlong = 0;
+
+        if unsafe { ffi::trezor_obj_get_ll_checked(obj, &mut ll) } {
+            Ok(ll)
+        } else {
+            Err(Error::NotInt)
+        }
+    }
+}
+
+//
+// # Converting plain data into `Obj`.
+//
 
 impl From<bool> for Obj {
     fn from(val: bool) -> Self {
@@ -224,7 +246,7 @@ impl From<&str> for Obj {
 }
 
 //
-// Additional conversions based on the methods above.
+// # Additional conversions based on the methods above.
 //
 
 impl From<u8> for Obj {
@@ -270,8 +292,7 @@ impl TryFrom<Obj> for u32 {
     type Error = Error;
 
     fn try_from(obj: Obj) -> Result<Self, Self::Error> {
-        // TODO: Support full range.
-        let val = i32::try_from(obj)?;
+        let val = i64::try_from(obj)?;
         let this = Self::try_from(val)?;
         Ok(this)
     }
@@ -282,7 +303,7 @@ impl TryFrom<Obj> for u64 {
 
     fn try_from(obj: Obj) -> Result<Self, Self::Error> {
         // TODO: Support full range.
-        let val = i32::try_from(obj)?;
+        let val = i64::try_from(obj)?;
         let this = Self::try_from(val)?;
         Ok(this)
     }
@@ -293,19 +314,8 @@ impl TryFrom<Obj> for usize {
 
     fn try_from(obj: Obj) -> Result<Self, Self::Error> {
         // TODO: Support full range.
-        let val = i32::try_from(obj)?;
+        let val = i64::try_from(obj)?;
         let this = Self::try_from(val)?;
-        Ok(this)
-    }
-}
-
-impl TryFrom<Obj> for i64 {
-    type Error = Error;
-
-    fn try_from(obj: Obj) -> Result<Self, Self::Error> {
-        // TODO: Support full range.
-        let val = i32::try_from(obj)?;
-        let this = Self::from(val);
         Ok(this)
     }
 }

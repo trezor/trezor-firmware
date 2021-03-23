@@ -60,6 +60,8 @@ fn generate_micropython_bindings() {
         .whitelist_function("mp_obj_get_int_maybe")
         .whitelist_function("mp_obj_is_true")
         .whitelist_function("mp_call_function_n_kw")
+        .whitelist_function("trezor_obj_get_ll_checked")
+        .whitelist_function("trezor_obj_get_ull_checked")
         // buffer
         .whitelist_function("mp_get_buffer")
         .whitelist_var("MP_BUFFER_READ")
@@ -96,6 +98,9 @@ fn generate_micropython_bindings() {
         .whitelist_function("mp_raise_ValueError")
         // typ
         .whitelist_var("mp_type_type");
+
+    // Don't add impls that hinder safety guarantees.
+    bindings = bindings.no_copy("_mp_map_t");
 
     // Pass in correct include paths and defines.
     if target == "thumbv7em-none-eabihf" {

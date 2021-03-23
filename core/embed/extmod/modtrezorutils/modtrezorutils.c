@@ -117,10 +117,14 @@ STATIC mp_obj_t mod_trezorutils_halt(size_t n_args, const mp_obj_t *args) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_halt_obj, 0, 1,
                                            mod_trezorutils_halt);
 
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_protobuf_type_obj,
-                                 protobuf_type);
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorutils_protobuf_decode_obj,
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_protobuf_type_for_name_obj,
+                                 protobuf_type_for_name);
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_protobuf_type_for_wire_obj,
+                                 protobuf_type_for_wire);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorutils_protobuf_decode_obj,
                                  protobuf_decode);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorutils_protobuf_len_obj,
+                                 protobuf_len);
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorutils_protobuf_encode_obj,
                                  protobuf_encode);
 
@@ -144,10 +148,14 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_memcpy), MP_ROM_PTR(&mod_trezorutils_memcpy_obj)},
     {MP_ROM_QSTR(MP_QSTR_halt), MP_ROM_PTR(&mod_trezorutils_halt_obj)},
     // protobuf
-    {MP_ROM_QSTR(MP_QSTR_protobuf_type),
-     MP_ROM_PTR(&mod_trezorutils_protobuf_type_obj)},
+    {MP_ROM_QSTR(MP_QSTR_protobuf_type_for_name),
+     MP_ROM_PTR(&mod_trezorutils_protobuf_type_for_name_obj)},
+    {MP_ROM_QSTR(MP_QSTR_protobuf_type_for_wire),
+     MP_ROM_PTR(&mod_trezorutils_protobuf_type_for_wire_obj)},
     {MP_ROM_QSTR(MP_QSTR_protobuf_decode),
      MP_ROM_PTR(&mod_trezorutils_protobuf_decode_obj)},
+    {MP_ROM_QSTR(MP_QSTR_protobuf_len),
+     MP_ROM_PTR(&mod_trezorutils_protobuf_len_obj)},
     {MP_ROM_QSTR(MP_QSTR_protobuf_encode),
      MP_ROM_PTR(&mod_trezorutils_protobuf_encode_obj)},
     // layouts

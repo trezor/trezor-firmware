@@ -29,13 +29,15 @@ impl<T> Gc<T> {
     }
 
     pub unsafe fn as_mut(&mut self) -> &mut T {
-        self.0.as_mut()
+        // SAFETY: Caller needs to uphold the usual aliasing guarantees.
+        unsafe { self.0.as_mut() }
     }
 }
 
 impl<T: ?Sized> Gc<T> {
     pub unsafe fn from_raw(ptr: *mut T) -> Self {
-        Self(NonNull::new_unchecked(ptr))
+        // SAFETY: `ptr` has to point to a previously GC-allocated memory.
+        unsafe { Self(NonNull::new_unchecked(ptr)) }
     }
 
     pub fn into_raw(this: Self) -> *mut T {

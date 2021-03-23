@@ -49,6 +49,7 @@ CPPDEFINES_MOD += [
     ('USE_EOS', '1' if EVERYTHING else '0'),
 ]
 SOURCE_MOD += [
+    'embed/extmod/trezorobj.c',
     'embed/extmod/modtrezorcrypto/modtrezorcrypto.c',
     'embed/extmod/modtrezorcrypto/crc.c',
     'vendor/trezor-crypto/address.c',

@@ -20,6 +20,19 @@ use super::{
 };
 
 #[no_mangle]
+pub extern "C" fn protobuf_len(def: Obj, obj: Obj) -> Obj {
+    util::try_or_raise(|| {
+        let def = Gc::<MsgDefObj>::try_from(def)?;
+
+        let stream = &mut CounterStream { len: 0 };
+
+        Encoder.encode_message(stream, def.msg(), obj)?;
+
+        Ok(stream.len.into())
+    })
+}
+
+#[no_mangle]
 pub extern "C" fn protobuf_encode(buf: Obj, def: Obj, obj: Obj) -> Obj {
     util::try_or_raise(|| {
         let def = Gc::<MsgDefObj>::try_from(def)?;

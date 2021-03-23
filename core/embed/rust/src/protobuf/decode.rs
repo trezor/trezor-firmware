@@ -9,12 +9,12 @@ use crate::{
 
 use super::{
     defs::{self, FieldDef, FieldType, MsgDef},
-    obj::{MsgDefObj, MsgObj, MSG_WIRE_ID_ATTR},
+    obj::{MsgDefObj, MsgObj},
     zigzag,
 };
 
 #[no_mangle]
-pub extern "C" fn protobuf_type(name: Obj) -> Obj {
+pub extern "C" fn protobuf_type_for_name(name: Obj) -> Obj {
     util::try_or_raise(|| {
         let name = Qstr::try_from(name)?;
         let def = MsgDef::for_name(name.to_u16()).ok_or(Error::Missing)?;
@@ -24,14 +24,35 @@ pub extern "C" fn protobuf_type(name: Obj) -> Obj {
 }
 
 #[no_mangle]
-pub extern "C" fn protobuf_decode(buf: Obj, msg_def: Obj) -> Obj {
+pub extern "C" fn protobuf_type_for_wire(wire_id: Obj) -> Obj {
     util::try_or_raise(|| {
-        let def = Gc::<MsgDefObj>::try_from(msg_def)?;
+        let wire_id = u16::try_from(wire_id)?;
+        let def = MsgDef::for_wire_id(wire_id).ok_or(Error::Missing)?;
+        let obj = MsgDefObj::alloc(def).into();
+        Ok(obj)
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn protobuf_decode(buf: Obj, msg_def: Obj, enable_experimental: Obj) -> Obj {
+    util::try_or_raise(|| {
         let buf = Buffer::try_from(buf)?;
+        let def = Gc::<MsgDefObj>::try_from(msg_def)?;
+        let enable_experimental = bool::try_from(enable_experimental)?;
+
+        if !enable_experimental && def.msg().is_experimental {
+            // Refuse to decode message defs marked as experimental if not
+            // explicitly allowed. Messages can also mark certain fields as
+            // expermental (not the whole message). This is enforced during the
+            // decoding.
+            return Err(Error::InvalidType);
+        }
+
         let stream = &mut InputStream::new(&buf);
         let decoder = Decoder {
-            enable_experimental: false,
+            enable_experimental,
         };
+
         let obj = decoder.message_from_stream(stream, def.msg())?;
         Ok(obj)
     })
@@ -55,7 +76,6 @@ impl Decoder {
         self.decode_fields_into(stream, msg, map)?;
         self.decode_defaults_into(msg, map)?;
         self.assign_required_into(msg, map)?;
-        self.assign_wire_id(msg, map);
         Ok(dict.into())
     }
 
@@ -70,14 +90,13 @@ impl Decoder {
         }
         self.decode_defaults_into(msg, map)?;
         self.assign_required_into(msg, map)?;
-        self.assign_wire_id(msg, map);
         Ok(obj.into())
     }
 
     /// Allocate the backing message object with enough pre-allocated space for
-    /// all fields, including the special `MSG_WIRE_ID_ATTR` field.
+    /// all fields.
     pub fn empty_message(&self, msg: &MsgDef) -> Gc<MsgObj> {
-        MsgObj::alloc_with_capacity(msg.fields.len() + 1)
+        MsgObj::alloc_with_capacity(msg.fields.len(), msg)
     }
 
     /// Decode message fields one-by-one from the input stream, assigning them
@@ -185,20 +204,15 @@ impl Decoder {
                 // Required field is missing, abort.
                 return Err(Error::Missing);
             }
-            // Optional field, set to None.
-            map.set(field_name, Obj::const_none());
+            if field.is_repeated() {
+                // Optional repeated field, set to a new empty list.
+                map.set(field_name, List::alloc(&[]));
+            } else {
+                // Optional singular field, set to None.
+                map.set(field_name, Obj::const_none());
+            }
         }
         Ok(())
-    }
-
-    /// Assign the wire ID of this message def into the map, under a key
-    /// designated by the `MSG_WIRE_ID_ATTR` QSTR.
-    pub fn assign_wire_id(&self, msg: &MsgDef, map: &mut Map) {
-        if let Some(wire_id) = msg.wire_id {
-            map.set(MSG_WIRE_ID_ATTR, wire_id);
-        } else {
-            map.set(MSG_WIRE_ID_ATTR, Obj::const_none());
-        }
     }
 
     /// Decode one field value from the input stream.

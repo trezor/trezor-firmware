@@ -3,7 +3,9 @@ use core::{mem, slice};
 pub struct MsgDef {
     pub fields: &'static [FieldDef],
     pub defaults: &'static [u8],
+    pub is_experimental: bool,
     pub wire_id: Option<u16>,
+    pub offset: u16,
 }
 
 impl MsgDef {
@@ -51,15 +53,15 @@ impl FieldDef {
     }
 
     pub fn is_required(&self) -> bool {
-        self.flags() & 0b1000_0000 != 0
+        self.flags() & 0b_1000_0000 != 0
     }
 
     pub fn is_repeated(&self) -> bool {
-        self.flags() & 0b0100_0000 != 0
+        self.flags() & 0b_0100_0000 != 0
     }
 
     pub fn is_experimental(&self) -> bool {
-        self.flags() & 0b0010_0000 != 0
+        self.flags() & 0b_0010_0000 != 0
     }
 
     fn flags(&self) -> u8 {
@@ -149,30 +151,39 @@ unsafe fn get_msg(msg_offset: u16) -> MsgDef {
     // struct MsgDef {
     //     fields_count: u8,
     //     defaults_size: u8,
-    //     wire_id: u16,
+    //     flags_and_wire_id: u16,
     //     fields: [Field],
     //     defaults: [u8],
     // }
 
-    let ptr = MSG_DEFS.as_ptr().add(msg_offset as usize);
-    let fields_count = ptr.offset(0).read() as usize;
-    let defaults_size = ptr.offset(1).read() as usize;
+    // SAFETY: `msg_offset` has to point to a beginning of a valid message
+    // definition inside `MSG_DEFS`.
+    unsafe {
+        let ptr = MSG_DEFS.as_ptr().add(msg_offset as usize);
+        let fields_count = ptr.offset(0).read() as usize;
+        let defaults_size = ptr.offset(1).read() as usize;
 
-    let wire_id_lo = ptr.offset(2).read();
-    let wire_id_hi = ptr.offset(3).read();
-    let wire_id = match u16::from_le_bytes([wire_id_lo, wire_id_hi]) {
-        0xFFFF => None,
-        some_wire_id => Some(some_wire_id),
-    };
+        let flags_and_wire_id_lo = ptr.offset(2).read();
+        let flags_and_wire_id_hi = ptr.offset(3).read();
+        let flags_and_wire_id = u16::from_le_bytes([flags_and_wire_id_lo, flags_and_wire_id_hi]);
 
-    let fields_size = fields_count * mem::size_of::<FieldDef>();
-    let fields_ptr = ptr.offset(4);
-    let defaults_ptr = ptr.offset(4).add(fields_size);
+        let is_experimental = flags_and_wire_id & 0x8000 != 0;
+        let wire_id = match flags_and_wire_id & 0x7FFF {
+            0x7FFF => None,
+            some_wire_id => Some(some_wire_id),
+        };
 
-    MsgDef {
-        fields: slice::from_raw_parts(fields_ptr.cast(), fields_count),
-        defaults: slice::from_raw_parts(defaults_ptr.cast(), defaults_size),
-        wire_id,
+        let fields_size = fields_count * mem::size_of::<FieldDef>();
+        let fields_ptr = ptr.offset(4);
+        let defaults_ptr = ptr.offset(4).add(fields_size);
+
+        MsgDef {
+            fields: slice::from_raw_parts(fields_ptr.cast(), fields_count),
+            defaults: slice::from_raw_parts(defaults_ptr.cast(), defaults_size),
+            is_experimental,
+            wire_id,
+            offset: msg_offset,
+        }
     }
 }
 
@@ -183,11 +194,15 @@ unsafe fn get_enum(enum_offset: u16) -> EnumDef {
     //     vals: [u16],
     // }
 
-    let ptr = ENUM_DEFS.as_ptr().add(enum_offset as usize);
-    let count = ptr.offset(0).read() as usize;
-    let vals = ptr.offset(1);
+    // SAFETY: `enum_offset` has to point to a beginning of a valid enum
+    // definition inside `ENUM_DEFS`.
+    unsafe {
+        let ptr = ENUM_DEFS.as_ptr().add(enum_offset as usize);
+        let count = ptr.offset(0).read() as usize;
+        let vals = ptr.offset(1);
 
-    EnumDef {
-        values: slice::from_raw_parts(vals.cast(), count),
+        EnumDef {
+            values: slice::from_raw_parts(vals.cast(), count),
+        }
     }
 }

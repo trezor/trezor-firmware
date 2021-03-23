@@ -1,4 +1,4 @@
-use core::{marker::PhantomData, mem::MaybeUninit, ops::Deref, slice};
+use core::{marker::PhantomData, mem::MaybeUninit, ops::Deref, ptr, slice};
 
 use crate::{
     error::Error,
@@ -46,7 +46,7 @@ impl Map {
         }
     }
 
-    pub fn new_with_capacity(capacity: usize) -> Self {
+    pub fn with_capacity(capacity: usize) -> Self {
         let mut map = MaybeUninit::uninit();
         // SAFETY: `mp_map_init` completely initializes all fields of `map`, allocating
         // the backing storage for `capacity` items on the heap.
@@ -124,9 +124,23 @@ impl Map {
     }
 }
 
+impl Clone for Map {
+    fn clone(&self) -> Self {
+        let mut map = Self::with_capacity(self.len());
+        unsafe {
+            ptr::copy_nonoverlapping(self.table, map.table, self.len());
+        }
+        map.set_used(self.used());
+        map.set_all_keys_are_qstrs(self.all_keys_are_qstrs());
+        map.set_is_ordered(self.is_ordered());
+        map.set_is_fixed(0);
+        map
+    }
+}
+
 impl Default for Map {
     fn default() -> Self {
-        Self::new_with_capacity(0)
+        Self::with_capacity(0)
     }
 }
 

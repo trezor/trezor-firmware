@@ -4,6 +4,7 @@
 #![feature(coerce_unsized)]
 #![feature(dispatch_from_dyn)]
 #![deny(clippy::all)]
+#![deny(unsafe_op_in_unsafe_fn)]
 #![allow(dead_code)]
 
 mod error;

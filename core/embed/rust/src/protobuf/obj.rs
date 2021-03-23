@@ -3,6 +3,7 @@ use core::convert::{TryFrom, TryInto};
 use crate::{
     error::Error,
     micropython::{
+        dict::Dict,
         ffi,
         gc::Gc,
         map::Map,
@@ -15,19 +16,21 @@ use crate::{
 
 use super::{decode::Decoder, defs::MsgDef};
 
-pub const MSG_WIRE_ID_ATTR: Qstr = Qstr::MP_QSTR_MESSAGE_WIRE_TYPE;
-
 #[repr(C)]
 pub struct MsgObj {
     base: ObjBase,
     map: Map,
+    msg_wire_id: Option<u16>,
+    msg_offset: u16,
 }
 
 impl MsgObj {
-    pub fn alloc_with_capacity(capacity: usize) -> Gc<Self> {
+    pub fn alloc_with_capacity(capacity: usize, msg: &MsgDef) -> Gc<Self> {
         Gc::new(Self {
             base: Self::obj_type().to_base(),
-            map: Map::new_with_capacity(capacity),
+            map: Map::with_capacity(capacity),
+            msg_wire_id: msg.wire_id,
+            msg_offset: msg.offset,
         })
     }
 
@@ -78,22 +81,43 @@ unsafe extern "C" fn msg_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut Obj)
 
     let attr = Qstr::from_u16(attr as _);
 
-    if dest.read() == Obj::const_null() {
-        // Load attribute.
-        if let Ok(obj) = this.map.get(attr) {
-            dest.write(obj);
-        }
-    } else {
-        let value = dest.offset(1).read();
-        if value == Obj::const_null() {
-            // Delete atribute.
-            this.as_mut().map.delete(attr);
+    unsafe {
+        if dest.read() == Obj::const_null() {
+            // Load attribute.
+            if let Ok(obj) = this.map.get(attr) {
+                // Message field was found, return its value.
+                dest.write(obj);
+            } else {
+                match attr {
+                    Qstr::MP_QSTR_MESSAGE_WIRE_TYPE => {
+                        // Return the wire ID of this message def, or None if not set.
+                        let obj = this
+                            .msg_wire_id
+                            .map_or_else(Obj::const_none, |wire_id| wire_id.into());
+                        dest.write(obj);
+                    }
+                    Qstr::MP_QSTR___dict__ => {
+                        // Conversion to dict. Allocate a new dict object with a copy of our map
+                        // and return it. This is a bit different from how uPy does it now, because
+                        // we're returning a mutable dict.
+                        let dict = Gc::new(Dict::with_map(this.map.clone()));
+                        dest.write(dict.into());
+                    }
+                    _ => {}
+                }
+            }
         } else {
-            // Store attribute.
-            this.as_mut().map.set(attr, value);
+            let value = dest.offset(1).read();
+            if value == Obj::const_null() {
+                // Delete atribute.
+                this.as_mut().map.delete(attr);
+            } else {
+                // Store attribute.
+                this.as_mut().map.set(attr, value);
+            }
+            // TODO: Fail if attr does not exist.
+            dest.write(Obj::const_null());
         }
-        // TODO: Fail if attr does not exist.
-        dest.write(Obj::const_null());
     }
 }
 
@@ -118,7 +142,10 @@ impl MsgDefObj {
     fn obj_type() -> &'static Type {
         static TYPE: Type = obj_type! {
             name: Qstr::MP_QSTR_MsgDef,
-            attr_fn: msg_def_obj_attr,
+            locals: &obj_dict!(obj_map! {
+                Qstr::MP_QSTR_wire => obj_fn_1!(msg_def_obj_wire).to_obj(),
+                Qstr::MP_QSTR_is_type_of => obj_fn_2!(msg_def_obj_is_type_of).to_obj(),
+            }),
             call_fn: msg_def_obj_call,
         };
         &TYPE
@@ -150,25 +177,6 @@ impl TryFrom<Obj> for Gc<MsgDefObj> {
     }
 }
 
-unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut Obj) {
-    let this: Gc<MsgDefObj> = self_in.try_into().unwrap();
-
-    let attr = Qstr::from_u16(attr as _);
-
-    if dest.read() == Obj::const_null() {
-        let value = match attr {
-            // Get this message's wire ID, or None if not present.
-            MSG_WIRE_ID_ATTR => match this.def.wire_id {
-                Some(wire_id) => wire_id.into(),
-                None => Obj::const_none(),
-            },
-            // Fail for unknown attributes.
-            _ => Obj::const_null(),
-        };
-        dest.write(value);
-    }
-}
-
 unsafe extern "C" fn msg_def_obj_call(
     self_in: Obj,
     n_args: usize,
@@ -178,9 +186,30 @@ unsafe extern "C" fn msg_def_obj_call(
     util::try_with_args_and_kwargs_inline(n_args, n_kw, args, |_args, kwargs| {
         let this = Gc::<MsgDefObj>::try_from(self_in)?;
         let decoder = Decoder {
-            enable_experimental: false,
+            enable_experimental: true,
         };
         let obj = decoder.message_from_values(kwargs, this.msg())?;
         Ok(obj)
+    })
+}
+
+unsafe extern "C" fn msg_def_obj_wire(self_in: Obj) -> Obj {
+    util::try_or_raise(|| {
+        let this = Gc::<MsgDefObj>::try_from(self_in)?;
+        Ok(this
+            .def
+            .wire_id
+            .map_or_else(Obj::const_none, |wire_id| wire_id.into()))
+    })
+}
+
+unsafe extern "C" fn msg_def_obj_is_type_of(self_in: Obj, obj: Obj) -> Obj {
+    util::try_or_raise(|| {
+        let this = Gc::<MsgDefObj>::try_from(self_in)?;
+        let msg = Gc::<MsgObj>::try_from(obj);
+        match msg {
+            Ok(msg) if msg.msg_offset == this.def.offset => Ok(Obj::const_true()),
+            _ => Ok(Obj::const_false()),
+        }
     })
 }
