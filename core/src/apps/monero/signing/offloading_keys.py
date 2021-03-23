@@ -134,7 +134,7 @@ def gen_hmac_vini(
     used only once and hard to check. I.e., indices in step 2
     are uncheckable, decoy keys in step 9 are just random keys.
     """
-    import protobuf
+    from trezor import protobuf
     from apps.monero.xmr.keccak_hasher import get_keccak_writer
 
     kwriter = get_keccak_writer()
@@ -146,7 +146,7 @@ def gen_hmac_vini(
             src_entr.real_out_additional_tx_keys[src_entr.real_output_in_tx_index]
         ]
 
-    protobuf.dump_message(kwriter, src_entr)
+    kwriter.write(protobuf.dump_message_buffer(src_entr))
     src_entr.outputs = real_outputs
     src_entr.real_out_additional_tx_keys = real_additional
     kwriter.write(vini_bin)
@@ -162,11 +162,11 @@ def gen_hmac_vouti(
     """
     Generates HMAC for (TxDestinationEntry[i] || tx.vout[i])
     """
-    import protobuf
+    from trezor import protobuf
     from apps.monero.xmr.keccak_hasher import get_keccak_writer
 
     kwriter = get_keccak_writer()
-    protobuf.dump_message(kwriter, dst_entr)
+    kwriter.write(protobuf.dump_message_buffer(dst_entr))
     kwriter.write(tx_out_bin)
 
     hmac_key_vouti = hmac_key_txout(key, idx)
@@ -180,11 +180,11 @@ def gen_hmac_tsxdest(
     """
     Generates HMAC for TxDestinationEntry[i]
     """
-    import protobuf
+    from trezor import protobuf
     from apps.monero.xmr.keccak_hasher import get_keccak_writer
 
     kwriter = get_keccak_writer()
-    protobuf.dump_message(kwriter, dst_entr)
+    kwriter.write(protobuf.dump_message_buffer(dst_entr))
 
     hmac_key = hmac_key_txdst(key, idx)
     hmac_tsxdest = crypto.compute_hmac(hmac_key, kwriter.get_digest())

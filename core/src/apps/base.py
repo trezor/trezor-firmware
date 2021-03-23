@@ -145,6 +145,7 @@ async def handle_DoPreauthorized(
 
     req = await ctx.call_any(PreauthorizedRequest(), *wire_types)
 
+    assert req.MESSAGE_WIRE_TYPE is not None
     handler = workflow_handlers.find_registered_handler(
         ctx.iface, req.MESSAGE_WIRE_TYPE
     )

@@ -145,10 +145,6 @@ class HashWriter:
     def write(self, buf: bytes) -> None:  # alias for extend()
         self.ctx.update(buf)
 
-    async def awrite(self, buf: bytes) -> int:  # AsyncWriter interface
-        self.ctx.update(buf)
-        return len(buf)
-
     def get_digest(self) -> bytes:
         return self.ctx.digest()
 

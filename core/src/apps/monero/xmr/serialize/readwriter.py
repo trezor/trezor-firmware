@@ -62,9 +62,6 @@ class MemoryReaderWriter:
 
         return nread
 
-    async def areadinto(self, buf):
-        return self.readinto(buf)
-
     def write(self, buf):
         nwritten = len(buf)
         nall = len(self.buffer)
@@ -97,9 +94,6 @@ class MemoryReaderWriter:
         self.nwritten += nwritten
         self.ndata += nwritten
         return nwritten
-
-    async def awrite(self, buf):
-        return self.write(buf)
 
     def get_buffer(self):
         mv = memoryview(self.buffer)

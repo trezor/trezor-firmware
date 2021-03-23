@@ -50,7 +50,7 @@ async def get_tx_keys(ctx, msg: MoneroGetTxKeyRequest, keychain):
     # and then is used to store the derivations if applicable
     plain_buff = chacha_poly.decrypt_pack(tx_enc_key, msg.tx_enc_keys)
     utils.ensure(len(plain_buff) % 32 == 0, "Tx key buffer has invalid size")
-    del msg.tx_enc_keys
+    msg.tx_enc_keys = b""
 
     # If return only derivations do tx_priv * view_pub
     if do_deriv:
