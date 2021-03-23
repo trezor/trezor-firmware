@@ -3,7 +3,7 @@ import storage.sd_salt
 from trezor import config, ui, wire
 from trezor.crypto import random
 from trezor.messages import SdProtectOperationType
-from trezor.messages.Success import Success
+from trezor.messages import Success
 from trezor.pin import pin_to_int
 from trezor.ui.text import Text
 
@@ -18,7 +18,7 @@ from apps.common.sdcard import ensure_sdcard, sd_problem_dialog
 
 if False:
     from typing import Awaitable, Tuple
-    from trezor.messages.SdProtect import SdProtect
+    from trezor.messages import SdProtect
 
 
 def _make_salt() -> Tuple[bytes, bytes, bytes]:

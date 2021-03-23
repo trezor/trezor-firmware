@@ -16,7 +16,7 @@ from .verification import SignatureVerifier
 
 if False:
     from typing import List, Optional, Tuple
-    from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
+    from trezor.messages import MultisigRedeemScriptType
     from trezor.messages.TxInputType import EnumTypeInputScriptType
     from apps.common.coininfo import CoinInfo
 

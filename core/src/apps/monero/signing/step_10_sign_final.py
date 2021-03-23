@@ -8,7 +8,7 @@ so we can recover it just from the transaction and the spend key.
 The private tx keys are used in other numerous Monero features.
 """
 
-from trezor.messages.MoneroTransactionFinalAck import MoneroTransactionFinalAck
+from trezor.messages import MoneroTransactionFinalAck
 
 from apps.monero import misc
 from apps.monero.xmr import crypto

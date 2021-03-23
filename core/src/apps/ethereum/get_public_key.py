@@ -1,5 +1,5 @@
-from trezor.messages.EthereumPublicKey import EthereumPublicKey
-from trezor.messages.HDNodeType import HDNodeType
+from trezor.messages import EthereumPublicKey
+from trezor.messages import HDNodeType
 
 from apps.common import coins, layout, paths
 

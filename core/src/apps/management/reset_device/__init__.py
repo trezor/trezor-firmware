@@ -3,9 +3,9 @@ import storage.device
 from trezor import config, wire
 from trezor.crypto import bip39, hashlib, random, slip39
 from trezor.messages import BackupType
-from trezor.messages.EntropyAck import EntropyAck
-from trezor.messages.EntropyRequest import EntropyRequest
-from trezor.messages.Success import Success
+from trezor.messages import EntropyAck
+from trezor.messages import EntropyRequest
+from trezor.messages import Success
 from trezor.pin import pin_to_int
 
 from .. import backup_types
@@ -16,7 +16,7 @@ if __debug__:
     from apps import debug
 
 if False:
-    from trezor.messages.ResetDevice import ResetDevice
+    from trezor.messages import ResetDevice
 
 _DEFAULT_BACKUP_TYPE = BackupType.Bip39
 

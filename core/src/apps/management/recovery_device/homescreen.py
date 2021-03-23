@@ -7,7 +7,7 @@ from trezor.crypto import slip39
 from trezor.crypto.hashlib import sha256
 from trezor.errors import MnemonicError
 from trezor.messages import BackupType
-from trezor.messages.Success import Success
+from trezor.messages import Success
 
 from apps.common import mnemonic
 from apps.common.layout import show_success

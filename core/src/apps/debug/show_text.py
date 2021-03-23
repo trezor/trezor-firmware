@@ -1,7 +1,7 @@
 import trezor.messages.DebugLinkShowTextStyle as S
 from trezor import ui, wire
-from trezor.messages.DebugLinkShowText import DebugLinkShowText
-from trezor.messages.Success import Success
+from trezor.messages import DebugLinkShowText
+from trezor.messages import Success
 from trezor.ui import style, text
 from trezor.ui.text import Text
 

@@ -16,7 +16,7 @@ if False:
     from typing import Iterator
     from trezor import wire
     from trezor.messages.SignTx import EnumTypeAmountUnit
-    from trezor.messages.TxOutput import TxOutput
+    from trezor.messages import TxOutput
 
     from apps.common.coininfo import CoinInfo
 

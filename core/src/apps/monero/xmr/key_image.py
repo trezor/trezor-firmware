@@ -5,7 +5,7 @@ if False:
     from typing import List, Tuple, Optional, Dict
     from apps.monero.xmr.types import Ge25519, Sc25519
     from apps.monero.xmr.credentials import AccountCreds
-    from trezor.messages.MoneroTransferDetails import MoneroTransferDetails
+    from trezor.messages import MoneroTransferDetails
 
     Subaddresses = Dict[bytes, Tuple[int, int]]
     Sig = List[List[Sc25519]]

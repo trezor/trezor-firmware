@@ -1,6 +1,6 @@
 from trezor.crypto.hashlib import sha256
-from trezor.messages.EosTxActionAck import EosTxActionAck
-from trezor.messages.EosTxActionRequest import EosTxActionRequest
+from trezor.messages import EosTxActionAck
+from trezor.messages import EosTxActionRequest
 from trezor.utils import HashWriter
 
 from .. import helpers, writers

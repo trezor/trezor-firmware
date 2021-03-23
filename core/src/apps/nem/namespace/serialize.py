@@ -1,5 +1,5 @@
-from trezor.messages.NEMProvisionNamespace import NEMProvisionNamespace
-from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
+from trezor.messages import NEMProvisionNamespace
+from trezor.messages import NEMTransactionCommon
 
 from ..helpers import NEM_TRANSACTION_TYPE_PROVISION_NAMESPACE
 from ..writers import (

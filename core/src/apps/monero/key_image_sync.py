@@ -1,14 +1,12 @@
 import gc
 
 from trezor import log, wire
-from trezor.messages.MoneroExportedKeyImage import MoneroExportedKeyImage
-from trezor.messages.MoneroKeyImageExportInitAck import MoneroKeyImageExportInitAck
-from trezor.messages.MoneroKeyImageSyncFinalAck import MoneroKeyImageSyncFinalAck
-from trezor.messages.MoneroKeyImageSyncFinalRequest import (
-    MoneroKeyImageSyncFinalRequest,
-)
-from trezor.messages.MoneroKeyImageSyncStepAck import MoneroKeyImageSyncStepAck
-from trezor.messages.MoneroKeyImageSyncStepRequest import MoneroKeyImageSyncStepRequest
+from trezor.messages import MoneroExportedKeyImage
+from trezor.messages import MoneroKeyImageExportInitAck
+from trezor.messages import MoneroKeyImageSyncFinalAck
+from trezor.messages import MoneroKeyImageSyncFinalRequest
+from trezor.messages import MoneroKeyImageSyncStepAck
+from trezor.messages import MoneroKeyImageSyncStepRequest
 
 from apps.common import paths
 from apps.common.keychain import auto_keychain

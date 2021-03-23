@@ -1,5 +1,5 @@
-from trezor.messages.StellarAddress import StellarAddress
-from trezor.messages.StellarGetAddress import StellarGetAddress
+from trezor.messages import StellarAddress
+from trezor.messages import StellarGetAddress
 
 from apps.common import paths, seed
 from apps.common.keychain import auto_keychain

@@ -1,6 +1,6 @@
 from trezor import wire
 from trezor.crypto import aes, hmac
-from trezor.messages.CipheredKeyValue import CipheredKeyValue
+from trezor.messages import CipheredKeyValue
 from trezor.ui.text import Text
 
 from apps.common.confirm import require_confirm

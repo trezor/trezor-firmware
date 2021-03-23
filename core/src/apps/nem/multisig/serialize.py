@@ -1,6 +1,6 @@
 from trezor.crypto import hashlib, nem
-from trezor.messages.NEMAggregateModification import NEMAggregateModification
-from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
+from trezor.messages import NEMAggregateModification
+from trezor.messages import NEMTransactionCommon
 
 from ..helpers import (
     NEM_TRANSACTION_TYPE_AGGREGATE_MODIFICATION,

@@ -1,5 +1,5 @@
 from trezor.crypto import hashlib
-from trezor.messages.TezosAddress import TezosAddress
+from trezor.messages import TezosAddress
 
 from apps.common import paths, seed
 from apps.common.keychain import with_slip44_keychain

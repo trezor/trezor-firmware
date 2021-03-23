@@ -3,7 +3,7 @@ import storage.device
 import storage.recovery
 from trezor import config, ui, wire, workflow
 from trezor.messages import ButtonRequestType
-from trezor.messages.Success import Success
+from trezor.messages import Success
 from trezor.pin import pin_to_int
 from trezor.ui.text import Text
 
@@ -17,7 +17,7 @@ from apps.common.request_pin import (
 from .homescreen import recovery_homescreen, recovery_process
 
 if False:
-    from trezor.messages.RecoveryDevice import RecoveryDevice
+    from trezor.messages import RecoveryDevice
 
 
 # List of RecoveryDevice fields that can be set when doing dry-run recovery.

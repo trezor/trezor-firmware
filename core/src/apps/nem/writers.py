@@ -1,4 +1,4 @@
-from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
+from trezor.messages import NEMTransactionCommon
 
 from apps.common.writers import write_bytes_unchecked, write_uint32_le, write_uint64_le
 

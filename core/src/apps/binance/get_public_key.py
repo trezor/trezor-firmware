@@ -1,5 +1,5 @@
-from trezor.messages.BinanceGetPublicKey import BinanceGetPublicKey
-from trezor.messages.BinancePublicKey import BinancePublicKey
+from trezor.messages import BinanceGetPublicKey
+from trezor.messages import BinancePublicKey
 
 from apps.common import layout, paths
 from apps.common.keychain import Keychain, auto_keychain

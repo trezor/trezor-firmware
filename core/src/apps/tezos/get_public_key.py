@@ -1,6 +1,6 @@
 from trezor import ui
 from trezor.messages import ButtonRequestType
-from trezor.messages.TezosPublicKey import TezosPublicKey
+from trezor.messages import TezosPublicKey
 from trezor.ui.text import Text
 from trezor.utils import chunks
 

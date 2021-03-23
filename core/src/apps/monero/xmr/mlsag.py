@@ -51,7 +51,7 @@ if False:
     from typing import List, Tuple
     from apps.monero.xmr.types import Ge25519, Sc25519
     from apps.monero.xmr.serialize_messages.tx_ct_key import CtKey
-    from trezor.messages.MoneroRctKeyPublic import MoneroRctKeyPublic
+    from trezor.messages import MoneroRctKeyPublic
 
     KeyM = List[List[bytes]]
 

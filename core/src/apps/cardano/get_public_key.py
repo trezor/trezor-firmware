@@ -1,8 +1,8 @@
 from ubinascii import hexlify
 
 from trezor import log, wire
-from trezor.messages.CardanoPublicKey import CardanoPublicKey
-from trezor.messages.HDNodeType import HDNodeType
+from trezor.messages import CardanoPublicKey
+from trezor.messages import HDNodeType
 
 from apps.common import layout, paths
 from apps.common.seed import remove_ed25519_prefix

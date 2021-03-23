@@ -1,5 +1,5 @@
-from trezor.messages.RippleAddress import RippleAddress
-from trezor.messages.RippleGetAddress import RippleGetAddress
+from trezor.messages import RippleAddress
+from trezor.messages import RippleGetAddress
 
 from apps.common import paths
 from apps.common.keychain import auto_keychain

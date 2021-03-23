@@ -1,6 +1,6 @@
 from trezor import wire
 from trezor.crypto.curve import ed25519
-from trezor.messages.Success import Success
+from trezor.messages import Success
 
 from apps.common.signverify import require_confirm_verify_message
 

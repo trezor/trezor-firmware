@@ -2,7 +2,7 @@ from ustruct import pack, unpack
 
 from trezor import ui
 from trezor.crypto.hashlib import sha256
-from trezor.messages.SignedIdentity import SignedIdentity
+from trezor.messages import SignedIdentity
 from trezor.ui.text import Text
 from trezor.utils import chunks
 

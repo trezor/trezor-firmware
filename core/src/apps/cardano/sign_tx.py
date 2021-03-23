@@ -2,8 +2,8 @@ from trezor import log, wire
 from trezor.crypto import hashlib
 from trezor.crypto.curve import ed25519
 from trezor.messages import CardanoAddressType, CardanoCertificateType
-from trezor.messages.CardanoAddressParametersType import CardanoAddressParametersType
-from trezor.messages.CardanoSignedTx import CardanoSignedTx
+from trezor.messages import CardanoAddressParametersType
+from trezor.messages import CardanoSignedTx
 
 from apps.common import cbor
 from apps.common.paths import validate_path
@@ -55,11 +55,11 @@ from .layout import (
 from .seed import is_byron_path, is_shelley_path
 
 if False:
-    from trezor.messages.CardanoSignTx import CardanoSignTx
-    from trezor.messages.CardanoTxCertificateType import CardanoTxCertificateType
-    from trezor.messages.CardanoTxInputType import CardanoTxInputType
-    from trezor.messages.CardanoTxOutputType import CardanoTxOutputType
-    from trezor.messages.CardanoTxWithdrawalType import CardanoTxWithdrawalType
+    from trezor.messages import CardanoSignTx
+    from trezor.messages import CardanoTxCertificateType
+    from trezor.messages import CardanoTxInputType
+    from trezor.messages import CardanoTxOutputType
+    from trezor.messages import CardanoTxWithdrawalType
     from typing import Dict, List, Tuple
 
 METADATA_HASH_SIZE = 32

@@ -2,8 +2,8 @@ from micropython import const
 
 from trezor import workflow
 from trezor.messages import ButtonRequestType
-from trezor.messages.ButtonAck import ButtonAck
-from trezor.messages.ButtonRequest import ButtonRequest
+from trezor.messages import ButtonAck
+from trezor.messages import ButtonRequest
 
 if False:
     from trezor import wire

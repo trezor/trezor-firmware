@@ -1,4 +1,4 @@
-from trezor.messages.LiskAddress import LiskAddress
+from trezor.messages import LiskAddress
 
 from apps.common import paths
 from apps.common.keychain import auto_keychain

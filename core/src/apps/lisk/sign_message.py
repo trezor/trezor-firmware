@@ -1,6 +1,6 @@
 from trezor.crypto.curve import ed25519
 from trezor.crypto.hashlib import sha256
-from trezor.messages.LiskMessageSignature import LiskMessageSignature
+from trezor.messages import LiskMessageSignature
 from trezor.utils import HashWriter
 
 from apps.common import paths

@@ -1,6 +1,6 @@
 from storage.device import is_initialized
 from trezor import config, ui, wire
-from trezor.messages.Success import Success
+from trezor.messages import Success
 from trezor.pin import pin_to_int
 from trezor.ui.text import Text
 
@@ -14,7 +14,7 @@ from apps.common.request_pin import (
 )
 
 if False:
-    from trezor.messages.ChangePin import ChangePin
+    from trezor.messages import ChangePin
 
 
 async def change_pin(ctx: wire.Context, msg: ChangePin) -> Success:

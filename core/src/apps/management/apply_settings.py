@@ -1,7 +1,7 @@
 import storage.device
 from trezor import ui, wire, workflow
 from trezor.messages import ButtonRequestType, SafetyCheckLevel
-from trezor.messages.Success import Success
+from trezor.messages import Success
 from trezor.strings import format_duration_ms
 from trezor.ui.text import Text
 
@@ -10,7 +10,7 @@ from apps.common import safety_checks
 from apps.common.confirm import require_confirm, require_hold_to_confirm
 
 if False:
-    from trezor.messages.ApplySettings import ApplySettings, EnumTypeSafetyCheckLevel
+    from trezor.messages import ApplySettings, EnumTypeSafetyCheckLevel
 
 
 def validate_homescreen(homescreen: bytes) -> None:

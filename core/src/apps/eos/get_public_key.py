@@ -1,7 +1,7 @@
 from trezor import wire
 from trezor.crypto.curve import secp256k1
-from trezor.messages.EosGetPublicKey import EosGetPublicKey
-from trezor.messages.EosPublicKey import EosPublicKey
+from trezor.messages import EosGetPublicKey
+from trezor.messages import EosPublicKey
 
 from apps.common import paths
 from apps.common.keychain import Keychain, auto_keychain

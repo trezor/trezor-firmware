@@ -6,12 +6,8 @@ from apps.monero.xmr import crypto
 
 if False:
     from apps.monero.xmr.types import Sc25519
-    from trezor.messages.MoneroTransactionSourceEntry import (
-        MoneroTransactionSourceEntry,
-    )
-    from trezor.messages.MoneroTransactionDestinationEntry import (
-        MoneroTransactionDestinationEntry,
-    )
+    from trezor.messages import MoneroTransactionSourceEntry
+    from trezor.messages import MoneroTransactionDestinationEntry
 
 
 _SECRET_LENGTH = const(32)
