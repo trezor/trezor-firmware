@@ -12,6 +12,7 @@ from trezor.utils import chunks, chunks_intersperse
 from ..components.common import break_path_to_lines
 from ..components.common.confirm import is_confirmed, raise_if_cancelled
 from ..components.common.webauthn import ConfirmInfo
+from ..components.tt import passphrase, pin
 from ..components.tt.button import ButtonCancel, ButtonDefault
 from ..components.tt.confirm import Confirm, ConfirmPageable, HoldToConfirm, Pageable
 from ..components.tt.scroll import (
@@ -30,7 +31,7 @@ from ..constants.tt import (
     QR_Y,
     TEXT_MAX_LINES,
 )
-from .common import interact
+from .common import button_request, interact
 
 if False:
     from typing import (
@@ -78,6 +79,9 @@ __all__ = (
     "show_popup",
     "confirm_webauthn",
     "confirm_webauthn_reset",
+    "draw_simple_text",
+    "request_passphrase_on_device",
+    "request_pin_on_device",
 )
 
 
@@ -1055,3 +1059,47 @@ async def confirm_webauthn_reset() -> bool:
     text.normal("Do you really want to")
     text.bold("erase all credentials?")
     return is_confirmed(await Confirm(text))
+
+
+def draw_simple_text(title: str, description: str = "") -> None:
+    text = Text(title, ui.ICON_CONFIG, new_lines=False)
+    text.normal(description)
+    ui.draw_simple(text)
+
+
+async def request_passphrase_on_device(ctx: wire.GenericContext, max_len: int) -> str:
+    await button_request(
+        ctx, "passphrase_device", code=ButtonRequestType.PassphraseEntry
+    )
+
+    keyboard = passphrase.PassphraseKeyboard("Enter passphrase", max_len)
+    result = await ctx.wait(keyboard)
+    if result is passphrase.CANCELLED:
+        raise wire.ActionCancelled("Passphrase entry cancelled")
+
+    assert isinstance(result, str)
+    return result
+
+
+async def request_pin_on_device(
+    ctx: wire.GenericContext,
+    prompt: str,
+    attempts_remaining: int,
+    allow_cancel: bool,
+) -> str:
+    await button_request(ctx, "pin_device", code=ButtonRequestType.PinEntry)
+
+    if attempts_remaining is None:
+        subprompt = None
+    elif attempts_remaining == 1:
+        subprompt = "This is your last attempt"
+    else:
+        subprompt = "%s attempts remaining" % attempts_remaining
+
+    dialog = pin.PinDialog(prompt, subprompt, allow_cancel)
+    while True:
+        result = await ctx.wait(dialog)
+        if result is pin.CANCELLED:
+            raise wire.PinCancelled
+        assert isinstance(result, str)
+        return result

@@ -1,6 +1,5 @@
 from common import *
 from trezor.utils import ensure
-from apps.common.layout import address_n_to_str
 from apps.common.paths import *
 
 

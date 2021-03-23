@@ -3,7 +3,7 @@
 
 from micropython import const
 
-from apps.common import HARDENED
+from apps.common.paths import HARDENED
 
 SLIP44_WANCHAIN = const(5718350)
 SLIP44_ETHEREUM = const(60)
