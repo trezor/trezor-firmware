@@ -110,7 +110,8 @@ mypy:
 		src/apps/bitcoin \
 		src/apps/cardano \
 		src/apps/misc \
-		src/apps/webauthn
+		src/apps/webauthn \
+		src/trezor/ui
 
 ## code generation:
 

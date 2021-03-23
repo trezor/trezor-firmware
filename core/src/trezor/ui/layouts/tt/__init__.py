@@ -9,21 +9,21 @@ from trezor.ui.popup import Popup
 from trezor.ui.qr import Qr
 from trezor.utils import chunks, chunks_intersperse
 
-from ..components.common import break_path_to_lines
-from ..components.common.confirm import is_confirmed, raise_if_cancelled
-from ..components.common.webauthn import ConfirmInfo
-from ..components.tt import passphrase, pin
-from ..components.tt.button import ButtonCancel, ButtonDefault
-from ..components.tt.confirm import Confirm, ConfirmPageable, HoldToConfirm, Pageable
-from ..components.tt.scroll import (
+from ...components.common import break_path_to_lines
+from ...components.common.confirm import is_confirmed, raise_if_cancelled
+from ...components.common.webauthn import ConfirmInfo
+from ...components.tt import passphrase, pin
+from ...components.tt.button import ButtonCancel, ButtonDefault
+from ...components.tt.confirm import Confirm, ConfirmPageable, HoldToConfirm, Pageable
+from ...components.tt.scroll import (
     PAGEBREAK,
     Paginated,
     paginate_paragraphs,
     paginate_text,
 )
-from ..components.tt.text import LINE_WIDTH_PAGINATED, Span, Text
-from ..components.tt.webauthn import ConfirmContent
-from ..constants.tt import (
+from ...components.tt.text import LINE_WIDTH_PAGINATED, Span, Text
+from ...components.tt.webauthn import ConfirmContent
+from ...constants.tt import (
     MONO_ADDR_PER_LINE,
     MONO_HEX_PER_LINE,
     QR_SIZE_THRESHOLD,
@@ -31,7 +31,7 @@ from ..constants.tt import (
     QR_Y,
     TEXT_MAX_LINES,
 )
-from .common import button_request, interact
+from ..common import button_request, interact
 
 if False:
     from typing import (
