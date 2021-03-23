@@ -1,11 +1,10 @@
 from trezor import ui
+from trezor.enums import BinanceOrderSide, ButtonRequestType
 from trezor.messages import (
     BinanceCancelMsg,
     BinanceInputOutput,
     BinanceOrderMsg,
-    BinanceOrderSide,
     BinanceTransferMsg,
-    ButtonRequestType,
 )
 from trezor.strings import format_amount
 from trezor.ui.components.tt.scroll import Paginated

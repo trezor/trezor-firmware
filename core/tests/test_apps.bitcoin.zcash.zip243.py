@@ -1,8 +1,8 @@
 from common import *
-from trezor.messages import InputScriptType
-from trezor.messages.SignTx import SignTx
-from trezor.messages.TxInput import TxInput
-from trezor.messages.PrevOutput import PrevOutput
+from trezor.enums import InputScriptType
+from trezor.messages import SignTx
+from trezor.messages import TxInput
+from trezor.messages import PrevOutput
 
 from apps.common import coins
 from apps.bitcoin.common import SIGHASH_ALL

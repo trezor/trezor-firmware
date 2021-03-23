@@ -3,9 +3,9 @@ from common import *
 from trezor.crypto import hashlib
 
 if not utils.BITCOIN_ONLY:
-    from trezor.messages.NEMSignTx import NEMSignTx
-    from trezor.messages.NEMMosaicCreation import NEMMosaicCreation
-    from trezor.messages.NEMMosaicDefinition import NEMMosaicDefinition
+    from trezor.messages import NEMSignTx
+    from trezor.messages import NEMMosaicCreation
+    from trezor.messages import NEMMosaicDefinition
     from apps.nem.helpers import *
     from apps.nem.mosaic import *
     from apps.nem.mosaic.serialize import *

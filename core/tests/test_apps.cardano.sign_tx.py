@@ -1,6 +1,6 @@
 from common import *
 from apps.common import HARDENED
-from trezor.messages.CardanoTxInputType import CardanoTxInputType
+from trezor.messages import CardanoTxInputType
 
 if not utils.BITCOIN_ONLY:
     from apps.cardano.sign_tx import _should_hide_output

@@ -1,12 +1,9 @@
 from trezor import log, wire, workflow
-from trezor.messages import ButtonRequestType
-from trezor.messages.ButtonAck import ButtonAck
-from trezor.messages.ButtonRequest import ButtonRequest
+from trezor.enums import ButtonRequestType
+from trezor.messages import ButtonAck, ButtonRequest
 
 if False:
     from typing import Any, Awaitable
-
-    from trezor.messages.ButtonRequest import EnumTypeButtonRequestType
 
     LayoutType = Awaitable[Any]
 
@@ -15,7 +12,7 @@ async def interact(
     ctx: wire.GenericContext,
     layout: LayoutType,
     brtype: str,
-    brcode: EnumTypeButtonRequestType = ButtonRequestType.Other,
+    brcode: ButtonRequestType = ButtonRequestType.Other,
 ) -> Any:
     log.debug(__name__, "ButtonRequest.type={}".format(brtype))
     workflow.close_others()

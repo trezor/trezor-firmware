@@ -6,12 +6,12 @@ from trezor.crypto.hashlib import sha256
 if not utils.BITCOIN_ONLY:
     from apps.binance.helpers import produce_json_for_signing
     from apps.binance.sign_tx import generate_content_signature, sign_tx
-    from trezor.messages.BinanceCancelMsg import BinanceCancelMsg
-    from trezor.messages.BinanceCoin import BinanceCoin
-    from trezor.messages.BinanceInputOutput import BinanceInputOutput
-    from trezor.messages.BinanceOrderMsg import BinanceOrderMsg
-    from trezor.messages.BinanceSignTx import BinanceSignTx
-    from trezor.messages.BinanceTransferMsg import BinanceTransferMsg
+    from trezor.messages import BinanceCancelMsg
+    from trezor.messages import BinanceCoin
+    from trezor.messages import BinanceInputOutput
+    from trezor.messages import BinanceOrderMsg
+    from trezor.messages import BinanceSignTx
+    from trezor.messages import BinanceTransferMsg
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

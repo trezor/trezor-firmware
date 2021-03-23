@@ -1,11 +1,9 @@
 from trezor import ui
+from trezor.enums import ButtonRequestType, NEMMosaicLevy, NEMSupplyChangeType
 from trezor.messages import (
-    ButtonRequestType,
     NEMMosaicCreation,
     NEMMosaicDefinition,
-    NEMMosaicLevy,
     NEMMosaicSupplyChange,
-    NEMSupplyChangeType,
     NEMTransactionCommon,
 )
 from trezor.ui.components.tt.scroll import Paginated

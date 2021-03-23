@@ -4,7 +4,7 @@ from apps.monero.xmr.serialize.int_serialize import dump_uvarint_b
 if False:
     from apps.monero.xmr.types import Ge25519, Sc25519
     from apps.monero.xmr.credentials import AccountCreds
-    from trezor.messages.MoneroTransferDetails import MoneroTransferDetails
+    from trezor.messages import MoneroTransferDetails
 
     Subaddresses = dict[bytes, tuple[int, int]]
     Sig = list[list[Sc25519]]

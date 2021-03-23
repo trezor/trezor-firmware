@@ -1,17 +1,19 @@
 from micropython import const
 
 from trezor import wire
-from trezor.messages.AuthorizeCoinJoin import AuthorizeCoinJoin
+from trezor.messages import AuthorizeCoinJoin
 
 from apps.common import authorization
 
 from .common import BIP32_WALLET_DEPTH
 
 if False:
-    import protobuf
-    from trezor.messages.GetOwnershipProof import GetOwnershipProof
-    from trezor.messages.SignTx import SignTx
-    from trezor.messages.TxInput import TxInput
+    from trezor.messages import (
+        GetOwnershipProof,
+        SignTx,
+        TxInput,
+    )
+    from trezor.protobuf import MessageType
 
     from apps.common.coininfo import CoinInfo
 
@@ -52,8 +54,8 @@ class CoinJoinAuthorization:
         return True
 
 
-def from_cached_message(auth_msg: protobuf.MessageType) -> CoinJoinAuthorization:
-    if not isinstance(auth_msg, AuthorizeCoinJoin):
+def from_cached_message(auth_msg: MessageType) -> CoinJoinAuthorization:
+    if not AuthorizeCoinJoin.is_type_of(auth_msg):
         raise wire.ProcessError("Appropriate params was not found")
 
     return CoinJoinAuthorization(auth_msg)

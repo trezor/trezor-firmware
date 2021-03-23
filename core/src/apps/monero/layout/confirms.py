@@ -1,7 +1,7 @@
 from ubinascii import hexlify
 
 from trezor import ui, wire
-from trezor.messages import ButtonRequestType
+from trezor.enums import ButtonRequestType
 from trezor.ui.components.tt.text import Text
 from trezor.ui.layouts import confirm_action
 from trezor.ui.popup import Popup
@@ -15,8 +15,8 @@ DUMMY_PAYMENT_ID = b"\x00\x00\x00\x00\x00\x00\x00\x00"
 
 if False:
     from apps.monero.signing.state import State
-    from trezor.messages.MoneroTransactionData import MoneroTransactionData
-    from trezor.messages.MoneroTransactionDestinationEntry import (
+    from trezor.messages import (
+        MoneroTransactionData,
         MoneroTransactionDestinationEntry,
     )
 
@@ -248,7 +248,7 @@ async def show_address(
     ctx, address: str, desc: str = "Confirm address", network: str = None
 ):
     from apps.common.confirm import confirm
-    from trezor.messages import ButtonRequestType
+    from trezor.enums import ButtonRequestType
     from trezor.ui.components.tt.button import ButtonDefault
     from trezor.ui.components.tt.scroll import Paginated
 

@@ -1,5 +1,4 @@
-from trezor.messages.MoneroGetWatchKey import MoneroGetWatchKey
-from trezor.messages.MoneroWatchKey import MoneroWatchKey
+from trezor.messages import MoneroGetWatchKey, MoneroWatchKey
 
 from apps.common import paths
 from apps.common.keychain import auto_keychain

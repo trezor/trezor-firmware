@@ -1,4 +1,4 @@
-from trezor.messages.LiskAddress import LiskAddress
+from trezor.messages import LiskAddress
 from trezor.ui.layouts import show_address
 
 from apps.common import paths

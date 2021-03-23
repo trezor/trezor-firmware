@@ -1,7 +1,6 @@
 from ubinascii import hexlify
 
-from trezor.messages.BinanceGetPublicKey import BinanceGetPublicKey
-from trezor.messages.BinancePublicKey import BinancePublicKey
+from trezor.messages import BinanceGetPublicKey, BinancePublicKey
 from trezor.ui.layouts import show_pubkey
 
 from apps.common import paths

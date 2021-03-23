@@ -1,8 +1,8 @@
 from common import unhexlify, unittest
 from trezor.crypto import bip39
-from trezor.messages import InputScriptType
-from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
-from trezor.messages.HDNodeType import HDNodeType
+from trezor.enums import InputScriptType
+from trezor.messages import MultisigRedeemScriptType
+from trezor.messages import HDNodeType
 
 from apps.common import coins
 from apps.common.keychain import Keychain

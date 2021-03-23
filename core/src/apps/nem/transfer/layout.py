@@ -1,10 +1,8 @@
 from trezor import ui
+from trezor.enums import ButtonRequestType, NEMImportanceTransferMode, NEMMosaicLevy
 from trezor.messages import (
-    ButtonRequestType,
     NEMImportanceTransfer,
-    NEMImportanceTransferMode,
     NEMMosaic,
-    NEMMosaicLevy,
     NEMTransactionCommon,
     NEMTransfer,
 )

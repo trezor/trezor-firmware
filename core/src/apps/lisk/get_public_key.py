@@ -1,6 +1,6 @@
 from ubinascii import hexlify
 
-from trezor.messages.LiskPublicKey import LiskPublicKey
+from trezor.messages import LiskPublicKey
 from trezor.ui.layouts import show_pubkey
 
 from apps.common import paths

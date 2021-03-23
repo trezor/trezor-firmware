@@ -1,6 +1,6 @@
 from common import *
 from trezor.crypto import bip32, bip39
-from trezor.messages.GetAddress import GetAddress
+from trezor.messages import GetAddress
 from trezor.utils import HashWriter
 
 from apps.common import coins

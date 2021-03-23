@@ -1,10 +1,7 @@
 import storage.recovery
-from trezor.messages import BackupType
+from trezor.enums import BackupType
 
 from . import recover
-
-if False:
-    from trezor.messages.ResetDevice import EnumTypeBackupType
 
 
 class WordValidityResult(Exception):
@@ -23,7 +20,7 @@ class ThresholdReached(WordValidityResult):
     pass
 
 
-def check(backup_type: EnumTypeBackupType | None, partial_mnemonic: list[str]) -> None:
+def check(backup_type: BackupType | None, partial_mnemonic: list[str]) -> None:
     # we can't perform any checks if the backup type was not yet decided
     if backup_type is None:
         return

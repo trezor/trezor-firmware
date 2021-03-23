@@ -1,7 +1,7 @@
 from micropython import const
 
 from trezor import ui, wire
-from trezor.messages import ButtonRequestType
+from trezor.enums import ButtonRequestType
 from trezor.ui.container import Container
 from trezor.ui.loader import LoaderDanger
 from trezor.ui.qr import Qr
@@ -32,8 +32,6 @@ if False:
         Awaitable,
         NoReturn,
     )
-
-    from trezor.messages.ButtonRequest import EnumTypeButtonRequestType
 
     from ..components.common.text import TextContent
 
@@ -82,7 +80,7 @@ async def confirm_action(
     reverse: bool = False,  # TODO cleanup @ redesign
     larger_vspace: bool = False,  # TODO cleanup @ redesign
     exc: ExceptionType = wire.ActionCancelled,
-    br_code: EnumTypeButtonRequestType = ButtonRequestType.Other,
+    br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> None:
     text = Text(
         title,
@@ -340,7 +338,7 @@ def show_pubkey(
 async def _show_modal(
     ctx: wire.GenericContext,
     br_type: str,
-    br_code: EnumTypeButtonRequestType,
+    br_code: ButtonRequestType,
     header: str,
     subheader: str | None,
     content: str,
@@ -400,7 +398,7 @@ def show_warning(
     header: str = "Warning",
     subheader: str | None = None,
     button: str = "Try again",
-    br_code: EnumTypeButtonRequestType = ButtonRequestType.Warning,
+    br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> Awaitable[None]:
     return _show_modal(
         ctx,
@@ -475,7 +473,7 @@ async def confirm_hex(
     title: str,
     data: str,
     description: str | None = None,
-    br_code: EnumTypeButtonRequestType = ButtonRequestType.Other,
+    br_code: ButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
     width: int = MONO_HEX_PER_LINE,
@@ -533,7 +531,7 @@ async def confirm_metadata(
     title: str,
     content: str,
     param: str | None = None,
-    br_code: EnumTypeButtonRequestType = ButtonRequestType.SignTx,
+    br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> None:
     text = Text(title, ui.ICON_SEND, ui.GREEN, new_lines=False)
     text.format_parametrized(content, param if param is not None else "")

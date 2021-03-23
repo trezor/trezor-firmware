@@ -1,5 +1,5 @@
 from trezor import utils
-from trezor.messages import MessageType
+from trezor.enums import MessageType
 
 if False:
     from trezor.wire import Handler

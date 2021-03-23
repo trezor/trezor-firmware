@@ -2,11 +2,7 @@ import math
 from ubinascii import hexlify
 
 from trezor import ui
-from trezor.messages import (
-    ButtonRequestType,
-    CardanoAddressType,
-    CardanoCertificateType,
-)
+from trezor.enums import ButtonRequestType, CardanoAddressType, CardanoCertificateType
 from trezor.strings import format_amount
 from trezor.ui.components.tt.button import ButtonDefault
 from trezor.ui.components.tt.scroll import Paginated
@@ -33,16 +29,15 @@ from .helpers.utils import (
 
 if False:
     from trezor import wire
-    from trezor.messages.CardanoBlockchainPointerType import (
+    from trezor.messages import (
         CardanoBlockchainPointerType,
+        CardanoTxCertificateType,
+        CardanoTxWithdrawalType,
+        CardanoPoolParametersType,
+        CardanoPoolOwnerType,
+        CardanoPoolMetadataType,
+        CardanoAssetGroupType,
     )
-    from trezor.messages.CardanoTxCertificateType import CardanoTxCertificateType
-    from trezor.messages.CardanoTxWithdrawalType import CardanoTxWithdrawalType
-    from trezor.messages.CardanoPoolParametersType import CardanoPoolParametersType
-    from trezor.messages.CardanoPoolOwnerType import CardanoPoolOwnerType
-    from trezor.messages.CardanoPoolMetadataType import CardanoPoolMetadataType
-    from trezor.messages.CardanoAssetGroupType import CardanoAssetGroupType
-    from trezor.messages.CardanoAddressParametersType import EnumTypeCardanoAddressType
 
 
 ADDRESS_TYPE_NAMES = {
@@ -137,7 +132,7 @@ async def show_warning_path(ctx: wire.Context, path: list[int], title: str) -> N
 
 
 async def show_warning_tx_no_staking_info(
-    ctx: wire.Context, address_type: EnumTypeCardanoAddressType, amount: int
+    ctx: wire.Context, address_type: CardanoAddressType, amount: int
 ) -> None:
     page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     page1.normal("Change " + ADDRESS_TYPE_NAMES[address_type].lower())
@@ -441,7 +436,7 @@ async def show_auxiliary_data_hash(
 async def show_address(
     ctx: wire.Context,
     address: str,
-    address_type: EnumTypeCardanoAddressType,
+    address_type: CardanoAddressType,
     path: list[int],
     network: str | None = None,
 ) -> bool:

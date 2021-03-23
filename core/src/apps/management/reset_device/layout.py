@@ -2,7 +2,7 @@ import ubinascii
 
 from trezor import ui, utils
 from trezor.crypto import random
-from trezor.messages import BackupType, ButtonRequestType
+from trezor.enums import BackupType, ButtonRequestType
 from trezor.ui.components.tt.button import Button, ButtonDefault
 from trezor.ui.components.tt.checklist import Checklist
 from trezor.ui.components.tt.info import InfoConfirm

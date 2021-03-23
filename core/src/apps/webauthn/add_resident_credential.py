@@ -1,7 +1,6 @@
 import storage.device
 from trezor import wire
-from trezor.messages.Success import Success
-from trezor.messages.WebAuthnAddResidentCredential import WebAuthnAddResidentCredential
+from trezor.messages import Success, WebAuthnAddResidentCredential
 from trezor.ui.layouts import show_error_and_raise
 
 from apps.common.confirm import require_confirm

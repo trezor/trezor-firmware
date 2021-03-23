@@ -4,8 +4,8 @@ from apps.common.paths import HARDENED
 
 if not utils.BITCOIN_ONLY:
     from apps.tezos.sign_tx import _get_address_from_contract
-    from trezor.messages import TezosContractType
-    from trezor.messages.TezosContractID import TezosContractID
+    from trezor.enums import TezosContractType
+    from trezor.messages import TezosContractID
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

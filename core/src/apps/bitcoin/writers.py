@@ -15,10 +15,12 @@ from apps.common.writers import (  # noqa: F401
 )
 
 if False:
-    from trezor.messages.TxInput import TxInput
-    from trezor.messages.TxOutput import TxOutput
-    from trezor.messages.PrevInput import PrevInput
-    from trezor.messages.PrevOutput import PrevOutput
+    from trezor.messages import (
+        PrevInput,
+        PrevOutput,
+        TxInput,
+        TxOutput,
+    )
     from trezor.utils import HashWriter
 
     from apps.common.writers import Writer

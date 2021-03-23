@@ -1,7 +1,6 @@
 from trezor import wire
 from trezor.crypto.curve import ed25519
-from trezor.messages.NEMSignedTx import NEMSignedTx
-from trezor.messages.NEMSignTx import NEMSignTx
+from trezor.messages import NEMSignedTx, NEMSignTx
 
 from apps.common import seed
 from apps.common.keychain import with_slip44_keychain

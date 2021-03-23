@@ -1,7 +1,7 @@
 from micropython import const
 
 from trezor import ui
-from trezor.messages import ButtonRequestType
+from trezor.enums import ButtonRequestType
 from trezor.ui.components.tt.button import ButtonDefault
 from trezor.ui.components.tt.text import Text
 from trezor.ui.container import Container

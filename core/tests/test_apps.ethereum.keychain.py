@@ -15,8 +15,8 @@ if not utils.BITCOIN_ONLY:
     )
     from apps.ethereum.networks import by_chain_id, by_slip44
 
-    from trezor.messages.EthereumGetAddress import EthereumGetAddress
-    from trezor.messages.EthereumSignTx import EthereumSignTx
+    from trezor.messages import EthereumGetAddress
+    from trezor.messages import EthereumSignTx
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

@@ -1,12 +1,14 @@
 from trezor import wire
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha256
-from trezor.messages import MessageType
-from trezor.messages.BinanceCancelMsg import BinanceCancelMsg
-from trezor.messages.BinanceOrderMsg import BinanceOrderMsg
-from trezor.messages.BinanceSignedTx import BinanceSignedTx
-from trezor.messages.BinanceTransferMsg import BinanceTransferMsg
-from trezor.messages.BinanceTxRequest import BinanceTxRequest
+from trezor.enums import MessageType
+from trezor.messages import (
+    BinanceCancelMsg,
+    BinanceOrderMsg,
+    BinanceSignedTx,
+    BinanceTransferMsg,
+    BinanceTxRequest,
+)
 
 from apps.common import paths
 from apps.common.keychain import Keychain, auto_keychain
@@ -37,11 +39,11 @@ async def sign_tx(ctx, envelope, keychain: Keychain):
 
     msg_json = helpers.produce_json_for_signing(envelope, msg)
 
-    if isinstance(msg, BinanceTransferMsg):
+    if BinanceTransferMsg.is_type_of(msg):
         await layout.require_confirm_transfer(ctx, msg)
-    elif isinstance(msg, BinanceOrderMsg):
+    elif BinanceOrderMsg.is_type_of(msg):
         await layout.require_confirm_order(ctx, msg)
-    elif isinstance(msg, BinanceCancelMsg):
+    elif BinanceCancelMsg.is_type_of(msg):
         await layout.require_confirm_cancel(ctx, msg)
     else:
         raise ValueError("input message unrecognized, is of type " + type(msg).__name__)

@@ -2,11 +2,13 @@ from micropython import const
 
 from trezor.crypto import bech32
 from trezor.crypto.scripts import sha256_ripemd160_digest
-from trezor.messages.BinanceCancelMsg import BinanceCancelMsg
-from trezor.messages.BinanceInputOutput import BinanceInputOutput
-from trezor.messages.BinanceOrderMsg import BinanceOrderMsg
-from trezor.messages.BinanceSignTx import BinanceSignTx
-from trezor.messages.BinanceTransferMsg import BinanceTransferMsg
+from trezor.messages import (
+    BinanceCancelMsg,
+    BinanceInputOutput,
+    BinanceOrderMsg,
+    BinanceSignTx,
+    BinanceTransferMsg,
+)
 
 ENVELOPE_BLUEPRINT = '{{"account_number":"{account_number}","chain_id":"{chain_id}","data":null,"memo":"{memo}","msgs":[{msgs}],"sequence":"{sequence}","source":"{source}"}}'
 MSG_TRANSFER_BLUEPRINT = '{{"inputs":[{inputs}],"outputs":[{outputs}]}}'
@@ -20,11 +22,11 @@ DECIMALS = const(8)
 
 
 def produce_json_for_signing(envelope: BinanceSignTx, msg) -> str:
-    if isinstance(msg, BinanceTransferMsg):
+    if BinanceTransferMsg.is_type_of(msg):
         json_msg = produce_transfer_json(msg)
-    elif isinstance(msg, BinanceOrderMsg):
+    elif BinanceOrderMsg.is_type_of(msg):
         json_msg = produce_neworder_json(msg)
-    elif isinstance(msg, BinanceCancelMsg):
+    elif BinanceCancelMsg.is_type_of(msg):
         json_msg = produce_cancel_json(msg)
     else:
         raise ValueError("input message unrecognized, is of type " + type(msg).__name__)

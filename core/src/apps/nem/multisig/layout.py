@@ -1,12 +1,7 @@
 from trezor import ui
 from trezor.crypto import nem
-from trezor.messages import (
-    ButtonRequestType,
-    NEMAggregateModification,
-    NEMModificationType,
-    NEMSignTx,
-    NEMTransactionCommon,
-)
+from trezor.enums import ButtonRequestType, NEMModificationType
+from trezor.messages import NEMAggregateModification, NEMSignTx, NEMTransactionCommon
 from trezor.ui.components.tt.text import Text
 
 from apps.common.layout import split_address

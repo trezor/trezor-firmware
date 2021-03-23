@@ -1,4 +1,4 @@
-from trezor.messages.NEMAddress import NEMAddress
+from trezor.messages import NEMAddress
 from trezor.ui.layouts import show_address
 
 from apps.common.keychain import with_slip44_keychain

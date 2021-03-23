@@ -1,5 +1,5 @@
 from trezor import wire
-from trezor.messages import ButtonRequestType
+from trezor.enums import ButtonRequestType
 from trezor.ui.components.tt.confirm import (
     CONFIRMED,
     INFO,
@@ -19,13 +19,12 @@ if False:
     from trezor import ui
     from trezor.ui.components.tt.confirm import ButtonContent, ButtonStyleType
     from trezor.ui.loader import LoaderStyleType
-    from trezor.messages.ButtonRequest import EnumTypeButtonRequestType
 
 
 async def confirm(
     ctx: wire.GenericContext,
     content: ui.Component,
-    code: EnumTypeButtonRequestType = ButtonRequestType.Other,
+    code: ButtonRequestType = ButtonRequestType.Other,
     confirm: ButtonContent | None = Confirm.DEFAULT_CONFIRM,
     confirm_style: ButtonStyleType = Confirm.DEFAULT_CONFIRM_STYLE,
     cancel: ButtonContent | None = Confirm.DEFAULT_CANCEL,
@@ -60,7 +59,7 @@ async def info_confirm(
     ctx: wire.GenericContext,
     content: ui.Component,
     info_func: Callable,
-    code: EnumTypeButtonRequestType = ButtonRequestType.Other,
+    code: ButtonRequestType = ButtonRequestType.Other,
     confirm: ButtonContent = InfoConfirm.DEFAULT_CONFIRM,
     confirm_style: ButtonStyleType = InfoConfirm.DEFAULT_CONFIRM_STYLE,
     cancel: ButtonContent = InfoConfirm.DEFAULT_CANCEL,
@@ -87,7 +86,7 @@ async def info_confirm(
 async def hold_to_confirm(
     ctx: wire.GenericContext,
     content: ui.Component,
-    code: EnumTypeButtonRequestType = ButtonRequestType.Other,
+    code: ButtonRequestType = ButtonRequestType.Other,
     confirm: str = HoldToConfirm.DEFAULT_CONFIRM,
     confirm_style: ButtonStyleType = HoldToConfirm.DEFAULT_CONFIRM_STYLE,
     loader_style: LoaderStyleType = HoldToConfirm.DEFAULT_LOADER_STYLE,

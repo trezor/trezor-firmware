@@ -2,7 +2,7 @@ from micropython import const
 
 import storage.device
 from trezor import wire, workflow
-from trezor.messages import ButtonRequestType
+from trezor.enums import ButtonRequestType
 
 from . import button_request
 
@@ -35,8 +35,7 @@ async def _request_from_user(ctx: wire.Context) -> str:
 
 
 async def _request_on_host(ctx: wire.Context) -> str:
-    from trezor.messages.PassphraseAck import PassphraseAck
-    from trezor.messages.PassphraseRequest import PassphraseRequest
+    from trezor.messages import PassphraseAck, PassphraseRequest
     from trezor.ui import ICON_CONFIG
     from trezor.ui.components.tt.text import Text
 

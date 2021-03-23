@@ -1,7 +1,7 @@
 from trezor import utils, wire
 from trezor.crypto import base58, cashaddr
 from trezor.crypto.hashlib import sha256
-from trezor.messages import InputScriptType
+from trezor.enums import InputScriptType
 
 from apps.common import address_type
 from apps.common.readers import read_bitcoin_varint
@@ -22,9 +22,7 @@ from .writers import (
 )
 
 if False:
-    from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
-    from trezor.messages.TxInput import TxInput
-    from trezor.messages.TxInput import EnumTypeInputScriptType
+    from trezor.messages import MultisigRedeemScriptType, TxInput
 
     from apps.common.coininfo import CoinInfo
 
@@ -32,7 +30,7 @@ if False:
 
 
 def input_derive_script(
-    script_type: EnumTypeInputScriptType,
+    script_type: InputScriptType,
     multisig: MultisigRedeemScriptType | None,
     coin: CoinInfo,
     hash_type: int,
@@ -521,7 +519,7 @@ def output_script_paytoopreturn(data: bytes) -> bytearray:
 
 def write_bip322_signature_proof(
     w: Writer,
-    script_type: EnumTypeInputScriptType,
+    script_type: InputScriptType,
     multisig: MultisigRedeemScriptType | None,
     coin: CoinInfo,
     public_key: bytes,

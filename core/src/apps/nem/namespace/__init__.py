@@ -1,5 +1,4 @@
-from trezor.messages.NEMProvisionNamespace import NEMProvisionNamespace
-from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
+from trezor.messages import NEMProvisionNamespace, NEMTransactionCommon
 
 from . import layout, serialize
 

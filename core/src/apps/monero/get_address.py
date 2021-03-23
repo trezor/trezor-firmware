@@ -1,4 +1,4 @@
-from trezor.messages.MoneroAddress import MoneroAddress
+from trezor.messages import MoneroAddress
 
 from apps.common import paths
 from apps.common.keychain import auto_keychain
