@@ -23,7 +23,7 @@ class CodecError(Exception):
 
 
 class Message:
-    def __init__(self, mtype: int, mdata: utils.BufferReader) -> None:
+    def __init__(self, mtype: int, mdata: bytes) -> None:
         self.type = mtype
         self.data = mdata
 
@@ -70,7 +70,7 @@ async def read_message(iface: WireInterface, buffer: utils.BufferType) -> Messag
     if read_and_throw_away:
         raise CodecError("Message too large")
 
-    return Message(mtype, utils.BufferReader(mdata))
+    return Message(mtype, mdata)
 
 
 async def write_message(iface: WireInterface, mtype: int, mdata: bytes) -> None:

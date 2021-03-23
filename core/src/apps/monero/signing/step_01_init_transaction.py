@@ -116,7 +116,7 @@ async def init_transaction(
     from trezor.messages.MoneroTransactionInitAck import MoneroTransactionInitAck
     from trezor.messages.MoneroTransactionRsigData import MoneroTransactionRsigData
 
-    rsig_data = MoneroTransactionRsigData(offload_type=state.rsig_offload)
+    rsig_data = MoneroTransactionRsigData(offload_type=int(state.rsig_offload))
 
     return MoneroTransactionInitAck(hmacs=hmacs, rsig_data=rsig_data)
 
@@ -273,11 +273,11 @@ def _compute_sec_keys(state: State, tsx_data: MoneroTransactionData):
     """
     Generate master key H( H(TsxData || tx_priv) || rand )
     """
-    import protobuf
+    from trezor import protobuf
     from apps.monero.xmr.keccak_hasher import get_keccak_writer
 
     writer = get_keccak_writer()
-    protobuf.dump_message(writer, tsx_data)
+    writer.write(protobuf.dump_message_buffer(tsx_data))
     writer.write(crypto.encodeint(state.tx_priv))
 
     master_key = crypto.keccak_2hash(
