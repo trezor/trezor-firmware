@@ -9,6 +9,7 @@ pub enum Error {
     InvalidType,
     NotBuffer,
     NotInt,
+    InvalidOperation,
 }
 
 impl Error {
@@ -22,6 +23,7 @@ impl Error {
                 Error::InvalidType => cstr("InvalidType\0"),
                 Error::NotBuffer => cstr("NotBuffer\0"),
                 Error::NotInt => cstr("NotInt\0"),
+                Error::InvalidOperation => cstr("InvalidOperation\0"),
             }
         }
     }
