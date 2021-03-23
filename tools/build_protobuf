@@ -51,55 +51,41 @@ PYTHON_MESSAGES_IGNORE=""
 RETURN=0
 
 do_rebuild() {
-    # rebuild protobuf in specified directory
-    local DESTDIR="$1"
+    local FILE_OR_DIR="$1"
+    shift
+    local OUTPUT="$1"
     shift
     local SOURCES="$1"
     shift
-    local IGNORE="$1"
-    shift
-    local APPLY_BITCOIN_ONLY="$1"
-    shift
 
-    mkdir -p "$DESTDIR"
-    rm -f "$DESTDIR"/[A-Z]*.py
+    if [ "$FILE_OR_DIR" == file ]; then
+        local param="--outfile"
+    else
+        local param="--python-outdir"
+    fi
 
     # note $SOURCES is unquoted - we want wildcard expansion and multiple args
-    $PROTOB/pb2py "$@" -o "$DESTDIR" $SOURCES
-
-    # TODO: make this less hackish
-    # maybe introduce attribute "altcoin" in protobuf?
-    if [ "$APPLY_BITCOIN_ONLY" == "TRUE" ]; then
-        sed -i "3ifrom trezor import utils\n" "$DESTDIR"/Capability.py
-        sed -i "3ifrom trezor import utils\n" "$DESTDIR"/MessageType.py
-        sed -i "/^EthereumGetPublicKey/iif not utils.BITCOIN_ONLY:" "$DESTDIR"/MessageType.py
-        for altcoin in Ethereum NEM Lisk Tezos Stellar Cardano Ripple Monero DebugMonero Eos Binance WebAuthn; do
-            sed -i "s:^$altcoin:    $altcoin:" "$DESTDIR"/Capability.py
-            sed -i "s:^$altcoin:    $altcoin:" "$DESTDIR"/MessageType.py
-        done
-        sed -i "/^Bitcoin_like/iif not utils.BITCOIN_ONLY:" "$DESTDIR"/Capability.py
-        sed -i "/^EOS/iif not utils.BITCOIN_ONLY:" "$DESTDIR"/Capability.py
-        for feature in Bitcoin_like EOS U2F; do
-            sed -i "s:^$feature:    $feature:" "$DESTDIR"/Capability.py
-        done
-    fi
-    # ENDTODO
-
-    # delete unused messages
-    for F in $IGNORE; do
-        rm -f "$DESTDIR"/"$F".py
-    done
+    $PROTOB/pb2py "$@" $param="$OUTPUT" $SOURCES
 }
 
 do_check() {
     # rebuild protobuf in tmpdir and check result against specified directory
     local TMPDIR=$(mktemp -d proto-check.XXXXXX)
-    local DESTDIR="$1"
+
+    local FILE_OR_DIR="$1"
+    shift
+    local OUTPUT="$1"
     shift
 
-    cp -rT "$DESTDIR" "$TMPDIR"
-    do_rebuild "$TMPDIR" "$@"
-    DIFF=$(diff -ur --exclude __pycache__ "$DESTDIR" "$TMPDIR")
+    if [ "$FILE_OR_DIR" == file ]; then
+        local TMPDEST="$TMPDIR/testfile"
+    else
+        cp -rT "$OUTPUT" "$TMPDIR"
+        local TMPDEST="$TMPDIR"
+    fi
+
+    do_rebuild "$FILE_OR_DIR" "$TMPDEST" "$@"
+    DIFF=$(diff -ur --exclude __pycache__ "$OUTPUT" "$TMPDEST")
     rm -r "$TMPDIR"
     if [ -n "$DIFF" ]; then
         echo "$DIFF"
@@ -113,7 +99,12 @@ else
     func=do_rebuild
 fi
 
-$func core/src/trezor/messages "$CORE_PROTOBUF_SOURCES" "$CORE_MESSAGES_IGNORE" TRUE --no-init-py
-$func python/src/trezorlib/messages "$PYTHON_PROTOBUF_SOURCES" "$PYTHON_MESSAGES_IGNORE" FALSE --include-deprecated -P ..protobuf
+$func dir core/src/trezor/enums "$CORE_PROTOBUF_SOURCES"
+$func file core/src/trezor/enums/__init__.py "$CORE_PROTOBUF_SOURCES" --template=core/src/trezor/enums/_proto_init.mako
+$func file core/src/trezor/messages.py "$CORE_PROTOBUF_SOURCES" --template=core/src/trezor/_proto_messages.mako
+
+$func file python/src/trezorlib/messages.py "$PYTHON_PROTOBUF_SOURCES" \
+    --template=python/src/trezorlib/_proto_messages.mako \
+    --include-deprecated
 
 exit $RETURN

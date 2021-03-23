@@ -4,13 +4,11 @@ set -e
 CWD=`dirname "$0"`
 RENDER="$CWD/../vendor/trezor-common/tools/cointool.py render"
 
-FIND_TEMPLATES="find $CWD/../src -name *.mako"
+FIND_TEMPLATES="find $CWD/../src -name *.mako -not -name _proto*"
 
 check_results() {
     CHECK_FAIL=0
     for filename in $($FIND_TEMPLATES); do
-        # ignore resources.py
-        if echo $filename | grep -q "resources.py.mako$"; then continue; fi
         TMP=`mktemp`
         TARGET="${filename%%.mako}"
         $RENDER "$filename" -o $TMP
