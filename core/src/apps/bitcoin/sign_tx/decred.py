@@ -2,8 +2,8 @@ from micropython import const
 
 from trezor import wire
 from trezor.crypto.hashlib import blake256
-from trezor.messages import DecredStakingSpendType, InputScriptType
-from trezor.messages.PrevOutput import PrevOutput
+from trezor.enums import DecredStakingSpendType, InputScriptType
+from trezor.messages import PrevOutput
 from trezor.utils import HashWriter, ensure
 
 from apps.common.writers import write_bitcoin_varint
@@ -24,11 +24,13 @@ OUTPUT_SCRIPT_NULL_SSTXCHANGE = (
 )
 
 if False:
-    from trezor.messages.SignTx import SignTx
-    from trezor.messages.TxInput import TxInput
-    from trezor.messages.TxOutput import TxOutput
-    from trezor.messages.PrevTx import PrevTx
-    from trezor.messages.PrevInput import PrevInput
+    from trezor.messages import (
+        SignTx,
+        TxInput,
+        TxOutput,
+        PrevTx,
+        PrevInput,
+    )
 
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
@@ -226,7 +228,7 @@ class Decred(Bitcoin):
         script_pubkey: bytes,
     ) -> None:
         writers.write_uint64(w, txo.amount)
-        if isinstance(txo, PrevOutput):
+        if PrevOutput.is_type_of(txo):
             if txo.decred_script_version is None:
                 raise wire.DataError("Script version must be provided")
             writers.write_uint16(w, txo.decred_script_version)

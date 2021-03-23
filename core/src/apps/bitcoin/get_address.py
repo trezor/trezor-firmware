@@ -1,6 +1,6 @@
 from trezor.crypto import bip32
-from trezor.messages import InputScriptType
-from trezor.messages.Address import Address
+from trezor.enums import InputScriptType
+from trezor.messages import Address
 from trezor.ui.layouts import show_address
 
 from apps.common.layout import address_n_to_str
@@ -11,8 +11,8 @@ from .keychain import validate_path_against_script_type, with_keychain
 from .multisig import multisig_pubkey_index
 
 if False:
-    from trezor.messages.GetAddress import GetAddress
-    from trezor.messages.HDNodeType import HDNodeType
+    from trezor.messages import GetAddress
+    from trezor.messages import HDNodeType
     from trezor import wire
     from apps.common.keychain import Keychain
     from apps.common.coininfo import CoinInfo

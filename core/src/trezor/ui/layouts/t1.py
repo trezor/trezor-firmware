@@ -1,10 +1,8 @@
 from trezor import ui, wire
-from trezor.messages import ButtonRequestType
+from trezor.enums import ButtonRequestType
 
 if False:
     from typing import NoReturn, Type, Union
-
-    from trezor.messages.ButtonRequest import EnumTypeButtonRequestType
 
     ExceptionType = Union[BaseException, Type[BaseException]]
 
@@ -26,7 +24,7 @@ async def confirm_action(
     reverse: bool = False,
     larger_vspace: bool = False,
     exc: ExceptionType = wire.ActionCancelled,
-    br_code: EnumTypeButtonRequestType = ButtonRequestType.Other,
+    br_code: ButtonRequestType = ButtonRequestType.Other,
 ) -> None:
     raise NotImplementedError
 

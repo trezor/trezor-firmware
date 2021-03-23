@@ -8,7 +8,7 @@ from apps.common.paths import PATTERN_SEP5, PathSchema
 from apps.common.keychain import LRUCache, Keychain, with_slip44_keychain, get_keychain
 from trezor import wire
 from trezor.crypto import bip39
-from trezor.messages import SafetyCheckLevel
+from trezor.enums import SafetyCheckLevel
 
 
 class TestKeychain(unittest.TestCase):

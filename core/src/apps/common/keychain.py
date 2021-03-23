@@ -16,7 +16,7 @@ if False:
     )
     from typing_extensions import Protocol
 
-    from protobuf import MessageType
+    from trezor.protobuf import MessageType
 
     T = TypeVar("T")
 

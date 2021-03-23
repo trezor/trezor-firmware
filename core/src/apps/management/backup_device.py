@@ -1,7 +1,7 @@
 import storage
 import storage.device
 from trezor import wire
-from trezor.messages.Success import Success
+from trezor.messages import Success
 
 from apps.common import mnemonic
 

@@ -1,23 +1,23 @@
 from micropython import const
 
-from trezor.messages import MessageType
+from trezor.enums import MessageType
 
 TX_TYPE = bytearray("\x00\x00\x00\x02")
 
 # source: https://github.com/stellar/go/blob/3d2c1defe73dbfed00146ebe0e8d7e07ce4bb1b6/xdr/Stellar-transaction.x#L16
 # Inflation not supported see https://github.com/trezor/trezor-core/issues/202#issuecomment-393342089
 op_codes = {
-    "StellarAccountMergeOp": const(8),
-    "StellarAllowTrustOp": const(7),
-    "StellarBumpSequenceOp": const(11),
-    "StellarChangeTrustOp": const(6),
-    "StellarCreateAccountOp": const(0),
-    "StellarCreatePassiveOfferOp": const(4),
-    "StellarManageDataOp": const(10),
-    "StellarManageOfferOp": const(3),
-    "StellarPathPaymentOp": const(2),
-    "StellarPaymentOp": const(1),
-    "StellarSetOptionsOp": const(5),
+    MessageType.StellarAccountMergeOp: 8,
+    MessageType.StellarAllowTrustOp: 7,
+    MessageType.StellarBumpSequenceOp: 11,
+    MessageType.StellarChangeTrustOp: 6,
+    MessageType.StellarCreateAccountOp: 0,
+    MessageType.StellarCreatePassiveOfferOp: 4,
+    MessageType.StellarManageDataOp: 10,
+    MessageType.StellarManageOfferOp: 3,
+    MessageType.StellarPathPaymentOp: 2,
+    MessageType.StellarPaymentOp: 1,
+    MessageType.StellarSetOptionsOp: 5,
 }
 
 op_wire_types = [
@@ -69,6 +69,7 @@ SIGN_TYPES = (SIGN_TYPE_ACCOUNT, SIGN_TYPE_HASH, SIGN_TYPE_PRE_AUTH)
 
 
 def get_op_code(msg) -> int:
-    if msg.__qualname__ not in op_codes:
+    wire = msg.MESSAGE_WIRE_TYPE
+    if wire not in op_codes:
         raise ValueError("Stellar: op code unknown")
-    return op_codes[msg.__qualname__]
+    return op_codes[wire]

@@ -1,5 +1,5 @@
 from trezor import log, wire
-from trezor.messages.CardanoAddress import CardanoAddress
+from trezor.messages import CardanoAddress
 
 from apps.common import paths
 from apps.common.layout import address_n_to_str, show_qr
@@ -17,10 +17,10 @@ from .layout import (
 from .sign_tx import validate_network_info
 
 if False:
-    from trezor.messages.CardanoAddressParametersType import (
+    from trezor.messages import (
         CardanoAddressParametersType,
+        CardanoGetAddress,
     )
-    from trezor.messages.CardanoGetAddress import CardanoGetAddress
 
 
 @seed.with_keychain

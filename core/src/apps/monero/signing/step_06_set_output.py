@@ -17,13 +17,11 @@ if False:
     from apps.monero.xmr.types import Sc25519, Ge25519
     from apps.monero.xmr.serialize_messages.tx_ecdh import EcdhTuple
     from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import Bulletproof
-    from trezor.messages.MoneroTransactionDestinationEntry import (
+    from trezor.messages import (
         MoneroTransactionDestinationEntry,
-    )
-    from trezor.messages.MoneroTransactionSetOutputAck import (
         MoneroTransactionSetOutputAck,
+        MoneroTransactionRsigData,
     )
-    from trezor.messages.MoneroTransactionRsigData import MoneroTransactionRsigData
 
 
 async def set_output(
@@ -71,9 +69,7 @@ async def set_output(
 
     # If det masks & offloading, return as we are handling offloaded BP.
     if state.is_processing_offloaded:
-        from trezor.messages.MoneroTransactionSetOutputAck import (
-            MoneroTransactionSetOutputAck,
-        )
+        from trezor.messages import MoneroTransactionSetOutputAck
 
         return MoneroTransactionSetOutputAck()
 
@@ -103,9 +99,7 @@ async def set_output(
     state.last_step = state.STEP_OUT
     state.mem_trace(14, True)
 
-    from trezor.messages.MoneroTransactionSetOutputAck import (
-        MoneroTransactionSetOutputAck,
-    )
+    from trezor.messages import MoneroTransactionSetOutputAck
 
     out_pk_bin = bytearray(64)
     utils.memcpy(out_pk_bin, 0, out_pk_dest, 0, 32)
@@ -397,7 +391,7 @@ def _return_rsig_data(
     if rsig is None and mask is None:
         return None
 
-    from trezor.messages.MoneroTransactionRsigData import MoneroTransactionRsigData
+    from trezor.messages import MoneroTransactionRsigData
 
     rsig_data = MoneroTransactionRsigData()
 

@@ -1,8 +1,8 @@
 from trezor import wire
 from trezor.crypto import base58, cashaddr
 from trezor.crypto.hashlib import sha256
-from trezor.messages import InputScriptType
-from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
+from trezor.enums import InputScriptType
+from trezor.messages import MultisigRedeemScriptType
 
 from apps.common import address_type
 from apps.common.coininfo import CoinInfo
@@ -13,11 +13,10 @@ from .scripts import output_script_multisig, output_script_native_p2wpkh_or_p2ws
 
 if False:
     from trezor.crypto import bip32
-    from trezor.messages.TxInputType import EnumTypeInputScriptType
 
 
 def get_address(
-    script_type: EnumTypeInputScriptType,
+    script_type: InputScriptType,
     coin: CoinInfo,
     node: bip32.HDNode,
     multisig: MultisigRedeemScriptType | None = None,

@@ -10,8 +10,8 @@ from .scripts import read_bip322_signature_proof, write_bip322_signature_proof
 from .verification import SignatureVerifier
 
 if False:
-    from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
-    from trezor.messages.TxInputType import EnumTypeInputScriptType
+    from trezor.enums import InputScriptType
+    from trezor.messages import MultisigRedeemScriptType
     from apps.common.coininfo import CoinInfo
 
 # This module implements the SLIP-0019 proof of ownership format, see
@@ -26,7 +26,7 @@ _OWNERSHIP_ID_KEY_PATH = [b"SLIP-0019", b"Ownership identification key"]
 
 def generate_proof(
     node: bip32.HDNode,
-    script_type: EnumTypeInputScriptType,
+    script_type: InputScriptType,
     multisig: MultisigRedeemScriptType | None,
     coin: CoinInfo,
     user_confirmed: bool,

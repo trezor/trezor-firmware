@@ -2,10 +2,10 @@ from common import *
 from trezor.crypto import hashlib
 
 if not utils.BITCOIN_ONLY:
-    from trezor.messages.NEMAggregateModification import NEMAggregateModification
-    from trezor.messages.NEMCosignatoryModification import NEMCosignatoryModification
-    from trezor.messages.NEMSignTx import NEMSignTx
-    from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
+    from trezor.messages import NEMAggregateModification
+    from trezor.messages import NEMCosignatoryModification
+    from trezor.messages import NEMSignTx
+    from trezor.messages import NEMTransactionCommon
     from apps.nem.helpers import *
     from apps.nem.multisig import *
     from apps.nem.multisig.serialize import *

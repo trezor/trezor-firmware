@@ -1,8 +1,8 @@
 from common import *
 
 if not utils.BITCOIN_ONLY:
-    from trezor.messages import TezosContractType
-    from trezor.messages.TezosContractID import TezosContractID
+    from trezor.enums import TezosContractType
+    from trezor.messages import TezosContractID
     from apps.tezos.helpers import base58_decode_check, base58_encode_check, write_bool
     from apps.tezos.sign_tx import (
         _encode_contract_id,

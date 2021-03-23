@@ -1,4 +1,3 @@
-import protobuf
 import storage.cache
 from trezor import protobuf
 from trezor.enums import MessageType

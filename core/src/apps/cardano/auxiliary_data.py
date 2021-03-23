@@ -1,6 +1,6 @@
 from trezor.crypto import hashlib
 from trezor.crypto.curve import ed25519
-from trezor.messages import CardanoAddressType
+from trezor.enums import CardanoAddressType
 
 from apps.common import cbor
 
@@ -15,10 +15,10 @@ if False:
     from typing import Union
     from trezor import wire
 
-    from trezor.messages.CardanoCatalystRegistrationParametersType import (
+    from trezor.messages import (
         CardanoCatalystRegistrationParametersType,
+        CardanoTxAuxiliaryDataType,
     )
-    from trezor.messages.CardanoTxAuxiliaryDataType import CardanoTxAuxiliaryDataType
 
     CatalystRegistrationPayload = dict[int, Union[bytes, int]]
     CatalystRegistrationSignature = dict[int, bytes]

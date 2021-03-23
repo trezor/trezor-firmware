@@ -3,8 +3,8 @@ import ustruct
 from trezor import wire
 from trezor.crypto.curve import ed25519
 from trezor.crypto.hashlib import sha256
-from trezor.messages import LiskTransactionType
-from trezor.messages.LiskSignedTx import LiskSignedTx
+from trezor.enums import LiskTransactionType
+from trezor.messages import LiskSignedTx
 from trezor.utils import HashWriter
 
 from apps.common import paths

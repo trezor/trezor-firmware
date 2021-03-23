@@ -1,8 +1,7 @@
 from micropython import const
 
-from trezor import ui, wire
-from trezor.messages.AuthorizeCoinJoin import AuthorizeCoinJoin
-from trezor.messages.Success import Success
+from trezor import ui
+from trezor.messages import AuthorizeCoinJoin, Success
 from trezor.strings import format_amount
 from trezor.ui.layouts import confirm_action, confirm_coinjoin
 
@@ -15,6 +14,7 @@ from .keychain import validate_path_against_script_type, with_keychain
 from .sign_tx.layout import format_coin_amount
 
 if False:
+    from trezor import wire
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
 

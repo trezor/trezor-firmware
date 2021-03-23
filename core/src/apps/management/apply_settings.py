@@ -1,7 +1,7 @@
 import storage.device
 from trezor import ui, wire
-from trezor.messages import ButtonRequestType, SafetyCheckLevel
-from trezor.messages.Success import Success
+from trezor.enums import ButtonRequestType, SafetyCheckLevel
+from trezor.messages import Success
 from trezor.strings import format_duration_ms
 from trezor.ui.layouts import confirm_action
 
@@ -9,7 +9,7 @@ from apps.base import reload_settings_from_storage
 from apps.common import safety_checks
 
 if False:
-    from trezor.messages.ApplySettings import ApplySettings, EnumTypeSafetyCheckLevel
+    from trezor.messages import ApplySettings
 
 
 def validate_homescreen(homescreen: bytes) -> None:
@@ -182,7 +182,7 @@ async def require_confirm_change_autolock_delay(ctx, delay_ms):
     )
 
 
-async def require_confirm_safety_checks(ctx, level: EnumTypeSafetyCheckLevel) -> None:
+async def require_confirm_safety_checks(ctx, level: SafetyCheckLevel) -> None:
     if level == SafetyCheckLevel.PromptAlways:
         await confirm_action(
             ctx,

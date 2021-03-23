@@ -1,7 +1,7 @@
 import gc
 
 from trezor import wire
-from trezor.messages import InputScriptType as I
+from trezor.enums import InputScriptType
 
 from apps.common import coininfo
 from apps.common.keychain import get_keychain
@@ -14,9 +14,7 @@ if False:
     from typing import Awaitable, Callable, Iterable, TypeVar
     from typing_extensions import Protocol
 
-    from protobuf import MessageType
-
-    from trezor.messages.TxInputType import EnumTypeInputScriptType
+    from trezor.protobuf import MessageType
 
     from apps.common.keychain import Keychain, MsgOut, Handler
     from apps.common.paths import Bip32Path
@@ -27,7 +25,7 @@ if False:
     class MsgWithAddressScriptType(Protocol):
         # XXX should be Bip32Path but that fails
         address_n: list[int] = ...
-        script_type: EnumTypeInputScriptType = ...
+        script_type: InputScriptType = ...
 
     MsgIn = TypeVar("MsgIn", bound=MsgWithCoinName)
     HandlerWithCoinInfo = Callable[..., Awaitable[MsgOut]]
@@ -68,7 +66,7 @@ def validate_path_against_script_type(
     coin: coininfo.CoinInfo,
     msg: MsgWithAddressScriptType | None = None,
     address_n: Bip32Path | None = None,
-    script_type: EnumTypeInputScriptType | None = None,
+    script_type: InputScriptType | None = None,
     multisig: bool = False,
 ) -> bool:
     patterns = []
@@ -76,19 +74,22 @@ def validate_path_against_script_type(
     if msg is not None:
         assert address_n is None and script_type is None
         address_n = msg.address_n
-        script_type = msg.script_type or I.SPENDADDRESS
+        script_type = msg.script_type or InputScriptType.SPENDADDRESS
         multisig = bool(getattr(msg, "multisig", False))
 
     else:
         assert address_n is not None and script_type is not None
 
-    if script_type == I.SPENDADDRESS and not multisig:
+    if script_type == InputScriptType.SPENDADDRESS and not multisig:
         patterns.append(PATTERN_BIP44)
         if coin.coin_name in BITCOIN_NAMES:
             patterns.append(PATTERN_GREENADDRESS_A)
             patterns.append(PATTERN_GREENADDRESS_B)
 
-    elif script_type in (I.SPENDADDRESS, I.SPENDMULTISIG) and multisig:
+    elif (
+        script_type in (InputScriptType.SPENDADDRESS, InputScriptType.SPENDMULTISIG)
+        and multisig
+    ):
         patterns.append(PATTERN_BIP45)
         patterns.append(PATTERN_PURPOSE48_RAW)
         if coin.coin_name in BITCOIN_NAMES:
@@ -98,7 +99,7 @@ def validate_path_against_script_type(
             patterns.append(PATTERN_UNCHAINED_UNHARDENED)
             patterns.append(PATTERN_UNCHAINED_DEPRECATED)
 
-    elif coin.segwit and script_type == I.SPENDP2SHWITNESS:
+    elif coin.segwit and script_type == InputScriptType.SPENDP2SHWITNESS:
         patterns.append(PATTERN_BIP49)
         if multisig:
             patterns.append(PATTERN_PURPOSE48_P2SHSEGWIT)
@@ -107,7 +108,7 @@ def validate_path_against_script_type(
             patterns.append(PATTERN_GREENADDRESS_B)
             patterns.append(PATTERN_CASA)
 
-    elif coin.segwit and script_type == I.SPENDWITNESS:
+    elif coin.segwit and script_type == InputScriptType.SPENDWITNESS:
         patterns.append(PATTERN_BIP84)
         if multisig:
             patterns.append(PATTERN_PURPOSE48_SEGWIT)

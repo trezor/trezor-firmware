@@ -1,8 +1,10 @@
 from trezor.crypto import random
-from trezor.messages.NEMImportanceTransfer import NEMImportanceTransfer
-from trezor.messages.NEMMosaic import NEMMosaic
-from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
-from trezor.messages.NEMTransfer import NEMTransfer
+from trezor.messages import (
+    NEMImportanceTransfer,
+    NEMMosaic,
+    NEMTransactionCommon,
+    NEMTransfer,
+)
 
 from ..helpers import (
     AES_BLOCK_SIZE,

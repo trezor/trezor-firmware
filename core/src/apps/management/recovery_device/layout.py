@@ -1,7 +1,7 @@
 import storage.recovery
 from trezor import strings, ui, wire
 from trezor.crypto.slip39 import MAX_SHARE_COUNT
-from trezor.messages import ButtonRequestType
+from trezor.enums import ButtonRequestType
 from trezor.ui.components.tt.scroll import Paginated
 from trezor.ui.components.tt.text import Text
 from trezor.ui.components.tt.word_select import WordSelector
@@ -18,7 +18,7 @@ from .recover import RecoveryAborted
 
 if False:
     from typing import Callable, Iterable
-    from trezor.messages.ResetDevice import EnumTypeBackupType
+    from trezor.enums import BackupType
 
 
 async def confirm_abort(ctx: wire.GenericContext, dry_run: bool = False) -> None:
@@ -61,7 +61,7 @@ async def request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
 
 
 async def request_mnemonic(
-    ctx: wire.GenericContext, word_count: int, backup_type: EnumTypeBackupType | None
+    ctx: wire.GenericContext, word_count: int, backup_type: BackupType | None
 ) -> str | None:
     await button_request(ctx, code=ButtonRequestType.MnemonicInput)
 

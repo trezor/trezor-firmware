@@ -1,8 +1,7 @@
 from ubinascii import hexlify
 
 from trezor import ui, wire
-from trezor.messages.GetOwnershipProof import GetOwnershipProof
-from trezor.messages.OwnershipProof import OwnershipProof
+from trezor.messages import GetOwnershipProof, OwnershipProof
 from trezor.ui.layouts import confirm_action, confirm_hex
 
 from apps.common.paths import validate_path

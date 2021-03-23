@@ -3,7 +3,7 @@ import utime
 import storage.cache
 import storage.sd_salt
 from trezor import config, ui, wire
-from trezor.messages import ButtonRequestType
+from trezor.enums import ButtonRequestType
 from trezor.ui.popup import Popup
 
 from . import button_request

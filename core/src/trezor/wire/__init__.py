@@ -36,9 +36,9 @@ reads the message's header. When the message type is known the first handler is 
 """
 
 from storage.cache import InvalidSessionError
+from trezor import log, loop, protobuf, utils, workflow
 from trezor.enums import FailureType
 from trezor.messages import Failure
-from trezor import log, loop, protobuf, utils, workflow
 from trezor.wire import codec_v1
 from trezor.wire.errors import ActionCancelled, DataError, Error
 

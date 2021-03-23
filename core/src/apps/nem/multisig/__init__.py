@@ -1,6 +1,4 @@
-from trezor.messages.NEMAggregateModification import NEMAggregateModification
-from trezor.messages.NEMSignTx import NEMSignTx
-from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
+from trezor.messages import NEMAggregateModification, NEMSignTx, NEMTransactionCommon
 
 from . import layout, serialize
 

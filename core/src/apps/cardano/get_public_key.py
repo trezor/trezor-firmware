@@ -1,8 +1,7 @@
 from ubinascii import hexlify
 
 from trezor import log, wire
-from trezor.messages.CardanoPublicKey import CardanoPublicKey
-from trezor.messages.HDNodeType import HDNodeType
+from trezor.messages import CardanoPublicKey, HDNodeType
 from trezor.ui.layouts import show_pubkey
 
 from apps.common import paths
@@ -12,7 +11,7 @@ from .helpers.paths import SCHEMA_PUBKEY
 from .helpers.utils import derive_public_key
 
 if False:
-    from trezor.messages.CardanoGetPublicKey import CardanoGetPublicKey
+    from trezor.messages import CardanoGetPublicKey
 
 
 @seed.with_keychain

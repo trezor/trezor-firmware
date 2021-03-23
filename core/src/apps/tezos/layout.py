@@ -1,5 +1,5 @@
 from trezor import ui
-from trezor.messages import ButtonRequestType
+from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount
 from trezor.ui.components.tt.scroll import Paginated
 from trezor.ui.components.tt.text import Text

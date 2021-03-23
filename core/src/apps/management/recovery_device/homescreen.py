@@ -5,9 +5,9 @@ import storage.recovery_shares
 from trezor import strings, utils, wire, workflow
 from trezor.crypto import slip39
 from trezor.crypto.hashlib import sha256
+from trezor.enums import BackupType, MessageType
 from trezor.errors import MnemonicError
-from trezor.messages import BackupType, MessageType
-from trezor.messages.Success import Success
+from trezor.messages import Success
 from trezor.ui.layouts import show_success
 
 from apps.common import mnemonic
@@ -15,9 +15,6 @@ from apps.homescreen.homescreen import homescreen
 
 from .. import backup_types
 from . import layout, recover
-
-if False:
-    from trezor.messages.ResetDevice import EnumTypeBackupType
 
 
 async def recovery_homescreen() -> None:
@@ -94,7 +91,7 @@ async def _continue_recovery_process(ctx: wire.GenericContext) -> Success:
 
 
 async def _finish_recovery_dry_run(
-    ctx: wire.GenericContext, secret: bytes, backup_type: EnumTypeBackupType
+    ctx: wire.GenericContext, secret: bytes, backup_type: BackupType
 ) -> Success:
     if backup_type is None:
         raise RuntimeError
@@ -127,7 +124,7 @@ async def _finish_recovery_dry_run(
 
 
 async def _finish_recovery(
-    ctx: wire.GenericContext, secret: bytes, backup_type: EnumTypeBackupType
+    ctx: wire.GenericContext, secret: bytes, backup_type: BackupType
 ) -> Success:
     if backup_type is None:
         raise RuntimeError
@@ -162,7 +159,7 @@ async def _request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
 
 async def _process_words(
     ctx: wire.GenericContext, words: str
-) -> tuple[bytes | None, EnumTypeBackupType]:
+) -> tuple[bytes | None, BackupType]:
     word_count = len(words.split(" "))
     is_slip39 = backup_types.is_slip39_word_count(word_count)
 
