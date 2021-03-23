@@ -6,6 +6,7 @@
 mod error;
 #[macro_use]
 mod micropython;
+mod protobuf;
 mod trezorhal;
 mod util;
 

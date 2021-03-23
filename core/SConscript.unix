@@ -171,6 +171,11 @@ SOURCE_MOD += [
     'embed/extmod/modtrezorutils/modtrezorutils.c',
 ]
 
+# rust mods
+SOURCE_MOD += [
+    'embed/extmod/rustmods/modtrezorproto.c',
+]
+
 # modutime
 SOURCE_MOD += [
     'vendor/micropython/ports/unix/modtime.c',

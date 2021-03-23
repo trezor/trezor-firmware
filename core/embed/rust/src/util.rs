@@ -9,7 +9,7 @@ use crate::{
     },
 };
 
-pub fn try_or_raise(func: impl FnOnce() -> Result<Obj, Error>) -> Obj {
+pub fn try_or_raise<T>(func: impl FnOnce() -> Result<T, Error>) -> T {
     func().unwrap_or_else(|err| raise_value_error(err.as_cstr()))
 }
 
