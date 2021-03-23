@@ -8,7 +8,7 @@ from trezor.ui.layouts import (
     confirm_properties,
 )
 
-from apps.common.layout import address_n_to_str
+from apps.common.paths import address_n_to_str
 
 from . import seed
 from .address import (

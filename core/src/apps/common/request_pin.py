@@ -2,11 +2,8 @@ import utime
 
 import storage.cache
 import storage.sd_salt
-from trezor import config, ui, wire
-from trezor.enums import ButtonRequestType
-from trezor.ui.popup import Popup
+from trezor import config, wire
 
-from . import button_request
 from .sdcard import SdCardUnavailable, request_sd_salt
 
 if False:
@@ -24,25 +21,9 @@ async def request_pin(
     attempts_remaining: int | None = None,
     allow_cancel: bool = True,
 ) -> str:
-    from trezor.ui.components.tt.pin import CANCELLED, PinDialog
+    from trezor.ui.layouts import request_pin_on_device
 
-    await button_request(ctx, code=ButtonRequestType.PinEntry)
-
-    if attempts_remaining is None:
-        subprompt = None
-    elif attempts_remaining == 1:
-        subprompt = "This is your last attempt"
-    else:
-        subprompt = "%s attempts remaining" % attempts_remaining
-
-    dialog = PinDialog(prompt, subprompt, allow_cancel)
-
-    while True:
-        pin = await ctx.wait(dialog)
-        if pin is CANCELLED:
-            raise wire.PinCancelled
-        assert isinstance(pin, str)
-        return pin
+    return await request_pin_on_device(ctx, prompt, attempts_remaining, allow_cancel)
 
 
 async def request_pin_confirm(ctx: wire.Context, *args: Any, **kwargs: Any) -> str:
@@ -55,14 +36,12 @@ async def request_pin_confirm(ctx: wire.Context, *args: Any, **kwargs: Any) -> s
 
 
 async def pin_mismatch() -> None:
-    from trezor.ui.components.tt.text import Text
+    from trezor.ui.layouts import show_popup
 
-    text = Text("PIN mismatch", ui.ICON_WRONG, ui.RED)
-    text.normal("The PINs you entered", "do not match.")
-    text.normal("")
-    text.normal("Please try again.")
-    popup = Popup(text, 3000)  # show for 3 seconds
-    await popup
+    await show_popup(
+        title="PIN mismatch",
+        description="The PINs you entered\ndo not match.\n\nPlease try again.",
+    )
 
 
 async def request_pin_and_sd_salt(
@@ -109,7 +88,11 @@ async def verify_user_pin(
         return
 
     if config.has_pin():
-        pin = await request_pin(ctx, prompt, config.get_pin_rem(), allow_cancel)
+        from trezor.ui.layouts import request_pin_on_device
+
+        pin = await request_pin_on_device(
+            ctx, prompt, config.get_pin_rem(), allow_cancel
+        )
         config.ensure_not_wipe_code(pin)
     else:
         pin = ""
@@ -125,7 +108,7 @@ async def verify_user_pin(
         raise RuntimeError
 
     while retry:
-        pin = await request_pin(
+        pin = await request_pin_on_device(
             ctx, "Wrong PIN, enter again", config.get_pin_rem(), allow_cancel
         )
         if config.unlock(pin, salt):

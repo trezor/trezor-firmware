@@ -5,7 +5,8 @@ from trezor.enums import CardanoAddressType
 from trezor.messages import CardanoAddressParametersType
 from trezor.messages import CardanoBlockchainPointerType
 
-from apps.common import HARDENED, seed
+from apps.common import seed
+from apps.common.paths import HARDENED
 
 if not utils.BITCOIN_ONLY:
     from apps.cardano.address import derive_human_readable_address, validate_address_parameters

@@ -6,8 +6,8 @@ from trezor.ui.components.tt.scroll import Paginated
 from trezor.ui.components.tt.text import Text
 from trezor.ui.components.tt.word_select import WordSelector
 from trezor.ui.layouts import confirm_action, show_success, show_warning
+from trezor.ui.layouts.common import button_request
 
-from apps.common import button_request
 from apps.common.confirm import confirm, info_confirm, require_confirm
 
 from .. import backup_types
