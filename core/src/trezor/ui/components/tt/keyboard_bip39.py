@@ -1,15 +1,11 @@
 from trezor import io, loop, res, ui, workflow
 from trezor.crypto import bip39
 from trezor.ui import display
-from trezor.ui.components.tt.button import (
-    Button,
-    ButtonClear,
-    ButtonMono,
-    ButtonMonoConfirm,
-)
+
+from .button import Button, ButtonClear, ButtonMono, ButtonMonoConfirm
 
 if False:
-    from trezor.ui.components.tt.button import ButtonContent, ButtonStyleStateType
+    from .button import ButtonContent, ButtonStyleStateType
 
 
 def compute_mask(text: str) -> int:
