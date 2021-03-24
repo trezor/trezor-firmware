@@ -1093,7 +1093,7 @@ async def request_passphrase_on_device(ctx: wire.GenericContext, max_len: int) -
 async def request_pin_on_device(
     ctx: wire.GenericContext,
     prompt: str,
-    attempts_remaining: int,
+    attempts_remaining: Optional[int],
     allow_cancel: bool,
 ) -> str:
     await button_request(ctx, "pin_device", code=ButtonRequestType.PinEntry)
