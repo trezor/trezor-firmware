@@ -71,6 +71,12 @@ TXHASH_927784 = bytes.fromhex(
 TXHASH_43d273 = bytes.fromhex(
     "43d273d3caf41759ad843474f960fbf80ff2ec961135d018b61e9fab3ad1fc06"
 )
+TXHASH_408397 = bytes.fromhex(
+    "4083973799f05c52f556b603ab0f93d9c4c50be50da03c770a492d0990ca7809"
+)
+TXHASH_ba917a = bytes.fromhex(
+    "ba917a2b563966e324ab37ed7de5f5cd7503b970b0f0bb9a5208f5835557e99c"
+)
 
 
 def test_p2pkh_fee_bump(client):
@@ -139,6 +145,52 @@ def test_p2pkh_fee_bump(client):
     assert (
         serialized_tx.hex()
         == "01000000017a1ebb08f129fb1cc814b59d63284286d58a7602708ae8be6dd073d8cbc7afbe000000006b483045022100a8c1c118d61259f8df463deb538a10d9e9f42bbdfff28bb1337ee5426e5098f8022060e7464f7a63a83fd93dbd268f319133cb03452764afd601db063ff3eede9207012103f54094da6a0b2e0799286268bb59ca7c83538e81c78e64f6333f40f9e0e222c0ffffffff02aead0100000000001976a914902c642ba3a22f5c6cfa30a1790c133ddf15cc8888ac50c30000000000001976a914a6450f1945831a81912616691e721b787383f4ed88ac00000000"
+    )
+
+
+def test_p2wpkh_op_return_fee_bump(client):
+    # Original input.
+    inp1 = messages.TxInputType(
+        address_n=parse_path("m/84h/1h/1h/0/14"),
+        amount=1000000,
+        script_type=messages.InputScriptType.SPENDWITNESS,
+        prev_hash=TXHASH_408397,
+        prev_index=1,
+        orig_hash=TXHASH_ba917a,
+        orig_index=0,
+        sequence=4294967293,
+    )
+
+    # Original OP_RETURN output.
+    out1 = messages.TxOutputType(
+        amount=0,
+        op_return_data=b"dead",
+        script_type=messages.OutputScriptType.PAYTOOPRETURN,
+        orig_hash=TXHASH_ba917a,
+        orig_index=0,
+    )
+
+    # Change-output. We bump the fee from 150 to 300.
+    out2 = messages.TxOutputType(
+        address_n=parse_path("m/84h/1h/1h/1/10"),
+        amount=999850 - 150,
+        script_type=messages.OutputScriptType.PAYTOWITNESS,
+        orig_hash=TXHASH_ba917a,
+        orig_index=1,
+    )
+
+    with client:
+        _, serialized_tx = btc.sign_tx(
+            client,
+            "Testnet",
+            [inp1],
+            [out1, out2],
+            prev_txes=TX_CACHE_TESTNET,
+        )
+
+    assert (
+        serialized_tx.hex()
+        == "010000000001010978ca90092d490a773ca00de50bc5c4d9930fab03b656f5525cf099379783400100000000fdffffff020000000000000000066a046465616414410f00000000001600141c02e2397a8a02ff71d3f26937d14a656469dd1f02483045022100f534412752c14064470d4a1f738fa01bc83598b07caaba4cd207b43b1b9702a4022071a4f0873006c07ccfeb1f82e86f3047eab208f38cfa41d7b566d6ca50dbca0f012102a269d4b8faf008074b974b6d64fa1776e17fdf65381a76d1338e9bba88983a8700000000"
     )
 
 
