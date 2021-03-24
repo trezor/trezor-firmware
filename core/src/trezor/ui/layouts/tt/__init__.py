@@ -149,8 +149,13 @@ async def confirm_action(
     )
 
 
-async def confirm_reset_device(ctx: wire.GenericContext, prompt: str) -> None:
-    text = Text("Create new wallet", ui.ICON_RESET, new_lines=False)
+async def confirm_reset_device(
+    ctx: wire.GenericContext, prompt: str, recovery: bool = False
+) -> None:
+    if recovery:
+        text = Text("Recovery mode", ui.ICON_RECOVERY, new_lines=False)
+    else:
+        text = Text("Create new wallet", ui.ICON_RESET, new_lines=False)
     text.bold(prompt)
     text.br()
     text.br_half()
@@ -161,9 +166,11 @@ async def confirm_reset_device(ctx: wire.GenericContext, prompt: str) -> None:
     await raise_if_cancelled(
         interact(
             ctx,
-            Confirm(text, major_confirm=True),
-            "setup_device",
-            ButtonRequestType.ResetDevice,
+            Confirm(text, major_confirm=not recovery),
+            "recover_device" if recovery else "setup_device",
+            ButtonRequestType.ProtectCall
+            if recovery
+            else ButtonRequestType.ResetDevice,
         )
     )
 
@@ -442,6 +449,8 @@ def show_warning(
     subheader: str | None = None,
     button: str = "Try again",
     br_code: ButtonRequestType = ButtonRequestType.Warning,
+    icon: str = ui.ICON_WRONG,
+    icon_color: int = ui.RED,
 ) -> Awaitable[None]:
     return _show_modal(
         ctx,
@@ -452,8 +461,8 @@ def show_warning(
         content=content,
         button_confirm=button,
         button_cancel=None,
-        icon=ui.ICON_WRONG,
-        icon_color=ui.RED,
+        icon=icon,
+        icon_color=icon_color,
     )
 
 

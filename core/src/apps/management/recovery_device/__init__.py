@@ -4,9 +4,8 @@ import storage.recovery
 from trezor import config, ui, wire, workflow
 from trezor.enums import ButtonRequestType
 from trezor.messages import Success
-from trezor.ui.components.tt.text import Text
+from trezor.ui.layouts import confirm_action, confirm_reset_device
 
-from apps.common.confirm import require_confirm
 from apps.common.request_pin import (
     error_pin_invalid,
     request_pin_and_sd_salt,
@@ -90,15 +89,15 @@ def _validate(msg: RecoveryDevice) -> None:
 
 async def _continue_dialog(ctx: wire.Context, msg: RecoveryDevice) -> None:
     if not msg.dry_run:
-        text = Text("Recovery mode", ui.ICON_RECOVERY, new_lines=False)
-        text.bold("Do you really want to recover a wallet?")
-        text.br()
-        text.br_half()
-        text.normal("By continuing you agree")
-        text.br()
-        text.normal("to ")
-        text.bold("https://trezor.io/tos")
+        await confirm_reset_device(
+            ctx, "Do you really want to\nrecover a wallet?", recovery=True
+        )
     else:
-        text = Text("Seed check", ui.ICON_RECOVERY, new_lines=False)
-        text.normal("Do you really want to check the recovery seed?")
-    await require_confirm(ctx, text, code=ButtonRequestType.ProtectCall)
+        await confirm_action(
+            ctx,
+            "confirm_seedcheck",
+            title="Seed check",
+            description="Do you really want to check the recovery seed?",
+            icon=ui.ICON_RECOVERY,
+            br_code=ButtonRequestType.ProtectCall,
+        )
