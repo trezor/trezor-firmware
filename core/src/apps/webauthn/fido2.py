@@ -11,7 +11,8 @@ from trezor.crypto import aes, der, hashlib, hmac, random
 from trezor.crypto.curve import nist256p1
 from trezor.ui.components.common.confirm import Pageable
 from trezor.ui.components.common.webauthn import ConfirmInfo
-from trezor.ui.layouts import confirm_webauthn, confirm_webauthn_reset, show_popup
+from trezor.ui.layouts import show_popup
+from trezor.ui.layouts.tt.webauthn import confirm_webauthn, confirm_webauthn_reset
 
 from apps.base import set_homescreen
 from apps.common import cbor

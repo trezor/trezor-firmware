@@ -1,6 +1,7 @@
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount
-from trezor.ui.layouts import confirm_metadata, confirm_total_ripple
+from trezor.ui.layouts import confirm_metadata
+from trezor.ui.layouts.tt.altcoin import confirm_total_ripple
 
 from . import helpers
 
