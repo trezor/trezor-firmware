@@ -11,7 +11,7 @@
   "address_type_p2sh": 7,
   "maxfee_kb": 640000000,
   "minfee_kb": 0,
-  "signed_message_header": "Firo Signed Message:\n",
+  "signed_message_header": "Zcoin Signed Message:\n",
   "hash_genesis_block": "4381deb85b1b2c9843c222944b616d997516dcbd6a964e1eaf0def0830695233",
   "xprv_magic": 76066276,
   "xpub_magic": 76067358,
