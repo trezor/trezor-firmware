@@ -52,8 +52,8 @@
 #include "touch.h"
 
 int main(void) {
-  // initialize pseudo-random number generator
-  drbg_init();
+  random_delays_init();
+
 #ifdef RDI
   rdi_start();
 #endif

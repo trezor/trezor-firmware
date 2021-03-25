@@ -27,6 +27,7 @@
 #include "display.h"
 #include "flash.h"
 #include "mini_printf.h"
+#include "random_delays.h"
 #include "rng.h"
 #include "sbu.h"
 #include "sdcard.h"
@@ -371,7 +372,7 @@ static secbool startswith(const char *s, const char *prefix) {
 
 int main(void) {
   display_orientation(0);
-  drbg_init();
+  random_delays_init();
   sdcard_init();
   touch_init();
   sbu_init();
