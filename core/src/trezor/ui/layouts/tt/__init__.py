@@ -11,10 +11,9 @@ from trezor.utils import chunks, chunks_intersperse
 
 from ...components.common import break_path_to_lines
 from ...components.common.confirm import is_confirmed, raise_if_cancelled
-from ...components.common.webauthn import ConfirmInfo
 from ...components.tt import passphrase, pin
 from ...components.tt.button import ButtonCancel, ButtonDefault
-from ...components.tt.confirm import Confirm, ConfirmPageable, HoldToConfirm, Pageable
+from ...components.tt.confirm import Confirm, HoldToConfirm
 from ...components.tt.scroll import (
     PAGEBREAK,
     Paginated,
@@ -22,7 +21,6 @@ from ...components.tt.scroll import (
     paginate_text,
 )
 from ...components.tt.text import LINE_WIDTH_PAGINATED, Span, Text
-from ...components.tt.webauthn import ConfirmContent
 from ...constants.tt import (
     MONO_ADDR_PER_LINE,
     MONO_HEX_PER_LINE,
@@ -34,15 +32,9 @@ from ...constants.tt import (
 from ..common import button_request, interact
 
 if False:
-    from typing import (
-        Awaitable,
-        Iterator,
-        NoReturn,
-        Sequence,
-        Tuple,
-    )
+    from typing import Awaitable, Iterator, NoReturn, Sequence
 
-    from .common import PropertyType, ExceptionType
+    from ..common import PropertyType, ExceptionType
 
 
 __all__ = (
@@ -62,23 +54,16 @@ __all__ = (
     "show_xpub",
     "show_warning",
     "confirm_output",
-    "confirm_decred_sstx_submission",
     "confirm_blob",
     "confirm_properties",
     "confirm_total",
-    "confirm_total_ethereum",
-    "confirm_total_ripple",
     "confirm_joint_total",
     "confirm_metadata",
     "confirm_replacement",
     "confirm_modify_output",
     "confirm_modify_fee",
     "confirm_coinjoin",
-    "confirm_timebounds_stellar",
-    "confirm_transfer_binance",
     "show_popup",
-    "confirm_webauthn",
-    "confirm_webauthn_reset",
     "draw_simple_text",
     "request_passphrase_on_device",
     "request_pin_on_device",
@@ -235,10 +220,6 @@ def _show_qr(
     text = Text(title, ui.ICON_RECEIVE, ui.GREEN)
 
     return Confirm(Container(qr, text), cancel=cancel, cancel_style=ButtonDefault)
-
-
-def _split_address(address: str) -> Iterator[str]:
-    return chunks_intersperse(address, MONO_ADDR_PER_LINE)
 
 
 def _truncate_hex(
@@ -522,25 +503,6 @@ async def confirm_output(
     await raise_if_cancelled(interact(ctx, content, "confirm_output", br_code))
 
 
-async def confirm_decred_sstx_submission(
-    ctx: wire.GenericContext,
-    address: str,
-    amount: str,
-) -> None:
-    text = Text("Purchase ticket", ui.ICON_SEND, ui.GREEN, new_lines=False)
-    text.normal(amount)
-    text.normal("\nwith voting rights to\n")
-    text.mono(*_split_address(address))
-    await raise_if_cancelled(
-        interact(
-            ctx,
-            Confirm(text),
-            "confirm_decred_sstx_submission",
-            ButtonRequestType.ConfirmOutput,
-        )
-    )
-
-
 async def confirm_blob(
     ctx: wire.GenericContext,
     br_type: str,
@@ -784,38 +746,6 @@ async def confirm_total(
     await raise_if_cancelled(interact(ctx, HoldToConfirm(text), br_type, br_code))
 
 
-# TODO cleanup @ redesign
-async def confirm_total_ethereum(
-    ctx: wire.GenericContext, total_amount: str, gas_price: str, fee_max: str
-) -> None:
-    text = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN, new_lines=False)
-    text.bold(total_amount)
-    text.normal(" ", ui.GREY, "Gas price:", ui.FG)
-    text.bold(gas_price)
-    text.normal(" ", ui.GREY, "Maximum fee:", ui.FG)
-    text.bold(fee_max)
-    await raise_if_cancelled(
-        interact(ctx, HoldToConfirm(text), "confirm_total", ButtonRequestType.SignTx)
-    )
-
-
-# TODO cleanup @ redesign
-async def confirm_total_ripple(
-    ctx: wire.GenericContext,
-    address: str,
-    amount: str,
-) -> None:
-    title = "Confirm sending"
-    text = Text(title, ui.ICON_SEND, ui.GREEN, new_lines=False)
-    text.bold("{} XRP\n".format(amount))
-    text.normal("to\n")
-    text.mono(*_split_address(address))
-
-    await raise_if_cancelled(
-        interact(ctx, HoldToConfirm(text), "confirm_output", ButtonRequestType.SignTx)
-    )
-
-
 async def confirm_joint_total(
     ctx: wire.GenericContext, spending_amount: str, total_amount: str
 ) -> None:
@@ -882,7 +812,7 @@ async def confirm_modify_output(
     page1 = Text("Modify amount", ui.ICON_SEND, ui.GREEN, new_lines=False)
     page1.normal("Address:\n")
     page1.br_half()
-    page1.mono(*_split_address(address))
+    page1.mono(*chunks_intersperse(address, MONO_ADDR_PER_LINE))
 
     page2 = Text("Modify amount", ui.ICON_SEND, ui.GREEN, new_lines=False)
     if sign < 0:
@@ -966,7 +896,7 @@ async def confirm_signverify(
 
         text = Text(header, new_lines=False)
         text.bold("Confirm address:\n")
-        text.mono(*_split_address(address))
+        text.mono(*chunks_intersperse(address, MONO_ADDR_PER_LINE))
         await raise_if_cancelled(
             interact(ctx, Confirm(text), br_type, ButtonRequestType.Other)
         )
@@ -985,55 +915,10 @@ async def confirm_signverify(
     )
 
 
-# TODO cleanup @ redesign
-async def confirm_timebounds_stellar(
-    ctx: wire.GenericContext, start: int, end: int
-) -> None:
-    text = Text("Confirm timebounds", ui.ICON_SEND, ui.GREEN)
-    text.bold("Valid from (UTC):")
-    if start:
-        text.normal(str(start))
-    else:
-        text.mono("[no restriction]")
-
-    text.bold("Valid to (UTC):")
-    if end:
-        text.normal(str(end))
-    else:
-        text.mono("[no restriction]")
-
-    await raise_if_cancelled(
-        interact(
-            ctx, Confirm(text), "confirm_timebounds", ButtonRequestType.ConfirmOutput
-        )
-    )
-
-
-# TODO cleanup @ redesign
-async def confirm_transfer_binance(
-    ctx: wire.GenericContext, inputs_outputs: Sequence[Tuple[str, str, str]]
-) -> None:
-    pages: list[ui.Component] = []
-    for title, amount, address in inputs_outputs:
-        coin_page = Text(title, ui.ICON_SEND, icon_color=ui.GREEN, new_lines=False)
-        coin_page.bold(amount)
-        coin_page.normal("\nto\n")
-        coin_page.mono(*_split_address(address))
-        pages.append(coin_page)
-
-    pages[-1] = HoldToConfirm(pages[-1])
-
-    await raise_if_cancelled(
-        interact(
-            ctx, Paginated(pages), "confirm_transfer", ButtonRequestType.ConfirmOutput
-        )
-    )
-
-
 async def show_popup(
     title: str,
     description: str,
-    subtitle: Optional[str] = None,
+    subtitle: str | None = None,
     description_param: str = "",
     timeout_ms: int = 3000,
 ) -> None:
@@ -1043,31 +928,6 @@ async def show_popup(
         text.br_half()
     text.format_parametrized(description, description_param)
     await Popup(text, timeout_ms)
-
-
-async def confirm_webauthn(
-    ctx: Optional[wire.GenericContext],
-    info: ConfirmInfo,
-    pageable: Optional[Pageable] = None,
-) -> bool:
-    if pageable is not None:
-        confirm: ui.Layout = ConfirmPageable(pageable, ConfirmContent(info))
-    else:
-        confirm = Confirm(ConfirmContent(info))
-
-    if ctx is None:
-        return is_confirmed(await confirm)
-    else:
-        return is_confirmed(
-            await interact(ctx, confirm, "confirm_webauthn", ButtonRequestType.Other)
-        )
-
-
-async def confirm_webauthn_reset() -> bool:
-    text = Text("FIDO2 Reset", ui.ICON_CONFIG)
-    text.normal("Do you really want to")
-    text.bold("erase all credentials?")
-    return is_confirmed(await Confirm(text))
 
 
 def draw_simple_text(title: str, description: str = "") -> None:
@@ -1093,7 +953,7 @@ async def request_passphrase_on_device(ctx: wire.GenericContext, max_len: int) -
 async def request_pin_on_device(
     ctx: wire.GenericContext,
     prompt: str,
-    attempts_remaining: Optional[int],
+    attempts_remaining: int | None,
     allow_cancel: bool,
 ) -> str:
     await button_request(ctx, "pin_device", code=ButtonRequestType.PinEntry)

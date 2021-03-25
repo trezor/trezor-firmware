@@ -5,8 +5,8 @@ from trezor.ui.layouts import (
     confirm_address,
     confirm_blob,
     confirm_metadata,
-    confirm_timebounds_stellar,
 )
+from trezor.ui.layouts.tt.altcoin import confirm_timebounds_stellar
 
 from . import consts
 

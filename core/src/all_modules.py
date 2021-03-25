@@ -156,12 +156,20 @@ trezor.ui.components.tt.confirm
 import trezor.ui.components.tt.confirm
 trezor.ui.components.tt.info
 import trezor.ui.components.tt.info
+trezor.ui.components.tt.keyboard_bip39
+import trezor.ui.components.tt.keyboard_bip39
+trezor.ui.components.tt.keyboard_slip39
+import trezor.ui.components.tt.keyboard_slip39
 trezor.ui.components.tt.num_input
 import trezor.ui.components.tt.num_input
 trezor.ui.components.tt.passphrase
 import trezor.ui.components.tt.passphrase
 trezor.ui.components.tt.pin
 import trezor.ui.components.tt.pin
+trezor.ui.components.tt.recovery
+import trezor.ui.components.tt.recovery
+trezor.ui.components.tt.reset
+import trezor.ui.components.tt.reset
 trezor.ui.components.tt.scroll
 import trezor.ui.components.tt.scroll
 trezor.ui.components.tt.swipe
@@ -186,6 +194,12 @@ trezor.ui.layouts.t1
 import trezor.ui.layouts.t1
 trezor.ui.layouts.tt
 import trezor.ui.layouts.tt
+trezor.ui.layouts.tt.altcoin
+import trezor.ui.layouts.tt.altcoin
+trezor.ui.layouts.tt.recovery
+import trezor.ui.layouts.tt.recovery
+trezor.ui.layouts.tt.reset
+import trezor.ui.layouts.tt.reset
 trezor.ui.loader
 import trezor.ui.loader
 trezor.ui.popup
@@ -290,8 +304,6 @@ apps.common.confirm
 import apps.common.confirm
 apps.common.keychain
 import apps.common.keychain
-apps.common.layout
-import apps.common.layout
 apps.common.passphrase
 import apps.common.passphrase
 apps.common.paths
@@ -340,10 +352,6 @@ apps.management.recovery_device
 import apps.management.recovery_device
 apps.management.recovery_device.homescreen
 import apps.management.recovery_device.homescreen
-apps.management.recovery_device.keyboard_bip39
-import apps.management.recovery_device.keyboard_bip39
-apps.management.recovery_device.keyboard_slip39
-import apps.management.recovery_device.keyboard_slip39
 apps.management.recovery_device.layout
 import apps.management.recovery_device.layout
 apps.management.recovery_device.recover
@@ -400,6 +408,12 @@ if utils.BITCOIN_ONLY:
     import trezor.enums.TezosBallotType
     trezor.enums.TezosContractType
     import trezor.enums.TezosContractType
+    trezor.ui.components.common.webauthn
+    import trezor.ui.components.common.webauthn
+    trezor.ui.components.tt.webauthn
+    import trezor.ui.components.tt.webauthn
+    trezor.ui.layouts.tt.webauthn
+    import trezor.ui.layouts.tt.webauthn
     apps.binance
     import apps.binance
     apps.binance.get_address
@@ -686,8 +700,6 @@ if utils.BITCOIN_ONLY:
     import apps.webauthn.add_resident_credential
     apps.webauthn.common
     import apps.webauthn.common
-    apps.webauthn.confirm
-    import apps.webauthn.confirm
     apps.webauthn.credential
     import apps.webauthn.credential
     apps.webauthn.fido2

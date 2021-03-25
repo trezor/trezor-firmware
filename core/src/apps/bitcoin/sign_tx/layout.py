@@ -1,12 +1,17 @@
 from micropython import const
 from ubinascii import hexlify
 
+from trezor import utils
 from trezor.enums import AmountUnit, ButtonRequestType, OutputScriptType
 from trezor.strings import format_amount
 from trezor.ui import layouts
 
 from .. import addresses
 from . import omni
+
+if not utils.BITCOIN_ONLY:
+    from trezor.ui.layouts.tt import altcoin
+
 
 if False:
     from trezor import wire
@@ -73,7 +78,7 @@ async def confirm_decred_sstx_submission(
     assert output.address is not None
     address_short = addresses.address_short(coin, output.address)
 
-    await layouts.confirm_decred_sstx_submission(
+    await altcoin.confirm_decred_sstx_submission(
         ctx, address_short, format_coin_amount(output.amount, coin, amount_unit)
     )
 
