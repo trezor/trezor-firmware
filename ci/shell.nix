@@ -1,6 +1,14 @@
-{ fullDeps ? false }:
+{ fullDeps ? false
+, hardwareTest ? false
+ }:
 
-with import ./nixpkgs.nix;
+# the last successful build of nixpkgs-unstable as of 2020-12-30
+with import (builtins.fetchTarball {
+  url = "https://github.com/NixOS/nixpkgs/archive/bea44d5ebe332260aa34a1bd48250b6364527356.tar.gz";
+  sha256 = "14sfk04iyvyh3jl1s2wayw1y077dwpk2d712nhjk1wwfjkdq03r3";
+})
+{ };
+
 let
   moneroTests = fetchurl {
     url = "https://github.com/ph4r05/monero/releases/download/v0.17.1.9-tests/trezor_tests";
@@ -61,6 +69,10 @@ stdenv.mkDerivation ({
     darwin.apple_sdk.frameworks.Metal
     darwin.libobjc
     libiconv
+  ] ++ lib.optionals hardwareTest [
+    (callPackage ./hardware_tests/uhubctl.nix { }) # HACK FIXME replace this with just uhubctl once pinned version of nixpkgs is updated
+    ffmpeg
+    dejavu_fonts
   ];
   LD_LIBRARY_PATH = "${libffi}/lib:${libjpeg.out}/lib:${libusb1}/lib:${libressl.out}/lib";
   NIX_ENFORCE_PURITY = 0;

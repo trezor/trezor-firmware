@@ -36,7 +36,6 @@ ENV \
 
 # Trezor specific stuff starts here
 
-COPY nixpkgs.nix nixpkgs.nix
 COPY shell.nix shell.nix
 
 # to make multiple python versions and monero test suite available, run docker build
