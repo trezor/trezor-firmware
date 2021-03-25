@@ -831,25 +831,25 @@
                 }
             ]
         },
-        "bitcoin:XZC": {
+        "bitcoin:FIRO": {
             "links": {
-                "Github": "https://github.com/zcoinofficial/zcoin",
-                "Homepage": "https://zcoin.io"
+                "Github": "https://github.com/firoorg/firo",
+                "Homepage": "https://firo.org"
             },
             "marketcap_usd": 0,
-            "name": "Zcoin",
-            "shortcut": "XZC",
+            "name": "Firo",
+            "shortcut": "FIRO",
             "t1_enabled": "yes",
             "t2_enabled": "yes",
             "type": "coin",
             "wallet": [
                 {
-                    "name": "Electrum-XZC",
-                    "url": "https://github.com/zcoinofficial/electrum-xzc"
+                    "name": "Electrum-FIRO",
+                    "url": "https://github.com/firoorg/electrum-firo"
                 },
                 {
                     "name": "Znode Tool",
-                    "url": "https://github.com/yura-pakhuchiy/znode-tool"
+                    "url": "https://github.com/firoorg/znode-tool-evo"
                 }
             ]
         },
