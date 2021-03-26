@@ -188,7 +188,12 @@ typedef long mp_off_t;
 
 #define MICROPY_BEGIN_ATOMIC_SECTION()     disable_irq()
 #define MICROPY_END_ATOMIC_SECTION(state)  enable_irq(state)
-#define MICROPY_EVENT_POLL_HOOK            __WFI();
+#define MICROPY_EVENT_POLL_HOOK \
+    do { \
+        extern void mp_handle_pending(bool); \
+        mp_handle_pending(true); \
+        __WFI(); \
+    } while (0);
 
 #define MICROPY_HW_BOARD_NAME "TREZORv2"
 #define MICROPY_HW_MCU_NAME "STM32F427xx"
