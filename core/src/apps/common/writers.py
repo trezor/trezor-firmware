@@ -4,16 +4,6 @@ if False:
     from trezor.utils import Writer
 
 
-def empty_bytearray(preallocate: int) -> bytearray:
-    """
-    Returns bytearray that won't allocate for at least `preallocate` bytes.
-    Useful in case you want to avoid allocating too often.
-    """
-    b = bytearray(preallocate)
-    b[:] = bytes()
-    return b
-
-
 def write_uint8(w: Writer, n: int) -> int:
     ensure(0 <= n <= 0xFF)
     w.append(n)
