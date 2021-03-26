@@ -38,6 +38,7 @@ def test_cardano_sign_tx(client, parameters, result):
     outputs = [cardano.create_output(o) for o in parameters["outputs"]]
     certificates = [cardano.create_certificate(c) for c in parameters["certificates"]]
     withdrawals = [cardano.create_withdrawal(w) for w in parameters["withdrawals"]]
+    auxiliary_data = cardano.create_auxiliary_data(parameters["auxiliary_data"])
 
     input_flow = parameters.get("input_flow", ())
 
@@ -60,9 +61,9 @@ def test_cardano_sign_tx(client, parameters, result):
             validity_interval_start=parameters.get("validity_interval_start"),
             certificates=certificates,
             withdrawals=withdrawals,
-            metadata=bytes.fromhex(parameters["metadata"]),
             protocol_magic=parameters["protocol_magic"],
             network_id=parameters["network_id"],
+            auxiliary_data=auxiliary_data,
         )
         assert response.tx_hash.hex() == result["tx_hash"]
         assert response.serialized_tx.hex() == result["serialized_tx"]
@@ -76,6 +77,7 @@ def test_cardano_sign_tx_failed(client, parameters, result):
     outputs = [cardano.create_output(o) for o in parameters["outputs"]]
     certificates = [cardano.create_certificate(c) for c in parameters["certificates"]]
     withdrawals = [cardano.create_withdrawal(w) for w in parameters["withdrawals"]]
+    auxiliary_data = cardano.create_auxiliary_data(parameters["auxiliary_data"])
 
     input_flow = parameters.get("input_flow", ())
 
@@ -92,9 +94,9 @@ def test_cardano_sign_tx_failed(client, parameters, result):
                 validity_interval_start=parameters.get("validity_interval_start"),
                 certificates=certificates,
                 withdrawals=withdrawals,
-                metadata=bytes.fromhex(parameters["metadata"]),
                 protocol_magic=parameters["protocol_magic"],
                 network_id=parameters["network_id"],
+                auxiliary_data=auxiliary_data,
             )
 
 
@@ -104,6 +106,7 @@ def test_cardano_sign_tx_with_multiple_chunks(client, parameters, result):
     outputs = [cardano.create_output(o) for o in parameters["outputs"]]
     certificates = [cardano.create_certificate(c) for c in parameters["certificates"]]
     withdrawals = [cardano.create_withdrawal(w) for w in parameters["withdrawals"]]
+    auxiliary_data = cardano.create_auxiliary_data(parameters["auxiliary_data"])
 
     input_flow = parameters.get("input_flow", ())
 
@@ -133,9 +136,9 @@ def test_cardano_sign_tx_with_multiple_chunks(client, parameters, result):
             validity_interval_start=parameters.get("validity_interval_start"),
             certificates=certificates,
             withdrawals=withdrawals,
-            metadata=bytes.fromhex(parameters["metadata"]),
             protocol_magic=parameters["protocol_magic"],
             network_id=parameters["network_id"],
+            auxiliary_data=auxiliary_data,
         )
         assert response.tx_hash.hex() == result["tx_hash"]
         assert response.serialized_tx.hex() == result["serialized_tx"]

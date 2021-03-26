@@ -67,9 +67,7 @@ def sign_tx(client, file, protocol_magic, network_id, testnet):
         cardano.create_withdrawal(withdrawal)
         for withdrawal in transaction.get("withdrawals", ())
     ]
-    metadata = None
-    if "metadata" in transaction:
-        metadata = bytes.fromhex(transaction["metadata"])
+    auxiliary_data = cardano.create_auxiliary_data(transaction.get("auxiliary_data"))
 
     signed_transaction = cardano.sign_tx(
         client,
@@ -80,9 +78,9 @@ def sign_tx(client, file, protocol_magic, network_id, testnet):
         validity_interval_start,
         certificates,
         withdrawals,
-        metadata,
         protocol_magic,
         network_id,
+        auxiliary_data,
     )
 
     return {

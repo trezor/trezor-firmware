@@ -26,6 +26,7 @@ from .CardanoAddress import CardanoAddress
 from .CardanoAddressParametersType import CardanoAddressParametersType
 from .CardanoAssetGroupType import CardanoAssetGroupType
 from .CardanoBlockchainPointerType import CardanoBlockchainPointerType
+from .CardanoCatalystRegistrationParametersType import CardanoCatalystRegistrationParametersType
 from .CardanoGetAddress import CardanoGetAddress
 from .CardanoGetPublicKey import CardanoGetPublicKey
 from .CardanoPoolMetadataType import CardanoPoolMetadataType
@@ -38,6 +39,7 @@ from .CardanoSignedTx import CardanoSignedTx
 from .CardanoSignedTxChunk import CardanoSignedTxChunk
 from .CardanoSignedTxChunkAck import CardanoSignedTxChunkAck
 from .CardanoTokenType import CardanoTokenType
+from .CardanoTxAuxiliaryDataType import CardanoTxAuxiliaryDataType
 from .CardanoTxCertificateType import CardanoTxCertificateType
 from .CardanoTxInputType import CardanoTxInputType
 from .CardanoTxOutputType import CardanoTxOutputType

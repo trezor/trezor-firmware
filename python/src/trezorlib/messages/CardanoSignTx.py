@@ -2,6 +2,7 @@
 # fmt: off
 from .. import protobuf as p
 
+from .CardanoTxAuxiliaryDataType import CardanoTxAuxiliaryDataType
 from .CardanoTxCertificateType import CardanoTxCertificateType
 from .CardanoTxInputType import CardanoTxInputType
 from .CardanoTxOutputType import CardanoTxOutputType
@@ -29,8 +30,8 @@ class CardanoSignTx(p.MessageType):
         certificates: Optional[List[CardanoTxCertificateType]] = None,
         withdrawals: Optional[List[CardanoTxWithdrawalType]] = None,
         ttl: Optional[int] = None,
-        metadata: Optional[bytes] = None,
         validity_interval_start: Optional[int] = None,
+        auxiliary_data: Optional[CardanoTxAuxiliaryDataType] = None,
     ) -> None:
         self.inputs = inputs if inputs is not None else []
         self.outputs = outputs if outputs is not None else []
@@ -40,8 +41,8 @@ class CardanoSignTx(p.MessageType):
         self.fee = fee
         self.network_id = network_id
         self.ttl = ttl
-        self.metadata = metadata
         self.validity_interval_start = validity_interval_start
+        self.auxiliary_data = auxiliary_data
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -54,6 +55,6 @@ class CardanoSignTx(p.MessageType):
             8: ('network_id', p.UVarintType, p.FLAG_REQUIRED),
             9: ('certificates', CardanoTxCertificateType, p.FLAG_REPEATED),
             10: ('withdrawals', CardanoTxWithdrawalType, p.FLAG_REPEATED),
-            11: ('metadata', p.BytesType, None),
             12: ('validity_interval_start', p.UVarintType, None),
+            13: ('auxiliary_data', CardanoTxAuxiliaryDataType, None),
         }

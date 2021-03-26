@@ -13,7 +13,7 @@
         "ttl": 10,
         "certificates": [],
         "withdrawals": [],
-        "metadata": "",
+        "auxiliary_data": null,
         "input_flow": [["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
@@ -43,7 +43,7 @@
         "ttl": 10,
         "certificates": [],
         "withdrawals": [],
-        "metadata": "",
+        "auxiliary_data": null,
         "input_flow": [["SWIPE", "YES"], ["YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
@@ -78,7 +78,7 @@
         "ttl": 10,
         "certificates": [],
         "withdrawals": [],
-        "metadata": "",
+        "auxiliary_data": null,
         "input_flow": [["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
@@ -114,7 +114,7 @@
         "ttl": 10,
         "certificates": [],
         "withdrawals": [],
-        "metadata": "",
+        "auxiliary_data": null,
         "input_flow": [["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
@@ -159,7 +159,7 @@
         "ttl": 10,
         "certificates": [],
         "withdrawals": [],
-        "metadata": "",
+        "auxiliary_data": null,
         "input_flow": [["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
@@ -196,7 +196,7 @@
         "ttl": 10,
         "certificates": [],
         "withdrawals": [],
-        "metadata": "",
+        "auxiliary_data": null,
         "input_flow": [["SWIPE", "YES"], ["YES"], ["YES"], ["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
@@ -233,7 +233,7 @@
         "ttl": 10,
         "certificates": [],
         "withdrawals": [],
-        "metadata": "",
+        "auxiliary_data": null,
         "input_flow": [["SWIPE", "YES"], ["YES"], ["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
@@ -269,7 +269,7 @@
         "ttl": 10,
         "certificates": [],
         "withdrawals": [],
-        "metadata": "",
+        "auxiliary_data": null,
         "input_flow": [["SWIPE", "YES"], ["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
@@ -305,7 +305,7 @@
         "ttl": 10,
         "certificates": [],
         "withdrawals": [],
-        "metadata": "",
+        "auxiliary_data": null,
         "input_flow": [["SWIPE", "YES"], ["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
@@ -343,7 +343,7 @@
         "ttl": 10,
         "certificates": [],
         "withdrawals": [],
-        "metadata": "",
+        "auxiliary_data": null,
         "input_flow": [["SWIPE", "YES"], ["YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
@@ -383,7 +383,7 @@
           }
         ],
         "withdrawals": [],
-        "metadata": "",
+        "auxiliary_data": null,
         "input_flow": [["SWIPE", "YES"], ["YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
@@ -418,7 +418,7 @@
           }
         ],
         "withdrawals": [],
-        "metadata": "",
+        "auxiliary_data": null,
         "input_flow": [["YES"], ["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
@@ -454,7 +454,7 @@
           }
         ],
         "withdrawals": [],
-        "metadata": "",
+        "auxiliary_data": null,
         "input_flow": [["SWIPE", "YES"], ["YES"], ["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
@@ -486,7 +486,7 @@
           {"type": 1, "path": "m/1852'/1815'/0'/2/0"}
         ],
         "withdrawals": [],
-        "metadata": "",
+        "auxiliary_data": null,
         "input_flow": [["SWIPE", "YES"], ["YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
@@ -526,7 +526,7 @@
             "amount": "1000"
           }
         ],
-        "metadata": "",
+        "auxiliary_data": null,
         "input_flow": [["SWIPE", "YES"], ["YES"], ["YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
@@ -562,7 +562,7 @@
           }
         ],
         "withdrawals": [],
-        "metadata": "",
+        "auxiliary_data": null,
         "input_flow": [["SWIPE", "YES"], ["YES"], ["YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
@@ -584,7 +584,7 @@
       }
     },
     {
-      "description": "transaction with metadata",
+      "description": "transaction with auxiliary data blob",
       "parameters": {
         "protocol_magic": 764824073,
         "network_id": 1,
@@ -592,8 +592,10 @@
         "ttl": 10,
         "certificates": [],
         "withdrawals": [],
-        "metadata": "a200a11864a118c843aa00ff01a119012c590100aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        "input_flow": [["SWIPE", "YES"], ["SWIPE", "YES"]],
+        "auxiliary_data": {
+          "blob": "a200a11864a118c843aa00ff01a119012c590100aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "input_flow": [["SWIPE", "YES"], ["YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -614,6 +616,47 @@
       }
     },
     {
+      "description": "transaction with catalyst registration",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": {
+          "catalyst_registration_parameters": {
+            "voting_public_key": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "staking_path": "m/1852'/1815'/0'/2/0",
+            "reward_address_parameters": {
+              "addressType": 0,
+              "path": "m/1852'/1815'/0'/0/0",
+              "stakingPath": "m/1852'/1815'/0'/2/0"
+            },
+            "nonce": 22634813
+          }
+        },
+        "input_flow": [["SWIPE", "SWIPE", "YES"], ["SWIPE", "SWIPE", "SWIPE", "SWIPE", "SWIPE", "YES"], ["YES"], ["SWIPE", "YES"]],
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ]
+      },
+      "result": {
+        "tx_hash": "839a587109358e0aa81b8fb3d5fa74665fac303425ec544a4db7f6ba4e882dff",
+        "serialized_tx": "83a500818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018182583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff0102182a030a075820a943e9166f1bb6d767b175384d3bd7d23645170df36fc1861fbf344135d8e120a100818258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c15840187ecd899e01390272a8d8289088199b3453945fa076819b5b5df60c325c10315477cc801044dfb553e780a300d79627ef5c09e64c6f953cc33bbc59152c900282a219ef64a40158201af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc025820bc65be1b0b9d7531778a1317c2aa6de936963c3f9ac7d5ee9e9eda25e0c97c5e0358390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277041a0159613d19ef65a101584074f27d877bbb4a5fc4f7c56869905c11f70bad0af3de24b23afaa1d024e750930f434ecc4b73e5d1723c2cb8548e8bf6098ac876487b3a6ed0891cb76994d40980"
+      }
+    },
+    {
       "description": "Testnet transaction",
       "parameters": {
         "protocol_magic": 42,
@@ -622,7 +665,7 @@
         "ttl": 10,
         "certificates": [],
         "withdrawals": [],
-        "metadata": "",
+        "auxiliary_data": null,
         "input_flow": [["SWIPE", "YES"], ["SWIPE", "YES"], ["YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
@@ -662,7 +705,7 @@
         "validity_interval_start": 47,
         "certificates": [],
         "withdrawals": [],
-        "metadata": "",
+        "auxiliary_data": null,
         "input_flow": [["YES"], ["SWIPE", "YES"], ["SWIPE", "SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
@@ -710,7 +753,7 @@
         "validity_interval_start": 47,
         "certificates": [],
         "withdrawals": [],
-        "metadata": "",
+        "auxiliary_data": null,
         "input_flow": [["YES"], ["SWIPE", "YES"], ["SWIPE", "YES"], ["SWIPE", "YES"], ["SWIPE", "SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
@@ -769,7 +812,7 @@
         "fee": 42,
         "certificates": [],
         "withdrawals": [],
-        "metadata": "",
+        "auxiliary_data": null,
         "input_flow": [["YES"]],
         "inputs": [
           {
@@ -800,7 +843,7 @@
         "fee": 42,
         "certificates": [],
         "withdrawals": [],
-        "metadata": "",
+        "auxiliary_data": null,
         "input_flow": [["YES"], ["YES"]],
         "inputs": [
           {
