@@ -268,3 +268,13 @@ def is_empty_iterator(i: Iterator) -> bool:
         return True
     else:
         return False
+
+
+def empty_bytearray(preallocate: int) -> bytearray:
+    """
+    Returns bytearray that won't allocate for at least `preallocate` bytes.
+    Useful in case you want to avoid allocating too often.
+    """
+    b = bytearray(preallocate)
+    b[:] = bytes()
+    return b
