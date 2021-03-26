@@ -280,7 +280,16 @@ python test:
       - common/**/*
       - python/**/*
   script:
-    - nix-shell --arg fullDeps true --run "cd python && poetry run tox"
+    # Workaround for nixpkgs+tox integration failure which results in:
+    #     ModuleNotFoundError: No module named '_sysconfigdata__linux_x86_64-linux-gnu'
+    # The value of _PYTHON_SYSCONFIGDATA_NAME has changed between python 3.7 and 3.8 and with
+    # multiple versions in your environment the older pythons don't seem to work under tox.
+    # When the variable is unset the interpreter seems to do the right thing. Can be removed in
+    # july 2023 when python 3.7 is EOLed.
+    # See also:
+    # https://github.com/NixOS/nixpkgs/blob/b00c7c2d1d905eb63c81a0917f1a94b763a7843b/pkgs/development/interpreters/python/cpython/default.nix#L103
+    # https://github.com/NixOS/nixpkgs/pull/98915
+    - nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && cd python && poetry run tox"
 
 
 # Storage
