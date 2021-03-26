@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "bignum.h"
 #include "bitmaps.h"
@@ -584,10 +585,17 @@ void layoutConfirmNondefaultLockTime(uint32_t lock_time,
                       _("will have no effect."), NULL, _("Continue?"), NULL);
 
   } else {
-    char str_locktime[11] = {0};
-    snprintf(str_locktime, sizeof(str_locktime), "%" PRIu32, lock_time);
-    char *str_type = (lock_time < LOCKTIME_TIMESTAMP_MIN_VALUE) ? "blockheight:"
-                                                                : "timestamp:";
+    char str_locktime[20] = {0};
+    char *str_type = NULL;
+    if (lock_time < LOCKTIME_TIMESTAMP_MIN_VALUE) {
+      str_type = "blockheight:";
+      snprintf(str_locktime, sizeof(str_locktime), "%" PRIu32, lock_time);
+    } else {
+      str_type = "timestamp (UTC):";
+      time_t time = lock_time;
+      const struct tm *tm = gmtime(&time);
+      strftime(str_locktime, sizeof(str_locktime), "%F %T", tm);
+    }
 
     layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                       _("Locktime for this"), _("transaction is set to"),
