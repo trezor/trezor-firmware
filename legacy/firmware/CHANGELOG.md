@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Allow decreasing the output value in RBF transactions.  [#1491]
 - Support long PIN of up to 50 digits.  [#1167]
+- Display nLockTime in human-readable form.  [#1549]
 
 ### Deprecated
 
@@ -384,3 +385,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1415]: https://github.com/trezor/trezor-firmware/pull/1415
 [#1491]: https://github.com/trezor/trezor-firmware/issues/1491
 [#1518]: https://github.com/trezor/trezor-firmware/pull/1518
+[#1549]: https://github.com/trezor/trezor-firmware/issues/1549
