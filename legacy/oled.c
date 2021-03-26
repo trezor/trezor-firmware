@@ -342,7 +342,7 @@ void oledDrawStringRight(int x, int y, const char *text, uint8_t font) {
 
 static void oled_draw_bitmap_flip(int x, int y, const BITMAP *bmp, bool flip) {
   for (int i = 0; i < bmp->width; i++) {
-    int ii = flip ? i : (bmp->width - 1 - i);
+    int ii = flip ? (bmp->width - 1 - i) : i;
     for (int j = 0; j < bmp->height; j++) {
       if (bmp->data[(ii / 8) + j * bmp->width / 8] & (1 << (7 - ii % 8))) {
         oledDrawPixel(x + i, y + j);
