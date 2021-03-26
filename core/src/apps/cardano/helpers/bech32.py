@@ -2,10 +2,13 @@ from trezor.crypto import bech32
 
 HRP_SEPARATOR = "1"
 
+# CIP-0005 prefixes - https://github.com/cardano-foundation/CIPs/blob/master/CIP-0005/CIP-0005.md
 HRP_ADDRESS = "addr"
 HRP_TESTNET_ADDRESS = "addr_test"
 HRP_REWARD_ADDRESS = "stake"
 HRP_TESTNET_REWARD_ADDRESS = "stake_test"
+# Jormungandr public key prefix - https://github.com/input-output-hk/voting-tools-lib/blob/18dae637e80db72444476606ab264b973bcf1a9d/src/Cardano/API/Extended.hs#L226
+HRP_JORMUN_PUBLIC_KEY = "ed25519_pk"
 
 
 def encode(hrp: str, data: bytes) -> str:

@@ -2,13 +2,12 @@
 # fmt: off
 from .. import protobuf as p
 
-from .CardanoTxMetadataType import CardanoTxMetadataType
+from .CardanoCatalystRegistrationParametersType import CardanoCatalystRegistrationParametersType
 
 if __debug__:
     try:
         from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
-        EnumTypeCardanoAuxiliaryDataType = Literal[0, 1]
     except ImportError:
         pass
 
@@ -18,18 +17,15 @@ class CardanoTxAuxiliaryDataType(p.MessageType):
     def __init__(
         self,
         *,
-        type: EnumTypeCardanoAuxiliaryDataType,
         blob: Optional[bytes] = None,
-        metadata: Optional[CardanoTxMetadataType] = None,
+        catalyst_registration_parameters: Optional[CardanoCatalystRegistrationParametersType] = None,
     ) -> None:
-        self.type = type
         self.blob = blob
-        self.metadata = metadata
+        self.catalyst_registration_parameters = catalyst_registration_parameters
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('type', p.EnumType("CardanoAuxiliaryDataType", (0, 1,)), p.FLAG_REQUIRED),
-            2: ('blob', p.BytesType, None),
-            3: ('metadata', CardanoTxMetadataType, None),
+            1: ('blob', p.BytesType, None),
+            2: ('catalyst_registration_parameters', CardanoCatalystRegistrationParametersType, None),
         }

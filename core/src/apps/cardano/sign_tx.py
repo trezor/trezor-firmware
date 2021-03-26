@@ -18,10 +18,15 @@ from .address import (
     get_address_bytes_unsafe,
     validate_output_address,
 )
+from .auxiliary_data import (
+    get_auxiliary_data_cbor,
+    hash_auxiliary_data,
+    show_auxiliary_data,
+    validate_auxiliary_data,
+)
 from .byron_address import get_address_attributes
 from .certificates import cborize_certificate, validate_certificate
 from .helpers import (
-    INVALID_METADATA,
     INVALID_STAKE_POOL_REGISTRATION_TX_STRUCTURE,
     INVALID_STAKEPOOL_REGISTRATION_TX_INPUTS,
     INVALID_TOKEN_BUNDLE_OUTPUT,
@@ -83,9 +88,7 @@ if False:
     CborizedSignedTx = tuple[dict, dict, Optional[cbor.Raw]]
     TxHash = bytes
 
-METADATA_HASH_SIZE = 32
 MINTING_POLICY_ID_LENGTH = 28
-MAX_METADATA_LENGTH = 500
 MAX_ASSET_NAME_LENGTH = 32
 MAX_TX_CHUNK_SIZE = 256
 
@@ -132,7 +135,9 @@ async def _sign_ordinary_tx(
     _validate_outputs(keychain, msg.outputs, msg.protocol_magic, msg.network_id)
     _validate_certificates(msg.certificates, msg.protocol_magic, msg.network_id)
     _validate_withdrawals(msg.withdrawals)
-    _validate_metadata(msg.metadata)
+    validate_auxiliary_data(
+        keychain, msg.auxiliary_data, msg.protocol_magic, msg.network_id
+    )
 
     # display the transaction in UI
     await _show_standard_tx(ctx, keychain, msg)
@@ -160,7 +165,9 @@ async def _sign_stake_pool_registration_tx(
     _ensure_no_signing_inputs(msg.inputs)
     _validate_outputs(keychain, msg.outputs, msg.protocol_magic, msg.network_id)
     _validate_certificates(msg.certificates, msg.protocol_magic, msg.network_id)
-    _validate_metadata(msg.metadata)
+    validate_auxiliary_data(
+        keychain, msg.auxiliary_data, msg.protocol_magic, msg.network_id
+    )
 
     await _show_stake_pool_registration_tx(ctx, keychain, msg)
 
@@ -274,23 +281,6 @@ def _validate_withdrawals(withdrawals: list[CardanoTxWithdrawalType]) -> None:
             raise INVALID_WITHDRAWAL
 
 
-def _validate_metadata(metadata: bytes | None) -> None:
-    if not metadata:
-        return
-
-    if len(metadata) > MAX_METADATA_LENGTH:
-        raise INVALID_METADATA
-
-    try:
-        # this also raises an error if there's some data remaining
-        decoded = cbor.decode(metadata)
-    except Exception:
-        raise INVALID_METADATA
-
-    if not isinstance(decoded, dict):
-        raise INVALID_METADATA
-
-
 def _cborize_signed_tx(
     keychain: seed.Keychain, msg: CardanoSignTx
 ) -> tuple[CborizedSignedTx, TxHash]:
@@ -306,11 +296,14 @@ def _cborize_signed_tx(
         msg.protocol_magic,
     )
 
-    metadata = None
-    if msg.metadata:
-        metadata = cbor.Raw(bytes(msg.metadata))
+    auxiliary_data = None
+    if msg.auxiliary_data:
+        auxiliary_data_cbor = get_auxiliary_data_cbor(
+            keychain, msg.auxiliary_data, msg.protocol_magic, msg.network_id
+        )
+        auxiliary_data = cbor.Raw(auxiliary_data_cbor)
 
-    return (tx_body, witnesses, metadata), tx_hash
+    return (tx_body, witnesses, auxiliary_data), tx_hash
 
 
 def _cborize_tx_body(keychain: seed.Keychain, msg: CardanoSignTx) -> dict:
@@ -340,8 +333,11 @@ def _cborize_tx_body(keychain: seed.Keychain, msg: CardanoSignTx) -> dict:
 
     # tx_body[6] is for protocol updates, which we don't support
 
-    if msg.metadata:
-        tx_body[7] = _hash_metadata(bytes(msg.metadata))
+    if msg.auxiliary_data:
+        auxiliary_data_cbor = get_auxiliary_data_cbor(
+            keychain, msg.auxiliary_data, msg.protocol_magic, msg.network_id
+        )
+        tx_body[7] = hash_auxiliary_data(bytes(auxiliary_data_cbor))
 
     if msg.validity_interval_start:
         tx_body[8] = msg.validity_interval_start
@@ -430,10 +426,6 @@ def _cborize_withdrawals(
         result[reward_address] = withdrawal.amount
 
     return result
-
-
-def _hash_metadata(metadata: bytes) -> bytes:
-    return hashlib.blake2b(data=metadata, outlen=METADATA_HASH_SIZE).digest()
 
 
 def _hash_tx_body(tx_body: dict) -> bytes:
@@ -573,7 +565,10 @@ async def _show_standard_tx(
     for withdrawal in msg.withdrawals:
         await confirm_withdrawal(ctx, withdrawal)
 
-    has_metadata = bool(msg.metadata)
+    await show_auxiliary_data(
+        ctx, keychain, msg.auxiliary_data, msg.protocol_magic, msg.network_id
+    )
+
     await confirm_transaction(
         ctx=ctx,
         amount=total_amount,
@@ -581,7 +576,6 @@ async def _show_standard_tx(
         protocol_magic=msg.protocol_magic,
         ttl=msg.ttl,
         validity_interval_start=msg.validity_interval_start,
-        has_metadata=has_metadata,
         is_network_id_verifiable=is_network_id_verifiable,
     )
 
@@ -615,6 +609,9 @@ async def _show_stake_pool_registration_tx(
     await confirm_stake_pool_metadata(ctx, pool_parameters.metadata)
     await confirm_transaction_network_ttl(
         ctx, msg.protocol_magic, msg.ttl, msg.validity_interval_start
+    )
+    await show_auxiliary_data(
+        ctx, keychain, msg.auxiliary_data, msg.protocol_magic, msg.network_id
     )
     await confirm_stake_pool_registration_final(ctx)
 

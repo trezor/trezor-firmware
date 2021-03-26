@@ -13,7 +13,7 @@
         "ttl": 10,
         "certificates": [],
         "withdrawals": [],
-        "metadata": "",
+        "auxiliary_data": null,
         "input_flow": [["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {

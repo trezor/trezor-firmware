@@ -215,7 +215,6 @@ async def confirm_transaction(
     protocol_magic: int,
     ttl: int | None,
     validity_interval_start: int | None,
-    has_metadata: bool,
     is_network_id_verifiable: bool,
 ) -> None:
     pages: list[ui.Component] = []
@@ -234,12 +233,6 @@ async def confirm_transaction(
     page2.normal("Valid since: %s" % format_optional_int(validity_interval_start))
     page2.normal("TTL: %s" % format_optional_int(ttl))
     pages.append(page2)
-
-    if has_metadata:
-        page3 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
-        page3.normal("Transaction contains")
-        page3.normal("metadata")
-        pages.append(page3)
 
     await require_hold_to_confirm(ctx, Paginated(pages))
 
@@ -389,6 +382,69 @@ async def confirm_withdrawal(
     page1.bold(address_n_to_str(to_account_path(withdrawal.path)))
     page1.normal("Amount:")
     page1.bold(format_coin_amount(withdrawal.amount))
+
+    await require_confirm(ctx, page1)
+
+
+async def confirm_catalyst_registration(
+    ctx: wire.Context,
+    public_key: str,
+    staking_path: list[int],
+    reward_address: str,
+    nonce: int,
+) -> None:
+    pages: list[ui.Component] = []
+
+    page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    page1.bold("Catalyst voting key")
+    page1.bold("registration")
+    pages.append(page1)
+
+    page2 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    page2.normal("Voting public key:")
+    page2.bold(*chunks(public_key, 17))
+    pages.append(page2)
+
+    page3 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    page3.normal("Staking key for")
+    page3.normal("account %s:" % format_account_number(staking_path))
+    page3.bold(address_n_to_str(staking_path))
+    pages.append(page3)
+
+    page4 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    page4.normal("Rewards go to:")
+
+    lines_per_page = 5
+    lines_used_on_first_page = 1
+    address_lines = list(chunks(reward_address, 17))
+
+    for address_line in address_lines[: lines_per_page - lines_used_on_first_page]:
+        page4.bold(address_line)
+    pages.append(page4)
+
+    pages.extend(
+        _paginate_lines(
+            address_lines,
+            lines_per_page - lines_used_on_first_page,
+            "Confirm transaction",
+            ui.ICON_SEND,
+            5,
+        )
+    )
+
+    last_page = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    last_page.normal("Nonce: %s" % nonce)
+    pages.append(last_page)
+
+    await require_confirm(ctx, Paginated(pages))
+
+
+async def show_auxiliary_data_hash(
+    ctx: wire.Context, auxiliary_data_hash: bytes
+) -> None:
+    page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    page1.normal("Auxiliary data hash:")
+    page1.bold(hexlify(auxiliary_data_hash).decode())
 
     await require_confirm(ctx, page1)
 
