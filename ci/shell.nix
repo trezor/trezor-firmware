@@ -2,10 +2,10 @@
 , hardwareTest ? false
  }:
 
-# the last successful build of nixpkgs-unstable as of 2020-12-30
+# the last successful build of nixpkgs-unstable as of 2021-03-25
 with import (builtins.fetchTarball {
-  url = "https://github.com/NixOS/nixpkgs/archive/bea44d5ebe332260aa34a1bd48250b6364527356.tar.gz";
-  sha256 = "14sfk04iyvyh3jl1s2wayw1y077dwpk2d712nhjk1wwfjkdq03r3";
+  url = "https://github.com/NixOS/nixpkgs/archive/c0e881852006b132236cbf0301bd1939bb50867e.tar.gz";
+  sha256 = "0fy7z7yxk5n7yslsvx5cyc6h21qwi4bhxf3awhirniszlbvaazy2";
 })
 { };
 
@@ -70,7 +70,7 @@ stdenv.mkDerivation ({
     darwin.libobjc
     libiconv
   ] ++ lib.optionals hardwareTest [
-    (callPackage ./hardware_tests/uhubctl.nix { }) # HACK FIXME replace this with just uhubctl once pinned version of nixpkgs is updated
+    uhubctl
     ffmpeg
     dejavu_fonts
   ];
