@@ -11,7 +11,7 @@ cd trezor-firmware
 ./build-docker.sh
 ```
 
-When the build is done, you will find the current firmware in `build/legacy/firmware/trezor.bin`.
+When the build is done, you will find the current firmware in `build/legacy/firmware/firmware.bin`.
 
 ### Running with sudo
 
@@ -65,8 +65,8 @@ poetry run ./script/setup
 poetry run ./script/cibuild
 ```
 
-A built device firmware will be located in `legacy/firmware/trezor.bin`. A built emulator will be
-located in `legacy/firmware/trezor.elf`.
+A built device firmware will be located in `legacy/firmware/firmware.bin`. A built emulator will be
+located in `legacy/firmware/firmware.elf`.
 
 ### Common errors
 
@@ -79,7 +79,7 @@ located in `legacy/firmware/trezor.elf`.
   find -L vendor -name "*.o" -delete
   ```
 
-You can launch the emulator using `./firmware/trezor.elf`. To use `trezorctl` with the emulator, use
+You can launch the emulator using `./firmware/firmware.elf`. To use `trezorctl` with the emulator, use
 `trezorctl -p udp` (for example, `trezorctl -p udp get_features`).
 
 You can use `TREZOR_OLED_SCALE` environment variable to make emulator screen bigger.
@@ -103,7 +103,7 @@ Build with `MEMORY_PROTECT=0` or you will get a hard fault on your device.
 
 Switch your device to bootloader mode, then execute:
 ```sh
-trezorctl firmware-update -f build/legacy/firmware/trezor.bin
+trezorctl firmware-update -f build/legacy/firmware/firmware.bin
 ```
 
 ## Combining bootloader and firmware with various `MEMORY_PROTECT` settings, signed/unsigned
