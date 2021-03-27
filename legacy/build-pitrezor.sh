@@ -26,6 +26,13 @@ case "$1" in
     export CC=arm-poky-linux-gnueabi-gcc
     export CPUFLAGS="-march=armv6 -mfpu=vfp -mfloat-abi=hard -mtune=arm1176jzf-s -mfpu=vfp --sysroot=/opt/poky/3.1.4/sysroots/arm1176jzfshf-vfp-poky-linux-gnueabi"
     ;;
+  "-pi4")
+    export PATH=/opt/poky/3.1.4cortex/sysroots/x86_64-pokysdk-linux/usr/bin:/opt/poky/3.1.4cortex/sysroots/x86_64-pokysdk-linux/usr/bin/arm-poky-linux-gnueabi:$PATH
+    export PKG_CONFIG_SYSROOT_DIR=/opt/poky/3.1.4cortex/sysroots/cortexa7t2hf-neon-vfpv4-poky-linux-gnueabi
+    export PKG_CONFIG_PATH=/opt/poky/3.1.4cortex/sysroots/cortexa7t2hf-neon-vfpv4-poky-linux-gnueabi/usr/lib/pkgconfig
+    export CC=arm-poky-linux-gnueabi-gcc
+    export CPUFLAGS=" -mthumb -mfpu=neon-vfpv4 -mfloat-abi=hard -mcpu=cortex-a7 --sysroot=/opt/poky/3.1.4cortex/sysroots/cortexa7t2hf-neon-vfpv4-poky-linux-gnueabi"
+    ;;
   *)
     ;;
 esac
