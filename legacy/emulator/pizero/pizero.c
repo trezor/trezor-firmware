@@ -18,6 +18,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <SDL.h>
+
 #include <bcm2835.h>
 
 #include "pizero.h"
@@ -77,8 +79,16 @@ void pizeroRefresh(const uint8_t *buffer) {
 uint16_t buttonRead(void) {
 	uint16_t state = 0;
 
-	state |= bcm2835_gpio_lev(gpio_no) == 0 ? BTN_PIN_NO : 0;
-	state |= bcm2835_gpio_lev(gpio_yes) == 0 ? BTN_PIN_YES : 0;
+	const uint8_t *scancodes = SDL_GetKeyboardState(NULL);
+
+	if (scancodes[SDL_SCANCODE_LEFT] || bcm2835_gpio_lev(gpio_no) == 0) {
+		state |= BTN_PIN_NO;
+	}
+
+	if (scancodes[SDL_SCANCODE_RIGHT] || bcm2835_gpio_lev(gpio_yes) == 0) {
+		state |= BTN_PIN_YES;
+	}
+
 	return ~state;
 }
 
