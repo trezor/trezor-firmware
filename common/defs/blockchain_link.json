@@ -223,6 +223,12 @@
       "https://blockbook-test.groestlcoin.org"
     ]
   },
+  "bitcoin:tLTC": {
+    "type": "blockbook",
+    "url": [
+      "https://tltc1.test"
+    ]
+  },
   "bitcoin:tPIVX": {
     "type": "blockbook",
     "url": [
