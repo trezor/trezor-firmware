@@ -4525,6 +4525,27 @@
   },
   "suite": {
     "supported": {
+      "bitcoin:BCH": true,
+      "bitcoin:BTC": true,
+      "bitcoin:BTG": true,
+      "bitcoin:DASH": true,
+      "bitcoin:DGB": true,
+      "bitcoin:DOGE": true,
+      "bitcoin:LTC": true,
+      "bitcoin:NMC": true,
+      "bitcoin:VTC": true,
+      "bitcoin:ZEC": true,
+      "bitcoin:tBTC": true,
+      "eth:ETC": true,
+      "eth:ETH": true,
+      "eth:tROP": true,
+      "misc:XRP": true,
+      "misc:tXRP": true
+    },
+    "unsupported": {}
+  },
+  "webwallet": {
+    "supported": {
       "bitcoin:ACM": true,
       "bitcoin:BCH": true,
       "bitcoin:BTC": true,
@@ -4552,11 +4573,10 @@
       "bitcoin:VTC": true,
       "bitcoin:ZCR": true,
       "bitcoin:ZEC": true,
+      "bitcoin:tBTC": true,
       "bitcoin:tGRS": true,
       "bitcoin:tLTC": true,
-      "bitcoin:tPPC": true,
-      "eth:ETC": true,
-      "eth:ETH": true
+      "bitcoin:tPPC": true
     },
     "unsupported": {}
   }
