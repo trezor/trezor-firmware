@@ -1,6 +1,7 @@
 from micropython import const
 from ubinascii import hexlify
 
+import storage.cache
 from storage import common
 
 if False:
@@ -318,9 +319,19 @@ def set_safety_check_level(level: StorageSafetyCheckLevel) -> None:
     common.set_uint8(_NAMESPACE, _SAFETY_CHECK_LEVEL, level)
 
 
+@storage.cache.stored(storage.cache.STORAGE_DEVICE_EXPERIMENTAL_FEATURES)
+def _get_experimental_features() -> bytes:
+    if common.get_bool(_NAMESPACE, _EXPERIMENTAL_FEATURES):
+        return b"\x01"
+    else:
+        return b""
+
+
 def get_experimental_features() -> bool:
-    return common.get_bool(_NAMESPACE, _EXPERIMENTAL_FEATURES)
+    return bool(_get_experimental_features())
 
 
 def set_experimental_features(enabled: bool) -> None:
+    cached_bytes = b"\x01" if enabled else b""
+    storage.cache.set(storage.cache.STORAGE_DEVICE_EXPERIMENTAL_FEATURES, cached_bytes)
     common.set_true_or_delete(_NAMESPACE, _EXPERIMENTAL_FEATURES, enabled)

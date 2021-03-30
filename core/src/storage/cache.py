@@ -20,6 +20,7 @@ APP_COMMON_AUTHORIZATION_DATA = 4
 # Keys that are valid across sessions
 APP_COMMON_SEED_WITHOUT_PASSPHRASE = 0 | _SESSIONLESS_FLAG
 APP_COMMON_SAFETY_CHECKS_TEMPORARY = 1 | _SESSIONLESS_FLAG
+STORAGE_DEVICE_EXPERIMENTAL_FEATURES = 2 | _SESSIONLESS_FLAG
 
 
 class InvalidSessionError(Exception):
@@ -77,6 +78,7 @@ class SessionlessCache(DataCache):
         self.fields = (
             64,  # APP_COMMON_SEED_WITHOUT_PASSPHRASE
             1,  # APP_COMMON_SAFETY_CHECKS_TEMPORARY
+            1,  # STORAGE_DEVICE_EXPERIMENTAL_FEATURES
         )
         super().__init__()
 

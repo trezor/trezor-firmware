@@ -247,6 +247,21 @@ class TestMsgApplysettings:
             )
             experimental_call()
 
+        # relock and try again
+        client.lock()
+        with client:
+            client.use_pin_sequence([PIN4])
+            client.set_expected_responses(
+                [
+                    messages.ButtonRequest,
+                    messages.ButtonRequest,
+                    messages.ButtonRequest,
+                    messages.Success,
+                ]
+            )
+            experimental_call()
+
+        # unset experimental features
         with client:
             client.set_expected_responses([messages.Success, messages.Features])
             device.apply_settings(client, experimental_features=False)
