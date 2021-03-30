@@ -8,7 +8,7 @@ from . import workflow_handlers
 
 if False:
     import protobuf
-    from typing import Iterable, NoReturn, Protocol
+    from typing import NoReturn
     from trezor.messages.Features import Features
     from trezor.messages.Initialize import Initialize
     from trezor.messages.EndSession import EndSession
@@ -18,15 +18,6 @@ if False:
     from trezor.messages.Ping import Ping
     from trezor.messages.DoPreauthorized import DoPreauthorized
     from trezor.messages.CancelAuthorization import CancelAuthorization
-
-if False:
-
-    class Authorization(Protocol):
-        def expected_wire_types(self) -> Iterable[int]:
-            ...
-
-        def __del__(self) -> None:
-            ...
 
 
 def get_features() -> Features:
@@ -144,16 +135,15 @@ async def handle_DoPreauthorized(
     ctx: wire.Context, msg: DoPreauthorized
 ) -> protobuf.MessageType:
     from trezor.messages.PreauthorizedRequest import PreauthorizedRequest
+    from apps.common import authorization
 
-    authorization: Authorization = storage.cache.get(
-        storage.cache.APP_BASE_AUTHORIZATION
-    )
-    if not authorization:
+    if not authorization.is_set():
         raise wire.ProcessError("No preauthorized operation")
 
-    req = await ctx.call_any(
-        PreauthorizedRequest(), *authorization.expected_wire_types()
-    )
+    wire_types = authorization.get_wire_types()
+    utils.ensure(bool(wire_types), "Unsupported preauthorization found")
+
+    req = await ctx.call_any(PreauthorizedRequest(), *wire_types)
 
     handler = workflow_handlers.find_registered_handler(
         ctx.iface, req.MESSAGE_WIRE_TYPE
@@ -161,28 +151,15 @@ async def handle_DoPreauthorized(
     if handler is None:
         return wire.unexpected_message()
 
-    return await handler(ctx, req, authorization)  # type: ignore
-
-
-def set_authorization(authorization: Authorization) -> None:
-    previous: Authorization = storage.cache.get(storage.cache.APP_BASE_AUTHORIZATION)
-    if previous:
-        previous.__del__()
-    storage.cache.set(storage.cache.APP_BASE_AUTHORIZATION, authorization)
+    return await handler(ctx, req, authorization.get())  # type: ignore
 
 
 async def handle_CancelAuthorization(
     ctx: wire.Context, msg: CancelAuthorization
 ) -> protobuf.MessageType:
-    authorization: Authorization = storage.cache.get(
-        storage.cache.APP_BASE_AUTHORIZATION
-    )
-    if not authorization:
-        raise wire.ProcessError("No preauthorized operation")
+    from apps.common import authorization
 
-    authorization.__del__()
-    storage.cache.set(storage.cache.APP_BASE_AUTHORIZATION, b"")
-
+    authorization.clear()
     return Success(message="Authorization cancelled")
 
 

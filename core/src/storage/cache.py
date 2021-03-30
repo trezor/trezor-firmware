@@ -14,7 +14,8 @@ _SESSION_ID_LENGTH = 32
 APP_COMMON_SEED = 0
 APP_CARDANO_PASSPHRASE = 1
 APP_MONERO_LIVE_REFRESH = 2
-APP_BASE_AUTHORIZATION = 3
+APP_COMMON_AUTHORIZATION_TYPE = 3
+APP_COMMON_AUTHORIZATION_DATA = 4
 
 # Keys that are valid across sessions
 APP_COMMON_SEED_WITHOUT_PASSPHRASE = 0 | _SESSIONLESS_FLAG
@@ -52,7 +53,8 @@ class SessionCache(DataCache):
             64,  # APP_COMMON_SEED
             50,  # APP_CARDANO_PASSPHRASE
             1,  # APP_MONERO_LIVE_REFRESH
-            128,  # APP_BASE_AUTHORIZATION
+            2,  # APP_COMMON_AUTHORIZATION_TYPE
+            128,  # APP_COMMON_AUTHORIZATION_DATA
         )
         self.last_usage = 0
         super().__init__()
