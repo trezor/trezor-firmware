@@ -23,7 +23,7 @@ class AuthorizeCoinJoin(p.MessageType):
         coordinator: str,
         max_total_fee: int,
         address_n: Optional[List[int]] = None,
-        fee_per_anonymity: Optional[int] = None,
+        fee_per_anonymity: int = 0,
         coin_name: str = "Bitcoin",
         script_type: EnumTypeInputScriptType = 0,
         amount_unit: EnumTypeAmountUnit = 0,
@@ -41,7 +41,7 @@ class AuthorizeCoinJoin(p.MessageType):
         return {
             1: ('coordinator', p.UnicodeType, p.FLAG_REQUIRED),
             2: ('max_total_fee', p.UVarintType, p.FLAG_REQUIRED),
-            3: ('fee_per_anonymity', p.UVarintType, None),
+            3: ('fee_per_anonymity', p.UVarintType, 0),  # default=0
             4: ('address_n', p.UVarintType, p.FLAG_REPEATED),
             5: ('coin_name', p.UnicodeType, "Bitcoin"),  # default=Bitcoin
             6: ('script_type', p.EnumType("InputScriptType", (0, 1, 2, 3, 4,)), 0),  # default=SPENDADDRESS

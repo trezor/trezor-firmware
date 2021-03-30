@@ -7,18 +7,19 @@ from apps.common import coininfo
 from apps.common.keychain import get_keychain
 from apps.common.paths import PATTERN_BIP44, PathSchema
 
+from . import authorization
 from .common import BITCOIN_NAMES
 
 if False:
     from typing import Awaitable, Callable, Iterable, TypeVar
     from typing_extensions import Protocol
 
+    from protobuf import MessageType
+
     from trezor.messages.TxInputType import EnumTypeInputScriptType
 
     from apps.common.keychain import Keychain, MsgOut, Handler
     from apps.common.paths import Bip32Path
-
-    from .authorization import CoinJoinAuthorization
 
     class MsgWithCoinName(Protocol):
         coin_name: str
@@ -189,14 +190,13 @@ def with_keychain(func: HandlerWithCoinInfo[MsgOut]) -> Handler[MsgIn, MsgOut]:
     async def wrapper(
         ctx: wire.Context,
         msg: MsgIn,
-        authorization: CoinJoinAuthorization | None = None,
+        auth_msg: MessageType | None = None,
     ) -> MsgOut:
-        if authorization:
-            keychain = authorization.keychain
-            coin = get_coin_by_name(msg.coin_name)
-            return await func(ctx, msg, keychain, coin, authorization)
+        keychain, coin = await get_keychain_for_coin(ctx, msg.coin_name)
+        if auth_msg:
+            auth_obj = authorization.from_cached_message(auth_msg)
+            return await func(ctx, msg, keychain, coin, auth_obj)
         else:
-            keychain, coin = await get_keychain_for_coin(ctx, msg.coin_name)
             with keychain:
                 return await func(ctx, msg, keychain, coin)
 
