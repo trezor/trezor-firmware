@@ -38,58 +38,214 @@
 #include "otp.h"
 #endif
 
-/* Screen timeout */
-uint32_t system_millis_lock_start = 0;
+#include <stdio.h>
 
-void check_lock_screen(void) {
-  buttonUpdate();
+enum GameDir { DIR_UP, DIR_RIGHT, DIR_DOWN, DIR_LEFT };
 
-  // wake from screensaver on any button
-  if (layoutLast == layoutScreensaver && (button.NoUp || button.YesUp)) {
-    layoutHome();
-    return;
-  }
+enum GameState { STATE_PLAYING, STATE_GAMEOVER };
 
-  // button held for long enough (5 seconds)
-  if (layoutLast == layoutHome && button.NoDown >= 114000 * 5) {
-    layoutDialog(&bmp_icon_question, _("Cancel"), _("Lock Device"), NULL,
-                 _("Do you really want to"), _("lock your Trezor?"), NULL, NULL,
-                 NULL, NULL);
+int SCORE = 0;
+int HISCORE = 0;
 
-    // wait until NoButton is released
-    usbTiny(1);
-    do {
-      usbSleep(5);
-      buttonUpdate();
-    } while (!button.NoUp);
+#define FIELD_WIDTH (OLED_WIDTH / 2)
+#define FIELD_HEIGHT (OLED_HEIGHT / 2)
 
-    // wait for confirmation/cancellation of the dialog
-    do {
-      usbSleep(5);
-      buttonUpdate();
-    } while (!button.YesUp && !button.NoUp);
-    usbTiny(0);
+struct Game {
+  int16_t field[FIELD_WIDTH * FIELD_HEIGHT];
+  int16_t len;
+  int16_t bug_lifetime;  // negative number, grows to zero
+  uint32_t delay;        // how much to sleep after each game loop iter
+  uint32_t spawn_rate;   // spawn_rate < random32() => a bug spawns
+  int growth_rate;       // how much to grow after eating
+  int x;
+  int y;
+  enum GameDir dir;
+  enum GameState state;
+};
 
+static struct Game game;
+
+#define GAME_CELL(x, y) game.field[y * FIELD_WIDTH + x]
+
+void gameInit(void) {
+  memset(game.field, 0, sizeof(game.field));
+  game.state = STATE_PLAYING;
+  game.dir = DIR_DOWN;
+  game.x = 25;
+  game.y = 0;
+  game.len = 16;
+  game.delay = 3e6;
+  game.growth_rate = 3;
+  game.bug_lifetime = INT16_MIN / 128;
+  game.spawn_rate = UINT32_MAX - (UINT32_MAX / 32);
+  SCORE = 0;
+
+  oledDrawBitmap(0, 0, &bmp_snake);
+  oledRefresh();
+
+  for (;;) {
+    delay(game.delay);
+    buttonUpdate();
     if (button.YesUp) {
-      // lock the screen
-      config_lockDevice();
-      layoutScreensaver();
-    } else {
-      // resume homescreen
-      layoutHome();
-    }
-  }
-
-  // if homescreen is shown for too long
-  if (layoutLast == layoutHome) {
-    if ((timer_ms() - system_millis_lock_start) >=
-        config_getAutoLockDelayMs()) {
-      // lock the screen
-      config_lockDevice();
-      layoutScreensaver();
+      break;
     }
   }
 }
+
+void gamePlayingUpdate(void) {
+  // input
+
+  buttonUpdate();
+  if (button.YesUp) {  // right
+    switch (game.dir) {
+      case DIR_UP:
+        game.dir = DIR_RIGHT;
+        break;
+      case DIR_LEFT:
+        game.dir = DIR_UP;
+        break;
+      case DIR_DOWN:
+        game.dir = DIR_LEFT;
+        break;
+      case DIR_RIGHT:
+        game.dir = DIR_DOWN;
+        break;
+    }
+  }
+  if (button.NoUp) {  // left
+    switch (game.dir) {
+      case DIR_UP:
+        game.dir = DIR_LEFT;
+        break;
+      case DIR_LEFT:
+        game.dir = DIR_DOWN;
+        break;
+      case DIR_DOWN:
+        game.dir = DIR_RIGHT;
+        break;
+      case DIR_RIGHT:
+        game.dir = DIR_UP;
+        break;
+    }
+  }
+
+  // update head
+
+  switch (game.dir) {
+    case DIR_UP:
+      game.y--;
+      break;
+    case DIR_LEFT:
+      game.x--;
+      break;
+    case DIR_DOWN:
+      game.y++;
+      break;
+    case DIR_RIGHT:
+      game.x++;
+      break;
+  }
+
+  // collisions
+
+  if ((game.x < 0 || game.x >= FIELD_WIDTH) ||  // hit left or right
+      (game.y < 0 || game.y >= FIELD_HEIGHT))   // hit top or bottom
+  {
+    game.state = STATE_GAMEOVER;
+    return;
+  }
+
+  if (GAME_CELL(game.x, game.y) > 0) {  // hit the body
+    game.state = STATE_GAMEOVER;
+    return;
+  }
+
+  if (GAME_CELL(game.x, game.y) < 0) {  // ate a bug
+    game.len++;                         // cell gets replaced by head later
+    SCORE++;
+    if (SCORE > HISCORE) {
+      HISCORE = SCORE;
+    }
+  }
+
+  // move
+
+  int y, x;
+
+  for (y = 0; y < FIELD_HEIGHT; y++) {
+    for (x = 0; x < FIELD_WIDTH; x++) {
+      if (GAME_CELL(x, y) > 0) {
+        GAME_CELL(x, y)--;
+      } else if (GAME_CELL(x, y) < 0) {
+        GAME_CELL(x, y)++;
+      }
+    }
+  }
+
+  GAME_CELL(game.x, game.y) = game.len;
+
+  // spawn a bug maybe?
+
+  if (game.spawn_rate < random32()) {
+    int16_t bug_x = random32() % FIELD_WIDTH;
+    int16_t bug_y = random32() % FIELD_HEIGHT;
+    GAME_CELL(bug_x, bug_y) = INT16_MIN / 128;
+  }
+}
+
+void gamePlayingDraw(void) {
+  int y, x;
+
+  for (y = 0; y < OLED_HEIGHT; y++) {
+    for (x = 0; x < OLED_WIDTH; x++) {
+      if (GAME_CELL(x / 2, y / 2) != 0) {
+        oledDrawPixel(x, y);
+      }
+    }
+  }
+}
+
+void gameOverUpdate(void) {
+  buttonUpdate();
+  if (button.YesUp) {
+    gameInit();
+  }
+}
+
+void gameOverDraw(void) {
+  char score[100];
+  char hiscore[100];
+  snprintf(score, sizeof(score), "Score: %d", SCORE);
+  snprintf(hiscore, sizeof(hiscore), "Hi-Score: %d", HISCORE);
+  oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT / 2 - 20, "GAME OVER", FONT_STANDARD);
+  oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT / 2, score, FONT_STANDARD);
+  oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT / 2 + 20, hiscore, FONT_STANDARD);
+}
+
+void gameUpdate(void) {
+  switch (game.state) {
+    case STATE_PLAYING:
+      gamePlayingUpdate();
+      break;
+    case STATE_GAMEOVER:
+      gameOverUpdate();
+      break;
+  }
+}
+
+void gameDraw(void) {
+  oledClear();
+  switch (game.state) {
+    case STATE_PLAYING:
+      gamePlayingDraw();
+      break;
+    case STATE_GAMEOVER:
+      gameOverDraw();
+      break;
+  }
+  oledRefresh();
+}
+
 
 static void collect_hw_entropy(bool privileged) {
 #if EMULATOR
@@ -123,7 +279,7 @@ int main(void) {
                                    // unpredictable stack protection checks
   oledInit();
 #else
-  check_bootloader(true);
+  // check_bootloader(true);
   setupApp();
   __stack_chk_guard = random32();  // this supports compiler provided
                                    // unpredictable stack protection checks
@@ -149,16 +305,11 @@ int main(void) {
 #endif
 #endif
 
-  oledDrawBitmap(40, 0, &bmp_logo64_half);
-  oledDrawBitmapFlip(40 + 24, 0, &bmp_logo64_half);
-  oledRefresh();
-
-  config_init();
-  layoutHome();
-  usbInit();
+  gameInit();
   for (;;) {
-    usbPoll();
-    check_lock_screen();
+    gameUpdate();
+    gameDraw();
+    delay(game.delay);
   }
 
   return 0;
