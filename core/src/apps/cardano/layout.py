@@ -85,11 +85,14 @@ async def confirm_sending(
     page1.bold(format_coin_amount(ada_amount))
     page1.normal("to")
 
-    to_lines = list(chunks(to, 17))
-    page1.bold(to_lines[0])
-
-    comp: ui.Component = page1  # otherwise `[page1]` is of the wrong type
-    pages = [comp] + _paginate_lines(to_lines, 1, "Confirm transaction", ui.ICON_SEND)
+    pages = _paginate_text(
+        page1,
+        "Confirm transaction",
+        ui.ICON_SEND,
+        to,
+        lines_per_page=4,
+        lines_used_on_first_page=3,
+    )
 
     await require_confirm(ctx, Paginated(pages))
 
@@ -414,22 +417,8 @@ async def confirm_catalyst_registration(
     page4 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
     page4.normal("Rewards go to:")
 
-    lines_per_page = 5
-    lines_used_on_first_page = 1
-    address_lines = list(chunks(reward_address, 17))
-
-    for address_line in address_lines[: lines_per_page - lines_used_on_first_page]:
-        page4.bold(address_line)
-    pages.append(page4)
-
     pages.extend(
-        _paginate_lines(
-            address_lines,
-            lines_per_page - lines_used_on_first_page,
-            "Confirm transaction",
-            ui.ICON_SEND,
-            5,
-        )
+        _paginate_text(page4, "Confirm transaction", ui.ICON_SEND, reward_address)
     )
 
     last_page = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
@@ -479,21 +468,13 @@ async def show_address(
         lines_per_page,
     )
 
-    address_lines = list(chunks(address, 17))
-    for address_line in address_lines[: lines_per_page - lines_used_on_first_page]:
-        page1.bold(address_line)
-
-    pages: list[ui.Component] = []
-    pages.append(page1)
-    # append remaining pages containing the rest of the address
-    pages.extend(
-        _paginate_lines(
-            address_lines,
-            lines_per_page - lines_used_on_first_page,
-            address_type_label,
-            ui.ICON_RECEIVE,
-            lines_per_page,
-        )
+    pages = _paginate_text(
+        page1,
+        address_type_label,
+        ui.ICON_RECEIVE,
+        address,
+        lines_per_page=lines_per_page,
+        lines_used_on_first_page=lines_used_on_first_page,
     )
 
     return await confirm(
@@ -505,14 +486,26 @@ async def show_address(
     )
 
 
-def _paginate_lines(
-    lines: list[str], offset: int, desc: str, icon: str, lines_per_page: int = 4
+def _paginate_text(
+    first_page: Text,
+    page_desc: str,
+    page_icon: str,
+    text: str,
+    lines_per_page: int = 5,
+    lines_used_on_first_page: int = 1,
 ) -> list[ui.Component]:
-    pages: list[ui.Component] = []
+    lines = list(chunks(text, 17))
+
+    offset = lines_per_page - lines_used_on_first_page
+
+    for text_line in lines[:offset]:
+        first_page.bold(text_line)
+
+    pages: list[ui.Component] = [first_page]
     if len(lines) > offset:
         to_pages = list(chunks(lines[offset:], lines_per_page))
         for page in to_pages:
-            t = Text(desc, icon, ui.GREEN)
+            t = Text(page_desc, page_icon, ui.GREEN)
             for line in page:
                 t.bold(line)
             pages.append(t)
