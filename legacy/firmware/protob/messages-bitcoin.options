@@ -38,7 +38,7 @@ TxInputType.orig_hash                                       max_size:32
 
 TxOutputType.address                                        max_size:130
 TxOutputType.address_n                                      max_count:8
-TxOutputType.op_return_data                                 max_size:80
+TxOutputType.op_return_data                                 max_size:150
 TxOutputType.orig_hash                                      max_size:32
 
 TxOutputBinType.script_pubkey                               max_size:520
@@ -65,7 +65,7 @@ TxInput.orig_hash                                           max_size:32
 
 TxOutput.address                                            max_size:130
 TxOutput.address_n                                          max_count:8
-TxOutput.op_return_data                                     max_size:80
+TxOutput.op_return_data                                     max_size:150
 TxOutput.orig_hash                                          max_size:32
 
 PrevInput.prev_hash                                         max_size:32
