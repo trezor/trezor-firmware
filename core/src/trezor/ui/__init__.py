@@ -362,8 +362,7 @@ class Layout(Component):
             # way to get the lowest input-to-render latency.
             self.dispatch(RENDER, 0, 0)
 
-    def handle_rendering(self) -> loop.Task:  # type: ignore
-        """Task that is rendering the layout in a busy loop."""
+    def _before_render(self) -> None:
         # Before the first render, we dim the display.
         backlight_fade(style.BACKLIGHT_DIM)
         # Clear the screen of any leftovers, make sure everything is marked for
@@ -387,6 +386,10 @@ class Layout(Component):
         # the brightness on again.
         refresh()
         backlight_fade(self.BACKLIGHT_LEVEL)
+
+    def handle_rendering(self) -> loop.Task:  # type: ignore
+        """Task that is rendering the layout in a busy loop."""
+        self._before_render()
         sleep = self.RENDER_SLEEP
         while True:
             # Wait for a couple of ms and render the layout again.  Because

@@ -23,6 +23,17 @@ APP_COMMON_SAFETY_CHECKS_TEMPORARY = 1 | _SESSIONLESS_FLAG
 STORAGE_DEVICE_EXPERIMENTAL_FEATURES = 2 | _SESSIONLESS_FLAG
 
 
+# === Homescreen storage ===
+# This does not logically belong to the "cache" functionality, but the cache module is
+# a convenient place to put this.
+# When a Homescreen layout is instantiated, it checks the value of `homescreen_shown`
+# to know whether it should render itself or whether the result of a previous instance
+# is still on. This way we can avoid unnecessary fadeins/fadeouts when a workflow ends.
+HOMESCREEN_ON = object()
+LOCKSCREEN_ON = object()
+homescreen_shown: object | None = None
+
+
 class InvalidSessionError(Exception):
     pass
 
