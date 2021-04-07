@@ -29,6 +29,11 @@ PROFILING_WRAPPER = HERE / "prof" / "prof.py"
 
 PROFILE_BASE = Path.home() / ".trezoremu"
 
+TREZOR_STORAGE_FILES = (
+    "trezor.flash",
+    "trezor.sdcard",
+)
+
 
 def run_command_with_emulator(emulator, command):
     with emulator:
@@ -87,6 +92,7 @@ def _from_env(name):
 @click.option("-c", "--command", "run_command", is_flag=True, help="Run command while emulator is running")
 @click.option("-d", "--production/--no-production", default=_from_env("PYOPT"), help="Production mode (debuglink disabled)")
 @click.option("-D", "--debugger", is_flag=True, help="Run emulator in debugger (gdb/lldb)")
+@click.option("-e", "--erase", is_flag=True, help="Erase profile before running")
 @click.option("--executable", type=click.Path(exists=True, dir_okay=False), default=os.environ.get("MICROPYTHON"), help="Alternate emulator executable")
 @click.option("-g", "--profiling/--no-profiling", default=_from_env("TREZOR_PROFILING"), help="Run with profiler wrapper")
 @click.option("-G", "--alloc-profiling/--no-alloc-profiling", default=_from_env("TREZOR_MEMPERF"), help="Profile memory allocation (requires special micropython build)")
@@ -110,6 +116,7 @@ def cli(
     run_command,
     production,
     debugger,
+    erase,
     executable,
     profiling,
     alloc_profiling,
@@ -197,6 +204,10 @@ def cli(
 
     else:
         profile_dir = Path("/var/tmp")
+
+    if erase:
+        for entry in TREZOR_STORAGE_FILES:
+            (profile_dir / entry).unlink(missing_ok=True)
 
     if quiet:
         output = None
