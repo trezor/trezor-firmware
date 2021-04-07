@@ -51,5 +51,5 @@ class ResetDevice(p.MessageType):
             7: ('u2f_counter', p.UVarintType, None),
             8: ('skip_backup', p.BoolType, None),
             9: ('no_backup', p.BoolType, None),
-            10: ('backup_type', p.EnumType("BackupType", (0, 1, 2)), 0),  # default=Bip39
+            10: ('backup_type', p.EnumType("BackupType", (0, 1, 2,)), 0),  # default=Bip39
         }

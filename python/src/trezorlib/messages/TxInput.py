@@ -59,7 +59,7 @@ class TxInput(p.MessageType):
             3: ('prev_index', p.UVarintType, p.FLAG_REQUIRED),
             4: ('script_sig', p.BytesType, None),
             5: ('sequence', p.UVarintType, 4294967295),  # default=4294967295
-            6: ('script_type', p.EnumType("InputScriptType", (0, 1, 2, 3, 4)), 0),  # default=SPENDADDRESS
+            6: ('script_type', p.EnumType("InputScriptType", (0, 1, 2, 3, 4,)), 0),  # default=SPENDADDRESS
             7: ('multisig', MultisigRedeemScriptType, None),
             8: ('amount', p.UVarintType, p.FLAG_REQUIRED),
             9: ('decred_tree', p.UVarintType, None),
@@ -68,5 +68,5 @@ class TxInput(p.MessageType):
             15: ('commitment_data', p.BytesType, None),
             16: ('orig_hash', p.BytesType, None),
             17: ('orig_index', p.UVarintType, None),
-            18: ('decred_staking_spend', p.EnumType("DecredStakingSpendType", (0, 1)), None),
+            18: ('decred_staking_spend', p.EnumType("DecredStakingSpendType", (0, 1,)), None),
         }

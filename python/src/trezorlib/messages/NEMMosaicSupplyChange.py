@@ -31,6 +31,6 @@ class NEMMosaicSupplyChange(p.MessageType):
         return {
             1: ('namespace', p.UnicodeType, None),
             2: ('mosaic', p.UnicodeType, None),
-            3: ('type', p.EnumType("NEMSupplyChangeType", (1, 2)), None),
+            3: ('type', p.EnumType("NEMSupplyChangeType", (1, 2,)), None),
             4: ('delta', p.UVarintType, None),
         }

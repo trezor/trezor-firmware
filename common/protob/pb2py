@@ -88,7 +88,7 @@ class ProtoField:
         elif field.type == field.TYPE_ENUM:
             value_dict = descriptor.enum_types[type_name]
             valuestr = ", ".join(str(v) for v in value_dict.values())
-            proto_type = 'p.EnumType("{}", ({}))'.format(type_name, valuestr)
+            proto_type = 'p.EnumType("{}", ({},))'.format(type_name, valuestr)
             py_type = "EnumType" + type_name
         else:
             try:

@@ -31,7 +31,7 @@ class CardanoPoolRelayParametersType(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('type', p.EnumType("CardanoPoolRelayType", (0, 1, 2)), p.FLAG_REQUIRED),
+            1: ('type', p.EnumType("CardanoPoolRelayType", (0, 1, 2,)), p.FLAG_REQUIRED),
             2: ('ipv4_address', p.BytesType, None),
             3: ('ipv6_address', p.BytesType, None),
             4: ('host_name', p.UnicodeType, None),

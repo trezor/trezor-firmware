@@ -31,7 +31,7 @@ class TxRequest(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('request_type', p.EnumType("RequestType", (0, 1, 2, 3, 4, 5, 6)), None),
+            1: ('request_type', p.EnumType("RequestType", (0, 1, 2, 3, 4, 5, 6,)), None),
             2: ('details', TxRequestDetailsType, None),
             3: ('serialized', TxRequestSerializedType, None),
         }

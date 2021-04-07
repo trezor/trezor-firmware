@@ -47,6 +47,6 @@ class ApplySettings(p.MessageType):
             6: ('auto_lock_delay_ms', p.UVarintType, None),
             7: ('display_rotation', p.UVarintType, None),
             8: ('passphrase_always_on_device', p.BoolType, None),
-            9: ('safety_checks', p.EnumType("SafetyCheckLevel", (0, 1, 2)), None),
+            9: ('safety_checks', p.EnumType("SafetyCheckLevel", (0, 1, 2,)), None),
             10: ('experimental_features', p.BoolType, None),
         }

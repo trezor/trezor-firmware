@@ -24,5 +24,5 @@ class WordRequest(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('type', p.EnumType("WordRequestType", (0, 1, 2)), None),
+            1: ('type', p.EnumType("WordRequestType", (0, 1, 2,)), None),
         }

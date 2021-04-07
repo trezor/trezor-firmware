@@ -41,11 +41,11 @@ class BinanceOrderMsg(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('id', p.UnicodeType, None),
-            2: ('ordertype', p.EnumType("BinanceOrderType", (0, 1, 2, 3)), None),
+            2: ('ordertype', p.EnumType("BinanceOrderType", (0, 1, 2, 3,)), None),
             3: ('price', p.SVarintType, None),
             4: ('quantity', p.SVarintType, None),
             5: ('sender', p.UnicodeType, None),
-            6: ('side', p.EnumType("BinanceOrderSide", (0, 1, 2)), None),
+            6: ('side', p.EnumType("BinanceOrderSide", (0, 1, 2,)), None),
             7: ('symbol', p.UnicodeType, None),
-            8: ('timeinforce', p.EnumType("BinanceTimeInForce", (0, 1, 2, 3)), None),
+            8: ('timeinforce', p.EnumType("BinanceTimeInForce", (0, 1, 2, 3,)), None),
         }
