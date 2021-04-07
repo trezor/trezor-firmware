@@ -25,6 +25,6 @@ class NEMCosignatoryModification(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('type', p.EnumType("NEMModificationType", (1, 2)), None),
+            1: ('type', p.EnumType("NEMModificationType", (1, 2,)), None),
             2: ('public_key', p.BytesType, None),
         }

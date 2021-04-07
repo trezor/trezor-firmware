@@ -24,5 +24,5 @@ class SdProtect(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('operation', p.EnumType("SdProtectOperationType", (0, 1, 2)), None),
+            1: ('operation', p.EnumType("SdProtectOperationType", (0, 1, 2,)), None),
         }

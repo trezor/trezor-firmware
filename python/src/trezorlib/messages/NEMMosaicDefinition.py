@@ -56,7 +56,7 @@ class NEMMosaicDefinition(p.MessageType):
             3: ('namespace', p.UnicodeType, None),
             4: ('mosaic', p.UnicodeType, None),
             5: ('divisibility', p.UVarintType, None),
-            6: ('levy', p.EnumType("NEMMosaicLevy", (1, 2)), None),
+            6: ('levy', p.EnumType("NEMMosaicLevy", (1, 2,)), None),
             7: ('fee', p.UVarintType, None),
             8: ('levy_address', p.UnicodeType, None),
             9: ('levy_namespace', p.UnicodeType, None),

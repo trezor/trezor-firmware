@@ -32,5 +32,5 @@ class TezosBallotOp(p.MessageType):
             1: ('source', p.BytesType, None),
             2: ('period', p.UVarintType, None),
             3: ('proposal', p.BytesType, None),
-            4: ('ballot', p.EnumType("TezosBallotType", (0, 1, 2)), None),
+            4: ('ballot', p.EnumType("TezosBallotType", (0, 1, 2,)), None),
         }

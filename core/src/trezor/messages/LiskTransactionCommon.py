@@ -41,7 +41,7 @@ class LiskTransactionCommon(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('type', p.EnumType("LiskTransactionType", (0, 1, 2, 3, 4, 5, 6, 7)), None),
+            1: ('type', p.EnumType("LiskTransactionType", (0, 1, 2, 3, 4, 5, 6, 7,)), None),
             2: ('amount', p.UVarintType, None),
             3: ('fee', p.UVarintType, None),
             4: ('recipient_id', p.UnicodeType, None),

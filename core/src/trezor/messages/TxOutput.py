@@ -42,7 +42,7 @@ class TxOutput(p.MessageType):
             1: ('address', p.UnicodeType, None),
             2: ('address_n', p.UVarintType, p.FLAG_REPEATED),
             3: ('amount', p.UVarintType, p.FLAG_REQUIRED),
-            4: ('script_type', p.EnumType("OutputScriptType", (0, 1, 2, 3, 4, 5)), 0),  # default=PAYTOADDRESS
+            4: ('script_type', p.EnumType("OutputScriptType", (0, 1, 2, 3, 4, 5,)), 0),  # default=PAYTOADDRESS
             5: ('multisig', MultisigRedeemScriptType, None),
             6: ('op_return_data', p.BytesType, None),
             10: ('orig_hash', p.BytesType, None),

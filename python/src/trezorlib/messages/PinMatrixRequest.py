@@ -24,5 +24,5 @@ class PinMatrixRequest(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('type', p.EnumType("PinMatrixRequestType", (1, 2, 3, 4, 5)), None),
+            1: ('type', p.EnumType("PinMatrixRequestType", (1, 2, 3, 4, 5,)), None),
         }

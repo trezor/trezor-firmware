@@ -53,6 +53,6 @@ class SignTx(p.MessageType):
             8: ('version_group_id', p.UVarintType, None),
             9: ('timestamp', p.UVarintType, None),
             10: ('branch_id', p.UVarintType, None),
-            11: ('amount_unit', p.EnumType("AmountUnit", (0, 1, 2, 3)), 0),  # default=BITCOIN
+            11: ('amount_unit', p.EnumType("AmountUnit", (0, 1, 2, 3,)), 0),  # default=BITCOIN
             12: ('decred_staking_ticket', p.BoolType, False),  # default=false
         }

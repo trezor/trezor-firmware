@@ -40,6 +40,6 @@ class GetAddress(p.MessageType):
             2: ('coin_name', p.UnicodeType, "Bitcoin"),  # default=Bitcoin
             3: ('show_display', p.BoolType, None),
             4: ('multisig', MultisigRedeemScriptType, None),
-            5: ('script_type', p.EnumType("InputScriptType", (0, 1, 2, 3, 4)), 0),  # default=SPENDADDRESS
+            5: ('script_type', p.EnumType("InputScriptType", (0, 1, 2, 3, 4,)), 0),  # default=SPENDADDRESS
             6: ('ignore_xpub_magic', p.BoolType, None),
         }

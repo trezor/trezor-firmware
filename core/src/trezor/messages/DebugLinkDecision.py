@@ -37,7 +37,7 @@ class DebugLinkDecision(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('yes_no', p.BoolType, None),
-            2: ('swipe', p.EnumType("DebugSwipeDirection", (0, 1, 2, 3)), None),
+            2: ('swipe', p.EnumType("DebugSwipeDirection", (0, 1, 2, 3,)), None),
             3: ('input', p.UnicodeType, None),
             4: ('x', p.UVarintType, None),
             5: ('y', p.UVarintType, None),

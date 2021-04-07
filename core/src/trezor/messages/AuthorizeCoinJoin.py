@@ -43,6 +43,6 @@ class AuthorizeCoinJoin(p.MessageType):
             3: ('fee_per_anonymity', p.UVarintType, None),
             4: ('address_n', p.UVarintType, p.FLAG_REPEATED),
             5: ('coin_name', p.UnicodeType, "Bitcoin"),  # default=Bitcoin
-            6: ('script_type', p.EnumType("InputScriptType", (0, 1, 2, 3, 4)), 0),  # default=SPENDADDRESS
-            11: ('amount_unit', p.EnumType("AmountUnit", (0, 1, 2, 3)), 0),  # default=BITCOIN
+            6: ('script_type', p.EnumType("InputScriptType", (0, 1, 2, 3, 4,)), 0),  # default=SPENDADDRESS
+            11: ('amount_unit', p.EnumType("AmountUnit", (0, 1, 2, 3,)), 0),  # default=BITCOIN
         }

@@ -46,7 +46,7 @@ class RecoveryDevice(p.MessageType):
             4: ('language', p.UnicodeType, None),
             5: ('label', p.UnicodeType, None),
             6: ('enforce_wordlist', p.BoolType, None),
-            8: ('type', p.EnumType("RecoveryDeviceType", (0, 1)), None),
+            8: ('type', p.EnumType("RecoveryDeviceType", (0, 1,)), None),
             9: ('u2f_counter', p.UVarintType, None),
             10: ('dry_run', p.BoolType, None),
         }
