@@ -73,7 +73,7 @@ def create_address_parameters(
         raise ValueError("Unknown address type")
 
     if address_type == messages.CardanoAddressType.POINTER:
-        certificate_pointer = create_certificate_pointer(
+        certificate_pointer = _create_certificate_pointer(
             block_index, tx_index, certificate_index
         )
 
@@ -86,7 +86,7 @@ def create_address_parameters(
     )
 
 
-def create_certificate_pointer(
+def _create_certificate_pointer(
     block_index: int, tx_index: int, certificate_index: int
 ) -> messages.CardanoBlockchainPointerType:
     if block_index is None or tx_index is None or certificate_index is None:
@@ -97,7 +97,7 @@ def create_certificate_pointer(
     )
 
 
-def create_input(tx_input) -> messages.CardanoTxInputType:
+def parse_input(tx_input) -> messages.CardanoTxInputType:
     if not all(k in tx_input for k in REQUIRED_FIELDS_INPUT):
         raise ValueError("The input is missing some fields")
 
@@ -108,7 +108,7 @@ def create_input(tx_input) -> messages.CardanoTxInputType:
     )
 
 
-def create_output(output) -> messages.CardanoTxOutputType:
+def parse_output(output) -> messages.CardanoTxOutputType:
     contains_address = "address" in output
     contains_address_type = "addressType" in output
 
@@ -124,10 +124,10 @@ def create_output(output) -> messages.CardanoTxOutputType:
     if contains_address:
         address = output["address"]
     else:
-        address_parameters = _create_address_parameters_internal(output)
+        address_parameters = _parse_address_parameters(output)
 
     if "token_bundle" in output:
-        token_bundle = _create_token_bundle(output["token_bundle"])
+        token_bundle = _parse_token_bundle(output["token_bundle"])
 
     return messages.CardanoTxOutputType(
         address=address,
@@ -137,7 +137,7 @@ def create_output(output) -> messages.CardanoTxOutputType:
     )
 
 
-def _create_token_bundle(token_bundle) -> List[messages.CardanoAssetGroupType]:
+def _parse_token_bundle(token_bundle) -> List[messages.CardanoAssetGroupType]:
     result = []
     for token_group in token_bundle:
         if not all(k in token_group for k in REQUIRED_FIELDS_TOKEN_GROUP):
@@ -146,14 +146,14 @@ def _create_token_bundle(token_bundle) -> List[messages.CardanoAssetGroupType]:
         result.append(
             messages.CardanoAssetGroupType(
                 policy_id=bytes.fromhex(token_group["policy_id"]),
-                tokens=_create_tokens(token_group["tokens"]),
+                tokens=_parse_tokens(token_group["tokens"]),
             )
         )
 
     return result
 
 
-def _create_tokens(tokens) -> List[messages.CardanoTokenType]:
+def _parse_tokens(tokens) -> List[messages.CardanoTokenType]:
     result = []
     for token in tokens:
         if not all(k in token for k in REQUIRED_FIELDS_TOKEN):
@@ -169,7 +169,7 @@ def _create_tokens(tokens) -> List[messages.CardanoTokenType]:
     return result
 
 
-def _create_address_parameters_internal(
+def _parse_address_parameters(
     address_parameters,
 ) -> messages.CardanoAddressParametersType:
     if "path" not in address_parameters:
@@ -190,7 +190,7 @@ def _create_address_parameters_internal(
     )
 
 
-def create_certificate(certificate) -> messages.CardanoTxCertificateType:
+def parse_certificate(certificate) -> messages.CardanoTxCertificateType:
     CERTIFICATE_MISSING_FIELDS_ERROR = ValueError(
         "The certificate is missing some fields"
     )
@@ -248,11 +248,11 @@ def create_certificate(certificate) -> messages.CardanoTxCertificateType:
                 reward_account=pool_parameters["reward_account"],
                 metadata=pool_metadata,
                 owners=[
-                    _create_pool_owner(pool_owner)
+                    _parse_pool_owner(pool_owner)
                     for pool_owner in pool_parameters.get("owners", [])
                 ],
                 relays=[
-                    _create_pool_relay(pool_relay)
+                    _parse_pool_relay(pool_relay)
                     for pool_relay in pool_parameters.get("relays", [])
                 ]
                 if "relays" in pool_parameters
@@ -263,7 +263,7 @@ def create_certificate(certificate) -> messages.CardanoTxCertificateType:
         raise ValueError("Unknown certificate type")
 
 
-def _create_pool_owner(pool_owner) -> messages.CardanoPoolOwnerType:
+def _parse_pool_owner(pool_owner) -> messages.CardanoPoolOwnerType:
     if "staking_key_path" in pool_owner:
         return messages.CardanoPoolOwnerType(
             staking_key_path=tools.parse_path(pool_owner["staking_key_path"])
@@ -274,7 +274,7 @@ def _create_pool_owner(pool_owner) -> messages.CardanoPoolOwnerType:
     )
 
 
-def _create_pool_relay(pool_relay) -> messages.CardanoPoolRelayParametersType:
+def _parse_pool_relay(pool_relay) -> messages.CardanoPoolRelayParametersType:
     pool_relay_type = int(pool_relay["type"])
 
     if pool_relay_type == messages.CardanoPoolRelayType.SINGLE_HOST_IP:
@@ -310,7 +310,7 @@ def _create_pool_relay(pool_relay) -> messages.CardanoPoolRelayParametersType:
     raise ValueError("Unknown pool relay type")
 
 
-def create_withdrawal(withdrawal) -> messages.CardanoTxWithdrawalType:
+def parse_withdrawal(withdrawal) -> messages.CardanoTxWithdrawalType:
     if not all(k in withdrawal for k in REQUIRED_FIELDS_WITHDRAWAL):
         raise ValueError("Withdrawal is missing some fields")
 
@@ -321,7 +321,7 @@ def create_withdrawal(withdrawal) -> messages.CardanoTxWithdrawalType:
     )
 
 
-def create_auxiliary_data(auxiliary_data) -> messages.CardanoTxAuxiliaryDataType:
+def parse_auxiliary_data(auxiliary_data) -> messages.CardanoTxAuxiliaryDataType:
     if auxiliary_data is None:
         return None
 
@@ -349,7 +349,7 @@ def create_auxiliary_data(auxiliary_data) -> messages.CardanoTxAuxiliaryDataType
                 ),
                 staking_path=tools.parse_path(catalyst_registration["staking_path"]),
                 nonce=catalyst_registration["nonce"],
-                reward_address_parameters=_create_address_parameters_internal(
+                reward_address_parameters=_parse_address_parameters(
                     catalyst_registration["reward_address_parameters"]
                 ),
             )
