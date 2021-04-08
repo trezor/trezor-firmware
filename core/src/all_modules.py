@@ -50,6 +50,8 @@ storage.debug
 import storage.debug
 storage.device
 import storage.device
+storage.fido2
+import storage.fido2
 storage.recovery
 import storage.recovery
 storage.recovery_shares
