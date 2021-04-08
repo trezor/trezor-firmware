@@ -5,6 +5,7 @@ from micropython import const
 
 import storage
 import storage.resident_credentials
+from storage.fido2 import KEY_AGREEMENT_PRIVKEY, KEY_AGREEMENT_PUBKEY
 from trezor import config, io, log, loop, ui, utils, workflow
 from trezor.crypto import aes, der, hashlib, hmac, random
 from trezor.crypto.curve import nist256p1
@@ -210,10 +211,6 @@ _RESULT_CONFIRM = const(1)  # User confirmed.
 _RESULT_DECLINE = const(2)  # User declined.
 _RESULT_CANCEL = const(3)  # Request was cancelled by _CMD_CANCEL.
 _RESULT_TIMEOUT = const(4)  # Request exceeded _FIDO2_CONFIRM_TIMEOUT_MS.
-
-# Generate the authenticatorKeyAgreementKey used for ECDH in authenticatorClientPIN getKeyAgreement.
-_KEY_AGREEMENT_PRIVKEY = nist256p1.generate_secret()
-_KEY_AGREEMENT_PUBKEY = nist256p1.publickey(_KEY_AGREEMENT_PRIVKEY, False)
 
 # FIDO2 configuration.
 _ALLOW_FIDO2 = True
@@ -1781,7 +1778,7 @@ def cbor_get_assertion_hmac_secret(cred: Credential, hmac_secret: dict) -> bytes
         raise CborError(_ERR_INVALID_LEN)
 
     # Compute the ECDH shared secret.
-    ecdh_result = nist256p1.multiply(_KEY_AGREEMENT_PRIVKEY, b"\04" + x + y)
+    ecdh_result = nist256p1.multiply(KEY_AGREEMENT_PRIVKEY, b"\04" + x + y)
     shared_secret = hashlib.sha256(ecdh_result[1:33]).digest()
 
     # Check the authentication tag and decrypt the salt.
@@ -1904,8 +1901,8 @@ def cbor_client_pin(req: Cmd) -> Cmd:
             common.COSE_KEY_ALG: common.COSE_ALG_ECDH_ES_HKDF_256,
             common.COSE_KEY_KTY: common.COSE_KEYTYPE_EC2,
             common.COSE_KEY_CRV: common.COSE_CURVE_P256,
-            common.COSE_KEY_X: _KEY_AGREEMENT_PUBKEY[1:33],
-            common.COSE_KEY_Y: _KEY_AGREEMENT_PUBKEY[33:],
+            common.COSE_KEY_X: KEY_AGREEMENT_PUBKEY[1:33],
+            common.COSE_KEY_Y: KEY_AGREEMENT_PUBKEY[33:],
         }
     }
 
