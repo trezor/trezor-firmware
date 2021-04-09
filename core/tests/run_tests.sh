@@ -3,7 +3,7 @@
 declare -a results
 declare -i passed=0 failed=0 exit_code=0
 declare COLOR_GREEN='\e[32m' COLOR_RED='\e[91m' COLOR_RESET='\e[39m'
-MICROPYTHON="${MICROPYTHON:-../build/unix/trezor-emu-core -X heapsize=1M}"
+MICROPYTHON="${MICROPYTHON:-../build/unix/trezor-emu-core -X heapsize=2M}"
 
 print_summary() {
     echo
