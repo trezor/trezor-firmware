@@ -325,7 +325,12 @@ SOURCE_UNIX = [
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_UNIX
 
-env = Environment(ENV=os.environ, CFLAGS='%s -DPYOPT=%s -DBITCOIN_ONLY=%s' % (ARGUMENTS.get('CFLAGS', ''), PYOPT, BITCOIN_ONLY))
+if PYOPT == '0' or not FROZEN:
+    STATIC="-DSTATIC="
+else:
+    STATIC=""
+
+env = Environment(ENV=os.environ, CFLAGS='%s -DPYOPT=%s -DBITCOIN_ONLY=%s %s' % (ARGUMENTS.get('CFLAGS', ''), PYOPT, BITCOIN_ONLY, STATIC))
 
 env.Tool('micropython')
 
