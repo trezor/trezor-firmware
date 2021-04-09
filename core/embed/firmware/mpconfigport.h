@@ -40,6 +40,7 @@
 // memory allocation policies
 #define MICROPY_ALLOC_PATH_MAX      (128)
 #define MICROPY_ENABLE_PYSTACK      (1)
+#define MICROPY_LOADED_MODULES_DICT_SIZE (160)
 
 // emitters
 #define MICROPY_PERSISTENT_CODE_LOAD (0)
