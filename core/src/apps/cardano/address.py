@@ -2,12 +2,10 @@ from trezor import wire
 from trezor.crypto import base58, hashlib
 from trezor.messages import CardanoAddressType
 
-from apps.common.seed import remove_ed25519_prefix
-
 from .byron_address import derive_byron_address, validate_byron_address
 from .helpers import INVALID_ADDRESS, NETWORK_MISMATCH, bech32, network_ids
 from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
-from .helpers.utils import variable_length_encode
+from .helpers.utils import derive_public_key, variable_length_encode
 from .seed import is_byron_path, is_shelley_path
 
 if False:
@@ -146,8 +144,7 @@ def _get_address_network_id(address: bytes) -> int:
 
 
 def get_public_key_hash(keychain: seed.Keychain, path: list[int]) -> bytes:
-    node = keychain.derive(path)
-    public_key = remove_ed25519_prefix(node.public_key())
+    public_key = derive_public_key(keychain, path)
     return hashlib.blake2b(data=public_key, outlen=28).digest()
 
 

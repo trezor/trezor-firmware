@@ -4,11 +4,11 @@ from trezor.messages import CardanoAddressType
 
 from apps.common import cbor
 
-from ..common.seed import remove_ed25519_prefix
 from .address import derive_address_bytes, derive_human_readable_address
 from .helpers import INVALID_AUXILIARY_DATA, bech32
 from .helpers.bech32 import HRP_JORMUN_PUBLIC_KEY
 from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
+from .helpers.utils import derive_public_key
 from .layout import confirm_catalyst_registration, show_auxiliary_data_hash
 
 if False:
@@ -172,8 +172,9 @@ def _cborize_catalyst_registration(
     protocol_magic: int,
     network_id: int,
 ) -> CatalystRegistration:
-    staking_node = keychain.derive(catalyst_registration_parameters.staking_path)
-    staking_key = remove_ed25519_prefix(staking_node.public_key())
+    staking_key = derive_public_key(
+        keychain, catalyst_registration_parameters.staking_path
+    )
 
     catalyst_registration_payload: CatalystRegistrationPayload = {
         1: catalyst_registration_parameters.voting_public_key,
