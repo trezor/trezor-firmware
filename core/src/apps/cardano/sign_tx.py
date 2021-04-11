@@ -9,7 +9,6 @@ from trezor.messages.CardanoSignedTxChunkAck import CardanoSignedTxChunkAck
 
 from apps.common import cbor, safety_checks
 from apps.common.paths import validate_path
-from apps.common.seed import remove_ed25519_prefix
 
 from . import seed
 from .address import (
@@ -49,7 +48,7 @@ from .helpers.paths import (
     SCHEMA_STAKING,
     SCHEMA_STAKING_ANY_ACCOUNT,
 )
-from .helpers.utils import to_account_path
+from .helpers.utils import derive_public_key, to_account_path
 from .layout import (
     confirm_certificate,
     confirm_sending,
@@ -510,7 +509,7 @@ def _cborize_shelley_witness(
     signature = ed25519.sign_ext(
         node.private_key(), node.private_key_ext(), tx_body_hash
     )
-    public_key = remove_ed25519_prefix(node.public_key())
+    public_key = derive_public_key(keychain, path)
 
     return public_key, signature
 
@@ -532,7 +531,7 @@ def _cborize_byron_witnesses(
     for path in paths:
         node = keychain.derive(list(path))
 
-        public_key = remove_ed25519_prefix(node.public_key())
+        public_key = derive_public_key(keychain, list(path))
         signature = ed25519.sign_ext(
             node.private_key(), node.private_key_ext(), tx_body_hash
         )

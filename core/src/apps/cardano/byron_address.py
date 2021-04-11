@@ -2,12 +2,11 @@ from trezor import log
 from trezor.crypto import crc, hashlib
 
 from apps.common import cbor
-from apps.common.seed import remove_ed25519_prefix
 
 from .helpers import INVALID_ADDRESS, NETWORK_MISMATCH, protocol_magics
+from .helpers.utils import derive_public_key
 
 if False:
-    from trezor.crypto import bip32
     from . import seed
 
 PROTOCOL_MAGIC_KEY = 2
@@ -30,11 +29,9 @@ def _encode_address_raw(address_data_encoded: bytes) -> bytes:
 def derive_byron_address(
     keychain: seed.Keychain, path: list, protocol_magic: int
 ) -> bytes:
-    node = keychain.derive(path)
-
     address_attributes = get_address_attributes(protocol_magic)
 
-    address_root = _get_address_root(node, address_attributes)
+    address_root = _get_address_root(keychain, path, address_attributes)
     address_type = 0
     address_data = [address_root, address_attributes, address_type]
     address_data_encoded = cbor.encode(address_data)
@@ -119,6 +116,8 @@ def _address_hash(data: list) -> bytes:
     return res
 
 
-def _get_address_root(node: bip32.HDNode, address_attributes: dict) -> bytes:
-    extpubkey = remove_ed25519_prefix(node.public_key()) + node.chain_code()
+def _get_address_root(
+    keychain: seed.Keychain, path: list[int], address_attributes: dict
+) -> bytes:
+    extpubkey = derive_public_key(keychain, path, extended=True)
     return _address_hash([0, [0, extpubkey], address_attributes])

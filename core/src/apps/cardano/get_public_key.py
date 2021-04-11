@@ -6,10 +6,10 @@ from trezor.messages.HDNodeType import HDNodeType
 from trezor.ui.layouts import show_pubkey
 
 from apps.common import paths
-from apps.common.seed import remove_ed25519_prefix
 
 from . import seed
 from .helpers.paths import SCHEMA_PUBKEY
+from .helpers.utils import derive_public_key
 
 if False:
     from trezor.messages.CardanoGetPublicKey import CardanoGetPublicKey
@@ -44,7 +44,7 @@ def _get_public_key(
 ) -> CardanoPublicKey:
     node = keychain.derive(derivation_path)
 
-    public_key = hexlify(remove_ed25519_prefix(node.public_key())).decode()
+    public_key = hexlify(derive_public_key(keychain, derivation_path)).decode()
     chain_code = hexlify(node.chain_code()).decode()
     xpub_key = public_key + chain_code
 
@@ -53,7 +53,7 @@ def _get_public_key(
         child_num=node.child_num(),
         fingerprint=node.fingerprint(),
         chain_code=node.chain_code(),
-        public_key=remove_ed25519_prefix(node.public_key()),
+        public_key=derive_public_key(keychain, derivation_path),
     )
 
     return CardanoPublicKey(node=node_type, xpub=xpub_key)
