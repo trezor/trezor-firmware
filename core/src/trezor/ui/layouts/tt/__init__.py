@@ -515,7 +515,7 @@ async def should_show_more(
     ctx: wire.GenericContext,
     title: str,
     para: Iterable[tuple[int, str]],
-    button_text: str = "Show details",
+    button_text: str = "Show all",
     br_type: str = "should_show_more",
     br_code: ButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_DEFAULT,

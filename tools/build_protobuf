@@ -13,6 +13,7 @@ CORE_PROTOBUF_SOURCES="\
     $PROTOB/messages-debug.proto \
     $PROTOB/messages-eos.proto \
     $PROTOB/messages-ethereum.proto \
+    $PROTOB/messages-ethereum-eip712.proto \
     $PROTOB/messages-management.proto \
     $PROTOB/messages-monero.proto \
     $PROTOB/messages-nem.proto \

@@ -110,6 +110,8 @@ def find_message_handler_module(msg_type: int) -> str:
             return "apps.ethereum.sign_message"
         elif msg_type == MessageType.EthereumVerifyMessage:
             return "apps.ethereum.verify_message"
+        elif msg_type == MessageType.EthereumSignTypedData:
+            return "apps.ethereum.sign_typed_data"
 
         # monero
         elif msg_type == MessageType.MoneroGetAddress:
