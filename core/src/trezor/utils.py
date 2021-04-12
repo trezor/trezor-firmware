@@ -82,6 +82,20 @@ class unimport:
         gc.collect()
 
 
+def presize_module(modname: str, size: int) -> None:
+    """Ensure the module's dict is preallocated to an expected size.
+
+    This is used in modules like `trezor`, whose dict size depends not only on the
+    symbols defined in the file itself, but also on the number of submodules that will
+    be inserted into the module's namespace.
+    """
+    module = sys.modules[modname]
+    for i in range(size):
+        setattr(module, "___PRESIZE_MODULE_%d" % i, None)
+    for i in range(size):
+        delattr(module, "___PRESIZE_MODULE_%d" % i)
+
+
 def ensure(cond: bool, msg: str | None = None) -> None:
     if not cond:
         if msg is None:
