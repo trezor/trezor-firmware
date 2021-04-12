@@ -1,6 +1,5 @@
 from trezor import loop, utils, wire, workflow
 
-# load applications
 import apps.base
 import usb
 
