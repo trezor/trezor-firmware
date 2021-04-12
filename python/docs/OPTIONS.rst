@@ -253,6 +253,7 @@ Ethereum commands.
     get-address      Get Ethereum address in hex encoding.
     get-public-node  Get Ethereum public node of given path.
     sign-message     Sign message with Ethereum address.
+    sign-typed-data  Sign typed data (EIP-712) with Ethereum address.
     sign-tx          Sign (and optionally publish) Ethereum transaction.
     verify-message   Verify message signed with Ethereum address.
 

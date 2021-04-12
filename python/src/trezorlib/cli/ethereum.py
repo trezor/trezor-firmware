@@ -33,6 +33,7 @@ except Exception:
 
 
 PATH_HELP = "BIP-32 path, e.g. m/44'/60'/0'/0/0"
+TYPED_DATA_USE_V4 = "Specify to use EIP-712 (v4) for typed data signing"
 
 # fmt: off
 ETHER_UNITS = {
@@ -306,6 +307,21 @@ def sign_message(client, address, message):
     }
     return output
 
+
+@cli.command()
+@click.option("-n", "--address", required=True, help=PATH_HELP)
+@click.option("--use-v4", type=bool, default=True, required=False, help=TYPED_DATA_USE_V4)
+@click.argument("typed_data_json")
+@with_client
+def sign_typed_data(client, address, use_v4, typed_data_json):
+    """Sign typed data (EIP-712) with Ethereum address."""
+    address_n = tools.parse_path(address)
+    ret = ethereum.sign_typed_data(client, address_n, use_v4, typed_data_json)
+    output = {
+        "address": ret.address,
+        "signature": "0x%s" % ret.signature.hex(),
+    }
+    return output
 
 @cli.command()
 @click.argument("address")
