@@ -97,6 +97,12 @@ if not utils.BITCOIN_ONLY:
     EthereumSignMessage = 64
     EthereumVerifyMessage = 65
     EthereumMessageSignature = 66
+    EthereumSignTypedData = 464
+    EthereumTypedDataStructRequest = 465
+    EthereumTypedDataStructAck = 466
+    EthereumTypedDataValueRequest = 467
+    EthereumTypedDataValueAck = 468
+    EthereumTypedDataSignature = 469
     NEMGetAddress = 67
     NEMAddress = 68
     NEMSignTx = 69

@@ -185,6 +185,12 @@ enum MessageType {
     MessageType_EthereumSignMessage = 64 [(wire_in) = true];
     MessageType_EthereumVerifyMessage = 65 [(wire_in) = true];
     MessageType_EthereumMessageSignature = 66 [(wire_out) = true];
+    MessageType_EthereumSignTypedData = 464 [(wire_in) = true];
+    MessageType_EthereumTypedDataStructRequest = 465 [(wire_out) = true];
+    MessageType_EthereumTypedDataStructAck = 466 [(wire_in) = true];
+    MessageType_EthereumTypedDataValueRequest = 467 [(wire_out) = true];
+    MessageType_EthereumTypedDataValueAck = 468 [(wire_in) = true];
+    MessageType_EthereumTypedDataSignature = 469 [(wire_out) = true];
 
     // NEM
     MessageType_NEMGetAddress = 67 [(wire_in) = true];

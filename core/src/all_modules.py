@@ -400,6 +400,8 @@ if not utils.BITCOIN_ONLY:
     import trezor.enums.CardanoTxSigningMode
     trezor.enums.CardanoTxWitnessType
     import trezor.enums.CardanoTxWitnessType
+    trezor.enums.EthereumDataType
+    import trezor.enums.EthereumDataType
     trezor.enums.NEMImportanceTransferMode
     import trezor.enums.NEMImportanceTransferMode
     trezor.enums.NEMModificationType
@@ -500,12 +502,12 @@ if not utils.BITCOIN_ONLY:
     import apps.eos.writers
     apps.ethereum
     import apps.ethereum
-    apps.ethereum.address
-    import apps.ethereum.address
     apps.ethereum.get_address
     import apps.ethereum.get_address
     apps.ethereum.get_public_key
     import apps.ethereum.get_public_key
+    apps.ethereum.helpers
+    import apps.ethereum.helpers
     apps.ethereum.keychain
     import apps.ethereum.keychain
     apps.ethereum.layout
@@ -518,6 +520,8 @@ if not utils.BITCOIN_ONLY:
     import apps.ethereum.sign_tx
     apps.ethereum.sign_tx_eip1559
     import apps.ethereum.sign_tx_eip1559
+    apps.ethereum.sign_typed_data
+    import apps.ethereum.sign_typed_data
     apps.ethereum.tokens
     import apps.ethereum.tokens
     apps.ethereum.verify_message
