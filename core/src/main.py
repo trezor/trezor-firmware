@@ -6,7 +6,13 @@ import storage
 import storage.device
 if __debug__:
     import storage.debug
-from trezor import config, pin, utils  # noqa: F401
+
+import trezor
+import trezor.pin  # noqa: F401
+from trezor import utils
+
+utils.presize_module("trezor", 30)
+utils.presize_module("storage", 12)
 
 if not utils.BITCOIN_ONLY:
     import storage.fido2  # noqa: F401
