@@ -1,7 +1,8 @@
+from micropython import const
+
 from trezor.ui.layouts import confirm_path_warning
 
-from . import HARDENED
-from .layout import address_n_to_str
+HARDENED = const(0x8000_0000)
 
 if False:
     from typing import (
@@ -265,3 +266,16 @@ def is_hardened(i: int) -> bool:
 
 def path_is_hardened(address_n: Bip32Path) -> bool:
     return all(is_hardened(n) for n in address_n)
+
+
+def address_n_to_str(address_n: Iterable[int]) -> str:
+    def path_item(i: int) -> str:
+        if i & HARDENED:
+            return str(i ^ HARDENED) + "'"
+        else:
+            return str(i)
+
+    if not address_n:
+        return "m"
+
+    return "m/" + "/".join([path_item(i) for i in address_n])

@@ -4,16 +4,18 @@ from trezor import ui, wire
 from trezor.messages import ButtonRequestType
 from trezor.ui.container import Container
 from trezor.ui.loader import LoaderDanger
+from trezor.ui.popup import Popup
 from trezor.ui.qr import Qr
 from trezor.utils import chunks, chunks_intersperse
 
-from ..components.common import break_path_to_lines
-from ..components.common.confirm import is_confirmed, raise_if_cancelled
-from ..components.tt.button import ButtonCancel, ButtonDefault
-from ..components.tt.confirm import Confirm, HoldToConfirm
-from ..components.tt.scroll import Paginated, paginate_paragraphs, paginate_text
-from ..components.tt.text import Span, Text
-from ..constants.tt import (
+from ...components.common import break_path_to_lines
+from ...components.common.confirm import is_confirmed, raise_if_cancelled
+from ...components.tt import passphrase, pin
+from ...components.tt.button import ButtonCancel, ButtonDefault
+from ...components.tt.confirm import Confirm, HoldToConfirm
+from ...components.tt.scroll import Paginated, paginate_paragraphs, paginate_text
+from ...components.tt.text import Span, Text
+from ...constants.tt import (
     MONO_ADDR_PER_LINE,
     MONO_HEX_PER_LINE,
     QR_SIZE_THRESHOLD,
@@ -21,7 +23,7 @@ from ..constants.tt import (
     QR_Y,
     TEXT_MAX_LINES,
 )
-from .common import interact
+from ..common import button_request, interact
 
 if False:
     from typing import (
@@ -55,21 +57,19 @@ __all__ = (
     "show_xpub",
     "show_warning",
     "confirm_output",
-    "confirm_decred_sstx_submission",
     "confirm_hex",
     "confirm_properties",
     "confirm_total",
-    "confirm_total_ethereum",
-    "confirm_total_ripple",
     "confirm_joint_total",
     "confirm_metadata",
     "confirm_replacement",
     "confirm_modify_output",
     "confirm_modify_fee",
     "confirm_coinjoin",
-    "confirm_timebounds_stellar",
-    "confirm_proposals_tezos",
-    "confirm_transfer_binance",
+    "show_popup",
+    "draw_simple_text",
+    "request_passphrase_on_device",
+    "request_pin_on_device",
 )
 
 
@@ -137,8 +137,13 @@ async def confirm_action(
     )
 
 
-async def confirm_reset_device(ctx: wire.GenericContext, prompt: str) -> None:
-    text = Text("Create new wallet", ui.ICON_RESET, new_lines=False)
+async def confirm_reset_device(
+    ctx: wire.GenericContext, prompt: str, recovery: bool = False
+) -> None:
+    if recovery:
+        text = Text("Recovery mode", ui.ICON_RECOVERY, new_lines=False)
+    else:
+        text = Text("Create new wallet", ui.ICON_RESET, new_lines=False)
     text.bold(prompt)
     text.br()
     text.br_half()
@@ -149,9 +154,11 @@ async def confirm_reset_device(ctx: wire.GenericContext, prompt: str) -> None:
     await raise_if_cancelled(
         interact(
             ctx,
-            Confirm(text, major_confirm=True),
-            "setup_device",
-            ButtonRequestType.ResetDevice,
+            Confirm(text, major_confirm=not recovery),
+            "recover_device" if recovery else "setup_device",
+            ButtonRequestType.ProtectCall
+            if recovery
+            else ButtonRequestType.ResetDevice,
         )
     )
 
@@ -216,10 +223,6 @@ def _show_qr(
     text = Text(title, ui.ICON_RECEIVE, ui.GREEN)
 
     return Confirm(Container(qr, text), cancel=cancel, cancel_style=ButtonDefault)
-
-
-def _split_address(address: str) -> Iterator[str]:
-    return chunks_intersperse(address, MONO_ADDR_PER_LINE)
 
 
 def _truncate_hex(
@@ -431,6 +434,8 @@ def show_warning(
     subheader: str | None = None,
     button: str = "Try again",
     br_code: EnumTypeButtonRequestType = ButtonRequestType.Warning,
+    icon: str = ui.ICON_WRONG,
+    icon_color: int = ui.RED,
 ) -> Awaitable[None]:
     return _show_modal(
         ctx,
@@ -441,8 +446,8 @@ def show_warning(
         content=content,
         button_confirm=button,
         button_cancel=None,
-        icon=ui.ICON_WRONG,
-        icon_color=ui.RED,
+        icon=icon,
+        icon_color=icon_color,
     )
 
 
@@ -502,25 +507,6 @@ async def confirm_output(
     await raise_if_cancelled(interact(ctx, content, "confirm_output", br_code))
 
 
-async def confirm_decred_sstx_submission(
-    ctx: wire.GenericContext,
-    address: str,
-    amount: str,
-) -> None:
-    text = Text("Purchase ticket", ui.ICON_SEND, ui.GREEN, new_lines=False)
-    text.normal(amount)
-    text.normal("\nwith voting rights to\n")
-    text.mono(*_split_address(address))
-    await raise_if_cancelled(
-        interact(
-            ctx,
-            Confirm(text),
-            "confirm_decred_sstx_submission",
-            ButtonRequestType.ConfirmOutput,
-        )
-    )
-
-
 async def confirm_hex(
     ctx: wire.GenericContext,
     br_type: str,
@@ -539,7 +525,7 @@ async def confirm_hex(
     truncate_ellipsis: str = "...",
 ) -> None:
     if truncate:
-        text = Text(title, icon, icon_color, new_lines=False)
+        text = Text(title, icon, icon_color, new_lines=False, break_words=width is None)
         description_lines = 0
         if subtitle is not None:
             description_lines += Span(subtitle, 0, ui.BOLD).count_lines()
@@ -627,38 +613,6 @@ async def confirm_total(
     await raise_if_cancelled(interact(ctx, HoldToConfirm(text), br_type, br_code))
 
 
-# TODO cleanup @ redesign
-async def confirm_total_ethereum(
-    ctx: wire.GenericContext, total_amount: str, gas_price: str, fee_max: str
-) -> None:
-    text = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN, new_lines=False)
-    text.bold(total_amount)
-    text.normal(" ", ui.GREY, "Gas price:", ui.FG)
-    text.bold(gas_price)
-    text.normal(" ", ui.GREY, "Maximum fee:", ui.FG)
-    text.bold(fee_max)
-    await raise_if_cancelled(
-        interact(ctx, HoldToConfirm(text), "confirm_total", ButtonRequestType.SignTx)
-    )
-
-
-# TODO cleanup @ redesign
-async def confirm_total_ripple(
-    ctx: wire.GenericContext,
-    address: str,
-    amount: str,
-) -> None:
-    title = "Confirm sending"
-    text = Text(title, ui.ICON_SEND, ui.GREEN, new_lines=False)
-    text.bold("{} XRP\n".format(amount))
-    text.normal("to\n")
-    text.mono(*_split_address(address))
-
-    await raise_if_cancelled(
-        interact(ctx, HoldToConfirm(text), "confirm_output", ButtonRequestType.SignTx)
-    )
-
-
 async def confirm_joint_total(
     ctx: wire.GenericContext, spending_amount: str, total_amount: str
 ) -> None:
@@ -725,7 +679,7 @@ async def confirm_modify_output(
     page1 = Text("Modify amount", ui.ICON_SEND, ui.GREEN, new_lines=False)
     page1.normal("Address:\n")
     page1.br_half()
-    page1.mono(*_split_address(address))
+    page1.mono(*chunks_intersperse(address, MONO_ADDR_PER_LINE))
 
     page2 = Text("Modify amount", ui.ICON_SEND, ui.GREEN, new_lines=False)
     if sign < 0:
@@ -809,7 +763,7 @@ async def confirm_signverify(
 
         text = Text(header, new_lines=False)
         text.bold("Confirm address:\n")
-        text.mono(*_split_address(address))
+        text.mono(*chunks_intersperse(address, MONO_ADDR_PER_LINE))
         await raise_if_cancelled(
             interact(ctx, Confirm(text), br_type, ButtonRequestType.Other)
         )
@@ -828,70 +782,60 @@ async def confirm_signverify(
     )
 
 
-# TODO cleanup @ redesign
-async def confirm_timebounds_stellar(
-    ctx: wire.GenericContext, start: int, end: int
+async def show_popup(
+    title: str,
+    description: str,
+    subtitle: str | None = None,
+    description_param: str = "",
+    timeout_ms: int = 3000,
 ) -> None:
-    text = Text("Confirm timebounds", ui.ICON_SEND, ui.GREEN)
-    text.bold("Valid from (UTC):")
-    if start:
-        text.normal(str(start))
-    else:
-        text.mono("[no restriction]")
+    text = Text(title, ui.ICON_WRONG, ui.RED)
+    if subtitle is not None:
+        text.bold(subtitle)
+        text.br_half()
+    text.format_parametrized(description, description_param)
+    await Popup(text, timeout_ms)
 
-    text.bold("Valid to (UTC):")
-    if end:
-        text.normal(str(end))
-    else:
-        text.mono("[no restriction]")
 
-    await raise_if_cancelled(
-        interact(
-            ctx, Confirm(text), "confirm_timebounds", ButtonRequestType.ConfirmOutput
-        )
+def draw_simple_text(title: str, description: str = "") -> None:
+    text = Text(title, ui.ICON_CONFIG, new_lines=False)
+    text.normal(description)
+    ui.draw_simple(text)
+
+
+async def request_passphrase_on_device(ctx: wire.GenericContext, max_len: int) -> str:
+    await button_request(
+        ctx, "passphrase_device", code=ButtonRequestType.PassphraseEntry
     )
 
+    keyboard = passphrase.PassphraseKeyboard("Enter passphrase", max_len)
+    result = await ctx.wait(keyboard)
+    if result is passphrase.CANCELLED:
+        raise wire.ActionCancelled("Passphrase entry cancelled")
 
-# TODO cleanup @ redesign
-async def confirm_proposals_tezos(
-    ctx: wire.GenericContext, proposals: Sequence[str]
-) -> None:
-    if len(proposals) > 1:
-        title = "Submit proposals"
+    assert isinstance(result, str)
+    return result
+
+
+async def request_pin_on_device(
+    ctx: wire.GenericContext,
+    prompt: str,
+    attempts_remaining: int | None,
+    allow_cancel: bool,
+) -> str:
+    await button_request(ctx, "pin_device", code=ButtonRequestType.PinEntry)
+
+    if attempts_remaining is None:
+        subprompt = None
+    elif attempts_remaining == 1:
+        subprompt = "This is your last attempt"
     else:
-        title = "Submit proposal"
+        subprompt = "%s attempts remaining" % attempts_remaining
 
-    pages: list[ui.Component] = []
-    for page, proposal in enumerate(proposals):
-        text = Text(title, ui.ICON_SEND, icon_color=ui.PURPLE, new_lines=False)
-        text.bold("Proposal {}:\n".format(page + 1))
-        text.mono(*chunks_intersperse(proposal, 17))
-        pages.append(text)
-
-    pages[-1] = Confirm(pages[-1])
-    paginated = Paginated(pages)
-
-    await raise_if_cancelled(
-        interact(ctx, paginated, "confirm_proposals", ButtonRequestType.SignTx)
-    )
-
-
-# TODO cleanup @ redesign
-async def confirm_transfer_binance(
-    ctx: wire.GenericContext, inputs_outputs: Sequence[Tuple[str, str, str]]
-) -> None:
-    pages: list[ui.Component] = []
-    for title, amount, address in inputs_outputs:
-        coin_page = Text(title, ui.ICON_SEND, icon_color=ui.GREEN, new_lines=False)
-        coin_page.bold(amount)
-        coin_page.normal("\nto\n")
-        coin_page.mono(*_split_address(address))
-        pages.append(coin_page)
-
-    pages[-1] = HoldToConfirm(pages[-1])
-
-    await raise_if_cancelled(
-        interact(
-            ctx, Paginated(pages), "confirm_transfer", ButtonRequestType.ConfirmOutput
-        )
-    )
+    dialog = pin.PinDialog(prompt, subprompt, allow_cancel)
+    while True:
+        result = await ctx.wait(dialog)
+        if result is pin.CANCELLED:
+            raise wire.PinCancelled
+        assert isinstance(result, str)
+        return result

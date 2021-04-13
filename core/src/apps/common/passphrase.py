@@ -1,16 +1,15 @@
 from micropython import const
 
 import storage.device
-from trezor import wire, workflow
-from trezor.messages import ButtonRequestType
+from trezor import ui, wire, workflow
 from trezor.messages.PassphraseAck import PassphraseAck
 from trezor.messages.PassphraseRequest import PassphraseRequest
-from trezor.ui import ICON_CONFIG, draw_simple
-from trezor.ui.components.tt.passphrase import CANCELLED, PassphraseKeyboard
-from trezor.ui.components.tt.text import Text
-
-from . import button_request
-from .confirm import require_confirm
+from trezor.ui.layouts import (
+    confirm_action,
+    confirm_hex,
+    draw_simple_text,
+    request_passphrase_on_device,
+)
 
 _MAX_PASSPHRASE_LEN = const(50)
 
@@ -29,7 +28,7 @@ async def get(ctx: wire.Context) -> str:
 async def _request_from_user(ctx: wire.Context) -> str:
     workflow.close_others()  # request exclusive UI access
     if storage.device.get_passphrase_always_on_device():
-        passphrase = await _request_on_device(ctx)
+        passphrase = await request_passphrase_on_device(ctx, _MAX_PASSPHRASE_LEN)
     else:
         passphrase = await _request_on_host(ctx)
     if len(passphrase.encode()) > _MAX_PASSPHRASE_LEN:
@@ -48,7 +47,7 @@ async def _request_on_host(ctx: wire.Context) -> str:
     if ack.on_device:
         if ack.passphrase is not None:
             raise wire.DataError("Passphrase provided when it should not be")
-        return await _request_on_device(ctx)
+        return await request_passphrase_on_device(ctx, _MAX_PASSPHRASE_LEN)
 
     if ack.passphrase is None:
         raise wire.DataError(
@@ -57,36 +56,30 @@ async def _request_on_host(ctx: wire.Context) -> str:
 
     # non-empty passphrase
     if ack.passphrase:
-        text = Text("Hidden wallet", ICON_CONFIG)
-        text.normal("Access hidden wallet?")
-        text.br()
-        text.normal("Next screen will show")
-        text.normal("the passphrase!")
-        await require_confirm(ctx, text, ButtonRequestType.Other)
+        await confirm_action(
+            ctx,
+            "passphrase_host1",
+            title="Hidden wallet",
+            description="Access hidden wallet?\n\nNext screen will show\nthe passphrase!",
+            icon=ui.ICON_CONFIG,
+        )
 
-        text = Text("Hidden wallet", ICON_CONFIG, break_words=True)
-        text.normal("Use this passphrase?")
-        text.br()
-        text.mono(ack.passphrase)
-        await require_confirm(ctx, text, ButtonRequestType.Other)
+        await confirm_hex(
+            ctx,
+            "passphrase_host2",
+            title="Hidden wallet",
+            description="Use this passphrase?\n",
+            data=ack.passphrase,
+            icon=ui.ICON_CONFIG,
+            icon_color=ui.ORANGE_ICON,
+            truncate=True,  # 50 characters fit
+            width=None,
+        )
 
     return ack.passphrase
 
 
-async def _request_on_device(ctx: wire.Context) -> str:
-    await button_request(ctx, code=ButtonRequestType.PassphraseEntry)
-
-    keyboard = PassphraseKeyboard("Enter passphrase", _MAX_PASSPHRASE_LEN)
-    passphrase = await ctx.wait(keyboard)
-    if passphrase is CANCELLED:
-        raise wire.ActionCancelled("Passphrase entry cancelled")
-
-    assert isinstance(passphrase, str)
-
-    return passphrase
-
-
 def _entry_dialog() -> None:
-    text = Text("Passphrase entry", ICON_CONFIG)
-    text.normal("Please type your", "passphrase on the", "connected host.")
-    draw_simple(text)
+    draw_simple_text(
+        "Passphrase entry", "Please type your\npassphrase on the\nconnected host."
+    )

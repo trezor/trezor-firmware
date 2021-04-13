@@ -2,13 +2,13 @@ import storage.device
 from trezor import ui, utils, workflow
 from trezor.crypto import bip39, slip39
 from trezor.messages import BackupType
-from trezor.ui.components.tt.text import Text
+from trezor.ui.layouts import draw_simple_text
 
 if False:
     from trezor.messages.ResetDevice import EnumTypeBackupType
 
 
-def get() -> tuple[bytes | None, int]:
+def get() -> tuple[bytes | None, EnumTypeBackupType]:
     return get_secret(), get_type()
 
 
@@ -58,8 +58,7 @@ def _start_progress() -> None:
     # Because we are drawing to the screen manually, without a layout, we
     # should make sure that no other layout is running.
     workflow.close_others()
-    t = Text("Please wait", ui.ICON_CONFIG)
-    ui.draw_simple(t)
+    draw_simple_text("Please wait")
 
 
 def _render_progress(progress: int, total: int) -> None:

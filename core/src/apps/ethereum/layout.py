@@ -3,7 +3,8 @@ from ubinascii import hexlify
 from trezor import ui
 from trezor.messages import ButtonRequestType
 from trezor.strings import format_amount
-from trezor.ui.layouts import confirm_hex, confirm_output, confirm_total_ethereum
+from trezor.ui.layouts import confirm_hex, confirm_output
+from trezor.ui.layouts.tt.altcoin import confirm_total_ethereum
 
 from . import networks, tokens
 from .address import address_from_bytes

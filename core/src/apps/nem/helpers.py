@@ -1,6 +1,6 @@
 from micropython import const
 
-from apps.common import HARDENED, paths
+from apps.common import paths
 
 from . import SLIP44_ID
 
@@ -45,7 +45,7 @@ def check_path(path: paths.Bip32Path, network: int) -> bool:
     if len(path) < 2:
         return False
 
-    coin_type = path[1] - HARDENED
+    coin_type = path[1] - paths.HARDENED
 
     if network == NEM_NETWORK_TESTNET:
         return coin_type == 1

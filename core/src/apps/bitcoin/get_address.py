@@ -3,8 +3,7 @@ from trezor.messages import InputScriptType
 from trezor.messages.Address import Address
 from trezor.ui.layouts import show_address
 
-from apps.common.layout import address_n_to_str
-from apps.common.paths import validate_path
+from apps.common.paths import address_n_to_str, validate_path
 
 from . import addresses
 from .keychain import validate_path_against_script_type, with_keychain

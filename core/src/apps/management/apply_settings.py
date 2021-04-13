@@ -33,7 +33,7 @@ def validate_homescreen(homescreen: bytes) -> None:
         raise wire.DataError("Homescreen must be full-color TOIF image")
 
 
-async def apply_settings(ctx: wire.Context, msg: ApplySettings):
+async def apply_settings(ctx: wire.Context, msg: ApplySettings) -> Success:
     if not storage.device.is_initialized():
         raise wire.NotInitialized("Device is not initialized")
     if (
@@ -99,7 +99,7 @@ async def apply_settings(ctx: wire.Context, msg: ApplySettings):
     return Success(message="Settings applied")
 
 
-async def require_confirm_change_homescreen(ctx):
+async def require_confirm_change_homescreen(ctx: wire.GenericContext) -> None:
     await confirm_action(
         ctx,
         "set_homescreen",
@@ -109,7 +109,7 @@ async def require_confirm_change_homescreen(ctx):
     )
 
 
-async def require_confirm_change_label(ctx, label):
+async def require_confirm_change_label(ctx: wire.GenericContext, label: str) -> None:
     await confirm_action(
         ctx,
         "set_label",
@@ -120,7 +120,9 @@ async def require_confirm_change_label(ctx, label):
     )
 
 
-async def require_confirm_change_passphrase(ctx, use):
+async def require_confirm_change_passphrase(
+    ctx: wire.GenericContext, use: bool
+) -> None:
     if use:
         description = "Do you really want to enable passphrase encryption?"
     else:
@@ -135,8 +137,8 @@ async def require_confirm_change_passphrase(ctx, use):
 
 
 async def require_confirm_change_passphrase_source(
-    ctx, passphrase_always_on_device: bool
-):
+    ctx: wire.GenericContext, passphrase_always_on_device: bool
+) -> None:
     if passphrase_always_on_device:
         description = "Do you really want to enter passphrase always on the device?"
     else:
@@ -150,7 +152,9 @@ async def require_confirm_change_passphrase_source(
     )
 
 
-async def require_confirm_change_display_rotation(ctx, rotation):
+async def require_confirm_change_display_rotation(
+    ctx: wire.GenericContext, rotation: int
+) -> None:
     if rotation == 0:
         label = "north"
     elif rotation == 90:
@@ -171,7 +175,9 @@ async def require_confirm_change_display_rotation(ctx, rotation):
     )
 
 
-async def require_confirm_change_autolock_delay(ctx, delay_ms):
+async def require_confirm_change_autolock_delay(
+    ctx: wire.GenericContext, delay_ms: int
+) -> None:
     await confirm_action(
         ctx,
         "set_autolock_delay",
@@ -182,7 +188,9 @@ async def require_confirm_change_autolock_delay(ctx, delay_ms):
     )
 
 
-async def require_confirm_safety_checks(ctx, level: EnumTypeSafetyCheckLevel) -> None:
+async def require_confirm_safety_checks(
+    ctx: wire.GenericContext, level: EnumTypeSafetyCheckLevel
+) -> None:
     if level == SafetyCheckLevel.PromptAlways:
         await confirm_action(
             ctx,
@@ -220,7 +228,9 @@ async def require_confirm_safety_checks(ctx, level: EnumTypeSafetyCheckLevel) ->
         raise ValueError  # enum value out of range
 
 
-async def require_confirm_experimental_features(ctx, enable: bool) -> None:
+async def require_confirm_experimental_features(
+    ctx: wire.GenericContext, enable: bool
+) -> None:
     if enable:
         await confirm_action(
             ctx,

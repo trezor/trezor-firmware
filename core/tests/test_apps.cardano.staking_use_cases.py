@@ -2,7 +2,7 @@ from ubinascii import unhexlify
 
 from common import *
 
-from apps.common import HARDENED
+from apps.common.paths import HARDENED
 from trezor.crypto import bip32
 from trezor.messages import CardanoAddressType
 from trezor.messages.CardanoAddressParametersType import CardanoAddressParametersType

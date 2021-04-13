@@ -1,5 +1,5 @@
 from common import *
-from apps.common import HARDENED
+from apps.common.paths import HARDENED
 from trezor.messages.CardanoTxInputType import CardanoTxInputType
 
 if not utils.BITCOIN_ONLY:

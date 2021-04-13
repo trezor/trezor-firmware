@@ -4,7 +4,6 @@ from trezor.messages.EthereumAddress import EthereumAddress
 from trezor.ui.layouts import show_address
 
 from apps.common import paths
-from apps.common.layout import address_n_to_str
 
 from . import networks
 from .address import address_from_bytes
@@ -27,7 +26,7 @@ async def get_address(ctx, msg, keychain):
     address = address_from_bytes(address_bytes, network)
 
     if msg.show_display:
-        title = address_n_to_str(msg.address_n)
+        title = paths.address_n_to_str(msg.address_n)
         await show_address(ctx, address=address, address_qr=address, title=title)
 
     return EthereumAddress(address=address)

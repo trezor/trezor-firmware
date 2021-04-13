@@ -5,9 +5,8 @@ from trezor.crypto.hashlib import sha256
 from trezor.messages.ECDHSessionKey import ECDHSessionKey
 from trezor.ui.layouts import confirm_hex
 
-from apps.common import HARDENED
 from apps.common.keychain import get_keychain
-from apps.common.paths import AlwaysMatchingSchema
+from apps.common.paths import HARDENED, AlwaysMatchingSchema
 
 from .sign_identity import serialize_identity, serialize_identity_without_proto
 

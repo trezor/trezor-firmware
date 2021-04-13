@@ -5,9 +5,9 @@ from trezor.ui.layouts import (
     confirm_hex,
     confirm_metadata,
     confirm_output,
-    confirm_proposals_tezos,
     confirm_total,
 )
+from trezor.ui.layouts.tt.altcoin import confirm_proposals_tezos
 
 from .helpers import TEZOS_AMOUNT_DECIMALS
 

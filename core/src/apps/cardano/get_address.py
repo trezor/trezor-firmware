@@ -3,7 +3,6 @@ from trezor.messages.CardanoAddress import CardanoAddress
 from trezor.ui.layouts import show_address
 
 from apps.common import paths
-from apps.common.layout import address_n_to_str
 
 from . import seed
 from .address import derive_human_readable_address
@@ -70,7 +69,7 @@ async def _display_address(
     if not protocol_magics.is_mainnet(protocol_magic):
         network_name = protocol_magics.to_ui_string(protocol_magic)
 
-    address_n = address_n_to_str(address_parameters.address_n)
+    address_n = paths.address_n_to_str(address_parameters.address_n)
     await show_address(
         ctx,
         address=address,

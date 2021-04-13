@@ -7,7 +7,8 @@ from trezor.messages import (
     ButtonRequestType,
 )
 from trezor.strings import format_amount
-from trezor.ui.layouts import confirm_properties, confirm_transfer_binance
+from trezor.ui.layouts import confirm_properties
+from trezor.ui.layouts.tt.altcoin import confirm_transfer_binance
 
 from . import helpers
 

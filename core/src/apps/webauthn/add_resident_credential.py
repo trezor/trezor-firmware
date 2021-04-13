@@ -2,11 +2,10 @@ import storage.device
 from trezor import wire
 from trezor.messages.Success import Success
 from trezor.messages.WebAuthnAddResidentCredential import WebAuthnAddResidentCredential
+from trezor.ui.components.common.webauthn import ConfirmInfo
 from trezor.ui.layouts import show_error_and_raise
+from trezor.ui.layouts.tt.webauthn import confirm_webauthn
 
-from apps.common.confirm import require_confirm
-
-from .confirm import ConfirmContent, ConfirmInfo
 from .credential import Fido2Credential
 from .resident_credentials import store_resident_credential
 
@@ -47,8 +46,8 @@ async def add_resident_credential(
             red=True,
         )
 
-    content = ConfirmContent(ConfirmAddCredential(cred))
-    await require_confirm(ctx, content)
+    if not await confirm_webauthn(ctx, ConfirmAddCredential(cred)):
+        raise wire.ActionCancelled
 
     if store_resident_credential(cred):
         return Success(message="Credential added")

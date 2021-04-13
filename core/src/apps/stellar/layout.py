@@ -1,12 +1,8 @@
 from trezor import strings, ui
 from trezor.messages import ButtonRequestType
 from trezor.ui.constants import MONO_ADDR_PER_LINE
-from trezor.ui.layouts import (
-    confirm_action,
-    confirm_hex,
-    confirm_metadata,
-    confirm_timebounds_stellar,
-)
+from trezor.ui.layouts import confirm_action, confirm_hex, confirm_metadata
+from trezor.ui.layouts.tt.altcoin import confirm_timebounds_stellar
 
 from . import consts
 

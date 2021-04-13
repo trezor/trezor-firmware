@@ -1,6 +1,6 @@
 from trezor import wire
 
-from apps.common import HARDENED, paths
+from apps.common import paths
 from apps.common.keychain import get_keychain
 
 from . import CURVE, networks
@@ -37,10 +37,10 @@ def _schemas_from_address_n(
     if slip44_hardened not in networks.all_slip44_ids_hardened():
         return ()
 
-    if not slip44_hardened & HARDENED:
+    if not slip44_hardened & paths.HARDENED:
         return ()
 
-    slip44_id = slip44_hardened - HARDENED
+    slip44_id = slip44_hardened - paths.HARDENED
     return (paths.PathSchema(pattern, slip44_id) for pattern in patterns)
 
 

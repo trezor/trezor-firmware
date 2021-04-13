@@ -11,13 +11,21 @@ if False:
     LayoutType = Awaitable[Any]
 
 
+async def button_request(
+    ctx: wire.GenericContext,
+    br_type: str,
+    code: EnumTypeButtonRequestType = ButtonRequestType.Other,
+) -> None:
+    log.debug(__name__, "ButtonRequest.type={}".format(br_type))
+    workflow.close_others()
+    await ctx.call(ButtonRequest(code=code), ButtonAck)
+
+
 async def interact(
     ctx: wire.GenericContext,
     layout: LayoutType,
-    brtype: str,
-    brcode: EnumTypeButtonRequestType = ButtonRequestType.Other,
+    br_type: str,
+    br_code: EnumTypeButtonRequestType = ButtonRequestType.Other,
 ) -> Any:
-    log.debug(__name__, "ButtonRequest.type={}".format(brtype))
-    workflow.close_others()
-    await ctx.call(ButtonRequest(code=brcode), ButtonAck)
+    await button_request(ctx, br_type, br_code)
     return await ctx.wait(layout)

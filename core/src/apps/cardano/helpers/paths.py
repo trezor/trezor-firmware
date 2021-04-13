@@ -1,7 +1,6 @@
 from micropython import const
 
-from apps.common import HARDENED
-from apps.common.paths import PathSchema
+from apps.common.paths import HARDENED, PathSchema
 
 SLIP44_ID = 1815
 
