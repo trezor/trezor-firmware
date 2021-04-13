@@ -407,16 +407,49 @@ void HAL_PCD_DisconnectCallback(PCD_HandleTypeDef *hpcd)
   */
 USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
 {
+#if defined(USE_USB_FS)
+  // Trezor 1 uses the OTG_FS peripheral
+  if (pdev->id == USB_PHY_FS_ID) {
+    /*Set LL Driver parameters */
+    pcd_fs_handle.Instance = USB_OTG_FS;
+    pcd_fs_handle.Init.dev_endpoints = 4;
+    pcd_fs_handle.Init.use_dedicated_ep1 = 0;
+    pcd_fs_handle.Init.ep0_mps = 0x40;
+    pcd_fs_handle.Init.dma_enable = 0;
+    pcd_fs_handle.Init.low_power_enable = 0;
+    pcd_fs_handle.Init.phy_itface = PCD_PHY_EMBEDDED;
+    pcd_fs_handle.Init.Sof_enable = 1;
+    pcd_fs_handle.Init.speed = PCD_SPEED_FULL;
+    pcd_fs_handle.Init.vbus_sensing_enable = 0; // No VBUS Sensing on USB0
+    /* Link The driver to the stack */
+    pcd_fs_handle.pData = pdev;
+    pdev->pData = &pcd_fs_handle;
+    /*Initialize LL Driver */
+    HAL_PCD_Init(&pcd_fs_handle);
+    // the OTG_FS peripheral has a dedicated 1.25KiB data RAM from which we
+    // allocate an area for each transmit FIFO and the single shared receive FIFO.
+    // the configuration is in terms of 32-bit words, so we have 320 32-bit words
+    // in this dedicated 1.25KiB data RAM to use. see section 6.3.8 in UM1021 and 29.13 in RM0033.
+    // USB packets that we deal with are 64 bytes in size which equates to 16 32-bit words.
+    // we size the transmit FIFO's equally and give the rest of the space to the receive FIFO.
+    const uint16_t transmit_fifo_size = 48; // 48 = 16 * 3 meaning that we give 3 packets of space for each transmit fifo
+    const uint16_t receive_fifo_zie = 128; // 128 = 320 - 4 * 48
+    HAL_PCDEx_SetRxFiFo(&pcd_fs_handle, receive_fifo_zie);
+    for (uint16_t i = 0; i < 4; i++) {
+      HAL_PCDEx_SetTxFiFo(&pcd_fs_handle, i, transmit_fifo_size);
+    }
+  }
+#endif
+#if defined(USE_USB_HS_IN_FS)
+  // Trezor T uses the OTG_HS peripheral
   if (pdev->id == USB_PHY_HS_ID) {
     /* Set LL Driver parameters */
     pcd_hs_handle.Instance = USB_OTG_HS;
     pcd_hs_handle.Init.dev_endpoints = 6;
     pcd_hs_handle.Init.use_dedicated_ep1 = 0;
-
     pcd_hs_handle.Init.ep0_mps = 0x40;
     pcd_hs_handle.Init.dma_enable = 0;
     pcd_hs_handle.Init.low_power_enable = 0;
-
     pcd_hs_handle.Init.phy_itface = PCD_PHY_EMBEDDED;
     pcd_hs_handle.Init.Sof_enable = 1;
     pcd_hs_handle.Init.speed = PCD_SPEED_HIGH_IN_FULL;
@@ -429,7 +462,6 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
     pdev->pData = &pcd_hs_handle;
     /* Initialize LL Driver */
     HAL_PCD_Init(&pcd_hs_handle);
-
     // the OTG_HS peripheral has a dedicated 4KiB data RAM from which we
     // allocate an area for each transmit FIFO and the single shared receive FIFO.
     // the configuration is in terms of 32-bit words, so we have 1024 32-bit words
@@ -445,6 +477,7 @@ USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
       HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, i, transmit_fifo_size);
     }
   }
+#endif
   return USBD_OK;
 }
 
