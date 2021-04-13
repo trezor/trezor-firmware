@@ -8,6 +8,8 @@ coverage combine .coverage.*
 
 coverage html \
   --omit=src/trezor/messages/* \
+  --omit=src/all_modules.py \
+  --omit=src/apps/ethereum/tokens.py \
   --fail-under=${COVERAGE_THRESHOLD}
 
 if [ $? -eq 2 ]; then
