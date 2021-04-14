@@ -5,7 +5,7 @@ from apps.common import paths
 from apps.common.layout import address_n_to_str, show_qr
 
 from . import seed
-from .address import derive_human_readable_address
+from .address import derive_human_readable_address, validate_address_parameters
 from .helpers import protocol_magics, staking_use_cases
 from .helpers.paths import SCHEMA_ADDRESS
 from .helpers.utils import to_account_path
@@ -38,6 +38,7 @@ async def get_address(
     )
 
     validate_network_info(msg.network_id, msg.protocol_magic)
+    validate_address_parameters(address_parameters)
 
     try:
         address = derive_human_readable_address(

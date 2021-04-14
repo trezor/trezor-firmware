@@ -17,6 +17,7 @@ from .address import (
     derive_address_bytes,
     derive_human_readable_address,
     get_address_bytes_unsafe,
+    validate_address_parameters,
     validate_output_address,
 )
 from .auxiliary_data import (
@@ -135,12 +136,10 @@ async def _sign_ordinary_tx(
             ctx, keychain, i.address_n, SCHEMA_ADDRESS.match(i.address_n)
         )
 
-    _validate_outputs(keychain, msg.outputs, msg.protocol_magic, msg.network_id)
+    _validate_outputs(msg.outputs, msg.protocol_magic, msg.network_id)
     _validate_certificates(msg.certificates, msg.protocol_magic, msg.network_id)
     _validate_withdrawals(msg.withdrawals)
-    validate_auxiliary_data(
-        keychain, msg.auxiliary_data, msg.protocol_magic, msg.network_id
-    )
+    validate_auxiliary_data(msg.auxiliary_data)
 
     # display the transaction in UI
     await _show_standard_tx(ctx, keychain, msg)
@@ -166,11 +165,9 @@ async def _sign_stake_pool_registration_tx(
     _validate_stake_pool_registration_tx_structure(msg)
 
     _ensure_no_signing_inputs(msg.inputs)
-    _validate_outputs(keychain, msg.outputs, msg.protocol_magic, msg.network_id)
+    _validate_outputs(msg.outputs, msg.protocol_magic, msg.network_id)
     _validate_certificates(msg.certificates, msg.protocol_magic, msg.network_id)
-    validate_auxiliary_data(
-        keychain, msg.auxiliary_data, msg.protocol_magic, msg.network_id
-    )
+    validate_auxiliary_data(msg.auxiliary_data)
 
     await _show_stake_pool_registration_tx(ctx, keychain, msg)
 
@@ -209,7 +206,6 @@ def _validate_stake_pool_registration_tx_structure(msg: CardanoSignTx) -> None:
 
 
 def _validate_outputs(
-    keychain: seed.Keychain,
     outputs: list[CardanoTxOutputType],
     protocol_magic: int,
     network_id: int,
@@ -218,10 +214,7 @@ def _validate_outputs(
     for output in outputs:
         total_amount += output.amount
         if output.address_parameters:
-            # try to derive the address to validate it
-            derive_address_bytes(
-                keychain, output.address_parameters, protocol_magic, network_id
-            )
+            validate_address_parameters(output.address_parameters)
         elif output.address is not None:
             validate_output_address(output.address, protocol_magic, network_id)
         else:

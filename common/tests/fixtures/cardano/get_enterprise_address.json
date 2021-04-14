@@ -8,7 +8,6 @@
       "parameters": {
         "path": "m/1852'/1815'/0'/0/0",
         "address_type": "enterprise",
-        "staking_key_hash": "1bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff",
         "network_id": 1,
         "protocol_magic": 764824073
       },
@@ -20,7 +19,6 @@
       "parameters": {
         "path": "m/1852'/1815'/0'/0/0",
         "address_type": "enterprise",
-        "staking_key_hash": "1bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff",
         "network_id": 0,
         "protocol_magic": 42
       },

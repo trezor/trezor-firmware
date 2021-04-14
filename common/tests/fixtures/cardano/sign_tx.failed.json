@@ -230,7 +230,7 @@
         ]
       },
       "result": {
-        "error_message": "Output address network mismatch!"
+        "error_message": "Output address network mismatch"
       }
     },
     {
@@ -258,7 +258,7 @@
         ]
       },
       "result": {
-        "error_message": "Output address network mismatch!"
+        "error_message": "Output address network mismatch"
       }
     },
     {

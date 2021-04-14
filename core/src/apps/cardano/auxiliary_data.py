@@ -4,7 +4,11 @@ from trezor.enums import CardanoAddressType
 
 from apps.common import cbor
 
-from .address import derive_address_bytes, derive_human_readable_address
+from .address import (
+    derive_address_bytes,
+    derive_human_readable_address,
+    validate_address_parameters,
+)
 from .helpers import INVALID_AUXILIARY_DATA, bech32
 from .helpers.bech32 import HRP_JORMUN_PUBLIC_KEY
 from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
@@ -36,12 +40,7 @@ METADATA_KEY_CATALYST_REGISTRATION = 61284
 METADATA_KEY_CATALYST_REGISTRATION_SIGNATURE = 61285
 
 
-def validate_auxiliary_data(
-    keychain: seed.Keychain,
-    auxiliary_data: CardanoTxAuxiliaryDataType | None,
-    protocol_magic: int,
-    network_id: int,
-) -> None:
+def validate_auxiliary_data(auxiliary_data: CardanoTxAuxiliaryDataType | None) -> None:
     if not auxiliary_data:
         return
 
@@ -52,10 +51,7 @@ def validate_auxiliary_data(
     if auxiliary_data.catalyst_registration_parameters:
         fields_provided += 1
         _validate_catalyst_registration_parameters(
-            keychain,
-            auxiliary_data.catalyst_registration_parameters,
-            protocol_magic,
-            network_id,
+            auxiliary_data.catalyst_registration_parameters
         )
 
     if fields_provided != 1:
@@ -72,10 +68,7 @@ def _validate_auxiliary_data_blob(auxiliary_data_blob: bytes) -> None:
 
 
 def _validate_catalyst_registration_parameters(
-    keychain: seed.Keychain,
     catalyst_registration_parameters: CardanoCatalystRegistrationParametersType,
-    protocol_magic: int,
-    network_id: int,
 ) -> None:
     if (
         len(catalyst_registration_parameters.voting_public_key)
@@ -92,8 +85,7 @@ def _validate_catalyst_registration_parameters(
     if address_parameters.address_type == CardanoAddressType.BYRON:
         raise INVALID_AUXILIARY_DATA
 
-    # try to derive the address to validate it
-    derive_address_bytes(keychain, address_parameters, protocol_magic, network_id)
+    validate_address_parameters(address_parameters)
 
 
 async def show_auxiliary_data(
