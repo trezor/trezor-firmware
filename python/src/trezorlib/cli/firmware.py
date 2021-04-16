@@ -206,11 +206,11 @@ def firmware_update(
     You can specify a filename or URL from which the firmware can be downloaded.
     You can also explicitly specify a firmware version that you want.
     Otherwise, trezorctl will attempt to find latest available version
-    from wallet.trezor.io.
+    from data.trezor.io.
 
     If you provide a fingerprint via the --fingerprint option, it will be checked
     against downloaded firmware fingerprint. Otherwise fingerprint is checked
-    against wallet.trezor.io information, if available.
+    against data.trezor.io information, if available.
     """
     if sum(bool(x) for x in (filename, url, version)) > 1:
         click.echo("You can use only one of: filename, url, version.")

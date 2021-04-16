@@ -86,8 +86,8 @@ You can use `TREZOR_OLED_SCALE` environment variable to make emulator screen big
 
 ## How to get fingerprint of firmware signed and distributed by SatoshiLabs?
 
-1. Pick version of firmware binary listed on https://wallet.trezor.io/data/firmware/1/releases.json
-2. Download it: `wget -O trezor.signed.bin https://wallet.trezor.io/data/firmware/1/trezor-1.6.1.bin`
+1. Pick version of firmware binary listed on https://data.trezor.io/firmware/1/releases.json
+2. Download it: `wget -O trezor.signed.bin https://data.trezor.io/firmware/1/trezor-1.9.4.bin`
 3. Use `trezorctl` dry-run mode to get the firmware fingerprint:
    ```sh
    trezorctl firmware-update -n -f trezor.signed.bin

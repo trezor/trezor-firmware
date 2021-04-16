@@ -37,7 +37,7 @@ PASSPHRASE_TEST_PATH = tools.parse_path("44h/1h/0h/0/0")
 OUTDATED_FIRMWARE_ERROR = """
 Your Trezor firmware is out of date. Update it with the following command:
   trezorctl firmware-update
-Or visit https://wallet.trezor.io/
+Or visit https://suite.trezor.io/
 """.strip()
 
 
