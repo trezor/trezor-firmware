@@ -41,7 +41,7 @@ class Lockscreen(HomescreenBase):
         ui.display.text_center(
             ui.WIDTH // 2, 35, self.label, ui.BOLD, ui.TITLE_GREY, ui.BG
         )
-        ui.display.avatar(48, 48, self.image, ui.WHITE, ui.BLACK)
+        ui.display.avatar(48, 48, self.get_image(), ui.WHITE, ui.BLACK)
 
         # lock bar
         ui.display.bar_radius(40, 100, 160, 40, ui.TITLE_GREY, ui.BG, 4)
