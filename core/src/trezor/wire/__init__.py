@@ -138,7 +138,6 @@ class Context:
         self.iface = iface
         self.sid = sid
         self.buffer = buffer
-        self.buffer_reader = utils.BufferReader(self.buffer)
         self.buffer_writer = utils.BufferWriter(self.buffer)
 
         self._field_cache: protobuf.FieldCache = {}
@@ -161,8 +160,7 @@ class Context:
         return await self.read_any(expected_wire_types)
 
     async def read_from_wire(self) -> codec_v1.Message:
-        self.buffer_writer.seek(0)
-        return await codec_v1.read_message(self.iface, self.buffer_writer.buffer)
+        return await codec_v1.read_message(self.iface, self.buffer)
 
     async def read(
         self,
