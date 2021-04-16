@@ -3,11 +3,8 @@ from micropython import const
 import storage.device
 from trezor import wire, workflow
 from trezor.messages import ButtonRequestType
-from trezor.ui import ICON_CONFIG, draw_simple
-from trezor.ui.components.tt.text import Text
 
 from . import button_request
-from .confirm import require_confirm
 
 _MAX_PASSPHRASE_LEN = const(50)
 
@@ -40,6 +37,10 @@ async def _request_from_user(ctx: wire.Context) -> str:
 async def _request_on_host(ctx: wire.Context) -> str:
     from trezor.messages.PassphraseAck import PassphraseAck
     from trezor.messages.PassphraseRequest import PassphraseRequest
+    from trezor.ui import ICON_CONFIG
+    from trezor.ui.components.tt.text import Text
+
+    from .confirm import require_confirm
 
     _entry_dialog()
 
@@ -89,6 +90,9 @@ async def _request_on_device(ctx: wire.Context) -> str:
 
 
 def _entry_dialog() -> None:
+    from trezor.ui import ICON_CONFIG, draw_simple
+    from trezor.ui.components.tt.text import Text
+
     text = Text("Passphrase entry", ICON_CONFIG)
     text.normal("Please type your", "passphrase on the", "connected host.")
     draw_simple(text)
