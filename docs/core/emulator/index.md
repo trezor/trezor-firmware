@@ -16,7 +16,7 @@ Emulator significantly speeds up development and has several features to help yo
    - or always use `poetry run ./emu.py`
 3. to use [bridge](https://github.com/trezor/trezord-go) with the emulator support, start it with `trezord-go -e 21324`
 
-Now you can use the emulator the same way as you use the device, for example you can visit our Wallet (https://wallet.trezor.io), use our Python CLI tool (`trezorctl`) etc. Simply click to emulate screen touches.
+Now you can use the emulator the same way as you use the device, for example you can use [Trezor Suite](https://suite.trezor.io), use our Python CLI tool (`trezorctl`), etc. Simply click to emulate screen touches.
 
 ## Features
 
