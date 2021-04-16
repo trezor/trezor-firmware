@@ -1,8 +1,4 @@
-from trezor.ui.constants import MONO_CHARS_PER_LINE
-from trezor.ui.layouts import confirm_path_warning
-
 from . import HARDENED
-from .layout import address_n_to_str
 
 if False:
     from typing import (
@@ -326,6 +322,9 @@ async def validate_path(
 
 
 async def show_path_warning(ctx: wire.Context, path: Bip32Path) -> None:
+    from trezor.ui.layouts import confirm_path_warning
+    from .layout import address_n_to_str
+
     await confirm_path_warning(ctx, address_n_to_str(path))
 
 
@@ -338,6 +337,9 @@ def path_is_hardened(address_n: Bip32Path) -> bool:
 
 
 def break_address_n_to_lines(address_n: Bip32Path) -> list[str]:
+    from trezor.ui.constants import MONO_CHARS_PER_LINE
+    from .layout import address_n_to_str
+
     lines = []
     path_str = address_n_to_str(address_n)
 
