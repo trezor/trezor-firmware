@@ -52,7 +52,7 @@ class Homescreen(HomescreenBase):
             ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT, ui.BG)
 
         # homescreen with shifted avatar and text on bottom
-        ui.display.avatar(48, 48 - 10, self.image, ui.WHITE, ui.BLACK)
+        ui.display.avatar(48, 48 - 10, self.get_image(), ui.WHITE, ui.BLACK)
         ui.display.text_center(ui.WIDTH // 2, 220, self.label, ui.BOLD, ui.FG, ui.BG)
 
     def on_touch_start(self, _x: int, _y: int) -> None:

@@ -9,10 +9,12 @@ class HomescreenBase(ui.Layout):
     def __init__(self) -> None:
         super().__init__()
         self.label = storage.device.get_label() or "My Trezor"
-        self.image = storage.device.get_homescreen() or res.load(
+        self.repaint = storage.cache.homescreen_shown is not self.RENDER_INDICATOR
+
+    def get_image(self) -> bytes:
+        return storage.device.get_homescreen() or res.load(
             "apps/homescreen/res/bg.toif"
         )
-        self.repaint = storage.cache.homescreen_shown is not self.RENDER_INDICATOR
 
     def on_render(self) -> None:
         if not self.repaint:
