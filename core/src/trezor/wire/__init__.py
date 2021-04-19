@@ -406,7 +406,14 @@ async def handle_session(
             if next_msg is None:
                 # If the previous run did not keep an unprocessed message for us,
                 # wait for a new one coming from the wire.
-                msg = await ctx.read_from_wire()
+                try:
+                    msg = await ctx.read_from_wire()
+                except codec_v1.CodecError as exc:
+                    if __debug__:
+                        log.exception(__name__, exc)
+                    await ctx.write(failure(exc))
+                    continue
+
             else:
                 # Process the message from previous run.
                 msg = next_msg
