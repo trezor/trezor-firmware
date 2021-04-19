@@ -44,4 +44,5 @@
   - [Monorepo Notes](misc/monorepo.md)
   - [Purpose48 derivation scheme](misc/purpose48.md)
   - [Review Process](misc/review.md)
+  - [Changelog](misc/changelog.md)
   - [TOIF Image Format](misc/toif.md)

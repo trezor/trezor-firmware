@@ -41,3 +41,12 @@ release commit messages prebuild:
       - $CI_PROJECT_PATH_SLUG == 'satoshilabs-trezor-trezor-firmware'
   script:
     - nix-shell --run "ci/check_release_commit_messages.sh"
+
+changelog prebuild:
+  stage: prebuild
+  before_script: []  # nothing needed
+  variables:
+    GIT_SUBMODULE_STRATEGY: "none"
+    GIT_STRATEGY: clone
+  script:
+    - nix-shell --run "ci/check_changelog.sh"

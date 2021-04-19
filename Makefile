@@ -11,7 +11,7 @@ C_FILES =  $(shell find . -type f -name '*.[ch]' | grep -f ./tools/style.c.inclu
 
 style_check: pystyle_check cstyle_check changelog_check yaml_check editor_check ## run all style checks (C+Py)
 
-style: pystyle cstyle changelog ## apply all code styles (C+Py)
+style: pystyle cstyle ## apply all code styles (C+Py)
 
 pystyle_check: ## run code style check on application sources and tests
 	flake8 --version
@@ -40,16 +40,16 @@ pystyle: ## apply code style on application sources and tests
 	make -C python style
 
 changelog_check: ## check changelog format
-	./tools/linkify-changelogs.py --check
+	./tools/generate-changelog.py --check core
+	./tools/generate-changelog.py --check python
+	./tools/generate-changelog.py --check legacy/firmware
+	./tools/generate-changelog.py --check legacy/bootloader
 
 yaml_check: ## check yaml formatting
 	yamllint .
 
 editor_check: ## check editorconfig formatting
 	editorconfig-checker -exclude '.*\.(so|dat|toif|der)'
-
-changelog: ## fill out issue links in changelog
-	./tools/linkify-changelogs.py
 
 cstyle_check: ## run code style check on low-level C code
 	clang-format --version
