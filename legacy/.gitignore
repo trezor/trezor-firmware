@@ -2,6 +2,7 @@ build/
 *.a
 *.bin
 *.d
+!.changelog.d
 *.elf
 *.hex
 *.img
