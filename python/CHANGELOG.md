@@ -5,39 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.13.0] - Unreleased
-[0.13.0]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.2...master
-
-### Added
-
-- Enabled session management via `EndSession`  [#1227]
-- Support for temporary or permanent `safety-checks` setting
-- Support for Output Descriptors export [#1363]
-- PIN entry via letters  [#1496]
-
-### Changed
-
-- protobuf is aware of `required` fields and default values
-- `btc.sign_tx()` accepts keyword arguments for transaction metadata  [#1266]
-- Support long PIN of up to 50 digits.  [#1167]
-
-### Deprecated
-
-- instantiating protobuf objects with positional arguments is deprecated
-- values of required fields must be supplied at instantiation time. Omitting them is deprecated.
-- `details` argument to `btc.sign_tx()` is deprecated. Use keyword arguments instead.
-
-### Fixed
-
-- added missing dependency on `attrs`  [#1232]
-- fixed number imprecision in `build_tx.py` that could cause "invalid prevhash" errors
-
-### Removed
-
-- dropped Python 3.5 support  [#810]
-- dropped debug-only `trezorctl debug show-text` functionality
-
-
 ## [0.12.2] - 2020-08-27
 [0.12.2]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.1...python/v0.12.2
 
@@ -506,16 +473,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#349]: https://github.com/trezor/python-trezor/issues/349
 [#351]: https://github.com/trezor/python-trezor/issues/351
 [#352]: https://github.com/trezor/python-trezor/issues/352
-[#810]: https://github.com/trezor/trezor-firmware/issues/810
 [#948]: https://github.com/trezor/trezor-firmware/issues/948
 [#1052]: https://github.com/trezor/trezor-firmware/issues/1052
 [#1126]: https://github.com/trezor/trezor-firmware/issues/1126
-[#1167]: https://github.com/trezor/trezor-firmware/issues/1167
 [#1179]: https://github.com/trezor/trezor-firmware/issues/1179
 [#1196]: https://github.com/trezor/trezor-firmware/issues/1196
 [#1210]: https://github.com/trezor/trezor-firmware/issues/1210
-[#1227]: https://github.com/trezor/trezor-firmware/issues/1227
-[#1232]: https://github.com/trezor/trezor-firmware/issues/1232
-[#1266]: https://github.com/trezor/trezor-firmware/issues/1266
-[#1363]: https://github.com/trezor/trezor-firmware/pull/1363
-[#1496]: https://github.com/trezor/trezor-firmware/pull/1496
