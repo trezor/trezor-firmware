@@ -1,0 +1,1 @@
+`btc.sign_tx()` accepts keyword arguments for transaction metadata

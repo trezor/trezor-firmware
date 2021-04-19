@@ -1,0 +1,1 @@
+fixed number imprecision in `build_tx.py` that could cause "invalid prevhash" errors
