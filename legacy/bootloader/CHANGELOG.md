@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## 1.10.0 [unreleased]
 
 ### Added
-- "Stay in bootloader" flag.
+- "Stay in bootloader" flag.  [#1461]
 - Soft-reset (reboots itself after firmware installation).
 
 ### Changed
@@ -110,3 +110,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - Initial import of code.
+
+[#1461]: https://github.com/trezor/trezor-firmware/pull/1461
