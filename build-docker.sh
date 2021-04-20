@@ -108,7 +108,9 @@ for BITCOIN_ONLY in 0 1; do
     git submodule update --init --recursive
     poetry install
     poetry run script/cibuild
-    mkdir -p build/firmware
+    mkdir -p build/bootloader build/firmware build/intermediate_fw
+    cp bootloader/bootloader.bin build/bootloader/bootloader.bin
+    cp intermediate_fw/trezor.bin build/intermediate_fw/inter.bin
     cp firmware/trezor.bin build/firmware/firmware.bin
     cp firmware/trezor.elf build/firmware/firmware.elf
     poetry run ../python/tools/firmware-fingerprint.py \

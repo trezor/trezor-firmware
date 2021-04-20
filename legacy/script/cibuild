@@ -25,6 +25,9 @@ make -C firmware/protob
 
 make -C firmware
 
+make -C intermediate_fw
+
 if [ "$EMULATOR" != 1 ]; then
     make -C firmware sign
+    make -C intermediate_fw sign
 fi
