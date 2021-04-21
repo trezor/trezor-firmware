@@ -4192,77 +4192,94 @@ END_TEST
 
 // test vectors from http://www.di-mgt.com.au/sha_testvectors.html
 START_TEST(test_sha3_256) {
+  static const struct {
+    const char *data;
+    const char *hash;
+  } tests[] = {
+      {
+          "",
+          "a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a",
+      },
+      {
+          "abc",
+          "3a985da74fe225b2045c172d6bd390bd855f086e3e9d525b46bfe24511431532",
+      },
+      {
+          "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
+          "41c0dba2a9d6240849100376a8235e2c82e1b9998a999e21db32dd97496d3376",
+      },
+      {
+          "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijkl"
+          "mnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
+          "916f6061fe879741ca6469b43971dfdb28b1a32dc36cb3254e812be27aad1d18",
+      },
+  };
+
   uint8_t digest[SHA3_256_DIGEST_LENGTH];
+  for (size_t i = 0; i < (sizeof(tests) / sizeof(*tests)); i++) {
+    size_t len = strlen(tests[i].data);
+    sha3_256((uint8_t *)tests[i].data, len, digest);
+    ck_assert_mem_eq(digest, fromhex(tests[i].hash), SHA3_256_DIGEST_LENGTH);
 
-  sha3_256((uint8_t *)"", 0, digest);
-  ck_assert_mem_eq(
-      digest,
-      fromhex(
-          "a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a"),
-      SHA3_256_DIGEST_LENGTH);
-
-  sha3_256((uint8_t *)"abc", 3, digest);
-  ck_assert_mem_eq(
-      digest,
-      fromhex(
-          "3a985da74fe225b2045c172d6bd390bd855f086e3e9d525b46bfe24511431532"),
-      SHA3_256_DIGEST_LENGTH);
-
-  sha3_256(
-      (uint8_t *)"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", 56,
-      digest);
-  ck_assert_mem_eq(
-      digest,
-      fromhex(
-          "41c0dba2a9d6240849100376a8235e2c82e1b9998a999e21db32dd97496d3376"),
-      SHA3_256_DIGEST_LENGTH);
-
-  sha3_256((uint8_t *)"abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu", 112, digest);
-  ck_assert_mem_eq(
-      digest,
-      fromhex(
-          "916f6061fe879741ca6469b43971dfdb28b1a32dc36cb3254e812be27aad1d18"),
-      SHA3_256_DIGEST_LENGTH);
+    // Test progressive hashing.
+    size_t part_len = len;
+    SHA3_CTX ctx;
+    sha3_256_Init(&ctx);
+    sha3_Update(&ctx, (uint8_t *)tests[i].data, part_len);
+    sha3_Update(&ctx, NULL, 0);
+    sha3_Update(&ctx, (uint8_t *)tests[i].data + part_len, len - part_len);
+    sha3_Final(&ctx, digest);
+    ck_assert_mem_eq(digest, fromhex(tests[i].hash), SHA3_256_DIGEST_LENGTH);
+  }
 }
 END_TEST
 
 // test vectors from http://www.di-mgt.com.au/sha_testvectors.html
 START_TEST(test_sha3_512) {
-  uint8_t digest[SHA3_512_DIGEST_LENGTH];
-
-  sha3_512((uint8_t *)"", 0, digest);
-  ck_assert_mem_eq(
-      digest,
-      fromhex(
+  static const struct {
+    const char *data;
+    const char *hash;
+  } tests[] = {
+      {
+          "",
           "a69f73cca23a9ac5c8b567dc185a756e97c982164fe25859e0d1dcc1475c80a615b2"
-          "123af1f5f94c11e3e9402c3ac558f500199d95b6d3e301758586281dcd26"),
-      SHA3_512_DIGEST_LENGTH);
-
-  sha3_512((uint8_t *)"abc", 3, digest);
-  ck_assert_mem_eq(
-      digest,
-      fromhex(
+          "123af1f5f94c11e3e9402c3ac558f500199d95b6d3e301758586281dcd26",
+      },
+      {
+          "abc",
           "b751850b1a57168a5693cd924b6b096e08f621827444f70d884f5d0240d2712e10e1"
-          "16e9192af3c91a7ec57647e3934057340b4cf408d5a56592f8274eec53f0"),
-      SHA3_512_DIGEST_LENGTH);
-
-  sha3_512(
-      (uint8_t *)"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", 56,
-      digest);
-  ck_assert_mem_eq(
-      digest,
-      fromhex(
+          "16e9192af3c91a7ec57647e3934057340b4cf408d5a56592f8274eec53f0",
+      },
+      {
+          "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
           "04a371e84ecfb5b8b77cb48610fca8182dd457ce6f326a0fd3d7ec2f1e91636dee69"
-          "1fbe0c985302ba1b0d8dc78c086346b533b49c030d99a27daf1139d6e75e"),
-      SHA3_512_DIGEST_LENGTH);
-
-  sha3_512((uint8_t *)"abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu", 112, digest);
-  ck_assert_mem_eq(
-      digest,
-      fromhex(
+          "1fbe0c985302ba1b0d8dc78c086346b533b49c030d99a27daf1139d6e75e",
+      },
+      {
+          "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijkl"
+          "mnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu",
           "afebb2ef542e6579c50cad06d2e578f9f8dd6881d7dc824d26360feebf18a4fa73e3"
-          "261122948efcfd492e74e82e2189ed0fb440d187f382270cb455f21dd185"),
-      SHA3_512_DIGEST_LENGTH);
+          "261122948efcfd492e74e82e2189ed0fb440d187f382270cb455f21dd185",
+      },
+  };
+
+  uint8_t digest[SHA3_512_DIGEST_LENGTH];
+  for (size_t i = 0; i < (sizeof(tests) / sizeof(*tests)); i++) {
+    size_t len = strlen(tests[i].data);
+    sha3_512((uint8_t *)tests[i].data, len, digest);
+    ck_assert_mem_eq(digest, fromhex(tests[i].hash), SHA3_512_DIGEST_LENGTH);
+
+    // Test progressive hashing.
+    size_t part_len = len;
+    SHA3_CTX ctx;
+    sha3_512_Init(&ctx);
+    sha3_Update(&ctx, (const uint8_t *)tests[i].data, part_len);
+    sha3_Update(&ctx, NULL, 0);
+    sha3_Update(&ctx, (const uint8_t *)tests[i].data + part_len,
+                len - part_len);
+    sha3_Final(&ctx, digest);
+    ck_assert_mem_eq(digest, fromhex(tests[i].hash), SHA3_512_DIGEST_LENGTH);
+  }
 }
 END_TEST
 
@@ -4511,6 +4528,17 @@ START_TEST(test_keccak_256) {
   for (size_t i = 0; i < (sizeof(tests) / sizeof(*tests)); i++) {
     keccak_256(fromhex(tests[i].data), tests[i].length, hash);
     ck_assert_mem_eq(hash, fromhex(tests[i].hash), SHA3_256_DIGEST_LENGTH);
+
+    // Test progressive hashing.
+    size_t part_len = tests[i].length / 2;
+    SHA3_CTX ctx = {0};
+    keccak_256_Init(&ctx);
+    keccak_Update(&ctx, fromhex(tests[i].data), part_len);
+    keccak_Update(&ctx, fromhex(tests[i].data), 0);
+    keccak_Update(&ctx, fromhex(tests[i].data) + part_len,
+                  tests[i].length - part_len);
+    keccak_Final(&ctx, hash);
+    ck_assert_mem_eq(hash, fromhex(tests[i].hash), SHA3_256_DIGEST_LENGTH);
   }
 }
 END_TEST
@@ -4518,7 +4546,7 @@ END_TEST
 // test vectors from
 // https://raw.githubusercontent.com/monero-project/monero/master/tests/hash/tests-extra-blake.txt
 START_TEST(test_blake256) {
-  struct {
+  static const struct {
     const char *hash;
     const char *data;
   } tests[] = {
@@ -4607,7 +4635,18 @@ START_TEST(test_blake256) {
   uint8_t hash[BLAKE256_DIGEST_LENGTH];
 
   for (size_t i = 0; i < (sizeof(tests) / sizeof(*tests)); i++) {
-    blake256(fromhex(tests[i].data), i, hash);
+    size_t len = strlen(tests[i].data) / 2;
+    blake256(fromhex(tests[i].data), len, hash);
+    ck_assert_mem_eq(hash, fromhex(tests[i].hash), BLAKE256_DIGEST_LENGTH);
+
+    // Test progressive hashing.
+    size_t part_len = len / 2;
+    BLAKE256_CTX ctx;
+    blake256_Init(&ctx);
+    blake256_Update(&ctx, fromhex(tests[i].data), part_len);
+    blake256_Update(&ctx, NULL, 0);
+    blake256_Update(&ctx, fromhex(tests[i].data) + part_len, len - part_len);
+    blake256_Final(&ctx, hash);
     ck_assert_mem_eq(hash, fromhex(tests[i].hash), BLAKE256_DIGEST_LENGTH);
   }
 }
@@ -4616,6 +4655,36 @@ END_TEST
 // test vectors from
 // https://raw.githubusercontent.com/BLAKE2/BLAKE2/master/testvectors/blake2b-kat.txt
 START_TEST(test_blake2b) {
+  static const struct {
+    const char *msg;
+    const char *hash;
+  } tests[] = {
+      {
+          "",
+          "10ebb67700b1868efb4417987acf4690ae9d972fb7a590c2f02871799aaa4786b5e9"
+          "96e8f0f4eb981fc214b005f42d2ff4233499391653df7aefcbc13fc51568",
+      },
+      {
+          "000102",
+          "33d0825dddf7ada99b0e7e307104ad07ca9cfd9692214f1561356315e784f3e5a17e"
+          "364ae9dbb14cb2036df932b77f4b292761365fb328de7afdc6d8998f5fc1",
+      },
+      {
+          "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f2021"
+          "22232425262728292a2b2c2d2e2f3031323334353637",
+          "f8f3726ac5a26cc80132493a6fedcb0e60760c09cfc84cad178175986819665e7684"
+          "2d7b9fedf76dddebf5d3f56faaad4477587af21606d396ae570d8e719af2",
+      },
+      {
+          "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f2021"
+          "22232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f40414243"
+          "4445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465"
+          "666768696a6b6c6d6e6f",
+          "227e3aed8d2cb10b918fcb04f9de3e6d0a57e08476d93759cd7b2ed54a1cbf0239c5"
+          "28fb04bbf288253e601d3bc38b21794afef90b17094a182cac557745e75f",
+      },
+  };
+
   uint8_t key[BLAKE2B_KEY_LENGTH];
   memcpy(key,
          fromhex(
@@ -4624,54 +4693,57 @@ START_TEST(test_blake2b) {
          BLAKE2B_KEY_LENGTH);
 
   uint8_t digest[BLAKE2B_DIGEST_LENGTH];
+  for (size_t i = 0; i < (sizeof(tests) / sizeof(*tests)); i++) {
+    size_t msg_len = strlen(tests[i].msg) / 2;
+    blake2b_Key(fromhex(tests[i].msg), msg_len, key, sizeof(key), digest,
+                sizeof(digest));
+    ck_assert_mem_eq(digest, fromhex(tests[i].hash), sizeof(digest));
 
-  blake2b_Key((uint8_t *)"", 0, key, BLAKE2B_KEY_LENGTH, digest,
-              BLAKE2B_DIGEST_LENGTH);
-  ck_assert_mem_eq(
-      digest,
-      fromhex(
-          "10ebb67700b1868efb4417987acf4690ae9d972fb7a590c2f02871799aaa4786b5e9"
-          "96e8f0f4eb981fc214b005f42d2ff4233499391653df7aefcbc13fc51568"),
-      BLAKE2B_DIGEST_LENGTH);
-
-  blake2b_Key(fromhex("000102"), 3, key, BLAKE2B_KEY_LENGTH, digest,
-              BLAKE2B_DIGEST_LENGTH);
-  ck_assert_mem_eq(
-      digest,
-      fromhex(
-          "33d0825dddf7ada99b0e7e307104ad07ca9cfd9692214f1561356315e784f3e5a17e"
-          "364ae9dbb14cb2036df932b77f4b292761365fb328de7afdc6d8998f5fc1"),
-      BLAKE2B_DIGEST_LENGTH);
-
-  blake2b_Key(
-      fromhex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
-              "202122232425262728292a2b2c2d2e2f3031323334353637"),
-      56, key, BLAKE2B_KEY_LENGTH, digest, BLAKE2B_DIGEST_LENGTH);
-  ck_assert_mem_eq(
-      digest,
-      fromhex(
-          "f8f3726ac5a26cc80132493a6fedcb0e60760c09cfc84cad178175986819665e7684"
-          "2d7b9fedf76dddebf5d3f56faaad4477587af21606d396ae570d8e719af2"),
-      BLAKE2B_DIGEST_LENGTH);
-
-  blake2b_Key(
-      fromhex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
-              "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"
-              "404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"
-              "606162636465666768696a6b6c6d6e6f"),
-      112, key, BLAKE2B_KEY_LENGTH, digest, BLAKE2B_DIGEST_LENGTH);
-  ck_assert_mem_eq(
-      digest,
-      fromhex(
-          "227e3aed8d2cb10b918fcb04f9de3e6d0a57e08476d93759cd7b2ed54a1cbf0239c5"
-          "28fb04bbf288253e601d3bc38b21794afef90b17094a182cac557745e75f"),
-      BLAKE2B_DIGEST_LENGTH);
+    // Test progressive hashing.
+    size_t part_len = msg_len / 2;
+    BLAKE2B_CTX ctx;
+    ck_assert_int_eq(blake2b_InitKey(&ctx, sizeof(digest), key, sizeof(key)),
+                     0);
+    ck_assert_int_eq(blake2b_Update(&ctx, fromhex(tests[i].msg), part_len), 0);
+    ck_assert_int_eq(blake2b_Update(&ctx, NULL, 0), 0);
+    ck_assert_int_eq(blake2b_Update(&ctx, fromhex(tests[i].msg) + part_len,
+                                    msg_len - part_len),
+                     0);
+    ck_assert_int_eq(blake2b_Final(&ctx, digest, sizeof(digest)), 0);
+    ck_assert_mem_eq(digest, fromhex(tests[i].hash), BLAKE2B_DIGEST_LENGTH);
+  }
 }
 END_TEST
 
 // test vectors from
 // https://raw.githubusercontent.com/BLAKE2/BLAKE2/master/testvectors/blake2s-kat.txt
 START_TEST(test_blake2s) {
+  static const struct {
+    const char *msg;
+    const char *hash;
+  } tests[] = {
+      {
+          "",
+          "48a8997da407876b3d79c0d92325ad3b89cbb754d86ab71aee047ad345fd2c49",
+      },
+      {
+          "000102",
+          "1d220dbe2ee134661fdf6d9e74b41704710556f2f6e5a091b227697445dbea6b",
+      },
+      {
+          "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f2021"
+          "22232425262728292a2b2c2d2e2f3031323334353637",
+          "2966b3cfae1e44ea996dc5d686cf25fa053fb6f67201b9e46eade85d0ad6b806",
+      },
+      {
+          "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f2021"
+          "22232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f40414243"
+          "4445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465"
+          "666768696a6b6c6d6e6f",
+          "90a83585717b75f0e9b725e055eeeeb9e7a028ea7e6cbc07b20917ec0363e38c",
+      },
+  };
+
   uint8_t key[BLAKE2S_KEY_LENGTH];
   memcpy(
       key,
@@ -4680,44 +4752,25 @@ START_TEST(test_blake2s) {
       BLAKE2S_KEY_LENGTH);
 
   uint8_t digest[BLAKE2S_DIGEST_LENGTH];
+  for (size_t i = 0; i < (sizeof(tests) / sizeof(*tests)); i++) {
+    size_t msg_len = strlen(tests[i].msg) / 2;
+    blake2s_Key(fromhex(tests[i].msg), msg_len, key, sizeof(key), digest,
+                sizeof(digest));
+    ck_assert_mem_eq(digest, fromhex(tests[i].hash), sizeof(digest));
 
-  blake2s_Key((uint8_t *)"", 0, key, BLAKE2S_KEY_LENGTH, digest,
-              BLAKE2S_DIGEST_LENGTH);
-  ck_assert_mem_eq(
-      digest,
-      fromhex(
-          "48a8997da407876b3d79c0d92325ad3b89cbb754d86ab71aee047ad345fd2c49"),
-      BLAKE2S_DIGEST_LENGTH);
-
-  blake2s_Key(fromhex("000102"), 3, key, BLAKE2S_KEY_LENGTH, digest,
-              BLAKE2S_DIGEST_LENGTH);
-  ck_assert_mem_eq(
-      digest,
-      fromhex(
-          "1d220dbe2ee134661fdf6d9e74b41704710556f2f6e5a091b227697445dbea6b"),
-      BLAKE2S_DIGEST_LENGTH);
-
-  blake2s_Key(
-      fromhex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
-              "202122232425262728292a2b2c2d2e2f3031323334353637"),
-      56, key, BLAKE2S_KEY_LENGTH, digest, BLAKE2S_DIGEST_LENGTH);
-  ck_assert_mem_eq(
-      digest,
-      fromhex(
-          "2966b3cfae1e44ea996dc5d686cf25fa053fb6f67201b9e46eade85d0ad6b806"),
-      BLAKE2S_DIGEST_LENGTH);
-
-  blake2s_Key(
-      fromhex("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
-              "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"
-              "404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"
-              "606162636465666768696a6b6c6d6e6f"),
-      112, key, BLAKE2S_KEY_LENGTH, digest, BLAKE2S_DIGEST_LENGTH);
-  ck_assert_mem_eq(
-      digest,
-      fromhex(
-          "90a83585717b75f0e9b725e055eeeeb9e7a028ea7e6cbc07b20917ec0363e38c"),
-      BLAKE2S_DIGEST_LENGTH);
+    // Test progressive hashing.
+    size_t part_len = msg_len / 2;
+    BLAKE2S_CTX ctx;
+    ck_assert_int_eq(blake2s_InitKey(&ctx, sizeof(digest), key, sizeof(key)),
+                     0);
+    ck_assert_int_eq(blake2s_Update(&ctx, fromhex(tests[i].msg), part_len), 0);
+    ck_assert_int_eq(blake2s_Update(&ctx, NULL, 0), 0);
+    ck_assert_int_eq(blake2s_Update(&ctx, fromhex(tests[i].msg) + part_len,
+                                    msg_len - part_len),
+                     0);
+    ck_assert_int_eq(blake2s_Final(&ctx, digest, sizeof(digest)), 0);
+    ck_assert_mem_eq(digest, fromhex(tests[i].hash), BLAKE2S_DIGEST_LENGTH);
+  }
 }
 END_TEST
 
