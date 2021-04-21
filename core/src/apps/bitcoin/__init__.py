@@ -10,4 +10,5 @@ def boot() -> None:
     wire.add(MessageType.GetOwnershipProof, __name__, "get_ownership_proof")
     wire.add(MessageType.SignTx, __name__, "sign_tx")
     wire.add(MessageType.SignMessage, __name__, "sign_message")
+    wire.add(MessageType.SignStake, __name__, "sign_stake")
     wire.add(MessageType.VerifyMessage, __name__, "verify_message")

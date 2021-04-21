@@ -186,7 +186,7 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_sign_schnorr(mp_obj_t secret_key,
   vstr_init_len(&sig, SCHNORR_SIG_LENGTH);
 
   if (0 != schnorr_sign_digest(&secp256k1, (const uint8_t *)sk.buf,
-                             (const uint8_t *)dig.buf, (uint8_t *)sig.buf)) {
+                               (const uint8_t *)dig.buf, (uint8_t *)sig.buf)) {
     vstr_clear(&sig);
     mp_raise_ValueError("Schnorr signing failed");
   }
@@ -265,15 +265,16 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_verify_recover(mp_obj_t signature,
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_secp256k1_verify_recover_obj,
                                  mod_trezorcrypto_secp256k1_verify_recover);
 
-/// def verify_schnorr(public_key: bytes, signature: bytes, digest: bytes) -> bool:
+/// def verify_schnorr(public_key: bytes, signature: bytes, digest: bytes) ->
+/// bool:
 ///     """
 ///     Uses public key to verify the Schnorr signature (BCH variant) of the
 ///     digest.
 ///     Returns True on success.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_secp256k1_verify_schnorr (mp_obj_t public_key,
-                                                           mp_obj_t signature,
-                                                           mp_obj_t digest) {
+STATIC mp_obj_t mod_trezorcrypto_secp256k1_verify_schnorr(mp_obj_t public_key,
+                                                          mp_obj_t signature,
+                                                          mp_obj_t digest) {
   mp_buffer_info_t pk = {0}, sig = {0}, dig = {0};
   mp_get_buffer_raise(public_key, &pk, MP_BUFFER_READ);
   mp_get_buffer_raise(signature, &sig, MP_BUFFER_READ);
@@ -289,10 +290,10 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_verify_schnorr (mp_obj_t public_key,
     return mp_const_false;
   }
 
-  return mp_obj_new_bool(
-      0 == schnorr_verify_digest(&secp256k1, (const uint8_t *)pk.buf,
-                                 (const uint8_t *)dig.buf,
-                                 (const uint8_t *)sig.buf));
+  return mp_obj_new_bool(0 == schnorr_verify_digest(&secp256k1,
+                                                    (const uint8_t *)pk.buf,
+                                                    (const uint8_t *)dig.buf,
+                                                    (const uint8_t *)sig.buf));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_secp256k1_verify_schnorr_obj,
                                  mod_trezorcrypto_secp256k1_verify_schnorr);
