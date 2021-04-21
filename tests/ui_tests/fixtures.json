@@ -383,6 +383,7 @@
 "test_msg_signmessage.py::test_signmessage[NFC message]": "69bd412ca0c2f980b7e0bfcc8329c7454b144d89bae40193ef8e61bdf24a6961",
 "test_msg_signmessage.py::test_signmessage[NFKD message]": "69bd412ca0c2f980b7e0bfcc8329c7454b144d89bae40193ef8e61bdf24a6961",
 "test_msg_signmessage.py::test_signmessage[bcash]": "d25510e01fb7599df0cd81fbc4b843fe08950435a0c706ced32682954fd66adc",
+"test_msg_signmessage.py::test_signmessage[decred-empty]": "a27757cfa7a25e46162d04429e2054a22891645b452952cf1762da166b4958d2",
 "test_msg_signmessage.py::test_signmessage[decred]": "8ba7d70f772524c74642fd13ddaf86e331cc8edea04ab550561cce58c89195ae",
 "test_msg_signmessage.py::test_signmessage[grs-p2pkh]": "ec3e945d48671cb2636eb0894f2f9e098021f4f887ed5811038786ecbe888f32",
 "test_msg_signmessage.py::test_signmessage[grs-segwit-native]": "ec3e945d48671cb2636eb0894f2f9e098021f4f887ed5811038786ecbe888f32",

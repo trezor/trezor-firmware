@@ -190,6 +190,16 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
         "206b1f8ba47ef9eaf87aa900e41ab1e97f67e8c09292faa4acf825228d074c4b774484046dcb1d9bbf0603045dbfb328c3e1b0c09c5ae133e89e604a67a1fc6cca",
         altcoin=True,
     ),
+    case(
+        "decred-empty",
+        "Decred",
+        "44h/42h/0h/0/0",
+        S.SPENDADDRESS,
+        "DsZtHtXHwvNR3nWf1PqfxrEdnRJisKEyzp1",
+        "",
+        "1fd2d57490b44a0361c7809768cad032d41ba1d4b7a297f935fc65ae05f71de7ea0c6c6fd265cc5154f1fa4acd7006b6a00ddd67fb7333c1594aff9120b3ba8024",
+        altcoin=True,
+    ),
 )
 
 
