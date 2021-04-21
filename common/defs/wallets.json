@@ -9,6 +9,9 @@
         "Electron Cash": "https://electroncash.org",
         "Exodus": "https://www.exodus.io"
     },
+    "bitcoin:BCHA": {
+        "ElectrumABC": "https://github.com/bitcoin-abc/ElectrumABC"
+    },
     "bitcoin:BTC": {
         "Electrum": "https://electrum.org",
         "Exodus": "https://www.exodus.io"
