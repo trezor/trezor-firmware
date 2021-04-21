@@ -16,6 +16,15 @@ class HomescreenBase(ui.Layout):
             "apps/homescreen/res/bg.toif"
         )
 
+    async def __iter__(self) -> ui.ResultValue:
+        # We need to catch the ui.Cancelled exception that kills us, because that means
+        # that we will need to draw on screen again after restart.
+        try:
+            return await super().__iter__()
+        except ui.Cancelled:
+            storage.cache.homescreen_shown = None
+            raise
+
     def on_render(self) -> None:
         if not self.repaint:
             return
