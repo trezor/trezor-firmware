@@ -433,6 +433,7 @@ class Descriptor:
         with open(os.path.join(self.out_dir, name + ".py"), "w") as f:
             f.write(AUTO_HEADER)
             f.write("# fmt: off\n")
+            f.write("# isort:skip_file\n")
             for line in out:
                 f.write(line + "\n")
 
@@ -440,7 +441,8 @@ class Descriptor:
         filename = os.path.join(self.out_dir, "__init__.py")
         with open(filename, "w") as init_py:
             init_py.write(AUTO_HEADER)
-            init_py.write("# fmt: off\n\n")
+            init_py.write("# fmt: off\n")
+            init_py.write("# isort:skip_file\n\n")
             for message in sorted(self.messages, key=lambda m: m.name):
                 init_py.write(self.create_message_import(message.name) + "\n")
             for enum in sorted(self.enums, key=lambda m: m.name):
