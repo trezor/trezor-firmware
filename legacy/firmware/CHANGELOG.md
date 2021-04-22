@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Allow decreasing the output value in RBF transactions.  [#1491]
 - Support long PIN of up to 50 digits.  [#1167]
 - Display nLockTime in human-readable form.  [#1549]
+- Included bootloader 1.10.0.
 
 ### Deprecated
 
