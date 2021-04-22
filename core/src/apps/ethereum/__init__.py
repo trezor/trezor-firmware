@@ -9,4 +9,5 @@ def boot() -> None:
     wire.add(MessageType.EthereumGetPublicKey, __name__, "get_public_key")
     wire.add(MessageType.EthereumSignTx, __name__, "sign_tx")
     wire.add(MessageType.EthereumSignMessage, __name__, "sign_message")
+    wire.add(MessageType.EthereumSignTypedData, __name__, "sign_typed_data")
     wire.add(MessageType.EthereumVerifyMessage, __name__, "verify_message")

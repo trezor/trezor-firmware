@@ -45,6 +45,7 @@ autoflake = "*"
 flake8-requirements = ">=1.3.2"
 
 # common
+eth_abi = "^2.1.1"
 demjson = "*"
 graphviz = "*"
 

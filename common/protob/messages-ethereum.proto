@@ -111,6 +111,46 @@ message EthereumMessageSignature {
     required string address = 3;     // address used to sign the message
 }
 
+
+/**
+ * Request: Ask device to sign typed data
+ * @start
+ * @next EthereumTypedDataRequest
+ * @next Failure
+ */
+message EthereumSignTypedData {
+    repeated uint32 address_n = 1;           // BIP-32 path to derive the key from master node
+    optional bool use_v4 = 2 [default=true]; // use EIP-712 (v4) for typed data signing
+}
+
+/**
+ * Response: Device asks for more values from typed data, or returns the signature and address.
+ * If member_path is not empty, device awaits the information for this value.
+ * Otherwise, the signature field contain the computed transaction signature.
+ * @end
+ * @next EthereumTypedDataAck
+ * @next Failure
+ */
+message EthereumTypedDataRequest {
+    repeated uint32 member_path = 1; // type or value member path requested by device
+    optional bool expect_type   = 2; // if true, then device expects type info, otherwise value
+    optional bytes signature    = 3; // signature of the message
+    optional string address     = 4; // address used to sign the message
+}
+
+/**
+ * Request: Typed data value.
+ * If the member is a struct member_value should not be set. If the member is literal num_members should not be set.
+ * @next EthereumTypedDataRequest
+ */
+message EthereumTypedDataAck {
+    optional string member_name     = 1; // if expect_type was true, should contain memeber name
+    optional string member_type     = 2; // contains member type name
+    optional uint32 member_array_n  = 3; // set to 0 when array is dynamic, None when member is not an array
+    optional uint32 member_children = 4; // if expect_type was true, should contain its children number
+    optional bytes member_value     = 5; // if expect_type was false and value is not struct or array, should contain eth-abi encoded member value
+}
+
 /**
  * Request: Ask device to verify message
  * @start
