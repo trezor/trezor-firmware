@@ -12,6 +12,7 @@
   - [Miscellaneous](core/misc/index.md)
     - [SLIP-39](core/misc/slip0039.md)
     - [Exceptions usage](core/misc/exceptions.md)
+    - [Memory fragmentation management](core/misc/fragmentation.md)
 - [Legacy](legacy/index.md)
 - [Python](python/index.md)
   - [trezorlib](python/trezorlib.md)
