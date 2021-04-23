@@ -4,4 +4,4 @@
 
 #define VERSION_MAJOR_CHAR "\x01"
 #define VERSION_MINOR_CHAR "\x0A"
-#define VERSION_PATCH_CHAR "\x00"
+#define VERSION_PATCH_CHAR "\x01"
