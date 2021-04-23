@@ -79,7 +79,7 @@ def test_autolock_interrupts_signing(device_handler):
     assert "1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1" in layout.text.replace(" ", "")
 
     layout = debug.click(buttons.OK, wait=True)
-    assert "Total amount: 0.0039 BTC" in layout.text
+    assert "Total amount:  0.0039 BTC" in layout.text
 
     # wait for autolock to kick in
     time.sleep(10.1)

@@ -28,10 +28,14 @@ class TestMsgNEMGetaddress:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_nem_getaddress(self, client):
         assert (
-            nem.get_address(client, parse_path("m/44'/1'/0'/0'/0'"), 0x68)
+            nem.get_address(
+                client, parse_path("m/44'/1'/0'/0'/0'"), 0x68, show_display=True
+            )
             == "NB3JCHVARQNGDS3UVGAJPTFE22UQFGMCQGHUBWQN"
         )
         assert (
-            nem.get_address(client, parse_path("m/44'/1'/0'/0'/0'"), 0x98)
+            nem.get_address(
+                client, parse_path("m/44'/1'/0'/0'/0'"), 0x98, show_display=True
+            )
             == "TB3JCHVARQNGDS3UVGAJPTFE22UQFGMCQHSBNBMF"
         )

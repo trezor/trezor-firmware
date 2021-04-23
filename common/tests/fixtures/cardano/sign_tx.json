@@ -197,7 +197,7 @@
         "certificates": [],
         "withdrawals": [],
         "metadata": "",
-        "input_flow": [["SWIPE", "YES"], ["YES"], ["YES"], ["SWIPE", "YES"], ["SWIPE", "YES"]],
+        "input_flow": [["SWIPE", "YES"], ["YES"], ["SWIPE", "YES"], ["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -270,7 +270,7 @@
         "certificates": [],
         "withdrawals": [],
         "metadata": "",
-        "input_flow": [["SWIPE", "YES"], ["SWIPE", "YES"], ["SWIPE", "YES"]],
+        "input_flow": [["SWIPE", "YES"], ["SWIPE", "SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -419,7 +419,7 @@
         ],
         "withdrawals": [],
         "metadata": "",
-        "input_flow": [["YES"], ["SWIPE", "YES"], ["SWIPE", "YES"]],
+        "input_flow": [["YES"], ["YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -593,7 +593,7 @@
         "certificates": [],
         "withdrawals": [],
         "metadata": "a200a11864a118c843aa00ff01a119012c590100aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        "input_flow": [["SWIPE", "YES"], ["SWIPE", "YES"]],
+        "input_flow": [["SWIPE", "YES"], ["SWIPE", "SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -770,7 +770,7 @@
         "certificates": [],
         "withdrawals": [],
         "metadata": "",
-        "input_flow": [["YES"]],
+        "input_flow": [["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -801,7 +801,7 @@
         "certificates": [],
         "withdrawals": [],
         "metadata": "",
-        "input_flow": [["YES"], ["YES"]],
+        "input_flow": [["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/44'/1815'/0'/0/0",

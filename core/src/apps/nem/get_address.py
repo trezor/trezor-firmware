@@ -21,12 +21,12 @@ async def get_address(ctx, msg, keychain):
     address = node.nem_address(network)
 
     if msg.show_display:
-        desc = address_n_to_str(msg.address_n)
+        title = address_n_to_str(msg.address_n)
         await show_address(
             ctx,
             address=address,
             address_qr=address.upper(),
-            desc=desc,
+            title=title,
             network=get_network_str(network),
         )
 

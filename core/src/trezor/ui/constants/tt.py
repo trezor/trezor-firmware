@@ -6,7 +6,7 @@ TEXT_LINE_HEIGHT_HALF = const(13)
 TEXT_MARGIN_LEFT = const(14)
 TEXT_MAX_LINES = const(5)
 
-MONO_CHARS_PER_LINE = const(17)
+MONO_ADDR_PER_LINE = const(17)
 MONO_HEX_PER_LINE = const(18)
 
 QR_X = const(120)

@@ -26,7 +26,6 @@ pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.cardano,
     pytest.mark.skip_t1,
-    pytest.mark.skip_ui,
 ]
 
 
@@ -59,6 +58,7 @@ def test_cardano_get_address(client, parameters, result):
         ),
         protocol_magic=parameters["protocol_magic"],
         network_id=parameters["network_id"],
+        show_display=True,
     )
     assert address == result["expected_address"]
 

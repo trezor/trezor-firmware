@@ -174,7 +174,7 @@ class TestMsgEosSignTx:
         }
 
         with client:
-            client.set_input_flow(self.input_flow(client.debug, pages=2))
+            client.set_input_flow(self.input_flow(client.debug, pages=1))
             resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
@@ -565,7 +565,7 @@ class TestMsgEosSignTx:
         }
 
         with client:
-            client.set_input_flow(self.input_flow(client.debug, pages=2))
+            client.set_input_flow(self.input_flow(client.debug, pages=3))
             resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (

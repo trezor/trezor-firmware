@@ -30,6 +30,7 @@ async def show_internal_entropy(ctx, entropy: bytes):
         icon_color=ui.ORANGE_ICON,
         width=16,
         br_code=ButtonRequestType.ResetDevice,
+        truncate=True,  # 32 bytes always fits
     )
 
 

@@ -237,7 +237,7 @@
         ],
         "withdrawals": [],
         "metadata": "",
-        "input_flow": [["SWIPE", "SWIPE", "YES"], ["YES"], ["SWIPE", "YES"], ["SWIPE", "YES"], ["YES"], ["YES"]],
+        "input_flow": [["SWIPE", "SWIPE", "YES"], ["YES"], ["SWIPE", "SWIPE", "YES"], ["SWIPE", "YES"], ["YES"], ["YES"]],
         "inputs": [
           {
             "path": null,
@@ -339,7 +339,7 @@
         ],
         "withdrawals": [],
         "metadata": "",
-        "input_flow": [["SWIPE", "SWIPE", "YES"], ["YES"], ["YES"], ["YES"], ["YES"]],
+        "input_flow": [["SWIPE", "SWIPE", "YES"], ["SWIPE", "YES"], ["YES"], ["YES"], ["YES"]],
         "inputs": [
           {
             "path": null,

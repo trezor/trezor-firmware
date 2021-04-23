@@ -1,4 +1,3 @@
-from trezor.ui.constants import MONO_CHARS_PER_LINE
 from trezor.ui.layouts import confirm_path_warning
 
 from . import HARDENED
@@ -266,17 +265,3 @@ def is_hardened(i: int) -> bool:
 
 def path_is_hardened(address_n: Bip32Path) -> bool:
     return all(is_hardened(n) for n in address_n)
-
-
-def break_address_n_to_lines(address_n: Bip32Path) -> list[str]:
-    lines = []
-    path_str = address_n_to_str(address_n)
-
-    per_line = MONO_CHARS_PER_LINE
-    while len(path_str) > per_line:
-        i = path_str[:per_line].rfind("/")
-        lines.append(path_str[:i])
-        path_str = path_str[i:]
-    lines.append(path_str)
-
-    return lines

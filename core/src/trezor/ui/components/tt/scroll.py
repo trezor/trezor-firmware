@@ -10,6 +10,12 @@ from .text import TEXT_MAX_LINES, Span, Text
 if __debug__:
     from apps.debug import confirm_signal, swipe_signal, notify_layout_change
 
+if False:
+    from typing import Callable, Iterable
+
+    from ..common.text import TextContent
+
+
 _PAGINATED_LINE_WIDTH = const(204)
 
 
@@ -240,7 +246,8 @@ def paginate_text(
     header_icon: str = ui.ICON_DEFAULT,
     icon_color: int = ui.ORANGE_ICON,
     break_words: bool = False,
-) -> Confirm | Paginated:
+    confirm: Callable[[ui.Component], ui.Layout] = Confirm,
+) -> ui.Layout:
     span = Span(text, 0, font, break_words=break_words)
     if span.count_lines() <= TEXT_MAX_LINES:
         result = Text(
@@ -251,7 +258,7 @@ def paginate_text(
             break_words=break_words,
         )
         result.content = [font, text]
-        return Confirm(result)
+        return confirm(result)
 
     else:
         pages: list[ui.Component] = []
@@ -279,5 +286,76 @@ def paginate_text(
             for _ in range(TEXT_MAX_LINES - 1):
                 span.next_line()
 
-        pages[-1] = Confirm(pages[-1])
+        pages[-1] = confirm(pages[-1])
+        return Paginated(pages)
+
+
+def paginate_paragraphs(
+    para: Iterable[tuple[int, str]],
+    header: str,
+    header_icon: str = ui.ICON_DEFAULT,
+    icon_color: int = ui.ORANGE_ICON,
+    break_words: bool = False,
+    confirm: Callable[[ui.Component], ui.Layout] = Confirm,
+    max_lines: int = TEXT_MAX_LINES,
+) -> ui.Layout:
+    span = Span("", 0, ui.NORMAL, break_words=break_words)
+    lines = 0
+    content: list[TextContent] = []
+    for font, text in para:
+        span.reset(text, 0, font, break_words=break_words)
+        lines += span.count_lines()
+
+        # we'll need this for multipage too
+        if content:
+            content.append("\n")
+        content.append(font)
+        content.append(text)
+
+    if lines <= max_lines:
+        result = Text(
+            header,
+            header_icon=header_icon,
+            icon_color=icon_color,
+            new_lines=False,
+            break_words=break_words,
+            max_lines=max_lines,
+        )
+        for font, text in para:
+            if len(result.content) != 0:
+                result.content.append("\n")
+            result.content.append(font)
+            result.content.append(text)
+        return confirm(result)
+
+    else:
+        pages: list[ui.Component] = []
+        lines_left = 0
+        for i, (font, text) in enumerate(para):
+            span.reset(
+                text, 0, font, break_words=break_words, line_width=_PAGINATED_LINE_WIDTH
+            )
+
+            while span.has_more_content():
+                span.next_line()
+                if lines_left <= 0:
+                    page = Text(
+                        header,
+                        header_icon=header_icon,
+                        icon_color=icon_color,
+                        new_lines=False,
+                        content_offset=i * 3 + 1,  # font, _text_, newline
+                        char_offset=span.start,
+                        line_width=_PAGINATED_LINE_WIDTH,
+                        render_page_overflow=False,
+                        break_words=break_words,
+                        max_lines=max_lines,
+                    )
+                    page.content = content
+                    pages.append(page)
+                    lines_left = max_lines - 1
+                else:
+                    lines_left -= 1
+
+        pages[-1] = confirm(pages[-1])
         return Paginated(pages)

@@ -35,5 +35,5 @@ BINANCE_ADDRESS_TEST_VECTORS = [
 def test_binance_get_address(client, path, expected_address):
     # data from https://github.com/binance-chain/javascript-sdk/blob/master/__tests__/crypto.test.js#L50
 
-    address = get_address(client, parse_path(path))
+    address = get_address(client, parse_path(path), show_display=True)
     assert address == expected_address
