@@ -2,10 +2,10 @@ from trezor import log, wire
 from trezor.crypto import hashlib
 from trezor.crypto.curve import ed25519
 from trezor.messages import CardanoAddressType, CardanoCertificateType
-from trezor.messages.CardanoAddressParametersType import CardanoAddressParametersType
-from trezor.messages.CardanoSignedTx import CardanoSignedTx
-from trezor.messages.CardanoSignedTxChunk import CardanoSignedTxChunk
-from trezor.messages.CardanoSignedTxChunkAck import CardanoSignedTxChunkAck
+from trezor.messages import CardanoAddressParametersType
+from trezor.messages import CardanoSignedTx
+from trezor.messages import CardanoSignedTxChunk
+from trezor.messages import CardanoSignedTxChunkAck
 
 from apps.common import cbor, safety_checks
 from apps.common.paths import validate_path
@@ -68,12 +68,12 @@ from .seed import is_byron_path, is_shelley_path
 if False:
     from typing import Any, Optional, Union
 
-    from trezor.messages.CardanoSignTx import CardanoSignTx
-    from trezor.messages.CardanoTxCertificateType import CardanoTxCertificateType
-    from trezor.messages.CardanoTxInputType import CardanoTxInputType
-    from trezor.messages.CardanoTxOutputType import CardanoTxOutputType
-    from trezor.messages.CardanoTxWithdrawalType import CardanoTxWithdrawalType
-    from trezor.messages.CardanoAssetGroupType import CardanoAssetGroupType
+    from trezor.messages import CardanoSignTx
+    from trezor.messages import CardanoTxCertificateType
+    from trezor.messages import CardanoTxInputType
+    from trezor.messages import CardanoTxOutputType
+    from trezor.messages import CardanoTxWithdrawalType
+    from trezor.messages import CardanoAssetGroupType
 
     from apps.common.cbor import CborSequence
     from apps.common.paths import PathSchema

@@ -1,4 +1,4 @@
-from trezor.messages.TezosPublicKey import TezosPublicKey
+from trezor.messages import TezosPublicKey
 from trezor.ui.layouts import show_pubkey
 
 from apps.common import paths, seed

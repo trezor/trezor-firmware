@@ -4,10 +4,8 @@ from apps.monero.xmr.networks import NetworkTypes, net_version
 
 if False:
     from apps.monero.xmr.types import Ge25519
-    from trezor.messages.MoneroAccountPublicAddress import MoneroAccountPublicAddress
-    from trezor.messages.MoneroTransactionDestinationEntry import (
-        MoneroTransactionDestinationEntry,
-    )
+    from trezor.messages import MoneroAccountPublicAddress
+    from trezor.messages import MoneroTransactionDestinationEntry
 
 
 def addr_to_hash(addr: MoneroAccountPublicAddress) -> bytes:

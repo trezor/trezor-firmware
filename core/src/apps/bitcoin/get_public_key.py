@@ -1,14 +1,14 @@
 from trezor import wire
 from trezor.messages import InputScriptType
-from trezor.messages.HDNodeType import HDNodeType
-from trezor.messages.PublicKey import PublicKey
+from trezor.messages import HDNodeType
+from trezor.messages import PublicKey
 from trezor.ui.layouts import show_xpub
 
 from apps.common import coins, paths
 from apps.common.keychain import get_keychain
 
 if False:
-    from trezor.messages.GetPublicKey import GetPublicKey
+    from trezor.messages import GetPublicKey
 
 
 async def get_public_key(ctx: wire.Context, msg: GetPublicKey) -> PublicKey:

@@ -1,5 +1,5 @@
 from trezor.crypto import hashlib
-from trezor.messages.TezosAddress import TezosAddress
+from trezor.messages import TezosAddress
 from trezor.ui.layouts import show_address
 
 from apps.common import paths, seed

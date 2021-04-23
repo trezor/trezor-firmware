@@ -1,6 +1,6 @@
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha3_256
-from trezor.messages.EthereumAddress import EthereumAddress
+from trezor.messages import EthereumAddress
 from trezor.ui.layouts import show_address
 
 from apps.common import paths

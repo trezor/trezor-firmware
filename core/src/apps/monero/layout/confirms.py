@@ -15,10 +15,8 @@ DUMMY_PAYMENT_ID = b"\x00\x00\x00\x00\x00\x00\x00\x00"
 
 if False:
     from apps.monero.signing.state import State
-    from trezor.messages.MoneroTransactionData import MoneroTransactionData
-    from trezor.messages.MoneroTransactionDestinationEntry import (
-        MoneroTransactionDestinationEntry,
-    )
+    from trezor.messages import MoneroTransactionData
+    from trezor.messages import MoneroTransactionDestinationEntry
 
 
 async def require_confirm_watchkey(ctx):

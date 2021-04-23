@@ -18,20 +18,14 @@ from .state import State
 
 if False:
     from apps.monero.xmr.types import Sc25519, Ge25519
-    from trezor.messages.MoneroTransactionSourceEntry import (
-        MoneroTransactionSourceEntry,
-    )
-    from trezor.messages.MoneroTransactionSetInputAck import (
-        MoneroTransactionSetInputAck,
-    )
+    from trezor.messages import MoneroTransactionSourceEntry
+    from trezor.messages import MoneroTransactionSetInputAck
 
 
 async def set_input(
     state: State, src_entr: MoneroTransactionSourceEntry
 ) -> MoneroTransactionSetInputAck:
-    from trezor.messages.MoneroTransactionSetInputAck import (
-        MoneroTransactionSetInputAck,
-    )
+    from trezor.messages import MoneroTransactionSetInputAck
     from apps.monero.xmr.crypto import chacha_poly
     from apps.monero.xmr.serialize_messages.tx_prefix import TxinToKey
     from apps.monero.signing import offloading_keys

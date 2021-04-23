@@ -1,6 +1,6 @@
 from storage.device import is_initialized
 from trezor import config, ui, wire
-from trezor.messages.Success import Success
+from trezor.messages import Success
 from trezor.ui.components.tt.text import Text
 from trezor.ui.layouts import show_success
 from trezor.ui.popup import Popup
@@ -13,7 +13,7 @@ from apps.common.request_pin import (
 )
 
 if False:
-    from trezor.messages.ChangeWipeCode import ChangeWipeCode
+    from trezor.messages import ChangeWipeCode
 
 
 async def change_wipe_code(ctx: wire.Context, msg: ChangeWipeCode) -> Success:

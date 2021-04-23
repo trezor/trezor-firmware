@@ -1,5 +1,5 @@
 from trezor import log, wire
-from trezor.messages.CardanoAddress import CardanoAddress
+from trezor.messages import CardanoAddress
 
 from apps.common import paths
 from apps.common.layout import address_n_to_str, show_qr

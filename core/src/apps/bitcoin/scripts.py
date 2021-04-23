@@ -22,8 +22,8 @@ from .writers import (
 )
 
 if False:
-    from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
-    from trezor.messages.TxInput import TxInput
+    from trezor.messages import MultisigRedeemScriptType
+    from trezor.messages import TxInput
     from trezor.messages.TxInput import EnumTypeInputScriptType
 
     from apps.common.coininfo import CoinInfo

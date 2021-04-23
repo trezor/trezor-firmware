@@ -52,6 +52,8 @@ RETURN=0
 
 do_rebuild() {
     # rebuild protobuf in specified directory
+    local BUILD_BLOB="$1"
+    shift
     local DESTDIR="$1"
     shift
     local SOURCES="$1"
@@ -65,7 +67,12 @@ do_rebuild() {
     rm -f "$DESTDIR"/[A-Z]*.py
 
     # note $SOURCES is unquoted - we want wildcard expansion and multiple args
-    $PROTOB/pb2py "$@" -o "$DESTDIR" $SOURCES
+    if [ "$BUILD_BLOB" == "TRUE" ]; then
+        # TODO: Use correct qstr-defs path.
+        $PROTOB/pb2py "$@" -o "$DESTDIR" $SOURCES --blob --qstr-defs core/build/unix/genhdr/qstrdefs.generated.h
+    else
+        $PROTOB/pb2py "$@" -o "$DESTDIR" $SOURCES --qstr-file pbuf_qstr.h
+    fi
 
     # TODO: make this less hackish
     # maybe introduce attribute "altcoin" in protobuf?
@@ -113,7 +120,13 @@ else
     func=do_rebuild
 fi
 
-$func core/src/trezor/messages "$CORE_PROTOBUF_SOURCES" "$CORE_MESSAGES_IGNORE" TRUE --no-init-py
-$func python/src/trezorlib/messages "$PYTHON_PROTOBUF_SOURCES" "$PYTHON_MESSAGES_IGNORE" FALSE --include-deprecated -P ..protobuf
+if [ "$1" == "--blob" ]; then
+    build_blob=TRUE
+else
+    build_blob=FALSE
+fi
+
+$func "$build_blob" core/src/trezor/enums "$CORE_PROTOBUF_SOURCES" "$CORE_MESSAGES_IGNORE" TRUE --no-init-py
+$func FALSE python/src/trezorlib/messages "$PYTHON_PROTOBUF_SOURCES" "$PYTHON_MESSAGES_IGNORE" FALSE --include-deprecated -P ..protobuf
 
 exit $RETURN

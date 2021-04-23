@@ -10,12 +10,12 @@ from .matchcheck import MultisigFingerprintChecker, WalletPathChecker
 
 if False:
     from typing import Protocol
-    from trezor.messages.SignTx import SignTx
-    from trezor.messages.PrevTx import PrevTx
-    from trezor.messages.TxInput import TxInput
-    from trezor.messages.TxOutput import TxOutput
-    from trezor.messages.PrevInput import PrevInput
-    from trezor.messages.PrevOutput import PrevOutput
+    from trezor.messages import SignTx
+    from trezor.messages import PrevTx
+    from trezor.messages import TxInput
+    from trezor.messages import TxOutput
+    from trezor.messages import PrevInput
+    from trezor.messages import PrevOutput
     from .hash143 import Hash143
 
     from apps.common.coininfo import CoinInfo

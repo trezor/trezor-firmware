@@ -20,12 +20,8 @@ from apps.monero.xmr import crypto
 from .state import State
 
 if False:
-    from trezor.messages.MoneroTransactionSourceEntry import (
-        MoneroTransactionSourceEntry,
-    )
-    from trezor.messages.MoneroTransactionSignInputAck import (
-        MoneroTransactionSignInputAck,
-    )
+    from trezor.messages import MoneroTransactionSourceEntry
+    from trezor.messages import MoneroTransactionSignInputAck
 
 
 async def sign_input(
@@ -207,9 +203,7 @@ async def sign_input(
     del (CtKey, input_secret_key, pseudo_out_alpha, mlsag, ring_pubkeys)
     state.mem_trace(6, True)
 
-    from trezor.messages.MoneroTransactionSignInputAck import (
-        MoneroTransactionSignInputAck,
-    )
+    from trezor.messages import MoneroTransactionSignInputAck
 
     # Encrypt signature, reveal once protocol finishes OK
     if state.client_version >= 3:

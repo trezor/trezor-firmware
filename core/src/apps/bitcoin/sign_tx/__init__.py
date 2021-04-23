@@ -1,6 +1,6 @@
 from trezor import utils, wire
-from trezor.messages.RequestType import TXFINISHED
-from trezor.messages.TxRequest import TxRequest
+from trezor.enums.RequestType import TXFINISHED
+from trezor.messages import TxRequest
 
 from ..common import BITCOIN_NAMES
 from ..keychain import with_keychain
@@ -14,13 +14,13 @@ if False:
 
     from protobuf import FieldCache
 
-    from trezor.messages.SignTx import SignTx
-    from trezor.messages.TxAckInput import TxAckInput
-    from trezor.messages.TxAckOutput import TxAckOutput
-    from trezor.messages.TxAckPrevMeta import TxAckPrevMeta
-    from trezor.messages.TxAckPrevInput import TxAckPrevInput
-    from trezor.messages.TxAckPrevOutput import TxAckPrevOutput
-    from trezor.messages.TxAckPrevExtraData import TxAckPrevExtraData
+    from trezor.messages import SignTx
+    from trezor.messages import TxAckInput
+    from trezor.messages import TxAckOutput
+    from trezor.messages import TxAckPrevMeta
+    from trezor.messages import TxAckPrevInput
+    from trezor.messages import TxAckPrevOutput
+    from trezor.messages import TxAckPrevExtraData
 
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
@@ -75,15 +75,14 @@ async def sign_tx(
     signer = signer_class(msg, keychain, coin, approver).signer()
 
     res: TxAckType | bool | None = None
-    field_cache: FieldCache = {}
     while True:
         req = signer.send(res)
         if isinstance(req, tuple):
             request_class, req = req
-            assert isinstance(req, TxRequest)
+            # assert isinstance(req, TxRequest)
             if req.request_type == TXFINISHED:
                 return req
-            res = await ctx.call(req, request_class, field_cache)
+            res = await ctx.call(req, request_class)
         elif isinstance(req, helpers.UiConfirm):
             res = await req.confirm_dialog(ctx)
             progress.report_init()

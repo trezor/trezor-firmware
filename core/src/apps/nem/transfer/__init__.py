@@ -1,6 +1,6 @@
-from trezor.messages.NEMImportanceTransfer import NEMImportanceTransfer
-from trezor.messages.NEMTransactionCommon import NEMTransactionCommon
-from trezor.messages.NEMTransfer import NEMTransfer
+from trezor.messages import NEMImportanceTransfer
+from trezor.messages import NEMTransactionCommon
+from trezor.messages import NEMTransfer
 
 from . import layout, serialize
 

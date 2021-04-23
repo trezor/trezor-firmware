@@ -1,9 +1,7 @@
 from trezor import wire
-from trezor.messages.WebAuthnCredential import WebAuthnCredential
-from trezor.messages.WebAuthnCredentials import WebAuthnCredentials
-from trezor.messages.WebAuthnListResidentCredentials import (
-    WebAuthnListResidentCredentials,
-)
+from trezor.messages import WebAuthnCredential
+from trezor.messages import WebAuthnCredentials
+from trezor.messages import WebAuthnListResidentCredentials
 from trezor.ui.layouts import confirm_action
 
 from . import resident_credentials

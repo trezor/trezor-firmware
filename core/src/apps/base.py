@@ -5,9 +5,9 @@ import storage.sd_salt
 from storage import cache
 from trezor import config, sdcard, ui, utils, wire, workflow
 from trezor.messages import Capability, MessageType
-from trezor.messages.Features import Features
-from trezor.messages.PreauthorizedRequest import PreauthorizedRequest
-from trezor.messages.Success import Success
+from trezor.messages import Features
+from trezor.messages import PreauthorizedRequest
+from trezor.messages import Success
 
 from apps.common import mnemonic, safety_checks
 from apps.common.request_pin import verify_user_pin
@@ -15,14 +15,14 @@ from apps.common.request_pin import verify_user_pin
 if False:
     import protobuf
     from typing import Iterable, NoReturn, Protocol
-    from trezor.messages.Initialize import Initialize
-    from trezor.messages.EndSession import EndSession
-    from trezor.messages.GetFeatures import GetFeatures
-    from trezor.messages.Cancel import Cancel
-    from trezor.messages.LockDevice import LockDevice
-    from trezor.messages.Ping import Ping
-    from trezor.messages.DoPreauthorized import DoPreauthorized
-    from trezor.messages.CancelAuthorization import CancelAuthorization
+    from trezor.messages import Initialize
+    from trezor.messages import EndSession
+    from trezor.messages import GetFeatures
+    from trezor.messages import Cancel
+    from trezor.messages import LockDevice
+    from trezor.messages import Ping
+    from trezor.messages import DoPreauthorized
+    from trezor.messages import CancelAuthorization
 
 if False:
 
@@ -130,7 +130,8 @@ async def handle_EndSession(ctx: wire.Context, msg: EndSession) -> Success:
 async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:
     if msg.button_protection:
         from trezor.ui.layouts import confirm_action
-        from trezor.messages.ButtonRequestType import ProtectCall
+        from trezor.enums.ButtonRequestType import ProtectCall
+        from trezor.ui.text import Text
 
         await confirm_action(ctx, "ping", "Confirm", "ping", br_code=ProtectCall)
     return Success(message=msg.message)

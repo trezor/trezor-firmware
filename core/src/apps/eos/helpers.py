@@ -1,6 +1,6 @@
 from trezor import wire
 from trezor.crypto import base58
-from trezor.messages.EosAsset import EosAsset
+from trezor.messages import EosAsset
 
 
 def base58_encode(prefix: str, sig_prefix: str, data: bytes) -> str:

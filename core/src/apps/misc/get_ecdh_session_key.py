@@ -2,7 +2,7 @@ from ustruct import pack, unpack
 
 from trezor import ui, wire
 from trezor.crypto.hashlib import sha256
-from trezor.messages.ECDHSessionKey import ECDHSessionKey
+from trezor.messages import ECDHSessionKey
 from trezor.ui.layouts import confirm_hex
 
 from apps.common import HARDENED

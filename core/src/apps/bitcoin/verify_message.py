@@ -1,7 +1,7 @@
 from trezor import wire
 from trezor.crypto.curve import secp256k1
-from trezor.messages.InputScriptType import SPENDADDRESS, SPENDP2SHWITNESS, SPENDWITNESS
-from trezor.messages.Success import Success
+from trezor.enums.InputScriptType import SPENDADDRESS, SPENDP2SHWITNESS, SPENDWITNESS
+from trezor.messages import Success
 from trezor.ui.layouts import confirm_signverify
 
 from apps.common import coins
@@ -16,7 +16,7 @@ from .addresses import (
 )
 
 if False:
-    from trezor.messages.VerifyMessage import VerifyMessage
+    from trezor.messages import VerifyMessage
     from trezor.messages.TxInputType import EnumTypeInputScriptType
 
 

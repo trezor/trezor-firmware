@@ -2,7 +2,7 @@ from ustruct import pack, unpack
 
 from trezor import wire
 from trezor.crypto.hashlib import sha256
-from trezor.messages.SignedIdentity import SignedIdentity
+from trezor.messages import SignedIdentity
 from trezor.ui.layouts import confirm_sign_identity
 
 from apps.common import HARDENED, coininfo

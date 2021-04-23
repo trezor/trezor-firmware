@@ -14,9 +14,7 @@ from apps.monero.xmr import crypto
 from .state import State
 
 if False:
-    from trezor.messages.MoneroTransactionAllOutSetAck import (
-        MoneroTransactionAllOutSetAck,
-    )
+    from trezor.messages import MoneroTransactionAllOutSetAck
 
 
 async def all_outputs_set(state: State) -> MoneroTransactionAllOutSetAck:
@@ -48,10 +46,8 @@ async def all_outputs_set(state: State) -> MoneroTransactionAllOutSetAck:
     # transaction prefix matches expected transaction prefix sent in the
     # init step.
 
-    from trezor.messages.MoneroRingCtSig import MoneroRingCtSig
-    from trezor.messages.MoneroTransactionAllOutSetAck import (
-        MoneroTransactionAllOutSetAck,
-    )
+    from trezor.messages import MoneroRingCtSig
+    from trezor.messages import MoneroTransactionAllOutSetAck
 
     # Initializes RCTsig structure (fee, tx prefix hash, type)
     rv_pb = MoneroRingCtSig(

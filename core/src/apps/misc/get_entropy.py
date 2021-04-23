@@ -1,6 +1,6 @@
 from trezor.crypto import random
 from trezor.messages import ButtonRequestType
-from trezor.messages.Entropy import Entropy
+from trezor.messages import Entropy
 from trezor.ui.layouts import confirm_action
 
 if False:

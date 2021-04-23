@@ -36,7 +36,7 @@ if __debug__:
         PREV_MEM = free
 
     def retit(**kwargs):
-        from trezor.messages.Failure import Failure
+        from trezor.messages import Failure
 
         return Failure(**kwargs)
 

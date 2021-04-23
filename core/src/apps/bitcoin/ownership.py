@@ -15,7 +15,7 @@ from .scripts import read_bip322_signature_proof, write_bip322_signature_proof
 from .verification import SignatureVerifier
 
 if False:
-    from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
+    from trezor.messages import MultisigRedeemScriptType
     from trezor.messages.TxInputType import EnumTypeInputScriptType
     from apps.common.coininfo import CoinInfo
 

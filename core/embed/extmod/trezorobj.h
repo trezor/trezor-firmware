@@ -75,4 +75,6 @@ static inline uint8_t trezor_obj_get_uint8(mp_obj_t obj) {
   return u;
 }
 
+bool trezor_obj_get_ll_checked(mp_obj_t obj, long long *value);
+
 #endif

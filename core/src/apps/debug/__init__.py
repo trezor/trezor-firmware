@@ -6,18 +6,18 @@ if not __debug__:
 if __debug__:
     from trezor import io, ui, wire
     from trezor.messages import MessageType, DebugSwipeDirection
-    from trezor.messages.DebugLinkLayout import DebugLinkLayout
+    from trezor.messages import DebugLinkLayout
     from trezor import config, crypto, log, loop, utils
-    from trezor.messages.Success import Success
+    from trezor.messages import Success
 
     if False:
-        from trezor.messages.DebugLinkDecision import DebugLinkDecision
-        from trezor.messages.DebugLinkGetState import DebugLinkGetState
-        from trezor.messages.DebugLinkRecordScreen import DebugLinkRecordScreen
-        from trezor.messages.DebugLinkReseedRandom import DebugLinkReseedRandom
-        from trezor.messages.DebugLinkState import DebugLinkState
-        from trezor.messages.DebugLinkEraseSdCard import DebugLinkEraseSdCard
-        from trezor.messages.DebugLinkWatchLayout import DebugLinkWatchLayout
+        from trezor.messages import DebugLinkDecision
+        from trezor.messages import DebugLinkGetState
+        from trezor.messages import DebugLinkRecordScreen
+        from trezor.messages import DebugLinkReseedRandom
+        from trezor.messages import DebugLinkState
+        from trezor.messages import DebugLinkEraseSdCard
+        from trezor.messages import DebugLinkWatchLayout
 
     save_screen = False
     save_screen_directory = "."
@@ -114,7 +114,7 @@ if __debug__:
     async def dispatch_DebugLinkGetState(
         ctx: wire.Context, msg: DebugLinkGetState
     ) -> DebugLinkState:
-        from trezor.messages.DebugLinkState import DebugLinkState
+        from trezor.messages import DebugLinkState
         from apps.common import mnemonic, passphrase
 
         m = DebugLinkState()

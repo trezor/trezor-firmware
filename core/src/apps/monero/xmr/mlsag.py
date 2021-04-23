@@ -50,7 +50,7 @@ from apps.monero.xmr.serialize import int_serialize
 if False:
     from apps.monero.xmr.types import Ge25519, Sc25519
     from apps.monero.xmr.serialize_messages.tx_ct_key import CtKey
-    from trezor.messages.MoneroRctKeyPublic import MoneroRctKeyPublic
+    from trezor.messages import MoneroRctKeyPublic
 
     KeyM = list[list[bytes]]
 

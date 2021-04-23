@@ -12,6 +12,7 @@ PRODTEST_BUILD_DIR    = $(BUILD_DIR)/prodtest
 REFLASH_BUILD_DIR     = $(BUILD_DIR)/reflash
 FIRMWARE_BUILD_DIR    = $(BUILD_DIR)/firmware
 UNIX_BUILD_DIR        = $(BUILD_DIR)/unix
+RUST_BUILD_DIR        = $(BUILD_DIR)/rust
 
 UNAME_S := $(shell uname -s)
 UNIX_PORT_OPTS ?=
@@ -179,10 +180,10 @@ clean_reflash: ## clean reflash build
 	rm -rf $(REFLASH_BUILD_DIR)
 
 clean_firmware: ## clean firmware build
-	rm -rf $(FIRMWARE_BUILD_DIR)
+	rm -rf $(FIRMWARE_BUILD_DIR) $(RUST_BUILD_DIR)
 
 clean_unix: ## clean unix build
-	rm -rf $(UNIX_BUILD_DIR)
+	rm -rf $(UNIX_BUILD_DIR) $(RUST_BUILD_DIR)
 
 clean_cross: ## clean mpy-cross build
 	$(MAKE) -C vendor/micropython/mpy-cross clean $(CROSS_PORT_OPTS)

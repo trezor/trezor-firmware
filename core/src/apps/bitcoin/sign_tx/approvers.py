@@ -11,9 +11,9 @@ from . import helpers, tx_weight
 from .tx_info import OriginalTxInfo, TxInfo
 
 if False:
-    from trezor.messages.SignTx import SignTx
-    from trezor.messages.TxInput import TxInput
-    from trezor.messages.TxOutput import TxOutput
+    from trezor.messages import SignTx
+    from trezor.messages import TxInput
+    from trezor.messages import TxOutput
 
     from apps.common.coininfo import CoinInfo
 
