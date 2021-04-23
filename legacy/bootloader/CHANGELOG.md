@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - "Stay in bootloader" flag.
+- Soft-reset (reboots itself after firmware installation).
 
 ### Changed
 - Use Trezor instead of TREZOR.
