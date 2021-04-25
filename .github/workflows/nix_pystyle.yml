@@ -6,6 +6,11 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
+    - name: log untrusted output
+      run: |
+        echo "::stop-commands::`echo -n ${{ github.token }} | sha256sum | head -c 64`"
+        echo "untrusted output"
+        echo "::`echo -n ${{ github.token }} | sha256sum | head -c 64`::"
     - uses: actions/checkout@v2
     - uses: cachix/install-nix-action@v10
       with:
