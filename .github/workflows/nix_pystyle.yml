@@ -5,12 +5,9 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    env:
+       ACTIONS_ALLOW_UNSECURE_COMMANDS: true
     steps:
-    - name: log untrusted output
-      run: |
-        echo "::stop-commands::`echo -n ${{ github.token }} | sha256sum | head -c 64`"
-        echo "untrusted output"
-        echo "::`echo -n ${{ github.token }} | sha256sum | head -c 64`::"
     - uses: actions/checkout@v2
     - uses: cachix/install-nix-action@v10
       with:
@@ -21,3 +18,4 @@ jobs:
         script: |
           nix-shell --run “poetry install”
           nix-shell --run “poetry run make pystyle_check”
+     
