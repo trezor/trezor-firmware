@@ -12,10 +12,8 @@ jobs:
     - uses: cachix/install-nix-action@v10
       with:
         nix_path: nixpkgs=channel:nixos-unstable
-    - uses: workflow/nix-shell-action@v1
-      with:
-        packages: hello,docker
-        script: |
-          nix-shell --run “poetry install”
-          nix-shell --run “poetry run make pystyle_check”
+    - name: "Just run"
+      run: |
+        nix-shell --run “poetry install”
+        nix-shell --run “poetry run make pystyle_check”
      
