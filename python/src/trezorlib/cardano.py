@@ -123,7 +123,8 @@ def parse_output(output) -> messages.CardanoTxOutputType:
 
     if contains_address:
         address = output["address"]
-    else:
+
+    if contains_address_type:
         address_parameters = _parse_address_parameters(output)
 
     if "token_bundle" in output:
