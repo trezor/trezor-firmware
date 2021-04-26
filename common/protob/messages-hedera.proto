@@ -1,0 +1,105 @@
+syntax = "proto3";
+package hw.trezor.messages.hedera;
+
+message HederaKey {
+    oneof key {
+        bytes ed25519 = 2; // [(nanopb).max_size = 32];
+    }
+}
+
+message HederaId {
+   uint64 shardNum = 1;
+   uint64 realmNum = 2;
+   uint64 tokenNum = 3;
+}
+
+message HederaTimestamp {
+    uint64 seconds = 1;
+    uint32 nanos = 2;
+}
+
+message HederaDuration {
+    uint64 seconds = 1;
+}
+
+message HederaTransactionID {
+    HederaId accountID = 2;
+}
+
+message HederaCryptoCreateTransactionBody {
+    uint64 initialBalance = 2;
+}
+
+message HederaAccountAmount {
+    HederaId accountID = 1;
+    sint64 amount = 2;
+}
+
+message HederaTransferList {
+    repeated HederaAccountAmount accountAmounts = 1; // [(nanopb).max_count = 2];
+}
+
+message HederaTokenTransferList {
+    HederaId token = 1;
+    repeated HederaAccountAmount accountAmounts = 2; // [(nanopb).max_count = 2];
+}
+
+message HederaCryptoTransferTransactionBody {
+    HederaTransferList transfers = 1;
+    repeated HederaTokenTransferList tokenTransfers = 2; // [(nanopb).max_count = 1];
+}
+
+message HederaTokenAssociateBody {
+    HederaId account = 1;
+    repeated HederaId tokens = 2; // [(nanopb).max_count = 1];
+}
+
+message HederaTransactionBody {
+    HederaTransactionID transactionID = 1;
+    uint64 transactionFee = 3;
+    string memo = 6; // [(nanopb).max_size = 100];
+    oneof data {
+        HederaCryptoCreateTransactionBody cryptoCreateAccount = 11;
+        HederaCryptoTransferTransactionBody cryptoTransfer = 14;
+        HederaTokenAssociateBody tokenAssociate = 40;
+    }
+}
+
+/**
+ * Response: Public Key
+ * @end
+ */
+message HederaPublicKey {
+    bytes publicKey = 1;
+}
+
+/**
+ * Request: Ask device for the public key derived from index address_n
+ * @start
+ * @next HederaPublicKey
+ * @next Failure
+ */
+message HederaGetPublicKey {
+    repeated uint32 address_n = 1;  // BIP32 account index (last part of path)
+    bool show_display = 2; // prompt for confirmation on device
+}
+
+/**
+ * Response: Transaction Signature
+ * @end
+ */
+message HederaSignedTx {
+    bytes signature = 1;
+}
+
+/**
+ * Request: Ask Device to sign a tx
+ * @start
+ * @next HederaSignedTx
+ * @next Failure
+ */
+message HederaSignTx {
+    bytes publicKey = 1;
+    HederaTransactionBody tx = 2;
+    uint64 decimals = 3; // you're did it ~ !
+}
