@@ -213,6 +213,12 @@ def _validate_outputs(
     total_amount = 0
     for output in outputs:
         total_amount += output.amount
+
+        if output.address_parameters and output.address is not None:
+            raise wire.ProcessError(
+                "Outputs can not contain both address and address_parameters fields!"
+            )
+
         if output.address_parameters:
             validate_address_parameters(output.address_parameters)
         elif output.address is not None:
