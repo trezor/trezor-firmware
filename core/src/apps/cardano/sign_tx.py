@@ -95,6 +95,7 @@ if False:
 MINTING_POLICY_ID_LENGTH = 28
 MAX_ASSET_NAME_LENGTH = 32
 MAX_TX_CHUNK_SIZE = 256
+MAX_TX_OUTPUT_SIZE = 4000
 
 
 @seed.with_keychain
@@ -136,7 +137,7 @@ async def _sign_ordinary_tx(
             ctx, keychain, i.address_n, SCHEMA_ADDRESS.match(i.address_n)
         )
 
-    _validate_outputs(msg.outputs, msg.protocol_magic, msg.network_id)
+    _validate_outputs(keychain, msg.outputs, msg.protocol_magic, msg.network_id)
     _validate_certificates(msg.certificates, msg.protocol_magic, msg.network_id)
     _validate_withdrawals(msg.withdrawals)
     validate_auxiliary_data(msg.auxiliary_data)
@@ -165,7 +166,7 @@ async def _sign_stake_pool_registration_tx(
     _validate_stake_pool_registration_tx_structure(msg)
 
     _ensure_no_signing_inputs(msg.inputs)
-    _validate_outputs(msg.outputs, msg.protocol_magic, msg.network_id)
+    _validate_outputs(keychain, msg.outputs, msg.protocol_magic, msg.network_id)
     _validate_certificates(msg.certificates, msg.protocol_magic, msg.network_id)
     validate_auxiliary_data(msg.auxiliary_data)
 
@@ -206,6 +207,7 @@ def _validate_stake_pool_registration_tx_structure(msg: CardanoSignTx) -> None:
 
 
 def _validate_outputs(
+    keychain: seed.Keychain,
     outputs: list[CardanoTxOutputType],
     protocol_magic: int,
     network_id: int,
@@ -229,9 +231,41 @@ def _validate_outputs(
             )
 
         _validate_token_bundle(output.token_bundle)
+        _validate_max_tx_output_size(keychain, output, protocol_magic, network_id)
 
     if total_amount > LOVELACE_MAX_SUPPLY:
         raise wire.ProcessError("Total transaction amount is out of range!")
+
+
+def _validate_max_tx_output_size(
+    keychain: seed.Keychain,
+    output: CardanoTxOutputType,
+    protocol_magic: int,
+    network_id: int,
+) -> None:
+    """
+    Output value size is currently limited to 4000 bytes at protocol level. Given
+    the maximum transaction size Trezor can handle (~9kB), we also want to enforce
+    this size limit here so that when the limit is raised at protocol level again,
+    Trezor would still not be able to produce larger outputs than it could
+    reliably spend. Once Cardano-transaction signing is refactored to be completely
+    streamed and maximum supported transaction size is thus raised, this limit can be lifted.
+    """
+    cborized_output = _cborize_output(keychain, output, protocol_magic, network_id)
+
+    assert len(cborized_output) == 2
+    # only the output value is used for counting the size in cardano-ledger-specs
+    cborized_output_value = cborized_output[1]
+    serialized_output_chunks = cbor.encode_streamed(cborized_output_value)
+
+    serialized_output_size = 0
+    for chunk in serialized_output_chunks:
+        serialized_output_size += len(chunk)
+
+    if serialized_output_size > MAX_TX_OUTPUT_SIZE:
+        raise wire.ProcessError(
+            "Maximum tx output value size (%s bytes) exceeded!" % MAX_TX_OUTPUT_SIZE
+        )
 
 
 def _validate_token_bundle(token_bundle: list[CardanoAssetGroupType]) -> None:
