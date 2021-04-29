@@ -25,6 +25,25 @@ ALPINE_VERSION=${ALPINE_VERSION:-3.13.2}
 ALPINE_TARBALL=${ALPINE_FILE:-alpine-minirootfs-$ALPINE_VERSION-$ALPINE_ARCH.tar.gz}
 CONTAINER_FS_URL=${CONTAINER_FS_URL:-"$ALPINE_CDN/v$ALPINE_RELEASE/releases/$ALPINE_ARCH/$ALPINE_TARBALL"}
 
+VARIANTS_core=(0 1)
+VARIANTS_legacy=(0 1)
+
+if [ "$1" == "--skip-core" ]; then
+  VARIANTS_core=()
+  shift
+fi
+
+if [ "$1" == "--skip-legacy" ]; then
+  VARIANTS_legacy=()
+  shift
+fi
+
+if [ "$1" == "--skip-bitcoinonly" ]; then
+  VARIANTS_core=(0)
+  VARIANTS_legacy=(0)
+  shift
+fi
+
 TAG=${1:-master}
 REPOSITORY=${2:-/local}
 PRODUCTION=${PRODUCTION:-1}
@@ -52,7 +71,7 @@ DIR=$(pwd)
 
 # build core
 
-for BITCOIN_ONLY in 0 1; do
+for BITCOIN_ONLY in ${VARIANTS_core[@]}; do
 
   DIRSUFFIX=${BITCOIN_ONLY/1/-bitcoinonly}
   DIRSUFFIX=${DIRSUFFIX/0/}
@@ -89,7 +108,7 @@ done
 
 # build legacy
 
-for BITCOIN_ONLY in 0 1; do
+for BITCOIN_ONLY in ${VARIANTS_legacy[@]}; do
 
   DIRSUFFIX=${BITCOIN_ONLY/1/-bitcoinonly}
   DIRSUFFIX=${DIRSUFFIX/0/}
@@ -134,7 +153,10 @@ done
 
 echo "Fingerprints:"
 for VARIANT in core legacy; do
-  for BITCOIN_ONLY in 0 1; do
+
+  VARIANTS="VARIANTS_$VARIANT[@]"
+
+  for BITCOIN_ONLY in ${!VARIANTS}; do
 
     DIRSUFFIX=${BITCOIN_ONLY/1/-bitcoinonly}
     DIRSUFFIX=${DIRSUFFIX/0/}
