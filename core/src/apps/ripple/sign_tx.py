@@ -1,8 +1,7 @@
 from trezor.crypto import der
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha512
-from trezor.messages import RippleSignedTx
-from trezor.messages import RippleSignTx
+from trezor.messages import RippleSignedTx, RippleSignTx
 from trezor.wire import ProcessError
 
 from apps.common import paths

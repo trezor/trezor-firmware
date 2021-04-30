@@ -1,6 +1,8 @@
-from trezor.messages import NEMMosaicCreation
-from trezor.messages import NEMMosaicSupplyChange
-from trezor.messages import NEMTransactionCommon
+from trezor.messages import (
+    NEMMosaicCreation,
+    NEMMosaicSupplyChange,
+    NEMTransactionCommon,
+)
 
 from ..helpers import (
     NEM_TRANSACTION_TYPE_MOSAIC_CREATION,

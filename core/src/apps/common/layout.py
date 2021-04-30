@@ -3,11 +3,10 @@ from micropython import const
 from trezor import ui
 from trezor.messages import ButtonRequestType
 from trezor.ui.components.tt.button import ButtonDefault
-from trezor.ui.components.tt.text import Text
+from trezor.ui.components.tt.scroll import Paginated
 from trezor.ui.components.tt.text import TEXT_MAX_LINES, Span, Text
 from trezor.ui.container import Container
 from trezor.ui.qr import Qr
-from trezor.ui.components.tt.scroll import Paginated
 from trezor.utils import chunks
 
 from apps.common import HARDENED
@@ -92,4 +91,3 @@ async def show_success(
     await require_confirm(
         ctx, text, ButtonRequestType.Success, confirm=button, cancel=None
     )
-

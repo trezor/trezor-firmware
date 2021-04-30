@@ -2,9 +2,7 @@ from micropython import const
 
 import storage.device
 from trezor import wire, workflow
-from trezor.messages import ButtonRequestType
-from trezor.messages import PassphraseAck
-from trezor.messages import PassphraseRequest
+from trezor.messages import ButtonRequestType, PassphraseAck, PassphraseRequest
 from trezor.ui import ICON_CONFIG, draw_simple
 from trezor.ui.components.tt.passphrase import CANCELLED, PassphraseKeyboard
 from trezor.ui.components.tt.text import Text

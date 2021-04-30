@@ -1,8 +1,7 @@
 from trezor import wire
 from trezor.crypto import base58, cashaddr
 from trezor.crypto.hashlib import sha256
-from trezor.messages import InputScriptType
-from trezor.messages import MultisigRedeemScriptType
+from trezor.messages import InputScriptType, MultisigRedeemScriptType
 
 from apps.common import address_type
 from apps.common.coininfo import CoinInfo

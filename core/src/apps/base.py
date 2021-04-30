@@ -4,10 +4,13 @@ import storage.recovery
 import storage.sd_salt
 from storage import cache
 from trezor import config, sdcard, ui, utils, wire, workflow
-from trezor.messages import Capability, MessageType
-from trezor.messages import Features
-from trezor.messages import PreauthorizedRequest
-from trezor.messages import Success
+from trezor.messages import (
+    Capability,
+    Features,
+    MessageType,
+    PreauthorizedRequest,
+    Success,
+)
 
 from apps.common import mnemonic, safety_checks
 from apps.common.request_pin import verify_user_pin

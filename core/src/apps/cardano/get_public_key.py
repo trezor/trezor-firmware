@@ -1,8 +1,7 @@
 from ubinascii import hexlify
 
 from trezor import log, wire
-from trezor.messages import CardanoPublicKey
-from trezor.messages import HDNodeType
+from trezor.messages import CardanoPublicKey, HDNodeType
 from trezor.ui.layouts import show_pubkey
 
 from apps.common import paths

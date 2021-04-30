@@ -1,15 +1,17 @@
-from trezor.messages import StellarAccountMergeOp
-from trezor.messages import StellarAllowTrustOp
-from trezor.messages import StellarAssetType
-from trezor.messages import StellarBumpSequenceOp
-from trezor.messages import StellarChangeTrustOp
-from trezor.messages import StellarCreateAccountOp
-from trezor.messages import StellarCreatePassiveOfferOp
-from trezor.messages import StellarManageDataOp
-from trezor.messages import StellarManageOfferOp
-from trezor.messages import StellarPathPaymentOp
-from trezor.messages import StellarPaymentOp
-from trezor.messages import StellarSetOptionsOp
+from trezor.messages import (
+    StellarAccountMergeOp,
+    StellarAllowTrustOp,
+    StellarAssetType,
+    StellarBumpSequenceOp,
+    StellarChangeTrustOp,
+    StellarCreateAccountOp,
+    StellarCreatePassiveOfferOp,
+    StellarManageDataOp,
+    StellarManageOfferOp,
+    StellarPathPaymentOp,
+    StellarPaymentOp,
+    StellarSetOptionsOp,
+)
 from trezor.wire import ProcessError
 
 from .. import consts, writers

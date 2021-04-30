@@ -35,16 +35,16 @@ reads the message's header. When the message type is known the first handler is 
 
 """
 
-import protobuf
-from trezor import log, loop, messages, ui, utils, workflow
 from trezorutils import (
-    protobuf_type_for_wire,
     protobuf_decode,
     protobuf_encode,
     protobuf_len,
+    protobuf_type_for_wire,
 )
-from trezor.messages import FailureType
-from trezor.messages import Failure
+
+import protobuf
+from trezor import log, loop, messages, ui, utils, workflow
+from trezor.messages import Failure, FailureType
 from trezor.wire import codec_v1
 from trezor.wire.errors import ActionCancelled, DataError, Error
 

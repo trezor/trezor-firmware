@@ -1,5 +1,4 @@
-from trezor.messages import StellarAddress
-from trezor.messages import StellarGetAddress
+from trezor.messages import StellarAddress, StellarGetAddress
 from trezor.ui.layouts import show_address
 
 from apps.common import paths, seed

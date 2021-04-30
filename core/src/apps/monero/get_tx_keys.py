@@ -16,8 +16,7 @@ using the view key, which the host possess.
 """
 
 from trezor import utils
-from trezor.messages import MoneroGetTxKeyAck
-from trezor.messages import MoneroGetTxKeyRequest
+from trezor.messages import MoneroGetTxKeyAck, MoneroGetTxKeyRequest
 
 from apps.common import paths
 from apps.common.keychain import auto_keychain

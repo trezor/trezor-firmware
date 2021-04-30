@@ -2,8 +2,7 @@ import storage
 import storage.device
 from trezor import config, wire
 from trezor.crypto import bip39, slip39
-from trezor.messages import BackupType
-from trezor.messages import Success
+from trezor.messages import BackupType, Success
 from trezor.ui.layouts import confirm_action
 
 from apps.management import backup_types

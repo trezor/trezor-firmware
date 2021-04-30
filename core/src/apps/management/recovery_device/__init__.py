@@ -2,8 +2,7 @@ import storage
 import storage.device
 import storage.recovery
 from trezor import config, ui, wire, workflow
-from trezor.messages import ButtonRequestType
-from trezor.messages import Success
+from trezor.messages import ButtonRequestType, Success
 from trezor.ui.components.tt.text import Text
 
 from apps.common.confirm import require_confirm

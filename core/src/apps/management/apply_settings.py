@@ -1,7 +1,6 @@
 import storage.device
 from trezor import ui, wire
-from trezor.messages import ButtonRequestType, SafetyCheckLevel
-from trezor.messages import Success
+from trezor.messages import ButtonRequestType, SafetyCheckLevel, Success
 from trezor.strings import format_duration_ms
 from trezor.ui.layouts import confirm_action
 

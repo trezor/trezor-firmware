@@ -1,8 +1,7 @@
 from trezor import wire
 from trezor.crypto import hashlib
 from trezor.crypto.curve import ed25519
-from trezor.messages import TezosBallotType, TezosContractType
-from trezor.messages import TezosSignedTx
+from trezor.messages import TezosBallotType, TezosContractType, TezosSignedTx
 
 from apps.common import paths
 from apps.common.keychain import with_slip44_keychain

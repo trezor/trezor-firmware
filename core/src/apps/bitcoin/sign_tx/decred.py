@@ -2,9 +2,7 @@ from micropython import const
 
 from trezor import wire
 from trezor.crypto.hashlib import blake256
-from trezor.messages import DecredStakingSpendType
-from trezor.messages import InputScriptType
-from trezor.messages import PrevOutput
+from trezor.messages import DecredStakingSpendType, InputScriptType, PrevOutput
 from trezor.utils import HashWriter, ensure
 
 from apps.common.writers import write_bitcoin_varint

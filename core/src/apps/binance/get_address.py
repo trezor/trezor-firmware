@@ -1,5 +1,4 @@
-from trezor.messages import BinanceAddress
-from trezor.messages import BinanceGetAddress
+from trezor.messages import BinanceAddress, BinanceGetAddress
 from trezor.ui.layouts import show_address
 
 from apps.common import paths

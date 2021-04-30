@@ -2,12 +2,14 @@ import gc
 
 import storage.cache
 from trezor import log
-from trezor.messages import MessageType
-from trezor.messages import MoneroLiveRefreshFinalAck
-from trezor.messages import MoneroLiveRefreshStartAck
-from trezor.messages import MoneroLiveRefreshStartRequest
-from trezor.messages import MoneroLiveRefreshStepAck
-from trezor.messages import MoneroLiveRefreshStepRequest
+from trezor.messages import (
+    MessageType,
+    MoneroLiveRefreshFinalAck,
+    MoneroLiveRefreshStartAck,
+    MoneroLiveRefreshStartRequest,
+    MoneroLiveRefreshStepAck,
+    MoneroLiveRefreshStepRequest,
+)
 
 from apps.common import paths
 from apps.common.keychain import auto_keychain

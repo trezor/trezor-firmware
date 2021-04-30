@@ -1,8 +1,5 @@
 from trezor.crypto.hashlib import sha256
-from trezor.messages import PrevTx
-from trezor.messages import SignTx
-from trezor.messages import TxInput
-from trezor.messages import TxOutput
+from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
 from trezor.utils import HashWriter
 
 from apps.common import coininfo

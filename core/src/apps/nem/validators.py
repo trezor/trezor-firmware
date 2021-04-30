@@ -1,12 +1,13 @@
 from trezor.crypto import nem
-from trezor.messages import NEMModificationType, NEMSupplyChangeType
 from trezor.messages import (
     NEMAggregateModification,
     NEMImportanceTransfer,
+    NEMModificationType,
     NEMMosaicCreation,
     NEMMosaicSupplyChange,
     NEMProvisionNamespace,
     NEMSignTx,
+    NEMSupplyChangeType,
     NEMTransactionCommon,
     NEMTransfer,
 )

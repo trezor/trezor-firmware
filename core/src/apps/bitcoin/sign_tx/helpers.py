@@ -1,8 +1,4 @@
 from trezor import utils, wire
-from trezor.messages import InputScriptType, OutputScriptType
-from trezor.messages import PrevInput
-from trezor.messages import PrevOutput
-from trezor.messages import PrevTx
 from trezor.enums.RequestType import (
     TXEXTRADATA,
     TXFINISHED,
@@ -12,16 +8,23 @@ from trezor.enums.RequestType import (
     TXORIGOUTPUT,
     TXOUTPUT,
 )
-from trezor.messages import SignTx
-from trezor.messages import TxAckInput
-from trezor.messages import TxAckOutput
-from trezor.messages import TxAckPrevExtraData
-from trezor.messages import TxAckPrevInput
-from trezor.messages import TxAckPrevMeta
-from trezor.messages import TxAckPrevOutput
-from trezor.messages import TxInput
-from trezor.messages import TxOutput
-from trezor.messages import TxRequest
+from trezor.messages import (
+    InputScriptType,
+    OutputScriptType,
+    PrevInput,
+    PrevOutput,
+    PrevTx,
+    SignTx,
+    TxAckInput,
+    TxAckOutput,
+    TxAckPrevExtraData,
+    TxAckPrevInput,
+    TxAckPrevMeta,
+    TxAckPrevOutput,
+    TxInput,
+    TxOutput,
+    TxRequest,
+)
 
 from apps.common import paths
 from apps.common.coininfo import CoinInfo

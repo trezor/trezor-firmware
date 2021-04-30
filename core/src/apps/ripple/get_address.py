@@ -1,5 +1,4 @@
-from trezor.messages import RippleAddress
-from trezor.messages import RippleGetAddress
+from trezor.messages import RippleAddress, RippleGetAddress
 from trezor.ui.layouts import show_address
 
 from apps.common import paths

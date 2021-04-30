@@ -2,11 +2,13 @@ from micropython import const
 
 from trezor.crypto import bech32
 from trezor.crypto.scripts import sha256_ripemd160_digest
-from trezor.messages import BinanceCancelMsg
-from trezor.messages import BinanceInputOutput
-from trezor.messages import BinanceOrderMsg
-from trezor.messages import BinanceSignTx
-from trezor.messages import BinanceTransferMsg
+from trezor.messages import (
+    BinanceCancelMsg,
+    BinanceInputOutput,
+    BinanceOrderMsg,
+    BinanceSignTx,
+    BinanceTransferMsg,
+)
 
 ENVELOPE_BLUEPRINT = '{{"account_number":"{account_number}","chain_id":"{chain_id}","data":null,"memo":"{memo}","msgs":[{msgs}],"sequence":"{sequence}","source":"{source}"}}'
 MSG_TRANSFER_BLUEPRINT = '{{"inputs":[{inputs}],"outputs":[{outputs}]}}'

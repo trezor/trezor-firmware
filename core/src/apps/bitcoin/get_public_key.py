@@ -1,7 +1,5 @@
 from trezor import wire
-from trezor.messages import InputScriptType
-from trezor.messages import HDNodeType
-from trezor.messages import PublicKey
+from trezor.messages import HDNodeType, InputScriptType, PublicKey
 from trezor.ui.layouts import show_xpub
 
 from apps.common import coins, paths

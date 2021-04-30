@@ -1,10 +1,7 @@
 from trezor import wire
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha256
-from trezor.messages import EosSignedTx
-from trezor.messages import EosSignTx
-from trezor.messages import EosTxActionAck
-from trezor.messages import EosTxActionRequest
+from trezor.messages import EosSignedTx, EosSignTx, EosTxActionAck, EosTxActionRequest
 from trezor.utils import HashWriter
 
 from apps.common import paths

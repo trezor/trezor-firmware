@@ -1,5 +1,6 @@
-from trezor.enums import MessageType
 from trezorutils import protobuf_type_for_name
+
+from trezor.enums import MessageType
 
 if __debug__:
     from trezor import log

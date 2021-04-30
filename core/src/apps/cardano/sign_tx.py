@@ -1,11 +1,14 @@
 from trezor import log, wire
 from trezor.crypto import hashlib
 from trezor.crypto.curve import ed25519
-from trezor.messages import CardanoAddressType, CardanoCertificateType
-from trezor.messages import CardanoAddressParametersType
-from trezor.messages import CardanoSignedTx
-from trezor.messages import CardanoSignedTxChunk
-from trezor.messages import CardanoSignedTxChunkAck
+from trezor.messages import (
+    CardanoAddressParametersType,
+    CardanoAddressType,
+    CardanoCertificateType,
+    CardanoSignedTx,
+    CardanoSignedTxChunk,
+    CardanoSignedTxChunkAck,
+)
 
 from apps.common import cbor, safety_checks
 from apps.common.paths import validate_path

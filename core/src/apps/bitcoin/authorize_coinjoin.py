@@ -1,8 +1,7 @@
 from micropython import const
 
 from trezor import ui
-from trezor.messages import AuthorizeCoinJoin
-from trezor.messages import Success
+from trezor.messages import AuthorizeCoinJoin, Success
 from trezor.strings import format_amount
 from trezor.ui.layouts import confirm_action, confirm_coinjoin
 

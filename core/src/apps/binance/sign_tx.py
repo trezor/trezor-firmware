@@ -1,12 +1,14 @@
 from trezor import wire
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha256
-from trezor.messages import MessageType
-from trezor.messages import BinanceCancelMsg
-from trezor.messages import BinanceOrderMsg
-from trezor.messages import BinanceSignedTx
-from trezor.messages import BinanceTransferMsg
-from trezor.messages import BinanceTxRequest
+from trezor.messages import (
+    BinanceCancelMsg,
+    BinanceOrderMsg,
+    BinanceSignedTx,
+    BinanceTransferMsg,
+    BinanceTxRequest,
+    MessageType,
+)
 
 from apps.common import paths
 from apps.common.keychain import Keychain, auto_keychain

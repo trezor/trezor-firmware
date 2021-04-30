@@ -2,10 +2,13 @@ from micropython import const
 
 from trezor import wire
 from trezor.crypto.hashlib import sha256
-from trezor.messages import InputScriptType, OutputScriptType
-from trezor.messages import TxRequest
-from trezor.messages import TxRequestDetailsType
-from trezor.messages import TxRequestSerializedType
+from trezor.messages import (
+    InputScriptType,
+    OutputScriptType,
+    TxRequest,
+    TxRequestDetailsType,
+    TxRequestSerializedType,
+)
 from trezor.utils import HashWriter, ensure
 
 from apps.common.writers import write_bitcoin_varint

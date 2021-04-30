@@ -1,7 +1,6 @@
 import storage
 from trezor import ui
-from trezor.messages import ButtonRequestType
-from trezor.messages import Success
+from trezor.messages import ButtonRequestType, Success
 from trezor.ui.layouts import confirm_action
 
 from .apply_settings import reload_settings_from_storage
