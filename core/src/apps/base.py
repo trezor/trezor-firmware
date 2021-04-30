@@ -131,7 +131,6 @@ async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:
     if msg.button_protection:
         from trezor.ui.layouts import confirm_action
         from trezor.enums.ButtonRequestType import ProtectCall
-        from trezor.ui.text import Text
 
         await confirm_action(ctx, "ping", "Confirm", "ping", br_code=ProtectCall)
     return Success(message=msg.message)

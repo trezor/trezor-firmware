@@ -1,7 +1,5 @@
 from trezor import log, wire, workflow
-from trezor.messages import ButtonRequestType
-from trezor.messages.ButtonAck import ButtonAck
-from trezor.messages.ButtonRequest import ButtonRequest
+from trezor.messages import ButtonRequestType, ButtonAck, ButtonRequest
 
 if False:
     from typing import Any, Awaitable

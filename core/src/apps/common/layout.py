@@ -4,10 +4,10 @@ from trezor import ui
 from trezor.messages import ButtonRequestType
 from trezor.ui.components.tt.button import ButtonDefault
 from trezor.ui.components.tt.text import Text
+from trezor.ui.components.tt.text import TEXT_MAX_LINES, Span, Text
 from trezor.ui.container import Container
 from trezor.ui.qr import Qr
-from trezor.ui.scroll import Paginated
-from trezor.ui.text import TEXT_MAX_LINES, Span, Text, calculate_text_pages
+from trezor.ui.components.tt.scroll import Paginated
 from trezor.utils import chunks
 
 from apps.common import HARDENED
@@ -93,57 +93,3 @@ async def show_success(
         ctx, text, ButtonRequestType.Success, confirm=button, cancel=None
     )
 
-
-def paginate_text(
-    text: str,
-    header: str,
-    font: int = ui.NORMAL,
-    header_icon: str = ui.ICON_DEFAULT,
-    icon_color: int = ui.ORANGE_ICON,
-    break_words: bool = False,
-) -> Union[Text, Paginated]:
-    items = [font, text]
-
-    # Try to fit the text into one page, with full width.
-    page_breaks = calculate_text_pages(
-        items=items,
-        break_words=break_words,
-        new_lines=False,
-    )
-    if len(page_breaks) == 1:
-        # Text fits, return just one text component.
-        text = Text(
-            header,
-            header_icon=header_icon,
-            icon_color=icon_color,
-            break_words=break_words,
-            new_lines=False,
-            render_page_overflow=False,
-        )
-        text.content = items
-        return text
-    else:
-        # Text doesn't fit, we need to paginate it. We also need to leave space for
-        # the pagination dots, so let's break it again with shorter `line_width`.
-        page_breaks = calculate_text_pages(
-            items=items,
-            break_words=break_words,
-            new_lines=False,
-            line_width=204,
-        )
-        pages: List[ui.Component] = []
-        for item_offset, char_offset in page_breaks:
-            page = Text(
-                header,
-                header_icon=header_icon,
-                icon_color=icon_color,
-                break_words=break_words,
-                new_lines=False,
-                line_width=204,
-                content_offset=item_offset,
-                char_offset=char_offset,
-                render_page_overflow=False,
-            )
-            page.content = items
-            pages.append(page)
-        return Paginated(pages)
