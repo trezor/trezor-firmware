@@ -394,15 +394,33 @@ env.Replace(
     MAKEVERSIONHDR='$PYTHON vendor/micropython/py/makeversionhdr.py',
     MAKEMODULEDEFS='$PYTHON vendor/micropython/py/makemoduledefs.py',
     MPY_TOOL='$PYTHON vendor/micropython/tools/mpy-tool.py',
-    MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross -O' + PYOPT
+    MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross -O' + PYOPT,
+    PB2PY='$PYTHON ../common/protob/pb2py',
 )
 
 #
 # Qstrings
 #
 
+PROTO_SOURCES_DIR = '../../../common/protob/'
+if EVERYTHING:
+    PROTO_SOURCES = Glob(PROTO_SOURCES_DIR + '*.proto',
+        exclude=[PROTO_SOURCES_DIR + 'messages-bootloader.proto']
+    )
+else:
+    PROTO_SOURCES = [
+        PROTO_SOURCES_DIR + f'messages{suffix}.proto'
+        for suffix in ('', '-bitcoin', '-common', '-crypto', '-management')
+    ]
+qstr_protobuf = env.Command(
+    target=[
+        'genhdr/qstrdefs.protobuf.h',
+    ],
+    source=PROTO_SOURCES,
+    action='$PB2PY -o ${TARGET.dir} $SOURCES --qstr-file ${TARGET.file}',
+)
+
 qstr_micropython = 'vendor/micropython/py/qstrdefs.h'
-qstr_protobuf = 'src/trezor/enums/pbuf_qstr.h'
 
 qstr_collected = env.CollectQstr(
     target='genhdr/qstrdefs.collected.h', source=SOURCE_QSTR)
@@ -576,9 +594,21 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
 # Rust library
 #
 
+protobuf_blobs = env.Command(
+    target=[
+        'rust/proto_enums.data',
+        'rust/proto_msgs.data',
+        'rust/proto_names.data',
+        'rust/proto_wire.data',
+    ],
+    source=PROTO_SOURCES,
+    action='$PB2PY -o ${TARGET.dir} $SOURCES --blob --qstr-defs build/unix/genhdr/qstrdefs.generated.h',
+)
+env.Depends(protobuf_blobs, qstr_generated)
+
 RUST_PROFILE = 'release'
 RUST_LIB = 'trezor_lib'
-RUST_LIBDIR = f'build/rust/{RUST_PROFILE}'
+RUST_LIBDIR = f'build/unix/rust/{RUST_PROFILE}'
 RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
 
 def cargo_build():
@@ -587,14 +617,14 @@ def cargo_build():
         profile = '--release'
     else:
         profile = ''
-    return f'cd embed/rust; cargo build {profile}'
+    return f'cd embed/rust; cargo build {profile} --target-dir=../../build/unix/rust'
 
 rust = env.Command(
     target=RUST_LIBPATH,
     source='',
     action=cargo_build(), )
+env.Depends(rust, protobuf_blobs)
 
-env.Depends(rust, qstr_generated)
 
 env.Append(LINKFLAGS=f'-L{RUST_LIBDIR}')
 env.Append(LINKFLAGS=f'-l{RUST_LIB}')
