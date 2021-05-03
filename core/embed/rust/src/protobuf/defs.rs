@@ -103,10 +103,10 @@ pub struct EnumDef {
     pub values: &'static [u16],
 }
 
-static ENUM_DEFS: &[u8] = include_bytes!("../../../../src/trezor/messages/proto_enums.data");
-static MSG_DEFS: &[u8] = include_bytes!("../../../../src/trezor/messages/proto_msgs.data");
-static NAME_DEFS: &[u8] = include_bytes!("../../../../src/trezor/messages/proto_names.data");
-static WIRE_DEFS: &[u8] = include_bytes!("../../../../src/trezor/messages/proto_wire.data");
+static ENUM_DEFS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/../../../../proto_enums.data"));
+static MSG_DEFS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/../../../..//proto_msgs.data"));
+static NAME_DEFS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/../../../..//proto_names.data"));
+static WIRE_DEFS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/../../../..//proto_wire.data"));
 
 fn find_msg_offset_by_name(msg_name: u16) -> Option<u16> {
     #[repr(C, packed)]

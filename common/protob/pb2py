@@ -816,18 +816,19 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory() as tmpdir:
         descriptor.write_classes(tmpdir, not args.no_init_py, args.include_deprecated)
 
-        for filename in os.listdir(args.out_dir):
-            pathname = os.path.join(args.out_dir, filename)
-            try:
-                with open(pathname, "r") as f:
-                    if next(f, None) == AUTO_HEADER:
-                        os.unlink(pathname)
-            except Exception:
-                pass
+        if not args.blob and not args.qstr_file:
+            for filename in os.listdir(args.out_dir):
+                pathname = os.path.join(args.out_dir, filename)
+                try:
+                    with open(pathname, "r") as f:
+                        if next(f, None) == AUTO_HEADER:
+                            os.unlink(pathname)
+                except Exception:
+                    pass
 
-        for filename in os.listdir(tmpdir):
-            src = os.path.join(tmpdir, filename)
-            shutil.copy(src, args.out_dir)
+            for filename in os.listdir(tmpdir):
+                src = os.path.join(tmpdir, filename)
+                shutil.copy(src, args.out_dir)
 
         if args.qstr_file:
             qstr_path = os.path.join(args.out_dir, args.qstr_file)
