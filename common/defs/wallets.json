@@ -113,7 +113,7 @@
         "Electrum-XPM": "https://github.com/justjamesdev/electrum-xpm"
     },
     "bitcoin:XRC": {
-        "Electrum-XRC": "https://electrum.bitcoinrh.org"
+        "Electrum-XRC": "https://electrum.xrhodium.org"
     },
     "bitcoin:XSN": {
         "Stakenet": "https://xsnexplorer.io/trezor"
