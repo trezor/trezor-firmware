@@ -791,7 +791,7 @@
             "wallet": [
                 {
                     "name": "Electrum-XRC",
-                    "url": "https://electrum.bitcoinrh.org"
+                    "url": "https://electrum.xrhodium.org"
                 }
             ]
         },
