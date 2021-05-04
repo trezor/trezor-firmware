@@ -6,6 +6,9 @@ ignore: |
   common/defs/ethereum/tokens/
 
 rules:
+  # fix for truthy warning on github action files
+  truthy:
+    allowed-values: ['true', 'false', 'on']
   # skip line length
   line-length: disable
   # skip "---" at the beginning
