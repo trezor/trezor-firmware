@@ -61,7 +61,7 @@ hardware core btconly device test:
     - nix-shell --run "cd ../.. && poetry install"
     - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin"
     - nix-shell --run "poetry run pytest -m 'not sd_card' $TESTS_SKIP ../../tests/device_tests"
-  timeout: 3h
+  timeout: 4h
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     expire_in: 2 days
@@ -88,7 +88,7 @@ hardware core monero test:
     - nix-shell --run "cd ../.. && poetry install"
     - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin"
     - nix-shell --arg fullDeps true --run "cd ../../core/tests && ./run_tests_device_emu_monero.sh $TESTOPTS"
-  timeout: 35m
+  timeout: 1h
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     expire_in: 2 days
