@@ -779,10 +779,14 @@ void layoutAddress(const char *address, const char *desc, bool qrcode,
       oledDrawString(0, 0 * 9, desc, FONT_STANDARD);
     }
     if (addrlen > 10) {  // don't split short addresses
-      uint32_t rowlen = (addrlen - 1) / (addrlen <= 42   ? 2
-                                         : addrlen <= 63 ? 3
-                                                         : 4) +
-                        1;
+      uint32_t rowcount = 4;
+      if (addrlen <= 42) {
+        rowcount = 2;
+      } else if (addrlen <= 63) {
+        rowcount = 3;
+      }
+
+      uint32_t rowlen = (addrlen - 1) / rowcount + 1;
       const char **str =
           split_message((const uint8_t *)address, addrlen, rowlen);
       for (int i = 0; i < 4; i++) {

@@ -3,9 +3,9 @@ from trezor.utils import BufferReader
 from apps.common.readers import read_bitcoin_varint
 
 
-def read_bytes_prefixed(r: BufferReader) -> bytes:
+def read_memoryview_prefixed(r: BufferReader) -> memoryview:
     n = read_bitcoin_varint(r)
-    return r.read(n)
+    return r.read_memoryview(n)
 
 
 def read_op_push(r: BufferReader) -> int:
