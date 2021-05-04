@@ -52,6 +52,8 @@
 #include "py/stackctrl.h"
 
 #include "common.h"
+#include "memzero.h"
+#include "storage.h"
 
 // Command line options, with their defaults
 STATIC bool compile_only = false;
@@ -504,6 +506,10 @@ MP_NOINLINE int main_(int argc, char **argv) {
   mp_stack_set_limit(600000 * (BYTES_PER_WORD / 4));
 
   pre_process_options(argc, argv);
+
+  // Init storage
+  storage_init(HW_ENTROPY_DATA, HW_ENTROPY_LEN);
+  memzero(HW_ENTROPY_DATA, sizeof(HW_ENTROPY_DATA));
 
 #if MICROPY_ENABLE_GC
   char *heap = malloc(heap_size);

@@ -39,6 +39,7 @@
 #include "common.h"
 #include "display.h"
 #include "flash.h"
+#include "memzero.h"
 #include "mpu.h"
 #ifdef RDI
 #include "rdi.h"
@@ -48,6 +49,7 @@
 #endif
 #include "rng.h"
 #include "sdcard.h"
+#include "storage.h"
 #include "supervise.h"
 #include "touch.h"
 
@@ -79,6 +81,10 @@ int main(void) {
 
   // Init peripherals
   pendsv_init();
+
+  // Init storage
+  storage_init(HW_ENTROPY_DATA, HW_ENTROPY_LEN);
+  memzero(HW_ENTROPY_DATA, sizeof(HW_ENTROPY_DATA));
 
 #if TREZOR_MODEL == 1
   display_init();

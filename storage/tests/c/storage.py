@@ -16,7 +16,7 @@ class Storage:
         )
 
     def init(self, salt: bytes) -> None:
-        self.lib.storage_init(0, salt, c.c_uint16(len(salt)))
+        self.lib.storage_init(salt, c.c_uint16(len(salt)))
 
     def wipe(self) -> None:
         self.lib.storage_wipe()

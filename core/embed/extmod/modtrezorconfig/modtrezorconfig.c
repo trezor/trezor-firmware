@@ -27,7 +27,6 @@
 
 #include "embed/extmod/trezorobj.h"
 
-#include "common.h"
 #include "memzero.h"
 #include "storage.h"
 
@@ -46,25 +45,25 @@ STATIC secbool wrapped_ui_wait_callback(uint32_t wait, uint32_t progress,
   return secfalse;
 }
 
-/// def init(
+/// def set_ui_wait_callback(
 ///    ui_wait_callback: Callable[[int, int, str], bool] | None = None
 /// ) -> None:
 ///     """
-///     Initializes the storage.  Must be called before any other method is
-///     called from this module!
+///     Sets the UI callback which shows progress during PIN verification.
 ///     """
-STATIC mp_obj_t mod_trezorconfig_init(size_t n_args, const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorconfig_set_ui_wait_callback(size_t n_args,
+                                                      const mp_obj_t *args) {
   if (n_args > 0) {
     MP_STATE_VM(trezorconfig_ui_wait_callback) = args[0];
-    storage_init(wrapped_ui_wait_callback, HW_ENTROPY_DATA, HW_ENTROPY_LEN);
+    storage_set_ui_wait_callback(wrapped_ui_wait_callback);
   } else {
-    storage_init(NULL, HW_ENTROPY_DATA, HW_ENTROPY_LEN);
+    storage_set_ui_wait_callback(NULL);
   }
-  memzero(HW_ENTROPY_DATA, sizeof(HW_ENTROPY_DATA));
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_init_obj, 0, 1,
-                                           mod_trezorconfig_init);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
+    mod_trezorconfig_set_ui_wait_callback_obj, 0, 1,
+    mod_trezorconfig_set_ui_wait_callback);
 
 /// def unlock(pin: str, ext_salt: bytes | None) -> bool:
 ///     """
@@ -411,7 +410,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorconfig_wipe_obj,
 
 STATIC const mp_rom_map_elem_t mp_module_trezorconfig_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorconfig)},
-    {MP_ROM_QSTR(MP_QSTR_init), MP_ROM_PTR(&mod_trezorconfig_init_obj)},
+    {MP_ROM_QSTR(MP_QSTR_set_ui_wait_callback),
+     MP_ROM_PTR(&mod_trezorconfig_set_ui_wait_callback_obj)},
     {MP_ROM_QSTR(MP_QSTR_check_pin),
      MP_ROM_PTR(&mod_trezorconfig_check_pin_obj)},
     {MP_ROM_QSTR(MP_QSTR_unlock), MP_ROM_PTR(&mod_trezorconfig_unlock_obj)},

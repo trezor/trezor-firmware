@@ -2,12 +2,11 @@ from typing import *
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
-def init(
+def set_ui_wait_callback(
    ui_wait_callback: Callable[[int, int, str], bool] | None = None
 ) -> None:
     """
-    Initializes the storage.  Must be called before any other method is
-    called from this module!
+    Sets the UI callback which shows progress during PIN verification.
     """
 
 

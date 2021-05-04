@@ -673,13 +673,11 @@ static void init_wiped_storage(void) {
   ensure(set_pin(PIN_EMPTY, PIN_EMPTY_LEN, NULL), "init_pin failed");
 }
 
-void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
-                  const uint16_t salt_len) {
+void storage_init(const uint8_t *salt, const uint16_t salt_len) {
   initialized = secfalse;
   unlocked = secfalse;
   norcow_init(&norcow_active_version);
   initialized = sectrue;
-  ui_callback = callback;
 
   sha256_Raw(salt, salt_len, hardware_salt);
 
@@ -698,6 +696,10 @@ void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
     storage_lock();
   }
   memzero(cached_keys, sizeof(cached_keys));
+}
+
+void storage_set_ui_wait_callback(PIN_UI_WAIT_CALLBACK callback) {
+  ui_callback = callback;
 }
 
 static secbool pin_fails_reset(void) {

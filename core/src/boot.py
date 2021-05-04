@@ -32,6 +32,6 @@ async def bootscreen() -> None:
 
 ui.display.backlight(ui.BACKLIGHT_NONE)
 ui.backlight_fade(ui.BACKLIGHT_NORMAL)
-config.init(show_pin_timeout)
+config.set_ui_wait_callback(show_pin_timeout)
 loop.schedule(bootscreen())
 loop.run()

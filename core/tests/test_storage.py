@@ -6,7 +6,6 @@ from storage import device
 class TestConfig(unittest.TestCase):
 
     def test_counter(self):
-        config.init()
         config.wipe()
         for i in range(150):
             self.assertEqual(device.next_u2f_counter(), i)

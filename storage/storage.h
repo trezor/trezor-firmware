@@ -44,8 +44,8 @@ extern const uint8_t *PIN_EMPTY;
 typedef secbool (*PIN_UI_WAIT_CALLBACK)(uint32_t wait, uint32_t progress,
                                         const char *message);
 
-void storage_init(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
-                  const uint16_t salt_len);
+void storage_init(const uint8_t *salt, const uint16_t salt_len);
+void storage_set_ui_wait_callback(PIN_UI_WAIT_CALLBACK callback);
 void storage_wipe(void);
 secbool storage_is_unlocked(void);
 void storage_lock(void);

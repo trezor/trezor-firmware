@@ -313,7 +313,7 @@ static secbool config_upgrade_v10(void) {
     }
   }
 
-  storage_init(NULL, HW_ENTROPY_DATA, HW_ENTROPY_LEN);
+  storage_init(HW_ENTROPY_DATA, HW_ENTROPY_LEN);
   storage_unlock(PIN_EMPTY, PIN_EMPTY_LEN, NULL);
   if (config.has_pin) {
     storage_change_pin(PIN_EMPTY, PIN_EMPTY_LEN, (const uint8_t *)config.pin,
@@ -380,8 +380,9 @@ void config_init(void) {
 
   config_upgrade_v10();
 
-  storage_init(&protectPinUiCallback, HW_ENTROPY_DATA, HW_ENTROPY_LEN);
+  storage_init(HW_ENTROPY_DATA, HW_ENTROPY_LEN);
   memzero(HW_ENTROPY_DATA, sizeof(HW_ENTROPY_DATA));
+  storage_set_ui_wait_callback(&protectPinUiCallback);
 
   // imported xprv is not supported anymore so we set initialized to false
   // if no mnemonic is present

@@ -18,13 +18,7 @@ def random_entry():
 
 class TestConfig(unittest.TestCase):
 
-    def test_init(self):
-        config.init()
-        config.init()
-        config.init()
-
     def test_wipe(self):
-        config.init()
         config.wipe()
         self.assertEqual(config.unlock('', None), True)
         config.set(1, 1, b'hello')
@@ -41,21 +35,19 @@ class TestConfig(unittest.TestCase):
 
     def test_lock(self):
         for _ in range(128):
-            config.init()
             config.wipe()
             self.assertEqual(config.unlock('', None), True)
             appid, key = random_entry()
             value = random.bytes(16)
             config.set(appid, key, value)
-            config.init()
+            config.lock()
             self.assertEqual(config.get(appid, key), None)
             with self.assertRaises(RuntimeError):
                 config.set(appid, key, bytes())
-        config.init()
+        config.lock()
         config.wipe()
 
     def test_public(self):
-        config.init()
         config.wipe()
         self.assertEqual(config.unlock('', None), True)
 
@@ -72,7 +64,7 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(v1, value32)
         self.assertEqual(v2, value16)
 
-        config.init()
+        config.lock()
 
         v1 = config.get(appid, key)
         v2 = config.get(appid, key, True)
@@ -81,7 +73,6 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(v2, value16)
 
     def test_change_pin(self):
-        config.init()
         config.wipe()
         self.assertTrue(config.unlock('', None))
         config.set(1, 1, b'value')
@@ -111,7 +102,7 @@ class TestConfig(unittest.TestCase):
 
             # Old PIN cannot be used to unlock storage.
             if old_pin != new_pin:
-                config.init()
+                config.lock()
                 self.assertFalse(config.unlock(old_pin, None))
                 self.assertEqual(config.get(1, 1), None)
                 with self.assertRaises(RuntimeError):
@@ -122,7 +113,7 @@ class TestConfig(unittest.TestCase):
             self.assertEqual(config.get(1, 1), b'value')
 
             # Lock the storage.
-            config.init()
+            config.lock()
             old_pin = new_pin
 
     def test_change_sd_salt(self):
@@ -130,7 +121,6 @@ class TestConfig(unittest.TestCase):
         salt2 = b"0123456789ABCDEF0123456789ABCDEF"
 
         # Enable PIN and SD salt.
-        config.init()
         config.wipe()
         self.assertTrue(config.unlock('', None))
         config.set(1, 1, b'value')
@@ -139,7 +129,7 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(config.get(1, 1), b'value')
 
         # Disable PIN and change SD salt.
-        config.init()
+        config.lock()
         self.assertFalse(config.unlock('000', None))
         self.assertIsNone(config.get(1, 1))
         self.assertTrue(config.unlock('000', salt1))
@@ -147,7 +137,7 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(config.get(1, 1), b'value')
 
         # Disable SD salt.
-        config.init()
+        config.lock()
         self.assertFalse(config.unlock('000', salt2))
         self.assertIsNone(config.get(1, 1))
         self.assertTrue(config.unlock('', salt2))
@@ -155,12 +145,11 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(config.get(1, 1), b'value')
 
         # Check that PIN and SD salt are disabled.
-        config.init()
+        config.lock()
         self.assertTrue(config.unlock('', None))
         self.assertEqual(config.get(1, 1), b'value')
 
     def test_set_get(self):
-        config.init()
         config.wipe()
         self.assertEqual(config.unlock('', None), True)
         for _ in range(32):
@@ -190,7 +179,6 @@ class TestConfig(unittest.TestCase):
             config.get(192, 1)
 
     def test_counter(self):
-        config.init()
         config.wipe()
 
         # Test writable_locked when storage is locked.
@@ -233,7 +221,6 @@ class TestConfig(unittest.TestCase):
             config.next_counter(1, 2, True)
 
     def test_compact(self):
-        config.init()
         config.wipe()
         self.assertEqual(config.unlock('', None), True)
         appid, key = 1, 1
@@ -244,7 +231,6 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(value, value2)
 
     def test_get_default(self):
-        config.init()
         config.wipe()
         self.assertEqual(config.unlock('', None), True)
         for _ in range(128):
