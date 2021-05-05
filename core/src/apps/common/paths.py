@@ -108,12 +108,14 @@ class PathSchema:
 
     @staticmethod
     def _copy_container(container: Container[int]) -> Container[int]:
+        # On hardware, hardened indices do not fit into smallint.
+        # The n+0 operation ensures that a new instance of a longint is created.
         if isinstance(container, Interval):
-            return Interval(container.min, container.max)
+            return Interval(container.min + 0, container.max + 0)
         if isinstance(container, set):
-            return set(container)
+            return set(i + 0 for i in container)
         if isinstance(container, tuple):
-            return container[:]
+            return tuple(i + 0 for i in container)
         raise RuntimeError("Unsupported container for copy")
 
     def __init__(
