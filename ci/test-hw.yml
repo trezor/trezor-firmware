@@ -22,7 +22,7 @@ hardware core regular device test:
     - core fw regular debug build
   variables:
     PYTEST_TIMEOUT: "1200"
-    TESTS_SKIP: "-k 'not 15_of_15 and not signtx_bgold and not send_bch_multisig_change'"
+    TESTS_SKIP: "-k 'not 15_of_15'"
   script:
     - cd ci/hardware_tests
     - set -a
