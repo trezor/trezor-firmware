@@ -295,7 +295,7 @@ static void send_msg_features(uint8_t iface_num,
     MSG_SEND_ASSIGN_VALUE(fw_patch, ((hdr->version >> 16) & 0xFF));
     MSG_SEND_ASSIGN_STRING_LEN(fw_vendor, vhdr->vstr, vhdr->vstr_len);
     uint8_t hash[32];
-    vendor_keys_hash(vhdr, hash);
+    vendor_header_hash(vhdr, hash);
     MSG_SEND_ASSIGN_BYTES(fw_vendor_keys, hash, 32);
   } else {
     MSG_SEND_ASSIGN_VALUE(firmware_present, false);
@@ -446,8 +446,8 @@ static void detect_installation(vendor_header *current_vhdr,
     return;
   }
   uint8_t hash1[32], hash2[32];
-  vendor_keys_hash(new_vhdr, hash1);
-  vendor_keys_hash(current_vhdr, hash2);
+  vendor_header_hash(new_vhdr, hash1);
+  vendor_header_hash(current_vhdr, hash2);
   if (0 != memcmp(hash1, hash2, 32)) {
     return;
   }
