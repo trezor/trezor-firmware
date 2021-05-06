@@ -336,6 +336,47 @@ def verify_message(client, coin, address, signature, message):
     return btc.verify_message(client, coin, address, signature, message)
 
 
+@cli.command()
+@click.option("-c", "--coin")
+@click.option("-n", "--address", required=True, help="BIP-32 path")
+@click.argument("txid", type=str)
+@click.argument("index", type=int)
+@click.argument("amount", type=int)
+@click.argument("height", type=int)
+@click.argument("is_coinbase", type=bool)
+@click.argument("proofid", type=str)
+@with_client
+def sign_stake(
+    client,
+    coin,
+    address,
+    txid,
+    index,
+    amount,
+    height,
+    is_coinbase,
+    proofid,
+):
+    """Sign an avalanche stake."""
+
+    msg = btc.sign_stake(
+        client,
+        coin,
+        tools.parse_path(address),
+        bytes.fromhex(txid),
+        index,
+        amount,
+        height,
+        is_coinbase,
+        bytes.fromhex(proofid),
+    )
+
+    return {
+        "pubkey": msg.pubkey.hex(),
+        "signature": base64.b64encode(msg.signature).decode(),
+    }
+
+
 #
 # deprecated interactive signing
 # ALL BELOW is legacy code and will be dropped

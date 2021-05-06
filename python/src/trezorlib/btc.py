@@ -342,3 +342,34 @@ def authorize_coinjoin(
             script_type=script_type,
         )
     )
+
+
+@expect(messages.StakeSignature)
+def sign_stake(
+    client,
+    coin_name,
+    address_n,
+    txid,
+    index,
+    amount,
+    height,
+    is_coinbase,
+    proofid,
+):
+    """Sign an avalanche stake.
+
+    Returns the signature and its public key.
+    """
+
+    return client.call(
+        messages.SignStake(
+            coin_name=coin_name,
+            address_n=address_n,
+            txid=txid,
+            index=index,
+            amount=amount,
+            height=height,
+            is_coinbase=is_coinbase,
+            proofid=proofid,
+        )
+    )

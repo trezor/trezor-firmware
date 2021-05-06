@@ -20,6 +20,7 @@ if False:
     from trezor.messages.TxOutput import TxOutput
     from trezor.messages.PrevInput import PrevInput
     from trezor.messages.PrevOutput import PrevOutput
+    from trezor.messages.SignStake import SignStake
     from trezor.utils import HashWriter
 
     from apps.common.writers import Writer
@@ -29,6 +30,7 @@ write_uint32 = write_uint32_le
 write_uint64 = write_uint64_le
 
 TX_HASH_SIZE = const(32)
+PROOFID_SIZE = const(32)
 
 
 def write_bytes_prefixed(w: Writer, b: bytes) -> None:
@@ -76,6 +78,16 @@ def write_op_push(w: Writer, n: int) -> None:
         w.append((n >> 8) & 0xFF)
         w.append((n >> 16) & 0xFF)
         w.append((n >> 24) & 0xFF)
+
+
+def write_stake(w: Writer, s: SignStake, pubkey: bytes) -> None:
+    write_bytes_reversed(w, s.proofid, PROOFID_SIZE)
+    write_bytes_reversed(w, s.txid, TX_HASH_SIZE)
+    write_uint32(w, s.index)
+    write_uint64(w, s.amount)
+    height_coinbase = s.height << 1 | int(s.is_coinbase)
+    write_uint32(w, height_coinbase)
+    write_bytes_prefixed(w, pubkey)
 
 
 def get_tx_hash(w: HashWriter, double: bool = False, reverse: bool = False) -> bytes:

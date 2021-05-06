@@ -111,6 +111,10 @@ enum MessageType {
     MessageType_OwnershipProof = 50 [(wire_out) = true];
     MessageType_AuthorizeCoinJoin = 51 [(wire_in) = true];
 
+    // Bitcoin ABC
+    MessageType_SignStake = 90 [(wire_in) = true];
+    MessageType_StakeSignature = 91 [(wire_out) = true];
+
     // Crypto
     MessageType_CipherKeyValue = 23 [(wire_in) = true];
     MessageType_CipheredKeyValue = 48 [(wire_out) = true];

@@ -559,3 +559,29 @@ message AuthorizeCoinJoin {
     optional InputScriptType script_type = 6 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
     optional AmountUnit amount_unit = 11 [default=BITCOIN];             // show amounts in
 }
+
+/**
+ * Request: Ask device to sign a stake
+ * @start
+ * @next StakeSignature
+ * @next Failure
+ */
+message SignStake {
+    repeated uint32 address_n = 1;                         // BIP-32 path to derive the key from master node
+    required bytes txid = 2;                               // the utxo txid
+    required uint32 index = 3;                             // the utxo index
+    required uint64 amount = 4;                            // the utxo amount
+    required uint32 height = 5;                            // block height of the utxo
+    required bool is_coinbase = 6;                         // whether the utxo is a coinbase reward
+    required bytes proofid = 7;                             // the proof identifier to sign the stake against
+    optional string coin_name = 8 [default='Bitcoin ABC']; // coin to use
+}
+
+/**
+ * Response: Stake Signature
+ * @end
+ */
+message StakeSignature {
+    required bytes pubkey = 1;    // public key to verify the signature
+    required bytes signature = 2; // signature of the stake
+}

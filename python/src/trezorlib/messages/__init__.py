@@ -240,8 +240,10 @@ from .SelfTest import SelfTest
 from .SetU2FCounter import SetU2FCounter
 from .SignIdentity import SignIdentity
 from .SignMessage import SignMessage
+from .SignStake import SignStake
 from .SignTx import SignTx
 from .SignedIdentity import SignedIdentity
+from .StakeSignature import StakeSignature
 from .StellarAccountMergeOp import StellarAccountMergeOp
 from .StellarAddress import StellarAddress
 from .StellarAllowTrustOp import StellarAllowTrustOp
