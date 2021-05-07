@@ -14,7 +14,8 @@ CPPPATH_MOD += [
     'vendor/trezor-crypto',
 ]
 SOURCE_MOD += [
-    'vendor/trezor-crypto/hmac_drbg.c',
+    'vendor/trezor-crypto/chacha_drbg.c',
+    'vendor/trezor-crypto/chacha20poly1305/chacha_merged.c',
     'vendor/trezor-crypto/memzero.c',
     'vendor/trezor-crypto/rand.c',
     'vendor/trezor-crypto/sha2.c',
@@ -70,6 +71,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/dma.c',
     'embed/trezorhal/flash.c',
     'embed/trezorhal/mini_printf.c',
+    'embed/trezorhal/random_delays.c',
     'embed/trezorhal/rng.c',
     'embed/trezorhal/sbu.c',
     'embed/trezorhal/sdcard.c',

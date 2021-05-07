@@ -24,15 +24,12 @@
 #include "common.h"
 #include "display.h"
 #include "flash.h"
-#include "hmac_drbg.h"
 #include "rand.h"
 
 #include "stm32f4xx_ll_utils.h"
 
 // from util.s
 extern void shutdown(void);
-
-static HMAC_DRBG_CTX drbg_ctx;
 
 #define COLOR_FATAL_ERROR RGB16(0x7F, 0x00, 0x00)
 
@@ -122,27 +119,6 @@ void __assert_func(const char *file, int line, const char *func,
 
 void hal_delay(uint32_t ms) { HAL_Delay(ms); }
 
-/*
- * Generates a delay of random length. Use this to protect sensitive code
- * against fault injection.
- */
-void wait_random(void) {
-  int wait = drbg_random32() & 0xff;
-  volatile int i = 0;
-  volatile int j = wait;
-  while (i < wait) {
-    if (i + j != wait) {
-      shutdown();
-    }
-    ++i;
-    --j;
-  }
-  // Double-check loop completion.
-  if (i != wait || j != 0) {
-    shutdown();
-  }
-}
-
 // reference RM0090 section 35.12.1 Figure 413
 #define USB_OTG_HS_DATA_FIFO_RAM (USB_OTG_HS_PERIPH_BASE + 0x20000U)
 #define USB_OTG_HS_DATA_FIFO_SIZE (4096U)
@@ -190,24 +166,4 @@ void collect_hw_entropy(void) {
   ensure(flash_otp_read(FLASH_OTP_BLOCK_RANDOMNESS, 0, HW_ENTROPY_DATA + 12,
                         FLASH_OTP_BLOCK_SIZE),
          NULL);
-}
-
-void drbg_init(void) {
-  uint8_t entropy[48];
-  random_buffer(entropy, sizeof(entropy));
-  hmac_drbg_init(&drbg_ctx, entropy, sizeof(entropy), NULL, 0);
-}
-
-void drbg_reseed(const uint8_t *entropy, size_t len) {
-  hmac_drbg_reseed(&drbg_ctx, entropy, len, NULL, 0);
-}
-
-void drbg_generate(uint8_t *buf, size_t len) {
-  hmac_drbg_generate(&drbg_ctx, buf, len);
-}
-
-uint32_t drbg_random32(void) {
-  uint32_t value;
-  drbg_generate((uint8_t *)&value, sizeof(value));
-  return value;
 }

@@ -6,6 +6,7 @@ BASE = ../../../
 
 SRC  = storage/tests/c/flash.c
 SRC += storage/tests/c/common.c
+SRC += storage/tests/c/random_delays.c
 SRC += storage/storage.c
 SRC += storage/norcow.c
 SRC += crypto/pbkdf2.c

@@ -38,7 +38,7 @@ LGPL License Terms @ref lgpl_license
 
 #include <string.h>
 #include <libopencm3/usb/usbd.h>
-#include "common.h"
+#include "random_delays.h"
 #include "usb_private.h"
 #include "util.h"
 

@@ -18,7 +18,7 @@
 
 #include "winusb.h"
 #include <libopencm3/usb/usbd.h>
-#include "common.h"
+#include "random_delays.h"
 #include "util.h"
 
 static int usb_descriptor_type(uint16_t wValue) { return wValue >> 8; }

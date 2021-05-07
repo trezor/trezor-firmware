@@ -26,6 +26,7 @@
 #include "image.h"
 #include "mini_printf.h"
 #include "mpu.h"
+#include "random_delays.h"
 #include "rng.h"
 #include "secbool.h"
 #include "touch.h"
@@ -214,7 +215,7 @@ static void check_bootloader_version(void) {
 #endif
 
 int main(void) {
-  drbg_init();
+  random_delays_init();
   touch_init();
   touch_power_on();
 

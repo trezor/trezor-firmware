@@ -41,8 +41,6 @@ error_shutdown(const char *line1, const char *line2, const char *line3,
 
 void hal_delay(uint32_t ms);
 
-void wait_random(void);
-
 void drbg_init(void);
 void drbg_reseed(const uint8_t *entropy, size_t len);
 void drbg_generate(uint8_t *buf, size_t len);

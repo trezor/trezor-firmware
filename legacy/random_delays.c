@@ -17,41 +17,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "random_delays.h"
 
 #include "common.h"
+#include "rng.h"
+#include "util.h"
 
-void __shutdown(void) {
-  printf("SHUTDOWN\n");
-  exit(3);
-}
-
-void __fatal_error(const char *expr, const char *msg, const char *file,
-                   int line, const char *func) {
-  printf("\nFATAL ERROR:\n");
-  if (expr) {
-    printf("expr: %s\n", expr);
+void wait_random(void) {
+  int wait = random32() & 0xff;
+  volatile int i = 0;
+  volatile int j = wait;
+  while (i < wait) {
+    if (i + j != wait) {
+      shutdown();
+    }
+    ++i;
+    --j;
   }
-  if (msg) {
-    printf("msg : %s\n", msg);
+  // Double-check loop completion.
+  if (i != wait || j != 0) {
+    shutdown();
   }
-  if (file) {
-    printf("file: %s:%d\n", file, line);
-  }
-  if (func) {
-    printf("func: %s\n", func);
-  }
-  __shutdown();
-}
-
-void error_shutdown(const char *line1, const char *line2, const char *line3,
-                    const char *line4) {
-  // For testing do not treat pin_fails_check_max as a fatal error.
-  (void)line1;
-  (void)line2;
-  (void)line3;
-  (void)line4;
-  return;
 }

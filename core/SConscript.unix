@@ -305,6 +305,7 @@ SOURCE_UNIX = [
     'embed/unix/flash.c',
     'embed/unix/main.c',
     'embed/unix/profile.c',
+    'embed/unix/random_delays.c',
     'embed/unix/rng.c',
     'embed/unix/sbu.c',
     'embed/unix/sdcard.c',

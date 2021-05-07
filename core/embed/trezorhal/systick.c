@@ -49,7 +49,7 @@
 #include "systick.h"
 
 #ifdef RDI
-  #include "rdi.h"
+  #include "random_delays.h"
 #endif
 
 #include "systemview.h"
