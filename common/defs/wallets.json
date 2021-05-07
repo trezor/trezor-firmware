@@ -121,10 +121,6 @@
     "bitcoin:XVG": {
       "Electrum": "https://github.com/vergecurrency/electrum/releases"
     },
-    "bitcoin:FIRO": {
-        "Electrum-FIRO": "https://github.com/firoorg/electrum-firo",
-        "Znode Tool": "https://github.com/firoorg/znode-tool-evo"
-    },
     "bitcoin:ZEC": {
         "Exodus": "https://www.exodus.io"
     },
