@@ -17,7 +17,7 @@
 import logging
 import sys
 import time
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterable, Optional, Set, Tuple
 
 from ..log import DUMP_PACKETS
 from . import DEV_TREZOR1, UDEV_RULES_STR, TransportException
@@ -130,11 +130,11 @@ class HidTransport(ProtocolBasedTransport):
         return "%s:%s" % (self.PATH_PREFIX, self.device["path"].decode())
 
     @classmethod
-    def enumerate(cls, debug: bool = False) -> Iterable["HidTransport"]:
+    def enumerate(cls, debug: bool = False, usb_ids: Optional[Set[Tuple[int, int]]] = {DEV_TREZOR1}) -> Iterable["HidTransport"]:
         devices = []
         for dev in hid.enumerate(0, 0):
             usb_id = (dev["vendor_id"], dev["product_id"])
-            if usb_id != DEV_TREZOR1:
+            if usb_ids is not None and usb_id not in usb_ids:
                 continue
             if debug:
                 if not is_debuglink(dev):
