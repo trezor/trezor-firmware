@@ -94,6 +94,9 @@ class TrezorClient:
         self.ui = ui
         self.session_counter = 0
         self.session_id = session_id
+        self.msg_type_to_class_override = {}
+        self.vendors = VENDORS
+        self.minimum_versions = MINIMUM_FIRMWARE_VERSION
         self.init_device(session_id=session_id)
 
     def open(self):
@@ -139,7 +142,7 @@ class TrezorClient:
                 msg_type, len(msg_bytes), msg_bytes.hex()
             ),
         )
-        msg = mapping.decode(msg_type, msg_bytes)
+        msg = mapping.decode(msg_type, msg_bytes, self.msg_type_to_class_override)
         LOG.debug(
             "received message: {}".format(msg.__class__.__name__),
             extra={"protobuf": msg},
@@ -232,7 +235,7 @@ class TrezorClient:
 
     def _refresh_features(self, features: messages.Features) -> None:
         """Update internal fields based on passed-in Features message."""
-        if features.vendor not in VENDORS:
+        if features.vendor not in self.vendors:
             raise RuntimeError("Unsupported device")
 
         self.features = features
@@ -320,7 +323,7 @@ class TrezorClient:
         if self.features.bootloader_mode:
             return False
         model = self.features.model or "1"
-        required_version = MINIMUM_FIRMWARE_VERSION[model]
+        required_version = self.minimum_versions[model]
         return self.version < required_version
 
     def check_firmware_version(self, warn_only=False):
