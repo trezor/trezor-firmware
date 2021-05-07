@@ -7,10 +7,10 @@ let
     url = "https://github.com/mozilla/nixpkgs-mozilla/archive/8c007b60731c07dd7a052cce508de3bb1ae849b4.tar.gz";
     sha256 = "1zybp62zz0h077zm2zmqs2wcg3whg6jqaah9hcl1gv4x8af4zhs6";
   });
-  # the last successful build of nixpkgs-unstable as of 2021-03-25
+  # the last successful build of nixpkgs-unstable as of 2021-05-07
   nixpkgs = import (builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/c0e881852006b132236cbf0301bd1939bb50867e.tar.gz";
-    sha256 = "0fy7z7yxk5n7yslsvx5cyc6h21qwi4bhxf3awhirniszlbvaazy2";
+    url = "https://github.com/NixOS/nixpkgs/archive/e62feb3bf4a603e26755238303bda0c24651e155.tar.gz";
+    sha256 = "1gkamm044jrksjrisr7h9grg8p2y6rk01x6391asrx988hm2rh9s";
   }) { overlays = [ mozillaOverlay ]; };
   moneroTests = nixpkgs.fetchurl {
     url = "https://github.com/ph4r05/monero/releases/download/v0.17.1.9-tests/trezor_tests";
