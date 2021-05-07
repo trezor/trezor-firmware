@@ -75,9 +75,9 @@ static int known_bootloader(int r, const uint8_t *hash) {
   // note to those verifying these values: bootloader versions above this
   // comment are aligned/padded to 32KiB with trailing 0xFF bytes and versions
   // below are padded with 0x00.
-  //                                       for more info, refer to "make -C
-  //                                       bootloader align" and
-  //                                       "firmware/bl_data.py".
+  //
+  // for more info, refer to "make -C bootloader align" and
+  // "firmware/bl_data.py".
   if (0 ==
       memcmp(hash,
              "\x8c\xe8\xd7\x9e\xdf\x43\x0c\x03\x42\x64\x68\x6c\xa9\xb1\xd7\x8d"

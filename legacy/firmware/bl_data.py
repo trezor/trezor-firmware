@@ -9,11 +9,27 @@ if len(data) > 32768:
 
 data += b"\x00" * (32768 - len(data))
 
-h = sha256(sha256(data).digest()).digest()
+bh = sha256(sha256(data).digest()).digest()
 
-bl_hash = ", ".join("0x%02x" % x for x in bytearray(h))
+bl_hash = ", ".join("0x%02x" % x for x in bytearray(bh))
 bl_data = ", ".join("0x%02x" % x for x in bytearray(data))
 
 with open("bl_data.h", "wt") as f:
     f.write("static const uint8_t bl_hash[32] = {%s};\n" % bl_hash)
     f.write("static const uint8_t bl_data[32768] = {%s};\n" % bl_data)
+
+# make sure the last item listed in known_bootloader function
+# is our bootloader
+with open("bl_check.c", "rt") as f:
+    hashes = []
+    for l in f.readlines():
+        if not len(l) >= 78 or not l.startswith('             "\\x'):
+            continue
+        l = l[14:78]
+        h = ""
+        for i in range(0, len(l), 4):
+            h += l[i + 2 : i + 4]
+        hashes.append(h)
+    check = hashes[-2] + hashes[-1]
+    if check != bh.hex():
+        raise Exception("bootloader hash not listed in bl_check.c")
