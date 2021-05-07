@@ -23,6 +23,7 @@
 
 #include <check.h>
 #include <inttypes.h>
+#include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -120,6 +121,17 @@ void nem_private_key(const char *reversed_hex, ed25519_secret_key private_key) {
     private_key[j] = reversed_key[sizeof(ed25519_secret_key) - j - 1];
   }
 }
+
+#define INT_BIT (CHAR_BIT * sizeof(int))
+#define ck_assert_uint64_eq(val1, val2) do{\
+    uint64_t v1 = (val1), v2 = (val2);     \
+    int lo1 = v1 & UINT_MAX;               \
+    int lo2 = v2 & UINT_MAX;               \
+    int hi1 = (v1 >> INT_BIT) & UINT_MAX;  \
+    int hi2 = (v2 >> INT_BIT) & UINT_MAX;  \
+    ck_assert_int_eq(lo1, lo2);            \
+    ck_assert_int_eq(hi1, hi2);            \
+}while(0)
 
 START_TEST(test_bignum_read_be) {
   bignum256 a;
@@ -372,35 +384,35 @@ START_TEST(test_bignum_write_uint64) {
       fromhex(
           "000000000000000000000000000000000000000000000000000000003fffffff"),
       &a);
-  ck_assert_int_eq(bn_write_uint64(&a), 0x3fffffff);
+  ck_assert_uint64_eq(bn_write_uint64(&a), 0x3fffffff);
 
   // bit 31 set
   bn_read_be(
       fromhex(
           "0000000000000000000000000000000000000000000000000000000040000000"),
       &a);
-  ck_assert_int_eq(bn_write_uint64(&a), 0x40000000);
+  ck_assert_uint64_eq(bn_write_uint64(&a), 0x40000000);
 
   // bit 33 set
   bn_read_be(
       fromhex(
           "0000000000000000000000000000000000000000000000000000000100000000"),
       &a);
-  ck_assert_int_eq(bn_write_uint64(&a), 0x100000000LL);
+  ck_assert_uint64_eq(bn_write_uint64(&a), 0x100000000LL);
 
   // bit 61 set
   bn_read_be(
       fromhex(
           "0000000000000000000000000000000000000000000000002000000000000000"),
       &a);
-  ck_assert_int_eq(bn_write_uint64(&a), 0x2000000000000000LL);
+  ck_assert_uint64_eq(bn_write_uint64(&a), 0x2000000000000000LL);
 
   // all 64 bits set
   bn_read_be(
       fromhex(
           "000000000000000000000000000000000000000000000000ffffffffffffffff"),
       &a);
-  ck_assert_int_eq(bn_write_uint64(&a), 0xffffffffffffffffLL);
+  ck_assert_uint64_eq(bn_write_uint64(&a), 0xffffffffffffffffLL);
 }
 END_TEST
 
