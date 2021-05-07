@@ -63,13 +63,13 @@ STATIC const mp_obj_type_t mod_trezorcrypto_monero_hasher_type;
 #define MP_OBJ_C_SCALAR(o) (MP_OBJ_PTR_MPC_SCALAR(o)->p)
 #define MP_OBJ_SCALAR(o) (MP_OBJ_PTR_MP_SCALAR(o)->p)
 
-STATIC inline void assert_ge25519(const mp_obj_t o) {
+static inline void assert_ge25519(const mp_obj_t o) {
   if (!MP_OBJ_IS_GE25519(o)) {
     mp_raise_ValueError("ge25519 expected");
   }
 }
 
-STATIC inline void assert_scalar(const mp_obj_t o) {
+static inline void assert_scalar(const mp_obj_t o) {
   if (!MP_OBJ_IS_SCALAR(o)) {
     mp_raise_ValueError("scalar expected");
   }
