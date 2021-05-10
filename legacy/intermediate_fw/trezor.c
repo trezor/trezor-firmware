@@ -112,7 +112,7 @@ int main(void) {
 
   mpu_config_off();  // needed for flash writable, RAM RWX
   timer_init();
-  check_bootloader(false);
+  check_and_replace_bootloader(false);
 
   layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Erasing old data", NULL,
                NULL, "DO NOT UNPLUG", "YOUR TREZOR!", NULL);

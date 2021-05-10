@@ -140,9 +140,9 @@ static int known_bootloader(int r, const uint8_t *hash) {
  * If bootloader is older and known, replace with newer bootloader.
  * If bootloader is unknown, halt with error message.
  *
- * @param shutdown_on_success: if true, shuts down device instead of return
+ * @param shutdown_on_replace: if true, shuts down device instead of return
  */
-void check_bootloader(bool shutdown_on_success) {
+void check_and_replace_bootloader(bool shutdown_on_replace) {
 #if MEMORY_PROTECT
   uint8_t hash[32] = {0};
   int r = memory_bootloader_hash(hash);
@@ -190,7 +190,7 @@ void check_bootloader(bool shutdown_on_success) {
     // check whether the write was OK
     r = memory_bootloader_hash(hash);
     if (r == 32 && 0 == memcmp(hash, bl_hash, 32)) {
-      if (shutdown_on_success) {
+      if (shutdown_on_replace) {
         // OK -> show info and halt
         layoutDialog(&bmp_icon_info, NULL, NULL, NULL, _("Update finished"),
                      _("successfully."), NULL, _("Please reconnect"),
@@ -207,5 +207,5 @@ void check_bootloader(bool shutdown_on_success) {
   shutdown();
 #endif
   // prevent compiler warning when MEMORY_PROTECT==0
-  (void)shutdown_on_success;
+  (void)shutdown_on_replace;
 }

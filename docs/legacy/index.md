@@ -117,7 +117,7 @@ This table shows the result for bootloader 1.8.0+ and 1.9.1+:
 | ------------------------- | ----------------------- | ------------------------------ | ------------------------------------------------------------------------------------------ |
 |  1                        |  1                      | yes                            | works, official configuration                                                              |
 |  1                        |  1                      | no                             | hardfault in header.S when setting VTOR and stack                                          |
-|  0                        |  1                      | no                             | works, but don't forget to comment out `check_bootloader`, otherwise it'll get overwritten |
+|  0                        |  1                      | no                             | works, but don't forget to comment out `check_and_replace_bootloader`, otherwise it'll get overwritten |
 |  0                        |  0                      | no                             | hard fault because header.S doesn't set VTOR and stack right                               |
 |  1                        |  0                      | no                             | works                                                                                      |
 
