@@ -137,7 +137,7 @@ START_TEST(test_bignum_read_be) {
                   0x14087f0a, 0x15498fe5, 0x10b161bb, 0xc55ece}};
 
   for (int i = 0; i < 9; i++) {
-    ck_assert_int_eq(a.val[i], b.val[i]);
+    ck_assert_uint_eq(a.val[i], b.val[i]);
   }
 }
 END_TEST
@@ -346,21 +346,21 @@ START_TEST(test_bignum_write_uint32) {
       fromhex(
           "000000000000000000000000000000000000000000000000000000001fffffff"),
       &a);
-  ck_assert_int_eq(bn_write_uint32(&a), 0x1fffffff);
+  ck_assert_uint_eq(bn_write_uint32(&a), 0x1fffffff);
 
   // lowest 30 bits set
   bn_read_be(
       fromhex(
           "000000000000000000000000000000000000000000000000000000003fffffff"),
       &a);
-  ck_assert_int_eq(bn_write_uint32(&a), 0x3fffffff);
+  ck_assert_uint_eq(bn_write_uint32(&a), 0x3fffffff);
 
   // bit 31 set
   bn_read_be(
       fromhex(
           "0000000000000000000000000000000000000000000000000000000040000000"),
       &a);
-  ck_assert_int_eq(bn_write_uint32(&a), 0x40000000);
+  ck_assert_uint_eq(bn_write_uint32(&a), 0x40000000);
 }
 END_TEST
 
@@ -372,35 +372,35 @@ START_TEST(test_bignum_write_uint64) {
       fromhex(
           "000000000000000000000000000000000000000000000000000000003fffffff"),
       &a);
-  ck_assert_int_eq(bn_write_uint64(&a), 0x3fffffff);
+  ck_assert_uint_eq(bn_write_uint64(&a), 0x3fffffff);
 
   // bit 31 set
   bn_read_be(
       fromhex(
           "0000000000000000000000000000000000000000000000000000000040000000"),
       &a);
-  ck_assert_int_eq(bn_write_uint64(&a), 0x40000000);
+  ck_assert_uint_eq(bn_write_uint64(&a), 0x40000000);
 
   // bit 33 set
   bn_read_be(
       fromhex(
           "0000000000000000000000000000000000000000000000000000000100000000"),
       &a);
-  ck_assert_int_eq(bn_write_uint64(&a), 0x100000000LL);
+  ck_assert_uint_eq(bn_write_uint64(&a), 0x100000000LL);
 
   // bit 61 set
   bn_read_be(
       fromhex(
           "0000000000000000000000000000000000000000000000002000000000000000"),
       &a);
-  ck_assert_int_eq(bn_write_uint64(&a), 0x2000000000000000LL);
+  ck_assert_uint_eq(bn_write_uint64(&a), 0x2000000000000000LL);
 
   // all 64 bits set
   bn_read_be(
       fromhex(
           "000000000000000000000000000000000000000000000000ffffffffffffffff"),
       &a);
-  ck_assert_int_eq(bn_write_uint64(&a), 0xffffffffffffffffLL);
+  ck_assert_uint_eq(bn_write_uint64(&a), 0xffffffffffffffffLL);
 }
 END_TEST
 
@@ -554,19 +554,19 @@ END_TEST
 
 START_TEST(test_bignum_format_uint64) {
   char buf[128], str[128];
-  int r;
+  size_t r;
   // test for (10^i) and (10^i) - 1
   uint64_t m = 1;
   for (int i = 0; i <= 19; i++, m *= 10) {
     sprintf(str, "%" PRIu64, m);
     r = bn_format_uint64(m, NULL, NULL, 0, 0, false, buf, sizeof(buf));
-    ck_assert_int_eq(r, strlen(str));
+    ck_assert_uint_eq(r, strlen(str));
     ck_assert_str_eq(buf, str);
 
     uint64_t n = m - 1;
     sprintf(str, "%" PRIu64, n);
     r = bn_format_uint64(n, NULL, NULL, 0, 0, false, buf, sizeof(buf));
-    ck_assert_int_eq(r, strlen(str));
+    ck_assert_uint_eq(r, strlen(str));
     ck_assert_str_eq(buf, str);
   }
 }
@@ -575,14 +575,14 @@ END_TEST
 START_TEST(test_bignum_format) {
   bignum256 a;
   char buf[128];
-  int r;
+  size_t r;
 
   bn_read_be(
       fromhex(
           "0000000000000000000000000000000000000000000000000000000000000000"),
       &a);
   r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 1);
+  ck_assert_uint_eq(r, 1);
   ck_assert_str_eq(buf, "0");
 
   bn_read_be(
@@ -590,7 +590,7 @@ START_TEST(test_bignum_format) {
           "0000000000000000000000000000000000000000000000000000000000000000"),
       &a);
   r = bn_format(&a, NULL, NULL, 20, 0, true, buf, sizeof(buf));
-  ck_assert_int_eq(r, 22);
+  ck_assert_uint_eq(r, 22);
   ck_assert_str_eq(buf, "0.00000000000000000000");
 
   bn_read_be(
@@ -598,7 +598,7 @@ START_TEST(test_bignum_format) {
           "0000000000000000000000000000000000000000000000000000000000000000"),
       &a);
   r = bn_format(&a, NULL, NULL, 0, 5, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 1);
+  ck_assert_uint_eq(r, 1);
   ck_assert_str_eq(buf, "0");
 
   bn_read_be(
@@ -606,7 +606,7 @@ START_TEST(test_bignum_format) {
           "0000000000000000000000000000000000000000000000000000000000000000"),
       &a);
   r = bn_format(&a, NULL, NULL, 0, -5, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 1);
+  ck_assert_uint_eq(r, 1);
   ck_assert_str_eq(buf, "0");
 
   bn_read_be(
@@ -614,7 +614,7 @@ START_TEST(test_bignum_format) {
           "0000000000000000000000000000000000000000000000000000000000000000"),
       &a);
   r = bn_format(&a, "", "", 0, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 1);
+  ck_assert_uint_eq(r, 1);
   ck_assert_str_eq(buf, "0");
 
   bn_read_be(
@@ -622,7 +622,7 @@ START_TEST(test_bignum_format) {
           "0000000000000000000000000000000000000000000000000000000000000000"),
       &a);
   r = bn_format(&a, NULL, "SFFX", 0, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 1 + 4);
+  ck_assert_uint_eq(r, 1 + 4);
   ck_assert_str_eq(buf, "0SFFX");
 
   bn_read_be(
@@ -630,7 +630,7 @@ START_TEST(test_bignum_format) {
           "0000000000000000000000000000000000000000000000000000000000000000"),
       &a);
   r = bn_format(&a, "PRFX", NULL, 0, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 4 + 1);
+  ck_assert_uint_eq(r, 4 + 1);
   ck_assert_str_eq(buf, "PRFX0");
 
   bn_read_be(
@@ -638,7 +638,7 @@ START_TEST(test_bignum_format) {
           "0000000000000000000000000000000000000000000000000000000000000000"),
       &a);
   r = bn_format(&a, "PRFX", "SFFX", 0, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 4 + 1 + 4);
+  ck_assert_uint_eq(r, 4 + 1 + 4);
   ck_assert_str_eq(buf, "PRFX0SFFX");
 
   bn_read_be(
@@ -646,7 +646,7 @@ START_TEST(test_bignum_format) {
           "0000000000000000000000000000000000000000000000000000000000000000"),
       &a);
   r = bn_format(&a, NULL, NULL, 18, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 1);
+  ck_assert_uint_eq(r, 1);
   ck_assert_str_eq(buf, "0");
 
   bn_read_be(
@@ -654,7 +654,7 @@ START_TEST(test_bignum_format) {
           "0000000000000000000000000000000000000000000000000000000000000001"),
       &a);
   r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 1);
+  ck_assert_uint_eq(r, 1);
   ck_assert_str_eq(buf, "1");
 
   bn_read_be(
@@ -662,7 +662,7 @@ START_TEST(test_bignum_format) {
           "0000000000000000000000000000000000000000000000000000000000000001"),
       &a);
   r = bn_format(&a, NULL, NULL, 6, 6, true, buf, sizeof(buf));
-  ck_assert_int_eq(r, 8);
+  ck_assert_uint_eq(r, 8);
   ck_assert_str_eq(buf, "1.000000");
 
   bn_read_be(
@@ -670,7 +670,7 @@ START_TEST(test_bignum_format) {
           "0000000000000000000000000000000000000000000000000000000000000002"),
       &a);
   r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 1);
+  ck_assert_uint_eq(r, 1);
   ck_assert_str_eq(buf, "2");
 
   bn_read_be(
@@ -678,7 +678,7 @@ START_TEST(test_bignum_format) {
           "0000000000000000000000000000000000000000000000000000000000000005"),
       &a);
   r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 1);
+  ck_assert_uint_eq(r, 1);
   ck_assert_str_eq(buf, "5");
 
   bn_read_be(
@@ -686,7 +686,7 @@ START_TEST(test_bignum_format) {
           "0000000000000000000000000000000000000000000000000000000000000009"),
       &a);
   r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 1);
+  ck_assert_uint_eq(r, 1);
   ck_assert_str_eq(buf, "9");
 
   bn_read_be(
@@ -694,7 +694,7 @@ START_TEST(test_bignum_format) {
           "000000000000000000000000000000000000000000000000000000000000000a"),
       &a);
   r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 2);
+  ck_assert_uint_eq(r, 2);
   ck_assert_str_eq(buf, "10");
 
   bn_read_be(
@@ -702,7 +702,7 @@ START_TEST(test_bignum_format) {
           "0000000000000000000000000000000000000000000000000000000000000014"),
       &a);
   r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 2);
+  ck_assert_uint_eq(r, 2);
   ck_assert_str_eq(buf, "20");
 
   bn_read_be(
@@ -710,7 +710,7 @@ START_TEST(test_bignum_format) {
           "0000000000000000000000000000000000000000000000000000000000000032"),
       &a);
   r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 2);
+  ck_assert_uint_eq(r, 2);
   ck_assert_str_eq(buf, "50");
 
   bn_read_be(
@@ -718,7 +718,7 @@ START_TEST(test_bignum_format) {
           "0000000000000000000000000000000000000000000000000000000000000063"),
       &a);
   r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 2);
+  ck_assert_uint_eq(r, 2);
   ck_assert_str_eq(buf, "99");
 
   bn_read_be(
@@ -726,7 +726,7 @@ START_TEST(test_bignum_format) {
           "0000000000000000000000000000000000000000000000000000000000000064"),
       &a);
   r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 3);
+  ck_assert_uint_eq(r, 3);
   ck_assert_str_eq(buf, "100");
 
   bn_read_be(
@@ -734,7 +734,7 @@ START_TEST(test_bignum_format) {
           "00000000000000000000000000000000000000000000000000000000000000c8"),
       &a);
   r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 3);
+  ck_assert_uint_eq(r, 3);
   ck_assert_str_eq(buf, "200");
 
   bn_read_be(
@@ -742,7 +742,7 @@ START_TEST(test_bignum_format) {
           "00000000000000000000000000000000000000000000000000000000000001f4"),
       &a);
   r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 3);
+  ck_assert_uint_eq(r, 3);
   ck_assert_str_eq(buf, "500");
 
   bn_read_be(
@@ -750,7 +750,7 @@ START_TEST(test_bignum_format) {
           "00000000000000000000000000000000000000000000000000000000000003e7"),
       &a);
   r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 3);
+  ck_assert_uint_eq(r, 3);
   ck_assert_str_eq(buf, "999");
 
   bn_read_be(
@@ -758,7 +758,7 @@ START_TEST(test_bignum_format) {
           "00000000000000000000000000000000000000000000000000000000000003e8"),
       &a);
   r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 4);
+  ck_assert_uint_eq(r, 4);
   ck_assert_str_eq(buf, "1000");
 
   bn_read_be(
@@ -766,7 +766,7 @@ START_TEST(test_bignum_format) {
           "0000000000000000000000000000000000000000000000000000000000989680"),
       &a);
   r = bn_format(&a, NULL, NULL, 7, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 1);
+  ck_assert_uint_eq(r, 1);
   ck_assert_str_eq(buf, "1");
 
   bn_read_be(
@@ -774,7 +774,7 @@ START_TEST(test_bignum_format) {
           "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
       &a);
   r = bn_format(&a, NULL, NULL, 0, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 78);
+  ck_assert_uint_eq(r, 78);
   ck_assert_str_eq(buf,
                    "11579208923731619542357098500868790785326998466564056403945"
                    "7584007913129639935");
@@ -784,7 +784,7 @@ START_TEST(test_bignum_format) {
           "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
       &a);
   r = bn_format(&a, NULL, NULL, 1, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 79);
+  ck_assert_uint_eq(r, 79);
   ck_assert_str_eq(buf,
                    "11579208923731619542357098500868790785326998466564056403945"
                    "758400791312963993.5");
@@ -794,7 +794,7 @@ START_TEST(test_bignum_format) {
           "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
       &a);
   r = bn_format(&a, NULL, NULL, 2, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 79);
+  ck_assert_uint_eq(r, 79);
   ck_assert_str_eq(buf,
                    "11579208923731619542357098500868790785326998466564056403945"
                    "75840079131296399.35");
@@ -804,7 +804,7 @@ START_TEST(test_bignum_format) {
           "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
       &a);
   r = bn_format(&a, NULL, NULL, 8, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 79);
+  ck_assert_uint_eq(r, 79);
   ck_assert_str_eq(buf,
                    "11579208923731619542357098500868790785326998466564056403945"
                    "75840079131.29639935");
@@ -814,7 +814,7 @@ START_TEST(test_bignum_format) {
           "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffe3bbb00"),
       &a);
   r = bn_format(&a, NULL, NULL, 8, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 70);
+  ck_assert_uint_eq(r, 70);
   ck_assert_str_eq(buf,
                    "11579208923731619542357098500868790785326998466564056403945"
                    "75840079131");
@@ -824,7 +824,7 @@ START_TEST(test_bignum_format) {
           "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
       &a);
   r = bn_format(&a, NULL, NULL, 18, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 79);
+  ck_assert_uint_eq(r, 79);
   ck_assert_str_eq(buf,
                    "11579208923731619542357098500868790785326998466564056403945"
                    "7.584007913129639935");
@@ -834,7 +834,7 @@ START_TEST(test_bignum_format) {
           "fffffffffffffffffffffffffffffffffffffffffffffffff7e52fe5afe40000"),
       &a);
   r = bn_format(&a, NULL, NULL, 18, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 60);
+  ck_assert_uint_eq(r, 60);
   ck_assert_str_eq(
       buf, "115792089237316195423570985008687907853269984665640564039457");
 
@@ -843,7 +843,7 @@ START_TEST(test_bignum_format) {
           "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
       &a);
   r = bn_format(&a, NULL, NULL, 78, 0, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 80);
+  ck_assert_uint_eq(r, 80);
   ck_assert_str_eq(buf,
                    "0."
                    "11579208923731619542357098500868790785326998466564056403945"
@@ -854,7 +854,7 @@ START_TEST(test_bignum_format) {
           "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
       &a);
   r = bn_format(&a, NULL, NULL, 0, 10, false, buf, sizeof(buf));
-  ck_assert_int_eq(r, 88);
+  ck_assert_uint_eq(r, 88);
   ck_assert_str_eq(buf,
                    "11579208923731619542357098500868790785326998466564056403945"
                    "75840079131296399350000000000");
@@ -865,7 +865,7 @@ START_TEST(test_bignum_format) {
       &a);
   r = bn_format(&a, "quite a long prefix", "even longer suffix", 60, 0, false,
                 buf, sizeof(buf));
-  ck_assert_int_eq(r, 116);
+  ck_assert_uint_eq(r, 116);
   ck_assert_str_eq(buf,
                    "quite a long "
                    "prefix115792089237316195."
@@ -879,11 +879,11 @@ START_TEST(test_bignum_format) {
   memset(buf, 'a', sizeof(buf));
   r = bn_format(&a, "prefix", "suffix", 10, 0, false, buf, 31);
   ck_assert_str_eq(buf, "prefix8198552.9216486895suffix");
-  ck_assert_int_eq(r, 30);
+  ck_assert_uint_eq(r, 30);
 
   memset(buf, 'a', sizeof(buf));
   r = bn_format(&a, "prefix", "suffix", 10, 0, false, buf, 30);
-  ck_assert_int_eq(r, 0);
+  ck_assert_uint_eq(r, 0);
   ck_assert_str_eq(buf, "");
 }
 END_TEST
@@ -976,8 +976,8 @@ START_TEST(test_base32_rfc4648) {
     size_t inlen = strlen(in);
     size_t outlen = strlen(out);
 
-    ck_assert_int_eq(outlen, base32_encoded_length(inlen));
-    ck_assert_int_eq(inlen, base32_decoded_length(outlen));
+    ck_assert_uint_eq(outlen, base32_encoded_length(inlen));
+    ck_assert_uint_eq(inlen, base32_decoded_length(outlen));
 
     ck_assert(base32_encode((uint8_t *)in, inlen, buffer, sizeof(buffer),
                             BASE32_ALPHABET_RFC4648) != NULL);
@@ -1186,7 +1186,7 @@ START_TEST(test_bignum_divmod) {
   i = 0;
   while (!bn_is_zero(&a) && i < 44) {
     bn_divmod58(&a, &r);
-    ck_assert_int_eq(r, ar[i]);
+    ck_assert_uint_eq(r, ar[i]);
     i++;
   }
   ck_assert_int_eq(i, 44);
@@ -1203,7 +1203,7 @@ START_TEST(test_bignum_divmod) {
   i = 0;
   while (!bn_is_zero(&b) && i < 26) {
     bn_divmod1000(&b, &r);
-    ck_assert_int_eq(r, br[i]);
+    ck_assert_uint_eq(r, br[i]);
     i++;
   }
   ck_assert_int_eq(i, 26);
@@ -1224,7 +1224,7 @@ START_TEST(test_bip32_vector_1) {
 
   // [Chain m]
   fingerprint = 0;
-  ck_assert_int_eq(fingerprint, 0x00000000);
+  ck_assert_uint_eq(fingerprint, 0x00000000);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -1249,7 +1249,6 @@ START_TEST(test_bip32_vector_1) {
   r = hdnode_deserialize_private(str, VERSION_PRIVATE, SECP256K1_NAME, &node2,
                                  NULL);
   ck_assert_int_eq(r, 0);
-  ck_assert_int_eq(r, 0);
   hdnode_fill_public_key(&node2);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, VERSION_PUBLIC, str, sizeof(str));
@@ -1266,7 +1265,7 @@ START_TEST(test_bip32_vector_1) {
   // [Chain m/0']
   fingerprint = hdnode_fingerprint(&node);
   hdnode_private_ckd_prime(&node, 0);
-  ck_assert_int_eq(fingerprint, 0x3442193e);
+  ck_assert_uint_eq(fingerprint, 0x3442193e);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -1307,7 +1306,7 @@ START_TEST(test_bip32_vector_1) {
   // [Chain m/0'/1]
   fingerprint = hdnode_fingerprint(&node);
   hdnode_private_ckd(&node, 1);
-  ck_assert_int_eq(fingerprint, 0x5c1bd648);
+  ck_assert_uint_eq(fingerprint, 0x5c1bd648);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -1348,7 +1347,7 @@ START_TEST(test_bip32_vector_1) {
   // [Chain m/0'/1/2']
   fingerprint = hdnode_fingerprint(&node);
   hdnode_private_ckd_prime(&node, 2);
-  ck_assert_int_eq(fingerprint, 0xbef5a2f9);
+  ck_assert_uint_eq(fingerprint, 0xbef5a2f9);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -1389,7 +1388,7 @@ START_TEST(test_bip32_vector_1) {
   // [Chain m/0'/1/2'/2]
   fingerprint = hdnode_fingerprint(&node);
   hdnode_private_ckd(&node, 2);
-  ck_assert_int_eq(fingerprint, 0xee7ab90c);
+  ck_assert_uint_eq(fingerprint, 0xee7ab90c);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -1430,7 +1429,7 @@ START_TEST(test_bip32_vector_1) {
   // [Chain m/0'/1/2'/2/1000000000]
   fingerprint = hdnode_fingerprint(&node);
   hdnode_private_ckd(&node, 1000000000);
-  ck_assert_int_eq(fingerprint, 0xd880d7d8);
+  ck_assert_uint_eq(fingerprint, 0xd880d7d8);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -1487,7 +1486,7 @@ START_TEST(test_bip32_vector_2) {
 
   // [Chain m]
   fingerprint = 0;
-  ck_assert_int_eq(fingerprint, 0x00000000);
+  ck_assert_uint_eq(fingerprint, 0x00000000);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -1529,7 +1528,7 @@ START_TEST(test_bip32_vector_2) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_private_ckd(&node, 0);
   ck_assert_int_eq(r, 1);
-  ck_assert_int_eq(fingerprint, 0xbd16bee5);
+  ck_assert_uint_eq(fingerprint, 0xbd16bee5);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -1571,7 +1570,7 @@ START_TEST(test_bip32_vector_2) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_private_ckd_prime(&node, 2147483647);
   ck_assert_int_eq(r, 1);
-  ck_assert_int_eq(fingerprint, 0x5a61ff8e);
+  ck_assert_uint_eq(fingerprint, 0x5a61ff8e);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -1613,7 +1612,7 @@ START_TEST(test_bip32_vector_2) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_private_ckd(&node, 1);
   ck_assert_int_eq(r, 1);
-  ck_assert_int_eq(fingerprint, 0xd8ab4937);
+  ck_assert_uint_eq(fingerprint, 0xd8ab4937);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -1655,7 +1654,7 @@ START_TEST(test_bip32_vector_2) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_private_ckd_prime(&node, 2147483646);
   ck_assert_int_eq(r, 1);
-  ck_assert_int_eq(fingerprint, 0x78412e3a);
+  ck_assert_uint_eq(fingerprint, 0x78412e3a);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -1697,7 +1696,7 @@ START_TEST(test_bip32_vector_2) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_private_ckd(&node, 2);
   ck_assert_int_eq(r, 1);
-  ck_assert_int_eq(fingerprint, 0x31a507b8);
+  ck_assert_uint_eq(fingerprint, 0x31a507b8);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -1747,7 +1746,7 @@ START_TEST(test_bip32_vector_2) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_public_ckd(&node, 0);
   ck_assert_int_eq(r, 1);
-  ck_assert_int_eq(fingerprint, 0xbd16bee5);
+  ck_assert_uint_eq(fingerprint, 0xbd16bee5);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -1784,7 +1783,7 @@ START_TEST(test_bip32_vector_3) {
 
   // [Chain m]
   fingerprint = 0;
-  ck_assert_int_eq(fingerprint, 0x00000000);
+  ck_assert_uint_eq(fingerprint, 0x00000000);
   hdnode_fill_public_key(&node);
   hdnode_serialize_private(&node, fingerprint, VERSION_PRIVATE, str,
                            sizeof(str));
@@ -1858,10 +1857,10 @@ START_TEST(test_bip32_compare) {
     ck_assert_int_eq(r, 1);
     r = hdnode_public_ckd(&node3, i);
     ck_assert_int_eq(r, 1);
-    ck_assert_int_eq(node1.depth, node2.depth);
-    ck_assert_int_eq(node1.depth, node3.depth);
-    ck_assert_int_eq(node1.child_num, node2.child_num);
-    ck_assert_int_eq(node1.child_num, node3.child_num);
+    ck_assert_uint_eq(node1.depth, node2.depth);
+    ck_assert_uint_eq(node1.depth, node3.depth);
+    ck_assert_uint_eq(node1.child_num, node2.child_num);
+    ck_assert_uint_eq(node1.child_num, node3.child_num);
     ck_assert_mem_eq(node1.chain_code, node2.chain_code, 32);
     ck_assert_mem_eq(node1.chain_code, node3.chain_code, 32);
     ck_assert_mem_eq(
@@ -2084,7 +2083,7 @@ START_TEST(test_bip32_nist_vector_1) {
 
   // [Chain m]
   fingerprint = 0;
-  ck_assert_int_eq(fingerprint, 0x00000000);
+  ck_assert_uint_eq(fingerprint, 0x00000000);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2105,7 +2104,7 @@ START_TEST(test_bip32_nist_vector_1) {
   // [Chain m/0']
   fingerprint = hdnode_fingerprint(&node);
   hdnode_private_ckd_prime(&node, 0);
-  ck_assert_int_eq(fingerprint, 0xbe6105b5);
+  ck_assert_uint_eq(fingerprint, 0xbe6105b5);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2126,7 +2125,7 @@ START_TEST(test_bip32_nist_vector_1) {
   // [Chain m/0'/1]
   fingerprint = hdnode_fingerprint(&node);
   hdnode_private_ckd(&node, 1);
-  ck_assert_int_eq(fingerprint, 0x9b02312f);
+  ck_assert_uint_eq(fingerprint, 0x9b02312f);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2147,7 +2146,7 @@ START_TEST(test_bip32_nist_vector_1) {
   // [Chain m/0'/1/2']
   fingerprint = hdnode_fingerprint(&node);
   hdnode_private_ckd_prime(&node, 2);
-  ck_assert_int_eq(fingerprint, 0xb98005c1);
+  ck_assert_uint_eq(fingerprint, 0xb98005c1);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2168,7 +2167,7 @@ START_TEST(test_bip32_nist_vector_1) {
   // [Chain m/0'/1/2'/2]
   fingerprint = hdnode_fingerprint(&node);
   hdnode_private_ckd(&node, 2);
-  ck_assert_int_eq(fingerprint, 0x0e9f3274);
+  ck_assert_uint_eq(fingerprint, 0x0e9f3274);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2189,7 +2188,7 @@ START_TEST(test_bip32_nist_vector_1) {
   // [Chain m/0'/1/2'/2/1000000000]
   fingerprint = hdnode_fingerprint(&node);
   hdnode_private_ckd(&node, 1000000000);
-  ck_assert_int_eq(fingerprint, 0x8b2b5c4b);
+  ck_assert_uint_eq(fingerprint, 0x8b2b5c4b);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2223,7 +2222,7 @@ START_TEST(test_bip32_nist_vector_2) {
 
   // [Chain m]
   fingerprint = 0;
-  ck_assert_int_eq(fingerprint, 0x00000000);
+  ck_assert_uint_eq(fingerprint, 0x00000000);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2245,7 +2244,7 @@ START_TEST(test_bip32_nist_vector_2) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_private_ckd(&node, 0);
   ck_assert_int_eq(r, 1);
-  ck_assert_int_eq(fingerprint, 0x607f628f);
+  ck_assert_uint_eq(fingerprint, 0x607f628f);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2267,7 +2266,7 @@ START_TEST(test_bip32_nist_vector_2) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_private_ckd_prime(&node, 2147483647);
   ck_assert_int_eq(r, 1);
-  ck_assert_int_eq(fingerprint, 0x946d2a54);
+  ck_assert_uint_eq(fingerprint, 0x946d2a54);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2289,7 +2288,7 @@ START_TEST(test_bip32_nist_vector_2) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_private_ckd(&node, 1);
   ck_assert_int_eq(r, 1);
-  ck_assert_int_eq(fingerprint, 0x218182d8);
+  ck_assert_uint_eq(fingerprint, 0x218182d8);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2311,7 +2310,7 @@ START_TEST(test_bip32_nist_vector_2) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_private_ckd_prime(&node, 2147483646);
   ck_assert_int_eq(r, 1);
-  ck_assert_int_eq(fingerprint, 0x931223e4);
+  ck_assert_uint_eq(fingerprint, 0x931223e4);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2333,7 +2332,7 @@ START_TEST(test_bip32_nist_vector_2) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_private_ckd(&node, 2);
   ck_assert_int_eq(r, 1);
-  ck_assert_int_eq(fingerprint, 0x956c4629);
+  ck_assert_uint_eq(fingerprint, 0x956c4629);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2363,7 +2362,7 @@ START_TEST(test_bip32_nist_vector_2) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_public_ckd(&node, 0);
   ck_assert_int_eq(r, 1);
-  ck_assert_int_eq(fingerprint, 0x607f628f);
+  ck_assert_uint_eq(fingerprint, 0x607f628f);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2405,10 +2404,10 @@ START_TEST(test_bip32_nist_compare) {
     ck_assert_int_eq(r, 1);
     r = hdnode_public_ckd(&node3, i);
     ck_assert_int_eq(r, 1);
-    ck_assert_int_eq(node1.depth, node2.depth);
-    ck_assert_int_eq(node1.depth, node3.depth);
-    ck_assert_int_eq(node1.child_num, node2.child_num);
-    ck_assert_int_eq(node1.child_num, node3.child_num);
+    ck_assert_uint_eq(node1.depth, node2.depth);
+    ck_assert_uint_eq(node1.depth, node3.depth);
+    ck_assert_uint_eq(node1.child_num, node2.child_num);
+    ck_assert_uint_eq(node1.child_num, node3.child_num);
     ck_assert_mem_eq(node1.chain_code, node2.chain_code, 32);
     ck_assert_mem_eq(node1.chain_code, node3.chain_code, 32);
     ck_assert_mem_eq(
@@ -2441,7 +2440,7 @@ START_TEST(test_bip32_nist_repeat) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_private_ckd_prime(&node, 28578);
   ck_assert_int_eq(r, 1);
-  ck_assert_int_eq(fingerprint, 0xbe6105b5);
+  ck_assert_uint_eq(fingerprint, 0xbe6105b5);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2463,7 +2462,7 @@ START_TEST(test_bip32_nist_repeat) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_private_ckd(&node2, 33941);
   ck_assert_int_eq(r, 1);
-  ck_assert_int_eq(fingerprint, 0x3e2b7bc6);
+  ck_assert_uint_eq(fingerprint, 0x3e2b7bc6);
   ck_assert_mem_eq(
       node2.chain_code,
       fromhex(
@@ -2485,7 +2484,7 @@ START_TEST(test_bip32_nist_repeat) {
   memzero(&node2.private_key, 32);
   r = hdnode_public_ckd(&node2, 33941);
   ck_assert_int_eq(r, 1);
-  ck_assert_int_eq(fingerprint, 0x3e2b7bc6);
+  ck_assert_uint_eq(fingerprint, 0x3e2b7bc6);
   ck_assert_mem_eq(
       node2.chain_code,
       fromhex(
@@ -2773,7 +2772,7 @@ START_TEST(test_bip32_decred_vector_1) {
 
   // [Chain m]
   fingerprint = 0;
-  ck_assert_int_eq(fingerprint, 0x00000000);
+  ck_assert_uint_eq(fingerprint, 0x00000000);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2816,7 +2815,7 @@ START_TEST(test_bip32_decred_vector_1) {
   // [Chain m/0']
   fingerprint = hdnode_fingerprint(&node);
   hdnode_private_ckd_prime(&node, 0);
-  ck_assert_int_eq(fingerprint, 0xbc495588);
+  ck_assert_uint_eq(fingerprint, 0xbc495588);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2858,7 +2857,7 @@ START_TEST(test_bip32_decred_vector_1) {
   // [Chain m/0'/1]
   fingerprint = hdnode_fingerprint(&node);
   hdnode_private_ckd(&node, 1);
-  ck_assert_int_eq(fingerprint, 0xc67bc2ef);
+  ck_assert_uint_eq(fingerprint, 0xc67bc2ef);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2900,7 +2899,7 @@ START_TEST(test_bip32_decred_vector_1) {
   // [Chain m/0'/1/2']
   fingerprint = hdnode_fingerprint(&node);
   hdnode_private_ckd_prime(&node, 2);
-  ck_assert_int_eq(fingerprint, 0xe7072187);
+  ck_assert_uint_eq(fingerprint, 0xe7072187);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2942,7 +2941,7 @@ START_TEST(test_bip32_decred_vector_1) {
   // [Chain m/0'/1/2'/2]
   fingerprint = hdnode_fingerprint(&node);
   hdnode_private_ckd(&node, 2);
-  ck_assert_int_eq(fingerprint, 0xbcbbc1c4);
+  ck_assert_uint_eq(fingerprint, 0xbcbbc1c4);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -2984,7 +2983,7 @@ START_TEST(test_bip32_decred_vector_1) {
   // [Chain m/0'/1/2'/2/1000000000]
   fingerprint = hdnode_fingerprint(&node);
   hdnode_private_ckd(&node, 1000000000);
-  ck_assert_int_eq(fingerprint, 0xe58b52e4);
+  ck_assert_uint_eq(fingerprint, 0xe58b52e4);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -3046,7 +3045,7 @@ START_TEST(test_bip32_decred_vector_2) {
 
   // [Chain m]
   fingerprint = 0;
-  ck_assert_int_eq(fingerprint, 0x00000000);
+  ck_assert_uint_eq(fingerprint, 0x00000000);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -3089,7 +3088,7 @@ START_TEST(test_bip32_decred_vector_2) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_private_ckd(&node, 0);
   ck_assert_int_eq(r, 1);
-  ck_assert_int_eq(fingerprint, 0x2524c9d3);
+  ck_assert_uint_eq(fingerprint, 0x2524c9d3);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -3132,7 +3131,7 @@ START_TEST(test_bip32_decred_vector_2) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_private_ckd_prime(&node, 2147483647);
   ck_assert_int_eq(r, 1);
-  ck_assert_int_eq(fingerprint, 0x6035c6ad);
+  ck_assert_uint_eq(fingerprint, 0x6035c6ad);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -3175,7 +3174,7 @@ START_TEST(test_bip32_decred_vector_2) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_private_ckd(&node, 1);
   ck_assert_int_eq(r, 1);
-  ck_assert_int_eq(fingerprint, 0x36fc7080);
+  ck_assert_uint_eq(fingerprint, 0x36fc7080);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -3218,7 +3217,7 @@ START_TEST(test_bip32_decred_vector_2) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_private_ckd_prime(&node, 2147483646);
   ck_assert_int_eq(r, 1);
-  ck_assert_int_eq(fingerprint, 0x45309b4c);
+  ck_assert_uint_eq(fingerprint, 0x45309b4c);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -3261,7 +3260,7 @@ START_TEST(test_bip32_decred_vector_2) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_private_ckd(&node, 2);
   ck_assert_int_eq(r, 1);
-  ck_assert_int_eq(fingerprint, 0x3491a5e6);
+  ck_assert_uint_eq(fingerprint, 0x3491a5e6);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -3311,7 +3310,7 @@ START_TEST(test_bip32_decred_vector_2) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_public_ckd(&node, 0);
   ck_assert_int_eq(r, 1);
-  ck_assert_int_eq(fingerprint, 0x6a19cfb3);
+  ck_assert_uint_eq(fingerprint, 0x6a19cfb3);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -5207,7 +5206,7 @@ START_TEST(test_mnemonic_to_bits) {
     int mnemonic_bits_len = mnemonic_to_bits(*b, mnemonic_bits);
     ck_assert_int_eq(mnemonic_bits_len % 33, 0);
     mnemonic_bits_len = mnemonic_bits_len * 4 / 33;
-    ck_assert_int_eq(mnemonic_bits_len, strlen(*a) / 2);
+    ck_assert_uint_eq((size_t)mnemonic_bits_len, strlen(*a) / 2);
     ck_assert_mem_eq(mnemonic_bits, fromhex(*a), mnemonic_bits_len);
     a += 2;
     b += 2;
@@ -5259,7 +5258,7 @@ START_TEST(test_slip39_word_index) {
     bool result = word_index(&index, vectors[i].word, sizeof(vectors[i].word));
     ck_assert_int_eq(result, vectors[i].expected_result);
     if (result) {
-      ck_assert_int_eq(index, vectors[i].expected_index);
+      ck_assert_uint_eq(index, vectors[i].expected_index);
     }
   }
 }
@@ -5285,7 +5284,7 @@ START_TEST(test_slip39_word_completion_mask) {
   };
   for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); i++) {
     uint16_t mask = slip39_word_completion_mask(vectors[i].prefix);
-    ck_assert_int_eq(mask, vectors[i].expected_mask);
+    ck_assert_uint_eq(mask, vectors[i].expected_mask);
   }
 }
 END_TEST
@@ -6870,7 +6869,7 @@ START_TEST(test_output_script) {
   while (*scr && *adr) {
     int r =
         script_output_to_address(fromhex(*scr), strlen(*scr) / 2, address, 60);
-    ck_assert_int_eq(r, (int)(strlen(*adr) + 1));
+    ck_assert_uint_eq((size_t)r, strlen(*adr) + 1);
     ck_assert_str_eq(address, *adr);
     scr += 2;
     adr += 2;
@@ -7606,13 +7605,13 @@ START_TEST(test_nem_cipher) {
     memcpy(iv, fromhex(tests[i].iv), sizeof(iv));
     ck_assert(hdnode_nem_encrypt(&node, public_key, iv, salt, input, input_size,
                                  buffer));
-    ck_assert_int_eq(output_size, NEM_ENCRYPTED_SIZE(input_size));
+    ck_assert_uint_eq(output_size, NEM_ENCRYPTED_SIZE(input_size));
     ck_assert_mem_eq(buffer, output, output_size);
 
     memcpy(iv, fromhex(tests[i].iv), sizeof(iv));
     ck_assert(hdnode_nem_decrypt(&node, public_key, iv, salt, output,
                                  output_size, buffer));
-    ck_assert_int_eq(input_size, NEM_DECRYPTED_SIZE(buffer, output_size));
+    ck_assert_uint_eq(input_size, NEM_DECRYPTED_SIZE(buffer, output_size));
     ck_assert_mem_eq(buffer, input, input_size);
   }
 }

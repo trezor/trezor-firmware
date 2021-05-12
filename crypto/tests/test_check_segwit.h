@@ -128,7 +128,7 @@ START_TEST(test_segwit) {
     ck_assert_int_eq(ret, 1);
     segwit_scriptpubkey(scriptpubkey, &scriptpubkey_len, witver, witprog,
                         witprog_len);
-    ck_assert_int_eq(scriptpubkey_len, valid_address[i].scriptPubKeyLen);
+    ck_assert_uint_eq(scriptpubkey_len, valid_address[i].scriptPubKeyLen);
     ck_assert_int_eq(
         memcmp(scriptpubkey, valid_address[i].scriptPubKey, scriptpubkey_len),
         0);
