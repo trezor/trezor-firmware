@@ -36,11 +36,11 @@ START_TEST(test_xmr_base58) {
 
     r = xmr_base58_addr_encode_check(tests[i].tag, rawn, len, strn,
                                      sizeof(strn));
-    ck_assert_int_eq((size_t)r, strlen(str));
+    ck_assert_uint_eq((size_t)r, strlen(str));
     ck_assert_mem_eq(strn, str, r);
 
     r = xmr_base58_addr_decode_check(strn, r, &tag, rawn, len);
-    ck_assert_int_eq(r, len);
+    ck_assert_uint_eq((size_t)r, len);
     ck_assert_mem_eq(rawn, fromhex(raw), len);
   }
 }
@@ -1115,7 +1115,7 @@ START_TEST(test_xmr_varint) {
     int written = 0;
     int read = 0;
 
-    ck_assert_int_eq(s1, strlen(tests[i].r) / 2);
+    ck_assert_uint_eq((size_t)s1, strlen(tests[i].r) / 2);
     written = xmr_write_varint(buff, sizeof(buff), tests[i].x);
     ck_assert_int_eq(s1, written);
     ck_assert_mem_eq(buff, fromhex(tests[i].r), strlen(tests[i].r) / 2);
