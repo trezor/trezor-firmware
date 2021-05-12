@@ -21,6 +21,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "common.h"
+
 #include "py/runtime.h"
 
 #if MICROPY_PY_TREZORCRYPTO
@@ -42,9 +44,6 @@
 #include "modtrezorcrypto-random.h"
 #include "modtrezorcrypto-ripemd160.h"
 #include "modtrezorcrypto-secp256k1.h"
-#ifdef SECP256K1_BUILD
-#include "modtrezorcrypto-secp256k1_zkp.h"
-#endif
 #include "modtrezorcrypto-sha1.h"
 #include "modtrezorcrypto-sha256.h"
 #include "modtrezorcrypto-sha3-256.h"
@@ -90,10 +89,6 @@ STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_Ripemd160_type)},
     {MP_ROM_QSTR(MP_QSTR_secp256k1),
      MP_ROM_PTR(&mod_trezorcrypto_secp256k1_module)},
-#ifdef SECP256K1_BUILD
-    {MP_ROM_QSTR(MP_QSTR_secp256k1_zkp),
-     MP_ROM_PTR(&mod_trezorcrypto_secp256k1_zkp_module)},
-#endif
     {MP_ROM_QSTR(MP_QSTR_sha1), MP_ROM_PTR(&mod_trezorcrypto_Sha1_type)},
     {MP_ROM_QSTR(MP_QSTR_sha256), MP_ROM_PTR(&mod_trezorcrypto_Sha256_type)},
     {MP_ROM_QSTR(MP_QSTR_sha512), MP_ROM_PTR(&mod_trezorcrypto_Sha512_type)},
@@ -114,5 +109,19 @@ const mp_obj_module_t mp_module_trezorcrypto = {
 
 MP_REGISTER_MODULE(MP_QSTR_trezorcrypto, mp_module_trezorcrypto,
                    MICROPY_PY_TREZORCRYPTO);
+
+#ifdef USE_SECP256K1_ZKP
+void secp256k1_default_illegal_callback_fn(const char *str, void *data) {
+  (void)data;
+  mp_raise_ValueError(str);
+  return;
+}
+
+void secp256k1_default_error_callback_fn(const char *str, void *data) {
+  (void)data;
+  __fatal_error(NULL, str, __FILE__, __LINE__, __func__);
+  return;
+}
+#endif
 
 #endif  // MICROPY_PY_TREZORCRYPTO

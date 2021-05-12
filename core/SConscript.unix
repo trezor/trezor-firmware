@@ -115,6 +115,9 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
         'vendor/secp256k1-zkp/include',
     ]
     CPPDEFINES_MOD += [
+        'USE_SECP256K1_ZKP',
+        'USE_SECP256K1_ZKP_ECDSA',
+        ('SECP256K1_CONTEXT_SIZE', '8416'),
         'SECP256K1_BUILD',
         'USE_NUM_NONE',
         'USE_FIELD_INV_BUILTIN',
@@ -126,12 +129,14 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
         ('ECMULT_GEN_PREC_BITS', '4'),
         ('ECMULT_WINDOW_SIZE', '8'),
         'ENABLE_MODULE_GENERATOR',
-        'ENABLE_MODULE_RANGEPROOF',
         'ENABLE_MODULE_RECOVERY',
-        'ENABLE_MODULE_ECDH',
     ]
     SOURCE_MOD_SECP256K1_ZKP = [
         'vendor/secp256k1-zkp/src/secp256k1.c',
+    ]
+    SOURCE_MOD += [
+        'vendor/trezor-crypto/zkp_context.c',
+        'vendor/trezor-crypto/zkp_ecdsa.c',
     ]
 
 # modtrezorio
