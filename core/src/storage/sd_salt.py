@@ -1,7 +1,7 @@
 from micropython import const
 
 import storage.device
-from trezor import fatfs
+from trezor import io
 from trezor.sdcard import with_filesystem
 from trezor.utils import consteq
 
@@ -42,12 +42,12 @@ def _get_salt_path(new: bool = False) -> str:
 def _load_salt(auth_key: bytes, path: str) -> bytearray | None:
     # Load the salt file if it exists.
     try:
-        with fatfs.open(path, "r") as f:
+        with io.fatfs.open(path, "r") as f:
             salt = bytearray(SD_SALT_LEN_BYTES)
             stored_tag = bytearray(SD_SALT_AUTH_TAG_LEN_BYTES)
             f.read(salt)
             f.read(stored_tag)
-    except fatfs.FatFSError:
+    except io.fatfs.FatFSError:
         return None
 
     # Check the salt's authentication tag.
@@ -81,22 +81,22 @@ def load_sd_salt() -> bytearray | None:
     # SD salt regeneration was interrupted earlier. Bring into consistent state.
     # TODO Possibly overwrite salt file with random data.
     try:
-        fatfs.unlink(salt_path)
-    except fatfs.FatFSError:
+        io.fatfs.unlink(salt_path)
+    except io.fatfs.FatFSError:
         pass
 
-    # fatfs.rename can fail with a write error, which falls through as an FatFSError.
+    # io.fatfs.rename can fail with a write error, which falls through as an FatFSError.
     # This should be handled in calling code, by allowing the user to retry.
-    fatfs.rename(new_salt_path, salt_path)
+    io.fatfs.rename(new_salt_path, salt_path)
     return salt
 
 
 @with_filesystem
 def set_sd_salt(salt: bytes, salt_tag: bytes, stage: bool = False) -> None:
     salt_path = _get_salt_path(stage)
-    fatfs.mkdir("/trezor", True)
-    fatfs.mkdir(_get_device_dir(), True)
-    with fatfs.open(salt_path, "w") as f:
+    io.fatfs.mkdir("/trezor", True)
+    io.fatfs.mkdir(_get_device_dir(), True)
+    with io.fatfs.open(salt_path, "w") as f:
         f.write(salt)
         f.write(salt_tag)
 
@@ -107,14 +107,14 @@ def commit_sd_salt() -> None:
     new_salt_path = _get_salt_path(new=True)
 
     try:
-        fatfs.unlink(salt_path)
-    except fatfs.FatFSError:
+        io.fatfs.unlink(salt_path)
+    except io.fatfs.FatFSError:
         pass
-    fatfs.rename(new_salt_path, salt_path)
+    io.fatfs.rename(new_salt_path, salt_path)
 
 
 @with_filesystem
 def remove_sd_salt() -> None:
     salt_path = _get_salt_path()
     # TODO Possibly overwrite salt file with random data.
-    fatfs.unlink(salt_path)
+    io.fatfs.unlink(salt_path)

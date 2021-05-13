@@ -134,10 +134,13 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
 
 # modtrezorio
 SOURCE_MOD += [
-    'embed/extmod/modtrezorio/ff.c',
-    'embed/extmod/modtrezorio/ffunicode.c',
     'embed/extmod/modtrezorio/modtrezorio.c',
 ]
+if TREZOR_MODEL == "T":
+    SOURCE_MOD += [
+        'embed/extmod/modtrezorio/ff.c',
+        'embed/extmod/modtrezorio/ffunicode.c',
+    ]
 
 # modtrezorui
 CPPPATH_MOD += [
@@ -312,8 +315,6 @@ SOURCE_UNIX = [
     'embed/unix/profile.c',
     'embed/unix/random_delays.c',
     'embed/unix/rng.c',
-    'embed/unix/sbu.c',
-    'embed/unix/sdcard.c',
     'embed/unix/touch.c',
     'embed/unix/usb.c',
     'vendor/micropython/lib/utils/gchelper_generic.c',
@@ -322,6 +323,11 @@ SOURCE_UNIX = [
     'vendor/micropython/ports/unix/input.c',
     'vendor/micropython/ports/unix/unix_mphal.c',
 ]
+if TREZOR_MODEL == 'T':
+    SOURCE_UNIX += [
+        'embed/unix/sbu.c',
+        'embed/unix/sdcard.c',
+    ]
 
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_UNIX
 
@@ -516,7 +522,11 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/*/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/debug/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py',
+        exclude=[
+            SOURCE_PY_DIR + 'apps/management/sd_protect.py',
+        ] if TREZOR_MODEL != 'T' else [])
+    )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/misc/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/*.py'))

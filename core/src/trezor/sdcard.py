@@ -1,4 +1,9 @@
-from trezorio import fatfs, sdcard
+try:
+    from trezorio import fatfs, sdcard
+
+    HAVE_SDCARD = True
+except Exception:
+    HAVE_SDCARD = False
 
 if False:
     from typing import Any, Callable, TypeVar
@@ -10,6 +15,9 @@ class FilesystemWrapper:
     _INSTANCE: "FilesystemWrapper" | None = None
 
     def __init__(self, mounted: bool) -> None:
+        if not HAVE_SDCARD:
+            raise RuntimeError
+
         self.mounted = mounted
         self.counter = 0
 
@@ -57,5 +65,14 @@ def with_filesystem(func: T) -> T:
     return wrapped_func  # type: ignore
 
 
-is_present = sdcard.is_present
-capacity = sdcard.capacity
+if HAVE_SDCARD:
+    is_present = sdcard.is_present
+    capacity = sdcard.capacity
+
+else:
+
+    def is_present() -> bool:
+        return False
+
+    def capacity() -> int:
+        return 0

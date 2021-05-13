@@ -46,10 +46,11 @@ def find_message_handler_module(msg_type: int) -> str:
         return "apps.management.apply_flags"
     elif msg_type == MessageType.ChangePin:
         return "apps.management.change_pin"
-    elif msg_type == MessageType.SdProtect:
-        return "apps.management.sd_protect"
     elif msg_type == MessageType.ChangeWipeCode:
         return "apps.management.change_wipe_code"
+
+    elif utils.MODEL == "T" and msg_type == MessageType.SdProtect:
+        return "apps.management.sd_protect"
 
     # bitcoin
     elif msg_type == MessageType.AuthorizeCoinJoin:
