@@ -139,10 +139,13 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
 
 # modtrezorio
 SOURCE_MOD += [
-    'embed/extmod/modtrezorio/ff.c',
-    'embed/extmod/modtrezorio/ffunicode.c',
     'embed/extmod/modtrezorio/modtrezorio.c',
 ]
+if TREZOR_MODEL == "T":
+    SOURCE_MOD += [
+        'embed/extmod/modtrezorio/ff.c',
+        'embed/extmod/modtrezorio/ffunicode.c',
+    ]
 
 # modtrezorui
 CPPPATH_MOD += [
@@ -340,8 +343,6 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/mpu.c',
     'embed/trezorhal/random_delays.c',
     'embed/trezorhal/rng.c',
-    'embed/trezorhal/sbu.c',
-    'embed/trezorhal/sdcard.c',
     'embed/trezorhal/stm32.c',
     'embed/trezorhal/systick.c',
     'embed/trezorhal/touch.c',
@@ -353,6 +354,11 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/util.s',
     'embed/trezorhal/vectortable.s',
 ]
+if TREZOR_MODEL == 'T':
+    SOURCE_TREZORHAL += [
+        'embed/trezorhal/sbu.c',
+        'embed/trezorhal/sdcard.c',
+    ]
 
 CPPDEFINES_MOD += ['USE_SVC_SHUTDOWN']
 
@@ -561,7 +567,11 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/*/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/debug/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py',
+        exclude=[
+            SOURCE_PY_DIR + 'apps/management/sd_protect.py',
+        ] if TREZOR_MODEL != 'T' else [])
+    )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/misc/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/*.py'))

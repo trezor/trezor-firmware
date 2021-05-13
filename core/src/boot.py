@@ -1,6 +1,5 @@
 import storage
 import storage.device
-import storage.sd_salt
 from trezor import config, log, loop, ui, utils, wire
 from trezor.pin import show_pin_timeout
 

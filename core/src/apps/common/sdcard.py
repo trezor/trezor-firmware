@@ -1,6 +1,6 @@
 import storage.sd_salt
 from storage.sd_salt import SD_CARD_HOT_SWAPPABLE
-from trezor import fatfs, sdcard, ui, wire
+from trezor import io, sdcard, ui, wire
 from trezor.ui.layouts import confirm_action, show_error_and_raise
 
 
@@ -131,8 +131,8 @@ async def ensure_sdcard(
         try:
             try:
                 with sdcard.filesystem(mounted=False):
-                    fatfs.mount()
-            except fatfs.NoFilesystem:
+                    io.fatfs.mount()
+            except io.fatfs.NoFilesystem:
                 # card not formatted. proceed out of the except clause
                 pass
             else:
@@ -143,9 +143,9 @@ async def ensure_sdcard(
 
             # Proceed to formatting. Failure is caught by the outside OSError handler
             with sdcard.filesystem(mounted=False):
-                fatfs.mkfs()
-                fatfs.mount()
-                fatfs.setlabel("TREZOR")
+                io.fatfs.mkfs()
+                io.fatfs.mount()
+                io.fatfs.setlabel("TREZOR")
 
             # format and mount succeeded
             return
@@ -165,7 +165,7 @@ async def request_sd_salt(
         await ensure_sdcard(ctx, ensure_filesystem=False)
         try:
             return storage.sd_salt.load_sd_salt()
-        except (storage.sd_salt.WrongSdCard, fatfs.NoFilesystem):
+        except (storage.sd_salt.WrongSdCard, io.fatfs.NoFilesystem):
             await _confirm_retry_wrong_card(ctx)
         except OSError:
             # Generic problem with loading the SD salt (hardware problem, or we could

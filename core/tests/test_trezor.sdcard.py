@@ -1,7 +1,8 @@
 from common import *
 
-from trezor import io, fatfs, sdcard
+from trezor import io, sdcard
 
+fatfs = io.fatfs
 
 class TestTrezorSdcard(unittest.TestCase):
     def test_power(self):
