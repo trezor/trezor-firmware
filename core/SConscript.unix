@@ -130,6 +130,8 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
         ('ECMULT_WINDOW_SIZE', '8'),
         'ENABLE_MODULE_GENERATOR',
         'ENABLE_MODULE_RECOVERY',
+        'ENABLE_MODULE_SCHNORRSIG',
+        'ENABLE_MODULE_EXTRAKEYS',
     ]
     SOURCE_MOD_SECP256K1_ZKP = [
         'vendor/secp256k1-zkp/src/secp256k1.c',
@@ -137,6 +139,7 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
     SOURCE_MOD += [
         'vendor/trezor-crypto/zkp_context.c',
         'vendor/trezor-crypto/zkp_ecdsa.c',
+        'vendor/trezor-crypto/zkp_schnorr.c',
     ]
 
 # modtrezorio
