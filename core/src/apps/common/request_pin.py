@@ -4,8 +4,6 @@ import storage.cache
 import storage.sd_salt
 from trezor import config, ui, wire
 from trezor.messages import ButtonRequestType
-from trezor.ui.components.tt.pin import CANCELLED, PinDialog
-from trezor.ui.components.tt.text import Text
 from trezor.ui.popup import Popup
 
 from . import button_request
@@ -26,6 +24,8 @@ async def request_pin(
     attempts_remaining: int | None = None,
     allow_cancel: bool = True,
 ) -> str:
+    from trezor.ui.components.tt.pin import CANCELLED, PinDialog
+
     await button_request(ctx, code=ButtonRequestType.PinEntry)
 
     if attempts_remaining is None:
@@ -55,6 +55,8 @@ async def request_pin_confirm(ctx: wire.Context, *args: Any, **kwargs: Any) -> s
 
 
 async def pin_mismatch() -> None:
+    from trezor.ui.components.tt.text import Text
+
     text = Text("PIN mismatch", ui.ICON_WRONG, ui.RED)
     text.normal("The PINs you entered", "do not match.")
     text.normal("")
