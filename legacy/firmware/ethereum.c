@@ -679,7 +679,6 @@ void ethereum_message_sign(const EthereumSignMessage *msg, const HDNode *node,
     return;
   }
 
-  resp->has_address = true;
   resp->address[0] = '0';
   resp->address[1] = 'x';
   ethereum_address_checksum(pubkeyhash, resp->address + 2, false, 0);
@@ -695,7 +694,6 @@ void ethereum_message_sign(const EthereumSignMessage *msg, const HDNode *node,
     return;
   }
 
-  resp->has_signature = true;
   resp->signature.bytes[64] = 27 + v;
   resp->signature.size = 65;
   msg_write(MessageType_MessageType_EthereumMessageSignature, resp);

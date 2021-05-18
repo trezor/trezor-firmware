@@ -28,20 +28,20 @@ void ui_screen_boot(const vendor_header* const vhdr,
 void ui_screen_boot_wait(int wait_seconds);
 void ui_screen_boot_click(void);
 
-void ui_screen_first(void);
-void ui_screen_second(void);
-void ui_screen_third(void);
+void ui_screen_welcome_first(void);
+void ui_screen_welcome_second(void);
+void ui_screen_welcome_third(void);
 
-void ui_screen_info(secbool buttons, const vendor_header* const vhdr,
-                    const image_header* const hdr);
-void ui_screen_info_fingerprint(const image_header* const hdr);
+void ui_screen_firmware_info(const vendor_header* const vhdr,
+                             const image_header* const hdr);
+void ui_screen_firmware_fingerprint(const image_header* const hdr);
 
 void ui_screen_install_confirm_upgrade(const vendor_header* const vhdr,
                                        const image_header* const hdr);
 void ui_screen_install_confirm_newvendor_or_downgrade_wipe(
     const vendor_header* const vhdr, const image_header* const hdr,
     secbool downgrade_wipe);
-void ui_screen_install(void);
+void ui_screen_install_start(void);
 void ui_screen_install_progress_erase(int pos, int len);
 void ui_screen_install_progress_upload(int pos);
 

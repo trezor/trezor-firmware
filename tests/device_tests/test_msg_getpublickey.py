@@ -22,8 +22,6 @@ from trezorlib.tools import parse_path
 
 from .. import bip32
 
-pytestmark = pytest.mark.skip_ui
-
 VECTORS_BITCOIN = (  # coin_name, xpub_magic, path, xpub
     (
         "Bitcoin",

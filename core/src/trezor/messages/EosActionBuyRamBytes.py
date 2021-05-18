@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -15,9 +15,9 @@ class EosActionBuyRamBytes(p.MessageType):
     def __init__(
         self,
         *,
-        payer: int = None,
-        receiver: int = None,
-        bytes: int = None,
+        payer: Optional[int] = None,
+        receiver: Optional[int] = None,
+        bytes: Optional[int] = None,
     ) -> None:
         self.payer = payer
         self.receiver = receiver

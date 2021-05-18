@@ -6,7 +6,7 @@ from .EosPermissionLevel import EosPermissionLevel
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -17,9 +17,9 @@ class EosActionCommon(p.MessageType):
     def __init__(
         self,
         *,
-        authorization: List[EosPermissionLevel] = None,
-        account: int = None,
-        name: int = None,
+        authorization: Optional[List[EosPermissionLevel]] = None,
+        account: Optional[int] = None,
+        name: Optional[int] = None,
     ) -> None:
         self.authorization = authorization if authorization is not None else []
         self.account = account

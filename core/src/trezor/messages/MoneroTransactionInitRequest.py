@@ -6,7 +6,7 @@ from .MoneroTransactionData import MoneroTransactionData
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -18,10 +18,10 @@ class MoneroTransactionInitRequest(p.MessageType):
     def __init__(
         self,
         *,
-        address_n: List[int] = None,
-        version: int = None,
-        network_type: int = None,
-        tsx_data: MoneroTransactionData = None,
+        address_n: Optional[List[int]] = None,
+        version: Optional[int] = None,
+        network_type: Optional[int] = None,
+        tsx_data: Optional[MoneroTransactionData] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.version = version

@@ -11,7 +11,6 @@ from trezor.crypto import monero as tcry, random
 from trezor.crypto.hashlib import sha3_256
 
 if False:
-    from typing import Tuple, Optional, Union
     from apps.monero.xmr.types import Sc25519, Ge25519
 
 
@@ -182,7 +181,7 @@ def ge25519_double_scalarmult_base_vartime(a, A, b) -> Ge25519:
 ge25519_double_scalarmult_vartime2 = tcry.xmr_add_keys3
 
 
-def identity(byte_enc=False) -> Union[Ge25519, bytes]:
+def identity(byte_enc=False) -> Ge25519 | bytes:
     idd = tcry.ge25519_set_neutral()
     return idd if not byte_enc else encodepoint(idd)
 
@@ -203,7 +202,7 @@ http://elligator.cr.yp.to/elligator-20130828.pdf
 cn_fast_hash = keccak_hash
 
 
-def hash_to_scalar(data: bytes, length: Optional[int] = None):
+def hash_to_scalar(data: bytes, length: int | None = None):
     """
     H_s(P)
     """
@@ -211,7 +210,7 @@ def hash_to_scalar(data: bytes, length: Optional[int] = None):
     return tcry.xmr_hash_to_scalar(dt)
 
 
-def hash_to_scalar_into(r: Sc25519, data: bytes, length: Optional[int] = None):
+def hash_to_scalar_into(r: Sc25519, data: bytes, length: int | None = None):
     dt = data[:length] if length else data
     return tcry.xmr_hash_to_scalar(r, dt)
 
@@ -289,7 +288,7 @@ def get_subaddress_secret_key(
     return tcry.xmr_get_subaddress_secret_key(major, minor, secret_key)
 
 
-def generate_signature(data: bytes, priv: Sc25519) -> Tuple[Sc25519, Sc25519, Ge25519]:
+def generate_signature(data: bytes, priv: Sc25519) -> tuple[Sc25519, Sc25519, Ge25519]:
     """
     Generate EC signature
     crypto_ops::generate_signature(const hash &prefix_hash, const public_key &pub, const secret_key &sec, signature &sig)

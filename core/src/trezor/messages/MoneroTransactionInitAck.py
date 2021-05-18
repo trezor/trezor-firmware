@@ -6,7 +6,7 @@ from .MoneroTransactionRsigData import MoneroTransactionRsigData
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -18,8 +18,8 @@ class MoneroTransactionInitAck(p.MessageType):
     def __init__(
         self,
         *,
-        hmacs: List[bytes] = None,
-        rsig_data: MoneroTransactionRsigData = None,
+        hmacs: Optional[List[bytes]] = None,
+        rsig_data: Optional[MoneroTransactionRsigData] = None,
     ) -> None:
         self.hmacs = hmacs if hmacs is not None else []
         self.rsig_data = rsig_data

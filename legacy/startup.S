@@ -32,6 +32,9 @@ reset_handler:
   isb
 #endif
 
+  ldr r0, =_stay_in_bootloader_flag_addr  // r0 - address of storage for "stay in bootloader" flag
+  ldr r11, [r0]        // r11 - keep in register and hope it gets to main
+
   ldr r0, =_ram_start // r0 - point to beginning of SRAM
   ldr r1, =_ram_end   // r1 - point to byte after the end of SRAM
   ldr r2, =0          // r2 - the byte-sized value to be written

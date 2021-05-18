@@ -97,7 +97,7 @@ static void _i2c_init(void) {
   }
 
   i2c_handle.Instance = I2C1;
-  i2c_handle.Init.ClockSpeed = 400000;
+  i2c_handle.Init.ClockSpeed = 200000;
   i2c_handle.Init.DutyCycle = I2C_DUTYCYCLE_16_9;
   i2c_handle.Init.OwnAddress1 = 0xFE;  // master
   i2c_handle.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;

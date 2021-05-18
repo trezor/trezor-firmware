@@ -13,9 +13,9 @@ class HDNode:
         fingerprint: int,
         child_num: int,
         chain_code: bytes,
-        private_key: bytes = None,
-        public_key: bytes = None,
-        curve_name: str = None,
+        private_key: bytes | None = None,
+        public_key: bytes | None = None,
+        curve_name: str | None = None,
     ) -> None:
         """
         """
@@ -117,7 +117,7 @@ def from_seed(seed: bytes, curve_name: str) -> HDNode:
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-bip32.h
-def from_mnemonic_cardano(mnemonic: str, passphrase: str) -> bytes:
+def from_mnemonic_cardano(mnemonic: str, passphrase: str) -> HDNode:
     """
     Construct a HD node from a BIP-0039 mnemonic using the Icarus derivation
     scheme, aka v2 derivation scheme.

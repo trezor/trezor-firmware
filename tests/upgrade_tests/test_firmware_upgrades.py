@@ -14,7 +14,9 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from trezorlib import MINIMUM_FIRMWARE_VERSION, btc, debuglink, device, fido
+import pytest
+
+from trezorlib import MINIMUM_FIRMWARE_VERSION, btc, debuglink, device, exceptions, fido
 from trezorlib.messages import BackupType
 from trezorlib.tools import H_
 
@@ -22,7 +24,7 @@ from ..click_tests import recovery
 from ..common import MNEMONIC_SLIP39_BASIC_20_3of6, MNEMONIC_SLIP39_BASIC_20_3of6_SECRET
 from ..device_handler import BackgroundDeviceHandler
 from ..emulators import ALL_TAGS, EmulatorWrapper
-from . import for_all
+from . import for_all, for_tags
 
 MINIMUM_FIRMWARE_VERSION["1"] = (1, 0, 0)
 MINIMUM_FIRMWARE_VERSION["T"] = (2, 0, 0)
@@ -64,6 +66,128 @@ def test_upgrade_load(gen, tag):
         assert device_id == emu.client.features.device_id
         asserts(emu.client)
         assert emu.client.features.language == LANGUAGE
+
+
+@for_all("legacy")
+def test_upgrade_load_pin(gen, tag):
+    PIN = "1234"
+
+    def asserts(client):
+        assert client.features.pin_protection
+        assert not client.features.passphrase_protection
+        assert client.features.initialized
+        assert client.features.label == LABEL
+        client.use_pin_sequence([PIN])
+        assert btc.get_address(client, "Bitcoin", PATH) == ADDRESS
+
+    with EmulatorWrapper(gen, tag) as emu:
+        debuglink.load_device_by_mnemonic(
+            emu.client,
+            mnemonic=MNEMONIC,
+            pin=PIN,
+            passphrase_protection=False,
+            label=LABEL,
+            language=LANGUAGE,
+        )
+        device_id = emu.client.features.device_id
+        asserts(emu.client)
+        storage = emu.get_storage()
+
+    with EmulatorWrapper(gen, storage=storage) as emu:
+        assert device_id == emu.client.features.device_id
+        asserts(emu.client)
+        assert emu.client.features.language == LANGUAGE
+
+
+# Test progressive upgrade of storage versions without unlocking in between.
+# Legacy storage: until legacy-v1.7.3 (pre-norcow)
+# Storage Version 0: until core-v2.0.9 (basic norcow)
+# Storage Version 1: since legacy-v1.8.0 and core-v2.1.0 (encryption)
+# Storage Version 2: since legacy-v1.9.0 and core-v2.3.0 (wipe code)
+# Storage Version 3: since legacy-v1.10.0 and core-v2.4.0 (long PIN)
+@for_tags(
+    ("legacy", ["v1.7.0", "v1.8.0", "v1.9.0"]),
+    ("legacy", ["v1.7.0", "v1.8.0"]),
+    ("legacy", ["v1.7.0", "v1.9.0"]),
+    ("legacy", ["v1.8.0", "v1.9.0"]),
+)
+def test_storage_upgrade_progressive(gen, tags):
+    PIN = "1234"
+
+    def asserts(client):
+        assert client.features.pin_protection
+        assert not client.features.passphrase_protection
+        assert client.features.initialized
+        assert client.features.label == LABEL
+        client.use_pin_sequence([PIN])
+        assert btc.get_address(client, "Bitcoin", PATH) == ADDRESS
+
+    with EmulatorWrapper(gen, tags[0]) as emu:
+        debuglink.load_device_by_mnemonic(
+            emu.client,
+            mnemonic=MNEMONIC,
+            pin=PIN,
+            passphrase_protection=False,
+            label=LABEL,
+            language=LANGUAGE,
+        )
+        device_id = emu.client.features.device_id
+        asserts(emu.client)
+        storage = emu.get_storage()
+
+    for tag in tags[1:]:
+        with EmulatorWrapper(gen, tag, storage=storage) as emu:
+            storage = emu.get_storage()
+
+    with EmulatorWrapper(gen, storage=storage) as emu:
+        assert device_id == emu.client.features.device_id
+        asserts(emu.client)
+        assert emu.client.features.language == LANGUAGE
+
+
+@for_all("legacy", legacy_minimum_version=(1, 9, 0))
+def test_upgrade_wipe_code(gen, tag):
+    PIN = "1234"
+    WIPE_CODE = "4321"
+
+    def asserts(client):
+        assert client.features.pin_protection
+        assert not client.features.passphrase_protection
+        assert client.features.initialized
+        assert client.features.label == LABEL
+        client.use_pin_sequence([PIN])
+        assert btc.get_address(client, "Bitcoin", PATH) == ADDRESS
+
+    with EmulatorWrapper(gen, tag) as emu:
+        debuglink.load_device_by_mnemonic(
+            emu.client,
+            mnemonic=MNEMONIC,
+            pin=PIN,
+            passphrase_protection=False,
+            label=LABEL,
+            language=LANGUAGE,
+        )
+
+        # Set wipe code.
+        emu.client.use_pin_sequence([PIN, WIPE_CODE, WIPE_CODE])
+        device.change_wipe_code(emu.client)
+
+        device_id = emu.client.features.device_id
+        asserts(emu.client)
+        storage = emu.get_storage()
+
+    with EmulatorWrapper(gen, storage=storage) as emu:
+        assert device_id == emu.client.features.device_id
+        asserts(emu.client)
+        assert emu.client.features.language == LANGUAGE
+
+        # Check that wipe code is set by changing the PIN to it.
+        emu.client.use_pin_sequence([PIN, WIPE_CODE, WIPE_CODE])
+        with pytest.raises(
+            exceptions.TrezorFailure,
+            match="The new PIN must be different from your wipe code",
+        ):
+            return device.change_pin(emu.client)
 
 
 @for_all("legacy")

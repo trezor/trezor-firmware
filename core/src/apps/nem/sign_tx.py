@@ -72,7 +72,7 @@ async def sign_tx(ctx, msg: NEMSignTx, keychain):
 
     signature = ed25519.sign(node.private_key(), tx, NEM_HASH_ALG)
 
-    resp = NEMSignedTx()
-    resp.data = tx
-    resp.signature = signature
-    return resp
+    return NEMSignedTx(
+        data=tx,
+        signature=signature,
+    )

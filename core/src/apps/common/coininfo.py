@@ -5,7 +5,7 @@ from trezor.crypto.base58 import blake256d_32, groestl512d_32, keccak_32, sha256
 from trezor.crypto.scripts import blake256_ripemd160_digest, sha256_ripemd160_digest
 
 if False:
-    from typing import Any, Dict, Optional
+    from typing import Any
 
 # flake8: noqa
 
@@ -21,15 +21,15 @@ class CoinInfo:
         maxfee_kb: int,
         signed_message_header: str,
         xpub_magic: int,
-        xpub_magic_segwit_p2sh: Optional[int],
-        xpub_magic_segwit_native: Optional[int],
-        xpub_magic_multisig_segwit_p2sh: Optional[int],
-        xpub_magic_multisig_segwit_native: Optional[int],
-        bech32_prefix: Optional[str],
-        cashaddr_prefix: Optional[str],
+        xpub_magic_segwit_p2sh: int | None,
+        xpub_magic_segwit_native: int | None,
+        xpub_magic_multisig_segwit_p2sh: int | None,
+        xpub_magic_multisig_segwit_native: int | None,
+        bech32_prefix: str | None,
+        cashaddr_prefix: str | None,
         slip44: int,
         segwit: bool,
-        fork_id: Optional[int],
+        fork_id: int | None,
         force_bip143: bool,
         decred: bool,
         negative_fee: bool,
@@ -37,7 +37,7 @@ class CoinInfo:
         extra_data: bool,
         timestamp: bool,
         overwintered: bool,
-        confidential_assets: Optional[Dict[str, Any]],
+        confidential_assets: dict[str, Any] | None,
     ) -> None:
         self.coin_name = coin_name
         self.coin_shortcut = coin_shortcut
@@ -766,6 +766,62 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
+        elif name == "Firo":
+            return CoinInfo(
+                coin_name=name,
+                coin_shortcut="FIRO",
+                decimals=8,
+                address_type=82,
+                address_type_p2sh=7,
+                maxfee_kb=640000000,
+                signed_message_header="Zcoin Signed Message:\n",
+                xpub_magic=0x0488b21e,
+                xpub_magic_segwit_p2sh=None,
+                xpub_magic_segwit_native=None,
+                xpub_magic_multisig_segwit_p2sh=None,
+                xpub_magic_multisig_segwit_native=None,
+                bech32_prefix=None,
+                cashaddr_prefix=None,
+                slip44=136,
+                segwit=False,
+                fork_id=None,
+                force_bip143=False,
+                decred=False,
+                negative_fee=False,
+                curve_name='secp256k1',
+                extra_data=True,
+                timestamp=False,
+                overwintered=False,
+                confidential_assets=None,
+            )
+        elif name == "Firo Testnet":
+            return CoinInfo(
+                coin_name=name,
+                coin_shortcut="tFIRO",
+                decimals=8,
+                address_type=65,
+                address_type_p2sh=178,
+                maxfee_kb=1000000,
+                signed_message_header="Zcoin Signed Message:\n",
+                xpub_magic=0x043587cf,
+                xpub_magic_segwit_p2sh=None,
+                xpub_magic_segwit_native=None,
+                xpub_magic_multisig_segwit_p2sh=None,
+                xpub_magic_multisig_segwit_native=None,
+                bech32_prefix=None,
+                cashaddr_prefix=None,
+                slip44=1,
+                segwit=False,
+                fork_id=None,
+                force_bip143=False,
+                decred=False,
+                negative_fee=False,
+                curve_name='secp256k1',
+                extra_data=True,
+                timestamp=False,
+                overwintered=False,
+                confidential_assets=None,
+            )
         elif name == "Florincoin":
             return CoinInfo(
                 coin_name=name,
@@ -1438,6 +1494,34 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
+        elif name == "Ravencoin Testnet":
+            return CoinInfo(
+                coin_name=name,
+                coin_shortcut="tRVN",
+                decimals=8,
+                address_type=111,
+                address_type_p2sh=196,
+                maxfee_kb=170000000000,
+                signed_message_header="Raven Signed Message:\n",
+                xpub_magic=0x043587cf,
+                xpub_magic_segwit_p2sh=None,
+                xpub_magic_segwit_native=None,
+                xpub_magic_multisig_segwit_p2sh=None,
+                xpub_magic_multisig_segwit_native=None,
+                bech32_prefix=None,
+                cashaddr_prefix=None,
+                slip44=1,
+                segwit=False,
+                fork_id=None,
+                force_bip143=False,
+                decred=False,
+                negative_fee=False,
+                curve_name='secp256k1',
+                extra_data=False,
+                timestamp=False,
+                overwintered=False,
+                confidential_assets=None,
+            )
         elif name == "Ritocoin":
             return CoinInfo(
                 coin_name=name,
@@ -1800,62 +1884,6 @@ def by_name(name: str) -> CoinInfo:
                 extra_data=True,
                 timestamp=False,
                 overwintered=True,
-                confidential_assets=None,
-            )
-        elif name == "Zcoin":
-            return CoinInfo(
-                coin_name=name,
-                coin_shortcut="XZC",
-                decimals=8,
-                address_type=82,
-                address_type_p2sh=7,
-                maxfee_kb=640000000,
-                signed_message_header="Zcoin Signed Message:\n",
-                xpub_magic=0x0488b21e,
-                xpub_magic_segwit_p2sh=None,
-                xpub_magic_segwit_native=None,
-                xpub_magic_multisig_segwit_p2sh=None,
-                xpub_magic_multisig_segwit_native=None,
-                bech32_prefix=None,
-                cashaddr_prefix=None,
-                slip44=136,
-                segwit=False,
-                fork_id=None,
-                force_bip143=False,
-                decred=False,
-                negative_fee=False,
-                curve_name='secp256k1',
-                extra_data=True,
-                timestamp=False,
-                overwintered=False,
-                confidential_assets=None,
-            )
-        elif name == "Zcoin Testnet":
-            return CoinInfo(
-                coin_name=name,
-                coin_shortcut="tXZC",
-                decimals=8,
-                address_type=65,
-                address_type_p2sh=178,
-                maxfee_kb=1000000,
-                signed_message_header="Zcoin Signed Message:\n",
-                xpub_magic=0x043587cf,
-                xpub_magic_segwit_p2sh=None,
-                xpub_magic_segwit_native=None,
-                xpub_magic_multisig_segwit_p2sh=None,
-                xpub_magic_multisig_segwit_native=None,
-                bech32_prefix=None,
-                cashaddr_prefix=None,
-                slip44=1,
-                segwit=False,
-                fork_id=None,
-                force_bip143=False,
-                decred=False,
-                negative_fee=False,
-                curve_name='secp256k1',
-                extra_data=True,
-                timestamp=False,
-                overwintered=False,
                 confidential_assets=None,
             )
     raise ValueError('Unknown coin name "%s"' % name)

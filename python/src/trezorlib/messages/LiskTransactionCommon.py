@@ -6,7 +6,7 @@ from .LiskTransactionAsset import LiskTransactionAsset
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeLiskTransactionType = Literal[0, 1, 2, 3, 4, 5, 6, 7]
     except ImportError:
@@ -18,15 +18,15 @@ class LiskTransactionCommon(p.MessageType):
     def __init__(
         self,
         *,
-        type: EnumTypeLiskTransactionType = None,
-        amount: int = None,
-        fee: int = None,
-        recipient_id: str = None,
-        sender_public_key: bytes = None,
-        requester_public_key: bytes = None,
-        signature: bytes = None,
-        timestamp: int = None,
-        asset: LiskTransactionAsset = None,
+        type: Optional[EnumTypeLiskTransactionType] = None,
+        amount: Optional[int] = None,
+        fee: Optional[int] = None,
+        recipient_id: Optional[str] = None,
+        sender_public_key: Optional[bytes] = None,
+        requester_public_key: Optional[bytes] = None,
+        signature: Optional[bytes] = None,
+        timestamp: Optional[int] = None,
+        asset: Optional[LiskTransactionAsset] = None,
     ) -> None:
         self.type = type
         self.amount = amount

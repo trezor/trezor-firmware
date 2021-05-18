@@ -28,7 +28,6 @@ from apps.common import coins
 from apps.common.keychain import Keychain
 from apps.bitcoin.keychain import get_schemas_for_coin
 from apps.bitcoin.sign_tx import bitcoin, helpers
-from apps.bitcoin.sign_tx.approvers import BasicApprover
 
 
 EMPTY_SERIALIZED = TxRequestSerializedType(serialized_tx=bytearray())
@@ -110,8 +109,7 @@ class TestSignTx(unittest.TestCase):
         seed = bip39.seed('alcohol woman abuse must during monitor noble actual mixed trade anger aisle', '')
         ns = get_schemas_for_coin(coin_bitcoin)
         keychain = Keychain(seed, coin_bitcoin.curve_name, ns)
-        approver = BasicApprover(tx, coin_bitcoin)
-        signer = bitcoin.Bitcoin(tx, keychain, coin_bitcoin, approver).signer()
+        signer = bitcoin.Bitcoin(tx, keychain, coin_bitcoin, None).signer()
 
         for request, response in chunks(messages, 2):
             res = signer.send(request)

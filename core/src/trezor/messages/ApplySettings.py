@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeSafetyCheckLevel = Literal[0, 1, 2]
     except ImportError:
@@ -17,15 +17,15 @@ class ApplySettings(p.MessageType):
     def __init__(
         self,
         *,
-        language: str = None,
-        label: str = None,
-        use_passphrase: bool = None,
-        homescreen: bytes = None,
-        auto_lock_delay_ms: int = None,
-        display_rotation: int = None,
-        passphrase_always_on_device: bool = None,
-        safety_checks: EnumTypeSafetyCheckLevel = None,
-        experimental_features: bool = None,
+        language: Optional[str] = None,
+        label: Optional[str] = None,
+        use_passphrase: Optional[bool] = None,
+        homescreen: Optional[bytes] = None,
+        auto_lock_delay_ms: Optional[int] = None,
+        display_rotation: Optional[int] = None,
+        passphrase_always_on_device: Optional[bool] = None,
+        safety_checks: Optional[EnumTypeSafetyCheckLevel] = None,
+        experimental_features: Optional[bool] = None,
     ) -> None:
         self.language = language
         self.label = label

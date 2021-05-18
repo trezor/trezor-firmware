@@ -3,7 +3,7 @@ from typing import *
 
 # extmod/modtrezorconfig/modtrezorconfig.c
 def init(
-   ui_wait_callback: Callable[[int, int, str], bool] = None
+   ui_wait_callback: Callable[[int, int, str], bool] | None = None
 ) -> None:
     """
     Initializes the storage.  Must be called before any other method is
@@ -12,7 +12,7 @@ def init(
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
-def unlock(pin: int, ext_salt: Optional[bytes]) -> bool:
+def unlock(pin: str, ext_salt: bytes | None) -> bool:
     """
     Attempts to unlock the storage with the given PIN and external salt.
     Returns True on success, False on failure.
@@ -20,7 +20,7 @@ def unlock(pin: int, ext_salt: Optional[bytes]) -> bool:
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
-def check_pin(pin: int, ext_salt: Optional[bytes]) -> bool:
+def check_pin(pin: str, ext_salt: bytes | None) -> bool:
     """
     Check the given PIN with the given external salt.
     Returns True on success, False on failure.
@@ -57,10 +57,10 @@ def get_pin_rem() -> int:
 
 # extmod/modtrezorconfig/modtrezorconfig.c
 def change_pin(
-    oldpin: int,
-    newpin: int,
-    old_ext_salt: Optional[bytes],
-    new_ext_salt: Optional[bytes],
+    oldpin: str,
+    newpin: str,
+    old_ext_salt: bytes | None,
+    new_ext_salt: bytes | None,
 ) -> bool:
     """
     Change PIN and external salt. Returns True on success, False on failure.
@@ -68,7 +68,7 @@ def change_pin(
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
-def ensure_not_wipe_code(pin: int) -> None:
+def ensure_not_wipe_code(pin: str) -> None:
     """
     Wipes the device if the entered PIN is the wipe code.
     """
@@ -83,9 +83,9 @@ def has_wipe_code() -> bool:
 
 # extmod/modtrezorconfig/modtrezorconfig.c
 def change_wipe_code(
-    pin: int,
-    ext_salt: Optional[bytes],
-    wipe_code: int,
+    pin: str,
+    ext_salt: bytes | None,
+    wipe_code: str,
 ) -> bool:
     """
     Change wipe code. Returns True on success, False on failure.
@@ -93,7 +93,7 @@ def change_wipe_code(
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
-def get(app: int, key: int, public: bool = False) -> Optional[bytes]:
+def get(app: int, key: int, public: bool = False) -> bytes | None:
     """
     Gets the value of the given key for the given app (or None if not set).
     Raises a RuntimeError if decryption or authentication of the stored
@@ -109,7 +109,9 @@ def set(app: int, key: int, value: bytes, public: bool = False) -> None:
 
 
 # extmod/modtrezorconfig/modtrezorconfig.c
-def delete(app: int, key: int, public: bool = False) -> bool:
+def delete(
+    app: int, key: int, public: bool = False, writable_locked: bool = False
+) -> bool:
     """
     Deletes the given key of the given app.
     """
@@ -118,7 +120,7 @@ def delete(app: int, key: int, public: bool = False) -> bool:
 # extmod/modtrezorconfig/modtrezorconfig.c
 def set_counter(
     app: int, key: int, count: int, writable_locked: bool = False
-) -> bool:
+) -> None:
     """
     Sets the given key of the given app as a counter with the given value.
     """
@@ -127,7 +129,7 @@ def set_counter(
 # extmod/modtrezorconfig/modtrezorconfig.c
 def next_counter(
    app: int, key: int, writable_locked: bool = False,
-) -> Optional[int]:
+) -> int:
     """
     Increments the counter stored under the given key of the given app and
     returns the new value.

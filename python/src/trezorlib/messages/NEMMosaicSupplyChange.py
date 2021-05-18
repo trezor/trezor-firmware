@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeNEMSupplyChangeType = Literal[1, 2]
     except ImportError:
@@ -16,10 +16,10 @@ class NEMMosaicSupplyChange(p.MessageType):
     def __init__(
         self,
         *,
-        namespace: str = None,
-        mosaic: str = None,
-        type: EnumTypeNEMSupplyChangeType = None,
-        delta: int = None,
+        namespace: Optional[str] = None,
+        mosaic: Optional[str] = None,
+        type: Optional[EnumTypeNEMSupplyChangeType] = None,
+        delta: Optional[int] = None,
     ) -> None:
         self.namespace = namespace
         self.mosaic = mosaic

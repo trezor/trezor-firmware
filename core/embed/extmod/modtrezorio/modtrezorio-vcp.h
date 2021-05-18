@@ -37,6 +37,7 @@ typedef struct _mp_obj_VCP_t {
 ///     ep_in: int,
 ///     ep_out: int,
 ///     ep_cmd: int,
+///     emu_port: int,
 /// ) -> None:
 ///     """
 ///     """
@@ -59,6 +60,9 @@ STATIC mp_obj_t mod_trezorio_VCP_make_new(const mp_obj_type_t *type,
       {MP_QSTR_ep_cmd,
        MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT,
        {.u_int = 0}},
+      {MP_QSTR_emu_port,
+       MP_ARG_REQUIRED | MP_ARG_KW_ONLY | MP_ARG_INT,
+       {.u_int = 0}},
   };
   mp_arg_val_t vals[MP_ARRAY_SIZE(allowed_args)] = {0};
   mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args),
@@ -69,12 +73,14 @@ STATIC mp_obj_t mod_trezorio_VCP_make_new(const mp_obj_type_t *type,
   const mp_int_t ep_in = vals[2].u_int;
   const mp_int_t ep_out = vals[3].u_int;
   const mp_int_t ep_cmd = vals[4].u_int;
+  const mp_int_t emu_port = vals[5].u_int;
 
   CHECK_PARAM_RANGE(iface_num, 0, 32)
   CHECK_PARAM_RANGE(data_iface_num, 0, 32)
   CHECK_PARAM_RANGE(ep_in, 0, 255)
   CHECK_PARAM_RANGE(ep_out, 0, 255)
   CHECK_PARAM_RANGE(ep_cmd, 0, 255)
+  CHECK_PARAM_RANGE(emu_port, 0, 65535)
 
   const size_t vcp_buffer_len = 1024;
   const size_t vcp_packet_len = 64;
@@ -92,9 +98,13 @@ STATIC mp_obj_t mod_trezorio_VCP_make_new(const mp_obj_type_t *type,
   o->info.rx_intr_byte = 3;  // Ctrl-C
   o->info.iface_num = (uint8_t)(iface_num);
   o->info.data_iface_num = (uint8_t)(data_iface_num);
+#ifdef TREZOR_EMULATOR
+  o->info.emu_port = (uint16_t)(emu_port);
+#else
   o->info.ep_cmd = (uint8_t)(ep_cmd);
   o->info.ep_in = (uint8_t)(ep_in);
   o->info.ep_out = (uint8_t)(ep_out);
+#endif
   o->info.polling_interval = 10;
   o->info.max_packet_len = (uint8_t)(vcp_packet_len);
 

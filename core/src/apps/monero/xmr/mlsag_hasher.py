@@ -2,7 +2,6 @@ from apps.monero.xmr import crypto
 from apps.monero.xmr.keccak_hasher import KeccakXmrArchive
 
 if False:
-    from typing import List, Union
     from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import Bulletproof
 
 
@@ -54,7 +53,7 @@ class PreMlsagHasher:
         self.kc_master.update(c_hash)
         self.rtcsig_hasher = None
 
-    def rsig_val(self, p: Union[bytes, List[bytes], Bulletproof], raw: bool = False):
+    def rsig_val(self, p: bytes | list[bytes] | Bulletproof, raw: bool = False):
         if self.state == 8:
             raise ValueError("State error")
 

@@ -1,12 +1,15 @@
 DebugLinkDecision.input                 max_size:33
+DebugLinkDecision.x                     type:FT_IGNORE
+DebugLinkDecision.y                     type:FT_IGNORE
 
 DebugLinkState.layout                   max_size:1024
-DebugLinkState.pin                      max_size:10
+DebugLinkState.pin                      max_size:51
 DebugLinkState.matrix                   max_size:10
 DebugLinkState.mnemonic_secret          max_size:240
 DebugLinkState.reset_word               max_size:12
 DebugLinkState.reset_entropy            max_size:128
 DebugLinkState.recovery_fake_word       max_size:12
+DebugLinkState.layout_lines             type:FT_IGNORE
 
 DebugLinkLog.bucket                     max_size:33
 DebugLinkLog.text                       max_size:256
@@ -14,12 +17,8 @@ DebugLinkLog.text                       max_size:256
 DebugLinkMemory.memory                  max_size:1024
 DebugLinkMemoryWrite.memory             max_size:1024
 
-# unused fields
-DebugLinkState.layout_lines             max_count:10 max_size:30
-DebugLinkLayout.lines                   max_count:10 max_size:30
-DebugLinkRecordScreen.target_directory  max_size:1
-DebugLinkShowText.header_text           max_size:1
-DebugLinkShowText.body_text             max_count:1
-DebugLinkShowText.header_icon           max_size:1
-DebugLinkShowText.icon_color            max_size:1
-DebugLinkShowTextItem.content           max_size:1
+# Unused messages.
+DebugLinkLayout                         skip_message:true
+DebugLinkRecordScreen                   skip_message:true
+DebugLinkShowText                       skip_message:true
+DebugLinkShowTextItem                   skip_message:true

@@ -22,7 +22,7 @@ def sign(
     secret_key: bytes,
     digest: bytes,
     compressed: bool = True,
-    canonical: int = None,
+    canonical: int | None = None,
 ) -> bytes:
     """
     Uses secret key to produce the signature of the digest.

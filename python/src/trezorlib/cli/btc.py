@@ -190,6 +190,11 @@ def get_public_node(client, coin, address, curve, script_type, show_display):
     }
 
 
+def _append_descriptor_checksum(desc: str) -> str:
+    checksum = tools.descriptor_checksum(desc)
+    return f"{desc}#{checksum}"
+
+
 def _get_descriptor(client, coin, account, script_type, show_display):
     coin = coin or DEFAULT_COIN
     if script_type == messages.InputScriptType.SPENDADDRESS:
@@ -206,7 +211,7 @@ def _get_descriptor(client, coin, account, script_type, show_display):
 
     if coin is None or coin == "Bitcoin":
         coin_type = 0
-    elif coin == "Testnet":
+    elif coin == "Testnet" or coin == "Regtest":
         coin_type = 1
     else:
         raise ValueError("Unsupported coin")
@@ -225,7 +230,9 @@ def _get_descriptor(client, coin, account, script_type, show_display):
     fingerprint = pub.root_fingerprint if pub.root_fingerprint is not None else 0
     external = f"[{fingerprint:08x}{path[1:]}]{pub.xpub}/0/*"
     internal = f"[{fingerprint:08x}{path[1:]}]{pub.xpub}/1/*"
-    return fmt.format(external), fmt.format(internal)
+    external = _append_descriptor_checksum(fmt.format(external))
+    internal = _append_descriptor_checksum(fmt.format(internal))
+    return external, internal
 
 
 @cli.command()
@@ -240,7 +247,6 @@ def get_descriptor(client, coin, account, script_type, show_display):
     """Get descriptor of given account."""
     try:
         ds = _get_descriptor(client, coin, account, script_type, show_display)
-        click.echo()
         for d in ds:
             click.echo(d)
     except ValueError as e:

@@ -49,7 +49,7 @@ STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_update(mp_obj_t self, mp_obj_t data);
 ///     prf: int,
 ///     password: bytes,
 ///     salt: bytes,
-///     iterations: int = None,
+///     iterations: int | None = None,
 ///     blocknr: int = 1,
 /// ) -> None:
 ///     """

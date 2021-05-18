@@ -6,7 +6,7 @@ from .TezosContractID import TezosContractID
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -17,8 +17,8 @@ class TezosManagerTransfer(p.MessageType):
     def __init__(
         self,
         *,
-        destination: TezosContractID = None,
-        amount: int = None,
+        destination: Optional[TezosContractID] = None,
+        amount: Optional[int] = None,
     ) -> None:
         self.destination = destination
         self.amount = amount

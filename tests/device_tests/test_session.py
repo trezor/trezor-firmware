@@ -29,7 +29,6 @@ XPUB = "xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7
 PIN4 = "1234"
 
 
-@pytest.mark.skip_ui
 @pytest.mark.setup_client(pin=PIN4, passphrase=True)
 def test_clear_session(client):
     is_trezor1 = client.features.model == "1"
@@ -64,7 +63,6 @@ def test_clear_session(client):
         assert get_public_node(client, ADDRESS_N).xpub == XPUB
 
 
-@pytest.mark.skip_ui
 def test_end_session(client):
     # client instance starts out not initialized
     # XXX do we want to change this?
@@ -95,7 +93,6 @@ def test_end_session(client):
         client.end_session()
 
 
-@pytest.mark.skip_ui
 def test_cannot_resume_ended_session(client):
     session_id = client.session_id
     with client:
@@ -112,7 +109,6 @@ def test_cannot_resume_ended_session(client):
     assert session_id != client.session_id
 
 
-@pytest.mark.skip_ui
 def test_end_session_only_current(client):
     """test that EndSession only destroys the current session"""
     session_id_a = client.session_id
@@ -131,7 +127,6 @@ def test_end_session_only_current(client):
     assert client.session_id == session_id_a
 
 
-@pytest.mark.skip_ui
 @pytest.mark.setup_client(passphrase=True)
 def test_session_recycling(client):
     session_id_orig = client.session_id

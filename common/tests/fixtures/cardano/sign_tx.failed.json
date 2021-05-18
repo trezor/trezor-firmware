@@ -637,7 +637,7 @@
       }
     },
     {
-      "description": "Too many tokens in output",
+      "description": "Change output path larger than 100",
       "parameters": {
         "protocol_magic": 764824073,
         "network_id": 1,
@@ -646,6 +646,7 @@
         "certificates": [],
         "withdrawals": [],
         "metadata": "",
+        "input_flow": [["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -655,93 +656,88 @@
         ],
         "outputs": [
           {
-            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
-            "amount": "3003112",
-            "token_bundle": [
-              {
-                "policy_id": "95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
-                "tokens": [
-                  {
-                    "asset_name_bytes": "01aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                    "amount": "7878754"
-                  },
-                  {
-                    "asset_name_bytes": "02aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                    "amount": "1234"
-                  },
-                  {
-                    "asset_name_bytes": "03aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                    "amount": "1234"
-                  },
-                  {
-                    "asset_name_bytes": "04aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                    "amount": "1234"
-                  },
-                  {
-                    "asset_name_bytes": "05aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                    "amount": "1234"
-                  },
-                  {
-                    "asset_name_bytes": "06aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                    "amount": "1234"
-                  },
-                  {
-                    "asset_name_bytes": "07aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                    "amount": "1234"
-                  },
-                  {
-                    "asset_name_bytes": "08aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                    "amount": "1234"
-                  },
-                  {
-                    "asset_name_bytes": "09aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                    "amount": "1234"
-                  }
-                ]
-              },
-              {
-                "policy_id": "75a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
-                "tokens": [
-                  {
-                    "asset_name_bytes": "10aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                    "amount": "47"
-                  },
-                  {
-                    "asset_name_bytes": "11aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                    "amount": "47"
-                  },
-                  {
-                    "asset_name_bytes": "12aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                    "amount": "47"
-                  },
-                  {
-                    "asset_name_bytes": "13aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                    "amount": "47"
-                  },
-                  {
-                    "asset_name_bytes": "14aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                    "amount": "47"
-                  },
-                  {
-                    "asset_name_bytes": "15aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                    "amount": "47"
-                  },
-                  {
-                    "asset_name_bytes": "16aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                    "amount": "47"
-                  },
-                  {
-                    "asset_name_bytes": "17aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                    "amount": "47"
-                  }
-                ]
-              }
-            ]
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          },
+          {
+            "addressType": 0,
+            "path": "m/1852'/1815'/190'/0/0",
+            "stakingPath": "m/1852'/1815'/0'/2/0",
+            "amount": "7120787"
           }
         ]
       },
       "result": {
-        "error_message": "Maximum tx output size"
+        "error_message": "Invalid change output path"
+      }
+    },
+    {
+      "description": "Change output staking path larger than 100",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "metadata": "",
+        "input_flow": [["SWIPE", "YES"]],
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          },
+          {
+            "addressType": 0,
+            "path": "m/1852'/1815'/0'/0/0",
+            "stakingPath": "m/1852'/1815'/190'/2/0",
+            "amount": "7120787"
+          }
+        ]
+      },
+      "result": {
+        "error_message": "Invalid change output staking path"
+      }
+    },
+    {
+      "description": "Stake deregistration account larger than 100",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [
+          {
+            "type": 1,
+            "path": "m/1852'/1815'/190'/2/0"
+          }
+        ],
+        "withdrawals": [],
+        "metadata": "",
+        "input_flow": [["SWIPE", "YES"]],
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ]
+      },
+      "result": {
+        "error_message": "Invalid certificate path"
       }
     },
     {

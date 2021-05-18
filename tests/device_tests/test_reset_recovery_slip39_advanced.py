@@ -31,7 +31,6 @@ from ..common import (
 
 
 @pytest.mark.skip_t1
-@pytest.mark.skip_ui
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_recovery(client):
     mnemonics = reset(client)
@@ -171,8 +170,8 @@ def reset(client, strength=128):
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),  # show seeds ends here
                 messages.ButtonRequest(code=B.Success),
-                messages.Success(),
-                messages.Features(),
+                messages.Success,
+                messages.Features,
             ]
         )
         client.set_input_flow(input_flow)

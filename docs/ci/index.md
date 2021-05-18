@@ -1,6 +1,6 @@
 # CI
 
-The complete test suite is running on a public [GitLab CI](https://gitlab.com/satoshilabs/trezor/trezor-firmware). If you are an external contributor, we also have a [Travis instance](https://travis-ci.org/trezor/trezor-firmware) where a small subset of tests is running as well - mostly style and easy fast checks, which are quite common to fail for new contributors.
+The complete test suite is running on a public [GitLab CI](https://gitlab.com/satoshilabs/trezor/trezor-firmware). We currently do not have a CI for external contributors. If needed we will repush your PR to enable the CI.
 
 See this [list](jobs.md) of CI jobs descriptions for more info.
 

@@ -194,7 +194,7 @@ class TestMsgNEMSignTxMosaics:
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.ConfirmOutput),
                     proto.ButtonRequest(code=B.SignTx),
-                    proto.NEMSignedTx(),
+                    proto.NEMSignedTx,
                 ]
             )
             client.set_input_flow(input_flow)

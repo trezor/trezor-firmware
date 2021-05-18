@@ -1,7 +1,10 @@
+from ubinascii import hexlify
+
 from trezor.messages.EthereumPublicKey import EthereumPublicKey
 from trezor.messages.HDNodeType import HDNodeType
+from trezor.ui.layouts import show_pubkey
 
-from apps.common import coins, layout, paths
+from apps.common import coins, paths
 
 from .keychain import with_keychain_from_path
 
@@ -27,6 +30,6 @@ async def get_public_key(ctx, msg, keychain):
     )
 
     if msg.show_display:
-        await layout.show_pubkey(ctx, pubkey)
+        await show_pubkey(ctx, hexlify(pubkey).decode())
 
     return EthereumPublicKey(node=node_type, xpub=node_xpub)

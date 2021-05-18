@@ -1,21 +1,24 @@
+from micropython import const
+
 from storage.device import get_device_id
 from trezor import io, utils
+
+UDP_PORT = 0
+WIRE_PORT_OFFSET = const(0)
+DEBUGLINK_PORT_OFFSET = const(1)
+WEBAUTHN_PORT_OFFSET = const(2)
+VCP_PORT_OFFSET = const(3)
+
+if utils.EMULATOR:
+    import uos
+
+    UDP_PORT = int(uos.getenv("TREZOR_UDP_PORT") or "21324")
 
 _iface_iter = iter(range(5))
 
 ENABLE_IFACE_DEBUG = __debug__
-# change to False to enable VCP, see below
 ENABLE_IFACE_WEBAUTHN = not utils.BITCOIN_ONLY
-
-# We only have 10 available USB endpoints on real HW, of which 2 are taken up by the USB descriptor.
-# iface_wire, iface_debug and iface_webauthn also consume 2 each, iface_vcp uses 3.
-# That is a grand total of 11. That means that we can't enable everything at the same time.
-# By default, iface_vcp is only enabled on bitcoin_only firmware, where iface_webauthn
-# is disabled. Implementation-wise, we check if any of the previous ifaces is disabled
-# in order to enable VCP.
-ENABLE_IFACE_VCP = __debug__ and (
-    utils.EMULATOR or not ENABLE_IFACE_DEBUG or not ENABLE_IFACE_WEBAUTHN
-)
+ENABLE_IFACE_VCP = __debug__
 
 # interface used for trezor wire protocol
 id_wire = next(_iface_iter)
@@ -23,6 +26,7 @@ iface_wire = io.WebUSB(
     iface_num=id_wire,
     ep_in=0x81 + id_wire,
     ep_out=0x01 + id_wire,
+    emu_port=UDP_PORT + WIRE_PORT_OFFSET,
 )
 
 # XXXXXXXXXXXXXXXXXXX
@@ -43,6 +47,7 @@ if __debug__ and ENABLE_IFACE_DEBUG:
         iface_num=id_debug,
         ep_in=0x81 + id_debug,
         ep_out=0x01 + id_debug,
+        emu_port=UDP_PORT + DEBUGLINK_PORT_OFFSET,
     )
 
 if not utils.BITCOIN_ONLY and ENABLE_IFACE_WEBAUTHN:
@@ -52,6 +57,7 @@ if not utils.BITCOIN_ONLY and ENABLE_IFACE_WEBAUTHN:
         iface_num=id_webauthn,
         ep_in=0x81 + id_webauthn,
         ep_out=0x01 + id_webauthn,
+        emu_port=UDP_PORT + WEBAUTHN_PORT_OFFSET,
         # fmt: off
         report_desc=bytes([
             0x06, 0xd0, 0xf1,  # USAGE_PAGE (FIDO Alliance)
@@ -84,6 +90,7 @@ if __debug__ and ENABLE_IFACE_VCP:
         ep_in=0x81 + id_vcp,
         ep_out=0x01 + id_vcp,
         ep_cmd=0x81 + id_vcp_data,
+        emu_port=UDP_PORT + VCP_PORT_OFFSET,
     )
 
 bus = io.USB(

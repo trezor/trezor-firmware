@@ -6,7 +6,7 @@ from .MoneroSubAddressIndicesList import MoneroSubAddressIndicesList
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -18,11 +18,11 @@ class MoneroKeyImageExportInitRequest(p.MessageType):
     def __init__(
         self,
         *,
-        address_n: List[int] = None,
-        subs: List[MoneroSubAddressIndicesList] = None,
-        num: int = None,
-        hash: bytes = None,
-        network_type: int = None,
+        address_n: Optional[List[int]] = None,
+        subs: Optional[List[MoneroSubAddressIndicesList]] = None,
+        num: Optional[int] = None,
+        hash: Optional[bytes] = None,
+        network_type: Optional[int] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.subs = subs if subs is not None else []

@@ -19,7 +19,7 @@
 
 #include "buttons.h"
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 uint16_t buttonRead(void) {
   uint16_t state = 0;

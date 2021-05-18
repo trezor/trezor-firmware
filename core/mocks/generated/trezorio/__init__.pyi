@@ -42,6 +42,7 @@ class HID:
         iface_num: int,
         ep_in: int,
         ep_out: int,
+        emu_port: int,
         report_desc: bytes,
         subclass: int = 0,
         protocol: int = 0,
@@ -68,7 +69,7 @@ class HID:
 
 
 # extmod/modtrezorio/modtrezorio-poll.h
-def poll(ifaces: Iterable[int], list_ref: List, timeout_ms: int) -> bool:
+def poll(ifaces: Iterable[int], list_ref: list, timeout_ms: int) -> bool:
     """
     Wait until one of `ifaces` is ready to read or write (using masks
     `list_ref`:
@@ -119,7 +120,7 @@ class USB:
         """
         """
 
-    def add(self, iface: Union[HID, VCP, WebUSB]) -> None:
+    def add(self, iface: HID | VCP | WebUSB) -> None:
         """
         Registers passed interface into the USB stack.
         """
@@ -148,6 +149,7 @@ class VCP:
         ep_in: int,
         ep_out: int,
         ep_cmd: int,
+        emu_port: int,
     ) -> None:
         """
         """
@@ -169,6 +171,7 @@ class WebUSB:
         iface_num: int,
         ep_in: int,
         ep_out: int,
+        emu_port: int,
         subclass: int = 0,
         protocol: int = 0,
         polling_interval: int = 1,

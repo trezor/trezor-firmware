@@ -8,16 +8,15 @@ from trezor.crypto.hashlib import sha256
 from trezor.errors import MnemonicError
 from trezor.messages import BackupType
 from trezor.messages.Success import Success
+from trezor.ui.layouts import show_success
 
 from apps.common import mnemonic
-from apps.common.layout import show_success
 from apps.homescreen.homescreen import homescreen
 
 from .. import backup_types
 from . import layout, recover
 
 if False:
-    from typing import Optional, Tuple
     from trezor.messages.ResetDevice import EnumTypeBackupType
 
 
@@ -146,7 +145,9 @@ async def _finish_recovery(
 
     storage.recovery.end_progress()
 
-    await show_success(ctx, ("You have successfully", "recovered your wallet."))
+    await show_success(
+        ctx, "success_recovery", "You have successfully recovered your wallet."
+    )
     return Success(message="Device recovered")
 
 
@@ -160,13 +161,13 @@ async def _request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
 
 async def _process_words(
     ctx: wire.GenericContext, words: str
-) -> Tuple[Optional[bytes], EnumTypeBackupType]:
+) -> tuple[bytes | None, EnumTypeBackupType]:
     word_count = len(words.split(" "))
     is_slip39 = backup_types.is_slip39_word_count(word_count)
 
     share = None
     if not is_slip39:  # BIP-39
-        secret: Optional[bytes] = recover.process_bip39(words)
+        secret: bytes | None = recover.process_bip39(words)
     else:
         secret, share = recover.process_slip39(words)
 

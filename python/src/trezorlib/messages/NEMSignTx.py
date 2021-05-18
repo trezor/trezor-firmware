@@ -12,7 +12,7 @@ from .NEMTransfer import NEMTransfer
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -24,15 +24,15 @@ class NEMSignTx(p.MessageType):
     def __init__(
         self,
         *,
-        transaction: NEMTransactionCommon = None,
-        multisig: NEMTransactionCommon = None,
-        transfer: NEMTransfer = None,
-        cosigning: bool = None,
-        provision_namespace: NEMProvisionNamespace = None,
-        mosaic_creation: NEMMosaicCreation = None,
-        supply_change: NEMMosaicSupplyChange = None,
-        aggregate_modification: NEMAggregateModification = None,
-        importance_transfer: NEMImportanceTransfer = None,
+        transaction: Optional[NEMTransactionCommon] = None,
+        multisig: Optional[NEMTransactionCommon] = None,
+        transfer: Optional[NEMTransfer] = None,
+        cosigning: Optional[bool] = None,
+        provision_namespace: Optional[NEMProvisionNamespace] = None,
+        mosaic_creation: Optional[NEMMosaicCreation] = None,
+        supply_change: Optional[NEMMosaicSupplyChange] = None,
+        aggregate_modification: Optional[NEMAggregateModification] = None,
+        importance_transfer: Optional[NEMImportanceTransfer] = None,
     ) -> None:
         self.transaction = transaction
         self.multisig = multisig

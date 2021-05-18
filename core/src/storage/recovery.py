@@ -24,10 +24,6 @@ _SLIP39_GROUP_COUNT        = const(0x07)  # int
 _DEFAULT_SLIP39_GROUP_COUNT = const(1)
 
 
-if False:
-    from typing import List, Optional
-
-
 def _require_progress() -> None:
     if not is_in_progress():
         raise RuntimeError
@@ -56,7 +52,7 @@ def set_slip39_identifier(identifier: int) -> None:
     common.set_uint16(_NAMESPACE, _SLIP39_IDENTIFIER, identifier)
 
 
-def get_slip39_identifier() -> Optional[int]:
+def get_slip39_identifier() -> int | None:
     _require_progress()
     return common.get_uint16(_NAMESPACE, _SLIP39_IDENTIFIER)
 
@@ -66,7 +62,7 @@ def set_slip39_iteration_exponent(exponent: int) -> None:
     common.set_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT, exponent)
 
 
-def get_slip39_iteration_exponent() -> Optional[int]:
+def get_slip39_iteration_exponent() -> int | None:
     _require_progress()
     return common.get_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT)
 
@@ -102,7 +98,7 @@ def set_slip39_remaining_shares(shares_remaining: int, group_index: int) -> None
     common.set(_NAMESPACE, _REMAINING, remaining)
 
 
-def get_slip39_remaining_shares(group_index: int) -> Optional[int]:
+def get_slip39_remaining_shares(group_index: int) -> int | None:
     _require_progress()
     remaining = common.get(_NAMESPACE, _REMAINING)
     if remaining is None or remaining[group_index] == slip39.MAX_SHARE_COUNT:
@@ -111,7 +107,7 @@ def get_slip39_remaining_shares(group_index: int) -> Optional[int]:
         return remaining[group_index]
 
 
-def fetch_slip39_remaining_shares() -> Optional[List[int]]:
+def fetch_slip39_remaining_shares() -> list[int] | None:
     _require_progress()
     remaining = common.get(_NAMESPACE, _REMAINING)
     if not remaining:

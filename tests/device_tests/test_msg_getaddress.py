@@ -33,7 +33,6 @@ def getmultisig(chain, nr, xpubs, signatures=[b"", b"", b""]):
     )
 
 
-@pytest.mark.skip_ui
 class TestMsgGetaddress:
     def test_btc(self, client):
         assert (
@@ -231,7 +230,6 @@ class TestMsgGetaddress:
 
 
 @pytest.mark.skip_t1
-@pytest.mark.skip_ui
 def test_invalid_path(client):
     with pytest.raises(TrezorFailure, match="Forbidden key path"):
         # slip44 id mismatch
@@ -288,7 +286,6 @@ def test_unknown_path_t1(client):
 
 
 @pytest.mark.altcoin
-@pytest.mark.skip_ui
 def test_crw(client):
     assert (
         btc.get_address(client, "Crown", parse_path("44'/72'/0'/0/0"))

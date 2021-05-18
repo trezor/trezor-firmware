@@ -37,10 +37,10 @@ from trezor.crypto import hmac, pbkdf2, random
 from trezor.errors import MnemonicError
 
 if False:
-    from typing import Dict, Iterable, List, Optional, Set, Tuple
+    from typing import Iterable, Tuple
 
     Indices = Tuple[int, ...]
-    MnemonicGroups = Dict[int, Tuple[int, Set[Tuple[int, bytes]]]]
+    MnemonicGroups = dict[int, tuple[int, set[tuple[int, bytes]]]]
 
 """
 ## Simple helpers
@@ -196,11 +196,11 @@ def generate_random_identifier() -> int:
 
 def split_ems(
     group_threshold: int,  # The number of groups required to reconstruct the master secret.
-    groups: List[Tuple[int, int]],  # A list of (member_threshold, member_count).
+    groups: list[tuple[int, int]],  # A list of (member_threshold, member_count).
     identifier: int,
     iteration_exponent: int,
     encrypted_master_secret: bytes,  # The encrypted master secret to split.
-) -> List[List[str]]:
+) -> list[list[str]]:
     """
     Splits an encrypted master secret into mnemonic shares using Shamir's secret sharing scheme.
 
@@ -229,7 +229,7 @@ def split_ems(
     # Split the Encrypted Master Secret on the group level.
     group_shares = _split_secret(group_threshold, len(groups), encrypted_master_secret)
 
-    mnemonics: List[List[str]] = []
+    mnemonics: list[list[str]] = []
     for (member_threshold, member_count), (group_index, group_secret) in zip(
         groups, group_shares
     ):
@@ -253,7 +253,7 @@ def split_ems(
     return mnemonics
 
 
-def recover_ems(mnemonics: List[str]) -> Tuple[int, int, bytes]:
+def recover_ems(mnemonics: list[str]) -> tuple[int, int, bytes]:
     """
     Combines mnemonic shares to obtain the encrypted master secret which was previously
     split using Shamir's secret sharing scheme.
@@ -426,7 +426,7 @@ def _rs1024_verify_checksum(data: Indices) -> bool:
     return _rs1024_polymod(tuple(_CUSTOMIZATION_STRING) + data) == 1
 
 
-def _rs1024_error_index(data: Indices) -> Optional[int]:
+def _rs1024_error_index(data: Indices) -> int | None:
     """
     Returns the index where an error possibly occurred.
     Currently unused.
@@ -484,7 +484,7 @@ def _create_digest(random_data: bytes, shared_secret: bytes) -> bytes:
 
 def _split_secret(
     threshold: int, share_count: int, shared_secret: bytes
-) -> List[Tuple[int, bytes]]:
+) -> list[tuple[int, bytes]]:
     if threshold < 1:
         raise ValueError(
             "The requested threshold ({}) must be a positive integer.".format(threshold)
@@ -526,7 +526,7 @@ def _split_secret(
     return shares
 
 
-def _recover_secret(threshold: int, shares: List[Tuple[int, bytes]]) -> bytes:
+def _recover_secret(threshold: int, shares: list[tuple[int, bytes]]) -> bytes:
     # If the threshold is 1, then the digest of the shared secret is not used.
     if threshold == 1:
         return shares[0][1]
@@ -591,8 +591,8 @@ def _encode_mnemonic(
 
 
 def _decode_mnemonics(
-    mnemonics: List[str],
-) -> Tuple[int, int, int, int, MnemonicGroups]:
+    mnemonics: list[str],
+) -> tuple[int, int, int, int, MnemonicGroups]:
     identifiers = set()
     iteration_exponents = set()
     group_thresholds = set()

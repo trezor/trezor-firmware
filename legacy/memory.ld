@@ -18,6 +18,7 @@ INCLUDE cortex-m-generic.ld
 
 _ram_start = ORIGIN(ram);
 _ram_end = ORIGIN(ram) + LENGTH(ram);
+_stay_in_bootloader_flag_addr = ABSOLUTE(0x20010000);
 _stack = _ram_end - 8;
 __stack_chk_guard = _ram_end - 8;
 system_millis = _ram_end - 4;

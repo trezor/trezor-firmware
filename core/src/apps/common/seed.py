@@ -10,7 +10,12 @@ if False:
 
 
 class Slip21Node:
-    def __init__(self, seed: bytes = None, data: bytes = None) -> None:
+    """
+    This class implements the SLIP-0021 hierarchical derivation of symmetric keys, see
+    https://github.com/satoshilabs/slips/blob/master/slip-0021.md.
+    """
+
+    def __init__(self, seed: bytes | None = None, data: bytes | None = None) -> None:
         assert seed is None or data is None, "Specify exactly one of: seed, data"
         if data is not None:
             self.data = data

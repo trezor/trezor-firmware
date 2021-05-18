@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeRecoveryDeviceType = Literal[0, 1]
     except ImportError:
@@ -17,15 +17,15 @@ class RecoveryDevice(p.MessageType):
     def __init__(
         self,
         *,
-        word_count: int = None,
-        passphrase_protection: bool = None,
-        pin_protection: bool = None,
-        language: str = None,
-        label: str = None,
-        enforce_wordlist: bool = None,
-        type: EnumTypeRecoveryDeviceType = None,
-        u2f_counter: int = None,
-        dry_run: bool = None,
+        word_count: Optional[int] = None,
+        passphrase_protection: Optional[bool] = None,
+        pin_protection: Optional[bool] = None,
+        language: Optional[str] = None,
+        label: Optional[str] = None,
+        enforce_wordlist: Optional[bool] = None,
+        type: Optional[EnumTypeRecoveryDeviceType] = None,
+        u2f_counter: Optional[int] = None,
+        dry_run: Optional[bool] = None,
     ) -> None:
         self.word_count = word_count
         self.passphrase_protection = passphrase_protection

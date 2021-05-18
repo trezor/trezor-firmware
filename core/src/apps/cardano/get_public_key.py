@@ -3,22 +3,22 @@ from ubinascii import hexlify
 from trezor import log, wire
 from trezor.messages.CardanoPublicKey import CardanoPublicKey
 from trezor.messages.HDNodeType import HDNodeType
+from trezor.ui.layouts import show_pubkey
 
-from apps.common import layout, paths
+from apps.common import paths
 from apps.common.seed import remove_ed25519_prefix
 
 from . import seed
 from .helpers.paths import SCHEMA_PUBKEY
 
 if False:
-    from typing import List
-    from trezor.messages import CardanoGetPublicKey
+    from trezor.messages.CardanoGetPublicKey import CardanoGetPublicKey
 
 
 @seed.with_keychain
 async def get_public_key(
     ctx: wire.Context, msg: CardanoGetPublicKey, keychain: seed.Keychain
-):
+) -> CardanoPublicKey:
     await paths.validate_path(
         ctx,
         keychain,
@@ -35,12 +35,12 @@ async def get_public_key(
         raise wire.ProcessError("Deriving public key failed")
 
     if msg.show_display:
-        await layout.show_pubkey(ctx, key.node.public_key)
+        await show_pubkey(ctx, hexlify(key.node.public_key).decode())
     return key
 
 
 def _get_public_key(
-    keychain: seed.Keychain, derivation_path: List[int]
+    keychain: seed.Keychain, derivation_path: list[int]
 ) -> CardanoPublicKey:
     node = keychain.derive(derivation_path)
 

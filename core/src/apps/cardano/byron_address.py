@@ -21,7 +21,7 @@ with base58 encoding and all the nuances of Byron addresses.
 """
 
 
-def _encode_address_raw(address_data_encoded) -> bytes:
+def _encode_address_raw(address_data_encoded: bytes) -> bytes:
     return cbor.encode(
         [cbor.Tagged(24, address_data_encoded), crc.crc32(address_data_encoded)]
     )

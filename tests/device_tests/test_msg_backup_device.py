@@ -56,8 +56,8 @@ def test_backup_bip39(client):
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
                 messages.ButtonRequest(code=B.Success),
-                messages.Success(),
-                messages.Features(),
+                messages.Success,
+                messages.Features,
             ]
         )
         device.backup(client)
@@ -119,8 +119,8 @@ def test_backup_slip39_basic(client):
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
                 messages.ButtonRequest(code=B.Success),
-                messages.Success(),
-                messages.Features(),
+                messages.Success,
+                messages.Features,
             ]
         )
         device.backup(client)
@@ -239,8 +239,8 @@ def test_backup_slip39_advanced(client):
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),  # show seeds ends here
                 messages.ButtonRequest(code=B.Success),
-                messages.Success(),
-                messages.Features(),
+                messages.Success,
+                messages.Features,
             ]
         )
         device.backup(client)

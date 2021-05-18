@@ -25,7 +25,7 @@
 
 /// package: trezorcrypto.bip39
 
-/// def complete_word(prefix: str) -> Optional[str]:
+/// def complete_word(prefix: str) -> str | None:
 ///     """
 ///     Return the first word from the wordlist starting with prefix.
 ///     """
@@ -125,7 +125,7 @@ STATIC void wrapped_ui_wait_callback(uint32_t current, uint32_t total) {
 /// def seed(
 ///     mnemonic: str,
 ///     passphrase: str,
-///     callback: Callable[[int, int], None] = None,
+///     callback: Callable[[int, int], None] | None = None,
 /// ) -> bytes:
 ///     """
 ///     Generate seed from mnemonic and passphrase.

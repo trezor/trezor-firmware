@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,8 +16,8 @@ class Ping(p.MessageType):
     def __init__(
         self,
         *,
-        message: str = None,
-        button_protection: bool = None,
+        message: str = "",
+        button_protection: Optional[bool] = None,
     ) -> None:
         self.message = message
         self.button_protection = button_protection
@@ -25,6 +25,6 @@ class Ping(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('message', p.UnicodeType, None),
+            1: ('message', p.UnicodeType, ""),  # default=
             2: ('button_protection', p.BoolType, None),
         }

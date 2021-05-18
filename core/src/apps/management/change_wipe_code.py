@@ -1,12 +1,11 @@
 from storage.device import is_initialized
 from trezor import config, ui, wire
 from trezor.messages.Success import Success
-from trezor.pin import pin_to_int
+from trezor.ui.components.tt.text import Text
+from trezor.ui.layouts import show_success
 from trezor.ui.popup import Popup
-from trezor.ui.text import Text
 
 from apps.common.confirm import require_confirm
-from apps.common.layout import show_success
 from apps.common.request_pin import (
     error_pin_invalid,
     request_pin,
@@ -30,7 +29,7 @@ async def change_wipe_code(ctx: wire.Context, msg: ChangeWipeCode) -> Success:
 
     if not msg.remove:
         # Pre-check the entered PIN.
-        if config.has_pin() and not config.check_pin(pin_to_int(pin), salt):
+        if config.has_pin() and not config.check_pin(pin, salt):
             await error_pin_invalid(ctx)
 
         # Get new wipe code.
@@ -39,21 +38,21 @@ async def change_wipe_code(ctx: wire.Context, msg: ChangeWipeCode) -> Success:
         wipe_code = ""
 
     # Write into storage.
-    if not config.change_wipe_code(pin_to_int(pin), salt, pin_to_int(wipe_code)):
+    if not config.change_wipe_code(pin, salt, wipe_code):
         await error_pin_invalid(ctx)
 
     if wipe_code:
         if has_wipe_code:
-            msg_screen = "changed the wipe code."
+            msg_screen = "You have successfully changed the wipe code."
             msg_wire = "Wipe code changed"
         else:
-            msg_screen = "set the wipe code."
+            msg_screen = "You have successfully set the wipe code."
             msg_wire = "Wipe code set"
     else:
-        msg_screen = "disabled the wipe code."
+        msg_screen = "You have successfully disabled the wipe code."
         msg_wire = "Wipe code removed"
 
-    await show_success(ctx, ("You have successfully", msg_screen))
+    await show_success(ctx, "success_wipe_code", msg_screen)
     return Success(message=msg_wire)
 
 

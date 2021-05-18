@@ -4,11 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## 2.3.6 [unreleased]
+## 2.4.0 [unreleased]
 
 ### Added
+- Locking the device by holding finger on the homescreen for 2.5 seconds.  [#1404]
+- Public key to ECDHSessionKey.  [#1518]
+- Decred staking.  [#1249]
 
 ### Changed
+- Allow decreasing the output value in RBF transactions.  [#1491]
+- Cardano: Allow stake pool registrations with zero margin.  [#1502]
+- Cardano: Assets are now shown as CIP-0014.  [#1510]
+- Support PIN of unlimited length.  [#1167]
 
 ### Deprecated
 
@@ -18,7 +25,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Security
 
-## 2.3.5 [to be released on 10th February 2021]
+## 2.3.6 [15th February 2021]
+
+### Added
+- Compatibility paths for Unchained Capital.  [#1467]
+
+## 2.3.5 [10th February 2021]
 
 ### Added
 - CoinJoin preauthorization and signing flow.  [#1053]
@@ -46,6 +58,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 - PIVX support
+- dropped debug-only `DebugLinkShowText` functionality
 
 ### Fixed
 - Path warning is not shown on `GetAddress(show_display=False)` call.  [#1206]
@@ -346,6 +359,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1139]: https://github.com/trezor/trezor-firmware/issues/1139
 [#1159]: https://github.com/trezor/trezor-firmware/issues/1159
 [#1165]: https://github.com/trezor/trezor-firmware/pull/1165
+[#1167]: https://github.com/trezor/trezor-firmware/issues/1167
 [#1173]: https://github.com/trezor/trezor-firmware/pull/1173
 [#1184]: https://github.com/trezor/trezor-firmware/issues/1184
 [#1188]: https://github.com/trezor/trezor-firmware/issues/1188
@@ -353,6 +367,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1193]: https://github.com/trezor/trezor-firmware/issues/1193
 [#1206]: https://github.com/trezor/trezor-firmware/issues/1206
 [#1246]: https://github.com/trezor/trezor-firmware/issues/1246
+[#1249]: https://github.com/trezor/trezor-firmware/issues/1249
 [#1271]: https://github.com/trezor/trezor-firmware/issues/1271
 [#1292]: https://github.com/trezor/trezor-firmware/issues/1292
 [#1322]: https://github.com/trezor/trezor-firmware/issues/1322
@@ -363,4 +378,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1384]: https://github.com/trezor/trezor-firmware/issues/1384
 [#1399]: https://github.com/trezor/trezor-firmware/issues/1399
 [#1402]: https://github.com/trezor/trezor-firmware/pull/1402
+[#1404]: https://github.com/trezor/trezor-firmware/issues/1404
 [#1415]: https://github.com/trezor/trezor-firmware/pull/1415
+[#1467]: https://github.com/trezor/trezor-firmware/issues/1467
+[#1491]: https://github.com/trezor/trezor-firmware/issues/1491
+[#1502]: https://github.com/trezor/trezor-firmware/issues/1502
+[#1510]: https://github.com/trezor/trezor-firmware/issues/1510
+[#1518]: https://github.com/trezor/trezor-firmware/pull/1518

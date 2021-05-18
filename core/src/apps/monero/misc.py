@@ -1,5 +1,4 @@
 if False:
-    from typing import Tuple
     from apps.monero.xmr.types import Sc25519
 
 
@@ -32,7 +31,7 @@ def compute_tx_key(
 
 def compute_enc_key_host(
     view_key_private: Sc25519, tx_prefix_hash: bytes
-) -> Tuple[bytes, bytes]:
+) -> tuple[bytes, bytes]:
     from apps.monero.xmr import crypto
 
     salt = crypto.random_bytes(32)

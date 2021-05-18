@@ -1,12 +1,22 @@
+import utime
+from micropython import const
+
 import storage
 import storage.device
 from trezor import config, ui
+from trezor.ui.loader import Loader, LoaderNeutral
+
+from apps.base import lock_device
 
 from . import HomescreenBase
+
+_LOADER_DELAY_MS = const(500)
+_LOADER_TOTAL_MS = const(2500)
 
 
 async def homescreen() -> None:
     await Homescreen()
+    lock_device()
 
 
 class Homescreen(HomescreenBase):
@@ -15,7 +25,18 @@ class Homescreen(HomescreenBase):
         if not storage.device.is_initialized():
             self.label = "Go to trezor.io/start"
 
+        self.loader = Loader(
+            style=LoaderNeutral,
+            target_ms=_LOADER_TOTAL_MS - _LOADER_DELAY_MS,
+            offset_y=-10,
+            reverse_speedup=3,
+        )
+        self.touch_ms: int | None = None
+
     def on_render(self) -> None:
+        if not self.repaint:
+            return
+
         # warning bar on top
         if storage.device.is_initialized() and storage.device.no_backup():
             ui.header_error("SEEDLESS")
@@ -33,3 +54,39 @@ class Homescreen(HomescreenBase):
         # homescreen with shifted avatar and text on bottom
         ui.display.avatar(48, 48 - 10, self.image, ui.WHITE, ui.BLACK)
         ui.display.text_center(ui.WIDTH // 2, 220, self.label, ui.BOLD, ui.FG, ui.BG)
+
+        self.repaint = False
+
+    def on_touch_start(self, _x: int, _y: int) -> None:
+        if self.loader.start_ms is not None:
+            self.loader.start()
+        elif config.has_pin():
+            self.touch_ms = utime.ticks_ms()
+
+    def on_touch_end(self, _x: int, _y: int) -> None:
+        if self.loader.start_ms is not None:
+            self.repaint = True
+        self.loader.stop()
+        self.touch_ms = None
+
+        # raise here instead of self.loader.on_finish so as not to send TOUCH_END to the lockscreen
+        if self.loader.elapsed_ms() >= self.loader.target_ms:
+            raise ui.Result(None)
+
+    def _loader_start(self) -> None:
+        ui.display.clear()
+        ui.display.text_center(ui.WIDTH // 2, 35, "Hold to lock", ui.BOLD, ui.FG, ui.BG)
+        self.loader.start()
+
+    def dispatch(self, event: int, x: int, y: int) -> None:
+        if (
+            self.touch_ms is not None
+            and self.touch_ms + _LOADER_DELAY_MS < utime.ticks_ms()
+        ):
+            self.touch_ms = None
+            self._loader_start()
+
+        if event is ui.RENDER and self.loader.start_ms is not None:
+            self.loader.dispatch(event, x, y)
+        else:
+            super().dispatch(event, x, y)

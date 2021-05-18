@@ -10,11 +10,12 @@ PYTHON ?= python
 ifeq ($(EMULATOR),1)
 CC       ?= gcc
 LD       := $(CC)
-OBJCOPY  := objcopy
-OBJDUMP  := objdump
+OBJCOPY  := true
+OBJDUMP  := true
 AR       := ar
 AS       := as
 
+CONFFLAG ?= -DCONFIDENTIAL=''
 OPTFLAGS ?= -O3
 DBGFLAGS ?= -g3 -ggdb3
 CPUFLAGS ?=
@@ -27,9 +28,11 @@ OBJCOPY  := $(PREFIX)objcopy
 OBJDUMP  := $(PREFIX)objdump
 AR       := $(PREFIX)ar
 AS       := $(PREFIX)as
-OPENOCD  := openocd -f interface/stlink-v2.cfg -c "transport select hla_swd" -f target/stm32f2x.cfg
+OPENOCD  := openocd -f interface/stlink.cfg -c "transport select hla_swd" -f target/stm32f2x.cfg
+
 GDB      := $(PREFIX)gdb --nx -ex 'set remotetimeout unlimited' -ex 'set confirm off' -ex 'target remote 127.0.0.1:3333' -ex 'monitor reset halt'
 
+CONFFLAG ?= -DCONFIDENTIAL='__attribute__((section("confidential")))'
 OPTFLAGS ?= -O3
 DBGFLAGS ?= -g -DNDEBUG
 CPUFLAGS ?= -mcpu=cortex-m3 -mthumb
@@ -66,8 +69,8 @@ CFLAGS   += $(OPTFLAGS) \
             -fstack-protector-all \
             $(CPUFLAGS) \
             $(FPUFLAGS) \
+            $(CONFFLAG) \
             -DSTM32F2 \
-            -DCONFIDENTIAL='__attribute__((section("confidential")))' \
             -DRAND_PLATFORM_INDEPENDENT=1 \
             -I$(TOOLCHAIN_DIR)/include \
             -I$(TOP_DIR) \

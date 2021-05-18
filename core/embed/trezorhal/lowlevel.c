@@ -176,8 +176,9 @@ secbool reset_flags_check(void) {
     return secfalse;
   }
 #endif
-
-  RCC->CSR |= RCC_CSR_RMVF;  // clear the reset flags
-
   return sectrue;
+}
+
+void reset_flags_reset(void) {
+  RCC->CSR |= RCC_CSR_RMVF;  // clear the reset flags
 }

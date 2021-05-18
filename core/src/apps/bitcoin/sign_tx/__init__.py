@@ -10,7 +10,7 @@ if not utils.BITCOIN_ONLY:
     from . import bitcoinlike, decred, zcash
 
 if False:
-    from typing import Optional, Union
+    from typing import Protocol, Union
 
     from protobuf import FieldCache
 
@@ -36,6 +36,19 @@ if False:
         TxAckPrevExtraData,
     ]
 
+    class SignerClass(Protocol):
+        def __init__(
+            self,
+            tx: SignTx,
+            keychain: Keychain,
+            coin: CoinInfo,
+            approver: approvers.Approver | None,
+        ) -> None:
+            ...
+
+        async def signer(self) -> None:
+            ...
+
 
 @with_keychain
 async def sign_tx(
@@ -43,17 +56,14 @@ async def sign_tx(
     msg: SignTx,
     keychain: Keychain,
     coin: CoinInfo,
-    authorization: Optional[CoinJoinAuthorization] = None,
+    authorization: CoinJoinAuthorization | None = None,
 ) -> TxRequest:
+    approver: approvers.Approver | None = None
     if authorization:
-        approver: approvers.Approver = approvers.CoinJoinApprover(
-            msg, coin, authorization
-        )
-    else:
-        approver = approvers.BasicApprover(msg, coin)
+        approver = approvers.CoinJoinApprover(msg, coin, authorization)
 
     if utils.BITCOIN_ONLY or coin.coin_name in BITCOIN_NAMES:
-        signer_class = bitcoin.Bitcoin
+        signer_class: type[SignerClass] = bitcoin.Bitcoin
     else:
         if coin.decred:
             signer_class = decred.Decred
@@ -64,7 +74,7 @@ async def sign_tx(
 
     signer = signer_class(msg, keychain, coin, approver).signer()
 
-    res: Union[TxAckType, bool, None] = None
+    res: TxAckType | bool | None = None
     field_cache: FieldCache = {}
     while True:
         req = signer.send(res)

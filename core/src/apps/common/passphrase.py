@@ -6,8 +6,8 @@ from trezor.messages import ButtonRequestType
 from trezor.messages.PassphraseAck import PassphraseAck
 from trezor.messages.PassphraseRequest import PassphraseRequest
 from trezor.ui import ICON_CONFIG, draw_simple
-from trezor.ui.passphrase import CANCELLED, PassphraseKeyboard
-from trezor.ui.text import Text
+from trezor.ui.components.tt.passphrase import CANCELLED, PassphraseKeyboard
+from trezor.ui.components.tt.text import Text
 
 from . import button_request
 from .confirm import require_confirm

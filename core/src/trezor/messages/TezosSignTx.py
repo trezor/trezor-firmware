@@ -11,7 +11,7 @@ from .TezosTransactionOp import TezosTransactionOp
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -23,14 +23,14 @@ class TezosSignTx(p.MessageType):
     def __init__(
         self,
         *,
-        address_n: List[int] = None,
-        branch: bytes = None,
-        reveal: TezosRevealOp = None,
-        transaction: TezosTransactionOp = None,
-        origination: TezosOriginationOp = None,
-        delegation: TezosDelegationOp = None,
-        proposal: TezosProposalOp = None,
-        ballot: TezosBallotOp = None,
+        branch: bytes,
+        address_n: Optional[List[int]] = None,
+        reveal: Optional[TezosRevealOp] = None,
+        transaction: Optional[TezosTransactionOp] = None,
+        origination: Optional[TezosOriginationOp] = None,
+        delegation: Optional[TezosDelegationOp] = None,
+        proposal: Optional[TezosProposalOp] = None,
+        ballot: Optional[TezosBallotOp] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.branch = branch
@@ -45,7 +45,7 @@ class TezosSignTx(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            2: ('branch', p.BytesType, None),
+            2: ('branch', p.BytesType, p.FLAG_REQUIRED),
             3: ('reveal', TezosRevealOp, None),
             4: ('transaction', TezosTransactionOp, None),
             5: ('origination', TezosOriginationOp, None),

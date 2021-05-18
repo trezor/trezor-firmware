@@ -3,7 +3,7 @@ import storage.device
 import storage.recovery
 import storage.sd_salt
 from storage import cache
-from trezor import config, sdcard, utils, wire, workflow
+from trezor import config, sdcard, ui, utils, wire, workflow
 from trezor.messages import Capability, MessageType
 from trezor.messages.Features import Features
 from trezor.messages.PreauthorizedRequest import PreauthorizedRequest
@@ -14,7 +14,7 @@ from apps.common.request_pin import verify_user_pin
 
 if False:
     import protobuf
-    from typing import Iterable, NoReturn, Optional, Protocol
+    from typing import Iterable, NoReturn, Protocol
     from trezor.messages.Initialize import Initialize
     from trezor.messages.EndSession import EndSession
     from trezor.messages.GetFeatures import GetFeatures
@@ -35,19 +35,20 @@ if False:
 
 
 def get_features() -> Features:
-    f = Features()
-    f.vendor = "trezor.io"
-    f.language = "en-US"
-    f.major_version = utils.VERSION_MAJOR
-    f.minor_version = utils.VERSION_MINOR
-    f.patch_version = utils.VERSION_PATCH
-    f.revision = utils.GITREV.encode()
-    f.model = utils.MODEL
-    f.device_id = storage.device.get_device_id()
-    f.label = storage.device.get_label()
-    f.pin_protection = config.has_pin()
-    f.unlocked = config.is_unlocked()
-    f.passphrase_protection = storage.device.is_passphrase_enabled()
+    f = Features(
+        vendor="trezor.io",
+        language="en-US",
+        major_version=utils.VERSION_MAJOR,
+        minor_version=utils.VERSION_MINOR,
+        patch_version=utils.VERSION_PATCH,
+        revision=utils.GITREV.encode(),
+        model=utils.MODEL,
+        device_id=storage.device.get_device_id(),
+        label=storage.device.get_label(),
+        pin_protection=config.has_pin(),
+        unlocked=config.is_unlocked(),
+        passphrase_protection=storage.device.is_passphrase_enabled(),
+    )
 
     if utils.BITCOIN_ONLY:
         f.capabilities = [
@@ -128,11 +129,10 @@ async def handle_EndSession(ctx: wire.Context, msg: EndSession) -> Success:
 
 async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:
     if msg.button_protection:
-        from apps.common.confirm import require_confirm
+        from trezor.ui.layouts import confirm_action
         from trezor.messages.ButtonRequestType import ProtectCall
-        from trezor.ui.text import Text
 
-        await require_confirm(ctx, Text("Confirm"), ProtectCall)
+        await confirm_action(ctx, "ping", "Confirm", "ping", br_code=ProtectCall)
     return Success(message=msg.message)
 
 
@@ -214,6 +214,11 @@ def lock_device() -> None:
         workflow.close_others()
 
 
+def lock_device_if_unlocked() -> None:
+    if config.is_unlocked():
+        lock_device()
+
+
 async def unlock_device(ctx: wire.GenericContext = wire.DUMMY_CONTEXT) -> None:
     """Ensure the device is in unlocked state.
 
@@ -230,7 +235,7 @@ async def unlock_device(ctx: wire.GenericContext = wire.DUMMY_CONTEXT) -> None:
 
 def get_pinlocked_handler(
     iface: wire.WireInterface, msg_type: int
-) -> Optional[wire.Handler[wire.Msg]]:
+) -> wire.Handler[wire.Msg] | None:
     orig_handler = wire.find_registered_workflow_handler(iface, msg_type)
     if orig_handler is None:
         return None
@@ -253,6 +258,15 @@ def get_pinlocked_handler(
     return wrapper
 
 
+# this function is also called when handling ApplySettings
+def reload_settings_from_storage() -> None:
+    workflow.idle_timer.set(
+        storage.device.get_autolock_delay_ms(), lock_device_if_unlocked
+    )
+    wire.experimental_enabled = storage.device.get_experimental_features()
+    ui.display.orientation(storage.device.get_rotation())
+
+
 def boot() -> None:
     wire.register(MessageType.Initialize, handle_Initialize)
     wire.register(MessageType.GetFeatures, handle_GetFeatures)
@@ -263,6 +277,4 @@ def boot() -> None:
     wire.register(MessageType.DoPreauthorized, handle_DoPreauthorized)
     wire.register(MessageType.CancelAuthorization, handle_CancelAuthorization)
 
-    wire.experimental_enabled = storage.device.get_experimental_features()
-
-    workflow.idle_timer.set(storage.device.get_autolock_delay_ms(), lock_device)
+    reload_settings_from_storage()

@@ -29,6 +29,7 @@ LOG = logging.getLogger(__name__)
 
 VENDORS = ("bitcointrezor.com", "trezor.io")
 MAX_PASSPHRASE_LENGTH = 50
+MAX_PIN_LENGTH = 50
 
 PASSPHRASE_ON_DEVICE = object()
 PASSPHRASE_TEST_PATH = tools.parse_path("44h/1h/0h/0/0")
@@ -152,7 +153,9 @@ class TrezorClient:
             self.call_raw(messages.Cancel())
             raise
 
-        if any(d not in "123456789" for d in pin) or not (1 <= len(pin) <= 9):
+        if any(d not in "123456789" for d in pin) or not (
+            1 <= len(pin) <= MAX_PIN_LENGTH
+        ):
             self.call_raw(messages.Cancel())
             raise ValueError("Invalid PIN provided")
 

@@ -10,6 +10,8 @@ HRP_TESTNET_REWARD_ADDRESS = "stake_test"
 
 def encode(hrp: str, data: bytes) -> str:
     converted_bits = bech32.convertbits(data, 8, 5)
+    if converted_bits is None:
+        raise ValueError
     return bech32.bech32_encode(hrp, converted_bits)
 
 
@@ -18,12 +20,14 @@ def decode_unsafe(bech: str) -> bytes:
     return decode(hrp, bech)
 
 
-def get_hrp(bech: str):
+def get_hrp(bech: str) -> str:
     return bech.rsplit(HRP_SEPARATOR, 1)[0]
 
 
 def decode(hrp: str, bech: str) -> bytes:
     decoded_hrp, data = bech32.bech32_decode(bech, 130)
+    if data is None:
+        raise ValueError
     if decoded_hrp != hrp:
         raise ValueError
 

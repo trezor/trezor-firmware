@@ -7,7 +7,7 @@ from .. import backup_types
 
 if False:
     from trezor.messages.ResetDevice import EnumTypeBackupType
-    from typing import Optional, Tuple, List, Union
+    from typing import Union
 
 
 class RecoveryAborted(Exception):
@@ -24,7 +24,7 @@ def process_bip39(words: str) -> bytes:
     return words.encode()
 
 
-def process_slip39(words: str) -> Tuple[Optional[bytes], slip39.Share]:
+def process_slip39(words: str) -> tuple[bytes | None, slip39.Share]:
     """
     Processes a single mnemonic share. Returns the encrypted master secret
     (or None if more shares are needed) and the share's group index and member index.
@@ -92,7 +92,7 @@ def process_slip39(words: str) -> Tuple[Optional[bytes], slip39.Share]:
 
 
 if False:
-    Slip39State = Union[Tuple[int, EnumTypeBackupType], Tuple[None, None]]
+    Slip39State = Union[tuple[int, EnumTypeBackupType], tuple[None, None]]
 
 
 def load_slip39_state() -> Slip39State:
@@ -106,7 +106,7 @@ def load_slip39_state() -> Slip39State:
     return word_count, backup_types.infer_backup_type(True, share)
 
 
-def fetch_previous_mnemonics() -> Optional[List[List[str]]]:
+def fetch_previous_mnemonics() -> list[list[str]] | None:
     mnemonics = []
     if not storage.recovery.get_slip39_group_count():
         return None

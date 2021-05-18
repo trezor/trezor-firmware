@@ -430,7 +430,6 @@ class TestMsgSigntx:
             == "6f9775545830731a316a4c2a39515b1890e9c8ab0f9e21e7c6a6ca2c1499116d"
         )
 
-    @pytest.mark.skip_ui
     @pytest.mark.slow
     def test_lots_of_inputs(self, client):
         # Tests if device implements serialization of len(inputs) correctly
@@ -458,7 +457,6 @@ class TestMsgSigntx:
             == "f90cdc2224366312be28166e2afe198ece7a60e86e25f5a50f5b14d811713da8"
         )
 
-    @pytest.mark.skip_ui
     @pytest.mark.slow
     def test_lots_of_outputs(self, client):
         # Tests if device implements serialization of len(outputs) correctly
@@ -1131,7 +1129,6 @@ class TestMsgSigntx:
                 prev_txes=TX_CACHE_TESTNET,
             )
 
-    @pytest.mark.skip_ui
     def test_not_enough_vouts(self, client):
         prev_tx = TX_CACHE_MAINNET[TXHASH_157041]
 
@@ -1187,7 +1184,6 @@ class TestMsgSigntx:
             ("branch_id", 13),
         ),
     )
-    @pytest.mark.skip_ui
     def test_prevtx_forbidden_fields(self, client, field, value):
         inp0 = messages.TxInputType(
             address_n=parse_path("44h/0h/0h/0/0"),
@@ -1215,7 +1211,6 @@ class TestMsgSigntx:
         "field, value",
         (("expiry", 9), ("timestamp", 42), ("version_group_id", 69), ("branch_id", 13)),
     )
-    @pytest.mark.skip_ui
     def test_signtx_forbidden_fields(self, client, field, value):
         inp0 = messages.TxInputType(
             address_n=parse_path("44h/0h/0h/0/0"),
@@ -1242,7 +1237,6 @@ class TestMsgSigntx:
         "script_type",
         (messages.InputScriptType.SPENDADDRESS, messages.InputScriptType.EXTERNAL),
     )
-    @pytest.mark.skip_ui
     def test_incorrect_input_script_type(self, client, script_type):
         address_n = parse_path("44'/1'/0'/0/0")
         attacker_multisig_public_key = bytes.fromhex(
@@ -1298,7 +1292,6 @@ class TestMsgSigntx:
             messages.OutputScriptType.PAYTOSCRIPTHASH,
         ),
     )
-    @pytest.mark.skip_ui
     def test_incorrect_output_script_type(self, client, script_type):
         address_n = parse_path("44'/1'/0'/0/0")
         attacker_multisig_public_key = bytes.fromhex(

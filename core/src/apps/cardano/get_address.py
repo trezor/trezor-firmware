@@ -17,7 +17,10 @@ from .layout import (
 from .sign_tx import validate_network_info
 
 if False:
-    from trezor.messages import CardanoAddressParametersType, CardanoGetAddress
+    from trezor.messages.CardanoAddressParametersType import (
+        CardanoAddressParametersType,
+    )
+    from trezor.messages.CardanoGetAddress import CardanoGetAddress
 
 
 @seed.with_keychain
@@ -95,4 +98,6 @@ async def _show_staking_warnings(
             address_parameters.staking_key_hash,
         )
     elif staking_type == staking_use_cases.POINTER_ADDRESS:
+        # ensured in _derive_shelley_address:
+        assert address_parameters.certificate_pointer is not None
         await show_warning_address_pointer(ctx, address_parameters.certificate_pointer)

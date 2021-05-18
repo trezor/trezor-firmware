@@ -11,7 +11,6 @@ if __debug__:
     from trezor.messages.Success import Success
 
     if False:
-        from typing import List, Optional
         from trezor.messages.DebugLinkDecision import DebugLinkDecision
         from trezor.messages.DebugLinkGetState import DebugLinkGetState
         from trezor.messages.DebugLinkRecordScreen import DebugLinkRecordScreen
@@ -23,7 +22,7 @@ if __debug__:
     save_screen = False
     save_screen_directory = "."
 
-    reset_internal_entropy: Optional[bytes] = None
+    reset_internal_entropy: bytes | None = None
     reset_current_words = loop.chan()
     reset_word_index = loop.chan()
 
@@ -37,7 +36,7 @@ if __debug__:
     debuglink_decision_chan = loop.chan()
 
     layout_change_chan = loop.chan()
-    current_content: List[str] = []
+    current_content: list[str] = []
     watch_layout_changes = False
 
     def screenshot() -> bool:
@@ -53,7 +52,7 @@ if __debug__:
             layout_change_chan.publish(current_content)
 
     async def debuglink_decision_dispatcher() -> None:
-        from trezor.ui import confirm, swipe
+        from trezor.ui.components.tt import confirm, swipe
 
         while True:
             msg = await debuglink_decision_chan.take()
@@ -79,6 +78,10 @@ if __debug__:
         content = await layout_change_chan.take()
         await ctx.write(DebugLinkLayout(lines=content))
 
+    async def touch_hold(x: int, y: int, duration_ms: int) -> None:
+        await loop.sleep(duration_ms)
+        loop.synthetic_events.append((io.TOUCH, (io.TOUCH_END, x, y)))
+
     async def dispatch_DebugLinkWatchLayout(
         ctx: wire.Context, msg: DebugLinkWatchLayout
     ) -> Success:
@@ -94,11 +97,14 @@ if __debug__:
         if debuglink_decision_chan.putters:
             log.warning(__name__, "DebugLinkDecision queue is not empty")
 
-        if msg.x is not None:
+        if msg.x is not None and msg.y is not None:
             evt_down = io.TOUCH_START, msg.x, msg.y
             evt_up = io.TOUCH_END, msg.x, msg.y
             loop.synthetic_events.append((io.TOUCH, evt_down))
-            loop.synthetic_events.append((io.TOUCH, evt_up))
+            if msg.hold_ms is not None:
+                loop.schedule(touch_hold(msg.x, msg.y, msg.hold_ms))
+            else:
+                loop.synthetic_events.append((io.TOUCH, evt_up))
         else:
             debuglink_decision_chan.publish(msg)
 
@@ -178,7 +184,6 @@ if __debug__:
             config.wipe()
 
         wire.add(MessageType.LoadDevice, __name__, "load_device")
-        wire.add(MessageType.DebugLinkShowText, __name__, "show_text")
         wire.register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)  # type: ignore
         wire.register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)
         wire.register(MessageType.DebugLinkReseedRandom, dispatch_DebugLinkReseedRandom)

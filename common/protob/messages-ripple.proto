@@ -20,7 +20,7 @@ message RippleGetAddress {
  * @end
  */
 message RippleAddress {
-    optional string address = 1;                // Address in Ripple format (base58 of a pubkey with checksum)
+    required string address = 1;                // Address in Ripple format (base58 of a pubkey with checksum)
 }
 
 /**
@@ -43,8 +43,8 @@ message RippleSignTx {
      * - see https://developers.ripple.com/payment.html
      */
     message RipplePayment {
-        optional uint64 amount = 1;             // only XRP is supported at the moment so this an integer
-        optional string destination = 2;        // destination account address
+        required uint64 amount = 1;             // only XRP is supported at the moment so this an integer
+        required string destination = 2;        // destination account address
         optional uint32 destination_tag = 3;    // destination tag to identify payments
     }
 }
@@ -54,6 +54,6 @@ message RippleSignTx {
  * @end
  */
 message RippleSignedTx {
-    optional bytes signature = 1;
-    optional bytes serialized_tx = 2;
+    required bytes signature = 1;
+    required bytes serialized_tx = 2;
 }

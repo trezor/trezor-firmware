@@ -280,7 +280,16 @@ python test:
       - common/**/*
       - python/**/*
   script:
-    - nix-shell --arg fullDeps true --run "cd python && poetry run tox"
+    # Workaround for nixpkgs+tox integration failure which results in:
+    #     ModuleNotFoundError: No module named '_sysconfigdata__linux_x86_64-linux-gnu'
+    # The value of _PYTHON_SYSCONFIGDATA_NAME has changed between python 3.7 and 3.8 and with
+    # multiple versions in your environment the older pythons don't seem to work under tox.
+    # When the variable is unset the interpreter seems to do the right thing. Can be removed in
+    # july 2023 when python 3.7 is EOLed.
+    # See also:
+    # https://github.com/NixOS/nixpkgs/blob/b00c7c2d1d905eb63c81a0917f1a94b763a7843b/pkgs/development/interpreters/python/cpython/default.nix#L103
+    # https://github.com/NixOS/nixpkgs/pull/98915
+    - nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && cd python && poetry run tox"
 
 
 # Storage
@@ -305,60 +314,7 @@ storage test:
     expire_in: 1 week
     when: always
 
-# Hardware
-hardware legacy regular device test:
-  stage: test
-  only:
-    - schedules  # nightly build
-    - /^legacy\//
-    - /^release\//
-    - /^secfix\//
-  tags:
-    - tpmb
-  needs:
-    - legacy fw regular debug build
-  script:
-    - cd ci/hardware_tests
-    - nix-shell --run "./record_video.sh ${CI_COMMIT_SHORT_SHA} start"
-    - nix-shell --run "cd ../.. && poetry install"
-    - nix-shell --run "poetry run python bootstrap.py"
-    - nix-shell --run "poetry run python bootstrap.py ../../trezor-*.bin"
-    - nix-shell --run "poetry run pytest ../../tests/device_tests"
-    - nix-shell --run "./record_video.sh ${CI_COMMIT_SHORT_SHA} stop"
-  artifacts:
-    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
-    paths:
-      - ci/hardware_tests/video*.mp4
-    expire_in: 2 days
-    when: always
-
-hardware legacy btconly device test:
-  stage: test
-  variables:
-    TREZOR_PYTEST_SKIP_ALTCOINS: 1
-  only:
-    - schedules  # nightly build
-    - /^legacy\//
-    - /^release\//
-    - /^secfix\//
-  tags:
-    - tpmb
-  needs:
-    - legacy fw btconly debug build
-  script:
-    - cd ci/hardware_tests
-    - nix-shell --run "./record_video.sh ${CI_COMMIT_SHORT_SHA} start"
-    - nix-shell --run "cd ../.. && poetry install"
-    - nix-shell --run "poetry run python bootstrap.py"
-    - nix-shell --run "poetry run python bootstrap.py ../../trezor-*.bin"
-    - nix-shell --run "poetry run pytest ../../tests/device_tests"
-    - nix-shell --run "./record_video.sh ${CI_COMMIT_SHORT_SHA} stop"
-  artifacts:
-    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
-    paths:
-      - ci/hardware_tests/video*.mp4
-    expire_in: 2 days
-    when: always
+# Memory profiling
 
 core unix memory profiler:
   stage: test

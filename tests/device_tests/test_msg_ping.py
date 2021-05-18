@@ -14,15 +14,12 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import pytest
-
 from trezorlib import messages
 
 
-@pytest.mark.skip_ui
 def test_ping(client):
     with client:
-        client.set_expected_responses([messages.Success()])
+        client.set_expected_responses([messages.Success])
         res = client.ping("random data")
         assert res == "random data"
 
@@ -30,7 +27,7 @@ def test_ping(client):
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
-                messages.Success(),
+                messages.Success,
             ]
         )
         res = client.ping("random data", button_protection=True)

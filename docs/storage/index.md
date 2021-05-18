@@ -16,9 +16,10 @@ Entries fall into three categories:
 |-----------|-----------------|--------------------|--------------------|
 | Private   | APP = 0         | Never              | Never              |
 | Protected | 1 ≤ APP ≤ 127   | Only when unlocked | Only when unlocked |
-| Public    | 128 ≤ APP ≤ 255 | Always             | Only when unlocked |
+| Public    | 128 ≤ APP ≤ 191 | Always             | Only when unlocked |
+| Writable  | 192 ≤ APP ≤ 255 | Always             | Always             |
 
-The format of public entries has remained unchanged, that is:
+The format of public and writable entries has remained unchanged, that is:
 
 | Data           | KEY | APP | LEN | DATA |
 |----------------|-----|-----|-----|------|
@@ -53,7 +54,7 @@ Furthermore, if any entry is overwritten, the old entry is erased, i.e., overwri
 1. From the flash storage read the entry containing the random salt, EDEK and PVC.
 
 2. Gather constant data from various system resources such as the ProcessorID (aka Unique device ID) and any hardware serial numbers that are available. The concatenation of this data with the random salt will be referred to as *salt*.
-3. Prompt the user to enter the PIN. Prefix the entered PIN with a "1" digit in base 10 and convert the integer to 4 bytes in little endian byte order. Then compute:
+3. Prompt the user to enter the PIN and compute:
 
     `PBKDF2(PRF = HMAC-SHA256, Password = pin, Salt = salt, iterations = 10000, dkLen = 352 bits)`
 
@@ -107,9 +108,9 @@ Whenever the value of an entry needs to be updated, a fresh IV is generated usin
 
 The storage authentication key (SAK) will be used to generate a storage authentication tag (SAT) for the list of all (APP, KEY) values of protected entries (1 ≤ APP ≤ 127) that have been set in the storage. The SAT will be checked during every get operation. When a new protected entry is added to the storage or when a protected entry is deleted from the storage, the value of the SAT will be updated. The value of the SAT is defined as the first 16 bytes of
 
-`HMAC-SHA-256(SAK, ⨁i HMAC-SHA-256(SAK, KEY_i || APP_i))`
+`HMAC-SHA-256(SAK, ⨁_i HMAC-SHA-256(SAK, KEY_i || APP_i))`
 
-where `⨁` denotes the n-ary bitwise XOR operation and KEY_i || APP_i is a two-byte encoding of the value of the *i*-th (APP, KEY) such that 1 ≤ APP ≤ 127.
+where `⨁` denotes the n-ary bitwise XOR operation and KEY<sub><i>i</i></sub> || APP<sub><i>i</i></sub> is a two-byte encoding of the value of the *i*-th (APP, KEY) such that 1 ≤ APP ≤ 127.
 
 ## Design rationale
 
@@ -125,7 +126,7 @@ where `⨁` denotes the n-ary bitwise XOR operation and KEY_i || APP_i is a two-
     - Not implemented in trezor-crypto.
     - Requires two keys of length at least 128 bits.
 
-- A 32-bit PVC would be sufficient to verify the PIN value, since there would be less than a 1 in 4 chance that there exists a false PIN, which has the same PVC as the correct PIN. Nevertheless, we decided to go with a 64-bit PVC to achieve a larger security margin. The chance that there exists a false PIN, which has the same PVC as the correct PIN, then drops below 1 in 10^10. The existence of a false PIN does not appear to pose a security weakness, since the false PIN cannot be used to decrypt the protected entries.
+- The 64 bit PVC means that there is less than a 1 in 10<sup>19</sup> chance that a wrong PIN will happen to have the same PVC as the correct PIN. The existence of false PINs does not pose a security weakness since a false PIN cannot be used to decrypt the protected entries.
 
 - Instead of using separate IVs for each entry we considered using a single IV for the entire sector. Upon sector compaction a new IV would have to be generated and the encrypted data would have to be reencrypted under the new IV. A possible issue with this approach is that compaction cannot happen without the DEK, i.e. generally data could not be written to the flash storage without knowing the PIN. This property might not always be desirable.
 
@@ -154,17 +155,17 @@ The basic idea is that there are two binary logs stored in the flash storage, e.
 ...0000001111111111... pin_entry_log
 ```
 
-Before every PIN verification the highest 1-bit in the pin_entry_log is set to 0. If the verification succeeds, then the corresponding bit in the pin_success_log is also set to 0. The example above shows the status of the logs when the last three PIN entries were not successful.
+Before every PIN verification the highest 1-bit in the `pin_entry_log` is set to 0. If the verification succeeds, then the corresponding bit in the `pin_success_log` is also set to 0. The example above shows the status of the logs when the last three PIN entries were not successful.
 
-In actual fact the logs are not written to the flash storage exactly as shown above, but they are stored in a form that should protect them against fault injection attacks. Only half of the stored bits carry information, the other half acts as "guard bits". So a stored value `...001110...` could look like `...0g0gg1g11g0g...`, where g denotes a guard bit. The positions and the values of the guard bits are determined by a guard key. The guard_key is a randomly generated uint32 value stored as an entry in the flash memory in cleartext. The assumption behind this is that an attacker attempting to reset or decrement the PIN counter by a fault injection is not able to read the flash storage. However, the value of guard_key also needs to be protected against fault injection, so the set of valid guard_key values should be limited by some condition which is easy to verify, such as guard_key mod M == C, where M and C a suitably chosen constants. The constants should be chosen so that the binary representation of any valid guard_key value has Hamming weight between 8 and 24. These conditions are discussed below.
+In actual fact the logs are not written to the flash storage exactly as shown above, but they are stored in a form that should protect them against fault injection attacks. Only half of the stored bits carry information, the other half acts as "guard bits". So a stored value `...001110...` could look like `...0g0gg1g11g0g...`, where `g` denotes a guard bit. The positions and the values of the guard bits are determined by a guard key. The `guard_key` is a randomly generated uint32 value stored as an entry in the flash memory in cleartext. The assumption behind this is that an attacker attempting to reset or decrement the PIN counter by a fault injection is not able to read the flash storage. However, the value of `guard_key` also needs to be protected against fault injection, so the set of valid `guard_key` values should be limited by some condition which is easy to verify, such as `guard_key mod M == C`, where `M` and `C` a suitably chosen constants. The constants should be chosen so that the binary representation of any valid `guard_key` value has Hamming weight between 8 and 24. These conditions are discussed below.
 
 ### Storage format
 
 The PIN log has APP = 0 and KEY = 1. The DATA part of the entry consists of 33 words (132 bytes, assuming 32-bit words):
 
-- guard_key (1 word)
-- pin_success_log (16 words)
-- pin_entry_log (16 words)
+- `guard_key` (1 word)
+- `pin_success_log` (16 words)
+- `pin_entry_log` (16 words)
 
 Each log is stored in big-endian word order. The byte order of each word is platform dependent.
 
@@ -172,9 +173,9 @@ Each log is stored in big-endian word order. The byte order of each word is plat
 
 The guard_key is said to be valid if the following three conditions hold true:
 
-1. Each byte of the binary representation of the guard_key has a balanced number of zeros and ones at the positions corresponding to the guard values (that is those bits in the mask 0xAAAAAAAA).
-2. The guard_key binary representation does not contain a run of 5 (or more) zeros or ones.
-3. The guard_key integer representation is congruent to 15 modulo 6311.
+1. Each byte of the binary representation of the `guard_key` has a balanced number of zeros and ones at the positions corresponding to the guard values (that is those bits in the mask 0xAAAAAAAA).
+2. The `guard_key` binary representation does not contain a run of 5 (or more) zeros or ones.
+3. The `guard_key` integer representation is congruent to 15 modulo 6311.
 
 Key validity can be checked with this function:
 
@@ -199,17 +200,17 @@ int key_validity(uint32_t guard_key)
 
 ### Key generation
 
-The guard_key may be generated in the following way:
+The `guard_key` may be generated in the following way:
 
 1. Generate a random integer *r* in such that 0 ≤ *r* ≤ 680552 with uniform probability.
 2. Set *r* = *r* * 6311 + 15.
-3. If *key_validity(r)* is not true go back to the step 1.
+3. If *key_validity*(*r*) is not true go back to the step 1.
 
 Note that on average steps 1 to 3 are repeated about one hundred times.
 
 ### Key expansion
 
-The guard_key is read from storage, its value is checked for validity and used to compute the guard_mask (indicating the positions of the guard bits) and guard value (indicating the values of the guard bits on their actual positions):
+The `guard_key` is read from storage, its value is checked for validity and used to compute the `guard_mask` (indicating the positions of the guard bits) and guard value (indicating the values of the guard bits on their actual positions):
 
 ```c
 LOW_MASK = 0x55555555
@@ -221,9 +222,9 @@ guard = (((guard_key & LOW_MASK) << 1) & guard_key) |
 
 **Explanation**:
 
-The guard_key contains two pieces of information. The position of the guard bits but also their corresponding values. The bitwise format of the guard_key is `vpvpvp...vp`. The bits labelled `p` indicate the position of each guard bit and the bits labelled `v` indicate its value.
+The `guard_key` contains two pieces of information. The position of the guard bits but also their corresponding values. The bitwise format of the `guard_key` is `vpvpvp...vp`. The bits labelled `p` indicate the position of each guard bit and the bits labelled `v` indicate its value.
 
-The guard_mask is derived from the guard_key and has the form `xyxyxy...xy` where x+y = 1 (in other words, there is exactly one 1 bit in each pair xy). First, we set the `x` bits:
+The `guard_mask` is derived from the `guard_key` and has the form `xyxyxy...xy` where x+y = 1 (in other words, there is exactly one 1 bit in each pair xy). First, we set the `x` bits:
 
 `(guard_key & LOW_MASK) << 1`
 
@@ -231,7 +232,7 @@ and the `y` bits to its corresponding complement:
 
 `(~guard_key) & LOW_MASK`
 
-That ensures that only one 1 bit is present in each pair `xy`. The guard value is equal to the bits labelled `v` in the guard_key but only at the positions indicated by the guard_mask. The guard value is therefore equal to:
+That ensures that only one 1 bit is present in each pair `xy`. The guard value is equal to the bits labelled `v` in the `guard_key` but only at the positions indicated by the `guard_mask`. The guard value is therefore equal to:
 
 ```
         -------- x bits mask --------- & -- guard_key --
@@ -268,11 +269,11 @@ The guard bits can be added back as follows:
 
 ### Determining the number of PIN failures
 
-Remove the guard bits from the words of the pin_entry_log using the operations described above and verify that the result has form 0\*1\* by checking the condition:
+Remove the guard bits from the words of the `pin_entry_log` using the operations described above and verify that the result has form 0\*1\* by checking the condition:
 
 `word & (word + 1) == 0`
 
-Then verify that the pin_entry_log and pin_success_log are in sync by checking the condition:
+Then verify that the `pin_entry_log` and `pin_success_log` are in sync by checking the condition:
 
 `pin_entry_log & pin_success_log == pin_entry_log`
 

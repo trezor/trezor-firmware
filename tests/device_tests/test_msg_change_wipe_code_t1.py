@@ -17,12 +17,15 @@
 import pytest
 
 from trezorlib import device, exceptions, messages
+from trezorlib.client import MAX_PIN_LENGTH
 
 PinType = messages.PinMatrixRequestType
 
 PIN4 = "1234"
 WIPE_CODE4 = "4321"
 WIPE_CODE6 = "456789"
+WIPE_CODE_MAX = "".join(chr((i % 9) + ord("1")) for i in range(MAX_PIN_LENGTH))
+WIPE_CODE_TOO_LONG = WIPE_CODE_MAX + "1"
 
 pytestmark = pytest.mark.skip_t2
 
@@ -48,7 +51,7 @@ def _set_wipe_code(client, pin, wipe_code):
         client.set_expected_responses(
             [messages.ButtonRequest()]
             + pin_matrices
-            + [messages.Success(), messages.Features()]
+            + [messages.Success, messages.Features]
         )
         device.change_wipe_code(client)
 
@@ -75,14 +78,14 @@ def test_set_remove_wipe_code(client):
     assert client.features.wipe_code_protection is None
 
     # Test set wipe code.
-    _set_wipe_code(client, PIN4, WIPE_CODE4)
+    _set_wipe_code(client, PIN4, WIPE_CODE_MAX)
 
     # Check that there's wipe code protection now.
     client.init_device()
     assert client.features.wipe_code_protection is True
 
     # Check that the wipe code is correct.
-    _check_wipe_code(client, PIN4, WIPE_CODE4)
+    _check_wipe_code(client, PIN4, WIPE_CODE_MAX)
 
     # Test change wipe code.
     _set_wipe_code(client, PIN4, WIPE_CODE6)
@@ -177,7 +180,7 @@ def test_set_pin_to_wipe_code(client):
     assert isinstance(resp, messages.Address)
 
 
-@pytest.mark.parametrize("invalid_wipe_code", ("1204", "", "1234567891"))
+@pytest.mark.parametrize("invalid_wipe_code", ("1204", "", WIPE_CODE_TOO_LONG))
 def test_set_wipe_code_invalid(client, invalid_wipe_code):
     # Let's set the wipe code
     ret = client.call_raw(messages.ChangeWipeCode())

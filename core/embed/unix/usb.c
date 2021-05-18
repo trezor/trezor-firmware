@@ -40,15 +40,14 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
        ? (void)0          \
        : __fatal_error(#expr, msg, __FILE__, __LINE__, __func__))
 
-// emulator opens UDP server on TREZOR_UDP_PORT port
-// and emulates HID/WebUSB interface TREZOR_UDP_IFACE
+// emulator opens UDP server and emulates HID/WebUSB interfaces
 // gracefully ignores all other USB interfaces
 
 #define USBD_MAX_NUM_INTERFACES 8
-#define TREZOR_UDP_PORT 21324
 
 static struct {
   usb_iface_type_t type;
+  uint16_t port;
   int sock;
   struct sockaddr_in si_me, si_other;
   socklen_t slen;
@@ -58,6 +57,7 @@ void usb_init(const usb_dev_info_t *dev_info) {
   (void)dev_info;
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
     usb_ifaces[i].type = USB_IFACE_TYPE_DISABLED;
+    usb_ifaces[i].port = 0;
     usb_ifaces[i].sock = -1;
     memzero(&usb_ifaces[i].si_me, sizeof(struct sockaddr_in));
     memzero(&usb_ifaces[i].si_other, sizeof(struct sockaddr_in));
@@ -69,7 +69,6 @@ void usb_deinit(void) {}
 
 void usb_start(void) {
   const char *ip = getenv("TREZOR_UDP_IP");
-  const char *port = getenv("TREZOR_UDP_PORT");
 
   // iterate interfaces
   for (int i = 0; i < USBD_MAX_NUM_INTERFACES; i++) {
@@ -90,11 +89,7 @@ void usb_start(void) {
     } else {
       usb_ifaces[i].si_me.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     }
-    if (port) {
-      usb_ifaces[i].si_me.sin_port = htons(atoi(port) + i);
-    } else {
-      usb_ifaces[i].si_me.sin_port = htons(TREZOR_UDP_PORT + i);
-    }
+    usb_ifaces[i].si_me.sin_port = htons(usb_ifaces[i].port);
 
     ensure(sectrue * (0 == bind(usb_ifaces[i].sock,
                                 (struct sockaddr *)&usb_ifaces[i].si_me,
@@ -109,6 +104,7 @@ secbool usb_hid_add(const usb_hid_info_t *info) {
   if (info->iface_num < USBD_MAX_NUM_INTERFACES &&
       usb_ifaces[info->iface_num].type == USB_IFACE_TYPE_DISABLED) {
     usb_ifaces[info->iface_num].type = USB_IFACE_TYPE_HID;
+    usb_ifaces[info->iface_num].port = info->emu_port;
   }
   return sectrue;
 }
@@ -117,6 +113,7 @@ secbool usb_webusb_add(const usb_webusb_info_t *info) {
   if (info->iface_num < USBD_MAX_NUM_INTERFACES &&
       usb_ifaces[info->iface_num].type == USB_IFACE_TYPE_DISABLED) {
     usb_ifaces[info->iface_num].type = USB_IFACE_TYPE_WEBUSB;
+    usb_ifaces[info->iface_num].port = info->emu_port;
   }
   return sectrue;
 }
@@ -125,6 +122,7 @@ secbool usb_vcp_add(const usb_vcp_info_t *info) {
   if (info->iface_num < USBD_MAX_NUM_INTERFACES &&
       usb_ifaces[info->iface_num].type == USB_IFACE_TYPE_DISABLED) {
     usb_ifaces[info->iface_num].type = USB_IFACE_TYPE_VCP;
+    usb_ifaces[info->iface_num].port = info->emu_port;
   }
   return sectrue;
 }

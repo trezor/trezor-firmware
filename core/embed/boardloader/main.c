@@ -166,9 +166,7 @@ static secbool copy_sdcard(void) {
 }
 
 int main(void) {
-  if (sectrue != reset_flags_check()) {
-    return 1;
-  }
+  reset_flags_reset();
 
   // need the systick timer running before many HAL operations.
   // want the PVD enabled before flash operations too.
@@ -176,7 +174,7 @@ int main(void) {
 
   if (sectrue != flash_configure_option_bytes()) {
     // display is not initialized so don't call ensure
-    secbool r =
+    const secbool r =
         flash_erase_sectors(STORAGE_SECTORS, STORAGE_SECTORS_COUNT, NULL);
     (void)r;
     return 2;

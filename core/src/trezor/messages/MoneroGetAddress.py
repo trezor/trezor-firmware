@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,12 +16,12 @@ class MoneroGetAddress(p.MessageType):
     def __init__(
         self,
         *,
-        address_n: List[int] = None,
-        show_display: bool = None,
-        network_type: int = None,
-        account: int = None,
-        minor: int = None,
-        payment_id: bytes = None,
+        address_n: Optional[List[int]] = None,
+        show_display: Optional[bool] = None,
+        network_type: Optional[int] = None,
+        account: Optional[int] = None,
+        minor: Optional[int] = None,
+        payment_id: Optional[bytes] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.show_display = show_display

@@ -80,7 +80,6 @@ def _check_error_message(value: bytes, model: str, message: str):
         assert message.endswith("Encountered invalid prevhash")
 
 
-@pytest.mark.skip_ui
 @pytest.mark.parametrize("prev_hash", (None, b"", b"x", b"hello world", b"x" * 33))
 def test_invalid_prev_hash(client, prev_hash):
     inp1 = messages.TxInputType(
@@ -101,7 +100,6 @@ def test_invalid_prev_hash(client, prev_hash):
     _check_error_message(prev_hash, client.features.model, e.value.message)
 
 
-@pytest.mark.skip_ui
 @pytest.mark.parametrize("prev_hash", (None, b"", b"x", b"hello world", b"x" * 33))
 def test_invalid_prev_hash_attack(client, prev_hash):
     # prepare input with a valid prev-hash
@@ -144,7 +142,6 @@ def test_invalid_prev_hash_attack(client, prev_hash):
     _check_error_message(prev_hash, client.features.model, e.value.message)
 
 
-@pytest.mark.skip_ui
 @pytest.mark.parametrize("prev_hash", (None, b"", b"x", b"hello world", b"x" * 33))
 def test_invalid_prev_hash_in_prevtx(client, prev_hash):
     cache = TxCache("Bitcoin")

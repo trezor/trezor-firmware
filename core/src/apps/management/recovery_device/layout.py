@@ -2,13 +2,13 @@ import storage.recovery
 from trezor import strings, ui, wire
 from trezor.crypto.slip39 import MAX_SHARE_COUNT
 from trezor.messages import ButtonRequestType
-from trezor.ui.scroll import Paginated
-from trezor.ui.text import Text
-from trezor.ui.word_select import WordSelector
+from trezor.ui.components.tt.scroll import Paginated
+from trezor.ui.components.tt.text import Text
+from trezor.ui.components.tt.word_select import WordSelector
+from trezor.ui.layouts import confirm_action, show_success, show_warning
 
 from apps.common import button_request
 from apps.common.confirm import confirm, info_confirm, require_confirm
-from apps.common.layout import show_success, show_warning
 
 from .. import backup_types
 from . import word_validity
@@ -17,19 +17,31 @@ from .keyboard_slip39 import Slip39Keyboard
 from .recover import RecoveryAborted
 
 if False:
-    from typing import List, Optional, Callable, Iterable, Tuple, Union
+    from typing import Callable, Iterable
     from trezor.messages.ResetDevice import EnumTypeBackupType
 
 
-async def confirm_abort(ctx: wire.GenericContext, dry_run: bool = False) -> bool:
+async def confirm_abort(ctx: wire.GenericContext, dry_run: bool = False) -> None:
     if dry_run:
-        text = Text("Abort seed check", ui.ICON_WIPE)
-        text.normal("Do you really want to", "abort the seed check?")
+        await confirm_action(
+            ctx,
+            "abort_recovery",
+            "Abort seed check",
+            description="Do you really want to abort the seed check?",
+            icon=ui.ICON_WIPE,
+            br_code=ButtonRequestType.ProtectCall,
+        )
     else:
-        text = Text("Abort recovery", ui.ICON_WIPE)
-        text.normal("Do you really want to", "abort the recovery", "process?")
-        text.bold("All progress will be lost.")
-    return await confirm(ctx, text, code=ButtonRequestType.ProtectCall)
+        await confirm_action(
+            ctx,
+            "abort_recovery",
+            "Abort recovery",
+            description="Do you really want to abort the recovery process?",
+            action="All progress will be lost.",
+            reverse=True,
+            icon=ui.ICON_WIPE,
+            br_code=ButtonRequestType.ProtectCall,
+        )
 
 
 async def request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
@@ -49,14 +61,14 @@ async def request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:
 
 
 async def request_mnemonic(
-    ctx: wire.GenericContext, word_count: int, backup_type: Optional[EnumTypeBackupType]
-) -> Optional[str]:
+    ctx: wire.GenericContext, word_count: int, backup_type: EnumTypeBackupType | None
+) -> str | None:
     await button_request(ctx, code=ButtonRequestType.MnemonicInput)
 
-    words: List[str] = []
+    words: list[str] = []
     for i in range(word_count):
         if backup_types.is_slip39_word_count(word_count):
-            keyboard: Union[Slip39Keyboard, Bip39Keyboard] = Slip39Keyboard(
+            keyboard: Slip39Keyboard | Bip39Keyboard = Slip39Keyboard(
                 "Type word %s of %s:" % (i + 1, word_count)
             )
         else:
@@ -82,11 +94,11 @@ async def request_mnemonic(
 
 async def show_remaining_shares(
     ctx: wire.GenericContext,
-    groups: Iterable[Tuple[int, Tuple[str, ...]]],  # remaining + list 3 words
-    shares_remaining: List[int],
+    groups: Iterable[tuple[int, tuple[str, ...]]],  # remaining + list 3 words
+    shares_remaining: list[int],
     group_threshold: int,
 ) -> None:
-    pages: List[ui.Component] = []
+    pages: list[ui.Component] = []
     for remaining, group in groups:
         if 0 < remaining < MAX_SHARE_COUNT:
             text = Text("Remaining Shares")
@@ -131,36 +143,16 @@ async def show_dry_run_result(
 ) -> None:
     if result:
         if is_slip39:
-            text = (
-                "The entered recovery",
-                "shares are valid and",
-                "match what is currently",
-                "in the device.",
-            )
+            text = "The entered recovery\nshares are valid and\nmatch what is currently\nin the device."
         else:
-            text = (
-                "The entered recovery",
-                "seed is valid and",
-                "matches the one",
-                "in the device.",
-            )
-        await show_success(ctx, text, button="Continue")
+            text = "The entered recovery\nseed is valid and\nmatches the one\nin the device."
+        await show_success(ctx, "success_dry_recovery", text, button="Continue")
     else:
         if is_slip39:
-            text = (
-                "The entered recovery",
-                "shares are valid but",
-                "do not match what is",
-                "currently in the device.",
-            )
+            text = "The entered recovery\nshares are valid but\ndo not match what is\ncurrently in the device."
         else:
-            text = (
-                "The entered recovery",
-                "seed is valid but does",
-                "not match the one",
-                "in the device.",
-            )
-        await show_warning(ctx, text, button="Continue")
+            text = "The entered recovery\nseed is valid but does\nnot match the one\nin the device."
+        await show_warning(ctx, "warning_dry_recovery", text, button="Continue")
 
 
 async def show_dry_run_different_type(ctx: wire.GenericContext) -> None:
@@ -175,37 +167,45 @@ async def show_dry_run_different_type(ctx: wire.GenericContext) -> None:
 
 async def show_invalid_mnemonic(ctx: wire.GenericContext, word_count: int) -> None:
     if backup_types.is_slip39_word_count(word_count):
-        await show_warning(ctx, ("You have entered", "an invalid recovery", "share."))
+        await show_warning(
+            ctx,
+            "warning_invalid_share",
+            "You have entered\nan invalid recovery\nshare.",
+        )
     else:
-        await show_warning(ctx, ("You have entered", "an invalid recovery", "seed."))
+        await show_warning(
+            ctx,
+            "warning_invalid_seed",
+            "You have entered\nan invalid recovery\nseed.",
+        )
 
 
 async def show_share_already_added(ctx: wire.GenericContext) -> None:
     await show_warning(
-        ctx, ("Share already entered,", "please enter", "a different share.")
+        ctx,
+        "warning_known_share",
+        "Share already entered,\nplease enter\na different share.",
     )
 
 
 async def show_identifier_mismatch(ctx: wire.GenericContext) -> None:
     await show_warning(
-        ctx, ("You have entered", "a share from another", "Shamir Backup.")
+        ctx,
+        "warning_mismatched_share",
+        "You have entered\na share from another\nShamir Backup.",
     )
 
 
 async def show_group_threshold_reached(ctx: wire.GenericContext) -> None:
     await show_warning(
         ctx,
-        (
-            "Threshold of this",
-            "group has been reached.",
-            "Input share from",
-            "different group",
-        ),
+        "warning_group_threshold",
+        "Threshold of this\ngroup has been reached.\nInput share from\ndifferent group.",
     )
 
 
 class RecoveryHomescreen(ui.Component):
-    def __init__(self, text: str, subtext: str = None):
+    def __init__(self, text: str, subtext: str | None = None):
         super().__init__()
         self.text = text
         self.subtext = subtext
@@ -240,7 +240,7 @@ class RecoveryHomescreen(ui.Component):
 
     if __debug__:
 
-        def read_content(self) -> List[str]:
+        def read_content(self) -> list[str]:
             return [self.__class__.__name__, self.text, self.subtext or ""]
 
 
@@ -248,7 +248,7 @@ async def homescreen_dialog(
     ctx: wire.GenericContext,
     homepage: RecoveryHomescreen,
     button_label: str,
-    info_func: Callable = None,
+    info_func: Callable | None = None,
 ) -> None:
     while True:
         if info_func:
@@ -274,5 +274,9 @@ async def homescreen_dialog(
             break
         # user has chosen to abort, confirm the choice
         dry_run = storage.recovery.is_dry_run()
-        if await confirm_abort(ctx, dry_run):
+        try:
+            await confirm_abort(ctx, dry_run)
+        except wire.ActionCancelled:
+            pass
+        else:
             raise RecoveryAborted

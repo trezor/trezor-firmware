@@ -4,8 +4,7 @@ import storage.recovery
 from trezor import config, ui, wire, workflow
 from trezor.messages import ButtonRequestType
 from trezor.messages.Success import Success
-from trezor.pin import pin_to_int
-from trezor.ui.text import Text
+from trezor.ui.components.tt.text import Text
 
 from apps.common.confirm import require_confirm
 from apps.common.request_pin import (
@@ -47,14 +46,14 @@ async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
     # for dry run pin needs to be entered
     if msg.dry_run:
         curpin, salt = await request_pin_and_sd_salt(ctx, "Enter PIN")
-        if not config.check_pin(pin_to_int(curpin), salt):
+        if not config.check_pin(curpin, salt):
             await error_pin_invalid(ctx)
 
     if not msg.dry_run:
         # set up pin if requested
         if msg.pin_protection:
             newpin = await request_pin_confirm(ctx, allow_cancel=False)
-            config.change_pin(pin_to_int(""), pin_to_int(newpin), None, None)
+            config.change_pin("", newpin, None, None)
 
         storage.device.set_passphrase_enabled(bool(msg.passphrase_protection))
         if msg.u2f_counter is not None:
@@ -100,9 +99,9 @@ async def _continue_dialog(ctx: wire.Context, msg: RecoveryDevice) -> None:
         text.br_half()
         text.normal("By continuing you agree")
         text.br()
-        text.normal("to")
+        text.normal("to ")
         text.bold("https://trezor.io/tos")
     else:
         text = Text("Seed check", ui.ICON_RECOVERY, new_lines=False)
-        text.normal("Do you really want to", "check the recovery", "seed?")
+        text.normal("Do you really want to check the recovery seed?")
     await require_confirm(ctx, text, code=ButtonRequestType.ProtectCall)

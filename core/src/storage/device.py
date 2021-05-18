@@ -7,7 +7,6 @@ from trezor.messages import BackupType
 
 if False:
     from trezor.messages.ResetDevice import EnumTypeBackupType
-    from typing import Optional
     from typing_extensions import Literal
 
 # Namespace:
@@ -67,7 +66,7 @@ def is_version_stored() -> bool:
     return bool(common.get(_NAMESPACE, _VERSION))
 
 
-def get_version() -> Optional[bytes]:
+def get_version() -> bytes | None:
     return common.get(_NAMESPACE, _VERSION)
 
 
@@ -104,7 +103,7 @@ def set_rotation(value: int) -> None:
     common.set(_NAMESPACE, _ROTATION, value.to_bytes(2, "big"), True)  # public
 
 
-def get_label() -> Optional[str]:
+def get_label() -> str | None:
     label = common.get(_NAMESPACE, _LABEL, True)  # public
     if label is None:
         return None
@@ -117,7 +116,7 @@ def set_label(label: str) -> None:
     common.set(_NAMESPACE, _LABEL, label.encode(), True)  # public
 
 
-def get_mnemonic_secret() -> Optional[bytes]:
+def get_mnemonic_secret() -> bytes | None:
     return common.get(_NAMESPACE, _MNEMONIC_SECRET)
 
 
@@ -146,7 +145,7 @@ def set_passphrase_enabled(enable: bool) -> None:
         set_passphrase_always_on_device(False)
 
 
-def get_homescreen() -> Optional[bytes]:
+def get_homescreen() -> bytes | None:
     return common.get(_NAMESPACE, _HOMESCREEN, public=True)
 
 
@@ -243,12 +242,12 @@ def set_autolock_delay_ms(delay_ms: int) -> None:
     common.set(_NAMESPACE, _AUTOLOCK_DELAY_MS, delay_ms.to_bytes(4, "big"))
 
 
-def next_u2f_counter() -> Optional[int]:
-    return common.next_counter(_NAMESPACE, U2F_COUNTER, True)  # writable when locked
+def next_u2f_counter() -> int:
+    return common.next_counter(_NAMESPACE, U2F_COUNTER, writable_locked=True)
 
 
 def set_u2f_counter(count: int) -> None:
-    common.set_counter(_NAMESPACE, U2F_COUNTER, count, True)  # writable when locked
+    common.set_counter(_NAMESPACE, U2F_COUNTER, count, writable_locked=True)
 
 
 def set_slip39_identifier(identifier: int) -> None:
@@ -260,7 +259,7 @@ def set_slip39_identifier(identifier: int) -> None:
     common.set_uint16(_NAMESPACE, _SLIP39_IDENTIFIER, identifier)
 
 
-def get_slip39_identifier() -> Optional[int]:
+def get_slip39_identifier() -> int | None:
     """The device's actual SLIP-39 identifier used in passphrase derivation."""
     return common.get_uint16(_NAMESPACE, _SLIP39_IDENTIFIER)
 
@@ -274,14 +273,14 @@ def set_slip39_iteration_exponent(exponent: int) -> None:
     common.set_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT, exponent)
 
 
-def get_slip39_iteration_exponent() -> Optional[int]:
+def get_slip39_iteration_exponent() -> int | None:
     """
     The device's actual SLIP-39 iteration exponent used in passphrase derivation.
     """
     return common.get_uint8(_NAMESPACE, _SLIP39_ITERATION_EXPONENT)
 
 
-def get_sd_salt_auth_key() -> Optional[bytes]:
+def get_sd_salt_auth_key() -> bytes | None:
     """
     The key used to check the authenticity of the SD card salt.
     """
@@ -291,7 +290,7 @@ def get_sd_salt_auth_key() -> Optional[bytes]:
     return auth_key
 
 
-def set_sd_salt_auth_key(auth_key: Optional[bytes]) -> None:
+def set_sd_salt_auth_key(auth_key: bytes | None) -> None:
     """
     The key used to check the authenticity of the SD card salt.
     """

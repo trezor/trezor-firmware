@@ -35,6 +35,8 @@ from .CardanoPoolRelayParametersType import CardanoPoolRelayParametersType
 from .CardanoPublicKey import CardanoPublicKey
 from .CardanoSignTx import CardanoSignTx
 from .CardanoSignedTx import CardanoSignedTx
+from .CardanoSignedTxChunk import CardanoSignedTxChunk
+from .CardanoSignedTxChunkAck import CardanoSignedTxChunkAck
 from .CardanoTokenType import CardanoTokenType
 from .CardanoTxCertificateType import CardanoTxCertificateType
 from .CardanoTxInputType import CardanoTxInputType
@@ -59,8 +61,6 @@ from .DebugLinkMemoryRead import DebugLinkMemoryRead
 from .DebugLinkMemoryWrite import DebugLinkMemoryWrite
 from .DebugLinkRecordScreen import DebugLinkRecordScreen
 from .DebugLinkReseedRandom import DebugLinkReseedRandom
-from .DebugLinkShowText import DebugLinkShowText
-from .DebugLinkShowTextItem import DebugLinkShowTextItem
 from .DebugLinkState import DebugLinkState
 from .DebugLinkStop import DebugLinkStop
 from .DebugLinkWatchLayout import DebugLinkWatchLayout
@@ -224,6 +224,7 @@ from .PrevInput import PrevInput
 from .PrevOutput import PrevOutput
 from .PrevTx import PrevTx
 from .PublicKey import PublicKey
+from .RebootToBootloader import RebootToBootloader
 from .RecoveryDevice import RecoveryDevice
 from .ResetDevice import ResetDevice
 from .RippleAddress import RippleAddress
@@ -311,8 +312,8 @@ from . import Capability
 from . import CardanoAddressType
 from . import CardanoCertificateType
 from . import CardanoPoolRelayType
-from . import DebugLinkShowTextStyle
 from . import DebugSwipeDirection
+from . import DecredStakingSpendType
 from . import FailureType
 from . import InputScriptType
 from . import LiskTransactionType

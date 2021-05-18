@@ -1,11 +1,15 @@
 from trezor import io, loop, res, ui, workflow
 from trezor.crypto import slip39
 from trezor.ui import display
-from trezor.ui.button import Button, ButtonClear, ButtonMono, ButtonMonoConfirm
+from trezor.ui.components.tt.button import (
+    Button,
+    ButtonClear,
+    ButtonMono,
+    ButtonMonoConfirm,
+)
 
 if False:
-    from typing import Optional, Tuple
-    from trezor.ui.button import ButtonContent, ButtonStyleStateType
+    from trezor.ui.components.tt.button import ButtonContent, ButtonStyleStateType
 
 
 class KeyButton(Button):
@@ -28,8 +32,8 @@ class InputButton(Button):
     def __init__(self, area: ui.Area, keyboard: "Slip39Keyboard") -> None:
         super().__init__(area, "")
         self.word = ""
-        self.pending_button: Optional[Button] = None
-        self.pending_index: Optional[int] = None
+        self.pending_button: Button | None = None
+        self.pending_index: int | None = None
         self.keyboard = keyboard
         self.disable()
 
@@ -37,8 +41,8 @@ class InputButton(Button):
         self,
         text: str,
         word: str,
-        pending_button: Optional[Button],
-        pending_index: Optional[int],
+        pending_button: Button | None,
+        pending_index: int | None,
     ) -> None:
         self.word = word
         self.text = text
@@ -118,7 +122,7 @@ class Slip39Keyboard(ui.Layout):
                 ("ab", "cd", "ef", "ghij", "klm", "nopq", "rs", "tuv", "wxyz")
             )
         ]
-        self.pending_button: Optional[Button] = None
+        self.pending_button: Button | None = None
         self.pending_index = 0
         self.button_sequence = ""
         self.mask = slip39.KEYBOARD_FULL_MASK
@@ -165,7 +169,7 @@ class Slip39Keyboard(ui.Layout):
         # Word was confirmed by the user.
         raise ui.Result(word)
 
-    def edit(self, button: Button = None, index: int = 0) -> None:
+    def edit(self, button: Button | None = None, index: int = 0) -> None:
         self.pending_button = button
         self.pending_index = index
 
@@ -222,7 +226,7 @@ class Slip39Keyboard(ui.Layout):
 
     if __debug__:
 
-        def create_tasks(self) -> Tuple[loop.Task, ...]:
+        def create_tasks(self) -> tuple[loop.Task, ...]:
             from apps.debug import input_signal
 
             return super().create_tasks() + (input_signal(),)

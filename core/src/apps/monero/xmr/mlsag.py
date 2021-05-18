@@ -48,12 +48,11 @@ from apps.monero.xmr import crypto
 from apps.monero.xmr.serialize import int_serialize
 
 if False:
-    from typing import List, Tuple
     from apps.monero.xmr.types import Ge25519, Sc25519
     from apps.monero.xmr.serialize_messages.tx_ct_key import CtKey
     from trezor.messages.MoneroRctKeyPublic import MoneroRctKeyPublic
 
-    KeyM = List[List[bytes]]
+    KeyM = list[list[bytes]]
 
 
 _HASH_KEY_CLSAG_ROUND = b"CLSAG_round\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -63,13 +62,13 @@ _HASH_KEY_CLSAG_AGG_1 = b"CLSAG_agg_1\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0
 
 def generate_mlsag_simple(
     message: bytes,
-    pubs: List[MoneroRctKeyPublic],
+    pubs: list[MoneroRctKeyPublic],
     in_sk: CtKey,
     a: Sc25519,
     cout: Ge25519,
     index: int,
-    mg_buff: List[bytes],
-) -> List[bytes]:
+    mg_buff: list[bytes],
+) -> list[bytes]:
     """
     MLSAG for RctType.Simple
     :param message: the full message to be signed (actually its hash)
@@ -110,7 +109,7 @@ def generate_mlsag_simple(
     return generate_mlsag(message, M, sk, index, dsRows, mg_buff)
 
 
-def gen_mlsag_assert(pk: KeyM, xx: List[Sc25519], index: int, dsRows: int):
+def gen_mlsag_assert(pk: KeyM, xx: list[Sc25519], index: int, dsRows: int):
     """
     Conditions check
     """
@@ -137,12 +136,12 @@ def gen_mlsag_assert(pk: KeyM, xx: List[Sc25519], index: int, dsRows: int):
 def generate_first_c_and_key_images(
     message: bytes,
     pk: KeyM,
-    xx: List[Sc25519],
+    xx: list[Sc25519],
     index: int,
     dsRows: int,
     rows: int,
     cols: int,
-) -> Tuple[Sc25519, List[Ge25519], List[Ge25519]]:
+) -> tuple[Sc25519, list[Ge25519], list[Ge25519]]:
     """
     MLSAG computation - the part with secret keys
     :param message: the full message to be signed (actually its hash)
@@ -197,11 +196,11 @@ def generate_first_c_and_key_images(
 def generate_mlsag(
     message: bytes,
     pk: KeyM,
-    xx: List[Sc25519],
+    xx: list[Sc25519],
     index: int,
     dsRows: int,
-    mg_buff: List[bytes],
-) -> List[bytes]:
+    mg_buff: list[bytes],
+) -> list[bytes]:
     """
     Multilayered Spontaneous Anonymous Group Signatures (MLSAG signatures)
 
@@ -298,13 +297,13 @@ def generate_mlsag(
 
 def generate_clsag_simple(
     message: bytes,
-    pubs: List[MoneroRctKeyPublic],
+    pubs: list[MoneroRctKeyPublic],
     in_sk: CtKey,
     a: Sc25519,
     cout: Ge25519,
     index: int,
-    mg_buff: List[bytes],
-) -> List[bytes]:
+    mg_buff: list[bytes],
+) -> list[bytes]:
     """
     CLSAG for RctType.Simple
     https://eprint.iacr.org/2019/654.pdf
@@ -341,14 +340,14 @@ def generate_clsag_simple(
 
 def _generate_clsag(
     message: bytes,
-    P: List[bytes],
+    P: list[bytes],
     p: Sc25519,
-    C_nonzero: List[bytes],
+    C_nonzero: list[bytes],
     z: Sc25519,
     Cout: Ge25519,
     index: int,
-    mg_buff: List[bytes],
-) -> List[bytes]:
+    mg_buff: list[bytes],
+) -> list[bytes]:
     sI = crypto.new_point()  # sig.I
     sD = crypto.new_point()  # sig.D
     sc1 = crypto.new_scalar()  # sig.c1

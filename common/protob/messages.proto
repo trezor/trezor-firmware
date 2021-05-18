@@ -81,6 +81,7 @@ enum MessageType {
     MessageType_DoPreauthorized = 84 [(wire_in) = true];
     MessageType_PreauthorizedRequest = 85 [(wire_out) = true];
     MessageType_CancelAuthorization = 86 [(wire_in) = true];
+    MessageType_RebootToBootloader = 87 [(wire_in) = true];
 
     // Deprecated messages, kept for protobuf compatibility.
     // Both are marked wire_out so that we don't need to implement incoming handler for legacy
@@ -135,7 +136,6 @@ enum MessageType {
     MessageType_DebugLinkLayout = 9001 [(wire_debug_out) = true];
     MessageType_DebugLinkReseedRandom = 9002 [(wire_debug_in) = true];
     MessageType_DebugLinkRecordScreen = 9003 [(wire_debug_in) = true];
-    MessageType_DebugLinkShowText = 9004 [(wire_debug_in) = true];
     MessageType_DebugLinkEraseSdCard = 9005 [(wire_debug_in) = true];
     MessageType_DebugLinkWatchLayout = 9006 [(wire_debug_in) = true];
 
@@ -206,6 +206,8 @@ enum MessageType {
     MessageType_CardanoGetAddress = 307 [(wire_in) = true];
     MessageType_CardanoAddress = 308 [(wire_out) = true];
     MessageType_CardanoSignedTx = 310 [(wire_out) = true];
+    MessageType_CardanoSignedTxChunk = 311 [(wire_out) = true];
+    MessageType_CardanoSignedTxChunkAck = 312 [(wire_in) = true];
 
     // Ripple
     MessageType_RippleGetAddress = 400 [(wire_in) = true];

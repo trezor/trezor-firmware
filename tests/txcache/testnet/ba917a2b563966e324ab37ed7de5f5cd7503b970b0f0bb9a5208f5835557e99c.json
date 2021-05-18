@@ -1,0 +1,28 @@
+{
+  "inputs": [
+    {
+      "address_n": [2147483732, 2147483649, 2147483649, 0, 14],
+      "amount": 1000000,
+      "prev_hash": "4083973799f05c52f556b603ab0f93d9c4c50be50da03c770a492d0990ca7809",
+      "prev_index": 1,
+      "script_sig": "",
+      "script_type": "SPENDWITNESS",
+      "sequence": 4294967293,
+      "witness": "024730440220245e21b27caa065940d5ea4b539926598ad0af4f47f8135a41d85708b7c0df42022050f7108edc8ff3d5ebf8a621e5127133caa302af2d050b7037bdc1a486861557012102a269d4b8faf008074b974b6d64fa1776e17fdf65381a76d1338e9bba88983a87"
+    }
+  ],
+  "lock_time": 0,
+  "outputs": [
+    {
+      "op_return_data": "64656164",
+      "amount": 0,
+      "script_type": "PAYTOOPRETURN"
+    },
+    {
+      "address_n": [2147483732, 2147483649, 2147483649, 1, 10],
+      "amount": 999850,
+      "script_type": "PAYTOWITNESS"
+    }
+  ],
+  "version": 1
+}

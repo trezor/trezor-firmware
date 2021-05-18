@@ -40,7 +40,7 @@ def setup_device_core(client, pin, wipe_code):
 
     with client:
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 5 + [messages.Success(), messages.Features()]
+            [messages.ButtonRequest()] * 5 + [messages.Success, messages.Features]
         )
         client.set_input_flow(input_flow)
         device.change_wipe_code(client)

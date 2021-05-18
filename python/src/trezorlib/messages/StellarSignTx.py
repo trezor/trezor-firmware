@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,18 +16,18 @@ class StellarSignTx(p.MessageType):
     def __init__(
         self,
         *,
-        address_n: List[int] = None,
-        network_passphrase: str = None,
-        source_account: str = None,
-        fee: int = None,
-        sequence_number: int = None,
-        timebounds_start: int = None,
-        timebounds_end: int = None,
-        memo_type: int = None,
-        memo_text: str = None,
-        memo_id: int = None,
-        memo_hash: bytes = None,
-        num_operations: int = None,
+        address_n: Optional[List[int]] = None,
+        network_passphrase: Optional[str] = None,
+        source_account: Optional[str] = None,
+        fee: Optional[int] = None,
+        sequence_number: Optional[int] = None,
+        timebounds_start: Optional[int] = None,
+        timebounds_end: Optional[int] = None,
+        memo_type: Optional[int] = None,
+        memo_text: Optional[str] = None,
+        memo_id: Optional[int] = None,
+        memo_hash: Optional[bytes] = None,
+        num_operations: Optional[int] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.network_passphrase = network_passphrase

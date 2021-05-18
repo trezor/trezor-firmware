@@ -8,7 +8,7 @@ from .TxOutputType import TxOutputType
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -19,20 +19,20 @@ class TransactionType(p.MessageType):
     def __init__(
         self,
         *,
-        inputs: List[TxInputType] = None,
-        bin_outputs: List[TxOutputBinType] = None,
-        outputs: List[TxOutputType] = None,
-        version: int = None,
-        lock_time: int = None,
-        inputs_cnt: int = None,
-        outputs_cnt: int = None,
-        extra_data: bytes = None,
-        extra_data_len: int = None,
-        expiry: int = None,
-        overwintered: bool = None,
-        version_group_id: int = None,
-        timestamp: int = None,
-        branch_id: int = None,
+        inputs: Optional[List[TxInputType]] = None,
+        bin_outputs: Optional[List[TxOutputBinType]] = None,
+        outputs: Optional[List[TxOutputType]] = None,
+        version: Optional[int] = None,
+        lock_time: Optional[int] = None,
+        inputs_cnt: Optional[int] = None,
+        outputs_cnt: Optional[int] = None,
+        extra_data: Optional[bytes] = None,
+        extra_data_len: Optional[int] = None,
+        expiry: Optional[int] = None,
+        overwintered: Optional[bool] = None,
+        version_group_id: Optional[int] = None,
+        timestamp: Optional[int] = None,
+        branch_id: Optional[int] = None,
     ) -> None:
         self.inputs = inputs if inputs is not None else []
         self.bin_outputs = bin_outputs if bin_outputs is not None else []

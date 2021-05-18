@@ -9,7 +9,7 @@ from .CardanoTxWithdrawalType import CardanoTxWithdrawalType
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -21,16 +21,16 @@ class CardanoSignTx(p.MessageType):
     def __init__(
         self,
         *,
-        inputs: List[CardanoTxInputType] = None,
-        outputs: List[CardanoTxOutputType] = None,
-        certificates: List[CardanoTxCertificateType] = None,
-        withdrawals: List[CardanoTxWithdrawalType] = None,
-        protocol_magic: int = None,
-        fee: int = None,
-        ttl: int = None,
-        network_id: int = None,
-        metadata: bytes = None,
-        validity_interval_start: int = None,
+        protocol_magic: int,
+        fee: int,
+        network_id: int,
+        inputs: Optional[List[CardanoTxInputType]] = None,
+        outputs: Optional[List[CardanoTxOutputType]] = None,
+        certificates: Optional[List[CardanoTxCertificateType]] = None,
+        withdrawals: Optional[List[CardanoTxWithdrawalType]] = None,
+        ttl: Optional[int] = None,
+        metadata: Optional[bytes] = None,
+        validity_interval_start: Optional[int] = None,
     ) -> None:
         self.inputs = inputs if inputs is not None else []
         self.outputs = outputs if outputs is not None else []
@@ -38,8 +38,8 @@ class CardanoSignTx(p.MessageType):
         self.withdrawals = withdrawals if withdrawals is not None else []
         self.protocol_magic = protocol_magic
         self.fee = fee
-        self.ttl = ttl
         self.network_id = network_id
+        self.ttl = ttl
         self.metadata = metadata
         self.validity_interval_start = validity_interval_start
 
@@ -48,10 +48,10 @@ class CardanoSignTx(p.MessageType):
         return {
             1: ('inputs', CardanoTxInputType, p.FLAG_REPEATED),
             2: ('outputs', CardanoTxOutputType, p.FLAG_REPEATED),
-            5: ('protocol_magic', p.UVarintType, None),
-            6: ('fee', p.UVarintType, None),
+            5: ('protocol_magic', p.UVarintType, p.FLAG_REQUIRED),
+            6: ('fee', p.UVarintType, p.FLAG_REQUIRED),
             7: ('ttl', p.UVarintType, None),
-            8: ('network_id', p.UVarintType, None),
+            8: ('network_id', p.UVarintType, p.FLAG_REQUIRED),
             9: ('certificates', CardanoTxCertificateType, p.FLAG_REPEATED),
             10: ('withdrawals', CardanoTxWithdrawalType, p.FLAG_REPEATED),
             11: ('metadata', p.BytesType, None),

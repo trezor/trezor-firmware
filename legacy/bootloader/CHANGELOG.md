@@ -4,20 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## 1.8.1 [Unreleased]
+## 1.10.0 [unreleased]
 
 ### Added
+- "Stay in bootloader" flag.
 
 ### Changed
 - Use Trezor instead of TREZOR.
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
 
 ## 1.8.0 [February 2019]
 

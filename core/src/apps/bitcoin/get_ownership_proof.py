@@ -3,9 +3,8 @@ from ubinascii import hexlify
 from trezor import ui, wire
 from trezor.messages.GetOwnershipProof import GetOwnershipProof
 from trezor.messages.OwnershipProof import OwnershipProof
-from trezor.ui.text import Text
+from trezor.ui.layouts import confirm_action, confirm_hex
 
-from apps.common.confirm import require_confirm
 from apps.common.paths import validate_path
 
 from . import addresses, common, scripts
@@ -13,7 +12,6 @@ from .keychain import validate_path_against_script_type, with_keychain
 from .ownership import generate_proof, get_identifier
 
 if False:
-    from typing import Optional
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
     from .authorization import CoinJoinAuthorization
@@ -28,7 +26,7 @@ async def get_ownership_proof(
     msg: GetOwnershipProof,
     keychain: Keychain,
     coin: CoinInfo,
-    authorization: Optional[CoinJoinAuthorization] = None,
+    authorization: CoinJoinAuthorization | None = None,
 ) -> OwnershipProof:
     if authorization:
         if not authorization.check_get_ownership_proof(msg):
@@ -65,25 +63,24 @@ async def get_ownership_proof(
 
     # In order to set the "user confirmation" bit in the proof, the user must actually confirm.
     if msg.user_confirmation and not authorization:
-        text = Text("Proof of ownership", ui.ICON_CONFIG)
-        text.normal("Do you want to create a")
         if not msg.commitment_data:
-            text.normal("proof of ownership?")
+            await confirm_action(
+                ctx,
+                "confirm_ownership_proof",
+                title="Proof of ownership",
+                description="Do you want to create a proof of ownership?",
+            )
         else:
-            hex_data = hexlify(msg.commitment_data).decode()
-            text.normal("proof of ownership for:")
-            if len(hex_data) > 3 * _MAX_MONO_LINE:
-                text.mono(hex_data[0:_MAX_MONO_LINE])
-                text.mono(
-                    hex_data[_MAX_MONO_LINE : 3 * _MAX_MONO_LINE // 2 - 1]
-                    + "..."
-                    + hex_data[-3 * _MAX_MONO_LINE // 2 + 2 : -_MAX_MONO_LINE]
-                )
-                text.mono(hex_data[-_MAX_MONO_LINE:])
-            else:
-                text.mono(hex_data)
-
-        await require_confirm(ctx, text)
+            await confirm_hex(
+                ctx,
+                "confirm_ownership_proof",
+                title="Proof of ownership",
+                description="Do you want to create a proof of ownership for:",
+                data=hexlify(msg.commitment_data).decode(),
+                icon=ui.ICON_CONFIG,
+                icon_color=ui.ORANGE_ICON,
+                truncate_middle=True,
+            )
 
     ownership_proof, signature = generate_proof(
         node,

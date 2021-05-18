@@ -1,5 +1,7 @@
 import pytest
 
+from python.src import consts
+
 from . import common
 
 # Strings for testing ChaCha20 encryption.
@@ -27,8 +29,8 @@ def test_set_get():
     assert common.memory_equals(sc, sp)
 
     for s in (sc, sp):
-        s.change_pin(1, 2221)
-        s.change_pin(2221, 991)
+        s.change_pin("", "222")
+        s.change_pin("222", "99")
         s.set(0xAAAA, b"something else")
     assert common.memory_equals(sc, sp)
 
@@ -60,7 +62,7 @@ def test_set_get():
 
     # check that storage functions after unlock
     for s in (sc, sp):
-        s.unlock(991)
+        s.unlock("99")
         s.set(0xAAAA, b"public")
         s.set(0x0902, b"protected")
         assert s.get(0xAAAA) == b"public"
@@ -131,14 +133,14 @@ def test_set_similar():
 
     for s in (sc, sp):
         s.wipe()
-        s.unlock(1)
+        s.unlock("")
         s.set(0xBEEF, b"satoshi")
         s.set(0xBEEF, b"Satoshi")
     assert common.memory_equals(sc, sp)
 
     for s in (sc, sp):
         s.wipe()
-        s.unlock(1)
+        s.unlock("")
         s.set(0xBEEF, b"satoshi")
         s.set(0xBEEF, b"Satoshi")
         s.set(0xBEEF, b"Satoshi")
@@ -182,4 +184,18 @@ def test_counter():
     for i in range(501, 700):
         for s in (sc, sp):
             assert i == s.next_counter(0xC001)
+    assert common.memory_equals(sc, sp)
+
+    for s in (sc, sp):
+        with pytest.raises(RuntimeError):
+            s.set_counter(0xC001, consts.UINT32_MAX + 1)
+
+        start = consts.UINT32_MAX - 100
+        s.set_counter(0xC001, start)
+        for i in range(start, consts.UINT32_MAX):
+            assert i + 1 == s.next_counter(0xC001)
+
+        with pytest.raises(RuntimeError):
+            s.next_counter(0xC001)
+
     assert common.memory_equals(sc, sp)

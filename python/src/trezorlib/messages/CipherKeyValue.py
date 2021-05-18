@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,13 +16,13 @@ class CipherKeyValue(p.MessageType):
     def __init__(
         self,
         *,
-        address_n: List[int] = None,
-        key: str = None,
-        value: bytes = None,
-        encrypt: bool = None,
-        ask_on_encrypt: bool = None,
-        ask_on_decrypt: bool = None,
-        iv: bytes = None,
+        key: str,
+        value: bytes,
+        address_n: Optional[List[int]] = None,
+        encrypt: Optional[bool] = None,
+        ask_on_encrypt: Optional[bool] = None,
+        ask_on_decrypt: Optional[bool] = None,
+        iv: Optional[bytes] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.key = key
@@ -36,8 +36,8 @@ class CipherKeyValue(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('address_n', p.UVarintType, p.FLAG_REPEATED),
-            2: ('key', p.UnicodeType, None),
-            3: ('value', p.BytesType, None),
+            2: ('key', p.UnicodeType, p.FLAG_REQUIRED),
+            3: ('value', p.BytesType, p.FLAG_REQUIRED),
             4: ('encrypt', p.BoolType, None),
             5: ('ask_on_encrypt', p.BoolType, None),
             6: ('ask_on_decrypt', p.BoolType, None),

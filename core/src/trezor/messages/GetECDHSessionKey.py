@@ -6,7 +6,7 @@ from .IdentityType import IdentityType
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -18,9 +18,9 @@ class GetECDHSessionKey(p.MessageType):
     def __init__(
         self,
         *,
-        identity: IdentityType = None,
-        peer_public_key: bytes = None,
-        ecdsa_curve_name: str = None,
+        identity: IdentityType,
+        peer_public_key: bytes,
+        ecdsa_curve_name: Optional[str] = None,
     ) -> None:
         self.identity = identity
         self.peer_public_key = peer_public_key
@@ -29,7 +29,7 @@ class GetECDHSessionKey(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('identity', IdentityType, None),
-            2: ('peer_public_key', p.BytesType, None),
+            1: ('identity', IdentityType, p.FLAG_REQUIRED),
+            2: ('peer_public_key', p.BytesType, p.FLAG_REQUIRED),
             3: ('ecdsa_curve_name', p.UnicodeType, None),
         }

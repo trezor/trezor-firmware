@@ -6,7 +6,7 @@ class Ge25519:
     """
     EC point on ED25519
     """
-    def __init__(self, x: Optional[Union[Ge25519, bytes]] = None):
+    def __init__(self, x: Ge25519 | bytes | None = None):
         """
         Constructor
         """
@@ -17,7 +17,7 @@ class Sc25519:
     """
     EC scalar on SC25519
     """
-    def __init__(self, x: Optional[Union[Sc25519, bytes, int]] = None):
+    def __init__(self, x: Sc25519 | bytes | int | None = None):
         """
         Constructor
         """
@@ -28,7 +28,7 @@ class Hasher:
     """
     XMR hasher
     """
-    def __init__(self, x: Optional[bytes] = None):
+    def __init__(self, x: bytes | None = None):
         """
         Constructor
         """
@@ -48,7 +48,7 @@ class Hasher:
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
 def init256_modm(
-    dst: Optional[Sc25519], val: Union[int, bytes, Sc25519]
+    dst: Sc25519 | None, val: int | bytes | Sc25519
 ) -> Sc25519:
     """
     Initializes Sc25519 scalar
@@ -85,21 +85,21 @@ def get256_modm(a: Sc25519) -> int:
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
-def add256_modm(r: Optional[Sc25519], a: Sc25519, b: Sc25519) -> Sc25519:
+def add256_modm(r: Sc25519 | None, a: Sc25519, b: Sc25519) -> Sc25519:
     """
     Scalar addition
     """
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
-def sub256_modm(r: Optional[Sc25519], a: Sc25519, b: Sc25519) -> Sc25519:
+def sub256_modm(r: Sc25519 | None, a: Sc25519, b: Sc25519) -> Sc25519:
     """
     Scalar subtraction
     """
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
-def mul256_modm(r: Optional[Sc25519], a: Sc25519, b: Sc25519) -> Sc25519:
+def mul256_modm(r: Sc25519 | None, a: Sc25519, b: Sc25519) -> Sc25519:
     """
     Scalar multiplication
     """
@@ -107,7 +107,7 @@ def mul256_modm(r: Optional[Sc25519], a: Sc25519, b: Sc25519) -> Sc25519:
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
 def mulsub256_modm(
-    r: Optional[Sc25519], a: Sc25519, b: Sc25519, c: Sc25519
+    r: Sc25519 | None, a: Sc25519, b: Sc25519, c: Sc25519
 ) -> Sc25519:
     """
     c - a*b
@@ -116,7 +116,7 @@ def mulsub256_modm(
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
 def muladd256_modm(
-    r: Optional[Sc25519], a: Sc25519, b: Sc25519, c: Sc25519
+    r: Sc25519 | None, a: Sc25519, b: Sc25519, c: Sc25519
 ) -> Sc25519:
     """
     c + a*b
@@ -124,7 +124,7 @@ def muladd256_modm(
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
-def inv256_modm(r: Optional[Sc25519], a: Sc25519) -> Sc25519:
+def inv256_modm(r: Sc25519 | None, a: Sc25519) -> Sc25519:
     """
     Scalar modular inversion
     """
@@ -132,7 +132,7 @@ def inv256_modm(r: Optional[Sc25519], a: Sc25519) -> Sc25519:
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
 def pack256_modm(
-    r: Optional[bytes], a: Sc25519, offset: Optional[int] = 0
+    r: bytes | None, a: Sc25519, offset: int | None = 0
 ) -> bytes:
     """
     Scalar compression
@@ -141,7 +141,7 @@ def pack256_modm(
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
 def unpack256_modm(
-    r: Optional[Sc25519], a: bytes, offset: int = 0
+    r: Sc25519 | None, a: bytes, offset: int = 0
 ) -> Sc25519:
     """
     Scalar decompression
@@ -150,7 +150,7 @@ def unpack256_modm(
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
 def unpack256_modm_noreduce(
-    r: Optional[Sc25519], a: bytes, offset: int = 0
+    r: Sc25519 | None, a: bytes, offset: int = 0
 ) -> Sc25519:
     """
     Scalar decompression, raw, without modular reduction
@@ -158,14 +158,14 @@ def unpack256_modm_noreduce(
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
-def ge25519_set_neutral(r: Optional[Ge25519]) -> Ge25519:
+def ge25519_set_neutral(r: Ge25519 | None) -> Ge25519:
     """
     Sets neutral point
     """
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
-def ge25519_set_xmr_h(r: Optional[Ge25519]) -> Ge25519:
+def ge25519_set_xmr_h(r: Ge25519 | None) -> Ge25519:
     """
     Sets H point
     """
@@ -186,28 +186,28 @@ def ge25519_eq(a: Ge25519, b: Ge25519) -> bool:
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
-def ge25519_add(r: Optional[Ge25519], a: Ge25519, b: Ge25519) -> Ge25519:
+def ge25519_add(r: Ge25519 | None, a: Ge25519, b: Ge25519) -> Ge25519:
     """
     Adds EC points
     """
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
-def ge25519_sub(r: Optional[Ge25519], a: Ge25519, b: Ge25519) -> Ge25519:
+def ge25519_sub(r: Ge25519 | None, a: Ge25519, b: Ge25519) -> Ge25519:
     """
     Subtracts EC points
     """
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
-def ge25519_double(r: Optional[Ge25519], p: Ge25519) -> Ge25519:
+def ge25519_double(r: Ge25519 | None, p: Ge25519) -> Ge25519:
     """
     EC point doubling
     """
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
-def ge25519_mul8(r: Optional[Ge25519], p: Ge25519) -> Ge25519:
+def ge25519_mul8(r: Ge25519 | None, p: Ge25519) -> Ge25519:
     """
     EC point * 8
     """
@@ -215,7 +215,7 @@ def ge25519_mul8(r: Optional[Ge25519], p: Ge25519) -> Ge25519:
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
 def ge25519_double_scalarmult_vartime(
-    r: Optional[Ge25519], p1: Ge25519, s1: Sc25519, s2: Sc25519
+    r: Ge25519 | None, p1: Ge25519, s1: Sc25519, s2: Sc25519
 ) -> Ge25519:
     """
     s1 * G + s2 * p1
@@ -224,7 +224,7 @@ def ge25519_double_scalarmult_vartime(
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
 def ge25519_double_scalarmult_vartime2(
-    r: Optional[Ge25519],
+    r: Ge25519 | None,
     p1: Ge25519,
     s1: Sc25519,
     p2: Ge25519,
@@ -237,7 +237,7 @@ def ge25519_double_scalarmult_vartime2(
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
 def ge25519_scalarmult_base(
-    r: Optional[Ge25519], s: Union[Sc25519, int]
+    r: Ge25519 | None, s: Sc25519 | int
 ) -> Ge25519:
     """
     s * G
@@ -246,7 +246,7 @@ def ge25519_scalarmult_base(
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
 def ge25519_scalarmult(
-    r: Optional[Ge25519], p: Ge25519, s: Union[Sc25519, int]
+    r: Ge25519 | None, p: Ge25519, s: Sc25519 | int
 ) -> Ge25519:
     """
     s * p
@@ -262,7 +262,7 @@ def ge25519_pack(r: bytes, p: Ge25519, offset: int = 0) -> bytes:
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
 def ge25519_unpack_vartime(
-    r: Optional[Ge25519], buff: bytes, offset: int = 0
+    r: Ge25519 | None, buff: bytes, offset: int = 0
 ) -> Ge25519:
     """
     Point decompression
@@ -277,7 +277,7 @@ def base58_addr_encode_check(tag: int, buff: bytes) -> bytes:
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
-def base58_addr_decode_check(buff: bytes) -> Tuple[bytes, int]:
+def base58_addr_decode_check(buff: bytes) -> tuple[bytes, int]:
     """
     Monero block base 58 decoding, returning (decoded, tag) or raising on
     error.
@@ -285,21 +285,21 @@ def base58_addr_decode_check(buff: bytes) -> Tuple[bytes, int]:
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
-def xmr_random_scalar(r: Optional[Sc25519] = None) -> Sc25519:
+def xmr_random_scalar(r: Sc25519 | None = None) -> Sc25519:
     """
     Generates a random scalar
     """
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
-def xmr_fast_hash(r: Optional[bytes], buff: bytes, length: int, offset: int) -> bytes:
+def xmr_fast_hash(r: bytes | None, buff: bytes, length: int, offset: int) -> bytes:
     """
     XMR fast hash
     """
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
-def xmr_hash_to_ec(r: Optional[Ge25519], buff: bytes, length: int, offset:
+def xmr_hash_to_ec(r: Ge25519 | None, buff: bytes, length: int, offset:
 int) -> Ge25519:
     """
     XMR hashing to EC point
@@ -307,7 +307,7 @@ int) -> Ge25519:
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
-def xmr_hash_to_scalar(r: Optional[Sc25519], buff: bytes, length: int,
+def xmr_hash_to_scalar(r: Sc25519 | None, buff: bytes, length: int,
 offset: int) -> Sc25519:
     """
     XMR hashing to EC scalar
@@ -316,7 +316,7 @@ offset: int) -> Sc25519:
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
 def xmr_derivation_to_scalar(
-    r: Optional[Sc25519], p: Ge25519, output_index: int
+    r: Sc25519 | None, p: Ge25519, output_index: int
 ) -> Sc25519:
     """
     H_s(derivation || varint(output_index))
@@ -325,7 +325,7 @@ def xmr_derivation_to_scalar(
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
 def xmr_generate_key_derivation(
-    r: Optional[Ge25519], A: Ge25519, b: Sc25519
+    r: Ge25519 | None, A: Ge25519, b: Sc25519
 ) -> Ge25519:
     """
     8*(key2*key1)
@@ -334,7 +334,7 @@ def xmr_generate_key_derivation(
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
 def xmr_derive_private_key(
-    r: Optional[Sc25519], deriv: Ge25519, idx: int, base: Sc25519
+    r: Sc25519 | None, deriv: Ge25519, idx: int, base: Sc25519
 ) -> Sc25519:
     """
     base + H_s(derivation || varint(output_index))
@@ -343,7 +343,7 @@ def xmr_derive_private_key(
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
 def xmr_derive_public_key(
-    r: Optional[Ge25519], deriv: Ge25519, idx: int, base: Ge25519
+    r: Ge25519 | None, deriv: Ge25519, idx: int, base: Ge25519
 ) -> Ge25519:
     """
     H_s(derivation || varint(output_index))G + base
@@ -352,7 +352,7 @@ def xmr_derive_public_key(
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
 def xmr_add_keys2(
-    r: Optional[Ge25519], a: Sc25519, b: Sc25519, B: Ge25519
+    r: Ge25519 | None, a: Sc25519, b: Sc25519, B: Ge25519
 ) -> Ge25519:
     """
     aG + bB, G is basepoint
@@ -361,7 +361,7 @@ def xmr_add_keys2(
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
 def xmr_add_keys2_vartime(
-    r: Optional[Ge25519], a: Sc25519, b: Sc25519, B: Ge25519
+    r: Ge25519 | None, a: Sc25519, b: Sc25519, B: Ge25519
 ) -> Ge25519:
     """
     aG + bB, G is basepoint
@@ -370,7 +370,7 @@ def xmr_add_keys2_vartime(
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
 def xmr_add_keys3(
-    r: Optional[Ge25519], a: Sc25519, A: Ge25519, b: Sc25519, B: Ge25519
+    r: Ge25519 | None, a: Sc25519, A: Ge25519, b: Sc25519, B: Ge25519
 ) -> Ge25519:
     """
     aA + bB
@@ -379,7 +379,7 @@ def xmr_add_keys3(
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
 def xmr_add_keys3_vartime(
-    r: Optional[Ge25519], a: Sc25519, A: Ge25519, b: Sc25519, B: Ge25519
+    r: Ge25519 | None, a: Sc25519, A: Ge25519, b: Sc25519, B: Ge25519
 ) -> Ge25519:
     """
     aA + bB
@@ -388,7 +388,7 @@ def xmr_add_keys3_vartime(
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
 def xmr_get_subaddress_secret_key(
-    r: Optional[Sc25519], major: int, minor: int, m: Sc25519
+    r: Sc25519 | None, major: int, minor: int, m: Sc25519
 ) -> Sc25519:
     """
     Hs(SubAddr || a || index_major || index_minor)
@@ -396,7 +396,7 @@ def xmr_get_subaddress_secret_key(
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-monero.h
-def xmr_gen_c(r: Optional[Ge25519], a: Sc25519, amount: int) -> Ge25519:
+def xmr_gen_c(r: Ge25519 | None, a: Sc25519, amount: int) -> Ge25519:
     """
     aG + amount * H
     """

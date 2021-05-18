@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,12 +16,12 @@ class CipheredKeyValue(p.MessageType):
     def __init__(
         self,
         *,
-        value: bytes = None,
+        value: bytes,
     ) -> None:
         self.value = value
 
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('value', p.BytesType, None),
+            1: ('value', p.BytesType, p.FLAG_REQUIRED),
         }

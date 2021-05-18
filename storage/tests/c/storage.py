@@ -21,10 +21,10 @@ class Storage:
     def wipe(self) -> None:
         self.lib.storage_wipe()
 
-    def unlock(self, pin: int, ext_salt: bytes = None) -> bool:
+    def unlock(self, pin: str, ext_salt: bytes = None) -> bool:
         if ext_salt is not None and len(ext_salt) != EXTERNAL_SALT_LEN:
             raise ValueError
-        return sectrue == self.lib.storage_unlock(c.c_uint32(pin), ext_salt)
+        return sectrue == self.lib.storage_unlock(pin.encode(), len(pin), ext_salt)
 
     def lock(self) -> None:
         self.lib.storage_lock()
@@ -37,8 +37,8 @@ class Storage:
 
     def change_pin(
         self,
-        oldpin: int,
-        newpin: int,
+        oldpin: str,
+        newpin: str,
         old_ext_salt: bytes = None,
         new_ext_salt: bytes = None,
     ) -> bool:
@@ -47,7 +47,12 @@ class Storage:
         if new_ext_salt is not None and len(new_ext_salt) != EXTERNAL_SALT_LEN:
             raise ValueError
         return sectrue == self.lib.storage_change_pin(
-            c.c_uint32(oldpin), c.c_uint32(newpin), old_ext_salt, new_ext_salt
+            oldpin.encode(),
+            len(oldpin),
+            newpin.encode(),
+            len(newpin),
+            old_ext_salt,
+            new_ext_salt,
         )
 
     def get(self, key: int) -> bytes:
@@ -65,17 +70,17 @@ class Storage:
         if sectrue != self.lib.storage_set(c.c_uint16(key), val, c.c_uint16(len(val))):
             raise RuntimeError("Failed to set value in storage.")
 
-    def set_counter(self, key: int, count: int) -> bool:
-        return sectrue == self.lib.storage_set_counter(
+    def set_counter(self, key: int, count: int) -> None:
+        if count > 0xFFFF_FFFF or sectrue != self.lib.storage_set_counter(
             c.c_uint16(key), c.c_uint32(count)
-        )
+        ):
+            raise RuntimeError("Failed to set value in storage.")
 
     def next_counter(self, key: int) -> int:
         count = c.c_uint32()
-        if sectrue == self.lib.storage_next_counter(c.c_uint16(key), c.byref(count)):
-            return count.value
-        else:
-            return None
+        if sectrue != self.lib.storage_next_counter(c.c_uint16(key), c.byref(count)):
+            raise RuntimeError("Failed to set value in storage.")
+        return count.value
 
     def delete(self, key: int) -> bool:
         return sectrue == self.lib.storage_delete(c.c_uint16(key))

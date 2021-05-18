@@ -40,9 +40,9 @@ message GetFeatures {
  */
 message Features {
     optional string vendor = 1;                 // name of the manufacturer, e.g. "trezor.io"
-    optional uint32 major_version = 2;          // major version of the firmware/bootloader, e.g. 1
-    optional uint32 minor_version = 3;          // minor version of the firmware/bootloader, e.g. 0
-    optional uint32 patch_version = 4;          // patch version of the firmware/bootloader, e.g. 0
+    required uint32 major_version = 2;          // major version of the firmware/bootloader, e.g. 1
+    required uint32 minor_version = 3;          // minor version of the firmware/bootloader, e.g. 0
+    required uint32 patch_version = 4;          // patch version of the firmware/bootloader, e.g. 0
     optional bool bootloader_mode = 5;          // is device in bootloader mode?
     optional string device_id = 6;              // device's unique identifier
     optional string language = 9;               // device language
@@ -64,7 +64,7 @@ message Features {
  * @next Success
  */
 message Ping {
-    optional string message = 1;                // message to send back in Success message
+    optional string message = 1 [default=""];   // message to send back in Success message
 }
 
 /**
@@ -72,7 +72,7 @@ message Ping {
  * @end
  */
 message Success {
-    optional string message = 1;    // human readable description of action or request-specific payload
+    optional string message = 1 [default=""]; // human readable description of action or request-specific payload
 }
 
 /**
@@ -136,7 +136,7 @@ message FirmwareRequest {
  * @next Success
  * @next Failure
  */
- message FirmwareUpload {
+message FirmwareUpload {
     required bytes payload = 1; // firmware to be loaded into device
     optional bytes hash = 2;    // hash of the payload
 }

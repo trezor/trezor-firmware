@@ -26,9 +26,10 @@ message DebugLinkDecision {
         RIGHT = 3;
     }
 
-    optional uint32 x = 4;   // touch X coordinate
-    optional uint32 y = 5;   // touch Y coordinate
-    optional bool wait = 6;  // wait for layout change
+    optional uint32 x = 4;        // touch X coordinate
+    optional uint32 y = 5;        // touch Y coordinate
+    optional bool wait = 6;       // wait for layout change
+    optional uint32 hold_ms = 7;  // touch hold duration
 }
 
 /**
@@ -55,32 +56,6 @@ message DebugLinkReseedRandom {
  */
 message DebugLinkRecordScreen {
     optional string target_directory = 1;  // empty or missing to stop recording
-}
-
-/**
- * Request: Show text on the screen
- * @start
- * @next Success
- */
- message DebugLinkShowText {
-    optional string header_text = 1;  // screen header text
-    repeated DebugLinkShowTextItem body_text = 2;  // body text segments
-    optional string header_icon = 3;  // icon name in ui.style
-    optional string icon_color = 4;   // color name in ui.style
-
-    message DebugLinkShowTextItem {
-        optional DebugLinkShowTextStyle style = 1;
-        optional string content = 2;
-    }
-
-    enum DebugLinkShowTextStyle {
-        NORMAL = 0;
-        BOLD = 1;
-        MONO = 2;
-        BR = 4;
-        BR_HALF = 5;
-        SET_COLOR = 6;
-    }
 }
 
 /**

@@ -8,7 +8,7 @@ from apps.common.paths import PATTERN_BIP44, PathSchema
 from .common import BITCOIN_NAMES
 
 if False:
-    from typing import Awaitable, Callable, Iterable, List, Optional, Tuple, TypeVar
+    from typing import Awaitable, Callable, Iterable, TypeVar
     from typing_extensions import Protocol
 
     from trezor.messages.TxInputType import EnumTypeInputScriptType
@@ -23,8 +23,8 @@ if False:
 
     class MsgWithAddressScriptType(Protocol):
         # XXX should be Bip32Path but that fails
-        address_n = ...  # type: List[int]
-        script_type = ...  # type: EnumTypeInputScriptType
+        address_n: list[int] = ...
+        script_type: EnumTypeInputScriptType = ...
 
     MsgIn = TypeVar("MsgIn", bound=MsgWithCoinName)
     HandlerWithCoinInfo = Callable[..., Awaitable[MsgOut]]
@@ -52,12 +52,20 @@ PATTERN_GREENADDRESS_SIGN_B = "m/1195487518/6/address_index"
 
 PATTERN_CASA = "m/49/coin_type/account/change/address_index"
 
+PATTERN_UNCHAINED_HARDENED = (
+    "m/45'/coin_type'/account'/[0-1000000]/change/address_index"
+)
+PATTERN_UNCHAINED_UNHARDENED = (
+    "m/45'/coin_type/account/[0-1000000]/change/address_index"
+)
+PATTERN_UNCHAINED_DEPRECATED = "m/45'/coin_type'/account'/[0-1000000]/address_index"
+
 
 def validate_path_against_script_type(
     coin: coininfo.CoinInfo,
-    msg: MsgWithAddressScriptType = None,
-    address_n: Bip32Path = None,
-    script_type: EnumTypeInputScriptType = None,
+    msg: MsgWithAddressScriptType | None = None,
+    address_n: Bip32Path | None = None,
+    script_type: EnumTypeInputScriptType | None = None,
     multisig: bool = False,
 ) -> bool:
     patterns = []
@@ -83,6 +91,9 @@ def validate_path_against_script_type(
         if coin.coin_name in BITCOIN_NAMES:
             patterns.append(PATTERN_GREENADDRESS_A)
             patterns.append(PATTERN_GREENADDRESS_B)
+            patterns.append(PATTERN_UNCHAINED_HARDENED)
+            patterns.append(PATTERN_UNCHAINED_UNHARDENED)
+            patterns.append(PATTERN_UNCHAINED_DEPRECATED)
 
     elif coin.segwit and script_type == I.SPENDP2SHWITNESS:
         patterns.append(PATTERN_BIP49)
@@ -123,6 +134,9 @@ def get_schemas_for_coin(coin: coininfo.CoinInfo) -> Iterable[PathSchema]:
                 PATTERN_GREENADDRESS_SIGN_A,
                 PATTERN_GREENADDRESS_SIGN_B,
                 PATTERN_CASA,
+                PATTERN_UNCHAINED_HARDENED,
+                PATTERN_UNCHAINED_UNHARDENED,
+                PATTERN_UNCHAINED_DEPRECATED,
             )
         )
 
@@ -148,7 +162,7 @@ def get_schemas_for_coin(coin: coininfo.CoinInfo) -> Iterable[PathSchema]:
     return schemas
 
 
-def get_coin_by_name(coin_name: Optional[str]) -> coininfo.CoinInfo:
+def get_coin_by_name(coin_name: str | None) -> coininfo.CoinInfo:
     if coin_name is None:
         coin_name = "Bitcoin"
 
@@ -159,8 +173,8 @@ def get_coin_by_name(coin_name: Optional[str]) -> coininfo.CoinInfo:
 
 
 async def get_keychain_for_coin(
-    ctx: wire.Context, coin_name: Optional[str]
-) -> Tuple[Keychain, coininfo.CoinInfo]:
+    ctx: wire.Context, coin_name: str | None
+) -> tuple[Keychain, coininfo.CoinInfo]:
     coin = get_coin_by_name(coin_name)
     schemas = get_schemas_for_coin(coin)
     slip21_namespaces = [[b"SLIP-0019"]]
@@ -172,7 +186,7 @@ def with_keychain(func: HandlerWithCoinInfo[MsgOut]) -> Handler[MsgIn, MsgOut]:
     async def wrapper(
         ctx: wire.Context,
         msg: MsgIn,
-        authorization: Optional[CoinJoinAuthorization] = None,
+        authorization: CoinJoinAuthorization | None = None,
     ) -> MsgOut:
         if authorization:
             keychain = authorization.keychain

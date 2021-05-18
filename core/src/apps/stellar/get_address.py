@@ -1,9 +1,10 @@
 from trezor.messages.StellarAddress import StellarAddress
 from trezor.messages.StellarGetAddress import StellarGetAddress
+from trezor.ui.layouts import show_address
 
 from apps.common import paths, seed
 from apps.common.keychain import auto_keychain
-from apps.common.layout import address_n_to_str, show_address, show_qr
+from apps.common.layout import address_n_to_str
 
 from . import helpers
 
@@ -18,10 +19,6 @@ async def get_address(ctx, msg: StellarGetAddress, keychain):
 
     if msg.show_display:
         desc = address_n_to_str(msg.address_n)
-        while True:
-            if await show_address(ctx, address, desc=desc):
-                break
-            if await show_qr(ctx, address.upper(), desc=desc):
-                break
+        await show_address(ctx, address=address, address_qr=address.upper(), desc=desc)
 
     return StellarAddress(address=address)

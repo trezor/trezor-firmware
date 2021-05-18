@@ -49,7 +49,12 @@ typedef struct _mp_obj_AES_t {
   uint8_t iv[AES_BLOCK_SIZE];
 } mp_obj_AES_t;
 
-/// def __init__(self, mode: int, key: bytes, iv: bytes = None) -> None:
+/// def __init__(
+///     self,
+///     mode: int,
+///     key: bytes,
+///     iv: bytes | None = None,
+/// ) -> None:
 ///     """
 ///     Initialize AES context.
 ///     """

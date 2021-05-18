@@ -94,6 +94,8 @@ void PIXELDATA(uint16_t c) {
   }
 }
 
+void display_init_seq(void) {}
+
 void display_init(void) {
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     printf("%s\n", SDL_GetError());

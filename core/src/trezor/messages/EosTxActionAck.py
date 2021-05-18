@@ -20,7 +20,7 @@ from .EosActionVoteProducer import EosActionVoteProducer
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -32,21 +32,21 @@ class EosTxActionAck(p.MessageType):
     def __init__(
         self,
         *,
-        common: EosActionCommon = None,
-        transfer: EosActionTransfer = None,
-        delegate: EosActionDelegate = None,
-        undelegate: EosActionUndelegate = None,
-        refund: EosActionRefund = None,
-        buy_ram: EosActionBuyRam = None,
-        buy_ram_bytes: EosActionBuyRamBytes = None,
-        sell_ram: EosActionSellRam = None,
-        vote_producer: EosActionVoteProducer = None,
-        update_auth: EosActionUpdateAuth = None,
-        delete_auth: EosActionDeleteAuth = None,
-        link_auth: EosActionLinkAuth = None,
-        unlink_auth: EosActionUnlinkAuth = None,
-        new_account: EosActionNewAccount = None,
-        unknown: EosActionUnknown = None,
+        common: Optional[EosActionCommon] = None,
+        transfer: Optional[EosActionTransfer] = None,
+        delegate: Optional[EosActionDelegate] = None,
+        undelegate: Optional[EosActionUndelegate] = None,
+        refund: Optional[EosActionRefund] = None,
+        buy_ram: Optional[EosActionBuyRam] = None,
+        buy_ram_bytes: Optional[EosActionBuyRamBytes] = None,
+        sell_ram: Optional[EosActionSellRam] = None,
+        vote_producer: Optional[EosActionVoteProducer] = None,
+        update_auth: Optional[EosActionUpdateAuth] = None,
+        delete_auth: Optional[EosActionDeleteAuth] = None,
+        link_auth: Optional[EosActionLinkAuth] = None,
+        unlink_auth: Optional[EosActionUnlinkAuth] = None,
+        new_account: Optional[EosActionNewAccount] = None,
+        unknown: Optional[EosActionUnknown] = None,
     ) -> None:
         self.common = common
         self.transfer = transfer

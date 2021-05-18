@@ -6,7 +6,7 @@ from .BinanceInputOutput import BinanceInputOutput
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -18,8 +18,8 @@ class BinanceTransferMsg(p.MessageType):
     def __init__(
         self,
         *,
-        inputs: List[BinanceInputOutput] = None,
-        outputs: List[BinanceInputOutput] = None,
+        inputs: Optional[List[BinanceInputOutput]] = None,
+        outputs: Optional[List[BinanceInputOutput]] = None,
     ) -> None:
         self.inputs = inputs if inputs is not None else []
         self.outputs = outputs if outputs is not None else []

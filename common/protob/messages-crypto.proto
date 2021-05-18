@@ -13,8 +13,8 @@ option java_outer_classname = "TrezorMessageCrypto";
  */
 message CipherKeyValue {
     repeated uint32 address_n = 1;      // BIP-32 path to derive the key from master node
-    optional string key = 2;            // key component of key:value
-    optional bytes value = 3;           // value component of key:value
+    required string key = 2;            // key component of key:value
+    required bytes value = 3;           // value component of key:value
     optional bool encrypt = 4;          // are we encrypting (True) or decrypting (False)?
     optional bool ask_on_encrypt = 5;   // should we ask on encrypt operation?
     optional bool ask_on_decrypt = 6;   // should we ask on decrypt operation?
@@ -26,7 +26,7 @@ message CipherKeyValue {
  * @end
  */
 message CipheredKeyValue {
-    optional bytes value = 1;           // ciphered/deciphered value
+    required bytes value = 1;           // ciphered/deciphered value
 }
 
 /**
@@ -49,10 +49,10 @@ message IdentityType {
  * @next Failure
  */
 message SignIdentity {
-    optional IdentityType identity = 1;     // identity
-    optional bytes challenge_hidden = 2;    // non-visible challenge
-    optional string challenge_visual = 3;   // challenge shown on display (e.g. date+time)
-    optional string ecdsa_curve_name = 4;   // ECDSA curve name to use
+    required IdentityType identity = 1;                  // identity
+    optional bytes challenge_hidden = 2 [default=""];    // non-visible challenge
+    optional string challenge_visual = 3 [default=""];   // challenge shown on display (e.g. date+time)
+    optional string ecdsa_curve_name = 4;                // ECDSA curve name to use
 }
 
 /**
@@ -61,8 +61,8 @@ message SignIdentity {
  */
 message SignedIdentity {
     optional string address = 1;    // identity address
-    optional bytes public_key = 2;  // identity public key
-    optional bytes signature = 3;   // signature of the identity data
+    required bytes public_key = 2;  // identity public key
+    required bytes signature = 3;   // signature of the identity data
 }
 
 /**
@@ -72,8 +72,8 @@ message SignedIdentity {
  * @next Failure
  */
 message GetECDHSessionKey {
-    optional IdentityType identity = 1;     // identity
-    optional bytes peer_public_key = 2;     // peer's public key
+    required IdentityType identity = 1;     // identity
+    required bytes peer_public_key = 2;     // peer's public key
     optional string ecdsa_curve_name = 3;   // ECDSA curve name to use
 }
 
@@ -82,7 +82,8 @@ message GetECDHSessionKey {
  * @end
  */
 message ECDHSessionKey {
-    optional bytes session_key = 1;     // ECDH session key
+    required bytes session_key = 1;     // ECDH session key
+    optional bytes public_key = 2;  // identity public key
 }
 
 /**
@@ -123,5 +124,5 @@ message CosiSign {
  * @end
  */
 message CosiSignature {
-    optional bytes signature = 1;   // Signature
+    required bytes signature = 1;   // Signature
 }

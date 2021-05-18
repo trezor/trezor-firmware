@@ -5,7 +5,7 @@ from .. import multisig
 from ..common import BIP32_WALLET_DEPTH
 
 if False:
-    from typing import Any, Union, Generic, TypeVar
+    from typing import Any, Generic, TypeVar
 
     from trezor.messages.TxInput import TxInput
     from trezor.messages.TxOutput import TxOutput
@@ -43,10 +43,10 @@ class MatchChecker(Generic[T]):
     UNDEFINED = object()
 
     def __init__(self) -> None:
-        self.attribute: Union[object, T] = self.UNDEFINED
+        self.attribute: object | T = self.UNDEFINED
         self.read_only = False  # Failsafe to ensure that add_input() is not accidentally called after output_matches().
 
-    def attribute_from_tx(self, txio: Union[TxInput, TxOutput]) -> T:
+    def attribute_from_tx(self, txio: TxInput | TxOutput) -> T:
         # Return the attribute from the txio, which is to be used for matching.
         # If the txio is invalid for matching, then return an object which
         # evaluates as a boolean False.
@@ -85,14 +85,14 @@ class MatchChecker(Generic[T]):
 
 
 class WalletPathChecker(MatchChecker):
-    def attribute_from_tx(self, txio: Union[TxInput, TxOutput]) -> Any:
+    def attribute_from_tx(self, txio: TxInput | TxOutput) -> Any:
         if len(txio.address_n) < BIP32_WALLET_DEPTH:
             return None
         return txio.address_n[:-BIP32_WALLET_DEPTH]
 
 
 class MultisigFingerprintChecker(MatchChecker):
-    def attribute_from_tx(self, txio: Union[TxInput, TxOutput]) -> Any:
+    def attribute_from_tx(self, txio: TxInput | TxOutput) -> Any:
         if not txio.multisig:
             return None
         return multisig.multisig_fingerprint(txio.multisig)

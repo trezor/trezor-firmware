@@ -6,7 +6,7 @@ from .HDNodeType import HDNodeType
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -18,8 +18,8 @@ class CardanoPublicKey(p.MessageType):
     def __init__(
         self,
         *,
-        xpub: str = None,
-        node: HDNodeType = None,
+        xpub: str,
+        node: HDNodeType,
     ) -> None:
         self.xpub = xpub
         self.node = node
@@ -27,6 +27,6 @@ class CardanoPublicKey(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('xpub', p.UnicodeType, None),
-            2: ('node', HDNodeType, None),
+            1: ('xpub', p.UnicodeType, p.FLAG_REQUIRED),
+            2: ('node', HDNodeType, p.FLAG_REQUIRED),
         }

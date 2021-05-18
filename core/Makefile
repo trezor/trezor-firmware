@@ -23,9 +23,10 @@ BITCOIN_ONLY ?= 0
 TREZOR_MODEL ?= T
 TREZOR_MEMPERF ?= 0
 
-STLINK_VER ?= v2
-OPENOCD = openocd -f interface/stlink-$(STLINK_VER).cfg -c "transport select hla_swd" -f target/stm32f4x.cfg
-OPENOCD_T1 = openocd -f interface/stlink-$(STLINK_VER).cfg -c "transport select hla_swd" -f target/stm32f2x.cfg
+OPENOCD_INTERFACE ?= stlink   # -or- ftdi/olimex-arm-usb-tiny-h
+OPENOCD_TRANSPORT ?= hla_swd  # -or- jtag
+OPENOCD = openocd -f interface/$(OPENOCD_INTERFACE).cfg -c "transport select $(OPENOCD_TRANSPORT)" -f target/stm32f4x.cfg
+OPENOCD_T1 = openocd -f interface/$(OPENOCD_INTERFACE).cfg -c "transport select $(OPENOCD_TRANSPORT)" -f target/stm32f2x.cfg
 
 BOARDLOADER_START   = 0x08000000
 BOOTLOADER_START    = 0x08020000
@@ -107,6 +108,8 @@ mypy:
 	mypy --config-file ../setup.cfg \
 		src/main.py \
 		src/apps/bitcoin \
+		src/apps/cardano \
+		src/apps/misc \
 		src/apps/webauthn
 
 ## code generation:
@@ -141,7 +144,7 @@ build_reflash: ## build reflash firmware + reflash image
 	dd if=build/bootloader/bootloader.bin of=$(REFLASH_BUILD_DIR)/sdimage.bin bs=1 seek=49152
 
 build_firmware: templates build_cross ## build firmware with frozen modules
-	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" RDI="$(RDI)" $(FIRMWARE_BUILD_DIR)/firmware.bin
+	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" $(FIRMWARE_BUILD_DIR)/firmware.bin
 
 build_unix: templates ## build unix port
 	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) TREZOR_MODEL="$(TREZOR_MODEL)" BITCOIN_ONLY="$(BITCOIN_ONLY)"
@@ -157,7 +160,7 @@ build_cross: ## build mpy-cross port
 
 ## clean commands:
 
-clean: clean_boardloader clean_bootloader clean_prodtest clean_firmware clean_unix clean_cross ## clean all
+clean: clean_boardloader clean_bootloader clean_bootloader_ci clean_prodtest clean_reflash clean_firmware clean_unix clean_cross ## clean all
 	rm -f ".sconsign.dblite"
 
 clean_boardloader: ## clean boardloader build
@@ -165,6 +168,9 @@ clean_boardloader: ## clean boardloader build
 
 clean_bootloader: ## clean bootloader build
 	rm -rf $(BOOTLOADER_BUILD_DIR)
+
+clean_bootloader_ci: ## clean bootloader_ci build
+	rm -rf $(BOOTLOADER_CI_BUILD_DIR)
 
 clean_prodtest: ## clean prodtest build
 	rm -rf $(PRODTEST_BUILD_DIR)
@@ -216,18 +222,18 @@ flash_erase_storage: ## erase storage sectors from flash
 	$(OPENOCD) -c "init; flash erase_sector 0 4 4; flash erase_sector 0 16 16; exit"
 
 flash_bootloader_jlink: $(BOOTLOADER_BUILD_DIR)/bootloader.bin ## flash bootloader using JLink
-	JLinkExe -commanderscript embed/bootloader/bootloader_flash.jlink
+	JLinkExe -nogui -commanderscript embed/bootloader/bootloader_flash.jlink
 
 flash_bootloader_ci_jlink: $(BOOTLOADER_CI_BUILD_DIR)/bootloader.bin ## flash CI bootloader using JLink
-	JLinkExe -commanderscript embed/bootloader_ci/bootloader_flash.jlink
+	JLinkExe -nogui -commanderscript embed/bootloader_ci/bootloader_flash.jlink
 
 flash_firmware_jlink: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using JLink. file names must end in .bin for JLink
 	cp -f $<.p1 $<.p1.bin
 	cp -f $<.p2 $<.p2.bin
-	JLinkExe -commanderscript embed/firmware/firmware_flash.jlink
+	JLinkExe -nogui -commanderscript embed/firmware/firmware_flash.jlink
 
 flash_firmware_t1_jlink: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash T1 core port via JLink
-	JLinkExe -commanderscript embed/firmware/firmware_flash_t1.jlink
+	JLinkExe -nogui -commanderscript embed/firmware/firmware_flash_t1.jlink
 
 ## openocd debug commands:
 

@@ -4,9 +4,7 @@ from trezor.messages.WebAuthnCredentials import WebAuthnCredentials
 from trezor.messages.WebAuthnListResidentCredentials import (
     WebAuthnListResidentCredentials,
 )
-from trezor.ui.text import Text
-
-from apps.common.confirm import require_confirm
+from trezor.ui.layouts import confirm_action
 
 from . import resident_credentials
 
@@ -14,14 +12,12 @@ from . import resident_credentials
 async def list_resident_credentials(
     ctx: wire.Context, msg: WebAuthnListResidentCredentials
 ) -> WebAuthnCredentials:
-    text = Text("List credentials")
-    text.normal(
-        "Do you want to export",
-        "information about the",
-        "resident credentials",
-        "stored on this device?",
+    await confirm_action(
+        ctx,
+        "credentials_list",
+        title="List credentials",
+        description="Do you want to export information about the resident credentials stored on this device?",
     )
-    await require_confirm(ctx, text)
     creds = [
         WebAuthnCredential(
             index=cred.index,

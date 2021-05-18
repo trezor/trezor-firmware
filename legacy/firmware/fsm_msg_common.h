@@ -20,11 +20,8 @@
 bool get_features(Features *resp) {
   resp->has_vendor = true;
   strlcpy(resp->vendor, "trezor.io", sizeof(resp->vendor));
-  resp->has_major_version = true;
   resp->major_version = VERSION_MAJOR;
-  resp->has_minor_version = true;
   resp->minor_version = VERSION_MINOR;
-  resp->has_patch_version = true;
   resp->patch_version = VERSION_PATCH;
   resp->has_device_id = true;
   strlcpy(resp->device_id, config_uuid_str, sizeof(resp->device_id));

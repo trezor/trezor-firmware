@@ -6,7 +6,7 @@ from .MoneroTransactionSourceEntry import MoneroTransactionSourceEntry
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -18,7 +18,7 @@ class MoneroTransactionSetInputRequest(p.MessageType):
     def __init__(
         self,
         *,
-        src_entr: MoneroTransactionSourceEntry = None,
+        src_entr: Optional[MoneroTransactionSourceEntry] = None,
     ) -> None:
         self.src_entr = src_entr
 

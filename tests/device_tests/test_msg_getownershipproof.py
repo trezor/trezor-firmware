@@ -23,7 +23,6 @@ from trezorlib.tools import parse_path
 pytestmark = pytest.mark.skip_t1
 
 
-@pytest.mark.skip_ui
 def test_ownership_id(client):
     ownership_id = btc.get_ownership_id(
         client,
@@ -37,7 +36,6 @@ def test_ownership_id(client):
     )
 
 
-@pytest.mark.skip_ui
 def test_attack_ownership_id(client):
     # Multisig with global suffix specification.
     # Use account numbers 1, 2 and 3 to create a valid multisig,
@@ -75,7 +73,6 @@ def test_attack_ownership_id(client):
             )
 
 
-@pytest.mark.skip_ui
 def test_p2wpkh_ownership_proof(client):
     ownership_proof, _ = btc.get_ownership_proof(
         client,
@@ -89,7 +86,6 @@ def test_p2wpkh_ownership_proof(client):
     )
 
 
-@pytest.mark.skip_ui
 def test_fake_ownership_id(client):
     with pytest.raises(TrezorFailure, match="Invalid ownership identifier"):
         btc.get_ownership_proof(

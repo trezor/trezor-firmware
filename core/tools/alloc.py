@@ -128,6 +128,11 @@ def html(obj, htmldir):
 
     with open(f"{htmldir}/index.html", "w") as f:
         f.write("<html>")
+        f.write(
+            "<h3>Total allocations: {}</h3>".format(
+                sum(total_sum for _, _, total_sum in file_sums)
+            )
+        )
         with HtmlTable(f) as table:
             table.tr((style_right, "avg"), (style_right, "total"), "")
             for filename, avg_sum, total_sum in file_sums:

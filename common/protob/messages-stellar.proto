@@ -10,7 +10,7 @@ option java_outer_classname = "TrezorMessageStellar";
  * @embed
  */
 message StellarAssetType {
-    optional uint32 type = 1;       // 0 = native asset (XLM), 1 = alphanum 4, 2 = alphanum 12
+    required uint32 type = 1;       // 0 = native asset (XLM), 1 = alphanum 4, 2 = alphanum 12
     optional string code = 2;       // for non-native assets, string describing the code
     optional string issuer = 3;     // issuing address
 }
@@ -30,7 +30,7 @@ message StellarGetAddress {
  * @end
  */
 message StellarAddress {
-    optional string address = 1;    // Address in Stellar format (base32 of a pubkey with checksum)
+    required string address = 1;    // Address in Stellar format (base32 of a pubkey with checksum)
 }
 
 /**
@@ -217,6 +217,6 @@ message StellarBumpSequenceOp {
  * @end
  */
 message StellarSignedTx {
-    optional bytes public_key = 1;  // public key for the private key used to sign data
-    optional bytes signature = 2;   // signature suitable for sending to the Stellar network
+    required bytes public_key = 1;  // public key for the private key used to sign data
+    required bytes signature = 2;   // signature suitable for sending to the Stellar network
 }

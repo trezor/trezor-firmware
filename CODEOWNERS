@@ -12,9 +12,9 @@
 
 /core/src/storage @andrewkozlik
 
-/core/src/trezor @tsusanka @matejcik
+/core/src/trezor @matejcik
 
-/core/tests @tsusanka
+/core/tests @matejcik
 
 /core/tools @matejcik
 
@@ -26,14 +26,12 @@
 
 /crypto/tools @prusnak
 
-/docs @tsusanka
-
 /legacy @prusnak
 
 /python @matejcik
 
 /storage @andrewkozlik
 
-/tests @tsusanka @matejcik
+/tests @matejcik
 
 /vendor @prusnak

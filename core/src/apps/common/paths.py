@@ -1,11 +1,8 @@
-from micropython import const
-
-from trezor import ui
-from trezor.messages import ButtonRequestType
-from trezor.ui.text import Text
+from trezor.ui.constants import MONO_CHARS_PER_LINE
+from trezor.ui.layouts import confirm_path_warning
 
 from . import HARDENED
-from .confirm import require_confirm
+from .layout import address_n_to_str
 
 if False:
     from typing import (
@@ -14,16 +11,11 @@ if False:
         Collection,
         Container,
         Iterable,
-        List,
         Sequence,
         TypeVar,
-        Union,
     )
     from typing_extensions import Protocol
     from trezor import wire
-
-    # XXX this is a circular import, but it's only for typing
-    from .keychain import Keychain
 
     Bip32Path = Sequence[int]
     Slip21Path = Sequence[bytes]
@@ -31,6 +23,13 @@ if False:
 
     class PathSchemaType(Protocol):
         def match(self, path: Bip32Path) -> bool:
+            ...
+
+    class KeychainValidatorType(Protocol):
+        def is_in_keychain(self, path: Bip32Path) -> bool:
+            ...
+
+        def verify_path(self, path: Bip32Path) -> None:
             ...
 
 
@@ -105,7 +104,7 @@ class PathSchema:
         "**": Interval(0, 0xFFFF_FFFF),
     }
 
-    def __init__(self, pattern: str, slip44_id: Union[int, Iterable[int]]) -> None:
+    def __init__(self, pattern: str, slip44_id: int | Iterable[int]) -> None:
         if not pattern.startswith("m/"):
             raise ValueError  # unsupported path template
         components = pattern[2:].split("/")
@@ -113,7 +112,7 @@ class PathSchema:
         if isinstance(slip44_id, int):
             slip44_id = (slip44_id,)
 
-        self.schema: List[Container[int]] = []
+        self.schema: list[Container[int]] = []
         self.trailing_components: Container[int] = ()
 
         for component in components:
@@ -247,7 +246,10 @@ PATTERN_SEP5 = "m/44'/coin_type'/account'"
 
 
 async def validate_path(
-    ctx: wire.Context, keychain: Keychain, path: Bip32Path, *additional_checks: bool
+    ctx: wire.Context,
+    keychain: KeychainValidatorType,
+    path: Bip32Path,
+    *additional_checks: bool,
 ) -> None:
     keychain.verify_path(path)
     if not keychain.is_in_keychain(path) or not all(additional_checks):
@@ -255,12 +257,7 @@ async def validate_path(
 
 
 async def show_path_warning(ctx: wire.Context, path: Bip32Path) -> None:
-    text = Text("Confirm path", ui.ICON_WRONG, ui.RED)
-    text.normal("Path")
-    text.mono(*break_address_n_to_lines(path))
-    text.normal("is unknown.")
-    text.normal("Are you sure?")
-    await require_confirm(ctx, text, ButtonRequestType.UnknownDerivationPath)
+    await confirm_path_warning(ctx, address_n_to_str(path))
 
 
 def is_hardened(i: int) -> bool:
@@ -271,21 +268,11 @@ def path_is_hardened(address_n: Bip32Path) -> bool:
     return all(is_hardened(n) for n in address_n)
 
 
-def address_n_to_str(address_n: Bip32Path) -> str:
-    def path_item(i: int) -> str:
-        if i & HARDENED:
-            return str(i ^ HARDENED) + "'"
-        else:
-            return str(i)
-
-    return "m/" + "/".join([path_item(i) for i in address_n])
-
-
-def break_address_n_to_lines(address_n: Bip32Path) -> List[str]:
+def break_address_n_to_lines(address_n: Bip32Path) -> list[str]:
     lines = []
     path_str = address_n_to_str(address_n)
 
-    per_line = const(17)
+    per_line = MONO_CHARS_PER_LINE
     while len(path_str) > per_line:
         i = path_str[:per_line].rfind("/")
         lines.append(path_str[:i])

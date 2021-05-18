@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -15,8 +15,8 @@ class EosActionUnknown(p.MessageType):
     def __init__(
         self,
         *,
-        data_size: int = None,
-        data_chunk: bytes = None,
+        data_size: int,
+        data_chunk: Optional[bytes] = None,
     ) -> None:
         self.data_size = data_size
         self.data_chunk = data_chunk
@@ -24,6 +24,6 @@ class EosActionUnknown(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('data_size', p.UVarintType, None),
+            1: ('data_size', p.UVarintType, p.FLAG_REQUIRED),
             2: ('data_chunk', p.BytesType, None),
         }

@@ -7,7 +7,7 @@ from .MoneroTransactionRsigData import MoneroTransactionRsigData
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -19,10 +19,10 @@ class MoneroTransactionSetOutputRequest(p.MessageType):
     def __init__(
         self,
         *,
-        dst_entr: MoneroTransactionDestinationEntry = None,
-        dst_entr_hmac: bytes = None,
-        rsig_data: MoneroTransactionRsigData = None,
-        is_offloaded_bp: bool = None,
+        dst_entr: Optional[MoneroTransactionDestinationEntry] = None,
+        dst_entr_hmac: Optional[bytes] = None,
+        rsig_data: Optional[MoneroTransactionRsigData] = None,
+        is_offloaded_bp: Optional[bool] = None,
     ) -> None:
         self.dst_entr = dst_entr
         self.dst_entr_hmac = dst_entr_hmac

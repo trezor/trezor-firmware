@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeCardanoPoolRelayType = Literal[0, 1, 2]
     except ImportError:
@@ -17,10 +17,10 @@ class CardanoPoolRelayParametersType(p.MessageType):
         self,
         *,
         type: EnumTypeCardanoPoolRelayType,
-        ipv4_address: bytes = None,
-        ipv6_address: bytes = None,
-        host_name: str = None,
-        port: int = None,
+        ipv4_address: Optional[bytes] = None,
+        ipv6_address: Optional[bytes] = None,
+        host_name: Optional[str] = None,
+        port: Optional[int] = None,
     ) -> None:
         self.type = type
         self.ipv4_address = ipv4_address

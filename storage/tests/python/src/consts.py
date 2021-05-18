@@ -1,3 +1,6 @@
+# ----- General ----- #
+UINT32_MAX = 0xFFFF_FFFF
+
 # ----- PIN and encryption related ----- #
 
 # App ID where PIN log is stored.
@@ -21,11 +24,11 @@ WIPE_CODE_DATA_KEY = (PIN_APP_ID << 8) | 0x06
 # Norcow storage key of the storage upgrade flag.
 STORAGE_UPGRADED_KEY = (PIN_APP_ID << 8) | 0x07
 
-# The PIN value corresponding to an invalid PIN.
-PIN_INVALID = 0
+# Norcow storage key of the unauthenticated storage version.
+UNAUTH_VERSION_KEY = (PIN_APP_ID << 8) | 0x08
 
 # The PIN value corresponding to an empty PIN.
-PIN_EMPTY = 1
+PIN_EMPTY = ""
 
 # Maximum number of failed unlock attempts.
 PIN_MAX_TRIES = 16
@@ -64,7 +67,7 @@ WIPE_CODE_TAG_SIZE = 8
 # The value corresponding to an unconfigured wipe code.
 # NOTE: This is intentionally different from PIN_EMPTY so that we don't need
 # special handling when both the PIN and wipe code are not set.
-WIPE_CODE_EMPTY = 0
+WIPE_CODE_EMPTY = "\0\0\0\0"
 
 # Size of counter. 4B integer and 8B tail.
 COUNTER_TAIL = 12
@@ -128,7 +131,7 @@ NORCOW_SECTOR_SIZE = 64 * 1024
 NORCOW_MAGIC = b"NRC2"
 
 # Norcow version, set in the storage header, but also as an encrypted item.
-NORCOW_VERSION = b"\x02\x00\x00\x00"
+NORCOW_VERSION = b"\x03\x00\x00\x00"
 
 # Norcow magic combined with the version, which is stored as its negation.
 NORCOW_MAGIC_AND_VERSION = NORCOW_MAGIC + bytes(

@@ -6,7 +6,7 @@ from .MultisigRedeemScriptType import MultisigRedeemScriptType
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeOutputScriptType = Literal[0, 1, 2, 3, 4, 5]
     except ImportError:
@@ -19,13 +19,13 @@ class TxOutput(p.MessageType):
         self,
         *,
         amount: int,
-        address_n: List[int] = None,
-        address: str = None,
+        address_n: Optional[List[int]] = None,
+        address: Optional[str] = None,
         script_type: EnumTypeOutputScriptType = 0,
-        multisig: MultisigRedeemScriptType = None,
-        op_return_data: bytes = None,
-        orig_hash: bytes = None,
-        orig_index: int = None,
+        multisig: Optional[MultisigRedeemScriptType] = None,
+        op_return_data: Optional[bytes] = None,
+        orig_hash: Optional[bytes] = None,
+        orig_index: Optional[int] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.amount = amount

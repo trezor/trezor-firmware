@@ -48,7 +48,7 @@ STATIC mp_obj_t mod_trezorcrypto_Hmac_update(mp_obj_t self, mp_obj_t data);
 ///     self,
 ///     hashtype: int,
 ///     key: bytes,
-///     message: bytes = None
+///     message: bytes | None = None,
 /// ) -> None:
 ///     """
 ///     Create a HMAC context.

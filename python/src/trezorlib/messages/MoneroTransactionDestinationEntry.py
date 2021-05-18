@@ -6,7 +6,7 @@ from .MoneroAccountPublicAddress import MoneroAccountPublicAddress
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -17,11 +17,11 @@ class MoneroTransactionDestinationEntry(p.MessageType):
     def __init__(
         self,
         *,
-        amount: int = None,
-        addr: MoneroAccountPublicAddress = None,
-        is_subaddress: bool = None,
-        original: bytes = None,
-        is_integrated: bool = None,
+        amount: Optional[int] = None,
+        addr: Optional[MoneroAccountPublicAddress] = None,
+        is_subaddress: Optional[bool] = None,
+        original: Optional[bytes] = None,
+        is_integrated: Optional[bool] = None,
     ) -> None:
         self.amount = amount
         self.addr = addr

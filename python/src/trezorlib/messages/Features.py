@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeCapability = Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
         EnumTypeBackupType = Literal[0, 1, 2]
@@ -19,50 +19,50 @@ class Features(p.MessageType):
     def __init__(
         self,
         *,
-        capabilities: List[EnumTypeCapability] = None,
-        vendor: str = None,
-        major_version: int = None,
-        minor_version: int = None,
-        patch_version: int = None,
-        bootloader_mode: bool = None,
-        device_id: str = None,
-        pin_protection: bool = None,
-        passphrase_protection: bool = None,
-        language: str = None,
-        label: str = None,
-        initialized: bool = None,
-        revision: bytes = None,
-        bootloader_hash: bytes = None,
-        imported: bool = None,
-        unlocked: bool = None,
-        firmware_present: bool = None,
-        needs_backup: bool = None,
-        flags: int = None,
-        model: str = None,
-        fw_major: int = None,
-        fw_minor: int = None,
-        fw_patch: int = None,
-        fw_vendor: str = None,
-        fw_vendor_keys: bytes = None,
-        unfinished_backup: bool = None,
-        no_backup: bool = None,
-        recovery_mode: bool = None,
-        backup_type: EnumTypeBackupType = None,
-        sd_card_present: bool = None,
-        sd_protection: bool = None,
-        wipe_code_protection: bool = None,
-        session_id: bytes = None,
-        passphrase_always_on_device: bool = None,
-        safety_checks: EnumTypeSafetyCheckLevel = None,
-        auto_lock_delay_ms: int = None,
-        display_rotation: int = None,
-        experimental_features: bool = None,
+        major_version: int,
+        minor_version: int,
+        patch_version: int,
+        capabilities: Optional[List[EnumTypeCapability]] = None,
+        vendor: Optional[str] = None,
+        bootloader_mode: Optional[bool] = None,
+        device_id: Optional[str] = None,
+        pin_protection: Optional[bool] = None,
+        passphrase_protection: Optional[bool] = None,
+        language: Optional[str] = None,
+        label: Optional[str] = None,
+        initialized: Optional[bool] = None,
+        revision: Optional[bytes] = None,
+        bootloader_hash: Optional[bytes] = None,
+        imported: Optional[bool] = None,
+        unlocked: Optional[bool] = None,
+        firmware_present: Optional[bool] = None,
+        needs_backup: Optional[bool] = None,
+        flags: Optional[int] = None,
+        model: Optional[str] = None,
+        fw_major: Optional[int] = None,
+        fw_minor: Optional[int] = None,
+        fw_patch: Optional[int] = None,
+        fw_vendor: Optional[str] = None,
+        fw_vendor_keys: Optional[bytes] = None,
+        unfinished_backup: Optional[bool] = None,
+        no_backup: Optional[bool] = None,
+        recovery_mode: Optional[bool] = None,
+        backup_type: Optional[EnumTypeBackupType] = None,
+        sd_card_present: Optional[bool] = None,
+        sd_protection: Optional[bool] = None,
+        wipe_code_protection: Optional[bool] = None,
+        session_id: Optional[bytes] = None,
+        passphrase_always_on_device: Optional[bool] = None,
+        safety_checks: Optional[EnumTypeSafetyCheckLevel] = None,
+        auto_lock_delay_ms: Optional[int] = None,
+        display_rotation: Optional[int] = None,
+        experimental_features: Optional[bool] = None,
     ) -> None:
         self.capabilities = capabilities if capabilities is not None else []
-        self.vendor = vendor
         self.major_version = major_version
         self.minor_version = minor_version
         self.patch_version = patch_version
+        self.vendor = vendor
         self.bootloader_mode = bootloader_mode
         self.device_id = device_id
         self.pin_protection = pin_protection
@@ -101,9 +101,9 @@ class Features(p.MessageType):
     def get_fields(cls) -> Dict:
         return {
             1: ('vendor', p.UnicodeType, None),
-            2: ('major_version', p.UVarintType, None),
-            3: ('minor_version', p.UVarintType, None),
-            4: ('patch_version', p.UVarintType, None),
+            2: ('major_version', p.UVarintType, p.FLAG_REQUIRED),
+            3: ('minor_version', p.UVarintType, p.FLAG_REQUIRED),
+            4: ('patch_version', p.UVarintType, p.FLAG_REQUIRED),
             5: ('bootloader_mode', p.BoolType, None),
             6: ('device_id', p.UnicodeType, None),
             7: ('pin_protection', p.BoolType, None),

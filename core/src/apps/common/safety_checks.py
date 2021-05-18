@@ -5,7 +5,6 @@ from storage.device import SAFETY_CHECK_LEVEL_PROMPT, SAFETY_CHECK_LEVEL_STRICT
 from trezor.messages import SafetyCheckLevel
 
 if False:
-    from typing import Optional
     from trezor.messages.ApplySettings import EnumTypeSafetyCheckLevel
 
 
@@ -13,9 +12,9 @@ def read_setting() -> EnumTypeSafetyCheckLevel:
     """
     Returns the effective safety check level.
     """
-    temporary_safety_check_level: Optional[
-        EnumTypeSafetyCheckLevel
-    ] = storage.cache.get(APP_COMMON_SAFETY_CHECKS_TEMPORARY)
+    temporary_safety_check_level: EnumTypeSafetyCheckLevel | None = storage.cache.get(
+        APP_COMMON_SAFETY_CHECKS_TEMPORARY
+    )
     if temporary_safety_check_level is not None:
         return temporary_safety_check_level
     else:

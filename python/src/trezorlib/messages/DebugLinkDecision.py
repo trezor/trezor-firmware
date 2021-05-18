@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeDebugSwipeDirection = Literal[0, 1, 2, 3]
     except ImportError:
@@ -17,12 +17,13 @@ class DebugLinkDecision(p.MessageType):
     def __init__(
         self,
         *,
-        yes_no: bool = None,
-        swipe: EnumTypeDebugSwipeDirection = None,
-        input: str = None,
-        x: int = None,
-        y: int = None,
-        wait: bool = None,
+        yes_no: Optional[bool] = None,
+        swipe: Optional[EnumTypeDebugSwipeDirection] = None,
+        input: Optional[str] = None,
+        x: Optional[int] = None,
+        y: Optional[int] = None,
+        wait: Optional[bool] = None,
+        hold_ms: Optional[int] = None,
     ) -> None:
         self.yes_no = yes_no
         self.swipe = swipe
@@ -30,6 +31,7 @@ class DebugLinkDecision(p.MessageType):
         self.x = x
         self.y = y
         self.wait = wait
+        self.hold_ms = hold_ms
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -40,4 +42,5 @@ class DebugLinkDecision(p.MessageType):
             4: ('x', p.UVarintType, None),
             5: ('y', p.UVarintType, None),
             6: ('wait', p.BoolType, None),
+            7: ('hold_ms', p.UVarintType, None),
         }

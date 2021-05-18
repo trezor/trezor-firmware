@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,8 +16,8 @@ class EosPublicKey(p.MessageType):
     def __init__(
         self,
         *,
-        wif_public_key: str = None,
-        raw_public_key: bytes = None,
+        wif_public_key: str,
+        raw_public_key: bytes,
     ) -> None:
         self.wif_public_key = wif_public_key
         self.raw_public_key = raw_public_key
@@ -25,6 +25,6 @@ class EosPublicKey(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('wif_public_key', p.UnicodeType, None),
-            2: ('raw_public_key', p.BytesType, None),
+            1: ('wif_public_key', p.UnicodeType, p.FLAG_REQUIRED),
+            2: ('raw_public_key', p.BytesType, p.FLAG_REQUIRED),
         }

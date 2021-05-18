@@ -153,6 +153,8 @@ static secbool _send_msg(uint8_t iface_num, uint16_t msg_id,
 }
 
 #define MSG_SEND_INIT(TYPE) TYPE msg_send = TYPE##_init_default
+#define MSG_SEND_ASSIGN_REQUIRED_VALUE(FIELD, VALUE) \
+  { msg_send.FIELD = VALUE; }
 #define MSG_SEND_ASSIGN_VALUE(FIELD, VALUE) \
   {                                         \
     msg_send.has_##FIELD = true;            \
@@ -281,9 +283,9 @@ static void send_msg_features(uint8_t iface_num,
                               const image_header *const hdr) {
   MSG_SEND_INIT(Features);
   MSG_SEND_ASSIGN_STRING(vendor, "trezor.io");
-  MSG_SEND_ASSIGN_VALUE(major_version, VERSION_MAJOR);
-  MSG_SEND_ASSIGN_VALUE(minor_version, VERSION_MINOR);
-  MSG_SEND_ASSIGN_VALUE(patch_version, VERSION_PATCH);
+  MSG_SEND_ASSIGN_REQUIRED_VALUE(major_version, VERSION_MAJOR);
+  MSG_SEND_ASSIGN_REQUIRED_VALUE(minor_version, VERSION_MINOR);
+  MSG_SEND_ASSIGN_REQUIRED_VALUE(patch_version, VERSION_PATCH);
   MSG_SEND_ASSIGN_VALUE(bootloader_mode, true);
   MSG_SEND_ASSIGN_STRING(model, "T");
   if (vhdr && hdr) {
@@ -464,7 +466,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
                                uint8_t *buf) {
   MSG_RECV_INIT(FirmwareUpload);
   MSG_RECV_CALLBACK(payload, _read_payload, read_offset);
-  secbool r = MSG_RECV(FirmwareUpload);
+  const secbool r = MSG_RECV(FirmwareUpload);
 
   if (sectrue != r || chunk_size != (chunk_requested + read_offset)) {
     MSG_SEND_INIT(Failure);
@@ -525,7 +527,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
       read_offset = 0;
 
       ui_fadeout();
-      ui_screen_install();
+      ui_screen_install_start();
       ui_fadein();
 
       ensure(flash_erase_sectors(FIRMWARE_SECTORS, FIRMWARE_SECTORS_COUNT,

@@ -2,11 +2,12 @@ Success.message                         max_size:256
 
 Failure.message                         max_size:256
 
-PinMatrixAck.pin                        max_size:10
+PinMatrixAck.pin                        max_size:51
 
 PassphraseAck.passphrase                max_size:51
 
-PassphraseAck._state                    max_size:1
+PassphraseAck._state                    type:FT_IGNORE
+
 Deprecated_PassphraseStateRequest.state max_size:1
 
 HDNodeType.chain_code   max_size:32

@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -15,8 +15,8 @@ class MoneroAccountPublicAddress(p.MessageType):
     def __init__(
         self,
         *,
-        spend_public_key: bytes = None,
-        view_public_key: bytes = None,
+        spend_public_key: Optional[bytes] = None,
+        view_public_key: Optional[bytes] = None,
     ) -> None:
         self.spend_public_key = spend_public_key
         self.view_public_key = view_public_key

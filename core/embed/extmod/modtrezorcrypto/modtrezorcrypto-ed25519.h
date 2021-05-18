@@ -174,7 +174,7 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_verify(mp_obj_t public_key,
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_ed25519_verify_obj,
                                  mod_trezorcrypto_ed25519_verify);
 
-/// def cosi_combine_publickeys(public_keys: List[bytes]) -> bytes:
+/// def cosi_combine_publickeys(public_keys: list[bytes]) -> bytes:
 ///     """
 ///     Combines a list of public keys used in COSI cosigning scheme.
 ///     """
@@ -209,7 +209,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(
     mod_trezorcrypto_ed25519_cosi_combine_publickeys_obj,
     mod_trezorcrypto_ed25519_cosi_combine_publickeys);
 
-/// def cosi_combine_signatures(R: bytes, signatures: List[bytes]) -> bytes:
+/// def cosi_combine_signatures(R: bytes, signatures: list[bytes]) -> bytes:
 ///     """
 ///     Combines a list of signatures used in COSI cosigning scheme.
 ///     """

@@ -93,8 +93,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_bar_obj, 6, 6,
 ///     w: int,
 ///     h: int,
 ///     fgcolor: int,
-///     bgcolor: int = None,
-///     radius: int = None,
+///     bgcolor: int | None = None,
+///     radius: int | None = None,
 /// ) -> None:
 ///     """
 ///     Renders a rounded bar at position (x,y = upper left corner) with width w
@@ -117,7 +117,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_bar_radius_obj,
                                            8, 8,
                                            mod_trezorui_Display_bar_radius);
 
-/// def toif_info(self, image: bytes) -> Tuple[int, int, bool]:
+/// def toif_info(self, image: bytes) -> tuple[int, int, bool]:
 ///     """
 ///     Returns tuple containing TOIF image dimensions: width, height, and
 ///     whether it is grayscale.
@@ -243,8 +243,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_icon_obj, 6, 6,
 ///     yoffset: int,
 ///     fgcolor: int,
 ///     bgcolor: int,
-///     icon: bytes = None,
-///     iconfgcolor: int = None,
+///     icon: bytes | None = None,
+///     iconfgcolor: int | None = None,
 /// ) -> None:
 ///     """
 ///     Renders a rotating loader graphic.
@@ -317,8 +317,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorui_Display_print_obj,
 ///     font: int,
 ///     fgcolor: int,
 ///     bgcolor: int,
-///     text_offset: int = None,
-///     text_len: int = None,
+///     text_offset: int | None = None,
+///     text_len: int | None = None,
 /// ) -> None:
 ///     """
 ///     Renders left-aligned text at position (x,y) where x is left position and
@@ -421,8 +421,8 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_text_right_obj,
 ///     self,
 ///     text: str,
 ///     font: int,
-///     text_offset: int = None,
-///     text_len: int = None,
+///     text_offset: int | None = None,
+///     text_len: int | None = None,
 /// ) -> int:
 ///     """
 ///     Returns a width of text in pixels. Font font is used for rendering.
@@ -499,7 +499,7 @@ STATIC mp_obj_t mod_trezorui_Display_qrcode(size_t n_args,
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_qrcode_obj, 5,
                                            5, mod_trezorui_Display_qrcode);
 
-/// def orientation(self, degrees: int = None) -> int:
+/// def orientation(self, degrees: int | None = None) -> int:
 ///     """
 ///     Sets display orientation to 0, 90, 180 or 270 degrees.
 ///     Everything needs to be redrawn again when this function is used.
@@ -524,7 +524,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_orientation_obj,
                                            1, 2,
                                            mod_trezorui_Display_orientation);
 
-/// def backlight(self, val: int = None) -> int:
+/// def backlight(self, val: int | None = None) -> int:
 ///     """
 ///     Sets backlight intensity to the value specified in val.
 ///     Call without the val parameter to just perform the read of the value.
@@ -547,7 +547,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_backlight_obj,
                                            1, 2,
                                            mod_trezorui_Display_backlight);
 
-/// def offset(self, xy: Tuple[int, int] = None) -> Tuple[int, int]:
+/// def offset(self, xy: tuple[int, int] | None = None) -> tuple[int, int]:
 ///     """
 ///     Sets offset (x, y) for all subsequent drawing calls.
 ///     Call without the xy parameter to just perform the read of the value.

@@ -966,6 +966,7 @@ void bn_divide_base(bignum256 *x, const bignum256 *prime) {
   // clang-format on
 }
 
+#if !USE_INVERSE_FAST
 // x = 1/x % prime if x != 0 else 0
 // Assumes x is normalized
 // Assumes prime is a prime number
@@ -973,7 +974,7 @@ void bn_divide_base(bignum256 *x, const bignum256 *prime) {
 // Assumes prime is normalized, 2**256 - 2**224 <= prime <= 2**256
 // The function doesn't have neither constant control flow nor constant memory
 //   access flow with regard to prime
-void bn_inverse_slow(bignum256 *x, const bignum256 *prime) {
+static void bn_inverse_slow(bignum256 *x, const bignum256 *prime) {
   // Uses formula 1/x % prime == x**(prime - 2) % prime
   // See https://en.wikipedia.org/wiki/Fermat%27s_little_theorem
 
@@ -989,6 +990,7 @@ void bn_inverse_slow(bignum256 *x, const bignum256 *prime) {
 
   memzero(&e, sizeof(e));
 }
+#endif
 
 #if false
 // x = 1/x % prime if x != 0 else 0
@@ -998,7 +1000,7 @@ void bn_inverse_slow(bignum256 *x, const bignum256 *prime) {
 // Assumes prime is odd, normalized, 2**256 - 2**224 <= prime <= 2**256
 // The function doesn't have neither constant control flow nor constant memory
 //   access flow with regard to prime and x
-void bn_inverse_fast(bignum256 *x, const bignum256 *prime) {
+static void bn_inverse_fast(bignum256 *x, const bignum256 *prime) {
   // "The Almost Montgomery Inverse" from the section 3 of "Constant Time
   // Modular Inversion" by Joppe W. Bos
   // See http://www.joppebos.com/files/CTInversion.pdf
@@ -1084,6 +1086,7 @@ void bn_inverse_fast(bignum256 *x, const bignum256 *prime) {
 }
 #endif
 
+#if USE_INVERSE_FAST
 // x = 1/x % prime if x != 0 else 0
 // Assumes x is is_normalized
 // Assumes GCD(x, prime) = 1
@@ -1091,7 +1094,7 @@ void bn_inverse_fast(bignum256 *x, const bignum256 *prime) {
 // Assumes prime is odd, normalized, 2**256 - 2**224 <= prime <= 2**256
 // The function has constant control flow but not constant memory access flow
 //   with regard to prime and x
-void bn_inverse_fast(bignum256 *x, const bignum256 *prime) {
+static void bn_inverse_fast(bignum256 *x, const bignum256 *prime) {
   // Custom constant time version of "The Almost Montgomery Inverse" from the
   // section 3 of "Constant Time Modular Inversion" by Joppe W. Bos
   // See http://www.joppebos.com/files/CTInversion.pdf
@@ -1196,6 +1199,7 @@ void bn_inverse_fast(bignum256 *x, const bignum256 *prime) {
   memzero(&r, sizeof(s));
   memzero(&s, sizeof(s));
 }
+#endif
 
 #if false
 // x = 1/x % prime if x != 0 else 0
@@ -1203,7 +1207,7 @@ void bn_inverse_fast(bignum256 *x, const bignum256 *prime) {
 // Assumes GCD(x, prime) = 1
 // Guarantees x is normalized and fully reduced modulo prime
 // Assumes prime is odd, normalized, 2**256 - 2**224 <= prime <= 2**256
-void bn_inverse_fast(bignum256 *x, const bignum256 *prime) {
+static void bn_inverse_fast(bignum256 *x, const bignum256 *prime) {
   // Custom constant time version of "The Almost Montgomery Inverse" from the
   // section 3 of "Constant Time Modular Inversion" by Joppe W. Bos
   // See http://www.joppebos.com/files/CTInversion.pdf

@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,8 +16,8 @@ class StellarSignedTx(p.MessageType):
     def __init__(
         self,
         *,
-        public_key: bytes = None,
-        signature: bytes = None,
+        public_key: bytes,
+        signature: bytes,
     ) -> None:
         self.public_key = public_key
         self.signature = signature
@@ -25,6 +25,6 @@ class StellarSignedTx(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('public_key', p.BytesType, None),
-            2: ('signature', p.BytesType, None),
+            1: ('public_key', p.BytesType, p.FLAG_REQUIRED),
+            2: ('signature', p.BytesType, p.FLAG_REQUIRED),
         }

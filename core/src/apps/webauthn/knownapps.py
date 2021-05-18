@@ -3,17 +3,13 @@
 # flake8: noqa
 
 
-if False:
-    from typing import Optional
-
-
 class FIDOApp:
     def __init__(
         self,
         label: str,
-        icon: Optional[str],
-        use_sign_count: Optional[bool],
-        use_self_attestation: Optional[bool],
+        icon: str | None,
+        use_sign_count: bool | None,
+        use_self_attestation: bool | None,
     ) -> None:
         self.label = label
         self.icon = icon
@@ -22,7 +18,7 @@ class FIDOApp:
 
 
 # fmt: off
-def by_rp_id_hash(rp_id_hash: bytes) -> Optional[FIDOApp]:
+def by_rp_id_hash(rp_id_hash: bytes) -> FIDOApp | None:
     if False:
         raise RuntimeError  # if false
     elif rp_id_hash == b"\x96\x89\x78\xa2\x99\x53\xde\x52\xd3\xef\x0f\x0c\x71\xb7\xb7\xb6\xb1\xaf\x9f\x08\xe2\x57\x89\x6a\x8d\x81\x26\x91\x85\x30\x29\x3b":
@@ -222,6 +218,14 @@ def by_rp_id_hash(rp_id_hash: bytes) -> Optional[FIDOApp]:
         return FIDOApp(
             label="mojeid.cz",
             icon="apps/webauthn/res/icon_mojeid.toif",
+            use_sign_count=None,
+            use_self_attestation=None,
+        )
+    elif rp_id_hash == b"\x85\x71\x01\x36\x1b\x20\xa9\x54\x4c\xdb\x9b\xef\x65\x85\x8b\x6b\xac\x70\x13\x55\x0d\x8f\x84\xf7\xef\xee\x25\x2b\x96\xfa\x7c\x1e":
+        # WebAuthn key for Namecheap
+        return FIDOApp(
+            label="www.namecheap.com",
+            icon="apps/webauthn/res/icon_namecheap.toif",
             use_sign_count=None,
             use_self_attestation=None,
         )

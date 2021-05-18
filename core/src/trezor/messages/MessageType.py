@@ -45,6 +45,7 @@ EndSession: Literal[83] = 83
 DoPreauthorized: Literal[84] = 84
 PreauthorizedRequest: Literal[85] = 85
 CancelAuthorization: Literal[86] = 86
+RebootToBootloader: Literal[87] = 87
 Deprecated_PassphraseStateRequest: Literal[77] = 77
 Deprecated_PassphraseStateAck: Literal[78] = 78
 FirmwareErase: Literal[6] = 6
@@ -88,7 +89,6 @@ DebugLinkFlashErase: Literal[113] = 113
 DebugLinkLayout: Literal[9001] = 9001
 DebugLinkReseedRandom: Literal[9002] = 9002
 DebugLinkRecordScreen: Literal[9003] = 9003
-DebugLinkShowText: Literal[9004] = 9004
 DebugLinkEraseSdCard: Literal[9005] = 9005
 DebugLinkWatchLayout: Literal[9006] = 9006
 if not utils.BITCOIN_ONLY:
@@ -145,6 +145,8 @@ if not utils.BITCOIN_ONLY:
     CardanoGetAddress: Literal[307] = 307
     CardanoAddress: Literal[308] = 308
     CardanoSignedTx: Literal[310] = 310
+    CardanoSignedTxChunk: Literal[311] = 311
+    CardanoSignedTxChunkAck: Literal[312] = 312
     RippleGetAddress: Literal[400] = 400
     RippleAddress: Literal[401] = 401
     RippleSignTx: Literal[402] = 402

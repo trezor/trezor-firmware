@@ -1,11 +1,8 @@
 from ubinascii import hexlify
 
-from trezor import ui, utils, wire
+from trezor import utils, wire
 from trezor.crypto.hashlib import blake256, sha256
-from trezor.ui.text import Text
 
-from apps.common.confirm import require_confirm
-from apps.common.layout import paginate_text, split_address
 from apps.common.writers import write_bitcoin_varint
 
 if False:
@@ -34,26 +31,3 @@ def decode_message(message: bytes) -> str:
         return bytes(message).decode()
     except UnicodeError:
         return "hex(%s)" % hexlify(message).decode()
-
-
-async def require_confirm_sign_message(
-    ctx: wire.Context, coin: str, message: bytes
-) -> None:
-    header = "Sign {} message".format(coin)
-    await require_confirm(ctx, paginate_text(decode_message(message), header))
-
-
-async def require_confirm_verify_message(
-    ctx: wire.Context, address: str, coin: str, message: bytes
-) -> None:
-    header = "Verify {} message".format(coin)
-    text = Text(header, new_lines=False)
-    text.bold("Confirm address:")
-    text.br()
-    text.mono(*split_address(address))
-    await require_confirm(ctx, text)
-
-    await require_confirm(
-        ctx,
-        paginate_text(decode_message(message), header, font=ui.MONO),
-    )

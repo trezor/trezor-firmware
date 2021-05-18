@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "bignum.h"
 #include "bitmaps.h"
@@ -277,7 +278,8 @@ void layoutHome(void) {
       oledDrawStringCenter(OLED_WIDTH / 2, OLED_HEIGHT - 8, label,
                            FONT_STANDARD);
     } else {
-      oledDrawBitmap(40, 0, &bmp_logo64);
+      oledDrawBitmap(40, 0, &bmp_logo64_half);
+      oledDrawBitmapFlip(40 + 24, 0, &bmp_logo64_half);
     }
   }
 
@@ -502,6 +504,37 @@ void layoutConfirmReplacement(const char *description, uint8_t txid[32]) {
                     description, str[0], str[1], str[2], str[3], NULL);
 }
 
+void layoutConfirmModifyOutput(const CoinInfo *coin, AmountUnit amount_unit,
+                               TxOutputType *out, TxOutputType *orig_out,
+                               int page) {
+  if (page == 0) {
+    render_address_dialog(coin, out->address, _("Modify amount for"),
+                          _("address:"), NULL);
+  } else {
+    char *question = NULL;
+    uint64_t amount_change = 0;
+    if (orig_out->amount < out->amount) {
+      question = _("Increase amount by:");
+      amount_change = out->amount - orig_out->amount;
+    } else {
+      question = _("Decrease amount by:");
+      amount_change = orig_out->amount - out->amount;
+    }
+
+    char str_amount_change[32] = {0};
+    format_coin_amount(amount_change, NULL, coin, amount_unit,
+                       str_amount_change, sizeof(str_amount_change));
+
+    char str_amount_new[32] = {0};
+    format_coin_amount(out->amount, NULL, coin, amount_unit, str_amount_new,
+                       sizeof(str_amount_new));
+
+    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                      question, str_amount_change, NULL, _("New amount:"),
+                      str_amount_new, NULL);
+  }
+}
+
 void layoutConfirmModifyFee(const CoinInfo *coin, AmountUnit amount_unit,
                             uint64_t fee_old, uint64_t fee_new) {
   char str_fee_change[32] = {0};
@@ -552,10 +585,17 @@ void layoutConfirmNondefaultLockTime(uint32_t lock_time,
                       _("will have no effect."), NULL, _("Continue?"), NULL);
 
   } else {
-    char str_locktime[11] = {0};
-    snprintf(str_locktime, sizeof(str_locktime), "%" PRIu32, lock_time);
-    char *str_type = (lock_time < LOCKTIME_TIMESTAMP_MIN_VALUE) ? "blockheight:"
-                                                                : "timestamp:";
+    char str_locktime[20] = {0};
+    char *str_type = NULL;
+    if (lock_time < LOCKTIME_TIMESTAMP_MIN_VALUE) {
+      str_type = "blockheight:";
+      snprintf(str_locktime, sizeof(str_locktime), "%" PRIu32, lock_time);
+    } else {
+      str_type = "timestamp (UTC):";
+      time_t time = lock_time;
+      const struct tm *tm = gmtime(&time);
+      strftime(str_locktime, sizeof(str_locktime), "%F %T", tm);
+    }
 
     layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                       _("Locktime for this"), _("transaction is set to"),
@@ -811,7 +851,7 @@ void layoutXPUBMultisig(const char *xpub, int index, int page, bool ours) {
     oledClear();
   }
   layoutLast = layoutXPUBMultisig;
-  char desc[] = "XPUB #__ _/2 (______)";
+  char desc[] = "XPUB #__ _/2 (________)";
   if (index + 1 >= 10) {
     desc[6] = '0' + (((index + 1) / 10) % 10);
     desc[7] = '0' + ((index + 1) % 10);
@@ -829,12 +869,14 @@ void layoutXPUBMultisig(const char *xpub, int index, int page, bool ours) {
     desc[19] = ')';
     desc[20] = 0;
   } else {
-    desc[14] = 'o';
-    desc[15] = 't';
-    desc[16] = 'h';
-    desc[17] = 'e';
-    desc[18] = 'r';
-    desc[19] = 's';
+    desc[14] = 'c';
+    desc[15] = 'o';
+    desc[16] = 's';
+    desc[17] = 'i';
+    desc[18] = 'g';
+    desc[19] = 'n';
+    desc[20] = 'e';
+    desc[21] = 'r';
   }
   _layout_xpub(xpub, desc, page);
   layoutButtonNo(_("Next"), NULL);

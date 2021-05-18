@@ -53,7 +53,7 @@ fi
 echo "Running tests"
 TIME_TESTS_START=$SECONDS
 if [[ "$OSTYPE" == "linux-gnu" && "$FORCE_DOCKER_USE" != 1 ]]; then
-  "$TREZOR_MONERO_TESTS_PATH" 2>&1 > "$TREZOR_MONERO_TESTS_LOG"
+  "$TREZOR_MONERO_TESTS_PATH" $@ 2>&1 > "$TREZOR_MONERO_TESTS_LOG"
   error=$?
 
 elif [[ "$OSTYPE" == "darwin"* || "$FORCE_DOCKER_USE" == 1 ]]; then

@@ -9,6 +9,7 @@ TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 FEATURE_FLAGS = {
     "RDI": True,
     "SECP256K1_ZKP": False,
+    "SYSTEM_VIEW": False,
 }
 
 CCFLAGS_MOD = ''
@@ -106,7 +107,7 @@ if EVERYTHING:
     ]
 
 # libsecp256k1-zkp
-if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
+if FEATURE_FLAGS["SECP256K1_ZKP"]:
     CPPPATH_MOD += [
         'vendor/secp256k1-zkp',
         'vendor/secp256k1-zkp/src',
@@ -351,6 +352,22 @@ if FEATURE_FLAGS["RDI"]:
     ]
     CPPDEFINES_MOD += ['RDI']
 
+if FEATURE_FLAGS["SYSTEM_VIEW"]:
+    SOURCE_FIRMWARE += [
+        'embed/segger/SEGGER/SEGGER_SYSVIEW_Config_NoOS.c',
+        'embed/segger/SEGGER/SEGGER_SYSVIEW.c',
+        'embed/segger/SEGGER/SEGGER_RTT.c',
+        'embed/segger/SEGGER/SEGGER_RTT_ASM_ARMv7M.S',
+        'embed/segger/SEGGER/Syscalls/SEGGER_RTT_Syscalls_GCC.c',
+        'embed/firmware/systemview.c',
+    ]
+    CPPPATH_MOD += [
+        'embed/segger/SEGGER/',
+        'embed/segger/Config/',
+    ]
+    CPPDEFINES_MOD += ['SYSTEM_VIEW']
+    CCFLAGS_MOD += '-DSYSTEM_VIEW '
+
 SOURCE_QSTR = SOURCE_MOD + SOURCE_MICROPYTHON + SOURCE_MICROPYTHON_SPEED
 
 env = Environment(ENV=os.environ, CFLAGS='%s -DPRODUCTION=%s -DPYOPT=%s -DBITCOIN_ONLY=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0'), PYOPT, BITCOIN_ONLY))
@@ -376,7 +393,7 @@ if TREZOR_MODEL == 'T':
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16'
     CPU_CCFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 '
     CPU_MODEL   = 'STM32F427xx'
-    LD_VARIANT  = '_zkp' if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"] else ''
+    LD_VARIANT  = '_zkp' if FEATURE_FLAGS["SECP256K1_ZKP"] else ''
 elif TREZOR_MODEL == '1':
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m3 -mfloat-abi=soft'
     CPU_CCFLAGS = '-mthumb -mtune=cortex-m3 -mcpu=cortex-m3 -mfloat-abi=soft '
@@ -475,6 +492,22 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/crypto/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/res/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/components/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/components/common/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/__init__.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/__init__.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/common.py'))
+    if TREZOR_MODEL == 'T':
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/components/tt/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/tt.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt.py'))
+    elif TREZOR_MODEL == '1':
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/components/t1/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/t1.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/t1.py'))
+    else:
+        raise ValueError('Unknown Trezor model')
+
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/*.py'))
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'storage/*.py'))
@@ -566,7 +599,7 @@ if FROZEN:
 #
 # static secp256-zkp ecmult context
 #
-if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
+if FEATURE_FLAGS["SECP256K1_ZKP"]:
     host_env = Environment(ENV=os.environ)
     host_env.Replace(
         CC=os.getenv('CC_FOR_BUILD') or 'gcc',
@@ -589,7 +622,7 @@ if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
 
 obj_program = []
 obj_program.extend(env.Object(source=SOURCE_MOD))
-if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
+if FEATURE_FLAGS["SECP256K1_ZKP"]:
     obj_program.extend(env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function'))
 obj_program.extend(env.Object(source=SOURCE_FIRMWARE))
 obj_program.extend(env.Object(source=SOURCE_MICROPYTHON))
@@ -618,7 +651,7 @@ obj_program.extend(
         ' $SOURCE $TARGET', ))
 
 env.Depends(obj_program, qstr_generated)
-if EVERYTHING and FEATURE_FLAGS["SECP256K1_ZKP"]:
+if FEATURE_FLAGS["SECP256K1_ZKP"]:
     env.Depends(obj_program, secp256k1_zkp_ecmult_static_context)
 
 program_elf = env.Command(

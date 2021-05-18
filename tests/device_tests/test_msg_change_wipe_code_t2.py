@@ -17,12 +17,13 @@
 import pytest
 
 from trezorlib import btc, device, messages
-from trezorlib.client import PASSPHRASE_TEST_PATH
+from trezorlib.client import MAX_PIN_LENGTH, PASSPHRASE_TEST_PATH
 from trezorlib.exceptions import Cancelled, TrezorFailure
 
 PIN4 = "1234"
 WIPE_CODE4 = "4321"
 WIPE_CODE6 = "456789"
+WIPE_CODE_MAX = "".join(chr((i % 10) + ord("0")) for i in range(MAX_PIN_LENGTH))
 
 pytestmark = pytest.mark.skip_t1
 
@@ -59,19 +60,19 @@ def test_set_remove_wipe_code(client):
 
     with client:
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 5 + [messages.Success(), messages.Features()]
+            [messages.ButtonRequest()] * 5 + [messages.Success, messages.Features]
         )
-        client.use_pin_sequence([PIN4, WIPE_CODE4, WIPE_CODE4])
+        client.use_pin_sequence([PIN4, WIPE_CODE_MAX, WIPE_CODE_MAX])
         device.change_wipe_code(client)
 
     client.init_device()
     assert client.features.wipe_code_protection is True
-    _check_wipe_code(client, PIN4, WIPE_CODE4)
+    _check_wipe_code(client, PIN4, WIPE_CODE_MAX)
 
     # Test change wipe code.
     with client:
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 5 + [messages.Success(), messages.Features()]
+            [messages.ButtonRequest()] * 5 + [messages.Success, messages.Features]
         )
         client.use_pin_sequence([PIN4, WIPE_CODE6, WIPE_CODE6])
         device.change_wipe_code(client)
@@ -83,7 +84,7 @@ def test_set_remove_wipe_code(client):
     # Test remove wipe code.
     with client:
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 3 + [messages.Success(), messages.Features()]
+            [messages.ButtonRequest()] * 3 + [messages.Success, messages.Features]
         )
         client.use_pin_sequence([PIN4])
         device.change_wipe_code(client, remove=True)
@@ -125,7 +126,7 @@ def test_set_wipe_code_to_pin(client):
 
     with client:
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 6 + [messages.Success(), messages.Features()]
+            [messages.ButtonRequest()] * 6 + [messages.Success, messages.Features]
         )
         client.use_pin_sequence([PIN4, PIN4, WIPE_CODE4, WIPE_CODE4])
         device.change_wipe_code(client)
@@ -139,7 +140,7 @@ def test_set_pin_to_wipe_code(client):
     # Set wipe code.
     with client:
         client.set_expected_responses(
-            [messages.ButtonRequest()] * 4 + [messages.Success(), messages.Features()]
+            [messages.ButtonRequest()] * 4 + [messages.Success, messages.Features]
         )
         client.use_pin_sequence([WIPE_CODE4, WIPE_CODE4])
         device.change_wipe_code(client)

@@ -18,8 +18,7 @@ from itertools import combinations
 from unittest import mock
 
 import pytest
-import shamir_mnemonic as shamir
-from shamir_mnemonic import MnemonicError
+from shamir_mnemonic import MnemonicError, shamir
 
 from trezorlib import device, messages as proto
 from trezorlib.exceptions import TrezorFailure
@@ -93,8 +92,8 @@ def reset_device(client, strength):
                 proto.ButtonRequest(code=B.ResetDevice),
                 proto.ButtonRequest(code=B.Success),
                 proto.ButtonRequest(code=B.Success),
-                proto.Success(),
-                proto.Features(),
+                proto.Success,
+                proto.Features,
             ]
         )
         client.set_input_flow(input_flow)
@@ -144,11 +143,9 @@ class TestMsgResetDeviceT2:
 def validate_mnemonics(mnemonics, threshold, expected_ems):
     # We expect these combinations to recreate the secret properly
     for test_group in combinations(mnemonics, threshold):
-        # TODO: HOTFIX, we should fix this properly by modifying and unifying the python-shamir-mnemonic API
-        ms = shamir.combine_mnemonics(test_group)
-        identifier, iteration_exponent, _, _, _ = shamir._decode_mnemonics(test_group)
-        ems = shamir._encrypt(ms, b"", iteration_exponent, identifier)
-        assert ems == expected_ems
+        groups = shamir.decode_mnemonics(test_group)
+        ems = shamir.recover_ems(groups)
+        assert expected_ems == ems.ciphertext
     # We expect these combinations to raise MnemonicError
     for test_group in combinations(mnemonics, threshold - 1):
         with pytest.raises(

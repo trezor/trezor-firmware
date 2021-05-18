@@ -19,7 +19,7 @@ ApplySettings.homescreen                max_size:1024
 Ping.message                            max_size:256
 
 LoadDevice.mnemonics                    max_count:16 max_size:241
-LoadDevice.pin                          max_size:10
+LoadDevice.pin                          max_size:51
 LoadDevice.language                     max_size:17
 LoadDevice.label                        max_size:33
 

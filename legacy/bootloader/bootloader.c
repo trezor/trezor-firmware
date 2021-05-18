@@ -31,6 +31,7 @@
 #include "rng.h"
 #include "setup.h"
 #include "signatures.h"
+#include "supervise.h"
 #include "usb.h"
 #include "util.h"
 
@@ -92,7 +93,8 @@ static void __attribute__((noreturn)) load_app(int signed_firmware) {
 
 static void bootloader_loop(void) {
   oledClear();
-  oledDrawBitmap(0, 0, &bmp_logo64);
+  oledDrawBitmap(0, 0, &bmp_logo64_half);
+  oledDrawBitmapFlip(24, 0, &bmp_logo64_half);
   if (firmware_present_new()) {
     oledDrawStringCenter(90, 10, "Trezor", FONT_STANDARD);
     oledDrawStringCenter(90, 30, "Bootloader", FONT_STANDARD);
@@ -111,6 +113,10 @@ static void bootloader_loop(void) {
 }
 
 int main(void) {
+  // grab "stay in bootloader" flag as soon as possible
+  register uint32_t r11 __asm__("r11");
+  volatile uint32_t stay_in_bootloader_flag = r11;
+
 #ifndef APPVER
   setup();
 #endif
@@ -123,12 +129,17 @@ int main(void) {
 
   mpu_config_bootloader();
 
+  if (stay_in_bootloader_flag == STAY_IN_BOOTLOADER_FLAG) {
+    goto bootloader_loop_start;
+  }
+
 #ifndef APPVER
   bool left_pressed = (buttonRead() & BTN_PIN_NO) == 0;
 
   if (firmware_present_new() && !left_pressed) {
     oledClear();
-    oledDrawBitmap(40, 0, &bmp_logo64_empty);
+    oledDrawBitmap(40, 0, &bmp_logo64_empty_half);
+    oledDrawBitmapFlip(40 + 24, 0, &bmp_logo64_empty_half);
     oledRefresh();
 
     const image_header *hdr =
@@ -148,6 +159,8 @@ int main(void) {
     load_app(signed_firmware);
   }
 #endif
+
+bootloader_loop_start:
 
   bootloader_loop();
 

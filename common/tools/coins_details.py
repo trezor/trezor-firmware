@@ -21,12 +21,8 @@ OVERRIDES = coin_info.load_json("coins_details.override.json")
 VERSIONS = coin_info.latest_releases()
 
 # automatic wallet entries
-WALLET_TREZOR = {"Trezor Wallet": "https://wallet.trezor.io"}
-WALLET_ETH_TREZOR = {"Trezor Suite": "https://suite.trezor.io"}
-WALLET_NEM = {
-    "Nano Wallet": "https://nem.io/downloads/",
-    "Magnum": "https://magnumwallet.co",
-}
+WALLET_SUITE = {"Trezor Suite": "https://suite.trezor.io"}
+WALLET_NEM = {"Nano Wallet": "https://nem.io/downloads/"}
 WALLETS_ETH_3RDPARTY = {
     "MyEtherWallet": "https://www.myetherwallet.com",
     "MyCrypto": "https://mycrypto.com",
@@ -96,14 +92,14 @@ def _is_supported(support, trezor_version):
         return nominal
 
 
-def _webwallet_support(coin, support):
-    """Check the "webwallet" support property.
+def _suite_support(coin, support):
+    """Check the "suite" support property.
     If set, check that at least one of the backends run on trezor.io.
     If yes, assume we support the coin in our wallet.
     Otherwise it's probably working with a custom backend, which means don't
     link to our wallet.
     """
-    if not support.get("webwallet"):
+    if not support.get("suite"):
         return False
     return any(".trezor.io" in url for url in coin["blockbook"])
 
@@ -150,7 +146,7 @@ def update_bitcoin(coins, support_info):
         details = dict(
             name=coin["coin_label"],
             links=dict(Homepage=coin["website"], Github=coin["github"]),
-            wallet=WALLET_TREZOR if _webwallet_support(coin, support) else {},
+            wallet=WALLET_SUITE if _suite_support(coin, support) else {},
         )
         dict_merge(res[key], details)
 
@@ -172,8 +168,8 @@ def update_erc20(coins, networks, support_info):
         if "deprecation" in coin:
             hidden = True
 
-        if network_support.get(chain, {}).get("webwallet"):
-            wallets = WALLET_ETH_TREZOR
+        if network_support.get(chain, {}).get("suite"):
+            wallets = WALLET_SUITE
         else:
             wallets = WALLETS_ETH_3RDPARTY
 
@@ -200,8 +196,8 @@ def update_ethereum_networks(coins, support_info):
     res = update_simple(coins, support_info, "coin")
     for coin in coins:
         key = coin["key"]
-        if support_info[key].get("webwallet"):
-            wallets = WALLET_ETH_TREZOR
+        if support_info[key].get("suite"):
+            wallets = WALLET_SUITE
         else:
             wallets = WALLETS_ETH_3RDPARTY
         details = dict(links=dict(Homepage=coin.get("url")), wallet=wallets)

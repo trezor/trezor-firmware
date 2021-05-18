@@ -8,7 +8,7 @@ from .LiskSignatureType import LiskSignatureType
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -19,11 +19,11 @@ class LiskTransactionAsset(p.MessageType):
     def __init__(
         self,
         *,
-        votes: List[str] = None,
-        signature: LiskSignatureType = None,
-        delegate: LiskDelegateType = None,
-        multisignature: LiskMultisignatureType = None,
-        data: str = None,
+        votes: Optional[List[str]] = None,
+        signature: Optional[LiskSignatureType] = None,
+        delegate: Optional[LiskDelegateType] = None,
+        multisignature: Optional[LiskMultisignatureType] = None,
+        data: Optional[str] = None,
     ) -> None:
         self.votes = votes if votes is not None else []
         self.signature = signature

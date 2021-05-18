@@ -2,9 +2,6 @@ from micropython import const
 
 from trezor import config
 
-if False:
-    from typing import Optional
-
 # Namespaces:
 # fmt: off
 APP_DEVICE             = const(0x01)
@@ -24,12 +21,14 @@ def set(app: int, key: int, data: bytes, public: bool = False) -> None:
     config.set(app, key, data, public)
 
 
-def get(app: int, key: int, public: bool = False) -> Optional[bytes]:
+def get(app: int, key: int, public: bool = False) -> bytes | None:
     return config.get(app, key, public)
 
 
-def delete(app: int, key: int, public: bool = False) -> None:
-    config.delete(app, key, public)
+def delete(
+    app: int, key: int, public: bool = False, writable_locked: bool = False
+) -> None:
+    config.delete(app, key, public, writable_locked)
 
 
 def set_true_or_delete(app: int, key: int, value: bool) -> None:
@@ -54,7 +53,7 @@ def set_uint8(app: int, key: int, val: int) -> None:
     set(app, key, val.to_bytes(1, "big"))
 
 
-def get_uint8(app: int, key: int) -> Optional[int]:
+def get_uint8(app: int, key: int) -> int | None:
     val = get(app, key)
     if not val:
         return None
@@ -65,16 +64,16 @@ def set_uint16(app: int, key: int, val: int) -> None:
     set(app, key, val.to_bytes(2, "big"))
 
 
-def get_uint16(app: int, key: int) -> Optional[int]:
+def get_uint16(app: int, key: int) -> int | None:
     val = get(app, key)
     if not val:
         return None
     return int.from_bytes(val, "big")
 
 
-def next_counter(app: int, key: int, public: bool = False) -> Optional[int]:
-    return config.next_counter(app, key, public)
+def next_counter(app: int, key: int, writable_locked: bool = False) -> int:
+    return config.next_counter(app, key, writable_locked)
 
 
-def set_counter(app: int, key: int, count: int, public: bool = False) -> None:
-    config.set_counter(app, key, count, public)
+def set_counter(app: int, key: int, count: int, writable_locked: bool = False) -> None:
+    config.set_counter(app, key, count, writable_locked)

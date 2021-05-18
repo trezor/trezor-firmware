@@ -10,7 +10,6 @@ from apps.monero.signing.state import State
 from apps.monero.xmr import crypto, monero
 
 if False:
-    from typing import List
     from apps.monero.xmr.types import Sc25519, Ge25519
     from trezor.messages.MoneroTransactionData import MoneroTransactionData
     from trezor.messages.MoneroTransactionRsigData import MoneroTransactionRsigData
@@ -122,7 +121,7 @@ async def init_transaction(
     return MoneroTransactionInitAck(hmacs=hmacs, rsig_data=rsig_data)
 
 
-def _check_subaddresses(state: State, outputs: List[MoneroTransactionDestinationEntry]):
+def _check_subaddresses(state: State, outputs: list[MoneroTransactionDestinationEntry]):
     """
     Using subaddresses leads to a few poorly documented exceptions.
 
@@ -221,7 +220,7 @@ def _check_grouping(state: State):
         raise ValueError("Invalid grouping")
 
 
-def _check_change(state: State, outputs: List[MoneroTransactionDestinationEntry]):
+def _check_change(state: State, outputs: list[MoneroTransactionDestinationEntry]):
     """
     Check if the change address in state.output_change (from `tsx_data.outputs`) is
     a) among tx outputs
@@ -288,7 +287,7 @@ def _compute_sec_keys(state: State, tsx_data: MoneroTransactionData):
     state.key_enc = crypto.keccak_2hash(b"enc" + master_key)
 
 
-def _precompute_subaddr(state: State, account: int, indices: List[int]):
+def _precompute_subaddr(state: State, account: int, indices: list[int]):
     """
     Precomputes subaddresses for account (major) and list of indices (minors)
     Subaddresses have to be stored in encoded form - unique representation.

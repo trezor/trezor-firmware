@@ -65,7 +65,6 @@ def test_timestamp_included(client):
 
 @pytest.mark.altcoin
 @pytest.mark.peercoin
-@pytest.mark.skip_ui
 def test_timestamp_missing(client):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44'/6'/0'/0/0"),
@@ -104,7 +103,6 @@ def test_timestamp_missing(client):
 
 @pytest.mark.altcoin
 @pytest.mark.peercoin
-@pytest.mark.skip_ui
 def test_timestamp_missing_prevtx(client):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44'/6'/0'/0/0"),

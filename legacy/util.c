@@ -32,11 +32,10 @@ void uint32hex(uint32_t num, char *str) {
 }
 
 // converts data to hexa
-void data2hex(const void *data, uint32_t len, char *str) {
-  const uint8_t *cdata = (uint8_t *)data;
+void data2hex(const uint8_t *data, uint32_t len, char *str) {
   for (uint32_t i = 0; i < len; i++) {
-    str[i * 2] = hexdigits[(cdata[i] >> 4) & 0xF];
-    str[i * 2 + 1] = hexdigits[cdata[i] & 0xF];
+    str[i * 2] = hexdigits[(data[i] >> 4) & 0xF];
+    str[i * 2 + 1] = hexdigits[data[i] & 0xF];
   }
   str[len * 2] = 0;
 }

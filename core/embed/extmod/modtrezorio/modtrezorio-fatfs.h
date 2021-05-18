@@ -170,9 +170,9 @@ typedef struct _mp_obj_FatFSFile_t {
 
 /// from types import TracebackType
 /// def __exit__(
-///     self, type: Optional[Type[BaseException]],
-///     value: Optional[BaseException],
-///     traceback: Optional[TracebackType],
+///     self, type: type[BaseException] | None,
+///     value: BaseException | None,
+///     traceback: TracebackType | None,
 /// ) -> None:
 ///     """
 ///     Close an open file object
@@ -223,7 +223,7 @@ STATIC mp_obj_t mod_trezorio_FatFSFile_read(mp_obj_t self, mp_obj_t data) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_FatFSFile_read_obj,
                                  mod_trezorio_FatFSFile_read);
 
-/// def write(self, data: Union[bytes, bytearray]) -> int:
+/// def write(self, data: bytes | bytearray) -> int:
 ///     """
 ///     Write data to the file
 ///     """
@@ -312,7 +312,7 @@ STATIC const mp_obj_type_t mod_trezorio_FatFSFile_type = {
     .locals_dict = (void *)&mod_trezorio_FatFSFile_locals_dict,
 };
 
-/// class FatFSDir(Iterator[Tuple[int, str, str]]):
+/// class FatFSDir(Iterator[tuple[int, str, str]]):
 ///     """
 ///     Class encapsulating directory
 ///     """
@@ -321,7 +321,7 @@ typedef struct _mp_obj_FatFSDir_t {
   DIR dp;
 } mp_obj_FatFSDir_t;
 
-/// def __next__(self) -> Tuple[int, str, str]:
+/// def __next__(self) -> tuple[int, str, str]:
 ///     """
 ///     Read an entry in the directory
 ///     """
@@ -453,7 +453,7 @@ STATIC mp_obj_t mod_trezorio_fatfs_unlink(mp_obj_t path) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_fatfs_unlink_obj,
                                  mod_trezorio_fatfs_unlink);
 
-/// def stat(path: str) -> Tuple[int, str, str]:
+/// def stat(path: str) -> tuple[int, str, str]:
 ///     """
 ///     Get file status
 ///     """

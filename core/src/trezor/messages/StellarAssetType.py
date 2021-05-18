@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -15,9 +15,9 @@ class StellarAssetType(p.MessageType):
     def __init__(
         self,
         *,
-        type: int = None,
-        code: str = None,
-        issuer: str = None,
+        type: int,
+        code: Optional[str] = None,
+        issuer: Optional[str] = None,
     ) -> None:
         self.type = type
         self.code = code
@@ -26,7 +26,7 @@ class StellarAssetType(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('type', p.UVarintType, None),
+            1: ('type', p.UVarintType, p.FLAG_REQUIRED),
             2: ('code', p.UnicodeType, None),
             3: ('issuer', p.UnicodeType, None),
         }

@@ -13,11 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enabled session management via `EndSession`  [#1227]
 - Support for temporary or permanent `safety-checks` setting
 - Support for Output Descriptors export [#1363]
+- PIN entry via letters  [#1496]
 
 ### Changed
 
 - protobuf is aware of `required` fields and default values
 - `btc.sign_tx()` accepts keyword arguments for transaction metadata  [#1266]
+- Support long PIN of up to 50 digits.  [#1167]
 
 ### Deprecated
 
@@ -33,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - dropped Python 3.5 support  [#810]
+- dropped debug-only `trezorctl debug show-text` functionality
 
 
 ## [0.12.2] - 2020-08-27
@@ -507,6 +510,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#948]: https://github.com/trezor/trezor-firmware/issues/948
 [#1052]: https://github.com/trezor/trezor-firmware/issues/1052
 [#1126]: https://github.com/trezor/trezor-firmware/issues/1126
+[#1167]: https://github.com/trezor/trezor-firmware/issues/1167
 [#1179]: https://github.com/trezor/trezor-firmware/issues/1179
 [#1196]: https://github.com/trezor/trezor-firmware/issues/1196
 [#1210]: https://github.com/trezor/trezor-firmware/issues/1210
@@ -514,3 +518,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#1232]: https://github.com/trezor/trezor-firmware/issues/1232
 [#1266]: https://github.com/trezor/trezor-firmware/issues/1266
 [#1363]: https://github.com/trezor/trezor-firmware/pull/1363
+[#1496]: https://github.com/trezor/trezor-firmware/pull/1496

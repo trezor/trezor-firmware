@@ -43,6 +43,9 @@
 #ifdef RDI
 #include "rdi.h"
 #endif
+#ifdef SYSTEM_VIEW
+#include "systemview.h"
+#endif
 #include "rng.h"
 #include "sdcard.h"
 #include "supervise.h"
@@ -62,6 +65,10 @@ int main(void) {
 
   collect_hw_entropy();
 
+#ifdef SYSTEM_VIEW
+  enable_systemview();
+#endif
+
 #if TREZOR_MODEL == T
 #if PRODUCTION
   check_and_replace_bootloader();
@@ -79,6 +86,7 @@ int main(void) {
 #endif
 
 #if TREZOR_MODEL == T
+  // display_init_seq();
   sdcard_init();
   touch_init();
   touch_power_on();
@@ -169,6 +177,11 @@ void SVC_C_Handler(uint32_t *stack) {
     case SVC_SET_PRIORITY:
       NVIC_SetPriority(stack[0], stack[1]);
       break;
+#ifdef SYSTEM_VIEW
+    case SVC_GET_DWT_CYCCNT:
+      cyccnt_cycles = *DWT_CYCCNT_ADDR;
+      break;
+#endif
     default:
       stack[0] = 0xffffffff;
       break;

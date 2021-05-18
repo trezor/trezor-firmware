@@ -2,7 +2,7 @@ from typing import *
 
 
 # extmod/modtrezorcrypto/modtrezorcrypto-bip39.h
-def complete_word(prefix: str) -> Optional[str]:
+def complete_word(prefix: str) -> str | None:
     """
     Return the first word from the wordlist starting with prefix.
     """
@@ -42,7 +42,7 @@ def check(mnemonic: str) -> bool:
 def seed(
     mnemonic: str,
     passphrase: str,
-    callback: Callable[[int, int], None] = None,
+    callback: Callable[[int, int], None] | None = None,
 ) -> bytes:
     """
     Generate seed from mnemonic and passphrase.

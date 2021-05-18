@@ -15,7 +15,7 @@ def init(
     for s in (sc, sp):
         s.init(uid)
         if unlock:
-            assert s.unlock(1)
+            assert s.unlock("")
     return sc, sp
 
 

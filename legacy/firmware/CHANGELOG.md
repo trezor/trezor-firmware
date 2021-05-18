@@ -4,11 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## 1.9.5 [unreleased]
+## 1.10.0 [unreleased]
 
 ### Added
+- Public key to ECDHSessionKey.  [#1518]
 
 ### Changed
+- Allow decreasing the output value in RBF transactions.  [#1491]
+- Support long PIN of up to 50 digits.  [#1167]
+- Display nLockTime in human-readable form.  [#1549]
 
 ### Deprecated
 
@@ -18,7 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Security
 
-## 1.9.4 [to be released on 10th February 2021]
+## 1.9.4 [10th February 2021]
 
 ### Added
 - Replacement transaction signing for replace-by-fee.  [#1367]
@@ -371,6 +375,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1098]: https://github.com/trezor/trezor-firmware/issues/1098
 [#1105]: https://github.com/trezor/trezor-firmware/issues/1105
 [#1165]: https://github.com/trezor/trezor-firmware/pull/1165
+[#1167]: https://github.com/trezor/trezor-firmware/issues/1167
 [#1188]: https://github.com/trezor/trezor-firmware/issues/1188
 [#1351]: https://github.com/trezor/trezor-firmware/issues/1351
 [#1363]: https://github.com/trezor/trezor-firmware/pull/1363
@@ -378,3 +383,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1369]: https://github.com/trezor/trezor-firmware/pull/1369
 [#1402]: https://github.com/trezor/trezor-firmware/pull/1402
 [#1415]: https://github.com/trezor/trezor-firmware/pull/1415
+[#1491]: https://github.com/trezor/trezor-firmware/issues/1491
+[#1518]: https://github.com/trezor/trezor-firmware/pull/1518
+[#1549]: https://github.com/trezor/trezor-firmware/issues/1549

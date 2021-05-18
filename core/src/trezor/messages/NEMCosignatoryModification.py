@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeNEMModificationType = Literal[1, 2]
     except ImportError:
@@ -16,8 +16,8 @@ class NEMCosignatoryModification(p.MessageType):
     def __init__(
         self,
         *,
-        type: EnumTypeNEMModificationType = None,
-        public_key: bytes = None,
+        type: Optional[EnumTypeNEMModificationType] = None,
+        public_key: Optional[bytes] = None,
     ) -> None:
         self.type = type
         self.public_key = public_key

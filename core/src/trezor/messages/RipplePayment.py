@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -15,9 +15,9 @@ class RipplePayment(p.MessageType):
     def __init__(
         self,
         *,
-        amount: int = None,
-        destination: str = None,
-        destination_tag: int = None,
+        amount: int,
+        destination: str,
+        destination_tag: Optional[int] = None,
     ) -> None:
         self.amount = amount
         self.destination = destination
@@ -26,7 +26,7 @@ class RipplePayment(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-            1: ('amount', p.UVarintType, None),
-            2: ('destination', p.UnicodeType, None),
+            1: ('amount', p.UVarintType, p.FLAG_REQUIRED),
+            2: ('destination', p.UnicodeType, p.FLAG_REQUIRED),
             3: ('destination_tag', p.UVarintType, None),
         }

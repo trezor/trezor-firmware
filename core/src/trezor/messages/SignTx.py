@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
         EnumTypeAmountUnit = Literal[0, 1, 2, 3]
     except ImportError:
@@ -22,11 +22,12 @@ class SignTx(p.MessageType):
         coin_name: str = "Bitcoin",
         version: int = 1,
         lock_time: int = 0,
-        expiry: int = None,
-        version_group_id: int = None,
-        timestamp: int = None,
-        branch_id: int = None,
+        expiry: Optional[int] = None,
+        version_group_id: Optional[int] = None,
+        timestamp: Optional[int] = None,
+        branch_id: Optional[int] = None,
         amount_unit: EnumTypeAmountUnit = 0,
+        decred_staking_ticket: bool = False,
     ) -> None:
         self.outputs_count = outputs_count
         self.inputs_count = inputs_count
@@ -38,6 +39,7 @@ class SignTx(p.MessageType):
         self.timestamp = timestamp
         self.branch_id = branch_id
         self.amount_unit = amount_unit
+        self.decred_staking_ticket = decred_staking_ticket
 
     @classmethod
     def get_fields(cls) -> Dict:
@@ -52,4 +54,5 @@ class SignTx(p.MessageType):
             9: ('timestamp', p.UVarintType, None),
             10: ('branch_id', p.UVarintType, None),
             11: ('amount_unit', p.EnumType("AmountUnit", (0, 1, 2, 3)), 0),  # default=BITCOIN
+            12: ('decred_staking_ticket', p.BoolType, False),  # default=false
         }

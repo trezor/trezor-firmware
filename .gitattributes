@@ -1,0 +1,4 @@
+core/CHANGELOG.md merge=union
+python/CHANGELOG.md merge=union
+legacy/firmware/CHANGELOG.md merge=union
+legacy/bootloader/CHANGELOG.md merge=union

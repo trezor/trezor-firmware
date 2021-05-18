@@ -13,11 +13,11 @@ def consteq(sec: bytes, pub: bytes) -> bool:
 
 # extmod/modtrezorutils/modtrezorutils.c
 def memcpy(
-    dst: Union[bytearray, memoryview],
+    dst: bytearray | memoryview,
     dst_ofs: int,
     src: bytes,
     src_ofs: int,
-    n: int = None,
+    n: int | None = None,
 ) -> int:
     """
     Copies at most `n` bytes from `src` at offset `src_ofs` to
@@ -28,7 +28,7 @@ def memcpy(
 
 
 # extmod/modtrezorutils/modtrezorutils.c
-def halt(msg: str = None) -> None:
+def halt(msg: str | None = None) -> None:
     """
     Halts execution.
     """

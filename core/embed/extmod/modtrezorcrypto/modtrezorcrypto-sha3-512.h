@@ -38,7 +38,11 @@ typedef struct _mp_obj_Sha3_512_t {
 
 STATIC mp_obj_t mod_trezorcrypto_Sha3_512_update(mp_obj_t self, mp_obj_t data);
 
-/// def __init__(self, data: bytes = None, keccak: bool = False) -> None:
+/// def __init__(
+///     self,
+///     data: bytes | None = None,
+///     keccak: bool = False,
+/// ) -> None:
 ///     """
 ///     Creates a hash context object.
 ///     """

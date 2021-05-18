@@ -4,7 +4,13 @@ bytes, string, embedded message and repeated fields.
 """
 
 if False:
-    from typing import Any, Callable, Dict, Iterable, List, Tuple, Type, TypeVar, Union
+    from typing import (
+        Any,
+        Callable,
+        Iterable,
+        TypeVar,
+        Union,
+    )
     from typing_extensions import Protocol
 
     class Reader(Protocol):
@@ -181,26 +187,26 @@ FLAG_EXPERIMENTAL = object()
 
 if False:
     MessageTypeDef = Union[
-        Type[UVarintType],
-        Type[SVarintType],
-        Type[BoolType],
+        type[UVarintType],
+        type[SVarintType],
+        type[BoolType],
         EnumType,
-        Type[BytesType],
-        Type[UnicodeType],
-        Type[MessageType],
+        type[BytesType],
+        type[UnicodeType],
+        type[MessageType],
     ]
-    FieldDef = Tuple[str, MessageTypeDef, Any]
-    FieldDict = Dict[int, FieldDef]
+    FieldDef = tuple[str, MessageTypeDef, Any]
+    FieldDict = dict[int, FieldDef]
 
-    FieldCache = Dict[Type[MessageType], FieldDict]
+    FieldCache = dict[type[MessageType], FieldDict]
 
     LoadedMessageType = TypeVar("LoadedMessageType", bound=MessageType)
 
 
 def load_message(
     reader: Reader,
-    msg_type: Type[LoadedMessageType],
-    field_cache: FieldCache = None,
+    msg_type: type[LoadedMessageType],
+    field_cache: FieldCache | None = None,
     experimental_enabled: bool = True,
 ) -> LoadedMessageType:
     if field_cache is None:
@@ -225,7 +231,7 @@ def load_message(
 
     if False:
         SingularValue = Union[int, bool, bytearray, str, MessageType]
-        Value = Union[SingularValue, List[SingularValue]]
+        Value = Union[SingularValue, list[SingularValue]]
         fvalue: Value = 0
 
     while True:
@@ -295,7 +301,7 @@ def load_message(
 
 
 def dump_message(
-    writer: Writer, msg: MessageType, field_cache: FieldCache = None
+    writer: Writer, msg: MessageType, field_cache: FieldCache | None = None
 ) -> None:
     repvalue = [0]
 
@@ -360,7 +366,7 @@ def dump_message(
                 raise TypeError
 
 
-def count_message(msg: MessageType, field_cache: FieldCache = None) -> int:
+def count_message(msg: MessageType, field_cache: FieldCache | None = None) -> int:
     nbytes = 0
     repvalue = [0]
 
@@ -430,7 +436,7 @@ def count_message(msg: MessageType, field_cache: FieldCache = None) -> int:
     return nbytes
 
 
-def _count_bytes_list(svalue: List[bytes]) -> int:
+def _count_bytes_list(svalue: list[bytes]) -> int:
     res = 0
     for x in svalue:
         res += len(x)

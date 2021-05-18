@@ -56,6 +56,7 @@
 #include "usb.h"
 #include "irq.h"
 #include "supervise.h"
+#include "systemview.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -407,102 +408,76 @@ void HAL_PCD_DisconnectCallback(PCD_HandleTypeDef *hpcd)
 USBD_StatusTypeDef  USBD_LL_Init (USBD_HandleTypeDef *pdev)
 {
 #if defined(USE_USB_FS)
-if (pdev->id ==  USB_PHY_FS_ID)
-{
-  /*Set LL Driver parameters */
-  pcd_fs_handle.Instance = USB_OTG_FS;
-  pcd_fs_handle.Init.dev_endpoints = 4;
-  pcd_fs_handle.Init.use_dedicated_ep1 = 0;
-  pcd_fs_handle.Init.ep0_mps = 0x40;
-  pcd_fs_handle.Init.dma_enable = 0;
-  pcd_fs_handle.Init.low_power_enable = 0;
-  pcd_fs_handle.Init.phy_itface = PCD_PHY_EMBEDDED;
-  pcd_fs_handle.Init.Sof_enable = 1;
-  pcd_fs_handle.Init.speed = PCD_SPEED_FULL;
-#if defined(MCU_SERIES_L4)
-  pcd_fs_handle.Init.lpm_enable = DISABLE;
-  pcd_fs_handle.Init.battery_charging_enable = DISABLE;
+  // Trezor 1 uses the OTG_FS peripheral
+  if (pdev->id == USB_PHY_FS_ID) {
+    /*Set LL Driver parameters */
+    pcd_fs_handle.Instance = USB_OTG_FS;
+    pcd_fs_handle.Init.dev_endpoints = 4;
+    pcd_fs_handle.Init.use_dedicated_ep1 = 0;
+    pcd_fs_handle.Init.ep0_mps = 0x40;
+    pcd_fs_handle.Init.dma_enable = 0;
+    pcd_fs_handle.Init.low_power_enable = 0;
+    pcd_fs_handle.Init.phy_itface = PCD_PHY_EMBEDDED;
+    pcd_fs_handle.Init.Sof_enable = 1;
+    pcd_fs_handle.Init.speed = PCD_SPEED_FULL;
+    pcd_fs_handle.Init.vbus_sensing_enable = 0; // No VBUS Sensing on USB0
+    /* Link The driver to the stack */
+    pcd_fs_handle.pData = pdev;
+    pdev->pData = &pcd_fs_handle;
+    /*Initialize LL Driver */
+    HAL_PCD_Init(&pcd_fs_handle);
+    // the OTG_FS peripheral has a dedicated 1.25KiB data RAM from which we
+    // allocate an area for each transmit FIFO and the single shared receive FIFO.
+    // the configuration is in terms of 32-bit words, so we have 320 32-bit words
+    // in this dedicated 1.25KiB data RAM to use. see section 6.3.8 in UM1021 and 29.13 in RM0033.
+    // USB packets that we deal with are 64 bytes in size which equates to 16 32-bit words.
+    // we size the transmit FIFO's equally and give the rest of the space to the receive FIFO.
+    const uint16_t transmit_fifo_size = 48; // 48 = 16 * 3 meaning that we give 3 packets of space for each transmit fifo
+    const uint16_t receive_fifo_zie = 128; // 128 = 320 - 4 * 48
+    HAL_PCDEx_SetRxFiFo(&pcd_fs_handle, receive_fifo_zie);
+    for (uint16_t i = 0; i < 4; i++) {
+      HAL_PCDEx_SetTxFiFo(&pcd_fs_handle, i, transmit_fifo_size);
+    }
+  }
 #endif
-#if !defined(MICROPY_HW_USB_VBUS_DETECT_PIN)
-  pcd_fs_handle.Init.vbus_sensing_enable = 0; // No VBUS Sensing on USB0
-#else
-  pcd_fs_handle.Init.vbus_sensing_enable = 1;
-#endif
-  /* Link The driver to the stack */
-  pcd_fs_handle.pData = pdev;
-  pdev->pData = &pcd_fs_handle;
-  /*Initialize LL Driver */
-  HAL_PCD_Init(&pcd_fs_handle);
-
-  HAL_PCDEx_SetRxFiFo(&pcd_fs_handle, 0x80);
-  HAL_PCDEx_SetTxFiFo(&pcd_fs_handle, 0, 0x20);
-  HAL_PCDEx_SetTxFiFo(&pcd_fs_handle, 1, 0x40);
-  HAL_PCDEx_SetTxFiFo(&pcd_fs_handle, 2, 0x20);
-  HAL_PCDEx_SetTxFiFo(&pcd_fs_handle, 3, 0x40);
-}
-#endif
-#if defined(USE_USB_HS)
-if (pdev->id == USB_PHY_HS_ID)
-{
 #if defined(USE_USB_HS_IN_FS)
-  /*Set LL Driver parameters */
-  pcd_hs_handle.Instance = USB_OTG_HS;
-  pcd_hs_handle.Init.dev_endpoints = 4;
-  pcd_hs_handle.Init.use_dedicated_ep1 = 0;
-  pcd_hs_handle.Init.ep0_mps = 0x40;
-  pcd_hs_handle.Init.dma_enable = 0;
-  pcd_hs_handle.Init.low_power_enable = 0;
-  pcd_hs_handle.Init.phy_itface = PCD_PHY_EMBEDDED;
-  pcd_hs_handle.Init.Sof_enable = 1;
-  pcd_hs_handle.Init.speed = PCD_SPEED_HIGH_IN_FULL;
-#if !defined(MICROPY_HW_USB_VBUS_DETECT_PIN)
-  pcd_hs_handle.Init.vbus_sensing_enable = 0; // No VBUS Sensing on USB0
-#else
-  pcd_hs_handle.Init.vbus_sensing_enable = 1;
+  // Trezor T uses the OTG_HS peripheral
+  if (pdev->id == USB_PHY_HS_ID) {
+    /* Set LL Driver parameters */
+    pcd_hs_handle.Instance = USB_OTG_HS;
+    pcd_hs_handle.Init.dev_endpoints = 6;
+    pcd_hs_handle.Init.use_dedicated_ep1 = 0;
+    pcd_hs_handle.Init.ep0_mps = 0x40;
+    pcd_hs_handle.Init.dma_enable = 0;
+    pcd_hs_handle.Init.low_power_enable = 0;
+    pcd_hs_handle.Init.phy_itface = PCD_PHY_EMBEDDED;
+    pcd_hs_handle.Init.Sof_enable = 1;
+    pcd_hs_handle.Init.speed = PCD_SPEED_HIGH_IN_FULL;
+    // Trezor T hardware has PB13 connected to HS_VBUS
+    // but we leave vbus sensing disabled because
+    // we don't use it for anything. the device is a bus powered peripheral.
+    pcd_hs_handle.Init.vbus_sensing_enable = 0;
+    /* Link The driver to the stack */
+    pcd_hs_handle.pData = pdev;
+    pdev->pData = &pcd_hs_handle;
+    /* Initialize LL Driver */
+    HAL_PCD_Init(&pcd_hs_handle);
+    // the OTG_HS peripheral has a dedicated 4KiB data RAM from which we
+    // allocate an area for each transmit FIFO and the single shared receive FIFO.
+    // the configuration is in terms of 32-bit words, so we have 1024 32-bit words
+    // in this dedicated 4KiB data RAM to use. see section 35.10.1 and 34.11 in RM0090.
+    // the reference to section 34.11 is for the OTG_FS device, but the FIFO architecture
+    // diagram seems to apply similarly to the FIFO in the OTG_HS that we are using.
+    // USB packets that we deal with are 64 bytes in size which equates to 16 32-bit words.
+    // we size the transmit FIFO's equally and give the rest of the space to the receive FIFO.
+    const uint16_t transmit_fifo_size = 144; // 144 = 16 * 9 meaning that we give 9 packets of space for each transmit fifo
+    const uint16_t receive_fifo_zie = 160; // 160 = 1024 - 6 * 144 section 35.10.1 details what some of this is used for besides storing packets
+    HAL_PCDEx_SetRxFiFo(&pcd_hs_handle, receive_fifo_zie);
+    for (uint16_t i = 0; i < 6; i++) {
+      HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, i, transmit_fifo_size);
+    }
+  }
 #endif
-  /* Link The driver to the stack */
-  pcd_hs_handle.pData = pdev;
-  pdev->pData = &pcd_hs_handle;
-  /*Initialize LL Driver */
-  HAL_PCD_Init(&pcd_hs_handle);
-
-  HAL_PCDEx_SetRxFiFo(&pcd_hs_handle, 0x80);
-  HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 0, 0x20);
-  HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 1, 0x40);
-  HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 2, 0x20);
-  HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 3, 0x40);
-#else // !defined(USE_USB_HS_IN_FS)
-  /*Set LL Driver parameters */
-  pcd_hs_handle.Instance = USB_OTG_HS;
-  pcd_hs_handle.Init.dev_endpoints = 6;
-  pcd_hs_handle.Init.use_dedicated_ep1 = 0;
-  pcd_hs_handle.Init.ep0_mps = 0x40;
-
-  /* Be aware that enabling USB-DMA mode will result in data being sent only by
-     multiple of 4 packet sizes. This is due to the fact that USB-DMA does
-     not allow sending data from non word-aligned addresses.
-     For this specific application, it is advised to not enable this option
-     unless required. */
-  pcd_hs_handle.Init.dma_enable = 0;
-
-  pcd_hs_handle.Init.low_power_enable = 0;
-  pcd_hs_handle.Init.phy_itface = PCD_PHY_ULPI;
-  pcd_hs_handle.Init.Sof_enable = 1;
-  pcd_hs_handle.Init.speed = PCD_SPEED_HIGH;
-  pcd_hs_handle.Init.vbus_sensing_enable = 1;
-  /* Link The driver to the stack */
-  pcd_hs_handle.pData = pdev;
-  pdev->pData = &pcd_hs_handle;
-  /*Initialize LL Driver */
-  HAL_PCD_Init(&pcd_hs_handle);
-
-  HAL_PCDEx_SetRxFiFo(&pcd_hs_handle, 0x200);
-  HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 0, 0x80);
-  HAL_PCDEx_SetTxFiFo(&pcd_hs_handle, 1, 0x174);
-
-#endif  // !USE_USB_HS_IN_FS
-}
-#endif  // USE_USB_HS
   return USBD_OK;
 }
 
@@ -702,20 +677,24 @@ void  USBD_LL_Delay(uint32_t Delay)
   */
 #if defined(USE_USB_FS)
 void OTG_FS_IRQHandler(void) {
+    SEGGER_SYSVIEW_RecordEnterISR();
     IRQ_ENTER(OTG_FS_IRQn);
     if (pcd_fs_handle.Instance) {
         HAL_PCD_IRQHandler(&pcd_fs_handle);
     }
     IRQ_EXIT(OTG_FS_IRQn);
+    SEGGER_SYSVIEW_RecordExitISR();
 }
 #endif
 #if defined(USE_USB_HS)
 void OTG_HS_IRQHandler(void) {
+    SEGGER_SYSVIEW_RecordEnterISR();
     IRQ_ENTER(OTG_HS_IRQn);
     if (pcd_hs_handle.Instance) {
         HAL_PCD_IRQHandler(&pcd_hs_handle);
     }
     IRQ_EXIT(OTG_HS_IRQn);
+    SEGGER_SYSVIEW_RecordExitISR();
 }
 #endif
 

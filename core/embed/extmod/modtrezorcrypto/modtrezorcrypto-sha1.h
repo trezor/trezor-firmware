@@ -37,7 +37,7 @@ typedef struct _mp_obj_Sha1_t {
 
 STATIC mp_obj_t mod_trezorcrypto_Sha1_update(mp_obj_t self, mp_obj_t data);
 
-/// def __init__(self, data: bytes = None) -> None:
+/// def __init__(self, data: bytes | None = None) -> None:
 ///     """
 ///     Creates a hash context object.
 ///     """

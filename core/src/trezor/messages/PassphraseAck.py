@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,8 +16,8 @@ class PassphraseAck(p.MessageType):
     def __init__(
         self,
         *,
-        passphrase: str = None,
-        on_device: bool = None,
+        passphrase: Optional[str] = None,
+        on_device: Optional[bool] = None,
     ) -> None:
         self.passphrase = passphrase
         self.on_device = on_device

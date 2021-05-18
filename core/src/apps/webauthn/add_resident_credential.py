@@ -1,17 +1,14 @@
 import storage.device
-from trezor import ui, wire
+from trezor import wire
 from trezor.messages.Success import Success
 from trezor.messages.WebAuthnAddResidentCredential import WebAuthnAddResidentCredential
-from trezor.ui.text import Text
+from trezor.ui.layouts import show_error_and_raise
 
 from apps.common.confirm import require_confirm
 
 from .confirm import ConfirmContent, ConfirmInfo
 from .credential import Fido2Credential
 from .resident_credentials import store_resident_credential
-
-if False:
-    from typing import Optional
 
 
 class ConfirmAddCredential(ConfirmInfo):
@@ -26,7 +23,7 @@ class ConfirmAddCredential(ConfirmInfo):
     def app_name(self) -> str:
         return self._cred.app_name()
 
-    def account_name(self) -> Optional[str]:
+    def account_name(self) -> str | None:
         return self._cred.account_name()
 
 
@@ -41,15 +38,14 @@ async def add_resident_credential(
     try:
         cred = Fido2Credential.from_cred_id(bytes(msg.credential_id), None)
     except Exception:
-        text = Text("Import credential", ui.ICON_WRONG, ui.RED)
-        text.normal(
-            "The credential you are",
-            "trying to import does",
-            "not belong to this",
-            "authenticator.",
+        await show_error_and_raise(
+            ctx,
+            "warning_credential",
+            header="Import credential",
+            button="Close",
+            content="The credential you are trying to import does\nnot belong to this authenticator.",
+            red=True,
         )
-        await require_confirm(ctx, text, confirm=None, cancel="Close")
-        raise wire.ActionCancelled
 
     content = ConfirmContent(ConfirmAddCredential(cred))
     await require_confirm(ctx, content)

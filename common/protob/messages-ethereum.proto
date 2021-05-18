@@ -24,8 +24,8 @@ message EthereumGetPublicKey {
  * @end
  */
 message EthereumPublicKey {
-    optional hw.trezor.messages.common.HDNodeType node = 1;        // BIP32 public node
-    optional string xpub = 2;        // serialized form of public node
+    required hw.trezor.messages.common.HDNodeType node = 1;        // BIP32 public node
+    required string xpub = 2;        // serialized form of public node
 }
 
 /**
@@ -107,8 +107,8 @@ message EthereumSignMessage {
  * @end
  */
 message EthereumMessageSignature {
-    optional bytes signature = 2;   // signature of the message
-    optional string address = 3;     // address used to sign the message
+    required bytes signature = 2;   // signature of the message
+    required string address = 3;     // address used to sign the message
 }
 
 /**

@@ -28,7 +28,7 @@ dominate = "*"
 pyserial = "*"
 
 ## test requirements
-shamir-mnemonic = "*"
+shamir-mnemonic = "^0.2.1"
 fido2 = "^0.8.0"
 
 ## typing

@@ -4,7 +4,7 @@ import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,9 +16,9 @@ class MoneroGetTxKeyAck(p.MessageType):
     def __init__(
         self,
         *,
-        salt: bytes = None,
-        tx_keys: bytes = None,
-        tx_derivations: bytes = None,
+        salt: Optional[bytes] = None,
+        tx_keys: Optional[bytes] = None,
+        tx_derivations: Optional[bytes] = None,
     ) -> None:
         self.salt = salt
         self.tx_keys = tx_keys

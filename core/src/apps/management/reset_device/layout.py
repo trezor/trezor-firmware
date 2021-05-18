@@ -3,71 +3,33 @@ import ubinascii
 from trezor import ui, utils
 from trezor.crypto import random
 from trezor.messages import BackupType, ButtonRequestType
-from trezor.ui.button import Button, ButtonDefault
-from trezor.ui.checklist import Checklist
-from trezor.ui.info import InfoConfirm
-from trezor.ui.loader import LoadingAnimation
-from trezor.ui.num_input import NumInput
-from trezor.ui.scroll import Paginated
-from trezor.ui.text import Text
+from trezor.ui.components.tt.button import Button, ButtonDefault
+from trezor.ui.components.tt.checklist import Checklist
+from trezor.ui.components.tt.info import InfoConfirm
+from trezor.ui.components.tt.num_input import NumInput
+from trezor.ui.components.tt.scroll import Paginated
+from trezor.ui.components.tt.text import Text
+from trezor.ui.layouts import confirm_action, confirm_hex, show_success, show_warning
 
-from apps.common.confirm import confirm, require_confirm, require_hold_to_confirm
-from apps.common.layout import show_success
+from apps.common.confirm import confirm, require_hold_to_confirm
 
 if False:
     from trezor import loop
-    from typing import List, Tuple
 
 if __debug__:
     from apps import debug
 
 
 async def show_internal_entropy(ctx, entropy: bytes):
-    entropy_str = ubinascii.hexlify(entropy).decode()
-    lines = utils.chunks(entropy_str, 16)
-    text = Text("Internal entropy", ui.ICON_RESET)
-    text.mono(*lines)
-    await require_confirm(ctx, text, ButtonRequestType.ResetDevice)
-
-
-async def confirm_backup(ctx):
-    # First prompt
-    text = Text("Success", ui.ICON_CONFIRM, ui.GREEN, new_lines=False)
-    text.bold("New wallet created")
-    text.br()
-    text.bold("successfully!")
-    text.br()
-    text.br_half()
-    text.normal("You should back up your")
-    text.br()
-    text.normal("new wallet right now.")
-    if await confirm(
+    await confirm_hex(
         ctx,
-        text,
-        ButtonRequestType.ResetDevice,
-        cancel="Skip",
-        confirm="Back up",
-        major_confirm=True,
-    ):
-        return True
-
-    # If the user selects Skip, ask again
-    text = Text("Warning", ui.ICON_WRONG, ui.RED, new_lines=False)
-    text.bold("Are you sure you want")
-    text.br()
-    text.bold("to skip the backup?")
-    text.br()
-    text.br_half()
-    text.normal("You can back up your")
-    text.br()
-    text.normal("Trezor once, at any time.")
-    return await confirm(
-        ctx,
-        text,
-        ButtonRequestType.ResetDevice,
-        cancel="Skip",
-        confirm="Back up",
-        major_confirm=True,
+        "entropy",
+        "Internal entropy",
+        data=ubinascii.hexlify(entropy).decode(),
+        icon=ui.ICON_RESET,
+        icon_color=ui.ORANGE_ICON,
+        width=16,
+        br_code=ButtonRequestType.ResetDevice,
     )
 
 
@@ -197,74 +159,69 @@ async def _show_confirmation_success(
     ctx, share_index=None, num_of_shares=None, group_index=None
 ):
     if share_index is None:  # it is a BIP39 backup
-        subheader = ("You have finished", "verifying your", "recovery seed.")
-        text = []
+        subheader = "You have finished\nverifying your\nrecovery seed."
+        text = ""
 
     elif share_index == num_of_shares - 1:
         if group_index is None:
-            subheader = ("You have finished", "verifying your", "recovery shares.")
+            subheader = "You have finished\nverifying your\nrecovery shares."
         else:
             subheader = (
-                "You have finished",
-                "verifying your",
-                "recovery shares",
-                "for group %s." % (group_index + 1),
+                "You have finished\nverifying your\nrecovery shares\nfor group %s."
+                % (group_index + 1)
             )
-        text = []
+        text = ""
 
     else:
         if group_index is None:
-            subheader = (
-                "Recovery share #%s" % (share_index + 1),
-                "checked successfully.",
-            )
-            text = ["Continue with share #%s." % (share_index + 2)]
+            subheader = "Recovery share #%s\nchecked successfully." % (share_index + 1)
+            text = "Continue with share #%s." % (share_index + 2)
         else:
-            subheader = (
-                "Group %s - Share %s" % ((group_index + 1), (share_index + 1)),
-                "checked successfully.",
+            subheader = "Group %s - Share %s\nchecked successfully." % (
+                (group_index + 1),
+                (share_index + 1),
             )
-            text = ("Continue with the next ", "share.")
+            text = "Continue with the next\nshare."
 
-    return await show_success(ctx, text, subheader=subheader)
+    return await show_success(ctx, "success_recovery", text, subheader=subheader)
 
 
 async def _show_confirmation_failure(ctx, share_index):
     if share_index is None:
-        text = Text("Recovery seed", ui.ICON_WRONG, ui.RED)
+        header = "Recovery seed"
     else:
-        text = Text("Recovery share #%s" % (share_index + 1), ui.ICON_WRONG, ui.RED)
-    text.bold("That is the wrong word.")
-    text.normal("Please check again.")
-    await require_confirm(
-        ctx, text, ButtonRequestType.ResetDevice, confirm="Check again", cancel=None
+        header = "Recovery share #%s" % (share_index + 1)
+    await show_warning(
+        ctx,
+        "warning_backup_check",
+        header=header,
+        subheader="That is the wrong word.",
+        content="Please check again.",
+        button="Check again",
+        br_code=ButtonRequestType.ResetDevice,
     )
 
 
 async def show_backup_warning(ctx, slip39=False):
-    text = Text("Caution", ui.ICON_NOCOPY)
     if slip39:
-        text.normal(
-            "Never make a digital",
-            "copy of your recovery",
-            "shares and never upload",
-            "them online!",
-        )
+        description = "Never make a digital copy of your recovery shares and never upload them online!"
     else:
-        text.normal(
-            "Never make a digital",
-            "copy of your recovery",
-            "seed and never upload",
-            "it online!",
-        )
-    await require_confirm(
-        ctx, text, ButtonRequestType.ResetDevice, "I understand", cancel=None
+        description = "Never make a digital copy of your recovery seed and never upload\nit online!"
+    await confirm_action(
+        ctx,
+        "backup_warning",
+        "Caution",
+        description=description,
+        verb="I understand",
+        verb_cancel=None,
+        icon=ui.ICON_NOCOPY,
+        br_code=ButtonRequestType.ResetDevice,
     )
 
 
 async def show_backup_success(ctx):
-    text = ("Use your backup", "when you need to", "recover your wallet.")
-    await show_success(ctx, text, subheader=["Your backup is done."])
+    text = "Use your backup\nwhen you need to\nrecover your wallet."
+    await show_success(ctx, "success_backup", text, subheader="Your backup is done.")
 
 
 # BIP39
@@ -638,32 +595,8 @@ class MnemonicWordSelect(ui.Layout):
 
     if __debug__:
 
-        def read_content(self) -> List[str]:
+        def read_content(self) -> list[str]:
             return self.text.read_content() + [b.text for b in self.buttons]
 
-        def create_tasks(self) -> Tuple[loop.Task, ...]:
+        def create_tasks(self) -> tuple[loop.Task, ...]:
             return super().create_tasks() + (debug.input_signal(),)
-
-
-async def show_reset_device_warning(ctx, backup_type: BackupType = BackupType.Bip39):
-    text = Text("Create new wallet", ui.ICON_RESET, new_lines=False)
-    if backup_type == BackupType.Slip39_Basic:
-        text.bold("Create a new wallet")
-        text.br()
-        text.bold("with Shamir Backup?")
-    elif backup_type == BackupType.Slip39_Advanced:
-        text.bold("Create a new wallet")
-        text.br()
-        text.bold("with Super Shamir?")
-    else:
-        text.bold("Do you want to create")
-        text.br()
-        text.bold("a new wallet?")
-    text.br()
-    text.br_half()
-    text.normal("By continuing you agree")
-    text.br()
-    text.normal("to")
-    text.bold("https://trezor.io/tos")
-    await require_confirm(ctx, text, ButtonRequestType.ResetDevice, major_confirm=True)
-    await LoadingAnimation()

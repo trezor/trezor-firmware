@@ -1,0 +1,169 @@
+image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/trezor-firmware-env.nix
+
+# Hardware
+
+# Currently it's not possible to run all regular TT tests without getting into
+# a state where the micropython heap is too fragmented and allocations fail
+# (often manifesting as a stuck test case). For that reason some tests are
+# skipped and the rest is divided into several groups with device reboots in
+# between them.
+# See also: https://github.com/trezor/trezor-firmware/issues/1371
+hardware core regular device test:
+  stage: test
+  only:
+    - schedules  # nightly build
+    - /^legacy\//
+    - /^release\//
+    - /^secfix\//
+    - /^hw\//
+  tags:
+    - tpmb
+  needs:
+    - core fw regular debug build
+  variables:
+    PYTEST_TIMEOUT: "1200"
+    TESTS_SKIP: "-k 'not 15_of_15 and not test_multisig_mismatch_inputs and not test_sign_tx and not signtx_bgold and not test_opreturn'"
+  script:
+    - cd ci/hardware_tests
+    - set -a
+    - source hardware.cfg
+    - set +a
+    - nix-shell --run "cd ../.. && poetry install"
+    - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin"
+    - nix-shell --run "poetry run pytest --random-order-bucket=none -x -m 'altcoin and not sd_card' $TESTS_SKIP ../../tests/device_tests/test_msg_[a-r]*.py"
+    - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin"
+    - nix-shell --run "poetry run pytest --random-order-bucket=none -x -m 'altcoin and not sd_card' $TESTS_SKIP ../../tests/device_tests/test_msg_signtx_a*.py ../../tests/device_tests/test_msg_signtx_b[a-c]*.py"
+    - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin"
+    - nix-shell --run "poetry run pytest --random-order-bucket=none -x -m 'altcoin and not sd_card' $TESTS_SKIP ../../tests/device_tests/test_msg_signtx_b[d-z]*py ../../tests/device_tests/test_msg_signtx_[c-k]*.py"
+    - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin"
+    - nix-shell --run "poetry run pytest --random-order-bucket=none -x -m 'altcoin and not sd_card' $TESTS_SKIP ../../tests/device_tests/test_msg_signtx_[l-z]*.py"
+    - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin"
+    - nix-shell --run "poetry run pytest --random-order-bucket=none -x -m 'altcoin and not sd_card' $TESTS_SKIP ../../tests/device_tests/test_msg_sign[^t]*.py ../../tests/device_tests/test_msg_s[^i]*.py ../../tests/device_tests/test_msg_[t-z]*.py"
+    - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin"
+    - nix-shell --run "poetry run pytest --random-order-bucket=none -x -m 'altcoin and not sd_card' $TESTS_SKIP ../../tests/device_tests/test_[^m]*.py ../../tests/device_tests/test_m[^s]*.py"
+    - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin"
+    - nix-shell --run "poetry run pytest --random-order-bucket=none -x -m 'not altcoin and not sd_card' $TESTS_SKIP ../../tests/device_tests/test_[a-l]*.py"
+    - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin"
+    - nix-shell --run "poetry run pytest --random-order-bucket=none -x -m 'not altcoin and not sd_card' $TESTS_SKIP ../../tests/device_tests/test_[n-z]*.py"
+    - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin"
+    - nix-shell --run "poetry run pytest --random-order-bucket=none -x -m 'not altcoin and not sd_card' $TESTS_SKIP ../../tests/device_tests/test_m[^s]*.py"
+    - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin"
+    - nix-shell --run "poetry run pytest --random-order-bucket=none -x -m 'not altcoin and not sd_card' $TESTS_SKIP ../../tests/device_tests/test_msg_[a-r]*.py"
+    - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin"
+    - nix-shell --run "poetry run pytest --random-order-bucket=none -x -m 'not altcoin and not sd_card' $TESTS_SKIP ../../tests/device_tests/test_msg_signt*.py"
+    - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin"
+    - nix-shell --run "poetry run pytest --random-order-bucket=none -x -m 'not altcoin and not sd_card' $TESTS_SKIP ../../tests/device_tests/test_msg_sign[^t]*.py ../../tests/device_tests/test_msg_s[^i]*.py"
+    - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin"
+    - nix-shell --run "poetry run pytest --random-order-bucket=none -x -m 'not altcoin and not sd_card' $TESTS_SKIP ../../tests/device_tests/test_msg_[t-z]*.py"
+  timeout: 4h
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    expire_in: 2 days
+    when: always
+
+hardware core btconly device test:
+  stage: test
+  only:
+    - schedules  # nightly build
+    - /^legacy\//
+    - /^release\//
+    - /^secfix\//
+    - /^hw\//
+  tags:
+    - tpmb
+  needs:
+    - core fw btconly debug build
+  variables:
+    TREZOR_PYTEST_SKIP_ALTCOINS: 1
+    PYTEST_TIMEOUT: "1200"
+    TESTS_SKIP: "-k 'not 15_of_15 and not test_multisig_mismatch_inputs and not test_sign_tx'"
+  script:
+    - cd ci/hardware_tests
+    - set -a
+    - source hardware.cfg
+    - set +a
+    - nix-shell --run "cd ../.. && poetry install"
+    - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin"
+    - nix-shell --run "poetry run pytest --random-order-bucket=none -x -m 'not sd_card' $TESTS_SKIP ../../tests/device_tests/test_msg_[a-r]*.py ../../tests/device_tests/test_msg_[t-z]*.py"
+    - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin"
+    - nix-shell --run "poetry run pytest --random-order-bucket=none -x -m 'not sd_card' $TESTS_SKIP ../../tests/device_tests/test_m[^s]*.py ../../tests/device_tests/test_[^m]*.py"
+    - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin"
+    - nix-shell --run "poetry run pytest --random-order-bucket=none -x -m 'not sd_card' $TESTS_SKIP ../../tests/device_tests/test_msg_s*.py"
+  timeout: 3h
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    expire_in: 2 days
+    when: always
+
+hardware core monero test:
+  stage: test
+  only:
+    - schedules  # nightly build
+    - /^release\//
+    - /^secfix\//
+    - /^hw\//
+  tags:
+    - tpmb
+  needs:
+    - core fw regular debug build
+  variables:
+    TESTOPTS: --trezor_path webusb
+  script:
+    - cd ci/hardware_tests
+    - set -a
+    - source hardware.cfg
+    - set +a
+    - nix-shell --run "cd ../.. && poetry install"
+    - nix-shell --run "poetry run python bootstrap.py tt ../../trezor-*.bin"
+    - nix-shell --arg fullDeps true --run "cd ../../core/tests && ./run_tests_device_emu_monero.sh $TESTOPTS"
+  timeout: 35m
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    expire_in: 2 days
+    when: always
+
+hardware legacy regular device test:
+  stage: test
+  only:
+    - schedules  # nightly build
+    - /^legacy\//
+    - /^release\//
+    - /^secfix\//
+    - /^hw\//
+  tags:
+    - tpmb
+  needs:
+    - legacy fw regular debug build
+  script:
+    - cd ci/hardware_tests
+    - nix-shell --run "./t1_hw_test.sh"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - ci/hardware_tests/*.mp4
+    expire_in: 2 days
+    when: always
+
+hardware legacy btconly device test:
+  stage: test
+  variables:
+    TREZOR_PYTEST_SKIP_ALTCOINS: 1
+  only:
+    - schedules  # nightly build
+    - /^legacy\//
+    - /^release\//
+    - /^secfix\//
+    - /^hw\//
+  tags:
+    - tpmb
+  needs:
+    - legacy fw btconly debug build
+  script:
+    - cd ci/hardware_tests
+    - nix-shell --run "./t1_hw_test.sh"
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - ci/hardware_tests/*.mp4
+    expire_in: 2 days
+    when: always

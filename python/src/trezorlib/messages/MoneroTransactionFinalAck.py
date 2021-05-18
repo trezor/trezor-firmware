@@ -4,7 +4,7 @@ from .. import protobuf as p
 
 if __debug__:
     try:
-        from typing import Dict, List  # noqa: F401
+        from typing import Dict, List, Optional  # noqa: F401
         from typing_extensions import Literal  # noqa: F401
     except ImportError:
         pass
@@ -16,11 +16,11 @@ class MoneroTransactionFinalAck(p.MessageType):
     def __init__(
         self,
         *,
-        cout_key: bytes = None,
-        salt: bytes = None,
-        rand_mult: bytes = None,
-        tx_enc_keys: bytes = None,
-        opening_key: bytes = None,
+        cout_key: Optional[bytes] = None,
+        salt: Optional[bytes] = None,
+        rand_mult: Optional[bytes] = None,
+        tx_enc_keys: Optional[bytes] = None,
+        opening_key: Optional[bytes] = None,
     ) -> None:
         self.cout_key = cout_key
         self.salt = salt

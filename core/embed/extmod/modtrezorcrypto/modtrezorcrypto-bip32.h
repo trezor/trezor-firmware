@@ -49,9 +49,9 @@ STATIC const mp_obj_type_t mod_trezorcrypto_HDNode_type;
 ///     fingerprint: int,
 ///     child_num: int,
 ///     chain_code: bytes,
-///     private_key: bytes = None,
-///     public_key: bytes = None,
-///     curve_name: str = None,
+///     private_key: bytes | None = None,
+///     public_key: bytes | None = None,
+///     curve_name: str | None = None,
 /// ) -> None:
 ///     """
 ///     """
@@ -586,7 +586,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_bip32_from_seed_obj,
 
 #if !BITCOIN_ONLY
 
-/// def from_mnemonic_cardano(mnemonic: str, passphrase: str) -> bytes:
+/// def from_mnemonic_cardano(mnemonic: str, passphrase: str) -> HDNode:
 ///     """
 ///     Construct a HD node from a BIP-0039 mnemonic using the Icarus derivation
 ///     scheme, aka v2 derivation scheme.
