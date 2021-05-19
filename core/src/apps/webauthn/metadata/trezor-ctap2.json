@@ -46,12 +46,7 @@
       "width": 240
     }
   ],
-  "supportedExtensions": [
-    {
-      "id": "txAuthSimple",
-      "fail_if_unknown": false
-    }
-  ],
+  "supportedExtensions": [],
   "attestationRootCertificates": [
     "MIIBGDCBwAIJALHZj0JkctMsMAoGCCqGSM49BAMCMBUxEzARBgNVBAMMClRyZXpvciBVMkYwHhcNMTYwNDI5MTMzMTUzWhcNMjYwNDI3MTMzMTUzWjAVMRMwEQYDVQQDDApUcmV6b3IgVTJGMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE2Ri9+opUrJLpDakfynqiZFTA0XM2MU3eg6VLhrXfTvBSZZodb/y3Rn8azduKMwgLXu2RiRP0Q6UmG8d7aGBvwTAKBggqhkjOPQQDAgNHADBEAiAkHoH/0uXmFTaUw1Uuj+vXHok1khy0g0FDcRx26u7zlQIgX4DrEPJczDmLPKipraQCf5MTIHe3q853Rlon9T0zoR0="
   ],
