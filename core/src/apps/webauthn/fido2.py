@@ -1863,7 +1863,7 @@ def cbor_get_info(req: Cmd) -> Cmd:
     # login.live.com shows an error, but doesn't instruct the user to set a PIN.
     response_data = {
         _GETINFO_RESP_VERSIONS: ["U2F_V2", "FIDO_2_0"],
-        _GETINFO_RESP_EXTENSIONS: ["hmac-secret"],
+        _GETINFO_RESP_EXTENSIONS: ["hmac-secret", "txAuthSimple"],
         _GETINFO_RESP_AAGUID: _AAGUID,
         _GETINFO_RESP_OPTIONS: {
             "rk": _ALLOW_RESIDENT_CREDENTIALS,
