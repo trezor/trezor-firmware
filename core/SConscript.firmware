@@ -400,7 +400,7 @@ elif TREZOR_MODEL == '1':
     CPU_CCFLAGS = '-mthumb -mtune=cortex-m3 -mcpu=cortex-m3 -mfloat-abi=soft '
     CPU_MODEL   = 'STM32F405xx'
     LD_VARIANT  = '' if EVERYTHING else '_min'
-    RUST_TARGET = 'thumbv7em-none-eabi'
+    RUST_TARGET = 'thumbv7m-none-eabi'
 else:
     raise ValueError('Unknown Trezor model')
 

@@ -8,7 +8,6 @@ fn main() {
 /// Generates Rust module that exports QSTR constants used in firmware.
 fn generate_qstr_bindings() {
     let out_path = env::var("OUT_DIR").unwrap();
-    let target = env::var("TARGET").unwrap();
 
     // Tell cargo to invalidate the built crate whenever the header changes.
     println!("cargo:rerun-if-changed=qstr.h");
@@ -20,7 +19,7 @@ fn generate_qstr_bindings() {
         // Pass in correct include paths.
         .clang_args(&[
             "-I",
-            if target.starts_with("thumbv7em-none-eabi") {
+            if is_firmware() {
                 "../../build/firmware"
             } else {
                 "../../build/unix"
@@ -41,7 +40,6 @@ fn generate_qstr_bindings() {
 
 fn generate_micropython_bindings() {
     let out_path = env::var("OUT_DIR").unwrap();
-    let target = env::var("TARGET").unwrap();
 
     // Tell cargo to invalidate the built crate whenever the header changes.
     println!("cargo:rerun-if-changed=micropython.h");
@@ -107,7 +105,7 @@ fn generate_micropython_bindings() {
     bindings = bindings.no_copy("_mp_map_t");
 
     // Pass in correct include paths and defines.
-    if target.starts_with("thumbv7em-none-eabi") {
+    if is_firmware() {
         bindings = bindings.clang_args(&[
             "-nostdinc",
             "-I../firmware",
@@ -163,4 +161,9 @@ fn generate_micropython_bindings() {
         .expect("Unable to generate Rust Micropython bindings")
         .write_to_file(PathBuf::from(out_path).join("micropython.rs"))
         .unwrap();
+}
+
+fn is_firmware() -> bool {
+    let target = env::var("TARGET").unwrap();
+    target.starts_with("thumbv7")
 }
