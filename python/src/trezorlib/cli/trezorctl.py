@@ -75,10 +75,12 @@ COMMAND_ALIASES = {
     "xrp": ripple.cli,
     "xlm": stellar.cli,
     "xtz": tezos.cli,
-    # firmware-update aliases:
-    "update-firmware": firmware.firmware_update,
-    "upgrade-firmware": firmware.firmware_update,
-    "firmware-upgrade": firmware.firmware_update,
+    # firmware aliases:
+    "fw": firmware.cli,
+    "update-firmware": firmware.update,
+    "upgrade-firmware": firmware.update,
+    "firmware-upgrade": firmware.update,
+    "firmware-update": firmware.update,
 }
 
 
@@ -339,7 +341,7 @@ cli.add_command(settings.cli)
 cli.add_command(stellar.cli)
 cli.add_command(tezos.cli)
 
-cli.add_command(firmware.firmware_update)
+cli.add_command(firmware.cli)
 cli.add_command(debug.cli)
 
 #

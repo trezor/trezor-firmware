@@ -46,7 +46,7 @@ on one page here.
     eos                EOS commands.
     ethereum           Ethereum commands.
     fido               FIDO2, U2F and WebAuthN management commands.
-    firmware-update    Upload new firmware to device.
+    firmware           Firmware commands.
     get-features       Retrieve device features and settings.
     get-session        Get a session ID for subsequent commands.
     lisk               Lisk commands.
@@ -101,6 +101,7 @@ Bitcoin and Bitcoin-like coins commands.
 
   Commands:
     get-address      Get address for specified path.
+    get-descriptor   Get descriptor of given account.
     get-public-node  Get public node of given path.
     sign-message     Sign message using address of given path.
     sign-tx          Sign transaction.
@@ -186,7 +187,6 @@ Miscellaneous debug features.
 
   Commands:
     send-bytes  Send raw bytes to Trezor.
-    show-text   Show text on Trezor display.
 
 Device management commands - setup, recover seed, wipe, etc.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -275,6 +275,27 @@ FIDO2, U2F and WebAuthN management commands.
   Commands:
     counter      Get or set the FIDO/U2F counter value.
     credentials  Manage FIDO2 resident credentials.
+
+Firmware commands.
+~~~~~~~~~~~~~~~~~~
+
+.. code::
+
+  trezorctl firmware --help
+
+.. code::
+
+  Usage: trezorctl firmware [OPTIONS] COMMAND [ARGS]...
+
+    Firmware commands.
+
+  Options:
+    --help  Show this message and exit.
+
+  Commands:
+    download  Download and save the firmware image.
+    update    Upload new firmware to device.
+    verify    Verify the integrity of the firmware data stored in a file.
 
 Lisk commands.
 ~~~~~~~~~~~~~~
@@ -376,15 +397,16 @@ Device settings.
     --help  Show this message and exit.
 
   Commands:
-    auto-lock-delay   Set auto-lock delay (in seconds).
-    display-rotation  Set display rotation.
-    flags             Set device flags.
-    homescreen        Set new homescreen.
-    label             Set new device label.
-    passphrase        Enable, disable or configure passphrase protection.
-    pin               Set, change or remove PIN.
-    safety-checks     Set safety check level.
-    wipe-code         Set or remove the wipe code.
+    auto-lock-delay        Set auto-lock delay (in seconds).
+    display-rotation       Set display rotation.
+    experimental-features  Enable or disable experimental message types.
+    flags                  Set device flags.
+    homescreen             Set new homescreen.
+    label                  Set new device label.
+    passphrase             Enable, disable or configure passphrase protection.
+    pin                    Set, change or remove PIN.
+    safety-checks          Set safety check level.
+    wipe-code              Set or remove the wipe code.
 
 Stellar commands.
 ~~~~~~~~~~~~~~~~~
