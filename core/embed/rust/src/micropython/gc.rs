@@ -1,7 +1,6 @@
 use core::{
     alloc::Layout,
-    marker::Unsize,
-    ops::{CoerceUnsized, Deref, DispatchFromDyn},
+    ops::Deref,
     ptr::{self, NonNull},
 };
 
@@ -12,9 +11,6 @@ use super::ffi;
 /// Although a garbage-collected pointer type technically should implement
 /// `Copy` and `Clone`, we avoid doing this until proven necessary.
 pub struct Gc<T: ?Sized>(NonNull<T>);
-
-impl<T: ?Sized + Unsize<U>, U: ?Sized> CoerceUnsized<Gc<U>> for Gc<T> {}
-impl<T: ?Sized + Unsize<U>, U: ?Sized> DispatchFromDyn<Gc<U>> for Gc<T> {}
 
 impl<T> Gc<T> {
     /// Allocate memory on the heap managed by the MicroPython garbage collector
