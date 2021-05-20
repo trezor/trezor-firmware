@@ -11,13 +11,13 @@ Install the required packages, depending on your operating system.
 * __Debian/Ubuntu__:
 
 ```sh
-sudo apt-get install scons libsdl2-dev libsdl2-image-dev
+sudo apt-get install scons libsdl2-dev libsdl2-image-dev llvm-dev libclang-dev clang
 ```
 
 * __Fedora__:
 
 ```sh
-sudo yum install scons SDL2-devel SDL2_image-devel
+sudo yum install scons SDL2-devel SDL2_image-devel clang-devel
 ```
 
 * __OpenSUSE__:
@@ -29,7 +29,7 @@ sudo zypper install scons libSDL2-devel libSDL2_image-devel
 * __Arch__:
 
 ```sh
-sudo pacman -S scons sdl2 sdl2_image
+sudo pacman -S scons sdl2 sdl2_image clang-devel
 ```
 
 * __NixOS__:
@@ -47,10 +47,24 @@ _Consider using [Nix](https://nixos.org/download.html). With Nix all you need to
 For other users:
 
 ```sh
-brew install scons sdl2 sdl2_image pkg-config
+brew install scons sdl2 sdl2_image pkg-config llvm
 ```
 
 * __Windows__: not supported yet, sorry.
+
+## Rust
+
+You will require Rust and Cargo. The currently supported version is 1.52 stable.
+The recommended way to install both is with [`rustup`](https://rustup.rs/). If you
+are installing `rustup` for the first time, the stable toolchain will be installed
+for you automatically. Otherwise, make sure you are up to date:
+
+```sh
+rustup update
+```
+
+The [bindgen crate](https://rust-lang.github.io/rust-bindgen/requirements.html)
+requires libclang for generating MicroPython FFI.
 
 ## Build
 
