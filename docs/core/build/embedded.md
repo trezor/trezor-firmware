@@ -11,7 +11,7 @@ You will also need Python dependencies for signing.
 ### Debian/Ubuntu
 
 ```sh
-sudo apt-get install scons gcc-arm-none-eabi libnewlib-arm-none-eabi
+sudo apt-get install scons gcc-arm-none-eabi libnewlib-arm-none-eabi llvm-dev libclang-dev clang
 ```
 
 ### NixOS
@@ -33,6 +33,15 @@ For other users:
 2. Follow the [install instructions](https://launchpadlibrarian.net/287100883/readme.txt)
 3. To install OpenOCD, run `brew install open-ocd`
 4. Run `make vendor build_boardloader build_bootloader build_firmware`
+
+## Rust
+
+Install the appropriate target with [`rustup`](https://rustup.rs/):
+
+```sh
+rustup target add thumbv7em-none-eabihf  # for TT
+rustup target add thumbv7m-none-eabi     # for T1
+```
 
 ## Building
 
