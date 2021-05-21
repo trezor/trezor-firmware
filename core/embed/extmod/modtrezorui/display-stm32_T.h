@@ -56,6 +56,10 @@ const volatile uint8_t DISPLAY_ST7789V_INVERT_COLORS = 0;
 // of ILI9341V datasheet
 #define DISPLAY_ID_ILI9341V 0x009341U
 
+// section "7.1.3 read display ID (04h)"
+// of NV3030A datasheet
+#define DISPLAY_ID_NV3030A 0x3031FFU
+
 static uint32_t read_display_id(uint8_t command) {
   volatile uint8_t c = 0;
   uint32_t id = 0;
@@ -94,7 +98,7 @@ static uint32_t display_identify(void) {
 static void __attribute__((unused)) display_sleep(void) {
   uint32_t id = display_identify();
   if ((id == DISPLAY_ID_ILI9341V) || (id == DISPLAY_ID_GC9307) ||
-      (id == DISPLAY_ID_ST7789V)) {
+      (id == DISPLAY_ID_ST7789V) || (id == DISPLAY_ID_NV3030A)) {
     CMD(0x28);     // DISPOFF: Display Off
     CMD(0x10);     // SLPIN: Sleep in
     HAL_Delay(5);  // need to wait 5 milliseconds after "sleep in" before
@@ -105,7 +109,7 @@ static void __attribute__((unused)) display_sleep(void) {
 static void display_unsleep(void) {
   uint32_t id = display_identify();
   if ((id == DISPLAY_ID_ILI9341V) || (id == DISPLAY_ID_GC9307) ||
-      (id == DISPLAY_ID_ST7789V)) {
+      (id == DISPLAY_ID_ST7789V) || (id == DISPLAY_ID_NV3030A)) {
     CMD(0x11);     // SLPOUT: Sleep Out
     HAL_Delay(5);  // need to wait 5 milliseconds after "sleep out" before
                    // sending any new commands
@@ -123,7 +127,7 @@ static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1,
   y1 += BUFFER_OFFSET.y;
   uint32_t id = display_identify();
   if ((id == DISPLAY_ID_ILI9341V) || (id == DISPLAY_ID_GC9307) ||
-      (id == DISPLAY_ID_ST7789V)) {
+      (id == DISPLAY_ID_ST7789V) || (id == DISPLAY_ID_NV3030A)) {
     CMD(0x2A);
     DATA(x0 >> 8);
     DATA(x0 & 0xFF);
@@ -142,7 +146,7 @@ static void display_set_orientation(int degrees) {
   char BX = 0, BY = 0;
   uint32_t id = display_identify();
   if ((id == DISPLAY_ID_ILI9341V) || (id == DISPLAY_ID_GC9307) ||
-      (id == DISPLAY_ID_ST7789V)) {
+      (id == DISPLAY_ID_ST7789V) || (id == DISPLAY_ID_NV3030A)) {
 #define RGB (1 << 3)
 #define MV (1 << 5)
 #define MX (1 << 6)
@@ -151,6 +155,7 @@ static void display_set_orientation(int degrees) {
     // section 9.3 in the ILI9341 manual
     // section 6.2.18 in the GC9307 manual
     // section 8.12 in the ST7789V manual
+    // section 7.1.27 in the NV3030A manual
     uint8_t display_command_parameter = 0;
     switch (degrees) {
       case 0:
@@ -443,6 +448,17 @@ static void send_init_seq_ILI9341V(void) {
   DATA(0x0F);
 }
 
+static void send_init_seq_NV3030A(void) {
+  // TEON: Tearing Effect Line On; V-blanking only
+  CMD(0x35);
+  DATA(0x00);
+
+  // COLMOD: Interface Pixel format; 65K color: 16-bit/pixel (RGB 5-6-5 bits
+  // input)
+  CMD(0x3A);
+  DATA(0x55);
+}
+
 void display_init_seq(void) {
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_14, GPIO_PIN_RESET);  // LCD_RST/PC14
   // wait 10 milliseconds. only needs to be low for 10 microseconds.
@@ -463,6 +479,8 @@ void display_init_seq(void) {
     send_init_seq_ST7789V(DISPLAY_ST7789V_INVERT_COLORS);
   } else if (id == DISPLAY_ID_ILI9341V) {
     send_init_seq_ILI9341V();
+  } else if (id == DISPLAY_ID_NV3030A) {
+    send_init_seq_NV3030A();
   }
 
   display_clear();
@@ -585,7 +603,7 @@ void display_init(void) {
 
 void display_refresh(void) {
   uint32_t id = display_identify();
-  if (id && (id != DISPLAY_ID_GC9307)) {
+  if (id && (id != DISPLAY_ID_GC9307) && (id != DISPLAY_ID_NV3030A)) {
     // synchronize with the panel synchronization signal
     // in order to avoid visual tearing effects
     while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_12)) {

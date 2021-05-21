@@ -87,7 +87,7 @@ int main(void) {
 #endif
 
 #if TREZOR_MODEL == T
-  // display_init_seq();
+  display_init_seq();
   sdcard_init();
   touch_init();
   touch_power_on();
