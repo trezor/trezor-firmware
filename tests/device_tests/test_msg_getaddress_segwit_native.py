@@ -27,34 +27,34 @@ class TestMsgGetaddressSegwitNative:
             btc.get_address(
                 client,
                 "Testnet",
-                parse_path("49'/1'/0'/0/0"),
+                parse_path("84'/1'/0'/0/0"),
                 True,
                 None,
                 script_type=proto.InputScriptType.SPENDWITNESS,
             )
-            == "tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s"
+            == "tb1qkvwu9g3k2pdxewfqr7syz89r3gj557l3uuf9r9"
         )
         assert (
             btc.get_address(
                 client,
                 "Testnet",
-                parse_path("49'/1'/0'/1/0"),
+                parse_path("84'/1'/0'/1/0"),
                 False,
                 None,
                 script_type=proto.InputScriptType.SPENDWITNESS,
             )
-            == "tb1q694ccp5qcc0udmfwgp692u2s2hjpq5h407urtu"
+            == "tb1qejqxwzfld7zr6mf7ygqy5s5se5xq7vmt96jk9x"
         )
         assert (
             btc.get_address(
                 client,
                 "Testnet",
-                parse_path("44'/1'/0'/0/0"),
+                parse_path("84'/1'/0'/0/0"),
                 False,
                 None,
                 script_type=proto.InputScriptType.SPENDWITNESS,
             )
-            == "tb1q54un3q39sf7e7tlfq99d6ezys7qgc62a6rxllc"
+            == "tb1qkvwu9g3k2pdxewfqr7syz89r3gj557l3uuf9r9"
         )
         assert (
             btc.get_address(
