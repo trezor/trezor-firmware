@@ -139,9 +139,14 @@ int main(void) {
   }
 
   if (sectrue == storage_initialized) {
-    // don't erase
+    // Storage probably contains a seed so leave the firmware intact.
+    // Invalidating it would cause the bootloader to wipe the storage before
+    // installing the target firmware. User will need to confirm installation.
     reboot_device();
   } else {
+    // New device. Invalidate the intermediate firmware so that after reboot
+    // the bootloader will install the target firmware without asking for user
+    // confirmation.
     invalidate_firmware_and_reboot();
   }
 
