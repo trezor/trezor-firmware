@@ -3,8 +3,8 @@ import sys
 from trezorutils import (  # noqa: F401
     BITCOIN_ONLY,
     EMULATOR,
-    GITREV,
     MODEL,
+    SCM_REVISION,
     VERSION_MAJOR,
     VERSION_MINOR,
     VERSION_PATCH,

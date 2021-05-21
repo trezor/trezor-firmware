@@ -32,7 +32,7 @@ def halt(msg: str | None = None) -> None:
     """
     Halts execution.
     """
-GITREV: str
+SCM_REVISION: bytes
 VERSION_MAJOR: int
 VERSION_MINOR: int
 VERSION_PATCH: int

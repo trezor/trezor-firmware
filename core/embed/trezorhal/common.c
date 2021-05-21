@@ -52,8 +52,10 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
   if (func) {
     display_printf("func: %s\n", func);
   }
-#ifdef GITREV
-  display_printf("rev : %s\n", XSTR(GITREV));
+#ifdef SCM_REVISION
+  const uint8_t *rev = (const uint8_t *)SCM_REVISION;
+  display_printf("rev : %02x%02x%02x%02x%02x\n", rev[0], rev[1], rev[2], rev[3],
+                 rev[4]);
 #endif
   display_printf("\nPlease contact Trezor support.\n");
   shutdown();
