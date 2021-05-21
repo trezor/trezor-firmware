@@ -623,28 +623,28 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
 # Rust library
 #
 
-RUST_PROFILE = 'release'
-RUST_LIB = 'trezor_lib'
-RUST_LIBDIR = f'build/rust/{RUST_TARGET}/{RUST_PROFILE}'
-RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
-
-def cargo_build():
-    # Determine the profile build flags.
-    if RUST_PROFILE == 'release':
-        profile = '--release'
-    else:
-        profile = ''
-    return f'cd embed/rust; cargo build {profile} --target={RUST_TARGET}'
-
-rust = env.Command(
-    target=RUST_LIBPATH,
-    source='',
-    action=cargo_build(), )
-
-env.Depends(rust, qstr_generated)
-
-env.Append(LINKFLAGS=f' -L{RUST_LIBDIR}')
-env.Append(LINKFLAGS=f' -l{RUST_LIB}')
+#RUST_PROFILE = 'release'
+#RUST_LIB = 'trezor_lib'
+#RUST_LIBDIR = f'build/rust/{RUST_TARGET}/{RUST_PROFILE}'
+#RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
+#
+#def cargo_build():
+#    # Determine the profile build flags.
+#    if RUST_PROFILE == 'release':
+#        profile = '--release'
+#    else:
+#        profile = ''
+#    return f'cd embed/rust; cargo build {profile} --target={RUST_TARGET}'
+#
+#rust = env.Command(
+#    target=RUST_LIBPATH,
+#    source='',
+#    action=cargo_build(), )
+#
+#env.Depends(rust, qstr_generated)
+#
+#env.Append(LINKFLAGS=f' -L{RUST_LIBDIR}')
+#env.Append(LINKFLAGS=f' -l{RUST_LIB}')
 
 #
 # Program objects
@@ -691,7 +691,7 @@ program_elf = env.Command(
     '$LINK -o $TARGET $CCFLAGS $CFLAGS $SOURCES $LINKFLAGS -lc_nano -lm -lgcc',
 )
 
-env.Depends(program_elf, rust)
+#env.Depends(program_elf, rust)
 
 if TREZOR_MODEL == 'T':
     action_bin=[
