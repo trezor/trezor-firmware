@@ -74,6 +74,7 @@ def test_show_multisig_3(client):
                 tools.parse_path(f"45h/0/0/{i}"),
                 show_display=True,
                 multisig=multisig,
+                script_type=messages.InputScriptType.SPENDMULTISIG,
             )
             == "35Q3tgZZfr9GhVpaqz7fbDK8WXV1V1KxfD"
         )
@@ -247,6 +248,7 @@ def test_show_multisig_15(client):
                 tools.parse_path(f"45h/0/0/{i}"),
                 show_display=True,
                 multisig=multisig,
+                script_type=messages.InputScriptType.SPENDMULTISIG,
             )
             == "3GG78bp1hA3mu9xv1vZLXiENmeabmi7WKQ"
         )

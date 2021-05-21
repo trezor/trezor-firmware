@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import btc, messages as proto
+from trezorlib import btc, device, messages as proto
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -67,6 +67,35 @@ class TestMsgSigntxInvalidPath:
         else:
             assert exc.value.code == proto.FailureType.DataError
             assert exc.value.message.endswith("Forbidden key path")
+
+    # Adapted from TestMsgSigntx.test_one_one_fee,
+    # only changed the coin from Bitcoin to Litecoin and set safety checks to prompt.
+    # Litecoin does not have strong replay protection using SIGHASH_FORKID, but
+    # spending from Bitcoin path should pass with safety checks set to prompt.
+    @pytest.mark.altcoin
+    def test_invalid_path_prompt(self, client):
+        # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
+        # input 0: 0.0039 BTC
+
+        inp1 = proto.TxInputType(
+            address_n=parse_path("44h/0h/0h/0/0"),
+            amount=390000,
+            prev_hash=TXHASH_d5f65e,
+            prev_index=0,
+        )
+
+        # address is converted from 1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1 by changing the version
+        out1 = proto.TxOutputType(
+            address="LfWz9wLHmqU9HoDkMg9NqbRosrHvEixeVZ",
+            amount=390000 - 10000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+
+        device.apply_settings(
+            client, safety_checks=proto.SafetyCheckLevel.PromptTemporarily
+        )
+
+        btc.sign_tx(client, "Litecoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET)
 
     # Adapted from TestMsgSigntx.test_one_one_fee,
     # only changed the coin from Bitcoin to Bcash.

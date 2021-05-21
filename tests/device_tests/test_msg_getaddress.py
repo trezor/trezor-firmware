@@ -229,19 +229,22 @@ class TestMsgGetaddress:
         assert address1 == address2
 
 
-@pytest.mark.skip_t1
 def test_invalid_path(client):
     with pytest.raises(TrezorFailure, match="Forbidden key path"):
         # slip44 id mismatch
-        btc.get_address(client, "Bitcoin", parse_path("m/44'/111'/0'/0/0"))
+        btc.get_address(
+            client, "Bitcoin", parse_path("m/44'/111'/0'/0/0"), show_display=True
+        )
 
 
-@pytest.mark.skip_t1
-def test_unknown_path_tt(client):
+def test_unknown_path(client):
     UNKNOWN_PATH = parse_path("m/44'/9'/0'/0/0")
-    with pytest.raises(TrezorFailure, match="Forbidden key path"):
-        # account number is too high
-        btc.get_address(client, "Bitcoin", UNKNOWN_PATH)
+    with client:
+        client.set_expected_responses([messages.Failure])
+
+        with pytest.raises(TrezorFailure, match="Forbidden key path"):
+            # account number is too high
+            btc.get_address(client, "Bitcoin", UNKNOWN_PATH, show_display=True)
 
     # disable safety checks
     device.apply_settings(client, safety_checks=SafetyCheckLevel.PromptTemporarily)
@@ -257,26 +260,6 @@ def test_unknown_path_tt(client):
             ]
         )
         # try again with a warning
-        btc.get_address(client, "Bitcoin", UNKNOWN_PATH, show_display=True)
-
-    with client:
-        # no warning is displayed when the call is silent
-        client.set_expected_responses([messages.Address])
-        btc.get_address(client, "Bitcoin", UNKNOWN_PATH, show_display=False)
-
-
-@pytest.mark.skip_t2
-def test_unknown_path_t1(client):
-    UNKNOWN_PATH = parse_path("m/44'/9'/0'/0/0")
-    with client:
-        client.set_expected_responses(
-            [
-                messages.ButtonRequest(code=messages.ButtonRequestType.Other),
-                messages.ButtonRequest(code=messages.ButtonRequestType.Address),
-                messages.Address,
-            ]
-        )
-        # warning is shown when showing address
         btc.get_address(client, "Bitcoin", UNKNOWN_PATH, show_display=True)
 
     with client:
