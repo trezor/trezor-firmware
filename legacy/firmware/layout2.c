@@ -1245,3 +1245,18 @@ void layoutConfirmAutoLockDelay(uint32_t delay_ms) {
                     _("Do you really want to"), _("auto-lock your device"),
                     line, NULL, NULL, NULL);
 }
+
+void layoutConfirmSafetyChecks(SafetyCheckLevel safety_ckeck_level) {
+  if (safety_ckeck_level == SafetyCheckLevel_Strict) {
+    // Disallow unsafe actions. This is the default.
+    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                      _("Do you really want to"), _("enforce strict safety"),
+                      _("checks?"), _("(Recommended.)"), NULL, NULL);
+  } else if (safety_ckeck_level == SafetyCheckLevel_PromptTemporarily) {
+    // Ask user before unsafe action. Reverts to Strict after reboot.
+    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
+                      _("Do you really want to"), _("be temporarily able"),
+                      _("to approve some"), _("actions which might"),
+                      _("be unsafe?"), NULL);
+  }
+}

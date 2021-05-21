@@ -28,6 +28,7 @@
 
 #include "messages-bitcoin.pb.h"
 #include "messages-crypto.pb.h"
+#include "messages-management.pb.h"
 #include "messages-nem.pb.h"
 
 extern void *layoutLast;
@@ -104,6 +105,7 @@ void layoutCosiCommitSign(const uint32_t *address_n, size_t address_n_count,
                           const uint8_t *data, uint32_t len, bool final_sign);
 
 void layoutConfirmAutoLockDelay(uint32_t delay_ms);
+void layoutConfirmSafetyChecks(SafetyCheckLevel safety_checks_level);
 
 const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen);
 const char **split_message_hex(const uint8_t *msg, uint32_t len);
