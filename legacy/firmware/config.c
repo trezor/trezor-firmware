@@ -143,6 +143,8 @@ static uint32_t sessionUseCounter = 0;
 static secbool autoLockDelayMsCached = secfalse;
 static uint32_t autoLockDelayMs = autoLockDelayMsDefault;
 
+static SafetyCheckLevel safetyCheckLevel = SafetyCheckLevel_Strict;
+
 static const uint32_t CONFIG_VERSION = 11;
 
 static const uint8_t FALSE_BYTE = '\x00';
@@ -949,6 +951,12 @@ void config_setAutoLockDelayMs(uint32_t auto_lock_delay_ms) {
   }
 }
 
+SafetyCheckLevel config_getSafetyCheckLevel(void) { return safetyCheckLevel; }
+
+void config_setSafetyCheckLevel(SafetyCheckLevel safety_check_level) {
+  safetyCheckLevel = safety_check_level;
+}
+
 void config_wipe(void) {
   char oldTiny = usbTiny(1);
   storage_wipe();
@@ -959,6 +967,7 @@ void config_wipe(void) {
   random_buffer((uint8_t *)config_uuid, sizeof(config_uuid));
   data2hex((const uint8_t *)config_uuid, sizeof(config_uuid), config_uuid_str);
   autoLockDelayMsCached = secfalse;
+  safetyCheckLevel = SafetyCheckLevel_Strict;
   storage_set(KEY_UUID, config_uuid, sizeof(config_uuid));
   storage_set(KEY_VERSION, &CONFIG_VERSION, sizeof(CONFIG_VERSION));
   session_clear(false);
