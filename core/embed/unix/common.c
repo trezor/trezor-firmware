@@ -58,9 +58,12 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
     display_printf("func: %s\n", func);
     printf("func: %s\n", func);
   }
-#ifdef GITREV
-  display_printf("rev : %s\n", XSTR(GITREV));
-  printf("rev : %s\n", XSTR(GITREV));
+#ifdef SCM_REVISION
+  const uint8_t *rev = (const uint8_t *)SCM_REVISION;
+  display_printf("rev : %02x%02x%02x%02x%02x\n", rev[0], rev[1], rev[2], rev[3],
+                 rev[4]);
+  printf("rev : %02x%02x%02x%02x%02x\n", rev[0], rev[1], rev[2], rev[3],
+         rev[4]);
 #endif
   display_printf("\n\n\nHint:\nIsn't the emulator already running?\n");
   printf("Hint:\nIsn't the emulator already running?\n");
