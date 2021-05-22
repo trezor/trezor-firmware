@@ -43,43 +43,42 @@ static const uint32_t META_MAGIC_V10 = 0x525a5254;  // 'TRZR'
 static const uint32_t NORCOW_MAGIC = 0x3243524e;  // 'NRC2'
 static const uint8_t norcow_sectors[NORCOW_SECTOR_COUNT] = NORCOW_SECTORS;
 
-/** Sector erase operation extracted from libopencm3 - flash_erase_sector
+/** Flash program word operation extracted from libopencm3,
  * so it can run from RAM
  */
 static void __attribute__((noinline, section(".data")))
-erase_sector(uint8_t sector, uint32_t psize) {
+_flash_program_word(uint32_t address, uint32_t data) {
   // Wait for flash controller to be ready
   while ((FLASH_SR & FLASH_SR_BSY) == FLASH_SR_BSY)
     ;
+
   // Set program word width
   FLASH_CR &= ~(FLASH_CR_PROGRAM_MASK << FLASH_CR_PROGRAM_SHIFT);
-  FLASH_CR |= psize << FLASH_CR_PROGRAM_SHIFT;
+  FLASH_CR |= FLASH_CR_PROGRAM_X32 << FLASH_CR_PROGRAM_SHIFT;
 
-  /* Sector numbering is not contiguous internally! */
-  if (sector >= 12) {
-    sector += 4;
-  }
+  // Enable writes to flash
+  FLASH_CR |= FLASH_CR_PG;
 
-  FLASH_CR &= ~(FLASH_CR_SNB_MASK << FLASH_CR_SNB_SHIFT);
-  FLASH_CR |= (sector & FLASH_CR_SNB_MASK) << FLASH_CR_SNB_SHIFT;
-  FLASH_CR |= FLASH_CR_SER;
-  FLASH_CR |= FLASH_CR_STRT;
+  // Program the word
+  MMIO32(address) = data;
 
   // Wait for flash controller to be ready
   while ((FLASH_SR & FLASH_SR_BSY) == FLASH_SR_BSY)
     ;
-  FLASH_CR &= ~FLASH_CR_SER;
-  FLASH_CR &= ~(FLASH_CR_SNB_MASK << FLASH_CR_SNB_SHIFT);
+
+  // Disable writes to flash
+  FLASH_CR &= ~FLASH_CR_PG;
 }
 
-static void __attribute__((noinline, section(".data"))) erase_firmware(void) {
+static void __attribute__((noinline, section(".data")))
+invalidate_firmware(void) {
   // Flash unlock
   FLASH_KEYR = FLASH_KEYR_KEY1;
   FLASH_KEYR = FLASH_KEYR_KEY2;
 
-  // Erase the first firmware sector
-  // (we don't need full erasure, this speeds up the process)
-  erase_sector(FLASH_CODE_SECTOR_FIRST, FLASH_CR_PROGRAM_X32);
+  // Erase the first firmware word
+  // (we don't need full erasure, this speeds up the whole process)
+  _flash_program_word(FLASH_FWHEADER_START, 0);
 
   // Flash lock
   FLASH_CR |= FLASH_CR_LOCK;
@@ -95,8 +94,8 @@ void __attribute__((noinline, noreturn, section(".data"))) reboot_device(void) {
 
 /** Entry point of RAM shim that deletes old FW, storage and reboot */
 void __attribute__((noinline, noreturn, section(".data")))
-erase_firmware_and_reboot(void) {
-  erase_firmware();
+invalidate_firmware_and_reboot(void) {
+  invalidate_firmware();
   reboot_device();
 
   for (;;)
@@ -140,10 +139,15 @@ int main(void) {
   }
 
   if (sectrue == storage_initialized) {
-    // don't erase
+    // Storage probably contains a seed so leave the firmware intact.
+    // Invalidating it would cause the bootloader to wipe the storage before
+    // installing the target firmware. User will need to confirm installation.
     reboot_device();
   } else {
-    erase_firmware_and_reboot();
+    // New device. Invalidate the intermediate firmware so that after reboot
+    // the bootloader will install the target firmware without asking for user
+    // confirmation.
+    invalidate_firmware_and_reboot();
   }
 
   return 0;
