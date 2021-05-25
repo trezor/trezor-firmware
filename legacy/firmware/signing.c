@@ -1070,6 +1070,7 @@ static bool signing_validate_output(TxOutputType *txoutput) {
 }
 
 static bool signing_validate_bin_output(TxOutputBinType *tx_bin_output) {
+#if !BITCOIN_ONLY
   if (!coin->decred && tx_bin_output->has_decred_script_version) {
     fsm_sendFailure(
         FailureType_Failure_DataError,
@@ -1077,6 +1078,9 @@ static bool signing_validate_bin_output(TxOutputBinType *tx_bin_output) {
     signing_abort();
     return false;
   }
+#else
+  (void)tx_bin_output;
+#endif
   return true;
 }
 
