@@ -4,13 +4,27 @@ base_branch=master
 fail=0
 subdirs="core python legacy/firmware legacy/bootloader"
 
+changed_files=$(mktemp)
+trap 'rm -- $changed_files' EXIT
+
 git fetch origin "$base_branch"
 
 check_feature_branch () {
+
+    for commit in $(git rev-list origin/$base_branch..)
+    do
+        if git log -n1 --format=%B "$commit" | grep -iFq "[no changelog]"; then
+            echo "Found [no changelog] in $commit, skipping."
+            continue
+        fi
+
+        git show --pretty=format: --name-only "$commit" >> "$changed_files"
+    done
+
     for subdir in $subdirs
     do
         echo "Checking $subdir"
-        files=$(git diff --name-only "origin/$base_branch..." -- "$subdir")
+        files=$(grep "^$subdir/" "$changed_files")
 
         if echo "$files" | grep . | grep -Fq -v .changelog.d; then
             if ! echo "$files" | grep -Fq .changelog.d; then
@@ -29,7 +43,7 @@ check_release_branch () {
     fi
 }
 
-if echo "$CI_COMMIT_BRANCH" | grep -q "^release/"; then
+if echo "$CI_COMMIT_BRANCH" | grep -Eq "^(release|secfix)/"; then
     check_release_branch
 else
     check_feature_branch

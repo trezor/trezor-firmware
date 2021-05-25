@@ -41,6 +41,13 @@ type you can add numeral suffix, e.g. `1234.fixed.1`, `1234.fixed.2`, etc.
 You can also add this entry using your `$VISUAL` editor by running `towncrier
 create --edit 1234.fixed` in the `core` directory.
 
+## Not adding changelog entry
+
+If you don't add an entry for changes in your branch, the `changelog prebuild`
+CI job will remind you by failing. Sometimes adding an entry does not really make
+sense, in that case you can include `[no changelog]` anywhere in the commit
+message to exclude that commit from the check.
+
 ## Generating changelog at the time of release
 
 When it's time to release new version of a repository component the formatted
