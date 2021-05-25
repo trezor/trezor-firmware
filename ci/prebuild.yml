@@ -44,6 +44,8 @@ release commit messages prebuild:
 
 changelog prebuild:
   stage: prebuild
+  except:
+    - master
   before_script: []  # nothing needed
   variables:
     GIT_SUBMODULE_STRATEGY: "none"
