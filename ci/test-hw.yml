@@ -109,6 +109,7 @@ hardware legacy regular device test:
   script:
     - cd ci/hardware_tests
     - nix-shell --run "./t1_hw_test.sh"
+  timeout: 1h10m
   artifacts:
     name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
     paths:
