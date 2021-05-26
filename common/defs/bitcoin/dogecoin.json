@@ -10,7 +10,7 @@
   "address_type": 30,
   "address_type_p2sh": 22,
   "maxfee_kb": 1200000000000,
-  "minfee_kb": 1000,
+  "minfee_kb": 100000000,
   "signed_message_header": "Dogecoin Signed Message:\n",
   "hash_genesis_block": "1a91e3dace36e2be3bf030a65679fe821aa1d6ef92e7c9902eb318182c355691",
   "xprv_magic": 49988504,
@@ -29,7 +29,7 @@
   "default_fee_b": {
     "Normal": 100000
   },
-  "dust_limit": 10000000,
+  "dust_limit": 99999999,
   "blocktime_seconds": 60,
   "uri_prefix": "dogecoin",
   "min_address_length": 27,
