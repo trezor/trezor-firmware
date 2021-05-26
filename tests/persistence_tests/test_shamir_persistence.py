@@ -100,6 +100,74 @@ def test_recovery_single_reset(emulator):
 
 
 @core_only
+def test_recovery_on_old_wallet(emulator):
+    """Check that the recovery workflow started on a disconnected device can survive
+    handling by the old Wallet.
+
+    While Suite will send a RecoveryDevice message and hook into the running recovery
+    flow, old Wallet can't do that and instead must repeatedly ask for features (via
+    Initialize+GetFeatures). At minimum, these two messages must not interrupt the
+    running recovery.
+    """
+    device_handler = BackgroundDeviceHandler(emulator.client)
+    debug = device_handler.debuglink()
+    features = device_handler.features()
+
+    assert features.initialized is False
+    assert features.recovery_mode is False
+
+    # enter recovery mode
+    device_handler.run(device.recover, pin_protection=False)
+    recovery.confirm_recovery(debug)
+
+    # restart to get into stand-alone recovery
+    debug = _restart(device_handler, emulator)
+    features = device_handler.features()
+    assert features.recovery_mode is True
+
+    # enter number of words
+    recovery.select_number_of_words(debug)
+
+    first_share = MNEMONIC_SLIP39_BASIC_20_3of6[0]
+    words = first_share.split(" ")
+
+    # start entering first share
+    layout = debug.read_layout()
+    assert "Enter any share" in layout.text
+    debug.press_yes()
+    layout = debug.wait_layout()
+    assert layout.text == "Slip39Keyboard"
+
+    # enter first word
+    debug.input(words[0])
+    layout = debug.wait_layout()
+
+    # while keyboard is open, hit the device with Initialize/GetFeatures
+    device_handler.client.init_device()
+    device_handler.client.refresh_features()
+
+    # try entering remaining 19 words
+    for word in words[1:]:
+        assert layout.text == "Slip39Keyboard"
+        debug.input(word)
+        layout = debug.wait_layout()
+
+    # check that we entered the first share successfully
+    assert "2 more shares" in layout.text
+
+    # try entering the remaining shares
+    for share in MNEMONIC_SLIP39_BASIC_20_3of6[1:3]:
+        recovery.enter_share(debug, share)
+
+    recovery.finalize(debug)
+
+    # check that the recovery succeeded
+    features = device_handler.features()
+    assert features.initialized is True
+    assert features.recovery_mode is False
+
+
+@core_only
 def test_recovery_multiple_resets(emulator):
     def enter_shares_with_restarts(debug):
         shares = MNEMONIC_SLIP39_ADVANCED_20
