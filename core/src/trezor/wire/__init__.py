@@ -52,6 +52,7 @@ if False:
         Any,
         Awaitable,
         Callable,
+        Container,
         Coroutine,
         Iterable,
         TypeVar,
@@ -431,7 +432,7 @@ async def handle_session(
                     # workflow running on wire.
                     utils.unimport_end(modules)
 
-                    if next_msg is None:
+                    if next_msg is None and msg.type not in AVOID_RESTARTING_FOR:
                         # Shut down the loop if there is no next message waiting.
                         # Let the session be restarted from `main`.
                         loop.clear()
@@ -450,6 +451,7 @@ def _find_handler_placeholder(iface: WireInterface, msg_type: int) -> Handler | 
 
 
 find_handler = _find_handler_placeholder
+AVOID_RESTARTING_FOR: Container[int] = ()
 
 
 def failure(exc: BaseException) -> Failure:
