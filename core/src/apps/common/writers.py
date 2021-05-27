@@ -99,3 +99,13 @@ def write_bitcoin_varint(w: Writer, n: int) -> None:
         w.append((n >> 8) & 0xFF)
         w.append((n >> 16) & 0xFF)
         w.append((n >> 24) & 0xFF)
+
+
+def write_uvarint(w: Writer, n: int) -> None:
+    ensure(n >= 0 and n <= 0xFFFF_FFFF_FFFF_FFFF)
+    shifted = 1
+    while shifted:
+        shifted = n >> 7
+        byte = (n & 0x7F) | (0x80 if shifted else 0x00)
+        w.append(byte)
+        n = shifted

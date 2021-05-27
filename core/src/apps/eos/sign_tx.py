@@ -28,7 +28,7 @@ async def sign_tx(ctx: wire.Context, msg: EosSignTx, keychain: Keychain) -> EosS
     sha = HashWriter(sha256())
     await _init(ctx, sha, msg)
     await _actions(ctx, sha, msg.num_actions)
-    writers.write_variant32(sha, 0)
+    writers.write_uvarint(sha, 0)
     writers.write_bytes_fixed(sha, bytearray(32), 32)
 
     digest = sha.get_digest()
@@ -42,8 +42,8 @@ async def sign_tx(ctx: wire.Context, msg: EosSignTx, keychain: Keychain) -> EosS
 async def _init(ctx: wire.Context, sha: HashWriter, msg: EosSignTx) -> None:
     writers.write_bytes_fixed(sha, msg.chain_id, 32)
     writers.write_header(sha, msg.header)
-    writers.write_variant32(sha, 0)
-    writers.write_variant32(sha, msg.num_actions)
+    writers.write_uvarint(sha, 0)
+    writers.write_uvarint(sha, msg.num_actions)
 
     await require_sign_tx(ctx, msg.num_actions)
 
