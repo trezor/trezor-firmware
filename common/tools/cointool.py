@@ -1,21 +1,17 @@
 #!/usr/bin/env python3
 import fnmatch
 import glob
-import io
 import json
 import logging
 import os
 import re
-import struct
 import sys
-import zlib
 from collections import defaultdict
 from hashlib import sha256
 
 import click
 
 import coin_info
-from coindef import CoinDef
 
 try:
     import termcolor
@@ -37,13 +33,11 @@ except ImportError:
     requests = None
 
 try:
-    import ed25519
     from PIL import Image
-    from trezorlib import protobuf
 
-    CAN_BUILD_DEFS = True
+    CAN_CHECK_ICONS = True
 except ImportError:
-    CAN_BUILD_DEFS = False
+    CAN_CHECK_ICONS = False
 
 
 # ======= Crayon colors ======
@@ -579,59 +573,6 @@ def check_fido(apps):
     return check_passed
 
 
-# ====== coindefs generators ======
-
-
-def convert_icon(icon):
-    """Convert PIL icon to TOIF format"""
-    # TODO: move this to python-trezor at some point
-    DIM = 32
-    icon = icon.resize((DIM, DIM), Image.LANCZOS)
-    # remove alpha channel, replace with black
-    bg = Image.new("RGBA", icon.size, (0, 0, 0, 255))
-    icon = Image.alpha_composite(bg, icon)
-    # process pixels
-    pix = icon.load()
-    data = bytes()
-    for y in range(DIM):
-        for x in range(DIM):
-            r, g, b, _ = pix[x, y]
-            c = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)
-            data += struct.pack(">H", c)
-    z = zlib.compressobj(level=9, wbits=10)
-    zdata = z.compress(data) + z.flush()
-    zdata = zdata[2:-4]  # strip header and checksum
-    return zdata
-
-
-def coindef_from_dict(coin):
-    proto = CoinDef()
-    for fname, _, fflags in CoinDef.FIELDS.values():
-        val = coin.get(fname)
-        if val is None and fflags & protobuf.FLAG_REPEATED:
-            val = []
-        elif fname == "signed_message_header":
-            val = val.encode()
-        elif fname == "hash_genesis_block":
-            val = bytes.fromhex(val)
-        setattr(proto, fname, val)
-
-    return proto
-
-
-def serialize_coindef(proto, icon):
-    proto.icon = icon
-    buf = io.BytesIO()
-    protobuf.dump_message(buf, proto)
-    return buf.getvalue()
-
-
-def sign(data):
-    h = sha256(data).digest()
-    sign_key = ed25519.SigningKey(b"A" * 32)
-    return sign_key.sign(h)
-
-
 # ====== click command handlers ======
 
 
@@ -689,7 +630,7 @@ def check(backend, icons, show_duplicates):
     if backend and requests is None:
         raise click.ClickException("You must install requests for backend check")
 
-    if icons and not CAN_BUILD_DEFS:
+    if icons and not CAN_CHECK_ICONS:
         raise click.ClickException("Missing requirements for icon check")
 
     defs, buckets = coin_info.coin_info_with_duplicates()
@@ -880,29 +821,6 @@ def dump(
     with outfile:
         indent = 4 if pretty else None
         json.dump(output, outfile, indent=indent, sort_keys=True)
-        outfile.write("\n")
-
-
-@cli.command()
-@click.option("-o", "--outfile", type=click.File(mode="w"), default="./coindefs.json")
-def coindefs(outfile):
-    """Generate signed coin definitions for python-trezor and others
-
-    This is currently unused but should enable us to add new coins without having to
-    update firmware.
-    """
-    coins = coin_info.coin_info().bitcoin
-    coindefs = {}
-    for coin in coins:
-        key = coin["key"]
-        icon = Image.open(coin["icon"])
-        ser = serialize_coindef(coindef_from_dict(coin), convert_icon(icon))
-        sig = sign(ser)
-        definition = (sig + ser).hex()
-        coindefs[key] = definition
-
-    with outfile:
-        json.dump(coindefs, outfile, indent=4, sort_keys=True)
         outfile.write("\n")
 
 
