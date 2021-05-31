@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Safety checks setting in T1.  [#1627]
 
+### Security
+- Fix incorrect empty string handling in BLAKE implementation used by Decred.
+
 
 ## 1.10.0 [13rd May 2021]
 
