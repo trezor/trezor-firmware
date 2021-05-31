@@ -617,7 +617,11 @@ def cargo_build():
         profile = '--release'
     else:
         profile = ''
-    return f'cd embed/rust; cargo build {profile} --target-dir=../../build/unix/rust'
+    features = []
+    if BITCOIN_ONLY == "1":
+        features.append("bitcoin_only")
+
+    return f'cd embed/rust; cargo build {profile} --target-dir=../../build/unix/rust --features "{" ".join(features)}"'
 
 rust = env.Command(
     target=RUST_LIBPATH,
