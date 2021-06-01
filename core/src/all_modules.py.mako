@@ -17,7 +17,35 @@ PATTERNS = (
     "apps/**/*.py",
 )
 
+ALTCOINS = (
+    "binance",
+    "cardano",
+    "eos",
+    "ethereum",
+    "lisk",
+    "monero",
+    "nem",
+    "ripple",
+    "stellar",
+    "tezos",
+    "webauthn",
+)
+
 pyfiles = chain.from_iterable(sorted(SRCDIR.glob(p)) for p in PATTERNS)
+
+def make_import_name(pyfile):
+    importfile = pyfile.relative_to(SRCDIR)
+    if importfile.name == "__init__.py":
+        import_name = str(importfile.parent)
+    else:
+        import_name = str(importfile.with_suffix(""))
+    return import_name.replace("/", ".")
+
+imports = [make_import_name(f) for f in pyfiles]
+
+imports_common = [import_name for import_name in imports if not any(a in import_name.lower() for a in ALTCOINS)]
+imports_altcoin = [import_name for import_name in imports if import_name not in imports_common]
+
 %>\
 from trezor.utils import halt
 
@@ -44,17 +72,17 @@ halt("Tried to import excluded module.")
 # interned, and some operation somewhere (rendering?) is reading strings character by
 # character.
 
-% for pyfile in pyfiles:
-<%
-pyfile = pyfile.relative_to(SRCDIR)
-if pyfile.name == "__init__.py":
-    import_name = str(pyfile.parent)
-else:
-    import_name = str(pyfile.with_suffix(""))
-import_name = import_name.replace("/", ".")
-%>\
+from trezor import utils
+
+% for import_name in imports_common:
 ${import_name}
 import ${import_name}
+% endfor
+
+if utils.BITCOIN_ONLY:
+% for import_name in imports_altcoin:
+    ${import_name}
+    import ${import_name}
 % endfor
 
 # generate full alphabet
