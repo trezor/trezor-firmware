@@ -30,12 +30,10 @@ SOURCE_HOST = 2
 class ApplySettingsCompat(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 25
 
-    @classmethod
-    def get_fields(cls):
-        return {
-            3: ("use_passphrase", protobuf.BoolType, 0),
-            5: ("passphrase_source", protobuf.UVarintType, 0),
-        }
+    FIELDS = {
+        3: protobuf.Field("use_passphrase", "bool"),
+        5: protobuf.Field("passphrase_source", "uint32"),
+    }
 
 
 mapping.map_class_to_type[ApplySettingsCompat] = ApplySettingsCompat.MESSAGE_WIRE_TYPE
