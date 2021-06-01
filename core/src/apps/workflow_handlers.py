@@ -46,10 +46,6 @@ def find_message_handler_module(msg_type: int) -> str:
         return "apps.management.apply_flags"
     elif msg_type == MessageType.ChangePin:
         return "apps.management.change_pin"
-    elif msg_type == MessageType.SetU2FCounter:
-        return "apps.management.set_u2f_counter"
-    elif msg_type == MessageType.GetNextU2FCounter:
-        return "apps.management.get_next_u2f_counter"
     elif msg_type == MessageType.SdProtect:
         return "apps.management.sd_protect"
     elif msg_type == MessageType.ChangeWipeCode:
@@ -86,6 +82,11 @@ def find_message_handler_module(msg_type: int) -> str:
     elif not utils.BITCOIN_ONLY:
         if False:
             raise RuntimeError
+
+        elif msg_type == MessageType.SetU2FCounter:
+            return "apps.management.set_u2f_counter"
+        elif msg_type == MessageType.GetNextU2FCounter:
+            return "apps.management.get_next_u2f_counter"
 
         # webauthn
         elif msg_type == MessageType.WebAuthnListResidentCredentials:
