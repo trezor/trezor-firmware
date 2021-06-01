@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import device, exceptions, messages, protobuf
+from trezorlib import device, exceptions, messages
 
 from .. import buttons
 from ..common import MNEMONIC12
@@ -180,16 +180,16 @@ def _make_bad_params():
     """Generate a list of field names that must NOT be set on a dry-run message,
     and default values of the appropriate type.
     """
-    for fname, ftype, _ in messages.RecoveryDevice.get_fields().values():
-        if fname in DRY_RUN_ALLOWED_FIELDS:
+    for field in messages.RecoveryDevice.FIELDS.values():
+        if field.name in DRY_RUN_ALLOWED_FIELDS:
             continue
 
-        if ftype is protobuf.UVarintType:
-            yield fname, 1
-        elif ftype is protobuf.BoolType:
-            yield fname, True
-        elif ftype is protobuf.UnicodeType:
-            yield fname, "test"
+        if "int" in field.type:
+            yield field.name, 1
+        elif field.type == "bool":
+            yield field.name, True
+        elif field.type == "string":
+            yield field.name, "test"
         else:
             # Someone added a field to RecoveryDevice of a type that has no assigned
             # default value. This test must be fixed.

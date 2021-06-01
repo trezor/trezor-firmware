@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from enum import IntEnum
 from io import BytesIO
 import logging
 
@@ -22,39 +23,50 @@ import pytest
 from trezorlib import protobuf
 
 
+class SomeEnum(IntEnum):
+    Zero = 0
+    Five = 5
+    TwentyFive = 25
+
+
+class WiderEnum(IntEnum):
+    One = 1
+    Two = 2
+    Three = 3
+    Four = 4
+    Five = 5
+
+
+class NarrowerEnum(IntEnum):
+    One = 1
+    Five = 5
+
+
 class PrimitiveMessage(protobuf.MessageType):
-    @classmethod
-    def get_fields(cls):
-        return {
-            1: ("uvarint", protobuf.UVarintType, None),
-            2: ("svarint", protobuf.SVarintType, None),
-            3: ("bool", protobuf.BoolType, None),
-            4: ("bytes", protobuf.BytesType, None),
-            5: ("unicode", protobuf.UnicodeType, None),
-            6: ("enum", protobuf.EnumType("t", (0, 5, 25)), None),
-        }
+    FIELDS = {
+        1: protobuf.Field("uvarint", "uint64"),
+        2: protobuf.Field("svarint", "sint64"),
+        3: protobuf.Field("bool", "bool"),
+        4: protobuf.Field("bytes", "bytes"),
+        5: protobuf.Field("unicode", "string"),
+        6: protobuf.Field("enum", SomeEnum),
+    }
 
 
 class EnumMessageMoreValues(protobuf.MessageType):
-    @classmethod
-    def get_fields(cls):
-        return {1: ("enum", protobuf.EnumType("t", (0, 1, 2, 3, 4, 5)), None)}
+    FIELDS = {1: protobuf.Field("enum", WiderEnum)}
 
 
 class EnumMessageLessValues(protobuf.MessageType):
-    @classmethod
-    def get_fields(cls):
-        return {1: ("enum", protobuf.EnumType("t", (0, 5)), None)}
+    FIELDS = {1: protobuf.Field("enum", NarrowerEnum)}
 
 
 class RepeatedFields(protobuf.MessageType):
-    @classmethod
-    def get_fields(cls):
-        return {
-            1: ("uintlist", protobuf.UVarintType, protobuf.FLAG_REPEATED),
-            2: ("enumlist", protobuf.EnumType("t", (0, 1)), protobuf.FLAG_REPEATED),
-            3: ("strlist", protobuf.UnicodeType, protobuf.FLAG_REPEATED),
-        }
+    FIELDS = {
+        1: protobuf.Field("uintlist", "uint64", repeated=True),
+        2: protobuf.Field("enumlist", SomeEnum, repeated=True),
+        3: protobuf.Field("strlist", "string", repeated=True),
+    }
 
 
 def load_uvarint(buffer):
@@ -130,7 +142,7 @@ def test_simple_message():
         bool=True,
         bytes=b"\xDE\xAD\xCA\xFE",
         unicode="Příliš žluťoučký kůň úpěl ďábelské ódy 😊",
-        enum=5,
+        enum=SomeEnum.Five,
     )
 
     buf = dump_message(msg)
@@ -142,13 +154,14 @@ def test_simple_message():
     assert retr.bool is True
     assert retr.bytes == b"\xDE\xAD\xCA\xFE"
     assert retr.unicode == "Příliš žluťoučký kůň úpěl ďábelské ódy 😊"
+    assert retr.enum == SomeEnum.Five
     assert retr.enum == 5
 
 
 def test_validate_enum(caplog):
     caplog.set_level(logging.INFO)
     # round-trip of a valid value
-    msg = EnumMessageMoreValues(enum=0)
+    msg = EnumMessageMoreValues(enum=WiderEnum.Five)
     buf = dump_message(msg)
     retr = load_message(buf, EnumMessageLessValues)
     assert retr.enum == msg.enum
@@ -157,42 +170,30 @@ def test_validate_enum(caplog):
 
     # dumping an invalid enum value fails
     msg.enum = 19
+    with pytest.raises(
+        ValueError, match="Value 19 in field enum unknown for WiderEnum"
+    ):
+        dump_message(msg)
+
+    msg.enum = WiderEnum.Three
     buf = dump_message(msg)
+    retr = load_message(buf, EnumMessageLessValues)
 
     assert len(caplog.records) == 1
     record = caplog.records.pop(0)
     assert record.levelname == "INFO"
-    assert record.getMessage() == "Value 19 unknown for type t"
-
-    msg.enum = 3
-    buf = dump_message(msg)
-    load_message(buf, EnumMessageLessValues)
-
-    assert len(caplog.records) == 1
-    record = caplog.records.pop(0)
-    assert record.levelname == "INFO"
-    assert record.getMessage() == "Value 3 unknown for type t"
+    assert record.getMessage() == "On field enum: 3 is not a valid NarrowerEnum"
+    assert retr.enum == 3
 
 
 def test_repeated():
     msg = RepeatedFields(
-        uintlist=[1, 2, 3], enumlist=[0, 1, 0, 1], strlist=["hello", "world"]
+        uintlist=[1, 2, 3], enumlist=[0, 5, 0, 5], strlist=["hello", "world"]
     )
     buf = dump_message(msg)
     retr = load_message(buf, RepeatedFields)
 
     assert retr == msg
-
-
-def test_enum_in_repeated(caplog):
-    caplog.set_level(logging.INFO)
-
-    msg = RepeatedFields(enumlist=[0, 1, 2, 3])
-    dump_message(msg)
-    assert len(caplog.records) == 2
-    for record in caplog.records:
-        assert record.levelname == "INFO"
-        assert "unknown for type t" in record.getMessage()
 
 
 def test_packed():
@@ -224,12 +225,10 @@ def test_packed_enum():
 
 
 class RequiredFields(protobuf.MessageType):
-    @classmethod
-    def get_fields(cls):
-        return {
-            1: ("uvarint", protobuf.UVarintType, protobuf.FLAG_REQUIRED),
-            2: ("nested", PrimitiveMessage, protobuf.FLAG_REQUIRED),
-        }
+    FIELDS = {
+        1: protobuf.Field("uvarint", "uint64", required=True),
+        2: protobuf.Field("nested", PrimitiveMessage, required=True),
+    }
 
 
 def test_required():
@@ -260,16 +259,14 @@ def test_required():
 
 
 class DefaultFields(protobuf.MessageType):
-    @classmethod
-    def get_fields(cls):
-        return {
-            1: ("uvarint", protobuf.UVarintType, 42),
-            2: ("svarint", protobuf.SVarintType, -42),
-            3: ("bool", protobuf.BoolType, True),
-            4: ("bytes", protobuf.BytesType, b"hello"),
-            5: ("unicode", protobuf.UnicodeType, "hello"),
-            6: ("enum", protobuf.EnumType("t", (0, 5, 25)), 5),
-        }
+    FIELDS = {
+        1: protobuf.Field("uvarint", "uint32", default=42),
+        2: protobuf.Field("svarint", "sint32", default=-42),
+        3: protobuf.Field("bool", "bool", default=True),
+        4: protobuf.Field("bytes", "bytes", default=b"hello"),
+        5: protobuf.Field("unicode", "string", default="hello"),
+        6: protobuf.Field("enum", SomeEnum, default=SomeEnum.Five),
+    }
 
 
 def test_default():
@@ -280,7 +277,7 @@ def test_default():
     assert retr.bool is True
     assert retr.bytes == b"hello"
     assert retr.unicode == "hello"
-    assert retr.enum == 5
+    assert retr.enum == SomeEnum.Five
 
     msg = DefaultFields(uvarint=0)
     buf = dump_message(msg)

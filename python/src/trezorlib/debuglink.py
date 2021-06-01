@@ -18,6 +18,7 @@ import logging
 import textwrap
 from collections import namedtuple
 from copy import deepcopy
+from enum import IntEnum
 
 from mnemonic import Mnemonic
 
@@ -285,11 +286,11 @@ class MessageFilter:
     @classmethod
     def from_message(cls, message):
         fields = {}
-        for fname, _, _ in message.get_fields().values():
-            value = getattr(message, fname)
-            if value in (None, [], protobuf.FLAG_REQUIRED):
+        for field in message.FIELDS.values():
+            value = getattr(message, field.name)
+            if value in (None, [], protobuf.REQUIRED_FIELD_PLACEHOLDER):
                 continue
-            fields[fname] = value
+            fields[field.name] = value
         return cls(type(message), **fields)
 
     def match(self, message):
@@ -308,12 +309,12 @@ class MessageFilter:
 
     def format(self, maxwidth=80):
         fields = []
-        for fname, ftype, _ in self.message_type.get_fields().values():
-            if fname not in self.fields:
+        for field in self.message_type.FIELDS.values():
+            if field.name not in self.fields:
                 continue
-            value = self.fields[fname]
-            if isinstance(ftype, protobuf.EnumType) and isinstance(value, int):
-                field_str = ftype.to_str(value)
+            value = self.fields[field.name]
+            if isinstance(value, IntEnum):
+                field_str = value.name
             elif isinstance(value, MessageFilter):
                 field_str = value.format(maxwidth - 4)
             elif isinstance(value, protobuf.MessageType):
@@ -321,7 +322,7 @@ class MessageFilter:
             else:
                 field_str = repr(value)
             field_str = textwrap.indent(field_str, "    ").lstrip()
-            fields.append((fname, field_str))
+            fields.append((field.name, field_str))
 
         pairs = ["{}={}".format(k, v) for k, v in fields]
         oneline_str = ", ".join(pairs)
