@@ -14,9 +14,12 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import pytest
+
 from trezorlib import fido
 
 
+@pytest.mark.altcoin
 def test_u2f_counter(client):
     assert fido.get_next_counter(client) == 0
     assert fido.get_next_counter(client) == 1
