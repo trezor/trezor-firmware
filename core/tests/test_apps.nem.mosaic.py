@@ -129,39 +129,39 @@ class TestNemMosaic(unittest.TestCase):
         b.quantity = 1
         b.mosaic = 'mosaic'
         res = sort_mosaics([a, b])
-        self.assertEqual(res, [b, a])
+        self.assertListEqual(res, [b, a])
 
         a.namespace = ''
         b.namespace = 'a.b.c'
         res = sort_mosaics([a, b])
-        self.assertEqual(res, [a, b])
+        self.assertListEqual(res, [a, b])
 
         a.namespace = 'z.z.z'
         b.namespace = 'a.b.c'
         res = sort_mosaics([a, b])
-        self.assertEqual(res, [b, a])
+        self.assertListEqual(res, [b, a])
 
         a.namespace = 'a'
         b.namespace = 'a'
         a.mosaic = 'mosaic'
         b.mosaic = 'mosaic'
         res = sort_mosaics([a, b])
-        self.assertEqual(res, [a, b])
+        self.assertListEqual(res, [a, b])
 
         a.mosaic = 'www'
         b.mosaic = 'aaa'
         res = sort_mosaics([a, b])
-        self.assertEqual(res, [b, a])
+        self.assertListEqual(res, [b, a])
 
         c = NEMMosaic()
         c.namespace = 'a'
         c.mosaic = 'zzz'
         res = sort_mosaics([a, b, c])
-        self.assertEqual(res, [b, a, c])
+        self.assertListEqual(res, [b, a, c])
 
         c.mosaic = 'bbb'
         res = sort_mosaics([a, b, c])
-        self.assertEqual(res, [b, c, a])
+        self.assertListEqual(res, [b, c, a])
 
 
 if __name__ == '__main__':
