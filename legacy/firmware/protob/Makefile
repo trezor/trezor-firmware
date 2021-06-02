@@ -12,13 +12,21 @@ ifeq ($(BITCOIN_ONLY), 1)
 SKIPPED_MESSAGES += Ethereum Lisk NEM Stellar
 endif
 
-all: messages_map.h messages_map_limits.h messages-bitcoin.pb.h messages-common.pb.h messages-crypto.pb.h messages-debug.pb.h messages-ethereum.pb.h messages-management.pb.h messages-nem.pb.h messages.pb.h messages-stellar.pb.h messages-lisk.pb.h messages_nem_pb2.py
+PROTO_NAMES = messages messages-bitcoin messages-common messages-crypto messages-debug \
+	messages-ethereum messages-lisk messages-management messages-nem messages-stellar
+
+PROTO_OPTIONS = $(PROTO_NAMES:=.options)
+PROTO_COMPILED = $(PROTO_NAMES:=.pb)
+PROTO_HEADERS = $(PROTO_COMPILED:=.h)
+
+all: messages_map.h messages_map_limits.h messages.pb.h
 
 PYTHON ?= python
 
-%.pb.h: %.pb %.options
+# produces also all of $(PROTO_HEADERS)
+messages.pb.h: $(PROTO_COMPILED) $(PROTO_OPTIONS)
 	@printf "  NANOPB  $@\n"
-	$(Q)nanopb_generator $< \
+	$(Q)nanopb_generator $(PROTO_COMPILED) \
 		-L '#include "%s"' \
 		-T -D . \
 		-s "mangle_names:M_FLATTEN"
@@ -27,10 +35,6 @@ PYTHON ?= python
 %.pb: %.proto
 	@printf "  PROTOC  $@\n"
 	$(Q)protoc -I/usr/include -I. $< -o $@
-
-messages_%_pb2.py: messages-%.proto
-	@printf "  PROTOC  $@\n"
-	$(Q)protoc -I/usr/include -I. $< --python_out=.
 
 %_pb2.py: %.proto
 	@printf "  PROTOC  $@\n"
