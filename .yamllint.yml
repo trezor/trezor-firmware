@@ -1,9 +1,10 @@
 extends: default
 
 ignore: |
+  /.venv
   vendor/
-  common/defs/ethereum/chains/
-  common/defs/ethereum/tokens/
+  /common/defs/ethereum/chains/
+  /common/defs/ethereum/tokens/
 
 rules:
   # fix for truthy warning on github action files
