@@ -54,9 +54,6 @@ def _hash_files(path):
 
 
 def _process_tested(fixture_test_path, test_name):
-    expected_hash = FILE_HASHES.get(test_name)
-    if expected_hash is None:
-        raise ValueError("Hash for '%s' not found in fixtures.json" % test_name)
     PROCESSED.add(test_name)
 
     actual_path = fixture_test_path / "actual"
@@ -64,6 +61,10 @@ def _process_tested(fixture_test_path, test_name):
     ACTUAL_HASHES[test_name] = actual_hash
 
     _rename_records(actual_path)
+
+    expected_hash = FILE_HASHES.get(test_name)
+    if expected_hash is None:
+        pytest.fail(f"Hash of {test_name} not found in fixtures.json")
 
     if actual_hash != expected_hash:
         file_path = testreport.failed(
