@@ -1898,6 +1898,32 @@ START_TEST(test_bip32_vector_4) {
   memcpy(&node3, &node, sizeof(HDNode));
   memzero(&node3.private_key, 32);
   ck_assert_mem_eq(&node2, &node3, sizeof(HDNode));
+
+  // [Chain m/0'/1']
+  fingerprint = hdnode_fingerprint(&node);
+  r = hdnode_private_ckd_prime(&node, 1);
+  ck_assert_int_eq(r, 1);
+  hdnode_fill_public_key(&node);
+  hdnode_serialize_private(&node, fingerprint, VERSION_PRIVATE, str,
+                           sizeof(str));
+  ck_assert_str_eq(str,
+                   "xprv9xJocDuwtYCMNAo3Zw76WENQeAS6WGXQ55RCy7tDJ8oALr4FWkuVoHJ"
+                   "eHVAcAqiZLE7Je3vZJHxspZdFHfnBEjHqU5hG1Jaj32dVoS6XLT1");
+  r = hdnode_deserialize_private(str, VERSION_PRIVATE, SECP256K1_NAME, &node2,
+                                 NULL);
+  ck_assert_int_eq(r, 0);
+  hdnode_fill_public_key(&node2);
+  ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
+  hdnode_serialize_public(&node, fingerprint, VERSION_PUBLIC, str, sizeof(str));
+  ck_assert_str_eq(str,
+                   "xpub6BJA1jSqiukeaesWfxe6sNK9CCGaujFFSJLomWHprUL9DePQ4JDkM5d"
+                   "88n49sMGJxrhpjazuXYWdMf17C9T5XnxkopaeS7jGk1GyyVziaMt");
+  r = hdnode_deserialize_public(str, VERSION_PUBLIC, SECP256K1_NAME, &node2,
+                                NULL);
+  ck_assert_int_eq(r, 0);
+  memcpy(&node3, &node, sizeof(HDNode));
+  memzero(&node3.private_key, 32);
+  ck_assert_mem_eq(&node2, &node3, sizeof(HDNode));
 }
 END_TEST
 
