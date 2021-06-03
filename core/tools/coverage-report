@@ -6,10 +6,14 @@ coverage run --source=./src /dev/null 2>/dev/null
 mv .coverage .coverage.empty
 coverage combine .coverage.*
 
+EXCLUDES="\
+src/all_modules.py,\
+src/apps/ethereum/tokens.py,\
+src/trezor/messages.py,\
+src/trezor/enums/__init__.py"
+
 coverage html \
-  --omit=src/trezor/messages/* \
-  --omit=src/all_modules.py \
-  --omit=src/apps/ethereum/tokens.py \
+  --omit="$EXCLUDES" \
   --fail-under=${COVERAGE_THRESHOLD}
 
 if [ $? -eq 2 ]; then
