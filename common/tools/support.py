@@ -498,8 +498,8 @@ def set_support_value(key, entries, reason):
             set_supported(device, key, True)
         elif value in ("no", "false", "0"):
             if device in coin_info.MISSING_SUPPORT_MEANS_NO:
-                click.echo("Setting explicitly unsupported for {device}.")
-                click.echo("Perhaps you meant removing support, i.e., '{device}=' ?")
+                click.echo(f"Setting explicitly unsupported for {device}.")
+                click.echo(f"Perhaps you meant removing support, i.e., '{device}=' ?")
             if not reason:
                 reason = click.prompt(f"Enter reason for not supporting on {device}:")
             set_unsupported(device, key, reason)
