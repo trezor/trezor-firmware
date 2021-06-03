@@ -21,19 +21,20 @@
 #define __COMPILER_TRAITS_H__
 
 /*
- * Avoid accidental build with gcc versions having broken stack protector 9.2.1 - 10.2
+ * Avoid accidental build with gcc versions having broken stack protector.
+ * Affected versions range 9.2.1 - 10.2
  */
 #if defined(__GNUC__) && !defined(__llvm__)
 
-#define GCC_VERSION (__GNUC__ * 10000 \
-                     + __GNUC_MINOR__ * 100 \
-                     + __GNUC_PATCHLEVEL__)
+#define GCC_VERSION \
+  (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 
 #if GCC_VERSION >= 90201 && GCC_VERSION <= 100200
-#pragma message "Only remove this GCC check if you are sure your compiler is patched or not used for production."
-#error "ARM GCC versions 9.2.1 - 10.2 have broken stack smash protector, aborting build."
+#pragma message \
+    "Only remove this GCC check if you are sure your compiler is patched or not used for production."
+#error \
+    "ARM GCC versions 9.2.1 - 10.2 have broken stack smash protector, aborting build."
 #endif
 #endif
 
 #endif
-
