@@ -25,6 +25,7 @@
 
 #include "bootloader.h"
 #include "buttons.h"
+#include "compiler_traits.h"
 #include "layout.h"
 #include "memory.h"
 #include "oled.h"
