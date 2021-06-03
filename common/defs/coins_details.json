@@ -389,24 +389,6 @@
                 }
             ]
         },
-        "bitcoin:HATCH": {
-            "links": {
-                "Github": "https://github.com/hatchpay/hatch",
-                "Homepage": "https://hatch.ga"
-            },
-            "marketcap_usd": 0,
-            "name": "Hatch",
-            "shortcut": "HATCH",
-            "t1_enabled": "yes",
-            "t2_enabled": "yes",
-            "type": "coin",
-            "wallet": [
-                {
-                    "name": "HMT",
-                    "url": "https://github.com/hatchpay/hatch-masternode-tool/"
-                }
-            ]
-        },
         "bitcoin:KMD": {
             "links": {
                 "Github": "https://github.com/komodoplatform/komodo",
