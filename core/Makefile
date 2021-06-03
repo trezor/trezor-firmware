@@ -42,7 +42,7 @@ FIRMWARE_P1_MAXSIZE = 786432
 FIRMWARE_P2_MAXSIZE = 917504
 FIRMWARE_MAXSIZE    = 1703936
 
-GITREV=$(shell git describe --always --dirty | tr '-' '_')
+GITREV=$(shell git describe --always --dirty --match 'core/*' | tr '-' '_')
 CFLAGS += -DGITREV=$(GITREV)
 
 TESTPATH = $(CURDIR)/../tests
