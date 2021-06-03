@@ -22,6 +22,7 @@
 #include "bl_check.h"
 #include "buttons.h"
 #include "common.h"
+#include "compiler_traits.h"
 #include "config.h"
 #include "gettext.h"
 #include "layout.h"
@@ -36,20 +37,6 @@
 #if !EMULATOR
 #include <libopencm3/stm32/desig.h>
 #include "otp.h"
-#endif
-
-/*
- * Avoid accidental build with gcc versions having broken stack protector 9.2.1 - 10.2
- */
-#if defined(__GNUC__) && !defined(__llvm__)
-
-#define GCC_VERSION (__GNUC__ * 10000 \
-                     + __GNUC_MINOR__ * 100 \
-                     + __GNUC_PATCHLEVEL__)
-
-#if GCC_VERSION >= 90201 && GCC_VERSION <= 100200
-#error "ARM GCC versions 9.2.1 - 10.2 have broken stack smash protector, preventing build"
-#endif
 #endif
 
 /* Screen timeout */
