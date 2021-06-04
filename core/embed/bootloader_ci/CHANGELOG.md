@@ -16,17 +16,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Security
 
+## 1.0.1 [Jan 2021]
 
-------------
-
-### Older changelog:
-
-Version 1.0.1 [Jan 2021]
-* decouple files from original bootloader as it will be reworked and symlink
+### Added
+- Decouple files from original bootloader as it will be reworked and symlink
   magic will break
-* version in version.h must be kept to match the original bootloader,
+- Version in version.h must be kept to match the original bootloader,
   otherwise firmware update will fail (bootloader will look too old)
 
-Version 1.0.0 [Aug 2020]
-* initial version
+## 1.0.0 [Aug 2020]
 
+### Added
+- Initial version

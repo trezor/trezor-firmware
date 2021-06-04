@@ -16,17 +16,3 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Security
 
-
-------------
-
-### Older changelog:
-
-Version 2.0.3 [Mar 2019]
-* enable MPU
-* introduce delays to USB stack
-
-Version 2.0.2 [Dec 2018]
-* add support for a new display driver
-
-Version 2.0.1 [Feb 2018]
-* first public release
