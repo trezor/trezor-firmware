@@ -91,6 +91,7 @@ if not utils.BITCOIN_ONLY:
     EthereumGetAddress = 56
     EthereumAddress = 57
     EthereumSignTx = 58
+    EthereumSignTxEIP1559 = 452
     EthereumTxRequest = 59
     EthereumTxAck = 60
     EthereumSignMessage = 64

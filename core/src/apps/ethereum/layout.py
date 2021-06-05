@@ -3,7 +3,12 @@ from ubinascii import hexlify
 from trezor import ui
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount
-from trezor.ui.layouts import confirm_address, confirm_blob, confirm_output
+from trezor.ui.layouts import (
+    confirm_address,
+    confirm_amount,
+    confirm_blob,
+    confirm_output,
+)
 from trezor.ui.layouts.tt.altcoin import confirm_total_ethereum
 
 from . import networks, tokens
@@ -33,6 +38,29 @@ async def require_confirm_fee(
         format_ethereum_amount(spending, token, chain_id, tx_type),
         format_ethereum_amount(gas_price, None, chain_id, tx_type),
         format_ethereum_amount(gas_price * gas_limit, None, chain_id, tx_type),
+    )
+
+
+async def require_confirm_eip1559_fee(
+    ctx, max_priority_fee, max_gas_fee, gas_limit, chain_id
+):
+    await confirm_amount(
+        ctx,
+        title="Confirm fee",
+        description="Maximum fee per gas",
+        amount=format_ethereum_amount(max_gas_fee, None, chain_id),
+    )
+    await confirm_amount(
+        ctx,
+        title="Confirm fee",
+        description="Priority fee per gas",
+        amount=format_ethereum_amount(max_priority_fee, None, chain_id),
+    )
+    await confirm_amount(
+        ctx,
+        title="Confirm fee",
+        description="Maximum fee",
+        amount=format_ethereum_amount(max_gas_fee * gas_limit, None, chain_id),
     )
 
 

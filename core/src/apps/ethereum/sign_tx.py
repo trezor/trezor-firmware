@@ -23,29 +23,14 @@ MAX_CHAIN_ID = 2147483629
 @with_keychain_from_chain_id
 async def sign_tx(ctx, msg, keychain):
     msg = sanitize(msg)
+
     check(msg)
     await paths.validate_path(ctx, keychain, msg.address_n)
 
+    # Handle ERC20s
+    token, address_bytes, recipient, value = await handle_erc20(ctx, msg)
+
     data_total = msg.data_length
-
-    # detect ERC - 20 token
-    token = None
-    address_bytes = recipient = address.bytes_from_address(msg.to)
-    value = int.from_bytes(msg.value, "big")
-    if (
-        len(msg.to) in (40, 42)
-        and len(msg.value) == 0
-        and data_total == 68
-        and len(msg.data_initial_chunk) == 68
-        and msg.data_initial_chunk[:16]
-        == b"\xa9\x05\x9c\xbb\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-    ):
-        token = tokens.token_by_chain_address(msg.chain_id, address_bytes)
-        recipient = msg.data_initial_chunk[16:36]
-        value = int.from_bytes(msg.data_initial_chunk[36:68], "big")
-
-        if token is tokens.UNKNOWN_TOKEN:
-            await require_confirm_unknown_token(ctx, address_bytes)
 
     await require_confirm_tx(ctx, recipient, value, msg.chain_id, token, msg.tx_type)
     if token is None and msg.data_length > 0:
@@ -99,6 +84,28 @@ async def sign_tx(ctx, msg, keychain):
     return result
 
 
+async def handle_erc20(ctx, msg):
+    token = None
+    address_bytes = recipient = address.bytes_from_address(msg.to)
+    value = int.from_bytes(msg.value, "big")
+    if (
+        len(msg.to) in (40, 42)
+        and len(msg.value) == 0
+        and msg.data_length == 68
+        and len(msg.data_initial_chunk) == 68
+        and msg.data_initial_chunk[:16]
+        == b"\xa9\x05\x9c\xbb\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    ):
+        token = tokens.token_by_chain_address(msg.chain_id, address_bytes)
+        recipient = msg.data_initial_chunk[16:36]
+        value = int.from_bytes(msg.data_initial_chunk[36:68], "big")
+
+        if token is tokens.UNKNOWN_TOKEN:
+            await require_confirm_unknown_token(ctx, address_bytes)
+
+    return token, address_bytes, recipient, value
+
+
 def get_total_length(msg: EthereumSignTx, data_total: int) -> int:
     length = 0
     if msg.tx_type is not None:
@@ -120,6 +127,7 @@ def get_total_length(msg: EthereumSignTx, data_total: int) -> int:
 
     length += rlp.header_length(data_total, msg.data_initial_chunk)
     length += data_total
+
     return length
 
 
@@ -157,9 +165,14 @@ def check(msg: EthereumSignTx):
     if msg.tx_type not in [1, 6, None]:
         raise wire.DataError("tx_type out of bounds")
 
-    if msg.chain_id < 0:
-        raise wire.DataError("chain_id out of bounds")
+    check_data(msg)
 
+    # safety checks
+    if not check_gas(msg) or not check_to(msg):
+        raise wire.DataError("Safety check failed")
+
+
+def check_data(msg: EthereumSignTx):
     if msg.data_length > 0:
         if not msg.data_initial_chunk:
             raise wire.DataError("Data length provided, but no initial chunk")
@@ -169,10 +182,6 @@ def check(msg: EthereumSignTx):
             raise wire.DataError("Data length exceeds limit")
         if len(msg.data_initial_chunk) > msg.data_length:
             raise wire.DataError("Invalid size of initial chunk")
-
-    # safety checks
-    if not check_gas(msg) or not check_to(msg):
-        raise wire.DataError("Safety check failed")
 
 
 def check_gas(msg: EthereumSignTx) -> bool:

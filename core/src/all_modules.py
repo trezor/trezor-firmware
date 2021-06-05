@@ -496,6 +496,8 @@ if utils.BITCOIN_ONLY:
     import apps.ethereum.sign_message
     apps.ethereum.sign_tx
     import apps.ethereum.sign_tx
+    apps.ethereum.sign_tx_eip1559
+    import apps.ethereum.sign_tx_eip1559
     apps.ethereum.tokens
     import apps.ethereum.tokens
     apps.ethereum.verify_message

@@ -17,6 +17,7 @@
 import re
 import sys
 from decimal import Decimal
+from typing import List
 
 import click
 
@@ -74,6 +75,25 @@ def _amount_to_int(ctx, param, value):
         raise click.BadParameter("Amount not understood")
 
 
+def _parse_access_list(ctx, param, value):
+    try:
+        return [_parse_access_list_item(val) for val in value]
+
+    except Exception:
+        raise click.BadParameter("Access List format invalid")
+
+
+def _parse_access_list_item(value):
+    try:
+        arr = value.split(":")
+        address, storage_keys = arr[0], arr[1:]
+        storage_keys_bytes = [_decode_hex(key) for key in storage_keys]
+        return ethereum.messages.EthereumAccessList(address, storage_keys_bytes)
+
+    except Exception:
+        raise click.BadParameter("Access List format invalid")
+
+
 def _list_units(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
@@ -105,6 +125,14 @@ def _erc20_contract(w3, token_address, to_address, amount):
     ]
     contract = w3.eth.contract(address=token_address, abi=min_abi)
     return contract.encodeABI("transfer", [to_address, amount])
+
+
+def _format_access_list(access_list: List[ethereum.messages.EthereumAccessList]):
+    mapped = map(
+        lambda item: [_decode_hex(item.address), item.storage_keys],
+        access_list,
+    )
+    return list(mapped)
 
 
 #####################
@@ -166,8 +194,22 @@ def get_public_node(client, address, show_display):
 )
 @click.option("-d", "--data", help="Data as hex string, e.g. 0x12345678")
 @click.option("-p", "--publish", is_flag=True, help="Publish transaction via RPC")
-@click.option("-x", "--tx-type", type=int, help="TX type (used only for Wanchain)")
+@click.option("-x", "--tx-type", type=int, help="TX type")
 @click.option("-t", "--token", help="ERC20 token address")
+@click.option(
+    "-a",
+    "--access-list",
+    help="Access List",
+    callback=_parse_access_list,
+    multiple=True,
+)
+@click.option("--max-gas-fee", help="Max Gas Fee (EIP1559)", callback=_amount_to_int)
+@click.option(
+    "--max-priority-fee",
+    help="Max Priority Fee (EIP1559)",
+    callback=_amount_to_int,
+)
+@click.option("-e", "--eip2718-type", type=int, help="EIP2718 tx type")
 @click.option(
     "--list-units",
     is_flag=True,
@@ -192,6 +234,10 @@ def sign_tx(
     to_address,
     tx_type,
     token,
+    max_gas_fee,
+    max_priority_fee,
+    access_list,
+    eip2718_type,
 ):
     """Sign (and optionally publish) Ethereum transaction.
 
@@ -216,9 +262,11 @@ def sign_tx(
         click.echo("  pip install web3 rlp")
         sys.exit(1)
 
+    is_eip1559 = eip2718_type == 2
     w3 = web3.Web3()
     if (
-        any(x is None for x in (gas_price, gas_limit, nonce))
+        (not is_eip1559 and gas_price is None)
+        or any(x is None for x in (gas_limit, nonce))
         or publish
         and not w3.isConnected()
     ):
@@ -246,7 +294,7 @@ def sign_tx(
     else:
         data = b""
 
-    if gas_price is None:
+    if gas_price is None and not is_eip1559:
         gas_price = w3.eth.gasPrice
 
     if gas_limit is None:
@@ -262,27 +310,61 @@ def sign_tx(
     if nonce is None:
         nonce = w3.eth.getTransactionCount(from_address)
 
-    sig = ethereum.sign_tx(
-        client,
-        n=address_n,
-        tx_type=tx_type,
-        nonce=nonce,
-        gas_price=gas_price,
-        gas_limit=gas_limit,
-        to=to_address,
-        value=amount,
-        data=data,
-        chain_id=chain_id,
+    sig = (
+        ethereum.sign_tx_eip1559(
+            client,
+            n=address_n,
+            nonce=nonce,
+            gas_limit=gas_limit,
+            to=to_address,
+            value=amount,
+            data=data,
+            chain_id=chain_id,
+            max_gas_fee=max_gas_fee,
+            max_priority_fee=max_priority_fee,
+            access_list=access_list,
+        )
+        if is_eip1559
+        else ethereum.sign_tx(
+            client,
+            n=address_n,
+            tx_type=tx_type,
+            nonce=nonce,
+            gas_price=gas_price,
+            gas_limit=gas_limit,
+            to=to_address,
+            value=amount,
+            data=data,
+            chain_id=chain_id,
+        )
     )
 
     to = _decode_hex(to_address)
-    if tx_type is None:
+    if is_eip1559:
+        transaction = rlp.encode(
+            (
+                chain_id,
+                nonce,
+                max_priority_fee,
+                max_gas_fee,
+                gas_limit,
+                to,
+                amount,
+                data,
+                _format_access_list(access_list) if access_list is not None else [],
+            )
+            + sig
+        )
+    elif tx_type is None:
         transaction = rlp.encode((nonce, gas_price, gas_limit, to, amount, data) + sig)
     else:
         transaction = rlp.encode(
             (tx_type, nonce, gas_price, gas_limit, to, amount, data) + sig
         )
-    tx_hex = "0x%s" % transaction.hex()
+    tx_hex = "0x%s%s" % (
+        str(eip2718_type).zfill(2) if eip2718_type is not None else "",
+        transaction.hex(),
+    )
 
     if publish:
         tx_hash = w3.eth.sendRawTransaction(tx_hex).hex()

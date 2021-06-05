@@ -117,6 +117,7 @@ class MessageType(IntEnum):
     EthereumGetAddress = 56
     EthereumAddress = 57
     EthereumSignTx = 58
+    EthereumSignTxEIP1559 = 452
     EthereumTxRequest = 59
     EthereumTxAck = 60
     EthereumSignMessage = 64
@@ -3971,6 +3972,50 @@ class EthereumSignTx(protobuf.MessageType):
         self.tx_type = tx_type
 
 
+class EthereumSignTxEIP1559(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 452
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
+        2: protobuf.Field("nonce", "bytes", repeated=False, required=True),
+        3: protobuf.Field("max_gas_fee", "bytes", repeated=False, required=True),
+        4: protobuf.Field("max_priority_fee", "bytes", repeated=False, required=True),
+        5: protobuf.Field("gas_limit", "bytes", repeated=False, required=True),
+        6: protobuf.Field("to", "string", repeated=False, required=False),
+        7: protobuf.Field("value", "bytes", repeated=False, required=True),
+        8: protobuf.Field("data_initial_chunk", "bytes", repeated=False, required=False),
+        9: protobuf.Field("data_length", "uint32", repeated=False, required=True),
+        10: protobuf.Field("chain_id", "uint32", repeated=False, required=True),
+        11: protobuf.Field("access_list", "EthereumAccessList", repeated=True, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        nonce: "bytes",
+        max_gas_fee: "bytes",
+        max_priority_fee: "bytes",
+        gas_limit: "bytes",
+        value: "bytes",
+        data_length: "int",
+        chain_id: "int",
+        address_n: Optional[List["int"]] = None,
+        access_list: Optional[List["EthereumAccessList"]] = None,
+        to: Optional["str"] = '',
+        data_initial_chunk: Optional["bytes"] = b'',
+    ) -> None:
+        self.address_n = address_n if address_n is not None else []
+        self.access_list = access_list if access_list is not None else []
+        self.nonce = nonce
+        self.max_gas_fee = max_gas_fee
+        self.max_priority_fee = max_priority_fee
+        self.gas_limit = gas_limit
+        self.value = value
+        self.data_length = data_length
+        self.chain_id = chain_id
+        self.to = to
+        self.data_initial_chunk = data_initial_chunk
+
+
 class EthereumTxRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 59
     FIELDS = {
@@ -4059,6 +4104,23 @@ class EthereumVerifyMessage(protobuf.MessageType):
     ) -> None:
         self.signature = signature
         self.message = message
+        self.address = address
+
+
+class EthereumAccessList(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("address", "string", repeated=False, required=True),
+        2: protobuf.Field("storage_keys", "bytes", repeated=True, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: "str",
+        storage_keys: Optional[List["bytes"]] = None,
+    ) -> None:
+        self.storage_keys = storage_keys if storage_keys is not None else []
         self.address = address
 
 

@@ -2962,6 +2962,40 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumSignTx"]:
             return isinstance(msg, cls)
 
+    class EthereumSignTxEIP1559(protobuf.MessageType):
+        address_n: "list[int]"
+        nonce: "bytes"
+        max_gas_fee: "bytes"
+        max_priority_fee: "bytes"
+        gas_limit: "bytes"
+        to: "str"
+        value: "bytes"
+        data_initial_chunk: "bytes"
+        data_length: "int"
+        chain_id: "int"
+        access_list: "list[EthereumAccessList]"
+
+        def __init__(
+            self,
+            *,
+            nonce: "bytes",
+            max_gas_fee: "bytes",
+            max_priority_fee: "bytes",
+            gas_limit: "bytes",
+            value: "bytes",
+            data_length: "int",
+            chain_id: "int",
+            address_n: "list[int] | None" = None,
+            access_list: "list[EthereumAccessList] | None" = None,
+            to: "str | None" = None,
+            data_initial_chunk: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumSignTxEIP1559"]:
+            return isinstance(msg, cls)
+
     class EthereumTxRequest(protobuf.MessageType):
         data_length: "int | None"
         signature_v: "int | None"
@@ -3044,6 +3078,22 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumVerifyMessage"]:
+            return isinstance(msg, cls)
+
+    class EthereumAccessList(protobuf.MessageType):
+        address: "str"
+        storage_keys: "list[bytes]"
+
+        def __init__(
+            self,
+            *,
+            address: "str",
+            storage_keys: "list[bytes] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumAccessList"]:
             return isinstance(msg, cls)
 
     class LiskGetAddress(protobuf.MessageType):

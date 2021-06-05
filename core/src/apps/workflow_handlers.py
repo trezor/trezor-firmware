@@ -103,6 +103,8 @@ def find_message_handler_module(msg_type: int) -> str:
             return "apps.ethereum.get_public_key"
         elif msg_type == MessageType.EthereumSignTx:
             return "apps.ethereum.sign_tx"
+        elif msg_type == MessageType.EthereumSignTxEIP1559:
+            return "apps.ethereum.sign_tx_eip1559"
         elif msg_type == MessageType.EthereumSignMessage:
             return "apps.ethereum.sign_message"
         elif msg_type == MessageType.EthereumVerifyMessage:
