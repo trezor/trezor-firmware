@@ -84,632 +84,632 @@ trezor.crypto.scripts
 import trezor.crypto.scripts
 trezor.crypto.slip39
 import trezor.crypto.slip39
+trezor.enums.Address
+import trezor.enums.Address
+trezor.enums.AmountUnit
+import trezor.enums.AmountUnit
+trezor.enums.ApplyFlags
+import trezor.enums.ApplyFlags
+trezor.enums.ApplySettings
+import trezor.enums.ApplySettings
+trezor.enums.AuthorizeCoinJoin
+import trezor.enums.AuthorizeCoinJoin
+trezor.enums.BackupDevice
+import trezor.enums.BackupDevice
+trezor.enums.BackupType
+import trezor.enums.BackupType
+trezor.enums.BinanceAddress
+import trezor.enums.BinanceAddress
+trezor.enums.BinanceCancelMsg
+import trezor.enums.BinanceCancelMsg
+trezor.enums.BinanceCoin
+import trezor.enums.BinanceCoin
+trezor.enums.BinanceGetAddress
+import trezor.enums.BinanceGetAddress
+trezor.enums.BinanceGetPublicKey
+import trezor.enums.BinanceGetPublicKey
+trezor.enums.BinanceInputOutput
+import trezor.enums.BinanceInputOutput
+trezor.enums.BinanceOrderMsg
+import trezor.enums.BinanceOrderMsg
+trezor.enums.BinanceOrderSide
+import trezor.enums.BinanceOrderSide
+trezor.enums.BinanceOrderType
+import trezor.enums.BinanceOrderType
+trezor.enums.BinancePublicKey
+import trezor.enums.BinancePublicKey
+trezor.enums.BinanceSignTx
+import trezor.enums.BinanceSignTx
+trezor.enums.BinanceSignedTx
+import trezor.enums.BinanceSignedTx
+trezor.enums.BinanceTimeInForce
+import trezor.enums.BinanceTimeInForce
+trezor.enums.BinanceTransferMsg
+import trezor.enums.BinanceTransferMsg
+trezor.enums.BinanceTxRequest
+import trezor.enums.BinanceTxRequest
+trezor.enums.ButtonAck
+import trezor.enums.ButtonAck
+trezor.enums.ButtonRequest
+import trezor.enums.ButtonRequest
+trezor.enums.ButtonRequestType
+import trezor.enums.ButtonRequestType
+trezor.enums.Cancel
+import trezor.enums.Cancel
+trezor.enums.CancelAuthorization
+import trezor.enums.CancelAuthorization
+trezor.enums.Capability
+import trezor.enums.Capability
+trezor.enums.CardanoAddress
+import trezor.enums.CardanoAddress
+trezor.enums.CardanoAddressParametersType
+import trezor.enums.CardanoAddressParametersType
+trezor.enums.CardanoAddressType
+import trezor.enums.CardanoAddressType
+trezor.enums.CardanoAssetGroupType
+import trezor.enums.CardanoAssetGroupType
+trezor.enums.CardanoBlockchainPointerType
+import trezor.enums.CardanoBlockchainPointerType
+trezor.enums.CardanoCatalystRegistrationParametersType
+import trezor.enums.CardanoCatalystRegistrationParametersType
+trezor.enums.CardanoCertificateType
+import trezor.enums.CardanoCertificateType
+trezor.enums.CardanoGetAddress
+import trezor.enums.CardanoGetAddress
+trezor.enums.CardanoGetPublicKey
+import trezor.enums.CardanoGetPublicKey
+trezor.enums.CardanoPoolMetadataType
+import trezor.enums.CardanoPoolMetadataType
+trezor.enums.CardanoPoolOwnerType
+import trezor.enums.CardanoPoolOwnerType
+trezor.enums.CardanoPoolParametersType
+import trezor.enums.CardanoPoolParametersType
+trezor.enums.CardanoPoolRelayParametersType
+import trezor.enums.CardanoPoolRelayParametersType
+trezor.enums.CardanoPoolRelayType
+import trezor.enums.CardanoPoolRelayType
+trezor.enums.CardanoPublicKey
+import trezor.enums.CardanoPublicKey
+trezor.enums.CardanoSignTx
+import trezor.enums.CardanoSignTx
+trezor.enums.CardanoSignedTx
+import trezor.enums.CardanoSignedTx
+trezor.enums.CardanoSignedTxChunk
+import trezor.enums.CardanoSignedTxChunk
+trezor.enums.CardanoSignedTxChunkAck
+import trezor.enums.CardanoSignedTxChunkAck
+trezor.enums.CardanoTokenType
+import trezor.enums.CardanoTokenType
+trezor.enums.CardanoTxAuxiliaryDataType
+import trezor.enums.CardanoTxAuxiliaryDataType
+trezor.enums.CardanoTxCertificateType
+import trezor.enums.CardanoTxCertificateType
+trezor.enums.CardanoTxInputType
+import trezor.enums.CardanoTxInputType
+trezor.enums.CardanoTxOutputType
+import trezor.enums.CardanoTxOutputType
+trezor.enums.CardanoTxWithdrawalType
+import trezor.enums.CardanoTxWithdrawalType
+trezor.enums.ChangePin
+import trezor.enums.ChangePin
+trezor.enums.ChangeWipeCode
+import trezor.enums.ChangeWipeCode
+trezor.enums.CipherKeyValue
+import trezor.enums.CipherKeyValue
+trezor.enums.CipheredKeyValue
+import trezor.enums.CipheredKeyValue
+trezor.enums.DebugLinkDecision
+import trezor.enums.DebugLinkDecision
+trezor.enums.DebugLinkEraseSdCard
+import trezor.enums.DebugLinkEraseSdCard
+trezor.enums.DebugLinkGetState
+import trezor.enums.DebugLinkGetState
+trezor.enums.DebugLinkLayout
+import trezor.enums.DebugLinkLayout
+trezor.enums.DebugLinkRecordScreen
+import trezor.enums.DebugLinkRecordScreen
+trezor.enums.DebugLinkReseedRandom
+import trezor.enums.DebugLinkReseedRandom
+trezor.enums.DebugLinkState
+import trezor.enums.DebugLinkState
+trezor.enums.DebugLinkWatchLayout
+import trezor.enums.DebugLinkWatchLayout
+trezor.enums.DebugMoneroDiagAck
+import trezor.enums.DebugMoneroDiagAck
+trezor.enums.DebugMoneroDiagRequest
+import trezor.enums.DebugMoneroDiagRequest
+trezor.enums.DebugSwipeDirection
+import trezor.enums.DebugSwipeDirection
+trezor.enums.DecredStakingSpendType
+import trezor.enums.DecredStakingSpendType
+trezor.enums.Deprecated_PassphraseStateAck
+import trezor.enums.Deprecated_PassphraseStateAck
+trezor.enums.Deprecated_PassphraseStateRequest
+import trezor.enums.Deprecated_PassphraseStateRequest
+trezor.enums.DoPreauthorized
+import trezor.enums.DoPreauthorized
+trezor.enums.ECDHSessionKey
+import trezor.enums.ECDHSessionKey
+trezor.enums.EndSession
+import trezor.enums.EndSession
+trezor.enums.Entropy
+import trezor.enums.Entropy
+trezor.enums.EntropyAck
+import trezor.enums.EntropyAck
+trezor.enums.EntropyRequest
+import trezor.enums.EntropyRequest
+trezor.enums.EosActionBuyRam
+import trezor.enums.EosActionBuyRam
+trezor.enums.EosActionBuyRamBytes
+import trezor.enums.EosActionBuyRamBytes
+trezor.enums.EosActionCommon
+import trezor.enums.EosActionCommon
+trezor.enums.EosActionDelegate
+import trezor.enums.EosActionDelegate
+trezor.enums.EosActionDeleteAuth
+import trezor.enums.EosActionDeleteAuth
+trezor.enums.EosActionLinkAuth
+import trezor.enums.EosActionLinkAuth
+trezor.enums.EosActionNewAccount
+import trezor.enums.EosActionNewAccount
+trezor.enums.EosActionRefund
+import trezor.enums.EosActionRefund
+trezor.enums.EosActionSellRam
+import trezor.enums.EosActionSellRam
+trezor.enums.EosActionTransfer
+import trezor.enums.EosActionTransfer
+trezor.enums.EosActionUndelegate
+import trezor.enums.EosActionUndelegate
+trezor.enums.EosActionUnknown
+import trezor.enums.EosActionUnknown
+trezor.enums.EosActionUnlinkAuth
+import trezor.enums.EosActionUnlinkAuth
+trezor.enums.EosActionUpdateAuth
+import trezor.enums.EosActionUpdateAuth
+trezor.enums.EosActionVoteProducer
+import trezor.enums.EosActionVoteProducer
+trezor.enums.EosAsset
+import trezor.enums.EosAsset
+trezor.enums.EosAuthorization
+import trezor.enums.EosAuthorization
+trezor.enums.EosAuthorizationAccount
+import trezor.enums.EosAuthorizationAccount
+trezor.enums.EosAuthorizationKey
+import trezor.enums.EosAuthorizationKey
+trezor.enums.EosAuthorizationWait
+import trezor.enums.EosAuthorizationWait
+trezor.enums.EosGetPublicKey
+import trezor.enums.EosGetPublicKey
+trezor.enums.EosPermissionLevel
+import trezor.enums.EosPermissionLevel
+trezor.enums.EosPublicKey
+import trezor.enums.EosPublicKey
+trezor.enums.EosSignTx
+import trezor.enums.EosSignTx
+trezor.enums.EosSignedTx
+import trezor.enums.EosSignedTx
+trezor.enums.EosTxActionAck
+import trezor.enums.EosTxActionAck
+trezor.enums.EosTxActionRequest
+import trezor.enums.EosTxActionRequest
+trezor.enums.EosTxHeader
+import trezor.enums.EosTxHeader
+trezor.enums.EthereumAddress
+import trezor.enums.EthereumAddress
+trezor.enums.EthereumGetAddress
+import trezor.enums.EthereumGetAddress
+trezor.enums.EthereumGetPublicKey
+import trezor.enums.EthereumGetPublicKey
+trezor.enums.EthereumMessageSignature
+import trezor.enums.EthereumMessageSignature
+trezor.enums.EthereumPublicKey
+import trezor.enums.EthereumPublicKey
+trezor.enums.EthereumSignMessage
+import trezor.enums.EthereumSignMessage
+trezor.enums.EthereumSignTx
+import trezor.enums.EthereumSignTx
+trezor.enums.EthereumTxAck
+import trezor.enums.EthereumTxAck
+trezor.enums.EthereumTxRequest
+import trezor.enums.EthereumTxRequest
+trezor.enums.EthereumVerifyMessage
+import trezor.enums.EthereumVerifyMessage
+trezor.enums.Failure
+import trezor.enums.Failure
+trezor.enums.FailureType
+import trezor.enums.FailureType
+trezor.enums.Features
+import trezor.enums.Features
+trezor.enums.GetAddress
+import trezor.enums.GetAddress
+trezor.enums.GetECDHSessionKey
+import trezor.enums.GetECDHSessionKey
+trezor.enums.GetEntropy
+import trezor.enums.GetEntropy
+trezor.enums.GetFeatures
+import trezor.enums.GetFeatures
+trezor.enums.GetNextU2FCounter
+import trezor.enums.GetNextU2FCounter
+trezor.enums.GetOwnershipId
+import trezor.enums.GetOwnershipId
+trezor.enums.GetOwnershipProof
+import trezor.enums.GetOwnershipProof
+trezor.enums.GetPublicKey
+import trezor.enums.GetPublicKey
+trezor.enums.HDNodePathType
+import trezor.enums.HDNodePathType
+trezor.enums.HDNodeType
+import trezor.enums.HDNodeType
+trezor.enums.IdentityType
+import trezor.enums.IdentityType
+trezor.enums.Initialize
+import trezor.enums.Initialize
+trezor.enums.InputScriptType
+import trezor.enums.InputScriptType
+trezor.enums.LiskAddress
+import trezor.enums.LiskAddress
+trezor.enums.LiskDelegateType
+import trezor.enums.LiskDelegateType
+trezor.enums.LiskGetAddress
+import trezor.enums.LiskGetAddress
+trezor.enums.LiskGetPublicKey
+import trezor.enums.LiskGetPublicKey
+trezor.enums.LiskMessageSignature
+import trezor.enums.LiskMessageSignature
+trezor.enums.LiskMultisignatureType
+import trezor.enums.LiskMultisignatureType
+trezor.enums.LiskPublicKey
+import trezor.enums.LiskPublicKey
+trezor.enums.LiskSignMessage
+import trezor.enums.LiskSignMessage
+trezor.enums.LiskSignTx
+import trezor.enums.LiskSignTx
+trezor.enums.LiskSignatureType
+import trezor.enums.LiskSignatureType
+trezor.enums.LiskSignedTx
+import trezor.enums.LiskSignedTx
+trezor.enums.LiskTransactionAsset
+import trezor.enums.LiskTransactionAsset
+trezor.enums.LiskTransactionCommon
+import trezor.enums.LiskTransactionCommon
+trezor.enums.LiskTransactionType
+import trezor.enums.LiskTransactionType
+trezor.enums.LiskVerifyMessage
+import trezor.enums.LiskVerifyMessage
+trezor.enums.LoadDevice
+import trezor.enums.LoadDevice
+trezor.enums.LockDevice
+import trezor.enums.LockDevice
+trezor.enums.MessageSignature
+import trezor.enums.MessageSignature
+trezor.enums.MessageType
+import trezor.enums.MessageType
+trezor.enums.MoneroAccountPublicAddress
+import trezor.enums.MoneroAccountPublicAddress
+trezor.enums.MoneroAddress
+import trezor.enums.MoneroAddress
+trezor.enums.MoneroExportedKeyImage
+import trezor.enums.MoneroExportedKeyImage
+trezor.enums.MoneroGetAddress
+import trezor.enums.MoneroGetAddress
+trezor.enums.MoneroGetTxKeyAck
+import trezor.enums.MoneroGetTxKeyAck
+trezor.enums.MoneroGetTxKeyRequest
+import trezor.enums.MoneroGetTxKeyRequest
+trezor.enums.MoneroGetWatchKey
+import trezor.enums.MoneroGetWatchKey
+trezor.enums.MoneroKeyImageExportInitAck
+import trezor.enums.MoneroKeyImageExportInitAck
+trezor.enums.MoneroKeyImageExportInitRequest
+import trezor.enums.MoneroKeyImageExportInitRequest
+trezor.enums.MoneroKeyImageSyncFinalAck
+import trezor.enums.MoneroKeyImageSyncFinalAck
+trezor.enums.MoneroKeyImageSyncFinalRequest
+import trezor.enums.MoneroKeyImageSyncFinalRequest
+trezor.enums.MoneroKeyImageSyncStepAck
+import trezor.enums.MoneroKeyImageSyncStepAck
+trezor.enums.MoneroKeyImageSyncStepRequest
+import trezor.enums.MoneroKeyImageSyncStepRequest
+trezor.enums.MoneroLiveRefreshFinalAck
+import trezor.enums.MoneroLiveRefreshFinalAck
+trezor.enums.MoneroLiveRefreshFinalRequest
+import trezor.enums.MoneroLiveRefreshFinalRequest
+trezor.enums.MoneroLiveRefreshStartAck
+import trezor.enums.MoneroLiveRefreshStartAck
+trezor.enums.MoneroLiveRefreshStartRequest
+import trezor.enums.MoneroLiveRefreshStartRequest
+trezor.enums.MoneroLiveRefreshStepAck
+import trezor.enums.MoneroLiveRefreshStepAck
+trezor.enums.MoneroLiveRefreshStepRequest
+import trezor.enums.MoneroLiveRefreshStepRequest
+trezor.enums.MoneroMultisigKLRki
+import trezor.enums.MoneroMultisigKLRki
+trezor.enums.MoneroOutputEntry
+import trezor.enums.MoneroOutputEntry
+trezor.enums.MoneroRctKeyPublic
+import trezor.enums.MoneroRctKeyPublic
+trezor.enums.MoneroRingCtSig
+import trezor.enums.MoneroRingCtSig
+trezor.enums.MoneroSubAddressIndicesList
+import trezor.enums.MoneroSubAddressIndicesList
+trezor.enums.MoneroTransactionAllInputsSetAck
+import trezor.enums.MoneroTransactionAllInputsSetAck
+trezor.enums.MoneroTransactionAllInputsSetRequest
+import trezor.enums.MoneroTransactionAllInputsSetRequest
+trezor.enums.MoneroTransactionAllOutSetAck
+import trezor.enums.MoneroTransactionAllOutSetAck
+trezor.enums.MoneroTransactionAllOutSetRequest
+import trezor.enums.MoneroTransactionAllOutSetRequest
+trezor.enums.MoneroTransactionData
+import trezor.enums.MoneroTransactionData
+trezor.enums.MoneroTransactionDestinationEntry
+import trezor.enums.MoneroTransactionDestinationEntry
+trezor.enums.MoneroTransactionFinalAck
+import trezor.enums.MoneroTransactionFinalAck
+trezor.enums.MoneroTransactionFinalRequest
+import trezor.enums.MoneroTransactionFinalRequest
+trezor.enums.MoneroTransactionInitAck
+import trezor.enums.MoneroTransactionInitAck
+trezor.enums.MoneroTransactionInitRequest
+import trezor.enums.MoneroTransactionInitRequest
+trezor.enums.MoneroTransactionInputViniAck
+import trezor.enums.MoneroTransactionInputViniAck
+trezor.enums.MoneroTransactionInputViniRequest
+import trezor.enums.MoneroTransactionInputViniRequest
+trezor.enums.MoneroTransactionInputsPermutationAck
+import trezor.enums.MoneroTransactionInputsPermutationAck
+trezor.enums.MoneroTransactionInputsPermutationRequest
+import trezor.enums.MoneroTransactionInputsPermutationRequest
+trezor.enums.MoneroTransactionRsigData
+import trezor.enums.MoneroTransactionRsigData
+trezor.enums.MoneroTransactionSetInputAck
+import trezor.enums.MoneroTransactionSetInputAck
+trezor.enums.MoneroTransactionSetInputRequest
+import trezor.enums.MoneroTransactionSetInputRequest
+trezor.enums.MoneroTransactionSetOutputAck
+import trezor.enums.MoneroTransactionSetOutputAck
+trezor.enums.MoneroTransactionSetOutputRequest
+import trezor.enums.MoneroTransactionSetOutputRequest
+trezor.enums.MoneroTransactionSignInputAck
+import trezor.enums.MoneroTransactionSignInputAck
+trezor.enums.MoneroTransactionSignInputRequest
+import trezor.enums.MoneroTransactionSignInputRequest
+trezor.enums.MoneroTransactionSourceEntry
+import trezor.enums.MoneroTransactionSourceEntry
+trezor.enums.MoneroTransferDetails
+import trezor.enums.MoneroTransferDetails
+trezor.enums.MoneroWatchKey
+import trezor.enums.MoneroWatchKey
+trezor.enums.MultisigRedeemScriptType
+import trezor.enums.MultisigRedeemScriptType
+trezor.enums.NEMAddress
+import trezor.enums.NEMAddress
+trezor.enums.NEMAggregateModification
+import trezor.enums.NEMAggregateModification
+trezor.enums.NEMCosignatoryModification
+import trezor.enums.NEMCosignatoryModification
+trezor.enums.NEMGetAddress
+import trezor.enums.NEMGetAddress
+trezor.enums.NEMImportanceTransfer
+import trezor.enums.NEMImportanceTransfer
+trezor.enums.NEMImportanceTransferMode
+import trezor.enums.NEMImportanceTransferMode
+trezor.enums.NEMModificationType
+import trezor.enums.NEMModificationType
+trezor.enums.NEMMosaic
+import trezor.enums.NEMMosaic
+trezor.enums.NEMMosaicCreation
+import trezor.enums.NEMMosaicCreation
+trezor.enums.NEMMosaicDefinition
+import trezor.enums.NEMMosaicDefinition
+trezor.enums.NEMMosaicLevy
+import trezor.enums.NEMMosaicLevy
+trezor.enums.NEMMosaicSupplyChange
+import trezor.enums.NEMMosaicSupplyChange
+trezor.enums.NEMProvisionNamespace
+import trezor.enums.NEMProvisionNamespace
+trezor.enums.NEMSignTx
+import trezor.enums.NEMSignTx
+trezor.enums.NEMSignedTx
+import trezor.enums.NEMSignedTx
+trezor.enums.NEMSupplyChangeType
+import trezor.enums.NEMSupplyChangeType
+trezor.enums.NEMTransactionCommon
+import trezor.enums.NEMTransactionCommon
+trezor.enums.NEMTransfer
+import trezor.enums.NEMTransfer
+trezor.enums.NextU2FCounter
+import trezor.enums.NextU2FCounter
+trezor.enums.OutputScriptType
+import trezor.enums.OutputScriptType
+trezor.enums.OwnershipId
+import trezor.enums.OwnershipId
+trezor.enums.OwnershipProof
+import trezor.enums.OwnershipProof
+trezor.enums.PassphraseAck
+import trezor.enums.PassphraseAck
+trezor.enums.PassphraseRequest
+import trezor.enums.PassphraseRequest
+trezor.enums.Ping
+import trezor.enums.Ping
+trezor.enums.PreauthorizedRequest
+import trezor.enums.PreauthorizedRequest
+trezor.enums.PrevInput
+import trezor.enums.PrevInput
+trezor.enums.PrevOutput
+import trezor.enums.PrevOutput
+trezor.enums.PrevTx
+import trezor.enums.PrevTx
+trezor.enums.PublicKey
+import trezor.enums.PublicKey
+trezor.enums.RebootToBootloader
+import trezor.enums.RebootToBootloader
+trezor.enums.RecoveryDevice
+import trezor.enums.RecoveryDevice
+trezor.enums.RecoveryDeviceType
+import trezor.enums.RecoveryDeviceType
+trezor.enums.RequestType
+import trezor.enums.RequestType
+trezor.enums.ResetDevice
+import trezor.enums.ResetDevice
+trezor.enums.RippleAddress
+import trezor.enums.RippleAddress
+trezor.enums.RippleGetAddress
+import trezor.enums.RippleGetAddress
+trezor.enums.RipplePayment
+import trezor.enums.RipplePayment
+trezor.enums.RippleSignTx
+import trezor.enums.RippleSignTx
+trezor.enums.RippleSignedTx
+import trezor.enums.RippleSignedTx
+trezor.enums.SafetyCheckLevel
+import trezor.enums.SafetyCheckLevel
+trezor.enums.SdProtect
+import trezor.enums.SdProtect
+trezor.enums.SdProtectOperationType
+import trezor.enums.SdProtectOperationType
+trezor.enums.SetU2FCounter
+import trezor.enums.SetU2FCounter
+trezor.enums.SignIdentity
+import trezor.enums.SignIdentity
+trezor.enums.SignMessage
+import trezor.enums.SignMessage
+trezor.enums.SignTx
+import trezor.enums.SignTx
+trezor.enums.SignedIdentity
+import trezor.enums.SignedIdentity
+trezor.enums.StellarAccountMergeOp
+import trezor.enums.StellarAccountMergeOp
+trezor.enums.StellarAddress
+import trezor.enums.StellarAddress
+trezor.enums.StellarAllowTrustOp
+import trezor.enums.StellarAllowTrustOp
+trezor.enums.StellarAssetType
+import trezor.enums.StellarAssetType
+trezor.enums.StellarBumpSequenceOp
+import trezor.enums.StellarBumpSequenceOp
+trezor.enums.StellarChangeTrustOp
+import trezor.enums.StellarChangeTrustOp
+trezor.enums.StellarCreateAccountOp
+import trezor.enums.StellarCreateAccountOp
+trezor.enums.StellarCreatePassiveOfferOp
+import trezor.enums.StellarCreatePassiveOfferOp
+trezor.enums.StellarGetAddress
+import trezor.enums.StellarGetAddress
+trezor.enums.StellarManageDataOp
+import trezor.enums.StellarManageDataOp
+trezor.enums.StellarManageOfferOp
+import trezor.enums.StellarManageOfferOp
+trezor.enums.StellarPathPaymentOp
+import trezor.enums.StellarPathPaymentOp
+trezor.enums.StellarPaymentOp
+import trezor.enums.StellarPaymentOp
+trezor.enums.StellarSetOptionsOp
+import trezor.enums.StellarSetOptionsOp
+trezor.enums.StellarSignTx
+import trezor.enums.StellarSignTx
+trezor.enums.StellarSignedTx
+import trezor.enums.StellarSignedTx
+trezor.enums.StellarTxOpRequest
+import trezor.enums.StellarTxOpRequest
+trezor.enums.Success
+import trezor.enums.Success
+trezor.enums.TezosAddress
+import trezor.enums.TezosAddress
+trezor.enums.TezosBallotOp
+import trezor.enums.TezosBallotOp
+trezor.enums.TezosBallotType
+import trezor.enums.TezosBallotType
+trezor.enums.TezosContractID
+import trezor.enums.TezosContractID
+trezor.enums.TezosContractType
+import trezor.enums.TezosContractType
+trezor.enums.TezosDelegationOp
+import trezor.enums.TezosDelegationOp
+trezor.enums.TezosGetAddress
+import trezor.enums.TezosGetAddress
+trezor.enums.TezosGetPublicKey
+import trezor.enums.TezosGetPublicKey
+trezor.enums.TezosManagerTransfer
+import trezor.enums.TezosManagerTransfer
+trezor.enums.TezosOriginationOp
+import trezor.enums.TezosOriginationOp
+trezor.enums.TezosParametersManager
+import trezor.enums.TezosParametersManager
+trezor.enums.TezosProposalOp
+import trezor.enums.TezosProposalOp
+trezor.enums.TezosPublicKey
+import trezor.enums.TezosPublicKey
+trezor.enums.TezosRevealOp
+import trezor.enums.TezosRevealOp
+trezor.enums.TezosSignTx
+import trezor.enums.TezosSignTx
+trezor.enums.TezosSignedTx
+import trezor.enums.TezosSignedTx
+trezor.enums.TezosTransactionOp
+import trezor.enums.TezosTransactionOp
+trezor.enums.TransactionType
+import trezor.enums.TransactionType
+trezor.enums.TxAck
+import trezor.enums.TxAck
+trezor.enums.TxAckInput
+import trezor.enums.TxAckInput
+trezor.enums.TxAckInputWrapper
+import trezor.enums.TxAckInputWrapper
+trezor.enums.TxAckOutput
+import trezor.enums.TxAckOutput
+trezor.enums.TxAckOutputWrapper
+import trezor.enums.TxAckOutputWrapper
+trezor.enums.TxAckPrevExtraData
+import trezor.enums.TxAckPrevExtraData
+trezor.enums.TxAckPrevExtraDataWrapper
+import trezor.enums.TxAckPrevExtraDataWrapper
+trezor.enums.TxAckPrevInput
+import trezor.enums.TxAckPrevInput
+trezor.enums.TxAckPrevInputWrapper
+import trezor.enums.TxAckPrevInputWrapper
+trezor.enums.TxAckPrevMeta
+import trezor.enums.TxAckPrevMeta
+trezor.enums.TxAckPrevOutput
+import trezor.enums.TxAckPrevOutput
+trezor.enums.TxAckPrevOutputWrapper
+import trezor.enums.TxAckPrevOutputWrapper
+trezor.enums.TxInput
+import trezor.enums.TxInput
+trezor.enums.TxInputType
+import trezor.enums.TxInputType
+trezor.enums.TxOutput
+import trezor.enums.TxOutput
+trezor.enums.TxOutputBinType
+import trezor.enums.TxOutputBinType
+trezor.enums.TxOutputType
+import trezor.enums.TxOutputType
+trezor.enums.TxRequest
+import trezor.enums.TxRequest
+trezor.enums.TxRequestDetailsType
+import trezor.enums.TxRequestDetailsType
+trezor.enums.TxRequestSerializedType
+import trezor.enums.TxRequestSerializedType
+trezor.enums.VerifyMessage
+import trezor.enums.VerifyMessage
+trezor.enums.WebAuthnAddResidentCredential
+import trezor.enums.WebAuthnAddResidentCredential
+trezor.enums.WebAuthnCredential
+import trezor.enums.WebAuthnCredential
+trezor.enums.WebAuthnCredentials
+import trezor.enums.WebAuthnCredentials
+trezor.enums.WebAuthnListResidentCredentials
+import trezor.enums.WebAuthnListResidentCredentials
+trezor.enums.WebAuthnRemoveResidentCredential
+import trezor.enums.WebAuthnRemoveResidentCredential
+trezor.enums.WipeDevice
+import trezor.enums.WipeDevice
 trezor.errors
 import trezor.errors
 trezor.log
 import trezor.log
 trezor.loop
 import trezor.loop
-trezor.messages.Address
-import trezor.messages.Address
-trezor.messages.AmountUnit
-import trezor.messages.AmountUnit
-trezor.messages.ApplyFlags
-import trezor.messages.ApplyFlags
-trezor.messages.ApplySettings
-import trezor.messages.ApplySettings
-trezor.messages.AuthorizeCoinJoin
-import trezor.messages.AuthorizeCoinJoin
-trezor.messages.BackupDevice
-import trezor.messages.BackupDevice
-trezor.messages.BackupType
-import trezor.messages.BackupType
-trezor.messages.BinanceAddress
-import trezor.messages.BinanceAddress
-trezor.messages.BinanceCancelMsg
-import trezor.messages.BinanceCancelMsg
-trezor.messages.BinanceCoin
-import trezor.messages.BinanceCoin
-trezor.messages.BinanceGetAddress
-import trezor.messages.BinanceGetAddress
-trezor.messages.BinanceGetPublicKey
-import trezor.messages.BinanceGetPublicKey
-trezor.messages.BinanceInputOutput
-import trezor.messages.BinanceInputOutput
-trezor.messages.BinanceOrderMsg
-import trezor.messages.BinanceOrderMsg
-trezor.messages.BinanceOrderSide
-import trezor.messages.BinanceOrderSide
-trezor.messages.BinanceOrderType
-import trezor.messages.BinanceOrderType
-trezor.messages.BinancePublicKey
-import trezor.messages.BinancePublicKey
-trezor.messages.BinanceSignTx
-import trezor.messages.BinanceSignTx
-trezor.messages.BinanceSignedTx
-import trezor.messages.BinanceSignedTx
-trezor.messages.BinanceTimeInForce
-import trezor.messages.BinanceTimeInForce
-trezor.messages.BinanceTransferMsg
-import trezor.messages.BinanceTransferMsg
-trezor.messages.BinanceTxRequest
-import trezor.messages.BinanceTxRequest
-trezor.messages.ButtonAck
-import trezor.messages.ButtonAck
-trezor.messages.ButtonRequest
-import trezor.messages.ButtonRequest
-trezor.messages.ButtonRequestType
-import trezor.messages.ButtonRequestType
-trezor.messages.Cancel
-import trezor.messages.Cancel
-trezor.messages.CancelAuthorization
-import trezor.messages.CancelAuthorization
-trezor.messages.Capability
-import trezor.messages.Capability
-trezor.messages.CardanoAddress
-import trezor.messages.CardanoAddress
-trezor.messages.CardanoAddressParametersType
-import trezor.messages.CardanoAddressParametersType
-trezor.messages.CardanoAddressType
-import trezor.messages.CardanoAddressType
-trezor.messages.CardanoAssetGroupType
-import trezor.messages.CardanoAssetGroupType
-trezor.messages.CardanoBlockchainPointerType
-import trezor.messages.CardanoBlockchainPointerType
-trezor.messages.CardanoCatalystRegistrationParametersType
-import trezor.messages.CardanoCatalystRegistrationParametersType
-trezor.messages.CardanoCertificateType
-import trezor.messages.CardanoCertificateType
-trezor.messages.CardanoGetAddress
-import trezor.messages.CardanoGetAddress
-trezor.messages.CardanoGetPublicKey
-import trezor.messages.CardanoGetPublicKey
-trezor.messages.CardanoPoolMetadataType
-import trezor.messages.CardanoPoolMetadataType
-trezor.messages.CardanoPoolOwnerType
-import trezor.messages.CardanoPoolOwnerType
-trezor.messages.CardanoPoolParametersType
-import trezor.messages.CardanoPoolParametersType
-trezor.messages.CardanoPoolRelayParametersType
-import trezor.messages.CardanoPoolRelayParametersType
-trezor.messages.CardanoPoolRelayType
-import trezor.messages.CardanoPoolRelayType
-trezor.messages.CardanoPublicKey
-import trezor.messages.CardanoPublicKey
-trezor.messages.CardanoSignTx
-import trezor.messages.CardanoSignTx
-trezor.messages.CardanoSignedTx
-import trezor.messages.CardanoSignedTx
-trezor.messages.CardanoSignedTxChunk
-import trezor.messages.CardanoSignedTxChunk
-trezor.messages.CardanoSignedTxChunkAck
-import trezor.messages.CardanoSignedTxChunkAck
-trezor.messages.CardanoTokenType
-import trezor.messages.CardanoTokenType
-trezor.messages.CardanoTxAuxiliaryDataType
-import trezor.messages.CardanoTxAuxiliaryDataType
-trezor.messages.CardanoTxCertificateType
-import trezor.messages.CardanoTxCertificateType
-trezor.messages.CardanoTxInputType
-import trezor.messages.CardanoTxInputType
-trezor.messages.CardanoTxOutputType
-import trezor.messages.CardanoTxOutputType
-trezor.messages.CardanoTxWithdrawalType
-import trezor.messages.CardanoTxWithdrawalType
-trezor.messages.ChangePin
-import trezor.messages.ChangePin
-trezor.messages.ChangeWipeCode
-import trezor.messages.ChangeWipeCode
-trezor.messages.CipherKeyValue
-import trezor.messages.CipherKeyValue
-trezor.messages.CipheredKeyValue
-import trezor.messages.CipheredKeyValue
-trezor.messages.DebugLinkDecision
-import trezor.messages.DebugLinkDecision
-trezor.messages.DebugLinkEraseSdCard
-import trezor.messages.DebugLinkEraseSdCard
-trezor.messages.DebugLinkGetState
-import trezor.messages.DebugLinkGetState
-trezor.messages.DebugLinkLayout
-import trezor.messages.DebugLinkLayout
-trezor.messages.DebugLinkRecordScreen
-import trezor.messages.DebugLinkRecordScreen
-trezor.messages.DebugLinkReseedRandom
-import trezor.messages.DebugLinkReseedRandom
-trezor.messages.DebugLinkState
-import trezor.messages.DebugLinkState
-trezor.messages.DebugLinkWatchLayout
-import trezor.messages.DebugLinkWatchLayout
-trezor.messages.DebugMoneroDiagAck
-import trezor.messages.DebugMoneroDiagAck
-trezor.messages.DebugMoneroDiagRequest
-import trezor.messages.DebugMoneroDiagRequest
-trezor.messages.DebugSwipeDirection
-import trezor.messages.DebugSwipeDirection
-trezor.messages.DecredStakingSpendType
-import trezor.messages.DecredStakingSpendType
-trezor.messages.Deprecated_PassphraseStateAck
-import trezor.messages.Deprecated_PassphraseStateAck
-trezor.messages.Deprecated_PassphraseStateRequest
-import trezor.messages.Deprecated_PassphraseStateRequest
-trezor.messages.DoPreauthorized
-import trezor.messages.DoPreauthorized
-trezor.messages.ECDHSessionKey
-import trezor.messages.ECDHSessionKey
-trezor.messages.EndSession
-import trezor.messages.EndSession
-trezor.messages.Entropy
-import trezor.messages.Entropy
-trezor.messages.EntropyAck
-import trezor.messages.EntropyAck
-trezor.messages.EntropyRequest
-import trezor.messages.EntropyRequest
-trezor.messages.EosActionBuyRam
-import trezor.messages.EosActionBuyRam
-trezor.messages.EosActionBuyRamBytes
-import trezor.messages.EosActionBuyRamBytes
-trezor.messages.EosActionCommon
-import trezor.messages.EosActionCommon
-trezor.messages.EosActionDelegate
-import trezor.messages.EosActionDelegate
-trezor.messages.EosActionDeleteAuth
-import trezor.messages.EosActionDeleteAuth
-trezor.messages.EosActionLinkAuth
-import trezor.messages.EosActionLinkAuth
-trezor.messages.EosActionNewAccount
-import trezor.messages.EosActionNewAccount
-trezor.messages.EosActionRefund
-import trezor.messages.EosActionRefund
-trezor.messages.EosActionSellRam
-import trezor.messages.EosActionSellRam
-trezor.messages.EosActionTransfer
-import trezor.messages.EosActionTransfer
-trezor.messages.EosActionUndelegate
-import trezor.messages.EosActionUndelegate
-trezor.messages.EosActionUnknown
-import trezor.messages.EosActionUnknown
-trezor.messages.EosActionUnlinkAuth
-import trezor.messages.EosActionUnlinkAuth
-trezor.messages.EosActionUpdateAuth
-import trezor.messages.EosActionUpdateAuth
-trezor.messages.EosActionVoteProducer
-import trezor.messages.EosActionVoteProducer
-trezor.messages.EosAsset
-import trezor.messages.EosAsset
-trezor.messages.EosAuthorization
-import trezor.messages.EosAuthorization
-trezor.messages.EosAuthorizationAccount
-import trezor.messages.EosAuthorizationAccount
-trezor.messages.EosAuthorizationKey
-import trezor.messages.EosAuthorizationKey
-trezor.messages.EosAuthorizationWait
-import trezor.messages.EosAuthorizationWait
-trezor.messages.EosGetPublicKey
-import trezor.messages.EosGetPublicKey
-trezor.messages.EosPermissionLevel
-import trezor.messages.EosPermissionLevel
-trezor.messages.EosPublicKey
-import trezor.messages.EosPublicKey
-trezor.messages.EosSignTx
-import trezor.messages.EosSignTx
-trezor.messages.EosSignedTx
-import trezor.messages.EosSignedTx
-trezor.messages.EosTxActionAck
-import trezor.messages.EosTxActionAck
-trezor.messages.EosTxActionRequest
-import trezor.messages.EosTxActionRequest
-trezor.messages.EosTxHeader
-import trezor.messages.EosTxHeader
-trezor.messages.EthereumAddress
-import trezor.messages.EthereumAddress
-trezor.messages.EthereumGetAddress
-import trezor.messages.EthereumGetAddress
-trezor.messages.EthereumGetPublicKey
-import trezor.messages.EthereumGetPublicKey
-trezor.messages.EthereumMessageSignature
-import trezor.messages.EthereumMessageSignature
-trezor.messages.EthereumPublicKey
-import trezor.messages.EthereumPublicKey
-trezor.messages.EthereumSignMessage
-import trezor.messages.EthereumSignMessage
-trezor.messages.EthereumSignTx
-import trezor.messages.EthereumSignTx
-trezor.messages.EthereumTxAck
-import trezor.messages.EthereumTxAck
-trezor.messages.EthereumTxRequest
-import trezor.messages.EthereumTxRequest
-trezor.messages.EthereumVerifyMessage
-import trezor.messages.EthereumVerifyMessage
-trezor.messages.Failure
-import trezor.messages.Failure
-trezor.messages.FailureType
-import trezor.messages.FailureType
-trezor.messages.Features
-import trezor.messages.Features
-trezor.messages.GetAddress
-import trezor.messages.GetAddress
-trezor.messages.GetECDHSessionKey
-import trezor.messages.GetECDHSessionKey
-trezor.messages.GetEntropy
-import trezor.messages.GetEntropy
-trezor.messages.GetFeatures
-import trezor.messages.GetFeatures
-trezor.messages.GetNextU2FCounter
-import trezor.messages.GetNextU2FCounter
-trezor.messages.GetOwnershipId
-import trezor.messages.GetOwnershipId
-trezor.messages.GetOwnershipProof
-import trezor.messages.GetOwnershipProof
-trezor.messages.GetPublicKey
-import trezor.messages.GetPublicKey
-trezor.messages.HDNodePathType
-import trezor.messages.HDNodePathType
-trezor.messages.HDNodeType
-import trezor.messages.HDNodeType
-trezor.messages.IdentityType
-import trezor.messages.IdentityType
-trezor.messages.Initialize
-import trezor.messages.Initialize
-trezor.messages.InputScriptType
-import trezor.messages.InputScriptType
-trezor.messages.LiskAddress
-import trezor.messages.LiskAddress
-trezor.messages.LiskDelegateType
-import trezor.messages.LiskDelegateType
-trezor.messages.LiskGetAddress
-import trezor.messages.LiskGetAddress
-trezor.messages.LiskGetPublicKey
-import trezor.messages.LiskGetPublicKey
-trezor.messages.LiskMessageSignature
-import trezor.messages.LiskMessageSignature
-trezor.messages.LiskMultisignatureType
-import trezor.messages.LiskMultisignatureType
-trezor.messages.LiskPublicKey
-import trezor.messages.LiskPublicKey
-trezor.messages.LiskSignMessage
-import trezor.messages.LiskSignMessage
-trezor.messages.LiskSignTx
-import trezor.messages.LiskSignTx
-trezor.messages.LiskSignatureType
-import trezor.messages.LiskSignatureType
-trezor.messages.LiskSignedTx
-import trezor.messages.LiskSignedTx
-trezor.messages.LiskTransactionAsset
-import trezor.messages.LiskTransactionAsset
-trezor.messages.LiskTransactionCommon
-import trezor.messages.LiskTransactionCommon
-trezor.messages.LiskTransactionType
-import trezor.messages.LiskTransactionType
-trezor.messages.LiskVerifyMessage
-import trezor.messages.LiskVerifyMessage
-trezor.messages.LoadDevice
-import trezor.messages.LoadDevice
-trezor.messages.LockDevice
-import trezor.messages.LockDevice
-trezor.messages.MessageSignature
-import trezor.messages.MessageSignature
-trezor.messages.MessageType
-import trezor.messages.MessageType
-trezor.messages.MoneroAccountPublicAddress
-import trezor.messages.MoneroAccountPublicAddress
-trezor.messages.MoneroAddress
-import trezor.messages.MoneroAddress
-trezor.messages.MoneroExportedKeyImage
-import trezor.messages.MoneroExportedKeyImage
-trezor.messages.MoneroGetAddress
-import trezor.messages.MoneroGetAddress
-trezor.messages.MoneroGetTxKeyAck
-import trezor.messages.MoneroGetTxKeyAck
-trezor.messages.MoneroGetTxKeyRequest
-import trezor.messages.MoneroGetTxKeyRequest
-trezor.messages.MoneroGetWatchKey
-import trezor.messages.MoneroGetWatchKey
-trezor.messages.MoneroKeyImageExportInitAck
-import trezor.messages.MoneroKeyImageExportInitAck
-trezor.messages.MoneroKeyImageExportInitRequest
-import trezor.messages.MoneroKeyImageExportInitRequest
-trezor.messages.MoneroKeyImageSyncFinalAck
-import trezor.messages.MoneroKeyImageSyncFinalAck
-trezor.messages.MoneroKeyImageSyncFinalRequest
-import trezor.messages.MoneroKeyImageSyncFinalRequest
-trezor.messages.MoneroKeyImageSyncStepAck
-import trezor.messages.MoneroKeyImageSyncStepAck
-trezor.messages.MoneroKeyImageSyncStepRequest
-import trezor.messages.MoneroKeyImageSyncStepRequest
-trezor.messages.MoneroLiveRefreshFinalAck
-import trezor.messages.MoneroLiveRefreshFinalAck
-trezor.messages.MoneroLiveRefreshFinalRequest
-import trezor.messages.MoneroLiveRefreshFinalRequest
-trezor.messages.MoneroLiveRefreshStartAck
-import trezor.messages.MoneroLiveRefreshStartAck
-trezor.messages.MoneroLiveRefreshStartRequest
-import trezor.messages.MoneroLiveRefreshStartRequest
-trezor.messages.MoneroLiveRefreshStepAck
-import trezor.messages.MoneroLiveRefreshStepAck
-trezor.messages.MoneroLiveRefreshStepRequest
-import trezor.messages.MoneroLiveRefreshStepRequest
-trezor.messages.MoneroMultisigKLRki
-import trezor.messages.MoneroMultisigKLRki
-trezor.messages.MoneroOutputEntry
-import trezor.messages.MoneroOutputEntry
-trezor.messages.MoneroRctKeyPublic
-import trezor.messages.MoneroRctKeyPublic
-trezor.messages.MoneroRingCtSig
-import trezor.messages.MoneroRingCtSig
-trezor.messages.MoneroSubAddressIndicesList
-import trezor.messages.MoneroSubAddressIndicesList
-trezor.messages.MoneroTransactionAllInputsSetAck
-import trezor.messages.MoneroTransactionAllInputsSetAck
-trezor.messages.MoneroTransactionAllInputsSetRequest
-import trezor.messages.MoneroTransactionAllInputsSetRequest
-trezor.messages.MoneroTransactionAllOutSetAck
-import trezor.messages.MoneroTransactionAllOutSetAck
-trezor.messages.MoneroTransactionAllOutSetRequest
-import trezor.messages.MoneroTransactionAllOutSetRequest
-trezor.messages.MoneroTransactionData
-import trezor.messages.MoneroTransactionData
-trezor.messages.MoneroTransactionDestinationEntry
-import trezor.messages.MoneroTransactionDestinationEntry
-trezor.messages.MoneroTransactionFinalAck
-import trezor.messages.MoneroTransactionFinalAck
-trezor.messages.MoneroTransactionFinalRequest
-import trezor.messages.MoneroTransactionFinalRequest
-trezor.messages.MoneroTransactionInitAck
-import trezor.messages.MoneroTransactionInitAck
-trezor.messages.MoneroTransactionInitRequest
-import trezor.messages.MoneroTransactionInitRequest
-trezor.messages.MoneroTransactionInputViniAck
-import trezor.messages.MoneroTransactionInputViniAck
-trezor.messages.MoneroTransactionInputViniRequest
-import trezor.messages.MoneroTransactionInputViniRequest
-trezor.messages.MoneroTransactionInputsPermutationAck
-import trezor.messages.MoneroTransactionInputsPermutationAck
-trezor.messages.MoneroTransactionInputsPermutationRequest
-import trezor.messages.MoneroTransactionInputsPermutationRequest
-trezor.messages.MoneroTransactionRsigData
-import trezor.messages.MoneroTransactionRsigData
-trezor.messages.MoneroTransactionSetInputAck
-import trezor.messages.MoneroTransactionSetInputAck
-trezor.messages.MoneroTransactionSetInputRequest
-import trezor.messages.MoneroTransactionSetInputRequest
-trezor.messages.MoneroTransactionSetOutputAck
-import trezor.messages.MoneroTransactionSetOutputAck
-trezor.messages.MoneroTransactionSetOutputRequest
-import trezor.messages.MoneroTransactionSetOutputRequest
-trezor.messages.MoneroTransactionSignInputAck
-import trezor.messages.MoneroTransactionSignInputAck
-trezor.messages.MoneroTransactionSignInputRequest
-import trezor.messages.MoneroTransactionSignInputRequest
-trezor.messages.MoneroTransactionSourceEntry
-import trezor.messages.MoneroTransactionSourceEntry
-trezor.messages.MoneroTransferDetails
-import trezor.messages.MoneroTransferDetails
-trezor.messages.MoneroWatchKey
-import trezor.messages.MoneroWatchKey
-trezor.messages.MultisigRedeemScriptType
-import trezor.messages.MultisigRedeemScriptType
-trezor.messages.NEMAddress
-import trezor.messages.NEMAddress
-trezor.messages.NEMAggregateModification
-import trezor.messages.NEMAggregateModification
-trezor.messages.NEMCosignatoryModification
-import trezor.messages.NEMCosignatoryModification
-trezor.messages.NEMGetAddress
-import trezor.messages.NEMGetAddress
-trezor.messages.NEMImportanceTransfer
-import trezor.messages.NEMImportanceTransfer
-trezor.messages.NEMImportanceTransferMode
-import trezor.messages.NEMImportanceTransferMode
-trezor.messages.NEMModificationType
-import trezor.messages.NEMModificationType
-trezor.messages.NEMMosaic
-import trezor.messages.NEMMosaic
-trezor.messages.NEMMosaicCreation
-import trezor.messages.NEMMosaicCreation
-trezor.messages.NEMMosaicDefinition
-import trezor.messages.NEMMosaicDefinition
-trezor.messages.NEMMosaicLevy
-import trezor.messages.NEMMosaicLevy
-trezor.messages.NEMMosaicSupplyChange
-import trezor.messages.NEMMosaicSupplyChange
-trezor.messages.NEMProvisionNamespace
-import trezor.messages.NEMProvisionNamespace
-trezor.messages.NEMSignTx
-import trezor.messages.NEMSignTx
-trezor.messages.NEMSignedTx
-import trezor.messages.NEMSignedTx
-trezor.messages.NEMSupplyChangeType
-import trezor.messages.NEMSupplyChangeType
-trezor.messages.NEMTransactionCommon
-import trezor.messages.NEMTransactionCommon
-trezor.messages.NEMTransfer
-import trezor.messages.NEMTransfer
-trezor.messages.NextU2FCounter
-import trezor.messages.NextU2FCounter
-trezor.messages.OutputScriptType
-import trezor.messages.OutputScriptType
-trezor.messages.OwnershipId
-import trezor.messages.OwnershipId
-trezor.messages.OwnershipProof
-import trezor.messages.OwnershipProof
-trezor.messages.PassphraseAck
-import trezor.messages.PassphraseAck
-trezor.messages.PassphraseRequest
-import trezor.messages.PassphraseRequest
-trezor.messages.Ping
-import trezor.messages.Ping
-trezor.messages.PreauthorizedRequest
-import trezor.messages.PreauthorizedRequest
-trezor.messages.PrevInput
-import trezor.messages.PrevInput
-trezor.messages.PrevOutput
-import trezor.messages.PrevOutput
-trezor.messages.PrevTx
-import trezor.messages.PrevTx
-trezor.messages.PublicKey
-import trezor.messages.PublicKey
-trezor.messages.RebootToBootloader
-import trezor.messages.RebootToBootloader
-trezor.messages.RecoveryDevice
-import trezor.messages.RecoveryDevice
-trezor.messages.RecoveryDeviceType
-import trezor.messages.RecoveryDeviceType
-trezor.messages.RequestType
-import trezor.messages.RequestType
-trezor.messages.ResetDevice
-import trezor.messages.ResetDevice
-trezor.messages.RippleAddress
-import trezor.messages.RippleAddress
-trezor.messages.RippleGetAddress
-import trezor.messages.RippleGetAddress
-trezor.messages.RipplePayment
-import trezor.messages.RipplePayment
-trezor.messages.RippleSignTx
-import trezor.messages.RippleSignTx
-trezor.messages.RippleSignedTx
-import trezor.messages.RippleSignedTx
-trezor.messages.SafetyCheckLevel
-import trezor.messages.SafetyCheckLevel
-trezor.messages.SdProtect
-import trezor.messages.SdProtect
-trezor.messages.SdProtectOperationType
-import trezor.messages.SdProtectOperationType
-trezor.messages.SetU2FCounter
-import trezor.messages.SetU2FCounter
-trezor.messages.SignIdentity
-import trezor.messages.SignIdentity
-trezor.messages.SignMessage
-import trezor.messages.SignMessage
-trezor.messages.SignTx
-import trezor.messages.SignTx
-trezor.messages.SignedIdentity
-import trezor.messages.SignedIdentity
-trezor.messages.StellarAccountMergeOp
-import trezor.messages.StellarAccountMergeOp
-trezor.messages.StellarAddress
-import trezor.messages.StellarAddress
-trezor.messages.StellarAllowTrustOp
-import trezor.messages.StellarAllowTrustOp
-trezor.messages.StellarAssetType
-import trezor.messages.StellarAssetType
-trezor.messages.StellarBumpSequenceOp
-import trezor.messages.StellarBumpSequenceOp
-trezor.messages.StellarChangeTrustOp
-import trezor.messages.StellarChangeTrustOp
-trezor.messages.StellarCreateAccountOp
-import trezor.messages.StellarCreateAccountOp
-trezor.messages.StellarCreatePassiveOfferOp
-import trezor.messages.StellarCreatePassiveOfferOp
-trezor.messages.StellarGetAddress
-import trezor.messages.StellarGetAddress
-trezor.messages.StellarManageDataOp
-import trezor.messages.StellarManageDataOp
-trezor.messages.StellarManageOfferOp
-import trezor.messages.StellarManageOfferOp
-trezor.messages.StellarPathPaymentOp
-import trezor.messages.StellarPathPaymentOp
-trezor.messages.StellarPaymentOp
-import trezor.messages.StellarPaymentOp
-trezor.messages.StellarSetOptionsOp
-import trezor.messages.StellarSetOptionsOp
-trezor.messages.StellarSignTx
-import trezor.messages.StellarSignTx
-trezor.messages.StellarSignedTx
-import trezor.messages.StellarSignedTx
-trezor.messages.StellarTxOpRequest
-import trezor.messages.StellarTxOpRequest
-trezor.messages.Success
-import trezor.messages.Success
-trezor.messages.TezosAddress
-import trezor.messages.TezosAddress
-trezor.messages.TezosBallotOp
-import trezor.messages.TezosBallotOp
-trezor.messages.TezosBallotType
-import trezor.messages.TezosBallotType
-trezor.messages.TezosContractID
-import trezor.messages.TezosContractID
-trezor.messages.TezosContractType
-import trezor.messages.TezosContractType
-trezor.messages.TezosDelegationOp
-import trezor.messages.TezosDelegationOp
-trezor.messages.TezosGetAddress
-import trezor.messages.TezosGetAddress
-trezor.messages.TezosGetPublicKey
-import trezor.messages.TezosGetPublicKey
-trezor.messages.TezosManagerTransfer
-import trezor.messages.TezosManagerTransfer
-trezor.messages.TezosOriginationOp
-import trezor.messages.TezosOriginationOp
-trezor.messages.TezosParametersManager
-import trezor.messages.TezosParametersManager
-trezor.messages.TezosProposalOp
-import trezor.messages.TezosProposalOp
-trezor.messages.TezosPublicKey
-import trezor.messages.TezosPublicKey
-trezor.messages.TezosRevealOp
-import trezor.messages.TezosRevealOp
-trezor.messages.TezosSignTx
-import trezor.messages.TezosSignTx
-trezor.messages.TezosSignedTx
-import trezor.messages.TezosSignedTx
-trezor.messages.TezosTransactionOp
-import trezor.messages.TezosTransactionOp
-trezor.messages.TransactionType
-import trezor.messages.TransactionType
-trezor.messages.TxAck
-import trezor.messages.TxAck
-trezor.messages.TxAckInput
-import trezor.messages.TxAckInput
-trezor.messages.TxAckInputWrapper
-import trezor.messages.TxAckInputWrapper
-trezor.messages.TxAckOutput
-import trezor.messages.TxAckOutput
-trezor.messages.TxAckOutputWrapper
-import trezor.messages.TxAckOutputWrapper
-trezor.messages.TxAckPrevExtraData
-import trezor.messages.TxAckPrevExtraData
-trezor.messages.TxAckPrevExtraDataWrapper
-import trezor.messages.TxAckPrevExtraDataWrapper
-trezor.messages.TxAckPrevInput
-import trezor.messages.TxAckPrevInput
-trezor.messages.TxAckPrevInputWrapper
-import trezor.messages.TxAckPrevInputWrapper
-trezor.messages.TxAckPrevMeta
-import trezor.messages.TxAckPrevMeta
-trezor.messages.TxAckPrevOutput
-import trezor.messages.TxAckPrevOutput
-trezor.messages.TxAckPrevOutputWrapper
-import trezor.messages.TxAckPrevOutputWrapper
-trezor.messages.TxInput
-import trezor.messages.TxInput
-trezor.messages.TxInputType
-import trezor.messages.TxInputType
-trezor.messages.TxOutput
-import trezor.messages.TxOutput
-trezor.messages.TxOutputBinType
-import trezor.messages.TxOutputBinType
-trezor.messages.TxOutputType
-import trezor.messages.TxOutputType
-trezor.messages.TxRequest
-import trezor.messages.TxRequest
-trezor.messages.TxRequestDetailsType
-import trezor.messages.TxRequestDetailsType
-trezor.messages.TxRequestSerializedType
-import trezor.messages.TxRequestSerializedType
-trezor.messages.VerifyMessage
-import trezor.messages.VerifyMessage
-trezor.messages.WebAuthnAddResidentCredential
-import trezor.messages.WebAuthnAddResidentCredential
-trezor.messages.WebAuthnCredential
-import trezor.messages.WebAuthnCredential
-trezor.messages.WebAuthnCredentials
-import trezor.messages.WebAuthnCredentials
-trezor.messages.WebAuthnListResidentCredentials
-import trezor.messages.WebAuthnListResidentCredentials
-trezor.messages.WebAuthnRemoveResidentCredential
-import trezor.messages.WebAuthnRemoveResidentCredential
-trezor.messages.WipeDevice
-import trezor.messages.WipeDevice
 trezor.messages
 import trezor.messages
 trezor.pin
