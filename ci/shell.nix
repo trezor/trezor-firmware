@@ -66,6 +66,7 @@ stdenv.mkDerivation ({
     rustStable
     wget
     zlib
+    moreutils
   ] ++ lib.optionals (!stdenv.isDarwin) [
     procps
     valgrind
