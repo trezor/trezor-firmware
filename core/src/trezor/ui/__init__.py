@@ -439,3 +439,28 @@ class Layout(Component):
 def wait_until_layout_is_running() -> Awaitable[None]:  # type: ignore
     while not layout_chan.takers:
         yield
+
+
+if utils.MODEL == "1":
+
+    class RustLayout(Layout):
+        def __init__(self, layout: Any):
+            self.layout = layout
+            self.layout.set_timer_fn(self.set_timer)
+
+        def set_timer(self, token: int, deadline: int) -> None:
+            # TODO: schedule a timer tick with `token` in `deadline` ms
+            print("timer", token, deadline)
+
+        def dispatch(self, event: int, x: int, y: int) -> None:
+            msg = None
+            if event is RENDER:
+                self.layout.paint()
+            elif event is io.TOUCH_START:
+                msg = self.layout.touch_start(x, y)
+            elif event is io.TOUCH_MOVE:
+                msg = self.layout.touch_move(x, y)
+            elif event is io.TOUCH_END:
+                msg = self.layout.touch_end(x, y)
+            if msg is not None:
+                raise Result(msg)

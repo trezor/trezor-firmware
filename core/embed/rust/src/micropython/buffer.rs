@@ -49,6 +49,24 @@ impl AsRef<[u8]> for Buffer {
     }
 }
 
+impl From<&'static [u8]> for Buffer {
+    fn from(val: &'static [u8]) -> Self {
+        Buffer {
+            ptr: val.as_ptr(),
+            len: val.len(),
+        }
+    }
+}
+
+impl From<&'static str> for Buffer {
+    fn from(val: &'static str) -> Self {
+        Buffer {
+            ptr: val.as_ptr(),
+            len: val.len(),
+        }
+    }
+}
+
 /// Represents a mutable slice of bytes stored on the MicroPython heap and
 /// owned by values that obey the `MP_BUFFER_WRITE` buffer protocol, such as
 /// `bytearray` or `memoryview`.

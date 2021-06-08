@@ -18,15 +18,13 @@ pub enum Error {
 }
 
 impl Error {
-    /// Create an exception instance matching the error code.
-    /// The result of this call should only be used to immediately raise the
-    /// exception, because the object is not guaranteed to remain intact.
-    /// Micropython might reuse the same space for creating a different
-    /// exception.
+    /// Create an exception instance matching the error code. The result of this
+    /// call should only be used to immediately raise the exception, because the
+    /// object is not guaranteed to remain intact. MicroPython might reuse the
+    /// same space for creating a different exception.
     pub unsafe fn into_obj(self) -> Obj {
         unsafe {
-            // SAFETY:
-            // - first argument is a reference to a valid exception type
+            // SAFETY: First argument is a reference to a valid exception type.
             // EXCEPTION: Sensibly, `new_exception_*` does not raise.
             match self {
                 Error::TypeError => ffi::mp_obj_new_exception(&ffi::mp_type_TypeError),
