@@ -1,4 +1,3 @@
-use crate::error::Error;
 use core::{mem, slice};
 
 pub struct MsgDef {
@@ -111,10 +110,9 @@ struct NameDef {
 }
 
 static ENUM_DEFS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/../../../../proto_enums.data"));
-static MSG_DEFS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/../../../..//proto_msgs.data"));
-static NAME_DEFS: &[u8] =
-    include_bytes!(concat!(env!("OUT_DIR"), "/../../../..//proto_names.data"));
-static WIRE_DEFS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/../../../..//proto_wire.data"));
+static MSG_DEFS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/../../../../proto_msgs.data"));
+static NAME_DEFS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/../../../../proto_names.data"));
+static WIRE_DEFS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/../../../../proto_wire.data"));
 
 pub fn find_name_by_msg_offset(msg_offset: u16) -> Result<u16, Error> {
     let name_defs: &[NameDef] = unsafe {

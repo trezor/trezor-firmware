@@ -63,13 +63,11 @@ impl MsgObj {
             return Ok(obj);
         }
 
-        // Built-in attribute
+        // Built-in attribute.
         match attr {
             Qstr::MP_QSTR_MESSAGE_WIRE_TYPE => {
                 // Return the wire ID of this message def, or None if not set.
-                Ok(self
-                    .msg_wire_id
-                    .map_or(Obj::const_none(), |wire_id| wire_id.into()))
+                Ok(self.msg_wire_id.map_or_else(Obj::const_none, Into::into))
             }
             Qstr::MP_QSTR_MESSAGE_NAME => {
                 // Return the qstr name of this message def
@@ -87,7 +85,7 @@ impl MsgObj {
 
     fn setattr(&mut self, attr: Qstr, value: Obj) -> Result<(), Error> {
         if value.is_null() {
-            // this would be a delattr
+            // Null value means a delattr operation, reject.
             return Err(Error::TypeError);
         }
 
@@ -207,20 +205,20 @@ unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut 
 
         let arg = unsafe { dest.read() };
         if !arg.is_null() {
-            // this would be a setattr
+            // Null destination would mean a `setattr`.
             return Err(Error::TypeError);
         }
 
         match attr {
             Qstr::MP_QSTR_MESSAGE_NAME => {
-                // Return the qstr name of this message def
+                // Return the QSTR name of this message def.
                 let name = Qstr::from_u16(find_name_by_msg_offset(this.def.offset)?);
                 unsafe {
                     dest.write(name.into());
                 };
             }
             Qstr::MP_QSTR_MESSAGE_WIRE_TYPE => {
-                // Return the wire type of this message def
+                // Return the wire type of this message def.
                 let wire_id_obj = this
                     .def
                     .wire_id
@@ -230,7 +228,7 @@ unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut 
                 };
             }
             Qstr::MP_QSTR_is_type_of => {
-                // Return the is_type_of bound method
+                // Return the `is_type_of` bound method:
                 // dest[0] = function_obj
                 // dest[1] = self
                 unsafe {

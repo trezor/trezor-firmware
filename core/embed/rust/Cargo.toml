@@ -8,6 +8,8 @@ build = "build.rs"
 
 [features]
 bitcoin_only = []
+ui = []
+ui_debug = []
 test = ["cc", "glob"]
 
 [lib]
@@ -26,18 +28,22 @@ codegen-units = 1
 [dependencies]
 cty = "0.2.1"
 
+[dependencies.heapless]
+version = "0.7.3"
+default_features = false
+
 [dependencies.cstr_core]
-version = "0.2.2"
+version = "0.2.4"
 default_features = false
 
 [build-dependencies.bindgen]
-version = "0.58.0"
+version = "0.59.1"
 default_features = false
 features = ["runtime"]
 
 [build-dependencies.cc]
 optional = true
-version = "1.0.68"
+version = "1.0.69"
 
 [build-dependencies.glob]
 optional = true

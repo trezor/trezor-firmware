@@ -194,6 +194,8 @@ types = {
     "qstrdata": "q",
     "protomsg": "P",
     "protodef": "p",
+    "uilayout": "U",
+    "uilayoutinner": "u",
 }
 
 pixels_per_line = len(
