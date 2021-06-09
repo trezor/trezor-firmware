@@ -40,6 +40,7 @@ error=1
 : "${TREZOR_MONERO_TESTS_SHA256SUM:=1e5dfdb07de4ea46088f4a5bdb0d51f040fe479019efae30f76427eee6edb3f7}"
 : "${TREZOR_MONERO_TESTS_PATH:=$CORE_DIR/tests/trezor_monero_tests}"
 : "${TREZOR_MONERO_TESTS_LOG:=$CORE_DIR/tests/trezor_monero_tests.log}"
+: "${TREZOR_MONERO_TESTS_CHAIN:=$CORE_DIR/tests/trezor_monero_tests.chain}"
 
 if [[ ! -f "$TREZOR_MONERO_TESTS_PATH" ]]; then
   echo "Downloading Trezor monero tests binary ($TREZOR_MONERO_TESTS_SHA256SUM) to ${TREZOR_MONERO_TESTS_PATH}"
@@ -53,7 +54,7 @@ fi
 echo "Running tests"
 TIME_TESTS_START=$SECONDS
 if [[ "$OSTYPE" == "linux-gnu" && "$FORCE_DOCKER_USE" != 1 ]]; then
-  "$TREZOR_MONERO_TESTS_PATH" $@ 2>&1 > "$TREZOR_MONERO_TESTS_LOG"
+  "$TREZOR_MONERO_TESTS_PATH" --chain=$TREZOR_MONERO_TESTS_CHAIN $@ 2>&1 > "$TREZOR_MONERO_TESTS_LOG"
   error=$?
 
 elif [[ "$OSTYPE" == "darwin"* || "$FORCE_DOCKER_USE" == 1 ]]; then
@@ -74,11 +75,11 @@ fi
 TIME_TESTS_ELAPSED=$((SECONDS-TIME_TESTS_START))
 
 if ((error != 0)); then
-  echo "ERROR in trezor tests. Log follows;"
-  tail -n 500 "$TREZOR_MONERO_TESTS_LOG"
+  RESULT=FAIL
 else
-  echo "[PASS] Monero test in $TIME_TESTS_ELAPSED sec. "
-  cat "$TREZOR_MONERO_TESTS_LOG" | grep -v DEBUG | egrep '#TEST#|tests.core\b' | tail -n 50
+  RESULT=PASS
 fi
 
+echo "[$RESULT] Monero test in $TIME_TESTS_ELAPSED sec. "
+cat "$TREZOR_MONERO_TESTS_LOG" | grep -v DEBUG | egrep '#TEST#|tests.core\b' | tail -n 50
 exit $error
