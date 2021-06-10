@@ -152,6 +152,12 @@
       "https://blockbook.ravencoin.org"
     ]
   },
+  "bitcoin:SAPP": {
+    "type": "blockbook",
+    "url": [
+      "https://blockbook.sappcoin.com"
+    ]
+  },
   "bitcoin:SYS": {
     "type": "blockbook",
     "url": [

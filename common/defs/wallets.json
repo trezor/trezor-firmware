@@ -91,6 +91,9 @@
         "Electrum-RVN": "https://github.com/traysi/electrum-raven",
         "Mango Farm": "https://mangofarmassets.com/mangowallet"
     },
+    "bitcoin:SAPP": {
+        "Electrum-SAPP": "https://github.com/sappcoin-com/electrum-wallet"
+    },
     "bitcoin:SMART": {
         "Electrum-SMART": "https://github.com/smartcash/electrum-smart"
     },

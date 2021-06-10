@@ -1438,6 +1438,34 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=False,
                 confidential_assets=None,
             )
+        elif name == "Sapphire":
+            return CoinInfo(
+                coin_name=name,
+                coin_shortcut="SAPP",
+                decimals=8,
+                address_type=63,
+                address_type_p2sh=18,
+                maxfee_kb=170000000000,
+                signed_message_header="DarkNet Signed Message:\n",
+                xpub_magic=0x022d2563,
+                xpub_magic_segwit_p2sh=None,
+                xpub_magic_segwit_native=None,
+                xpub_magic_multisig_segwit_p2sh=None,
+                xpub_magic_multisig_segwit_native=None,
+                bech32_prefix=None,
+                cashaddr_prefix=None,
+                slip44=832,
+                segwit=False,
+                fork_id=None,
+                force_bip143=False,
+                decred=False,
+                negative_fee=False,
+                curve_name='secp256k1',
+                extra_data=False,
+                timestamp=False,
+                overwintered=False,
+                confidential_assets=None,
+            )
         elif name == "SmartCash":
             return CoinInfo(
                 coin_name=name,
