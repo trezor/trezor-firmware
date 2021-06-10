@@ -4,7 +4,15 @@ from trezorcrypto import random  # avoid pulling in trezor.crypto
 from trezor import utils
 
 if False:
-    from typing import Sequence
+    from typing import Sequence, TypeVar, overload
+
+    T = TypeVar("T")
+
+else:
+
+    def overload(f) -> None:  # type: ignore
+        pass
+
 
 _MAX_SESSIONS_COUNT = 10
 _SESSIONLESS_FLAG = 128
@@ -43,20 +51,35 @@ class DataCache:
     fields: Sequence[int]
 
     def __init__(self) -> None:
-        self.data = [bytearray(f) for f in self.fields]
+        self.data = [bytearray(f + 1) for f in self.fields]
 
     def set(self, key: int, value: bytes) -> None:
         utils.ensure(key < len(self.fields))
         utils.ensure(len(value) <= self.fields[key])
-        self.data[key][:] = value
+        self.data[key][0] = 1
+        self.data[key][1:] = value
 
-    def get(self, key: int) -> bytes:
+    @overload
+    def get(self, key: int) -> bytes | None:
+        ...
+
+    @overload
+    def get(self, key: int, default: T) -> bytes | T:  # noqa: F811
+        ...
+
+    def get(self, key: int, default: T | None = None) -> bytes | T | None:  # noqa: F811
         utils.ensure(key < len(self.fields), "failed to load key %d" % key)
-        return bytes(self.data[key])
+        if self.data[key][0] != 1:
+            return default
+        return bytes(self.data[key][1:])
+
+    def delete(self, key: int) -> None:
+        utils.ensure(key < len(self.fields))
+        self.data[key][:] = b"\x00"
 
     def clear(self) -> None:
         for i in range(len(self.fields)):
-            self.set(i, b"")
+            self.delete(i)
 
 
 class SessionCache(DataCache):
@@ -184,12 +207,30 @@ def set(key: int, value: bytes) -> None:
     _SESSIONS[_active_session_idx].set(key, value)
 
 
-def get(key: int) -> bytes:
+@overload
+def get(key: int) -> bytes | None:
+    ...
+
+
+@overload
+def get(key: int, default: T) -> bytes | T:  # noqa: F811
+    ...
+
+
+def get(key: int, default: T | None = None) -> bytes | T | None:  # noqa: F811
     if key & _SESSIONLESS_FLAG:
-        return _SESSIONLESS_CACHE.get(key ^ _SESSIONLESS_FLAG)
+        return _SESSIONLESS_CACHE.get(key ^ _SESSIONLESS_FLAG, default)
     if _active_session_idx is None:
         raise InvalidSessionError
-    return _SESSIONS[_active_session_idx].get(key)
+    return _SESSIONS[_active_session_idx].get(key, default)
+
+
+def delete(key: int) -> None:
+    if key & _SESSIONLESS_FLAG:
+        return _SESSIONLESS_CACHE.delete(key ^ _SESSIONLESS_FLAG)
+    if _active_session_idx is None:
+        raise InvalidSessionError
+    return _SESSIONS[_active_session_idx].delete(key)
 
 
 if False:
@@ -208,7 +249,7 @@ def stored(key: int) -> Callable[[ByteFunc], ByteFunc]:
 
         def wrapper(*args, **kwargs):  # type: ignore
             value = get(key)
-            if not value:
+            if value is None:
                 value = func(*args, **kwargs)
                 set(key, value)
             return value
@@ -227,7 +268,7 @@ def stored_async(key: int) -> Callable[[AsyncByteFunc], AsyncByteFunc]:
 
         async def wrapper(*args, **kwargs):  # type: ignore
             value = get(key)
-            if not value:
+            if value is None:
                 value = await func(*args, **kwargs)
                 set(key, value)
             return value

@@ -27,10 +27,10 @@ def apply_setting(level: SafetyCheckLevel) -> None:
     Changes the safety level settings.
     """
     if level == SafetyCheckLevel.Strict:
-        storage.cache.set(APP_COMMON_SAFETY_CHECKS_TEMPORARY, b"")
+        storage.cache.delete(APP_COMMON_SAFETY_CHECKS_TEMPORARY)
         storage.device.set_safety_check_level(SAFETY_CHECK_LEVEL_STRICT)
     elif level == SafetyCheckLevel.PromptAlways:
-        storage.cache.set(APP_COMMON_SAFETY_CHECKS_TEMPORARY, b"")
+        storage.cache.delete(APP_COMMON_SAFETY_CHECKS_TEMPORARY)
         storage.device.set_safety_check_level(SAFETY_CHECK_LEVEL_PROMPT)
     elif level == SafetyCheckLevel.PromptTemporarily:
         storage.device.set_safety_check_level(SAFETY_CHECK_LEVEL_STRICT)
