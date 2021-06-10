@@ -88,7 +88,7 @@ def _set_last_unlock_time() -> None:
 
 def _get_last_unlock_time() -> int:
     return int.from_bytes(
-        storage.cache.get(storage.cache.APP_COMMON_REQUEST_PIN_LAST_UNLOCK), "big"
+        storage.cache.get(storage.cache.APP_COMMON_REQUEST_PIN_LAST_UNLOCK, b""), "big"
     )
 
 

@@ -35,13 +35,13 @@ def get() -> protobuf.MessageType | None:
         return None
 
     msg_wire_type = int.from_bytes(stored_auth_type, "big")
-    buffer = storage.cache.get(storage.cache.APP_COMMON_AUTHORIZATION_DATA)
+    buffer = storage.cache.get(storage.cache.APP_COMMON_AUTHORIZATION_DATA, b"")
     return protobuf.load_message_buffer(buffer, msg_wire_type)
 
 
 def get_wire_types() -> Iterable[int]:
     stored_auth_type = storage.cache.get(storage.cache.APP_COMMON_AUTHORIZATION_TYPE)
-    if not stored_auth_type:
+    if stored_auth_type is None:
         return ()
 
     msg_wire_type = int.from_bytes(stored_auth_type, "big")
@@ -49,5 +49,5 @@ def get_wire_types() -> Iterable[int]:
 
 
 def clear() -> None:
-    storage.cache.set(storage.cache.APP_COMMON_AUTHORIZATION_TYPE, b"")
-    storage.cache.set(storage.cache.APP_COMMON_AUTHORIZATION_DATA, b"")
+    storage.cache.delete(storage.cache.APP_COMMON_AUTHORIZATION_TYPE)
+    storage.cache.delete(storage.cache.APP_COMMON_AUTHORIZATION_DATA)
