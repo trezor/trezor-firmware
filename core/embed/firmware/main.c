@@ -40,9 +40,7 @@
 #include "display.h"
 #include "flash.h"
 #include "mpu.h"
-#ifdef RDI
 #include "random_delays.h"
-#endif
 #ifdef SYSTEM_VIEW
 #include "systemview.h"
 #endif
