@@ -312,6 +312,7 @@ SOURCE_UNIX = [
     'embed/unix/common.c',
     'embed/unix/flash.c',
     'embed/unix/main.c',
+    'embed/unix/main_main.c',
     'embed/unix/profile.c',
     'embed/unix/random_delays.c',
     'embed/unix/rng.c',
