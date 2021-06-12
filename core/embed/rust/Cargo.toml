@@ -8,6 +8,7 @@ build = "build.rs"
 
 [features]
 bitcoin_only = []
+test = ["cc", "glob"]
 
 [lib]
 crate-type = ["staticlib"]
@@ -29,5 +30,15 @@ cty = "0.2.1"
 version = "0.2.2"
 default_features = false
 
-[build-dependencies]
-bindgen = "0.58.0"
+[build-dependencies.bindgen]
+version = "0.58.0"
+default_features = false
+features = ["runtime"]
+
+[build-dependencies.cc]
+optional = true
+version = "1.0.68"
+
+[build-dependencies.glob]
+optional = true
+version = "0.3.0"
