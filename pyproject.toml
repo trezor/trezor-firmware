@@ -32,7 +32,7 @@ shamir-mnemonic = "^0.2.1"
 fido2 = "^0.8.0"
 
 ## typing
-mypy = {git = "https://github.com/python/mypy.git"}
+mypy = "^0.901"
 typing-extensions = ">=3.7.4"
 
 ## style
