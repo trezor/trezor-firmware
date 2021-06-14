@@ -5,7 +5,7 @@
   .global default_handler
   .type default_handler, STT_FUNC
 default_handler:
-  b shutdown
+  b shutdown_privileged
 
   .macro add_handler symbol_name:req
     .word \symbol_name
