@@ -53,8 +53,6 @@
 extern void shutdown_privileged(void);
 
 int main(void) {
-  random_delays_init();
-
 #ifdef RDI
   rdi_start();
 #endif
