@@ -29,9 +29,6 @@
 
 #include "stm32f4xx_ll_utils.h"
 
-// from util.s
-extern void shutdown_privileged(void);
-
 #define COLOR_FATAL_ERROR RGB16(0x7F, 0x00, 0x00)
 
 // from util.s
@@ -71,7 +68,7 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
                  rev[4]);
 #endif
   display_printf("\nPlease contact Trezor support.\n");
-  shutdown_privileged();
+  shutdown();
   for (;;)
     ;
 }
@@ -120,7 +117,7 @@ error_shutdown(const char *line1, const char *line2, const char *line3,
   display_printf("\nPlease unplug the device.\n");
 #endif
   display_backlight(255);
-  shutdown_privileged();
+  shutdown();
   for (;;)
     ;
 }
