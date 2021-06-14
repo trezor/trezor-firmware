@@ -87,9 +87,9 @@ void SystemInit(void) {
 }
 
 // from util.s
-extern void shutdown(void);
+extern void shutdown_privileged(void);
 
 void PVD_IRQHandler(void) {
   TIM1->CCR1 = 0;  // turn off display backlight
-  shutdown();
+  shutdown_privileged();
 }

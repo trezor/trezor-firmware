@@ -121,9 +121,9 @@ jump_to_unprivileged:
   // jump
   bx lr
 
-  .global shutdown
-  .type shutdown, STT_FUNC
-shutdown:
+  .global shutdown_privileged
+  .type shutdown_privileged, STT_FUNC
+shutdown_privileged:
   cpsid f
   ldr r0, =0
   mov r1, r0
