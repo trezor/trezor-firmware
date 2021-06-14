@@ -49,6 +49,9 @@
 #include "supervise.h"
 #include "touch.h"
 
+// from util.s
+extern void shutdown_privileged(void);
+
 int main(void) {
   random_delays_init();
 
@@ -180,6 +183,11 @@ void SVC_C_Handler(uint32_t *stack) {
       cyccnt_cycles = *DWT_CYCCNT_ADDR;
       break;
 #endif
+    case SVC_SHUTDOWN:
+      shutdown_privileged();
+      for (;;)
+        ;
+      break;
     default:
       stack[0] = 0xffffffff;
       break;
