@@ -34,9 +34,22 @@ CFLAGS   += $(OPTFLAGS) \
             -Wno-missing-braces \
             -Werror
 
+ZKP_CFLAGS = \
+	-DSECP256K1_BUILD \
+	-DUSE_NUM_NONE \
+	-DUSE_FIELD_INV_BUILTIN \
+	-DUSE_SCALAR_INV_BUILTIN \
+	-DUSE_FIELD_10X26 \
+	-DUSE_SCALAR_8X32 \
+	-DECMULT_GEN_PREC_BITS=4 \
+	-DECMULT_WINDOW_SIZE=8
+ZKP_PATH = ../vendor/secp256k1-zkp
+CFLAGS += -DSECP256K1_CONTEXT_SIZE=73952
+
 VALGRIND ?= 1
 
 CFLAGS += -I.
+CFLAGS += -I..
 CFLAGS += -DVALGRIND=$(VALGRIND)
 CFLAGS += -DUSE_ETHEREUM=1
 CFLAGS += -DUSE_GRAPHENE=1
@@ -82,6 +95,7 @@ SRCS  += slip39.c
 SRCS  += schnorr.c
 
 OBJS   = $(SRCS:.c=.o)
+OBJS  += secp256k1-zkp.o
 
 TESTLIBS = $(shell pkg-config --libs check) -lpthread -lm
 TESTSSLLIBS = $(shell pkg-config --libs openssl)
@@ -124,11 +138,15 @@ tools/bip39bruteforce: tools/bip39bruteforce.o $(OBJS)
 fuzzer: fuzzer/fuzzer.o $(OBJS)
 	$(CC) $(CFLAGS) fuzzer/fuzzer.o $(OBJS) -o fuzzer/fuzzer
 
+secp256k1-zkp.o:
+	$(CC) $(ZKP_CFLAGS) -fPIC -I$(ZKP_PATH) -I$(ZKP_PATH)/src -c $(ZKP_PATH)/src/secp256k1.c -o secp256k1-zkp.o
+
 clean:
 	rm -f *.o aes/*.o chacha20poly1305/*.o ed25519-donna/*.o monero/*.o
 	rm -f tests/*.o tests/test_check tests/test_speed tests/test_openssl tests/libtrezor-crypto.so tests/aestst
 	rm -f tools/*.o tools/xpubaddrgen tools/mktable tools/bip39bruteforce
 	rm -f fuzzer/*.o fuzzer/fuzzer
+	rm -f secp256k1-zkp.o
 
 clean-fuzzer: clean
 	rm -f crash-* fuzz-*.log slow-unit-* timeout-*
