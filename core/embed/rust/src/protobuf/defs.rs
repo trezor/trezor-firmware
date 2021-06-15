@@ -109,10 +109,31 @@ struct NameDef {
     msg_offset: u16,
 }
 
-static ENUM_DEFS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/../../../../proto_enums.data"));
-static MSG_DEFS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/../../../../proto_msgs.data"));
-static NAME_DEFS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/../../../../proto_names.data"));
-static WIRE_DEFS: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/../../../../proto_wire.data"));
+#[cfg(target_arch = "arm")]
+macro_rules! proto_def_path {
+    ($filename:expr) => {
+        concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../build/firmware/rust/",
+            $filename
+        )
+    };
+}
+#[cfg(not(target_arch = "arm"))]
+macro_rules! proto_def_path {
+    ($filename:expr) => {
+        concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../build/unix/rust/",
+            $filename
+        )
+    };
+}
+
+static ENUM_DEFS: &[u8] = include_bytes!(proto_def_path!("proto_enums.data"));
+static MSG_DEFS: &[u8] = include_bytes!(proto_def_path!("proto_msgs.data"));
+static NAME_DEFS: &[u8] = include_bytes!(proto_def_path!("proto_names.data"));
+static WIRE_DEFS: &[u8] = include_bytes!(proto_def_path!("proto_wire.data"));
 
 pub fn find_name_by_msg_offset(msg_offset: u16) -> Result<u16, Error> {
     let name_defs: &[NameDef] = unsafe {
