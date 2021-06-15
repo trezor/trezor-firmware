@@ -668,10 +668,10 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
 
 protobuf_blobs = env.Command(
     target=[
-        f'rust/{RUST_TARGET}/proto_enums.data',
-        f'rust/{RUST_TARGET}/proto_msgs.data',
-        f'rust/{RUST_TARGET}/proto_names.data',
-        f'rust/{RUST_TARGET}/proto_wire.data',
+        f'rust/proto_enums.data',
+        f'rust/proto_msgs.data',
+        f'rust/proto_names.data',
+        f'rust/proto_wire.data',
     ],
     source=PROTO_SOURCES,
     action='$PB2PY --bitcoin-only=%s --blob-outdir ${TARGET.dir} $SOURCES --qstr-defs build/firmware/genhdr/qstrdefs.generated.h' % BITCOIN_ONLY,
