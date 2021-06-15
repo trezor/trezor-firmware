@@ -3,8 +3,9 @@ import math
 from common import *
 
 from apps.common.cbor import (
-    Tagged,
     IndefiniteLengthArray,
+    OrderedMap,
+    Tagged,
     decode,
     encode,
     encode_chunked,
@@ -59,6 +60,7 @@ class TestCardanoCbor(unittest.TestCase):
             # maps
             ({}, 'a0'),
             ({1: 2, 3: 4}, 'a201020304'),
+            ({3: 4, 1: 2}, 'a201020304'),
 
             # indefinite
             (IndefiniteLengthArray([]), '9fff'),
@@ -93,6 +95,25 @@ class TestCardanoCbor(unittest.TestCase):
             encoded = unhexlify(encoded_hex)
             self.assertEqual(encode(value_tuple), encoded)
             self.assertEqual(decode(encoded), val)
+
+    def test_cbor_ordered_map(self):
+        """
+        OrderedMaps should be encoded as maps without any ordering and decoded back as dicts.
+        """
+        test_vectors = [
+            ({}, 'a0'),
+            ([[1, 2], [3, 4]], 'a201020304'),
+            ([[3, 4], [1, 2]], 'a203040102'),
+        ]
+
+        for val, encoded_hex in test_vectors:
+            ordered_map = OrderedMap()
+            for key, value in val:
+                ordered_map[key] = value
+
+            encoded = unhexlify(encoded_hex)
+            self.assertEqual(encode(ordered_map), encoded)
+            self.assertEqual(decode(encoded), {k: v for k, v in val})
 
     def test_encode_streamed(self):
         large_dict = {i: i for i in range(100)}
