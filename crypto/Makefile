@@ -125,8 +125,8 @@ tests/test_speed: tests/test_speed.o $(OBJS)
 tests/test_openssl: tests/test_openssl.o $(OBJS)
 	$(CC) tests/test_openssl.o $(OBJS) $(TESTSSLLIBS) -o tests/test_openssl
 
-tests/libtrezor-crypto.so: $(SRCS)
-	$(CC) $(CFLAGS) -DAES_128 -DAES_192 -fPIC -shared $(SRCS) -o tests/libtrezor-crypto.so
+tests/libtrezor-crypto.so: $(SRCS) secp256k1-zkp.o
+	$(CC) $(CFLAGS) -DAES_128 -DAES_192 -fPIC -shared $(SRCS) secp256k1-zkp.o -o tests/libtrezor-crypto.so
 
 tools: tools/xpubaddrgen tools/mktable tools/bip39bruteforce
 
