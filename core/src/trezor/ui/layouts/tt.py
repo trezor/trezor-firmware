@@ -11,7 +11,7 @@ from ..components.common import break_path_to_lines
 from ..components.common.confirm import is_confirmed, raise_if_cancelled
 from ..components.tt.button import ButtonCancel, ButtonDefault
 from ..components.tt.confirm import Confirm, HoldToConfirm
-from ..components.tt.scroll import Paginated, paginate_paragraphs, paginate_text
+from ..components.tt.scroll import Paginated, paginate_paragraphs, paginate_text, PAGINATED_LINE_WIDTH, PAGEBREAK
 from ..components.tt.text import Span, Text
 from ..constants.tt import (
     MONO_ADDR_PER_LINE,
@@ -577,6 +577,9 @@ async def confirm_hex(
     await raise_if_cancelled(interact(ctx, content, br_type, br_code))
 
 
+_SCREEN_FULL_THRESHOLD = const(2)
+
+
 # TODO keep name and value on the same page if possible
 async def confirm_properties(
     ctx: wire.GenericContext,
@@ -588,12 +591,44 @@ async def confirm_properties(
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> None:
+    span = Span()
     para = []
-    for p in props:
-        if p[0] is not None:
-            para.append((ui.NORMAL, p[0]))
-        if p[1] is not None:
-            para.append((ui.BOLD, p[1]))
+    used_lines = 0
+    for key, val in props:
+        span.reset(key or "", 0, ui.NORMAL, line_width=PAGINATED_LINE_WIDTH)
+        key_lines = span.count_lines()
+        span.reset(val or "", 0, ui.BOLD, line_width=PAGINATED_LINE_WIDTH)
+        val_lines = span.count_lines()
+
+        remaining_lines = TEXT_MAX_LINES - used_lines
+        used_lines = (used_lines + key_lines + val_lines) % TEXT_MAX_LINES
+
+        if key_lines + val_lines > remaining_lines:
+            if remaining_lines <= _SCREEN_FULL_THRESHOLD:
+                # there are only 2 remaining lines, don't try to fit and put everything
+                # on next page
+                para.append(PAGEBREAK)
+                used_lines = (key_lines + val_lines) % TEXT_MAX_LINES
+
+            elif val_lines > 0 and key_lines >= remaining_lines:
+                # more than 2 remaining lines so try to fit something -- but won't fit
+                # at least one line of value
+                para.append(PAGEBREAK)
+                used_lines = (key_lines + val_lines) % TEXT_MAX_LINES
+
+            elif key_lines + val_lines <= TEXT_MAX_LINES:
+                # Whole property won't fit to the page, but it will fit on a page
+                # by itself
+                para.append(PAGEBREAK)
+                used_lines = (key_lines + val_lines) % TEXT_MAX_LINES
+
+            # else:
+            # None of the above. Continue fitting on the same page.
+
+        if key:
+            para.append((ui.NORMAL, key))
+        if val:
+            para.append((ui.BOLD, val))
     content = paginate_paragraphs(
         para, title, icon, icon_color, confirm=HoldToConfirm if hold else Confirm
     )

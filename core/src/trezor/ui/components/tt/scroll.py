@@ -15,7 +15,7 @@ if False:
     from ..common.text import TextContent
 
 
-_PAGINATED_LINE_WIDTH = const(204)
+PAGINATED_LINE_WIDTH = const(204)
 
 WAS_PAGED = object()
 
@@ -283,7 +283,7 @@ def paginate_text(
     else:
         pages: list[ui.Component] = []
         span.reset(
-            text, 0, font, break_words=break_words, line_width=_PAGINATED_LINE_WIDTH
+            text, 0, font, break_words=break_words, line_width=PAGINATED_LINE_WIDTH
         )
         while span.has_more_content():
             # advance to first line of the page
@@ -295,7 +295,7 @@ def paginate_text(
                 new_lines=False,
                 content_offset=0,
                 char_offset=span.start,
-                line_width=_PAGINATED_LINE_WIDTH,
+                line_width=PAGINATED_LINE_WIDTH,
                 break_words=break_words,
                 render_page_overflow=False,
             )
@@ -310,6 +310,9 @@ def paginate_text(
         return Paginated(pages)
 
 
+PAGEBREAK = 0, ""
+
+
 def paginate_paragraphs(
     para: Iterable[tuple[int, str]],
     header: str,
@@ -321,15 +324,16 @@ def paginate_paragraphs(
     span = Span("", 0, ui.NORMAL, break_words=break_words)
     lines = 0
     content: list[TextContent] = []
-    for font, text in para:
-        span.reset(text, 0, font, break_words=break_words)
+    for item in para:
+        if item is PAGEBREAK:
+            continue
+        span.reset(item[1], 0, item[0], break_words=break_words)
         lines += span.count_lines()
 
         # we'll need this for multipage too
         if content:
             content.append("\n")
-        content.append(font)
-        content.append(text)
+        content.extend(item)
 
     if lines <= TEXT_MAX_LINES:
         result = Text(
@@ -339,19 +343,27 @@ def paginate_paragraphs(
             new_lines=False,
             break_words=break_words,
         )
-        for font, text in para:
-            if len(result.content) != 0:
-                result.content.append("\n")
-            result.content.append(font)
-            result.content.append(text)
+        result.content = content
         return confirm(result)
 
     else:
         pages: list[ui.Component] = []
         lines_left = 0
-        for i, (font, text) in enumerate(para):
+        content_ctr = 0
+        page: Text | None = None
+        for item in para:
+            if item is PAGEBREAK:
+                if page is not None:
+                    page.max_lines -= lines_left
+                lines_left = 0
+                continue
+
             span.reset(
-                text, 0, font, break_words=break_words, line_width=_PAGINATED_LINE_WIDTH
+                item[1],
+                0,
+                item[0],
+                break_words=break_words,
+                line_width=PAGINATED_LINE_WIDTH,
             )
 
             while span.has_more_content():
@@ -362,9 +374,9 @@ def paginate_paragraphs(
                         header_icon=header_icon,
                         icon_color=icon_color,
                         new_lines=False,
-                        content_offset=i * 3 + 1,  # font, _text_, newline
+                        content_offset=content_ctr * 3 + 1,  # font, _text_, newline
                         char_offset=span.start,
-                        line_width=_PAGINATED_LINE_WIDTH,
+                        line_width=PAGINATED_LINE_WIDTH,
                         render_page_overflow=False,
                         break_words=break_words,
                     )
@@ -373,6 +385,8 @@ def paginate_paragraphs(
                     lines_left = TEXT_MAX_LINES - 1
                 else:
                     lines_left -= 1
+
+            content_ctr += 1
 
         pages[-1] = confirm(pages[-1])
         return Paginated(pages)
