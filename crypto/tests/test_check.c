@@ -3428,6 +3428,79 @@ START_TEST(test_bip32_decred_vector_2) {
 }
 END_TEST
 
+static void test_ecdsa_get_public_key33_helper(
+    void (*ecdsa_get_public_key33_fn)(const ecdsa_curve *, const uint8_t *,
+                                      uint8_t *)) {
+  uint8_t privkey[32];
+  uint8_t pubkey[65];
+  const ecdsa_curve *curve = &secp256k1;
+
+  memcpy(
+      privkey,
+      fromhex(
+          "c46f5b217f04ff28886a89d3c762ed84e5fa318d1c9a635d541131e69f1f49f5"),
+      32);
+  ecdsa_get_public_key33_fn(curve, privkey, pubkey);
+  ck_assert_mem_eq(
+      pubkey,
+      fromhex(
+          "0232b062e9153f573c220b1be0299d6447e81577274bf11a7c08dff71384c6b6ec"),
+      33);
+
+  memcpy(
+      privkey,
+      fromhex(
+          "3b90a4de80fb00d77795762c389d1279d4b4ab5992ae3cde6bc12ca63116f74c"),
+      32);
+  ecdsa_get_public_key33_fn(curve, privkey, pubkey);
+  ck_assert_mem_eq(
+      pubkey,
+      fromhex(
+          "0332b062e9153f573c220b1be0299d6447e81577274bf11a7c08dff71384c6b6ec"),
+      33);
+}
+
+START_TEST(test_ecdsa_get_public_key33) {
+  test_ecdsa_get_public_key33_helper(ecdsa_get_public_key33);
+}
+END_TEST
+
+START_TEST(test_zkp_ecdsa_get_public_key33) {
+  test_ecdsa_get_public_key33_helper(zkp_ecdsa_get_public_key33);
+}
+END_TEST
+
+static void test_ecdsa_get_public_key65_helper(
+    void (*ecdsa_get_public_key65_fn)(const ecdsa_curve *, const uint8_t *,
+                                      uint8_t *)) {
+  uint8_t privkey[32];
+  uint8_t pubkey[65];
+  const ecdsa_curve *curve = &secp256k1;
+
+  memcpy(
+      privkey,
+      fromhex(
+          "c46f5b217f04ff28886a89d3c762ed84e5fa318d1c9a635d541131e69f1f49f5"),
+      32);
+  ecdsa_get_public_key65_fn(curve, privkey, pubkey);
+  ck_assert_mem_eq(
+      pubkey,
+      fromhex(
+          "0432b062e9153f573c220b1be0299d6447e81577274bf11a7c08dff71384c6b6ec"
+          "179ca56b637a57e0fcd28cefa10c9433dc30532682647f4daa053d43d5cc960a"),
+      65);
+}
+
+START_TEST(test_ecdsa_get_public_key65) {
+  test_ecdsa_get_public_key65_helper(ecdsa_get_public_key65);
+}
+END_TEST
+
+START_TEST(test_zkp_ecdsa_get_public_key65) {
+  test_ecdsa_get_public_key65_helper(zkp_ecdsa_get_public_key65);
+}
+END_TEST
+
 static void test_ecdsa_recover_pub_from_sig_helper(int (
     *ecdsa_recover_pub_from_sig_fn)(const ecdsa_curve *, uint8_t *,
                                     const uint8_t *, const uint8_t *, int)) {
@@ -9188,8 +9261,12 @@ Suite *test_suite(void) {
   suite_add_tcase(s, tc);
 
   tc = tcase_create("ecdsa");
+  tcase_add_test(tc, test_ecdsa_get_public_key33);
+  tcase_add_test(tc, test_ecdsa_get_public_key65);
   tcase_add_test(tc, test_ecdsa_recover_pub_from_sig);
   tcase_add_test(tc, test_ecdsa_verify_digest);
+  tcase_add_test(tc, test_zkp_ecdsa_get_public_key33);
+  tcase_add_test(tc, test_zkp_ecdsa_get_public_key65);
   tcase_add_test(tc, test_zkp_ecdsa_recover_pub_from_sig);
   tcase_add_test(tc, test_zkp_ecdsa_verify_digest);
   suite_add_tcase(s, tc);
