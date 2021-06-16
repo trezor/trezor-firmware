@@ -3426,7 +3426,9 @@ START_TEST(test_bip32_decred_vector_2) {
 }
 END_TEST
 
-START_TEST(test_ecdsa_sign_digest) {
+static void test_ecdsa_recover_pub_from_sig_helper(int (
+    *ecdsa_recover_pub_from_sig_fn)(const ecdsa_curve *, uint8_t *,
+                                    const uint8_t *, const uint8_t *, int)) {
   int res;
   uint8_t digest[32];
   uint8_t pubkey[65];
@@ -3439,7 +3441,7 @@ START_TEST(test_ecdsa_sign_digest) {
           "de4e9524586d6fce45667f9ff12f661e79870c4105fa0fb58af976619bb11432"),
       32);
   // r = 2:  Four points should exist
-  res = ecdsa_recover_pub_from_sig(
+  res = ecdsa_recover_pub_from_sig_fn(
       curve, pubkey,
       fromhex(
           "00000000000000000000000000000000000000000000000000000000000000020123"
@@ -3452,7 +3454,7 @@ START_TEST(test_ecdsa_sign_digest) {
           "043fc5bf5fec35b6ffe6fd246226d312742a8c296bfa57dd22da509a2e348529b7dd"
           "b9faf8afe1ecda3c05e7b2bda47ee1f5a87e952742b22afca560b29d972fcf"),
       65);
-  res = ecdsa_recover_pub_from_sig(
+  res = ecdsa_recover_pub_from_sig_fn(
       curve, pubkey,
       fromhex(
           "00000000000000000000000000000000000000000000000000000000000000020123"
@@ -3465,7 +3467,7 @@ START_TEST(test_ecdsa_sign_digest) {
           "0456d8089137b1fd0d890f8c7d4a04d0fd4520a30b19518ee87bd168ea12ed809032"
           "9274c4c6c0d9df04515776f2741eeffc30235d596065d718c3973e19711ad0"),
       65);
-  res = ecdsa_recover_pub_from_sig(
+  res = ecdsa_recover_pub_from_sig_fn(
       curve, pubkey,
       fromhex(
           "00000000000000000000000000000000000000000000000000000000000000020123"
@@ -3478,7 +3480,7 @@ START_TEST(test_ecdsa_sign_digest) {
           "04cee0e740f41aab39156844afef0182dea2a8026885b10454a2d539df6f6df9023a"
           "bfcb0f01c50bef3c0fa8e59a998d07441e18b1c60583ef75cc8b912fb21a15"),
       65);
-  res = ecdsa_recover_pub_from_sig(
+  res = ecdsa_recover_pub_from_sig_fn(
       curve, pubkey,
       fromhex(
           "00000000000000000000000000000000000000000000000000000000000000020123"
@@ -3498,7 +3500,7 @@ START_TEST(test_ecdsa_sign_digest) {
           "0000000000000000000000000000000000000000000000000000000000000000"),
       32);
   // r = 7:  No point P with P.x = 7,  but P.x = (order + 7) exists
-  res = ecdsa_recover_pub_from_sig(
+  res = ecdsa_recover_pub_from_sig_fn(
       curve, pubkey,
       fromhex(
           "00000000000000000000000000000000000000000000000000000000000000070123"
@@ -3511,7 +3513,7 @@ START_TEST(test_ecdsa_sign_digest) {
           "044d81bb47a31ffc6cf1f780ecb1e201ec47214b651650867c07f13ad06e12a1b040"
           "de78f8dbda700f4d3cd7ee21b3651a74c7661809699d2be7ea0992b0d39797"),
       65);
-  res = ecdsa_recover_pub_from_sig(
+  res = ecdsa_recover_pub_from_sig_fn(
       curve, pubkey,
       fromhex(
           "00000000000000000000000000000000000000000000000000000000000000070123"
@@ -3524,7 +3526,7 @@ START_TEST(test_ecdsa_sign_digest) {
           "044d81bb47a31ffc6cf1f780ecb1e201ec47214b651650867c07f13ad06e12a1b0bf"
           "21870724258ff0b2c32811de4c9ae58b3899e7f69662d41815f66c4f2c6498"),
       65);
-  res = ecdsa_recover_pub_from_sig(
+  res = ecdsa_recover_pub_from_sig_fn(
       curve, pubkey,
       fromhex(
           "00000000000000000000000000000000000000000000000000000000000000070123"
@@ -3538,7 +3540,7 @@ START_TEST(test_ecdsa_sign_digest) {
           "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
       32);
   // r = 1:  Two points P with P.x = 1,  but P.x = (order + 7) doesn't exist
-  res = ecdsa_recover_pub_from_sig(
+  res = ecdsa_recover_pub_from_sig_fn(
       curve, pubkey,
       fromhex(
           "00000000000000000000000000000000000000000000000000000000000000010123"
@@ -3551,7 +3553,7 @@ START_TEST(test_ecdsa_sign_digest) {
           "045d330b2f89dbfca149828277bae852dd4aebfe136982cb531a88e9e7a89463fe71"
           "519f34ea8feb9490c707f14bc38c9ece51762bfd034ea014719b7c85d2871b"),
       65);
-  res = ecdsa_recover_pub_from_sig(
+  res = ecdsa_recover_pub_from_sig_fn(
       curve, pubkey,
       fromhex(
           "00000000000000000000000000000000000000000000000000000000000000010123"
@@ -3566,14 +3568,14 @@ START_TEST(test_ecdsa_sign_digest) {
       65);
 
   // r = 0 is always invalid
-  res = ecdsa_recover_pub_from_sig(
+  res = ecdsa_recover_pub_from_sig_fn(
       curve, pubkey,
       fromhex(
           "00000000000000000000000000000000000000000000000000000000000000010123"
           "456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"),
       digest, 2);
   ck_assert_int_eq(res, 1);
-  res = ecdsa_recover_pub_from_sig(
+  res = ecdsa_recover_pub_from_sig_fn(
       curve, pubkey,
       fromhex(
           "00000000000000000000000000000000000000000000000000000000000000000123"
@@ -3581,7 +3583,7 @@ START_TEST(test_ecdsa_sign_digest) {
       digest, 0);
   ck_assert_int_eq(res, 1);
   // r >= order is always invalid
-  res = ecdsa_recover_pub_from_sig(
+  res = ecdsa_recover_pub_from_sig_fn(
       curve, pubkey,
       fromhex(
           "fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd03641410123"
@@ -3589,7 +3591,7 @@ START_TEST(test_ecdsa_sign_digest) {
       digest, 0);
   ck_assert_int_eq(res, 1);
   // check that overflow of r is handled
-  res = ecdsa_recover_pub_from_sig(
+  res = ecdsa_recover_pub_from_sig_fn(
       curve, pubkey,
       fromhex(
           "000000000000000000000000000000014551231950B75FC4402DA1722FC9BAEE0123"
@@ -3597,7 +3599,7 @@ START_TEST(test_ecdsa_sign_digest) {
       digest, 2);
   ck_assert_int_eq(res, 1);
   // s = 0 is always invalid
-  res = ecdsa_recover_pub_from_sig(
+  res = ecdsa_recover_pub_from_sig_fn(
       curve, pubkey,
       fromhex(
           "00000000000000000000000000000000000000000000000000000000000000020000"
@@ -3605,7 +3607,7 @@ START_TEST(test_ecdsa_sign_digest) {
       digest, 0);
   ck_assert_int_eq(res, 1);
   // s >= order is always invalid
-  res = ecdsa_recover_pub_from_sig(
+  res = ecdsa_recover_pub_from_sig_fn(
       curve, pubkey,
       fromhex(
           "0000000000000000000000000000000000000000000000000000000000000002ffff"
@@ -3613,9 +3615,14 @@ START_TEST(test_ecdsa_sign_digest) {
       digest, 0);
   ck_assert_int_eq(res, 1);
 }
-END_TEST
 
 START_TEST(test_ecdsa_recover_pub_from_sig) {
+  test_ecdsa_recover_pub_from_sig_helper(ecdsa_recover_pub_from_sig);
+}
+END_TEST
+
+static void test_ecdsa_verify_digest_helper(int (*ecdsa_verify_digest_fn)(
+    const ecdsa_curve *, const uint8_t *, const uint8_t *, const uint8_t *)) {
   int res;
   uint8_t digest[32];
   uint8_t pubkey[65];
@@ -3640,9 +3647,14 @@ START_TEST(test_ecdsa_recover_pub_from_sig) {
              "a0b37f8fba683cc68f6574cd43b39f0343a50008bf6ccea9d13231d9e7e2e1e41"
              "1edc8d307254296264aebfc3dc76cd8b668373a072fd64665b50000e9fcce52"),
          sizeof(sig));
-  res = ecdsa_verify_digest(curve, pubkey, sig, digest);
+  res = ecdsa_verify_digest_fn(curve, pubkey, sig, digest);
   ck_assert_int_eq(res, 0);
 }
+
+START_TEST(test_ecdsa_verify_digest) {
+  test_ecdsa_verify_digest_helper(ecdsa_verify_digest);
+}
+END_TEST
 
 #define test_deterministic(KEY, MSG, K)           \
   do {                                            \
@@ -9165,7 +9177,7 @@ Suite *test_suite(void) {
 
   tc = tcase_create("ecdsa");
   tcase_add_test(tc, test_ecdsa_recover_pub_from_sig);
-  tcase_add_test(tc, test_ecdsa_sign_digest);
+  tcase_add_test(tc, test_ecdsa_verify_digest);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("rfc6979");
