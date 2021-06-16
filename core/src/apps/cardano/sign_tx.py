@@ -309,12 +309,19 @@ def _validate_certificates(
 
 
 def _validate_withdrawals(withdrawals: list[CardanoTxWithdrawalType]) -> None:
+    seen_withdrawals = set()
     for withdrawal in withdrawals:
         if not SCHEMA_STAKING_ANY_ACCOUNT.match(withdrawal.path):
             raise INVALID_WITHDRAWAL
 
         if not 0 <= withdrawal.amount < LOVELACE_MAX_SUPPLY:
             raise INVALID_WITHDRAWAL
+
+        path_tuple = tuple(withdrawal.path)
+        if path_tuple in seen_withdrawals:
+            raise wire.ProcessError("Duplicate withdrawals")
+        else:
+            seen_withdrawals.add(path_tuple)
 
 
 def _cborize_signed_tx(
