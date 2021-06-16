@@ -71,6 +71,8 @@
 #include "shamir.h"
 #include "slip39.h"
 #include "slip39_wordlist.h"
+#include "zkp_context.h"
+#include "zkp_ecdsa.h"
 
 #if VALGRIND
 /*
@@ -3621,6 +3623,11 @@ START_TEST(test_ecdsa_recover_pub_from_sig) {
 }
 END_TEST
 
+START_TEST(test_zkp_ecdsa_recover_pub_from_sig) {
+  test_ecdsa_recover_pub_from_sig_helper(zkp_ecdsa_recover_pub_from_sig);
+}
+END_TEST
+
 static void test_ecdsa_verify_digest_helper(int (*ecdsa_verify_digest_fn)(
     const ecdsa_curve *, const uint8_t *, const uint8_t *, const uint8_t *)) {
   int res;
@@ -3653,6 +3660,11 @@ static void test_ecdsa_verify_digest_helper(int (*ecdsa_verify_digest_fn)(
 
 START_TEST(test_ecdsa_verify_digest) {
   test_ecdsa_verify_digest_helper(ecdsa_verify_digest);
+}
+END_TEST
+
+START_TEST(test_zkp_ecdsa_verify_digest) {
+  test_ecdsa_verify_digest_helper(zkp_ecdsa_verify_digest);
 }
 END_TEST
 
@@ -9178,6 +9190,8 @@ Suite *test_suite(void) {
   tc = tcase_create("ecdsa");
   tcase_add_test(tc, test_ecdsa_recover_pub_from_sig);
   tcase_add_test(tc, test_ecdsa_verify_digest);
+  tcase_add_test(tc, test_zkp_ecdsa_recover_pub_from_sig);
+  tcase_add_test(tc, test_zkp_ecdsa_verify_digest);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("rfc6979");
@@ -9436,6 +9450,7 @@ Suite *test_suite(void) {
 
 // run suite
 int main(void) {
+  zkp_context_init();
   int number_failed;
   Suite *s = test_suite();
   SRunner *sr = srunner_create(s);
