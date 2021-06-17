@@ -1,6 +1,8 @@
 from micropython import const
 
-from trezor import loop, res, ui, utils
+from trezor import loop, res, ui, utils, wire, workflow
+from trezor.enums import ButtonRequestType
+from trezor.messages import ButtonAck, ButtonRequest
 
 from .button import Button, ButtonCancel, ButtonConfirm, ButtonDefault
 from .confirm import CANCELLED, CONFIRMED, Confirm
@@ -8,6 +10,12 @@ from .swipe import SWIPE_DOWN, SWIPE_UP, SWIPE_VERTICAL, Swipe
 from .text import TEXT_MAX_LINES, Span, Text
 
 _PAGINATED_LINE_WIDTH = const(204)
+
+WAS_PAGED = object()
+
+
+if False:
+    from typing import Any
 
 
 def render_scrollbar(pages: int, page: int) -> None:
@@ -46,20 +54,19 @@ def render_swipe_text() -> None:
 
 
 class Paginated(ui.Layout):
-    def __init__(
-        self, pages: list[ui.Component], page: int = 0, one_by_one: bool = False
-    ):
+    def __init__(self, pages: list[ui.Component], page: int = 0):
         super().__init__()
         self.pages = pages
         self.page = page
-        self.one_by_one = one_by_one
 
     def dispatch(self, event: int, x: int, y: int) -> None:
         pages = self.pages
         page = self.page
         pages[page].dispatch(event, x, y)
 
-        if event is ui.RENDER:
+        if event is ui.REPAINT:
+            self.repaint = True
+        elif event is ui.RENDER:
             length = len(pages)
             if page < length - 1:
                 render_swipe_icon()
@@ -89,15 +96,24 @@ class Paginated(ui.Layout):
         elif swipe is SWIPE_DOWN:
             self.page = max(self.page - 1, 0)
 
-        self.pages[self.page].dispatch(ui.REPAINT, 0, 0)
-        self.repaint = True
-
-        if __debug__:
-            from apps.debug import notify_layout_change
-
-            notify_layout_change(self)
-
         self.on_change()
+        raise ui.Result(WAS_PAGED)
+
+    async def interact(
+        self,
+        ctx: wire.GenericContext,
+        code: ButtonRequestType = ButtonRequestType.Other,
+    ) -> Any:
+        workflow.close_others()
+        result = WAS_PAGED
+        while result is WAS_PAGED:
+            br = ButtonRequest(
+                code=code, pages=len(self.pages), page_number=self.page + 1
+            )
+            await ctx.call(br, ButtonAck)
+            result = await self
+
+        return result
 
     def create_tasks(self) -> tuple[loop.Task, ...]:
         tasks: tuple[loop.Task, ...] = (
@@ -118,8 +134,7 @@ class Paginated(ui.Layout):
             return tasks
 
     def on_change(self) -> None:
-        if self.one_by_one:
-            raise ui.Result(self.page)
+        pass
 
     if __debug__:
 

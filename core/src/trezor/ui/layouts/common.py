@@ -8,6 +8,10 @@ if False:
     LayoutType = Awaitable[Any]
 
 
+if __debug__:
+    from ..components.tt.scroll import Paginated
+
+
 async def interact(
     ctx: wire.GenericContext,
     layout: LayoutType,
@@ -15,6 +19,10 @@ async def interact(
     brcode: ButtonRequestType = ButtonRequestType.Other,
 ) -> Any:
     log.debug(__name__, "ButtonRequest.type={}".format(brtype))
-    workflow.close_others()
-    await ctx.call(ButtonRequest(code=brcode), ButtonAck)
-    return await ctx.wait(layout)
+    if layout.__class__.__name__ == "Paginated":
+        assert isinstance(layout, Paginated)
+        return await layout.interact(ctx, code=brcode)
+    else:
+        workflow.close_others()
+        await ctx.call(ButtonRequest(code=brcode), ButtonAck)
+        return await ctx.wait(layout)
