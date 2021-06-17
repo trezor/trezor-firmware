@@ -234,6 +234,12 @@ class DebugUI:
         if self.input_flow is None:
             if br.code == messages.ButtonRequestType.PinEntry:
                 self.debuglink.input(self.get_pin())
+            elif (
+                br.pages is not None
+                and br.page_number is not None
+                and br.pages > br.page_number
+            ):
+                self.debuglink.swipe_up()
             else:
                 self.debuglink.press_yes()
         elif self.input_flow is self.INPUT_FLOW_DONE:
