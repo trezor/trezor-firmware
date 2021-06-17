@@ -143,9 +143,9 @@ def test_invalid_seed_core(client):
             assert layout.text == "Bip39Keyboard"
             client.debug.input("stick")
 
-        code = yield
+        br = yield
         layout = client.debug.wait_layout()
-        assert code == messages.ButtonRequestType.Warning
+        assert br.code == messages.ButtonRequestType.Warning
         assert "invalid recovery seed" in layout.text
         client.debug.click(buttons.OK)
 

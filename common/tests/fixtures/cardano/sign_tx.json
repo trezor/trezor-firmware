@@ -14,7 +14,6 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/44'/1815'/0'/0/1",
@@ -44,7 +43,6 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "YES"], ["YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/44'/1815'/0'/0/1",
@@ -79,7 +77,6 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -115,7 +112,6 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
               "path": "m/44'/1815'/0'/0/1",
@@ -160,7 +156,6 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
               "path": "m/1852'/1815'/0'/0/0",
@@ -197,7 +192,6 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "YES"], ["YES"], ["YES"], ["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -234,7 +228,6 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "YES"], ["YES"], ["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -270,7 +263,6 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "YES"], ["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -306,7 +298,6 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "YES"], ["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -344,7 +335,6 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "YES"], ["YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -384,7 +374,6 @@
         ],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "YES"], ["YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -419,7 +408,6 @@
         ],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["YES"], ["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -455,7 +443,6 @@
         ],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "YES"], ["YES"], ["SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -487,7 +474,6 @@
         ],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "YES"], ["YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -527,7 +513,6 @@
           }
         ],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "YES"], ["YES"], ["YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -563,7 +548,6 @@
         ],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "YES"], ["YES"], ["YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -595,7 +579,6 @@
         "auxiliary_data": {
           "blob": "a200a11864a118c843aa00ff01a119012c590100aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         },
-        "input_flow": [["SWIPE", "YES"], ["YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -636,7 +619,6 @@
             "nonce": 22634813
           }
         },
-        "input_flow": [["SWIPE", "SWIPE", "YES"], ["SWIPE", "SWIPE", "SWIPE", "SWIPE", "SWIPE", "YES"], ["YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -666,7 +648,6 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "YES"], ["SWIPE", "YES"], ["YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/44'/1815'/0'/0/1",
@@ -706,7 +687,6 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["YES"], ["SWIPE", "YES"], ["SWIPE", "SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -754,7 +734,6 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["YES"], ["SWIPE", "YES"], ["SWIPE", "YES"], ["SWIPE", "YES"], ["SWIPE", "SWIPE", "YES"], ["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -813,7 +792,6 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -844,7 +822,6 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["YES"], ["YES"]],
         "inputs": [
           {
             "path": "m/44'/1815'/0'/0/0",

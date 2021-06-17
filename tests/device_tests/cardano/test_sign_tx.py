@@ -40,8 +40,6 @@ def test_cardano_sign_tx(client, parameters, result):
     withdrawals = [cardano.parse_withdrawal(w) for w in parameters["withdrawals"]]
     auxiliary_data = cardano.parse_auxiliary_data(parameters["auxiliary_data"])
 
-    input_flow = parameters.get("input_flow", ())
-
     if parameters.get("security_checks") == "prompt":
         device.apply_settings(
             client, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
@@ -50,8 +48,6 @@ def test_cardano_sign_tx(client, parameters, result):
         device.apply_settings(client, safety_checks=messages.SafetyCheckLevel.Strict)
 
     with client:
-        client.set_input_flow(_to_device_actions(client, input_flow))
-
         response = cardano.sign_tx(
             client=client,
             inputs=inputs,
@@ -79,11 +75,7 @@ def test_cardano_sign_tx_failed(client, parameters, result):
     withdrawals = [cardano.parse_withdrawal(w) for w in parameters["withdrawals"]]
     auxiliary_data = cardano.parse_auxiliary_data(parameters["auxiliary_data"])
 
-    input_flow = parameters.get("input_flow", ())
-
     with client:
-        client.set_input_flow(_to_device_actions(client, input_flow))
-
         with pytest.raises(TrezorFailure, match=result["error_message"]):
             cardano.sign_tx(
                 client=client,
@@ -108,12 +100,16 @@ def test_cardano_sign_tx_with_multiple_chunks(client, parameters, result):
     withdrawals = [cardano.parse_withdrawal(w) for w in parameters["withdrawals"]]
     auxiliary_data = cardano.parse_auxiliary_data(parameters["auxiliary_data"])
 
-    input_flow = parameters.get("input_flow", ())
-
     expected_responses = [
         messages.PassphraseRequest(),
-        messages.ButtonRequest(),
-        messages.ButtonRequest(),
+        # XXX as many ButtonRequests as paginations. We are relying on the fact that
+        # there is only one fixture whose pagination is known.
+        # If that changes, we'll need to figure out something else.
+        messages.ButtonRequest(page_number=1),
+        messages.ButtonRequest(page_number=2),
+        messages.ButtonRequest(page_number=3),
+        messages.ButtonRequest(page_number=1),
+        messages.ButtonRequest(page_number=2),
     ]
     expected_responses += [
         messages.CardanoSignedTxChunk(signed_tx_chunk=bytes.fromhex(signed_tx_chunk))
@@ -124,9 +120,7 @@ def test_cardano_sign_tx_with_multiple_chunks(client, parameters, result):
     ]
 
     with client:
-        client.set_input_flow(_to_device_actions(client, input_flow))
         client.set_expected_responses(expected_responses)
-
         response = cardano.sign_tx(
             client=client,
             inputs=inputs,
@@ -142,18 +136,3 @@ def test_cardano_sign_tx_with_multiple_chunks(client, parameters, result):
         )
         assert response.tx_hash.hex() == result["tx_hash"]
         assert response.serialized_tx.hex() == result["serialized_tx"]
-
-
-def _to_device_actions(client, input_flow):
-    if not input_flow:
-        yield
-
-    for sequence in input_flow:
-        yield
-        for action in sequence:
-            if action == "SWIPE":
-                client.debug.swipe_up()
-            elif action == "YES":
-                client.debug.press_yes()
-            else:
-                raise ValueError("Invalid input action")

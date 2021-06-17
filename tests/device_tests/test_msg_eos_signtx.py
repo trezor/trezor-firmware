@@ -31,20 +31,6 @@ ADDRESS_N = parse_path("m/44'/194'/0'/0/0")
 @pytest.mark.skip_t1
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 class TestMsgEosSignTx:
-    @pytest.mark.setup_client(uninitialized=True)
-    def input_flow(self, debug, pages):
-        # confirm number of actions
-        yield
-        debug.press_yes()
-
-        # swipe through pages
-        yield
-        for _ in range(pages - 1):
-            debug.swipe_up()
-
-        # confirm last page
-        debug.press_yes()
-
     def test_eos_signtx_transfer_token(self, client):
         transaction = {
             "expiration": "2018-07-14T10:43:28",
@@ -73,7 +59,6 @@ class TestMsgEosSignTx:
         }
 
         with client:
-            client.set_input_flow(self.input_flow(client.debug, pages=3))
             resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
@@ -108,7 +93,6 @@ class TestMsgEosSignTx:
         }
 
         with client:
-            client.set_input_flow(self.input_flow(client.debug, pages=2))
             resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
@@ -143,7 +127,6 @@ class TestMsgEosSignTx:
         }
 
         with client:
-            client.set_input_flow(self.input_flow(client.debug, pages=2))
             resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
@@ -174,7 +157,6 @@ class TestMsgEosSignTx:
         }
 
         with client:
-            client.set_input_flow(self.input_flow(client.debug, pages=2))
             resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
@@ -211,7 +193,6 @@ class TestMsgEosSignTx:
         }
 
         with client:
-            client.set_input_flow(self.input_flow(client.debug, pages=3))
             resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
@@ -247,7 +228,6 @@ class TestMsgEosSignTx:
         }
 
         with client:
-            client.set_input_flow(self.input_flow(client.debug, pages=2))
             resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
@@ -278,7 +258,6 @@ class TestMsgEosSignTx:
         }
 
         with client:
-            client.set_input_flow(self.input_flow(client.debug, pages=0))
             resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
@@ -314,7 +293,6 @@ class TestMsgEosSignTx:
         }
 
         with client:
-            client.set_input_flow(self.input_flow(client.debug, pages=2))
             resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
@@ -349,7 +327,6 @@ class TestMsgEosSignTx:
         }
 
         with client:
-            client.set_input_flow(self.input_flow(client.debug, pages=2))
             resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
@@ -407,7 +384,6 @@ class TestMsgEosSignTx:
         }
 
         with client:
-            client.set_input_flow(self.input_flow(client.debug, pages=8))
             resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
@@ -438,7 +414,6 @@ class TestMsgEosSignTx:
         }
 
         with client:
-            client.set_input_flow(self.input_flow(client.debug, pages=0))
             resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
@@ -503,7 +478,6 @@ class TestMsgEosSignTx:
         }
 
         with client:
-            client.set_input_flow(self.input_flow(client.debug, pages=6))
             resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
@@ -534,7 +508,6 @@ class TestMsgEosSignTx:
         }
 
         with client:
-            client.set_input_flow(self.input_flow(client.debug, pages=0))
             resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
@@ -565,7 +538,6 @@ class TestMsgEosSignTx:
         }
 
         with client:
-            client.set_input_flow(self.input_flow(client.debug, pages=2))
             resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
@@ -646,36 +618,7 @@ class TestMsgEosSignTx:
             "transaction_extensions": [],
         }
 
-        def input_flow():
-            # confirm number of actions
-            yield
-            client.debug.press_yes()
-
-            # swipe through new account
-            yield
-            for _ in range(5):
-                client.debug.swipe_up()
-
-            # confirm new account
-            client.debug.press_yes()
-
-            # swipe through buyrambytes
-            yield
-            client.debug.swipe_up()
-
-            # confirm buyrambytes
-            client.debug.press_yes()
-
-            # swipe through delegatebw
-            yield
-            for _ in range(2):
-                client.debug.swipe_up()
-
-            # confirm delegatebw
-            client.debug.press_yes()
-
         with client:
-            client.set_input_flow(input_flow)
             resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (
@@ -714,27 +657,7 @@ class TestMsgEosSignTx:
             "context_free_data": [],
         }
 
-        def input_flow():
-            # confirm number of actions
-            yield
-            client.debug.press_yes()
-
-            # swipe through setcode
-            yield
-            client.debug.swipe_up()
-
-            # confirm setcode
-            client.debug.press_yes()
-
-            # swipe through setabi
-            yield
-            client.debug.swipe_up()
-
-            # confirm setabi
-            client.debug.press_yes()
-
         with client:
-            client.set_input_flow(input_flow)
             resp = eos.sign_tx(client, ADDRESS_N, transaction, CHAIN_ID)
             assert isinstance(resp, EosSignedTx)
             assert (

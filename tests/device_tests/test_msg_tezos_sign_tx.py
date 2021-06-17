@@ -29,15 +29,8 @@ TEZOS_PATH_15 = parse_path("m/44'/1729'/15'")
 @pytest.mark.tezos
 @pytest.mark.skip_t1
 class TestMsgTezosSignTx:
-    def input_flow(self, debug, num_pages):
-        yield
-        for _ in range(num_pages - 1):
-            debug.swipe_up()
-        debug.press_yes()
-
     def test_tezos_sign_tx_proposal(self, client):
         with client:
-            client.set_input_flow(self.input_flow(client.debug, num_pages=1))
             resp = tezos.sign_tx(
                 client,
                 TEZOS_PATH_10,
@@ -70,7 +63,6 @@ class TestMsgTezosSignTx:
 
     def test_tezos_sign_tx_multiple_proposals(self, client):
         with client:
-            client.set_input_flow(self.input_flow(client.debug, num_pages=2))
             resp = tezos.sign_tx(
                 client,
                 TEZOS_PATH_10,

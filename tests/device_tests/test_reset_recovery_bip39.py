@@ -23,7 +23,12 @@ from trezorlib import btc, device, messages
 from trezorlib.messages import BackupType, ButtonRequestType as B
 from trezorlib.tools import parse_path
 
-from ..common import EXTERNAL_ENTROPY, click_through, read_and_confirm_mnemonic
+from ..common import (
+    EXTERNAL_ENTROPY,
+    click_through,
+    paging_responses,
+    read_and_confirm_mnemonic,
+)
 
 
 @pytest.mark.skip_t1
@@ -39,8 +44,9 @@ def test_reset_recovery(client):
 
 
 def reset(client, strength=128, skip_backup=False):
+    words = strength // 32 * 3
+    mnemonic_pages = ((words + 3) // 4) + 1
     mnemonic = None
-    word_count = strength // 32 * 3
 
     def input_flow():
         nonlocal mnemonic
@@ -51,28 +57,29 @@ def reset(client, strength=128, skip_backup=False):
         yield from click_through(client.debug, screens=3, code=B.ResetDevice)
 
         # mnemonic phrases
-        btn_code = yield
-        assert btn_code == B.ResetDevice
-        mnemonic = read_and_confirm_mnemonic(client.debug, words=word_count)
+        mnemonic = yield from read_and_confirm_mnemonic(client.debug)
 
         # confirm recovery seed check
-        btn_code = yield
-        assert btn_code == B.Success
+        br = yield
+        assert br.code == B.Success
         client.debug.press_yes()
 
         # confirm success
-        btn_code = yield
-        assert btn_code == B.Success
+        br = yield
+        assert br.code == B.Success
         client.debug.press_yes()
 
-    with client:
+    os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
+    with mock.patch("os.urandom", os_urandom), client:
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.EntropyRequest(),
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
+            ]
+            + paging_responses(mnemonic_pages, code=B.ResetDevice)
+            + [
                 messages.ButtonRequest(code=B.Success),
                 messages.ButtonRequest(code=B.Success),
                 messages.Success,
@@ -81,19 +88,17 @@ def reset(client, strength=128, skip_backup=False):
         )
         client.set_input_flow(input_flow)
 
-        os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
-        with mock.patch("os.urandom", os_urandom), client:
-            # No PIN, no passphrase, don't display random
-            device.reset(
-                client,
-                display_random=False,
-                strength=strength,
-                passphrase_protection=False,
-                pin_protection=False,
-                label="test",
-                language="en-US",
-                backup_type=BackupType.Bip39,
-            )
+        # No PIN, no passphrase, don't display random
+        device.reset(
+            client,
+            display_random=False,
+            strength=strength,
+            passphrase_protection=False,
+            pin_protection=False,
+            label="test",
+            language="en-US",
+            backup_type=BackupType.Bip39,
+        )
 
     # Check if device is properly initialized
     assert client.features.initialized is True
