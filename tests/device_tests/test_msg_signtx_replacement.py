@@ -517,10 +517,7 @@ def test_p2wpkh_in_p2sh_fee_bump_from_external(client):
                 request_output(0),
                 request_orig_output(0, TXHASH_334cd7),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (
-                    client.features.model == "1",
-                    messages.ButtonRequest(code=B.ConfirmOutput),
-                ),
+                messages.ButtonRequest(code=B.ConfirmOutput),
                 request_orig_output(1, TXHASH_334cd7),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),

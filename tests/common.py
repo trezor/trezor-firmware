@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 
 from trezorlib import btc, tools
-from trezorlib.messages import ButtonRequestType as B
+from trezorlib.messages import ButtonRequest, ButtonRequestType as B
 
 # fmt: off
 #                1      2     3    4      5      6      7     8      9    10    11    12
@@ -130,16 +130,16 @@ def recovery_enter_shares(debug, shares, groups=False):
     yield
     debug.press_yes()
     # Input word number
-    code = yield
-    assert code == B.MnemonicWordCount
+    br = yield
+    assert br.code == B.MnemonicWordCount
     debug.input(str(word_count))
     # Homescreen - proceed to share entry
     yield
     debug.press_yes()
     # Enter shares
     for index, share in enumerate(shares):
-        code = yield
-        assert code == B.MnemonicInput
+        br = yield
+        assert br.code == B.MnemonicInput
         # Enter mnemonic words
         for word in share.split(" "):
             debug.input(word)
@@ -171,11 +171,11 @@ def click_through(debug, screens, code=None):
     for _ in range(screens):
         received = yield
         if code is not None:
-            assert received == code
+            assert received.code == code
         debug.press_yes()
 
 
-def read_and_confirm_mnemonic(debug, words, choose_wrong=False):
+def read_and_confirm_mnemonic(debug, choose_wrong=False):
     """Read a given number of mnemonic words from Trezor T screen and correctly
     answer confirmation questions. Return the full mnemonic.
 
@@ -185,13 +185,13 @@ def read_and_confirm_mnemonic(debug, words, choose_wrong=False):
     def input_flow():
         yield from click_through(client.debug, screens=3)
 
-        yield  # confirm mnemonic entry
-        mnemonic = read_and_confirm_mnemonic(client.debug, words=20)
+        mnemonic = yield from read_and_confirm_mnemonic(client.debug)
     """
     mnemonic = []
     while True:
+        br = yield
         mnemonic.extend(debug.read_reset_word().split())
-        if len(mnemonic) < words:
+        if br.page_number < br.pages:
             debug.swipe_up()
         else:
             # last page is confirmation
@@ -208,6 +208,15 @@ def read_and_confirm_mnemonic(debug, words, choose_wrong=False):
             debug.input(mnemonic[index])
 
     return " ".join(mnemonic)
+
+
+def paging_responses(pages, code=None):
+    """Generate a sequence of ButtonRequests for paging through a specified number
+    of screens.
+    """
+    return [
+        ButtonRequest(code=code, page_number=i + 1, pages=pages) for i in range(pages)
+    ]
 
 
 def get_test_address(client):

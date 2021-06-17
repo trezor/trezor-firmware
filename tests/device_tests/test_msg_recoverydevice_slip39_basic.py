@@ -154,8 +154,8 @@ def test_ask_word_number(client):
         for _ in range(20):
             debug.input("slush")
 
-        code = yield  # Invalid share
-        assert code == messages.ButtonRequestType.Warning
+        br = yield  # Invalid share
+        assert br.code == messages.ButtonRequestType.Warning
         debug.press_yes()
 
         yield  # Homescreen - start process
@@ -168,8 +168,8 @@ def test_ask_word_number(client):
         for _ in range(33):
             debug.input("slush")
 
-        code = yield  # Invalid share
-        assert code == messages.ButtonRequestType.Warning
+        br = yield  # Invalid share
+        assert br.code == messages.ButtonRequestType.Warning
         debug.press_yes()
 
         yield  # Homescreen
@@ -206,8 +206,8 @@ def test_ask_word_number(client):
         for word in share:
             debug.input(word)
 
-        code = yield  # Invalid share
-        assert code == messages.ButtonRequestType.Warning
+        br = yield  # Invalid share
+        assert br.code == messages.ButtonRequestType.Warning
         debug.press_yes()
 
         yield  # Proceed to next share
@@ -257,8 +257,8 @@ def test_wrong_nth_word(client, nth_word):
                 debug.input(share[-1])
                 break
 
-        code = yield
-        assert code == messages.ButtonRequestType.Warning
+        br = yield
+        assert br.code == messages.ButtonRequestType.Warning
 
         client.cancel()
 
@@ -294,8 +294,8 @@ def test_same_share(client):
         for word in second_share:
             debug.input(word)
 
-        code = yield
-        assert code == messages.ButtonRequestType.Warning
+        br = yield
+        assert br.code == messages.ButtonRequestType.Warning
 
         client.cancel()
 

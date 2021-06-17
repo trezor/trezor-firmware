@@ -177,7 +177,7 @@ def test_show_multisig_xpubs(
 
         def input_flow():
             yield  # show address
-            lines = client.debug.wait_layout().lines
+            lines = client.debug.wait_layout().lines  # TODO: do not need to *wait* now?
             assert lines[0] == "Multisig 2 of 3"
             assert "".join(lines[1:]) == address
 
@@ -190,6 +190,7 @@ def test_show_multisig_xpubs(
             lines1 = client.debug.wait_layout().lines
             assert lines1[0] == "XPUB #1 " + ("(yours)" if i == 0 else "(cosigner)")
             client.debug.swipe_up()
+            yield
             lines2 = client.debug.wait_layout().lines
             assert lines2[0] == "XPUB #1 " + ("(yours)" if i == 0 else "(cosigner)")
             assert "".join(lines1[1:] + lines2[1:]) == xpubs[0]
@@ -199,6 +200,7 @@ def test_show_multisig_xpubs(
             lines1 = client.debug.wait_layout().lines
             assert lines1[0] == "XPUB #2 " + ("(yours)" if i == 1 else "(cosigner)")
             client.debug.swipe_up()
+            yield
             lines2 = client.debug.wait_layout().lines
             assert lines2[0] == "XPUB #2 " + ("(yours)" if i == 1 else "(cosigner)")
             assert "".join(lines1[1:] + lines2[1:]) == xpubs[1]
@@ -208,6 +210,7 @@ def test_show_multisig_xpubs(
             lines1 = client.debug.wait_layout().lines
             assert lines1[0] == "XPUB #3 " + ("(yours)" if i == 2 else "(cosigner)")
             client.debug.swipe_up()
+            yield
             lines2 = client.debug.wait_layout().lines
             assert lines2[0] == "XPUB #3 " + ("(yours)" if i == 2 else "(cosigner)")
             assert "".join(lines1[1:] + lines2[1:]) == xpubs[2]

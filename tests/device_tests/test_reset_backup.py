@@ -23,11 +23,18 @@ from shamir_mnemonic import shamir
 from trezorlib import device, messages
 from trezorlib.messages import BackupType, ButtonRequestType as B
 
-from ..common import EXTERNAL_ENTROPY, click_through, read_and_confirm_mnemonic
+from ..common import (
+    EXTERNAL_ENTROPY,
+    click_through,
+    paging_responses,
+    read_and_confirm_mnemonic,
+)
 
 
 def backup_flow_bip39(client):
     mnemonic = None
+    words = 12
+    mnemonic_pages = ((words + 3) // 4) + 1
 
     def input_flow():
         nonlocal mnemonic
@@ -36,25 +43,25 @@ def backup_flow_bip39(client):
         yield from click_through(client.debug, screens=1, code=B.ResetDevice)
 
         # mnemonic phrases
-        btn_code = yield
-        assert btn_code == B.ResetDevice
-        mnemonic = read_and_confirm_mnemonic(client.debug, words=12)
+        mnemonic = yield from read_and_confirm_mnemonic(client.debug)
 
         # confirm recovery seed check
-        btn_code = yield
-        assert btn_code == B.Success
+        br = yield
+        assert br.code == B.Success
         client.debug.press_yes()
 
         # confirm success
-        btn_code = yield
-        assert btn_code == B.Success
+        br = yield
+        assert br.code == B.Success
         client.debug.press_yes()
 
     with client:
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
+            ]
+            + paging_responses(mnemonic_pages, code=B.ResetDevice)
+            + [
                 messages.ButtonRequest(code=B.Success),
                 messages.ButtonRequest(code=B.Success),
                 messages.Success,
@@ -69,6 +76,8 @@ def backup_flow_bip39(client):
 
 def backup_flow_slip39_basic(client):
     mnemonics = []
+    words = 20
+    mnemonic_pages = ((words + 3) // 4) + 1
 
     def input_flow():
         # 1. Checklist
@@ -81,8 +90,8 @@ def backup_flow_slip39_basic(client):
 
         # Mnemonic phrases
         for _ in range(5):
-            yield  # Phrase screen
-            mnemonic = read_and_confirm_mnemonic(client.debug, words=20)
+            # Phrase screen
+            mnemonic = yield from read_and_confirm_mnemonic(client.debug)
             mnemonics.append(mnemonic)
             yield  # Confirm continue to next
             client.debug.press_yes()
@@ -96,7 +105,7 @@ def backup_flow_slip39_basic(client):
         client.set_expected_responses(
             [messages.ButtonRequest(code=B.ResetDevice)] * 6  # intro screens
             + [
-                messages.ButtonRequest(code=B.ResetDevice),
+                *paging_responses(mnemonic_pages, code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
             ]
             * 5  # individual shares
@@ -115,6 +124,8 @@ def backup_flow_slip39_basic(client):
 
 def backup_flow_slip39_advanced(client):
     mnemonics = []
+    words = 20
+    mnemonic_pages = ((words + 3) // 4) + 1
 
     def input_flow():
         # 1. Confirm Reset
@@ -132,19 +143,17 @@ def backup_flow_slip39_advanced(client):
         for _ in range(5):
             for _ in range(5):
                 # mnemonic phrases
-                btn_code = yield
-                assert btn_code == B.ResetDevice
-                mnemonic = read_and_confirm_mnemonic(client.debug, words=20)
+                mnemonic = yield from read_and_confirm_mnemonic(client.debug)
                 mnemonics.append(mnemonic)
 
                 # Confirm continue to next share
-                btn_code = yield
-                assert btn_code == B.Success
+                br = yield
+                assert br.code == B.Success
                 client.debug.press_yes()
 
         # safety warning
-        btn_code = yield
-        assert btn_code == B.Success
+        br = yield
+        assert br.code == B.Success
         client.debug.press_yes()
 
     with client:
@@ -157,7 +166,7 @@ def backup_flow_slip39_advanced(client):
             ]
             * 5  # group thresholds
             + [
-                messages.ButtonRequest(code=B.ResetDevice),
+                *paging_responses(mnemonic_pages, code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
             ]
             * 25  # individual shares
