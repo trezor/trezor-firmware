@@ -209,7 +209,7 @@ class TrezorClient:
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         # do this raw - send ButtonAck first, notify UI later
         self._raw_write(messages.ButtonAck())
-        self.ui.button_request(msg.code)
+        self.ui.button_request(msg)
         return self._raw_read()
 
     @tools.session
