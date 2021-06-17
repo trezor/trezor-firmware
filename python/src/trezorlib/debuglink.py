@@ -230,9 +230,9 @@ class DebugUI:
         self.passphrase = ""
         self.input_flow = None
 
-    def button_request(self, code):
+    def button_request(self, br):
         if self.input_flow is None:
-            if code == messages.ButtonRequestType.PinEntry:
+            if br.code == messages.ButtonRequestType.PinEntry:
                 self.debuglink.input(self.get_pin())
             else:
                 self.debuglink.press_yes()
@@ -240,7 +240,7 @@ class DebugUI:
             raise AssertionError("input flow ended prematurely")
         else:
             try:
-                self.input_flow.send(code)
+                self.input_flow.send(br)
             except StopIteration:
                 self.input_flow = self.INPUT_FLOW_DONE
 

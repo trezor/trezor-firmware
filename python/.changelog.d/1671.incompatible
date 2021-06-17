@@ -1,0 +1,2 @@
+The type of argument to `ui.button_request(x)` is changed from int to ButtonRequest.
+The original int value can be accessed as `x.code`
