@@ -93,6 +93,7 @@ SRCS  += hmac_drbg.c
 SRCS  += rfc6979.c
 SRCS  += slip39.c
 SRCS  += schnorr.c
+SRCS  += zkp_context.c
 
 OBJS   = $(SRCS:.c=.o)
 OBJS  += secp256k1-zkp.o
