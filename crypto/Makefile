@@ -42,7 +42,9 @@ ZKP_CFLAGS = \
 	-DUSE_FIELD_10X26 \
 	-DUSE_SCALAR_8X32 \
 	-DECMULT_GEN_PREC_BITS=4 \
-	-DECMULT_WINDOW_SIZE=8
+	-DECMULT_WINDOW_SIZE=8 \
+	-DENABLE_MODULE_GENERATOR \
+	-DENABLE_MODULE_RECOVERY
 ZKP_PATH = ../vendor/secp256k1-zkp
 CFLAGS += -DSECP256K1_CONTEXT_SIZE=73952
 
@@ -94,6 +96,7 @@ SRCS  += rfc6979.c
 SRCS  += slip39.c
 SRCS  += schnorr.c
 SRCS  += zkp_context.c
+SRCS  += zkp_ecdsa.c
 
 OBJS   = $(SRCS:.c=.o)
 OBJS  += secp256k1-zkp.o
