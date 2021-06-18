@@ -269,5 +269,17 @@
     "url": [
       "wss://s.altnet.rippletest.net"
     ]
+  },
+  "misc:ADA": {
+    "type": "cardano",
+    "url": [
+      "wss://trezor-cardano-mainnet.blockfrost.io"
+    ]
+  },
+  "misc:tADA": {
+    "type": "cardano",
+    "url": [
+      "wss://trezor-cardano-testnet.blockfrost.io"
+    ]
   }
 }
