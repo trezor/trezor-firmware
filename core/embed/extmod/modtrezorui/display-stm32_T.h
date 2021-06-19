@@ -275,7 +275,7 @@ static void send_init_seq_GC9307(void) {
   DATA(0x8F);
 }
 
-static void send_init_seq_ST7789V(void) {
+static void send_init_seq_ST7789V(uint8_t invert_colors) {
   // most recent manual:
   // https://www.newhavendisplay.com/appnotes/datasheets/LCDs/ST7789V.pdf
   // TEON: Tearing Effect Line On; V-blanking only
@@ -307,7 +307,7 @@ static void send_init_seq_ST7789V(void) {
 
   // INVOFF (20h): Display Inversion Off
   // INVON  (21h): Display Inversion On
-  CMD(0x20 | DISPLAY_ST7789V_INVERT_COLORS);
+  CMD(0x20 | invert_colors);
 
   // the above config is the most important and definitely necessary
 
@@ -457,7 +457,7 @@ void display_init_seq(void) {
   if (id == DISPLAY_ID_GC9307) {
     send_init_seq_GC9307();
   } else if (id == DISPLAY_ID_ST7789V) {
-    send_init_seq_ST7789V();
+    send_init_seq_ST7789V(DISPLAY_ST7789V_INVERT_COLORS);
   } else if (id == DISPLAY_ID_ILI9341V) {
     send_init_seq_ILI9341V();
   }
