@@ -123,8 +123,11 @@ jump_to_unprivileged:
 
   .global shutdown_privileged
   .type shutdown_privileged, STT_FUNC
+  // The function must be called from the privileged mode
 shutdown_privileged:
-  cpsid f
+  cpsid f // disable all exceptions (except for NMI), the instruction is ignored in unprivileged mode
+  // if the exceptions weren't disabled, an exception handler (for example systick handler)
+  // could be called after the memory is erased, which would lead to another exception
   ldr r0, =0
   mov r1, r0
   mov r2, r0
