@@ -151,6 +151,9 @@ shutdown_privileged:
   // set to value in r2
   bl memset_reg
   bl clear_otg_hs_memory
+  ldr r0, =1
+  msr control, r0 // jump to unprivileged mode
+  ldr r0, =0
   b . // loop forever
 
   .end
