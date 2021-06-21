@@ -2,7 +2,7 @@
 
 base_branch=master
 fail=0
-subdirs="core python legacy/firmware legacy/bootloader"
+subdirs="core core/embed/boardloader core/embed/bootloader core/embed/bootloader_ci legacy/bootloader legacy/firmware legacy/intermediate_fw python"
 
 changed_files=$(mktemp)
 trap 'rm -- $changed_files' EXIT
