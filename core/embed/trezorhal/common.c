@@ -25,6 +25,7 @@
 #include "display.h"
 #include "flash.h"
 #include "rand.h"
+#include "supervise.h"
 
 #include "stm32f4xx_ll_utils.h"
 
@@ -32,6 +33,18 @@
 extern void shutdown_privileged(void);
 
 #define COLOR_FATAL_ERROR RGB16(0x7F, 0x00, 0x00)
+
+// from util.s
+extern void shutdown_privileged(void);
+
+void shutdown(void) {
+#ifdef USE_SVC_SHUTDOWN
+  svc_shutdown();
+#else
+  // It won't work properly unless called from the privileged mode
+  shutdown_privileged();
+#endif
+}
 
 void __attribute__((noreturn))
 __fatal_error(const char *expr, const char *msg, const char *file, int line,

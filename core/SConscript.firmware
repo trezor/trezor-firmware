@@ -354,6 +354,8 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/vectortable.s',
 ]
 
+CPPDEFINES_MOD += ['USE_SVC_SHUTDOWN']
+
 if FEATURE_FLAGS["RDI"]:
     CPPDEFINES_MOD += ['RDI']
 
