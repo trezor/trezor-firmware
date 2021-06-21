@@ -138,17 +138,10 @@ int main(void) {
     }
   }
 
-  if (sectrue == storage_initialized) {
-    // Storage probably contains a seed so leave the firmware intact.
-    // Invalidating it would cause the bootloader to wipe the storage before
-    // installing the target firmware. User will need to confirm installation.
-    reboot_device();
-  } else {
-    // New device. Invalidate the intermediate firmware so that after reboot
-    // the bootloader will install the target firmware without asking for user
-    // confirmation.
-    invalidate_firmware_and_reboot();
-  }
+  // Invalidate firmware header magic 4 bytes which will keep firmware
+  // signatures intact.
+  // This is required so that bootloader won't erase storage.
+  invalidate_firmware_and_reboot();
 
   return 0;
 }
