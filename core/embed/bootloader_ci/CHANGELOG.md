@@ -4,19 +4,8 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
 
-### Added
-
-### Deprecated
-
-### Removed
-
-### Fixed
-
-### Security
-
-## 1.0.1 [Jan 2021]
+## 1.0.1 [January 2021]
 
 ### Added
 - Decouple files from original bootloader as it will be reworked and symlink
@@ -24,7 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Version in version.h must be kept to match the original bootloader,
   otherwise firmware update will fail (bootloader will look too old)
 
-## 1.0.0 [Aug 2020]
+## 1.0.0 [August 2020]
 
 ### Added
 - Initial version
