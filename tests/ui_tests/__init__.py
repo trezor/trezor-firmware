@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
+from _pytest.outcomes import Failed
 
 from .reporting import testreport
 
@@ -139,3 +140,18 @@ def _get_fixtures_content(fixtures: dict, remove_missing: bool):
         fixtures = fixtures
 
     return json.dumps(fixtures, indent="", sort_keys=True) + "\n"
+
+
+def main():
+    read_fixtures()
+    for record in (UI_TESTS_DIR / "screens").iterdir():
+        if not (record / "actual").exists():
+            continue
+
+        try:
+            _process_tested(record, record.name)
+            print("PASSED:", record.name)
+        except Failed:
+            print("FAILED:", record.name)
+
+    testreport.index()
