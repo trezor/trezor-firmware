@@ -1,5 +1,3 @@
-from ubinascii import hexlify
-
 from trezor import ui
 from trezor.enums import ButtonRequestType, CardanoAddressType, CardanoCertificateType
 from trezor.strings import format_amount
@@ -197,7 +195,7 @@ async def show_warning_tx_staking_key_hash(
 ) -> None:
     props = [
         ("Change address staking rights do not match the current account.\n\n", None),
-        ("Staking key hash:", hexlify(staking_key_hash).decode()),
+        ("Staking key hash:", staking_key_hash),
         ("Change amount:", format_coin_amount(amount)),
     ]
 
@@ -365,7 +363,7 @@ async def confirm_stake_pool_metadata(
         title="Confirm transaction",
         props=[
             ("Pool metadata url:", metadata.url),
-            ("Pool metadata hash:", hexlify(metadata.hash).decode()),
+            ("Pool metadata hash:", metadata.hash),
         ],
         br_code=ButtonRequestType.Other,
     )
@@ -458,7 +456,7 @@ async def show_auxiliary_data_hash(
         ctx,
         "confirm_auxiliary_data",
         title="Confirm transaction",
-        props=[("Auxiliary data hash:", hexlify(auxiliary_data_hash).decode())],
+        props=[("Auxiliary data hash:", auxiliary_data_hash)],
         br_code=ButtonRequestType.Other,
     )
 
@@ -486,7 +484,7 @@ async def show_warning_address_foreign_staking_key(
         )
     else:
         assert staking_key_hash is not None  # _validate_base_address_staking_info
-        props.append(("Staking key:", hexlify(staking_key_hash).decode()))
+        props.append(("Staking key:", staking_key_hash))
     props.append(("Continue?", None))
 
     await confirm_properties(
