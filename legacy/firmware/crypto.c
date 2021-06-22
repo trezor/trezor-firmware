@@ -33,6 +33,10 @@
 #include "segwit_addr.h"
 #include "sha2.h"
 
+#define PATH_MAX_ACCOUNT 100
+#define PATH_MAX_CHANGE 1
+#define PATH_MAX_ADDRESS_INDEX 1000000
+
 // SLIP-44 hardened coin type for Bitcoin
 #define SLIP44_BITCOIN 0x80000000
 
@@ -549,8 +553,9 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
     if (full) {
       valid &= (script_type == InputScriptType_SPENDADDRESS);
       valid &= (address_n[2] & 0x80000000) == 0x80000000;
-      valid &= (address_n[3] & 0x80000000) == 0;
-      valid &= (address_n[4] & 0x80000000) == 0;
+      valid &= (address_n[2] & 0x7fffffff) <= PATH_MAX_ACCOUNT;
+      valid &= (address_n[3] <= PATH_MAX_CHANGE);
+      valid &= (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
     }
     return valid;
   }
@@ -577,24 +582,24 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
     if (full) {
       if (address_n_count == 4) {
         valid &= (script_type == InputScriptType_SPENDMULTISIG);
-        valid &= (address_n[1] & 0x80000000) == 0;
-        valid &= (address_n[2] & 0x80000000) == 0;
-        valid &= (address_n[3] & 0x80000000) == 0;
+        valid &= (address_n[1] <= 100);
+        valid &= (address_n[2] <= PATH_MAX_CHANGE);
+        valid &= (address_n[3] <= PATH_MAX_ADDRESS_INDEX);
       } else if (address_n_count == 5) {
         valid &= (script_type == InputScriptType_SPENDADDRESS ||
                   script_type == InputScriptType_SPENDMULTISIG);
         valid &= (address_n[2] & 0x80000000) == 0x80000000;
-        valid &= (address_n[2] & 0x7fffffff) <= 100;
-        valid &= address_n[3] <= 1000000;
-        valid &= address_n[4] <= 1000000;
+        valid &= (address_n[2] & 0x7fffffff) <= PATH_MAX_ACCOUNT;
+        valid &= (address_n[3] <= 1000000);
+        valid &= (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
       } else if (address_n_count == 6) {
         valid &= (script_type == InputScriptType_SPENDADDRESS ||
                   script_type == InputScriptType_SPENDMULTISIG);
         valid &= (address_n[1] & 0x80000000) == (address_n[2] & 0x80000000);
-        valid &= (address_n[2] & 0x7fffffff) <= 100;
-        valid &= address_n[3] <= 1000000;
-        valid &= address_n[4] <= 1;
-        valid &= address_n[5] <= 1000000;
+        valid &= (address_n[2] & 0x7fffffff) <= PATH_MAX_ACCOUNT;
+        valid &= (address_n[3] <= 1000000);
+        valid &= (address_n[4] <= PATH_MAX_CHANGE);
+        valid &= (address_n[5] <= PATH_MAX_ADDRESS_INDEX);
       } else {
         return false;
       }
@@ -618,7 +623,18 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
                (script_type == InputScriptType_SPENDP2SHWITNESS) ||
                (script_type == InputScriptType_SPENDWITNESS);
       valid &= (address_n[2] & 0x80000000) == 0x80000000;
-      valid &= (address_n[4] & 0x80000000) == 0;
+      valid &= (address_n[2] & 0x7fffffff) <= PATH_MAX_ACCOUNT;
+      if (address_n_count == 5) {
+        valid &= (address_n[3] <= PATH_MAX_CHANGE);
+        valid &= (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
+      } else if (address_n_count == 6) {
+        valid &= (address_n[3] & 0x80000000) == 0x80000000;
+        valid &= (address_n[3] & 0x7fffffff) <= 3;
+        valid &= (address_n[4] <= PATH_MAX_CHANGE);
+        valid &= (address_n[5] <= PATH_MAX_ADDRESS_INDEX);
+      } else {
+        return false;
+      }
     }
     return valid;
   }
@@ -636,8 +652,9 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
     if (full) {
       valid &= (script_type == InputScriptType_SPENDP2SHWITNESS);
       valid &= (address_n[2] & 0x80000000) == 0x80000000;
-      valid &= (address_n[3] & 0x80000000) == 0;
-      valid &= (address_n[4] & 0x80000000) == 0;
+      valid &= (address_n[2] & 0x7fffffff) <= PATH_MAX_ACCOUNT;
+      valid &= (address_n[3] <= PATH_MAX_CHANGE);
+      valid &= (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
     }
     return valid;
   }
@@ -656,8 +673,9 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
     if (full) {
       valid &= (script_type == InputScriptType_SPENDWITNESS);
       valid &= (address_n[2] & 0x80000000) == 0x80000000;
-      valid &= (address_n[3] & 0x80000000) == 0;
-      valid &= (address_n[4] & 0x80000000) == 0;
+      valid &= (address_n[2] & 0x7fffffff) <= PATH_MAX_ACCOUNT;
+      valid &= (address_n[3] <= PATH_MAX_CHANGE);
+      valid &= (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
     }
     return valid;
   }
@@ -668,7 +686,7 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
     valid &= (coin->coin_type == SLIP44_BITCOIN);
     if (full) {
       valid &= (address_n_count == 2);
-      valid &= (address_n[1] <= 1000000);
+      valid &= (address_n[1] <= PATH_MAX_ADDRESS_INDEX);
     }
     return valid;
   }
@@ -681,8 +699,8 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
       valid &= (address_n_count == 4);
       valid &= (address_n[1] & 0x80000000) == 0x80000000;
       valid &= (address_n[1] & 0x7fffffff) <= 100;
-      valid &= address_n[2] == 1 || address_n[2] == 4;
-      valid &= address_n[3] <= 1000000;
+      valid &= (address_n[2] == 1 || address_n[2] == 4);
+      valid &= (address_n[3] <= PATH_MAX_ADDRESS_INDEX);
     }
     return valid;
   }
@@ -695,7 +713,7 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
     if (full) {
       if (address_n_count == 3) {
         valid &= (address_n[1] == 6);
-        valid &= (address_n[2] <= 1000000);
+        valid &= (address_n[2] <= PATH_MAX_ADDRESS_INDEX);
       } else if (address_n_count != 1) {
         return false;
       }
@@ -715,9 +733,9 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
     if (full) {
       valid &= (script_type == InputScriptType_SPENDP2SHWITNESS);
       valid &= (address_n[1] & 0x80000000) == 0;
-      valid &= address_n[2] <= 100;
-      valid &= address_n[3] <= 1;
-      valid &= address_n[4] <= 1000000;
+      valid &= (address_n[2] <= PATH_MAX_ACCOUNT);
+      valid &= (address_n[3] <= PATH_MAX_CHANGE);
+      valid &= (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
     }
     return valid;
   }
