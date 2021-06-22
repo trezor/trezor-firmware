@@ -21,6 +21,7 @@
 
 #include "memzero.h"
 #include "py/objint.h"
+#include "py/runtime.h"
 
 static bool mpz_as_ll_checked(const mpz_t *i, long long *value) {
   // Analogue of `mpz_as_int_checked` from mpz.c
@@ -60,5 +61,16 @@ bool trezor_obj_get_ll_checked(mp_obj_t obj, long long *value) {
     // Value is not integer.
     *value = 0;
     return false;
+  }
+}
+
+mp_obj_t trezor_obj_call_protected(void (*func)(void *), void *arg) {
+  nlr_buf_t nlr;
+  if (nlr_push(&nlr) == 0) {
+    (*func)(arg);
+    nlr_pop();
+    return mp_const_none;
+  } else {
+    return MP_OBJ_FROM_PTR(nlr.ret_val);
   }
 }

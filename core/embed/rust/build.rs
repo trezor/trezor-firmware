@@ -95,6 +95,7 @@ fn generate_micropython_bindings() {
         .allowlist_function("mp_map_lookup")
         // runtime
         .allowlist_function("mp_raise_ValueError")
+        .allowlist_function("trezor_obj_call_protected")
         // typ
         .allowlist_var("mp_type_type");
 
