@@ -1,5 +1,7 @@
 from micropython import const
 
+from ubinascii import hexlify
+
 from trezor import ui, wire
 from trezor.enums import ButtonRequestType
 from trezor.ui.container import Container
@@ -11,7 +13,13 @@ from ..components.common import break_path_to_lines
 from ..components.common.confirm import is_confirmed, raise_if_cancelled
 from ..components.tt.button import ButtonCancel, ButtonDefault
 from ..components.tt.confirm import Confirm, HoldToConfirm
-from ..components.tt.scroll import Paginated, paginate_paragraphs, paginate_text, PAGINATED_LINE_WIDTH, PAGEBREAK
+from ..components.tt.scroll import (
+    Paginated,
+    paginate_paragraphs,
+    paginate_text,
+    PAGINATED_LINE_WIDTH,
+    PAGEBREAK,
+)
 from ..components.tt.text import Span, Text
 from ..constants.tt import (
     MONO_ADDR_PER_LINE,
@@ -36,7 +44,7 @@ if False:
     )
 
     ExceptionType = Union[BaseException, Type[BaseException]]
-    PropertyType = Tuple[Optional[str], Optional[str]]
+    PropertyType = Tuple[Optional[str], Union[str, bytes, None]]
 
 
 __all__ = (
@@ -597,8 +605,14 @@ async def confirm_properties(
     for key, val in props:
         span.reset(key or "", 0, ui.NORMAL, line_width=PAGINATED_LINE_WIDTH)
         key_lines = span.count_lines()
-        span.reset(val or "", 0, ui.BOLD, line_width=PAGINATED_LINE_WIDTH)
-        val_lines = span.count_lines()
+
+        if isinstance(val, str):
+            span.reset(val, 0, ui.BOLD, line_width=PAGINATED_LINE_WIDTH)
+            val_lines = span.count_lines()
+        elif isinstance(val, bytes):
+            val_lines = (len(val) * 2 + MONO_HEX_PER_LINE - 1) // MONO_HEX_PER_LINE
+        else:
+            val_lines = 0
 
         remaining_lines = TEXT_MAX_LINES - used_lines
         used_lines = (used_lines + key_lines + val_lines) % TEXT_MAX_LINES
@@ -627,7 +641,12 @@ async def confirm_properties(
 
         if key:
             para.append((ui.NORMAL, key))
-        if val:
+        if isinstance(val, bytes):
+            para.extend(
+                (ui.MONO, line)
+                for line in chunks(hexlify(val).decode(), MONO_HEX_PER_LINE - 2)
+            )
+        elif isinstance(val, str):
             para.append((ui.BOLD, val))
     content = paginate_paragraphs(
         para, title, icon, icon_color, confirm=HoldToConfirm if hold else Confirm

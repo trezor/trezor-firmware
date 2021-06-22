@@ -1,5 +1,3 @@
-from ubinascii import hexlify
-
 from trezor import ui
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_properties
@@ -290,7 +288,7 @@ async def confirm_action_unknown(
         props=[
             ("Contract:", helpers.eos_name_to_string(action.account)),
             ("Action Name:", helpers.eos_name_to_string(action.name)),
-            ("Checksum:", hexlify(checksum).decode("ascii")),
+            ("Checksum:", checksum),
         ],
         icon=ui.ICON_WIPE,
         icon_color=ui.RED,
