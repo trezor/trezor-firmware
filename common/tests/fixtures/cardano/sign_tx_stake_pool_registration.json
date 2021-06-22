@@ -68,7 +68,6 @@
         ],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "SWIPE", "YES"], ["SWIPE", "YES"], ["SWIPE", "YES"], ["YES"], ["YES"]],
         "inputs": [
           {
             "path": null,
@@ -152,7 +151,6 @@
         ],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "SWIPE", "YES"], ["SWIPE", "YES"], ["SWIPE", "YES"], ["YES"], ["YES"]],
         "inputs": [
           {
             "path": null,
@@ -237,7 +235,6 @@
         ],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "SWIPE", "YES"], ["YES"], ["SWIPE", "YES"], ["SWIPE", "YES"], ["YES"], ["YES"]],
         "inputs": [
           {
             "path": null,
@@ -288,7 +285,6 @@
         ],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "SWIPE", "YES"], ["YES"], ["YES"], ["YES"], ["YES"]],
         "inputs": [
           {
             "path": null,
@@ -339,7 +335,6 @@
         ],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "SWIPE", "YES"], ["YES"], ["YES"], ["YES"], ["YES"]],
         "inputs": [
           {
             "path": null,
@@ -426,7 +421,6 @@
           "type": 0,
           "blob": "a200a11864a118c843aa00ff01a119012c590100aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         },
-        "input_flow": [["SWIPE", "SWIPE", "YES"], ["SWIPE", "YES"], ["SWIPE", "YES"], ["YES"], ["YES"], ["YES"]],
         "inputs": [
           {
             "path": null,

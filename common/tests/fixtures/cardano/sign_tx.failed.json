@@ -703,7 +703,6 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -738,7 +737,6 @@
         "certificates": [],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
@@ -778,7 +776,6 @@
         ],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "YES"]],
         "inputs": [
           {
             "path": "m/1852'/1815'/0'/0/0",
