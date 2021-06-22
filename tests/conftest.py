@@ -202,7 +202,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
 
     if _should_write_ui_report(exitstatus):
         println("-------- UI tests summary: --------")
-        println(f"{testreport.REPORTS_PATH / 'index.html'}")
+        println("Run ./tests/show_results.py to open test summary")
         println("")
 
 
