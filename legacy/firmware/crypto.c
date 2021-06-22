@@ -555,15 +555,49 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
     return valid;
   }
 
-  // m/45' - BIP45 Copay Abandoned Multisig P2SH
-  // m / purpose' / cosigner_index / change / address_index
   if (address_n_count > 0 && address_n[0] == (0x80000000 + 45)) {
+    if (address_n_count == 4) {
+      // m/45' - BIP45 Copay Abandoned Multisig P2SH
+      // m / purpose' / cosigner_index / change / address_index
+      // Patterns without a coin_type field must be treated as Bitcoin paths.
+      valid &= check_cointype(coin, SLIP44_BITCOIN, full);
+    } else if (address_n_count == 5) {
+      // Unchained Capital compatibility pattern. Will be removed in the
+      // future.
+      // m / 45' / coin_type' / account' / [0-1000000] / address_index
+      valid &= check_cointype(coin, address_n[1], full);
+    } else if (address_n_count == 6) {
+      // Unchained Capital compatibility pattern. Will be removed in the
+      // future.
+      // m/45'/coin_type'/account'/[0-1000000]/change/address_index
+      // m/45'/coin_type/account/[0-1000000]/change/address_index
+      valid &= check_cointype(coin, 0x80000000 | address_n[1], full);
+    }
+
     if (full) {
-      valid &= (script_type == InputScriptType_SPENDMULTISIG);
-      valid &= (address_n_count == 4);
-      valid &= (address_n[1] & 0x80000000) == 0;
-      valid &= (address_n[2] & 0x80000000) == 0;
-      valid &= (address_n[3] & 0x80000000) == 0;
+      if (address_n_count == 4) {
+        valid &= (script_type == InputScriptType_SPENDMULTISIG);
+        valid &= (address_n[1] & 0x80000000) == 0;
+        valid &= (address_n[2] & 0x80000000) == 0;
+        valid &= (address_n[3] & 0x80000000) == 0;
+      } else if (address_n_count == 5) {
+        valid &= (script_type == InputScriptType_SPENDADDRESS ||
+                  script_type == InputScriptType_SPENDMULTISIG);
+        valid &= (address_n[2] & 0x80000000) == 0x80000000;
+        valid &= (address_n[2] & 0x7fffffff) <= 100;
+        valid &= address_n[3] <= 1000000;
+        valid &= address_n[4] <= 1000000;
+      } else if (address_n_count == 6) {
+        valid &= (script_type == InputScriptType_SPENDADDRESS ||
+                  script_type == InputScriptType_SPENDMULTISIG);
+        valid &= (address_n[1] & 0x80000000) == (address_n[2] & 0x80000000);
+        valid &= (address_n[2] & 0x7fffffff) <= 100;
+        valid &= address_n[3] <= 1000000;
+        valid &= address_n[4] <= 1;
+        valid &= address_n[5] <= 1000000;
+      } else {
+        return false;
+      }
     }
     return valid;
   }
@@ -624,6 +658,66 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
       valid &= (address_n[2] & 0x80000000) == 0x80000000;
       valid &= (address_n[3] & 0x80000000) == 0;
       valid &= (address_n[4] & 0x80000000) == 0;
+    }
+    return valid;
+  }
+
+  // Green Address compatibility pattern. Will be removed in the future.
+  // m / [1,4] / address_index
+  if (address_n_count > 0 && (address_n[0] == 1 || address_n[0] == 4)) {
+    valid &= (coin->coin_type == SLIP44_BITCOIN);
+    if (full) {
+      valid &= (address_n_count == 2);
+      valid &= (address_n[1] <= 1000000);
+    }
+    return valid;
+  }
+
+  // Green Address compatibility pattern. Will be removed in the future.
+  // m / 3' / [1-100]' / [1,4] / address_index
+  if (address_n_count > 0 && address_n[0] == (0x80000000 + 3)) {
+    valid &= (coin->coin_type == SLIP44_BITCOIN);
+    if (full) {
+      valid &= (address_n_count == 4);
+      valid &= (address_n[1] & 0x80000000) == 0x80000000;
+      valid &= (address_n[1] & 0x7fffffff) <= 100;
+      valid &= address_n[2] == 1 || address_n[2] == 4;
+      valid &= address_n[3] <= 1000000;
+    }
+    return valid;
+  }
+
+  // Green Address compatibility patterns. Will be removed in the future.
+  // m / 1195487518
+  // m / 1195487518 / 6 / address_index
+  if (address_n_count > 0 && address_n[0] == 1195487518) {
+    valid &= (coin->coin_type == SLIP44_BITCOIN);
+    if (full) {
+      if (address_n_count == 3) {
+        valid &= (address_n[1] == 6);
+        valid &= (address_n[2] <= 1000000);
+      } else if (address_n_count != 1) {
+        return false;
+      }
+    }
+    return valid;
+  }
+
+  // Casa compatibility pattern. Will be removed in the future.
+  // m / 49 / coin_type / account / change / address_index
+  if (address_n_count > 0 && address_n[0] == 49) {
+    if (full) {
+      valid &= (address_n_count == 5);
+    } else {
+      valid &= (address_n_count >= 2);
+    }
+    valid &= check_cointype(coin, 0x80000000 | address_n[1], full);
+    if (full) {
+      valid &= (script_type == InputScriptType_SPENDP2SHWITNESS);
+      valid &= (address_n[1] & 0x80000000) == 0;
+      valid &= address_n[2] <= 100;
+      valid &= address_n[3] <= 1;
+      valid &= address_n[4] <= 1000000;
     }
     return valid;
   }

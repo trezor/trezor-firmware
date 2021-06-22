@@ -109,12 +109,6 @@ def test_getpublicnode(client, path, script_types):
         assert res.xpub
 
 
-# See https://github.com/trezor/trezor-firmware/issues/1660
-# T1 fails on:
-# test_getaddress[m/45'/0'/63'/1000000/0/255-script_types5]
-# test_getaddress[m/45'/0'/63'/1000000/255-script_types7]
-# test_getaddress[m/45'/0/63/1000000/0/255-script_types6]
-@pytest.mark.skip_t1
 @pytest.mark.parametrize("path, script_types", VECTORS)
 def test_getaddress(client, path, script_types):
     for script_type in script_types:
@@ -170,9 +164,6 @@ def test_signtx(client, path, script_types):
         assert serialized_tx.hex()
 
 
-# See https://github.com/trezor/trezor-firmware/issues/1660
-# T1 fails on the Unchained paths
-@pytest.mark.skip_t1
 @pytest.mark.multisig
 @pytest.mark.parametrize("paths, address_index", VECTORS_MULTISIG)
 def test_getaddress_multisig(client, paths, address_index):
