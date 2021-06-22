@@ -519,7 +519,6 @@
         ],
         "withdrawals": [],
         "auxiliary_data": null,
-        "input_flow": [["SWIPE", "SWIPE", "YES"]],
         "inputs": [
           {
             "path": null,
