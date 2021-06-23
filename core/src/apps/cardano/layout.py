@@ -37,6 +37,8 @@ if False:
         CardanoAssetGroupType,
     )
 
+    from trezor.ui.layouts import PropertyType
+
 
 ADDRESS_TYPE_NAMES = {
     CardanoAddressType.BYRON: "Legacy",
@@ -217,7 +219,7 @@ async def confirm_transaction(
     validity_interval_start: int | None,
     is_network_id_verifiable: bool,
 ) -> None:
-    props = [
+    props: list[PropertyType] = [
         ("Transaction amount:", format_coin_amount(amount)),
         ("Transaction fee:", format_coin_amount(fee)),
     ]
@@ -467,7 +469,7 @@ async def show_warning_address_foreign_staking_key(
     staking_account_path: list[int],
     staking_key_hash: bytes | None,
 ) -> None:
-    props: list[tuple[str, str | None]] = [
+    props: list[PropertyType] = [
         (
             "Stake rights associated with this address do not match your account %s:"
             % format_account_number(account_path),
