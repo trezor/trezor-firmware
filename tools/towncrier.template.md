@@ -8,7 +8,7 @@
 ### {{ definitions[category]['name'] }}
 {% if definitions[category]['showcontent'] %}
 {% for text, values in sections[section][category].items() %}
-- {{ text }}  {{ values|join(', ') }}
+- {{ text }}  {{ values|reject("eq", "[#noissue]")|join(', ') }}
 {% endfor %}
 {% endif %}
 {% endfor %}

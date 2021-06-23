@@ -19,10 +19,13 @@ for different components of the repository:
 
 [`towncrier`](https://github.com/twisted/towncrier) aims to create changelogs
 that are convenient to read, at the expense of being somewhat inconvenient to
-create. Furthermore every changelog entry has to be linked to a GitHub issue or
-pull request number. If you don't want to create an issue just to satisfy this
-rule you can use self-reference to your change's pull request number by first
-creating the PR and then adding the entry.
+create.
+
+Furthermore every changelog entry should be linked to a GitHub issue or pull
+request number. If you don't want to create an issue just to satisfy this rule
+you can use self-reference to your change's pull request number by first
+creating the PR and then adding the entry. If this is not suitable, the word
+`noissue` can be used in place of the issue number.
 
 There are a few types of changelog entries, as described by the [Keep a
 Changelog](https://keepachangelog.com/en/1.0.0/) format:
