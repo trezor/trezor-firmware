@@ -1,5 +1,4 @@
 from micropython import const
-
 from ubinascii import hexlify
 
 from trezor import ui, wire
@@ -14,11 +13,11 @@ from ..components.common.confirm import is_confirmed, raise_if_cancelled
 from ..components.tt.button import ButtonCancel, ButtonDefault
 from ..components.tt.confirm import Confirm, HoldToConfirm
 from ..components.tt.scroll import (
+    PAGEBREAK,
+    PAGINATED_LINE_WIDTH,
     Paginated,
     paginate_paragraphs,
     paginate_text,
-    PAGINATED_LINE_WIDTH,
-    PAGEBREAK,
 )
 from ..components.tt.text import Span, Text
 from ..constants.tt import (
@@ -36,15 +35,11 @@ if False:
         Awaitable,
         Iterator,
         NoReturn,
-        Optional,
         Sequence,
         Tuple,
-        Type,
-        Union,
     )
 
-    ExceptionType = Union[BaseException, Type[BaseException]]
-    PropertyType = Tuple[Optional[str], Union[str, bytes, None]]
+    from .common import PropertyType, ExceptionType
 
 
 __all__ = (

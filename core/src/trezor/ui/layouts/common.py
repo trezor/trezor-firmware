@@ -3,9 +3,11 @@ from trezor.enums import ButtonRequestType
 from trezor.messages import ButtonAck, ButtonRequest
 
 if False:
-    from typing import Any, Awaitable
+    from typing import Any, Awaitable, Optional, Tuple, Type, Union
 
     LayoutType = Awaitable[Any]
+    PropertyType = Tuple[Optional[str], Union[str, bytes, None]]
+    ExceptionType = Union[BaseException, Type[BaseException]]
 
 
 if __debug__:
