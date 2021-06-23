@@ -540,6 +540,14 @@ static bool check_cointype(const CoinInfo *coin, uint32_t slip44, bool full) {
 bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
                            uint32_t address_n_count, const uint32_t *address_n,
                            bool full) {
+  // If full == true, this function checks that the path is a recognized path
+  // for the given coin. Used by GetAddress to prevent ransom attacks where a
+  // user could be coerced to use an address with an unenumerable path.
+  // If full == false, this function checks that a coin without strong replay
+  // protection doesn't access paths that are known to be used by another coin.
+  // Used by SignTx to ensure that a user cannot be coerced into signing a
+  // testnet transaction or a Litecoin transaction which in fact spends Bitcoin.
+
   bool valid = true;
   // m/44' : BIP44 Legacy
   // m / purpose' / coin_type' / account' / change / address_index
@@ -740,6 +748,6 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
     return valid;
   }
 
-  // we don't check unknown paths
-  return true;
+  // we allow unknown paths when a full check is not required
+  return !full;
 }
