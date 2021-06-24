@@ -21,7 +21,7 @@
   "xpub_magic_multisig_segwit_native": 70617039,
   "bech32_prefix": "tbtg",
   "cashaddr_prefix": null,
-  "slip44": 156,
+  "slip44": 1,
   "segwit": true,
   "decred": false,
   "fork_id": 79,
