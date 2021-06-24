@@ -74,6 +74,7 @@
 "cardano-test_sign_tx.py::test_cardano_sign_tx_failed[change_output_staking_path_larger_than_100]": "9dd34acde52006947bb448a058fc782c808940174427cd8f3d4befcc7a1e8f02",
 "cardano-test_sign_tx.py::test_cardano_sign_tx_failed[contains_other_certificates]": "612dad8ab8762162a186ec9279d7de0bdfc589c52b4e4f4eba0545a00f21c3f0",
 "cardano-test_sign_tx.py::test_cardano_sign_tx_failed[contains_withdrawal]": "612dad8ab8762162a186ec9279d7de0bdfc589c52b4e4f4eba0545a00f21c3f0",
+"cardano-test_sign_tx.py::test_cardano_sign_tx_failed[duplicate_withdrawal]": "612dad8ab8762162a186ec9279d7de0bdfc589c52b4e4f4eba0545a00f21c3f0",
 "cardano-test_sign_tx.py::test_cardano_sign_tx_failed[fee_is_too_high]": "612dad8ab8762162a186ec9279d7de0bdfc589c52b4e4f4eba0545a00f21c3f0",
 "cardano-test_sign_tx.py::test_cardano_sign_tx_failed[invalid_pool_id]": "612dad8ab8762162a186ec9279d7de0bdfc589c52b4e4f4eba0545a00f21c3f0",
 "cardano-test_sign_tx.py::test_cardano_sign_tx_failed[mainnet_protocol_magic_with_testnet_network_id]": "612dad8ab8762162a186ec9279d7de0bdfc589c52b4e4f4eba0545a00f21c3f0",
