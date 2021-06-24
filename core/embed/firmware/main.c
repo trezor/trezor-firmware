@@ -52,6 +52,8 @@
 #include "touch.h"
 
 int main(void) {
+  random_delays_init();
+
 #ifdef RDI
   rdi_start();
 #endif

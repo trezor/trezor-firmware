@@ -44,10 +44,6 @@ reset_handler:
   ldr r1, = __stack_chk_guard
   str r0, [r1]
 
-#ifdef RDI
-  bl random_delays_init
-#endif
-
   // re-enable exceptions
   // according to "ARM Cortex-M Programming Guide to Memory Barrier Instructions" Application Note 321, section 4.7:
   // "If it is not necessary to ensure that a pended interrupt is recognized immediately before
