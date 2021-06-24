@@ -33,6 +33,12 @@
 #include "segwit_addr.h"
 #include "sha2.h"
 
+// SLIP-44 hardened coin type for Bitcoin
+#define SLIP44_BITCOIN 0x80000000
+
+// SLIP-44 hardened coin type for all Testnet coins
+#define SLIP44_TESTNET 0x80000001
+
 uint32_t ser_length(uint32_t len, uint8_t *out) {
   if (len < 253) {
     out[0] = len & 0xFF;
@@ -512,10 +518,14 @@ static bool check_cointype(const CoinInfo *coin, uint32_t slip44, bool full) {
   (void)full;
 #else
   if (!full) {
-    // some wallets such as Electron-Cash (BCH) store coins on Bitcoin paths
-    // we can allow spending these coins from Bitcoin paths if the coin has
-    // implemented strong replay protection via SIGHASH_FORKID
-    if (slip44 == 0x80000000 && coin->has_fork_id) {
+    // Some wallets such as Electron-Cash (BCH) store coins on Bitcoin paths.
+    // We can allow spending these coins from Bitcoin paths if the coin has
+    // implemented strong replay protection via SIGHASH_FORKID. However, we
+    // cannot allow spending any testnet coins from Bitcoin paths, because
+    // otherwise an attacker could trick the user into spending BCH on a Bitcoin
+    // path by signing a seemingly harmless BCH Testnet transaction.
+    if (slip44 == SLIP44_BITCOIN && coin->has_fork_id &&
+        coin->coin_type != SLIP44_TESTNET) {
       return true;
     }
   }
