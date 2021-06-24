@@ -184,6 +184,9 @@ def validate_btc(coin):
     if not coin["max_address_length"] >= coin["min_address_length"]:
         errors.append("max address length must not be smaller than min address length")
 
+    if "testnet" in coin["coin_name"].lower() and coin["slip44"] != 1:
+        errors.append("testnet coins must use slip44 coin type 1")
+
     if coin["segwit"]:
         if coin["bech32_prefix"] is None:
             errors.append("bech32_prefix must be defined for segwit-enabled coin")
