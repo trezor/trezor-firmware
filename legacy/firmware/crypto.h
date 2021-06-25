@@ -84,6 +84,6 @@ int cryptoIdentityFingerprint(const IdentityType *identity, uint8_t *hash);
 
 bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
                            uint32_t address_n_count, const uint32_t *address_n,
-                           bool full);
+                           bool has_multisig, bool full);
 
 #endif

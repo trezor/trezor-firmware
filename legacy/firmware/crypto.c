@@ -539,7 +539,7 @@ static bool check_cointype(const CoinInfo *coin, uint32_t slip44, bool full) {
 
 bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
                            uint32_t address_n_count, const uint32_t *address_n,
-                           bool full) {
+                           bool has_multisig, bool full) {
   // If full == true, this function checks that the path is a recognized path
   // for the given coin. Used by GetAddress to prevent ransom attacks where a
   // user could be coerced to use an address with an unenumerable path.
@@ -560,6 +560,7 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
     valid = valid && check_cointype(coin, address_n[1], full);
     if (full) {
       valid = valid && (script_type == InputScriptType_SPENDADDRESS);
+      valid = valid && (!has_multisig);
       valid = valid && ((address_n[2] & 0x80000000) == 0x80000000);
       valid = valid && ((address_n[2] & 0x7fffffff) <= PATH_MAX_ACCOUNT);
       valid = valid && (address_n[3] <= PATH_MAX_CHANGE);
@@ -588,6 +589,7 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
     }
 
     if (full) {
+      valid = valid && has_multisig;
       if (address_n_count == 4) {
         valid = valid && (script_type == InputScriptType_SPENDMULTISIG);
         valid = valid && (address_n[1] <= 100);
@@ -628,6 +630,7 @@ bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
     }
     valid = valid && check_cointype(coin, address_n[1], full);
     if (full) {
+      valid = valid && has_multisig;
       valid = valid && (script_type == InputScriptType_SPENDMULTISIG ||
                         script_type == InputScriptType_SPENDP2SHWITNESS ||
                         script_type == InputScriptType_SPENDWITNESS);
