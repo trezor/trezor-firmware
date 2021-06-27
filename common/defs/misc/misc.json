@@ -187,5 +187,16 @@
             "Homepage": "https://tether.to"
         },
         "wallet": {}
+    },
+       {
+        "name": "Helium",
+        "shortcut": "HNT",
+        "slip44": 0,
+        "curve": "secp256k1",
+        "decimals": 2,
+        "links": {
+            "Homepage": "https://www.helium.com/"
+        },
+        "wallet": {}
     }
 ]
