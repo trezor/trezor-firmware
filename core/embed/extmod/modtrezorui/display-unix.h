@@ -71,6 +71,9 @@ static struct {
   } pos;
 } PIXELWINDOW;
 
+// noop on unix, display is refreshed every loop step
+#define PIXELDATA_DIRTY()
+
 void PIXELDATA(uint16_t c) {
 #if TREZOR_MODEL == 1
   // set to white if highest bits of all R, G, B values are set to 1

@@ -66,6 +66,8 @@ static struct {
   } pos;
 } PIXELWINDOW;
 
+static bool pixeldata_dirty = true;
+
 void PIXELDATA(uint16_t c) {
   if (PIXELWINDOW.pos.x <= PIXELWINDOW.end.x &&
       PIXELWINDOW.pos.y <= PIXELWINDOW.end.y) {
@@ -86,6 +88,8 @@ void PIXELDATA(uint16_t c) {
     PIXELWINDOW.pos.y++;
   }
 }
+
+void PIXELDATA_DIRTY() { pixeldata_dirty = true; }
 
 static void display_set_window(uint16_t x0, uint16_t y0, uint16_t x1,
                                uint16_t y1) {
@@ -223,6 +227,11 @@ void display_refresh(void) {
   static const uint8_t s[3] = {OLED_SETLOWCOLUMN | 0x00,
                                OLED_SETHIGHCOLUMN | 0x00,
                                OLED_SETSTARTLINE | 0x00};
+
+  if (!pixeldata_dirty) {
+    return;
+  }
+  pixeldata_dirty = false;
 
   HAL_GPIO_WritePin(OLED_CS_PORT, OLED_CS_PIN, GPIO_PIN_RESET);  // SPI select
   spi_send(s, 3);
