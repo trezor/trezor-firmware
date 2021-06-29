@@ -183,11 +183,13 @@ void fsm_msgGetAddress(const GetAddress *msg) {
       strlcpy(desc, _("Address:"), sizeof(desc));
     }
 
-    if (!coin_known_path_check(coin, msg->script_type, msg->address_n_count,
-                               msg->address_n, msg->has_multisig, true)) {
+    if (!coin_path_check(coin, msg->script_type, msg->address_n_count,
+                         msg->address_n, msg->has_multisig,
+                         CoinPathCheckLevel_SCRIPT_TYPE)) {
       if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict &&
-          !coin_known_path_check(coin, msg->script_type, msg->address_n_count,
-                                 msg->address_n, msg->has_multisig, false)) {
+          !coin_path_check(coin, msg->script_type, msg->address_n_count,
+                           msg->address_n, msg->has_multisig,
+                           CoinPathCheckLevel_KNOWN)) {
         fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
         layoutHome();
         return;
