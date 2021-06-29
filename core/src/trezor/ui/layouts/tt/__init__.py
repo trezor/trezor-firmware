@@ -4,6 +4,7 @@ from ubinascii import hexlify
 from trezor import ui, wire
 from trezor.enums import ButtonRequestType
 from trezor.ui.container import Container
+from trezor.ui.loader import LoaderDanger
 from trezor.ui.popup import Popup
 from trezor.ui.qr import Qr
 from trezor.utils import chunks, chunks_intersperse
@@ -16,9 +17,11 @@ from ...components.common.confirm import (
     is_confirmed,
     raise_if_cancelled,
 )
+from ...components.common.homescreen import HomescreenBase
 from ...components.tt import passphrase, pin
 from ...components.tt.button import ButtonCancel, ButtonDefault
 from ...components.tt.confirm import Confirm, HoldToConfirm
+from ...components.tt.homescreen import Homescreen
 from ...components.tt.scroll import (
     PAGEBREAK,
     AskPaginated,
@@ -73,6 +76,7 @@ __all__ = (
     "request_passphrase_on_device",
     "request_pin_on_device",
     "should_show_more",
+    "homescreen",
 )
 
 
@@ -1063,3 +1067,7 @@ async def request_pin_on_device(
             raise wire.PinCancelled
         assert isinstance(result, str)
         return result
+
+
+def homescreen() -> HomescreenBase:
+    return Homescreen()

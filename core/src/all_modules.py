@@ -146,6 +146,8 @@ trezor.ui.components.common
 import trezor.ui.components.common
 trezor.ui.components.common.confirm
 import trezor.ui.components.common.confirm
+trezor.ui.components.common.homescreen
+import trezor.ui.components.common.homescreen
 trezor.ui.components.common.text
 import trezor.ui.components.common.text
 trezor.ui.components.t1
@@ -158,6 +160,8 @@ trezor.ui.components.tt.checklist
 import trezor.ui.components.tt.checklist
 trezor.ui.components.tt.confirm
 import trezor.ui.components.tt.confirm
+trezor.ui.components.tt.homescreen
+import trezor.ui.components.tt.homescreen
 trezor.ui.components.tt.info
 import trezor.ui.components.tt.info
 trezor.ui.components.tt.keyboard_bip39
