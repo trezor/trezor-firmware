@@ -448,6 +448,8 @@ if utils.BITCOIN_ONLY:
     import apps.cardano.helpers
     apps.cardano.helpers.bech32
     import apps.cardano.helpers.bech32
+    apps.cardano.helpers.hash_builder_collection
+    import apps.cardano.helpers.hash_builder_collection
     apps.cardano.helpers.network_ids
     import apps.cardano.helpers.network_ids
     apps.cardano.helpers.paths

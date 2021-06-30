@@ -29,12 +29,12 @@ if False:
     from trezor import wire
     from trezor.messages import (
         CardanoBlockchainPointerType,
-        CardanoTxCertificateType,
-        CardanoTxWithdrawalType,
+        CardanoTxCertificate,
+        CardanoTxWithdrawal,
         CardanoPoolParametersType,
-        CardanoPoolOwnerType,
+        CardanoPoolOwner,
         CardanoPoolMetadataType,
-        CardanoAssetGroupType,
+        CardanoToken,
     )
 
     from trezor.ui.layouts import PropertyType
@@ -67,11 +67,8 @@ def is_printable_ascii_bytestring(bytestr: bytes) -> bool:
 async def confirm_sending(
     ctx: wire.Context,
     ada_amount: int,
-    token_bundle: list[CardanoAssetGroupType],
     to: str,
 ) -> None:
-    await confirm_sending_token_bundle(ctx, token_bundle)
-
     await confirm_output(
         ctx,
         to,
@@ -86,27 +83,25 @@ async def confirm_sending(
     )
 
 
-async def confirm_sending_token_bundle(
-    ctx: wire.Context, token_bundle: list[CardanoAssetGroupType]
+async def confirm_sending_token(
+    ctx: wire.Context, policy_id: bytes, token: CardanoToken
 ) -> None:
-    for token_group in token_bundle:
-        for token in token_group.tokens:
-            await confirm_properties(
-                ctx,
-                "confirm_token",
-                title="Confirm transaction",
-                props=[
-                    (
-                        "Asset fingerprint:",
-                        format_asset_fingerprint(
-                            policy_id=token_group.policy_id,
-                            asset_name_bytes=token.asset_name_bytes,
-                        ),
-                    ),
-                    ("Amount sent:", format_amount(token.amount, 0)),
-                ],
-                br_code=ButtonRequestType.Other,
-            )
+    await confirm_properties(
+        ctx,
+        "confirm_token",
+        title="Confirm transaction",
+        props=[
+            (
+                "Asset fingerprint:",
+                format_asset_fingerprint(
+                    policy_id=policy_id,
+                    asset_name_bytes=token.asset_name_bytes,
+                ),
+            ),
+            ("Amount sent:", format_amount(token.amount, 0)),
+        ],
+        br_code=ButtonRequestType.Other,
+    )
 
 
 async def show_warning_tx_output_contains_tokens(ctx: wire.Context) -> None:
@@ -212,7 +207,6 @@ async def show_warning_tx_staking_key_hash(
 
 async def confirm_transaction(
     ctx: wire.Context,
-    amount: int,
     fee: int,
     protocol_magic: int,
     ttl: int | None,
@@ -220,12 +214,13 @@ async def confirm_transaction(
     is_network_id_verifiable: bool,
 ) -> None:
     props: list[PropertyType] = [
-        ("Transaction amount:", format_coin_amount(amount)),
         ("Transaction fee:", format_coin_amount(fee)),
     ]
 
     if is_network_id_verifiable:
-        props.append(("Network:", protocol_magics.to_ui_string(protocol_magic)))
+        props.append(
+            ("Network: %s" % protocol_magics.to_ui_string(protocol_magic), None)
+        )
 
     props.append(
         ("Valid since: %s" % format_optional_int(validity_interval_start), None)
@@ -243,7 +238,7 @@ async def confirm_transaction(
 
 
 async def confirm_certificate(
-    ctx: wire.Context, certificate: CardanoTxCertificateType
+    ctx: wire.Context, certificate: CardanoTxCertificate
 ) -> None:
     # stake pool registration requires custom confirmation logic not covered
     # in this call
@@ -270,10 +265,7 @@ async def confirm_certificate(
 
 
 async def confirm_stake_pool_parameters(
-    ctx: wire.Context,
-    pool_parameters: CardanoPoolParametersType,
-    network_id: int,
-    protocol_magic: int,
+    ctx: wire.Context, pool_parameters: CardanoPoolParametersType
 ) -> None:
     margin_percentage = (
         100.0 * pool_parameters.margin_numerator / pool_parameters.margin_denominator
@@ -302,39 +294,36 @@ async def confirm_stake_pool_parameters(
     )
 
 
-async def confirm_stake_pool_owners(
+async def confirm_stake_pool_owner(
     ctx: wire.Context,
     keychain: seed.Keychain,
-    owners: list[CardanoPoolOwnerType],
+    owner: CardanoPoolOwner,
     network_id: int,
 ) -> None:
     props: list[tuple[str, str | None]] = []
-    for index, owner in enumerate(owners, 1):
-        if owner.staking_key_path:
-            props.append(
-                ("Pool owner #%d:" % index, address_n_to_str(owner.staking_key_path))
+    if owner.staking_key_path:
+        props.append(("Pool owner:", address_n_to_str(owner.staking_key_path)))
+        props.append(
+            (
+                encode_human_readable_address(
+                    pack_reward_address_bytes(
+                        get_public_key_hash(keychain, owner.staking_key_path),
+                        network_id,
+                    )
+                ),
+                None,
             )
-            props.append(
-                (
-                    encode_human_readable_address(
-                        pack_reward_address_bytes(
-                            get_public_key_hash(keychain, owner.staking_key_path),
-                            network_id,
-                        )
-                    ),
-                    None,
-                )
+        )
+    else:
+        assert owner.staking_key_hash is not None  # validate_pool_owners
+        props.append(
+            (
+                "Pool owner:",
+                encode_human_readable_address(
+                    pack_reward_address_bytes(owner.staking_key_hash, network_id)
+                ),
             )
-        else:
-            assert owner.staking_key_hash is not None  # validate_pool_owners
-            props.append(
-                (
-                    "Pool owner #%d:" % index,
-                    encode_human_readable_address(
-                        pack_reward_address_bytes(owner.staking_key_hash, network_id)
-                    ),
-                )
-            )
+        )
 
     await confirm_properties(
         ctx,
@@ -371,7 +360,7 @@ async def confirm_stake_pool_metadata(
     )
 
 
-async def confirm_transaction_network_ttl(
+async def confirm_stake_pool_registration_final(
     ctx: wire.Context,
     protocol_magic: int,
     ttl: int | None,
@@ -379,36 +368,21 @@ async def confirm_transaction_network_ttl(
 ) -> None:
     await confirm_properties(
         ctx,
-        "confirm_pool_network",
-        title="Confirm transaction",
-        props=[
-            ("Network:", protocol_magics.to_ui_string(protocol_magic)),
-            (
-                "Valid since: %s" % format_optional_int(validity_interval_start),
-                None,
-            ),
-            ("TTL: %s" % format_optional_int(ttl), None),
-        ],
-        br_code=ButtonRequestType.Other,
-    )
-
-
-async def confirm_stake_pool_registration_final(
-    ctx: wire.Context,
-) -> None:
-    await confirm_metadata(
-        ctx,
         "confirm_pool_final",
         title="Confirm transaction",
-        content="Confirm signing the stake pool registration as an owner",
-        hide_continue=True,
+        props=[
+            ("Confirm signing the stake pool registration as an owner.", None),
+            ("Network:", protocol_magics.to_ui_string(protocol_magic)),
+            ("Valid since:", format_optional_int(validity_interval_start)),
+            ("TTL:", format_optional_int(ttl)),
+        ],
         hold=True,
         br_code=ButtonRequestType.Other,
     )
 
 
 async def confirm_withdrawal(
-    ctx: wire.Context, withdrawal: CardanoTxWithdrawalType
+    ctx: wire.Context, withdrawal: CardanoTxWithdrawal
 ) -> None:
     await confirm_properties(
         ctx,

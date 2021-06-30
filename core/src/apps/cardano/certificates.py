@@ -1,4 +1,8 @@
-from trezor.enums import CardanoCertificateType, CardanoPoolRelayType
+from trezor.enums import (
+    CardanoCertificateType,
+    CardanoPoolRelayType,
+    CardanoTxSigningMode,
+)
 
 from apps.common import cbor
 
@@ -13,10 +17,10 @@ from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 if False:
     from trezor.messages import (
         CardanoPoolMetadataType,
-        CardanoPoolOwnerType,
+        CardanoPoolOwner,
         CardanoPoolParametersType,
-        CardanoPoolRelayParametersType,
-        CardanoTxCertificateType,
+        CardanoPoolRelayParameters,
+        CardanoTxCertificate,
     )
 
     from apps.common.cbor import CborSequence
@@ -34,8 +38,22 @@ MAX_PORT_NUMBER = 65535
 
 
 def validate_certificate(
-    certificate: CardanoTxCertificateType, protocol_magic: int, network_id: int
+    certificate: CardanoTxCertificate,
+    signing_mode: CardanoTxSigningMode,
+    protocol_magic: int,
+    network_id: int,
 ) -> None:
+    if (
+        signing_mode == CardanoTxSigningMode.ORDINARY_TRANSACTION
+        and certificate.type == CardanoCertificateType.STAKE_POOL_REGISTRATION
+    ):
+        raise INVALID_CERTIFICATE
+    elif (
+        signing_mode == CardanoTxSigningMode.POOL_REGISTRATION_AS_OWNER
+        and certificate.type != CardanoCertificateType.STAKE_POOL_REGISTRATION
+    ):
+        raise INVALID_CERTIFICATE
+
     if certificate.type in (
         CardanoCertificateType.STAKE_DELEGATION,
         CardanoCertificateType.STAKE_REGISTRATION,
@@ -57,7 +75,7 @@ def validate_certificate(
 
 
 def cborize_certificate(
-    keychain: seed.Keychain, certificate: CardanoTxCertificateType
+    keychain: seed.Keychain, certificate: CardanoTxCertificate
 ) -> CborSequence:
     if certificate.type in (
         CardanoCertificateType.STAKE_REGISTRATION,
@@ -73,33 +91,35 @@ def cborize_certificate(
             (0, get_public_key_hash(keychain, certificate.path)),
             certificate.pool,
         )
-    elif certificate.type == CardanoCertificateType.STAKE_POOL_REGISTRATION:
-        pool_parameters = certificate.pool_parameters
-
-        assert pool_parameters is not None
-
-        return (
-            certificate.type,
-            pool_parameters.pool_id,
-            pool_parameters.vrf_key_hash,
-            pool_parameters.pledge,
-            pool_parameters.cost,
-            cbor.Tagged(
-                30,
-                (
-                    pool_parameters.margin_numerator,
-                    pool_parameters.margin_denominator,
-                ),
-            ),
-            # this relies on pool_parameters.reward_account being validated beforehand
-            # in _validate_pool_parameters
-            get_address_bytes_unsafe(pool_parameters.reward_account),
-            _cborize_pool_owners(keychain, pool_parameters.owners),
-            _cborize_pool_relays(pool_parameters.relays),
-            _cborize_pool_metadata(pool_parameters.metadata),
-        )
     else:
         raise INVALID_CERTIFICATE
+
+
+def cborize_initial_pool_registration_certificate_fields(
+    certificate: CardanoTxCertificate,
+) -> CborSequence:
+    assert certificate.type == CardanoCertificateType.STAKE_POOL_REGISTRATION
+
+    pool_parameters = certificate.pool_parameters
+    assert pool_parameters is not None
+
+    return (
+        certificate.type,
+        pool_parameters.pool_id,
+        pool_parameters.vrf_key_hash,
+        pool_parameters.pledge,
+        pool_parameters.cost,
+        cbor.Tagged(
+            30,
+            (
+                pool_parameters.margin_numerator,
+                pool_parameters.margin_denominator,
+            ),
+        ),
+        # this relies on pool_parameters.reward_account being validated beforehand
+        # in _validate_pool_parameters
+        get_address_bytes_unsafe(pool_parameters.reward_account),
+    )
 
 
 def assert_certificate_cond(condition: bool) -> None:
@@ -119,41 +139,27 @@ def _validate_pool_parameters(
     assert_certificate_cond(
         pool_parameters.margin_numerator <= pool_parameters.margin_denominator
     )
-    assert_certificate_cond(len(pool_parameters.owners) > 0)
+    assert_certificate_cond(pool_parameters.owners_count > 0)
 
     validate_reward_address(pool_parameters.reward_account, protocol_magic, network_id)
-
-    for pool_relay in pool_parameters.relays:
-        _validate_pool_relay(pool_relay)
-
-    _validate_pool_owners(pool_parameters.owners)
 
     if pool_parameters.metadata:
         _validate_pool_metadata(pool_parameters.metadata)
 
 
-def _validate_pool_owners(owners: list[CardanoPoolOwnerType]) -> None:
-    owners_as_path_count = 0
-    for owner in owners:
+def validate_pool_owner(owner: CardanoPoolOwner) -> None:
+    assert_certificate_cond(
+        owner.staking_key_hash is not None or owner.staking_key_path is not None
+    )
+    if owner.staking_key_hash is not None:
+        assert_certificate_cond(len(owner.staking_key_hash) == ADDRESS_KEY_HASH_SIZE)
+    if owner.staking_key_path:
         assert_certificate_cond(
-            owner.staking_key_hash is not None or owner.staking_key_path is not None
+            SCHEMA_STAKING_ANY_ACCOUNT.match(owner.staking_key_path)
         )
-        if owner.staking_key_hash is not None:
-            assert_certificate_cond(
-                len(owner.staking_key_hash) == ADDRESS_KEY_HASH_SIZE
-            )
-        if owner.staking_key_path:
-            assert_certificate_cond(
-                SCHEMA_STAKING_ANY_ACCOUNT.match(owner.staking_key_path)
-            )
-
-        if owner.staking_key_path:
-            owners_as_path_count += 1
-
-    assert_certificate_cond(owners_as_path_count == 1)
 
 
-def _validate_pool_relay(pool_relay: CardanoPoolRelayParametersType) -> None:
+def validate_pool_relay(pool_relay: CardanoPoolRelayParameters) -> None:
     if pool_relay.type == CardanoPoolRelayType.SINGLE_HOST_IP:
         assert_certificate_cond(
             pool_relay.ipv4_address is not None or pool_relay.ipv6_address is not None
@@ -188,20 +194,13 @@ def _validate_pool_metadata(pool_metadata: CardanoPoolMetadataType) -> None:
     assert_certificate_cond(all((32 <= ord(c) < 127) for c in pool_metadata.url))
 
 
-def _cborize_pool_owners(
-    keychain: seed.Keychain, pool_owners: list[CardanoPoolOwnerType]
-) -> list[bytes]:
-    result = []
-
-    for pool_owner in pool_owners:
-        if pool_owner.staking_key_path:
-            result.append(get_public_key_hash(keychain, pool_owner.staking_key_path))
-        elif pool_owner.staking_key_hash:
-            result.append(pool_owner.staking_key_hash)
-        else:
-            raise ValueError
-
-    return result
+def cborize_pool_owner(keychain: seed.Keychain, pool_owner: CardanoPoolOwner) -> bytes:
+    if pool_owner.staking_key_path:
+        return get_public_key_hash(keychain, pool_owner.staking_key_path)
+    elif pool_owner.staking_key_hash:
+        return pool_owner.staking_key_hash
+    else:
+        raise ValueError
 
 
 def _cborize_ipv6_address(ipv6_address: bytes | None) -> bytes | None:
@@ -218,41 +217,32 @@ def _cborize_ipv6_address(ipv6_address: bytes | None) -> bytes | None:
     return result
 
 
-def _cborize_pool_relays(
-    pool_relays: list[CardanoPoolRelayParametersType],
-) -> list[CborSequence]:
-    result: list[CborSequence] = []
-
-    for pool_relay in pool_relays:
-        if pool_relay.type == CardanoPoolRelayType.SINGLE_HOST_IP:
-            result.append(
-                (
-                    pool_relay.type,
-                    pool_relay.port,
-                    pool_relay.ipv4_address,
-                    _cborize_ipv6_address(pool_relay.ipv6_address),
-                )
-            )
-        elif pool_relay.type == CardanoPoolRelayType.SINGLE_HOST_NAME:
-            result.append(
-                (
-                    pool_relay.type,
-                    pool_relay.port,
-                    pool_relay.host_name,
-                )
-            )
-        elif pool_relay.type == CardanoPoolRelayType.MULTIPLE_HOST_NAME:
-            result.append(
-                (
-                    pool_relay.type,
-                    pool_relay.host_name,
-                )
-            )
-
-    return result
+def cborize_pool_relay(
+    pool_relay: CardanoPoolRelayParameters,
+) -> CborSequence:
+    if pool_relay.type == CardanoPoolRelayType.SINGLE_HOST_IP:
+        return (
+            pool_relay.type,
+            pool_relay.port,
+            pool_relay.ipv4_address,
+            _cborize_ipv6_address(pool_relay.ipv6_address),
+        )
+    elif pool_relay.type == CardanoPoolRelayType.SINGLE_HOST_NAME:
+        return (
+            pool_relay.type,
+            pool_relay.port,
+            pool_relay.host_name,
+        )
+    elif pool_relay.type == CardanoPoolRelayType.MULTIPLE_HOST_NAME:
+        return (
+            pool_relay.type,
+            pool_relay.host_name,
+        )
+    else:
+        raise INVALID_CERTIFICATE
 
 
-def _cborize_pool_metadata(
+def cborize_pool_metadata(
     pool_metadata: CardanoPoolMetadataType | None,
 ) -> CborSequence | None:
     if not pool_metadata:

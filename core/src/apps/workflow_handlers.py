@@ -149,7 +149,7 @@ def find_message_handler_module(msg_type: int) -> str:
             return "apps.cardano.get_address"
         elif msg_type == MessageType.CardanoGetPublicKey:
             return "apps.cardano.get_public_key"
-        elif msg_type == MessageType.CardanoSignTx:
+        elif msg_type == MessageType.CardanoSignTxInit:
             return "apps.cardano.sign_tx"
 
         # tezos
