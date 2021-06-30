@@ -28,7 +28,7 @@ DRY_RUN_ALLOWED_FIELDS = ("dry_run", "word_count", "enforce_wordlist", "type")
 async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
     """
     Recover BIP39/SLIP39 seed into empty device.
-    Recovery is also possible with replugged Trezor. We call this process Persistance.
+    Recovery is also possible with replugged Trezor. We call this process Persistence.
     User starts the process here using the RecoveryDevice msg and then they can unplug
     the device anytime and continue without a computer.
     """

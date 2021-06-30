@@ -23,7 +23,7 @@ async def sign_tx(ctx, msg, keychain):
     node = keychain.derive(msg.address_n)
 
     if msg.transaction is not None:
-        # if the tranasction oprtation is used to execute code on a smart contract
+        # if the transaction operation is used to execute code on a smart contract
         if msg.transaction.parameters_manager is not None:
             parameters_manager = msg.transaction.parameters_manager
 

@@ -17,7 +17,7 @@ if False:
     from apps.common.paths import Bip32Path
 
 # This module implements the SLIP-0017 Elliptic Curve Diffie-Hellman algorithm, using a
-# determinstic hierarchy, see https://github.com/satoshilabs/slips/blob/master/slip-0017.md.
+# deterministic hierarchy, see https://github.com/satoshilabs/slips/blob/master/slip-0017.md.
 
 
 async def get_ecdh_session_key(

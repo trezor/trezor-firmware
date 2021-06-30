@@ -467,7 +467,7 @@ void display_init_seq(void) {
 }
 
 void display_init(void) {
-  // init peripherials
+  // init peripherals
   __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_TIM1_CLK_ENABLE();
   __HAL_RCC_FMC_CLK_ENABLE();

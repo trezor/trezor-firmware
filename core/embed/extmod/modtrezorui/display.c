@@ -349,7 +349,7 @@ void display_icon(int x, int y, int w, int h, const void *data,
   }
 }
 
-// see docs/misc/toif.md for defintion of the TOIF format
+// see docs/misc/toif.md for definition of the TOIF format
 bool display_toif_info(const uint8_t *data, uint32_t len, uint16_t *out_w,
                        uint16_t *out_h, bool *out_grayscale) {
   if (len < 12 || memcmp(data, "TOI", 3) != 0) {

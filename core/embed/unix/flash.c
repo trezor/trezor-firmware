@@ -106,7 +106,7 @@ void flash_init(void) {
   struct stat sb;
   int r = stat(FLASH_FILE, &sb);
 
-  // (re)create if non existant or wrong size
+  // (re)create if non existent or wrong size
   if (r != 0 || sb.st_size != FLASH_SIZE) {
     int fd = open(FLASH_FILE, O_RDWR | O_CREAT | O_TRUNC, (mode_t)0600);
     ensure(sectrue * (fd >= 0), "open failed");

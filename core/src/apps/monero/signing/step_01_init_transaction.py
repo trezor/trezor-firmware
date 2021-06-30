@@ -71,7 +71,7 @@ async def init_transaction(
     # Ensure change is correct
     _check_change(state, tsx_data.outputs)
 
-    # At least two outpus are required, this applies also for sweep txs
+    # At least two outputs are required, this applies also for sweep txs
     # where one fake output is added. See _check_change for more info
     if state.output_count < 2:
         raise signing.NotEnoughOutputsError("At least two outputs are required")

@@ -18,7 +18,7 @@
  */
 
 /*
-Random delay interrupts (RDI) is a contermeasure agains side channel attacks. It
+Random delay interrupts (RDI) is a contermeasure against side channel attacks. It
 consists of an interrupt handler that is supposed to be called every millisecond
 or so. The handler waits for a random number of cpu ticks that is a sample of so
 called floating mean distribution. That means that the number is the sum of two
