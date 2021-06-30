@@ -26,6 +26,7 @@ CHANGE_OUTPUT_PATH_NAME = "Change output path"
 CHANGE_OUTPUT_STAKING_PATH_NAME = "Change output staking path"
 CERTIFICATE_PATH_NAME = "Certificate path"
 POOL_OWNER_STAKING_PATH_NAME = "Pool owner staking path"
+WITNESS_PATH_NAME = "Witness path"
 
 
 def unharden(item: int) -> int:

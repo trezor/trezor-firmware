@@ -6,13 +6,48 @@ from apps.common.cbor import (
     IndefiniteLengthArray,
     OrderedMap,
     Tagged,
+    create_array_header,
+    create_map_header,
     decode,
     encode,
     encode_chunked,
     encode_streamed,
 )
 
+
 class TestCardanoCbor(unittest.TestCase):
+    def test_create_array_header(self):
+        test_vectors = [
+            (0, '80'),
+            (23, '97'),
+            ((2 ** 8) - 1, '98ff'),
+            ((2 ** 16) - 1, '99ffff'),
+            ((2 ** 32) - 1, '9affffffff'),
+            ((2 ** 64) - 1, '9bffffffffffffffff'),
+        ]
+        for val, header_hex in test_vectors:
+            header = unhexlify(header_hex)
+            self.assertEqual(create_array_header(val), header)
+
+        with self.assertRaises(NotImplementedError):
+            create_array_header(2 ** 64)
+
+    def test_create_map_header(self):
+        test_vectors = [
+            (0, 'a0'),
+            (23, 'b7'),
+            ((2 ** 8) - 1, 'b8ff'),
+            ((2 ** 16) - 1, 'b9ffff'),
+            ((2 ** 32) - 1, 'baffffffff'),
+            ((2 ** 64) - 1, 'bbffffffffffffffff'),
+        ]
+        for val, header_hex in test_vectors:
+            header = unhexlify(header_hex)
+            self.assertEqual(create_map_header(val), header)
+
+        with self.assertRaises(NotImplementedError):
+            create_map_header(2 ** 64)
+
     def test_cbor_encoding(self):
         test_vectors = [
             # unsigned integers

@@ -41,12 +41,18 @@ def cli():
 @click.argument("file", type=click.File("r"))
 @click.option("-f", "--file", "_ignore", is_flag=True, hidden=True, expose_value=False)
 @click.option(
+    "-s",
+    "--signing-mode",
+    required=True,
+    type=ChoiceType({m.name: m for m in messages.CardanoTxSigningMode}),
+)
+@click.option(
     "-p", "--protocol-magic", type=int, default=cardano.PROTOCOL_MAGICS["mainnet"]
 )
 @click.option("-N", "--network-id", type=int, default=cardano.NETWORK_IDS["mainnet"])
 @click.option("-t", "--testnet", is_flag=True)
 @with_client
-def sign_tx(client, file, protocol_magic, network_id, testnet):
+def sign_tx(client, file, signing_mode, protocol_magic, network_id, testnet):
     """Sign Cardano transaction."""
     transaction = json.load(file)
 
@@ -69,8 +75,9 @@ def sign_tx(client, file, protocol_magic, network_id, testnet):
     ]
     auxiliary_data = cardano.parse_auxiliary_data(transaction.get("auxiliary_data"))
 
-    signed_transaction = cardano.sign_tx(
+    sign_tx_response = cardano.sign_tx(
         client,
+        signing_mode,
         inputs,
         outputs,
         fee,
@@ -83,10 +90,28 @@ def sign_tx(client, file, protocol_magic, network_id, testnet):
         auxiliary_data,
     )
 
-    return {
-        "tx_hash": signed_transaction.tx_hash.hex(),
-        "serialized_tx": signed_transaction.serialized_tx.hex(),
-    }
+    sign_tx_response["tx_hash"] = sign_tx_response["tx_hash"].hex()
+    sign_tx_response["witnesses"] = [
+        {
+            "type": witness["type"],
+            "pub_key": witness["pub_key"].hex(),
+            "signature": witness["signature"].hex(),
+            "chain_code": witness["chain_code"].hex()
+            if witness["chain_code"] is not None
+            else None,
+        }
+        for witness in sign_tx_response["witnesses"]
+    ]
+    auxiliary_data_supplement = sign_tx_response.get("auxiliary_data_supplement")
+    if auxiliary_data_supplement:
+        auxiliary_data_supplement["auxiliary_data_hash"] = auxiliary_data_supplement[
+            "auxiliary_data_hash"
+        ].hex()
+        catalyst_signature = auxiliary_data_supplement.get("catalyst_signature")
+        if catalyst_signature:
+            auxiliary_data_supplement["catalyst_signature"] = catalyst_signature.hex()
+        sign_tx_response["auxiliary_data_supplement"] = auxiliary_data_supplement
+    return sign_tx_response
 
 
 @cli.command()
