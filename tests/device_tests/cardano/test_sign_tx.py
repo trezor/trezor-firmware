@@ -34,6 +34,7 @@ pytestmark = [
     "cardano/sign_tx.slip39.json",
 )
 def test_cardano_sign_tx(client, parameters, result):
+    signing_mode = cardano.SIGNING_MODE_IDS[parameters["signing_mode"]]
     inputs = [cardano.parse_input(i) for i in parameters["inputs"]]
     outputs = [cardano.parse_output(o) for o in parameters["outputs"]]
     certificates = [cardano.parse_certificate(c) for c in parameters["certificates"]]
@@ -50,6 +51,7 @@ def test_cardano_sign_tx(client, parameters, result):
     with client:
         response = cardano.sign_tx(
             client=client,
+            signing_mode=signing_mode,
             inputs=inputs,
             outputs=outputs,
             fee=parameters["fee"],
@@ -61,14 +63,14 @@ def test_cardano_sign_tx(client, parameters, result):
             network_id=parameters["network_id"],
             auxiliary_data=auxiliary_data,
         )
-        assert response.tx_hash.hex() == result["tx_hash"]
-        assert response.serialized_tx.hex() == result["serialized_tx"]
+        assert response == _transform_expected_result(result)
 
 
 @parametrize_using_common_fixtures(
     "cardano/sign_tx.failed.json", "cardano/sign_tx_stake_pool_registration.failed.json"
 )
 def test_cardano_sign_tx_failed(client, parameters, result):
+    signing_mode = cardano.SIGNING_MODE_IDS[parameters["signing_mode"]]
     inputs = [cardano.parse_input(i) for i in parameters["inputs"]]
     outputs = [cardano.parse_output(o) for o in parameters["outputs"]]
     certificates = [cardano.parse_certificate(c) for c in parameters["certificates"]]
@@ -79,6 +81,7 @@ def test_cardano_sign_tx_failed(client, parameters, result):
         with pytest.raises(TrezorFailure, match=result["error_message"]):
             cardano.sign_tx(
                 client=client,
+                signing_mode=signing_mode,
                 inputs=inputs,
                 outputs=outputs,
                 fee=parameters["fee"],
@@ -92,41 +95,31 @@ def test_cardano_sign_tx_failed(client, parameters, result):
             )
 
 
-@parametrize_using_common_fixtures("cardano/sign_tx.chunked.json")
-def test_cardano_sign_tx_with_multiple_chunks(client, parameters, result):
-    inputs = [cardano.parse_input(i) for i in parameters["inputs"]]
-    outputs = [cardano.parse_output(o) for o in parameters["outputs"]]
-    certificates = [cardano.parse_certificate(c) for c in parameters["certificates"]]
-    withdrawals = [cardano.parse_withdrawal(w) for w in parameters["withdrawals"]]
-    auxiliary_data = cardano.parse_auxiliary_data(parameters["auxiliary_data"])
+def _transform_expected_result(result):
+    """Transform the JSON representation of the expected result into the format which is returned by trezorlib.
 
-    expected_responses = [
-        messages.PassphraseRequest(),
-        messages.ButtonRequest(),
-        messages.ButtonRequest(),
-    ]
-    expected_responses += [
-        messages.CardanoSignedTxChunk(signed_tx_chunk=bytes.fromhex(signed_tx_chunk))
-        for signed_tx_chunk in result["signed_tx_chunks"]
-    ]
-    expected_responses += [
-        messages.CardanoSignedTx(tx_hash=bytes.fromhex(result["tx_hash"]))
-    ]
-
-    with client:
-        client.set_expected_responses(expected_responses)
-        response = cardano.sign_tx(
-            client=client,
-            inputs=inputs,
-            outputs=outputs,
-            fee=parameters["fee"],
-            ttl=parameters.get("ttl"),
-            validity_interval_start=parameters.get("validity_interval_start"),
-            certificates=certificates,
-            withdrawals=withdrawals,
-            protocol_magic=parameters["protocol_magic"],
-            network_id=parameters["network_id"],
-            auxiliary_data=auxiliary_data,
-        )
-        assert response.tx_hash.hex() == result["tx_hash"]
-        assert response.serialized_tx.hex() == result["serialized_tx"]
+    This involves converting the hex strings into real binary values."""
+    transformed_result = {
+        "tx_hash": bytes.fromhex(result["tx_hash"]),
+        "witnesses": [
+            {
+                "type": witness["type"],
+                "pub_key": bytes.fromhex(witness["pub_key"]),
+                "signature": bytes.fromhex(witness["signature"]),
+                "chain_code": bytes.fromhex(witness["chain_code"])
+                if witness["chain_code"]
+                else None,
+            }
+            for witness in result["witnesses"]
+        ],
+    }
+    if supplement := result.get("auxiliary_data_supplement"):
+        transformed_result["auxiliary_data_supplement"] = {
+            "type": supplement["type"],
+            "auxiliary_data_hash": bytes.fromhex(supplement["auxiliary_data_hash"]),
+        }
+        if catalyst_signature := supplement.get("catalyst_signature"):
+            transformed_result["auxiliary_data_supplement"][
+                "catalyst_signature"
+            ] = bytes.fromhex(catalyst_signature)
+    return transformed_result
