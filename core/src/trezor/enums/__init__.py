@@ -138,6 +138,23 @@ if TYPE_CHECKING:
         CardanoSignedTx = 310
         CardanoSignedTxChunk = 311
         CardanoSignedTxChunkAck = 312
+        CardanoTxItemAck = 313
+        CardanoTxAuxiliaryDataSupplement = 314
+        CardanoTxWitnessRequest = 315
+        CardanoTxWitnessResponse = 316
+        CardanoTxHostAck = 317
+        CardanoTxBodyHash = 318
+        CardanoSignTxFinished = 319
+        CardanoSignTxInit = 320
+        CardanoTxInput = 321
+        CardanoTxOutput = 322
+        CardanoAssetGroup = 323
+        CardanoToken = 324
+        CardanoTxCertificate = 325
+        CardanoTxWithdrawal = 326
+        CardanoTxAuxiliaryData = 327
+        CardanoPoolOwner = 328
+        CardanoPoolRelayParameters = 329
         RippleGetAddress = 400
         RippleAddress = 401
         RippleSignTx = 402
@@ -321,6 +338,18 @@ if TYPE_CHECKING:
         SINGLE_HOST_IP = 0
         SINGLE_HOST_NAME = 1
         MULTIPLE_HOST_NAME = 2
+
+    class CardanoTxAuxiliaryDataSupplementType(IntEnum):
+        NONE = 0
+        CATALYST_REGISTRATION_SIGNATURE = 1
+
+    class CardanoTxSigningMode(IntEnum):
+        ORDINARY_TRANSACTION = 0
+        POOL_REGISTRATION_AS_OWNER = 1
+
+    class CardanoTxWitnessType(IntEnum):
+        BYRON_WITNESS = 0
+        SHELLEY_WITNESS = 1
 
     class BackupType(IntEnum):
         Bip39 = 0

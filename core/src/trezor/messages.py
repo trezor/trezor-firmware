@@ -28,6 +28,9 @@ if TYPE_CHECKING:
     from trezor.enums import CardanoAddressType  # noqa: F401
     from trezor.enums import CardanoCertificateType  # noqa: F401
     from trezor.enums import CardanoPoolRelayType  # noqa: F401
+    from trezor.enums import CardanoTxAuxiliaryDataSupplementType  # noqa: F401
+    from trezor.enums import CardanoTxSigningMode  # noqa: F401
+    from trezor.enums import CardanoTxWitnessType  # noqa: F401
     from trezor.enums import DebugSwipeDirection  # noqa: F401
     from trezor.enums import DecredStakingSpendType  # noqa: F401
     from trezor.enums import FailureType  # noqa: F401
@@ -1141,76 +1144,43 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoPublicKey"]:
             return isinstance(msg, cls)
 
-    class CardanoSignTx(protobuf.MessageType):
-        inputs: "list[CardanoTxInputType]"
-        outputs: "list[CardanoTxOutputType]"
+    class CardanoSignTxInit(protobuf.MessageType):
+        signing_mode: "CardanoTxSigningMode"
         protocol_magic: "int"
+        network_id: "int"
+        inputs_count: "int"
+        outputs_count: "int"
         fee: "int"
         ttl: "int | None"
-        network_id: "int"
-        certificates: "list[CardanoTxCertificateType]"
-        withdrawals: "list[CardanoTxWithdrawalType]"
+        certificates_count: "int"
+        withdrawals_count: "int"
+        has_auxiliary_data: "bool"
         validity_interval_start: "int | None"
-        auxiliary_data: "CardanoTxAuxiliaryDataType | None"
+        witness_requests_count: "int"
 
         def __init__(
             self,
             *,
+            signing_mode: "CardanoTxSigningMode",
             protocol_magic: "int",
-            fee: "int",
             network_id: "int",
-            inputs: "list[CardanoTxInputType] | None" = None,
-            outputs: "list[CardanoTxOutputType] | None" = None,
-            certificates: "list[CardanoTxCertificateType] | None" = None,
-            withdrawals: "list[CardanoTxWithdrawalType] | None" = None,
+            inputs_count: "int",
+            outputs_count: "int",
+            fee: "int",
+            certificates_count: "int",
+            withdrawals_count: "int",
+            has_auxiliary_data: "bool",
+            witness_requests_count: "int",
             ttl: "int | None" = None,
             validity_interval_start: "int | None" = None,
-            auxiliary_data: "CardanoTxAuxiliaryDataType | None" = None,
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoSignTx"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoSignTxInit"]:
             return isinstance(msg, cls)
 
-    class CardanoSignedTxChunk(protobuf.MessageType):
-        signed_tx_chunk: "bytes"
-
-        def __init__(
-            self,
-            *,
-            signed_tx_chunk: "bytes",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoSignedTxChunk"]:
-            return isinstance(msg, cls)
-
-    class CardanoSignedTxChunkAck(protobuf.MessageType):
-
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoSignedTxChunkAck"]:
-            return isinstance(msg, cls)
-
-    class CardanoSignedTx(protobuf.MessageType):
-        tx_hash: "bytes"
-        serialized_tx: "bytes | None"
-
-        def __init__(
-            self,
-            *,
-            tx_hash: "bytes",
-            serialized_tx: "bytes | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoSignedTx"]:
-            return isinstance(msg, cls)
-
-    class CardanoTxInputType(protobuf.MessageType):
-        address_n: "list[int]"
+    class CardanoTxInput(protobuf.MessageType):
         prev_hash: "bytes"
         prev_index: "int"
 
@@ -1219,51 +1189,50 @@ if TYPE_CHECKING:
             *,
             prev_hash: "bytes",
             prev_index: "int",
-            address_n: "list[int] | None" = None,
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxInputType"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxInput"]:
             return isinstance(msg, cls)
 
-    class CardanoTxOutputType(protobuf.MessageType):
+    class CardanoTxOutput(protobuf.MessageType):
         address: "str | None"
-        amount: "int"
         address_parameters: "CardanoAddressParametersType | None"
-        token_bundle: "list[CardanoAssetGroupType]"
+        amount: "int"
+        asset_groups_count: "int"
 
         def __init__(
             self,
             *,
             amount: "int",
-            token_bundle: "list[CardanoAssetGroupType] | None" = None,
+            asset_groups_count: "int",
             address: "str | None" = None,
             address_parameters: "CardanoAddressParametersType | None" = None,
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxOutputType"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxOutput"]:
             return isinstance(msg, cls)
 
-    class CardanoAssetGroupType(protobuf.MessageType):
+    class CardanoAssetGroup(protobuf.MessageType):
         policy_id: "bytes"
-        tokens: "list[CardanoTokenType]"
+        tokens_count: "int"
 
         def __init__(
             self,
             *,
             policy_id: "bytes",
-            tokens: "list[CardanoTokenType] | None" = None,
+            tokens_count: "int",
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoAssetGroupType"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoAssetGroup"]:
             return isinstance(msg, cls)
 
-    class CardanoTokenType(protobuf.MessageType):
+    class CardanoToken(protobuf.MessageType):
         asset_name_bytes: "bytes"
         amount: "int"
 
@@ -1276,10 +1245,10 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTokenType"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoToken"]:
             return isinstance(msg, cls)
 
-    class CardanoPoolOwnerType(protobuf.MessageType):
+    class CardanoPoolOwner(protobuf.MessageType):
         staking_key_path: "list[int]"
         staking_key_hash: "bytes | None"
 
@@ -1292,10 +1261,10 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoPoolOwnerType"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoPoolOwner"]:
             return isinstance(msg, cls)
 
-    class CardanoPoolRelayParametersType(protobuf.MessageType):
+    class CardanoPoolRelayParameters(protobuf.MessageType):
         type: "CardanoPoolRelayType"
         ipv4_address: "bytes | None"
         ipv6_address: "bytes | None"
@@ -1314,7 +1283,7 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoPoolRelayParametersType"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoPoolRelayParameters"]:
             return isinstance(msg, cls)
 
     class CardanoPoolMetadataType(protobuf.MessageType):
@@ -1341,9 +1310,9 @@ if TYPE_CHECKING:
         margin_numerator: "int"
         margin_denominator: "int"
         reward_account: "str"
-        owners: "list[CardanoPoolOwnerType]"
-        relays: "list[CardanoPoolRelayParametersType]"
         metadata: "CardanoPoolMetadataType | None"
+        owners_count: "int"
+        relays_count: "int"
 
         def __init__(
             self,
@@ -1355,8 +1324,8 @@ if TYPE_CHECKING:
             margin_numerator: "int",
             margin_denominator: "int",
             reward_account: "str",
-            owners: "list[CardanoPoolOwnerType] | None" = None,
-            relays: "list[CardanoPoolRelayParametersType] | None" = None,
+            owners_count: "int",
+            relays_count: "int",
             metadata: "CardanoPoolMetadataType | None" = None,
         ) -> None:
             pass
@@ -1365,7 +1334,7 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoPoolParametersType"]:
             return isinstance(msg, cls)
 
-    class CardanoTxCertificateType(protobuf.MessageType):
+    class CardanoTxCertificate(protobuf.MessageType):
         type: "CardanoCertificateType"
         path: "list[int]"
         pool: "bytes | None"
@@ -1382,10 +1351,10 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxCertificateType"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxCertificate"]:
             return isinstance(msg, cls)
 
-    class CardanoTxWithdrawalType(protobuf.MessageType):
+    class CardanoTxWithdrawal(protobuf.MessageType):
         path: "list[int]"
         amount: "int"
 
@@ -1398,7 +1367,7 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxWithdrawalType"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxWithdrawal"]:
             return isinstance(msg, cls)
 
     class CardanoCatalystRegistrationParametersType(protobuf.MessageType):
@@ -1421,20 +1390,104 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoCatalystRegistrationParametersType"]:
             return isinstance(msg, cls)
 
-    class CardanoTxAuxiliaryDataType(protobuf.MessageType):
-        blob: "bytes | None"
+    class CardanoTxAuxiliaryData(protobuf.MessageType):
         catalyst_registration_parameters: "CardanoCatalystRegistrationParametersType | None"
+        hash: "bytes | None"
 
         def __init__(
             self,
             *,
-            blob: "bytes | None" = None,
             catalyst_registration_parameters: "CardanoCatalystRegistrationParametersType | None" = None,
+            hash: "bytes | None" = None,
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxAuxiliaryDataType"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxAuxiliaryData"]:
+            return isinstance(msg, cls)
+
+    class CardanoTxItemAck(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxItemAck"]:
+            return isinstance(msg, cls)
+
+    class CardanoTxAuxiliaryDataSupplement(protobuf.MessageType):
+        type: "CardanoTxAuxiliaryDataSupplementType"
+        auxiliary_data_hash: "bytes | None"
+        catalyst_signature: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            type: "CardanoTxAuxiliaryDataSupplementType",
+            auxiliary_data_hash: "bytes | None" = None,
+            catalyst_signature: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxAuxiliaryDataSupplement"]:
+            return isinstance(msg, cls)
+
+    class CardanoTxWitnessRequest(protobuf.MessageType):
+        path: "list[int]"
+
+        def __init__(
+            self,
+            *,
+            path: "list[int] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxWitnessRequest"]:
+            return isinstance(msg, cls)
+
+    class CardanoTxWitnessResponse(protobuf.MessageType):
+        type: "CardanoTxWitnessType"
+        pub_key: "bytes"
+        signature: "bytes"
+        chain_code: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            type: "CardanoTxWitnessType",
+            pub_key: "bytes",
+            signature: "bytes",
+            chain_code: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxWitnessResponse"]:
+            return isinstance(msg, cls)
+
+    class CardanoTxHostAck(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxHostAck"]:
+            return isinstance(msg, cls)
+
+    class CardanoTxBodyHash(protobuf.MessageType):
+        tx_hash: "bytes"
+
+        def __init__(
+            self,
+            *,
+            tx_hash: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxBodyHash"]:
+            return isinstance(msg, cls)
+
+    class CardanoSignTxFinished(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoSignTxFinished"]:
             return isinstance(msg, cls)
 
     class CipherKeyValue(protobuf.MessageType):
