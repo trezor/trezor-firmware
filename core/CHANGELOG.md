@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2.4.1 [14th July 2021]
+
+### Added
+- ButtonRequest is sent also after every screen of a multi-page view.  [#1671]
+
+### Changed
+- Converted altcoin apps to common layout code.  [#1538]
+- Reimplement protobuf codec and library in Rust  [#1541]
+- Cardano: Reintroduce maximum transaction output size limitation  [#1606]
+- Cardano: Improve address validation and decouple it from address derivation  [#1606]
+- Cardano: Remove sorting of policies, assets and withdrawals. Rather add them to the transaction in the order they arrived in.  [#1672]
+- Cardano: Forbid withdrawals with the same path in a single transaction  [#1672]
+
+### Removed
+- Removed support for Firo  [#1647]
+- Removed support for Hatch  [#1650]
+
+### Fixed
+- Unify Features.revision reporting with legacy  [#1620]
+- Fix red screen on shutdown.  [#1658]
+- Empty passphrase is properly cached in Cardano functions  [#1659]
+
+
 ## 2.4.0 [9th June 2021]
 
 ### Added
@@ -389,6 +412,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1502]: https://github.com/trezor/trezor-firmware/issues/1502
 [#1510]: https://github.com/trezor/trezor-firmware/issues/1510
 [#1518]: https://github.com/trezor/trezor-firmware/issues/1518
+[#1538]: https://github.com/trezor/trezor-firmware/issues/1538
 [#1540]: https://github.com/trezor/trezor-firmware/issues/1540
+[#1541]: https://github.com/trezor/trezor-firmware/issues/1541
 [#1554]: https://github.com/trezor/trezor-firmware/issues/1554
 [#1565]: https://github.com/trezor/trezor-firmware/issues/1565
+[#1606]: https://github.com/trezor/trezor-firmware/issues/1606
+[#1620]: https://github.com/trezor/trezor-firmware/issues/1620
+[#1647]: https://github.com/trezor/trezor-firmware/issues/1647
+[#1650]: https://github.com/trezor/trezor-firmware/issues/1650
+[#1658]: https://github.com/trezor/trezor-firmware/issues/1658
+[#1659]: https://github.com/trezor/trezor-firmware/issues/1659
+[#1671]: https://github.com/trezor/trezor-firmware/issues/1671
+[#1672]: https://github.com/trezor/trezor-firmware/issues/1672
