@@ -5,10 +5,10 @@
   },
   "tests": [
     {
-      "parameters":{
+      "parameters": {
         "path": "m/44'/1815'/0'"
       },
-      "result":{
+      "result": {
         "public_key": "c0fce1839f1a84c4e770293ac2f5e0875141b29017b7f56ab135352d00ad6966",
         "chain_code": "07faa161c9f5464315d2855f70fdf1431d5fa39eb838767bf17b69772137452f"
       }

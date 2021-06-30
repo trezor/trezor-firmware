@@ -1178,7 +1178,8 @@
         ]
       }
     },
-    {"description": "transaction with everything set except pool registration certificate",
+    {
+      "description": "transaction with everything set except pool registration certificate",
       "parameters": {
         "protocol_magic": 764824073,
         "network_id": 1,
