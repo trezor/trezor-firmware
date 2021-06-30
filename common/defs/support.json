@@ -115,7 +115,10 @@
       "bitcoin:tLTC": true,
       "bitcoin:tPPC": true,
       "eth:ETC": true,
-      "eth:ETH": true
+      "eth:ETH": true,
+      "eth:tROP": true,
+      "misc:XRP": true,
+      "misc:tXRP": true
     },
     "unsupported": {
       "bitcoin:FIRO": "See issue #1588",
