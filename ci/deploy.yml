@@ -231,3 +231,27 @@ ui tests core fixtures deploy:
     - rsync --delete -va ci/ui_test_records/* "$DEPLOY_PATH"
   tags:
     - deploy
+
+# Automatic deploy to trezor-common
+
+common_deploy:
+  stage: deploy
+  variables:
+    DEPLOY_PATH: ""
+    GIT_SUBMODULE_STRATEGY: "none"
+  only:
+    changes:
+      - common/**/*
+  before_script:
+    - export LAST_COMMIT=(git log -1 --pretty=%B common/)
+  script:
+    - git clone https://sl-gitlab-integration:$GITHUB_TOKEN@github.com/trezor/trezor-common.git common-sync/
+    - git -C common-sync/ checkout -b sync
+    - cp -r common/ common-sync/
+    - cd common-sync/
+    - git add .
+    - git commit -m "$LAST_COMMIT"
+    - git push origin sync
+    - gh pr list --json id | jq '. | length' | grep -q '0' && gh pr create --title "trezor-common autoupdate from trezor-firmware"
+  tags:
+    - deploy
