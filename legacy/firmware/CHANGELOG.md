@@ -13,14 +13,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Allow decreasing the output value in RBF transactions.  [#1491]
 - Support long PIN of up to 50 digits.  [#1167]
 - Display nLockTime in human-readable form.  [#1549]
+## 1.10.1 [24th May 2021]
 
-### Deprecated
-
-### Removed
-
-### Fixed
+### Added
+- Safety checks setting in T1.  [#1627]
 
 ### Security
+- Fix incorrect empty string handling in BLAKE implementation used by Decred.
+
+
+## 1.10.0 [13rd May 2021]
+
+### Added
+- Public key to ECDHSessionKey.  [#1518]
+
+### Changed
+- Support long PIN of up to 50 digits.  [#1167]
+- Included bootloader 1.10.0.  [#1461]
+- Allow decreasing the output value in RBF transactions.  [#1491]
+- Display nLockTime in human-readable form.  [#1549]
+
 
 ## 1.9.4 [10th February 2021]
 
@@ -386,3 +398,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1491]: https://github.com/trezor/trezor-firmware/issues/1491
 [#1518]: https://github.com/trezor/trezor-firmware/pull/1518
 [#1549]: https://github.com/trezor/trezor-firmware/issues/1549
+[#1461]: https://github.com/trezor/trezor-firmware/issues/1461
+[#1491]: https://github.com/trezor/trezor-firmware/issues/1491
+[#1518]: https://github.com/trezor/trezor-firmware/issues/1518
+[#1549]: https://github.com/trezor/trezor-firmware/issues/1549
+[#1627]: https://github.com/trezor/trezor-firmware/issues/1627

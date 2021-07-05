@@ -12,11 +12,17 @@ def read_setting() -> EnumTypeSafetyCheckLevel:
     """
     Returns the effective safety check level.
     """
+<<<<<<< HEAD
     temporary_safety_check_level: EnumTypeSafetyCheckLevel | None = storage.cache.get(
         APP_COMMON_SAFETY_CHECKS_TEMPORARY
     )
     if temporary_safety_check_level is not None:
         return temporary_safety_check_level
+=======
+    temporary_safety_check_level = storage.cache.get(APP_COMMON_SAFETY_CHECKS_TEMPORARY)
+    if temporary_safety_check_level:
+        return int.from_bytes(temporary_safety_check_level, "big")  # type: ignore
+>>>>>>> legacy/v1.10.1
     else:
         stored = storage.device.safety_check_level()
         if stored == SAFETY_CHECK_LEVEL_STRICT:
@@ -32,14 +38,14 @@ def apply_setting(level: EnumTypeSafetyCheckLevel) -> None:
     Changes the safety level settings.
     """
     if level == SafetyCheckLevel.Strict:
-        storage.cache.delete(APP_COMMON_SAFETY_CHECKS_TEMPORARY)
+        storage.cache.set(APP_COMMON_SAFETY_CHECKS_TEMPORARY, b"")
         storage.device.set_safety_check_level(SAFETY_CHECK_LEVEL_STRICT)
     elif level == SafetyCheckLevel.PromptAlways:
-        storage.cache.delete(APP_COMMON_SAFETY_CHECKS_TEMPORARY)
+        storage.cache.set(APP_COMMON_SAFETY_CHECKS_TEMPORARY, b"")
         storage.device.set_safety_check_level(SAFETY_CHECK_LEVEL_PROMPT)
     elif level == SafetyCheckLevel.PromptTemporarily:
         storage.device.set_safety_check_level(SAFETY_CHECK_LEVEL_STRICT)
-        storage.cache.set(APP_COMMON_SAFETY_CHECKS_TEMPORARY, level)
+        storage.cache.set(APP_COMMON_SAFETY_CHECKS_TEMPORARY, level.to_bytes(1, "big"))
     else:
         raise ValueError("Unknown SafetyCheckLevel")
 

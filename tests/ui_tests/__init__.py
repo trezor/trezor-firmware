@@ -99,12 +99,17 @@ def screen_recording(client, request):
     try:
         client.debug.start_recording(str(screen_path))
         yield
-        if test_ui == "record":
-            _process_recorded(screen_path, test_name)
-        else:
-            _process_tested(screens_test_path, test_name)
     finally:
+        # Wait for response to Initialize, which gives the emulator time to catch up
+        # and redraw the homescreen. Otherwise there's a race condition between that
+        # and stopping recording.
+        client.init_device()
         client.debug.stop_recording()
+
+    if test_ui == "record":
+        _process_recorded(screen_path, test_name)
+    else:
+        _process_tested(screens_test_path, test_name)
 
 
 def list_missing():

@@ -34,10 +34,11 @@ pytestmark = [
     "cardano/sign_tx.slip39.json",
 )
 def test_cardano_sign_tx(client, parameters, result):
-    inputs = [cardano.create_input(i) for i in parameters["inputs"]]
-    outputs = [cardano.create_output(o) for o in parameters["outputs"]]
-    certificates = [cardano.create_certificate(c) for c in parameters["certificates"]]
-    withdrawals = [cardano.create_withdrawal(w) for w in parameters["withdrawals"]]
+    inputs = [cardano.parse_input(i) for i in parameters["inputs"]]
+    outputs = [cardano.parse_output(o) for o in parameters["outputs"]]
+    certificates = [cardano.parse_certificate(c) for c in parameters["certificates"]]
+    withdrawals = [cardano.parse_withdrawal(w) for w in parameters["withdrawals"]]
+    auxiliary_data = cardano.parse_auxiliary_data(parameters["auxiliary_data"])
 
     input_flow = parameters.get("input_flow", ())
 
@@ -60,9 +61,9 @@ def test_cardano_sign_tx(client, parameters, result):
             validity_interval_start=parameters.get("validity_interval_start"),
             certificates=certificates,
             withdrawals=withdrawals,
-            metadata=bytes.fromhex(parameters["metadata"]),
             protocol_magic=parameters["protocol_magic"],
             network_id=parameters["network_id"],
+            auxiliary_data=auxiliary_data,
         )
         assert response.tx_hash.hex() == result["tx_hash"]
         assert response.serialized_tx.hex() == result["serialized_tx"]
@@ -72,10 +73,11 @@ def test_cardano_sign_tx(client, parameters, result):
     "cardano/sign_tx.failed.json", "cardano/sign_tx_stake_pool_registration.failed.json"
 )
 def test_cardano_sign_tx_failed(client, parameters, result):
-    inputs = [cardano.create_input(i) for i in parameters["inputs"]]
-    outputs = [cardano.create_output(o) for o in parameters["outputs"]]
-    certificates = [cardano.create_certificate(c) for c in parameters["certificates"]]
-    withdrawals = [cardano.create_withdrawal(w) for w in parameters["withdrawals"]]
+    inputs = [cardano.parse_input(i) for i in parameters["inputs"]]
+    outputs = [cardano.parse_output(o) for o in parameters["outputs"]]
+    certificates = [cardano.parse_certificate(c) for c in parameters["certificates"]]
+    withdrawals = [cardano.parse_withdrawal(w) for w in parameters["withdrawals"]]
+    auxiliary_data = cardano.parse_auxiliary_data(parameters["auxiliary_data"])
 
     input_flow = parameters.get("input_flow", ())
 
@@ -92,18 +94,19 @@ def test_cardano_sign_tx_failed(client, parameters, result):
                 validity_interval_start=parameters.get("validity_interval_start"),
                 certificates=certificates,
                 withdrawals=withdrawals,
-                metadata=bytes.fromhex(parameters["metadata"]),
                 protocol_magic=parameters["protocol_magic"],
                 network_id=parameters["network_id"],
+                auxiliary_data=auxiliary_data,
             )
 
 
 @parametrize_using_common_fixtures("cardano/sign_tx.chunked.json")
 def test_cardano_sign_tx_with_multiple_chunks(client, parameters, result):
-    inputs = [cardano.create_input(i) for i in parameters["inputs"]]
-    outputs = [cardano.create_output(o) for o in parameters["outputs"]]
-    certificates = [cardano.create_certificate(c) for c in parameters["certificates"]]
-    withdrawals = [cardano.create_withdrawal(w) for w in parameters["withdrawals"]]
+    inputs = [cardano.parse_input(i) for i in parameters["inputs"]]
+    outputs = [cardano.parse_output(o) for o in parameters["outputs"]]
+    certificates = [cardano.parse_certificate(c) for c in parameters["certificates"]]
+    withdrawals = [cardano.parse_withdrawal(w) for w in parameters["withdrawals"]]
+    auxiliary_data = cardano.parse_auxiliary_data(parameters["auxiliary_data"])
 
     input_flow = parameters.get("input_flow", ())
 
@@ -133,9 +136,9 @@ def test_cardano_sign_tx_with_multiple_chunks(client, parameters, result):
             validity_interval_start=parameters.get("validity_interval_start"),
             certificates=certificates,
             withdrawals=withdrawals,
-            metadata=bytes.fromhex(parameters["metadata"]),
             protocol_magic=parameters["protocol_magic"],
             network_id=parameters["network_id"],
+            auxiliary_data=auxiliary_data,
         )
         assert response.tx_hash.hex() == result["tx_hash"]
         assert response.serialized_tx.hex() == result["serialized_tx"]

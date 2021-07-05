@@ -12,6 +12,7 @@
   - [Miscellaneous](core/misc/index.md)
     - [SLIP-39](core/misc/slip0039.md)
     - [Exceptions usage](core/misc/exceptions.md)
+    - [Memory fragmentation management](core/misc/fragmentation.md)
 - [Legacy](legacy/index.md)
 - [Python](python/index.md)
   - [trezorlib](python/trezorlib.md)
@@ -44,4 +45,5 @@
   - [Monorepo Notes](misc/monorepo.md)
   - [Purpose48 derivation scheme](misc/purpose48.md)
   - [Review Process](misc/review.md)
+  - [Changelog](misc/changelog.md)
   - [TOIF Image Format](misc/toif.md)

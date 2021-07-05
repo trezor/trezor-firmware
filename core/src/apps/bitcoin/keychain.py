@@ -1,3 +1,5 @@
+import gc
+
 from trezor import wire
 from trezor.messages import InputScriptType as I
 
@@ -5,18 +7,19 @@ from apps.common import coininfo
 from apps.common.keychain import get_keychain
 from apps.common.paths import PATTERN_BIP44, PathSchema
 
+from . import authorization
 from .common import BITCOIN_NAMES
 
 if False:
     from typing import Awaitable, Callable, Iterable, TypeVar
     from typing_extensions import Protocol
 
+    from protobuf import MessageType
+
     from trezor.messages.TxInputType import EnumTypeInputScriptType
 
     from apps.common.keychain import Keychain, MsgOut, Handler
     from apps.common.paths import Bip32Path
-
-    from .authorization import CoinJoinAuthorization
 
     class MsgWithCoinName(Protocol):
         coin_name: str
@@ -113,7 +116,7 @@ def validate_path_against_script_type(
             patterns.append(PATTERN_GREENADDRESS_B)
 
     return any(
-        PathSchema(pattern, coin.slip44).match(address_n) for pattern in patterns
+        PathSchema.parse(pattern, coin.slip44).match(address_n) for pattern in patterns
     )
 
 
@@ -151,15 +154,16 @@ def get_schemas_for_coin(coin: coininfo.CoinInfo) -> Iterable[PathSchema]:
             )
         )
 
-    schemas = [PathSchema(pattern, coin.slip44) for pattern in patterns]
+    schemas = [PathSchema.parse(pattern, coin.slip44) for pattern in patterns]
 
     # some wallets such as Electron-Cash (BCH) store coins on Bitcoin paths
     # we can allow spending these coins from Bitcoin paths if the coin has
     # implemented strong replay protection via SIGHASH_FORKID
     if coin.fork_id is not None:
-        schemas.extend(PathSchema(pattern, 0) for pattern in patterns)
+        schemas.extend(PathSchema.parse(pattern, 0) for pattern in patterns)
 
-    return schemas
+    gc.collect()
+    return [schema.copy() for schema in schemas]
 
 
 def get_coin_by_name(coin_name: str | None) -> coininfo.CoinInfo:
@@ -186,14 +190,13 @@ def with_keychain(func: HandlerWithCoinInfo[MsgOut]) -> Handler[MsgIn, MsgOut]:
     async def wrapper(
         ctx: wire.Context,
         msg: MsgIn,
-        authorization: CoinJoinAuthorization | None = None,
+        auth_msg: MessageType | None = None,
     ) -> MsgOut:
-        if authorization:
-            keychain = authorization.keychain
-            coin = get_coin_by_name(msg.coin_name)
-            return await func(ctx, msg, keychain, coin, authorization)
+        keychain, coin = await get_keychain_for_coin(ctx, msg.coin_name)
+        if auth_msg:
+            auth_obj = authorization.from_cached_message(auth_msg)
+            return await func(ctx, msg, keychain, coin, auth_obj)
         else:
-            keychain, coin = await get_keychain_for_coin(ctx, msg.coin_name)
             with keychain:
                 return await func(ctx, msg, keychain, coin)
 

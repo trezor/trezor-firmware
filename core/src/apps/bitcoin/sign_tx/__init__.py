@@ -1,5 +1,14 @@
+import gc
+
 from trezor import utils, wire
 from trezor.messages.RequestType import TXFINISHED
+from trezor.messages.SignTx import SignTx
+from trezor.messages.TxAckInput import TxAckInput
+from trezor.messages.TxAckOutput import TxAckOutput
+from trezor.messages.TxAckPrevExtraData import TxAckPrevExtraData
+from trezor.messages.TxAckPrevInput import TxAckPrevInput
+from trezor.messages.TxAckPrevMeta import TxAckPrevMeta
+from trezor.messages.TxAckPrevOutput import TxAckPrevOutput
 from trezor.messages.TxRequest import TxRequest
 
 from ..common import BITCOIN_NAMES
@@ -13,14 +22,6 @@ if False:
     from typing import Protocol, Union
 
     from protobuf import FieldCache
-
-    from trezor.messages.SignTx import SignTx
-    from trezor.messages.TxAckInput import TxAckInput
-    from trezor.messages.TxAckOutput import TxAckOutput
-    from trezor.messages.TxAckPrevMeta import TxAckPrevMeta
-    from trezor.messages.TxAckPrevInput import TxAckPrevInput
-    from trezor.messages.TxAckPrevOutput import TxAckPrevOutput
-    from trezor.messages.TxAckPrevExtraData import TxAckPrevExtraData
 
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
@@ -75,7 +76,18 @@ async def sign_tx(
     signer = signer_class(msg, keychain, coin, approver).signer()
 
     res: TxAckType | bool | None = None
+
+    gc.collect()
     field_cache: FieldCache = {}
+    TxRequest.cache_subordinate_types(field_cache)
+    SignTx.cache_subordinate_types(field_cache)
+    TxAckInput.cache_subordinate_types(field_cache)
+    TxAckOutput.cache_subordinate_types(field_cache)
+    TxAckPrevExtraData.cache_subordinate_types(field_cache)
+    TxAckPrevInput.cache_subordinate_types(field_cache)
+    TxAckPrevMeta.cache_subordinate_types(field_cache)
+    TxAckPrevOutput.cache_subordinate_types(field_cache)
+
     while True:
         req = signer.send(res)
         if isinstance(req, tuple):

@@ -18,6 +18,7 @@
  */
 
 #include "signing.h"
+#include "config.h"
 #include "crypto.h"
 #include "ecdsa.h"
 #include "fsm.h"
@@ -686,7 +687,19 @@ bool compile_input_script_sig(TxInputType *tinput) {
   }
   if (!coin_known_path_check(coin, tinput->script_type, tinput->address_n_count,
                              tinput->address_n, false)) {
-    return false;
+    if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
+      return false;
+    }
+
+    layoutDialogSwipe(&bmp_icon_warning, _("Abort"), _("Continue"), NULL,
+                      _("Wrong address path"), _("for selected coin."), NULL,
+                      _("Continue at your"), _("own risk!"), NULL);
+    if (!protectButton(ButtonRequestType_ButtonRequest_UnknownDerivationPath,
+                       false)) {
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+      layoutHome();
+      return false;
+    }
   }
   return fill_input_script_sig(tinput);
 }

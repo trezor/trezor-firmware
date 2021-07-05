@@ -27,20 +27,25 @@ if __debug__:
 if False:
     from typing import (
         Any,
-        Iterable,
         Iterator,
         Protocol,
         Union,
         TypeVar,
         Sequence,
+        Set,
     )
 
 
-def unimport_begin() -> Iterable[str]:
+def unimport_begin() -> Set[str]:
     return set(sys.modules)
 
 
-def unimport_end(mods: Iterable[str]) -> None:
+def unimport_end(mods: Set[str], collect: bool = True) -> None:
+    # static check that the size of sys.modules never grows above value of
+    # MICROPY_LOADED_MODULES_DICT_SIZE, so that the sys.modules dict is never
+    # reallocated at run-time
+    assert len(sys.modules) <= 160, "Please bump preallocated size in mpconfigport.h"
+
     for mod in sys.modules:
         if mod not in mods:
             # remove reference from sys.modules
@@ -58,9 +63,42 @@ def unimport_end(mods: Iterable[str]) -> None:
                 # referenced from the parent package. both is fine.
                 pass
     # collect removed modules
-    gc.collect()
+    if collect:
+        gc.collect()
 
 
+class unimport:
+    def __init__(self) -> None:
+        self.mods: Set[str] | None = None
+
+    def __enter__(self) -> None:
+        self.mods = unimport_begin()
+
+    def __exit__(self, _exc_type: Any, _exc_value: Any, _tb: Any) -> None:
+        assert self.mods is not None
+        unimport_end(self.mods, collect=False)
+        self.mods.clear()
+        self.mods = None
+        gc.collect()
+
+<<<<<<< HEAD
+=======
+
+def presize_module(modname: str, size: int) -> None:
+    """Ensure the module's dict is preallocated to an expected size.
+
+    This is used in modules like `trezor`, whose dict size depends not only on the
+    symbols defined in the file itself, but also on the number of submodules that will
+    be inserted into the module's namespace.
+    """
+    module = sys.modules[modname]
+    for i in range(size):
+        setattr(module, "___PRESIZE_MODULE_%d" % i, None)
+    for i in range(size):
+        delattr(module, "___PRESIZE_MODULE_%d" % i)
+
+
+>>>>>>> legacy/v1.10.1
 def ensure(cond: bool, msg: str | None = None) -> None:
     if not cond:
         if msg is None:
@@ -268,3 +306,13 @@ def is_empty_iterator(i: Iterator) -> bool:
         return True
     else:
         return False
+
+
+def empty_bytearray(preallocate: int) -> bytearray:
+    """
+    Returns bytearray that won't allocate for at least `preallocate` bytes.
+    Useful in case you want to avoid allocating too often.
+    """
+    b = bytearray(preallocate)
+    b[:] = bytes()
+    return b

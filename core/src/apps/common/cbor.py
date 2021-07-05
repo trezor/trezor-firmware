@@ -7,7 +7,11 @@ from micropython import const
 
 from trezor import log, utils
 
+<<<<<<< HEAD
 from . import readers, writers
+=======
+from . import readers
+>>>>>>> legacy/v1.10.1
 
 if False:
     from typing import Any, Union, Iterator, Tuple
@@ -250,7 +254,11 @@ def encode_chunked(value: Value, max_chunk_size: int) -> Iterator[bytes]:
 
     chunks = encode_streamed(value)
 
+<<<<<<< HEAD
     chunk_buffer = writers.empty_bytearray(max_chunk_size)
+=======
+    chunk_buffer = utils.empty_bytearray(max_chunk_size)
+>>>>>>> legacy/v1.10.1
     try:
         current_chunk_view = utils.BufferReader(next(chunks))
         while True:

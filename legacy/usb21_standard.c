@@ -19,7 +19,7 @@
 #include "usb21_standard.h"
 #include <stdint.h>
 #include <string.h>
-#include "common.h"
+#include "random_delays.h"
 #include "util.h"
 
 static uint16_t build_bos_descriptor(const struct usb_bos_descriptor *bos,

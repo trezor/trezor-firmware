@@ -22,8 +22,6 @@
 
 #include "secbool.h"
 
-void wait_random(void);
-
 void __fatal_error(const char *expr, const char *msg, const char *file,
                    int line, const char *func);
 void error_shutdown(const char *line1, const char *line2, const char *line3,

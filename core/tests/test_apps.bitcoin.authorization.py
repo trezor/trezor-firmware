@@ -1,5 +1,6 @@
 from common import unittest, H_
 
+import storage.cache
 from trezor.messages.AuthorizeCoinJoin import AuthorizeCoinJoin
 from trezor.messages.GetOwnershipProof import GetOwnershipProof
 from trezor.messages.SignTx import SignTx
@@ -19,13 +20,14 @@ class TestAuthorization(unittest.TestCase):
         self.msg_auth = AuthorizeCoinJoin(
             coordinator="www.example.com",
             max_total_fee=40000,
-            fee_per_anonymity=0.003 * 10**9,
+            fee_per_anonymity=int(0.003 * 10**9),
             address_n=[H_(84), H_(0), H_(0)],
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDWITNESS,
         )
 
-        self.authorization = CoinJoinAuthorization(self.msg_auth, None, self.coin)
+        self.authorization = CoinJoinAuthorization(self.msg_auth)
+        storage.cache.start_session()
 
     def test_ownership_proof_account_depth_mismatch(self):
         # Account depth mismatch.

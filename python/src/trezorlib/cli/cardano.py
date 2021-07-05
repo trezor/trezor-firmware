@@ -54,22 +54,20 @@ def sign_tx(client, file, protocol_magic, network_id, testnet):
         protocol_magic = cardano.PROTOCOL_MAGICS["testnet"]
         network_id = cardano.NETWORK_IDS["testnet"]
 
-    inputs = [cardano.create_input(input) for input in transaction["inputs"]]
-    outputs = [cardano.create_output(output) for output in transaction["outputs"]]
+    inputs = [cardano.parse_input(input) for input in transaction["inputs"]]
+    outputs = [cardano.parse_output(output) for output in transaction["outputs"]]
     fee = transaction["fee"]
     ttl = transaction.get("ttl")
     validity_interval_start = transaction.get("validity_interval_start")
     certificates = [
-        cardano.create_certificate(certificate)
+        cardano.parse_certificate(certificate)
         for certificate in transaction.get("certificates", ())
     ]
     withdrawals = [
-        cardano.create_withdrawal(withdrawal)
+        cardano.parse_withdrawal(withdrawal)
         for withdrawal in transaction.get("withdrawals", ())
     ]
-    metadata = None
-    if "metadata" in transaction:
-        metadata = bytes.fromhex(transaction["metadata"])
+    auxiliary_data = cardano.parse_auxiliary_data(transaction.get("auxiliary_data"))
 
     signed_transaction = cardano.sign_tx(
         client,
@@ -80,9 +78,9 @@ def sign_tx(client, file, protocol_magic, network_id, testnet):
         validity_interval_start,
         certificates,
         withdrawals,
-        metadata,
         protocol_magic,
         network_id,
+        auxiliary_data,
     )
 
     return {

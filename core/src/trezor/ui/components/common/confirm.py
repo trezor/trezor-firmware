@@ -1,8 +1,11 @@
 from trezor import loop, ui, wire
 
+<<<<<<< HEAD
 if __debug__:
     from apps.debug import confirm_signal
 
+=======
+>>>>>>> legacy/v1.10.1
 if False:
     from typing import Any, Awaitable
 
@@ -52,4 +55,9 @@ class ConfirmBase(ui.Layout):
             return self.content.read_content()
 
         def create_tasks(self) -> tuple[loop.Task, ...]:
+<<<<<<< HEAD
+=======
+            from apps.debug import confirm_signal
+
+>>>>>>> legacy/v1.10.1
             return super().create_tasks() + (confirm_signal(),)

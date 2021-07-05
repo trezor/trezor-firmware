@@ -2,25 +2,24 @@
 , hardwareTest ? false
  }:
 
-# the last successful build of nixpkgs-unstable as of 2021-03-25
-with import (builtins.fetchTarball {
-  url = "https://github.com/NixOS/nixpkgs/archive/c0e881852006b132236cbf0301bd1939bb50867e.tar.gz";
-  sha256 = "0fy7z7yxk5n7yslsvx5cyc6h21qwi4bhxf3awhirniszlbvaazy2";
-})
-{ };
-
 let
-  moneroTests = fetchurl {
+  # the last successful build of nixpkgs-unstable as of 2021-05-07
+  nixpkgs = import (builtins.fetchTarball {
+    url = "https://github.com/NixOS/nixpkgs/archive/e62feb3bf4a603e26755238303bda0c24651e155.tar.gz";
+    sha256 = "1gkamm044jrksjrisr7h9grg8p2y6rk01x6391asrx988hm2rh9s";
+  }) { };
+  moneroTests = nixpkgs.fetchurl {
     url = "https://github.com/ph4r05/monero/releases/download/v0.17.1.9-tests/trezor_tests";
     sha256 = "410bc4ff2ff1edc65e17f15b549bd1bf8a3776cf67abdea86aed52cf4bce8d9d";
   };
-  moneroTestsPatched = runCommandCC "monero_trezor_tests" {} ''
+  moneroTestsPatched = nixpkgs.runCommandCC "monero_trezor_tests" {} ''
     cp ${moneroTests} $out
     chmod +wx $out
-    ${patchelf}/bin/patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" "$out"
+    ${nixpkgs.patchelf}/bin/patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" "$out"
     chmod -w $out
   '';
 in
+with nixpkgs;
 stdenv.mkDerivation ({
   name = "trezor-firmware-env";
   buildInputs = lib.optionals fullDeps [
@@ -38,6 +37,7 @@ stdenv.mkDerivation ({
     bash
     check
     clang-tools
+    clang
     editorconfig-checker
     gcc
     gcc-arm-embedded
@@ -52,6 +52,7 @@ stdenv.mkDerivation ({
     pkgconfig
     poetry
     protobuf3_6
+    rustfmt
     wget
     zlib
   ] ++ lib.optionals (!stdenv.isDarwin) [
@@ -80,6 +81,8 @@ stdenv.mkDerivation ({
   # Fix bdist-wheel problem by setting source date epoch to a more recent date
   SOURCE_DATE_EPOCH = 1600000000;
 
+  # Used by rust bindgen
+  LIBCLANG_PATH = "${llvmPackages.libclang}/lib";
 } // (lib.optionalAttrs fullDeps) {
   TREZOR_MONERO_TESTS_PATH = moneroTestsPatched;
 })

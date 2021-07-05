@@ -1,20 +1,15 @@
-import storage
+import storage.cache
 import storage.device
-import storage.recovery
-import storage.sd_salt
-from storage import cache
-from trezor import config, sdcard, ui, utils, wire, workflow
-from trezor.messages import Capability, MessageType
-from trezor.messages.Features import Features
-from trezor.messages.PreauthorizedRequest import PreauthorizedRequest
+from trezor import config, utils, wire, workflow
+from trezor.messages import MessageType
 from trezor.messages.Success import Success
 
-from apps.common import mnemonic, safety_checks
-from apps.common.request_pin import verify_user_pin
+from . import workflow_handlers
 
 if False:
     import protobuf
-    from typing import Iterable, NoReturn, Protocol
+    from typing import NoReturn
+    from trezor.messages.Features import Features
     from trezor.messages.Initialize import Initialize
     from trezor.messages.EndSession import EndSession
     from trezor.messages.GetFeatures import GetFeatures
@@ -24,17 +19,17 @@ if False:
     from trezor.messages.DoPreauthorized import DoPreauthorized
     from trezor.messages.CancelAuthorization import CancelAuthorization
 
-if False:
-
-    class Authorization(Protocol):
-        def expected_wire_types(self) -> Iterable[int]:
-            ...
-
-        def __del__(self) -> None:
-            ...
-
 
 def get_features() -> Features:
+    import storage.recovery
+    import storage.sd_salt
+
+    from trezor import sdcard
+    from trezor.messages import Capability
+    from trezor.messages.Features import Features
+
+    from apps.common import mnemonic, safety_checks
+
     f = Features(
         vendor="trezor.io",
         language="en-US",
@@ -105,7 +100,7 @@ async def handle_Initialize(ctx: wire.Context, msg: Initialize) -> Features:
     features = get_features()
     if msg.session_id:
         msg.session_id = bytes(msg.session_id)
-    features.session_id = cache.start_session(msg.session_id)
+    features.session_id = storage.cache.start_session(msg.session_id)
     return features
 
 
@@ -123,7 +118,7 @@ async def handle_LockDevice(ctx: wire.Context, msg: LockDevice) -> Success:
 
 
 async def handle_EndSession(ctx: wire.Context, msg: EndSession) -> Success:
-    cache.end_current_session()
+    storage.cache.end_current_session()
     return Success()
 
 
@@ -139,42 +134,32 @@ async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:
 async def handle_DoPreauthorized(
     ctx: wire.Context, msg: DoPreauthorized
 ) -> protobuf.MessageType:
-    authorization: Authorization = storage.cache.get(
-        storage.cache.APP_BASE_AUTHORIZATION
-    )
-    if not authorization:
+    from trezor.messages.PreauthorizedRequest import PreauthorizedRequest
+    from apps.common import authorization
+
+    if not authorization.is_set():
         raise wire.ProcessError("No preauthorized operation")
 
-    req = await ctx.call_any(
-        PreauthorizedRequest(), *authorization.expected_wire_types()
-    )
+    wire_types = authorization.get_wire_types()
+    utils.ensure(bool(wire_types), "Unsupported preauthorization found")
 
-    handler = wire.find_registered_workflow_handler(ctx.iface, req.MESSAGE_WIRE_TYPE)
+    req = await ctx.call_any(PreauthorizedRequest(), *wire_types)
+
+    handler = workflow_handlers.find_registered_handler(
+        ctx.iface, req.MESSAGE_WIRE_TYPE
+    )
     if handler is None:
         return wire.unexpected_message()
 
-    return await handler(ctx, req, authorization)  # type: ignore
-
-
-def set_authorization(authorization: Authorization) -> None:
-    previous: Authorization = storage.cache.get(storage.cache.APP_BASE_AUTHORIZATION)
-    if previous:
-        previous.__del__()
-    storage.cache.set(storage.cache.APP_BASE_AUTHORIZATION, authorization)
+    return await handler(ctx, req, authorization.get())  # type: ignore
 
 
 async def handle_CancelAuthorization(
     ctx: wire.Context, msg: CancelAuthorization
 ) -> protobuf.MessageType:
-    authorization: Authorization = storage.cache.get(
-        storage.cache.APP_BASE_AUTHORIZATION
-    )
-    if not authorization:
-        raise wire.ProcessError("No preauthorized operation")
+    from apps.common import authorization
 
-    authorization.__del__()
-    storage.cache.delete(storage.cache.APP_BASE_AUTHORIZATION)
-
+    authorization.clear()
     return Success(message="Authorization cancelled")
 
 
@@ -190,6 +175,8 @@ ALLOW_WHILE_LOCKED = (
 
 
 def set_homescreen() -> None:
+    import storage.recovery
+
     if not config.is_unlocked():
         from apps.homescreen.lockscreen import lockscreen
 
@@ -225,18 +212,20 @@ async def unlock_device(ctx: wire.GenericContext = wire.DUMMY_CONTEXT) -> None:
     If the storage is locked, attempt to unlock it. Reset the homescreen and the wire
     handler.
     """
+    from apps.common.request_pin import verify_user_pin
+
     if not config.is_unlocked():
         # verify_user_pin will raise if the PIN was invalid
         await verify_user_pin(ctx)
 
     set_homescreen()
-    wire.find_handler = wire.find_registered_workflow_handler
+    wire.find_handler = workflow_handlers.find_registered_handler
 
 
 def get_pinlocked_handler(
     iface: wire.WireInterface, msg_type: int
 ) -> wire.Handler[wire.Msg] | None:
-    orig_handler = wire.find_registered_workflow_handler(iface, msg_type)
+    orig_handler = workflow_handlers.find_registered_handler(iface, msg_type)
     if orig_handler is None:
         return None
 
@@ -260,6 +249,8 @@ def get_pinlocked_handler(
 
 # this function is also called when handling ApplySettings
 def reload_settings_from_storage() -> None:
+    from trezor import ui
+
     workflow.idle_timer.set(
         storage.device.get_autolock_delay_ms(), lock_device_if_unlocked
     )
@@ -268,13 +259,19 @@ def reload_settings_from_storage() -> None:
 
 
 def boot() -> None:
-    wire.register(MessageType.Initialize, handle_Initialize)
-    wire.register(MessageType.GetFeatures, handle_GetFeatures)
-    wire.register(MessageType.Cancel, handle_Cancel)
-    wire.register(MessageType.LockDevice, handle_LockDevice)
-    wire.register(MessageType.EndSession, handle_EndSession)
-    wire.register(MessageType.Ping, handle_Ping)
-    wire.register(MessageType.DoPreauthorized, handle_DoPreauthorized)
-    wire.register(MessageType.CancelAuthorization, handle_CancelAuthorization)
+    workflow_handlers.register(MessageType.Initialize, handle_Initialize)
+    workflow_handlers.register(MessageType.GetFeatures, handle_GetFeatures)
+    workflow_handlers.register(MessageType.Cancel, handle_Cancel)
+    workflow_handlers.register(MessageType.LockDevice, handle_LockDevice)
+    workflow_handlers.register(MessageType.EndSession, handle_EndSession)
+    workflow_handlers.register(MessageType.Ping, handle_Ping)
+    workflow_handlers.register(MessageType.DoPreauthorized, handle_DoPreauthorized)
+    workflow_handlers.register(
+        MessageType.CancelAuthorization, handle_CancelAuthorization
+    )
 
     reload_settings_from_storage()
+    if config.is_unlocked():
+        wire.find_handler = workflow_handlers.find_registered_handler
+    else:
+        wire.find_handler = get_pinlocked_handler

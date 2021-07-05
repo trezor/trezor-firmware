@@ -61,7 +61,6 @@ static const char *get_0str(mp_obj_t o, size_t min_len, size_t max_len) {
 ///     device_protocol: int = 0,
 ///     manufacturer: str = "",
 ///     product: str = "",
-///     serial_number: str = "",
 ///     interface: str = "",
 ///     usb21_enabled: bool = True,
 ///     usb21_landing: bool = True,
@@ -90,9 +89,6 @@ STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type,
       {MP_QSTR_product,
        MP_ARG_KW_ONLY | MP_ARG_OBJ,
        {.u_obj = mp_const_empty_bytes}},
-      {MP_QSTR_serial_number,
-       MP_ARG_KW_ONLY | MP_ARG_OBJ,
-       {.u_obj = mp_const_empty_bytes}},
       {MP_QSTR_interface,
        MP_ARG_KW_ONLY | MP_ARG_OBJ,
        {.u_obj = mp_const_empty_bytes}},
@@ -111,10 +107,9 @@ STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type,
   const mp_int_t release_num = vals[5].u_int;
   const char *manufacturer = get_0str(vals[6].u_obj, 0, 32);
   const char *product = get_0str(vals[7].u_obj, 0, 32);
-  const char *serial_number = get_0str(vals[8].u_obj, 0, 32);
-  const char *interface = get_0str(vals[9].u_obj, 0, 32);
-  const secbool usb21_enabled = vals[10].u_bool ? sectrue : secfalse;
-  const secbool usb21_landing = vals[11].u_bool ? sectrue : secfalse;
+  const char *interface = get_0str(vals[8].u_obj, 0, 32);
+  const secbool usb21_enabled = vals[9].u_bool ? sectrue : secfalse;
+  const secbool usb21_landing = vals[10].u_bool ? sectrue : secfalse;
 
   CHECK_PARAM_RANGE(device_class, 0, 255)
   CHECK_PARAM_RANGE(device_subclass, 0, 255)
@@ -127,9 +122,6 @@ STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type,
   }
   if (product == NULL) {
     mp_raise_ValueError("product is invalid");
-  }
-  if (serial_number == NULL) {
-    mp_raise_ValueError("serial_number is invalid");
   }
   if (interface == NULL) {
     mp_raise_ValueError("interface is invalid");
@@ -148,7 +140,7 @@ STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type,
   o->info.release_num = (uint16_t)(release_num);
   o->info.manufacturer = manufacturer;
   o->info.product = product;
-  o->info.serial_number = serial_number;
+  o->info.serial_number = NULL;
   o->info.interface = interface;
   o->info.usb21_enabled = usb21_enabled;
   o->info.usb21_landing = usb21_landing;
@@ -175,16 +167,23 @@ STATIC mp_obj_t mod_trezorio_USB_add(mp_obj_t self, mp_obj_t iface) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_USB_add_obj,
                                  mod_trezorio_USB_add);
 
-/// def open(self) -> None:
+/// def open(self, serial_number: str) -> None:
 ///     """
 ///     Initializes the USB stack.
 ///     """
-STATIC mp_obj_t mod_trezorio_USB_open(mp_obj_t self) {
+STATIC mp_obj_t mod_trezorio_USB_open(mp_obj_t self,
+                                      mp_obj_t serial_number_obj) {
   mp_obj_USB_t *o = MP_OBJ_TO_PTR(self);
 
   if (o->state != USB_CLOSED) {
     mp_raise_msg(&mp_type_RuntimeError, "already initialized");
   }
+
+  const char *serial_number = get_0str(serial_number_obj, 0, 32);
+  if (serial_number == NULL) {
+    mp_raise_ValueError("serial_number is invalid");
+  }
+  o->info.serial_number = serial_number;
 
   size_t iface_cnt = 0;
   mp_obj_t *iface_objs = NULL;
@@ -234,7 +233,7 @@ STATIC mp_obj_t mod_trezorio_USB_open(mp_obj_t self) {
 
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_USB_open_obj,
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_USB_open_obj,
                                  mod_trezorio_USB_open);
 
 /// def close(self) -> None:

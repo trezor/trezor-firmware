@@ -1,6 +1,9 @@
 from micropython import const
 
+<<<<<<< HEAD
 from storage.device import get_device_id
+=======
+>>>>>>> legacy/v1.10.1
 from trezor import io, utils
 
 UDP_PORT = 0
@@ -100,7 +103,6 @@ bus = io.USB(
     manufacturer="SatoshiLabs",
     product="TREZOR",
     interface="TREZOR Interface",
-    serial_number=get_device_id(),
     usb21_landing=False,
 )
 bus.add(iface_wire)

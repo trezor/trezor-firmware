@@ -1,9 +1,8 @@
 from micropython import const
 from ubinascii import hexlify
 
+import storage.cache
 from storage import common
-from trezor.crypto import random
-from trezor.messages import BackupType
 
 if False:
     from trezor.messages.ResetDevice import EnumTypeBackupType
@@ -36,8 +35,6 @@ _SD_SALT_AUTH_KEY          = const(0x12)  # bytes
 INITIALIZED                = const(0x13)  # bool (0x01 or empty)
 _SAFETY_CHECK_LEVEL        = const(0x14)  # int
 _EXPERIMENTAL_FEATURES     = const(0x15)  # bool (0x01 or empty)
-
-_DEFAULT_BACKUP_TYPE       = BackupType.Bip39
 
 SAFETY_CHECK_LEVEL_STRICT  : Literal[0] = const(0)
 SAFETY_CHECK_LEVEL_PROMPT  : Literal[1] = const(1)
@@ -79,6 +76,8 @@ def is_initialized() -> bool:
 
 
 def _new_device_id() -> str:
+    from trezorcrypto import random  # avoid pulling in trezor.crypto
+
     return hexlify(random.bytes(12)).decode().upper()
 
 
@@ -121,9 +120,11 @@ def get_mnemonic_secret() -> bytes | None:
 
 
 def get_backup_type() -> EnumTypeBackupType:
+    from trezor.messages import BackupType
+
     backup_type = common.get_uint8(_NAMESPACE, _BACKUP_TYPE)
     if backup_type is None:
-        backup_type = _DEFAULT_BACKUP_TYPE
+        backup_type = BackupType.Bip39
 
     if backup_type not in (
         BackupType.Bip39,
@@ -318,9 +319,19 @@ def set_safety_check_level(level: StorageSafetyCheckLevel) -> None:
     common.set_uint8(_NAMESPACE, _SAFETY_CHECK_LEVEL, level)
 
 
+@storage.cache.stored(storage.cache.STORAGE_DEVICE_EXPERIMENTAL_FEATURES)
+def _get_experimental_features() -> bytes:
+    if common.get_bool(_NAMESPACE, _EXPERIMENTAL_FEATURES):
+        return b"\x01"
+    else:
+        return b""
+
+
 def get_experimental_features() -> bool:
-    return common.get_bool(_NAMESPACE, _EXPERIMENTAL_FEATURES)
+    return bool(_get_experimental_features())
 
 
 def set_experimental_features(enabled: bool) -> None:
+    cached_bytes = b"\x01" if enabled else b""
+    storage.cache.set(storage.cache.STORAGE_DEVICE_EXPERIMENTAL_FEATURES, cached_bytes)
     common.set_true_or_delete(_NAMESPACE, _EXPERIMENTAL_FEATURES, enabled)

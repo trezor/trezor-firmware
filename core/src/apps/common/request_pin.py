@@ -1,10 +1,14 @@
 import utime
 
+import storage.cache
 import storage.sd_salt
 from trezor import config, ui, wire
 from trezor.messages import ButtonRequestType
+<<<<<<< HEAD
 from trezor.ui.components.tt.pin import CANCELLED, PinDialog
 from trezor.ui.components.tt.text import Text
+=======
+>>>>>>> legacy/v1.10.1
 from trezor.ui.popup import Popup
 
 from . import button_request
@@ -12,9 +16,12 @@ from .sdcard import SdCardUnavailable, request_sd_salt
 
 if False:
     from typing import Any, NoReturn
+<<<<<<< HEAD
 
 
 _last_successful_unlock = 0
+=======
+>>>>>>> legacy/v1.10.1
 
 
 def can_lock_device() -> bool:
@@ -28,6 +35,8 @@ async def request_pin(
     attempts_remaining: int | None = None,
     allow_cancel: bool = True,
 ) -> str:
+    from trezor.ui.components.tt.pin import CANCELLED, PinDialog
+
     await button_request(ctx, code=ButtonRequestType.PinEntry)
 
     if attempts_remaining is None:
@@ -57,6 +66,8 @@ async def request_pin_confirm(ctx: wire.Context, *args: Any, **kwargs: Any) -> s
 
 
 async def pin_mismatch() -> None:
+    from trezor.ui.components.tt.text import Text
+
     text = Text("PIN mismatch", ui.ICON_WRONG, ui.RED)
     text.normal("The PINs you entered", "do not match.")
     text.normal("")
@@ -79,6 +90,19 @@ async def request_pin_and_sd_salt(
     return pin, salt
 
 
+def _set_last_unlock_time() -> None:
+    now = utime.ticks_ms()
+    storage.cache.set(
+        storage.cache.APP_COMMON_REQUEST_PIN_LAST_UNLOCK, now.to_bytes(4, "big")
+    )
+
+
+def _get_last_unlock_time() -> int:
+    return int.from_bytes(
+        storage.cache.get(storage.cache.APP_COMMON_REQUEST_PIN_LAST_UNLOCK), "big"
+    )
+
+
 async def verify_user_pin(
     ctx: wire.GenericContext = wire.DUMMY_CONTEXT,
     prompt: str = "Enter your PIN",
@@ -86,11 +110,11 @@ async def verify_user_pin(
     retry: bool = True,
     cache_time_ms: int = 0,
 ) -> None:
-    global _last_successful_unlock
+    last_unlock = _get_last_unlock_time()
     if (
         cache_time_ms
-        and _last_successful_unlock
-        and utime.ticks_ms() - _last_successful_unlock <= cache_time_ms
+        and last_unlock
+        and utime.ticks_ms() - last_unlock <= cache_time_ms
         and config.is_unlocked()
     ):
         return
@@ -106,7 +130,11 @@ async def verify_user_pin(
     except SdCardUnavailable:
         raise wire.PinCancelled("SD salt is unavailable")
     if config.unlock(pin, salt):
+<<<<<<< HEAD
         _last_successful_unlock = utime.ticks_ms()
+=======
+        _set_last_unlock_time()
+>>>>>>> legacy/v1.10.1
         return
     elif not config.has_pin():
         raise RuntimeError
@@ -116,7 +144,11 @@ async def verify_user_pin(
             ctx, "Wrong PIN, enter again", config.get_pin_rem(), allow_cancel
         )
         if config.unlock(pin, salt):
+<<<<<<< HEAD
             _last_successful_unlock = utime.ticks_ms()
+=======
+            _set_last_unlock_time()
+>>>>>>> legacy/v1.10.1
             return
 
     raise wire.PinInvalid

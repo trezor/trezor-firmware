@@ -6,7 +6,7 @@ from trezor import strings, utils, wire, workflow
 from trezor.crypto import slip39
 from trezor.crypto.hashlib import sha256
 from trezor.errors import MnemonicError
-from trezor.messages import BackupType
+from trezor.messages import BackupType, MessageType
 from trezor.messages.Success import Success
 from trezor.ui.layouts import show_success
 
@@ -31,6 +31,7 @@ async def recovery_homescreen() -> None:
 
 
 async def recovery_process(ctx: wire.GenericContext) -> Success:
+    wire.AVOID_RESTARTING_FOR = (MessageType.Initialize, MessageType.GetFeatures)
     try:
         return await _continue_recovery_process(ctx)
     except recover.RecoveryAborted:

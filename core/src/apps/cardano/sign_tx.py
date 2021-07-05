@@ -9,7 +9,6 @@ from trezor.messages.CardanoSignedTxChunkAck import CardanoSignedTxChunkAck
 
 from apps.common import cbor, safety_checks
 from apps.common.paths import validate_path
-from apps.common.seed import remove_ed25519_prefix
 
 from . import seed
 from .address import (
@@ -18,10 +17,15 @@ from .address import (
     get_address_bytes_unsafe,
     validate_output_address,
 )
+from .auxiliary_data import (
+    get_auxiliary_data_cbor,
+    hash_auxiliary_data,
+    show_auxiliary_data,
+    validate_auxiliary_data,
+)
 from .byron_address import get_address_attributes
 from .certificates import cborize_certificate, validate_certificate
 from .helpers import (
-    INVALID_METADATA,
     INVALID_STAKE_POOL_REGISTRATION_TX_STRUCTURE,
     INVALID_STAKEPOOL_REGISTRATION_TX_INPUTS,
     INVALID_TOKEN_BUNDLE_OUTPUT,
@@ -44,7 +48,7 @@ from .helpers.paths import (
     SCHEMA_STAKING,
     SCHEMA_STAKING_ANY_ACCOUNT,
 )
-from .helpers.utils import to_account_path
+from .helpers.utils import derive_public_key, to_account_path
 from .layout import (
     confirm_certificate,
     confirm_sending,
@@ -77,6 +81,7 @@ if False:
 
     from apps.common.cbor import CborSequence
     from apps.common.paths import PathSchema
+<<<<<<< HEAD
 
     CborizedTokenBundle = dict[bytes, dict[bytes, int]]
     CborizedTxOutput = tuple[bytes, Union[int, tuple[int, CborizedTokenBundle]]]
@@ -86,6 +91,15 @@ if False:
 METADATA_HASH_SIZE = 32
 MINTING_POLICY_ID_LENGTH = 28
 MAX_METADATA_LENGTH = 500
+=======
+
+    CborizedTokenBundle = dict[bytes, dict[bytes, int]]
+    CborizedTxOutput = tuple[bytes, Union[int, tuple[int, CborizedTokenBundle]]]
+    CborizedSignedTx = tuple[dict, dict, Optional[cbor.Raw]]
+    TxHash = bytes
+
+MINTING_POLICY_ID_LENGTH = 28
+>>>>>>> legacy/v1.10.1
 MAX_ASSET_NAME_LENGTH = 32
 MAX_TX_CHUNK_SIZE = 256
 
@@ -132,7 +146,13 @@ async def _sign_ordinary_tx(
     _validate_outputs(keychain, msg.outputs, msg.protocol_magic, msg.network_id)
     _validate_certificates(msg.certificates, msg.protocol_magic, msg.network_id)
     _validate_withdrawals(msg.withdrawals)
+<<<<<<< HEAD
     _validate_metadata(msg.metadata)
+=======
+    validate_auxiliary_data(
+        keychain, msg.auxiliary_data, msg.protocol_magic, msg.network_id
+    )
+>>>>>>> legacy/v1.10.1
 
     # display the transaction in UI
     await _show_standard_tx(ctx, keychain, msg)
@@ -160,7 +180,13 @@ async def _sign_stake_pool_registration_tx(
     _ensure_no_signing_inputs(msg.inputs)
     _validate_outputs(keychain, msg.outputs, msg.protocol_magic, msg.network_id)
     _validate_certificates(msg.certificates, msg.protocol_magic, msg.network_id)
+<<<<<<< HEAD
     _validate_metadata(msg.metadata)
+=======
+    validate_auxiliary_data(
+        keychain, msg.auxiliary_data, msg.protocol_magic, msg.network_id
+    )
+>>>>>>> legacy/v1.10.1
 
     await _show_stake_pool_registration_tx(ctx, keychain, msg)
 
@@ -274,6 +300,7 @@ def _validate_withdrawals(withdrawals: list[CardanoTxWithdrawalType]) -> None:
             raise INVALID_WITHDRAWAL
 
 
+<<<<<<< HEAD
 def _validate_metadata(metadata: bytes | None) -> None:
     if not metadata:
         return
@@ -291,6 +318,8 @@ def _validate_metadata(metadata: bytes | None) -> None:
         raise INVALID_METADATA
 
 
+=======
+>>>>>>> legacy/v1.10.1
 def _cborize_signed_tx(
     keychain: seed.Keychain, msg: CardanoSignTx
 ) -> tuple[CborizedSignedTx, TxHash]:
@@ -306,11 +335,22 @@ def _cborize_signed_tx(
         msg.protocol_magic,
     )
 
+<<<<<<< HEAD
     metadata = None
     if msg.metadata:
         metadata = cbor.Raw(bytes(msg.metadata))
 
     return (tx_body, witnesses, metadata), tx_hash
+=======
+    auxiliary_data = None
+    if msg.auxiliary_data:
+        auxiliary_data_cbor = get_auxiliary_data_cbor(
+            keychain, msg.auxiliary_data, msg.protocol_magic, msg.network_id
+        )
+        auxiliary_data = cbor.Raw(auxiliary_data_cbor)
+
+    return (tx_body, witnesses, auxiliary_data), tx_hash
+>>>>>>> legacy/v1.10.1
 
 
 def _cborize_tx_body(keychain: seed.Keychain, msg: CardanoSignTx) -> dict:
@@ -340,8 +380,14 @@ def _cborize_tx_body(keychain: seed.Keychain, msg: CardanoSignTx) -> dict:
 
     # tx_body[6] is for protocol updates, which we don't support
 
-    if msg.metadata:
-        tx_body[7] = _hash_metadata(bytes(msg.metadata))
+    if msg.auxiliary_data:
+        auxiliary_data_cbor = get_auxiliary_data_cbor(
+            keychain, msg.auxiliary_data, msg.protocol_magic, msg.network_id
+        )
+        tx_body[7] = hash_auxiliary_data(bytes(auxiliary_data_cbor))
+
+    if msg.validity_interval_start:
+        tx_body[8] = msg.validity_interval_start
 
     if msg.validity_interval_start:
         tx_body[8] = msg.validity_interval_start
@@ -363,6 +409,7 @@ def _cborize_outputs(
         _cborize_output(keychain, output, protocol_magic, network_id)
         for output in outputs
     ]
+<<<<<<< HEAD
 
 
 def _cborize_output(
@@ -380,6 +427,25 @@ def _cborize_output(
         assert output.address is not None  # _validate_outputs
         address = get_address_bytes_unsafe(output.address)
 
+=======
+
+
+def _cborize_output(
+    keychain: seed.Keychain,
+    output: CardanoTxOutputType,
+    protocol_magic: int,
+    network_id: int,
+) -> CborizedTxOutput:
+    amount = output.amount
+    if output.address_parameters:
+        address = derive_address_bytes(
+            keychain, output.address_parameters, protocol_magic, network_id
+        )
+    else:
+        assert output.address is not None  # _validate_outputs
+        address = get_address_bytes_unsafe(output.address)
+
+>>>>>>> legacy/v1.10.1
     if not output.token_bundle:
         return (address, amount)
     else:
@@ -432,10 +498,6 @@ def _cborize_withdrawals(
     return result
 
 
-def _hash_metadata(metadata: bytes) -> bytes:
-    return hashlib.blake2b(data=metadata, outlen=METADATA_HASH_SIZE).digest()
-
-
 def _hash_tx_body(tx_body: dict) -> bytes:
     tx_body_cbor_chunks = cbor.encode_streamed(tx_body)
 
@@ -443,6 +505,16 @@ def _hash_tx_body(tx_body: dict) -> bytes:
     for chunk in tx_body_cbor_chunks:
         hashfn.update(chunk)
 
+<<<<<<< HEAD
+def _hash_tx_body(tx_body: dict) -> bytes:
+    tx_body_cbor_chunks = cbor.encode_streamed(tx_body)
+
+    hashfn = hashlib.blake2b(outlen=32)
+    for chunk in tx_body_cbor_chunks:
+        hashfn.update(chunk)
+
+=======
+>>>>>>> legacy/v1.10.1
     return hashfn.digest()
 
 
@@ -518,7 +590,7 @@ def _cborize_shelley_witness(
     signature = ed25519.sign_ext(
         node.private_key(), node.private_key_ext(), tx_body_hash
     )
-    public_key = remove_ed25519_prefix(node.public_key())
+    public_key = derive_public_key(keychain, path)
 
     return public_key, signature
 
@@ -540,7 +612,7 @@ def _cborize_byron_witnesses(
     for path in paths:
         node = keychain.derive(list(path))
 
-        public_key = remove_ed25519_prefix(node.public_key())
+        public_key = derive_public_key(keychain, list(path))
         signature = ed25519.sign_ext(
             node.private_key(), node.private_key_ext(), tx_body_hash
         )
@@ -573,7 +645,10 @@ async def _show_standard_tx(
     for withdrawal in msg.withdrawals:
         await confirm_withdrawal(ctx, withdrawal)
 
-    has_metadata = bool(msg.metadata)
+    await show_auxiliary_data(
+        ctx, keychain, msg.auxiliary_data, msg.protocol_magic, msg.network_id
+    )
+
     await confirm_transaction(
         ctx=ctx,
         amount=total_amount,
@@ -581,7 +656,10 @@ async def _show_standard_tx(
         protocol_magic=msg.protocol_magic,
         ttl=msg.ttl,
         validity_interval_start=msg.validity_interval_start,
+<<<<<<< HEAD
         has_metadata=has_metadata,
+=======
+>>>>>>> legacy/v1.10.1
         is_network_id_verifiable=is_network_id_verifiable,
     )
 
@@ -616,6 +694,12 @@ async def _show_stake_pool_registration_tx(
     await confirm_transaction_network_ttl(
         ctx, msg.protocol_magic, msg.ttl, msg.validity_interval_start
     )
+<<<<<<< HEAD
+=======
+    await show_auxiliary_data(
+        ctx, keychain, msg.auxiliary_data, msg.protocol_magic, msg.network_id
+    )
+>>>>>>> legacy/v1.10.1
     await confirm_stake_pool_registration_final(ctx)
 
 

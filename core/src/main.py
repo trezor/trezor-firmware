@@ -1,73 +1,56 @@
 # isort:skip_file
+# fmt: off
 
-# unlock the device
-import boot  # noqa: F401
+# We are tightly controlling the memory layout. Order of imports is important.
+# Modules imported directly from here also must take care to have as few dependencies
+# as possible.
 
-# prepare the USB interfaces, but do not connect to the host yet
+# === Import always-active modules
+# trezor imports only C modules
+import trezor
+# trezor.utils import only C modules
+from trezor import utils
+# we need space for 30 items in the trezor module
+utils.presize_module("trezor", 30)
+
+# storage imports storage.common, storage.cache and storage.device.
+# These import trezor, trezor.config (which is a C module), trezor.utils, and each other.
+import storage
+# we will need space for 12 items in the storage module
+utils.presize_module("storage", 12)
+
+if not utils.BITCOIN_ONLY:
+    # storage.fido2 only imports C modules
+    import storage.fido2  # noqa: F401
+
+if __debug__:
+    # storage.debug only imports C modules
+    import storage.debug
+
+# trezor.pin imports trezor.utils
+# We need it as an always-active module because trezor.pin.show_pin_timeout is used
+# as a UI callback for storage, which can be invoked at any time
+import trezor.pin  # noqa: F401
+
+# === Prepare the USB interfaces first. Do not connect to the host yet.
+# usb imports trezor.utils and trezor.io which is a C module
 import usb
 
-from trezor import loop, utils, wire, workflow
+# create an unimport manager that will be reused in the main loop
+unimport_manager = utils.unimport()
+
+# unlock the device, unload the boot module afterwards
+with unimport_manager:
+    import boot
+    del boot
 
 # start the USB
-usb.bus.open()
+import storage.device
 
+usb.bus.open(storage.device.get_device_id())
 
-def _boot_apps() -> None:
-    # load applications
-    import apps.base
-    import apps.management
-    import apps.bitcoin
-    import apps.misc
-
-    if not utils.BITCOIN_ONLY:
-        import apps.ethereum
-        import apps.lisk
-        import apps.monero
-        import apps.nem
-        import apps.stellar
-        import apps.ripple
-        import apps.cardano
-        import apps.tezos
-        import apps.eos
-        import apps.binance
-        import apps.webauthn
-
-    if __debug__:
-        import apps.debug
-
-    # boot applications
-    apps.base.boot()
-    apps.management.boot()
-    apps.bitcoin.boot()
-    apps.misc.boot()
-    if not utils.BITCOIN_ONLY:
-        apps.ethereum.boot()
-        apps.lisk.boot()
-        apps.monero.boot()
-        apps.nem.boot()
-        apps.stellar.boot()
-        apps.ripple.boot()
-        apps.cardano.boot()
-        apps.tezos.boot()
-        apps.eos.boot()
-        apps.binance.boot()
-        apps.webauthn.boot()
-    if __debug__:
-        apps.debug.boot()
-
-    # run main event loop and specify which screen is the default
-    apps.base.set_homescreen()
-    workflow.start_default()
-
-
-_boot_apps()
-
-# initialize the wire codec
-wire.setup(usb.iface_wire)
-if __debug__:
-    wire.setup(usb.iface_debug, use_workflow=False)
-
-loop.run()
-
-# loop is empty. That should not happen
-utils.halt("All tasks have died.")
+# run the endless loop
+while True:
+    with unimport_manager:
+        import session  # noqa: F401
+        del session

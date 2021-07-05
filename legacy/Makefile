@@ -7,6 +7,7 @@ OBJS += common.o
 OBJS += flash.o
 OBJS += layout.o
 OBJS += oled.o
+OBJS += random_delays.o
 OBJS += rng.o
 
 ifneq ($(EMULATOR),1)

@@ -20,63 +20,65 @@
 #include "trezor.h"
 #include <libopencm3/stm32/desig.h>
 #include <libopencm3/stm32/flash.h>
+#include <string.h>
 #include <vendor/libopencm3/include/libopencmsis/core_cm3.h>
 #include "bitmaps.h"
 #include "bl_check.h"
 #include "layout.h"
 #include "memory.h"
 #include "memzero.h"
+#include "norcow_config.h"
 #include "oled.h"
 #include "rng.h"
 #include "setup.h"
+#include "supervise.h"
 #include "timer.h"
 #include "util.h"
 
-/** Sector erase operation extracted from libopencm3 - flash_erase_sector
+// legacy storage magic
+#define LEGACY_STORAGE_SECTOR 2
+static const uint32_t META_MAGIC_V10 = 0x525a5254;  // 'TRZR'
+
+// norcow storage magic
+static const uint32_t NORCOW_MAGIC = 0x3243524e;  // 'NRC2'
+static const uint8_t norcow_sectors[NORCOW_SECTOR_COUNT] = NORCOW_SECTORS;
+
+/** Flash program word operation extracted from libopencm3,
  * so it can run from RAM
  */
 static void __attribute__((noinline, section(".data")))
-erase_sector(uint8_t sector, uint32_t psize) {
+_flash_program_word(uint32_t address, uint32_t data) {
   // Wait for flash controller to be ready
   while ((FLASH_SR & FLASH_SR_BSY) == FLASH_SR_BSY)
     ;
+
   // Set program word width
   FLASH_CR &= ~(FLASH_CR_PROGRAM_MASK << FLASH_CR_PROGRAM_SHIFT);
-  FLASH_CR |= psize << FLASH_CR_PROGRAM_SHIFT;
+  FLASH_CR |= FLASH_CR_PROGRAM_X32 << FLASH_CR_PROGRAM_SHIFT;
 
-  /* Sector numbering is not contiguous internally! */
-  if (sector >= 12) {
-    sector += 4;
-  }
+  // Enable writes to flash
+  FLASH_CR |= FLASH_CR_PG;
 
-  FLASH_CR &= ~(FLASH_CR_SNB_MASK << FLASH_CR_SNB_SHIFT);
-  FLASH_CR |= (sector & FLASH_CR_SNB_MASK) << FLASH_CR_SNB_SHIFT;
-  FLASH_CR |= FLASH_CR_SER;
-  FLASH_CR |= FLASH_CR_STRT;
+  // Program the word
+  MMIO32(address) = data;
 
   // Wait for flash controller to be ready
   while ((FLASH_SR & FLASH_SR_BSY) == FLASH_SR_BSY)
     ;
-  FLASH_CR &= ~FLASH_CR_SER;
-  FLASH_CR &= ~(FLASH_CR_SNB_MASK << FLASH_CR_SNB_SHIFT);
+
+  // Disable writes to flash
+  FLASH_CR &= ~FLASH_CR_PG;
 }
 
 static void __attribute__((noinline, section(".data")))
-erase_firmware_and_storage(void) {
+invalidate_firmware(void) {
   // Flash unlock
   FLASH_KEYR = FLASH_KEYR_KEY1;
   FLASH_KEYR = FLASH_KEYR_KEY2;
 
-  // Erase storage sectors to prevent firmware downgrade to vulnerable version
-  for (int i = FLASH_STORAGE_SECTOR_FIRST; i <= FLASH_STORAGE_SECTOR_LAST;
-       i++) {
-    erase_sector(i, FLASH_CR_PROGRAM_X32);
-  }
-
-  // Erase firmware sectors
-  for (int i = FLASH_CODE_SECTOR_FIRST; i <= FLASH_CODE_SECTOR_LAST; i++) {
-    erase_sector(i, FLASH_CR_PROGRAM_X32);
-  }
+  // Erase the first firmware word
+  // (we don't need full erasure, this speeds up the whole process)
+  _flash_program_word(FLASH_FWHEADER_START, 0);
 
   // Flash lock
   FLASH_CR |= FLASH_CR_LOCK;
@@ -84,6 +86,7 @@ erase_firmware_and_storage(void) {
 
 void __attribute__((noinline, noreturn, section(".data"))) reboot_device(void) {
   __disable_irq();
+  *STAY_IN_BOOTLOADER_FLAG_ADDR = STAY_IN_BOOTLOADER_FLAG;
   SCB_AIRCR = SCB_AIRCR_VECTKEY | SCB_AIRCR_SYSRESETREQ;
   while (1)
     ;
@@ -91,8 +94,8 @@ void __attribute__((noinline, noreturn, section(".data"))) reboot_device(void) {
 
 /** Entry point of RAM shim that deletes old FW, storage and reboot */
 void __attribute__((noinline, noreturn, section(".data")))
-erase_fw_and_reboot(void) {
-  erase_firmware_and_storage();
+invalidate_firmware_and_reboot(void) {
+  invalidate_firmware();
   reboot_device();
 
   for (;;)
@@ -112,14 +115,40 @@ int main(void) {
 
   mpu_config_off();  // needed for flash writable, RAM RWX
   timer_init();
-  check_bootloader(false);
+  check_and_replace_bootloader(false);
 
-  layoutDialog(&bmp_icon_warning, NULL, NULL, NULL, "Erasing old data", NULL,
-               NULL, "DO NOT UNPLUG", "YOUR TREZOR!", NULL);
-  oledRefresh();
+  secbool storage_initialized = secfalse;
 
-  // from this point the execution is from RAM instead of flash
-  erase_fw_and_reboot();
+  // check legacy storage
+  uint32_t *magic = (uint32_t *)flash_get_address(LEGACY_STORAGE_SECTOR, 0,
+                                                  sizeof(META_MAGIC_V10));
+  if (*magic == META_MAGIC_V10) {
+    storage_initialized = sectrue;
+  }
+
+  if (storage_initialized == secfalse) {
+    // check norcow storage
+    for (uint8_t i = 0; i < NORCOW_SECTOR_COUNT; i++) {
+      magic = (uint32_t *)flash_get_address(norcow_sectors[i], 0,
+                                            sizeof(NORCOW_MAGIC));
+      if (*magic == NORCOW_MAGIC) {
+        storage_initialized = sectrue;
+        break;
+      }
+    }
+  }
+
+  if (sectrue == storage_initialized) {
+    // Storage probably contains a seed so leave the firmware intact.
+    // Invalidating it would cause the bootloader to wipe the storage before
+    // installing the target firmware. User will need to confirm installation.
+    reboot_device();
+  } else {
+    // New device. Invalidate the intermediate firmware so that after reboot
+    // the bootloader will install the target firmware without asking for user
+    // confirmation.
+    invalidate_firmware_and_reboot();
+  }
 
   return 0;
 }

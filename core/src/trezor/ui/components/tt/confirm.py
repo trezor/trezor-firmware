@@ -5,9 +5,12 @@ from trezor.ui.loader import Loader, LoaderDefault
 
 from ..common.confirm import CANCELLED, CONFIRMED, INFO, ConfirmBase
 from .button import Button, ButtonAbort, ButtonCancel, ButtonConfirm, ButtonDefault
+<<<<<<< HEAD:core/src/trezor/ui/components/tt/confirm.py
 
 if __debug__:
     from apps.debug import swipe_signal, confirm_signal
+=======
+>>>>>>> legacy/v1.10.1:core/src/trezor/ui/components/tt/confirm.py
 
 if False:
     from typing import Any
@@ -96,6 +99,8 @@ class ConfirmPageable(Confirm):
             directions = SWIPE_HORIZONTAL
 
         if __debug__:
+            from apps.debug import swipe_signal
+
             swipe = await loop.race(Swipe(directions), swipe_signal())
         else:
             swipe = await Swipe(directions)
@@ -196,6 +201,11 @@ class InfoConfirm(ui.Layout):
             return self.content.read_content()
 
         def create_tasks(self) -> tuple[loop.Task, ...]:
+<<<<<<< HEAD:core/src/trezor/ui/components/tt/confirm.py
+=======
+            from apps.debug import confirm_signal
+
+>>>>>>> legacy/v1.10.1:core/src/trezor/ui/components/tt/confirm.py
             return super().create_tasks() + (confirm_signal(),)
 
 
@@ -273,4 +283,9 @@ class HoldToConfirm(ui.Layout):
             return self.content.read_content()
 
         def create_tasks(self) -> tuple[loop.Task, ...]:
+<<<<<<< HEAD:core/src/trezor/ui/components/tt/confirm.py
+=======
+            from apps.debug import confirm_signal
+
+>>>>>>> legacy/v1.10.1:core/src/trezor/ui/components/tt/confirm.py
             return super().create_tasks() + (confirm_signal(),)

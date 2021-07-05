@@ -553,7 +553,7 @@ message AuthorizeCoinJoin {
 
     required string coordinator = 1;                                    // coordinator identifier to approve as a prefix in commitment data (max. 18 ASCII characters)
     required uint64 max_total_fee = 2;                                  // maximum total fees
-    optional uint32 fee_per_anonymity = 3;                              // fee per anonymity set in units of 10^-9 percent
+    optional uint32 fee_per_anonymity = 3 [default=0];                  // fee per anonymity set in units of 10^-9 percent
     repeated uint32 address_n = 4;                                      // prefix of the BIP-32 path leading to the account (m / purpose' / coin_type' / account')
     optional string coin_name = 5 [default='Bitcoin'];                  // coin to use
     optional InputScriptType script_type = 6 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)

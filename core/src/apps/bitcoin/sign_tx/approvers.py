@@ -263,6 +263,9 @@ class CoinJoinApprover(Approver):
         super().__init__(tx, coin)
         self.authorization = authorization
 
+        if authorization.params.coin_name != tx.coin_name:
+            raise wire.DataError("Coin name does not match authorization.")
+
         # Upper bound on the user's contribution to the weight of the transaction.
         self.our_weight = tx_weight.TxWeightCalculator(
             tx.inputs_count, tx.outputs_count
@@ -352,7 +355,7 @@ class CoinJoinApprover(Approver):
         decimal_divisor: float = pow(10, FEE_PER_ANONYMITY_DECIMALS + 2)
         return (
             self.coordinator_fee_base
-            * self.authorization.fee_per_anonymity
+            * self.authorization.params.fee_per_anonymity
             / decimal_divisor
         )
 

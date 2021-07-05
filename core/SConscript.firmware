@@ -1,4 +1,5 @@
 # pylint: disable=E0602
+# fmt: off
 
 import os
 
@@ -49,6 +50,7 @@ CPPDEFINES_MOD += [
     ('USE_EOS', '1' if EVERYTHING else '0'),
 ]
 SOURCE_MOD += [
+    'embed/extmod/trezorobj.c',
     'embed/extmod/modtrezorcrypto/crc.c',
     'embed/extmod/modtrezorcrypto/modtrezorcrypto.c',
     'embed/extmod/modtrezorcrypto/rand.c',
@@ -331,6 +333,7 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/flash.c',
     'embed/trezorhal/mini_printf.c',
     'embed/trezorhal/mpu.c',
+    'embed/trezorhal/random_delays.c',
     'embed/trezorhal/rng.c',
     'embed/trezorhal/sbu.c',
     'embed/trezorhal/sdcard.c',
@@ -347,9 +350,6 @@ SOURCE_TREZORHAL = [
 ]
 
 if FEATURE_FLAGS["RDI"]:
-    SOURCE_TREZORHAL += [
-        'embed/trezorhal/rdi.c',
-    ]
     CPPDEFINES_MOD += ['RDI']
 
 if FEATURE_FLAGS["SYSTEM_VIEW"]:
@@ -394,11 +394,13 @@ if TREZOR_MODEL == 'T':
     CPU_CCFLAGS = '-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 '
     CPU_MODEL   = 'STM32F427xx'
     LD_VARIANT  = '_zkp' if FEATURE_FLAGS["SECP256K1_ZKP"] else ''
+    RUST_TARGET = 'thumbv7em-none-eabihf'
 elif TREZOR_MODEL == '1':
     CPU_ASFLAGS = '-mthumb -mcpu=cortex-m3 -mfloat-abi=soft'
     CPU_CCFLAGS = '-mthumb -mtune=cortex-m3 -mcpu=cortex-m3 -mfloat-abi=soft '
     CPU_MODEL   = 'STM32F405xx'
     LD_VARIANT  = '' if EVERYTHING else '_min'
+    RUST_TARGET = 'thumbv7m-none-eabi'
 else:
     raise ValueError('Unknown Trezor model')
 
@@ -416,6 +418,7 @@ env.Replace(
     LINKFLAGS='-T embed/firmware/memory_${TREZOR_MODEL}%s.ld -Wl,--gc-sections -Wl,-Map=build/firmware/firmware.map -Wl,--warn-common' % LD_VARIANT,
     CPPPATH=[
         '.',
+        'embed/rust',
         'embed/firmware',
         'embed/trezorhal',
         'embed/extmod/modtrezorui',
@@ -617,6 +620,33 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
     )
 
 #
+# Rust library
+#
+
+#RUST_PROFILE = 'release'
+#RUST_LIB = 'trezor_lib'
+#RUST_LIBDIR = f'build/rust/{RUST_TARGET}/{RUST_PROFILE}'
+#RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
+#
+#def cargo_build():
+#    # Determine the profile build flags.
+#    if RUST_PROFILE == 'release':
+#        profile = '--release'
+#    else:
+#        profile = ''
+#    return f'cd embed/rust; cargo build {profile} --target={RUST_TARGET}'
+#
+#rust = env.Command(
+#    target=RUST_LIBPATH,
+#    source='',
+#    action=cargo_build(), )
+#
+#env.Depends(rust, qstr_generated)
+#
+#env.Append(LINKFLAGS=f' -L{RUST_LIBDIR}')
+#env.Append(LINKFLAGS=f' -l{RUST_LIB}')
+
+#
 # Program objects
 #
 
@@ -658,8 +688,10 @@ program_elf = env.Command(
     target='firmware.elf',
     source=obj_program,
     action=
-    '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lm -lgcc',
+    '$LINK -o $TARGET $CCFLAGS $CFLAGS $SOURCES $LINKFLAGS -lc_nano -lm -lgcc',
 )
+
+#env.Depends(program_elf, rust)
 
 if TREZOR_MODEL == 'T':
     action_bin=[

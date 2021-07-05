@@ -86,8 +86,8 @@ You can use `TREZOR_OLED_SCALE` environment variable to make emulator screen big
 
 ## How to get fingerprint of firmware signed and distributed by SatoshiLabs?
 
-1. Pick version of firmware binary listed on https://wallet.trezor.io/data/firmware/1/releases.json
-2. Download it: `wget -O trezor.signed.bin https://wallet.trezor.io/data/firmware/1/trezor-1.6.1.bin`
+1. Pick version of firmware binary listed on https://data.trezor.io/firmware/1/releases.json
+2. Download it: `wget -O trezor.signed.bin https://data.trezor.io/firmware/1/trezor-1.9.4.bin`
 3. Use `trezorctl` dry-run mode to get the firmware fingerprint:
    ```sh
    trezorctl firmware-update -n -f trezor.signed.bin
@@ -117,7 +117,7 @@ This table shows the result for bootloader 1.8.0+ and 1.9.1+:
 | ------------------------- | ----------------------- | ------------------------------ | ------------------------------------------------------------------------------------------ |
 |  1                        |  1                      | yes                            | works, official configuration                                                              |
 |  1                        |  1                      | no                             | hardfault in header.S when setting VTOR and stack                                          |
-|  0                        |  1                      | no                             | works, but don't forget to comment out `check_bootloader`, otherwise it'll get overwritten |
+|  0                        |  1                      | no                             | works, but don't forget to comment out `check_and_replace_bootloader`, otherwise it'll get overwritten |
 |  0                        |  0                      | no                             | hard fault because header.S doesn't set VTOR and stack right                               |
 |  1                        |  0                      | no                             | works                                                                                      |
 

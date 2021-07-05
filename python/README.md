@@ -20,7 +20,7 @@ On a typical system, you already have all you need. Install `trezor` with:
 pip3 install trezor
 ```
 
-On Windows, you also need to either install [Trezor Bridge](https://wallet.trezor.io/#/bridge), or
+On Windows, you also need to either install [Trezor Bridge](https://suite.trezor.io/web/bridge/), or
 [libusb](https://github.com/libusb/libusb/wiki/Windows) and the appropriate
 [drivers](https://zadig.akeo.ie/).
 

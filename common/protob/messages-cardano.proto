@@ -116,17 +116,19 @@ message CardanoPublicKey {
  * @next Failure
  */
 message CardanoSignTx {
-    repeated CardanoTxInputType inputs = 1;             // inputs to be used in transaction
-    repeated CardanoTxOutputType outputs = 2;           // outputs to be used in transaction
-    // optional uint32 transactions_count = 3;          // left as a comment so we know to skip the id 3 in the future
-    required uint32 protocol_magic = 5;                 // network's protocol magic
-    required uint64 fee = 6;                            // transaction fee - added in shelley
-    optional uint64 ttl = 7;                            // transaction ttl - added in shelley
-    required uint32 network_id = 8;                     // network id - mainnet or testnet
-    repeated CardanoTxCertificateType certificates = 9; // transaction certificates - added in shelley
-    repeated CardanoTxWithdrawalType withdrawals = 10;  // transaction withdrawals - added in shelley
-    optional bytes metadata = 11;                       // transaction metadata - added in shelley
-    optional uint64 validity_interval_start = 12;       // transaction validity start - added in allegra
+    repeated CardanoTxInputType inputs = 1;                     // inputs to be used in transaction
+    repeated CardanoTxOutputType outputs = 2;                   // outputs to be used in transaction
+    // optional uint32 transactions_count = 3;                  // left as a comment so we know to skip the id 3 in the future
+    // optional uint32 network = 4;                             // replaced with protocol_magic
+    required uint32 protocol_magic = 5;                         // network's protocol magic
+    required uint64 fee = 6;                                    // transaction fee - added in shelley
+    optional uint64 ttl = 7;                                    // transaction ttl - added in shelley
+    required uint32 network_id = 8;                             // network id - mainnet or testnet
+    repeated CardanoTxCertificateType certificates = 9;         // transaction certificates - added in shelley
+    repeated CardanoTxWithdrawalType withdrawals = 10;          // transaction withdrawals - added in shelley
+    // optional bytes metadata = 11;                            // replaced in Mary era with auxiliary data below
+    optional uint64 validity_interval_start = 12;               // transaction validity start - added in allegra
+    optional CardanoTxAuxiliaryDataType auxiliary_data = 13;    // transaction auxiliary data
 
     /**
      * Structure representing cardano transaction input
@@ -217,6 +219,18 @@ message CardanoSignTx {
     message CardanoTxWithdrawalType {
         repeated uint32 path = 1;
         required uint64 amount = 2;
+    }
+
+    message CardanoCatalystRegistrationParametersType {
+        required bytes voting_public_key = 1;
+        repeated uint32 staking_path = 2;
+        required CardanoAddressParametersType reward_address_parameters = 3;
+        required uint64 nonce = 4;
+    }
+
+    message CardanoTxAuxiliaryDataType {
+        optional bytes blob = 1;
+        optional CardanoCatalystRegistrationParametersType catalyst_registration_parameters = 2;
     }
 }
 

@@ -197,7 +197,8 @@ def with_slip44_keychain(
 
     schemas = []
     for pattern in patterns:
-        schemas.append(paths.PathSchema(pattern=pattern, slip44_id=slip44_ids))
+        schemas.append(paths.PathSchema.parse(pattern=pattern, slip44_id=slip44_ids))
+    schemas = [s.copy() for s in schemas]
 
     def decorator(func: HandlerWithKeychain[MsgIn, MsgOut]) -> Handler[MsgIn, MsgOut]:
         async def wrapper(ctx: wire.Context, msg: MsgIn) -> MsgOut:

@@ -20,8 +20,6 @@ REVIEWER = Jan Matejek <jan.matejek@satoshilabs.com>, Tomas Susanka <tomas.susan
 
 ## Important notes
 
-Unfortunately we are aware of the fact that currently at most ~14 inputs are supported per transaction. To resolve this, the cardano app will have to be rewritten to support transaction streaming.
-
 Cardano requires a custom `seed.py` file and `Keychain` class. This is because the original Cardano derivation schemes don't separate seed generation from key tree derivation and also because we need to support both Byron (44') and Shelley (1852') purposes. More on this can be found [here](https://github.com/satoshilabs/slips/blob/master/slip-0023.md) and [here](https://github.com/input-output-hk/implementation-decisions/blob/e2d1bed5e617f0907bc5e12cf1c3f3302a4a7c42/text/1852-hd-chimeric.md).
 
 Cardano uses extended public keys. This also means that the transaction signature is built using the `ed25519.sign_ext` function.
@@ -126,8 +124,6 @@ Transaction outputs may include custom tokens on top of ADA tokens:
 
 Please see the transaction below for more details.
 
-**The serialized transaction output size is currently limited to 512 bytes. This limitation is a mitigation measure to prevent sending large (especially change) outputs containing many tokens that Trezor would not be able to spend given that currently the full Cardano transaction is held in-memory. Once Cardano-transaction signing is refactored to be streamed, this limit can be lifted**
-
 #### Certificates
 
 Certificates are posted to the blockchain via transactions and they mark a certain action, thus there are multiple certificate types:
@@ -151,11 +147,17 @@ Withdrawals are posted to the blockchain via transactions and they are used to w
 
 You can read more on withdrawals in the [delegation design spec](https://hydra.iohk.io/build/2006688/download/1/delegation_design_spec.pdf) (there is not a dedicated section to withdrawals, simply search for 'withdrawal').
 
-#### Metadata
+#### Auxiliary data
 
-Each transaction may contain metadata. Metadata format can be found [here](https://github.com/input-output-hk/cardano-ledger-specs/blob/097890495cbb0e8b62106bcd090a5721c3f4b36f/shelley-ma/shelley-ma-test/cddl-files/shelley-ma.cddl#L212). It's basically a CBOR serialized map and can contain numbers, bytes, strings or nested maps/lists.
+_Auxiliary data have replaced metadata in the Cardano Mary era_
 
-Due to memory limitations we currently enforce a maximum size of 500 bytes for metadata.
+Each transaction may contain auxiliary data. Auxiliary data format can be found [here](https://github.com/input-output-hk/cardano-ledger-specs/blob/57c27d168b8d4288534ce74e77c1df33870e756a/shelley-ma/shelley-ma-test/cddl-files/shelley-ma.cddl#L212).
+
+Auxiliary data can be sent to Trezor as a blob or as an object with parameters. The blob will be included in the transaction as is.
+
+The only object currently supported is Catalyst voting key registration. To be in compliance with the CDDL and other Cardano tools, Catalyst voting key registration object is being wrapped in a tuple and an empty tuple follows it. The empty tuple represents `auxiliary_scripts` which are not yet supported on Trezor and are thus always empty. Byron addresses are not supported as Catalyst reward addresses.
+
+[Catalyst Registration Transaction Metadata Format](https://github.com/cardano-foundation/CIPs/blob/749f22eccd78e05fcdc4552c49639bb3bbd0a458/CIP-0015/CIP-0015.md)
 
 #### Transaction Explorer
 
@@ -170,7 +172,7 @@ Cardano uses [CBOR](https://www.rfc-editor.org/info/rfc7049) as a serialization 
 
 #### Raw transaction example
 ```
-83a700818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018282583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff821904d2a1581c95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39a14874652474436f696e1910e18258390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b427719115c02182a030a048182008200581c122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b427705a1581de1122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b42771903e80814a10082825820bc65be1b0b9d7531778a1317c2aa6de936963c3f9ac7d5ee9e9eda25e0c97c5e5840c6e85c7eec254f765ddc119b1f40ef50944dcb1882822c3d61641785bbc312d1049ed0a92ded74745986f5d464d0d0caafc9f0c66285a056309d3d39cf19b20e8258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c158401feabb9e56bca7d3cb75f0942d1ebaec92f167193c70fb9b416e9ae3d3e0f368f49fde3f4a862eb6a02f9a27834d0b7c1f6dd689616809432c99f3ab7249ad0ef6
+83a800818258203b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b700018282583901eb0baa5e570cffbe2934db29df0b6a3d7c0430ee65d4c3a7ab2fefb91bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff821904d2a1581c95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39a14874652474436f696e1910e18258390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b427719115c02182a030a048182008200581c122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b427705a1581de1122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b42771903e80758205410cfffe33d9da8b3ab789068f12e0464fad13f586f92d8c8c2fcac68c1a9c00814a100828258205d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c158406478ca1a1d1bab66688a19e983fbff9e7f9120f0035d9663ae8eb917cf01ce1c4b47834d06f41cf0c7c5218be0224ab1d88de97b20572d6fdc3cb1e40b662300825820bc65be1b0b9d7531778a1317c2aa6de936963c3f9ac7d5ee9e9eda25e0c97c5e584023ddaf5c9f5c9a22fd646f1c1c5a3f1a84c3a43d90d2211e919450c35df53bcded772e0badb33a898c03f3c227765bc21e678d85b716e0055ca9d89274d6660e82a219ef64a4015820cdea4080a301fdfda7a6b9c8b5283273f51af5f34ae587e05c5492f90a2ae54f025820bc65be1b0b9d7531778a1317c2aa6de936963c3f9ac7d5ee9e9eda25e0c97c5e0358390180f9e2c88e6c817008f3a812ed889b4a4da8e0bd103f86e7335422aa122a946b9ad3d2ddf029d3a828f0468aece76895f15c9efbd69b4277041a015d76c419ef65a101584017ed3f6a8ef2d0f1212e3aa49766fcf22b087c6cfa5cf247ecbc6c27069d7c17f189f2ca0acf6f1d54e1999e12fc37ac695c693982df96430896b54e0bcff10780
 ```
 
 #### The same transactions with structure description
@@ -220,6 +222,9 @@ Cardano uses [CBOR](https://www.rfc-editor.org/info/rfc7049) as a serialization 
    # uint(5), map(1), bytes(29), uint(7204944340)
    5: {h'E11...': 1000},
 
+   # auxiliary data hash
+   7: h'541...',
+
    # validity_interval_start
    # uint(8), uint(20)
    8: 20
@@ -231,14 +236,30 @@ Cardano uses [CBOR](https://www.rfc-editor.org/info/rfc7049) as a serialization 
    # uint(0), array(2)
    0: [
        # array(2), bytes(32), bytes(64)
-       [h'BC6...', h'C6E...'],
+       [h'5D0...', h'647...'],
        # array(2), bytes(32), bytes(64)
-       [h'5D0...', h'1FE...']
+       [h'BC6...', h'23D...']
    ]
  },
-
- # metadata
- # primitive(22)
- null
+ # auxiliary data - catalyst voting key registration
+ # array(2)
+ [
+   # map(2)
+   {
+     # uint(61284), map(4), uint(1), bytes(32), uint(2), bytes(32), uint(3), bytes(57), uint(4), uint(22902468)
+     61284: {
+       1: h'CDE...',
+       2: h'BC6...',
+       3: h'018...',
+       4: 22902468
+     },
+     # uint(61285), map(1), bytes(64)
+     61285: {
+       1:h'17E...'
+     }
+   },
+   # array(0)
+   []
+ ]
 ]
 ```

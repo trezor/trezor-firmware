@@ -4,7 +4,6 @@ from trezor.crypto.hashlib import sha256
 from trezor.utils import ensure
 
 from apps.common.writers import (  # noqa: F401
-    empty_bytearray,
     write_bitcoin_varint,
     write_bytes_fixed,
     write_bytes_reversed,

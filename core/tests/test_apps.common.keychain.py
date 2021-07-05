@@ -3,9 +3,8 @@ from common import *
 from mock_storage import mock_storage
 
 from storage import cache
-import storage.device
 from apps.common import safety_checks
-from apps.common.paths import PATTERN_SEP5, PathSchema, path_is_hardened
+from apps.common.paths import PATTERN_SEP5, PathSchema
 from apps.common.keychain import LRUCache, Keychain, with_slip44_keychain, get_keychain
 from trezor import wire
 from trezor.crypto import bip39
@@ -22,8 +21,8 @@ class TestKeychain(unittest.TestCase):
     @mock_storage
     def test_verify_path(self):
         schemas = (
-            PathSchema("m/44'/coin_type'", slip44_id=134),
-            PathSchema("m/44'/coin_type'", slip44_id=11),
+            PathSchema.parse("m/44'/coin_type'", slip44_id=134),
+            PathSchema.parse("m/44'/coin_type'", slip44_id=11),
         )
         keychain = Keychain(b"", "secp256k1", schemas)
 
@@ -49,7 +48,7 @@ class TestKeychain(unittest.TestCase):
             keychain.verify_path(path)
 
     def test_verify_path_special_ed25519(self):
-        schema = PathSchema("m/44'/coin_type'/*", slip44_id=134)
+        schema = PathSchema.parse("m/44'/coin_type'/*", slip44_id=134)
         k = Keychain(b"", "ed25519-keccak", [schema])
 
         # OK case
@@ -74,7 +73,7 @@ class TestKeychain(unittest.TestCase):
         seed = bip39.seed(" ".join(["all"] * 12), "")
         cache.set(cache.APP_COMMON_SEED, seed)
 
-        schema = PathSchema("m/44'/1'", 0)
+        schema = PathSchema.parse("m/44'/1'", 0)
         keychain = await_result(
             get_keychain(wire.DUMMY_CONTEXT, "secp256k1", [schema])
         )

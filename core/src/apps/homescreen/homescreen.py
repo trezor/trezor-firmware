@@ -2,6 +2,7 @@ import utime
 from micropython import const
 
 import storage
+import storage.cache
 import storage.device
 from trezor import config, ui
 from trezor.ui.loader import Loader, LoaderNeutral
@@ -20,6 +21,8 @@ async def homescreen() -> None:
 
 
 class Homescreen(HomescreenBase):
+    RENDER_INDICATOR = storage.cache.HOMESCREEN_ON
+
     def __init__(self) -> None:
         super().__init__()
         if not storage.device.is_initialized():
@@ -33,10 +36,14 @@ class Homescreen(HomescreenBase):
         )
         self.touch_ms: int | None = None
 
+<<<<<<< HEAD
     def on_render(self) -> None:
         if not self.repaint:
             return
 
+=======
+    def do_render(self) -> None:
+>>>>>>> legacy/v1.10.1
         # warning bar on top
         if storage.device.is_initialized() and storage.device.no_backup():
             ui.header_error("SEEDLESS")
@@ -52,11 +59,14 @@ class Homescreen(HomescreenBase):
             ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT, ui.BG)
 
         # homescreen with shifted avatar and text on bottom
-        ui.display.avatar(48, 48 - 10, self.image, ui.WHITE, ui.BLACK)
+        ui.display.avatar(48, 48 - 10, self.get_image(), ui.WHITE, ui.BLACK)
         ui.display.text_center(ui.WIDTH // 2, 220, self.label, ui.BOLD, ui.FG, ui.BG)
 
+<<<<<<< HEAD
         self.repaint = False
 
+=======
+>>>>>>> legacy/v1.10.1
     def on_touch_start(self, _x: int, _y: int) -> None:
         if self.loader.start_ms is not None:
             self.loader.start()
@@ -65,7 +75,11 @@ class Homescreen(HomescreenBase):
 
     def on_touch_end(self, _x: int, _y: int) -> None:
         if self.loader.start_ms is not None:
+<<<<<<< HEAD
             self.repaint = True
+=======
+            self.set_repaint(True)
+>>>>>>> legacy/v1.10.1
         self.loader.stop()
         self.touch_ms = None
 

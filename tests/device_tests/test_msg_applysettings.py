@@ -165,11 +165,10 @@ class TestMsgApplysettings:
             _set_expected_responses(client)
             device.apply_settings(client, homescreen=img)
 
-    @pytest.mark.skip_t1
     @pytest.mark.setup_client(pin=None)
     def test_safety_checks(self, client):
         def get_bad_address():
-            btc.get_address(client, "Bitcoin", parse_path("m/0"))
+            btc.get_address(client, "Bitcoin", parse_path("m/44'"), show_display=True)
 
         assert client.features.safety_checks == messages.SafetyCheckLevel.Strict
 
@@ -179,17 +178,22 @@ class TestMsgApplysettings:
             client.set_expected_responses([messages.Failure])
             get_bad_address()
 
-        with client:
-            client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
-            device.apply_settings(
-                client, safety_checks=messages.SafetyCheckLevel.PromptAlways
+        if client.features.model != "1":
+            with client:
+                client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
+                device.apply_settings(
+                    client, safety_checks=messages.SafetyCheckLevel.PromptAlways
+                )
+
+            assert (
+                client.features.safety_checks == messages.SafetyCheckLevel.PromptAlways
             )
 
-        assert client.features.safety_checks == messages.SafetyCheckLevel.PromptAlways
-
-        with client:
-            client.set_expected_responses([messages.Address])
-            get_bad_address()
+            with client:
+                client.set_expected_responses(
+                    [messages.ButtonRequest, messages.ButtonRequest, messages.Address]
+                )
+                get_bad_address()
 
         with client:
             client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
@@ -216,7 +220,9 @@ class TestMsgApplysettings:
         )
 
         with client:
-            client.set_expected_responses([messages.Address])
+            client.set_expected_responses(
+                [messages.ButtonRequest, messages.ButtonRequest, messages.Address]
+            )
             get_bad_address()
 
     @pytest.mark.skip_t1
@@ -247,6 +253,21 @@ class TestMsgApplysettings:
             )
             experimental_call()
 
+        # relock and try again
+        client.lock()
+        with client:
+            client.use_pin_sequence([PIN4])
+            client.set_expected_responses(
+                [
+                    messages.ButtonRequest,
+                    messages.ButtonRequest,
+                    messages.ButtonRequest,
+                    messages.Success,
+                ]
+            )
+            experimental_call()
+
+        # unset experimental features
         with client:
             client.set_expected_responses([messages.Success, messages.Features])
             device.apply_settings(client, experimental_features=False)

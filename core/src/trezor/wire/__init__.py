@@ -36,7 +36,8 @@ reads the message's header. When the message type is known the first handler is 
 """
 
 import protobuf
-from trezor import log, loop, messages, ui, utils, workflow
+from storage.cache import InvalidSessionError
+from trezor import log, loop, messages, utils, workflow
 from trezor.messages import FailureType
 from trezor.messages.Failure import Failure
 from trezor.wire import codec_v1
@@ -51,6 +52,7 @@ if False:
         Any,
         Awaitable,
         Callable,
+        Container,
         Coroutine,
         Iterable,
         TypeVar,
@@ -62,6 +64,7 @@ if False:
     Handler = Callable[["Context", Msg], HandlerTask]
 
 
+<<<<<<< HEAD
 # Maps a wire type directly to a handler.
 workflow_handlers: dict[int, Handler] = {}
 
@@ -69,29 +72,15 @@ workflow_handlers: dict[int, Handler] = {}
 # to be dynamically imported when such message arrives.
 workflow_packages: dict[int, tuple[str, str]] = {}
 
+=======
+>>>>>>> legacy/v1.10.1
 # If set to False protobuf messages marked with "unstable" option are rejected.
 experimental_enabled: bool = False
 
 
-def add(wire_type: int, pkgname: str, modname: str) -> None:
-    """Shortcut for registering a dynamically-imported Protobuf workflow."""
-    workflow_packages[wire_type] = (pkgname, modname)
-
-
-def register(wire_type: int, handler: Handler) -> None:
-    """Register `handler` to get scheduled after `wire_type` message is received."""
-    workflow_handlers[wire_type] = handler
-
-
-def setup(iface: WireInterface, use_workflow: bool = True) -> None:
+def setup(iface: WireInterface, is_debug_session: bool = False) -> None:
     """Initialize the wire stack on passed USB interface."""
-    loop.schedule(handle_session(iface, codec_v1.SESSION_ID, use_workflow))
-
-
-def clear() -> None:
-    """Remove all registered handlers."""
-    workflow_handlers.clear()
-    workflow_packages.clear()
+    loop.schedule(handle_session(iface, codec_v1.SESSION_ID, is_debug_session))
 
 
 if False:
@@ -150,13 +139,16 @@ DUMMY_CONTEXT = DummyContext()
 
 PROTOBUF_BUFFER_SIZE = 8192
 
+WIRE_BUFFER = bytearray(PROTOBUF_BUFFER_SIZE)
+if __debug__:
+    WIRE_BUFFER_DEBUG = bytearray(PROTOBUF_BUFFER_SIZE)
+
 
 class Context:
-    def __init__(self, iface: WireInterface, sid: int) -> None:
+    def __init__(self, iface: WireInterface, sid: int, buffer: bytearray) -> None:
         self.iface = iface
         self.sid = sid
-        self.buffer = bytearray(PROTOBUF_BUFFER_SIZE)
-        self.buffer_reader = utils.BufferReader(self.buffer)
+        self.buffer = buffer
         self.buffer_writer = utils.BufferWriter(self.buffer)
 
         self._field_cache: protobuf.FieldCache = {}
@@ -179,8 +171,7 @@ class Context:
         return await self.read_any(expected_wire_types)
 
     async def read_from_wire(self) -> codec_v1.Message:
-        self.buffer_writer.seek(0)
-        return await codec_v1.read_message(self.iface, self.buffer_writer.buffer)
+        return await codec_v1.read_message(self.iface, self.buffer)
 
     async def read(
         self,
@@ -301,6 +292,7 @@ class UnexpectedMessageError(Exception):
         self.msg = msg
 
 
+<<<<<<< HEAD
 async def handle_session(
     iface: WireInterface, session_id: int, use_workflow: bool = True
 ) -> None:
@@ -336,147 +328,192 @@ async def handle_session(
                 # this message instead of waiting for new one.
                 msg = next_msg
                 next_msg = None
+=======
+async def _handle_single_message(
+    ctx: Context, msg: codec_v1.Message, use_workflow: bool
+) -> codec_v1.Message | None:
+    """Handle a message that was loaded from USB by the caller.
+>>>>>>> legacy/v1.10.1
 
-            # Now we are in a middle of reading a message and we need to decide
-            # what to do with it, based on its type from the message header.
-            # From this point on, we should take care to read it in full and
-            # send a response.
+    Find the appropriate handler, run it and write its result on the wire. In case
+    a problem is encountered at any point, write the appropriate error on the wire.
 
-            # Take a mark of modules that are imported at this point, so we can
-            # roll back and un-import any others.  Should not raise.
-            modules = utils.unimport_begin()
+    If the workflow finished normally or with an error, the return value is None.
 
-            # We need to find a handler for this message type.  Should not
-            # raise.
-            handler = find_handler(iface, msg.type)
+    If an unexpected message had arrived on the wire while the workflow was processing,
+    the workflow is shut down with an `UnexpectedMessageError`. This is not considered
+    an "error condition" to return over the wire -- instead the message is processed
+    as if starting a new workflow.
+    In such case, the `UnexpectedMessageError` is caught and the message is returned
+    to the caller. It will then be processed in the next iteration of the message loop.
+    """
+    if __debug__:
+        try:
+            msg_type = messages.get_type(msg.type).__name__
+        except KeyError:
+            msg_type = "%d - unknown message type" % msg.type
+        log.debug(
+            __name__,
+            "%s:%x receive: <%s>",
+            ctx.iface.iface_num(),
+            ctx.sid,
+            msg_type,
+        )
 
-            if handler is None:
-                # If no handler is found, we can skip decoding and directly
-                # respond with failure.  Should not raise.
-                res_msg = unexpected_message()
+    res_msg: protobuf.MessageType | None = None
 
+    # We need to find a handler for this message type.  Should not raise.
+    handler = find_handler(ctx.iface, msg.type)
+
+    if handler is None:
+        # If no handler is found, we can skip decoding and directly
+        # respond with failure.
+        await ctx.write(unexpected_message())
+        return None
+
+    # Here we make sure we always respond with a Failure response
+    # in case of any errors.
+    try:
+        # Find a protobuf.MessageType subclass that describes this
+        # message.  Raises if the type is not found.
+        req_type = messages.get_type(msg.type)
+
+        # Try to decode the message according to schema from
+        # `req_type`. Raises if the message is malformed.
+        req_msg = _wrap_protobuf_load(msg.data, req_type)
+
+        # Create the handler task.
+        task = handler(ctx, req_msg)
+
+        # Run the workflow task.  Workflow can do more on-the-wire
+        # communication inside, but it should eventually return a
+        # response message, or raise an exception (a rather common
+        # thing to do).  Exceptions are handled in the code below.
+        if use_workflow:
+            # Spawn a workflow around the task. This ensures that concurrent
+            # workflows are shut down.
+            res_msg = await workflow.spawn(task)
+        else:
+            # For debug messages, ignore workflow processing and just await
+            # results of the handler.
+            res_msg = await task
+
+    except UnexpectedMessageError as exc:
+        # Workflow was trying to read a message from the wire, and
+        # something unexpected came in.  See Context.read() for
+        # example, which expects some particular message and raises
+        # UnexpectedMessageError if another one comes in.
+        # In order not to lose the message, we return it to the caller.
+        # TODO:
+        # We might handle only the few common cases here, like
+        # Initialize and Cancel.
+        return exc.msg
+
+    except BaseException as exc:
+        # Either:
+        # - the message had a type that has a registered handler, but does not have
+        #   a protobuf class
+        # - the message was not valid protobuf
+        # - workflow raised some kind of an exception while running
+        # - something canceled the workflow from the outside
+        if __debug__:
+            if isinstance(exc, ActionCancelled):
+                log.debug(__name__, "cancelled: {}".format(exc.message))
+            elif isinstance(exc, loop.TaskClosed):
+                log.debug(__name__, "cancelled: loop task was closed")
             else:
-                # We found a valid handler for this message type.
+                log.exception(__name__, exc)
+        res_msg = failure(exc)
 
+<<<<<<< HEAD
                 # Workflow task, declared for the finally block
                 wf_task: HandlerTask | None = None
-
-                # Here we make sure we always respond with a Failure response
-                # in case of any errors.
-                try:
-                    # Find a protobuf.MessageType subclass that describes this
-                    # message.  Raises if the type is not found.
-                    req_type = messages.get_type(msg.type)
-
-                    # Try to decode the message according to schema from
-                    # `req_type`. Raises if the message is malformed.
-                    req_msg = _wrap_protobuf_load(msg.data, req_type)
-
-                    # At this point, message reports are all processed and
-                    # correctly parsed into `req_msg`.
-
-                    # Create the workflow task.
-                    wf_task = handler(ctx, req_msg)
-
-                    # Run the workflow task.  Workflow can do more on-the-wire
-                    # communication inside, but it should eventually return a
-                    # response message, or raise an exception (a rather common
-                    # thing to do).  Exceptions are handled in the code below.
-                    if use_workflow:
-                        res_msg = await workflow.spawn(wf_task)
-                    else:
-                        res_msg = await wf_task
-
-                except UnexpectedMessageError as exc:
-                    # Workflow was trying to read a message from the wire, and
-                    # something unexpected came in.  See Context.read() for
-                    # example, which expects some particular message and raises
-                    # UnexpectedMessageError if another one comes in.
-                    # In order not to lose the message, we pass on the reader
-                    # to get picked up by the workflow logic in the beginning of
-                    # the cycle, which processes it in the usual manner.
-                    # TODO:
-                    # We might handle only the few common cases here, like
-                    # Initialize and Cancel.
-                    next_msg = exc.msg
-                    res_msg = None
-
-                except Exception as exc:
-                    # Either:
-                    # - the first workflow message had a type that has a
-                    #   registered handler, but does not have a protobuf class
-                    # - the first workflow message was not a valid protobuf
-                    # - workflow raised some kind of an exception while running
-                    # - something canceled the workflow from the outside
-                    if __debug__:
-                        if isinstance(exc, ActionCancelled):
-                            log.debug(__name__, "cancelled: {}".format(exc.message))
-                        elif isinstance(exc, loop.TaskClosed):
-                            log.debug(__name__, "cancelled: loop task was closed")
-                        else:
-                            log.exception(__name__, exc)
-                    res_msg = failure(exc)
-
-                finally:
-                    # If we ran a workflow task, and a default workflow is on, make sure
-                    # we do not race against the layout that is inside.
-                    # TODO: this is very hacky and complects wire with the ui
-                    if wf_task is not None and workflow.default_task is not None:
-                        await ui.wait_until_layout_is_running()
-
-            if res_msg is not None:
-                # Either the workflow returned a response, or we created one.
-                # Write it on the wire.  Possibly, the incoming message haven't
-                # been read in full.  We ignore this case here and let the rest
-                # of the reports get processed while waiting for the message
-                # header.
-                # TODO: if the write fails, we do not unimport the loaded modules
-                await ctx.write(res_msg)
-
-            # Cleanup, so garbage collection triggered after un-importing can
-            # pick up the trash.
-            req_type = None
-            req_msg = None
-            res_msg = None
-            handler = None
-            wf_task = None
-
-            # Unload modules imported by the workflow.  Should not raise.
-            utils.unimport_end(modules)
-
-        except Exception as exc:
-            # The session handling should never exit, just log and continue.
-            if __debug__:
-                log.exception(__name__, exc)
+=======
+    if res_msg is not None:
+        # perform the write outside the big try-except block, so that usb write
+        # problem bubbles up
+        await ctx.write(res_msg)
+    return None
+>>>>>>> legacy/v1.10.1
 
 
+async def handle_session(
+    iface: WireInterface, session_id: int, is_debug_session: bool = False
+) -> None:
+    if __debug__ and is_debug_session:
+        ctx_buffer = WIRE_BUFFER_DEBUG
+    else:
+        ctx_buffer = WIRE_BUFFER
+    ctx = Context(iface, session_id, ctx_buffer)
+    next_msg: codec_v1.Message | None = None
+
+    if __debug__ and is_debug_session:
+        import apps.debug
+
+<<<<<<< HEAD
 def find_registered_workflow_handler(
     iface: WireInterface, msg_type: int
 ) -> Handler | None:
     if msg_type in workflow_handlers:
         # Message has a handler available, return it directly.
         handler = workflow_handlers[msg_type]
+=======
+        apps.debug.DEBUG_CONTEXT = ctx
+>>>>>>> legacy/v1.10.1
 
-    elif msg_type in workflow_packages:
-        # Message needs a dynamically imported handler, import it.
-        pkgname, modname = workflow_packages[msg_type]
-        handler = import_workflow(pkgname, modname)
+    # Take a mark of modules that are imported at this point, so we can
+    # roll back and un-import any others.
+    modules = utils.unimport_begin()
+    while True:
+        try:
+            if next_msg is None:
+                # If the previous run did not keep an unprocessed message for us,
+                # wait for a new one coming from the wire.
+                try:
+                    msg = await ctx.read_from_wire()
+                except codec_v1.CodecError as exc:
+                    if __debug__:
+                        log.exception(__name__, exc)
+                    await ctx.write(failure(exc))
+                    continue
 
-    else:
-        # Message does not have any registered handler.
-        return None
+            else:
+                # Process the message from previous run.
+                msg = next_msg
+                next_msg = None
 
-    return handler
+            try:
+                next_msg = await _handle_single_message(
+                    ctx, msg, use_workflow=not is_debug_session
+                )
+            finally:
+                if not __debug__ or not is_debug_session:
+                    # Unload modules imported by the workflow.  Should not raise.
+                    # This is not done for the debug session because the snapshot taken
+                    # in a debug session would clear modules which are in use by the
+                    # workflow running on wire.
+                    utils.unimport_end(modules)
+
+                    if next_msg is None and msg.type not in AVOID_RESTARTING_FOR:
+                        # Shut down the loop if there is no next message waiting.
+                        # Let the session be restarted from `main`.
+                        loop.clear()
+                        return
+
+        except Exception as exc:
+            # Log and try again. The session handler can only exit explicitly via
+            # loop.clear() above.
+            if __debug__:
+                log.exception(__name__, exc)
 
 
-find_handler = find_registered_workflow_handler
+def _find_handler_placeholder(iface: WireInterface, msg_type: int) -> Handler | None:
+    """Placeholder handler lookup before a proper one is registered."""
+    return None
 
 
-def import_workflow(pkgname: str, modname: str) -> Any:
-    modpath = "%s.%s" % (pkgname, modname)
-    module = __import__(modpath, None, None, (modname,), 0)
-    handler = getattr(module, modname)
-    return handler
+find_handler = _find_handler_placeholder
+AVOID_RESTARTING_FOR: Container[int] = ()
 
 
 def failure(exc: BaseException) -> Failure:
@@ -484,6 +521,8 @@ def failure(exc: BaseException) -> Failure:
         return Failure(code=exc.code, message=exc.message)
     elif isinstance(exc, loop.TaskClosed):
         return Failure(code=FailureType.ActionCancelled, message="Cancelled")
+    elif isinstance(exc, InvalidSessionError):
+        return Failure(code=FailureType.InvalidSession, message="Invalid session")
     else:
         return Failure(code=FailureType.FirmwareError, message="Firmware error")
 

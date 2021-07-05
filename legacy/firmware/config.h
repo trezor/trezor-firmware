@@ -162,6 +162,9 @@ bool config_getFlags(uint32_t *flags);
 uint32_t config_getAutoLockDelayMs(void);
 void config_setAutoLockDelayMs(uint32_t auto_lock_delay_ms);
 
+SafetyCheckLevel config_getSafetyCheckLevel(void);
+void config_setSafetyCheckLevel(SafetyCheckLevel safety_check_level);
+
 void config_wipe(void);
 
 extern char config_uuid_str[2 * UUID_SIZE + 1];

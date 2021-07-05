@@ -3,12 +3,7 @@ from trezor.crypto import bip32, hashlib, hmac
 
 from apps.common.keychain import Keychain
 from apps.common.readers import read_bitcoin_varint
-from apps.common.writers import (
-    empty_bytearray,
-    write_bitcoin_varint,
-    write_bytes_fixed,
-    write_uint8,
-)
+from apps.common.writers import write_bitcoin_varint, write_bytes_fixed, write_uint8
 
 from . import common
 from .scripts import read_bip322_signature_proof, write_bip322_signature_proof
@@ -43,7 +38,7 @@ def generate_proof(
     if user_confirmed:
         flags |= _FLAG_USER_CONFIRMED
 
-    proof = empty_bytearray(4 + 1 + 1 + len(ownership_ids) * _OWNERSHIP_ID_LEN)
+    proof = utils.empty_bytearray(4 + 1 + 1 + len(ownership_ids) * _OWNERSHIP_ID_LEN)
 
     write_bytes_fixed(proof, _VERSION_MAGIC, 4)
     write_uint8(proof, flags)

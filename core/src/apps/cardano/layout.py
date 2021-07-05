@@ -85,11 +85,22 @@ async def confirm_sending(
     page1.bold(format_coin_amount(ada_amount))
     page1.normal("to")
 
+<<<<<<< HEAD
     to_lines = list(chunks(to, 17))
     page1.bold(to_lines[0])
 
     comp: ui.Component = page1  # otherwise `[page1]` is of the wrong type
     pages = [comp] + _paginate_lines(to_lines, 1, "Confirm transaction", ui.ICON_SEND)
+=======
+    pages = _paginate_text(
+        page1,
+        "Confirm transaction",
+        ui.ICON_SEND,
+        to,
+        lines_per_page=4,
+        lines_used_on_first_page=3,
+    )
+>>>>>>> legacy/v1.10.1
 
     await require_confirm(ctx, Paginated(pages))
 
@@ -215,7 +226,10 @@ async def confirm_transaction(
     protocol_magic: int,
     ttl: int | None,
     validity_interval_start: int | None,
+<<<<<<< HEAD
     has_metadata: bool,
+=======
+>>>>>>> legacy/v1.10.1
     is_network_id_verifiable: bool,
 ) -> None:
     pages: list[ui.Component] = []
@@ -234,12 +248,6 @@ async def confirm_transaction(
     page2.normal("Valid since: %s" % format_optional_int(validity_interval_start))
     page2.normal("TTL: %s" % format_optional_int(ttl))
     pages.append(page2)
-
-    if has_metadata:
-        page3 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
-        page3.normal("Transaction contains")
-        page3.normal("metadata")
-        pages.append(page3)
 
     await require_hold_to_confirm(ctx, Paginated(pages))
 
@@ -393,6 +401,55 @@ async def confirm_withdrawal(
     await require_confirm(ctx, page1)
 
 
+async def confirm_catalyst_registration(
+    ctx: wire.Context,
+    public_key: str,
+    staking_path: list[int],
+    reward_address: str,
+    nonce: int,
+) -> None:
+    pages: list[ui.Component] = []
+
+    page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    page1.bold("Catalyst voting key")
+    page1.bold("registration")
+    pages.append(page1)
+
+    page2 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    page2.normal("Voting public key:")
+    page2.bold(*chunks(public_key, 17))
+    pages.append(page2)
+
+    page3 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    page3.normal("Staking key for")
+    page3.normal("account %s:" % format_account_number(staking_path))
+    page3.bold(address_n_to_str(staking_path))
+    pages.append(page3)
+
+    page4 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    page4.normal("Rewards go to:")
+
+    pages.extend(
+        _paginate_text(page4, "Confirm transaction", ui.ICON_SEND, reward_address)
+    )
+
+    last_page = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    last_page.normal("Nonce: %s" % nonce)
+    pages.append(last_page)
+
+    await require_confirm(ctx, Paginated(pages))
+
+
+async def show_auxiliary_data_hash(
+    ctx: wire.Context, auxiliary_data_hash: bytes
+) -> None:
+    page1 = Text("Confirm transaction", ui.ICON_SEND, ui.GREEN)
+    page1.normal("Auxiliary data hash:")
+    page1.bold(hexlify(auxiliary_data_hash).decode())
+
+    await require_confirm(ctx, page1)
+
+
 async def show_address(
     ctx: wire.Context,
     address: str,
@@ -423,6 +480,7 @@ async def show_address(
         lines_per_page,
     )
 
+<<<<<<< HEAD
     address_lines = list(chunks(address, 17))
     for address_line in address_lines[: lines_per_page - lines_used_on_first_page]:
         page1.bold(address_line)
@@ -438,6 +496,15 @@ async def show_address(
             ui.ICON_RECEIVE,
             lines_per_page,
         )
+=======
+    pages = _paginate_text(
+        page1,
+        address_type_label,
+        ui.ICON_RECEIVE,
+        address,
+        lines_per_page=lines_per_page,
+        lines_used_on_first_page=lines_used_on_first_page,
+>>>>>>> legacy/v1.10.1
     )
 
     return await confirm(
@@ -449,14 +516,33 @@ async def show_address(
     )
 
 
+<<<<<<< HEAD
 def _paginate_lines(
     lines: list[str], offset: int, desc: str, icon: str, lines_per_page: int = 4
 ) -> list[ui.Component]:
     pages: list[ui.Component] = []
+=======
+def _paginate_text(
+    first_page: Text,
+    page_desc: str,
+    page_icon: str,
+    text: str,
+    lines_per_page: int = 5,
+    lines_used_on_first_page: int = 1,
+) -> list[ui.Component]:
+    lines = list(chunks(text, 17))
+
+    offset = lines_per_page - lines_used_on_first_page
+
+    for text_line in lines[:offset]:
+        first_page.bold(text_line)
+
+    pages: list[ui.Component] = [first_page]
+>>>>>>> legacy/v1.10.1
     if len(lines) > offset:
         to_pages = list(chunks(lines[offset:], lines_per_page))
         for page in to_pages:
-            t = Text(desc, icon, ui.GREEN)
+            t = Text(page_desc, page_icon, ui.GREEN)
             for line in page:
                 t.bold(line)
             pages.append(t)

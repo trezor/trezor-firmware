@@ -41,7 +41,10 @@
 #include "flash.h"
 #include "mpu.h"
 #ifdef RDI
-#include "rdi.h"
+#include "random_delays.h"
+#endif
+#ifdef SYSTEM_VIEW
+#include "systemview.h"
 #endif
 #ifdef SYSTEM_VIEW
 #include "systemview.h"
@@ -52,8 +55,8 @@
 #include "touch.h"
 
 int main(void) {
-  // initialize pseudo-random number generator
-  drbg_init();
+  random_delays_init();
+
 #ifdef RDI
   rdi_start();
 #endif
