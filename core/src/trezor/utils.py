@@ -81,8 +81,6 @@ class unimport:
         self.mods = None
         gc.collect()
 
-<<<<<<< HEAD
-=======
 
 def presize_module(modname: str, size: int) -> None:
     """Ensure the module's dict is preallocated to an expected size.
@@ -98,7 +96,6 @@ def presize_module(modname: str, size: int) -> None:
         delattr(module, "___PRESIZE_MODULE_%d" % i)
 
 
->>>>>>> legacy/v1.10.1
 def ensure(cond: bool, msg: str | None = None) -> None:
     if not cond:
         if msg is None:

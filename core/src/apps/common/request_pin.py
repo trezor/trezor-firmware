@@ -4,11 +4,6 @@ import storage.cache
 import storage.sd_salt
 from trezor import config, ui, wire
 from trezor.messages import ButtonRequestType
-<<<<<<< HEAD
-from trezor.ui.components.tt.pin import CANCELLED, PinDialog
-from trezor.ui.components.tt.text import Text
-=======
->>>>>>> legacy/v1.10.1
 from trezor.ui.popup import Popup
 
 from . import button_request
@@ -16,12 +11,6 @@ from .sdcard import SdCardUnavailable, request_sd_salt
 
 if False:
     from typing import Any, NoReturn
-<<<<<<< HEAD
-
-
-_last_successful_unlock = 0
-=======
->>>>>>> legacy/v1.10.1
 
 
 def can_lock_device() -> bool:
@@ -130,11 +119,7 @@ async def verify_user_pin(
     except SdCardUnavailable:
         raise wire.PinCancelled("SD salt is unavailable")
     if config.unlock(pin, salt):
-<<<<<<< HEAD
-        _last_successful_unlock = utime.ticks_ms()
-=======
         _set_last_unlock_time()
->>>>>>> legacy/v1.10.1
         return
     elif not config.has_pin():
         raise RuntimeError
@@ -144,11 +129,7 @@ async def verify_user_pin(
             ctx, "Wrong PIN, enter again", config.get_pin_rem(), allow_cancel
         )
         if config.unlock(pin, salt):
-<<<<<<< HEAD
-            _last_successful_unlock = utime.ticks_ms()
-=======
             _set_last_unlock_time()
->>>>>>> legacy/v1.10.1
             return
 
     raise wire.PinInvalid

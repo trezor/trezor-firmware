@@ -85,13 +85,6 @@ async def confirm_sending(
     page1.bold(format_coin_amount(ada_amount))
     page1.normal("to")
 
-<<<<<<< HEAD
-    to_lines = list(chunks(to, 17))
-    page1.bold(to_lines[0])
-
-    comp: ui.Component = page1  # otherwise `[page1]` is of the wrong type
-    pages = [comp] + _paginate_lines(to_lines, 1, "Confirm transaction", ui.ICON_SEND)
-=======
     pages = _paginate_text(
         page1,
         "Confirm transaction",
@@ -100,7 +93,6 @@ async def confirm_sending(
         lines_per_page=4,
         lines_used_on_first_page=3,
     )
->>>>>>> legacy/v1.10.1
 
     await require_confirm(ctx, Paginated(pages))
 
@@ -226,10 +218,6 @@ async def confirm_transaction(
     protocol_magic: int,
     ttl: int | None,
     validity_interval_start: int | None,
-<<<<<<< HEAD
-    has_metadata: bool,
-=======
->>>>>>> legacy/v1.10.1
     is_network_id_verifiable: bool,
 ) -> None:
     pages: list[ui.Component] = []
@@ -480,23 +468,6 @@ async def show_address(
         lines_per_page,
     )
 
-<<<<<<< HEAD
-    address_lines = list(chunks(address, 17))
-    for address_line in address_lines[: lines_per_page - lines_used_on_first_page]:
-        page1.bold(address_line)
-
-    pages: list[ui.Component] = []
-    pages.append(page1)
-    # append remaining pages containing the rest of the address
-    pages.extend(
-        _paginate_lines(
-            address_lines,
-            lines_per_page - lines_used_on_first_page,
-            address_type_label,
-            ui.ICON_RECEIVE,
-            lines_per_page,
-        )
-=======
     pages = _paginate_text(
         page1,
         address_type_label,
@@ -504,7 +475,6 @@ async def show_address(
         address,
         lines_per_page=lines_per_page,
         lines_used_on_first_page=lines_used_on_first_page,
->>>>>>> legacy/v1.10.1
     )
 
     return await confirm(
@@ -516,12 +486,6 @@ async def show_address(
     )
 
 
-<<<<<<< HEAD
-def _paginate_lines(
-    lines: list[str], offset: int, desc: str, icon: str, lines_per_page: int = 4
-) -> list[ui.Component]:
-    pages: list[ui.Component] = []
-=======
 def _paginate_text(
     first_page: Text,
     page_desc: str,
@@ -538,7 +502,6 @@ def _paginate_text(
         first_page.bold(text_line)
 
     pages: list[ui.Component] = [first_page]
->>>>>>> legacy/v1.10.1
     if len(lines) > offset:
         to_pages = list(chunks(lines[offset:], lines_per_page))
         for page in to_pages:

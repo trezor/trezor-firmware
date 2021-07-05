@@ -1,14 +1,6 @@
 from micropython import const
 
 from trezor import loop, res, ui, utils
-<<<<<<< HEAD:core/src/trezor/ui/components/tt/scroll.py
-
-from .button import Button, ButtonCancel, ButtonConfirm, ButtonDefault
-from .confirm import CANCELLED, CONFIRMED, Confirm
-from .swipe import SWIPE_DOWN, SWIPE_UP, SWIPE_VERTICAL, Swipe
-from .text import TEXT_MAX_LINES, Span, Text
-=======
->>>>>>> legacy/v1.10.1:core/src/trezor/ui/components/tt/scroll.py
 
 from .button import Button, ButtonCancel, ButtonConfirm, ButtonDefault
 from .confirm import CANCELLED, CONFIRMED, Confirm
@@ -241,11 +233,8 @@ class PaginatedWithButtons(ui.Layout):
             return self.pages[self.page].read_content()
 
         def create_tasks(self) -> tuple[loop.Task, ...]:
-<<<<<<< HEAD:core/src/trezor/ui/components/tt/scroll.py
-=======
             from apps.debug import confirm_signal
 
->>>>>>> legacy/v1.10.1:core/src/trezor/ui/components/tt/scroll.py
             return super().create_tasks() + (confirm_signal(),)
 
 

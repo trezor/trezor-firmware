@@ -1,15 +1,6 @@
 if False:
-<<<<<<< HEAD
-    from protobuf import MessageType as MessageType_  # noqa: F401
-
-    MessageClass = type[MessageType_]
-
-type_to_name: dict[int, str] = {}  # reverse table of wire_type mapping
-registered: dict[int, MessageClass] = {}  # dynamically registered types
-=======
     import protobuf
     from typing import Type
->>>>>>> legacy/v1.10.1
 
 
 def get_type(wire_type: int) -> Type[protobuf.MessageType]:

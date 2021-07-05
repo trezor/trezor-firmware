@@ -1,9 +1,5 @@
 from micropython import const
 
-<<<<<<< HEAD
-from storage.device import get_device_id
-=======
->>>>>>> legacy/v1.10.1
 from trezor import io, utils
 
 UDP_PORT = 0

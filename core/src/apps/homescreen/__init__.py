@@ -4,11 +4,8 @@ from trezor import res, ui
 
 
 class HomescreenBase(ui.Layout):
-<<<<<<< HEAD
-=======
     RENDER_INDICATOR: object | None = None
 
->>>>>>> legacy/v1.10.1
     def __init__(self) -> None:
         super().__init__()
         self.label = storage.device.get_label() or "My Trezor"
@@ -18,8 +15,6 @@ class HomescreenBase(ui.Layout):
         return storage.device.get_homescreen() or res.load(
             "apps/homescreen/res/bg.toif"
         )
-<<<<<<< HEAD
-=======
 
     async def __iter__(self) -> ui.ResultValue:
         # We need to catch the ui.Cancelled exception that kills us, because that means
@@ -46,4 +41,3 @@ class HomescreenBase(ui.Layout):
     def _before_render(self) -> None:
         if storage.cache.homescreen_shown is not self.RENDER_INDICATOR:
             return super()._before_render()
->>>>>>> legacy/v1.10.1

@@ -46,9 +46,6 @@
 #ifdef SYSTEM_VIEW
 #include "systemview.h"
 #endif
-#ifdef SYSTEM_VIEW
-#include "systemview.h"
-#endif
 #include "rng.h"
 #include "sdcard.h"
 #include "supervise.h"

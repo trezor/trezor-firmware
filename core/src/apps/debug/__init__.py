@@ -15,10 +15,7 @@ if __debug__:
     from apps import workflow_handlers
 
     if False:
-<<<<<<< HEAD
-=======
         from trezor.ui import Layout
->>>>>>> legacy/v1.10.1
         from trezor.messages.DebugLinkDecision import DebugLinkDecision
         from trezor.messages.DebugLinkGetState import DebugLinkGetState
         from trezor.messages.DebugLinkRecordScreen import DebugLinkRecordScreen
@@ -27,13 +24,6 @@ if __debug__:
         from trezor.messages.DebugLinkEraseSdCard import DebugLinkEraseSdCard
         from trezor.messages.DebugLinkWatchLayout import DebugLinkWatchLayout
 
-<<<<<<< HEAD
-    save_screen = False
-    save_screen_directory = "."
-
-    reset_internal_entropy: bytes | None = None
-=======
->>>>>>> legacy/v1.10.1
     reset_current_words = loop.chan()
     reset_word_index = loop.chan()
 
@@ -47,17 +37,12 @@ if __debug__:
     debuglink_decision_chan = loop.chan()
 
     layout_change_chan = loop.chan()
-<<<<<<< HEAD
-    current_content: list[str] = []
-    watch_layout_changes = False
-=======
 
     DEBUG_CONTEXT: wire.Context | None = None
 
     LAYOUT_WATCHER_NONE = 0
     LAYOUT_WATCHER_STATE = 1
     LAYOUT_WATCHER_LAYOUT = 2
->>>>>>> legacy/v1.10.1
 
     def screenshot() -> bool:
         if storage.save_screen:
@@ -92,11 +77,6 @@ if __debug__:
             await input_chan.put(Result(msg.input))
 
     async def debuglink_decision_dispatcher() -> None:
-<<<<<<< HEAD
-        from trezor.ui.components.tt import confirm, swipe
-
-=======
->>>>>>> legacy/v1.10.1
         while True:
             msg = await debuglink_decision_chan.take()
             await dispatch_debuglink_decision(msg)
@@ -115,10 +95,6 @@ if __debug__:
     async def touch_hold(x: int, y: int, duration_ms: int) -> None:
         from trezor import io
 
-        await loop.sleep(duration_ms)
-        loop.synthetic_events.append((io.TOUCH, (io.TOUCH_END, x, y)))
-
-    async def touch_hold(x: int, y: int, duration_ms: int) -> None:
         await loop.sleep(duration_ms)
         loop.synthetic_events.append((io.TOUCH, (io.TOUCH_END, x, y)))
 
@@ -229,19 +205,6 @@ if __debug__:
         return Success()
 
     def boot() -> None:
-<<<<<<< HEAD
-        # wipe storage when debug build is used on real hardware
-        if not utils.EMULATOR:
-            config.wipe()
-
-        wire.add(MessageType.LoadDevice, __name__, "load_device")
-        wire.register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)  # type: ignore
-        wire.register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)
-        wire.register(MessageType.DebugLinkReseedRandom, dispatch_DebugLinkReseedRandom)
-        wire.register(MessageType.DebugLinkRecordScreen, dispatch_DebugLinkRecordScreen)
-        wire.register(MessageType.DebugLinkEraseSdCard, dispatch_DebugLinkEraseSdCard)
-        wire.register(MessageType.DebugLinkWatchLayout, dispatch_DebugLinkWatchLayout)
-=======
         workflow_handlers.register(MessageType.DebugLinkDecision, dispatch_DebugLinkDecision)  # type: ignore
         workflow_handlers.register(MessageType.DebugLinkGetState, dispatch_DebugLinkGetState)  # type: ignore
         workflow_handlers.register(
@@ -260,4 +223,3 @@ if __debug__:
         loop.schedule(debuglink_decision_dispatcher())
         if storage.layout_watcher is not LAYOUT_WATCHER_NONE:
             loop.schedule(return_layout_change())
->>>>>>> legacy/v1.10.1

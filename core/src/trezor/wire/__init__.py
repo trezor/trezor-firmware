@@ -64,16 +64,6 @@ if False:
     Handler = Callable[["Context", Msg], HandlerTask]
 
 
-<<<<<<< HEAD
-# Maps a wire type directly to a handler.
-workflow_handlers: dict[int, Handler] = {}
-
-# Maps a wire type to a tuple of package and module.  This allows handlers
-# to be dynamically imported when such message arrives.
-workflow_packages: dict[int, tuple[str, str]] = {}
-
-=======
->>>>>>> legacy/v1.10.1
 # If set to False protobuf messages marked with "unstable" option are rejected.
 experimental_enabled: bool = False
 
@@ -292,48 +282,10 @@ class UnexpectedMessageError(Exception):
         self.msg = msg
 
 
-<<<<<<< HEAD
-async def handle_session(
-    iface: WireInterface, session_id: int, use_workflow: bool = True
-) -> None:
-    ctx = Context(iface, session_id)
-    next_msg: codec_v1.Message | None = None
-    res_msg: protobuf.MessageType | None = None
-    req_type = None
-    req_msg = None
-    while True:
-        try:
-            if next_msg is None:
-                # We are not currently reading a message, so let's wait for one.
-                # If the decoding fails, exception is raised and we try again
-                # (with the same `Reader` instance, it's OK).  Even in case of
-                # de-synchronized wire communication, report with a message
-                # header is eventually received, after a couple of tries.
-                msg = await ctx.read_from_wire()
-
-                if __debug__:
-                    try:
-                        msg_type = messages.get_type(msg.type).__name__
-                    except KeyError:
-                        msg_type = "%d - unknown message type" % msg.type
-                    log.debug(
-                        __name__,
-                        "%s:%x receive: <%s>",
-                        iface.iface_num(),
-                        session_id,
-                        msg_type,
-                    )
-            else:
-                # We have a reader left over from earlier.  We should process
-                # this message instead of waiting for new one.
-                msg = next_msg
-                next_msg = None
-=======
 async def _handle_single_message(
     ctx: Context, msg: codec_v1.Message, use_workflow: bool
 ) -> codec_v1.Message | None:
     """Handle a message that was loaded from USB by the caller.
->>>>>>> legacy/v1.10.1
 
     Find the appropriate handler, run it and write its result on the wire. In case
     a problem is encountered at any point, write the appropriate error on the wire.
@@ -425,16 +377,11 @@ async def _handle_single_message(
                 log.exception(__name__, exc)
         res_msg = failure(exc)
 
-<<<<<<< HEAD
-                # Workflow task, declared for the finally block
-                wf_task: HandlerTask | None = None
-=======
     if res_msg is not None:
         # perform the write outside the big try-except block, so that usb write
         # problem bubbles up
         await ctx.write(res_msg)
     return None
->>>>>>> legacy/v1.10.1
 
 
 async def handle_session(
@@ -450,16 +397,7 @@ async def handle_session(
     if __debug__ and is_debug_session:
         import apps.debug
 
-<<<<<<< HEAD
-def find_registered_workflow_handler(
-    iface: WireInterface, msg_type: int
-) -> Handler | None:
-    if msg_type in workflow_handlers:
-        # Message has a handler available, return it directly.
-        handler = workflow_handlers[msg_type]
-=======
         apps.debug.DEBUG_CONTEXT = ctx
->>>>>>> legacy/v1.10.1
 
     # Take a mark of modules that are imported at this point, so we can
     # roll back and un-import any others.

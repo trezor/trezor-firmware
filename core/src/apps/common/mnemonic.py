@@ -1,10 +1,6 @@
 import storage.device
 from trezor import ui, utils, workflow
 from trezor.messages import BackupType
-<<<<<<< HEAD
-from trezor.ui.components.tt.text import Text
-=======
->>>>>>> legacy/v1.10.1
 
 if False:
     from trezor.messages.ResetDevice import EnumTypeBackupType

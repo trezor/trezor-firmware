@@ -69,9 +69,5 @@ class TxInput(p.MessageType):
             15: ('commitment_data', p.BytesType, None),
             16: ('orig_hash', p.BytesType, None),
             17: ('orig_index', p.UVarintType, None),
-<<<<<<< HEAD
-            18: ('decred_staking_spend', p.EnumType("DecredStakingSpendType", (0, 1)), None),
-=======
             18: ('decred_staking_spend', p.EnumType("DecredStakingSpendType", (0, 1,)), None),
->>>>>>> legacy/v1.10.1
         }

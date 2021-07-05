@@ -26,10 +26,6 @@ class TezosContractID(p.MessageType):
     @classmethod
     def get_fields(cls) -> Dict:
         return {
-<<<<<<< HEAD
-            1: ('tag', p.EnumType("TezosContractType", (0, 1)), p.FLAG_REQUIRED),
-=======
             1: ('tag', p.EnumType("TezosContractType", (0, 1,)), p.FLAG_REQUIRED),
->>>>>>> legacy/v1.10.1
             2: ('hash', p.BytesType, p.FLAG_REQUIRED),
         }

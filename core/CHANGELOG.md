@@ -4,18 +4,6 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## 2.4.0 [unreleased]
-
-### Added
-- Locking the device by holding finger on the homescreen for 2.5 seconds.  [#1404]
-- Public key to ECDHSessionKey.  [#1518]
-- Decred staking.  [#1249]
-
-### Changed
-- Allow decreasing the output value in RBF transactions.  [#1491]
-- Cardano: Allow stake pool registrations with zero margin.  [#1502]
-- Cardano: Assets are now shown as CIP-0014.  [#1510]
-- Support PIN of unlimited length.  [#1167]
 ## 2.4.0 [24th May 2021]
 
 ### Added
@@ -37,11 +25,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Import errors on T1 startup.  [#24]
 - Improve wording when showing multisig XPUBs.  [#1431]
 
-
-## 2.3.6 [15th February 2021]
-
-### Added
-- Compatibility paths for Unchained Capital.  [#1467]
 
 ## 2.3.6 [15th February 2021]
 
@@ -405,7 +388,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1491]: https://github.com/trezor/trezor-firmware/issues/1491
 [#1502]: https://github.com/trezor/trezor-firmware/issues/1502
 [#1510]: https://github.com/trezor/trezor-firmware/issues/1510
-[#1518]: https://github.com/trezor/trezor-firmware/pull/1518
 [#1518]: https://github.com/trezor/trezor-firmware/issues/1518
 [#1540]: https://github.com/trezor/trezor-firmware/issues/1540
 [#1554]: https://github.com/trezor/trezor-firmware/issues/1554

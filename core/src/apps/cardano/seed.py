@@ -91,15 +91,7 @@ async def _get_keychain_bip39(ctx: wire.Context) -> Keychain:
 
 async def get_keychain(ctx: wire.Context) -> Keychain:
     if mnemonic.is_bip39():
-<<<<<<< HEAD
-        passphrase = await get_passphrase(ctx)
-        # derive the root node from mnemonic and passphrase via Cardano Icarus algorithm
-        secret_bytes = mnemonic.get_secret()
-        assert secret_bytes is not None
-        root = bip32.from_mnemonic_cardano(secret_bytes.decode(), passphrase)
-=======
         return await _get_keychain_bip39(ctx)
->>>>>>> legacy/v1.10.1
     else:
         # derive the root node via SLIP-0023 https://github.com/satoshilabs/slips/blob/master/slip-0022.md
         seed = await get_seed(ctx)

@@ -1,12 +1,4 @@
-<<<<<<< HEAD
-from trezor.ui.constants import MONO_CHARS_PER_LINE
-from trezor.ui.layouts import confirm_path_warning
-
 from . import HARDENED
-from .layout import address_n_to_str
-=======
-from . import HARDENED
->>>>>>> legacy/v1.10.1
 
 if False:
     from typing import (
@@ -108,9 +100,6 @@ class PathSchema:
         "**": Interval(0, 0xFFFF_FFFF),
     }
 
-<<<<<<< HEAD
-    def __init__(self, pattern: str, slip44_id: int | Iterable[int]) -> None:
-=======
     _EMPTY_TUPLE = ()
 
     @staticmethod
@@ -170,7 +159,6 @@ class PathSchema:
         The parsing process trashes the memory layout, so at the end a compact-allocated
         copy of the resulting structures is returned.
         """
->>>>>>> legacy/v1.10.1
         if not pattern.startswith("m/"):
             raise ValueError  # unsupported path template
         components = pattern[2:].split("/")
@@ -178,13 +166,8 @@ class PathSchema:
         if isinstance(slip44_id, int):
             slip44_id = (slip44_id,)
 
-<<<<<<< HEAD
-        self.schema: list[Container[int]] = []
-        self.trailing_components: Container[int] = ()
-=======
         schema: list[Container[int]] = []
         trailing_components: Container[int] = ()
->>>>>>> legacy/v1.10.1
 
         for component in components:
             if component in cls.WILDCARD_RANGES:
@@ -341,12 +324,9 @@ async def validate_path(
 
 
 async def show_path_warning(ctx: wire.Context, path: Bip32Path) -> None:
-<<<<<<< HEAD
-=======
     from trezor.ui.layouts import confirm_path_warning
     from .layout import address_n_to_str
 
->>>>>>> legacy/v1.10.1
     await confirm_path_warning(ctx, address_n_to_str(path))
 
 
@@ -359,12 +339,9 @@ def path_is_hardened(address_n: Bip32Path) -> bool:
 
 
 def break_address_n_to_lines(address_n: Bip32Path) -> list[str]:
-<<<<<<< HEAD
-=======
     from trezor.ui.constants import MONO_CHARS_PER_LINE
     from .layout import address_n_to_str
 
->>>>>>> legacy/v1.10.1
     lines = []
     path_str = address_n_to_str(address_n)
 

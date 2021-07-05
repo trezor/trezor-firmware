@@ -12,17 +12,9 @@ def read_setting() -> EnumTypeSafetyCheckLevel:
     """
     Returns the effective safety check level.
     """
-<<<<<<< HEAD
-    temporary_safety_check_level: EnumTypeSafetyCheckLevel | None = storage.cache.get(
-        APP_COMMON_SAFETY_CHECKS_TEMPORARY
-    )
-    if temporary_safety_check_level is not None:
-        return temporary_safety_check_level
-=======
     temporary_safety_check_level = storage.cache.get(APP_COMMON_SAFETY_CHECKS_TEMPORARY)
     if temporary_safety_check_level:
         return int.from_bytes(temporary_safety_check_level, "big")  # type: ignore
->>>>>>> legacy/v1.10.1
     else:
         stored = storage.device.safety_check_level()
         if stored == SAFETY_CHECK_LEVEL_STRICT:

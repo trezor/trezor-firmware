@@ -5,12 +5,8 @@ from apps.common.seed import remove_ed25519_prefix
 
 from . import bech32
 
-<<<<<<< HEAD
-from . import bech32
-=======
 if False:
     from .. import seed
->>>>>>> legacy/v1.10.1
 
 
 def variable_length_encode(number: int) -> bytes:
@@ -66,8 +62,6 @@ def format_asset_fingerprint(policy_id: bytes, asset_name_bytes: bytes) -> str:
     ).digest()
 
     return bech32.encode("asset", fingerprint)
-<<<<<<< HEAD
-=======
 
 
 def derive_public_key(
@@ -76,4 +70,3 @@ def derive_public_key(
     node = keychain.derive(path)
     public_key = remove_ed25519_prefix(node.public_key())
     return public_key if not extended else public_key + node.chain_code()
->>>>>>> legacy/v1.10.1
