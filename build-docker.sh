@@ -20,9 +20,10 @@ fi
 
 CONTAINER_NAME=${CONTAINER_NAME:-trezor-firmware-env.nix}
 ALPINE_CDN=${ALPINE_CDN:-http://dl-cdn.alpinelinux.org/alpine}
-ALPINE_RELEASE=${ALPINE_RELEASE:-3.13}
-ALPINE_VERSION=${ALPINE_VERSION:-3.13.2}
+ALPINE_RELEASE=${ALPINE_RELEASE:-3.14}
+ALPINE_VERSION=${ALPINE_VERSION:-3.14.0}
 ALPINE_TARBALL=${ALPINE_FILE:-alpine-minirootfs-$ALPINE_VERSION-$ALPINE_ARCH.tar.gz}
+NIX_VERSION=${NIX_VERSION:-2.3.14}
 CONTAINER_FS_URL=${CONTAINER_FS_URL:-"$ALPINE_CDN/v$ALPINE_RELEASE/releases/$ALPINE_ARCH/$ALPINE_TARBALL"}
 
 VARIANTS_core=(0 1)
@@ -58,7 +59,7 @@ else
   fi
 fi
 
-docker build --build-arg ALPINE_VERSION="$ALPINE_VERSION" --build-arg ALPINE_ARCH="$ALPINE_ARCH" -t "$CONTAINER_NAME" ci/
+docker build --build-arg ALPINE_VERSION="$ALPINE_VERSION" --build-arg ALPINE_ARCH="$ALPINE_ARCH" --build-arg NIX_VERSION="$NIX_VERSION" -t "$CONTAINER_NAME" ci/
 
 # stat under macOS has slightly different cli interface
 USER=$(stat -c "%u" . 2>/dev/null || stat -f "%u" .)
