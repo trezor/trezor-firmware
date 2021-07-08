@@ -686,6 +686,13 @@ int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
 #endif
 
   bn_read_be(digest, &z);
+  if (bn_is_zero(&z)) {
+    // The probability of the digest being all-zero by chance is infinitesimal,
+    // so this is most likely an indication of a bug. Furthermore, the signature
+    // has no value, because in this case it can be easily forged for any public
+    // key, see ecdsa_verify_digest().
+    return 1;
+  }
 
   for (i = 0; i < 10000; i++) {
 #if USE_RFC6979
@@ -713,11 +720,16 @@ int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
       continue;
     }
 
+    bn_read_be(priv_key, s);
+    if (bn_is_zero(s)) {
+      // Using an all-zero private key is most likely an indication of a bug.
+      return 2;
+    }
+
     // randomize operations to counter side-channel attacks
     generate_k_random(&randk, &curve->order);
     bn_multiply(&randk, &k, &curve->order);  // k*rand
     bn_inverse(&k, &curve->order);           // (k*rand)^-1
-    bn_read_be(priv_key, s);                 // priv
     bn_multiply(&R.x, s, &curve->order);     // R.x*priv
     bn_add(s, &z);                           // R.x*priv + z
     bn_multiply(&k, s, &curve->order);       // (k*rand)^-1 (R.x*priv + z)
