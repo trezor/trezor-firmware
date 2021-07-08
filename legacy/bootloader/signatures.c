@@ -27,8 +27,9 @@
 #include "sha2.h"
 #include "signatures.h"
 
-const uint32_t FIRMWARE_MAGIC_OLD = 0x525a5254;  // TRZR
-const uint32_t FIRMWARE_MAGIC_NEW = 0x465a5254;  // TRZF
+const uint32_t FIRMWARE_MAGIC_OLD = 0x525a5254;    // TRZR
+const uint32_t FIRMWARE_MAGIC_NEW = 0x465a5254;    // TRZF
+const uint32_t FIRMWARE_INVALIDATED = 0x00000000;  // via intermediate FW
 
 #define PUBKEYS 5
 
@@ -121,10 +122,20 @@ void compute_firmware_fingerprint(const image_header *hdr, uint8_t hash[32]) {
   sha256_Raw((const uint8_t *)&copy, sizeof(image_header), hash);
 }
 
-bool firmware_present_new(void) {
+bool firmware_present_new(bool allow_invalidated) {
   const image_header *hdr =
       (const image_header *)FLASH_PTR(FLASH_FWHEADER_START);
-  if (hdr->magic != FIRMWARE_MAGIC_NEW) return false;
+  switch (hdr->magic) {
+    case FIRMWARE_MAGIC_NEW:
+      break;
+    case FIRMWARE_INVALIDATED:
+      if (allow_invalidated) {
+        break;
+      }
+      return false;
+    default:
+      return false;
+  }
   // we need to ignore hdrlen for now
   // because we keep reset_handler ptr there
   // for compatibility with older bootloaders

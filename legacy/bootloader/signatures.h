@@ -59,7 +59,7 @@ typedef struct {
 
 #define FW_CHUNK_SIZE 65536
 
-bool firmware_present_new(void);
+bool firmware_present_new(bool allow_invalidated);
 void compute_firmware_fingerprint(const image_header *hdr, uint8_t hash[32]);
 int signatures_new_ok(const image_header *hdr, uint8_t store_fingerprint[32]);
 int check_firmware_hashes(const image_header *hdr);

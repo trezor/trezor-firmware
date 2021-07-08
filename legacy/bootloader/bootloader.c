@@ -95,7 +95,7 @@ static void bootloader_loop(void) {
   oledClear();
   oledDrawBitmap(0, 0, &bmp_logo64_half);
   oledDrawBitmapFlip(24, 0, &bmp_logo64_half);
-  if (firmware_present_new()) {
+  if (firmware_present_new(false)) {
     oledDrawStringCenter(90, 10, "Trezor", FONT_STANDARD);
     oledDrawStringCenter(90, 30, "Bootloader", FONT_STANDARD);
     oledDrawStringCenter(90, 50,
@@ -136,7 +136,7 @@ int main(void) {
 #ifndef APPVER
   bool left_pressed = (buttonRead() & BTN_PIN_NO) == 0;
 
-  if (firmware_present_new() && !left_pressed) {
+  if (firmware_present_new(false) && !left_pressed) {
     oledClear();
     oledDrawBitmap(40, 0, &bmp_logo64_empty_half);
     oledDrawBitmapFlip(40 + 24, 0, &bmp_logo64_empty_half);

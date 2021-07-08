@@ -220,7 +220,7 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
   if (flash_state == STATE_OPEN) {
     if (msg_id == 0x0006) {  // FirmwareErase message (id 6)
       bool proceed = false;
-      if (firmware_present_new()) {
+      if (firmware_present_new(false)) {
         layoutDialog(&bmp_icon_question, "Abort", "Continue", NULL,
                      "Install new", "firmware?", NULL, "Never do this without",
                      "your recovery card!", NULL);
@@ -230,7 +230,8 @@ static void rx_callback(usbd_device *dev, uint8_t ep) {
       }
       if (proceed) {
         // check whether the current firmware is signed (old or new method)
-        if (firmware_present_new()) {
+        // or was invalidated by intermediate FW
+        if (firmware_present_new(true)) {
           const image_header *hdr =
               (const image_header *)FLASH_PTR(FLASH_FWHEADER_START);
           old_was_signed =
@@ -521,7 +522,7 @@ static void checkButtons(void) {
 }
 
 void usbLoop(void) {
-  bool firmware_present = firmware_present_new();
+  bool firmware_present = firmware_present_new(false);
   usbInit(firmware_present);
   for (;;) {
     usbd_poll(usbd_dev);

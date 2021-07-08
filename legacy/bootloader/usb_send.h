@@ -66,7 +66,7 @@ static void send_msg_features(usbd_device *dev) {
          "\x01\x01"
          "1",
          35);
-  response[30] = firmware_present_new() ? 0x01 : 0x00;
+  response[30] = firmware_present_new(false) ? 0x01 : 0x00;
   while (usbd_ep_write_packet(dev, ENDPOINT_ADDRESS_IN, response, 64) != 64) {
   }
 }
