@@ -70,12 +70,16 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_publickey(size_t n_args,
   bool compressed = n_args < 2 || args[1] == mp_const_true;
   if (compressed) {
     vstr_init_len(&pk, 33);
-    ecdsa_get_public_key33(&nist256p1, (const uint8_t *)sk.buf,
-                           (uint8_t *)pk.buf);
+    if (ecdsa_get_public_key33(&nist256p1, (const uint8_t *)sk.buf,
+                               (uint8_t *)pk.buf) != 0) {
+      mp_raise_ValueError("Invalid secret key");
+    }
   } else {
     vstr_init_len(&pk, 65);
-    ecdsa_get_public_key65(&nist256p1, (const uint8_t *)sk.buf,
-                           (uint8_t *)pk.buf);
+    if (ecdsa_get_public_key65(&nist256p1, (const uint8_t *)sk.buf,
+                               (uint8_t *)pk.buf) != 0) {
+      mp_raise_ValueError("Invalid secret key");
+    }
   }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &pk);
 }

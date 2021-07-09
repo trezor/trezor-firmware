@@ -641,6 +641,11 @@ int ecdh_multiply(const ecdsa_curve *curve, const uint8_t *priv_key,
 
   bignum256 k = {0};
   bn_read_be(priv_key, &k);
+  if (bn_is_zero(&k) || !bn_is_less(&k, &curve->order)) {
+    // Invalid private key.
+    return 2;
+  }
+
   point_multiply(curve, &k, &point, &point);
   memzero(&k, sizeof(k));
 
@@ -721,8 +726,8 @@ int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
     }
 
     bn_read_be(priv_key, s);
-    if (bn_is_zero(s)) {
-      // Using an all-zero private key is most likely an indication of a bug.
+    if (bn_is_zero(s) || !bn_is_less(s, &curve->order)) {
+      // Invalid private key.
       return 2;
     }
 
@@ -783,6 +788,12 @@ int ecdsa_get_public_key33(const ecdsa_curve *curve, const uint8_t *priv_key,
   bignum256 k = {0};
 
   bn_read_be(priv_key, &k);
+  if (bn_is_zero(&k) || !bn_is_less(&k, &curve->order)) {
+    // Invalid private key.
+    memzero(pub_key, 33);
+    return -1;
+  }
+
   // compute k*G
   if (scalar_multiply(curve, &k, &R) != 0) {
     memzero(&k, sizeof(k));
@@ -802,6 +813,12 @@ int ecdsa_get_public_key65(const ecdsa_curve *curve, const uint8_t *priv_key,
   bignum256 k = {0};
 
   bn_read_be(priv_key, &k);
+  if (bn_is_zero(&k) || !bn_is_less(&k, &curve->order)) {
+    // Invalid private key.
+    memzero(pub_key, 65);
+    return -1;
+  }
+
   // compute k*G
   if (scalar_multiply(curve, &k, &R) != 0) {
     memzero(&k, sizeof(k));

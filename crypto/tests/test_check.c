@@ -8959,7 +8959,7 @@ START_TEST(test_schnorr_sign_verify_digest) {
     memcpy(priv_key, fromhex(tests[i].priv_key), 32);
     memcpy(expected, fromhex(tests[i].sig), SCHNORR_SIG_LENGTH);
 
-    ecdsa_get_public_key33(curve, priv_key, pub_key);
+    ck_assert_int_eq(ecdsa_get_public_key33(curve, priv_key, pub_key), 0);
 
     schnorr_sign_digest(curve, priv_key, digest, result);
 
