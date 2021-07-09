@@ -25,7 +25,6 @@ from trezorlib.tools import parse_path
 from ..common import (
     EXTERNAL_ENTROPY,
     click_through,
-    paging_responses,
     read_and_confirm_mnemonic,
     recovery_enter_shares,
 )
@@ -60,10 +59,6 @@ def test_reset_recovery(client):
 
 def reset(client, strength=128):
     all_mnemonics = []
-    # per SLIP-39: strength in bits, rounded up to nearest multiple of 10, plus 70 bits
-    # of metadata, split into 10-bit words
-    word_count = ((strength + 9) // 10) + 7
-    mnemonic_pages = ((word_count + 3) // 4) + 1
 
     def input_flow():
         # 1. Confirm Reset
@@ -122,7 +117,7 @@ def reset(client, strength=128):
             ]
             + [
                 # individual mnemonic
-                *paging_responses(mnemonic_pages, code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
             ]
             * (5 * 5)  # groups * shares

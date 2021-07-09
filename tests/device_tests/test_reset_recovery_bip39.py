@@ -23,12 +23,7 @@ from trezorlib import btc, device, messages
 from trezorlib.messages import BackupType, ButtonRequestType as B
 from trezorlib.tools import parse_path
 
-from ..common import (
-    EXTERNAL_ENTROPY,
-    click_through,
-    paging_responses,
-    read_and_confirm_mnemonic,
-)
+from ..common import EXTERNAL_ENTROPY, click_through, read_and_confirm_mnemonic
 
 
 @pytest.mark.skip_t1
@@ -44,8 +39,6 @@ def test_reset_recovery(client):
 
 
 def reset(client, strength=128, skip_backup=False):
-    words = strength // 32 * 3
-    mnemonic_pages = ((words + 3) // 4) + 1
     mnemonic = None
 
     def input_flow():
@@ -77,9 +70,7 @@ def reset(client, strength=128, skip_backup=False):
                 messages.EntropyRequest(),
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.ResetDevice),
-            ]
-            + paging_responses(mnemonic_pages, code=B.ResetDevice)
-            + [
+                messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
                 messages.ButtonRequest(code=B.Success),
                 messages.Success,

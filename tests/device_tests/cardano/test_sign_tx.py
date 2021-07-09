@@ -102,13 +102,8 @@ def test_cardano_sign_tx_with_multiple_chunks(client, parameters, result):
 
     expected_responses = [
         messages.PassphraseRequest(),
-        # XXX as many ButtonRequests as paginations. We are relying on the fact that
-        # there is only one fixture whose pagination is known.
-        # If that changes, we'll need to figure out something else.
-        messages.ButtonRequest(page_number=1),
-        messages.ButtonRequest(page_number=2),
-        messages.ButtonRequest(page_number=1),
-        messages.ButtonRequest(page_number=2),
+        messages.ButtonRequest(),
+        messages.ButtonRequest(),
     ]
     expected_responses += [
         messages.CardanoSignedTxChunk(signed_tx_chunk=bytes.fromhex(signed_tx_chunk))
