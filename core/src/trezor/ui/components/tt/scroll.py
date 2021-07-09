@@ -111,12 +111,9 @@ class Paginated(ui.Layout):
         code: ButtonRequestType = ButtonRequestType.Other,
     ) -> Any:
         workflow.close_others()
+        await ctx.call(ButtonRequest(code=code, pages=len(self.pages)), ButtonAck)
         result = WAS_PAGED
         while result is WAS_PAGED:
-            br = ButtonRequest(
-                code=code, pages=len(self.pages), page_number=self.page + 1
-            )
-            await ctx.call(br, ButtonAck)
             result = await self
 
         return result

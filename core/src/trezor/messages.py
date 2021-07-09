@@ -283,14 +283,12 @@ if TYPE_CHECKING:
     class ButtonRequest(protobuf.MessageType):
         code: ButtonRequestType | None
         pages: int | None
-        page_number: int | None
 
         def __init__(
             self,
             *,
             code: ButtonRequestType | None = None,
             pages: int | None = None,
-            page_number: int | None = None,
         ) -> None:
             pass
 

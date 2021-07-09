@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## 2.4.1 [14th July 2021]
 
 ### Added
-- ButtonRequest is sent also after every screen of a multi-page view.  [#1671]
+- ButtonRequest for multi-page views contains number of pages.  [#1671]
 
 ### Changed
 - Converted altcoin apps to common layout code.  [#1538]
