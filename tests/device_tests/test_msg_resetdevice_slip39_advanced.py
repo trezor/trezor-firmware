@@ -23,12 +23,7 @@ from trezorlib import device, messages as proto
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import BackupType, ButtonRequestType as B
 
-from ..common import (
-    click_through,
-    generate_entropy,
-    paging_responses,
-    read_and_confirm_mnemonic,
-)
+from ..common import click_through, generate_entropy, read_and_confirm_mnemonic
 
 EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 
@@ -39,8 +34,6 @@ class TestMsgResetDeviceT2:
     @pytest.mark.setup_client(uninitialized=True)
     def test_reset_device_slip39_advanced(self, client):
         strength = 128
-        word_count = 20
-        mnemonic_page_count = (word_count // 4) + 1
         member_threshold = 3
         all_mnemonics = []
 
@@ -101,7 +94,7 @@ class TestMsgResetDeviceT2:
                 ]
                 + [
                     # individual mnemonic
-                    *paging_responses(mnemonic_page_count, code=B.ResetDevice),
+                    proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.Success),
                 ]
                 * (5 * 5)  # groups * shares

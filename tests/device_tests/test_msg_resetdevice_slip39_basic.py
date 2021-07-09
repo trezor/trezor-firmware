@@ -28,16 +28,11 @@ from ..common import (
     EXTERNAL_ENTROPY,
     click_through,
     generate_entropy,
-    paging_responses,
     read_and_confirm_mnemonic,
 )
 
 
 def reset_device(client, strength):
-    # per SLIP-39: strength in bits, rounded up to nearest multiple of 10, plus 70 bits
-    # of metadata, split into 10-bit words
-    word_count = ((strength + 9) // 10) + 7
-    mnemonic_pages = ((word_count + 3) // 4) + 1
     member_threshold = 3
     all_mnemonics = []
 
@@ -84,7 +79,7 @@ def reset_device(client, strength):
             ]
             + [
                 # individual mnemonic
-                *paging_responses(mnemonic_pages, code=B.ResetDevice),
+                proto.ButtonRequest(code=B.ResetDevice),
                 proto.ButtonRequest(code=B.Success),
             ]
             * 5  # number of shares

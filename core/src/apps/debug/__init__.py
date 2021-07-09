@@ -56,7 +56,7 @@ if __debug__:
 
     def notify_layout_change(layout: Layout) -> None:
         storage.current_content[:] = layout.read_content()
-        if storage.watch_layout_changes:
+        if storage.watch_layout_changes or layout_change_chan.takers:
             layout_change_chan.publish(storage.current_content)
 
     async def dispatch_debuglink_decision(msg: DebugLinkDecision) -> None:

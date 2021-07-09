@@ -27,7 +27,6 @@ from ..common import (
     MNEMONIC_SLIP39_ADVANCED_20,
     MNEMONIC_SLIP39_BASIC_20_3of6,
     click_through,
-    paging_responses,
     read_and_confirm_mnemonic,
 )
 
@@ -37,8 +36,6 @@ from ..common import (
 def test_backup_bip39(client):
     assert client.features.needs_backup is True
     mnemonic = None
-    words = 12
-    mnemonic_pages = ((words + 3) // 4) + 1
 
     def input_flow():
         nonlocal mnemonic
@@ -56,9 +53,7 @@ def test_backup_bip39(client):
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.ResetDevice),
-            ]
-            + paging_responses(mnemonic_pages, code=B.ResetDevice)
-            + [
+                messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
                 messages.ButtonRequest(code=B.Success),
                 messages.Success,
@@ -81,8 +76,6 @@ def test_backup_bip39(client):
 def test_backup_slip39_basic(client):
     assert client.features.needs_backup is True
     mnemonics = []
-    words = 20
-    mnemonic_pages = ((words + 3) // 4) + 1
 
     def input_flow():
         # 1. Checklist
@@ -110,7 +103,7 @@ def test_backup_slip39_basic(client):
         client.set_expected_responses(
             [messages.ButtonRequest(code=B.ResetDevice)] * 6  # intro screens
             + [
-                *paging_responses(mnemonic_pages, code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
             ]
             * 5  # individual shares
@@ -139,8 +132,6 @@ def test_backup_slip39_basic(client):
 def test_backup_slip39_advanced(client):
     assert client.features.needs_backup is True
     mnemonics = []
-    words = 20
-    mnemonic_pages = ((words + 3) // 4) + 1
 
     def input_flow():
         # 1. Checklist
@@ -177,7 +168,7 @@ def test_backup_slip39_advanced(client):
             ]
             * 5  # group thresholds
             + [
-                *paging_responses(mnemonic_pages, code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
             ]
             * 25  # individual shares

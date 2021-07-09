@@ -242,12 +242,8 @@ def test_signmessage_pagination(client, message):
 
         # start assuming there was a word break; this avoids prepending space at start
         word_break = True
-        page = 0
-        while True:
-            br = yield
-            assert br.page_number == page + 1
-            page = br.page_number
-
+        br = yield
+        for i in range(br.pages):
             layout = client.debug.wait_layout()
             for line in layout.lines[1:]:
                 if line == "-":
@@ -261,11 +257,10 @@ def test_signmessage_pagination(client, message):
                     # attach with space
                     message_read += " " + line
 
-            if page < br.pages:
+            if i < br.pages - 1:
                 client.debug.swipe_up()
-            else:
-                client.debug.press_yes()
-                break
+
+        client.debug.press_yes()
 
     with client:
         client.set_input_flow(input_flow)

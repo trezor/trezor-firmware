@@ -27,7 +27,6 @@ from ..common import (
     MNEMONIC12,
     click_through,
     generate_entropy,
-    paging_responses,
     read_and_confirm_mnemonic,
 )
 
@@ -35,8 +34,6 @@ EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
 
 
 def reset_device(client, strength):
-    words = strength // 32 * 3
-    mnemonic_pages = ((words + 3) // 4) + 1
     mnemonic = None
 
     def input_flow():
@@ -67,9 +64,7 @@ def reset_device(client, strength):
                 proto.EntropyRequest(),
                 proto.ButtonRequest(code=B.ResetDevice),
                 proto.ButtonRequest(code=B.ResetDevice),
-            ]
-            + paging_responses(mnemonic_pages, code=B.ResetDevice)
-            + [
+                proto.ButtonRequest(code=B.ResetDevice),
                 proto.ButtonRequest(code=B.Success),
                 proto.ButtonRequest(code=B.Success),
                 proto.Success,
@@ -124,8 +119,6 @@ class TestMsgResetDeviceT2:
     def test_reset_device_pin(self, client):
         mnemonic = None
         strength = 256  # 24 words
-        words = strength // 32 * 3
-        mnemonic_pages = (words // 4) + 1
 
         def input_flow():
             nonlocal mnemonic
@@ -182,9 +175,7 @@ class TestMsgResetDeviceT2:
                     proto.EntropyRequest(),
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
-                ]
-                + paging_responses(mnemonic_pages, code=B.ResetDevice)
-                + [
+                    proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.Success),
                     proto.ButtonRequest(code=B.Success),
                     proto.Success,
@@ -223,8 +214,6 @@ class TestMsgResetDeviceT2:
     def test_reset_failed_check(self, client):
         mnemonic = None
         strength = 256  # 24 words
-        words = strength // 32 * 3
-        mnemonic_pages = (words // 4) + 1
 
         def input_flow():
             nonlocal mnemonic
@@ -264,11 +253,9 @@ class TestMsgResetDeviceT2:
                     proto.EntropyRequest(),
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),
-                ]
-                + paging_responses(mnemonic_pages, code=B.ResetDevice)
-                + [proto.ButtonRequest(code=B.ResetDevice)]
-                + paging_responses(mnemonic_pages, code=B.ResetDevice)
-                + [
+                    proto.ButtonRequest(code=B.ResetDevice),
+                    proto.ButtonRequest(code=B.ResetDevice),
+                    proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.Success),
                     proto.ButtonRequest(code=B.Success),
                     proto.Success,

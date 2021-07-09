@@ -158,8 +158,8 @@ class DebugLink:
     def press_no(self):
         self.input(button=False)
 
-    def swipe_up(self):
-        self.input(swipe=messages.DebugSwipeDirection.UP)
+    def swipe_up(self, wait=False):
+        self.input(swipe=messages.DebugSwipeDirection.UP, wait=wait)
 
     def swipe_down(self):
         self.input(swipe=messages.DebugSwipeDirection.DOWN)
@@ -234,13 +234,10 @@ class DebugUI:
         if self.input_flow is None:
             if br.code == messages.ButtonRequestType.PinEntry:
                 self.debuglink.input(self.get_pin())
-            elif (
-                br.pages is not None
-                and br.page_number is not None
-                and br.pages > br.page_number
-            ):
-                self.debuglink.swipe_up()
             else:
+                if br.pages is not None:
+                    for _ in range(br.pages - 1):
+                        self.debuglink.swipe_up(wait=True)
                 self.debuglink.press_yes()
         elif self.input_flow is self.INPUT_FLOW_DONE:
             raise AssertionError("input flow ended prematurely")

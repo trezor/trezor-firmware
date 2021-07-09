@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 
 from trezorlib import btc, tools
-from trezorlib.messages import ButtonRequest, ButtonRequestType as B
+from trezorlib.messages import ButtonRequestType as B
 
 # fmt: off
 #                1      2     3    4      5      6      7     8      9    10    11    12
@@ -188,15 +188,14 @@ def read_and_confirm_mnemonic(debug, choose_wrong=False):
         mnemonic = yield from read_and_confirm_mnemonic(client.debug)
     """
     mnemonic = []
-    while True:
-        br = yield
+    br = yield
+    for _ in range(br.pages - 1):
         mnemonic.extend(debug.read_reset_word().split())
-        if br.page_number < br.pages:
-            debug.swipe_up()
-        else:
-            # last page is confirmation
-            debug.press_yes()
-            break
+        debug.swipe_up(wait=True)
+
+    # last page is confirmation
+    mnemonic.extend(debug.read_reset_word().split())
+    debug.press_yes()
 
     # check share
     for _ in range(3):
@@ -208,15 +207,6 @@ def read_and_confirm_mnemonic(debug, choose_wrong=False):
             debug.input(mnemonic[index])
 
     return " ".join(mnemonic)
-
-
-def paging_responses(pages, code=None):
-    """Generate a sequence of ButtonRequests for paging through a specified number
-    of screens.
-    """
-    return [
-        ButtonRequest(code=code, page_number=i + 1, pages=pages) for i in range(pages)
-    ]
 
 
 def get_test_address(client):
