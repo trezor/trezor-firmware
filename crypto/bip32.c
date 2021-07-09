@@ -215,7 +215,9 @@ int hdnode_private_ckd(HDNode *inout, uint32_t i) {
     if (!inout->curve->params) {
       return 0;
     }
-    hdnode_fill_public_key(inout);
+    if (hdnode_fill_public_key(inout) != 0) {
+      return 0;
+    }
     memcpy(data, inout->public_key, 33);
   }
   write_be(data + 33, i);
@@ -316,7 +318,9 @@ int hdnode_private_ckd_cardano(HDNode *inout, uint32_t index) {
     memcpy(data + 1, inout->private_key, 32);
     memcpy(data + 1 + 32, inout->private_key_extension, 32);
   } else {  // public derivation
-    hdnode_fill_public_key(inout);
+    if (hdnode_fill_public_key(inout) != 0) {
+      return 0;
+    }
     data[0] = 2;
     memcpy(data + 1, inout->public_key + 1, 32);
   }
@@ -377,7 +381,9 @@ static int hdnode_from_secret_cardano(const uint8_t *k,
   out->private_key[31] |= 0x40;
 
   out->public_key[0] = 0;
-  hdnode_fill_public_key(out);
+  if (hdnode_fill_public_key(out) != 0) {
+    return 0;
+  }
 
   return 1;
 }
@@ -585,26 +591,34 @@ int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count,
 }
 #endif
 
-void hdnode_get_address_raw(HDNode *node, uint32_t version, uint8_t *addr_raw) {
-  hdnode_fill_public_key(node);
+int hdnode_get_address_raw(HDNode *node, uint32_t version, uint8_t *addr_raw) {
+  if (hdnode_fill_public_key(node) != 0) {
+    return 1;
+  }
   ecdsa_get_address_raw(node->public_key, version, node->curve->hasher_pubkey,
                         addr_raw);
+  return 0;
 }
 
-void hdnode_get_address(HDNode *node, uint32_t version, char *addr,
-                        int addrsize) {
-  hdnode_fill_public_key(node);
+int hdnode_get_address(HDNode *node, uint32_t version, char *addr,
+                       int addrsize) {
+  if (hdnode_fill_public_key(node) != 0) {
+    return 1;
+  }
   ecdsa_get_address(node->public_key, version, node->curve->hasher_pubkey,
                     node->curve->hasher_base58, addr, addrsize);
+  return 0;
 }
 
-void hdnode_fill_public_key(HDNode *node) {
-  if (node->public_key[0] != 0) return;
+int hdnode_fill_public_key(HDNode *node) {
+  if (node->public_key[0] != 0) return 0;
 
 #if USE_BIP32_25519_CURVES
   if (node->curve->params) {
-    ecdsa_get_public_key33(node->curve->params, node->private_key,
-                           node->public_key);
+    if (ecdsa_get_public_key33(node->curve->params, node->private_key,
+                               node->public_key) != 0) {
+      return 1;
+    }
   } else {
     node->public_key[0] = 1;
     if (node->curve == &ed25519_info) {
@@ -626,9 +640,12 @@ void hdnode_fill_public_key(HDNode *node) {
   }
 #else
 
-  ecdsa_get_public_key33(node->curve->params, node->private_key,
-                         node->public_key);
+  if (ecdsa_get_public_key33(node->curve->params, node->private_key,
+                             node->public_key) != 0) {
+    return 1;
+  }
 #endif
+  return 0;
 }
 
 #if USE_ETHEREUM
@@ -637,7 +654,10 @@ int hdnode_get_ethereum_pubkeyhash(const HDNode *node, uint8_t *pubkeyhash) {
   SHA3_CTX ctx = {0};
 
   /* get uncompressed public key */
-  ecdsa_get_public_key65(node->curve->params, node->private_key, buf);
+  if (ecdsa_get_public_key65(node->curve->params, node->private_key, buf) !=
+      0) {
+    return 0;
+  }
 
   /* compute sha3 of x and y coordinate without 04 prefix */
   sha3_256_Init(&ctx);
@@ -657,7 +677,10 @@ int hdnode_get_nem_address(HDNode *node, uint8_t version, char *address) {
     return 0;
   }
 
-  hdnode_fill_public_key(node);
+  if (hdnode_fill_public_key(node) != 0) {
+    return 0;
+  }
+
   return nem_get_address(&node->public_key[1], version, address);
 }
 
@@ -766,15 +789,21 @@ int hdnode_sign(HDNode *node, const uint8_t *msg, uint32_t msg_len,
     return 1;  // signatures are not supported
   } else {
     if (node->curve == &ed25519_info) {
-      hdnode_fill_public_key(node);
+      if (hdnode_fill_public_key(node) != 0) {
+        return 1;
+      }
       ed25519_sign(msg, msg_len, node->private_key, node->public_key + 1, sig);
     } else if (node->curve == &ed25519_sha3_info) {
-      hdnode_fill_public_key(node);
+      if (hdnode_fill_public_key(node) != 0) {
+        return 1;
+      }
       ed25519_sign_sha3(msg, msg_len, node->private_key, node->public_key + 1,
                         sig);
 #if USE_KECCAK
     } else if (node->curve == &ed25519_keccak_info) {
-      hdnode_fill_public_key(node);
+      if (hdnode_fill_public_key(node) != 0) {
+        return 1;
+      }
       ed25519_sign_keccak(msg, msg_len, node->private_key, node->public_key + 1,
                           sig);
 #endif

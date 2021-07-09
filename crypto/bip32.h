@@ -103,7 +103,7 @@ int hdnode_private_ckd_cached(HDNode *inout, const uint32_t *i, size_t i_count,
 
 uint32_t hdnode_fingerprint(HDNode *node);
 
-void hdnode_fill_public_key(HDNode *node);
+int hdnode_fill_public_key(HDNode *node);
 
 #if USE_ETHEREUM
 int hdnode_get_ethereum_pubkeyhash(const HDNode *node, uint8_t *pubkeyhash);
@@ -147,9 +147,9 @@ int hdnode_deserialize_private(const char *str, uint32_t version,
                                const char *curve, HDNode *node,
                                uint32_t *fingerprint);
 
-void hdnode_get_address_raw(HDNode *node, uint32_t version, uint8_t *addr_raw);
-void hdnode_get_address(HDNode *node, uint32_t version, char *addr,
-                        int addrsize);
+int hdnode_get_address_raw(HDNode *node, uint32_t version, uint8_t *addr_raw);
+int hdnode_get_address(HDNode *node, uint32_t version, char *addr,
+                       int addrsize);
 
 const curve_info *get_curve_by_name(const char *curve_name);
 

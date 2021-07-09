@@ -256,7 +256,9 @@ int compile_output(const CoinInfo *coin, AmountUnit amount_unit,
                                   NULL) == 0) {
       return 0;  // failed to compile output
     }
-    hdnode_fill_public_key(&node);
+    if (hdnode_fill_public_key(&node) != 0) {
+      return 0;  // failed to compile output
+    }
     if (!compute_address(coin, input_script_type, &node, in->has_multisig,
                          &in->multisig, in->address)) {
       return 0;  // failed to compile output

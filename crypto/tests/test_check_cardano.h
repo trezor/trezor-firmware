@@ -136,7 +136,7 @@ START_TEST(test_bip32_cardano_hdnode_vector_1) {
       fromhex(
           "daeb991f2d2128e2525415c56a07f4366baa26c1e48572a5e073934b6de35fbc"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key + 1,
       fromhex(
@@ -174,7 +174,7 @@ START_TEST(test_bip32_cardano_hdnode_vector_2) {
       fromhex(
           "64aa9a16331f14c981b769efcf96addcc4c6db44047fe7a7feae0be23d33bf54"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key + 1,
       fromhex(
@@ -212,7 +212,7 @@ START_TEST(test_bip32_cardano_hdnode_vector_3) {
       fromhex(
           "b4fc241feffe840b8a54a26ab447f5a5caa31032db3a8091fca14f38b86ed539"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key + 1,
       fromhex(
@@ -251,7 +251,7 @@ START_TEST(test_bip32_cardano_hdnode_vector_4) {
       fromhex(
           "a3071959013af95aaecf78a7a2e1b9838bbbc4864d6a8a2295243782078345cd"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key + 1,
       fromhex(
@@ -291,7 +291,7 @@ START_TEST(test_bip32_cardano_hdnode_vector_5) {
       fromhex(
           "5bebf1eea68acd04932653d944b064b10baaf5886dd73c185cc285059bf93363"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key + 1,
       fromhex(
@@ -332,7 +332,7 @@ START_TEST(test_bip32_cardano_hdnode_vector_6) {
       fromhex(
           "466332cb097934b43008701e7e27044aa56c7859019e4eba18d91a3bea23dff7"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key + 1,
       fromhex(
@@ -374,7 +374,7 @@ START_TEST(test_bip32_cardano_hdnode_vector_7) {
       fromhex(
           "01eccef768a79859f824a1d3c3e35e131184e2940c3fca9a4c9b307741f65363"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key + 1,
       fromhex(
@@ -416,7 +416,7 @@ START_TEST(test_bip32_cardano_hdnode_vector_8) {
       fromhex(
           "170e0d3b65ba8d71f27a6db60d0ac26dcb16e52e08cc259db72066f206b258d5"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key + 1,
       fromhex(
@@ -459,7 +459,7 @@ START_TEST(test_bip32_cardano_hdnode_vector_9) {
       fromhex(
           "80d2c677638e5dbd4395cdec279bf2a42077f2797c9e887949d37cdb317fce6a"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key + 1,
       fromhex(

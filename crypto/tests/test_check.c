@@ -1238,7 +1238,7 @@ START_TEST(test_bip32_vector_1) {
       fromhex(
           "e8f32e723decf4051aefac8e2c93c9c5b214313817cdb01a1494b917c8436b35"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -1252,7 +1252,7 @@ START_TEST(test_bip32_vector_1) {
   r = hdnode_deserialize_private(str, VERSION_PRIVATE, SECP256K1_NAME, &node2,
                                  NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, VERSION_PUBLIC, str, sizeof(str));
   ck_assert_str_eq(str,
@@ -1279,7 +1279,7 @@ START_TEST(test_bip32_vector_1) {
       fromhex(
           "edb2e14f9ee77d26dd93b4ecede8d16ed408ce149b6cd80b0715a2d911a0afea"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -1293,7 +1293,7 @@ START_TEST(test_bip32_vector_1) {
   r = hdnode_deserialize_private(str, VERSION_PRIVATE, SECP256K1_NAME, &node2,
                                  NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, VERSION_PUBLIC, str, sizeof(str));
   ck_assert_str_eq(str,
@@ -1320,7 +1320,7 @@ START_TEST(test_bip32_vector_1) {
       fromhex(
           "3c6cb8d0f6a264c91ea8b5030fadaa8e538b020f0a387421a12de9319dc93368"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -1334,7 +1334,7 @@ START_TEST(test_bip32_vector_1) {
   r = hdnode_deserialize_private(str, VERSION_PRIVATE, SECP256K1_NAME, &node2,
                                  NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, VERSION_PUBLIC, str, sizeof(str));
   ck_assert_str_eq(str,
@@ -1361,7 +1361,7 @@ START_TEST(test_bip32_vector_1) {
       fromhex(
           "cbce0d719ecf7431d88e6a89fa1483e02e35092af60c042b1df2ff59fa424dca"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -1375,7 +1375,7 @@ START_TEST(test_bip32_vector_1) {
   r = hdnode_deserialize_private(str, VERSION_PRIVATE, SECP256K1_NAME, &node2,
                                  NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, VERSION_PUBLIC, str, sizeof(str));
   ck_assert_str_eq(str,
@@ -1402,7 +1402,7 @@ START_TEST(test_bip32_vector_1) {
       fromhex(
           "0f479245fb19a38a1954c5c7c0ebab2f9bdfd96a17563ef28a6a4b1a2a764ef4"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -1416,7 +1416,7 @@ START_TEST(test_bip32_vector_1) {
   r = hdnode_deserialize_private(str, VERSION_PRIVATE, SECP256K1_NAME, &node2,
                                  NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, VERSION_PUBLIC, str, sizeof(str));
   ck_assert_str_eq(str,
@@ -1443,7 +1443,7 @@ START_TEST(test_bip32_vector_1) {
       fromhex(
           "471b76e389e528d6de6d816857e012c5455051cad6660850e58372a6c3e6e7c8"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -1457,7 +1457,7 @@ START_TEST(test_bip32_vector_1) {
   r = hdnode_deserialize_private(str, VERSION_PRIVATE, SECP256K1_NAME, &node2,
                                  NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, VERSION_PUBLIC, str, sizeof(str));
   ck_assert_str_eq(str,
@@ -1500,7 +1500,7 @@ START_TEST(test_bip32_vector_2) {
       fromhex(
           "4b03d6fc340455b363f51020ad3ecca4f0850280cf436c70c727923f6db46c3e"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -1514,7 +1514,7 @@ START_TEST(test_bip32_vector_2) {
   r = hdnode_deserialize_private(str, VERSION_PRIVATE, SECP256K1_NAME, &node2,
                                  NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, VERSION_PUBLIC, str, sizeof(str));
   ck_assert_str_eq(str,
@@ -1542,7 +1542,7 @@ START_TEST(test_bip32_vector_2) {
       fromhex(
           "abe74a98f6c7eabee0428f53798f0ab8aa1bd37873999041703c742f15ac7e1e"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -1556,7 +1556,7 @@ START_TEST(test_bip32_vector_2) {
   r = hdnode_deserialize_private(str, VERSION_PRIVATE, SECP256K1_NAME, &node2,
                                  NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, VERSION_PUBLIC, str, sizeof(str));
   ck_assert_str_eq(str,
@@ -1584,7 +1584,7 @@ START_TEST(test_bip32_vector_2) {
       fromhex(
           "877c779ad9687164e9c2f4f0f4ff0340814392330693ce95a58fe18fd52e6e93"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -1598,7 +1598,7 @@ START_TEST(test_bip32_vector_2) {
   r = hdnode_deserialize_private(str, VERSION_PRIVATE, SECP256K1_NAME, &node2,
                                  NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, VERSION_PUBLIC, str, sizeof(str));
   ck_assert_str_eq(str,
@@ -1626,7 +1626,7 @@ START_TEST(test_bip32_vector_2) {
       fromhex(
           "704addf544a06e5ee4bea37098463c23613da32020d604506da8c0518e1da4b7"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -1640,7 +1640,7 @@ START_TEST(test_bip32_vector_2) {
   r = hdnode_deserialize_private(str, VERSION_PRIVATE, SECP256K1_NAME, &node2,
                                  NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, VERSION_PUBLIC, str, sizeof(str));
   ck_assert_str_eq(str,
@@ -1668,7 +1668,7 @@ START_TEST(test_bip32_vector_2) {
       fromhex(
           "f1c7c871a54a804afe328b4c83a1c33b8e5ff48f5087273f04efa83b247d6a2d"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -1682,7 +1682,7 @@ START_TEST(test_bip32_vector_2) {
   r = hdnode_deserialize_private(str, VERSION_PRIVATE, SECP256K1_NAME, &node2,
                                  NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, VERSION_PUBLIC, str, sizeof(str));
   ck_assert_str_eq(str,
@@ -1710,7 +1710,7 @@ START_TEST(test_bip32_vector_2) {
       fromhex(
           "bb7d39bdb83ecf58f2fd82b6d918341cbef428661ef01ab97c28a4842125ac23"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -1724,7 +1724,7 @@ START_TEST(test_bip32_vector_2) {
   r = hdnode_deserialize_private(str, VERSION_PRIVATE, SECP256K1_NAME, &node2,
                                  NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, VERSION_PUBLIC, str, sizeof(str));
   ck_assert_str_eq(str,
@@ -1760,7 +1760,7 @@ START_TEST(test_bip32_vector_2) {
       fromhex(
           "0000000000000000000000000000000000000000000000000000000000000000"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -1787,7 +1787,7 @@ START_TEST(test_bip32_vector_3) {
   // [Chain m]
   fingerprint = 0;
   ck_assert_uint_eq(fingerprint, 0x00000000);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   hdnode_serialize_private(&node, fingerprint, VERSION_PRIVATE, str,
                            sizeof(str));
   ck_assert_str_eq(str,
@@ -1796,7 +1796,7 @@ START_TEST(test_bip32_vector_3) {
   r = hdnode_deserialize_private(str, VERSION_PRIVATE, SECP256K1_NAME, &node2,
                                  NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, VERSION_PUBLIC, str, sizeof(str));
   ck_assert_str_eq(str,
@@ -1813,7 +1813,7 @@ START_TEST(test_bip32_vector_3) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_private_ckd_prime(&node, 0);
   ck_assert_int_eq(r, 1);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   hdnode_serialize_private(&node, fingerprint, VERSION_PRIVATE, str,
                            sizeof(str));
   ck_assert_str_eq(str,
@@ -1822,7 +1822,7 @@ START_TEST(test_bip32_vector_3) {
   r = hdnode_deserialize_private(str, VERSION_PRIVATE, SECP256K1_NAME, &node2,
                                  NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, VERSION_PUBLIC, str, sizeof(str));
   ck_assert_str_eq(str,
@@ -1854,7 +1854,7 @@ START_TEST(test_bip32_vector_4) {
   // [Chain m]
   fingerprint = 0;
   ck_assert_int_eq(fingerprint, 0x00000000);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   hdnode_serialize_private(&node, fingerprint, VERSION_PRIVATE, str,
                            sizeof(str));
   ck_assert_str_eq(str,
@@ -1863,7 +1863,7 @@ START_TEST(test_bip32_vector_4) {
   r = hdnode_deserialize_private(str, VERSION_PRIVATE, SECP256K1_NAME, &node2,
                                  NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, VERSION_PUBLIC, str, sizeof(str));
   ck_assert_str_eq(str,
@@ -1880,7 +1880,7 @@ START_TEST(test_bip32_vector_4) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_private_ckd_prime(&node, 0);
   ck_assert_int_eq(r, 1);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   hdnode_serialize_private(&node, fingerprint, VERSION_PRIVATE, str,
                            sizeof(str));
   ck_assert_str_eq(str,
@@ -1889,7 +1889,7 @@ START_TEST(test_bip32_vector_4) {
   r = hdnode_deserialize_private(str, VERSION_PRIVATE, SECP256K1_NAME, &node2,
                                  NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, VERSION_PUBLIC, str, sizeof(str));
   ck_assert_str_eq(str,
@@ -1906,7 +1906,7 @@ START_TEST(test_bip32_vector_4) {
   fingerprint = hdnode_fingerprint(&node);
   r = hdnode_private_ckd_prime(&node, 1);
   ck_assert_int_eq(r, 1);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   hdnode_serialize_private(&node, fingerprint, VERSION_PRIVATE, str,
                            sizeof(str));
   ck_assert_str_eq(str,
@@ -1915,7 +1915,7 @@ START_TEST(test_bip32_vector_4) {
   r = hdnode_deserialize_private(str, VERSION_PRIVATE, SECP256K1_NAME, &node2,
                                  NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, VERSION_PUBLIC, str, sizeof(str));
   ck_assert_str_eq(str,
@@ -1943,10 +1943,10 @@ START_TEST(test_bip32_compare) {
           "301133282ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788"
           "f9f174429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19"),
       64, SECP256K1_NAME, &node2);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   for (i = 0; i < 100; i++) {
     memcpy(&node3, &node1, sizeof(HDNode));
-    hdnode_fill_public_key(&node3);
+    ck_assert_int_eq(hdnode_fill_public_key(&node3), 0);
     r = hdnode_private_ckd(&node1, i);
     ck_assert_int_eq(r, 1);
     r = hdnode_public_ckd(&node2, i);
@@ -1969,7 +1969,7 @@ START_TEST(test_bip32_compare) {
         fromhex(
             "0000000000000000000000000000000000000000000000000000000000000000"),
         32);
-    hdnode_fill_public_key(&node1);
+    ck_assert_int_eq(hdnode_fill_public_key(&node1), 0);
     ck_assert_mem_eq(node1.public_key, node2.public_key, 33);
     ck_assert_mem_eq(node1.public_key, node3.public_key, 33);
   }
@@ -1979,7 +1979,7 @@ END_TEST
 START_TEST(test_bip32_optimized) {
   HDNode root;
   hdnode_from_seed((uint8_t *)"NothingToSeeHere", 16, SECP256K1_NAME, &root);
-  hdnode_fill_public_key(&root);
+  ck_assert_int_eq(hdnode_fill_public_key(&root), 0);
 
   curve_point pub;
   ecdsa_read_pubkey(&secp256k1, root.public_key, &pub);
@@ -1991,7 +1991,7 @@ START_TEST(test_bip32_optimized) {
     // unoptimized
     memcpy(&node, &root, sizeof(HDNode));
     hdnode_public_ckd(&node, i);
-    hdnode_fill_public_key(&node);
+    ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
     ecdsa_get_address(node.public_key, 0, HASHER_SHA2_RIPEMD, HASHER_SHA2D,
                       addr1, sizeof(addr1));
     // optimized
@@ -2136,7 +2136,7 @@ START_TEST(test_bip32_nist_seed) {
       fromhex(
           "7762f9729fed06121fd13f326884c82f59aa95c57ac492ce8c9654e60efd130c"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2160,7 +2160,7 @@ START_TEST(test_bip32_nist_seed) {
       fromhex(
           "0e49dc46ce1d8c29d9b80a05e40f5d0cd68cbf02ae98572186f5343be18084bf"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2190,7 +2190,7 @@ START_TEST(test_bip32_nist_vector_1) {
       fromhex(
           "612091aaa12e22dd2abef664f8a01a82cae99ad7441b7ef8110424915c268bc2"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2211,7 +2211,7 @@ START_TEST(test_bip32_nist_vector_1) {
       fromhex(
           "6939694369114c67917a182c59ddb8cafc3004e63ca5d3b84403ba8613debc0c"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2232,7 +2232,7 @@ START_TEST(test_bip32_nist_vector_1) {
       fromhex(
           "284e9d38d07d21e4e281b645089a94f4cf5a5a81369acf151a1c3a57f18b2129"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2253,7 +2253,7 @@ START_TEST(test_bip32_nist_vector_1) {
       fromhex(
           "694596e8a54f252c960eb771a3c41e7e32496d03b954aeb90f61635b8e092aa7"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2274,7 +2274,7 @@ START_TEST(test_bip32_nist_vector_1) {
       fromhex(
           "5996c37fd3dd2679039b23ed6f70b506c6b56b3cb5e424681fb0fa64caf82aaa"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2295,7 +2295,7 @@ START_TEST(test_bip32_nist_vector_1) {
       fromhex(
           "21c4f269ef0a5fd1badf47eeacebeeaa3de22eb8e5b0adcd0f27dd99d34d0119"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2329,7 +2329,7 @@ START_TEST(test_bip32_nist_vector_2) {
       fromhex(
           "eaa31c2e46ca2962227cf21d73a7ef0ce8b31c756897521eb6c7b39796633357"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2351,7 +2351,7 @@ START_TEST(test_bip32_nist_vector_2) {
       fromhex(
           "d7d065f63a62624888500cdb4f88b6d59c2927fee9e6d0cdff9cad555884df6e"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2373,7 +2373,7 @@ START_TEST(test_bip32_nist_vector_2) {
       fromhex(
           "96d2ec9316746a75e7793684ed01e3d51194d81a42a3276858a5b7376d4b94b9"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2395,7 +2395,7 @@ START_TEST(test_bip32_nist_vector_2) {
       fromhex(
           "974f9096ea6873a915910e82b29d7c338542ccde39d2064d1cc228f371542bbc"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2417,7 +2417,7 @@ START_TEST(test_bip32_nist_vector_2) {
       fromhex(
           "da29649bbfaff095cd43819eda9a7be74236539a29094cd8336b07ed8d4eff63"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2439,7 +2439,7 @@ START_TEST(test_bip32_nist_vector_2) {
       fromhex(
           "bb0a77ba01cc31d77205d51d08bd313b979a71ef4de9b062f8958297e746bd67"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2490,10 +2490,10 @@ START_TEST(test_bip32_nist_compare) {
           "301133282ad079cbeb59bc446ad39d333928f74c46997d3609cd3e2801ca69d62788"
           "f9f174429946ff4e9be89f67c22fae28cb296a9b37734f75e73d1477af19"),
       64, NIST256P1_NAME, &node2);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   for (i = 0; i < 100; i++) {
     memcpy(&node3, &node1, sizeof(HDNode));
-    hdnode_fill_public_key(&node3);
+    ck_assert_int_eq(hdnode_fill_public_key(&node3), 0);
     r = hdnode_private_ckd(&node1, i);
     ck_assert_int_eq(r, 1);
     r = hdnode_public_ckd(&node2, i);
@@ -2516,7 +2516,7 @@ START_TEST(test_bip32_nist_compare) {
         fromhex(
             "0000000000000000000000000000000000000000000000000000000000000000"),
         32);
-    hdnode_fill_public_key(&node1);
+    ck_assert_int_eq(hdnode_fill_public_key(&node1), 0);
     ck_assert_mem_eq(node1.public_key, node2.public_key, 33);
     ck_assert_mem_eq(node1.public_key, node3.public_key, 33);
   }
@@ -2547,7 +2547,7 @@ START_TEST(test_bip32_nist_repeat) {
       fromhex(
           "06f0db126f023755d0b8d86d4591718a5210dd8d024e3e14b6159d63f53aa669"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2569,7 +2569,7 @@ START_TEST(test_bip32_nist_repeat) {
       fromhex(
           "092154eed4af83e078ff9b84322015aefe5769e31270f62c3f66c33888335f3a"),
       32);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(
       node2.public_key,
       fromhex(
@@ -2586,7 +2586,7 @@ START_TEST(test_bip32_nist_repeat) {
       fromhex(
           "9e87fe95031f14736774cd82f25fd885065cb7c358c1edf813c72af535e83071"),
       32);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(
       node2.public_key,
       fromhex(
@@ -2614,7 +2614,7 @@ START_TEST(test_bip32_ed25519_vector_1) {
       fromhex(
           "2b4be7f19ee27bbf30c667b642d5f4aa69fd169872f8fc3059c08ebae2eb19e7"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2633,7 +2633,7 @@ START_TEST(test_bip32_ed25519_vector_1) {
       fromhex(
           "68e0fe46dfb67e368c75379acec591dad19df3cde26e63b93a8e704f1dade7a3"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2652,7 +2652,7 @@ START_TEST(test_bip32_ed25519_vector_1) {
       fromhex(
           "b1d0bad404bf35da785a64ca1ac54b2617211d2777696fbffaf208f746ae84f2"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2671,7 +2671,7 @@ START_TEST(test_bip32_ed25519_vector_1) {
       fromhex(
           "92a5b23c0b8a99e37d07df3fb9966917f5d06e02ddbd909c7e184371463e9fc9"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2690,7 +2690,7 @@ START_TEST(test_bip32_ed25519_vector_1) {
       fromhex(
           "30d1dc7e5fc04c31219ab25a27ae00b50f6fd66622f6e9c913253d6511d1e662"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2709,7 +2709,7 @@ START_TEST(test_bip32_ed25519_vector_1) {
       fromhex(
           "8f94d394a8e8fd6b1bc2f3f49f5c47e385281d5c17e65324b0f62483e37e8793"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2741,7 +2741,7 @@ START_TEST(test_bip32_ed25519_vector_2) {
       fromhex(
           "171cb88b1b3c1db25add599712e36245d75bc65a1a5c9e18d76f9f2b1eab4012"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2761,7 +2761,7 @@ START_TEST(test_bip32_ed25519_vector_2) {
       fromhex(
           "1559eb2bbec5790b0c65d8693e4d0875b1747f4970ae8b650486ed7470845635"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2781,7 +2781,7 @@ START_TEST(test_bip32_ed25519_vector_2) {
       fromhex(
           "ea4f5bfe8694d8bb74b7b59404632fd5968b774ed545e810de9c32a4fb4192f4"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2801,7 +2801,7 @@ START_TEST(test_bip32_ed25519_vector_2) {
       fromhex(
           "3757c7577170179c7868353ada796c839135b3d30554bbb74a4b1e4a5a58505c"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2821,7 +2821,7 @@ START_TEST(test_bip32_ed25519_vector_2) {
       fromhex(
           "5837736c89570de861ebc173b1086da4f505d4adb387c6a1b1342d5e4ac9ec72"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2841,7 +2841,7 @@ START_TEST(test_bip32_ed25519_vector_2) {
       fromhex(
           "551d333177df541ad876a60ea71f00447931c0a9da16f227c11ea080d7391b8d"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2879,7 +2879,7 @@ START_TEST(test_bip32_decred_vector_1) {
       fromhex(
           "e8f32e723decf4051aefac8e2c93c9c5b214313817cdb01a1494b917c8436b35"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2894,7 +2894,7 @@ START_TEST(test_bip32_decred_vector_1) {
                                  SECP256K1_DECRED_NAME, &node2, NULL);
   ck_assert_int_eq(r, 0);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, DECRED_VERSION_PUBLIC, str,
                           sizeof(str));
@@ -2922,7 +2922,7 @@ START_TEST(test_bip32_decred_vector_1) {
       fromhex(
           "edb2e14f9ee77d26dd93b4ecede8d16ed408ce149b6cd80b0715a2d911a0afea"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2936,7 +2936,7 @@ START_TEST(test_bip32_decred_vector_1) {
   r = hdnode_deserialize_private(str, DECRED_VERSION_PRIVATE,
                                  SECP256K1_DECRED_NAME, &node2, NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, DECRED_VERSION_PUBLIC, str,
                           sizeof(str));
@@ -2964,7 +2964,7 @@ START_TEST(test_bip32_decred_vector_1) {
       fromhex(
           "3c6cb8d0f6a264c91ea8b5030fadaa8e538b020f0a387421a12de9319dc93368"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -2978,7 +2978,7 @@ START_TEST(test_bip32_decred_vector_1) {
   r = hdnode_deserialize_private(str, DECRED_VERSION_PRIVATE,
                                  SECP256K1_DECRED_NAME, &node2, NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, DECRED_VERSION_PUBLIC, str,
                           sizeof(str));
@@ -3006,7 +3006,7 @@ START_TEST(test_bip32_decred_vector_1) {
       fromhex(
           "cbce0d719ecf7431d88e6a89fa1483e02e35092af60c042b1df2ff59fa424dca"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -3020,7 +3020,7 @@ START_TEST(test_bip32_decred_vector_1) {
   r = hdnode_deserialize_private(str, DECRED_VERSION_PRIVATE,
                                  SECP256K1_DECRED_NAME, &node2, NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, DECRED_VERSION_PUBLIC, str,
                           sizeof(str));
@@ -3048,7 +3048,7 @@ START_TEST(test_bip32_decred_vector_1) {
       fromhex(
           "0f479245fb19a38a1954c5c7c0ebab2f9bdfd96a17563ef28a6a4b1a2a764ef4"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -3062,7 +3062,7 @@ START_TEST(test_bip32_decred_vector_1) {
   r = hdnode_deserialize_private(str, DECRED_VERSION_PRIVATE,
                                  SECP256K1_DECRED_NAME, &node2, NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, DECRED_VERSION_PUBLIC, str,
                           sizeof(str));
@@ -3090,7 +3090,7 @@ START_TEST(test_bip32_decred_vector_1) {
       fromhex(
           "471b76e389e528d6de6d816857e012c5455051cad6660850e58372a6c3e6e7c8"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -3104,7 +3104,7 @@ START_TEST(test_bip32_decred_vector_1) {
   r = hdnode_deserialize_private(str, DECRED_VERSION_PRIVATE,
                                  SECP256K1_DECRED_NAME, &node2, NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, DECRED_VERSION_PUBLIC, str,
                           sizeof(str));
@@ -3152,7 +3152,7 @@ START_TEST(test_bip32_decred_vector_2) {
       fromhex(
           "4b03d6fc340455b363f51020ad3ecca4f0850280cf436c70c727923f6db46c3e"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -3166,7 +3166,7 @@ START_TEST(test_bip32_decred_vector_2) {
   r = hdnode_deserialize_private(str, DECRED_VERSION_PRIVATE,
                                  SECP256K1_DECRED_NAME, &node2, NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, DECRED_VERSION_PUBLIC, str,
                           sizeof(str));
@@ -3195,7 +3195,7 @@ START_TEST(test_bip32_decred_vector_2) {
       fromhex(
           "abe74a98f6c7eabee0428f53798f0ab8aa1bd37873999041703c742f15ac7e1e"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -3209,7 +3209,7 @@ START_TEST(test_bip32_decred_vector_2) {
   r = hdnode_deserialize_private(str, DECRED_VERSION_PRIVATE,
                                  SECP256K1_DECRED_NAME, &node2, NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, DECRED_VERSION_PUBLIC, str,
                           sizeof(str));
@@ -3238,7 +3238,7 @@ START_TEST(test_bip32_decred_vector_2) {
       fromhex(
           "877c779ad9687164e9c2f4f0f4ff0340814392330693ce95a58fe18fd52e6e93"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -3252,7 +3252,7 @@ START_TEST(test_bip32_decred_vector_2) {
   r = hdnode_deserialize_private(str, DECRED_VERSION_PRIVATE,
                                  SECP256K1_DECRED_NAME, &node2, NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, DECRED_VERSION_PUBLIC, str,
                           sizeof(str));
@@ -3281,7 +3281,7 @@ START_TEST(test_bip32_decred_vector_2) {
       fromhex(
           "704addf544a06e5ee4bea37098463c23613da32020d604506da8c0518e1da4b7"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -3295,7 +3295,7 @@ START_TEST(test_bip32_decred_vector_2) {
   r = hdnode_deserialize_private(str, DECRED_VERSION_PRIVATE,
                                  SECP256K1_DECRED_NAME, &node2, NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, DECRED_VERSION_PUBLIC, str,
                           sizeof(str));
@@ -3324,7 +3324,7 @@ START_TEST(test_bip32_decred_vector_2) {
       fromhex(
           "f1c7c871a54a804afe328b4c83a1c33b8e5ff48f5087273f04efa83b247d6a2d"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -3338,7 +3338,7 @@ START_TEST(test_bip32_decred_vector_2) {
   r = hdnode_deserialize_private(str, DECRED_VERSION_PRIVATE,
                                  SECP256K1_DECRED_NAME, &node2, NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, DECRED_VERSION_PUBLIC, str,
                           sizeof(str));
@@ -3367,7 +3367,7 @@ START_TEST(test_bip32_decred_vector_2) {
       fromhex(
           "bb7d39bdb83ecf58f2fd82b6d918341cbef428661ef01ab97c28a4842125ac23"),
       32);
-  hdnode_fill_public_key(&node);
+  ck_assert_int_eq(hdnode_fill_public_key(&node), 0);
   ck_assert_mem_eq(
       node.public_key,
       fromhex(
@@ -3381,7 +3381,7 @@ START_TEST(test_bip32_decred_vector_2) {
   r = hdnode_deserialize_private(str, DECRED_VERSION_PRIVATE,
                                  SECP256K1_DECRED_NAME, &node2, NULL);
   ck_assert_int_eq(r, 0);
-  hdnode_fill_public_key(&node2);
+  ck_assert_int_eq(hdnode_fill_public_key(&node2), 0);
   ck_assert_mem_eq(&node, &node2, sizeof(HDNode));
   hdnode_serialize_public(&node, fingerprint, DECRED_VERSION_PUBLIC, str,
                           sizeof(str));
@@ -7057,7 +7057,7 @@ static void test_bip32_ecdh_init_node(HDNode *node, const char *seed_str,
                                       const char *curve_name) {
   hdnode_from_seed((const uint8_t *)seed_str, strlen(seed_str), curve_name,
                    node);
-  hdnode_fill_public_key(node);
+  ck_assert_int_eq(hdnode_fill_public_key(node), 0);
   if (node->public_key[0] == 1) {
     node->public_key[0] = 0x40;  // Curve25519 public keys start with 0x40 byte
   }

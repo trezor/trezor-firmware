@@ -263,9 +263,12 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_serialize_public(mp_obj_t self,
                                                          mp_obj_t version) {
   uint32_t ver = trezor_obj_get_uint(version);
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
+  if (hdnode_fill_public_key(&o->hdnode) != 0) {
+    mp_raise_ValueError("Failed to serialize");
+  }
+
   vstr_t xpub = {0};
   vstr_init_len(&xpub, XPUB_MAXLEN);
-  hdnode_fill_public_key(&o->hdnode);
   int written = hdnode_serialize_public(&o->hdnode, o->fingerprint, ver,
                                         xpub.buf, xpub.alloc);
   if (written <= 0) {
@@ -367,7 +370,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_private_key_ext_obj,
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_HDNode_public_key(mp_obj_t self) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
-  hdnode_fill_public_key(&o->hdnode);
+  if (hdnode_fill_public_key(&o->hdnode) != 0) {
+    mp_raise_ValueError("Invalid private key");
+  }
   return mp_obj_new_bytes(o->hdnode.public_key, sizeof(o->hdnode.public_key));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_public_key_obj,
@@ -385,7 +390,9 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_address(mp_obj_t self,
 
   vstr_t address = {0};
   vstr_init_len(&address, ADDRESS_MAXLEN);
-  hdnode_get_address(&o->hdnode, v, address.buf, address.alloc);
+  if (hdnode_get_address(&o->hdnode, v, address.buf, address.alloc) != 0) {
+    mp_raise_ValueError("Failed to get address");
+  }
   address.len = strlen(address.buf);
   return mp_obj_new_str_from_vstr(&mp_type_str, &address);
 }
