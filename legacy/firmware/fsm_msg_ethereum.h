@@ -33,7 +33,13 @@ void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg) {
   HDNode *node = fsm_getDerivedNode(curve, msg->address_n, msg->address_n_count,
                                     &fingerprint);
   if (!node) return;
-  hdnode_fill_public_key(node);
+
+  if (hdnode_fill_public_key(node) != 0) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to derive public key"));
+    layoutHome();
+    return;
+  }
 
   if (msg->has_show_display && msg->show_display) {
     layoutPublicKey(node->public_key);

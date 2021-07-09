@@ -652,7 +652,10 @@ static bool fill_input_script_sig(TxInputType *tinput) {
     // Failed to derive private key
     return false;
   }
-  hdnode_fill_public_key(&node);
+  if (hdnode_fill_public_key(&node) != 0) {
+    // Failed to derive public key
+    return false;
+  }
   if (tinput->has_multisig) {
     tinput->script_sig.size = compile_script_multisig(coin, &(tinput->multisig),
                                                       tinput->script_sig.bytes);

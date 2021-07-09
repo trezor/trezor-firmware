@@ -123,7 +123,12 @@ void fsm_msgNEMSignTx(NEMSignTx *msg) {
                          msg->transaction.address_n_count, NULL);
   if (!node) return;
 
-  hdnode_fill_public_key(node);
+  if (hdnode_fill_public_key(node) != 0) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to derive public key"));
+    layoutHome();
+    return;
+  }
 
   const NEMTransactionCommon *common =
       msg->has_multisig ? &msg->multisig : &msg->transaction;

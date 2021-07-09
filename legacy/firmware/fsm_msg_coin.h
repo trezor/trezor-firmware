@@ -45,7 +45,13 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
   node = fsm_getDerivedNode(curve, msg->address_n, msg->address_n_count,
                             &fingerprint);
   if (!node) return;
-  hdnode_fill_public_key(node);
+
+  if (hdnode_fill_public_key(node) != 0) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to derive public key"));
+    layoutHome();
+    return;
+  }
 
   resp->node.depth = node->depth;
   resp->node.fingerprint = fingerprint;
@@ -154,7 +160,13 @@ void fsm_msgGetAddress(const GetAddress *msg) {
   HDNode *node = fsm_getDerivedNode(coin->curve_name, msg->address_n,
                                     msg->address_n_count, NULL);
   if (!node) return;
-  hdnode_fill_public_key(node);
+
+  if (hdnode_fill_public_key(node) != 0) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to derive public key"));
+    layoutHome();
+    return;
+  }
 
   char address[MAX_ADDR_SIZE];
   if (msg->has_multisig) {  // use progress bar only for multisig
@@ -262,7 +274,13 @@ void fsm_msgSignMessage(const SignMessage *msg) {
   layoutProgressSwipe(_("Signing"), 0);
   if (cryptoMessageSign(coin, node, msg->script_type, msg->message.bytes,
                         msg->message.size, resp->signature.bytes) == 0) {
-    hdnode_fill_public_key(node);
+    if (hdnode_fill_public_key(node) != 0) {
+      fsm_sendFailure(FailureType_Failure_ProcessError,
+                      _("Failed to derive public key"));
+      layoutHome();
+      return;
+    }
+
     if (!compute_address(coin, msg->script_type, node, false, NULL,
                          resp->address)) {
       fsm_sendFailure(FailureType_Failure_ProcessError,

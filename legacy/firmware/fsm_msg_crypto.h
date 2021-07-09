@@ -139,14 +139,25 @@ void fsm_msgSignIdentity(const SignIdentity *msg) {
   }
 
   if (result == 0) {
-    hdnode_fill_public_key(node);
+    if (hdnode_fill_public_key(node) != 0) {
+      fsm_sendFailure(FailureType_Failure_ProcessError,
+                      _("Failed to derive public key"));
+      layoutHome();
+      return;
+    }
+
     if (strcmp(curve, SECP256K1_NAME) != 0) {
       resp->has_address = false;
     } else {
       resp->has_address = true;
-      hdnode_get_address(
-          node, 0x00, resp->address,
-          sizeof(resp->address));  // hardcoded Bitcoin address type
+      // hardcoded Bitcoin address type
+      if (hdnode_get_address(node, 0x00, resp->address,
+                             sizeof(resp->address)) != 0) {
+        fsm_sendFailure(FailureType_Failure_ProcessError,
+                        _("Failed to get address"));
+        layoutHome();
+        return;
+      }
     }
     resp->public_key.size = 33;
     memcpy(resp->public_key.bytes, node->public_key, 33);
@@ -207,7 +218,12 @@ void fsm_msgGetECDHSessionKey(const GetECDHSessionKey *msg) {
   if (hdnode_get_shared_key(node, msg->peer_public_key.bytes,
                             resp->session_key.bytes, &result_size) == 0) {
     resp->session_key.size = result_size;
-    hdnode_fill_public_key(node);
+    if (hdnode_fill_public_key(node) != 0) {
+      fsm_sendFailure(FailureType_Failure_ProcessError,
+                      _("Failed to derive public key"));
+      layoutHome();
+      return;
+    }
     memcpy(resp->public_key.bytes, node->public_key, 33);
     resp->public_key.size = 33;
     resp->has_public_key = true;
