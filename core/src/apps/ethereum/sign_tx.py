@@ -68,19 +68,19 @@ async def sign_tx(ctx, msg, keychain):
     total_length = get_total_length(msg, data_total)
 
     sha = HashWriter(sha3_256(keccak=True))
-    sha.extend(rlp.encode_length(total_length, True))  # total length
+    rlp.write_header(sha, total_length, rlp.LIST_HEADER_BYTE)
 
     if msg.tx_type is not None:
-        sha.extend(rlp.encode(msg.tx_type))
+        rlp.write(sha, msg.tx_type)
 
     for field in (msg.nonce, msg.gas_price, msg.gas_limit, address_bytes, msg.value):
-        sha.extend(rlp.encode(field))
+        rlp.write(sha, field)
 
     if data_left == 0:
-        sha.extend(rlp.encode(data))
+        rlp.write(sha, data)
     else:
-        sha.extend(rlp.encode_length(data_total, False))
-        sha.extend(rlp.encode(data, False))
+        rlp.write_header(sha, data_total, rlp.STRING_HEADER_BYTE, data)
+        sha.extend(data)
 
     while data_left > 0:
         resp = await send_request_chunk(ctx, data_left)
@@ -89,9 +89,9 @@ async def sign_tx(ctx, msg, keychain):
 
     # eip 155 replay protection
     if msg.chain_id:
-        sha.extend(rlp.encode(msg.chain_id))
-        sha.extend(rlp.encode(0))
-        sha.extend(rlp.encode(0))
+        rlp.write(sha, msg.chain_id)
+        rlp.write(sha, 0)
+        rlp.write(sha, 0)
 
     digest = sha.get_digest()
     result = sign_digest(msg, keychain, digest)
@@ -102,29 +102,24 @@ async def sign_tx(ctx, msg, keychain):
 def get_total_length(msg: EthereumSignTx, data_total: int) -> int:
     length = 0
     if msg.tx_type is not None:
-        length += rlp.field_length(1, [msg.tx_type])
+        length += rlp.length(msg.tx_type)
 
-    length += rlp.field_length(len(msg.nonce), msg.nonce[:1])
-    length += rlp.field_length(len(msg.gas_price), msg.gas_price)
-    length += rlp.field_length(len(msg.gas_limit), msg.gas_limit)
-    to = address.bytes_from_address(msg.to)
-    length += rlp.field_length(len(to), to)
-    length += rlp.field_length(len(msg.value), msg.value)
+    for item in (
+        msg.nonce,
+        msg.gas_price,
+        msg.gas_limit,
+        address.bytes_from_address(msg.to),
+        msg.value,
+    ):
+        length += rlp.length(item)
 
     if msg.chain_id:  # forks replay protection
-        if msg.chain_id < 0x100:
-            l = 1
-        elif msg.chain_id < 0x1_0000:
-            l = 2
-        elif msg.chain_id < 0x100_0000:
-            l = 3
-        else:
-            l = 4
-        length += rlp.field_length(l, [msg.chain_id])
-        length += rlp.field_length(0, 0)
-        length += rlp.field_length(0, 0)
+        length += rlp.length(msg.chain_id)
+        length += rlp.length(0)
+        length += rlp.length(0)
 
-    length += rlp.field_length(data_total, msg.data_initial_chunk)
+    length += rlp.header_length(data_total, msg.data_initial_chunk)
+    length += data_total
     return length
 
 
