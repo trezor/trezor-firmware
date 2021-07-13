@@ -30,6 +30,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Ensure that all testnet coins use SLIP-44 coin type 1.
 - Disable all testnet coins from accessing Bitcoin paths.
 - Restrict BIP-45 paths to Bitcoin and coins with strong replay protection.
+- Fix operation source account encoding in Stellar.
 
 
 ## 2.4.0 [9th June 2021]

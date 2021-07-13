@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Don't show addresses that have an unrecognized path.
 - Disable all testnet coins from accessing Bitcoin paths.
 - Restrict the BIP-32 path ranges of `account`, `change` and `address_index` fields.
+- Fix operation source account encoding in Stellar.
 
 
 ## 1.10.1 [9th June 2021]

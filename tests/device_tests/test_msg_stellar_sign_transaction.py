@@ -234,7 +234,7 @@ def test_sign_tx_allow_trust_op(client):
 def test_sign_tx_change_trust_op(client):
 
     op = messages.StellarChangeTrustOp()
-    op.limit = 500111000
+    op.limit = 5000000000
     op.source_account = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
 
     op.asset = messages.StellarAssetType(
@@ -248,7 +248,7 @@ def test_sign_tx_change_trust_op(client):
 
     assert (
         b64encode(response.signature)
-        == b"OZdDO/qW8o/xbV6nZaDM/D7z9/fqbrk+P4lSzzCqeD3C8nGOg+Jl33JqHek0zNNOW9Pn+tPpfdoQnuZWJzocCw=="
+        == b"B7UyKRCzVf6esTkzDJgac0vJ1YfI4Z7Ecq65/3TY0+D/VB3myZVg06LMjgIf10q8kF+GvJwN6XGKRd6q1wxHAw=="
     )
 
 

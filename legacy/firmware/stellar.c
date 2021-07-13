@@ -165,8 +165,8 @@ bool stellar_signingInit(const StellarSignTx *msg) {
 
 bool stellar_confirmSourceAccount(bool has_source_account,
                                   const char *str_account) {
+  stellar_hashupdate_bool(has_source_account);
   if (!has_source_account) {
-    stellar_hashupdate_bool(false);
     return true;
   }
 
