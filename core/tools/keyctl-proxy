@@ -145,7 +145,7 @@ def cli(ipaddr, fw_file, fw_or_type, digest):
         click.echo(fw_or_type.format())
 
     if not fw_file and (not fw_or_type or not digest):
-        raise click.ClickException("Please specify either fw_file or -t and -h")
+        raise click.ClickException("Please specify either fw_file or -t and -d")
 
     try:
         TREZOR = get_default_client()
