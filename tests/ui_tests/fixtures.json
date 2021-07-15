@@ -128,6 +128,7 @@
 "test_cancel.py::test_cancel_message_via_cancel[message1]": "83a76ca8054759209fc06244ee303f95e20da9e6ccdfe268d16fba5e0065de69",
 "test_cancel.py::test_cancel_message_via_initialize[message0]": "83a76ca8054759209fc06244ee303f95e20da9e6ccdfe268d16fba5e0065de69",
 "test_cancel.py::test_cancel_message_via_initialize[message1]": "83a76ca8054759209fc06244ee303f95e20da9e6ccdfe268d16fba5e0065de69",
+"test_cancel.py::test_cancel_on_paginated": "83a76ca8054759209fc06244ee303f95e20da9e6ccdfe268d16fba5e0065de69",
 "test_debuglink.py::test_softlock_instability": "bdc28bcdb709f6ffd74ba89bc34ff87a2516c9277bad701c1c6d9e9926ce6871",
 "test_descriptors.py::test_descriptors[Bitcoin-0-InputScriptType.SPENDADDRESS-descriptors0]": "2cfe6b7b4d74644c8bdef3f18d8a9be8c20787ab5e9af2588bac2c426a5f1da7",
 "test_descriptors.py::test_descriptors[Bitcoin-0-InputScriptType.SPENDP2SHWITNESS-descriptors4]": "5b87cbe3b60327d699545bf61101cf633f66d66bc485d692c51505c18519948a",
