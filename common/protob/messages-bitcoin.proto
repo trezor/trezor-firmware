@@ -17,6 +17,7 @@ enum InputScriptType {
     EXTERNAL = 2;           // reserved for external inputs (coinjoin)
     SPENDWITNESS = 3;       // native SegWit
     SPENDP2SHWITNESS = 4;   // SegWit over P2SH (backward compatible)
+    SPENDTAPROOT = 5;       // Taproot
 }
 
 /**
@@ -29,6 +30,7 @@ enum OutputScriptType {
     PAYTOOPRETURN = 3;      // op_return
     PAYTOWITNESS = 4;       // only for change output
     PAYTOP2SHWITNESS = 5;   // only for change output
+    PAYTOTAPROOT = 6;       // only for change output
 }
 
 /**
