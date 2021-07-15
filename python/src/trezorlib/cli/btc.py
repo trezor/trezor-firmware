@@ -30,6 +30,7 @@ INPUT_SCRIPTS = {
     "pkh": messages.InputScriptType.SPENDADDRESS,
     "wpkh": messages.InputScriptType.SPENDWITNESS,
     "sh-wpkh": messages.InputScriptType.SPENDP2SHWITNESS,
+    "tr": messages.InputScriptType.SPENDTAPROOT,
 }
 
 OUTPUT_SCRIPTS = {
@@ -39,6 +40,7 @@ OUTPUT_SCRIPTS = {
     "pkh": messages.OutputScriptType.PAYTOADDRESS,
     "wpkh": messages.OutputScriptType.PAYTOWITNESS,
     "sh-wpkh": messages.OutputScriptType.PAYTOP2SHWITNESS,
+    "tr": messages.OutputScriptType.PAYTOTAPROOT,
 }
 
 DEFAULT_COIN = "Bitcoin"
@@ -206,6 +208,9 @@ def _get_descriptor(client, coin, account, script_type, show_display):
     elif script_type == messages.InputScriptType.SPENDWITNESS:
         acc_type = 84
         fmt = "wpkh({})"
+    elif script_type == messages.InputScriptType.SPENDTAPROOT:
+        acc_type = 86
+        fmt = "tr({})"
     else:
         raise ValueError("Unsupported account type")
 
