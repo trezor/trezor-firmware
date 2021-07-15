@@ -128,6 +128,42 @@ VECTORS_DESCRIPTORS = (  # coin, account, script_type, descriptors
             "wpkh([5c9e228d/84'/1'/1']tpubDCZB6sR48s4T6xoXqaYxScvf23kmQvg5QpyFkYnDBjsmviKHLSG9s6cp593Exg87tuMjXXMWDvBRXnJtzppcQf8Z8HdJP1rothfxm4qnPXo/1/*)#qrgjqk5h",
         ),
     ),
+    (
+        "Bitcoin",
+        0,
+        messages.InputScriptType.SPENDTAPROOT,
+        (
+            "tr([5c9e228d/86'/0'/0']xpub6Bw885JisRbcKmowfBvMmCxaFHodKn1VpmRmctmJJoM8D4DzyP4qJv8ZdD9V9r3SSGjmK2KJEDnvLH6f1Q4HrobEvnCeKydNvf1eir3RHZk/0/*)#d8jj22qr",
+            "tr([5c9e228d/86'/0'/0']xpub6Bw885JisRbcKmowfBvMmCxaFHodKn1VpmRmctmJJoM8D4DzyP4qJv8ZdD9V9r3SSGjmK2KJEDnvLH6f1Q4HrobEvnCeKydNvf1eir3RHZk/1/*)#unhnhlsm",
+        ),
+    ),
+    (
+        "Bitcoin",
+        1,
+        messages.InputScriptType.SPENDTAPROOT,
+        (
+            "tr([5c9e228d/86'/0'/1']xpub6Bw885JisRbcLp1379q64fdNPGTnHKYGcA9wcWqGcUgkKZkYCwXSCb9Qfw8DGDgYMmcDM8QwQGooqCM3Ym4yq8kS5dBjzZSXUdVUdhyfirD/0/*)#dq8u44kn",
+            "tr([5c9e228d/86'/0'/1']xpub6Bw885JisRbcLp1379q64fdNPGTnHKYGcA9wcWqGcUgkKZkYCwXSCb9Qfw8DGDgYMmcDM8QwQGooqCM3Ym4yq8kS5dBjzZSXUdVUdhyfirD/1/*)#u5zagqxt",
+        ),
+    ),
+    (
+        "Testnet",
+        0,
+        messages.InputScriptType.SPENDTAPROOT,
+        (
+            "tr([5c9e228d/86'/1'/0']tpubDC88gkaZi5HvJGxGDNLADkvtdpni3mLmx6vr2KnXmWMG8zfkBRggsxHVBkUpgcwPe2KKpkyvTJCdXHb1UHEWE64vczyyPQfHr1skBcsRedN/0/*)#4rqwxvej",
+            "tr([5c9e228d/86'/1'/0']tpubDC88gkaZi5HvJGxGDNLADkvtdpni3mLmx6vr2KnXmWMG8zfkBRggsxHVBkUpgcwPe2KKpkyvTJCdXHb1UHEWE64vczyyPQfHr1skBcsRedN/1/*)#yh90mef2",
+        ),
+    ),
+    (
+        "Testnet",
+        1,
+        messages.InputScriptType.SPENDTAPROOT,
+        (
+            "tr([5c9e228d/86'/1'/1']tpubDC88gkaZi5HvKcrFLNkZwcXx1YyShkmPTkSNoP5MHQnSP9vTrKEYKtoeEkX4oEJmNYSm6Y3fFcNV4xbkDE1uZZBmJe1ircegxgVnBW8j4SL/0/*)#7254x7qg",
+            "tr([5c9e228d/86'/1'/1']tpubDC88gkaZi5HvKcrFLNkZwcXx1YyShkmPTkSNoP5MHQnSP9vTrKEYKtoeEkX4oEJmNYSm6Y3fFcNV4xbkDE1uZZBmJe1ircegxgVnBW8j4SL/1/*)#0735mtss",
+        ),
+    ),
 )
 
 
