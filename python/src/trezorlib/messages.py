@@ -298,6 +298,7 @@ class InputScriptType(IntEnum):
     EXTERNAL = 2
     SPENDWITNESS = 3
     SPENDP2SHWITNESS = 4
+    SPENDTAPROOT = 5
 
 
 class OutputScriptType(IntEnum):
@@ -307,6 +308,7 @@ class OutputScriptType(IntEnum):
     PAYTOOPRETURN = 3
     PAYTOWITNESS = 4
     PAYTOP2SHWITNESS = 5
+    PAYTOTAPROOT = 6
 
 
 class DecredStakingSpendType(IntEnum):
