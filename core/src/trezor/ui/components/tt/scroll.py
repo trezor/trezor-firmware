@@ -114,7 +114,7 @@ class Paginated(ui.Layout):
         await ctx.call(ButtonRequest(code=code, pages=len(self.pages)), ButtonAck)
         result = WAS_PAGED
         while result is WAS_PAGED:
-            result = await self
+            result = await ctx.wait(self)
 
         return result
 
