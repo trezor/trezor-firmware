@@ -101,7 +101,12 @@ def _wrap_protobuf_load(
     expected_type: type[LoadedMessageType],
 ) -> LoadedMessageType:
     try:
-        return protobuf.decode(buffer, expected_type, experimental_enabled)
+        msg = protobuf.decode(buffer, expected_type, experimental_enabled)
+        if __debug__ and utils.EMULATOR:
+            log.debug(
+                __name__, "received message contents:\n%s", utils.dump_protobuf(msg)
+            )
+        return msg
     except Exception as e:
         if __debug__:
             log.exception(__name__, e)
