@@ -130,8 +130,6 @@ DUMMY_CONTEXT = DummyContext()
 PROTOBUF_BUFFER_SIZE = 8192
 
 WIRE_BUFFER = bytearray(PROTOBUF_BUFFER_SIZE)
-if __debug__:
-    WIRE_BUFFER_DEBUG = bytearray(PROTOBUF_BUFFER_SIZE)
 
 
 class Context:
@@ -378,11 +376,7 @@ async def _handle_single_message(
 async def handle_session(
     iface: WireInterface, session_id: int, is_debug_session: bool = False
 ) -> None:
-    if __debug__ and is_debug_session:
-        ctx_buffer = WIRE_BUFFER_DEBUG
-    else:
-        ctx_buffer = WIRE_BUFFER
-    ctx = Context(iface, session_id, ctx_buffer)
+    ctx = Context(iface, session_id, WIRE_BUFFER)
     next_msg: codec_v1.Message | None = None
 
     if __debug__ and is_debug_session:
