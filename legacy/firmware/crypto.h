@@ -32,6 +32,12 @@
 #include "messages-bitcoin.pb.h"
 #include "messages-crypto.pb.h"
 
+typedef enum _CoinPathCheckLevel {
+  CoinPathCheckLevel_BASIC = 0,
+  CoinPathCheckLevel_KNOWN = 1,
+  CoinPathCheckLevel_SCRIPT_TYPE = 2,
+} CoinPathCheckLevel;
+
 #define ser_length_size(len) ((len) < 253 ? 1 : (len) < 0x10000 ? 3 : 5)
 
 uint32_t ser_length(uint32_t len, uint8_t *out);
@@ -82,8 +88,8 @@ int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig,
 
 int cryptoIdentityFingerprint(const IdentityType *identity, uint8_t *hash);
 
-bool coin_known_path_check(const CoinInfo *coin, InputScriptType script_type,
-                           uint32_t address_n_count, const uint32_t *address_n,
-                           bool full);
+bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
+                     uint32_t address_n_count, const uint32_t *address_n,
+                     bool has_multisig, CoinPathCheckLevel level);
 
 #endif

@@ -138,8 +138,9 @@ def _write_set_options_int(w, value: int):
 def write_account(w, source_account: str):
     if source_account is None:
         writers.write_bool(w, False)
-        return
-    writers.write_pubkey(w, source_account)
+    else:
+        writers.write_bool(w, True)
+        writers.write_pubkey(w, source_account)
 
 
 def _write_asset_code(w, asset_type: int, asset_code: str):

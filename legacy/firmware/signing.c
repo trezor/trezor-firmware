@@ -685,8 +685,9 @@ bool compile_input_script_sig(TxInputType *tinput) {
       return false;
     }
   }
-  if (!coin_known_path_check(coin, tinput->script_type, tinput->address_n_count,
-                             tinput->address_n, false)) {
+  if (!coin_path_check(coin, tinput->script_type, tinput->address_n_count,
+                       tinput->address_n, tinput->has_multisig,
+                       CoinPathCheckLevel_BASIC)) {
     if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
       return false;
     }

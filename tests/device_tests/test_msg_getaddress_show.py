@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages, tools
+from trezorlib.exceptions import TrezorFailure
 
 VECTORS = (  # path, script_type, address
     (
@@ -49,6 +50,17 @@ def test_show(client, path, script_type, address):
         )
         == address
     )
+
+
+def test_show_unrecognized_path(client):
+    with pytest.raises(TrezorFailure):
+        btc.get_address(
+            client,
+            "Bitcoin",
+            tools.parse_path("m/24684621h/516582h/5156h/21/856"),
+            script_type=messages.InputScriptType.SPENDWITNESS,
+            show_display=True,
+        )
 
 
 @pytest.mark.multisig
