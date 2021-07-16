@@ -35,6 +35,8 @@ if False:
         Set,
     )
 
+    from trezor.protobuf import MessageType
+
 
 def unimport_begin() -> Set[str]:
     return set(sys.modules)
@@ -353,3 +355,34 @@ def empty_bytearray(preallocate: int) -> bytearray:
     b = bytearray(preallocate)
     b[:] = bytes()
     return b
+
+
+if __debug__:
+
+    def dump_protobuf_lines(msg: MessageType, line_start: str = "") -> Iterator[str]:
+        msg_dict = msg.__dict__
+        if not msg_dict:
+            yield line_start + msg.MESSAGE_NAME + " {}"
+            return
+
+        yield line_start + msg.MESSAGE_NAME + " {"
+        for key, val in msg_dict.items():
+            if type(val) == type(msg):
+                sublines = dump_protobuf_lines(val, line_start=key + ": ")
+                for subline in sublines:
+                    yield "    " + subline
+            elif val and isinstance(val, list) and type(val[0]) == type(msg):
+                # non-empty list of protobuf messages
+                yield "    {}: [".format(key)
+                for subval in val:
+                    sublines = dump_protobuf_lines(subval)
+                    for subline in sublines:
+                        yield "        " + subline
+                yield "    ]"
+            else:
+                yield "    {}: {!r}".format(key, val)
+
+        yield "}"
+
+    def dump_protobuf(msg: MessageType) -> str:
+        return "\n".join(dump_protobuf_lines(msg))
