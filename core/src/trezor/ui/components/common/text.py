@@ -3,12 +3,16 @@ from micropython import const
 from trezor import ui
 
 from ...constants import (
+    PAGINATION_MARGIN_RIGHT,
     TEXT_HEADER_HEIGHT,
     TEXT_LINE_HEIGHT,
     TEXT_LINE_HEIGHT_HALF,
     TEXT_MARGIN_LEFT,
     TEXT_MAX_LINES,
 )
+
+LINE_WIDTH = ui.WIDTH - TEXT_MARGIN_LEFT
+LINE_WIDTH_PAGINATED = LINE_WIDTH - PAGINATION_MARGIN_RIGHT
 
 if False:
     from typing import Any, Union
@@ -30,7 +34,7 @@ class Span:
         string: str = "",
         start: int = 0,
         font: int = ui.NORMAL,
-        line_width: int = ui.WIDTH - TEXT_MARGIN_LEFT,
+        line_width: int = LINE_WIDTH,
         offset_x: int = 0,
         break_words: bool = False,
     ) -> None:
@@ -41,7 +45,7 @@ class Span:
         string: str,
         start: int,
         font: int,
-        line_width: int = ui.WIDTH - TEXT_MARGIN_LEFT,
+        line_width: int = LINE_WIDTH,
         offset_x: int = 0,
         break_words: bool = False,
     ) -> None:
