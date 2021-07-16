@@ -1,8 +1,6 @@
-from ubinascii import hexlify
-
 from trezor import ui, wire
 from trezor.messages import GetOwnershipProof, OwnershipProof
-from trezor.ui.layouts import confirm_action, confirm_hex
+from trezor.ui.layouts import confirm_action, confirm_blob
 
 from apps.common.paths import validate_path
 
@@ -70,16 +68,14 @@ async def get_ownership_proof(
                 description="Do you want to create a proof of ownership?",
             )
         else:
-            await confirm_hex(
+            await confirm_blob(
                 ctx,
                 "confirm_ownership_proof",
                 title="Proof of ownership",
                 description="Do you want to create a proof of ownership for:",
-                data=hexlify(msg.commitment_data).decode(),
+                data=msg.commitment_data,
                 icon=ui.ICON_CONFIG,
                 icon_color=ui.ORANGE_ICON,
-                truncate=True,  # commitment data, probably should show all
-                truncate_middle=True,
             )
 
     ownership_proof, signature = generate_proof(
