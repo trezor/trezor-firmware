@@ -14,12 +14,11 @@ from ..components.tt.button import ButtonCancel, ButtonDefault
 from ..components.tt.confirm import Confirm, HoldToConfirm
 from ..components.tt.scroll import (
     PAGEBREAK,
-    PAGINATED_LINE_WIDTH,
     Paginated,
     paginate_paragraphs,
     paginate_text,
 )
-from ..components.tt.text import Span, Text
+from ..components.tt.text import LINE_WIDTH_PAGINATED, Span, Text
 from ..constants.tt import (
     MONO_ADDR_PER_LINE,
     MONO_HEX_PER_LINE,
@@ -598,11 +597,11 @@ async def confirm_properties(
     para = []
     used_lines = 0
     for key, val in props:
-        span.reset(key or "", 0, ui.NORMAL, line_width=PAGINATED_LINE_WIDTH)
+        span.reset(key or "", 0, ui.NORMAL, line_width=LINE_WIDTH_PAGINATED)
         key_lines = span.count_lines()
 
         if isinstance(val, str):
-            span.reset(val, 0, ui.BOLD, line_width=PAGINATED_LINE_WIDTH)
+            span.reset(val, 0, ui.BOLD, line_width=LINE_WIDTH_PAGINATED)
             val_lines = span.count_lines()
         elif isinstance(val, bytes):
             val_lines = (len(val) * 2 + MONO_HEX_PER_LINE - 1) // MONO_HEX_PER_LINE
