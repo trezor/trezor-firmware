@@ -43,6 +43,9 @@ if False:
 
 __all__ = (
     "confirm_action",
+    "confirm_address",
+    "confirm_text",
+    "confirm_amount",
     "confirm_reset_device",
     "confirm_backup",
     "confirm_path_warning",
@@ -56,7 +59,7 @@ __all__ = (
     "show_warning",
     "confirm_output",
     "confirm_decred_sstx_submission",
-    "confirm_hex",
+    "confirm_blob",
     "confirm_properties",
     "confirm_total",
     "confirm_total_ethereum",
@@ -356,14 +359,13 @@ async def show_address(
 def show_pubkey(
     ctx: wire.Context, pubkey: str, title: str = "Confirm public key"
 ) -> Awaitable[None]:
-    return confirm_hex(
+    return confirm_blob(
         ctx,
         br_type="show_pubkey",
         title="Confirm public key",
         data=pubkey,
         br_code=ButtonRequestType.PublicKey,
         icon=ui.ICON_RECEIVE,
-        truncate=True,  # should fit?
     )
 
 
@@ -521,62 +523,159 @@ async def confirm_decred_sstx_submission(
     )
 
 
-async def confirm_hex(
+async def confirm_blob(
     ctx: wire.GenericContext,
     br_type: str,
     title: str,
-    data: str,
-    subtitle: str | None = None,
+    data: bytes | str,
     description: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
-    color_description: int = ui.FG,  # TODO cleanup @ redesign
-    width: int | None = MONO_HEX_PER_LINE,
-    width_paginated: int = MONO_HEX_PER_LINE - 2,
-    truncate: bool = False,
-    truncate_middle: bool = False,
-    truncate_ellipsis: str = "...",
 ) -> None:
-    if truncate:
+    """Confirm data blob.
+
+    Applicable for public keys, signatures, hashes. In general, any kind of
+    data that is not human-readable, and can be wrapped at any character.
+
+    For addresses, use `confirm_address`.
+
+    Displays in monospace font. Paginates automatically.
+    If data is provided as bytes or bytearray, it is converted to hex.
+    """
+    if isinstance(data, (bytes, bytearray)):
+        data_str = hexlify(data).decode()
+    else:
+        data_str = data
+
+    span = Span()
+    lines = 0
+    if description is not None:
+        span.reset(description, 0, ui.NORMAL)
+        lines += span.count_lines()
+    data_lines = (len(data_str) + MONO_HEX_PER_LINE - 1) // MONO_HEX_PER_LINE
+    lines += data_lines
+
+    if lines <= TEXT_MAX_LINES:
         text = Text(title, icon, icon_color, new_lines=False)
-        description_lines = 0
-        if subtitle is not None:
-            description_lines += Span(subtitle, 0, ui.BOLD).count_lines()
-            text.bold(subtitle)
-            text.br()
         if description is not None:
-            description_lines += Span(description, 0, ui.NORMAL).count_lines()
-            text.content.extend((ui.NORMAL, color_description, description, ui.FG))
+            text.normal(description)
             text.br()
-        if width is not None:
-            text.mono(
-                *_truncate_hex(
-                    data,
-                    lines=TEXT_MAX_LINES - description_lines,
-                    width=width,
-                    middle=truncate_middle,
-                    ellipsis=truncate_ellipsis,
-                )
-            )
+
+        # special case:
+        if len(data_str) % 16 == 0:
+            # sanity checks:
+            # (a) we must not exceed MONO_HEX_PER_LINE
+            assert MONO_HEX_PER_LINE > 16
+            # (b) we must not increase number of lines
+            assert (len(data_str) // 16) <= data_lines
+            # the above holds true for MONO_HEX_PER_LINE == 18 and TEXT_MAX_LINES == 5
+            per_line = 16
+
         else:
-            text.mono(data)
+            per_line = MONO_HEX_PER_LINE
+        text.mono(ui.FG, *chunks_intersperse(data_str, per_line))
         content: ui.Layout = Confirm(text)
+
     else:
         para = []
-        if subtitle is not None:
-            para.append((ui.BOLD, subtitle))
         if description is not None:
-            assert (
-                color_description == ui.FG
-            )  # only ethereum uses this and it truncates
             para.append((ui.NORMAL, description))
-        if width is not None:
-            para.extend((ui.MONO, line) for line in chunks(data, width_paginated))
-        else:
-            para.append((ui.MONO, data))
+        para.extend((ui.MONO, line) for line in chunks(data_str, MONO_HEX_PER_LINE - 2))
         content = paginate_paragraphs(para, title, icon, icon_color)
     await raise_if_cancelled(interact(ctx, content, br_type, br_code))
+
+
+def confirm_address(
+    ctx: wire.GenericContext,
+    title: str,
+    address: str,
+    description: str | None = "Address:",
+    br_type: str = "confirm_address",
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+    icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
+    icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
+) -> Awaitable[None]:
+    # TODO clarify API - this should be pretty limited to support mainly confirming
+    # destinations and similar
+    return confirm_blob(
+        ctx,
+        br_type=br_type,
+        title=title,
+        data=address,
+        description=description,
+        br_code=br_code,
+        icon=icon,
+        icon_color=icon_color,
+    )
+
+
+async def confirm_text(
+    ctx: wire.GenericContext,
+    br_type: str,
+    title: str,
+    data: str,
+    description: str | None = None,
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+    icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
+    icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
+) -> None:
+    """Confirm textual data.
+
+    Applicable for human-readable strings, numbers, date/time values etc.
+
+    For amounts, use `confirm_amount`.
+
+    Displays in bold font. Paginates automatically.
+    """
+    span = Span()
+    lines = 0
+    if description is not None:
+        span.reset(description, 0, ui.NORMAL)
+        lines += span.count_lines()
+    span.reset(data, 0, ui.BOLD)
+    lines += span.count_lines()
+
+    if lines <= TEXT_MAX_LINES:
+        text = Text(title, icon, icon_color, new_lines=False)
+        if description is not None:
+            text.normal(description)
+            text.br()
+        text.bold(data)
+        content: ui.Layout = Confirm(text)
+
+    else:
+        para = []
+        if description is not None:
+            para.append((ui.NORMAL, description))
+        para.append((ui.BOLD, data))
+        content = paginate_paragraphs(para, title, icon, icon_color)
+    await raise_if_cancelled(interact(ctx, content, br_type, br_code))
+
+
+def confirm_amount(
+    ctx: wire.GenericContext,
+    title: str,
+    amount: str,
+    description: str = "Amount:",
+    br_type: str = "confirm_amount",
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+    icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
+    icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
+) -> Awaitable[None]:
+    """Confirm amount."""
+    # TODO clarify API - this should be pretty limited to support mainly confirming
+    # destinations and similar
+    return confirm_text(
+        ctx,
+        br_type=br_type,
+        title=title,
+        data=amount,
+        description=description,
+        br_code=br_code,
+        icon=icon,
+        icon_color=icon_color,
+    )
 
 
 _SCREEN_FULL_THRESHOLD = const(2)
