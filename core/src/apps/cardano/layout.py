@@ -469,6 +469,10 @@ async def show_warning_address_foreign_staking_key(
     staking_account_path: list[int],
     staking_key_hash: bytes | None,
 ) -> None:
+    # TODO: confirm_properties not appropriate here
+    # instead, presumably, this should be a flow:
+    # 1. show_warning: Mismatch! continue?
+    # 2. confirm_blob(mismatched_value)
     props: list[PropertyType] = [
         (
             "Stake rights associated with this address do not match your account %s:"

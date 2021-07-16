@@ -1,5 +1,3 @@
-import ubinascii
-
 from trezor import ui, utils
 from trezor.crypto import random
 from trezor.enums import BackupType, ButtonRequestType
@@ -9,7 +7,7 @@ from trezor.ui.components.tt.info import InfoConfirm
 from trezor.ui.components.tt.num_input import NumInput
 from trezor.ui.components.tt.scroll import Paginated
 from trezor.ui.components.tt.text import Text
-from trezor.ui.layouts import confirm_action, confirm_hex, show_success, show_warning
+from trezor.ui.layouts import confirm_action, confirm_blob, show_success, show_warning
 
 from apps.common.confirm import confirm, require_hold_to_confirm
 
@@ -21,16 +19,14 @@ if __debug__:
 
 
 async def show_internal_entropy(ctx, entropy: bytes):
-    await confirm_hex(
+    await confirm_blob(
         ctx,
         "entropy",
         "Internal entropy",
-        data=ubinascii.hexlify(entropy).decode(),
+        data=entropy,
         icon=ui.ICON_RESET,
         icon_color=ui.ORANGE_ICON,
-        width=16,
         br_code=ButtonRequestType.ResetDevice,
-        truncate=True,  # 32 bytes always fits
     )
 
 

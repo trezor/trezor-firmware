@@ -7,7 +7,12 @@ from trezor.messages import (
     NEMTransfer,
 )
 from trezor.strings import format_amount
-from trezor.ui.layouts import confirm_action, confirm_output, confirm_properties
+from trezor.ui.layouts import (
+    confirm_action,
+    confirm_output,
+    confirm_properties,
+    confirm_text,
+)
 
 from ..helpers import (
     NEM_LEVY_PERCENTILE_DIVISOR_ABSOLUTE,
@@ -145,13 +150,12 @@ async def _require_confirm_payload(ctx, payload: bytearray, encrypt=False):
     payload = bytes(payload).decode()
     subtitle = "Encrypted:" if encrypt else "Unencrypted:"
 
-    await confirm_properties(
+    await confirm_text(
         ctx,
         "confirm_payload",
         title="Confirm payload",
-        props=[
-            (None, subtitle),
-            (payload, None),
-        ],
+        description=subtitle,
+        data=payload,
         icon_color=ui.GREEN if encrypt else ui.RED,
+        br_code=ButtonRequestType.ConfirmOutput,
     )
