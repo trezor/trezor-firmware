@@ -29,6 +29,7 @@ class CoinInfo:
         cashaddr_prefix: str | None,
         slip44: int,
         segwit: bool,
+        taproot: bool,
         fork_id: int | None,
         force_bip143: bool,
         decred: bool,
@@ -55,6 +56,7 @@ class CoinInfo:
         self.cashaddr_prefix = cashaddr_prefix
         self.slip44 = slip44
         self.segwit = segwit
+        self.taproot = taproot
         self.fork_id = fork_id
         self.force_bip143 = force_bip143
         self.decred = decred
@@ -117,6 +119,7 @@ ATTRIBUTES = (
     ("cashaddr_prefix", black_repr),
     ("slip44", int),
     ("segwit", bool),
+    ("taproot", bool),
     ("fork_id", black_repr),
     ("force_bip143", bool),
     ("decred", bool),

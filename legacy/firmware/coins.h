@@ -33,6 +33,7 @@ typedef struct _CoinInfo {
   const char *signed_message_header;
   uint32_t decimals;
   bool has_segwit;
+  bool has_taproot;
   bool has_fork_id;
   bool force_bip143;
   bool decred;
