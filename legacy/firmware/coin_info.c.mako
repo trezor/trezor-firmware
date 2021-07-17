@@ -30,6 +30,7 @@ const CoinInfo coins[COINS_COUNT] = {
 	.maxfee_kb = ${c_int(c.maxfee_kb)},
 	.signed_message_header = ${signed_message_header(c.signed_message_header)},
 	.has_segwit = ${c_bool(c.segwit)},
+	.has_taproot = ${c_bool(c.taproot)},
 	.has_fork_id = ${defined(c.fork_id)},
 	.force_bip143 = ${c_bool(c.force_bip143)},
 	.decred = ${c_bool(c.decred)},
