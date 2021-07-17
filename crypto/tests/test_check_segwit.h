@@ -106,7 +106,7 @@ START_TEST(test_segwit) {
     size_t data_len;
     int res = bech32_decode(hrp, data, &data_len, valid_checksum[i]);
     ck_assert_int_eq(res, 1);
-    res = bech32_encode(rebuild, hrp, data, data_len);
+    res = bech32_encode(rebuild, hrp, data, data_len, BECH32_ENCODING_BECH32);
     ck_assert_int_eq(res, 1);
     ck_assert_int_eq(my_strncasecmp(rebuild, valid_checksum[i], 92), 0);
   }
