@@ -905,6 +905,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 static bool is_multisig_input_script_type(const TxInputType *txinput) {
+  // we do not support Multisig with Taproot yet
   if (txinput->script_type == InputScriptType_SPENDMULTISIG ||
       txinput->script_type == InputScriptType_SPENDP2SHWITNESS ||
       txinput->script_type == InputScriptType_SPENDWITNESS) {
@@ -914,6 +915,7 @@ static bool is_multisig_input_script_type(const TxInputType *txinput) {
 }
 
 static bool is_multisig_output_script_type(const TxOutputType *txoutput) {
+  // we do not support Multisig with Taproot yet
   if (txoutput->script_type == OutputScriptType_PAYTOMULTISIG ||
       txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS ||
       txoutput->script_type == OutputScriptType_PAYTOWITNESS) {
@@ -926,7 +928,8 @@ static bool is_internal_input_script_type(const TxInputType *txinput) {
   if (txinput->script_type == InputScriptType_SPENDADDRESS ||
       txinput->script_type == InputScriptType_SPENDMULTISIG ||
       txinput->script_type == InputScriptType_SPENDP2SHWITNESS ||
-      txinput->script_type == InputScriptType_SPENDWITNESS) {
+      txinput->script_type == InputScriptType_SPENDWITNESS ||
+      txinput->script_type == InputScriptType_SPENDTAPROOT) {
     return true;
   }
   return false;
@@ -936,7 +939,8 @@ static bool is_change_output_script_type(const TxOutputType *txoutput) {
   if (txoutput->script_type == OutputScriptType_PAYTOADDRESS ||
       txoutput->script_type == OutputScriptType_PAYTOMULTISIG ||
       txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS ||
-      txoutput->script_type == OutputScriptType_PAYTOWITNESS) {
+      txoutput->script_type == OutputScriptType_PAYTOWITNESS ||
+      txoutput->script_type == OutputScriptType_PAYTOTAPROOT) {
     return true;
   }
   return false;
@@ -944,11 +948,21 @@ static bool is_change_output_script_type(const TxOutputType *txoutput) {
 
 static bool is_segwit_input_script_type(const TxInputType *txinput) {
   if (txinput->script_type == InputScriptType_SPENDP2SHWITNESS ||
-      txinput->script_type == InputScriptType_SPENDWITNESS) {
+      txinput->script_type == InputScriptType_SPENDWITNESS ||
+      txinput->script_type == InputScriptType_SPENDTAPROOT) {
     return true;
   }
   return false;
 }
+
+/*
+static bool is_taproot_input_script_type(const TxInputType *txinput) {
+  if (txinput->script_type == InputScriptType_SPENDTAPROOT) {
+    return true;
+  }
+  return false;
+}
+*/
 
 static bool signing_validate_input(const TxInputType *txinput) {
   if (txinput->prev_hash.size != 32) {
