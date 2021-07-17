@@ -163,6 +163,10 @@ int cryptoMessageSign(const CoinInfo *coin, HDNode *node,
         // segwit
         signature[0] = 39 + pby;
         break;
+      case InputScriptType_SPENDTAPROOT:
+        // taproot
+        signature[0] = 43 + pby;
+        break;
       default:
         // p2pkh
         signature[0] = 31 + pby;
@@ -240,8 +244,29 @@ int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message,
                             address)) {
       return 4;
     }
+    if (witver != 0 || len != 20) {
+      return 2;
+    }
     ecdsa_get_pubkeyhash(pubkey, coin->curve->hasher_pubkey, addr_raw);
-    if (memcmp(recovered_raw, addr_raw, len) != 0 || witver != 0 || len != 20) {
+    if (memcmp(recovered_raw, addr_raw, len)) {
+      return 2;
+    }
+  } else
+      // taproot
+      if (signature[0] >= 43 && signature[0] <= 46) {
+    int witver = 0;
+    size_t len = 0;
+    if (!coin->bech32_prefix ||
+        !segwit_addr_decode(&witver, recovered_raw, &len, coin->bech32_prefix,
+                            address)) {
+      return 4;
+    }
+    if (witver != 1 || len != 32) {
+      return 2;
+    }
+    uint8_t tweaked_pubkey[32];
+    // TODO: ecdsa_tweak_pubkey(pubkey, tweaked_pubkey);
+    if (memcmp(tweaked_pubkey, addr_raw, len) != 0) {
       return 2;
     }
   } else {
@@ -650,6 +675,7 @@ bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
     valid = valid && check_cointype(coin, address_n[1], check_known);
     if (check_script_type) {
       valid = valid && has_multisig;
+      // we do not support Multisig with Taproot yet
       valid = valid && (script_type == InputScriptType_SPENDMULTISIG ||
                         script_type == InputScriptType_SPENDP2SHWITNESS ||
                         script_type == InputScriptType_SPENDWITNESS);
@@ -707,6 +733,29 @@ bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
     valid = valid && check_cointype(coin, address_n[1], check_known);
     if (check_script_type) {
       valid = valid && (script_type == InputScriptType_SPENDWITNESS);
+    }
+    if (check_known) {
+      valid = valid && ((address_n[2] & 0x80000000) == 0x80000000);
+      valid = valid && ((address_n[2] & 0x7fffffff) <= PATH_MAX_ACCOUNT);
+      valid = valid && (address_n[3] <= PATH_MAX_CHANGE);
+      valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
+    }
+    return valid;
+  }
+
+  // m/86' : BIP86 Taproot
+  // m / purpose' / coin_type' / account' / change / address_index
+  if (address_n_count > 0 && address_n[0] == (0x80000000 + 86)) {
+    valid = valid && coin->has_taproot;
+    valid = valid && (coin->bech32_prefix != NULL);
+    if (check_known) {
+      valid = valid && (address_n_count == 5);
+    } else {
+      valid = valid && (address_n_count >= 2);
+    }
+    valid = valid && check_cointype(coin, address_n[1], check_known);
+    if (check_script_type) {
+      valid = valid && (script_type == InputScriptType_SPENDTAPROOT);
     }
     if (check_known) {
       valid = valid && ((address_n[2] & 0x80000000) == 0x80000000);

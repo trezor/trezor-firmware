@@ -35,6 +35,7 @@
 #include "util.h"
 
 #define SEGWIT_VERSION_0 0
+#define SEGWIT_VERSION_1 1
 
 #define CASHADDR_P2KH (0)
 #define CASHADDR_P2SH (8)
@@ -54,6 +55,8 @@
 #define TXSIZE_WITNESSPKHASH 22
 /* size of a p2wsh script (1 version, 1 push, 32 hash) */
 #define TXSIZE_WITNESSSCRIPT 34
+/* size of a p2tr script (1 version, 1 push, 32 hash) */
+#define TXSIZE_TAPROOT 34
 /* size of a p2pkh script (dup, hash, push, 20 pubkeyhash, equal, checksig) */
 #define TXSIZE_P2PKHASH 25
 /* size of a p2sh script (hash, push, 20 scripthash, equal) */
@@ -169,6 +172,19 @@ bool compute_address(const CoinInfo *coin, InputScriptType script_type,
                             digest, 20)) {
       return 0;
     }
+  } else if (script_type == InputScriptType_SPENDTAPROOT) {
+    // taproot
+    if (!coin->has_taproot || !coin->has_segwit || !coin->bech32_prefix) {
+      return 0;
+    }
+    uint8_t tweaked_pubkey[32];
+    // TODO: replace the memcpy below with
+    // ecdsa_tweak_pubkey(node->public_key, tweaked_pubkey);
+    memcpy(tweaked_pubkey, node->public_key, 32);  // HACK!
+    if (!segwit_addr_encode(address, coin->bech32_prefix, SEGWIT_VERSION_1,
+                            tweaked_pubkey, 32)) {
+      return 0;
+    }
   } else if (script_type == InputScriptType_SPENDP2SHWITNESS) {
     // segwit p2wpkh embedded in p2sh
     if (!coin->has_segwit) {
@@ -247,6 +263,9 @@ int compile_output(const CoinInfo *coin, AmountUnit amount_unit,
         break;
       case OutputScriptType_PAYTOP2SHWITNESS:
         input_script_type = InputScriptType_SPENDP2SHWITNESS;
+        break;
+      case OutputScriptType_PAYTOTAPROOT:
+        input_script_type = InputScriptType_SPENDTAPROOT;
         break;
       default:
         return 0;  // failed to compile output
@@ -876,6 +895,8 @@ uint32_t tx_input_weight(const CoinInfo *coin, const TxInputType *txinput) {
     input_script_size += ser_length_size(input_script_size);
     weight += 4 * input_script_size;
   } else if (txinput->script_type == InputScriptType_SPENDWITNESS ||
+             // TODO: is the following line correct?
+             txinput->script_type == InputScriptType_SPENDTAPROOT ||
              txinput->script_type == InputScriptType_SPENDP2SHWITNESS) {
     if (txinput->script_type == InputScriptType_SPENDP2SHWITNESS) {
       weight += 4 * (2 + (txinput->has_multisig ? TXSIZE_WITNESSSCRIPT
@@ -897,6 +918,8 @@ uint32_t tx_output_weight(const CoinInfo *coin, const TxOutputType *txoutput) {
     if (txoutput->script_type == OutputScriptType_PAYTOWITNESS) {
       output_script_size =
           txoutput->has_multisig ? TXSIZE_WITNESSSCRIPT : TXSIZE_WITNESSPKHASH;
+    } else if (txoutput->script_type == OutputScriptType_PAYTOTAPROOT) {
+      output_script_size = TXSIZE_TAPROOT;
     } else if (txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS) {
       output_script_size = TXSIZE_P2SCRIPT;
     } else {
