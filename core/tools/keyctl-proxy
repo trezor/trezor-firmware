@@ -30,8 +30,8 @@ PATH = "10018h/{}h"
 TREZOR = None
 
 
-def make_commit(fw_or_type, digest, public_keys):
-    path = PATH.format(fw_or_type.BIP32_INDEX)
+def make_commit(image_type, digest, public_keys):
+    path = PATH.format(image_type.BIP32_INDEX)
     address_n = parse_path(path)
 
     # device information - show only first time
@@ -42,7 +42,7 @@ def make_commit(fw_or_type, digest, public_keys):
 
     while True:
         # signing information - repeat every time
-        click.echo("Commiting to {} hash:".format(click.style(fw_or_type.NAME, bold=True)))
+        click.echo("Commiting to {} hash:".format(click.style(image_type.NAME, bold=True)))
         for partid in range(4):
             digest_part = digest[partid * 8 : (partid + 1) * 8]
             color = "red" if partid % 2 else "cyan"
