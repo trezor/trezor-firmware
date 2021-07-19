@@ -33,6 +33,7 @@
 #include "py/objtype.h"
 
 #include "embed/extmod/trezorobj.h"
+#include "embed/rust/librust.h"
 #include "embed/trezorhal/usb.h"
 
 #include <string.h>
@@ -301,6 +302,11 @@ typedef struct _mp_obj_HID_t {
   usb_hid_info_t info;
 } mp_obj_HID_t;
 
+typedef struct _mp_obj_protomsg_t {
+  mp_obj_base_t base;
+  mp_map_t map;
+} mp_obj_protomsg_t;
+
 void dump_bound_method(FILE *out, const mp_obj_bound_meth_t *meth) {
   print_type(out, "method", NULL, meth, false);
 
@@ -487,6 +493,29 @@ void dump_trezor_vcp(FILE *out, const mp_obj_VCP_t *vcp) {
   fprintf(out, ",\n");
 }
 
+void dump_protomsg(FILE *out, const mp_obj_protomsg_t *value) {
+  mp_obj_t name[2] = {MP_OBJ_NULL, MP_OBJ_NULL};
+  mp_obj_type_t *type = protobuf_debug_msg_type();
+  type->attr((mp_obj_t)value, MP_QSTR_MESSAGE_NAME, name);
+
+  print_type(out, "protomsg", NULL, value, false);
+  fprintf(out, ",\n\"message_name\": ");
+  dump_short(out, name[0]);
+  dump_map_as_children(out, &value->map);
+  fprintf(out, "},\n");
+}
+
+void dump_protodef(FILE *out, const mp_obj_t *value) {
+  mp_obj_t name[2] = {MP_OBJ_NULL, MP_OBJ_NULL};
+  mp_obj_type_t *type = protobuf_debug_msg_def_type();
+  type->attr((mp_obj_t)value, MP_QSTR_MESSAGE_NAME, name);
+
+  print_type(out, "protodef", NULL, value, false);
+  fprintf(out, ",\n\"message_name\": ");
+  dump_short(out, name[0]);
+  fprintf(out, "},\n");
+}
+
 void dump_value_opt(FILE *out, mp_const_obj_t value, bool eval_short) {
   if (!eval_short && is_short(value)) return;
 
@@ -601,6 +630,14 @@ void dump_value_opt(FILE *out, mp_const_obj_t value, bool eval_short) {
            mp_obj_is_type(value, &mod_trezorui_Display_type)) {
     print_type(out, "trezor", NULL, value, true);
     fprintf(out, ",\n");
+  }
+
+  else if (mp_obj_is_type(value, protobuf_debug_msg_type())) {
+    dump_protomsg(out, value);
+  }
+
+  else if (mp_obj_is_type(value, protobuf_debug_msg_def_type())) {
+    dump_protodef(out, value);
   }
 
   else {

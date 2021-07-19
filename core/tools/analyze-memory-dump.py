@@ -56,6 +56,10 @@ def ptr_or_shortval(maybe_ptr):
         return maybe_ptr["shortval"]
 
 
+def is_ignored_ptr(ptr):
+    return (ptr == "(nil)" or ptr.startswith("0x5") or ptr.startswith("0x6"))
+
+
 def deref_or_shortval(maybe_ptr):
     if is_ptr(maybe_ptr) and maybe_ptr in MEMORY:
         return MEMORY[maybe_ptr]
@@ -154,7 +158,7 @@ allobjs.sort(key=lambda x: x.ptr)
 min_ptr = min(
     item.ptrval()
     for item in allobjs
-    if item.ptr != "(nil)" and not item.ptr.startswith("0x5")
+    if not is_ignored_ptr(item.ptr)
 )
 max_ptr = max(item.ptrval() for item in allobjs if item.ptr != "(nil)")
 
@@ -188,6 +192,8 @@ types = {
     "rawbuffer": "R",
     "qstrpool": "Q",
     "qstrdata": "q",
+    "protomsg": "P",
+    "protodef": "p",
 }
 
 pixels_per_line = len(
@@ -207,7 +213,7 @@ def pixel_index(ptrval):
 for item in MEMORY.values():
     if item.alloc == 0:
         continue
-    if item.ptr.startswith("0x5"):
+    if is_ignored_ptr(item.ptr):
         continue
     ptridx = pixel_index(item.ptrval())
     assert ptridx >= 0, item.item
@@ -217,7 +223,7 @@ for item in MEMORY.values():
 for item in MEMORY.values():
     if item.alloc > 0:
         continue
-    if item.ptr == "(nil)" or item.ptr.startswith("0x5"):
+    if is_ignored_ptr(item.ptr):
         continue
     ptridx = pixel_index(item.ptrval())
     if ptridx < 0:
