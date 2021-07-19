@@ -31,6 +31,7 @@ def segwit_scriptpubkey(witver, witprog):
 
 
 VALID_CHECKSUM = [
+    # BIP-173
     "A12UEL5L",
     "a12uel5l",
     "an83characterlonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1tt5tgs",
@@ -41,6 +42,7 @@ VALID_CHECKSUM = [
 ]
 
 INVALID_CHECKSUM = [
+    # BIP-173
     " 1nwldj5",
     "\x7F" + "1axkwrx",
     "\x80" + "1eym55h",
@@ -56,6 +58,7 @@ INVALID_CHECKSUM = [
 ]
 
 VALID_ADDRESS = [
+    # BIP-173
     ["BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3T4", "0014751e76e8199196d454941c45d1b3a323f1433bd6"],
     ["tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sl5k7",
      "00201863143c14c5166804bd19203356da136c985678cd4d27a1b8c6329604903262"],
@@ -68,6 +71,7 @@ VALID_ADDRESS = [
 ]
 
 INVALID_ADDRESS = [
+    # BIP-173
     "tc1qw508d6qejxtdg4y5r3zarvary0c5xw7kg3g4ty",
     "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t5",
     "BC13W508D6QEJXTDG4Y5R3ZARVARY0C5XW7KN40WF2",
