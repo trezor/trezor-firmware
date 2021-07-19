@@ -183,11 +183,51 @@ def get_all_firmware_releases(
     return releases
 
 
+def get_url_and_fingerprint_from_release(
+    release: dict,
+    bitcoin_only: bool,
+) -> tuple:
+    """Get appropriate url and fingerprint from release dictionary."""
+    if bitcoin_only:
+        url = release["url_bitcoinonly"]
+        fingerprint = release["fingerprint_bitcoinonly"]
+    else:
+        url = release["url"]
+        fingerprint = release["fingerprint"]
+
+    url_prefix = "data/"
+    if not url.startswith(url_prefix):
+        click.echo(f"Unsupported URL found: {url}")
+        sys.exit(1)
+    final_url = "https://data.trezor.io/" + url[len(url_prefix) :]
+
+    return final_url, fingerprint
+
+
+def find_specified_firmware_version(
+    version: str,
+    beta: bool,
+    bitcoin_only: bool,
+) -> tuple:
+    """Get the url from which to download the firmware and its expected fingerprint.
+
+    If the specified version is not found, exits with a failure.
+    """
+    want_version = [int(x) for x in version.split(".")]
+    releases = get_all_firmware_releases(bitcoin_only, beta, want_version[0])
+    for release in releases:
+        if release["version"] == want_version:
+            return get_url_and_fingerprint_from_release(release, bitcoin_only)
+
+    click.echo(f"Version {version} could not be found.")
+    sys.exit(1)
+
+
 def find_best_firmware_version(
     client: TrezorClient,
-    version: str = None,
-    beta: bool = False,
-    bitcoin_only: bool = False,
+    version: str,
+    beta: bool,
+    bitcoin_only: bool,
 ) -> tuple:
     """Get the url from which to download the firmware and its expected fingerprint.
 
@@ -273,20 +313,7 @@ def find_best_firmware_version(
             if not ok:
                 sys.exit(1)
 
-    if bitcoin_only:
-        url = release["url_bitcoinonly"]
-        fingerprint = release["fingerprint_bitcoinonly"]
-    else:
-        url = release["url"]
-        fingerprint = release["fingerprint"]
-
-    url_prefix = "data/"
-    if not url.startswith(url_prefix):
-        click.echo(f"Unsupported URL found: {url}")
-        sys.exit(1)
-    final_url = "https://data.trezor.io/" + url[len(url_prefix) :]
-
-    return final_url, fingerprint
+    return get_url_and_fingerprint_from_release(release, bitcoin_only)
 
 
 def download_firmware_data(url: str) -> bytes:
@@ -420,10 +447,10 @@ def verify(
 @click.option("--beta", is_flag=True, help="Use firmware from BETA channel")
 @click.option("--bitcoin-only", is_flag=True, help="Use bitcoin-only firmware (if possible)")
 @click.option("--fingerprint", help="Expected firmware fingerprint in hex")
+@click.pass_obj
 # fmt: on
-@with_client
 def download(
-    client: TrezorClient,
+    obj: TrezorConnection,
     output: BinaryIO,
     version: str,
     skip_check: bool,
@@ -436,9 +463,21 @@ def download(
     Validation is done by default, can be omitted by "-s" or "--skip-check".
     When fingerprint or output file are not set, take them from SL servers.
     """
-    url, fp = find_best_firmware_version(
-        client=client, version=version, beta=beta, bitcoin_only=bitcoin_only
-    )
+    # When a version is specified, we do not even need the client connection
+    #   (and we will not be checking device when validating)
+    if version:
+        url, fp = find_specified_firmware_version(
+            version=version, beta=beta, bitcoin_only=bitcoin_only
+        )
+        bootloader_onev2 = None
+        trezor_major_version = None
+    else:
+        with obj.client_context() as client:
+            url, fp = find_best_firmware_version(
+                client=client, version=version, beta=beta, bitcoin_only=bitcoin_only
+            )
+            bootloader_onev2 = _is_bootloader_onev2(client)
+            trezor_major_version = client.features.major_version
 
     firmware_data = download_firmware_data(url)
 
@@ -449,8 +488,8 @@ def download(
         validate_firmware(
             firmware_data=firmware_data,
             fingerprint=fingerprint,
-            bootloader_onev2=_is_bootloader_onev2(client),
-            trezor_major_version=client.features.major_version,
+            bootloader_onev2=bootloader_onev2,
+            trezor_major_version=trezor_major_version,
         )
 
     if not output:
