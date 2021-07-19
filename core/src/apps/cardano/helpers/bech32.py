@@ -15,7 +15,7 @@ def encode(hrp: str, data: bytes) -> str:
     converted_bits = bech32.convertbits(data, 8, 5)
     if converted_bits is None:
         raise ValueError
-    return bech32.bech32_encode(hrp, converted_bits)
+    return bech32.bech32_encode(hrp, converted_bits, bech32.Encoding.BECH32)
 
 
 def decode_unsafe(bech: str) -> bytes:
@@ -28,10 +28,12 @@ def get_hrp(bech: str) -> str:
 
 
 def decode(hrp: str, bech: str) -> bytes:
-    decoded_hrp, data = bech32.bech32_decode(bech, 130)
+    decoded_hrp, data, spec = bech32.bech32_decode(bech, 130)
     if data is None:
         raise ValueError
     if decoded_hrp != hrp:
+        raise ValueError
+    if spec != bech32.Encoding.BECH32:
         raise ValueError
 
     decoded = bech32.convertbits(data, 5, 8, False)
