@@ -13,8 +13,10 @@ write_uint64 = write_uint64_be
 if False:
     from typing import AnyStr
 
+    from trezor.utils import Writer
 
-def write_string(w, s: AnyStr) -> None:
+
+def write_string(w: Writer, s: AnyStr) -> None:
     """Write XDR string padded to a multiple of 4 bytes."""
     if isinstance(s, str):
         buf = s.encode()
@@ -28,14 +30,14 @@ def write_string(w, s: AnyStr) -> None:
         write_bytes_unchecked(w, bytes([0] * (4 - remainder)))
 
 
-def write_bool(w, val: bool):
+def write_bool(w: Writer, val: bool) -> None:
     if val:
         write_uint32(w, 1)
     else:
         write_uint32(w, 0)
 
 
-def write_pubkey(w, address: str):
+def write_pubkey(w: Writer, address: str) -> None:
     # first 4 bytes of an address are the type, there's only one type (0)
     write_uint32(w, 0)
     write_bytes_fixed(w, public_key_from_address(address), 32)

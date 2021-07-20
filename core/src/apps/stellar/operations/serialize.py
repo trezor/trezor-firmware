@@ -1,7 +1,8 @@
+from trezor.enums import StellarAssetType
 from trezor.messages import (
     StellarAccountMergeOp,
     StellarAllowTrustOp,
-    StellarAssetType,
+    StellarAsset,
     StellarBumpSequenceOp,
     StellarChangeTrustOp,
     StellarCreateAccountOp,
@@ -14,14 +15,17 @@ from trezor.messages import (
 )
 from trezor.wire import DataError, ProcessError
 
-from .. import consts, writers
+from .. import writers
+
+if False:
+    from trezor.utils import Writer
 
 
-def write_account_merge_op(w, msg: StellarAccountMergeOp):
+def write_account_merge_op(w: Writer, msg: StellarAccountMergeOp) -> None:
     writers.write_pubkey(w, msg.destination_account)
 
 
-def write_allow_trust_op(w, msg: StellarAllowTrustOp):
+def write_allow_trust_op(w: Writer, msg: StellarAllowTrustOp) -> None:
     # trustor account (the account being allowed to access the asset)
     writers.write_pubkey(w, msg.trusted_account)
     writers.write_uint32(w, msg.asset_type)
@@ -30,21 +34,21 @@ def write_allow_trust_op(w, msg: StellarAllowTrustOp):
     writers.write_bool(w, msg.is_authorized)
 
 
-def write_bump_sequence_op(w, msg: StellarBumpSequenceOp):
+def write_bump_sequence_op(w: Writer, msg: StellarBumpSequenceOp) -> None:
     writers.write_uint64(w, msg.bump_to)
 
 
-def write_change_trust_op(w, msg: StellarChangeTrustOp):
+def write_change_trust_op(w: Writer, msg: StellarChangeTrustOp) -> None:
     _write_asset(w, msg.asset)
     writers.write_uint64(w, msg.limit)
 
 
-def write_create_account_op(w, msg: StellarCreateAccountOp):
+def write_create_account_op(w: Writer, msg: StellarCreateAccountOp) -> None:
     writers.write_pubkey(w, msg.new_account)
     writers.write_uint64(w, msg.starting_balance)
 
 
-def write_create_passive_offer_op(w, msg: StellarCreatePassiveOfferOp):
+def write_create_passive_offer_op(w: Writer, msg: StellarCreatePassiveOfferOp) -> None:
     _write_asset(w, msg.selling_asset)
     _write_asset(w, msg.buying_asset)
     writers.write_uint64(w, msg.amount)
@@ -52,7 +56,7 @@ def write_create_passive_offer_op(w, msg: StellarCreatePassiveOfferOp):
     writers.write_uint32(w, msg.price_d)
 
 
-def write_manage_data_op(w, msg: StellarManageDataOp):
+def write_manage_data_op(w: Writer, msg: StellarManageDataOp) -> None:
     if len(msg.key) > 64:
         raise ProcessError("Stellar: max length of a key is 64 bytes")
     writers.write_string(w, msg.key)
@@ -61,7 +65,7 @@ def write_manage_data_op(w, msg: StellarManageDataOp):
         writers.write_string(w, msg.value)
 
 
-def write_manage_offer_op(w, msg: StellarManageOfferOp):
+def write_manage_offer_op(w: Writer, msg: StellarManageOfferOp) -> None:
     _write_asset(w, msg.selling_asset)
     _write_asset(w, msg.buying_asset)
     writers.write_uint64(w, msg.amount)  # amount to sell
@@ -70,7 +74,7 @@ def write_manage_offer_op(w, msg: StellarManageOfferOp):
     writers.write_uint64(w, msg.offer_id)
 
 
-def write_path_payment_op(w, msg: StellarPathPaymentOp):
+def write_path_payment_op(w: Writer, msg: StellarPathPaymentOp) -> None:
     _write_asset(w, msg.send_asset)
     writers.write_uint64(w, msg.send_max)
     writers.write_pubkey(w, msg.destination_account)
@@ -82,13 +86,13 @@ def write_path_payment_op(w, msg: StellarPathPaymentOp):
         _write_asset(w, p)
 
 
-def write_payment_op(w, msg: StellarPaymentOp):
+def write_payment_op(w: Writer, msg: StellarPaymentOp) -> None:
     writers.write_pubkey(w, msg.destination_account)
     _write_asset(w, msg.asset)
     writers.write_uint64(w, msg.amount)
 
 
-def write_set_options_op(w, msg: StellarSetOptionsOp):
+def write_set_options_op(w: Writer, msg: StellarSetOptionsOp) -> None:
     # inflation destination
     if msg.inflation_destination_account is None:
         writers.write_bool(w, False)
@@ -118,16 +122,18 @@ def write_set_options_op(w, msg: StellarSetOptionsOp):
     # signer
     if msg.signer_type is None:
         writers.write_bool(w, False)
-    elif msg.signer_type in consts.SIGN_TYPES:
+    else:
+        if msg.signer_key is None or msg.signer_weight is None:
+            raise DataError(
+                "Stellar: signer_type, signer_key, signer_weight must be set together"
+            )
         writers.write_bool(w, True)
         writers.write_uint32(w, msg.signer_type)
         writers.write_bytes_fixed(w, msg.signer_key, 32)
         writers.write_uint32(w, msg.signer_weight)
-    else:
-        raise ProcessError("Stellar: unknown signer type")
 
 
-def _write_set_options_int(w, value: int):
+def _write_set_options_int(w: Writer, value: int | None) -> None:
     if value is None:
         writers.write_bool(w, False)
     else:
@@ -135,7 +141,7 @@ def _write_set_options_int(w, value: int):
         writers.write_uint32(w, value)
 
 
-def write_account(w, source_account: str):
+def write_account(w: Writer, source_account: str | None) -> None:
     if source_account is None:
         writers.write_bool(w, False)
     else:
@@ -143,28 +149,36 @@ def write_account(w, source_account: str):
         writers.write_pubkey(w, source_account)
 
 
-def _write_asset_code(w, asset_type: int, asset_code: str):
-    code = bytearray(asset_code)
-    if asset_type == consts.ASSET_TYPE_NATIVE:
+def _write_asset_code(
+    w: Writer, asset_type: StellarAssetType, asset_code: str | None
+) -> None:
+    if asset_type == StellarAssetType.NATIVE:
         return  # nothing is needed
-    elif asset_type == consts.ASSET_TYPE_ALPHANUM4:
+
+    if asset_code is None:
+        raise DataError("Stellar: invalid asset")
+
+    code = asset_code.encode()
+    if asset_type == StellarAssetType.ALPHANUM4:
         if len(code) > 4:
             raise DataError("Stellar: asset code too long for ALPHANUM4")
         # pad with zeros to 4 chars
-        writers.write_bytes_fixed(w, code + bytearray([0] * (4 - len(code))), 4)
-    elif asset_type == consts.ASSET_TYPE_ALPHANUM12:
+        writers.write_bytes_fixed(w, code + bytes([0] * (4 - len(code))), 4)
+    elif asset_type == StellarAssetType.ALPHANUM12:
         if len(code) > 12:
             raise DataError("Stellar: asset code too long for ALPHANUM12")
         # pad with zeros to 12 chars
-        writers.write_bytes_fixed(w, code + bytearray([0] * (12 - len(code))), 12)
+        writers.write_bytes_fixed(w, code + bytes([0] * (12 - len(code))), 12)
     else:
         raise ProcessError("Stellar: invalid asset type")
 
 
-def _write_asset(w, asset: StellarAssetType):
-    if asset is None or asset.type == consts.ASSET_TYPE_NATIVE:
+def _write_asset(w: Writer, asset: StellarAsset) -> None:
+    if asset.type == StellarAssetType.NATIVE:
         writers.write_uint32(w, 0)
         return
+    if asset.code is None or asset.issuer is None:
+        raise DataError("Stellar: invalid asset")
     writers.write_uint32(w, asset.type)
     _write_asset_code(w, asset.type, asset.code)
     writers.write_pubkey(w, asset.issuer)
