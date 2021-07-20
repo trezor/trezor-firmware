@@ -416,6 +416,23 @@ if TYPE_CHECKING:
         ImportanceTransfer_Activate = 1
         ImportanceTransfer_Deactivate = 2
 
+    class StellarAssetType(IntEnum):
+        NATIVE = 0
+        ALPHANUM4 = 1
+        ALPHANUM12 = 2
+
+    class StellarMemoType(IntEnum):
+        NONE = 0
+        TEXT = 1
+        ID = 2
+        HASH = 3
+        RETURN = 4
+
+    class StellarSignerType(IntEnum):
+        ACCOUNT = 0
+        PRE_AUTH = 1
+        HASH = 2
+
     class TezosContractType(IntEnum):
         Implicit = 0
         Originated = 1
