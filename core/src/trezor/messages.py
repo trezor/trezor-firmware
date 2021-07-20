@@ -46,6 +46,9 @@ if TYPE_CHECKING:
     from trezor.enums import RequestType  # noqa: F401
     from trezor.enums import SafetyCheckLevel  # noqa: F401
     from trezor.enums import SdProtectOperationType  # noqa: F401
+    from trezor.enums import StellarAssetType  # noqa: F401
+    from trezor.enums import StellarMemoType  # noqa: F401
+    from trezor.enums import StellarSignerType  # noqa: F401
     from trezor.enums import TezosBallotType  # noqa: F401
     from trezor.enums import TezosContractType  # noqa: F401
     from trezor.enums import WordRequestType  # noqa: F401
@@ -4428,22 +4431,22 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["RipplePayment"]:
             return isinstance(msg, cls)
 
-    class StellarAssetType(protobuf.MessageType):
-        type: "int"
+    class StellarAsset(protobuf.MessageType):
+        type: "StellarAssetType"
         code: "str | None"
         issuer: "str | None"
 
         def __init__(
             self,
             *,
-            type: "int",
+            type: "StellarAssetType",
             code: "str | None" = None,
             issuer: "str | None" = None,
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarAssetType"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarAsset"]:
             return isinstance(msg, cls)
 
     class StellarGetAddress(protobuf.MessageType):
@@ -4478,33 +4481,33 @@ if TYPE_CHECKING:
 
     class StellarSignTx(protobuf.MessageType):
         address_n: "list[int]"
-        network_passphrase: "str | None"
-        source_account: "str | None"
-        fee: "int | None"
-        sequence_number: "int | None"
+        network_passphrase: "str"
+        source_account: "str"
+        fee: "int"
+        sequence_number: "int"
         timebounds_start: "int | None"
         timebounds_end: "int | None"
-        memo_type: "int | None"
+        memo_type: "StellarMemoType"
         memo_text: "str | None"
         memo_id: "int | None"
         memo_hash: "bytes | None"
-        num_operations: "int | None"
+        num_operations: "int"
 
         def __init__(
             self,
             *,
+            network_passphrase: "str",
+            source_account: "str",
+            fee: "int",
+            sequence_number: "int",
+            memo_type: "StellarMemoType",
+            num_operations: "int",
             address_n: "list[int] | None" = None,
-            network_passphrase: "str | None" = None,
-            source_account: "str | None" = None,
-            fee: "int | None" = None,
-            sequence_number: "int | None" = None,
             timebounds_start: "int | None" = None,
             timebounds_end: "int | None" = None,
-            memo_type: "int | None" = None,
             memo_text: "str | None" = None,
             memo_id: "int | None" = None,
             memo_hash: "bytes | None" = None,
-            num_operations: "int | None" = None,
         ) -> None:
             pass
 
@@ -4520,17 +4523,17 @@ if TYPE_CHECKING:
 
     class StellarPaymentOp(protobuf.MessageType):
         source_account: "str | None"
-        destination_account: "str | None"
-        asset: "StellarAssetType | None"
-        amount: "int | None"
+        destination_account: "str"
+        asset: "StellarAsset"
+        amount: "int"
 
         def __init__(
             self,
             *,
+            destination_account: "str",
+            asset: "StellarAsset",
+            amount: "int",
             source_account: "str | None" = None,
-            destination_account: "str | None" = None,
-            asset: "StellarAssetType | None" = None,
-            amount: "int | None" = None,
         ) -> None:
             pass
 
@@ -4540,15 +4543,15 @@ if TYPE_CHECKING:
 
     class StellarCreateAccountOp(protobuf.MessageType):
         source_account: "str | None"
-        new_account: "str | None"
-        starting_balance: "int | None"
+        new_account: "str"
+        starting_balance: "int"
 
         def __init__(
             self,
             *,
+            new_account: "str",
+            starting_balance: "int",
             source_account: "str | None" = None,
-            new_account: "str | None" = None,
-            starting_balance: "int | None" = None,
         ) -> None:
             pass
 
@@ -4558,23 +4561,23 @@ if TYPE_CHECKING:
 
     class StellarPathPaymentOp(protobuf.MessageType):
         source_account: "str | None"
-        send_asset: "StellarAssetType | None"
-        send_max: "int | None"
-        destination_account: "str | None"
-        destination_asset: "StellarAssetType | None"
-        destination_amount: "int | None"
-        paths: "list[StellarAssetType]"
+        send_asset: "StellarAsset"
+        send_max: "int"
+        destination_account: "str"
+        destination_asset: "StellarAsset"
+        destination_amount: "int"
+        paths: "list[StellarAsset]"
 
         def __init__(
             self,
             *,
-            paths: "list[StellarAssetType] | None" = None,
+            send_asset: "StellarAsset",
+            send_max: "int",
+            destination_account: "str",
+            destination_asset: "StellarAsset",
+            destination_amount: "int",
+            paths: "list[StellarAsset] | None" = None,
             source_account: "str | None" = None,
-            send_asset: "StellarAssetType | None" = None,
-            send_max: "int | None" = None,
-            destination_account: "str | None" = None,
-            destination_asset: "StellarAssetType | None" = None,
-            destination_amount: "int | None" = None,
         ) -> None:
             pass
 
@@ -4584,23 +4587,23 @@ if TYPE_CHECKING:
 
     class StellarManageOfferOp(protobuf.MessageType):
         source_account: "str | None"
-        selling_asset: "StellarAssetType | None"
-        buying_asset: "StellarAssetType | None"
-        amount: "int | None"
-        price_n: "int | None"
-        price_d: "int | None"
-        offer_id: "int | None"
+        selling_asset: "StellarAsset"
+        buying_asset: "StellarAsset"
+        amount: "int"
+        price_n: "int"
+        price_d: "int"
+        offer_id: "int"
 
         def __init__(
             self,
             *,
+            selling_asset: "StellarAsset",
+            buying_asset: "StellarAsset",
+            amount: "int",
+            price_n: "int",
+            price_d: "int",
+            offer_id: "int",
             source_account: "str | None" = None,
-            selling_asset: "StellarAssetType | None" = None,
-            buying_asset: "StellarAssetType | None" = None,
-            amount: "int | None" = None,
-            price_n: "int | None" = None,
-            price_d: "int | None" = None,
-            offer_id: "int | None" = None,
         ) -> None:
             pass
 
@@ -4610,21 +4613,21 @@ if TYPE_CHECKING:
 
     class StellarCreatePassiveOfferOp(protobuf.MessageType):
         source_account: "str | None"
-        selling_asset: "StellarAssetType | None"
-        buying_asset: "StellarAssetType | None"
-        amount: "int | None"
-        price_n: "int | None"
-        price_d: "int | None"
+        selling_asset: "StellarAsset"
+        buying_asset: "StellarAsset"
+        amount: "int"
+        price_n: "int"
+        price_d: "int"
 
         def __init__(
             self,
             *,
+            selling_asset: "StellarAsset",
+            buying_asset: "StellarAsset",
+            amount: "int",
+            price_n: "int",
+            price_d: "int",
             source_account: "str | None" = None,
-            selling_asset: "StellarAssetType | None" = None,
-            buying_asset: "StellarAssetType | None" = None,
-            amount: "int | None" = None,
-            price_n: "int | None" = None,
-            price_d: "int | None" = None,
         ) -> None:
             pass
 
@@ -4642,7 +4645,7 @@ if TYPE_CHECKING:
         medium_threshold: "int | None"
         high_threshold: "int | None"
         home_domain: "str | None"
-        signer_type: "int | None"
+        signer_type: "StellarSignerType | None"
         signer_key: "bytes | None"
         signer_weight: "int | None"
 
@@ -4658,7 +4661,7 @@ if TYPE_CHECKING:
             medium_threshold: "int | None" = None,
             high_threshold: "int | None" = None,
             home_domain: "str | None" = None,
-            signer_type: "int | None" = None,
+            signer_type: "StellarSignerType | None" = None,
             signer_key: "bytes | None" = None,
             signer_weight: "int | None" = None,
         ) -> None:
@@ -4670,15 +4673,15 @@ if TYPE_CHECKING:
 
     class StellarChangeTrustOp(protobuf.MessageType):
         source_account: "str | None"
-        asset: "StellarAssetType | None"
-        limit: "int | None"
+        asset: "StellarAsset"
+        limit: "int"
 
         def __init__(
             self,
             *,
+            asset: "StellarAsset",
+            limit: "int",
             source_account: "str | None" = None,
-            asset: "StellarAssetType | None" = None,
-            limit: "int | None" = None,
         ) -> None:
             pass
 
@@ -4688,19 +4691,19 @@ if TYPE_CHECKING:
 
     class StellarAllowTrustOp(protobuf.MessageType):
         source_account: "str | None"
-        trusted_account: "str | None"
-        asset_type: "int | None"
+        trusted_account: "str"
+        asset_type: "StellarAssetType"
         asset_code: "str | None"
-        is_authorized: "int | None"
+        is_authorized: "bool"
 
         def __init__(
             self,
             *,
+            trusted_account: "str",
+            asset_type: "StellarAssetType",
+            is_authorized: "bool",
             source_account: "str | None" = None,
-            trusted_account: "str | None" = None,
-            asset_type: "int | None" = None,
             asset_code: "str | None" = None,
-            is_authorized: "int | None" = None,
         ) -> None:
             pass
 
@@ -4710,13 +4713,13 @@ if TYPE_CHECKING:
 
     class StellarAccountMergeOp(protobuf.MessageType):
         source_account: "str | None"
-        destination_account: "str | None"
+        destination_account: "str"
 
         def __init__(
             self,
             *,
+            destination_account: "str",
             source_account: "str | None" = None,
-            destination_account: "str | None" = None,
         ) -> None:
             pass
 
@@ -4726,14 +4729,14 @@ if TYPE_CHECKING:
 
     class StellarManageDataOp(protobuf.MessageType):
         source_account: "str | None"
-        key: "str | None"
+        key: "str"
         value: "bytes | None"
 
         def __init__(
             self,
             *,
+            key: "str",
             source_account: "str | None" = None,
-            key: "str | None" = None,
             value: "bytes | None" = None,
         ) -> None:
             pass
@@ -4744,13 +4747,13 @@ if TYPE_CHECKING:
 
     class StellarBumpSequenceOp(protobuf.MessageType):
         source_account: "str | None"
-        bump_to: "int | None"
+        bump_to: "int"
 
         def __init__(
             self,
             *,
+            bump_to: "int",
             source_account: "str | None" = None,
-            bump_to: "int | None" = None,
         ) -> None:
             pass
 

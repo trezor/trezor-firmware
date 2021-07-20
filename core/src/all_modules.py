@@ -408,6 +408,12 @@ if utils.BITCOIN_ONLY:
     import trezor.enums.NEMMosaicLevy
     trezor.enums.NEMSupplyChangeType
     import trezor.enums.NEMSupplyChangeType
+    trezor.enums.StellarAssetType
+    import trezor.enums.StellarAssetType
+    trezor.enums.StellarMemoType
+    import trezor.enums.StellarMemoType
+    trezor.enums.StellarSignerType
+    import trezor.enums.StellarSignerType
     trezor.enums.TezosBallotType
     import trezor.enums.TezosBallotType
     trezor.enums.TezosContractType
