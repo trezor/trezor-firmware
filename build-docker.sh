@@ -18,8 +18,22 @@ if [ -z "$ALPINE_ARCH" ]; then
   esac
 fi
 
+if [ -z "$ALPINE_CHECKSUM" ]; then
+  case "$ALPINE_ARCH" in
+    aarch64)
+      ALPINE_CHECKSUM="bc541e148463b3dde10fdbb1af8eac4e34706eae8883c6d126263db07a9a9c42"
+      ;;
+    x86_64)
+      ALPINE_CHECKSUM="bcdf5a4e58637b9228f8e474547a3de9ea02a05a5fa68a2495b0657ada7e65f6"
+      ;;
+    *)
+      exit
+  esac
+ fi
+
+
 CONTAINER_NAME=${CONTAINER_NAME:-trezor-firmware-env.nix}
-ALPINE_CDN=${ALPINE_CDN:-http://dl-cdn.alpinelinux.org/alpine}
+ALPINE_CDN=${ALPINE_CDN:-https://dl-cdn.alpinelinux.org/alpine}
 ALPINE_RELEASE=${ALPINE_RELEASE:-3.14}
 ALPINE_VERSION=${ALPINE_VERSION:-3.14.0}
 ALPINE_TARBALL=${ALPINE_FILE:-alpine-minirootfs-$ALPINE_VERSION-$ALPINE_ARCH.tar.gz}
@@ -58,6 +72,9 @@ else
     curl -L -o "ci/$ALPINE_TARBALL" "$CONTAINER_FS_URL"
   fi
 fi
+
+# check alpine checksum
+echo "${ALPINE_CHECKSUM} ci/${ALPINE_TARBALL}" | sha256sum -c
 
 docker build --build-arg ALPINE_VERSION="$ALPINE_VERSION" --build-arg ALPINE_ARCH="$ALPINE_ARCH" --build-arg NIX_VERSION="$NIX_VERSION" -t "$CONTAINER_NAME" ci/
 
