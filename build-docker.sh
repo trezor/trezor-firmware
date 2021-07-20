@@ -74,7 +74,11 @@ else
 fi
 
 # check alpine checksum
-echo "${ALPINE_CHECKSUM} ci/${ALPINE_TARBALL}" | sha256sum -c
+if command -v sha256sum &> /dev/null ; then
+    echo "${ALPINE_CHECKSUM}  ci/${ALPINE_TARBALL}" | sha256sum -c
+else
+    echo "${ALPINE_CHECKSUM}  ci/${ALPINE_TARBALL}" | shasum -a 256 -c
+fi
 
 docker build --build-arg ALPINE_VERSION="$ALPINE_VERSION" --build-arg ALPINE_ARCH="$ALPINE_ARCH" --build-arg NIX_VERSION="$NIX_VERSION" -t "$CONTAINER_NAME" ci/
 
