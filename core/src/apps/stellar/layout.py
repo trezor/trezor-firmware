@@ -1,5 +1,5 @@
 from trezor import strings, ui
-from trezor.enums import ButtonRequestType
+from trezor.enums import ButtonRequestType, StellarAssetType, StellarMemoType
 from trezor.ui.layouts import (
     confirm_action,
     confirm_address,
@@ -7,16 +7,22 @@ from trezor.ui.layouts import (
     confirm_metadata,
 )
 from trezor.ui.layouts.tt.altcoin import confirm_timebounds_stellar
+from trezor.wire import DataError
 
 from . import consts
 
 if False:
-    from trezor.messages import StellarAssetType
+    from trezor.wire import Context
+
+    from trezor.messages import StellarAsset
 
 
 async def require_confirm_init(
-    ctx, address: str, network_passphrase: str, accounts_match: bool
-):
+    ctx: Context,
+    address: str,
+    network_passphrase: str,
+    accounts_match: bool,
+) -> None:
     if accounts_match:
         description = "Initialize signing with your account"
     else:
@@ -44,18 +50,20 @@ async def require_confirm_init(
         )
 
 
-async def require_confirm_timebounds(ctx, start: int, end: int):
+async def require_confirm_timebounds(ctx: Context, start: int, end: int) -> None:
     await confirm_timebounds_stellar(ctx, start, end)
 
 
-async def require_confirm_memo(ctx, memo_type: int, memo_text: str):
-    if memo_type == consts.MEMO_TYPE_TEXT:
+async def require_confirm_memo(
+    ctx: Context, memo_type: StellarMemoType, memo_text: str
+) -> None:
+    if memo_type == StellarMemoType.TEXT:
         description = "Memo (TEXT)"
-    elif memo_type == consts.MEMO_TYPE_ID:
+    elif memo_type == StellarMemoType.ID:
         description = "Memo (ID)"
-    elif memo_type == consts.MEMO_TYPE_HASH:
+    elif memo_type == StellarMemoType.HASH:
         description = "Memo (HASH)"
-    elif memo_type == consts.MEMO_TYPE_RETURN:
+    elif memo_type == StellarMemoType.RETURN:
         description = "Memo (RETURN)"
     else:
         return await confirm_action(
@@ -78,7 +86,7 @@ async def require_confirm_memo(ctx, memo_type: int, memo_text: str):
     )
 
 
-async def require_confirm_final(ctx, fee: int, num_operations: int):
+async def require_confirm_final(ctx: Context, fee: int, num_operations: int) -> None:
     op_str = strings.format_plural("{count} {plural}", num_operations, "operation")
     await confirm_metadata(
         ctx,
@@ -91,14 +99,16 @@ async def require_confirm_final(ctx, fee: int, num_operations: int):
     )
 
 
-def format_asset(asset: StellarAssetType | None = None) -> str:
-    if asset is None or asset.type == consts.ASSET_TYPE_NATIVE:
+def format_asset(asset: StellarAsset | None) -> str:
+    if asset is None or asset.type == StellarAssetType.NATIVE:
         return "XLM"
     else:
+        if asset.code is None:
+            raise DataError("Stellar asset code is missing")
         return asset.code
 
 
-def format_amount(amount: int, asset: StellarAssetType | None = None) -> str:
+def format_amount(amount: int, asset: StellarAsset | None = None) -> str:
     return (
         strings.format_amount(amount, consts.AMOUNT_DECIMALS)
         + " "
@@ -106,7 +116,7 @@ def format_amount(amount: int, asset: StellarAssetType | None = None) -> str:
     )
 
 
-def get_network_warning(network_passphrase: str):
+def get_network_warning(network_passphrase: str) -> str | None:
     if network_passphrase == consts.NETWORK_PASSPHRASE_PUBLIC:
         return None
     if network_passphrase == consts.NETWORK_PASSPHRASE_TESTNET:

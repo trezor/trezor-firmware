@@ -1,8 +1,14 @@
 from .. import consts, writers
 from . import layout, serialize
 
+if False:
+    from trezor.utils import Writer
+    from trezor.wire import Context
 
-async def process_operation(ctx, w, op):
+
+async def process_operation(
+    ctx: Context, w: Writer, op: consts.StellarMessageType
+) -> None:
     if op.source_account:
         await layout.confirm_source_account(ctx, op.source_account)
     serialize.write_account(w, op.source_account)

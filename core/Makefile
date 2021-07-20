@@ -115,6 +115,7 @@ mypy:
 		src/apps/ethereum \
 		src/apps/management \
 		src/apps/misc \
+		src/apps/stellar \
 		src/apps/webauthn \
 		src/trezor/ui
 

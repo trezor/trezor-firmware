@@ -68,9 +68,9 @@ NETWORK_PASSPHRASE = "Test SDF Network ; September 2015"
 
 
 def _create_msg(memo=False) -> messages.StellarSignTx:
-    kwargs = {"memo_type": 0}
+    kwargs = {"memo_type": messages.StellarMemoType.NONE}
     if memo:
-        kwargs = {"memo_type": 1, "memo_text": "hi"}
+        kwargs = {"memo_type": messages.StellarMemoType.TEXT, "memo_text": "hi"}
     return messages.StellarSignTx(
         source_account="GAK5MSF74TJW6GLM7NLTL76YZJKM2S4CGP3UH4REJHPHZ4YBZW2GSBPW",
         fee=100,
@@ -135,25 +135,7 @@ def test_sign_tx_payment_op_native(client):
     op = messages.StellarPaymentOp()
     op.amount = 500111000
     op.destination_account = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
-
-    tx = _create_msg()
-
-    response = stellar.sign_tx(client, tx, [op], ADDRESS_N, NETWORK_PASSPHRASE)
-
-    assert (
-        b64encode(response.signature)
-        == b"pDc6ghKCLNoYbt3h4eBw+533237m0BB0Jp/d/TxJCA83mF3o5Fr4l5vwAWBR62hdTWAP9MhVluY0cd5i54UwDg=="
-        # a4373a8212822cda186edde1e1e070fb9df7db7ee6d01074269fddfd3c49080f37985de8e45af8979bf0016051eb685d4d600ff4c85596e63471de62e785300e
-    )
-
-
-def test_sign_tx_payment_op_native_explicit_asset(client):
-    """Native payment of 50.0111 XLM to GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"""
-
-    op = messages.StellarPaymentOp()
-    op.amount = 500111000
-    op.destination_account = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
-    op.asset = messages.StellarAssetType(type=0)
+    op.asset = messages.StellarAsset(type=messages.StellarAssetType.NATIVE)
 
     tx = _create_msg()
 
@@ -173,8 +155,8 @@ def test_sign_tx_payment_op_custom_asset1(client):
     op.amount = 500111000
     op.destination_account = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
 
-    op.asset = messages.StellarAssetType(
-        type=1,
+    op.asset = messages.StellarAsset(
+        type=messages.StellarAssetType.ALPHANUM4,
         code="X",
         issuer="GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC",
     )
@@ -196,8 +178,8 @@ def test_sign_tx_payment_op_custom_asset12(client):
     op.amount = 500111000
     op.destination_account = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
 
-    op.asset = messages.StellarAssetType(
-        type=2,
+    op.asset = messages.StellarAsset(
+        type=messages.StellarAssetType.ALPHANUM12,
         code="ABCDEFGHIJKL",
         issuer="GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC",
     )
@@ -218,7 +200,7 @@ def test_sign_tx_allow_trust_op(client):
     op = messages.StellarAllowTrustOp()
     op.is_authorized = True
     op.trusted_account = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
-    op.asset_type = 1
+    op.asset_type = messages.StellarAssetType.ALPHANUM4
     op.asset_code = "X"
     tx = _create_msg(memo=True)
 
@@ -237,8 +219,8 @@ def test_sign_tx_change_trust_op(client):
     op.limit = 5000000000
     op.source_account = "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V"
 
-    op.asset = messages.StellarAssetType(
-        type=2,
+    op.asset = messages.StellarAsset(
+        type=messages.StellarAssetType.ALPHANUM12,
         code="ABCDEFGHIJKL",
         issuer="GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC",
     )
@@ -256,13 +238,13 @@ def test_sign_tx_change_trust_op(client):
 def test_sign_tx_passive_offer_op(client):
 
     op = messages.StellarCreatePassiveOfferOp()
-    op.selling_asset = messages.StellarAssetType(
-        type=2,
+    op.selling_asset = messages.StellarAsset(
+        type=messages.StellarAssetType.ALPHANUM12,
         code="ABCDEFGHIJKL",
         issuer="GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC",
     )
-    op.buing_asset = messages.StellarAssetType(
-        type=1,
+    op.buying_asset = messages.StellarAsset(
+        type=messages.StellarAssetType.ALPHANUM4,
         code="X",
         issuer="GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC",
     )
@@ -284,13 +266,13 @@ def test_sign_tx_passive_offer_op(client):
 def test_sign_tx_manage_offer_op(client):
 
     op = messages.StellarManageOfferOp()
-    op.selling_asset = messages.StellarAssetType(
-        type=2,
+    op.selling_asset = messages.StellarAsset(
+        type=messages.StellarAssetType.ALPHANUM12,
         code="ABCDEFGHIJKL",
         issuer="GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC",
     )
-    op.buing_asset = messages.StellarAssetType(
-        type=1,
+    op.buying_asset = messages.StellarAsset(
+        type=messages.StellarAssetType.ALPHANUM4,
         code="X",
         issuer="GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC",
     )
@@ -313,15 +295,15 @@ def test_sign_tx_manage_offer_op(client):
 def test_sign_tx_path_payment_op(client):
 
     op = messages.StellarPathPaymentOp()
-    op.send = messages.StellarAssetType(
-        type=1,
+    op.send_asset = messages.StellarAsset(
+        type=messages.StellarAssetType.ALPHANUM4,
         code="X",
         issuer="GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC",
     )
     op.send_max = 50000
     op.destination_account = "GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC"
-    op.destination_asset = messages.StellarAssetType(
-        type=1,
+    op.destination_asset = messages.StellarAsset(
+        type=messages.StellarAssetType.ALPHANUM4,
         code="X",
         issuer="GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC",
     )
@@ -355,7 +337,7 @@ def test_sign_tx_set_options(client):
     )
 
     op = messages.StellarSetOptionsOp()
-    op.signer_type = 0
+    op.signer_type = messages.StellarSignerType.ACCOUNT
     op.signer_key = bytes.fromhex(
         "72187adb879c414346d77c71af8cce7b6eaa57b528e999fd91feae6b6418628e"
     )
@@ -407,7 +389,7 @@ def test_sign_tx_set_options(client):
     )
 
     op = messages.StellarSetOptionsOp()
-    op.signer_type = 1
+    op.signer_type = messages.StellarSignerType.PRE_AUTH
     op.signer_key = bytes.fromhex(
         "72187adb879c414346d77c71af8cce7b6eaa57b528e999fd91feae6b6418628e"
     )

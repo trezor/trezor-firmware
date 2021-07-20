@@ -14,7 +14,7 @@ def public_key_from_address(address: str) -> bytes:
     return b[1:-2]
 
 
-def address_from_public_key(pubkey: bytes):
+def address_from_public_key(pubkey: bytes) -> str:
     """Returns the base32-encoded version of public key bytes (G...)"""
     address = bytearray()
     address.append(6 << 3)  # version -> 'G'
@@ -24,7 +24,7 @@ def address_from_public_key(pubkey: bytes):
     return base32.encode(address)
 
 
-def _crc16_checksum_verify(data: bytes, checksum: bytes):
+def _crc16_checksum_verify(data: bytes, checksum: bytes) -> None:
     if _crc16_checksum(data) != checksum:
         raise ProcessError("Invalid address checksum")
 
