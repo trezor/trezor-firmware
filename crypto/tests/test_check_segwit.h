@@ -1,6 +1,7 @@
 #include "segwit_addr.h"
 
 static const char* valid_checksum[] = {
+    // BIP-173
     "A12UEL5L",
     "a12uel5l",
     "an83characterlonghumanreadablepartthatcontainsthenumber1andtheexcludedchar"
@@ -13,6 +14,7 @@ static const char* valid_checksum[] = {
 };
 
 static const char* invalid_checksum[] = {
+    // BIP-173
     " 1nwldj5",
     "\x7f"
     "1axkwrx",
@@ -43,6 +45,7 @@ struct invalid_address_data {
 };
 
 static struct valid_address_data valid_address[] = {
+    // BIP-173
     {"BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3T4",
      22,
      {0x00, 0x14, 0x75, 0x1e, 0x76, 0xe8, 0x19, 0x91, 0x96, 0xd4, 0x54,
@@ -52,18 +55,6 @@ static struct valid_address_data valid_address[] = {
      {0x00, 0x20, 0x18, 0x63, 0x14, 0x3c, 0x14, 0xc5, 0x16, 0x68, 0x04, 0xbd,
       0x19, 0x20, 0x33, 0x56, 0xda, 0x13, 0x6c, 0x98, 0x56, 0x78, 0xcd, 0x4d,
       0x27, 0xa1, 0xb8, 0xc6, 0x32, 0x96, 0x04, 0x90, 0x32, 0x62}},
-    {"bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7k7grpl"
-     "x",
-     42,
-     {0x51, 0x28, 0x75, 0x1e, 0x76, 0xe8, 0x19, 0x91, 0x96, 0xd4, 0x54,
-      0x94, 0x1c, 0x45, 0xd1, 0xb3, 0xa3, 0x23, 0xf1, 0x43, 0x3b, 0xd6,
-      0x75, 0x1e, 0x76, 0xe8, 0x19, 0x91, 0x96, 0xd4, 0x54, 0x94, 0x1c,
-      0x45, 0xd1, 0xb3, 0xa3, 0x23, 0xf1, 0x43, 0x3b, 0xd6}},
-    {"BC1SW50QA3JX3S", 4, {0x60, 0x02, 0x75, 0x1e}},
-    {"bc1zw508d6qejxtdg4y5r3zarvaryvg6kdaj",
-     18,
-     {0x52, 0x10, 0x75, 0x1e, 0x76, 0xe8, 0x19, 0x91, 0x96, 0xd4, 0x54, 0x94,
-      0x1c, 0x45, 0xd1, 0xb3, 0xa3, 0x23}},
     {"tb1qqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvsesrxh6hy",
      34,
      {0x00, 0x20, 0x00, 0x00, 0x00, 0xc4, 0xa5, 0xca, 0xd4, 0x62, 0x21, 0xb2,
@@ -71,6 +62,7 @@ static struct valid_address_data valid_address[] = {
       0x6c, 0xe2, 0x4d, 0x16, 0x5d, 0xab, 0x93, 0xe8, 0x64, 0x33}}};
 
 static const char* invalid_address[] = {
+    // BIP-173
     "tc1qw508d6qejxtdg4y5r3zarvary0c5xw7kg3g4ty",
     "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t5",
     "BC13W508D6QEJXTDG4Y5R3ZARVARY0C5XW7KN40WF2",
@@ -122,16 +114,14 @@ START_TEST(test_segwit) {
     size_t witprog_len;
     int witver;
     const char* hrp = "bc";
+    if (memcmp(valid_address[i].address, "tb1", 3) == 0) {
+      hrp = "tb";
+    }
     uint8_t scriptpubkey[42];
     size_t scriptpubkey_len;
     char rebuild[93];
     int ret = segwit_addr_decode(&witver, witprog, &witprog_len, hrp,
                                  valid_address[i].address);
-    if (!ret) {
-      hrp = "tb";
-      ret = segwit_addr_decode(&witver, witprog, &witprog_len, hrp,
-                               valid_address[i].address);
-    }
     ck_assert_int_eq(ret, 1);
     segwit_scriptpubkey(scriptpubkey, &scriptpubkey_len, witver, witprog,
                         witprog_len);
