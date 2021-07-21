@@ -20,7 +20,7 @@ import logging
 
 import pytest
 
-from trezorlib import protobuf
+from trezorlib import messages, protobuf
 
 
 class SomeEnum(IntEnum):
@@ -49,24 +49,62 @@ class PrimitiveMessage(protobuf.MessageType):
         3: protobuf.Field("bool", "bool"),
         4: protobuf.Field("bytes", "bytes"),
         5: protobuf.Field("unicode", "string"),
-        6: protobuf.Field("enum", SomeEnum),
+        6: protobuf.Field("enum", "SomeEnum"),
     }
 
 
 class EnumMessageMoreValues(protobuf.MessageType):
-    FIELDS = {1: protobuf.Field("enum", WiderEnum)}
+    FIELDS = {1: protobuf.Field("enum", "WiderEnum")}
 
 
 class EnumMessageLessValues(protobuf.MessageType):
-    FIELDS = {1: protobuf.Field("enum", NarrowerEnum)}
+    FIELDS = {1: protobuf.Field("enum", "NarrowerEnum")}
 
 
 class RepeatedFields(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("uintlist", "uint64", repeated=True),
-        2: protobuf.Field("enumlist", SomeEnum, repeated=True),
+        2: protobuf.Field("enumlist", "SomeEnum", repeated=True),
         3: protobuf.Field("strlist", "string", repeated=True),
     }
+
+
+class RequiredFields(protobuf.MessageType):
+    FIELDS = {
+        1: protobuf.Field("uvarint", "uint64", required=True),
+        2: protobuf.Field("nested", "PrimitiveMessage", required=True),
+    }
+
+
+class DefaultFields(protobuf.MessageType):
+    FIELDS = {
+        1: protobuf.Field("uvarint", "uint32", default=42),
+        2: protobuf.Field("svarint", "sint32", default=-42),
+        3: protobuf.Field("bool", "bool", default=True),
+        4: protobuf.Field("bytes", "bytes", default=b"hello"),
+        5: protobuf.Field("unicode", "string", default="hello"),
+        6: protobuf.Field("enum", "SomeEnum", default=SomeEnum.Five),
+    }
+
+
+class RecursiveMessage(protobuf.MessageType):
+    FIELDS = {
+        1: protobuf.Field("uvarint", "uint64"),
+        2: protobuf.Field("recursivefield", "RecursiveMessage", required=False)
+    }
+
+
+# message types are read from the messages module so we need to "include" these messages there for now
+messages.SomeEnum = SomeEnum
+messages.WiderEnum = WiderEnum
+messages.NarrowerEnum = NarrowerEnum
+messages.PrimitiveMessage = PrimitiveMessage
+messages.EnumMessageMoreValues = EnumMessageMoreValues
+messages.EnumMessageLessValues = EnumMessageLessValues
+messages.RepeatedFields = RepeatedFields
+messages.RequiredFields = RequiredFields
+messages.DefaultFields = DefaultFields
+messages.RecursiveMessage = RecursiveMessage
 
 
 def load_uvarint(buffer):
@@ -224,13 +262,6 @@ def test_packed_enum():
     assert not msg.strlist
 
 
-class RequiredFields(protobuf.MessageType):
-    FIELDS = {
-        1: protobuf.Field("uvarint", "uint64", required=True),
-        2: protobuf.Field("nested", PrimitiveMessage, required=True),
-    }
-
-
 def test_required():
     msg = RequiredFields(uvarint=3, nested=PrimitiveMessage())
     buf = dump_message(msg)
@@ -258,17 +289,6 @@ def test_required():
         load_message(buf, RequiredFields)
 
 
-class DefaultFields(protobuf.MessageType):
-    FIELDS = {
-        1: protobuf.Field("uvarint", "uint32", default=42),
-        2: protobuf.Field("svarint", "sint32", default=-42),
-        3: protobuf.Field("bool", "bool", default=True),
-        4: protobuf.Field("bytes", "bytes", default=b"hello"),
-        5: protobuf.Field("unicode", "string", default="hello"),
-        6: protobuf.Field("enum", SomeEnum, default=SomeEnum.Five),
-    }
-
-
 def test_default():
     # load empty message
     retr = load_message(b"", DefaultFields)
@@ -288,3 +308,25 @@ def test_default():
     buf = dump_message(msg)
     retr = load_message(buf, DefaultFields)
     assert retr.uvarint == 42
+
+
+def test_recursive():
+    msg = RecursiveMessage(
+        uvarint=1,
+        recursivefield=RecursiveMessage(
+            uvarint=2,
+            recursivefield=RecursiveMessage(
+                uvarint=3
+            )
+        )
+    )
+
+    buf = dump_message(msg)
+    retr = load_message(buf, RecursiveMessage)
+
+    assert msg == retr
+    assert retr.uvarint == 1
+    assert type(retr.recursivefield) == RecursiveMessage
+    assert retr.recursivefield.uvarint == 2
+    assert type(retr.recursivefield.recursivefield) == RecursiveMessage
+    assert retr.recursivefield.recursivefield.uvarint == 3
