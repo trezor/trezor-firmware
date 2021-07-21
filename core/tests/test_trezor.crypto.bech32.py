@@ -32,21 +32,27 @@ def segwit_scriptpubkey(witver, witprog):
 
 VALID_CHECKSUM = [
     "A12UEL5L",
+    "a12uel5l",
     "an83characterlonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1tt5tgs",
     "abcdef1qpzry9x8gf2tvdw0s3jn54khce6mua7lmqqqxw",
     "11qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqc8247j",
     "split1checkupstagehandshakeupstreamerranterredcaperred2y9e3w",
+    "?1ezyfcl",
 ]
 
 INVALID_CHECKSUM = [
     " 1nwldj5",
     "\x7F" + "1axkwrx",
+    "\x80" + "1eym55h",
     "an84characterslonghumanreadablepartthatcontainsthenumber1andtheexcludedcharactersbio1569pvx",
     "pzry9x0s0muk",
     "1pzry9x0s0muk",
     "x1b4n0q5v",
     "li1dgmt3",
     "de1lg7wt\xff",
+    "A1G7SGD8",
+    "10a06t8",
+    "1qzzfhee",
 ]
 
 VALID_ADDRESS = [
