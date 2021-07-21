@@ -41,20 +41,20 @@ def member_type(field):
     class ${message.name}(protobuf.MessageType):
 % if message.fields:
 % for field in message.fields:
-        ${field.name}: ${member_type(field)}
+        ${field.name}: "${member_type(field)}"
 % endfor
 
         def __init__(
             self,
             *,
 % for field in required_fields:
-            ${field.name}: ${field.python_type},
+            ${field.name}: "${field.python_type}",
 % endfor
 % for field in repeated_fields:
-            ${field.name}: list[${field.python_type}] | None = None,
+            ${field.name}: "list[${field.python_type}] | None" = None,
 % endfor
 % for field in optional_fields:
-            ${field.name}: ${field.python_type} | None = None,
+            ${field.name}: "${field.python_type} | None" = None,
 % endfor
         ) -> None:
             pass

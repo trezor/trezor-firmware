@@ -144,7 +144,7 @@ REQUIRED_FIELD_PLACEHOLDER = object()
 @attr.s(auto_attribs=True)
 class Field:
     name: str
-    type: Union[str, "MessageType", IntEnum]
+    type: str
     repeated: bool = attr.ib(default=False)
     required: bool = attr.ib(default=False)
     default: object = attr.ib(default=None)
@@ -154,10 +154,11 @@ class Field:
         if self.type in WIRE_TYPES:
             return WIRE_TYPES[self.type]
 
-        if safe_issubclass(self.type, MessageType):
+        field_type_object = get_field_type_object(self)
+        if safe_issubclass(field_type_object, MessageType):
             return WIRE_TYPE_LENGTH
 
-        if safe_issubclass(self.type, IntEnum):
+        if safe_issubclass(field_type_object, IntEnum):
             return WIRE_TYPE_INT
 
         raise ValueError(f"Unrecognized type for field {self.name}")
@@ -269,6 +270,15 @@ class CountingWriter:
         return nwritten
 
 
+def get_field_type_object(field: Field) -> Optional[type]:
+    from . import messages
+
+    field_type_object = getattr(messages, field.type, None)
+    if not safe_issubclass(field_type_object, (IntEnum, MessageType)):
+        return None
+    return field_type_object
+
+
 def decode_packed_array_field(field: Field, reader: Reader) -> List[Any]:
     assert field.repeated, "Not decoding packed array into non-repeated field"
     length = load_uvarint(reader)
@@ -285,9 +295,11 @@ def decode_packed_array_field(field: Field, reader: Reader) -> List[Any]:
 def decode_varint_field(field: Field, reader: Reader) -> Union[int, bool, IntEnum]:
     assert field.wire_type == WIRE_TYPE_INT, f"Field {field.name} is not varint-encoded"
     value = load_uvarint(reader)
-    if safe_issubclass(field.type, IntEnum):
+
+    field_type_object = get_field_type_object(field)
+    if safe_issubclass(field_type_object, IntEnum):
         try:
-            return field.type(value)
+            return field_type_object(value)
         except ValueError as e:
             # treat enum errors as warnings
             LOG.info(f"On field {field.name}: {e}")
@@ -328,8 +340,9 @@ def decode_length_delimited_field(
         reader.readinto(buf)
         return buf.decode()
 
-    if safe_issubclass(field.type, MessageType):
-        return load_message(LimitedReader(reader, value), field.type)
+    field_type_object = get_field_type_object(field)
+    if safe_issubclass(field_type_object, MessageType):
+        return load_message(LimitedReader(reader, value), field_type_object)
 
     raise TypeError  # field type is unknown
 
@@ -420,16 +433,17 @@ def dump_message(writer: Writer, msg: MessageType) -> None:
         for svalue in fvalue:
             dump_uvarint(writer, fkey)
 
-            if safe_issubclass(field.type, MessageType):
+            field_type_object = get_field_type_object(field)
+            if safe_issubclass(field_type_object, MessageType):
                 counter = CountingWriter()
                 dump_message(counter, svalue)
                 dump_uvarint(writer, counter.size)
                 dump_message(writer, svalue)
 
-            elif safe_issubclass(field.type, IntEnum):
-                if svalue not in field.type.__members__.values():
+            elif safe_issubclass(field_type_object, IntEnum):
+                if svalue not in field_type_object.__members__.values():
                     raise ValueError(
-                        f"Value {svalue} in field {field.name} unknown for {field.type.__name__}"
+                        f"Value {svalue} in field {field.name} unknown for {field.type}"
                     )
                 dump_uvarint(writer, svalue)
 
@@ -531,15 +545,16 @@ def format_message(
 
 
 def value_to_proto(field: Field, value: Any) -> Any:
-    if safe_issubclass(field.type, MessageType):
+    field_type_object = get_field_type_object(field)
+    if safe_issubclass(field_type_object, MessageType):
         raise TypeError("value_to_proto only converts simple values")
 
-    if safe_issubclass(field.type, IntEnum):
+    if safe_issubclass(field_type_object, IntEnum):
         if isinstance(value, str):
-            return field.type.__members__[value]
+            return field_type_object.__members__[value]
         else:
             try:
-                return field.type(value)
+                return field_type_object(value)
             except ValueError as e:
                 LOG.info(f"On field {field.name}: {e}")
                 return int(value)
@@ -572,8 +587,9 @@ def dict_to_proto(message_type: Type[MT], d: Dict[str, Any]) -> MT:
         if not field.repeated:
             value = [value]
 
-        if safe_issubclass(field.type, MessageType):
-            newvalue = [dict_to_proto(field.type, v) for v in value]
+        field_type_object = get_field_type_object(field)
+        if safe_issubclass(field_type_object, MessageType):
+            newvalue = [dict_to_proto(field_type_object, v) for v in value]
         else:
             newvalue = [value_to_proto(field, v) for v in value]
 

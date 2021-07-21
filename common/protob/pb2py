@@ -379,42 +379,6 @@ class Descriptor:
         for enum in self.enums:
             self.convert_enum_value_names(enum)
 
-        self.depsort_messages()
-
-    def depsort_messages(self):
-        # sort messages according to dependencies
-        messages_dict = {m.name: m for m in reversed(self.messages)}
-        messages_sorted = []
-        seen_messages = set()
-
-        # pop first message
-        _, message = messages_dict.popitem()
-
-        while True:
-            dependent_type = next(
-                (
-                    f.type_name
-                    for f in message.fields
-                    if f.is_message and f.type_name not in seen_messages
-                ),
-                None,
-            )
-            if dependent_type:
-                # return current message to unprocessed
-                messages_dict[message.name] = message
-                # pop the dependency
-                message = messages_dict.pop(dependent_type)
-            else:
-                # see message
-                seen_messages.add(message.name)
-                messages_sorted.append(message)
-                if not messages_dict:
-                    break
-                else:
-                    _, message = messages_dict.popitem()
-
-        assert len(messages_sorted) == len(self.messages)
-        self.messages[:] = messages_sorted
 
     def _filter_items(self, iter):
         return [

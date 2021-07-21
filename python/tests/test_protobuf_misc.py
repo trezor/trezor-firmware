@@ -18,7 +18,7 @@ from enum import IntEnum
 
 import pytest
 
-from trezorlib import protobuf
+from trezorlib import messages, protobuf
 
 
 class SimpleEnum(IntEnum):
@@ -34,18 +34,18 @@ class SimpleMessage(protobuf.MessageType):
         3: protobuf.Field("bool", "bool"),
         4: protobuf.Field("bytes", "bytes"),
         5: protobuf.Field("unicode", "string"),
-        6: protobuf.Field("enum", SimpleEnum),
+        6: protobuf.Field("enum", "SimpleEnum"),
         7: protobuf.Field("rep_int", "uint64", repeated=True),
         8: protobuf.Field("rep_str", "string", repeated=True),
-        9: protobuf.Field("rep_enum", SimpleEnum, repeated=True),
+        9: protobuf.Field("rep_enum", "SimpleEnum", repeated=True),
     }
 
 
 class NestedMessage(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("scalar", "uint64"),
-        2: protobuf.Field("nested", SimpleMessage),
-        3: protobuf.Field("repeated", SimpleMessage, repeated=True),
+        2: protobuf.Field("nested", "SimpleMessage"),
+        3: protobuf.Field("repeated", "SimpleMessage", repeated=True),
     }
 
 
@@ -53,6 +53,13 @@ class RequiredFields(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("scalar", "uint64", required=True),
     }
+
+
+# message types are read from the messages module so we need to "include" these messages there for now
+messages.SimpleEnum = SimpleEnum
+messages.SimpleMessage = SimpleMessage
+messages.NestedMessage = NestedMessage
+messages.RequiredFields = RequiredFields
 
 
 def test_get_field():
