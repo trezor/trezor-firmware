@@ -62,10 +62,6 @@ VALID_ADDRESS = [
     ["BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3T4", "0014751e76e8199196d454941c45d1b3a323f1433bd6"],
     ["tb1qrp33g0q5c5txsp9arysrx4k6zdkfs4nce4xj0gdcccefvpysxf3q0sl5k7",
      "00201863143c14c5166804bd19203356da136c985678cd4d27a1b8c6329604903262"],
-    ["bc1pw508d6qejxtdg4y5r3zarvary0c5xw7kw508d6qejxtdg4y5r3zarvary0c5xw7k7grplx",
-     "5128751e76e8199196d454941c45d1b3a323f1433bd6751e76e8199196d454941c45d1b3a323f1433bd6"],
-    ["BC1SW50QA3JX3S", "6002751e"],
-    ["bc1zw508d6qejxtdg4y5r3zarvaryvg6kdaj", "5210751e76e8199196d454941c45d1b3a323"],
     ["tb1qqqqqp399et2xygdj5xreqhjjvcmzhxw4aywxecjdzew6hylgvsesrxh6hy",
      "0020000000c4a5cad46221b2a187905e5266362b99d5e91c6ce24d165dab93e86433"],
 ]
@@ -100,27 +96,24 @@ class TestCryptoBech32(unittest.TestCase):
     def test_valid_checksum(self):
         """Test checksum creation and validation."""
         for test in VALID_CHECKSUM:
-            hrp, _ = bech32.bech32_decode(test)
+            hrp, _, _ = bech32.bech32_decode(test)
             self.assertIsNotNone(hrp)
             pos = test.rfind('1')
             test = test[:pos + 1] + chr(ord(test[pos + 1]) ^ 1) + test[pos + 2:]
-            hrp, _ = bech32.bech32_decode(test)
+            hrp, _, _ = bech32.bech32_decode(test)
             self.assertIsNone(hrp)
 
     def test_invalid_checksum(self):
         """Test validation of invalid checksums."""
         for test in INVALID_CHECKSUM:
-            hrp, _ = bech32.bech32_decode(test)
+            hrp, _, _ = bech32.bech32_decode(test)
             self.assertIsNone(hrp)
 
     def test_valid_address(self):
         """Test whether valid addresses decode to the correct output."""
         for (address, hexscript) in VALID_ADDRESS:
-            hrp = "bc"
+            hrp = "tb" if address.startswith("tb1") else "bc"
             witver, witprog = bech32.decode(hrp, address)
-            if witver is None:
-                hrp = "tb"
-                witver, witprog = bech32.decode(hrp, address)
             self.assertIsNotNone(witver)
             scriptpubkey = segwit_scriptpubkey(witver, witprog)
             self.assertEqual(scriptpubkey, unhexlify(hexscript))
