@@ -60,19 +60,18 @@ async def get_ownership_proof(
 
     # In order to set the "user confirmation" bit in the proof, the user must actually confirm.
     if msg.user_confirmation and not authorization:
-        if not msg.commitment_data:
-            await confirm_action(
-                ctx,
-                "confirm_ownership_proof",
-                title="Proof of ownership",
-                description="Do you want to create a proof of ownership?",
-            )
-        else:
+        await confirm_action(
+            ctx,
+            "confirm_ownership_proof",
+            title="Proof of ownership",
+            description="Do you want to create a proof of ownership?",
+        )
+        if msg.commitment_data:
             await confirm_blob(
                 ctx,
                 "confirm_ownership_proof",
                 title="Proof of ownership",
-                description="Do you want to create a proof of ownership for:",
+                description="Commitment data:",
                 data=msg.commitment_data,
                 icon=ui.ICON_CONFIG,
                 icon_color=ui.ORANGE_ICON,
