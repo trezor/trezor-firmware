@@ -71,7 +71,6 @@ __all__ = (
     "confirm_modify_fee",
     "confirm_coinjoin",
     "confirm_timebounds_stellar",
-    "confirm_proposals_tezos",
     "confirm_transfer_binance",
 )
 
@@ -988,30 +987,6 @@ async def confirm_timebounds_stellar(
         interact(
             ctx, Confirm(text), "confirm_timebounds", ButtonRequestType.ConfirmOutput
         )
-    )
-
-
-# TODO cleanup @ redesign
-async def confirm_proposals_tezos(
-    ctx: wire.GenericContext, proposals: Sequence[str]
-) -> None:
-    if len(proposals) > 1:
-        title = "Submit proposals"
-    else:
-        title = "Submit proposal"
-
-    pages: list[ui.Component] = []
-    for page, proposal in enumerate(proposals):
-        text = Text(title, ui.ICON_SEND, icon_color=ui.PURPLE, new_lines=False)
-        text.bold("Proposal {}:\n".format(page + 1))
-        text.mono(*chunks_intersperse(proposal, 17))
-        pages.append(text)
-
-    pages[-1] = Confirm(pages[-1])
-    paginated = Paginated(pages)
-
-    await raise_if_cancelled(
-        interact(ctx, paginated, "confirm_proposals", ButtonRequestType.SignTx)
     )
 
 
