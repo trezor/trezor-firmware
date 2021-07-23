@@ -15,6 +15,8 @@ INVALID_STAKEPOOL_REGISTRATION_TX_WITNESSES = wire.ProcessError(
     "Stakepool registration transaction can only contain staking witnesses"
 )
 INVALID_WITNESS_REQUEST = wire.ProcessError("Invalid witness request")
+INVALID_NATIVE_SCRIPT = wire.ProcessError("Invalid native script")
 
 LOVELACE_MAX_SUPPLY = 45_000_000_000 * 1_000_000
 ADDRESS_KEY_HASH_SIZE = 28
+SCRIPT_HASH_SIZE = 28

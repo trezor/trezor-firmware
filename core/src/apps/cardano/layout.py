@@ -1,7 +1,14 @@
 from trezor import ui
-from trezor.enums import ButtonRequestType, CardanoAddressType, CardanoCertificateType
+from trezor.enums import (
+    ButtonRequestType,
+    CardanoAddressType,
+    CardanoCertificateType,
+    CardanoNativeScriptHashDisplayFormat,
+    CardanoNativeScriptType,
+)
 from trezor.strings import format_amount
 from trezor.ui.layouts import (
+    confirm_blob,
     confirm_metadata,
     confirm_output,
     confirm_path_warning,
@@ -20,7 +27,9 @@ from .helpers import protocol_magics
 from .helpers.utils import (
     format_account_number,
     format_asset_fingerprint,
+    format_key_hash,
     format_optional_int,
+    format_script_hash,
     format_stake_pool_id,
     to_account_path,
 )
@@ -29,6 +38,7 @@ if False:
     from trezor import wire
     from trezor.messages import (
         CardanoBlockchainPointerType,
+        CardanoNativeScript,
         CardanoTxCertificate,
         CardanoTxWithdrawal,
         CardanoPoolParametersType,
@@ -48,6 +58,15 @@ ADDRESS_TYPE_NAMES = {
     CardanoAddressType.REWARD: "Reward",
 }
 
+SCRIPT_TYPE_NAMES = {
+    CardanoNativeScriptType.PUB_KEY: "Key",
+    CardanoNativeScriptType.ALL: "All",
+    CardanoNativeScriptType.ANY: "Any",
+    CardanoNativeScriptType.N_OF_K: "N of K",
+    CardanoNativeScriptType.INVALID_BEFORE: "Invalid before",
+    CardanoNativeScriptType.INVALID_HEREAFTER: "Invalid hereafter",
+}
+
 CERTIFICATE_TYPE_NAMES = {
     CardanoCertificateType.STAKE_REGISTRATION: "Stake key registration",
     CardanoCertificateType.STAKE_DEREGISTRATION: "Stake key deregistration",
@@ -62,6 +81,103 @@ def format_coin_amount(amount: int) -> str:
 
 def is_printable_ascii_bytestring(bytestr: bytes) -> bool:
     return all((32 < b < 127) for b in bytestr)
+
+
+async def show_native_script(
+    ctx: wire.Context,
+    script: CardanoNativeScript,
+    indices: list[int] = [],
+) -> None:
+    indices_str = ".".join([str(i) for i in indices])
+
+    script_type_name_suffix = ""
+    if script.type == CardanoNativeScriptType.PUB_KEY:
+        if script.key_path:
+            script_type_name_suffix = "path"
+        elif script.key_hash:
+            script_type_name_suffix = "hash"
+
+    props: list[PropertyType] = [
+        (
+            "Script%s - %s %s:"
+            % (
+                (" " + indices_str if indices_str else ""),
+                SCRIPT_TYPE_NAMES[script.type],
+                script_type_name_suffix,
+            ),
+            None,
+        )
+    ]
+
+    if script.type == CardanoNativeScriptType.PUB_KEY:
+        assert script.key_hash is not None or script.key_path  # validate_script
+        if script.key_hash:
+            props.append((None, format_key_hash(script.key_hash, True)))
+        elif script.key_path:
+            props.append((address_n_to_str(script.key_path), None))
+    elif script.type == CardanoNativeScriptType.N_OF_K:
+        assert script.required_signatures_count is not None  # validate_script
+        props.append(
+            (
+                "Requires %s out of %s signatures."
+                % (script.required_signatures_count, len(script.scripts)),
+                None,
+            )
+        )
+    elif script.type == CardanoNativeScriptType.INVALID_BEFORE:
+        assert script.invalid_before is not None  # validate_script
+        props.append((str(script.invalid_before), None))
+    elif script.type == CardanoNativeScriptType.INVALID_HEREAFTER:
+        assert script.invalid_hereafter is not None  # validate_script
+        props.append((str(script.invalid_hereafter), None))
+
+    if script.type in (
+        CardanoNativeScriptType.ALL,
+        CardanoNativeScriptType.ANY,
+        CardanoNativeScriptType.N_OF_K,
+    ):
+        assert script.scripts  # validate_script
+        props.append(("Contains %i nested scripts." % len(script.scripts), None))
+
+    await confirm_properties(
+        ctx,
+        "verify_script",
+        title="Verify script",
+        props=props,
+        br_code=ButtonRequestType.Other,
+    )
+
+    for i, sub_script in enumerate(script.scripts):
+        await show_native_script(ctx, sub_script, indices + [(i + 1)])
+
+
+async def show_script_hash(
+    ctx: wire.Context,
+    script_hash: bytes,
+    display_format: CardanoNativeScriptHashDisplayFormat,
+) -> None:
+    assert display_format in (
+        CardanoNativeScriptHashDisplayFormat.BECH32,
+        CardanoNativeScriptHashDisplayFormat.POLICY_ID,
+    )
+
+    if display_format == CardanoNativeScriptHashDisplayFormat.BECH32:
+        await confirm_properties(
+            ctx,
+            "verify_script",
+            title="Verify script",
+            props=[("Script hash:", format_script_hash(script_hash))],
+            br_code=ButtonRequestType.Other,
+        )
+    elif display_format == CardanoNativeScriptHashDisplayFormat.POLICY_ID:
+        await confirm_blob(
+            ctx,
+            "verify_script",
+            title="Verify script",
+            data=script_hash,
+            description="Policy ID:",
+            br_code=ButtonRequestType.Other,
+        )
 
 
 async def confirm_sending(

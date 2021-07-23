@@ -86,6 +86,14 @@ AuxiliaryDataSupplement = Dict[str, Union[int, bytes]]
 SignTxResponse = Dict[str, Union[bytes, List[Witness], AuxiliaryDataSupplement]]
 
 
+def parse_optional_bytes(value: Optional[str]) -> Optional[bytes]:
+    return bytes.fromhex(value) if value is not None else None
+
+
+def parse_optional_int(value) -> Optional[int]:
+    return int(value) if value is not None else None
+
+
 def create_address_parameters(
     address_type: messages.CardanoAddressType,
     address_n: List[int],
@@ -227,6 +235,35 @@ def _parse_address_parameters(
         address_parameters.get("blockIndex"),
         address_parameters.get("txIndex"),
         address_parameters.get("certificateIndex"),
+    )
+
+
+def parse_native_script(native_script) -> messages.CardanoNativeScript:
+    if "type" not in native_script:
+        raise ValueError("Script is missing some fields")
+
+    type = native_script["type"]
+    scripts = [
+        parse_native_script(sub_script)
+        for sub_script in native_script.get("scripts", ())
+    ]
+
+    key_hash = _parse_optional_bytes(native_script.get("key_hash"))
+    key_path = tools.parse_path(native_script.get("key_path"))
+    required_signatures_count = parse_optional_int(
+        native_script.get("required_signatures_count")
+    )
+    invalid_before = parse_optional_int(native_script.get("invalid_before"))
+    invalid_hereafter = parse_optional_int(native_script.get("invalid_hereafter"))
+
+    return messages.CardanoNativeScript(
+        type=type,
+        scripts=scripts,
+        key_hash=key_hash,
+        key_path=key_path,
+        required_signatures_count=required_signatures_count,
+        invalid_before=invalid_before,
+        invalid_hereafter=invalid_hereafter,
     )
 
 
@@ -380,9 +417,7 @@ def parse_auxiliary_data(auxiliary_data) -> messages.CardanoTxAuxiliaryData:
     )
 
     # include all provided fields so we can test validation in FW
-    hash = None
-    if "hash" in auxiliary_data:
-        hash = bytes.fromhex(auxiliary_data["hash"])
+    hash = parse_optional_bytes(auxiliary_data.get("hash"))
 
     catalyst_registration_parameters = None
     if "catalyst_registration_parameters" in auxiliary_data:
@@ -491,6 +526,20 @@ def get_address(
 @expect(messages.CardanoPublicKey)
 def get_public_key(client, address_n: List[int]) -> messages.CardanoPublicKey:
     return client.call(messages.CardanoGetPublicKey(address_n=address_n))
+
+
+@expect(messages.CardanoNativeScriptHash)
+def get_native_script_hash(
+    client,
+    native_script: messages.CardanoNativeScript,
+    display_format: messages.CardanoNativeScriptHashDisplayFormat = messages.CardanoNativeScriptHashDisplayFormat.HIDE,
+) -> messages.CardanoNativeScriptHash:
+    return client.call(
+        messages.CardanoGetNativeScriptHash(
+            script=native_script,
+            display_format=display_format,
+        )
+    )
 
 
 def sign_tx(

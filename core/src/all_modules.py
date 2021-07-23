@@ -392,6 +392,10 @@ if utils.BITCOIN_ONLY:
     import trezor.enums.CardanoAddressType
     trezor.enums.CardanoCertificateType
     import trezor.enums.CardanoCertificateType
+    trezor.enums.CardanoNativeScriptHashDisplayFormat
+    import trezor.enums.CardanoNativeScriptHashDisplayFormat
+    trezor.enums.CardanoNativeScriptType
+    import trezor.enums.CardanoNativeScriptType
     trezor.enums.CardanoPoolRelayType
     import trezor.enums.CardanoPoolRelayType
     trezor.enums.CardanoTxAuxiliaryDataSupplementType
@@ -448,6 +452,8 @@ if utils.BITCOIN_ONLY:
     import apps.cardano.certificates
     apps.cardano.get_address
     import apps.cardano.get_address
+    apps.cardano.get_native_script_hash
+    import apps.cardano.get_native_script_hash
     apps.cardano.get_public_key
     import apps.cardano.get_public_key
     apps.cardano.helpers
@@ -470,6 +476,8 @@ if utils.BITCOIN_ONLY:
     import apps.cardano.helpers.utils
     apps.cardano.layout
     import apps.cardano.layout
+    apps.cardano.native_script
+    import apps.cardano.native_script
     apps.cardano.seed
     import apps.cardano.seed
     apps.cardano.sign_tx
