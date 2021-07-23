@@ -1962,6 +1962,8 @@ class CardanoAddressParametersType(protobuf.MessageType):
         3: protobuf.Field("address_n_staking", "uint32", repeated=True, required=False),
         4: protobuf.Field("staking_key_hash", "bytes", repeated=False, required=False),
         5: protobuf.Field("certificate_pointer", "CardanoBlockchainPointerType", repeated=False, required=False),
+        6: protobuf.Field("script_payment_hash", "bytes", repeated=False, required=False),
+        7: protobuf.Field("script_staking_hash", "bytes", repeated=False, required=False),
     }
 
     def __init__(
@@ -1972,12 +1974,16 @@ class CardanoAddressParametersType(protobuf.MessageType):
         address_n_staking: Optional[List["int"]] = None,
         staking_key_hash: Optional["bytes"] = None,
         certificate_pointer: Optional["CardanoBlockchainPointerType"] = None,
+        script_payment_hash: Optional["bytes"] = None,
+        script_staking_hash: Optional["bytes"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.address_n_staking = address_n_staking if address_n_staking is not None else []
         self.address_type = address_type
         self.staking_key_hash = staking_key_hash
         self.certificate_pointer = certificate_pointer
+        self.script_payment_hash = script_payment_hash
+        self.script_staking_hash = script_staking_hash
 
 
 class CardanoGetAddress(protobuf.MessageType):

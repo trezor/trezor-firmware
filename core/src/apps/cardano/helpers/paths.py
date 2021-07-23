@@ -19,8 +19,9 @@ SCHEMA_STAKING = PathSchema.parse("m/[1852]'/coin_type'/account'/2/0", SLIP44_ID
 SCHEMA_STAKING_ANY_ACCOUNT = PathSchema.parse("m/[1852]'/coin_type'/[0-%s]'/2/0" % (HARDENED - 1), SLIP44_ID)
 # fmt: on
 
-ACCOUNT_PATH_LENGTH = const(3)
 ACCOUNT_PATH_INDEX = const(2)
+ACCOUNT_PATH_LENGTH = const(3)
+CHAIN_STAKING_KEY = const(2)
 
 CHANGE_OUTPUT_PATH_NAME = "Change output path"
 CHANGE_OUTPUT_STAKING_PATH_NAME = "Change output staking path"
