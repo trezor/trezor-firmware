@@ -6,8 +6,8 @@
   "tests": [
     {
       "parameters": {
-        "path": "m/1852'/1815'/0'/2/0",
         "address_type": "reward",
+        "staking_path": "m/1852'/1815'/0'/2/0",
         "network_id": 1,
         "protocol_magic": 764824073
       },
@@ -17,13 +17,35 @@
     },
     {
       "parameters": {
-        "path": "m/1852'/1815'/0'/2/0",
         "address_type": "reward",
+        "staking_path": "m/1852'/1815'/0'/2/0",
         "network_id": 0,
         "protocol_magic": 42
       },
       "result": {
         "expected_address": "stake_test1uqfz49rtntfa9h0s98f6s28sg69weemgjhc4e8hm66d5yac643znq"
+      }
+    },
+    {
+      "parameters": {
+        "address_type": "reward_script",
+        "script_staking_hash": "8d7bebc7a58f1c7b5fb7c9391071ecd3b51b032695522f8c555343a9",
+        "network_id": 1,
+        "protocol_magic": 764824073
+      },
+      "result": {
+        "expected_address": "stake17xxhh6785k83c76lklynjyr3anfm2xcry624ytuv24f582gt5mad4"
+      }
+    },
+    {
+      "parameters": {
+        "address_type": "reward_script",
+        "script_staking_hash": "8d7bebc7a58f1c7b5fb7c9391071ecd3b51b032695522f8c555343a9",
+        "network_id": 0,
+        "protocol_magic": 42
+      },
+      "result": {
+        "expected_address": "stake_test17zxhh6785k83c76lklynjyr3anfm2xcry624ytuv24f582gv73lfg"
       }
     }
   ]

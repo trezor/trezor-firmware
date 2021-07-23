@@ -25,6 +25,28 @@
       "result": {
         "expected_address": "addr_test1vzq0nckg3ekgzuqg7w5p9mvgnd9ym28qh5grlph8xd2z92s8k2y47"
       }
+    },
+    {
+      "parameters": {
+        "address_type": "enterprise_script",
+        "script_payment_hash": "0d5acbf6a1dfb0c8724e60df314987315ccbf78bb6c0f9b6f3d568fe",
+        "network_id": 1,
+        "protocol_magic": 764824073
+      },
+      "result": {
+        "expected_address": "addr1wyx44jlk580mpjrjfesd7v2fsuc4ejlh3wmvp7dk702k3lsqee7sp"
+      }
+    },
+    {
+      "parameters": {
+        "address_type": "enterprise_script",
+        "script_payment_hash": "0d5acbf6a1dfb0c8724e60df314987315ccbf78bb6c0f9b6f3d568fe",
+        "network_id": 0,
+        "protocol_magic": 42
+      },
+      "result": {
+        "expected_address": "addr_test1wqx44jlk580mpjrjfesd7v2fsuc4ejlh3wmvp7dk702k3lsm3dzly"
+      }
     }
   ]
 }

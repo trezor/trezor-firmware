@@ -55,14 +55,6 @@ INCOMPLETE_OUTPUT_ERROR_MESSAGE = "The output is missing some fields"
 
 INVALID_OUTPUT_TOKEN_BUNDLE_ENTRY = "The output's token_bundle entry is invalid"
 
-ADDRESS_TYPES = (
-    messages.CardanoAddressType.BYRON,
-    messages.CardanoAddressType.BASE,
-    messages.CardanoAddressType.POINTER,
-    messages.CardanoAddressType.ENTERPRISE,
-    messages.CardanoAddressType.REWARD,
-)
-
 InputWithPath = Tuple[messages.CardanoTxInput, List[int]]
 AssetGroupWithTokens = Tuple[messages.CardanoAssetGroup, List[messages.CardanoToken]]
 OutputWithAssetGroups = Tuple[messages.CardanoTxOutput, List[AssetGroupWithTokens]]
@@ -102,13 +94,15 @@ def create_address_parameters(
     block_index: int = None,
     tx_index: int = None,
     certificate_index: int = None,
+    script_payment_hash: bytes = None,
+    script_staking_hash: bytes = None,
 ) -> messages.CardanoAddressParametersType:
     certificate_pointer = None
 
-    if address_type not in ADDRESS_TYPES:
-        raise ValueError("Unknown address type")
-
-    if address_type == messages.CardanoAddressType.POINTER:
+    if address_type in (
+        messages.CardanoAddressType.POINTER,
+        messages.CardanoAddressType.POINTER_SCRIPT,
+    ):
         certificate_pointer = _create_certificate_pointer(
             block_index, tx_index, certificate_index
         )
@@ -119,6 +113,8 @@ def create_address_parameters(
         address_n_staking=address_n_staking,
         staking_key_hash=staking_key_hash,
         certificate_pointer=certificate_pointer,
+        script_payment_hash=script_payment_hash,
+        script_staking_hash=script_staking_hash,
     )
 
 
@@ -220,21 +216,31 @@ def _parse_tokens(tokens) -> List[messages.CardanoToken]:
 def _parse_address_parameters(
     address_parameters,
 ) -> messages.CardanoAddressParametersType:
-    if "path" not in address_parameters:
+    if "addressType" not in address_parameters:
         raise ValueError(INCOMPLETE_OUTPUT_ERROR_MESSAGE)
 
-    staking_key_hash_bytes = None
-    if "stakingKeyHash" in address_parameters:
-        staking_key_hash_bytes = bytes.fromhex(address_parameters.get("stakingKeyHash"))
+    path = tools.parse_path(address_parameters.get("path"))
+    staking_path = tools.parse_path(address_parameters.get("stakingPath"))
+    staking_key_hash_bytes = parse_optional_bytes(
+        address_parameters.get("stakingKeyHash")
+    )
+    script_payment_hash = parse_optional_bytes(
+        address_parameters.get("scriptPaymentHash")
+    )
+    script_staking_hash = parse_optional_bytes(
+        address_parameters.get("scriptStakingHash")
+    )
 
     return create_address_parameters(
         int(address_parameters["addressType"]),
-        tools.parse_path(address_parameters["path"]),
-        tools.parse_path(address_parameters.get("stakingPath")),
+        path,
+        staking_path,
         staking_key_hash_bytes,
         address_parameters.get("blockIndex"),
         address_parameters.get("txIndex"),
         address_parameters.get("certificateIndex"),
+        script_payment_hash,
+        script_staking_hash,
     )
 
 
@@ -248,7 +254,7 @@ def parse_native_script(native_script) -> messages.CardanoNativeScript:
         for sub_script in native_script.get("scripts", ())
     ]
 
-    key_hash = _parse_optional_bytes(native_script.get("key_hash"))
+    key_hash = parse_optional_bytes(native_script.get("key_hash"))
     key_path = tools.parse_path(native_script.get("key_path"))
     required_signatures_count = parse_optional_int(
         native_script.get("required_signatures_count")

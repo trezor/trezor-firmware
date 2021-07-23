@@ -23,14 +23,6 @@ from . import ChoiceType, with_client
 
 PATH_HELP = "BIP-32 path to key, e.g. m/44'/1815'/0'/0/0"
 
-ADDRESS_TYPES = {
-    "byron": messages.CardanoAddressType.BYRON,
-    "base": messages.CardanoAddressType.BASE,
-    "pointer": messages.CardanoAddressType.POINTER,
-    "enterprise": messages.CardanoAddressType.ENTERPRISE,
-    "reward": messages.CardanoAddressType.REWARD,
-}
-
 
 @click.group(name="cardano")
 def cli():
@@ -115,14 +107,21 @@ def sign_tx(client, file, signing_mode, protocol_magic, network_id, testnet):
 
 
 @cli.command()
-@click.option("-n", "--address", required=True, help=PATH_HELP)
+@click.option("-n", "--address", type=str, default=None, help=PATH_HELP)
 @click.option("-d", "--show-display", is_flag=True)
-@click.option("-t", "--address-type", type=ChoiceType(ADDRESS_TYPES), default="base")
+@click.option(
+    "-t",
+    "--address-type",
+    type=ChoiceType({m.name: m for m in messages.CardanoAddressType}),
+    default="BASE",
+)
 @click.option("-s", "--staking-address", type=str, default=None)
 @click.option("-h", "--staking-key-hash", type=str, default=None)
 @click.option("-b", "--block_index", type=int, default=None)
 @click.option("-x", "--tx_index", type=int, default=None)
 @click.option("-c", "--certificate_index", type=int, default=None)
+@click.option("--script-payment-hash", type=str, default=None)
+@click.option("--script-staking-hash", type=str, default=None)
 @click.option(
     "-p", "--protocol-magic", type=int, default=cardano.PROTOCOL_MAGICS["mainnet"]
 )
@@ -138,6 +137,8 @@ def get_address(
     block_index,
     tx_index,
     certificate_index,
+    script_payment_hash,
+    script_staking_hash,
     protocol_magic,
     network_id,
     show_display,
@@ -161,9 +162,9 @@ def get_address(
         protocol_magic = cardano.PROTOCOL_MAGICS["testnet"]
         network_id = cardano.NETWORK_IDS["testnet"]
 
-    staking_key_hash_bytes = None
-    if staking_key_hash:
-        staking_key_hash_bytes = bytes.fromhex(staking_key_hash)
+    staking_key_hash_bytes = cardano.parse_optional_bytes(staking_key_hash)
+    script_payment_hash_bytes = cardano.parse_optional_bytes(script_payment_hash)
+    script_staking_hash_bytes = cardano.parse_optional_bytes(script_staking_hash)
 
     address_parameters = cardano.create_address_parameters(
         address_type,
@@ -173,6 +174,8 @@ def get_address(
         block_index,
         tx_index,
         certificate_index,
+        script_payment_hash_bytes,
+        script_staking_hash_bytes,
     )
 
     return cardano.get_address(
