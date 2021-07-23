@@ -187,3 +187,20 @@ def get_public_key(client, address):
     """Get Cardano public key."""
     address_n = tools.parse_path(address)
     return cardano.get_public_key(client, address_n)
+
+
+@cli.command()
+@click.argument("file", type=click.File("r"))
+@click.option(
+    "-d",
+    "--display-format",
+    type=ChoiceType({m.name: m for m in messages.CardanoNativeScriptHashDisplayFormat}),
+    default="HIDE",
+)
+@with_client
+def get_native_script_hash(client, file, display_format):
+    """Get Cardano native script hash."""
+    native_script_json = json.load(file)
+    native_script = cardano.parse_native_script(native_script_json)
+
+    return cardano.get_native_script_hash(client, native_script, display_format)

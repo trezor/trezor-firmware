@@ -176,6 +176,8 @@ class MessageType(IntEnum):
     CardanoTxAuxiliaryData = 327
     CardanoPoolOwner = 328
     CardanoPoolRelayParameters = 329
+    CardanoGetNativeScriptHash = 330
+    CardanoNativeScriptHash = 331
     RippleGetAddress = 400
     RippleAddress = 401
     RippleSignTx = 402
@@ -340,6 +342,21 @@ class CardanoAddressType(IntEnum):
     BYRON = 8
     REWARD = 14
     REWARD_SCRIPT = 15
+
+
+class CardanoNativeScriptType(IntEnum):
+    PUB_KEY = 0
+    ALL = 1
+    ANY = 2
+    N_OF_K = 3
+    INVALID_BEFORE = 4
+    INVALID_HEREAFTER = 5
+
+
+class CardanoNativeScriptHashDisplayFormat(IntEnum):
+    HIDE = 0
+    BECH32 = 1
+    POLICY_ID = 2
 
 
 class CardanoCertificateType(IntEnum):
@@ -1872,6 +1889,69 @@ class CardanoBlockchainPointerType(protobuf.MessageType):
         self.block_index = block_index
         self.tx_index = tx_index
         self.certificate_index = certificate_index
+
+
+class CardanoNativeScript(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("type", "CardanoNativeScriptType", repeated=False, required=True),
+        2: protobuf.Field("scripts", "CardanoNativeScript", repeated=True, required=False),
+        3: protobuf.Field("key_hash", "bytes", repeated=False, required=False),
+        4: protobuf.Field("key_path", "uint32", repeated=True, required=False),
+        5: protobuf.Field("required_signatures_count", "uint32", repeated=False, required=False),
+        6: protobuf.Field("invalid_before", "uint64", repeated=False, required=False),
+        7: protobuf.Field("invalid_hereafter", "uint64", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        type: "CardanoNativeScriptType",
+        scripts: Optional[List["CardanoNativeScript"]] = None,
+        key_path: Optional[List["int"]] = None,
+        key_hash: Optional["bytes"] = None,
+        required_signatures_count: Optional["int"] = None,
+        invalid_before: Optional["int"] = None,
+        invalid_hereafter: Optional["int"] = None,
+    ) -> None:
+        self.scripts = scripts if scripts is not None else []
+        self.key_path = key_path if key_path is not None else []
+        self.type = type
+        self.key_hash = key_hash
+        self.required_signatures_count = required_signatures_count
+        self.invalid_before = invalid_before
+        self.invalid_hereafter = invalid_hereafter
+
+
+class CardanoGetNativeScriptHash(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 330
+    FIELDS = {
+        1: protobuf.Field("script", "CardanoNativeScript", repeated=False, required=True),
+        2: protobuf.Field("display_format", "CardanoNativeScriptHashDisplayFormat", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        script: "CardanoNativeScript",
+        display_format: "CardanoNativeScriptHashDisplayFormat",
+    ) -> None:
+        self.script = script
+        self.display_format = display_format
+
+
+class CardanoNativeScriptHash(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 331
+    FIELDS = {
+        1: protobuf.Field("script_hash", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        script_hash: "bytes",
+    ) -> None:
+        self.script_hash = script_hash
 
 
 class CardanoAddressParametersType(protobuf.MessageType):

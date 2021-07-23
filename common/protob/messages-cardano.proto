@@ -25,6 +25,21 @@ enum CardanoAddressType {
     REWARD_SCRIPT = 15;
 }
 
+enum CardanoNativeScriptType {
+    PUB_KEY = 0;
+    ALL = 1;
+    ANY = 2;
+    N_OF_K = 3;
+    INVALID_BEFORE = 4;
+    INVALID_HEREAFTER = 5;
+}
+
+enum CardanoNativeScriptHashDisplayFormat {
+    HIDE = 0;
+    BECH32 = 1;
+    POLICY_ID = 2;
+}
+
 enum CardanoCertificateType {
     STAKE_REGISTRATION = 0;
     STAKE_DEREGISTRATION = 1;
@@ -62,6 +77,39 @@ message CardanoBlockchainPointerType {
     required uint32 block_index = 1;
     required uint32 tx_index = 2;
     required uint32 certificate_index = 3;
+}
+
+/*
+ * @embed
+ */
+message CardanoNativeScript {
+    required CardanoNativeScriptType type = 1;
+    repeated CardanoNativeScript scripts = 2;
+
+    optional bytes key_hash = 3;
+    repeated uint32 key_path = 4;
+    optional uint32 required_signatures_count = 5;
+    optional uint64 invalid_before = 6;
+    optional uint64 invalid_hereafter = 7;
+}
+
+/**
+ * Request: Ask device for Cardano native script hash
+ * @start
+ * @next CardanoNativeScriptHash
+ * @next Failure
+ */
+message CardanoGetNativeScriptHash {
+    required CardanoNativeScript script = 1;
+    required CardanoNativeScriptHashDisplayFormat display_format = 2;   // display hash as bech32 or policy id
+}
+
+/**
+ * Request: Ask device for Cardano native script hash
+ * @end
+ */
+message CardanoNativeScriptHash {
+    required bytes script_hash = 1;
 }
 
 /**

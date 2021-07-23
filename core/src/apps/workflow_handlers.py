@@ -152,6 +152,8 @@ def find_message_handler_module(msg_type: int) -> str:
             return "apps.cardano.get_public_key"
         elif msg_type == MessageType.CardanoSignTxInit:
             return "apps.cardano.sign_tx"
+        elif msg_type == MessageType.CardanoGetNativeScriptHash:
+            return "apps.cardano.get_native_script_hash"
 
         # tezos
         elif msg_type == MessageType.TezosGetAddress:
