@@ -61,6 +61,7 @@ enum CardanoTxAuxiliaryDataSupplementType {
 enum CardanoTxSigningMode {
     ORDINARY_TRANSACTION = 0;
     POOL_REGISTRATION_AS_OWNER = 1;
+    MULTISIG_TRANSACTION = 2;
 }
 
 enum CardanoTxWitnessType {
@@ -193,6 +194,7 @@ message CardanoSignTxInit {
     required bool has_auxiliary_data = 10;
     optional uint64 validity_interval_start = 11;
     required uint32 witness_requests_count = 12;
+    required uint32 minting_asset_groups_count = 13;
 }
 
 /**
@@ -230,7 +232,8 @@ message CardanoAssetGroup {
  */
 message CardanoToken {
     required bytes asset_name_bytes = 1;     // asset name as bytestring (may be either ascii string or hash)
-    required uint64 amount = 2;              // asset amount
+    optional uint64 amount = 2;              // asset amount
+    optional sint64 mint_amount = 3;         // mint amount (can also be negative in which case the tokens are burnt)
 }
 
 /**
@@ -288,9 +291,10 @@ message CardanoPoolParametersType {
  */
  message CardanoTxCertificate {
     required CardanoCertificateType type = 1;                 // certificate type
-    repeated uint32 path = 2;                                 // BIP-32 path to derive (staking) key
+    repeated uint32 path = 2;                                 // stake credential key path
     optional bytes pool = 3;                                  // pool hash
     optional CardanoPoolParametersType pool_parameters = 4;   // used for stake pool registration certificate
+    optional bytes script_hash = 5;                           // stake credential script hash
 }
 
 /**
@@ -298,8 +302,9 @@ message CardanoPoolParametersType {
  * @next CardanoTxItemAck
  */
 message CardanoTxWithdrawal {
-    repeated uint32 path = 1;
+    repeated uint32 path = 1;           // stake credential key path
     required uint64 amount = 2;
+    optional bytes script_hash = 3;     // stake credential script hash
 }
 
 /**
@@ -323,6 +328,14 @@ message CardanoTxAuxiliaryData {
 }
 
 /**
+ * Request: Transaction mint
+ * @next CardanoTxItemAck
+ */
+message CardanoTxMint {
+    required uint32 asset_groups_count = 1;
+}
+
+/**
  * Response: Acknowledgement of the last transaction item received
  * @next CardanoTxInput
  * @next CardanoTxOutput
@@ -334,6 +347,7 @@ message CardanoTxAuxiliaryData {
  * @next CardanoTxWithdrawal
  * @next CardanoTxAuxiliaryData
  * @next CardanoTxWitnessRequest
+ * @next CardanoTxMint
  */
 message CardanoTxItemAck {
 }
@@ -442,7 +456,7 @@ message CardanoSignTx {
 
     message CardanoTokenType {
         required bytes asset_name_bytes = 1;     // asset name as bytestring (may be either ascii string or hash)
-        required uint64 amount = 2;        // asset amount
+        required uint64 amount = 2;              // asset amount
     }
 
     /**

@@ -1,5 +1,5 @@
 from ...common.paths import HARDENED
-from ..seed import is_byron_path, is_shelley_path
+from ..seed import is_byron_path, is_minting_path, is_multisig_path, is_shelley_path
 from . import (
     INVALID_CERTIFICATE,
     INVALID_OUTPUT,
@@ -33,6 +33,10 @@ class AccountPathChecker:
         self.account_path: object | list[int] = self.UNDEFINED
 
     def _add(self, path: list[int], error: wire.ProcessError) -> None:
+        # multi-sig and minting paths are always shown and thus don't need to be checked
+        if is_multisig_path(path) or is_minting_path(path):
+            return
+
         account_path = to_account_path(path)
         if self.account_path is self.UNDEFINED:
             self.account_path = account_path

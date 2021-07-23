@@ -27,7 +27,9 @@
             "amount": "3003112"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid address"
@@ -56,7 +58,9 @@
             "amount": "3003112"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid address"
@@ -85,7 +89,9 @@
             "amount": "3003112"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid address"
@@ -114,7 +120,9 @@
             "amount": "3003112"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid address"
@@ -143,7 +151,9 @@
             "amount": "3003112"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid address"
@@ -172,7 +182,9 @@
             "amount": "3003112"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Fee is out of range"
@@ -206,7 +218,9 @@
             "amount": "1000000"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Total transaction amount is out of range!"
@@ -235,7 +249,9 @@
             "amount": "3003112"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Output address network mismatch"
@@ -264,7 +280,9 @@
             "amount": "3003112"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Output address network mismatch"
@@ -293,7 +311,9 @@
             "amount": "1"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid address"
@@ -322,7 +342,9 @@
             "amount": "1"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid address"
@@ -351,7 +373,9 @@
             "amount": "1"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid network id/protocol magic combination!"
@@ -380,7 +404,9 @@
             "amount": "1"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid network id/protocol magic combination!"
@@ -409,7 +435,9 @@
             "amount": "3003112"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid address"
@@ -441,7 +469,9 @@
             "amount": "1"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid output"
@@ -475,7 +505,118 @@
             "amount": "3003112"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
+      },
+      "result": {
+        "error_message": "Invalid certificate"
+      }
+    },
+    {
+      "description": "Certificate has multisig path",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [
+          {
+            "type": 0,
+            "path": "m/1854'/1815'/0'/0/0"
+          }
+        ],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
+      },
+      "result": {
+        "error_message": "Invalid certificate"
+      }
+    },
+    {
+      "description": "Certificate has script hash",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [
+          {
+            "type": 0,
+            "script_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+          }
+        ],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
+      },
+      "result": {
+        "error_message": "Invalid certificate"
+      }
+    },
+    {
+      "description": "Certificate has both path and script_hash",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [
+          {
+            "type": 0,
+            "path": "m/1852'/1815'/0'/0/0",
+            "script_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+          }
+        ],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -510,7 +651,9 @@
             "amount": "3003112"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -544,7 +687,81 @@
             "amount": "3003112"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
+      },
+      "result": {
+        "error_message": "Invalid withdrawal"
+      }
+    },
+    {
+      "description": "Withdrawal has multisig path",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [
+          {
+            "path": "m/1854'/1815'/0'/0/0",
+            "amount": "1000"
+          }
+        ],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
+      },
+      "result": {
+        "error_message": "Invalid withdrawal"
+      }
+    },
+    {
+      "description": "Withdrawal has script hash",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [
+          {
+            "script_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd",
+            "amount": "1000"
+          }
+        ],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -578,7 +795,46 @@
             "amount": "3003112"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
+      },
+      "result": {
+        "error_message": "Invalid withdrawal"
+      }
+    },
+    {
+      "description": "Withdrawal contains both path and script_hash",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [
+          {
+            "path": "m/1852'/1815'/0'/2/0",
+            "amount": "1000",
+            "script_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+          }
+        ],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -616,7 +872,9 @@
             "amount": "3003112"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Duplicate withdrawals"
@@ -647,7 +905,9 @@
             "amount": "3003112"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid auxiliary data"
@@ -686,7 +946,9 @@
             "amount": "1"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid auxiliary data"
@@ -727,7 +989,9 @@
             "amount": "1"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid auxiliary data"
@@ -762,7 +1026,9 @@
             "amount": "7120787"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid change output path"
@@ -797,10 +1063,80 @@
             "amount": "7120787"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid change output staking path"
+      }
+    },
+    {
+      "description": "Change output with script in payment part",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          },
+          {
+            "addressType": 1,
+            "scriptPaymentHash": "0d5acbf6a1dfb0c8724e60df314987315ccbf78bb6c0f9b6f3d568fe",
+            "stakingPath": "m/1852'/1815'/0'/2/0",
+            "amount": "7120787"
+          }
+        ],
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
+      },
+      "result": {
+        "error_message": "Invalid address parameters"
+      }
+    },
+    {
+      "description": "Output with reward address",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "stake1uyfz49rtntfa9h0s98f6s28sg69weemgjhc4e8hm66d5yacalmqha",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
+      },
+      "result": {
+        "error_message": "Invalid address"
       }
     },
     {
@@ -831,7 +1167,9 @@
             "amount": "1"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid certificate path"
@@ -875,7 +1213,9 @@
             ]
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid token bundle in output"
@@ -924,10 +1264,321 @@
             ]
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid token bundle in output"
+      }
+    },
+    {
+      "description": "Additional witness requests in ORDINARY_TRANSACTION",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [
+          {
+            "path": "m/1854'/1815'/0'/0/0"
+          }
+        ]
+      },
+      "result": {
+        "error_message": "Invalid witness request"
+      }
+    },
+    {
+      "description": "1854 input path in ORDINARY_TRANSACTION",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1854'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [
+          {
+            "path": "m/1854'/1815'/0'/0/0"
+          }
+        ]
+      },
+      "result": {
+        "error_message": "Invalid witness request"
+      }
+    },
+    {
+      "description": "1854 change output path in ORDINARY_TRANSACTION",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "addressType": 0,
+            "path": "m/1854'/1815'/0'/0/0",
+            "stakingPath": "m/1852'/1815'/0'/2/0",
+            "amount": "7120787"
+          }
+        ],
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
+      },
+      "result": {
+        "error_message": "Invalid address parameters"
+      }
+    },
+    {
+      "description": "Ordinary transaction with token minting with 1854 path",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": 47,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1234",
+            "token_bundle": [
+              {
+                "policy_id": "95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+                "tokens": [
+                  {
+                    "asset_name_bytes": "74652474436f696e",
+                    "amount": "100"
+                  }
+                ]
+              },
+              {
+                "policy_id": "a5a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+                "tokens": [
+                  {
+                    "asset_name_bytes": "74652474436f696e",
+                    "amount": "100"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "mint": [
+          {
+            "policy_id": "95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+            "tokens": [
+              {
+                "asset_name_bytes": "74652474436f696e",
+                "mint_amount": "100"
+              },
+              {
+                "asset_name_bytes": "75652474436f696e",
+                "mint_amount": "-100"
+              }
+            ]
+          },
+          {
+            "policy_id": "a5a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+            "tokens": [
+              {
+                "asset_name_bytes": "74652474436f696e",
+                "mint_amount": "100"
+              },
+              {
+                "asset_name_bytes": "75652474436f696e",
+                "mint_amount": "-100"
+              }
+            ]
+          }
+        ],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [
+          {
+            "path": "m/1854'/1815'/0'/0/0"
+          }
+        ]
+      },
+      "result": {
+        "error_message": "Invalid witness request"
+      }
+    },
+    {
+      "description": "Ordinary transaction without token minting but with a 1855 additional witness request",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": 47,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1234"
+          }
+        ],
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [
+          {
+            "path": "m/1855'/1815'/0'"
+          }
+        ]
+      },
+      "result": {
+        "error_message": "Invalid witness request"
+      }
+    },
+    {
+      "description": "Ordinary transaction with long token minting path",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": 47,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "2000000",
+            "token_bundle": [
+              {
+                "policy_id": "95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+                "tokens": [
+                  {
+                    "asset_name_bytes": "74652474436f696e",
+                    "amount": "7878754"
+                  }
+                ]
+              },
+              {
+                "policy_id": "96a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+                "tokens": [
+                  {
+                    "asset_name_bytes": "74652474436f696e",
+                    "amount": "7878754"
+                  },
+                  {
+                    "asset_name_bytes": "75652474436f696e",
+                    "amount": "1234"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "mint": [
+          {
+            "policy_id": "95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+            "tokens": [
+              {
+                "asset_name_bytes": "74652474436f696e",
+                "mint_amount": "7878754"
+              },
+              {
+                "asset_name_bytes": "75652474436f696e",
+                "mint_amount": "-7878754"
+              }
+            ]
+          },
+          {
+            "policy_id": "96a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+            "tokens": [
+              {
+                "asset_name_bytes": "74652474436f696e",
+                "mint_amount": "7878754"
+              },
+              {
+                "asset_name_bytes": "75652474436f696e",
+                "mint_amount": "-1234"
+              }
+            ]
+          }
+        ],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [
+          {
+            "path": "m/1855'/1815'/0'/0/0"
+          }
+        ]
+      },
+      "result": {
+        "error_message": "Invalid witness request"
       }
     },
     {
@@ -959,7 +1610,9 @@
             "amount": "7120787"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -993,7 +1646,9 @@
             "amount": "1"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -1027,7 +1682,9 @@
             "amount": "1"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -1067,7 +1724,9 @@
             "amount": "7120787"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid certificate"
@@ -1107,7 +1766,9 @@
             "amount": "7120787"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -1146,7 +1807,9 @@
             "amount": "1"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid withdrawal"
@@ -1179,7 +1842,9 @@
             "amount": "1"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid witness request"
@@ -1209,7 +1874,9 @@
             "amount": "7120787"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "error_message": "Invalid witness request"

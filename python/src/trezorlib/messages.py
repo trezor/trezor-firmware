@@ -178,6 +178,7 @@ class MessageType(IntEnum):
     CardanoPoolRelayParameters = 329
     CardanoGetNativeScriptHash = 330
     CardanoNativeScriptHash = 331
+    CardanoTxMint = 332
     RippleGetAddress = 400
     RippleAddress = 401
     RippleSignTx = 402
@@ -380,6 +381,7 @@ class CardanoTxAuxiliaryDataSupplementType(IntEnum):
 class CardanoTxSigningMode(IntEnum):
     ORDINARY_TRANSACTION = 0
     POOL_REGISTRATION_AS_OWNER = 1
+    MULTISIG_TRANSACTION = 2
 
 
 class CardanoTxWitnessType(IntEnum):
@@ -2072,6 +2074,7 @@ class CardanoSignTxInit(protobuf.MessageType):
         10: protobuf.Field("has_auxiliary_data", "bool", repeated=False, required=True),
         11: protobuf.Field("validity_interval_start", "uint64", repeated=False, required=False),
         12: protobuf.Field("witness_requests_count", "uint32", repeated=False, required=True),
+        13: protobuf.Field("minting_asset_groups_count", "uint32", repeated=False, required=True),
     }
 
     def __init__(
@@ -2087,6 +2090,7 @@ class CardanoSignTxInit(protobuf.MessageType):
         withdrawals_count: "int",
         has_auxiliary_data: "bool",
         witness_requests_count: "int",
+        minting_asset_groups_count: "int",
         ttl: Optional["int"] = None,
         validity_interval_start: Optional["int"] = None,
     ) -> None:
@@ -2100,6 +2104,7 @@ class CardanoSignTxInit(protobuf.MessageType):
         self.withdrawals_count = withdrawals_count
         self.has_auxiliary_data = has_auxiliary_data
         self.witness_requests_count = witness_requests_count
+        self.minting_asset_groups_count = minting_asset_groups_count
         self.ttl = ttl
         self.validity_interval_start = validity_interval_start
 
@@ -2165,17 +2170,20 @@ class CardanoToken(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 324
     FIELDS = {
         1: protobuf.Field("asset_name_bytes", "bytes", repeated=False, required=True),
-        2: protobuf.Field("amount", "uint64", repeated=False, required=True),
+        2: protobuf.Field("amount", "uint64", repeated=False, required=False),
+        3: protobuf.Field("mint_amount", "sint64", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
         asset_name_bytes: "bytes",
-        amount: "int",
+        amount: Optional["int"] = None,
+        mint_amount: Optional["int"] = None,
     ) -> None:
         self.asset_name_bytes = asset_name_bytes
         self.amount = amount
+        self.mint_amount = mint_amount
 
 
 class CardanoPoolOwner(protobuf.MessageType):
@@ -2292,6 +2300,7 @@ class CardanoTxCertificate(protobuf.MessageType):
         2: protobuf.Field("path", "uint32", repeated=True, required=False),
         3: protobuf.Field("pool", "bytes", repeated=False, required=False),
         4: protobuf.Field("pool_parameters", "CardanoPoolParametersType", repeated=False, required=False),
+        5: protobuf.Field("script_hash", "bytes", repeated=False, required=False),
     }
 
     def __init__(
@@ -2301,11 +2310,13 @@ class CardanoTxCertificate(protobuf.MessageType):
         path: Optional[List["int"]] = None,
         pool: Optional["bytes"] = None,
         pool_parameters: Optional["CardanoPoolParametersType"] = None,
+        script_hash: Optional["bytes"] = None,
     ) -> None:
         self.path = path if path is not None else []
         self.type = type
         self.pool = pool
         self.pool_parameters = pool_parameters
+        self.script_hash = script_hash
 
 
 class CardanoTxWithdrawal(protobuf.MessageType):
@@ -2313,6 +2324,7 @@ class CardanoTxWithdrawal(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("path", "uint32", repeated=True, required=False),
         2: protobuf.Field("amount", "uint64", repeated=False, required=True),
+        3: protobuf.Field("script_hash", "bytes", repeated=False, required=False),
     }
 
     def __init__(
@@ -2320,9 +2332,11 @@ class CardanoTxWithdrawal(protobuf.MessageType):
         *,
         amount: "int",
         path: Optional[List["int"]] = None,
+        script_hash: Optional["bytes"] = None,
     ) -> None:
         self.path = path if path is not None else []
         self.amount = amount
+        self.script_hash = script_hash
 
 
 class CardanoCatalystRegistrationParametersType(protobuf.MessageType):
@@ -2363,6 +2377,20 @@ class CardanoTxAuxiliaryData(protobuf.MessageType):
     ) -> None:
         self.catalyst_registration_parameters = catalyst_registration_parameters
         self.hash = hash
+
+
+class CardanoTxMint(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 332
+    FIELDS = {
+        1: protobuf.Field("asset_groups_count", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        asset_groups_count: "int",
+    ) -> None:
+        self.asset_groups_count = asset_groups_count
 
 
 class CardanoTxItemAck(protobuf.MessageType):
