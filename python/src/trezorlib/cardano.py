@@ -24,6 +24,7 @@ from .tools import expect
 SIGNING_MODE_IDS = {
     "ORDINARY_TRANSACTION": messages.CardanoTxSigningMode.ORDINARY_TRANSACTION,
     "POOL_REGISTRATION_AS_OWNER": messages.CardanoTxSigningMode.POOL_REGISTRATION_AS_OWNER,
+    "MULTISIG_TRANSACTION": messages.CardanoTxSigningMode.MULTISIG_TRANSACTION,
 }
 
 PROTOCOL_MAGICS = {"mainnet": 764824073, "testnet": 42}
@@ -41,9 +42,7 @@ REQUIRED_FIELDS_POOL_PARAMETERS = (
     "reward_account",
     "owners",
 )
-REQUIRED_FIELDS_WITHDRAWAL = ("path", "amount")
 REQUIRED_FIELDS_TOKEN_GROUP = ("policy_id", "tokens")
-REQUIRED_FIELDS_TOKEN = ("asset_name_bytes", "amount")
 REQUIRED_FIELDS_CATALYST_REGISTRATION = (
     "voting_public_key",
     "staking_path",
@@ -54,6 +53,7 @@ REQUIRED_FIELDS_CATALYST_REGISTRATION = (
 INCOMPLETE_OUTPUT_ERROR_MESSAGE = "The output is missing some fields"
 
 INVALID_OUTPUT_TOKEN_BUNDLE_ENTRY = "The output's token_bundle entry is invalid"
+INVALID_MINT_TOKEN_BUNDLE_ENTRY = "The mint token_bundle entry is invalid"
 
 InputWithPath = Tuple[messages.CardanoTxInput, List[int]]
 AssetGroupWithTokens = Tuple[messages.CardanoAssetGroup, List[messages.CardanoToken]]
@@ -65,6 +65,9 @@ CertificateItem = Union[
     messages.CardanoTxCertificate,
     messages.CardanoPoolOwner,
     messages.CardanoPoolRelayParameters,
+]
+MintItem = Union[
+    messages.CardanoTxMint, messages.CardanoAssetGroup, messages.CardanoToken
 ]
 PoolOwnersAndRelays = Tuple[
     List[messages.CardanoPoolOwner], List[messages.CardanoPoolRelayParameters]
@@ -160,10 +163,12 @@ def parse_output(output) -> OutputWithAssetGroups:
         address = output["address"]
 
     if contains_address_type:
-        address_parameters = _parse_address_parameters(output)
+        address_parameters = _parse_address_parameters(
+            output, INCOMPLETE_OUTPUT_ERROR_MESSAGE
+        )
 
     if "token_bundle" in output:
-        token_bundle = _parse_token_bundle(output["token_bundle"])
+        token_bundle = _parse_token_bundle(output["token_bundle"], is_mint=False)
 
     return (
         messages.CardanoTxOutput(
@@ -176,19 +181,26 @@ def parse_output(output) -> OutputWithAssetGroups:
     )
 
 
-def _parse_token_bundle(token_bundle) -> List[AssetGroupWithTokens]:
+def _parse_token_bundle(token_bundle, is_mint: bool) -> List[AssetGroupWithTokens]:
+    error_message: str
+    if is_mint:
+        error_message = INVALID_MINT_TOKEN_BUNDLE_ENTRY
+    else:
+        error_message = INVALID_OUTPUT_TOKEN_BUNDLE_ENTRY
+
     result = []
     for token_group in token_bundle:
         if not all(k in token_group for k in REQUIRED_FIELDS_TOKEN_GROUP):
-            raise ValueError(INVALID_OUTPUT_TOKEN_BUNDLE_ENTRY)
+            raise ValueError(error_message)
 
-        tokens = _parse_tokens(token_group["tokens"])
+        tokens = _parse_tokens(token_group["tokens"], is_mint)
 
         result.append(
             (
                 messages.CardanoAssetGroup(
                     policy_id=bytes.fromhex(token_group["policy_id"]),
                     tokens_count=len(tokens),
+                    is_mint=is_mint,
                 ),
                 tokens,
             )
@@ -197,16 +209,34 @@ def _parse_token_bundle(token_bundle) -> List[AssetGroupWithTokens]:
     return result
 
 
-def _parse_tokens(tokens) -> List[messages.CardanoToken]:
+def _parse_tokens(tokens, is_mint: bool) -> List[messages.CardanoToken]:
+    error_message: str
+    if is_mint:
+        error_message = INVALID_MINT_TOKEN_BUNDLE_ENTRY
+    else:
+        error_message = INVALID_OUTPUT_TOKEN_BUNDLE_ENTRY
+
     result = []
     for token in tokens:
-        if not all(k in token for k in REQUIRED_FIELDS_TOKEN):
-            raise ValueError(INVALID_OUTPUT_TOKEN_BUNDLE_ENTRY)
+        if "asset_name_bytes" not in token:
+            raise ValueError(error_message)
+
+        mint_amount = None
+        amount = None
+        if is_mint:
+            if "mint_amount" not in token:
+                raise ValueError(error_message)
+            mint_amount = int(token["mint_amount"])
+        else:
+            if "amount" not in token:
+                raise ValueError(error_message)
+            amount = int(token["amount"])
 
         result.append(
             messages.CardanoToken(
                 asset_name_bytes=bytes.fromhex(token["asset_name_bytes"]),
-                amount=int(token["amount"]),
+                amount=amount,
+                mint_amount=mint_amount,
             )
         )
 
@@ -214,12 +244,12 @@ def _parse_tokens(tokens) -> List[messages.CardanoToken]:
 
 
 def _parse_address_parameters(
-    address_parameters,
+    address_parameters, error_message: str
 ) -> messages.CardanoAddressParametersType:
     if "addressType" not in address_parameters:
-        raise ValueError(INCOMPLETE_OUTPUT_ERROR_MESSAGE)
+        raise ValueError(error_message)
 
-    path = tools.parse_path(address_parameters.get("path"))
+    payment_path = tools.parse_path(address_parameters.get("path"))
     staking_path = tools.parse_path(address_parameters.get("stakingPath"))
     staking_key_hash_bytes = parse_optional_bytes(
         address_parameters.get("stakingKeyHash")
@@ -233,7 +263,7 @@ def _parse_address_parameters(
 
     return create_address_parameters(
         int(address_parameters["addressType"]),
-        path,
+        payment_path,
         staking_path,
         staking_key_hash_bytes,
         address_parameters.get("blockIndex"),
@@ -287,11 +317,16 @@ def parse_certificate(certificate) -> CertificateWithPoolOwnersAndRelays:
         if "pool" not in certificate:
             raise CERTIFICATE_MISSING_FIELDS_ERROR
 
+        path, script_hash = _parse_path_or_script_hash(
+            certificate, CERTIFICATE_MISSING_FIELDS_ERROR
+        )
+
         return (
             messages.CardanoTxCertificate(
                 type=certificate_type,
-                path=tools.parse_path(certificate["path"]),
+                path=path,
                 pool=bytes.fromhex(certificate["pool"]),
+                script_hash=script_hash,
             ),
             None,
         )
@@ -299,12 +334,13 @@ def parse_certificate(certificate) -> CertificateWithPoolOwnersAndRelays:
         messages.CardanoCertificateType.STAKE_REGISTRATION,
         messages.CardanoCertificateType.STAKE_DEREGISTRATION,
     ):
-        if "path" not in certificate:
-            raise CERTIFICATE_MISSING_FIELDS_ERROR
+        path, script_hash = _parse_path_or_script_hash(
+            certificate, CERTIFICATE_MISSING_FIELDS_ERROR
+        )
+
         return (
             messages.CardanoTxCertificate(
-                type=certificate_type,
-                path=tools.parse_path(certificate["path"]),
+                type=certificate_type, path=path, script_hash=script_hash
             ),
             None,
         )
@@ -356,6 +392,18 @@ def parse_certificate(certificate) -> CertificateWithPoolOwnersAndRelays:
         raise ValueError("Unknown certificate type")
 
 
+def _parse_path_or_script_hash(
+    obj, error: ValueError
+) -> Tuple[List[int], Optional[bytes]]:
+    if "path" not in obj and "script_hash" not in obj:
+        raise error
+
+    path = tools.parse_path(obj.get("path"))
+    script_hash = parse_optional_bytes(obj.get("script_hash"))
+
+    return path, script_hash
+
+
 def _parse_pool_owner(pool_owner) -> messages.CardanoPoolOwner:
     if "staking_key_path" in pool_owner:
         return messages.CardanoPoolOwner(
@@ -404,13 +452,21 @@ def _parse_pool_relay(pool_relay) -> messages.CardanoPoolRelayParameters:
 
 
 def parse_withdrawal(withdrawal) -> messages.CardanoTxWithdrawal:
-    if not all(k in withdrawal for k in REQUIRED_FIELDS_WITHDRAWAL):
-        raise ValueError("Withdrawal is missing some fields")
+    WITHDRAWAL_MISSING_FIELDS_ERROR = ValueError(
+        "The withdrawal is missing some fields"
+    )
 
-    path = withdrawal["path"]
+    if "amount" not in withdrawal:
+        raise WITHDRAWAL_MISSING_FIELDS_ERROR
+
+    path, script_hash = _parse_path_or_script_hash(
+        withdrawal, WITHDRAWAL_MISSING_FIELDS_ERROR
+    )
+
     return messages.CardanoTxWithdrawal(
-        path=tools.parse_path(path),
+        path=path,
         amount=int(withdrawal["amount"]),
+        script_hash=script_hash,
     )
 
 
@@ -441,7 +497,8 @@ def parse_auxiliary_data(auxiliary_data) -> messages.CardanoTxAuxiliaryData:
                 staking_path=tools.parse_path(catalyst_registration["staking_path"]),
                 nonce=catalyst_registration["nonce"],
                 reward_address_parameters=_parse_address_parameters(
-                    catalyst_registration["reward_address_parameters"]
+                    catalyst_registration["reward_address_parameters"],
+                    AUXILIARY_DATA_MISSING_FIELDS_ERROR,
                 ),
             )
         )
@@ -455,33 +512,62 @@ def parse_auxiliary_data(auxiliary_data) -> messages.CardanoTxAuxiliaryData:
     )
 
 
-def _get_witness_paths(
+def parse_mint(mint) -> List[AssetGroupWithTokens]:
+    return _parse_token_bundle(mint, is_mint=True)
+
+
+def parse_additional_witness_request(
+    additional_witness_request,
+) -> Path:
+    if "path" not in additional_witness_request:
+        raise ValueError("Invalid additional witness request")
+
+    return tools.parse_path(additional_witness_request["path"])
+
+
+def _get_witness_requests(
     inputs: List[InputWithPath],
     certificates: List[CertificateWithPoolOwnersAndRelays],
     withdrawals: List[messages.CardanoTxWithdrawal],
-) -> List[Path]:
+    additional_witness_requests: List[Path],
+    signing_mode: messages.CardanoTxSigningMode,
+) -> List[messages.CardanoTxWitnessRequest]:
     paths = set()
-    for _, path in inputs:
-        if path:
-            paths.add(tuple(path))
-    for certificate, pool_owners_and_relays in certificates:
-        if certificate.type in (
-            messages.CardanoCertificateType.STAKE_DEREGISTRATION,
-            messages.CardanoCertificateType.STAKE_DELEGATION,
-        ):
-            paths.add(tuple(certificate.path))
-        elif (
-            certificate.type == messages.CardanoCertificateType.STAKE_POOL_REGISTRATION
-            and pool_owners_and_relays is not None
-        ):
-            owners, _ = pool_owners_and_relays
-            for pool_owner in owners:
-                if pool_owner.staking_key_path:
-                    paths.add(tuple(pool_owner.staking_key_path))
-    for withdrawal in withdrawals:
-        paths.add(tuple(withdrawal.path))
 
-    return sorted([list(path) for path in paths])
+    # don't gather paths from tx elements in MULTISIG_TRANSACTION signing mode
+    if signing_mode != messages.CardanoTxSigningMode.MULTISIG_TRANSACTION:
+        for _, path in inputs:
+            if path:
+                paths.add(tuple(path))
+        for certificate, pool_owners_and_relays in certificates:
+            if (
+                certificate.type
+                in (
+                    messages.CardanoCertificateType.STAKE_DEREGISTRATION,
+                    messages.CardanoCertificateType.STAKE_DELEGATION,
+                )
+                and certificate.path
+            ):
+                paths.add(tuple(certificate.path))
+            elif (
+                certificate.type
+                == messages.CardanoCertificateType.STAKE_POOL_REGISTRATION
+                and pool_owners_and_relays is not None
+            ):
+                owners, _ = pool_owners_and_relays
+                for pool_owner in owners:
+                    if pool_owner.staking_key_path:
+                        paths.add(tuple(pool_owner.staking_key_path))
+        for withdrawal in withdrawals:
+            if withdrawal.path:
+                paths.add(tuple(withdrawal.path))
+
+    # add additional_witness_requests in all cases
+    for additional_witness_request in additional_witness_requests:
+        paths.add(tuple(additional_witness_request))
+
+    sorted_paths = sorted([list(path) for path in paths])
+    return [messages.CardanoTxWitnessRequest(path=path) for path in sorted_paths]
 
 
 def _get_input_items(inputs: List[InputWithPath]) -> Iterator[messages.CardanoTxInput]:
@@ -506,6 +592,13 @@ def _get_certificate_items(
             owners, relays = pool_owners_and_relays
             yield from owners
             yield from relays
+
+
+def _get_mint_items(mint: List[AssetGroupWithTokens]) -> Iterator[MintItem]:
+    yield messages.CardanoTxMint(asset_groups_count=len(mint))
+    for asset_group, tokens in mint:
+        yield asset_group
+        yield from tokens
 
 
 # ====== Client functions ====== #
@@ -561,10 +654,14 @@ def sign_tx(
     protocol_magic: int = PROTOCOL_MAGICS["mainnet"],
     network_id: int = NETWORK_IDS["mainnet"],
     auxiliary_data: messages.CardanoTxAuxiliaryData = None,
+    mint: List[AssetGroupWithTokens] = (),
+    additional_witness_requests: List[Path] = (),
 ) -> SignTxResponse:
     UNEXPECTED_RESPONSE_ERROR = exceptions.TrezorException("Unexpected response")
 
-    witness_paths = _get_witness_paths(inputs, certificates, withdrawals)
+    witness_requests = _get_witness_requests(
+        inputs, certificates, withdrawals, additional_witness_requests, signing_mode
+    )
 
     response = client.call(
         messages.CardanoSignTxInit(
@@ -579,7 +676,8 @@ def sign_tx(
             protocol_magic=protocol_magic,
             network_id=network_id,
             has_auxiliary_data=auxiliary_data is not None,
-            witness_requests_count=len(witness_paths),
+            minting_asset_groups_count=len(mint),
+            witness_requests_count=len(witness_requests),
         )
     )
     if not isinstance(response, messages.CardanoTxItemAck):
@@ -615,9 +713,15 @@ def sign_tx(
         if not isinstance(response, messages.CardanoTxItemAck):
             raise UNEXPECTED_RESPONSE_ERROR
 
+    if mint:
+        for mint_item in _get_mint_items(mint):
+            response = client.call(mint_item)
+            if not isinstance(response, messages.CardanoTxItemAck):
+                raise UNEXPECTED_RESPONSE_ERROR
+
     sign_tx_response["witnesses"] = []
-    for path in witness_paths:
-        response = client.call(messages.CardanoTxWitnessRequest(path=path))
+    for witness_request in witness_requests:
+        response = client.call(witness_request)
         if not isinstance(response, messages.CardanoTxWitnessResponse):
             raise UNEXPECTED_RESPONSE_ERROR
         sign_tx_response["witnesses"].append(

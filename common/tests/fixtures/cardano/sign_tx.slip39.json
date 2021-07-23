@@ -31,7 +31,9 @@
             "amount": "3003112"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "tx_hash": "73e09bdebf98a9e0f17f86a2d11e0f14f4f8dae77cdf26ff1678e821f20c8db6",
@@ -73,7 +75,9 @@
             "amount": "1000000"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "tx_hash": "4c43ce4c72f145b145ae7add414722735e250d048f61c4585a5becafcbffa6ae",
@@ -115,7 +119,9 @@
             "amount": "1000000"
           }
         ],
-        "signing_mode": "ORDINARY_TRANSACTION"
+        "mint": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": []
       },
       "result": {
         "tx_hash": "93a2c3cfb67ef1e4bae167b0f443c3370664bdb9171bc9cd41bad98e5cc049b2",

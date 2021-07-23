@@ -209,6 +209,24 @@ def _validate_script_hash(script_hash: bytes | None) -> None:
         raise INVALID_ADDRESS_PARAMETERS
 
 
+def validate_output_address_parameters(
+    parameters: CardanoAddressParametersType,
+) -> None:
+    validate_address_parameters(parameters)
+
+    if parameters.address_type in (
+        CardanoAddressType.BASE_SCRIPT_KEY,
+        CardanoAddressType.BASE_SCRIPT_SCRIPT,
+        CardanoAddressType.POINTER_SCRIPT,
+        CardanoAddressType.ENTERPRISE_SCRIPT,
+        CardanoAddressType.REWARD,
+        CardanoAddressType.REWARD_SCRIPT,
+    ):
+        # Change outputs with script payment part are forbidden.
+        # Reward addresses are forbidden as outputs in general, see also validate_output_address
+        raise INVALID_ADDRESS_PARAMETERS
+
+
 def _validate_address_and_get_type(
     address: str, protocol_magic: int, network_id: int
 ) -> int:

@@ -1,11 +1,17 @@
 from trezor.crypto import hashlib
+from trezor.enums import CardanoTxSigningMode
 
-from apps.cardano.helpers.paths import ACCOUNT_PATH_INDEX, unharden
+from apps.cardano.helpers.paths import (
+    ACCOUNT_PATH_INDEX,
+    SCHEMA_STAKING_ANY_ACCOUNT,
+    unharden,
+)
 from apps.common.seed import remove_ed25519_prefix
 
-from . import ADDRESS_KEY_HASH_SIZE, bech32
+from . import ADDRESS_KEY_HASH_SIZE, SCRIPT_HASH_SIZE, bech32
 
 if False:
+    from trezor import wire
     from .. import seed
 
 
@@ -79,3 +85,26 @@ def derive_public_key(
     node = keychain.derive(path)
     public_key = remove_ed25519_prefix(node.public_key())
     return public_key if not extended else public_key + node.chain_code()
+
+
+def validate_stake_credential(
+    path: list[int],
+    script_hash: bytes | None,
+    signing_mode: CardanoTxSigningMode,
+    error: wire.ProcessError,
+) -> None:
+    if path and script_hash:
+        raise error
+
+    if path:
+        if signing_mode != CardanoTxSigningMode.ORDINARY_TRANSACTION:
+            raise error
+        if not SCHEMA_STAKING_ANY_ACCOUNT.match(path):
+            raise error
+    elif script_hash:
+        if signing_mode != CardanoTxSigningMode.MULTISIG_TRANSACTION:
+            raise error
+        if len(script_hash) != SCRIPT_HASH_SIZE:
+            raise error
+    else:
+        raise error
