@@ -57,6 +57,78 @@
         "public_key": "be81ace1f63f4f0cae74dd274a72d7818f238bc764ab3e0dc0beb1945b756dca",
         "chain_code": "29034f036a162ac4f9f9f397b2d1f289754bb6633915f26b199e156f81d05c88"
       }
+    },
+    {
+      "parameters": {
+        "path": "m/1854'/1815'/0'"
+      },
+      "result": {
+        "public_key": "99694f772a1cffa68ad4a8d911e649cfe990aee720d26893211a8818c4566a42",
+        "chain_code": "9c3372fcecd832bfe2418319e473b981cdd641e0e12bd878b5e94d93fa0b1552"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/1854'/1815'/1'"
+      },
+      "result": {
+        "public_key": "1b66eb903dc15131c0f39c1ac41ca659115ab790c3e2aef129e3095e406abffe",
+        "chain_code": "0fcb6522d3aa8ad78370c48e62c97eb1315f4234ded8d8fdd9b941c4e5fda0c0"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/1854'/1815'/2'"
+      },
+      "result": {
+        "public_key": "29f3535b40978eda8038de3fe85cf08efecff5e565a3dc745660a43a172aaa0a",
+        "chain_code": "b82dbc91a252a93ec6d3f9e418a4e779c848162777367f729468ec23f409304e"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/1854'/1815'/3'"
+      },
+      "result": {
+        "public_key": "bdc40afecb357a08538cd98878b11d0afa7a0a36a8c5f71be1b591ae09088149",
+        "chain_code": "c4e0b579c132de4204d19f12260ac6bede8ae67f0fe15b9098d4f32a42314924"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/1855'/1815'/0'"
+      },
+      "result": {
+        "public_key": "b75258e4f61eb7b313d8554c2fe10673cf214ca2d762bfd53ec3b7846e2ee872",
+        "chain_code": "9ad37dc23fe1cda7b0ac5574c6f16171cdb2bb723496954770a2bf0e08334e8f"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/1855'/1815'/1'"
+      },
+      "result": {
+        "public_key": "a54627d6d16724032172541d4261e7aa87c06395724f1d18975a21d56650bda9",
+        "chain_code": "bccfd881a3bb7eefbfb885a80909c30892a9a2151f7530c10c68ec6e7a89b28a"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/1855'/1815'/2'"
+      },
+      "result": {
+        "public_key": "5307953b17d4195e0b87d61731339dba2c7d543f621d87c1bd73466328372345",
+        "chain_code": "0e3314c9499b6efec4fa48cd5068dd549ed5ee524c300e754ebc0a63c3bc06ff"
+      }
+    },
+    {
+      "parameters": {
+        "path": "m/1855'/1815'/3'"
+      },
+      "result": {
+        "public_key": "b404bb5bf674a38ebd6141416df8e1aea9ed04c2ebea659c29145d24db7e67db",
+        "chain_code": "2dc07d8eda29c2a806295ee42dc1f3bf63814d0c9ee978a24827575dcb5a53bb"
+      }
     }
   ]
 }

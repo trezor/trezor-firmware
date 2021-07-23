@@ -18,15 +18,20 @@ if False:
 
 
 class Keychain:
-    """Cardano keychain hard-coded to Byron and Shelley seed namespaces."""
+    """
+    Cardano keychain hard-coded to 44 (Byron), 1852 (Shelley), 1854 (multi-sig) and 1855 (token minting)
+    seed namespaces.
+    """
 
     def __init__(self, root: bip32.HDNode) -> None:
         self.byron_root = derive_path_cardano(root, paths.BYRON_ROOT)
         self.shelley_root = derive_path_cardano(root, paths.SHELLEY_ROOT)
+        self.multisig_root = derive_path_cardano(root, paths.MULTISIG_ROOT)
+        self.minting_root = derive_path_cardano(root, paths.MINTING_ROOT)
         root.__del__()
 
     def verify_path(self, path: Bip32Path) -> None:
-        if not is_byron_path(path) and not is_shelley_path(path):
+        if not self.is_in_keychain(path):
             raise wire.DataError("Forbidden key path")
 
     def _get_path_root(self, path: Bip32Path) -> bip32.HDNode:
@@ -34,18 +39,31 @@ class Keychain:
             return self.byron_root
         elif is_shelley_path(path):
             return self.shelley_root
+        elif is_multisig_path(path):
+            return self.multisig_root
+        elif is_minting_path(path):
+            return self.minting_root
         else:
             raise wire.DataError("Forbidden key path")
 
     def is_in_keychain(self, path: Bip32Path) -> bool:
-        return is_byron_path(path) or is_shelley_path(path)
+        return (
+            is_byron_path(path)
+            or is_shelley_path(path)
+            or is_multisig_path(path)
+            or is_minting_path(path)
+        )
 
     def derive(self, node_path: Bip32Path) -> bip32.HDNode:
         self.verify_path(node_path)
         path_root = self._get_path_root(node_path)
 
         # this is true now, so for simplicity we don't branch on path type
-        assert len(paths.BYRON_ROOT) == len(paths.SHELLEY_ROOT)
+        assert (
+            len(paths.BYRON_ROOT) == len(paths.SHELLEY_ROOT)
+            and len(paths.MULTISIG_ROOT) == len(paths.SHELLEY_ROOT)
+            and len(paths.MINTING_ROOT) == len(paths.SHELLEY_ROOT)
+        )
         suffix = node_path[len(paths.SHELLEY_ROOT) :]
 
         # derive child node from the root
@@ -62,6 +80,14 @@ def is_byron_path(path: Bip32Path) -> bool:
 
 def is_shelley_path(path: Bip32Path) -> bool:
     return path[: len(paths.SHELLEY_ROOT)] == paths.SHELLEY_ROOT
+
+
+def is_multisig_path(path: Bip32Path) -> bool:
+    return path[: len(paths.MULTISIG_ROOT)] == paths.MULTISIG_ROOT
+
+
+def is_minting_path(path: Bip32Path) -> bool:
+    return path[: len(paths.MINTING_ROOT)] == paths.MINTING_ROOT
 
 
 def derive_path_cardano(root: bip32.HDNode, path: Bip32Path) -> bip32.HDNode:
