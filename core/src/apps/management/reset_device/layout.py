@@ -2,7 +2,7 @@ import ubinascii
 
 from trezor import ui, utils
 from trezor.crypto import random
-from trezor.messages import BackupType, ButtonRequestType
+from trezor.enums import BackupType, ButtonRequestType
 from trezor.ui.components.tt.button import Button, ButtonDefault
 from trezor.ui.components.tt.checklist import Checklist
 from trezor.ui.components.tt.info import InfoConfirm
@@ -30,6 +30,7 @@ async def show_internal_entropy(ctx, entropy: bytes):
         icon_color=ui.ORANGE_ICON,
         width=16,
         br_code=ButtonRequestType.ResetDevice,
+        truncate=True,  # 32 bytes always fits
     )
 
 

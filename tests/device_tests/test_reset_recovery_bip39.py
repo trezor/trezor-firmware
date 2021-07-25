@@ -40,7 +40,6 @@ def test_reset_recovery(client):
 
 def reset(client, strength=128, skip_backup=False):
     mnemonic = None
-    word_count = strength // 32 * 3
 
     def input_flow():
         nonlocal mnemonic
@@ -51,21 +50,20 @@ def reset(client, strength=128, skip_backup=False):
         yield from click_through(client.debug, screens=3, code=B.ResetDevice)
 
         # mnemonic phrases
-        btn_code = yield
-        assert btn_code == B.ResetDevice
-        mnemonic = read_and_confirm_mnemonic(client.debug, words=word_count)
+        mnemonic = yield from read_and_confirm_mnemonic(client.debug)
 
         # confirm recovery seed check
-        btn_code = yield
-        assert btn_code == B.Success
+        br = yield
+        assert br.code == B.Success
         client.debug.press_yes()
 
         # confirm success
-        btn_code = yield
-        assert btn_code == B.Success
+        br = yield
+        assert br.code == B.Success
         client.debug.press_yes()
 
-    with client:
+    os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
+    with mock.patch("os.urandom", os_urandom), client:
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.ResetDevice),
@@ -81,19 +79,17 @@ def reset(client, strength=128, skip_backup=False):
         )
         client.set_input_flow(input_flow)
 
-        os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
-        with mock.patch("os.urandom", os_urandom), client:
-            # No PIN, no passphrase, don't display random
-            device.reset(
-                client,
-                display_random=False,
-                strength=strength,
-                passphrase_protection=False,
-                pin_protection=False,
-                label="test",
-                language="en-US",
-                backup_type=BackupType.Bip39,
-            )
+        # No PIN, no passphrase, don't display random
+        device.reset(
+            client,
+            display_random=False,
+            strength=strength,
+            passphrase_protection=False,
+            pin_protection=False,
+            label="test",
+            language="en-US",
+            backup_type=BackupType.Bip39,
+        )
 
     # Check if device is properly initialized
     assert client.features.initialized is True

@@ -31,11 +31,9 @@ from ..common import (
 )
 
 EXTERNAL_ENTROPY = b"zlutoucky kun upel divoke ody" * 2
-STRENGTH_TO_WORDS = {128: 12, 192: 18, 256: 24}
 
 
 def reset_device(client, strength):
-    words = STRENGTH_TO_WORDS[strength]
     mnemonic = None
 
     def input_flow():
@@ -46,18 +44,16 @@ def reset_device(client, strength):
         yield from click_through(client.debug, screens=3, code=B.ResetDevice)
 
         # mnemonic phrases
-        btn_code = yield
-        assert btn_code == B.ResetDevice
-        mnemonic = read_and_confirm_mnemonic(client.debug, words=words)
+        mnemonic = yield from read_and_confirm_mnemonic(client.debug)
 
         # confirm recovery seed check
-        btn_code = yield
-        assert btn_code == B.Success
+        br = yield
+        assert br.code == B.Success
         client.debug.press_yes()
 
         # confirm success
-        btn_code = yield
-        assert btn_code == B.Success
+        br = yield
+        assert br.code == B.Success
         client.debug.press_yes()
 
     os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
@@ -128,8 +124,8 @@ class TestMsgResetDeviceT2:
             nonlocal mnemonic
 
             # Confirm Reset
-            btn_code = yield
-            assert btn_code == B.ResetDevice
+            br = yield
+            assert br.code == B.ResetDevice
             client.debug.press_yes()
 
             # Enter new PIN
@@ -141,33 +137,31 @@ class TestMsgResetDeviceT2:
             client.debug.input("654")
 
             # Confirm entropy
-            btn_code = yield
-            assert btn_code == B.ResetDevice
+            br = yield
+            assert br.code == B.ResetDevice
             client.debug.press_yes()
 
             # Backup your seed
-            btn_code = yield
-            assert btn_code == B.ResetDevice
+            br = yield
+            assert br.code == B.ResetDevice
             client.debug.press_yes()
 
             # Confirm warning
-            btn_code = yield
-            assert btn_code == B.ResetDevice
+            br = yield
+            assert br.code == B.ResetDevice
             client.debug.press_yes()
 
             # mnemonic phrases
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            mnemonic = read_and_confirm_mnemonic(client.debug, words=24)
+            mnemonic = yield from read_and_confirm_mnemonic(client.debug)
 
             # confirm recovery seed check
-            btn_code = yield
-            assert btn_code == B.Success
+            br = yield
+            assert br.code == B.Success
             client.debug.press_yes()
 
             # confirm success
-            btn_code = yield
-            assert btn_code == B.Success
+            br = yield
+            assert br.code == B.Success
             client.debug.press_yes()
 
         os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
@@ -229,30 +223,26 @@ class TestMsgResetDeviceT2:
             yield from click_through(client.debug, screens=3, code=B.ResetDevice)
 
             # mnemonic phrases, wrong answer
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            mnemonic = read_and_confirm_mnemonic(
-                client.debug, words=24, choose_wrong=True
+            mnemonic = yield from read_and_confirm_mnemonic(
+                client.debug, choose_wrong=True
             )
 
             # warning screen
-            btn_code = yield
-            assert btn_code == B.ResetDevice
+            br = yield
+            assert br.code == B.ResetDevice
             client.debug.press_yes()
 
             # mnemonic phrases
-            btn_code = yield
-            assert btn_code == B.ResetDevice
-            mnemonic = read_and_confirm_mnemonic(client.debug, words=24)
+            mnemonic = yield from read_and_confirm_mnemonic(client.debug)
 
             # confirm recovery seed check
-            btn_code = yield
-            assert btn_code == B.Success
+            br = yield
+            assert br.code == B.Success
             client.debug.press_yes()
 
             # confirm success
-            btn_code = yield
-            assert btn_code == B.Success
+            br = yield
+            assert br.code == B.Success
             client.debug.press_yes()
 
         os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)

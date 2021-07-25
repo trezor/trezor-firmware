@@ -68,7 +68,7 @@ class ClickUI:
         self.always_prompt = always_prompt
         self.passphrase_on_host = passphrase_on_host
 
-    def button_request(self, code):
+    def button_request(self, _br):
         if not self.prompt_shown:
             echo("Please confirm action on your Trezor device.")
         if not self.always_prompt:

@@ -2,7 +2,7 @@ from common import *
 
 if not utils.BITCOIN_ONLY:
     from apps.eos import helpers
-    from trezor.messages.EosAsset import EosAsset
+    from trezor.messages import EosAsset
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

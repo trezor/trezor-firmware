@@ -2,11 +2,11 @@ from common import unittest, await_result, H_
 
 import storage.cache
 from trezor import wire
-from trezor.messages.AuthorizeCoinJoin import AuthorizeCoinJoin
-from trezor.messages.TxInput import TxInput
-from trezor.messages.TxOutput import TxOutput
-from trezor.messages.SignTx import SignTx
-from trezor.messages import InputScriptType, OutputScriptType
+from trezor.messages import AuthorizeCoinJoin
+from trezor.messages import TxInput
+from trezor.messages import TxOutput
+from trezor.messages import SignTx
+from trezor.enums import InputScriptType, OutputScriptType
 
 from apps.common import coins
 from apps.bitcoin.authorization import CoinJoinAuthorization

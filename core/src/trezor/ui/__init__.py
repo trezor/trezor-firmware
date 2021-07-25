@@ -187,7 +187,7 @@ def grid(
     spacing: int = 0,  # spacing size between cells
 ) -> Area:
     """
-    Returns area (tuple of four integers, in pixels) of a cell on i-th possition
+    Returns area (tuple of four integers, in pixels) of a cell on i-th position
     in a table you define yourself.  Example:
 
     >>> ui.grid(4, n_x=2, n_y=3, start_x=20, start_y=20)
@@ -219,7 +219,7 @@ RENDER = const(-255)
 # Event dispatched when components should mark themselves for re-painting.
 REPAINT = const(-256)
 
-# How long, in milliseconds, should the layout rendering task sleep betweeen
+# How long, in milliseconds, should the layout rendering task sleep between
 # the render calls.
 _RENDER_DELAY_MS = const(10)
 

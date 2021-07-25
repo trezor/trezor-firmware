@@ -1,8 +1,7 @@
 from trezor import wire
 from trezor.crypto import bip32
 from trezor.crypto.hashlib import sha256
-from trezor.messages.HDNodeType import HDNodeType
-from trezor.messages.MultisigRedeemScriptType import MultisigRedeemScriptType
+from trezor.messages import HDNodeType, MultisigRedeemScriptType
 from trezor.utils import HashWriter
 
 from apps.common import paths

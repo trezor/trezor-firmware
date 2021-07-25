@@ -33,7 +33,11 @@ class TestCase:
     def assertEqual(self, x, y, msg=''):
         if not msg:
             msg = "%r vs (expected) %r" % (x, y)
-        ensure(x == y, msg)
+
+        if x.__class__ == y.__class__ and x.__class__.__name__ == "Msg":
+            self.assertMessageEqual(x, y)
+        else:
+            ensure(x == y, msg)
 
     def assertNotEqual(self, x, y, msg=''):
         if not msg:
@@ -151,6 +155,22 @@ class TestCase:
     def assertObjectEqual(self, a, b, msg=''):
         self.assertIsInstance(a, b.__class__, msg)
         self.assertEqual(a.__dict__, b.__dict__, msg)
+
+    def assertMessageEqual(self, x, y):
+        self.assertEqual(
+            x.MESSAGE_NAME,
+            y.MESSAGE_NAME,
+            "Expected {}, found {}".format(x.MESSAGE_NAME, y.MESSAGE_NAME)
+        )
+        xdict = x.__dict__
+        ydict = y.__dict__
+        for key in xdict:
+            self.assertTrue(key in ydict)
+            self.assertEqual(
+                xdict[key],
+                ydict[key],
+                "At {}.{} expected {}, found {}".format(x.MESSAGE_NAME, key, xdict[key], ydict[key])
+            )
 
 
 def skip(msg):

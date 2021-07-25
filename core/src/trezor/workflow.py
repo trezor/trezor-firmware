@@ -9,7 +9,7 @@ if False:
     IdleCallback = Callable[[], None]
 
 if __debug__:
-    # Used in `on_close` bellow for memory statistics.
+    # Used in `on_close` below for memory statistics.
 
     import micropython
 

@@ -3,6 +3,10 @@
 #define SVC_ENABLE_IRQ 0
 #define SVC_DISABLE_IRQ 1
 #define SVC_SET_PRIORITY 2
+#define SVC_SHUTDOWN 4
+
+// from util.s
+extern void shutdown_privileged(void);
 
 static inline uint32_t is_mode_unprivileged(void) {
   uint32_t r0;
@@ -36,5 +40,13 @@ static inline void svc_setpriority(uint32_t IRQn, uint32_t priority) {
                          : "memory");
   } else {
     NVIC_SetPriority(IRQn, priority);
+  }
+}
+
+static inline void svc_shutdown(void) {
+  if (is_mode_unprivileged()) {
+    __asm__ __volatile__("svc %0" ::"i"(SVC_SHUTDOWN) : "memory");
+  } else {
+    shutdown_privileged();
   }
 }

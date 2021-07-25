@@ -10,10 +10,16 @@ from trezor import log, utils
 from . import readers
 
 if False:
-    from typing import Any, Union, Iterator, Tuple
+    from typing import Any, Generic, Iterator, Tuple, TypeVar, Union
 
+    K = TypeVar("K")
+    V = TypeVar("V")
     Value = Any
     CborSequence = Union[list[Value], Tuple[Value, ...]]
+else:
+    # mypy cheat: Generic[K, V] will be `object` which is a valid parent type
+    Generic = {(0, 0): object}  # type: ignore
+    K = V = 0  # type: ignore
 
 _CBOR_TYPE_MASK = const(0xE0)
 _CBOR_INFO_BITS = const(0x1F)
@@ -52,7 +58,7 @@ def _header(typ: int, l: int) -> bytes:
     elif l < 2 ** 64:
         return struct.pack(">BQ", typ + 27, l)
     else:
-        raise NotImplementedError("Length %d not suppported" % l)
+        raise NotImplementedError("Length %d not supported" % l)
 
 
 def _cbor_encode(value: Value) -> Iterator[bytes]:
@@ -81,6 +87,11 @@ def _cbor_encode(value: Value) -> Iterator[bytes]:
         sorted_map = sorted((encode(k), v) for k, v in value.items())
         for k, v in sorted_map:
             yield k
+            yield from _cbor_encode(v)
+    elif isinstance(value, OrderedMap):
+        yield _header(_CBOR_MAP, len(value))
+        for k, v in value:
+            yield encode(k)
             yield from _cbor_encode(v)
     elif isinstance(value, Tagged):
         yield _header(_CBOR_TAG, value.tag)
@@ -117,7 +128,7 @@ def _read_length(r: utils.BufferReader, aux: int) -> int:
     elif aux == _CBOR_UINT64_FOLLOWS:
         return readers.read_uint64_be(r)
     else:
-        raise NotImplementedError("Length %d not suppported" % aux)
+        raise NotImplementedError("Length %d not supported" % aux)
 
 
 def _cbor_decode(r: utils.BufferReader) -> Value:
@@ -224,6 +235,26 @@ class IndefiniteLengthArray:
             return self.array == other
         else:
             return False
+
+
+class OrderedMap(Generic[K, V]):
+    """
+    Items of an OrderedMap are included in CBOR as they are added without sorting them in any way. We also allow
+    duplicates since CBOR is also somewhat lenient in not allowing them. It is thus up to the client to make sure no
+    duplicates are inserted if it's desired.
+    """
+
+    def __init__(self) -> None:
+        self._internal_list: list[tuple[K, V]] = []
+
+    def __setitem__(self, key: K, value: V) -> None:
+        self._internal_list.append((key, value))
+
+    def __iter__(self) -> Iterator:
+        yield from self._internal_list
+
+    def __len__(self) -> int:
+        return len(self._internal_list)
 
 
 def encode(value: Value) -> bytes:

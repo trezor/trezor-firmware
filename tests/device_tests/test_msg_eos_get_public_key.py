@@ -28,7 +28,9 @@ from ..common import MNEMONIC12
 class TestMsgEosGetpublickey:
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
     def test_eos_get_public_key(self, client):
-        public_key = get_public_key(client, parse_path("m/44'/194'/0'/0/0"))
+        public_key = get_public_key(
+            client, parse_path("m/44'/194'/0'/0/0"), show_display=True
+        )
         assert (
             public_key.wif_public_key
             == "EOS4u6Sfnzj4Sh2pEQnkXyZQJqH3PkKjGByDCbsqqmyq6PttM9KyB"

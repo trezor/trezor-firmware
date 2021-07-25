@@ -1319,7 +1319,7 @@ static void gen_numname (
 		seq = (UINT)sreg;
 	}
 
-	/* itoa (hexdecimal) */
+	/* itoa (hexadecimal) */
 	i = 7;
 	do {
 		c = (BYTE)((seq % 16) + '0');
@@ -1628,7 +1628,7 @@ static void get_fileinfo (
 	fno->altname[di] = 0;	/* Terminate the SFN  (null string means SFN is invalid) */
 
 	if (fno->fname[0] == 0) {	/* If LFN is invalid, altname[] needs to be copied to fname[] */
-		if (di == 0) {	/* If LFN and SFN both are invalid, this object is inaccesible */
+		if (di == 0) {	/* If LFN and SFN both are invalid, this object is inaccessible */
 			fno->fname[di++] = '?';
 		} else {
 			for (si = di = 0, lcf = NS_BODY; fno->altname[si]; si++, di++) {	/* Copy altname[] to fname[] with case information */
@@ -1987,7 +1987,7 @@ static FRESULT mount_volume (	/* FR_OK(0): successful, !=0: an error occurred */
 
 	/* Find an FAT volume on the drive */
 	fmt = find_volume(fs, LD2PT(vol));
-	if (fmt == 4) return FR_DISK_ERR;		/* An error occured in the disk I/O layer */
+	if (fmt == 4) return FR_DISK_ERR;		/* An error occurred in the disk I/O layer */
 	if (fmt >= 2) return FR_NO_FILESYSTEM;	/* No FAT volume is found */
 	bsect = fs->winsect;					/* Volume location */
 
@@ -2218,7 +2218,7 @@ FRESULT f_open (
 			}
 		}
 		else {	/* Open an existing file */
-			if (res == FR_OK) {					/* Is the object exsiting? */
+			if (res == FR_OK) {					/* Is the object existing? */
 				if (dj.obj.attr & AM_DIR) {		/* File open against a directory */
 					res = FR_NO_FILE;
 				} else {
@@ -2654,7 +2654,7 @@ FRESULT f_opendir (
 		FREE_NAMBUF();
 		if (res == FR_NO_FILE) res = FR_NO_PATH;
 	}
-	if (res != FR_OK) dp->obj.fs = 0;		/* Invalidate the directory object if function faild */
+	if (res != FR_OK) dp->obj.fs = 0;		/* Invalidate the directory object if function failed */
 
 	LEAVE_FF(fs, res);
 }
@@ -2986,7 +2986,7 @@ FRESULT f_mkdir (
 						st_clust(fs, fs->win + SZDIRE, pcl);
 						fs->wflag = 1;
 					}
-					res = dir_register(&dj);	/* Register the object to the parent directoy */
+					res = dir_register(&dj);	/* Register the object to the parent directory */
 				}
 			}
 			if (res == FR_OK) {

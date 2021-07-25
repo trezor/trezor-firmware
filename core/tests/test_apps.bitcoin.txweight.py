@@ -1,8 +1,8 @@
 from common import *
 
-from trezor.messages.TxInput import TxInput
-from trezor.messages.TxOutput import TxOutput
-from trezor.messages import OutputScriptType
+from trezor.messages import TxInput
+from trezor.messages import TxOutput
+from trezor.enums import OutputScriptType
 from trezor.crypto import bip32, bip39
 
 from apps.common import coins

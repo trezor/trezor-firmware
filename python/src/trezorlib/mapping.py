@@ -24,24 +24,16 @@ map_class_to_type = {}
 
 
 def build_map():
-    for msg_name in dir(messages.MessageType):
-        if msg_name.startswith("__"):
-            continue
-
-        if msg_name == "Literal":
-            # TODO: remove this when we have a good implementation of enums
-            continue
-
-        try:
-            msg_class = getattr(messages, msg_name)
-        except AttributeError:
+    for entry in messages.MessageType:
+        msg_class = getattr(messages, entry.name, None)
+        if msg_class is None:
             raise ValueError(
-                "Implementation of protobuf message '%s' is missing" % msg_name
+                f"Implementation of protobuf message '{entry.name}' is missing"
             )
 
-        if msg_class.MESSAGE_WIRE_TYPE != getattr(messages.MessageType, msg_name):
+        if msg_class.MESSAGE_WIRE_TYPE != entry.value:
             raise ValueError(
-                "Inconsistent wire type and MessageType record for '%s'" % msg_class
+                f"Inconsistent wire type and MessageType record for '{entry.name}'"
             )
 
         register_message(msg_class)

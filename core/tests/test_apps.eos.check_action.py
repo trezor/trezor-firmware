@@ -2,20 +2,20 @@ from common import *
 
 if not utils.BITCOIN_ONLY:
     from apps.eos.actions import check_action
-    from trezor.messages.EosTxActionAck import EosTxActionAck
-    from trezor.messages.EosActionBuyRam import EosActionBuyRam
-    from trezor.messages.EosActionBuyRamBytes import EosActionBuyRamBytes
-    from trezor.messages.EosActionDelegate import EosActionDelegate
-    from trezor.messages.EosActionDeleteAuth import EosActionDeleteAuth
-    from trezor.messages.EosActionLinkAuth import EosActionLinkAuth
-    from trezor.messages.EosActionNewAccount import EosActionNewAccount
-    from trezor.messages.EosActionRefund import EosActionRefund
-    from trezor.messages.EosActionSellRam import EosActionSellRam
-    from trezor.messages.EosActionTransfer import EosActionTransfer
-    from trezor.messages.EosActionUndelegate import EosActionUndelegate
-    from trezor.messages.EosActionUnlinkAuth import EosActionUnlinkAuth
-    from trezor.messages.EosActionUpdateAuth import EosActionUpdateAuth
-    from trezor.messages.EosActionVoteProducer import EosActionVoteProducer
+    from trezor.messages import EosTxActionAck
+    from trezor.messages import EosActionBuyRam
+    from trezor.messages import EosActionBuyRamBytes
+    from trezor.messages import EosActionDelegate
+    from trezor.messages import EosActionDeleteAuth
+    from trezor.messages import EosActionLinkAuth
+    from trezor.messages import EosActionNewAccount
+    from trezor.messages import EosActionRefund
+    from trezor.messages import EosActionSellRam
+    from trezor.messages import EosActionTransfer
+    from trezor.messages import EosActionUndelegate
+    from trezor.messages import EosActionUnlinkAuth
+    from trezor.messages import EosActionUpdateAuth
+    from trezor.messages import EosActionVoteProducer
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

@@ -1,7 +1,7 @@
 from trezor import wire
 from trezor.crypto.curve import secp256k1
-from trezor.messages.InputScriptType import SPENDADDRESS, SPENDP2SHWITNESS, SPENDWITNESS
-from trezor.messages.Success import Success
+from trezor.enums import InputScriptType
+from trezor.messages import Success
 from trezor.ui.layouts import confirm_signverify
 
 from apps.common import coins
@@ -16,8 +16,7 @@ from .addresses import (
 )
 
 if False:
-    from trezor.messages.VerifyMessage import VerifyMessage
-    from trezor.messages.TxInputType import EnumTypeInputScriptType
+    from trezor.messages import VerifyMessage
 
 
 async def verify_message(ctx: wire.Context, msg: VerifyMessage) -> Success:
@@ -32,14 +31,14 @@ async def verify_message(ctx: wire.Context, msg: VerifyMessage) -> Success:
     recid = signature[0]
     if recid >= 27 and recid <= 34:
         # p2pkh
-        script_type: EnumTypeInputScriptType = SPENDADDRESS
+        script_type = InputScriptType.SPENDADDRESS
     elif recid >= 35 and recid <= 38:
         # segwit-in-p2sh
-        script_type = SPENDP2SHWITNESS
+        script_type = InputScriptType.SPENDP2SHWITNESS
         signature = bytes([signature[0] - 4]) + signature[1:]
     elif recid >= 39 and recid <= 42:
         # native segwit
-        script_type = SPENDWITNESS
+        script_type = InputScriptType.SPENDWITNESS
         signature = bytes([signature[0] - 8]) + signature[1:]
     else:
         raise wire.ProcessError("Invalid signature")
@@ -49,13 +48,13 @@ async def verify_message(ctx: wire.Context, msg: VerifyMessage) -> Success:
     if not pubkey:
         raise wire.ProcessError("Invalid signature")
 
-    if script_type == SPENDADDRESS:
+    if script_type == InputScriptType.SPENDADDRESS:
         addr = address_pkh(pubkey, coin)
         if coin.cashaddr_prefix is not None:
             addr = address_to_cashaddr(addr, coin)
-    elif script_type == SPENDP2SHWITNESS:
+    elif script_type == InputScriptType.SPENDP2SHWITNESS:
         addr = address_p2wpkh_in_p2sh(pubkey, coin)
-    elif script_type == SPENDWITNESS:
+    elif script_type == InputScriptType.SPENDWITNESS:
         addr = address_p2wpkh(pubkey, coin)
     else:
         raise wire.ProcessError("Invalid signature")

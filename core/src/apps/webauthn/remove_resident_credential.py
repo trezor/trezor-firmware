@@ -1,10 +1,7 @@
 import storage.device
 import storage.resident_credentials
 from trezor import wire
-from trezor.messages.Success import Success
-from trezor.messages.WebAuthnRemoveResidentCredential import (
-    WebAuthnRemoveResidentCredential,
-)
+from trezor.messages import Success, WebAuthnRemoveResidentCredential
 
 from apps.common.confirm import require_confirm
 

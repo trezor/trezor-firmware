@@ -34,7 +34,6 @@ class TestMsgResetDeviceT2:
     @pytest.mark.setup_client(uninitialized=True)
     def test_reset_device_slip39_advanced(self, client):
         strength = 128
-        word_count = 20
         member_threshold = 3
         all_mnemonics = []
 
@@ -56,19 +55,17 @@ class TestMsgResetDeviceT2:
             for g in range(5):
                 for h in range(5):
                     # mnemonic phrases
-                    btn_code = yield
-                    assert btn_code == B.ResetDevice
-                    mnemonic = read_and_confirm_mnemonic(client.debug, words=word_count)
+                    mnemonic = yield from read_and_confirm_mnemonic(client.debug)
                     all_mnemonics.append(mnemonic)
 
                     # Confirm continue to next share
-                    btn_code = yield
-                    assert btn_code == B.Success
+                    br = yield
+                    assert br.code == B.Success
                     client.debug.press_yes()
 
             # safety warning
-            btn_code = yield
-            assert btn_code == B.Success
+            br = yield
+            assert br.code == B.Success
             client.debug.press_yes()
 
         os_urandom = mock.Mock(return_value=EXTERNAL_ENTROPY)
@@ -94,56 +91,14 @@ class TestMsgResetDeviceT2:
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.ResetDevice),  # group #5 counts
                     proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.ResetDevice),  # show seeds
-                    proto.ButtonRequest(code=B.Success),
+                ]
+                + [
+                    # individual mnemonic
                     proto.ButtonRequest(code=B.ResetDevice),
                     proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),
-                    proto.ButtonRequest(code=B.ResetDevice),
-                    proto.ButtonRequest(code=B.Success),  # show seeds ends here
+                ]
+                * (5 * 5)  # groups * shares
+                + [
                     proto.ButtonRequest(code=B.Success),
                     proto.Success,
                     proto.Features,

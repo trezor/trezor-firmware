@@ -1,14 +1,14 @@
 from common import *
 from trezor import wire
 from trezor.crypto import bip32, slip39
-from trezor.messages import CardanoAddressType
-from trezor.messages.CardanoAddressParametersType import CardanoAddressParametersType
-from trezor.messages.CardanoBlockchainPointerType import CardanoBlockchainPointerType
+from trezor.enums import CardanoAddressType
+from trezor.messages import CardanoAddressParametersType
+from trezor.messages import CardanoBlockchainPointerType
 
 from apps.common import HARDENED, seed
 
 if not utils.BITCOIN_ONLY:
-    from apps.cardano.address import derive_human_readable_address
+    from apps.cardano.address import derive_human_readable_address, validate_address_parameters
     from apps.cardano.byron_address import _address_hash
     from apps.cardano.helpers import network_ids, protocol_magics
     from apps.cardano.seed import Keychain
@@ -335,32 +335,6 @@ class TestCardanoAddress(unittest.TestCase):
 
             self.assertEqual(actual_address, expected_address)
 
-    def test_base_address_with_invalid_parameters(self):
-        mnemonic = "test walk nut penalty hip pave soap entry language right filter choice"
-        passphrase = ""
-        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
-        keychain = Keychain(node)
-
-        # both address_n_staking and staking_key_hash are None
-        with self.assertRaises(wire.DataError):
-            address_parameters = CardanoAddressParametersType(
-                address_type=CardanoAddressType.BASE,
-                address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
-                address_n_staking=None,
-                staking_key_hash=None,
-            )
-            derive_human_readable_address(keychain, address_parameters, 0, 0)
-
-        # address_n_staking is not a staking path
-        with self.assertRaises(wire.DataError):
-            address_parameters = CardanoAddressParametersType(
-                address_type=CardanoAddressType.BASE,
-                address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
-                address_n_staking=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
-                staking_key_hash=None,
-            )
-            derive_human_readable_address(keychain, address_parameters, 0, 0)
-
     def test_enterprise_address(self):
         mnemonic = "test walk nut penalty hip pave soap entry language right filter choice"
         passphrase = ""
@@ -404,21 +378,6 @@ class TestCardanoAddress(unittest.TestCase):
 
             self.assertEqual(actual_address, expected_address)
 
-    def test_pointer_address_invalid_pointers(self):
-        mnemonic = "test walk nut penalty hip pave soap entry language right filter choice"
-        passphrase = ""
-        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
-        keychain = Keychain(node)
-
-        # pointer is None
-        with self.assertRaises(wire.DataError):
-            address_parameters = CardanoAddressParametersType(
-                address_type=CardanoAddressType.POINTER,
-                address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
-                certificate_pointer=None,
-            )
-            derive_human_readable_address(keychain, address_parameters, 0, 0)
-
     def test_reward_address(self):
         mnemonic = "test walk nut penalty hip pave soap entry language right filter choice"
         passphrase = ""
@@ -440,75 +399,6 @@ class TestCardanoAddress(unittest.TestCase):
 
             self.assertEqual(actual_address, expected_address)
 
-    def test_reward_address_with_non_staking_path(self):
-        mnemonic = "test walk nut penalty hip pave soap entry language right filter choice"
-        passphrase = ""
-        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
-        keychain = Keychain(node)
-
-        with self.assertRaises(wire.DataError):
-            address_parameters = CardanoAddressParametersType(
-                address_type=CardanoAddressType.REWARD,
-                address_n=[44 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0]
-            )
-            derive_human_readable_address(keychain, address_parameters, 0, 0)
-
-    def test_shelley_address_with_byron_namespace(self):
-        """
-        It shouldn't be possible to derive Shelley addresses
-        (Base, Pointer, Enterprise, Reward) with a Byron namespace (44')
-        """
-        mnemonic = "test walk nut penalty hip pave soap entry language right filter choice"
-        passphrase = ""
-        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
-        keychain = Keychain(node)
-
-        with self.assertRaises(wire.DataError):
-            address_parameters = CardanoAddressParametersType(
-                address_type=CardanoAddressType.BASE,
-                address_n=[44 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0]
-            )
-            derive_human_readable_address(keychain, address_parameters, 0, 0)
-
-        with self.assertRaises(wire.DataError):
-            address_parameters = CardanoAddressParametersType(
-                address_type=CardanoAddressType.POINTER,
-                address_n=[44 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
-                certificate_pointer=CardanoBlockchainPointerType(block_index=0, tx_index=0, certificate_index=0)
-            )
-            derive_human_readable_address(keychain, address_parameters, 0, 0)
-
-        with self.assertRaises(wire.DataError):
-            address_parameters = CardanoAddressParametersType(
-                address_type=CardanoAddressType.ENTERPRISE,
-                address_n=[44 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
-            )
-            derive_human_readable_address(keychain, address_parameters, 0, 0)
-
-        with self.assertRaises(wire.DataError):
-            address_parameters = CardanoAddressParametersType(
-                address_type=CardanoAddressType.REWARD,
-                address_n=[44 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
-            )
-            derive_human_readable_address(keychain, address_parameters, 0, 0)
-
-    def test_byron_address_with_shelley_namespace(self):
-        """
-        It shouldn't be possible to derive Byron addresses
-        with a Shelley namespace (1852')
-        """
-        mnemonic = "all all all all all all all all all all all all"
-        passphrase = ""
-        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
-        keychain = Keychain(node)
-
-        with self.assertRaises(wire.DataError):
-            address_parameters = CardanoAddressParametersType(
-                address_type=CardanoAddressType.BYRON,
-                address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
-            )
-            derive_human_readable_address(keychain, address_parameters, 0, 0)
-
     def test_testnet_byron_address(self):
         mnemonic = "all all all all all all all all all all all all"
         passphrase = ""
@@ -529,6 +419,79 @@ class TestCardanoAddress(unittest.TestCase):
             )
             address = derive_human_readable_address(keychain, address_parameters, protocol_magics.TESTNET, 0)
             self.assertEqual(expected, address)
+
+    def test_validate_address_parameters(self):
+        test_vectors = [
+            # base address - both address_n_staking and staking_key_hash are None
+            CardanoAddressParametersType(
+                address_type=CardanoAddressType.BASE,
+                address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                address_n_staking=None,
+                staking_key_hash=None,
+            ),
+            # base address - both address_n_staking and staking_key_hash are set
+            CardanoAddressParametersType(
+                address_type=CardanoAddressType.BASE,
+                address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                address_n_staking=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
+                staking_key_hash=unhexlify("1bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff"),
+            ),
+            # base address - staking_key_hash is too short
+            CardanoAddressParametersType(
+                address_type=CardanoAddressType.BASE,
+                address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                address_n_staking=None,
+                staking_key_hash=unhexlify("1bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8d"),
+            ),
+            # base address - address_n_staking is not a staking path
+            CardanoAddressParametersType(
+                address_type=CardanoAddressType.BASE,
+                address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                address_n_staking=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                staking_key_hash=None,
+            ),
+            # pointer address - pointer is None
+            CardanoAddressParametersType(
+                address_type=CardanoAddressType.POINTER,
+                address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                certificate_pointer=None,
+            ),
+            # reward address - non staking path
+            CardanoAddressParametersType(
+                address_type=CardanoAddressType.REWARD,
+                address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0]
+            ),
+
+            # Shelley addresses with Byron namespace
+            CardanoAddressParametersType(
+                address_type=CardanoAddressType.BASE,
+                address_n=[44 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0]
+            ),
+            CardanoAddressParametersType(
+                address_type=CardanoAddressType.POINTER,
+                address_n=[44 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+                certificate_pointer=CardanoBlockchainPointerType(block_index=0, tx_index=0, certificate_index=0)
+            ),
+            CardanoAddressParametersType(
+                address_type=CardanoAddressType.ENTERPRISE,
+                address_n=[44 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+            ),
+            CardanoAddressParametersType(
+                address_type=CardanoAddressType.REWARD,
+                address_n=[44 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+            ),
+
+            # Byron address with Shelley namespace
+            CardanoAddressParametersType(
+                address_type=CardanoAddressType.BYRON,
+                address_n=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 0, 0],
+            )
+        ]
+
+        for address_parameters in test_vectors:
+            with self.assertRaises(wire.ProcessError):
+                validate_address_parameters(address_parameters)
+
 
 if __name__ == '__main__':
     unittest.main()

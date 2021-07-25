@@ -1,8 +1,8 @@
 from trezor import wire
 from trezor.crypto import hashlib
 from trezor.crypto.curve import ed25519
-from trezor.messages import TezosBallotType, TezosContractType
-from trezor.messages.TezosSignedTx import TezosSignedTx
+from trezor.enums import TezosBallotType, TezosContractType
+from trezor.messages import TezosSignedTx
 
 from apps.common import paths
 from apps.common.keychain import with_slip44_keychain
@@ -23,7 +23,7 @@ async def sign_tx(ctx, msg, keychain):
     node = keychain.derive(msg.address_n)
 
     if msg.transaction is not None:
-        # if the tranasction oprtation is used to execute code on a smart contract
+        # if the transaction operation is used to execute code on a smart contract
         if msg.transaction.parameters_manager is not None:
             parameters_manager = msg.transaction.parameters_manager
 

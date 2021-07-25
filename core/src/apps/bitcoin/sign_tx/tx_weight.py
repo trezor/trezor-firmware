@@ -7,10 +7,10 @@
 
 from micropython import const
 
-from trezor.messages import InputScriptType
+from trezor.enums import InputScriptType
 
 if False:
-    from trezor.messages.TxInput import TxInput
+    from trezor.messages import TxInput
 
 # transaction header size: 4 byte version
 _TXSIZE_HEADER = const(4)

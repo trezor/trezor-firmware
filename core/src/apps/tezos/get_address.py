@@ -1,5 +1,5 @@
 from trezor.crypto import hashlib
-from trezor.messages.TezosAddress import TezosAddress
+from trezor.messages import TezosAddress
 from trezor.ui.layouts import show_address
 
 from apps.common import paths, seed
@@ -22,7 +22,7 @@ async def get_address(ctx, msg, keychain):
     )
 
     if msg.show_display:
-        desc = address_n_to_str(msg.address_n)
-        await show_address(ctx, address=address, address_qr=address, desc=desc)
+        title = address_n_to_str(msg.address_n)
+        await show_address(ctx, address=address, address_qr=address, title=title)
 
     return TezosAddress(address=address)

@@ -25,13 +25,23 @@
 #include "display.h"
 #include "flash.h"
 #include "rand.h"
+#include "supervise.h"
 
 #include "stm32f4xx_ll_utils.h"
 
-// from util.s
-extern void shutdown(void);
-
 #define COLOR_FATAL_ERROR RGB16(0x7F, 0x00, 0x00)
+
+// from util.s
+extern void shutdown_privileged(void);
+
+void shutdown(void) {
+#ifdef USE_SVC_SHUTDOWN
+  svc_shutdown();
+#else
+  // It won't work properly unless called from the privileged mode
+  shutdown_privileged();
+#endif
+}
 
 void __attribute__((noreturn))
 __fatal_error(const char *expr, const char *msg, const char *file, int line,
@@ -52,8 +62,10 @@ __fatal_error(const char *expr, const char *msg, const char *file, int line,
   if (func) {
     display_printf("func: %s\n", func);
   }
-#ifdef GITREV
-  display_printf("rev : %s\n", XSTR(GITREV));
+#ifdef SCM_REVISION
+  const uint8_t *rev = (const uint8_t *)SCM_REVISION;
+  display_printf("rev : %02x%02x%02x%02x%02x\n", rev[0], rev[1], rev[2], rev[3],
+                 rev[4]);
 #endif
   display_printf("\nPlease contact Trezor support.\n");
   shutdown();

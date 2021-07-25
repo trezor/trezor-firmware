@@ -25,7 +25,7 @@ for fn in sorted(glob.glob("*.png")):
     name = os.path.splitext(fn)[0]
     w, h = im.size
     if w % 8 != 0:
-        raise Exception("Width must be divisable by 8! (%s is %dx%d)" % (fn, w, h))
+        raise Exception("Width must be divisible by 8! (%s is %dx%d)" % (fn, w, h))
     img = list(im.getdata())
     hdrs.append("extern const BITMAP bmp_%s;\n" % name)
     imgs.append("const BITMAP bmp_%s = {%d, %d, bmp_%s_data};\n" % (name, w, h, name))

@@ -4,12 +4,36 @@ from distutils.dir_util import copy_tree
 from pathlib import Path
 
 import dominate
+import dominate.tags as t
 from dominate.tags import div, h1, h2, hr, p, strong, table, th, tr
 from dominate.util import text
 
 from . import download, html
 
-REPORTS_PATH = Path(__file__).parent.resolve() / "reports" / "test"
+HERE = Path(__file__).parent.resolve()
+REPORTS_PATH = HERE / "reports" / "test"
+
+STYLE = (HERE / "testreport.css").read_text()
+SCRIPT = (HERE / "testreport.js").read_text()
+
+ACTUAL_HASHES = {}
+
+
+def document(title, actual_hash=None, index=False):
+    doc = dominate.document(title=title)
+    style = t.style()
+    style.add_raw_string(STYLE)
+    script = t.script()
+    script.add_raw_string(SCRIPT)
+    doc.head.add(style, script)
+
+    if actual_hash is not None:
+        doc.body["data-actual-hash"] = actual_hash
+
+    if index:
+        doc.body["data-index"] = True
+
+    return doc
 
 
 def _header(test_name, expected_hash, actual_hash):
@@ -43,7 +67,7 @@ def index():
     failed_tests = list((REPORTS_PATH / "failed").iterdir())
 
     title = "UI Test report " + datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    doc = dominate.document(title=title)
+    doc = document(title=title, index=True)
 
     with doc:
         h1("UI Test report")
@@ -54,7 +78,25 @@ def index():
         hr()
 
         h2("Failed", style="color: red;")
-        html.report_links(failed_tests, REPORTS_PATH)
+        with p(id="file-hint"):
+            strong("Tip:")
+            text(" use ")
+            t.span("./tests/show_results.sh", style="font-family: monospace")
+            text(" to enable smart features.")
+
+        with div("Test colors", _class="script-hidden"):
+            with t.ul():
+                with t.li():
+                    t.span("new", style="color: blue")
+                    t.button("clear all", onclick="resetState('all')")
+                with t.li():
+                    t.span("marked OK", style="color: grey")
+                    t.button("clear", onclick="resetState('ok')")
+                with t.li():
+                    t.span("marked BAD", style="color: darkred")
+                    t.button("clear", onclick="resetState('bad')")
+
+        html.report_links(failed_tests, REPORTS_PATH, ACTUAL_HASHES)
 
         h2("Passed", style="color: green;")
         html.report_links(passed_tests, REPORTS_PATH)
@@ -63,7 +105,9 @@ def index():
 
 
 def failed(fixture_test_path, test_name, actual_hash, expected_hash):
-    doc = dominate.document(title=test_name)
+    ACTUAL_HASHES[test_name] = actual_hash
+
+    doc = document(title=test_name, actual_hash=actual_hash)
     recorded_path = fixture_test_path / "recorded"
     actual_path = fixture_test_path / "actual"
 
@@ -81,6 +125,12 @@ def failed(fixture_test_path, test_name, actual_hash, expected_hash):
 
     with doc:
         _header(test_name, expected_hash, actual_hash)
+
+        with div(id="markbox", _class="script-hidden"):
+            p("Click a button to mark the test result as:")
+            with div(id="buttons"):
+                t.button("OK", id="mark-ok", onclick="markState('ok')")
+                t.button("BAD", id="mark-bad", onclick="markState('bad')")
 
         if download_failed:
             with p():
@@ -100,7 +150,7 @@ def failed(fixture_test_path, test_name, actual_hash, expected_hash):
 def passed(fixture_test_path, test_name, actual_hash):
     copy_tree(str(fixture_test_path / "actual"), str(fixture_test_path / "recorded"))
 
-    doc = dominate.document(title=test_name)
+    doc = document(title=test_name)
     actual_path = fixture_test_path / "actual"
     actual_screens = sorted(actual_path.iterdir())
 

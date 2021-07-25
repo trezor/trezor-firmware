@@ -1,4 +1,4 @@
-from trezor.messages import CardanoCertificateType, CardanoPoolRelayType
+from trezor.enums import CardanoCertificateType, CardanoPoolRelayType
 
 from apps.common import cbor
 
@@ -7,17 +7,17 @@ from .address import (
     get_public_key_hash,
     validate_reward_address,
 )
-from .helpers import INVALID_CERTIFICATE, LOVELACE_MAX_SUPPLY
+from .helpers import ADDRESS_KEY_HASH_SIZE, INVALID_CERTIFICATE, LOVELACE_MAX_SUPPLY
 from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 
 if False:
-    from trezor.messages.CardanoTxCertificateType import CardanoTxCertificateType
-    from trezor.messages.CardanoPoolParametersType import CardanoPoolParametersType
-    from trezor.messages.CardanoPoolRelayParametersType import (
+    from trezor.messages import (
+        CardanoPoolMetadataType,
+        CardanoPoolOwnerType,
+        CardanoPoolParametersType,
         CardanoPoolRelayParametersType,
+        CardanoTxCertificateType,
     )
-    from trezor.messages.CardanoPoolOwnerType import CardanoPoolOwnerType
-    from trezor.messages.CardanoPoolMetadataType import CardanoPoolMetadataType
 
     from apps.common.cbor import CborSequence
 
@@ -26,7 +26,6 @@ if False:
 POOL_HASH_SIZE = 28
 VRF_KEY_HASH_SIZE = 32
 POOL_METADATA_HASH_SIZE = 32
-PUBLIC_KEY_HASH_SIZE = 28
 IPV4_ADDRESS_SIZE = 4
 IPV6_ADDRESS_SIZE = 16
 
@@ -140,7 +139,9 @@ def _validate_pool_owners(owners: list[CardanoPoolOwnerType]) -> None:
             owner.staking_key_hash is not None or owner.staking_key_path is not None
         )
         if owner.staking_key_hash is not None:
-            assert_certificate_cond(len(owner.staking_key_hash) == PUBLIC_KEY_HASH_SIZE)
+            assert_certificate_cond(
+                len(owner.staking_key_hash) == ADDRESS_KEY_HASH_SIZE
+            )
         if owner.staking_key_path:
             assert_certificate_cond(
                 SCHEMA_STAKING_ANY_ACCOUNT.match(owner.staking_key_path)

@@ -1,13 +1,27 @@
 from micropython import const
 
-from trezor import loop, res, ui, utils
+from trezor import loop, res, ui, utils, wire, workflow
+from trezor.enums import ButtonRequestType
+from trezor.messages import ButtonAck, ButtonRequest
 
 from .button import Button, ButtonCancel, ButtonConfirm, ButtonDefault
 from .confirm import CANCELLED, CONFIRMED, Confirm
 from .swipe import SWIPE_DOWN, SWIPE_UP, SWIPE_VERTICAL, Swipe
 from .text import TEXT_MAX_LINES, Span, Text
 
-_PAGINATED_LINE_WIDTH = const(204)
+if False:
+    from typing import Callable, Iterable
+
+    from ..common.text import TextContent
+
+
+PAGINATED_LINE_WIDTH = const(204)
+
+WAS_PAGED = object()
+
+
+if False:
+    from typing import Any
 
 
 def render_scrollbar(pages: int, page: int) -> None:
@@ -46,20 +60,19 @@ def render_swipe_text() -> None:
 
 
 class Paginated(ui.Layout):
-    def __init__(
-        self, pages: list[ui.Component], page: int = 0, one_by_one: bool = False
-    ):
+    def __init__(self, pages: list[ui.Component], page: int = 0):
         super().__init__()
         self.pages = pages
         self.page = page
-        self.one_by_one = one_by_one
 
     def dispatch(self, event: int, x: int, y: int) -> None:
         pages = self.pages
         page = self.page
         pages[page].dispatch(event, x, y)
 
-        if event is ui.RENDER:
+        if event is ui.REPAINT:
+            self.repaint = True
+        elif event is ui.RENDER:
             length = len(pages)
             if page < length - 1:
                 render_swipe_icon()
@@ -89,15 +102,21 @@ class Paginated(ui.Layout):
         elif swipe is SWIPE_DOWN:
             self.page = max(self.page - 1, 0)
 
-        self.pages[self.page].dispatch(ui.REPAINT, 0, 0)
-        self.repaint = True
-
-        if __debug__:
-            from apps.debug import notify_layout_change
-
-            notify_layout_change(self)
-
         self.on_change()
+        raise ui.Result(WAS_PAGED)
+
+    async def interact(
+        self,
+        ctx: wire.GenericContext,
+        code: ButtonRequestType = ButtonRequestType.Other,
+    ) -> Any:
+        workflow.close_others()
+        await ctx.call(ButtonRequest(code=code, pages=len(self.pages)), ButtonAck)
+        result = WAS_PAGED
+        while result is WAS_PAGED:
+            result = await self
+
+        return result
 
     def create_tasks(self) -> tuple[loop.Task, ...]:
         tasks: tuple[loop.Task, ...] = (
@@ -118,8 +137,7 @@ class Paginated(ui.Layout):
             return tasks
 
     def on_change(self) -> None:
-        if self.one_by_one:
-            raise ui.Result(self.page)
+        pass
 
     if __debug__:
 
@@ -245,7 +263,8 @@ def paginate_text(
     header_icon: str = ui.ICON_DEFAULT,
     icon_color: int = ui.ORANGE_ICON,
     break_words: bool = False,
-) -> Confirm | Paginated:
+    confirm: Callable[[ui.Component], ui.Layout] = Confirm,
+) -> ui.Layout:
     span = Span(text, 0, font, break_words=break_words)
     if span.count_lines() <= TEXT_MAX_LINES:
         result = Text(
@@ -256,12 +275,12 @@ def paginate_text(
             break_words=break_words,
         )
         result.content = [font, text]
-        return Confirm(result)
+        return confirm(result)
 
     else:
         pages: list[ui.Component] = []
         span.reset(
-            text, 0, font, break_words=break_words, line_width=_PAGINATED_LINE_WIDTH
+            text, 0, font, break_words=break_words, line_width=PAGINATED_LINE_WIDTH
         )
         while span.has_more_content():
             # advance to first line of the page
@@ -273,7 +292,7 @@ def paginate_text(
                 new_lines=False,
                 content_offset=0,
                 char_offset=span.start,
-                line_width=_PAGINATED_LINE_WIDTH,
+                line_width=PAGINATED_LINE_WIDTH,
                 break_words=break_words,
                 render_page_overflow=False,
             )
@@ -284,5 +303,87 @@ def paginate_text(
             for _ in range(TEXT_MAX_LINES - 1):
                 span.next_line()
 
-        pages[-1] = Confirm(pages[-1])
+        pages[-1] = confirm(pages[-1])
+        return Paginated(pages)
+
+
+PAGEBREAK = 0, ""
+
+
+def paginate_paragraphs(
+    para: Iterable[tuple[int, str]],
+    header: str,
+    header_icon: str = ui.ICON_DEFAULT,
+    icon_color: int = ui.ORANGE_ICON,
+    break_words: bool = False,
+    confirm: Callable[[ui.Component], ui.Layout] = Confirm,
+) -> ui.Layout:
+    span = Span("", 0, ui.NORMAL, break_words=break_words)
+    lines = 0
+    content: list[TextContent] = []
+    for item in para:
+        if item is PAGEBREAK:
+            continue
+        span.reset(item[1], 0, item[0], break_words=break_words)
+        lines += span.count_lines()
+
+        # we'll need this for multipage too
+        if content:
+            content.append("\n")
+        content.extend(item)
+
+    if lines <= TEXT_MAX_LINES:
+        result = Text(
+            header,
+            header_icon=header_icon,
+            icon_color=icon_color,
+            new_lines=False,
+            break_words=break_words,
+        )
+        result.content = content
+        return confirm(result)
+
+    else:
+        pages: list[ui.Component] = []
+        lines_left = 0
+        content_ctr = 0
+        page: Text | None = None
+        for item in para:
+            if item is PAGEBREAK:
+                if page is not None:
+                    page.max_lines -= lines_left
+                lines_left = 0
+                continue
+
+            span.reset(
+                item[1],
+                0,
+                item[0],
+                break_words=break_words,
+                line_width=PAGINATED_LINE_WIDTH,
+            )
+
+            while span.has_more_content():
+                span.next_line()
+                if lines_left <= 0:
+                    page = Text(
+                        header,
+                        header_icon=header_icon,
+                        icon_color=icon_color,
+                        new_lines=False,
+                        content_offset=content_ctr * 3 + 1,  # font, _text_, newline
+                        char_offset=span.start,
+                        line_width=PAGINATED_LINE_WIDTH,
+                        render_page_overflow=False,
+                        break_words=break_words,
+                    )
+                    page.content = content
+                    pages.append(page)
+                    lines_left = TEXT_MAX_LINES - 1
+                else:
+                    lines_left -= 1
+
+            content_ctr += 1
+
+        pages[-1] = confirm(pages[-1])
         return Paginated(pages)

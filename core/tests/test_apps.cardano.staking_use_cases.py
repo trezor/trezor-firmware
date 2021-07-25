@@ -4,9 +4,9 @@ from common import *
 
 from apps.common import HARDENED
 from trezor.crypto import bip32
-from trezor.messages import CardanoAddressType
-from trezor.messages.CardanoAddressParametersType import CardanoAddressParametersType
-from trezor.messages.CardanoBlockchainPointerType import CardanoBlockchainPointerType
+from trezor.enums import CardanoAddressType
+from trezor.messages import CardanoAddressParametersType
+from trezor.messages import CardanoBlockchainPointerType
 
 
 if not utils.BITCOIN_ONLY:

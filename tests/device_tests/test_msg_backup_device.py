@@ -41,8 +41,8 @@ def test_backup_bip39(client):
         nonlocal mnemonic
         yield  # Confirm Backup
         client.debug.press_yes()
-        yield  # Mnemonic phrases
-        mnemonic = read_and_confirm_mnemonic(client.debug, words=12)
+        # Mnemonic phrases
+        mnemonic = yield from read_and_confirm_mnemonic(client.debug)
         yield  # Confirm success
         client.debug.press_yes()
         yield  # Backup is done
@@ -88,8 +88,8 @@ def test_backup_slip39_basic(client):
 
         # Mnemonic phrases
         for _ in range(5):
-            yield  # Phrase screen
-            mnemonic = read_and_confirm_mnemonic(client.debug, words=20)
+            # Phrase screen
+            mnemonic = yield from read_and_confirm_mnemonic(client.debug)
             mnemonics.append(mnemonic)
             yield  # Confirm continue to next
             client.debug.press_yes()
@@ -101,23 +101,13 @@ def test_backup_slip39_basic(client):
     with client:
         client.set_input_flow(input_flow)
         client.set_expected_responses(
-            [
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
+            [messages.ButtonRequest(code=B.ResetDevice)] * 6  # intro screens
+            + [
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
+            ]
+            * 5  # individual shares
+            + [
                 messages.ButtonRequest(code=B.Success),
                 messages.Success,
                 messages.Features,
@@ -158,8 +148,8 @@ def test_backup_slip39_advanced(client):
         # Mnemonic phrases
         for _ in range(5):
             for _ in range(5):
-                yield  # Phrase screen
-                mnemonic = read_and_confirm_mnemonic(client.debug, words=20)
+                # Phrase screen
+                mnemonic = yield from read_and_confirm_mnemonic(client.debug)
                 mnemonics.append(mnemonic)
                 yield  # Confirm continue to next
                 client.debug.press_yes()
@@ -171,73 +161,18 @@ def test_backup_slip39_advanced(client):
     with client:
         client.set_input_flow(input_flow)
         client.set_expected_responses(
-            [
+            [messages.ButtonRequest(code=B.ResetDevice)] * 6  # intro screens
+            + [
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),  # group #1 counts
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),  # group #2 counts
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),  # group #3 counts
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),  # group #4 counts
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),  # group #5 counts
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.ResetDevice),  # show seeds
-                messages.ButtonRequest(code=B.Success),
+            ]
+            * 5  # group thresholds
+            + [
                 messages.ButtonRequest(code=B.ResetDevice),
                 messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),
-                messages.ButtonRequest(code=B.ResetDevice),
-                messages.ButtonRequest(code=B.Success),  # show seeds ends here
+            ]
+            * 25  # individual shares
+            + [
                 messages.ButtonRequest(code=B.Success),
                 messages.Success,
                 messages.Features,

@@ -1,23 +1,25 @@
 import storage.cache
 import storage.device
 from trezor import config, utils, wire, workflow
-from trezor.messages import MessageType
-from trezor.messages.Success import Success
+from trezor.enums import MessageType
+from trezor.messages import Success
 
 from . import workflow_handlers
 
 if False:
-    import protobuf
+    from trezor import protobuf
     from typing import NoReturn
-    from trezor.messages.Features import Features
-    from trezor.messages.Initialize import Initialize
-    from trezor.messages.EndSession import EndSession
-    from trezor.messages.GetFeatures import GetFeatures
-    from trezor.messages.Cancel import Cancel
-    from trezor.messages.LockDevice import LockDevice
-    from trezor.messages.Ping import Ping
-    from trezor.messages.DoPreauthorized import DoPreauthorized
-    from trezor.messages.CancelAuthorization import CancelAuthorization
+    from trezor.messages import (
+        Features,
+        Initialize,
+        EndSession,
+        GetFeatures,
+        Cancel,
+        LockDevice,
+        Ping,
+        DoPreauthorized,
+        CancelAuthorization,
+    )
 
 
 def get_features() -> Features:
@@ -25,8 +27,8 @@ def get_features() -> Features:
     import storage.sd_salt
 
     from trezor import sdcard
-    from trezor.messages import Capability
-    from trezor.messages.Features import Features
+    from trezor.enums import Capability
+    from trezor.messages import Features
 
     from apps.common import mnemonic, safety_checks
 
@@ -36,7 +38,7 @@ def get_features() -> Features:
         major_version=utils.VERSION_MAJOR,
         minor_version=utils.VERSION_MINOR,
         patch_version=utils.VERSION_PATCH,
-        revision=utils.GITREV.encode(),
+        revision=utils.SCM_REVISION,
         model=utils.MODEL,
         device_id=storage.device.get_device_id(),
         label=storage.device.get_label(),
@@ -125,16 +127,16 @@ async def handle_EndSession(ctx: wire.Context, msg: EndSession) -> Success:
 async def handle_Ping(ctx: wire.Context, msg: Ping) -> Success:
     if msg.button_protection:
         from trezor.ui.layouts import confirm_action
-        from trezor.messages.ButtonRequestType import ProtectCall
+        from trezor.enums import ButtonRequestType as B
 
-        await confirm_action(ctx, "ping", "Confirm", "ping", br_code=ProtectCall)
+        await confirm_action(ctx, "ping", "Confirm", "ping", br_code=B.ProtectCall)
     return Success(message=msg.message)
 
 
 async def handle_DoPreauthorized(
     ctx: wire.Context, msg: DoPreauthorized
 ) -> protobuf.MessageType:
-    from trezor.messages.PreauthorizedRequest import PreauthorizedRequest
+    from trezor.messages import PreauthorizedRequest
     from apps.common import authorization
 
     if not authorization.is_set():
@@ -145,6 +147,7 @@ async def handle_DoPreauthorized(
 
     req = await ctx.call_any(PreauthorizedRequest(), *wire_types)
 
+    assert req.MESSAGE_WIRE_TYPE is not None
     handler = workflow_handlers.find_registered_handler(
         ctx.iface, req.MESSAGE_WIRE_TYPE
     )

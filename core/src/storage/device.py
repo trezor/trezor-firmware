@@ -5,7 +5,7 @@ import storage.cache
 from storage import common
 
 if False:
-    from trezor.messages.ResetDevice import EnumTypeBackupType
+    from trezor.enums import BackupType
     from typing_extensions import Literal
 
 # Namespace:
@@ -119,8 +119,8 @@ def get_mnemonic_secret() -> bytes | None:
     return common.get(_NAMESPACE, _MNEMONIC_SECRET)
 
 
-def get_backup_type() -> EnumTypeBackupType:
-    from trezor.messages import BackupType
+def get_backup_type() -> BackupType:
+    from trezor.enums import BackupType
 
     backup_type = common.get_uint8(_NAMESPACE, _BACKUP_TYPE)
     if backup_type is None:
@@ -158,7 +158,7 @@ def set_homescreen(homescreen: bytes) -> None:
 
 def store_mnemonic_secret(
     secret: bytes,
-    backup_type: EnumTypeBackupType,
+    backup_type: BackupType,
     needs_backup: bool = False,
     no_backup: bool = False,
 ) -> None:

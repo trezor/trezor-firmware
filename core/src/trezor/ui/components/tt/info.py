@@ -37,7 +37,7 @@ class InfoConfirm(ui.Layout):
         style: InfoConfirmStyleType = DEFAULT_STYLE,
     ) -> None:
         super().__init__()
-        self.text = text.split()
+        self.text = [text]
         self.style = style
         panel_area = ui.grid(0, n_x=1, n_y=1)
         self.panel_area = panel_area
@@ -66,7 +66,7 @@ class InfoConfirm(ui.Layout):
                 max_lines=6,
                 offset_y=y + TEXT_LINE_HEIGHT,
                 offset_x=x + TEXT_MARGIN_LEFT - ui.VIEWX,
-                line_width=w,
+                line_width=w - TEXT_MARGIN_LEFT,
                 fg=fg_color,
                 bg=bg_color,
             )

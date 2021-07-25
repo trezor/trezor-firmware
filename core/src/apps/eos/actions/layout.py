@@ -1,135 +1,128 @@
-from micropython import const
-from ubinascii import hexlify
-
 from trezor import ui
-from trezor.messages import ButtonRequestType
-from trezor.ui.components.tt.scroll import Paginated
-from trezor.ui.components.tt.text import Text
-from trezor.utils import chunks
+from trezor.enums import ButtonRequestType
+from trezor.ui.layouts import confirm_properties
 
 from .. import helpers
-from ..layout import require_confirm
 
 if False:
     from trezor import wire
-    from trezor.messages.EosAuthorization import EosAuthorization
-    from trezor.messages.EosActionBuyRam import EosActionBuyRam
-    from trezor.messages.EosActionBuyRamBytes import EosActionBuyRamBytes
-    from trezor.messages.EosActionCommon import EosActionCommon
-    from trezor.messages.EosActionDelegate import EosActionDelegate
-    from trezor.messages.EosActionDeleteAuth import EosActionDeleteAuth
-    from trezor.messages.EosActionLinkAuth import EosActionLinkAuth
-    from trezor.messages.EosActionNewAccount import EosActionNewAccount
-    from trezor.messages.EosActionRefund import EosActionRefund
-    from trezor.messages.EosActionSellRam import EosActionSellRam
-    from trezor.messages.EosActionTransfer import EosActionTransfer
-    from trezor.messages.EosActionUndelegate import EosActionUndelegate
-    from trezor.messages.EosActionUnlinkAuth import EosActionUnlinkAuth
-    from trezor.messages.EosActionUpdateAuth import EosActionUpdateAuth
-    from trezor.messages.EosActionVoteProducer import EosActionVoteProducer
-
-_LINE_LENGTH = const(17)
-_LINE_PLACEHOLDER = "{:<" + str(_LINE_LENGTH) + "}"
-_FIRST_PAGE = const(0)
-_TWO_FIELDS_PER_PAGE = const(2)
-_THREE_FIELDS_PER_PAGE = const(3)
-_FOUR_FIELDS_PER_PAGE = const(4)
-_FIVE_FIELDS_PER_PAGE = const(5)
-
-
-async def _require_confirm_paginated(
-    ctx: wire.Context, header: str, fields: list[str], per_page: int
-) -> None:
-    pages = []
-    for page in chunks(fields, per_page):
-        if header == "Arbitrary data":
-            text = Text(header, ui.ICON_WIPE, ui.RED)
-        else:
-            text = Text(header, ui.ICON_CONFIRM, ui.GREEN)
-        text.mono(*page)
-        pages.append(text)
-    await require_confirm(ctx, Paginated(pages), ButtonRequestType.ConfirmOutput)
+    from trezor.messages import (
+        EosActionBuyRam,
+        EosActionBuyRamBytes,
+        EosActionCommon,
+        EosActionDelegate,
+        EosActionDeleteAuth,
+        EosActionLinkAuth,
+        EosActionNewAccount,
+        EosActionRefund,
+        EosActionSellRam,
+        EosActionTransfer,
+        EosActionUndelegate,
+        EosActionUnlinkAuth,
+        EosActionUpdateAuth,
+        EosActionVoteProducer,
+        EosAuthorization,
+    )
 
 
 async def confirm_action_buyram(ctx: wire.Context, msg: EosActionBuyRam) -> None:
-    text = "Buy RAM"
-    fields = []
-    fields.append("Payer:")
-    fields.append(helpers.eos_name_to_string(msg.payer))
-    fields.append("Receiver:")
-    fields.append(helpers.eos_name_to_string(msg.receiver))
-    fields.append("Amount:")
-    fields.append(helpers.eos_asset_to_string(msg.quantity))
-    await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
+    await confirm_properties(
+        ctx,
+        "confirm_buyram",
+        title="Buy RAM",
+        props=[
+            ("Payer:", helpers.eos_name_to_string(msg.payer)),
+            ("Receiver:", helpers.eos_name_to_string(msg.receiver)),
+            ("Amount:", helpers.eos_asset_to_string(msg.quantity)),
+        ],
+        icon=ui.ICON_CONFIRM,
+        br_code=ButtonRequestType.ConfirmOutput,
+    )
 
 
 async def confirm_action_buyrambytes(
     ctx: wire.Context, msg: EosActionBuyRamBytes
 ) -> None:
-    text = "Buy RAM"
-    fields = []
-    fields.append("Payer:")
-    fields.append(helpers.eos_name_to_string(msg.payer))
-    fields.append("Receiver:")
-    fields.append(helpers.eos_name_to_string(msg.receiver))
-    fields.append("Bytes:")
-    fields.append(str(msg.bytes))
-    await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
+    await confirm_properties(
+        ctx,
+        "confirm_buyrambytes",
+        title="Buy RAM",
+        props=[
+            ("Payer:", helpers.eos_name_to_string(msg.payer)),
+            ("Receiver:", helpers.eos_name_to_string(msg.receiver)),
+            ("Bytes:", str(msg.bytes)),
+        ],
+        icon=ui.ICON_CONFIRM,
+        br_code=ButtonRequestType.ConfirmOutput,
+    )
 
 
 async def confirm_action_delegate(ctx: wire.Context, msg: EosActionDelegate) -> None:
-    text = "Delegate"
-    fields = []
-    fields.append("Sender:")
-    fields.append(helpers.eos_name_to_string(msg.sender))
-    fields.append("Receiver:")
-    fields.append(helpers.eos_name_to_string(msg.receiver))
-    fields.append("CPU:")
-    fields.append(helpers.eos_asset_to_string(msg.cpu_quantity))
-    fields.append("NET:")
-    fields.append(helpers.eos_asset_to_string(msg.net_quantity))
-
+    props = [
+        ("Sender:", helpers.eos_name_to_string(msg.sender)),
+        ("Receiver:", helpers.eos_name_to_string(msg.receiver)),
+        ("CPU:", helpers.eos_asset_to_string(msg.cpu_quantity)),
+        ("NET:", helpers.eos_asset_to_string(msg.net_quantity)),
+    ]
     if msg.transfer:
-        fields.append("Transfer: Yes")
-        fields.append("Receiver:")
-        fields.append(helpers.eos_name_to_string(msg.receiver))
+        props.append(("Transfer:", "Yes"))
+        props.append(("Receiver:", helpers.eos_name_to_string(msg.receiver)))
     else:
-        fields.append("Transfer: No")
+        props.append(("Transfer:", "No"))
 
-    await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
+    await confirm_properties(
+        ctx,
+        "confirm_delegate",
+        title="Delegate",
+        props=props,
+        icon=ui.ICON_CONFIRM,
+        br_code=ButtonRequestType.ConfirmOutput,
+    )
 
 
 async def confirm_action_sellram(ctx: wire.Context, msg: EosActionSellRam) -> None:
-    text = "Sell RAM"
-    fields = []
-    fields.append("Receiver:")
-    fields.append(helpers.eos_name_to_string(msg.account))
-    fields.append("Bytes:")
-    fields.append(str(msg.bytes))
-    await _require_confirm_paginated(ctx, text, fields, _TWO_FIELDS_PER_PAGE)
+    await confirm_properties(
+        ctx,
+        "confirm_sellram",
+        title="Sell RAM",
+        props=[
+            ("Receiver:", helpers.eos_name_to_string(msg.account)),
+            ("Bytes:", str(msg.bytes)),
+        ],
+        icon=ui.ICON_CONFIRM,
+        br_code=ButtonRequestType.ConfirmOutput,
+    )
 
 
 async def confirm_action_undelegate(
     ctx: wire.Context, msg: EosActionUndelegate
 ) -> None:
-    text = "Undelegate"
-    fields = []
-    fields.append("Sender:")
-    fields.append(helpers.eos_name_to_string(msg.sender))
-    fields.append("Receiver:")
-    fields.append(helpers.eos_name_to_string(msg.receiver))
-    fields.append("CPU:")
-    fields.append(helpers.eos_asset_to_string(msg.cpu_quantity))
-    fields.append("NET:")
-    fields.append(helpers.eos_asset_to_string(msg.net_quantity))
-    await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
+    await confirm_properties(
+        ctx,
+        "confirm_undelegate",
+        title="Undelegate",
+        props=[
+            ("Sender:", helpers.eos_name_to_string(msg.sender)),
+            ("Receiver:", helpers.eos_name_to_string(msg.receiver)),
+            ("CPU:", helpers.eos_asset_to_string(msg.cpu_quantity)),
+            ("NET:", helpers.eos_asset_to_string(msg.net_quantity)),
+        ],
+        icon=ui.ICON_CONFIRM,
+        br_code=ButtonRequestType.ConfirmOutput,
+    )
 
 
 async def confirm_action_refund(ctx: wire.Context, msg: EosActionRefund) -> None:
-    text = Text("Refund", ui.ICON_CONFIRM, icon_color=ui.GREEN)
-    text.normal("Owner:")
-    text.normal(helpers.eos_name_to_string(msg.owner))
-    await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
+    await confirm_properties(
+        ctx,
+        "confirm_refund",
+        title="Refund",
+        props=[
+            ("Owner:", helpers.eos_name_to_string(msg.owner)),
+        ],
+        icon=ui.ICON_CONFIRM,
+        br_code=ButtonRequestType.ConfirmOutput,
+    )
 
 
 async def confirm_action_voteproducer(
@@ -137,138 +130,175 @@ async def confirm_action_voteproducer(
 ) -> None:
     if msg.proxy and not msg.producers:
         # PROXY
-        text = Text("Vote for proxy", ui.ICON_CONFIRM, icon_color=ui.GREEN)
-        text.normal("Voter:")
-        text.normal(helpers.eos_name_to_string(msg.voter))
-        text.normal("Proxy:")
-        text.normal(helpers.eos_name_to_string(msg.proxy))
-        await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
+        await confirm_properties(
+            ctx,
+            "confirm_voteproducer",
+            title="Vote for proxy",
+            props=[
+                ("Voter:", helpers.eos_name_to_string(msg.voter)),
+                ("Proxy:", helpers.eos_name_to_string(msg.proxy)),
+            ],
+            icon=ui.ICON_CONFIRM,
+            br_code=ButtonRequestType.ConfirmOutput,
+        )
 
     elif msg.producers:
         # PRODUCERS
-        text = "Vote for producers"
-        fields = [
-            "{:2d}. {}".format(wi + 1, helpers.eos_name_to_string(producer))
-            for wi, producer in enumerate(msg.producers)
-        ]
-        await _require_confirm_paginated(ctx, text, fields, _FIVE_FIELDS_PER_PAGE)
+        await confirm_properties(
+            ctx,
+            "confirm_voteproducer",
+            title="Vote for producers",
+            props=(
+                ("{:2d}. {}".format(wi + 1, helpers.eos_name_to_string(producer)), None)
+                for wi, producer in enumerate(msg.producers)
+            ),
+            icon=ui.ICON_CONFIRM,
+            br_code=ButtonRequestType.ConfirmOutput,
+        )
 
     else:
         # Cancel vote
-        text = Text("Cancel vote", ui.ICON_CONFIRM, icon_color=ui.GREEN)
-        text.normal("Voter:")
-        text.normal(helpers.eos_name_to_string(msg.voter))
-        await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
+        await confirm_properties(
+            ctx,
+            "confirm_voteproducer",
+            title="Cancel vote",
+            props=[
+                ("Voter:", helpers.eos_name_to_string(msg.voter)),
+            ],
+            icon=ui.ICON_CONFIRM,
+            br_code=ButtonRequestType.ConfirmOutput,
+        )
 
 
 async def confirm_action_transfer(
     ctx: wire.Context, msg: EosActionTransfer, account: str
 ) -> None:
-    text = "Transfer"
-    fields = []
-    fields.append("From:")
-    fields.append(helpers.eos_name_to_string(msg.sender))
-    fields.append("To:")
-    fields.append(helpers.eos_name_to_string(msg.receiver))
-    fields.append("Amount:")
-    fields.append(helpers.eos_asset_to_string(msg.quantity))
-    fields.append("Contract:")
-    fields.append(account)
-
+    props = [
+        ("From:", helpers.eos_name_to_string(msg.sender)),
+        ("To:", helpers.eos_name_to_string(msg.receiver)),
+        ("Amount:", helpers.eos_asset_to_string(msg.quantity)),
+        ("Contract:", account),
+    ]
     if msg.memo is not None:
-        fields.append("Memo:")
-        fields.extend(split_data(msg.memo[:512]))
-
-    await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
+        props.append(("Memo", msg.memo[:512]))
+    await confirm_properties(
+        ctx,
+        "confirm_transfer",
+        title="Transfer",
+        props=props,
+        icon=ui.ICON_CONFIRM,
+        br_code=ButtonRequestType.ConfirmOutput,
+    )
 
 
 async def confirm_action_updateauth(
     ctx: wire.Context, msg: EosActionUpdateAuth
 ) -> None:
-    text = "Update Auth"
-    fields = []
-    fields.append("Account:")
-    fields.append(helpers.eos_name_to_string(msg.account))
-    fields.append("Permission:")
-    fields.append(helpers.eos_name_to_string(msg.permission))
-    fields.append("Parent:")
-    fields.append(helpers.eos_name_to_string(msg.parent))
-    fields.extend(authorization_fields(msg.auth))
-    await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
+    props = [
+        ("Account:", helpers.eos_name_to_string(msg.account)),
+        ("Permission:", helpers.eos_name_to_string(msg.permission)),
+        ("Parent:", helpers.eos_name_to_string(msg.parent)),
+    ]
+    props.extend(authorization_fields(msg.auth))
+    await confirm_properties(
+        ctx,
+        "confirm_updateauth",
+        title="Update Auth",
+        props=props,
+        icon=ui.ICON_CONFIRM,
+        br_code=ButtonRequestType.ConfirmOutput,
+    )
 
 
 async def confirm_action_deleteauth(
     ctx: wire.Context, msg: EosActionDeleteAuth
 ) -> None:
-    text = Text("Delete auth", ui.ICON_CONFIRM, icon_color=ui.GREEN)
-    text.normal("Account:")
-    text.normal(helpers.eos_name_to_string(msg.account))
-    text.normal("Permission:")
-    text.normal(helpers.eos_name_to_string(msg.permission))
-    await require_confirm(ctx, text, ButtonRequestType.ConfirmOutput)
+    await confirm_properties(
+        ctx,
+        "confirm_deleteauth",
+        title="Delete Auth",
+        props=[
+            ("Account:", helpers.eos_name_to_string(msg.account)),
+            ("Permission:", helpers.eos_name_to_string(msg.permission)),
+        ],
+        icon=ui.ICON_CONFIRM,
+        br_code=ButtonRequestType.ConfirmOutput,
+    )
 
 
 async def confirm_action_linkauth(ctx: wire.Context, msg: EosActionLinkAuth) -> None:
-    text = "Link Auth"
-    fields = []
-    fields.append("Account:")
-    fields.append(helpers.eos_name_to_string(msg.account))
-    fields.append("Code:")
-    fields.append(helpers.eos_name_to_string(msg.code))
-    fields.append("Type:")
-    fields.append(helpers.eos_name_to_string(msg.type))
-    fields.append("Requirement:")
-    fields.append(helpers.eos_name_to_string(msg.requirement))
-    await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
+    await confirm_properties(
+        ctx,
+        "confirm_linkauth",
+        title="Link Auth",
+        props=[
+            ("Account:", helpers.eos_name_to_string(msg.account)),
+            ("Code:", helpers.eos_name_to_string(msg.code)),
+            ("Type:", helpers.eos_name_to_string(msg.type)),
+            ("Requirement:", helpers.eos_name_to_string(msg.requirement)),
+        ],
+        icon=ui.ICON_CONFIRM,
+        br_code=ButtonRequestType.ConfirmOutput,
+    )
 
 
 async def confirm_action_unlinkauth(
     ctx: wire.Context, msg: EosActionUnlinkAuth
 ) -> None:
-    text = "Unlink Auth"
-    fields = []
-    fields.append("Account:")
-    fields.append(helpers.eos_name_to_string(msg.account))
-    fields.append("Code:")
-    fields.append(helpers.eos_name_to_string(msg.code))
-    fields.append("Type:")
-    fields.append(helpers.eos_name_to_string(msg.type))
-    await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
+    await confirm_properties(
+        ctx,
+        "confirm_unlinkauth",
+        title="Unlink Auth",
+        props=[
+            ("Account:", helpers.eos_name_to_string(msg.account)),
+            ("Code:", helpers.eos_name_to_string(msg.code)),
+            ("Type:", helpers.eos_name_to_string(msg.type)),
+        ],
+        icon=ui.ICON_CONFIRM,
+        br_code=ButtonRequestType.ConfirmOutput,
+    )
 
 
 async def confirm_action_newaccount(
     ctx: wire.Context, msg: EosActionNewAccount
 ) -> None:
-    text = "New Account"
-    fields = []
-    fields.append("Creator:")
-    fields.append(helpers.eos_name_to_string(msg.creator))
-    fields.append("Name:")
-    fields.append(helpers.eos_name_to_string(msg.name))
-    fields.extend(authorization_fields(msg.owner))
-    fields.extend(authorization_fields(msg.active))
-    await _require_confirm_paginated(ctx, text, fields, _FOUR_FIELDS_PER_PAGE)
+    props = [
+        ("Creator:", helpers.eos_name_to_string(msg.creator)),
+        ("Name:", helpers.eos_name_to_string(msg.name)),
+    ]
+    props.extend(authorization_fields(msg.owner))
+    props.extend(authorization_fields(msg.active))
+    await confirm_properties(
+        ctx,
+        "confirm_newaccount",
+        title="New Account",
+        props=props,
+        icon=ui.ICON_CONFIRM,
+        br_code=ButtonRequestType.ConfirmOutput,
+    )
 
 
 async def confirm_action_unknown(
     ctx: wire.Context, action: EosActionCommon, checksum: bytes
 ) -> None:
-    text = "Arbitrary data"
+    await confirm_properties(
+        ctx,
+        "confirm_unknown",
+        title="Arbitrary data",
+        props=[
+            ("Contract:", helpers.eos_name_to_string(action.account)),
+            ("Action Name:", helpers.eos_name_to_string(action.name)),
+            ("Checksum:", checksum),
+        ],
+        icon=ui.ICON_WIPE,
+        icon_color=ui.RED,
+        br_code=ButtonRequestType.ConfirmOutput,
+    )
+
+
+def authorization_fields(auth: EosAuthorization) -> list[tuple[str, str | None]]:
     fields = []
-    fields.append("Contract:")
-    fields.append(helpers.eos_name_to_string(action.account))
-    fields.append("Action Name:")
-    fields.append(helpers.eos_name_to_string(action.name))
-    fields.append("Checksum: ")
-    fields.extend(split_data(hexlify(checksum).decode("ascii")))
-    await _require_confirm_paginated(ctx, text, fields, _FIVE_FIELDS_PER_PAGE)
-
-
-def authorization_fields(auth: EosAuthorization) -> list[str]:
-    fields = []
-
-    fields.append("Threshold:")
-    fields.append(str(auth.threshold))
+    fields.append(("Threshold:", str(auth.threshold)))
 
     for i, key in enumerate(auth.keys):
         _key = helpers.public_key_to_wif(bytes(key.key))
@@ -276,10 +306,9 @@ def authorization_fields(auth: EosAuthorization) -> list[str]:
 
         header = "Key #{}:".format(i + 1)
         w_header = "Key #{} Weight:".format(i + 1)
-        fields.append(header)
-        fields += split_data(_key)
-        fields.append(w_header)
-        fields.append(_weight)
+
+        fields.append((header, _key))
+        fields.append((w_header, _weight))
 
     for i, account in enumerate(auth.accounts):
         _account = helpers.eos_name_to_string(account.account.actor)
@@ -289,12 +318,9 @@ def authorization_fields(auth: EosAuthorization) -> list[str]:
         p_header = "Acc Permission #{}:".format(i + 1)
         w_header = "Account #{} weight:".format(i + 1)
 
-        fields.append(a_header)
-        fields.append(_account)
-        fields.append(p_header)
-        fields.append(_permission)
-        fields.append(w_header)
-        fields.append(str(account.weight))
+        fields.append((a_header, _account))
+        fields.append((p_header, _permission))
+        fields.append((w_header, str(account.weight)))
 
     for i, wait in enumerate(auth.waits):
         _wait = str(wait.wait_sec)
@@ -302,17 +328,7 @@ def authorization_fields(auth: EosAuthorization) -> list[str]:
 
         header = "Delay #{}".format(i + 1)
         w_header = "Delay #{} weight:".format(i + 1)
-        fields.append(header)
-        fields.append("{} sec".format(_wait))
-        fields.append(w_header)
-        fields.append(_weight)
+        fields.append((header, "{} sec".format(_wait)))
+        fields.append((w_header, _weight))
 
     return fields
-
-
-def split_data(data: str) -> list[str]:
-    lines = []
-    while data:
-        lines.append("{} ".format(data[:_LINE_LENGTH]))
-        data = data[_LINE_LENGTH:]
-    return lines

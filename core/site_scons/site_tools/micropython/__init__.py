@@ -25,9 +25,13 @@ def generate(env):
         source_name = source.replace(env['source_dir'], '')
         # replace "utils.BITCOIN_ONLY" with literal constant (True/False)
         # so the compiler can optimize out the things we don't want
-        btc_only = 'True' if env['bitcoin_only'] == '1' else 'False'
+        btc_only = env['bitcoin_only'] == '1'
         interim = "%s.i" % target[:-4]  # replace .mpy with .i
-        return '$SED "s:utils\\.BITCOIN_ONLY:%s:g" %s > %s && $MPY_CROSS -o %s -s %s %s' % (btc_only, source, interim, target, source_name, interim)
+        sed_scripts = " ".join([
+            f"-e 's/utils\.BITCOIN_ONLY/{btc_only}/g'",
+            "-e 's/if TYPE_CHECKING/if False/'",
+        ])
+        return f'$SED {sed_scripts} {source} > {interim} && $MPY_CROSS -o {target} -s {source_name} {interim}'
 
     env['BUILDERS']['FrozenModule'] = SCons.Builder.Builder(
         generator=generate_frozen_module,

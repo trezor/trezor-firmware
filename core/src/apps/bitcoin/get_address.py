@@ -1,6 +1,6 @@
 from trezor.crypto import bip32
-from trezor.messages import InputScriptType
-from trezor.messages.Address import Address
+from trezor.enums import InputScriptType
+from trezor.messages import Address
 from trezor.ui.layouts import show_address
 
 from apps.common.layout import address_n_to_str
@@ -11,8 +11,8 @@ from .keychain import validate_path_against_script_type, with_keychain
 from .multisig import multisig_pubkey_index
 
 if False:
-    from trezor.messages.GetAddress import GetAddress
-    from trezor.messages.HDNodeType import HDNodeType
+    from trezor.messages import GetAddress
+    from trezor.messages import HDNodeType
     from trezor import wire
     from apps.common.keychain import Keychain
     from apps.common.coininfo import CoinInfo
@@ -82,19 +82,19 @@ async def get_address(
                 pubnodes = [hd.node for hd in msg.multisig.pubkeys]
             multisig_index = multisig_pubkey_index(msg.multisig, node.public_key())
 
-            desc = "Multisig %d of %d" % (msg.multisig.m, len(pubnodes))
+            title = "Multisig %d of %d" % (msg.multisig.m, len(pubnodes))
             await show_address(
                 ctx,
                 address=address_short,
                 address_qr=address_qr,
-                desc=desc,
+                title=title,
                 multisig_index=multisig_index,
                 xpubs=_get_xpubs(coin, multisig_xpub_magic, pubnodes),
             )
         else:
-            desc = address_n_to_str(msg.address_n)
+            title = address_n_to_str(msg.address_n)
             await show_address(
-                ctx, address=address_short, address_qr=address_qr, desc=desc
+                ctx, address=address_short, address_qr=address_qr, title=title
             )
 
     return Address(address=address)

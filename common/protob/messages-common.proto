@@ -45,7 +45,8 @@ message Failure {
  * @next ButtonAck
  */
 message ButtonRequest {
-    optional ButtonRequestType code = 1;
+    optional ButtonRequestType code = 1;  // enum identifier of the screen
+    optional uint32 pages = 2;            // if the screen is paginated, number of pages
     /**
     * Type of button request
     */

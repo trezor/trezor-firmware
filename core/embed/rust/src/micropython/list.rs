@@ -8,7 +8,7 @@ pub type List = ffi::mp_obj_list_t;
 
 impl List {
     pub fn alloc(values: &[Obj]) -> Gc<Self> {
-        // SAFETY: Altough `values` are copied into the new list and not mutated,
+        // SAFETY: Although `values` are copied into the new list and not mutated,
         // `mp_obj_new_list` is taking them through a mut pointer.
         unsafe {
             let list = ffi::mp_obj_new_list(values.len(), values.as_ptr() as *mut Obj);

@@ -24,9 +24,6 @@
 #include <stdint.h>
 #include "secbool.h"
 
-#define XSTR(s) STR(s)
-#define STR(s) #s
-
 #ifndef MIN_8bits
 #define MIN_8bits(a, b)                  \
   ({                                     \
@@ -51,6 +48,8 @@
     _a > _b ? _a : _b;  \
   })
 #endif
+
+void shutdown(void);
 
 void __attribute__((noreturn))
 __fatal_error(const char *expr, const char *msg, const char *file, int line,

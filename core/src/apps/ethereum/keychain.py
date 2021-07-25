@@ -11,7 +11,7 @@ if False:
 
     from protobuf import MessageType
 
-    from trezor.messages.EthereumSignTx import EthereumSignTx
+    from trezor.messages import EthereumSignTx
 
     from apps.common.keychain import MsgOut, Handler, HandlerWithKeychain
 

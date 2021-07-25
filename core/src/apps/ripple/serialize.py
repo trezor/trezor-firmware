@@ -8,7 +8,7 @@
 # the actual data follow. This currently only supports the Payment
 # transaction type and the fields that are required for it.
 
-from trezor.messages.RippleSignTx import RippleSignTx
+from trezor.messages import RippleSignTx
 
 from . import helpers
 

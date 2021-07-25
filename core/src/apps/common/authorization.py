@@ -1,7 +1,7 @@
-import protobuf
 import storage.cache
-from trezor import messages, utils
-from trezor.messages import MessageType
+from trezor import protobuf
+from trezor.enums import MessageType
+from trezor.utils import ensure
 
 if False:
     from typing import Iterable
@@ -16,9 +16,12 @@ def is_set() -> bool:
 
 
 def set(auth_message: protobuf.MessageType) -> None:
-    buffer = bytearray(protobuf.count_message(auth_message))
-    writer = utils.BufferWriter(buffer)
-    protobuf.dump_message(writer, auth_message)
+    buffer = protobuf.dump_message_buffer(auth_message)
+
+    # only wire-level messages can be stored as authorization
+    # (because only wire-level messages have wire_type, which we use as identifier)
+    ensure(auth_message.MESSAGE_WIRE_TYPE is not None)
+    assert auth_message.MESSAGE_WIRE_TYPE is not None  # so that mypy knows as well
     storage.cache.set(
         storage.cache.APP_COMMON_AUTHORIZATION_TYPE,
         auth_message.MESSAGE_WIRE_TYPE.to_bytes(2, "big"),
@@ -32,16 +35,13 @@ def get() -> protobuf.MessageType | None:
         return None
 
     msg_wire_type = int.from_bytes(stored_auth_type, "big")
-    msg_type = messages.get_type(msg_wire_type)
-    buffer = storage.cache.get(storage.cache.APP_COMMON_AUTHORIZATION_DATA)
-    reader = utils.BufferReader(buffer)
-
-    return protobuf.load_message(reader, msg_type)
+    buffer = storage.cache.get(storage.cache.APP_COMMON_AUTHORIZATION_DATA, b"")
+    return protobuf.load_message_buffer(buffer, msg_wire_type)
 
 
 def get_wire_types() -> Iterable[int]:
     stored_auth_type = storage.cache.get(storage.cache.APP_COMMON_AUTHORIZATION_TYPE)
-    if not stored_auth_type:
+    if stored_auth_type is None:
         return ()
 
     msg_wire_type = int.from_bytes(stored_auth_type, "big")
@@ -49,5 +49,5 @@ def get_wire_types() -> Iterable[int]:
 
 
 def clear() -> None:
-    storage.cache.set(storage.cache.APP_COMMON_AUTHORIZATION_TYPE, b"")
-    storage.cache.set(storage.cache.APP_COMMON_AUTHORIZATION_DATA, b"")
+    storage.cache.delete(storage.cache.APP_COMMON_AUTHORIZATION_TYPE)
+    storage.cache.delete(storage.cache.APP_COMMON_AUTHORIZATION_DATA)

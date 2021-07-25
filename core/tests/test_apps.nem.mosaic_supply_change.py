@@ -6,8 +6,8 @@ if not utils.BITCOIN_ONLY:
     from apps.nem.helpers import *
     from apps.nem.mosaic import *
     from apps.nem.mosaic.serialize import *
-    from trezor.messages.NEMSignTx import NEMSignTx
-    from trezor.messages.NEMMosaicSupplyChange import NEMMosaicSupplyChange
+    from trezor.messages import NEMSignTx
+    from trezor.messages import NEMMosaicSupplyChange
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

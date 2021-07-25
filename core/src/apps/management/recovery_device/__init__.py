@@ -2,8 +2,8 @@ import storage
 import storage.device
 import storage.recovery
 from trezor import config, ui, wire, workflow
-from trezor.messages import ButtonRequestType
-from trezor.messages.Success import Success
+from trezor.enums import ButtonRequestType
+from trezor.messages import Success
 from trezor.ui.components.tt.text import Text
 
 from apps.common.confirm import require_confirm
@@ -16,7 +16,7 @@ from apps.common.request_pin import (
 from .homescreen import recovery_homescreen, recovery_process
 
 if False:
-    from trezor.messages.RecoveryDevice import RecoveryDevice
+    from trezor.messages import RecoveryDevice
 
 
 # List of RecoveryDevice fields that can be set when doing dry-run recovery.
@@ -28,7 +28,7 @@ DRY_RUN_ALLOWED_FIELDS = ("dry_run", "word_count", "enforce_wordlist", "type")
 async def recovery_device(ctx: wire.Context, msg: RecoveryDevice) -> Success:
     """
     Recover BIP39/SLIP39 seed into empty device.
-    Recovery is also possible with replugged Trezor. We call this process Persistance.
+    Recovery is also possible with replugged Trezor. We call this process Persistence.
     User starts the process here using the RecoveryDevice msg and then they can unplug
     the device anytime and continue without a computer.
     """
@@ -91,10 +91,7 @@ def _validate(msg: RecoveryDevice) -> None:
 async def _continue_dialog(ctx: wire.Context, msg: RecoveryDevice) -> None:
     if not msg.dry_run:
         text = Text("Recovery mode", ui.ICON_RECOVERY, new_lines=False)
-        text.bold("Do you really want to")
-        text.br()
-        text.bold("recover a wallet?")
-
+        text.bold("Do you really want to recover a wallet?")
         text.br()
         text.br_half()
         text.normal("By continuing you agree")

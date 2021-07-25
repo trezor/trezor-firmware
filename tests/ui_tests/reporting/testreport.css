@@ -1,0 +1,53 @@
+.novisit a:visited {
+    color: blue;
+}
+
+tr.ok a, tr.ok a:visited {
+    color: grey;
+}
+
+tr.bad a, tr.bad a:visited {
+    color: darkred;
+}
+
+#markbox {
+    position: fixed;
+    top: 50px;
+    right: 5px;
+    width: 300px;
+    padding: 1em;
+}
+
+#markbox #buttons {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+#markbox button {
+    border: 3px solid;
+    font-size: 20pt;
+    padding: 1em;
+    background: white;
+}
+
+#markbox #mark-ok {
+    color: green;
+    border-color: darkgreen;
+}
+
+#markbox #mark-ok:hover {
+    border-color: lightgreen;
+}
+
+#markbox #mark-bad {
+    color: darkred;
+    border-color: darkred;
+}
+
+#markbox #mark-bad:hover {
+    border-color: red;
+}
+
+.script-hidden {
+    display: none;
+}

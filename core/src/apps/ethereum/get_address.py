@@ -1,6 +1,6 @@
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha3_256
-from trezor.messages.EthereumAddress import EthereumAddress
+from trezor.messages import EthereumAddress
 from trezor.ui.layouts import show_address
 
 from apps.common import paths
@@ -27,7 +27,7 @@ async def get_address(ctx, msg, keychain):
     address = address_from_bytes(address_bytes, network)
 
     if msg.show_display:
-        desc = address_n_to_str(msg.address_n)
-        await show_address(ctx, address=address, address_qr=address, desc=desc)
+        title = address_n_to_str(msg.address_n)
+        await show_address(ctx, address=address, address_qr=address, title=title)
 
     return EthereumAddress(address=address)

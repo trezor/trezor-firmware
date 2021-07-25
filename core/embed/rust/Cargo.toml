@@ -6,6 +6,9 @@ edition = "2018"
 resolver = "2"
 build = "build.rs"
 
+[features]
+bitcoin_only = []
+
 [lib]
 crate-type = ["staticlib"]
 

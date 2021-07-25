@@ -55,7 +55,7 @@ void sdcard_init(void) {
   int r = stat(SDCARD_FILE, &sb);
   int should_clear = 0;
 
-  // (re)create if non existant or wrong size
+  // (re)create if non existent or wrong size
   if (r != 0 || sb.st_size != SDCARD_SIZE) {
     int fd = open(SDCARD_FILE, O_RDWR | O_CREAT | O_TRUNC, (mode_t)0600);
     ensure(sectrue * (fd >= 0), "open failed");

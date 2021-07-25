@@ -4,7 +4,7 @@ from mock_storage import mock_storage
 import storage
 import storage.recovery
 from apps.management.recovery_device.recover import process_slip39
-from trezor.messages import BackupType
+from trezor.enums import BackupType
 from apps.management.recovery_device.word_validity import check, IdentifierMismatch, AlreadyAdded, ThresholdReached
 
 MNEMONIC_SLIP39_BASIC_20_3of6 = [

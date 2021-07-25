@@ -206,11 +206,11 @@ def render_text(
     if false, the trailing "..." is not shown. This is useful when the rendered text is
     in fact paginated.
 
-    `font` specifies the default font, but that can be overriden by font instructions
+    `font` specifies the default font, but that can be overridden by font instructions
     in `items`.
-    `fg` specifies default foreground color, which can also be overriden by instructions
+    `fg` specifies default foreground color, which can also be overridden by instructions
     in `items`.
-    `bg` specifies background color. This cannot be overriden.
+    `bg` specifies background color. This cannot be overridden.
 
     `offset_x` and `offset_y` specify starting XY position of the text bounding box.
     `line_width` specifies width of the bounding box. Height of the bounding box is

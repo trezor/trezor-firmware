@@ -2,9 +2,7 @@ from ubinascii import hexlify
 
 from trezor.crypto.curve import ed25519
 from trezor.crypto.hashlib import sha256
-from trezor.messages.StellarSignedTx import StellarSignedTx
-from trezor.messages.StellarSignTx import StellarSignTx
-from trezor.messages.StellarTxOpRequest import StellarTxOpRequest
+from trezor.messages import StellarSignedTx, StellarSignTx, StellarTxOpRequest
 from trezor.wire import ProcessError
 
 from apps.common import paths, seed

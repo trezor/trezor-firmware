@@ -1,6 +1,5 @@
 from trezor.crypto.hashlib import sha256
-from trezor.messages.EosTxActionAck import EosTxActionAck
-from trezor.messages.EosTxActionRequest import EosTxActionRequest
+from trezor.messages import EosTxActionAck, EosTxActionRequest
 from trezor.utils import HashWriter
 
 from .. import helpers, writers
@@ -74,7 +73,7 @@ async def process_unknown_action(
     ctx: wire.Context, w: Writer, action: EosTxActionAck
 ) -> None:
     checksum = HashWriter(sha256())
-    writers.write_variant32(checksum, action.unknown.data_size)
+    writers.write_uvarint(checksum, action.unknown.data_size)
     checksum.extend(action.unknown.data_chunk)
 
     writers.write_bytes_unchecked(w, action.unknown.data_chunk)

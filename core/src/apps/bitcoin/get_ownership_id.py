@@ -1,6 +1,5 @@
 from trezor import wire
-from trezor.messages.GetOwnershipId import GetOwnershipId
-from trezor.messages.OwnershipId import OwnershipId
+from trezor.messages import GetOwnershipId, OwnershipId
 
 from apps.common.paths import validate_path
 

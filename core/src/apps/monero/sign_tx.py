@@ -1,7 +1,7 @@
 import gc
 
 from trezor import log, utils, wire
-from trezor.messages import MessageType
+from trezor.enums import MessageType
 
 from apps.common.keychain import auto_keychain
 from apps.monero.signing.state import State

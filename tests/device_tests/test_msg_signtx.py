@@ -662,7 +662,7 @@ class TestMsgSigntx:
                 nonlocal finished
                 for expected in (B.ConfirmOutput, B.FeeOverThreshold, B.SignTx):
                     br = yield
-                    assert br == expected
+                    assert br.code == expected
                     client.debug.press_yes()
                 finished = True
 

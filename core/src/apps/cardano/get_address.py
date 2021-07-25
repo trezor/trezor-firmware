@@ -1,26 +1,27 @@
 from trezor import log, wire
-from trezor.messages.CardanoAddress import CardanoAddress
+from trezor.messages import CardanoAddress
+from trezor.ui.layouts import show_address
 
 from apps.common import paths
-from apps.common.layout import address_n_to_str, show_qr
+from apps.common.layout import address_n_to_str
 
 from . import seed
-from .address import derive_human_readable_address
+from .address import derive_human_readable_address, validate_address_parameters
 from .helpers import protocol_magics, staking_use_cases
 from .helpers.paths import SCHEMA_ADDRESS
 from .helpers.utils import to_account_path
 from .layout import (
-    show_address,
+    ADDRESS_TYPE_NAMES,
     show_warning_address_foreign_staking_key,
     show_warning_address_pointer,
 )
 from .sign_tx import validate_network_info
 
 if False:
-    from trezor.messages.CardanoAddressParametersType import (
+    from trezor.messages import (
         CardanoAddressParametersType,
+        CardanoGetAddress,
     )
-    from trezor.messages.CardanoGetAddress import CardanoGetAddress
 
 
 @seed.with_keychain
@@ -38,6 +39,7 @@ async def get_address(
     )
 
     validate_network_info(msg.network_id, msg.protocol_magic)
+    validate_address_parameters(address_parameters)
 
     try:
         address = derive_human_readable_address(
@@ -69,19 +71,15 @@ async def _display_address(
     if not protocol_magics.is_mainnet(protocol_magic):
         network_name = protocol_magics.to_ui_string(protocol_magic)
 
-    while True:
-        if await show_address(
-            ctx,
-            address,
-            address_parameters.address_type,
-            address_parameters.address_n,
-            network=network_name,
-        ):
-            break
-        if await show_qr(
-            ctx, address, desc=address_n_to_str(address_parameters.address_n)
-        ):
-            break
+    address_n = address_n_to_str(address_parameters.address_n)
+    await show_address(
+        ctx,
+        address=address,
+        title="%s address" % ADDRESS_TYPE_NAMES[address_parameters.address_type],
+        network=network_name,
+        address_extra=address_n,
+        title_qr=address_n,
+    )
 
 
 async def _show_staking_warnings(

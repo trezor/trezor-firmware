@@ -1,13 +1,11 @@
-from trezor.messages import CardanoAddressType
+from trezor.enums import CardanoAddressType
 
 from ..address import get_public_key_hash
 from ..seed import is_shelley_path
 from .utils import to_account_path
 
 if False:
-    from trezor.messages.CardanoAddressParametersType import (
-        CardanoAddressParametersType,
-    )
+    from trezor.messages import CardanoAddressParametersType
     from ..seed import Keychain
 
 

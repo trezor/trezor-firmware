@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
+from _pytest.outcomes import Failed
 
 from .reporting import testreport
 
@@ -54,9 +55,6 @@ def _hash_files(path):
 
 
 def _process_tested(fixture_test_path, test_name):
-    expected_hash = FILE_HASHES.get(test_name)
-    if expected_hash is None:
-        raise ValueError("Hash for '%s' not found in fixtures.json" % test_name)
     PROCESSED.add(test_name)
 
     actual_path = fixture_test_path / "actual"
@@ -64,6 +62,10 @@ def _process_tested(fixture_test_path, test_name):
     ACTUAL_HASHES[test_name] = actual_hash
 
     _rename_records(actual_path)
+
+    expected_hash = FILE_HASHES.get(test_name)
+    if expected_hash is None:
+        pytest.fail(f"Hash of {test_name} not found in fixtures.json")
 
     if actual_hash != expected_hash:
         file_path = testreport.failed(
@@ -138,3 +140,18 @@ def _get_fixtures_content(fixtures: dict, remove_missing: bool):
         fixtures = fixtures
 
     return json.dumps(fixtures, indent="", sort_keys=True) + "\n"
+
+
+def main():
+    read_fixtures()
+    for record in (UI_TESTS_DIR / "screens").iterdir():
+        if not (record / "actual").exists():
+            continue
+
+        try:
+            _process_tested(record, record.name)
+            print("PASSED:", record.name)
+        except Failed:
+            print("FAILED:", record.name)
+
+    testreport.index()

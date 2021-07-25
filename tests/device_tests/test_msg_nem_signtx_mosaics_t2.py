@@ -16,11 +16,12 @@
 
 import pytest
 
-from trezorlib import messages as proto, nem
-from trezorlib.messages import ButtonRequestType as B
+from trezorlib import nem
 from trezorlib.tools import parse_path
 
 from ..common import MNEMONIC12
+
+ADDRESS_N = parse_path("m/44'/1'/0'/0'/0'")
 
 
 # assertion data from T1
@@ -78,7 +79,7 @@ class TestMsgNEMSignTxMosaics:
         }
 
         # not using client.nem_sign_tx() because of swiping
-        tx = self._nem_sign(client, 2, test_suite)
+        tx = nem.sign_tx(client, ADDRESS_N, test_suite)
         assert (
             tx.data.hex()
             == "01400000010000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f7404c100000020000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b40620841a0000000600000068656c6c6f6d0c00000048656c6c6f206d6f73616963050000006c6f72656d04000000150000000c00000064697669736962696c6974790100000030160000000d000000696e697469616c537570706c7901000000301a0000000d000000737570706c794d757461626c650500000066616c7365190000000c0000007472616e7366657261626c650500000066616c7365000000002800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324adc05000000000000"
@@ -113,7 +114,7 @@ class TestMsgNEMSignTxMosaics:
         }
 
         # not using client.nem_sign_tx() because of swiping
-        tx = self._nem_sign(client, 2, test_suite)
+        tx = nem.sign_tx(client, ADDRESS_N, test_suite)
         assert (
             tx.data.hex()
             == "01400000010000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f7404c200000020000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b40620841a0000000600000068656c6c6f6d0c00000048656c6c6f206d6f73616963050000006c6f72656d04000000150000000c00000064697669736962696c6974790100000034180000000d000000696e697469616c537570706c79030000003230301a0000000d000000737570706c794d757461626c650500000066616c7365180000000c0000007472616e7366657261626c650400000074727565000000002800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324adc05000000000000"
@@ -152,7 +153,7 @@ class TestMsgNEMSignTxMosaics:
             "creationFee": 1500,
         }
 
-        tx = self._nem_sign(client, 6, test_suite)
+        tx = nem.sign_tx(client, ADDRESS_N, test_suite)
         assert (
             tx.data.hex()
             == "01400000010000987f0e730420000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b406208480841e0000000000ff5f74041801000020000000edfd32f6e760648c032f9acb4b30d514265f6a5b5f8a7154f2618922b40620841a0000000600000068656c6c6f6d0c00000048656c6c6f206d6f73616963050000006c6f72656d04000000150000000c00000064697669736962696c6974790100000034180000000d000000696e697469616c537570706c79030000003230301a0000000d000000737570706c794d757461626c650500000066616c7365180000000c0000007472616e7366657261626c65040000007472756556000000010000002800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324a1a0000000600000068656c6c6f6d0c00000048656c6c6f206d6f7361696302000000000000002800000054414c49434532474d4133344358484437584c4a513533364e4d35554e4b5148544f524e4e54324adc05000000000000"
@@ -161,41 +162,3 @@ class TestMsgNEMSignTxMosaics:
             tx.signature.hex()
             == "b87aac1ddf146d35e6a7f3451f57e2fe504ac559031e010a51261257c37bd50fcfa7b2939dd7a3203b54c4807d458475182f5d3dc135ec0d1d4a9cd42159fd0a"
         )
-
-    def _nem_sign(self, client, num_of_swipes, test_suite):
-        n = parse_path("m/44'/1'/0'/0'/0'")
-
-        def input_flow():
-            # Confirm Action
-            btn_code = yield
-            assert btn_code == B.ConfirmOutput
-            client.debug.press_yes()
-
-            # Swipe and confirm
-            yield
-            for _ in range(num_of_swipes):
-                client.debug.swipe_up()
-            client.debug.press_yes()
-
-            # Confirm Action
-            btn_code = yield
-            assert btn_code == B.ConfirmOutput
-            client.debug.press_yes()
-
-            # Sign Tx
-            btn_code = yield
-            assert btn_code == B.SignTx
-            client.debug.press_yes()
-
-        with client:
-            client.set_expected_responses(
-                [
-                    proto.ButtonRequest(code=B.ConfirmOutput),
-                    proto.ButtonRequest(code=B.ConfirmOutput),
-                    proto.ButtonRequest(code=B.ConfirmOutput),
-                    proto.ButtonRequest(code=B.SignTx),
-                    proto.NEMSignedTx,
-                ]
-            )
-            client.set_input_flow(input_flow)
-            return nem.sign_tx(client, n, test_suite)

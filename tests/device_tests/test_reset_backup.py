@@ -36,18 +36,16 @@ def backup_flow_bip39(client):
         yield from click_through(client.debug, screens=1, code=B.ResetDevice)
 
         # mnemonic phrases
-        btn_code = yield
-        assert btn_code == B.ResetDevice
-        mnemonic = read_and_confirm_mnemonic(client.debug, words=12)
+        mnemonic = yield from read_and_confirm_mnemonic(client.debug)
 
         # confirm recovery seed check
-        btn_code = yield
-        assert btn_code == B.Success
+        br = yield
+        assert br.code == B.Success
         client.debug.press_yes()
 
         # confirm success
-        btn_code = yield
-        assert btn_code == B.Success
+        br = yield
+        assert br.code == B.Success
         client.debug.press_yes()
 
     with client:
@@ -81,8 +79,8 @@ def backup_flow_slip39_basic(client):
 
         # Mnemonic phrases
         for _ in range(5):
-            yield  # Phrase screen
-            mnemonic = read_and_confirm_mnemonic(client.debug, words=20)
+            # Phrase screen
+            mnemonic = yield from read_and_confirm_mnemonic(client.debug)
             mnemonics.append(mnemonic)
             yield  # Confirm continue to next
             client.debug.press_yes()
@@ -132,19 +130,17 @@ def backup_flow_slip39_advanced(client):
         for _ in range(5):
             for _ in range(5):
                 # mnemonic phrases
-                btn_code = yield
-                assert btn_code == B.ResetDevice
-                mnemonic = read_and_confirm_mnemonic(client.debug, words=20)
+                mnemonic = yield from read_and_confirm_mnemonic(client.debug)
                 mnemonics.append(mnemonic)
 
                 # Confirm continue to next share
-                btn_code = yield
-                assert btn_code == B.Success
+                br = yield
+                assert br.code == B.Success
                 client.debug.press_yes()
 
         # safety warning
-        btn_code = yield
-        assert btn_code == B.Success
+        br = yield
+        assert br.code == B.Success
         client.debug.press_yes()
 
     with client:

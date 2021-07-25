@@ -1,15 +1,17 @@
-from trezor.messages.StellarAccountMergeOp import StellarAccountMergeOp
-from trezor.messages.StellarAllowTrustOp import StellarAllowTrustOp
-from trezor.messages.StellarAssetType import StellarAssetType
-from trezor.messages.StellarBumpSequenceOp import StellarBumpSequenceOp
-from trezor.messages.StellarChangeTrustOp import StellarChangeTrustOp
-from trezor.messages.StellarCreateAccountOp import StellarCreateAccountOp
-from trezor.messages.StellarCreatePassiveOfferOp import StellarCreatePassiveOfferOp
-from trezor.messages.StellarManageDataOp import StellarManageDataOp
-from trezor.messages.StellarManageOfferOp import StellarManageOfferOp
-from trezor.messages.StellarPathPaymentOp import StellarPathPaymentOp
-from trezor.messages.StellarPaymentOp import StellarPaymentOp
-from trezor.messages.StellarSetOptionsOp import StellarSetOptionsOp
+from trezor.messages import (
+    StellarAccountMergeOp,
+    StellarAllowTrustOp,
+    StellarAssetType,
+    StellarBumpSequenceOp,
+    StellarChangeTrustOp,
+    StellarCreateAccountOp,
+    StellarCreatePassiveOfferOp,
+    StellarManageDataOp,
+    StellarManageOfferOp,
+    StellarPathPaymentOp,
+    StellarPaymentOp,
+    StellarSetOptionsOp,
+)
 from trezor.wire import ProcessError
 
 from .. import consts, writers
@@ -136,8 +138,9 @@ def _write_set_options_int(w, value: int):
 def write_account(w, source_account: str):
     if source_account is None:
         writers.write_bool(w, False)
-        return
-    writers.write_pubkey(w, source_account)
+    else:
+        writers.write_bool(w, True)
+        writers.write_pubkey(w, source_account)
 
 
 def _write_asset_code(w, asset_type: int, asset_code: str):

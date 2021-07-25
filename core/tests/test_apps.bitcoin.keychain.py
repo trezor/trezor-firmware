@@ -53,15 +53,11 @@ class TestBitcoinKeychain(unittest.TestCase):
 
         valid_addresses = (
             [H_(44), H_(1), H_(0), 0, 0],
-            [H_(45), 99, 1, 1000],
             [H_(48), H_(1), H_(0), H_(2), 1, 1000],
             [H_(49), H_(1), H_(0), 0, 10],
             [H_(84), H_(1), H_(0), 0, 10],
             # Casa:
             [49, 1, 0, 0, 10],
-            # Green:
-            [1, 1000],
-            [H_(3), H_(10), 4, 1000],
         )
         invalid_addresses = (
             [H_(43), H_(1), H_(0), 0, 0],
@@ -69,6 +65,10 @@ class TestBitcoinKeychain(unittest.TestCase):
             [44, 1, 0, 0, 0],
             [H_(44), H_(1), H_(0)],
             [H_(44), H_(1), H_(0), 0, 0, 0],
+            [H_(45), 99, 1, 1000],
+            # Green:
+            [1, 1000],
+            [H_(3), H_(10), 4, 1000],
         )
 
         for addr in valid_addresses:
@@ -141,7 +141,6 @@ class TestAltcoinKeychains(unittest.TestCase):
         self.assertTrue(coin.segwit)
         valid_addresses = (
             [H_(44), H_(2), H_(0), 0, 0],
-            [H_(45), 99, 1, 1000],
             [H_(48), H_(2), H_(0), H_(2), 1, 1000],
             [H_(49), H_(2), H_(0), 0, 10],
             [H_(84), H_(2), H_(0), 0, 10],
@@ -150,6 +149,7 @@ class TestAltcoinKeychains(unittest.TestCase):
             [H_(43), H_(2), H_(0), 0, 0],
             # Bitcoin paths:
             [H_(44), H_(0), H_(0), 0, 0],
+            [H_(45), 99, 1, 1000],
             [H_(49), H_(0), H_(0), 0, 0],
             [H_(84), H_(0), H_(0), 0, 0],
 

@@ -3,8 +3,8 @@ import sys
 from trezorutils import (  # noqa: F401
     BITCOIN_ONLY,
     EMULATOR,
-    GITREV,
     MODEL,
+    SCM_REVISION,
     VERSION_MAJOR,
     VERSION_MINOR,
     VERSION_PATCH,
@@ -113,6 +113,18 @@ def chunks(items: Chunkable, size: int) -> Iterator[Chunkable]:
         yield items[i : i + size]
 
 
+def chunks_intersperse(
+    items: Chunkable, size: int, sep: str = "\n"
+) -> Iterator[Chunkable]:
+    first = True
+    for i in range(0, len(items), size):
+        if not first:
+            yield sep
+        else:
+            first = False
+        yield items[i : i + size]
+
+
 if False:
 
     class HashContext(Protocol):
@@ -144,10 +156,6 @@ class HashWriter:
 
     def write(self, buf: bytes) -> None:  # alias for extend()
         self.ctx.update(buf)
-
-    async def awrite(self, buf: bytes) -> int:  # AsyncWriter interface
-        self.ctx.update(buf)
-        return len(buf)
 
     def get_digest(self) -> bytes:
         return self.ctx.digest()

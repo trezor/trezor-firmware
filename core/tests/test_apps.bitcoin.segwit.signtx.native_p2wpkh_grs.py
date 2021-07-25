@@ -2,28 +2,28 @@ from common import *
 
 from trezor.utils import chunks
 from trezor.crypto import bip39
-from trezor.messages.SignTx import SignTx
-from trezor.messages.TxAckInput import TxAckInput
-from trezor.messages.TxAckInputWrapper import TxAckInputWrapper
-from trezor.messages.TxInput import TxInput
-from trezor.messages.TxAckOutput import TxAckOutput
-from trezor.messages.TxAckOutputWrapper import TxAckOutputWrapper
-from trezor.messages.TxOutput import TxOutput
-from trezor.messages.TxAckPrevMeta import TxAckPrevMeta
-from trezor.messages.PrevTx import PrevTx
-from trezor.messages.TxAckPrevInput import TxAckPrevInput
-from trezor.messages.TxAckPrevInputWrapper import TxAckPrevInputWrapper
-from trezor.messages.PrevInput import PrevInput
-from trezor.messages.TxAckPrevOutput import TxAckPrevOutput
-from trezor.messages.TxAckPrevOutputWrapper import TxAckPrevOutputWrapper
-from trezor.messages.PrevOutput import PrevOutput
-from trezor.messages.TxRequest import TxRequest
-from trezor.messages.RequestType import TXINPUT, TXMETA, TXOUTPUT, TXFINISHED
-from trezor.messages.TxRequestDetailsType import TxRequestDetailsType
-from trezor.messages.TxRequestSerializedType import TxRequestSerializedType
-from trezor.messages import AmountUnit
-from trezor.messages import InputScriptType
-from trezor.messages import OutputScriptType
+from trezor.messages import SignTx
+from trezor.messages import TxAckInput
+from trezor.messages import TxAckInputWrapper
+from trezor.messages import TxInput
+from trezor.messages import TxAckOutput
+from trezor.messages import TxAckOutputWrapper
+from trezor.messages import TxOutput
+from trezor.messages import TxAckPrevMeta
+from trezor.messages import PrevTx
+from trezor.messages import TxAckPrevInput
+from trezor.messages import TxAckPrevInputWrapper
+from trezor.messages import PrevInput
+from trezor.messages import TxAckPrevOutput
+from trezor.messages import TxAckPrevOutputWrapper
+from trezor.messages import PrevOutput
+from trezor.messages import TxRequest
+from trezor.enums.RequestType import TXINPUT, TXMETA, TXOUTPUT, TXFINISHED
+from trezor.messages import TxRequestDetailsType
+from trezor.messages import TxRequestSerializedType
+from trezor.enums import AmountUnit
+from trezor.enums import InputScriptType
+from trezor.enums import OutputScriptType
 
 from apps.common import coins
 from apps.common.keychain import Keychain

@@ -1,9 +1,6 @@
 import storage.device
 from trezor import ui, utils, workflow
-from trezor.messages import BackupType
-
-if False:
-    from trezor.messages.ResetDevice import EnumTypeBackupType
+from trezor.enums import BackupType
 
 
 def get() -> tuple[bytes | None, int]:
@@ -14,7 +11,7 @@ def get_secret() -> bytes | None:
     return storage.device.get_mnemonic_secret()
 
 
-def get_type() -> EnumTypeBackupType:
+def get_type() -> BackupType:
     return storage.device.get_backup_type()
 
 

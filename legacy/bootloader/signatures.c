@@ -102,7 +102,7 @@ int signatures_old_ok(void) {
   }
   if (0 != ecdsa_verify_digest(&secp256k1, pubkey[sigindex3 - 1],
                                (const uint8_t *)FLASH_META_SIG3,
-                               hash)) {  // failture
+                               hash)) {  // failure
     return SIG_FAIL;
   }
 

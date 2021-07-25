@@ -53,7 +53,7 @@ class TestWireCodecV1(unittest.TestCase):
         # e.value is StopIteration. e.value.value is the return value of the call
         result = e.value.value
         self.assertEqual(result.type, MESSAGE_TYPE)
-        self.assertEqual(result.data.buffer, b"")
+        self.assertEqual(result.data, b"")
 
         # message should have been read into the buffer
         self.assertEqual(buffer, b"\x00" * 64)
@@ -83,7 +83,7 @@ class TestWireCodecV1(unittest.TestCase):
         # e.value is StopIteration. e.value.value is the return value of the call
         result = e.value.value
         self.assertEqual(result.type, MESSAGE_TYPE)
-        self.assertEqual(result.data.buffer, message)
+        self.assertEqual(result.data, message)
 
         # message should have been read into the buffer
         self.assertEqual(buffer, message)
@@ -108,7 +108,7 @@ class TestWireCodecV1(unittest.TestCase):
         # e.value is StopIteration. e.value.value is the return value of the call
         result = e.value.value
         self.assertEqual(result.type, MESSAGE_TYPE)
-        self.assertEqual(result.data.buffer, message)
+        self.assertEqual(result.data, message)
 
         # read should have allocated its own buffer and not touch ours
         self.assertEqual(buffer, b"\x00")
@@ -176,7 +176,7 @@ class TestWireCodecV1(unittest.TestCase):
 
         result = e.value.value
         self.assertEqual(result.type, MESSAGE_TYPE)
-        self.assertEqual(result.data.buffer, message)
+        self.assertEqual(result.data, message)
 
     def test_read_huge_packet(self):
         PACKET_COUNT = 100_000

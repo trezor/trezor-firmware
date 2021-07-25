@@ -31,7 +31,7 @@ Credential selection is supported directly on the device. The `authenticatorGetN
 * COSE algorithm ES256 (-7): ECDSA using the NIST P-256 curve with SHA-256.
 * COSE algorithm EdDSA (-8): Pure EdDSA using the Ed25519 curve.
 
-### Extenstions
+### Extensions
 
 * hmac-secret extension.
 

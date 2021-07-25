@@ -55,9 +55,6 @@
     "bitcoin:GRS": {
         "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet"
     },
-    "bitcoin:HATCH": {
-        "HMT": "https://github.com/hatchpay/hatch-masternode-tool/"
-    },
     "bitcoin:KOTO": {
         "Electrum-KOTO": "https://electrum.kotocoin.info"
     },

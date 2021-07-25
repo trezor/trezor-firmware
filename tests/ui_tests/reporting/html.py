@@ -5,7 +5,10 @@ from itertools import zip_longest
 from dominate.tags import a, i, img, table, td, th, tr
 
 
-def report_links(tests, reports_path):
+def report_links(tests, reports_path, actual_hashes=None):
+    if actual_hashes is None:
+        actual_hashes = {}
+
     if not tests:
         i("None!")
         return
@@ -13,7 +16,7 @@ def report_links(tests, reports_path):
         with tr():
             th("Link to report")
         for test in sorted(tests):
-            with tr():
+            with tr(data_actual_hash=actual_hashes.get(test.stem, "")):
                 path = test.relative_to(reports_path)
                 td(a(test.name, href=path))
 

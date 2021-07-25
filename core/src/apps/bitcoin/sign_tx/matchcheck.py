@@ -7,8 +7,7 @@ from ..common import BIP32_WALLET_DEPTH
 if False:
     from typing import Any, Generic, TypeVar
 
-    from trezor.messages.TxInput import TxInput
-    from trezor.messages.TxOutput import TxOutput
+    from trezor.messages import TxInput, TxOutput
 
     T = TypeVar("T")
 else:

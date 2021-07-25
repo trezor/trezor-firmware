@@ -32,7 +32,7 @@ _Current mainnet network id:_ 1
 
 ## Key types
 
-In Shelley two types of keys are used. Payment key and staking key. Payment keys are derived from _m/1852'/1815'/x/[0,1]/y_ paths and are used for holding/transfering funds. Staking keys are derived from _m/1852'/1815'/x/2/0_ paths, thus there is only one staking key per account. They are used for staking operations - certificates, withdrawals. Shelley addresses are built from the combination of hashes of these keys.
+In Shelley two types of keys are used. Payment key and staking key. Payment keys are derived from _m/1852'/1815'/x/[0,1]/y_ paths and are used for holding/transferring funds. Staking keys are derived from _m/1852'/1815'/x/2/0_ paths, thus there is only one staking key per account. They are used for staking operations - certificates, withdrawals. Shelley addresses are built from the combination of hashes of these keys.
 
 ## Addresses
 
