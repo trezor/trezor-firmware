@@ -26,7 +26,7 @@ PYTHON ?= python
 # produces also all of $(PROTO_HEADERS)
 messages.pb.h: $(PROTO_COMPILED) $(PROTO_OPTIONS)
 	@printf "  NANOPB  $@\n"
-	$(Q)nanopb_generator $(PROTO_COMPILED) \
+	$(Q)$(PYTHON) ../../vendor/nanopb/generator/nanopb_generator.py $(PROTO_COMPILED) \
 		-L '#include "%s"' \
 		-T -D . \
 		-s "mangle_names:M_FLATTEN"
