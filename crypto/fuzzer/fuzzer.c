@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2020 Christian Reitter
+ * Copyright (c) 2020-2021 Christian Reitter
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the "Software"),
@@ -20,25 +20,46 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-// necessary for the target functions
+// includes for potential target functions
+// based on test_check.c
+#include "address.h"
 #include "aes/aes.h"
+#include "base32.h"
+#include "base58.h"
 #include "bignum.h"
+#include "bip32.h"
+#include "bip39.h"
+#include "blake256.h"
+#include "blake2b.h"
+#include "blake2s.h"
+#include "chacha_drbg.h"
+#include "curves.h"
 #include "ecdsa.h"
-#include "hasher.h"
-#include "nist256p1.h"
-#include "rand.h"
-#include "secp256k1.h"
-
 #include "ed25519-donna/ed25519-donna.h"
+#include "ed25519-donna/ed25519-keccak.h"
 #include "ed25519-donna/ed25519.h"
+#include "hmac_drbg.h"
+#include "memzero.h"
+#include "monero/monero.h"
 #include "nem.h"
+#include "nist256p1.h"
+#include "pbkdf2.h"
+#include "rand.h"
+#include "rc4.h"
+#include "rfc6979.h"
+#include "schnorr.h"
+#include "script.h"
+#include "secp256k1.h"
+#include "sha2.h"
+#include "sha3.h"
 #include "shamir.h"
+#include "slip39.h"
+#include "slip39_wordlist.h"
 
 /* fuzzer input data handling */
 const uint8_t *fuzzer_ptr;
@@ -64,9 +85,6 @@ void fuzzer_reset_state(void) {
 
 /* individual fuzzer harness functions */
 
-extern size_t bn_format(const bignum256 *amnt, const char *prefix,
-                        const char *suffix, unsigned int decimals, int exponent,
-                        bool trailing, char *out, size_t outlen);
 int fuzz_bn_format(void) {
   bignum256 target_bignum;
   // we need some amount of data, bail if the input is too short
@@ -132,10 +150,6 @@ int fuzz_bn_format(void) {
   return 0;
 }
 
-extern const char *BASE32_ALPHABET_RFC4648;
-extern uint8_t *base32_decode(const char *in, size_t inlen, uint8_t *out,
-                              size_t outlen, const char *alphabet);
-
 // arbitrarily chosen maximum size
 #define BASE32_DECODE_MAX_INPUT_LEN 512
 
@@ -161,9 +175,6 @@ int fuzz_base32_decode(void) {
   return 0;
 }
 
-extern char *base32_encode(const uint8_t *in, size_t inlen, char *out,
-                           size_t outlen, const char *alphabet);
-
 // arbitrarily chosen maximum size
 #define BASE32_ENCODE_MAX_INPUT_LEN 512
 
@@ -185,9 +196,6 @@ int fuzz_base32_encode(void) {
                 BASE32_ALPHABET_RFC4648);
   return 0;
 }
-
-extern int base58_encode_check(const uint8_t *data, int datalen,
-                               HasherType hasher_type, char *str, int strsize);
 
 // internal limit is 128, try some extra bytes
 #define BASE58_ENCODE_MAX_INPUT_LEN 140
@@ -214,9 +222,6 @@ int fuzz_base58_encode_check(void) {
   base58_encode_check(in_buffer, raw_inlen, HASHER_SHA3K, out_buffer, outlen);
   return 0;
 }
-
-extern int base58_decode_check(const char *str, HasherType hasher_type,
-                               uint8_t *data, int datalen);
 
 // internal limit is 128, try some extra bytes
 #define BASE58_DECODE_MAX_INPUT_LEN 140
@@ -247,10 +252,6 @@ int fuzz_base58_decode_check(void) {
   return 0;
 }
 
-extern int xmr_base58_addr_decode_check(const char *addr, size_t sz,
-                                        uint64_t *tag, void *data,
-                                        size_t datalen);
-
 // arbitrarily chosen maximum size
 #define XMR_BASE58_ADDR_DECODE_MAX_INPUT_LEN 512
 
@@ -272,9 +273,6 @@ int fuzz_xmr_base58_addr_decode_check(void) {
   xmr_base58_addr_decode_check(in_buffer, raw_inlen, &tag, out_buffer, outlen);
   return 0;
 }
-
-extern int xmr_base58_addr_encode_check(uint64_t tag, const uint8_t *data,
-                                        size_t binsz, char *b58, size_t b58sz);
 
 // arbitrarily chosen maximum size
 #define XMR_BASE58_ADDR_ENCODE_MAX_INPUT_LEN 512
@@ -304,10 +302,6 @@ int fuzz_xmr_base58_addr_encode_check(void) {
                                outlen);
   return 0;
 }
-
-extern int xmr_size_varint(uint64_t num);
-extern int xmr_write_varint(uint8_t *buff, size_t buff_size, uint64_t num);
-extern int xmr_read_varint(uint8_t *buff, size_t buff_size, uint64_t *val);
 
 // arbitrarily chosen maximum size
 #define XMR_SERIALIZE_VARINT_MAX_INPUT_LEN 128
@@ -342,8 +336,6 @@ int fuzz_xmr_serialize_varint(void) {
   return 0;
 }
 
-extern bool nem_validate_address(const char *address, uint8_t network);
-
 // arbitrarily chosen maximum size
 #define NEM_VALIDATE_ADDRESS_MAX_INPUT_LEN 128
 
@@ -355,25 +347,21 @@ int fuzz_nem_validate_address(void) {
 
   char in_buffer[NEM_VALIDATE_ADDRESS_MAX_INPUT_LEN] = {0};
 
-  // TODO potential BUG: is it clearly specified that the address has to be null
-  // terminated?
-  in_buffer[NEM_VALIDATE_ADDRESS_MAX_INPUT_LEN - 1] = 0;
-
   uint8_t network = *fuzzer_ptr;
   fuzzer_input(1);
 
-  // mutate the buffer
+  // mutate the buffer with the remaining fuzzer input data
   memcpy(&in_buffer, fuzzer_ptr, fuzzer_length);
   size_t raw_inlen = fuzzer_length;
   fuzzer_input(raw_inlen);
+  // TODO potential bug: is it clearly specified that the address has to be null
+  // terminated?
+  in_buffer[NEM_VALIDATE_ADDRESS_MAX_INPUT_LEN - 1] = 0;
 
   nem_validate_address(in_buffer, network);
 
   return 0;
 }
-
-extern bool nem_get_address(const ed25519_public_key public_key,
-                            uint8_t version, char *address);
 
 int fuzz_nem_get_address(void) {
   unsigned char ed25519_public_key[32] = {0};
@@ -394,10 +382,6 @@ int fuzz_nem_get_address(void) {
   return 0;
 }
 
-extern void xmr_get_subaddress_secret_key(bignum256modm r, uint32_t major,
-                                          uint32_t minor,
-                                          const bignum256modm m);
-
 int fuzz_xmr_get_subaddress_secret_key(void) {
   bignum256modm m = {0};
   uint32_t major = 0;
@@ -416,9 +400,6 @@ int fuzz_xmr_get_subaddress_secret_key(void) {
 
   return 0;
 }
-
-extern void xmr_derive_private_key(bignum256modm s, const ge25519 *deriv,
-                                   uint32_t idx, const bignum256modm base);
 
 int fuzz_xmr_derive_private_key(void) {
   bignum256modm base = {0};
@@ -441,9 +422,6 @@ int fuzz_xmr_derive_private_key(void) {
   return 0;
 }
 
-extern void xmr_derive_public_key(ge25519 *r, const ge25519 *deriv,
-                                  uint32_t idx, const ge25519 *base);
-
 int fuzz_xmr_derive_public_key(void) {
   ge25519 base = {0};
   ge25519 deriv = {0};
@@ -464,16 +442,11 @@ int fuzz_xmr_derive_public_key(void) {
   return 0;
 }
 
-extern bool shamir_interpolate(uint8_t *result, uint8_t result_index,
-                               const uint8_t *share_indices,
-                               const uint8_t **share_values,
-                               uint8_t share_count, size_t len);
-
 #define SHAMIR_MAX_SHARE_COUNT 16
 #define SHAMIR_MAX_DATA_LEN (SHAMIR_MAX_SHARE_COUNT * SHAMIR_MAX_LEN)
 int fuzz_shamir_interpolate(void) {
   if (fuzzer_length != (2 * sizeof(uint8_t) + SHAMIR_MAX_SHARE_COUNT +
-                        SHAMIR_MAX_DATA_LEN + 2)) {
+                        SHAMIR_MAX_DATA_LEN + sizeof(size_t))) {
     return 0;
   }
 
@@ -495,24 +468,77 @@ int fuzz_shamir_interpolate(void) {
   memcpy(&share_values_content, fuzzer_input(SHAMIR_MAX_DATA_LEN),
          SHAMIR_MAX_DATA_LEN);
   memcpy(&share_count, fuzzer_input(sizeof(uint8_t)), sizeof(uint8_t));
+  // note: this is platform specific via byte length of size_t
+  memcpy(&len, fuzzer_input(sizeof(size_t)), sizeof(size_t));
 
-  // the target function checks for (len > SHAMIR_MAX_LEN),
-  // so we don't have to test the whole size_t length value
-  len = (fuzzer_ptr[0] << 8) + fuzzer_ptr[1];
-  fuzzer_input(2);
-
-  // mirror the checks in mod_trezorcrypto_shamir_interpolate()
+  // mirror a check that the real code does
   if (share_count < 1 || share_count > SHAMIR_MAX_SHARE_COUNT) {
     return 0;
   }
+  // (len > SHAMIR_MAX_LEN) is handled in the target function
 
   shamir_interpolate(result, result_index, share_indices, share_values,
                      share_count, len);
   return 0;
 }
 
-extern int ecdsa_verify_digest(const ecdsa_curve *curve, const uint8_t *pub_key,
-                               const uint8_t *sig, const uint8_t *digest);
+int fuzz_ecdsa_sign_digest(void) {
+  uint8_t curve_decider = 0;
+  uint8_t sig[64] = {0};
+  uint8_t priv_key[32] = {0};
+  uint8_t digest[32] = {0};
+
+  if (fuzzer_length < 1 + sizeof(sig) + sizeof(priv_key) + sizeof(digest)) {
+    return 0;
+  }
+  const ecdsa_curve *curve;
+  uint8_t pby = 0;
+
+  memcpy(&curve_decider, fuzzer_input(1), 1);
+  memcpy(&sig, fuzzer_input(sizeof(sig)), sizeof(sig));
+  memcpy(&priv_key, fuzzer_input(sizeof(priv_key)), sizeof(priv_key));
+  memcpy(&digest, fuzzer_input(sizeof(digest)), sizeof(digest));
+
+  // pick one of the standard curves
+  if ((curve_decider & 0x1) == 1) {
+    curve = &secp256k1;
+  } else {
+    curve = &nist256p1;
+  }
+
+  // TODO optionally set a function for is_canonical()
+  int res = ecdsa_sign_digest(curve, priv_key, digest, sig, &pby, NULL);
+
+  // successful signing
+  if (res == 0) {
+    uint8_t pub_key[33] = {0};
+    ecdsa_get_public_key33(curve, priv_key, pub_key);
+    res = ecdsa_verify_digest(curve, pub_key, sig, digest);
+
+    if (res != 0) {
+      // verification did not succeed
+
+      // case: all zero pubkey value
+      uint8_t pub_key_zero[33] =
+          "\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+          "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
+
+      // case: all zero digest value
+      uint8_t digest_zero[32] =
+          "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+          "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
+
+      if (memcmp(&pub_key, &pub_key_zero, sizeof(pub_key_zero)) == 0 ||
+          memcmp(&digest, &digest_zero, sizeof(digest_zero)) == 0) {
+        return 0;
+      }
+
+      // handle as crash
+      exit(1);
+    }
+  }
+  return 0;
+}
 
 int fuzz_ecdsa_verify_digest(void) {
   uint8_t curve_decider = 0;
@@ -540,13 +566,15 @@ int fuzz_ecdsa_verify_digest(void) {
   int res = ecdsa_verify_digest(curve, (const uint8_t *)&pub_key,
                                 (const uint8_t *)&sig, (const uint8_t *)&hash);
 
-  // TODO check if the fuzzer ever manages to get the return value to 0
-  (void)res;
+  if (res == 0) {
+    // See if the fuzzer ever manages to get find a correct verification
+    // intentionally trigger a crash to make this case observable
+    // TODO this is not an actual problem, remove in the future
+    exit(1);
+  }
 
   return 0;
 }
-
-extern bool word_index(uint16_t *index, const char *word, uint8_t word_length);
 
 int fuzz_word_index(void) {
 #define MAX_WORD_LENGTH 12
@@ -559,15 +587,12 @@ int fuzz_word_index(void) {
   char word[MAX_WORD_LENGTH + 1] = {0};
   memcpy(&word, fuzzer_ptr, MAX_WORD_LENGTH);
   size_t word_length = strlen(word);
-
   uint16_t index = 0;
 
   word_index(&index, (const char *)&word, word_length);
 
   return 0;
 }
-
-extern uint16_t slip39_word_completion_mask(uint16_t sequence);
 
 int fuzz_slip39_word_completion_mask(void) {
   if (fuzzer_length != 2) {
@@ -576,16 +601,13 @@ int fuzz_slip39_word_completion_mask(void) {
   uint16_t sequence = (fuzzer_ptr[0] << 8) + fuzzer_ptr[1];
   fuzzer_input(2);
 
-  // TODO perform additional checks on the output?
   slip39_word_completion_mask(sequence);
 
   return 0;
 }
 
-extern int mnemonic_to_bits(const char *mnemonic, uint8_t *mnemonic_bits);
-
 int fuzz_mnemonic_to_bits(void) {
-  // slightly longer than MAX_MNEMONIC_LEN from config.h
+  // length chosen somewhat arbitrarily
 #define MAX_MNEMONIC_LENGTH 256
 
   if (fuzzer_length < MAX_MNEMONIC_LENGTH) {
@@ -596,8 +618,7 @@ int fuzz_mnemonic_to_bits(void) {
   memcpy(&mnemonic, fuzzer_ptr, MAX_MNEMONIC_LENGTH);
   uint8_t mnemonic_bits[32 + 1] = {0};
 
-  int number_of_bits = mnemonic_to_bits((const char *)&mnemonic, mnemonic_bits);
-  assert(0 <= number_of_bits && number_of_bits <= 264);
+  mnemonic_to_bits((const char *)&mnemonic, mnemonic_bits);
 
   return 0;
 }
@@ -674,36 +695,220 @@ int fuzz_aes(void) {
   return 0;
 }
 
-extern int base58gph_encode_check(const uint8_t *data, int datalen, char *str,
-                                  int strsize);
-
-extern int base58gph_decode_check(const char *str, uint8_t *data, int datalen);
-
 int fuzz_b58gph_encode_decode(void) {
-  // note: encode and decode have an internal limit of 128
-#define BASE58_GPH_MAX_INPUT_LEN 140
+  // note: encode and decode functions have an internal limit of 128
+#define BASE58_GPH_MAX_INPUT_LEN 130
 
-  if (fuzzer_length > BASE58_GPH_MAX_INPUT_LEN) {
+  if (fuzzer_length < 1 + 1 + BASE58_GPH_MAX_INPUT_LEN) {
     return 0;
   }
+
+  // use a flexible output buffer target size
+  uint8_t chosen_outlen = 0;
+  memcpy(&chosen_outlen, fuzzer_input(1), 1);
+  if (chosen_outlen > BASE58_GPH_MAX_INPUT_LEN) {
+    return 0;
+  }
+  // use a flexible input buffer target size
+  uint8_t chosen_inlen = 0;
+  memcpy(&chosen_inlen, fuzzer_input(1), 1);
+  if (chosen_inlen > BASE58_GPH_MAX_INPUT_LEN) {
+    return 0;
+  }
+
+  // TODO switch to malloc()'ed buffers for better out of bounds access
+  // detection?
 
   uint8_t encode_in_buffer[BASE58_GPH_MAX_INPUT_LEN] = {0};
   // with null termination
   char decode_in_buffer[BASE58_GPH_MAX_INPUT_LEN + 1] = {0};
   char out_buffer[BASE58_GPH_MAX_INPUT_LEN] = {0};
-  size_t outlen = sizeof(out_buffer);
 
-  size_t raw_inlen = fuzzer_length;
-  memcpy(&encode_in_buffer, fuzzer_input(raw_inlen), raw_inlen);
-  memcpy(&decode_in_buffer, &encode_in_buffer, raw_inlen);
+  memcpy(&encode_in_buffer, fuzzer_input(chosen_inlen), chosen_inlen);
+  memcpy(&decode_in_buffer, &encode_in_buffer, chosen_inlen);
 
-  base58gph_encode_check(encode_in_buffer, raw_inlen, out_buffer, outlen);
-  base58gph_decode_check(decode_in_buffer, (uint8_t *)&out_buffer, outlen);
+  int ret = 0;
+  ret = base58gph_encode_check(encode_in_buffer, chosen_inlen, out_buffer,
+                               chosen_outlen);
 
-  // TODO do logical encode<>decode comparison checks?
+  if (ret != 0) {
+    // successful encode, try decode
+    uint8_t dummy_buffer[BASE58_GPH_MAX_INPUT_LEN] = {0};
+    ret = base58gph_decode_check(out_buffer, (uint8_t *)&dummy_buffer,
+                                 chosen_outlen);
+    if (ret == 0) {
+      // mark as exception
+      // TODO POTENTIAL BUG - followup
+      // exit(1);
+    }
+  }
+
+  // do a second operation with the same input, without relationship to the
+  // previously computed output
+  base58gph_decode_check(decode_in_buffer, (uint8_t *)&out_buffer,
+                         chosen_outlen);
+  return 0;
+}
+
+#define SCHNORR_VERIFY_PUBKEY_DATA_LENGTH 33
+#define SCHNORR_VERIFY_PRIVKEY_DATA_LENGTH 32
+
+int fuzz_schnorr_verify_digest(void) {
+  if (fuzzer_length < SHA256_DIGEST_LENGTH + SCHNORR_VERIFY_PUBKEY_DATA_LENGTH +
+                          SCHNORR_SIG_LENGTH) {
+    return 0;
+  }
+
+  // TODO optionally try nist256p1 ?
+  const ecdsa_curve *curve = &secp256k1;
+  uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
+  uint8_t pub_key[SCHNORR_VERIFY_PUBKEY_DATA_LENGTH] = {0};
+  uint8_t signature[SCHNORR_SIG_LENGTH] = {0};
+
+  memcpy(&digest, fuzzer_input(SHA256_DIGEST_LENGTH), SHA256_DIGEST_LENGTH);
+  memcpy(&pub_key, fuzzer_input(SCHNORR_VERIFY_PUBKEY_DATA_LENGTH),
+         SCHNORR_VERIFY_PUBKEY_DATA_LENGTH);
+  memcpy(&signature, fuzzer_input(SCHNORR_SIG_LENGTH), SCHNORR_SIG_LENGTH);
+
+  // TODO this limitation is a bug workaround
+  if (pub_key[0] != 0x04) {
+    int ret = schnorr_verify_digest(curve, pub_key, digest, signature);
+    if (ret == 0) {
+      // assuming that the fuzzer can't puzzle together validly signed inputs,
+      // exit with a forced crash if a successful verification is observed
+      exit(1);
+    }
+  }
 
   return 0;
 }
+
+int fuzz_schnorr_sign_digest(void) {
+  if (fuzzer_length <
+      1 + SHA256_DIGEST_LENGTH + SCHNORR_VERIFY_PRIVKEY_DATA_LENGTH) {
+    return 0;
+  }
+
+  const ecdsa_curve *curve;
+  uint8_t digest[SHA256_DIGEST_LENGTH] = {0};
+  uint8_t priv_key[SCHNORR_VERIFY_PRIVKEY_DATA_LENGTH] = {0};
+  uint8_t signature[SCHNORR_SIG_LENGTH] = {0};
+  int ret = 0;
+
+  uint8_t curve_decider = 0;
+  memcpy(&curve_decider, fuzzer_input(1), 1);
+
+  if ((curve_decider & 0x1) == 1) {
+    curve = &secp256k1;
+  } else {
+    curve = &nist256p1;
+  }
+
+  memcpy(&digest, fuzzer_input(SHA256_DIGEST_LENGTH), SHA256_DIGEST_LENGTH);
+  memcpy(&priv_key, fuzzer_input(SCHNORR_VERIFY_PRIVKEY_DATA_LENGTH),
+         SCHNORR_VERIFY_PRIVKEY_DATA_LENGTH);
+
+  ret = schnorr_sign_digest(curve, priv_key, digest, signature);
+
+  if (ret == 0) {
+    // signing was successful, check if the verification works
+
+    // compute matching pubkey
+    uint8_t pub_key[33] = {0};
+    ecdsa_get_public_key33(curve, priv_key, pub_key);
+
+    if (schnorr_verify_digest(curve, pub_key, digest, signature) != 0) {
+      // ignore known case
+      uint8_t pub_key_null[33] =
+          "\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+          "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
+      if (memcmp(&pub_key, &pub_key_null, 33) == 0) {
+        return 0;
+      }
+
+      // something is wrong, mark as crash
+      exit(1);
+    }
+  }
+  return 0;
+}
+
+int fuzz_chacha_drbg(void) {
+#define CHACHA_DRBG_ENTROPY_LENGTH 32
+#define CHACHA_DRBG_RESEED_LENGTH 32
+#define CHACHA_DRBG_NONCE_LENGTH 16
+#define CHACHA_DRBG_RESULT_LENGTH 16
+
+  if (fuzzer_length < CHACHA_DRBG_ENTROPY_LENGTH + CHACHA_DRBG_RESEED_LENGTH +
+                          CHACHA_DRBG_NONCE_LENGTH) {
+    return 0;
+  }
+
+  uint8_t entropy[CHACHA_DRBG_ENTROPY_LENGTH] = {0};
+  uint8_t reseed[CHACHA_DRBG_RESEED_LENGTH] = {0};
+  uint8_t nonce_bytes[CHACHA_DRBG_NONCE_LENGTH] = {0};
+  uint8_t result[CHACHA_DRBG_RESULT_LENGTH] = {0};
+  CHACHA_DRBG_CTX ctx;
+
+  // TODO improvement idea: switch to variable input sizes
+  memcpy(&entropy, fuzzer_input(CHACHA_DRBG_ENTROPY_LENGTH),
+         CHACHA_DRBG_ENTROPY_LENGTH);
+  memcpy(&reseed, fuzzer_input(CHACHA_DRBG_RESEED_LENGTH),
+         CHACHA_DRBG_RESEED_LENGTH);
+  memcpy(&nonce_bytes, fuzzer_input(CHACHA_DRBG_NONCE_LENGTH),
+         CHACHA_DRBG_NONCE_LENGTH);
+
+  chacha_drbg_init(&ctx, entropy, sizeof(entropy), nonce_bytes,
+                   sizeof(nonce_bytes));
+  chacha_drbg_reseed(&ctx, reseed, sizeof(reseed), NULL, 0);
+  chacha_drbg_generate(&ctx, result, sizeof(result));
+
+  return 0;
+}
+
+int fuzz_ed25519_sign_verify(void) {
+  ed25519_secret_key secret_key;
+  ed25519_signature signature;
+  ed25519_public_key public_key;
+  // length chosen arbitrarily
+  uint8_t message[32] = {0};
+  int ret = 0;
+
+  if (fuzzer_length <
+      sizeof(secret_key) + sizeof(signature) + sizeof(message)) {
+    return 0;
+  }
+
+  memcpy(&secret_key, fuzzer_input(sizeof(secret_key)), sizeof(secret_key));
+  memcpy(&signature, fuzzer_input(sizeof(signature)), sizeof(signature));
+  memcpy(&message, fuzzer_input(sizeof(message)), sizeof(message));
+
+  ed25519_publickey(secret_key, public_key);
+  // sign message, this should always succeed
+  ed25519_sign(message, sizeof(message), secret_key, public_key, signature);
+
+  // verify message, we expect this to work
+  ret = ed25519_sign_open(message, sizeof(message), public_key, signature);
+
+  // TODO are there other error values?
+  if (ret == -1) {
+    // mark as exception
+    exit(1);
+  }
+
+  return 0;
+}
+
+// TODO more XMR functions
+// extern void xmr_hash_to_ec(ge25519 *P, const void *data, size_t length);
+
+// this function directly calls
+// hasher_Raw(HASHER_SHA3K, data, length, hash)
+// is this interesting at all?
+// extern void xmr_fast_hash(uint8_t *hash, const void *data, size_t length);
+
+// TODO target idea: re-create openssl_check() from test_openssl.c
+// to do differential fuzzing against OpenSSL functions
 
 #define META_HEADER_SIZE 3
 
@@ -801,6 +1006,24 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       break;
     case 19:
       fuzz_b58gph_encode_decode();
+      break;
+    case 20:
+      fuzz_schnorr_verify_digest();
+      break;
+    case 21:
+      fuzz_schnorr_sign_digest();
+      break;
+    case 22:
+      fuzz_chacha_drbg();
+      break;
+    case 23:
+#ifdef FUZZ_ALLOW_SLOW
+      // slow through expensive bignum operations
+      fuzz_ecdsa_sign_digest();
+#endif
+      break;
+    case 24:
+      fuzz_ed25519_sign_verify();
       break;
 
     default:

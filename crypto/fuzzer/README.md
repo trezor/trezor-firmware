@@ -21,7 +21,6 @@ Examples:
   * `SANFLAGS="-fsanitize=address,undefined"`
   * `SANFLAGS="-fsanitize=memory -fsanitize-memory-track-origins"`
 
-
 ### Optimizations
 
 Override `OPTFLAGS` to test the library at different optimization levels or simplify the debugging of detected issues.
@@ -30,6 +29,12 @@ Examples:
 
   * `OPTFLAGS="-O0 -ggdb3"`
   * `OPTFLAGS="-O3 -march=native"`
+
+### Other Flags
+
+To be determined:
+* `-DNDEBUG`
+* `-DUSE_BIP39_CACHE=0 -DUSE_BIP32_CACHE=0`
 
 ## Operation
 
@@ -61,7 +66,6 @@ cd fuzzer
 ./extract_fuzzer_dictionary.sh fuzzer_crypto_tests_strings_dictionary1.txt
 ```
 The resulting file can be used as a fuzzer dictionary.
-
 
 ## Evaluate Source Coverage
 
