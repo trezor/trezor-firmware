@@ -1791,12 +1791,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ApplyFlags(protobuf.MessageType):
-        flags: int | None
+        flags: int
 
         def __init__(
             self,
             *,
-            flags: int | None = None,
+            flags: int,
         ) -> None:
             pass
 
@@ -1833,12 +1833,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class SdProtect(protobuf.MessageType):
-        operation: SdProtectOperationType | None
+        operation: SdProtectOperationType
 
         def __init__(
             self,
             *,
-            operation: SdProtectOperationType | None = None,
+            operation: SdProtectOperationType,
         ) -> None:
             pass
 
@@ -1977,12 +1977,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EntropyAck(protobuf.MessageType):
-        entropy: bytes | None
+        entropy: bytes
 
         def __init__(
             self,
             *,
-            entropy: bytes | None = None,
+            entropy: bytes,
         ) -> None:
             pass
 
@@ -2021,12 +2021,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class WordRequest(protobuf.MessageType):
-        type: WordRequestType | None
+        type: WordRequestType
 
         def __init__(
             self,
             *,
-            type: WordRequestType | None = None,
+            type: WordRequestType,
         ) -> None:
             pass
 
@@ -2049,12 +2049,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class SetU2FCounter(protobuf.MessageType):
-        u2f_counter: int | None
+        u2f_counter: int
 
         def __init__(
             self,
             *,
-            u2f_counter: int | None = None,
+            u2f_counter: int,
         ) -> None:
             pass
 
@@ -2069,12 +2069,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class NextU2FCounter(protobuf.MessageType):
-        u2f_counter: int | None
+        u2f_counter: int
 
         def __init__(
             self,
             *,
-            u2f_counter: int | None = None,
+            u2f_counter: int,
         ) -> None:
             pass
 

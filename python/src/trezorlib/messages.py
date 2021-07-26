@@ -2690,13 +2690,13 @@ class ApplySettings(protobuf.MessageType):
 class ApplyFlags(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 28
     FIELDS = {
-        1: protobuf.Field("flags", "uint32", repeated=False, required=False),
+        1: protobuf.Field("flags", "uint32", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        flags: Optional[int] = None,
+        flags: int,
     ) -> None:
         self.flags = flags
 
@@ -2732,13 +2732,13 @@ class ChangeWipeCode(protobuf.MessageType):
 class SdProtect(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 79
     FIELDS = {
-        1: protobuf.Field("operation", SdProtectOperationType, repeated=False, required=False),
+        1: protobuf.Field("operation", SdProtectOperationType, repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        operation: Optional[SdProtectOperationType] = None,
+        operation: SdProtectOperationType,
     ) -> None:
         self.operation = operation
 
@@ -2886,13 +2886,13 @@ class EntropyRequest(protobuf.MessageType):
 class EntropyAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 36
     FIELDS = {
-        1: protobuf.Field("entropy", "bytes", repeated=False, required=False),
+        1: protobuf.Field("entropy", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        entropy: Optional[bytes] = None,
+        entropy: bytes,
     ) -> None:
         self.entropy = entropy
 
@@ -2938,13 +2938,13 @@ class RecoveryDevice(protobuf.MessageType):
 class WordRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 46
     FIELDS = {
-        1: protobuf.Field("type", WordRequestType, repeated=False, required=False),
+        1: protobuf.Field("type", WordRequestType, repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        type: Optional[WordRequestType] = None,
+        type: WordRequestType,
     ) -> None:
         self.type = type
 
@@ -2966,13 +2966,13 @@ class WordAck(protobuf.MessageType):
 class SetU2FCounter(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 63
     FIELDS = {
-        1: protobuf.Field("u2f_counter", "uint32", repeated=False, required=False),
+        1: protobuf.Field("u2f_counter", "uint32", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        u2f_counter: Optional[int] = None,
+        u2f_counter: int,
     ) -> None:
         self.u2f_counter = u2f_counter
 
@@ -2984,13 +2984,13 @@ class GetNextU2FCounter(protobuf.MessageType):
 class NextU2FCounter(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 81
     FIELDS = {
-        1: protobuf.Field("u2f_counter", "uint32", repeated=False, required=False),
+        1: protobuf.Field("u2f_counter", "uint32", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        u2f_counter: Optional[int] = None,
+        u2f_counter: int,
     ) -> None:
         self.u2f_counter = u2f_counter
 
