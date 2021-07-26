@@ -145,7 +145,6 @@ static void format_number(char *dest, int number) {
 static void recovery_request(void) {
   WordRequest resp = {0};
   memzero(&resp, sizeof(WordRequest));
-  resp.has_type = true;
   if (awaiting_word == 1) {
     resp.type = WordRequestType_WordRequestType_Plain;
   } else if (word_index % 4 == 3) {

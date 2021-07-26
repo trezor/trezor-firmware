@@ -315,11 +315,7 @@ void fsm_msgResetDevice(const ResetDevice *msg) {
 }
 
 void fsm_msgEntropyAck(const EntropyAck *msg) {
-  if (msg->has_entropy) {
-    reset_entropy(msg->entropy.bytes, msg->entropy.size);
-  } else {
-    reset_entropy(0, 0);
-  }
+  reset_entropy(msg->entropy.bytes, msg->entropy.size);
 }
 
 void fsm_msgBackupDevice(const BackupDevice *msg) {
@@ -477,9 +473,7 @@ void fsm_msgApplySettings(const ApplySettings *msg) {
 void fsm_msgApplyFlags(const ApplyFlags *msg) {
   CHECK_PIN
 
-  if (msg->has_flags) {
-    config_applyFlags(msg->flags);
-  }
+  config_applyFlags(msg->flags);
   fsm_sendSuccess(_("Flags applied"));
 }
 
@@ -539,7 +533,6 @@ void fsm_msgGetNextU2FCounter() {
   uint32_t counter = config_nextU2FCounter();
 
   RESP_INIT(NextU2FCounter);
-  resp->has_u2f_counter = true;
   resp->u2f_counter = counter;
   msg_write(MessageType_MessageType_NextU2FCounter, resp);
   layoutHome();
