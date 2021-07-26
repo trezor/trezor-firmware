@@ -1,5 +1,5 @@
-StellarAssetType.code                                   max_size:13
-StellarAssetType.issuer                                 max_size:57
+StellarAsset.code                                       max_size:13
+StellarAsset.issuer                                     max_size:57
 StellarGetAddress.address_n                             max_count:10
 
 StellarAddress.address                                  max_size:57
