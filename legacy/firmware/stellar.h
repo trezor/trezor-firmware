@@ -94,7 +94,7 @@ void stellar_hashupdate_uint64(uint64_t value);
 void stellar_hashupdate_bool(bool value);
 void stellar_hashupdate_string(const uint8_t *data, size_t len);
 void stellar_hashupdate_address(const uint8_t *address_bytes);
-void stellar_hashupdate_asset(const StellarAssetType *asset);
+void stellar_hashupdate_asset(const StellarAsset *asset);
 void stellar_hashupdate_bytes(const uint8_t *data, size_t len);
 
 void stellar_fillSignedTx(StellarSignedTx *resp);
@@ -104,7 +104,7 @@ void stellar_getSignatureForActiveTx(uint8_t *out_signature);
 void stellar_format_uint32(uint32_t number, char *out, size_t outlen);
 void stellar_format_uint64(uint64_t number, char *out, size_t outlen);
 void stellar_format_stroops(uint64_t number, char *out, size_t outlen);
-void stellar_format_asset(const StellarAssetType *asset, char *str_formatted,
+void stellar_format_asset(const StellarAsset *asset, char *str_formatted,
                           size_t len);
 void stellar_format_price(uint32_t numerator, uint32_t denominator, char *out,
                           size_t outlen);
