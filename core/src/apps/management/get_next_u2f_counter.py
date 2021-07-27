@@ -15,8 +15,7 @@ async def get_next_u2f_counter(
         ctx,
         "get_u2f_counter",
         title="Get next U2F counter",
-        description="Do you really want to\n{}\nthe U2F counter?",
-        description_param="increase and retrieve",
+        description="Do you really want to increase and retrieve\nthe U2F counter?",
         icon=ui.ICON_CONFIG,
         br_code=ButtonRequestType.ProtectCall,
     )
