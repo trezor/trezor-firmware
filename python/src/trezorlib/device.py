@@ -207,3 +207,9 @@ def backup(client):
 @expect(messages.Success, field="message")
 def cancel_authorization(client):
     return client.call(messages.CancelAuthorization())
+
+
+@session
+@expect(messages.Success, field="message")
+def reboot_to_bootloader(client):
+    return client.call(messages.RebootToBootloader())

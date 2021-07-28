@@ -206,13 +206,14 @@ Device management commands - setup, recover seed, wipe, etc.
     --help  Show this message and exit.
 
   Commands:
-    backup      Perform device seed backup.
-    load        Upload seed and custom configuration to the device.
-    recover     Start safe recovery workflow.
-    sd-protect  Secure the device with SD card protection.
-    self-test   Perform a self-test.
-    setup       Perform device setup and generate new seed.
-    wipe        Reset device to factory defaults and remove all private data.
+    backup                Perform device seed backup.
+    load                  Upload seed and custom configuration to the device.
+    reboot-to-bootloader  Reboot device into bootloader mode.
+    recover               Start safe recovery workflow.
+    sd-protect            Secure the device with SD card protection.
+    self-test             Perform a self-test.
+    setup                 Perform device setup and generate new seed.
+    wipe                  Reset device to factory defaults and remove all private data.
 
 EOS commands.
 ~~~~~~~~~~~~~

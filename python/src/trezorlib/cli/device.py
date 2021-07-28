@@ -258,3 +258,20 @@ def sd_protect(client, operation):
     if client.features.model == "1":
         raise click.BadUsage("Trezor One does not support SD card protection.")
     return device.sd_protect(client, operation)
+
+
+@cli.command()
+@click.pass_obj
+def reboot_to_bootloader(obj):
+    """Reboot device into bootloader mode.
+
+    Currently only supported on Trezor Model One.
+    """
+    # avoid using @with_client because it closes the session afterwards,
+    # which triggers double prompt on device
+    with obj.client_context() as client:
+        if client.features.model != "1":
+            click.echo(
+                f"Warning: Rebooting into bootloader not supported on Trezor {client.features.model}"
+            )
+        return device.reboot_to_bootloader(client)
