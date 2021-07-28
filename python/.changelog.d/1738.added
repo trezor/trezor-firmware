@@ -1,0 +1,1 @@
+trezorctl: new command `device reboot-to-bootloader` reboots T1 to bootloader
