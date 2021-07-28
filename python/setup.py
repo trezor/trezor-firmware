@@ -14,6 +14,7 @@ install_requires = [
     "construct>=2.9",
     "typing_extensions>=3.7.4",
     "pyblake2>=0.9.3 ; python_version<'3.6'",
+    "attrs",
 ]
 
 CWD = os.path.dirname(os.path.realpath(__file__))
