@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.3] - 2021-07-29
+[0.12.3]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.2...python/v0.12.3
+
+### Added
+
+- `trezorctl btc get-descriptor` support [#1363]
+- `trezorctl btc reboot-to-bootloader` support [#1738]
+- distinguishing between temporary and permanent safety checks
+- trezorctl accepts PIN entered by letters (useful on laptops)
+- support for 50-digit PIN for T1
+
+### Changed
+
+- allowed Click 8.x as a requirement
+- replaced all references to Trezor Wallet with Trezor Suite, and modified all mentions
+  of Beta Wallet
+
+### Fixed
+
+- added missing requirement `attrs`
+- properly parse big numbers in `tools/build_tx.py` [#1257], [#1296]
+- it is now possible to set safety checks for T1
+
+
 ## [0.12.2] - 2020-08-27
 [0.12.2]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.1...python/v0.12.2
 
@@ -479,3 +503,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#1179]: https://github.com/trezor/trezor-firmware/issues/1179
 [#1196]: https://github.com/trezor/trezor-firmware/issues/1196
 [#1210]: https://github.com/trezor/trezor-firmware/issues/1210
+[#1257]: https://github.com/trezor/trezor-firmware/issues/1257
+[#1296]: https://github.com/trezor/trezor-firmware/issues/1296
+[#1363]: https://github.com/trezor/trezor-firmware/issues/1363
+[#1738]: https://github.com/trezor/trezor-firmware/issues/1738
