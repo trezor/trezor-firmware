@@ -55,7 +55,14 @@ units) will not be recognized, unless you install HIDAPI support (see below).
   pip3 install trezor[ethereum]
   ```
 
-To install both, use `pip3 install trezor[hidapi,ethereum]`.
+* **Stellar**: To support Stellar signing from command line, additional packages are
+  needed. Install with:
+
+  ```sh
+  pip3 install trezor[stellar]
+  ```
+
+To install all three, use `pip3 install trezor[hidapi,ethereum,stellar]`.
 
 ### Distro packages
 
