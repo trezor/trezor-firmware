@@ -35,43 +35,38 @@ void usbInit(void) { emulatorSocketInit(); }
 #define _ISDBG ('n')
 #endif
 
-void usbPoll(void) {
+void usbSleep(uint32_t millis) {
   emulatorPoll();
 
   static uint8_t buffer[USB_PACKET_SIZE];
 
   int iface = 0;
-  if (emulatorSocketRead(&iface, buffer, sizeof(buffer)) > 0) {
+  if (emulatorSocketRead(&iface, buffer, sizeof(buffer), millis) > 0) {
     if (!tiny) {
-      msg_read_common(_ISDBG, buffer, sizeof(buffer));
+      do {
+        msg_read_common(_ISDBG, buffer, sizeof(buffer));
+      } while (emulatorSocketRead(&iface, buffer, sizeof(buffer), 0) > 0);
     } else {
       msg_read_tiny(buffer, sizeof(buffer));
     }
   }
 
-  const uint8_t *data = msg_out_data();
-  if (data != NULL) {
+  const uint8_t *data;
+  while ((data = msg_out_data()) != NULL) {
     emulatorSocketWrite(0, data, USB_PACKET_SIZE);
   }
 
 #if DEBUG_LINK
-  data = msg_debug_out_data();
-  if (data != NULL) {
+  while ((data = msg_debug_out_data()) != NULL) {
     emulatorSocketWrite(1, data, USB_PACKET_SIZE);
   }
 #endif
 }
 
+void usbPoll(void) { usbSleep(0); }
+
 char usbTiny(char set) {
   char old = tiny;
   tiny = set;
   return old;
-}
-
-void usbSleep(uint32_t millis) {
-  uint32_t start = timer_ms();
-
-  while ((timer_ms() - start) < millis) {
-    usbPoll();
-  }
 }
