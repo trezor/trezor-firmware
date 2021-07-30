@@ -38,13 +38,13 @@
 #include "util.h"
 
 /* maximum supported chain id.  v must fit in an uint32_t. */
-#define MAX_CHAIN_ID 2147483629
+#define MAX_CHAIN_ID 9223372036854775807
 
 static bool ethereum_signing = false;
 static uint32_t data_total, data_left;
 static EthereumTxRequest msg_tx_request;
 static CONFIDENTIAL uint8_t privkey[32];
-static uint32_t chain_id;
+static uint64_t chain_id;
 static uint32_t tx_type;
 struct SHA3_CTX keccak_ctx = {0};
 
