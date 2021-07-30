@@ -14,37 +14,11 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import struct
-
 import pytest
 
 from trezorlib import messages as proto, misc
-from trezorlib.tools import H_
 
 from ..common import MNEMONIC12
-
-
-def check_path(identity):
-    from hashlib import sha256
-
-    m = sha256()
-    m.update(struct.pack("<I", identity.index))
-    uri = ""
-    if identity.proto:
-        uri += identity.proto + "://"
-    if identity.user:
-        uri += identity.user + "@"
-    if identity.host:
-        uri += identity.host
-    if identity.port:
-        uri += ":" + identity.port
-    if identity.path:
-        uri += identity.path
-    m.update(uri)
-    print("hash:", m.hexdigest())
-    (a, b, c, d, _, _, _, _) = struct.unpack("<8I", m.digest())
-    address_n = [H_(13), H_(a), H_(b), H_(c), H_(d)]
-    print("path:", "m/" + "/".join([str(x) for x in address_n]))
 
 
 class TestMsgSignidentity:
