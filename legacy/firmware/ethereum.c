@@ -37,7 +37,7 @@
 #include "transaction.h"
 #include "util.h"
 
-/* maximum supported chain id.  v must fit in an uint32_t. */
+/* maximum supported chain id.  v must fit in an uint64_t. */
 #define MAX_CHAIN_ID 9223372036854775807
 
 static bool ethereum_signing = false;
