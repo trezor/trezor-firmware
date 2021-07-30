@@ -24,7 +24,6 @@ from . import TransportException
 from .protocol import ProtocolBasedTransport, ProtocolV1
 
 SOCKET_TIMEOUT = 10
-TRY_PATH_TIMEOUT = 1
 
 LOG = logging.getLogger(__name__)
 
@@ -60,12 +59,15 @@ class UdpTransport(ProtocolBasedTransport):
     def _try_path(cls, path: str) -> "UdpTransport":
         d = cls(path)
         try:
-            d.wait_until_ready(timeout=TRY_PATH_TIMEOUT)
-            return d
-        except Exception as e:
-            raise TransportException(
-                "No Trezor device found at address {}".format(d.get_path())
-            ) from e
+            d.open()
+            if d._ping():
+                return d
+            else:
+                raise TransportException(
+                    "No Trezor device found at address {}".format(d.get_path())
+                )
+        finally:
+            d.close()
 
     @classmethod
     def enumerate(cls) -> Iterable["UdpTransport"]:
