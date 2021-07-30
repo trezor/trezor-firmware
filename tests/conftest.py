@@ -28,7 +28,8 @@ from .device_handler import BackgroundDeviceHandler
 from .ui_tests.reporting import testreport
 
 
-def get_device():
+@pytest.fixture(scope="session")
+def _raw_client(request):
     path = os.environ.get("TREZOR_PATH")
     interact = int(os.environ.get("INTERACT", 0))
     if path:
@@ -36,6 +37,7 @@ def get_device():
             transport = get_transport(path)
             return TrezorClientDebugLink(transport, auto_interact=not interact)
         except Exception as e:
+            request.session.shouldstop = "Failed to communicate with Trezor"
             raise RuntimeError("Failed to open debuglink for {}".format(path)) from e
 
     else:
@@ -46,11 +48,12 @@ def get_device():
             except Exception:
                 pass
         else:
+            request.session.shouldstop = "Failed to communicate with Trezor"
             raise RuntimeError("No debuggable device found")
 
 
 @pytest.fixture(scope="function")
-def client(request):
+def client(request, _raw_client):
     """Client fixture.
 
     Every test function that requires a client instance will get it from here.
@@ -70,19 +73,13 @@ def client(request):
 
     @pytest.mark.setup_client(uninitialized=True)
     """
-    try:
-        client = get_device()
-    except RuntimeError:
-        request.session.shouldstop = "No debuggable Trezor is available"
-        pytest.fail("No debuggable Trezor is available")
-
-    if request.node.get_closest_marker("skip_t2") and client.features.model == "T":
+    if request.node.get_closest_marker("skip_t2") and _raw_client.features.model == "T":
         pytest.skip("Test excluded on Trezor T")
-    if request.node.get_closest_marker("skip_t1") and client.features.model == "1":
+    if request.node.get_closest_marker("skip_t1") and _raw_client.features.model == "1":
         pytest.skip("Test excluded on Trezor 1")
 
     sd_marker = request.node.get_closest_marker("sd_card")
-    if sd_marker and not client.features.sd_card_present:
+    if sd_marker and not _raw_client.features.sd_card_present:
         raise RuntimeError(
             "This test requires SD card.\n"
             "To skip all such tests, run:\n"
@@ -92,16 +89,23 @@ def client(request):
     test_ui = request.config.getoption("ui")
     run_ui_tests = not request.node.get_closest_marker("skip_ui") and test_ui
 
-    client.open()
+    _raw_client.reset_debug_features()
+    _raw_client.open()
+    try:
+        _raw_client.init_device()
+    except Exception:
+        request.session.shouldstop = "Failed to communicate with Trezor"
+        pytest.fail("Failed to communicate with Trezor")
+
     if run_ui_tests:
         # we need to reseed before the wipe
-        client.debug.reseed(0)
+        _raw_client.debug.reseed(0)
 
     if sd_marker:
         should_format = sd_marker.kwargs.get("formatted", True)
-        client.debug.erase_sd_card(format=should_format)
+        _raw_client.debug.erase_sd_card(format=should_format)
 
-    wipe_device(client)
+    wipe_device(_raw_client)
 
     setup_params = dict(
         uninitialized=False,
@@ -122,7 +126,7 @@ def client(request):
 
     if not setup_params["uninitialized"]:
         debuglink.load_device(
-            client,
+            _raw_client,
             mnemonic=setup_params["mnemonic"],
             pin=setup_params["pin"],
             passphrase_protection=use_passphrase,
@@ -132,21 +136,21 @@ def client(request):
             no_backup=setup_params["no_backup"],
         )
 
-        if client.features.model == "T":
-            apply_settings(client, experimental_features=True)
+        if _raw_client.features.model == "T":
+            apply_settings(_raw_client, experimental_features=True)
 
         if use_passphrase and isinstance(setup_params["passphrase"], str):
-            client.use_passphrase(setup_params["passphrase"])
+            _raw_client.use_passphrase(setup_params["passphrase"])
 
-        client.clear_session()
+        _raw_client.clear_session()
 
     if run_ui_tests:
-        with ui_tests.screen_recording(client, request):
-            yield client
+        with ui_tests.screen_recording(_raw_client, request):
+            yield _raw_client
     else:
-        yield client
+        yield _raw_client
 
-    client.close()
+    _raw_client.close()
 
 
 def pytest_sessionstart(session):
