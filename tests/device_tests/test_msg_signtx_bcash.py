@@ -230,9 +230,8 @@ class TestMsgSigntxBch:
 
             return msg
 
-        client.set_filter(proto.TxAck, attack_processor)
-
         with client:
+            client.set_filter(proto.TxAck, attack_processor)
             client.set_expected_responses(
                 [
                     request_input(0),

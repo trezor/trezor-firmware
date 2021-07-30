@@ -407,6 +407,9 @@ class TrezorClientDebugLink(TrezorClient):
 
         Useful for test scenarios with an active malicious actor on the wire.
         """
+        if not self.in_with_statement:
+            raise RuntimeError("Must be called inside 'with' statement")
+
         self.filters[message_type] = callback
 
     def _filter_message(self, msg):
@@ -477,6 +480,7 @@ class TrezorClientDebugLink(TrezorClient):
 
         self.in_with_statement -= 1
         self.ui.clear()
+        self.filters.clear()
         self.watch_layout(False)
 
         if _type is not None:
