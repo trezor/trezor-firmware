@@ -91,7 +91,6 @@ class UdpTransport(ProtocolBasedTransport):
     def wait_until_ready(self, timeout: float = 10) -> None:
         try:
             self.open()
-            self.socket.settimeout(0)
             start = time.monotonic()
             while True:
                 if self._ping():
