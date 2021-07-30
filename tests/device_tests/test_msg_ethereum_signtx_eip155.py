@@ -101,6 +101,26 @@ VECTORS_CHAIN_IDS = (  # chain_id, slip44, sig_v, sig_r, sig_s
             "1447ba45be9fca42bcbf250389403245c8c1b0476e60b96dea320b0a596b5528",
         ),
     ),
+    # PALM
+    (
+        11297108109,
+        60,
+        (
+            22594216254,
+            "9d05ca7cdcf971f3114c0ef8d636c5aae1353bb227e04ec1198c60d874e676c0",
+            "35414067209e27fb690d9387264c74e334e25a117705f3583fb24434a952c9ca",
+        ),
+    ),
+    # PALM
+    (
+        11297108109,
+        1,
+        (
+            22594216253,
+            "cccccef8f6636f316e69a1239436f9d61021501ba20ed72b6528c84b2f727980",
+            "614cb533a5d73cbf92ba4683c87c9238d0547572ee8f0f821ab1decdfc9639b8",
+        ),
+    ),
 )
 
 

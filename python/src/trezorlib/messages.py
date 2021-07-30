@@ -3941,7 +3941,7 @@ class EthereumSignTx(protobuf.MessageType):
         6: protobuf.Field("value", "bytes", repeated=False, required=False),
         7: protobuf.Field("data_initial_chunk", "bytes", repeated=False, required=False),
         8: protobuf.Field("data_length", "uint32", repeated=False, required=False),
-        9: protobuf.Field("chain_id", "uint32", repeated=False, required=False),
+        9: protobuf.Field("chain_id", "uint64", repeated=False, required=False),
         10: protobuf.Field("tx_type", "uint32", repeated=False, required=False),
     }
 
