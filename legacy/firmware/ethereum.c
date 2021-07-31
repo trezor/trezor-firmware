@@ -118,20 +118,24 @@ static void hash_rlp_field(const uint8_t *buf, size_t size) {
  * Push an RLP encoded number to the hash buffer.
  * Ethereum yellow paper says to convert to big endian and strip leading zeros.
  */
-static void hash_rlp_number(uint32_t number) {
+static void hash_rlp_number(uint64_t number) {
   if (!number) {
     return;
   }
-  uint8_t data[4] = {0};
-  data[0] = (number >> 24) & 0xff;
-  data[1] = (number >> 16) & 0xff;
-  data[2] = (number >> 8) & 0xff;
-  data[3] = (number)&0xff;
+  uint8_t data[8] = {0};
+  data[0] = (number >> 56) & 0xff;
+  data[1] = (number >> 48) & 0xff;
+  data[2] = (number >> 40) & 0xff;
+  data[3] = (number >> 32) & 0xff;
+  data[4] = (number >> 24) & 0xff;
+  data[5] = (number >> 16) & 0xff;
+  data[6] = (number >> 8) & 0xff;
+  data[7] = (number)&0xff;
   int offset = 0;
   while (!data[offset]) {
     offset++;
   }
-  hash_rlp_field(data + offset, 4 - offset);
+  hash_rlp_field(data + offset, 8 - offset);
 }
 
 /*
@@ -153,18 +157,18 @@ static int rlp_calculate_length(int length, uint8_t firstbyte) {
   }
 }
 
-static int rlp_calculate_number_length(uint32_t number) {
-  if (number <= 0x7f) {
-    return 1;
-  } else if (number <= 0xff) {
-    return 2;
-  } else if (number <= 0xffff) {
-    return 3;
-  } else if (number <= 0xffffff) {
-    return 4;
-  } else {
-    return 5;
+/* If number is less than 0x80 the RLP encoding is iteself (1 byte).
+ * If it is 0x80 or larger, RLP encoding is 1 + length in bytes.
+ */
+static int rlp_calculate_number_length(uint64_t number) {
+  int length = 1;
+  if (number >= 0x80) {
+    while (number) {
+      length++;
+      number = number >> 8;
+    }
   }
+  return length;
 }
 
 static void send_request_chunk(void) {
