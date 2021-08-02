@@ -17,7 +17,7 @@ from .layout import (
 )
 
 # maximum supported chain id
-MAX_CHAIN_ID = 9223372036854775807
+MAX_CHAIN_ID = 9223372036854775790
 
 @with_keychain_from_chain_id
 async def sign_tx(ctx, msg, keychain):
