@@ -12,9 +12,7 @@ static void _librust_qstrs(void) {
   // layout
   MP_QSTR_Layout;
   MP_QSTR_set_timer_fn;
-  MP_QSTR_touch_start;
-  MP_QSTR_touch_move;
-  MP_QSTR_touch_end;
+  MP_QSTR_hid_event;
   MP_QSTR_timer;
   MP_QSTR_paint;
   MP_QSTR_trace;

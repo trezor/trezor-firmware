@@ -12,7 +12,7 @@ use crate::ui::{
     geometry::{Offset, Point, Rect},
 };
 
-use super::theme;
+use super::model::theme;
 
 pub const MAX_ARGUMENTS: usize = 6;
 

@@ -164,3 +164,10 @@ fn buffer_as_mut<'a>(ptr: *mut u8, len: usize) -> &'a mut [u8] {
         unsafe { slice::from_raw_parts_mut(ptr, len) }
     }
 }
+
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for Buffer {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        self.as_ref().trace(t)
+    }
+}

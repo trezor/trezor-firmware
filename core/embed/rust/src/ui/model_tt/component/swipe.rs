@@ -4,7 +4,7 @@ use crate::ui::{
     geometry::{Point, Rect},
 };
 
-use super::theme;
+use super::{theme, event::TouchEvent};
 
 pub enum SwipeDirection {
     Up,
@@ -86,11 +86,11 @@ impl Component for Swipe {
 
     fn event(&mut self, _ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         match (event, self.origin) {
-            (Event::TouchStart(pos), _) if self.area.contains(pos) => {
+            (Event::Touch(TouchEvent::TouchStart(pos)), _) if self.area.contains(pos) => {
                 // Mark the starting position of this touch.
                 self.origin.replace(pos);
             }
-            (Event::TouchMove(pos), Some(origin)) => {
+            (Event::Touch(TouchEvent::TouchMove(pos)), Some(origin)) => {
                 // Consider our allowed directions and the touch distance and modify the display
                 // backlight accordingly.
                 let ofs = pos - origin;
@@ -107,7 +107,7 @@ impl Component for Swipe {
                     }
                 };
             }
-            (Event::TouchEnd(pos), Some(origin)) => {
+            (Event::Touch(TouchEvent::TouchEnd(pos)), Some(origin)) => {
                 // Touch interaction is over, reset the position.
                 self.origin.take();
 

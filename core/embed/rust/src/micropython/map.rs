@@ -37,6 +37,8 @@ impl Map {
             value,
         }
     }
+
+    pub const EMPTY: Map = Self::from_fixed_static::<0>(&[]);
 }
 
 impl Map {

@@ -1,6 +1,9 @@
 use crate::trezorhal::display;
 
-use super::geometry::{Offset, Point, Rect};
+use super::{
+    component::model::constants,
+    geometry::{Offset, Point, Rect},
+};
 
 pub fn width() -> i32 {
     display::width()
@@ -73,13 +76,11 @@ pub fn text_width(text: &[u8], font: Font) -> i32 {
 }
 
 pub fn text_height() -> i32 {
-    const TEXT_HEIGHT: i32 = 16;
-    TEXT_HEIGHT
+    constants::TEXT_HEIGHT
 }
 
 pub fn line_height() -> i32 {
-    const LINE_HEIGHT: i32 = 26;
-    LINE_HEIGHT
+    constants::LINE_HEIGHT
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]

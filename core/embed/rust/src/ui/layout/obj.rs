@@ -13,10 +13,7 @@ use crate::{
         qstr::Qstr,
         typ::Type,
     },
-    ui::{
-        component::{Child, Component, Event, EventCtx, Never, TimerToken},
-        geometry::Point,
-    },
+    ui::component::{model::HidEvent, Child, Component, Event, EventCtx, Never, TimerToken},
     util,
 };
 
@@ -207,9 +204,7 @@ impl LayoutObj {
             name: Qstr::MP_QSTR_Layout,
             locals: &obj_dict!(obj_map! {
                 Qstr::MP_QSTR_set_timer_fn => obj_fn_2!(ui_layout_set_timer_fn).as_obj(),
-                Qstr::MP_QSTR_touch_start => obj_fn_3!(ui_layout_touch_start).as_obj(),
-                Qstr::MP_QSTR_touch_move => obj_fn_3!(ui_layout_touch_move).as_obj(),
-                Qstr::MP_QSTR_touch_end => obj_fn_3!(ui_layout_touch_end).as_obj(),
+                Qstr::MP_QSTR_hid_event => obj_fn_var!(4, 4, ui_layout_hid_event).as_obj(),
                 Qstr::MP_QSTR_timer => obj_fn_2!(ui_layout_timer).as_obj(),
                 Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).as_obj(),
                 Qstr::MP_QSTR_trace => obj_fn_2!(ui_layout_trace).as_obj(),
@@ -286,34 +281,21 @@ extern "C" fn ui_layout_set_timer_fn(this: Obj, timer_fn: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn ui_layout_touch_start(this: Obj, x: Obj, y: Obj) -> Obj {
-    let block = || {
-        let this: Gc<LayoutObj> = this.try_into()?;
-        let event = Event::TouchStart(Point::new(x.try_into()?, y.try_into()?));
-        let msg = this.obj_event(event)?;
+extern "C" fn ui_layout_hid_event(n_args: usize, args: *const Obj) -> Obj {
+    let block = |args: &[Obj], _kwargs: &Map| {
+        if args.len() != 4 {
+            return Err(Error::TypeError);
+        }
+        let this: Gc<LayoutObj> = args[0].try_into()?;
+        let event = HidEvent::new(
+            args[1].try_into()?,
+            args[2].try_into()?,
+            args[3].try_into()?,
+        )?;
+        let msg = this.obj_event(Event::HumanInput(event))?;
         Ok(msg)
     };
-    unsafe { util::try_or_raise(block) }
-}
-
-extern "C" fn ui_layout_touch_move(this: Obj, x: Obj, y: Obj) -> Obj {
-    let block = || {
-        let this: Gc<LayoutObj> = this.try_into()?;
-        let event = Event::TouchMove(Point::new(x.try_into()?, y.try_into()?));
-        let msg = this.obj_event(event)?;
-        Ok(msg)
-    };
-    unsafe { util::try_or_raise(block) }
-}
-
-extern "C" fn ui_layout_touch_end(this: Obj, x: Obj, y: Obj) -> Obj {
-    let block = || {
-        let this: Gc<LayoutObj> = this.try_into()?;
-        let event = Event::TouchEnd(Point::new(x.try_into()?, y.try_into()?));
-        let msg = this.obj_event(event)?;
-        Ok(msg)
-    };
-    unsafe { util::try_or_raise(block) }
+    unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
 }
 
 extern "C" fn ui_layout_timer(this: Obj, token: Obj) -> Obj {

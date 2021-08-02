@@ -3,7 +3,10 @@ use heapless::Vec;
 use crate::{
     trezorhal::random,
     ui::{
-        component::{Child, Component, Event, EventCtx, Never},
+        component::{
+            label::{Label, LabelStyle},
+            Child, Component, Event, EventCtx, Never,
+        },
         display,
         geometry::{Grid, Offset, Point, Rect},
     },
@@ -11,7 +14,6 @@ use crate::{
 
 use super::{
     button::{Button, ButtonContent, ButtonMsg::Clicked},
-    label::{Label, LabelStyle},
     theme,
 };
 
