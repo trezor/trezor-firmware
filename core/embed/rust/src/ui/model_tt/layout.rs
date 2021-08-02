@@ -4,16 +4,17 @@ use crate::{
     error::Error,
     micropython::{buffer::Buffer, obj::Obj},
     ui::{
-        component::{
-            model_tt::{theme, Button, Dialog, DialogMsg, Text},
-            Child,
-        },
+        component::{Child, Text},
         display,
+        layout::obj::LayoutObj,
     },
     util,
 };
 
-use super::obj::LayoutObj;
+use super::{
+    component::{Button, Dialog, DialogMsg},
+    theme,
+};
 
 impl<T> TryFrom<DialogMsg<T>> for Obj
 where

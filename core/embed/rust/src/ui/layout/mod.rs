@@ -1,2 +1,1 @@
-mod example;
-mod obj;
+pub mod obj;

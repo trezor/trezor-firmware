@@ -456,11 +456,9 @@ if utils.MODEL == "1":
             msg = None
             if event is RENDER:
                 self.layout.paint()
-            elif event is io.TOUCH_START:
-                msg = self.layout.touch_start(x, y)
-            elif event is io.TOUCH_MOVE:
-                msg = self.layout.touch_move(x, y)
-            elif event is io.TOUCH_END:
-                msg = self.layout.touch_end(x, y)
+            elif event in (io.BUTTON_PRESSED, io.BUTTON_RELEASED):
+                msg = self.layout.hid_event(event, x, 0)
+            # elif event in (io.TOUCH_START, io.TOUCH_MOVE, io.TOUCH_END):
+            #    self.layout.hid_event(event, x, y)
             if msg is not None:
                 raise Result(msg)

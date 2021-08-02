@@ -44,8 +44,7 @@ extern "C" {
     ) -> bool;
 }
 
-const WIDTH: i32 = 240;
-const HEIGHT: i32 = 240;
+use crate::ui::component::model::constants::{HEIGHT, WIDTH};
 
 pub struct ToifInfo {
     pub width: u16,

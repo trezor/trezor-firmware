@@ -2,7 +2,7 @@ use core::{mem, time::Duration};
 
 use heapless::Vec;
 
-use crate::ui::geometry::Point;
+use crate::ui::{model_t1::event::ButtonEvent, model_tt::event::TouchEvent};
 
 /// Type used by components that do not return any messages.
 ///
@@ -81,9 +81,7 @@ where
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Event {
-    TouchStart(Point),
-    TouchMove(Point),
-    TouchEnd(Point),
+    HumanInput(HidEvent),
     Timer(TimerToken),
 }
 

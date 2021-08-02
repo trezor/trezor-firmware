@@ -7,7 +7,10 @@ resolver = "2"
 build = "build.rs"
 
 [features]
+default = ["model_tt"]
 bitcoin_only = []
+model_tt = []
+model_t1 = []
 ui = []
 ui_debug = []
 test = ["cc", "glob"]
