@@ -1,0 +1,2 @@
+Updated `chain_id` to be a 64bit value to make it consistent with the Eth client chain_ids and software wallets like Metamask. Also updated the value of MAX_CHAIN_ID.
+Consequently also updated `signature_v` to be a 64bit value because it uses chain_id to calculate the signature
