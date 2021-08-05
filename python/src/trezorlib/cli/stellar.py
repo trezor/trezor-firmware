@@ -83,8 +83,17 @@ def sign_transaction(client, b64envelope, address, network_passphrase):
         click.echo()
         click.echo("  pip install stellar-sdk")
         sys.exit(1)
+    try:
+        envelope = parse_transaction_envelope_from_xdr(b64envelope, network_passphrase)
+    except Exception:
+        click.echo(
+            "Failed to parse XDR.\n"
+            "Make sure to pass a valid TransactionEnvelope object.\n"
+            "You can check whether the data you submitted is valid TransactionEnvelope object "
+            "through XDRViewer - https://laboratory.stellar.org/#xdr-viewer\n"
+        )
+        sys.exit(1)
 
-    envelope = parse_transaction_envelope_from_xdr(b64envelope, network_passphrase)
     if isinstance(envelope, FeeBumpTransactionEnvelope):
         click.echo("FeeBumpTransactionEnvelope is not supported")
         sys.exit(1)
