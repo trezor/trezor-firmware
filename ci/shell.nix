@@ -49,6 +49,8 @@ stdenv.mkDerivation ({
     check
     clang-tools
     clang
+    docker
+    docker-compose
     editorconfig-checker
     gcc
     gcc-arm-embedded

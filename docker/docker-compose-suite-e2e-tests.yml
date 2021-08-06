@@ -1,0 +1,19 @@
+version: "3"
+services:
+  trezor-user-env-unix:
+    image: registry.gitlab.com/satoshilabs/trezor/trezor-user-env/trezor-user-env
+    environment:
+      - SDL_VIDEODRIVER=dummy
+      - XDG_RUNTIME_DIR=/var/tmp
+    network_mode: bridge # this makes docker reuse existing networks
+  e2e-tests:
+    image: registry.gitlab.com/satoshilabs/trezor/trezor-suite/trezor-suite-e2e
+    entrypoint: []
+    environment:
+    # TODO: get also the artifact with T1 emulator
+      - CYPRESS_emuVersionT2=https://gitlab.com/satoshilabs/trezor/trezor-firmware/-/jobs/$CI_JOB_ID/artifacts/file/core/build/unix/trezor-emu-core
+      - CYPRESS_baseUrl=https://suite.corp.sldev.cz/suite-web/develop
+      - CYPRESS_ASSET_PREFIX=/web
+    network_mode: service:trezor-user-env-unix
+    working_dir: /trezor-suite
+    command: bash -c "node ./packages/integration-tests/projects/suite-web/run_tests.js --project /trezor-suite/packages/integration-tests/projects/suite-web"

@@ -337,3 +337,19 @@ core unix memory profiler:
       - core/prof/memperf-html
     expire_in: 1 week
     when: always
+
+# Suite e2e
+suite e2e tests:
+  stage: test
+  variables:
+    COMPOSE_FILE: ./docker/docker-compose.suite-e2e-tests.yml
+  before_script:
+    - docker login $CI_DEPENDENCY_PROXY_SERVER -u $CI_DEPENDENCY_PROXY_USER -p $CI_DEPENDENCY_PROXY_PASSWORD
+  script:
+    - docker-compose pull
+    - docker-compose up -d trezor-user-env-unix
+    - sleep 5
+    - docker-compose run e2e-tests
+  after_script:
+    - docker-compose down
+    - docker network prune -f
