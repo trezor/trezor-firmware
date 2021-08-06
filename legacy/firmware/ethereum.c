@@ -38,8 +38,8 @@
 #include "util.h"
 
 /* maximum supported chain id.
-  signature_v must also fit in an uint64_t.
-  */
+ * signature_v must also fit in an uint64_t.
+ */
 #define MAX_CHAIN_ID ((0xFFFFFFFFFFFFFFFF - 35) >> 1)
 
 static bool ethereum_signing = false;
