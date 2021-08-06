@@ -40,7 +40,7 @@
 /* maximum supported chain id.
   signature_v must also fit in an uint64_t.
   */
-#define MAX_CHAIN_ID ((ULLONG_MAX - 35) >> 1)
+#define MAX_CHAIN_ID ((0xFFFFFFFFFFFFFFFF - 35) >> 1)
 
 static bool ethereum_signing = false;
 static uint32_t data_total, data_left;
