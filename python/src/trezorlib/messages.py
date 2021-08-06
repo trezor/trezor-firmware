@@ -5966,8 +5966,8 @@ class StellarSignTx(protobuf.MessageType):
         4: protobuf.Field("source_account", "string", repeated=False, required=True),
         5: protobuf.Field("fee", "uint32", repeated=False, required=True),
         6: protobuf.Field("sequence_number", "uint64", repeated=False, required=True),
-        8: protobuf.Field("timebounds_start", "uint32", repeated=False, required=False),
-        9: protobuf.Field("timebounds_end", "uint32", repeated=False, required=False),
+        8: protobuf.Field("timebounds_start", "uint32", repeated=False, required=True),
+        9: protobuf.Field("timebounds_end", "uint32", repeated=False, required=True),
         10: protobuf.Field("memo_type", "StellarMemoType", repeated=False, required=True),
         11: protobuf.Field("memo_text", "string", repeated=False, required=False),
         12: protobuf.Field("memo_id", "uint64", repeated=False, required=False),
@@ -5982,11 +5982,11 @@ class StellarSignTx(protobuf.MessageType):
         source_account: "str",
         fee: "int",
         sequence_number: "int",
+        timebounds_start: "int",
+        timebounds_end: "int",
         memo_type: "StellarMemoType",
         num_operations: "int",
         address_n: Optional[List["int"]] = None,
-        timebounds_start: Optional["int"] = None,
-        timebounds_end: Optional["int"] = None,
         memo_text: Optional["str"] = None,
         memo_id: Optional["int"] = None,
         memo_hash: Optional["bytes"] = None,
@@ -5996,10 +5996,10 @@ class StellarSignTx(protobuf.MessageType):
         self.source_account = source_account
         self.fee = fee
         self.sequence_number = sequence_number
-        self.memo_type = memo_type
-        self.num_operations = num_operations
         self.timebounds_start = timebounds_start
         self.timebounds_end = timebounds_end
+        self.memo_type = memo_type
+        self.num_operations = num_operations
         self.memo_text = memo_text
         self.memo_id = memo_id
         self.memo_hash = memo_hash

@@ -52,8 +52,8 @@ message StellarSignTx {
     required string source_account = 4;      // source account address
     required uint32 fee = 5;                 // Fee (in stroops) for the transaction
     required uint64 sequence_number = 6;     // transaction sequence number
-    optional uint32 timebounds_start = 8;    // unix timestamp (client must truncate this to 32 bytes)
-    optional uint32 timebounds_end = 9;      // unix timestamp (client must truncate this to 32 bytes)
+    required uint32 timebounds_start = 8;    // unix timestamp (client must truncate this to 32 bytes)
+    required uint32 timebounds_end = 9;      // unix timestamp (client must truncate this to 32 bytes)
     required StellarMemoType memo_type = 10; // type of memo attached to the transaction
     optional string memo_text = 11;          // up to 28 characters (4 bytes are for length)
     optional uint64 memo_id = 12;            // 8-byte uint64

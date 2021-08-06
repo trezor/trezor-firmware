@@ -101,21 +101,16 @@ bool stellar_signingInit(const StellarSignTx *msg) {
   // Hash: sequence number
   stellar_hashupdate_uint64(msg->sequence_number);
 
-  // Timebounds are only present if timebounds_start or timebounds_end is
-  // non-zero
-  uint8_t has_timebounds =
-      (msg->timebounds_start > 0 || msg->timebounds_end > 0);
   // Hash: the "has timebounds?" boolean
-  stellar_hashupdate_bool(has_timebounds);
-  if (has_timebounds) {
-    // Timebounds are sent as uint32s since that's all we can display, but they
-    // must be hashed as 64-bit values
-    stellar_hashupdate_uint32(0);
-    stellar_hashupdate_uint32(msg->timebounds_start);
+  stellar_hashupdate_bool(true);
 
-    stellar_hashupdate_uint32(0);
-    stellar_hashupdate_uint32(msg->timebounds_end);
-  }
+  // Timebounds are sent as uint32s since that's all we can display, but they
+  // must be hashed as 64-bit values
+  stellar_hashupdate_uint32(0);
+  stellar_hashupdate_uint32(msg->timebounds_start);
+
+  stellar_hashupdate_uint32(0);
+  stellar_hashupdate_uint32(msg->timebounds_end);
 
   // Hash: memo
   stellar_hashupdate_uint32(msg->memo_type);
@@ -1297,7 +1292,8 @@ void stellar_format_asset(const StellarAsset *asset, char *str_formatted,
   memzero(str_asset_issuer_trunc, sizeof(str_asset_issuer_trunc));
 
   // Validate issuer account for non-native assets
-  if (asset->type != StellarAssetType_NATIVE && !stellar_validateAddress(asset->issuer)) {
+  if (asset->type != StellarAssetType_NATIVE &&
+      !stellar_validateAddress(asset->issuer)) {
     stellar_signingAbort(_("Invalid asset issuer"));
     return;
   }
@@ -1323,7 +1319,8 @@ void stellar_format_asset(const StellarAsset *asset, char *str_formatted,
     memcpy(str_asset_issuer_trunc, asset->issuer, 5);
   }
   // Issuer is read the same way for both types of custom assets
-  if (asset->type == StellarAssetType_ALPHANUM4 || asset->type == StellarAssetType_ALPHANUM12) {
+  if (asset->type == StellarAssetType_ALPHANUM4 ||
+      asset->type == StellarAssetType_ALPHANUM12) {
     strlcat(str_formatted, _(" ("), len);
     strlcat(str_formatted, str_asset_issuer_trunc, len);
     strlcat(str_formatted, _(")"), len);
@@ -1676,42 +1673,38 @@ void stellar_layoutTransactionSummary(const StellarSignTx *msg) {
   memzero(str_lines, sizeof(str_lines));
 
   // Timebound: lower
-  if (msg->timebounds_start || msg->timebounds_end) {
-    time_t timebound;
-    char str_timebound[32] = {0};
-    const struct tm *tm = NULL;
+  time_t timebound;
+  char str_timebound[32] = {0};
+  const struct tm *tm = NULL;
 
-    timebound = (time_t)msg->timebounds_start;
-    strlcpy(str_lines[0], _("Valid from:"), sizeof(str_lines[0]));
-    if (timebound) {
-      tm = gmtime(&timebound);
-      strftime(str_timebound, sizeof(str_timebound), "%F %T (UTC)", tm);
-      strlcpy(str_lines[1], str_timebound, sizeof(str_lines[1]));
-    } else {
-      strlcpy(str_lines[1], _("[no restriction]"), sizeof(str_lines[1]));
-    }
-
-    // Reset for timebound_max
-    memzero(str_timebound, sizeof(str_timebound));
-
-    timebound = (time_t)msg->timebounds_end;
-    strlcpy(str_lines[2], _("Valid to:"), sizeof(str_lines[2]));
-    if (timebound) {
-      tm = gmtime(&timebound);
-      strftime(str_timebound, sizeof(str_timebound), "%F %T (UTC)", tm);
-      strlcpy(str_lines[3], str_timebound, sizeof(str_lines[3]));
-    } else {
-      strlcpy(str_lines[3], _("[no restriction]"), sizeof(str_lines[3]));
-    }
+  timebound = (time_t)msg->timebounds_start;
+  strlcpy(str_lines[0], _("Valid from:"), sizeof(str_lines[0]));
+  if (timebound) {
+    tm = gmtime(&timebound);
+    strftime(str_timebound, sizeof(str_timebound), "%F %T (UTC)", tm);
+    strlcpy(str_lines[1], str_timebound, sizeof(str_lines[1]));
+  } else {
+    strlcpy(str_lines[1], _("[no restriction]"), sizeof(str_lines[1]));
   }
 
-  if (msg->timebounds_start || msg->timebounds_end) {
-    stellar_layoutTransactionDialog(_("Confirm Time Bounds"), str_lines[0],
-                                    str_lines[1], str_lines[2], str_lines[3]);
-    if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-      stellar_signingAbort(_("User canceled"));
-      return;
-    }
+  // Reset for timebound_max
+  memzero(str_timebound, sizeof(str_timebound));
+
+  timebound = (time_t)msg->timebounds_end;
+  strlcpy(str_lines[2], _("Valid to:"), sizeof(str_lines[2]));
+  if (timebound) {
+    tm = gmtime(&timebound);
+    strftime(str_timebound, sizeof(str_timebound), "%F %T (UTC)", tm);
+    strlcpy(str_lines[3], str_timebound, sizeof(str_lines[3]));
+  } else {
+    strlcpy(str_lines[3], _("[no restriction]"), sizeof(str_lines[3]));
+  }
+
+  stellar_layoutTransactionDialog(_("Confirm Time Bounds"), str_lines[0],
+                                  str_lines[1], str_lines[2], str_lines[3]);
+  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    stellar_signingAbort(_("User canceled"));
+    return;
   }
 }
 
