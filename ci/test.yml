@@ -342,7 +342,7 @@ core unix memory profiler:
 suite e2e tests:
   stage: test
   variables:
-    COMPOSE_FILE: ./docker/docker-compose.suite-e2e-tests.yml
+    COMPOSE_FILE: ./docker/docker-compose-suite-e2e-tests.yml
   before_script:
     - docker login $CI_DEPENDENCY_PROXY_SERVER -u $CI_DEPENDENCY_PROXY_USER -p $CI_DEPENDENCY_PROXY_PASSWORD
   script:
