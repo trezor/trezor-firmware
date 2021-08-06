@@ -70,20 +70,14 @@ async def _init(ctx: Context, w: bytearray, pubkey: bytes, msg: StellarSignTx) -
     )
 
 
-async def _timebounds(
-    ctx: Context, w: bytearray, start: int | None, end: int | None
-) -> None:
-    # timebounds are only present if timebounds_start or timebounds_end is non-zero
-    if start is not None and end is not None:
-        # confirm dialog
-        await layout.require_confirm_timebounds(ctx, start, end)
-        writers.write_bool(w, True)
+async def _timebounds(ctx: Context, w: bytearray, start: int, end: int) -> None:
+    # confirm dialog
+    await layout.require_confirm_timebounds(ctx, start, end)
 
-        # timebounds are sent as uint32s since that's all we can display, but they must be hashed as 64bit
-        writers.write_uint64(w, start)
-        writers.write_uint64(w, end)
-    else:
-        writers.write_bool(w, False)
+    # timebounds are sent as uint32s since that's all we can display, but they must be hashed as 64bit
+    writers.write_bool(w, True)
+    writers.write_uint64(w, start)
+    writers.write_uint64(w, end)
 
 
 async def _operations(ctx: Context, w: bytearray, num_operations: int) -> None:
