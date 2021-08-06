@@ -5,8 +5,8 @@ from trezor.ui.layouts import (
     confirm_address,
     confirm_blob,
     confirm_metadata,
+    confirm_properties,
 )
-from trezor.ui.layouts.tt.altcoin import confirm_timebounds_stellar
 from trezor.wire import DataError
 
 from . import consts
@@ -51,7 +51,15 @@ async def require_confirm_init(
 
 
 async def require_confirm_timebounds(ctx: Context, start: int, end: int) -> None:
-    await confirm_timebounds_stellar(ctx, start, end)
+    await confirm_properties(
+        ctx,
+        "confirm_timebounds",
+        title="Confirm timebounds",
+        props=(
+            ("Valid from (UTC)", str(start) if start > 0 else "[no restriction]"),
+            ("Valid to (UTC)", str(end) if end > 0 else "[no restriction]"),
+        ),
+    )
 
 
 async def require_confirm_memo(

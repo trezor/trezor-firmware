@@ -43,29 +43,6 @@ async def confirm_total_ripple(
     )
 
 
-async def confirm_timebounds_stellar(
-    ctx: wire.GenericContext, start: int, end: int
-) -> None:
-    text = Text("Confirm timebounds", ui.ICON_SEND, ui.GREEN)
-    text.bold("Valid from (UTC):")
-    if start:
-        text.normal(str(start))
-    else:
-        text.mono("[no restriction]")
-
-    text.bold("Valid to (UTC):")
-    if end:
-        text.normal(str(end))
-    else:
-        text.mono("[no restriction]")
-
-    await raise_if_cancelled(
-        interact(
-            ctx, Confirm(text), "confirm_timebounds", ButtonRequestType.ConfirmOutput
-        )
-    )
-
-
 async def confirm_transfer_binance(
     ctx: wire.GenericContext, inputs_outputs: Sequence[tuple[str, str, str]]
 ) -> None:
