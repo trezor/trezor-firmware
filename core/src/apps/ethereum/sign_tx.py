@@ -19,6 +19,7 @@ from .layout import (
 # maximum supported chain id
 MAX_CHAIN_ID = (0xFFFF_FFFF_FFFF_FFFF - 35) / 2
 
+
 @with_keychain_from_chain_id
 async def sign_tx(ctx, msg, keychain):
     msg = sanitize(msg)
