@@ -32,6 +32,7 @@ try:
         IdMemo,
         ManageData,
         ManageSellOffer,
+        NoneMemo,
         Operation,
         PathPaymentStrictReceive,
         Payment,
@@ -53,7 +54,6 @@ except ImportError:
     DEFAULT_NETWORK_PASSPHRASE = "Public Global Stellar Network ; September 2015"
 
 DEFAULT_BIP32_PATH = "m/44h/148h/0h"
-# Stellar's BIP32 differs to Bitcoin's see https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0005.md
 
 
 def from_envelope(envelope: "TransactionEnvelope"):
@@ -63,35 +63,47 @@ def from_envelope(envelope: "TransactionEnvelope"):
     """
     if not HAVE_STELLAR_SDK:
         raise RuntimeError("Stellar SDK not available")
-    tx = messages.StellarSignTx()
+
     parsed_tx = envelope.transaction
-    tx.source_account = parsed_tx.source.account_id
-    tx.fee = parsed_tx.fee
-    tx.sequence_number = parsed_tx.sequence
+    if parsed_tx.time_bounds is None:
+        raise ValueError("Timebounds are mandatory")
 
-    # Timebounds is an optional field
-    if parsed_tx.time_bounds:
-        tx.timebounds_start = parsed_tx.time_bounds.min_time
-        tx.timebounds_end = parsed_tx.time_bounds.max_time
-
-    memo = parsed_tx.memo
-    if isinstance(memo, TextMemo):
+    memo_type = messages.StellarMemoType.NONE
+    memo_text = None
+    memo_id = None
+    memo_hash = None
+    if isinstance(parsed_tx.memo, NoneMemo):
+        pass
+    elif isinstance(parsed_tx.memo, TextMemo):
         # memo_text is specified as UTF-8 string, but returned as bytes from the XDR parser
-        tx.memo_type = messages.StellarMemoType.TEXT
-        tx.memo_text = memo.memo_text.decode("utf-8")
-    elif isinstance(memo, IdMemo):
-        tx.memo_type = messages.StellarMemoType.ID
-        tx.memo_id = memo.memo_id
-    elif isinstance(memo, HashMemo):
-        tx.memo_type = messages.StellarMemoType.HASH
-        tx.memo_hash = memo.memo_hash
-    elif isinstance(memo, ReturnHashMemo):
-        tx.memo_type = messages.StellarMemoType.RETURN
-        tx.memo_hash = memo.memo_return
+        memo_type = messages.StellarMemoType.TEXT
+        memo_text = parsed_tx.memo.memo_text.decode("utf-8")
+    elif isinstance(parsed_tx.memo, IdMemo):
+        memo_type = messages.StellarMemoType.ID
+        memo_id = parsed_tx.memo.memo_id
+    elif isinstance(parsed_tx.memo, HashMemo):
+        memo_type = messages.StellarMemoType.HASH
+        memo_hash = parsed_tx.memo.memo_hash
+    elif isinstance(parsed_tx.memo, ReturnHashMemo):
+        memo_type = messages.StellarMemoType.RETURN
+        memo_hash = parsed_tx.memo.memo_return
     else:
-        tx.memo_type = messages.StellarMemoType.NONE
+        raise ValueError("Unsupported memo type")
 
-    tx.num_operations = len(parsed_tx.operations)
+    tx = messages.StellarSignTx(
+        source_account=parsed_tx.source.account_id,
+        fee=parsed_tx.fee,
+        sequence_number=parsed_tx.sequence,
+        timebounds_start=parsed_tx.time_bounds.min_time,
+        timebounds_end=parsed_tx.time_bounds.max_time,
+        memo_type=memo_type,
+        memo_text=memo_text,
+        memo_id=memo_id,
+        memo_hash=memo_hash,
+        num_operations=len(parsed_tx.operations),
+        network_passphrase=envelope.network_passphrase,
+    )
+
     operations = [_read_operation(op) for op in parsed_tx.operations]
     return tx, operations
 
