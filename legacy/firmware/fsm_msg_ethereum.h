@@ -76,6 +76,11 @@ void fsm_msgEthereumTxAck(const EthereumTxAck *msg) {
   ethereum_signing_txack(msg);
 }
 
+void fsm_msgEthereumSignTxEIP1559(const EthereumSignTxEIP1559 *msg) {
+  (void)msg;
+  fsm_sendFailure(FailureType_Failure_UnexpectedMessage, _("Not implemented"));
+}
+
 void fsm_msgEthereumGetAddress(const EthereumGetAddress *msg) {
   RESP_INIT(EthereumAddress);
 
