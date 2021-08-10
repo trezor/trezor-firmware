@@ -192,9 +192,11 @@ def _read_operation(op: "Operation"):
             limit=_read_amount(op.limit),
         )
     if isinstance(op, AllowTrust):
-        is_authorized = False
-        if op.authorize is True or TrustLineEntryFlag.AUTHORIZED_FLAG == op.authorize:
-            is_authorized = True
+        if op.authorize not in (
+            TrustLineEntryFlag.UNAUTHORIZED_FLAG,
+            TrustLineEntryFlag.AUTHORIZED_FLAG,
+        ):
+            raise ValueError("Unsupported trust line flag")
         asset_type = (
             ASSET_TYPE_ALPHA4 if len(op.asset_code) <= 4 else ASSET_TYPE_ALPHA12
         )
@@ -203,7 +205,7 @@ def _read_operation(op: "Operation"):
             trusted_account=op.trustor,
             asset_type=asset_type,
             asset_code=op.asset_code,
-            is_authorized=is_authorized,
+            is_authorized=op.authorize.value,
         )
     if isinstance(op, AccountMerge):
         return messages.StellarAccountMergeOp(
