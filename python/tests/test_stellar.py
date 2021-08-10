@@ -13,8 +13,7 @@
 #
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
-
-
+import pytest
 from stellar_sdk import Account, Asset, Network, TransactionBuilder, TrustLineEntryFlag
 from stellar_sdk.strkey import StrKey
 
@@ -959,6 +958,36 @@ def test_stellar_parse_operation_allow_trust_v0():
     assert parsed_operation.asset_type == stellar.ASSET_TYPE_ALPHA4
     assert parsed_operation.asset_code == asset_code
     assert parsed_operation.trusted_account == trustor
+    assert parsed_operation.is_authorized == TrustLineEntryFlag.AUTHORIZED_FLAG.value
+
+
+def test_stellar_parse_operation_allow_trust_unsupport_flag_v0():
+    network_passphrase = Network.TESTNET_NETWORK_PASSPHRASE
+    tx_source = "GCSJ7MFIIGIRMAS4R3VT5FIFIAOXNMGDI5HPYTWS5X7HH74FSJ6STSGF"
+    sequence = 123456
+    asset_code = "USD"
+    trustor = "GCSJ7MFIIGIRMAS4R3VT5FIFIAOXNMGDI5HPYTWS5X7HH74FSJ6STSGF"
+    operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
+
+    source_account = Account(account_id=tx_source, sequence=sequence)
+    envelope = (
+        TransactionBuilder(
+            source_account=source_account,
+            network_passphrase=network_passphrase,
+            base_fee=100,
+            v1=False,
+        )
+        .append_allow_trust_op(
+            trustor=trustor,
+            asset_code=asset_code,
+            authorize=TrustLineEntryFlag.AUTHORIZED_TO_MAINTAIN_LIABILITIES_FLAG,
+            source=operation_source,
+        )
+        .build()
+    )
+
+    with pytest.raises(ValueError, match="Unsupported trust line flag"):
+        stellar.from_envelope(envelope)
 
 
 def test_stellar_parse_operation_account_merge_v0():
@@ -1994,6 +2023,36 @@ def test_stellar_parse_operation_allow_trust_v1():
     assert parsed_operation.asset_type == stellar.ASSET_TYPE_ALPHA4
     assert parsed_operation.asset_code == asset_code
     assert parsed_operation.trusted_account == trustor
+    assert parsed_operation.is_authorized == TrustLineEntryFlag.AUTHORIZED_FLAG.value
+
+
+def test_stellar_parse_operation_allow_trust_unsupport_flag_v1():
+    network_passphrase = Network.TESTNET_NETWORK_PASSPHRASE
+    tx_source = "GCSJ7MFIIGIRMAS4R3VT5FIFIAOXNMGDI5HPYTWS5X7HH74FSJ6STSGF"
+    sequence = 123456
+    asset_code = "USD"
+    trustor = "GCSJ7MFIIGIRMAS4R3VT5FIFIAOXNMGDI5HPYTWS5X7HH74FSJ6STSGF"
+    operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
+
+    source_account = Account(account_id=tx_source, sequence=sequence)
+    envelope = (
+        TransactionBuilder(
+            source_account=source_account,
+            network_passphrase=network_passphrase,
+            base_fee=100,
+            v1=True,
+        )
+        .append_allow_trust_op(
+            trustor=trustor,
+            asset_code=asset_code,
+            authorize=TrustLineEntryFlag.AUTHORIZED_TO_MAINTAIN_LIABILITIES_FLAG,
+            source=operation_source,
+        )
+        .build()
+    )
+
+    with pytest.raises(ValueError, match="Unsupported trust line flag"):
+        stellar.from_envelope(envelope)
 
 
 def test_stellar_parse_operation_account_merge_v1():
