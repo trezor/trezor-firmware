@@ -46,6 +46,8 @@ PATTERN_BIP48_SEGWIT = "m/48'/coin_type'/account'/2'/change/address_index"
 PATTERN_BIP49 = "m/49'/coin_type'/account'/change/address_index"
 # BIP-84 for segwit: https://github.com/bitcoin/bips/blob/master/bip-0084.mediawiki
 PATTERN_BIP84 = "m/84'/coin_type'/account'/change/address_index"
+# BIP-86 for taproot: https://github.com/bitcoin/bips/blob/master/bip-0086.mediawiki
+PATTERN_BIP86 = "m/86'/coin_type'/account'/change/address_index"
 
 # compatibility patterns, will be removed in the future
 PATTERN_GREENADDRESS_A = "m/[1,4]/address_index"
@@ -129,6 +131,9 @@ def validate_path_against_script_type(
             patterns.append(PATTERN_GREENADDRESS_A)
             patterns.append(PATTERN_GREENADDRESS_B)
 
+    elif coin.taproot and script_type == InputScriptType.SPENDTAPROOT:
+        patterns.append(PATTERN_BIP86)
+
     return any(
         PathSchema.parse(pattern, coin.slip44).match(address_n) for pattern in patterns
     )
@@ -178,6 +183,10 @@ def get_schemas_for_coin(coin: coininfo.CoinInfo) -> Iterable[PathSchema]:
                 PATTERN_BIP48_SEGWIT,
             )
         )
+
+    # taproot patterns
+    if coin.taproot:
+        patterns.append(PATTERN_BIP86)
 
     schemas = [PathSchema.parse(pattern, coin.slip44) for pattern in patterns]
 
