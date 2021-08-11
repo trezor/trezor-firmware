@@ -111,7 +111,7 @@ def by_name(name: str) -> CoinInfo:
             cashaddr_prefix=None,
             slip44=0,
             segwit=True,
-            taproot=False,
+            taproot=True,
             fork_id=None,
             force_bip143=False,
             decred=False,
