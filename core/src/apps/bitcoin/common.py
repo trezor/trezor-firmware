@@ -19,8 +19,8 @@ SIGHASH_ALL = const(0x01)
 # The number of bip32 levels used in a wallet (chain and address)
 BIP32_WALLET_DEPTH = const(2)
 
-# supported witness version for bech32 addresses
-_BECH32_WITVER = const(0x00)
+# supported witness versions for bech32 addresses
+_BECH32_WITVERS = (0, 1)
 
 MULTISIG_INPUT_SCRIPT_TYPES = (
     InputScriptType.SPENDMULTISIG,
@@ -78,8 +78,9 @@ def ecdsa_hash_pubkey(pubkey: bytes, coin: CoinInfo) -> bytes:
     return coin.script_hash(pubkey).digest()
 
 
-def encode_bech32_address(prefix: str, script: bytes) -> str:
-    address = bech32.encode(prefix, _BECH32_WITVER, script)
+def encode_bech32_address(prefix: str, witver: int, script: bytes) -> str:
+    assert witver in _BECH32_WITVERS
+    address = bech32.encode(prefix, witver, script)
     if address is None:
         raise wire.ProcessError("Invalid address")
     return address
@@ -87,7 +88,7 @@ def encode_bech32_address(prefix: str, script: bytes) -> str:
 
 def decode_bech32_address(prefix: str, address: str) -> bytes:
     witver, raw = bech32.decode(prefix, address)
-    if witver != _BECH32_WITVER:
+    if witver not in _BECH32_WITVERS:
         raise wire.ProcessError("Invalid address witness program")
     assert raw is not None
     return bytes(raw)

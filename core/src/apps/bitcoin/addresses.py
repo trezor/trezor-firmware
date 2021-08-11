@@ -56,6 +56,11 @@ def get_address(
         # native p2wpkh
         return address_p2wpkh(node.public_key(), coin)
 
+    elif script_type == InputScriptType.SPENDTAPROOT:  # taproot
+        if not coin.taproot or not coin.bech32_prefix:
+            raise wire.ProcessError("Taproot not enabled on this coin")
+        return address_p2tr(node.public_key(), coin)
+
     elif (
         script_type == InputScriptType.SPENDP2SHWITNESS
     ):  # p2wpkh or p2wsh nested in p2sh
@@ -123,11 +128,18 @@ def address_p2wsh_in_p2sh(witness_script_hash: bytes, coin: CoinInfo) -> str:
 def address_p2wpkh(pubkey: bytes, coin: CoinInfo) -> str:
     assert coin.bech32_prefix is not None
     pubkeyhash = ecdsa_hash_pubkey(pubkey, coin)
-    return encode_bech32_address(coin.bech32_prefix, pubkeyhash)
+    return encode_bech32_address(coin.bech32_prefix, 0, pubkeyhash)
 
 
 def address_p2wsh(witness_script_hash: bytes, hrp: str) -> str:
-    return encode_bech32_address(hrp, witness_script_hash)
+    return encode_bech32_address(hrp, 0, witness_script_hash)
+
+
+def address_p2tr(pubkey: bytes, coin: CoinInfo) -> str:
+    assert coin.bech32_prefix is not None
+    # TODO: Is the following correct?
+    # TODO: we need to at least "tweak" the pubkey
+    return encode_bech32_address(coin.bech32_prefix, 1, pubkey)
 
 
 def address_to_cashaddr(address: str, coin: CoinInfo) -> str:
