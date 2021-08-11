@@ -123,11 +123,11 @@ def address_p2wsh_in_p2sh(witness_script_hash: bytes, coin: CoinInfo) -> str:
 def address_p2wpkh(pubkey: bytes, coin: CoinInfo) -> str:
     assert coin.bech32_prefix is not None
     pubkeyhash = ecdsa_hash_pubkey(pubkey, coin)
-    return encode_bech32_address(coin.bech32_prefix, pubkeyhash)
+    return encode_bech32_address(coin.bech32_prefix, 0, pubkeyhash)
 
 
 def address_p2wsh(witness_script_hash: bytes, hrp: str) -> str:
-    return encode_bech32_address(hrp, witness_script_hash)
+    return encode_bech32_address(hrp, 0, witness_script_hash)
 
 
 def address_to_cashaddr(address: str, coin: CoinInfo) -> str:
