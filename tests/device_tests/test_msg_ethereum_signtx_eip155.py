@@ -101,6 +101,46 @@ VECTORS_CHAIN_IDS = (  # chain_id, slip44, sig_v, sig_r, sig_s
             "1447ba45be9fca42bcbf250389403245c8c1b0476e60b96dea320b0a596b5528",
         ),
     ),
+    # Previous max chain id
+    (
+        2147483639,
+        1,
+        (
+            4294967314,
+            "f06ba56a3d3602a3d39a614375b2867f8a867354ba17fde98a5cb5f1806320d1",
+            "7bc197e0f656e52183805abada49c7d41f5d2b929f1ae0ebe99618286dfed116",
+        ),
+    ),
+    # PALM
+    (
+        11297108109,
+        60,
+        (
+            22594216254,
+            "9d05ca7cdcf971f3114c0ef8d636c5aae1353bb227e04ec1198c60d874e676c0",
+            "35414067209e27fb690d9387264c74e334e25a117705f3583fb24434a952c9ca",
+        ),
+    ),
+    # PALM
+    (
+        11297108109,
+        1,
+        (
+            22594216253,
+            "cccccef8f6636f316e69a1239436f9d61021501ba20ed72b6528c84b2f727980",
+            "614cb533a5d73cbf92ba4683c87c9238d0547572ee8f0f821ab1decdfc9639b8",
+        ),
+    ),
+    # Max uint64
+    (
+        0xFFFF_FFFF_FFFF_FFFF,
+        1,
+        (
+            36893488147419103266,
+            "7bf581e8c7ff7d0e94d25eaa476de928d444b180fe50a91374b8883ff5dee3a8",
+            "3a3efa7a3f97043a999b3183d958a03126ec2652608c376c4626850b9b6a33fa",
+        ),
+    ),
 )
 
 
