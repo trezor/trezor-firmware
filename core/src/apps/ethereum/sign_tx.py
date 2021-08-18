@@ -17,7 +17,7 @@ from .layout import (
 )
 
 # maximum supported chain id
-MAX_CHAIN_ID = 2147483629
+MAX_CHAIN_ID = (0xFFFF_FFFF_FFFF_FFFF - 35) / 2
 
 
 @with_keychain_from_chain_id
@@ -157,7 +157,7 @@ def check(msg: EthereumSignTx):
     if msg.tx_type not in [1, 6, None]:
         raise wire.DataError("tx_type out of bounds")
 
-    if msg.chain_id < 0:
+    if msg.chain_id < 1:
         raise wire.DataError("chain_id out of bounds")
 
     if msg.data_length > 0:

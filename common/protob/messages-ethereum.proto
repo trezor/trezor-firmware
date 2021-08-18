@@ -65,7 +65,7 @@ message EthereumSignTx {
     optional bytes value = 6;               // <=256 bit unsigned big endian (in wei)
     optional bytes data_initial_chunk = 7;  // The initial data chunk (<= 1024 bytes)
     optional uint32 data_length = 8;        // Length of transaction payload
-    optional uint32 chain_id = 9;           // Chain Id for EIP 155
+    optional uint64 chain_id = 9;           // Chain Id for EIP 155
     optional uint32 tx_type = 10;           // (only for Wanchain)
 }
 
@@ -78,7 +78,7 @@ message EthereumSignTx {
  */
 message EthereumTxRequest {
     optional uint32 data_length = 1;    // Number of bytes being requested (<= 1024)
-    optional uint32 signature_v = 2;    // Computed signature (recovery parameter, limited to 27 or 28)
+    optional uint64 signature_v = 2;    // Computed signature (recovery parameter, limited to 27 or 28)
     optional bytes signature_r = 3;     // Computed signature R component (256 bit)
     optional bytes signature_s = 4;     // Computed signature S component (256 bit)
 }

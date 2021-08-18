@@ -58,7 +58,7 @@ bool address_check_prefix(const uint8_t *addr, uint32_t address_type) {
 #include "sha3.h"
 
 void ethereum_address_checksum(const uint8_t *addr, char *address, bool rskip60,
-                               uint32_t chain_id) {
+                               uint64_t chain_id) {
   const char *hex = "0123456789abcdef";
   for (int i = 0; i < 20; i++) {
     address[i * 2] = hex[(addr[i] >> 4) & 0xF];
