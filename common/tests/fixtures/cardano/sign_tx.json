@@ -252,7 +252,7 @@
         "auxiliary_data": null,
         "inputs": [
           {
-            "path": "m/1852'/1815'/0'/0/0",
+            "path": "m/1852'/1815'/190'/0/0",
             "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
             "prev_index": 0
           }
@@ -276,8 +276,8 @@
         "witnesses": [
           {
             "type": 1,
-            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
-            "signature": "4d8f0fd9798b62937b1739dcb893dfc6a0abd9eb2ad98244ced00d78949a2fd2751fac4bb2ebe5577688e5d9f47da79a52b5c571c3082996514ab5995dc2580d",
+            "pub_key": "eae29ffe0e7b8c844036c0a3bf4c7da1106c8fd08ca908d52bb76f7c7baa5719",
+            "signature": "8049c6d62abf26a303e184be326ff941e8c123c1cba2ce83daffb12c7c0cf31379e18f7afdd877d70a0fc2a4c8b144a22a3382489f7eff9c94ec9328177d0c0e",
             "chain_code": null
           }
         ]
@@ -708,7 +708,7 @@
         "auxiliary_data": null,
         "inputs": [
           {
-            "path": "m/1852'/1815'/0'/0/0",
+            "path": "m/1852'/1815'/190'/0/0",
             "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
             "prev_index": 0
           }
@@ -726,8 +726,8 @@
         "witnesses": [
           {
             "type": 1,
-            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
-            "signature": "19b71c5b97a188cf9ff479b6ef7a45a0df94a917845d15c03a5fa508042724dcee1e8f944b91141ed91e6faa228806b3644e2560cb231470d09788ac5065ff00",
+            "pub_key": "eae29ffe0e7b8c844036c0a3bf4c7da1106c8fd08ca908d52bb76f7c7baa5719",
+            "signature": "26d1381ae36a70fb08edf04445fe90f37c6ed76283f637d2239caf83e6632c2722c784e7bf41770804f0e483cdd3c68b025d8fa81d53f4fb06b16ec261271808",
             "chain_code": null
           },
           {
@@ -1285,10 +1285,6 @@
           {
             "path": "m/1852'/1815'/0'/2/0",
             "amount": "1000"
-          },
-          {
-            "path": "m/1852'/1815'/1'/2/0",
-            "amount": "1000"
           }
         ],
         "auxiliary_data": {
@@ -1306,36 +1302,30 @@
         "signing_mode": "ORDINARY_TRANSACTION"
       },
       "result": {
-        "tx_hash": "75a98c63e05095201f8309bb49d181e1ad67b380f9ab23f91fab32758eb65ae5",
+        "tx_hash": "ee0dfef8b97857ebe7aa8935af50e9f8f608ff4054c0c034600750d722d90631",
         "witnesses": [
           {
             "type": 1,
             "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
-            "signature": "86cb9f0df29e2e0685f913adadd941b5a568a122a36133a34e74749d65dbaf9346884adb3b1e86fee6f16ceccc7395d71bc9950350ed8760eed452eaef961e0b",
+            "signature": "7d17407e4e8f8b89f8794c022408a84e6f7ef163957d9d7e8ebee4cf9b5c87750c7c559f3a2663441535eec88ebce8540e7d7ea30897de984b1053b818374007",
             "chain_code": null
           },
           {
             "type": 1,
             "pub_key": "36a8ef21d5b98fdf23a27325cf643deaac35e912c835e35037f23d1061ae5b16",
-            "signature": "36cc6f5099b52ee8799cd7fb3e960f64c415dcdf494e4a1271869ed980617dcd1b419a4278a700e4c40bd4bf189102cff4959e089bb1ba8c62a233901f963608",
+            "signature": "df62ec013a32d137c86931cec726d104cbc3193776026ec36d10450d9cbd289abc4c2d44311878b3aba035a8aec2c076522183027f9da046b586b5de5c460504",
             "chain_code": null
           },
           {
             "type": 1,
             "pub_key": "e90d7b0a6cf831b0042d37961dd528842860e77914e715bcece676c75353b812",
-            "signature": "170d7e783b16ab20b517e0282e7937ca7c7eebd2546bbd219584c1ede9a104e98c2da9906d6b4238aeeeeeeff970f03da04b4a5e3342b4169db4cea2f2134008",
+            "signature": "e249396d227f1d0540e58b64610bdb990eb1f1db9b3bae4a3d4a8088679af4a3bab464a5c912f7041a5fabc37e3009b3e1f4d76e2406429a0ebed85b880ecd0c",
             "chain_code": null
           },
           {
             "type": 1,
             "pub_key": "bc65be1b0b9d7531778a1317c2aa6de936963c3f9ac7d5ee9e9eda25e0c97c5e",
-            "signature": "0e486eae9df832c3f3e635e0322c1b1bbfa1834e31fb43efce0bd6e66c949587a5a9edad9ff5abb0213d964640b98457a3afc82dfa4acc2e9108e66930435607",
-            "chain_code": null
-          },
-          {
-            "type": 1,
-            "pub_key": "79f81c0b814ee61b4463792a7a5cf45940f15813d8ebe1ecc6261ecd8afc5799",
-            "signature": "16c37673a359a9a96213291281dcb029cc5b504f5a285711dd5f44ea7bff0d9729a00e2ef1d7761f5e9575ceda16ff02ccb223a573e7faf67e2b63de6f3bee0c",
+            "signature": "0dfd139ce3e255664a77de7d199ce5e4f1a1238ec17a6acec4aaae79be2ccd9b1d21127164c059c8aea2c4b91292aaf352c824550db7594b59e4eca6455d3f03",
             "chain_code": null
           }
         ],

@@ -26,6 +26,7 @@ if False:
     from apps.common.cbor import CborSequence
 
     from . import seed
+    from .helpers.account_path_check import AccountPathChecker
 
 POOL_HASH_SIZE = 28
 VRF_KEY_HASH_SIZE = 32
@@ -42,6 +43,7 @@ def validate_certificate(
     signing_mode: CardanoTxSigningMode,
     protocol_magic: int,
     network_id: int,
+    account_path_checker: AccountPathChecker,
 ) -> None:
     if (
         signing_mode == CardanoTxSigningMode.ORDINARY_TRANSACTION
@@ -72,6 +74,8 @@ def validate_certificate(
         _validate_pool_parameters(
             certificate.pool_parameters, protocol_magic, network_id
         )
+
+    account_path_checker.add_certificate(certificate)
 
 
 def cborize_certificate(
@@ -147,7 +151,9 @@ def _validate_pool_parameters(
         _validate_pool_metadata(pool_parameters.metadata)
 
 
-def validate_pool_owner(owner: CardanoPoolOwner) -> None:
+def validate_pool_owner(
+    owner: CardanoPoolOwner, account_path_checker: AccountPathChecker
+) -> None:
     assert_certificate_cond(
         owner.staking_key_hash is not None or owner.staking_key_path is not None
     )
@@ -157,6 +163,8 @@ def validate_pool_owner(owner: CardanoPoolOwner) -> None:
         assert_certificate_cond(
             SCHEMA_STAKING_ANY_ACCOUNT.match(owner.staking_key_path)
         )
+
+    account_path_checker.add_pool_owner(owner)
 
 
 def validate_pool_relay(pool_relay: CardanoPoolRelayParameters) -> None:

@@ -446,6 +446,8 @@ if utils.BITCOIN_ONLY:
     import apps.cardano.get_public_key
     apps.cardano.helpers
     import apps.cardano.helpers
+    apps.cardano.helpers.account_path_check
+    import apps.cardano.helpers.account_path_check
     apps.cardano.helpers.bech32
     import apps.cardano.helpers.bech32
     apps.cardano.helpers.hash_builder_collection
