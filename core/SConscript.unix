@@ -503,7 +503,6 @@ if FROZEN:
             SOURCE_PY_DIR + 'trezor/enums/DebugMonero*.py',
             SOURCE_PY_DIR + 'trezor/enums/Eos*.py',
             SOURCE_PY_DIR + 'trezor/enums/Ethereum*.py',
-            SOURCE_PY_DIR + 'trezor/enums/Lisk*.py',
             SOURCE_PY_DIR + 'trezor/enums/Monero*.py',
             SOURCE_PY_DIR + 'trezor/enums/NEM*.py',
             SOURCE_PY_DIR + 'trezor/enums/Ripple*.py',
@@ -543,9 +542,6 @@ if FROZEN:
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/ethereum/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Ethereum*.py'))
-
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/lisk/*.py'))
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Lisk*.py'))
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/monero/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/monero/*/*.py'))

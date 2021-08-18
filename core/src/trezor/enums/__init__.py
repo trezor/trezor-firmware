@@ -108,15 +108,6 @@ if TYPE_CHECKING:
         NEMSignedTx = 70
         NEMDecryptMessage = 75
         NEMDecryptedMessage = 76
-        LiskGetAddress = 114
-        LiskAddress = 115
-        LiskSignTx = 116
-        LiskSignedTx = 117
-        LiskSignMessage = 118
-        LiskMessageSignature = 119
-        LiskVerifyMessage = 120
-        LiskGetPublicKey = 121
-        LiskPublicKey = 122
         TezosGetAddress = 150
         TezosAddress = 151
         TezosSignTx = 152
@@ -379,16 +370,6 @@ if TYPE_CHECKING:
         DOWN = 1
         LEFT = 2
         RIGHT = 3
-
-    class LiskTransactionType(IntEnum):
-        Transfer = 0
-        RegisterSecondPassphrase = 1
-        RegisterDelegate = 2
-        CastVotes = 3
-        RegisterMultisignatureAccount = 4
-        CreateDapp = 5
-        TransferIntoDapp = 6
-        TransferOutOfDapp = 7
 
     class NEMMosaicLevy(IntEnum):
         MosaicLevy_Absolute = 1
