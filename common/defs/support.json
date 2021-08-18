@@ -66,7 +66,6 @@
       "misc:ADA": true,
       "misc:BNB": true,
       "misc:EOS": true,
-      "misc:LSK": true,
       "misc:XLM": true,
       "misc:XRP": true,
       "misc:XTZ": true,
@@ -2086,7 +2085,6 @@
       "eth:tmACA": "1.9.5",
       "eth:tsDIODE": "1.9.5",
       "eth:xDAI": "1.9.4",
-      "misc:LSK": "1.7.1",
       "misc:MAID": "1.7.2",
       "misc:OMNI": "1.7.2",
       "misc:USDT": "1.7.2",
@@ -2338,6 +2336,7 @@
       "misc:ADA": "not implemented",
       "misc:BNB": "not implemented",
       "misc:EOS": "not implemented",
+      "misc:LSK": "Incompatible mainnet hard-fork",
       "misc:ONT": "not implemented",
       "misc:XMR": "not implemented",
       "misc:XRP": "not implemented",
@@ -4309,7 +4308,6 @@
       "misc:ADA": "2.0.8",
       "misc:BNB": "2.1.5",
       "misc:EOS": "2.1.1",
-      "misc:LSK": "2.0.7",
       "misc:MAID": "2.0.10",
       "misc:OMNI": "2.0.10",
       "misc:ONT": "soon",
@@ -4562,7 +4560,8 @@
       "erc20:eth:univ2FARMUSDC:5149": "(AUTO) duplicate key",
       "erc20:gor:TST": "(AUTO) duplicate key",
       "eth:ATH:1620": "duplicate key",
-      "eth:ATH:43110": "duplicate key"
+      "eth:ATH:43110": "duplicate key",
+      "misc:LSK": "Incompatible mainnet hard-fork"
     }
   }
 }

@@ -86,7 +86,7 @@ message Features {
         Capability_Crypto = 5 [(bitcoin_only) = true];  // generic crypto operations for GPG, SSH, etc.
         Capability_EOS = 6;
         Capability_Ethereum = 7;
-        Capability_Lisk = 8;
+        Capability_Lisk = 8 [deprecated = true];
         Capability_Monero = 9;
         Capability_NEM = 10;
         Capability_Ripple = 11;

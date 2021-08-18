@@ -190,6 +190,7 @@ enum MessageType {
     MessageType_NEMDecryptedMessage = 76 [(wire_out) = true];
 
     // Lisk
+    /*
     MessageType_LiskGetAddress = 114 [(wire_in) = true];
     MessageType_LiskAddress = 115 [(wire_out) = true];
     MessageType_LiskSignTx = 116 [(wire_in) = true];
@@ -199,6 +200,8 @@ enum MessageType {
     MessageType_LiskVerifyMessage = 120 [(wire_in) = true];
     MessageType_LiskGetPublicKey = 121 [(wire_in) = true];
     MessageType_LiskPublicKey = 122 [(wire_out) = true];
+    */
+    reserved 114 to 122;
 
     // Tezos
     MessageType_TezosGetAddress = 150 [(wire_in) = true];
