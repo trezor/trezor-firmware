@@ -55,7 +55,6 @@
 
 #if !BITCOIN_ONLY
 #include "ethereum.h"
-#include "lisk.h"
 #include "nem.h"
 #include "nem2.h"
 #include "stellar.h"
@@ -335,7 +334,6 @@ void fsm_msgRebootToBootloader(void) {
 #if !BITCOIN_ONLY
 
 #include "fsm_msg_ethereum.h"
-#include "fsm_msg_lisk.h"
 #include "fsm_msg_nem.h"
 #include "fsm_msg_stellar.h"
 

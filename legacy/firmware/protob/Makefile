@@ -9,11 +9,11 @@ SKIPPED_MESSAGES := Binance Cardano DebugMonero Eos Monero Ontology Ripple SdPro
 	TxAckInput TxAckOutput TxAckPrev
 
 ifeq ($(BITCOIN_ONLY), 1)
-SKIPPED_MESSAGES += Ethereum Lisk NEM Stellar
+SKIPPED_MESSAGES += Ethereum NEM Stellar
 endif
 
 PROTO_NAMES = messages messages-bitcoin messages-common messages-crypto messages-debug \
-	messages-ethereum messages-lisk messages-management messages-nem messages-stellar
+	messages-ethereum messages-management messages-nem messages-stellar
 
 PROTO_OPTIONS = $(PROTO_NAMES:=.options)
 PROTO_COMPILED = $(PROTO_NAMES:=.pb)
