@@ -58,8 +58,6 @@ firmwares.
 - AdaLite https://github.com/vacuumlabs/adalite
 - Stellarterm https://github.com/stellarterm/stellarterm
 - frame https://github.com/floating/frame
-- lisk-desktop https://github.com/LiskHQ/lisk-desktop
-- Liskish Wallet https://github.com/hirishh/liskish-wallet/
 - web3-react https://github.com/NoahZinsmeister/web3-react
 - KyberSwap https://github.com/KyberNetwork/KyberSwap
 - Balance Manager https://github.com/balance-io/balance-manager
