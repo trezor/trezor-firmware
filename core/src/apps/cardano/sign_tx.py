@@ -56,6 +56,7 @@ from .certificates import (
     validate_pool_relay,
 )
 from .helpers import (
+    INVALID_OUTPUT,
     INVALID_STAKE_POOL_REGISTRATION_TX_STRUCTURE,
     INVALID_STAKEPOOL_REGISTRATION_TX_WITNESSES,
     INVALID_TOKEN_BUNDLE_OUTPUT,
@@ -65,17 +66,14 @@ from .helpers import (
     protocol_magics,
     staking_use_cases,
 )
+from .helpers.account_path_check import AccountPathChecker
 from .helpers.hash_builder_collection import HashBuilderDict, HashBuilderList
 from .helpers.paths import (
-    ACCOUNT_PATH_INDEX,
-    BIP_PATH_LENGTH,
     CERTIFICATE_PATH_NAME,
     CHANGE_OUTPUT_PATH_NAME,
     CHANGE_OUTPUT_STAKING_PATH_NAME,
-    MAX_SAFE_ACCOUNT_INDEX,
-    MAX_SAFE_CHANGE_ADDRESS_INDEX,
     POOL_OWNER_STAKING_PATH_NAME,
-    SCHEMA_ADDRESS,
+    SCHEMA_PAYMENT,
     SCHEMA_STAKING,
     SCHEMA_STAKING_ANY_ACCOUNT,
     WITNESS_PATH_NAME,
@@ -139,18 +137,25 @@ async def sign_tx(
         )
     )
 
+    account_path_checker = AccountPathChecker()
+
     hash_fn = hashlib.blake2b(outlen=32)
     tx_dict: HashBuilderDict[int, Any] = HashBuilderDict(tx_body_map_item_count)
     tx_dict.start(hash_fn)
     with tx_dict:
-        await _process_transaction(ctx, msg, keychain, tx_dict)
+        await _process_transaction(ctx, msg, keychain, tx_dict, account_path_checker)
 
     await _confirm_transaction(ctx, msg, is_network_id_verifiable)
 
     try:
         tx_hash = hash_fn.digest()
         response_after_witness_requests = await _process_witness_requests(
-            ctx, keychain, tx_hash, msg.witness_requests_count, msg.signing_mode
+            ctx,
+            keychain,
+            tx_hash,
+            msg.witness_requests_count,
+            msg.signing_mode,
+            account_path_checker,
         )
         await ctx.call(response_after_witness_requests, CardanoTxHostAck)
 
@@ -186,6 +191,7 @@ async def _process_transaction(
     msg: CardanoSignTxInit,
     keychain: seed.Keychain,
     tx_dict: HashBuilderDict,
+    account_path_checker: AccountPathChecker,
 ) -> None:
     inputs_list: HashBuilderList[tuple[bytes, int]] = HashBuilderList(msg.inputs_count)
     with tx_dict.add(TX_BODY_KEY_INPUTS, inputs_list):
@@ -201,6 +207,7 @@ async def _process_transaction(
             msg.signing_mode,
             msg.protocol_magic,
             msg.network_id,
+            account_path_checker,
         )
 
     tx_dict.add(TX_BODY_KEY_FEE, msg.fee)
@@ -219,6 +226,7 @@ async def _process_transaction(
                 msg.signing_mode,
                 msg.protocol_magic,
                 msg.network_id,
+                account_path_checker,
             )
 
     if msg.withdrawals_count > 0:
@@ -233,6 +241,7 @@ async def _process_transaction(
                 msg.withdrawals_count,
                 msg.protocol_magic,
                 msg.network_id,
+                account_path_checker,
             )
 
     if msg.has_auxiliary_data:
@@ -287,12 +296,13 @@ async def _process_outputs(
     signing_mode: CardanoTxSigningMode,
     protocol_magic: int,
     network_id: int,
+    account_path_checker: AccountPathChecker,
 ) -> None:
     """Read, validate, confirm and serialize the outputs, return the total non-change output amount."""
     total_amount = 0
     for _ in range(outputs_count):
         output: CardanoTxOutput = await ctx.call(CardanoTxItemAck(), CardanoTxOutput)
-        _validate_output(output, protocol_magic, network_id)
+        _validate_output(output, protocol_magic, network_id, account_path_checker)
         if signing_mode == CardanoTxSigningMode.ORDINARY_TRANSACTION:
             await _show_output(
                 ctx,
@@ -393,6 +403,7 @@ async def _process_certificates(
     signing_mode: CardanoTxSigningMode,
     protocol_magic: int,
     network_id: int,
+    account_path_checker: AccountPathChecker,
 ) -> None:
     """Read, validate, confirm and serialize the certificates."""
     if certificates_count == 0:
@@ -402,7 +413,9 @@ async def _process_certificates(
         certificate: CardanoTxCertificate = await ctx.call(
             CardanoTxItemAck(), CardanoTxCertificate
         )
-        validate_certificate(certificate, signing_mode, protocol_magic, network_id)
+        validate_certificate(
+            certificate, signing_mode, protocol_magic, network_id, account_path_checker
+        )
         await _show_certificate(ctx, certificate, signing_mode)
 
         if certificate.type == CardanoCertificateType.STAKE_POOL_REGISTRATION:
@@ -428,6 +441,7 @@ async def _process_certificates(
                         pool_owners_list,
                         pool_parameters.owners_count,
                         network_id,
+                        account_path_checker,
                     )
 
                 relays_list: HashBuilderList[cbor.CborSequence] = HashBuilderList(
@@ -449,11 +463,12 @@ async def _process_pool_owners(
     pool_owners_list: HashBuilderList[bytes],
     owners_count: int,
     network_id: int,
+    account_path_checker: AccountPathChecker,
 ) -> None:
     owners_as_path_count = 0
     for _ in range(owners_count):
         owner: CardanoPoolOwner = await ctx.call(CardanoTxItemAck(), CardanoPoolOwner)
-        validate_pool_owner(owner)
+        validate_pool_owner(owner, account_path_checker)
         await _show_pool_owner(ctx, keychain, owner, network_id)
 
         pool_owners_list.append(cborize_pool_owner(keychain, owner))
@@ -484,6 +499,7 @@ async def _process_withdrawals(
     withdrawals_count: int,
     protocol_magic: int,
     network_id: int,
+    account_path_checker: AccountPathChecker,
 ) -> None:
     """Read, validate, confirm and serialize the withdrawals."""
     if withdrawals_count == 0:
@@ -496,7 +512,7 @@ async def _process_withdrawals(
         withdrawal: CardanoTxWithdrawal = await ctx.call(
             CardanoTxItemAck(), CardanoTxWithdrawal
         )
-        _validate_withdrawal(withdrawal, seen_withdrawals)
+        _validate_withdrawal(withdrawal, seen_withdrawals, account_path_checker)
         await confirm_withdrawal(ctx, withdrawal)
         reward_address = derive_address_bytes(
             keychain,
@@ -551,11 +567,12 @@ async def _process_witness_requests(
     tx_hash: bytes,
     witness_requests_count: int,
     signing_mode: CardanoTxSigningMode,
+    account_path_checker: AccountPathChecker,
 ) -> CardanoTxResponseType:
     response: CardanoTxResponseType = CardanoTxItemAck()
     for _ in range(witness_requests_count):
         witness_request = await ctx.call(response, CardanoTxWitnessRequest)
-        _validate_witness(signing_mode, witness_request)
+        _validate_witness_request(witness_request, signing_mode, account_path_checker)
         await _show_witness(ctx, witness_request.path)
 
         response = (
@@ -616,21 +633,22 @@ def _validate_stake_pool_registration_tx_structure(msg: CardanoSignTxInit) -> No
 
 
 def _validate_output(
-    output: CardanoTxOutput, protocol_magic: int, network_id: int
+    output: CardanoTxOutput,
+    protocol_magic: int,
+    network_id: int,
+    account_path_checker: AccountPathChecker,
 ) -> None:
     if output.address_parameters and output.address is not None:
-        raise wire.ProcessError(
-            "Outputs can not contain both address and address_parameters fields!"
-        )
+        raise INVALID_OUTPUT
 
     if output.address_parameters:
         validate_address_parameters(output.address_parameters)
     elif output.address is not None:
         validate_output_address(output.address, protocol_magic, network_id)
     else:
-        raise wire.ProcessError(
-            "Each output must have an address field or address_parameters!"
-        )
+        raise INVALID_OUTPUT
+
+    account_path_checker.add_output(output)
 
 
 async def _show_output(
@@ -644,7 +662,7 @@ async def _show_output(
     if output.address_parameters:
         await _fail_or_warn_if_invalid_path(
             ctx,
-            SCHEMA_ADDRESS,
+            SCHEMA_PAYMENT,
             output.address_parameters.address_n,
             CHANGE_OUTPUT_PATH_NAME,
         )
@@ -703,7 +721,9 @@ async def _show_certificate(
 
 
 def _validate_withdrawal(
-    withdrawal: CardanoTxWithdrawal, seen_withdrawals: set[tuple[int, ...]]
+    withdrawal: CardanoTxWithdrawal,
+    seen_withdrawals: set[tuple[int, ...]],
+    account_path_checker: AccountPathChecker,
 ) -> None:
     if not SCHEMA_STAKING_ANY_ACCOUNT.match(withdrawal.path):
         raise INVALID_WITHDRAWAL
@@ -716,6 +736,8 @@ def _validate_withdrawal(
         raise wire.ProcessError("Duplicate withdrawals")
     else:
         seen_withdrawals.add(path_tuple)
+
+    account_path_checker.add_withdrawal(withdrawal)
 
 
 def _get_output_address(
@@ -768,14 +790,17 @@ async def _show_pool_owner(
     await confirm_stake_pool_owner(ctx, keychain, owner, network_id)
 
 
-def _validate_witness(
+def _validate_witness_request(
+    witness_request: CardanoTxWitnessRequest,
     signing_mode: CardanoTxSigningMode,
-    witness: CardanoTxWitnessRequest,
+    account_path_checker: AccountPathChecker,
 ) -> None:
     # witness path validation happens in _show_witness
 
     if signing_mode == CardanoTxSigningMode.POOL_REGISTRATION_AS_OWNER:
-        _ensure_no_payment_witness(witness)
+        _ensure_no_payment_witness(witness_request)
+
+    account_path_checker.add_witness_request(witness_request)
 
 
 def _ensure_no_payment_witness(witness: CardanoTxWitnessRequest) -> None:
@@ -799,12 +824,14 @@ async def _show_witness(
     ctx: wire.Context,
     witness_path: list[int],
 ) -> None:
-    await _fail_or_warn_if_invalid_path(
-        ctx,
-        SCHEMA_ADDRESS,
-        witness_path,
-        WITNESS_PATH_NAME,
-    )
+    if not SCHEMA_PAYMENT.match(witness_path) and not SCHEMA_STAKING.match(
+        witness_path
+    ):
+        await _fail_or_warn_path(
+            ctx,
+            witness_path,
+            WITNESS_PATH_NAME,
+        )
 
 
 async def _show_change_output_staking_warnings(
@@ -856,19 +883,14 @@ async def _show_change_output_staking_warnings(
 
 def _should_hide_output(path: list[int]) -> bool:
     """Return whether the output address is from a safe path, so it could be hidden."""
-    return (
-        len(path) == BIP_PATH_LENGTH
-        and path[ACCOUNT_PATH_INDEX] <= MAX_SAFE_ACCOUNT_INDEX
-        and path[-2] < 2
-        and path[-1] < MAX_SAFE_CHANGE_ADDRESS_INDEX
-    )
+    return SCHEMA_PAYMENT.match(path)
 
 
 def _should_show_tokens(
     output: CardanoTxOutput, signing_mode: CardanoTxSigningMode
 ) -> bool:
     if signing_mode != CardanoTxSigningMode.ORDINARY_TRANSACTION:
-        return True
+        return False
 
     if output.address_parameters:
         return not _should_hide_output(output.address_parameters.address_n)
@@ -893,7 +915,13 @@ async def _fail_or_warn_if_invalid_path(
     ctx: wire.Context, schema: PathSchema, path: list[int], path_name: str
 ) -> None:
     if not schema.match(path):
-        if safety_checks.is_strict():
-            raise wire.DataError("Invalid %s" % path_name.lower())
-        else:
-            await show_warning_path(ctx, path, path_name)
+        await _fail_or_warn_path(ctx, path, path_name)
+
+
+async def _fail_or_warn_path(
+    ctx: wire.Context, path: list[int], path_name: str
+) -> None:
+    if safety_checks.is_strict():
+        raise wire.DataError("Invalid %s" % path_name.lower())
+    else:
+        await show_warning_path(ctx, path, path_name)
