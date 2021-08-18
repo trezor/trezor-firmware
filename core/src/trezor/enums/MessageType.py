@@ -103,15 +103,6 @@ if not utils.BITCOIN_ONLY:
     NEMSignedTx = 70
     NEMDecryptMessage = 75
     NEMDecryptedMessage = 76
-    LiskGetAddress = 114
-    LiskAddress = 115
-    LiskSignTx = 116
-    LiskSignedTx = 117
-    LiskSignMessage = 118
-    LiskMessageSignature = 119
-    LiskVerifyMessage = 120
-    LiskGetPublicKey = 121
-    LiskPublicKey = 122
     TezosGetAddress = 150
     TezosAddress = 151
     TezosSignTx = 152

@@ -22,7 +22,6 @@ ALTCOINS = (
     "cardano",
     "eos",
     "ethereum",
-    "lisk",
     "monero",
     "nem",
     "ripple",

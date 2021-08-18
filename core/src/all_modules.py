@@ -394,8 +394,6 @@ if utils.BITCOIN_ONLY:
     import trezor.enums.CardanoCertificateType
     trezor.enums.CardanoPoolRelayType
     import trezor.enums.CardanoPoolRelayType
-    trezor.enums.LiskTransactionType
-    import trezor.enums.LiskTransactionType
     trezor.enums.NEMImportanceTransferMode
     import trezor.enums.NEMImportanceTransferMode
     trezor.enums.NEMModificationType
@@ -502,22 +500,6 @@ if utils.BITCOIN_ONLY:
     import apps.ethereum.tokens
     apps.ethereum.verify_message
     import apps.ethereum.verify_message
-    apps.lisk
-    import apps.lisk
-    apps.lisk.get_address
-    import apps.lisk.get_address
-    apps.lisk.get_public_key
-    import apps.lisk.get_public_key
-    apps.lisk.helpers
-    import apps.lisk.helpers
-    apps.lisk.layout
-    import apps.lisk.layout
-    apps.lisk.sign_message
-    import apps.lisk.sign_message
-    apps.lisk.sign_tx
-    import apps.lisk.sign_tx
-    apps.lisk.verify_message
-    import apps.lisk.verify_message
     apps.monero
     import apps.monero
     apps.monero.diag

@@ -15,7 +15,6 @@ if not utils.BITCOIN_ONLY:
     Cardano = 4
     EOS = 6
     Ethereum = 7
-    Lisk = 8
     Monero = 9
     NEM = 10
     Ripple = 11
