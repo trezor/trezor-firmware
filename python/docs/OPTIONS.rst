@@ -49,7 +49,6 @@ on one page here.
     firmware           Firmware commands.
     get-features       Retrieve device features and settings.
     get-session        Get a session ID for subsequent commands.
-    lisk               Lisk commands.
     list               List connected Trezor devices.
     monero             Monero commands.
     nem                NEM commands.
@@ -297,29 +296,6 @@ Firmware commands.
     download  Download and save the firmware image.
     update    Upload new firmware to device.
     verify    Verify the integrity of the firmware data stored in a file.
-
-Lisk commands.
-~~~~~~~~~~~~~~
-
-.. code::
-
-  trezorctl lisk --help
-
-.. code::
-
-  Usage: trezorctl lisk [OPTIONS] COMMAND [ARGS]...
-
-    Lisk commands.
-
-  Options:
-    --help  Show this message and exit.
-
-  Commands:
-    get-address     Get Lisk address for specified path.
-    get-public-key  Get Lisk public key for specified path.
-    sign-message    Sign message with Lisk address.
-    sign-tx         Sign Lisk transaction.
-    verify-message  Verify message signed with Lisk address.
 
 Monero commands.
 ~~~~~~~~~~~~~~~~
