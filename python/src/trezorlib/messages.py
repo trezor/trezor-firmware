@@ -129,6 +129,15 @@ class MessageType(IntEnum):
     NEMSignedTx = 70
     NEMDecryptMessage = 75
     NEMDecryptedMessage = 76
+    LiskGetAddress = 114
+    LiskAddress = 115
+    LiskSignTx = 116
+    LiskSignedTx = 117
+    LiskSignMessage = 118
+    LiskMessageSignature = 119
+    LiskVerifyMessage = 120
+    LiskGetPublicKey = 121
+    LiskPublicKey = 122
     TezosGetAddress = 150
     TezosAddress = 151
     TezosSignTx = 152
@@ -424,6 +433,17 @@ class DebugSwipeDirection(IntEnum):
     DOWN = 1
     LEFT = 2
     RIGHT = 3
+
+
+class LiskTransactionType(IntEnum):
+    Transfer = 0
+    RegisterSecondPassphrase = 1
+    RegisterDelegate = 2
+    CastVotes = 3
+    RegisterMultisignatureAccount = 4
+    CreateDapp = 5
+    TransferIntoDapp = 6
+    TransferOutOfDapp = 7
 
 
 class NEMMosaicLevy(IntEnum):
@@ -4444,6 +4464,265 @@ class EthereumAccessList(protobuf.MessageType):
     ) -> None:
         self.storage_keys = storage_keys if storage_keys is not None else []
         self.address = address
+
+
+class LiskGetAddress(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 114
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
+        2: protobuf.Field("show_display", "bool", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        address_n: Optional[List["int"]] = None,
+        show_display: Optional["bool"] = None,
+    ) -> None:
+        self.address_n = address_n if address_n is not None else []
+        self.show_display = show_display
+
+
+class LiskAddress(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 115
+    FIELDS = {
+        1: protobuf.Field("address", "string", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: "str",
+    ) -> None:
+        self.address = address
+
+
+class LiskGetPublicKey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 121
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
+        2: protobuf.Field("show_display", "bool", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        address_n: Optional[List["int"]] = None,
+        show_display: Optional["bool"] = None,
+    ) -> None:
+        self.address_n = address_n if address_n is not None else []
+        self.show_display = show_display
+
+
+class LiskPublicKey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 122
+    FIELDS = {
+        1: protobuf.Field("public_key", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        public_key: "bytes",
+    ) -> None:
+        self.public_key = public_key
+
+
+class LiskSignTx(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 116
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
+        2: protobuf.Field("transaction", "LiskTransactionCommon", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        transaction: "LiskTransactionCommon",
+        address_n: Optional[List["int"]] = None,
+    ) -> None:
+        self.address_n = address_n if address_n is not None else []
+        self.transaction = transaction
+
+
+class LiskSignedTx(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 117
+    FIELDS = {
+        1: protobuf.Field("signature", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        signature: "bytes",
+    ) -> None:
+        self.signature = signature
+
+
+class LiskSignMessage(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 118
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
+        2: protobuf.Field("message", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        message: "bytes",
+        address_n: Optional[List["int"]] = None,
+    ) -> None:
+        self.address_n = address_n if address_n is not None else []
+        self.message = message
+
+
+class LiskMessageSignature(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 119
+    FIELDS = {
+        1: protobuf.Field("public_key", "bytes", repeated=False, required=True),
+        2: protobuf.Field("signature", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        public_key: "bytes",
+        signature: "bytes",
+    ) -> None:
+        self.public_key = public_key
+        self.signature = signature
+
+
+class LiskVerifyMessage(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 120
+    FIELDS = {
+        1: protobuf.Field("public_key", "bytes", repeated=False, required=True),
+        2: protobuf.Field("signature", "bytes", repeated=False, required=True),
+        3: protobuf.Field("message", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        public_key: "bytes",
+        signature: "bytes",
+        message: "bytes",
+    ) -> None:
+        self.public_key = public_key
+        self.signature = signature
+        self.message = message
+
+
+class LiskTransactionCommon(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("type", "LiskTransactionType", repeated=False, required=False),
+        2: protobuf.Field("amount", "uint64", repeated=False, required=False),
+        3: protobuf.Field("fee", "uint64", repeated=False, required=False),
+        4: protobuf.Field("recipient_id", "string", repeated=False, required=False),
+        5: protobuf.Field("sender_public_key", "bytes", repeated=False, required=False),
+        6: protobuf.Field("requester_public_key", "bytes", repeated=False, required=False),
+        7: protobuf.Field("signature", "bytes", repeated=False, required=False),
+        8: protobuf.Field("timestamp", "uint32", repeated=False, required=False),
+        9: protobuf.Field("asset", "LiskTransactionAsset", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        type: Optional["LiskTransactionType"] = None,
+        amount: Optional["int"] = None,
+        fee: Optional["int"] = None,
+        recipient_id: Optional["str"] = None,
+        sender_public_key: Optional["bytes"] = None,
+        requester_public_key: Optional["bytes"] = None,
+        signature: Optional["bytes"] = None,
+        timestamp: Optional["int"] = None,
+        asset: Optional["LiskTransactionAsset"] = None,
+    ) -> None:
+        self.type = type
+        self.amount = amount
+        self.fee = fee
+        self.recipient_id = recipient_id
+        self.sender_public_key = sender_public_key
+        self.requester_public_key = requester_public_key
+        self.signature = signature
+        self.timestamp = timestamp
+        self.asset = asset
+
+
+class LiskTransactionAsset(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("signature", "LiskSignatureType", repeated=False, required=False),
+        2: protobuf.Field("delegate", "LiskDelegateType", repeated=False, required=False),
+        3: protobuf.Field("votes", "string", repeated=True, required=False),
+        4: protobuf.Field("multisignature", "LiskMultisignatureType", repeated=False, required=False),
+        5: protobuf.Field("data", "string", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        votes: Optional[List["str"]] = None,
+        signature: Optional["LiskSignatureType"] = None,
+        delegate: Optional["LiskDelegateType"] = None,
+        multisignature: Optional["LiskMultisignatureType"] = None,
+        data: Optional["str"] = None,
+    ) -> None:
+        self.votes = votes if votes is not None else []
+        self.signature = signature
+        self.delegate = delegate
+        self.multisignature = multisignature
+        self.data = data
+
+
+class LiskSignatureType(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("public_key", "bytes", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        public_key: Optional["bytes"] = None,
+    ) -> None:
+        self.public_key = public_key
+
+
+class LiskDelegateType(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("username", "string", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        username: Optional["str"] = None,
+    ) -> None:
+        self.username = username
+
+
+class LiskMultisignatureType(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("min", "uint32", repeated=False, required=False),
+        2: protobuf.Field("life_time", "uint32", repeated=False, required=False),
+        3: protobuf.Field("keys_group", "string", repeated=True, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        keys_group: Optional[List["str"]] = None,
+        min: Optional["int"] = None,
+        life_time: Optional["int"] = None,
+    ) -> None:
+        self.keys_group = keys_group if keys_group is not None else []
+        self.min = min
+        self.life_time = life_time
 
 
 class MoneroTransactionSourceEntry(protobuf.MessageType):

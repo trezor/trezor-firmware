@@ -40,6 +40,7 @@ from . import (
     ethereum,
     fido,
     firmware,
+    lisk,
     monero,
     nem,
     ripple,
@@ -69,6 +70,7 @@ COMMAND_ALIASES = {
     "bnb": binance.cli,
     "eth": ethereum.cli,
     "ada": cardano.cli,
+    "lsk": lisk.cli,
     "xmr": monero.cli,
     "xrp": ripple.cli,
     "xlm": stellar.cli,
@@ -331,6 +333,7 @@ cli.add_command(device.cli)
 cli.add_command(eos.cli)
 cli.add_command(ethereum.cli)
 cli.add_command(fido.cli)
+cli.add_command(lisk.cli)
 cli.add_command(monero.cli)
 cli.add_command(nem.cli)
 cli.add_command(ripple.cli)
