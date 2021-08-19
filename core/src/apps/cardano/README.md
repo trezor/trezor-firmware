@@ -11,11 +11,17 @@ REVIEWER = Jan Matejek <jan.matejek@satoshilabs.com>, Tomas Susanka <tomas.susan
 ## Useful links
 
 [Cardano documentation](https://docs.cardano.org/en/latest/) - official documentation.
+
 [Cardano developer documentation](https://developers.cardano.org/) - official developer documentation.
+
 [Delegation Design Spec](https://hydra.iohk.io/build/2006688/download/1/delegation_design_spec.pdf) - contains information about delegation (addresses, certificates, withdrawals, ...).
+
 [Multi Asset CDDL spec](https://github.com/input-output-hk/cardano-ledger-specs/blob/097890495cbb0e8b62106bcd090a5721c3f4b36f/shelley-ma/shelley-ma-test/cddl-files/shelley-ma.cddl).
+
 [Byron address format](https://github.com/input-output-hk/cardano-wallet/wiki/About-Address-Format---Byron).
+
 [The Shelley 1852' purpose and staking path](https://github.com/input-output-hk/implementation-decisions/blob/e2d1bed5e617f0907bc5e12cf1c3f3302a4a7c42/text/1852-hd-chimeric.md).
+
 [cbor.me](http://cbor.me/) - very useful tool for CBOR inspection.
 
 ## Important notes
@@ -27,7 +33,9 @@ Cardano uses extended public keys. This also means that the transaction signatur
 ## Protocol magic vs. Network id
 
 Protocol magic is used to identify the network on the protocol level. Each network (mainnet, testnet, testnet 2, ...) has its own protocol magic. It's a 4 byte number. Network Id is a more compact version of the protocol magic - it's only 4 bits. It is used in addresses to determine, whether they belong to a testnet or any of the (possibly in the future existing) mainnets. Network Id 0 is reserved for all the testnets that might ever exist and the remaining 15 values are used for mainnets.
+
 _Current mainnet protocol magic:_ 764824073
+
 _Current mainnet network id:_ 1
 
 ## Key types
@@ -45,66 +53,112 @@ In Shelley, address encoding has been switched from Base58 to Bech32. However, B
 #### Byron address
 
 Legacy address used mainly during the Byron era, but still supported in Shelley. Has no staking rights. More about address format can be found [here](https://github.com/input-output-hk/cardano-wallet/wiki/About-Address-Format---Byron).
+
 **Example:**
+
 Mainnet: `Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2`
+
 Testnet: `2657WMsDfac7BteXkJq5Jzdog4h47fPbkwUM49isuWbYAr2cFRHa3rURP236h9PBe`
 
 #### Base address
 
-Introduced in Shelley:
-`[header] + [payment_key_hash] + [staking_key_hash]`
+Introduced in Shelley: `[header] + [payment_key_hash] + [staking_key_hash]`
+
 Base address can have staking rights (as it contains a staking key hash), but the staking key has to be registered on the blockchain first. Funds can be received even without the staking key being registered though. It is also possible to own the funds (payment key) but to use a different staking key to build the address. This would transfer the staking rights to the owner of the staking key. This can be useful for staking your funds for a charity.
+
 **Example:**
+
 Mainnet: `addr1q8v42wjda8r6mpfj40d36znlgfdcqp7jtj03ah8skh6u8wnrqua2vw243tmjfjt0h5wsru6appuz8c0pfd75ur7myyeqsx9990`
+
 Testnet: `addr_test1qrv42wjda8r6mpfj40d36znlgfdcqp7jtj03ah8skh6u8wnrqua2vw243tmjfjt0h5wsru6appuz8c0pfd75ur7myyeqnsc9fs`
 
 #### Pointer address
 
-Introduced in Shelley:
-`[header] + [payment_key_hash] + [certificate_pointer]`
+Introduced in Shelley: `[header] + [payment_key_hash] + [certificate_pointer]`
+
 Certificate pointer is a pointer `(block, transaction, certificate)` to the staking key registration certificate on the blockchain. It replaces `staking_key_hash` from base address, but serves the same purpose. Thus pointer address is pretty much the same as base address in function, but is much shorter (~35B vs 57B) thanks to the certificate pointer.
+
 **Example:**
+
 Mainnet: `addr1gxq0nckg3ekgzuqg7w5p9mvgnd9ym28qh5grlph8xd2z92spqgpsl97q83`
+
 Testnet: `addr_test1gzq0nckg3ekgzuqg7w5p9mvgnd9ym28qh5grlph8xd2z925ph3wczvf2ag2x9t`
 
 #### Enterprise address
 
-Introduced in Shelley:
-`[header] + [payment_key_hash]`
+Introduced in Shelley: `[header] + [payment_key_hash]`
+
 Entreprise address has no staking rights. This is useful for example for exchanges which contain a lot of funds and thus would control too much stake.
+
 **Example:**
+
 Mainnet: `addr1vxq0nckg3ekgzuqg7w5p9mvgnd9ym28qh5grlph8xd2z92su77c6m`
+
 Testnet: `addr_test1vzq0nckg3ekgzuqg7w5p9mvgnd9ym28qh5grlph8xd2z92s8k2y47`
 
 #### Reward address
 
-Introduced in Shelley:
-`[header] + [staking_key_hash]`
+Introduced in Shelley: `[header] + [staking_key_hash]`
+
 Staking rewards are gathered on this address after stake registration and delegation. They can then be withdrawn by a transaction with `withdrawals` filled in. All of the rewards have to be taken out at once.
+
 **Example:**
+
 Mainnet: `stake1uyfz49rtntfa9h0s98f6s28sg69weemgjhc4e8hm66d5yacalmqha`
+
 Testnet: `stake_test1uqfz49rtntfa9h0s98f6s28sg69weemgjhc4e8hm66d5yac643znq`
 
 
 ## Transactions
 
-Transactions don't have a distinct type. Every transaction may transfer funds, post a certificate, withdraw funds or do all at once (to a point).
+Transactions don't have a distinct type. Every transaction may transfer funds, post a certificate, withdraw funds or do all at once (to a point). However, for security purposes we had to limit some combinations of elements e.g. a pool registration transaction being signed by the owner cannot contain any payment witnesses. To identify the transaction type we use a so-called transaction signing mode (`CardanoTxSigningMode`).
 
-_Unfortunately we are aware of the fact that currently at most ~14 inputs are supported per transaction. This should be resolved when the cardano app is updated to support transaction streaming._
+### Transaction streaming
 
-#### Witnesses
+In the past transaction parameters have been sent to Trezor as a single, large object which would get processed, and the whole signed and serialized transaction would be returned by Trezor. However, as transactions kept on growing, this approach proved to be very memory inefficient, and the supported transaction size was quite limited (around 2kB).
+
+We have iteratively updated the Cardano implementation so that now the transaction parameters are sent to Trezor one by one and are also processed one-by-one. For example the inputs of a transaction are all sent and processed separately, which means that the number of inputs a single transaction can contain is very large (perhaps even infinite). All lists and maps are processed similarly to the inputs.
+
+Thanks to transaction streaming, it's now possible to sign a transaction with 65 inputs, 40 outputs, another 10 outputs with 12 policies and 10 assets each. The multiasset outputs included in the transaction were all over the 4kB max size given by the protocol. The whole transaction was 62kB (current protocol transaction size limit is 16kB). It could also probably handle much much more, but these tests already took long enough to complete.
+
+### Transaction signing mode
+
+For security and in some cases UX purposes we use transaction signing mode so that we are able to better adjust the policies for a given transaction.
+
+#### Ordinary transaction
+
+An ordinary transaction cannot contain a pool registration certificate. Otherwise, no special rules currently apply.
+
+#### Pool registration as owner
+
+When signing a pool registration transaction as an owner, the transaction cannot contain the following:
+- inputs with path, i.e. payment witness requests
+- other certificates
+- withdrawals
+
+Including inputs with a path would cause the transaction to be signed by such a path without letting the user know. Of course, we could let the user know that the transaction is being signed by the user's payment key, however, a pool owner should never be the one paying for the pool registration anyways so such a witness request doesn't make sense.
+
+Just like a pool registration certificate, other certificates and withdrawals are also signed by the user's staking keys. Allowing other certificates and withdrawals to be included in the transaction might thus cause the user to inadvertently sign a delegation certificate or withdrawal along with the pool registration.
+
+### Single account model
+
+Change outputs, certificates, withdrawals and witness requests (inputs) are allowed to only contain paths from a single account. The single account is determined by the first encountered element containing a path. Byron and Shelley paths with the same account are considered as separate accounts.
+
+### Witnesses
 
 Transactions need a witness (signature) for each input, withdrawal and some certificates. A witness for each key is included only once in a transaction. The signature is built using the `ed25519.sign_ext` function. There are significant differences between Byron and Shelley witnesses - although we need to support both, because a transaction may have Byron inputs.
 
-_Shelley witnesses_:
+#### Shelley witnesses
+
 They only need to contain the public key (not the extended public key) and the signature. Nothing else is needed to verify the signature, although the signing happens with an extended private key.
 
-_Byron witnesses_:
+#### Byron witnesses
+
 In order to be able to properly verify them, Byron witnesses need to contain the public key, signature, chain code and address attributes (which are empty on mainnet or contain the protocol magic on testnet).
 
 More on witness structure can be found [here](https://github.com/input-output-hk/cardano-ledger-specs/blob/097890495cbb0e8b62106bcd090a5721c3f4b36f/shelley-ma/shelley-ma-test/cddl-files/shelley-ma.cddl#L219).
 
-#### Multi Asset support
+### Multi Asset support
 
 _Multi Asset support has been added in the Cardano Mary era_
 
@@ -124,38 +178,38 @@ Transaction outputs may include custom tokens on top of ADA tokens:
 
 Please see the transaction below for more details.
 
-#### Certificates
+### Certificates
 
 Certificates are posted to the blockchain via transactions and they mark a certain action, thus there are multiple certificate types:
 * stake key registration certificate
 * stake key de-registration certificate
 * delegation certificate
-
-And these three which are not supported by Trezor at the moment:
 * stake pool registration certificate
+
+And these two which are not supported by Trezor at the moment:
 * stake pool retirement certificate
 * operational key certificate
 
-Stake key de-registration and delegation certificates both need to be witnessed by the corresponding staking key.
+Stake key de-registration and delegation certificates both need to be witnessed by the corresponding staking key. A stake pool registration certificate can only be signed on Trezor by a pool owner and the `POOL_REGISTRATION_AS_OWNER` signing mode has to be used. Pool operator support isn't available on Trezor.
 
 You can read more on certificates in the [delegation design spec](https://hydra.iohk.io/build/2006688/download/1/delegation_design_spec.pdf#subsection.3.4).
 Info about their structure can be found [here](https://github.com/input-output-hk/cardano-ledger-specs/blob/097890495cbb0e8b62106bcd090a5721c3f4b36f/shelley-ma/shelley-ma-test/cddl-files/shelley-ma.cddl#L102).
 
-#### Withdrawals
+### Withdrawals
 
 Withdrawals are posted to the blockchain via transactions and they are used to withdraw rewards from reward accounts. When withdrawing funds, the transaction needs to be witnessed by the corresponding staking key.
 
 You can read more on withdrawals in the [delegation design spec](https://hydra.iohk.io/build/2006688/download/1/delegation_design_spec.pdf) (there is not a dedicated section to withdrawals, simply search for 'withdrawal').
 
-#### Auxiliary data
+### Auxiliary data
 
 _Auxiliary data have replaced metadata in the Cardano Mary era_
 
 Each transaction may contain auxiliary data. Auxiliary data format can be found [here](https://github.com/input-output-hk/cardano-ledger-specs/blob/57c27d168b8d4288534ce74e77c1df33870e756a/shelley-ma/shelley-ma-test/cddl-files/shelley-ma.cddl#L212).
 
-Auxiliary data can be sent to Trezor as a blob or as an object with parameters. The blob will be included in the transaction as is.
+Auxiliary data can be sent to Trezor as a hash or as an object with parameters. The hash will be included in the transaction body as is and will be shown to the user.
 
-The only object currently supported is Catalyst voting key registration. To be in compliance with the CDDL and other Cardano tools, Catalyst voting key registration object is being wrapped in a tuple and an empty tuple follows it. The empty tuple represents `auxiliary_scripts` which are not yet supported on Trezor and are thus always empty. Byron addresses are not supported as Catalyst reward addresses.
+The only object currently supported is Catalyst voting key registration. To be in compliance with the CDDL and other Cardano tools, Catalyst voting key registration object is being wrapped in a tuple and an empty tuple follows it. The empty tuple represents `auxiliary_scripts` which are not yet supported on Trezor and are thus always empty. Byron addresses are not supported as Catalyst reward addresses. The Catalyst registration signature is returned in the form of `CardanoTxAuxiliaryDataSupplement` which also contains the auxiliary data hash calculated by Trezor.
 
 [Catalyst Registration Transaction Metadata Format](https://github.com/cardano-foundation/CIPs/blob/749f22eccd78e05fcdc4552c49639bb3bbd0a458/CIP-0015/CIP-0015.md)
 
