@@ -68,6 +68,7 @@
       "misc:ADA": true,
       "misc:BNB": true,
       "misc:EOS": true,
+      "misc:LSK": true,
       "misc:XLM": true,
       "misc:XRP": true,
       "misc:XTZ": true,
@@ -2146,6 +2147,7 @@
       "eth:tmACA": "1.9.5",
       "eth:tsDIODE": "1.9.5",
       "eth:xDAI": "1.9.4",
+      "misc:LSK": "1.7.1",
       "misc:MAID": "1.7.2",
       "misc:OMNI": "1.7.2",
       "misc:USDT": "1.7.2",
@@ -2461,7 +2463,6 @@
       "misc:ADA": "not implemented",
       "misc:BNB": "not implemented",
       "misc:EOS": "not implemented",
-      "misc:LSK": "Incompatible mainnet hard-fork",
       "misc:XMR": "not implemented",
       "misc:XRP": "not implemented",
       "misc:XTZ": "not implemented",
@@ -4494,6 +4495,7 @@
       "misc:ADA": "2.0.8",
       "misc:BNB": "2.1.5",
       "misc:EOS": "2.1.1",
+      "misc:LSK": "2.0.7",
       "misc:MAID": "2.0.10",
       "misc:OMNI": "2.0.10",
       "misc:USDT": "2.0.10",
@@ -4809,8 +4811,7 @@
       "eth:tXPR": "(AUTO) exclude testnet",
       "eth:taETH": "(AUTO) exclude testnet",
       "eth:tcett": "(AUTO) exclude testnet",
-      "eth:tusd": "(AUTO) exclude testnet",
-      "misc:LSK": "Incompatible mainnet hard-fork"
+      "eth:tusd": "(AUTO) exclude testnet"
     }
   }
 }
