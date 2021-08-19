@@ -41,7 +41,7 @@ async def confirm_source_account(ctx: Context, source_account: str) -> None:
         "Confirm operation",
         source_account,
         description="Source account:",
-        br_type="op_source_account",
+        name="op_source_account",
     )
 
 
@@ -63,7 +63,7 @@ async def confirm_account_merge_op(ctx: Context, op: StellarAccountMergeOp) -> N
         "Account Merge",
         op.destination_account,
         description="All XLM will be sent to:",
-        br_type="op_account_merge",
+        name="op_account_merge",
     )
 
 
@@ -83,7 +83,7 @@ async def confirm_change_trust_op(ctx: Context, op: StellarChangeTrustOp) -> Non
         title="Delete trust" if op.limit == 0 else "Add trust",
         amount=format_amount(op.limit, op.asset),
         description="Limit:",
-        br_type="op_change_trust",
+        name="op_change_trust",
     )
     await confirm_asset_issuer(ctx, op.asset)
 
@@ -211,7 +211,7 @@ async def confirm_path_payment_strict_receive_op(
         title="Debited amount",
         amount=format_amount(op.send_max, op.send_asset),
         description="Pay at most:",
-        br_type="op_path_payment_strict_receive",
+        name="op_path_payment_strict_receive",
     )
     await confirm_asset_issuer(ctx, op.send_asset)
 
@@ -232,7 +232,7 @@ async def confirm_path_payment_strict_send_op(
         title="Debited amount",
         amount=format_amount(op.send_amount, op.send_asset),
         description="Pay:",
-        br_type="op_path_payment_strict_send",
+        name="op_path_payment_strict_send",
     )
     await confirm_asset_issuer(ctx, op.send_asset)
 
@@ -253,7 +253,7 @@ async def confirm_set_options_op(ctx: Context, op: StellarSetOptionsOp) -> None:
             "Inflation",
             op.inflation_destination_account,
             description="Destination:",
-            br_type="op_inflation",
+            name="op_inflation",
         )
 
     if op.clear_flags:
@@ -339,5 +339,5 @@ async def confirm_asset_issuer(ctx: Context, asset: StellarAsset) -> None:
         "Confirm Issuer",
         asset.issuer,
         description=f"{asset.code} issuer:",
-        br_type="confirm_asset_issuer",
+        name="confirm_asset_issuer",
     )

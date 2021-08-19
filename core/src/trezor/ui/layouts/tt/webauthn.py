@@ -23,7 +23,9 @@ async def confirm_webauthn(
         return is_confirmed(await confirm)
     else:
         return is_confirmed(
-            await interact(ctx, confirm, "confirm_webauthn", ButtonRequestType.Other)
+            await interact(
+                ctx, confirm, "confirm_webauthn", br_code=ButtonRequestType.Other
+            )
         )
 
 

@@ -83,7 +83,7 @@ async def show_remaining_shares(
 
     pages[-1] = Confirm(pages[-1], cancel=None)
     await raise_if_cancelled(
-        interact(ctx, Paginated(pages), "show_shares", ButtonRequestType.Other)
+        interact(ctx, Paginated(pages), "show_shares", br_code=ButtonRequestType.Other)
     )
 
 
@@ -101,7 +101,7 @@ async def show_group_share_success(
             ctx,
             Confirm(text, confirm="Continue", cancel=None),
             "share_success",
-            ButtonRequestType.Other,
+            br_code=ButtonRequestType.Other,
         )
     )
 
@@ -129,6 +129,6 @@ async def continue_recovery(
                 ctx,
                 Confirm(homepage, confirm=button_label, major_confirm=True),
                 "recovery",
-                ButtonRequestType.RecoveryHomepage,
+                br_code=ButtonRequestType.RecoveryHomepage,
             )
         )

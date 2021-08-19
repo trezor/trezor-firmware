@@ -33,7 +33,7 @@ async def require_confirm_init(
         ctx,
         title="Confirm Stellar",
         address=address,
-        br_type="confirm_init",
+        name="confirm_init",
         description=description,
         icon=ui.ICON_SEND,
     )

@@ -95,7 +95,7 @@ async def show_share_words(
             ctx,
             paginated,
             "backup_words",
-            ButtonRequestType.ResetDevice,
+            br_code=ButtonRequestType.ResetDevice,
         )
     )
 
@@ -170,7 +170,7 @@ async def slip39_show_checklist(
             ctx,
             Confirm(checklist, confirm="Continue", cancel=None),
             "slip39_checklist",
-            ButtonRequestType.ResetDevice,
+            br_code=ButtonRequestType.ResetDevice,
         )
     )
 
@@ -199,7 +199,7 @@ async def slip39_prompt_threshold(
                     cancel_style=ButtonDefault,
                 ),
                 "slip39_threshold",
-                ButtonRequestType.ResetDevice,
+                br_code=ButtonRequestType.ResetDevice,
             )
         )
 
@@ -255,7 +255,7 @@ async def slip39_prompt_number_of_shares(
                     cancel_style=ButtonDefault,
                 ),
                 "slip39_shares",
-                ButtonRequestType.ResetDevice,
+                br_code=ButtonRequestType.ResetDevice,
             )
         )
         count = shares.input.count
@@ -303,7 +303,7 @@ async def slip39_advanced_prompt_number_of_groups(ctx: wire.GenericContext) -> i
                     cancel_style=ButtonDefault,
                 ),
                 "slip39_groups",
-                ButtonRequestType.ResetDevice,
+                br_code=ButtonRequestType.ResetDevice,
             )
         )
         count = shares.input.count
@@ -345,7 +345,7 @@ async def slip39_advanced_prompt_group_threshold(
                     cancel_style=ButtonDefault,
                 ),
                 "slip39_group_threshold",
-                ButtonRequestType.ResetDevice,
+                br_code=ButtonRequestType.ResetDevice,
             )
         )
         count = shares.input.count

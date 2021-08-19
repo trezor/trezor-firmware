@@ -45,7 +45,7 @@ async def require_confirm_origination(ctx: Context, address: str) -> None:
         title="Confirm origination",
         address=address,
         description="Address:",
-        br_type="confirm_origination",
+        name="confirm_origination",
         icon_color=ui.ORANGE,
         br_code=ButtonRequestType.SignTx,
     )
@@ -60,7 +60,7 @@ async def require_confirm_origination_fee(ctx: Context, balance: int, fee: int) 
             ("Fee:", format_tezos_amount(fee)),
         ),
         icon_color=ui.ORANGE,
-        br_type="confirm_origination_final",
+        name="confirm_origination_final",
         hold=True,
     )
 
@@ -71,7 +71,7 @@ async def require_confirm_delegation_baker(ctx: Context, baker: str) -> None:
         title="Confirm delegation",
         address=baker,
         description="Baker address:",
-        br_type="confirm_delegation",
+        name="confirm_delegation",
         icon_color=ui.BLUE,
         br_code=ButtonRequestType.SignTx,
     )
@@ -152,7 +152,7 @@ async def require_confirm_delegation_manager_withdraw(
         title="Remove delegation",
         address=address,
         description="Delegator:",
-        br_type="confirm_undelegation",
+        name="confirm_undelegation",
         icon=ui.ICON_RECEIVE,
         icon_color=ui.RED,
         br_code=ButtonRequestType.SignTx,

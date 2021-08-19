@@ -53,7 +53,7 @@ class _RustLayout(ui.Layout):
 
 async def confirm_action(
     ctx: wire.GenericContext,
-    br_type: str,
+    name: str,
     title: str,
     action: str | None = None,
     description: str | None = None,
@@ -129,7 +129,7 @@ async def confirm_text(
 
 async def show_error_and_raise(
     ctx: wire.GenericContext,
-    br_type: str,
+    name: str,
     content: str,
     header: str = "Error",
     subheader: str | None = None,

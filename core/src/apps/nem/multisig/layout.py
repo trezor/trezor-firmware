@@ -53,7 +53,7 @@ async def ask_aggregate_modification(
 async def _require_confirm_address(ctx: Context, action: str, address: str) -> None:
     await confirm_address(
         ctx,
-        br_type="confirm_multisig",
+        name="confirm_multisig",
         title="Confirm address",
         description=action,
         address=address,
