@@ -111,6 +111,18 @@ def find_message_handler_module(msg_type: int) -> str:
         elif msg_type == MessageType.EthereumVerifyMessage:
             return "apps.ethereum.verify_message"
 
+        # lisk
+        elif msg_type == MessageType.LiskGetPublicKey:
+            return "apps.lisk.get_public_key"
+        elif msg_type == MessageType.LiskGetAddress:
+            return "apps.lisk.get_address"
+        elif msg_type == MessageType.LiskSignTx:
+            return "apps.lisk.sign_tx"
+        elif msg_type == MessageType.LiskSignMessage:
+            return "apps.lisk.sign_message"
+        elif msg_type == MessageType.LiskVerifyMessage:
+            return "apps.lisk.verify_message"
+
         # monero
         elif msg_type == MessageType.MoneroGetAddress:
             return "apps.monero.get_address"

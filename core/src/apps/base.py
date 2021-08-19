@@ -64,6 +64,7 @@ def get_features() -> Features:
             Capability.Crypto,
             Capability.EOS,
             Capability.Ethereum,
+            Capability.Lisk,
             Capability.Monero,
             Capability.NEM,
             Capability.Ripple,
