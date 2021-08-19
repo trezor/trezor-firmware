@@ -3984,7 +3984,7 @@ class EthereumSignTxEIP1559(protobuf.MessageType):
         7: protobuf.Field("value", "bytes", repeated=False, required=True),
         8: protobuf.Field("data_initial_chunk", "bytes", repeated=False, required=False),
         9: protobuf.Field("data_length", "uint32", repeated=False, required=True),
-        10: protobuf.Field("chain_id", "uint32", repeated=False, required=True),
+        10: protobuf.Field("chain_id", "uint64", repeated=False, required=True),
         11: protobuf.Field("access_list", "EthereumAccessList", repeated=True, required=False),
     }
 
