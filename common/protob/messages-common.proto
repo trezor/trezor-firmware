@@ -51,6 +51,10 @@ message Failure {
 message ButtonRequest {
     optional ButtonRequestType code = 1;  // enum identifier of the screen
     optional uint32 pages = 2;            // if the screen is paginated, number of pages
+
+    optional string name = 3;             // human-readable description of the screen
+    optional uint32 index = 4;            // if the screen is one of many of the same name
+                                          // (e.g., confirm output 1 of 3), the index of this screen
     /**
     * Type of button request
     */
