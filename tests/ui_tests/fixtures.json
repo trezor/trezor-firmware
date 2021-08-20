@@ -519,6 +519,7 @@
 "test_msg_signtx_external.py::test_p2wpkh_with_false_proof": "180fa10c6aab6dafa764dc598ce7cc4ac216ad27051e6f414503fc000f85cae9",
 "test_msg_signtx_external.py::test_p2wpkh_with_proof": "209ddfa68c6bc1c885712d39ffc07cce8c1fb7b80c6497f21b34492f7d3de22c",
 "test_msg_signtx_external.py::test_p2wsh_external_presigned": "8374d50b803db0160de39ce7e5a4170112f4c99d703490920a2de735bd261bda",
+"test_msg_signtx_firo.py::test_spend_lelantus": "cc2de1647ce965776cc4aa7406ba69ba1ec63ed05183b5afcff80a7c20a43052",
 "test_msg_signtx_grs.py-test_legacy": "3a80ea724a93ed225d64f8def739d63b11f8c096455f971feabec8be6f7597fb",
 "test_msg_signtx_grs.py-test_legacy_change": "8dfc140534bdaa08f6916831dc0d510f57b07617f30df748e4e0456d4dd93ece",
 "test_msg_signtx_grs.py-test_send_segwit_native": "82dfa15178d33e757da58943aff36dcc0eebb984e34832b71f6ca09b2a525cbc",
