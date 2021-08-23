@@ -79,7 +79,7 @@ async def confirm_sending(
         width_paginated=17,
         to_str="\nto\n",
         to_paginated=True,
-        br_code=ButtonRequestType.Other,
+        br_code=ButtonRequestType.ConfirmOutput,
     )
 
 
@@ -100,7 +100,7 @@ async def confirm_sending_token(
             ),
             ("Amount sent:", format_amount(token.amount, 0)),
         ],
-        br_code=ButtonRequestType.Other,
+        br_code=ButtonRequestType.ConfirmOutputToken,
     )
 
 
@@ -111,7 +111,7 @@ async def show_warning_tx_output_contains_tokens(ctx: wire.Context) -> None:
         title="Confirm transaction",
         content="The following\ntransaction output\ncontains tokens.",
         larger_vspace=True,
-        br_code=ButtonRequestType.Other,
+        br_code=ButtonRequestType.ShowWarningOutputTokens,
     )
 
 
@@ -131,7 +131,7 @@ async def show_warning_tx_no_staking_info(
         content=content,
         param=format_coin_amount(amount),
         hide_continue=True,
-        br_code=ButtonRequestType.Other,
+        br_code=ButtonRequestType.ShowWarningTxNoStakingInfo,
     )
 
 
@@ -157,7 +157,7 @@ async def show_warning_tx_pointer_address(
             ),
             ("Change amount:", format_coin_amount(amount)),
         ],
-        br_code=ButtonRequestType.Other,
+        br_code=ButtonRequestType.ShowWarningTxPointerAddress,
     )
 
 
@@ -181,7 +181,7 @@ async def show_warning_tx_different_staking_account(
             ),
             ("Change amount:", format_coin_amount(amount)),
         ],
-        br_code=ButtonRequestType.Other,
+        br_code=ButtonRequestType.ShowWarningTxDifferentStakingAccount,
     )
 
 
@@ -201,7 +201,7 @@ async def show_warning_tx_staking_key_hash(
         "confirm_different_stakingrights",
         title="Confirm transaction",
         props=props,
-        br_code=ButtonRequestType.Other,
+        br_code=ButtonRequestType.ShowWarningTxStakingKeyHash,
     )
 
 
@@ -233,7 +233,7 @@ async def confirm_transaction(
         title="Confirm transaction",
         props=props,
         hold=True,
-        br_code=ButtonRequestType.Other,
+        br_code=ButtonRequestType.SignTx,
     )
 
 
@@ -260,7 +260,7 @@ async def confirm_certificate(
         "confirm_certificate",
         title="Confirm transaction",
         props=props,
-        br_code=ButtonRequestType.Other,
+        br_code=ButtonRequestType.ConfirmCertificate,
     )
 
 
@@ -290,7 +290,7 @@ async def confirm_stake_pool_parameters(
                 None,
             ),
         ],
-        br_code=ButtonRequestType.Other,
+        br_code=ButtonRequestType.ConfirmStakePoolParameters,
     )
 
 
@@ -330,7 +330,7 @@ async def confirm_stake_pool_owner(
         "confirm_pool_owners",
         title="Confirm transaction",
         props=props,
-        br_code=ButtonRequestType.Other,
+        br_code=ButtonRequestType.ConfirmStakePoolOwner,
     )
 
 
@@ -344,7 +344,7 @@ async def confirm_stake_pool_metadata(
             "confirm_pool_metadata",
             title="Confirm transaction",
             props=[("Pool has no metadata (anonymous pool)", None)],
-            br_code=ButtonRequestType.Other,
+            br_code=ButtonRequestType.ConfirmStakePoolMetadata,
         )
         return
 
@@ -356,7 +356,7 @@ async def confirm_stake_pool_metadata(
             ("Pool metadata url:", metadata.url),
             ("Pool metadata hash:", metadata.hash),
         ],
-        br_code=ButtonRequestType.Other,
+        br_code=ButtonRequestType.ConfirmStakePoolMetadata,
     )
 
 
@@ -377,7 +377,7 @@ async def confirm_stake_pool_registration_final(
             ("TTL:", format_optional_int(ttl)),
         ],
         hold=True,
-        br_code=ButtonRequestType.Other,
+        br_code=ButtonRequestType.ConfirmStakePoolRegistration,
     )
 
 
@@ -396,7 +396,7 @@ async def confirm_withdrawal(
             ),
             ("Amount:", format_coin_amount(withdrawal.amount)),
         ],
-        br_code=ButtonRequestType.Other,
+        br_code=ButtonRequestType.ConfirmWithdrawal,
     )
 
 
@@ -421,7 +421,7 @@ async def confirm_catalyst_registration(
             ("Rewards go to:", reward_address),
             ("Nonce:", str(nonce)),
         ],
-        br_code=ButtonRequestType.Other,
+        br_code=ButtonRequestType.ConfirmCatalystRegistration,
     )
 
 
@@ -433,7 +433,7 @@ async def show_auxiliary_data_hash(
         "confirm_auxiliary_data",
         title="Confirm transaction",
         props=[("Auxiliary data hash:", auxiliary_data_hash)],
-        br_code=ButtonRequestType.Other,
+        br_code=ButtonRequestType.ConfirmAuxiliaryData,
     )
 
 
@@ -474,7 +474,7 @@ async def show_warning_address_foreign_staking_key(
         props=props,
         icon=ui.ICON_WRONG,
         icon_color=ui.RED,
-        br_code=ButtonRequestType.Other,
+        br_code=ButtonRequestType.ShowWarningAddressForeignKey,
     )
 
 
@@ -485,7 +485,7 @@ async def show_warning_tx_network_unverifiable(ctx: wire.Context) -> None:
         title="Warning",
         content="Transaction has no outputs, network cannot be verified.",
         larger_vspace=True,
-        br_code=ButtonRequestType.Other,
+        br_code=ButtonRequestType.ShowWarningTxNetworkUnverifiable,
     )
 
 
@@ -504,5 +504,5 @@ async def show_warning_address_pointer(
         icon=ui.ICON_WRONG,
         icon_color=ui.RED,
         content=content,
-        br_code=ButtonRequestType.Other,
+        br_code=ButtonRequestType.ShowWarningAddressPointer,
     )

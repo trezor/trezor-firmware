@@ -273,6 +273,24 @@ if TYPE_CHECKING:
         Warning = 18
         PassphraseEntry = 19
         PinEntry = 20
+        ConfirmOutputToken = 21
+        ConfirmCertificate = 22
+        ConfirmWithdrawal = 23
+        ConfirmCatalystRegistration = 24
+        ConfirmAuxiliaryData = 25
+        ConfirmStakePoolRegistration = 26
+        ConfirmStakePoolMetadata = 27
+        ConfirmStakePoolOwner = 28
+        ConfirmStakePoolParameters = 29
+        ShowWarningOutputTokens = 30
+        ShowWarningAddressForeignKey = 31
+        ShowWarningAddressPointer = 32
+        ShowWarningTxNetworkUnverifiable = 33
+        ShowWarningTxStakingKeyHash = 34
+        ShowWarningTxDifferentStakingAccount = 35
+        ShowWarningTxPointerAddress = 36
+        ShowWarningTxNoStakingInfo = 37
+        
 
     class PinMatrixRequestType(IntEnum):
         Current = 1
