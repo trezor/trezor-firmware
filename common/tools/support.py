@@ -2,7 +2,6 @@
 import json
 import os
 import re
-import subprocess
 import sys
 
 import click
@@ -35,6 +34,19 @@ def clear_support(device, key):
     supported, unsupported = support_dicts(device)
     supported.pop(key, None)
     unsupported.pop(key, None)
+
+
+def support_setdefault(device, key, value, reason=None):
+    """Set value only if no other value is set"""
+    supported, unsupported = support_dicts(device)
+    if value is not False and key not in unsupported:
+        supported.setdefault(key, value)
+
+    if value is False:
+        if reason is None:
+            raise ValueError("reason must be given for unsupported keys")
+        if key not in supported:
+            unsupported[key] = reason
 
 
 def set_supported(device, key, value):
@@ -291,94 +303,56 @@ def check(check_tokens, ignore_missing):
 
 @cli.command()
 # fmt: off
-@click.argument("device")
-@click.option("-r", "--version", help="Set explicit version string (default: guess from latest release)")
-@click.option("--git-tag/--no-git-tag", "-g", default=False, help="Create a corresponding Git tag")
-@click.option("--release-missing/--no-release-missing", default=True, help="Release coins with missing support info")
+@click.option("--v1", help="Version for T1 release (default: guess from latest)")
+@click.option("--v2", help="Version for TT release (default: guess from latest)")
 @click.option("-n", "--dry-run", is_flag=True, help="Do not write changes")
-@click.option("-s", "--soon", is_flag=True, help="Only set missing support-infos to be released 'soon'")
 @click.option("-f", "--force", is_flag=True, help="Proceed even with bad version/device info")
-@click.option("-y", "--add-all", is_flag=True, help="Do not ask for confirmation, add all selected coins")
 @click.option("-v", "--verbose", is_flag=True, help="Be more verbose")
+@click.option("--skip-testnets/--no-skip-testnets", default=True, help="Automatically exclude testnets")
 # fmt: on
 @click.pass_context
 def release(
     ctx,
-    device: str,
-    version,
-    git_tag,
-    release_missing,
+    v1,
+    v2,
     dry_run,
-    soon,
     force,
-    add_all,
     verbose,
+    skip_testnets,
 ):
     """Release a new Trezor firmware.
 
     Update support infos so that all coins have a clear support status.
-    By default, marks duplicate tokens as unsupported, and all coins that either
-    don't have support info, or they are supported "soon", are set to the
-    released firmware version.
+    By default, marks duplicate tokens and testnets as unsupported, and all coins that
+    don't have support info are set to the released firmware version.
 
-    Optionally tags the repository with the given version.
-
-    `device` can be "1", "2", or a string matching `support.json` key. Version
-    is autodetected by downloading a list of latest releases and incrementing
-    micro version by one, or you can specify `--version` explicitly.
-
-    Unless `--add-all` is specified, the tool will ask you to confirm each added
-    coin. ERC20 tokens are added automatically. Use `--verbose` to see them.
+    The tool will ask you to confirm each added coin. ERC20 tokens are added
+    automatically. Use `--verbose` to see them.
     """
-    # check condition(s)
-    if soon and git_tag:
-        raise click.ClickException("Cannot git-tag a 'soon' revision")
+    latest_releases = coin_info.latest_releases()
 
-    # process `device`
-    if device.isnumeric():
-        device = f"trezor{device}"
+    def bump_version(version_tuple):
+        version_list = list(version_tuple)
+        version_list[-1] += 1
+        return ".".join(str(n) for n in version_list)
 
-    if not force and device not in coin_info.VERSIONED_SUPPORT_INFO:
-        raise click.ClickException(
-            f"Non-releasable device {device} (support info is not versioned). "
-            "Use --force to proceed anyway."
-        )
+    # guess `version` if not given
+    if not v1:
+        v1 = bump_version(latest_releases["trezor1"])
+    if not v2:
+        v2 = bump_version(latest_releases["trezor2"])
 
-    if not soon:
-        # guess `version` if not given
-        if not version:
-            versions = coin_info.latest_releases()
-            latest_version = versions.get(device)
-            if latest_version is None:
-                raise click.ClickException(
-                    "Failed to guess version. "
-                    "Please use --version to specify it explicitly."
-                )
-            else:
-                latest_version = list(latest_version)
-            latest_version[-1] += 1
-            version = ".".join(str(n) for n in latest_version)
+    versions = {"trezor1": v1, "trezor2": v2}
 
-        # process `version`
-        try:
-            version_numbers = list(map(int, version.split(".")))
-            expected_device = f"trezor{version_numbers[0]}"
-            if not force and device != expected_device:
-                raise click.ClickException(
-                    f"Device {device} should not be version {version}. "
-                    "Use --force to proceed anyway."
-                )
-        except ValueError as e:
-            if not force:
-                raise click.ClickException(
-                    f"Failed to parse '{version}' as a version. "
-                    "Use --force to proceed anyway."
-                ) from e
+    for number in "1", "2":
+        device = f"trezor{number}"
+        version = versions[device]
+        if not force and not version.startswith(number + "."):
+            raise click.ClickException(
+                f"Device trezor{device} should not be version {version}. "
+                "Use --force to proceed anyway."
+            )
 
-    if soon:
-        version = "soon"
-        print(f"Moving {device} missing infos to 'soon'")
-    else:
         print(f"Releasing {device} firmware version {version}")
 
     defs, _ = coin_info.coin_info_with_duplicates()
@@ -389,50 +363,49 @@ def release(
     print("Fixing up data...")
     ctx.invoke(fix, dry_run=True)
 
-    def maybe_add(coin, label):
-        add = False
-        if add_all:
-            add = True
-        else:
-            text = f"Add {label} coin {coin['key']} ({coin['name']})?"
-            add = click.confirm(text, default=True)
-        if add:
-            set_supported(device, coin["key"], version)
+    def maybe_add(coin):
+        add = click.confirm(
+            f"Add missing coin {coin['key']} ({coin['name']})?", default=True
+        )
+        if not add:
+            unsupport_reason = click.prompt(
+                "Enter reason for not supporting (blank to skip)",
+                default="",
+                show_default=False,
+            )
+            if not unsupport_reason:
+                return
 
-    # if we're releasing, process coins marked "soon"
-    if not soon:
-        supported, _ = support_dicts(device)
-        soon_list = [
-            coins_dict[key]
-            for key, val in supported.items()
-            if val == "soon" and key in coins_dict
-        ]
-        for coin in soon_list:
-            key = coin["key"]
-            maybe_add(coin, "soon")
+        for device, version in versions.items():
+            if add:
+                support_setdefault(device, coin["key"], version)
+            else:
+                support_setdefault(device, coin["key"], False, unsupport_reason)
 
     # process missing (not listed) supportinfos
-    if release_missing:
-        missing_list = find_unsupported_coins(coins_dict)[device]
-        tokens = [coin for coin in missing_list if coin_info.is_token(coin)]
-        nontokens = [coin for coin in missing_list if not coin_info.is_token(coin)]
-        for coin in tokens:
-            key = coin["key"]
-            # assert not coin.get("duplicate"), key
-            if verbose:
-                print(f"Adding missing {key} ({coin['name']})")
-            set_supported(device, key, version)
+    missing_list = []
+    unsupported = find_unsupported_coins(coins_dict)
+    for val in unsupported.values():
+        for coin in val:
+            if coin not in missing_list:
+                missing_list.append(coin)
 
-        for coin in nontokens:
-            maybe_add(coin, "missing")
+    tokens = [coin for coin in missing_list if coin_info.is_token(coin)]
+    nontokens = [coin for coin in missing_list if not coin_info.is_token(coin)]
+    for coin in tokens:
+        key = coin["key"]
+        # assert not coin.get("duplicate"), key
+        if verbose:
+            print(f"Adding missing {key} ({coin['name']})")
+        for device, version in versions.items():
+            support_setdefault(device, key, version)
 
-    tagname = f"{device}-{version}"
-    if git_tag:
-        if dry_run:
-            print(f"Would tag current commit with {tagname}")
+    for coin in nontokens:
+        if skip_testnets and "testnet" in coin["name"].lower():
+            for device, version in versions.items():
+                support_setdefault(device, coin["key"], False, "(AUTO) exclude testnet")
         else:
-            print(f"Tagging current commit with {tagname}")
-            subprocess.check_call(["git", "tag", tagname])
+            maybe_add(coin)
 
     if not dry_run:
         write_support_info()
