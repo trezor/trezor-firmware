@@ -248,6 +248,7 @@ def show_success(
 
 async def confirm_output(
     ctx: wire.GenericContext,
+    index: int,
     address: str,
     amount: str,
     font_amount: int = ui.NORMAL,  # TODO cleanup @ redesign

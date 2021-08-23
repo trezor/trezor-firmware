@@ -182,7 +182,7 @@ class Bitcoin:
             orig_txo: TxOutput | None = None
             if txo.orig_hash:
                 orig_txo = await self.get_original_output(txo, script_pubkey)
-            await self.approve_output(txo, script_pubkey, orig_txo)
+            await self.approve_output(i, txo, script_pubkey, orig_txo)
 
         # Finalize original outputs.
         for orig in self.orig_txs:
@@ -426,6 +426,7 @@ class Bitcoin:
 
     async def approve_output(
         self,
+        index: int,
         txo: TxOutput,
         script_pubkey: bytes,
         orig_txo: TxOutput | None,
@@ -447,7 +448,7 @@ class Bitcoin:
             # Output is change and does not need approval.
             self.approver.add_change_output(txo, script_pubkey)
         else:
-            await self.approver.add_external_output(txo, script_pubkey, orig_txo)
+            await self.approver.add_external_output(index, txo, script_pubkey, orig_txo)
 
         self.tx_info.add_output(txo, script_pubkey)
 

@@ -46,7 +46,10 @@ class DecredApprover(BasicApprover):
     ) -> None:
         # NOTE: The following calls Approver.add_external_output(), not BasicApprover.add_external_output().
         # This is needed to skip calling helpers.confirm_output(), which is what BasicApprover would do.
-        await super(BasicApprover, self).add_external_output(txo, script_pubkey, None)
+        # SSTX submission must be output 0 so we pass 0 as index directly
+        await super(BasicApprover, self).add_external_output(
+            0, txo, script_pubkey, None
+        )
         await helpers.confirm_decred_sstx_submission(txo, self.coin, self.amount_unit)
 
 
@@ -135,11 +138,12 @@ class Decred(Bitcoin):
 
     async def approve_output(
         self,
+        index: int,
         txo: TxOutput,
         script_pubkey: bytes,
         orig_txo: TxOutput | None,
     ) -> None:
-        await super().approve_output(txo, script_pubkey, orig_txo)
+        await super().approve_output(index, txo, script_pubkey, orig_txo)
         self.write_tx_output(self.serialized_tx, txo, script_pubkey)
 
     async def step4_serialize_inputs(self) -> None:

@@ -791,6 +791,8 @@ class ButtonRequest(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("code", "ButtonRequestType", repeated=False, required=False),
         2: protobuf.Field("pages", "uint32", repeated=False, required=False),
+        3: protobuf.Field("name", "string", repeated=False, required=False),
+        4: protobuf.Field("index", "uint32", repeated=False, required=False),
     }
 
     def __init__(
@@ -798,9 +800,13 @@ class ButtonRequest(protobuf.MessageType):
         *,
         code: Optional["ButtonRequestType"] = None,
         pages: Optional["int"] = None,
+        name: Optional["str"] = None,
+        index: Optional["int"] = None,
     ) -> None:
         self.code = code
         self.pages = pages
+        self.name = name
+        self.index = index
 
 
 class ButtonAck(protobuf.MessageType):

@@ -203,6 +203,7 @@ async def show_transaction_signing_mode(
 
 async def confirm_sending(
     ctx: wire.Context,
+    index: int,
     ada_amount: int,
     to: str,
     is_change_output: bool,
@@ -210,6 +211,7 @@ async def confirm_sending(
     subtitle = "Change amount:" if is_change_output else "Confirm sending:"
     await confirm_output(
         ctx,
+        index,
         to,
         format_coin_amount(ada_amount),
         title="Confirm transaction",

@@ -101,6 +101,7 @@ class Approver:
 
     async def add_external_output(
         self,
+        index: int,
         txo: TxOutput,
         script_pubkey: bytes,
         orig_txo: TxOutput | None = None,
@@ -152,11 +153,12 @@ class BasicApprover(Approver):
 
     async def add_external_output(
         self,
+        index: int,
         txo: TxOutput,
         script_pubkey: bytes,
         orig_txo: TxOutput | None = None,
     ) -> None:
-        await super().add_external_output(txo, script_pubkey, orig_txo)
+        await super().add_external_output(index, txo, script_pubkey, orig_txo)
 
         if orig_txo:
             if txo.amount < orig_txo.amount:
@@ -170,7 +172,7 @@ class BasicApprover(Approver):
                         "Reducing original output amounts is not supported."
                     )
                 await helpers.confirm_modify_output(
-                    txo, orig_txo, self.coin, self.amount_unit
+                    index, txo, orig_txo, self.coin, self.amount_unit
                 )
             elif txo.amount > orig_txo.amount:
                 # PayJoin transactions may increase the value of external outputs without
@@ -191,7 +193,7 @@ class BasicApprover(Approver):
         elif txo.payment_req_index is None or self.show_payment_req_details:
             # Ask user to confirm output, unless it is part of a payment
             # request, which gets confirmed separately.
-            await helpers.confirm_output(txo, self.coin, self.amount_unit)
+            await helpers.confirm_output(index, txo, self.coin, self.amount_unit)
 
     async def add_payment_request(
         self, msg: TxAckPaymentRequest, keychain: Keychain
@@ -220,8 +222,8 @@ class BasicApprover(Approver):
         else:
             description = "Update transaction"
 
-        for orig in orig_txs:
-            await helpers.confirm_replacement(description, orig.orig_hash)
+        for i, orig in enumerate(orig_txs):
+            await helpers.confirm_replacement(i, description, orig.orig_hash)
 
     async def approve_tx(self, tx_info: TxInfo, orig_txs: list[OriginalTxInfo]) -> None:
         await super().approve_tx(tx_info, orig_txs)
