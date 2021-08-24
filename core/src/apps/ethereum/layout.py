@@ -15,7 +15,7 @@ from . import networks, tokens
 from .address import address_from_bytes
 
 
-async def require_confirm_tx(ctx, to_bytes, value, chain_id, token=None, tx_type=None):
+async def require_confirm_tx(ctx, to_bytes, value, chain_id, token=None):
     if to_bytes:
         to_str = address_from_bytes(to_bytes, networks.by_chain_id(chain_id))
     else:
@@ -23,7 +23,7 @@ async def require_confirm_tx(ctx, to_bytes, value, chain_id, token=None, tx_type
     await confirm_output(
         ctx,
         address=to_str,
-        amount=format_ethereum_amount(value, token, chain_id, tx_type),
+        amount=format_ethereum_amount(value, token, chain_id),
         font_amount=ui.BOLD,
         color_to=ui.GREY,
         br_code=ButtonRequestType.SignTx,
@@ -31,13 +31,13 @@ async def require_confirm_tx(ctx, to_bytes, value, chain_id, token=None, tx_type
 
 
 async def require_confirm_fee(
-    ctx, spending, gas_price, gas_limit, chain_id, token=None, tx_type=None
+    ctx, spending, gas_price, gas_limit, chain_id, token=None
 ):
     await confirm_total_ethereum(
         ctx,
-        format_ethereum_amount(spending, token, chain_id, tx_type),
-        format_ethereum_amount(gas_price, None, chain_id, tx_type),
-        format_ethereum_amount(gas_price * gas_limit, None, chain_id, tx_type),
+        format_ethereum_amount(spending, token, chain_id),
+        format_ethereum_amount(gas_price, None, chain_id),
+        format_ethereum_amount(gas_price * gas_limit, None, chain_id),
     )
 
 
@@ -88,7 +88,7 @@ async def require_confirm_data(ctx, data, data_total):
     )
 
 
-def format_ethereum_amount(value: int, token, chain_id: int, tx_type=None):
+def format_ethereum_amount(value: int, token, chain_id: int):
     if token is tokens.UNKNOWN_TOKEN:
         suffix = "Wei UNKN"
         decimals = 0
@@ -96,7 +96,7 @@ def format_ethereum_amount(value: int, token, chain_id: int, tx_type=None):
         suffix = token[2]
         decimals = token[3]
     else:
-        suffix = networks.shortcut_by_chain_id(chain_id, tx_type)
+        suffix = networks.shortcut_by_chain_id(chain_id)
         decimals = 18
 
     # Don't want to display wei values for tokens with small decimal numbers

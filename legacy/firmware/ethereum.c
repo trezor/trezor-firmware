@@ -250,11 +250,7 @@ static void ethereumFormatAmount(const bignum256 *amnt, const TokenType *token,
     suffix = " Wei";
     decimals = 0;
   } else {
-    if (tx_type == 1 || tx_type == 6) {
-      suffix = " WAN";
-    } else {
-      ASSIGN_ETHEREUM_SUFFIX(suffix, chain_id);
-    }
+    ASSIGN_ETHEREUM_SUFFIX(suffix, chain_id);
   }
   bn_format(amnt, NULL, suffix, decimals, 0, false, buf, buflen);
 }
