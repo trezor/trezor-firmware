@@ -5,23 +5,13 @@ from micropython import const
 
 from apps.common.paths import HARDENED
 
-SLIP44_WANCHAIN = const(5718350)
-SLIP44_ETHEREUM = const(60)
-
 if False:
     from typing import Iterator
 
 
-def is_wanchain(chain_id: int, tx_type: int) -> bool:
-    return tx_type in (1, 6) and chain_id in (1, 3)
-
-
-def shortcut_by_chain_id(chain_id: int, tx_type: int = None) -> str:
-    if is_wanchain(chain_id, tx_type):
-        return "WAN"
-    else:
-        n = by_chain_id(chain_id)
-        return n.shortcut if n is not None else "UNKN"
+def shortcut_by_chain_id(chain_id: int) -> str:
+    n = by_chain_id(chain_id)
+    return n.shortcut if n is not None else "UNKN"
 
 
 def by_chain_id(chain_id: int) -> "NetworkInfo" | None:
@@ -32,9 +22,6 @@ def by_chain_id(chain_id: int) -> "NetworkInfo" | None:
 
 
 def by_slip44(slip44: int) -> "NetworkInfo" | None:
-    if slip44 == SLIP44_WANCHAIN:
-        # Coerce to Ethereum
-        slip44 = SLIP44_ETHEREUM
     for n in _networks_iterator():
         if n.slip44 == slip44:
             return n
@@ -44,7 +31,6 @@ def by_slip44(slip44: int) -> "NetworkInfo" | None:
 def all_slip44_ids_hardened() -> Iterator[int]:
     for n in _networks_iterator():
         yield n.slip44 | HARDENED
-    yield SLIP44_WANCHAIN | HARDENED
 
 
 class NetworkInfo:
