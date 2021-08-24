@@ -34,7 +34,7 @@ async def sign_tx(ctx, msg, keychain):
 
     data_total = msg.data_length
 
-    await require_confirm_tx(ctx, recipient, value, msg.chain_id, token, msg.tx_type)
+    await require_confirm_tx(ctx, recipient, value, msg.chain_id, token)
     if token is None and msg.data_length > 0:
         await require_confirm_data(ctx, msg.data_initial_chunk, data_total)
 
@@ -45,7 +45,6 @@ async def sign_tx(ctx, msg, keychain):
         int.from_bytes(msg.gas_limit, "big"),
         msg.chain_id,
         token,
-        msg.tx_type,
     )
 
     data = bytearray()

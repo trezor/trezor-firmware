@@ -50,7 +50,7 @@
                 "data": "",
                 "path": "44'/5718350'/0'/0/0",
                 "to_address": "0xd0d6d6c5fe4a677d343cc433536bb717bae167dd",
-                "chain_id": 1,
+                "chain_id": 888,
                 "nonce": 0,
                 "gas_price": 20,
                 "gas_limit": 20,
@@ -58,9 +58,9 @@
                 "value": 100
             },
             "result": {
-                "sig_v": 38,
-                "sig_r": "d6e197029031ec90b53ed14e8233aa78b592400513ac0386d2d55cdedc3d796f",
-                "sig_s": "326e0d600dd1b7ee606eb531b998a6a3b3293d4995fb8cfe0677962e8a43cff6"
+                "sig_v": 1811,
+                "sig_r": "93648ad45524a896b1f465e868bb7c0427502e218b135e53b55f7a1e7e2293aa",
+                "sig_s": "2fd3882fbeb8968041d463d7c61526cdb36a80f53b2b217221b879b0d275d179"
             }
         },
         {

@@ -155,24 +155,6 @@ class TestEthereumKeychain(unittest.TestCase):
                 )
             )
 
-    def test_wanchain(self):
-        @with_keychain_from_chain_id
-        async def handler_wanchain(ctx, msg, keychain):
-            self._check_keychain(keychain, 5718350)
-            # provided address should succeed too
-            keychain.derive(msg.address_n)
-
-        await_result(
-            handler_wanchain(
-                wire.DUMMY_CONTEXT,
-                EthereumSignTx(
-                    address_n=[44 | HARDENED, 5718350 | HARDENED, 0 | HARDENED],
-                    chain_id=3,
-                    tx_type=6,
-                ),
-            )
-        )
-
 
 if __name__ == "__main__":
     unittest.main()
