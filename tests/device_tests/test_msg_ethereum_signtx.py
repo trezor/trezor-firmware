@@ -185,7 +185,6 @@ class TestMsgEthereumSigntx:
             sig_v, sig_r, sig_s = ethereum.sign_tx(
                 client,
                 n=parse_path("44'/60'/0'/0/100"),
-                chain_id=1,
                 nonce=0,
                 gas_price=20,
                 gas_limit=20,
@@ -193,14 +192,14 @@ class TestMsgEthereumSigntx:
                 value=10,
             )
 
-        assert sig_v == 37
+        assert sig_v == 27
         assert (
             sig_r.hex()
-            == "364ea282d85ca0e0615ccda301b7b8a56831491284dff36f6738b6110390e154"
+            == "2f548f63ddb4cf19b6b9f922da58ff71833b967d590f3b4dcc2a70810338a982"
         )
         assert (
             sig_s.hex()
-            == "361a1771b74ca7136a3aef7624ed0818658dc3700e8ae6a1fbce42c4beb59d91"
+            == "428d35f0dca963b5196b63e7aa5e0405d8bff77d6aee1202183f1f68dacb4483"
         )
 
         with client:
@@ -215,21 +214,20 @@ class TestMsgEthereumSigntx:
             sig_v, sig_r, sig_s = ethereum.sign_tx(
                 client,
                 n=parse_path("44'/60'/0'/0/100"),
-                chain_id=1,
                 nonce=123456,
                 gas_price=20000,
                 gas_limit=20000,
                 to=TO_ADDR,
                 value=12345678901234567890,
             )
-        assert sig_v == 38
+        assert sig_v == 27
         assert (
             sig_r.hex()
-            == "60709d8966ea6c63e4c89cfee847d6fe58a96eb17e6240cb1d7a14b4c3f05915"
+            == "3bf0470cd7f5ad8d82613199f73deadc55c3c9f32f91b1a21b5ef644144ebd58"
         )
         assert (
             sig_s.hex()
-            == "4ff112527ec146b493982a4b42def6babccf27facd6f3554d0d26ba18a88e544"
+            == "48b3ef1b2502febdf35e9ff4df0ba1fda62f042fad639eb4852a297fc9872ebd"
         )
 
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
@@ -247,7 +245,6 @@ class TestMsgEthereumSigntx:
             sig_v, sig_r, sig_s = ethereum.sign_tx(
                 client,
                 n=parse_path("44'/60'/0'/0/0"),
-                chain_id=1,
                 nonce=0,
                 gas_price=20,
                 gas_limit=20,
@@ -255,14 +252,14 @@ class TestMsgEthereumSigntx:
                 value=10,
                 data=b"abcdefghijklmnop" * 16,
             )
-        assert sig_v == 37
+        assert sig_v == 27
         assert (
             sig_r.hex()
-            == "88ba4067fb0b71fcd9dd840cfe4d040fc545336287882036ea31826232ba5137"
+            == "e90f9e3dbfb34861d40d67570cb369049e675c6eebfdda6b08413a2283421b85"
         )
         assert (
             sig_s.hex()
-            == "0d855eb6993c2361d58e1789a364567ce97a7df07bb998236500d16af8b3a1a2"
+            == "763912b8801f76cbea7792d98123a245514beeab2f3afebb4bab637888e8393a"
         )
 
         with client:
@@ -287,7 +284,6 @@ class TestMsgEthereumSigntx:
             sig_v, sig_r, sig_s = ethereum.sign_tx(
                 client,
                 n=parse_path("44'/60'/0'/0/0"),
-                chain_id=1,
                 nonce=123456,
                 gas_price=20000,
                 gas_limit=20000,
@@ -295,14 +291,14 @@ class TestMsgEthereumSigntx:
                 value=12345678901234567890,
                 data=b"ABCDEFGHIJKLMNOP" * 256 + b"!!!",
             )
-        assert sig_v == 38
+        assert sig_v == 27
         assert (
             sig_r.hex()
-            == "a95a65ef61cafb89ab0e593b2577e3ca23177404b38189375cfc839f0fce9b9e"
+            == "dd96d82d791118a55601dfcede237760d2e9734b76c373ede5362a447c42ac48"
         )
         assert (
             sig_s.hex()
-            == "45efb6846b33da028b77faf920c5154c5302ee55fe34b75c9b7addb40aac40a9"
+            == "60a77558f28d483d476f9507cd8a6a4bb47b86611aaff95fd5499b9ee9ebe7ee"
         )
 
     @pytest.mark.setup_client(mnemonic=MNEMONIC12)
@@ -329,7 +325,6 @@ class TestMsgEthereumSigntx:
             sig_v, sig_r, sig_s = ethereum.sign_tx(
                 client,
                 n=parse_path("44'/60'/0'/0/0"),
-                chain_id=1,
                 nonce=0,
                 gas_price=20000,
                 gas_limit=20000,
@@ -337,14 +332,14 @@ class TestMsgEthereumSigntx:
                 value=0,
                 data=b"ABCDEFGHIJKLMNOP" * 256 + b"!!!",
             )
-        assert sig_v == 38
+        assert sig_v == 27
         assert (
             sig_r.hex()
-            == "f1a42daa34cc6ee433fc8329a4b41f8d16967863d1588ae364564bc9e6e9c5f1"
+            == "81af16020d3c6ad820cab2e2b0834fa37f4a9b0c2443f151a4e2f12fe1081b09"
         )
         assert (
             sig_s.hex()
-            == "7952c81accea9c9a8d3ed602e7316105fdf7203d6b8a80c4fcfe134a08b15388"
+            == "7b34b5d8a43771d493cd9fa0c7b27a9563e2a31799fb9f0c2809539a848b9f47"
         )
 
     def test_ethereum_signtx_newcontract(self, client):
@@ -353,7 +348,6 @@ class TestMsgEthereumSigntx:
             ethereum.sign_tx(
                 client,
                 n=parse_path("44'/60'/0'/0/0"),
-                chain_id=1,
                 nonce=123456,
                 gas_price=20000,
                 gas_limit=20000,
@@ -383,7 +377,6 @@ class TestMsgEthereumSigntx:
             sig_v, sig_r, sig_s = ethereum.sign_tx(
                 client,
                 n=parse_path("44'/60'/0'/0/0"),
-                chain_id=1,
                 nonce=0,
                 gas_price=20000,
                 gas_limit=20000,
@@ -391,14 +384,14 @@ class TestMsgEthereumSigntx:
                 value=12345678901234567890,
                 data=b"ABCDEFGHIJKLMNOP" * 256 + b"!!!",
             )
-        assert sig_v == 37
+        assert sig_v == 28
         assert (
             sig_r.hex()
-            == "07f6c40dcd3bc875c106304eda9eebb25716c0cf62127478ed22bc24128dbeb7"
+            == "c86bda9de238b1c602648996561e7270a3be208da96bbf23474cb8e4014b9f93"
         )
         assert (
             sig_s.hex()
-            == "7efeedb81b22f2a3f88e7fd3b4119902f09280f4d179eda275b6fdf25e0fdac6"
+            == "18742403f75a05e7fa9868c30b36f1e55628de02d01c03084c1ff6775a13137c"
         )
 
     def test_ethereum_sanity_checks(self, client):
@@ -407,7 +400,6 @@ class TestMsgEthereumSigntx:
             ethereum.sign_tx(
                 client,
                 n=parse_path("44'/60'/0'/0/0"),
-                chain_id=1,
                 nonce=123456,
                 gas_price=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
                 gas_limit=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
@@ -420,7 +412,6 @@ class TestMsgEthereumSigntx:
             client.call(
                 messages.EthereumSignTx(
                     address_n=parse_path("44'/60'/0'/0/0"),
-                    chain_id=1,
                     nonce=b"AAA",
                     gas_limit=ethereum.int_to_big_endian(10000),
                     to=TO_ADDR,
@@ -433,7 +424,6 @@ class TestMsgEthereumSigntx:
             client.call(
                 messages.EthereumSignTx(
                     address_n=parse_path("44'/60'/0'/0/0"),
-                    chain_id=1,
                     nonce=b"AAA",
                     gas_price=ethereum.int_to_big_endian(10000),
                     to=TO_ADDR,
