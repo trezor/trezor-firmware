@@ -2374,6 +2374,10 @@ def token_by_chain_address(chain_id, address):
             return (chain_id, address, "SNT", 18)  # eth / Status Network Token
         elif address == b"\x28\x59\x02\x1e\xe7\xf2\xcb\x10\x16\x2e\x67\xf3\x3a\xf2\xd2\x27\x64\xb3\x1a\xff":
             return (chain_id, address, "SNTR", 4)  # eth / Silent Notary
+        elif address == b"\xc0\x11\xa7\x24\x00\xe5\x8e\xcd\x99\xee\x49\x7c\xf8\x9e\x37\x75\xd4\xbd\x73\x2f":
+            return (chain_id, address, "SNX", 18)  # eth / Synthetix Network Token
+        elif address == b"\xc0\x11\xa7\x3e\xe8\x57\x6f\xb4\x6f\x5e\x1c\x57\x51\xca\x3b\x9f\xe0\xaf\x2a\x6f":
+            return (chain_id, address, "SNX", 18)  # eth / Synthetix Network Token
         elif address == b"\xd6\x59\x60\xfa\xcb\x8e\x4a\x2d\xfc\xb2\xc2\x21\x2c\xb2\xe4\x4a\x02\xe2\xa5\x7e":
             return (chain_id, address, "SOAR", 6)  # eth / Soarcoin
         elif address == b"\x2d\x0e\x95\xbd\x47\x95\xd7\xac\xe0\xda\x3c\x0f\xf7\xb7\x06\xa5\x97\x0e\xb9\xd3":
@@ -2628,6 +2632,8 @@ def token_by_chain_address(chain_id, address):
             return (chain_id, address, "TTU", 18)  # eth / TaTaTu
         elif address == b"\xa8\x38\xbe\x6e\x4b\x76\x0e\x60\x61\xd4\x73\x2d\x6b\x9f\x11\xbf\x57\x8f\x9a\x76":
             return (chain_id, address, "TTV", 18)  # eth / TV-TWO: Token for Television
+        elif address == b"\x00\x00\x00\x00\x00\x08\x5d\x47\x80\xb7\x31\x19\xb6\x44\xae\x5e\xcd\x22\xb3\x76":
+            return (chain_id, address, "TUSD", 18)  # eth / TrueUSD
         elif address == b"\x2e\xf1\xab\x8a\x26\x18\x7c\x58\xbb\x8a\xae\xb1\x1b\x2f\xc6\xd2\x5c\x5c\x07\x16":
             return (chain_id, address, "TWN", 18)  # eth / The World News
         elif address == b"\xfb\xd0\xd1\xc7\x7b\x50\x17\x96\xa3\x5d\x86\xcf\x91\xd6\x5d\x97\x78\xee\xe6\x95":
