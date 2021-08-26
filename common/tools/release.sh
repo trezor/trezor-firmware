@@ -1,5 +1,10 @@
 #!/bin/sh
 
+if [ -z "$COINMARKETCAP_API_KEY" ]; then
+    echo "Please set \$COINMARKETCAP_API_KEY"
+    exit 1
+fi
+
 HERE=$(dirname $0)
 
 CHECK_OUTPUT=$(mktemp -d)
@@ -25,3 +30,5 @@ $HERE/cointool.py check > $CHECK_OUTPUT/post.txt
 make -C $HERE/../.. gen
 
 diff $CHECK_OUTPUT/pre.txt $CHECK_OUTPUT/post.txt
+
+$HERE/coins_details.py
