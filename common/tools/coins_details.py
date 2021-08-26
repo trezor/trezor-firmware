@@ -259,13 +259,15 @@ def check_missing_data(coins):
             LOG.info(f"{k}: Details are OK, but coin is still hidden")
 
         if hide:
+            data = marketcap.get_coin(coin)
+            if data and data["cmc_rank"] < 150 and not coin.get("ignore_cmc_rank"):
+                LOG.warning(f"{k}: Hiding coin ranked {data['cmc_rank']} on CMC")
             coin["hidden"] = 1
 
     # summary of hidden coins
     hidden_coins = [k for k, coin in coins.items() if coin.get("hidden")]
     for key in hidden_coins:
         del coins[key]
-        LOG.debug(f"{key}: Coin is hidden")
 
 
 def apply_overrides(coins):
@@ -310,7 +312,7 @@ def main(refresh, api_key, verbose):
 
     marketcap.init(api_key, refresh=refresh)
 
-    defs = coin_info.coin_info()
+    defs, _ = coin_info.coin_info_with_duplicates()
     support_info = coin_info.support_info(defs)
 
     coins = {}
