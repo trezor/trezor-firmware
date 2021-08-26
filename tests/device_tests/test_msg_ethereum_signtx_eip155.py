@@ -20,6 +20,8 @@ import pytest
 from trezorlib import ethereum
 from trezorlib.tools import parse_path
 
+MAX_CHAIN_ID = 2147483629
+
 VECTORS_CHAIN_IDS = (  # chain_id, slip44, sig_v, sig_r, sig_s
     # Ethereum
     (
@@ -129,6 +131,26 @@ VECTORS_CHAIN_IDS = (  # chain_id, slip44, sig_v, sig_r, sig_s
             22594216253,
             "cccccef8f6636f316e69a1239436f9d61021501ba20ed72b6528c84b2f727980",
             "614cb533a5d73cbf92ba4683c87c9238d0547572ee8f0f821ab1decdfc9639b8",
+        ),
+    ),
+    # MAX_CHAIN_ID
+    (
+        MAX_CHAIN_ID,
+        1,
+        (
+            4294967293,
+            "97f217d851c9f54013d7792d3b06492abbeda334191687323f08e03e979bd6c9",
+            "6a5f60d9abb1fa76be8ab76d3c879e1f0187e432692e3e9adce60642f06abe74",
+        ),
+    ),
+    # MAX_CHAIN_ID+1
+    (
+        MAX_CHAIN_ID+1,
+        1,
+        (
+            4294967296,
+            "f643499025c61025d27f7815ed1b1dcd92233548ebdd13bdd056e9cf3f84a853",
+            "33f363b014e5a404bec8479bb08649a6843f65c1f3166d3289211fb5361dab45",
         ),
     ),
     # Max uint64
