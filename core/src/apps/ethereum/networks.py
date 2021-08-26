@@ -629,7 +629,7 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
     )
     yield NetworkInfo(
         chain_id=888,
-        slip44=60,
+        slip44=5718350,
         shortcut="WAN",
         name="Wanchain",
         rskip60=False,
@@ -814,6 +814,13 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         slip44=60,
         shortcut="GEN",
         name="Blockchain Genesis",
+        rskip60=False,
+    )
+    yield NetworkInfo(
+        chain_id=16000,
+        slip44=60,
+        shortcut="MTT",
+        name="MetaDot",
         rskip60=False,
     )
     yield NetworkInfo(
