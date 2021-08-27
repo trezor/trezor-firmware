@@ -145,7 +145,7 @@ VECTORS_CHAIN_IDS = (  # chain_id, slip44, sig_v, sig_r, sig_s
     ),
     # MAX_CHAIN_ID+1
     (
-        MAX_CHAIN_ID+1,
+        MAX_CHAIN_ID + 1,
         1,
         (
             4294967296,
