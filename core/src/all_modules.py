@@ -522,6 +522,8 @@ if utils.BITCOIN_ONLY:
     import apps.lisk.helpers
     apps.lisk.layout
     import apps.lisk.layout
+    apps.lisk.lisk32
+    import apps.lisk.lisk32
     apps.lisk.sign_message
     import apps.lisk.sign_message
     apps.lisk.sign_tx
