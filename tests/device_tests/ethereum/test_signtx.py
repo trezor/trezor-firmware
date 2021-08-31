@@ -106,30 +106,6 @@ def test_sanity_checks(client):
             value=12345678901234567890,
         )
 
-    # no gas price
-    with pytest.raises(TrezorFailure):
-        client.call(
-            messages.EthereumSignTx(
-                address_n=parse_path("44'/60'/0'/0/0"),
-                nonce=b"AAA",
-                gas_limit=ethereum.int_to_big_endian(10000),
-                to=TO_ADDR,
-                value=ethereum.int_to_big_endian(12345678901234567890),
-            )
-        )
-
-    # no gas limit
-    with pytest.raises(TrezorFailure):
-        client.call(
-            messages.EthereumSignTx(
-                address_n=parse_path("44'/60'/0'/0/0"),
-                nonce=b"AAA",
-                gas_price=ethereum.int_to_big_endian(10000),
-                to=TO_ADDR,
-                value=ethereum.int_to_big_endian(12345678901234567890),
-            )
-        )
-
 
 def test_data_streaming(client):
     """Only verifying the expected responses, the signatures are

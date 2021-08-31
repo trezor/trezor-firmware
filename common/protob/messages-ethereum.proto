@@ -50,23 +50,24 @@ message EthereumAddress {
 
 /**
  * Request: Ask device to sign transaction
- * All fields are optional from the protocol's point of view. Each field defaults to value `0` if missing.
+ * gas_price, gas_limit and chain_id must be provided and non-zero.
+ * All other fields are optional and default to value `0` if missing.
  * Note: the first at most 1024 bytes of data MUST be transmitted as part of this message.
  * @start
  * @next EthereumTxRequest
  * @next Failure
  */
 message EthereumSignTx {
-    repeated uint32 address_n = 1;          // BIP-32 path to derive the key from master node
-    optional bytes nonce = 2;               // <=256 bit unsigned big endian
-    optional bytes gas_price = 3;           // <=256 bit unsigned big endian (in wei)
-    optional bytes gas_limit = 4;           // <=256 bit unsigned big endian
-    optional string to = 11;                // recipient address
-    optional bytes value = 6;               // <=256 bit unsigned big endian (in wei)
-    optional bytes data_initial_chunk = 7;  // The initial data chunk (<= 1024 bytes)
-    optional uint32 data_length = 8;        // Length of transaction payload
-    required uint64 chain_id = 9;           // Chain Id for EIP 155
-    optional uint32 tx_type = 10;           // Used for Wanchain
+    repeated uint32 address_n = 1;                       // BIP-32 path to derive the key from master node
+    optional bytes nonce = 2 [default=''];               // <=256 bit unsigned big endian
+    required bytes gas_price = 3;                        // <=256 bit unsigned big endian (in wei)
+    required bytes gas_limit = 4;                        // <=256 bit unsigned big endian
+    optional string to = 11 [default=''];                // recipient address
+    optional bytes value = 6 [default=''];               // <=256 bit unsigned big endian (in wei)
+    optional bytes data_initial_chunk = 7 [default=''];  // The initial data chunk (<= 1024 bytes)
+    optional uint32 data_length = 8 [default=0];         // Length of transaction payload
+    required uint64 chain_id = 9;                        // Chain Id for EIP 155
+    optional uint32 tx_type = 10;                        // Used for Wanchain
 }
 
 /**
@@ -114,7 +115,7 @@ message EthereumTxRequest {
  * @next EthereumTxRequest
  */
 message EthereumTxAck {
-    optional bytes data_chunk = 1;  // Bytes from transaction payload (<= 1024 bytes)
+    required bytes data_chunk = 1;  // Bytes from transaction payload (<= 1024 bytes)
 }
 
 /**
@@ -125,7 +126,7 @@ message EthereumTxAck {
  */
 message EthereumSignMessage {
     repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
-    optional bytes message = 2;     // message to be signed
+    required bytes message = 2;     // message to be signed
 }
 
 /**
@@ -144,7 +145,7 @@ message EthereumMessageSignature {
  * @next Failure
  */
 message EthereumVerifyMessage {
-    optional bytes signature = 2;   // signature to verify
-    optional bytes message = 3;     // message to verify
-    optional string address = 4;     // address to verify
+    required bytes signature = 2;   // signature to verify
+    required bytes message = 3;     // message to verify
+    required string address = 4;     // address to verify
 }

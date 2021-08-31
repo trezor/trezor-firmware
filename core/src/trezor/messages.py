@@ -2984,24 +2984,24 @@ if TYPE_CHECKING:
 
     class EthereumSignTx(protobuf.MessageType):
         address_n: "list[int]"
-        nonce: "bytes | None"
-        gas_price: "bytes | None"
-        gas_limit: "bytes | None"
-        to: "str | None"
-        value: "bytes | None"
-        data_initial_chunk: "bytes | None"
-        data_length: "int | None"
+        nonce: "bytes"
+        gas_price: "bytes"
+        gas_limit: "bytes"
+        to: "str"
+        value: "bytes"
+        data_initial_chunk: "bytes"
+        data_length: "int"
         chain_id: "int"
         tx_type: "int | None"
 
         def __init__(
             self,
             *,
+            gas_price: "bytes",
+            gas_limit: "bytes",
             chain_id: "int",
             address_n: "list[int] | None" = None,
             nonce: "bytes | None" = None,
-            gas_price: "bytes | None" = None,
-            gas_limit: "bytes | None" = None,
             to: "str | None" = None,
             value: "bytes | None" = None,
             data_initial_chunk: "bytes | None" = None,
@@ -3069,12 +3069,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EthereumTxAck(protobuf.MessageType):
-        data_chunk: "bytes | None"
+        data_chunk: "bytes"
 
         def __init__(
             self,
             *,
-            data_chunk: "bytes | None" = None,
+            data_chunk: "bytes",
         ) -> None:
             pass
 
@@ -3084,13 +3084,13 @@ if TYPE_CHECKING:
 
     class EthereumSignMessage(protobuf.MessageType):
         address_n: "list[int]"
-        message: "bytes | None"
+        message: "bytes"
 
         def __init__(
             self,
             *,
+            message: "bytes",
             address_n: "list[int] | None" = None,
-            message: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -3115,16 +3115,16 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EthereumVerifyMessage(protobuf.MessageType):
-        signature: "bytes | None"
-        message: "bytes | None"
-        address: "str | None"
+        signature: "bytes"
+        message: "bytes"
+        address: "str"
 
         def __init__(
             self,
             *,
-            signature: "bytes | None" = None,
-            message: "bytes | None" = None,
-            address: "str | None" = None,
+            signature: "bytes",
+            message: "bytes",
+            address: "str",
         ) -> None:
             pass
 

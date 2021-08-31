@@ -4258,8 +4258,8 @@ class EthereumSignTx(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
         2: protobuf.Field("nonce", "bytes", repeated=False, required=False),
-        3: protobuf.Field("gas_price", "bytes", repeated=False, required=False),
-        4: protobuf.Field("gas_limit", "bytes", repeated=False, required=False),
+        3: protobuf.Field("gas_price", "bytes", repeated=False, required=True),
+        4: protobuf.Field("gas_limit", "bytes", repeated=False, required=True),
         11: protobuf.Field("to", "string", repeated=False, required=False),
         6: protobuf.Field("value", "bytes", repeated=False, required=False),
         7: protobuf.Field("data_initial_chunk", "bytes", repeated=False, required=False),
@@ -4271,22 +4271,22 @@ class EthereumSignTx(protobuf.MessageType):
     def __init__(
         self,
         *,
+        gas_price: "bytes",
+        gas_limit: "bytes",
         chain_id: "int",
         address_n: Optional[List["int"]] = None,
-        nonce: Optional["bytes"] = None,
-        gas_price: Optional["bytes"] = None,
-        gas_limit: Optional["bytes"] = None,
-        to: Optional["str"] = None,
-        value: Optional["bytes"] = None,
-        data_initial_chunk: Optional["bytes"] = None,
-        data_length: Optional["int"] = None,
+        nonce: Optional["bytes"] = b'',
+        to: Optional["str"] = '',
+        value: Optional["bytes"] = b'',
+        data_initial_chunk: Optional["bytes"] = b'',
+        data_length: Optional["int"] = 0,
         tx_type: Optional["int"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
-        self.chain_id = chain_id
-        self.nonce = nonce
         self.gas_price = gas_price
         self.gas_limit = gas_limit
+        self.chain_id = chain_id
+        self.nonce = nonce
         self.to = to
         self.value = value
         self.data_initial_chunk = data_initial_chunk
@@ -4364,13 +4364,13 @@ class EthereumTxRequest(protobuf.MessageType):
 class EthereumTxAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 60
     FIELDS = {
-        1: protobuf.Field("data_chunk", "bytes", repeated=False, required=False),
+        1: protobuf.Field("data_chunk", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        data_chunk: Optional["bytes"] = None,
+        data_chunk: "bytes",
     ) -> None:
         self.data_chunk = data_chunk
 
@@ -4379,14 +4379,14 @@ class EthereumSignMessage(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 64
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        2: protobuf.Field("message", "bytes", repeated=False, required=False),
+        2: protobuf.Field("message", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
+        message: "bytes",
         address_n: Optional[List["int"]] = None,
-        message: Optional["bytes"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.message = message
@@ -4412,17 +4412,17 @@ class EthereumMessageSignature(protobuf.MessageType):
 class EthereumVerifyMessage(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 65
     FIELDS = {
-        2: protobuf.Field("signature", "bytes", repeated=False, required=False),
-        3: protobuf.Field("message", "bytes", repeated=False, required=False),
-        4: protobuf.Field("address", "string", repeated=False, required=False),
+        2: protobuf.Field("signature", "bytes", repeated=False, required=True),
+        3: protobuf.Field("message", "bytes", repeated=False, required=True),
+        4: protobuf.Field("address", "string", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        signature: Optional["bytes"] = None,
-        message: Optional["bytes"] = None,
-        address: Optional["str"] = None,
+        signature: "bytes",
+        message: "bytes",
+        address: "str",
     ) -> None:
         self.signature = signature
         self.message = message

@@ -55,7 +55,7 @@ def sign_tx(
     msg = messages.EthereumSignTx(
         address_n=n,
         nonce=int_to_big_endian(nonce),
-        gas_price=int_to_big_endian(gas_price) if gas_price is not None else None,
+        gas_price=int_to_big_endian(gas_price),
         gas_limit=int_to_big_endian(gas_limit),
         value=int_to_big_endian(value),
         to=to,
