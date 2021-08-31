@@ -16,8 +16,10 @@ from .layout import (
     require_confirm_unknown_token,
 )
 
-# maximum supported chain id
-MAX_CHAIN_ID = 2147483629
+# Maximum chain_id which returns the full signature_v (which must fit into an uint32).
+# chain_ids larger than this will only return one bit and the caller must recalculate
+# the full value: v = 2 * chain_id + 35 + v_bit
+MAX_CHAIN_ID = (0xFFFF_FFFF - 36) // 2
 
 
 @with_keychain_from_chain_id
