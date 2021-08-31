@@ -95,6 +95,12 @@ def format_ethereum_amount(value: int, token, chain_id: int):
     elif token:
         suffix = token[2]
         decimals = token[3]
+def format_ethereum_amount(
+    value: int, token: tokens.TokenInfo | None, chain_id: int
+) -> str:
+    if token:
+        suffix = token.symbol
+        decimals = token.decimals
     else:
         suffix = networks.shortcut_by_chain_id(chain_id)
         decimals = 18
