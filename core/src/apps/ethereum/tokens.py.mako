@@ -12,10 +12,16 @@ def group_tokens(tokens):
     return r
 %>\
 
-UNKNOWN_TOKEN = (None, None, None, None)
+
+class TokenInfo:
+    def __init__(self, symbol: str, decimals: int) -> None:
+        self.symbol = symbol
+        self.decimals = decimals
+
+UNKNOWN_TOKEN = TokenInfo("Wei UNKN", 0)
 
 
-def token_by_chain_address(chain_id, address):
+def token_by_chain_address(chain_id: int, address: bytes) -> TokenInfo:
     if False:
         pass
 % for token_chain_id, tokens in group_tokens(supported_on("trezor2", erc20)).items():
@@ -24,7 +30,7 @@ def token_by_chain_address(chain_id, address):
             pass
         % for t in tokens:
         elif address == ${black_repr(t.address_bytes)}:
-            return (chain_id, address, ${black_repr(t.symbol)}, ${t.decimals})  # ${t.chain} / ${t.name.strip()}
+            return TokenInfo(${black_repr(t.symbol)}, ${t.decimals})  # ${t.chain} / ${t.name.strip()}
         % endfor
 % endfor
     return UNKNOWN_TOKEN
