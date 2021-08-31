@@ -6,17 +6,31 @@ from apps.common.keychain import get_keychain
 from . import CURVE, networks
 
 if False:
-    from typing import Callable, Iterable
-    from typing_extensions import Protocol
+    from typing import Callable, Iterable, TypeVar, Union
 
-    from protobuf import MessageType
-
-    from trezor.messages import EthereumSignTx
+    from trezor.messages import (
+        EthereumGetAddress,
+        EthereumGetPublicKey,
+        EthereumSignMessage,
+        EthereumSignTx,
+        EthereumSignTxEIP1559,
+    )
 
     from apps.common.keychain import MsgOut, Handler, HandlerWithKeychain
 
-    class MsgWithAddressN(MessageType, Protocol):
-        address_n: paths.Bip32Path
+    EthereumMessages = Union[
+        EthereumGetAddress,
+        EthereumGetPublicKey,
+        EthereumSignTx,
+        EthereumSignMessage,
+    ]
+    MsgIn = TypeVar("MsgIn", bound=EthereumMessages)
+
+    EthereumSignTxAny = Union[
+        EthereumSignTx,
+        EthereumSignTxEIP1559,
+    ]
+    MsgInChainId = TypeVar("MsgInChainId", bound=EthereumSignTxAny)
 
 
 # We believe Ethereum should use 44'/60'/a' for everything, because it is
@@ -47,13 +61,9 @@ def _schemas_from_address_n(
 
 def with_keychain_from_path(
     *patterns: str,
-) -> Callable[
-    [HandlerWithKeychain[MsgWithAddressN, MsgOut]], Handler[MsgWithAddressN, MsgOut]
-]:
-    def decorator(
-        func: HandlerWithKeychain[MsgWithAddressN, MsgOut]
-    ) -> Handler[MsgWithAddressN, MsgOut]:
-        async def wrapper(ctx: wire.Context, msg: MsgWithAddressN) -> MsgOut:
+) -> Callable[[HandlerWithKeychain[MsgIn, MsgOut]], Handler[MsgIn, MsgOut]]:
+    def decorator(func: HandlerWithKeychain[MsgIn, MsgOut]) -> Handler[MsgIn, MsgOut]:
+        async def wrapper(ctx: wire.Context, msg: MsgIn) -> MsgOut:
             schemas = _schemas_from_address_n(patterns, msg.address_n)
             keychain = await get_keychain(ctx, CURVE, schemas)
             with keychain:
@@ -64,11 +74,9 @@ def with_keychain_from_path(
     return decorator
 
 
-def _schemas_from_chain_id(msg: EthereumSignTx) -> Iterable[paths.PathSchema]:
-    if msg.chain_id is None:
-        return _schemas_from_address_n(PATTERNS_ADDRESS, msg.address_n)
-
+def _schemas_from_chain_id(msg: EthereumSignTxAny) -> Iterable[paths.PathSchema]:
     info = networks.by_chain_id(msg.chain_id)
+    slip44_id: tuple[int, ...]
     if info is None:
         # allow Ethereum or testnet paths for unknown networks
         slip44_id = (60, 1)
@@ -85,10 +93,10 @@ def _schemas_from_chain_id(msg: EthereumSignTx) -> Iterable[paths.PathSchema]:
 
 
 def with_keychain_from_chain_id(
-    func: HandlerWithKeychain[EthereumSignTx, MsgOut]
-) -> Handler[EthereumSignTx, MsgOut]:
+    func: HandlerWithKeychain[MsgInChainId, MsgOut]
+) -> Handler[MsgInChainId, MsgOut]:
     # this is only for SignTx, and only PATTERN_ADDRESS is allowed
-    async def wrapper(ctx: wire.Context, msg: EthereumSignTx) -> MsgOut:
+    async def wrapper(ctx: wire.Context, msg: MsgInChainId) -> MsgOut:
         schemas = _schemas_from_chain_id(msg)
         keychain = await get_keychain(ctx, CURVE, schemas)
         with keychain:

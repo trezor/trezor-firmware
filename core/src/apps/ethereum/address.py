@@ -1,35 +1,42 @@
-from ubinascii import unhexlify
+from ubinascii import hexlify, unhexlify
 
 from trezor import wire
 
+if False:
+    from .networks import NetworkInfo
 
-def address_from_bytes(address_bytes: bytes, network=None) -> str:
+
+def address_from_bytes(address_bytes: bytes, network: NetworkInfo | None = None) -> str:
     """
     Converts address in bytes to a checksummed string as defined
     in https://github.com/ethereum/EIPs/blob/master/EIPS/eip-55.md
     """
-    from ubinascii import hexlify
     from trezor.crypto.hashlib import sha3_256
 
-    rskip60 = network is not None and network.rskip60
+    if network is not None and network.rskip60:
+        prefix = str(network.chain_id) + "0x"
+    else:
+        prefix = ""
 
-    hx = hexlify(address_bytes).decode()
+    address_hex = hexlify(address_bytes).decode()
+    digest = sha3_256((prefix + address_hex).encode(), keccak=True).digest()
 
-    prefix = str(network.chain_id) + "0x" if rskip60 else ""
-    hs = sha3_256(prefix + hx, keccak=True).digest()
-    h = ""
+    def maybe_upper(i: int) -> str:
+        """Uppercase i-th letter only if the corresponding nibble has high bit set."""
+        digest_byte = digest[i // 2]
+        hex_letter = address_hex[i]
+        if i % 2 == 0:
+            # even letter -> high nibble
+            bit = 0x80
+        else:
+            # odd letter -> low nibble
+            bit = 0x08
+        if digest_byte & bit:
+            return hex_letter.upper()
+        else:
+            return hex_letter
 
-    for i in range(20):
-        l = hx[i * 2]
-        if hs[i] & 0x80 and l >= "a" and l <= "f":
-            l = l.upper()
-        h += l
-        l = hx[i * 2 + 1]
-        if hs[i] & 0x08 and l >= "a" and l <= "f":
-            l = l.upper()
-        h += l
-
-    return "0x" + h
+    return "0x" + "".join(maybe_upper(i) for i in range(len(address_hex)))
 
 
 def bytes_from_address(address: str) -> bytes:

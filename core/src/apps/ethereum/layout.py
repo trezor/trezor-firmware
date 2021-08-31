@@ -14,13 +14,24 @@ from trezor.ui.layouts.tt.altcoin import confirm_total_ethereum
 from . import networks, tokens
 from .address import address_from_bytes
 
+if False:
+    from typing import Awaitable
 
-async def require_confirm_tx(ctx, to_bytes, value, chain_id, token=None):
+    from trezor.wire import Context
+
+
+def require_confirm_tx(
+    ctx: Context,
+    to_bytes: bytes,
+    value: int,
+    chain_id: int,
+    token: tokens.TokenInfo | None = None,
+) -> Awaitable[None]:
     if to_bytes:
         to_str = address_from_bytes(to_bytes, networks.by_chain_id(chain_id))
     else:
         to_str = "new contract?"
-    await confirm_output(
+    return confirm_output(
         ctx,
         address=to_str,
         amount=format_ethereum_amount(value, token, chain_id),
@@ -30,10 +41,15 @@ async def require_confirm_tx(ctx, to_bytes, value, chain_id, token=None):
     )
 
 
-async def require_confirm_fee(
-    ctx, spending, gas_price, gas_limit, chain_id, token=None
-):
-    await confirm_total_ethereum(
+def require_confirm_fee(
+    ctx: Context,
+    spending: int,
+    gas_price: int,
+    gas_limit: int,
+    chain_id: int,
+    token: tokens.TokenInfo | None = None,
+) -> Awaitable[None]:
+    return confirm_total_ethereum(
         ctx,
         format_ethereum_amount(spending, token, chain_id),
         format_ethereum_amount(gas_price, None, chain_id),
@@ -42,8 +58,8 @@ async def require_confirm_fee(
 
 
 async def require_confirm_eip1559_fee(
-    ctx, max_priority_fee, max_gas_fee, gas_limit, chain_id
-):
+    ctx: Context, max_priority_fee: int, max_gas_fee: int, gas_limit: int, chain_id: int
+) -> None:
     await confirm_amount(
         ctx,
         title="Confirm fee",
@@ -64,9 +80,11 @@ async def require_confirm_eip1559_fee(
     )
 
 
-async def require_confirm_unknown_token(ctx, address_bytes):
+def require_confirm_unknown_token(
+    ctx: Context, address_bytes: bytes
+) -> Awaitable[None]:
     contract_address_hex = "0x" + hexlify(address_bytes).decode()
-    await confirm_address(
+    return confirm_address(
         ctx,
         "Unknown token",
         contract_address_hex,
@@ -77,8 +95,8 @@ async def require_confirm_unknown_token(ctx, address_bytes):
     )
 
 
-async def require_confirm_data(ctx, data, data_total):
-    await confirm_blob(
+def require_confirm_data(ctx: Context, data: bytes, data_total: int) -> Awaitable[None]:
+    return confirm_blob(
         ctx,
         "confirm_data",
         title="Confirm data",
@@ -88,13 +106,6 @@ async def require_confirm_data(ctx, data, data_total):
     )
 
 
-def format_ethereum_amount(value: int, token, chain_id: int):
-    if token is tokens.UNKNOWN_TOKEN:
-        suffix = "Wei UNKN"
-        decimals = 0
-    elif token:
-        suffix = token[2]
-        decimals = token[3]
 def format_ethereum_amount(
     value: int, token: tokens.TokenInfo | None, chain_id: int
 ) -> str:

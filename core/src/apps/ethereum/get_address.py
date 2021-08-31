@@ -9,9 +9,17 @@ from . import networks
 from .address import address_from_bytes
 from .keychain import PATTERNS_ADDRESS, with_keychain_from_path
 
+if False:
+    from trezor.messages import EthereumGetAddress
+    from trezor.wire import Context
+
+    from apps.common.keychain import Keychain
+
 
 @with_keychain_from_path(*PATTERNS_ADDRESS)
-async def get_address(ctx, msg, keychain):
+async def get_address(
+    ctx: Context, msg: EthereumGetAddress, keychain: Keychain
+) -> EthereumAddress:
     await paths.validate_path(ctx, keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)

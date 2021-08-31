@@ -1,8 +1,6 @@
 # generated from networks.py.mako
 # do not edit manually!
 
-from micropython import const
-
 from apps.common.paths import HARDENED
 
 if False:

@@ -6,7 +6,7 @@ if not utils.BITCOIN_ONLY:
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
-class TestEthereumLayout(unittest.TestCase):
+class TestFormatEthereumAmount(unittest.TestCase):
 
     def test_format(self):
         text = format_ethereum_amount(1, None, 1)
@@ -60,12 +60,14 @@ class TestEthereumLayout(unittest.TestCase):
         text = format_ethereum_amount(1000000000000000001, None, 31)
         self.assertEqual(text, '1.000000000000000001 tRBTC')
 
+    def test_unknown_chain(self):
         # unknown chain
         text = format_ethereum_amount(1, None, 9999)
         self.assertEqual(text, '1 Wei UNKN')
         text = format_ethereum_amount(10000000000000000001, None, 9999)
         self.assertEqual(text, '10.000000000000000001 UNKN')
 
+    def test_tokens(self):
         # tokens with low decimal values
         # USDC has 6 decimals
         usdc_token = token_by_chain_address(1, unhexlify("a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"))
@@ -86,6 +88,16 @@ class TestEthereumLayout(unittest.TestCase):
         self.assertEqual(text, '0.000000001 ICO')
         text = format_ethereum_amount(11, ico_token, 1)
         self.assertEqual(text, '0.0000000011 ICO')
+
+    def test_unknown_token(self):
+        unknown_token = token_by_chain_address(1, b"hello")
+        text = format_ethereum_amount(1, unknown_token, 1)
+        self.assertEqual(text, '1 Wei UNKN')
+        text = format_ethereum_amount(0, unknown_token, 1)
+        self.assertEqual(text, '0 Wei UNKN')
+        # unknown token has 0 decimals so is always wei
+        text = format_ethereum_amount(1000000000000000000, unknown_token, 1)
+        self.assertEqual(text, '1000000000000000000 Wei UNKN')
 
 
 if __name__ == '__main__':
