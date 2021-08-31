@@ -118,6 +118,8 @@ class TestEthereumKeychain(unittest.TestCase):
                 EthereumSignTx(
                     address_n=[44 | HARDENED, 60 | HARDENED, 0 | HARDENED],
                     chain_id=1,
+                    gas_price=b"",
+                    gas_limit=b"",
                 ),
             )
         )
@@ -128,6 +130,8 @@ class TestEthereumKeychain(unittest.TestCase):
                 EthereumSignTx(
                     address_n=[44 | HARDENED, 61 | HARDENED, 0 | HARDENED],
                     chain_id=61,
+                    gas_price=b"",
+                    gas_limit=b"",
                 ),
             )
         )
@@ -140,6 +144,8 @@ class TestEthereumKeychain(unittest.TestCase):
                 EthereumSignTx(
                     address_n=[44 | HARDENED, 60 | HARDENED, 0 | HARDENED],
                     chain_id=61,
+                    gas_price=b"",
+                    gas_limit=b"",
                 ),
             )
         )
@@ -151,6 +157,8 @@ class TestEthereumKeychain(unittest.TestCase):
                     EthereumSignTx(
                         address_n=[44 | HARDENED, 61 | HARDENED, 0 | HARDENED],
                         chain_id=2,
+                        gas_price=b"",
+                        gas_limit=b"",
                     ),
                 )
             )

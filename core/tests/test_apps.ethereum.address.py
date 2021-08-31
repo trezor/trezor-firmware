@@ -22,10 +22,9 @@ class TestEthereumGetAddress(unittest.TestCase):
             '0xD1220A0cf47c7B9Be7A2E6BA89F429762e7b9aDb',
         ]
         for s in eip55:
-            s = s[2:]
-            b = bytes([int(s[i:i + 2], 16) for i in range(0, len(s), 2)])
+            b = unhexlify(s[2:])
             h = address_from_bytes(b)
-            self.assertEqual(h, '0x' + s)
+            self.assertEqual(h, s)
 
     def test_address_from_bytes_rskip60(self):
         # https://github.com/rsksmart/RSKIPs/blob/master/IPs/RSKIP60.md
@@ -43,16 +42,14 @@ class TestEthereumGetAddress(unittest.TestCase):
         ]
         n = NetworkInfo(chain_id=30, slip44=1, shortcut='T', name='T', rskip60=True)
         for s in rskip60_chain_30:
-            s = s[2:]
-            b = bytes([int(s[i:i + 2], 16) for i in range(0, len(s), 2)])
+            b = unhexlify(s[2:])
             h = address_from_bytes(b, n)
-            self.assertEqual(h, '0x' + s)
+            self.assertEqual(h, s)
         n.chain_id = 31
         for s in rskip60_chain_31:
-            s = s[2:]
-            b = bytes([int(s[i:i + 2], 16) for i in range(0, len(s), 2)])
+            b = unhexlify(s[2:])
             h = address_from_bytes(b, n)
-            self.assertEqual(h, '0x' + s)
+            self.assertEqual(h, s)
 
 
 if __name__ == '__main__':

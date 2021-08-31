@@ -16,6 +16,14 @@ from .layout import (
     require_confirm_unknown_token,
 )
 
+if False:
+    from typing import Tuple
+
+    from apps.common.keychain import Keychain
+
+    from .keychain import EthereumSignTxAny
+
+
 # Maximum chain_id which returns the full signature_v (which must fit into an uint32).
 # chain_ids larger than this will only return one bit and the caller must recalculate
 # the full value: v = 2 * chain_id + 35 + v_bit
@@ -23,9 +31,9 @@ MAX_CHAIN_ID = (0xFFFF_FFFF - 36) // 2
 
 
 @with_keychain_from_chain_id
-async def sign_tx(ctx, msg, keychain):
-    msg = sanitize(msg)
-
+async def sign_tx(
+    ctx: wire.Context, msg: EthereumSignTx, keychain: Keychain
+) -> EthereumTxRequest:
     check(msg)
     await paths.validate_path(ctx, keychain, msg.address_n)
 
@@ -84,7 +92,9 @@ async def sign_tx(ctx, msg, keychain):
     return result
 
 
-async def handle_erc20(ctx, msg):
+async def handle_erc20(
+    ctx: wire.Context, msg: EthereumSignTxAny
+) -> Tuple[tokens.TokenInfo | None, bytes, bytes, int]:
     token = None
     address_bytes = recipient = address.bytes_from_address(msg.to)
     value = int.from_bytes(msg.value, "big")
@@ -111,7 +121,7 @@ def get_total_length(msg: EthereumSignTx, data_total: int) -> int:
     if msg.tx_type is not None:
         length += rlp.length(msg.tx_type)
 
-    for item in (
+    fields: Tuple[rlp.RLPItem, ...] = (
         msg.nonce,
         msg.gas_price,
         msg.gas_limit,
@@ -120,8 +130,10 @@ def get_total_length(msg: EthereumSignTx, data_total: int) -> int:
         msg.chain_id,
         0,
         0,
-    ):
-        length += rlp.length(item)
+    )
+
+    for field in fields:
+        length += rlp.length(field)
 
     length += rlp.header_length(data_total, msg.data_initial_chunk)
     length += data_total
@@ -129,7 +141,7 @@ def get_total_length(msg: EthereumSignTx, data_total: int) -> int:
     return length
 
 
-async def send_request_chunk(ctx, data_left: int):
+async def send_request_chunk(ctx: wire.Context, data_left: int) -> EthereumTxAck:
     # TODO: layoutProgress ?
     req = EthereumTxRequest()
     if data_left <= 1024:
@@ -140,7 +152,9 @@ async def send_request_chunk(ctx, data_left: int):
     return await ctx.call(req, EthereumTxAck)
 
 
-def sign_digest(msg: EthereumSignTx, keychain, digest):
+def sign_digest(
+    msg: EthereumSignTx, keychain: Keychain, digest: bytes
+) -> EthereumTxRequest:
     node = keychain.derive(msg.address_n)
     signature = secp256k1.sign(
         node.private_key(), digest, False, secp256k1.CANONICAL_SIG_ETHEREUM
@@ -159,7 +173,7 @@ def sign_digest(msg: EthereumSignTx, keychain, digest):
     return req
 
 
-def check(msg: EthereumSignTx):
+def check(msg: EthereumSignTx) -> None:
     if msg.tx_type not in [1, 6, None]:
         raise wire.DataError("tx_type out of bounds")
 
@@ -170,7 +184,7 @@ def check(msg: EthereumSignTx):
         raise wire.DataError("Safety check failed")
 
 
-def check_data(msg: EthereumSignTx):
+def check_data(msg: EthereumSignTxAny) -> None:
     if msg.data_length > 0:
         if not msg.data_initial_chunk:
             raise wire.DataError("Data length provided, but no initial chunk")
@@ -183,15 +197,13 @@ def check_data(msg: EthereumSignTx):
 
 
 def check_gas(msg: EthereumSignTx) -> bool:
-    if msg.gas_price is None or msg.gas_limit is None:
-        return False
     if len(msg.gas_price) + len(msg.gas_limit) > 30:
         # sanity check that fee doesn't overflow
         return False
     return True
 
 
-def check_to(msg: EthereumTxRequest) -> bool:
+def check_to(msg: EthereumSignTxAny) -> bool:
     if msg.to == "":
         if msg.data_length == 0:
             # sending transaction to address 0 (contract creation) without a data field
@@ -200,17 +212,3 @@ def check_to(msg: EthereumTxRequest) -> bool:
         if len(msg.to) not in (40, 42):
             return False
     return True
-
-
-def sanitize(msg):
-    if msg.value is None:
-        msg.value = b""
-    if msg.data_initial_chunk is None:
-        msg.data_initial_chunk = b""
-    if msg.data_length is None:
-        msg.data_length = 0
-    if msg.to is None:
-        msg.to = ""
-    if msg.nonce is None:
-        msg.nonce = b""
-    return msg
