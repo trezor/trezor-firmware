@@ -99,7 +99,7 @@ void fsm_msgEthereumGetAddress(const EthereumGetAddress *msg) {
   uint32_t slip44 =
       (msg->address_n_count > 1) ? (msg->address_n[1] & 0x7fffffff) : 0;
   bool rskip60 = false;
-  uint32_t chain_id = 0;
+  uint64_t chain_id = 0;
   // constants from trezor-common/defs/ethereum/networks.json
   switch (slip44) {
     case 137:

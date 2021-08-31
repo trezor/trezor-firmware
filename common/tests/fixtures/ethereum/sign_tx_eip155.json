@@ -155,6 +155,82 @@
                 "sig_r": "f699de96e886995e460e760839d4f2c7b9f1c98f2d3c108d0add4e8663a679d8",
                 "sig_s": "1447ba45be9fca42bcbf250389403245c8c1b0476e60b96dea320b0a596b5528"
             }
+        },
+        {
+            "name": "Palm",
+            "parameters": {
+                "chain_id": 11297108109,
+                "path": "44'/60'/0'/0/0",
+                "nonce": 0,
+                "gas_price": 20000000000,
+                "gas_limit": 21000,
+                "value": 10000000000,
+                "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
+                "tx_type": null,
+                "data": ""
+            },
+            "result": {
+                "sig_v": 22594216254,
+                "sig_r": "9d05ca7cdcf971f3114c0ef8d636c5aae1353bb227e04ec1198c60d874e676c0",
+                "sig_s": "35414067209e27fb690d9387264c74e334e25a117705f3583fb24434a952c9ca"
+            }
+        },
+        {
+            "name": "max_chain_id",
+            "parameters": {
+                "chain_id": 2147483629,
+                "path": "44'/1'/0'/0/0",
+                "nonce": 0,
+                "gas_price": 20000000000,
+                "gas_limit": 21000,
+                "value": 10000000000,
+                "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
+                "tx_type": null,
+                "data": ""
+            },
+            "result": {
+                "sig_v": 4294967293,
+                "sig_r": "97f217d851c9f54013d7792d3b06492abbeda334191687323f08e03e979bd6c9",
+                "sig_s": "6a5f60d9abb1fa76be8ab76d3c879e1f0187e432692e3e9adce60642f06abe74"
+            }
+        },
+        {
+            "name": "max_chain_plus_one",
+            "parameters": {
+                "chain_id": 2147483630,
+                "path": "44'/1'/0'/0/0",
+                "nonce": 0,
+                "gas_price": 20000000000,
+                "gas_limit": 21000,
+                "value": 10000000000,
+                "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
+                "tx_type": null,
+                "data": ""
+            },
+            "result": {
+                "sig_v": 4294967296,
+                "sig_r": "f643499025c61025d27f7815ed1b1dcd92233548ebdd13bdd056e9cf3f84a853",
+                "sig_s": "33f363b014e5a404bec8479bb08649a6843f65c1f3166d3289211fb5361dab45"
+            }
+        },
+        {
+            "name": "max_uint64",
+            "parameters": {
+                "chain_id": 18446744073709551615,
+                "path": "44'/1'/0'/0/0",
+                "nonce": 0,
+                "gas_price": 20000000000,
+                "gas_limit": 21000,
+                "value": 10000000000,
+                "to_address": "0x8eA7a3fccC211ED48b763b4164884DDbcF3b0A98",
+                "tx_type": null,
+                "data": ""
+            },
+            "result": {
+                "sig_v": 36893488147419103266,
+                "sig_r": "7bf581e8c7ff7d0e94d25eaa476de928d444b180fe50a91374b8883ff5dee3a8",
+                "sig_s": "3a3efa7a3f97043a999b3183d958a03126ec2652608c376c4626850b9b6a33fa"
+            }
         }
     ]
 }
