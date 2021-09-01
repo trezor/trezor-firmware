@@ -56,6 +56,8 @@ typedef struct {
   STORAGE_BYTES(public_key, 33);
 } StorageHDNode;
 
+#define MAX_OLD_PIN_LEN 9
+
 typedef struct _Storage {
   uint32_t version;
 
@@ -63,7 +65,7 @@ typedef struct _Storage {
   STORAGE_STRING(mnemonic, 241)
   STORAGE_BOOL(passphrase_protection)
   STORAGE_UINT32(pin_failed_attempts)
-  STORAGE_STRING(pin, 10)
+  STORAGE_STRING(pin, MAX_OLD_PIN_LEN + 1)
   STORAGE_STRING(language, 17)
   STORAGE_STRING(label, 33)
   STORAGE_BOOL(imported)

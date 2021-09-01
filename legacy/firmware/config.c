@@ -319,7 +319,7 @@ static secbool config_upgrade_v10(void) {
   storage_unlock(PIN_EMPTY, PIN_EMPTY_LEN, NULL);
   if (config.has_pin) {
     storage_change_pin(PIN_EMPTY, PIN_EMPTY_LEN, (const uint8_t *)config.pin,
-                       strnlen(config.pin, MAX_PIN_LEN), NULL, NULL);
+                       strnlen(config.pin, MAX_OLD_PIN_LEN), NULL, NULL);
   }
 
   while (pin_wait != 0) {
