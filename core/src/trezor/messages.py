@@ -2991,12 +2991,13 @@ if TYPE_CHECKING:
         value: "bytes | None"
         data_initial_chunk: "bytes | None"
         data_length: "int | None"
-        chain_id: "int | None"
+        chain_id: "int"
         tx_type: "int | None"
 
         def __init__(
             self,
             *,
+            chain_id: "int",
             address_n: "list[int] | None" = None,
             nonce: "bytes | None" = None,
             gas_price: "bytes | None" = None,
@@ -3005,7 +3006,6 @@ if TYPE_CHECKING:
             value: "bytes | None" = None,
             data_initial_chunk: "bytes | None" = None,
             data_length: "int | None" = None,
-            chain_id: "int | None" = None,
             tx_type: "int | None" = None,
         ) -> None:
             pass

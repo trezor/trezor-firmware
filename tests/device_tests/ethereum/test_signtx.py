@@ -178,6 +178,7 @@ def test_data_streaming(client):
             to=TO_ADDR,
             value=0,
             data=b"ABCDEFGHIJKLMNOP" * 256 + b"!!!",
+            chain_id=1,
         )
 
 

@@ -4264,13 +4264,14 @@ class EthereumSignTx(protobuf.MessageType):
         6: protobuf.Field("value", "bytes", repeated=False, required=False),
         7: protobuf.Field("data_initial_chunk", "bytes", repeated=False, required=False),
         8: protobuf.Field("data_length", "uint32", repeated=False, required=False),
-        9: protobuf.Field("chain_id", "uint64", repeated=False, required=False),
+        9: protobuf.Field("chain_id", "uint64", repeated=False, required=True),
         10: protobuf.Field("tx_type", "uint32", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
+        chain_id: "int",
         address_n: Optional[List["int"]] = None,
         nonce: Optional["bytes"] = None,
         gas_price: Optional["bytes"] = None,
@@ -4279,10 +4280,10 @@ class EthereumSignTx(protobuf.MessageType):
         value: Optional["bytes"] = None,
         data_initial_chunk: Optional["bytes"] = None,
         data_length: Optional["int"] = None,
-        chain_id: Optional["int"] = None,
         tx_type: Optional["int"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
+        self.chain_id = chain_id
         self.nonce = nonce
         self.gas_price = gas_price
         self.gas_limit = gas_limit
@@ -4290,7 +4291,6 @@ class EthereumSignTx(protobuf.MessageType):
         self.value = value
         self.data_initial_chunk = data_initial_chunk
         self.data_length = data_length
-        self.chain_id = chain_id
         self.tx_type = tx_type
 
 
