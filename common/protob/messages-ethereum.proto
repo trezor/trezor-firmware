@@ -65,7 +65,7 @@ message EthereumSignTx {
     optional bytes value = 6;               // <=256 bit unsigned big endian (in wei)
     optional bytes data_initial_chunk = 7;  // The initial data chunk (<= 1024 bytes)
     optional uint32 data_length = 8;        // Length of transaction payload
-    optional uint64 chain_id = 9;           // Chain Id for EIP 155
+    required uint64 chain_id = 9;           // Chain Id for EIP 155
     optional uint32 tx_type = 10;           // Used for Wanchain
 }
 

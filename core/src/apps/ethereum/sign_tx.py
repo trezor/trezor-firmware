@@ -75,10 +75,9 @@ async def sign_tx(ctx, msg, keychain):
         sha.extend(resp.data_chunk)
 
     # eip 155 replay protection
-    if msg.chain_id:
-        rlp.write(sha, msg.chain_id)
-        rlp.write(sha, 0)
-        rlp.write(sha, 0)
+    rlp.write(sha, msg.chain_id)
+    rlp.write(sha, 0)
+    rlp.write(sha, 0)
 
     digest = sha.get_digest()
     result = sign_digest(msg, keychain, digest)
@@ -119,13 +118,11 @@ def get_total_length(msg: EthereumSignTx, data_total: int) -> int:
         msg.gas_limit,
         address.bytes_from_address(msg.to),
         msg.value,
+        msg.chain_id,
+        0,
+        0,
     ):
         length += rlp.length(item)
-
-    if msg.chain_id:  # forks replay protection
-        length += rlp.length(msg.chain_id)
-        length += rlp.length(0)
-        length += rlp.length(0)
 
     length += rlp.header_length(data_total, msg.data_initial_chunk)
     length += data_total
@@ -154,7 +151,7 @@ def sign_digest(msg: EthereumSignTx, keychain, digest):
     req.signature_v = signature[0]
     if msg.chain_id > MAX_CHAIN_ID:
         req.signature_v -= 27
-    elif msg.chain_id:
+    else:
         req.signature_v += 2 * msg.chain_id + 8
 
     req.signature_r = signature[1:33]
@@ -217,6 +214,4 @@ def sanitize(msg):
         msg.to = ""
     if msg.nonce is None:
         msg.nonce = b""
-    if msg.chain_id is None:
-        msg.chain_id = 0
     return msg

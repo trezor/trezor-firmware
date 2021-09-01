@@ -193,12 +193,10 @@ static void send_signature(void) {
   layoutProgress(_("Signing"), 1000);
 
   /* eip-155 replay protection */
-  if (chain_id) {
-    /* hash v=chain_id, r=0, s=0 */
-    hash_rlp_number(chain_id);
-    hash_rlp_length(0, 0);
-    hash_rlp_length(0, 0);
-  }
+  /* hash v=chain_id, r=0, s=0 */
+  hash_rlp_number(chain_id);
+  hash_rlp_length(0, 0);
+  hash_rlp_length(0, 0);
 
   keccak_Final(&keccak_ctx, hash);
   if (ecdsa_sign_digest(&secp256k1, privkey, hash, sig, &v,
@@ -216,10 +214,8 @@ static void send_signature(void) {
   msg_tx_request.has_signature_v = true;
   if (chain_id > MAX_CHAIN_ID) {
     msg_tx_request.signature_v = v;
-  } else if (chain_id) {
-    msg_tx_request.signature_v = v + 2 * chain_id + 35;
   } else {
-    msg_tx_request.signature_v = v + 27;
+    msg_tx_request.signature_v = v + 2 * chain_id + 35;
   }
 
   msg_tx_request.has_signature_r = true;
@@ -438,17 +434,12 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node) {
   if (!msg->has_nonce) msg->nonce.size = 0;
 
   /* eip-155 chain id */
-  if (msg->has_chain_id) {
-    if (msg->chain_id < 1) {
-      fsm_sendFailure(FailureType_Failure_DataError,
-                      _("Chain Id out of bounds"));
-      ethereum_signing_abort();
-      return;
-    }
-    chain_id = msg->chain_id;
-  } else {
-    chain_id = 0;
+  if (msg->chain_id < 1) {
+    fsm_sendFailure(FailureType_Failure_DataError, _("Chain ID out of bounds"));
+    ethereum_signing_abort();
+    return;
   }
+  chain_id = msg->chain_id;
 
   /* Wanchain txtype */
   if (msg->has_tx_type) {
@@ -558,11 +549,9 @@ void ethereum_signing_init(EthereumSignTx *msg, const HDNode *node) {
   if (tx_type) {
     rlp_length += rlp_calculate_number_length(tx_type);
   }
-  if (chain_id) {
-    rlp_length += rlp_calculate_number_length(chain_id);
-    rlp_length += rlp_calculate_length(0, 0);
-    rlp_length += rlp_calculate_length(0, 0);
-  }
+  rlp_length += rlp_calculate_number_length(chain_id);
+  rlp_length += rlp_calculate_length(0, 0);
+  rlp_length += rlp_calculate_length(0, 0);
 
   /* Stage 2: Store header fields */
   hash_rlp_list_length(rlp_length);
