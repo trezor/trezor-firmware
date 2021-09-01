@@ -31,10 +31,10 @@ ed25519_extsk(hash_512bits extsk, const ed25519_secret_key sk) {
 }
 
 static void
-ed25519_hram(hash_512bits hram, const ed25519_signature RS, const ed25519_public_key pk, const unsigned char *m, size_t mlen) {
+ed25519_hram(hash_512bits hram, const ed25519_public_key R, const ed25519_public_key pk, const unsigned char *m, size_t mlen) {
 	ed25519_hash_context ctx;
 	ed25519_hash_init(&ctx);
-	ed25519_hash_update(&ctx, RS, 32);
+	ed25519_hash_update(&ctx, R, 32);
 	ed25519_hash_update(&ctx, pk, 32);
 	ed25519_hash_update(&ctx, m, mlen);
 	ed25519_hash_final(&ctx, hram);
