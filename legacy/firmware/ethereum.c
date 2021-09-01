@@ -386,10 +386,6 @@ static void layoutEthereumFee(const uint8_t *value, uint32_t value_len,
  */
 
 static bool ethereum_signing_check(const EthereumSignTx *msg) {
-  if (!msg->has_gas_price || !msg->has_gas_limit) {
-    return false;
-  }
-
   size_t tolen = msg->has_to ? strlen(msg->to) : 0;
 
   if (tolen != 42 && tolen != 40 && tolen != 0) {
@@ -589,7 +585,7 @@ void ethereum_signing_txack(const EthereumTxAck *tx) {
     return;
   }
 
-  if (data_left > 0 && (!tx->has_data_chunk || tx->data_chunk.size == 0)) {
+  if (data_left > 0 && tx->data_chunk.size == 0) {
     fsm_sendFailure(FailureType_Failure_DataError,
                     _("Empty data chunk received"));
     ethereum_signing_abort();

@@ -155,9 +155,6 @@ void fsm_msgEthereumSignMessage(const EthereumSignMessage *msg) {
 }
 
 void fsm_msgEthereumVerifyMessage(const EthereumVerifyMessage *msg) {
-  CHECK_PARAM(msg->has_address, _("No address provided"));
-  CHECK_PARAM(msg->has_message, _("No message provided"));
-
   if (ethereum_message_verify(msg) != 0) {
     fsm_sendFailure(FailureType_Failure_DataError, _("Invalid signature"));
     return;
