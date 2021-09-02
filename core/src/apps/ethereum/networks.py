@@ -1115,3 +1115,10 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         name="Pirl",
         rskip60=False,
     )
+    yield NetworkInfo(
+        chain_id=11297108109,
+        slip44=60,
+        shortcut="PALM",
+        name="Palm",
+        rskip60=False,
+    )
