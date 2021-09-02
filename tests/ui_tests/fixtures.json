@@ -146,7 +146,7 @@
 "ethereum-test_signtx.py::test_signtx[Auxilium]": "723083f8dccf4676f7a134a070977576341f2f7a5850e463e487c8705ebe25f1",
 "ethereum-test_signtx.py::test_signtx[ETC]": "41ed0476f3043025d40eaf13ed76c1ebcd4bee9b7a6d23764a00451f1edc5b40",
 "ethereum-test_signtx.py::test_signtx[Ethereum]": "ad88572a4100efd3909c39c76e452630f25d5600bcde22a18c02c327528507f3",
-"ethereum-test_signtx.py::test_signtx[Palm]": "0787a56c2398e08ab154bf7c163ad433f3528af71261965b6c1bd0d9568b8854",
+"ethereum-test_signtx.py::test_signtx[Palm]": "7a0d3389e94836c47c1029512141f6a3b35dd4dd718987f92bb627d514eecf91",
 "ethereum-test_signtx.py::test_signtx[Pirl]": "1f7046f216ec275ba8a36b9e6c59b2cdd3fee9ca48a96b066cdd4c23f3e27218",
 "ethereum-test_signtx.py::test_signtx[Rinkeby]": "616151df0f0af77bfb861e536d84fa251df16584855bc5d1c3006b2ce5272ef7",
 "ethereum-test_signtx.py::test_signtx[Ropsten]": "7e5061120253d3a608d9815f0da93a83b929cbef4680f960cb4701e564a9297a",
