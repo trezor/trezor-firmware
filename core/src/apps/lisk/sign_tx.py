@@ -1,40 +1,45 @@
-import ustruct
-
 from trezor import wire
 from trezor.crypto.curve import ed25519
-from trezor.crypto.hashlib import sha256
-from trezor.enums import LiskTransactionType
+from trezor.enums import LiskTransactionModuleID, MessageType
 from trezor.messages import LiskSignedTx
-from trezor.utils import HashWriter
+from trezor.protobuf import dump_message_buffer, load_message_buffer
 
 from apps.common import paths
 from apps.common.keychain import auto_keychain
 
 from . import layout
-from .helpers import get_address_from_public_key
+from .helpers import get_lisk32_from_address_hash
 
 
 @auto_keychain(__name__)
 async def sign_tx(ctx, msg, keychain):
     await paths.validate_path(ctx, keychain, msg.address_n)
 
+    # decode the buffer into LiskTransaction
+    tx = load_message_buffer(msg.transaction, MessageType.LiskTransaction)
+
     pubkey, seckey = _get_keys(keychain, msg)
-    transaction = _update_raw_tx(msg.transaction, pubkey)
+
+    # check if the sender_public_key is the same as the derived one
+    if not _check_sender_publick_key(tx, pubkey):
+        raise wire.DataError("The transaction has invalid sender public key")
+
+    # decode the asset based on module_id and asset_id
+    asset = _decode_tx_asset(tx)
+    # Reset asset with the dump (so we are sure we are signing only what we expect)
+    tx.asset = dump_message_buffer(asset)
 
     try:
-        await _require_confirm_by_type(ctx, transaction)
+        await _require_confirm_by_type(ctx, tx, asset)
     except AttributeError:
-        raise wire.DataError("The transaction has invalid asset data field")
+        raise wire.DataError("The transaction has invalid asset field")
 
-    await layout.require_confirm_fee(ctx, transaction.amount, transaction.fee)
+    amount = _get_tx_amount(tx, asset)
+    await layout.require_confirm_fee(ctx, amount, tx.fee)
 
-    txbytes = _get_transaction_bytes(transaction)
-    txhash = HashWriter(sha256())
-    for field in txbytes:
-        txhash.extend(field)
-    digest = txhash.get_digest()
-
-    signature = ed25519.sign(seckey, digest)
+    txbytes = dump_message_buffer(tx)
+    txbytes_to_sign = b"".join([msg.networkIdentifier, bytes(txbytes)])
+    signature = ed25519.sign(seckey, txbytes_to_sign)
 
     return LiskSignedTx(signature=signature)
 
@@ -49,102 +54,81 @@ def _get_keys(keychain, msg):
     return pubkey, seckey
 
 
-def _update_raw_tx(transaction, pubkey):
-    # If device is using for second signature sender_public_key must be exist in transaction
-    if not transaction.sender_public_key:
-        transaction.sender_public_key = pubkey
-
-    # For CastVotes transactions, recipientId should be equal to transaction
-    # creator address.
-    if transaction.type == LiskTransactionType.CastVotes:
-        if not transaction.recipient_id:
-            transaction.recipient_id = get_address_from_public_key(pubkey)
-
-    return transaction
+def _check_sender_publick_key(tx, pubkey):
+    return tx.sender_public_key == pubkey
 
 
-async def _require_confirm_by_type(ctx, transaction):
+def _decode_tx_asset(tx):
 
-    if transaction.type == LiskTransactionType.Transfer:
-        return await layout.require_confirm_tx(
-            ctx, transaction.recipient_id, transaction.amount
-        )
+    if not tx.asset:
+        raise wire.DataError("Missing asset data")
 
-    if transaction.type == LiskTransactionType.RegisterDelegate:
-        return await layout.require_confirm_delegate_registration(
-            ctx, transaction.asset.delegate.username
-        )
-
-    if transaction.type == LiskTransactionType.CastVotes:
-        return await layout.require_confirm_vote_tx(ctx, transaction.asset.votes)
-
-    if transaction.type == LiskTransactionType.RegisterSecondPassphrase:
-        return await layout.require_confirm_public_key(
-            ctx, transaction.asset.signature.public_key
-        )
-
-    if transaction.type == LiskTransactionType.RegisterMultisignatureAccount:
-        return await layout.require_confirm_multisig(
-            ctx, transaction.asset.multisignature
-        )
-
-    raise wire.DataError("Invalid transaction type")
-
-
-def _get_transaction_bytes(tx):
-
-    # Required transaction parameters
-    t_type = ustruct.pack("<b", tx.type)
-    t_timestamp = ustruct.pack("<i", tx.timestamp)
-    t_sender_public_key = tx.sender_public_key
-    t_requester_public_key = tx.requester_public_key or b""
-
-    if not tx.recipient_id:
-        # Value can be empty string
-        t_recipient_id = ustruct.pack(">Q", 0)
-    else:
-        # Lisk uses big-endian for recipient_id, string -> int -> bytes
-        t_recipient_id = ustruct.pack(">Q", int(tx.recipient_id[:-1]))
-
-    t_amount = ustruct.pack("<Q", tx.amount)
-    t_asset = _get_asset_data_bytes(tx)
-    t_signature = tx.signature or b""
-
-    return (
-        t_type,
-        t_timestamp,
-        t_sender_public_key,
-        t_requester_public_key,
-        t_recipient_id,
-        t_amount,
-        t_asset,
-        t_signature,
-    )
-
-
-def _get_asset_data_bytes(msg):
-
-    if msg.type == LiskTransactionType.Transfer:
-        # Transfer transaction have optional data field
-        if msg.asset.data is not None:
-            return msg.asset.data.encode()
+    # Module ID = 2 - Token
+    if tx.module_id == LiskTransactionModuleID.Token:
+        if tx.asset_id == 0:  # Transfer
+            return load_message_buffer(tx.asset, MessageType.LiskAssetTransfer)
         else:
-            return b""
+            raise wire.DataError("Invalid module type for Token module")
+    # Module ID = 4 - Multisignature
+    elif tx.module_id == LiskTransactionModuleID.Multisignature:
+        if tx.asset_id == 0:  # Register Multisignature
+            return load_message_buffer(tx.asset, MessageType.LiskAssetRegisterMultisig)
+        else:
+            raise wire.DataError("Invalid module type for Multisignature module")
+    # Module ID = 5 - Dpos
+    elif tx.module_id == LiskTransactionModuleID.Dpos:
+        if tx.asset_id == 0:  # Register Delegate
+            return load_message_buffer(tx.asset, MessageType.LiskAssetRegisterDelegate)
+        elif tx.asset_id == 1:  # Vote Delegate
+            return load_message_buffer(tx.asset, MessageType.LiskAssetVoteDelegate)
+        elif tx.asset_id == 2:  # Unlock Token
+            return load_message_buffer(tx.asset, MessageType.LiskAssetUnlockToken)
+        else:
+            raise wire.DataError("Invalid module type for Dpos module")
+    # Module ID = 1000 - Legacy
+    elif tx.module_id == LiskTransactionModuleID.Legacy:
+        if tx.asset_id == 0:  # Reclaim Lisk
+            return load_message_buffer(tx.asset, MessageType.LiskAssetReclaimLisk)
+        else:
+            raise wire.DataError("Invalid module type for Legacy module")
+    else:
+        raise wire.DataError("Invalid module type")
 
-    if msg.type == LiskTransactionType.RegisterDelegate:
-        return msg.asset.delegate.username.encode()
 
-    if msg.type == LiskTransactionType.CastVotes:
-        return ("".join(msg.asset.votes)).encode()
+async def _require_confirm_by_type(ctx, tx, asset):
+    # Transfer
+    if tx.module_id == LiskTransactionModuleID.Token and tx.asset_id == 0:
+        recipient_address = get_lisk32_from_address_hash(asset.recipient_address)
+        await layout.require_confirm_tx(ctx, recipient_address, asset.amount)
+        if asset.data != "":
+            await layout.require_confirm_data(ctx, asset.data)
+        return
+    # Register Multisignature
+    elif tx.module_id == LiskTransactionModuleID.Multisignature and tx.asset_id == 0:
+        return await layout.require_confirm_multisig_tx(ctx, asset)
+    # Register Delegate
+    elif tx.module_id == LiskTransactionModuleID.Dpos and tx.asset_id == 0:
+        return await layout.require_confirm_delegate_registration(ctx, asset.username)
+    # Vote Delegate
+    elif tx.module_id == LiskTransactionModuleID.Dpos and tx.asset_id == 1:
+        return await layout.require_confirm_vote_tx(ctx, asset.votes)
+    # Unlock Token
+    elif tx.module_id == LiskTransactionModuleID.Dpos and tx.asset_id == 2:
+        return await layout.require_confirm_unlock_tx(ctx, asset.unlock_objects)
+    # Reclaim Lisk
+    elif tx.module_id == LiskTransactionModuleID.Legacy and tx.asset_id == 0:
+        return await layout.require_confirm_reclaim_tx(ctx, asset.amount)
+    else:
+        raise wire.DataError("Unexpected error")
 
-    if msg.type == LiskTransactionType.RegisterSecondPassphrase:
-        return msg.asset.signature.public_key
 
-    if msg.type == LiskTransactionType.RegisterMultisignatureAccount:
-        data = b""
-        data += ustruct.pack("<b", msg.asset.multisignature.min)
-        data += ustruct.pack("<b", msg.asset.multisignature.life_time)
-        data += ("".join(msg.asset.multisignature.keys_group)).encode()
-        return data
-
-    raise wire.DataError("Invalid transaction type")
+def _get_tx_amount(tx, asset):
+    # Transfer
+    if tx.module_id == LiskTransactionModuleID.Token and tx.asset_id == 0:
+        return asset.amount
+    # Reclaim Lisk
+    elif tx.module_id == LiskTransactionModuleID.Legacy and tx.asset_id == 0:
+        return asset.amount
+    # All the others
+    else:
+        return 0

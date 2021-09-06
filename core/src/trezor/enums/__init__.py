@@ -117,6 +117,15 @@ if TYPE_CHECKING:
         LiskVerifyMessage = 120
         LiskGetPublicKey = 121
         LiskPublicKey = 122
+        LiskTransaction = 123
+        LiskAssetTransfer = 124
+        LiskAssetRegisterMultisig = 125
+        LiskAssetRegisterDelegate = 126
+        LiskAssetVoteDelegate = 127
+        LiskVote = 128
+        LiskAssetUnlockToken = 129
+        LiskUnlock = 130
+        LiskAssetReclaimLisk = 131
         TezosGetAddress = 150
         TezosAddress = 151
         TezosSignTx = 152
@@ -409,15 +418,11 @@ if TYPE_CHECKING:
         LEFT = 2
         RIGHT = 3
 
-    class LiskTransactionType(IntEnum):
-        Transfer = 0
-        RegisterSecondPassphrase = 1
-        RegisterDelegate = 2
-        CastVotes = 3
-        RegisterMultisignatureAccount = 4
-        CreateDapp = 5
-        TransferIntoDapp = 6
-        TransferOutOfDapp = 7
+    class LiskTransactionModuleID(IntEnum):
+        Token = 2
+        Multisignature = 4
+        Dpos = 5
+        Legacy = 1000
 
     class NEMMosaicLevy(IntEnum):
         MosaicLevy_Absolute = 1

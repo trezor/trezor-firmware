@@ -112,6 +112,15 @@ if not utils.BITCOIN_ONLY:
     LiskVerifyMessage = 120
     LiskGetPublicKey = 121
     LiskPublicKey = 122
+    LiskTransaction = 123
+    LiskAssetTransfer = 124
+    LiskAssetRegisterMultisig = 125
+    LiskAssetRegisterDelegate = 126
+    LiskAssetVoteDelegate = 127
+    LiskVote = 128
+    LiskAssetUnlockToken = 129
+    LiskUnlock = 130
+    LiskAssetReclaimLisk = 131
     TezosGetAddress = 150
     TezosAddress = 151
     TezosSignTx = 152

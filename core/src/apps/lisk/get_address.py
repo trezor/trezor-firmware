@@ -4,7 +4,7 @@ from trezor.ui.layouts import show_address
 from apps.common import paths
 from apps.common.keychain import auto_keychain
 
-from .helpers import get_address_from_public_key
+from .helpers import get_lisk32_from_public_key
 
 
 @auto_keychain(__name__)
@@ -14,7 +14,7 @@ async def get_address(ctx, msg, keychain):
     node = keychain.derive(msg.address_n)
     pubkey = node.public_key()
     pubkey = pubkey[1:]  # skip ed25519 pubkey marker
-    address = get_address_from_public_key(pubkey)
+    address = get_lisk32_from_public_key(pubkey)
 
     if msg.show_display:
         title = paths.address_n_to_str(msg.address_n)

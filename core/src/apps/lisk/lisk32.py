@@ -24,15 +24,16 @@
 
 BECH32 = 1
 CHARSET = "zxvcpmbn3465o978uyrtkqew2adsjhfg"
-HRP = 'lsk'
+HRP = "lsk"
+
 
 def bech32_polymod(values):
     """Internal function that computes the Bech32 checksum."""
-    generator = [0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3]
+    generator = [0x3B6A57B2, 0x26508E6D, 0x1EA119FA, 0x3D4233DD, 0x2A1462B3]
     chk = 1
     for value in values:
         top = chk >> 25
-        chk = (chk & 0x1ffffff) << 5 ^ value
+        chk = (chk & 0x1FFFFFF) << 5 ^ value
         for i in range(5):
             chk ^= generator[i] if ((top >> i) & 1) else 0
     return chk
@@ -50,6 +51,7 @@ def bech32_verify_checksum(data):
         return BECH32
     return None
 
+
 def bech32_create_checksum(data):
     """Compute the checksum values given HRP and data."""
     const = 1
@@ -60,12 +62,14 @@ def bech32_create_checksum(data):
 def bech32_encode(hrp, data):
     """Compute a Lisk32 string given HRP and data values."""
     combined = data + bech32_create_checksum(data)
-    return hrp + ''.join([CHARSET[d] for d in combined])
+    return hrp + "".join([CHARSET[d] for d in combined])
+
 
 def bech32_decode(bech):
     """Validate a Lisk32 string, and determine HRP and data."""
-    if ((any(ord(x) < 33 or ord(x) > 126 for x in bech)) or
-            (bech.lower() != bech and bech.upper() != bech)):
+    if (any(ord(x) < 33 or ord(x) > 126 for x in bech)) or (
+        bech.lower() != bech and bech.upper() != bech
+    ):
         return (None, None, None)
     bech = bech.lower()
     pos = 3
@@ -77,6 +81,7 @@ def bech32_decode(bech):
     if spec is None:
         return (None, None, None)
     return (hrp, data[:-6], spec)
+
 
 def convertbits(data, frombits, tobits, pad=True):
     """General power-of-2 base conversion."""
@@ -119,6 +124,6 @@ def decode_lisk32(addr: str) -> list[int] | None:
 def encode_lisk32(witprog: list[int]) -> str | None:
     """Encode a Lisk32 address."""
     ret = bech32_encode(HRP, convertbits(witprog, 8, 5))
-    if decode_lisk32(ret) == None:
+    if decode_lisk32(ret) is None:
         return None
     return ret

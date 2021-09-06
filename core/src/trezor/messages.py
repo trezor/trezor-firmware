@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     from trezor.enums import DecredStakingSpendType  # noqa: F401
     from trezor.enums import FailureType  # noqa: F401
     from trezor.enums import InputScriptType  # noqa: F401
-    from trezor.enums import LiskTransactionType  # noqa: F401
+    from trezor.enums import LiskTransactionModuleID  # noqa: F401
     from trezor.enums import MessageType  # noqa: F401
     from trezor.enums import NEMImportanceTransferMode  # noqa: F401
     from trezor.enums import NEMModificationType  # noqa: F401
@@ -3211,12 +3211,14 @@ if TYPE_CHECKING:
 
     class LiskSignTx(protobuf.MessageType):
         address_n: "list[int]"
-        transaction: "LiskTransactionCommon"
+        networkIdentifier: "bytes"
+        transaction: "bytes"
 
         def __init__(
             self,
             *,
-            transaction: "LiskTransactionCommon",
+            networkIdentifier: "bytes",
+            transaction: "bytes",
             address_n: "list[int] | None" = None,
         ) -> None:
             pass
@@ -3289,102 +3291,154 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["LiskVerifyMessage"]:
             return isinstance(msg, cls)
 
-    class LiskTransactionCommon(protobuf.MessageType):
-        type: "LiskTransactionType | None"
-        amount: "int | None"
-        fee: "int | None"
-        recipient_id: "str | None"
-        sender_public_key: "bytes | None"
-        requester_public_key: "bytes | None"
-        signature: "bytes | None"
-        timestamp: "int | None"
-        asset: "LiskTransactionAsset | None"
+    class LiskTransaction(protobuf.MessageType):
+        module_id: "LiskTransactionModuleID"
+        asset_id: "int"
+        nonce: "int"
+        fee: "int"
+        sender_public_key: "bytes"
+        asset: "bytes | None"
 
         def __init__(
             self,
             *,
-            type: "LiskTransactionType | None" = None,
-            amount: "int | None" = None,
-            fee: "int | None" = None,
-            recipient_id: "str | None" = None,
-            sender_public_key: "bytes | None" = None,
-            requester_public_key: "bytes | None" = None,
-            signature: "bytes | None" = None,
-            timestamp: "int | None" = None,
-            asset: "LiskTransactionAsset | None" = None,
+            module_id: "LiskTransactionModuleID",
+            asset_id: "int",
+            nonce: "int",
+            fee: "int",
+            sender_public_key: "bytes",
+            asset: "bytes | None" = None,
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["LiskTransactionCommon"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["LiskTransaction"]:
             return isinstance(msg, cls)
 
-    class LiskTransactionAsset(protobuf.MessageType):
-        signature: "LiskSignatureType | None"
-        delegate: "LiskDelegateType | None"
-        votes: "list[str]"
-        multisignature: "LiskMultisignatureType | None"
-        data: "str | None"
+    class LiskAssetTransfer(protobuf.MessageType):
+        amount: "int"
+        recipient_address: "bytes"
+        data: "str"
 
         def __init__(
             self,
             *,
-            votes: "list[str] | None" = None,
-            signature: "LiskSignatureType | None" = None,
-            delegate: "LiskDelegateType | None" = None,
-            multisignature: "LiskMultisignatureType | None" = None,
-            data: "str | None" = None,
+            amount: "int",
+            recipient_address: "bytes",
+            data: "str",
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["LiskTransactionAsset"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["LiskAssetTransfer"]:
             return isinstance(msg, cls)
 
-    class LiskSignatureType(protobuf.MessageType):
-        public_key: "bytes | None"
+    class LiskAssetRegisterMultisig(protobuf.MessageType):
+        number_of_signatures: "int"
+        mandatory_keys: "list[bytes]"
+        optional_keys: "list[bytes]"
 
         def __init__(
             self,
             *,
-            public_key: "bytes | None" = None,
+            number_of_signatures: "int",
+            mandatory_keys: "list[bytes] | None" = None,
+            optional_keys: "list[bytes] | None" = None,
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["LiskSignatureType"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["LiskAssetRegisterMultisig"]:
             return isinstance(msg, cls)
 
-    class LiskDelegateType(protobuf.MessageType):
-        username: "str | None"
+    class LiskAssetRegisterDelegate(protobuf.MessageType):
+        username: "str"
 
         def __init__(
             self,
             *,
-            username: "str | None" = None,
+            username: "str",
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["LiskDelegateType"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["LiskAssetRegisterDelegate"]:
             return isinstance(msg, cls)
 
-    class LiskMultisignatureType(protobuf.MessageType):
-        min: "int | None"
-        life_time: "int | None"
-        keys_group: "list[str]"
+    class LiskAssetVoteDelegate(protobuf.MessageType):
+        votes: "list[LiskVote]"
 
         def __init__(
             self,
             *,
-            keys_group: "list[str] | None" = None,
-            min: "int | None" = None,
-            life_time: "int | None" = None,
+            votes: "list[LiskVote] | None" = None,
         ) -> None:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["LiskMultisignatureType"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["LiskAssetVoteDelegate"]:
+            return isinstance(msg, cls)
+
+    class LiskAssetUnlockToken(protobuf.MessageType):
+        unlock_objects: "list[LiskUnlock]"
+
+        def __init__(
+            self,
+            *,
+            unlock_objects: "list[LiskUnlock] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["LiskAssetUnlockToken"]:
+            return isinstance(msg, cls)
+
+    class LiskAssetReclaimLisk(protobuf.MessageType):
+        amount: "int"
+
+        def __init__(
+            self,
+            *,
+            amount: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["LiskAssetReclaimLisk"]:
+            return isinstance(msg, cls)
+
+    class LiskVote(protobuf.MessageType):
+        delegate_address: "bytes"
+        amount: "int"
+
+        def __init__(
+            self,
+            *,
+            delegate_address: "bytes",
+            amount: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["LiskVote"]:
+            return isinstance(msg, cls)
+
+    class LiskUnlock(protobuf.MessageType):
+        delegate_address: "bytes"
+        amount: "int"
+        unvote_height: "int"
+
+        def __init__(
+            self,
+            *,
+            delegate_address: "bytes",
+            amount: "int",
+            unvote_height: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["LiskUnlock"]:
             return isinstance(msg, cls)
 
     class MoneroTransactionSourceEntry(protobuf.MessageType):

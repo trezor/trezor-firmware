@@ -9,7 +9,7 @@ from apps.common.keychain import auto_keychain
 from apps.common.signverify import decode_message
 from apps.common.writers import write_bitcoin_varint
 
-from .helpers import get_address_from_public_key
+from .helpers import get_lisk32_from_public_key
 
 
 def message_digest(message):
@@ -29,7 +29,7 @@ async def sign_message(ctx, msg, keychain):
     node = keychain.derive(msg.address_n)
     pubkey = node.public_key()
     pubkey = pubkey[1:]  # skip ed25519 pubkey marker
-    address = get_address_from_public_key(pubkey)
+    address = get_lisk32_from_public_key(pubkey)
 
     await confirm_signverify(ctx, "Lisk", decode_message(msg.message), address)
 

@@ -400,8 +400,8 @@ if utils.BITCOIN_ONLY:
     import trezor.enums.CardanoTxSigningMode
     trezor.enums.CardanoTxWitnessType
     import trezor.enums.CardanoTxWitnessType
-    trezor.enums.LiskTransactionType
-    import trezor.enums.LiskTransactionType
+    trezor.enums.LiskTransactionModuleID
+    import trezor.enums.LiskTransactionModuleID
     trezor.enums.NEMImportanceTransferMode
     import trezor.enums.NEMImportanceTransferMode
     trezor.enums.NEMModificationType
