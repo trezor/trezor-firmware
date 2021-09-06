@@ -138,6 +138,15 @@ class MessageType(IntEnum):
     LiskVerifyMessage = 120
     LiskGetPublicKey = 121
     LiskPublicKey = 122
+    LiskTransaction = 123
+    LiskAssetTransfer = 124
+    LiskAssetRegisterMultisig = 125
+    LiskAssetRegisterDelegate = 126
+    LiskAssetVoteDelegate = 127
+    LiskVote = 128
+    LiskAssetUnlockToken = 129
+    LiskUnlock = 130
+    LiskAssetReclaimLisk = 131
     TezosGetAddress = 150
     TezosAddress = 151
     TezosSignTx = 152
@@ -435,15 +444,11 @@ class DebugSwipeDirection(IntEnum):
     RIGHT = 3
 
 
-class LiskTransactionType(IntEnum):
-    Transfer = 0
-    RegisterSecondPassphrase = 1
-    RegisterDelegate = 2
-    CastVotes = 3
-    RegisterMultisignatureAccount = 4
-    CreateDapp = 5
-    TransferIntoDapp = 6
-    TransferOutOfDapp = 7
+class LiskTransactionModuleID(IntEnum):
+    Token = 2
+    Multisignature = 4
+    Dpos = 5
+    Legacy = 1000
 
 
 class NEMMosaicLevy(IntEnum):
@@ -4532,16 +4537,19 @@ class LiskSignTx(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 116
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        2: protobuf.Field("transaction", "LiskTransactionCommon", repeated=False, required=True),
+        2: protobuf.Field("networkIdentifier", "bytes", repeated=False, required=True),
+        3: protobuf.Field("transaction", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        transaction: "LiskTransactionCommon",
+        networkIdentifier: "bytes",
+        transaction: "bytes",
         address_n: Optional[List["int"]] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
+        self.networkIdentifier = networkIdentifier
         self.transaction = transaction
 
 
@@ -4613,116 +4621,166 @@ class LiskVerifyMessage(protobuf.MessageType):
         self.message = message
 
 
-class LiskTransactionCommon(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
+class LiskTransaction(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 123
     FIELDS = {
-        1: protobuf.Field("type", "LiskTransactionType", repeated=False, required=False),
-        2: protobuf.Field("amount", "uint64", repeated=False, required=False),
-        3: protobuf.Field("fee", "uint64", repeated=False, required=False),
-        4: protobuf.Field("recipient_id", "string", repeated=False, required=False),
-        5: protobuf.Field("sender_public_key", "bytes", repeated=False, required=False),
-        6: protobuf.Field("requester_public_key", "bytes", repeated=False, required=False),
-        7: protobuf.Field("signature", "bytes", repeated=False, required=False),
-        8: protobuf.Field("timestamp", "uint32", repeated=False, required=False),
-        9: protobuf.Field("asset", "LiskTransactionAsset", repeated=False, required=False),
+        1: protobuf.Field("module_id", "LiskTransactionModuleID", repeated=False, required=True),
+        2: protobuf.Field("asset_id", "uint32", repeated=False, required=True),
+        3: protobuf.Field("nonce", "uint64", repeated=False, required=True),
+        4: protobuf.Field("fee", "uint64", repeated=False, required=True),
+        5: protobuf.Field("sender_public_key", "bytes", repeated=False, required=True),
+        6: protobuf.Field("asset", "bytes", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
-        type: Optional["LiskTransactionType"] = None,
-        amount: Optional["int"] = None,
-        fee: Optional["int"] = None,
-        recipient_id: Optional["str"] = None,
-        sender_public_key: Optional["bytes"] = None,
-        requester_public_key: Optional["bytes"] = None,
-        signature: Optional["bytes"] = None,
-        timestamp: Optional["int"] = None,
-        asset: Optional["LiskTransactionAsset"] = None,
+        module_id: "LiskTransactionModuleID",
+        asset_id: "int",
+        nonce: "int",
+        fee: "int",
+        sender_public_key: "bytes",
+        asset: Optional["bytes"] = None,
     ) -> None:
-        self.type = type
-        self.amount = amount
+        self.module_id = module_id
+        self.asset_id = asset_id
+        self.nonce = nonce
         self.fee = fee
-        self.recipient_id = recipient_id
         self.sender_public_key = sender_public_key
-        self.requester_public_key = requester_public_key
-        self.signature = signature
-        self.timestamp = timestamp
         self.asset = asset
 
 
-class LiskTransactionAsset(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
+class LiskAssetTransfer(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 124
     FIELDS = {
-        1: protobuf.Field("signature", "LiskSignatureType", repeated=False, required=False),
-        2: protobuf.Field("delegate", "LiskDelegateType", repeated=False, required=False),
-        3: protobuf.Field("votes", "string", repeated=True, required=False),
-        4: protobuf.Field("multisignature", "LiskMultisignatureType", repeated=False, required=False),
-        5: protobuf.Field("data", "string", repeated=False, required=False),
+        1: protobuf.Field("amount", "uint64", repeated=False, required=True),
+        2: protobuf.Field("recipient_address", "bytes", repeated=False, required=True),
+        3: protobuf.Field("data", "string", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        votes: Optional[List["str"]] = None,
-        signature: Optional["LiskSignatureType"] = None,
-        delegate: Optional["LiskDelegateType"] = None,
-        multisignature: Optional["LiskMultisignatureType"] = None,
-        data: Optional["str"] = None,
+        amount: "int",
+        recipient_address: "bytes",
+        data: "str",
     ) -> None:
-        self.votes = votes if votes is not None else []
-        self.signature = signature
-        self.delegate = delegate
-        self.multisignature = multisignature
+        self.amount = amount
+        self.recipient_address = recipient_address
         self.data = data
 
 
-class LiskSignatureType(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
+class LiskAssetRegisterMultisig(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 125
     FIELDS = {
-        1: protobuf.Field("public_key", "bytes", repeated=False, required=False),
+        1: protobuf.Field("number_of_signatures", "uint32", repeated=False, required=True),
+        2: protobuf.Field("mandatory_keys", "bytes", repeated=True, required=False),
+        3: protobuf.Field("optional_keys", "bytes", repeated=True, required=False),
     }
 
     def __init__(
         self,
         *,
-        public_key: Optional["bytes"] = None,
+        number_of_signatures: "int",
+        mandatory_keys: Optional[List["bytes"]] = None,
+        optional_keys: Optional[List["bytes"]] = None,
     ) -> None:
-        self.public_key = public_key
+        self.mandatory_keys = mandatory_keys if mandatory_keys is not None else []
+        self.optional_keys = optional_keys if optional_keys is not None else []
+        self.number_of_signatures = number_of_signatures
 
 
-class LiskDelegateType(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
+class LiskAssetRegisterDelegate(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 126
     FIELDS = {
-        1: protobuf.Field("username", "string", repeated=False, required=False),
+        1: protobuf.Field("username", "string", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        username: Optional["str"] = None,
+        username: "str",
     ) -> None:
         self.username = username
 
 
-class LiskMultisignatureType(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = None
+class LiskAssetVoteDelegate(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 127
     FIELDS = {
-        1: protobuf.Field("min", "uint32", repeated=False, required=False),
-        2: protobuf.Field("life_time", "uint32", repeated=False, required=False),
-        3: protobuf.Field("keys_group", "string", repeated=True, required=False),
+        1: protobuf.Field("votes", "LiskVote", repeated=True, required=False),
     }
 
     def __init__(
         self,
         *,
-        keys_group: Optional[List["str"]] = None,
-        min: Optional["int"] = None,
-        life_time: Optional["int"] = None,
+        votes: Optional[List["LiskVote"]] = None,
     ) -> None:
-        self.keys_group = keys_group if keys_group is not None else []
-        self.min = min
-        self.life_time = life_time
+        self.votes = votes if votes is not None else []
+
+
+class LiskAssetUnlockToken(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 129
+    FIELDS = {
+        1: protobuf.Field("unlock_objects", "LiskUnlock", repeated=True, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        unlock_objects: Optional[List["LiskUnlock"]] = None,
+    ) -> None:
+        self.unlock_objects = unlock_objects if unlock_objects is not None else []
+
+
+class LiskAssetReclaimLisk(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 131
+    FIELDS = {
+        1: protobuf.Field("amount", "uint64", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        amount: "int",
+    ) -> None:
+        self.amount = amount
+
+
+class LiskVote(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 128
+    FIELDS = {
+        1: protobuf.Field("delegate_address", "bytes", repeated=False, required=True),
+        2: protobuf.Field("amount", "sint64", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        delegate_address: "bytes",
+        amount: "int",
+    ) -> None:
+        self.delegate_address = delegate_address
+        self.amount = amount
+
+
+class LiskUnlock(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 130
+    FIELDS = {
+        1: protobuf.Field("delegate_address", "bytes", repeated=False, required=True),
+        2: protobuf.Field("amount", "uint64", repeated=False, required=True),
+        3: protobuf.Field("unvote_height", "uint32", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        delegate_address: "bytes",
+        amount: "int",
+        unvote_height: "int",
+    ) -> None:
+        self.delegate_address = delegate_address
+        self.amount = amount
+        self.unvote_height = unvote_height
 
 
 class MoneroTransactionSourceEntry(protobuf.MessageType):

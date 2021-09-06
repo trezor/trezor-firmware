@@ -15,8 +15,11 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from . import exceptions, messages
-from .protobuf import dict_to_proto
+from .protobuf import dict_to_proto 
+from .mapping import decode
 from .tools import dict_from_camelcase, expect, normalize_nfc
+
+import click
 
 
 @expect(messages.LiskAddress, field="address")
@@ -50,11 +53,6 @@ def verify_message(client, pubkey, signature, message):
     return isinstance(resp, messages.Success)
 
 
-RENAMES = {"lifetime": "life_time", "keysgroup": "keys_group"}
-
-
 @expect(messages.LiskSignedTx)
-def sign_tx(client, n, transaction):
-    transaction = dict_from_camelcase(transaction, renames=RENAMES)
-    msg = dict_to_proto(messages.LiskTransactionCommon, transaction)
-    return client.call(messages.LiskSignTx(address_n=n, transaction=msg))
+def sign_tx(client, n, networkIdentifier, transaction):
+    return client.call(messages.LiskSignTx(address_n=n, networkIdentifier=networkIdentifier, transaction=transaction))

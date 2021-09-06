@@ -22,7 +22,8 @@ from .. import lisk, tools
 from . import with_client
 
 PATH_HELP = "BIP-32 path, e.g. m/44'/134'/0'/0'"
-
+NETWORKID_HELP = "Lisk Network Identifier, e.g. 4c09e6a781fc4c7bdb936ee815de8f94190f8a7519becd9de2081832be309a99"
+TX_HELP = "Lisk Transaction"
 
 @click.group(name="lisk")
 def cli():
@@ -52,17 +53,18 @@ def get_public_key(client, address, show_display):
 
 
 @cli.command()
-@click.argument("file", type=click.File("r"))
+@click.argument("TX_BYTES")
 @click.option("-n", "--address", required=True, help=PATH_HELP)
-@click.option("-f", "--file", "_ignore", is_flag=True, hidden=True, expose_value=False)
+@click.option("-i", "--network-id", required=True, help=NETWORKID_HELP)
+@click.option("-x", "--tx-bytes", "_ignore", is_flag=True, hidden=True, expose_value=False, help=TX_HELP)
 @with_client
-def sign_tx(client, address, file):
+def sign_tx(client, address, network_id, tx_bytes):
     """Sign Lisk transaction."""
     address_n = tools.parse_path(address)
-    transaction = lisk.sign_tx(client, address_n, json.load(file))
-
-    payload = {"signature": transaction.signature.hex()}
-
+    network_id_bytes = bytes.fromhex(network_id)
+    tx_bytes_bytes = bytes.fromhex(tx_bytes)
+    signature = lisk.sign_tx(client, address_n, networkIdentifier=network_id_bytes, transaction=tx_bytes_bytes)
+    payload = {"signature": signature.signature.hex()}
     return payload
 
 
