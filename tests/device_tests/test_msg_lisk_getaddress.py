@@ -25,10 +25,10 @@ from trezorlib.tools import parse_path
 @pytest.mark.parametrize(
     "path, address",
     (
-        ("m/44h/134h/0h", "3685460048641680438L"),
-        ("m/44h/134h/1h", "2178885030141662239L"),
-        ("m/44h/134h/100h", "7191894793645699638L"),
-        ("m/44h/1h/0h", "8365436719773013410L"),
+        ("m/44h/134h/0h", "lskbarvjr5co3rtbjgun4hu4mj5bst6jouedp5ko4"),
+        ("m/44h/134h/1h", "lskcf6zpxcpfufxj7hx2d8qccg796qvpupcwu5efy"),
+        ("m/44h/134h/100h", "lskbdacwa4qwsnbbv8wfz98q3h42t2ndgfbr83mxd"),
+        ("m/44h/1h/0h", "lskk46y4d6gzzon3gz6ampchxk8kbak3gxxanntkn"),
     ),
 )
 def test_lisk_getaddress(client, path, address):
