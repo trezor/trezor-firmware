@@ -199,6 +199,16 @@ enum MessageType {
     MessageType_LiskVerifyMessage = 120 [(wire_in) = true];
     MessageType_LiskGetPublicKey = 121 [(wire_in) = true];
     MessageType_LiskPublicKey = 122 [(wire_out) = true];
+    // Lisk Internal assets
+    MessageType_LiskTransaction = 123;
+    MessageType_LiskAssetTransfer = 124;
+    MessageType_LiskAssetRegisterMultisig = 125;
+    MessageType_LiskAssetRegisterDelegate = 126;
+    MessageType_LiskAssetVoteDelegate = 127;
+    MessageType_LiskVote = 128;
+    MessageType_LiskAssetUnlockToken = 129;
+    MessageType_LiskUnlock = 130;
+    MessageType_LiskAssetReclaimLisk = 131;
 
     // Tezos
     MessageType_TezosGetAddress = 150 [(wire_in) = true];
