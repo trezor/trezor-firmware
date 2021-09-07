@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.4] - 2021-09-07
+[0.12.4]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.3...python/v0.12.4
+
+### Fixed
+
+- trezorctl: fixed "Invalid value for <param>" when using Click 8 and param is not specified [#1798]
+
 ## [0.12.3] - 2021-07-29
 [0.12.3]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.2...python/v0.12.3
 
@@ -507,3 +514,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#1296]: https://github.com/trezor/trezor-firmware/issues/1296
 [#1363]: https://github.com/trezor/trezor-firmware/issues/1363
 [#1738]: https://github.com/trezor/trezor-firmware/issues/1738
+[#1798]: https://github.com/trezor/trezor-firmware/issues/1798
