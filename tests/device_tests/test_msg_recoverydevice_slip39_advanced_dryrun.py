@@ -65,7 +65,7 @@ def test_2of3_dryrun(client):
     )
 
 
-@pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_20, passphrase=True)
+@pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_20)
 def test_2of3_invalid_seed_dryrun(client):
     debug = client.debug
 

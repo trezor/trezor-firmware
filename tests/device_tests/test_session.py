@@ -29,7 +29,7 @@ XPUB = "xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7
 PIN4 = "1234"
 
 
-@pytest.mark.setup_client(pin=PIN4, passphrase=True)
+@pytest.mark.setup_client(pin=PIN4, passphrase="")
 def test_clear_session(client):
     is_trezor1 = client.features.model == "1"
     init_responses = [
