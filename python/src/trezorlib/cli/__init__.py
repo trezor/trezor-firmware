@@ -31,6 +31,8 @@ class ChoiceType(click.Choice):
         self.typemap = typemap
 
     def convert(self, value, param, ctx):
+        if value in self.typemap.values():
+            return value
         value = super().convert(value, param, ctx)
         return self.typemap[value]
 

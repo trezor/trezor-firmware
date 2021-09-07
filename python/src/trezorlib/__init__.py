@@ -1,4 +1,4 @@
-__version__ = "0.12.3"
+__version__ = "0.12.4"
 
 # fmt: off
 MINIMUM_FIRMWARE_VERSION = {
