@@ -308,7 +308,7 @@ def test_passphrase_always_on_device(client):
 
 
 @pytest.mark.skip_t2
-@pytest.mark.setup_client(passphrase=True)
+@pytest.mark.setup_client(passphrase="")
 def test_passphrase_on_device_not_possible_on_t1(client):
     # This setting makes no sense on T1.
     response = client.call_raw(messages.ApplySettings(passphrase_always_on_device=True))
@@ -332,7 +332,7 @@ def test_passphrase_ack_mismatch(client):
     assert response.code == FailureType.DataError
 
 
-@pytest.mark.setup_client(passphrase=True)
+@pytest.mark.setup_client(passphrase="")
 def test_passphrase_missing(client):
     response = client.call_raw(XPUB_REQUEST)
     assert isinstance(response, messages.PassphraseRequest)
