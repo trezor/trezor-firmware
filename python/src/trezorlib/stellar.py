@@ -52,18 +52,6 @@ except ImportError:
     HAVE_STELLAR_SDK = False
     DEFAULT_NETWORK_PASSPHRASE = "Public Global Stellar Network ; September 2015"
 
-# Memo types
-MEMO_TYPE_NONE = 0
-MEMO_TYPE_TEXT = 1
-MEMO_TYPE_ID = 2
-MEMO_TYPE_HASH = 3
-MEMO_TYPE_RETURN = 4
-
-# Asset types
-ASSET_TYPE_NATIVE = 0
-ASSET_TYPE_ALPHA4 = 1
-ASSET_TYPE_ALPHA12 = 2
-
 DEFAULT_BIP32_PATH = "m/44h/148h/0h"
 # Stellar's BIP32 differs to Bitcoin's see https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0005.md
 
@@ -89,19 +77,19 @@ def from_envelope(envelope: "TransactionEnvelope"):
     memo = parsed_tx.memo
     if isinstance(memo, TextMemo):
         # memo_text is specified as UTF-8 string, but returned as bytes from the XDR parser
-        tx.memo_type = MEMO_TYPE_TEXT
+        tx.memo_type = messages.StellarMemoType.TEXT
         tx.memo_text = memo.memo_text.decode("utf-8")
     elif isinstance(memo, IdMemo):
-        tx.memo_type = MEMO_TYPE_ID
+        tx.memo_type = messages.StellarMemoType.ID
         tx.memo_id = memo.memo_id
     elif isinstance(memo, HashMemo):
-        tx.memo_type = MEMO_TYPE_HASH
+        tx.memo_type = messages.StellarMemoType.HASH
         tx.memo_hash = memo.memo_hash
     elif isinstance(memo, ReturnHashMemo):
-        tx.memo_type = MEMO_TYPE_RETURN
+        tx.memo_type = messages.StellarMemoType.RETURN
         tx.memo_hash = memo.memo_return
     else:
-        tx.memo_type = MEMO_TYPE_NONE
+        tx.memo_type = messages.StellarMemoType.NONE
 
     tx.num_operations = len(parsed_tx.operations)
     operations = [_read_operation(op) for op in parsed_tx.operations]
@@ -181,7 +169,7 @@ def _read_operation(op: "Operation"):
                 signer_key = op.signer.signer_key.signer_key.pre_auth_tx.uint256
             else:
                 raise ValueError("Unsupported signer key type")
-            operation.signer_type = signer_type.value
+            operation.signer_type = messages.StellarSignerType(signer_type.value)
             operation.signer_key = signer_key
             operation.signer_weight = op.signer.weight
         return operation
@@ -198,7 +186,9 @@ def _read_operation(op: "Operation"):
         ):
             raise ValueError("Unsupported trust line flag")
         asset_type = (
-            ASSET_TYPE_ALPHA4 if len(op.asset_code) <= 4 else ASSET_TYPE_ALPHA12
+            messages.StellarAssetType.ALPHANUM4
+            if len(op.asset_code) <= 4
+            else messages.StellarAssetType.ALPHANUM12
         )
         return messages.StellarAllowTrustOp(
             source_account=source_account,
@@ -238,17 +228,21 @@ def _read_price(price: Union["Price", str, Decimal]) -> "Price":
     return Price.from_raw_price(price)
 
 
-def _read_asset(asset: "Asset") -> messages.StellarAssetType:
+def _read_asset(asset: "Asset") -> messages.StellarAsset:
     """Reads a stellar Asset from unpacker"""
     if asset.is_native():
-        return messages.StellarAssetType(type=ASSET_TYPE_NATIVE)
+        return messages.StellarAsset(type=messages.StellarAssetType.NATIVE)
     if asset.guess_asset_type() == "credit_alphanum4":
-        return messages.StellarAssetType(
-            type=ASSET_TYPE_ALPHA4, code=asset.code, issuer=asset.issuer
+        return messages.StellarAsset(
+            type=messages.StellarAssetType.ALPHANUM4,
+            code=asset.code,
+            issuer=asset.issuer,
         )
     if asset.guess_asset_type() == "credit_alphanum12":
-        return messages.StellarAssetType(
-            type=ASSET_TYPE_ALPHA12, code=asset.code, issuer=asset.issuer
+        return messages.StellarAsset(
+            type=messages.StellarAssetType.ALPHANUM12,
+            code=asset.code,
+            issuer=asset.issuer,
         )
     raise ValueError("Unsupported asset type")
 
