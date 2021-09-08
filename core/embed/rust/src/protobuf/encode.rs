@@ -15,7 +15,7 @@ use crate::{
 
 use super::{
     defs::{FieldDef, FieldType, MsgDef},
-    obj::{MsgObj},
+    obj::MsgObj,
     zigzag,
 };
 

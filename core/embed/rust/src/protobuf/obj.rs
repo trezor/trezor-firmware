@@ -67,7 +67,9 @@ impl MsgObj {
         match attr {
             Qstr::MP_QSTR_MESSAGE_WIRE_TYPE => {
                 // Return the wire ID of this message def, or None if not set.
-                Ok(self.msg_wire_id.map_or(Obj::const_none(), |wire_id| wire_id.into()))
+                Ok(self
+                    .msg_wire_id
+                    .map_or(Obj::const_none(), |wire_id| wire_id.into()))
             }
             Qstr::MP_QSTR_MESSAGE_NAME => {
                 // Return the qstr name of this message def
@@ -79,7 +81,7 @@ impl MsgObj {
                 // we're returning a mutable dict.
                 Ok(Gc::new(Dict::with_map(self.map.clone())).into())
             }
-            _ => { Err(Error::Missing) }
+            _ => Err(Error::Missing),
         }
     }
 
@@ -198,7 +200,7 @@ impl TryFrom<Obj> for Gc<MsgDefObj> {
 
 unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut Obj) {
     util::try_or_raise(|| {
-        let this=  Gc::<MsgDefObj>::try_from(self_in)?;
+        let this = Gc::<MsgDefObj>::try_from(self_in)?;
         let attr = Qstr::from_u16(attr as _);
 
         if unsafe { dest.read() } != Obj::const_null() {
@@ -209,7 +211,9 @@ unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut 
             Qstr::MP_QSTR_MESSAGE_NAME => {
                 // Return the qstr name of this message def
                 let name = Qstr::from_u16(find_name_by_msg_offset(this.def.offset)?);
-                unsafe { dest.write(name.into()); };
+                unsafe {
+                    dest.write(name.into());
+                };
             }
             Qstr::MP_QSTR_MESSAGE_WIRE_TYPE => {
                 // Return the wire type of this message def
@@ -217,7 +221,9 @@ unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut 
                     .def
                     .wire_id
                     .map_or_else(Obj::const_none, |wire_id| wire_id.into());
-                unsafe { dest.write(wire_id_obj); };
+                unsafe {
+                    dest.write(wire_id_obj);
+                };
             }
             Qstr::MP_QSTR_is_type_of => {
                 // Return the is_type_of bound method
@@ -228,7 +234,9 @@ unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut 
                     dest.offset(1).write(self_in);
                 }
             }
-            _ => { return Err(Error::Missing); }
+            _ => {
+                return Err(Error::Missing);
+            }
         }
         Ok(())
     });
@@ -261,7 +269,8 @@ unsafe extern "C" fn msg_def_obj_is_type_of(self_in: Obj, obj: Obj) -> Obj {
     })
 }
 
-static MSG_DEF_OBJ_IS_TYPE_OF_OBJ: ffi::mp_obj_fun_builtin_fixed_t = obj_fn_2!(msg_def_obj_is_type_of);
+static MSG_DEF_OBJ_IS_TYPE_OF_OBJ: ffi::mp_obj_fun_builtin_fixed_t =
+    obj_fn_2!(msg_def_obj_is_type_of);
 
 #[no_mangle]
 pub extern "C" fn protobuf_debug_msg_type() -> &'static Type {
