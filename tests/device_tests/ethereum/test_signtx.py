@@ -83,7 +83,7 @@ def test_sanity_checks(client):
     need to be exposed to the public.
     """
     # contract creation without data should fail.
-    with pytest.raises(Exception):
+    with pytest.raises(TrezorFailure, match=r"DataError"):
         ethereum.sign_tx(
             client,
             n=parse_path("44'/60'/0'/0/0"),
@@ -92,10 +92,11 @@ def test_sanity_checks(client):
             gas_limit=20000,
             to="",
             value=12345678901234567890,
+            chain_id=1,
         )
 
     # gas overflow
-    with pytest.raises(TrezorFailure):
+    with pytest.raises(TrezorFailure, match=r"DataError"):
         ethereum.sign_tx(
             client,
             n=parse_path("44'/60'/0'/0/0"),
@@ -104,6 +105,20 @@ def test_sanity_checks(client):
             gas_limit=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
             to=TO_ADDR,
             value=12345678901234567890,
+            chain_id=1,
+        )
+
+    # bad chain ID
+    with pytest.raises(TrezorFailure, match=r"Chain ID out of bounds"):
+        ethereum.sign_tx(
+            client,
+            n=parse_path("44'/60'/0'/0/0"),
+            nonce=123456,
+            gas_price=20000,
+            gas_limit=20000,
+            to=TO_ADDR,
+            value=12345678901234567890,
+            chain_id=0,
         )
 
 
@@ -250,3 +265,65 @@ def test_signtx_eip1559_access_list_larger(client):
         sig_s.hex()
         == "7d0ea2a28ef5702ca763c1f340427c0020292ffcbb4553dd1c8ea8e2b9126dbc"
     )
+
+
+@pytest.mark.skip_t1
+def test_sanity_checks_eip1559(client):
+    """Is not vectorized because these are internal-only tests that do not
+    need to be exposed to the public.
+    """
+    # contract creation without data should fail.
+    with pytest.raises(TrezorFailure, match=r"DataError"):
+        ethereum.sign_tx_eip1559(
+            client,
+            n=parse_path("44'/60'/0'/0/100"),
+            nonce=0,
+            gas_limit=20,
+            to="",
+            chain_id=1,
+            value=10,
+            max_gas_fee=20,
+            max_priority_fee=1,
+        )
+
+    # max fee overflow
+    with pytest.raises(TrezorFailure, match=r"DataError"):
+        ethereum.sign_tx_eip1559(
+            client,
+            n=parse_path("44'/60'/0'/0/100"),
+            nonce=0,
+            gas_limit=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
+            to=TO_ADDR,
+            chain_id=1,
+            value=10,
+            max_gas_fee=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
+            max_priority_fee=1,
+        )
+
+    # priority fee overflow
+    with pytest.raises(TrezorFailure, match=r"DataError"):
+        ethereum.sign_tx_eip1559(
+            client,
+            n=parse_path("44'/60'/0'/0/100"),
+            nonce=0,
+            gas_limit=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
+            to=TO_ADDR,
+            chain_id=1,
+            value=10,
+            max_gas_fee=20,
+            max_priority_fee=0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF,
+        )
+
+    # bad chain ID
+    with pytest.raises(TrezorFailure, match=r"Chain ID out of bounds"):
+        ethereum.sign_tx_eip1559(
+            client,
+            n=parse_path("44'/60'/0'/0/100"),
+            nonce=0,
+            gas_limit=20,
+            to=TO_ADDR,
+            chain_id=0,
+            value=10,
+            max_gas_fee=20,
+            max_priority_fee=1,
+        )

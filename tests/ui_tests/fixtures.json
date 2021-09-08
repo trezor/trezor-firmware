@@ -143,6 +143,7 @@
 "ethereum-test_sign_verify_message.py::test_verify_invalid": "95241229201fd860604af3e061eb1173ebd9078e3db8679ecd72db86c7c08f63",
 "ethereum-test_signtx.py::test_data_streaming": "ca1a891c07f4a0bdce9fd2bd9ab519f6c6ce07806ea59d08416736605682f8f1",
 "ethereum-test_signtx.py::test_sanity_checks": "5a80508a71a9ef64f94762b07636f90e464832f0f4a3102af8fa1a8c69e94586",
+"ethereum-test_signtx.py::test_sanity_checks_eip1559": "5a80508a71a9ef64f94762b07636f90e464832f0f4a3102af8fa1a8c69e94586",
 "ethereum-test_signtx.py::test_signtx[Auxilium]": "723083f8dccf4676f7a134a070977576341f2f7a5850e463e487c8705ebe25f1",
 "ethereum-test_signtx.py::test_signtx[ETC]": "41ed0476f3043025d40eaf13ed76c1ebcd4bee9b7a6d23764a00451f1edc5b40",
 "ethereum-test_signtx.py::test_signtx[Ethereum]": "ad88572a4100efd3909c39c76e452630f25d5600bcde22a18c02c327528507f3",

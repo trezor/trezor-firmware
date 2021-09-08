@@ -14,7 +14,7 @@ from .layout import (
     require_confirm_eip1559_fee,
     require_confirm_tx,
 )
-from .sign_tx import check_data, check_to, handle_erc20, send_request_chunk
+from .sign_tx import check_common_fields, handle_erc20, send_request_chunk
 
 if False:
     from typing import Tuple
@@ -159,7 +159,9 @@ def sign_digest(
 
 
 def check(msg: EthereumSignTxEIP1559) -> None:
-    check_data(msg)
+    if len(msg.max_gas_fee) + len(msg.gas_limit) > 30:
+        raise wire.DataError("Fee overflow")
+    if len(msg.max_priority_fee) + len(msg.gas_limit) > 30:
+        raise wire.DataError("Fee overflow")
 
-    if not check_to(msg):
-        raise wire.DataError("Safety check failed")
+    check_common_fields(msg)
