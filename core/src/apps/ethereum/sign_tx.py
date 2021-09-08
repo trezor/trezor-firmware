@@ -177,14 +177,13 @@ def check(msg: EthereumSignTx) -> None:
     if msg.tx_type not in [1, 6, None]:
         raise wire.DataError("tx_type out of bounds")
 
-    check_data(msg)
+    if len(msg.gas_price) + len(msg.gas_limit) > 30:
+        raise wire.DataError("Fee overflow")
 
-    # safety checks
-    if not check_gas(msg) or not check_to(msg):
-        raise wire.DataError("Safety check failed")
+    check_common_fields(msg)
 
 
-def check_data(msg: EthereumSignTxAny) -> None:
+def check_common_fields(msg: EthereumSignTxAny) -> None:
     if msg.data_length > 0:
         if not msg.data_initial_chunk:
             raise wire.DataError("Data length provided, but no initial chunk")
@@ -195,20 +194,12 @@ def check_data(msg: EthereumSignTxAny) -> None:
         if len(msg.data_initial_chunk) > msg.data_length:
             raise wire.DataError("Invalid size of initial chunk")
 
+    if len(msg.to) not in (0, 40, 42):
+        raise wire.DataError("Invalid recipient address")
 
-def check_gas(msg: EthereumSignTx) -> bool:
-    if len(msg.gas_price) + len(msg.gas_limit) > 30:
-        # sanity check that fee doesn't overflow
-        return False
-    return True
+    if not msg.to and msg.data_length == 0:
+        # sending transaction to address 0 (contract creation) without a data field
+        raise wire.DataError("Contract creation without data")
 
-
-def check_to(msg: EthereumSignTxAny) -> bool:
-    if msg.to == "":
-        if msg.data_length == 0:
-            # sending transaction to address 0 (contract creation) without a data field
-            return False
-    else:
-        if len(msg.to) not in (40, 42):
-            return False
-    return True
+    if msg.chain_id == 0:
+        raise wire.DataError("Chain ID out of bounds")
