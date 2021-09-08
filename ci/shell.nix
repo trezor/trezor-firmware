@@ -28,6 +28,9 @@ let
       "thumbv7em-none-eabihf" # TT
       "thumbv7m-none-eabi"    # T1
     ];
+    # we use rustfmt from nixpkgs because it's built with the nighly flag needed for wrap_comments
+    # to use official binary, remove rustfmt from buildInputs below and uncomment next line:
+    # extensions = [ "rustfmt" ];
   };
 in
 with nixpkgs;

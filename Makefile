@@ -9,9 +9,9 @@ PY_FILES = $(shell find . -type f -name '*.py'   | grep -f ./tools/style.py.incl
 C_FILES =  $(shell find . -type f -name '*.[ch]' | grep -f ./tools/style.c.include  | grep -v -f ./tools/style.c.exclude )
 
 
-style_check: pystyle_check cstyle_check changelog_check yaml_check editor_check ## run all style checks (C+Py)
+style_check: pystyle_check ruststyle_check cstyle_check changelog_check yaml_check editor_check ## run all style checks
 
-style: pystyle cstyle ## apply all code styles (C+Py)
+style: pystyle ruststyle cstyle ## apply all code styles (C+Rust+Py)
 
 pystyle_check: ## run code style check on application sources and tests
 	flake8 --version
@@ -70,6 +70,15 @@ defs_check: ## check validity of coin definitions and protobuf files
 	python3 common/tools/support.py check --ignore-missing
 	python3 common/protob/check.py
 	python3 common/protob/graph.py common/protob/*.proto
+
+ruststyle:
+	@echo [RUSTFMT]
+	@cd core/embed/rust ; cargo fmt
+
+ruststyle_check:
+	rustfmt --version
+	@echo [RUSTFMT]
+	@cd core/embed/rust ; cargo fmt -- --check
 
 ## code generation commands:
 
