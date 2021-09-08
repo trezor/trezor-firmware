@@ -207,7 +207,7 @@ def _read_operation(op: "Operation"):
             trusted_account=op.trustor,
             asset_type=asset_type,
             asset_code=op.asset_code,
-            is_authorized=op.authorize.value,
+            is_authorized=bool(op.authorize.value),
         )
     if isinstance(op, AccountMerge):
         return messages.StellarAccountMergeOp(
