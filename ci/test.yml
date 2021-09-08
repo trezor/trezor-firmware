@@ -8,6 +8,7 @@ core unit test:
     - core unix regular build
   script:
     - nix-shell --run "poetry run make -C core test | ts -s"
+    - nix-shell --run "poetry run make -C core test_rust | ts -s"
 
 core device ui test:
   stage: test

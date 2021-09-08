@@ -78,6 +78,9 @@ emu: ## run emulator
 test: ## run unit tests
 	cd tests ; ./run_tests.sh $(TESTOPTS)
 
+test_rust: ## run rs unit tests
+	cd embed/rust ; cargo test -- --test-threads=1
+
 test_emu: ## run selected device tests from python-trezor
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS)
 
