@@ -134,15 +134,6 @@ STATIC int execute_from_lexer(int source_kind, const void *source,
 
     mp_parse_tree_t parse_tree = mp_parse(lex, input_kind);
 
-#if defined(MICROPY_UNIX_COVERAGE)
-    // allow to print the parse tree in the coverage build
-    if (mp_verbose_flag >= 3) {
-      printf("----------------\n");
-      mp_parse_node_print(parse_tree.root, 0);
-      printf("----------------\n");
-    }
-#endif
-
     mp_obj_t module_fun = mp_compile(&parse_tree, source_name, is_repl);
 
     if (!compile_only) {
@@ -563,14 +554,6 @@ MP_NOINLINE int main_(int argc, char **argv) {
   }
 
   mp_obj_list_init(MP_OBJ_TO_PTR(mp_sys_argv), 0);
-
-#if defined(MICROPY_UNIX_COVERAGE)
-  {
-    MP_DECLARE_CONST_FUN_OBJ_0(extra_coverage_obj);
-    mp_store_global(QSTR_FROM_STR_STATIC("extra_coverage"),
-                    MP_OBJ_FROM_PTR(&extra_coverage_obj));
-  }
-#endif
 
   // Here is some example code to create a class and instance of that class.
   // First is the Python, then the C code.
