@@ -26,10 +26,10 @@ pub struct MsgObj {
 }
 
 impl MsgObj {
-    pub fn alloc_with_capacity(capacity: usize, msg: &MsgDef) -> Gc<Self> {
+    pub fn alloc_with_capacity(capacity: usize, msg: &MsgDef) -> Result<Gc<Self>, Error> {
         Gc::new(Self {
             base: Self::obj_type().to_base(),
-            map: Map::with_capacity(capacity),
+            map: Map::with_capacity(capacity)?,
             msg_wire_id: msg.wire_id,
             msg_offset: msg.offset,
         })
@@ -79,23 +79,23 @@ impl MsgObj {
                 // Conversion to dict. Allocate a new dict object with a copy of our map
                 // and return it. This is a bit different from how uPy does it now, because
                 // we're returning a mutable dict.
-                Ok(Gc::new(Dict::with_map(self.map.clone())).into())
+                Ok(Gc::new(Dict::with_map(self.map.try_clone()?))?.into())
             }
-            _ => Err(Error::Missing),
+            _ => Err(Error::AttributeError(attr)),
         }
     }
 
     fn setattr(&mut self, attr: Qstr, value: Obj) -> Result<(), Error> {
         if value == Obj::const_null() {
             // this would be a delattr
-            return Err(Error::InvalidOperation);
+            return Err(Error::TypeError);
         }
 
         if self.map.contains_key(attr) {
-            self.map.set(attr, value);
+            self.map.set(attr, value)?;
             Ok(())
         } else {
-            Err(Error::Missing)
+            Err(Error::AttributeError(attr))
         }
     }
 }
@@ -120,7 +120,7 @@ impl TryFrom<Obj> for Gc<MsgObj> {
             let this = unsafe { Gc::from_raw(value.as_ptr().cast()) };
             Ok(this)
         } else {
-            Err(Error::InvalidType)
+            Err(Error::TypeError)
         }
     }
 }
@@ -152,11 +152,12 @@ pub struct MsgDefObj {
 }
 
 impl MsgDefObj {
-    pub fn alloc(def: MsgDef) -> Gc<Self> {
-        Gc::new(Self {
+    pub fn alloc(def: MsgDef) -> Result<Gc<Self>, Error> {
+        let this = Gc::new(Self {
             base: Self::obj_type().to_base(),
             def,
-        })
+        })?;
+        Ok(this)
     }
 
     pub fn msg(&self) -> &MsgDef {
@@ -193,7 +194,7 @@ impl TryFrom<Obj> for Gc<MsgDefObj> {
             let this = unsafe { Gc::from_raw(value.as_ptr().cast()) };
             Ok(this)
         } else {
-            Err(Error::InvalidType)
+            Err(Error::TypeError)
         }
     }
 }
@@ -204,7 +205,8 @@ unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut 
         let attr = Qstr::from_u16(attr as _);
 
         if unsafe { dest.read() } != Obj::const_null() {
-            return Err(Error::InvalidOperation);
+            // this would be a setattr
+            return Err(Error::TypeError);
         }
 
         match attr {
@@ -235,7 +237,7 @@ unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut 
                 }
             }
             _ => {
-                return Err(Error::Missing);
+                return Err(Error::AttributeError(attr));
             }
         }
         Ok(())

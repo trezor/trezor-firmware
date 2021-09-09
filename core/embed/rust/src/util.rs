@@ -5,17 +5,17 @@ use crate::{
     micropython::{
         map::{Map, MapElem},
         obj::Obj,
-        runtime::raise_value_error,
+        runtime::raise_exception,
     },
 };
 
 pub fn try_or_raise<T>(func: impl FnOnce() -> Result<T, Error>) -> T {
-    func().unwrap_or_else(|err| raise_value_error(err.as_cstr()))
+    func().unwrap_or_else(|err| raise_exception(err))
 }
 
 pub fn try_with_kwargs(kwargs: *const Map, func: impl FnOnce(&Map) -> Result<Obj, Error>) -> Obj {
     try_or_raise(|| {
-        let kwargs = unsafe { kwargs.as_ref() }.ok_or(Error::Missing)?;
+        let kwargs = unsafe { kwargs.as_ref() }.ok_or(Error::MissingKwargs)?;
 
         func(kwargs)
     })
@@ -33,7 +33,7 @@ pub fn try_with_args_and_kwargs(
         } else {
             unsafe { slice::from_raw_parts(args, n_args) }
         };
-        let kwargs = unsafe { kwargs.as_ref() }.ok_or(Error::Missing)?;
+        let kwargs = unsafe { kwargs.as_ref() }.ok_or(Error::MissingKwargs)?;
 
         func(args, kwargs)
     })
