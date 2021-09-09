@@ -144,7 +144,7 @@ if TREZOR_MODEL == "T":
 
 # modtrezorui
 CPPPATH_MOD += [
-        'vendor/micropython/extmod/uzlib',
+        'vendor/micropython/lib/uzlib',
 ]
 CPPDEFINES_MOD += [
     'TREZOR_FONT_BOLD_ENABLE',
@@ -162,9 +162,9 @@ SOURCE_MOD += [
     'embed/extmod/modtrezorui/font_pixeloperatormono_regular_8.c',
     'embed/extmod/modtrezorui/modtrezorui.c',
     'embed/extmod/modtrezorui/qr-code-generator/qrcodegen.c',
-    'vendor/micropython/extmod/uzlib/adler32.c',
-    'vendor/micropython/extmod/uzlib/crc32.c',
-    'vendor/micropython/extmod/uzlib/tinflate.c',
+    'vendor/micropython/lib/uzlib/adler32.c',
+    'vendor/micropython/lib/uzlib/crc32.c',
+    'vendor/micropython/lib/uzlib/tinflate.c',
 ]
 if FROZEN:
     CPPDEFINES_MOD += ['TREZOR_EMULATOR_FROZEN']
@@ -190,7 +190,7 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/extmod/moduheapq.c',
     'vendor/micropython/extmod/modutimeq.c',
     'vendor/micropython/extmod/utime_mphal.c',
-    'vendor/micropython/lib/mp-readline/readline.c',
+    'vendor/micropython/shared/readline/readline.c',
     'vendor/micropython/ports/unix/modos.c',
     'vendor/micropython/py/argcheck.c',
     'vendor/micropython/py/asmarm.c',
@@ -317,7 +317,7 @@ SOURCE_UNIX = [
     'embed/unix/rng.c',
     'embed/unix/touch.c',
     'embed/unix/usb.c',
-    'vendor/micropython/lib/utils/gchelper_generic.c',
+    'vendor/micropython/shared/runtime/gchelper_generic.c',
     'vendor/micropython/ports/unix/alloc.c',
     'vendor/micropython/ports/unix/gccollect.c',
     'vendor/micropython/ports/unix/input.c',
