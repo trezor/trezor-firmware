@@ -1,4 +1,4 @@
-use core::convert::TryFrom;
+use core::convert::{TryFrom, TryInto};
 
 use crate::{
     error::Error,
@@ -15,6 +15,7 @@ use crate::{
 
 use super::{
     defs::{FieldDef, FieldType, MsgDef},
+    error,
     obj::MsgObj,
     zigzag,
 };
@@ -28,7 +29,7 @@ pub extern "C" fn protobuf_len(obj: Obj) -> Obj {
 
         Encoder.encode_message(stream, &obj.def(), &obj)?;
 
-        Ok(stream.len.into())
+        Ok(stream.len.try_into()?)
     })
 }
 
@@ -46,7 +47,7 @@ pub extern "C" fn protobuf_encode(buf: Obj, obj: Obj) -> Obj {
 
         Encoder.encode_message(stream, &obj.def(), &obj)?;
 
-        Ok(stream.len().into())
+        Ok(stream.len().try_into()?)
     })
 }
 
@@ -220,7 +221,7 @@ impl<'a> OutputStream for BufferStream<'a> {
                 *pos += len;
                 buf.copy_from_slice(val);
             })
-            .ok_or(Error::Missing)
+            .ok_or_else(error::end_of_buffer)
     }
 
     fn write_byte(&mut self, val: u8) -> Result<(), Error> {
@@ -231,6 +232,6 @@ impl<'a> OutputStream for BufferStream<'a> {
                 *pos += 1;
                 *buf = val;
             })
-            .ok_or(Error::Missing)
+            .ok_or_else(error::end_of_buffer)
     }
 }

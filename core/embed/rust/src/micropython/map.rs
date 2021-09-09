@@ -5,7 +5,7 @@ use crate::{
     micropython::{obj::Obj, qstr::Qstr},
 };
 
-use super::ffi;
+use super::{ffi, runtime::catch_exception};
 
 pub type Map = ffi::mp_map_t;
 pub type MapElem = ffi::mp_map_elem_t;
@@ -42,20 +42,24 @@ impl Map {
 impl Map {
     pub fn from_fixed<'a>(table: &'a [MapElem]) -> MapRef<'a> {
         let mut map = MaybeUninit::uninit();
-        // SAFETY: `mp_map_init` completely initializes all fields of `map`.
+        // SAFETY: `mp_map_init_fixed_table` completely initializes all fields of `map`.
         unsafe {
+            // EXCEPTION: Does not raise.
             ffi::mp_map_init_fixed_table(map.as_mut_ptr(), table.len(), table.as_ptr().cast());
             MapRef::new(map.assume_init())
         }
     }
 
-    pub fn with_capacity(capacity: usize) -> Self {
+    pub fn with_capacity(capacity: usize) -> Result<Self, Error> {
         let mut map = MaybeUninit::uninit();
         // SAFETY: `mp_map_init` completely initializes all fields of `map`, allocating
         // the backing storage for `capacity` items on the heap.
         unsafe {
-            ffi::mp_map_init(map.as_mut_ptr(), capacity);
-            map.assume_init()
+            // EXCEPTION: Will raise if allocation fails.
+            catch_exception(|| {
+                ffi::mp_map_init(map.as_mut_ptr(), capacity);
+            })?;
+            Ok(map.assume_init())
         }
     }
 
@@ -86,18 +90,19 @@ impl Map {
         //    cast to mut ptr is therefore safe.
         unsafe {
             let map = self as *const Self as *mut Self;
+            // EXCEPTION: Does not raise for MP_MAP_LOOKUP.
             let elem = ffi::mp_map_lookup(map, index, ffi::_mp_map_lookup_kind_t_MP_MAP_LOOKUP)
                 .as_ref()
-                .ok_or(Error::Missing)?;
+                .ok_or(Error::KeyError(index))?;
             Ok(elem.value)
         }
     }
 
-    pub fn set(&mut self, index: impl Into<Obj>, value: impl Into<Obj>) {
+    pub fn set(&mut self, index: impl Into<Obj>, value: impl Into<Obj>) -> Result<(), Error> {
         self.set_obj(index.into(), value.into())
     }
 
-    pub fn set_obj(&mut self, index: Obj, value: Obj) {
+    pub fn set_obj(&mut self, index: Obj, value: Obj) -> Result<(), Error> {
         // SAFETY:
         //  - `mp_map_lookup` with `_mp_map_lookup_kind_t_MP_MAP_LOOKUP_ADD_IF_NOT_FOUND
         //    returns a pointer to a `mp_map_elem_t` value with a lifetime valid for the
@@ -107,15 +112,19 @@ impl Map {
         //    replace it.
         unsafe {
             let map = self as *mut Self;
-            let elem = ffi::mp_map_lookup(
-                map,
-                index,
-                ffi::_mp_map_lookup_kind_t_MP_MAP_LOOKUP_ADD_IF_NOT_FOUND,
-            )
+            // EXCEPTION: Will raise if allocation fails.
+            let elem = catch_exception(|| {
+                ffi::mp_map_lookup(
+                    map,
+                    index,
+                    ffi::_mp_map_lookup_kind_t_MP_MAP_LOOKUP_ADD_IF_NOT_FOUND,
+                )
+            })?
             .as_mut()
             .unwrap();
             elem.value = value;
         }
+        Ok(())
     }
 
     pub fn delete(&mut self, index: impl Into<Obj>) {
@@ -125,6 +134,7 @@ impl Map {
     pub fn delete_obj(&mut self, index: Obj) {
         unsafe {
             let map = self as *mut Self;
+            // EXCEPTION: Does not raise for MP_MAP_LOOKUP_REMOVE_IF_FOUND.
             ffi::mp_map_lookup(
                 map,
                 index,
@@ -134,9 +144,9 @@ impl Map {
     }
 }
 
-impl Clone for Map {
-    fn clone(&self) -> Self {
-        let mut map = Self::with_capacity(self.len());
+impl Map {
+    pub fn try_clone(&self) -> Result<Self, Error> {
+        let mut map = Self::with_capacity(self.len())?;
         unsafe {
             ptr::copy_nonoverlapping(self.table, map.table, self.len());
         }
@@ -144,13 +154,7 @@ impl Clone for Map {
         map.set_all_keys_are_qstrs(self.all_keys_are_qstrs());
         map.set_is_ordered(self.is_ordered());
         map.set_is_fixed(0);
-        map
-    }
-}
-
-impl Default for Map {
-    fn default() -> Self {
-        Self::with_capacity(0)
+        Ok(map)
     }
 }
 

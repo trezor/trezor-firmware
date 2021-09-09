@@ -7,6 +7,8 @@ use crate::{
     util,
 };
 
+use super::error;
+
 use super::{
     defs::{self, FieldDef, FieldType, MsgDef},
     obj::{MsgDefObj, MsgObj},
@@ -17,8 +19,8 @@ use super::{
 pub extern "C" fn protobuf_type_for_name(name: Obj) -> Obj {
     util::try_or_raise(|| {
         let name = Qstr::try_from(name)?;
-        let def = MsgDef::for_name(name.to_u16()).ok_or(Error::Missing)?;
-        let obj = MsgDefObj::alloc(def).into();
+        let def = MsgDef::for_name(name.to_u16()).ok_or_else(|| Error::KeyError(name.into()))?;
+        let obj = MsgDefObj::alloc(def)?.into();
         Ok(obj)
     })
 }
@@ -27,8 +29,8 @@ pub extern "C" fn protobuf_type_for_name(name: Obj) -> Obj {
 pub extern "C" fn protobuf_type_for_wire(wire_id: Obj) -> Obj {
     util::try_or_raise(|| {
         let wire_id = u16::try_from(wire_id)?;
-        let def = MsgDef::for_wire_id(wire_id).ok_or(Error::Missing)?;
-        let obj = MsgDefObj::alloc(def).into();
+        let def = MsgDef::for_wire_id(wire_id).ok_or_else(|| Error::KeyError(wire_id.into()))?;
+        let obj = MsgDefObj::alloc(def)?.into();
         Ok(obj)
     })
 }
@@ -45,7 +47,7 @@ pub extern "C" fn protobuf_decode(buf: Obj, msg_def: Obj, enable_experimental: O
             // explicitly allowed. Messages can also mark certain fields as
             // experimental (not the whole message). This is enforced during the
             // decoding.
-            return Err(Error::InvalidType);
+            return Err(error::experimental_not_enabled());
         }
 
         let stream = &mut InputStream::new(&buf);
@@ -70,7 +72,7 @@ impl Decoder {
         stream: &mut InputStream,
         msg: &MsgDef,
     ) -> Result<Obj, Error> {
-        let mut obj = self.empty_message(msg);
+        let mut obj = self.empty_message(msg)?;
         // SAFETY: We assume that `obj` is not aliased here.
         let map = unsafe { Gc::as_mut(&mut obj) }.map_mut();
         self.decode_fields_into(stream, msg, map)?;
@@ -82,11 +84,11 @@ impl Decoder {
     /// Create a new message instance and fill it from `values`, handling the
     /// default and required fields correctly.
     pub fn message_from_values(&self, values: &Map, msg: &MsgDef) -> Result<Obj, Error> {
-        let mut obj = self.empty_message(msg);
+        let mut obj = self.empty_message(msg)?;
         // SAFETY: We assume that `obj` is not aliased here.
         let map = unsafe { Gc::as_mut(&mut obj) }.map_mut();
         for elem in values.elems() {
-            map.set(elem.key, elem.value);
+            map.set(elem.key, elem.value)?;
         }
         self.decode_defaults_into(msg, map)?;
         self.assign_required_into(msg, map)?;
@@ -95,7 +97,7 @@ impl Decoder {
 
     /// Allocate the backing message object with enough pre-allocated space for
     /// all fields.
-    pub fn empty_message(&self, msg: &MsgDef) -> Gc<MsgObj> {
+    pub fn empty_message(&self, msg: &MsgDef) -> Result<Gc<MsgObj>, Error> {
         MsgObj::alloc_with_capacity(msg.fields.len(), msg)
     }
 
@@ -126,14 +128,14 @@ impl Decoder {
                             // SAFETY: We assume that `list` is not aliased here. This holds for
                             // uses in `message_from_stream` and `message_from_values`, because we
                             // start with an empty `Map` and fill with unique lists.
-                            unsafe { Gc::as_mut(&mut list) }.append(field_value);
+                            unsafe { Gc::as_mut(&mut list) }.append(field_value)?;
                         } else {
-                            let list = List::alloc(&[field_value]);
-                            map.set(field_name, list);
+                            let list = List::alloc(&[field_value])?;
+                            map.set(field_name, list)?;
                         }
                     } else {
                         // Singular field, assign the value directly.
-                        map.set(field_name, field_value);
+                        map.set(field_name, field_value)?;
                     }
                 }
                 None => {
@@ -148,7 +150,7 @@ impl Decoder {
                             stream.read(len)?;
                         }
                         _ => {
-                            return Err(Error::InvalidType);
+                            return Err(error::unknown_field_type());
                         }
                     }
                 }
@@ -169,7 +171,9 @@ impl Decoder {
         // We need to look to the field descriptor to know how to interpret the value
         // after the field tag.
         while let Ok(field_tag) = stream.read_byte() {
-            let field = msg.field(field_tag).ok_or(Error::Missing)?;
+            let field = msg
+                .field(field_tag)
+                .ok_or_else(|| Error::KeyError(field_tag.into()))?;
             let field_name = Qstr::from(field.name);
             if map.contains_key(field_name) {
                 // Field already has a value assigned, skip it.
@@ -183,13 +187,13 @@ impl Decoder {
                         stream.read(len)?;
                     }
                     _ => {
-                        return Err(Error::InvalidType);
+                        return Err(error::unknown_field_type());
                     }
                 }
             } else {
                 // Decode the value and assign it.
                 let field_value = self.decode_field(stream, field)?;
-                map.set(field_name, field_value);
+                map.set(field_name, field_value)?;
             }
         }
         Ok(())
@@ -206,14 +210,14 @@ impl Decoder {
             }
             if field.is_required() {
                 // Required field is missing, abort.
-                return Err(Error::Missing);
+                return Err(error::missing_required_field(field_name));
             }
             if field.is_repeated() {
                 // Optional repeated field, set to a new empty list.
-                map.set(field_name, List::alloc(&[]));
+                map.set(field_name, List::alloc(&[])?)?;
             } else {
                 // Optional singular field, set to None.
-                map.set(field_name, Obj::const_none());
+                map.set(field_name, Obj::const_none())?;
             }
         }
         Ok(())
@@ -222,14 +226,14 @@ impl Decoder {
     /// Decode one field value from the input stream.
     fn decode_field(&self, stream: &mut InputStream, field: &FieldDef) -> Result<Obj, Error> {
         if field.is_experimental() && !self.enable_experimental {
-            return Err(Error::InvalidType);
+            return Err(error::experimental_not_enabled());
         }
         let num = stream.read_uvarint()?;
         match field.get_type() {
-            FieldType::UVarInt => Ok(num.into()),
+            FieldType::UVarInt => Ok(num.try_into()?),
             FieldType::SVarInt => {
                 let signed_int = zigzag::to_signed(num);
-                Ok(signed_int.into())
+                Ok(signed_int.try_into()?)
             }
             FieldType::Bool => {
                 let boolean = num != 0;
@@ -238,20 +242,21 @@ impl Decoder {
             FieldType::Bytes => {
                 let buf_len = num.try_into()?;
                 let buf = stream.read(buf_len)?;
-                Ok(buf.into())
+                buf.try_into()
             }
             FieldType::String => {
                 let buf_len = num.try_into()?;
                 let buf = stream.read(buf_len)?;
-                let unicode = str::from_utf8(buf).map_err(|_| Error::InvalidType)?;
-                Ok(unicode.into())
+                let unicode =
+                    str::from_utf8(buf).map_err(|_| error::invalid_value(field.name.into()))?;
+                unicode.try_into()
             }
             FieldType::Enum(enum_type) => {
                 let enum_val = num.try_into()?;
                 if enum_type.values.contains(&enum_val) {
                     Ok(enum_val.into())
                 } else {
-                    Err(Error::InvalidType)
+                    Err(error::invalid_value(field.name.into()))
                 }
             }
             FieldType::Msg(msg_type) => {
@@ -277,7 +282,7 @@ impl<'a> InputStream<'a> {
         let buf = self
             .buf
             .get(self.pos..self.pos + len)
-            .ok_or(Error::Missing)?;
+            .ok_or_else(error::end_of_buffer)?;
         self.pos += len;
         Ok(Self::new(buf))
     }
@@ -286,13 +291,17 @@ impl<'a> InputStream<'a> {
         let buf = self
             .buf
             .get(self.pos..self.pos + len)
-            .ok_or(Error::Missing)?;
+            .ok_or_else(error::end_of_buffer)?;
         self.pos += len;
         Ok(buf)
     }
 
     pub fn read_byte(&mut self) -> Result<u8, Error> {
-        let val = self.buf.get(self.pos).copied().ok_or(Error::Missing)?;
+        let val = self
+            .buf
+            .get(self.pos)
+            .copied()
+            .ok_or_else(error::end_of_buffer)?;
         self.pos += 1;
         Ok(val)
     }

@@ -1,19 +1,26 @@
 use core::mem::MaybeUninit;
 
-use cstr_core::CStr;
+use crate::error::Error;
 
 use super::{ffi, obj::Obj};
 
-pub fn raise_value_error(msg: &'static CStr) -> ! {
+/// Raise a micropython exception via NLR jump.
+/// Jumps directly out of the context without running any destructors,
+/// finalizers, etc. This is very likely to break a lot of Rust's assumptions.
+/// Should only be called in places where you really don't care anymore.
+pub unsafe fn raise_exception(err: Error) -> ! {
     unsafe {
-        ffi::mp_raise_ValueError(msg.as_ptr());
+        // SAFETY:
+        // - argument must be an exception instance
+        // (err.to_obj() should return the right thing)
+        ffi::nlr_jump(err.to_obj().as_ptr());
     }
     panic!();
 }
 
 /// Execute `func` while catching MicroPython exceptions. Returns `Ok` in the
 /// successful case, and `Err` with the caught `Obj` in case of a raise.
-pub fn except<F, T>(mut func: F) -> Result<T, Obj>
+pub fn catch_exception<F, T>(mut func: F) -> Result<T, Error>
 where
     F: FnMut() -> T,
 {
@@ -29,15 +36,16 @@ where
         let mut wrapper = || {
             result = MaybeUninit::new(func());
         };
-        // `wrapper` is a closure, and to pass it over the FFI, we split it into a function
-        // pointer, and a user-data pointer. `ffi::trezor_obj_call_protected` then calls
-        // the `callback` with the `argument`.
+        // `wrapper` is a closure, and to pass it over the FFI, we split it into a
+        // function pointer, and a user-data pointer.
+        // `ffi::trezor_obj_call_protected` then calls the `callback` with the
+        // `argument`.
         let (callback, argument) = split_func_into_callback_and_argument(&mut wrapper);
         let exception = ffi::trezor_obj_call_protected(Some(callback), argument);
         if exception == Obj::const_none() {
             Ok(result.assume_init())
         } else {
-            Err(exception)
+            Err(Error::CaughtException(exception))
         }
     }
 }
@@ -73,15 +81,14 @@ mod tests {
 
     #[test]
     fn except_returns_ok_on_no_exception() {
-        let result = except(|| 1);
+        let result = catch_exception(|| 1);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), 1);
     }
 
     #[test]
-    fn except_catches_value_error() {
-        let msg = unsafe { CStr::from_bytes_with_nul_unchecked(b"msg\0") };
-        let result = except(|| raise_value_error(&msg));
+    fn except_catches_raised() {
+        let result = catch_exception(|| raise_exception(Error::TypeError));
         assert!(result.is_err());
     }
 }

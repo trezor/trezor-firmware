@@ -111,7 +111,7 @@ def _wrap_protobuf_load(
         if __debug__:
             log.exception(__name__, e)
         if e.args:
-            raise DataError("Failed to decode message: {}".format(e.args[0]))
+            raise DataError("Failed to decode message: " + " ".join(e.args))
         else:
             raise DataError("Failed to decode message")
 

@@ -2,25 +2,29 @@ use core::convert::TryFrom;
 
 use crate::error::Error;
 
-use super::{ffi, gc::Gc, obj::Obj};
+use super::{ffi, gc::Gc, obj::Obj, runtime::catch_exception};
 
 pub type List = ffi::mp_obj_list_t;
 
 impl List {
-    pub fn alloc(values: &[Obj]) -> Gc<Self> {
+    pub fn alloc(values: &[Obj]) -> Result<Gc<Self>, Error> {
         // SAFETY: Although `values` are copied into the new list and not mutated,
         // `mp_obj_new_list` is taking them through a mut pointer.
-        unsafe {
+        // EXCEPTION: Will raise if allocation fails.
+        catch_exception(|| unsafe {
             let list = ffi::mp_obj_new_list(values.len(), values.as_ptr() as *mut Obj);
             Gc::from_raw(list.as_ptr().cast())
-        }
+        })
     }
 
-    pub fn append(&mut self, value: Obj) {
+    pub fn append(&mut self, value: Obj) -> Result<(), Error> {
         unsafe {
             let ptr = self as *mut Self;
             let list = Obj::from_ptr(ptr.cast());
-            ffi::mp_obj_list_append(list, value);
+            // EXCEPTION: Will raise if allocation fails.
+            catch_exception(|| {
+                ffi::mp_obj_list_append(list, value);
+            })
         }
     }
 }
@@ -44,7 +48,7 @@ impl TryFrom<Obj> for Gc<List> {
             let this = unsafe { Gc::from_raw(value.as_ptr().cast()) };
             Ok(this)
         } else {
-            Err(Error::InvalidType)
+            Err(Error::TypeError)
         }
     }
 }
