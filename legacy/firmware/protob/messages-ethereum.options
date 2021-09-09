@@ -11,7 +11,7 @@ EthereumSignTxEIP1559.nonce              max_size:32
 EthereumSignTxEIP1559.max_gas_fee        max_size:32
 EthereumSignTxEIP1559.max_priority_fee   max_size:32
 EthereumSignTxEIP1559.gas_limit          max_size:32
-EthereumSignTxEIP1559.to                 max_size:32
+EthereumSignTxEIP1559.to                 max_size:43
 EthereumSignTxEIP1559.value              max_size:32
 EthereumSignTxEIP1559.data_initial_chunk max_size:1024
 EthereumSignTxEIP1559.access_list        max_count:8
