@@ -38,7 +38,7 @@
 
 #include <string.h>
 
-#define WORDS_PER_BLOCK ((MICROPY_BYTES_PER_GC_BLOCK) / BYTES_PER_WORD)
+#define WORDS_PER_BLOCK ((MICROPY_BYTES_PER_GC_BLOCK) / MP_BYTES_PER_OBJ_WORD)
 #define BYTES_PER_BLOCK (MICROPY_BYTES_PER_GC_BLOCK)
 
 // ATB = allocation table byte
@@ -279,7 +279,7 @@ typedef struct _mp_obj_closure_t {
 } mp_obj_closure_t;
 
 extern const mp_obj_type_t mp_type_bound_meth;
-extern const mp_obj_type_t closure_type;
+extern const mp_obj_type_t mp_type_closure;
 extern const mp_obj_type_t mp_type_cell;
 extern const mp_obj_type_t mod_trezorio_WebUSB_type;
 extern const mp_obj_type_t mod_trezorio_USB_type;
@@ -576,7 +576,7 @@ void dump_value_opt(FILE *out, mp_const_obj_t value, bool eval_short) {
     dump_bound_method(out, value);
   }
 
-  else if (mp_obj_is_type(value, &closure_type)) {
+  else if (mp_obj_is_type(value, &mp_type_closure)) {
     dump_closure(out, value);
   }
 
