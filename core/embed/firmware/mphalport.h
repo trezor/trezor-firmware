@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "lib/utils/interrupt_char.h"
+#include "shared/runtime/interrupt_char.h"
 
 static inline mp_uint_t mp_hal_ticks_cpu(void) { return 0; }
 

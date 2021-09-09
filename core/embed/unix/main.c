@@ -140,9 +140,9 @@ STATIC int execute_from_lexer(int source_kind, const void *source,
       // execute it
       mp_call_function_0(module_fun);
       // check for pending exception
-      if (MP_STATE_VM(mp_pending_exception) != MP_OBJ_NULL) {
-        mp_obj_t obj = MP_STATE_VM(mp_pending_exception);
-        MP_STATE_VM(mp_pending_exception) = MP_OBJ_NULL;
+      if (MP_STATE_MAIN_THREAD(mp_pending_exception) != MP_OBJ_NULL) {
+        mp_obj_t obj = MP_STATE_MAIN_THREAD(mp_pending_exception);
+        MP_STATE_MAIN_THREAD(mp_pending_exception) = MP_OBJ_NULL;
         nlr_raise(obj);
       }
     }
@@ -159,7 +159,7 @@ STATIC int execute_from_lexer(int source_kind, const void *source,
 }
 
 #if MICROPY_USE_READLINE == 1
-#include "lib/mp-readline/readline.h"
+#include "shared/readline/readline.h"
 #else
 STATIC char *strjoin(const char *s1, int sep_char, const char *s2) {
   int l1 = strlen(s1);

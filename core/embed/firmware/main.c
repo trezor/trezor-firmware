@@ -23,7 +23,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "lib/utils/pyexec.h"
 #include "py/compile.h"
 #include "py/gc.h"
 #include "py/mperrno.h"
@@ -31,6 +30,7 @@
 #include "py/repl.h"
 #include "py/runtime.h"
 #include "py/stackctrl.h"
+#include "shared/runtime/pyexec.h"
 
 #include "ports/stm32/gccollect.h"
 #include "ports/stm32/pendsv.h"
