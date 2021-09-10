@@ -86,7 +86,7 @@ impl MsgObj {
     }
 
     fn setattr(&mut self, attr: Qstr, value: Obj) -> Result<(), Error> {
-        if value == Obj::const_null() {
+        if value.is_null() {
             // this would be a delattr
             return Err(Error::TypeError);
         }
@@ -131,7 +131,7 @@ unsafe extern "C" fn msg_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut Obj)
         let attr = Qstr::from_u16(attr as _);
 
         unsafe {
-            if dest.read() == Obj::const_null() {
+            if dest.read().is_null() {
                 // Load attribute
                 dest.write(this.getattr(attr)?);
             } else {
@@ -204,7 +204,8 @@ unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut 
         let this = Gc::<MsgDefObj>::try_from(self_in)?;
         let attr = Qstr::from_u16(attr as _);
 
-        if unsafe { dest.read() } != Obj::const_null() {
+        let arg = unsafe { dest.read() };
+        if !arg.is_null() {
             // this would be a setattr
             return Err(Error::TypeError);
         }

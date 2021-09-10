@@ -57,6 +57,11 @@ impl Obj {
         // micropython/py/obj.h mp_obj_is_obj
         self.as_bits() & 3 == 0
     }
+
+    pub fn is_null(self) -> bool {
+        // obj == NULL
+        self.as_bits() == 0
+    }
 }
 
 impl Obj {
