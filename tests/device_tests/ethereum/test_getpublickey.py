@@ -17,29 +17,20 @@
 import pytest
 
 from trezorlib import ethereum
-from trezorlib.tools import H_
+from trezorlib.tools import parse_path
 
-from ...common import MNEMONIC12
+from ...common import parametrize_using_common_fixtures
+
+pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 
 
-@pytest.mark.altcoin
-@pytest.mark.ethereum
-class TestMsgEthereumGetPublicKey:
-    @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-    def test_ethereum_getpublickey(self, client):
-        res = ethereum.get_public_node(client, [H_(44), H_(60), H_(0)])
-        assert res.node.depth == 3
-        assert res.node.fingerprint == 0xC10CFFDA
-        assert res.node.child_num == 0x80000000
-        assert (
-            res.node.chain_code.hex()
-            == "813d9feda6421f97a6472ff36679aa9e211ff88f6bdee51093af313ce628087e"
-        )
-        assert (
-            res.node.public_key.hex()
-            == "0318c22dedce01caca32354f98428e3af06a452f3fa84e6af8f1b6aa362affa641"
-        )
-        assert (
-            res.xpub
-            == "xpub6D54vV8eUYHMVBZCnz4SLjuiQngXURVCGKKGoJrWUDRegdMByLTJKfRs64q3UKiQCsSHJPtCQehTvERczdghS7gb8oedWSyNDtBU1zYDJtb"
-        )
+@parametrize_using_common_fixtures("ethereum/getpublickey.json")
+def test_ethereum_getpublickey(client, parameters, result):
+    path = parse_path(parameters["path"])
+    res = ethereum.get_public_node(client, path)
+    assert res.node.depth == len(path)
+    assert res.node.fingerprint == result["fingerprint"]
+    assert res.node.child_num == result["child_num"]
+    assert res.node.chain_code.hex() == result["chain_code"]
+    assert res.node.public_key.hex() == result["public_key"]
+    assert res.xpub == result["xpub"]

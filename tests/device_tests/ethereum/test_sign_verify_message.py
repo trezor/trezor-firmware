@@ -24,9 +24,7 @@ from ...common import parametrize_using_common_fixtures
 pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 
 
-@parametrize_using_common_fixtures(
-    "ethereum/signmessage.json",
-)
+@parametrize_using_common_fixtures("ethereum/signmessage.json")
 def test_signmessage(client, parameters, result):
     res = ethereum.sign_message(
         client, parse_path(parameters["path"]), parameters["msg"]
@@ -35,9 +33,7 @@ def test_signmessage(client, parameters, result):
     assert res.signature.hex() == result["sig"]
 
 
-@parametrize_using_common_fixtures(
-    "ethereum/verifymessage.json",
-)
+@parametrize_using_common_fixtures("ethereum/verifymessage.json")
 def test_verify(client, parameters, result):
     res = ethereum.verify_message(
         client,
