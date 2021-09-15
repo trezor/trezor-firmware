@@ -37,12 +37,12 @@ def test_signtx(client, parameters, result):
         sig_v, sig_r, sig_s = ethereum.sign_tx(
             client,
             n=parse_path(parameters["path"]),
-            nonce=parameters["nonce"],
-            gas_price=parameters["gas_price"],
-            gas_limit=parameters["gas_limit"],
+            nonce=int(parameters["nonce"], 16),
+            gas_price=int(parameters["gas_price"], 16),
+            gas_limit=int(parameters["gas_limit"], 16),
             to=parameters["to_address"],
             chain_id=parameters["chain_id"],
-            value=parameters["value"],
+            value=int(parameters["value"], 16),
             tx_type=parameters["tx_type"],
             data=bytes.fromhex(parameters["data"]),
         )
@@ -54,27 +54,25 @@ def test_signtx(client, parameters, result):
     assert sig_v == result["sig_v"]
 
 
-@parametrize_using_common_fixtures(
-    "ethereum/sign_tx_eip1559.json",
-)
+@parametrize_using_common_fixtures("ethereum/sign_tx_eip1559.json")
 @pytest.mark.skip_t1
 def test_signtx_eip1559(client, parameters, result):
     with client:
         sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
             client,
             n=parse_path(parameters["path"]),
-            nonce=parameters["nonce"],
-            gas_limit=parameters["gas_limit"],
-            max_gas_fee=parameters["max_gas_fee"],
-            max_priority_fee=parameters["max_priority_fee"],
+            nonce=int(parameters["nonce"], 16),
+            gas_limit=int(parameters["gas_limit"], 16),
+            max_gas_fee=int(parameters["max_gas_fee"], 16),
+            max_priority_fee=int(parameters["max_priority_fee"], 16),
             to=parameters["to_address"],
             chain_id=parameters["chain_id"],
-            value=parameters["value"],
+            value=int(parameters["value"], 16),
             data=bytes.fromhex(parameters["data"]),
         )
 
-    assert sig_r.hex() == result["sig_r_hex"]
-    assert sig_s.hex() == result["sig_s_hex"]
+    assert sig_r.hex() == result["sig_r"]
+    assert sig_s.hex() == result["sig_s"]
     assert sig_v == result["sig_v"]
 
 

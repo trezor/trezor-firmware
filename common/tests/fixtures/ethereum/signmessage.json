@@ -7,7 +7,7 @@
         {
             "parameters": {
                 "msg": "This is an example of a signed message.",
-                "path": "44'/60'/0'/0/0"
+                "path": "m/44'/60'/0'/0/0"
             },
             "result": {
                 "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
@@ -17,7 +17,7 @@
         {
             "parameters": {
                 "msg": "VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!VeryLongMessage!",
-                "path": "44'/60'/0'/0/0"
+                "path": "m/44'/60'/0'/0/0"
             },
             "result": {
                 "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
@@ -27,7 +27,7 @@
         {
             "parameters": {
                 "msg": "MsgLenIs9",
-                "path": "44'/60'/0'/0/0"
+                "path": "m/44'/60'/0'/0/0"
             },
             "result": {
                 "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
@@ -37,7 +37,7 @@
         {
             "parameters": {
                 "msg": "MsgLenIs10",
-                "path": "44'/60'/0'/0/0"
+                "path": "m/44'/60'/0'/0/0"
             },
             "result": {
                 "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
@@ -47,7 +47,7 @@
         {
             "parameters": {
                 "msg": "MsgLenIs11!",
-                "path": "44'/60'/0'/0/0"
+                "path": "m/44'/60'/0'/0/0"
             },
             "result": {
                 "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
@@ -57,7 +57,7 @@
         {
             "parameters": {
                 "msg": "This message has length 99!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
-                "path": "44'/60'/0'/0/0"
+                "path": "m/44'/60'/0'/0/0"
             },
             "result": {
                 "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
@@ -67,7 +67,7 @@
         {
             "parameters": {
                 "msg": "This message has length 100!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
-                "path": "44'/60'/0'/0/0"
+                "path": "m/44'/60'/0'/0/0"
             },
             "result": {
                 "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
@@ -77,7 +77,7 @@
         {
             "parameters": {
                 "msg": "This message has length 101!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
-                "path": "44'/60'/0'/0/0"
+                "path": "m/44'/60'/0'/0/0"
             },
             "result": {
                 "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
