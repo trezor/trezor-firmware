@@ -61,22 +61,21 @@ def hash_tx(data: bytes) -> bytes:
 
 def _check_error_message(value: bytes, model: str, message: str):
     if model != "1":
-        if value is None:
-            assert message == "Failed to decode message: Missing"
-        else:
-            assert message == "Provided prev_hash is invalid."
-        return
+        assert message == "Provided prev_hash is invalid."
 
     # T1 has several possible errors
-    if value is None:
-        assert message.endswith("missing required field")
     elif len(value) > 32:
         assert message.endswith("bytes overflow")
     else:
         assert message.endswith("Encountered invalid prevhash")
 
 
-@pytest.mark.parametrize("prev_hash", (None, b"", b"x", b"hello world", b"x" * 33))
+with_bad_prevhashes = pytest.mark.parametrize(
+    "prev_hash", (b"", b"x", b"hello world", b"x" * 33)
+)
+
+
+@with_bad_prevhashes
 def test_invalid_prev_hash(client, prev_hash):
     inp1 = messages.TxInputType(
         address_n=tools.parse_path("m/44h/0h/0h/0/0"),
@@ -96,7 +95,7 @@ def test_invalid_prev_hash(client, prev_hash):
     _check_error_message(prev_hash, client.features.model, e.value.message)
 
 
-@pytest.mark.parametrize("prev_hash", (None, b"", b"x", b"hello world", b"x" * 33))
+@with_bad_prevhashes
 def test_invalid_prev_hash_attack(client, prev_hash):
     # prepare input with a valid prev-hash
     inp1 = messages.TxInputType(
@@ -138,7 +137,7 @@ def test_invalid_prev_hash_attack(client, prev_hash):
     _check_error_message(prev_hash, client.features.model, e.value.message)
 
 
-@pytest.mark.parametrize("prev_hash", (None, b"", b"x", b"hello world", b"x" * 33))
+@with_bad_prevhashes
 def test_invalid_prev_hash_in_prevtx(client, prev_hash):
     cache = TxCache("Bitcoin")
     prev_tx = cache[TXHASH_157041]
