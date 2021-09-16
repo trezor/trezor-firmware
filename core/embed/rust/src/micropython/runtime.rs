@@ -2,7 +2,7 @@ use core::mem::MaybeUninit;
 
 use crate::error::Error;
 
-use super::{ffi, obj::Obj};
+use super::ffi;
 
 /// Raise a micropython exception via NLR jump.
 /// Jumps directly out of the context without running any destructors,
@@ -34,7 +34,7 @@ where
         // boundary, so we assign it explicitly in `wrapper`.
         let mut result = MaybeUninit::zeroed();
         let mut wrapper = || {
-            result = MaybeUninit::new(func());
+            result.write(func());
         };
         // `wrapper` is a closure, and to pass it over the FFI, we split it into a
         // function pointer, and a user-data pointer.
@@ -42,7 +42,7 @@ where
         // `argument`.
         let (callback, argument) = split_func_into_callback_and_argument(&mut wrapper);
         let exception = ffi::trezor_obj_call_protected(Some(callback), argument);
-        if exception == Obj::const_none() {
+        if exception.is_null() {
             Ok(result.assume_init())
         } else {
             Err(Error::CaughtException(exception))
