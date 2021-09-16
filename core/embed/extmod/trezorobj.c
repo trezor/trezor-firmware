@@ -71,7 +71,7 @@ mp_obj_t trezor_obj_call_protected(void (*func)(void *), void *arg) {
   if (nlr_push(&nlr) == 0) {
     (*func)(arg);
     nlr_pop();
-    return mp_const_none;
+    return NULL;
   } else {
     return MP_OBJ_FROM_PTR(nlr.ret_val);
   }
