@@ -22,7 +22,7 @@ use super::{
 
 #[no_mangle]
 pub extern "C" fn protobuf_len(obj: Obj) -> Obj {
-    util::try_or_raise(|| {
+    let block = || {
         let obj = Gc::<MsgObj>::try_from(obj)?;
 
         let stream = &mut CounterStream { len: 0 };
@@ -30,12 +30,13 @@ pub extern "C" fn protobuf_len(obj: Obj) -> Obj {
         Encoder.encode_message(stream, &obj.def(), &obj)?;
 
         Ok(stream.len.try_into()?)
-    })
+    };
+    unsafe { util::try_or_raise(block) }
 }
 
 #[no_mangle]
 pub extern "C" fn protobuf_encode(buf: Obj, obj: Obj) -> Obj {
-    util::try_or_raise(|| {
+    let block = || {
         let obj = Gc::<MsgObj>::try_from(obj)?;
 
         // We assume there are no other refs into `buf` at this point. This specifically
@@ -46,7 +47,8 @@ pub extern "C" fn protobuf_encode(buf: Obj, obj: Obj) -> Obj {
         Encoder.encode_message(stream, &obj.def(), &obj)?;
 
         Ok(stream.len().try_into()?)
-    })
+    };
+    unsafe { util::try_or_raise(block) }
 }
 
 pub struct Encoder;

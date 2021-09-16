@@ -126,7 +126,7 @@ impl TryFrom<Obj> for Gc<MsgObj> {
 }
 
 unsafe extern "C" fn msg_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut Obj) {
-    util::try_or_raise(|| {
+    let block = || {
         let mut this = Gc::<MsgObj>::try_from(self_in)?;
         let attr = Qstr::from_u16(attr as _);
 
@@ -142,7 +142,8 @@ unsafe extern "C" fn msg_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut Obj)
             }
             Ok(())
         }
-    })
+    };
+    unsafe { util::try_or_raise(block) }
 }
 
 #[repr(C)]
@@ -200,7 +201,7 @@ impl TryFrom<Obj> for Gc<MsgDefObj> {
 }
 
 unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut Obj) {
-    util::try_or_raise(|| {
+    let block = || {
         let this = Gc::<MsgDefObj>::try_from(self_in)?;
         let attr = Qstr::from_u16(attr as _);
 
@@ -242,7 +243,8 @@ unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut 
             }
         }
         Ok(())
-    });
+    };
+    unsafe { util::try_or_raise(block) }
 }
 
 unsafe extern "C" fn msg_def_obj_call(
@@ -251,25 +253,27 @@ unsafe extern "C" fn msg_def_obj_call(
     n_kw: usize,
     args: *const Obj,
 ) -> Obj {
-    util::try_with_args_and_kwargs_inline(n_args, n_kw, args, |_args, kwargs| {
+    let block = |_args: &[Obj], kwargs: &Map| {
         let this = Gc::<MsgDefObj>::try_from(self_in)?;
         let decoder = Decoder {
             enable_experimental: true,
         };
         let obj = decoder.message_from_values(kwargs, this.msg())?;
         Ok(obj)
-    })
+    };
+    unsafe { util::try_with_args_and_kwargs_inline(n_args, n_kw, args, block) }
 }
 
 unsafe extern "C" fn msg_def_obj_is_type_of(self_in: Obj, obj: Obj) -> Obj {
-    util::try_or_raise(|| {
+    let block = || {
         let this = Gc::<MsgDefObj>::try_from(self_in)?;
         let msg = Gc::<MsgObj>::try_from(obj);
         match msg {
             Ok(msg) if msg.msg_offset == this.def.offset => Ok(Obj::const_true()),
             _ => Ok(Obj::const_false()),
         }
-    })
+    };
+    unsafe { util::try_or_raise(block) }
 }
 
 static MSG_DEF_OBJ_IS_TYPE_OF_OBJ: ffi::mp_obj_fun_builtin_fixed_t =
