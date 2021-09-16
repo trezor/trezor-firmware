@@ -6,8 +6,10 @@ use super::ffi;
 
 /// Raise a micropython exception via NLR jump.
 /// Jumps directly out of the context without running any destructors,
-/// finalizers, etc. This is very likely to break a lot of Rust's assumptions.
-/// Should only be called in places where you really don't care anymore.
+/// finalizers, etc. This is very likely to break a lot of Rust's assumptions:
+/// in particular, _any_ jumping over Rust code is currently considered
+/// undefined. See full discussion at https://github.com/rust-lang/rfcs/issues/2625
+/// Should only be called at the boundary which would otherwise return to C.
 pub unsafe fn raise_exception(err: Error) -> ! {
     unsafe {
         // SAFETY:
@@ -88,7 +90,7 @@ mod tests {
 
     #[test]
     fn except_catches_raised() {
-        let result = catch_exception(|| raise_exception(Error::TypeError));
+        let result = catch_exception(|| unsafe { raise_exception(Error::TypeError) });
         assert!(result.is_err());
     }
 }

@@ -17,27 +17,29 @@ use super::{
 
 #[no_mangle]
 pub extern "C" fn protobuf_type_for_name(name: Obj) -> Obj {
-    util::try_or_raise(|| {
+    let block = || {
         let name = Qstr::try_from(name)?;
         let def = MsgDef::for_name(name.to_u16()).ok_or_else(|| Error::KeyError(name.into()))?;
         let obj = MsgDefObj::alloc(def)?.into();
         Ok(obj)
-    })
+    };
+    unsafe { util::try_or_raise(block) }
 }
 
 #[no_mangle]
 pub extern "C" fn protobuf_type_for_wire(wire_id: Obj) -> Obj {
-    util::try_or_raise(|| {
+    let block = || {
         let wire_id = u16::try_from(wire_id)?;
         let def = MsgDef::for_wire_id(wire_id).ok_or_else(|| Error::KeyError(wire_id.into()))?;
         let obj = MsgDefObj::alloc(def)?.into();
         Ok(obj)
-    })
+    };
+    unsafe { util::try_or_raise(block) }
 }
 
 #[no_mangle]
 pub extern "C" fn protobuf_decode(buf: Obj, msg_def: Obj, enable_experimental: Obj) -> Obj {
-    util::try_or_raise(|| {
+    let block = || {
         let buf = Buffer::try_from(buf)?;
         let def = Gc::<MsgDefObj>::try_from(msg_def)?;
         let enable_experimental = bool::try_from(enable_experimental)?;
@@ -57,7 +59,8 @@ pub extern "C" fn protobuf_decode(buf: Obj, msg_def: Obj, enable_experimental: O
 
         let obj = decoder.message_from_stream(stream, def.msg())?;
         Ok(obj)
-    })
+    };
+    unsafe { util::try_or_raise(block) }
 }
 
 pub struct Decoder {
