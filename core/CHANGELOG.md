@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## 2.4.2 [26th August 2021]
+## 2.4.2 [16th September 2021]
 
 ### Added
 - [emulator] Added option to dump detailed Micropython memory layout  [#1557]
