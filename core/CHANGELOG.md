@@ -4,6 +4,35 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2.4.2 [26th August 2021]
+
+### Added
+- [emulator] Added option to dump detailed Micropython memory layout  [#1557]
+- Support for Ethereum EIP1559 transactions  [#1604]
+- Re-enabled Firo support  [#1767]
+
+### Changed
+- Converted all remaining code to common layouts.  [#1545]
+- Memory optimization of BTC signing and CBOR decoding.  [#1581]
+- Cardano transaction parameters are now streamed into the device one by one instead of being sent as one large object  [#1683]
+- Thanks to transaction streaming, Cardano now supports larger transactions (tested with 62kB transactions, but supposedly even larger transactions are supported)  [#1683]
+- Refactor RLP codec for better clarity and some small memory savings.  [#1704]
+- Refer to `m/48'/...` multisig derivation paths as BIP-48 instead of Purpose48.  [#1744]
+
+### Removed
+- Removed support for Lisk  [#1765]
+
+### Fixed
+- Disable TT features (SD card, SBU, FAT) for T1 build.  [#1163]
+- It is no longer possible to sign Cardano transactions containing paths belonging to multiple accounts (except for Byron to Shelley migration)  [#1683]
+- Add new rpId to Binance's FIDO definition.  [#1705]
+- Don't use format strings in keyctl-proxy  [#1707]
+- Properly respond to USB events while on a paginated screen.  [#1708]
+
+### Incompatible changes
+- Due to transaction streaming in Cardano, it isn't possible to return the whole serialized transaction anymore. Instead the transaction hash, transaction witnesses and auxiliary data supplement are returned and the serialized transaction needs to be assembled by the client.  [#1683]
+
+
 ## 2.4.1 [14th July 2021]
 
 ### Added
@@ -389,6 +418,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1133]: https://github.com/trezor/trezor-firmware/issues/1133
 [#1139]: https://github.com/trezor/trezor-firmware/issues/1139
 [#1159]: https://github.com/trezor/trezor-firmware/issues/1159
+[#1163]: https://github.com/trezor/trezor-firmware/issues/1163
 [#1165]: https://github.com/trezor/trezor-firmware/pull/1165
 [#1167]: https://github.com/trezor/trezor-firmware/issues/1167
 [#1173]: https://github.com/trezor/trezor-firmware/pull/1173
@@ -421,8 +451,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1538]: https://github.com/trezor/trezor-firmware/issues/1538
 [#1540]: https://github.com/trezor/trezor-firmware/issues/1540
 [#1541]: https://github.com/trezor/trezor-firmware/issues/1541
+[#1545]: https://github.com/trezor/trezor-firmware/issues/1545
 [#1554]: https://github.com/trezor/trezor-firmware/issues/1554
+[#1557]: https://github.com/trezor/trezor-firmware/issues/1557
 [#1565]: https://github.com/trezor/trezor-firmware/issues/1565
+[#1581]: https://github.com/trezor/trezor-firmware/issues/1581
+[#1604]: https://github.com/trezor/trezor-firmware/issues/1604
 [#1606]: https://github.com/trezor/trezor-firmware/issues/1606
 [#1620]: https://github.com/trezor/trezor-firmware/issues/1620
 [#1647]: https://github.com/trezor/trezor-firmware/issues/1647
@@ -431,3 +465,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#1659]: https://github.com/trezor/trezor-firmware/issues/1659
 [#1671]: https://github.com/trezor/trezor-firmware/issues/1671
 [#1672]: https://github.com/trezor/trezor-firmware/issues/1672
+[#1683]: https://github.com/trezor/trezor-firmware/issues/1683
+[#1704]: https://github.com/trezor/trezor-firmware/issues/1704
+[#1705]: https://github.com/trezor/trezor-firmware/issues/1705
+[#1707]: https://github.com/trezor/trezor-firmware/issues/1707
+[#1708]: https://github.com/trezor/trezor-firmware/issues/1708
+[#1744]: https://github.com/trezor/trezor-firmware/issues/1744
+[#1765]: https://github.com/trezor/trezor-firmware/issues/1765
+[#1767]: https://github.com/trezor/trezor-firmware/issues/1767
