@@ -34,10 +34,14 @@ impl Error {
                 Error::AllocationFailed => ffi::mp_obj_new_exception(&ffi::mp_type_MemoryError),
                 Error::CaughtException(obj) => obj,
                 Error::KeyError(key) => {
-                    ffi::mp_obj_new_exception_arg1(&ffi::mp_type_KeyError, key.into())
+                    ffi::mp_obj_new_exception_args(&ffi::mp_type_KeyError, 1, &key.into())
                 }
                 Error::ValueError(msg) => {
-                    ffi::mp_obj_new_exception_msg(&ffi::mp_type_ValueError, msg.as_ptr())
+                    if let Ok(msg) = msg.try_into() {
+                        ffi::mp_obj_new_exception_args(&ffi::mp_type_ValueError, 1, &msg)
+                    } else {
+                        ffi::mp_obj_new_exception(&ffi::mp_type_ValueError)
+                    }
                 }
                 Error::ValueErrorParam(msg, param) => {
                     if let Ok(msg) = msg.try_into() {
@@ -48,7 +52,7 @@ impl Error {
                     }
                 }
                 Error::AttributeError(attr) => {
-                    ffi::mp_obj_new_exception_arg1(&ffi::mp_type_AttributeError, attr.into())
+                    ffi::mp_obj_new_exception_args(&ffi::mp_type_AttributeError, 1, &attr.into())
                 }
             }
         }
