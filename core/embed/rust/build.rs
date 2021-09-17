@@ -97,8 +97,6 @@ fn generate_micropython_bindings() {
         // exceptions
         .allowlist_function("nlr_jump")
         .allowlist_function("mp_obj_new_exception")
-        .allowlist_function("mp_obj_new_exception_msg")
-        .allowlist_function("mp_obj_new_exception_arg1")
         .allowlist_function("mp_obj_new_exception_args")
         .allowlist_function("trezor_obj_call_protected")
         .allowlist_var("mp_type_AttributeError")
