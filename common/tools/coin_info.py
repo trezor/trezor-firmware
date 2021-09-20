@@ -362,15 +362,13 @@ def support_info_single(support_data, coin):
     top-level key.
 
     The support value for each device is determined in order of priority:
-    * if the coin is a duplicate ERC20 token, all support values are `None`
-    * if the coin has an entry in `unsupported`, its support is `None`
+    * if the coin has an entry in `unsupported`, its support is `False`
     * if the coin has an entry in `supported` its support is that entry
       (usually a version string, or `True` for connect/suite)
-    * otherwise support is presumed "soon"
+    * if the coin doesn't have an entry, its support status is `None`
     """
     support_info = {}
     key = coin["key"]
-    dup = coin.get("duplicate")
     for device, values in support_data.items():
         if key in values["unsupported"]:
             support_value = False
@@ -378,13 +376,6 @@ def support_info_single(support_data, coin):
             support_value = values["supported"][key]
         elif device in MISSING_SUPPORT_MEANS_NO:
             support_value = False
-        elif is_token(coin):
-            if dup:
-                # if duplicate token that is not explicitly listed, it's unsupported
-                support_value = False
-            else:
-                # otherwise implicitly supported in next
-                support_value = "soon"
         else:
             support_value = None
         support_info[device] = support_value

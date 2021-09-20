@@ -72,9 +72,7 @@ support_info = coin_info.support_info(defs.misc)
 for key, support in support_info.values():
     t2_support = support["trezor2"]
     coin_name = dict_by_coin_key[key]
-    if t2_support == "soon":
-        print(coin_name, "will be supported soon!")
-    elif t2_support:
+    if t2_support:
         print(coin_name, "is supported since version", t2_support)
     else:
         print(coin_name, "is not supported")
@@ -97,15 +95,15 @@ fee.
 
 # Release Workflow
 
-This entails collecting information on coins whose support status is unknown,
-marking coins whose support status is `soon`, and including new ERC20 tokens.
+This entails collecting information on coins whose support status is unknown and
+including new Ethereum chains and ERC20 tokens.
 
 ## Maintaining Support Status
 
 When a new coin definition is added, its support status is _unknown_. It is excluded
 from code generation by default. If you want to include a coin in a firmware build,
-you need to switch it to _soon_ first. You can set multiple support statuses at the
-same time:
+you need to switch it to supported in a particular version first. You can set multiple
+support statuses at the same time:
 
 ```
 $ ./support.py show Ontology
@@ -115,19 +113,16 @@ misc:ONT - Ontology (ONT)
  * trezor2 : support info missing
  * suite : NO
 
-$ ./support.py set misc:ONT trezor1=no -r "not planned on T1" trezor2=soon
+$ ./support.py set misc:ONT trezor1=no -r "not planned on T1" trezor2=2.4.7
 misc:ONT - Ontology (ONT)
  * connect : NO
  * trezor1 : NO (reason: not planned on T1)
- * trezor2 : SOON
+ * trezor2 : 2.4.7
  * suite : NO
 ```
 
 Afterwards, review and commit changes to `defs/support.json`, and update the `trezor-common`
 submodule in your target firmware.
-
-If you're adding multiple coins at once, you can use `support.py release 1 --soon` to automatically
-add all currently-unknown coins to _soon_. (The `1` indicates that this is for Trezor One)
 
 ERC20 tokens in _unknown_ state are considered _soon_ as well, unless their symbols
 are duplicates. Use `support.py fix` to synchronize duplicate status in `support.json` file.
