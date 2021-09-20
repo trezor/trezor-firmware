@@ -14,7 +14,7 @@ import marketcap
 LOG = logging.getLogger(__name__)
 
 OPTIONAL_KEYS = ("links", "notes", "wallet")
-ALLOWED_SUPPORT_STATUS = ("yes", "no", "planned", "soon")
+ALLOWED_SUPPORT_STATUS = ("yes", "no")
 
 WALLETS = coin_info.load_json("wallets.json")
 OVERRIDES = coin_info.load_json("coins_details.override.json")
@@ -78,18 +78,9 @@ def summary(coins, api_key):
 
 
 def _is_supported(support, trezor_version):
-    version = VERSIONS[trezor_version]
-    nominal = support.get(trezor_version)
-    if nominal is None:
-        return "no"
-    elif isinstance(nominal, bool):
-        return "yes" if nominal else "no"
-
-    try:
-        nominal_version = tuple(map(int, nominal.split(".")))
-        return "yes" if nominal_version <= version else "soon"
-    except ValueError:
-        return nominal
+    # True or version string means YES
+    # False or None means NO
+    return "yes" if support.get(trezor_version) else "no"
 
 
 def _suite_support(coin, support):
@@ -227,10 +218,10 @@ def check_missing_data(coins):
             LOG.log(level, f"{k}: Missing homepage")
             hide = True
         if coin["t1_enabled"] not in ALLOWED_SUPPORT_STATUS:
-            LOG.warning(f"{k}: Unknown t1_enabled")
+            LOG.error(f"{k}: Unknown t1_enabled: {coin['t1_enabled']}")
             hide = True
         if coin["t2_enabled"] not in ALLOWED_SUPPORT_STATUS:
-            LOG.warning(f"{k}: Unknown t2_enabled")
+            LOG.error(f"{k}: Unknown t2_enabled: {coin['t2_enabled']}")
             hide = True
 
         # check wallets

@@ -149,18 +149,10 @@ Each coin on each device can be in one of four support states:
   dictionary. The value is a string with reason for not supporting.
   For connect and suite, if the key is not listed at all, it is also considered unsupported.
   ERC20 tokens detected as duplicates are also considered unsupported.
-* **soon**: coin's key is listed in the device's `supported` dictionary, with
-  the value `"soon"`.
-  ERC20 tokens that are not listed at all are also considered `soon`, unless detected
-  as duplicates.
 * **unknown**: coin's key is not listed at all.
 
-_Supported_ and _soon_ coins are used in code generation (i.e., included in built firmware).
+_Supported_ coins are used in code generation (i.e., included in built firmware).
 _Unsupported_ and _unknown_ coins are excluded from code generation.
-
-That means that new ERC20 tokens are included as soon as you update the tokens repository.
-New coin definitions, on the other hand, are not included until someone sets their
-support status to _soon_ (or a version) explicitly.
 
 You can edit `support.json` manually, but it is usually better to use the `support.py` tool.
 See [tools docs](../tools) for details.

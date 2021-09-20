@@ -67,8 +67,6 @@ def print_support(coin):
             val = where["supported"][key]
             if val is True:
                 return "YES"
-            elif val == "soon":
-                return "SOON"
             elif VERSION_RE.match(val):
                 return f"YES since {val}"
             else:
@@ -98,10 +96,8 @@ def check_support_values():
         if not isinstance(value, str):
             raise ValueError(f"non-str value: {value}")
 
-        is_version = VERSION_RE.match(value)
-        is_soon = value == "soon"
-        if not (is_version or is_soon):
-            raise ValueError(f"expected version or 'soon', found '{value}'")
+        if not VERSION_RE.match(value):
+            raise ValueError(f"expected version, found '{value}'")
 
     errors = []
     for device, values in SUPPORT_INFO.items():
@@ -437,14 +433,15 @@ def set_support_value(key, entries, reason):
     """Set a support info variable.
 
     Examples:
-    support.py set coin:BTC trezor1=soon trezor2=2.0.7 suite=yes connect=no
+    support.py set coin:BTC trezor1=1.10.5 trezor2=2.4.7 suite=yes connect=no
     support.py set coin:LTC trezor1=yes connect=
 
     Setting a variable to "yes", "true" or "1" sets support to true.
     Setting a variable to "no", "false" or "0" sets support to false.
     (or null, in case of trezor1/2)
     Setting variable to empty ("trezor1=") will set to null, or clear the entry.
-    Setting to "soon", "planned", "2.1.1" etc. will set the literal string.
+    Setting a variable to a particular version string (e.g., "2.4.7") will set that
+    particular version.
     """
     defs, _ = coin_info.coin_info_with_duplicates()
     coins = defs.as_dict()
