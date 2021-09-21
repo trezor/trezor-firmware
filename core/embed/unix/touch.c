@@ -18,22 +18,49 @@
  */
 
 #include <SDL2/SDL.h>
+#include <stdbool.h>
 #include <stdint.h>
+
+extern void __shutdown(void);
+extern const char *display_save(const char *prefix);
+
+static bool handle_emulator_events(const SDL_Event *event) {
+  switch (event->type) {
+    case SDL_KEYUP:
+      if (event->key.repeat) {
+        break;
+      }
+      switch (event->key.keysym.sym) {
+        case SDLK_ESCAPE:
+          __shutdown();
+          return true;
+        case SDLK_p:
+          display_save("emu");
+          return true;
+      }
+      break;
+    case SDL_QUIT:
+      __shutdown();
+      return true;
+  }
+  return false;
+}
+
+#if TREZOR_MODEL == T
 
 #include "touch.h"
 
 extern int sdl_display_res_x, sdl_display_res_y;
 extern int sdl_touch_offset_x, sdl_touch_offset_y;
 
-extern void __shutdown(void);
-extern const char *display_save(const char *prefix);
-
 uint32_t touch_read(void) {
   SDL_Event event;
   SDL_PumpEvents();
   if (SDL_PollEvent(&event) > 0) {
+    if (handle_emulator_events(&event)) {
+      return 0;
+    }
     switch (event.type) {
-#if TREZOR_MODEL == T
       case SDL_MOUSEBUTTONDOWN:
       case SDL_MOUSEMOTION:
       case SDL_MOUSEBUTTONUP: {
@@ -70,45 +97,50 @@ uint32_t touch_read(void) {
         }
         break;
       }
-#endif
-#if TREZOR_MODEL == 1
+    }
+  }
+  return 0;
+}
+
+#elif TREZOR_MODEL == 1
+
+#include "button.h"
+
+uint32_t button_read(void) {
+  SDL_Event event;
+  SDL_PumpEvents();
+  if (SDL_PollEvent(&event) > 0) {
+    if (handle_emulator_events(&event)) {
+      return 0;
+    }
+    switch (event.type) {
       case SDL_KEYDOWN:
         if (event.key.repeat) {
           break;
         }
         switch (event.key.keysym.sym) {
           case SDLK_LEFT:
-            return TOUCH_START | touch_pack_xy(0, sdl_display_res_y - 1);
+            return BTN_EVT_DOWN | BTN_LEFT;
           case SDLK_RIGHT:
-            return TOUCH_START |
-                   touch_pack_xy(sdl_display_res_x - 1, sdl_display_res_y - 1);
+            return BTN_EVT_DOWN | BTN_RIGHT;
         }
         break;
-#endif
       case SDL_KEYUP:
         if (event.key.repeat) {
           break;
         }
         switch (event.key.keysym.sym) {
-          case SDLK_ESCAPE:
-            __shutdown();
-            break;
-          case SDLK_p:
-            display_save("emu");
-            break;
-#if TREZOR_MODEL == 1
           case SDLK_LEFT:
-            return TOUCH_END | touch_pack_xy(0, sdl_display_res_y - 1);
+            return BTN_EVT_UP | BTN_LEFT;
           case SDLK_RIGHT:
-            return TOUCH_END |
-                   touch_pack_xy(sdl_display_res_x - 1, sdl_display_res_y - 1);
-#endif
+            return BTN_EVT_UP | BTN_RIGHT;
         }
-        break;
-      case SDL_QUIT:
-        __shutdown();
         break;
     }
   }
   return 0;
 }
+
+#else
+#error Unknown Trezor model
+#endif

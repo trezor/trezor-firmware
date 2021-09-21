@@ -239,28 +239,48 @@ class Component:
     def __init__(self) -> None:
         self.repaint = True
 
-    def dispatch(self, event: int, x: int, y: int) -> None:
-        if event is RENDER:
-            self.on_render()
-        elif event is io.TOUCH_START:
-            self.on_touch_start(x, y)
-        elif event is io.TOUCH_MOVE:
-            self.on_touch_move(x, y)
-        elif event is io.TOUCH_END:
-            self.on_touch_end(x, y)
-        elif event is REPAINT:
-            self.repaint = True
+    if utils.MODEL == "T":
+
+        def dispatch(self, event: int, x: int, y: int) -> None:
+            if event is RENDER:
+                self.on_render()
+            elif event is io.TOUCH_START:
+                self.on_touch_start(x, y)
+            elif event is io.TOUCH_MOVE:
+                self.on_touch_move(x, y)
+            elif event is io.TOUCH_END:
+                self.on_touch_end(x, y)
+            elif event is REPAINT:
+                self.repaint = True
+
+        def on_touch_start(self, x: int, y: int) -> None:
+            pass
+
+        def on_touch_move(self, x: int, y: int) -> None:
+            pass
+
+        def on_touch_end(self, x: int, y: int) -> None:
+            pass
+
+    elif utils.MODEL == "1":
+
+        def dispatch(self, event: int, x: int, y: int) -> None:
+            if event is RENDER:
+                self.on_render()
+            elif event is io.BUTTON_PRESSED:
+                self.on_button_pressed(x)
+            elif event is io.BUTTON_RELEASED:
+                self.on_button_released(x)
+            elif event is REPAINT:
+                self.repaint = True
+
+        def on_button_pressed(self, button_number: int) -> None:
+            pass
+
+        def on_button_released(self, button_number: int) -> None:
+            pass
 
     def on_render(self) -> None:
-        pass
-
-    def on_touch_start(self, x: int, y: int) -> None:
-        pass
-
-    def on_touch_move(self, x: int, y: int) -> None:
-        pass
-
-    def on_touch_end(self, x: int, y: int) -> None:
         pass
 
     if __debug__:
@@ -350,17 +370,33 @@ class Layout(Component):
         Usually overridden to add another tasks to the list."""
         return self.handle_input(), self.handle_rendering()
 
-    def handle_input(self) -> loop.Task:  # type: ignore
-        """Task that is waiting for the user input."""
-        touch = loop.wait(io.TOUCH)
-        while True:
-            # Using `yield` instead of `await` to avoid allocations.
-            event, x, y = yield touch
-            workflow.idle_timer.touch()
-            self.dispatch(event, x, y)
-            # We dispatch a render event right after the touch.  Quick and dirty
-            # way to get the lowest input-to-render latency.
-            self.dispatch(RENDER, 0, 0)
+    if utils.MODEL == "T":
+
+        def handle_input(self) -> loop.Task:  # type: ignore
+            """Task that is waiting for the user input."""
+            touch = loop.wait(io.TOUCH)
+            while True:
+                # Using `yield` instead of `await` to avoid allocations.
+                event, x, y = yield touch
+                workflow.idle_timer.touch()
+                self.dispatch(event, x, y)
+                # We dispatch a render event right after the touch.  Quick and dirty
+                # way to get the lowest input-to-render latency.
+                self.dispatch(RENDER, 0, 0)
+
+    elif utils.MODEL == "1":
+
+        def handle_input(self) -> loop.Task:  # type: ignore
+            """Task that is waiting for the user input."""
+            button = loop.wait(io.BUTTON)
+            while True:
+                event, button_num = yield button
+                workflow.idle_timer.touch()
+                self.dispatch(event, button_num, 0)
+                self.dispatch(RENDER, 0, 0)
+
+    else:
+        raise ValueError("Unknown Trezor model")
 
     def _before_render(self) -> None:
         # Before the first render, we dim the display.

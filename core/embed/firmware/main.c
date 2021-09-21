@@ -36,6 +36,7 @@
 #include "ports/stm32/pendsv.h"
 
 #include "bl_check.h"
+#include "button.h"
 #include "common.h"
 #include "display.h"
 #include "flash.h"
@@ -83,7 +84,7 @@ int main(void) {
 
 #if TREZOR_MODEL == 1
   display_init();
-  touch_init();
+  button_init();
 #endif
 
 #if TREZOR_MODEL == T

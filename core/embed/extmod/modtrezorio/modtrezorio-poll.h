@@ -19,9 +19,11 @@
 
 #include <string.h>
 
+#include "button.h"
 #include "display.h"
 #include "embed/extmod/trezorobj.h"
 
+#define BUTTON_IFACE (254)
 #define TOUCH_IFACE (255)
 #define POLL_READ (0x0000)
 #define POLL_WRITE (0x0100)
@@ -37,6 +39,8 @@
 ///     `list_ref[0]` - the interface number, including the mask
 ///     `list_ref[1]` - for touch event, tuple of:
 ///                     (event_type, x_position, y_position)
+///                   - for button event (T1), tuple of:
+///                     (event type, button number)
 ///                   - for USB read event, received bytes
 ///
 ///     If timeout occurs, False is returned, True otherwise.
@@ -60,7 +64,10 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
       const mp_uint_t iface = i & 0x00FF;
       const mp_uint_t mode = i & 0xFF00;
 
-      if (iface == TOUCH_IFACE) {
+      if (false) {
+      }
+#if TREZOR_MODEL == T
+      else if (iface == TOUCH_IFACE) {
         const uint32_t evt = touch_read();
         if (evt) {
           mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
@@ -94,7 +101,28 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
           ret->items[1] = MP_OBJ_FROM_PTR(tuple);
           return mp_const_true;
         }
-      } else if (mode == POLL_READ) {
+      }
+#elif TREZOR_MODEL == 1
+      else if (iface == BUTTON_IFACE) {
+        const uint32_t evt = button_read();
+        if (evt & (BTN_EVT_DOWN | BTN_EVT_UP)) {
+          mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
+          uint32_t etype = (evt >> 24) & 0x3U;  // button down/up
+          uint32_t en = evt & 0xFFFF;           // button number
+          if (display_orientation(-1) == 180) {
+            en = (en == BTN_LEFT) ? BTN_RIGHT : BTN_LEFT;
+          }
+          tuple->items[0] = MP_OBJ_NEW_SMALL_INT(etype);
+          tuple->items[1] = MP_OBJ_NEW_SMALL_INT(en);
+          ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
+          ret->items[1] = MP_OBJ_FROM_PTR(tuple);
+          return mp_const_true;
+        }
+      }
+#else
+#error Unknown Trezor model
+#endif
+      else if (mode == POLL_READ) {
         if (sectrue == usb_hid_can_read(iface)) {
           uint8_t buf[64] = {0};
           int len = usb_hid_read(iface, buf, sizeof(buf));
