@@ -28,7 +28,7 @@ pub struct MsgObj {
 impl MsgObj {
     pub fn alloc_with_capacity(capacity: usize, msg: &MsgDef) -> Result<Gc<Self>, Error> {
         Gc::new(Self {
-            base: Self::obj_type().to_base(),
+            base: Self::obj_type().as_base(),
             map: Map::with_capacity(capacity)?,
             msg_wire_id: msg.wire_id,
             msg_offset: msg.offset,
@@ -100,13 +100,13 @@ impl MsgObj {
     }
 }
 
-impl Into<Obj> for Gc<MsgObj> {
-    fn into(self) -> Obj {
+impl From<Gc<MsgObj>> for Obj {
+    fn from(value: Gc<MsgObj>) -> Self {
         // SAFETY:
-        //  - We are GC-allocated.
-        //  - We are `repr(C)`.
-        //  - We have a `base` as the first field with the correct type.
-        unsafe { Obj::from_ptr(Self::into_raw(self).cast()) }
+        //  - `value` is GC-allocated.
+        //  - `value` is `repr(C)`.
+        //  - `value` has a `base` as the first field with the correct type.
+        unsafe { Self::from_ptr(Gc::into_raw(value).cast()) }
     }
 }
 
@@ -155,7 +155,7 @@ pub struct MsgDefObj {
 impl MsgDefObj {
     pub fn alloc(def: MsgDef) -> Result<Gc<Self>, Error> {
         let this = Gc::new(Self {
-            base: Self::obj_type().to_base(),
+            base: Self::obj_type().as_base(),
             def,
         })?;
         Ok(this)
@@ -175,13 +175,13 @@ impl MsgDefObj {
     }
 }
 
-impl Into<Obj> for Gc<MsgDefObj> {
-    fn into(self) -> Obj {
+impl From<Gc<MsgDefObj>> for Obj {
+    fn from(value: Gc<MsgDefObj>) -> Self {
         // SAFETY:
-        //  - We are GC-allocated.
-        //  - We are `repr(C)`.
-        //  - We have a `base` as the first field with the correct type.
-        unsafe { Obj::from_ptr(Self::into_raw(self).cast()) }
+        //  - `value` is GC-allocated.
+        //  - `value` is `repr(C)`.
+        //  - `value` has a `base` as the first field with the correct type.
+        unsafe { Self::from_ptr(Gc::into_raw(value).cast()) }
     }
 }
 
@@ -234,7 +234,7 @@ unsafe extern "C" fn msg_def_obj_attr(self_in: Obj, attr: ffi::qstr, dest: *mut 
                 // dest[0] = function_obj
                 // dest[1] = self
                 unsafe {
-                    dest.write(MSG_DEF_OBJ_IS_TYPE_OF_OBJ.to_obj());
+                    dest.write(MSG_DEF_OBJ_IS_TYPE_OF_OBJ.as_obj());
                     dest.offset(1).write(self_in);
                 }
             }

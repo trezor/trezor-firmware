@@ -129,7 +129,8 @@ impl TryFrom<Obj> for bool {
         // SAFETY:
         //  - `obj` can be anything uPy understands.
         // EXCEPTION: Can call Python code (on custom instances) and therefore raise.
-        if catch_exception(|| unsafe { ffi::mp_obj_is_true(obj) })? {
+        let result = catch_exception(|| unsafe { ffi::mp_obj_is_true(obj) })?;
+        if result {
             Ok(true)
         } else {
             Ok(false)

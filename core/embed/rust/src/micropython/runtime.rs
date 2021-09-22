@@ -14,8 +14,8 @@ pub unsafe fn raise_exception(err: Error) -> ! {
     unsafe {
         // SAFETY:
         // - argument must be an exception instance
-        // (err.to_obj() should return the right thing)
-        ffi::nlr_jump(err.to_obj().as_ptr());
+        // (err.into_obj() should return the right thing)
+        ffi::nlr_jump(err.into_obj().as_ptr());
     }
     panic!();
 }

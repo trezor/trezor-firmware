@@ -30,5 +30,5 @@ fn panic(_info: &PanicInfo) -> ! {
 
     // TODO: Ideally we would take the file and line info out of
     // `PanicInfo::location()`.
-    trezorhal::common::fatal_error(&empty, &msg, &empty, 0, &empty);
+    trezorhal::common::fatal_error(empty, msg, empty, 0, empty);
 }

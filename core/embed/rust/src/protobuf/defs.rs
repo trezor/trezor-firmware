@@ -126,8 +126,7 @@ pub fn find_name_by_msg_offset(msg_offset: u16) -> Result<u16, Error> {
 
     name_defs
         .iter()
-        .filter(|def| def.msg_offset == msg_offset)
-        .next()
+        .find(|def| def.msg_offset == msg_offset)
         .map(|def| def.msg_name)
         .ok_or_else(|| Error::KeyError(msg_offset.into()))
 }

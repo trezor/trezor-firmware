@@ -150,7 +150,7 @@ fn generate_micropython_bindings() {
             .lines()
             .skip_while(|s| !s.contains("search starts here:"))
             .take_while(|s| !s.contains("End of search list."))
-            .filter(|s| s.starts_with(" "))
+            .filter(|s| s.starts_with(' '))
             .map(|s| format!("-I{}", s.trim()));
 
         bindings = bindings.clang_args(include_args);

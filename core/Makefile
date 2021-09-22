@@ -118,6 +118,9 @@ mypy:
 		src/apps/webauthn \
 		src/trezor/ui
 
+clippy:
+	cd embed/rust ; cargo clippy
+
 ## code generation:
 
 templates: ## render Mako templates (for lists of coins, tokens, etc.)
