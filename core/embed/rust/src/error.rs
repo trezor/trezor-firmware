@@ -4,6 +4,7 @@ use cstr_core::CStr;
 use crate::micropython::{ffi, obj::Obj, qstr::Qstr};
 
 #[derive(Debug)]
+#[allow(clippy::enum_variant_names)]
 pub enum Error {
     TypeError,
     OutOfRange,
@@ -22,7 +23,7 @@ impl Error {
     /// exception, because the object is not guaranteed to remain intact.
     /// Micropython might reuse the same space for creating a different
     /// exception.
-    pub unsafe fn to_obj(self) -> Obj {
+    pub unsafe fn into_obj(self) -> Obj {
         unsafe {
             // SAFETY:
             // - first argument is a reference to a valid exception type
@@ -34,7 +35,7 @@ impl Error {
                 Error::AllocationFailed => ffi::mp_obj_new_exception(&ffi::mp_type_MemoryError),
                 Error::CaughtException(obj) => obj,
                 Error::KeyError(key) => {
-                    ffi::mp_obj_new_exception_args(&ffi::mp_type_KeyError, 1, &key.into())
+                    ffi::mp_obj_new_exception_args(&ffi::mp_type_KeyError, 1, &key)
                 }
                 Error::ValueError(msg) => {
                     if let Ok(msg) = msg.try_into() {
@@ -45,7 +46,7 @@ impl Error {
                 }
                 Error::ValueErrorParam(msg, param) => {
                     if let Ok(msg) = msg.try_into() {
-                        let args: [Obj; 2] = [msg, param.into()];
+                        let args: [Obj; 2] = [msg, param];
                         ffi::mp_obj_new_exception_args(&ffi::mp_type_ValueError, 2, args.as_ptr())
                     } else {
                         ffi::mp_obj_new_exception(&ffi::mp_type_ValueError)

@@ -29,7 +29,7 @@ pub extern "C" fn protobuf_len(obj: Obj) -> Obj {
 
         Encoder.encode_message(stream, &obj.def(), &obj)?;
 
-        Ok(stream.len.try_into()?)
+        stream.len.try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -46,7 +46,7 @@ pub extern "C" fn protobuf_encode(buf: Obj, obj: Obj) -> Obj {
 
         Encoder.encode_message(stream, &obj.def(), &obj)?;
 
-        Ok(stream.len().try_into()?)
+        stream.len().try_into()
     };
     unsafe { util::try_or_raise(block) }
 }
