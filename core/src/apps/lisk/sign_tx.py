@@ -38,6 +38,10 @@ async def sign_tx(ctx, msg, keychain):
     await layout.require_confirm_fee(ctx, amount, tx.fee)
 
     txbytes = dump_message_buffer(tx)
+    # check if bytes are equal to original message
+    if txbytes != msg.transaction:
+        raise wire.DataError("Bytes sent and bytes decoded are different")
+
     txbytes_to_sign = b"".join([msg.networkIdentifier, bytes(txbytes)])
     signature = ed25519.sign(seckey, txbytes_to_sign)
 
