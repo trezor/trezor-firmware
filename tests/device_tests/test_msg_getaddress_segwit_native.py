@@ -45,6 +45,30 @@ VECTORS = (  # coin, path, script_type, address
         proto.InputScriptType.SPENDWITNESS,
         "bc1qktmhrsmsenepnnfst8x6j27l0uqv7ggrg8x38q",
     ),
+    (
+        "Testnet",
+        "86'/1'/0'/0/0",
+        proto.InputScriptType.SPENDTAPROOT,
+        "tb1pqtsqqumlztrefsm80mvw57quqtl84k55u86h5zzlwevp7z8g0hmvx3acdpx",
+    ),
+    (
+        "Testnet",
+        "86'/1'/0'/1/0",
+        proto.InputScriptType.SPENDTAPROOT,
+        "tb1pqgs9yec8hmk675m4dxrhdxtdd08ce2y5m9zsqfy8aaz7qtxpuhc2z7jtx66",
+    ),
+    (
+        "Bitcoin",
+        "86'/0'/0'/0/0",
+        proto.InputScriptType.SPENDTAPROOT,
+        "bc1pqvp5l8d0ww028grgx6pgl0zdd4ldup9df4t72yt5pts2z0he888eqa47cws",
+    ),
+    (
+        "Bitcoin",
+        "86'/0'/0'/1/0",
+        proto.InputScriptType.SPENDTAPROOT,
+        "bc1pq2zcgdxzwaxsgcdyty83jmm477u7x05pvl7ndhtsflu3nw79gkgh7qlvje2",
+    ),
     pytest.param(
         "Groestlcoin",
         "84'/17'/0'/0/0",
