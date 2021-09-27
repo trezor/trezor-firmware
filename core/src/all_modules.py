@@ -280,8 +280,6 @@ apps.bitcoin.sign_tx.tx_info
 import apps.bitcoin.sign_tx.tx_info
 apps.bitcoin.sign_tx.tx_weight
 import apps.bitcoin.sign_tx.tx_weight
-apps.bitcoin.sign_tx.zcash
-import apps.bitcoin.sign_tx.zcash
 apps.bitcoin.verification
 import apps.bitcoin.verification
 apps.bitcoin.verify_message
@@ -381,7 +379,7 @@ import apps.misc.sign_identity
 apps.workflow_handlers
 import apps.workflow_handlers
 
-if utils.BITCOIN_ONLY:
+if not utils.BITCOIN_ONLY:
     trezor.enums.BinanceOrderSide
     import trezor.enums.BinanceOrderSide
     trezor.enums.BinanceOrderType
@@ -436,6 +434,8 @@ if utils.BITCOIN_ONLY:
     import apps.binance.layout
     apps.binance.sign_tx
     import apps.binance.sign_tx
+    apps.bitcoin.sign_tx.zcash
+    import apps.bitcoin.sign_tx.zcash
     apps.cardano
     import apps.cardano
     apps.cardano.address
