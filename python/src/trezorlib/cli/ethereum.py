@@ -303,7 +303,7 @@ def sign_tx(
                 "to": to_address,
                 "from": from_address,
                 "value": amount,
-                "data": "0x%s" % data.hex(),
+                "data": f"0x{data.hex()}",
             }
         )
 
@@ -361,16 +361,17 @@ def sign_tx(
         transaction = rlp.encode(
             (tx_type, nonce, gas_price, gas_limit, to, amount, data) + sig
         )
-    tx_hex = "0x%s%s" % (
-        str(eip2718_type).zfill(2) if eip2718_type is not None else "",
-        transaction.hex(),
-    )
+    if eip2718_type is not None:
+        eip2718_prefix = f"{eip2718_type:02x}"
+    else:
+        eip2718_prefix = ""
+    tx_hex = f"0x{eip2718_prefix}{transaction.hex()}"
 
     if publish:
         tx_hash = w3.eth.sendRawTransaction(tx_hex).hex()
-        return "Transaction published with ID: %s" % tx_hash
+        return f"Transaction published with ID: {tx_hash}"
     else:
-        return "Signed raw transaction:\n%s" % tx_hex
+        return f"Signed raw transaction:\n{tx_hex}"
 
 
 @cli.command()
@@ -384,7 +385,7 @@ def sign_message(client, address, message):
     output = {
         "message": message,
         "address": ret.address,
-        "signature": "0x%s" % ret.signature.hex(),
+        "signature": f"0x{ret.signature.hex()}",
     }
     return output
 

@@ -83,7 +83,7 @@ CERTIFICATE_TYPE_NAMES = {
 
 
 def format_coin_amount(amount: int) -> str:
-    return "%s %s" % (format_amount(amount, 6), "ADA")
+    return f"{format_amount(amount, 6)} ADA"
 
 
 def is_printable_ascii_bytestring(bytestr: bytes) -> bool:
@@ -104,14 +104,14 @@ async def show_native_script(
         elif script.key_hash:
             script_type_name_suffix = "hash"
 
+    if indices_str:
+        script_heading = "Script " + indices_str
+    else:
+        script_heading = "Script"
+
     props: list[PropertyType] = [
         (
-            "Script%s - %s %s:"
-            % (
-                (" " + indices_str if indices_str else ""),
-                SCRIPT_TYPE_NAMES[script.type],
-                script_type_name_suffix,
-            ),
+            f"{script_heading} - {SCRIPT_TYPE_NAMES[script.type]} {script_type_name_suffix}:",
             None,
         )
     ]
@@ -126,8 +126,7 @@ async def show_native_script(
         assert script.required_signatures_count is not None  # validate_script
         props.append(
             (
-                "Requires %s out of %s signatures."
-                % (script.required_signatures_count, len(script.scripts)),
+                f"Requires {script.required_signatures_count} out of {len(script.scripts)} signatures.",
                 None,
             )
         )
@@ -144,7 +143,7 @@ async def show_native_script(
         CardanoNativeScriptType.N_OF_K,
     ):
         assert script.scripts  # validate_script
-        props.append(("Contains %i nested scripts." % len(script.scripts), None))
+        props.append((f"Contains {len(script.scripts)} nested scripts.", None))
 
     await confirm_properties(
         ctx,
@@ -263,7 +262,7 @@ async def _show_credential(
     if is_change_output:
         title = "Confirm transaction"
     else:
-        title = "%s address" % ADDRESS_TYPE_NAMES[credential.address_type]
+        title = f"{ADDRESS_TYPE_NAMES[credential.address_type]} address"
 
     props: list[PropertyType] = []
 
@@ -279,8 +278,7 @@ async def _show_credential(
         credential_title = credential.get_title()
         props.append(
             (
-                "%s %s credential is a %s:"
-                % (address_usage, credential.type_name, credential_title),
+                f"{address_usage} {credential.type_name} credential is a {credential_title}:",
                 None,
             )
         )
@@ -295,8 +293,7 @@ async def _show_credential(
     if credential.is_no_staking:
         props.append(
             (
-                "%s address - no staking rewards."
-                % ADDRESS_TYPE_NAMES[credential.address_type],
+                f"{ADDRESS_TYPE_NAMES[credential.address_type]} address - no staking rewards.",
                 None,
             )
         )
@@ -350,7 +347,7 @@ async def confirm_witness_request(
         "confirm_total",
         title="Confirm transaction",
         data=address_n_to_str(witness_path),
-        description="Sign transaction with %s:" % path_title,
+        description=f"Sign transaction with {path_title}:",
         br_code=ButtonRequestType.Other,
     )
 
@@ -368,14 +365,10 @@ async def confirm_transaction(
     ]
 
     if is_network_id_verifiable:
-        props.append(
-            ("Network: %s" % protocol_magics.to_ui_string(protocol_magic), None)
-        )
+        props.append((f"Network: {protocol_magics.to_ui_string(protocol_magic)}", None))
 
-    props.append(
-        ("Valid since: %s" % format_optional_int(validity_interval_start), None)
-    )
-    props.append(("TTL: %s" % format_optional_int(ttl), None))
+    props.append((f"Valid since: {format_optional_int(validity_interval_start)}", None))
+    props.append((f"TTL: {format_optional_int(ttl)}", None))
 
     await confirm_properties(
         ctx,
@@ -401,7 +394,7 @@ async def confirm_certificate(
     if certificate.path:
         props.append(
             (
-                "for account %s:" % format_account_number(certificate.path),
+                f"for account {format_account_number(certificate.path)}:",
                 address_n_to_str(to_account_path(certificate.path)),
             ),
         )
@@ -428,7 +421,7 @@ async def confirm_stake_pool_parameters(
     margin_percentage = (
         100.0 * pool_parameters.margin_numerator / pool_parameters.margin_denominator
     )
-    percentage_formatted = ("%f" % margin_percentage).rstrip("0").rstrip(".")
+    percentage_formatted = str(float(margin_percentage)).rstrip("0").rstrip(".")
     await confirm_properties(
         ctx,
         "confirm_pool_registration",
@@ -559,7 +552,7 @@ async def confirm_withdrawal(
     if withdrawal.path:
         props.append(
             (
-                "for account %s:" % format_account_number(withdrawal.path),
+                f"for account {format_account_number(withdrawal.path)}:",
                 address_n_to_str(to_account_path(withdrawal.path)),
             )
         )
@@ -593,7 +586,7 @@ async def confirm_catalyst_registration(
             ("Catalyst voting key registration", None),
             ("Voting public key:", public_key),
             (
-                "Staking key for account %s:" % format_account_number(staking_path),
+                f"Staking key for account {format_account_number(staking_path)}:",
                 address_n_to_str(staking_path),
             ),
             ("Rewards go to:", reward_address),
@@ -630,8 +623,6 @@ async def confirm_token_minting(
     ctx: wire.Context, policy_id: bytes, token: CardanoToken
 ) -> None:
     assert token.mint_amount is not None  # _validate_token
-    is_minting = token.mint_amount >= 0
-
     await confirm_properties(
         ctx,
         "confirm_mint",
@@ -645,7 +636,7 @@ async def confirm_token_minting(
                 ),
             ),
             (
-                "Amount %s:" % ("minted" if is_minting else "burned"),
+                "Amount minted:" if token.mint_amount >= 0 else "Amount burned:",
                 format_amount(token.mint_amount, 0),
             ),
         ],
@@ -674,7 +665,7 @@ async def show_cardano_address(
     if not protocol_magics.is_mainnet(protocol_magic):
         network_name = protocol_magics.to_ui_string(protocol_magic)
 
-    title = "%s address" % ADDRESS_TYPE_NAMES[address_parameters.address_type]
+    title = f"{ADDRESS_TYPE_NAMES[address_parameters.address_type]} address"
     address_extra = None
     title_qr = title
     if address_parameters.address_type in (

@@ -73,7 +73,7 @@ def check_type(val, types, nullable=False, empty=False, regex=None, choice=None)
 
     # check type
     if not isinstance(val, types):
-        raise TypeError("Wrong type (expected: {})".format(types))
+        raise TypeError(f"Wrong type (expected: {types})")
 
     # check empty
     if isinstance(val, (list, dict)) and not empty and not val:
@@ -86,12 +86,12 @@ def check_type(val, types, nullable=False, empty=False, regex=None, choice=None)
         if types is not str:
             raise TypeError("Wrong type for regex check")
         if not re.search(regex, val):
-            raise ValueError("Value does not match regex {}".format(regex))
+            raise ValueError(f"Value does not match regex {regex}")
 
     # check choice
     if choice is not None and val not in choice:
         choice_str = ", ".join(choice)
-        raise ValueError("Value not allowed, use one of: {}".format(choice_str))
+        raise ValueError(f"Value not allowed, use one of: {choice_str}")
 
 
 def check_key(key, types, optional=False, **kwargs):
@@ -100,11 +100,11 @@ def check_key(key, types, optional=False, **kwargs):
             if optional:
                 return
             else:
-                raise KeyError("{}: Missing key".format(key))
+                raise KeyError(f"{key}: Missing key")
         try:
             check_type(coin[key], types, **kwargs)
         except Exception as e:
-            raise ValueError("{}: {}".format(key, e)) from e
+            raise ValueError(f"{key}: {e}") from e
 
     return do_check
 
@@ -216,7 +216,7 @@ def _load_btc_coins():
         coin.update(
             name=coin["coin_label"],
             shortcut=coin["coin_shortcut"],
-            key="bitcoin:{}".format(coin["coin_shortcut"]),
+            key=f"bitcoin:{coin['coin_shortcut']}",
             icon=str(file.with_suffix(".png")),
         )
         coins.append(coin)
@@ -280,7 +280,7 @@ def _load_erc20_tokens():
                 chain_id=network["chain_id"],
                 address_bytes=bytes.fromhex(token["address"][2:]),
                 shortcut=token["symbol"],
-                key="erc20:{}:{}".format(chain, token["symbol"]),
+                key=f"erc20:{chain}:{token['symbol']}",
             )
             tokens.append(token)
 
@@ -292,7 +292,7 @@ def _load_nem_mosaics():
     mosaics = load_json("nem/nem_mosaics.json")
     for mosaic in mosaics:
         shortcut = mosaic["ticker"].strip()
-        mosaic.update(shortcut=shortcut, key="nem:{}".format(shortcut))
+        mosaic.update(shortcut=shortcut, key=f"nem:{shortcut}")
     return mosaics
 
 
@@ -300,7 +300,7 @@ def _load_misc():
     """Loads miscellaneous networks from `misc/misc.json`"""
     others = load_json("misc/misc.json")
     for other in others:
-        other.update(key="misc:{}".format(other["shortcut"]))
+        other.update(key=f"misc:{other['shortcut']}")
     return others
 
 
@@ -544,7 +544,7 @@ def deduplicate_keys(all_coins):
             elif "chain_id" in coin:
                 coin["key"] += ":" + str(coin["chain_id"])
             else:
-                coin["key"] += ":{}".format(i)
+                coin["key"] += f":{i}"
                 coin["dup_key_nontoken"] = True
 
 

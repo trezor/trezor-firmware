@@ -80,7 +80,7 @@ def _get_inputs_interactive(blockbook_url):
         tx = btc.from_json(tx_json)
         txes[txhash] = tx
         amount = tx.bin_outputs[prev_index].amount
-        echo("Input amount: {}".format(amount))
+        echo(f"Input amount: {amount}")
 
         sequence = prompt(
             "Sequence Number to use (RBF opt-in enabled by default)",

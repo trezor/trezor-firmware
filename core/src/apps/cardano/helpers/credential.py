@@ -188,9 +188,9 @@ class Credential:
             return [(None, format_script_hash(self.script_hash))]
         elif self.pointer:
             return [
-                ("Block: %s" % self.pointer.block_index, None),
-                ("Transaction: %s" % self.pointer.tx_index, None),
-                ("Certificate: %s" % self.pointer.certificate_index, None),
+                (f"Block: {self.pointer.block_index}", None),
+                (f"Transaction: {self.pointer.tx_index}", None),
+                (f"Certificate: {self.pointer.certificate_index}", None),
             ]
         else:
             return []

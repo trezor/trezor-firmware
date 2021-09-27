@@ -187,11 +187,11 @@ async def _request_share_first_screen(
             await _request_share_next_screen(ctx)
         else:
             await layout.homescreen_dialog(
-                ctx, "Enter share", "Enter any share", "(%d words)" % word_count
+                ctx, "Enter share", "Enter any share", f"({word_count} words)"
             )
     else:  # BIP-39
         await layout.homescreen_dialog(
-            ctx, "Enter seed", "Enter recovery seed", "(%d words)" % word_count
+            ctx, "Enter seed", "Enter recovery seed", f"({word_count} words)"
         )
 
 

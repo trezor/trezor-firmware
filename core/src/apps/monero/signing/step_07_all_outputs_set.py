@@ -87,18 +87,12 @@ def _validate(state: State):
     # Fee test
     if state.fee != (state.summary_inputs_money - state.summary_outs_money):
         raise ValueError(
-            "Fee invalid %s vs %s, out: %s"
-            % (
-                state.fee,
-                state.summary_inputs_money - state.summary_outs_money,
-                state.summary_outs_money,
-            )
+            f"Fee invalid {state.fee} vs {state.summary_inputs_money - state.summary_outs_money}, out: {state.summary_outs_money}"
         )
 
     if state.summary_outs_money > state.summary_inputs_money:
         raise ValueError(
-            "Transaction inputs money (%s) less than outputs money (%s)"
-            % (state.summary_inputs_money, state.summary_outs_money)
+            f"Transaction inputs money ({state.summary_inputs_money}) less than outputs money ({state.summary_outs_money})"
         )
 
 

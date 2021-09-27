@@ -37,7 +37,7 @@ def get_public_key(client, address, show_display):
     """Get Eos public key in base58 encoding."""
     address_n = tools.parse_path(address)
     res = eos.get_public_key(client, address_n, show_display)
-    return "WIF: {}\nRaw: {}".format(res.wif_public_key, res.raw_public_key.hex())
+    return f"WIF: {res.wif_public_key}\nRaw: {res.raw_public_key.hex()}"
 
 
 @cli.command()

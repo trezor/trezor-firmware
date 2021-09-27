@@ -27,7 +27,7 @@ async def _request_from_user(ctx: wire.Context) -> str:
         passphrase = await _request_on_host(ctx)
     if len(passphrase.encode()) > _MAX_PASSPHRASE_LEN:
         raise wire.DataError(
-            "Maximum passphrase length is %d bytes" % _MAX_PASSPHRASE_LEN
+            f"Maximum passphrase length is {_MAX_PASSPHRASE_LEN} bytes"
         )
 
     return passphrase

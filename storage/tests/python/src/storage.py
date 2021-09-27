@@ -169,7 +169,7 @@ class Storage:
 
         base = int.from_bytes(current[:4], sys.byteorder)
         tail = helpers.to_int_by_words(current[4:])
-        tail_count = "{0:064b}".format(tail).count("0")
+        tail_count = f"{tail:064b}".count("0")
         increased_count = base + tail_count + 1
         if increased_count > consts.UINT32_MAX:
             raise RuntimeError("Failed to set value in storage.")

@@ -22,7 +22,7 @@ def variable_length_encode(number: int) -> bytes:
     https://en.wikipedia.org/wiki/Variable-length_quantity
     """
     if number < 0:
-        raise ValueError("Negative numbers not supported. Number supplied: %s" % number)
+        raise ValueError(f"Negative numbers not supported. Number supplied: {number}")
 
     encoded = [number & 0x7F]
     while number > 0x7F:
@@ -40,7 +40,7 @@ def format_account_number(path: list[int]) -> str:
     if len(path) <= ACCOUNT_PATH_INDEX:
         raise ValueError("Path is too short.")
 
-    return "#%d" % (unharden(path[ACCOUNT_PATH_INDEX]) + 1)
+    return f"#{unharden(path[ACCOUNT_PATH_INDEX]) + 1}"
 
 
 def format_optional_int(number: int | None) -> str:

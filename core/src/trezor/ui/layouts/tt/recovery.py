@@ -41,10 +41,10 @@ async def request_word(
 ) -> str:
     if is_slip39:
         keyboard: Slip39Keyboard | Bip39Keyboard = Slip39Keyboard(
-            "Type word %s of %s:" % (word_index + 1, word_count)
+            f"Type word {word_index + 1} of {word_count}:"
         )
     else:
-        keyboard = Bip39Keyboard("Type word %s of %s:" % (word_index + 1, word_count))
+        keyboard = Bip39Keyboard(f"Type word {word_index + 1} of {word_count}:")
 
     word: str = await ctx.wait(keyboard)
     return word
@@ -93,9 +93,9 @@ async def show_group_share_success(
 ) -> None:
     text = Text("Success", ui.ICON_CONFIRM)
     text.bold("You have entered")
-    text.bold("Share %s" % (share_index + 1))
+    text.bold(f"Share {share_index + 1}")
     text.normal("from")
-    text.bold("Group %s" % (group_index + 1))
+    text.bold(f"Group {group_index + 1}")
 
     await raise_if_cancelled(
         interact(

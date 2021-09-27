@@ -297,7 +297,7 @@ async def _handle_single_message(
         try:
             msg_type = protobuf.type_for_wire(msg.type).MESSAGE_NAME
         except Exception:
-            msg_type = "%d - unknown message type" % msg.type
+            msg_type = f"{msg.type} - unknown message type"
         log.debug(
             __name__,
             "%s:%x receive: <%s>",
@@ -364,7 +364,7 @@ async def _handle_single_message(
         # - something canceled the workflow from the outside
         if __debug__:
             if isinstance(exc, ActionCancelled):
-                log.debug(__name__, "cancelled: {}".format(exc.message))
+                log.debug(__name__, "cancelled: %s", exc.message)
             elif isinstance(exc, loop.TaskClosed):
                 log.debug(__name__, "cancelled: loop task was closed")
             else:

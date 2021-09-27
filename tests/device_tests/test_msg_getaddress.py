@@ -118,7 +118,7 @@ class TestMsgGetaddress:
     def test_multisig(self, client):
         xpubs = []
         for n in range(1, 4):
-            node = btc.get_public_node(client, parse_path("44'/0'/%d'" % n))
+            node = btc.get_public_node(client, parse_path(f"44'/0'/{n}'"))
             xpubs.append(node.xpub)
 
         for nr in range(1, 4):
@@ -126,7 +126,7 @@ class TestMsgGetaddress:
                 btc.get_address(
                     client,
                     "Bitcoin",
-                    parse_path("44'/0'/%d'/0/0" % nr),
+                    parse_path(f"44'/0'/{nr}'/0/0"),
                     show_display=(nr == 1),
                     multisig=getmultisig(0, 0, xpubs=xpubs),
                 )
@@ -136,7 +136,7 @@ class TestMsgGetaddress:
                 btc.get_address(
                     client,
                     "Bitcoin",
-                    parse_path("44'/0'/%d'/1/0" % nr),
+                    parse_path(f"44'/0'/{nr}'/1/0"),
                     show_display=(nr == 1),
                     multisig=getmultisig(1, 0, xpubs=xpubs),
                 )
@@ -150,7 +150,7 @@ class TestMsgGetaddress:
         # Use account numbers 1, 2 and 3 to create a valid multisig,
         # but not containing the keys from account 0 used below.
         nodes = [
-            btc.get_public_node(client, parse_path("44'/0'/%d'" % i)).node
+            btc.get_public_node(client, parse_path(f"44'/0'/{i}'")).node
             for i in range(1, 4)
         ]
         multisig1 = messages.MultisigRedeemScriptType(
@@ -188,7 +188,7 @@ class TestMsgGetaddress:
         xpubs = []
         for n in range(1, 4):
             node = btc.get_public_node(
-                client, parse_path("44'/145'/%d'" % n), coin_name="Bcash"
+                client, parse_path(f"44'/145'/{n}'"), coin_name="Bcash"
             )
             xpubs.append(node.xpub)
 
@@ -197,7 +197,7 @@ class TestMsgGetaddress:
                 btc.get_address(
                     client,
                     "Bcash",
-                    parse_path("44'/145'/%d'/0/0" % nr),
+                    parse_path(f"44'/145'/{nr}'/0/0"),
                     show_display=(nr == 1),
                     multisig=getmultisig(0, 0, xpubs=xpubs),
                 )
@@ -207,7 +207,7 @@ class TestMsgGetaddress:
                 btc.get_address(
                     client,
                     "Bcash",
-                    parse_path("44'/145'/%d'/1/0" % nr),
+                    parse_path(f"44'/145'/{nr}'/1/0"),
                     show_display=(nr == 1),
                     multisig=getmultisig(1, 0, xpubs=xpubs),
                 )

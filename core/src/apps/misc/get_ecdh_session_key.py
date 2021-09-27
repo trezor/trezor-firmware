@@ -47,7 +47,7 @@ async def require_confirm_ecdh_session_key(
     proto = identity.proto.upper() if identity.proto else "identity"
     await confirm_address(
         ctx,
-        "Decrypt %s" % proto,
+        f"Decrypt {proto}",
         serialize_identity_without_proto(identity),
         description=None,
         icon=ui.ICON_DEFAULT,

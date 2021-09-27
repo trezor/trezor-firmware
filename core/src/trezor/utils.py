@@ -93,9 +93,9 @@ def presize_module(modname: str, size: int) -> None:
     """
     module = sys.modules[modname]
     for i in range(size):
-        setattr(module, "___PRESIZE_MODULE_%d" % i, None)
+        setattr(module, f"___PRESIZE_MODULE_{i}", None)
     for i in range(size):
-        delattr(module, "___PRESIZE_MODULE_%d" % i)
+        delattr(module, f"___PRESIZE_MODULE_{i}")
 
 
 if __debug__:
@@ -103,7 +103,7 @@ if __debug__:
     def mem_dump(filename: str) -> None:
         from micropython import mem_info
 
-        print("### sysmodules (%d):" % len(sys.modules))
+        print(f"### sysmodules ({len(sys.modules)}):")
         for mod in sys.modules:
             print("*", mod)
         if EMULATOR:
@@ -321,7 +321,7 @@ def obj_repr(o: object) -> str:
         d = {attr: getattr(o, attr, None) for attr in o.__slots__}
     else:
         d = o.__dict__
-    return "<%s: %s>" % (o.__class__.__name__, d)
+    return f"<{o.__class__.__name__}: {d}>"
 
 
 def truncate_utf8(string: str, max_bytes: int) -> str:
@@ -373,14 +373,14 @@ if __debug__:
                     yield "    " + subline
             elif val and isinstance(val, list) and type(val[0]) == type(msg):
                 # non-empty list of protobuf messages
-                yield "    {}: [".format(key)
+                yield f"    {key}: ["
                 for subval in val:
                     sublines = dump_protobuf_lines(subval)
                     for subline in sublines:
                         yield "        " + subline
                 yield "    ]"
             else:
-                yield "    {}: {!r}".format(key, val)
+                yield f"    {key}: {repr(val)}"
 
         yield "}"
 

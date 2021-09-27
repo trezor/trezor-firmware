@@ -90,8 +90,8 @@ async def ask_transfer_mosaic(
             "confirm_mosaic_transfer",
             title="Confirm mosaic",
             props=[
-                ("Confirm transfer of", "%s raw units" % mosaic_quantity),
-                ("of", "%s.%s" % (mosaic.namespace, mosaic.mosaic)),
+                ("Confirm transfer of", f"{mosaic_quantity} raw units"),
+                ("of", f"{mosaic.namespace}.{mosaic.mosaic}"),
             ],
         )
 
@@ -139,7 +139,7 @@ async def _require_confirm_transfer(ctx, recipient, value):
     await confirm_output(
         ctx,
         recipient,
-        amount="Send {} XEM".format(format_amount(value, NEM_MAX_DIVISIBILITY)),
+        amount=f"Send {format_amount(value, NEM_MAX_DIVISIBILITY)} XEM",
         font_amount=ui.BOLD,
         title="Confirm transfer",
         to_str="\nto\n",

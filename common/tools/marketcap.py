@@ -47,7 +47,7 @@ def init(api_key, refresh=None):
                 first_100 = all_ids[:100]
                 all_ids = all_ids[100:]
                 time.sleep(2.2)
-                print("Fetching metadata, {} coins remaining...".format(len(all_ids)))
+                print(f"Fetching metadata, {len(all_ids)} coins remaining...")
                 metadata = call(
                     "cryptocurrency/info", api_key, params={"id": ",".join(first_100)}
                 )

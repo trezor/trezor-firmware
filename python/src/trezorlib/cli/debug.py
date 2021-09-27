@@ -58,12 +58,12 @@ def send_bytes(obj, message_name_or_type, hex_data):
     response_type, response_data = transport.read()
     transport.end_session()
 
-    click.echo("Response type: {}".format(response_type))
-    click.echo("Response data: {}".format(response_data.hex()))
+    click.echo(f"Response type: {response_type}")
+    click.echo(f"Response data: {response_data.hex()}")
 
     try:
         msg = mapping.decode(response_type, response_data)
         click.echo("Parsed message:")
         click.echo(protobuf.format_message(msg))
     except Exception as e:
-        click.echo("Could not parse response: {}".format(e))
+        click.echo(f"Could not parse response: {e}")

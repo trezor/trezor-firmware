@@ -97,7 +97,7 @@ class TestMsgGetaddressSegwit:
     def test_show_multisig_3(self, client):
         nodes = [
             btc.get_public_node(
-                client, parse_path("49'/1'/%d'" % i), coin_name="Testnet"
+                client, parse_path(f"49'/1'/{i}'"), coin_name="Testnet"
             ).node
             for i in range(1, 4)
         ]
@@ -130,7 +130,7 @@ class TestMsgGetaddressSegwit:
         # Use account numbers 1, 2 and 3 to create a valid multisig,
         # but not containing the keys from account 0 used below.
         nodes = [
-            btc.get_public_node(client, parse_path("49'/0'/%d'" % i)).node
+            btc.get_public_node(client, parse_path(f"49'/0'/{i}'")).node
             for i in range(1, 4)
         ]
         multisig1 = proto.MultisigRedeemScriptType(

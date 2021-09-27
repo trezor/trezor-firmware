@@ -81,7 +81,7 @@ async def get_address(
                 pubnodes = [hd.node for hd in msg.multisig.pubkeys]
             multisig_index = multisig_pubkey_index(msg.multisig, node.public_key())
 
-            title = "Multisig %d of %d" % (msg.multisig.m, len(pubnodes))
+            title = f"Multisig {msg.multisig.m} of {len(pubnodes)}"
             await show_address(
                 ctx,
                 address=address_short,

@@ -412,10 +412,9 @@ class U2fCredential(Credential):
         if app is not None:
             return app.label
 
-        return "%s...%s" % (
-            hexlify(self.rp_id_hash[:4]).decode(),
-            hexlify(self.rp_id_hash[-4:]).decode(),
-        )
+        start = hexlify(self.rp_id_hash[:4]).decode()
+        end = hexlify(self.rp_id_hash[-4:]).decode()
+        return f"{start}...{end}"
 
     @staticmethod
     def from_key_handle(key_handle: bytes, rp_id_hash: bytes) -> "U2fCredential":

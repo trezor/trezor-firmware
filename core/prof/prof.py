@@ -82,7 +82,7 @@ class AllocCounter:
 
         allocs_per_last_line = allocs_now - self.last_alloc_count
         self.count_last_line(allocs_per_last_line)
-        self.last_line = "{}:{}".format(frame.f_code.co_filename, frame.f_lineno)
+        self.last_line = f"{frame.f_code.co_filename}:{frame.f_lineno}"
         self.last_alloc_count = micropython.alloc_count()
 
     def dump_data(self, filename):

@@ -89,7 +89,7 @@ class TrezorClient:
         ui,
         session_id=None,
     ):
-        LOG.info("creating client instance for device: {}".format(transport.get_path()))
+        LOG.info(f"creating client instance for device: {transport.get_path()}")
         self.transport = transport
         self.ui = ui
         self.session_counter = 0
@@ -118,15 +118,13 @@ class TrezorClient:
     def _raw_write(self, msg):
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         LOG.debug(
-            "sending message: {}".format(msg.__class__.__name__),
+            f"sending message: {msg.__class__.__name__}",
             extra={"protobuf": msg},
         )
         msg_type, msg_bytes = mapping.encode(msg)
         LOG.log(
             DUMP_BYTES,
-            "encoded as type {} ({} bytes): {}".format(
-                msg_type, len(msg_bytes), msg_bytes.hex()
-            ),
+            f"encoded as type {msg_type} ({len(msg_bytes)} bytes): {msg_bytes.hex()}",
         )
         self.transport.write(msg_type, msg_bytes)
 
@@ -135,13 +133,11 @@ class TrezorClient:
         msg_type, msg_bytes = self.transport.read()
         LOG.log(
             DUMP_BYTES,
-            "received type {} ({} bytes): {}".format(
-                msg_type, len(msg_bytes), msg_bytes.hex()
-            ),
+            f"received type {msg_type} ({len(msg_bytes)} bytes): {msg_bytes.hex()}",
         )
         msg = mapping.decode(msg_type, msg_bytes)
         LOG.debug(
-            "received message: {}".format(msg.__class__.__name__),
+            f"received message: {msg.__class__.__name__}",
             extra={"protobuf": msg},
         )
         return msg

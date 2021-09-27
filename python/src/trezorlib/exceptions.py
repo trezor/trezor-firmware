@@ -35,7 +35,7 @@ class TrezorFailure(TrezorException):
             if not name.startswith("_")
         }
         if self.message is not None:
-            return "{}: {}".format(types[self.code], self.message)
+            return f"{types[self.code]}: {self.message}"
         else:
             return types[self.failure.code]
 

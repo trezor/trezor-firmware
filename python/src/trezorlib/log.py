@@ -39,7 +39,7 @@ class PrettyProtobufFormatter(logging.Formatter):
         )
         if hasattr(record, "protobuf"):
             if type(record.protobuf) in OMITTED_MESSAGES:
-                message += " ({} bytes)".format(record.protobuf.ByteSize())
+                message += f" ({record.protobuf.ByteSize()} bytes)"
             else:
                 message += "\n" + protobuf.format_message(record.protobuf)
         return message

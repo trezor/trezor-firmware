@@ -82,7 +82,7 @@ def test_show_segwit(client, show_display, coin, path, script_type, address):
 def test_show_multisig_3(client):
     nodes = [
         btc.get_public_node(
-            client, parse_path("84'/1'/%d'" % index), coin_name="Testnet"
+            client, parse_path(f"84'/1'/{index}'"), coin_name="Testnet"
         ).node
         for index in range(1, 4)
     ]
@@ -97,7 +97,7 @@ def test_show_multisig_3(client):
             btc.get_address(
                 client,
                 "Testnet",
-                parse_path("84'/1'/%d'/0/1" % i),
+                parse_path(f"84'/1'/{i}'/0/1"),
                 False,
                 multisig2,
                 script_type=proto.InputScriptType.SPENDWITNESS,
@@ -108,7 +108,7 @@ def test_show_multisig_3(client):
             btc.get_address(
                 client,
                 "Testnet",
-                parse_path("84'/1'/%d'/0/0" % i),
+                parse_path(f"84'/1'/{i}'/0/0"),
                 False,
                 multisig1,
                 script_type=proto.InputScriptType.SPENDWITNESS,
@@ -124,7 +124,7 @@ def test_multisig_missing(client, show_display):
     # Use account numbers 1, 2 and 3 to create a valid multisig,
     # but not containing the keys from account 0 used below.
     nodes = [
-        btc.get_public_node(client, parse_path("84'/0'/%d'" % i)).node
+        btc.get_public_node(client, parse_path(f"84'/0'/{i}'")).node
         for i in range(1, 4)
     ]
     multisig1 = proto.MultisigRedeemScriptType(

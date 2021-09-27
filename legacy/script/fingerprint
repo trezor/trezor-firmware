@@ -37,5 +37,4 @@ if __name__ == "__main__":
     print("Filename    :", args.file.name)
     print("Fingerprint :", fingerprint)
 
-    print("Size        : {} bytes (out of {} maximum)"
-          .format(size, args.max_size))
+    print(f"Size        : {size} bytes (out of {args.max_size} maximum)")
