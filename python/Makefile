@@ -18,7 +18,6 @@ dist: doc clean
 	$(SETUP) bdist_wheel
 
 doc:
-	make -C .. changelog
 	$(PYTHON) helper-scripts/make-options-rst.py
 
 clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts

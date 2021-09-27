@@ -35,6 +35,8 @@ if False:
         Set,
     )
 
+    from trezor.protobuf import MessageType
+
 
 def unimport_begin() -> Set[str]:
     return set(sys.modules)
@@ -96,6 +98,24 @@ def presize_module(modname: str, size: int) -> None:
         delattr(module, "___PRESIZE_MODULE_%d" % i)
 
 
+if __debug__:
+
+    def mem_dump(filename: str) -> None:
+        from micropython import mem_info
+
+        print("### sysmodules (%d):" % len(sys.modules))
+        for mod in sys.modules:
+            print("*", mod)
+        if EMULATOR:
+            from trezorutils import meminfo
+
+            print("### dumping to", filename)
+            meminfo(filename)
+            mem_info()
+        else:
+            mem_info(True)
+
+
 def ensure(cond: bool, msg: str | None = None) -> None:
     if not cond:
         if msg is None:
@@ -128,6 +148,9 @@ def chunks_intersperse(
 if False:
 
     class HashContext(Protocol):
+        def __init__(self, data: bytes = None) -> None:
+            ...
+
         def update(self, buf: bytes) -> None:
             ...
 
@@ -198,8 +221,11 @@ class BufferWriter:
 class BufferReader:
     """Seekable and readable view into a buffer."""
 
-    def __init__(self, buffer: bytes) -> None:
-        self.buffer = buffer
+    def __init__(self, buffer: Union[bytes, memoryview]) -> None:
+        if isinstance(buffer, memoryview):
+            self.buffer = buffer
+        else:
+            self.buffer = memoryview(buffer)
         self.offset = 0
 
     def seek(self, offset: int) -> None:
@@ -230,7 +256,15 @@ class BufferReader:
         If `length` is unspecified, reads all remaining data.
 
         Note that this method makes a copy of the data. To avoid allocation, use
-        `readinto()`.
+        `readinto()`. To avoid copying use `read_memoryview()`.
+        """
+        return bytes(self.read_memoryview(length))
+
+    def read_memoryview(self, length: int | None = None) -> memoryview:
+        """Read and return a memoryview of exactly `length` bytes, or raise
+        EOFError.
+
+        If `length` is unspecified, reads all remaining data.
         """
         if length is None:
             ret = self.buffer[self.offset :]
@@ -321,3 +355,34 @@ def empty_bytearray(preallocate: int) -> bytearray:
     b = bytearray(preallocate)
     b[:] = bytes()
     return b
+
+
+if __debug__:
+
+    def dump_protobuf_lines(msg: MessageType, line_start: str = "") -> Iterator[str]:
+        msg_dict = msg.__dict__
+        if not msg_dict:
+            yield line_start + msg.MESSAGE_NAME + " {}"
+            return
+
+        yield line_start + msg.MESSAGE_NAME + " {"
+        for key, val in msg_dict.items():
+            if type(val) == type(msg):
+                sublines = dump_protobuf_lines(val, line_start=key + ": ")
+                for subline in sublines:
+                    yield "    " + subline
+            elif val and isinstance(val, list) and type(val[0]) == type(msg):
+                # non-empty list of protobuf messages
+                yield "    {}: [".format(key)
+                for subval in val:
+                    sublines = dump_protobuf_lines(subval)
+                    for subline in sublines:
+                        yield "        " + subline
+                yield "    ]"
+            else:
+                yield "    {}: {!r}".format(key, val)
+
+        yield "}"
+
+    def dump_protobuf(msg: MessageType) -> str:
+        return "\n".join(dump_protobuf_lines(msg))

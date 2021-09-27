@@ -46,10 +46,11 @@ def find_message_handler_module(msg_type: int) -> str:
         return "apps.management.apply_flags"
     elif msg_type == MessageType.ChangePin:
         return "apps.management.change_pin"
-    elif msg_type == MessageType.SdProtect:
-        return "apps.management.sd_protect"
     elif msg_type == MessageType.ChangeWipeCode:
         return "apps.management.change_wipe_code"
+
+    elif utils.MODEL == "T" and msg_type == MessageType.SdProtect:
+        return "apps.management.sd_protect"
 
     # bitcoin
     elif msg_type == MessageType.AuthorizeCoinJoin:
@@ -103,22 +104,12 @@ def find_message_handler_module(msg_type: int) -> str:
             return "apps.ethereum.get_public_key"
         elif msg_type == MessageType.EthereumSignTx:
             return "apps.ethereum.sign_tx"
+        elif msg_type == MessageType.EthereumSignTxEIP1559:
+            return "apps.ethereum.sign_tx_eip1559"
         elif msg_type == MessageType.EthereumSignMessage:
             return "apps.ethereum.sign_message"
         elif msg_type == MessageType.EthereumVerifyMessage:
             return "apps.ethereum.verify_message"
-
-        # lisk
-        elif msg_type == MessageType.LiskGetPublicKey:
-            return "apps.lisk.get_public_key"
-        elif msg_type == MessageType.LiskGetAddress:
-            return "apps.lisk.get_address"
-        elif msg_type == MessageType.LiskSignTx:
-            return "apps.lisk.sign_tx"
-        elif msg_type == MessageType.LiskSignMessage:
-            return "apps.lisk.sign_message"
-        elif msg_type == MessageType.LiskVerifyMessage:
-            return "apps.lisk.verify_message"
 
         # monero
         elif msg_type == MessageType.MoneroGetAddress:
@@ -159,7 +150,7 @@ def find_message_handler_module(msg_type: int) -> str:
             return "apps.cardano.get_address"
         elif msg_type == MessageType.CardanoGetPublicKey:
             return "apps.cardano.get_public_key"
-        elif msg_type == MessageType.CardanoSignTx:
+        elif msg_type == MessageType.CardanoSignTxInit:
             return "apps.cardano.sign_tx"
 
         # tezos

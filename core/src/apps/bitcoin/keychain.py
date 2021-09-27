@@ -35,11 +35,12 @@ if False:
 # BIP-45 for multisig: https://github.com/bitcoin/bips/blob/master/bip-0045.mediawiki
 PATTERN_BIP45 = "m/45'/[0-100]/change/address_index"
 
-# Electrum Purpose48. See docs/misc/purpose48.md
-# Electrum does not seem to use the raw script type, it is included here for completeness.
-PATTERN_PURPOSE48_RAW = "m/48'/coin_type'/account'/0'/change/address_index"
-PATTERN_PURPOSE48_P2SHSEGWIT = "m/48'/coin_type'/account'/1'/change/address_index"
-PATTERN_PURPOSE48_SEGWIT = "m/48'/coin_type'/account'/2'/change/address_index"
+# BIP-48 for multisig: https://github.com/bitcoin/bips/blob/master/bip-0048.mediawiki
+# The raw script type is not part of the BIP (and Electrum, as a notable implementation,
+# does not use it), it is included here for completeness.
+PATTERN_BIP48_RAW = "m/48'/coin_type'/account'/0'/change/address_index"
+PATTERN_BIP48_P2SHSEGWIT = "m/48'/coin_type'/account'/1'/change/address_index"
+PATTERN_BIP48_SEGWIT = "m/48'/coin_type'/account'/2'/change/address_index"
 
 # BIP-49 for segwit-in-P2SH: https://github.com/bitcoin/bips/blob/master/bip-0049.mediawiki
 PATTERN_BIP49 = "m/49'/coin_type'/account'/change/address_index"
@@ -97,7 +98,7 @@ def validate_path_against_script_type(
         script_type in (InputScriptType.SPENDADDRESS, InputScriptType.SPENDMULTISIG)
         and multisig
     ):
-        patterns.append(PATTERN_PURPOSE48_RAW)
+        patterns.append(PATTERN_BIP48_RAW)
         if coin.slip44 == SLIP44_BITCOIN or (
             coin.fork_id is not None and coin.slip44 != SLIP44_TESTNET
         ):
@@ -113,7 +114,7 @@ def validate_path_against_script_type(
     elif coin.segwit and script_type == InputScriptType.SPENDP2SHWITNESS:
         patterns.append(PATTERN_BIP49)
         if multisig:
-            patterns.append(PATTERN_PURPOSE48_P2SHSEGWIT)
+            patterns.append(PATTERN_BIP48_P2SHSEGWIT)
         if coin.slip44 == SLIP44_BITCOIN:
             patterns.append(PATTERN_GREENADDRESS_A)
             patterns.append(PATTERN_GREENADDRESS_B)
@@ -123,7 +124,7 @@ def validate_path_against_script_type(
     elif coin.segwit and script_type == InputScriptType.SPENDWITNESS:
         patterns.append(PATTERN_BIP84)
         if multisig:
-            patterns.append(PATTERN_PURPOSE48_SEGWIT)
+            patterns.append(PATTERN_BIP48_SEGWIT)
         if coin.slip44 == SLIP44_BITCOIN:
             patterns.append(PATTERN_GREENADDRESS_A)
             patterns.append(PATTERN_GREENADDRESS_B)
@@ -137,7 +138,7 @@ def get_schemas_for_coin(coin: coininfo.CoinInfo) -> Iterable[PathSchema]:
     # basic patterns
     patterns = [
         PATTERN_BIP44,
-        PATTERN_PURPOSE48_RAW,
+        PATTERN_BIP48_RAW,
     ]
 
     # patterns without coin_type field must be treated as if coin_type == 0
@@ -173,8 +174,8 @@ def get_schemas_for_coin(coin: coininfo.CoinInfo) -> Iterable[PathSchema]:
             (
                 PATTERN_BIP49,
                 PATTERN_BIP84,
-                PATTERN_PURPOSE48_P2SHSEGWIT,
-                PATTERN_PURPOSE48_SEGWIT,
+                PATTERN_BIP48_P2SHSEGWIT,
+                PATTERN_BIP48_SEGWIT,
             )
         )
 

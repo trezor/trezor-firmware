@@ -3,7 +3,13 @@ from ubinascii import hexlify
 from trezor import ui
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount
-from trezor.ui.layouts import confirm_hex, confirm_output, confirm_total_ethereum
+from trezor.ui.layouts import (
+    confirm_address,
+    confirm_amount,
+    confirm_blob,
+    confirm_output,
+)
+from trezor.ui.layouts.tt.altcoin import confirm_total_ethereum
 
 from . import networks, tokens
 from .address import address_from_bytes
@@ -35,32 +41,49 @@ async def require_confirm_fee(
     )
 
 
+async def require_confirm_eip1559_fee(
+    ctx, max_priority_fee, max_gas_fee, gas_limit, chain_id
+):
+    await confirm_amount(
+        ctx,
+        title="Confirm fee",
+        description="Maximum fee per gas",
+        amount=format_ethereum_amount(max_gas_fee, None, chain_id),
+    )
+    await confirm_amount(
+        ctx,
+        title="Confirm fee",
+        description="Priority fee per gas",
+        amount=format_ethereum_amount(max_priority_fee, None, chain_id),
+    )
+    await confirm_amount(
+        ctx,
+        title="Confirm fee",
+        description="Maximum fee",
+        amount=format_ethereum_amount(max_gas_fee * gas_limit, None, chain_id),
+    )
+
+
 async def require_confirm_unknown_token(ctx, address_bytes):
     contract_address_hex = "0x" + hexlify(address_bytes).decode()
-    await confirm_hex(
+    await confirm_address(
         ctx,
-        "confirm_unknown",
-        title="Unknown token",
-        data=contract_address_hex,
-        truncate=True,
+        "Unknown token",
+        contract_address_hex,
         description="Contract:",
-        color_description=ui.GREY,
+        br_type="unknown_token",
         icon_color=ui.ORANGE,
         br_code=ButtonRequestType.SignTx,
     )
 
 
 async def require_confirm_data(ctx, data, data_total):
-    data_str = hexlify(data[:36]).decode()
-    if data_total > 36:
-        data_str = data_str[:-2] + ".."
-    await confirm_hex(
+    await confirm_blob(
         ctx,
         "confirm_data",
         title="Confirm data",
-        data=data_str,
-        truncate=True,
-        subtitle="Size: %d bytes" % data_total,
+        description="Size: %d bytes" % data_total,
+        data=data,
         br_code=ButtonRequestType.SignTx,
     )
 

@@ -19,6 +19,7 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,6 +35,8 @@ struct usb_socket {
 
 static struct usb_socket usb_main;
 static struct usb_socket usb_debug;
+
+static struct pollfd usb_fds[2];
 
 static int socket_setup(int port) {
   int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -96,23 +99,26 @@ static size_t socket_read(struct usb_socket *sock, void *buffer, size_t size) {
 void emulatorSocketInit(void) {
   usb_main.fd = socket_setup(TREZOR_UDP_PORT);
   usb_main.fromlen = 0;
+  usb_fds[0].fd = usb_main.fd;
+  usb_fds[0].events = POLLIN;
+
   usb_debug.fd = socket_setup(TREZOR_UDP_PORT + 1);
   usb_debug.fromlen = 0;
+  usb_fds[1].fd = usb_debug.fd;
+  usb_fds[1].events = POLLIN;
 }
 
-size_t emulatorSocketRead(int *iface, void *buffer, size_t size) {
-  size_t n = socket_read(&usb_main, buffer, size);
-  if (n > 0) {
-    *iface = 0;
-    return n;
+size_t emulatorSocketRead(int *iface, void *buffer, size_t size,
+                          int timeout_ms) {
+  if (poll(usb_fds, 2, timeout_ms) > 0) {
+    if (usb_fds[0].revents & POLLIN) {
+      *iface = 0;
+      return socket_read(&usb_main, buffer, size);
+    } else if (usb_fds[1].revents & POLLIN) {
+      *iface = 1;
+      return socket_read(&usb_debug, buffer, size);
+    }
   }
-
-  n = socket_read(&usb_debug, buffer, size);
-  if (n > 0) {
-    *iface = 1;
-    return n;
-  }
-
   return 0;
 }
 

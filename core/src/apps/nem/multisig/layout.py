@@ -2,8 +2,7 @@ from trezor import ui
 from trezor.crypto import nem
 from trezor.enums import ButtonRequestType, NEMModificationType
 from trezor.messages import NEMAggregateModification, NEMSignTx, NEMTransactionCommon
-from trezor.ui.constants import MONO_ADDR_PER_LINE
-from trezor.ui.layouts import confirm_hex
+from trezor.ui.layouts import confirm_address
 
 from ..layout import require_confirm_fee, require_confirm_final, require_confirm_text
 
@@ -42,14 +41,12 @@ async def ask_aggregate_modification(
 
 
 async def _require_confirm_address(ctx, action: str, address: str):
-    await confirm_hex(
+    await confirm_address(
         ctx,
         br_type="confirm_multisig",
         title="Confirm address",
         description=action,
-        data=address,
+        address=address,
         br_code=ButtonRequestType.ConfirmOutput,
         icon=ui.ICON_SEND,
-        width=MONO_ADDR_PER_LINE,
-        truncate=True,
     )

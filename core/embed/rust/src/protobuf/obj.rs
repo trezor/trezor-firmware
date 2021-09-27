@@ -262,3 +262,13 @@ unsafe extern "C" fn msg_def_obj_is_type_of(self_in: Obj, obj: Obj) -> Obj {
 }
 
 static MSG_DEF_OBJ_IS_TYPE_OF_OBJ: ffi::mp_obj_fun_builtin_fixed_t = obj_fn_2!(msg_def_obj_is_type_of);
+
+#[no_mangle]
+pub extern "C" fn protobuf_debug_msg_type() -> &'static Type {
+    MsgObj::obj_type()
+}
+
+#[no_mangle]
+pub extern "C" fn protobuf_debug_msg_def_type() -> &'static Type {
+    MsgDefObj::obj_type()
+}

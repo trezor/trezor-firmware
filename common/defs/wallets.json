@@ -127,5 +127,8 @@
     },
     "bitcoin:ZCR": {
         "Electrum-ZCR": "https://github.com/zcore-coin/electrum-wallet/"
+    },
+    "eth:WAN": {
+        "Wanchain Wallet": "https://www.wanchain.org/getstarted/"
     }
 }

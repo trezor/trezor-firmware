@@ -1,7 +1,7 @@
 from trezor import loop, ui, wire
 
 if False:
-    from typing import Any, Awaitable
+    from typing import Callable, Any, Awaitable
 
 CONFIRMED = object()
 CANCELLED = object()
@@ -16,6 +16,20 @@ async def raise_if_cancelled(a: Awaitable, exc: Any = wire.ActionCancelled) -> N
     result = await a
     if result is CANCELLED:
         raise exc
+
+
+async def is_confirmed_info(
+    ctx: wire.GenericContext,
+    dialog: ui.Layout,
+    info_func: Callable,
+) -> bool:
+    while True:
+        result = await ctx.wait(dialog)
+
+        if result is INFO:
+            await info_func(ctx)
+        else:
+            return is_confirmed(result)
 
 
 class ConfirmBase(ui.Layout):
@@ -52,3 +66,26 @@ class ConfirmBase(ui.Layout):
             from apps.debug import confirm_signal
 
             return super().create_tasks() + (confirm_signal(),)
+
+
+class Pageable:
+    def __init__(self) -> None:
+        self._page = 0
+
+    def page(self) -> int:
+        return self._page
+
+    def page_count(self) -> int:
+        raise NotImplementedError
+
+    def is_first(self) -> bool:
+        return self._page == 0
+
+    def is_last(self) -> bool:
+        return self._page == self.page_count() - 1
+
+    def next(self) -> None:
+        self._page = min(self._page + 1, self.page_count() - 1)
+
+    def prev(self) -> None:
+        self._page = max(self._page - 1, 0)

@@ -5,15 +5,18 @@ environment:
   variables:
     GIT_SUBMODULE_STRATEGY: none  # no need to fetch submodules
     CONTAINER_NAME: "$CI_REGISTRY/satoshilabs/trezor/trezor-firmware/trezor-firmware-env.nix"
-    ALPINE_RELEASE: "3.12"
+    ALPINE_RELEASE: "3.14"
     ALPINE_ARCH: "x86_64"
-    ALPINE_VERSION: "3.12.3"
+    ALPINE_VERSION: "3.14.0"
+    ALPINE_CHECKSUM: "bcdf5a4e58637b9228f8e474547a3de9ea02a05a5fa68a2495b0657aaa7e65f6"
+    NIX_VERSION: "2.3.14"
   services:
     - docker:dind
   before_script:
     - docker login $CI_REGISTRY -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
   script:
-    - wget -nc -P ci/ http://dl-cdn.alpinelinux.org/alpine/v$ALPINE_RELEASE/releases/$ALPINE_ARCH/alpine-minirootfs-$ALPINE_VERSION-$ALPINE_ARCH.tar.gz
-    - docker build --tag $CONTAINER_NAME:$CI_COMMIT_SHA --tag $CONTAINER_NAME:latest --build-arg ALPINE_VERSION="$ALPINE_VERSION" --build-arg ALPINE_ARCH="$ALPINE_ARCH" --build-arg FULLDEPS_TESTING=1 ci/
+    - wget -nc -P ci/ https://dl-cdn.alpinelinux.org/alpine/v$ALPINE_RELEASE/releases/$ALPINE_ARCH/alpine-minirootfs-$ALPINE_VERSION-$ALPINE_ARCH.tar.gz
+    - echo "${ALPINE_CHECKSUM} ci/alpine-minirootfs-$ALPINE_VERSION-$ALPINE_ARCH.tar.gz" | sha256sum -c
+    - docker build --tag $CONTAINER_NAME:$CI_COMMIT_SHA --tag $CONTAINER_NAME:latest --build-arg ALPINE_VERSION="$ALPINE_VERSION" --build-arg ALPINE_ARCH="$ALPINE_ARCH" --build-arg NIX_VERSION="$NIX_VERSION" --build-arg FULLDEPS_TESTING=1 ci/
     - docker push $CONTAINER_NAME:$CI_COMMIT_SHA
     - docker push $CONTAINER_NAME:latest

@@ -101,7 +101,12 @@ def _wrap_protobuf_load(
     expected_type: type[LoadedMessageType],
 ) -> LoadedMessageType:
     try:
-        return protobuf.decode(buffer, expected_type, experimental_enabled)
+        msg = protobuf.decode(buffer, expected_type, experimental_enabled)
+        if __debug__ and utils.EMULATOR:
+            log.debug(
+                __name__, "received message contents:\n%s", utils.dump_protobuf(msg)
+            )
+        return msg
     except Exception as e:
         if __debug__:
             log.exception(__name__, e)
@@ -130,8 +135,6 @@ DUMMY_CONTEXT = DummyContext()
 PROTOBUF_BUFFER_SIZE = 8192
 
 WIRE_BUFFER = bytearray(PROTOBUF_BUFFER_SIZE)
-if __debug__:
-    WIRE_BUFFER_DEBUG = bytearray(PROTOBUF_BUFFER_SIZE)
 
 
 class Context:
@@ -378,11 +381,7 @@ async def _handle_single_message(
 async def handle_session(
     iface: WireInterface, session_id: int, is_debug_session: bool = False
 ) -> None:
-    if __debug__ and is_debug_session:
-        ctx_buffer = WIRE_BUFFER_DEBUG
-    else:
-        ctx_buffer = WIRE_BUFFER
-    ctx = Context(iface, session_id, ctx_buffer)
+    ctx = Context(iface, session_id, WIRE_BUFFER)
     next_msg: codec_v1.Message | None = None
 
     if __debug__ and is_debug_session:

@@ -26,7 +26,6 @@ algorithm, extended to work on other curves.
 | Ontology | nist256p1 | TODO               |             | TODO           |
 | Cardano  | ed25519   | `44'/1815'/a'/y/i` | yes         | [4](#Cardano)  |
 | Stellar  | ed25519   | `44'/148'/a'`      |             |                |
-| Lisk     | ed25519   | `44'/134'/a'`      |             |                |
 | NEM      | ed25519   | `44'/43'/a'`       |             | [5](#NEM)      |
 | Monero   | ed25519   | `44'/128'/a'`      |             |                |
 | Tezos    | ed25519   | `44'/1729'/a'`     |             | [6](#Tezos)    |

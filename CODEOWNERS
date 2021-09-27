@@ -1,8 +1,6 @@
-/ci @tsusanka
-
 /common/defs @prusnak @matejcik
 
-/common/protob @tsusanka @matejcik
+/common/protob @matejcik
 
 /core/embed @prusnak
 

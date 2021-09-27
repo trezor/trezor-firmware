@@ -7,8 +7,7 @@ from trezor.ui.components.tt.confirm import (
     HoldToConfirm,
     InfoConfirm,
 )
-
-from . import button_request
+from trezor.ui.layouts.common import button_request
 
 if __debug__:
     from trezor.ui.components.tt.scroll import Paginated

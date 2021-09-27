@@ -37,6 +37,14 @@ def by_rp_id_hash(rp_id_hash: bytes) -> FIDOApp | None:
             use_sign_count=False,
             use_self_attestation=True,
         )
+    elif rp_id_hash == b"\x20\xf6\x61\xb1\x94\x0c\x34\x70\xac\x54\xfa\x2e\xb4\x99\x90\xfd\x33\xb5\x6d\xe8\xde\x60\x18\x70\xff\x02\xa8\x06\x0f\x3b\x7c\x58":
+        # WebAuthn key for Binance
+        return FIDOApp(
+            label="binance.com",
+            icon="apps/webauthn/res/icon_binance.toif",
+            use_sign_count=False,
+            use_self_attestation=True,
+        )
     elif rp_id_hash == b"\x12\x74\x3b\x92\x12\x97\xb7\x7f\x11\x35\xe4\x1f\xde\xdd\x4a\x84\x6a\xfe\x82\xe1\xf3\x69\x32\xa9\x91\x2f\x3b\x0d\x8d\xfb\x7d\x0e":
         # U2F key for Bitbucket
         return FIDOApp(

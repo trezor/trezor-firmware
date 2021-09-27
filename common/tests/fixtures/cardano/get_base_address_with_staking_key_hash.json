@@ -7,7 +7,7 @@
     {
       "parameters": {
         "path": "m/1852'/1815'/4'/0/0",
-        "address_type":"base",
+        "address_type": "base",
         "staking_key_hash": "1bc428e4720702ebd5dab4fb175324c192dc9bb76cc5da956e3c8dff",
         "network_id": 1,
         "protocol_magic": 764824073

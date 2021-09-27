@@ -17,6 +17,8 @@ from .hash143 import Bip143Hash
 from .tx_info import OriginalTxInfo, TxInfo
 
 if False:
+    from typing import Sequence
+
     from trezor.crypto import bip32
 
     from trezor.messages import (
@@ -36,6 +38,7 @@ if False:
 
 # the number of bytes to preallocate for serialized transaction chunks
 _MAX_SERIALIZED_CHUNK_SIZE = const(2048)
+_SERIALIZED_TX_BUFFER = empty_bytearray(_MAX_SERIALIZED_CHUNK_SIZE)
 
 
 class Bitcoin:
@@ -77,6 +80,8 @@ class Bitcoin:
         coin: CoinInfo,
         approver: approvers.Approver | None,
     ) -> None:
+        global _SERIALIZED_TX_BUFFER
+
         self.tx_info = TxInfo(self, helpers.sanitize_sign_tx(tx, coin))
         self.keychain = keychain
         self.coin = coin
@@ -93,7 +98,8 @@ class Bitcoin:
         self.external: set[int] = set()
 
         # transaction and signature serialization
-        self.serialized_tx = empty_bytearray(_MAX_SERIALIZED_CHUNK_SIZE)
+        _SERIALIZED_TX_BUFFER[:] = bytes()
+        self.serialized_tx = _SERIALIZED_TX_BUFFER
         self.tx_req = TxRequest()
         self.tx_req.details = TxRequestDetailsType()
         self.tx_req.serialized = TxRequestSerializedType()
@@ -392,7 +398,7 @@ class Bitcoin:
         i: int,
         txi: TxInput,
         tx_info: TxInfo | OriginalTxInfo,
-        public_keys: list[bytes],
+        public_keys: Sequence[bytes | memoryview],
         threshold: int,
         script_pubkey: bytes,
     ) -> bytes:
@@ -455,8 +461,7 @@ class Bitcoin:
 
         node = self.keychain.derive(txi.address_n)
         key_sign_pub = node.public_key()
-        script_sig = self.input_derive_script(txi, key_sign_pub, b"")
-        self.write_tx_input(self.serialized_tx, txi, script_sig)
+        self.write_tx_input_derived(self.serialized_tx, txi, key_sign_pub, b"")
 
     def sign_bip143_input(self, txi: TxInput) -> tuple[bytes, bytes]:
         self.tx_info.check_input(txi)
@@ -496,14 +501,16 @@ class Bitcoin:
         if txi.multisig:
             # find out place of our signature based on the pubkey
             signature_index = multisig.multisig_pubkey_index(txi.multisig, public_key)
-            self.serialized_tx.extend(
-                scripts.witness_multisig(
-                    txi.multisig, signature, signature_index, self.get_hash_type(txi)
-                )
+            scripts.write_witness_multisig(
+                self.serialized_tx,
+                txi.multisig,
+                signature,
+                signature_index,
+                self.get_hash_type(txi),
             )
         else:
-            self.serialized_tx.extend(
-                scripts.witness_p2wpkh(signature, public_key, self.get_hash_type(txi))
+            scripts.write_witness_p2wpkh(
+                self.serialized_tx, signature, public_key, self.get_hash_type(txi)
             )
 
     async def get_legacy_tx_digest(
@@ -581,8 +588,9 @@ class Bitcoin:
         signature = ecdsa_sign(node, tx_digest)
 
         # serialize input with correct signature
-        script_sig = self.input_derive_script(txi, node.public_key(), signature)
-        self.write_tx_input(self.serialized_tx, txi, script_sig)
+        self.write_tx_input_derived(
+            self.serialized_tx, txi, node.public_key(), signature
+        )
         self.set_serialized_signature(i, signature)
 
     async def serialize_output(self, i: int) -> None:
@@ -655,6 +663,26 @@ class Bitcoin:
         # the fork ID value.
         return self.get_sighash_type(txi) & 0xFF
 
+    def write_tx_input_derived(
+        self,
+        w: writers.Writer,
+        txi: TxInput,
+        pubkey: bytes,
+        signature: bytes,
+    ) -> None:
+        writers.write_bytes_reversed(w, txi.prev_hash, writers.TX_HASH_SIZE)
+        writers.write_uint32(w, txi.prev_index)
+        scripts.write_input_script_prefixed(
+            w,
+            txi.script_type,
+            txi.multisig,
+            self.coin,
+            self.get_hash_type(txi),
+            pubkey,
+            signature,
+        )
+        writers.write_uint32(w, txi.sequence)
+
     @staticmethod
     def write_tx_input(
         w: writers.Writer,
@@ -722,18 +750,3 @@ class Bitcoin:
         assert txo.address is not None  # checked in sanitize_tx_output
 
         return scripts.output_derive_script(txo.address, self.coin)
-
-    # Tx Inputs
-    # ===
-
-    def input_derive_script(
-        self, txi: TxInput, pubkey: bytes, signature: bytes
-    ) -> bytes:
-        return scripts.input_derive_script(
-            txi.script_type,
-            txi.multisig,
-            self.coin,
-            self.get_hash_type(txi),
-            pubkey,
-            signature,
-        )

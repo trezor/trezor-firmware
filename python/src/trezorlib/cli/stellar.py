@@ -15,11 +15,20 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import base64
+import sys
 
 import click
 
 from .. import stellar, tools
 from . import with_client
+
+try:
+    from stellar_sdk import (
+        parse_transaction_envelope_from_xdr,
+        FeeBumpTransactionEnvelope,
+    )
+except ImportError:
+    pass
 
 PATH_HELP = "BIP32 path. Always use hardened paths and the m/44'/148'/ prefix"
 
@@ -68,8 +77,29 @@ def sign_transaction(client, b64envelope, address, network_passphrase):
     For testnet transactions, use the following network passphrase:
     'Test SDF Network ; September 2015'
     """
+    if not stellar.HAVE_STELLAR_SDK:
+        click.echo("Stellar requirements not installed.")
+        click.echo("Please run:")
+        click.echo()
+        click.echo("  pip install stellar-sdk")
+        sys.exit(1)
+    try:
+        envelope = parse_transaction_envelope_from_xdr(b64envelope, network_passphrase)
+    except Exception:
+        click.echo(
+            "Failed to parse XDR.\n"
+            "Make sure to pass a valid TransactionEnvelope object.\n"
+            "You can check whether the data you submitted is valid TransactionEnvelope object "
+            "through XDRViewer - https://laboratory.stellar.org/#xdr-viewer\n"
+        )
+        sys.exit(1)
+
+    if isinstance(envelope, FeeBumpTransactionEnvelope):
+        click.echo("FeeBumpTransactionEnvelope is not supported")
+        sys.exit(1)
+
     address_n = tools.parse_path(address)
-    tx, operations = stellar.parse_transaction_bytes(base64.b64decode(b64envelope))
+    tx, operations = stellar.from_envelope(envelope)
     resp = stellar.sign_tx(client, tx, operations, address_n, network_passphrase)
 
     return base64.b64encode(resp.signature)

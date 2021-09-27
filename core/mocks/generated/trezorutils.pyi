@@ -1,6 +1,14 @@
 from typing import *
 
 
+# extmod/modtrezorutils/modtrezorutils-meminfo.h
+def meminfo(filename: str) -> None:
+    """Dumps map of micropython GC arena to a file.
+    The JSON file can be decoded by analyze.py
+    Only available in the emulator.
+     """
+
+
 # extmod/modtrezorutils/modtrezorutils.c
 def consteq(sec: bytes, pub: bytes) -> bool:
     """

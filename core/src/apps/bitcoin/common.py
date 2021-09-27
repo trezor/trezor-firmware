@@ -73,7 +73,7 @@ def ecdsa_hash_pubkey(pubkey: bytes, coin: CoinInfo) -> bytes:
     else:
         ensure(len(pubkey) == 33)  # compresssed format
 
-    return coin.script_hash(pubkey)
+    return coin.script_hash(pubkey).digest()
 
 
 def encode_bech32_address(prefix: str, script: bytes) -> str:

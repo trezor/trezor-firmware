@@ -157,7 +157,11 @@ int main(void) {
   layoutHome();
   usbInit();
   for (;;) {
+#if EMULATOR && !PIZERO
+    usbSleep(10);
+#else
     usbPoll();
+#endif
     check_lock_screen();
   }
 

@@ -86,7 +86,7 @@ message Features {
         Capability_Crypto = 5 [(bitcoin_only) = true];  // generic crypto operations for GPG, SSH, etc.
         Capability_EOS = 6;
         Capability_Ethereum = 7;
-        Capability_Lisk = 8;
+        Capability_Lisk = 8 [deprecated = true];
         Capability_Monero = 9;
         Capability_NEM = 10;
         Capability_Ripple = 11;
@@ -153,7 +153,7 @@ message ApplySettings {
  * @next Failure
  */
 message ApplyFlags {
-    optional uint32 flags = 1;  // bitmask, can only set bits, not unset
+    required uint32 flags = 1;  // bitmask, can only set bits, not unset
 }
 
 /**
@@ -183,7 +183,7 @@ message ChangeWipeCode {
  * @next Failure
  */
 message SdProtect {
-    optional SdProtectOperationType operation = 1;
+    required SdProtectOperationType operation = 1;
     /**
     * Structure representing SD card protection operation
     */
@@ -296,7 +296,7 @@ message EntropyRequest {
  * @next Success
  */
 message EntropyAck {
-    optional bytes entropy = 1;     // 256 bits (32 bytes) of random data
+    required bytes entropy = 1;     // 256 bits (32 bytes) of random data
 }
 
 /**
@@ -337,7 +337,7 @@ message RecoveryDevice {
  * @next WordAck
  */
 message WordRequest {
-    optional WordRequestType type = 1;
+    required WordRequestType type = 1;
     /**
     * Type of Recovery Word request
     */
@@ -364,7 +364,7 @@ message WordAck {
  * @next Success
  */
 message SetU2FCounter {
-    optional uint32 u2f_counter = 1;
+    required uint32 u2f_counter = 1;
 }
 
 /**
@@ -380,7 +380,7 @@ message GetNextU2FCounter {
  * @end
  */
 message NextU2FCounter {
-    optional uint32 u2f_counter = 1;
+    required uint32 u2f_counter = 1;
 }
 
 /**

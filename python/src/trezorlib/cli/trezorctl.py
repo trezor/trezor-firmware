@@ -40,7 +40,6 @@ from . import (
     ethereum,
     fido,
     firmware,
-    lisk,
     monero,
     nem,
     ripple,
@@ -70,15 +69,16 @@ COMMAND_ALIASES = {
     "bnb": binance.cli,
     "eth": ethereum.cli,
     "ada": cardano.cli,
-    "lsk": lisk.cli,
     "xmr": monero.cli,
     "xrp": ripple.cli,
     "xlm": stellar.cli,
     "xtz": tezos.cli,
-    # firmware-update aliases:
-    "update-firmware": firmware.firmware_update,
-    "upgrade-firmware": firmware.firmware_update,
-    "firmware-upgrade": firmware.firmware_update,
+    # firmware aliases:
+    "fw": firmware.cli,
+    "update-firmware": firmware.update,
+    "upgrade-firmware": firmware.update,
+    "firmware-upgrade": firmware.update,
+    "firmware-update": firmware.update,
 }
 
 
@@ -331,7 +331,6 @@ cli.add_command(device.cli)
 cli.add_command(eos.cli)
 cli.add_command(ethereum.cli)
 cli.add_command(fido.cli)
-cli.add_command(lisk.cli)
 cli.add_command(monero.cli)
 cli.add_command(nem.cli)
 cli.add_command(ripple.cli)
@@ -339,7 +338,7 @@ cli.add_command(settings.cli)
 cli.add_command(stellar.cli)
 cli.add_command(tezos.cli)
 
-cli.add_command(firmware.firmware_update)
+cli.add_command(firmware.cli)
 cli.add_command(debug.cli)
 
 #

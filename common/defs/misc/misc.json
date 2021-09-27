@@ -101,32 +101,6 @@
         }
     },
     {
-        "name": "Ontology",
-        "shortcut": "ONT",
-        "slip44": 1024,
-        "curve": "nist256p1",
-        "decimals": 8,
-        "links": {
-            "Homepage": "https://ont.io",
-            "Github": "https://github.com/ontio/ontology"
-        },
-        "wallet": {}
-    },
-    {
-        "name": "Wanchain",
-        "shortcut": "WAN",
-        "slip44": 5718350,
-        "curve": "secp256k1",
-        "decimals": 18,
-        "links": {
-            "Homepage": "https://wanchain.org",
-            "Github": "https://github.com/wanchain/go-wanchain"
-        },
-        "wallet": {
-            "Wanchain Wallet": "https://www.wanchain.org/getstarted/"
-        }
-    },
-    {
         "name": "EOS",
         "shortcut": "EOS",
         "slip44": 194,

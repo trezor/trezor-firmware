@@ -105,10 +105,9 @@ bool stellar_signingInit(const StellarSignTx *msg) {
   // non-zero
   uint8_t has_timebounds =
       (msg->timebounds_start > 0 || msg->timebounds_end > 0);
+  // Hash: the "has timebounds?" boolean
+  stellar_hashupdate_bool(has_timebounds);
   if (has_timebounds) {
-    // Hash: the "has timebounds?" boolean
-    stellar_hashupdate_bool(true);
-
     // Timebounds are sent as uint32s since that's all we can display, but they
     // must be hashed as 64-bit values
     stellar_hashupdate_uint32(0);
@@ -116,10 +115,6 @@ bool stellar_signingInit(const StellarSignTx *msg) {
 
     stellar_hashupdate_uint32(0);
     stellar_hashupdate_uint32(msg->timebounds_end);
-  }
-  // No timebounds, hash a false boolean
-  else {
-    stellar_hashupdate_bool(false);
   }
 
   // Hash: memo
@@ -140,10 +135,12 @@ bool stellar_signingInit(const StellarSignTx *msg) {
     // Hash and return are the same data structure (32 byte tx hash)
     case 3:
     case 4:
-      stellar_hashupdate_bytes(msg->memo_hash.bytes, msg->memo_hash.size);
+      stellar_hashupdate_bytes(msg->memo_hash.bytes, 32);
       break;
     default:
-      break;
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Stellar invalid memo type"));
+      return false;
   }
 
   // Hash: number of operations
@@ -707,6 +704,7 @@ bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg) {
     // Hash low threshold
     stellar_hashupdate_uint32(msg->low_threshold);
   }
+
   stellar_hashupdate_bool(msg->has_medium_threshold);
   if (msg->has_medium_threshold) {
     char str_med_threshold[10 + 1] = {0};
@@ -720,6 +718,7 @@ bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg) {
     // Hash medium threshold
     stellar_hashupdate_uint32(msg->medium_threshold);
   }
+
   stellar_hashupdate_bool(msg->has_high_threshold);
   if (msg->has_high_threshold) {
     char str_high_threshold[10 + 1] = {0};
@@ -789,45 +788,42 @@ bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg) {
     strlcat(str_weight_row, str_weight, sizeof(str_weight_row));
 
     // 0 = account, 1 = pre-auth, 2 = hash(x)
-    char str_signer_type[16] = {0};
+    char *str_signer_type = NULL;
     bool needs_hash_confirm = false;
-    if (msg->signer_type == 0) {
-      strlcpy(str_signer_type, _("account"), sizeof(str_signer_type));
-      strlcat(str_title, str_signer_type, sizeof(str_title));
+    switch (msg->signer_type) {
+      case 0:
+        strlcat(str_title, _("account"), sizeof(str_title));
 
-      const char **str_addr_rows =
-          stellar_lineBreakAddress(msg->signer_key.bytes);
-      stellar_layoutTransactionDialog(str_title, str_weight_row,
-                                      str_addr_rows[0], str_addr_rows[1],
-                                      str_addr_rows[2]);
-      if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-        stellar_signingAbort(_("User canceled"));
-        return false;
-      }
-    }
-    if (msg->signer_type == 1) {
-      needs_hash_confirm = true;
-      strlcpy(str_signer_type, _("pre-auth hash"), sizeof(str_signer_type));
-      strlcat(str_title, str_signer_type, sizeof(str_title));
+        const char **str_addr_rows =
+            stellar_lineBreakAddress(msg->signer_key.bytes);
+        stellar_layoutTransactionDialog(str_title, str_weight_row,
+                                        str_addr_rows[0], str_addr_rows[1],
+                                        str_addr_rows[2]);
+        if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall,
+                           false)) {
+          stellar_signingAbort(_("User canceled"));
+          return false;
+        }
+        break;
+      case 1:
+      case 2:
+        str_signer_type =
+            (msg->signer_type == 1) ? _("pre-auth hash") : _("hash(x)");
+        needs_hash_confirm = true;
+        strlcat(str_title, str_signer_type, sizeof(str_title));
 
-      stellar_layoutTransactionDialog(str_title, str_weight_row, NULL,
-                                      _("(confirm hash on next"), _("screen)"));
-      if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-        stellar_signingAbort(_("User canceled"));
+        stellar_layoutTransactionDialog(str_title, str_weight_row, NULL,
+                                        _("(confirm hash on next"),
+                                        _("screen)"));
+        if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall,
+                           false)) {
+          stellar_signingAbort(_("User canceled"));
+          return false;
+        }
+        break;
+      default:
+        stellar_signingAbort(_("Stellar: invalid signer type"));
         return false;
-      }
-    }
-    if (msg->signer_type == 2) {
-      needs_hash_confirm = true;
-      strlcpy(str_signer_type, _("hash(x)"), sizeof(str_signer_type));
-      strlcat(str_title, str_signer_type, sizeof(str_title));
-
-      stellar_layoutTransactionDialog(str_title, str_weight_row, NULL,
-                                      _("(confirm hash on next"), _("screen)"));
-      if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-        stellar_signingAbort(_("User canceled"));
-        return false;
-      }
     }
 
     // Extra confirmation step for hash signers
@@ -850,7 +846,7 @@ bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg) {
     // Hash: signer type
     stellar_hashupdate_uint32(msg->signer_type);
     // key
-    stellar_hashupdate_bytes(msg->signer_key.bytes, msg->signer_key.size);
+    stellar_hashupdate_bytes(msg->signer_key.bytes, 32);
     // weight
     stellar_hashupdate_uint32(msg->signer_weight);
   }
@@ -973,17 +969,21 @@ bool stellar_confirmAllowTrustOp(const StellarAllowTrustOp *msg) {
   // asset type
   stellar_hashupdate_uint32(msg->asset_type);
   // asset code
-  if (msg->asset_type == 1) {
-    char code4[4 + 1] = {0};
-    memzero(code4, sizeof(code4));
-    strlcpy(code4, msg->asset_code, sizeof(code4));
-    stellar_hashupdate_bytes((uint8_t *)code4, 4);
-  }
-  if (msg->asset_type == 2) {
-    char code12[12 + 1] = {0};
-    memzero(code12, sizeof(code12));
-    strlcpy(code12, msg->asset_code, sizeof(code12));
-    stellar_hashupdate_bytes((uint8_t *)code12, 12);
+  char padded_code[12 + 1] = {0};
+  switch (msg->asset_type) {
+    case 0:  // native asset (XLM)
+      break;
+    case 1:  // alphanum 4
+      strlcpy(padded_code, msg->asset_code, 4 + 1);
+      stellar_hashupdate_bytes((uint8_t *)padded_code, 4);
+      break;
+    case 2:  // alphanum 12
+      strlcpy(padded_code, msg->asset_code, 12 + 1);
+      stellar_hashupdate_bytes((uint8_t *)padded_code, 12);
+      break;
+    default:
+      stellar_signingAbort(_("Stellar: invalid asset type"));
+      return false;
   }
   // is authorized
   stellar_hashupdate_bool(msg->is_authorized);
@@ -1086,11 +1086,9 @@ bool stellar_confirmManageDataOp(const StellarManageDataOp *msg) {
   stellar_hashupdate_string((unsigned char *)&(msg->key),
                             strnlen(msg->key, 64));
   // value
+  stellar_hashupdate_bool(msg->has_value);
   if (msg->has_value) {
-    stellar_hashupdate_bool(true);
     stellar_hashupdate_string(msg->value.bytes, msg->value.size);
-  } else {
-    stellar_hashupdate_bool(false);
   }
 
   // At this point, the operation is confirmed
@@ -1628,36 +1626,36 @@ void stellar_layoutTransactionSummary(const StellarSignTx *msg) {
   // Reset lines for displaying memo
   memzero(str_lines, sizeof(str_lines));
 
-  // Memo: none
-  if (msg->memo_type == 0) {
-    strlcpy(str_lines[0], _("[No Memo Set]"), sizeof(str_lines[0]));
-    strlcpy(str_lines[1], _("Important:"), sizeof(str_lines[0]));
-    strlcpy(str_lines[2], _("Many exchanges require"), sizeof(str_lines[0]));
-    strlcpy(str_lines[3], _("a memo when depositing."), sizeof(str_lines[0]));
-  }
-  // Memo: text
-  if (msg->memo_type == 1) {
-    strlcpy(str_lines[0], _("Memo (TEXT)"), sizeof(str_lines[0]));
+  switch (msg->memo_type) {
+    case 0:  // Memo: none
+      strlcpy(str_lines[0], _("[No Memo Set]"), sizeof(str_lines[0]));
+      strlcpy(str_lines[1], _("Important:"), sizeof(str_lines[0]));
+      strlcpy(str_lines[2], _("Many exchanges require"), sizeof(str_lines[0]));
+      strlcpy(str_lines[3], _("a memo when depositing."), sizeof(str_lines[0]));
+      break;
+    case 1:  // Memo: text
+      strlcpy(str_lines[0], _("Memo (TEXT)"), sizeof(str_lines[0]));
 
-    // Split 28-character string into two lines of 19 / 9
-    // todo: word wrap method?
-    strlcpy(str_lines[1], (const char *)msg->memo_text, 19 + 1);
-    strlcpy(str_lines[2], (const char *)(msg->memo_text + 19), 9 + 1);
-  }
-  // Memo: ID
-  if (msg->memo_type == 2) {
-    strlcpy(str_lines[0], _("Memo (ID)"), sizeof(str_lines[0]));
-    stellar_format_uint64(msg->memo_id, str_lines[1], sizeof(str_lines[1]));
-  }
-  // Memo: hash
-  if (msg->memo_type == 3) {
-    needs_memo_hash_confirm = 1;
-    strlcpy(str_lines[0], _("Memo (HASH)"), sizeof(str_lines[0]));
-  }
-  // Memo: return
-  if (msg->memo_type == 4) {
-    needs_memo_hash_confirm = 1;
-    strlcpy(str_lines[0], _("Memo (RETURN)"), sizeof(str_lines[0]));
+      // Split 28-character string into two lines of 19 / 9
+      // todo: word wrap method?
+      strlcpy(str_lines[1], (const char *)msg->memo_text, 19 + 1);
+      strlcpy(str_lines[2], (const char *)(msg->memo_text + 19), 9 + 1);
+      break;
+    case 2:  // Memo: ID
+      strlcpy(str_lines[0], _("Memo (ID)"), sizeof(str_lines[0]));
+      stellar_format_uint64(msg->memo_id, str_lines[1], sizeof(str_lines[1]));
+      break;
+    case 3:  // Memo: hash
+      needs_memo_hash_confirm = 1;
+      strlcpy(str_lines[0], _("Memo (HASH)"), sizeof(str_lines[0]));
+      break;
+    case 4:  // Memo: return
+      needs_memo_hash_confirm = 1;
+      strlcpy(str_lines[0], _("Memo (RETURN)"), sizeof(str_lines[0]));
+      break;
+    default:
+      stellar_signingAbort(_("Stellar invalid memo type"));
+      return;
   }
 
   if (needs_memo_hash_confirm) {

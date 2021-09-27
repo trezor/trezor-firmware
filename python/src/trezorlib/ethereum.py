@@ -55,7 +55,7 @@ def sign_tx(
     msg = messages.EthereumSignTx(
         address_n=n,
         nonce=int_to_big_endian(nonce),
-        gas_price=int_to_big_endian(gas_price),
+        gas_price=int_to_big_endian(gas_price) if gas_price is not None else None,
         gas_limit=int_to_big_endian(gas_limit),
         value=int_to_big_endian(value),
         to=to,
@@ -79,6 +79,47 @@ def sign_tx(
     # only signature bit returned. recalculate signature_v
     if response.signature_v <= 1:
         response.signature_v += 2 * chain_id + 35
+
+    return response.signature_v, response.signature_r, response.signature_s
+
+
+@session
+def sign_tx_eip1559(
+    client,
+    n,
+    *,
+    nonce,
+    gas_limit,
+    to,
+    value,
+    data=b"",
+    chain_id,
+    max_gas_fee,
+    max_priority_fee,
+    access_list=()
+):
+    length = len(data)
+    data, chunk = data[1024:], data[:1024]
+    msg = messages.EthereumSignTxEIP1559(
+        address_n=n,
+        nonce=int_to_big_endian(nonce),
+        gas_limit=int_to_big_endian(gas_limit),
+        value=int_to_big_endian(value),
+        to=to,
+        chain_id=chain_id,
+        max_gas_fee=int_to_big_endian(max_gas_fee),
+        max_priority_fee=int_to_big_endian(max_priority_fee),
+        access_list=access_list,
+        data_length=length,
+        data_initial_chunk=chunk,
+    )
+
+    response = client.call(msg)
+
+    while response.data_length is not None:
+        data_length = response.data_length
+        data, chunk = data[data_length:], data[:data_length]
+        response = client.call(messages.EthereumTxAck(data_chunk=chunk))
 
     return response.signature_v, response.signature_r, response.signature_s
 

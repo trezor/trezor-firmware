@@ -1,10 +1,8 @@
-from ubinascii import hexlify
-
 from trezor import strings, ui
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import (
     confirm_action,
-    confirm_hex,
+    confirm_blob,
     confirm_metadata,
     confirm_output,
 )
@@ -137,11 +135,11 @@ async def _require_confirm_output(
 
 
 async def _require_confirm_payment_id(ctx, payment_id: bytes):
-    await confirm_hex(
+    await confirm_blob(
         ctx,
         "confirm_payment_id",
         title="Payment ID",
-        data=hexlify(payment_id).decode(),
+        data=payment_id,
         br_code=ButtonRequestType.SignTx,
     )
 

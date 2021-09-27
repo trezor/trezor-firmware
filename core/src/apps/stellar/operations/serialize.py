@@ -12,7 +12,7 @@ from trezor.messages import (
     StellarPaymentOp,
     StellarSetOptionsOp,
 )
-from trezor.wire import ProcessError
+from trezor.wire import DataError, ProcessError
 
 from .. import consts, writers
 
@@ -148,9 +148,13 @@ def _write_asset_code(w, asset_type: int, asset_code: str):
     if asset_type == consts.ASSET_TYPE_NATIVE:
         return  # nothing is needed
     elif asset_type == consts.ASSET_TYPE_ALPHANUM4:
+        if len(code) > 4:
+            raise DataError("Stellar: asset code too long for ALPHANUM4")
         # pad with zeros to 4 chars
         writers.write_bytes_fixed(w, code + bytearray([0] * (4 - len(code))), 4)
     elif asset_type == consts.ASSET_TYPE_ALPHANUM12:
+        if len(code) > 12:
+            raise DataError("Stellar: asset code too long for ALPHANUM12")
         # pad with zeros to 12 chars
         writers.write_bytes_fixed(w, code + bytearray([0] * (12 - len(code))), 12)
     else:

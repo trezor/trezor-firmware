@@ -2,9 +2,6 @@ from micropython import const
 
 import storage.device
 from trezor import wire, workflow
-from trezor.enums import ButtonRequestType
-
-from . import button_request
 
 _MAX_PASSPHRASE_LEN = const(50)
 
@@ -23,7 +20,9 @@ async def get(ctx: wire.Context) -> str:
 async def _request_from_user(ctx: wire.Context) -> str:
     workflow.close_others()  # request exclusive UI access
     if storage.device.get_passphrase_always_on_device():
-        passphrase = await _request_on_device(ctx)
+        from trezor.ui.layouts import request_passphrase_on_device
+
+        passphrase = await request_passphrase_on_device(ctx, _MAX_PASSPHRASE_LEN)
     else:
         passphrase = await _request_on_host(ctx)
     if len(passphrase.encode()) > _MAX_PASSPHRASE_LEN:
@@ -36,19 +35,17 @@ async def _request_from_user(ctx: wire.Context) -> str:
 
 async def _request_on_host(ctx: wire.Context) -> str:
     from trezor.messages import PassphraseAck, PassphraseRequest
-    from trezor.ui import ICON_CONFIG
-    from trezor.ui.components.tt.text import Text
-
-    from .confirm import require_confirm
 
     _entry_dialog()
 
     request = PassphraseRequest()
     ack = await ctx.call(request, PassphraseAck)
     if ack.on_device:
+        from trezor.ui.layouts import request_passphrase_on_device
+
         if ack.passphrase is not None:
             raise wire.DataError("Passphrase provided when it should not be")
-        return await _request_on_device(ctx)
+        return await request_passphrase_on_device(ctx, _MAX_PASSPHRASE_LEN)
 
     if ack.passphrase is None:
         raise wire.DataError(
@@ -57,41 +54,33 @@ async def _request_on_host(ctx: wire.Context) -> str:
 
     # non-empty passphrase
     if ack.passphrase:
-        text = Text("Hidden wallet", ICON_CONFIG)
-        text.normal("Access hidden wallet?")
-        text.br()
-        text.normal("Next screen will show")
-        text.normal("the passphrase!")
-        await require_confirm(ctx, text, ButtonRequestType.Other)
+        from trezor import ui
+        from trezor.ui.layouts import confirm_action, confirm_blob
 
-        text = Text("Hidden wallet", ICON_CONFIG, break_words=True)
-        text.normal("Use this passphrase?")
-        text.br()
-        text.mono(ack.passphrase)
-        await require_confirm(ctx, text, ButtonRequestType.Other)
+        await confirm_action(
+            ctx,
+            "passphrase_host1",
+            title="Hidden wallet",
+            description="Access hidden wallet?\n\nNext screen will show\nthe passphrase!",
+            icon=ui.ICON_CONFIG,
+        )
+
+        await confirm_blob(
+            ctx,
+            "passphrase_host2",
+            title="Hidden wallet",
+            description="Use this passphrase?\n",
+            data=ack.passphrase,
+            icon=ui.ICON_CONFIG,
+            icon_color=ui.ORANGE_ICON,
+        )
 
     return ack.passphrase
 
 
-async def _request_on_device(ctx: wire.Context) -> str:
-    from trezor.ui.components.tt.passphrase import CANCELLED, PassphraseKeyboard
-
-    await button_request(ctx, code=ButtonRequestType.PassphraseEntry)
-
-    keyboard = PassphraseKeyboard("Enter passphrase", _MAX_PASSPHRASE_LEN)
-    passphrase = await ctx.wait(keyboard)
-    if passphrase is CANCELLED:
-        raise wire.ActionCancelled("Passphrase entry cancelled")
-
-    assert isinstance(passphrase, str)
-
-    return passphrase
-
-
 def _entry_dialog() -> None:
-    from trezor.ui import ICON_CONFIG, draw_simple
-    from trezor.ui.components.tt.text import Text
+    from trezor.ui.layouts import draw_simple_text
 
-    text = Text("Passphrase entry", ICON_CONFIG)
-    text.normal("Please type your", "passphrase on the", "connected host.")
-    draw_simple(text)
+    draw_simple_text(
+        "Passphrase entry", "Please type your\npassphrase on the\nconnected host."
+    )

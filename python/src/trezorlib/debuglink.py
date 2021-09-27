@@ -374,18 +374,20 @@ class TrezorClientDebugLink(TrezorClient):
             else:
                 raise
 
-        self.ui = DebugUI(self.debug)
-
-        self.in_with_statement = 0
-        self.screenshot_id = 0
-
-        self.filters = {}
-
-        # Do not expect any specific response from device
-        self.expected_responses = None
-        self.actual_responses = None
+        self.reset_debug_features()
 
         super().__init__(transport, ui=self.ui)
+
+    def reset_debug_features(self):
+        """Prepare the debugging client for a new testcase.
+
+        Clears all debugging state that might have been modified by a testcase.
+        """
+        self.ui = DebugUI(self.debug)
+        self.in_with_statement = False
+        self.expected_responses = None
+        self.actual_responses = None
+        self.filters = {}
 
     def open(self):
         super().open()
@@ -407,6 +409,9 @@ class TrezorClientDebugLink(TrezorClient):
 
         Useful for test scenarios with an active malicious actor on the wire.
         """
+        if not self.in_with_statement:
+            raise RuntimeError("Must be called inside 'with' statement")
+
         self.filters[message_type] = callback
 
     def _filter_message(self, msg):
@@ -467,30 +472,24 @@ class TrezorClientDebugLink(TrezorClient):
 
     def __enter__(self):
         # For usage in with/expected_responses
-        self.in_with_statement += 1
-        if self.in_with_statement > 1:
+        if self.in_with_statement:
             raise RuntimeError("Do not nest!")
+        self.in_with_statement = True
         return self
 
-    def __exit__(self, _type, value, traceback):
+    def __exit__(self, exc_type, value, traceback):
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
 
-        self.in_with_statement -= 1
-        self.ui.clear()
         self.watch_layout(False)
+        # copy expected/actual responses before clearing them
+        expected_responses = self.expected_responses
+        actual_responses = self.actual_responses
+        self.reset_debug_features()
 
-        if _type is not None:
-            # Another exception raised
-            return False
-
-        try:
-            # Evaluate missed responses in 'with' statement
-            self._verify_responses(self.expected_responses, self.actual_responses)
-        finally:
-            self.expected_responses = None
-            self.actual_responses = None
-
-        return False
+        if exc_type is None:
+            # If no other exception was raised, evaluate missed responses
+            # (raises AssertionError on mismatch)
+            self._verify_responses(expected_responses, actual_responses)
 
     def set_expected_responses(self, expected):
         """Set a sequence of expected responses to client calls.
@@ -557,7 +556,8 @@ class TrezorClientDebugLink(TrezorClient):
     def _raw_write(self, msg):
         return super()._raw_write(self._filter_message(msg))
 
-    def _expectation_lines(self, expected, current):
+    @staticmethod
+    def _expectation_lines(expected, current):
         start_at = max(current - EXPECTED_RESPONSES_CONTEXT_LINES, 0)
         stop_at = min(current + EXPECTED_RESPONSES_CONTEXT_LINES + 1, len(expected))
         output = []
@@ -575,7 +575,8 @@ class TrezorClientDebugLink(TrezorClient):
         output.append("")
         return output
 
-    def _verify_responses(self, expected, actual):
+    @classmethod
+    def _verify_responses(cls, expected, actual):
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
 
         if expected is None and actual is None:
@@ -583,7 +584,7 @@ class TrezorClientDebugLink(TrezorClient):
 
         for i, (exp, act) in enumerate(zip_longest(expected, actual)):
             if exp is None:
-                output = self._expectation_lines(expected, i)
+                output = cls._expectation_lines(expected, i)
                 output.append("No more messages were expected, but we got:")
                 for resp in actual[i:]:
                     output.append(
@@ -592,12 +593,12 @@ class TrezorClientDebugLink(TrezorClient):
                 raise AssertionError("\n".join(output))
 
             if act is None:
-                output = self._expectation_lines(expected, i)
+                output = cls._expectation_lines(expected, i)
                 output.append("This and the following message was not received.")
                 raise AssertionError("\n".join(output))
 
             if not exp.match(act):
-                output = self._expectation_lines(expected, i)
+                output = cls._expectation_lines(expected, i)
                 output.append("Actually received:")
                 output.append(textwrap.indent(protobuf.format_message(act), "    "))
                 raise AssertionError("\n".join(output))

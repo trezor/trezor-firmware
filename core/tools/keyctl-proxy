@@ -30,30 +30,30 @@ PATH = "10018h/{}h"
 TREZOR = None
 
 
-def make_commit(fw_or_type, digest, public_keys):
-    path = PATH.format(fw_or_type.BIP32_INDEX)
+def make_commit(image_type, digest, public_keys):
+    path = PATH.format(image_type.BIP32_INDEX)
     address_n = parse_path(path)
 
     # device information - show only first time
     click.echo(
-        f"\nUsing device {click.style(TREZOR.features.label, bold=True)} "
-        f"at path {TREZOR.transport.get_path()}"
+        "\nUsing device {} ".format(click.style(TREZOR.features.label, bold=True)) +
+        "at path {}".format(TREZOR.transport.get_path())
     )
 
     while True:
         # signing information - repeat every time
-        click.echo(f"Commiting to {click.style(fw_or_type.NAME, bold=True)} hash:")
+        click.echo("Commiting to {} hash:".format(click.style(image_type.NAME, bold=True)))
         for partid in range(4):
             digest_part = digest[partid * 8 : (partid + 1) * 8]
             color = "red" if partid % 2 else "cyan"
             digest_str = click.style(digest_part.hex().upper(), fg=color)
             click.echo("\t" + digest_str)
-        click.echo(f"Using path: {click.style(path, bold=True)}")
+        click.echo("Using path: {}".format(click.style(path, bold=True)))
 
         try:
             commit = cosi.commit(TREZOR, address_n, digest)
             if public_keys is not None and commit.pubkey not in public_keys:
-                click.echo(f"\n\nPublic key {commit.pubkey.hex()} is unknown.")
+                click.echo("\n\nPublic key {} is unknown.".format(commit.pubkey.hex()))
                 if click.confirm("Retry with a different passphrase?", default=True):
                     TREZOR.init_device()
                     continue
@@ -80,8 +80,8 @@ class KeyctlProxy:
 
     def _check_name_digest(self, name, digest):
         if name != self.name or digest != self.digest:
-            click.echo(f"ERROR! Remote wants to sign {name} with digest {digest.hex()}")
-            click.echo(f"Expected: {self.name} with digest {self.digest.hex()}")
+            click.echo("ERROR! Remote wants to sign {} with digest {}".format(name, digest.hex()))
+            click.echo("Expected: {} with digest {}".format(self.name, self.digest.hex()))
             raise ValueError("Unexpected index/digest")
 
     def get_commit(self, name, digest):
@@ -122,10 +122,10 @@ class KeyctlProxy:
 @click.option(
     "-l", "--listen", "ipaddr", default="0.0.0.0", help="Bind to particular ip address"
 )
-@click.option("-t", "--header-type", "fw_or_type", type=click.Choice(indexmap.keys()))
+@click.option("-t", "--image-type", type=click.Choice(indexmap.keys()))
 @click.option("-d", "--digest")
 @click.argument("fw_file", type=click.File("rb"), required=False)
-def cli(ipaddr, fw_file, fw_or_type, digest):
+def cli(ipaddr, fw_file, image_type, digest):
     """Participate in signing of firmware.
 
     Specify either fw_file to auto-detect type and digest, or use -t and -d to specify
@@ -135,17 +135,17 @@ def cli(ipaddr, fw_file, fw_or_type, digest):
 
     public_keys = None
     if fw_file:
-        if fw_or_type or digest:
+        if image_type or digest:
             raise click.ClickException("Do not specify fw_file together with -t/-d")
 
-        fw_or_type = parse_image(fw_file.read())
-        digest = fw_or_type.digest()
-        public_keys = fw_or_type.public_keys
+        image_type = parse_image(fw_file.read())
+        digest = image_type.digest()
+        public_keys = image_type.public_keys
 
-        click.echo(fw_or_type.format())
+        click.echo(image_type.format())
 
-    if not fw_file and (not fw_or_type or not digest):
-        raise click.ClickException("Please specify either fw_file or -t and -h")
+    if not fw_file and (not image_type or not digest):
+        raise click.ClickException("Please specify either fw_file or -t and -d")
 
     try:
         TREZOR = get_default_client()
@@ -153,12 +153,12 @@ def cli(ipaddr, fw_file, fw_or_type, digest):
     except Exception as e:
         raise click.ClickException("Please connect a Trezor and retry.") from e
 
-    pubkey, R = make_commit(fw_or_type, digest, public_keys)
+    pubkey, R = make_commit(image_type, digest, public_keys)
 
     daemon = Pyro4.Daemon(host=ipaddr, port=PORT)
-    proxy = KeyctlProxy(daemon, fw_or_type, digest, (pubkey, R))
+    proxy = KeyctlProxy(daemon, image_type, digest, (pubkey, R))
     uri = daemon.register(proxy, "keyctl")
-    click.echo(f"keyctl-proxy running at URI: {uri}")
+    click.echo("keyctl-proxy running at URI: {}".format(uri))
     click.echo("Press Ctrl+C to abort.")
     daemon.requestLoop()
 

@@ -1,11 +1,8 @@
 from storage.device import is_initialized
 from trezor import config, ui, wire
 from trezor.messages import Success
-from trezor.ui.components.tt.text import Text
-from trezor.ui.layouts import show_success
-from trezor.ui.popup import Popup
+from trezor.ui.layouts import confirm_action, show_popup, show_success
 
-from apps.common.confirm import require_confirm
 from apps.common.request_pin import (
     error_pin_invalid,
     request_pin,
@@ -13,6 +10,8 @@ from apps.common.request_pin import (
 )
 
 if False:
+    from typing import Awaitable
+
     from trezor.messages import ChangeWipeCode
 
 
@@ -58,25 +57,39 @@ async def change_wipe_code(ctx: wire.Context, msg: ChangeWipeCode) -> Success:
 
 def _require_confirm_action(
     ctx: wire.Context, msg: ChangeWipeCode, has_wipe_code: bool
-) -> None:
+) -> Awaitable[None]:
     if msg.remove and has_wipe_code:
-        text = Text("Disable wipe code", ui.ICON_CONFIG)
-        text.normal("Do you really want to")
-        text.bold("disable wipe code")
-        text.bold("protection?")
-        return require_confirm(ctx, text)
+        return confirm_action(
+            ctx,
+            "disable_wipe_code",
+            title="Disable wipe code",
+            description="Do you really want to",
+            action="disable wipe code protection?",
+            reverse=True,
+            icon=ui.ICON_CONFIG,
+        )
 
     if not msg.remove and has_wipe_code:
-        text = Text("Change wipe code", ui.ICON_CONFIG)
-        text.normal("Do you really want to")
-        text.bold("change the wipe code?")
-        return require_confirm(ctx, text)
+        return confirm_action(
+            ctx,
+            "change_wipe_code",
+            title="Change wipe code",
+            description="Do you really want to",
+            action="change the wipe code?",
+            reverse=True,
+            icon=ui.ICON_CONFIG,
+        )
 
     if not msg.remove and not has_wipe_code:
-        text = Text("Set wipe code", ui.ICON_CONFIG)
-        text.normal("Do you really want to")
-        text.bold("set the wipe code?")
-        return require_confirm(ctx, text)
+        return confirm_action(
+            ctx,
+            "set_wipe_code",
+            title="Set wipe code",
+            description="Do you really want to",
+            action="set the wipe code?",
+            reverse=True,
+            icon=ui.ICON_CONFIG,
+        )
 
     # Removing non-existing wipe code.
     raise wire.ProcessError("Wipe code protection is already disabled")
@@ -96,18 +109,14 @@ async def _request_wipe_code_confirm(ctx: wire.Context, pin: str) -> str:
 
 
 async def _wipe_code_invalid() -> None:
-    text = Text("Invalid wipe code", ui.ICON_WRONG, ui.RED)
-    text.normal("The wipe code must be", "different from your PIN.")
-    text.normal("")
-    text.normal("Please try again.")
-    popup = Popup(text, 3000)  # show for 3 seconds
-    await popup
+    await show_popup(
+        title="Invalid wipe code",
+        description="The wipe code must be\ndifferent from your PIN.\n\nPlease try again.",
+    )
 
 
 async def _wipe_code_mismatch() -> None:
-    text = Text("Code mismatch", ui.ICON_WRONG, ui.RED)
-    text.normal("The wipe codes you", "entered do not match.")
-    text.normal("")
-    text.normal("Please try again.")
-    popup = Popup(text, 3000)  # show for 3 seconds
-    await popup
+    await show_popup(
+        title="Code mismatch",
+        description="The wipe codes you\nentered do not match.\n\nPlease try again.",
+    )

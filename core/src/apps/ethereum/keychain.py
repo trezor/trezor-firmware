@@ -1,6 +1,7 @@
 from trezor import wire
+from trezor.messages import EthereumSignTxEIP1559
 
-from apps.common import HARDENED, paths
+from apps.common import paths
 from apps.common.keychain import get_keychain
 
 from . import CURVE, networks
@@ -37,10 +38,10 @@ def _schemas_from_address_n(
     if slip44_hardened not in networks.all_slip44_ids_hardened():
         return ()
 
-    if not slip44_hardened & HARDENED:
+    if not slip44_hardened & paths.HARDENED:
         return ()
 
-    slip44_id = slip44_hardened - HARDENED
+    slip44_id = slip44_hardened - paths.HARDENED
     schemas = [paths.PathSchema.parse(pattern, slip44_id) for pattern in patterns]
     return [s.copy() for s in schemas]
 
@@ -72,7 +73,9 @@ def _schemas_from_chain_id(msg: EthereumSignTx) -> Iterable[paths.PathSchema]:
     if info is None:
         # allow Ethereum or testnet paths for unknown networks
         slip44_id = (60, 1)
-    elif networks.is_wanchain(msg.chain_id, msg.tx_type):
+    elif not EthereumSignTxEIP1559.is_type_of(msg) and networks.is_wanchain(
+        msg.chain_id, msg.tx_type
+    ):
         slip44_id = (networks.SLIP44_WANCHAIN,)
     elif info.slip44 != 60 and info.slip44 != 1:
         # allow cross-signing with Ethereum unless it's testnet

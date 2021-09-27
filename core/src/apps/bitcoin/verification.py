@@ -1,12 +1,10 @@
-from trezor import wire
+from trezor import utils, wire
 from trezor.crypto import der
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha256
 
 from .common import ecdsa_hash_pubkey
 from .scripts import (
-    input_script_p2wpkh_in_p2sh,
-    input_script_p2wsh_in_p2sh,
     output_script_native_p2wpkh_or_p2wsh,
     output_script_p2pkh,
     output_script_p2sh,
@@ -15,6 +13,8 @@ from .scripts import (
     parse_output_script_multisig,
     parse_witness_multisig,
     parse_witness_p2wpkh,
+    write_input_script_p2wpkh_in_p2sh,
+    write_input_script_p2wsh_in_p2sh,
 )
 
 if False:
@@ -30,8 +30,8 @@ class SignatureVerifier:
         coin: CoinInfo,
     ):
         self.threshold = 1
-        self.public_keys: list[bytes] = []
-        self.signatures: list[tuple[bytes, int]] = []
+        self.public_keys: list[memoryview] = []
+        self.signatures: list[tuple[memoryview, int]] = []
 
         if not script_sig:
             if not witness:
@@ -56,9 +56,11 @@ class SignatureVerifier:
             if len(script_sig) == 23:  # P2WPKH nested in BIP16 P2SH
                 public_key, signature, hash_type = parse_witness_p2wpkh(witness)
                 pubkey_hash = ecdsa_hash_pubkey(public_key, coin)
-                if input_script_p2wpkh_in_p2sh(pubkey_hash) != script_sig:
+                w = utils.empty_bytearray(23)
+                write_input_script_p2wpkh_in_p2sh(w, pubkey_hash)
+                if w != script_sig:
                     raise wire.DataError("Invalid public key hash")
-                script_hash = coin.script_hash(script_sig[1:])
+                script_hash = coin.script_hash(script_sig[1:]).digest()
                 if output_script_p2sh(script_hash) != script_pubkey:
                     raise wire.DataError("Invalid script hash")
                 self.public_keys = [public_key]
@@ -66,9 +68,11 @@ class SignatureVerifier:
             elif len(script_sig) == 35:  # P2WSH nested in BIP16 P2SH
                 script, self.signatures = parse_witness_multisig(witness)
                 script_hash = sha256(script).digest()
-                if input_script_p2wsh_in_p2sh(script_hash) != script_sig:
+                w = utils.empty_bytearray(35)
+                write_input_script_p2wsh_in_p2sh(w, script_hash)
+                if w != script_sig:
                     raise wire.DataError("Invalid script hash")
-                script_hash = coin.script_hash(script_sig[1:])
+                script_hash = coin.script_hash(script_sig[1:]).digest()
                 if output_script_p2sh(script_hash) != script_pubkey:
                     raise wire.DataError("Invalid script hash")
                 self.public_keys, self.threshold = parse_output_script_multisig(script)
@@ -84,7 +88,7 @@ class SignatureVerifier:
                 self.signatures = [(signature, hash_type)]
             elif len(script_pubkey) == 23:  # P2SH
                 script, self.signatures = parse_input_script_multisig(script_sig)
-                script_hash = coin.script_hash(script)
+                script_hash = coin.script_hash(script).digest()
                 if output_script_p2sh(script_hash) != script_pubkey:
                     raise wire.DataError("Invalid script hash")
                 self.public_keys, self.threshold = parse_output_script_multisig(script)
@@ -114,7 +118,7 @@ class SignatureVerifier:
             raise wire.DataError("Invalid signature")
 
 
-def decode_der_signature(der_signature: bytes) -> bytearray:
+def decode_der_signature(der_signature: memoryview) -> bytearray:
     seq = der.decode_seq(der_signature)
     if len(seq) != 2 or any(len(i) > 32 for i in seq):
         raise ValueError

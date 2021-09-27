@@ -1,4 +1,4 @@
-# trezor-crypto fuzzing
+# Fuzz Testing trezor-crypto
 Selected functions can be fuzzed via specific libFuzzer harnesses for increased test coverage and issue detection.
 
 Note: the following commands are relative to the trezor-crypto main directory.
@@ -19,15 +19,22 @@ Recommended: ASAN / UBSAN / MSAN flags for error detection can be specified via 
 Examples:
 
   * `SANFLAGS="-fsanitize=address,undefined"`
-  * `SANFLAGS="-fsanitize=memory"`
+  * `SANFLAGS="-fsanitize=memory -fsanitize-memory-track-origins"`
 
 ### Optimizations
 
 Override `OPTFLAGS` to test the library at different optimization levels or simplify the debugging of detected issues.
 
-Example:
+Examples:
 
   * `OPTFLAGS="-O0 -ggdb3"`
+  * `OPTFLAGS="-O3 -march=native"`
+
+### Other Flags
+
+To be determined:
+* `-DNDEBUG`
+* `-DUSE_BIP39_CACHE=0 -DUSE_BIP32_CACHE=0`
 
 ## Operation
 
@@ -46,18 +53,21 @@ mkdir fuzzer/fuzzer_corpus
 ./fuzzer/fuzzer -max_len=2048 -use_value_profile=1 -jobs=16 -timeout=1 -reload=5 -print_pcs=1 -print_funcs=42  fuzzer/fuzzer_corpus
 ```
 
-Hint: for more permanent setups, consider invoking the fuzzer from outside of the source directory to avoid cluttering it with logfiles and crash inputs.
+Hint: for more permanent setups, consider invoking the fuzzer from outside of the source directory to avoid cluttering it with logfiles and crash inputs. Similarly, it is recommended to store the fuzzer corpus in another location.
 
-## Automated fuzzer dictionary generation
+## Automated Fuzzer Dictionary Generation
 
 [Dictionaries](https://llvm.org/docs/LibFuzzer.html#dictionaries) are a useful mechanism to augment the capabilities of the fuzzer. Specify them via the `-dict=` flag.
 
-### Collect interesting strings from the unit tests
-``` bash
-grep -r -P -o -h  "\"\w+\"" tests | sort  | uniq > fuzzer_crypto_tests_strings_dictionary1.txt
-```
+### Collect Interesting Strings From Unit Tests
 
-## Evaluate source coverage
+```bash
+cd fuzzer
+./extract_fuzzer_dictionary.sh fuzzer_crypto_tests_strings_dictionary1.txt
+```
+The resulting file can be used as a fuzzer dictionary.
+
+## Evaluate Source Coverage
 
   1. build the fuzzer binary with `CFLAGS="-fprofile-instr-generate -fcoverage-mapping"`
   1. run with suitable `-runs=` or `-max_total_time=` limits

@@ -3,19 +3,20 @@ name: "Prebuild checks"
 on: [pull_request]
 
 jobs:
-
   style_check:
+    name: Style check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.3.4
       - uses: cachix/install-nix-action@v13
         with:
           nix_path: nixpkgs=channel:nixos-unstable
-        name: "Run script"
+        name: "Run style check"
       - run: nix-shell --run "poetry install"
       - run: nix-shell --run "poetry run make style_check"
 
   defs_check:
+    name: Defs check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.3.4
@@ -25,11 +26,12 @@ jobs:
       - uses: cachix/install-nix-action@v13
         with:
           nix_path: nixpkgs=channel:nixos-unstable
-        name: "Run script"
+        name: "Run defs check"
       - run: nix-shell --run "poetry install"
       - run: nix-shell --run "poetry run make defs_check"
 
   gen_check:
+    name: Gen check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.3.4
@@ -39,6 +41,16 @@ jobs:
       - uses: cachix/install-nix-action@v13
         with:
           nix_path: nixpkgs=channel:nixos-unstable
-        name: "Run script"
+        name: "Run gen check"
       - run: nix-shell --run "poetry install"
       - run: nix-shell --run "poetry run make gen_check"
+
+  changelog_check:
+    name: Changelog check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+        name: "Run check changelog"
+      - run: ./ci/check_changelog.sh

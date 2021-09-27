@@ -2,15 +2,30 @@
 
 function refreshMarkStates() {
     for (let tr of document.body.querySelectorAll("tr[data-actual-hash]")) {
-        let a = tr.querySelector("a")
-        let mark = window.localStorage.getItem(a.href)
+        let mark = window.localStorage.getItem(itemKeyFromIndexEntry(tr))
         tr.className = mark || ""
     }
 }
 
 
+function itemKeyFromOneTest() {
+    if (document.body.dataset.index)
+        throw new Error("itemKeyFromOneTest() called on index")
+    if (!document.body.dataset.actualHash)
+        throw new Error("itemKeyFromOneTest() called on no actualHash")
+
+    return window.location.href + "+" + document.body.dataset.actualHash
+}
+
+
+function itemKeyFromIndexEntry(entry) {
+    let a = entry.querySelector("a")
+    return a.href + "+" + entry.dataset.actualHash
+}
+
+
 function markState(state) {
-    window.localStorage.setItem(window.location.href, state)
+    window.localStorage.setItem(itemKeyFromOneTest(), state)
     if (window.nextHref) {
         window.location.assign(window.nextHref)
     } else {

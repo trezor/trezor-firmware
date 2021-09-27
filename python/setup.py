@@ -9,7 +9,7 @@ install_requires = [
     "ecdsa>=0.9",
     "mnemonic>=0.17",
     "requests>=2.4.0",
-    "click>=7,<8",
+    "click>=7,<9",
     "libusb1>=1.6.4",
     "construct>=2.9",
     "typing_extensions>=3.7.4",
@@ -22,6 +22,7 @@ extras_require = {
     "ethereum": ["rlp>=1.1.0", "web3>=4.8"],
     "qt-widgets": ["PyQt5"],
     "extra": ["Pillow"],
+    "stellar": ["stellar-sdk>=4.0.0,<5.0.0"],
 }
 
 extras_require["full"] = sum(extras_require.values(), [])

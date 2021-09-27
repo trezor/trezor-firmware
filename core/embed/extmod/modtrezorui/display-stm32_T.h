@@ -39,6 +39,9 @@ const volatile uint8_t DISPLAY_ST7789V_INVERT_COLORS = 0;
   DATA((X) >> 8);    \
   DATA((X)&0xFF)
 
+// noop on TT as we don't need to push data to display
+#define PIXELDATA_DIRTY()
+
 #define LED_PWM_TIM_PERIOD (10000)
 
 // section "9.1.3 RDDID (04h): Read Display ID"

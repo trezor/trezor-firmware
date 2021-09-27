@@ -1,9 +1,9 @@
 {
   "setup": {
     "mnemonic": [
-        "extra extend academic bishop cricket bundle tofu goat apart victim enlarge program behavior permit course armed jerky faint language modern",
-        "extra extend academic acne away best indicate impact square oasis prospect painting voting guest either argue username racism enemy eclipse",
-        "extra extend academic arcade born dive legal hush gross briefing talent drug much home firefly toxic analysis idea umbrella slice"
+      "extra extend academic bishop cricket bundle tofu goat apart victim enlarge program behavior permit course armed jerky faint language modern",
+      "extra extend academic acne away best indicate impact square oasis prospect painting voting guest either argue username racism enemy eclipse",
+      "extra extend academic arcade born dive legal hush gross briefing talent drug much home firefly toxic analysis idea umbrella slice"
     ],
     "passphrase": "TREZOR"
   },
@@ -11,11 +11,11 @@
     {
       "parameters": {
         "path": "m/44'/1815'/0'/0/0",
-        "address_type":"byron",
+        "address_type": "byron",
         "protocol_magic": 764824073,
-        "network_id":1
+        "network_id": 1
       },
-      "result":{
+      "result": {
         "expected_address": "Ae2tdPwUPEYxF9NAMNdd3v2LZoMeWp7gCZiDb6bZzFQeeVASzoP7HC4V9s6"
       }
     },

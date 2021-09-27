@@ -249,7 +249,7 @@
       "https://eth2.trezor.io"
     ]
   },
-  "eth:ROP": {
+  "eth:tROP": {
     "type": "blockbook",
     "url": [
       "https://ropsten1.trezor.io",

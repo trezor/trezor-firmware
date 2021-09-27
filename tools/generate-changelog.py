@@ -79,7 +79,12 @@ def current_date(project):
     parts = project.parts
     today = datetime.datetime.now()
 
-    if parts[-2:] == ("legacy", "bootloader"):
+    if (
+        parts[-3:] == ("core", "embed", "bootloader")
+        or parts[-3:] == ("core", "embed", "bootloader_ci")
+        or parts[-2:] == ("legacy", "bootloader")
+        or parts[-2:] == ("legacy", "intermediate_fw")
+    ):
         return today.strftime("%B %Y")
     elif parts[-1] == "python":
         return today.strftime("%Y-%m-%d")

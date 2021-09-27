@@ -2,7 +2,8 @@ from common import *
 from trezor import wire
 from trezor.crypto import bip32, slip39
 
-from apps.common import HARDENED, seed
+from apps.common import seed
+from apps.common.paths import HARDENED
 
 if not utils.BITCOIN_ONLY:
     from apps.cardano.seed import Keychain

@@ -156,12 +156,20 @@ trezor.ui.components.tt.confirm
 import trezor.ui.components.tt.confirm
 trezor.ui.components.tt.info
 import trezor.ui.components.tt.info
+trezor.ui.components.tt.keyboard_bip39
+import trezor.ui.components.tt.keyboard_bip39
+trezor.ui.components.tt.keyboard_slip39
+import trezor.ui.components.tt.keyboard_slip39
 trezor.ui.components.tt.num_input
 import trezor.ui.components.tt.num_input
 trezor.ui.components.tt.passphrase
 import trezor.ui.components.tt.passphrase
 trezor.ui.components.tt.pin
 import trezor.ui.components.tt.pin
+trezor.ui.components.tt.recovery
+import trezor.ui.components.tt.recovery
+trezor.ui.components.tt.reset
+import trezor.ui.components.tt.reset
 trezor.ui.components.tt.scroll
 import trezor.ui.components.tt.scroll
 trezor.ui.components.tt.swipe
@@ -186,6 +194,12 @@ trezor.ui.layouts.t1
 import trezor.ui.layouts.t1
 trezor.ui.layouts.tt
 import trezor.ui.layouts.tt
+trezor.ui.layouts.tt.altcoin
+import trezor.ui.layouts.tt.altcoin
+trezor.ui.layouts.tt.recovery
+import trezor.ui.layouts.tt.recovery
+trezor.ui.layouts.tt.reset
+import trezor.ui.layouts.tt.reset
 trezor.ui.loader
 import trezor.ui.loader
 trezor.ui.popup
@@ -290,8 +304,6 @@ apps.common.confirm
 import apps.common.confirm
 apps.common.keychain
 import apps.common.keychain
-apps.common.layout
-import apps.common.layout
 apps.common.passphrase
 import apps.common.passphrase
 apps.common.paths
@@ -340,10 +352,6 @@ apps.management.recovery_device
 import apps.management.recovery_device
 apps.management.recovery_device.homescreen
 import apps.management.recovery_device.homescreen
-apps.management.recovery_device.keyboard_bip39
-import apps.management.recovery_device.keyboard_bip39
-apps.management.recovery_device.keyboard_slip39
-import apps.management.recovery_device.keyboard_slip39
 apps.management.recovery_device.layout
 import apps.management.recovery_device.layout
 apps.management.recovery_device.recover
@@ -386,8 +394,12 @@ if utils.BITCOIN_ONLY:
     import trezor.enums.CardanoCertificateType
     trezor.enums.CardanoPoolRelayType
     import trezor.enums.CardanoPoolRelayType
-    trezor.enums.LiskTransactionType
-    import trezor.enums.LiskTransactionType
+    trezor.enums.CardanoTxAuxiliaryDataSupplementType
+    import trezor.enums.CardanoTxAuxiliaryDataSupplementType
+    trezor.enums.CardanoTxSigningMode
+    import trezor.enums.CardanoTxSigningMode
+    trezor.enums.CardanoTxWitnessType
+    import trezor.enums.CardanoTxWitnessType
     trezor.enums.NEMImportanceTransferMode
     import trezor.enums.NEMImportanceTransferMode
     trezor.enums.NEMModificationType
@@ -400,6 +412,12 @@ if utils.BITCOIN_ONLY:
     import trezor.enums.TezosBallotType
     trezor.enums.TezosContractType
     import trezor.enums.TezosContractType
+    trezor.ui.components.common.webauthn
+    import trezor.ui.components.common.webauthn
+    trezor.ui.components.tt.webauthn
+    import trezor.ui.components.tt.webauthn
+    trezor.ui.layouts.tt.webauthn
+    import trezor.ui.layouts.tt.webauthn
     apps.binance
     import apps.binance
     apps.binance.get_address
@@ -428,8 +446,12 @@ if utils.BITCOIN_ONLY:
     import apps.cardano.get_public_key
     apps.cardano.helpers
     import apps.cardano.helpers
+    apps.cardano.helpers.account_path_check
+    import apps.cardano.helpers.account_path_check
     apps.cardano.helpers.bech32
     import apps.cardano.helpers.bech32
+    apps.cardano.helpers.hash_builder_collection
+    import apps.cardano.helpers.hash_builder_collection
     apps.cardano.helpers.network_ids
     import apps.cardano.helpers.network_ids
     apps.cardano.helpers.paths
@@ -482,26 +504,12 @@ if utils.BITCOIN_ONLY:
     import apps.ethereum.sign_message
     apps.ethereum.sign_tx
     import apps.ethereum.sign_tx
+    apps.ethereum.sign_tx_eip1559
+    import apps.ethereum.sign_tx_eip1559
     apps.ethereum.tokens
     import apps.ethereum.tokens
     apps.ethereum.verify_message
     import apps.ethereum.verify_message
-    apps.lisk
-    import apps.lisk
-    apps.lisk.get_address
-    import apps.lisk.get_address
-    apps.lisk.get_public_key
-    import apps.lisk.get_public_key
-    apps.lisk.helpers
-    import apps.lisk.helpers
-    apps.lisk.layout
-    import apps.lisk.layout
-    apps.lisk.sign_message
-    import apps.lisk.sign_message
-    apps.lisk.sign_tx
-    import apps.lisk.sign_tx
-    apps.lisk.verify_message
-    import apps.lisk.verify_message
     apps.monero
     import apps.monero
     apps.monero.diag
@@ -686,8 +694,6 @@ if utils.BITCOIN_ONLY:
     import apps.webauthn.add_resident_credential
     apps.webauthn.common
     import apps.webauthn.common
-    apps.webauthn.confirm
-    import apps.webauthn.confirm
     apps.webauthn.credential
     import apps.webauthn.credential
     apps.webauthn.fido2

@@ -96,6 +96,7 @@ if TYPE_CHECKING:
         EthereumGetAddress = 56
         EthereumAddress = 57
         EthereumSignTx = 58
+        EthereumSignTxEIP1559 = 452
         EthereumTxRequest = 59
         EthereumTxAck = 60
         EthereumSignMessage = 64
@@ -107,15 +108,6 @@ if TYPE_CHECKING:
         NEMSignedTx = 70
         NEMDecryptMessage = 75
         NEMDecryptedMessage = 76
-        LiskGetAddress = 114
-        LiskAddress = 115
-        LiskSignTx = 116
-        LiskSignedTx = 117
-        LiskSignMessage = 118
-        LiskMessageSignature = 119
-        LiskVerifyMessage = 120
-        LiskGetPublicKey = 121
-        LiskPublicKey = 122
         TezosGetAddress = 150
         TezosAddress = 151
         TezosSignTx = 152
@@ -146,6 +138,23 @@ if TYPE_CHECKING:
         CardanoSignedTx = 310
         CardanoSignedTxChunk = 311
         CardanoSignedTxChunkAck = 312
+        CardanoTxItemAck = 313
+        CardanoTxAuxiliaryDataSupplement = 314
+        CardanoTxWitnessRequest = 315
+        CardanoTxWitnessResponse = 316
+        CardanoTxHostAck = 317
+        CardanoTxBodyHash = 318
+        CardanoSignTxFinished = 319
+        CardanoSignTxInit = 320
+        CardanoTxInput = 321
+        CardanoTxOutput = 322
+        CardanoAssetGroup = 323
+        CardanoToken = 324
+        CardanoTxCertificate = 325
+        CardanoTxWithdrawal = 326
+        CardanoTxAuxiliaryData = 327
+        CardanoPoolOwner = 328
+        CardanoPoolRelayParameters = 329
         RippleGetAddress = 400
         RippleAddress = 401
         RippleSignTx = 402
@@ -330,6 +339,18 @@ if TYPE_CHECKING:
         SINGLE_HOST_NAME = 1
         MULTIPLE_HOST_NAME = 2
 
+    class CardanoTxAuxiliaryDataSupplementType(IntEnum):
+        NONE = 0
+        CATALYST_REGISTRATION_SIGNATURE = 1
+
+    class CardanoTxSigningMode(IntEnum):
+        ORDINARY_TRANSACTION = 0
+        POOL_REGISTRATION_AS_OWNER = 1
+
+    class CardanoTxWitnessType(IntEnum):
+        BYRON_WITNESS = 0
+        SHELLEY_WITNESS = 1
+
     class BackupType(IntEnum):
         Bip39 = 0
         Slip39_Basic = 1
@@ -378,16 +399,6 @@ if TYPE_CHECKING:
         DOWN = 1
         LEFT = 2
         RIGHT = 3
-
-    class LiskTransactionType(IntEnum):
-        Transfer = 0
-        RegisterSecondPassphrase = 1
-        RegisterDelegate = 2
-        CastVotes = 3
-        RegisterMultisignatureAccount = 4
-        CreateDapp = 5
-        TransferIntoDapp = 6
-        TransferOutOfDapp = 7
 
     class NEMMosaicLevy(IntEnum):
         MosaicLevy_Absolute = 1

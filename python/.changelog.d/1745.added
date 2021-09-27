@@ -1,0 +1,1 @@
+`trezorlib.stellar.from_envelope` was added, it includes support for the Stellar [TransactionV1](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0015.md#xdr) format transaction.

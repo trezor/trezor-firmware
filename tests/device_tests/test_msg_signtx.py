@@ -826,12 +826,12 @@ class TestMsgSigntx:
 
             return msg
 
-        # Set up attack processors
-        client.set_filter(messages.TxAck, attack_processor)
-
-        with pytest.raises(
+        with client, pytest.raises(
             TrezorFailure, match="Transaction has changed during signing"
         ):
+            # Set up attack processors
+            client.set_filter(messages.TxAck, attack_processor)
+
             btc.sign_tx(
                 client,
                 "Bitcoin",
@@ -879,12 +879,12 @@ class TestMsgSigntx:
 
             return msg
 
-        # Set up attack processors
-        client.set_filter(messages.TxAck, attack_processor)
-
-        with pytest.raises(
+        with client, pytest.raises(
             TrezorFailure, match="Transaction has changed during signing"
         ):
+            # Set up attack processors
+            client.set_filter(messages.TxAck, attack_processor)
+
             btc.sign_tx(
                 client, "Testnet", [inp1], [out1, out2], prev_txes=TX_CACHE_TESTNET
             )
@@ -933,9 +933,9 @@ class TestMsgSigntx:
 
             return msg
 
-        client.set_filter(messages.TxAck, attack_processor)
         # Now run the attack, must trigger the exception
         with client:
+            client.set_filter(messages.TxAck, attack_processor)
             client.set_expected_responses(
                 [
                     request_input(0),

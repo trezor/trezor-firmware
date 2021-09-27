@@ -6,6 +6,8 @@ from trezor.ui import display, style
 from ..common.text import (  # noqa: F401
     BR,
     BR_HALF,
+    LINE_WIDTH,
+    LINE_WIDTH_PAGINATED,
     TEXT_MAX_LINES,
     Span,
     TextBase,

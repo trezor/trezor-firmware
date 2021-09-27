@@ -1,6 +1,7 @@
 from trezor.crypto import hashlib
 from trezor.crypto.curve import ed25519
-from trezor.enums import CardanoAddressType
+from trezor.enums import CardanoAddressType, CardanoTxAuxiliaryDataSupplementType
+from trezor.messages import CardanoTxAuxiliaryDataSupplement
 
 from apps.common import cbor
 
@@ -21,10 +22,11 @@ if False:
 
     from trezor.messages import (
         CardanoCatalystRegistrationParametersType,
-        CardanoTxAuxiliaryDataType,
+        CardanoTxAuxiliaryData,
     )
 
     CatalystRegistrationPayload = dict[int, Union[bytes, int]]
+    SignedCatalystRegistrationPayload = tuple[CatalystRegistrationPayload, bytes]
     CatalystRegistrationSignature = dict[int, bytes]
     CatalystRegistration = dict[
         int, Union[CatalystRegistrationPayload, CatalystRegistrationSignature]
@@ -40,14 +42,11 @@ METADATA_KEY_CATALYST_REGISTRATION = 61284
 METADATA_KEY_CATALYST_REGISTRATION_SIGNATURE = 61285
 
 
-def validate_auxiliary_data(auxiliary_data: CardanoTxAuxiliaryDataType | None) -> None:
-    if not auxiliary_data:
-        return
-
+def validate_auxiliary_data(auxiliary_data: CardanoTxAuxiliaryData) -> None:
     fields_provided = 0
-    if auxiliary_data.blob:
+    if auxiliary_data.hash:
         fields_provided += 1
-        _validate_auxiliary_data_blob(auxiliary_data.blob)
+        _validate_auxiliary_data_hash(auxiliary_data.hash)
     if auxiliary_data.catalyst_registration_parameters:
         fields_provided += 1
         _validate_catalyst_registration_parameters(
@@ -58,12 +57,8 @@ def validate_auxiliary_data(auxiliary_data: CardanoTxAuxiliaryDataType | None) -
         raise INVALID_AUXILIARY_DATA
 
 
-def _validate_auxiliary_data_blob(auxiliary_data_blob: bytes) -> None:
-    try:
-        # validation to prevent CBOR injection and invalid CBOR
-        # we don't validate data format, just that it's a valid CBOR
-        cbor.decode(auxiliary_data_blob)
-    except Exception:
+def _validate_auxiliary_data_hash(auxiliary_data_hash: bytes) -> None:
+    if len(auxiliary_data_hash) != AUXILIARY_DATA_HASH_SIZE:
         raise INVALID_AUXILIARY_DATA
 
 
@@ -91,27 +86,20 @@ def _validate_catalyst_registration_parameters(
 async def show_auxiliary_data(
     ctx: wire.Context,
     keychain: seed.Keychain,
-    auxiliary_data: CardanoTxAuxiliaryDataType | None,
+    auxiliary_data_hash: bytes,
+    catalyst_registration_parameters: CardanoCatalystRegistrationParametersType | None,
     protocol_magic: int,
     network_id: int,
 ) -> None:
-    if not auxiliary_data:
-        return
-
-    if auxiliary_data.catalyst_registration_parameters:
+    if catalyst_registration_parameters:
         await _show_catalyst_registration(
             ctx,
             keychain,
-            auxiliary_data.catalyst_registration_parameters,
+            catalyst_registration_parameters,
             protocol_magic,
             network_id,
         )
 
-    auxiliary_data_bytes = get_auxiliary_data_cbor(
-        keychain, auxiliary_data, protocol_magic, network_id
-    )
-
-    auxiliary_data_hash = hash_auxiliary_data(bytes(auxiliary_data_bytes))
     await show_auxiliary_data_hash(ctx, auxiliary_data_hash)
 
 
@@ -138,37 +126,71 @@ async def _show_catalyst_registration(
     )
 
 
-def get_auxiliary_data_cbor(
+def get_auxiliary_data_hash_and_supplement(
     keychain: seed.Keychain,
-    auxiliary_data: CardanoTxAuxiliaryDataType,
+    auxiliary_data: CardanoTxAuxiliaryData,
     protocol_magic: int,
     network_id: int,
-) -> bytes:
-    if auxiliary_data.blob:
-        return auxiliary_data.blob
-    elif auxiliary_data.catalyst_registration_parameters:
-        cborized_catalyst_registration = _cborize_catalyst_registration(
-            keychain,
-            auxiliary_data.catalyst_registration_parameters,
-            protocol_magic,
-            network_id,
+) -> tuple[bytes, CardanoTxAuxiliaryDataSupplement]:
+    if parameters := auxiliary_data.catalyst_registration_parameters:
+        (
+            catalyst_registration_payload,
+            catalyst_signature,
+        ) = _get_signed_catalyst_registration_payload(
+            keychain, parameters, protocol_magic, network_id
         )
-        return cbor.encode(_wrap_metadata(cborized_catalyst_registration))
+        auxiliary_data_hash = _get_catalyst_registration_auxiliary_data_hash(
+            catalyst_registration_payload, catalyst_signature
+        )
+        auxiliary_data_supplement = CardanoTxAuxiliaryDataSupplement(
+            type=CardanoTxAuxiliaryDataSupplementType.CATALYST_REGISTRATION_SIGNATURE,
+            auxiliary_data_hash=auxiliary_data_hash,
+            catalyst_signature=catalyst_signature,
+        )
+        return auxiliary_data_hash, auxiliary_data_supplement
     else:
-        raise INVALID_AUXILIARY_DATA
+        assert auxiliary_data.hash is not None  # validate_auxiliary_data
+        return auxiliary_data.hash, CardanoTxAuxiliaryDataSupplement(
+            type=CardanoTxAuxiliaryDataSupplementType.NONE
+        )
+
+
+def _get_catalyst_registration_auxiliary_data_hash(
+    catalyst_registration_payload: CatalystRegistrationPayload,
+    catalyst_registration_payload_signature: bytes,
+) -> bytes:
+    cborized_catalyst_registration = _cborize_catalyst_registration(
+        catalyst_registration_payload,
+        catalyst_registration_payload_signature,
+    )
+    return _hash_auxiliary_data(
+        cbor.encode(_wrap_metadata(cborized_catalyst_registration))
+    )
 
 
 def _cborize_catalyst_registration(
+    catalyst_registration_payload: CatalystRegistrationPayload,
+    catalyst_registration_payload_signature: bytes,
+) -> CatalystRegistration:
+    catalyst_registration_signature = {1: catalyst_registration_payload_signature}
+
+    return {
+        METADATA_KEY_CATALYST_REGISTRATION: catalyst_registration_payload,
+        METADATA_KEY_CATALYST_REGISTRATION_SIGNATURE: catalyst_registration_signature,
+    }
+
+
+def _get_signed_catalyst_registration_payload(
     keychain: seed.Keychain,
     catalyst_registration_parameters: CardanoCatalystRegistrationParametersType,
     protocol_magic: int,
     network_id: int,
-) -> CatalystRegistration:
+) -> SignedCatalystRegistrationPayload:
     staking_key = derive_public_key(
         keychain, catalyst_registration_parameters.staking_path
     )
 
-    catalyst_registration_payload: CatalystRegistrationPayload = {
+    payload: CatalystRegistrationPayload = {
         1: catalyst_registration_parameters.voting_public_key,
         2: staking_key,
         3: derive_address_bytes(
@@ -180,19 +202,13 @@ def _cborize_catalyst_registration(
         4: catalyst_registration_parameters.nonce,
     }
 
-    catalyst_registration_payload_signature = (
-        _create_catalyst_registration_payload_signature(
-            keychain,
-            catalyst_registration_payload,
-            catalyst_registration_parameters.staking_path,
-        )
+    signature = _create_catalyst_registration_payload_signature(
+        keychain,
+        payload,
+        catalyst_registration_parameters.staking_path,
     )
-    catalyst_registration_signature = {1: catalyst_registration_payload_signature}
 
-    return {
-        METADATA_KEY_CATALYST_REGISTRATION: catalyst_registration_payload,
-        METADATA_KEY_CATALYST_REGISTRATION_SIGNATURE: catalyst_registration_signature,
-    }
+    return payload, signature
 
 
 def _create_catalyst_registration_payload_signature(
@@ -228,7 +244,7 @@ def _wrap_metadata(metadata: dict) -> tuple[dict, tuple]:
     return metadata, ()
 
 
-def hash_auxiliary_data(auxiliary_data: bytes) -> bytes:
+def _hash_auxiliary_data(auxiliary_data: bytes) -> bytes:
     return hashlib.blake2b(
         data=auxiliary_data, outlen=AUXILIARY_DATA_HASH_SIZE
     ).digest()

@@ -3,12 +3,11 @@ from trezor.messages import CardanoAddress
 from trezor.ui.layouts import show_address
 
 from apps.common import paths
-from apps.common.layout import address_n_to_str
 
 from . import seed
 from .address import derive_human_readable_address, validate_address_parameters
 from .helpers import protocol_magics, staking_use_cases
-from .helpers.paths import SCHEMA_ADDRESS
+from .helpers.paths import SCHEMA_PAYMENT, SCHEMA_STAKING
 from .helpers.utils import to_account_path
 from .layout import (
     ADDRESS_TYPE_NAMES,
@@ -34,8 +33,9 @@ async def get_address(
         ctx,
         keychain,
         address_parameters.address_n,
-        # path must match the ADDRESS schema
-        SCHEMA_ADDRESS.match(address_parameters.address_n),
+        # path must match the PAYMENT or STAKING schema
+        SCHEMA_PAYMENT.match(address_parameters.address_n)
+        or SCHEMA_STAKING.match(address_parameters.address_n),
     )
 
     validate_network_info(msg.network_id, msg.protocol_magic)
@@ -71,7 +71,7 @@ async def _display_address(
     if not protocol_magics.is_mainnet(protocol_magic):
         network_name = protocol_magics.to_ui_string(protocol_magic)
 
-    address_n = address_n_to_str(address_parameters.address_n)
+    address_n = paths.address_n_to_str(address_parameters.address_n)
     await show_address(
         ctx,
         address=address,

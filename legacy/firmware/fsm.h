@@ -24,7 +24,6 @@
 #include "messages-crypto.pb.h"
 #include "messages-debug.pb.h"
 #include "messages-ethereum.pb.h"
-#include "messages-lisk.pb.h"
 #include "messages-management.pb.h"
 #include "messages-nem.pb.h"
 #include "messages-stellar.pb.h"
@@ -103,17 +102,10 @@ void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg);
 void fsm_msgEthereumSignTx(
     EthereumSignTx
         *msg);  // not const because we mutate transaction during validation
+void fsm_msgEthereumSignTxEIP1559(const EthereumSignTxEIP1559 *msg);
 void fsm_msgEthereumTxAck(const EthereumTxAck *msg);
 void fsm_msgEthereumSignMessage(const EthereumSignMessage *msg);
 void fsm_msgEthereumVerifyMessage(const EthereumVerifyMessage *msg);
-
-// lisk
-void fsm_msgLiskGetAddress(const LiskGetAddress *msg);
-void fsm_msgLiskGetPublicKey(const LiskGetPublicKey *msg);
-void fsm_msgLiskSignMessage(const LiskSignMessage *msg);
-void fsm_msgLiskVerifyMessage(const LiskVerifyMessage *msg);
-void fsm_msgLiskSignTx(LiskSignTx *msg);  // not const because we mutate
-                                          // transaction during validation
 
 // nem
 void fsm_msgNEMGetAddress(

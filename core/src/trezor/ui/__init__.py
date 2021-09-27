@@ -48,7 +48,7 @@ else:
 
 
 # in both debug and production, emulator needs to draw the screen explicitly
-if utils.EMULATOR:
+if utils.EMULATOR or utils.MODEL == "1":
     loop.after_step_hook = refresh
 
 

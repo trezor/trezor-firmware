@@ -7,15 +7,13 @@ from trezor.messages import ButtonAck, ButtonRequest
 from .button import Button, ButtonCancel, ButtonConfirm, ButtonDefault
 from .confirm import CANCELLED, CONFIRMED, Confirm
 from .swipe import SWIPE_DOWN, SWIPE_UP, SWIPE_VERTICAL, Swipe
-from .text import TEXT_MAX_LINES, Span, Text
+from .text import LINE_WIDTH_PAGINATED, TEXT_MAX_LINES, Span, Text
 
 if False:
     from typing import Callable, Iterable
 
     from ..common.text import TextContent
 
-
-PAGINATED_LINE_WIDTH = const(204)
 
 WAS_PAGED = object()
 
@@ -114,7 +112,7 @@ class Paginated(ui.Layout):
         await ctx.call(ButtonRequest(code=code, pages=len(self.pages)), ButtonAck)
         result = WAS_PAGED
         while result is WAS_PAGED:
-            result = await self
+            result = await ctx.wait(self)
 
         return result
 
@@ -280,7 +278,7 @@ def paginate_text(
     else:
         pages: list[ui.Component] = []
         span.reset(
-            text, 0, font, break_words=break_words, line_width=PAGINATED_LINE_WIDTH
+            text, 0, font, break_words=break_words, line_width=LINE_WIDTH_PAGINATED
         )
         while span.has_more_content():
             # advance to first line of the page
@@ -292,7 +290,7 @@ def paginate_text(
                 new_lines=False,
                 content_offset=0,
                 char_offset=span.start,
-                line_width=PAGINATED_LINE_WIDTH,
+                line_width=LINE_WIDTH_PAGINATED,
                 break_words=break_words,
                 render_page_overflow=False,
             )
@@ -360,7 +358,7 @@ def paginate_paragraphs(
                 0,
                 item[0],
                 break_words=break_words,
-                line_width=PAGINATED_LINE_WIDTH,
+                line_width=LINE_WIDTH_PAGINATED,
             )
 
             while span.has_more_content():
@@ -373,7 +371,7 @@ def paginate_paragraphs(
                         new_lines=False,
                         content_offset=content_ctr * 3 + 1,  # font, _text_, newline
                         char_offset=span.start,
-                        line_width=PAGINATED_LINE_WIDTH,
+                        line_width=LINE_WIDTH_PAGINATED,
                         render_page_overflow=False,
                         break_words=break_words,
                     )

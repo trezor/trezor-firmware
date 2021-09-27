@@ -41,9 +41,13 @@ pystyle: ## apply code style on application sources and tests
 
 changelog_check: ## check changelog format
 	./tools/generate-changelog.py --check core
-	./tools/generate-changelog.py --check python
-	./tools/generate-changelog.py --check legacy/firmware
+	./tools/generate-changelog.py --check core/embed/boardloader
+	./tools/generate-changelog.py --check core/embed/bootloader
+	./tools/generate-changelog.py --check core/embed/bootloader_ci
 	./tools/generate-changelog.py --check legacy/bootloader
+	./tools/generate-changelog.py --check legacy/firmware
+	./tools/generate-changelog.py --check legacy/intermediate_fw
+	./tools/generate-changelog.py --check python
 
 yaml_check: ## check yaml formatting
 	yamllint .

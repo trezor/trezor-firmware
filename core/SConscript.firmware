@@ -139,10 +139,13 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
 
 # modtrezorio
 SOURCE_MOD += [
-    'embed/extmod/modtrezorio/ff.c',
-    'embed/extmod/modtrezorio/ffunicode.c',
     'embed/extmod/modtrezorio/modtrezorio.c',
 ]
+if TREZOR_MODEL == "T":
+    SOURCE_MOD += [
+        'embed/extmod/modtrezorio/ff.c',
+        'embed/extmod/modtrezorio/ffunicode.c',
+    ]
 
 # modtrezorui
 CPPPATH_MOD += [
@@ -340,8 +343,6 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/mpu.c',
     'embed/trezorhal/random_delays.c',
     'embed/trezorhal/rng.c',
-    'embed/trezorhal/sbu.c',
-    'embed/trezorhal/sdcard.c',
     'embed/trezorhal/stm32.c',
     'embed/trezorhal/systick.c',
     'embed/trezorhal/touch.c',
@@ -353,6 +354,11 @@ SOURCE_TREZORHAL = [
     'embed/trezorhal/util.s',
     'embed/trezorhal/vectortable.s',
 ]
+if TREZOR_MODEL == 'T':
+    SOURCE_TREZORHAL += [
+        'embed/trezorhal/sbu.c',
+        'embed/trezorhal/sdcard.c',
+    ]
 
 CPPDEFINES_MOD += ['USE_SVC_SHUTDOWN']
 
@@ -523,7 +529,12 @@ if FROZEN:
     if TREZOR_MODEL == 'T':
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/components/tt/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/tt.py'))
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt/__init__.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt/reset.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt/recovery.py'))
+        if EVERYTHING:
+            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt/altcoin.py'))
+            SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/layouts/tt/webauthn.py'))
     elif TREZOR_MODEL == '1':
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/components/t1/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/ui/constants/t1.py'))
@@ -543,7 +554,6 @@ if FROZEN:
             SOURCE_PY_DIR + 'trezor/enums/DebugMonero*.py',
             SOURCE_PY_DIR + 'trezor/enums/Eos*.py',
             SOURCE_PY_DIR + 'trezor/enums/Ethereum*.py',
-            SOURCE_PY_DIR + 'trezor/enums/Lisk*.py',
             SOURCE_PY_DIR + 'trezor/enums/Monero*.py',
             SOURCE_PY_DIR + 'trezor/enums/NEM*.py',
             SOURCE_PY_DIR + 'trezor/enums/Ripple*.py',
@@ -557,7 +567,11 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/*/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/debug/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py',
+        exclude=[
+            SOURCE_PY_DIR + 'apps/management/sd_protect.py',
+        ] if TREZOR_MODEL != 'T' else [])
+    )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/misc/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/*.py'))
@@ -583,9 +597,6 @@ if FROZEN:
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/ethereum/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Ethereum*.py'))
-
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/lisk/*.py'))
-        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Lisk*.py'))
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/monero/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/monero/*/*.py'))

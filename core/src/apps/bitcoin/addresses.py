@@ -3,13 +3,14 @@ from trezor.crypto import base58, cashaddr
 from trezor.crypto.hashlib import sha256
 from trezor.enums import InputScriptType
 from trezor.messages import MultisigRedeemScriptType
+from trezor.utils import HashWriter
 
 from apps.common import address_type
 from apps.common.coininfo import CoinInfo
 
 from .common import ecdsa_hash_pubkey, encode_bech32_address
 from .multisig import multisig_get_pubkeys, multisig_pubkey_index
-from .scripts import output_script_multisig, output_script_native_p2wpkh_or_p2wsh
+from .scripts import output_script_native_p2wpkh_or_p2wsh, write_output_script_multisig
 
 if False:
     from trezor.crypto import bip32
@@ -75,29 +76,29 @@ def get_address(
 def address_multisig_p2sh(pubkeys: list[bytes], m: int, coin: CoinInfo) -> str:
     if coin.address_type_p2sh is None:
         raise wire.ProcessError("Multisig not enabled on this coin")
-    redeem_script = output_script_multisig(pubkeys, m)
-    redeem_script_hash = coin.script_hash(redeem_script)
-    return address_p2sh(redeem_script_hash, coin)
+    redeem_script = HashWriter(coin.script_hash())
+    write_output_script_multisig(redeem_script, pubkeys, m)
+    return address_p2sh(redeem_script.get_digest(), coin)
 
 
 def address_multisig_p2wsh_in_p2sh(pubkeys: list[bytes], m: int, coin: CoinInfo) -> str:
     if coin.address_type_p2sh is None:
         raise wire.ProcessError("Multisig not enabled on this coin")
-    witness_script = output_script_multisig(pubkeys, m)
-    witness_script_hash = sha256(witness_script).digest()
-    return address_p2wsh_in_p2sh(witness_script_hash, coin)
+    witness_script_h = HashWriter(sha256())
+    write_output_script_multisig(witness_script_h, pubkeys, m)
+    return address_p2wsh_in_p2sh(witness_script_h.get_digest(), coin)
 
 
 def address_multisig_p2wsh(pubkeys: list[bytes], m: int, hrp: str) -> str:
     if not hrp:
         raise wire.ProcessError("Multisig not enabled on this coin")
-    witness_script = output_script_multisig(pubkeys, m)
-    witness_script_hash = sha256(witness_script).digest()
-    return address_p2wsh(witness_script_hash, hrp)
+    witness_script_h = HashWriter(sha256())
+    write_output_script_multisig(witness_script_h, pubkeys, m)
+    return address_p2wsh(witness_script_h.get_digest(), hrp)
 
 
 def address_pkh(pubkey: bytes, coin: CoinInfo) -> str:
-    s = address_type.tobytes(coin.address_type) + coin.script_hash(pubkey)
+    s = address_type.tobytes(coin.address_type) + coin.script_hash(pubkey).digest()
     return base58.encode_check(bytes(s), coin.b58_hash)
 
 
@@ -109,13 +110,13 @@ def address_p2sh(redeem_script_hash: bytes, coin: CoinInfo) -> str:
 def address_p2wpkh_in_p2sh(pubkey: bytes, coin: CoinInfo) -> str:
     pubkey_hash = ecdsa_hash_pubkey(pubkey, coin)
     redeem_script = output_script_native_p2wpkh_or_p2wsh(pubkey_hash)
-    redeem_script_hash = coin.script_hash(redeem_script)
+    redeem_script_hash = coin.script_hash(redeem_script).digest()
     return address_p2sh(redeem_script_hash, coin)
 
 
 def address_p2wsh_in_p2sh(witness_script_hash: bytes, coin: CoinInfo) -> str:
     redeem_script = output_script_native_p2wpkh_or_p2wsh(witness_script_hash)
-    redeem_script_hash = coin.script_hash(redeem_script)
+    redeem_script_hash = coin.script_hash(redeem_script).digest()
     return address_p2sh(redeem_script_hash, coin)
 
 

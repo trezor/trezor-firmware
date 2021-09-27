@@ -3,6 +3,7 @@ from micropython import const
 from trezor import ui
 
 from ...constants import (
+    PAGINATION_MARGIN_RIGHT,
     TEXT_HEADER_HEIGHT,
     TEXT_LINE_HEIGHT,
     TEXT_LINE_HEIGHT_HALF,
@@ -10,8 +11,11 @@ from ...constants import (
     TEXT_MAX_LINES,
 )
 
+LINE_WIDTH = ui.WIDTH - TEXT_MARGIN_LEFT
+LINE_WIDTH_PAGINATED = LINE_WIDTH - PAGINATION_MARGIN_RIGHT
+
 if False:
-    from typing import Any, Union
+    from typing import Any, Sequence, Union
 
     TextContent = Union[str, int]
 
@@ -30,7 +34,7 @@ class Span:
         string: str = "",
         start: int = 0,
         font: int = ui.NORMAL,
-        line_width: int = ui.WIDTH - TEXT_MARGIN_LEFT,
+        line_width: int = LINE_WIDTH,
         offset_x: int = 0,
         break_words: bool = False,
     ) -> None:
@@ -41,7 +45,7 @@ class Span:
         string: str,
         start: int,
         font: int,
-        line_width: int = ui.WIDTH - TEXT_MARGIN_LEFT,
+        line_width: int = LINE_WIDTH,
         offset_x: int = 0,
         break_words: bool = False,
     ) -> None:
@@ -172,7 +176,7 @@ _WORKING_SPAN = Span()
 
 
 def render_text(
-    items: list[TextContent],
+    items: Sequence[TextContent],
     new_lines: bool,
     max_lines: int,
     font: int = ui.NORMAL,

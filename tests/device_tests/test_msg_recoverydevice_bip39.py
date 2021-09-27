@@ -68,8 +68,6 @@ class TestMsgRecoverydevice:
                 ret = client.call_raw(proto.WordAck(word=word))
                 fakes += 1
 
-            print(mnemonic)
-
         # Workflow succesfully ended
         assert isinstance(ret, proto.Success)
 
@@ -119,8 +117,6 @@ class TestMsgRecoverydevice:
             else:
                 ret = client.call_raw(proto.WordAck(word=word))
                 fakes += 1
-
-            print(mnemonic)
 
         # Workflow succesfully ended
         assert isinstance(ret, proto.Success)

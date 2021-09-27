@@ -3,11 +3,16 @@
  }:
 
 let
-  # the last successful build of nixpkgs-unstable as of 2021-05-07
+  # the last commit from master as of 2021-07-09
+  rustOverlay = import (builtins.fetchTarball {
+    url = "https://github.com/oxalica/rust-overlay/archive/76732f3ddba766b1fe772fca80aafbc9cccd78dd.tar.gz";
+    sha256 = "0lqwxn28malsjxw8hxp4iwax5v0mlwi4l5q0cxfacq153gi6j0f8";
+  });
+  # the last successful build of nixpkgs-unstable as of 2021-07-09
   nixpkgs = import (builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/e62feb3bf4a603e26755238303bda0c24651e155.tar.gz";
-    sha256 = "1gkamm044jrksjrisr7h9grg8p2y6rk01x6391asrx988hm2rh9s";
-  }) { };
+    url = "https://github.com/NixOS/nixpkgs/archive/7b4ff2184e4cab274ecb2b2eb49d20ef2142ddf1.tar.gz";
+    sha256 = "1gdjm0qv5x9jx3zps7vz6yh10rkhmrbk7vf0b2hx5x6wi8yngfnb";
+  }) { overlays = [ rustOverlay ]; };
   moneroTests = nixpkgs.fetchurl {
     url = "https://github.com/ph4r05/monero/releases/download/v0.17.1.9-tests/trezor_tests";
     sha256 = "410bc4ff2ff1edc65e17f15b549bd1bf8a3776cf67abdea86aed52cf4bce8d9d";
@@ -18,6 +23,12 @@ let
     ${nixpkgs.patchelf}/bin/patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" "$out"
     chmod -w $out
   '';
+  rustStable = nixpkgs.rust-bin.stable."1.53.0".default.override {
+    targets = [
+      "thumbv7em-none-eabihf" # TT
+      "thumbv7m-none-eabi"    # T1
+    ];
+  };
 in
 with nixpkgs;
 stdenv.mkDerivation ({
@@ -53,6 +64,7 @@ stdenv.mkDerivation ({
     poetry
     protobuf3_6
     rustfmt
+    rustStable
     wget
     zlib
     moreutils
@@ -83,7 +95,7 @@ stdenv.mkDerivation ({
   SOURCE_DATE_EPOCH = 1600000000;
 
   # Used by rust bindgen
-  LIBCLANG_PATH = "${llvmPackages.libclang}/lib";
+  LIBCLANG_PATH = "${llvmPackages.libclang.lib}/lib";
 } // (lib.optionalAttrs fullDeps) {
   TREZOR_MONERO_TESTS_PATH = moneroTestsPatched;
 })

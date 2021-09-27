@@ -92,7 +92,7 @@ def test_show_multisig_3(client):
         )
 
 
-VECTORS_MULTISIG = (  # script_type, purpose48_type, address, xpubs, ignore_xpub_magic
+VECTORS_MULTISIG = (  # script_type, bip48_type, address, xpubs, ignore_xpub_magic
     (
         messages.InputScriptType.SPENDMULTISIG,
         0,
@@ -165,15 +165,15 @@ VECTORS_MULTISIG = (  # script_type, purpose48_type, address, xpubs, ignore_xpub
 @pytest.mark.skip_t1
 @pytest.mark.multisig
 @pytest.mark.parametrize(
-    "script_type, purpose48_type, address, xpubs, ignore_xpub_magic", VECTORS_MULTISIG
+    "script_type, bip48_type, address, xpubs, ignore_xpub_magic", VECTORS_MULTISIG
 )
 def test_show_multisig_xpubs(
-    client, script_type, purpose48_type, address, xpubs, ignore_xpub_magic
+    client, script_type, bip48_type, address, xpubs, ignore_xpub_magic
 ):
     nodes = [
         btc.get_public_node(
             client,
-            tools.parse_path(f"48h/0h/{i}h/{purpose48_type}h"),
+            tools.parse_path(f"48h/0h/{i}h/{bip48_type}h"),
             coin_name="Bitcoin",
         )
         for i in range(3)
@@ -235,7 +235,7 @@ def test_show_multisig_xpubs(
             btc.get_address(
                 client,
                 "Bitcoin",
-                tools.parse_path(f"48h/0h/{i}h/{purpose48_type}h/0/0"),
+                tools.parse_path(f"48h/0h/{i}h/{bip48_type}h/0/0"),
                 show_display=True,
                 multisig=multisig,
                 script_type=script_type,
