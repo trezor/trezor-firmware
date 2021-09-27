@@ -1033,7 +1033,7 @@ async def _fail_or_warn_path(
     ctx: wire.Context, path: list[int], path_name: str
 ) -> None:
     if safety_checks.is_strict():
-        raise wire.DataError("Invalid %s" % path_name.lower())
+        raise wire.DataError(f"Invalid {path_name.lower()}")
     else:
         await show_warning_path(ctx, path, path_name)
 
@@ -1045,7 +1045,7 @@ def _fail_if_strict_and_unusual(
         return
 
     if Credential.payment_credential(address_parameters).is_unusual_path:
-        raise wire.DataError("Invalid %s" % CHANGE_OUTPUT_PATH_NAME.lower())
+        raise wire.DataError(f"Invalid {CHANGE_OUTPUT_PATH_NAME.lower()}")
 
     if Credential.stake_credential(address_parameters).is_unusual_path:
-        raise wire.DataError("Invalid %s" % CHANGE_OUTPUT_STAKING_PATH_NAME.lower())
+        raise wire.DataError(f"Invalid {CHANGE_OUTPUT_STAKING_PATH_NAME.lower()}")

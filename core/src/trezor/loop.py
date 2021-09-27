@@ -231,7 +231,7 @@ class sleep(Syscall):
     Example:
 
     >>> planned = await loop.sleep(1000)  # sleep for 1s
-    >>> print('missed by %d ms', utime.ticks_diff(utime.ticks_ms(), planned))
+    >>> print(f"missed by {utime.ticks_diff(utime.ticks_ms(), planned)} ms")
     """
 
     def __init__(self, delay_ms: int) -> None:

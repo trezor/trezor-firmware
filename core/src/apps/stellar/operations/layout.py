@@ -114,7 +114,7 @@ async def confirm_manage_offer_op(ctx: Context, op: StellarManageOfferOp) -> Non
             text = "Delete"
         else:
             text = "Update"
-        text += " #%d" % op.offer_id
+        text += f" #{op.offer_id}"
     await _confirm_offer(ctx, text, op)
 
 
@@ -131,7 +131,7 @@ async def _confirm_offer(
             ("Selling:", format_amount(op.amount, op.selling_asset)),
             ("Buying:", format_asset(op.buying_asset)),
             (
-                "Price per {}:".format(format_asset(op.buying_asset)),
+                f"Price per {format_asset(op.buying_asset)}:",
                 str(op.price_n / op.price_d),
             ),
         ),
@@ -279,6 +279,6 @@ async def confirm_asset_issuer(ctx: Context, asset: StellarAsset) -> None:
         ctx,
         "Confirm Issuer",
         asset.issuer,
-        description="{} issuer:".format(asset.code),
+        description=f"{asset.code} issuer:",
         br_type="confirm_asset_issuer",
     )

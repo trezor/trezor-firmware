@@ -334,7 +334,7 @@ def resp_cmd_authenticate(siglen: int) -> dict:
 def overlay_struct(buf: bytearray, desc: dict) -> Any:
     desc_size = uctypes.sizeof(desc, uctypes.BIG_ENDIAN)  # type: ignore
     if desc_size > len(buf):
-        raise ValueError("desc is too big (%d > %d)" % (desc_size, len(buf)))
+        raise ValueError(f"desc is too big ({desc_size} > {len(buf)})")
     return uctypes.struct(uctypes.addressof(buf), desc, uctypes.BIG_ENDIAN)
 
 

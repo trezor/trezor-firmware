@@ -38,7 +38,7 @@ def _raw_client(request):
             return TrezorClientDebugLink(transport, auto_interact=not interact)
         except Exception as e:
             request.session.shouldstop = "Failed to communicate with Trezor"
-            raise RuntimeError("Failed to open debuglink for {}".format(path)) from e
+            raise RuntimeError(f"Failed to open debuglink for {path}") from e
 
     else:
         devices = enumerate_devices()

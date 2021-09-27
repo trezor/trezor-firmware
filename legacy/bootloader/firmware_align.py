@@ -9,8 +9,7 @@ fn = sys.argv[1]
 fs = os.stat(fn).st_size
 if fs > MAXSIZE:
     raise Exception(
-        "bootloader has to be smaller than %d bytes (current size is %d)"
-        % (MAXSIZE, fs)
+        f"bootloader has to be smaller than {MAXSIZE} bytes (current size is {fs})"
     )
 with open(fn, "ab") as f:
     f.write(b"\x00" * (TOTALSIZE - fs))

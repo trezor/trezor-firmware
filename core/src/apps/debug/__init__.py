@@ -110,9 +110,7 @@ if __debug__:
         layout_change_chan.putters.clear()
         await ui.wait_until_layout_is_running()
         storage.watch_layout_changes = bool(msg.watch)
-        log.debug(
-            __name__, "Watch layout changes: {}".format(storage.watch_layout_changes)
-        )
+        log.debug(__name__, "Watch layout changes: %s", storage.watch_layout_changes)
         return Success()
 
     async def dispatch_DebugLinkDecision(

@@ -59,11 +59,11 @@ class Slip39NumInput(ui.Component):
                         first_line_text = "Only one share will"
                         second_line_text = "be created."
                     else:
-                        first_line_text = "%s people or locations" % count
+                        first_line_text = f"{count} people or locations"
                         second_line_text = "will each hold one share."
                 else:
                     first_line_text = "Set the total number of"
-                    second_line_text = "shares in Group %s." % (self.group_id + 1)
+                    second_line_text = f"shares in Group {self.group_id + 1}."
                 ui.display.bar(0, 110, ui.WIDTH, 52, ui.BG)
                 ui.display.text(12, 130, first_line_text, ui.NORMAL, ui.FG, ui.BG)
                 ui.display.text(12, 156, second_line_text, ui.NORMAL, ui.FG, ui.BG)
@@ -73,12 +73,12 @@ class Slip39NumInput(ui.Component):
                     if count == 1:
                         second_line_text = "1 share."
                     elif count == self.input.max_count:
-                        second_line_text = "all %s of the shares." % count
+                        second_line_text = f"all {count} of the shares."
                     else:
-                        second_line_text = "any %s of the shares." % count
+                        second_line_text = f"any {count} of the shares."
                 else:
                     first_line_text = "The required number of "
-                    second_line_text = "shares to form Group %s." % (self.group_id + 1)
+                    second_line_text = f"shares to form Group {self.group_id + 1}."
                 ui.display.bar(0, 110, ui.WIDTH, 52, ui.BG)
                 ui.display.text(12, 130, first_line_text, ui.NORMAL, ui.FG, ui.BG)
                 ui.display.text(12, 156, second_line_text, ui.NORMAL, ui.FG, ui.BG)
@@ -127,12 +127,10 @@ class MnemonicWordSelect(ui.Layout):
         if share_index is None:
             self.text: ui.Component = Text("Check seed")
         elif group_index is None:
-            self.text = Text("Check share #%s" % (share_index + 1))
+            self.text = Text(f"Check share #{share_index + 1}")
         else:
-            self.text = Text(
-                "Check G%s - Share %s" % ((group_index + 1), (share_index + 1))
-            )
-        self.text.normal("Select word %d of %d:" % (word_index + 1, count))
+            self.text = Text(f"Check G{group_index + 1} - Share {share_index + 1}")
+        self.text.normal(f"Select word {word_index + 1} of {count}:")
 
     def dispatch(self, event: int, x: int, y: int) -> None:
         for btn in self.buttons:

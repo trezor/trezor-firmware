@@ -360,6 +360,6 @@ if __name__ == "__main__":
     if not ALL_TAGS:
         print("No versions found. Remember to run download_emulators.sh")
     for k, v in ALL_TAGS.items():
-        print("Found versions for {}:".format(k), v)
+        print(f"Found versions for {k}: {v}")
     print()
-    print("Use `pytest {}` to run tests".format(__file__))
+    print(f"Use `pytest {__file__}` to run tests")

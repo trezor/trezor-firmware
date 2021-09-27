@@ -100,7 +100,7 @@ def require_confirm_data(ctx: Context, data: bytes, data_total: int) -> Awaitabl
         ctx,
         "confirm_data",
         title="Confirm data",
-        description="Size: %d bytes" % data_total,
+        description=f"Size: {data_total} bytes",
         data=data,
         br_code=ButtonRequestType.SignTx,
     )
@@ -121,4 +121,4 @@ def format_ethereum_amount(
         suffix = "Wei " + suffix
         decimals = 0
 
-    return "%s %s" % (format_amount(value, decimals), suffix)
+    return f"{format_amount(value, decimals)} {suffix}"

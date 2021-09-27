@@ -251,4 +251,4 @@ class Button(ui.Component):
     if __debug__:
 
         def read_content(self) -> list[str]:
-            return ["<Button: {}>".format(self.text)]
+            return [f"<Button: {self.text}>"]

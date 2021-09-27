@@ -35,7 +35,7 @@ def format_coin_amount(amount: int, coin: CoinInfo, amount_unit: AmountUnit) -> 
         decimals -= 3
         shortcut = "m" + shortcut
     # we don't need to do anything for AmountUnit.BITCOIN
-    return "%s %s" % (format_amount(amount, decimals), shortcut)
+    return f"{format_amount(amount, decimals)} {shortcut}"
 
 
 async def confirm_output(

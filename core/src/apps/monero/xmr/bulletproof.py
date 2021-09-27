@@ -654,7 +654,7 @@ class KeyVPowers(KeyVBase):
                 else crypto.sc_mul_into(self.cur, self.cur, self.x)
             )
         else:
-            raise IndexError("Only linear scan allowed: %s, %s" % (prev, item))
+            raise IndexError(f"Only linear scan allowed: {prev}, {item}")
 
     def set_state(self, idx, val):
         self.last_idx = idx

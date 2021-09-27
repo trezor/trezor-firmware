@@ -58,8 +58,6 @@ def sign_tx(client, address, file, broadcast):
     payload = {"data": transaction.data.hex(), "signature": transaction.signature.hex()}
 
     if broadcast:
-        return requests.post(
-            "{}/transaction/announce".format(broadcast), json=payload
-        ).json()
+        return requests.post(f"{broadcast}/transaction/announce", json=payload).json()
     else:
         return payload

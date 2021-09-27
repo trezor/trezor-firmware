@@ -312,7 +312,7 @@ def _rsig_bp(state: State) -> bytes:
 
     rsig = _dump_rsig_bp(rsig)
     state.mem_trace(
-        "post-bp-ser, size: %s" % len(rsig) if __debug__ else None, collect=True
+        f"post-bp-ser, size: {len(rsig)}" if __debug__ else None, collect=True
     )
 
     # state cleanup

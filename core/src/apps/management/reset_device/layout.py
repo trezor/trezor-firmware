@@ -61,21 +61,15 @@ async def _show_confirmation_success(
         if group_index is None:
             subheader = "You have finished\nverifying your\nrecovery shares."
         else:
-            subheader = (
-                "You have finished\nverifying your\nrecovery shares\nfor group %s."
-                % (group_index + 1)
-            )
+            subheader = f"You have finished\nverifying your\nrecovery shares\nfor group {group_index + 1}."
         text = ""
 
     else:
         if group_index is None:
-            subheader = "Recovery share #%s\nchecked successfully." % (share_index + 1)
-            text = "Continue with share #%s." % (share_index + 2)
+            subheader = f"Recovery share #{share_index + 1}\nchecked successfully."
+            text = f"Continue with share #{share_index + 2}."
         else:
-            subheader = "Group %s - Share %s\nchecked successfully." % (
-                (group_index + 1),
-                (share_index + 1),
-            )
+            subheader = f"Group {group_index + 1} - Share {share_index + 1}\nchecked successfully."
             text = "Continue with the next\nshare."
 
     return await show_success(ctx, "success_recovery", text, subheader=subheader)
@@ -87,7 +81,7 @@ async def _show_confirmation_failure(
     if share_index is None:
         header = "Recovery seed"
     else:
-        header = "Recovery share #%s" % (share_index + 1)
+        header = f"Recovery share #{share_index + 1}"
     await show_warning(
         ctx,
         "warning_backup_check",

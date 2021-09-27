@@ -213,9 +213,7 @@ def split_ems(
 
     if group_threshold > len(groups):
         raise ValueError(
-            "The requested group threshold ({}) must not exceed the number of groups ({}).".format(
-                group_threshold, len(groups)
-            )
+            f"The requested group threshold ({group_threshold}) must not exceed the number of groups ({len(groups)})."
         )
 
     if any(
@@ -273,17 +271,13 @@ def recover_ems(mnemonics: list[str]) -> tuple[int, int, bytes]:
 
     if len(groups) != group_threshold:
         raise MnemonicError(
-            "Wrong number of mnemonic groups. Expected {} groups, but {} were provided.".format(
-                group_threshold, len(groups)
-            )
+            f"Wrong number of mnemonic groups. Expected {group_threshold} groups, but {len(groups)} were provided."
         )
 
     for group_index, group in groups.items():
         if len(group[1]) != group[0]:  # group[0] is threshold
             raise MnemonicError(
-                "Wrong number of mnemonics. Expected {} mnemonics, but {} were provided.".format(
-                    group[0], len(group[1])
-                )
+                f"Wrong number of mnemonics. Expected {group[0]} mnemonics, but {len(group[1])} were provided."
             )
 
     group_shares = [
@@ -302,9 +296,7 @@ def decode_mnemonic(mnemonic: str) -> Share:
 
     if len(mnemonic_data) < _MIN_MNEMONIC_LENGTH_WORDS:
         raise MnemonicError(
-            "Invalid mnemonic length. The length of each mnemonic must be at least {} words.".format(
-                _MIN_MNEMONIC_LENGTH_WORDS
-            )
+            f"Invalid mnemonic length. The length of each mnemonic must be at least {_MIN_MNEMONIC_LENGTH_WORDS} words."
         )
 
     padding_len = (_RADIX_BITS * (len(mnemonic_data) - _METADATA_LENGTH_WORDS)) % 16
@@ -487,21 +479,17 @@ def _split_secret(
 ) -> list[tuple[int, bytes]]:
     if threshold < 1:
         raise ValueError(
-            "The requested threshold ({}) must be a positive integer.".format(threshold)
+            f"The requested threshold ({threshold}) must be a positive integer."
         )
 
     if threshold > share_count:
         raise ValueError(
-            "The requested threshold ({}) must not exceed the number of shares ({}).".format(
-                threshold, share_count
-            )
+            f"The requested threshold ({threshold}) must not exceed the number of shares ({share_count})."
         )
 
     if share_count > MAX_SHARE_COUNT:
         raise ValueError(
-            "The requested number of shares ({}) must not exceed {}.".format(
-                share_count, MAX_SHARE_COUNT
-            )
+            f"The requested number of shares ({share_count}) must not exceed {MAX_SHARE_COUNT}."
         )
 
     # If the threshold is 1, then the digest of the shared secret is not used.
@@ -615,9 +603,7 @@ def _decode_mnemonics(
 
     if len(identifiers) != 1 or len(iteration_exponents) != 1:
         raise MnemonicError(
-            "Invalid set of mnemonics. All mnemonics must begin with the same {} words.".format(
-                _ID_EXP_LENGTH_WORDS
-            )
+            f"Invalid set of mnemonics. All mnemonics must begin with the same {_ID_EXP_LENGTH_WORDS} words."
         )
 
     if len(group_thresholds) != 1:

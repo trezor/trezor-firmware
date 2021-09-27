@@ -78,7 +78,7 @@ class TrezorConnection:
         except Exception:
             click.echo("Failed to find a Trezor device.")
             if self.path is not None:
-                click.echo("Using path: {}".format(self.path))
+                click.echo(f"Using path: {self.path}")
             sys.exit(1)
 
         try:

@@ -294,7 +294,7 @@ def sign_tx(
 
     if not isinstance(resp, messages.StellarSignedTx):
         raise exceptions.TrezorException(
-            "Unexpected message: {}".format(resp.__class__.__name__)
+            f"Unexpected message: {resp.__class__.__name__}"
         )
 
     if operations:

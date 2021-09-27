@@ -97,7 +97,7 @@ def getDecryptedNonce(client, entry):
     if pr.scheme and pr.netloc:
         item = pr.netloc
 
-    ENC_KEY = 'Unlock %s for user %s?' % (item, entry['username'])
+    ENC_KEY = f"Unlock {item} for user {entry['username']}?"
     ENC_VALUE = entry['nonce']
     decrypted_nonce = misc.decrypt_keyvalue(
         client,
@@ -116,7 +116,7 @@ def printEntries(entries):
     print('================')
     print()
     for k, v in entries.items():
-        print('Entry id: #%s' % k)
+        print(f'Entry id: #{k}')
         print('-------------')
         for kk, vv in v.items():
             if kk in ['nonce', 'safe_note', 'password']:

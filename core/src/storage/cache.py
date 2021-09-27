@@ -68,7 +68,7 @@ class DataCache:
         ...
 
     def get(self, key: int, default: T | None = None) -> bytes | T | None:  # noqa: F811
-        utils.ensure(key < len(self.fields), "failed to load key %d" % key)
+        utils.ensure(key < len(self.fields), f"failed to load key {key}")
         if self.data[key][0] != 1:
             return default
         return bytes(self.data[key][1:])

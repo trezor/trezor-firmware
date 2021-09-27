@@ -248,7 +248,7 @@ def _show_address(
     network: str | None = None,
     extra: str | None = None,
 ) -> ui.Layout:
-    para = [(ui.NORMAL, "%s network" % network)] if network is not None else []
+    para = [(ui.NORMAL, f"{network} network")] if network is not None else []
     if extra is not None:
         para.append((ui.BOLD, extra))
     para.extend(
@@ -340,7 +340,7 @@ async def show_address(
         if is_multisig:
             for i, xpub in enumerate(xpubs):
                 cancel = "Next" if i < len(xpubs) - 1 else "Address"
-                title_xpub = "XPUB #%d" % (i + 1)
+                title_xpub = f"XPUB #{i + 1}"
                 title_xpub += " (yours)" if i == multisig_index else " (cosigner)"
                 if is_confirmed(
                     await interact(
@@ -864,7 +864,7 @@ async def confirm_coinjoin(
     text = Text("Authorize CoinJoin", ui.ICON_RECOVERY, new_lines=False)
     if fee_per_anonymity is not None:
         text.normal("Fee per anonymity set:\n")
-        text.bold("{} %\n".format(fee_per_anonymity))
+        text.bold(f"{fee_per_anonymity} %\n")
     text.normal("Maximum total fees:\n")
     text.bold(total_fee)
     await raise_if_cancelled(
@@ -876,7 +876,7 @@ async def confirm_coinjoin(
 async def confirm_sign_identity(
     ctx: wire.GenericContext, proto: str, identity: str, challenge_visual: str | None
 ) -> None:
-    text = Text("Sign %s" % proto, new_lines=False)
+    text = Text(f"Sign {proto}", new_lines=False)
     if challenge_visual:
         text.normal(challenge_visual)
         text.br()
@@ -890,7 +890,7 @@ async def confirm_signverify(
     ctx: wire.GenericContext, coin: str, message: str, address: str | None = None
 ) -> None:
     if address:
-        header = "Verify {} message".format(coin)
+        header = f"Verify {coin} message"
         font = ui.MONO
         br_type = "verify_message"
 
@@ -901,7 +901,7 @@ async def confirm_signverify(
             interact(ctx, Confirm(text), br_type, ButtonRequestType.Other)
         )
     else:
-        header = "Sign {} message".format(coin)
+        header = f"Sign {coin} message"
         font = ui.NORMAL
         br_type = "sign_message"
 
@@ -963,7 +963,7 @@ async def request_pin_on_device(
     elif attempts_remaining == 1:
         subprompt = "This is your last attempt"
     else:
-        subprompt = "%s attempts remaining" % attempts_remaining
+        subprompt = f"{attempts_remaining} attempts remaining"
 
     dialog = pin.PinDialog(prompt, subprompt, allow_cancel)
     while True:

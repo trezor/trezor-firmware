@@ -47,13 +47,11 @@ class Emulator:
         storage=None,
         headless=False,
         debug=True,
-        extra_args=()
+        extra_args=(),
     ):
         self.executable = Path(executable).resolve()
         if not executable.exists():
-            raise ValueError(
-                "emulator executable not found: {}".format(self.executable)
-            )
+            raise ValueError(f"emulator executable not found: {self.executable}")
 
         self.profile_dir = Path(profile_dir).resolve()
         if not self.profile_dir.exists():
@@ -87,7 +85,7 @@ class Emulator:
         return os.environ.copy()
 
     def _get_transport(self):
-        return UdpTransport("127.0.0.1:{}".format(self.port))
+        return UdpTransport(f"127.0.0.1:{self.port}")
 
     def wait_until_ready(self, timeout=EMULATOR_WAIT_TIME):
         transport = self._get_transport()
@@ -109,7 +107,7 @@ class Emulator:
         finally:
             transport.close()
 
-        LOG.info("Emulator ready after {:.3f} seconds".format(time.monotonic() - start))
+        LOG.info(f"Emulator ready after {time.monotonic() - start:.3f} seconds")
 
     def wait(self, timeout=None):
         ret = self.process.wait(timeout=timeout)
@@ -149,9 +147,7 @@ class Emulator:
             self.wait_until_ready()
         except TimeoutError:
             # Assuming that after the default 60-second timeout, the process is stuck
-            LOG.warning(
-                "Emulator did not come up after {} seconds".format(EMULATOR_WAIT_TIME)
-            )
+            LOG.warning(f"Emulator did not come up after {EMULATOR_WAIT_TIME} seconds")
             self.process.kill()
             raise
 
@@ -175,7 +171,7 @@ class Emulator:
             try:
                 self.process.wait(EMULATOR_WAIT_TIME)
                 end = time.monotonic()
-                LOG.info("Emulator shut down after {:.3f} seconds".format(end - start))
+                LOG.info(f"Emulator shut down after {end - start:.3f} seconds")
             except subprocess.TimeoutExpired:
                 LOG.info("Emulator seems stuck. Sending kill signal.")
                 self.process.kill()
@@ -210,7 +206,7 @@ class CoreEmulator(Emulator):
         sdcard=None,
         disable_animation=True,
         heap_size="20M",
-        **kwargs
+        **kwargs,
     ):
         super().__init__(*args, **kwargs)
         if workdir is not None:
@@ -244,7 +240,7 @@ class CoreEmulator(Emulator):
     def make_args(self):
         pyopt = "-O0" if self.debug else "-O1"
         return (
-            [pyopt, "-X", "heapsize={}".format(self.heap_size)]
+            [pyopt, "-X", f"heapsize={self.heap_size}"]
             + self.main_args
             + self.extra_args
         )

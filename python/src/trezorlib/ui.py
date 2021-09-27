@@ -95,7 +95,7 @@ class ClickUI:
 
         while True:
             try:
-                pin = prompt("Please enter {}".format(desc), hide_input=True)
+                pin = prompt(f"Please enter {desc}", hide_input=True)
             except click.Abort:
                 raise Cancelled from None
 
@@ -108,11 +108,7 @@ class ClickUI:
                     "The value may only consist of digits 1 to 9 or letters cvbdfgert."
                 )
             elif len(pin) > MAX_PIN_LENGTH:
-                echo(
-                    "The value must be at most {} digits in length.".format(
-                        MAX_PIN_LENGTH
-                    )
-                )
+                echo(f"The value must be at most {MAX_PIN_LENGTH} digits in length.")
             else:
                 return pin
 

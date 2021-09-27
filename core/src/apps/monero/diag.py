@@ -26,9 +26,7 @@ if __debug__:
         diff = PREV_MEM - free
         log.debug(
             __name__,
-            "======= {} {} Diff: {} Free: {} Allocated: {}".format(
-                CUR_MES, x, diff, free, gc.mem_alloc()
-            ),
+            f"======= {CUR_MES} {x} Diff: {diff} Free: {free} Allocated: {gc.mem_alloc()}",
         )
         micropython.mem_info()
         gc.collect()

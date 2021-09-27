@@ -16,7 +16,7 @@ class Device:
     def run_trezorctl(self, cmd: str, **kwargs):
         full_cmd = "trezorctl "
         full_cmd += cmd
-        self.log("[software/trezorctl] Running '{}'".format(full_cmd))
+        self.log(f"[software/trezorctl] Running '{full_cmd}'")
         return run(full_cmd, shell=True, check=True, **kwargs)
 
     def check_model(self, model=None):
@@ -26,11 +26,9 @@ class Device:
         self.run_trezorctl("get-features | grep version")
         lines = res.stdout.splitlines()
         if len(lines) != 1:
-            raise RuntimeError("{} trezors connected".format(len(lines)))
+            raise RuntimeError(f"{len(lines)} trezors connected")
         if model and model not in lines[0]:
-            raise RuntimeError(
-                "invalid trezor model connected (expected {})".format(model)
-            )
+            raise RuntimeError(f"invalid trezor model connected (expected {model})")
         return lines[0].split()[0]
 
     def reboot(self):
@@ -41,7 +39,7 @@ class Device:
         self.now()
         self.log("[hardware/usb] Turning power on...")
         run(
-            "uhubctl -l {} -p {} -a on".format(self.uhub_location, self.device_port),
+            f"uhubctl -l {self.uhub_location} -p {self.device_port} -a on",
             shell=True,
             check=True,
         )
@@ -51,9 +49,7 @@ class Device:
         self.now()
         self.log("[hardware/usb] Turning power off...")
         run(
-            "uhubctl -l {} -p {} -r 100 -a off".format(
-                self.uhub_location, self.device_port
-            ),
+            f"uhubctl -l {self.uhub_location} -p {self.device_port} -r 100 -a off",
             shell=True,
             check=True,
         )
@@ -65,9 +61,9 @@ class Device:
     @staticmethod
     def wait(seconds):
         Device.now()
-        Device.log("[software] Waiting for {} seconds...".format(seconds))
+        Device.log(f"[software] Waiting for {seconds} seconds...")
         time.sleep(seconds)
 
     @staticmethod
     def now():
-        Device.log("\n[timestamp] {}".format(datetime.datetime.now()))
+        Device.log(f"\n[timestamp] {datetime.datetime.now()}")

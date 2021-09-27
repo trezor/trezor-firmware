@@ -159,4 +159,4 @@ def by_name(name: str) -> CoinInfo:
                 % endfor
             )
 % endfor
-    raise ValueError('Unknown coin name "%s"' % name)
+    raise ValueError  # Unknown coin name

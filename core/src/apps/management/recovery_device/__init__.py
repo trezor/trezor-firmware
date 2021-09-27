@@ -82,9 +82,7 @@ def _validate(msg: RecoveryDevice) -> None:
         # check that only allowed fields are set
         for key, value in msg.__dict__.items():
             if key not in DRY_RUN_ALLOWED_FIELDS and value is not None:
-                raise wire.ProcessError(
-                    "Forbidden field set in dry-run: {}".format(key)
-                )
+                raise wire.ProcessError(f"Forbidden field set in dry-run: {key}")
 
 
 async def _continue_dialog(ctx: wire.Context, msg: RecoveryDevice) -> None:

@@ -41,8 +41,7 @@ async def set_input(
     # real_output denotes which output in outputs is the real one (ours)
     if src_entr.real_output >= len(src_entr.outputs):
         raise ValueError(
-            "real_output index %s bigger than output_keys.size() %s"
-            % (src_entr.real_output, len(src_entr.outputs))
+            f"real_output index {src_entr.real_output} bigger than output_keys.size() {len(src_entr.outputs)}"
         )
     state.summary_inputs_money += src_entr.amount
 

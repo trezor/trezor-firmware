@@ -10,16 +10,14 @@ class TrezorOne(Device):
 
     def touch(self, location, action):
         self.now()
-        self.log(
-            "[hardware/trezor] Touching the {} button by {}...".format(location, action)
-        )
-        self.serial.write(("{} {}\n".format(location, action)).encode())
+        self.log(f"[hardware/trezor] Touching the {location} button by {action}...")
+        self.serial.write(f"{location} {action}\n".encode())
 
     def update_firmware(self, file=None):
         if file:
             unofficial = True
-            trezorctlcmd = "firmware-update -s -f {} &".format(file)
-            self.log("[software] Updating the firmware to {}".format(file))
+            trezorctlcmd = f"firmware-update -s -f {file} &"
+            self.log(f"[software] Updating the firmware to {file}")
         else:
             unofficial = False
             trezorctlcmd = "firmware-update &"

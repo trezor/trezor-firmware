@@ -18,7 +18,7 @@ def bump_header(filename, **kwargs):
             m = HEADER_LINE_RE.match(line)
             if m is not None and m[1] in kwargs:
                 symbol = m[1]
-                result_lines.append("#define {0} {1}\n".format(symbol, kwargs[symbol]))
+                result_lines.append(f"#define {symbol} {kwargs[symbol]}\n")
             else:
                 result_lines.append(line)
 
