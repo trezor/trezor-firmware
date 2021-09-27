@@ -149,7 +149,7 @@ async def confirm_action_voteproducer(
             "confirm_voteproducer",
             title="Vote for producers",
             props=(
-                ("{:2d}. {}".format(wi + 1, helpers.eos_name_to_string(producer)), None)
+                (f"{wi + 1:2d}. {helpers.eos_name_to_string(producer)}", None)
                 for wi, producer in enumerate(msg.producers)
             ),
             icon=ui.ICON_CONFIRM,
@@ -304,8 +304,8 @@ def authorization_fields(auth: EosAuthorization) -> list[tuple[str, str | None]]
         _key = helpers.public_key_to_wif(bytes(key.key))
         _weight = str(key.weight)
 
-        header = "Key #{}:".format(i + 1)
-        w_header = "Key #{} Weight:".format(i + 1)
+        header = f"Key #{i + 1}:"
+        w_header = f"Key #{i + 1} Weight:"
 
         fields.append((header, _key))
         fields.append((w_header, _weight))
@@ -314,9 +314,9 @@ def authorization_fields(auth: EosAuthorization) -> list[tuple[str, str | None]]
         _account = helpers.eos_name_to_string(account.account.actor)
         _permission = helpers.eos_name_to_string(account.account.permission)
 
-        a_header = "Account #{}:".format(i + 1)
-        p_header = "Acc Permission #{}:".format(i + 1)
-        w_header = "Account #{} weight:".format(i + 1)
+        a_header = f"Account #{i + 1}:"
+        p_header = f"Acc Permission #{i + 1}:"
+        w_header = f"Account #{i + 1} weight:"
 
         fields.append((a_header, _account))
         fields.append((p_header, _permission))
@@ -326,9 +326,9 @@ def authorization_fields(auth: EosAuthorization) -> list[tuple[str, str | None]]
         _wait = str(wait.wait_sec)
         _weight = str(wait.weight)
 
-        header = "Delay #{}".format(i + 1)
-        w_header = "Delay #{} weight:".format(i + 1)
-        fields.append((header, "{} sec".format(_wait)))
+        header = f"Delay #{i + 1}"
+        w_header = f"Delay #{i + 1} weight:"
+        fields.append((header, f"{_wait} sec"))
         fields.append((w_header, _weight))
 
     return fields

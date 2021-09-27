@@ -84,9 +84,7 @@ def _process_tested(fixture_test_path, test_name):
         )
 
         pytest.fail(
-            "Hash of {} differs.\nExpected:  {}\nActual:    {}\nDiff file: {}".format(
-                test_name, expected_hash, actual_hash, file_path
-            )
+            f"Hash of {test_name} differs.\nExpected:  {expected_hash}\nActual:    {actual_hash}\nDiff file: {file_path}"
         )
     else:
         testreport.passed(fixture_test_path, test_name, actual_hash)

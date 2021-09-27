@@ -373,7 +373,7 @@ if __debug__:
                     yield "    " + subline
             elif val and isinstance(val, list) and type(val[0]) == type(msg):
                 # non-empty list of protobuf messages
-                yield "    {}: [".format(key)
+                yield f"    {key}: ["
                 for subval in val:
                     sublines = dump_protobuf_lines(subval)
                     for subline in sublines:

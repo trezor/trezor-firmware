@@ -143,7 +143,7 @@ def r(request):
 def curve(request):
     name = request.param
     curve_ptr = lib.get_curve_by_name(bytes(name, "ascii")).contents.params
-    assert curve_ptr, "curve {} not found".format(name)
+    assert curve_ptr, f"curve {name} not found"
     curve_obj = curves[name]
     curve_obj.ptr = c.cast(curve_ptr, c.POINTER(ecdsa_curve))
     curve_obj.p = curve_obj.curve.p()  # shorthand
@@ -154,7 +154,7 @@ def curve(request):
 def point(request):
     name = request.param.curve
     curve_ptr = lib.get_curve_by_name(bytes(name, "ascii")).contents.params
-    assert curve_ptr, "curve {} not found".format(name)
+    assert curve_ptr, f"curve {name} not found"
     curve_obj = curves[name]
     curve_obj.ptr = c.c_void_p(curve_ptr)
     curve_obj.p = ecdsa.ellipticcurve.Point(

@@ -35,9 +35,9 @@ def eos_asset_to_string(asset: EosAsset) -> str:
             integer = "0"
         fraction = amount_digits[-precision:]
 
-        return "{}.{} {}".format(integer, fraction, symbol)
+        return f"{integer}.{fraction} {symbol}"
     else:
-        return "{} {}".format(amount_digits, symbol)
+        return f"{amount_digits} {symbol}"
 
 
 def public_key_to_wif(pub_key: bytes) -> str:

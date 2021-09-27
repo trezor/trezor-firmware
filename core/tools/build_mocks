@@ -68,8 +68,8 @@ def store_to_file(dest, parts):
         if os.path.isdir(os.path.join(dest, package)):
             if not line.strip():
                 continue
-            print("Package exists: {}".format(package))
-            print("You should set 'package:' in {}".format(line.strip()))
+            print(f"Package exists: {package}")
+            print(f"You should set 'package:' in {line.strip()}")
             sys.exit(1)
 
         if not os.path.exists(filepath):

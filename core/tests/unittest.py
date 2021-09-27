@@ -160,7 +160,7 @@ class TestCase:
         self.assertEqual(
             x.MESSAGE_NAME,
             y.MESSAGE_NAME,
-            "Expected {}, found {}".format(x.MESSAGE_NAME, y.MESSAGE_NAME)
+            f"Expected {x.MESSAGE_NAME}, found {y.MESSAGE_NAME}"
         )
         xdict = x.__dict__
         ydict = y.__dict__
@@ -169,7 +169,7 @@ class TestCase:
             self.assertEqual(
                 xdict[key],
                 ydict[key],
-                "At {}.{} expected {}, found {}".format(x.MESSAGE_NAME, key, xdict[key], ydict[key])
+                f"At {x.MESSAGE_NAME}.{key} expected {xdict[key]}, found {ydict[key]}"
             )
 
 
@@ -236,9 +236,9 @@ def run_class(c, test_result):
                     test_result.testsRun += 1
                     retval = m()
                     if isinstance(retval, generator_type):
-                        raise RuntimeError("{} must not be a generator (it is async, uses yield or await).".format(name))
+                        raise RuntimeError(f"{name} must not be a generator (it is async, uses yield or await).")
                     elif retval is not None:
-                        raise RuntimeError("{} should not return a result.".format(name))
+                        raise RuntimeError(f"{name} should not return a result.")
                 finally:
                     tear_down()
                 print(" ok")
@@ -271,11 +271,11 @@ def main(module="__main__"):
     msg = "Ran %d tests" % result.testsRun
     result_strs = []
     if result.skippedNum > 0:
-        result_strs.append("{} skipped".format(result.skippedNum))
+        result_strs.append(f"{result.skippedNum} skipped")
     if result.failuresNum > 0:
-        result_strs.append("{} failed".format(result.failuresNum))
+        result_strs.append(f"{result.failuresNum} failed")
     if result.errorsNum > 0:
-        result_strs.append("{} errored".format(result.errorsNum))
+        result_strs.append(f"{result.errorsNum} errored")
     if result_strs:
         msg += " (" + ", ".join(result_strs) + ")"
     print(msg)

@@ -28,4 +28,4 @@ while True:
     except Exception:
         time.sleep(0.05)
 end = time.monotonic()
-print("waited for {:.3f}s".format(end - start))
+print(f"waited for {end - start:.3f}s")

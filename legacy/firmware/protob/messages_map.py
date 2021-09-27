@@ -130,7 +130,7 @@ for extension in (wire_in, wire_out, wire_debug_in, wire_debug_out):
         fh.write("\n#if DEBUG_LINK\n")
         fl.write("\n#if DEBUG_LINK\n")
 
-    fh.write("\n\t// {label}\n\n".format(label=LABELS[extension]))
+    fh.write(f"\n\t// {LABELS[extension]}\n\n")
 
     for message in messages[extension]:
         if message.name in SPECIAL_DEBUG_MESSAGES:

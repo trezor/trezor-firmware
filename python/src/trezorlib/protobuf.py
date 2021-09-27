@@ -527,11 +527,11 @@ def format_message(
                 output = repr(value)
             else:
                 output = "0x" + value.hex()
-            return "{} bytes {}{}".format(length, output, suffix)
+            return f"{length} bytes {output}{suffix}"
 
         if isinstance(value, int) and safe_issubclass(field.type, IntEnum):
             try:
-                return "{} ({})".format(field.type(value).name, value)
+                return f"{field.type(value).name} ({value})"
             except ValueError:
                 return str(value)
 

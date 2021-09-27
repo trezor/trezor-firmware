@@ -48,7 +48,7 @@ def annotate(obj, filename):
     if obj.type == "total":
         alloc_str = lambda line: str(line["total_allocs"])
     else:
-        alloc_str = lambda line: "{:.2f}".format(line["avg_allocs"])
+        alloc_str = lambda line: f"{line['avg_allocs']:.2f}"
 
     filedata = obj.data[filename]
 
@@ -83,10 +83,10 @@ def _list(obj, sort_by="avg_allocs", reverse=False):
 def list(obj, reverse):
     if obj.type == "total":
         field = "total_allocs"
-        format_num = lambda l: "{}".format(l[2])
+        format_num = lambda l: f"{l[2]}"
     else:
         field = "avg_allocs"
-        format_num = lambda l: "{:.2f}".format(l[1])
+        format_num = lambda l: f"{l[1]:.2f}"
 
     file_sums = _list(obj, field, reverse)
 
@@ -112,7 +112,7 @@ class HtmlTable:
         self.f.write("<tr>")
         for td in tds:
             if isinstance(td, tuple):
-                self.f.write("<td {}><tt>{}</tt></td>".format(td[0], td[1]))
+                self.f.write(f"<td {td[0]}><tt>{td[1]}</tt></td>")
             else:
                 self.f.write(f"<td><tt>{td}</tt></td>")
         self.f.write("</tr>")
@@ -129,9 +129,7 @@ def html(obj, htmldir):
     with open(f"{htmldir}/index.html", "w") as f:
         f.write("<html>")
         f.write(
-            "<h3>Total allocations: {}</h3>".format(
-                sum(total_sum for _, _, total_sum in file_sums)
-            )
+            f"<h3>Total allocations: {sum(total_sum for _, _, total_sum in file_sums)}</h3>"
         )
         with HtmlTable(f) as table:
             table.tr((style_right, "avg"), (style_right, "total"), "")

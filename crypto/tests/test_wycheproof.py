@@ -135,7 +135,7 @@ def parse_ec_pubkey(public_key):
 
     if curve_name is None:
         raise NotSupported(
-            "Unsupported named elliptic curve: {}".format(curve_identifier)
+            f"Unsupported named elliptic curve: {curve_identifier}"
         )
 
     try:
@@ -167,7 +167,7 @@ def parse_digest(name):
     if name == "SHA-256":
         return 0
     else:
-        raise NotSupported("Unsupported hash function: {}".format(name))
+        raise NotSupported(f"Unsupported hash function: {name}")
 
 
 def get_curve_by_name(name):
@@ -245,7 +245,7 @@ def aes_encrypt_initialise(key, context):
     elif len(key) == (256 / 8):
         lib.aes_encrypt_key256(key, context)
     else:
-        raise NotSupported("Unsupported key length: {}".format(len(key) * 8))
+        raise NotSupported(f"Unsupported key length: {len(key) * 8}")
 
 
 def aes_cbc_encrypt(key, iv, plaintext):
@@ -267,7 +267,7 @@ def aes_decrypt_initialise(key, context):
     elif len(key) == (256 / 8):
         lib.aes_decrypt_key256(key, context)
     else:
-        raise NotSupported("Unsupported AES key length: {}".format(len(key) * 8))
+        raise NotSupported(f"Unsupported AES key length: {len(key) * 8}")
 
 
 def aes_cbc_decrypt(key, iv, ciphertext):
@@ -637,7 +637,7 @@ def test_eddsa(public_key, message, signature, result):
 def test_ecdsa(curve_name, public_key, hasher, message, signature, result):
     curve = get_curve_by_name(curve_name)
     if curve is None:
-        raise NotSupported("Curve not supported: {}".format(curve_name))
+        raise NotSupported(f"Curve not supported: {curve_name}")
 
     public_key = unhexlify(public_key)
     signature = unhexlify(signature)
@@ -670,7 +670,7 @@ def test_curve25519_dh(public_key, private_key, shared, result):
 def test_ecdh(curve_name, public_key, private_key, shared, result):
     curve = get_curve_by_name(curve_name)
     if curve is None:
-        raise NotSupported("Curve not supported: {}".format(curve_name))
+        raise NotSupported(f"Curve not supported: {curve_name}")
 
     public_key = unhexlify(public_key)
     private_key = unhexlify(private_key)

@@ -36,24 +36,23 @@ def make_commit(image_type, digest, public_keys):
 
     # device information - show only first time
     click.echo(
-        "\nUsing device {} ".format(click.style(TREZOR.features.label, bold=True)) +
-        "at path {}".format(TREZOR.transport.get_path())
+        f"\nUsing device {click.style(TREZOR.features.label, bold=True)} at path {TREZOR.transport.get_path()}"
     )
 
     while True:
         # signing information - repeat every time
-        click.echo("Commiting to {} hash:".format(click.style(image_type.NAME, bold=True)))
+        click.echo(f"Commiting to {click.style(image_type.NAME, bold=True)} hash:")
         for partid in range(4):
             digest_part = digest[partid * 8 : (partid + 1) * 8]
             color = "red" if partid % 2 else "cyan"
             digest_str = click.style(digest_part.hex().upper(), fg=color)
             click.echo("\t" + digest_str)
-        click.echo("Using path: {}".format(click.style(path, bold=True)))
+        click.echo(f"Using path: {click.style(path, bold=True)}")
 
         try:
             commit = cosi.commit(TREZOR, address_n, digest)
             if public_keys is not None and commit.pubkey not in public_keys:
-                click.echo("\n\nPublic key {} is unknown.".format(commit.pubkey.hex()))
+                click.echo(f"\n\nPublic key {commit.pubkey.hex()} is unknown.")
                 if click.confirm("Retry with a different passphrase?", default=True):
                     TREZOR.init_device()
                     continue
@@ -80,8 +79,8 @@ class KeyctlProxy:
 
     def _check_name_digest(self, name, digest):
         if name != self.name or digest != self.digest:
-            click.echo("ERROR! Remote wants to sign {} with digest {}".format(name, digest.hex()))
-            click.echo("Expected: {} with digest {}".format(self.name, self.digest.hex()))
+            click.echo(f"ERROR! Remote wants to sign {name} with digest {digest.hex()}")
+            click.echo(f"Expected: {self.name} with digest {self.digest.hex()}")
             raise ValueError("Unexpected index/digest")
 
     def get_commit(self, name, digest):
@@ -142,7 +141,7 @@ def cli(ipaddr, fw_file, image_type, digest):
         digest = image_type.digest()
         public_keys = image_type.public_keys
 
-        click.echo(image_type.format())
+        click.echo(image_type)
 
     if not fw_file and (not image_type or not digest):
         raise click.ClickException("Please specify either fw_file or -t and -d")
@@ -158,7 +157,7 @@ def cli(ipaddr, fw_file, image_type, digest):
     daemon = Pyro4.Daemon(host=ipaddr, port=PORT)
     proxy = KeyctlProxy(daemon, image_type, digest, (pubkey, R))
     uri = daemon.register(proxy, "keyctl")
-    click.echo("keyctl-proxy running at URI: {}".format(uri))
+    click.echo(f"keyctl-proxy running at URI: {uri}")
     click.echo("Press Ctrl+C to abort.")
     daemon.requestLoop()
 

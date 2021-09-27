@@ -59,7 +59,7 @@ def sign_tx(client, address, file, broadcast):
 
     if broadcast:
         return requests.post(
-            "{}/transaction/announce".format(broadcast), json=payload
+            f"{broadcast}/transaction/announce", json=payload
         ).json()
     else:
         return payload

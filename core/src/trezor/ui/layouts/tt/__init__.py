@@ -864,7 +864,7 @@ async def confirm_coinjoin(
     text = Text("Authorize CoinJoin", ui.ICON_RECOVERY, new_lines=False)
     if fee_per_anonymity is not None:
         text.normal("Fee per anonymity set:\n")
-        text.bold("{} %\n".format(fee_per_anonymity))
+        text.bold(f"{fee_per_anonymity} %\n")
     text.normal("Maximum total fees:\n")
     text.bold(total_fee)
     await raise_if_cancelled(
@@ -890,7 +890,7 @@ async def confirm_signverify(
     ctx: wire.GenericContext, coin: str, message: str, address: str | None = None
 ) -> None:
     if address:
-        header = "Verify {} message".format(coin)
+        header = f"Verify {coin} message"
         font = ui.MONO
         br_type = "verify_message"
 
@@ -901,7 +901,7 @@ async def confirm_signverify(
             interact(ctx, Confirm(text), br_type, ButtonRequestType.Other)
         )
     else:
-        header = "Sign {} message".format(coin)
+        header = f"Sign {coin} message"
         font = ui.NORMAL
         br_type = "sign_message"
 

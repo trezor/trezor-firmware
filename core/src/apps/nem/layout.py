@@ -22,7 +22,7 @@ async def require_confirm_fee(ctx, action: str, fee: int):
         "confirm_fee",
         title="Confirm fee",
         content=action + "\n{}",
-        param="{} XEM".format(format_amount(fee, NEM_MAX_DIVISIBILITY)),
+        param=f"{format_amount(fee, NEM_MAX_DIVISIBILITY)} XEM",
         hide_continue=True,
         br_code=ButtonRequestType.ConfirmOutput,
     )
@@ -44,7 +44,7 @@ async def require_confirm_final(ctx, fee: int):
         "confirm_final",
         title="Final confirm",
         content="Sign this transaction\n{}\nfor network fee?",
-        param="and pay {} XEM".format(format_amount(fee, NEM_MAX_DIVISIBILITY)),
+        param=f"and pay {format_amount(fee, NEM_MAX_DIVISIBILITY)} XEM",
         hide_continue=True,
         hold=True,
     )

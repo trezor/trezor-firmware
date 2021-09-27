@@ -139,7 +139,7 @@ async def _require_confirm_transfer(ctx, recipient, value):
     await confirm_output(
         ctx,
         recipient,
-        amount="Send {} XEM".format(format_amount(value, NEM_MAX_DIVISIBILITY)),
+        amount=f"Send {format_amount(value, NEM_MAX_DIVISIBILITY)} XEM",
         font_amount=ui.BOLD,
         title="Confirm transfer",
         to_str="\nto\n",
