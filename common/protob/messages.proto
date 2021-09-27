@@ -9,6 +9,8 @@ package hw.trezor.messages;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessage";
 
+option (include_in_bitcoin_only) = true;
+
 import "google/protobuf/descriptor.proto";
 
 /************************* WARNING ***********************
@@ -18,7 +20,7 @@ EnumValueOptions and FieldOptions, MUST NOT have the same ID.
 
 Using the same ID indicates the same purpose (protobuf does not allow multiple
 extensions with the same name), such as EnumValueOptions.bitcoin_only and
-MessageOptions.include_in_bitcoin_only. pb2py can then find the extension under
+FileOptions.include_in_bitcoin_only. pb2py can then find the extension under
 either name.
 
 The convention to achieve this is as follows:
@@ -54,14 +56,17 @@ extend google.protobuf.EnumOptions {
 extend google.protobuf.MessageOptions {
     optional bool unstable = 52001;   // indicate that a message definition might change at any time
     optional uint32 wire_type = 52002;   // override wire type specified in the MessageType enum
-
-    optional bool include_in_bitcoin_only = 60000;  // message is available on BITCOIN_ONLY build
-                                                    // intentionally identical to `bitcoin_only` from enum
 }
 
 /** Options for tagging field types */
 extend google.protobuf.FieldOptions {
     optional bool experimental = 53001;   // indicate that a field is intended for development and beta testing only
+}
+
+/** Options for tagging files with protobuf definitions */
+extend google.protobuf.FileOptions {
+    optional bool include_in_bitcoin_only = 60000;  // definitions are available on BITCOIN_ONLY build
+                                                    // intentionally identical to `bitcoin_only` from enum
 }
 
 

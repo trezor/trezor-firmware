@@ -5,6 +5,8 @@ package hw.trezor.messages.webauthn;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageWebAuthn";
 
+import "messages.proto";
+
 /**
  * Request: List resident credentials
  * @start
