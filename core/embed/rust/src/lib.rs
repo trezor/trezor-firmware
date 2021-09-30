@@ -9,6 +9,7 @@ mod micropython;
 mod protobuf;
 mod trezorhal;
 mod util;
+mod wire;
 
 #[cfg(not(test))]
 use core::panic::PanicInfo;
