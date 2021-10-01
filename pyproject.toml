@@ -45,7 +45,7 @@ autoflake = "*"
 flake8-requirements = ">=1.3.2"
 
 # common
-demjson = "*"
+demjson3 = "*"
 graphviz = "*"
 
 ## cointool
