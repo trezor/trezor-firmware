@@ -14,6 +14,11 @@ pub struct Msg<'a> {
     pub data: &'a [u8],
 }
 
+pub enum Decode<'a> {
+    InProgress,
+    Complete(Msg<'a>),
+}
+
 pub struct Decoder {
     state: State,
 }
@@ -32,19 +37,7 @@ impl Decoder {
     ) -> Result<Decode<'a>, CodecError> {
         match self.state {
             State::Initial => {
-                if packet[0] != PACKET_MARKER
-                    || packet[1] != HEADER_MAGIC
-                    || packet[2] != HEADER_MAGIC
-                {
-                    return Err(CodecError::InvalidPacket);
-                }
-                let id = u16::from_be_bytes([packet[3], packet[4]]);
-                let len = u32::from_be_bytes([packet[5], packet[6], packet[7], packet[8]]) as usize;
-                if len > buffer.len() {
-                    return Err(CodecError::OutOfBounds);
-                }
-                let tail = &packet[9..]; // Skip the marker and header.
-                let data = &tail[..tail.len().min(len)];
+                let (id, len, data) = decode_init_packet(packet, buffer.len())?;
 
                 buffer[..data.len()].copy_from_slice(data);
 
@@ -72,12 +65,8 @@ impl Decoder {
                 len,
                 buffered_len,
             } => {
-                if packet[0] != PACKET_MARKER {
-                    return Err(CodecError::InvalidPacket);
-                }
                 let remaining_len = len - buffered_len;
-                let tail = &packet[1..]; // Skip the marker.
-                let data = &tail[..tail.len().min(remaining_len)];
+                let data = decode_cont_packet(packet, remaining_len)?;
 
                 buffer[buffered_len..buffered_len + data.len()].copy_from_slice(data);
 
@@ -103,9 +92,27 @@ impl Decoder {
     }
 }
 
-pub enum Decode<'a> {
-    InProgress,
-    Complete(Msg<'a>),
+fn decode_init_packet(packet: &Packet, max_len: usize) -> Result<(u16, usize, &[u8]), CodecError> {
+    if packet[0] != PACKET_MARKER || packet[1] != HEADER_MAGIC || packet[2] != HEADER_MAGIC {
+        return Err(CodecError::InvalidPacket);
+    }
+    let id = u16::from_be_bytes([packet[3], packet[4]]);
+    let len = u32::from_be_bytes([packet[5], packet[6], packet[7], packet[8]]) as usize;
+    if len > max_len {
+        return Err(CodecError::OutOfBounds);
+    }
+    let tail = &packet[9..]; // Skip the marker and header.
+    let data = &tail[..tail.len().min(len)];
+    Ok((id, len, data))
+}
+
+fn decode_cont_packet(packet: &Packet, max_len: usize) -> Result<&[u8], CodecError> {
+    if packet[0] != PACKET_MARKER {
+        return Err(CodecError::InvalidPacket);
+    }
+    let tail = &packet[1..]; // Skip the marker.
+    let data = &tail[..tail.len().min(max_len)];
+    Ok(data)
 }
 
 enum State {
@@ -115,6 +122,11 @@ enum State {
         len: usize,
         buffered_len: usize,
     },
+}
+
+pub enum Encode {
+    InProgress,
+    Complete,
 }
 
 pub struct Encoder<'a> {
@@ -156,9 +168,4 @@ impl<'a> Encoder<'a> {
             Encode::Complete
         }
     }
-}
-
-pub enum Encode {
-    InProgress,
-    Complete,
 }

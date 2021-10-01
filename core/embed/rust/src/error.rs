@@ -1,4 +1,5 @@
 use core::convert::{Infallible, TryInto};
+
 use cstr_core::CStr;
 
 use crate::micropython::{ffi, obj::Obj, qstr::Qstr};
