@@ -26,7 +26,7 @@ def fetch_recorded(hash, path):
     try:
         urllib.request.urlretrieve(zip_src, zip_dest)
     except urllib.error.HTTPError:
-        raise RuntimeError("No such recorded collection was found on '%s'." % zip_src)
+        raise RuntimeError(f"No such recorded collection was found on '{zip_src}'.")
     except urllib.error.URLError:
         _dns_failed = True
         raise RuntimeError(

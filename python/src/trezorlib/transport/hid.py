@@ -80,7 +80,7 @@ class HidHandle:
 
     def write_chunk(self, chunk: bytes) -> None:
         if len(chunk) != 64:
-            raise TransportException("Unexpected chunk size: %d" % len(chunk))
+            raise TransportException(f"Unexpected chunk size: {len(chunk)}")
 
         if self.hid_version == 2:
             chunk = b"\x00" + chunk
@@ -99,7 +99,7 @@ class HidHandle:
 
         LOG.log(DUMP_PACKETS, f"read packet: {chunk.hex()}")
         if len(chunk) != 64:
-            raise TransportException("Unexpected chunk size: %d" % len(chunk))
+            raise TransportException(f"Unexpected chunk size: {len(chunk)}")
         return bytes(chunk)
 
     def probe_hid_version(self) -> int:
@@ -127,7 +127,7 @@ class HidTransport(ProtocolBasedTransport):
         super().__init__(protocol=ProtocolV1(self.handle))
 
     def get_path(self) -> str:
-        return "%s:%s" % (self.PATH_PREFIX, self.device["path"].decode())
+        return f"{self.PATH_PREFIX}:{self.device['path'].decode()}"
 
     @classmethod
     def enumerate(cls, debug: bool = False) -> Iterable["HidTransport"]:

@@ -141,5 +141,5 @@ class UdpTransport(ProtocolBasedTransport):
                 continue
         LOG.log(DUMP_PACKETS, f"received packet: {chunk.hex()}")
         if len(chunk) != 64:
-            raise TransportException("Unexpected chunk size: %d" % len(chunk))
+            raise TransportException(f"Unexpected chunk size: {len(chunk)}")
         return bytearray(chunk)

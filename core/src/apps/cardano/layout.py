@@ -57,7 +57,7 @@ CERTIFICATE_TYPE_NAMES = {
 
 
 def format_coin_amount(amount: int) -> str:
-    return "%s %s" % (format_amount(amount, 6), "ADA")
+    return f"{format_amount(amount, 6)!s} ADA"
 
 
 def is_printable_ascii_bytestring(bytestr: bytes) -> bool:
@@ -123,7 +123,7 @@ async def show_warning_tx_no_staking_info(
     ctx: wire.Context, address_type: CardanoAddressType, amount: int
 ) -> None:
     atype = ADDRESS_TYPE_NAMES[address_type].lower()
-    content = "Change %s address has no stake rights.\nChange amount:\n{}" % atype
+    content = f"Change {atype} address has no stake rights.\nChange amount:\n{{}}"
     await confirm_metadata(
         ctx,
         "warning_staking",
@@ -148,12 +148,7 @@ async def show_warning_tx_pointer_address(
             ("Change address has a\npointer with staking\nrights.\n\n\n", None),
             (
                 "Pointer:",
-                "%s, %s, %s"
-                % (
-                    pointer.block_index,
-                    pointer.tx_index,
-                    pointer.certificate_index,
-                ),
+                f"{pointer.block_index}, {pointer.tx_index}, {pointer.certificate_index}"
             ),
             ("Change amount:", format_coin_amount(amount)),
         ],
@@ -176,7 +171,7 @@ async def show_warning_tx_different_staking_account(
                 None,
             ),
             (
-                "Staking account %s:" % format_account_number(staking_account_path),
+                f"Staking account {format_account_number(staking_account_path)}:",
                 address_n_to_str(staking_account_path),
             ),
             ("Change amount:", format_coin_amount(amount)),
@@ -219,13 +214,13 @@ async def confirm_transaction(
 
     if is_network_id_verifiable:
         props.append(
-            ("Network: %s" % protocol_magics.to_ui_string(protocol_magic), None)
+            (f"Network: {protocol_magics.to_ui_string(protocol_magic)}", None)
         )
 
     props.append(
-        ("Valid since: %s" % format_optional_int(validity_interval_start), None)
+        (f"Valid since: {format_optional_int(validity_interval_start)}", None)
     )
-    props.append(("TTL: %s" % format_optional_int(ttl), None))
+    props.append((f"TTL: {format_optional_int(ttl)}", None))
 
     await confirm_properties(
         ctx,
@@ -247,7 +242,7 @@ async def confirm_certificate(
     props = [
         ("Confirm:", CERTIFICATE_TYPE_NAMES[certificate.type]),
         (
-            "for account %s:" % format_account_number(certificate.path),
+            f"for account {format_account_number(certificate.path)}:",
             address_n_to_str(to_account_path(certificate.path)),
         ),
     ]
@@ -270,7 +265,7 @@ async def confirm_stake_pool_parameters(
     margin_percentage = (
         100.0 * pool_parameters.margin_numerator / pool_parameters.margin_denominator
     )
-    percentage_formatted = ("%f" % margin_percentage).rstrip("0").rstrip(".")
+    percentage_formatted = (str(float(margin_percentage))).rstrip("0").rstrip(".")
     await confirm_properties(
         ctx,
         "confirm_pool_registration",
@@ -390,8 +385,7 @@ async def confirm_withdrawal(
         title="Confirm transaction",
         props=[
             (
-                "Confirm withdrawal\nfor account %s:"
-                % format_account_number(withdrawal.path),
+                f"Confirm withdrawal\nfor account {format_account_number(withdrawal.path)}:",
                 address_n_to_str(to_account_path(withdrawal.path)),
             ),
             ("Amount:", format_coin_amount(withdrawal.amount)),
@@ -415,7 +409,7 @@ async def confirm_catalyst_registration(
             ("Catalyst voting key registration", None),
             ("Voting public key:", public_key),
             (
-                "Staking key for account %s:" % format_account_number(staking_path),
+                f"Staking key for account {format_account_number(staking_path)}:",
                 address_n_to_str(staking_path),
             ),
             ("Rewards go to:", reward_address),
@@ -449,8 +443,7 @@ async def show_warning_address_foreign_staking_key(
     # 2. confirm_blob(mismatched_value)
     props: list[PropertyType] = [
         (
-            "Stake rights associated with this address do not match your account %s:"
-            % format_account_number(account_path),
+            f"Stake rights associated with this address do not match your account {format_account_number(account_path)}:",
             address_n_to_str(account_path),
         )
     ]
@@ -458,7 +451,7 @@ async def show_warning_address_foreign_staking_key(
     if staking_account_path:
         props.append(
             (
-                "Stake account %s:" % format_account_number(staking_account_path),
+                f"Stake account {format_account_number(staking_account_path)}:",
                 address_n_to_str(staking_account_path),
             )
         )
@@ -492,11 +485,7 @@ async def show_warning_tx_network_unverifiable(ctx: wire.Context) -> None:
 async def show_warning_address_pointer(
     ctx: wire.Context, pointer: CardanoBlockchainPointerType
 ) -> None:
-    content = "Pointer address:\nBlock: %s\nTransaction: %s\nCertificate: %s" % (
-        pointer.block_index,
-        pointer.tx_index,
-        pointer.certificate_index,
-    )
+    content = f"Pointer address:\nBlock: {pointer.block_index}\nTransaction: {pointer.tx_index}\nCertificate: {pointer.certificate_index}"
     await confirm_metadata(
         ctx,
         "warning_pointer",

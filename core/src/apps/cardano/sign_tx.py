@@ -922,6 +922,6 @@ async def _fail_or_warn_path(
     ctx: wire.Context, path: list[int], path_name: str
 ) -> None:
     if safety_checks.is_strict():
-        raise wire.DataError("Invalid %s" % path_name.lower())
+        raise wire.DataError(f"Invalid {path_name.lower()}")
     else:
         await show_warning_path(ctx, path, path_name)

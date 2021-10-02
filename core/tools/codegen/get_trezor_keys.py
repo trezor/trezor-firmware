@@ -11,7 +11,7 @@ else:
     raise Exception("No Trezor found")
 
 for i in [0, 1, 2]:
-    path = "m/10018'/%d'" % i
+    path = f"m/10018'/{i}'"
     pk = t.get_public_node(
         t.expand_path(path), ecdsa_curve_name="ed25519", show_display=True
     )

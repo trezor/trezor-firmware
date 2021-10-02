@@ -238,7 +238,7 @@ class MessageType(metaclass=_MessageTypeMeta):
             if value is None or value == []:
                 continue
             d[key] = value
-        return "<%s: %s>" % (self.__class__.__name__, d)
+        return f"<{self.__class__.__name__}: {d}>"
 
     def ByteSize(self) -> int:
         data = BytesIO()

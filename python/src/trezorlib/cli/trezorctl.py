@@ -185,9 +185,9 @@ def print_result(res, is_json, **kwargs):
             for k, v in res.items():
                 if isinstance(v, dict):
                     for kk, vv in v.items():
-                        click.echo("%s.%s: %s" % (k, kk, vv))
+                        click.echo(f"{k}.{kk}: {vv}")
                 else:
-                    click.echo("%s: %s" % (k, v))
+                    click.echo(f"{k}: {v}")
         elif isinstance(res, protobuf.MessageType):
             click.echo(protobuf.format_message(res))
         elif res is not None:

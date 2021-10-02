@@ -446,7 +446,7 @@ def check_segwit(coins):
                     print_log(
                         logging.ERROR,
                         coin["name"],
-                        "segwit is True => %s should be set" % field,
+                        f"segwit is True => {field} should be set",
                     )
                     return False
         else:
@@ -455,7 +455,7 @@ def check_segwit(coins):
                     print_log(
                         logging.ERROR,
                         coin["name"],
-                        "segwit is False => %s should NOT be set" % field,
+                        f"segwit is False => {field} should NOT be set",
                     )
                     return False
     return True

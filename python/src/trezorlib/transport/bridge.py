@@ -118,7 +118,7 @@ class BridgeTransport(Transport):
             self.handle = BridgeHandleModern(self)
 
     def get_path(self) -> str:
-        return "%s:%s" % (self.PATH_PREFIX, self.device["path"])
+        return f"{self.PATH_PREFIX}:{self.device['path']}"
 
     def find_debug(self) -> "BridgeTransport":
         if not self.device.get("debug"):

@@ -75,7 +75,7 @@ async def _display_address(
     await show_address(
         ctx,
         address=address,
-        title="%s address" % ADDRESS_TYPE_NAMES[address_parameters.address_type],
+        title=f"{ADDRESS_TYPE_NAMES[address_parameters.address_type]} address",
         network=network_name,
         address_extra=address_n,
         title_qr=address_n,

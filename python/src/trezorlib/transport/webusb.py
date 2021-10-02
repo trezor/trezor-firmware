@@ -65,7 +65,7 @@ class WebUsbHandle:
     def write_chunk(self, chunk: bytes) -> None:
         assert self.handle is not None
         if len(chunk) != 64:
-            raise TransportException("Unexpected chunk size: %d" % len(chunk))
+            raise TransportException(f"Unexpected chunk size: {len(chunk)}")
         LOG.log(DUMP_PACKETS, f"writing packet: {chunk.hex()}")
         self.handle.interruptWrite(self.endpoint, chunk)
 
@@ -80,7 +80,7 @@ class WebUsbHandle:
                 time.sleep(0.001)
         LOG.log(DUMP_PACKETS, f"read packet: {chunk.hex()}")
         if len(chunk) != 64:
-            raise TransportException("Unexpected chunk size: %d" % len(chunk))
+            raise TransportException(f"Unexpected chunk size: {len(chunk)}")
         return chunk
 
 
@@ -106,7 +106,7 @@ class WebUsbTransport(ProtocolBasedTransport):
         super().__init__(protocol=ProtocolV1(handle))
 
     def get_path(self) -> str:
-        return "%s:%s" % (self.PATH_PREFIX, dev_to_str(self.device))
+        return f"{self.PATH_PREFIX}:{dev_to_str(self.device)}"
 
     @classmethod
     def enumerate(cls, usb_reset=False) -> Iterable["WebUsbTransport"]:

@@ -19,5 +19,5 @@ for fn in sorted(files):
     h_ff = blake2s(data=data_ff).digest()
     h_00 = "".join(["\\x%02x" % i for i in h_00])
     h_ff = "".join(["\\x%02x" % i for i in h_ff])
-    print("    // %s (padded with 0x00)\n    if (0 == memcmp(hash, \"%s\", 32)) return sectrue;" % (fn, h_00))
-    print("    // %s (padded with 0xff)\n    if (0 == memcmp(hash, \"%s\", 32)) return sectrue;" % (fn, h_ff))
+    print(f"    // {fn!s} (padded with 0x00)\n    if (0 == memcmp(hash, \"{h_00!s}\", 32)) return sectrue;")
+    print(f"    // {fn!s} (padded with 0xff)\n    if (0 == memcmp(hash, \"{h_ff!s}\", 32)) return sectrue;")

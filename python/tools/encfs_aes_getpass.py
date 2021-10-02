@@ -56,9 +56,9 @@ def choose_device(devices):
             continue
 
         if client.features.label:
-            sys.stderr.write("[%d] %s\n" % (i, client.features.label))
+            sys.stderr.write(f"[{i}] {client.features.label}\n")
         else:
-            sys.stderr.write("[%d] <no label>\n" % i)
+            sys.stderr.write(f"[{i}] <no label>\n")
         client.close()
         i += 1
 

@@ -271,7 +271,7 @@ def sign_tx(
                 idx = res.serialized.signature_index
                 sig = res.serialized.signature
                 if signatures[idx] is not None:
-                    raise ValueError("Signature for index %d already filled" % idx)
+                    raise ValueError(f"Signature for index {idx} already filled")
                 signatures[idx] = sig
 
         if res.request_type == R.TXFINISHED:

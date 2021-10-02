@@ -90,8 +90,8 @@ async def ask_transfer_mosaic(
             "confirm_mosaic_transfer",
             title="Confirm mosaic",
             props=[
-                ("Confirm transfer of", "%s raw units" % mosaic_quantity),
-                ("of", "%s.%s" % (mosaic.namespace, mosaic.mosaic)),
+                ("Confirm transfer of", f"{mosaic_quantity} raw units"),
+                ("of", f"{mosaic.namespace}.{mosaic.mosaic}"),
             ],
         )
 

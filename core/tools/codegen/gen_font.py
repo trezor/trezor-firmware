@@ -53,29 +53,27 @@ def process_bitmap_buffer(buf, bpp):
 
 
 def process_face(name, style, size, bpp=4, shave_bearingX=0):
-    print("Processing ... %s %s %s" % (name, style, size))
-    face = freetype.Face("fonts/%s-%s.ttf" % (name, style))
+    print(f"Processing ... {name} {style} {size}")
+    face = freetype.Face(f"fonts/{name}-{style}.ttf")
     face.set_pixel_sizes(0, size)
-    fontname = "%s_%s_%d" % (name.lower(), style.lower(), size)
-    with open("font_%s.h" % fontname, "wt") as f:
+    fontname = f"{name.lower()}_{style.lower()}_{size}"
+    with open(f"font_{fontname}.h", "wt") as f:
         f.write("#include <stdint.h>\n\n")
-        f.write("#if TREZOR_FONT_BPP != %d\n" % bpp)
-        f.write("#error Wrong TREZOR_FONT_BPP (expected %d)\n" % bpp)
+        f.write(f"#if TREZOR_FONT_BPP != {bpp}\n")
+        f.write(f"#error Wrong TREZOR_FONT_BPP (expected {bpp})\n")
         f.write("#endif\n")
         f.write(
-            "extern const uint8_t* const Font_%s_%s_%d[%d + 1 - %d];\n"
-            % (name, style, size, MAX_GLYPH, MIN_GLYPH)
+            f"extern const uint8_t* const Font_{name}_{style}_{size}[{MAX_GLYPH} + 1 - {MIN_GLYPH}];\n"
         )
         f.write(
-            "extern const uint8_t Font_%s_%s_%d_glyph_nonprintable[];\n"
-            % (name, style, size)
+            f"extern const uint8_t Font_{name}_{style}_{size}_glyph_nonprintable[];\n"
         )
-    with open("font_%s.c" % fontname, "wt") as f:
+    with open(f"font_{fontname}.c", "wt") as f:
         f.write("#include <stdint.h>\n\n")
         f.write("// clang-format off\n\n")
         f.write("// - the first two bytes are width and height of the glyph\n")
         f.write("// - the third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph\n")
-        f.write("// - the rest is packed %d-bit glyph data\n\n" % bpp)
+        f.write(f"// - the rest is packed {bpp}-bit glyph data\n\n")
         for i in range(MIN_GLYPH, MAX_GLYPH + 1):
             c = chr(i)
             face.load_char(c, freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_NORMAL)
@@ -108,48 +106,35 @@ def process_face(name, style, size, bpp=4, shave_bearingX=0):
             assert bearingX >= 0 and bearingX <= 255
             assert bearingY >= 0 and bearingY <= 255
             print(
-                'Loaded glyph "%c" ... %d x %d @ %d grays (%d bytes, metrics: %d, %d, %d)'
-                % (
-                    c,
-                    bitmap.width,
-                    bitmap.rows,
-                    bitmap.num_grays,
-                    len(bitmap.buffer),
-                    advance,
-                    bearingX,
-                    bearingY,
-                )
+                f'Loaded glyph "{c}" ... {bitmap.width} x {bitmap.rows} @ {bitmap.num_grays} grays ({len(bitmap.buffer)} bytes, metrics: {advance}, {bearingX}, {bearingY})'
             )
             f.write(
-                "/* %c */ static const uint8_t Font_%s_%s_%d_glyph_%d[] = { %d, %d, %d, %d, %d"
-                % (c, name, style, size, i, width, rows, advance, bearingX, bearingY)
+                f"/* {c} */ static const uint8_t Font_{name}_{style}_{size}_glyph_{i}[] = {{ {width}, {rows}, {advance}, {bearingX}, {bearingY}"
             )
             buf = list(bitmap.buffer)
             if len(buf) > 0:
                 f.write(
                     ", "
-                    + ", ".join(["%d" % x for x in process_bitmap_buffer(buf, bpp)])
+                    + ", ".join([str(x) for x in process_bitmap_buffer(buf, bpp)])
                 )
             f.write(" };\n")
 
             if i == ord("?"):
                 nonprintable = (
-                    "\nconst uint8_t Font_%s_%s_%d_glyph_nonprintable[] = { %d, %d, %d, %d, %d"
-                    % (name, style, size, width, rows, advance, bearingX, bearingY)
+                    f"\nconst uint8_t Font_{name}_{style}_{size}_glyph_nonprintable[] = {{ {width}, {rows}, {advance}, {bearingX}, {bearingY}"
                 )
                 nonprintable += ", " + ", ".join(
-                    ["%d" % (x ^ 0xFF) for x in process_bitmap_buffer(buf, bpp)]
+                    [str(x ^ 0xFF) for x in process_bitmap_buffer(buf, bpp)]
                 )
                 nonprintable += " };\n"
 
         f.write(nonprintable)
 
         f.write(
-            "\nconst uint8_t * const Font_%s_%s_%d[%d + 1 - %d] = {\n"
-            % (name, style, size, MAX_GLYPH, MIN_GLYPH)
+            f"\nconst uint8_t * const Font_{name}_{style}_{size}[{MAX_GLYPH} + 1 - {MIN_GLYPH}] = {{\n"
         )
         for i in range(MIN_GLYPH, MAX_GLYPH + 1):
-            f.write("    Font_%s_%s_%d_glyph_%d,\n" % (name, style, size, i))
+            f.write(f"    Font_{name}_{style}_{size}_glyph_{i},\n")
         f.write("};\n")
 
 

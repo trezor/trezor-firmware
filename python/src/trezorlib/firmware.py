@@ -496,7 +496,7 @@ def update(client, data):
         if isinstance(resp, messages.Success):
             return
         else:
-            raise RuntimeError("Unexpected result %s" % resp)
+            raise RuntimeError(f"Unexpected result {resp}")
 
     # TREZORv2 method
     while isinstance(resp, messages.FirmwareRequest):
@@ -507,4 +507,4 @@ def update(client, data):
     if isinstance(resp, messages.Success):
         return
     else:
-        raise RuntimeError("Unexpected message %s" % resp)
+        raise RuntimeError(f"Unexpected message {resp}")

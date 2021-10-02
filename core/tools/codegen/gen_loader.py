@@ -8,8 +8,8 @@ outer = 60
 inner = 42
 
 with open("loader.h", "wt") as f:
-    f.write("static const int img_loader_size = %d;\n" % outer)
-    f.write("static const uint16_t img_loader[%d][%d] = {\n" % (outer, outer))
+    f.write(f"static const int img_loader_size = {outer};\n")
+    f.write(f"static const uint16_t img_loader[{outer}][{outer}] = {{\n")
     for y in range(outer):
         f.write("    {")
         for x in range(outer):
@@ -32,6 +32,6 @@ with open("loader.h", "wt") as f:
                 c[i] = max(0, min(int(c[i]), 15))
             a = int(math.atan2((outer - 1 - x), (outer - 1 - y)) * 2 * 249 / math.pi)
             v = (a << 8) | (c[15] << 4) | c[5]
-            f.write("%d," % v)
+            f.write(f"{v},")
         f.write("},\n")
     f.write("};\n")

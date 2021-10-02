@@ -30,4 +30,4 @@ def decode_message(message: bytes) -> str:
     try:
         return bytes(message).decode()
     except UnicodeError:
-        return "hex(%s)" % hexlify(message).decode()
+        return f"hex({hexlify(message).decode()})"

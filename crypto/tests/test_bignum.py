@@ -621,7 +621,7 @@ def assert_bn_format(x, prefix, suffix, decimals, exponent, trailing):
             if not trailing:
                 output = output.rstrip("0").rstrip(".")
         else:
-            output = "%d" % (amount // d)
+            output = str(amount // d)
 
         return prefix + output + suffix
 

@@ -297,7 +297,7 @@ async def _handle_single_message(
         try:
             msg_type = protobuf.type_for_wire(msg.type).MESSAGE_NAME
         except Exception:
-            msg_type = "%d - unknown message type" % msg.type
+            msg_type = f"{msg.type} - unknown message type"
         log.debug(
             __name__,
             "%s:%x receive: <%s>",

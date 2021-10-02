@@ -18,7 +18,7 @@ class AssertRaisesContext:
 
     def __exit__(self, exc_type, exc_value, tb):
         if exc_type is None:
-            ensure(False, "%r not raised" % self.expected)
+            ensure(False, f"{repr(self.expected)} not raised")
         if issubclass(exc_type, self.expected):
             self.value = exc_value
             return True
@@ -32,7 +32,7 @@ class TestCase:
 
     def assertEqual(self, x, y, msg=''):
         if not msg:
-            msg = "%r vs (expected) %r" % (x, y)
+            msg = f"{repr(x)} vs (expected) {repr(y)}"
 
         if x.__class__ == y.__class__ and x.__class__.__name__ == "Msg":
             self.assertMessageEqual(x, y)
@@ -41,7 +41,7 @@ class TestCase:
 
     def assertNotEqual(self, x, y, msg=''):
         if not msg:
-            msg = "%r not expected to be equal %r" % (x, y)
+            msg = f"{repr(x)} not expected to be equal {repr(y)}"
         ensure(x != y, msg)
 
     def assertAlmostEqual(self, x, y, places=None, msg='', delta=None):
@@ -54,14 +54,14 @@ class TestCase:
             if abs(x - y) <= delta:
                 return
             if not msg:
-                msg = '%r != %r within %r delta' % (x, y, delta)
+                msg = f'{repr(x)} != {repr(y)} within {repr(delta)} delta'
         else:
             if places is None:
                 places = 7
             if round(abs(y - x), places) == 0:
                 return
             if not msg:
-                msg = '%r != %r within %r places' % (x, y, places)
+                msg = f'{repr(x)} != {repr(y)} within {repr(places)} places'
 
         ensure(False, msg)
 
@@ -73,50 +73,50 @@ class TestCase:
             if not (x == y) and abs(x - y) > delta:
                 return
             if not msg:
-                msg = '%r == %r within %r delta' % (x, y, delta)
+                msg = f'{repr(x)} == {repr(y)} within {repr(delta)} delta'
         else:
             if places is None:
                 places = 7
             if not (x == y) and round(abs(y - x), places) != 0:
                 return
             if not msg:
-                msg = '%r == %r within %r places' % (x, y, places)
+                msg = f'{repr(x)} == {repr(y)} within {repr(places)} places'
 
         ensure(False, msg)
 
     def assertIs(self, x, y, msg=''):
         if not msg:
-            msg = "%r is not %r" % (x, y)
+            msg = f"{repr(x)} is not {repr(y)}"
         ensure(x is y, msg)
 
     def assertIsNot(self, x, y, msg=''):
         if not msg:
-            msg = "%r is %r" % (x, y)
+            msg = f"{repr(x)} is {repr(y)}"
         ensure(x is not y, msg)
 
     def assertIsNone(self, x, msg=''):
         if not msg:
-            msg = "%r is not None" % x
+            msg = f"{repr(x)} is not None"
         ensure(x is None, msg)
 
     def assertIsNotNone(self, x, msg=''):
         if not msg:
-            msg = "%r is None" % x
+            msg = f"{repr(x)} is None"
         ensure(x is not None, msg)
 
     def assertTrue(self, x, msg=''):
         if not msg:
-            msg = "Expected %r to be True" % x
+            msg = f"Expected {repr(x)} to be True"
         ensure(x, msg)
 
     def assertFalse(self, x, msg=''):
         if not msg:
-            msg = "Expected %r to be False" % x
+            msg = f"Expected {repr(x)} to be False"
         ensure(not x, msg)
 
     def assertIn(self, x, y, msg=''):
         if not msg:
-            msg = "Expected %r to be in %r" % (x, y)
+            msg = f"Expected {repr(x)} to be in {repr(y)}"
         ensure(x in y, msg)
 
     def assertIsInstance(self, x, y, msg=''):
@@ -132,7 +132,7 @@ class TestCase:
                 return
             raise
         else:
-            ensure(False, "%r not raised" % exc)
+            ensure(False, f"{repr(exc)} not raised")
 
     def assertListEqual(self, x, y, msg=''):
         if len(x) != len(y):
@@ -268,7 +268,7 @@ def main(module="__main__"):
         suite.addTest(c)
     runner = TestRunner()
     result = runner.run(suite)
-    msg = "Ran %d tests" % result.testsRun
+    msg = f"Ran {result.testsRun} tests"
     result_strs = []
     if result.skippedNum > 0:
         result_strs.append(f"{result.skippedNum} skipped")

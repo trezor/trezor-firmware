@@ -21,10 +21,7 @@ def parse(data: bytes) -> str:
     if tx_version == 0 and tx_type == 0 and len(data) == 20:  # OMNI simple send
         currency, amount = unpack(">IQ", data[8:20])
         suffix, divisible = currencies.get(currency, ("UNKN", False))
-        return "Simple send of %s %s" % (
-            format_amount(amount, 8 if divisible else 0),
-            suffix,
-        )
+        return f"Simple send of {format_amount(amount, 8 if divisible else 0)} {suffix}"
     else:
         # unknown OMNI transaction
         return "Unknown transaction"

@@ -210,7 +210,7 @@ class expect:
             ret = f(*args, **kwargs)
             if not isinstance(ret, self.expected):
                 raise RuntimeError(
-                    "Got %s, expected %s" % (ret.__class__, self.expected)
+                    f"Got {ret.__class__}, expected {self.expected}"
                 )
             if self.field is not None:
                 return getattr(ret, self.field)

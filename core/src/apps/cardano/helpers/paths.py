@@ -12,7 +12,7 @@ SCHEMA_PUBKEY = PathSchema.parse("m/[44,1852]'/coin_type'/account'/*", SLIP44_ID
 SCHEMA_PAYMENT = PathSchema.parse("m/[44,1852]'/coin_type'/account'/[0,1]/address_index", SLIP44_ID)
 # staking is only allowed on Shelley paths with suffix /2/0
 SCHEMA_STAKING = PathSchema.parse("m/1852'/coin_type'/account'/2/0", SLIP44_ID)
-SCHEMA_STAKING_ANY_ACCOUNT = PathSchema.parse("m/1852'/coin_type'/[0-%s]'/2/0" % (HARDENED - 1), SLIP44_ID)
+SCHEMA_STAKING_ANY_ACCOUNT = PathSchema.parse(f"m/1852'/coin_type'/[0-{HARDENED - 1}]'/2/0", SLIP44_ID)
 # fmt: on
 
 ACCOUNT_PATH_LENGTH = const(3)
