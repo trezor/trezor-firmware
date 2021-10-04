@@ -169,9 +169,7 @@ def check_eth(coins):
     check_passed = True
     chains = find_collisions(coins, "chain")
     for key, bucket in chains.items():
-        bucket_str = ", ".join(
-            f"{coin['key']} ({coin['name']})" for coin in bucket
-        )
+        bucket_str = ", ".join(f"{coin['key']} ({coin['name']})" for coin in bucket)
         chain_name_str = "colliding chain name " + crayon(None, key, bold=True) + ":"
         print_log(logging.ERROR, chain_name_str, bucket_str)
         check_passed = False
@@ -417,9 +415,7 @@ def check_key_uniformity(coins):
         keyset = set(coin.keys()) | IGNORE_NONUNIFORM_KEYS
         missing = ", ".join(reference_keyset - keyset)
         if missing:
-            print_log(
-                logging.ERROR, f"coin {key} has missing keys: {missing}"
-            )
+            print_log(logging.ERROR, f"coin {key} has missing keys: {missing}")
         additional = ", ".join(keyset - reference_keyset)
         if additional:
             print_log(

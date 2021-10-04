@@ -47,13 +47,11 @@ class Emulator:
         storage=None,
         headless=False,
         debug=True,
-        extra_args=()
+        extra_args=(),
     ):
         self.executable = Path(executable).resolve()
         if not executable.exists():
-            raise ValueError(
-                f"emulator executable not found: {self.executable}"
-            )
+            raise ValueError(f"emulator executable not found: {self.executable}")
 
         self.profile_dir = Path(profile_dir).resolve()
         if not self.profile_dir.exists():
@@ -149,9 +147,7 @@ class Emulator:
             self.wait_until_ready()
         except TimeoutError:
             # Assuming that after the default 60-second timeout, the process is stuck
-            LOG.warning(
-                f"Emulator did not come up after {EMULATOR_WAIT_TIME} seconds"
-            )
+            LOG.warning(f"Emulator did not come up after {EMULATOR_WAIT_TIME} seconds")
             self.process.kill()
             raise
 
@@ -210,7 +206,7 @@ class CoreEmulator(Emulator):
         sdcard=None,
         disable_animation=True,
         heap_size="20M",
-        **kwargs
+        **kwargs,
     ):
         super().__init__(*args, **kwargs)
         if workdir is not None:

@@ -364,7 +364,7 @@ async def _handle_single_message(
         # - something canceled the workflow from the outside
         if __debug__:
             if isinstance(exc, ActionCancelled):
-                log.debug(__name__, f"cancelled: {exc.message}")
+                log.debug(__name__, "cancelled: %s", exc.message)
             elif isinstance(exc, loop.TaskClosed):
                 log.debug(__name__, "cancelled: loop task was closed")
             else:

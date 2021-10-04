@@ -134,9 +134,7 @@ def parse_ec_pubkey(public_key):
     curve_name = get_curve_name_by_identifier(curve_identifier)
 
     if curve_name is None:
-        raise NotSupported(
-            f"Unsupported named elliptic curve: {curve_identifier}"
-        )
+        raise NotSupported(f"Unsupported named elliptic curve: {curve_identifier}")
 
     try:
         public_key = bytes(public_key["public_key"].asOctets())

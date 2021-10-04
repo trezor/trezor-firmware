@@ -111,9 +111,7 @@ def main(filename, cost, skip, txsize, refresh, api_key, verbose):
             with open(filename, "w") as fh:
                 json.dump(coin, fh, indent=2)
                 fh.write("\n")
-            logging.info(
-                f"{short}:\tupdated {old_maxfee_kb} -> {new_maxfee_kb}"
-            )
+            logging.info(f"{short}:\tupdated {old_maxfee_kb} -> {new_maxfee_kb}")
             delta = delta_percent(old_maxfee_kb, new_maxfee_kb)
             if delta > MAX_DELTA_PERCENT:
                 logging.warning(f"{short}:\tprice has changed by {delta} %")

@@ -129,9 +129,7 @@ class MnemonicWordSelect(ui.Layout):
         elif group_index is None:
             self.text = Text(f"Check share #{share_index + 1}")
         else:
-            self.text = Text(
-                f"Check G{group_index + 1} - Share {share_index + 1}"
-            )
+            self.text = Text(f"Check G{group_index + 1} - Share {share_index + 1}")
         self.text.normal(f"Select word {word_index + 1} of {count}:")
 
     def dispatch(self, event: int, x: int, y: int) -> None:

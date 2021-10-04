@@ -58,7 +58,7 @@ def _header(typ: int, l: int) -> bytes:
     elif l < 2 ** 64:
         return struct.pack(">BQ", typ + 27, l)
     else:
-        raise NotImplementedError(f"Length {l} not supported")
+        raise NotImplementedError  # Length not supported
 
 
 def _cbor_encode(value: Value) -> Iterator[bytes]:
@@ -128,7 +128,7 @@ def _read_length(r: utils.BufferReader, aux: int) -> int:
     elif aux == _CBOR_UINT64_FOLLOWS:
         return readers.read_uint64_be(r)
     else:
-        raise NotImplementedError(f"Length {aux} not supported")
+        raise NotImplementedError  # Length not supported
 
 
 def _cbor_decode(r: utils.BufferReader) -> Value:
@@ -202,7 +202,7 @@ def _cbor_decode(r: utils.BufferReader) -> Value:
             raise NotImplementedError
     else:
         if __debug__:
-            log.debug(__name__, f"not implemented (decode): {fb}")
+            log.debug(__name__, "not implemented (decode): %s", fb)
         raise NotImplementedError
 
 

@@ -61,9 +61,7 @@ async def _show_confirmation_success(
         if group_index is None:
             subheader = "You have finished\nverifying your\nrecovery shares."
         else:
-            subheader = (
-                f"You have finished\nverifying your\nrecovery shares\nfor group {group_index + 1}."
-            )
+            subheader = f"You have finished\nverifying your\nrecovery shares\nfor group {group_index + 1}."
         text = ""
 
     else:

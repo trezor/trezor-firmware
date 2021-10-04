@@ -108,9 +108,7 @@ class ClickUI:
                     "The value may only consist of digits 1 to 9 or letters cvbdfgert."
                 )
             elif len(pin) > MAX_PIN_LENGTH:
-                echo(
-                    f"The value must be at most {MAX_PIN_LENGTH} digits in length."
-                )
+                echo(f"The value must be at most {MAX_PIN_LENGTH} digits in length.")
             else:
                 return pin
 

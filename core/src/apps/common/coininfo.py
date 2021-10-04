@@ -1830,4 +1830,4 @@ def by_name(name: str) -> CoinInfo:
                 overwintered=True,
                 confidential_assets=None,
             )
-    raise ValueError(f'Unknown coin name "{name}"')
+    raise ValueError  # Unknown coin name

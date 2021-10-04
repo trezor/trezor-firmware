@@ -57,7 +57,7 @@ CERTIFICATE_TYPE_NAMES = {
 
 
 def format_coin_amount(amount: int) -> str:
-    return f"{format_amount(amount, 6)!s} ADA"
+    return f"{format_amount(amount, 6)} ADA"
 
 
 def is_printable_ascii_bytestring(bytestr: bytes) -> bool:
@@ -148,7 +148,7 @@ async def show_warning_tx_pointer_address(
             ("Change address has a\npointer with staking\nrights.\n\n\n", None),
             (
                 "Pointer:",
-                f"{pointer.block_index}, {pointer.tx_index}, {pointer.certificate_index}"
+                f"{pointer.block_index}, {pointer.tx_index}, {pointer.certificate_index}",
             ),
             ("Change amount:", format_coin_amount(amount)),
         ],
@@ -213,13 +213,9 @@ async def confirm_transaction(
     ]
 
     if is_network_id_verifiable:
-        props.append(
-            (f"Network: {protocol_magics.to_ui_string(protocol_magic)}", None)
-        )
+        props.append((f"Network: {protocol_magics.to_ui_string(protocol_magic)}", None))
 
-    props.append(
-        (f"Valid since: {format_optional_int(validity_interval_start)}", None)
-    )
+    props.append((f"Valid since: {format_optional_int(validity_interval_start)}", None))
     props.append((f"TTL: {format_optional_int(ttl)}", None))
 
     await confirm_properties(

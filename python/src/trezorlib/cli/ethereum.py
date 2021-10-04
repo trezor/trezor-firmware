@@ -303,7 +303,7 @@ def sign_tx(
                 "to": to_address,
                 "from": from_address,
                 "value": amount,
-                f"data": f"0x{data.hex()}",
+                "data": f"0x{data.hex()}",
             }
         )
 

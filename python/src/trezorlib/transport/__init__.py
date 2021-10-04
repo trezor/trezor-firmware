@@ -93,9 +93,7 @@ class Transport:
             ):
                 return device
 
-        raise TransportException(
-            f"{cls.PATH_PREFIX} device not found: {path}"
-        )
+        raise TransportException(f"{cls.PATH_PREFIX} device not found: {path}")
 
 
 def all_transports() -> Iterable[Type[Transport]]:

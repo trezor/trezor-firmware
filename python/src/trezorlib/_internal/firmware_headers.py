@@ -226,9 +226,7 @@ class VendorHeader(SignableImage):
         fingerprint = firmware.header_digest(vh)
 
         if not terse:
-            output.append(
-                f"Fingerprint: {click.style(fingerprint.hex(), bold=True)}"
-            )
+            output.append(f"Fingerprint: {click.style(fingerprint.hex(), bold=True)}")
 
         sig_status = self.check_signature()
         sym = SYM_OK if sig_status.is_ok() else SYM_FAIL

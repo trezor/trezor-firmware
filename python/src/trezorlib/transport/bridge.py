@@ -38,7 +38,9 @@ def call_bridge(uri: str, data=None) -> requests.Response:
     url = TREZORD_HOST + "/" + uri
     r = CONNECTION.post(url, data=data)
     if r.status_code != 200:
-        error_str = f"trezord: {uri} failed with code {r.status_code}: {r.json()['error']}"
+        error_str = (
+            f"trezord: {uri} failed with code {r.status_code}: {r.json()['error']}"
+        )
         raise TransportException(error_str)
     return r
 
