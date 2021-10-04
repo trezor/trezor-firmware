@@ -131,6 +131,7 @@
 #define MICROPY_PY_SYS_PLATFORM     "trezor-emulator"
 #define MICROPY_PY_UERRNO           (0)
 #define MICROPY_PY_THREAD           (0)
+#define MICROPY_PY_FSTRINGS         (1)
 
 // extended modules
 #define MICROPY_PY_UCTYPES          (1)
