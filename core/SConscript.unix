@@ -367,7 +367,7 @@ if ARGUMENTS.get('TREZOR_EMULATOR_ASAN', 0):
 
 if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', 0):
     env.Replace(
-        COPT=' -O0 -ggdb',
+        COPT=' -Og -ggdb',
         STRIP='true', )
 
 if ARGUMENTS.get('TREZOR_MEMPERF', '0') == '1':
