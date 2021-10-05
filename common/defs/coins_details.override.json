@@ -27,6 +27,13 @@
         "ignore_cmc_rank": true,
         "reason": "this exists as misc:EOS and the eth: entry is probably a mistake"
     },
+    "eth:XDC": {
+        "wallet": {
+            "MyCrypto": null,
+            "MyEtherWallet": null,
+            "XDC Wallet": "https://wallet.xinfin.network"
+        }
+    },
     "misc:LSK": {
         "hidden": true,
         "ignore_cmc_rank": true,

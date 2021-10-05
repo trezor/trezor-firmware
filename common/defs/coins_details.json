@@ -34747,12 +34747,8 @@
             "type": "coin",
             "wallet": [
                 {
-                    "name": "MyCrypto",
-                    "url": "https://mycrypto.com"
-                },
-                {
-                    "name": "MyEtherWallet",
-                    "url": "https://www.myetherwallet.com"
+                    "name": "XDC Wallet",
+                    "url": "https://wallet.xinfin.network"
                 }
             ]
         },
