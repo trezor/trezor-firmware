@@ -19,7 +19,7 @@ impl Type {
         }
     }
 
-    pub fn as_base(&'static self) -> ObjBase {
+    pub const fn as_base(&'static self) -> ObjBase {
         ObjBase { type_: self }
     }
 }

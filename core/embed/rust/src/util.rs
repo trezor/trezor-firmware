@@ -9,9 +9,9 @@ use crate::{
     },
 };
 
-/// Perform a call and convert errors into a raised micropython exception.
-/// Should only called when returning from Rust to C.
-/// See `raise_exception` for details.
+/// Perform a call and convert errors into a raised MicroPython exception.
+/// Should only called when returning from Rust to C. See `raise_exception` for
+/// details.
 pub unsafe fn try_or_raise<T>(func: impl FnOnce() -> Result<T, Error>) -> T {
     func().unwrap_or_else(|err| unsafe {
         raise_exception(err);
@@ -19,10 +19,8 @@ pub unsafe fn try_or_raise<T>(func: impl FnOnce() -> Result<T, Error>) -> T {
 }
 
 /// Extract kwargs from a C call and pass them into Rust. Raise exception if an
-/// error occurs.
-/// TODO when does uPy call this?
-/// Should only called when returning from Rust to C.
-/// See `raise_exception` for details.
+/// error occurs. Should only called when returning from Rust to C. See
+/// `raise_exception` for details.
 pub unsafe fn try_with_kwargs(
     kwargs: *const Map,
     func: impl FnOnce(&Map) -> Result<Obj, Error>,
@@ -36,10 +34,8 @@ pub unsafe fn try_with_kwargs(
 }
 
 /// Extract args and kwargs from a C call and pass them into Rust. Raise
-/// exception if an error occurs.
-/// TODO when would uPy call this?
-/// Should only called when returning from Rust to C.
-/// See `raise_exception` for details.
+/// exception if an error occurs. Should only called when returning from Rust to
+/// C. See `raise_exception` for details.
 pub unsafe fn try_with_args_and_kwargs(
     n_args: usize,
     args: *const Obj,
@@ -60,9 +56,8 @@ pub unsafe fn try_with_args_and_kwargs(
 }
 
 /// Extract args and kwargs from a C call where args and kwargs are inlined, and
-/// pass them into Rust. Raise exception if an error occurs.
-/// Should only called when returning from Rust to C.
-/// See `raise_exception` for details.
+/// pass them into Rust. Raise exception if an error occurs. Should only called
+/// when returning from Rust to C. See `raise_exception` for details.
 pub unsafe fn try_with_args_and_kwargs_inline(
     n_args: usize,
     n_kw: usize,

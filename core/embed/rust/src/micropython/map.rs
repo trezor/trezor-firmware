@@ -121,7 +121,7 @@ impl Map {
                 )
             })?
             .as_mut()
-            .unwrap();
+            .unwrap(); // `MP_MAP_LOOKUP_ADD_IF_NOT_FOUND` should always return a non-null pointer.
             elem.value = value;
         }
         Ok(())

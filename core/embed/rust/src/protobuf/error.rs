@@ -1,9 +1,8 @@
 use cstr_core::CStr;
 
-use crate::error::Error;
-use crate::micropython::qstr::Qstr;
+use crate::{error::Error, micropython::qstr::Qstr};
 
-/* XXX const version of from_bytes_with_nul_unchecked is nightly-only */
+// XXX const version of `from_bytes_with_nul_unchecked` is nightly-only.
 
 pub fn experimental_not_enabled() -> Error {
     let msg =
