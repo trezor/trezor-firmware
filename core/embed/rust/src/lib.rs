@@ -1,5 +1,6 @@
 #![cfg_attr(not(test), no_std)]
 #![deny(clippy::all)]
+#![allow(clippy::new_without_default)]
 #![deny(unsafe_op_in_unsafe_fn)]
 #![allow(dead_code)]
 
@@ -17,13 +18,10 @@ mod ui;
 mod util;
 
 #[cfg(not(feature = "test"))]
-use core::panic::PanicInfo;
-#[cfg(not(feature = "test"))]
-use cstr_core::CStr;
-
-#[cfg(not(feature = "test"))]
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
+fn panic(_info: &core::panic::PanicInfo) -> ! {
+    use cstr_core::CStr;
+
     // Although it would be ideal to use the original error message, ignoring it
     // lets us avoid the `fmt` machinery and its code size and is also important for
     // security reasons, as we do not always controls the message contents. We

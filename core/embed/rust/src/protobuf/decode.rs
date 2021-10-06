@@ -1,5 +1,7 @@
-use core::convert::{TryFrom, TryInto};
-use core::str;
+use core::{
+    convert::{TryFrom, TryInto},
+    str,
+};
 
 use crate::{
     error::Error,

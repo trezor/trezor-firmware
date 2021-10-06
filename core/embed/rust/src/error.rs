@@ -1,10 +1,11 @@
 use core::convert::{Infallible, TryInto};
+
 use cstr_core::CStr;
 
 use crate::micropython::{ffi, obj::Obj, qstr::Qstr};
 
+#[allow(clippy::enum_variant_names)] // We mimic the Python exception classnames here.
 #[derive(Debug)]
-#[allow(clippy::enum_variant_names)]
 pub enum Error {
     TypeError,
     OutOfRange,
@@ -44,7 +45,7 @@ impl Error {
                 }
                 Error::ValueErrorParam(msg, param) => {
                     if let Ok(msg) = msg.try_into() {
-                        let args: [Obj; 2] = [msg, param];
+                        let args = [msg, param];
                         ffi::mp_obj_new_exception_args(&ffi::mp_type_ValueError, 2, args.as_ptr())
                     } else {
                         ffi::mp_obj_new_exception(&ffi::mp_type_ValueError)

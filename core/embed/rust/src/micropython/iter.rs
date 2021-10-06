@@ -1,10 +1,8 @@
 use core::ptr;
 
-use crate::error::Error;
-use crate::micropython::obj::Obj;
+use crate::{error::Error, micropython::obj::Obj};
 
-use super::ffi;
-use super::runtime::catch_exception;
+use super::{ffi, runtime::catch_exception};
 
 pub struct IterBuf {
     iter_buf: ffi::mp_obj_iter_buf_t,

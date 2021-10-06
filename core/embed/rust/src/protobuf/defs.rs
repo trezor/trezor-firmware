@@ -135,19 +135,17 @@ static MSG_DEFS: &[u8] = include_bytes!(proto_def_path!("proto_msgs.data"));
 static NAME_DEFS: &[u8] = include_bytes!(proto_def_path!("proto_names.data"));
 static WIRE_DEFS: &[u8] = include_bytes!(proto_def_path!("proto_wire.data"));
 
-pub fn find_name_by_msg_offset(msg_offset: u16) -> Result<u16, Error> {
+pub fn find_name_by_msg_offset(msg_offset: u16) -> Option<u16> {
     let name_defs: &[NameDef] = unsafe {
         slice::from_raw_parts(
             NAME_DEFS.as_ptr().cast(),
             NAME_DEFS.len() / mem::size_of::<NameDef>(),
         )
     };
-
     name_defs
         .iter()
         .find(|def| def.msg_offset == msg_offset)
         .map(|def| def.msg_name)
-        .ok_or_else(|| Error::KeyError(msg_offset.into()))
 }
 
 fn find_msg_offset_by_name(msg_name: u16) -> Option<u16> {

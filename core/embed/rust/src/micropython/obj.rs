@@ -1,12 +1,13 @@
-use core::convert::{TryFrom, TryInto};
-use core::num::TryFromIntError;
+use core::{
+    convert::{TryFrom, TryInto},
+    num::TryFromIntError,
+};
 
 use cstr_core::CStr;
 
 use crate::error::Error;
 
-use super::ffi;
-use super::runtime::catch_exception;
+use super::{ffi, runtime::catch_exception};
 
 pub type Obj = ffi::mp_obj_t;
 pub type ObjBase = ffi::mp_obj_base_t;
@@ -129,12 +130,8 @@ impl TryFrom<Obj> for bool {
         // SAFETY:
         //  - `obj` can be anything uPy understands.
         // EXCEPTION: Can call Python code (on custom instances) and therefore raise.
-        let result = catch_exception(|| unsafe { ffi::mp_obj_is_true(obj) })?;
-        if result {
-            Ok(true)
-        } else {
-            Ok(false)
-        }
+        let is_true = catch_exception(|| unsafe { ffi::mp_obj_is_true(obj) })?;
+        Ok(is_true)
     }
 }
 
@@ -298,14 +295,14 @@ impl TryFrom<&'static CStr> for Obj {
 
 impl From<u8> for Obj {
     fn from(val: u8) -> Self {
-        // u8 will fit into smallint so no error should happen here
+        // `u8` will fit into smallint so no error should happen here.
         u32::from(val).try_into().unwrap()
     }
 }
 
 impl From<u16> for Obj {
     fn from(val: u16) -> Self {
-        // u16 will fit into smallint so no error should happen here
+        // `u16` will fit into smallint so no error should happen here.
         u32::from(val).try_into().unwrap()
     }
 }
@@ -368,6 +365,18 @@ impl TryFrom<Obj> for usize {
         let val = i64::try_from(obj)?;
         let this = Self::try_from(val)?;
         Ok(this)
+    }
+}
+
+impl<T> From<Option<T>> for Obj
+where
+    T: Into<Obj>,
+{
+    fn from(val: Option<T>) -> Self {
+        match val {
+            Some(v) => v.into(),
+            None => Self::const_none(),
+        }
     }
 }
 
