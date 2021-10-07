@@ -8,8 +8,8 @@ from trezor.messages import (
     StellarCreateAccountOp,
     StellarCreatePassiveOfferOp,
     StellarManageDataOp,
-    StellarManageOfferOp,
-    StellarPathPaymentOp,
+    StellarManageSellOfferOp,
+    StellarPathPaymentStrictReceiveOp,
     StellarPaymentOp,
     StellarSetOptionsOp,
 )
@@ -65,7 +65,7 @@ def write_manage_data_op(w: Writer, msg: StellarManageDataOp) -> None:
         writers.write_string(w, msg.value)
 
 
-def write_manage_offer_op(w: Writer, msg: StellarManageOfferOp) -> None:
+def write_manage_sell_offer_op(w: Writer, msg: StellarManageSellOfferOp) -> None:
     _write_asset(w, msg.selling_asset)
     _write_asset(w, msg.buying_asset)
     writers.write_uint64(w, msg.amount)  # amount to sell
@@ -74,7 +74,9 @@ def write_manage_offer_op(w: Writer, msg: StellarManageOfferOp) -> None:
     writers.write_uint64(w, msg.offer_id)
 
 
-def write_path_payment_op(w: Writer, msg: StellarPathPaymentOp) -> None:
+def write_path_payment_strict_receive_op(
+    w: Writer, msg: StellarPathPaymentStrictReceiveOp
+) -> None:
     _write_asset(w, msg.send_asset)
     writers.write_uint64(w, msg.send_max)
     writers.write_pubkey(w, msg.destination_account)

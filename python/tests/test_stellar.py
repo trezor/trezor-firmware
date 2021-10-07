@@ -325,7 +325,7 @@ def test_path_payment_strict_receive():
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
 
-    assert isinstance(operations[0], messages.StellarPathPaymentOp)
+    assert isinstance(operations[0], messages.StellarPathPaymentStrictReceiveOp)
     assert operations[0].source_account == operation_source
     assert operations[0].destination_account == destination
     assert operations[0].send_asset.type == messages.StellarAssetType.NATIVE
@@ -368,7 +368,7 @@ def test_manage_sell_offer_new_offer():
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
-    assert isinstance(operations[0], messages.StellarManageOfferOp)
+    assert isinstance(operations[0], messages.StellarManageSellOfferOp)
     assert operations[0].source_account == operation_source
     assert operations[0].selling_asset.type == messages.StellarAssetType.NATIVE
     assert operations[0].buying_asset.type == messages.StellarAssetType.ALPHANUM4
@@ -408,7 +408,7 @@ def test_manage_sell_offer_update_offer():
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
-    assert isinstance(operations[0], messages.StellarManageOfferOp)
+    assert isinstance(operations[0], messages.StellarManageSellOfferOp)
     assert operations[0].source_account == operation_source
     assert operations[0].selling_asset.type == messages.StellarAssetType.NATIVE
     assert operations[0].buying_asset.type == messages.StellarAssetType.ALPHANUM4

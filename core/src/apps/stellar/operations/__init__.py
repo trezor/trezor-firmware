@@ -34,12 +34,12 @@ async def process_operation(
     elif serialize.StellarManageDataOp.is_type_of(op):
         await layout.confirm_manage_data_op(ctx, op)
         serialize.write_manage_data_op(w, op)
-    elif serialize.StellarManageOfferOp.is_type_of(op):
-        await layout.confirm_manage_offer_op(ctx, op)
-        serialize.write_manage_offer_op(w, op)
-    elif serialize.StellarPathPaymentOp.is_type_of(op):
-        await layout.confirm_path_payment_op(ctx, op)
-        serialize.write_path_payment_op(w, op)
+    elif serialize.StellarManageSellOfferOp.is_type_of(op):
+        await layout.confirm_manage_sell_offer_op(ctx, op)
+        serialize.write_manage_sell_offer_op(w, op)
+    elif serialize.StellarPathPaymentStrictReceiveOp.is_type_of(op):
+        await layout.confirm_path_payment_strict_receive_op(ctx, op)
+        serialize.write_path_payment_strict_receive_op(w, op)
     elif serialize.StellarPaymentOp.is_type_of(op):
         await layout.confirm_payment_op(ctx, op)
         serialize.write_payment_op(w, op)

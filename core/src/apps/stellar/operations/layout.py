@@ -8,8 +8,8 @@ from trezor.messages import (
     StellarCreateAccountOp,
     StellarCreatePassiveOfferOp,
     StellarManageDataOp,
-    StellarManageOfferOp,
-    StellarPathPaymentOp,
+    StellarManageSellOfferOp,
+    StellarPathPaymentStrictReceiveOp,
     StellarPaymentOp,
     StellarSetOptionsOp,
 )
@@ -106,7 +106,9 @@ async def confirm_create_passive_offer_op(
     await _confirm_offer(ctx, text, op)
 
 
-async def confirm_manage_offer_op(ctx: Context, op: StellarManageOfferOp) -> None:
+async def confirm_manage_sell_offer_op(
+    ctx: Context, op: StellarManageSellOfferOp
+) -> None:
     if op.offer_id == 0:
         text = "New Offer"
     else:
@@ -121,7 +123,7 @@ async def confirm_manage_offer_op(ctx: Context, op: StellarManageOfferOp) -> Non
 async def _confirm_offer(
     ctx: Context,
     title: str,
-    op: StellarCreatePassiveOfferOp | StellarManageOfferOp,
+    op: StellarCreatePassiveOfferOp | StellarManageSellOfferOp,
 ) -> None:
     await confirm_properties(
         ctx,
@@ -161,7 +163,9 @@ async def confirm_manage_data_op(ctx: Context, op: StellarManageDataOp) -> None:
         )
 
 
-async def confirm_path_payment_op(ctx: Context, op: StellarPathPaymentOp) -> None:
+async def confirm_path_payment_strict_receive_op(
+    ctx: Context, op: StellarPathPaymentStrictReceiveOp
+) -> None:
     await confirm_output(
         ctx,
         address=op.destination_account,
@@ -175,7 +179,7 @@ async def confirm_path_payment_op(ctx: Context, op: StellarPathPaymentOp) -> Non
         title="Debited amount",
         amount=format_amount(op.send_max, op.send_asset),
         description="Pay at most:",
-        br_type="op_path_payment",
+        br_type="op_path_payment_strict_receive",
     )
     await confirm_asset_issuer(ctx, op.send_asset)
 

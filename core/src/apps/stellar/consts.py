@@ -14,8 +14,8 @@ if False:
         StellarCreateAccountOp,
         StellarCreatePassiveOfferOp,
         StellarManageDataOp,
-        StellarManageOfferOp,
-        StellarPathPaymentOp,
+        StellarManageSellOfferOp,
+        StellarPathPaymentStrictReceiveOp,
         StellarPaymentOp,
         StellarSetOptionsOp,
     )
@@ -28,8 +28,8 @@ if False:
         StellarCreateAccountOp,
         StellarCreatePassiveOfferOp,
         StellarManageDataOp,
-        StellarManageOfferOp,
-        StellarPathPaymentOp,
+        StellarManageSellOfferOp,
+        StellarPathPaymentStrictReceiveOp,
         StellarPaymentOp,
         StellarSetOptionsOp,
     ]
@@ -47,8 +47,8 @@ op_codes: dict[int, int] = {
     MessageType.StellarCreateAccountOp: 0,
     MessageType.StellarCreatePassiveOfferOp: 4,
     MessageType.StellarManageDataOp: 10,
-    MessageType.StellarManageOfferOp: 3,
-    MessageType.StellarPathPaymentOp: 2,
+    MessageType.StellarManageSellOfferOp: 3,
+    MessageType.StellarPathPaymentStrictReceiveOp: 2,
     MessageType.StellarPaymentOp: 1,
     MessageType.StellarSetOptionsOp: 5,
 }
@@ -61,8 +61,8 @@ op_wire_types = [
     MessageType.StellarCreateAccountOp,
     MessageType.StellarCreatePassiveOfferOp,
     MessageType.StellarManageDataOp,
-    MessageType.StellarManageOfferOp,
-    MessageType.StellarPathPaymentOp,
+    MessageType.StellarManageSellOfferOp,
+    MessageType.StellarPathPaymentStrictReceiveOp,
     MessageType.StellarPaymentOp,
     MessageType.StellarSetOptionsOp,
 ]

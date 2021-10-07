@@ -4772,7 +4772,7 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarCreateAccountOp"]:
             return isinstance(msg, cls)
 
-    class StellarPathPaymentOp(protobuf.MessageType):
+    class StellarPathPaymentStrictReceiveOp(protobuf.MessageType):
         source_account: "str | None"
         send_asset: "StellarAsset"
         send_max: "int"
@@ -4795,10 +4795,10 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarPathPaymentOp"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarPathPaymentStrictReceiveOp"]:
             return isinstance(msg, cls)
 
-    class StellarManageOfferOp(protobuf.MessageType):
+    class StellarManageSellOfferOp(protobuf.MessageType):
         source_account: "str | None"
         selling_asset: "StellarAsset"
         buying_asset: "StellarAsset"
@@ -4821,7 +4821,7 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarManageOfferOp"]:
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarManageSellOfferOp"]:
             return isinstance(msg, cls)
 
     class StellarCreatePassiveOfferOp(protobuf.MessageType):

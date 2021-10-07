@@ -59,8 +59,9 @@ bool stellar_confirmSourceAccount(bool has_source_account,
                                   const char *str_account);
 bool stellar_confirmCreateAccountOp(const StellarCreateAccountOp *msg);
 bool stellar_confirmPaymentOp(const StellarPaymentOp *msg);
-bool stellar_confirmPathPaymentOp(const StellarPathPaymentOp *msg);
-bool stellar_confirmManageOfferOp(const StellarManageOfferOp *msg);
+bool stellar_confirmPathPaymentStrictReceiveOp(
+    const StellarPathPaymentStrictReceiveOp *msg);
+bool stellar_confirmManageSellOfferOp(const StellarManageSellOfferOp *msg);
 bool stellar_confirmCreatePassiveOfferOp(
     const StellarCreatePassiveOfferOp *msg);
 bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg);

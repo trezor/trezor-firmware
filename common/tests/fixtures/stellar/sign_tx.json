@@ -336,7 +336,7 @@
       }
     },
     {
-      "name": "StellarManageOfferOp",
+      "name": "StellarManageSellOfferOp",
       "parameters": {
         "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAAGQAAAAAAAAD6AAAAAEAAAAAG4J3zQAAAABd5CqEAAAAAAAAAAEAAAAAAAAAAwAAAAJBQkNERUZHSElKS0wAAAAAKYSWAsIOWDZfEjwS2HocpFUNEM0hsK4OGNROPlb9ahUAAAABWAAAAAAAAAAphJYCwg5YNl8SPBLYehykVQ0QzSGwrg4Y1E4+Vv1qFQAAAAAdzxaYAAAAAwAAAAQAAAAAAAAFOQAAAAAAAAAA",
         "address_n": "m/44'/148'/0'",
@@ -351,7 +351,7 @@
         },
         "operations": [
           {
-            "_message_type": "StellarManageOfferOp",
+            "_message_type": "StellarManageSellOfferOp",
             "selling_asset": {
               "type": "ALPHANUM12",
               "code": "ABCDEFGHIJKL",
@@ -375,7 +375,7 @@
       }
     },
     {
-      "name": "StellarPathPaymentOp",
+      "name": "StellarPathPaymentStrictReceiveOp",
       "parameters": {
         "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAAGQAAAAAAAAD6AAAAAEAAAAAG4J3zQAAAABd5CqEAAAAAAAAAAEAAAAAAAAAAgAAAAFYAAAAAAAAACmElgLCDlg2XxI8Eth6HKRVDRDNIbCuDhjUTj5W/WoVAAAAAB3PFpgAAAAAXVVkJGaxhbhDFS6eIZFR28WJICfsQBAaUXvtXKAwwuAAAAACQUJDREVGR0hJSktMAAAAACmElgLCDlg2XxI8Eth6HKRVDRDNIbCuDhjUTj5W/WoVAAAAAAAB4kAAAAAAAAAAAAAAAAA=",
         "address_n": "m/44'/148'/0'",
@@ -390,7 +390,7 @@
         },
         "operations": [
           {
-            "_message_type": "StellarPathPaymentOp",
+            "_message_type": "StellarPathPaymentStrictReceiveOp",
             "send_asset": {
               "type": "ALPHANUM4",
               "code": "X",
