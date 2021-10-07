@@ -156,6 +156,7 @@ class MessageType(IntEnum):
     StellarAccountMergeOp = 218
     StellarManageDataOp = 220
     StellarBumpSequenceOp = 221
+    StellarManageBuyOfferOp = 222
     StellarSignedTx = 230
     CardanoSignTx = 303
     CardanoGetPublicKey = 305
@@ -6358,6 +6359,38 @@ class StellarPathPaymentStrictReceiveOp(protobuf.MessageType):
 
 class StellarManageSellOfferOp(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 213
+    FIELDS = {
+        1: protobuf.Field("source_account", "string", repeated=False, required=False),
+        2: protobuf.Field("selling_asset", "StellarAsset", repeated=False, required=True),
+        3: protobuf.Field("buying_asset", "StellarAsset", repeated=False, required=True),
+        4: protobuf.Field("amount", "sint64", repeated=False, required=True),
+        5: protobuf.Field("price_n", "uint32", repeated=False, required=True),
+        6: protobuf.Field("price_d", "uint32", repeated=False, required=True),
+        7: protobuf.Field("offer_id", "uint64", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        selling_asset: "StellarAsset",
+        buying_asset: "StellarAsset",
+        amount: "int",
+        price_n: "int",
+        price_d: "int",
+        offer_id: "int",
+        source_account: Optional["str"] = None,
+    ) -> None:
+        self.selling_asset = selling_asset
+        self.buying_asset = buying_asset
+        self.amount = amount
+        self.price_n = price_n
+        self.price_d = price_d
+        self.offer_id = offer_id
+        self.source_account = source_account
+
+
+class StellarManageBuyOfferOp(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 222
     FIELDS = {
         1: protobuf.Field("source_account", "string", repeated=False, required=False),
         2: protobuf.Field("selling_asset", "StellarAsset", repeated=False, required=True),

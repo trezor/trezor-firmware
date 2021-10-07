@@ -7,6 +7,7 @@ from trezor.messages import (
     StellarChangeTrustOp,
     StellarCreateAccountOp,
     StellarCreatePassiveOfferOp,
+    StellarManageBuyOfferOp,
     StellarManageDataOp,
     StellarManageSellOfferOp,
     StellarPathPaymentStrictReceiveOp,
@@ -106,8 +107,20 @@ async def confirm_create_passive_offer_op(
     await _confirm_offer(ctx, text, op)
 
 
+async def confirm_manage_buy_offer_op(
+    ctx: Context, op: StellarManageBuyOfferOp
+) -> None:
+    await _confirm_manage_offer_op_common(ctx, op)
+
+
 async def confirm_manage_sell_offer_op(
     ctx: Context, op: StellarManageSellOfferOp
+) -> None:
+    await _confirm_manage_offer_op_common(ctx, op)
+
+
+async def _confirm_manage_offer_op_common(
+    ctx: Context, op: StellarManageBuyOfferOp | StellarManageSellOfferOp
 ) -> None:
     if op.offer_id == 0:
         text = "New Offer"
@@ -123,21 +136,37 @@ async def confirm_manage_sell_offer_op(
 async def _confirm_offer(
     ctx: Context,
     title: str,
-    op: StellarCreatePassiveOfferOp | StellarManageSellOfferOp,
+    op: StellarCreatePassiveOfferOp
+    | StellarManageSellOfferOp
+    | StellarManageBuyOfferOp,
 ) -> None:
-    await confirm_properties(
-        ctx,
-        "op_offer",
-        title=title,
-        props=(
-            ("Selling:", format_amount(op.amount, op.selling_asset)),
-            ("Buying:", format_asset(op.buying_asset)),
-            (
-                f"Price per {format_asset(op.buying_asset)}:",
-                str(op.price_n / op.price_d),
-            ),
-        ),
-    )
+    if StellarManageBuyOfferOp.is_type_of(op):
+        buying = ("Buying:", format_amount(op.amount, op.buying_asset))
+        selling = ("Selling:", format_asset(op.selling_asset))
+        price = (
+            f"Price per {format_asset(op.selling_asset)}:",
+            str(op.price_n / op.price_d),
+        )
+        await confirm_properties(
+            ctx,
+            "op_offer",
+            title=title,
+            props=(buying, selling, price),
+        )
+    else:
+        selling = ("Selling:", format_amount(op.amount, op.selling_asset))
+        buying = ("Buying:", format_asset(op.buying_asset))
+        price = (
+            f"Price per {format_asset(op.buying_asset)}:",
+            str(op.price_n / op.price_d),
+        )
+        await confirm_properties(
+            ctx,
+            "op_offer",
+            title=title,
+            props=(selling, buying, price),
+        )
+
     await confirm_asset_issuer(ctx, op.selling_asset)
     await confirm_asset_issuer(ctx, op.buying_asset)
 

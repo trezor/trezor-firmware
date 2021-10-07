@@ -34,6 +34,9 @@ async def process_operation(
     elif serialize.StellarManageDataOp.is_type_of(op):
         await layout.confirm_manage_data_op(ctx, op)
         serialize.write_manage_data_op(w, op)
+    elif serialize.StellarManageBuyOfferOp.is_type_of(op):
+        await layout.confirm_manage_buy_offer_op(ctx, op)
+        serialize.write_manage_buy_offer_op(w, op)
     elif serialize.StellarManageSellOfferOp.is_type_of(op):
         await layout.confirm_manage_sell_offer_op(ctx, op)
         serialize.write_manage_sell_offer_op(w, op)

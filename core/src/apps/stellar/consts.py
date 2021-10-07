@@ -14,6 +14,7 @@ if False:
         StellarCreateAccountOp,
         StellarCreatePassiveOfferOp,
         StellarManageDataOp,
+        StellarManageBuyOfferOp,
         StellarManageSellOfferOp,
         StellarPathPaymentStrictReceiveOp,
         StellarPaymentOp,
@@ -28,6 +29,7 @@ if False:
         StellarCreateAccountOp,
         StellarCreatePassiveOfferOp,
         StellarManageDataOp,
+        StellarManageBuyOfferOp,
         StellarManageSellOfferOp,
         StellarPathPaymentStrictReceiveOp,
         StellarPaymentOp,
@@ -37,7 +39,7 @@ if False:
 
 TX_TYPE = b"\x00\x00\x00\x02"
 
-# source: https://github.com/stellar/go/blob/3d2c1defe73dbfed00146ebe0e8d7e07ce4bb1b6/xdr/Stellar-transaction.x#L16
+# source: https://github.com/stellar/go/blob/a1db2a6b1f/xdr/Stellar-transaction.x#L35
 # Inflation not supported see https://github.com/trezor/trezor-core/issues/202#issuecomment-393342089
 op_codes: dict[int, int] = {
     MessageType.StellarAccountMergeOp: 8,
@@ -47,6 +49,7 @@ op_codes: dict[int, int] = {
     MessageType.StellarCreateAccountOp: 0,
     MessageType.StellarCreatePassiveOfferOp: 4,
     MessageType.StellarManageDataOp: 10,
+    MessageType.StellarManageBuyOfferOp: 12,
     MessageType.StellarManageSellOfferOp: 3,
     MessageType.StellarPathPaymentStrictReceiveOp: 2,
     MessageType.StellarPaymentOp: 1,
@@ -61,6 +64,7 @@ op_wire_types = [
     MessageType.StellarCreateAccountOp,
     MessageType.StellarCreatePassiveOfferOp,
     MessageType.StellarManageDataOp,
+    MessageType.StellarManageBuyOfferOp,
     MessageType.StellarManageSellOfferOp,
     MessageType.StellarPathPaymentStrictReceiveOp,
     MessageType.StellarPaymentOp,

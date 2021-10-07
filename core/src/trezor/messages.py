@@ -4824,6 +4824,32 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarManageSellOfferOp"]:
             return isinstance(msg, cls)
 
+    class StellarManageBuyOfferOp(protobuf.MessageType):
+        source_account: "str | None"
+        selling_asset: "StellarAsset"
+        buying_asset: "StellarAsset"
+        amount: "int"
+        price_n: "int"
+        price_d: "int"
+        offer_id: "int"
+
+        def __init__(
+            self,
+            *,
+            selling_asset: "StellarAsset",
+            buying_asset: "StellarAsset",
+            amount: "int",
+            price_n: "int",
+            price_d: "int",
+            offer_id: "int",
+            source_account: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarManageBuyOfferOp"]:
+            return isinstance(msg, cls)
+
     class StellarCreatePassiveOfferOp(protobuf.MessageType):
         source_account: "str | None"
         selling_asset: "StellarAsset"

@@ -120,6 +120,7 @@ void fsm_msgStellarPaymentOp(const StellarPaymentOp *msg);
 void fsm_msgStellarCreateAccountOp(const StellarCreateAccountOp *msg);
 void fsm_msgStellarPathPaymentStrictReceiveOp(
     const StellarPathPaymentStrictReceiveOp *msg);
+void fsm_msgStellarManageBuyOfferOp(const StellarManageBuyOfferOp *msg);
 void fsm_msgStellarManageSellOfferOp(const StellarManageSellOfferOp *msg);
 void fsm_msgStellarCreatePassiveOfferOp(const StellarCreatePassiveOfferOp *msg);
 void fsm_msgStellarSetOptionsOp(const StellarSetOptionsOp *msg);
