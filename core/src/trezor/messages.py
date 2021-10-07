@@ -4798,6 +4798,32 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarPathPaymentStrictReceiveOp"]:
             return isinstance(msg, cls)
 
+    class StellarPathPaymentStrictSendOp(protobuf.MessageType):
+        source_account: "str | None"
+        send_asset: "StellarAsset"
+        send_amount: "int"
+        destination_account: "str"
+        destination_asset: "StellarAsset"
+        destination_min: "int"
+        paths: "list[StellarAsset]"
+
+        def __init__(
+            self,
+            *,
+            send_asset: "StellarAsset",
+            send_amount: "int",
+            destination_account: "str",
+            destination_asset: "StellarAsset",
+            destination_min: "int",
+            paths: "list[StellarAsset] | None" = None,
+            source_account: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["StellarPathPaymentStrictSendOp"]:
+            return isinstance(msg, cls)
+
     class StellarManageSellOfferOp(protobuf.MessageType):
         source_account: "str | None"
         selling_asset: "StellarAsset"

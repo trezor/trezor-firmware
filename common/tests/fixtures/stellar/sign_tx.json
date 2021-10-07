@@ -452,6 +452,56 @@
       }
     },
     {
+      "name": "StellarPathPaymentStrictSendOp",
+      "parameters": {
+        "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAAGQAAAAAAAAD6AAAAAEAAAAAG4J3zQAAAABd5CqEAAAAAAAAAAEAAAAAAAAADQAAAAFYAAAAAAAAAHCLqjFfflwWbYS0ZL+zj9YleP460nIn52zLt6F5xFEhAAAAAB3PFpgAAAAAXVVkJGaxhbhDFS6eIZFR28WJICfsQBAaUXvtXKAwwuAAAAACQUJDREVGR0hJSktMAAAAACmElgLCDlg2XxI8Eth6HKRVDRDNIbCuDhjUTj5W/WoVAAAAAAAB4kAAAAACAAAAAUpQWQAAAAAA/Pr8d4Jv8Bq3LDTJiXMR/LjsnkO0R2sDyP5fodnIhB4AAAACQkFOQU5BAAAAAAAAAAAAAL5FO387ZKhuvo51/hHfkV1gShE677dHpUZV6jK+Wgg7AAAAAAAAAAA=",
+        "address_n": "m/44'/148'/0'",
+        "network_passphrase": "Test SDF Network ; September 2015",
+        "tx": {
+          "source_account": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+          "fee": 100,
+          "sequence_number": 1000,
+          "timebounds_start": 461535181,
+          "timebounds_end": 1575234180,
+          "memo_type": "NONE"
+        },
+        "operations": [
+          {
+            "_message_type": "StellarPathPaymentStrictSendOp",
+            "send_asset": {
+              "type": "ALPHANUM4",
+              "code": "X",
+              "issuer": "GBYIXKRRL57FYFTNQS2GJP5TR7LCK6H6HLJHEJ7HNTF3PILZYRISDLNQ"
+            },
+            "send_amount": 500111000,
+            "destination_account": "GBOVKZBEM2YYLOCDCUXJ4IMRKHN4LCJAE7WEAEA2KF562XFAGDBOB64V",
+            "destination_asset": {
+              "type": "ALPHANUM12",
+              "code": "ABCDEFGHIJKL",
+              "issuer": "GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC"
+            },
+            "destination_min": 123456,
+            "paths": [
+              {
+                "type": "ALPHANUM4",
+                "code": "JPY",
+                "issuer": "GD6PV7DXQJX7AGVXFQ2MTCLTCH6LR3E6IO2EO2YDZD7F7IOZZCCB5DSQ"
+              },
+              {
+                "type": "ALPHANUM12",
+                "code": "BANANA",
+                "issuer": "GC7EKO37HNSKQ3V6RZ274EO7SFOWASQRHLX3OR5FIZK6UMV6LIEDXHGZ"
+              }
+            ]
+          }
+        ]
+      },
+      "result": {
+        "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
+        "signature": "ZoJRiq9zQsbv/w5CA4IOqRPsPY46kzrQ0uMgY+Y9Ec6kKk/0ktFt2icEKNvVAKZUYmfEEigKhki/Rt9meN43CQ=="
+      }
+    },
+    {
       "name": "StellarManageDataOp",
       "parameters": {
         "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAAGQAAAAAAAAD6AAAAAEAAAAAG4J3zQAAAABd5CqEAAAAAAAAAAEAAAAAAAAACgAAAARkYXRhAAAAAQAAAANhYmMAAAAAAAAAAAA=",

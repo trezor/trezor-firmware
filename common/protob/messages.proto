@@ -240,6 +240,7 @@ enum MessageType {
     MessageType_StellarManageDataOp = 220 [(wire_in) = true];
     MessageType_StellarBumpSequenceOp = 221 [(wire_in) = true];
     MessageType_StellarManageBuyOfferOp = 222 [(wire_in) = true];
+    MessageType_StellarPathPaymentStrictSendOp = 223 [(wire_in) = true];
     MessageType_StellarSignedTx = 230 [(wire_out) = true];
 
     // Cardano

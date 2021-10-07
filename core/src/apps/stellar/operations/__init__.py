@@ -43,6 +43,9 @@ async def process_operation(
     elif serialize.StellarPathPaymentStrictReceiveOp.is_type_of(op):
         await layout.confirm_path_payment_strict_receive_op(ctx, op)
         serialize.write_path_payment_strict_receive_op(w, op)
+    elif serialize.StellarPathPaymentStrictSendOp.is_type_of(op):
+        await layout.confirm_path_payment_strict_send_op(ctx, op)
+        serialize.write_path_payment_strict_send_op(w, op)
     elif serialize.StellarPaymentOp.is_type_of(op):
         await layout.confirm_payment_op(ctx, op)
         serialize.write_payment_op(w, op)

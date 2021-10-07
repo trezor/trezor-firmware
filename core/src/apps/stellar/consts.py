@@ -17,6 +17,7 @@ if False:
         StellarManageBuyOfferOp,
         StellarManageSellOfferOp,
         StellarPathPaymentStrictReceiveOp,
+        StellarPathPaymentStrictSendOp,
         StellarPaymentOp,
         StellarSetOptionsOp,
     )
@@ -32,6 +33,7 @@ if False:
         StellarManageBuyOfferOp,
         StellarManageSellOfferOp,
         StellarPathPaymentStrictReceiveOp,
+        StellarPathPaymentStrictSendOp,
         StellarPaymentOp,
         StellarSetOptionsOp,
     ]
@@ -52,6 +54,7 @@ op_codes: dict[int, int] = {
     MessageType.StellarManageBuyOfferOp: 12,
     MessageType.StellarManageSellOfferOp: 3,
     MessageType.StellarPathPaymentStrictReceiveOp: 2,
+    MessageType.StellarPathPaymentStrictSendOp: 13,
     MessageType.StellarPaymentOp: 1,
     MessageType.StellarSetOptionsOp: 5,
 }
@@ -67,6 +70,7 @@ op_wire_types = [
     MessageType.StellarManageBuyOfferOp,
     MessageType.StellarManageSellOfferOp,
     MessageType.StellarPathPaymentStrictReceiveOp,
+    MessageType.StellarPathPaymentStrictSendOp,
     MessageType.StellarPaymentOp,
     MessageType.StellarSetOptionsOp,
 ]
