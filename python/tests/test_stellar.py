@@ -447,7 +447,7 @@ def test_create_passive_sell_offer():
 
     tx, operations = stellar.from_envelope(envelope)
     assert len(operations) == 1
-    assert isinstance(operations[0], messages.StellarCreatePassiveOfferOp)
+    assert isinstance(operations[0], messages.StellarCreatePassiveSellOfferOp)
     assert operations[0].source_account == operation_source
     assert operations[0].selling_asset.type == messages.StellarAssetType.NATIVE
     assert operations[0].buying_asset.type == messages.StellarAssetType.ALPHANUM4

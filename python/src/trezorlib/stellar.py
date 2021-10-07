@@ -153,7 +153,7 @@ def _read_operation(op: "Operation"):
         )
     if isinstance(op, CreatePassiveSellOffer):
         price = _read_price(op.price)
-        return messages.StellarCreatePassiveOfferOp(
+        return messages.StellarCreatePassiveSellOfferOp(
             source_account=source_account,
             selling_asset=_read_asset(op.selling),
             buying_asset=_read_asset(op.buying),

@@ -124,7 +124,8 @@ void fsm_msgStellarPathPaymentStrictSendOp(
     const StellarPathPaymentStrictSendOp *msg);
 void fsm_msgStellarManageBuyOfferOp(const StellarManageBuyOfferOp *msg);
 void fsm_msgStellarManageSellOfferOp(const StellarManageSellOfferOp *msg);
-void fsm_msgStellarCreatePassiveOfferOp(const StellarCreatePassiveOfferOp *msg);
+void fsm_msgStellarCreatePassiveSellOfferOp(
+    const StellarCreatePassiveSellOfferOp *msg);
 void fsm_msgStellarSetOptionsOp(const StellarSetOptionsOp *msg);
 void fsm_msgStellarChangeTrustOp(const StellarChangeTrustOp *msg);
 void fsm_msgStellarAllowTrustOp(const StellarAllowTrustOp *msg);

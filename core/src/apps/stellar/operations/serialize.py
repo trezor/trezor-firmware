@@ -6,7 +6,7 @@ from trezor.messages import (
     StellarBumpSequenceOp,
     StellarChangeTrustOp,
     StellarCreateAccountOp,
-    StellarCreatePassiveOfferOp,
+    StellarCreatePassiveSellOfferOp,
     StellarManageBuyOfferOp,
     StellarManageDataOp,
     StellarManageSellOfferOp,
@@ -50,7 +50,9 @@ def write_create_account_op(w: Writer, msg: StellarCreateAccountOp) -> None:
     writers.write_uint64(w, msg.starting_balance)
 
 
-def write_create_passive_offer_op(w: Writer, msg: StellarCreatePassiveOfferOp) -> None:
+def write_create_passive_sell_offer_op(
+    w: Writer, msg: StellarCreatePassiveSellOfferOp
+) -> None:
     _write_asset(w, msg.selling_asset)
     _write_asset(w, msg.buying_asset)
     writers.write_uint64(w, msg.amount)

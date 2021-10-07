@@ -78,7 +78,7 @@ message StellarSignTx {
  * @next StellarPathPaymentStrictSendOp
  * @next StellarManageSellOfferOp
  * @next StellarManageBuyOfferOp
- * @next StellarCreatePassiveOfferOp
+ * @next StellarCreatePassiveSellOfferOp
  * @next StellarSetOptionsOp
  * @next StellarChangeTrustOp
  * @next StellarAllowTrustOp
@@ -177,7 +177,7 @@ message StellarManageBuyOfferOp {
  * @next StellarTxOpRequest
  * @next StellarSignedTx
  */
-message StellarCreatePassiveOfferOp {
+message StellarCreatePassiveSellOfferOp {
     optional string source_account = 1;             // (optional) source account address
     required StellarAsset selling_asset = 2;
     required StellarAsset buying_asset = 3;

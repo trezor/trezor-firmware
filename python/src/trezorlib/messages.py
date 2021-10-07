@@ -149,7 +149,7 @@ class MessageType(IntEnum):
     StellarPaymentOp = 211
     StellarPathPaymentStrictReceiveOp = 212
     StellarManageSellOfferOp = 213
-    StellarCreatePassiveOfferOp = 214
+    StellarCreatePassiveSellOfferOp = 214
     StellarSetOptionsOp = 215
     StellarChangeTrustOp = 216
     StellarAllowTrustOp = 217
@@ -6454,7 +6454,7 @@ class StellarManageBuyOfferOp(protobuf.MessageType):
         self.source_account = source_account
 
 
-class StellarCreatePassiveOfferOp(protobuf.MessageType):
+class StellarCreatePassiveSellOfferOp(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 214
     FIELDS = {
         1: protobuf.Field("source_account", "string", repeated=False, required=False),

@@ -231,7 +231,7 @@ enum MessageType {
     MessageType_StellarPaymentOp = 211 [(wire_in) = true];
     MessageType_StellarPathPaymentStrictReceiveOp = 212 [(wire_in) = true];
     MessageType_StellarManageSellOfferOp = 213 [(wire_in) = true];
-    MessageType_StellarCreatePassiveOfferOp = 214 [(wire_in) = true];
+    MessageType_StellarCreatePassiveSellOfferOp = 214 [(wire_in) = true];
     MessageType_StellarSetOptionsOp = 215 [(wire_in) = true];
     MessageType_StellarChangeTrustOp = 216 [(wire_in) = true];
     MessageType_StellarAllowTrustOp = 217 [(wire_in) = true];

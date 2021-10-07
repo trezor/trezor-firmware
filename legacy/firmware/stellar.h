@@ -65,8 +65,8 @@ bool stellar_confirmPathPaymentStrictSendOp(
     const StellarPathPaymentStrictSendOp *msg);
 bool stellar_confirmManageBuyOfferOp(const StellarManageBuyOfferOp *msg);
 bool stellar_confirmManageSellOfferOp(const StellarManageSellOfferOp *msg);
-bool stellar_confirmCreatePassiveOfferOp(
-    const StellarCreatePassiveOfferOp *msg);
+bool stellar_confirmCreatePassiveSellOfferOp(
+    const StellarCreatePassiveSellOfferOp *msg);
 bool stellar_confirmSetOptionsOp(const StellarSetOptionsOp *msg);
 bool stellar_confirmChangeTrustOp(const StellarChangeTrustOp *msg);
 bool stellar_confirmAllowTrustOp(const StellarAllowTrustOp *msg);

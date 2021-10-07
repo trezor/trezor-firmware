@@ -183,9 +183,9 @@ void fsm_msgStellarManageSellOfferOp(const StellarManageSellOfferOp *msg) {
   }
 }
 
-void fsm_msgStellarCreatePassiveOfferOp(
-    const StellarCreatePassiveOfferOp *msg) {
-  if (!stellar_confirmCreatePassiveOfferOp(msg)) return;
+void fsm_msgStellarCreatePassiveSellOfferOp(
+    const StellarCreatePassiveSellOfferOp *msg) {
+  if (!stellar_confirmCreatePassiveSellOfferOp(msg)) return;
 
   if (stellar_allOperationsConfirmed()) {
     RESP_INIT(StellarSignedTx);
