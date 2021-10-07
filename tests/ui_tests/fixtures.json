@@ -844,7 +844,7 @@
 "test_stellar.py::test_sign_tx[StellarChangeTrustOp-add]": "7a8d420121a13e34f6ca7ad224e01a3b189ceb8e8d104cf9ec9b329222670936",
 "test_stellar.py::test_sign_tx[StellarChangeTrustOp-delete]": "ec26e6883ba9405412674431e0ec07504b3f25682ce7d76ebd445b809194198a",
 "test_stellar.py::test_sign_tx[StellarCreateAccountOp]": "2582717c25974d2b3ee156624b00375148ff7fd12eeea73625a7c367fa610373",
-"test_stellar.py::test_sign_tx[StellarCreatePassiveOfferOp]": "6b0f0d2b746f98e2c85006ea7e2d5c49cd9277662e47f223138ff418066791e3",
+"test_stellar.py::test_sign_tx[StellarCreatePassiveSellOfferOp]": "6b0f0d2b746f98e2c85006ea7e2d5c49cd9277662e47f223138ff418066791e3",
 "test_stellar.py::test_sign_tx[StellarManageDataOp]": "8fbec6547a8f9d1f002181db0cbe57fe86abef8d365b1c06fd14292cd0b068a7",
 "test_stellar.py::test_sign_tx[StellarManageBuyOfferOp]": "fc57e1ca8b65588aa16cc3524d6dc0f01e094ad5d16a6f7e739a69c101b554bc",
 "test_stellar.py::test_sign_tx[StellarManageSellOfferOp]": "6ed84765b2ed46711be0ed1219d91c27e927119d352f37b2baf8c6501186bbce",

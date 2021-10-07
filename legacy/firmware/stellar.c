@@ -659,8 +659,8 @@ bool stellar_confirmManageSellOfferOp(const StellarManageSellOfferOp *msg) {
   return true;
 }
 
-bool stellar_confirmCreatePassiveOfferOp(
-    const StellarCreatePassiveOfferOp *msg) {
+bool stellar_confirmCreatePassiveSellOfferOp(
+    const StellarCreatePassiveSellOfferOp *msg) {
   if (!stellar_signing) return false;
 
   if (!stellar_confirmSourceAccount(msg->has_source_account,

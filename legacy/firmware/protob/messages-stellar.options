@@ -29,7 +29,7 @@ StellarManageBuyOfferOp.source_account                     max_size:57
 
 StellarManageSellOfferOp.source_account                     max_size:57
 
-StellarCreatePassiveOfferOp.source_account              max_size:57
+StellarCreatePassiveSellOfferOp.source_account              max_size:57
 
 StellarSetOptionsOp.source_account                      max_size:57
 StellarSetOptionsOp.inflation_destination_account       max_size:57

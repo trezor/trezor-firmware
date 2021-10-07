@@ -123,7 +123,7 @@ if not utils.BITCOIN_ONLY:
     StellarPaymentOp = 211
     StellarPathPaymentStrictReceiveOp = 212
     StellarManageSellOfferOp = 213
-    StellarCreatePassiveOfferOp = 214
+    StellarCreatePassiveSellOfferOp = 214
     StellarSetOptionsOp = 215
     StellarChangeTrustOp = 216
     StellarAllowTrustOp = 217
