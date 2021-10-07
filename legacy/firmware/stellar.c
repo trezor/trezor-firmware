@@ -289,7 +289,8 @@ bool stellar_confirmPaymentOp(const StellarPaymentOp *msg) {
   return true;
 }
 
-bool stellar_confirmPathPaymentOp(const StellarPathPaymentOp *msg) {
+bool stellar_confirmPathPaymentStrictReceiveOp(
+    const StellarPathPaymentStrictReceiveOp *msg) {
   if (!stellar_signing) return false;
 
   if (!stellar_confirmSourceAccount(msg->has_source_account,
@@ -387,7 +388,7 @@ bool stellar_confirmPathPaymentOp(const StellarPathPaymentOp *msg) {
   return true;
 }
 
-bool stellar_confirmManageOfferOp(const StellarManageOfferOp *msg) {
+bool stellar_confirmManageSellOfferOp(const StellarManageSellOfferOp *msg) {
   if (!stellar_signing) return false;
 
   if (!stellar_confirmSourceAccount(msg->has_source_account,

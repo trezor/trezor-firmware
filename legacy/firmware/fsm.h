@@ -118,8 +118,9 @@ void fsm_msgStellarGetAddress(const StellarGetAddress *msg);
 void fsm_msgStellarSignTx(const StellarSignTx *msg);
 void fsm_msgStellarPaymentOp(const StellarPaymentOp *msg);
 void fsm_msgStellarCreateAccountOp(const StellarCreateAccountOp *msg);
-void fsm_msgStellarPathPaymentOp(const StellarPathPaymentOp *msg);
-void fsm_msgStellarManageOfferOp(const StellarManageOfferOp *msg);
+void fsm_msgStellarPathPaymentStrictReceiveOp(
+    const StellarPathPaymentStrictReceiveOp *msg);
+void fsm_msgStellarManageSellOfferOp(const StellarManageSellOfferOp *msg);
 void fsm_msgStellarCreatePassiveOfferOp(const StellarCreatePassiveOfferOp *msg);
 void fsm_msgStellarSetOptionsOp(const StellarSetOptionsOp *msg);
 void fsm_msgStellarChangeTrustOp(const StellarChangeTrustOp *msg);

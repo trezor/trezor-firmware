@@ -1,0 +1,1 @@
+Stellar: rename StellarManageOfferOp to StellarManageSellOfferOp and StellarPathPaymentOp to StellarPathPaymentStrictReceiveOp.

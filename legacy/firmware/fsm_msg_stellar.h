@@ -109,8 +109,9 @@ void fsm_msgStellarPaymentOp(const StellarPaymentOp *msg) {
   }
 }
 
-void fsm_msgStellarPathPaymentOp(const StellarPathPaymentOp *msg) {
-  if (!stellar_confirmPathPaymentOp(msg)) return;
+void fsm_msgStellarPathPaymentStrictReceiveOp(
+    const StellarPathPaymentStrictReceiveOp *msg) {
+  if (!stellar_confirmPathPaymentStrictReceiveOp(msg)) return;
 
   if (stellar_allOperationsConfirmed()) {
     RESP_INIT(StellarSignedTx);
@@ -127,8 +128,8 @@ void fsm_msgStellarPathPaymentOp(const StellarPathPaymentOp *msg) {
   }
 }
 
-void fsm_msgStellarManageOfferOp(const StellarManageOfferOp *msg) {
-  if (!stellar_confirmManageOfferOp(msg)) return;
+void fsm_msgStellarManageSellOfferOp(const StellarManageSellOfferOp *msg) {
+  if (!stellar_confirmManageSellOfferOp(msg)) return;
 
   if (stellar_allOperationsConfirmed()) {
     RESP_INIT(StellarSignedTx);

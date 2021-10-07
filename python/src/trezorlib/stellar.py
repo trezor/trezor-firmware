@@ -128,7 +128,7 @@ def _read_operation(op: "Operation"):
             amount=_read_amount(op.amount),
         )
     if isinstance(op, PathPaymentStrictReceive):
-        operation = messages.StellarPathPaymentOp(
+        operation = messages.StellarPathPaymentStrictReceiveOp(
             source_account=source_account,
             send_asset=_read_asset(op.send_asset),
             send_max=_read_amount(op.send_max),
@@ -140,7 +140,7 @@ def _read_operation(op: "Operation"):
         return operation
     if isinstance(op, ManageSellOffer):
         price = _read_price(op.price)
-        return messages.StellarManageOfferOp(
+        return messages.StellarManageSellOfferOp(
             source_account=source_account,
             selling_asset=_read_asset(op.selling),
             buying_asset=_read_asset(op.buying),

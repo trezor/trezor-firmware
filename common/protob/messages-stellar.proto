@@ -74,8 +74,8 @@ message StellarSignTx {
  * Response: device is ready for client to send the next operation
  * @next StellarPaymentOp
  * @next StellarCreateAccountOp
- * @next StellarPathPaymentOp
- * @next StellarManageOfferOp
+ * @next StellarPathPaymentStrictReceiveOp
+ * @next StellarManageSellOfferOp
  * @next StellarCreatePassiveOfferOp
  * @next StellarSetOptionsOp
  * @next StellarChangeTrustOp
@@ -115,7 +115,7 @@ message StellarCreateAccountOp {
  * @next StellarTxOpRequest
  * @next StellarSignedTx
  */
-message StellarPathPaymentOp {
+message StellarPathPaymentStrictReceiveOp {
     optional string source_account = 1;         // (optional) source address
     required StellarAsset send_asset = 2;
     required sint64 send_max = 3;
@@ -130,7 +130,7 @@ message StellarPathPaymentOp {
  * @next StellarTxOpRequest
  * @next StellarSignedTx
  */
-message StellarManageOfferOp {
+message StellarManageSellOfferOp {
     optional string source_account = 1;             // (optional) source account address
     required StellarAsset selling_asset = 2;
     required StellarAsset buying_asset = 3;
