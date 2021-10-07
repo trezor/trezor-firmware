@@ -11,6 +11,7 @@ from trezor.messages import (
     StellarManageDataOp,
     StellarManageSellOfferOp,
     StellarPathPaymentStrictReceiveOp,
+    StellarPathPaymentStrictSendOp,
     StellarPaymentOp,
     StellarSetOptionsOp,
 )
@@ -209,6 +210,27 @@ async def confirm_path_payment_strict_receive_op(
         amount=format_amount(op.send_max, op.send_asset),
         description="Pay at most:",
         br_type="op_path_payment_strict_receive",
+    )
+    await confirm_asset_issuer(ctx, op.send_asset)
+
+
+async def confirm_path_payment_strict_send_op(
+    ctx: Context, op: StellarPathPaymentStrictSendOp
+) -> None:
+    await confirm_output(
+        ctx,
+        address=op.destination_account,
+        amount=format_amount(op.destination_min, op.destination_asset),
+        title="Path Pay at least",
+    )
+    await confirm_asset_issuer(ctx, op.destination_asset)
+    # confirm what the sender is using to pay
+    await confirm_amount(
+        ctx,
+        title="Debited amount",
+        amount=format_amount(op.send_amount, op.send_asset),
+        description="Pay:",
+        br_type="op_path_payment_strict_send",
     )
     await confirm_asset_issuer(ctx, op.send_asset)
 

@@ -35,6 +35,7 @@ try:
         NoneMemo,
         Operation,
         PathPaymentStrictReceive,
+        PathPaymentStrictSend,
         Payment,
         ReturnHashMemo,
         SetOptions,
@@ -237,6 +238,17 @@ def _read_operation(op: "Operation"):
             price_d=price.d,
             offer_id=op.offer_id,
         )
+    if isinstance(op, PathPaymentStrictSend):
+        operation = messages.StellarPathPaymentStrictSendOp(
+            source_account=source_account,
+            send_asset=_read_asset(op.send_asset),
+            send_amount=_read_amount(op.send_amount),
+            destination_account=op.destination.account_id,
+            destination_asset=_read_asset(op.dest_asset),
+            destination_min=_read_amount(op.dest_min),
+            paths=[_read_asset(asset) for asset in op.path],
+        )
+        return operation
     raise ValueError(f"Unknown operation type: {op.__class__.__name__}")
 
 

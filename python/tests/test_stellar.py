@@ -330,6 +330,7 @@ def test_path_payment_strict_receive():
     assert operations[0].destination_account == destination
     assert operations[0].send_asset.type == messages.StellarAssetType.NATIVE
     assert operations[0].send_max == 500111000
+    assert operations[0].destination_amount == 1000000000
     assert operations[0].destination_asset.type == messages.StellarAssetType.ALPHANUM4
     assert operations[0].destination_asset.code == dest_code
     assert operations[0].destination_asset.issuer == dest_issuer
@@ -782,3 +783,57 @@ def test_manage_buy_offer_update_offer():
     assert operations[0].price_n == 1
     assert operations[0].price_d == 2
     assert operations[0].offer_id == offer_id
+
+
+def test_path_payment_strict_send():
+    tx = make_default_tx()
+    destination = "GDNSSYSCSSJ76FER5WEEXME5G4MTCUBKDRQSKOYP36KUKVDB2VCMERS6"
+    send_amount = "50.0112"
+    dest_min = "120"
+    send_code = "XLM"
+    send_issuer = None
+    dest_code = "USD"
+    dest_issuer = "GCSJ7MFIIGIRMAS4R3VT5FIFIAOXNMGDI5HPYTWS5X7HH74FSJ6STSGF"
+    operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
+    path_asset1 = Asset(
+        "JPY", "GD6PV7DXQJX7AGVXFQ2MTCLTCH6LR3E6IO2EO2YDZD7F7IOZZCCB5DSQ"
+    )
+    path_asset2 = Asset(
+        "BANANA", "GC7EKO37HNSKQ3V6RZ274EO7SFOWASQRHLX3OR5FIZK6UMV6LIEDXHGZ"
+    )
+
+    envelope = (
+        tx
+        .append_path_payment_strict_send_op(
+            destination=destination,
+            send_code=send_code,
+            send_issuer=send_issuer,
+            send_amount=send_amount,
+            dest_code=dest_code,
+            dest_issuer=dest_issuer,
+            dest_min=dest_min,
+            path=[path_asset1, path_asset2],
+            source=operation_source,
+        )
+        .build()
+    )
+
+    tx, operations = stellar.from_envelope(envelope)
+    assert len(operations) == 1
+
+    assert isinstance(operations[0], messages.StellarPathPaymentStrictSendOp)
+    assert operations[0].source_account == operation_source
+    assert operations[0].destination_account == destination
+    assert operations[0].send_asset.type == messages.StellarAssetType.NATIVE
+    assert operations[0].send_amount == 500112000
+    assert operations[0].destination_min == 1200000000
+    assert operations[0].destination_asset.type == messages.StellarAssetType.ALPHANUM4
+    assert operations[0].destination_asset.code == dest_code
+    assert operations[0].destination_asset.issuer == dest_issuer
+    assert len(operations[0].paths) == 2
+    assert operations[0].paths[0].type == messages.StellarAssetType.ALPHANUM4
+    assert operations[0].paths[0].code == path_asset1.code
+    assert operations[0].paths[0].issuer == path_asset1.issuer
+    assert operations[0].paths[1].type == messages.StellarAssetType.ALPHANUM12
+    assert operations[0].paths[1].code == path_asset2.code
+    assert operations[0].paths[1].issuer == path_asset2.issuer

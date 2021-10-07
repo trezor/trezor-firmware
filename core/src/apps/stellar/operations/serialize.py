@@ -11,6 +11,7 @@ from trezor.messages import (
     StellarManageDataOp,
     StellarManageSellOfferOp,
     StellarPathPaymentStrictReceiveOp,
+    StellarPathPaymentStrictSendOp,
     StellarPaymentOp,
     StellarSetOptionsOp,
 )
@@ -94,6 +95,20 @@ def write_path_payment_strict_receive_op(
 
     _write_asset(w, msg.destination_asset)
     writers.write_uint64(w, msg.destination_amount)
+    writers.write_uint32(w, len(msg.paths))
+    for p in msg.paths:
+        _write_asset(w, p)
+
+
+def write_path_payment_strict_send_op(
+    w: Writer, msg: StellarPathPaymentStrictSendOp
+) -> None:
+    _write_asset(w, msg.send_asset)
+    writers.write_uint64(w, msg.send_amount)
+    writers.write_pubkey(w, msg.destination_account)
+
+    _write_asset(w, msg.destination_asset)
+    writers.write_uint64(w, msg.destination_min)
     writers.write_uint32(w, len(msg.paths))
     for p in msg.paths:
         _write_asset(w, p)

@@ -28,6 +28,7 @@ Stellar transaction is composed of one or more operations. We support all [opera
 - Manage Buy Offer
 - Manage Sell Offer
 - Path Payment Strict Receive
+- Path Payment Strict Send
 - Payment
 - Set Options
 

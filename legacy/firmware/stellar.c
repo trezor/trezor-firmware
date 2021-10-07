@@ -356,9 +356,9 @@ bool stellar_confirmPathPaymentStrictReceiveOp(
   strlcpy(str_source_amount, _("Pay Using "), sizeof(str_source_amount));
   strlcat(str_source_amount, str_source_number, sizeof(str_source_amount));
 
-  stellar_layoutTransactionDialog(str_source_amount, str_send_asset, NULL,
-                                  _("This is the amount debited"),
-                                  _("from your account."));
+  stellar_layoutTransactionDialog(str_source_amount, str_send_asset,
+                                  _("This is the max"),
+                                  _("amount debited from your"), _("account."));
   if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
     stellar_signingAbort(_("User canceled"));
     return false;
@@ -376,6 +376,104 @@ bool stellar_confirmPathPaymentStrictReceiveOp(
   stellar_hashupdate_asset(&(msg->destination_asset));
   // destination amount
   stellar_hashupdate_uint64(msg->destination_amount);
+
+  // paths are stored as an array so hash the number of elements as a uint32
+  stellar_hashupdate_uint32(msg->paths_count);
+  for (uint8_t i = 0; i < msg->paths_count; i++) {
+    stellar_hashupdate_asset(&(msg->paths[i]));
+  }
+
+  // At this point, the operation is confirmed
+  stellar_activeTx.confirmed_operations++;
+  return true;
+}
+
+bool stellar_confirmPathPaymentStrictSendOp(
+    const StellarPathPaymentStrictSendOp *msg) {
+  if (!stellar_signing) return false;
+
+  if (!stellar_confirmSourceAccount(msg->has_source_account,
+                                    msg->source_account)) {
+    stellar_signingAbort(_("Source account error"));
+    return false;
+  }
+
+  // Hash: operation type
+  stellar_hashupdate_uint32(13);
+
+  // Validate destination account and convert to bytes
+  uint8_t destination_account_bytes[STELLAR_KEY_SIZE] = {0};
+  if (!stellar_getAddressBytes(msg->destination_account,
+                               destination_account_bytes)) {
+    stellar_signingAbort(_("Invalid destination account"));
+    return false;
+  }
+  const char **str_dest_rows =
+      stellar_lineBreakAddress(destination_account_bytes);
+
+  // To: G...
+  char str_to[32] = {0};
+  strlcpy(str_to, _("To: "), sizeof(str_to));
+  strlcat(str_to, str_dest_rows[0], sizeof(str_to));
+
+  char str_send_asset[32] = {0};
+  char str_dest_asset[32] = {0};
+  stellar_format_asset(&(msg->send_asset), str_send_asset,
+                       sizeof(str_send_asset));
+  stellar_format_asset(&(msg->destination_asset), str_dest_asset,
+                       sizeof(str_dest_asset));
+
+  char str_pay_amount[32] = {0};
+  char str_amount[32] = {0};
+  stellar_format_stroops(msg->destination_min, str_amount, sizeof(str_amount));
+
+  strlcat(str_pay_amount, str_amount, sizeof(str_pay_amount));
+
+  // Confirm what the receiver will get
+  /*
+  Path Pay at least
+  100.0000000
+  JPY (G1234ABCDEF)
+  To: G....
+  ....
+  ....
+  */
+  stellar_layoutTransactionDialog(_("Path Pay at least"), str_pay_amount,
+                                  str_dest_asset, str_to, str_dest_rows[1]);
+  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    stellar_signingAbort(_("User canceled"));
+    return false;
+  }
+
+  // Confirm what the sender is using to pay
+  char str_source_amount[32] = {0};
+  char str_source_number[32] = {0};
+  stellar_format_stroops(msg->send_amount, str_source_number,
+                         sizeof(str_source_number));
+
+  strlcpy(str_source_amount, _("Pay Using "), sizeof(str_source_amount));
+  strlcat(str_source_amount, str_source_number, sizeof(str_source_amount));
+
+  stellar_layoutTransactionDialog(
+      str_dest_rows[2], str_source_amount, str_send_asset,
+      _("This is the amount debited"), _("from your account."));
+  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    stellar_signingAbort(_("User canceled"));
+    return false;
+  }
+  // Note: no confirmation for intermediate steps since they don't impact the
+  // user
+
+  // Hash send asset
+  stellar_hashupdate_asset(&(msg->send_asset));
+  // send amount (signed vs. unsigned doesn't matter wrt hashing)
+  stellar_hashupdate_uint64(msg->send_amount);
+  // destination account
+  stellar_hashupdate_address(destination_account_bytes);
+  // destination asset
+  stellar_hashupdate_asset(&(msg->destination_asset));
+  // destination amount
+  stellar_hashupdate_uint64(msg->destination_min);
 
   // paths are stored as an array so hash the number of elements as a uint32
   stellar_hashupdate_uint32(msg->paths_count);

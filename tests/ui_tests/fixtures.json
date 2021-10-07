@@ -849,6 +849,7 @@
 "test_stellar.py::test_sign_tx[StellarManageBuyOfferOp]": "fc57e1ca8b65588aa16cc3524d6dc0f01e094ad5d16a6f7e739a69c101b554bc",
 "test_stellar.py::test_sign_tx[StellarManageSellOfferOp]": "6ed84765b2ed46711be0ed1219d91c27e927119d352f37b2baf8c6501186bbce",
 "test_stellar.py::test_sign_tx[StellarPathPaymentStrictReceiveOp]": "58f3bfaece0706bc172d6e6564b728ec0b7f8e2629d8c64dc60672786586076d",
+"test_stellar.py::test_sign_tx[StellarPathPaymentStrictSendOp]": "fdd36a59520317d514e03f535dfeb93339af0f7ea5ee07c556bee3c8784c94ed",
 "test_stellar.py::test_sign_tx[StellarPaymentOp-asset12]": "1d8e9d5d65420a259f7e2deef1efaf0ce5be966a0f1e5b8e95b832f176f00de2",
 "test_stellar.py::test_sign_tx[StellarPaymentOp-asset4]": "0de0b815dad5d348a3b9d06e37da94800363e5de8e6ca9cd0f84e5070f7e1b22",
 "test_stellar.py::test_sign_tx[StellarPaymentOp-native_asset]": "b2015b9e0f9ff60e2ea4fca2942e97b70a320386c2043fb36acde4a830272098",

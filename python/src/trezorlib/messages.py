@@ -157,6 +157,7 @@ class MessageType(IntEnum):
     StellarManageDataOp = 220
     StellarBumpSequenceOp = 221
     StellarManageBuyOfferOp = 222
+    StellarPathPaymentStrictSendOp = 223
     StellarSignedTx = 230
     CardanoSignTx = 303
     CardanoGetPublicKey = 305
@@ -6354,6 +6355,38 @@ class StellarPathPaymentStrictReceiveOp(protobuf.MessageType):
         self.destination_account = destination_account
         self.destination_asset = destination_asset
         self.destination_amount = destination_amount
+        self.source_account = source_account
+
+
+class StellarPathPaymentStrictSendOp(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 223
+    FIELDS = {
+        1: protobuf.Field("source_account", "string", repeated=False, required=False),
+        2: protobuf.Field("send_asset", "StellarAsset", repeated=False, required=True),
+        3: protobuf.Field("send_amount", "sint64", repeated=False, required=True),
+        4: protobuf.Field("destination_account", "string", repeated=False, required=True),
+        5: protobuf.Field("destination_asset", "StellarAsset", repeated=False, required=True),
+        6: protobuf.Field("destination_min", "sint64", repeated=False, required=True),
+        7: protobuf.Field("paths", "StellarAsset", repeated=True, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        send_asset: "StellarAsset",
+        send_amount: "int",
+        destination_account: "str",
+        destination_asset: "StellarAsset",
+        destination_min: "int",
+        paths: Optional[List["StellarAsset"]] = None,
+        source_account: Optional["str"] = None,
+    ) -> None:
+        self.paths = paths if paths is not None else []
+        self.send_asset = send_asset
+        self.send_amount = send_amount
+        self.destination_account = destination_account
+        self.destination_asset = destination_asset
+        self.destination_min = destination_min
         self.source_account = source_account
 
 

@@ -1,1 +1,1 @@
-Stellar: add support for StellarManageBuyOfferOp.
+Stellar: add support for StellarManageBuyOfferOp and StellarPathPaymentStrictSendOp.
