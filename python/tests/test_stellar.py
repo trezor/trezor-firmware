@@ -712,3 +712,73 @@ def test_bump_sequence():
     assert isinstance(operations[0], messages.StellarBumpSequenceOp)
     assert operations[0].source_account == operation_source
     assert operations[0].bump_to == bump_to
+
+
+def test_manage_buy_offer_new_offer():
+    tx = make_default_tx()
+    price = "0.5"
+    amount = "50.0111"
+    selling_code = "XLM"
+    selling_issuer = None
+    buying_code = "USD"
+    buying_issuer = "GCSJ7MFIIGIRMAS4R3VT5FIFIAOXNMGDI5HPYTWS5X7HH74FSJ6STSGF"
+    operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
+
+    envelope = tx.append_manage_buy_offer_op(
+        selling_code=selling_code,
+        selling_issuer=selling_issuer,
+        buying_code=buying_code,
+        buying_issuer=buying_issuer,
+        amount=amount,
+        price=price,
+        source=operation_source,
+    ).build()
+
+    tx, operations = stellar.from_envelope(envelope)
+    assert len(operations) == 1
+    assert isinstance(operations[0], messages.StellarManageBuyOfferOp)
+    assert operations[0].source_account == operation_source
+    assert operations[0].selling_asset.type == messages.StellarAssetType.NATIVE
+    assert operations[0].buying_asset.type == messages.StellarAssetType.ALPHANUM4
+    assert operations[0].buying_asset.code == buying_code
+    assert operations[0].buying_asset.issuer == buying_issuer
+    assert operations[0].amount == 500111000
+    assert operations[0].price_n == 1
+    assert operations[0].price_d == 2
+    assert operations[0].offer_id == 0  # indicates a new offer
+
+
+def test_manage_buy_offer_update_offer():
+    tx = make_default_tx()
+    price = "0.5"
+    amount = "50.0111"
+    selling_code = "XLM"
+    selling_issuer = None
+    buying_code = "USD"
+    buying_issuer = "GCSJ7MFIIGIRMAS4R3VT5FIFIAOXNMGDI5HPYTWS5X7HH74FSJ6STSGF"
+    offer_id = 12345
+    operation_source = "GAEB4MRKRCONK4J7MVQXAHTNDPAECUCCCNE7YC5CKM34U3OJ673A4D6V"
+
+    envelope = tx.append_manage_buy_offer_op(
+        selling_code=selling_code,
+        selling_issuer=selling_issuer,
+        buying_code=buying_code,
+        buying_issuer=buying_issuer,
+        amount=amount,
+        price=price,
+        offer_id=offer_id,
+        source=operation_source,
+    ).build()
+
+    tx, operations = stellar.from_envelope(envelope)
+    assert len(operations) == 1
+    assert isinstance(operations[0], messages.StellarManageBuyOfferOp)
+    assert operations[0].source_account == operation_source
+    assert operations[0].selling_asset.type == messages.StellarAssetType.NATIVE
+    assert operations[0].buying_asset.type == messages.StellarAssetType.ALPHANUM4
+    assert operations[0].buying_asset.code == buying_code
+    assert operations[0].buying_asset.issuer == buying_issuer
+    assert operations[0].amount == 500111000
+    assert operations[0].price_n == 1
+    assert operations[0].price_d == 2
+    assert operations[0].offer_id == offer_id

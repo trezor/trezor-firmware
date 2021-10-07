@@ -43,6 +43,7 @@ try:
         TrustLineEntryFlag,
         Price,
         Network,
+        ManageBuyOffer,
     )
     from stellar_sdk.xdr.signer_key_type import SignerKeyType
 
@@ -224,6 +225,17 @@ def _read_operation(op: "Operation"):
     if isinstance(op, BumpSequence):
         return messages.StellarBumpSequenceOp(
             source_account=source_account, bump_to=op.bump_to
+        )
+    if isinstance(op, ManageBuyOffer):
+        price = _read_price(op.price)
+        return messages.StellarManageBuyOfferOp(
+            source_account=source_account,
+            selling_asset=_read_asset(op.selling),
+            buying_asset=_read_asset(op.buying),
+            amount=_read_amount(op.amount),
+            price_n=price.n,
+            price_d=price.d,
+            offer_id=op.offer_id,
         )
     raise ValueError(f"Unknown operation type: {op.__class__.__name__}")
 

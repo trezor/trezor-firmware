@@ -7,6 +7,7 @@ from trezor.messages import (
     StellarChangeTrustOp,
     StellarCreateAccountOp,
     StellarCreatePassiveOfferOp,
+    StellarManageBuyOfferOp,
     StellarManageDataOp,
     StellarManageSellOfferOp,
     StellarPathPaymentStrictReceiveOp,
@@ -65,10 +66,20 @@ def write_manage_data_op(w: Writer, msg: StellarManageDataOp) -> None:
         writers.write_string(w, msg.value)
 
 
+def write_manage_buy_offer_op(w: Writer, msg: StellarManageBuyOfferOp) -> None:
+    _write_manage_offer_op_common(w, msg)
+
+
 def write_manage_sell_offer_op(w: Writer, msg: StellarManageSellOfferOp) -> None:
+    _write_manage_offer_op_common(w, msg)
+
+
+def _write_manage_offer_op_common(
+    w: Writer, msg: StellarManageSellOfferOp | StellarManageBuyOfferOp
+) -> None:
     _write_asset(w, msg.selling_asset)
     _write_asset(w, msg.buying_asset)
-    writers.write_uint64(w, msg.amount)  # amount to sell
+    writers.write_uint64(w, msg.amount)  # amount to sell / buy
     writers.write_uint32(w, msg.price_n)  # numerator
     writers.write_uint32(w, msg.price_d)  # denominator
     writers.write_uint64(w, msg.offer_id)

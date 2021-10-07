@@ -336,6 +336,45 @@
       }
     },
     {
+      "name": "StellarManageBuyOfferOp",
+      "parameters": {
+        "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAAGQAAAAAAAAD6AAAAAEAAAAAG4J3zQAAAABd5CqEAAAAAAAAAAEAAAAAAAAADAAAAAJBQkNERUZHSElKS0wAAAAAKYSWAsIOWDZfEjwS2HocpFUNEM0hsK4OGNROPlb9ahUAAAABWAAAAAAAAABwi6oxX35cFm2EtGS/s4/WJXj+OtJyJ+dsy7ehecRRIQAAAAAdzxaYAAAAAwAAAAQAAAAAAAAFOQAAAAAAAAAA",
+        "address_n": "m/44'/148'/0'",
+        "network_passphrase": "Test SDF Network ; September 2015",
+        "tx": {
+          "source_account": "GAXSFOOGF4ELO5HT5PTN23T5XE6D5QWL3YBHSVQ2HWOFEJNYYMRJENBV",
+          "fee": 100,
+          "sequence_number": 1000,
+          "timebounds_start": 461535181,
+          "timebounds_end": 1575234180,
+          "memo_type": "NONE"
+        },
+        "operations": [
+          {
+            "_message_type": "StellarManageBuyOfferOp",
+            "selling_asset": {
+              "type": "ALPHANUM12",
+              "code": "ABCDEFGHIJKL",
+              "issuer": "GAUYJFQCYIHFQNS7CI6BFWD2DSSFKDIQZUQ3BLQODDKE4PSW7VVBKENC"
+            },
+            "buying_asset": {
+              "type": "ALPHANUM4",
+              "code": "X",
+              "issuer": "GBYIXKRRL57FYFTNQS2GJP5TR7LCK6H6HLJHEJ7HNTF3PILZYRISDLNQ"
+            },
+            "amount": 500111000,
+            "price_n": 3,
+            "price_d": 4,
+            "offer_id": 1337
+          }
+        ]
+      },
+      "result": {
+        "public_key": "2f22b9c62f08b774f3ebe6dd6e7db93c3ec2cbde0279561a3d9c5225b8c32292",
+        "signature": "sDQuKEm7j6Lsuw+QUTrotSloZiF+8LrXsuoLCBadewWpArO8+qmMgonrG3bJfaZ4dYdD8WcpfP5LNLOfU+lDBA=="
+      }
+    },
+    {
       "name": "StellarManageSellOfferOp",
       "parameters": {
         "xdr": "AAAAAgAAAAAvIrnGLwi3dPPr5t1ufbk8PsLL3gJ5Vho9nFIluMMikgAAAGQAAAAAAAAD6AAAAAEAAAAAG4J3zQAAAABd5CqEAAAAAAAAAAEAAAAAAAAAAwAAAAJBQkNERUZHSElKS0wAAAAAKYSWAsIOWDZfEjwS2HocpFUNEM0hsK4OGNROPlb9ahUAAAABWAAAAAAAAAAphJYCwg5YNl8SPBLYehykVQ0QzSGwrg4Y1E4+Vv1qFQAAAAAdzxaYAAAAAwAAAAQAAAAAAAAFOQAAAAAAAAAA",
