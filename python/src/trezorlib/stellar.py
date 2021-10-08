@@ -271,7 +271,7 @@ def _read_amount(amount: str) -> int:
 
 
 def _read_price(price: Union["Price", str, Decimal]) -> "Price":
-    # In the coming stellar-sdk 5.x, the type of price must be Price,
+    # In the coming stellar-sdk 6.x, the type of price must be Price,
     # at that time we can remove this function
     if isinstance(price, Price):
         return price
