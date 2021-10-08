@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Something does not work as expected.
 title: ''
 labels: bug
 assignees: ''
@@ -14,10 +14,10 @@ A clear and concise description of what the bug is.
 Describe firmware version and revision you are using when encountering the bug.
 
 **Desktop/smartphone setup (please complete the following information):**
- - Wallet software: [e.g. Trezor Wallet, Trezor Beta Wallet, Trezor Suite, Electrum]
+ - Wallet software: [e.g. Trezor Suite, Electrum]
  - OS: [e.g. Windows, macOS, Linux, Android]
- - Browser [e.g. chrome, firefox, safari]
- - Version [e.g. 42]
+ - Browser [e.g. Chrome, Firefox, Safari]
+ - Version [e.g. 90.0.2]
 
 **To Reproduce**
 Steps to reproduce the behavior:
