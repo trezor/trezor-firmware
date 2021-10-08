@@ -45,6 +45,7 @@ try:
         Price,
         Network,
         ManageBuyOffer,
+        MuxedAccount,
     )
     from stellar_sdk.xdr.signer_key_type import SignerKeyType
 
@@ -92,6 +93,7 @@ def from_envelope(envelope: "TransactionEnvelope"):
     else:
         raise ValueError("Unsupported memo type")
 
+    _raise_if_account_muxed_id_exists(parsed_tx.source)
     tx = messages.StellarSignTx(
         source_account=parsed_tx.source.account_id,
         fee=parsed_tx.fee,
@@ -113,6 +115,7 @@ def from_envelope(envelope: "TransactionEnvelope"):
 def _read_operation(op: "Operation"):
     # TODO: Let's add muxed account support later.
     if op.source:
+        _raise_if_account_muxed_id_exists(op.source)
         source_account = op.source.account_id
     else:
         source_account = None
@@ -123,6 +126,7 @@ def _read_operation(op: "Operation"):
             starting_balance=_read_amount(op.starting_balance),
         )
     if isinstance(op, Payment):
+        _raise_if_account_muxed_id_exists(op.destination)
         return messages.StellarPaymentOp(
             source_account=source_account,
             destination_account=op.destination.account_id,
@@ -130,6 +134,7 @@ def _read_operation(op: "Operation"):
             amount=_read_amount(op.amount),
         )
     if isinstance(op, PathPaymentStrictReceive):
+        _raise_if_account_muxed_id_exists(op.destination)
         operation = messages.StellarPathPaymentStrictReceiveOp(
             source_account=source_account,
             send_asset=_read_asset(op.send_asset),
@@ -212,6 +217,7 @@ def _read_operation(op: "Operation"):
             is_authorized=bool(op.authorize.value),
         )
     if isinstance(op, AccountMerge):
+        _raise_if_account_muxed_id_exists(op.destination)
         return messages.StellarAccountMergeOp(
             source_account=source_account,
             destination_account=op.destination.account_id,
@@ -239,6 +245,7 @@ def _read_operation(op: "Operation"):
             offer_id=op.offer_id,
         )
     if isinstance(op, PathPaymentStrictSend):
+        _raise_if_account_muxed_id_exists(op.destination)
         operation = messages.StellarPathPaymentStrictSendOp(
             source_account=source_account,
             send_asset=_read_asset(op.send_asset),
@@ -250,6 +257,13 @@ def _read_operation(op: "Operation"):
         )
         return operation
     raise ValueError(f"Unknown operation type: {op.__class__.__name__}")
+
+
+def _raise_if_account_muxed_id_exists(account: "MuxedAccount"):
+    # Currently Trezor firmware does not support MuxedAccount,
+    # so we throw an exception here.
+    if account.account_muxed_id is not None:
+        raise ValueError("MuxedAccount is not supported")
 
 
 def _read_amount(amount: str) -> int:
