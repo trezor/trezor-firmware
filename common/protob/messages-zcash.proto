@@ -11,10 +11,7 @@ option java_outer_classname = "TrezorMessageZcash";
  * @next DebugZcashDiagResponse
  */
 message DebugZcashDiagRequest {
-    enum DiagType {
-        Hello = 0;
-    }
-    optional DiagType type = 1;
+    optional uint64 ins = 1; // TODO: How to access protobuff enum from Rust?
     optional bytes data = 2;
 }
 

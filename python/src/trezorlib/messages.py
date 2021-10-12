@@ -479,10 +479,6 @@ class TezosBallotType(IntEnum):
     Pass = 2
 
 
-class DiagType(IntEnum):
-    Hello = 0
-
-
 class BinanceGetAddress(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 700
     FIELDS = {
@@ -6765,17 +6761,17 @@ class WebAuthnCredential(protobuf.MessageType):
 class DebugZcashDiagRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 900
     FIELDS = {
-        1: protobuf.Field("type", "DiagType", repeated=False, required=False),
+        1: protobuf.Field("ins", "uint64", repeated=False, required=False),
         2: protobuf.Field("data", "bytes", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
-        type: Optional["DiagType"] = None,
+        ins: Optional["int"] = None,
         data: Optional["bytes"] = None,
     ) -> None:
-        self.type = type
+        self.ins = ins
         self.data = data
 
 
