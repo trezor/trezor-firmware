@@ -31,6 +31,8 @@ from .helpers.utils import (
     format_asset_fingerprint,
     format_key_hash,
     format_optional_int,
+    format_output_datum_hash,
+    format_script_data_hash,
     format_script_hash,
     format_stake_pool_id,
     to_account_path,
@@ -328,6 +330,34 @@ async def show_warning_tx_output_contains_tokens(ctx: wire.Context) -> None:
         title="Confirm transaction",
         content="The following\ntransaction output\ncontains tokens.",
         larger_vspace=True,
+        br_code=ButtonRequestType.Other,
+    )
+
+
+async def show_warning_tx_output_contains_datum_hash(
+    ctx: wire.Context, datum_hash: bytes
+) -> None:
+    await confirm_properties(
+        ctx,
+        "confirm_datum_hash",
+        title="Confirm transaction",
+        props=[
+            (
+                "The following transaction output contains datum hash:",
+                format_output_datum_hash(datum_hash),
+            ),
+            ("\nContinue?", None),
+        ],
+        br_code=ButtonRequestType.Other,
+    )
+
+
+async def show_warning_tx_output_no_datum_hash(ctx: wire.Context) -> None:
+    await confirm_metadata(
+        ctx,
+        "confirm_no_datum_hash",
+        title="Confirm transaction",
+        content="The following transaction output contains a script address, but does not contain a datum hash.",
         br_code=ButtonRequestType.Other,
     )
 
@@ -650,6 +680,16 @@ async def show_warning_tx_network_unverifiable(ctx: wire.Context) -> None:
         title="Warning",
         content="Transaction has no outputs, network cannot be verified.",
         larger_vspace=True,
+        br_code=ButtonRequestType.Other,
+    )
+
+
+async def confirm_script_data_hash(ctx: wire.Context, script_data_hash: bytes) -> None:
+    await confirm_properties(
+        ctx,
+        "confirm_script_data_hash",
+        title="Confirm transaction",
+        props=[("Script data hash:", format_script_data_hash(script_data_hash))],
         br_code=ButtonRequestType.Other,
     )
 

@@ -172,20 +172,19 @@ def parse_output(output: dict) -> OutputWithAssetGroups:
     if not (contains_address or contains_address_type):
         raise ValueError(INCOMPLETE_OUTPUT_ERROR_MESSAGE)
 
-    address = None
+    address = output.get("address")
+
     address_parameters = None
-    token_bundle = []
-
-    if contains_address:
-        address = output["address"]
-
     if contains_address_type:
         address_parameters = _parse_address_parameters(
             output, INCOMPLETE_OUTPUT_ERROR_MESSAGE
         )
 
+    token_bundle = []
     if "token_bundle" in output:
         token_bundle = _parse_token_bundle(output["token_bundle"], is_mint=False)
+
+    datum_hash = parse_optional_bytes(output.get("datum_hash"))
 
     return (
         messages.CardanoTxOutput(
@@ -193,6 +192,7 @@ def parse_output(output: dict) -> OutputWithAssetGroups:
             address_parameters=address_parameters,
             amount=int(output["amount"]),
             asset_groups_count=len(token_bundle),
+            datum_hash=datum_hash,
         ),
         token_bundle,
     )
@@ -537,6 +537,10 @@ def parse_mint(mint: Iterable[dict]) -> List[AssetGroupWithTokens]:
     return _parse_token_bundle(mint, is_mint=True)
 
 
+def parse_script_data_hash(script_data_hash: Optional[str]) -> Optional[bytes]:
+    return parse_optional_bytes(script_data_hash)
+
+
 def parse_additional_witness_request(
     additional_witness_request: dict,
 ) -> Path:
@@ -688,6 +692,7 @@ def sign_tx(
     network_id: int = NETWORK_IDS["mainnet"],
     auxiliary_data: Optional[messages.CardanoTxAuxiliaryData] = None,
     mint: Sequence[AssetGroupWithTokens] = (),
+    script_data_hash: Optional[bytes] = None,
     additional_witness_requests: Sequence[Path] = (),
     derivation_type: messages.CardanoDerivationType = messages.CardanoDerivationType.ICARUS,
     include_network_id: bool = False,
@@ -712,6 +717,7 @@ def sign_tx(
             network_id=network_id,
             has_auxiliary_data=auxiliary_data is not None,
             minting_asset_groups_count=len(mint),
+            script_data_hash=script_data_hash,
             witness_requests_count=len(witness_requests),
             derivation_type=derivation_type,
             include_network_id=include_network_id,

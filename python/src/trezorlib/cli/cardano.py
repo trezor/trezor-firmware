@@ -87,6 +87,9 @@ def sign_tx(
     ]
     auxiliary_data = cardano.parse_auxiliary_data(transaction.get("auxiliary_data"))
     mint = cardano.parse_mint(transaction.get("mint", ()))
+    script_data_hash = cardano.parse_script_data_hash(
+        transaction.get("script_data_hash")
+    )
     additional_witness_requests = [
         cardano.parse_additional_witness_request(p)
         for p in transaction["additional_witness_requests"]
@@ -107,6 +110,7 @@ def sign_tx(
         network_id,
         auxiliary_data,
         mint,
+        script_data_hash,
         additional_witness_requests,
         derivation_type=derivation_type,
         include_network_id=include_network_id,

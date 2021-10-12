@@ -35,9 +35,11 @@ from apps.common import cbor, safety_checks
 
 from . import seed
 from .address import (
+    ADDRESS_TYPES_PAYMENT_SCRIPT,
     derive_address_bytes,
     derive_human_readable_address,
     get_address_bytes_unsafe,
+    get_address_type,
     validate_output_address,
     validate_output_address_parameters,
 )
@@ -59,6 +61,8 @@ from .certificates import (
 )
 from .helpers import (
     INVALID_OUTPUT,
+    INVALID_OUTPUT_DATUM_HASH,
+    INVALID_SCRIPT_DATA_HASH,
     INVALID_STAKE_POOL_REGISTRATION_TX_STRUCTURE,
     INVALID_STAKEPOOL_REGISTRATION_TX_WITNESSES,
     INVALID_TOKEN_BUNDLE_MINT,
@@ -67,6 +71,8 @@ from .helpers import (
     INVALID_WITHDRAWAL,
     INVALID_WITNESS_REQUEST,
     LOVELACE_MAX_SUPPLY,
+    OUTPUT_DATUM_HASH_SIZE,
+    SCRIPT_DATA_HASH_SIZE,
     network_ids,
     protocol_magics,
 )
@@ -87,6 +93,7 @@ from .helpers.paths import (
 from .helpers.utils import derive_public_key, validate_stake_credential
 from .layout import (
     confirm_certificate,
+    confirm_script_data_hash,
     confirm_sending,
     confirm_sending_token,
     confirm_stake_pool_metadata,
@@ -102,7 +109,9 @@ from .layout import (
     show_warning_path,
     show_warning_tx_contains_mint,
     show_warning_tx_network_unverifiable,
+    show_warning_tx_output_contains_datum_hash,
     show_warning_tx_output_contains_tokens,
+    show_warning_tx_output_no_datum_hash,
 )
 from .seed import is_byron_path, is_multisig_path, is_shelley_path
 
@@ -124,6 +133,7 @@ TX_BODY_KEY_WITHDRAWALS = const(5)
 TX_BODY_KEY_AUXILIARY_DATA = const(7)
 TX_BODY_KEY_VALIDITY_INTERVAL_START = const(8)
 TX_BODY_KEY_MINT = const(9)
+TX_BODY_KEY_SCRIPT_DATA_HASH = const(11)
 TX_BODY_KEY_NETWORK_ID = const(15)
 
 POOL_REGISTRATION_CERTIFICATE_ITEMS_COUNT = 10
@@ -147,6 +157,7 @@ async def sign_tx(
             msg.validity_interval_start is not None,
             msg.minting_asset_groups_count > 0,
             msg.include_network_id,
+            msg.script_data_hash is not None,
         )
     )
 
@@ -201,6 +212,12 @@ async def _validate_tx_signing_request(
         if not is_network_id_verifiable:
             await show_warning_tx_network_unverifiable(ctx)
     else:
+        raise INVALID_TX_SIGNING_REQUEST
+
+    if msg.script_data_hash is not None and msg.signing_mode not in (
+        CardanoTxSigningMode.ORDINARY_TRANSACTION,
+        CardanoTxSigningMode.MULTISIG_TRANSACTION,
+    ):
         raise INVALID_TX_SIGNING_REQUEST
 
     return is_network_id_verifiable
@@ -284,6 +301,9 @@ async def _process_transaction(
         with tx_dict.add(TX_BODY_KEY_MINT, minting_dict):
             await _process_minting(ctx, minting_dict)
 
+    if msg.script_data_hash is not None:
+        await _process_script_data_hash(ctx, tx_dict, msg.script_data_hash)
+
     if msg.include_network_id:
         tx_dict.add(TX_BODY_KEY_NETWORK_ID, msg.network_id)
 
@@ -360,13 +380,15 @@ async def _process_outputs(
             keychain, protocol_magic, network_id, output
         )
 
-        if output.asset_groups_count == 0:
-            outputs_list.append((output_address, output.amount))
-        else:
-            # output structure is: [address, [amount, asset_groups]]
-            output_list: HashBuilderList = HashBuilderList(2)
-            with outputs_list.append(output_list):
-                output_list.append(output_address)
+        has_datum_hash = output.datum_hash is not None
+        output_list: HashBuilderList = HashBuilderList(2 + int(has_datum_hash))
+        with outputs_list.append(output_list):
+            output_list.append(output_address)
+            if output.asset_groups_count == 0:
+                # output structure is: [address, amount, datum_hash?]
+                output_list.append(output.amount)
+            else:
+                # output structure is: [address, [amount, asset_groups], datum_hash?]
                 output_value_list: HashBuilderList = HashBuilderList(2)
                 with output_list.append(output_value_list):
                     output_value_list.append(output.amount)
@@ -380,6 +402,8 @@ async def _process_outputs(
                             output.asset_groups_count,
                             should_show_output,
                         )
+            if has_datum_hash:
+                output_list.append(output.datum_hash)
 
         total_amount += output.amount
 
@@ -662,6 +686,19 @@ async def _process_minting_tokens(
         tokens.add(token.asset_name_bytes, token.mint_amount)
 
 
+async def _process_script_data_hash(
+    ctx: wire.Context,
+    tx_body_builder_dict: HashBuilderDict,
+    script_data_hash: bytes,
+) -> None:
+    """Validate, confirm and serialize the script data hash."""
+    _validate_script_data_hash(script_data_hash)
+
+    await confirm_script_data_hash(ctx, script_data_hash)
+
+    tx_body_builder_dict.add(TX_BODY_KEY_SCRIPT_DATA_HASH, script_data_hash)
+
+
 async def _process_witness_requests(
     ctx: wire.Context,
     keychain: seed.Keychain,
@@ -762,6 +799,18 @@ def _validate_output(
     else:
         raise INVALID_OUTPUT
 
+    if output.datum_hash is not None:
+        if signing_mode not in (
+            CardanoTxSigningMode.ORDINARY_TRANSACTION,
+            CardanoTxSigningMode.MULTISIG_TRANSACTION,
+        ):
+            raise INVALID_OUTPUT
+        if len(output.datum_hash) != OUTPUT_DATUM_HASH_SIZE:
+            raise INVALID_OUTPUT_DATUM_HASH
+        address_type = _get_output_address_type(output)
+        if address_type not in ADDRESS_TYPES_PAYMENT_SCRIPT:
+            raise INVALID_OUTPUT
+
     account_path_checker.add_output(output)
 
 
@@ -769,6 +818,16 @@ def _should_show_output(
     output: CardanoTxOutput,
     signing_mode: CardanoTxSigningMode,
 ) -> bool:
+    if output.datum_hash:
+        # none of the reasons for hiding below should be reachable when datum hash
+        # is present, but let's make sure
+        return True
+
+    address_type = _get_output_address_type(output)
+    if output.datum_hash is None and address_type in ADDRESS_TYPES_PAYMENT_SCRIPT:
+        # Plutus script address without a datum hash is unspendable, we must show a warning
+        return True
+
     if signing_mode == CardanoTxSigningMode.POOL_REGISTRATION_AS_OWNER:
         # In a pool registration transaction, there are no inputs belonging to the user
         # and no spending witnesses. It is thus safe to not show the outputs.
@@ -789,8 +848,15 @@ async def _show_output(
     protocol_magic: int,
     network_id: int,
 ) -> None:
+    if output.datum_hash:
+        await show_warning_tx_output_contains_datum_hash(ctx, output.datum_hash)
+
     if output.asset_groups_count > 0:
         await show_warning_tx_output_contains_tokens(ctx)
+
+    address_type = _get_output_address_type(output)
+    if output.datum_hash is None and address_type in ADDRESS_TYPES_PAYMENT_SCRIPT:
+        await show_warning_tx_output_no_datum_hash(ctx)
 
     is_change_output: bool
     if address_parameters := output.address_parameters:
@@ -892,6 +958,11 @@ def _validate_withdrawal(
     account_path_checker.add_withdrawal(withdrawal)
 
 
+def _validate_script_data_hash(script_data_hash: bytes) -> None:
+    if len(script_data_hash) != SCRIPT_DATA_HASH_SIZE:
+        raise INVALID_SCRIPT_DATA_HASH
+
+
 def _get_output_address(
     keychain: seed.Keychain,
     protocol_magic: int,
@@ -905,6 +976,13 @@ def _get_output_address(
     else:
         assert output.address is not None  # _validate_output
         return get_address_bytes_unsafe(output.address)
+
+
+def _get_output_address_type(output: CardanoTxOutput) -> CardanoAddressType:
+    if output.address_parameters:
+        return output.address_parameters.address_type
+    assert output.address is not None  # _validate_output
+    return get_address_type(get_address_bytes_unsafe(output.address))
 
 
 def _sign_tx_hash(

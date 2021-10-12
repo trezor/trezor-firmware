@@ -32,6 +32,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -77,6 +78,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -122,6 +124,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false

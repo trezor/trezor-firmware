@@ -39,6 +39,13 @@ ADDRESS_TYPES_SHELLEY = (
     CardanoAddressType.REWARD_SCRIPT,
 )
 
+ADDRESS_TYPES_PAYMENT_SCRIPT = (
+    CardanoAddressType.BASE_SCRIPT_KEY,
+    CardanoAddressType.BASE_SCRIPT_SCRIPT,
+    CardanoAddressType.POINTER_SCRIPT,
+    CardanoAddressType.ENTERPRISE_SCRIPT,
+)
+
 MIN_ADDRESS_BYTES_LENGTH = 29
 MAX_ADDRESS_BYTES_LENGTH = 65
 
@@ -240,7 +247,7 @@ def _validate_address_and_get_type(
         raise INVALID_ADDRESS
 
     address_bytes = get_address_bytes_unsafe(address)
-    address_type = _get_address_type(address_bytes)
+    address_type = get_address_type(address_bytes)
 
     if address_type == CardanoAddressType.BYRON:
         validate_byron_address(address_bytes, protocol_magic)
@@ -281,14 +288,14 @@ def get_address_bytes_unsafe(address: str) -> bytes:
     return address_bytes
 
 
-def _get_address_type(address: bytes) -> CardanoAddressType:
+def get_address_type(address: bytes) -> CardanoAddressType:
     return address[0] >> 4  # type: ignore [int-into-enum]
 
 
 def _validate_shelley_address(
     address_str: str, address_bytes: bytes, network_id: int
 ) -> None:
-    address_type = _get_address_type(address_bytes)
+    address_type = get_address_type(address_bytes)
 
     _validate_address_size(address_bytes)
     _validate_address_bech32_hrp(address_str, address_type, network_id)
@@ -352,7 +359,7 @@ def derive_human_readable_address(
 
 
 def encode_human_readable_address(address_bytes: bytes) -> str:
-    address_type = _get_address_type(address_bytes)
+    address_type = get_address_type(address_bytes)
     if address_type == CardanoAddressType.BYRON:
         return base58.encode(address_bytes)
     elif address_type in ADDRESS_TYPES_SHELLEY:

@@ -45,6 +45,7 @@ def test_cardano_sign_tx(client: Client, parameters, result):
     withdrawals = [cardano.parse_withdrawal(w) for w in parameters["withdrawals"]]
     auxiliary_data = cardano.parse_auxiliary_data(parameters["auxiliary_data"])
     mint = cardano.parse_mint(parameters["mint"])
+    script_data_hash = cardano.parse_script_data_hash(parameters["script_data_hash"])
     additional_witness_requests = [
         cardano.parse_additional_witness_request(p)
         for p in parameters["additional_witness_requests"]
@@ -72,6 +73,7 @@ def test_cardano_sign_tx(client: Client, parameters, result):
             network_id=parameters["network_id"],
             auxiliary_data=auxiliary_data,
             mint=mint,
+            script_data_hash=script_data_hash,
             additional_witness_requests=additional_witness_requests,
             include_network_id=parameters["include_network_id"],
         )
@@ -93,6 +95,7 @@ def test_cardano_sign_tx_failed(client: Client, parameters, result):
     withdrawals = [cardano.parse_withdrawal(w) for w in parameters["withdrawals"]]
     auxiliary_data = cardano.parse_auxiliary_data(parameters["auxiliary_data"])
     mint = cardano.parse_mint(parameters["mint"])
+    script_data_hash = cardano.parse_script_data_hash(parameters["script_data_hash"])
     additional_witness_requests = [
         cardano.parse_additional_witness_request(p)
         for p in parameters["additional_witness_requests"]
@@ -121,6 +124,7 @@ def test_cardano_sign_tx_failed(client: Client, parameters, result):
                 network_id=parameters["network_id"],
                 auxiliary_data=auxiliary_data,
                 mint=mint,
+                script_data_hash=script_data_hash,
                 additional_witness_requests=additional_witness_requests,
                 include_network_id=parameters["include_network_id"],
             )

@@ -1330,6 +1330,7 @@ if TYPE_CHECKING:
         minting_asset_groups_count: "int"
         derivation_type: "CardanoDerivationType"
         include_network_id: "bool"
+        script_data_hash: "bytes | None"
 
         def __init__(
             self,
@@ -1349,6 +1350,7 @@ if TYPE_CHECKING:
             ttl: "int | None" = None,
             validity_interval_start: "int | None" = None,
             include_network_id: "bool | None" = None,
+            script_data_hash: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -1377,6 +1379,7 @@ if TYPE_CHECKING:
         address_parameters: "CardanoAddressParametersType | None"
         amount: "int"
         asset_groups_count: "int"
+        datum_hash: "bytes | None"
 
         def __init__(
             self,
@@ -1385,6 +1388,7 @@ if TYPE_CHECKING:
             asset_groups_count: "int",
             address: "str | None" = None,
             address_parameters: "CardanoAddressParametersType | None" = None,
+            datum_hash: "bytes | None" = None,
         ) -> None:
             pass
 
