@@ -380,6 +380,12 @@ apps.misc.sign_identity
 import apps.misc.sign_identity
 apps.workflow_handlers
 import apps.workflow_handlers
+apps.zcash
+import apps.zcash
+apps.zcash.diag
+import apps.zcash.diag
+apps.zcash.orchard
+import apps.zcash.orchard
 
 if utils.BITCOIN_ONLY:
     trezor.enums.BinanceOrderSide

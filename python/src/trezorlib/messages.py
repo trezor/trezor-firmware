@@ -238,6 +238,8 @@ class MessageType(IntEnum):
     WebAuthnCredentials = 801
     WebAuthnAddResidentCredential = 802
     WebAuthnRemoveResidentCredential = 803
+    DebugZcashDiagRequest = 900
+    DebugZcashDiagResponse = 901
 
 
 class FailureType(IntEnum):
@@ -475,6 +477,10 @@ class TezosBallotType(IntEnum):
     Yay = 0
     Nay = 1
     Pass = 2
+
+
+class DiagType(IntEnum):
+    Hello = 0
 
 
 class BinanceGetAddress(protobuf.MessageType):
@@ -6754,3 +6760,34 @@ class WebAuthnCredential(protobuf.MessageType):
         self.use_sign_count = use_sign_count
         self.algorithm = algorithm
         self.curve = curve
+
+
+class DebugZcashDiagRequest(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 900
+    FIELDS = {
+        1: protobuf.Field("type", "DiagType", repeated=False, required=False),
+        2: protobuf.Field("data", "bytes", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        type: Optional["DiagType"] = None,
+        data: Optional["bytes"] = None,
+    ) -> None:
+        self.type = type
+        self.data = data
+
+
+class DebugZcashDiagResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 901
+    FIELDS = {
+        1: protobuf.Field("data", "bytes", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        data: Optional["bytes"] = None,
+    ) -> None:
+        self.data = data
