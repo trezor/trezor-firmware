@@ -8,7 +8,7 @@ from trezor.ui.layouts import confirm_action, draw_simple_text
 from trezor import log
 
 async def diag(ctx: Context, msg: DebugZcashDiagRequest) -> DebugZcashDiagResponse:
-    log.debug("Zcash Diag. data={}".format(msg.data))
+    log.debug(__name__, "Zcash Diag. data={}".format(msg.data))
 
     await confirm_action(
         ctx,
