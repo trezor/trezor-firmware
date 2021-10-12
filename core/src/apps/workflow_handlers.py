@@ -175,6 +175,10 @@ def find_message_handler_module(msg_type: int) -> str:
         elif msg_type == MessageType.BinanceSignTx:
             return "apps.binance.sign_tx"
 
+        # zcash
+        elif msg_type == MessageType.DebugZcashDiagRequest: # TODO: and __debug__
+            return "apps.zcash.diag"
+
     raise ValueError
 
 
