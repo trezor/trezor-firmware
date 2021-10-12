@@ -18,7 +18,7 @@ from . import messages
 from .tools import expect
 
 @expect(messages.DebugZcashDiagResponse, field="data")
-def diag(client, data):
+def diag(client, ins=0, data=b""):
     return client.call(
-        messages.DebugZcashDiagRequest(data=data)
+        messages.DebugZcashDiagRequest(ins=ins, data=data)
     )
