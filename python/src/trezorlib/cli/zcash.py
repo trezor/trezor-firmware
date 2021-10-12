@@ -25,8 +25,8 @@ def cli():
 
 
 @cli.command()
-@click.option("-d", "--data", required=False, default=b"hello", help="Diag meassage data.")
+@click.option("-d", "--data", required=False, default="hello", help="Diag meassage data.")
 @with_client
 def diag(client, data):
     """Get Zcash diagnotic message."""
-    return zcash.diag(client, data)
+    return zcash.diag(client, data.encode("utf-8"))
