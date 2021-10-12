@@ -45,7 +45,7 @@ async def ask_transfer_mosaic(
         return
 
     definition = get_mosaic_definition(mosaic.namespace, mosaic.mosaic, common.network)
-    mosaic_quantity = mosaic.quantity * transfer.amount / NEM_MOSAIC_AMOUNT_DIVISOR
+    mosaic_quantity = mosaic.quantity * transfer.amount // NEM_MOSAIC_AMOUNT_DIVISOR
 
     if definition:
         await confirm_properties(
@@ -103,7 +103,7 @@ def _get_xem_amount(transfer: NEMTransfer):
     # otherwise xem amount is taken from the nem xem mosaic if present
     for mosaic in transfer.mosaics:
         if is_nem_xem_mosaic(mosaic.namespace, mosaic.mosaic):
-            return mosaic.quantity * transfer.amount / NEM_MOSAIC_AMOUNT_DIVISOR
+            return mosaic.quantity * transfer.amount // NEM_MOSAIC_AMOUNT_DIVISOR
     # if there are mosaics but do not include xem, 0 xem is sent
     return 0
 
@@ -116,7 +116,7 @@ def _get_levy_msg(mosaic_definition, quantity: int, network: int) -> str:
         levy_fee = mosaic_definition["fee"]
     else:
         levy_fee = (
-            quantity * mosaic_definition["fee"] / NEM_LEVY_PERCENTILE_DIVISOR_ABSOLUTE
+            quantity * mosaic_definition["fee"] // NEM_LEVY_PERCENTILE_DIVISOR_ABSOLUTE
         )
     return (
         format_amount(levy_fee, levy_definition["divisibility"])
