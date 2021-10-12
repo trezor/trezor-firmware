@@ -46,6 +46,7 @@ from . import (
     settings,
     stellar,
     tezos,
+    zcash,
     with_client,
 )
 
@@ -73,6 +74,7 @@ COMMAND_ALIASES = {
     "xrp": ripple.cli,
     "xlm": stellar.cli,
     "xtz": tezos.cli,
+    "zec": zcash.cli,
     # firmware aliases:
     "fw": firmware.cli,
     "update-firmware": firmware.update,
@@ -337,6 +339,7 @@ cli.add_command(ripple.cli)
 cli.add_command(settings.cli)
 cli.add_command(stellar.cli)
 cli.add_command(tezos.cli)
+cli.add_command(zcash.cli)
 
 cli.add_command(firmware.cli)
 cli.add_command(debug.cli)
