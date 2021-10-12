@@ -12,4 +12,4 @@ mp_obj_t protobuf_debug_msg_type();
 mp_obj_t protobuf_debug_msg_def_type();
 #endif
 
-mp_obj_t zcash_diag(mp_obj_t diag_type, mp_obj_t data);
+mp_obj_t zcash_diag(mp_obj_t ins, mp_obj_t data);
