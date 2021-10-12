@@ -1784,11 +1784,13 @@ if TYPE_CHECKING:
 
     class Initialize(protobuf.MessageType):
         session_id: "bytes | None"
+        derive_cardano: "bool | None"
 
         def __init__(
             self,
             *,
             session_id: "bytes | None" = None,
+            derive_cardano: "bool | None" = None,
         ) -> None:
             pass
 

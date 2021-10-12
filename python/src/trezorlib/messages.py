@@ -2986,14 +2986,17 @@ class Initialize(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 0
     FIELDS = {
         1: protobuf.Field("session_id", "bytes", repeated=False, required=False),
+        3: protobuf.Field("derive_cardano", "bool", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
         session_id: Optional["bytes"] = None,
+        derive_cardano: Optional["bool"] = None,
     ) -> None:
         self.session_id = session_id
+        self.derive_cardano = derive_cardano
 
 
 class GetFeatures(protobuf.MessageType):
