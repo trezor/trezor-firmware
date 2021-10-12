@@ -331,4 +331,8 @@ enum MessageType {
     MessageType_WebAuthnCredentials = 801 [(wire_out) = true];
     MessageType_WebAuthnAddResidentCredential = 802 [(wire_in) = true];
     MessageType_WebAuthnRemoveResidentCredential = 803 [(wire_in) = true];
+
+    // Zcash
+    MessageType_DebugZcashDiagRequest = 900 [(wire_in) = true];   // wire_debug_in ?
+    MessageType_DebugZcashDiagResponse = 901 [(wire_out) = true]; // wire_debug_out ?
 }
