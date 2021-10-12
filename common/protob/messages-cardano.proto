@@ -206,6 +206,7 @@ message CardanoSignTxInit {
     required uint32 minting_asset_groups_count = 13;
     required CardanoDerivationType derivation_type = 14;
     optional bool include_network_id = 15 [default=false];      // network id included as tx body item
+    optional bytes script_data_hash = 16;
 }
 
 /**
@@ -226,6 +227,7 @@ message CardanoTxOutput {
     optional CardanoAddressParametersType address_parameters = 2;   // parameters used to derive the address
     required uint64 amount = 3;                                     // amount to spend
     required uint32 asset_groups_count = 4;
+    optional bytes datum_hash = 5;
 }
 
 /**

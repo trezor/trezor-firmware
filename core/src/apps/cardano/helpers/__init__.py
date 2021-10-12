@@ -18,7 +18,11 @@ INVALID_STAKEPOOL_REGISTRATION_TX_WITNESSES = wire.ProcessError(
 INVALID_WITNESS_REQUEST = wire.ProcessError("Invalid witness request")
 INVALID_NATIVE_SCRIPT = wire.ProcessError("Invalid native script")
 INVALID_TOKEN_BUNDLE_MINT = wire.ProcessError("Invalid mint token bundle")
+INVALID_OUTPUT_DATUM_HASH = wire.ProcessError("Invalid output datum hash")
+INVALID_SCRIPT_DATA_HASH = wire.ProcessError("Invalid script data hash")
 
 LOVELACE_MAX_SUPPLY = 45_000_000_000 * 1_000_000
 ADDRESS_KEY_HASH_SIZE = 28
 SCRIPT_HASH_SIZE = 28
+OUTPUT_DATUM_HASH_SIZE = 32
+SCRIPT_DATA_HASH_SIZE = 32

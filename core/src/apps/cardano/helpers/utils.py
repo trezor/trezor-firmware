@@ -76,6 +76,14 @@ def format_key_hash(key_hash: bytes, is_shared_key: bool) -> str:
     return bech32.encode(hrp, key_hash)
 
 
+def format_output_datum_hash(output_datum_hash: bytes) -> str:
+    return bech32.encode(bech32.HRP_OUTPUT_DATUM_HASH, output_datum_hash)
+
+
+def format_script_data_hash(script_data_hash: bytes) -> str:
+    return bech32.encode(bech32.HRP_SCRIPT_DATA_HASH, script_data_hash)
+
+
 def get_public_key_hash(keychain: seed.Keychain, path: list[int]) -> bytes:
     public_key = derive_public_key(keychain, path)
     return hashlib.blake2b(data=public_key, outlen=ADDRESS_KEY_HASH_SIZE).digest()

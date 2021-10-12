@@ -28,6 +28,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -73,6 +74,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -119,6 +121,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -174,6 +177,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -238,6 +242,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -285,6 +290,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -332,6 +338,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -378,6 +385,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -426,6 +434,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -471,6 +480,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -516,6 +526,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -556,6 +567,7 @@
         ],
         "outputs": [],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -606,6 +618,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -657,6 +670,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -713,6 +727,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -765,6 +780,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -813,6 +829,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -864,6 +881,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -918,6 +936,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -976,6 +995,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1047,6 +1067,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1088,6 +1109,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1138,6 +1160,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1190,6 +1213,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1237,6 +1261,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1375,6 +1400,7 @@
           }
         },
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1490,6 +1516,7 @@
             ]
           }
         ],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -1540,6 +1567,7 @@
           }
         ],
         "mint": [],
+        "script_data_hash": null,
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": true
@@ -1552,6 +1580,130 @@
             "pub_key": "89053545a6c254b0d9b1464e48d2b5fcf91d4e25c128afb1fcfc61d0843338ea",
             "signature": "7223909207fc1fa0c6125ffd4fbf7e1d845b7ca77078de7705aa34e4b6f416bb2efaaadfa022a91437ba4f33875b9a688f78d6fb30542b59417650a169afde01",
             "chain_code": "26308151516f3b0e02bb1638142747863c520273ce9bd3e5cd91e1d46fe2a635"
+          }
+        ]
+      }
+    },
+    {
+      "description": "Ordinary transaction with output datum hash",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1w9rhu54nz94k9l5v6d9rzfs47h7dv7xffcwkekuxcx3evnqpvuxu0",
+            "amount": "1",
+            "datum_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "8ea2765f1e46d84f02d8b25a5f0cf445aaeaadcab913e17e59388a4f898ca812",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "ccc4e3c2adbf63561881212c8dffd42a02850460256da9b393aaed2cbd131fbb2798a92a2adf59c31d22e1e33c3dad011d91e09aa2d5b15ba64fa995bf241900",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "Ordinary transaction with script address but no datum hash",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1w9rhu54nz94k9l5v6d9rzfs47h7dv7xffcwkekuxcx3evnqpvuxu0",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "06d6587ddd79e000b6922c54069b78bb931b0cba06d97ba4171f3ce6590438d2",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "4b7e694b8a31905918561eedc376aaa2f7827f19e228a9e28b5f56ee55ea61725752c50c2f1c67b79de747aeb8e5f1559ce211107a399938b954121d4c085f07",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "Ordinary transaction with script data hash",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": "d593fd793c377ac50a3169bb8378ffc257c944da31aa8f355dfa5a4f6ff89e02",
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "8606e5b69b5c40bd359d7bad6ed6f77810b8e8acba6cbca298c13f92b11178d4",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "c8676cf593554f347e2d6a5ffc6a1371638156eaaddb3e7f94ae9a7488a6adb01c3660d8aff1da08e01c4899615158e69c5c797841ef7747740ab56d3b452f0c",
+            "chain_code": null
           }
         ]
       }
