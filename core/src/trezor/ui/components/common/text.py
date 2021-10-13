@@ -274,7 +274,7 @@ def render_text(
         # render it after a linebreak
         item_width = ui.display.text_width(item, font)
         if (
-            item_width <= line_width
+            item_width <= line_width  # pylint: disable=chained-comparison
             and item_width + offset_x - INITIAL_OFFSET_X > line_width
             and "\n" not in item
         ):
@@ -422,7 +422,7 @@ class TextBase(ui.Component):
         param_font: int = ui.BOLD,
     ) -> None:
         parts = format_string.split("{}", len(params))
-        for i in range(len(parts)):
+        for i in range(len(parts)):  # pylint: disable=consider-using-enumerate
             self.content.append(font)
             self.content.append(parts[i])
             if i < len(parts) - 1 and i < len(params):

@@ -313,7 +313,7 @@ async def _process_inputs(
     inputs_count: int,
 ) -> None:
     """Read, validate and serialize the inputs."""
-    for index in range(inputs_count):
+    for _ in range(inputs_count):
         input: CardanoTxInput = await ctx.call(CardanoTxItemAck(), CardanoTxInput)
         inputs_list.append((input.prev_hash, input.prev_index))
 

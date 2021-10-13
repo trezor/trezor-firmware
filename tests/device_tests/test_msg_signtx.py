@@ -1201,7 +1201,7 @@ class TestMsgSigntx:
         setattr(prev_tx, field, value)
         name = field.replace("_", " ")
         with pytest.raises(
-            TrezorFailure, match=r"(?i){} not enabled on this coin".format(name)
+            TrezorFailure, match=rf"(?i){name} not enabled on this coin"
         ):
             btc.sign_tx(
                 client, "Bitcoin", [inp0], [out1], prev_txes={TXHASH_157041: prev_tx}
@@ -1227,7 +1227,7 @@ class TestMsgSigntx:
         kwargs = {field: value}
         name = field.replace("_", " ")
         with pytest.raises(
-            TrezorFailure, match=r"(?i){} not enabled on this coin".format(name)
+            TrezorFailure, match=rf"(?i){name} not enabled on this coin"
         ):
             btc.sign_tx(
                 client, "Bitcoin", [inp0], [out1], prev_txes=TX_CACHE_MAINNET, **kwargs

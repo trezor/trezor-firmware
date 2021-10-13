@@ -259,7 +259,7 @@ class TestMsgSigntxBch:
             for i in range(1, 4)
         ]
 
-        def getmultisig(chain, nr, signatures=[b"", b"", b""], nodes=nodes):
+        def getmultisig(chain, nr, signatures):
             return proto.MultisigRedeemScriptType(
                 nodes=nodes, address_n=[chain, nr], signatures=signatures, m=2
             )
@@ -339,14 +339,16 @@ class TestMsgSigntxBch:
             for i in range(1, 4)
         ]
 
-        def getmultisig(chain, nr, signatures=[b"", b"", b""], nodes=nodes):
+        EMPTY_SIGNATURES = [b"", b"", b""]
+
+        def getmultisig(chain, nr, signatures):
             return proto.MultisigRedeemScriptType(
                 nodes=nodes, address_n=[chain, nr], signatures=signatures, m=2
             )
 
         inp1 = proto.TxInputType(
             address_n=parse_path("48'/145'/3'/0'/0/0"),
-            multisig=getmultisig(0, 0),
+            multisig=getmultisig(0, 0, EMPTY_SIGNATURES),
             amount=48490,
             prev_hash=TXHASH_8b6db9,
             prev_index=0,
@@ -359,7 +361,7 @@ class TestMsgSigntxBch:
         )
         out2 = proto.TxOutputType(
             address_n=parse_path("48'/145'/3'/0'/1/0"),
-            multisig=getmultisig(1, 0),
+            multisig=getmultisig(1, 0, EMPTY_SIGNATURES),
             script_type=proto.OutputScriptType.PAYTOMULTISIG,
             amount=24000,
         )

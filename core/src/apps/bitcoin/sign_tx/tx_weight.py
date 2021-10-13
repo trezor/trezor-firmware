@@ -9,6 +9,8 @@ from micropython import const
 
 from trezor.enums import InputScriptType
 
+from .. import common
+
 if False:
     from trezor.messages import TxInput
 
@@ -69,17 +71,11 @@ class TxWeightCalculator:
 
         self.counter += 4 * _TXSIZE_INPUT
 
-        if (
-            i.script_type == InputScriptType.SPENDADDRESS
-            or i.script_type == InputScriptType.SPENDMULTISIG
-        ):
+        if i.script_type in common.NONSEGWIT_INPUT_SCRIPT_TYPES:
             input_script_size += self.ser_length_size(input_script_size)
             self.counter += 4 * input_script_size
 
-        elif (
-            i.script_type == InputScriptType.SPENDWITNESS
-            or i.script_type == InputScriptType.SPENDP2SHWITNESS
-        ):
+        elif i.script_type in common.SEGWIT_INPUT_SCRIPT_TYPES:
             self.add_witness_header()
             if i.script_type == InputScriptType.SPENDP2SHWITNESS:
                 if i.multisig:

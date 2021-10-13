@@ -137,7 +137,7 @@ def recovery_enter_shares(debug, shares, groups=False):
     yield
     debug.press_yes()
     # Enter shares
-    for index, share in enumerate(shares):
+    for share in shares:
         br = yield
         assert br.code == B.MnemonicInput
         # Enter mnemonic words

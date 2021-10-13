@@ -78,7 +78,7 @@ def c_str_filter(b):
         return "NULL"
 
     def hexescape(c):
-        return r"\x{:02x}".format(c)
+        return rf"\x{c:02x}"
 
     if isinstance(b, bytes):
         return '"' + "".join(map(hexescape, b)) + '"'

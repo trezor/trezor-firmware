@@ -215,13 +215,11 @@ def hash_to_scalar_into(r: Sc25519, data: bytes, length: int | None = None):
     return tcry.xmr_hash_to_scalar(r, dt)
 
 
-"""
-H_p(buf)
-
-Code adapted from MiniNero: https://github.com/monero-project/mininero
-https://github.com/monero-project/research-lab/blob/master/whitepaper/ge_fromfe_writeup/ge_fromfe.pdf
-http://archive.is/yfINb
-"""
+# H_p(buf)
+#
+# Code adapted from MiniNero: https://github.com/monero-project/mininero
+# https://github.com/monero-project/research-lab/blob/master/whitepaper/ge_fromfe_writeup/ge_fromfe.pdf
+# http://archive.is/yfINb
 hash_to_point = tcry.xmr_hash_to_ec
 hash_to_point_into = tcry.xmr_hash_to_ec
 

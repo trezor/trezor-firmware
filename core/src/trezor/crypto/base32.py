@@ -8,7 +8,7 @@ from ustruct import unpack
 _b32alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
 
 _b32tab = [ord(c) for c in _b32alphabet]
-_b32rev = dict([(ord(v), k) for k, v in enumerate(_b32alphabet)])
+_b32rev = {ord(v): k for k, v in enumerate(_b32alphabet)}
 
 
 def encode(s: bytes) -> str:
@@ -54,7 +54,7 @@ def encode(s: bytes) -> str:
 
 def decode(s: str) -> bytes:
     data = s.encode()
-    quanta, leftover = divmod(len(data), 8)
+    _, leftover = divmod(len(data), 8)
     if leftover:
         raise ValueError("Incorrect padding")
     # Strip off pad characters from the right.  We need to count the pad
@@ -78,11 +78,11 @@ def decode(s: str) -> bytes:
         acc += _b32rev[c] << shift
         shift -= 5
         if shift < 0:
-            parts.append(unhexlify(("%010x" % acc).encode()))
+            parts.append(unhexlify((f"{acc:010x}").encode()))
             acc = 0
             shift = 35
     # Process the last, partial quanta
-    last = unhexlify(bytes("%010x" % acc, "ascii"))
+    last = unhexlify(bytes(f"{acc:010x}", "ascii"))
     if padchars == 0:
         last = b""  # No characters
     elif padchars == 1:

@@ -35,7 +35,8 @@ def _get_device_dir() -> str:
 
 
 def _get_salt_path(new: bool = False) -> str:
-    return "{}/salt{}".format(_get_device_dir(), ".new" if new else "")
+    ext = ".new" if new else ""
+    return f"{_get_device_dir()}/salt{ext}"
 
 
 @with_filesystem

@@ -24,11 +24,11 @@ from trezorlib.tools import parse_path
 from .. import bip32
 
 
-def getmultisig(chain, nr, xpubs, signatures=[b"", b"", b""]):
+def getmultisig(chain, nr, xpubs):
     return messages.MultisigRedeemScriptType(
         nodes=[bip32.deserialize(xpub) for xpub in xpubs],
         address_n=[chain, nr],
-        signatures=signatures,
+        signatures=[b"", b"", b""],
         m=2,
     )
 

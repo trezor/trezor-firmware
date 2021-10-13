@@ -82,7 +82,7 @@ async def _timebounds(ctx: Context, w: bytearray, start: int, end: int) -> None:
 
 async def _operations(ctx: Context, w: bytearray, num_operations: int) -> None:
     writers.write_uint32(w, num_operations)
-    for i in range(num_operations):
+    for _ in range(num_operations):
         op = await ctx.call_any(StellarTxOpRequest(), *consts.op_wire_types)
         await process_operation(ctx, w, op)  # type: ignore
 

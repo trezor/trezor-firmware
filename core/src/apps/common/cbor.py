@@ -77,7 +77,7 @@ def _cbor_encode(value: Value) -> Iterator[bytes]:
         encoded_value = value.encode()
         yield _header(_CBOR_TEXT_STRING, len(encoded_value))
         yield encoded_value
-    elif isinstance(value, list) or isinstance(value, tuple):
+    elif isinstance(value, (list, tuple)):
         # definite-length valued list
         yield _header(_CBOR_ARRAY, len(value))
         for x in value:

@@ -52,11 +52,9 @@ async def set_input(
     tx_key = crypto.decodepoint(src_entr.real_out_tx_key)
     additional_tx_pub_key = _get_additional_public_key(src_entr)
 
-    """
-    Calculates `derivation = Ra`, private spend key `x = H(Ra||i) + b` to be able
-    to spend the UTXO; and key image `I = x*H(P||i)`
-    """
-    xi, ki, di = monero.generate_tx_spend_and_key_image_and_derivation(
+    # Calculates `derivation = Ra`, private spend key `x = H(Ra||i) + b` to be able
+    # to spend the UTXO; and key image `I = x*H(P||i)`
+    xi, ki, _di = monero.generate_tx_spend_and_key_image_and_derivation(
         state.creds,
         state.subaddresses,
         out_key,
@@ -78,11 +76,9 @@ async def set_input(
     if src_entr.rct:
         vini.amount = 0
 
-    """
-    Serialize `vini` with variant code for TxinToKey (prefix = TxinToKey.VARIANT_CODE).
-    The binary `vini_bin` is later sent to step 4 and 9 with its hmac,
-    where it is checked and directly used.
-    """
+    # Serialize `vini` with variant code for TxinToKey (prefix = TxinToKey.VARIANT_CODE).
+    # The binary `vini_bin` is later sent to step 4 and 9 with its hmac,
+    # where it is checked and directly used.
     vini_bin = serialize.dump_msg(vini, preallocate=64, prefix=b"\x02")
     state.mem_trace(2, True)
 
@@ -114,10 +110,8 @@ async def set_input(
 
     state.last_step = state.STEP_INP
     if state.current_input_index + 1 == state.input_count:
-        """
-        When we finish the inputs processing, we no longer need
-        the precomputed subaddresses so we clear them to save memory.
-        """
+        # When we finish the inputs processing, we no longer need
+        # the precomputed subaddresses so we clear them to save memory.
         state.subaddresses = None
         state.input_last_amount = src_entr.amount
 

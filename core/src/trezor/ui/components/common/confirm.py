@@ -44,6 +44,7 @@ class ConfirmBase(ui.Layout):
         confirm: ui.Component | None = None,
         cancel: ui.Component | None = None,
     ) -> None:
+        super().__init__()
         self.content = content
         self.confirm = confirm
         self.cancel = cancel

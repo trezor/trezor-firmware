@@ -1,3 +1,4 @@
+# pylint: disable=wrong-import-position
 import math
 import utime
 from micropython import const
@@ -156,7 +157,7 @@ def header_error(message: str, clear: bool = True) -> None:
         display.bar(0, 30, WIDTH, HEIGHT - 30, style.BG)
 
 
-def draw_simple(t: Component) -> None:  # noqa: F405
+def draw_simple(t: "Component") -> None:
     """Render a component synchronously.
 
     Useful when you need to put something on screen and go on to do other things.
@@ -312,8 +313,6 @@ class Cancelled(Exception):
     See `Layout.__iter__` for details.
     """
 
-    pass
-
 
 class Layout(Component):
     """
@@ -445,6 +444,7 @@ if utils.MODEL == "1":
 
     class RustLayout(Layout):
         def __init__(self, layout: Any):
+            super().__init__()
             self.layout = layout
             self.layout.set_timer_fn(self.set_timer)
 

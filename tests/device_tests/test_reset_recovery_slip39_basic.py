@@ -59,7 +59,7 @@ def reset(client, strength=128):
         yield from click_through(client.debug, screens=8, code=B.ResetDevice)
 
         # show & confirm shares
-        for h in range(5):
+        for _ in range(5):
             # mnemonic phrases
             mnemonic = yield from read_and_confirm_mnemonic(client.debug)
             all_mnemonics.append(mnemonic)

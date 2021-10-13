@@ -51,7 +51,7 @@ def prefix_expand(prefix: str) -> list[int]:
 
 def calculate_checksum(prefix: str, payload: list[int]) -> list[int]:
     poly = cashaddr_polymod(prefix_expand(prefix) + payload + [0, 0, 0, 0, 0, 0, 0, 0])
-    out = list()
+    out = []
     for i in range(8):
         out.append((poly >> 5 * (7 - i)) & 0x1F)
     return out
@@ -62,7 +62,7 @@ def verify_checksum(prefix: str, payload: list[int]) -> bool:
 
 
 def b32decode(inputs: str) -> list[int]:
-    out = list()
+    out = []
     for letter in inputs:
         out.append(CHARSET.find(letter))
     return out

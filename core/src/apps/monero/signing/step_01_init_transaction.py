@@ -246,12 +246,10 @@ def _check_change(state: State, outputs: list[MoneroTransactionDestinationEntry]
         state.mem_trace("No change" if __debug__ else None)
         return
 
-    """
-    Sweep tx is just one output and no change.
-    To prevent recognition of such transactions another fake output is added
-    that spends exactly 0 coins to a random address.
-    See https://github.com/monero-project/monero/pull/1415
-    """
+    # Sweep tx is just one output and no change.
+    # To prevent recognition of such transactions another fake output is added
+    # that spends exactly 0 coins to a random address.
+    # See https://github.com/monero-project/monero/pull/1415
     if change_index is None and state.output_change.amount == 0 and len(outputs) == 2:
         state.mem_trace("Sweep tsx" if __debug__ else None)
         return

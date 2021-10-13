@@ -87,7 +87,7 @@ def write_bytes_reversed(w: Writer, b: bytes, length: int) -> int:
 
 
 def write_bitcoin_varint(w: Writer, n: int) -> None:
-    ensure(n >= 0 and n <= 0xFFFF_FFFF)
+    ensure(0 <= n <= 0xFFFF_FFFF)
     if n < 253:
         w.append(n & 0xFF)
     elif n < 0x1_0000:
@@ -103,7 +103,7 @@ def write_bitcoin_varint(w: Writer, n: int) -> None:
 
 
 def write_uvarint(w: Writer, n: int) -> None:
-    ensure(n >= 0 and n <= 0xFFFF_FFFF_FFFF_FFFF)
+    ensure(0 <= n <= 0xFFFF_FFFF_FFFF_FFFF)
     shifted = 1
     while shifted:
         shifted = n >> 7

@@ -409,7 +409,7 @@ class KeyV(KeyVBase):
 
     def resize(self, nsize, chop=False, realloc=False):
         if self.size == nsize:
-            return self
+            return
 
         if self.chunked and nsize <= _CHSIZE:
             self.chunked = False  # de-chunk

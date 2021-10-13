@@ -262,12 +262,14 @@ def _format_thresholds(op: StellarSetOptionsOp) -> list[tuple[str, str]]:
 def _format_flags(flags: int) -> str:
     if flags > consts.FLAGS_MAX_SIZE:
         raise ProcessError("Stellar: invalid flags")
-    text = "{}{}{}".format(
-        "AUTH_REQUIRED\n" if flags & consts.FLAG_AUTH_REQUIRED else "",
-        "AUTH_REVOCABLE\n" if flags & consts.FLAG_AUTH_REVOCABLE else "",
-        "AUTH_IMMUTABLE\n" if flags & consts.FLAG_AUTH_IMMUTABLE else "",
-    )
-    return text
+    flags_set = []
+    if flags & consts.FLAG_AUTH_REQUIRED:
+        flags_set.append("AUTH_REQUIRED\n")
+    if flags & consts.FLAG_AUTH_REVOCABLE:
+        flags_set.append("AUTH_REVOCABLE\n")
+    if flags & consts.FLAG_AUTH_IMMUTABLE:
+        flags_set.append("AUTH_IMMUTABLE\n")
+    return "".join(flags_set)
 
 
 async def confirm_asset_issuer(ctx: Context, asset: StellarAsset) -> None:

@@ -61,7 +61,7 @@ def write_tx_output(w: Writer, o: TxOutput | PrevOutput, script_pubkey: bytes) -
 
 
 def write_op_push(w: Writer, n: int) -> None:
-    ensure(n >= 0 and n <= 0xFFFF_FFFF)
+    ensure(0 <= n <= 0xFFFF_FFFF)
     if n < 0x4C:
         w.append(n & 0xFF)
     elif n < 0xFF:
@@ -80,7 +80,7 @@ def write_op_push(w: Writer, n: int) -> None:
 
 
 def op_push_length(n: int) -> int:
-    ensure(n >= 0 and n <= 0xFFFF_FFFF)
+    ensure(0 <= n <= 0xFFFF_FFFF)
     if n < 0x4C:
         return 1
     elif n < 0xFF:

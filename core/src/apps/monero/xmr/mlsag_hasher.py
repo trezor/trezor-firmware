@@ -33,13 +33,13 @@ class PreMlsagHasher:
         self.rtcsig_hasher.uvarint(fee)  # UVarintType
 
     def set_ecdh(self, ecdh: bytes):
-        if self.state != 2 and self.state != 3 and self.state != 4:
+        if self.state not in (2, 3, 4):
             raise ValueError("State error")
         self.state = 4
         self.rtcsig_hasher.buffer(ecdh)
 
     def set_out_pk_commitment(self, out_pk_commitment: bytes):
-        if self.state != 4 and self.state != 5:
+        if self.state not in (4, 5):
             raise ValueError("State error")
         self.state = 5
         self.rtcsig_hasher.buffer(out_pk_commitment)  # ECKey

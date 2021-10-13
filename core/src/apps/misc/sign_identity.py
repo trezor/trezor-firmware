@@ -124,8 +124,6 @@ def sign_challenge(
     sigtype: str | coininfo.CoinInfo,
     curve: str,
 ) -> bytes:
-    from trezor.crypto.hashlib import sha256
-
     if curve == "secp256k1":
         from trezor.crypto.curve import secp256k1
     elif curve == "nist256p1":
@@ -166,7 +164,7 @@ def sign_challenge(
 
     if curve == "ed25519":
         signature = b"\x00" + signature
-    elif sigtype == "gpg" or sigtype == "ssh":
+    elif sigtype in ("gpg", "ssh"):
         signature = b"\x00" + signature[1:]
 
     return signature

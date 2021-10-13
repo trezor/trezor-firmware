@@ -239,11 +239,9 @@ def _protect_signature(state: State, mg_buffer: list[bytes]) -> list[bytes]:
 
     cipher = chacha20poly1305(key, nonce)
 
-    """
-    cipher.update() input has to be 512 bit long (besides the last block).
-    Thus we go over mg_buffer and buffer 512 bit input blocks before
-    calling cipher.update().
-    """
+    # cipher.update() input has to be 512 bit long (besides the last block).
+    # Thus we go over mg_buffer and buffer 512 bit input blocks before
+    # calling cipher.update().
     CHACHA_BLOCK = 64  # 512 bit chacha key-stream block size
     buff = bytearray(CHACHA_BLOCK)
     buff_len = 0  # valid bytes in the block buffer
