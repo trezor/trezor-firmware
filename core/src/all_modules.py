@@ -298,8 +298,6 @@ apps.common.coininfo
 import apps.common.coininfo
 apps.common.coins
 import apps.common.coins
-apps.common.confirm
-import apps.common.confirm
 apps.common.keychain
 import apps.common.keychain
 apps.common.passphrase
