@@ -49,6 +49,6 @@ async def _init(ctx: wire.Context, sha: HashWriter, msg: EosSignTx) -> None:
 
 
 async def _actions(ctx: wire.Context, sha: HashWriter, num_actions: int) -> None:
-    for i in range(num_actions):
+    for _ in range(num_actions):
         action = await ctx.call(EosTxActionRequest(), EosTxActionAck)
         await process_action(ctx, sha, action)

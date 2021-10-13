@@ -386,7 +386,7 @@ def test_wrong_coordinator(client):
     )
 
     with pytest.raises(TrezorFailure, match="Unauthorized operation"):
-        ownership_proof, _ = btc.get_ownership_proof(
+        btc.get_ownership_proof(
             client,
             "Testnet",
             parse_path("84'/1'/0'/1/0"),
@@ -412,7 +412,7 @@ def test_cancel_authorization(client):
     device.cancel_authorization(client)
 
     with pytest.raises(TrezorFailure, match="No preauthorized operation"):
-        ownership_proof, _ = btc.get_ownership_proof(
+        btc.get_ownership_proof(
             client,
             "Testnet",
             parse_path("84'/1'/0'/1/0"),

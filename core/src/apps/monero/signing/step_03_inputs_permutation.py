@@ -27,13 +27,13 @@ if False:
 async def tsx_inputs_permutation(
     state: State, permutation: list[int]
 ) -> MoneroTransactionInputsPermutationAck:
+    """
+    Set permutation on the inputs - sorted by key image on host.
+    """
     from trezor.messages import MoneroTransactionInputsPermutationAck
 
     await transaction_step(state, state.STEP_PERM)
 
-    """
-    Set permutation on the inputs - sorted by key image on host.
-    """
     if state.last_step != state.STEP_INP:
         raise ValueError("Invalid state transition")
     if len(permutation) != state.input_count:

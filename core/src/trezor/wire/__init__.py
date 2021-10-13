@@ -309,7 +309,7 @@ async def _handle_single_message(
     res_msg: protobuf.MessageType | None = None
 
     # We need to find a handler for this message type.  Should not raise.
-    handler = find_handler(ctx.iface, msg.type)
+    handler = find_handler(ctx.iface, msg.type)  # pylint: disable=assignment-from-none
 
     if handler is None:
         # If no handler is found, we can skip decoding and directly
@@ -431,7 +431,7 @@ async def handle_session(
                         # Shut down the loop if there is no next message waiting.
                         # Let the session be restarted from `main`.
                         loop.clear()
-                        return
+                        return  # pylint: disable=lost-exception
 
         except Exception as exc:
             # Log and try again. The session handler can only exit explicitly via

@@ -20,8 +20,8 @@ def _byte_size(x: int) -> int:
     for exp in range(64):
         if x < 0x100 ** exp:
             return exp
-    else:
-        raise ValueError  # int is too large
+
+    raise ValueError  # int is too large
 
 
 def int_to_bytes(x: int) -> bytes:

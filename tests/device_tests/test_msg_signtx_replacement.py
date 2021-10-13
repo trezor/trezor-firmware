@@ -982,7 +982,7 @@ def test_p2wpkh_invalid_signature(client):
     }
 
     with pytest.raises(TrezorFailure, match="Invalid signature"):
-        _, serialized_tx = btc.sign_tx(
+        btc.sign_tx(
             client,
             "Testnet",
             [inp1],

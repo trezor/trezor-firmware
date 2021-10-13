@@ -134,7 +134,7 @@ class MessageType(XmrType):
     """
 
     def __init__(self, **kwargs):
-        for kw in kwargs:
+        for kw in kwargs:  # pylint: disable=consider-using-dict-items
             setattr(self, kw, kwargs[kw])
 
     __eq__ = obj_eq

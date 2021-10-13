@@ -42,9 +42,8 @@ if False:
     Indices = Tuple[int, ...]
     MnemonicGroups = dict[int, tuple[int, set[tuple[int, bytes]]]]
 
-"""
-## Simple helpers
-"""
+
+# === Simple helpers ===
 
 _RADIX_BITS = const(10)
 """The length of the radix in bits."""
@@ -62,9 +61,7 @@ def _xor(a: bytes, b: bytes) -> bytes:
     return bytes(x ^ y for x, y in zip(a, b))
 
 
-"""
-## Constants
-"""
+# === Constants ===
 
 _ID_LENGTH_BITS = const(15)
 """The length of the random identifier in bits."""
@@ -106,9 +103,7 @@ _DIGEST_INDEX = const(254)
 """The index of the share containing the digest of the shared secret."""
 
 
-"""
-# Keyboard functions
-"""
+# === Keyboard functions ===
 
 KEYBOARD_FULL_MASK = const(0x1FF)
 """All buttons are allowed. 9-bit bitmap all set to 1."""
@@ -126,9 +121,7 @@ def button_sequence_to_word(prefix: str) -> str:
     return slip39.button_sequence_to_word(int(prefix))
 
 
-"""
-# External API
-"""
+# === External API ===
 
 MAX_SHARE_COUNT = const(16)
 """The maximum number of shares that can be created."""
@@ -265,7 +258,7 @@ def recover_ems(mnemonics: list[str]) -> tuple[int, int, bytes]:
         identifier,
         iteration_exponent,
         group_threshold,
-        group_count,
+        _group_count,
         groups,
     ) = _decode_mnemonics(mnemonics)
 
@@ -274,7 +267,7 @@ def recover_ems(mnemonics: list[str]) -> tuple[int, int, bytes]:
             f"Wrong number of mnemonic groups. Expected {group_threshold} groups, but {len(groups)} were provided."
         )
 
-    for group_index, group in groups.items():
+    for group in groups.values():
         if len(group[1]) != group[0]:  # group[0] is threshold
             raise MnemonicError(
                 f"Wrong number of mnemonics. Expected {group[0]} mnemonics, but {len(group[1])} were provided."
@@ -344,9 +337,7 @@ def decode_mnemonic(mnemonic: str) -> Share:
     )
 
 
-"""
-## Convert mnemonics or integers to indices and back
-"""
+# === Convert mnemonics or integers to indices and back ===
 
 
 def _int_from_indices(indices: Indices) -> int:
@@ -371,9 +362,7 @@ def _mnemonic_to_indices(mnemonic: str) -> Iterable[int]:
     return (slip39.word_index(word.lower()) for word in mnemonic.split())
 
 
-"""
-## Checksum functions
-"""
+# === Checksum functions ===
 
 
 def _rs1024_create_checksum(data: Indices) -> Indices:
@@ -449,9 +438,7 @@ def _rs1024_error_index(data: Indices) -> int | None:
     return None
 
 
-"""
-## Internal functions
-"""
+# === Internal functions ===
 
 
 def _round_function(i: int, passphrase: bytes, e: int, salt: bytes, r: bytes) -> bytes:
@@ -616,7 +603,7 @@ def _decode_mnemonics(
             "Invalid set of mnemonics. All mnemonics must have the same group count."
         )
 
-    for group_index, group in groups.items():
+    for group in groups.values():
         if len(set(share[0] for share in group[1])) != len(group[1]):
             raise MnemonicError(
                 "Invalid set of shares. Member indices in each group must be unique."

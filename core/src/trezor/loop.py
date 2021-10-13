@@ -99,7 +99,7 @@ def close(task: Task) -> None:
     Unschedule and unblock a task, close it so it can release all resources, and
     call its finalizer.
     """
-    for iface in _paused:
+    for iface in _paused:  # pylint: disable=consider-using-dict-items
         _paused[iface].discard(task)
     _queue.discard(task)
     task.close()

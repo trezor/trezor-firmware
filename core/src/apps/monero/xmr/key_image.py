@@ -75,7 +75,7 @@ def _export_key_image(
         sub_addr_major,
         sub_addr_minor,
     )
-    xi, ki, recv_derivation = r[:3]
+    xi, ki, _ = r[:3]
 
     phash = crypto.encodepoint(ki)
     sig = generate_ring_signature(phash, ki, [pkey], xi, 0, test)

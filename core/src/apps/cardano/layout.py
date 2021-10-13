@@ -93,9 +93,13 @@ def is_printable_ascii_bytestring(bytestr: bytes) -> bool:
 async def show_native_script(
     ctx: wire.Context,
     script: CardanoNativeScript,
-    indices: list[int] = [],
+    indices: list[int] | None = None,
 ) -> None:
-    indices_str = ".".join([str(i) for i in indices])
+    script_heading = "Script"
+    if indices is None:
+        indices = []
+    if indices:
+        script_heading += " " + ".".join(str(i) for i in indices)
 
     script_type_name_suffix = ""
     if script.type == CardanoNativeScriptType.PUB_KEY:
@@ -103,11 +107,6 @@ async def show_native_script(
             script_type_name_suffix = "path"
         elif script.key_hash:
             script_type_name_suffix = "hash"
-
-    if indices_str:
-        script_heading = "Script " + indices_str
-    else:
-        script_heading = "Script"
 
     props: list[PropertyType] = [
         (
@@ -154,7 +153,7 @@ async def show_native_script(
     )
 
     for i, sub_script in enumerate(script.scripts):
-        await show_native_script(ctx, sub_script, indices + [(i + 1)])
+        await show_native_script(ctx, sub_script, indices + [i + 1])
 
 
 async def show_script_hash(
@@ -433,11 +432,9 @@ async def confirm_stake_pool_parameters(
             ),
             ("Pool reward account:", pool_parameters.reward_account),
             (
-                "Pledge: {}\nCost: {}\nMargin: {}%".format(
-                    format_coin_amount(pool_parameters.pledge),
-                    format_coin_amount(pool_parameters.cost),
-                    percentage_formatted,
-                ),
+                f"Pledge: {format_coin_amount(pool_parameters.pledge)}\n"
+                + f"Cost: {format_coin_amount(pool_parameters.cost)}\n"
+                + f"Margin: {percentage_formatted}%",
                 None,
             ),
         ],

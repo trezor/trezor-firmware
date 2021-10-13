@@ -129,6 +129,4 @@ class TestOpReturn:
             with pytest.raises(
                 TrezorFailure, match="Output's address_n provided but not expected."
             ):
-                _, serialized_tx = btc.sign_tx(
-                    client, "Bitcoin", [inp1], [out1], prev_txes=TX_API
-                )
+                btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=TX_API)

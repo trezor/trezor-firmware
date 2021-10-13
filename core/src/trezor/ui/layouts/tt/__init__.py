@@ -310,7 +310,7 @@ async def show_address(
     title: str = "Confirm address",
     network: str | None = None,
     multisig_index: int | None = None,
-    xpubs: Sequence[str] = [],
+    xpubs: Sequence[str] = (),
     address_extra: str | None = None,
     title_qr: str | None = None,
 ) -> None:

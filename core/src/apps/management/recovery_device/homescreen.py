@@ -224,8 +224,8 @@ async def _show_remaining_groups_and_shares(ctx: wire.GenericContext) -> None:
 
     groups = set()
     first_entered_index = -1
-    for i in range(len(shares_remaining)):
-        if shares_remaining[i] < slip39.MAX_SHARE_COUNT:
+    for i, group_count in enumerate(shares_remaining):
+        if group_count < slip39.MAX_SHARE_COUNT:
             first_entered_index = i
 
     share = None

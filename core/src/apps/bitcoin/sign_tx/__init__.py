@@ -37,7 +37,7 @@ if False:
     ]
 
     class SignerClass(Protocol):
-        def __init__(
+        def __init__(  # pylint: disable=super-init-not-called
             self,
             tx: SignTx,
             keychain: Keychain,

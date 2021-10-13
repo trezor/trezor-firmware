@@ -40,7 +40,7 @@ def write_input_script_prefixed(
         # p2sh multisig
         assert multisig is not None  # checked in sanitize_tx_input
         signature_index = multisig_pubkey_index(multisig, pubkey)
-        return write_input_script_multisig_prefixed(
+        write_input_script_multisig_prefixed(
             w, multisig, signature, signature_index, hash_type, coin
         )
     else:

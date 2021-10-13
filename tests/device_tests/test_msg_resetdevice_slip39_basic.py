@@ -48,7 +48,7 @@ def reset_device(client, strength):
         yield from click_through(client.debug, screens=8, code=B.ResetDevice)
 
         # show & confirm shares
-        for h in range(5):
+        for _ in range(5):
             # mnemonic phrases
             mnemonic = yield from read_and_confirm_mnemonic(client.debug)
             all_mnemonics.append(mnemonic)
@@ -141,7 +141,5 @@ def validate_mnemonics(mnemonics, threshold, expected_ems):
         assert expected_ems == ems.ciphertext
     # We expect these combinations to raise MnemonicError
     for test_group in combinations(mnemonics, threshold - 1):
-        with pytest.raises(
-            MnemonicError, match=r".*Expected {} mnemonics.*".format(threshold)
-        ):
+        with pytest.raises(MnemonicError, match=f".*Expected {threshold} mnemonics.*"):
             shamir.combine_mnemonics(test_group)

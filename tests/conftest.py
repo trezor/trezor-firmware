@@ -47,9 +47,9 @@ def _raw_client(request):
                 return TrezorClientDebugLink(device, auto_interact=not interact)
             except Exception:
                 pass
-        else:
-            request.session.shouldstop = "Failed to communicate with Trezor"
-            raise RuntimeError("No debuggable device found")
+
+        request.session.shouldstop = "Failed to communicate with Trezor"
+        raise RuntimeError("No debuggable device found")
 
 
 @pytest.fixture(scope="function")

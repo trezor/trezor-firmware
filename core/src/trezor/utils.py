@@ -48,7 +48,7 @@ def unimport_end(mods: Set[str], collect: bool = True) -> None:
     # reallocated at run-time
     assert len(sys.modules) <= 160, "Please bump preallocated size in mpconfigport.h"
 
-    for mod in sys.modules:
+    for mod in sys.modules:  # pylint: disable=consider-using-dict-items
         if mod not in mods:
             # remove reference from sys.modules
             del sys.modules[mod]
@@ -148,7 +148,9 @@ def chunks_intersperse(
 if False:
 
     class HashContext(Protocol):
-        def __init__(self, data: bytes = None) -> None:
+        def __init__(  # pylint: disable=super-init-not-called
+            self, data: bytes = None
+        ) -> None:
             ...
 
         def update(self, buf: bytes) -> None:

@@ -157,6 +157,8 @@ def _get_ballot(ballot):
     elif ballot == TezosBallotType.Pass:
         return "pass"
 
+    raise RuntimeError  # unrecognized enum value
+
 
 def _get_operation_bytes(w: bytearray, msg):
     write_bytes_fixed(w, msg.branch, helpers.BRANCH_HASH_SIZE)

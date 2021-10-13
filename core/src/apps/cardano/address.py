@@ -294,7 +294,7 @@ def _validate_shelley_address(
 
 
 def _validate_address_size(address_bytes: bytes) -> None:
-    if not (MIN_ADDRESS_BYTES_LENGTH <= len(address_bytes) <= MAX_ADDRESS_BYTES_LENGTH):
+    if not MIN_ADDRESS_BYTES_LENGTH <= len(address_bytes) <= MAX_ADDRESS_BYTES_LENGTH:
         raise INVALID_ADDRESS
 
 

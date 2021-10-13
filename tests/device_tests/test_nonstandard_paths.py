@@ -224,8 +224,6 @@ def test_signtx_multisig(client, paths, address_index):
         multisig=multisig,
     )
 
-    sig, serialized_tx = btc.sign_tx(
-        client, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET
-    )
+    sig, _ = btc.sign_tx(client, "Bitcoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET)
 
     assert sig[0]

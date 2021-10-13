@@ -5,7 +5,7 @@ from os.path import basename
 from graphviz import Digraph
 
 
-class Message(object):
+class Message:
     def __init__(self, fname, name, attrs):
         self.fname = basename(fname)
         self.name = name

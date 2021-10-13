@@ -54,9 +54,7 @@ async def input_vini(
     if state.current_input_index > 0 and state.last_ki <= cur_ki:
         raise ValueError("Key image order invalid")
 
-    """
-    Incremental hasing of tx.vin[i]
-    """
+    # Incremental hasing of tx.vin[i]
     state.tx_prefix_hasher.buffer(vini_bin)
     state.last_step = state.STEP_VINI
     state.last_ki = cur_ki if state.current_input_index < state.input_count else None

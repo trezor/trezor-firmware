@@ -99,7 +99,7 @@ async def process_unknown_action(
 
 def check_action(action: EosTxActionAck, name: str, account: str) -> bool:
     if account == "eosio":
-        if (
+        return (
             (name == "buyram" and action.buy_ram is not None)
             or (name == "buyrambytes" and action.buy_ram_bytes is not None)
             or (name == "sellram" and action.sell_ram is not None)
@@ -112,10 +112,7 @@ def check_action(action: EosTxActionAck, name: str, account: str) -> bool:
             or (name == "linkauth" and action.link_auth is not None)
             or (name == "unlinkauth" and action.unlink_auth is not None)
             or (name == "newaccount" and action.new_account is not None)
-        ):
-            return True
-        else:
-            return False
+        )
 
     elif name == "transfer":
         return action.transfer is not None
