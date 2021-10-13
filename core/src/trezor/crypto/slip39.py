@@ -37,7 +37,7 @@ from trezor.crypto import hmac, pbkdf2, random
 from trezor.errors import MnemonicError
 
 if False:
-    from typing import Iterable, Tuple
+    from typing import Callable, Iterable, Tuple
 
     Indices = Tuple[int, ...]
     MnemonicGroups = dict[int, tuple[int, set[tuple[int, bytes]]]]
@@ -162,6 +162,7 @@ def decrypt(
     passphrase: bytes,
     iteration_exponent: int,
     identifier: int,
+    progress_callback: Callable[[int, int], None] | None = None,
 ) -> bytes:
     """
     Converts the Encrypted Master Secret to a Master Secret by applying the passphrase.
@@ -177,6 +178,8 @@ def decrypt(
             r,
             _xor(l, _round_function(i, passphrase, iteration_exponent, salt, r)),
         )
+        if progress_callback:
+            progress_callback(_ROUND_COUNT - i, _ROUND_COUNT)
     return r + l
 
 
