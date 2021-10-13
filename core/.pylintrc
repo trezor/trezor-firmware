@@ -1,5 +1,0 @@
-[MASTER]
-init-hook='sys.path.append("mocks");
-
-[MESSAGES CONTROL]
-disable=C0111,C0103,C0413,W0603,W0703,R,bad-continuation
