@@ -18,6 +18,7 @@ pystyle_check: ## run code style check on application sources and tests
 	isort --version | awk '/VERSION/{print $$2}'
 	black --version
 	mypy --version
+	pylint --version
 	@echo [MYPY]
 	@make -C core mypy
 	@echo [FLAKE8]
@@ -26,6 +27,8 @@ pystyle_check: ## run code style check on application sources and tests
 	@isort --check-only $(PY_FILES)
 	@echo [BLACK]
 	@black --check $(PY_FILES)
+	@echo [PYLINT]
+	@pylint $(PY_FILES)
 	make -C python style_check
 
 pystyle: ## apply code style on application sources and tests
@@ -37,6 +40,8 @@ pystyle: ## apply code style on application sources and tests
 	@make -C core mypy
 	@echo [FLAKE8]
 	@flake8 $(PY_FILES)
+	@echo [PYLINT]
+	@pylint $(PY_FILES)
 	make -C python style
 
 changelog_check: ## check changelog format
