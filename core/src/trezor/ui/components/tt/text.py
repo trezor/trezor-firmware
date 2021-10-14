@@ -8,7 +8,10 @@ from ..common.text import (  # noqa: F401
     BR_HALF,
     LINE_WIDTH,
     LINE_WIDTH_PAGINATED,
+    TEXT_HEADER_HEIGHT,
+    TEXT_LINE_HEIGHT,
     TEXT_MAX_LINES,
+    TEXT_MAX_LINES_NO_HEADER,
     Span,
     TextBase,
     render_text,
@@ -30,13 +33,16 @@ def header(
 class Text(TextBase):
     def on_render(self) -> None:
         if self.repaint:
-            header(
-                self.header_text,
-                self.header_icon,
-                ui.TITLE_GREY,
-                ui.BG,
-                self.icon_color,
-            )
+            offset_y = TEXT_LINE_HEIGHT
+            if self.header_text is not None:
+                header(
+                    self.header_text,
+                    self.header_icon,
+                    ui.TITLE_GREY,
+                    ui.BG,
+                    self.icon_color,
+                )
+                offset_y = TEXT_HEADER_HEIGHT + TEXT_LINE_HEIGHT
             render_text(
                 self.content,
                 self.new_lines,
@@ -46,6 +52,7 @@ class Text(TextBase):
                 break_words=self.break_words,
                 line_width=self.line_width,
                 render_page_overflow=self.render_page_overflow,
+                offset_y=offset_y,
             )
             self.repaint = False
 
