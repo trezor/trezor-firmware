@@ -60,9 +60,9 @@ def write_input_script_prefixed(
             write_input_script_p2wpkh_in_p2sh(
                 w, common.ecdsa_hash_pubkey(pubkey, coin), prefixed=True
             )
-    elif script_type == InputScriptType.SPENDWITNESS:
-        # native p2wpkh or p2wsh
-        script_sig = input_script_native_p2wpkh_or_p2wsh()
+    elif script_type in (InputScriptType.SPENDWITNESS, InputScriptType.SPENDTAPROOT):
+        # native p2wpkh or p2wsh or p2tr
+        script_sig = input_script_native_segwit()
         write_bytes_prefixed(w, script_sig)
     elif script_type == InputScriptType.SPENDMULTISIG:
         # p2sh multisig
@@ -77,9 +77,9 @@ def write_input_script_prefixed(
 
 def output_derive_script(address: str, coin: CoinInfo) -> bytes:
     if coin.bech32_prefix and address.startswith(coin.bech32_prefix):
-        # p2wpkh or p2wsh
-        witprog = common.decode_bech32_address(coin.bech32_prefix, address)
-        return output_script_native_p2wpkh_or_p2wsh(witprog)
+        # p2wpkh or p2wsh or p2tr
+        witver, witprog = common.decode_bech32_address(coin.bech32_prefix, address)
+        return output_script_native_segwit(witver, witprog)
 
     if (
         not utils.BITCOIN_ONLY
@@ -205,34 +205,39 @@ def output_script_p2sh(scripthash: bytes) -> bytearray:
     return s
 
 
-# SegWit: Native P2WPKH or P2WSH
+# SegWit: Native P2WPKH or P2WSH or P2TR
 # ===
+#
+# P2WPKH (Pay-to-Witness-Public-Key-Hash) is native SegWit version 0 P2PKH.
+# Not backwards compatible.
 # https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#p2wpkh
+#
+# P2WSH (Pay-to-Witness-Script-Hash) is native SegWit version 0 P2SH.
+# Not backwards compatible.
 # https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#p2wsh
 #
-# P2WPKH (Pay-to-Witness-Public-Key-Hash) is the segwit native P2PKH.
+# P2TR (Pay-to-Taproot) is native SegWit version 1.
 # Not backwards compatible.
-#
-# P2WSH (Pay-to-Witness-Script-Hash) is segwit native P2SH.
-# Not backwards compatible.
+# https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki#script-validation-rules
 
 
-def input_script_native_p2wpkh_or_p2wsh() -> bytearray:
+def input_script_native_segwit() -> bytearray:
     # Completely replaced by the witness and therefore empty.
     return bytearray(0)
 
 
-def output_script_native_p2wpkh_or_p2wsh(witprog: bytes) -> bytearray:
+def output_script_native_segwit(witver: int, witprog: bytes) -> bytearray:
     # Either:
     # 00 14 <20-byte-key-hash>
     # 00 20 <32-byte-script-hash>
+    # 51 20 <32-byte-taproot-output-key>
     length = len(witprog)
-    utils.ensure(length == 20 or length == 32)
+    utils.ensure((length == 20 and witver == 0) or length == 32)
 
-    w = utils.empty_bytearray(3 + length)
-    w.append(0x00)  # witness version byte
-    w.append(length)  # pub key hash length is 20 (P2WPKH) or 32 (P2WSH) bytes
-    write_bytes_fixed(w, witprog, length)  # pub key hash
+    w = utils.empty_bytearray(2 + length)
+    w.append(witver + 0x50 if witver else 0)  # witness version byte (OP_witver)
+    w.append(length)  # witness program length is 20 (P2WPKH) or 32 (P2WSH, P2TR) bytes
+    write_bytes_fixed(w, witprog, length)
     return w
 
 

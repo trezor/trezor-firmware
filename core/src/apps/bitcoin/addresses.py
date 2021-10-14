@@ -10,7 +10,7 @@ from apps.common.coininfo import CoinInfo
 
 from .common import ecdsa_hash_pubkey, encode_bech32_address
 from .multisig import multisig_get_pubkeys, multisig_pubkey_index
-from .scripts import output_script_native_p2wpkh_or_p2wsh, write_output_script_multisig
+from .scripts import output_script_native_segwit, write_output_script_multisig
 
 if False:
     from trezor.crypto import bip32
@@ -109,13 +109,13 @@ def address_p2sh(redeem_script_hash: bytes, coin: CoinInfo) -> str:
 
 def address_p2wpkh_in_p2sh(pubkey: bytes, coin: CoinInfo) -> str:
     pubkey_hash = ecdsa_hash_pubkey(pubkey, coin)
-    redeem_script = output_script_native_p2wpkh_or_p2wsh(pubkey_hash)
+    redeem_script = output_script_native_segwit(0, pubkey_hash)
     redeem_script_hash = coin.script_hash(redeem_script).digest()
     return address_p2sh(redeem_script_hash, coin)
 
 
 def address_p2wsh_in_p2sh(witness_script_hash: bytes, coin: CoinInfo) -> str:
-    redeem_script = output_script_native_p2wpkh_or_p2wsh(witness_script_hash)
+    redeem_script = output_script_native_segwit(0, witness_script_hash)
     redeem_script_hash = coin.script_hash(redeem_script).digest()
     return address_p2sh(redeem_script_hash, coin)
 
