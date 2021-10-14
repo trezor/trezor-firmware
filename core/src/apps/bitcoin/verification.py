@@ -5,7 +5,7 @@ from trezor.crypto.hashlib import sha256
 
 from .common import ecdsa_hash_pubkey
 from .scripts import (
-    output_script_native_p2wpkh_or_p2wsh,
+    output_script_native_segwit,
     output_script_p2pkh,
     output_script_p2sh,
     parse_input_script_multisig,
@@ -40,14 +40,14 @@ class SignatureVerifier:
             if len(script_pubkey) == 22:  # P2WPKH
                 public_key, signature, hash_type = parse_witness_p2wpkh(witness)
                 pubkey_hash = ecdsa_hash_pubkey(public_key, coin)
-                if output_script_native_p2wpkh_or_p2wsh(pubkey_hash) != script_pubkey:
+                if output_script_native_segwit(0, pubkey_hash) != script_pubkey:
                     raise wire.DataError("Invalid public key hash")
                 self.public_keys = [public_key]
                 self.signatures = [(signature, hash_type)]
             elif len(script_pubkey) == 34:  # P2WSH
                 script, self.signatures = parse_witness_multisig(witness)
                 script_hash = sha256(script).digest()
-                if output_script_native_p2wpkh_or_p2wsh(script_hash) != script_pubkey:
+                if output_script_native_segwit(0, script_hash) != script_pubkey:
                     raise wire.DataError("Invalid script hash")
                 self.public_keys, self.threshold = parse_output_script_multisig(script)
             else:

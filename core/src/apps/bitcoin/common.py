@@ -7,6 +7,7 @@ from trezor.enums import InputScriptType, OutputScriptType
 from trezor.utils import ensure
 
 if False:
+    from typing import Tuple
     from apps.common.coininfo import CoinInfo
     from trezor.messages import TxInput
 
@@ -84,12 +85,12 @@ def encode_bech32_address(prefix: str, witver: int, script: bytes) -> str:
     return address
 
 
-def decode_bech32_address(prefix: str, address: str) -> bytes:
+def decode_bech32_address(prefix: str, address: str) -> Tuple[int, bytes]:
     witver, raw = bech32.decode(prefix, address)
     if witver not in _BECH32_WITVERS:
         raise wire.ProcessError("Invalid address witness program")
     assert raw is not None
-    return bytes(raw)
+    return witver, bytes(raw)
 
 
 def input_is_segwit(txi: TxInput) -> bool:
