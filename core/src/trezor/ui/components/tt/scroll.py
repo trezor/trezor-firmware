@@ -7,7 +7,13 @@ from trezor.messages import ButtonAck, ButtonRequest
 from .button import Button, ButtonCancel, ButtonConfirm, ButtonDefault
 from .confirm import CANCELLED, CONFIRMED, Confirm
 from .swipe import SWIPE_DOWN, SWIPE_UP, SWIPE_VERTICAL, Swipe
-from .text import LINE_WIDTH_PAGINATED, TEXT_MAX_LINES, Span, Text
+from .text import (
+    LINE_WIDTH_PAGINATED,
+    TEXT_MAX_LINES,
+    TEXT_MAX_LINES_NO_HEADER,
+    Span,
+    Text,
+)
 
 if False:
     from typing import Callable, Iterable
@@ -310,7 +316,7 @@ PAGEBREAK = 0, ""
 
 def paginate_paragraphs(
     para: Iterable[tuple[int, str]],
-    header: str,
+    header: str | None,
     header_icon: str = ui.ICON_DEFAULT,
     icon_color: int = ui.ORANGE_ICON,
     break_words: bool = False,
@@ -319,6 +325,7 @@ def paginate_paragraphs(
     span = Span("", 0, ui.NORMAL, break_words=break_words)
     lines = 0
     content: list[TextContent] = []
+    max_lines = TEXT_MAX_LINES_NO_HEADER if header is None else TEXT_MAX_LINES
     for item in para:
         if item is PAGEBREAK:
             continue
@@ -330,7 +337,7 @@ def paginate_paragraphs(
             content.append("\n")
         content.extend(item)
 
-    if lines <= TEXT_MAX_LINES:
+    if lines <= max_lines:
         result = Text(
             header,
             header_icon=header_icon,
@@ -377,7 +384,7 @@ def paginate_paragraphs(
                     )
                     page.content = content
                     pages.append(page)
-                    lines_left = TEXT_MAX_LINES - 1
+                    lines_left = max_lines - 1
                 else:
                     lines_left -= 1
 
