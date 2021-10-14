@@ -45,29 +45,33 @@ VECTORS = (  # coin, path, script_type, address
         proto.InputScriptType.SPENDWITNESS,
         "bc1qktmhrsmsenepnnfst8x6j27l0uqv7ggrg8x38q",
     ),
-    (
+    pytest.param(
         "Testnet",
         "86'/1'/0'/0/0",
         proto.InputScriptType.SPENDTAPROOT,
         "tb1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq8s8a5u",
+        marks=pytest.mark.skip_t1,
     ),
-    (
+    pytest.param(
         "Testnet",
         "86'/1'/0'/1/0",
         proto.InputScriptType.SPENDTAPROOT,
         "tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c",
+        marks=pytest.mark.skip_t1,
     ),
-    (
+    pytest.param(
         "Bitcoin",
         "86'/0'/0'/0/0",
         proto.InputScriptType.SPENDTAPROOT,
         "bc1ptxs597p3fnpd8gwut5p467ulsydae3rp9z75hd99w8k3ljr9g9rqx6ynaw",
+        marks=pytest.mark.skip_t1,
     ),
-    (
+    pytest.param(
         "Bitcoin",
         "86'/0'/0'/1/0",
         proto.InputScriptType.SPENDTAPROOT,
         "bc1pgypgja2hmcx2l6s2ssq75k6ev68ved6nujcspt47dgvkp8euc70s6uegk6",
+        marks=pytest.mark.skip_t1,
     ),
     pytest.param(
         "Groestlcoin",
@@ -86,6 +90,13 @@ VECTORS = (  # coin, path, script_type, address
 )
 
 
+BIP86_VECTORS = (  # path, address for "abandon ... abandon about" seed
+    ("86'/0'/0'/0/0", "bc1p5cyxnuxmeuwuvkwfem96lqzszd02n6xdcjrs20cac6yqjjwudpxqkedrcr"),
+    ("86'/0'/0'/0/1", "bc1p4qhjn9zdvkux4e44uhx8tc55attvtyu358kutcqkudyccelu0was9fqzwh"),
+    ("86'/0'/0'/1/0", "bc1p3qkhfews2uk44qtvauqyr2ttdsw7svhkl9nkm9s9c3x4ax5h60wqwruhk7"),
+)
+
+
 @pytest.mark.parametrize("show_display", (True, False))
 @pytest.mark.parametrize("coin, path, script_type, address", VECTORS)
 def test_show_segwit(client, show_display, coin, path, script_type, address):
@@ -97,6 +108,26 @@ def test_show_segwit(client, show_display, coin, path, script_type, address):
             show_display,
             None,
             script_type=script_type,
+        )
+        == address
+    )
+
+
+# Tests https://github.com/bitcoin/bips/blob/master/bip-0086.mediawiki#test-vectors
+@pytest.mark.skip_t1
+@pytest.mark.setup_client(
+    mnemonic="abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+)
+@pytest.mark.parametrize("path, address", BIP86_VECTORS)
+def test_bip86(client, path, address):
+    assert (
+        btc.get_address(
+            client,
+            "Bitcoin",
+            parse_path(path),
+            False,
+            None,
+            script_type=proto.InputScriptType.SPENDTAPROOT,
         )
         == address
     )
