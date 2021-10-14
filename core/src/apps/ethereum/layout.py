@@ -103,6 +103,7 @@ def require_confirm_data(ctx: Context, data: bytes, data_total: int) -> Awaitabl
         description=f"Size: {data_total} bytes",
         data=data,
         br_code=ButtonRequestType.SignTx,
+        ask_pagination=True,
     )
 
 

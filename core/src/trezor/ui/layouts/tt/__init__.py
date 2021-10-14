@@ -10,12 +10,19 @@ from trezor.ui.qr import Qr
 from trezor.utils import chunks, chunks_intersperse
 
 from ...components.common import break_path_to_lines
-from ...components.common.confirm import is_confirmed, raise_if_cancelled
+from ...components.common.confirm import (
+    CONFIRMED,
+    GO_BACK,
+    SHOW_PAGINATED,
+    is_confirmed,
+    raise_if_cancelled,
+)
 from ...components.tt import passphrase, pin
 from ...components.tt.button import ButtonCancel, ButtonDefault
 from ...components.tt.confirm import Confirm, HoldToConfirm
 from ...components.tt.scroll import (
     PAGEBREAK,
+    AskPaginated,
     Paginated,
     paginate_paragraphs,
     paginate_text,
@@ -32,7 +39,7 @@ from ...constants.tt import (
 from ..common import button_request, interact
 
 if False:
-    from typing import Awaitable, Iterator, NoReturn, Sequence
+    from typing import Awaitable, Iterable, Iterator, NoReturn, Sequence
 
     from ..common import PropertyType, ExceptionType
 
@@ -503,6 +510,50 @@ async def confirm_output(
     await raise_if_cancelled(interact(ctx, content, "confirm_output", br_code))
 
 
+async def _confirm_ask_pagination(
+    ctx: wire.GenericContext,
+    br_type: str,
+    title: str,
+    para: Iterable[tuple[int, str]],
+    para_truncated: Iterable[tuple[int, str]],
+    br_code: ButtonRequestType,
+    icon: str,
+    icon_color: int,
+) -> None:
+    paginated: ui.Layout | None = None
+
+    truncated = Text(
+        title,
+        header_icon=icon,
+        icon_color=icon_color,
+        new_lines=False,
+        max_lines=TEXT_MAX_LINES - 2,
+    )
+    for font, text in para_truncated:
+        truncated.content.extend((font, text, "\n"))
+    ask_dialog = Confirm(AskPaginated(truncated))
+
+    while True:
+        result = await raise_if_cancelled(interact(ctx, ask_dialog, br_type, br_code))
+        if result is CONFIRMED:
+            return
+        assert result is SHOW_PAGINATED
+
+        if paginated is None:
+            paginated = paginate_paragraphs(
+                para,
+                header=None,
+                back_button=True,
+                confirm=lambda content: Confirm(
+                    content, cancel=None, confirm="Close", confirm_style=ButtonDefault
+                ),
+            )
+        result = await interact(ctx, paginated, br_type, br_code)
+        assert result in (CONFIRMED, GO_BACK)
+
+    assert False
+
+
 async def confirm_blob(
     ctx: wire.GenericContext,
     br_type: str,
@@ -512,6 +563,7 @@ async def confirm_blob(
     br_code: ButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
+    ask_pagination: bool = False,
 ) -> None:
     """Confirm data blob.
 
@@ -556,14 +608,28 @@ async def confirm_blob(
             per_line = MONO_HEX_PER_LINE
         text.mono(ui.FG, *chunks_intersperse(data_str, per_line))
         content: ui.Layout = Confirm(text)
+        return await raise_if_cancelled(interact(ctx, content, br_type, br_code))
+
+    elif ask_pagination:
+        para = [(ui.MONO, line) for line in chunks(data_str, MONO_HEX_PER_LINE - 2)]
+
+        para_truncated = []
+        if description is not None:
+            para_truncated.append((ui.NORMAL, description))
+        para_truncated.extend(para[:TEXT_MAX_LINES])
+
+        return await _confirm_ask_pagination(
+            ctx, br_type, title, para, para_truncated, br_code, icon, icon_color
+        )
 
     else:
         para = []
         if description is not None:
             para.append((ui.NORMAL, description))
         para.extend((ui.MONO, line) for line in chunks(data_str, MONO_HEX_PER_LINE - 2))
-        content = paginate_paragraphs(para, title, icon, icon_color)
-    await raise_if_cancelled(interact(ctx, content, br_type, br_code))
+
+        paginated = paginate_paragraphs(para, title, icon, icon_color)
+        return await raise_if_cancelled(interact(ctx, paginated, br_type, br_code))
 
 
 def confirm_address(
