@@ -209,7 +209,7 @@ def grid(
 
 def in_area(area: Area, x: int, y: int) -> bool:
     ax, ay, aw, ah = area
-    return ax <= x <= ax + aw and ay <= y <= ay + ah
+    return ax <= x < ax + aw and ay <= y < ay + ah
 
 
 # Component events.  Should be different from `io.TOUCH_*` events.
