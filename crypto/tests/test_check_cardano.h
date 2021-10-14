@@ -113,14 +113,24 @@ START_TEST(test_bip32_cardano_hdnode_vector_1) {
   HDNode node;
 
   uint8_t mnemonic_bits[66];
+  uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
   int mnemonic_bits_len = mnemonic_to_bits(
       "ring crime symptom enough erupt lady behave ramp apart settle citizen "
       "junk",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 132);
-  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
-                                     mnemonic_bits_len / 8, &node);
+  secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+                                     mnemonic_bits_len / 8, cardano_secret,
+                                     NULL);
+  hdnode_from_secret_cardano(cardano_secret, &node);
 
+  ck_assert_mem_eq(
+      cardano_secret,
+      fromhex(
+          "08a14df748e477a69d21c97c56db151fc19e2521f31dd0ac5360f269e5b6ea46"
+          "daeb991f2d2128e2525415c56a07f4366baa26c1e48572a5e073934b6de35fbc"
+          "affbc325d9027c0f2d9f925b1dcf6c12bf5c1dd08904474066a4f2c00db56173"),
+      96);
   ck_assert_mem_eq(
       node.chain_code,
       fromhex(
@@ -149,15 +159,18 @@ START_TEST(test_bip32_cardano_hdnode_vector_2) {
   HDNode node;
 
   uint8_t mnemonic_bits[66];
+  uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
   int mnemonic_bits_len = mnemonic_to_bits(
       "ring crime symptom enough erupt lady behave ramp apart settle citizen "
       "junk",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 132);
-  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
-                                     mnemonic_bits_len / 8, &node);
+  secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+                                     mnemonic_bits_len / 8, cardano_secret,
+                                     NULL);
+  hdnode_from_secret_cardano(cardano_secret, &node);
 
-  hdnode_private_ckd_cardano(&node, 0x80000000);
+  hdnode_private_ckd(&node, 0x80000000);
 
   ck_assert_mem_eq(
       node.chain_code,
@@ -187,15 +200,18 @@ START_TEST(test_bip32_cardano_hdnode_vector_3) {
   HDNode node;
 
   uint8_t mnemonic_bits[66];
+  uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
   int mnemonic_bits_len = mnemonic_to_bits(
       "ring crime symptom enough erupt lady behave ramp apart settle citizen "
       "junk",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 132);
-  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
-                                     mnemonic_bits_len / 8, &node);
+  secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+                                     mnemonic_bits_len / 8, cardano_secret,
+                                     NULL);
+  hdnode_from_secret_cardano(cardano_secret, &node);
 
-  hdnode_private_ckd_cardano(&node, 0x80000001);
+  hdnode_private_ckd(&node, 0x80000001);
 
   ck_assert_mem_eq(
       node.chain_code,
@@ -225,16 +241,19 @@ START_TEST(test_bip32_cardano_hdnode_vector_4) {
   HDNode node;
 
   uint8_t mnemonic_bits[66];
+  uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
   int mnemonic_bits_len = mnemonic_to_bits(
       "ring crime symptom enough erupt lady behave ramp apart settle citizen "
       "junk",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 132);
-  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
-                                     mnemonic_bits_len / 8, &node);
+  secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+                                     mnemonic_bits_len / 8, cardano_secret,
+                                     NULL);
+  hdnode_from_secret_cardano(cardano_secret, &node);
 
-  hdnode_private_ckd_cardano(&node, 0x80000000);
-  hdnode_private_ckd_cardano(&node, 0x80000001);
+  hdnode_private_ckd(&node, 0x80000000);
+  hdnode_private_ckd(&node, 0x80000001);
 
   ck_assert_mem_eq(
       node.chain_code,
@@ -264,17 +283,20 @@ START_TEST(test_bip32_cardano_hdnode_vector_5) {
   HDNode node;
 
   uint8_t mnemonic_bits[66];
+  uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
   int mnemonic_bits_len = mnemonic_to_bits(
       "ring crime symptom enough erupt lady behave ramp apart settle citizen "
       "junk",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 132);
-  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
-                                     mnemonic_bits_len / 8, &node);
+  secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+                                     mnemonic_bits_len / 8, cardano_secret,
+                                     NULL);
+  hdnode_from_secret_cardano(cardano_secret, &node);
 
-  hdnode_private_ckd_cardano(&node, 0x80000000);
-  hdnode_private_ckd_cardano(&node, 0x80000001);
-  hdnode_private_ckd_cardano(&node, 0x80000002);
+  hdnode_private_ckd(&node, 0x80000000);
+  hdnode_private_ckd(&node, 0x80000001);
+  hdnode_private_ckd(&node, 0x80000002);
 
   ck_assert_mem_eq(
       node.chain_code,
@@ -304,18 +326,21 @@ START_TEST(test_bip32_cardano_hdnode_vector_6) {
   HDNode node;
 
   uint8_t mnemonic_bits[66];
+  uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
   int mnemonic_bits_len = mnemonic_to_bits(
       "ring crime symptom enough erupt lady behave ramp apart settle citizen "
       "junk",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 132);
-  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
-                                     mnemonic_bits_len / 8, &node);
+  secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+                                     mnemonic_bits_len / 8, cardano_secret,
+                                     NULL);
+  hdnode_from_secret_cardano(cardano_secret, &node);
 
-  hdnode_private_ckd_cardano(&node, 0x80000000);
-  hdnode_private_ckd_cardano(&node, 0x80000001);
-  hdnode_private_ckd_cardano(&node, 0x80000002);
-  hdnode_private_ckd_cardano(&node, 0x80000002);
+  hdnode_private_ckd(&node, 0x80000000);
+  hdnode_private_ckd(&node, 0x80000001);
+  hdnode_private_ckd(&node, 0x80000002);
+  hdnode_private_ckd(&node, 0x80000002);
 
   ck_assert_mem_eq(
       node.chain_code,
@@ -345,19 +370,22 @@ START_TEST(test_bip32_cardano_hdnode_vector_7) {
   HDNode node;
 
   uint8_t mnemonic_bits[66];
+  uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
   int mnemonic_bits_len = mnemonic_to_bits(
       "ring crime symptom enough erupt lady behave ramp apart settle citizen "
       "junk",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 132);
-  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
-                                     mnemonic_bits_len / 8, &node);
+  secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+                                     mnemonic_bits_len / 8, cardano_secret,
+                                     NULL);
+  hdnode_from_secret_cardano(cardano_secret, &node);
 
-  hdnode_private_ckd_cardano(&node, 0x80000000);
-  hdnode_private_ckd_cardano(&node, 0x80000001);
-  hdnode_private_ckd_cardano(&node, 0x80000002);
-  hdnode_private_ckd_cardano(&node, 0x80000002);
-  hdnode_private_ckd_cardano(&node, 0xBB9ACA00);
+  hdnode_private_ckd(&node, 0x80000000);
+  hdnode_private_ckd(&node, 0x80000001);
+  hdnode_private_ckd(&node, 0x80000002);
+  hdnode_private_ckd(&node, 0x80000002);
+  hdnode_private_ckd(&node, 0xBB9ACA00);
 
   ck_assert_mem_eq(
       node.chain_code,
@@ -387,19 +415,22 @@ START_TEST(test_bip32_cardano_hdnode_vector_8) {
   HDNode node;
 
   uint8_t mnemonic_bits[66];
+  uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
   int mnemonic_bits_len = mnemonic_to_bits(
       "found differ bulb shadow wrist blue bind vessel deposit tip pelican "
       "action surprise weapon check fiction muscle this",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 198);
-  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
-                                     mnemonic_bits_len / 8, &node);
+  secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+                                     mnemonic_bits_len / 8, cardano_secret,
+                                     NULL);
+  hdnode_from_secret_cardano(cardano_secret, &node);
 
-  hdnode_private_ckd_cardano(&node, 0x80000000);
-  hdnode_private_ckd_cardano(&node, 0x80000001);
-  hdnode_private_ckd_cardano(&node, 0x80000002);
-  hdnode_private_ckd_cardano(&node, 0x80000002);
-  hdnode_private_ckd_cardano(&node, 0xBB9ACA00);
+  hdnode_private_ckd(&node, 0x80000000);
+  hdnode_private_ckd(&node, 0x80000001);
+  hdnode_private_ckd(&node, 0x80000002);
+  hdnode_private_ckd(&node, 0x80000002);
+  hdnode_private_ckd(&node, 0xBB9ACA00);
 
   ck_assert_mem_eq(
       node.chain_code,
@@ -429,20 +460,23 @@ START_TEST(test_bip32_cardano_hdnode_vector_9) {
   HDNode node;
 
   uint8_t mnemonic_bits[66];
+  uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
   int mnemonic_bits_len = mnemonic_to_bits(
       "balance exotic ranch knife glory slow tape favorite yard gym awake "
       "ill exist useless parent aim pig stay effort into square gasp credit "
       "butter",
       mnemonic_bits);
   ck_assert_int_eq(mnemonic_bits_len, 264);
-  hdnode_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
-                                     mnemonic_bits_len / 8, &node);
+  secret_from_entropy_cardano_icarus((const uint8_t *)"", 0, mnemonic_bits,
+                                     mnemonic_bits_len / 8, cardano_secret,
+                                     NULL);
+  hdnode_from_secret_cardano(cardano_secret, &node);
 
-  hdnode_private_ckd_cardano(&node, 0x80000000);
-  hdnode_private_ckd_cardano(&node, 0x80000001);
-  hdnode_private_ckd_cardano(&node, 0x80000002);
-  hdnode_private_ckd_cardano(&node, 0x80000002);
-  hdnode_private_ckd_cardano(&node, 0xBB9ACA00);
+  hdnode_private_ckd(&node, 0x80000000);
+  hdnode_private_ckd(&node, 0x80000001);
+  hdnode_private_ckd(&node, 0x80000002);
+  hdnode_private_ckd(&node, 0x80000002);
+  hdnode_private_ckd(&node, 0xBB9ACA00);
 
   ck_assert_mem_eq(
       node.chain_code,

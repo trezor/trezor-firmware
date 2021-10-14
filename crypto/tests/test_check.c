@@ -48,6 +48,7 @@
 #include "blake256.h"
 #include "blake2b.h"
 #include "blake2s.h"
+#include "cardano.h"
 #include "chacha_drbg.h"
 #include "curves.h"
 #include "ecdsa.h"
