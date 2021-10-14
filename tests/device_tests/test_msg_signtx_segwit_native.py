@@ -53,6 +53,9 @@ TXHASH_31bc1c = bytes.fromhex(
 TXHASH_a345b8 = bytes.fromhex(
     "a345b85759b385c6446055e4c3baa77e8161a65009dc009489b48aa6587ce348"
 )
+TXHASH_ec16dc = bytes.fromhex(
+    "ec16dc5a539c5d60001a7471c37dbb0b5294c289c77df8bd07870b30d73e2231"
+)
 
 
 class TestMsgSigntxSegwitNative:
@@ -199,6 +202,34 @@ class TestMsgSigntxSegwitNative:
         assert (
             serialized_tx.hex()
             == "010000000001018a44999c07bba32df1cacdc50987944e68e3205b4429438fdde35c76024614090000000000ffffffff02404b4c000000000017a9147a55d61848e77ca266e79a39bfc85c580a6426c987a8386f0000000000160014d16b8c0680c61fc6ed2e407455715055e41052f502473044022073ce72dcf2f6e42eeb44adbe7d5038cf3763f168d1c04bd8b873a19b53331f51022016b051725731e7f53a567021bcd9c370727f551c81e857ebae7c128472119652012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86200000000"
+        )
+
+    def test_send_to_taproot(self, client):
+        inp1 = proto.TxInputType(
+            address_n=parse_path("84'/1'/0'/0/0"),
+            amount=10000,
+            prev_hash=TXHASH_ec16dc,
+            prev_index=0,
+            script_type=proto.InputScriptType.SPENDWITNESS,
+        )
+        out1 = proto.TxOutputType(
+            address="tb1pdvdljpj774356dpk32c2ks0yqv7q7c4f98px2d9e76s73vpudpxs7tl6vp",
+            amount=7000,
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+        )
+        out2 = proto.TxOutputType(
+            address="tb1qcc4ext5rsa8pzqa2m030jk670wmn5f649pu7sr",
+            script_type=proto.OutputScriptType.PAYTOADDRESS,
+            amount=10000 - 7000 - 200,
+        )
+        with client:
+            _, serialized_tx = btc.sign_tx(
+                client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API
+            )
+
+        assert (
+            serialized_tx.hex()
+            == "0100000000010131223ed7300b8707bdf87dc789c294520bbb7dc371741a00605d9c535adc16ec0000000000ffffffff02581b0000000000002251206b1bf9065ef5634d34368ab0ab41e4033c0f62a929c26534b9f6a1e8b03c684df00a000000000000160014c62b932e83874e1103aadbe2f95b5e7bb73a275502473044022008ce0e893e91935ada9a31fe6b2f6228070dd2a5bdebc413429e658be761901502207086e0d3aa6abbad29c966444d3b791e43c174f88154381d07c92a84fec7c527012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86200000000"
         )
 
     def test_send_native_change(self, client):
