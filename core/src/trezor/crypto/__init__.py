@@ -2,6 +2,7 @@ from trezorcrypto import (  # noqa: F401
     aes,
     bip32,
     bip39,
+    cardano,
     chacha20poly1305,
     crc,
     hmac,
