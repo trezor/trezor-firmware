@@ -49,7 +49,7 @@ def validate_certificate(
     account_path_checker: AccountPathChecker,
 ) -> None:
     if (
-        signing_mode == CardanoTxSigningMode.ORDINARY_TRANSACTION
+        signing_mode != CardanoTxSigningMode.POOL_REGISTRATION_AS_OWNER
         and certificate.type == CardanoCertificateType.STAKE_POOL_REGISTRATION
     ):
         raise INVALID_CERTIFICATE

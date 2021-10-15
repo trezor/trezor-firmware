@@ -175,6 +175,7 @@
 "cardano-test_sign_tx.py::test_cardano_sign_tx_failed[transaction_with_catalyst_registration-11533421": "b77d0e79de37f1036e6924e9ce742326a95a191629acf12a0494efcb92e46350",
 "cardano-test_sign_tx.py::test_cardano_sign_tx_failed[two_owners_with_path]": "13e202aaf27c6395a2fcb7cfdb2dc6cadb613a23cdd9548f860c8e524bb76b98",
 "cardano-test_sign_tx.py::test_cardano_sign_tx_failed[unsupported_address_type]": "9e1f554bb74f847e8f09201dda808fd1e0cdb68737515f34d6ad435957671c77",
+"cardano-test_sign_tx.py::test_cardano_sign_tx_failed[with_multisig_transaction_signing_mode]": "a1f8001a566bd030249ad2d8c0dea7fbfb38ef2aafd0541c359598e3ca4053ff",
 "cardano-test_sign_tx.py::test_cardano_sign_tx_failed[with_ordinary_transaction_signing_mode]": "b77d0e79de37f1036e6924e9ce742326a95a191629acf12a0494efcb92e46350",
 "cardano-test_sign_tx.py::test_cardano_sign_tx_failed[withdrawal_amount_is_too_large]": "0a1ce9fbfcead1f0f1f03b98e2ab719f92949a9b72f5da99097edd5f45e91154",
 "cardano-test_sign_tx.py::test_cardano_sign_tx_failed[withdrawal_contains_both_path_and_script_hash]": "0a1ce9fbfcead1f0f1f03b98e2ab719f92949a9b72f5da99097edd5f45e91154",
