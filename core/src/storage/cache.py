@@ -21,7 +21,7 @@ _SESSION_ID_LENGTH = 32
 # Traditional cache keys
 APP_COMMON_SEED = 0
 APP_COMMON_DERIVE_CARDANO = 1
-APP_CARDANO_XPRV = 2
+APP_CARDANO_SECRET = 2
 APP_MONERO_LIVE_REFRESH = 3
 APP_COMMON_AUTHORIZATION_TYPE = 4
 APP_COMMON_AUTHORIZATION_DATA = 5
@@ -69,10 +69,14 @@ class DataCache:
         ...
 
     def get(self, key: int, default: T | None = None) -> bytes | T | None:  # noqa: F811
-        utils.ensure(key < len(self.fields), f"failed to load key {key}")
+        utils.ensure(key < len(self.fields))
         if self.data[key][0] != 1:
             return default
         return bytes(self.data[key][1:])
+
+    def is_set(self, key: int) -> bool:
+        utils.ensure(key < len(self.fields))
+        return self.data[key][0] == 1
 
     def delete(self, key: int) -> None:
         utils.ensure(key < len(self.fields))
@@ -89,7 +93,7 @@ class SessionCache(DataCache):
         self.fields = (
             64,  # APP_COMMON_SEED
             1,  # APP_COMMON_DERIVE_CARDANO
-            96,  # APP_CARDANO_XPRV
+            96,  # APP_CARDANO_SECRET
             1,  # APP_MONERO_LIVE_REFRESH
             2,  # APP_COMMON_AUTHORIZATION_TYPE
             128,  # APP_COMMON_AUTHORIZATION_DATA
@@ -225,6 +229,14 @@ def get(key: int, default: T | None = None) -> bytes | T | None:  # noqa: F811
     if _active_session_idx is None:
         raise InvalidSessionError
     return _SESSIONS[_active_session_idx].get(key, default)
+
+
+def is_set(key: int) -> bool:
+    if key & _SESSIONLESS_FLAG:
+        return _SESSIONLESS_CACHE.is_set(key ^ _SESSIONLESS_FLAG)
+    if _active_session_idx is None:
+        raise InvalidSessionError
+    return _SESSIONS[_active_session_idx].is_set(key)
 
 
 def delete(key: int) -> None:
