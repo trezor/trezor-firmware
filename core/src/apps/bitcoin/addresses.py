@@ -1,5 +1,6 @@
 from trezor import wire
 from trezor.crypto import base58, cashaddr
+from trezor.crypto.curve import bip340
 from trezor.crypto.hashlib import sha256
 from trezor.enums import InputScriptType
 from trezor.messages import MultisigRedeemScriptType
@@ -55,6 +56,15 @@ def get_address(
 
         # native p2wpkh
         return address_p2wpkh(node.public_key(), coin)
+
+    elif script_type == InputScriptType.SPENDTAPROOT:  # taproot
+        if not coin.taproot or not coin.bech32_prefix:
+            raise wire.ProcessError("Taproot not enabled on this coin")
+
+        if multisig is not None:
+            raise wire.ProcessError("Multisig not supported for taproot")
+
+        return address_p2tr(node.public_key(), coin)
 
     elif (
         script_type == InputScriptType.SPENDP2SHWITNESS
@@ -128,6 +138,12 @@ def address_p2wpkh(pubkey: bytes, coin: CoinInfo) -> str:
 
 def address_p2wsh(witness_script_hash: bytes, hrp: str) -> str:
     return encode_bech32_address(hrp, 0, witness_script_hash)
+
+
+def address_p2tr(pubkey: bytes, coin: CoinInfo) -> str:
+    assert coin.bech32_prefix is not None
+    output_pubkey = bip340.tweak_public_key(pubkey[1:])
+    return encode_bech32_address(coin.bech32_prefix, 1, output_pubkey)
 
 
 def address_to_cashaddr(address: str, coin: CoinInfo) -> str:
