@@ -52,7 +52,10 @@ async def get_address(
 
     address = addresses.get_address(msg.script_type, coin, node, msg.multisig)
     address_short = addresses.address_short(coin, address)
-    if coin.segwit and msg.script_type == InputScriptType.SPENDWITNESS:
+    if coin.segwit and msg.script_type in (
+        InputScriptType.SPENDWITNESS,
+        InputScriptType.SPENDTAPROOT,
+    ):
         address_qr = address.upper()  # bech32 address
     elif coin.cashaddr_prefix is not None:
         address_qr = address.upper()  # cashaddr address
