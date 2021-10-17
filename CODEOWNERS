@@ -1,4 +1,4 @@
-/common/defs @prusnak @matejcik
+/common/defs @matejcik
 
 /common/protob @matejcik
 
@@ -16,7 +16,7 @@
 
 /core/tools @matejcik
 
-/crypto @andrewkozlik @onvej-sl @prusnak
+/crypto @andrewkozlik @onvej-sl
 
 /crypto/gui @prusnak
 
