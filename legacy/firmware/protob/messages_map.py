@@ -97,7 +97,7 @@ def handle_message(fh, fl, skipped, message):
 
     if encoded_size:
         fl.write(
-            f'_Static_assert({encoded_size} >= sizeof({short_name}_size), "msg buffer too small");\n'
+            f'_Static_assert({encoded_size} >= {short_name}_size, "msg buffer too small");\n'
         )
 
     if decoded_size:
