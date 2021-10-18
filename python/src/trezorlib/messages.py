@@ -1197,6 +1197,7 @@ class TxInput(protobuf.MessageType):
         16: protobuf.Field("orig_hash", "bytes", repeated=False, required=False),
         17: protobuf.Field("orig_index", "uint32", repeated=False, required=False),
         18: protobuf.Field("decred_staking_spend", "DecredStakingSpendType", repeated=False, required=False),
+        19: protobuf.Field("script_pubkey", "bytes", repeated=False, required=False),
     }
 
     def __init__(
@@ -1217,6 +1218,7 @@ class TxInput(protobuf.MessageType):
         orig_hash: Optional["bytes"] = None,
         orig_index: Optional["int"] = None,
         decred_staking_spend: Optional["DecredStakingSpendType"] = None,
+        script_pubkey: Optional["bytes"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.prev_hash = prev_hash
@@ -1233,6 +1235,7 @@ class TxInput(protobuf.MessageType):
         self.orig_hash = orig_hash
         self.orig_index = orig_index
         self.decred_staking_spend = decred_staking_spend
+        self.script_pubkey = script_pubkey
 
 
 class TxOutput(protobuf.MessageType):
@@ -1650,6 +1653,7 @@ class TxInputType(protobuf.MessageType):
         16: protobuf.Field("orig_hash", "bytes", repeated=False, required=False),
         17: protobuf.Field("orig_index", "uint32", repeated=False, required=False),
         18: protobuf.Field("decred_staking_spend", "DecredStakingSpendType", repeated=False, required=False),
+        19: protobuf.Field("script_pubkey", "bytes", repeated=False, required=False),
     }
 
     def __init__(
@@ -1670,6 +1674,7 @@ class TxInputType(protobuf.MessageType):
         orig_hash: Optional["bytes"] = None,
         orig_index: Optional["int"] = None,
         decred_staking_spend: Optional["DecredStakingSpendType"] = None,
+        script_pubkey: Optional["bytes"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.prev_hash = prev_hash
@@ -1686,6 +1691,7 @@ class TxInputType(protobuf.MessageType):
         self.orig_hash = orig_hash
         self.orig_index = orig_index
         self.decred_staking_spend = decred_staking_spend
+        self.script_pubkey = script_pubkey
 
 
 class TxOutputBinType(protobuf.MessageType):

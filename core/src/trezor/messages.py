@@ -643,6 +643,7 @@ if TYPE_CHECKING:
         orig_hash: "bytes | None"
         orig_index: "int | None"
         decred_staking_spend: "DecredStakingSpendType | None"
+        script_pubkey: "bytes | None"
 
         def __init__(
             self,
@@ -662,6 +663,7 @@ if TYPE_CHECKING:
             orig_hash: "bytes | None" = None,
             orig_index: "int | None" = None,
             decred_staking_spend: "DecredStakingSpendType | None" = None,
+            script_pubkey: "bytes | None" = None,
         ) -> None:
             pass
 

@@ -300,6 +300,7 @@ message TxAck {
             optional bytes orig_hash = 16;                                      // tx_hash of the original transaction where this input was spent (used when creating a replacement transaction)
             optional uint32 orig_index = 17;                                    // index of the input in the original transaction (used when creating a replacement transaction)
             optional DecredStakingSpendType decred_staking_spend = 18;          // if not None this holds the type of stake spend: revocation or stake generation
+            optional bytes script_pubkey = 19;                                  // scriptPubKey of the previous output spent by this input, only set of EXTERNAL inputs
         }
         /**
         * Structure representing compiled transaction output
@@ -351,6 +352,7 @@ message TxInput {
     optional bytes orig_hash = 16;                                      // tx_hash of the original transaction where this input was spent (used when creating a replacement transaction)
     optional uint32 orig_index = 17;                                    // index of the input in the original transaction (used when creating a replacement transaction)
     optional DecredStakingSpendType decred_staking_spend = 18; 	        // if not None this holds the type of stake spend: revocation or stake generation
+    optional bytes script_pubkey = 19;                                  // scriptPubKey of the previous output spent by this input, only set of EXTERNAL inputs
 }
 
 /** Data type for transaction output to be signed.
@@ -399,7 +401,7 @@ message PrevInput {
     optional uint32 decred_tree = 9;                                    // only for Decred
 
     // fields that are in use, or have been in the past, in TxInputType
-    reserved 1, 6, 7, 8, 10, 11, 12, 13, 14, 15;
+    reserved 1, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19;
 }
 
 /** Data type for outputs of previous transactions.
