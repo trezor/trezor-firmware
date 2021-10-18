@@ -1,0 +1,1 @@
+Fix incorrect compile-time check of maximum protobuf message size.
