@@ -238,6 +238,9 @@ class TestMsgSigntxZcash:
             prev_hash=TXHASH_aaf51e,
             prev_index=1,
             script_type=proto.InputScriptType.EXTERNAL,
+            script_pubkey=bytes.fromhex(
+                "76a914a579388225827d9f2fe9014add644487808c695d88ac"
+            ),
             script_sig=bytes.fromhex(
                 "47304402202495a38e5b368569a1a0c9fc95aa7e57a0dd5ae43f51300d7222dc139015233d022047833eaa571578f72c8468c8b537b36410388b7eb5001d75d1f4b954e1997d590121030e669acac1f280d1ddf441cd2ba5e97417bf2689e4bbec86df4f831bf9f7ffd0"
             ),

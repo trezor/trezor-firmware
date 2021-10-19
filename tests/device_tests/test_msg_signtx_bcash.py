@@ -443,6 +443,9 @@ class TestMsgSigntxBch:
             prev_hash=TXHASH_502e85,
             prev_index=0,
             script_type=proto.InputScriptType.EXTERNAL,
+            script_pubkey=bytes.fromhex(
+                "76a914b1401fce7e8bf123c88a0467e0ed11e3b9fbef5488ac"
+            ),
             script_sig=bytes.fromhex(
                 "47304402207a2a955f1cb3dc5f03f2c82934f55654882af4e852e5159639f6349e9386ec4002205fb8419dce4e648eae8f67bc4e369adfb130a87d2ea2d668f8144213b12bb457412103174c61e9c5362507e8061e28d2c0ce3d4df4e73f3535ae0b12f37809e0f92d2d"
             ),

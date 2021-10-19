@@ -332,6 +332,7 @@ def test_p2wpkh_payjoin(
         script_type=messages.InputScriptType.EXTERNAL,
         prev_hash=TXHASH_70f987,
         prev_index=1,
+        script_pubkey=bytes.fromhex("0014167dae080bca35c9ea49c0c8335dcc4b252a1d70"),
         witness=bytes.fromhex(copayer_witness),
     )
 
@@ -788,6 +789,7 @@ def test_attack_false_internal(client):
         prev_index=0,
         orig_hash=TXHASH_334cd7,
         orig_index=1,
+        script_pubkey=bytes.fromhex("a914b9170a062fafcf4379729d104dd04859b1ce955887"),
         script_sig=bytes.fromhex("160014209297fb46272a0b7e05139440dbd39daea3e25a"),
         witness=bytes.fromhex(
             "024730440220709798e66e44ee76d8b0858407b2098f2f0046703761e2617b2b870a346cb56c022010242f602cd41485934834ecf12c1647d003df8c9d4c0d8637514e1dc8a657a2012103c2c2e65556ca4b7371549324b99390725493c8a6792e093a0bdcbb3e2d7df4ab"
@@ -894,6 +896,7 @@ def test_attack_fake_ext_input_amount(client):
         prev_index=0,
         orig_hash=TXHASH_ed89ac,
         orig_index=1,
+        script_pubkey=bytes.fromhex("a914eb227e547838e56792d92ef597244d8b33767c8f87"),
         script_sig=bytes.fromhex("160014681ea49259abb892460bf3373e8a0b43d877fa18"),
         witness=bytes.fromhex(
             "02483045022100d9c2d4364e104bf0d27886b4d7cd05f9a256bda8acbe84b7b2753f5c054b1a8602206a512575a89da5b5123e2769a5f73675b27b9f43d1a7b54bddeae039f6b83efa0121028cbc37e1816a23086fa738c8415def477e813e20f484dbbd6f5a33a37c322251"
@@ -921,6 +924,10 @@ def test_attack_fake_ext_input_amount(client):
     prev_tx_attack.inputs[1].amount -= 30000
     prev_tx_attack.inputs[1].address_n = None
     prev_tx_attack.inputs[1].script_type = messages.InputScriptType.EXTERNAL
+    prev_tx_attack.inputs[1].script_pubkey = bytes.fromhex(
+        "a914eb227e547838e56792d92ef597244d8b33767c8f87"
+    )
+
     prev_txes = {
         TXHASH_ed89ac: prev_tx_attack,
         TXHASH_6673b7: TX_CACHE_TESTNET[TXHASH_6673b7],
