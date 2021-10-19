@@ -139,7 +139,7 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
     SOURCE_MOD += [
         'vendor/trezor-crypto/zkp_context.c',
         'vendor/trezor-crypto/zkp_ecdsa.c',
-        'vendor/trezor-crypto/zkp_schnorr.c',
+        'vendor/trezor-crypto/zkp_bip340.c',
     ]
 
 # modtrezorio

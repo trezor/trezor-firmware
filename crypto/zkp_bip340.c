@@ -30,13 +30,14 @@
 #include "vendor/secp256k1-zkp/include/secp256k1_extrakeys.h"
 #include "vendor/secp256k1-zkp/include/secp256k1_schnorrsig.h"
 
-#include "zkp_schnorr.h"
+#include "zkp_bip340.h"
 
 // BIP340 Schnorr public key derivation
 // private_key_bytes has 32 bytes
 // public_key_bytes has 32 bytes
-int zkp_schnorr_get_public_key(const uint8_t *private_key_bytes,
-                               uint8_t *public_key_bytes) {
+// returns 0 on success
+int zkp_bip340_get_public_key(const uint8_t *private_key_bytes,
+                              uint8_t *public_key_bytes) {
   int result = 0;
 
   secp256k1_pubkey pubkey = {0};
@@ -81,9 +82,9 @@ int zkp_schnorr_get_public_key(const uint8_t *private_key_bytes,
 // signature_bytes has 64 bytes
 // auxiliary_data has 32 bytes or is NULL
 // returns 0 on success
-int zkp_schnorr_sign_digest(const uint8_t *private_key_bytes,
-                            const uint8_t *digest, uint8_t *signature_bytes,
-                            uint8_t *auxiliary_data) {
+int zkp_bip340_sign_digest(const uint8_t *private_key_bytes,
+                           const uint8_t *digest, uint8_t *signature_bytes,
+                           uint8_t *auxiliary_data) {
   int result = 0;
 
   secp256k1_keypair keypair = {0};
@@ -118,9 +119,9 @@ int zkp_schnorr_sign_digest(const uint8_t *private_key_bytes,
 // signature_bytes has 64 bytes
 // digest has 32 bytes
 // returns 0 if verification succeeded
-int zkp_schnorr_verify_digest(const uint8_t *public_key_bytes,
-                              const uint8_t *signature_bytes,
-                              const uint8_t *digest) {
+int zkp_bip340_verify_digest(const uint8_t *public_key_bytes,
+                             const uint8_t *signature_bytes,
+                             const uint8_t *digest) {
   int result = 0;
 
   secp256k1_xonly_pubkey xonly_pubkey = {0};

@@ -71,9 +71,9 @@
 #include "shamir.h"
 #include "slip39.h"
 #include "slip39_wordlist.h"
+#include "zkp_bip340.h"
 #include "zkp_context.h"
 #include "zkp_ecdsa.h"
-#include "zkp_schnorr.h"
 
 #if VALGRIND
 /*
@@ -9156,7 +9156,7 @@ START_TEST(test_schnorr_verify_digest) {
 }
 END_TEST
 
-START_TEST(test_zkp_schnorr_sign) {
+START_TEST(test_zkp_bip340_sign) {
   static struct {
     const char *priv_key;
     const char *pub_key;
@@ -9207,17 +9207,17 @@ START_TEST(test_zkp_schnorr_sign) {
     memcpy(digest, fromhex(tests[i].digest), 32);
     memcpy(expected_sig, fromhex(tests[i].sig), 32);
 
-    zkp_schnorr_get_public_key(priv_key, pub_key);
+    zkp_bip340_get_public_key(priv_key, pub_key);
     ck_assert_mem_eq(expected_pub_key, pub_key, 32);
 
-    res = zkp_schnorr_sign_digest(priv_key, digest, sig, aux_input);
+    res = zkp_bip340_sign_digest(priv_key, digest, sig, aux_input);
     ck_assert_mem_eq(expected_sig, sig, 32);
     ck_assert_int_eq(res, 0);
   }
 }
 END_TEST
 
-START_TEST(test_zkp_schnorr_verify) {
+START_TEST(test_zkp_bip340_verify) {
   static struct {
     const char *pub_key;
     const char *digest;
@@ -9294,7 +9294,7 @@ START_TEST(test_zkp_schnorr_verify) {
     memcpy(digest, fromhex(tests[i].digest), 32);
     memcpy(sig, fromhex(tests[i].sig), 64);
 
-    res = zkp_schnorr_verify_digest(pub_key, sig, digest);
+    res = zkp_bip340_verify_digest(pub_key, sig, digest);
     ck_assert_int_eq(res, tests[i].res);
   }
 }
@@ -9612,9 +9612,9 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_schnorr_verify_digest);
   suite_add_tcase(s, tc);
 
-  tc = tcase_create("zkp_schnorr");
-  tcase_add_test(tc, test_zkp_schnorr_sign);
-  tcase_add_test(tc, test_zkp_schnorr_verify);
+  tc = tcase_create("zkp_bip340");
+  tcase_add_test(tc, test_zkp_bip340_sign);
+  tcase_add_test(tc, test_zkp_bip340_verify);
   suite_add_tcase(s, tc);
 
 #if USE_CARDANO

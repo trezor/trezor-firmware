@@ -43,8 +43,8 @@
 #include "modtrezorcrypto-pbkdf2.h"
 #include "modtrezorcrypto-random.h"
 #include "modtrezorcrypto-ripemd160.h"
-#ifdef USE_SECP256K1_ZKP_SCHNORR
-#include "modtrezorcrypto-schnorr.h"
+#ifdef USE_SECP256K1_ZKP_BIP340
+#include "modtrezorcrypto-bip340.h"
 #endif
 #include "modtrezorcrypto-secp256k1.h"
 #include "modtrezorcrypto-sha1.h"
@@ -92,9 +92,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_Ripemd160_type)},
     {MP_ROM_QSTR(MP_QSTR_secp256k1),
      MP_ROM_PTR(&mod_trezorcrypto_secp256k1_module)},
-#ifdef USE_SECP256K1_ZKP_SCHNORR
-    {MP_ROM_QSTR(MP_QSTR_schnorr),
-     MP_ROM_PTR(&mod_trezorcrypto_schnorr_module)},
+#ifdef USE_SECP256K1_ZKP_BIP340
+    {MP_ROM_QSTR(MP_QSTR_bip340), MP_ROM_PTR(&mod_trezorcrypto_bip340_module)},
 #endif
     {MP_ROM_QSTR(MP_QSTR_sha1), MP_ROM_PTR(&mod_trezorcrypto_Sha1_type)},
     {MP_ROM_QSTR(MP_QSTR_sha256), MP_ROM_PTR(&mod_trezorcrypto_Sha256_type)},
