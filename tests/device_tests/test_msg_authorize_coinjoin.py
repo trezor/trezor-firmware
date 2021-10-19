@@ -95,6 +95,7 @@ def test_sign_tx(client):
         prev_hash=TXHASH_e5b7e2,
         prev_index=0,
         script_type=messages.InputScriptType.EXTERNAL,
+        script_pubkey=bytes.fromhex("00149c02608d469160a92f40fdf8c6ccced029493088"),
         ownership_proof=bytearray.fromhex(
             "534c001900016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c40002473044022072b4376c1b6c9e9e4d45158e1b6b4edfbe7b2292d8b4a60e8b0d273bcfef6b4a0220786169ab42a7663cb7d5f27ecb468da76dc2d1b7a10d1d18fbe5120e7890b9d2012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
         ),
@@ -229,6 +230,7 @@ def test_unfair_fee(client):
         prev_hash=TXHASH_e5b7e2,
         prev_index=0,
         script_type=messages.InputScriptType.EXTERNAL,
+        script_pubkey=bytes.fromhex("00149c02608d469160a92f40fdf8c6ccced029493088"),
         ownership_proof=bytearray.fromhex(
             "534c001900016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c40002473044022072b4376c1b6c9e9e4d45158e1b6b4edfbe7b2292d8b4a60e8b0d273bcfef6b4a0220786169ab42a7663cb7d5f27ecb468da76dc2d1b7a10d1d18fbe5120e7890b9d2012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
         ),
@@ -306,6 +308,7 @@ def test_no_anonymity(client):
         prev_hash=TXHASH_e5b7e2,
         prev_index=0,
         script_type=messages.InputScriptType.EXTERNAL,
+        script_pubkey=bytes.fromhex("00149c02608d469160a92f40fdf8c6ccced029493088"),
         ownership_proof=bytearray.fromhex(
             "534c001900016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c40002473044022072b4376c1b6c9e9e4d45158e1b6b4edfbe7b2292d8b4a60e8b0d273bcfef6b4a0220786169ab42a7663cb7d5f27ecb468da76dc2d1b7a10d1d18fbe5120e7890b9d2012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d"
         ),
