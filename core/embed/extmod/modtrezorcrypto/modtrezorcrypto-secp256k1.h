@@ -71,26 +71,31 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_publickey(size_t n_args,
     mp_raise_ValueError("Invalid length of secret key");
   }
   vstr_t pk = {0};
+  int ret = 0;
   bool compressed = n_args < 2 || args[1] == mp_const_true;
   if (compressed) {
     vstr_init_len(&pk, 33);
 #ifdef USE_SECP256K1_ZKP_ECDSA
-    zkp_ecdsa_get_public_key33(&secp256k1, (const uint8_t *)sk.buf,
-                               (uint8_t *)pk.buf);
+    ret = zkp_ecdsa_get_public_key33(&secp256k1, (const uint8_t *)sk.buf,
+                                     (uint8_t *)pk.buf);
 #else
-    ecdsa_get_public_key33(&secp256k1, (const uint8_t *)sk.buf,
-                           (uint8_t *)pk.buf);
+    ret = ecdsa_get_public_key33(&secp256k1, (const uint8_t *)sk.buf,
+                                 (uint8_t *)pk.buf);
 #endif
 
   } else {
     vstr_init_len(&pk, 65);
 #ifdef USE_SECP256K1_ZKP_ECDSA
-    zkp_ecdsa_get_public_key65(&secp256k1, (const uint8_t *)sk.buf,
-                               (uint8_t *)pk.buf);
+    ret = zkp_ecdsa_get_public_key65(&secp256k1, (const uint8_t *)sk.buf,
+                                     (uint8_t *)pk.buf);
 #else
-    ecdsa_get_public_key65(&secp256k1, (const uint8_t *)sk.buf,
-                           (uint8_t *)pk.buf);
+    ret = ecdsa_get_public_key65(&secp256k1, (const uint8_t *)sk.buf,
+                                 (uint8_t *)pk.buf);
 #endif
+  }
+  if (0 != ret) {
+    vstr_clear(&pk);
+    mp_raise_ValueError("Invalid secret key");
   }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &pk);
 }
