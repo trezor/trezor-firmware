@@ -99,7 +99,7 @@ SRCS  += slip39.c
 SRCS  += schnorr.c
 SRCS  += zkp_context.c
 SRCS  += zkp_ecdsa.c
-SRCS  += zkp_schnorr.c
+SRCS  += zkp_bip340.c
 
 OBJS   = $(SRCS:.c=.o)
 OBJS  += secp256k1-zkp.o
