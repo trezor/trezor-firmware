@@ -403,13 +403,16 @@ void point_jacobian_double(jacobian_curve_point *p, const ecdsa_curve *curve) {
 }
 
 // res = k * p
-void point_multiply(const ecdsa_curve *curve, const bignum256 *k,
-                    const curve_point *p, curve_point *res) {
+// returns 0 on success
+int point_multiply(const ecdsa_curve *curve, const bignum256 *k,
+                   const curve_point *p, curve_point *res) {
   // this algorithm is loosely based on
   //  Katsuyuki Okeya and Tsuyoshi Takagi, The Width-w NAF Method Provides
   //  Small Memory and Fast Elliptic Scalar Multiplications Secure against
   //  Side Channel Attacks.
-  assert(bn_is_less(k, &curve->order));
+  if (!bn_is_less(k, &curve->order)) {
+    return 1;
+  }
 
   int i = 0, j = 0;
   static CONFIDENTIAL bignum256 a;
@@ -441,7 +444,7 @@ void point_multiply(const ecdsa_curve *curve, const bignum256 *k,
   // special case 0*p:  just return zero. We don't care about constant time.
   if (!is_non_zero) {
     point_set_infinity(res);
-    return;
+    return 1;
   }
 
   // Now a = k + 2^256 (mod curve->order) and a is odd.
@@ -522,15 +525,20 @@ void point_multiply(const ecdsa_curve *curve, const bignum256 *k,
   jacobian_to_curve(&jres, res, prime);
   memzero(&a, sizeof(a));
   memzero(&jres, sizeof(jres));
+
+  return 0;
 }
 
 #if USE_PRECOMPUTED_CP
 
 // res = k * G
 // k must be a normalized number with 0 <= k < curve->order
-void scalar_multiply(const ecdsa_curve *curve, const bignum256 *k,
-                     curve_point *res) {
-  assert(bn_is_less(k, &curve->order));
+// returns 0 on success
+int scalar_multiply(const ecdsa_curve *curve, const bignum256 *k,
+                    curve_point *res) {
+  if (!bn_is_less(k, &curve->order)) {
+    return 1;
+  }
 
   int i = {0}, j = {0};
   static CONFIDENTIAL bignum256 a;
@@ -558,7 +566,7 @@ void scalar_multiply(const ecdsa_curve *curve, const bignum256 *k,
   // special case 0*G:  just return zero. We don't care about constant time.
   if (!is_non_zero) {
     point_set_infinity(res);
-    return;
+    return 0;
   }
 
   // Now a = k + 2^256 (mod curve->order) and a is odd.
@@ -611,13 +619,15 @@ void scalar_multiply(const ecdsa_curve *curve, const bignum256 *k,
   jacobian_to_curve(&jres, res, prime);
   memzero(&a, sizeof(a));
   memzero(&jres, sizeof(jres));
+
+  return 0;
 }
 
 #else
 
-void scalar_multiply(const ecdsa_curve *curve, const bignum256 *k,
-                     curve_point *res) {
-  point_multiply(curve, k, &curve->G, res);
+int scalar_multiply(const ecdsa_curve *curve, const bignum256 *k,
+                    curve_point *res) {
+  return point_multiply(curve, k, &curve->G, res);
 }
 
 #endif
@@ -754,33 +764,43 @@ int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
   return -1;
 }
 
-void ecdsa_get_public_key33(const ecdsa_curve *curve, const uint8_t *priv_key,
-                            uint8_t *pub_key) {
+// returns 0 on success
+int ecdsa_get_public_key33(const ecdsa_curve *curve, const uint8_t *priv_key,
+                           uint8_t *pub_key) {
   curve_point R = {0};
   bignum256 k = {0};
 
   bn_read_be(priv_key, &k);
   // compute k*G
-  scalar_multiply(curve, &k, &R);
+  if (scalar_multiply(curve, &k, &R) != 0) {
+    memzero(&k, sizeof(k));
+    return 1;
+  }
   pub_key[0] = 0x02 | (R.y.val[0] & 0x01);
   bn_write_be(&R.x, pub_key + 1);
   memzero(&R, sizeof(R));
   memzero(&k, sizeof(k));
+  return 0;
 }
 
-void ecdsa_get_public_key65(const ecdsa_curve *curve, const uint8_t *priv_key,
-                            uint8_t *pub_key) {
+// returns 0 on success
+int ecdsa_get_public_key65(const ecdsa_curve *curve, const uint8_t *priv_key,
+                           uint8_t *pub_key) {
   curve_point R = {0};
   bignum256 k = {0};
 
   bn_read_be(priv_key, &k);
   // compute k*G
-  scalar_multiply(curve, &k, &R);
+  if (scalar_multiply(curve, &k, &R) != 0) {
+    memzero(&k, sizeof(k));
+    return 1;
+  }
   pub_key[0] = 0x04;
   bn_write_be(&R.x, pub_key + 1);
   bn_write_be(&R.y, pub_key + 33);
   memzero(&R, sizeof(R));
   memzero(&k, sizeof(k));
+  return 0;
 }
 
 int ecdsa_uncompress_pubkey(const ecdsa_curve *curve, const uint8_t *pub_key,

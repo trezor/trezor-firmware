@@ -3429,19 +3429,20 @@ START_TEST(test_bip32_decred_vector_2) {
 }
 END_TEST
 
-static void test_ecdsa_get_public_key33_helper(
-    void (*ecdsa_get_public_key33_fn)(const ecdsa_curve *, const uint8_t *,
-                                      uint8_t *)) {
-  uint8_t privkey[32];
-  uint8_t pubkey[65];
+static void test_ecdsa_get_public_key33_helper(int (*ecdsa_get_public_key33_fn)(
+    const ecdsa_curve *, const uint8_t *, uint8_t *)) {
+  uint8_t privkey[32] = {0};
+  uint8_t pubkey[65] = {0};
   const ecdsa_curve *curve = &secp256k1;
+  int res = 0;
 
   memcpy(
       privkey,
       fromhex(
           "c46f5b217f04ff28886a89d3c762ed84e5fa318d1c9a635d541131e69f1f49f5"),
       32);
-  ecdsa_get_public_key33_fn(curve, privkey, pubkey);
+  res = ecdsa_get_public_key33_fn(curve, privkey, pubkey);
+  ck_assert_int_eq(res, 0);
   ck_assert_mem_eq(
       pubkey,
       fromhex(
@@ -3453,7 +3454,8 @@ static void test_ecdsa_get_public_key33_helper(
       fromhex(
           "3b90a4de80fb00d77795762c389d1279d4b4ab5992ae3cde6bc12ca63116f74c"),
       32);
-  ecdsa_get_public_key33_fn(curve, privkey, pubkey);
+  res = ecdsa_get_public_key33_fn(curve, privkey, pubkey);
+  ck_assert_int_eq(res, 0);
   ck_assert_mem_eq(
       pubkey,
       fromhex(
@@ -3471,19 +3473,20 @@ START_TEST(test_zkp_ecdsa_get_public_key33) {
 }
 END_TEST
 
-static void test_ecdsa_get_public_key65_helper(
-    void (*ecdsa_get_public_key65_fn)(const ecdsa_curve *, const uint8_t *,
-                                      uint8_t *)) {
-  uint8_t privkey[32];
-  uint8_t pubkey[65];
+static void test_ecdsa_get_public_key65_helper(int (*ecdsa_get_public_key65_fn)(
+    const ecdsa_curve *, const uint8_t *, uint8_t *)) {
+  uint8_t privkey[32] = {0};
+  uint8_t pubkey[65] = {0};
   const ecdsa_curve *curve = &secp256k1;
+  int res = 0;
 
   memcpy(
       privkey,
       fromhex(
           "c46f5b217f04ff28886a89d3c762ed84e5fa318d1c9a635d541131e69f1f49f5"),
       32);
-  ecdsa_get_public_key65_fn(curve, privkey, pubkey);
+  res = ecdsa_get_public_key65_fn(curve, privkey, pubkey);
+  ck_assert_int_eq(res, 0);
   ck_assert_mem_eq(
       pubkey,
       fromhex(
@@ -6337,11 +6340,11 @@ static void test_point_mult_curve(const ecdsa_curve *curve) {
     /* test distributivity: (a + b)P = aP + bP */
     bn_mod(&a, &curve->order);
     bn_mod(&b, &curve->order);
-    point_multiply(curve, &a, &p, &p1);
-    point_multiply(curve, &b, &p, &p2);
+    ck_assert_int_eq(point_multiply(curve, &a, &p, &p1), 0);
+    ck_assert_int_eq(point_multiply(curve, &b, &p, &p2), 0);
     bn_addmod(&a, &b, &curve->order);
     bn_mod(&a, &curve->order);
-    point_multiply(curve, &a, &p, &p3);
+    ck_assert_int_eq(point_multiply(curve, &a, &p, &p3), 0);
     point_add(curve, &p1, &p2);
     ck_assert_mem_eq(&p2, &p3, sizeof(curve_point));
     // new "random" numbers and a "random" point
@@ -6368,17 +6371,17 @@ static void test_scalar_point_mult_curve(const ecdsa_curve *curve) {
      */
     bn_mod(&a, &curve->order);
     bn_mod(&b, &curve->order);
-    scalar_multiply(curve, &a, &p1);
-    point_multiply(curve, &b, &p1, &p1);
+    ck_assert_int_eq(scalar_multiply(curve, &a, &p1), 0);
+    ck_assert_int_eq(point_multiply(curve, &b, &p1, &p1), 0);
 
-    scalar_multiply(curve, &b, &p2);
-    point_multiply(curve, &a, &p2, &p2);
+    ck_assert_int_eq(scalar_multiply(curve, &b, &p2), 0);
+    ck_assert_int_eq(point_multiply(curve, &a, &p2, &p2), 0);
 
     ck_assert_mem_eq(&p1, &p2, sizeof(curve_point));
 
     bn_multiply(&a, &b, &curve->order);
     bn_mod(&b, &curve->order);
-    scalar_multiply(curve, &b, &p2);
+    ck_assert_int_eq(scalar_multiply(curve, &b, &p2), 0);
 
     ck_assert_mem_eq(&p1, &p2, sizeof(curve_point));
 
