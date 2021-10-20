@@ -17,13 +17,17 @@
 import logging
 import os
 import warnings
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from mnemonic import Mnemonic
 
 from . import MINIMUM_FIRMWARE_VERSION, exceptions, mapping, messages, tools
 from .log import DUMP_BYTES
 from .messages import Capability
+
+if TYPE_CHECKING:
+    from .ui import TrezorClientUI
+    from .transport import Transport
 
 LOG = logging.getLogger(__name__)
 
@@ -85,16 +89,17 @@ class TrezorClient:
 
     def __init__(
         self,
-        transport,
-        ui,
-        session_id=None,
+        transport: "Transport",
+        ui: "TrezorClientUI",
+        session_id: Optional[bytes] = None,
+        derive_cardano: Optional[bool] = None,
     ):
         LOG.info(f"creating client instance for device: {transport.get_path()}")
         self.transport = transport
         self.ui = ui
         self.session_counter = 0
         self.session_id = session_id
-        self.init_device(session_id=session_id)
+        self.init_device(session_id=session_id, derive_cardano=derive_cardano)
 
     def open(self):
         if self.session_counter == 0:
@@ -257,7 +262,11 @@ class TrezorClient:
 
     @tools.session
     def init_device(
-        self, *, session_id: bytes = None, new_session: bool = False
+        self,
+        *,
+        session_id: bytes = None,
+        new_session: bool = False,
+        derive_cardano: Optional[bool] = None,
     ) -> Optional[bytes]:
         """Initialize the device and return a session ID.
 
@@ -292,7 +301,15 @@ class TrezorClient:
         elif session_id is not None:
             self.session_id = session_id
 
-        resp = self.call_raw(messages.Initialize(session_id=self.session_id))
+        resp = self.call_raw(
+            messages.Initialize(
+                session_id=self.session_id,
+                derive_cardano=derive_cardano,
+            )
+        )
+        if isinstance(resp, messages.Failure):
+            # can happen if `derive_cardano` does not match the current session
+            raise exceptions.TrezorFailure(resp)
         if not isinstance(resp, messages.Features):
             raise exceptions.TrezorException("Unexpected response to Initialize")
 
