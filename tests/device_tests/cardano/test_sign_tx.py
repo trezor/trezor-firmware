@@ -35,6 +35,8 @@ pytestmark = [
     "cardano/sign_tx.slip39.json",
 )
 def test_cardano_sign_tx(client, parameters, result):
+    client.init_device(new_session=True, derive_cardano=True)
+
     signing_mode = messages.CardanoTxSigningMode.__members__[parameters["signing_mode"]]
     inputs = [cardano.parse_input(i) for i in parameters["inputs"]]
     outputs = [cardano.parse_output(o) for o in parameters["outputs"]]
@@ -80,6 +82,8 @@ def test_cardano_sign_tx(client, parameters, result):
     "cardano/sign_tx_stake_pool_registration.failed.json",
 )
 def test_cardano_sign_tx_failed(client, parameters, result):
+    client.init_device(new_session=True, derive_cardano=True)
+
     signing_mode = messages.CardanoTxSigningMode.__members__[parameters["signing_mode"]]
     inputs = [cardano.parse_input(i) for i in parameters["inputs"]]
     outputs = [cardano.parse_output(o) for o in parameters["outputs"]]

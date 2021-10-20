@@ -1,4 +1,5 @@
 {
+"cardano-test_address_public_key.py::test_bad_session": "c09de07fbbf1e047442180e2facb5482d06a1a428891b875b7dd93c9e4704ae1",
 "cardano-test_address_public_key.py::test_cardano_get_address[parameters0-result0]": "e3be7c64097574e795bad1852f3eb7b9d5c4577ed88a845329bacc7350338d74",
 "cardano-test_address_public_key.py::test_cardano_get_address[parameters1-result1]": "50b6d3e772e77d6f52c7883f89c3b5f196e43865982c6c5b5171a72546e68164",
 "cardano-test_address_public_key.py::test_cardano_get_address[parameters10-result10]": "31b0bb5d4ab8cbd5293cbdc8c44f722e5e39c1f633eaa1db2186cb138d88dd5c",
