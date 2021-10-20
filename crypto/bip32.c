@@ -49,7 +49,7 @@
 #include "memzero.h"
 
 const curve_info ed25519_info = {
-    .bip32_name = "ed25519 seed",
+    .bip32_name = ED25519_SEED_NAME,
     .params = NULL,
     .hasher_base58 = HASHER_SHA2D,
     .hasher_sign = HASHER_SHA2D,
