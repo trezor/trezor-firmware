@@ -81,11 +81,15 @@ const secp256k1_context *zkp_context_get_read_only() {
   return context;
 }
 
+// returns NULL if context cannot be acquired
 secp256k1_context *zkp_context_acquire_writable() {
   assert(initialized == true);
 
   // We don't expect the context to be used by multiple threads
-  assert(!atomic_flag_test_and_set(&locked));
+  if (atomic_flag_test_and_set(&locked)) {
+    return NULL;
+  }
+
   return context;
 }
 

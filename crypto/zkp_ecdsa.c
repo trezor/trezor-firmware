@@ -55,12 +55,16 @@ int zkp_ecdsa_get_public_key33(const ecdsa_curve *curve,
 
   if (result == 0) {
     secp256k1_context *context_writable = zkp_context_acquire_writable();
-    secp256k1_context_writable_randomize(context_writable);
-    if (secp256k1_ec_pubkey_create(context_writable, &public_key,
-                                   private_key_bytes) != 1) {
+    if (context_writable) {
+      secp256k1_context_writable_randomize(context_writable);
+      if (secp256k1_ec_pubkey_create(context_writable, &public_key,
+                                     private_key_bytes) != 1) {
+        result = 1;
+      }
+      zkp_context_release_writable();
+    } else {
       result = 1;
     }
-    zkp_context_release_writable();
   }
 
   if (result == 0) {
@@ -94,12 +98,16 @@ int zkp_ecdsa_get_public_key65(const ecdsa_curve *curve,
 
   if (result == 0) {
     secp256k1_context *context_writable = zkp_context_acquire_writable();
-    secp256k1_context_writable_randomize(context_writable);
-    if (secp256k1_ec_pubkey_create(context_writable, &public_key,
-                                   private_key_bytes) != 1) {
+    if (context_writable) {
+      secp256k1_context_writable_randomize(context_writable);
+      if (secp256k1_ec_pubkey_create(context_writable, &public_key,
+                                     private_key_bytes) != 1) {
+        result = 1;
+      }
+      zkp_context_release_writable();
+    } else {
       result = 1;
     }
-    zkp_context_release_writable();
   }
 
   if (result == 0) {
@@ -147,14 +155,18 @@ int zkp_ecdsa_sign_digest(
   secp256k1_ecdsa_recoverable_signature recoverable_signature = {0};
 
   if (result == 0) {
-    secp256k1_context *ctx_writable = zkp_context_acquire_writable();
-    secp256k1_context_writable_randomize(ctx_writable);
-    if (secp256k1_ecdsa_sign_recoverable(ctx_writable, &recoverable_signature,
-                                         digest, private_key_bytes, NULL,
-                                         NULL) != 1) {
+    secp256k1_context *context_writable = zkp_context_acquire_writable();
+    if (context_writable) {
+      secp256k1_context_writable_randomize(context_writable);
+      if (secp256k1_ecdsa_sign_recoverable(
+              context_writable, &recoverable_signature, digest,
+              private_key_bytes, NULL, NULL) != 1) {
+        result = 1;
+      }
+      zkp_context_release_writable();
+    } else {
       result = 1;
     }
-    zkp_context_release_writable();
   }
 
   if (result == 0) {
