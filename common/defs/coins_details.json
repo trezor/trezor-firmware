@@ -411,6 +411,24 @@
                 }
             ]
         },
+        "bitcoin:ILC": {
+            "links": {
+                "Github": "https://github.com/ILCOINDevelopmentTeam/ilcoin-master",
+                "Homepage": "https://ilcoincrypto.com"
+            },
+            "marketcap_usd": 2219292,
+            "name": "ILCOIN",
+            "shortcut": "ILC",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin",
+            "wallet": [
+                {
+                    "name": "Electrum-ILC",
+                    "url": "https://github.com/ILCOINDevelopmentTeam/electrum-ilc"
+                }
+            ]
+        },
         "bitcoin:KMD": {
             "links": {
                 "Github": "https://github.com/komodoplatform/komodo",
