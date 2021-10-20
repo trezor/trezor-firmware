@@ -794,6 +794,8 @@
 "test_protection_levels.py::test_get_public_key": "f0ac110de788b3112e04dc2ef131fca011a8dea1c309df37adeb23066729e273",
 "test_protection_levels.py::test_initialize": "59e518cba8589979f0af46e2acb211d37c96312f1d1a63a899d138ebb2f3ca29",
 "test_protection_levels.py::test_passphrase_cached": "7fe34cc300a6f3547eaf72ab4339b758469f1e2722244d2a14d06e55ab1a3716",
+"test_protection_levels.py::test_passphrase_reporting[False]": "233f8978b159ec8fb4092599d63f001c8059222ca14a9e84d185560d3c32ce24",
+"test_protection_levels.py::test_passphrase_reporting[True]": "d9e9bdb39d15d6737ed6234f16c36bb7ad95ca54067ff8f10cffccaa3caa96cb",
 "test_protection_levels.py::test_ping": "5551c263e8e09c8ae683f4dec3dd9d7ecc05ebbd3f2556604b27479c8f1fbc82",
 "test_protection_levels.py::test_sign_message_t2": "bdcc7268caf112c3ba1708d9387fcca8384b330ba5a1e500df87e5fa3b0a4320",
 "test_protection_levels.py::test_signtx": "f13f1687e062bd407dc781ae93ebb6619eee5ea3d37ee031ffdc98d5bd7aea33",

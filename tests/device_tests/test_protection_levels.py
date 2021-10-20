@@ -61,6 +61,32 @@ def test_initialize(client):
         client.init_device()
 
 
+@pytest.mark.skip_t1
+@pytest.mark.setup_client(pin=PIN4)
+@pytest.mark.parametrize("passphrase", (True, False))
+def test_passphrase_reporting(client, passphrase):
+    """On TT, passphrase_protection is a private setting, so a locked device should
+    report passphrase_protection=None.
+    """
+    with client:
+        client.use_pin_sequence([PIN4])
+        device.apply_settings(client, use_passphrase=passphrase)
+
+    client.lock()
+
+    # on a locked device, passphrase_protection should be None
+    assert client.features.unlocked is False
+    assert client.features.passphrase_protection is None
+
+    # on an unlocked device, protection should be reported accurately
+    _assert_protection(client, pin=True, passphrase=passphrase)
+
+    # after re-locking, the setting should be hidden again
+    client.lock()
+    assert client.features.unlocked is False
+    assert client.features.passphrase_protection is None
+
+
 def test_apply_settings(client):
     _assert_protection(client)
     with client:

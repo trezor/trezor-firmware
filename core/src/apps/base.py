@@ -44,7 +44,6 @@ def get_features() -> Features:
         label=storage.device.get_label(),
         pin_protection=config.has_pin(),
         unlocked=config.is_unlocked(),
-        passphrase_protection=storage.device.is_passphrase_enabled(),
     )
 
     if utils.BITCOIN_ONLY:
@@ -79,7 +78,8 @@ def get_features() -> Features:
 
     # private fields:
     if config.is_unlocked():
-
+        # passphrase_protection is private, see #1807
+        f.passphrase_protection = storage.device.is_passphrase_enabled()
         f.needs_backup = storage.device.needs_backup()
         f.unfinished_backup = storage.device.unfinished_backup()
         f.no_backup = storage.device.no_backup()
