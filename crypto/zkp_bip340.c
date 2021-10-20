@@ -44,12 +44,16 @@ int zkp_bip340_get_public_key(const uint8_t *private_key_bytes,
 
   if (result == 0) {
     secp256k1_context *context_writable = zkp_context_acquire_writable();
-    secp256k1_context_writable_randomize(context_writable);
-    if (secp256k1_ec_pubkey_create(context_writable, &pubkey,
-                                   private_key_bytes) != 1) {
+    if (context_writable) {
+      secp256k1_context_writable_randomize(context_writable);
+      if (secp256k1_ec_pubkey_create(context_writable, &pubkey,
+                                     private_key_bytes) != 1) {
+        result = -1;
+      }
+      zkp_context_release_writable();
+    } else {
       result = -1;
     }
-    zkp_context_release_writable();
   }
 
   secp256k1_xonly_pubkey xonly_pubkey = {0};
@@ -91,22 +95,30 @@ int zkp_bip340_sign_digest(const uint8_t *private_key_bytes,
 
   if (result == 0) {
     secp256k1_context *context_writable = zkp_context_acquire_writable();
-    secp256k1_context_writable_randomize(context_writable);
-    if (secp256k1_keypair_create(context_writable, &keypair,
-                                 private_key_bytes) != 1) {
+    if (context_writable) {
+      secp256k1_context_writable_randomize(context_writable);
+      if (secp256k1_keypair_create(context_writable, &keypair,
+                                   private_key_bytes) != 1) {
+        result = -1;
+      }
+      zkp_context_release_writable();
+    } else {
       result = -1;
     }
-    zkp_context_release_writable();
   }
 
   if (result == 0) {
     secp256k1_context *context_writable = zkp_context_acquire_writable();
-    secp256k1_context_writable_randomize(context_writable);
-    if (secp256k1_schnorrsig_sign(context_writable, signature_bytes, digest,
-                                  &keypair, NULL, auxiliary_data) != 1) {
+    if (context_writable) {
+      secp256k1_context_writable_randomize(context_writable);
+      if (secp256k1_schnorrsig_sign(context_writable, signature_bytes, digest,
+                                    &keypair, NULL, auxiliary_data) != 1) {
+        result = -1;
+      }
+      zkp_context_release_writable();
+    } else {
       result = -1;
     }
-    zkp_context_release_writable();
   }
 
   memzero(&keypair, sizeof(keypair));
