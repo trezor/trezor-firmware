@@ -112,7 +112,7 @@ int zkp_bip340_sign_digest(const uint8_t *private_key_bytes,
     if (context_writable) {
       secp256k1_context_writable_randomize(context_writable);
       if (secp256k1_schnorrsig_sign(context_writable, signature_bytes, digest,
-                                    &keypair, NULL, auxiliary_data) != 1) {
+                                    &keypair, auxiliary_data) != 1) {
         result = -1;
       }
       zkp_context_release_writable();
@@ -148,7 +148,7 @@ int zkp_bip340_verify_digest(const uint8_t *public_key_bytes,
 
   if (result == 0) {
     if (secp256k1_schnorrsig_verify(context_read_only, signature_bytes, digest,
-                                    &xonly_pubkey) != 1) {
+                                    32, &xonly_pubkey) != 1) {
       result = 5;
     }
   }
