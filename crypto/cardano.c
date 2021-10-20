@@ -40,7 +40,7 @@
 #define CARDANO_MAX_NODE_DEPTH 1048576
 
 const curve_info ed25519_cardano_info = {
-    .bip32_name = "ed25519 cardano seed",
+    .bip32_name = ED25519_CARDANO_NAME,
     .params = NULL,
     .hasher_base58 = HASHER_SHA2D,
     .hasher_sign = HASHER_SHA2D,
@@ -194,13 +194,67 @@ int secret_from_seed_cardano_slip23(const uint8_t *seed, int seed_len,
   return 1;
 }
 
+// Derives the root Cardano secret from a BIP-32 master secret via the Ledger
+// derivation:
+// https://github.com/cardano-foundation/CIPs/blob/09d7d8ee1bd64f7e6b20b5a6cae088039dce00cb/CIP-0003/Ledger.md
+int secret_from_seed_cardano_ledger(const uint8_t *seed, int seed_len,
+                                    uint8_t secret_out[CARDANO_SECRET_LENGTH]) {
+  static CONFIDENTIAL uint8_t chain_code[SHA256_DIGEST_LENGTH];
+  static CONFIDENTIAL uint8_t root_key[SHA512_DIGEST_LENGTH];
+  static CONFIDENTIAL HMAC_SHA256_CTX ctx;
+  static CONFIDENTIAL HMAC_SHA512_CTX sctx;
+
+  const uint8_t *intermediate_result = seed;
+  int intermediate_result_len = seed_len;
+  do {
+    // STEP 1: derive a master secret like in BIP-32/SLIP-10
+    hmac_sha512_Init(&sctx, (const uint8_t *)ED25519_SEED_NAME,
+                     strlen(ED25519_SEED_NAME));
+    hmac_sha512_Update(&sctx, intermediate_result, intermediate_result_len);
+    hmac_sha512_Final(&sctx, root_key);
+
+    // STEP 2: check that the resulting key does not have a particular bit set,
+    // otherwise iterate like in SLIP-10
+    intermediate_result = root_key;
+    intermediate_result_len = sizeof(root_key);
+  } while (root_key[31] & 0x20);
+
+  // STEP 3: calculate the chain code as a HMAC-SHA256 of "\x01" + seed,
+  // key is "ed25519 seed"
+  hmac_sha256_Init(&ctx, (const unsigned char *)ED25519_SEED_NAME,
+                   strlen(ED25519_SEED_NAME));
+  hmac_sha256_Update(&ctx, (const unsigned char *)"\x01", 1);
+  hmac_sha256_Update(&ctx, seed, seed_len);
+  hmac_sha256_Final(&ctx, chain_code);
+
+  // STEP 4: extract information into output
+  _Static_assert(
+      SHA512_DIGEST_LENGTH + SHA256_DIGEST_LENGTH == CARDANO_SECRET_LENGTH,
+      "Invalid configuration of Cardano secret size");
+  memcpy(secret_out, root_key, SHA512_DIGEST_LENGTH);
+  memcpy(secret_out + SHA512_DIGEST_LENGTH, chain_code, SHA256_DIGEST_LENGTH);
+
+  // STEP 5: tweak bits of the private key
+  cardano_ed25519_tweak_bits(secret_out);
+
+  memzero(&ctx, sizeof(ctx));
+  memzero(&sctx, sizeof(sctx));
+  memzero(root_key, sizeof(root_key));
+  memzero(chain_code, sizeof(chain_code));
+  return 1;
+}
+
 #define CARDANO_ICARUS_STEPS 32
+_Static_assert(
+    CARDANO_ICARUS_PBKDF2_ROUNDS % CARDANO_ICARUS_STEPS == 0,
+    "CARDANO_ICARUS_STEPS does not divide CARDANO_ICARUS_PBKDF2_ROUNDS");
 #define CARDANO_ICARUS_ROUNDS_PER_STEP \
   (CARDANO_ICARUS_PBKDF2_ROUNDS / CARDANO_ICARUS_STEPS)
 
 // Derives the root Cardano HDNode from a passphrase and the entropy encoded in
 // a BIP-0039 mnemonic using the Icarus derivation scheme, aka V2 derivation
-// scheme.
+// scheme:
+// https://github.com/cardano-foundation/CIPs/blob/09d7d8ee1bd64f7e6b20b5a6cae088039dce00cb/CIP-0003/Icarus.md
 int secret_from_entropy_cardano_icarus(
     const uint8_t *pass, int pass_len, const uint8_t *entropy, int entropy_len,
     uint8_t secret_out[CARDANO_SECRET_LENGTH],
