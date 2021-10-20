@@ -104,6 +104,9 @@ class Bitcoin:
         # set of indices of inputs which are external
         self.external: set[int] = set()
 
+        # indicates whether all internal inputs are Taproot
+        self.taproot_only = True
+
         # transaction and signature serialization
         _SERIALIZED_TX_BUFFER[:] = bytes()
         self.serialized_tx = _SERIALIZED_TX_BUFFER
@@ -118,10 +121,10 @@ class Bitcoin:
         # stable device tests.
         self.orig_txs: list[OriginalTxInfo] = []
 
-        # h_inputs is a digest of the inputs streamed for approval in Step 1, which
-        # is used to ensure that the inputs streamed for verification in Step 3 are
-        # the same as those in Step 1.
+        # The digests of the inputs streamed for approval in Step 1. These are used to ensure that
+        # the inputs streamed for verification in Step 3 are the same as those in Step 1.
         self.h_inputs: bytes | None = None
+        self.h_external_inputs: bytes | None = None
 
         progress.init(tx.inputs_count, tx.outputs_count)
 
@@ -132,17 +135,25 @@ class Bitcoin:
         return Bip143Hash()
 
     async def step1_process_inputs(self) -> None:
+        h_external_inputs_check = HashWriter(sha256())
+
         for i in range(self.tx_info.tx.inputs_count):
             # STAGE_REQUEST_1_INPUT in legacy
             txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
             script_pubkey = self.input_derive_script(txi)
             self.tx_info.add_input(txi, script_pubkey)
+            if txi.script_type not in (
+                InputScriptType.SPENDTAPROOT,
+                InputScriptType.EXTERNAL,
+            ):
+                self.taproot_only = False
 
             if input_is_segwit(txi):
                 self.segwit.add(i)
 
             if input_is_external(txi):
                 self.external.add(i)
+                writers.write_tx_input_check(h_external_inputs_check, txi)
                 await self.process_external_input(txi)
             else:
                 await self.process_internal_input(txi)
@@ -151,6 +162,7 @@ class Bitcoin:
                 await self.process_original_input(txi, script_pubkey)
 
         self.h_inputs = self.tx_info.get_tx_check_digest()
+        self.h_external_inputs = h_external_inputs_check.get_digest()
 
         # Finalize original inputs.
         for orig in self.orig_txs:
@@ -181,22 +193,44 @@ class Bitcoin:
         # should come out the same as h_inputs, checked before continuing
         h_check = HashWriter(sha256())
 
-        for i in range(self.tx_info.tx.inputs_count):
-            progress.advance()
-            txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
+        if self.taproot_only:
+            # All internal inputs are Taproot. We only need to verify external inputs. We can trust
+            # the amounts and scriptPubKeys, because if an invalid value is provided then all
+            # issued signatures will be invalid.
+            expected_digest = self.h_external_inputs
+            for i in self.external:
+                progress.advance()
+                txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
+                writers.write_tx_input_check(h_check, txi)
+                assert txi.script_pubkey is not None  # checked in sanitize_tx_input
+                await self.verify_external_input(i, txi, txi.script_pubkey)
+            progress.advance(self.tx_info.tx.inputs_count - len(self.external))
+        else:
+            # There are internal non-Taproot inputs. We need to verify all inputs, because we can't
+            # trust any amounts or scriptPubKeys. If we did, then an attacker who provides invalid
+            # information about amounts, scriptPubKeys and/or script types may still obtain valid
+            # signatures for legacy and SegWit v0 inputs. These valid signatures could be exploited
+            # in subsequent signing operations to falsely claim externality of the already signed
+            # inputs or to falsely claim that a transaction is a replacement of an already approved
+            # transaction or to construct a valid transaction by combining signatures obtained in
+            # multiple rounds of the attack.
+            expected_digest = self.h_inputs
+            for i in range(self.tx_info.tx.inputs_count):
+                progress.advance()
+                txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
+                writers.write_tx_input_check(h_check, txi)
 
-            writers.write_tx_input_check(h_check, txi)
-            prev_amount, script_pubkey = await self.get_prevtx_output(
-                txi.prev_hash, txi.prev_index
-            )
-            if prev_amount != txi.amount:
-                raise wire.DataError("Invalid amount specified")
+                prev_amount, script_pubkey = await self.get_prevtx_output(
+                    txi.prev_hash, txi.prev_index
+                )
+                if prev_amount != txi.amount:
+                    raise wire.DataError("Invalid amount specified")
 
-            if i in self.external:
-                await self.verify_external_input(i, txi, script_pubkey)
+                if i in self.external:
+                    await self.verify_external_input(i, txi, script_pubkey)
 
         # check that the inputs were the same as those streamed for approval
-        if h_check.get_digest() != self.h_inputs:
+        if h_check.get_digest() != expected_digest:
             raise wire.ProcessError("Transaction has changed during signing")
 
         # verify the signature of one SIGHASH_ALL input in each original transaction
@@ -475,8 +509,10 @@ class Bitcoin:
 
         self.write_tx_input_derived(self.serialized_tx, txi, key_sign_pub, b"")
 
-    def sign_bip143_input(self, txi: TxInput) -> tuple[bytes, bytes]:
+    def sign_bip143_input(self, i: int, txi: TxInput) -> tuple[bytes, bytes]:
         self.tx_info.check_input(txi)
+        if self.taproot_only:
+            raise wire.ProcessError("Transaction has changed during signing")
 
         node = self.keychain.derive(txi.address_n)
         public_key = node.public_key()
@@ -528,7 +564,7 @@ class Bitcoin:
                 self.serialized_tx, signature, self.get_hash_type(txi)
             )
         else:
-            public_key, signature = self.sign_bip143_input(txi)
+            public_key, signature = self.sign_bip143_input(i, txi)
 
             if txi.multisig:
                 # find out place of our signature based on the pubkey
@@ -617,6 +653,9 @@ class Bitcoin:
         return tx_digest, txi_sign, node
 
     async def sign_nonsegwit_input(self, i: int) -> None:
+        if self.taproot_only:
+            raise wire.ProcessError("Transaction has changed during signing")
+
         tx_digest, txi, node = await self.get_legacy_tx_digest(i, self.tx_info)
         assert node is not None
 
