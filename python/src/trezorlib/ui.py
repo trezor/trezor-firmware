@@ -15,11 +15,13 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import os
+from typing import Union
 
 import click
 from mnemonic import Mnemonic
+from typing_extensions import Protocol
 
-from . import device
+from . import device, messages
 from .client import MAX_PIN_LENGTH, PASSPHRASE_ON_DEVICE
 from .exceptions import Cancelled
 from .messages import PinMatrixRequestType, WordRequestType
@@ -51,6 +53,17 @@ PIN_NEW = PinMatrixRequestType.NewFirst
 PIN_CONFIRM = PinMatrixRequestType.NewSecond
 WIPE_CODE_NEW = PinMatrixRequestType.WipeCodeFirst
 WIPE_CODE_CONFIRM = PinMatrixRequestType.WipeCodeSecond
+
+
+class TrezorClientUI(Protocol):
+    def button_request(self, br: messages.ButtonRequest) -> None:
+        ...
+
+    def get_pin(self, code: PinMatrixRequestType) -> str:
+        ...
+
+    def get_passphrase(self, available_on_device: bool) -> Union[str, object]:
+        ...
 
 
 def echo(*args, **kwargs):
