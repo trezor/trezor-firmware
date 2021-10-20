@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from trezor.enums import Capability  # noqa: F401
     from trezor.enums import CardanoAddressType  # noqa: F401
     from trezor.enums import CardanoCertificateType  # noqa: F401
+    from trezor.enums import CardanoDerivationType  # noqa: F401
     from trezor.enums import CardanoNativeScriptHashDisplayFormat  # noqa: F401
     from trezor.enums import CardanoNativeScriptType  # noqa: F401
     from trezor.enums import CardanoPoolRelayType  # noqa: F401
@@ -1093,12 +1094,14 @@ if TYPE_CHECKING:
     class CardanoGetNativeScriptHash(protobuf.MessageType):
         script: "CardanoNativeScript"
         display_format: "CardanoNativeScriptHashDisplayFormat"
+        derivation_type: "CardanoDerivationType"
 
         def __init__(
             self,
             *,
             script: "CardanoNativeScript",
             display_format: "CardanoNativeScriptHashDisplayFormat",
+            derivation_type: "CardanoDerivationType",
         ) -> None:
             pass
 
@@ -1151,6 +1154,7 @@ if TYPE_CHECKING:
         protocol_magic: "int"
         network_id: "int"
         address_parameters: "CardanoAddressParametersType"
+        derivation_type: "CardanoDerivationType"
 
         def __init__(
             self,
@@ -1158,6 +1162,7 @@ if TYPE_CHECKING:
             protocol_magic: "int",
             network_id: "int",
             address_parameters: "CardanoAddressParametersType",
+            derivation_type: "CardanoDerivationType",
             show_display: "bool | None" = None,
         ) -> None:
             pass
@@ -1183,10 +1188,12 @@ if TYPE_CHECKING:
     class CardanoGetPublicKey(protobuf.MessageType):
         address_n: "list[int]"
         show_display: "bool | None"
+        derivation_type: "CardanoDerivationType"
 
         def __init__(
             self,
             *,
+            derivation_type: "CardanoDerivationType",
             address_n: "list[int] | None" = None,
             show_display: "bool | None" = None,
         ) -> None:
@@ -1226,6 +1233,7 @@ if TYPE_CHECKING:
         validity_interval_start: "int | None"
         witness_requests_count: "int"
         minting_asset_groups_count: "int"
+        derivation_type: "CardanoDerivationType"
 
         def __init__(
             self,
@@ -1241,6 +1249,7 @@ if TYPE_CHECKING:
             has_auxiliary_data: "bool",
             witness_requests_count: "int",
             minting_asset_groups_count: "int",
+            derivation_type: "CardanoDerivationType",
             ttl: "int | None" = None,
             validity_interval_start: "int | None" = None,
         ) -> None:

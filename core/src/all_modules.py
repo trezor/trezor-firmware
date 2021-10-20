@@ -388,6 +388,8 @@ if not utils.BITCOIN_ONLY:
     import trezor.enums.CardanoAddressType
     trezor.enums.CardanoCertificateType
     import trezor.enums.CardanoCertificateType
+    trezor.enums.CardanoDerivationType
+    import trezor.enums.CardanoDerivationType
     trezor.enums.CardanoNativeScriptHashDisplayFormat
     import trezor.enums.CardanoNativeScriptHashDisplayFormat
     trezor.enums.CardanoNativeScriptType
