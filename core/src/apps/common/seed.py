@@ -52,7 +52,7 @@ if not utils.BITCOIN_ONLY:
         need_seed = not cache.is_set(cache.APP_COMMON_SEED)
         need_cardano_secret = cache.get(
             cache.APP_COMMON_DERIVE_CARDANO
-        ) and not cache.is_set(cache.APP_CARDANO_SECRET)
+        ) and not cache.is_set(cache.APP_CARDANO_ICARUS_SECRET)
 
         if not need_seed and not need_cardano_secret:
             return
@@ -64,9 +64,9 @@ if not utils.BITCOIN_ONLY:
             cache.set(cache.APP_COMMON_SEED, common_seed)
 
         if need_cardano_secret:
-            from apps.cardano.seed import derive_and_store_secret
+            from apps.cardano.seed import derive_and_store_secrets
 
-            derive_and_store_secret(passphrase)
+            derive_and_store_secrets(passphrase)
 
     @cache.stored_async(cache.APP_COMMON_SEED)
     async def get_seed(ctx: wire.Context) -> bytes:

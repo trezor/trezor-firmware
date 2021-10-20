@@ -328,6 +328,11 @@ if TYPE_CHECKING:
         TXORIGINPUT = 5
         TXORIGOUTPUT = 6
 
+    class CardanoDerivationType(IntEnum):
+        LEDGER = 0
+        ICARUS = 1
+        ICARUS_TREZOR = 2
+
     class CardanoAddressType(IntEnum):
         BASE = 0
         BASE_SCRIPT_KEY = 1

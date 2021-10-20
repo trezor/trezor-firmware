@@ -341,6 +341,12 @@ class RequestType(IntEnum):
     TXORIGOUTPUT = 6
 
 
+class CardanoDerivationType(IntEnum):
+    LEDGER = 0
+    ICARUS = 1
+    ICARUS_TREZOR = 2
+
+
 class CardanoAddressType(IntEnum):
     BASE = 0
     BASE_SCRIPT_KEY = 1
@@ -1957,6 +1963,7 @@ class CardanoGetNativeScriptHash(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("script", "CardanoNativeScript", repeated=False, required=True),
         2: protobuf.Field("display_format", "CardanoNativeScriptHashDisplayFormat", repeated=False, required=True),
+        3: protobuf.Field("derivation_type", "CardanoDerivationType", repeated=False, required=True),
     }
 
     def __init__(
@@ -1964,9 +1971,11 @@ class CardanoGetNativeScriptHash(protobuf.MessageType):
         *,
         script: "CardanoNativeScript",
         display_format: "CardanoNativeScriptHashDisplayFormat",
+        derivation_type: "CardanoDerivationType",
     ) -> None:
         self.script = script
         self.display_format = display_format
+        self.derivation_type = derivation_type
 
 
 class CardanoNativeScriptHash(protobuf.MessageType):
@@ -2022,6 +2031,7 @@ class CardanoGetAddress(protobuf.MessageType):
         3: protobuf.Field("protocol_magic", "uint32", repeated=False, required=True),
         4: protobuf.Field("network_id", "uint32", repeated=False, required=True),
         5: protobuf.Field("address_parameters", "CardanoAddressParametersType", repeated=False, required=True),
+        6: protobuf.Field("derivation_type", "CardanoDerivationType", repeated=False, required=True),
     }
 
     def __init__(
@@ -2030,11 +2040,13 @@ class CardanoGetAddress(protobuf.MessageType):
         protocol_magic: "int",
         network_id: "int",
         address_parameters: "CardanoAddressParametersType",
+        derivation_type: "CardanoDerivationType",
         show_display: Optional["bool"] = False,
     ) -> None:
         self.protocol_magic = protocol_magic
         self.network_id = network_id
         self.address_parameters = address_parameters
+        self.derivation_type = derivation_type
         self.show_display = show_display
 
 
@@ -2057,15 +2069,18 @@ class CardanoGetPublicKey(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
         2: protobuf.Field("show_display", "bool", repeated=False, required=False),
+        3: protobuf.Field("derivation_type", "CardanoDerivationType", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
+        derivation_type: "CardanoDerivationType",
         address_n: Optional[List["int"]] = None,
         show_display: Optional["bool"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
+        self.derivation_type = derivation_type
         self.show_display = show_display
 
 
@@ -2102,6 +2117,7 @@ class CardanoSignTxInit(protobuf.MessageType):
         11: protobuf.Field("validity_interval_start", "uint64", repeated=False, required=False),
         12: protobuf.Field("witness_requests_count", "uint32", repeated=False, required=True),
         13: protobuf.Field("minting_asset_groups_count", "uint32", repeated=False, required=True),
+        14: protobuf.Field("derivation_type", "CardanoDerivationType", repeated=False, required=True),
     }
 
     def __init__(
@@ -2118,6 +2134,7 @@ class CardanoSignTxInit(protobuf.MessageType):
         has_auxiliary_data: "bool",
         witness_requests_count: "int",
         minting_asset_groups_count: "int",
+        derivation_type: "CardanoDerivationType",
         ttl: Optional["int"] = None,
         validity_interval_start: Optional["int"] = None,
     ) -> None:
@@ -2132,6 +2149,7 @@ class CardanoSignTxInit(protobuf.MessageType):
         self.has_auxiliary_data = has_auxiliary_data
         self.witness_requests_count = witness_requests_count
         self.minting_asset_groups_count = minting_asset_groups_count
+        self.derivation_type = derivation_type
         self.ttl = ttl
         self.validity_interval_start = validity_interval_start
 
