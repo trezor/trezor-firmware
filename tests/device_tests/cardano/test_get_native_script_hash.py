@@ -32,6 +32,8 @@ pytestmark = [
     "cardano/get_native_script_hash.json",
 )
 def test_cardano_get_native_script_hash(client, parameters, result):
+    client.init_device(new_session=True, derive_cardano=True)
+
     native_script_hash = get_native_script_hash(
         client,
         native_script=parse_native_script(parameters["native_script"]),
