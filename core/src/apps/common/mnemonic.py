@@ -59,8 +59,10 @@ def get_seed(passphrase: str = "", progress_bar: bool = True) -> bytes:
 
 if not utils.BITCOIN_ONLY:
 
-    def derive_cardano_icarus_trezor(
-        passphrase: str = "", progress_bar: bool = True
+    def derive_cardano_icarus(
+        passphrase: str = "",
+        trezor_derivation: bool = True,
+        progress_bar: bool = True,
     ) -> bytes:
         if not is_bip39():
             raise ValueError  # should not be called for SLIP-39
@@ -76,8 +78,8 @@ if not utils.BITCOIN_ONLY:
 
         from trezor.crypto import cardano
 
-        return cardano.derive_icarus_trezor(
-            mnemonic_secret, passphrase, render_func
+        return cardano.derive_icarus(
+            mnemonic_secret.decode(), passphrase, trezor_derivation, render_func
         )
 
 
