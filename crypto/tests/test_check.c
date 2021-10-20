@@ -9631,6 +9631,10 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_bip32_cardano_hdnode_vector_8);
   tcase_add_test(tc, test_bip32_cardano_hdnode_vector_9);
 
+  tcase_add_test(tc, test_cardano_ledger_vector_1);
+  tcase_add_test(tc, test_cardano_ledger_vector_2);
+  tcase_add_test(tc, test_cardano_ledger_vector_3);
+
   tcase_add_test(tc, test_ed25519_cardano_sign_vectors);
   suite_add_tcase(s, tc);
 #endif

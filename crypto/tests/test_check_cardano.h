@@ -501,3 +501,72 @@ START_TEST(test_bip32_cardano_hdnode_vector_9) {
       32);
 }
 END_TEST
+
+START_TEST(test_cardano_ledger_vector_1) {
+  uint8_t seed[512 / 8];
+  uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
+
+  const char *mnemonic =
+      "recall grace sport punch exhibit mad harbor stand obey "
+      "short width stem awkward used stairs wool ugly "
+      "trap season stove worth toward congress jaguar";
+
+  mnemonic_to_seed(mnemonic, "", seed, NULL);
+  const int res =
+      secret_from_seed_cardano_ledger(seed, sizeof(seed), cardano_secret);
+  ck_assert_int_eq(res, 1);
+  ck_assert_mem_eq(
+      cardano_secret,
+      fromhex(
+          "a08cf85b564ecf3b947d8d4321fb96d70ee7bb760877e371899b14e2ccf88658"
+          "104b884682b57efd97decbb318a45c05a527b9cc5c2f64f7352935a049ceea60"
+          "680d52308194ccef2a18e6812b452a5815fbd7f5babc083856919aaf668fe7e4"),
+      CARDANO_SECRET_LENGTH);
+}
+END_TEST
+
+START_TEST(test_cardano_ledger_vector_2) {
+  uint8_t seed[512 / 8];
+  uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
+
+  const char *mnemonic =
+      "correct cherry mammal bubble want mandate polar hazard "
+      "crater better craft exotic choice fun tourist census "
+      "gap lottery neglect address glow carry old business";
+
+  mnemonic_to_seed(mnemonic, "", seed, NULL);
+  const int res =
+      secret_from_seed_cardano_ledger(seed, sizeof(seed), cardano_secret);
+  ck_assert_int_eq(res, 1);
+  ck_assert_mem_eq(
+      cardano_secret,
+      fromhex(
+          "587c6774357ecbf840d4db6404ff7af016dace0400769751ad2abfc77b9a3844"
+          "cc71702520ef1a4d1b68b91187787a9b8faab0a9bb6b160de541b6ee62469901"
+          "fc0beda0975fe4763beabd83b7051a5fd5cbce5b88e82c4bbaca265014e524bd"),
+      CARDANO_SECRET_LENGTH);
+}
+END_TEST
+
+START_TEST(test_cardano_ledger_vector_3) {
+  uint8_t seed[512 / 8];
+  uint8_t cardano_secret[CARDANO_SECRET_LENGTH];
+
+  const char *mnemonic =
+      "abandon abandon abandon abandon abandon abandon abandon abandon "
+      "abandon abandon abandon abandon abandon abandon abandon abandon "
+      "abandon abandon abandon abandon abandon abandon abandon art";
+
+  mnemonic_to_seed(mnemonic, "foo", seed, NULL);
+  const int res =
+      secret_from_seed_cardano_ledger(seed, sizeof(seed), cardano_secret);
+  ck_assert_int_eq(res, 1);
+  ck_assert_mem_eq(
+      cardano_secret,
+      fromhex(
+          "f053a1e752de5c26197b60f032a4809f08bb3e5d90484fe42024be31efcba757"
+          "8d914d3ff992e21652fee6a4d99f6091006938fac2c0c0f9d2de0ba64b754e92"
+          "a4f3723f23472077aa4cd4dd8a8a175dba07ea1852dad1cf268c61a2679c3890"),
+      CARDANO_SECRET_LENGTH);
+}
+END_TEST
