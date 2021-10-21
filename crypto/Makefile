@@ -35,12 +35,12 @@ CFLAGS   += $(OPTFLAGS) \
             -Werror
 
 ZKP_CFLAGS = \
-	-DSECP256K1_BUILD \
 	-DUSE_NUM_NONE \
 	-DUSE_FIELD_INV_BUILTIN \
 	-DUSE_SCALAR_INV_BUILTIN \
 	-DUSE_FIELD_10X26 \
 	-DUSE_SCALAR_8X32 \
+	-DUSE_ECMULT_STATIC_PRECOMPUTATION \
 	-DECMULT_GEN_PREC_BITS=4 \
 	-DECMULT_WINDOW_SIZE=8 \
 	-DENABLE_MODULE_GENERATOR \
@@ -48,7 +48,7 @@ ZKP_CFLAGS = \
 	-DENABLE_MODULE_SCHNORRSIG \
 	-DENABLE_MODULE_EXTRAKEYS
 ZKP_PATH = ../vendor/secp256k1-zkp
-CFLAGS += -DSECP256K1_CONTEXT_SIZE=73952
+CFLAGS += -DSECP256K1_CONTEXT_SIZE=8416
 
 VALGRIND ?= 1
 
@@ -145,7 +145,11 @@ tools/bip39bruteforce: tools/bip39bruteforce.o $(OBJS)
 fuzzer: fuzzer/fuzzer.o $(OBJS)
 	$(CC) $(CFLAGS) fuzzer/fuzzer.o $(OBJS) -o fuzzer/fuzzer
 
-secp256k1-zkp.o:
+$(ZKP_PATH)/src/ecmult_static_context.h: $(ZKP_PATH)/src/gen_context.c
+	$(CC) $(ZKP_CFLAGS) $(ZKP_PATH)/src/gen_context.c -o $(ZKP_PATH)/gen_context
+	cd $(ZKP_PATH) && ./gen_context
+
+secp256k1-zkp.o: $(ZKP_PATH)/src/ecmult_static_context.h
 	$(CC) $(ZKP_CFLAGS) -fPIC -I$(ZKP_PATH) -I$(ZKP_PATH)/src -c $(ZKP_PATH)/src/secp256k1.c -o secp256k1-zkp.o
 
 clean:
@@ -154,6 +158,8 @@ clean:
 	rm -f tools/*.o tools/xpubaddrgen tools/mktable tools/bip39bruteforce
 	rm -f fuzzer/*.o fuzzer/fuzzer
 	rm -f secp256k1-zkp.o
+	rm -f $(ZKP_PATH)/gen_context
+	rm -f $(ZKP_PATH)/src/ecmult_static_context.h
 
 clean-fuzzer: clean
 	rm -f crash-* fuzz-*.log slow-unit-* timeout-*
