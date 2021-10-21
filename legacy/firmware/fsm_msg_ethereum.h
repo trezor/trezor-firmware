@@ -60,7 +60,7 @@ void fsm_msgEthereumGetPublicKey(const EthereumGetPublicKey *msg) {
   layoutHome();
 }
 
-void fsm_msgEthereumSignTx(EthereumSignTx *msg) {
+void fsm_msgEthereumSignTx(const EthereumSignTx *msg) {
   CHECK_INITIALIZED
 
   CHECK_PIN
@@ -72,13 +72,20 @@ void fsm_msgEthereumSignTx(EthereumSignTx *msg) {
   ethereum_signing_init(msg, node);
 }
 
-void fsm_msgEthereumTxAck(const EthereumTxAck *msg) {
-  ethereum_signing_txack(msg);
+void fsm_msgEthereumSignTxEIP1559(const EthereumSignTxEIP1559 *msg) {
+  CHECK_INITIALIZED
+
+  CHECK_PIN
+
+  const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n,
+                                          msg->address_n_count, NULL);
+  if (!node) return;
+
+  ethereum_signing_init_eip1559(msg, node);
 }
 
-void fsm_msgEthereumSignTxEIP1559(const EthereumSignTxEIP1559 *msg) {
-  (void)msg;
-  fsm_sendFailure(FailureType_Failure_UnexpectedMessage, _("Not implemented"));
+void fsm_msgEthereumTxAck(const EthereumTxAck *msg) {
+  ethereum_signing_txack(msg);
 }
 
 void fsm_msgEthereumGetAddress(const EthereumGetAddress *msg) {
