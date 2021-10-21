@@ -1333,6 +1333,8 @@ if TYPE_CHECKING:
         derivation_type: "CardanoDerivationType"
         include_network_id: "bool"
         script_data_hash: "bytes | None"
+        collateral_inputs_count: "int"
+        required_signers_count: "int"
 
         def __init__(
             self,
@@ -1349,6 +1351,8 @@ if TYPE_CHECKING:
             witness_requests_count: "int",
             minting_asset_groups_count: "int",
             derivation_type: "CardanoDerivationType",
+            collateral_inputs_count: "int",
+            required_signers_count: "int",
             ttl: "int | None" = None,
             validity_interval_start: "int | None" = None,
             include_network_id: "bool | None" = None,
@@ -1606,6 +1610,38 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxMint"]:
+            return isinstance(msg, cls)
+
+    class CardanoTxCollateralInput(protobuf.MessageType):
+        prev_hash: "bytes"
+        prev_index: "int"
+
+        def __init__(
+            self,
+            *,
+            prev_hash: "bytes",
+            prev_index: "int",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxCollateralInput"]:
+            return isinstance(msg, cls)
+
+    class CardanoTxRequiredSigner(protobuf.MessageType):
+        key_hash: "bytes | None"
+        key_path: "list[int]"
+
+        def __init__(
+            self,
+            *,
+            key_path: "list[int] | None" = None,
+            key_hash: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["CardanoTxRequiredSigner"]:
             return isinstance(msg, cls)
 
     class CardanoTxItemAck(protobuf.MessageType):

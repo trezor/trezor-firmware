@@ -29,6 +29,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -62,6 +64,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -95,6 +99,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -128,6 +134,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -161,6 +169,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -194,6 +204,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -227,6 +239,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -265,6 +279,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -298,6 +314,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -331,6 +349,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -364,6 +384,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -397,6 +419,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -430,6 +454,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -463,6 +489,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -496,6 +524,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -532,6 +562,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -570,6 +602,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -608,6 +642,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -646,6 +682,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -685,6 +723,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -724,6 +764,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -762,6 +804,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -800,6 +844,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -838,6 +884,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -876,6 +924,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -915,6 +965,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -950,6 +1002,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -993,6 +1047,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1038,6 +1094,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1072,6 +1130,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1106,6 +1166,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1142,6 +1204,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1175,12 +1239,94 @@
         ],
         "mint": [],
         "script_data_hash": "d593fd793c377ac50a3169bb8378ffc257c944da31aa8f355dfa5a4f",
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
       },
       "result": {
         "error_message": "Invalid script data hash"
+      }
+    },
+    {
+      "description": "Collateral input is present",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "required_signers": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid tx signing request"
+      }
+    },
+    {
+      "description": "Required signer is present",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [
+          {
+            "key_hash": "3a7f09d3df4cf66a7399c2b05bfa234d5a29560c311fc5db4c490711"
+          }
+        ],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid tx signing request"
       }
     },
     {
@@ -1214,6 +1360,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1253,6 +1401,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1292,6 +1442,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1325,6 +1477,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1363,6 +1517,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1411,6 +1567,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1464,6 +1622,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1511,6 +1671,8 @@
           }
         ],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1563,6 +1725,8 @@
           }
         ],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1615,6 +1779,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1677,6 +1843,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1728,6 +1896,8 @@
           }
         ],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1789,6 +1959,8 @@
           }
         ],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1822,6 +1994,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -1859,6 +2033,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -1898,6 +2074,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -1979,6 +2157,8 @@
           }
         ],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -2017,6 +2197,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -2106,6 +2288,8 @@
           }
         ],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -2149,6 +2333,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -2187,6 +2373,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -2225,6 +2413,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -2269,6 +2459,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -2313,6 +2505,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -2356,6 +2550,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -2393,6 +2589,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -2427,6 +2625,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false

@@ -165,6 +165,8 @@ if not utils.BITCOIN_ONLY:
     CardanoGetNativeScriptHash = 330
     CardanoNativeScriptHash = 331
     CardanoTxMint = 332
+    CardanoTxCollateralInput = 333
+    CardanoTxRequiredSigner = 334
     RippleGetAddress = 400
     RippleAddress = 401
     RippleSignTx = 402

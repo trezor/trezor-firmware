@@ -76,6 +76,10 @@ def format_key_hash(key_hash: bytes, is_shared_key: bool) -> str:
     return bech32.encode(hrp, key_hash)
 
 
+def format_required_signer_key_hash(required_signer_key_hash: bytes) -> str:
+    return bech32.encode(bech32.HRP_REQUIRED_SIGNER_KEY_HASH, required_signer_key_hash)
+
+
 def format_output_datum_hash(output_datum_hash: bytes) -> str:
     return bech32.encode(bech32.HRP_OUTPUT_DATUM_HASH, output_datum_hash)
 
@@ -112,7 +116,10 @@ def validate_stake_credential(
         if not SCHEMA_STAKING_ANY_ACCOUNT.match(path):
             raise error
     elif script_hash:
-        if signing_mode != CardanoTxSigningMode.MULTISIG_TRANSACTION:
+        if signing_mode not in (
+            CardanoTxSigningMode.MULTISIG_TRANSACTION,
+            CardanoTxSigningMode.PLUTUS_TRANSACTION,
+        ):
             raise error
         if len(script_hash) != SCRIPT_HASH_SIZE:
             raise error

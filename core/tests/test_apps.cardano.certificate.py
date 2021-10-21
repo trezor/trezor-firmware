@@ -33,6 +33,15 @@ class TestCardanoCertificate(unittest.TestCase):
             ),
             (
                 CardanoTxCertificate(
+                    type=CardanoCertificateType.STAKE_REGISTRATION,
+                    script_hash=unhexlify(
+                        "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+                    ),
+                ),
+                CardanoTxSigningMode.PLUTUS_TRANSACTION,
+            ),
+            (
+                CardanoTxCertificate(
                     type=CardanoCertificateType.STAKE_DELEGATION,
                     path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
                     pool=unhexlify(
@@ -55,6 +64,18 @@ class TestCardanoCertificate(unittest.TestCase):
             ),
             (
                 CardanoTxCertificate(
+                    type=CardanoCertificateType.STAKE_DELEGATION,
+                    script_hash=unhexlify(
+                        "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+                    ),
+                    pool=unhexlify(
+                        "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
+                    ),
+                ),
+                CardanoTxSigningMode.PLUTUS_TRANSACTION,
+            ),
+            (
+                CardanoTxCertificate(
                     type=CardanoCertificateType.STAKE_DEREGISTRATION,
                     path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
                 ),
@@ -68,6 +89,15 @@ class TestCardanoCertificate(unittest.TestCase):
                     ),
                 ),
                 CardanoTxSigningMode.MULTISIG_TRANSACTION,
+            ),
+            (
+                CardanoTxCertificate(
+                    type=CardanoCertificateType.STAKE_DEREGISTRATION,
+                    script_hash=unhexlify(
+                        "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+                    ),
+                ),
+                CardanoTxSigningMode.PLUTUS_TRANSACTION,
             ),
             (
                 CardanoTxCertificate(

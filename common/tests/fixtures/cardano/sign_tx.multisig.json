@@ -80,6 +80,8 @@
           }
         ],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -138,6 +140,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -192,6 +196,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -250,6 +256,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -313,6 +321,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -395,6 +405,11 @@
                 ]
               }
             ]
+          },
+          {
+            "address": "addr1w9rhu54nz94k9l5v6d9rzfs47h7dv7xffcwkekuxcx3evnqpvuxu0",
+            "amount": "1",
+            "datum_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7"
           }
         ],
         "mint": [
@@ -412,7 +427,9 @@
             ]
           }
         ],
-        "script_data_hash": null,
+        "script_data_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -425,27 +442,27 @@
             "path": "m/1855'/1815'/0'"
           }
         ],
-        "include_network_id": false
+        "include_network_id": true
       },
       "result": {
-        "tx_hash": "2be64c04ea3f5bac3c224ec47a4157ade91fc6ab4fd6b83ce3d57b2e9186720b",
+        "tx_hash": "c3637e34529fae17dbbb90c58307df0cf3b818f4c034860fff362d1ea864cca4",
         "witnesses": [
           {
             "type": 1,
             "pub_key": "b10be5c0d11ad8292bbe69e220ca0cfbe154610b3041a8e72f9d515c226ab3b1",
-            "signature": "38a56a46b21caef91742ffafdec202ed96809c3070c9bfd51db5c750d77edbfb8514d9cd2255ab5a857dd8a63706ae0ca29e390fba6af7a906b186aed117b809",
+            "signature": "58bc9f1c39f2cd4248ad79a5f6a4733a6e751e86b09163e468b92ec1079590f6052f30f9a782812ba1b553f1c5f22cad807af97494cf8a0a26bf123bc2f60202",
             "chain_code": null
           },
           {
             "type": 1,
             "pub_key": "f2ef4ecd21ad28a8d270ca7be7e96c87f60dc821e13c0d0c5870344e9693637c",
-            "signature": "0c9071c421fe207ac1d9102643eac8ddf5ff29238782956b5706b9f1f084dfc5c087b4ceda6d079f8bb6438d3b556d3ac97565a87a8ec33f11856408b0480400",
+            "signature": "8b3e5b1b013d7456c1b0d67a334af725e3e1d3ea9a4a8ff05889314691f797cb49fff2cc10764133bce154db5e0eb91e4c1982cf53e6578648cf1f251f37020a",
             "chain_code": null
           },
           {
             "type": 1,
             "pub_key": "b75258e4f61eb7b313d8554c2fe10673cf214ca2d762bfd53ec3b7846e2ee872",
-            "signature": "85bf1bc71c04c72ae8184885b9d5eadd49b2c27bd332a42bc42c35b49429509350795bbdb716a95946b7c30cb62f20e1d39e4be3df5625a141f3e3c2e3526e02",
+            "signature": "cb3daca29e217a9f0c7e5ad47b0d07827ce8937d252ba6e32415f4613e8e6675e1b3964d28b354d338bae623bba1c30bf47a37818b56602a6e7ba7ff081aa605",
             "chain_code": null
           }
         ]
@@ -476,6 +493,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -520,6 +539,8 @@
         ],
         "mint": [],
         "script_data_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {

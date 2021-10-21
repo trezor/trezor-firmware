@@ -68,6 +68,7 @@ enum CardanoTxSigningMode {
     ORDINARY_TRANSACTION = 0;
     POOL_REGISTRATION_AS_OWNER = 1;
     MULTISIG_TRANSACTION = 2;
+    PLUTUS_TRANSACTION = 3;
 }
 
 enum CardanoTxWitnessType {
@@ -207,6 +208,8 @@ message CardanoSignTxInit {
     required CardanoDerivationType derivation_type = 14;
     optional bool include_network_id = 15 [default=false];      // network id included as tx body item
     optional bytes script_data_hash = 16;
+    required uint32 collateral_inputs_count = 17;
+    required uint32 required_signers_count = 18;
 }
 
 /**
@@ -349,6 +352,24 @@ message CardanoTxMint {
 }
 
 /**
+ * Request: Transaction collateral input data
+ * @next CardanoTxItemAck
+ */
+message CardanoTxCollateralInput {
+    required bytes prev_hash = 1;
+    required uint32 prev_index = 2;
+}
+
+/**
+ * Request: Transaction required signer
+ * @next CardanoTxItemAck
+ */
+message CardanoTxRequiredSigner {
+    optional bytes key_hash = 1;
+    repeated uint32 key_path = 2;
+}
+
+/**
  * Response: Acknowledgement of the last transaction item received
  * @next CardanoTxInput
  * @next CardanoTxOutput
@@ -361,6 +382,8 @@ message CardanoTxMint {
  * @next CardanoTxAuxiliaryData
  * @next CardanoTxWitnessRequest
  * @next CardanoTxMint
+ * @next CardanoTxCollateralInput
+ * @next CardanoTxRequiredSigner
  */
 message CardanoTxItemAck {
 }

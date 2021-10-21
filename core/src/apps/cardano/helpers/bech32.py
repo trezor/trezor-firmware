@@ -12,6 +12,7 @@ HRP_JORMUN_PUBLIC_KEY = "ed25519_pk"
 HRP_SCRIPT_HASH = "script"
 HRP_KEY_HASH = "addr_vkh"
 HRP_SHARED_KEY_HASH = "addr_shared_vkh"
+HRP_REQUIRED_SIGNER_KEY_HASH = "req_signer_vkh"
 HRP_OUTPUT_DATUM_HASH = "datum"
 HRP_SCRIPT_DATA_HASH = "script_data"
 

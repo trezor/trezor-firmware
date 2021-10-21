@@ -33,6 +33,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -74,6 +76,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -119,6 +123,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -168,6 +174,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -209,6 +217,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -241,6 +251,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -279,6 +291,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -315,6 +329,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -403,6 +419,8 @@
           }
         ],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "MULTISIG_TRANSACTION",
         "additional_witness_requests": [
           {
@@ -413,6 +431,91 @@
       },
       "result": {
         "error_message": "Invalid witness request"
+      }
+    },
+    {
+      "description": "Multisig transaction with a collateral input",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1w9rhu54nz94k9l5v6d9rzfs47h7dv7xffcwkekuxcx3evnqpvuxu0",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [
+          {
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "required_signers": [],
+        "signing_mode": "MULTISIG_TRANSACTION",
+        "additional_witness_requests": [
+          {
+            "path": "m/1854'/1815'/0'/0/0"
+          }
+        ],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid tx signing request"
+      }
+    },
+    {
+      "description": "Multisig transaction with a required signer",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1w9rhu54nz94k9l5v6d9rzfs47h7dv7xffcwkekuxcx3evnqpvuxu0",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [
+          {
+            "key_hash": "3a7f09d3df4cf66a7399c2b05bfa234d5a29560c311fc5db4c490711"
+          }
+        ],
+        "signing_mode": "MULTISIG_TRANSACTION",
+        "additional_witness_requests": [
+          {
+            "path": "m/1854'/1815'/0'/0/0"
+          }
+        ],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid tx signing request"
       }
     }
   ]

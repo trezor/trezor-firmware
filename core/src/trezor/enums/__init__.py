@@ -183,6 +183,8 @@ if TYPE_CHECKING:
         CardanoGetNativeScriptHash = 330
         CardanoNativeScriptHash = 331
         CardanoTxMint = 332
+        CardanoTxCollateralInput = 333
+        CardanoTxRequiredSigner = 334
         RippleGetAddress = 400
         RippleAddress = 401
         RippleSignTx = 402
@@ -379,6 +381,7 @@ if TYPE_CHECKING:
         ORDINARY_TRANSACTION = 0
         POOL_REGISTRATION_AS_OWNER = 1
         MULTISIG_TRANSACTION = 2
+        PLUTUS_TRANSACTION = 3
 
     class CardanoTxWitnessType(IntEnum):
         BYRON_WITNESS = 0

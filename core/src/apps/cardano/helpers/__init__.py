@@ -21,6 +21,8 @@ INVALID_NATIVE_SCRIPT = wire.ProcessError("Invalid native script")
 INVALID_TOKEN_BUNDLE_MINT = wire.ProcessError("Invalid mint token bundle")
 INVALID_OUTPUT_DATUM_HASH = wire.ProcessError("Invalid output datum hash")
 INVALID_SCRIPT_DATA_HASH = wire.ProcessError("Invalid script data hash")
+INVALID_COLLATERAL_INPUT = wire.ProcessError("Invalid collateral input")
+INVALID_REQUIRED_SIGNER = wire.ProcessError("Invalid required signer")
 
 LOVELACE_MAX_SUPPLY = 45_000_000_000 * 1_000_000
 INPUT_PREV_HASH_SIZE = 32

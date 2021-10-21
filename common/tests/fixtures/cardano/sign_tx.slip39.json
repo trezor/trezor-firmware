@@ -33,6 +33,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -79,6 +81,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
@@ -125,6 +129,8 @@
         ],
         "mint": [],
         "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
         "signing_mode": "ORDINARY_TRANSACTION",
         "additional_witness_requests": [],
         "include_network_id": false
