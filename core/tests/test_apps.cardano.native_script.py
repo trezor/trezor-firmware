@@ -1,6 +1,6 @@
 from common import *
 from trezor import wire
-from trezor.crypto import bip32
+from trezor.crypto import cardano
 from trezor.enums import CardanoNativeScriptType
 from trezor.messages import CardanoNativeScript
 
@@ -280,7 +280,8 @@ class TestCardanoNativeScript(unittest.TestCase):
     def test_get_native_script_hash(self):
         mnemonic = "all all all all all all all all all all all all"
         passphrase = ""
-        node = bip32.from_mnemonic_cardano(mnemonic, passphrase)
+        secret = cardano.derive_icarus(mnemonic, passphrase, False)
+        node = cardano.from_secret(secret)
         keychain = Keychain(node)
 
         for script, expected_hash in VALID_NATIVE_SCRIPTS:
