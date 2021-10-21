@@ -109,8 +109,11 @@ int mnemonic_to_bits(const char *mnemonic, uint8_t *bits) {
   }
   n++;
 
-  // check number of words
-  if (n != 12 && n != 18 && n != 24) {
+  // check that number of words is valid for BIP-39:
+  // (a) between 128 and 256 bits of initial entropy (12 - 24 words)
+  // (b) number of bits divisible by 33 (1 checksum bit per 32 input bits)
+  //     - that is, (n * 11) % 33 == 0, so n % 3 == 0
+  if (n < 12 || n > 24 || (n % 3)) {
     return 0;
   }
 
