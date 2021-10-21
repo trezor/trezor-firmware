@@ -51,6 +51,12 @@ static uint64_t chain_id;
 static bool eip1559;
 struct SHA3_CTX keccak_ctx = {0};
 
+static uint32_t signing_access_list_count;
+static EthereumAccessList signing_access_list[8];
+_Static_assert(sizeof(signing_access_list) ==
+                   sizeof(((EthereumSignTxEIP1559 *)NULL)->access_list),
+               "access_list buffer size mismatch");
+
 struct signing_params {
   bool pubkeyhash_set;
   uint8_t pubkeyhash[20];
@@ -192,6 +198,29 @@ static int rlp_calculate_number_length(uint64_t number) {
   return length;
 }
 
+static uint32_t rlp_calculate_access_list_keys_length(
+    const EthereumAccessList_storage_keys_t *keys, uint32_t keys_count) {
+  uint32_t keys_length = 0;
+  for (size_t i = 0; i < keys_count; i++) {
+    keys_length += rlp_calculate_length(keys[i].size, keys[i].bytes[0]);
+  }
+  return keys_length;
+}
+
+static uint32_t rlp_calculate_access_list_length(
+    const EthereumAccessList access_list[8], uint32_t access_list_count) {
+  uint32_t length = 0;
+  for (size_t i = 0; i < access_list_count; i++) {
+    uint32_t address_length = rlp_calculate_length(20, 0xff);
+    uint32_t keys_length = rlp_calculate_access_list_keys_length(
+        access_list[i].storage_keys, access_list[i].storage_keys_count);
+    length += rlp_calculate_length(
+        address_length + rlp_calculate_length(keys_length, 0xff), 0xff);
+  }
+
+  return length;
+}
+
 static void send_request_chunk(void) {
   int progress = 1000 - (data_total > 1000000 ? data_left / (data_total / 800)
                                               : data_left * 800 / data_total);
@@ -212,7 +241,31 @@ static void send_signature(void) {
   layoutProgress(_("Signing"), 1000);
 
   if (eip1559) {
-    hash_rlp_list_length(0);
+    hash_rlp_list_length(rlp_calculate_access_list_length(
+        signing_access_list, signing_access_list_count));
+    for (size_t i = 0; i < signing_access_list_count; i++) {
+      uint8_t address[20] = {0};
+      if (!ethereum_parse(signing_access_list[i].address, address)) {
+        fsm_sendFailure(FailureType_Failure_DataError, _("Malformed address"));
+        ethereum_signing_abort();
+        return;
+      }
+
+      uint32_t address_length =
+          rlp_calculate_length(sizeof(address), address[0]);
+      uint32_t keys_length = rlp_calculate_access_list_keys_length(
+          signing_access_list[i].storage_keys,
+          signing_access_list[i].storage_keys_count);
+
+      hash_rlp_list_length(address_length +
+                           rlp_calculate_length(keys_length, 0xff));
+      hash_rlp_field(address, sizeof(address));
+      hash_rlp_list_length(keys_length);
+      for (size_t j = 0; j < signing_access_list[i].storage_keys_count; j++) {
+        hash_rlp_field(signing_access_list[i].storage_keys[j].bytes,
+                       signing_access_list[i].storage_keys[j].size);
+      }
+    }
   } else {
     /* eip-155 replay protection */
     /* hash v=chain_id, r=0, s=0 */
@@ -444,6 +497,8 @@ static bool ethereum_signing_init_common(struct signing_params *params) {
   chain_id = 0;
 
   memzero(&msg_tx_request, sizeof(EthereumTxRequest));
+  memzero(signing_access_list, sizeof(signing_access_list));
+  signing_access_list_count = 0;
 
   /* eip-155 chain id */
   if (params->chain_id < 1) {
@@ -725,7 +780,10 @@ void ethereum_signing_init_eip1559(const EthereumSignTxEIP1559 *msg,
   rlp_length +=
       rlp_calculate_length(data_total, params.data_initial_chunk_bytes[0]);
 
-  rlp_length += rlp_calculate_length(0, 0xff);
+  rlp_length +=
+      rlp_calculate_length(rlp_calculate_access_list_length(
+                               msg->access_list, msg->access_list_count),
+                           0xff);
 
   /* Stage 2: Store header fields */
   hash_rlp_number(EIP1559_TX_TYPE);
@@ -743,6 +801,10 @@ void ethereum_signing_init_eip1559(const EthereumSignTxEIP1559 *msg,
   hash_rlp_length(data_total, params.data_initial_chunk_bytes[0]);
   hash_data(params.data_initial_chunk_bytes, params.data_initial_chunk_size);
   data_left = data_total - params.data_initial_chunk_size;
+
+  /* make a copy of access_list, hash it after data is processed */
+  memcpy(signing_access_list, msg->access_list, sizeof(signing_access_list));
+  signing_access_list_count = msg->access_list_count;
 
   memcpy(privkey, node->private_key, 32);
 

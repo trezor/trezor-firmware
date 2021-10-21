@@ -172,7 +172,6 @@ def test_data_streaming(client):
         )
 
 
-@pytest.mark.skip_t1
 def test_signtx_eip1559_access_list(client):
     with client:
 
