@@ -1,0 +1,788 @@
+{
+  "setup": {
+    "mnemonic": "all all all all all all all all all all all all",
+    "passphrase": ""
+  },
+  "tests": [
+    {
+      "description": "Simple Plutus transaction",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": "d593fd793c377ac50a3169bb8378ffc257c944da31aa8f355dfa5a4f6ff89e02",
+        "collateral_inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "required_signers": [],
+        "signing_mode": "PLUTUS_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "598dc85bc03cc682ee7ce8b4db798d836a0840429cae7fc62fe388e727a669a2",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "7b347ee79f28881cc13f233035e1641981e766f8abf3e8dd826dd0ab7cd56d3e4ada1d935dbbb04947642397be5daca9b8ad214d3383744eeb421b30cb5ab804",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "Simple Plutus transaction with required signers",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": "d593fd793c377ac50a3169bb8378ffc257c944da31aa8f355dfa5a4f6ff89e02",
+        "collateral_inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "required_signers": [
+          {
+            "key_path": "m/1852'/1815'/0'/0/1"
+          },
+          {
+            "key_path": "m/1854'/1815'/0'/0/0"
+          },
+          {
+            "key_path": "m/1855'/1815'/0'"
+          },
+          {
+            "key_hash": "3a7f09d3df4cf66a7399c2b05bfa234d5a29560c311fc5db4c490711"
+          }
+        ],
+        "signing_mode": "PLUTUS_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "ff4a515636b38ed2b2b37f64501f75f04a25d05349b5b84c07f319b6f86372f4",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "d1673535de3120907e23f0df01553ddd3072b3212e0936c68d2352ccafcda6a7ce1798351706a3d475ad715ae13008ba45cfdf6b5e65fa963dea9c3a0e003207",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "36a8ef21d5b98fdf23a27325cf643deaac35e912c835e35037f23d1061ae5b16",
+            "signature": "71658f91b1f22e9ba5ea5aa3cf8a29294bf9ebbc2681aa0a83171ffbe8ddba9c291f879a02096948c0c99f2098355a023246656ebe5131f4a48d5be80ea92d01",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "b10be5c0d11ad8292bbe69e220ca0cfbe154610b3041a8e72f9d515c226ab3b1",
+            "signature": "cb1c210bc406ce9530d385617b48ec8be37e7b0f1403964237cf4790d065508c53f8542be9817018d242d8b3cec59de0e42726ca8c1335f9b166a99acb698306",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "b75258e4f61eb7b313d8554c2fe10673cf214ca2d762bfd53ec3b7846e2ee872",
+            "signature": "46084ff13573185716863a71e565cfd16edb677db6ae01e64db0490cd05098bd66b8d75187a06c867c183b78bfdf7478e34be2ee46bf262e07b834d091dd0009",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "Simple Plutus transaction with additional witness requests",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": "d593fd793c377ac50a3169bb8378ffc257c944da31aa8f355dfa5a4f6ff89e02",
+        "collateral_inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "required_signers": [],
+        "signing_mode": "PLUTUS_TRANSACTION",
+        "additional_witness_requests": [
+          {
+            "path": "m/1852'/1815'/0'/0/1"
+          },
+          {
+            "path": "m/1854'/1815'/0'/0/0"
+          },
+          {
+            "path": "m/1855'/1815'/0'"
+          }
+        ],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "598dc85bc03cc682ee7ce8b4db798d836a0840429cae7fc62fe388e727a669a2",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "7b347ee79f28881cc13f233035e1641981e766f8abf3e8dd826dd0ab7cd56d3e4ada1d935dbbb04947642397be5daca9b8ad214d3383744eeb421b30cb5ab804",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "36a8ef21d5b98fdf23a27325cf643deaac35e912c835e35037f23d1061ae5b16",
+            "signature": "7251c488f172fb4a3c06b24abd7d636f8ee18548c3dd06c505a4c84ebc02c5734859e8231c62bcb56cd3635b23bcf948d66598f26a6fe2ce946b8d203268620e",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "b10be5c0d11ad8292bbe69e220ca0cfbe154610b3041a8e72f9d515c226ab3b1",
+            "signature": "e90ad831eb5a312f112e22562aa28039c8b6fddff00264835f866fcad550ff62e9feb190b2662a374d31d4ac0596a4d5e177da25519645ae4ff8164ca614e008",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "b75258e4f61eb7b313d8554c2fe10673cf214ca2d762bfd53ec3b7846e2ee872",
+            "signature": "1efbaa626bef7482238639c211fbb4aa7aa638ef17cde400ea88dc33ff71e427920d030a71b78e1188838f18804903e98d402402d5a0e693e44416edc2c55701",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "Plutus transaction without script data hash and collateral inputs",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [
+          {
+            "key_path": "m/1852'/1815'/0'/0/1"
+          }
+        ],
+        "signing_mode": "PLUTUS_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "3fbf931170d2ed6df95a35572d850b40bab4b350763872cb9110f93e9ce8668b",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "36a8ef21d5b98fdf23a27325cf643deaac35e912c835e35037f23d1061ae5b16",
+            "signature": "4825580aca1d9486960092b4410c05bac533a5682f97153a2992d15aa98390460136705fdb35c394d6906e48ae4023b12ce780b9cc3530cfa4756b4160512207",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "Plutus transaction with an ordinary input",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          },
+          {
+            "path": "m/1852'/1815'/0'/0/2",
+            "prev_hash": "991af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dc",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": "d593fd793c377ac50a3169bb8378ffc257c944da31aa8f355dfa5a4f6ff89e02",
+        "collateral_inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "required_signers": [
+          {
+            "key_path": "m/1852'/1815'/0'/0/1"
+          }
+        ],
+        "signing_mode": "PLUTUS_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "08bd557131d89c5008cf79f7bdf9c47d27ad7c00b3a1a19dfecedd7c1f7508d8",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "65d13326aa2a1ef0c68ca6a3e6571147f136e2136e2454755d0184da059f4885b1ff4c8a6247d21e5bfdadb1d2dbf05e45b786323272ab907bd17bf7ab48bc04",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "36a8ef21d5b98fdf23a27325cf643deaac35e912c835e35037f23d1061ae5b16",
+            "signature": "ab5713ad075a7dd567c08b05fa8627a9a1708cffe00117b026fe3adaf84f30a60120dfbbdf39f8dc74b7c02a392390f2b2652b45db2bb291e3ab8235ea53a80e",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "e90d7b0a6cf831b0042d37961dd528842860e77914e715bcece676c75353b812",
+            "signature": "ee6f84e3ba2134ff17d6574f03ce6d495a3aa5bb73db9cafe600b047bab62387f2ed814a61e80d03f2bcb938aa6b4f70632612ed6adf5d99e7c45662da0c150d",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "Plutus transaction with token minting",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "validity_interval_start": 47,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "2000000",
+            "token_bundle": [
+              {
+                "policy_id": "95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+                "tokens": [
+                  {
+                    "asset_name_bytes": "74652474436f696e",
+                    "amount": "7878754"
+                  }
+                ]
+              },
+              {
+                "policy_id": "96a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+                "tokens": [
+                  {
+                    "asset_name_bytes": "74652474436f696e",
+                    "amount": "7878754"
+                  },
+                  {
+                    "asset_name_bytes": "75652474436f696e",
+                    "amount": "1234"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "mint": [
+          {
+            "policy_id": "95a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+            "tokens": [
+              {
+                "asset_name_bytes": "74652474436f696e",
+                "mint_amount": "7878754"
+              },
+              {
+                "asset_name_bytes": "75652474436f696e",
+                "mint_amount": "-7878754"
+              }
+            ]
+          },
+          {
+            "policy_id": "96a292ffee938be03e9bae5657982a74e9014eb4960108c9e23a5b39",
+            "tokens": [
+              {
+                "asset_name_bytes": "74652474436f696e",
+                "mint_amount": "7878754"
+              },
+              {
+                "asset_name_bytes": "75652474436f696e",
+                "mint_amount": "-1234"
+              }
+            ]
+          }
+        ],
+        "script_data_hash": "d593fd793c377ac50a3169bb8378ffc257c944da31aa8f355dfa5a4f6ff89e02",
+        "collateral_inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "required_signers": [
+          {
+            "key_path": "m/1852'/1815'/0'/0/1"
+          }
+        ],
+        "signing_mode": "PLUTUS_TRANSACTION",
+        "additional_witness_requests": [
+          {
+            "path": "m/1855'/1815'/0'"
+          }
+        ],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "f1ff85026488d1ea60950d9d1819ee00a012560074cd60435f2510e917d86a7f",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "2649f1010679a14ec63c4d72c96bb46e78d7940c88a4f56c2b99c4fea9b5e8d6234f01b312e7ddc69a7ee0c474b71afe5f83ccdb3d041f5f0a5d8d66bd18970c",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "36a8ef21d5b98fdf23a27325cf643deaac35e912c835e35037f23d1061ae5b16",
+            "signature": "9a4959b3bbe3bb91477bd80e20492bf778342574be61152af2d991a2febb7cbe497d4b3d03ebe7f864db3a866ebb183bce5f92b50a234ef5e00e72c0d4be7e08",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "b75258e4f61eb7b313d8554c2fe10673cf214ca2d762bfd53ec3b7846e2ee872",
+            "signature": "af3530c4e2d48be647b29edbde10525954c0875285e2f593bd99798451e687d5dd9f84b49f10aa060b67399b766ee140b0107528b7f243a0adbb4b47d2a83007",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "Plutus transaction with stake registration certificate",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [
+          {
+            "type": 0,
+            "script_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+          }
+        ],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": "d593fd793c377ac50a3169bb8378ffc257c944da31aa8f355dfa5a4f6ff89e02",
+        "collateral_inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "required_signers": [
+          {
+            "key_path": "m/1852'/1815'/0'/0/1"
+          }
+        ],
+        "signing_mode": "PLUTUS_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "0c4a8ec4a0e6718d81a391d09bbc7d48e14f879c94b7e48a35092ef532ebf597",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "f699c20b23ebc2cd8371d5df81edaf6c1057f69e9c3df68f7a2a8fe30cf95516256ea894610beead8a831f6af8e832c131a2deb08eea4441848cfbc57dddd007",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "36a8ef21d5b98fdf23a27325cf643deaac35e912c835e35037f23d1061ae5b16",
+            "signature": "876bf1ce1d8c1aa8fb830e7fcaff1289d8e29cda0529468823fdaaac38be4c95b04b72c8669eb062ef27b816d677c7f00a4d9f4b427d932d4de93bcf1f32460a",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "Plutus transaction with stake registration and stake delegation certificates",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [
+          {
+            "type": 0,
+            "script_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+          },
+          {
+            "type": 2,
+            "pool": "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973",
+            "script_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+          }
+        ],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": "d593fd793c377ac50a3169bb8378ffc257c944da31aa8f355dfa5a4f6ff89e02",
+        "collateral_inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "required_signers": [
+          {
+            "key_path": "m/1852'/1815'/0'/0/1"
+          },
+          {
+            "key_path": "m/1854'/1815'/0'/2/0"
+          }
+        ],
+        "signing_mode": "PLUTUS_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "53d7a7ee887178a08ac70ff2088f8bfbafc7b6bcd5a54e79a686b013455d5e25",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "0911d01cc22dfeff461b899f16788689deed54ec5b5433abdbabeafe135b90d142497d8dbefad35ece9a188da318b3d930121d7b1e4630211c38d65f895ee506",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "36a8ef21d5b98fdf23a27325cf643deaac35e912c835e35037f23d1061ae5b16",
+            "signature": "a3ad8674b341277b4f4e88eb1257164cc50dda61a5ef6d3c19eb3f24d24d91933fd87349d2234bcbf630c60f6cc519f05075082daca429fb1743025a5dd1130b",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "f2ef4ecd21ad28a8d270ca7be7e96c87f60dc821e13c0d0c5870344e9693637c",
+            "signature": "16bf0b97bca3012d8f715ea4c00657abcde5fb71d44cbfb18ca10750ae8ce6769de6efc94595e674592844d718d0a3252d7ea2db408a8fe4c2e0b08eb2af4d06",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "Plutus transaction with stake deregistration",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [
+          {
+            "type": 1,
+            "script_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+          }
+        ],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "required_signers": [
+          {
+            "key_path": "m/1852'/1815'/0'/0/1"
+          },
+          {
+            "key_path": "m/1854'/1815'/0'/2/0"
+          }
+        ],
+        "signing_mode": "PLUTUS_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "c55ef20e0c8da066bab5221a5c010c32d90905753b0257576e34d7e639f65c9d",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "e8f09ff2ff8507fdfa4d33525b15b93f443e15d95b67db57524a08d799a061b4615196cba47760ff39819c6c3d1c524f5a4e247460d8fcef5c3a13d261d7670f",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "36a8ef21d5b98fdf23a27325cf643deaac35e912c835e35037f23d1061ae5b16",
+            "signature": "b3de1a866d8cb7d6e3ec96a4d4b5f45322def1fc75ae5f0ff53b6eb2dbd85340b358a71be82ff810c6ac716eb37650eb83132327ff18cb00326e770481e1b10b",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "f2ef4ecd21ad28a8d270ca7be7e96c87f60dc821e13c0d0c5870344e9693637c",
+            "signature": "7b558ae9bf5dcc7cb85f991d494291d483204c28e1d50590d99af8b2bce3482d4a59f665f3b9105ac38b87aca29c53c484f062daf882e40ce0fed683839e1c04",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "Plutus transaction with stake deregistration and withdrawal",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [
+          {
+            "type": 1,
+            "script_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+          }
+        ],
+        "withdrawals": [
+          {
+            "amount": "1000",
+            "script_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+          }
+        ],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": "d593fd793c377ac50a3169bb8378ffc257c944da31aa8f355dfa5a4f6ff89e02",
+        "collateral_inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "required_signers": [
+          {
+            "key_path": "m/1852'/1815'/0'/0/1"
+          },
+          {
+            "key_path": "m/1854'/1815'/0'/2/0"
+          }
+        ],
+        "signing_mode": "PLUTUS_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "b3ccc29173719973363988763826eb853cb314df8dde07fcf82dab9961d47c25",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "be0437f0452d9d7d494ad78d277f5414b062741f4cdc2debe50b2e26dfbdf5cca2644b734e112c53a843233dc5c2f13ab6f5aebb09ae1cf20d2d2f3d56d32b0a",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "36a8ef21d5b98fdf23a27325cf643deaac35e912c835e35037f23d1061ae5b16",
+            "signature": "2d3a8ff9251a72f5162ca910e1097fce2c1d0407f5199389126b3521540ad044cc585e9bf830f895a9f523379c0280e2d85d019d648653b31711486dc89e7107",
+            "chain_code": null
+          },
+          {
+            "type": 1,
+            "pub_key": "f2ef4ecd21ad28a8d270ca7be7e96c87f60dc821e13c0d0c5870344e9693637c",
+            "signature": "bbf0616344629b0bbbc5f05ca5c6382ecc3e4eb629bdd798cdb4a25affd3024201bb697ef4086e1e7ab1793642b4888d78e6935daf97db22a736978bbd249f0f",
+            "chain_code": null
+          }
+        ]
+      }
+    },
+    {
+      "description": "Plutus transaction with output datum hash",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          },
+          {
+            "address": "addr1w9rhu54nz94k9l5v6d9rzfs47h7dv7xffcwkekuxcx3evnqpvuxu0",
+            "amount": "1",
+            "datum_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": "d593fd793c377ac50a3169bb8378ffc257c944da31aa8f355dfa5a4f6ff89e02",
+        "collateral_inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "1af8fa0b754ff99253d983894e63a2b09cbb56c833ba18c3384210163f63dcfc",
+            "prev_index": 0
+          }
+        ],
+        "required_signers": [],
+        "signing_mode": "PLUTUS_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "tx_hash": "bb4d26c40c67d23ca74bb2e4ad28f586567b99907b86c0337fb7d8f4cde90100",
+        "witnesses": [
+          {
+            "type": 1,
+            "pub_key": "5d010cf16fdeff40955633d6c565f3844a288a24967cf6b76acbeb271b4f13c1",
+            "signature": "24fcbbb8985feef3c54b86fdfded2fd2d324e1dc79a1e891bdf97d9c6115f28eef54eca387a95f34a73b87e705d9336a6582835620052e95f43403ae49f8cc08",
+            "chain_code": null
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -32,6 +32,7 @@ from .helpers.utils import (
     format_key_hash,
     format_optional_int,
     format_output_datum_hash,
+    format_required_signer_key_hash,
     format_script_data_hash,
     format_script_hash,
     format_stake_pool_id,
@@ -44,6 +45,9 @@ if TYPE_CHECKING:
     from trezor.messages import (
         CardanoNativeScript,
         CardanoTxCertificate,
+        CardanoTxCollateralInput,
+        CardanoTxInput,
+        CardanoTxRequiredSigner,
         CardanoTxWithdrawal,
         CardanoPoolParametersType,
         CardanoPoolOwner,
@@ -201,6 +205,27 @@ async def show_transaction_signing_mode(
             larger_vspace=True,
             br_code=ButtonRequestType.Other,
         )
+    elif signing_mode == CardanoTxSigningMode.PLUTUS_TRANSACTION:
+        await confirm_metadata(
+            ctx,
+            "confirm_signing_mode",
+            title="Confirm transaction",
+            content="Confirming a Plutus transaction - loss of collateral is possible. Check all items carefully.",
+            br_code=ButtonRequestType.Other,
+        )
+
+
+async def confirm_input(ctx: wire.Context, input: CardanoTxInput) -> None:
+    await confirm_properties(
+        ctx,
+        "confirm_input",
+        title="Confirm transaction",
+        props=[
+            ("Input ID:", input.prev_hash),
+            ("Input index:", str(input.prev_index)),
+        ],
+        br_code=ButtonRequestType.Other,
+    )
 
 
 async def confirm_sending(
@@ -334,6 +359,17 @@ async def show_warning_tx_output_contains_tokens(ctx: wire.Context) -> None:
     )
 
 
+async def show_warning_tx_contains_mint(ctx: wire.Context) -> None:
+    await confirm_metadata(
+        ctx,
+        "confirm_tokens",
+        title="Confirm transaction",
+        content="The transaction contains minting or burning of tokens.",
+        larger_vspace=True,
+        br_code=ButtonRequestType.Other,
+    )
+
+
 async def show_warning_tx_output_contains_datum_hash(
     ctx: wire.Context, datum_hash: bytes
 ) -> None:
@@ -358,6 +394,26 @@ async def show_warning_tx_output_no_datum_hash(ctx: wire.Context) -> None:
         "confirm_no_datum_hash",
         title="Confirm transaction",
         content="The following transaction output contains a script address, but does not contain a datum hash.",
+        br_code=ButtonRequestType.Other,
+    )
+
+
+async def show_warning_no_script_data_hash(ctx: wire.Context) -> None:
+    await confirm_metadata(
+        ctx,
+        "confirm_no_script_data_hash",
+        title="Confirm transaction",
+        content="The transaction contains no script data hash. Plutus script will not be able to run.",
+        br_code=ButtonRequestType.Other,
+    )
+
+
+async def show_warning_no_collateral_inputs(ctx: wire.Context) -> None:
+    await confirm_metadata(
+        ctx,
+        "confirm_no_collateral_inputs",
+        title="Confirm transaction",
+        content="The transaction contains no collateral inputs. Plutus script will not be able to run.",
         br_code=ButtonRequestType.Other,
     )
 
@@ -637,17 +693,6 @@ async def show_auxiliary_data_hash(
     )
 
 
-async def show_warning_tx_contains_mint(ctx: wire.Context) -> None:
-    await confirm_metadata(
-        ctx,
-        "confirm_tokens",
-        title="Confirm transaction",
-        content="The transaction contains\nminting or burning of\ntokens.",
-        larger_vspace=True,
-        br_code=ButtonRequestType.Other,
-    )
-
-
 async def confirm_token_minting(
     ctx: wire.Context, policy_id: bytes, token: CardanoToken
 ) -> None:
@@ -690,6 +735,42 @@ async def confirm_script_data_hash(ctx: wire.Context, script_data_hash: bytes) -
         "confirm_script_data_hash",
         title="Confirm transaction",
         props=[("Script data hash:", format_script_data_hash(script_data_hash))],
+        br_code=ButtonRequestType.Other,
+    )
+
+
+async def confirm_collateral_input(
+    ctx: wire.Context, collateral_input: CardanoTxCollateralInput
+) -> None:
+    await confirm_properties(
+        ctx,
+        "confirm_collateral_input",
+        title="Confirm transaction",
+        props=[
+            ("Collateral input ID:", collateral_input.prev_hash),
+            ("Collateral input index:", str(collateral_input.prev_index)),
+        ],
+        br_code=ButtonRequestType.Other,
+    )
+
+
+async def confirm_required_signer(
+    ctx: wire.Context, required_signer: CardanoTxRequiredSigner
+) -> None:
+    assert (
+        required_signer.key_hash is not None or required_signer.key_path
+    )  # _validate_required_signer
+    formatted_signer = (
+        format_required_signer_key_hash(required_signer.key_hash)
+        if required_signer.key_hash is not None
+        else address_n_to_str(required_signer.key_path)
+    )
+
+    await confirm_properties(
+        ctx,
+        "confirm_required_signer",
+        title="Confirm transaction",
+        props=[("Required signer", formatted_signer)],
         br_code=ButtonRequestType.Other,
     )
 

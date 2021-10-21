@@ -8,14 +8,10 @@ from trezor.enums import (
 
 from apps.common import cbor
 
-from .address import (
-    get_address_bytes_unsafe,
-    get_public_key_hash,
-    validate_reward_address,
-)
+from .address import get_address_bytes_unsafe, validate_reward_address
 from .helpers import ADDRESS_KEY_HASH_SIZE, INVALID_CERTIFICATE, LOVELACE_MAX_SUPPLY
 from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
-from .helpers.utils import validate_stake_credential
+from .helpers.utils import get_public_key_hash, validate_stake_credential
 
 if TYPE_CHECKING:
     from typing import Any

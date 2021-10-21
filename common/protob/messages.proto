@@ -278,6 +278,8 @@ enum MessageType {
     MessageType_CardanoGetNativeScriptHash = 330 [(wire_in) = true];
     MessageType_CardanoNativeScriptHash = 331 [(wire_out) = true];
     MessageType_CardanoTxMint = 332 [(wire_in) = true];
+    MessageType_CardanoTxCollateralInput = 333 [(wire_in) = true];
+    MessageType_CardanoTxRequiredSigner = 334 [(wire_in) = true];
 
     // Ripple
     MessageType_RippleGetAddress = 400 [(wire_in) = true];
