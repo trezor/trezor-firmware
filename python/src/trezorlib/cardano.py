@@ -611,6 +611,7 @@ def get_address(
     protocol_magic: int = PROTOCOL_MAGICS["mainnet"],
     network_id: int = NETWORK_IDS["mainnet"],
     show_display: bool = False,
+    derivation_type: messages.CardanoDerivationType = messages.CardanoDerivationType.ICARUS,
 ) -> messages.CardanoAddress:
     return client.call(
         messages.CardanoGetAddress(
@@ -618,13 +619,22 @@ def get_address(
             protocol_magic=protocol_magic,
             network_id=network_id,
             show_display=show_display,
+            derivation_type=derivation_type,
         )
     )
 
 
 @expect(messages.CardanoPublicKey)
-def get_public_key(client, address_n: List[int]) -> messages.CardanoPublicKey:
-    return client.call(messages.CardanoGetPublicKey(address_n=address_n))
+def get_public_key(
+    client,
+    address_n: List[int],
+    derivation_type: messages.CardanoDerivationType = messages.CardanoDerivationType.ICARUS,
+) -> messages.CardanoPublicKey:
+    return client.call(
+        messages.CardanoGetPublicKey(
+            address_n=address_n, derivation_type=derivation_type
+        )
+    )
 
 
 @expect(messages.CardanoNativeScriptHash)
@@ -632,11 +642,13 @@ def get_native_script_hash(
     client,
     native_script: messages.CardanoNativeScript,
     display_format: messages.CardanoNativeScriptHashDisplayFormat = messages.CardanoNativeScriptHashDisplayFormat.HIDE,
+    derivation_type: messages.CardanoDerivationType = messages.CardanoDerivationType.ICARUS,
 ) -> messages.CardanoNativeScriptHash:
     return client.call(
         messages.CardanoGetNativeScriptHash(
             script=native_script,
             display_format=display_format,
+            derivation_type=derivation_type,
         )
     )
 
@@ -656,6 +668,7 @@ def sign_tx(
     auxiliary_data: messages.CardanoTxAuxiliaryData = None,
     mint: List[AssetGroupWithTokens] = (),
     additional_witness_requests: List[Path] = (),
+    derivation_type: messages.CardanoDerivationType = messages.CardanoDerivationType.ICARUS,
 ) -> SignTxResponse:
     UNEXPECTED_RESPONSE_ERROR = exceptions.TrezorException("Unexpected response")
 
@@ -678,6 +691,7 @@ def sign_tx(
             has_auxiliary_data=auxiliary_data is not None,
             minting_asset_groups_count=len(mint),
             witness_requests_count=len(witness_requests),
+            derivation_type=derivation_type,
         )
     )
     if not isinstance(response, messages.CardanoTxItemAck):
