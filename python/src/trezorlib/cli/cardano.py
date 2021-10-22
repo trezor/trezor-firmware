@@ -43,8 +43,16 @@ def cli():
 )
 @click.option("-N", "--network-id", type=int, default=cardano.NETWORK_IDS["mainnet"])
 @click.option("-t", "--testnet", is_flag=True)
+@click.option(
+    "-D",
+    "--derivation-type",
+    type=ChoiceType({m.name: m for m in messages.CardanoDerivationType}),
+    default=messages.CardanoDerivationType.ICARUS,
+)
 @with_client
-def sign_tx(client, file, signing_mode, protocol_magic, network_id, testnet):
+def sign_tx(
+    client, file, signing_mode, protocol_magic, network_id, testnet, derivation_type
+):
     """Sign Cardano transaction."""
     transaction = json.load(file)
 
@@ -72,6 +80,7 @@ def sign_tx(client, file, signing_mode, protocol_magic, network_id, testnet):
         for p in transaction["additional_witness_requests"]
     ]
 
+    client.init_device(derive_cardano=True)
     sign_tx_response = cardano.sign_tx(
         client,
         signing_mode,
@@ -87,6 +96,7 @@ def sign_tx(client, file, signing_mode, protocol_magic, network_id, testnet):
         auxiliary_data,
         mint,
         additional_witness_requests,
+        derivation_type=derivation_type,
     )
 
     sign_tx_response["tx_hash"] = sign_tx_response["tx_hash"].hex()
@@ -134,6 +144,12 @@ def sign_tx(client, file, signing_mode, protocol_magic, network_id, testnet):
 )
 @click.option("-N", "--network-id", type=int, default=cardano.NETWORK_IDS["mainnet"])
 @click.option("-e", "--testnet", is_flag=True)
+@click.option(
+    "-D",
+    "--derivation-type",
+    type=ChoiceType({m.name: m for m in messages.CardanoDerivationType}),
+    default=messages.CardanoDerivationType.ICARUS,
+)
 @with_client
 def get_address(
     client,
@@ -150,6 +166,7 @@ def get_address(
     network_id,
     show_display,
     testnet,
+    derivation_type,
 ):
     """
     Get Cardano address.
@@ -185,18 +202,31 @@ def get_address(
         script_staking_hash_bytes,
     )
 
+    client.init_device(derive_cardano=True)
     return cardano.get_address(
-        client, address_parameters, protocol_magic, network_id, show_display
+        client,
+        address_parameters,
+        protocol_magic,
+        network_id,
+        show_display,
+        derivation_type=derivation_type,
     )
 
 
 @cli.command()
 @click.option("-n", "--address", required=True, help=PATH_HELP)
+@click.option(
+    "-D",
+    "--derivation-type",
+    type=ChoiceType({m.name: m for m in messages.CardanoDerivationType}),
+    default=messages.CardanoDerivationType.ICARUS,
+)
 @with_client
-def get_public_key(client, address):
+def get_public_key(client, address, derivation_type):
     """Get Cardano public key."""
     address_n = tools.parse_path(address)
-    return cardano.get_public_key(client, address_n)
+    client.init_device(derive_cardano=True)
+    return cardano.get_public_key(client, address_n, derivation_type=derivation_type)
 
 
 @cli.command()
@@ -207,10 +237,19 @@ def get_public_key(client, address):
     type=ChoiceType({m.name: m for m in messages.CardanoNativeScriptHashDisplayFormat}),
     default="HIDE",
 )
+@click.option(
+    "-D",
+    "--derivation-type",
+    type=ChoiceType({m.name: m for m in messages.CardanoDerivationType}),
+    default=messages.CardanoDerivationType.ICARUS,
+)
 @with_client
-def get_native_script_hash(client, file, display_format):
+def get_native_script_hash(client, file, display_format, derivation_type):
     """Get Cardano native script hash."""
     native_script_json = json.load(file)
     native_script = cardano.parse_native_script(native_script_json)
 
-    return cardano.get_native_script_hash(client, native_script, display_format)
+    client.init_device(derive_cardano=True)
+    return cardano.get_native_script_hash(
+        client, native_script, display_format, derivation_type=derivation_type
+    )
