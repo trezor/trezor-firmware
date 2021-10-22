@@ -1,0 +1,41 @@
+{
+  "setup": {
+    "mnemonic": "very improve such purity recipe deer giggle shuffle bamboo sorry galaxy damp confirm note easy pause coast purse often hint west angle spare north",
+    "passphrase": ""
+  },
+  "tests": [
+    {
+      "name": "ledger-derivation",
+      "parameters": {
+        "path": "m/1852'/1815'/0'",
+        "derivation_type": "LEDGER"
+      },
+      "result": {
+        "public_key": "09a48c3390586bf1b5141e141fd2045b54f0a100af4254abb9bcf124eb82b078",
+        "chain_code": "abb4f1731e9bb4151fb8bbe4a63c64b84a6e6193ef2b97edd4176136d55c235f"
+      }
+    },
+    {
+      "name": "icarus-derivation",
+      "parameters": {
+        "path": "m/1852'/1815'/0'",
+        "derivation_type": "ICARUS"
+      },
+      "result": {
+        "public_key": "8946b80aaa2ab0839276ca373d0b7845803ae39e452ac2469986bf8b360b217f",
+        "chain_code": "85e096c7789c5aa29012633044750b1a79ab5ac2eb7189c91113e8ffbadd550f"
+      }
+    },
+    {
+      "name": "icarus-trezor-derivation",
+      "parameters": {
+        "path": "m/1852'/1815'/0'",
+        "derivation_type": "ICARUS_TREZOR"
+      },
+      "result": {
+        "public_key": "8a97a956fadbc79e09a867ed1e829af4f66a34903c9194de44c87262dfe19111",
+        "chain_code": "dd97903ff01f4fcb6375c8252b31a59d9b170c1b61f5786304dc676270f44a90"
+      }
+    }
+  ]
+}
