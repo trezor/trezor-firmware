@@ -244,6 +244,7 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/py/mpz.c',
     'vendor/micropython/py/nativeglue.c',
     'vendor/micropython/py/nlr.c',
+    'vendor/micropython/py/nlraarch64.c',
     'vendor/micropython/py/nlrsetjmp.c',
     'vendor/micropython/py/nlrthumb.c',
     'vendor/micropython/py/nlrx64.c',
