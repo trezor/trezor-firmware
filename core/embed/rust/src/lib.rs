@@ -1,3 +1,4 @@
+#![feature(default_alloc_error_handler)]
 #![cfg_attr(not(test), no_std)]
 #![deny(clippy::all)]
 #![deny(unsafe_op_in_unsafe_fn)]

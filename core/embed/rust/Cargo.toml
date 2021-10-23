@@ -26,6 +26,9 @@ codegen-units = 1
 [dependencies]
 cty = "0.2.1"
 
+orchard = { path = "/home/agi/code/orchard" , default-features = false, features = ["alloc"] }
+static-alloc = "0.2.3"
+
 [dependencies.cstr_core]
 version = "0.2.2"
 default_features = false
