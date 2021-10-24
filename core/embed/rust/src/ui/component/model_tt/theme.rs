@@ -1,7 +1,9 @@
 use crate::ui::{
-    component::model_tt::{ButtonStyle, ButtonStyleSheet, LabelStyle},
+    component::model_tt::{loader::LoaderStyle, ButtonStyle, ButtonStyleSheet, LabelStyle},
     display::{Color, Font},
 };
+
+use super::loader::LoaderStyleSheet;
 
 // Font constants.
 pub const FONT_NORMAL: Font = Font::new(-1);
@@ -88,4 +90,19 @@ pub fn button_cancel() -> ButtonStyleSheet {
 
 pub fn button_clear() -> ButtonStyleSheet {
     button_default()
+}
+
+pub fn loader_default() -> LoaderStyleSheet {
+    LoaderStyleSheet {
+        normal: &LoaderStyle {
+            icon: None,
+            loader_color: FG,
+            background_color: BG,
+        },
+        active: &LoaderStyle {
+            icon: None,
+            loader_color: GREEN,
+            background_color: BG,
+        },
+    }
 }
