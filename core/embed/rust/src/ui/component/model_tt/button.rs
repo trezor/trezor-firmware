@@ -7,6 +7,8 @@ use crate::ui::{
 use super::theme;
 
 pub enum ButtonMsg {
+    Pressed,
+    Released,
     Clicked,
 }
 
@@ -18,21 +20,26 @@ pub struct Button {
 }
 
 impl Button {
-    pub fn new(area: Rect, content: ButtonContent, styles: ButtonStyleSheet) -> Self {
+    pub fn new(area: Rect, content: ButtonContent) -> Self {
         Self {
             area,
             content,
-            styles,
+            styles: theme::button_default(),
             state: State::Initial,
         }
     }
 
-    pub fn with_text(area: Rect, text: &'static [u8], styles: ButtonStyleSheet) -> Self {
-        Self::new(area, ButtonContent::Text(text), styles)
+    pub fn with_text(area: Rect, text: &'static [u8]) -> Self {
+        Self::new(area, ButtonContent::Text(text))
     }
 
-    pub fn with_icon(area: Rect, image: &'static [u8], styles: ButtonStyleSheet) -> Self {
-        Self::new(area, ButtonContent::Icon(image), styles)
+    pub fn with_icon(area: Rect, image: &'static [u8]) -> Self {
+        Self::new(area, ButtonContent::Icon(image))
+    }
+
+    pub fn styled(mut self, styles: ButtonStyleSheet) -> Self {
+        self.styles = styles;
+        self
     }
 
     pub fn enable(&mut self, ctx: &mut EventCtx) {
@@ -41,6 +48,14 @@ impl Button {
 
     pub fn disable(&mut self, ctx: &mut EventCtx) {
         self.set(ctx, State::Disabled)
+    }
+
+    pub fn enabled(&mut self, ctx: &mut EventCtx, enabled: bool) {
+        if enabled {
+            self.enable(ctx);
+        } else {
+            self.disable(ctx);
+        }
     }
 
     pub fn is_enabled(&self) -> bool {
@@ -88,6 +103,7 @@ impl Component for Button {
                         // Touch started in our area, transform to `Pressed` state.
                         if self.area.contains(pos) {
                             self.set(ctx, State::Pressed);
+                            return Some(ButtonMsg::Pressed);
                         }
                     }
                 }
@@ -97,10 +113,12 @@ impl Component for Button {
                     State::Released if self.area.contains(pos) => {
                         // Touch entered our area, transform to `Pressed` state.
                         self.set(ctx, State::Pressed);
+                        return Some(ButtonMsg::Pressed);
                     }
                     State::Pressed if !self.area.contains(pos) => {
                         // Touch is leaving our area, transform to `Released` state.
                         self.set(ctx, State::Released);
+                        return Some(ButtonMsg::Released);
                     }
                     _ => {
                         // Do nothing.
@@ -115,7 +133,6 @@ impl Component for Button {
                     State::Pressed if self.area.contains(pos) => {
                         // Touch finished in our area, we got clicked.
                         self.set(ctx, State::Initial);
-
                         return Some(ButtonMsg::Clicked);
                     }
                     _ => {
