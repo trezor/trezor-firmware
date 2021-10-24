@@ -1,80 +1,96 @@
 use crate::ui::{
-    component::{Child, Component, Event, EventCtx},
+    component::{base::ComponentExt, Child, Component, Event, EventCtx},
     geometry::{Grid, Rect},
 };
 
-use super::button::{Button, ButtonMsg::Clicked};
-
-pub enum DialogMsg<T> {
+pub enum DialogMsg<T, L, R> {
     Content(T),
-    LeftClicked,
-    RightClicked,
+    Left(L),
+    Right(R),
 }
 
-pub struct Dialog<T> {
+pub struct Dialog<T, L, R> {
     content: Child<T>,
-    left_btn: Option<Child<Button>>,
-    right_btn: Option<Child<Button>>,
+    left: Child<L>,
+    right: Child<R>,
 }
 
-impl<T: Component> Dialog<T> {
+impl<T, L, R> Dialog<T, L, R>
+where
+    T: Component,
+    L: Component,
+    R: Component,
+{
     pub fn new(
         area: Rect,
         content: impl FnOnce(Rect) -> T,
-        left: impl FnOnce(Rect) -> Button,
-        right: impl FnOnce(Rect) -> Button,
+        left: impl FnOnce(Rect) -> L,
+        right: impl FnOnce(Rect) -> R,
     ) -> Self {
-        let grid = Grid::new(area, 5, 2);
-        let content = Child::new(content(Rect::new(
-            grid.row_col(0, 0).top_left(),
-            grid.row_col(4, 1).bottom_right(),
-        )));
-        let left_btn = Child::new(left(grid.row_col(4, 0)));
-        let right_btn = Child::new(right(grid.row_col(4, 1)));
+        let layout = DialogLayout::middle(area);
         Self {
-            content,
-            left_btn: Some(left_btn),
-            right_btn: Some(right_btn),
+            content: content(layout.content).into_child(),
+            left: left(layout.left).into_child(),
+            right: right(layout.right).into_child(),
         }
     }
 }
 
-impl<T: Component> Component for Dialog<T> {
-    type Msg = DialogMsg<T::Msg>;
+impl<T, L, R> Component for Dialog<T, L, R>
+where
+    T: Component,
+    L: Component,
+    R: Component,
+{
+    type Msg = DialogMsg<T::Msg, L::Msg, R::Msg>;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some(msg) = self.content.event(ctx, event) {
-            Some(DialogMsg::Content(msg))
-        } else if let Some(Clicked) = self.left_btn.as_mut().and_then(|b| b.event(ctx, event)) {
-            Some(DialogMsg::LeftClicked)
-        } else if let Some(Clicked) = self.right_btn.as_mut().and_then(|b| b.event(ctx, event)) {
-            Some(DialogMsg::RightClicked)
-        } else {
-            None
-        }
+        self.content
+            .event(ctx, event)
+            .map(Self::Msg::Content)
+            .or_else(|| self.left.event(ctx, event).map(Self::Msg::Left))
+            .or_else(|| self.right.event(ctx, event).map(Self::Msg::Right))
     }
 
     fn paint(&mut self) {
         self.content.paint();
-        if let Some(b) = self.left_btn.as_mut() {
-            b.paint();
-        }
-        if let Some(b) = self.right_btn.as_mut() {
-            b.paint();
+        self.left.paint();
+        self.right.paint();
+    }
+}
+
+struct DialogLayout {
+    content: Rect,
+    left: Rect,
+    right: Rect,
+}
+
+impl DialogLayout {
+    fn middle(area: Rect) -> Self {
+        let grid = Grid::new(area, 5, 2);
+        Self {
+            content: Rect::new(
+                grid.row_col(0, 0).top_left(),
+                grid.row_col(4, 1).bottom_right(),
+            ),
+            left: grid.row_col(4, 0),
+            right: grid.row_col(4, 1),
         }
     }
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Dialog<T>
+impl<T, L, R> crate::trace::Trace for Dialog<T, L, R>
 where
     T: crate::trace::Trace,
+    L: crate::trace::Trace,
+    R: crate::trace::Trace,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.open("Dialog");
         t.field("content", &self.content);
-        t.field("left", &self.left_btn);
-        t.field("right", &self.right_btn);
+        t.field("left", &self.left);
+        t.field("right", &self.right);
         t.close();
     }
 }
