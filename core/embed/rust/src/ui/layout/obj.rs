@@ -254,7 +254,7 @@ impl TryFrom<Obj> for TimerToken {
     type Error = Error;
 
     fn try_from(value: Obj) -> Result<Self, Self::Error> {
-        let raw: usize = value.try_into()?;
+        let raw: u32 = value.try_into()?;
         let this = Self::from_raw(raw);
         Ok(this)
     }
