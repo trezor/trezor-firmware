@@ -38,7 +38,7 @@ impl<F, T> Text<F, T> {
         if self.args.insert(key, value).is_err() {
             // Map is full, ignore.
             #[cfg(feature = "ui_debug")]
-            panic!("Text args map is full");
+            panic!("text args map is full");
         }
         self
     }

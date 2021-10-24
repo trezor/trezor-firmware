@@ -4,6 +4,7 @@ use crate::{
     trezorhal::random,
     ui::{
         component::{
+            base::ComponentExt,
             label::{Label, LabelStyle},
             Child, Component, Event, EventCtx, Never,
         },
@@ -57,29 +58,20 @@ impl PinDialog {
             minor_prompt,
             theme::label_default(),
         );
-        let dots = Child::new(PinDots::new(
-            grid.row_col(0, 0),
-            digits.len(),
-            theme::label_default(),
-        ));
+        let dots =
+            PinDots::new(grid.row_col(0, 0), digits.len(), theme::label_default()).into_child();
 
         // Control buttons.
         let grid = Grid::new(area, 5, 3);
-        let reset_btn = Child::new(Button::with_text(
-            grid.row_col(4, 0),
-            b"Reset",
-            theme::button_clear(),
-        ));
-        let cancel_btn = Child::new(Button::with_icon(
-            grid.row_col(4, 0),
-            theme::ICON_CANCEL,
-            theme::button_cancel(),
-        ));
-        let confirm_btn = Child::new(Button::with_icon(
-            grid.row_col(4, 2),
-            theme::ICON_CONFIRM,
-            theme::button_clear(),
-        ));
+        let reset_btn = Button::with_text(grid.row_col(4, 0), b"Reset")
+            .styled(theme::button_clear())
+            .into_child();
+        let cancel_btn = Button::with_icon(grid.row_col(4, 0), theme::ICON_CANCEL)
+            .styled(theme::button_cancel())
+            .into_child();
+        let confirm_btn = Button::with_icon(grid.row_col(4, 2), theme::ICON_CONFIRM)
+            .styled(theme::button_clear())
+            .into_child();
 
         // PIN digit buttons.
         let digit_btns = Self::generate_digit_buttons(&grid);
@@ -111,7 +103,7 @@ impl PinDialog {
                 i + 1 + 3
             });
             let text: &[u8; 1] = digits[i];
-            Child::new(Button::with_text(area, text, theme::button_default()))
+            Child::new(Button::with_text(area, text))
         };
         [
             btn(0),
@@ -128,25 +120,17 @@ impl PinDialog {
     }
 
     fn pin_modified(&mut self, ctx: &mut EventCtx) {
+        let is_full = self.digits.is_full();
         for btn in &mut self.digit_btns {
-            let is_full = self.digits.is_full();
-            btn.mutate(ctx, |ctx, btn| {
-                if is_full {
-                    btn.disable(ctx);
-                } else {
-                    btn.enable(ctx);
-                }
-            });
+            btn.mutate(ctx, |ctx, btn| btn.enabled(ctx, !is_full));
         }
-        if self.digits.is_empty() {
-            self.reset_btn.mutate(ctx, |ctx, btn| btn.disable(ctx));
-            self.cancel_btn.mutate(ctx, |ctx, btn| btn.enable(ctx));
-            self.confirm_btn.mutate(ctx, |ctx, btn| btn.disable(ctx));
-        } else {
-            self.reset_btn.mutate(ctx, |ctx, btn| btn.enable(ctx));
-            self.cancel_btn.mutate(ctx, |ctx, btn| btn.disable(ctx));
-            self.confirm_btn.mutate(ctx, |ctx, btn| btn.enable(ctx));
-        }
+        let is_empty = self.digits.is_empty();
+        self.reset_btn
+            .mutate(ctx, |ctx, btn| btn.enabled(ctx, !is_empty));
+        self.cancel_btn
+            .mutate(ctx, |ctx, btn| btn.enabled(ctx, is_empty));
+        self.confirm_btn
+            .mutate(ctx, |ctx, btn| btn.enabled(ctx, !is_empty));
         let digit_count = self.digits.len();
         self.dots
             .mutate(ctx, |ctx, dots| dots.update(ctx, digit_count));

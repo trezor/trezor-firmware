@@ -12,22 +12,23 @@ use crate::{
 };
 
 use super::{
-    component::{Button, Dialog, DialogMsg},
+    component::{Button, ButtonMsg, Dialog, DialogMsg},
     theme,
 };
 
-impl<T> TryFrom<DialogMsg<T>> for Obj
+impl<T> TryFrom<DialogMsg<T, ButtonMsg, ButtonMsg>> for Obj
 where
     Obj: TryFrom<T>,
-    Error: From<<T as TryInto<Obj>>::Error>,
+    Error: From<<Obj as TryFrom<T>>::Error>,
 {
     type Error = Error;
 
-    fn try_from(val: DialogMsg<T>) -> Result<Self, Self::Error> {
+    fn try_from(val: DialogMsg<T, ButtonMsg, ButtonMsg>) -> Result<Self, Self::Error> {
         match val {
             DialogMsg::Content(c) => Ok(c.try_into()?),
-            DialogMsg::LeftClicked => 1.try_into(),
-            DialogMsg::RightClicked => 2.try_into(),
+            DialogMsg::Left(ButtonMsg::Clicked) => 1.try_into(),
+            DialogMsg::Right(ButtonMsg::Clicked) => 2.try_into(),
+            _ => Ok(Obj::const_none()),
         }
     }
 }
@@ -43,8 +44,8 @@ extern "C" fn ui_layout_new_example(param: Obj) -> Obj {
                     .with(b"some", "a few")
                     .with(b"param", "xx")
             },
-            |area| Button::with_text(area, b"Left", theme::button_default()),
-            |area| Button::with_text(area, b"Right", theme::button_default()),
+            |area| Button::with_text(area, b"Left"),
+            |area| Button::with_text(area, b"Right"),
         )))?;
         Ok(layout.into())
     };
@@ -105,8 +106,8 @@ mod tests {
                 )
                 .with(b"param", b"parameters!")
             },
-            |area| Button::with_text(area, b"Left", theme::button_default()),
-            |area| Button::with_text(area, b"Right", theme::button_default()),
+            |area| Button::with_text(area, b"Left"),
+            |area| Button::with_text(area, b"Right"),
         ));
         assert_eq!(
             trace(&layout),
