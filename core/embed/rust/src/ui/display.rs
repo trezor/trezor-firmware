@@ -71,14 +71,14 @@ pub fn icon(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
 
     let r = Rect::from_center_and_size(
         center,
-        Offset::new(toif_info.width as _, toif_info.height as _),
+        Offset::new(toif_info.width.into(), toif_info.height.into()),
     );
     display::icon(
         r.x0,
         r.y0,
         r.width(),
         r.height(),
-        &data[12..], // skip TOIF header
+        &data[12..], // Skip TOIF header.
         fg_color.into(),
         bg_color.into(),
     );
@@ -103,6 +103,45 @@ pub fn dotted_line(start: Point, width: i32, color: Color) {
     for x in (start.x..width).step_by(2) {
         display::bar(x, start.y, 1, 1, color.into());
     }
+}
+
+pub const LOADER_MIN: u16 = 0;
+pub const LOADER_MAX: u16 = 1000;
+
+pub fn loader(
+    progress: u16,
+    y_offset: i32,
+    fg_color: Color,
+    bg_color: Color,
+    icon: Option<(&[u8], Color)>,
+) {
+    display::loader(
+        progress,
+        false,
+        y_offset,
+        fg_color.into(),
+        bg_color.into(),
+        icon.map(|i| i.0),
+        icon.map(|i| i.1.into()).unwrap_or(0),
+    );
+}
+
+pub fn loader_indeterminate(
+    progress: u16,
+    y_offset: i32,
+    fg_color: Color,
+    bg_color: Color,
+    icon: Option<(&[u8], Color)>,
+) {
+    display::loader(
+        progress,
+        true,
+        y_offset,
+        fg_color.into(),
+        bg_color.into(),
+        icon.map(|i| i.0),
+        icon.map(|i| i.1.into()).unwrap_or(0),
+    );
 }
 
 pub fn text(baseline: Point, text: &[u8], font: Font, fg_color: Color, bg_color: Color) {
@@ -172,14 +211,6 @@ impl Color {
         (self.0 << 3) as u8 & 0xF8
     }
 
-    pub fn blend(self, other: Self, t: f32) -> Self {
-        Self::rgb(
-            lerp(self.r(), other.r(), t),
-            lerp(self.g(), other.g(), t),
-            lerp(self.b(), other.b(), t),
-        )
-    }
-
     pub fn to_u16(self) -> u16 {
         self.0
     }
@@ -199,8 +230,4 @@ impl From<Color> for u16 {
     fn from(val: Color) -> Self {
         val.to_u16()
     }
-}
-
-fn lerp(a: u8, b: u8, t: f32) -> u8 {
-    (a as f32 + t * (b - a) as f32) as u8
 }

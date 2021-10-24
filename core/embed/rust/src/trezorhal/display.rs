@@ -1,3 +1,5 @@
+use core::ptr;
+
 extern "C" {
     // trezorhal/display.c
     fn display_backlight(val: cty::c_int) -> cty::c_int;
@@ -42,6 +44,16 @@ extern "C" {
         out_h: *mut cty::uint16_t,
         out_grayscale: *mut bool,
     ) -> bool;
+    fn display_loader(
+        progress: cty::uint16_t,
+        indeterminate: bool,
+        yoffset: cty::c_int,
+        fgcolor: cty::uint16_t,
+        bgcolor: cty::uint16_t,
+        icon: *const cty::uint8_t,
+        iconlen: cty::uint32_t,
+        iconfgcolor: cty::uint16_t,
+    );
 }
 
 #[cfg(not(feature = "model_tt"))]
@@ -128,5 +140,28 @@ pub fn toif_info(data: &[u8]) -> Result<ToifInfo, ()> {
         })
     } else {
         Err(())
+    }
+}
+
+pub fn loader(
+    progress: u16,
+    indeterminate: bool,
+    yoffset: i32,
+    fgcolor: u16,
+    bgcolor: u16,
+    icon: Option<&[u8]>,
+    iconfgcolor: u16,
+) {
+    unsafe {
+        display_loader(
+            progress,
+            indeterminate,
+            yoffset,
+            fgcolor,
+            bgcolor,
+            icon.map(|i| i.as_ptr()).unwrap_or(ptr::null()),
+            icon.map(|i| i.len()).unwrap_or(0) as _,
+            iconfgcolor,
+        );
     }
 }
