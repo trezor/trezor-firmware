@@ -67,8 +67,12 @@ impl Loader {
     pub fn progress(&self, now: Instant) -> Option<u16> {
         match &self.state {
             State::Initial => None,
-            State::Growing(animation) | State::Shrinking(animation) => Some(animation.value(now)),
+            State::Growing(anim) | State::Shrinking(anim) => Some(anim.value(now)),
         }
+    }
+
+    pub fn is_started(&self) -> bool {
+        matches!(self.state, State::Growing(_) | State::Shrinking(_))
     }
 
     pub fn is_finished(&self, now: Instant) -> bool {
@@ -79,7 +83,13 @@ impl Loader {
 impl Component for Loader {
     type Msg = Never;
 
-    fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
+            if self.is_started() {
+                ctx.request_paint();
+                ctx.request_anim_frame();
+            }
+        }
         None
     }
 
