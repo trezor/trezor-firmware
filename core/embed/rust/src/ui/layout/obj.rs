@@ -1,7 +1,6 @@
 use core::{
     cell::RefCell,
     convert::{TryFrom, TryInto},
-    time::Duration,
 };
 
 use crate::{
@@ -13,6 +12,7 @@ use crate::{
         qstr::Qstr,
         typ::Type,
     },
+    time::Duration,
     ui::component::{Child, Component, Event, EventCtx, Never, TimerToken},
     util,
 };
@@ -268,7 +268,7 @@ impl TryFrom<Duration> for Obj {
     type Error = Error;
 
     fn try_from(value: Duration) -> Result<Self, Self::Error> {
-        let millis: usize = value.as_millis().try_into()?;
+        let millis: usize = value.to_millis().try_into()?;
         millis.try_into()
     }
 }

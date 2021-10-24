@@ -1,11 +1,12 @@
-use core::time::Duration;
-
 use heapless::Vec;
 
-use crate::ui::{
-    component::{Child, Component, Event, EventCtx, Never, TimerToken},
-    display,
-    geometry::{Grid, Rect},
+use crate::{
+    time::Duration,
+    ui::{
+        component::{base::ComponentExt, Child, Component, Event, EventCtx, Never, TimerToken},
+        display,
+        geometry::{Grid, Rect},
+    },
 };
 
 use super::{
@@ -35,10 +36,18 @@ struct Pending {
     timer: TimerToken,
 }
 
-const MAX_LENGTH: usize = 50;
 const STARTING_PAGE: usize = 1;
 const PAGES: usize = 4;
 const KEYS: usize = 10;
+#[rustfmt::skip]
+const KEYBOARD: [[&str; KEYS]; PAGES] = [
+    ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+    [" ", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz", "*#"],
+    [" ", "ABC", "DEF", "GHI", "JKL", "MNO", "PQRS", "TUV", "WXYZ", "*#"],
+    ["_<>", ".:@", "/|\\", "!()", "+%&", "-[]", "?{}", ",'`", ";\"~", "$^="],
+    ];
+
+const MAX_LENGTH: usize = 50;
 const PENDING_DEADLINE: Duration = Duration::from_secs(1);
 
 impl PassphraseKeyboard {
@@ -50,17 +59,13 @@ impl PassphraseKeyboard {
 
         let text = Vec::new();
         let page_swipe = Swipe::horizontal(area);
-        let textbox = Child::new(TextBox::new(textbox_area, text));
-        let confirm_btn = Child::new(Button::with_text(
-            confirm_btn_area,
-            b"Confirm",
-            theme::button_confirm(),
-        ));
-        let back_btn = Child::new(Button::with_text(
-            back_btn_area,
-            b"Back",
-            theme::button_clear(),
-        ));
+        let textbox = TextBox::new(textbox_area, text).into_child();
+        let confirm_btn = Button::with_text(confirm_btn_area, b"Confirm")
+            .styled(theme::button_confirm())
+            .into_child();
+        let back_btn = Button::with_text(back_btn_area, b"Back")
+            .styled(theme::button_clear())
+            .into_child();
         let key_btns = Self::generate_keyboard(&key_grid);
 
         Self {
@@ -75,38 +80,14 @@ impl PassphraseKeyboard {
     }
 
     fn generate_keyboard(grid: &Grid) -> [[Child<Button>; KEYS]; PAGES] {
-        [
-            Self::generate_key_page(grid, 0),
-            Self::generate_key_page(grid, 1),
-            Self::generate_key_page(grid, 2),
-            Self::generate_key_page(grid, 3),
-        ]
+        [0, 1, 2, 3].map(|i| Self::generate_key_page(grid, i))
     }
 
     fn generate_key_page(grid: &Grid, page: usize) -> [Child<Button>; KEYS] {
-        [
-            Self::generate_key(grid, page, 0),
-            Self::generate_key(grid, page, 1),
-            Self::generate_key(grid, page, 2),
-            Self::generate_key(grid, page, 3),
-            Self::generate_key(grid, page, 4),
-            Self::generate_key(grid, page, 5),
-            Self::generate_key(grid, page, 6),
-            Self::generate_key(grid, page, 7),
-            Self::generate_key(grid, page, 8),
-            Self::generate_key(grid, page, 9),
-        ]
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(|i| Self::generate_key(grid, page, i))
     }
 
     fn generate_key(grid: &Grid, page: usize, key: usize) -> Child<Button> {
-        #[rustfmt::skip]
-        const KEYBOARD: [[&str; KEYS]; PAGES] = [
-            ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
-            [" ", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz", "*#"],
-            [" ", "ABC", "DEF", "GHI", "JKL", "MNO", "PQRS", "TUV", "WXYZ", "*#"],
-            ["_<>", ".:@", "/|\\", "!()", "+%&", "-[]", "?{}", ",'`", ";\"~", "$^="],
-        ];
-
         // Assign the keys in each page to buttons on a 5x3 grid, starting from the
         // second row.
         let area = grid.cell(if key < 9 {
@@ -119,9 +100,9 @@ impl PassphraseKeyboard {
         let text = KEYBOARD[page][key].as_bytes();
         if text == b" " {
             let icon = theme::ICON_SPACE;
-            Child::new(Button::with_icon(area, icon, theme::button_default()))
+            Child::new(Button::with_icon(area, icon))
         } else {
-            Child::new(Button::with_text(area, text, theme::button_default()))
+            Child::new(Button::with_text(area, text))
         }
     }
 
@@ -283,7 +264,7 @@ impl TextBox {
         if self.text.push(char).is_err() {
             // Should not happen unless `self.text` has zero capacity.
             #[cfg(feature = "ui_debug")]
-            panic!("Textbox has zero capacity");
+            panic!("textbox has zero capacity");
         }
         ctx.request_paint();
     }
@@ -292,7 +273,7 @@ impl TextBox {
         if self.text.push(char).is_err() {
             // `self.text` is full, ignore this change.
             #[cfg(feature = "ui_debug")]
-            panic!("Textbox is full");
+            panic!("textbox is full");
         }
         ctx.request_paint();
     }
