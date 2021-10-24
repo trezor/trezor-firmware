@@ -109,6 +109,8 @@ fn generate_micropython_bindings() {
         .allowlist_var("mp_type_OverflowError")
         .allowlist_var("mp_type_ValueError")
         .allowlist_var("mp_type_TypeError")
+        // time
+        .allowlist_function("mp_hal_ticks_ms")
         // typ
         .allowlist_var("mp_type_type");
 
@@ -159,6 +161,7 @@ fn generate_micropython_bindings() {
             "-I../unix",
             "-I../../build/unix",
             "-I../../vendor/micropython",
+            "-I../../vendor/micropython/ports/unix",
         ]);
     }
 
