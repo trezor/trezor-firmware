@@ -1,5 +1,6 @@
 mod button;
 mod dialog;
+mod loader;
 mod page;
 mod passphrase;
 mod pin;
