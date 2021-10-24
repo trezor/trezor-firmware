@@ -135,35 +135,42 @@ pub enum Event {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub struct TimerToken(usize);
+pub struct TimerToken(u32);
 
 impl TimerToken {
     /// Value of an invalid (or missing) token.
     pub const INVALID: TimerToken = TimerToken(0);
 
-    pub fn from_raw(raw: usize) -> Self {
+    pub const fn from_raw(raw: u32) -> Self {
         Self(raw)
     }
 
-    pub fn into_raw(self) -> usize {
+    pub const fn into_raw(self) -> u32 {
         self.0
     }
 }
 
 pub struct EventCtx {
     timers: Vec<(TimerToken, Duration), { Self::MAX_TIMERS }>,
-    next_token: usize,
+    next_token: u32,
     paint_requested: bool,
 }
 
 impl EventCtx {
+    /// Timer token dedicated for animation frames.
+    pub const ANIM_FRAME_TIMER: TimerToken = TimerToken(1);
+
+    // 0 == `TimerToken::INVALID`,
+    // 1 == `Self::ANIM_FRAME_TIMER`.
+    const STARTING_TIMER_TOKEN: u32 = 2;
+
     /// Maximum amount of timers requested in one event tick.
     const MAX_TIMERS: usize = 4;
 
     pub fn new() -> Self {
         Self {
             timers: Vec::new(),
-            next_token: 1,
+            next_token: Self::STARTING_TIMER_TOKEN,
             paint_requested: false,
         }
     }
@@ -182,21 +189,37 @@ impl EventCtx {
     /// Request a timer event to be delivered after `deadline` elapses.
     pub fn request_timer(&mut self, deadline: Duration) -> TimerToken {
         let token = self.next_timer_token();
-        if self.timers.push((token, deadline)).is_err() {
-            // The timer queue is full. Let's just ignore this request.
-            #[cfg(feature = "ui_debug")]
-            panic!("timer queue is full");
-        }
+        self.register_timer(token, deadline);
         token
+    }
+
+    /// Request an animation frame timer to fire as soon as possible.
+    pub fn request_anim_frame(&mut self) {
+        self.register_timer(Self::ANIM_FRAME_TIMER, Duration::ZERO);
     }
 
     pub fn pop_timer(&mut self) -> Option<(TimerToken, Duration)> {
         self.timers.pop()
     }
 
+    fn register_timer(&mut self, token: TimerToken, deadline: Duration) {
+        if self.timers.push((token, deadline)).is_err() {
+            // The timer queue is full, this would be a development error in the layout
+            // layer. Let's panic in the debug env.
+            #[cfg(feature = "ui_debug")]
+            panic!("timer queue is full");
+        }
+    }
+
     fn next_timer_token(&mut self) -> TimerToken {
         let token = TimerToken(self.next_token);
-        self.next_token += 1;
+        // We start again from the beginning if the token counter overflows. This would
+        // probably happen in case of a bug and a long-running session. Let's risk the
+        // collisions in such case.
+        self.next_token = self
+            .next_token
+            .checked_add(1)
+            .unwrap_or(Self::STARTING_TIMER_TOKEN);
         token
     }
 }
