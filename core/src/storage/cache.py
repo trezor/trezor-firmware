@@ -22,10 +22,11 @@ _SESSION_ID_LENGTH = 32
 APP_COMMON_SEED = 0
 APP_COMMON_AUTHORIZATION_TYPE = 1
 APP_COMMON_AUTHORIZATION_DATA = 2
-APP_COMMON_DERIVE_CARDANO = 3
-APP_CARDANO_ICARUS_SECRET = 4
-APP_CARDANO_ICARUS_TREZOR_SECRET = 5
-APP_MONERO_LIVE_REFRESH = 6
+if not utils.BITCOIN_ONLY:
+    APP_COMMON_DERIVE_CARDANO = 3
+    APP_CARDANO_ICARUS_SECRET = 4
+    APP_CARDANO_ICARUS_TREZOR_SECRET = 5
+    APP_MONERO_LIVE_REFRESH = 6
 
 # Keys that are valid across sessions
 APP_COMMON_SEED_WITHOUT_PASSPHRASE = 0 | _SESSIONLESS_FLAG
@@ -91,15 +92,22 @@ class DataCache:
 class SessionCache(DataCache):
     def __init__(self) -> None:
         self.session_id = bytearray(_SESSION_ID_LENGTH)
-        self.fields = (
-            64,  # APP_COMMON_SEED
-            2,  # APP_COMMON_AUTHORIZATION_TYPE
-            128,  # APP_COMMON_AUTHORIZATION_DATA
-            1,  # APP_COMMON_DERIVE_CARDANO
-            96,  # APP_CARDANO_ICARUS_SECRET
-            96,  # APP_CARDANO_ICARUS_TREZOR_SECRET
-            1,  # APP_MONERO_LIVE_REFRESH
-        )
+        if utils.BITCOIN_ONLY:
+            self.fields = (
+                64,  # APP_COMMON_SEED
+                2,  # APP_COMMON_AUTHORIZATION_TYPE
+                128,  # APP_COMMON_AUTHORIZATION_DATA
+            )
+        else:
+            self.fields = (
+                64,  # APP_COMMON_SEED
+                2,  # APP_COMMON_AUTHORIZATION_TYPE
+                128,  # APP_COMMON_AUTHORIZATION_DATA
+                1,  # APP_COMMON_DERIVE_CARDANO
+                96,  # APP_CARDANO_ICARUS_SECRET
+                96,  # APP_CARDANO_ICARUS_TREZOR_SECRET
+                1,  # APP_MONERO_LIVE_REFRESH
+            )
         self.last_usage = 0
         super().__init__()
 
