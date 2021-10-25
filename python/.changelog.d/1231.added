@@ -1,0 +1,1 @@
+Added parameters to enable Cardano derivation when calling `init_device()`.

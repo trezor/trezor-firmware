@@ -1,0 +1,1 @@
+Session must be configured with Initialize(derive_cardano=True), otherwise Cardano functions will fail.

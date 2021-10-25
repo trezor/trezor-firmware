@@ -1,0 +1,1 @@
+Added parameters to specify kind of Cardano derivation to all functions and `trezorctl` commands.
