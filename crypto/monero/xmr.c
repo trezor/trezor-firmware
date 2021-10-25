@@ -3,6 +3,7 @@
 //
 
 #include "xmr.h"
+#include "../byte_order.h"
 #include "int-util.h"
 #include "rand.h"
 #include "serialize.h"
@@ -128,6 +129,12 @@ void xmr_get_subaddress_secret_key(bignum256modm r, uint32_t major,
   char data[sizeof(prefix) + sizeof(buff) + 2 * sizeof(uint32_t)] = {0};
   memcpy(data, prefix, sizeof(prefix));
   memcpy(data + sizeof(prefix), buff, sizeof(buff));
+
+#if BYTE_ORDER == BIG_ENDIAN
+  REVERSE32(major, major);
+  REVERSE32(minor, minor);
+#endif
+
   memcpy(data + sizeof(prefix) + sizeof(buff), &major, sizeof(uint32_t));
   memcpy(data + sizeof(prefix) + sizeof(buff) + sizeof(uint32_t), &minor,
          sizeof(uint32_t));
