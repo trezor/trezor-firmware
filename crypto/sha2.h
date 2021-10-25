@@ -74,6 +74,7 @@ char* sha1_Data(const uint8_t*, size_t, char[SHA1_DIGEST_STRING_LENGTH]);
 
 void sha256_Transform(const uint32_t* state_in, const uint32_t* data, uint32_t* state_out);
 void sha256_Init(SHA256_CTX *);
+void sha256_Init_ex(SHA256_CTX *, const uint32_t state[8], uint64_t bitcount);
 void sha256_Update(SHA256_CTX*, const uint8_t*, size_t);
 void sha256_Final(SHA256_CTX*, uint8_t[SHA256_DIGEST_LENGTH]);
 char* sha256_End(SHA256_CTX*, char[SHA256_DIGEST_STRING_LENGTH]);
