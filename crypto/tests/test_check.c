@@ -4823,6 +4823,60 @@ START_TEST(test_blake2b) {
 }
 END_TEST
 
+// Blake2b-256 personalized, a la ZCash
+// Test vectors from https://zips.z.cash/zip-0243
+START_TEST(test_blake2bp) {
+  static const struct {
+    const char *msg;
+    const char *personal;
+    const char *hash;
+  } tests[] = {
+      {
+          "",
+          "ZcashPrevoutHash",
+          "d53a633bbecf82fe9e9484d8a0e727c73bb9e68c96e72dec30144f6a84afa136",
+      },
+      {
+          "",
+          "ZcashSequencHash",
+          "a5f25f01959361ee6eb56a7401210ee268226f6ce764a4f10b7f29e54db37272",
+
+      },
+      {
+          "e7719811893e0000095200ac6551ac636565b2835a0805750200025151",
+          "ZcashOutputsHash",
+          "ab6f7f6c5ad6b56357b5f37e16981723db6c32411753e28c175e15589172194a",
+      },
+      {
+          "0bbe32a598c22adfb48cef72ba5d4287c0cefbacfd8ce195b4963c34a94bba7a1"
+          "75dae4b090f47a068e227433f9e49d3aa09e356d8d66d0c0121e91a3c4aa3f27fa1b"
+          "63396e2b41d",
+          "ZcashPrevoutHash",
+          "cacf0f5210cce5fa65a59f314292b3111d299e7d9d582753cf61e1e408552ae4",
+      }};
+
+  uint8_t digest[32];
+  for (size_t i = 0; i < (sizeof(tests) / sizeof(*tests)); i++) {
+    size_t msg_len = strlen(tests[i].msg) / 2;
+
+    // Test progressive hashing.
+    size_t part_len = msg_len / 2;
+    BLAKE2B_CTX ctx;
+    ck_assert_int_eq(
+        blake2b_InitPersonal(&ctx, sizeof(digest), tests[i].personal,
+                             strlen(tests[i].personal)),
+        0);
+    ck_assert_int_eq(blake2b_Update(&ctx, fromhex(tests[i].msg), part_len), 0);
+    ck_assert_int_eq(blake2b_Update(&ctx, NULL, 0), 0);
+    ck_assert_int_eq(blake2b_Update(&ctx, fromhex(tests[i].msg) + part_len,
+                                    msg_len - part_len),
+                     0);
+    ck_assert_int_eq(blake2b_Final(&ctx, digest, sizeof(digest)), 0);
+    ck_assert_mem_eq(digest, fromhex(tests[i].hash), sizeof(digest));
+  }
+}
+END_TEST
+
 // test vectors from
 // https://raw.githubusercontent.com/BLAKE2/BLAKE2/master/testvectors/blake2s-kat.txt
 START_TEST(test_blake2s) {
@@ -5530,7 +5584,7 @@ START_TEST(test_slip39_word_index) {
                  // 9999 value is never checked since the word is not in list
                  {"fakeword", false, 9999}};
   for (size_t i = 0; i < (sizeof(vectors) / sizeof(*vectors)); i++) {
-    bool result = word_index(&index, vectors[i].word, sizeof(vectors[i].word));
+    bool result = word_index(&index, vectors[i].word, strlen(vectors[i].word));
     ck_assert_int_eq(result, vectors[i].expected_result);
     if (result) {
       ck_assert_uint_eq(index, vectors[i].expected_index);
@@ -9469,6 +9523,7 @@ Suite *test_suite(void) {
 
   tc = tcase_create("blake2");
   tcase_add_test(tc, test_blake2b);
+  tcase_add_test(tc, test_blake2bp);
   tcase_add_test(tc, test_blake2s);
   suite_add_tcase(s, tc);
 

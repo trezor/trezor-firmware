@@ -32,6 +32,7 @@
 #include <stdint.h>
 #include "sha2.h"
 #include "memzero.h"
+#include "byte_order.h"
 
 /*
  * ASSERT NOTE:

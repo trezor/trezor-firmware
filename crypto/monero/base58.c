@@ -36,6 +36,7 @@
 #include "int-util.h"
 #include "sha2.h"
 #include "../base58.h"
+#include "../byte_order.h"
 
 const size_t alphabet_size = 58; // sizeof(b58digits_ordered) - 1;
 const size_t encoded_block_sizes[] = {0, 2, 3, 5, 6, 7, 9, 10, 11};
@@ -71,7 +72,11 @@ void uint_64_to_8be(uint64_t num, size_t size, uint8_t* data)
 {
 	assert(1 <= size && size <= sizeof(uint64_t));
 
+#if BYTE_ORDER == LITTLE_ENDIAN
 	uint64_t num_be = SWAP64(num);
+#else
+	uint64_t num_be = num;
+#endif
 	memcpy(data, (uint8_t*)(&num_be) + sizeof(uint64_t) - size, size);
 }
 
