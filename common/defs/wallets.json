@@ -55,6 +55,9 @@
     "bitcoin:GRS": {
         "Electrum-GRS": "https://www.groestlcoin.org/groestlcoin-electrum-wallet"
     },
+    "bitcoin:ILC": {
+        "Electrum-ILC": "https://electrum.ilcoincrypto.com"
+    },
     "bitcoin:KOTO": {
         "Electrum-KOTO": "https://electrum.kotocoin.info"
     },
