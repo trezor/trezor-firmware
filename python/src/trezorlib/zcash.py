@@ -22,3 +22,17 @@ def diag(client, ins=0, data=b""):
     return client.call(
         messages.DebugZcashDiagRequest(ins=ins, data=data)
     )
+
+@expect(messages.ZcashAddress, field="address")
+def get_address(client, account=None, diversifier_index=None, show_display=False):
+    kwargs = dict()
+    if account != None:
+        kwargs["account"] = account
+    if diversifier_index != None:
+        kwargs["diversifier_index"] = diversifier_index
+    if show_display != None:
+        kwargs["show_display"] = show_display
+
+    return client.call(
+        messages.ZcashGetAddress(**kwargs)
+    )

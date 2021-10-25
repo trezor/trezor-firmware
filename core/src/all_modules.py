@@ -386,6 +386,10 @@ apps.zcash.diag
 import apps.zcash.diag
 apps.zcash.orchard
 import apps.zcash.orchard
+apps.zcash.orchard.get_address
+import apps.zcash.orchard.get_address
+apps.zcash.orchard.get_fvk
+import apps.zcash.orchard.get_fvk
 
 if utils.BITCOIN_ONLY:
     trezor.enums.BinanceOrderSide

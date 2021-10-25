@@ -240,6 +240,10 @@ class MessageType(IntEnum):
     WebAuthnRemoveResidentCredential = 803
     DebugZcashDiagRequest = 900
     DebugZcashDiagResponse = 901
+    ZcashGetAddress = 902
+    ZcashAddress = 903
+    ZcashGetFullViewingKey = 904
+    ZcashFullViewingKey = 905
 
 
 class FailureType(IntEnum):
@@ -6787,3 +6791,68 @@ class DebugZcashDiagResponse(protobuf.MessageType):
         data: Optional["bytes"] = None,
     ) -> None:
         self.data = data
+
+
+class ZcashGetFullViewingKey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 904
+    FIELDS = {
+        1: protobuf.Field("account", "uint32", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        account: Optional["int"] = 0,
+    ) -> None:
+        self.account = account
+
+
+class ZcashFullViewingKey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 905
+    FIELDS = {
+        1: protobuf.Field("fvk", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        fvk: "bytes",
+    ) -> None:
+        self.fvk = fvk
+
+
+class ZcashGetAddress(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 902
+    FIELDS = {
+        1: protobuf.Field("account", "uint32", repeated=False, required=False),
+        2: protobuf.Field("network_type", "uint32", repeated=False, required=False),
+        3: protobuf.Field("diversifier_index", "uint64", repeated=False, required=False),
+        4: protobuf.Field("show_display", "bool", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        account: Optional["int"] = 0,
+        network_type: Optional["int"] = 0,
+        diversifier_index: Optional["int"] = 18446744073709551615,
+        show_display: Optional["bool"] = False,
+    ) -> None:
+        self.account = account
+        self.network_type = network_type
+        self.diversifier_index = diversifier_index
+        self.show_display = show_display
+
+
+class ZcashAddress(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 903
+    FIELDS = {
+        1: protobuf.Field("address", "string", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: Optional["str"] = None,
+    ) -> None:
+        self.address = address

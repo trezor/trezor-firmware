@@ -16,7 +16,7 @@
 
 import click
 
-from .. import zcash, messages
+from .. import zcash, messages, tools
 from . import with_client
 
 @click.group(name="zcash")
@@ -31,3 +31,18 @@ def cli():
 def diag(client, ins, data):
     """Get Zcash diagnotic message."""
     return zcash.diag(client, int(ins), data.encode("utf-8"))
+
+@cli.command()
+@click.option(
+    "-n",
+    "--account",
+    type=int,
+    required=False,
+    default=0,
+    help="Account number. default = 0",
+)
+@click.option("-d", "--show-display", is_flag=True)
+@with_client
+def get_address(client, account, show_display):
+    """Get Zcash diversified public address."""
+    return zcash.get_address(client, account=account, show_display=show_display)    

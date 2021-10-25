@@ -28,6 +28,7 @@ cty = "0.2.1"
 
 orchard = { path = "/home/agi/code/orchard" , default-features = false, features = ["alloc"] }
 static-alloc = "0.2.3"
+bech32 = { version = "0.8.1", default_features = false }
 
 [dependencies.cstr_core]
 version = "0.2.2"

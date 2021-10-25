@@ -25,10 +25,14 @@
 
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_zcash_diag, zcash_diag);
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_zcash_get_fvk, zcash_get_fvk);
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_zcash_get_address, zcash_get_address);
 
 STATIC const mp_rom_map_elem_t mp_module_trezorzcash_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorzcash)},
     {MP_ROM_QSTR(MP_QSTR_diag),     MP_ROM_PTR(&mod_zcash_diag)},
+    {MP_ROM_QSTR(MP_QSTR_get_fvk),  MP_ROM_PTR(&mod_zcash_get_fvk)},
+    {MP_ROM_QSTR(MP_QSTR_get_address), MP_ROM_PTR(&mod_zcash_get_address)},
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorzcash_globals,
