@@ -307,7 +307,7 @@ class MessageFilter:
 
         return True
 
-    def format(self, maxwidth=80):
+    def to_string(self, maxwidth=80):
         fields = []
         for field in self.message_type.FIELDS.values():
             if field.name not in self.fields:
@@ -316,7 +316,7 @@ class MessageFilter:
             if isinstance(value, IntEnum):
                 field_str = value.name
             elif isinstance(value, MessageFilter):
-                field_str = value.format(maxwidth - 4)
+                field_str = value.to_string(maxwidth - 4)
             elif isinstance(value, protobuf.MessageType):
                 field_str = protobuf.format_message(value)
             else:
@@ -563,7 +563,7 @@ class TrezorClientDebugLink(TrezorClient):
         for i in range(start_at, stop_at):
             exp = expected[i]
             prefix = "    " if i != current else ">>> "
-            output.append(textwrap.indent(exp, prefix))
+            output.append(textwrap.indent(exp.to_string(), prefix))
         if stop_at < len(expected):
             omitted = len(expected) - stop_at
             output.append(f"    (...{omitted} following responses omitted)")
