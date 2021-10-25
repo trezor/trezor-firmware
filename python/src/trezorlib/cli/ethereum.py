@@ -268,8 +268,7 @@ def sign_tx(
         (not is_eip1559 and gas_price is None)
         or any(x is None for x in (gas_limit, nonce))
         or publish
-        and not w3.isConnected()
-    ):
+    ) and not w3.isConnected():
         click.echo("Failed to connect to Ethereum node.")
         click.echo(
             "If you want to sign offline, make sure you provide --gas-price, "
