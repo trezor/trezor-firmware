@@ -24,6 +24,7 @@
 #include <string.h>
 
 #include "memzero.h"
+#include "sha2.h"
 #include "zkp_context.h"
 
 #include "vendor/secp256k1-zkp/include/secp256k1.h"
@@ -31,6 +32,12 @@
 #include "vendor/secp256k1-zkp/include/secp256k1_schnorrsig.h"
 
 #include "zkp_bip340.h"
+
+// Initial hash value H for SHA-256 TapTweak:
+const uint32_t sha256_initial_taptweak_state[8] = {
+    0xd129a2f3UL, 0x701c655dUL, 0x6583b6c3UL, 0xb9419727UL,
+    0x95f4e232UL, 0x94fd54f4UL, 0xa2ae8d85UL, 0x47ca590bUL,
+};
 
 // BIP340 Schnorr public key derivation
 // private_key_bytes has 32 bytes
@@ -154,6 +161,151 @@ int zkp_bip340_verify_digest(const uint8_t *public_key_bytes,
   }
 
   memzero(&xonly_pubkey, sizeof(xonly_pubkey));
+
+  return result;
+}
+
+// BIP340 Schnorr public key tweak
+// internal_public_key has 32 bytes
+// root_hash has 32 bytes or is empty (NULL)
+// output_public_key has 32 bytes
+// returns 0 on success
+int zkp_bip340_tweak_public_key(const uint8_t *internal_public_key,
+                                const uint8_t *root_hash,
+                                uint8_t *output_public_key) {
+  int result = 0;
+
+  uint8_t tweak[SHA256_DIGEST_LENGTH] = {0};
+  if (result == 0) {
+    SHA256_CTX ctx = {0};
+    sha256_Init_ex(&ctx, sha256_initial_taptweak_state, 512);
+    sha256_Update(&ctx, internal_public_key, 32);
+    if (root_hash != NULL) {
+      sha256_Update(&ctx, root_hash, 32);
+    }
+    sha256_Final(&ctx, tweak);
+  }
+
+  const secp256k1_context *context_read_only = zkp_context_get_read_only();
+
+  secp256k1_xonly_pubkey internal_pubkey = {0};
+  if (result == 0) {
+    if (secp256k1_xonly_pubkey_parse(context_read_only, &internal_pubkey,
+                                     internal_public_key) != 1) {
+      result = -1;
+    }
+  }
+
+  secp256k1_pubkey output_pubkey = {0};
+  if (result == 0) {
+    if (secp256k1_xonly_pubkey_tweak_add(context_read_only, &output_pubkey,
+                                         &internal_pubkey, tweak) != 1) {
+      result = -1;
+    }
+  }
+
+  memzero(tweak, sizeof(tweak));
+  memzero(&internal_pubkey, sizeof(internal_pubkey));
+
+  secp256k1_xonly_pubkey xonly_output_pubkey = {0};
+  if (result == 0) {
+    if (secp256k1_xonly_pubkey_from_pubkey(context_read_only,
+                                           &xonly_output_pubkey, NULL,
+                                           &output_pubkey) != 1) {
+      result = -1;
+    }
+  }
+
+  memzero(&output_pubkey, sizeof(output_pubkey));
+
+  if (result == 0) {
+    if (secp256k1_xonly_pubkey_serialize(context_read_only, output_public_key,
+                                         &xonly_output_pubkey) != 1) {
+      result = -1;
+    }
+  }
+
+  memzero(&xonly_output_pubkey, sizeof(xonly_output_pubkey));
+
+  return result;
+}
+
+// BIP340 Schnorr private key tweak
+// internal_private_key has 32 bytes
+// root_hash has 32 bytes or is empty (NULL)
+// output_private_key has 32 bytes
+// returns 0 on success
+int zkp_bip340_tweak_private_key(const uint8_t *internal_private_key,
+                                 const uint8_t *root_hash,
+                                 uint8_t *output_private_key) {
+  int result = 0;
+
+  secp256k1_keypair keypair = {0};
+
+  if (result == 0) {
+    secp256k1_context *context_writable = zkp_context_acquire_writable();
+    if (context_writable) {
+      secp256k1_context_writable_randomize(context_writable);
+      if (secp256k1_keypair_create(context_writable, &keypair,
+                                   internal_private_key) != 1) {
+        result = -1;
+      }
+      zkp_context_release_writable();
+    } else {
+      result = -1;
+    }
+  }
+
+  const secp256k1_context *context_read_only = zkp_context_get_read_only();
+
+  secp256k1_xonly_pubkey internal_xonly_pubkey = {0};
+  if (result == 0) {
+    if (secp256k1_keypair_xonly_pub(context_read_only, &internal_xonly_pubkey,
+                                    NULL, &keypair) != 1) {
+      result = -1;
+    }
+  }
+
+  uint8_t internal_public_key[32] = {0};
+  if (result == 0) {
+    if (secp256k1_xonly_pubkey_serialize(context_read_only, internal_public_key,
+                                         &internal_xonly_pubkey) != 1) {
+      result = -1;
+    }
+  }
+
+  memzero(&internal_xonly_pubkey, sizeof(internal_xonly_pubkey));
+
+  uint8_t tweak[SHA256_DIGEST_LENGTH] = {0};
+  if (result == 0) {
+    SHA256_CTX ctx = {0};
+    sha256_Init_ex(&ctx, sha256_initial_taptweak_state, 512);
+    sha256_Update(&ctx, internal_public_key, 32);
+    if (root_hash != NULL) {
+      sha256_Update(&ctx, root_hash, 32);
+    }
+    sha256_Final(&ctx, tweak);
+  }
+
+  memzero(&internal_public_key, sizeof(internal_public_key));
+
+  if (result == 0) {
+    if (secp256k1_keypair_xonly_tweak_add(context_read_only, &keypair, tweak) !=
+        1) {
+      result = -1;
+    }
+  }
+
+  memzero(tweak, sizeof(tweak));
+
+  if (result == 0) {
+    if (secp256k1_keypair_sec(context_read_only, output_private_key,
+                              &keypair) != 1) {
+      result = -1;
+    }
+  }
+
+  memzero(&keypair, sizeof(keypair));
 
   return result;
 }

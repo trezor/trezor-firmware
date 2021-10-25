@@ -677,6 +677,15 @@ void sha256_Init(SHA256_CTX* context) {
 	context->bitcount = 0;
 }
 
+void sha256_Init_ex(SHA256_CTX *context, const uint32_t state[8], uint64_t bitcount) {
+  if (context == (SHA256_CTX*)0) {
+    return;
+  }
+  MEMCPY_BCOPY(context->state, state, SHA256_DIGEST_LENGTH);
+  memzero(context->buffer, SHA256_BLOCK_LENGTH);
+  context->bitcount = bitcount;
+}
+
 #ifdef SHA2_UNROLL_TRANSFORM
 
 /* Unrolled SHA-256 round macros: */
