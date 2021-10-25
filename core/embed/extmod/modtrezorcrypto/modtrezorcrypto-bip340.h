@@ -19,6 +19,7 @@
 
 #include "py/objstr.h"
 
+#include "rand.h"
 #include "zkp_bip340.h"
 
 /// package: trezorcrypto.bip340
@@ -237,7 +238,7 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypt_bip340_globals_table[] = {
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypt_bip340_globals,
                             mod_trezorcrypt_bip340_globals_table);
 
-STATIC const mp_obj_module_t mod_trezorcrypt_bip340_module = {
+STATIC const mp_obj_module_t mod_trezorcrypto_bip340_module = {
     .base = {&mp_type_module},
     .globals = (mp_obj_dict_t *)&mod_trezorcrypt_bip340_globals,
 };
