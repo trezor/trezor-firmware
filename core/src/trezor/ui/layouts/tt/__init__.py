@@ -74,6 +74,7 @@ __all__ = (
     "draw_simple_text",
     "request_passphrase_on_device",
     "request_pin_on_device",
+    "should_show_more",
 )
 
 
@@ -510,6 +511,38 @@ async def confirm_output(
     await raise_if_cancelled(interact(ctx, content, "confirm_output", br_code))
 
 
+async def should_show_more(
+    ctx: wire.GenericContext,
+    title: str,
+    para: Iterable[tuple[int, str]],
+    button_text: str = "Show details",
+    br_type: str = "should_show_more",
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+    icon: str = ui.ICON_DEFAULT,
+    icon_color: int = ui.ORANGE_ICON,
+) -> bool:
+    """Return True if the user wants to show more (they click a special button)
+    and False when the user wants to continue without showing details.
+
+    Raises ActionCancelled if the user cancels.
+    """
+    page = Text(
+        title,
+        header_icon=icon,
+        icon_color=icon_color,
+        new_lines=False,
+        max_lines=TEXT_MAX_LINES - 2,
+    )
+    for font, text in para:
+        page.content.extend((font, text, "\n"))
+    ask_dialog = Confirm(AskPaginated(page, button_text))
+
+    result = await raise_if_cancelled(interact(ctx, ask_dialog, br_type, br_code))
+    assert result in (SHOW_PAGINATED, CONFIRMED)
+
+    return result is SHOW_PAGINATED
+
+
 async def _confirm_ask_pagination(
     ctx: wire.GenericContext,
     br_type: str,
@@ -521,23 +554,17 @@ async def _confirm_ask_pagination(
     icon_color: int,
 ) -> None:
     paginated: ui.Layout | None = None
-
-    truncated = Text(
-        title,
-        header_icon=icon,
-        icon_color=icon_color,
-        new_lines=False,
-        max_lines=TEXT_MAX_LINES - 2,
-    )
-    for font, text in para_truncated:
-        truncated.content.extend((font, text, "\n"))
-    ask_dialog = Confirm(AskPaginated(truncated))
-
     while True:
-        result = await raise_if_cancelled(interact(ctx, ask_dialog, br_type, br_code))
-        if result is CONFIRMED:
+        if not await should_show_more(
+            ctx,
+            title,
+            para=para_truncated,
+            br_type=br_type,
+            br_code=br_code,
+            icon=icon,
+            icon_color=icon_color,
+        ):
             return
-        assert result is SHOW_PAGINATED
 
         if paginated is None:
             paginated = paginate_paragraphs(
@@ -560,6 +587,7 @@ async def confirm_blob(
     title: str,
     data: bytes | str,
     description: str | None = None,
+    hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.Other,
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
@@ -607,7 +635,7 @@ async def confirm_blob(
         else:
             per_line = MONO_HEX_PER_LINE
         text.mono(ui.FG, *chunks_intersperse(data_str, per_line))
-        content: ui.Layout = Confirm(text)
+        content: ui.Layout = HoldToConfirm(text) if hold else Confirm(text)
         return await raise_if_cancelled(interact(ctx, content, br_type, br_code))
 
     elif ask_pagination:
@@ -628,7 +656,9 @@ async def confirm_blob(
             para.append((ui.NORMAL, description))
         para.extend((ui.MONO, line) for line in chunks(data_str, MONO_HEX_PER_LINE - 2))
 
-        paginated = paginate_paragraphs(para, title, icon, icon_color)
+        paginated = paginate_paragraphs(
+            para, title, icon, icon_color, confirm=HoldToConfirm if hold else Confirm
+        )
         return await raise_if_cancelled(interact(ctx, paginated, br_type, br_code))
 
 
