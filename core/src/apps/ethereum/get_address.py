@@ -6,7 +6,7 @@ from trezor.ui.layouts import show_address
 from apps.common import paths
 
 from . import networks
-from .address import address_from_bytes
+from .helpers import address_from_bytes
 from .keychain import PATTERNS_ADDRESS, with_keychain_from_path
 
 if False:
