@@ -205,13 +205,9 @@ extern const struct _mp_print_t mp_stderr_print;
 
 // extra built in modules to add to the list of known ones
 extern const struct _mp_obj_module_t mp_module_os;
-// on unix, we use time, not utime
-extern const struct _mp_obj_module_t mp_module_time;
 
 #define MICROPY_PORT_BUILTIN_MODULES \
-    { MP_ROM_QSTR(MP_QSTR_uos), MP_ROM_PTR(&mp_module_os) }, \
-    { MP_ROM_QSTR(MP_QSTR_utime), MP_ROM_PTR(&mp_module_time) },
-
+    { MP_ROM_QSTR(MP_QSTR_uos), MP_ROM_PTR(&mp_module_os) },
 
 
 // For size_t and ssize_t

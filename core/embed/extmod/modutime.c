@@ -25,10 +25,33 @@
  */
 
 #include "extmod/utime_mphal.h"
+#include "shared/timeutils/timeutils.h"
+
+// copy of ports/stm32/modutime.c:time_localtime, without support
+// for getting current clock time (i.e., timestamp must always be provided)
+STATIC mp_obj_t time_gmtime2000(mp_obj_t timestamp) {
+  mp_int_t seconds = mp_obj_get_int(timestamp);
+  timeutils_struct_time_t tm;
+  timeutils_seconds_since_2000_to_struct_time(seconds, &tm);
+  mp_obj_t tuple[8] = {
+      tuple[0] = mp_obj_new_int(tm.tm_year),
+      tuple[1] = mp_obj_new_int(tm.tm_mon),
+      tuple[2] = mp_obj_new_int(tm.tm_mday),
+      tuple[3] = mp_obj_new_int(tm.tm_hour),
+      tuple[4] = mp_obj_new_int(tm.tm_min),
+      tuple[5] = mp_obj_new_int(tm.tm_sec),
+      tuple[6] = mp_obj_new_int(tm.tm_wday),
+      tuple[7] = mp_obj_new_int(tm.tm_yday),
+  };
+  return mp_obj_new_tuple(8, tuple);
+}
+
+MP_DEFINE_CONST_FUN_OBJ_1(time_gmtime2000_obj, time_gmtime2000);
 
 STATIC const mp_rom_map_elem_t time_module_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_utime)},
 
+    {MP_ROM_QSTR(MP_QSTR_gmtime2000), MP_ROM_PTR(&time_gmtime2000_obj)},
     {MP_ROM_QSTR(MP_QSTR_sleep), MP_ROM_PTR(&mp_utime_sleep_obj)},
     {MP_ROM_QSTR(MP_QSTR_sleep_ms), MP_ROM_PTR(&mp_utime_sleep_ms_obj)},
     {MP_ROM_QSTR(MP_QSTR_sleep_us), MP_ROM_PTR(&mp_utime_sleep_us_obj)},
@@ -46,4 +69,4 @@ const mp_obj_module_t mp_module_utime = {
     .globals = (mp_obj_dict_t*)&time_module_globals,
 };
 
-MP_REGISTER_MODULE(MP_QSTR_utime, mp_module_utime, MICROPY_PY_UTIME_MP_HAL);
+MP_REGISTER_MODULE(MP_QSTR_utime, mp_module_utime, MICROPY_PY_UTIME);

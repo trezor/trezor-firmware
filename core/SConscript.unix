@@ -194,7 +194,7 @@ if NEW_UI:
 
 # modutime
 SOURCE_MOD += [
-    'vendor/micropython/ports/unix/modtime.c',
+    'embed/extmod/modutime.c',
 ]
 
 SOURCE_MICROPYTHON = [
@@ -204,6 +204,7 @@ SOURCE_MICROPYTHON = [
     'vendor/micropython/extmod/modutimeq.c',
     'vendor/micropython/extmod/utime_mphal.c',
     'vendor/micropython/shared/readline/readline.c',
+    'vendor/micropython/shared/timeutils/timeutils.c',
     'vendor/micropython/ports/unix/modos.c',
     'vendor/micropython/py/argcheck.c',
     'vendor/micropython/py/asmarm.c',
