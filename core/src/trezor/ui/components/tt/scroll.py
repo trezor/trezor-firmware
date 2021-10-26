@@ -168,10 +168,10 @@ class Paginated(ui.Layout):
 
 
 class AskPaginated(ui.Component):
-    def __init__(self, content: ui.Component) -> None:
+    def __init__(self, content: ui.Component, button_text: str = "Show all") -> None:
         super().__init__()
         self.content = content
-        self.button = Button(ui.grid(3, n_x=1), "Show all", ButtonDefault)
+        self.button = Button(ui.grid(3, n_x=1), button_text, ButtonDefault)
         self.button.on_click = self.on_show_paginated_click  # type: ignore
 
     def dispatch(self, event: int, x: int, y: int) -> None:
