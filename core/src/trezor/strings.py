@@ -39,7 +39,8 @@ def format_plural(string: str, count: int, plural: str) -> str:
         raise ValueError
 
     if count == 0 or count > 1:
-        if plural[-1] == "y":
+        # candy -> candies, but key -> keys
+        if plural[-1] == "y" and plural[-2] not in "aeiouy":
             plural = plural[:-1] + "ies"
         elif plural[-1] in "hsxz":
             plural = plural + "es"

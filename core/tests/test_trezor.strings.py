@@ -17,10 +17,12 @@ class TestStrings(unittest.TestCase):
 
     def test_format_plural(self):
         VECTORS = [
-            ("We need {count} more {plural}", 3, "share", "We need 3 more shares"),
             ("We need {count} more {plural}", 1, "share", "We need 1 more share"),
+            ("We need {count} more {plural}", 3, "share", "We need 3 more shares"),
             ("We need {count} more {plural}", 1, "candy", "We need 1 more candy"),
             ("We need {count} more {plural}", 7, "candy", "We need 7 more candies"),
+            ("We need {count} more {plural}", 1, "key", "We need 1 more key"),
+            ("We need {count} more {plural}", 5, "key", "We need 5 more keys"),
             ("We need {count} more {plural}", 1, "hash", "We need 1 more hash"),
             ("We need {count} more {plural}", 2, "hash", "We need 2 more hashes"),
             ("We need {count} more {plural}", 1, "fuzz", "We need 1 more fuzz"),
