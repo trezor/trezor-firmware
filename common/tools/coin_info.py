@@ -112,7 +112,7 @@ def check_key(key, types, optional=False, **kwargs):
 BTC_CHECKS = [
     check_key("coin_name", str, regex=r"^[A-Z]"),
     check_key("coin_shortcut", str, regex=r"^t?[A-Z]{3,}$"),
-    check_key("coin_label", str, regex=r"^[A-Z]"),
+    check_key("coin_label", str, regex=r"^x?[A-Z]"),
     check_key("website", str, regex=r"^https://.*[^/]$"),
     check_key("github", str, regex=r"^https://git(hu|la)b.com/.*[^/]$"),
     check_key("maintainer", str),
