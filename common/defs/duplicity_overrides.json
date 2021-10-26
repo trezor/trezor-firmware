@@ -27,5 +27,7 @@
     "eth:QKC:100005": false,
     "eth:QKC:100006": false,
     "eth:QKC:100007": false,
-    "eth:QKC:100008": false
+    "eth:QKC:100008": false,
+    "eth:xDAI:100": false,
+    "eth:xDAI:200": false
 }
