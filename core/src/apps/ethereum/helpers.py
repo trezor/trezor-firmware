@@ -52,3 +52,4 @@ def bytes_from_address(address: str) -> bytes:
         return bytes()
 
     raise wire.ProcessError("Ethereum: Invalid address length")
+

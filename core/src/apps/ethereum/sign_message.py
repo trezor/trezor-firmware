@@ -7,7 +7,7 @@ from trezor.utils import HashWriter
 from apps.common import paths
 from apps.common.signverify import decode_message
 
-from . import address
+from .helpers import address_from_bytes
 from .keychain import PATTERNS_ADDRESS, with_keychain_from_path
 
 if False:
@@ -42,6 +42,6 @@ async def sign_message(
     )
 
     return EthereumMessageSignature(
-        address=address.address_from_bytes(node.ethereum_pubkeyhash()),
+        address=address_from_bytes(node.ethereum_pubkeyhash()),
         signature=signature[1:] + bytearray([signature[0]]),
     )

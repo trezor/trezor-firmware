@@ -7,7 +7,8 @@ from trezor.utils import HashWriter
 
 from apps.common import paths
 
-from . import address, tokens
+from . import tokens
+from .helpers import bytes_from_address
 from .keychain import with_keychain_from_chain_id
 from .layout import (
     require_confirm_data,
@@ -96,7 +97,7 @@ async def handle_erc20(
     ctx: wire.Context, msg: EthereumSignTxAny
 ) -> Tuple[tokens.TokenInfo | None, bytes, bytes, int]:
     token = None
-    address_bytes = recipient = address.bytes_from_address(msg.to)
+    address_bytes = recipient = bytes_from_address(msg.to)
     value = int.from_bytes(msg.value, "big")
     if (
         len(msg.to) in (40, 42)
@@ -125,7 +126,7 @@ def get_total_length(msg: EthereumSignTx, data_total: int) -> int:
         msg.nonce,
         msg.gas_price,
         msg.gas_limit,
-        address.bytes_from_address(msg.to),
+        bytes_from_address(msg.to),
         msg.value,
         msg.chain_id,
         0,
