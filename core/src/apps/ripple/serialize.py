@@ -12,6 +12,9 @@ from trezor.messages import RippleSignTx
 
 from . import helpers
 
+if False:
+    from typing import Any, Optional
+
 FIELD_TYPE_INT16 = 1
 FIELD_TYPE_INT32 = 2
 FIELD_TYPE_AMOUNT = 6
@@ -35,7 +38,13 @@ FIELDS_MAP = {
 TRANSACTION_TYPES = {"Payment": 0}
 
 
-def serialize(msg: RippleSignTx, source_address: str, pubkey=None, signature=None):
+def serialize(
+    msg: RippleSignTx,
+    source_address: str,
+    pubkey: Optional[bytes] = None,
+    signature: Optional[bytes] = None,
+) -> bytearray:
+    assert msg.payment is not None
     w = bytearray()
     # must be sorted numerically first by type and then by name
     write(w, FIELDS_MAP["type"], TRANSACTION_TYPES["Payment"])
@@ -52,7 +61,7 @@ def serialize(msg: RippleSignTx, source_address: str, pubkey=None, signature=Non
     return w
 
 
-def write(w: bytearray, field: dict, value):
+def write(w: bytearray, field: dict, value: Any) -> None:
     if value is None:
         return
     write_type(w, field)
@@ -70,7 +79,7 @@ def write(w: bytearray, field: dict, value):
         raise ValueError("Unknown field type")
 
 
-def write_type(w: bytearray, field: dict):
+def write_type(w: bytearray, field: dict) -> None:
     if field["key"] <= 0xF:
         w.append((field["type"] << 4) | field["key"])
     else:
@@ -91,13 +100,13 @@ def serialize_amount(value: int) -> bytearray:
     return b
 
 
-def write_bytes_varint(w: bytearray, value: bytes):
+def write_bytes_varint(w: bytearray, value: bytes) -> None:
     """Serialize a variable length bytes."""
     write_varint(w, len(value))
     w.extend(value)
 
 
-def write_varint(w: bytearray, val: int):
+def write_varint(w: bytearray, val: int) -> None:
     """
     Implements variable-length int encoding from Ripple.
     See: https://ripple.com/wiki/Binary_Format#Variable_Length_Data_Encoding
@@ -119,7 +128,7 @@ def write_varint(w: bytearray, val: int):
         raise ValueError("Value is too large")
 
 
-def rshift(val, n):
+def rshift(val: int, n: int) -> int:
     """
     Implements signed right-shift.
     See: http://stackoverflow.com/a/5833119/15677

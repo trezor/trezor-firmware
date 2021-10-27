@@ -19,12 +19,15 @@ from ..writers import (
     write_uint64_le,
 )
 
+if False:
+    from trezor.crypto import bip32
+
 
 def serialize_transfer(
     common: NEMTransactionCommon,
     transfer: NEMTransfer,
     public_key: bytes,
-    payload: bytes = None,
+    payload: bytes | None = None,
     encrypted: bool = False,
 ) -> bytearray:
     tx = serialize_tx_common(
@@ -54,7 +57,7 @@ def serialize_transfer(
     return tx
 
 
-def serialize_mosaic(w: bytearray, namespace: str, mosaic: str, quantity: int):
+def serialize_mosaic(w: bytearray, namespace: str, mosaic: str, quantity: int) -> None:
     identifier_w = bytearray()
     write_bytes_with_len(identifier_w, namespace.encode())
     write_bytes_with_len(identifier_w, mosaic.encode())
@@ -78,32 +81,33 @@ def serialize_importance_transfer(
     return w
 
 
-def get_transfer_payload(transfer: NEMTransfer, node) -> [bytes, bool]:
+def get_transfer_payload(transfer: NEMTransfer, node: bip32.HDNode) -> tuple[bytes, bool]:
     payload = transfer.payload
     encrypted = False
     if transfer.public_key is not None:
         if payload is None:
             raise ValueError("Public key provided but no payload to encrypt")
+        assert transfer.payload is not None
         payload = _encrypt(node, transfer.public_key, transfer.payload)
         encrypted = True
 
     return payload, encrypted
 
 
-def _encrypt(node, public_key: bytes, payload: bytes) -> bytes:
+def _encrypt(node: bip32.HDNode, public_key: bytes, payload: bytes) -> bytes:
     salt = random.bytes(NEM_SALT_SIZE)
     iv = random.bytes(AES_BLOCK_SIZE)
     encrypted = node.nem_encrypt(public_key, iv, salt, payload)
     return iv + salt + encrypted
 
 
-def _get_version(network, mosaics=None) -> int:
+def _get_version(network: int, mosaics: list[NEMMosaic] | None = None) -> int:
     if mosaics:
         return network << 24 | 2
     return network << 24 | 1
 
 
-def canonicalize_mosaics(mosaics: list):
+def canonicalize_mosaics(mosaics: list[NEMMosaic]) -> list[NEMMosaic]:
     if len(mosaics) <= 1:
         return mosaics
     mosaics = merge_mosaics(mosaics)
@@ -116,10 +120,10 @@ def are_mosaics_equal(a: NEMMosaic, b: NEMMosaic) -> bool:
     return False
 
 
-def merge_mosaics(mosaics: list) -> list:
+def merge_mosaics(mosaics: list[NEMMosaic]) -> list[NEMMosaic]:
     if not mosaics:
         return []
-    ret = []
+    ret: list[NEMMosaic] = []
     for i in mosaics:
         found = False
         for k, y in enumerate(ret):
@@ -131,5 +135,5 @@ def merge_mosaics(mosaics: list) -> list:
     return ret
 
 
-def sort_mosaics(mosaics: list) -> list:
+def sort_mosaics(mosaics: list[NEMMosaic]) -> list[NEMMosaic]:
     return sorted(mosaics, key=lambda m: (m.namespace, m.mosaic))

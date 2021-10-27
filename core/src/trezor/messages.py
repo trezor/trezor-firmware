@@ -2533,17 +2533,17 @@ if TYPE_CHECKING:
 
     class EosSignTx(protobuf.MessageType):
         address_n: "list[int]"
-        chain_id: "bytes | None"
-        header: "EosTxHeader | None"
-        num_actions: "int | None"
+        chain_id: "bytes"
+        header: "EosTxHeader"
+        num_actions: "int"
 
         def __init__(
             self,
             *,
+            chain_id: "bytes",
+            header: "EosTxHeader",
+            num_actions: "int",
             address_n: "list[int] | None" = None,
-            chain_id: "bytes | None" = None,
-            header: "EosTxHeader | None" = None,
-            num_actions: "int | None" = None,
         ) -> None:
             pass
 
@@ -2566,7 +2566,7 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EosTxActionAck(protobuf.MessageType):
-        common: "EosActionCommon | None"
+        common: "EosActionCommon"
         transfer: "EosActionTransfer | None"
         delegate: "EosActionDelegate | None"
         undelegate: "EosActionUndelegate | None"
@@ -2585,7 +2585,7 @@ if TYPE_CHECKING:
         def __init__(
             self,
             *,
-            common: "EosActionCommon | None" = None,
+            common: "EosActionCommon",
             transfer: "EosActionTransfer | None" = None,
             delegate: "EosActionDelegate | None" = None,
             undelegate: "EosActionUndelegate | None" = None,
@@ -2646,14 +2646,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EosAsset(protobuf.MessageType):
-        amount: "int | None"
-        symbol: "int | None"
+        amount: "int"
+        symbol: "int"
 
         def __init__(
             self,
             *,
-            amount: "int | None" = None,
-            symbol: "int | None" = None,
+            amount: "int",
+            symbol: "int",
         ) -> None:
             pass
 
@@ -2662,14 +2662,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EosPermissionLevel(protobuf.MessageType):
-        actor: "int | None"
-        permission: "int | None"
+        actor: "int"
+        permission: "int"
 
         def __init__(
             self,
             *,
-            actor: "int | None" = None,
-            permission: "int | None" = None,
+            actor: "int",
+            permission: "int",
         ) -> None:
             pass
 
@@ -2698,14 +2698,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EosAuthorizationAccount(protobuf.MessageType):
-        account: "EosPermissionLevel | None"
-        weight: "int | None"
+        account: "EosPermissionLevel"
+        weight: "int"
 
         def __init__(
             self,
             *,
-            account: "EosPermissionLevel | None" = None,
-            weight: "int | None" = None,
+            account: "EosPermissionLevel",
+            weight: "int",
         ) -> None:
             pass
 
@@ -2714,14 +2714,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EosAuthorizationWait(protobuf.MessageType):
-        wait_sec: "int | None"
-        weight: "int | None"
+        wait_sec: "int"
+        weight: "int"
 
         def __init__(
             self,
             *,
-            wait_sec: "int | None" = None,
-            weight: "int | None" = None,
+            wait_sec: "int",
+            weight: "int",
         ) -> None:
             pass
 
@@ -2730,7 +2730,7 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EosAuthorization(protobuf.MessageType):
-        threshold: "int | None"
+        threshold: "int"
         keys: "list[EosAuthorizationKey]"
         accounts: "list[EosAuthorizationAccount]"
         waits: "list[EosAuthorizationWait]"
@@ -2738,10 +2738,10 @@ if TYPE_CHECKING:
         def __init__(
             self,
             *,
+            threshold: "int",
             keys: "list[EosAuthorizationKey] | None" = None,
             accounts: "list[EosAuthorizationAccount] | None" = None,
             waits: "list[EosAuthorizationWait] | None" = None,
-            threshold: "int | None" = None,
         ) -> None:
             pass
 
@@ -2750,16 +2750,16 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EosActionCommon(protobuf.MessageType):
-        account: "int | None"
-        name: "int | None"
+        account: "int"
+        name: "int"
         authorization: "list[EosPermissionLevel]"
 
         def __init__(
             self,
             *,
+            account: "int",
+            name: "int",
             authorization: "list[EosPermissionLevel] | None" = None,
-            account: "int | None" = None,
-            name: "int | None" = None,
         ) -> None:
             pass
 
@@ -2768,18 +2768,18 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EosActionTransfer(protobuf.MessageType):
-        sender: "int | None"
-        receiver: "int | None"
-        quantity: "EosAsset | None"
-        memo: "str | None"
+        sender: "int"
+        receiver: "int"
+        quantity: "EosAsset"
+        memo: "str"
 
         def __init__(
             self,
             *,
-            sender: "int | None" = None,
-            receiver: "int | None" = None,
-            quantity: "EosAsset | None" = None,
-            memo: "str | None" = None,
+            sender: "int",
+            receiver: "int",
+            quantity: "EosAsset",
+            memo: "str",
         ) -> None:
             pass
 
@@ -2788,20 +2788,20 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EosActionDelegate(protobuf.MessageType):
-        sender: "int | None"
-        receiver: "int | None"
-        net_quantity: "EosAsset | None"
-        cpu_quantity: "EosAsset | None"
-        transfer: "bool | None"
+        sender: "int"
+        receiver: "int"
+        net_quantity: "EosAsset"
+        cpu_quantity: "EosAsset"
+        transfer: "bool"
 
         def __init__(
             self,
             *,
-            sender: "int | None" = None,
-            receiver: "int | None" = None,
-            net_quantity: "EosAsset | None" = None,
-            cpu_quantity: "EosAsset | None" = None,
-            transfer: "bool | None" = None,
+            sender: "int",
+            receiver: "int",
+            net_quantity: "EosAsset",
+            cpu_quantity: "EosAsset",
+            transfer: "bool",
         ) -> None:
             pass
 
@@ -2810,18 +2810,18 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EosActionUndelegate(protobuf.MessageType):
-        sender: "int | None"
-        receiver: "int | None"
-        net_quantity: "EosAsset | None"
-        cpu_quantity: "EosAsset | None"
+        sender: "int"
+        receiver: "int"
+        net_quantity: "EosAsset"
+        cpu_quantity: "EosAsset"
 
         def __init__(
             self,
             *,
-            sender: "int | None" = None,
-            receiver: "int | None" = None,
-            net_quantity: "EosAsset | None" = None,
-            cpu_quantity: "EosAsset | None" = None,
+            sender: "int",
+            receiver: "int",
+            net_quantity: "EosAsset",
+            cpu_quantity: "EosAsset",
         ) -> None:
             pass
 
@@ -2830,12 +2830,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EosActionRefund(protobuf.MessageType):
-        owner: "int | None"
+        owner: "int"
 
         def __init__(
             self,
             *,
-            owner: "int | None" = None,
+            owner: "int",
         ) -> None:
             pass
 
@@ -2844,16 +2844,16 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EosActionBuyRam(protobuf.MessageType):
-        payer: "int | None"
-        receiver: "int | None"
-        quantity: "EosAsset | None"
+        payer: "int"
+        receiver: "int"
+        quantity: "EosAsset"
 
         def __init__(
             self,
             *,
-            payer: "int | None" = None,
-            receiver: "int | None" = None,
-            quantity: "EosAsset | None" = None,
+            payer: "int",
+            receiver: "int",
+            quantity: "EosAsset",
         ) -> None:
             pass
 
@@ -2862,16 +2862,16 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EosActionBuyRamBytes(protobuf.MessageType):
-        payer: "int | None"
-        receiver: "int | None"
-        bytes: "int | None"
+        payer: "int"
+        receiver: "int"
+        bytes: "int"
 
         def __init__(
             self,
             *,
-            payer: "int | None" = None,
-            receiver: "int | None" = None,
-            bytes: "int | None" = None,
+            payer: "int",
+            receiver: "int",
+            bytes: "int",
         ) -> None:
             pass
 
@@ -2880,14 +2880,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EosActionSellRam(protobuf.MessageType):
-        account: "int | None"
-        bytes: "int | None"
+        account: "int"
+        bytes: "int"
 
         def __init__(
             self,
             *,
-            account: "int | None" = None,
-            bytes: "int | None" = None,
+            account: "int",
+            bytes: "int",
         ) -> None:
             pass
 
@@ -2896,16 +2896,16 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EosActionVoteProducer(protobuf.MessageType):
-        voter: "int | None"
-        proxy: "int | None"
+        voter: "int"
+        proxy: "int"
         producers: "list[int]"
 
         def __init__(
             self,
             *,
+            voter: "int",
+            proxy: "int",
             producers: "list[int] | None" = None,
-            voter: "int | None" = None,
-            proxy: "int | None" = None,
         ) -> None:
             pass
 
@@ -2914,18 +2914,18 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EosActionUpdateAuth(protobuf.MessageType):
-        account: "int | None"
-        permission: "int | None"
-        parent: "int | None"
-        auth: "EosAuthorization | None"
+        account: "int"
+        permission: "int"
+        parent: "int"
+        auth: "EosAuthorization"
 
         def __init__(
             self,
             *,
-            account: "int | None" = None,
-            permission: "int | None" = None,
-            parent: "int | None" = None,
-            auth: "EosAuthorization | None" = None,
+            account: "int",
+            permission: "int",
+            parent: "int",
+            auth: "EosAuthorization",
         ) -> None:
             pass
 
@@ -2934,14 +2934,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EosActionDeleteAuth(protobuf.MessageType):
-        account: "int | None"
-        permission: "int | None"
+        account: "int"
+        permission: "int"
 
         def __init__(
             self,
             *,
-            account: "int | None" = None,
-            permission: "int | None" = None,
+            account: "int",
+            permission: "int",
         ) -> None:
             pass
 
@@ -2950,18 +2950,18 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EosActionLinkAuth(protobuf.MessageType):
-        account: "int | None"
-        code: "int | None"
-        type: "int | None"
-        requirement: "int | None"
+        account: "int"
+        code: "int"
+        type: "int"
+        requirement: "int"
 
         def __init__(
             self,
             *,
-            account: "int | None" = None,
-            code: "int | None" = None,
-            type: "int | None" = None,
-            requirement: "int | None" = None,
+            account: "int",
+            code: "int",
+            type: "int",
+            requirement: "int",
         ) -> None:
             pass
 
@@ -2970,16 +2970,16 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EosActionUnlinkAuth(protobuf.MessageType):
-        account: "int | None"
-        code: "int | None"
-        type: "int | None"
+        account: "int"
+        code: "int"
+        type: "int"
 
         def __init__(
             self,
             *,
-            account: "int | None" = None,
-            code: "int | None" = None,
-            type: "int | None" = None,
+            account: "int",
+            code: "int",
+            type: "int",
         ) -> None:
             pass
 
@@ -2988,18 +2988,18 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EosActionNewAccount(protobuf.MessageType):
-        creator: "int | None"
-        name: "int | None"
-        owner: "EosAuthorization | None"
-        active: "EosAuthorization | None"
+        creator: "int"
+        name: "int"
+        owner: "EosAuthorization"
+        active: "EosAuthorization"
 
         def __init__(
             self,
             *,
-            creator: "int | None" = None,
-            name: "int | None" = None,
-            owner: "EosAuthorization | None" = None,
-            active: "EosAuthorization | None" = None,
+            creator: "int",
+            name: "int",
+            owner: "EosAuthorization",
+            active: "EosAuthorization",
         ) -> None:
             pass
 
@@ -3009,13 +3009,13 @@ if TYPE_CHECKING:
 
     class EosActionUnknown(protobuf.MessageType):
         data_size: "int"
-        data_chunk: "bytes | None"
+        data_chunk: "bytes"
 
         def __init__(
             self,
             *,
             data_size: "int",
-            data_chunk: "bytes | None" = None,
+            data_chunk: "bytes",
         ) -> None:
             pass
 
@@ -4247,14 +4247,14 @@ if TYPE_CHECKING:
 
     class NEMGetAddress(protobuf.MessageType):
         address_n: "list[int]"
-        network: "int | None"
+        network: "int"
         show_display: "bool | None"
 
         def __init__(
             self,
             *,
+            network: "int",
             address_n: "list[int] | None" = None,
-            network: "int | None" = None,
             show_display: "bool | None" = None,
         ) -> None:
             pass
@@ -4278,7 +4278,7 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class NEMSignTx(protobuf.MessageType):
-        transaction: "NEMTransactionCommon | None"
+        transaction: "NEMTransactionCommon"
         multisig: "NEMTransactionCommon | None"
         transfer: "NEMTransfer | None"
         cosigning: "bool | None"
@@ -4291,7 +4291,7 @@ if TYPE_CHECKING:
         def __init__(
             self,
             *,
-            transaction: "NEMTransactionCommon | None" = None,
+            transaction: "NEMTransactionCommon",
             multisig: "NEMTransactionCommon | None" = None,
             transfer: "NEMTransfer | None" = None,
             cosigning: "bool | None" = None,
@@ -4359,20 +4359,20 @@ if TYPE_CHECKING:
 
     class NEMTransactionCommon(protobuf.MessageType):
         address_n: "list[int]"
-        network: "int | None"
-        timestamp: "int | None"
-        fee: "int | None"
-        deadline: "int | None"
+        network: "int"
+        timestamp: "int"
+        fee: "int"
+        deadline: "int"
         signer: "bytes | None"
 
         def __init__(
             self,
             *,
+            network: "int",
+            timestamp: "int",
+            fee: "int",
+            deadline: "int",
             address_n: "list[int] | None" = None,
-            network: "int | None" = None,
-            timestamp: "int | None" = None,
-            fee: "int | None" = None,
-            deadline: "int | None" = None,
             signer: "bytes | None" = None,
         ) -> None:
             pass
@@ -4382,8 +4382,8 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class NEMTransfer(protobuf.MessageType):
-        recipient: "str | None"
-        amount: "int | None"
+        recipient: "str"
+        amount: "int"
         payload: "bytes | None"
         public_key: "bytes | None"
         mosaics: "list[NEMMosaic]"
@@ -4391,9 +4391,9 @@ if TYPE_CHECKING:
         def __init__(
             self,
             *,
+            recipient: "str",
+            amount: "int",
             mosaics: "list[NEMMosaic] | None" = None,
-            recipient: "str | None" = None,
-            amount: "int | None" = None,
             payload: "bytes | None" = None,
             public_key: "bytes | None" = None,
         ) -> None:
@@ -4404,18 +4404,18 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class NEMProvisionNamespace(protobuf.MessageType):
-        namespace: "str | None"
+        namespace: "str"
         parent: "str | None"
-        sink: "str | None"
-        fee: "int | None"
+        sink: "str"
+        fee: "int"
 
         def __init__(
             self,
             *,
-            namespace: "str | None" = None,
+            namespace: "str",
+            sink: "str",
+            fee: "int",
             parent: "str | None" = None,
-            sink: "str | None" = None,
-            fee: "int | None" = None,
         ) -> None:
             pass
 
@@ -4424,16 +4424,16 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class NEMMosaicCreation(protobuf.MessageType):
-        definition: "NEMMosaicDefinition | None"
-        sink: "str | None"
-        fee: "int | None"
+        definition: "NEMMosaicDefinition"
+        sink: "str"
+        fee: "int"
 
         def __init__(
             self,
             *,
-            definition: "NEMMosaicDefinition | None" = None,
-            sink: "str | None" = None,
-            fee: "int | None" = None,
+            definition: "NEMMosaicDefinition",
+            sink: "str",
+            fee: "int",
         ) -> None:
             pass
 
@@ -4442,18 +4442,18 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class NEMMosaicSupplyChange(protobuf.MessageType):
-        namespace: "str | None"
-        mosaic: "str | None"
-        type: "NEMSupplyChangeType | None"
-        delta: "int | None"
+        namespace: "str"
+        mosaic: "str"
+        type: "NEMSupplyChangeType"
+        delta: "int"
 
         def __init__(
             self,
             *,
-            namespace: "str | None" = None,
-            mosaic: "str | None" = None,
-            type: "NEMSupplyChangeType | None" = None,
-            delta: "int | None" = None,
+            namespace: "str",
+            mosaic: "str",
+            type: "NEMSupplyChangeType",
+            delta: "int",
         ) -> None:
             pass
 
@@ -4478,14 +4478,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class NEMImportanceTransfer(protobuf.MessageType):
-        mode: "NEMImportanceTransferMode | None"
-        public_key: "bytes | None"
+        mode: "NEMImportanceTransferMode"
+        public_key: "bytes"
 
         def __init__(
             self,
             *,
-            mode: "NEMImportanceTransferMode | None" = None,
-            public_key: "bytes | None" = None,
+            mode: "NEMImportanceTransferMode",
+            public_key: "bytes",
         ) -> None:
             pass
 
@@ -4494,16 +4494,16 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class NEMMosaic(protobuf.MessageType):
-        namespace: "str | None"
-        mosaic: "str | None"
-        quantity: "int | None"
+        namespace: "str"
+        mosaic: "str"
+        quantity: "int"
 
         def __init__(
             self,
             *,
-            namespace: "str | None" = None,
-            mosaic: "str | None" = None,
-            quantity: "int | None" = None,
+            namespace: "str",
+            mosaic: "str",
+            quantity: "int",
         ) -> None:
             pass
 
@@ -4514,38 +4514,38 @@ if TYPE_CHECKING:
     class NEMMosaicDefinition(protobuf.MessageType):
         name: "str | None"
         ticker: "str | None"
-        namespace: "str | None"
-        mosaic: "str | None"
+        namespace: "str"
+        mosaic: "str"
         divisibility: "int | None"
-        levy: "NEMMosaicLevy | None"
-        fee: "int | None"
-        levy_address: "str | None"
-        levy_namespace: "str | None"
-        levy_mosaic: "str | None"
+        levy: "NEMMosaicLevy"
+        fee: "int"
+        levy_address: "str"
+        levy_namespace: "str"
+        levy_mosaic: "str"
         supply: "int | None"
         mutable_supply: "bool | None"
         transferable: "bool | None"
-        description: "str | None"
+        description: "str"
         networks: "list[int]"
 
         def __init__(
             self,
             *,
+            namespace: "str",
+            mosaic: "str",
+            levy: "NEMMosaicLevy",
+            fee: "int",
+            levy_address: "str",
+            levy_namespace: "str",
+            levy_mosaic: "str",
+            description: "str",
             networks: "list[int] | None" = None,
             name: "str | None" = None,
             ticker: "str | None" = None,
-            namespace: "str | None" = None,
-            mosaic: "str | None" = None,
             divisibility: "int | None" = None,
-            levy: "NEMMosaicLevy | None" = None,
-            fee: "int | None" = None,
-            levy_address: "str | None" = None,
-            levy_namespace: "str | None" = None,
-            levy_mosaic: "str | None" = None,
             supply: "int | None" = None,
             mutable_supply: "bool | None" = None,
             transferable: "bool | None" = None,
-            description: "str | None" = None,
         ) -> None:
             pass
 
@@ -4554,14 +4554,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class NEMCosignatoryModification(protobuf.MessageType):
-        type: "NEMModificationType | None"
-        public_key: "bytes | None"
+        type: "NEMModificationType"
+        public_key: "bytes"
 
         def __init__(
             self,
             *,
-            type: "NEMModificationType | None" = None,
-            public_key: "bytes | None" = None,
+            type: "NEMModificationType",
+            public_key: "bytes",
         ) -> None:
             pass
 

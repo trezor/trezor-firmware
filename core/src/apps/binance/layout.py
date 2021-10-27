@@ -1,3 +1,4 @@
+from trezor import wire
 from trezor.enums import BinanceOrderSide, ButtonRequestType
 from trezor.messages import (
     BinanceCancelMsg,
@@ -12,11 +13,14 @@ from trezor.ui.layouts.tt.altcoin import confirm_transfer_binance
 from . import helpers
 
 
-async def require_confirm_transfer(ctx, msg: BinanceTransferMsg):
+async def require_confirm_transfer(ctx: wire.Context, msg: BinanceTransferMsg) -> None:
     items = []
 
-    def make_input_output_pages(msg: BinanceInputOutput, direction):
+    def make_input_output_pages(msg: BinanceInputOutput, direction: str) -> None:
+        assert msg.address is not None
         for coin in msg.coins:
+            assert coin.denom is not None
+            assert coin.amount is not None
             items.append(
                 (
                     direction,
@@ -34,7 +38,7 @@ async def require_confirm_transfer(ctx, msg: BinanceTransferMsg):
     await confirm_transfer_binance(ctx, items)
 
 
-async def require_confirm_cancel(ctx, msg: BinanceCancelMsg):
+async def require_confirm_cancel(ctx: wire.Context, msg: BinanceCancelMsg) -> None:
     await confirm_properties(
         ctx,
         "confirm_cancel",
@@ -49,7 +53,10 @@ async def require_confirm_cancel(ctx, msg: BinanceCancelMsg):
     )
 
 
-async def require_confirm_order(ctx, msg: BinanceOrderMsg):
+async def require_confirm_order(ctx: wire.Context, msg: BinanceOrderMsg) -> None:
+    # TODO: could set required in protobuf
+    assert msg.quantity is not None
+    assert msg.price is not None
     if msg.side == BinanceOrderSide.BUY:
         side = "Buy"
     elif msg.side == BinanceOrderSide.SELL:

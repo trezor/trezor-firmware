@@ -22,15 +22,19 @@ from ..helpers import (
 from ..layout import require_confirm_final, require_confirm_text
 from ..mosaic.helpers import get_mosaic_definition, is_nem_xem_mosaic
 
+if False:
+    from trezor.wire import Context
+
 
 async def ask_transfer(
-    ctx,
+    ctx: Context,
     common: NEMTransactionCommon,
     transfer: NEMTransfer,
     payload: bytes,
     encrypted: bool,
-):
+) -> None:
     if payload:
+        assert transfer.payload is not None
         await _require_confirm_payload(ctx, transfer.payload, encrypted)
     for mosaic in transfer.mosaics:
         await ask_transfer_mosaic(ctx, common, transfer, mosaic)
@@ -39,8 +43,8 @@ async def ask_transfer(
 
 
 async def ask_transfer_mosaic(
-    ctx, common: NEMTransactionCommon, transfer: NEMTransfer, mosaic: NEMMosaic
-):
+    ctx: Context, common: NEMTransactionCommon, transfer: NEMTransfer, mosaic: NEMMosaic
+) -> None:
     if is_nem_xem_mosaic(mosaic.namespace, mosaic.mosaic):
         return
 
@@ -96,7 +100,7 @@ async def ask_transfer_mosaic(
         )
 
 
-def _get_xem_amount(transfer: NEMTransfer):
+def _get_xem_amount(transfer: NEMTransfer) -> int:
     # if mosaics are empty the transfer.amount denotes the xem amount
     if not transfer.mosaics:
         return transfer.amount
@@ -108,7 +112,7 @@ def _get_xem_amount(transfer: NEMTransfer):
     return 0
 
 
-def _get_levy_msg(mosaic_definition, quantity: int, network: int) -> str:
+def _get_levy_msg(mosaic_definition: dict, quantity: int, network: int) -> str:
     levy_definition = get_mosaic_definition(
         mosaic_definition["levy_namespace"], mosaic_definition["levy_mosaic"], network
     )
@@ -125,8 +129,8 @@ def _get_levy_msg(mosaic_definition, quantity: int, network: int) -> str:
 
 
 async def ask_importance_transfer(
-    ctx, common: NEMTransactionCommon, imp: NEMImportanceTransfer
-):
+    ctx: Context, common: NEMTransactionCommon, imp: NEMImportanceTransfer
+) -> None:
     if imp.mode == NEMImportanceTransferMode.ImportanceTransfer_Activate:
         m = "Activate"
     else:
@@ -135,7 +139,7 @@ async def ask_importance_transfer(
     await require_confirm_final(ctx, common.fee)
 
 
-async def _require_confirm_transfer(ctx, recipient, value):
+async def _require_confirm_transfer(ctx: Context, recipient: str, value: int) -> None:
     await confirm_output(
         ctx,
         recipient,
@@ -146,16 +150,13 @@ async def _require_confirm_transfer(ctx, recipient, value):
     )
 
 
-async def _require_confirm_payload(ctx, payload: bytearray, encrypt=False):
-    payload = bytes(payload).decode()
-    subtitle = "Encrypted:" if encrypt else "Unencrypted:"
-
+async def _require_confirm_payload(ctx: Context, payload: bytearray | bytes, encrypt: bool = False) -> None:
     await confirm_text(
         ctx,
         "confirm_payload",
         title="Confirm payload",
-        description=subtitle,
-        data=payload,
+        description="Encrypted:" if encrypt else "Unencrypted:",
+        data=bytes(payload).decode(),
         icon_color=ui.GREEN if encrypt else ui.RED,
         br_code=ButtonRequestType.ConfirmOutput,
     )

@@ -8,9 +8,14 @@ from . import CURVE, PATTERNS, SLIP44_ID
 from .helpers import check_path, get_network_str
 from .validators import validate_network
 
+if False:
+    from apps.common.keychain import Keychain
+    from trezor.wire import Context
+    from trezor.messages import NEMGetAddress
+
 
 @with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
-async def get_address(ctx, msg, keychain):
+async def get_address(ctx: Context, msg: NEMGetAddress, keychain: Keychain) -> NEMAddress:
     network = validate_network(msg.network)
     await validate_path(
         ctx, keychain, msg.address_n, check_path(msg.address_n, msg.network)

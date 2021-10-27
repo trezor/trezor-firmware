@@ -7,6 +7,10 @@ from trezor.utils import BufferReader, ensure
 from apps.common.readers import read_uint32_be
 from apps.common.writers import write_bytes_unchecked, write_uint8
 
+if False:
+    from typing import Optional
+
+
 TEZOS_AMOUNT_DECIMALS = const(6)
 TEZOS_ED25519_ADDRESS_PREFIX = "tz1"
 TEZOS_ORIGINATED_ADDRESS_PREFIX = "KT1"
@@ -82,21 +86,21 @@ OP_TAG_DELEGATION = const(110)
 EP_TAG_NAMED = const(255)
 
 
-def base58_encode_check(payload, prefix=None):
+def base58_encode_check(payload: bytes, prefix: Optional[str] = None) -> str:
     result = payload
     if prefix is not None:
         result = TEZOS_PREFIX_BYTES[prefix] + payload
     return base58.encode_check(result)
 
 
-def base58_decode_check(enc, prefix=None):
+def base58_decode_check(enc: str, prefix: Optional[str] = None) -> bytes:
     decoded = base58.decode_check(enc)
     if prefix is not None:
         decoded = decoded[len(TEZOS_PREFIX_BYTES[prefix]) :]
     return decoded
 
 
-def write_bool(w: bytearray, boolean: bool):
+def write_bool(w: bytearray, boolean: bool) -> None:
     if boolean:
         write_uint8(w, 255)
     else:
@@ -104,7 +108,7 @@ def write_bool(w: bytearray, boolean: bool):
 
 
 def write_instruction(w: bytearray, instruction: str) -> int:
-    write_bytes_unchecked(w, MICHELSON_INSTRUCTION_BYTES[instruction])
+    return write_bytes_unchecked(w, MICHELSON_INSTRUCTION_BYTES[instruction])
 
 
 def check_script_size(script: bytes) -> None:

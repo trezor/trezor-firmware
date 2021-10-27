@@ -3,13 +3,13 @@ import storage.device
 from trezor import config, wire
 from trezor.crypto import bip39, slip39
 from trezor.enums import BackupType
-from trezor.messages import Success
+from trezor.messages import LoadDevice, Success
 from trezor.ui.layouts import confirm_action
 
 from apps.management import backup_types
 
 
-async def load_device(ctx, msg):
+async def load_device(ctx: wire.Context, msg: LoadDevice) -> Success:
     word_count = _validate(msg)
     is_slip39 = backup_types.is_slip39_word_count(word_count)
 
@@ -42,6 +42,7 @@ async def load_device(ctx, msg):
         needs_backup=msg.needs_backup is True,
         no_backup=msg.no_backup is True,
     )
+    assert msg.passphrase_protection is not None
     storage.device.set_passphrase_enabled(msg.passphrase_protection)
     storage.device.set_label(msg.label or "")
     if msg.pin:
@@ -50,7 +51,7 @@ async def load_device(ctx, msg):
     return Success(message="Device loaded")
 
 
-def _validate(msg) -> int:
+def _validate(msg: LoadDevice) -> int:
     if storage.device.is_initialized():
         raise wire.UnexpectedMessage("Already initialized")
 
@@ -67,7 +68,7 @@ def _validate(msg) -> int:
     return word_count
 
 
-async def _warn(ctx: wire.Context):
+async def _warn(ctx: wire.Context) -> None:
     await confirm_action(
         ctx,
         "warn_loading_seed",

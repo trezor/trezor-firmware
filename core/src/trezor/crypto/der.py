@@ -79,7 +79,7 @@ def read_int(r: BufferReader) -> memoryview:
     return r.read_memoryview(n)
 
 
-def encode_seq(seq: tuple) -> bytes:
+def encode_seq(seq: tuple[bytes, ...]) -> bytes:
     # Preallocate space for a signature, which is all that this function ever encodes.
     buffer = empty_bytearray(MAX_DER_SIGNATURE_LENGTH)
     buffer.append(0x30)

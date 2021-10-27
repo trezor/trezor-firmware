@@ -10,9 +10,12 @@ from . import CURVE, PATTERNS, SLIP44_ID, mosaic, multisig, namespace, transfer
 from .helpers import NEM_HASH_ALG, check_path
 from .validators import validate
 
+if False:
+    from apps.common.keychain import Keychain
+
 
 @with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
-async def sign_tx(ctx, msg: NEMSignTx, keychain):
+async def sign_tx(ctx: wire.Context, msg: NEMSignTx, keychain: Keychain) -> NEMSignedTx:
     validate(msg)
 
     await validate_path(
@@ -25,6 +28,7 @@ async def sign_tx(ctx, msg: NEMSignTx, keychain):
     node = keychain.derive(msg.transaction.address_n)
 
     if msg.multisig:
+        assert msg.multisig.signer is not None
         public_key = msg.multisig.signer
         common = msg.multisig
         await multisig.ask(ctx, msg)
@@ -58,6 +62,7 @@ async def sign_tx(ctx, msg: NEMSignTx, keychain):
     if msg.multisig:
         # wrap transaction in multisig wrapper
         if msg.cosigning:
+            assert msg.multisig.signer is not None
             tx = multisig.cosign(
                 seed.remove_ed25519_prefix(node.public_key()),
                 msg.transaction,

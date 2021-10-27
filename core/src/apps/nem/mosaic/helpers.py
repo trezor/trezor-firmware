@@ -6,7 +6,7 @@ def get_mosaic_definition(namespace_name: str, mosaic_name: str, network: int) -
         if namespace_name == m["namespace"] and mosaic_name == m["mosaic"]:
             if ("networks" not in m) or (network in m["networks"]):
                 return m
-    return None
+    return {}
 
 
 def is_nem_xem_mosaic(namespace_name: str, mosaic_name: str) -> bool:

@@ -16,10 +16,10 @@ class TestNemMosaic(unittest.TestCase):
         self.assertEqual(m["ticker"], " XEM")
 
         m = get_mosaic_definition("nem", "xxx", 104)
-        self.assertEqual(m, None)
+        self.assertEqual(m, {})
 
         m = get_mosaic_definition("aaaa", "xxx", 104)
-        self.assertEqual(m, None)
+        self.assertEqual(m, {})
 
         m = get_mosaic_definition("pacnem", "cheese", 104)
         self.assertEqual(m["name"], "PacNEM Score Tokens")
