@@ -20,6 +20,10 @@ SIGHASH_ALL = const(0x01)
 # The number of bip32 levels used in a wallet (chain and address)
 BIP32_WALLET_DEPTH = const(2)
 
+# Bitcoin opcodes
+OP_0 = const(0x00)
+OP_1 = const(0x51)
+
 # supported witness versions for bech32 addresses
 _BECH32_WITVERS = (0, 1)
 
@@ -48,6 +52,7 @@ CHANGE_OUTPUT_SCRIPT_TYPES = tuple(CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES.keys())
 SEGWIT_INPUT_SCRIPT_TYPES = (
     InputScriptType.SPENDP2SHWITNESS,
     InputScriptType.SPENDWITNESS,
+    InputScriptType.SPENDTAPROOT,
 )
 
 SEGWIT_OUTPUT_SCRIPT_TYPES = (
@@ -101,10 +106,16 @@ def input_is_segwit(txi: TxInput) -> bool:
     )
 
 
-def input_is_nonsegwit(txi: TxInput) -> bool:
-    return txi.script_type in NONSEGWIT_INPUT_SCRIPT_TYPES or (
-        txi.script_type == InputScriptType.EXTERNAL and txi.witness is None
-    )
+def input_is_taproot(txi: TxInput) -> bool:
+    if txi.script_type == InputScriptType.SPENDTAPROOT:
+        return True
+
+    if txi.script_type == InputScriptType.EXTERNAL:
+        assert txi.script_pubkey is not None
+        if txi.script_pubkey[0] == OP_1:
+            return True
+
+    return False
 
 
 def input_is_external(txi: TxInput) -> bool:

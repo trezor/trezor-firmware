@@ -6,7 +6,7 @@ from trezor.messages import PrevTx, SignTx, TxInput
 from apps.common.writers import write_bitcoin_varint
 
 from .. import multisig, writers
-from ..common import input_is_nonsegwit
+from ..common import NONSEGWIT_INPUT_SCRIPT_TYPES
 from . import helpers
 from .bitcoin import Bitcoin
 
@@ -21,7 +21,7 @@ class Bitcoinlike(Bitcoin):
     async def sign_nonsegwit_bip143_input(self, i_sign: int) -> None:
         txi = await helpers.request_tx_input(self.tx_req, i_sign, self.coin)
 
-        if not input_is_nonsegwit(txi):
+        if txi.script_type not in NONSEGWIT_INPUT_SCRIPT_TYPES:
             raise wire.ProcessError("Transaction has changed during signing")
         public_key, signature = self.sign_bip143_input(txi)
 
