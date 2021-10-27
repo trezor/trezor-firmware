@@ -56,8 +56,14 @@ async def require_confirm_timebounds(ctx: Context, start: int, end: int) -> None
         "confirm_timebounds",
         title="Confirm timebounds",
         props=(
-            ("Valid from (UTC)", str(start) if start > 0 else "[no restriction]"),
-            ("Valid to (UTC)", str(end) if end > 0 else "[no restriction]"),
+            (
+                "Valid from (UTC)",
+                strings.format_timestamp(start) if start > 0 else "[no restriction]",
+            ),
+            (
+                "Valid to (UTC)",
+                strings.format_timestamp(end) if end > 0 else "[no restriction]",
+            ),
         ),
     )
 
