@@ -646,6 +646,7 @@
 "test_msg_signtx_decred.py-test_spend_from_stake_generation_and_revocation_decred": "a8a1451c9ab4dea8228665b6e008a4aa806007898b1b45ab0ef47df33501c705",
 "test_msg_signtx_external.py::test_p2pkh_presigned": "8dd8089941ceb0d82c9425c69d54240f99e3ae7932ef24acd49313d28389b683",
 "test_msg_signtx_external.py::test_p2pkh_with_proof": "c09de07fbbf1e047442180e2facb5482d06a1a428891b875b7dd93c9e4704ae1",
+"test_msg_signtx_external.py::test_p2tr_external_presigned": "d4855cb0ec8bbb713d3bb27d2b08cf42e2128bae06b2be385f44a107d457ad6d",
 "test_msg_signtx_external.py::test_p2wpkh_in_p2sh_presigned": "a5a48f7d133331109339d1dbd417d31f64e58859742263d472cdff8c3ea8e7e1",
 "test_msg_signtx_external.py::test_p2wpkh_in_p2sh_with_proof": "c09de07fbbf1e047442180e2facb5482d06a1a428891b875b7dd93c9e4704ae1",
 "test_msg_signtx_external.py::test_p2wpkh_presigned": "4608478b1d61415cf0ec93a0ea4397c35d17a91d4b6d25e9c024b77330e398eb",

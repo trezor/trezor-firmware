@@ -52,6 +52,12 @@ TXHASH_65b768 = bytes.fromhex(
 TXHASH_a345b8 = bytes.fromhex(
     "a345b85759b385c6446055e4c3baa77e8161a65009dc009489b48aa6587ce348"
 )
+TXHASH_3ac32e = bytes.fromhex(
+    "3ac32e90831d79385eee49d6030a2123cd9d009fe8ffc3d470af9a6a777a119b"
+)
+TXHASH_df862e = bytes.fromhex(
+    "df862e31da31ff84addd392f6aa89af18978a398ea258e4901ae72894b66679f"
+)
 
 
 @pytest.mark.skip_t1
@@ -425,6 +431,96 @@ def test_p2wsh_external_presigned(client):
         with pytest.raises(TrezorFailure, match="Invalid signature"):
             btc.sign_tx(
                 client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_CACHE_TESTNET
+            )
+
+
+@pytest.mark.skip_t1
+def test_p2tr_external_presigned(client):
+    inp1 = proto.TxInputType(
+        # tb1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq8s8a5u
+        address_n=parse_path("86'/1'/0'/0/0"),
+        amount=6800,
+        prev_hash=TXHASH_df862e,
+        prev_index=0,
+        script_type=proto.InputScriptType.SPENDTAPROOT,
+    )
+    inp2 = proto.TxInputType(
+        # tb1p8tvmvsvhsee73rhym86wt435qrqm92psfsyhy6a3n5gw455znnpqm8wald
+        # m/86'/1'/0'/0/1 for "all all ... all" seed.
+        amount=13000,
+        prev_hash=TXHASH_3ac32e,
+        prev_index=1,
+        script_pubkey=bytes.fromhex(
+            "51203ad9b641978673e88ee4d9f4e5d63400c1b2a8304c09726bb19d10ead2829cc2"
+        ),
+        script_type=proto.InputScriptType.EXTERNAL,
+        witness=bytearray.fromhex(
+            "01409956e47403278bf76eecbbbc3af0c2731d8347763825248a2e0f39aca5a684a7d5054e7222a1033fb5864a886180f1a8c64adab12433c78298d1f83e4c8f46e1"
+        ),
+    )
+    out1 = proto.TxOutputType(
+        # 84'/1'/1'/0/0
+        address="tb1q7r9yvcdgcl6wmtta58yxf29a8kc96jkyxl7y88",
+        amount=15000,
+        script_type=proto.OutputScriptType.PAYTOADDRESS,
+    )
+    out2 = proto.TxOutputType(
+        # tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c
+        address_n=parse_path("86'/1'/0'/1/0"),
+        script_type=proto.OutputScriptType.PAYTOTAPROOT,
+        amount=6800 + 13000 - 200 - 15000,
+    )
+    with client:
+        client.set_expected_responses(
+            [
+                request_input(0),
+                request_input(1),
+                request_output(0),
+                proto.ButtonRequest(code=B.ConfirmOutput),
+                request_output(1),
+                proto.ButtonRequest(code=B.SignTx),
+                request_input(1),
+                request_input(0),
+                request_input(1),
+                request_output(0),
+                request_output(1),
+                request_input(0),
+                request_input(1),
+                request_finished(),
+            ]
+        )
+        _, serialized_tx = btc.sign_tx(
+            client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_CACHE_TESTNET
+        )
+
+    assert (
+        serialized_tx.hex()
+        == "010000000001029f67664b8972ae01498e25ea98a37889f19aa86a2f39ddad84ff31da312e86df0000000000ffffffff9b117a776a9aaf70d4c3ffe89f009dcd23210a03d649ee5e38791d83902ec33a0100000000ffffffff02983a000000000000160014f0ca4661a8c7f4edad7da1c864a8bd3db05d4ac4f8110000000000002251209a9af24b396f593b34e23fefba6b417a55c5ee3f430c3837379fcb5246ab36d70140b51992353d2f99b7b620c0882cb06694996f1b6c7e62a3c1d3036e0f896fbf0b92f3d9aeab94f2454809a501715667345f702c8214693f469225de5f6636b86b01409956e47403278bf76eecbbbc3af0c2731d8347763825248a2e0f39aca5a684a7d5054e7222a1033fb5864a886180f1a8c64adab12433c78298d1f83e4c8f46e100000000"
+    )
+
+    # Test corrupted signature in witness.
+    inp2.witness[10] ^= 1
+    with client:
+        client.set_expected_responses(
+            [
+                request_input(0),
+                request_input(1),
+                request_output(0),
+                proto.ButtonRequest(code=B.ConfirmOutput),
+                request_output(1),
+                proto.ButtonRequest(code=B.SignTx),
+                request_input(1),
+                proto.Failure(code=proto.FailureType.DataError),
+            ]
+        )
+
+        with pytest.raises(TrezorFailure, match="Invalid signature"):
+            btc.sign_tx(
+                client,
+                "Testnet",
+                [inp1, inp2],
+                [out1, out2],
+                prev_txes=TX_CACHE_TESTNET,
             )
 
 
