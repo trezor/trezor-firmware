@@ -223,7 +223,7 @@ class Bitcoin:
             if i in self.segwit:
                 if i in self.external:
                     txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
-                    self.serialized_tx.extend(txi.witness or b"")
+                    self.serialized_tx.extend(txi.witness or b"\0")
                 else:
                     await self.sign_segwit_input(i)
             else:
@@ -455,7 +455,7 @@ class Bitcoin:
         # STAGE_REQUEST_SEGWIT_INPUT in legacy
         txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
 
-        if not input_is_segwit(txi):
+        if txi.script_type not in common.SEGWIT_INPUT_SCRIPT_TYPES:
             raise wire.ProcessError("Transaction has changed during signing")
         self.tx_info.check_input(txi)
 
@@ -491,8 +491,7 @@ class Bitcoin:
     async def sign_segwit_input(self, i: int) -> None:
         # STAGE_REQUEST_SEGWIT_WITNESS in legacy
         txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
-
-        if not input_is_segwit(txi):
+        if txi.script_type not in common.SEGWIT_INPUT_SCRIPT_TYPES:
             raise wire.ProcessError("Transaction has changed during signing")
 
         public_key, signature = self.sign_bip143_input(txi)
