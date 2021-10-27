@@ -39,6 +39,8 @@ def get_network_str(network: int) -> str:
     elif network == NEM_NETWORK_MIJIN:
         return "Mijin"
 
+    raise ValueError  # no valid network
+
 
 def check_path(path: paths.Bip32Path, network: int) -> bool:
     """Validates that the appropriate coin_type is set for the given network."""

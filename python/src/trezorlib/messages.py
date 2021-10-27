@@ -3775,18 +3775,18 @@ class EosSignTx(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 602
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        2: protobuf.Field("chain_id", "bytes", repeated=False, required=False),
-        3: protobuf.Field("header", "EosTxHeader", repeated=False, required=False),
-        4: protobuf.Field("num_actions", "uint32", repeated=False, required=False),
+        2: protobuf.Field("chain_id", "bytes", repeated=False, required=True),
+        3: protobuf.Field("header", "EosTxHeader", repeated=False, required=True),
+        4: protobuf.Field("num_actions", "uint32", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
+        chain_id: "bytes",
+        header: "EosTxHeader",
+        num_actions: "int",
         address_n: Optional[List["int"]] = None,
-        chain_id: Optional["bytes"] = None,
-        header: Optional["EosTxHeader"] = None,
-        num_actions: Optional["int"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.chain_id = chain_id
@@ -3811,7 +3811,7 @@ class EosTxActionRequest(protobuf.MessageType):
 class EosTxActionAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 604
     FIELDS = {
-        1: protobuf.Field("common", "EosActionCommon", repeated=False, required=False),
+        1: protobuf.Field("common", "EosActionCommon", repeated=False, required=True),
         2: protobuf.Field("transfer", "EosActionTransfer", repeated=False, required=False),
         3: protobuf.Field("delegate", "EosActionDelegate", repeated=False, required=False),
         4: protobuf.Field("undelegate", "EosActionUndelegate", repeated=False, required=False),
@@ -3831,7 +3831,7 @@ class EosTxActionAck(protobuf.MessageType):
     def __init__(
         self,
         *,
-        common: Optional["EosActionCommon"] = None,
+        common: "EosActionCommon",
         transfer: Optional["EosActionTransfer"] = None,
         delegate: Optional["EosActionDelegate"] = None,
         undelegate: Optional["EosActionUndelegate"] = None,
@@ -3910,15 +3910,15 @@ class EosTxHeader(protobuf.MessageType):
 class EosAsset(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("amount", "sint64", repeated=False, required=False),
-        2: protobuf.Field("symbol", "uint64", repeated=False, required=False),
+        1: protobuf.Field("amount", "sint64", repeated=False, required=True),
+        2: protobuf.Field("symbol", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        amount: Optional["int"] = None,
-        symbol: Optional["int"] = None,
+        amount: "int",
+        symbol: "int",
     ) -> None:
         self.amount = amount
         self.symbol = symbol
@@ -3927,15 +3927,15 @@ class EosAsset(protobuf.MessageType):
 class EosPermissionLevel(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("actor", "uint64", repeated=False, required=False),
-        2: protobuf.Field("permission", "uint64", repeated=False, required=False),
+        1: protobuf.Field("actor", "uint64", repeated=False, required=True),
+        2: protobuf.Field("permission", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        actor: Optional["int"] = None,
-        permission: Optional["int"] = None,
+        actor: "int",
+        permission: "int",
     ) -> None:
         self.actor = actor
         self.permission = permission
@@ -3967,15 +3967,15 @@ class EosAuthorizationKey(protobuf.MessageType):
 class EosAuthorizationAccount(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("account", "EosPermissionLevel", repeated=False, required=False),
-        2: protobuf.Field("weight", "uint32", repeated=False, required=False),
+        1: protobuf.Field("account", "EosPermissionLevel", repeated=False, required=True),
+        2: protobuf.Field("weight", "uint32", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        account: Optional["EosPermissionLevel"] = None,
-        weight: Optional["int"] = None,
+        account: "EosPermissionLevel",
+        weight: "int",
     ) -> None:
         self.account = account
         self.weight = weight
@@ -3984,15 +3984,15 @@ class EosAuthorizationAccount(protobuf.MessageType):
 class EosAuthorizationWait(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("wait_sec", "uint32", repeated=False, required=False),
-        2: protobuf.Field("weight", "uint32", repeated=False, required=False),
+        1: protobuf.Field("wait_sec", "uint32", repeated=False, required=True),
+        2: protobuf.Field("weight", "uint32", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        wait_sec: Optional["int"] = None,
-        weight: Optional["int"] = None,
+        wait_sec: "int",
+        weight: "int",
     ) -> None:
         self.wait_sec = wait_sec
         self.weight = weight
@@ -4001,7 +4001,7 @@ class EosAuthorizationWait(protobuf.MessageType):
 class EosAuthorization(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("threshold", "uint32", repeated=False, required=False),
+        1: protobuf.Field("threshold", "uint32", repeated=False, required=True),
         2: protobuf.Field("keys", "EosAuthorizationKey", repeated=True, required=False),
         3: protobuf.Field("accounts", "EosAuthorizationAccount", repeated=True, required=False),
         4: protobuf.Field("waits", "EosAuthorizationWait", repeated=True, required=False),
@@ -4010,10 +4010,10 @@ class EosAuthorization(protobuf.MessageType):
     def __init__(
         self,
         *,
+        threshold: "int",
         keys: Optional[List["EosAuthorizationKey"]] = None,
         accounts: Optional[List["EosAuthorizationAccount"]] = None,
         waits: Optional[List["EosAuthorizationWait"]] = None,
-        threshold: Optional["int"] = None,
     ) -> None:
         self.keys = keys if keys is not None else []
         self.accounts = accounts if accounts is not None else []
@@ -4024,17 +4024,17 @@ class EosAuthorization(protobuf.MessageType):
 class EosActionCommon(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("account", "uint64", repeated=False, required=False),
-        2: protobuf.Field("name", "uint64", repeated=False, required=False),
+        1: protobuf.Field("account", "uint64", repeated=False, required=True),
+        2: protobuf.Field("name", "uint64", repeated=False, required=True),
         3: protobuf.Field("authorization", "EosPermissionLevel", repeated=True, required=False),
     }
 
     def __init__(
         self,
         *,
+        account: "int",
+        name: "int",
         authorization: Optional[List["EosPermissionLevel"]] = None,
-        account: Optional["int"] = None,
-        name: Optional["int"] = None,
     ) -> None:
         self.authorization = authorization if authorization is not None else []
         self.account = account
@@ -4044,19 +4044,19 @@ class EosActionCommon(protobuf.MessageType):
 class EosActionTransfer(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("sender", "uint64", repeated=False, required=False),
-        2: protobuf.Field("receiver", "uint64", repeated=False, required=False),
-        3: protobuf.Field("quantity", "EosAsset", repeated=False, required=False),
-        4: protobuf.Field("memo", "string", repeated=False, required=False),
+        1: protobuf.Field("sender", "uint64", repeated=False, required=True),
+        2: protobuf.Field("receiver", "uint64", repeated=False, required=True),
+        3: protobuf.Field("quantity", "EosAsset", repeated=False, required=True),
+        4: protobuf.Field("memo", "string", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        sender: Optional["int"] = None,
-        receiver: Optional["int"] = None,
-        quantity: Optional["EosAsset"] = None,
-        memo: Optional["str"] = None,
+        sender: "int",
+        receiver: "int",
+        quantity: "EosAsset",
+        memo: "str",
     ) -> None:
         self.sender = sender
         self.receiver = receiver
@@ -4067,21 +4067,21 @@ class EosActionTransfer(protobuf.MessageType):
 class EosActionDelegate(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("sender", "uint64", repeated=False, required=False),
-        2: protobuf.Field("receiver", "uint64", repeated=False, required=False),
-        3: protobuf.Field("net_quantity", "EosAsset", repeated=False, required=False),
-        4: protobuf.Field("cpu_quantity", "EosAsset", repeated=False, required=False),
-        5: protobuf.Field("transfer", "bool", repeated=False, required=False),
+        1: protobuf.Field("sender", "uint64", repeated=False, required=True),
+        2: protobuf.Field("receiver", "uint64", repeated=False, required=True),
+        3: protobuf.Field("net_quantity", "EosAsset", repeated=False, required=True),
+        4: protobuf.Field("cpu_quantity", "EosAsset", repeated=False, required=True),
+        5: protobuf.Field("transfer", "bool", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        sender: Optional["int"] = None,
-        receiver: Optional["int"] = None,
-        net_quantity: Optional["EosAsset"] = None,
-        cpu_quantity: Optional["EosAsset"] = None,
-        transfer: Optional["bool"] = None,
+        sender: "int",
+        receiver: "int",
+        net_quantity: "EosAsset",
+        cpu_quantity: "EosAsset",
+        transfer: "bool",
     ) -> None:
         self.sender = sender
         self.receiver = receiver
@@ -4093,19 +4093,19 @@ class EosActionDelegate(protobuf.MessageType):
 class EosActionUndelegate(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("sender", "uint64", repeated=False, required=False),
-        2: protobuf.Field("receiver", "uint64", repeated=False, required=False),
-        3: protobuf.Field("net_quantity", "EosAsset", repeated=False, required=False),
-        4: protobuf.Field("cpu_quantity", "EosAsset", repeated=False, required=False),
+        1: protobuf.Field("sender", "uint64", repeated=False, required=True),
+        2: protobuf.Field("receiver", "uint64", repeated=False, required=True),
+        3: protobuf.Field("net_quantity", "EosAsset", repeated=False, required=True),
+        4: protobuf.Field("cpu_quantity", "EosAsset", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        sender: Optional["int"] = None,
-        receiver: Optional["int"] = None,
-        net_quantity: Optional["EosAsset"] = None,
-        cpu_quantity: Optional["EosAsset"] = None,
+        sender: "int",
+        receiver: "int",
+        net_quantity: "EosAsset",
+        cpu_quantity: "EosAsset",
     ) -> None:
         self.sender = sender
         self.receiver = receiver
@@ -4116,13 +4116,13 @@ class EosActionUndelegate(protobuf.MessageType):
 class EosActionRefund(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("owner", "uint64", repeated=False, required=False),
+        1: protobuf.Field("owner", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        owner: Optional["int"] = None,
+        owner: "int",
     ) -> None:
         self.owner = owner
 
@@ -4130,17 +4130,17 @@ class EosActionRefund(protobuf.MessageType):
 class EosActionBuyRam(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("payer", "uint64", repeated=False, required=False),
-        2: protobuf.Field("receiver", "uint64", repeated=False, required=False),
-        3: protobuf.Field("quantity", "EosAsset", repeated=False, required=False),
+        1: protobuf.Field("payer", "uint64", repeated=False, required=True),
+        2: protobuf.Field("receiver", "uint64", repeated=False, required=True),
+        3: protobuf.Field("quantity", "EosAsset", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        payer: Optional["int"] = None,
-        receiver: Optional["int"] = None,
-        quantity: Optional["EosAsset"] = None,
+        payer: "int",
+        receiver: "int",
+        quantity: "EosAsset",
     ) -> None:
         self.payer = payer
         self.receiver = receiver
@@ -4150,17 +4150,17 @@ class EosActionBuyRam(protobuf.MessageType):
 class EosActionBuyRamBytes(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("payer", "uint64", repeated=False, required=False),
-        2: protobuf.Field("receiver", "uint64", repeated=False, required=False),
-        3: protobuf.Field("bytes", "uint32", repeated=False, required=False),
+        1: protobuf.Field("payer", "uint64", repeated=False, required=True),
+        2: protobuf.Field("receiver", "uint64", repeated=False, required=True),
+        3: protobuf.Field("bytes", "uint32", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        payer: Optional["int"] = None,
-        receiver: Optional["int"] = None,
-        bytes: Optional["int"] = None,
+        payer: "int",
+        receiver: "int",
+        bytes: "int",
     ) -> None:
         self.payer = payer
         self.receiver = receiver
@@ -4170,15 +4170,15 @@ class EosActionBuyRamBytes(protobuf.MessageType):
 class EosActionSellRam(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("account", "uint64", repeated=False, required=False),
-        2: protobuf.Field("bytes", "uint64", repeated=False, required=False),
+        1: protobuf.Field("account", "uint64", repeated=False, required=True),
+        2: protobuf.Field("bytes", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        account: Optional["int"] = None,
-        bytes: Optional["int"] = None,
+        account: "int",
+        bytes: "int",
     ) -> None:
         self.account = account
         self.bytes = bytes
@@ -4187,17 +4187,17 @@ class EosActionSellRam(protobuf.MessageType):
 class EosActionVoteProducer(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("voter", "uint64", repeated=False, required=False),
-        2: protobuf.Field("proxy", "uint64", repeated=False, required=False),
+        1: protobuf.Field("voter", "uint64", repeated=False, required=True),
+        2: protobuf.Field("proxy", "uint64", repeated=False, required=True),
         3: protobuf.Field("producers", "uint64", repeated=True, required=False),
     }
 
     def __init__(
         self,
         *,
+        voter: "int",
+        proxy: "int",
         producers: Optional[List["int"]] = None,
-        voter: Optional["int"] = None,
-        proxy: Optional["int"] = None,
     ) -> None:
         self.producers = producers if producers is not None else []
         self.voter = voter
@@ -4207,19 +4207,19 @@ class EosActionVoteProducer(protobuf.MessageType):
 class EosActionUpdateAuth(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("account", "uint64", repeated=False, required=False),
-        2: protobuf.Field("permission", "uint64", repeated=False, required=False),
-        3: protobuf.Field("parent", "uint64", repeated=False, required=False),
-        4: protobuf.Field("auth", "EosAuthorization", repeated=False, required=False),
+        1: protobuf.Field("account", "uint64", repeated=False, required=True),
+        2: protobuf.Field("permission", "uint64", repeated=False, required=True),
+        3: protobuf.Field("parent", "uint64", repeated=False, required=True),
+        4: protobuf.Field("auth", "EosAuthorization", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        account: Optional["int"] = None,
-        permission: Optional["int"] = None,
-        parent: Optional["int"] = None,
-        auth: Optional["EosAuthorization"] = None,
+        account: "int",
+        permission: "int",
+        parent: "int",
+        auth: "EosAuthorization",
     ) -> None:
         self.account = account
         self.permission = permission
@@ -4230,15 +4230,15 @@ class EosActionUpdateAuth(protobuf.MessageType):
 class EosActionDeleteAuth(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("account", "uint64", repeated=False, required=False),
-        2: protobuf.Field("permission", "uint64", repeated=False, required=False),
+        1: protobuf.Field("account", "uint64", repeated=False, required=True),
+        2: protobuf.Field("permission", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        account: Optional["int"] = None,
-        permission: Optional["int"] = None,
+        account: "int",
+        permission: "int",
     ) -> None:
         self.account = account
         self.permission = permission
@@ -4247,19 +4247,19 @@ class EosActionDeleteAuth(protobuf.MessageType):
 class EosActionLinkAuth(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("account", "uint64", repeated=False, required=False),
-        2: protobuf.Field("code", "uint64", repeated=False, required=False),
-        3: protobuf.Field("type", "uint64", repeated=False, required=False),
-        4: protobuf.Field("requirement", "uint64", repeated=False, required=False),
+        1: protobuf.Field("account", "uint64", repeated=False, required=True),
+        2: protobuf.Field("code", "uint64", repeated=False, required=True),
+        3: protobuf.Field("type", "uint64", repeated=False, required=True),
+        4: protobuf.Field("requirement", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        account: Optional["int"] = None,
-        code: Optional["int"] = None,
-        type: Optional["int"] = None,
-        requirement: Optional["int"] = None,
+        account: "int",
+        code: "int",
+        type: "int",
+        requirement: "int",
     ) -> None:
         self.account = account
         self.code = code
@@ -4270,17 +4270,17 @@ class EosActionLinkAuth(protobuf.MessageType):
 class EosActionUnlinkAuth(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("account", "uint64", repeated=False, required=False),
-        2: protobuf.Field("code", "uint64", repeated=False, required=False),
-        3: protobuf.Field("type", "uint64", repeated=False, required=False),
+        1: protobuf.Field("account", "uint64", repeated=False, required=True),
+        2: protobuf.Field("code", "uint64", repeated=False, required=True),
+        3: protobuf.Field("type", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        account: Optional["int"] = None,
-        code: Optional["int"] = None,
-        type: Optional["int"] = None,
+        account: "int",
+        code: "int",
+        type: "int",
     ) -> None:
         self.account = account
         self.code = code
@@ -4290,19 +4290,19 @@ class EosActionUnlinkAuth(protobuf.MessageType):
 class EosActionNewAccount(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("creator", "uint64", repeated=False, required=False),
-        2: protobuf.Field("name", "uint64", repeated=False, required=False),
-        3: protobuf.Field("owner", "EosAuthorization", repeated=False, required=False),
-        4: protobuf.Field("active", "EosAuthorization", repeated=False, required=False),
+        1: protobuf.Field("creator", "uint64", repeated=False, required=True),
+        2: protobuf.Field("name", "uint64", repeated=False, required=True),
+        3: protobuf.Field("owner", "EosAuthorization", repeated=False, required=True),
+        4: protobuf.Field("active", "EosAuthorization", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        creator: Optional["int"] = None,
-        name: Optional["int"] = None,
-        owner: Optional["EosAuthorization"] = None,
-        active: Optional["EosAuthorization"] = None,
+        creator: "int",
+        name: "int",
+        owner: "EosAuthorization",
+        active: "EosAuthorization",
     ) -> None:
         self.creator = creator
         self.name = name
@@ -4314,14 +4314,14 @@ class EosActionUnknown(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("data_size", "uint32", repeated=False, required=True),
-        2: protobuf.Field("data_chunk", "bytes", repeated=False, required=False),
+        2: protobuf.Field("data_chunk", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
         data_size: "int",
-        data_chunk: Optional["bytes"] = None,
+        data_chunk: "bytes",
     ) -> None:
         self.data_size = data_size
         self.data_chunk = data_chunk
@@ -5562,15 +5562,15 @@ class NEMGetAddress(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 67
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        2: protobuf.Field("network", "uint32", repeated=False, required=False),
+        2: protobuf.Field("network", "uint32", repeated=False, required=True),
         3: protobuf.Field("show_display", "bool", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
+        network: "int",
         address_n: Optional[List["int"]] = None,
-        network: Optional["int"] = None,
         show_display: Optional["bool"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
@@ -5595,7 +5595,7 @@ class NEMAddress(protobuf.MessageType):
 class NEMSignTx(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 69
     FIELDS = {
-        1: protobuf.Field("transaction", "NEMTransactionCommon", repeated=False, required=False),
+        1: protobuf.Field("transaction", "NEMTransactionCommon", repeated=False, required=True),
         2: protobuf.Field("multisig", "NEMTransactionCommon", repeated=False, required=False),
         3: protobuf.Field("transfer", "NEMTransfer", repeated=False, required=False),
         4: protobuf.Field("cosigning", "bool", repeated=False, required=False),
@@ -5609,7 +5609,7 @@ class NEMSignTx(protobuf.MessageType):
     def __init__(
         self,
         *,
-        transaction: Optional["NEMTransactionCommon"] = None,
+        transaction: "NEMTransactionCommon",
         multisig: Optional["NEMTransactionCommon"] = None,
         transfer: Optional["NEMTransfer"] = None,
         cosigning: Optional["bool"] = None,
@@ -5688,21 +5688,21 @@ class NEMTransactionCommon(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        2: protobuf.Field("network", "uint32", repeated=False, required=False),
-        3: protobuf.Field("timestamp", "uint32", repeated=False, required=False),
-        4: protobuf.Field("fee", "uint64", repeated=False, required=False),
-        5: protobuf.Field("deadline", "uint32", repeated=False, required=False),
+        2: protobuf.Field("network", "uint32", repeated=False, required=True),
+        3: protobuf.Field("timestamp", "uint32", repeated=False, required=True),
+        4: protobuf.Field("fee", "uint64", repeated=False, required=True),
+        5: protobuf.Field("deadline", "uint32", repeated=False, required=True),
         6: protobuf.Field("signer", "bytes", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
+        network: "int",
+        timestamp: "int",
+        fee: "int",
+        deadline: "int",
         address_n: Optional[List["int"]] = None,
-        network: Optional["int"] = None,
-        timestamp: Optional["int"] = None,
-        fee: Optional["int"] = None,
-        deadline: Optional["int"] = None,
         signer: Optional["bytes"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
@@ -5716,8 +5716,8 @@ class NEMTransactionCommon(protobuf.MessageType):
 class NEMTransfer(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("recipient", "string", repeated=False, required=False),
-        2: protobuf.Field("amount", "uint64", repeated=False, required=False),
+        1: protobuf.Field("recipient", "string", repeated=False, required=True),
+        2: protobuf.Field("amount", "uint64", repeated=False, required=True),
         3: protobuf.Field("payload", "bytes", repeated=False, required=False),
         4: protobuf.Field("public_key", "bytes", repeated=False, required=False),
         5: protobuf.Field("mosaics", "NEMMosaic", repeated=True, required=False),
@@ -5726,9 +5726,9 @@ class NEMTransfer(protobuf.MessageType):
     def __init__(
         self,
         *,
+        recipient: "str",
+        amount: "int",
         mosaics: Optional[List["NEMMosaic"]] = None,
-        recipient: Optional["str"] = None,
-        amount: Optional["int"] = None,
         payload: Optional["bytes"] = None,
         public_key: Optional["bytes"] = None,
     ) -> None:
@@ -5742,40 +5742,40 @@ class NEMTransfer(protobuf.MessageType):
 class NEMProvisionNamespace(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("namespace", "string", repeated=False, required=False),
+        1: protobuf.Field("namespace", "string", repeated=False, required=True),
         2: protobuf.Field("parent", "string", repeated=False, required=False),
-        3: protobuf.Field("sink", "string", repeated=False, required=False),
-        4: protobuf.Field("fee", "uint64", repeated=False, required=False),
+        3: protobuf.Field("sink", "string", repeated=False, required=True),
+        4: protobuf.Field("fee", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        namespace: Optional["str"] = None,
+        namespace: "str",
+        sink: "str",
+        fee: "int",
         parent: Optional["str"] = None,
-        sink: Optional["str"] = None,
-        fee: Optional["int"] = None,
     ) -> None:
         self.namespace = namespace
-        self.parent = parent
         self.sink = sink
         self.fee = fee
+        self.parent = parent
 
 
 class NEMMosaicCreation(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("definition", "NEMMosaicDefinition", repeated=False, required=False),
-        2: protobuf.Field("sink", "string", repeated=False, required=False),
-        3: protobuf.Field("fee", "uint64", repeated=False, required=False),
+        1: protobuf.Field("definition", "NEMMosaicDefinition", repeated=False, required=True),
+        2: protobuf.Field("sink", "string", repeated=False, required=True),
+        3: protobuf.Field("fee", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        definition: Optional["NEMMosaicDefinition"] = None,
-        sink: Optional["str"] = None,
-        fee: Optional["int"] = None,
+        definition: "NEMMosaicDefinition",
+        sink: "str",
+        fee: "int",
     ) -> None:
         self.definition = definition
         self.sink = sink
@@ -5785,19 +5785,19 @@ class NEMMosaicCreation(protobuf.MessageType):
 class NEMMosaicSupplyChange(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("namespace", "string", repeated=False, required=False),
-        2: protobuf.Field("mosaic", "string", repeated=False, required=False),
-        3: protobuf.Field("type", "NEMSupplyChangeType", repeated=False, required=False),
-        4: protobuf.Field("delta", "uint64", repeated=False, required=False),
+        1: protobuf.Field("namespace", "string", repeated=False, required=True),
+        2: protobuf.Field("mosaic", "string", repeated=False, required=True),
+        3: protobuf.Field("type", "NEMSupplyChangeType", repeated=False, required=True),
+        4: protobuf.Field("delta", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        namespace: Optional["str"] = None,
-        mosaic: Optional["str"] = None,
-        type: Optional["NEMSupplyChangeType"] = None,
-        delta: Optional["int"] = None,
+        namespace: "str",
+        mosaic: "str",
+        type: "NEMSupplyChangeType",
+        delta: "int",
     ) -> None:
         self.namespace = namespace
         self.mosaic = mosaic
@@ -5825,15 +5825,15 @@ class NEMAggregateModification(protobuf.MessageType):
 class NEMImportanceTransfer(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("mode", "NEMImportanceTransferMode", repeated=False, required=False),
-        2: protobuf.Field("public_key", "bytes", repeated=False, required=False),
+        1: protobuf.Field("mode", "NEMImportanceTransferMode", repeated=False, required=True),
+        2: protobuf.Field("public_key", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        mode: Optional["NEMImportanceTransferMode"] = None,
-        public_key: Optional["bytes"] = None,
+        mode: "NEMImportanceTransferMode",
+        public_key: "bytes",
     ) -> None:
         self.mode = mode
         self.public_key = public_key
@@ -5842,17 +5842,17 @@ class NEMImportanceTransfer(protobuf.MessageType):
 class NEMMosaic(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("namespace", "string", repeated=False, required=False),
-        2: protobuf.Field("mosaic", "string", repeated=False, required=False),
-        3: protobuf.Field("quantity", "uint64", repeated=False, required=False),
+        1: protobuf.Field("namespace", "string", repeated=False, required=True),
+        2: protobuf.Field("mosaic", "string", repeated=False, required=True),
+        3: protobuf.Field("quantity", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        namespace: Optional["str"] = None,
-        mosaic: Optional["str"] = None,
-        quantity: Optional["int"] = None,
+        namespace: "str",
+        mosaic: "str",
+        quantity: "int",
     ) -> None:
         self.namespace = namespace
         self.mosaic = mosaic
@@ -5864,69 +5864,69 @@ class NEMMosaicDefinition(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("name", "string", repeated=False, required=False),
         2: protobuf.Field("ticker", "string", repeated=False, required=False),
-        3: protobuf.Field("namespace", "string", repeated=False, required=False),
-        4: protobuf.Field("mosaic", "string", repeated=False, required=False),
+        3: protobuf.Field("namespace", "string", repeated=False, required=True),
+        4: protobuf.Field("mosaic", "string", repeated=False, required=True),
         5: protobuf.Field("divisibility", "uint32", repeated=False, required=False),
-        6: protobuf.Field("levy", "NEMMosaicLevy", repeated=False, required=False),
-        7: protobuf.Field("fee", "uint64", repeated=False, required=False),
-        8: protobuf.Field("levy_address", "string", repeated=False, required=False),
-        9: protobuf.Field("levy_namespace", "string", repeated=False, required=False),
-        10: protobuf.Field("levy_mosaic", "string", repeated=False, required=False),
+        6: protobuf.Field("levy", "NEMMosaicLevy", repeated=False, required=True),
+        7: protobuf.Field("fee", "uint64", repeated=False, required=True),
+        8: protobuf.Field("levy_address", "string", repeated=False, required=True),
+        9: protobuf.Field("levy_namespace", "string", repeated=False, required=True),
+        10: protobuf.Field("levy_mosaic", "string", repeated=False, required=True),
         11: protobuf.Field("supply", "uint64", repeated=False, required=False),
         12: protobuf.Field("mutable_supply", "bool", repeated=False, required=False),
         13: protobuf.Field("transferable", "bool", repeated=False, required=False),
-        14: protobuf.Field("description", "string", repeated=False, required=False),
+        14: protobuf.Field("description", "string", repeated=False, required=True),
         15: protobuf.Field("networks", "uint32", repeated=True, required=False),
     }
 
     def __init__(
         self,
         *,
+        namespace: "str",
+        mosaic: "str",
+        levy: "NEMMosaicLevy",
+        fee: "int",
+        levy_address: "str",
+        levy_namespace: "str",
+        levy_mosaic: "str",
+        description: "str",
         networks: Optional[List["int"]] = None,
         name: Optional["str"] = None,
         ticker: Optional["str"] = None,
-        namespace: Optional["str"] = None,
-        mosaic: Optional["str"] = None,
         divisibility: Optional["int"] = None,
-        levy: Optional["NEMMosaicLevy"] = None,
-        fee: Optional["int"] = None,
-        levy_address: Optional["str"] = None,
-        levy_namespace: Optional["str"] = None,
-        levy_mosaic: Optional["str"] = None,
         supply: Optional["int"] = None,
         mutable_supply: Optional["bool"] = None,
         transferable: Optional["bool"] = None,
-        description: Optional["str"] = None,
     ) -> None:
         self.networks = networks if networks is not None else []
-        self.name = name
-        self.ticker = ticker
         self.namespace = namespace
         self.mosaic = mosaic
-        self.divisibility = divisibility
         self.levy = levy
         self.fee = fee
         self.levy_address = levy_address
         self.levy_namespace = levy_namespace
         self.levy_mosaic = levy_mosaic
+        self.description = description
+        self.name = name
+        self.ticker = ticker
+        self.divisibility = divisibility
         self.supply = supply
         self.mutable_supply = mutable_supply
         self.transferable = transferable
-        self.description = description
 
 
 class NEMCosignatoryModification(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("type", "NEMModificationType", repeated=False, required=False),
-        2: protobuf.Field("public_key", "bytes", repeated=False, required=False),
+        1: protobuf.Field("type", "NEMModificationType", repeated=False, required=True),
+        2: protobuf.Field("public_key", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        type: Optional["NEMModificationType"] = None,
-        public_key: Optional["bytes"] = None,
+        type: "NEMModificationType",
+        public_key: "bytes",
     ) -> None:
         self.type = type
         self.public_key = public_key

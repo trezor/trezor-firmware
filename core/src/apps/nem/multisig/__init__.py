@@ -2,28 +2,33 @@ from trezor.messages import NEMAggregateModification, NEMSignTx, NEMTransactionC
 
 from . import layout, serialize
 
+if False:
+    from trezor.wire import Context
 
-async def ask(ctx, msg: NEMSignTx):
+
+async def ask(ctx: Context, msg: NEMSignTx) -> None:
     await layout.ask_multisig(ctx, msg)
 
 
-def initiate(public_key, common: NEMTransactionCommon, inner_tx: bytes) -> bytes:
+def initiate(
+    public_key: bytes, common: NEMTransactionCommon, inner_tx: bytes
+) -> bytearray:
     return serialize.serialize_multisig(common, public_key, inner_tx)
 
 
 def cosign(
-    public_key, common: NEMTransactionCommon, inner_tx: bytes, signer: bytes
-) -> bytes:
+    public_key: bytes, common: NEMTransactionCommon, inner_tx: bytes, signer: bytes
+) -> bytearray:
     return serialize.serialize_multisig_signature(common, public_key, inner_tx, signer)
 
 
 async def aggregate_modification(
-    ctx,
+    ctx: Context,
     public_key: bytes,
     common: NEMTransactionCommon,
     aggr: NEMAggregateModification,
     multisig: bool,
-):
+) -> bytearray:
     await layout.ask_aggregate_modification(ctx, common, aggr, multisig)
     w = serialize.serialize_aggregate_modification(common, aggr, public_key)
 

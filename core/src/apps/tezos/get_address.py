@@ -1,5 +1,5 @@
 from trezor.crypto import hashlib
-from trezor.messages import TezosAddress
+from trezor.messages import TezosAddress, TezosGetAddress
 from trezor.ui.layouts import show_address
 
 from apps.common import paths, seed
@@ -7,9 +7,15 @@ from apps.common.keychain import with_slip44_keychain
 
 from . import CURVE, PATTERNS, SLIP44_ID, helpers
 
+if False:
+    from apps.common.keychain import Keychain
+    from trezor.wire import Context
+
 
 @with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
-async def get_address(ctx, msg, keychain):
+async def get_address(
+    ctx: Context, msg: TezosGetAddress, keychain: Keychain
+) -> TezosAddress:
     await paths.validate_path(ctx, keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)

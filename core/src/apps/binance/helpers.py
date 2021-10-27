@@ -1,5 +1,6 @@
 from micropython import const
 
+from trezor import wire
 from trezor.crypto import bech32
 from trezor.crypto.scripts import sha256_ripemd160
 from trezor.messages import (
@@ -9,6 +10,9 @@ from trezor.messages import (
     BinanceSignTx,
     BinanceTransferMsg,
 )
+
+if False:
+    from trezor.protobuf import MessageType
 
 ENVELOPE_BLUEPRINT = '{{"account_number":"{account_number}","chain_id":"{chain_id}","data":null,"memo":"{memo}","msgs":[{msgs}],"sequence":"{sequence}","source":"{source}"}}'
 MSG_TRANSFER_BLUEPRINT = '{{"inputs":[{inputs}],"outputs":[{outputs}]}}'
@@ -21,7 +25,9 @@ COIN_BLUEPRINT = '{{"amount":{amount},"denom":"{denom}"}}'
 DECIMALS = const(8)
 
 
-def produce_json_for_signing(envelope: BinanceSignTx, msg) -> str:
+def produce_json_for_signing(envelope: BinanceSignTx, msg: MessageType) -> str:
+    # Mypy crashing on https://github.com/python/mypy/issues/10665
+    # TODO: maybe  # type: ignore
     if BinanceTransferMsg.is_type_of(msg):
         json_msg = produce_transfer_json(msg)
     elif BinanceOrderMsg.is_type_of(msg):
@@ -47,7 +53,7 @@ def produce_json_for_signing(envelope: BinanceSignTx, msg) -> str:
 
 
 def produce_transfer_json(msg: BinanceTransferMsg) -> str:
-    def make_input_output(input_output: BinanceInputOutput):
+    def make_input_output(input_output: BinanceInputOutput) -> str:
         coins = ",".join(
             COIN_BLUEPRINT.format(amount=c.amount, denom=c.denom)
             for c in input_output.coins
@@ -90,4 +96,6 @@ def address_from_public_key(pubkey: bytes, hrp: str) -> str:
 
     convertedbits = bech32.convertbits(h, 8, 5, False)
 
+    if convertedbits is None:
+        raise wire.DataError("convertedbits is None")
     return bech32.bech32_encode(hrp, convertedbits, bech32.Encoding.BECH32)

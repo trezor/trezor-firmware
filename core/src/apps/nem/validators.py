@@ -24,7 +24,7 @@ from .helpers import (
 )
 
 
-def validate(msg: NEMSignTx):
+def validate(msg: NEMSignTx) -> None:
     if msg.transaction is None:
         raise ProcessError("No common provided")
 
@@ -61,7 +61,7 @@ def validate_network(network: int) -> int:
     return network
 
 
-def _validate_single_tx(msg: NEMSignTx):
+def _validate_single_tx(msg: NEMSignTx) -> None:
     # ensure exactly one transaction is provided
     tx_count = (
         bool(msg.transfer)
@@ -77,7 +77,7 @@ def _validate_single_tx(msg: NEMSignTx):
         raise ProcessError("More than one transaction provided")
 
 
-def _validate_common(common: NEMTransactionCommon, inner: bool = False):
+def _validate_common(common: NEMTransactionCommon, inner: bool = False) -> None:
     common.network = validate_network(common.network)
 
     err = None
@@ -106,14 +106,14 @@ def _validate_common(common: NEMTransactionCommon, inner: bool = False):
         )
 
 
-def _validate_public_key(public_key: bytes, err_msg: str):
+def _validate_public_key(public_key: bytes, err_msg: str) -> None:
     if not public_key:
         raise ProcessError(f"{err_msg} (none provided)")
     if len(public_key) != NEM_PUBLIC_KEY_SIZE:
         raise ProcessError(f"{err_msg} (invalid length)")
 
 
-def _validate_importance_transfer(importance_transfer: NEMImportanceTransfer):
+def _validate_importance_transfer(importance_transfer: NEMImportanceTransfer) -> None:
     if importance_transfer.mode is None:
         raise ProcessError("No mode provided")
     _validate_public_key(
@@ -121,15 +121,16 @@ def _validate_importance_transfer(importance_transfer: NEMImportanceTransfer):
     )
 
 
-def _validate_multisig(multisig: NEMTransactionCommon, network: int):
+def _validate_multisig(multisig: NEMTransactionCommon, network: int) -> None:
     if multisig.network != network:
         raise ProcessError("Inner transaction network is different")
+    assert multisig.signer is not None  # we check multisig
     _validate_public_key(multisig.signer, "Invalid multisig signer public key provided")
 
 
 def _validate_aggregate_modification(
     aggregate_modification: NEMAggregateModification, creation: bool = False
-):
+) -> None:
 
     if creation and not aggregate_modification.modifications:
         raise ProcessError("No modifications provided")
@@ -147,7 +148,7 @@ def _validate_aggregate_modification(
         _validate_public_key(m.public_key, "Invalid cosignatory public key provided")
 
 
-def _validate_supply_change(supply_change: NEMMosaicSupplyChange):
+def _validate_supply_change(supply_change: NEMMosaicSupplyChange) -> None:
     if supply_change.namespace is None:
         raise ProcessError("No namespace provided")
     if supply_change.mosaic is None:
@@ -163,7 +164,7 @@ def _validate_supply_change(supply_change: NEMMosaicSupplyChange):
         raise ProcessError("No delta provided")
 
 
-def _validate_mosaic_creation(mosaic_creation: NEMMosaicCreation, network: int):
+def _validate_mosaic_creation(mosaic_creation: NEMMosaicCreation, network: int) -> None:
     if mosaic_creation.definition is None:
         raise ProcessError("No mosaic definition provided")
     if mosaic_creation.sink is None:
@@ -233,7 +234,7 @@ def _validate_mosaic_creation(mosaic_creation: NEMMosaicCreation, network: int):
 
 def _validate_provision_namespace(
     provision_namespace: NEMProvisionNamespace, network: int
-):
+) -> None:
     if provision_namespace.namespace is None:
         raise ProcessError("No namespace provided")
     if provision_namespace.sink is None:
@@ -245,7 +246,7 @@ def _validate_provision_namespace(
         raise ProcessError("Invalid rental sink address")
 
 
-def _validate_transfer(transfer: NEMTransfer, network: int):
+def _validate_transfer(transfer: NEMTransfer, network: int) -> None:
     if transfer.recipient is None:
         raise ProcessError("No recipient provided")
     if transfer.amount is None:

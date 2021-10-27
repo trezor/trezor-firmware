@@ -34,6 +34,7 @@ def write_auth(w: Writer, auth: EosAuthorization) -> None:
     write_uint32_le(w, auth.threshold)
     write_uvarint(w, len(auth.keys))
     for key in auth.keys:
+        assert key.key is not None
         write_uvarint(w, key.type)
         write_bytes_fixed(w, key.key, 33)
         write_uint16_le(w, key.weight)

@@ -2,9 +2,12 @@ from trezor.messages import NEMProvisionNamespace, NEMTransactionCommon
 
 from . import layout, serialize
 
+if False:
+    from trezor.wire import Context
+
 
 async def namespace(
-    ctx,
+    ctx: Context,
     public_key: bytes,
     common: NEMTransactionCommon,
     namespace: NEMProvisionNamespace,

@@ -4,8 +4,11 @@ from trezor.ui.layouts import confirm_metadata, confirm_properties
 
 from .helpers import NEM_MAX_DIVISIBILITY
 
+if False:
+    from trezor.wire import Context
 
-async def require_confirm_text(ctx, action: str):
+
+async def require_confirm_text(ctx: Context, action: str) -> None:
     await confirm_metadata(
         ctx,
         "confirm_nem",
@@ -16,7 +19,7 @@ async def require_confirm_text(ctx, action: str):
     )
 
 
-async def require_confirm_fee(ctx, action: str, fee: int):
+async def require_confirm_fee(ctx: Context, action: str, fee: int) -> None:
     await confirm_metadata(
         ctx,
         "confirm_fee",
@@ -28,7 +31,7 @@ async def require_confirm_fee(ctx, action: str, fee: int):
     )
 
 
-async def require_confirm_content(ctx, headline: str, content: list):
+async def require_confirm_content(ctx: Context, headline: str, content: list) -> None:
     await confirm_properties(
         ctx,
         "confirm_content",
@@ -37,7 +40,7 @@ async def require_confirm_content(ctx, headline: str, content: list):
     )
 
 
-async def require_confirm_final(ctx, fee: int):
+async def require_confirm_final(ctx: Context, fee: int) -> None:
     # we use SignTx, not ConfirmOutput, for compatibility with T1
     await confirm_metadata(
         ctx,

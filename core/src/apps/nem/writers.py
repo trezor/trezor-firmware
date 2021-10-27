@@ -5,9 +5,9 @@ from apps.common.writers import write_bytes_unchecked, write_uint32_le, write_ui
 
 def serialize_tx_common(
     common: NEMTransactionCommon,
-    public_key: bytearray,
+    public_key: bytearray | bytes,
     transaction_type: int,
-    version: int = None,
+    version: int | None = None,
 ) -> bytearray:
     w = bytearray()
 
@@ -24,6 +24,6 @@ def serialize_tx_common(
     return w
 
 
-def write_bytes_with_len(w, buf: bytes):
+def write_bytes_with_len(w: bytearray, buf: bytes) -> None:
     write_uint32_le(w, len(buf))
     write_bytes_unchecked(w, buf)

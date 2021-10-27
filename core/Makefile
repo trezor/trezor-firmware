@@ -109,13 +109,18 @@ pylint: ## run pylint on application sources and tests
 
 mypy:
 	mypy --config-file ../setup.cfg \
+		--html-report . \
 		src/main.py \
 		src/apps/bitcoin \
 		src/apps/cardano \
+		src/apps/eos \
 		src/apps/ethereum \
 		src/apps/management \
 		src/apps/misc \
+		src/apps/nem \
+		src/apps/ripple \
 		src/apps/stellar \
+		src/apps/tezos \
 		src/apps/webauthn \
 		src/trezor/ui
 

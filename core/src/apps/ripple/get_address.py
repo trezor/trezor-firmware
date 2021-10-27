@@ -6,9 +6,15 @@ from apps.common.keychain import auto_keychain
 
 from .helpers import address_from_public_key
 
+if False:
+    from apps.common.keychain import Keychain
+    from trezor.wire import Context
+
 
 @auto_keychain(__name__)
-async def get_address(ctx, msg: RippleGetAddress, keychain):
+async def get_address(
+    ctx: Context, msg: RippleGetAddress, keychain: Keychain
+) -> RippleAddress:
     await paths.validate_path(ctx, keychain, msg.address_n)
 
     node = keychain.derive(msg.address_n)

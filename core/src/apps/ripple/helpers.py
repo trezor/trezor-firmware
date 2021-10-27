@@ -44,7 +44,7 @@ def address_from_public_key(pubkey: bytes) -> str:
     return base58_ripple.encode_check(bytes(address))
 
 
-def decode_address(address: str):
+def decode_address(address: str) -> bytes:
     """Returns so called Account ID"""
     adr = base58_ripple.decode_check(address)
     return adr[1:]

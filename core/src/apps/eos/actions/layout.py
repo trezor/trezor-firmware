@@ -194,7 +194,7 @@ async def confirm_action_transfer(
 async def confirm_action_updateauth(
     ctx: wire.Context, msg: EosActionUpdateAuth
 ) -> None:
-    props = [
+    props: list[tuple[str, str | None]] = [
         ("Account:", helpers.eos_name_to_string(msg.account)),
         ("Permission:", helpers.eos_name_to_string(msg.permission)),
         ("Parent:", helpers.eos_name_to_string(msg.parent)),
@@ -262,7 +262,7 @@ async def confirm_action_unlinkauth(
 async def confirm_action_newaccount(
     ctx: wire.Context, msg: EosActionNewAccount
 ) -> None:
-    props = [
+    props: list[tuple[str, str | None]] = [
         ("Creator:", helpers.eos_name_to_string(msg.creator)),
         ("Name:", helpers.eos_name_to_string(msg.name)),
     ]
@@ -297,10 +297,11 @@ async def confirm_action_unknown(
 
 
 def authorization_fields(auth: EosAuthorization) -> list[tuple[str, str | None]]:
-    fields = []
+    fields: list[tuple[str, str | None]] = []
     fields.append(("Threshold:", str(auth.threshold)))
 
     for i, key in enumerate(auth.keys, 1):
+        assert key.key is not None
         _key = helpers.public_key_to_wif(bytes(key.key))
         _weight = str(key.weight)
 
