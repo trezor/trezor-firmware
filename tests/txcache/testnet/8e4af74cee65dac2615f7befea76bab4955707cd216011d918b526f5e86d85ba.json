@@ -1,0 +1,36 @@
+{
+  "inputs": [
+    {
+      "address_n": [2147483734, 2147483649, 2147483648, 0, 1],
+      "amount": 13000,
+      "prev_hash": "a4e2745235250cc223b42004769338f5837e9290caf546da33ab117e4d011c92",
+      "prev_index": 1,
+      "script_sig": "",
+      "script_type": "SPENDTAPROOT",
+      "sequence": 4294967293,
+      "witness": "01402c1c2352ec3eceb7d337710520a548c5c6f35cd6c9c539d94d4d8452a084137c06f69c5e6f042c45b635567b46303e936463b62bdf70422497fc0ae2208bcb40"
+    },
+    {
+      "address_n": [2147483734, 2147483649, 2147483648, 0, 0],
+      "amount": 6800,
+      "prev_hash": "ccd7eaacc9f6902b89c00a6c221391bd41c8b78e7935ff3e1130d13644393ff2",
+      "prev_index": 0,
+      "script_sig": "",
+      "script_type": "SPENDTAPROOT",
+      "sequence": 4294967293
+    }
+  ],
+  "lock_time": 0,
+  "outputs": [
+    {
+      "address": "tb1qq0rurzt04d76hk7pjxhqggk7ad4zj7c9u369kt",
+      "amount": 15000
+    },
+    {
+      "address_n": [2147483734, 2147483649, 2147483648, 1, 0],
+      "amount": 4600,
+      "script_type": "PAYTOTAPROOT"
+    }
+  ],
+  "version": 1
+}

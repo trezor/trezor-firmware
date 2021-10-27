@@ -77,6 +77,15 @@ TXHASH_408397 = bytes.fromhex(
 TXHASH_ba917a = bytes.fromhex(
     "ba917a2b563966e324ab37ed7de5f5cd7503b970b0f0bb9a5208f5835557e99c"
 )
+TXHASH_a4e274 = bytes.fromhex(
+    "a4e2745235250cc223b42004769338f5837e9290caf546da33ab117e4d011c92"
+)
+TXHASH_ccd7ea = bytes.fromhex(
+    "ccd7eaacc9f6902b89c00a6c221391bd41c8b78e7935ff3e1130d13644393ff2"
+)
+TXHASH_8e4af7 = bytes.fromhex(
+    "8e4af74cee65dac2615f7befea76bab4955707cd216011d918b526f5e86d85ba"
+)
 
 
 def test_p2pkh_fee_bump(client):
@@ -191,6 +200,77 @@ def test_p2wpkh_op_return_fee_bump(client):
     assert (
         serialized_tx.hex()
         == "010000000001010978ca90092d490a773ca00de50bc5c4d9930fab03b656f5525cf099379783400100000000fdffffff020000000000000000066a046465616414410f00000000001600141c02e2397a8a02ff71d3f26937d14a656469dd1f02483045022100f534412752c14064470d4a1f738fa01bc83598b07caaba4cd207b43b1b9702a4022071a4f0873006c07ccfeb1f82e86f3047eab208f38cfa41d7b566d6ca50dbca0f012102a269d4b8faf008074b974b6d64fa1776e17fdf65381a76d1338e9bba88983a8700000000"
+    )
+
+
+# txid 48bc29fc42a64b43d043b0b7b99b21aa39654234754608f791c60bcbd91a8e92
+@pytest.mark.skip_t1
+def test_p2tr_fee_bump(client):
+    inp1 = messages.TxInputType(
+        # tb1p8tvmvsvhsee73rhym86wt435qrqm92psfsyhy6a3n5gw455znnpqm8wald
+        address_n=parse_path("86'/1'/0'/0/1"),
+        amount=13000,
+        orig_hash=TXHASH_8e4af7,
+        orig_index=0,
+        prev_hash=TXHASH_a4e274,
+        prev_index=1,
+        script_type=messages.InputScriptType.SPENDTAPROOT,
+    )
+    inp2 = messages.TxInputType(
+        # tb1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq8s8a5u
+        address_n=parse_path("86'/1'/0'/0/0"),
+        amount=6800,
+        orig_hash=TXHASH_8e4af7,
+        orig_index=1,
+        prev_hash=TXHASH_ccd7ea,
+        prev_index=0,
+        script_type=messages.InputScriptType.SPENDTAPROOT,
+    )
+    out1 = messages.TxOutputType(
+        address="tb1qq0rurzt04d76hk7pjxhqggk7ad4zj7c9u369kt",
+        amount=15000,
+        orig_hash=TXHASH_8e4af7,
+        orig_index=0,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+    out2 = messages.TxOutputType(
+        # tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c
+        address_n=parse_path("86'/1'/0'/1/0"),
+        amount=4600 - 250,  # bump the fee by 250
+        orig_hash=TXHASH_8e4af7,
+        orig_index=1,
+        script_type=messages.OutputScriptType.PAYTOTAPROOT,
+    )
+    with client:
+        client.set_expected_responses(
+            [
+                request_input(0),
+                request_meta(TXHASH_8e4af7),
+                request_orig_input(0, TXHASH_8e4af7),
+                request_input(1),
+                request_orig_input(1, TXHASH_8e4af7),
+                messages.ButtonRequest(code=B.SignTx),
+                request_output(0),
+                request_orig_output(0, TXHASH_8e4af7),
+                request_output(1),
+                request_orig_output(1, TXHASH_8e4af7),
+                messages.ButtonRequest(code=B.SignTx),
+                request_input(0),
+                request_input(1),
+                request_output(0),
+                request_output(1),
+                request_input(0),
+                request_input(1),
+                request_finished(),
+            ]
+        )
+        _, serialized_tx = btc.sign_tx(
+            client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_CACHE_TESTNET
+        )
+
+    assert (
+        serialized_tx.hex()
+        == "01000000000102921c014d7e11ab33da46f5ca90927e83f53893760420b423c20c25355274e2a40100000000fffffffff23f394436d130113eff35798eb7c841bd9113226c0ac0892b90f6c9acead7cc0000000000ffffffff02983a00000000000016001403c7c1896fab7dabdbc191ae0422deeb6a297b05fe100000000000002251209a9af24b396f593b34e23fefba6b417a55c5ee3f430c3837379fcb5246ab36d70140b0eef4af1291a31e3416e9daaf05457e5b14447663ef8137a250fe3eca24e2fc85e0d0a001a8035fa272d78b104761b05040ffa0b7d6f9a902c23aa8b521687e0140775b82068243545e9327725c56681c78bd7da0934bfdac2cc9cc06a1511379ff28e539c2538fe26f7e2c7385e51d650c4af8dc2c35baa7161c36d6919c83ff5c00000000"
     )
 
 
