@@ -412,6 +412,9 @@ def sanitize_tx_input(txi: TxInput, coin: CoinInfo) -> TxInput:
         if not coin.segwit:
             raise wire.DataError("Segwit not enabled on this coin.")
 
+    if txi.script_type == InputScriptType.SPENDTAPROOT and not coin.taproot:
+        raise wire.DataError("Taproot not enabled on this coin")
+
     if txi.commitment_data and not txi.ownership_proof:
         raise wire.DataError("commitment_data field provided but not expected.")
 
@@ -447,6 +450,9 @@ def sanitize_tx_output(txo: TxOutput, coin: CoinInfo) -> TxOutput:
     if txo.script_type in common.SEGWIT_OUTPUT_SCRIPT_TYPES:
         if not coin.segwit:
             raise wire.DataError("Segwit not enabled on this coin.")
+
+    if txo.script_type == OutputScriptType.PAYTOTAPROOT and not coin.taproot:
+        raise wire.DataError("Taproot not enabled on this coin")
 
     if txo.script_type == OutputScriptType.PAYTOOPRETURN:
         # op_return output
