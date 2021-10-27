@@ -1,5 +1,6 @@
 from trezor import utils, wire
 from trezor.crypto import bip32, hashlib, hmac
+from trezor.enums import InputScriptType
 
 from apps.common.keychain import Keychain
 from apps.common.readers import read_bitcoin_varint
@@ -10,7 +11,6 @@ from .scripts import read_bip322_signature_proof, write_bip322_signature_proof
 from .verification import SignatureVerifier
 
 if False:
-    from trezor.enums import InputScriptType
     from trezor.messages import MultisigRedeemScriptType
     from apps.common.coininfo import CoinInfo
 
@@ -49,7 +49,15 @@ def generate_proof(
     sighash = hashlib.sha256(proof)
     sighash.update(script_pubkey)
     sighash.update(commitment_data)
-    signature = common.ecdsa_sign(node, sighash.digest())
+    if script_type in (
+        InputScriptType.SPENDADDRESS,
+        InputScriptType.SPENDMULTISIG,
+        InputScriptType.SPENDWITNESS,
+        InputScriptType.SPENDP2SHWITNESS,
+    ):
+        signature = common.ecdsa_sign(node, sighash.digest())
+    else:
+        raise wire.DataError("Unsupported script type.")
     public_key = node.public_key()
     write_bip322_signature_proof(
         proof, script_type, multisig, coin, public_key, signature
