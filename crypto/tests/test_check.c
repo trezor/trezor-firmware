@@ -9355,6 +9355,71 @@ START_TEST(test_zkp_bip340_verify) {
 }
 END_TEST
 
+START_TEST(test_zkp_bip340_tweak) {
+  static struct {
+    const char *root_hash;
+    const char *internal_priv;
+    const char *output_priv;
+    const char *internal_pub;
+    const char *output_pub;
+  } tests[] = {
+      // Taken from https://github.com/bitcoin/bips/blob/master/bip-0086/ and
+      // https://github.com/bitcoin-core/btcdeb/blob/master/doc/tapscript-example-with-tap.md
+      {NULL, "41f41d69260df4cf277826a9b65a3717e4eeddbeedf637f212ca096576479361",
+       "eaac016f36e8c18347fbacf05ab7966708fbfce7ce3bf1dc32a09dd0645db038",
+       "cc8a4bc64d897bddc5fbc2f670f7a8ba0b386779106cf1223c6fc5d7cd6fc115",
+       "a60869f0dbcf1dc659c9cecbaf8050135ea9e8cdc487053f1dc6880949dc684c"},
+      {NULL, "86c68ac0ed7df88cbdd08a847c6d639f87d1234d40503abf3ac178ef7ddc05dd",
+       "0b6f18573f75c454efb43d2bfc7c91f7f88cb802c45a7821e820402fcf2836d3",
+       "83dfe85a3151d2517290da461fe2815591ef69f2b18a2ce63f01697a8b313145",
+       "a82f29944d65b86ae6b5e5cc75e294ead6c59391a1edc5e016e3498c67fc7bbb"},
+      {NULL, "6ccbca4a02ac648702dde463d9c1b0d328a4df1e068ef9dc2bc788b33a4f0412",
+       "c3074682f4c54d9801da58a52aaf0e28c089d5f8c6847dc8829734bbe3f60647",
+       "399f1b2f4393f29a18c937859c5dd8a77350103157eb880f02e8c08214277cef",
+       "882d74e5d0572d5a816cef0041a96b6c1de832f6f9676d9605c44d5e9a97d3dc"},
+      {"41646f8c1fe2a96ddad7f5471bc4fee7da98794ef8c45a4f4fc6a559d60c9f6b",
+       "1229101a0fcf2104e8808dab35661134aa5903867d44deb73ce1c7e4eb925be8",
+       "4fe6b3e5fbd61870577980ad5e4e13080776069f0fb3c1e353572e0c4993abc1",
+       "f30544d6009c8d8d94f5d030b2e844b1a3ca036255161c479db1cca5b374dd1c",
+       "a5ba0871796eb49fb4caa6bf78e675b9455e2d66e751676420f8381d5dda8951"},
+  };
+
+  int res = 0;
+  uint8_t internal_priv[32] = {0};
+  uint8_t output_priv[32] = {0};
+  uint8_t internal_pub[32] = {0};
+  uint8_t output_pub[32] = {0};
+  uint8_t result[32] = {0};
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
+    memcpy(internal_priv, fromhex(tests[i].internal_priv), 32);
+    memcpy(output_priv, fromhex(tests[i].output_priv), 32);
+    memcpy(internal_pub, fromhex(tests[i].internal_pub), 32);
+    memcpy(output_pub, fromhex(tests[i].output_pub), 32);
+    const uint8_t *root_hash = NULL;
+    if (tests[i].root_hash != NULL) {
+      root_hash = fromhex(tests[i].root_hash);
+    }
+
+    res = zkp_bip340_get_public_key(internal_priv, result);
+    ck_assert_int_eq(res, 0);
+    ck_assert_mem_eq(internal_pub, result, 32);
+
+    res = zkp_bip340_get_public_key(output_priv, result);
+    ck_assert_int_eq(res, 0);
+    ck_assert_mem_eq(output_pub, result, 32);
+
+    res = zkp_bip340_tweak_private_key(internal_priv, root_hash, result);
+    ck_assert_int_eq(res, 0);
+    ck_assert_mem_eq(output_priv, result, 32);
+
+    res = zkp_bip340_tweak_public_key(internal_pub, root_hash, result);
+    ck_assert_int_eq(res, 0);
+    ck_assert_mem_eq(output_pub, result, 32);
+  }
+}
+END_TEST
+
 static int my_strncasecmp(const char *s1, const char *s2, size_t n) {
   size_t i = 0;
   while (i < n) {
@@ -9671,6 +9736,7 @@ Suite *test_suite(void) {
   tc = tcase_create("zkp_bip340");
   tcase_add_test(tc, test_zkp_bip340_sign);
   tcase_add_test(tc, test_zkp_bip340_verify);
+  tcase_add_test(tc, test_zkp_bip340_tweak);
   suite_add_tcase(s, tc);
 
 #if USE_CARDANO
