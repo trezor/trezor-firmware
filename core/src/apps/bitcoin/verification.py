@@ -1,9 +1,9 @@
 from trezor import utils, wire
 from trezor.crypto import der
-from trezor.crypto.curve import secp256k1
+from trezor.crypto.curve import bip340, secp256k1
 from trezor.crypto.hashlib import sha256
 
-from .common import ecdsa_hash_pubkey
+from .common import OP_0, OP_1, ecdsa_hash_pubkey
 from .scripts import (
     output_script_native_segwit,
     output_script_p2pkh,
@@ -11,13 +11,16 @@ from .scripts import (
     parse_input_script_multisig,
     parse_input_script_p2pkh,
     parse_output_script_multisig,
+    parse_output_script_p2tr,
     parse_witness_multisig,
+    parse_witness_p2tr,
     parse_witness_p2wpkh,
     write_input_script_p2wpkh_in_p2sh,
     write_input_script_p2wsh_in_p2sh,
 )
 
 if False:
+    from typing import Sequence
     from apps.common.coininfo import CoinInfo
 
 
@@ -32,6 +35,7 @@ class SignatureVerifier:
         self.threshold = 1
         self.public_keys: list[memoryview] = []
         self.signatures: list[tuple[memoryview, int]] = []
+        self.is_taproot = False
 
         if not script_sig:
             if not witness:
@@ -44,12 +48,16 @@ class SignatureVerifier:
                     raise wire.DataError("Invalid public key hash")
                 self.public_keys = [public_key]
                 self.signatures = [(signature, hash_type)]
-            elif len(script_pubkey) == 34:  # P2WSH
+            elif len(script_pubkey) == 34 and script_pubkey[0] == OP_0:  # P2WSH
                 script, self.signatures = parse_witness_multisig(witness)
                 script_hash = sha256(script).digest()
                 if output_script_native_segwit(0, script_hash) != script_pubkey:
                     raise wire.DataError("Invalid script hash")
                 self.public_keys, self.threshold = parse_output_script_multisig(script)
+            elif len(script_pubkey) == 34 and script_pubkey[0] == OP_1:  # P2TR
+                self.is_taproot = True
+                self.public_keys = [parse_output_script_p2tr(script_pubkey)]
+                self.signatures = [parse_witness_p2tr(witness)]
             else:
                 raise wire.DataError("Unsupported signature script")
         elif witness and witness != b"\x00":
@@ -98,8 +106,8 @@ class SignatureVerifier:
         if self.threshold != len(self.signatures):
             raise wire.DataError("Invalid signature")
 
-    def ensure_hash_type(self, hash_type: int) -> None:
-        if any(h != hash_type for _, h in self.signatures):
+    def ensure_hash_type(self, hash_types: Sequence[int]) -> None:
+        if any(h not in hash_types for _, h in self.signatures):
             raise wire.DataError("Unsupported sighash type")
 
     def verify(self, digest: bytes) -> None:
@@ -108,6 +116,17 @@ class SignatureVerifier:
         # different hash type than expected, then verification will fail. To
         # return the proper error message, the caller can optionally check the
         # hash type by using ensure_hash_type() before calling verify.
+
+        if self.is_taproot:
+            self.verify_bip340(digest)
+        else:
+            self.verify_ecdsa(digest)
+
+    def verify_bip340(self, digest: bytes) -> None:
+        if not bip340.verify(self.public_keys[0], self.signatures[0][0], digest):
+            raise wire.DataError("Invalid signature")
+
+    def verify_ecdsa(self, digest: bytes) -> None:
         try:
             i = 0
             for der_signature, _ in self.signatures:
