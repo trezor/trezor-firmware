@@ -60,7 +60,7 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
         bip143 = Bip143Hash()
         bip143.add_input(self.inp1, b"")
         bip143.add_input(self.inp2, b"")
-        sequence_hash = get_tx_hash(bip143.h_sequence, double=coin.sign_hash_double)
+        sequence_hash = get_tx_hash(bip143.h_sequences, double=coin.sign_hash_double)
         self.assertEqual(hexlify(sequence_hash), b'52b0a642eea2fb7ae638c36f6252b6750293dbe574a806984b8e4d8548339a3b')
 
     def test_outputs(self):
@@ -95,7 +95,7 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
 
         # test data public key hash
         # only for input 2 - input 1 is not segwit
-        result = bip143.preimage_hash(self.inp2, [node.public_key()], 1, self.tx, coin, SIGHASH_ALL)
+        result = bip143.preimage_hash(1, self.inp2, [node.public_key()], 1, self.tx, coin, SIGHASH_ALL)
         self.assertEqual(hexlify(result), b'2fa3f1351618b2532228d7182d3221d95c21fd3d496e7e22e9ded873cf022a8b')
 
 

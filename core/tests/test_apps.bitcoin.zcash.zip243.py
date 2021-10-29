@@ -213,7 +213,7 @@ class TestZcashZip243(unittest.TestCase):
             self.assertEqual(hexlify(get_tx_hash(zip243.h_prevouts)), v["prevouts_hash"])
             self.assertEqual(hexlify(get_tx_hash(zip243.h_sequence)), v["sequence_hash"])
             self.assertEqual(hexlify(get_tx_hash(zip243.h_outputs)), v["outputs_hash"])
-            self.assertEqual(hexlify(zip243.preimage_hash(txi, [unhexlify(i["pubkey"])], 1, tx, coin, SIGHASH_ALL)), v["preimage_hash"])
+            self.assertEqual(hexlify(zip243.preimage_hash(0, txi, [unhexlify(i["pubkey"])], 1, tx, coin, SIGHASH_ALL)), v["preimage_hash"])
 
 
 if __name__ == "__main__":

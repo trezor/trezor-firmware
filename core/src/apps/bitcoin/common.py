@@ -3,8 +3,9 @@ from micropython import const
 from trezor import wire
 from trezor.crypto import bech32, bip32, der
 from trezor.crypto.curve import secp256k1
+from trezor.crypto.hashlib import sha256
 from trezor.enums import InputScriptType, OutputScriptType
-from trezor.utils import ensure
+from trezor.utils import HashWriter, ensure
 
 if False:
     from typing import Tuple
@@ -124,3 +125,10 @@ def input_is_taproot(txi: TxInput) -> bool:
 
 def input_is_external(txi: TxInput) -> bool:
     return txi.script_type == InputScriptType.EXTERNAL
+
+
+def tagged_hashwriter(tag: bytes) -> HashWriter:
+    tag_digest = sha256(tag).digest()
+    ctx = sha256(tag_digest)
+    ctx.update(tag_digest)
+    return HashWriter(ctx)

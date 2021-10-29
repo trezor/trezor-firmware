@@ -62,6 +62,7 @@ class DecredHash:
 
     def preimage_hash(
         self,
+        i: int,
         txi: TxInput,
         public_keys: Sequence[bytes | memoryview],
         threshold: int,

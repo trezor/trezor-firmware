@@ -49,6 +49,7 @@ class Zip243Hash:
 
     def preimage_hash(
         self,
+        i: int,
         txi: TxInput,
         public_keys: Sequence[bytes | memoryview],
         threshold: int,
@@ -145,6 +146,7 @@ class Zcashlike(Bitcoinlike):
         tx_hash: bytes | None = None,
     ) -> bytes:
         return tx_info.hash143.preimage_hash(
+            0,
             txi,
             public_keys,
             threshold,

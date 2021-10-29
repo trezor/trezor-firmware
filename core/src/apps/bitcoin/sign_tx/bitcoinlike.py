@@ -47,10 +47,10 @@ class Bitcoinlike(Bitcoin):
         public_keys: Sequence[bytes | memoryview],
         threshold: int,
         script_pubkey: bytes,
-        tx_hash: bytes | None = None,
     ) -> bytes:
         if self.coin.force_bip143:
             return tx_info.hash143.preimage_hash(
+                i,
                 txi,
                 public_keys,
                 threshold,
