@@ -11,7 +11,10 @@ if False:
 
 
 if __debug__:
-    from ..components.tt.scroll import Paginated
+    from trezor import utils
+
+    if utils.MODEL == "T":
+        from ..components.tt.scroll import Paginated
 
 
 async def button_request(

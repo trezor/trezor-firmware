@@ -16,4 +16,11 @@ static void _librust_qstrs(void) {
   MP_QSTR_timer;
   MP_QSTR_paint;
   MP_QSTR_trace;
+
+  MP_QSTR_title;
+  MP_QSTR_action;
+  MP_QSTR_description;
+  MP_QSTR_verb;
+  MP_QSTR_verb_cancel;
+  MP_QSTR_reverse;
 }

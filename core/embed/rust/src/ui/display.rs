@@ -60,6 +60,27 @@ pub fn icon(center: Point, data: &[u8], fg_color: Color, bg_color: Color) {
     );
 }
 
+// Used on T1 only.
+pub fn rounded_rect1(r: Rect, fg_color: Color, bg_color: Color) {
+    display::bar(r.x0, r.y0, r.width(), r.height(), fg_color.into());
+    let corners = [
+        r.top_left(),
+        r.top_right() + Offset::new(-1, 0),
+        r.bottom_right() + Offset::new(-1, -1),
+        r.bottom_left() + Offset::new(0, -1),
+    ];
+    for p in corners.iter() {
+        display::bar(p.x, p.y, 1, 1, bg_color.into());
+    }
+}
+
+// Used on T1 only.
+pub fn dotted_line(start: Point, width: i32, color: Color) {
+    for x in (start.x..width).step_by(2) {
+        display::bar(x, start.y, 1, 1, color.into());
+    }
+}
+
 pub fn text(baseline: Point, text: &[u8], font: Font, fg_color: Color, bg_color: Color) {
     display::text(
         baseline.x,
@@ -137,6 +158,10 @@ impl Color {
 
     pub fn to_u16(self) -> u16 {
         self.0
+    }
+
+    pub fn neg(self) -> Self {
+        Self(!self.0)
     }
 }
 

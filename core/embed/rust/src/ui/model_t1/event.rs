@@ -13,7 +13,7 @@ pub enum ButtonEvent {
 }
 
 impl ButtonEvent {
-    pub fn new(event: u32, button: u32, _unused: u32) -> Result<Self, error::Error> {
+    pub fn new(event: u32, button: u32) -> Result<Self, error::Error> {
         let button = match button {
             0 => T1Button::Left,
             1 => T1Button::Right,
