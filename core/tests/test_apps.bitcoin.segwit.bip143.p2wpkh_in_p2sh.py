@@ -50,7 +50,7 @@ class TestSegwitBip143(unittest.TestCase):
         coin = coins.by_name(self.tx.coin_name)
         bip143 = Bip143Hash()
         bip143.add_input(self.inp1, b"")
-        sequence_hash = get_tx_hash(bip143.h_sequence, double=coin.sign_hash_double)
+        sequence_hash = get_tx_hash(bip143.h_sequences, double=coin.sign_hash_double)
         self.assertEqual(hexlify(sequence_hash), b'18606b350cd8bf565266bc352f0caddcf01e8fa789dd8a15386327cf8cabe198')
 
     def test_bip143_outputs(self):
@@ -80,7 +80,7 @@ class TestSegwitBip143(unittest.TestCase):
         node = keychain.derive(self.inp1.address_n)
 
         # test data public key hash
-        result = bip143.preimage_hash(self.inp1, [node.public_key()], 1, self.tx, coin, SIGHASH_ALL)
+        result = bip143.preimage_hash(0, self.inp1, [node.public_key()], 1, self.tx, coin, SIGHASH_ALL)
         self.assertEqual(hexlify(result), b'6e28aca7041720995d4acf59bbda64eef5d6f23723d23f2e994757546674bbd9')
 
 

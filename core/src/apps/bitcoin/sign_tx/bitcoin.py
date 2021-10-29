@@ -403,6 +403,7 @@ class Bitcoin:
     ) -> bytes:
         if txi.witness:
             return tx_info.hash143.preimage_hash(
+                i,
                 txi,
                 public_keys,
                 threshold,
@@ -475,6 +476,7 @@ class Bitcoin:
             public_keys = [public_key]
             threshold = 1
         hash143_hash = self.tx_info.hash143.preimage_hash(
+            0,
             txi,
             public_keys,
             threshold,
