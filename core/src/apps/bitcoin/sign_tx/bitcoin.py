@@ -374,7 +374,7 @@ class Bitcoin:
             verifier = SignatureVerifier(
                 script_pubkey, txi.script_sig, txi.witness, self.coin
             )
-            verifier.ensure_hash_type(SIGHASH_ALL)
+            verifier.ensure_hash_type((SIGHASH_ALL_TAPROOT, self.get_hash_type(txi)))
             tx_digest = await self.get_tx_digest(
                 orig.verification_index,
                 txi,
@@ -439,7 +439,7 @@ class Bitcoin:
                 script_pubkey, txi.script_sig, txi.witness, self.coin
             )
 
-            verifier.ensure_hash_type(self.get_hash_type(txi))
+            verifier.ensure_hash_type((SIGHASH_ALL_TAPROOT, self.get_hash_type(txi)))
 
             tx_digest = await self.get_tx_digest(
                 i,
