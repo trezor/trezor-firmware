@@ -392,8 +392,18 @@ def sanitize_tx_input(txi: TxInput, coin: CoinInfo) -> TxInput:
     if not txi.multisig and txi.script_type == InputScriptType.SPENDMULTISIG:
         raise wire.DataError("Multisig details required.")
 
-    if txi.address_n and txi.script_type not in common.INTERNAL_INPUT_SCRIPT_TYPES:
-        raise wire.DataError("Input's address_n provided but not expected.")
+    if txi.script_type in common.INTERNAL_INPUT_SCRIPT_TYPES:
+        if not txi.address_n:
+            raise wire.DataError("Missing address_n field.")
+
+        if txi.script_pubkey:
+            raise wire.DataError("Input's script_pubkey provided but not expected.")
+    else:
+        if txi.address_n:
+            raise wire.DataError("Input's address_n provided but not expected.")
+
+        if not txi.script_pubkey:
+            raise wire.DataError("Missing script_pubkey field.")
 
     if not coin.decred and txi.decred_tree is not None:
         raise wire.DataError("Decred details provided but Decred coin not specified.")

@@ -39,7 +39,7 @@ class Zip243Hash:
         self.h_sequence = HashWriter(blake2b(outlen=32, personal=b"ZcashSequencHash"))
         self.h_outputs = HashWriter(blake2b(outlen=32, personal=b"ZcashOutputsHash"))
 
-    def add_input(self, txi: TxInput) -> None:
+    def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
         write_bytes_reversed(self.h_prevouts, txi.prev_hash, TX_HASH_SIZE)
         write_uint32(self.h_prevouts, txi.prev_index)
         write_uint32(self.h_sequence, txi.sequence)

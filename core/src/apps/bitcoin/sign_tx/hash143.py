@@ -5,12 +5,13 @@ from trezor.utils import HashWriter
 from apps.common import coininfo
 
 from .. import scripts, writers
+from ..common import input_is_taproot, tagged_hashwriter
 
 if False:
     from typing import Protocol, Sequence
 
     class Hash143(Protocol):
-        def add_input(self, txi: TxInput) -> None:
+        def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
             ...
 
         def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
@@ -35,7 +36,7 @@ class Bip143Hash:
         self.h_sequence = HashWriter(sha256())
         self.h_outputs = HashWriter(sha256())
 
-    def add_input(self, txi: TxInput) -> None:
+    def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
         writers.write_bytes_reversed(
             self.h_prevouts, txi.prev_hash, writers.TX_HASH_SIZE
         )

@@ -54,7 +54,7 @@ class DecredHash:
     def __init__(self, h_prefix: HashWriter) -> None:
         self.h_prefix = h_prefix
 
-    def add_input(self, txi: TxInput) -> None:
+    def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
         Decred.write_tx_input(self.h_prefix, txi, bytes())
 
     def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
@@ -122,7 +122,7 @@ class Decred(Bitcoin):
     async def process_external_input(self, txi: TxInput) -> None:
         raise wire.DataError("External inputs not supported")
 
-    async def process_original_input(self, txi: TxInput) -> None:
+    async def process_original_input(self, txi: TxInput, script_pubkey: bytes) -> None:
         raise wire.DataError("Replacement transactions not supported")
 
     async def approve_output(
