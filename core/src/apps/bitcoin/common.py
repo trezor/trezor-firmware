@@ -2,7 +2,7 @@ from micropython import const
 
 from trezor import wire
 from trezor.crypto import bech32, bip32, der
-from trezor.crypto.curve import secp256k1
+from trezor.crypto.curve import bip340, secp256k1
 from trezor.crypto.hashlib import sha256
 from trezor.enums import InputScriptType, OutputScriptType
 from trezor.utils import HashWriter, ensure
@@ -76,6 +76,12 @@ def ecdsa_sign(node: bip32.HDNode, digest: bytes) -> bytes:
     sig = secp256k1.sign(node.private_key(), digest)
     sigder = der.encode_seq((sig[1:33], sig[33:65]))
     return sigder
+
+
+def bip340_sign(node: bip32.HDNode, digest: bytes) -> bytes:
+    internal_private_key = node.private_key()
+    output_private_key = bip340.tweak_secret_key(internal_private_key)
+    return bip340.sign(output_private_key, digest)
 
 
 def ecdsa_hash_pubkey(pubkey: bytes, coin: CoinInfo) -> bytes:

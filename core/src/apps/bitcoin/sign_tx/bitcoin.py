@@ -9,7 +9,14 @@ from trezor.utils import HashWriter, empty_bytearray, ensure
 from apps.common.writers import write_bitcoin_varint
 
 from .. import addresses, common, multisig, scripts, writers
-from ..common import SIGHASH_ALL, ecdsa_sign, input_is_external, input_is_segwit
+from ..common import (
+    SIGHASH_ALL,
+    SIGHASH_ALL_TAPROOT,
+    bip340_sign,
+    ecdsa_sign,
+    input_is_external,
+    input_is_segwit,
+)
 from ..ownership import verify_nonownership
 from ..verification import SignatureVerifier
 from . import approvers, helpers, progress
@@ -459,8 +466,13 @@ class Bitcoin:
             raise wire.ProcessError("Transaction has changed during signing")
         self.tx_info.check_input(txi)
 
-        node = self.keychain.derive(txi.address_n)
-        key_sign_pub = node.public_key()
+        if txi.script_type == InputScriptType.SPENDP2SHWITNESS:
+            node = self.keychain.derive(txi.address_n)
+            key_sign_pub = node.public_key()
+        else:
+            # Native SegWit has an empty scriptSig. Public key is not needed.
+            key_sign_pub = b""
+
         self.write_tx_input_derived(self.serialized_tx, txi, key_sign_pub, b"")
 
     def sign_bip143_input(self, txi: TxInput) -> tuple[bytes, bytes]:
@@ -489,29 +501,53 @@ class Bitcoin:
 
         return public_key, signature
 
+    def sign_taproot_input(self, i: int, txi: TxInput) -> bytes:
+        self.tx_info.check_input(txi)
+        sigmsg_digest = self.tx_info.hash143.preimage_hash(
+            i,
+            txi,
+            [],
+            1,
+            self.tx_info.tx,
+            self.coin,
+            self.get_sighash_type(txi),
+        )
+
+        node = self.keychain.derive(txi.address_n)
+        return bip340_sign(node, sigmsg_digest)
+
     async def sign_segwit_input(self, i: int) -> None:
         # STAGE_REQUEST_SEGWIT_WITNESS in legacy
         txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
         if txi.script_type not in common.SEGWIT_INPUT_SCRIPT_TYPES:
             raise wire.ProcessError("Transaction has changed during signing")
 
-        public_key, signature = self.sign_bip143_input(txi)
-
-        self.set_serialized_signature(i, signature)
-        if txi.multisig:
-            # find out place of our signature based on the pubkey
-            signature_index = multisig.multisig_pubkey_index(txi.multisig, public_key)
-            scripts.write_witness_multisig(
-                self.serialized_tx,
-                txi.multisig,
-                signature,
-                signature_index,
-                self.get_hash_type(txi),
+        if txi.script_type == InputScriptType.SPENDTAPROOT:
+            signature = self.sign_taproot_input(i, txi)
+            scripts.write_witness_p2tr(
+                self.serialized_tx, signature, self.get_hash_type(txi)
             )
         else:
-            scripts.write_witness_p2wpkh(
-                self.serialized_tx, signature, public_key, self.get_hash_type(txi)
-            )
+            public_key, signature = self.sign_bip143_input(txi)
+
+            if txi.multisig:
+                # find out place of our signature based on the pubkey
+                signature_index = multisig.multisig_pubkey_index(
+                    txi.multisig, public_key
+                )
+                scripts.write_witness_multisig(
+                    self.serialized_tx,
+                    txi.multisig,
+                    signature,
+                    signature_index,
+                    self.get_hash_type(txi),
+                )
+            else:
+                scripts.write_witness_p2wpkh(
+                    self.serialized_tx, signature, public_key, self.get_hash_type(txi)
+                )
+
+        self.set_serialized_signature(i, signature)
 
     async def get_legacy_tx_digest(
         self,
@@ -654,7 +690,10 @@ class Bitcoin:
     # ===
 
     def get_sighash_type(self, txi: TxInput) -> int:
-        return SIGHASH_ALL
+        if common.input_is_taproot(txi):
+            return SIGHASH_ALL_TAPROOT
+        else:
+            return SIGHASH_ALL
 
     def get_hash_type(self, txi: TxInput) -> int:
         """ Return the nHashType flags."""
