@@ -180,6 +180,54 @@ impl Rect {
             y1: self.y1,
         }
     }
+
+    pub fn hsplit(self, height: i32) -> (Self, Self) {
+        let height = if height.is_positive() {
+            height
+        } else {
+            self.height() + height
+        };
+
+        let top = Self {
+            x0: self.x0,
+            y0: self.y0,
+            x1: self.x1,
+            y1: self.y0 + height,
+        };
+
+        let bottom = Self {
+            x0: self.x0,
+            y0: top.y0 + height,
+            x1: self.x1,
+            y1: self.y1,
+        };
+
+        (top, bottom)
+    }
+
+    pub fn vsplit(self, width: i32) -> (Self, Self) {
+        let width = if width.is_positive() {
+            width
+        } else {
+            self.width() + width
+        };
+
+        let left = Self {
+            x0: self.x0,
+            y0: self.y0,
+            x1: self.x0 + width,
+            y1: self.y1,
+        };
+
+        let right = Self {
+            x0: left.x0 + width,
+            y0: self.y0,
+            x1: self.x1,
+            y1: self.y1,
+        };
+
+        (left, right)
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]

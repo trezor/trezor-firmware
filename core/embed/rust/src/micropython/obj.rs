@@ -380,6 +380,23 @@ where
     }
 }
 
+impl Obj {
+    /// Conversion to Rust types with typed `None`.
+    pub fn try_into_option<T>(self) -> Result<Option<T>, Error>
+    where
+        T: TryFrom<Obj>,
+        <T as TryFrom<Obj>>::Error: Into<Error>,
+    {
+        if self == Obj::const_none() {
+            return Ok(None);
+        }
+        match self.try_into() {
+            Ok(x) => Ok(Some(x)),
+            Err(e) => Err(e.into()),
+        }
+    }
+}
+
 impl From<TryFromIntError> for Error {
     fn from(_: TryFromIntError) -> Self {
         Self::OutOfRange
