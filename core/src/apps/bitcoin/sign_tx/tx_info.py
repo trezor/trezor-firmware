@@ -77,8 +77,10 @@ class TxInfoBase:
         # The minimum nSequence of all inputs.
         self.min_sequence = _SEQUENCE_FINAL
 
-    def add_input(self, txi: TxInput) -> None:
-        self.hash143.add_input(txi)  # all inputs are included (non-segwit as well)
+    def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
+        self.hash143.add_input(
+            txi, script_pubkey
+        )  # all inputs are included (non-segwit as well)
         writers.write_tx_input_check(self.h_tx_check, txi)
         self.min_sequence = min(self.min_sequence, txi.sequence)
 
@@ -147,8 +149,8 @@ class OriginalTxInfo(TxInfoBase):
         self.verification_input: TxInput | None = None
         self.verification_index: int | None = None
 
-    def add_input(self, txi: TxInput) -> None:
-        super().add_input(txi)
+    def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
+        super().add_input(txi, script_pubkey)
         writers.write_tx_input(self.h_tx, txi, txi.script_sig or bytes())
 
         # For verification use the first original input that specifies address_n.

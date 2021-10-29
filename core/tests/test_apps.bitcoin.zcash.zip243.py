@@ -201,7 +201,7 @@ class TestZcashZip243(unittest.TestCase):
                     script_type = i["script_type"],
                     sequence = i["sequence"],
                 )
-                zip243.add_input(txi)
+                zip243.add_input(txi, b"")
 
             for o in v["outputs"]:
                 txo = PrevOutput(

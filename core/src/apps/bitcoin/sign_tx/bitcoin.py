@@ -128,8 +128,8 @@ class Bitcoin:
         for i in range(self.tx_info.tx.inputs_count):
             # STAGE_REQUEST_1_INPUT in legacy
             txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
-
-            self.tx_info.add_input(txi)
+            script_pubkey = self.input_derive_script(txi)
+            self.tx_info.add_input(txi, script_pubkey)
 
             if input_is_segwit(txi):
                 self.segwit.add(i)
@@ -141,7 +141,7 @@ class Bitcoin:
                 await self.process_internal_input(txi)
 
             if txi.orig_hash:
-                await self.process_original_input(txi)
+                await self.process_original_input(txi, script_pubkey)
 
         self.h_inputs = self.tx_info.get_tx_check_digest()
 
@@ -243,7 +243,7 @@ class Bitcoin:
     async def process_external_input(self, txi: TxInput) -> None:
         self.approver.add_external_input(txi)
 
-    async def process_original_input(self, txi: TxInput) -> None:
+    async def process_original_input(self, txi: TxInput, script_pubkey: bytes) -> None:
         assert txi.orig_hash is not None
         assert txi.orig_index is not None
 
@@ -270,19 +270,24 @@ class Bitcoin:
         )
 
         # Verify that the original input matches:
+        #
         # An input is characterized by its prev_hash and prev_index. We also check that the
         # amounts match, so that we don't have to call get_prevtx_output() twice for the same
-        # prevtx output. Verifying that script_type matches is just a sanity check, because
-        # because we count both inputs as internal or external based only on txi.script_type.
+        # prevtx output. Verifying that script_type matches is just a sanity check, because we
+        # count both inputs as internal or external based only on txi.script_type.
+        #
+        # When all inputs are taproot, we don't check the prevtxs, so we have to ensure that the
+        # claims about the script_pubkey values and amounts remain consistent throughout.
         if (
             orig_txi.prev_hash != txi.prev_hash
             or orig_txi.prev_index != txi.prev_index
             or orig_txi.amount != txi.amount
             or orig_txi.script_type != txi.script_type
+            or self.input_derive_script(orig_txi) != script_pubkey
         ):
             raise wire.ProcessError("Original input does not match current input.")
 
-        orig.add_input(orig_txi)
+        orig.add_input(orig_txi, script_pubkey)
         orig.index += 1
 
     async def fetch_removed_original_outputs(
@@ -358,13 +363,7 @@ class Bitcoin:
 
             assert orig.verification_index is not None
             txi = orig.verification_input
-
-            node = self.keychain.derive(txi.address_n)
-            address = addresses.get_address(
-                txi.script_type, self.coin, node, txi.multisig
-            )
-            script_pubkey = scripts.output_derive_script(address, self.coin)
-
+            script_pubkey = self.input_derive_script(txi)
             verifier = SignatureVerifier(
                 script_pubkey, txi.script_sig, txi.witness, self.coin
             )
@@ -725,8 +724,17 @@ class Bitcoin:
         self.tx_req.serialized.signature_index = index
         self.tx_req.serialized.signature = signature
 
-    # Tx Outputs
+    # scriptPubKey derivation
     # ===
+
+    def input_derive_script(self, txi: TxInput) -> bytes:
+        if input_is_external(txi):
+            assert txi.script_pubkey is not None  # checked in sanitize_tx_input
+            return txi.script_pubkey
+
+        node = self.keychain.derive(txi.address_n)
+        address = addresses.get_address(txi.script_type, self.coin, node, txi.multisig)
+        return scripts.output_derive_script(address, self.coin)
 
     def output_derive_script(self, txo: TxOutput) -> bytes:
         if txo.script_type == OutputScriptType.PAYTOOPRETURN:

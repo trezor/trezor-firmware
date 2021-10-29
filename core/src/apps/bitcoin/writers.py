@@ -53,6 +53,7 @@ def write_tx_input_check(w: Writer, i: TxInput) -> None:
         write_uint32(w, n)
     write_uint32(w, i.sequence)
     write_uint64(w, i.amount or 0)
+    write_bytes_prefixed(w, i.script_pubkey or b"")
 
 
 def write_tx_output(w: Writer, o: TxOutput | PrevOutput, script_pubkey: bytes) -> None:

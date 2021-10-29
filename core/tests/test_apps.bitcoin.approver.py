@@ -40,6 +40,7 @@ class TestApprover(unittest.TestCase):
                 prev_hash=b"",
                 prev_index=0,
                 amount=denomination + 1000000 * (i + 1),
+                script_pubkey=bytes(22),
                 script_type=InputScriptType.EXTERNAL,
                 sequence=0xffffffff,
             ) for i in range(99)
