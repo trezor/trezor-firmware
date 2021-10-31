@@ -32,7 +32,7 @@ class TestCalculateTxWeight(unittest.TestCase):
                             address_n=[],
                             multisig=None)
 
-        calculator = TxWeightCalculator(1, 1)
+        calculator = TxWeightCalculator()
         calculator.add_input(inp1)
         calculator.add_output(output_derive_script(out1.address, coin))
 
@@ -71,14 +71,14 @@ class TestCalculateTxWeight(unittest.TestCase):
             multisig=None,
         )
 
-        calculator = TxWeightCalculator(1, 2)
+        calculator = TxWeightCalculator()
         calculator.add_input(inp1)
         calculator.add_output(output_derive_script(out1.address, coin))
         calculator.add_output(output_derive_script(out2.address, coin))
 
         self.assertEqual(calculator.get_total(), 670)
         # non-segwit: header, inputs, outputs, locktime 4*(4+65+67+4) = 560
-        # segwit: segwit header, witness count, 2x witness 1*(2+1+107) = 110
+        # segwit: segwit header, witness stack item count, witness 1*(2+1+107) = 110
         # total 670
 
     def test_native_p2wpkh_txweight(self):
@@ -111,14 +111,14 @@ class TestCalculateTxWeight(unittest.TestCase):
             multisig=None,
         )
 
-        calculator = TxWeightCalculator(1, 2)
+        calculator = TxWeightCalculator()
         calculator.add_input(inp1)
         calculator.add_output(output_derive_script(out1.address, coin))
         calculator.add_output(output_derive_script(out2.address, coin))
 
         self.assertEqual(calculator.get_total(), 566)
         # non-segwit: header, inputs, outputs, locktime 4*(4+42+64+4) = 456
-        # segwit: segwit header, witness count, 2x witness 1*(2+1+107) = 110
+        # segwit: segwit header, witness stack item count, witness 1*(2+1+107) = 110
         # total 566
 
 

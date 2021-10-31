@@ -27,7 +27,7 @@ if False:
 class Approver:
     def __init__(self, tx: SignTx, coin: CoinInfo) -> None:
         self.coin = coin
-        self.weight = tx_weight.TxWeightCalculator(tx.inputs_count, tx.outputs_count)
+        self.weight = tx_weight.TxWeightCalculator()
 
         # amounts in the current transaction
         self.total_in = 0  # sum of input amounts
@@ -267,9 +267,7 @@ class CoinJoinApprover(Approver):
             raise wire.DataError("Coin name does not match authorization.")
 
         # Upper bound on the user's contribution to the weight of the transaction.
-        self.our_weight = tx_weight.TxWeightCalculator(
-            tx.inputs_count, tx.outputs_count
-        )
+        self.our_weight = tx_weight.TxWeightCalculator()
 
         # base for coordinator fee to be multiplied by fee_per_anonymity
         self.coordinator_fee_base = 0
