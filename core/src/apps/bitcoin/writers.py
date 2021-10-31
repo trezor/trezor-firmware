@@ -65,10 +65,10 @@ def write_op_push(w: Writer, n: int) -> None:
     ensure(0 <= n <= 0xFFFF_FFFF)
     if n < 0x4C:
         w.append(n & 0xFF)
-    elif n < 0xFF:
+    elif n < 0x100:
         w.append(0x4C)
         w.append(n & 0xFF)
-    elif n < 0xFFFF:
+    elif n < 0x1_0000:
         w.append(0x4D)
         w.append(n & 0xFF)
         w.append((n >> 8) & 0xFF)
@@ -84,9 +84,9 @@ def op_push_length(n: int) -> int:
     ensure(0 <= n <= 0xFFFF_FFFF)
     if n < 0x4C:
         return 1
-    elif n < 0xFF:
+    elif n < 0x100:
         return 2
-    elif n < 0xFFFF:
+    elif n < 0x1_0000:
         return 3
     else:
         return 4
