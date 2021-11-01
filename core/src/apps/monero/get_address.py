@@ -7,9 +7,16 @@ from apps.monero import misc
 from apps.monero.xmr import addresses, crypto, monero
 from apps.monero.xmr.networks import net_version
 
+if False:
+    from trezor.wire import Context
+    from trezor.messages import MoneroGetAddress
+    from apps.common.keychain import Keychain
+
 
 @auto_keychain(__name__)
-async def get_address(ctx, msg, keychain):
+async def get_address(
+    ctx: Context, msg: MoneroGetAddress, keychain: Keychain
+) -> MoneroAddress:
     await paths.validate_path(ctx, keychain, msg.address_n)
 
     creds = misc.get_creds(keychain, msg.address_n, msg.network_type)

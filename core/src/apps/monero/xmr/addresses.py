@@ -38,8 +38,10 @@ def decode_addr(addr: bytes) -> tuple[int, bytes, bytes]:
 
 
 def public_addr_encode(
-    pub_addr: MoneroAccountPublicAddress, is_sub=False, net=NetworkTypes.MAINNET
-):
+    pub_addr: MoneroAccountPublicAddress,
+    is_sub: bool = False,
+    net: NetworkTypes = NetworkTypes.MAINNET,
+) -> str:
     """
     Encodes public address to Monero address
     """
@@ -73,7 +75,7 @@ def classify_subaddresses(
     return num_stdaddresses, num_subaddresses, single_dest_subaddress
 
 
-def addr_eq(a: MoneroAccountPublicAddress, b: MoneroAccountPublicAddress):
+def addr_eq(a: MoneroAccountPublicAddress, b: MoneroAccountPublicAddress) -> bool:
     return (
         a.spend_public_key == b.spend_public_key
         and a.view_public_key == b.view_public_key

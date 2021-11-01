@@ -10,41 +10,41 @@ class PreMlsagHasher:
     Iterative construction of the pre_mlsag_hash
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.state = 0
         self.kc_master = crypto.get_keccak()
         self.rsig_hasher = crypto.get_keccak()
         self.rtcsig_hasher = KeccakXmrArchive()
 
-    def init(self):
+    def init(self) -> None:
         if self.state != 0:
             raise ValueError("State error")
 
         self.state = 1
 
-    def set_message(self, message: bytes):
+    def set_message(self, message: bytes) -> None:
         self.kc_master.update(message)
 
-    def set_type_fee(self, rv_type: int, fee: int):
+    def set_type_fee(self, rv_type: int, fee: int) -> None:
         if self.state != 1:
             raise ValueError("State error")
         self.state = 2
         self.rtcsig_hasher.uint(rv_type, 1)  # UInt8
         self.rtcsig_hasher.uvarint(fee)  # UVarintType
 
-    def set_ecdh(self, ecdh: bytes):
+    def set_ecdh(self, ecdh: bytes) -> None:
         if self.state != 2 and self.state != 3 and self.state != 4:
             raise ValueError("State error")
         self.state = 4
         self.rtcsig_hasher.buffer(ecdh)
 
-    def set_out_pk_commitment(self, out_pk_commitment: bytes):
+    def set_out_pk_commitment(self, out_pk_commitment: bytes) -> None:
         if self.state != 4 and self.state != 5:
             raise ValueError("State error")
         self.state = 5
         self.rtcsig_hasher.buffer(out_pk_commitment)  # ECKey
 
-    def rctsig_base_done(self):
+    def rctsig_base_done(self) -> None:
         if self.state != 5:
             raise ValueError("State error")
         self.state = 6
@@ -53,7 +53,7 @@ class PreMlsagHasher:
         self.kc_master.update(c_hash)
         self.rtcsig_hasher = None
 
-    def rsig_val(self, p: bytes | list[bytes] | Bulletproof, raw: bool = False):
+    def rsig_val(self, p: bytes | list[bytes] | Bulletproof, raw: bool = False) -> None:
         if self.state == 8:
             raise ValueError("State error")
 

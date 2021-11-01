@@ -6,6 +6,7 @@ from trezor import log
 from apps.monero.xmr import crypto
 
 if False:
+    from trezor.wire import Context
     from apps.monero.xmr.types import Ge25519, Sc25519
     from apps.monero.xmr.credentials import AccountCreds
 
@@ -23,7 +24,7 @@ class State:
     STEP_ALL_OUT = const(500)
     STEP_SIGN = const(600)
 
-    def __init__(self, ctx):
+    def __init__(self, ctx: Context) -> None:
         from apps.monero.xmr.keccak_hasher import KeccakXmrArchive
         from apps.monero.xmr.mlsag_hasher import PreMlsagHasher
 
@@ -141,7 +142,7 @@ class State:
         self.full_message_hasher = PreMlsagHasher()
         self.full_message: bytes | None = None
 
-    def mem_trace(self, x=None, collect=False):
+    def mem_trace(self, x=None, collect: bool = False) -> None:
         if __debug__:
             log.debug(
                 __name__,

@@ -20,7 +20,7 @@ random_bytes = random.bytes
 ct_equals = tcry.ct_equals
 
 
-def keccak_factory(data=None):
+def keccak_factory(data: bytes | None = None):
     return sha3_256(data=data, keccak=True)
 
 
@@ -29,14 +29,14 @@ keccak_hash = tcry.xmr_fast_hash
 keccak_hash_into = tcry.xmr_fast_hash
 
 
-def keccak_2hash(inp, buff=None):
+def keccak_2hash(inp: bytes, buff: bytes | None = None) -> bytes:
     buff = buff if buff else bytearray(32)
     keccak_hash_into(buff, inp)
     keccak_hash_into(buff, buff)
     return buff
 
 
-def compute_hmac(key, msg):
+def compute_hmac(key: bytes, msg: bytes) -> bytes:
     digestmod = keccak_factory
     inner = digestmod()
     block_size = inner.block_size
@@ -181,7 +181,7 @@ def ge25519_double_scalarmult_base_vartime(a, A, b) -> Ge25519:
 ge25519_double_scalarmult_vartime2 = tcry.xmr_add_keys3
 
 
-def identity(byte_enc=False) -> Ge25519 | bytes:
+def identity(byte_enc: bool = False) -> Ge25519 | bytes:
     idd = tcry.ge25519_set_neutral()
     return idd if not byte_enc else encodepoint(idd)
 

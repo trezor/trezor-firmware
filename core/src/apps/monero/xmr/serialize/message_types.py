@@ -8,6 +8,9 @@ from apps.monero.xmr.serialize.int_serialize import (
     load_uvarint,
 )
 
+if False:
+    from trezor.utils import HashWriter
+
 
 class UnicodeType(XmrType):
     """
@@ -15,12 +18,12 @@ class UnicodeType(XmrType):
     """
 
     @staticmethod
-    def dump(writer, s):
+    def dump(writer: HashWriter, s) -> None:
         dump_uvarint(writer, len(s))
         writer.write(bytes(s))
 
     @staticmethod
-    def load(reader):
+    def load(reader) -> str:
         ivalue = load_uvarint(reader)
         fvalue = bytearray(ivalue)
         reader.readinto(fvalue)
@@ -37,7 +40,7 @@ class BlobType(XmrType):
     SIZE = 0
 
     @classmethod
-    def dump(cls, writer, elem: bytes):
+    def dump(cls, writer: HashWriter, elem: bytes) -> None:
         if cls.FIX_SIZE:
             if cls.SIZE != len(elem):
                 raise ValueError("Size mismatch")
@@ -67,7 +70,7 @@ class ContainerType(XmrType):
     ELEM_TYPE = None
 
     @classmethod
-    def dump(cls, writer, elems, elem_type=None):
+    def dump(cls, writer: HashWriter, elems, elem_type=None) -> None:
         if elem_type is None:
             elem_type = cls.ELEM_TYPE
         if cls.FIX_SIZE:
@@ -79,7 +82,7 @@ class ContainerType(XmrType):
             elem_type.dump(writer, elem)
 
     @classmethod
-    def load(cls, reader, elem_type=None):
+    def load(cls, reader, elem_type=None) -> list:
         if elem_type is None:
             elem_type = cls.ELEM_TYPE
         if cls.FIX_SIZE:
@@ -100,7 +103,7 @@ class VariantType(XmrType):
     """
 
     @classmethod
-    def dump(cls, writer, elem):
+    def dump(cls, writer: HashWriter, elem) -> None:
         for field in cls.f_specs():
             ftype = field[1]
             if isinstance(elem, ftype):
@@ -141,7 +144,7 @@ class MessageType(XmrType):
     __repr__ = obj_repr
 
     @classmethod
-    def dump(cls, writer, msg):
+    def dump(cls, writer: HashWriter, msg) -> None:
         defs = cls.f_specs()
         for field in defs:
             fname, ftype, *fparams = field

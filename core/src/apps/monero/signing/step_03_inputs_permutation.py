@@ -49,7 +49,7 @@ async def tsx_inputs_permutation(
     return MoneroTransactionInputsPermutationAck()
 
 
-def _check_permutation(permutation: list[int]):
+def _check_permutation(permutation: list[int]) -> None:
     for n in range(len(permutation)):
         if n not in permutation:
             raise ValueError("Invalid permutation")

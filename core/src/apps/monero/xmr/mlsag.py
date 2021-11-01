@@ -109,7 +109,9 @@ def generate_mlsag_simple(
     return generate_mlsag(message, M, sk, index, dsRows, mg_buff)
 
 
-def gen_mlsag_assert(pk: KeyM, xx: list[Sc25519], index: int, dsRows: int):
+def gen_mlsag_assert(
+    pk: KeyM, xx: list[Sc25519], index: int, dsRows: int
+) -> tuple[int, int]:
     """
     Conditions check
     """
@@ -140,7 +142,6 @@ def generate_first_c_and_key_images(
     index: int,
     dsRows: int,
     rows: int,
-    cols: int,
 ) -> tuple[Sc25519, list[Ge25519], list[Ge25519]]:
     """
     MLSAG computation - the part with secret keys
@@ -150,7 +151,6 @@ def generate_first_c_and_key_images(
     :param index: specifies corresponding public key to the `xx`'s private key in the `pk` array
     :param dsRows: row number where the pubkeys "end" (and commitments follow)
     :param rows: total number of rows
-    :param cols: size of ring
     """
     II = _key_vector(dsRows)
     alpha = _key_vector(rows)
@@ -227,7 +227,7 @@ def generate_mlsag(
 
     # calculates the "first" c, key images and random scalars alpha
     c_old, II, alpha = generate_first_c_and_key_images(
-        message, pk, xx, index, dsRows, rows, cols
+        message, pk, xx, index, dsRows, rows
     )
 
     i = (index + 1) % cols
@@ -464,21 +464,21 @@ def _generate_clsag(
     return mg_buff
 
 
-def _key_vector(rows):
+def _key_vector(rows: int) -> list[None]:
     return [None] * rows
 
 
-def _key_matrix(rows, cols):
+def _key_matrix(rows: int, cols: int) -> list[None | list[None]]:
     """
     first index is columns (so slightly backward from math)
     """
     rv = [None] * cols
-    for i in range(0, cols):
+    for i in range(cols):
         rv[i] = _key_vector(rows)
     return rv
 
 
-def _hasher_message(message):
+def _hasher_message(message: bytes):
     """
     Returns incremental hasher for MLSAG
     """
@@ -487,6 +487,6 @@ def _hasher_message(message):
     return ctx
 
 
-def _hash_point(hasher, point, tmp_buff):
+def _hash_point(hasher, point, tmp_buff) -> None:
     crypto.encodepoint_into(tmp_buff, point)
     hasher.update(tmp_buff)

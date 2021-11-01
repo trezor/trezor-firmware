@@ -385,7 +385,7 @@ def _dump_rsig_bp(rsig: Bulletproof) -> bytes:
 
 
 def _return_rsig_data(
-    rsig: bytes = None, mask: bytes = None
+    rsig: bytes | None = None, mask: bytes | None = None
 ) -> MoneroTransactionRsigData:
     if rsig is None and mask is None:
         return None

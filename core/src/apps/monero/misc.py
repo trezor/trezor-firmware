@@ -1,8 +1,15 @@
 if False:
     from apps.monero.xmr.types import Sc25519
+    from apps.common.keychain import Keychain
+    from apps.monero.xmr.networks import NetworkTypes
+    from apps.monero.xmr.credentials import AccountCreds
 
 
-def get_creds(keychain, address_n=None, network_type=None):
+def get_creds(
+    keychain: Keychain,
+    address_n: list[int] | None = None,
+    network_type: NetworkTypes | None = None,
+) -> AccountCreds:
     from apps.monero.xmr import monero
     from apps.monero.xmr.credentials import AccountCreds
 

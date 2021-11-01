@@ -24,8 +24,10 @@ class StageNet:
 
 
 def net_version(
-    network_type=NetworkTypes.MAINNET, is_subaddr=False, is_integrated=False
-):
+    network_type: NetworkTypes | None = NetworkTypes.MAINNET,
+    is_subaddr: bool = False,
+    is_integrated: bool = False,
+) -> bytes:
     """
     Network version bytes used for address construction
     """

@@ -19,7 +19,7 @@ class AccountCreds:
         spend_key_public: Ge25519 | None = None,
         address: str | None = None,
         network_type=NetworkTypes.MAINNET,
-    ):
+    ) -> None:
         self.view_key_private = view_key_private
         self.view_key_public = view_key_public
         self.spend_key_private = spend_key_private
@@ -33,7 +33,7 @@ class AccountCreds:
         priv_view_key: Sc25519,
         priv_spend_key: Sc25519,
         network_type=NetworkTypes.MAINNET,
-    ):
+    ) -> AccountCreds:
         pub_view_key = crypto.scalarmult_base(priv_view_key)
         pub_spend_key = crypto.scalarmult_base(priv_spend_key)
         addr = encode_addr(

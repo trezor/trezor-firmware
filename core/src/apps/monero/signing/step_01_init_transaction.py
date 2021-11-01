@@ -122,7 +122,9 @@ async def init_transaction(
     return MoneroTransactionInitAck(hmacs=hmacs, rsig_data=rsig_data)
 
 
-def _check_subaddresses(state: State, outputs: list[MoneroTransactionDestinationEntry]):
+def _check_subaddresses(
+    state: State, outputs: list[MoneroTransactionDestinationEntry]
+) -> None:
     """
     Using subaddresses leads to a few poorly documented exceptions.
 
@@ -181,7 +183,7 @@ def _get_primary_change_address(state: State) -> MoneroAccountPublicAddress:
     )
 
 
-def _check_rsig_data(state: State, rsig_data: MoneroTransactionRsigData):
+def _check_rsig_data(state: State, rsig_data: MoneroTransactionRsigData) -> None:
     """
     There are two types of monero ring confidential transactions:
     1. RCTTypeFull = 1 (used if num_inputs == 1 && Borromean)
@@ -210,7 +212,7 @@ def _check_rsig_data(state: State, rsig_data: MoneroTransactionRsigData):
     _check_grouping(state)
 
 
-def _check_grouping(state: State):
+def _check_grouping(state: State) -> None:
     acc = 0
     for x in state.rsig_grouping:
         if x is None or x <= 0:
@@ -221,7 +223,9 @@ def _check_grouping(state: State):
         raise ValueError("Invalid grouping")
 
 
-def _check_change(state: State, outputs: list[MoneroTransactionDestinationEntry]):
+def _check_change(
+    state: State, outputs: list[MoneroTransactionDestinationEntry]
+) -> None:
     """
     Check if the change address in state.output_change (from `tsx_data.outputs`) is
     a) among tx outputs
@@ -270,7 +274,7 @@ def _check_change(state: State, outputs: list[MoneroTransactionDestinationEntry]
         raise signing.ChangeAddressError("Change address differs from ours")
 
 
-def _compute_sec_keys(state: State, tsx_data: MoneroTransactionData):
+def _compute_sec_keys(state: State, tsx_data: MoneroTransactionData) -> None:
     """
     Generate master key H( H(TsxData || tx_priv) || rand )
     """
@@ -288,7 +292,7 @@ def _compute_sec_keys(state: State, tsx_data: MoneroTransactionData):
     state.key_enc = crypto.keccak_2hash(b"enc" + master_key)
 
 
-def _precompute_subaddr(state: State, account: int, indices: list[int]):
+def _precompute_subaddr(state: State, account: int, indices: list[int]) -> None:
     """
     Precomputes subaddresses for account (major) and list of indices (minors)
     Subaddresses have to be stored in encoded form - unique representation.
@@ -297,7 +301,7 @@ def _precompute_subaddr(state: State, account: int, indices: list[int]):
     monero.compute_subaddresses(state.creds, account, indices, state.subaddresses)
 
 
-def _process_payment_id(state: State, tsx_data: MoneroTransactionData):
+def _process_payment_id(state: State, tsx_data: MoneroTransactionData) -> None:
     """
     Writes payment id to the `extra` field under the TX_EXTRA_NONCE = 0x02 tag.
 
@@ -355,7 +359,7 @@ def _process_payment_id(state: State, tsx_data: MoneroTransactionData):
 
 def _get_key_for_payment_id_encryption(
     tsx_data: MoneroTransactionData,
-    change_addr=None,
+    change_addr: MoneroAccountPublicAddress | None = None,
     add_dummy_payment_id: bool = False,
 ) -> bytes:
     """

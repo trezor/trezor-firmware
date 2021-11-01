@@ -1,7 +1,11 @@
+if False:
+    from trezor.utils import HashWriter
+
+
 _UINT_BUFFER = bytearray(1)
 
 
-def load_uint(reader, width):
+def load_uint(reader, width: int) -> int:
     """
     Constant-width integer serialization
     """
@@ -15,7 +19,7 @@ def load_uint(reader, width):
     return result
 
 
-def dump_uint(writer, n, width):
+def dump_uint(writer: HashWriter, n: int, width: int) -> None:
     """
     Constant-width integer serialization
     """
@@ -26,7 +30,7 @@ def dump_uint(writer, n, width):
         n >>= 8
 
 
-def uvarint_size(n):
+def uvarint_size(n: int) -> int:
     """
     Returns size in bytes n would occupy serialized as varint
     """
@@ -37,7 +41,7 @@ def uvarint_size(n):
     return bts
 
 
-def load_uvarint_b(buffer):
+def load_uvarint_b(buffer: bytearray) -> int:
     """
     Variable int deserialization, synchronous from buffer.
     """
@@ -51,7 +55,7 @@ def load_uvarint_b(buffer):
     return result
 
 
-def dump_uvarint_b(n):
+def dump_uvarint_b(n: int) -> bytearray:
     """
     Serializes uvarint to the buffer
     """
@@ -59,7 +63,7 @@ def dump_uvarint_b(n):
     return dump_uvarint_b_into(n, buffer, 0)
 
 
-def dump_uvarint_b_into(n, buffer, offset=0):
+def dump_uvarint_b_into(n: int, buffer: bytearray, offset: int = 0) -> bytearray:
     """
     Serializes n as variable size integer to the provided buffer.
     """
@@ -74,7 +78,7 @@ def dump_uvarint_b_into(n, buffer, offset=0):
     return buffer
 
 
-def dump_uint_b_into(n, width, buffer, offset=0):
+def dump_uint_b_into(n: int, width: int, buffer: bytearray, offset: int = 0):
     """
     Serializes fixed size integer to the buffer
     """
@@ -84,7 +88,7 @@ def dump_uint_b_into(n, width, buffer, offset=0):
     return buffer
 
 
-def load_uvarint(reader):
+def load_uvarint(reader) -> int:
     buffer = _UINT_BUFFER
     result = 0
     shift = 0
@@ -97,7 +101,7 @@ def load_uvarint(reader):
     return result
 
 
-def dump_uvarint(writer, n):
+def dump_uvarint(writer: HashWriter, n: int) -> None:
     if n < 0:
         raise ValueError("Cannot dump signed value, convert it to unsigned first.")
     buffer = _UINT_BUFFER

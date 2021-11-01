@@ -16,9 +16,15 @@ from apps.monero import layout, misc
 from apps.monero.xmr import crypto, key_image, monero
 from apps.monero.xmr.crypto import chacha_poly
 
+if False:
+    from trezor.wire import Context
+    from apps.common.keychain import Keychain
+
 
 @auto_keychain(__name__)
-async def key_image_sync(ctx, msg, keychain):
+async def key_image_sync(
+    ctx: Context, msg, keychain: Keychain
+) -> MoneroKeyImageSyncFinalAck:
     state = KeyImageSync()
 
     res = await _init_step(state, ctx, msg, keychain)
@@ -27,7 +33,7 @@ async def key_image_sync(ctx, msg, keychain):
         res = await _sync_step(state, ctx, msg)
         gc.collect()
     msg = await ctx.call(res, MoneroKeyImageSyncFinalRequest)
-    res = await _final_step(state, ctx)
+    res = await _final_step(state)
 
     return res
 
@@ -43,7 +49,9 @@ class KeyImageSync:
         self.hasher = crypto.get_keccak()
 
 
-async def _init_step(s, ctx, msg, keychain):
+async def _init_step(
+    s: KeyImageSync, ctx: Context, msg, keychain: Keychain
+) -> MoneroKeyImageExportInitAck:
     await paths.validate_path(ctx, keychain, msg.address_n)
 
     s.creds = misc.get_creds(keychain, msg.address_n, msg.network_type)
@@ -62,7 +70,7 @@ async def _init_step(s, ctx, msg, keychain):
     return MoneroKeyImageExportInitAck()
 
 
-async def _sync_step(s, ctx, tds):
+async def _sync_step(s: KeyImageSync, ctx: Context, tds) -> MoneroKeyImageSyncStepAck:
     if not tds.tdis:
         raise wire.DataError("Empty")
 
@@ -99,7 +107,7 @@ async def _sync_step(s, ctx, tds):
     return MoneroKeyImageSyncStepAck(kis=kis)
 
 
-async def _final_step(s, ctx):
+async def _final_step(s: KeyImageSync) -> MoneroKeyImageSyncFinalAck:
     if s.current_output + 1 != s.num_outputs:
         raise wire.DataError("Invalid number of outputs")
 

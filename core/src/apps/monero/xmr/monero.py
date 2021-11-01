@@ -15,7 +15,9 @@ class XmrNoSuchAddressException(XmrException):
     pass
 
 
-def get_subaddress_secret_key(secret_key: Sc25519, major: int = 0, minor: int = 0):
+def get_subaddress_secret_key(
+    secret_key: Sc25519, major: int = 0, minor: int = 0
+) -> Sc25519:
     """
     Builds subaddress secret key from the subaddress index
     Hs(SubAddr || a || index_major || index_minor)
@@ -72,7 +74,7 @@ def is_out_to_account(
     creds: AccountCreds | None = None,
     sub_addr_major: int = None,
     sub_addr_minor: int = None,
-):
+) -> tuple[tuple[int, int], Ge25519] | None:
     """
     Checks whether the given transaction is sent to the account.
     Searches subaddresses for the computed subaddress_spendkey.

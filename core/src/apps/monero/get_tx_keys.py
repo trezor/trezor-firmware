@@ -24,12 +24,18 @@ from apps.monero import layout, misc
 from apps.monero.xmr import crypto
 from apps.monero.xmr.crypto import chacha_poly
 
-_GET_TX_KEY_REASON_TX_KEY = 0
+if False:
+    from trezor.wire import Context
+    from apps.common.keychain import Keychain
+
+
 _GET_TX_KEY_REASON_TX_DERIVATION = 1
 
 
 @auto_keychain(__name__)
-async def get_tx_keys(ctx, msg: MoneroGetTxKeyRequest, keychain):
+async def get_tx_keys(
+    ctx: Context, msg: MoneroGetTxKeyRequest, keychain: Keychain
+) -> MoneroGetTxKeyAck:
     await paths.validate_path(ctx, keychain, msg.address_n)
 
     do_deriv = msg.reason == _GET_TX_KEY_REASON_TX_DERIVATION

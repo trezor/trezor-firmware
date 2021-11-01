@@ -5,6 +5,9 @@ from apps.monero.xmr.serialize.int_serialize import (
     load_uvarint,
 )
 
+if False:
+    from trezor.utils import HashWriter
+
 
 class XmrType:
     pass
@@ -16,7 +19,7 @@ class UVarintType(XmrType):
         return load_uvarint(reader)
 
     @staticmethod
-    def dump(writer, n: int):
+    def dump(writer: HashWriter, n: int) -> None:
         return dump_uvarint(writer, n)
 
 
@@ -28,7 +31,7 @@ class IntType(XmrType):
         return load_uint(reader, cls.WIDTH)
 
     @classmethod
-    def dump(cls, writer, n: int):
+    def dump(cls, writer: HashWriter, n: int) -> None:
         return dump_uint(writer, n, cls.WIDTH)
 
 

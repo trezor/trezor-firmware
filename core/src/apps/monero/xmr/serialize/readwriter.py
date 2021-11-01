@@ -4,13 +4,13 @@ import gc
 class MemoryReaderWriter:
     def __init__(
         self,
-        buffer=None,
-        read_empty=False,
-        threshold=None,
-        do_gc=False,
-        preallocate=None,
+        buffer: bytearray | None = None,
+        read_empty: bool = False,
+        threshold: int | None = None,
+        do_gc: bool = False,
+        preallocate: int | None = None,
         **kwargs
-    ):
+    ) -> None:
         self.buffer = buffer
         self.nread = 0
         self.nwritten = 0
@@ -30,15 +30,15 @@ class MemoryReaderWriter:
         else:
             self.woffset = len(buffer)
 
-    def is_empty(self):
+    def is_empty(self) -> bool:
         return self.offset == len(self.buffer) or self.offset == self.woffset
 
-    def preallocate(self, size):
+    def preallocate(self, size: int) -> None:
         self.buffer = bytearray(size)
         self.offset = 0
         self.woffset = 0
 
-    def readinto(self, buf):
+    def readinto(self, buf: bytearray) -> int:
         ln = len(buf)
         if not self.read_empty and ln > 0 and self.offset == len(self.buffer):
             raise EOFError
@@ -62,7 +62,7 @@ class MemoryReaderWriter:
 
         return nread
 
-    def write(self, buf):
+    def write(self, buf: bytearray) -> int:
         nwritten = len(buf)
         nall = len(self.buffer)
         towrite = nwritten
@@ -95,6 +95,6 @@ class MemoryReaderWriter:
         self.ndata += nwritten
         return nwritten
 
-    def get_buffer(self):
+    def get_buffer(self) -> bytearray:
         mv = memoryview(self.buffer)
         return mv[self.offset : self.woffset]
