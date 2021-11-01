@@ -10,7 +10,7 @@ from micropython import const
 from trezor import wire
 from trezor.enums import InputScriptType
 
-from .. import common
+from .. import common, ownership
 
 if False:
     from trezor.messages import TxInput
@@ -87,6 +87,24 @@ class TxWeightCalculator:
             else:
                 self.counter += 4  # empty script_sig (1 byte)
             self.counter += 1 + input_script_size  # discounted witness
+        elif i.script_type == InputScriptType.EXTERNAL:
+            if i.ownership_proof:
+                script_sig, witness = ownership.read_scriptsig_witness(
+                    i.ownership_proof
+                )
+                script_sig_size = len(script_sig)
+                witness_size = len(witness)
+            else:
+                script_sig_size = len(i.script_sig or b"")
+                witness_size = len(i.witness or b"")
+
+            if witness_size > 1:
+                self.segwit_inputs_count += 1
+
+            self.counter += 4 * (self.varint_size(script_sig_size) + script_sig_size)
+            self.counter += witness_size
+        else:
+            raise wire.DataError("Invalid script type")
 
     def add_output(self, script: bytes) -> None:
         self.outputs_count += 1
