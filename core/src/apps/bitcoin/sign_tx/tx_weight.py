@@ -7,6 +7,7 @@
 
 from micropython import const
 
+from trezor import wire
 from trezor.enums import InputScriptType
 
 from .. import common
@@ -28,7 +29,9 @@ _TXSIZE_OUTPUT = const(8)
 # size of a pubkey
 _TXSIZE_PUBKEY = const(33)
 # maximum size of a DER signature (3 type bytes, 3 len bytes, 33 R, 32 S, 1 sighash)
-_TXSIZE_SIGNATURE = const(72)
+_TXSIZE_DER_SIGNATURE = const(72)
+# size of a Schnorr signature (32 R, 32 S, no sighash)
+_TXSIZE_SCHNORR_SIGNATURE = const(64)
 # size of a multiscript without pubkey (1 M, 1 N, 1 checksig)
 _TXSIZE_MULTISIGSCRIPT = const(3)
 # size of a p2wpkh script (1 version, 1 push, 20 hash)
@@ -48,6 +51,9 @@ class TxWeightCalculator:
         self.inputs_count += 1
 
         if i.multisig:
+            if i.script_type == InputScriptType.SPENDTAPROOT:
+                raise wire.ProcessError("Multisig not supported for taproot")
+
             n = len(i.multisig.nodes) if i.multisig.nodes else len(i.multisig.pubkeys)
             multisig_script_size = _TXSIZE_MULTISIGSCRIPT + n * (1 + _TXSIZE_PUBKEY)
             if i.script_type in common.SEGWIT_INPUT_SCRIPT_TYPES:
@@ -57,11 +63,13 @@ class TxWeightCalculator:
 
             input_script_size = (
                 1  # the OP_FALSE bug in multisig
-                + i.multisig.m * (1 + _TXSIZE_SIGNATURE)
+                + i.multisig.m * (1 + _TXSIZE_DER_SIGNATURE)
                 + multisig_script_size
             )
+        elif i.script_type == InputScriptType.SPENDTAPROOT:
+            input_script_size = 1 + _TXSIZE_SCHNORR_SIGNATURE
         else:
-            input_script_size = 1 + _TXSIZE_SIGNATURE + 1 + _TXSIZE_PUBKEY
+            input_script_size = 1 + _TXSIZE_DER_SIGNATURE + 1 + _TXSIZE_PUBKEY
 
         self.counter += 4 * _TXSIZE_INPUT
 
