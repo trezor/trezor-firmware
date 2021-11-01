@@ -58,7 +58,9 @@ def _supply_message(supply_change: NEMMosaicSupplyChange) -> list[tuple[str, str
     ]
 
 
-async def require_confirm_properties(ctx: Context, definition: NEMMosaicDefinition) -> None:
+async def require_confirm_properties(
+    ctx: Context, definition: NEMMosaicDefinition
+) -> None:
     properties = []
 
     # description

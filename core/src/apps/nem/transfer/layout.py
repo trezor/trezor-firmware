@@ -24,6 +24,7 @@ from ..mosaic.helpers import get_mosaic_definition, is_nem_xem_mosaic
 
 if False:
     from trezor.wire import Context
+    from ..mosaic.helpers import Mosaic
 
 
 async def ask_transfer(
@@ -59,14 +60,14 @@ async def ask_transfer_mosaic(
             props=[
                 (
                     "Confirm transfer of",
-                    format_amount(mosaic_quantity, definition["divisibility"])
-                    + definition["ticker"],
+                    format_amount(mosaic_quantity, definition.divisibility)
+                    + definition.ticker,
                 ),
-                ("of", definition["name"]),
+                ("of", definition.name),
             ],
         )
 
-        if "levy" in definition and "fee" in definition:
+        if definition.levy is not None and definition.fee is not None:
             levy_msg = _get_levy_msg(definition, mosaic_quantity, common.network)
             await confirm_properties(
                 ctx,
@@ -112,19 +113,22 @@ def _get_xem_amount(transfer: NEMTransfer) -> int:
     return 0
 
 
-def _get_levy_msg(mosaic_definition: dict, quantity: int, network: int) -> str:
+def _get_levy_msg(mosaic_definition: Mosaic, quantity: int, network: int) -> str:
+    assert mosaic_definition.levy_namespace is not None
+    assert mosaic_definition.levy_mosaic is not None
     levy_definition = get_mosaic_definition(
-        mosaic_definition["levy_namespace"], mosaic_definition["levy_mosaic"], network
+        mosaic_definition.levy_namespace, mosaic_definition.levy_mosaic, network
     )
-    if mosaic_definition["levy"] == NEMMosaicLevy.MosaicLevy_Absolute:
-        levy_fee = mosaic_definition["fee"]
+    assert levy_definition is not None
+    assert mosaic_definition.fee is not None
+    if mosaic_definition.levy == NEMMosaicLevy.MosaicLevy_Absolute:
+        levy_fee = mosaic_definition.fee
     else:
         levy_fee = (
-            quantity * mosaic_definition["fee"] // NEM_LEVY_PERCENTILE_DIVISOR_ABSOLUTE
+            quantity * mosaic_definition.fee // NEM_LEVY_PERCENTILE_DIVISOR_ABSOLUTE
         )
     return (
-        format_amount(levy_fee, levy_definition["divisibility"])
-        + levy_definition["ticker"]
+        format_amount(levy_fee, levy_definition.divisibility) + levy_definition.ticker
     )
 
 
@@ -150,7 +154,9 @@ async def _require_confirm_transfer(ctx: Context, recipient: str, value: int) ->
     )
 
 
-async def _require_confirm_payload(ctx: Context, payload: bytearray | bytes, encrypt: bool = False) -> None:
+async def _require_confirm_payload(
+    ctx: Context, payload: bytearray | bytes, encrypt: bool = False
+) -> None:
     await confirm_text(
         ctx,
         "confirm_payload",

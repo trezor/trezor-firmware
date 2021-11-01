@@ -13,7 +13,10 @@ from trezor.messages import RippleSignTx
 from . import helpers
 
 if False:
-    from typing import Any, Optional
+    from trezor.utils import Writer
+
+    FieldType = dict[str, int]
+
 
 FIELD_TYPE_INT16 = 1
 FIELD_TYPE_INT32 = 2
@@ -41,8 +44,8 @@ TRANSACTION_TYPES = {"Payment": 0}
 def serialize(
     msg: RippleSignTx,
     source_address: str,
-    pubkey: Optional[bytes] = None,
-    signature: Optional[bytes] = None,
+    pubkey: bytes | None = None,
+    signature: bytes | None = None,
 ) -> bytearray:
     assert msg.payment is not None
     w = bytearray()
@@ -61,25 +64,30 @@ def serialize(
     return w
 
 
-def write(w: bytearray, field: dict, value: Any) -> None:
+def write(w: Writer, field: FieldType, value: int | bytes | str | None) -> None:
     if value is None:
         return
     write_type(w, field)
     if field["type"] == FIELD_TYPE_INT16:
+        assert isinstance(value, int)
         w.extend(value.to_bytes(2, "big"))
     elif field["type"] == FIELD_TYPE_INT32:
+        assert isinstance(value, int)
         w.extend(value.to_bytes(4, "big"))
     elif field["type"] == FIELD_TYPE_AMOUNT:
+        assert isinstance(value, int)
         w.extend(serialize_amount(value))
     elif field["type"] == FIELD_TYPE_ACCOUNT:
+        assert isinstance(value, str)
         write_bytes_varint(w, helpers.decode_address(value))
     elif field["type"] == FIELD_TYPE_VL:
+        assert isinstance(value, bytes)
         write_bytes_varint(w, value)
     else:
         raise ValueError("Unknown field type")
 
 
-def write_type(w: bytearray, field: dict) -> None:
+def write_type(w: Writer, field: FieldType) -> None:
     if field["key"] <= 0xF:
         w.append((field["type"] << 4) | field["key"])
     else:
@@ -100,13 +108,13 @@ def serialize_amount(value: int) -> bytearray:
     return b
 
 
-def write_bytes_varint(w: bytearray, value: bytes) -> None:
+def write_bytes_varint(w: Writer, value: bytes) -> None:
     """Serialize a variable length bytes."""
     write_varint(w, len(value))
     w.extend(value)
 
 
-def write_varint(w: bytearray, val: int) -> None:
+def write_varint(w: Writer, val: int) -> None:
     """
     Implements variable-length int encoding from Ripple.
     See: https://ripple.com/wiki/Binary_Format#Variable_Length_Data_Encoding

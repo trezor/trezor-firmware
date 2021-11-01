@@ -23,6 +23,7 @@ if False:
         EosActionVoteProducer,
         EosAuthorization,
     )
+    from trezor.ui.layouts import PropertyType
 
 
 async def confirm_action_buyram(ctx: wire.Context, msg: EosActionBuyRam) -> None:
@@ -148,7 +149,7 @@ async def confirm_action_voteproducer(
             ctx,
             "confirm_voteproducer",
             title="Vote for producers",
-            props=(
+            props=list(
                 (f"{wi:2d}. {helpers.eos_name_to_string(producer)}", None)
                 for wi, producer in enumerate(msg.producers, 1)
             ),
@@ -194,7 +195,7 @@ async def confirm_action_transfer(
 async def confirm_action_updateauth(
     ctx: wire.Context, msg: EosActionUpdateAuth
 ) -> None:
-    props: list[tuple[str, str | None]] = [
+    props: list[PropertyType] = [
         ("Account:", helpers.eos_name_to_string(msg.account)),
         ("Permission:", helpers.eos_name_to_string(msg.permission)),
         ("Parent:", helpers.eos_name_to_string(msg.parent)),

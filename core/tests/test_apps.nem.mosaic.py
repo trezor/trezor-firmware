@@ -12,19 +12,19 @@ class TestNemMosaic(unittest.TestCase):
 
     def test_get_mosaic_definition(self):
         m = get_mosaic_definition("nem", "xem", 104)
-        self.assertEqual(m["name"], "NEM")
-        self.assertEqual(m["ticker"], " XEM")
+        self.assertEqual(m.name, "NEM")
+        self.assertEqual(m.ticker, " XEM")
 
         m = get_mosaic_definition("nem", "xxx", 104)
-        self.assertEqual(m, {})
+        self.assertEqual(m, None)
 
         m = get_mosaic_definition("aaaa", "xxx", 104)
-        self.assertEqual(m, {})
+        self.assertEqual(m, None)
 
         m = get_mosaic_definition("pacnem", "cheese", 104)
-        self.assertEqual(m["name"], "PacNEM Score Tokens")
-        self.assertEqual(m["ticker"], " PAC:CHS")
-        self.assertEqual(m["fee"], 100)
+        self.assertEqual(m.name, "PacNEM Score Tokens")
+        self.assertEqual(m.ticker, " PAC:CHS")
+        self.assertEqual(m.fee, 100)
 
     def test_mosaic_canonicalization(self):
         a = NEMMosaic()

@@ -8,6 +8,9 @@ from ..helpers import (
 )
 from ..writers import serialize_tx_common, write_bytes_with_len, write_uint32_le
 
+if False:
+    from trezor.utils import Writer
+
 
 def serialize_multisig(
     common: NEMTransactionCommon, public_key: bytes, inner: bytes
@@ -48,14 +51,13 @@ def serialize_aggregate_modification(
 
 
 def write_cosignatory_modification(
-    w: bytearray, cosignatory_type: int, cosignatory_pubkey: bytes
-) -> bytearray:
+    w: Writer, cosignatory_type: int, cosignatory_pubkey: bytes
+) -> None:
     write_uint32_le(w, 4 + 4 + len(cosignatory_pubkey))
     write_uint32_le(w, cosignatory_type)
     write_bytes_with_len(w, cosignatory_pubkey)
-    return w
 
 
-def write_minimum_cosignatories(w: bytearray, relative_change: int) -> None:
+def write_minimum_cosignatories(w: Writer, relative_change: int) -> None:
     write_uint32_le(w, 4)
     write_uint32_le(w, relative_change)
