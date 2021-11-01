@@ -32,7 +32,7 @@ def serialize_multisig_signature(
 
     write_uint32_le(w, 4 + len(digest))
     write_bytes_with_len(w, digest)
-    write_bytes_with_len(w, address)
+    write_bytes_with_len(w, address.encode())
     return w
 
 

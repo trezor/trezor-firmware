@@ -46,7 +46,7 @@ async def confirm(
         )
         result = await content.interact(ctx, code=code)
     else:
-        await button_request(ctx, code=code)
+        await button_request(ctx, code=code)  # type: ignore
         dialog = Confirm(
             content, confirm, confirm_style, cancel, cancel_style, major_confirm
         )
@@ -67,7 +67,7 @@ async def info_confirm(
     info: ButtonContent = InfoConfirm.DEFAULT_INFO,
     info_style: ButtonStyleType = InfoConfirm.DEFAULT_INFO_STYLE,
 ) -> bool:
-    await button_request(ctx, code=code)
+    await button_request(ctx, code=code)  # type: ignore
 
     dialog = InfoConfirm(
         content, confirm, confirm_style, cancel, cancel_style, info, info_style
@@ -102,7 +102,7 @@ async def hold_to_confirm(
         )
         result = await content.interact(ctx, code=code)
     else:
-        await button_request(ctx, code=code)
+        await button_request(ctx, code=code)  # type: ignore
         dialog = HoldToConfirm(content, confirm, confirm_style, loader_style, cancel)
         result = await ctx.wait(dialog)
 

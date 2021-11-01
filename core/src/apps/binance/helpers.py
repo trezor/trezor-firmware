@@ -1,6 +1,5 @@
 from micropython import const
 
-from trezor import wire
 from trezor.crypto import bech32
 from trezor.crypto.scripts import sha256_ripemd160
 from trezor.messages import (
@@ -95,7 +94,6 @@ def address_from_public_key(pubkey: bytes, hrp: str) -> str:
     h = sha256_ripemd160(pubkey).digest()
 
     convertedbits = bech32.convertbits(h, 8, 5, False)
+    assert convertedbits is not None
 
-    if convertedbits is None:
-        raise wire.DataError("convertedbits is None")
     return bech32.bech32_encode(hrp, convertedbits, bech32.Encoding.BECH32)
