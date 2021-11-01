@@ -92,7 +92,7 @@ def verify_nonownership(
 
         # Verify the BIP-322 SignatureProof.
 
-        proof_body = proof[: r.offset]
+        proof_body = memoryview(proof)[: r.offset]
         sighash = hashlib.sha256(proof_body)
         sighash.update(script_pubkey)
         if commitment_data:
@@ -108,6 +108,26 @@ def verify_nonownership(
         raise wire.DataError("Invalid proof of ownership")
 
     return not_owned
+
+
+def read_scriptsig_witness(ownership_proof: bytes) -> tuple[memoryview, memoryview]:
+    try:
+        r = utils.BufferReader(ownership_proof)
+        if r.read_memoryview(4) != _VERSION_MAGIC:
+            raise wire.DataError("Unknown format of proof of ownership")
+
+        flags = r.get()
+        if flags & 0b1111_1110:
+            raise wire.DataError("Unknown flags in proof of ownership")
+
+        # Skip ownership IDs.
+        id_count = read_bitcoin_varint(r)
+        r.read_memoryview(_OWNERSHIP_ID_LEN * id_count)
+
+        return read_bip322_signature_proof(r)
+
+    except (ValueError, EOFError):
+        raise wire.DataError("Invalid proof of ownership")
 
 
 def get_identifier(script_pubkey: bytes, keychain: Keychain) -> bytes:

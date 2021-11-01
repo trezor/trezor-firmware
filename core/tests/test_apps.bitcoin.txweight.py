@@ -304,5 +304,59 @@ class TestCalculateTxWeight(unittest.TestCase):
         # average length, so the caculator should estimate 285 bytes of witness data.
         self.assertEqual(calculator.get_total(), 4*477 + 285)
 
+    def test_external_txweight(self):
+        coin = coins.by_name('Testnet')
+
+        inp1 = TxInput(
+            amount=100000,
+            prev_hash=unhexlify('e5b7e21b5ba720e81efd6bfa9f854ababdcddc75a43bfa60bf0fe069cfd1bb8a'),
+            prev_index=0,
+            script_type=InputScriptType.EXTERNAL,
+            script_pubkey=unhexlify('00149c02608d469160a92f40fdf8c6ccced029493088'),
+            ownership_proof=unhexlify(
+                '534c001900016b2055d8190244b2ed2d46513c40658a574d3bc2deb6969c0535bb818b44d2c40002483045022100d4ad0374c922848c71d913fba59c81b9075e0d33e884d953f0c4b4806b8ffd0c022024740e6717a2b6a5aa03148c3a28b02c713b4e30fc8aeae67fa69eb20e8ddcd9012103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d'
+            ),
+        )
+
+        inp2 = TxInput(
+            address_n=[84 | 0x80000000, 1 | 0x80000000, 0 | 0x80000000, 0, 0],
+            prev_hash=unhexlify('70f9871eb03a38405cfd7a01e0e1448678132d815e2c9f552ad83ae23969509e'),
+            prev_index=0,
+            amount=100000,
+            script_type=InputScriptType.SPENDWITNESS,
+        )
+
+        inp3 = TxInput(
+            # tb1qldlynaqp0hy4zc2aag3pkenzvxy65saesxw3wd
+            # address_n=parse_path("m/84h/1h/0h/0/1"),
+            prev_hash=unhexlify('65b768dacccfb209eebd95a1fb80a04f1dd6a3abc6d7b41d5e9d9f91605b37d9'),
+            prev_index=0,
+            amount=10000,
+            script_type=InputScriptType.EXTERNAL,
+            script_pubkey=unhexlify('0014fb7e49f4017dc951615dea221b66626189aa43b9'),
+            script_sig=bytes(0),
+            witness=unhexlify(
+                '024730440220432ac60461de52713ad543cbb1484f7eca1a72c615d539b3f42f5668da4501d2022063786a6d6940a5c1ed9c2d2fd02cef90b6c01ddd84829c946561e15be6c0aae1012103dcf3bc936ecb2ec57b8f468050abce8c8756e75fd74273c9977744b1a0be7d03'
+            ),
+        )
+
+        out1 = TxOutput(
+            address="tb1qnspxpr2xj9s2jt6qlhuvdnxw6q55jvygcf89r2",
+            amount=100000 + 100000 + 10000,
+            script_type=OutputScriptType.PAYTOWITNESS,
+        )
+
+        calculator = TxWeightCalculator()
+        calculator.add_input(inp1)
+        calculator.add_input(inp2)
+        calculator.add_input(inp3)
+        calculator.add_output(output_derive_script(out1.address, coin))
+
+        self.assertEqual(calculator.get_total(), 4*164 + 325)
+        # non-segwit: header, inputs, outputs, locktime 4*(4+1+3*41+1+31+4) = 4*164
+        # segwit: segwit header, 2x estimated witness (including stack item count)
+        # and 1x exact witness (including stack item count) 1*(2+108+108+107) = 325
+
+
 if __name__ == '__main__':
     unittest.main()
