@@ -10,9 +10,7 @@ async def ask(ctx: Context, msg: NEMSignTx) -> None:
     await layout.ask_multisig(ctx, msg)
 
 
-def initiate(
-    public_key: bytes, common: NEMTransactionCommon, inner_tx: bytes
-) -> bytes:
+def initiate(public_key: bytes, common: NEMTransactionCommon, inner_tx: bytes) -> bytes:
     return serialize.serialize_multisig(common, public_key, inner_tx)
 
 
