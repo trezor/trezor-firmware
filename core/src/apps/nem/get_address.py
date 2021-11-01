@@ -15,7 +15,9 @@ if False:
 
 
 @with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
-async def get_address(ctx: Context, msg: NEMGetAddress, keychain: Keychain) -> NEMAddress:
+async def get_address(
+    ctx: Context, msg: NEMGetAddress, keychain: Keychain
+) -> NEMAddress:
     network = validate_network(msg.network)
     await validate_path(
         ctx, keychain, msg.address_n, check_path(msg.address_n, msg.network)

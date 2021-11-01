@@ -15,6 +15,9 @@ from ..writers import (
     write_uint64_le,
 )
 
+if False:
+    from trezor.utils import Writer
+
 
 def serialize_mosaic_creation(
     common: NEMTransactionCommon, creation: NEMMosaicCreation, public_key: bytes
@@ -83,7 +86,7 @@ def serialize_mosaic_supply_change(
     return w
 
 
-def _write_property(w: bytearray, name: str, value: int | bool | str | None) -> None:
+def _write_property(w: Writer, name: str, value: int | bool | str | None) -> None:
     if value is None:
         if name in ("divisibility", "initialSupply"):
             value = 0

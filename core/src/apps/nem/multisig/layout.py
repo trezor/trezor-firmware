@@ -22,7 +22,10 @@ async def ask_multisig(ctx: Context, msg: NEMSignTx) -> None:
 
 
 async def ask_aggregate_modification(
-    ctx: Context, common: NEMTransactionCommon, mod: NEMAggregateModification, multisig: bool
+    ctx: Context,
+    common: NEMTransactionCommon,
+    mod: NEMAggregateModification,
+    multisig: bool,
 ) -> None:
     if not multisig:
         await require_confirm_text(ctx, "Convert account to multisig account?")

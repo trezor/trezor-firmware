@@ -42,8 +42,7 @@ async def load_device(ctx: wire.Context, msg: LoadDevice) -> Success:
         needs_backup=msg.needs_backup is True,
         no_backup=msg.no_backup is True,
     )
-    assert msg.passphrase_protection is not None
-    storage.device.set_passphrase_enabled(msg.passphrase_protection)
+    storage.device.set_passphrase_enabled(bool(msg.passphrase_protection))
     storage.device.set_label(msg.label or "")
     if msg.pin:
         config.change_pin("", msg.pin, None, None)

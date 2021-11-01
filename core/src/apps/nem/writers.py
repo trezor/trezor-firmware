@@ -2,6 +2,9 @@ from trezor.messages import NEMTransactionCommon
 
 from apps.common.writers import write_bytes_unchecked, write_uint32_le, write_uint64_le
 
+if False:
+    from trezor.utils import Writer
+
 
 def serialize_tx_common(
     common: NEMTransactionCommon,
@@ -24,6 +27,6 @@ def serialize_tx_common(
     return w
 
 
-def write_bytes_with_len(w: bytearray, buf: bytes) -> None:
+def write_bytes_with_len(w: Writer, buf: bytes) -> None:
     write_uint32_le(w, len(buf))
     write_bytes_unchecked(w, buf)

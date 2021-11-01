@@ -16,7 +16,7 @@ from apps.common.writers import (
 from . import CURVE, PATTERNS, SLIP44_ID, helpers, layout
 
 if False:
-    from typing import Optional, Union
+    from typing import Union
     from apps.common.keychain import Keychain
     from trezor.wire import Context
     from trezor.messages import (
@@ -30,6 +30,7 @@ if False:
         TezosTransactionOp,
         TezosOriginationOp,
     )
+    from trezor.utils import Writer
 
 
 @with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
@@ -92,7 +93,7 @@ async def sign_tx(ctx: Context, msg: TezosSignTx, keychain: Keychain) -> TezosSi
     elif msg.delegation is not None:
         source = _get_address_by_tag(msg.delegation.source)
 
-        delegate_address: Optional[str] = None
+        delegate_address: str | None = None
         if msg.delegation.delegate is not None:
             delegate_address = _get_address_by_tag(msg.delegation.delegate)
 
@@ -169,7 +170,7 @@ def _get_protocol_hash(proposal: bytes) -> str:
     return helpers.base58_encode_check(proposal, prefix="P")
 
 
-def _get_ballot(ballot: int) -> str:
+def _get_ballot(ballot: TezosBallotType) -> str:
     if ballot == TezosBallotType.Yay:
         return "yay"
     elif ballot == TezosBallotType.Nay:
@@ -180,7 +181,7 @@ def _get_ballot(ballot: int) -> str:
     raise ValueError  # invalid ballot
 
 
-def _get_operation_bytes(w: bytearray, msg: TezosSignTx) -> None:
+def _get_operation_bytes(w: Writer, msg: TezosSignTx) -> None:
     write_bytes_fixed(w, msg.branch, helpers.BRANCH_HASH_SIZE)
 
     # when the account sends first operation in lifetime,
@@ -250,7 +251,7 @@ def _get_operation_bytes(w: bytearray, msg: TezosSignTx) -> None:
 
 
 def _encode_common(
-    w: bytearray,
+    w: Writer,
     operation: Union[
         TezosDelegationOp, TezosOriginationOp, TezosTransactionOp, TezosRevealOp
     ],
@@ -270,14 +271,12 @@ def _encode_common(
     _encode_zarith(w, operation.storage_limit)
 
 
-def _encode_contract_id(w: bytearray, contract_id: TezosContractID) -> None:
+def _encode_contract_id(w: Writer, contract_id: TezosContractID) -> None:
     write_uint8(w, contract_id.tag)
     write_bytes_fixed(w, contract_id.hash, helpers.CONTRACT_ID_SIZE - 1)
 
 
-def _encode_data_with_bool_prefix(
-    w: bytearray, data: bytes, expected_length: int
-) -> None:
+def _encode_data_with_bool_prefix(w: Writer, data: bytes, expected_length: int) -> None:
     if data:
         helpers.write_bool(w, True)
         write_bytes_fixed(w, data, expected_length)
@@ -285,7 +284,7 @@ def _encode_data_with_bool_prefix(
         helpers.write_bool(w, False)
 
 
-def _encode_zarith(w: bytearray, num: int) -> None:
+def _encode_zarith(w: Writer, num: int) -> None:
     while True:
         byte = num & 127
         num = num >> 7
@@ -297,7 +296,7 @@ def _encode_zarith(w: bytearray, num: int) -> None:
         write_uint8(w, 128 | byte)
 
 
-def _encode_proposal(w: bytearray, proposal: TezosProposalOp) -> None:
+def _encode_proposal(w: Writer, proposal: TezosProposalOp) -> None:
     assert proposal.source is not None
     assert proposal.period is not None
     write_uint8(w, helpers.OP_TAG_PROPOSALS)
@@ -308,7 +307,7 @@ def _encode_proposal(w: bytearray, proposal: TezosProposalOp) -> None:
         write_bytes_fixed(w, proposal_hash, helpers.PROPOSAL_HASH_SIZE)
 
 
-def _encode_ballot(w: bytearray, ballot: TezosBallotOp) -> None:
+def _encode_ballot(w: Writer, ballot: TezosBallotOp) -> None:
     assert ballot.source is not None
     assert ballot.period is not None
     assert ballot.proposal is not None
@@ -320,7 +319,7 @@ def _encode_ballot(w: bytearray, ballot: TezosBallotOp) -> None:
     write_uint8(w, ballot.ballot)
 
 
-def _encode_natural(w: bytearray, num: int) -> None:
+def _encode_natural(w: Writer, num: int) -> None:
     # encode a natural integer with its signed bit on position 7
     # as we do not expect negative numbers in a transfer operation the bit is never set
     natural_tag = 0
@@ -337,7 +336,7 @@ def _encode_natural(w: bytearray, num: int) -> None:
 
 
 def _encode_manager_common(
-    w: bytearray, sequence_length: int, operation: str, to_contract: bool = False
+    w: Writer, sequence_length: int, operation: str, to_contract: bool = False
 ) -> None:
     # 5 = tag and sequence_length (1 byte + 4 bytes)
     argument_length = sequence_length + 5
@@ -364,7 +363,7 @@ def _encode_manager_common(
 
 
 def _encode_manager_to_implicit_transfer(
-    w: bytearray, manager_transfer: TezosManagerTransfer
+    w: Writer, manager_transfer: TezosManagerTransfer
 ) -> None:
     MICHELSON_LENGTH = 48
 
@@ -388,7 +387,7 @@ def _encode_manager_to_implicit_transfer(
 
 
 # smart_contract_delegation
-def _encode_manager_delegation(w: bytearray, delegate: bytes) -> None:
+def _encode_manager_delegation(w: Writer, delegate: bytes) -> None:
     MICHELSON_LENGTH = 42  # length is fixed this time(no variable length fields)
 
     _encode_manager_common(w, MICHELSON_LENGTH, "PUSH")
@@ -398,7 +397,7 @@ def _encode_manager_delegation(w: bytearray, delegate: bytes) -> None:
     helpers.write_instruction(w, "CONS")
 
 
-def _encode_manager_delegation_remove(w: bytearray) -> None:
+def _encode_manager_delegation_remove(w: Writer) -> None:
     MICHELSON_LENGTH = 14  # length is fixed this time(no variable length fields)
     _encode_manager_common(w, MICHELSON_LENGTH, "NONE")
     helpers.write_instruction(w, "SET_DELEGATE")
@@ -406,7 +405,7 @@ def _encode_manager_delegation_remove(w: bytearray) -> None:
 
 
 def _encode_manager_to_manager_transfer(
-    w: bytearray, manager_transfer: TezosManagerTransfer
+    w: Writer, manager_transfer: TezosManagerTransfer
 ) -> None:
     MICHELSON_LENGTH = 77
 

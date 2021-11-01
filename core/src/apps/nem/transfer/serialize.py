@@ -21,6 +21,7 @@ from ..writers import (
 
 if False:
     from trezor.crypto import bip32
+    from trezor.utils import Writer
 
 
 def serialize_transfer(
@@ -57,7 +58,7 @@ def serialize_transfer(
     return tx
 
 
-def serialize_mosaic(w: bytearray, namespace: str, mosaic: str, quantity: int) -> None:
+def serialize_mosaic(w: Writer, namespace: str, mosaic: str, quantity: int) -> None:
     identifier_w = bytearray()
     write_bytes_with_len(identifier_w, namespace.encode())
     write_bytes_with_len(identifier_w, mosaic.encode())
@@ -81,7 +82,9 @@ def serialize_importance_transfer(
     return w
 
 
-def get_transfer_payload(transfer: NEMTransfer, node: bip32.HDNode) -> tuple[bytes, bool]:
+def get_transfer_payload(
+    transfer: NEMTransfer, node: bip32.HDNode
+) -> tuple[bytes, bool]:
     payload = transfer.payload
     encrypted = False
     if transfer.public_key is not None:
@@ -91,6 +94,7 @@ def get_transfer_payload(transfer: NEMTransfer, node: bip32.HDNode) -> tuple[byt
         payload = _encrypt(node, transfer.public_key, transfer.payload)
         encrypted = True
 
+    assert payload is not None
     return payload, encrypted
 
 
