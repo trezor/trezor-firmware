@@ -6,6 +6,7 @@ Q := @
 endif
 
 PYTHON ?= python
+CC_FOR_BUILD ?= gcc
 
 ifeq ($(EMULATOR),1)
 CC       ?= gcc
@@ -83,6 +84,8 @@ LDFLAGS  += -L$(TOP_DIR) \
             $(DBGFLAGS) \
             $(CPUFLAGS) \
             $(FPUFLAGS)
+
+ZKP_PATH = $(TOP_DIR)vendor/secp256k1-zkp
 
 ifeq ($(EMULATOR),1)
 CFLAGS   += -DEMULATOR=1
@@ -199,6 +202,19 @@ $(NAME).list: $(NAME).elf
 $(NAME).elf: $(OBJS) $(LDSCRIPT) $(LIBDEPS)
 	@printf "  LD      $@\n"
 	$(Q)$(LD) -o $(NAME).elf $(OBJS) $(LDLIBS) $(LDFLAGS)
+
+$(ZKP_PATH)/src/ecmult_static_context.h: $(ZKP_PATH)/src/gen_context.c
+	@printf "  GEN     $@\n"
+	$(Q)$(CC_FOR_BUILD) $(ZKP_CFLAGS) $(ZKP_PATH)/src/gen_context.c -o $(ZKP_PATH)/gen_context
+	$(Q)cd $(ZKP_PATH) && ./gen_context
+
+secp256k1-zkp.o: $(ZKP_PATH)/src/ecmult_static_context.h
+	@printf "  CC      $@\n"
+	$(Q)$(CC) $(CFLAGS) -Wno-unused-function $(ZKP_CFLAGS) -I$(ZKP_PATH) -I$(ZKP_PATH)/src -c $(ZKP_PATH)/src/secp256k1.c -o secp256k1-zkp.o
+
+field_10x26_arm.o:
+	@printf "  AS      $@\n"
+	$(Q)$(CC) $(CFLAGS) $(ZKP_CFLAGS) -c $(ZKP_PATH)/src/asm/field_10x26_arm.s -o field_10x26_arm.o
 
 %.o: %.S Makefile
 	@printf "  AS      $@\n"
