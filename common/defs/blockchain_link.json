@@ -271,13 +271,13 @@
     ]
   },
   "misc:ADA": {
-    "type": "cardano",
+    "type": "blockfrost",
     "url": [
       "wss://trezor-cardano-mainnet.blockfrost.io"
     ]
   },
   "misc:tADA": {
-    "type": "cardano",
+    "type": "blockfrost",
     "url": [
       "wss://trezor-cardano-testnet.blockfrost.io"
     ]
