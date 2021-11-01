@@ -257,6 +257,8 @@ class BasicApprover(Approver):
 
 
 class CoinJoinApprover(Approver):
+    MAX_OUTPUT_WEIGHT = const(4 * 43)
+
     def __init__(
         self, tx: SignTx, coin: CoinInfo, authorization: CoinJoinAuthorization
     ) -> None:
@@ -319,9 +321,12 @@ class CoinJoinApprover(Approver):
         if mining_fee > (self.coin.maxfee_kb / 1000) * (self.weight.get_total() / 4):
             raise wire.ProcessError("Mining fee over threshold")
 
-        # The maximum mining fee that the user should be paying.
+        # The maximum mining fee that the user should be paying assuming that participants share
+        # the fees for the coordinator's output.
         our_max_mining_fee = (
-            mining_fee * self.our_weight.get_total() / self.weight.get_total()
+            mining_fee
+            * self.our_weight.get_total()
+            / (self.weight.get_total() - self.MAX_OUTPUT_WEIGHT)
         )
 
         # The coordinator fee for the user's outputs.
