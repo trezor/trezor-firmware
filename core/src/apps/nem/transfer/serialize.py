@@ -72,7 +72,7 @@ def serialize_mosaic(w: Writer, namespace: str, mosaic: str, quantity: int) -> N
 
 def serialize_importance_transfer(
     common: NEMTransactionCommon, imp: NEMImportanceTransfer, public_key: bytes
-) -> bytearray:
+) -> bytes:
     w = serialize_tx_common(
         common, public_key, NEM_TRANSACTION_TYPE_IMPORTANCE_TRANSFER
     )

@@ -21,7 +21,7 @@ if False:
 
 def serialize_mosaic_creation(
     common: NEMTransactionCommon, creation: NEMMosaicCreation, public_key: bytes
-) -> bytearray:
+) -> bytes:
     w = serialize_tx_common(common, public_key, NEM_TRANSACTION_TYPE_MOSAIC_CREATION)
 
     mosaics_w = bytearray()
@@ -70,7 +70,7 @@ def serialize_mosaic_creation(
 
 def serialize_mosaic_supply_change(
     common: NEMTransactionCommon, change: NEMMosaicSupplyChange, public_key: bytes
-) -> bytearray:
+) -> bytes:
     w = serialize_tx_common(
         common, public_key, NEM_TRANSACTION_TYPE_MOSAIC_SUPPLY_CHANGE
     )

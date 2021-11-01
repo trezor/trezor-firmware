@@ -13,7 +13,7 @@ async def transfer(
     common: NEMTransactionCommon,
     transfer: NEMTransfer,
     node: bip32.HDNode,
-) -> bytearray:
+) -> bytes:
     transfer.mosaics = serialize.canonicalize_mosaics(transfer.mosaics)
     payload, encrypted = serialize.get_transfer_payload(transfer, node)
 
@@ -30,6 +30,6 @@ async def importance_transfer(
     public_key: bytes,
     common: NEMTransactionCommon,
     imp: NEMImportanceTransfer,
-) -> bytearray:
+) -> bytes:
     await layout.ask_importance_transfer(ctx, common, imp)
     return serialize.serialize_importance_transfer(common, imp, public_key)

@@ -25,8 +25,6 @@ DECIMALS = const(8)
 
 
 def produce_json_for_signing(envelope: BinanceSignTx, msg: MessageType) -> str:
-    # Mypy crashing on https://github.com/python/mypy/issues/10665
-    # TODO: maybe  # type: ignore
     if BinanceTransferMsg.is_type_of(msg):
         json_msg = produce_transfer_json(msg)
     elif BinanceOrderMsg.is_type_of(msg):

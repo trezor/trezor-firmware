@@ -14,7 +14,7 @@ if False:
 
 def serialize_multisig(
     common: NEMTransactionCommon, public_key: bytes, inner: bytes
-) -> bytearray:
+) -> bytes:
     w = serialize_tx_common(common, public_key, NEM_TRANSACTION_TYPE_MULTISIG)
     write_bytes_with_len(w, inner)
     return w
@@ -25,7 +25,7 @@ def serialize_multisig_signature(
     public_key: bytes,
     inner: bytes,
     address_public_key: bytes,
-) -> bytearray:
+) -> bytes:
     w = serialize_tx_common(common, public_key, NEM_TRANSACTION_TYPE_MULTISIG_SIGNATURE)
     digest = hashlib.sha3_256(inner, keccak=True).digest()
     address = nem.compute_address(address_public_key, common.network)
