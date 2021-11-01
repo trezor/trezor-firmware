@@ -149,7 +149,7 @@ async def confirm_action_voteproducer(
             ctx,
             "confirm_voteproducer",
             title="Vote for producers",
-            props=list(
+            props=(
                 (f"{wi:2d}. {helpers.eos_name_to_string(producer)}", None)
                 for wi, producer in enumerate(msg.producers, 1)
             ),

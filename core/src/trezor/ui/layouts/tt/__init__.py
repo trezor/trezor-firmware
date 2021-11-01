@@ -761,7 +761,7 @@ async def confirm_properties(
     ctx: wire.GenericContext,
     br_type: str,
     title: str,
-    props: Sequence[PropertyType],
+    props: Iterable[PropertyType],
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
     hold: bool = False,

@@ -155,7 +155,7 @@ async def _require_confirm_transfer(ctx: Context, recipient: str, value: int) ->
 
 
 async def _require_confirm_payload(
-    ctx: Context, payload: bytearray | bytes, encrypt: bool = False
+    ctx: Context, payload: bytes, encrypt: bool = False
 ) -> None:
     await confirm_text(
         ctx,

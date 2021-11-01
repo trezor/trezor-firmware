@@ -16,6 +16,7 @@ if False:
         EosActionDelegate,
         EosActionDeleteAuth,
         EosActionLinkAuth,
+        EosActionUnlinkAuth,
         EosActionNewAccount,
         EosActionRefund,
         EosActionSellRam,
@@ -64,7 +65,7 @@ def write_action_transfer(w: Writer, msg: EosActionTransfer) -> None:
     write_uint64_le(w, msg.sender)
     write_uint64_le(w, msg.receiver)
     write_asset(w, msg.quantity)
-    write_bytes_prefixed(w, msg.memo)
+    write_bytes_prefixed(w, msg.memo.encode())
 
 
 def write_action_buyram(w: Writer, msg: EosActionBuyRam) -> None:
@@ -130,7 +131,7 @@ def write_action_linkauth(w: Writer, msg: EosActionLinkAuth) -> None:
     write_uint64_le(w, msg.requirement)
 
 
-def write_action_unlinkauth(w: Writer, msg: EosActionLinkAuth) -> None:
+def write_action_unlinkauth(w: Writer, msg: EosActionUnlinkAuth) -> None:
     write_uint64_le(w, msg.account)
     write_uint64_le(w, msg.code)
     write_uint64_le(w, msg.type)
