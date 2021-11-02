@@ -120,7 +120,7 @@ message TezosSignTx {
         required uint64 balance = 7;
         optional bool spendable = 8;
         optional bool delegatable = 9;
-        optional bytes delegate = 10;
+        required bytes delegate = 10;
         required bytes script = 11;
     }
     /**

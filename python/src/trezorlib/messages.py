@@ -6893,7 +6893,7 @@ class TezosOriginationOp(protobuf.MessageType):
         7: protobuf.Field("balance", "uint64", repeated=False, required=True),
         8: protobuf.Field("spendable", "bool", repeated=False, required=False),
         9: protobuf.Field("delegatable", "bool", repeated=False, required=False),
-        10: protobuf.Field("delegate", "bytes", repeated=False, required=False),
+        10: protobuf.Field("delegate", "bytes", repeated=False, required=True),
         11: protobuf.Field("script", "bytes", repeated=False, required=True),
     }
 
@@ -6906,11 +6906,11 @@ class TezosOriginationOp(protobuf.MessageType):
         gas_limit: "int",
         storage_limit: "int",
         balance: "int",
+        delegate: "bytes",
         script: "bytes",
         manager_pubkey: Optional["bytes"] = None,
         spendable: Optional["bool"] = None,
         delegatable: Optional["bool"] = None,
-        delegate: Optional["bytes"] = None,
     ) -> None:
         self.source = source
         self.fee = fee
@@ -6918,11 +6918,11 @@ class TezosOriginationOp(protobuf.MessageType):
         self.gas_limit = gas_limit
         self.storage_limit = storage_limit
         self.balance = balance
+        self.delegate = delegate
         self.script = script
         self.manager_pubkey = manager_pubkey
         self.spendable = spendable
         self.delegatable = delegatable
-        self.delegate = delegate
 
 
 class TezosDelegationOp(protobuf.MessageType):

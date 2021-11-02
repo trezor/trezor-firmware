@@ -109,8 +109,6 @@ async def sign_tx(ctx: Context, msg: TezosSignTx, keychain: Keychain) -> TezosSi
         await layout.require_confirm_proposals(ctx, proposed_protocols)
 
     elif msg.ballot is not None:
-        assert msg.ballot.proposal is not None
-        assert msg.ballot.ballot is not None
         proposed_protocol = _get_protocol_hash(msg.ballot.proposal)
         submitted_ballot = _get_ballot(msg.ballot.ballot)
         await layout.require_confirm_ballot(ctx, proposed_protocol, submitted_ballot)
@@ -229,7 +227,6 @@ def _get_operation_bytes(w: Writer, msg: TezosSignTx) -> None:
     elif msg.origination is not None:
         _encode_common(w, msg.origination, "origination")
         _encode_zarith(w, msg.origination.balance)
-        assert msg.origination.delegate is not None
         _encode_data_with_bool_prefix(
             w, msg.origination.delegate, helpers.TAGGED_PUBKEY_HASH_SIZE
         )
