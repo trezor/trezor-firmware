@@ -41,6 +41,10 @@ def serialize_mosaic_creation(
     _write_property(mosaics_w, "transferable", creation.definition.transferable)
 
     if creation.definition.levy:
+        assert creation.definition.levy_namespace is not None
+        assert creation.definition.levy_mosaic is not None
+        assert creation.definition.levy_address is not None
+        assert creation.definition.fee is not None
 
         levy_identifier_w = bytearray()
         write_bytes_with_len(

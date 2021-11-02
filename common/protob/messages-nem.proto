@@ -95,11 +95,11 @@ message NEMSignTx {
             required string namespace = 3;          // Fully qualified name of the namespace
             required string mosaic = 4;             // Name of the mosaic definition
             optional uint32 divisibility = 5;       // Number of decimal places that a mosaic can be divided into
-            required NEMMosaicLevy levy = 6;        // Levy type
-            required uint64 fee = 7;                // Levy fee (interpretation depends on levy type)
-            required string levy_address = 8;       // Levy address
-            required string levy_namespace = 9;     // Fully qualified name of the namespace of the levy mosaic
-            required string levy_mosaic = 10;       // Name of the levy mosaic
+            optional NEMMosaicLevy levy = 6;        // Levy type
+            optional uint64 fee = 7;                // Levy fee (interpretation depends on levy type)
+            optional string levy_address = 8;       // Levy address
+            optional string levy_namespace = 9;     // Fully qualified name of the namespace of the levy mosaic
+            optional string levy_mosaic = 10;       // Name of the levy mosaic
             optional uint64 supply = 11;            // Initial supply to create, always given in entire units
             optional bool mutable_supply = 12;      // Mutable supply
             optional bool transferable = 13;        // Mosaic allows transfers among accounts other than the creator

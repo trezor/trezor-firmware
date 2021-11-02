@@ -85,7 +85,7 @@ def write(w: Writer, field: RippleField, value: int | bytes | str | None) -> Non
         assert isinstance(value, str)
         write_bytes_varint(w, helpers.decode_address(value))
     elif field.type == FIELD_TYPE_VL:
-        assert isinstance(value, bytes)
+        assert isinstance(value, (bytes, bytearray))
         write_bytes_varint(w, value)
     else:
         raise ValueError("Unknown field type")

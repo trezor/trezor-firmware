@@ -6052,11 +6052,11 @@ class NEMMosaicDefinition(protobuf.MessageType):
         3: protobuf.Field("namespace", "string", repeated=False, required=True),
         4: protobuf.Field("mosaic", "string", repeated=False, required=True),
         5: protobuf.Field("divisibility", "uint32", repeated=False, required=False),
-        6: protobuf.Field("levy", "NEMMosaicLevy", repeated=False, required=True),
-        7: protobuf.Field("fee", "uint64", repeated=False, required=True),
-        8: protobuf.Field("levy_address", "string", repeated=False, required=True),
-        9: protobuf.Field("levy_namespace", "string", repeated=False, required=True),
-        10: protobuf.Field("levy_mosaic", "string", repeated=False, required=True),
+        6: protobuf.Field("levy", "NEMMosaicLevy", repeated=False, required=False),
+        7: protobuf.Field("fee", "uint64", repeated=False, required=False),
+        8: protobuf.Field("levy_address", "string", repeated=False, required=False),
+        9: protobuf.Field("levy_namespace", "string", repeated=False, required=False),
+        10: protobuf.Field("levy_mosaic", "string", repeated=False, required=False),
         11: protobuf.Field("supply", "uint64", repeated=False, required=False),
         12: protobuf.Field("mutable_supply", "bool", repeated=False, required=False),
         13: protobuf.Field("transferable", "bool", repeated=False, required=False),
@@ -6069,16 +6069,16 @@ class NEMMosaicDefinition(protobuf.MessageType):
         *,
         namespace: "str",
         mosaic: "str",
-        levy: "NEMMosaicLevy",
-        fee: "int",
-        levy_address: "str",
-        levy_namespace: "str",
-        levy_mosaic: "str",
         description: "str",
         networks: Optional[List["int"]] = None,
         name: Optional["str"] = None,
         ticker: Optional["str"] = None,
         divisibility: Optional["int"] = None,
+        levy: Optional["NEMMosaicLevy"] = None,
+        fee: Optional["int"] = None,
+        levy_address: Optional["str"] = None,
+        levy_namespace: Optional["str"] = None,
+        levy_mosaic: Optional["str"] = None,
         supply: Optional["int"] = None,
         mutable_supply: Optional["bool"] = None,
         transferable: Optional["bool"] = None,
@@ -6086,15 +6086,15 @@ class NEMMosaicDefinition(protobuf.MessageType):
         self.networks = networks if networks is not None else []
         self.namespace = namespace
         self.mosaic = mosaic
+        self.description = description
+        self.name = name
+        self.ticker = ticker
+        self.divisibility = divisibility
         self.levy = levy
         self.fee = fee
         self.levy_address = levy_address
         self.levy_namespace = levy_namespace
         self.levy_mosaic = levy_mosaic
-        self.description = description
-        self.name = name
-        self.ticker = ticker
-        self.divisibility = divisibility
         self.supply = supply
         self.mutable_supply = mutable_supply
         self.transferable = transferable

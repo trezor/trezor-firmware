@@ -29,12 +29,14 @@ TYPE_MOSAIC_CREATION = 0x4001
 TYPE_MOSAIC_SUPPLY_CHANGE = 0x4002
 
 
-def create_transaction_common(transaction):
-    msg = messages.NEMTransactionCommon()
-    msg.network = (transaction["version"] >> 24) & 0xFF
-    msg.timestamp = transaction["timeStamp"]
-    msg.fee = transaction["fee"]
-    msg.deadline = transaction["deadline"]
+def create_transaction_common(transaction: dict) -> messages.NEMTransactionCommon:
+    msg = messages.NEMTransactionCommon(
+        network=(transaction["version"] >> 24) & 0xFF,
+        timestamp=transaction["timeStamp"],
+        fee=transaction["fee"],
+        deadline=transaction["deadline"],
+    )
+
 
     if "signer" in transaction:
         msg.signer = bytes.fromhex(transaction["signer"])
@@ -42,10 +44,11 @@ def create_transaction_common(transaction):
     return msg
 
 
-def create_transfer(transaction):
-    msg = messages.NEMTransfer()
-    msg.recipient = transaction["recipient"]
-    msg.amount = transaction["amount"]
+def create_transfer(transaction: dict) -> messages.NEMTransfer:
+    msg = messages.NEMTransfer(
+        recipient=transaction["recipient"],
+        amount=transaction["amount"]
+    )
 
     if "payload" in transaction["message"]:
         msg.payload = bytes.fromhex(transaction["message"]["payload"])
@@ -66,85 +69,89 @@ def create_transfer(transaction):
     return msg
 
 
-def create_aggregate_modification(transactions):
-    msg = messages.NEMAggregateModification()
-    msg.modifications = [
-        messages.NEMCosignatoryModification(
-            type=modification["modificationType"],
-            public_key=bytes.fromhex(modification["cosignatoryAccount"]),
-        )
-        for modification in transactions["modifications"]
-    ]
+def create_aggregate_modification(transaction: dict) -> messages.NEMAggregateModification:
+    msg = messages.NEMAggregateModification(
+        modifications=[
+            messages.NEMCosignatoryModification(
+                type=modification["modificationType"],
+                public_key=bytes.fromhex(modification["cosignatoryAccount"]),
+            )
+            for modification in transaction["modifications"]
+        ]
+    )
 
-    if "minCosignatories" in transactions:
-        msg.relative_change = transactions["minCosignatories"]["relativeChange"]
+    if "minCosignatories" in transaction:
+        msg.relative_change = transaction["minCosignatories"]["relativeChange"]
 
     return msg
 
 
-def create_provision_namespace(transaction):
-    msg = messages.NEMProvisionNamespace()
-    msg.namespace = transaction["newPart"]
+def create_provision_namespace(transaction: dict) -> messages.NEMProvisionNamespace:
+    msg = messages.NEMProvisionNamespace(
+        sink=transaction["rentalFeeSink"],
+        fee=transaction["rentalFee"],
+        namespace=transaction["newPart"],
+    )
 
     if transaction["parent"]:
         msg.parent = transaction["parent"]
 
-    msg.sink = transaction["rentalFeeSink"]
-    msg.fee = transaction["rentalFee"]
     return msg
 
 
-def create_mosaic_creation(transaction):
-    definition = transaction["mosaicDefinition"]
-    msg = messages.NEMMosaicCreation()
-    msg.definition = messages.NEMMosaicDefinition()
-    msg.definition.namespace = definition["id"]["namespaceId"]
-    msg.definition.mosaic = definition["id"]["name"]
+def create_mosaic_creation(transaction: dict) -> messages.NEMMosaicCreation:
+    definition_dict = transaction["mosaicDefinition"]
 
-    if definition["levy"]:
-        msg.definition.levy = definition["levy"]["type"]
-        msg.definition.fee = definition["levy"]["fee"]
-        msg.definition.levy_address = definition["levy"]["recipient"]
-        msg.definition.levy_namespace = definition["levy"]["mosaicId"]["namespaceId"]
-        msg.definition.levy_mosaic = definition["levy"]["mosaicId"]["name"]
+    definition = messages.NEMMosaicDefinition(
+        namespace=definition_dict["id"]["namespaceId"],
+        mosaic=definition_dict["id"]["name"],
+        description=definition_dict["description"],
+    )
 
-    msg.definition.description = definition["description"]
+    if definition_dict["levy"]:
+        definition.levy = definition_dict["levy"]["type"]
+        definition.fee = definition_dict["levy"]["fee"]
+        definition.levy_address = definition_dict["levy"]["recipient"]
+        definition.levy_namespace = definition_dict["levy"]["mosaicId"]["namespaceId"]
+        definition.levy_mosaic = definition_dict["levy"]["mosaicId"]["name"]
 
-    for property in definition["properties"]:
+    for property in definition_dict["properties"]:
         name = property["name"]
         value = json.loads(property["value"])
 
         if name == "divisibility":
-            msg.definition.divisibility = value
+            definition.divisibility = value
         elif name == "initialSupply":
-            msg.definition.supply = value
+            definition.supply = value
         elif name == "supplyMutable":
-            msg.definition.mutable_supply = value
+            definition.mutable_supply = value
         elif name == "transferable":
-            msg.definition.transferable = value
+            definition.transferable = value
 
-    msg.sink = transaction["creationFeeSink"]
-    msg.fee = transaction["creationFee"]
-    return msg
-
-
-def create_supply_change(transaction):
-    msg = messages.NEMMosaicSupplyChange()
-    msg.namespace = transaction["mosaicId"]["namespaceId"]
-    msg.mosaic = transaction["mosaicId"]["name"]
-    msg.type = transaction["supplyType"]
-    msg.delta = transaction["delta"]
-    return msg
+    return messages.NEMMosaicCreation(
+        definition=definition,
+        sink=transaction["creationFeeSink"],
+        fee=transaction["creationFee"],
+    )
 
 
-def create_importance_transfer(transaction):
-    msg = messages.NEMImportanceTransfer()
-    msg.mode = transaction["importanceTransfer"]["mode"]
-    msg.public_key = bytes.fromhex(transaction["importanceTransfer"]["publicKey"])
-    return msg
+def create_supply_change(transaction: dict) -> messages.NEMMosaicSupplyChange:
+    return messages.NEMMosaicSupplyChange(
+        namespace=transaction["mosaicId"]["namespaceId"],
+        mosaic=transaction["mosaicId"]["name"],
+        type=transaction["supplyType"],
+        delta=transaction["delta"],
+    )
 
 
-def fill_transaction_by_type(msg, transaction):
+def create_importance_transfer(transaction: dict) -> messages.NEMImportanceTransfer:
+    return messages.NEMImportanceTransfer(
+        mode=transaction["importanceTransfer"]["mode"],
+        public_key=bytes.fromhex(transaction["importanceTransfer"]["publicKey"]),
+    )
+
+
+def fill_transaction_by_type(msg, transaction: dict) -> None:
     if transaction["type"] == TYPE_TRANSACTION_TRANSFER:
         msg.transfer = create_transfer(transaction)
     elif transaction["type"] == TYPE_AGGREGATE_MODIFICATION:
@@ -161,10 +168,11 @@ def fill_transaction_by_type(msg, transaction):
         raise ValueError("Unknown transaction type")
 
 
-def create_sign_tx(transaction):
-    msg = messages.NEMSignTx()
-    msg.transaction = create_transaction_common(transaction)
-    msg.cosigning = transaction["type"] == TYPE_MULTISIG_SIGNATURE
+def create_sign_tx(transaction: dict) -> messages.NEMSignTx:
+    msg = messages.NEMSignTx(
+        transaction=create_transaction_common(transaction),
+        cosigning=transaction["type"] == TYPE_MULTISIG_SIGNATURE,
+    )
 
     if transaction["type"] in (TYPE_MULTISIG_SIGNATURE, TYPE_MULTISIG):
         other_trans = transaction["otherTrans"]
@@ -182,14 +190,14 @@ def create_sign_tx(transaction):
 
 
 @expect(messages.NEMAddress, field="address")
-def get_address(client, n, network, show_display=False):
+def get_address(client, n, network, show_display=False) -> messages.NEMAddress:
     return client.call(
         messages.NEMGetAddress(address_n=n, network=network, show_display=show_display)
     )
 
 
 @expect(messages.NEMSignedTx)
-def sign_tx(client, n, transaction):
+def sign_tx(client, n, transaction) -> messages.NEMSignedTx:
     try:
         msg = create_sign_tx(transaction)
     except ValueError as e:

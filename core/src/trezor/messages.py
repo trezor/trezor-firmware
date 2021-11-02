@@ -4517,11 +4517,11 @@ if TYPE_CHECKING:
         namespace: "str"
         mosaic: "str"
         divisibility: "int | None"
-        levy: "NEMMosaicLevy"
-        fee: "int"
-        levy_address: "str"
-        levy_namespace: "str"
-        levy_mosaic: "str"
+        levy: "NEMMosaicLevy | None"
+        fee: "int | None"
+        levy_address: "str | None"
+        levy_namespace: "str | None"
+        levy_mosaic: "str | None"
         supply: "int | None"
         mutable_supply: "bool | None"
         transferable: "bool | None"
@@ -4533,16 +4533,16 @@ if TYPE_CHECKING:
             *,
             namespace: "str",
             mosaic: "str",
-            levy: "NEMMosaicLevy",
-            fee: "int",
-            levy_address: "str",
-            levy_namespace: "str",
-            levy_mosaic: "str",
             description: "str",
             networks: "list[int] | None" = None,
             name: "str | None" = None,
             ticker: "str | None" = None,
             divisibility: "int | None" = None,
+            levy: "NEMMosaicLevy | None" = None,
+            fee: "int | None" = None,
+            levy_address: "str | None" = None,
+            levy_namespace: "str | None" = None,
+            levy_mosaic: "str | None" = None,
             supply: "int | None" = None,
             mutable_supply: "bool | None" = None,
             transferable: "bool | None" = None,

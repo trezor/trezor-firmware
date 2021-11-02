@@ -94,7 +94,9 @@ def get_transfer_payload(
         payload = _encrypt(node, transfer.public_key, transfer.payload)
         encrypted = True
 
-    assert payload is not None
+    if payload is None:
+        payload = b""
+
     return payload, encrypted
 
 
