@@ -6828,6 +6828,7 @@ class ZcashGetAddress(protobuf.MessageType):
         2: protobuf.Field("network_type", "uint32", repeated=False, required=False),
         3: protobuf.Field("diversifier_index", "uint64", repeated=False, required=False),
         4: protobuf.Field("show_display", "bool", repeated=False, required=False),
+        5: protobuf.Field("transparent", "GetAddress", repeated=False, required=False),
     }
 
     def __init__(
@@ -6835,13 +6836,15 @@ class ZcashGetAddress(protobuf.MessageType):
         *,
         account: Optional["int"] = 0,
         network_type: Optional["int"] = 0,
-        diversifier_index: Optional["int"] = 18446744073709551615,
+        diversifier_index: Optional["int"] = 0,
         show_display: Optional["bool"] = False,
+        transparent: Optional["GetAddress"] = None,
     ) -> None:
         self.account = account
         self.network_type = network_type
         self.diversifier_index = diversifier_index
         self.show_display = show_display
+        self.transparent = transparent
 
 
 class ZcashAddress(protobuf.MessageType):
