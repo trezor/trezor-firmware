@@ -35451,6 +35451,27 @@
                 }
             ]
         },
+        "eth:xDAI:100": {
+            "links": {
+                "Homepage": "https://forum.poa.network/c/xdai-chain"
+            },
+            "marketcap_usd": 94550637,
+            "name": "xDAI Chain",
+            "shortcut": "xDAI",
+            "t1_enabled": "yes",
+            "t2_enabled": "yes",
+            "type": "coin",
+            "wallet": [
+                {
+                    "name": "MyCrypto",
+                    "url": "https://mycrypto.com"
+                },
+                {
+                    "name": "MyEtherWallet",
+                    "url": "https://www.myetherwallet.com"
+                }
+            ]
+        },
         "misc:ADA": {
             "links": {
                 "Github": "https://github.com/input-output-hk/cardano-sl",
@@ -35735,12 +35756,12 @@
         }
     },
     "info": {
-        "marketcap_supported": "93.25 %",
-        "marketcap_usd": 2470653276153,
-        "t1_coins": 1810,
-        "t2_coins": 1816,
-        "total_marketcap_usd": 2649597487250,
-        "updated_at": 1635778354,
-        "updated_at_readable": "Mon Nov  1 15:52:34 2021"
+        "marketcap_supported": "90.95 %",
+        "marketcap_usd": 2470747826790,
+        "t1_coins": 1811,
+        "t2_coins": 1817,
+        "total_marketcap_usd": 2716458553105,
+        "updated_at": 1635859294,
+        "updated_at_readable": "Tue Nov  2 14:21:34 2021"
     }
 }

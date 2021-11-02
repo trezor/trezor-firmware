@@ -409,6 +409,13 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         rskip60=False,
     )
     yield NetworkInfo(
+        chain_id=100,
+        slip44=700,
+        shortcut="xDAI",
+        name="xDAI Chain",
+        rskip60=False,
+    )
+    yield NetworkInfo(
         chain_id=101,
         slip44=464,
         shortcut="ETI",

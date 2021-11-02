@@ -2201,6 +2201,7 @@
       "eth:thtt": "1.9.5",
       "eth:tmACA": "1.9.5",
       "eth:tsDIODE": "1.9.5",
+      "eth:xDAI:100": "1.9.4",
       "misc:MAID": "1.7.2",
       "misc:OMNI": "1.7.2",
       "misc:USDT": "1.7.2",
@@ -2532,7 +2533,6 @@
       "eth:taETH": "(AUTO) exclude testnet",
       "eth:tcett": "(AUTO) exclude testnet",
       "eth:tusd": "(AUTO) exclude testnet",
-      "eth:xDAI:100": "duplicate key",
       "eth:xDAI:200": "duplicate key",
       "misc:ADA": "not implemented",
       "misc:BNB": "not implemented",
@@ -4623,6 +4623,7 @@
       "eth:thtt": "2.3.7",
       "eth:tmACA": "2.3.7",
       "eth:tsDIODE": "2.3.7",
+      "eth:xDAI:100": "2.3.5",
       "misc:ADA": "2.0.8",
       "misc:BNB": "2.1.5",
       "misc:EOS": "2.1.1",
@@ -4961,7 +4962,6 @@
       "eth:taETH": "(AUTO) exclude testnet",
       "eth:tcett": "(AUTO) exclude testnet",
       "eth:tusd": "(AUTO) exclude testnet",
-      "eth:xDAI:100": "duplicate key",
       "eth:xDAI:200": "duplicate key",
       "misc:LSK": "Incompatible mainnet hard-fork"
     }
