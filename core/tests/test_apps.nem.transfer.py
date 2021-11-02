@@ -102,19 +102,29 @@ class TestNemTransfer(unittest.TestCase):
 
 def _create_msg(network: int, timestamp: int, fee: int, deadline: int,
                 recipient: str, amount: int, mosaics: int = 0):
-    m = NEMSignTx()
-    m.transaction = NEMTransactionCommon()
-    m.transaction.network = network
-    m.transaction.timestamp = timestamp
-    m.transaction.fee = fee
-    m.transaction.deadline = deadline
-    m.transfer = NEMTransfer()
-    m.transfer.recipient = recipient
-    m.transfer.amount = amount
-    m.transfer.mosaics = list()
-    for i in range(mosaics):
-        m.transfer.mosaics.append(NEMMosaic())
-    return m
+    transaction = NEMTransactionCommon(
+        network=network,
+        timestamp=timestamp,
+        fee=fee,
+        deadline=deadline,
+    )
+
+    mosaic_kwargs = {
+        "namespace": "abc",
+        "mosaic": "abc",
+        "quantity": 5,
+    }
+    transfer = NEMTransfer(
+        recipient=recipient,
+        amount=amount,
+        mosaics=[NEMMosaic(**mosaic_kwargs) for _ in range(mosaics)],
+    )
+
+    return NEMSignTx(
+        transaction=transaction,
+        transfer=transfer,
+    )
+
 
 
 if __name__ == '__main__':

@@ -7,6 +7,13 @@ if not utils.BITCOIN_ONLY:
     from apps.nem.transfer.serialize import *
 
 
+mosaic_kwargs = {
+    "namespace": "abc",
+    "mosaic": "abc",
+    "quantity": 5,
+}
+
+
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestNemMosaic(unittest.TestCase):
 
@@ -27,31 +34,31 @@ class TestNemMosaic(unittest.TestCase):
         self.assertEqual(m.fee, 100)
 
     def test_mosaic_canonicalization(self):
-        a = NEMMosaic()
+        a = NEMMosaic(**mosaic_kwargs)
         a.namespace = 'abc'
         a.quantity = 3
         a.mosaic = 'mosaic'
-        b = NEMMosaic()
+        b = NEMMosaic(**mosaic_kwargs)
         b.namespace = 'abc'
         b.quantity = 4
         b.mosaic = 'a'
-        c = NEMMosaic()
+        c = NEMMosaic(**mosaic_kwargs)
         c.namespace = 'zzz'
         c.quantity = 3
         c.mosaic = 'mosaic'
-        d = NEMMosaic()
+        d = NEMMosaic(**mosaic_kwargs)
         d.namespace = 'abc'
         d.quantity = 8
         d.mosaic = 'mosaic'
-        e = NEMMosaic()
+        e = NEMMosaic(**mosaic_kwargs)
         e.namespace = 'aaa'
         e.quantity = 1
         e.mosaic = 'mosaic'
-        f = NEMMosaic()
+        f = NEMMosaic(**mosaic_kwargs)
         f.namespace = 'aaa'
         f.quantity = 1
         f.mosaic = 'mosaicz'
-        g = NEMMosaic()
+        g = NEMMosaic(**mosaic_kwargs)
         g.namespace = 'zzz'
         g.quantity = 30
         g.mosaic = 'mosaic'
@@ -63,11 +70,11 @@ class TestNemMosaic(unittest.TestCase):
         self.assertEqual(res[4].quantity, 3 + 30)  # c + g
 
     def test_mosaic_merge(self):
-        a = NEMMosaic()
+        a = NEMMosaic(**mosaic_kwargs)
         a.namespace = 'abc'
         a.quantity = 1
         a.mosaic = 'mosaic'
-        b = NEMMosaic()
+        b = NEMMosaic(**mosaic_kwargs)
         b.namespace = 'abc'
         b.quantity = 1
         b.mosaic = 'mosaic'
@@ -85,7 +92,7 @@ class TestNemMosaic(unittest.TestCase):
         merged = merge_mosaics([a, b])
         self.assertEqual(len(merged), 2)
 
-        c = NEMMosaic()
+        c = NEMMosaic(**mosaic_kwargs)
         c.namespace = 'abc'
         c.mosaic = 'xxx'
         c.quantity = 2
@@ -120,11 +127,11 @@ class TestNemMosaic(unittest.TestCase):
         self.assertEqual(len(merged), 1)
 
     def test_mosaic_sort(self):
-        a = NEMMosaic()
+        a = NEMMosaic(**mosaic_kwargs)
         a.namespace = 'abcz'
         a.quantity = 1
         a.mosaic = 'mosaic'
-        b = NEMMosaic()
+        b = NEMMosaic(**mosaic_kwargs)
         b.namespace = 'abca'
         b.quantity = 1
         b.mosaic = 'mosaic'
@@ -153,7 +160,7 @@ class TestNemMosaic(unittest.TestCase):
         res = sort_mosaics([a, b])
         self.assertListEqual(res, [b, a])
 
-        c = NEMMosaic()
+        c = NEMMosaic(**mosaic_kwargs)
         c.namespace = 'a'
         c.mosaic = 'zzz'
         res = sort_mosaics([a, b, c])
