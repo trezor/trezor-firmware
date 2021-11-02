@@ -20,8 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-if False:
-    from typing import Iterable
+from .bech32 import convertbits
 
 CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
 ADDRESS_TYPE_P2KH = 0
@@ -73,30 +72,6 @@ def b32encode(inputs: list[int]) -> str:
     for char_code in inputs:
         out += CHARSET[char_code]
     return out
-
-
-def convertbits(
-    data: Iterable[int], frombits: int, tobits: int, pad: bool = True
-) -> list[int]:
-    acc = 0
-    bits = 0
-    ret = []
-    maxv = (1 << tobits) - 1
-    max_acc = (1 << (frombits + tobits - 1)) - 1
-    for value in data:
-        if value < 0 or (value >> frombits):
-            raise ValueError
-        acc = ((acc << frombits) | value) & max_acc
-        bits += frombits
-        while bits >= tobits:
-            bits -= tobits
-            ret.append((acc >> bits) & maxv)
-    if pad:
-        if bits:
-            ret.append((acc << (tobits - bits)) & maxv)
-    elif bits >= frombits or ((acc << (tobits - bits)) & maxv):
-        raise ValueError
-    return ret
 
 
 def encode(prefix: str, version: int, payload_bytes: bytes) -> str:
