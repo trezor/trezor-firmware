@@ -718,6 +718,7 @@
 "test_msg_signtx_segwit_native.py-test_send_p2sh": "a61bf07f8f254b6c8386ae5462ea3688b307abce563a61c9c91f5908b0dcaf2a",
 "test_msg_signtx_segwit_native.py-test_send_p2sh_change": "8288ac83c0e6d5924780ee3b1278e36063ad6c86a288d0b8abbb52eaaf0cc4e7",
 "test_msg_signtx_segwit_native.py-test_send_to_taproot": "9a138b34e18e310617cc7d79cf2efa1c180948d1a4d3647f6de1e48d94a441b8",
+"test_msg_signtx_taproot.py-test_attack_script_type": "9e6fc83df9e604e233e709f37dc8c7c6194de828d11a023ee7bca376d5304f60",
 "test_msg_signtx_taproot.py-test_send_mixed": "750648ddd29e1eee28bf2d4f292a131821cdf6413ccafbfed88ee5c8f70841b4",
 "test_msg_signtx_taproot.py-test_send_p2tr": "3ea24494ae8e004645d31afcd798066a784c44acb613588c407c4717ad9a56d6",
 "test_msg_signtx_taproot.py-test_send_two_with_change": "b394ee2dcdc7d8b5906b9b4d7f52ac69af7e9e5f93229980f6450a1d4e83bd9b",
