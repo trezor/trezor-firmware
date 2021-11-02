@@ -7,6 +7,4 @@ tests/trezor_monero_tests*
 .coverage
 .coverage.*
 htmlcov/
-html/*
-index.html
-mypy-html.css
+mypy_report

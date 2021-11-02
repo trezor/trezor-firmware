@@ -109,12 +109,21 @@ pylint: ## run pylint on application sources and tests
 
 mypy:
 	mypy --config-file ../setup.cfg \
-		--html-report . \
 		src/main.py \
 		src/apps \
 		src/trezor \
 		src/storage \
 		--exclude src/apps/monero
+
+mypy_report:
+	mkdir -p mypy_report && \
+	mypy --config-file ../setup.cfg \
+		src/main.py \
+		src/apps \
+		src/trezor \
+		src/storage \
+		--exclude src/apps/monero \
+		--html-report ./mypy_report
 
 clippy:
 	cd embed/rust ; cargo clippy
