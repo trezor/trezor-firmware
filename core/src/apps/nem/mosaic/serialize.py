@@ -41,6 +41,7 @@ def serialize_mosaic_creation(
     _write_property(mosaics_w, "transferable", creation.definition.transferable)
 
     if creation.definition.levy:
+        # all below asserts checked by nem.validators._validate_mosaic_creation
         assert creation.definition.levy_namespace is not None
         assert creation.definition.levy_mosaic is not None
         assert creation.definition.levy_address is not None

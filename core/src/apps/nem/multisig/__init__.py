@@ -25,9 +25,9 @@ async def aggregate_modification(
     public_key: bytes,
     common: NEMTransactionCommon,
     aggr: NEMAggregateModification,
-    multisig: bool,
+    is_multisig: bool,
 ) -> bytes:
-    await layout.ask_aggregate_modification(ctx, common, aggr, multisig)
+    await layout.ask_aggregate_modification(ctx, common, aggr, is_multisig)
     w = serialize.serialize_aggregate_modification(common, aggr, public_key)
 
     for m in aggr.modifications:

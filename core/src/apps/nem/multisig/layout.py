@@ -11,8 +11,8 @@ if False:
 
 
 async def ask_multisig(ctx: Context, msg: NEMSignTx) -> None:
-    assert msg.multisig is not None
-    assert msg.multisig.signer is not None
+    assert msg.multisig is not None  # sign_tx
+    assert msg.multisig.signer is not None  # sign_tx
     address = nem.compute_address(msg.multisig.signer, msg.transaction.network)
     if msg.cosigning:
         await _require_confirm_address(ctx, "Cosign transaction for", address)
@@ -25,9 +25,9 @@ async def ask_aggregate_modification(
     ctx: Context,
     common: NEMTransactionCommon,
     mod: NEMAggregateModification,
-    multisig: bool,
+    is_multisig: bool,
 ) -> None:
-    if not multisig:
+    if not is_multisig:
         await require_confirm_text(ctx, "Convert account to multisig account?")
 
     for m in mod.modifications:
@@ -39,7 +39,7 @@ async def ask_aggregate_modification(
         await _require_confirm_address(ctx, action + " cosignatory", address)
 
     if mod.relative_change:
-        if multisig:
+        if is_multisig:
             action = "Modify the number of cosignatories by "
         else:
             action = "Set minimum cosignatories to "

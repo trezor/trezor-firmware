@@ -32,7 +32,7 @@ def validate(msg: NEMSignTx) -> None:
     _validate_common(msg.transaction)
 
     if msg.multisig:
-        _validate_common(msg.multisig, True)
+        _validate_common(msg.multisig, is_inner=True)
         _validate_multisig(msg.multisig, msg.transaction.network)
     if not msg.multisig and msg.cosigning:
         raise ProcessError("No multisig transaction to cosign")
@@ -77,7 +77,7 @@ def _validate_single_tx(msg: NEMSignTx) -> None:
         raise ProcessError("More than one transaction provided")
 
 
-def _validate_common(common: NEMTransactionCommon, inner: bool = False) -> None:
+def _validate_common(common: NEMTransactionCommon, is_inner: bool = False) -> None:
     common.network = validate_network(common.network)
 
     err = None
@@ -88,14 +88,14 @@ def _validate_common(common: NEMTransactionCommon, inner: bool = False) -> None:
     if common.deadline is None:
         err = "deadline"
 
-    if not inner and common.signer:
+    if not is_inner and common.signer:
         raise ProcessError("Signer not allowed in outer transaction")
 
-    if inner and common.signer is None:
+    if is_inner and common.signer is None:
         err = "signer"
 
     if err:
-        if inner:
+        if is_inner:
             raise ProcessError(f"No {err} provided in inner transaction")
         else:
             raise ProcessError(f"No {err} provided")
@@ -106,7 +106,7 @@ def _validate_common(common: NEMTransactionCommon, inner: bool = False) -> None:
         )
 
 
-def _validate_public_key(public_key: bytes, err_msg: str) -> None:
+def _validate_public_key(public_key: bytes | None, err_msg: str) -> None:
     if not public_key:
         raise ProcessError(f"{err_msg} (none provided)")
     if len(public_key) != NEM_PUBLIC_KEY_SIZE:
@@ -124,7 +124,6 @@ def _validate_importance_transfer(importance_transfer: NEMImportanceTransfer) ->
 def _validate_multisig(multisig: NEMTransactionCommon, network: int) -> None:
     if multisig.network != network:
         raise ProcessError("Inner transaction network is different")
-    assert multisig.signer is not None  # we check multisig
     _validate_public_key(multisig.signer, "Invalid multisig signer public key provided")
 
 

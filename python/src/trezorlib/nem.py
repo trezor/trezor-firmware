@@ -37,7 +37,6 @@ def create_transaction_common(transaction: dict) -> messages.NEMTransactionCommo
         deadline=transaction["deadline"],
     )
 
-
     if "signer" in transaction:
         msg.signer = bytes.fromhex(transaction["signer"])
 
@@ -46,8 +45,7 @@ def create_transaction_common(transaction: dict) -> messages.NEMTransactionCommo
 
 def create_transfer(transaction: dict) -> messages.NEMTransfer:
     msg = messages.NEMTransfer(
-        recipient=transaction["recipient"],
-        amount=transaction["amount"]
+        recipient=transaction["recipient"], amount=transaction["amount"]
     )
 
     if "payload" in transaction["message"]:
@@ -69,7 +67,9 @@ def create_transfer(transaction: dict) -> messages.NEMTransfer:
     return msg
 
 
-def create_aggregate_modification(transaction: dict) -> messages.NEMAggregateModification:
+def create_aggregate_modification(
+    transaction: dict,
+) -> messages.NEMAggregateModification:
     msg = messages.NEMAggregateModification(
         modifications=[
             messages.NEMCosignatoryModification(

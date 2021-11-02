@@ -589,7 +589,7 @@ class BinanceSignTx(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 704
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        2: protobuf.Field("msg_count", "uint32", repeated=False, required=False),
+        2: protobuf.Field("msg_count", "uint32", repeated=False, required=True),
         3: protobuf.Field("account_number", "sint64", repeated=False, required=False),
         4: protobuf.Field("chain_id", "string", repeated=False, required=False),
         5: protobuf.Field("memo", "string", repeated=False, required=False),
@@ -600,8 +600,8 @@ class BinanceSignTx(protobuf.MessageType):
     def __init__(
         self,
         *,
+        msg_count: "int",
         address_n: Optional[List["int"]] = None,
-        msg_count: Optional["int"] = None,
         account_number: Optional["int"] = None,
         chain_id: Optional["str"] = None,
         memo: Optional["str"] = None,
@@ -713,15 +713,15 @@ class BinanceSignedTx(protobuf.MessageType):
 class BinanceInputOutput(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("address", "string", repeated=False, required=False),
+        1: protobuf.Field("address", "string", repeated=False, required=True),
         2: protobuf.Field("coins", "BinanceCoin", repeated=True, required=False),
     }
 
     def __init__(
         self,
         *,
+        address: "str",
         coins: Optional[List["BinanceCoin"]] = None,
-        address: Optional["str"] = None,
     ) -> None:
         self.coins = coins if coins is not None else []
         self.address = address
@@ -730,15 +730,15 @@ class BinanceInputOutput(protobuf.MessageType):
 class BinanceCoin(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("amount", "sint64", repeated=False, required=False),
-        2: protobuf.Field("denom", "string", repeated=False, required=False),
+        1: protobuf.Field("amount", "sint64", repeated=False, required=True),
+        2: protobuf.Field("denom", "string", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        amount: Optional["int"] = None,
-        denom: Optional["str"] = None,
+        amount: "int",
+        denom: "str",
     ) -> None:
         self.amount = amount
         self.denom = denom
@@ -6152,29 +6152,29 @@ class RippleSignTx(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 402
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False),
-        2: protobuf.Field("fee", "uint64", repeated=False, required=False),
+        2: protobuf.Field("fee", "uint64", repeated=False, required=True),
         3: protobuf.Field("flags", "uint32", repeated=False, required=False),
-        4: protobuf.Field("sequence", "uint32", repeated=False, required=False),
+        4: protobuf.Field("sequence", "uint32", repeated=False, required=True),
         5: protobuf.Field("last_ledger_sequence", "uint32", repeated=False, required=False),
-        6: protobuf.Field("payment", "RipplePayment", repeated=False, required=False),
+        6: protobuf.Field("payment", "RipplePayment", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
+        fee: "int",
+        sequence: "int",
+        payment: "RipplePayment",
         address_n: Optional[List["int"]] = None,
-        fee: Optional["int"] = None,
-        flags: Optional["int"] = None,
-        sequence: Optional["int"] = None,
+        flags: Optional["int"] = 0,
         last_ledger_sequence: Optional["int"] = None,
-        payment: Optional["RipplePayment"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.fee = fee
-        self.flags = flags
         self.sequence = sequence
-        self.last_ledger_sequence = last_ledger_sequence
         self.payment = payment
+        self.flags = flags
+        self.last_ledger_sequence = last_ledger_sequence
 
 
 class RippleSignedTx(protobuf.MessageType):
@@ -6957,17 +6957,17 @@ class TezosDelegationOp(protobuf.MessageType):
 class TezosProposalOp(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("source", "bytes", repeated=False, required=False),
-        2: protobuf.Field("period", "uint64", repeated=False, required=False),
+        1: protobuf.Field("source", "bytes", repeated=False, required=True),
+        2: protobuf.Field("period", "uint64", repeated=False, required=True),
         4: protobuf.Field("proposals", "bytes", repeated=True, required=False),
     }
 
     def __init__(
         self,
         *,
+        source: "bytes",
+        period: "int",
         proposals: Optional[List["bytes"]] = None,
-        source: Optional["bytes"] = None,
-        period: Optional["int"] = None,
     ) -> None:
         self.proposals = proposals if proposals is not None else []
         self.source = source
@@ -6977,19 +6977,19 @@ class TezosProposalOp(protobuf.MessageType):
 class TezosBallotOp(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("source", "bytes", repeated=False, required=False),
-        2: protobuf.Field("period", "uint64", repeated=False, required=False),
-        3: protobuf.Field("proposal", "bytes", repeated=False, required=False),
-        4: protobuf.Field("ballot", "TezosBallotType", repeated=False, required=False),
+        1: protobuf.Field("source", "bytes", repeated=False, required=True),
+        2: protobuf.Field("period", "uint64", repeated=False, required=True),
+        3: protobuf.Field("proposal", "bytes", repeated=False, required=True),
+        4: protobuf.Field("ballot", "TezosBallotType", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        source: Optional["bytes"] = None,
-        period: Optional["int"] = None,
-        proposal: Optional["bytes"] = None,
-        ballot: Optional["TezosBallotType"] = None,
+        source: "bytes",
+        period: "int",
+        proposal: "bytes",
+        ballot: "TezosBallotType",
     ) -> None:
         self.source = source
         self.period = period
@@ -7020,15 +7020,15 @@ class TezosParametersManager(protobuf.MessageType):
 class TezosManagerTransfer(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("destination", "TezosContractID", repeated=False, required=False),
-        2: protobuf.Field("amount", "uint64", repeated=False, required=False),
+        1: protobuf.Field("destination", "TezosContractID", repeated=False, required=True),
+        2: protobuf.Field("amount", "uint64", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        destination: Optional["TezosContractID"] = None,
-        amount: Optional["int"] = None,
+        destination: "TezosContractID",
+        amount: "int",
     ) -> None:
         self.destination = destination
         self.amount = amount

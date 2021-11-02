@@ -119,7 +119,7 @@ if TYPE_CHECKING:
 
     class BinanceSignTx(protobuf.MessageType):
         address_n: "list[int]"
-        msg_count: "int | None"
+        msg_count: "int"
         account_number: "int | None"
         chain_id: "str | None"
         memo: "str | None"
@@ -129,8 +129,8 @@ if TYPE_CHECKING:
         def __init__(
             self,
             *,
+            msg_count: "int",
             address_n: "list[int] | None" = None,
-            msg_count: "int | None" = None,
             account_number: "int | None" = None,
             chain_id: "str | None" = None,
             memo: "str | None" = None,
@@ -228,14 +228,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class BinanceInputOutput(protobuf.MessageType):
-        address: "str | None"
+        address: "str"
         coins: "list[BinanceCoin]"
 
         def __init__(
             self,
             *,
+            address: "str",
             coins: "list[BinanceCoin] | None" = None,
-            address: "str | None" = None,
         ) -> None:
             pass
 
@@ -244,14 +244,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class BinanceCoin(protobuf.MessageType):
-        amount: "int | None"
-        denom: "str | None"
+        amount: "int"
+        denom: "str"
 
         def __init__(
             self,
             *,
-            amount: "int | None" = None,
-            denom: "str | None" = None,
+            amount: "int",
+            denom: "str",
         ) -> None:
             pass
 
@@ -4601,21 +4601,21 @@ if TYPE_CHECKING:
 
     class RippleSignTx(protobuf.MessageType):
         address_n: "list[int]"
-        fee: "int | None"
-        flags: "int | None"
-        sequence: "int | None"
+        fee: "int"
+        flags: "int"
+        sequence: "int"
         last_ledger_sequence: "int | None"
-        payment: "RipplePayment | None"
+        payment: "RipplePayment"
 
         def __init__(
             self,
             *,
+            fee: "int",
+            sequence: "int",
+            payment: "RipplePayment",
             address_n: "list[int] | None" = None,
-            fee: "int | None" = None,
             flags: "int | None" = None,
-            sequence: "int | None" = None,
             last_ledger_sequence: "int | None" = None,
-            payment: "RipplePayment | None" = None,
         ) -> None:
             pass
 
@@ -5290,16 +5290,16 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class TezosProposalOp(protobuf.MessageType):
-        source: "bytes | None"
-        period: "int | None"
+        source: "bytes"
+        period: "int"
         proposals: "list[bytes]"
 
         def __init__(
             self,
             *,
+            source: "bytes",
+            period: "int",
             proposals: "list[bytes] | None" = None,
-            source: "bytes | None" = None,
-            period: "int | None" = None,
         ) -> None:
             pass
 
@@ -5308,18 +5308,18 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class TezosBallotOp(protobuf.MessageType):
-        source: "bytes | None"
-        period: "int | None"
-        proposal: "bytes | None"
-        ballot: "TezosBallotType | None"
+        source: "bytes"
+        period: "int"
+        proposal: "bytes"
+        ballot: "TezosBallotType"
 
         def __init__(
             self,
             *,
-            source: "bytes | None" = None,
-            period: "int | None" = None,
-            proposal: "bytes | None" = None,
-            ballot: "TezosBallotType | None" = None,
+            source: "bytes",
+            period: "int",
+            proposal: "bytes",
+            ballot: "TezosBallotType",
         ) -> None:
             pass
 
@@ -5346,14 +5346,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class TezosManagerTransfer(protobuf.MessageType):
-        destination: "TezosContractID | None"
-        amount: "int | None"
+        destination: "TezosContractID"
+        amount: "int"
 
         def __init__(
             self,
             *,
-            destination: "TezosContractID | None" = None,
-            amount: "int | None" = None,
+            destination: "TezosContractID",
+            amount: "int",
         ) -> None:
             pass
 

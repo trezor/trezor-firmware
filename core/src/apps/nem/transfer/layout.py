@@ -32,11 +32,10 @@ async def ask_transfer(
     common: NEMTransactionCommon,
     transfer: NEMTransfer,
     payload: bytes,
-    encrypted: bool,
+    is_encrypted: bool,
 ) -> None:
     if payload:
-        assert transfer.payload is not None
-        await _require_confirm_payload(ctx, transfer.payload, encrypted)
+        await _require_confirm_payload(ctx, payload, is_encrypted)
     for mosaic in transfer.mosaics:
         await ask_transfer_mosaic(ctx, common, transfer, mosaic)
     await _require_confirm_transfer(ctx, transfer.recipient, _get_xem_amount(transfer))
@@ -114,13 +113,15 @@ def _get_xem_amount(transfer: NEMTransfer) -> int:
 
 
 def _get_levy_msg(mosaic_definition: Mosaic, quantity: int, network: int) -> str:
+    # all below asserts checked by nem.validators._validate_mosaic_creation
     assert mosaic_definition.levy_namespace is not None
     assert mosaic_definition.levy_mosaic is not None
+    assert mosaic_definition.fee is not None
+
     levy_definition = get_mosaic_definition(
         mosaic_definition.levy_namespace, mosaic_definition.levy_mosaic, network
     )
     assert levy_definition is not None
-    assert mosaic_definition.fee is not None
     if mosaic_definition.levy == NEMMosaicLevy.MosaicLevy_Absolute:
         levy_fee = mosaic_definition.fee
     else:
@@ -155,14 +156,14 @@ async def _require_confirm_transfer(ctx: Context, recipient: str, value: int) ->
 
 
 async def _require_confirm_payload(
-    ctx: Context, payload: bytes, encrypt: bool = False
+    ctx: Context, payload: bytes, is_encrypted: bool = False
 ) -> None:
     await confirm_text(
         ctx,
         "confirm_payload",
         title="Confirm payload",
-        description="Encrypted:" if encrypt else "Unencrypted:",
+        description="Encrypted:" if is_encrypted else "Unencrypted:",
         data=bytes(payload).decode(),
-        icon_color=ui.GREEN if encrypt else ui.RED,
+        icon_color=ui.GREEN if is_encrypted else ui.RED,
         br_code=ButtonRequestType.ConfirmOutput,
     )

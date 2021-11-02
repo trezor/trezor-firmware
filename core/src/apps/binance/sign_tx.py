@@ -22,9 +22,6 @@ async def sign_tx(
     ctx: wire.Context, envelope: BinanceSignTx, keychain: Keychain
 ) -> BinanceSignedTx:
     # create transaction message -> sign it -> create signature/pubkey message -> serialize all
-    assert (
-        envelope.msg_count is not None
-    )  # sent from client as number (should be maybe disabled as optional in protobuf)
     if envelope.msg_count > 1:
         raise wire.DataError("Multiple messages not supported.")
 

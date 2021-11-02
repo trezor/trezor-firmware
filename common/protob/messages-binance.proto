@@ -52,7 +52,7 @@ message BinancePublicKey {
 */
 message BinanceSignTx {
     repeated uint32 address_n = 1; // BIP-32-style path to derive the key from master node
-    optional uint32 msg_count = 2; // count of Binance<Any>Msg to be included in this tx
+    required uint32 msg_count = 2; // count of Binance<Any>Msg to be included in this tx
     optional sint64 account_number = 3;
     optional string chain_id = 4;
     optional string memo = 5;
@@ -79,13 +79,13 @@ message BinanceTransferMsg {
     repeated BinanceInputOutput outputs = 2;
 
     message BinanceInputOutput {
-        optional string address = 1;
+        required string address = 1;
         repeated BinanceCoin coins = 2;
     }
 
     message BinanceCoin {
-        optional sint64 amount = 1;
-        optional string denom = 2;
+        required sint64 amount = 1;
+        required string denom = 2;
     }
 }
 

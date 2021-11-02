@@ -29,8 +29,6 @@ async def sign_tx(
     tx = serialize(msg, source_address, pubkey=node.public_key())
     to_sign = get_network_prefix() + tx
 
-    assert msg.payment is not None
-    assert msg.fee is not None
     check_fee(msg.fee)
     if msg.payment.destination_tag is not None:
         await layout.require_confirm_destination_tag(ctx, msg.payment.destination_tag)
@@ -72,20 +70,9 @@ def set_canonical_flag(msg: RippleSignTx) -> None:
     - see https://wiki.ripple.com/Transaction_Malleability#Using_Fully-Canonical_Signatures
     - see https://github.com/trezor/trezor-crypto/blob/3e8974ff8871263a70b7fbb9a27a1da5b0d810f7/ecdsa.c#L791
     """
-    if msg.flags is None:
-        msg.flags = 0
     msg.flags |= helpers.FLAG_FULLY_CANONICAL
 
 
 def validate(msg: RippleSignTx) -> None:
-    if None in (msg.fee, msg.sequence, msg.payment) or (
-        msg.payment and None in (msg.payment.amount, msg.payment.destination)
-    ):
-        raise ProcessError(
-            "Some of the required fields are missing (fee, sequence, payment.amount, payment.destination)"
-        )
-    assert msg.payment is not None
-    if msg.payment.amount < 0:
-        raise ProcessError("Only non-negative amounts are allowed.")
     if msg.payment.amount > helpers.MAX_ALLOWED_AMOUNT:
         raise ProcessError("Amount exceeds maximum allowed amount.")

@@ -17,10 +17,7 @@ async def require_confirm_transfer(ctx: wire.Context, msg: BinanceTransferMsg) -
     items = []
 
     def make_input_output_pages(msg: BinanceInputOutput, direction: str) -> None:
-        assert msg.address is not None
         for coin in msg.coins:
-            assert coin.denom is not None
-            assert coin.amount is not None
             items.append(
                 (
                     direction,

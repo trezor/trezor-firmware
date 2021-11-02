@@ -60,8 +60,6 @@ async def sign_tx(ctx: Context, msg: TezosSignTx, keychain: Keychain) -> TezosSi
 
             # operation to transfer tokens from a smart contract to an implicit account or a smart contract
             elif parameters_manager.transfer is not None:
-                assert parameters_manager.transfer.destination is not None
-                assert parameters_manager.transfer.amount is not None
                 to = _get_address_from_contract(parameters_manager.transfer.destination)
                 await layout.require_confirm_tx(
                     ctx, to, parameters_manager.transfer.amount
@@ -297,8 +295,6 @@ def _encode_zarith(w: Writer, num: int) -> None:
 
 
 def _encode_proposal(w: Writer, proposal: TezosProposalOp) -> None:
-    assert proposal.source is not None
-    assert proposal.period is not None
     write_uint8(w, helpers.OP_TAG_PROPOSALS)
     write_bytes_fixed(w, proposal.source, helpers.TAGGED_PUBKEY_HASH_SIZE)
     write_uint32_be(w, proposal.period)
@@ -308,10 +304,6 @@ def _encode_proposal(w: Writer, proposal: TezosProposalOp) -> None:
 
 
 def _encode_ballot(w: Writer, ballot: TezosBallotOp) -> None:
-    assert ballot.source is not None
-    assert ballot.period is not None
-    assert ballot.proposal is not None
-    assert ballot.ballot is not None
     write_uint8(w, helpers.OP_TAG_BALLOT)
     write_bytes_fixed(w, ballot.source, helpers.TAGGED_PUBKEY_HASH_SIZE)
     write_uint32_be(w, ballot.period)
@@ -336,7 +328,7 @@ def _encode_natural(w: Writer, num: int) -> None:
 
 
 def _encode_manager_common(
-    w: Writer, sequence_length: int, operation: str, to_contract: bool = False
+    w: Writer, sequence_length: int, operation: str, is_to_contract: bool = False
 ) -> None:
     # 5 = tag and sequence_length (1 byte + 4 bytes)
     argument_length = sequence_length + 5
@@ -350,13 +342,13 @@ def _encode_manager_common(
     helpers.write_instruction(w, "NIL")
     helpers.write_instruction(w, "operation")
     helpers.write_instruction(w, operation)
-    if to_contract is True:
+    if is_to_contract:
         helpers.write_instruction(w, "address")
     else:
         helpers.write_instruction(w, "key_hash")
     if operation == "PUSH":
         write_uint8(w, 10)  # byte sequence
-        if to_contract is True:
+        if is_to_contract:
             write_uint32_be(w, helpers.CONTRACT_ID_SIZE)
         else:
             write_uint32_be(w, helpers.TAGGED_PUBKEY_HASH_SIZE)
@@ -367,8 +359,6 @@ def _encode_manager_to_implicit_transfer(
 ) -> None:
     MICHELSON_LENGTH = 48
 
-    assert manager_transfer.amount is not None
-    assert manager_transfer.destination is not None
     value_natural = bytearray()
     _encode_natural(value_natural, manager_transfer.amount)
     sequence_length = MICHELSON_LENGTH + len(value_natural)
@@ -409,13 +399,11 @@ def _encode_manager_to_manager_transfer(
 ) -> None:
     MICHELSON_LENGTH = 77
 
-    assert manager_transfer.amount is not None
-    assert manager_transfer.destination is not None
     value_natural = bytearray()
     _encode_natural(value_natural, manager_transfer.amount)
     sequence_length = MICHELSON_LENGTH + len(value_natural)
 
-    _encode_manager_common(w, sequence_length, "PUSH", to_contract=True)
+    _encode_manager_common(w, sequence_length, "PUSH", is_to_contract=True)
     _encode_contract_id(w, manager_transfer.destination)
     helpers.write_instruction(w, "CONTRACT")
     helpers.write_instruction(w, "unit")

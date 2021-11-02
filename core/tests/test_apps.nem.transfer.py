@@ -109,22 +109,16 @@ def _create_msg(network: int, timestamp: int, fee: int, deadline: int,
         deadline=deadline,
     )
 
-    mosaic_kwargs = {
-        "namespace": "abc",
-        "mosaic": "abc",
-        "quantity": 5,
-    }
     transfer = NEMTransfer(
         recipient=recipient,
         amount=amount,
-        mosaics=[NEMMosaic(**mosaic_kwargs) for _ in range(mosaics)],
+        mosaics=[NEMMosaic(namespace="abc", quantity=5, mosaic="mosaic") for _ in range(mosaics)],
     )
 
     return NEMSignTx(
         transaction=transaction,
         transfer=transfer,
     )
-
 
 
 if __name__ == '__main__':

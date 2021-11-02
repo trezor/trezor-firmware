@@ -36,7 +36,7 @@ class TestRippleSerializer(unittest.TestCase):
             payment=payment,
         )
         self.assertEqual(
-            serialize(common, source_address),
+            serialize(common, source_address, pubkey=None),
             unhexlify(
                 "120000240000000161400000000bebc20068400000000000000a811450f97a072f1c4357f1ad84566a609479d927c9428314550fc62003e785dc231a1058a05e56e3f09cf4e6"
             ),
@@ -55,7 +55,7 @@ class TestRippleSerializer(unittest.TestCase):
             payment=payment,
         )
         self.assertEqual(
-            serialize(common, source_address),
+            serialize(common, source_address, pubkey=None),
             unhexlify(
                 "12000024000000636140000000000000016840000000000000638114550fc62003e785dc231a1058a05e56e3f09cf4e6831450f97a072f1c4357f1ad84566a609479d927c942"
             ),
@@ -75,7 +75,7 @@ class TestRippleSerializer(unittest.TestCase):
             payment=payment,
         )
         self.assertEqual(
-            serialize(common, source_address),
+            serialize(common, source_address, pubkey=None),
             unhexlify(
                 "120000220000000024000000026140000000017d784068400000000000000a81145ccb151f6e9d603f394ae778acf10d3bece874f68314e851bbbe79e328e43d68f43445368133df5fba5a"
             ),
@@ -96,7 +96,7 @@ class TestRippleSerializer(unittest.TestCase):
         )
         # 201b005ee9ba removed from the test vector because last ledger sequence is not supported
         self.assertEqual(
-            serialize(common, source_address),
+            serialize(common, source_address, pubkey=None),
             unhexlify(
                 "12000022000000002400000090614000000000030d4068400000000000000f8114aa1bd19d9e87be8069fdbf6843653c43837c03c6831467fe6ec28e0464dd24fb2d62a492aac697cfad02"
             ),
@@ -118,7 +118,7 @@ class TestRippleSerializer(unittest.TestCase):
             payment=payment,
         )
         self.assertEqual(
-            serialize(common, source_address),
+            serialize(common, source_address, pubkey=None),
             unhexlify(
                 "120000220000000024000000012ef72d50ca6140000000017d784068400000000000000c8114e851bbbe79e328e43d68f43445368133df5fba5a831476dac5e814cd4aa74142c3ab45e69a900e637aa2"
             ),

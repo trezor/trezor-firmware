@@ -29,7 +29,7 @@ def serialize_transfer(
     transfer: NEMTransfer,
     public_key: bytes,
     payload: bytes | None = None,
-    encrypted: bool = False,
+    is_encrypted: bool = False,
 ) -> bytearray:
     tx = serialize_tx_common(
         common,
@@ -44,7 +44,7 @@ def serialize_transfer(
     if payload:
         # payload + payload size (u32) + encryption flag (u32)
         write_uint32_le(tx, len(payload) + 2 * 4)
-        if encrypted:
+        if is_encrypted:
             write_uint32_le(tx, 0x02)
         else:
             write_uint32_le(tx, 0x01)
@@ -86,18 +86,17 @@ def get_transfer_payload(
     transfer: NEMTransfer, node: bip32.HDNode
 ) -> tuple[bytes, bool]:
     payload = transfer.payload
-    encrypted = False
+    is_encrypted = False
     if transfer.public_key is not None:
         if payload is None:
             raise ValueError("Public key provided but no payload to encrypt")
-        assert transfer.payload is not None
-        payload = _encrypt(node, transfer.public_key, transfer.payload)
-        encrypted = True
+        payload = _encrypt(node, transfer.public_key, payload)
+        is_encrypted = True
 
     if payload is None:
         payload = b""
 
-    return payload, encrypted
+    return payload, is_encrypted
 
 
 def _encrypt(node: bip32.HDNode, public_key: bytes, payload: bytes) -> bytes:

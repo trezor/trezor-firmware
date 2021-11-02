@@ -28,7 +28,8 @@ async def sign_tx(ctx: wire.Context, msg: NEMSignTx, keychain: Keychain) -> NEMS
     node = keychain.derive(msg.transaction.address_n)
 
     if msg.multisig:
-        assert msg.multisig.signer is not None
+        if msg.multisig.signer is None:
+            raise wire.DataError("No signer provided")
         public_key = msg.multisig.signer
         common = msg.multisig
         await multisig.ask(ctx, msg)

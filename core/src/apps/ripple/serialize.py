@@ -48,10 +48,9 @@ TRANSACTION_TYPES = {"Payment": 0}
 def serialize(
     msg: RippleSignTx,
     source_address: str,
-    pubkey: bytes | None = None,
+    pubkey: bytes,
     signature: bytes | None = None,
 ) -> bytearray:
-    assert msg.payment is not None
     w = bytearray()
     # must be sorted numerically first by type and then by name
     write(w, FIELDS_MAP["type"], TRANSACTION_TYPES["Payment"])

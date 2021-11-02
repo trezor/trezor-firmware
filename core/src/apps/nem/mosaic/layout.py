@@ -86,9 +86,15 @@ async def require_confirm_properties(
 
     # levy
     if definition.levy:
-        assert definition.levy_address is not None
-        assert definition.levy_namespace is not None
-        assert definition.levy_mosaic is not None
+        assert (
+            definition.levy_address is not None
+        )  # nem.validators._validate_mosaic_creation
+        assert (
+            definition.levy_namespace is not None
+        )  # nem.validators._validate_mosaic_creation
+        assert (
+            definition.levy_mosaic is not None
+        )  # nem.validators._validate_mosaic_creation
         properties.append(("Levy recipient:", definition.levy_address))
 
         properties.append(("Levy fee:", str(definition.fee)))
