@@ -17,7 +17,8 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.tools import parse_path
+from trezorlib.exceptions import TrezorFailure
+from trezorlib.tools import H_, parse_path
 
 from ..tx_cache import TxCache
 from .signtx import request_finished, request_input, request_meta, request_output
@@ -39,6 +40,12 @@ TXHASH_8c3ea7 = bytes.fromhex(
 )
 TXHASH_901593 = bytes.fromhex(
     "901593bed347678d9762fdee728c35dc4ec3cfdc3728a4d72dcaab3751122e85"
+)
+TXHASH_091446 = bytes.fromhex(
+    "09144602765ce3dd8f4329445b20e3684e948709c5cdcaf12da3bb079c99448a"
+)
+TXHASH_65b811 = bytes.fromhex(
+    "65b811d3eca0fe6915d9f2d77c86c5a7f19bf66b1b1253c2c51cb4ae5f0c017b"
 )
 
 
@@ -277,3 +284,66 @@ class TestMsgSigntxTaproot:
             serialized_tx.hex()
             == "010000000001045d77b6e482d770031ad3ce3423727cc1707bc2c82e729b1189d2b60aa1a73e8c0000000017160014a33c6e24c99e108b97bc411e7e9ef31e9d5d6164ffffffff7b350e3faca092f39883d7086cdd502c82b6f0314ab61541b062733edef156790000000000ffffffff852e125137abca2dd7a42837dccfc34edc358c72eefd62978d6747d3be9315900000000000ffffffff9b117a776a9aaf70d4c3ffe89f009dcd23210a03d649ee5e38791d83902ec33a020000006b483045022100f6bd64136839b49822cf7e2050bc5c91346fc18b5cf97a945d4fd6c502f712d002207d1859e66d218f705b704f3cfca0c75410349bb1f50623f4fc2d09d5d8df0a3f012103bae960983f83e28fcb8f0e5f3dc1f1297b9f9636612fd0835b768e1b7275fb9dffffffff05a861000000000000160014d1a739f628f7eca55e8b99e7f32b22dcdbf672d4581b0000000000001976a91402e9b094fd98e2a26e805894eb78f7ff3fef199b88acf41a00000000000017a9141ff816cbeb74817050de585ceb2c772ebf71147a870000000000000000186a1674657374206f66206f705f72657475726e206461746110270000000000002251205a02573f7b39770ac53f73d161dc86f5104c6812bac297cb6ba418f6f1219c070247304402205fae7fa2b5141548593d5623ce5bd82ee18dfc751c243526039c91848efd603702200febfbe3467a68c599245ff89055514f26e146c79b58d932ced2325e6dad1b1a0121021630971f20fa349ba940a6ba3706884c41579cd760c89901374358db5dd545b90247304402201b21212100c84207697cebb852374669c382ed97cbd08afbbdfe1b302802161602206b32b2140d094cf5b7e758135961c95478c8e82fea0df30f56ccee284b79eaea012103f6b2377d52960a6094ec158cf19dcf9e33b3da4798c2302aa5806483ed4187ae01404a81e4b7f55d6d4a26923c5e2daf3cc86ed6030f83ea6e7bb16d7b81b988b34585be21a64ab45ddcc2fb9f17be2dfeff6b22cf943bc3fc8f125a7f463af428ed0000000000"
         )
+
+    def test_attack_script_type(self, client):
+        # Scenario: The attacker falsely claims that the transaction is Taproot-only to avoid prev
+        # tx streaming and gives a lower amount for one of the inputs. The correct input types and
+        # amounts are revelaled only in step6_sign_segwit_inputs() to get a valid signature. This
+        # results in a transaction which pays a fee much larger than what the user confirmed.
+
+        inp1 = messages.TxInputType(
+            address_n=parse_path("84'/1'/0'/1/0"),
+            amount=7289000,
+            prev_hash=TXHASH_65b811,
+            prev_index=1,
+            script_type=messages.InputScriptType.SPENDWITNESS,
+        )
+        inp2 = messages.TxInputType(
+            address_n=parse_path("84'/1'/1'/0/0"),
+            amount=12300000,
+            prev_hash=TXHASH_091446,
+            prev_index=0,
+            script_type=messages.InputScriptType.SPENDWITNESS,
+        )
+
+        out1 = messages.TxOutputType(
+            address="tb1q694ccp5qcc0udmfwgp692u2s2hjpq5h407urtu",
+            script_type=messages.OutputScriptType.PAYTOADDRESS,
+            amount=7289000 + 10000 - 1000,
+        )
+
+        attack_count = 5
+
+        def attack_processor(msg):
+            nonlocal attack_count
+
+            if attack_count > 0 and msg.tx.inputs:
+                attack_count -= 1
+                if msg.tx.inputs[0] == inp2:
+                    msg.tx.inputs[0].amount = 10000
+                msg.tx.inputs[0].address_n[0] = H_(86)
+                msg.tx.inputs[0].script_type = messages.InputScriptType.SPENDTAPROOT
+
+            return msg
+
+        with client:
+            client.set_filter(messages.TxAck, attack_processor)
+            client.set_expected_responses(
+                [
+                    request_input(0),
+                    request_input(1),
+                    request_output(0),
+                    messages.ButtonRequest(code=B.ConfirmOutput),
+                    messages.ButtonRequest(code=B.SignTx),
+                    request_input(0),
+                    request_input(1),
+                    request_output(0),
+                    request_input(0),
+                    request_input(1),
+                    messages.Failure(code=messages.FailureType.ProcessError),
+                ]
+            )
+            with pytest.raises(TrezorFailure) as exc:
+                btc.sign_tx(client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_API)
+            assert exc.value.code == messages.FailureType.ProcessError
+            assert exc.value.message.endswith("Transaction has changed during signing")
