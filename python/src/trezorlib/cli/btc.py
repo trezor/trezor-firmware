@@ -233,11 +233,8 @@ def _get_descriptor(client, coin, account, script_type, show_display):
     )
 
     fingerprint = pub.root_fingerprint if pub.root_fingerprint is not None else 0
-    external = f"[{fingerprint:08x}{path[1:]}]{pub.xpub}/0/*"
-    internal = f"[{fingerprint:08x}{path[1:]}]{pub.xpub}/1/*"
-    external = _append_descriptor_checksum(fmt.format(external))
-    internal = _append_descriptor_checksum(fmt.format(internal))
-    return external, internal
+    descriptor = f"[{fingerprint:08x}{path[1:]}]{pub.xpub}/<0;1>/*"
+    return _append_descriptor_checksum(fmt.format(descriptor))
 
 
 @cli.command()
@@ -251,9 +248,8 @@ def _get_descriptor(client, coin, account, script_type, show_display):
 def get_descriptor(client, coin, account, script_type, show_display):
     """Get descriptor of given account."""
     try:
-        ds = _get_descriptor(client, coin, account, script_type, show_display)
-        for d in ds:
-            click.echo(d)
+        d = _get_descriptor(client, coin, account, script_type, show_display)
+        click.echo(d)
     except ValueError as e:
         raise click.ClickException(e.msg)
 
