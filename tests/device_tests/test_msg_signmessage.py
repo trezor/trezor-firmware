@@ -350,3 +350,28 @@ def test_signmessage_pagination_trailing_newline(client):
             n=parse_path("m/44h/0h/0h/0/0"),
             message=message,
         )
+
+
+@pytest.mark.skip_t1
+def test_signmessage_path_warning(client):
+    message = "This is an example of a signed message."
+
+    with client:
+        client.set_expected_responses(
+            [
+                # expect a path warning
+                message_filters.ButtonRequest(
+                    code=messages.ButtonRequestType.UnknownDerivationPath
+                ),
+                message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
+                message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
+                messages.MessageSignature,
+            ]
+        )
+        btc.sign_message(
+            client,
+            coin_name="Bitcoin",
+            n=parse_path("m/86h/0h/0h/0/0"),
+            message=message,
+            script_type=messages.InputScriptType.SPENDWITNESS,
+        )

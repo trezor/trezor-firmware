@@ -8,7 +8,7 @@ from apps.common.paths import validate_path
 from apps.common.signverify import decode_message, message_digest
 
 from .addresses import address_short, get_address
-from .keychain import with_keychain
+from .keychain import validate_path_against_script_type, with_keychain
 
 if False:
     from trezor.messages import SignMessage
@@ -25,7 +25,9 @@ async def sign_message(
     address_n = msg.address_n
     script_type = msg.script_type or InputScriptType.SPENDADDRESS
 
-    await validate_path(ctx, keychain, address_n)
+    await validate_path(
+        ctx, keychain, address_n, validate_path_against_script_type(coin, msg)
+    )
 
     node = keychain.derive(address_n)
     address = get_address(script_type, coin, node)
