@@ -92,6 +92,4 @@ def address_from_public_key(pubkey: bytes, hrp: str) -> str:
     h = sha256_ripemd160(pubkey).digest()
 
     convertedbits = bech32.convertbits(h, 8, 5, False)
-    assert convertedbits is not None
-
     return bech32.bech32_encode(hrp, convertedbits, bech32.Encoding.BECH32)

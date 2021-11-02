@@ -22,7 +22,7 @@
 
 if False:
     from enum import IntEnum
-    from typing import Iterable, Union, TypeVar
+    from typing import Sequence, Union, TypeVar
 
     A = TypeVar("A")
     B = TypeVar("B")
@@ -110,9 +110,15 @@ def bech32_decode(
 
 
 def convertbits(
-    data: Iterable[int], frombits: int, tobits: int, pad: bool = True
-) -> list[int] | None:
+    data: Sequence[int], frombits: int, tobits: int, pad: bool = True
+) -> list[int]:
     """General power-of-2 base conversion."""
+    data_bits = len(data) * frombits
+    if not pad and data_bits % tobits != 0:
+        # the total number of bits provided is not divisible by `tobits`
+        # and padding is disabled
+        raise ValueError
+
     acc = 0
     bits = 0
     ret = []
@@ -120,17 +126,19 @@ def convertbits(
     max_acc = (1 << (frombits + tobits - 1)) - 1
     for value in data:
         if value < 0 or (value >> frombits):
-            return None
+            raise ValueError  # input value does not match `frombits` size
         acc = ((acc << frombits) | value) & max_acc
         bits += frombits
         while bits >= tobits:
             bits -= tobits
             ret.append((acc >> bits) & maxv)
-    if pad:
-        if bits:
-            ret.append((acc << (tobits - bits)) & maxv)
-    elif bits >= frombits or ((acc << (tobits - bits)) & maxv):
-        return None
+
+    if pad and bits:
+        # append remaining bits (if any), zero-padded from right
+        ret.append((acc << (tobits - bits)) & maxv)
+    else:
+        assert bits == 0
+
     return ret
 
 
@@ -144,11 +152,11 @@ def decode(hrp: str, addr: str) -> OptionalTuple2[int, list[int]]:
     if hrpgot != hrp:
         return (None, None)
     decoded = convertbits(data[1:], 5, 8, False)
-    if decoded is None or len(decoded) < 2 or len(decoded) > 40:
+    if not 2 < len(decoded) < 40:
         return (None, None)
     if data[0] > 16:
         return (None, None)
-    if data[0] == 0 and len(decoded) != 20 and len(decoded) != 32:
+    if data[0] == 0 and len(decoded) not in (20, 32):
         return (None, None)
     if (
         data[0] == 0
@@ -160,11 +168,9 @@ def decode(hrp: str, addr: str) -> OptionalTuple2[int, list[int]]:
     return (data[0], decoded)
 
 
-def encode(hrp: str, witver: int, witprog: Iterable[int]) -> str | None:
+def encode(hrp: str, witver: int, witprog: bytes) -> str | None:
     """Encode a segwit address."""
     data = convertbits(witprog, 8, 5)
-    if data is None:
-        return None
     spec = Encoding.BECH32 if witver == 0 else Encoding.BECH32M
     ret = bech32_encode(hrp, [witver] + data, spec)
     if decode(hrp, ret) == (None, None):

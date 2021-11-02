@@ -16,8 +16,6 @@ HRP_SHARED_KEY_HASH = "addr_shared_vkh"
 
 def encode(hrp: str, data: bytes) -> str:
     converted_bits = bech32.convertbits(data, 8, 5)
-    if converted_bits is None:
-        raise ValueError
     return bech32.bech32_encode(hrp, converted_bits, bech32.Encoding.BECH32)
 
 
@@ -39,8 +37,5 @@ def decode(hrp: str, bech: str) -> bytes:
     if spec != bech32.Encoding.BECH32:
         raise ValueError
 
-    decoded = bech32.convertbits(data, 5, 8, False)
-    if decoded is None:
-        raise ValueError
-
+    decoded = bytes(bech32.convertbits(data, 5, 8, False))
     return bytes(decoded)
