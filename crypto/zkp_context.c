@@ -34,12 +34,18 @@ static uint8_t context_buffer[SECP256K1_CONTEXT_SIZE];
 static secp256k1_context *context;
 static volatile atomic_flag locked;
 
-void secp256k1_context_writable_randomize(secp256k1_context *context_writable) {
+// returns 0 on success
+int secp256k1_context_writable_randomize(secp256k1_context *context_writable) {
   uint8_t seed[32] = {0};
   random_buffer(seed, sizeof(seed));
   int returned = secp256k1_context_randomize(context_writable, seed);
   memzero(seed, sizeof(seed));
-  assert(returned == 1);
+
+  if (returned != 1) {
+    return 1;
+  }
+
+  return 0;
 }
 
 bool zkp_context_is_initialized(void) { return context != NULL; }
