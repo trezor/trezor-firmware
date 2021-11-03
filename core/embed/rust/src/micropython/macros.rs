@@ -46,6 +46,40 @@ macro_rules! obj_fn_3 {
     }};
 }
 
+macro_rules! obj_fn_var {
+    ($min:expr, $max:expr, $f:expr) => {{
+        #[allow(unused_unsafe)]
+        unsafe {
+            use $crate::micropython::ffi;
+
+            ffi::mp_obj_fun_builtin_var_t {
+                base: ffi::mp_obj_base_t {
+                    type_: &ffi::mp_type_fun_builtin_var,
+                },
+                sig: ($min << 17u32) | ($max << 1u32) | 0, // min, max, takes_kw
+                fun: ffi::_mp_obj_fun_builtin_var_t__bindgen_ty_1 { var: Some($f) },
+            }
+        }
+    }};
+}
+
+macro_rules! obj_fn_kw {
+    ($min:expr, $f:expr) => {{
+        #[allow(unused_unsafe)]
+        unsafe {
+            use $crate::micropython::ffi;
+
+            ffi::mp_obj_fun_builtin_var_t {
+                base: ffi::mp_obj_base_t {
+                    type_: &ffi::mp_type_fun_builtin_var,
+                },
+                sig: ($min << 17u32) | (0xffff << 1u32) | 1, // min, max, takes_kw
+                fun: ffi::_mp_obj_fun_builtin_var_t__bindgen_ty_1 { kw: Some($f) },
+            }
+        }
+    }};
+}
+
 /// Construct fixed static const `Map` from `key` => `val` pairs.
 macro_rules! obj_map {
     ($($key:expr => $val:expr),*) => ({
