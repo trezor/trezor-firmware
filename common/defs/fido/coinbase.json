@@ -1,0 +1,4 @@
+{
+  "name": "Coinbase",
+  "webauthn": ["coinbase.com"]
+}
