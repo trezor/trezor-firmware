@@ -49,6 +49,10 @@ int zkp_ecdsa_get_public_key33(const ecdsa_curve *curve,
                                const uint8_t *private_key_bytes,
                                uint8_t *public_key_bytes) {
   assert(curve == &secp256k1);
+  if (curve != &secp256k1) {
+    return 1;
+  }
+
   int result = 0;
 
   secp256k1_pubkey public_key = {0};
@@ -92,6 +96,10 @@ int zkp_ecdsa_get_public_key65(const ecdsa_curve *curve,
                                const uint8_t *private_key_bytes,
                                uint8_t *public_key_bytes) {
   assert(curve == &secp256k1);
+  if (curve != &secp256k1) {
+    return 1;
+  }
+
   int result = 0;
 
   secp256k1_pubkey public_key = {0};
@@ -140,6 +148,10 @@ int zkp_ecdsa_sign_digest(
     int (*is_canonical)(uint8_t by, uint8_t signature_bytes[64])) {
   assert(curve == &secp256k1);
   assert(is_canonical == NULL);
+  if (curve != &secp256k1 || is_canonical != NULL) {
+    return 1;
+  }
+
   int result = 0;
 
   if (result == 0) {
@@ -198,6 +210,10 @@ int zkp_ecdsa_recover_pub_from_sig(const ecdsa_curve *curve,
                                    const uint8_t *signature_bytes,
                                    const uint8_t *digest, int recid) {
   assert(curve == &secp256k1);
+  if (curve != &secp256k1) {
+    return 1;
+  }
+
   int result = 0;
 
   const secp256k1_context *context_read_only = zkp_context_get_read_only();
@@ -248,6 +264,10 @@ int zkp_ecdsa_verify_digest(const ecdsa_curve *curve,
                             const uint8_t *signature_bytes,
                             const uint8_t *digest) {
   assert(curve == &secp256k1);
+  if (curve != &secp256k1) {
+    return 1;
+  }
+
   int result = 0;
 
   int public_key_length = 0;
@@ -318,6 +338,11 @@ int zkp_ecdsa_verify(const ecdsa_curve *curve, HasherType hasher_type,
                      const uint8_t *public_key_bytes,
                      const uint8_t *signature_bytes, const uint8_t *message,
                      uint32_t message_length) {
+  assert(curve == &secp256k1);
+  if (curve != &secp256k1) {
+    return 1;
+  }
+
   uint8_t hash[32] = {0};
   hasher_Raw(hasher_type, message, message_length, hash);
   int result =
