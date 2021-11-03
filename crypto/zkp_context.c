@@ -44,7 +44,8 @@ void secp256k1_context_writable_randomize(secp256k1_context *context_writable) {
 
 bool zkp_context_is_initialized(void) { return context != NULL; }
 
-void zkp_context_init() {
+// returns 0 on success
+int zkp_context_init() {
   assert(context == NULL);
 
   const unsigned int context_flags =
@@ -52,16 +53,23 @@ void zkp_context_init() {
 
   const size_t context_size =
       secp256k1_context_preallocated_size(context_flags);
-  assert(context_size != 0);
-  assert(context_size <= SECP256K1_CONTEXT_SIZE);
+  // Assert the context is as small as possible
+  assert(context_size == SECP256K1_CONTEXT_SIZE);
+  if (context_size == 0 || context_size > SECP256K1_CONTEXT_SIZE) {
+    return 1;
+  }
 
   context =
       secp256k1_context_preallocated_create(context_buffer, context_flags);
-  assert(context != NULL);
+  if (context == NULL) {
+    return 1;
+  }
 
   secp256k1_context_writable_randomize(context);
 
   atomic_flag_clear(&locked);
+
+  return 0;
 }
 
 void zkp_context_destroy() {

@@ -600,7 +600,7 @@ def generate_eddsa(filename):
 dir = os.path.abspath(os.path.dirname(__file__))
 lib = ctypes.cdll.LoadLibrary(os.path.join(dir, "libtrezor-crypto.so"))
 if not lib.zkp_context_is_initialized():
-    lib.zkp_context_init()
+    assert lib.zkp_context_init() == 0
 testvectors_directory = os.path.join(dir, "wycheproof/testvectors")
 context_structure_length = 1024
 

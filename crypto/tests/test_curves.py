@@ -80,7 +80,7 @@ random_iters = int(os.environ.get("ITERS", 1))
 DIR = os.path.abspath(os.path.dirname(__file__))
 lib = c.cdll.LoadLibrary(os.path.join(DIR, "libtrezor-crypto.so"))
 if not lib.zkp_context_is_initialized():
-    lib.zkp_context_init()
+    assert lib.zkp_context_init() == 0
 
 BIGNUM = c.c_uint32 * 9
 
