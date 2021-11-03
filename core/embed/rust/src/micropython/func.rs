@@ -16,3 +16,21 @@ impl Func {
 
 // SAFETY: We are in a single-threaded environment.
 unsafe impl Sync for Func {}
+
+pub type FuncVar = ffi::mp_obj_fun_builtin_var_t;
+
+impl FuncVar {
+    /// Convert variable argument "static const" function to a MicroPython
+    /// object.
+    pub const fn as_obj(&'static self) -> Obj {
+        // SAFETY:
+        //  - We are an object struct with a base and a type.
+        //  - 'static lifetime holds us in place.
+        //  - MicroPython is smart enough not to mutate `mp_obj_fun_builtin_var_t`
+        //    objects.
+        unsafe { Obj::from_ptr(self as *const _ as *mut _) }
+    }
+}
+
+// SAFETY: We are in a single-threaded environment.
+unsafe impl Sync for FuncVar {}
