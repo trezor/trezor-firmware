@@ -69,6 +69,14 @@ def by_rp_id_hash(rp_id_hash: bytes) -> FIDOApp | None:
             use_sign_count=None,
             use_self_attestation=None,
         )
+    elif rp_id_hash == b"\xe2\x7d\x61\xb4\xe9\x9d\xe0\xed\x98\x16\x3c\xb3\x8b\x7a\xf9\x33\xc6\x66\x5e\x55\x09\xe8\x49\x08\x37\x05\x58\x13\x77\x8e\x23\x6a":
+        # WebAuthn key for Coinbase
+        return FIDOApp(
+            label="coinbase.com",
+            icon="apps/webauthn/res/icon_coinbase.toif",
+            use_sign_count=None,
+            use_self_attestation=None,
+        )
     elif rp_id_hash == b"\x68\x20\x19\x15\xd7\x4c\xb4\x2a\xf5\xb3\xcc\x5c\x95\xb9\x55\x3e\x3e\x3a\x83\xb4\xd2\xa9\x3b\x45\xfb\xad\xaa\x84\x69\xff\x8e\x6e":
         # U2F key for Dashlane
         return FIDOApp(
