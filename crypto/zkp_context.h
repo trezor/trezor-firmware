@@ -5,7 +5,7 @@
 
 #include "vendor/secp256k1-zkp/include/secp256k1_preallocated.h"
 
-void secp256k1_context_writable_randomize(secp256k1_context *context);
+int secp256k1_context_writable_randomize(secp256k1_context *context);
 int zkp_context_init(void);
 void zkp_context_destroy(void);
 const secp256k1_context *zkp_context_get_read_only(void);

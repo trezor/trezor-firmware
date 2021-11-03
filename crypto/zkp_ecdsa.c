@@ -55,20 +55,30 @@ int zkp_ecdsa_get_public_key33(const ecdsa_curve *curve,
 
   int result = 0;
 
-  secp256k1_pubkey public_key = {0};
-
+  secp256k1_context *context_writable = NULL;
   if (result == 0) {
-    secp256k1_context *context_writable = zkp_context_acquire_writable();
-    if (context_writable) {
-      secp256k1_context_writable_randomize(context_writable);
-      if (secp256k1_ec_pubkey_create(context_writable, &public_key,
-                                     private_key_bytes) != 1) {
-        result = 1;
-      }
-      zkp_context_release_writable();
-    } else {
+    context_writable = zkp_context_acquire_writable();
+    if (context_writable == NULL) {
       result = 1;
     }
+  }
+  if (result == 0) {
+    if (secp256k1_context_writable_randomize(context_writable) != 0) {
+      result = 1;
+    }
+  }
+
+  secp256k1_pubkey public_key = {0};
+  if (result == 0) {
+    if (secp256k1_ec_pubkey_create(context_writable, &public_key,
+                                   private_key_bytes) != 1) {
+      result = 1;
+    }
+  }
+
+  if (context_writable) {
+    zkp_context_release_writable();
+    context_writable = NULL;
   }
 
   if (result == 0) {
@@ -102,20 +112,30 @@ int zkp_ecdsa_get_public_key65(const ecdsa_curve *curve,
 
   int result = 0;
 
-  secp256k1_pubkey public_key = {0};
-
+  secp256k1_context *context_writable = NULL;
   if (result == 0) {
-    secp256k1_context *context_writable = zkp_context_acquire_writable();
-    if (context_writable) {
-      secp256k1_context_writable_randomize(context_writable);
-      if (secp256k1_ec_pubkey_create(context_writable, &public_key,
-                                     private_key_bytes) != 1) {
-        result = 1;
-      }
-      zkp_context_release_writable();
-    } else {
+    context_writable = zkp_context_acquire_writable();
+    if (context_writable == NULL) {
       result = 1;
     }
+  }
+  if (result == 0) {
+    if (secp256k1_context_writable_randomize(context_writable) != 0) {
+      result = 1;
+    }
+  }
+
+  secp256k1_pubkey public_key = {0};
+  if (result == 0) {
+    if (secp256k1_ec_pubkey_create(context_writable, &public_key,
+                                   private_key_bytes) != 1) {
+      result = 1;
+    }
+  }
+
+  if (context_writable) {
+    zkp_context_release_writable();
+    context_writable = NULL;
   }
 
   if (result == 0) {
@@ -164,21 +184,31 @@ int zkp_ecdsa_sign_digest(
     }
   }
 
-  secp256k1_ecdsa_recoverable_signature recoverable_signature = {0};
-
+  secp256k1_context *context_writable = NULL;
   if (result == 0) {
-    secp256k1_context *context_writable = zkp_context_acquire_writable();
-    if (context_writable) {
-      secp256k1_context_writable_randomize(context_writable);
-      if (secp256k1_ecdsa_sign_recoverable(
-              context_writable, &recoverable_signature, digest,
-              private_key_bytes, NULL, NULL) != 1) {
-        result = 1;
-      }
-      zkp_context_release_writable();
-    } else {
+    context_writable = zkp_context_acquire_writable();
+    if (context_writable == NULL) {
       result = 1;
     }
+  }
+  if (result == 0) {
+    if (secp256k1_context_writable_randomize(context_writable) != 0) {
+      result = 1;
+    }
+  }
+
+  secp256k1_ecdsa_recoverable_signature recoverable_signature = {0};
+  if (result == 0) {
+    if (secp256k1_ecdsa_sign_recoverable(context_writable,
+                                         &recoverable_signature, digest,
+                                         private_key_bytes, NULL, NULL) != 1) {
+      result = 1;
+    }
+  }
+
+  if (context_writable) {
+    zkp_context_release_writable();
+    context_writable = NULL;
   }
 
   if (result == 0) {

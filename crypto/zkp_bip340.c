@@ -47,20 +47,30 @@ int zkp_bip340_get_public_key(const uint8_t *private_key_bytes,
                               uint8_t *public_key_bytes) {
   int result = 0;
 
-  secp256k1_pubkey pubkey = {0};
-
+  secp256k1_context *context_writable = NULL;
   if (result == 0) {
-    secp256k1_context *context_writable = zkp_context_acquire_writable();
-    if (context_writable) {
-      secp256k1_context_writable_randomize(context_writable);
-      if (secp256k1_ec_pubkey_create(context_writable, &pubkey,
-                                     private_key_bytes) != 1) {
-        result = -1;
-      }
-      zkp_context_release_writable();
-    } else {
+    context_writable = zkp_context_acquire_writable();
+    if (context_writable == NULL) {
       result = -1;
     }
+  }
+  if (result == 0) {
+    if (secp256k1_context_writable_randomize(context_writable) != 0) {
+      result = -1;
+    }
+  }
+
+  secp256k1_pubkey public_key = {0};
+  if (result == 0) {
+    if (secp256k1_ec_pubkey_create(context_writable, &public_key,
+                                   private_key_bytes) != 1) {
+      result = -1;
+    }
+  }
+
+  if (context_writable) {
+    zkp_context_release_writable();
+    context_writable = NULL;
   }
 
   secp256k1_xonly_pubkey xonly_pubkey = {0};
@@ -68,12 +78,12 @@ int zkp_bip340_get_public_key(const uint8_t *private_key_bytes,
 
   if (result == 0) {
     if (secp256k1_xonly_pubkey_from_pubkey(context_read_only, &xonly_pubkey,
-                                           NULL, &pubkey) != 1) {
+                                           NULL, &public_key) != 1) {
       result = -1;
     }
   }
 
-  memzero(&pubkey, sizeof(pubkey));
+  memzero(&public_key, sizeof(public_key));
 
   if (result == 0) {
     if (secp256k1_xonly_pubkey_serialize(context_read_only, public_key_bytes,
@@ -98,34 +108,43 @@ int zkp_bip340_sign_digest(const uint8_t *private_key_bytes,
                            uint8_t *auxiliary_data) {
   int result = 0;
 
-  secp256k1_keypair keypair = {0};
-
+  secp256k1_context *context_writable = NULL;
   if (result == 0) {
-    secp256k1_context *context_writable = zkp_context_acquire_writable();
-    if (context_writable) {
-      secp256k1_context_writable_randomize(context_writable);
-      if (secp256k1_keypair_create(context_writable, &keypair,
-                                   private_key_bytes) != 1) {
-        result = -1;
-      }
-      zkp_context_release_writable();
-    } else {
+    context_writable = zkp_context_acquire_writable();
+    if (context_writable == NULL) {
+      result = -1;
+    }
+  }
+  if (result == 0) {
+    if (secp256k1_context_writable_randomize(context_writable) != 0) {
+      result = -1;
+    }
+  }
+
+  secp256k1_keypair keypair = {0};
+  if (result == 0) {
+    if (secp256k1_keypair_create(context_writable, &keypair,
+                                 private_key_bytes) != 1) {
       result = -1;
     }
   }
 
   if (result == 0) {
-    secp256k1_context *context_writable = zkp_context_acquire_writable();
-    if (context_writable) {
-      secp256k1_context_writable_randomize(context_writable);
-      if (secp256k1_schnorrsig_sign(context_writable, signature_bytes, digest,
-                                    &keypair, auxiliary_data) != 1) {
-        result = -1;
-      }
-      zkp_context_release_writable();
-    } else {
+    if (secp256k1_context_writable_randomize(context_writable) != 0) {
       result = -1;
     }
+  }
+
+  if (result == 0) {
+    if (secp256k1_schnorrsig_sign(context_writable, signature_bytes, digest,
+                                  &keypair, auxiliary_data) != 1) {
+      result = -1;
+    }
+  }
+
+  if (context_writable) {
+    zkp_context_release_writable();
+    context_writable = NULL;
   }
 
   memzero(&keypair, sizeof(keypair));
@@ -240,20 +259,28 @@ int zkp_bip340_tweak_private_key(const uint8_t *internal_private_key,
                                  uint8_t *output_private_key) {
   int result = 0;
 
-  secp256k1_keypair keypair = {0};
-
+  secp256k1_context *context_writable = NULL;
   if (result == 0) {
-    secp256k1_context *context_writable = zkp_context_acquire_writable();
-    if (context_writable) {
-      secp256k1_context_writable_randomize(context_writable);
-      if (secp256k1_keypair_create(context_writable, &keypair,
-                                   internal_private_key) != 1) {
-        result = -1;
-      }
-      zkp_context_release_writable();
-    } else {
+    context_writable = zkp_context_acquire_writable();
+    if (context_writable == NULL) {
       result = -1;
     }
+  }
+  if (result == 0) {
+    if (secp256k1_context_writable_randomize(context_writable) != 0) {
+      result = -1;
+    }
+  }
+
+  secp256k1_keypair keypair = {0};
+  if (secp256k1_keypair_create(context_writable, &keypair,
+                               internal_private_key) != 1) {
+    result = -1;
+  }
+
+  if (context_writable) {
+    zkp_context_release_writable();
+    context_writable = NULL;
   }
 
   const secp256k1_context *context_read_only = zkp_context_get_read_only();
