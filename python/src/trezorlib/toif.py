@@ -3,12 +3,18 @@ import zlib
 from dataclasses import dataclass
 from typing import Sequence, Tuple
 
+from typing_extensions import Literal
+
 from . import firmware
 
 try:
+    # Explanation of having to use "Image.Image" in typing:
+    # https://stackoverflow.com/questions/58236138/pil-and-python-static-typing/58236618#58236618
     from PIL import Image
+
+    PIL_AVAILABLE = True
 except ImportError:
-    Image = None
+    PIL_AVAILABLE = False
 
 
 RGBPixel = Tuple[int, int, int]
@@ -79,14 +85,15 @@ class Toif:
                 f"Uncompressed data is {len(uncompressed)} bytes, expected {expected_size}"
             )
 
-    def to_image(self) -> "Image":
-        if Image is None:
+    def to_image(self) -> "Image.Image":
+        if not PIL_AVAILABLE:
             raise RuntimeError(
                 "PIL is not available. Please install via 'pip install Pillow'"
             )
 
         uncompressed = _decompress(self.data)
 
+        pil_mode: Literal["L", "RGB"]
         if self.mode is firmware.ToifMode.grayscale:
             pil_mode = "L"
             raw_data = _to_grayscale(uncompressed)
@@ -117,15 +124,17 @@ def load(filename: str) -> Toif:
         return from_bytes(f.read())
 
 
-def from_image(image: "Image", background=(0, 0, 0, 255)) -> Toif:
-    if Image is None:
+def from_image(
+    image: "Image.Image", background: Tuple[int, int, int, int] = (0, 0, 0, 255)
+) -> Toif:
+    if not PIL_AVAILABLE:
         raise RuntimeError(
             "PIL is not available. Please install via 'pip install Pillow'"
         )
 
     if image.mode == "RGBA":
-        background = Image.new("RGBA", image.size, background)
-        blend = Image.alpha_composite(background, image)
+        img_background = Image.new("RGBA", image.size, background)
+        blend = Image.alpha_composite(img_background, image)
         image = blend.convert("RGB")
 
     if image.mode == "L":

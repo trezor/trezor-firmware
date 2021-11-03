@@ -2,14 +2,17 @@
 
 import os
 import sys
+from typing import Any, Optional
 
 try:
     import construct as c
+    from construct import len_, this
 except ImportError:
-    sys.stderr.write("This tool requires Construct. Install it with 'pip install Construct'.\n")
+    sys.stderr.write(
+        "This tool requires Construct. Install it with 'pip install Construct'.\n"
+    )
     sys.exit(1)
 
-from construct import this, len_
 
 if os.isatty(sys.stdin.fileno()):
     tx_hex = input("Enter transaction in hex format: ")
@@ -21,35 +24,35 @@ tx_bin = bytes.fromhex(tx_hex)
 
 CompactUintStruct = c.Struct(
     "base" / c.Int8ul,
-    "ext" / c.Switch(this.base, {0xfd: c.Int16ul, 0xfe: c.Int32ul, 0xff: c.Int64ul}),
+    "ext" / c.Switch(this.base, {0xFD: c.Int16ul, 0xFE: c.Int32ul, 0xFF: c.Int64ul}),
 )
 
 
 class CompactUintAdapter(c.Adapter):
-    def _encode(self, obj, context, path):
-        if obj < 0xfd:
+    def _encode(self, obj: int, context: Any, path: Any) -> dict:
+        if obj < 0xFD:
             return {"base": obj}
         if obj < 2 ** 16:
-            return {"base": 0xfd, "ext": obj}
+            return {"base": 0xFD, "ext": obj}
         if obj < 2 ** 32:
-            return {"base": 0xfe, "ext": obj}
+            return {"base": 0xFE, "ext": obj}
         if obj < 2 ** 64:
-            return {"base": 0xff, "ext": obj}
+            return {"base": 0xFF, "ext": obj}
         raise ValueError("Value too big for compact uint")
 
-    def _decode(self, obj, context, path):
+    def _decode(self, obj: dict, context: Any, path: Any):
         return obj["ext"] or obj["base"]
 
 
 class ConstFlag(c.Adapter):
-    def __init__(self, const):
+    def __init__(self, const: bytes) -> None:
         self.const = const
         super().__init__(c.Optional(c.Const(const)))
 
-    def _encode(self, obj, context, path):
+    def _encode(self, obj: Any, context: Any, path: Any) -> Optional[bytes]:
         return self.const if obj else None
 
-    def _decode(self, obj, context, path):
+    def _decode(self, obj: Any, context: Any, path: Any) -> bool:
         return obj is not None
 
 

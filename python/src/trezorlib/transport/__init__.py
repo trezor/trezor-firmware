@@ -15,9 +15,21 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import logging
-from typing import Iterable, List, Tuple, Type
+from typing import (
+    TYPE_CHECKING,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+)
 
 from ..exceptions import TrezorException
+
+if TYPE_CHECKING:
+    T = TypeVar("T", bound="Transport")
 
 LOG = logging.getLogger(__name__)
 
@@ -58,7 +70,7 @@ class Transport:
     a Trezor device to a computer.
     """
 
-    PATH_PREFIX: str = None
+    PATH_PREFIX: str
     ENABLED = False
 
     def __str__(self) -> str:
@@ -79,12 +91,15 @@ class Transport:
     def write(self, message_type: int, message_data: bytes) -> None:
         raise NotImplementedError
 
-    @classmethod
-    def enumerate(cls) -> Iterable["Transport"]:
+    def find_debug(self: "T") -> "T":
         raise NotImplementedError
 
     @classmethod
-    def find_by_path(cls, path: str, prefix_search: bool = False) -> "Transport":
+    def enumerate(cls: Type["T"]) -> Iterable["T"]:
+        raise NotImplementedError
+
+    @classmethod
+    def find_by_path(cls: Type["T"], path: str, prefix_search: bool = False) -> "T":
         for device in cls.enumerate():
             if (
                 path is None
@@ -96,21 +111,23 @@ class Transport:
         raise TransportException(f"{cls.PATH_PREFIX} device not found: {path}")
 
 
-def all_transports() -> Iterable[Type[Transport]]:
+def all_transports() -> Iterable[Type["Transport"]]:
     from .bridge import BridgeTransport
     from .hid import HidTransport
     from .udp import UdpTransport
     from .webusb import WebUsbTransport
 
-    return set(
-        cls
-        for cls in (BridgeTransport, HidTransport, UdpTransport, WebUsbTransport)
-        if cls.ENABLED
+    transports: Tuple[Type["Transport"], ...] = (
+        BridgeTransport,
+        HidTransport,
+        UdpTransport,
+        WebUsbTransport,
     )
+    return set(t for t in transports if t.ENABLED)
 
 
-def enumerate_devices() -> Iterable[Transport]:
-    devices: List[Transport] = []
+def enumerate_devices() -> Sequence["Transport"]:
+    devices: List["Transport"] = []
     for transport in all_transports():
         name = transport.__name__
         try:
@@ -125,7 +142,9 @@ def enumerate_devices() -> Iterable[Transport]:
     return devices
 
 
-def get_transport(path: str = None, prefix_search: bool = False) -> Transport:
+def get_transport(
+    path: Optional[str] = None, prefix_search: bool = False
+) -> "Transport":
     if path is None:
         try:
             return next(iter(enumerate_devices()))

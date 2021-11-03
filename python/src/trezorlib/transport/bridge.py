@@ -34,7 +34,7 @@ CONNECTION = requests.Session()
 CONNECTION.headers.update(TREZORD_ORIGIN_HEADER)
 
 
-def call_bridge(uri: str, data=None) -> requests.Response:
+def call_bridge(uri: str, data: Optional[str] = None) -> requests.Response:
     url = TREZORD_HOST + "/" + uri
     r = CONNECTION.post(url, data=data)
     if r.status_code != 200:
@@ -127,7 +127,7 @@ class BridgeTransport(Transport):
             raise TransportException("Debug device not available")
         return BridgeTransport(self.device, self.legacy, debug=True)
 
-    def _call(self, action: str, data: str = None) -> requests.Response:
+    def _call(self, action: str, data: Optional[str] = None) -> requests.Response:
         session = self.session or "null"
         uri = action + "/" + str(session)
         if self.debug:

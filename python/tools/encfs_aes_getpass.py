@@ -7,25 +7,29 @@ Usage:
 encfs --standard --extpass=./encfs_aes_getpass.py ~/.crypt ~/crypt
 """
 
+import hashlib
+import json
 import os
 import sys
-import json
-import hashlib
+from typing import TYPE_CHECKING, Sequence
 
 import trezorlib
+import trezorlib.misc
+from trezorlib.client import TrezorClient
+from trezorlib.tools import Address
+from trezorlib.transport import enumerate_devices
+from trezorlib.ui import ClickUI
 
 version_tuple = tuple(map(int, trezorlib.__version__.split(".")))
 if not (0, 11) <= version_tuple < (0, 12):
     raise RuntimeError("trezorlib version mismatch (0.11.x is required)")
 
-from trezorlib.client import TrezorClient
-from trezorlib.transport import enumerate_devices
-from trezorlib.ui import ClickUI
 
-import trezorlib.misc
+if TYPE_CHECKING:
+    from trezorlib.transport import Transport
 
 
-def wait_for_devices():
+def wait_for_devices() -> Sequence["Transport"]:
     devices = enumerate_devices()
     while not len(devices):
         sys.stderr.write("Please connect Trezor to computer and press Enter...")
@@ -35,7 +39,7 @@ def wait_for_devices():
     return devices
 
 
-def choose_device(devices):
+def choose_device(devices: Sequence["Transport"]) -> "Transport":
     if not len(devices):
         raise RuntimeError("No Trezor connected!")
 
@@ -72,7 +76,7 @@ def choose_device(devices):
         raise ValueError("Invalid choice, exiting...")
 
 
-def main():
+def main() -> None:
 
     if "encfs_root" not in os.environ:
         sys.stderr.write(
@@ -106,7 +110,7 @@ def main():
         if len(passw) != 32:
             raise ValueError("32 bytes password expected")
 
-        bip32_path = [10, 0]
+        bip32_path = Address([10, 0])
         passw_encrypted = trezorlib.misc.encrypt_keyvalue(
             client, bip32_path, label, passw, False, True
         )

@@ -17,7 +17,15 @@
 import logging
 from typing import Optional, Set, Type
 
+from typing_extensions import Protocol, runtime_checkable
+
 from . import protobuf
+
+
+@runtime_checkable
+class HasProtobuf(Protocol):
+    protobuf: protobuf.MessageType
+
 
 OMITTED_MESSAGES: Set[Type[protobuf.MessageType]] = set()
 
@@ -37,7 +45,7 @@ class PrettyProtobufFormatter(logging.Formatter):
             source=record.name,
             msg=super().format(record),
         )
-        if hasattr(record, "protobuf"):
+        if isinstance(record, HasProtobuf):
             if type(record.protobuf) in OMITTED_MESSAGES:
                 message += f" ({record.protobuf.ByteSize()} bytes)"
             else:
@@ -45,13 +53,16 @@ class PrettyProtobufFormatter(logging.Formatter):
         return message
 
 
-def enable_debug_output(verbosity: int = 1, handler: Optional[logging.Handler] = None):
+def enable_debug_output(
+    verbosity: int = 1, handler: Optional[logging.Handler] = None
+) -> None:
     if handler is None:
         handler = logging.StreamHandler()
 
     formatter = PrettyProtobufFormatter()
     handler.setFormatter(formatter)
 
+    level = logging.NOTSET
     if verbosity > 0:
         level = logging.DEBUG
     if verbosity > 1:

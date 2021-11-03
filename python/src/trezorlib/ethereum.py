@@ -15,13 +15,18 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import re
-from typing import Any, Dict, List, Union
+from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, Tuple
 
 from . import exceptions, messages
 from .tools import expect, normalize_nfc, session
 
+if TYPE_CHECKING:
+    from .client import TrezorClient
+    from .tools import Address
+    from .protobuf import MessageType
 
-def int_to_big_endian(value) -> bytes:
+
+def int_to_big_endian(value: int) -> bytes:
     return value.to_bytes((value.bit_length() + 7) // 8, "big")
 
 
@@ -50,13 +55,18 @@ def typeof_array(type_name: str) -> str:
 
 def parse_type_n(type_name: str) -> int:
     """Parse N from type<N>. Example: "uint256" -> 256."""
-    return int(re.search(r"\d+$", type_name).group(0))
+    match = re.search(r"\d+$", type_name)
+    if match:
+        return int(match.group(0))
+    else:
+        raise ValueError(f"Could not parse type<N> from {type_name}.")
 
 
-def parse_array_n(type_name: str) -> Union[int, str]:
+def parse_array_n(type_name: str) -> Optional[int]:
     """Parse N in type[<N>] where "type" can itself be an array type."""
+    # sign that it is a dynamic array - we do not know <N>
     if type_name.endswith("[]"):
-        return "dynamic"
+        return None
 
     start_idx = type_name.rindex("[") + 1
     return int(type_name[start_idx:-1])
@@ -74,8 +84,7 @@ def get_field_type(type_name: str, types: dict) -> messages.EthereumFieldType:
 
     if is_array(type_name):
         data_type = messages.EthereumDataType.ARRAY
-        array_size = parse_array_n(type_name)
-        size = None if array_size == "dynamic" else array_size
+        size = parse_array_n(type_name)
         member_typename = typeof_array(type_name)
         entry_type = get_field_type(member_typename, types)
         # Not supporting nested arrays currently
@@ -135,15 +144,19 @@ def encode_data(value: Any, type_name: str) -> bytes:
 # ====== Client functions ====== #
 
 
-@expect(messages.EthereumAddress, field="address")
-def get_address(client, n, show_display=False, multisig=None):
+@expect(messages.EthereumAddress, field="address", ret_type=str)
+def get_address(
+    client: "TrezorClient", n: "Address", show_display: bool = False
+) -> "MessageType":
     return client.call(
         messages.EthereumGetAddress(address_n=n, show_display=show_display)
     )
 
 
 @expect(messages.EthereumPublicKey)
-def get_public_node(client, n, show_display=False):
+def get_public_node(
+    client: "TrezorClient", n: "Address", show_display: bool = False
+) -> "MessageType":
     return client.call(
         messages.EthereumGetPublicKey(address_n=n, show_display=show_display)
     )
@@ -151,17 +164,20 @@ def get_public_node(client, n, show_display=False):
 
 @session
 def sign_tx(
-    client,
-    n,
-    nonce,
-    gas_price,
-    gas_limit,
-    to,
-    value,
-    data=None,
-    chain_id=None,
-    tx_type=None,
-):
+    client: "TrezorClient",
+    n: "Address",
+    nonce: int,
+    gas_price: int,
+    gas_limit: int,
+    to: str,
+    value: int,
+    data: Optional[bytes] = None,
+    chain_id: Optional[int] = None,
+    tx_type: Optional[int] = None,
+) -> Tuple[int, bytes, bytes]:
+    if chain_id is None:
+        raise exceptions.TrezorException("Chain ID cannot be undefined")
+
     msg = messages.EthereumSignTx(
         address_n=n,
         nonce=int_to_big_endian(nonce),
@@ -179,11 +195,18 @@ def sign_tx(
         msg.data_initial_chunk = chunk
 
     response = client.call(msg)
+    assert isinstance(response, messages.EthereumTxRequest)
 
     while response.data_length is not None:
         data_length = response.data_length
+        assert data is not None
         data, chunk = data[data_length:], data[:data_length]
         response = client.call(messages.EthereumTxAck(data_chunk=chunk))
+        assert isinstance(response, messages.EthereumTxRequest)
+
+    assert response.signature_v is not None
+    assert response.signature_r is not None
+    assert response.signature_s is not None
 
     # https://github.com/trezor/trezor-core/pull/311
     # only signature bit returned. recalculate signature_v
@@ -195,19 +218,19 @@ def sign_tx(
 
 @session
 def sign_tx_eip1559(
-    client,
-    n,
+    client: "TrezorClient",
+    n: "Address",
     *,
-    nonce,
-    gas_limit,
-    to,
-    value,
-    data=b"",
-    chain_id,
-    max_gas_fee,
-    max_priority_fee,
-    access_list=(),
-):
+    nonce: int,
+    gas_limit: int,
+    to: str,
+    value: int,
+    data: bytes = b"",
+    chain_id: int,
+    max_gas_fee: int,
+    max_priority_fee: int,
+    access_list: Optional[List[messages.EthereumAccessList]] = None,
+) -> Tuple[int, bytes, bytes]:
     length = len(data)
     data, chunk = data[1024:], data[:1024]
     msg = messages.EthereumSignTxEIP1559(
@@ -225,25 +248,37 @@ def sign_tx_eip1559(
     )
 
     response = client.call(msg)
+    assert isinstance(response, messages.EthereumTxRequest)
 
     while response.data_length is not None:
         data_length = response.data_length
         data, chunk = data[data_length:], data[:data_length]
         response = client.call(messages.EthereumTxAck(data_chunk=chunk))
+        assert isinstance(response, messages.EthereumTxRequest)
 
+    assert response.signature_v is not None
+    assert response.signature_r is not None
+    assert response.signature_s is not None
     return response.signature_v, response.signature_r, response.signature_s
 
 
 @expect(messages.EthereumMessageSignature)
-def sign_message(client, n, message):
-    message = normalize_nfc(message)
-    return client.call(messages.EthereumSignMessage(address_n=n, message=message))
+def sign_message(
+    client: "TrezorClient", n: "Address", message: AnyStr
+) -> "MessageType":
+    return client.call(
+        messages.EthereumSignMessage(address_n=n, message=normalize_nfc(message))
+    )
 
 
 @expect(messages.EthereumTypedDataSignature)
 def sign_typed_data(
-    client, n: List[int], data: Dict[str, Any], *, metamask_v4_compat: bool = True
-):
+    client: "TrezorClient",
+    n: "Address",
+    data: Dict[str, Any],
+    *,
+    metamask_v4_compat: bool = True,
+) -> "MessageType":
     data = sanitize_typed_data(data)
     types = data["types"]
 
@@ -258,7 +293,7 @@ def sign_typed_data(
     while isinstance(response, messages.EthereumTypedDataStructRequest):
         struct_name = response.name
 
-        members = []
+        members: List["messages.EthereumStructMember"] = []
         for field in types[struct_name]:
             field_type = get_field_type(field["type"], types)
             struct_member = messages.EthereumStructMember(
@@ -309,12 +344,13 @@ def sign_typed_data(
     return response
 
 
-def verify_message(client, address, signature, message):
-    message = normalize_nfc(message)
+def verify_message(
+    client: "TrezorClient", address: str, signature: bytes, message: AnyStr
+) -> bool:
     try:
         resp = client.call(
             messages.EthereumVerifyMessage(
-                address=address, signature=signature, message=message
+                address=address, signature=signature, message=normalize_nfc(message)
             )
         )
     except exceptions.TrezorFailure:

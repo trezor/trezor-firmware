@@ -15,12 +15,18 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from datetime import datetime
+from typing import TYPE_CHECKING, List, Tuple
 
 from . import exceptions, messages
 from .tools import b58decode, expect, session
 
+if TYPE_CHECKING:
+    from .client import TrezorClient
+    from .tools import Address
+    from .protobuf import MessageType
 
-def name_to_number(name):
+
+def name_to_number(name: str) -> int:
     length = len(name)
     value = 0
 
@@ -40,7 +46,7 @@ def name_to_number(name):
     return value
 
 
-def char_to_symbol(c):
+def char_to_symbol(c: str) -> int:
     if c >= "a" and c <= "z":
         return ord(c) - ord("a") + 6
     elif c >= "1" and c <= "5":
@@ -49,7 +55,7 @@ def char_to_symbol(c):
         return 0
 
 
-def parse_asset(asset):
+def parse_asset(asset: str) -> messages.EosAsset:
     amount_str, symbol_str = asset.split(" ")
 
     # "-1.0000" => ["-1", "0000"] => -10000
@@ -67,7 +73,7 @@ def parse_asset(asset):
     return messages.EosAsset(amount=amount, symbol=symbol)
 
 
-def public_key_to_buffer(pub_key):
+def public_key_to_buffer(pub_key: str) -> Tuple[int, bytes]:
     _t = 0
     if pub_key[:3] == "EOS":
         pub_key = pub_key[3:]
@@ -82,7 +88,7 @@ def public_key_to_buffer(pub_key):
     return _t, b58decode(pub_key, None)[:-4]
 
 
-def parse_common(action):
+def parse_common(action: dict) -> messages.EosActionCommon:
     authorization = []
     for auth in action["authorization"]:
         authorization.append(
@@ -99,7 +105,7 @@ def parse_common(action):
     )
 
 
-def parse_transfer(data):
+def parse_transfer(data: dict) -> messages.EosActionTransfer:
     return messages.EosActionTransfer(
         sender=name_to_number(data["from"]),
         receiver=name_to_number(data["to"]),
@@ -108,7 +114,7 @@ def parse_transfer(data):
     )
 
 
-def parse_vote_producer(data):
+def parse_vote_producer(data: dict) -> messages.EosActionVoteProducer:
     producers = []
     for producer in data["producers"]:
         producers.append(name_to_number(producer))
@@ -120,7 +126,7 @@ def parse_vote_producer(data):
     )
 
 
-def parse_buy_ram(data):
+def parse_buy_ram(data: dict) -> messages.EosActionBuyRam:
     return messages.EosActionBuyRam(
         payer=name_to_number(data["payer"]),
         receiver=name_to_number(data["receiver"]),
@@ -128,7 +134,7 @@ def parse_buy_ram(data):
     )
 
 
-def parse_buy_rambytes(data):
+def parse_buy_rambytes(data: dict) -> messages.EosActionBuyRamBytes:
     return messages.EosActionBuyRamBytes(
         payer=name_to_number(data["payer"]),
         receiver=name_to_number(data["receiver"]),
@@ -136,13 +142,13 @@ def parse_buy_rambytes(data):
     )
 
 
-def parse_sell_ram(data):
+def parse_sell_ram(data: dict) -> messages.EosActionSellRam:
     return messages.EosActionSellRam(
         account=name_to_number(data["account"]), bytes=int(data["bytes"])
     )
 
 
-def parse_delegate(data):
+def parse_delegate(data: dict) -> messages.EosActionDelegate:
     return messages.EosActionDelegate(
         sender=name_to_number(data["from"]),
         receiver=name_to_number(data["receiver"]),
@@ -152,7 +158,7 @@ def parse_delegate(data):
     )
 
 
-def parse_undelegate(data):
+def parse_undelegate(data: dict) -> messages.EosActionUndelegate:
     return messages.EosActionUndelegate(
         sender=name_to_number(data["from"]),
         receiver=name_to_number(data["receiver"]),
@@ -161,11 +167,11 @@ def parse_undelegate(data):
     )
 
 
-def parse_refund(data):
+def parse_refund(data: dict) -> messages.EosActionRefund:
     return messages.EosActionRefund(owner=name_to_number(data["owner"]))
 
 
-def parse_updateauth(data):
+def parse_updateauth(data: dict) -> messages.EosActionUpdateAuth:
     auth = parse_authorization(data["auth"])
 
     return messages.EosActionUpdateAuth(
@@ -176,14 +182,14 @@ def parse_updateauth(data):
     )
 
 
-def parse_deleteauth(data):
+def parse_deleteauth(data: dict) -> messages.EosActionDeleteAuth:
     return messages.EosActionDeleteAuth(
         account=name_to_number(data["account"]),
         permission=name_to_number(data["permission"]),
     )
 
 
-def parse_linkauth(data):
+def parse_linkauth(data: dict) -> messages.EosActionLinkAuth:
     return messages.EosActionLinkAuth(
         account=name_to_number(data["account"]),
         code=name_to_number(data["code"]),
@@ -192,7 +198,7 @@ def parse_linkauth(data):
     )
 
 
-def parse_unlinkauth(data):
+def parse_unlinkauth(data: dict) -> messages.EosActionUnlinkAuth:
     return messages.EosActionUnlinkAuth(
         account=name_to_number(data["account"]),
         code=name_to_number(data["code"]),
@@ -200,7 +206,7 @@ def parse_unlinkauth(data):
     )
 
 
-def parse_authorization(data):
+def parse_authorization(data: dict) -> messages.EosAuthorization:
     keys = []
     for key in data["keys"]:
         _t, _k = public_key_to_buffer(key["key"])
@@ -234,7 +240,7 @@ def parse_authorization(data):
     )
 
 
-def parse_new_account(data):
+def parse_new_account(data: dict) -> messages.EosActionNewAccount:
     owner = parse_authorization(data["owner"])
     active = parse_authorization(data["active"])
 
@@ -246,12 +252,12 @@ def parse_new_account(data):
     )
 
 
-def parse_unknown(data):
+def parse_unknown(data: str) -> messages.EosActionUnknown:
     data_bytes = bytes.fromhex(data)
     return messages.EosActionUnknown(data_size=len(data_bytes), data_chunk=data_bytes)
 
 
-def parse_action(action):
+def parse_action(action: dict) -> messages.EosTxActionAck:
     tx_action = messages.EosTxActionAck()
     data = action["data"]
 
@@ -290,7 +296,9 @@ def parse_action(action):
     return tx_action
 
 
-def parse_transaction_json(transaction):
+def parse_transaction_json(
+    transaction: dict,
+) -> Tuple[messages.EosTxHeader, List[messages.EosTxActionAck]]:
     header = messages.EosTxHeader(
         expiration=int(
             (
@@ -314,7 +322,9 @@ def parse_transaction_json(transaction):
 
 
 @expect(messages.EosPublicKey)
-def get_public_key(client, n, show_display=False, multisig=None):
+def get_public_key(
+    client: "TrezorClient", n: "Address", show_display: bool = False
+) -> "MessageType":
     response = client.call(
         messages.EosGetPublicKey(address_n=n, show_display=show_display)
     )
@@ -322,7 +332,9 @@ def get_public_key(client, n, show_display=False, multisig=None):
 
 
 @session
-def sign_tx(client, address, transaction, chain_id):
+def sign_tx(
+    client: "TrezorClient", address: "Address", transaction: dict, chain_id: str
+) -> messages.EosSignedTx:
     header, actions = parse_transaction_json(transaction)
 
     msg = messages.EosSignTx()

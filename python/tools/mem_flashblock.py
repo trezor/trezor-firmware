@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
+import sys
+
 from trezorlib.debuglink import DebugLink
 from trezorlib.transport import enumerate_devices
-import sys
 
 # fmt: off
 sectoraddrs = [0x8000000, 0x8004000, 0x8008000, 0x800c000,
@@ -13,7 +14,7 @@ sectorlens = [0x4000, 0x4000, 0x4000, 0x4000,
 # fmt: on
 
 
-def find_debug():
+def find_debug() -> DebugLink:
     for device in enumerate_devices():
         try:
             debug_transport = device.find_debug()
@@ -27,7 +28,7 @@ def find_debug():
         sys.exit(1)
 
 
-def main():
+def main() -> None:
     debug = find_debug()
 
     sector = int(sys.argv[1])

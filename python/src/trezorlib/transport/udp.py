@@ -17,7 +17,7 @@
 import logging
 import socket
 import time
-from typing import Iterable, Optional, cast
+from typing import Iterable, Optional
 
 from ..log import DUMP_PACKETS
 from . import TransportException
@@ -35,7 +35,7 @@ class UdpTransport(ProtocolBasedTransport):
     PATH_PREFIX = "udp"
     ENABLED = True
 
-    def __init__(self, device: str = None) -> None:
+    def __init__(self, device: Optional[str] = None) -> None:
         if not device:
             host = UdpTransport.DEFAULT_HOST
             port = UdpTransport.DEFAULT_PORT
@@ -80,10 +80,7 @@ class UdpTransport(ProtocolBasedTransport):
     @classmethod
     def find_by_path(cls, path: str, prefix_search: bool = False) -> "UdpTransport":
         if prefix_search:
-            return cast(UdpTransport, super().find_by_path(path, prefix_search))
-            # This is *technically* type-able: mark `find_by_path` as returning
-            # the same type from which `cls` comes from.
-            # Mypy can't handle that though, so here we are.
+            return super().find_by_path(path, prefix_search)
         else:
             path = path.replace(f"{cls.PATH_PREFIX}:", "")
             return cls._try_path(path)

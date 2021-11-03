@@ -17,15 +17,17 @@
 import logging
 import os
 import warnings
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 from mnemonic import Mnemonic
 
-from . import MINIMUM_FIRMWARE_VERSION, exceptions, mapping, messages, tools
+from . import MINIMUM_FIRMWARE_VERSION, exceptions, mapping, messages
 from .log import DUMP_BYTES
 from .messages import Capability
+from .tools import expect, parse_path, session
 
 if TYPE_CHECKING:
+    from .protobuf import MessageType
     from .ui import TrezorClientUI
     from .transport import Transport
 
@@ -36,7 +38,7 @@ MAX_PASSPHRASE_LENGTH = 50
 MAX_PIN_LENGTH = 50
 
 PASSPHRASE_ON_DEVICE = object()
-PASSPHRASE_TEST_PATH = tools.parse_path("44h/1h/0h/0/0")
+PASSPHRASE_TEST_PATH = parse_path("44h/1h/0h/0/0")
 
 OUTDATED_FIRMWARE_ERROR = """
 Your Trezor firmware is out of date. Update it with the following command:
@@ -45,7 +47,9 @@ Or visit https://suite.trezor.io/
 """.strip()
 
 
-def get_default_client(path=None, ui=None, **kwargs):
+def get_default_client(
+    path: Optional[str] = None, ui: Optional["TrezorClientUI"] = None, **kwargs: Any
+) -> "TrezorClient":
     """Get a client for a connected Trezor device.
 
     Returns a TrezorClient instance with minimum fuss.
@@ -93,7 +97,7 @@ class TrezorClient:
         ui: "TrezorClientUI",
         session_id: Optional[bytes] = None,
         derive_cardano: Optional[bool] = None,
-    ):
+    ) -> None:
         LOG.info(f"creating client instance for device: {transport.get_path()}")
         self.transport = transport
         self.ui = ui
@@ -101,26 +105,26 @@ class TrezorClient:
         self.session_id = session_id
         self.init_device(session_id=session_id, derive_cardano=derive_cardano)
 
-    def open(self):
+    def open(self) -> None:
         if self.session_counter == 0:
             self.transport.begin_session()
         self.session_counter += 1
 
-    def close(self):
+    def close(self) -> None:
         self.session_counter = max(self.session_counter - 1, 0)
         if self.session_counter == 0:
             # TODO call EndSession here?
             self.transport.end_session()
 
-    def cancel(self):
+    def cancel(self) -> None:
         self._raw_write(messages.Cancel())
 
-    def call_raw(self, msg):
+    def call_raw(self, msg: "MessageType") -> "MessageType":
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         self._raw_write(msg)
         return self._raw_read()
 
-    def _raw_write(self, msg):
+    def _raw_write(self, msg: "MessageType") -> None:
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         LOG.debug(
             f"sending message: {msg.__class__.__name__}",
@@ -133,7 +137,7 @@ class TrezorClient:
         )
         self.transport.write(msg_type, msg_bytes)
 
-    def _raw_read(self):
+    def _raw_read(self) -> "MessageType":
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         msg_type, msg_bytes = self.transport.read()
         LOG.log(
@@ -147,7 +151,7 @@ class TrezorClient:
         )
         return msg
 
-    def _callback_pin(self, msg):
+    def _callback_pin(self, msg: messages.PinMatrixRequest) -> "MessageType":
         try:
             pin = self.ui.get_pin(msg.type)
         except exceptions.Cancelled:
@@ -170,10 +174,12 @@ class TrezorClient:
         else:
             return resp
 
-    def _callback_passphrase(self, msg: messages.PassphraseRequest):
+    def _callback_passphrase(self, msg: messages.PassphraseRequest) -> "MessageType":
         available_on_device = Capability.PassphraseEntry in self.features.capabilities
 
-        def send_passphrase(passphrase=None, on_device=None):
+        def send_passphrase(
+            passphrase: Optional[str] = None, on_device: Optional[bool] = None
+        ) -> "MessageType":
             msg = messages.PassphraseAck(passphrase=passphrase, on_device=on_device)
             resp = self.call_raw(msg)
             if isinstance(resp, messages.Deprecated_PassphraseStateRequest):
@@ -199,6 +205,8 @@ class TrezorClient:
                 return send_passphrase(on_device=True)
 
         # else process host-entered passphrase
+        if not isinstance(passphrase, str):
+            raise RuntimeError("Passphrase must be a str")
         passphrase = Mnemonic.normalize_string(passphrase)
         if len(passphrase) > MAX_PASSPHRASE_LENGTH:
             self.call_raw(messages.Cancel())
@@ -206,15 +214,15 @@ class TrezorClient:
 
         return send_passphrase(passphrase, on_device=False)
 
-    def _callback_button(self, msg):
+    def _callback_button(self, msg: messages.ButtonRequest) -> "MessageType":
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         # do this raw - send ButtonAck first, notify UI later
         self._raw_write(messages.ButtonAck())
         self.ui.button_request(msg)
         return self._raw_read()
 
-    @tools.session
-    def call(self, msg):
+    @session
+    def call(self, msg: "MessageType") -> "MessageType":
         self.check_firmware_version()
         resp = self.call_raw(msg)
         while True:
@@ -247,7 +255,7 @@ class TrezorClient:
             self.session_id = self.features.session_id
             self.features.session_id = None
 
-    @tools.session
+    @session
     def refresh_features(self) -> messages.Features:
         """Reload features from the device.
 
@@ -260,11 +268,11 @@ class TrezorClient:
         self._refresh_features(resp)
         return resp
 
-    @tools.session
+    @session
     def init_device(
         self,
         *,
-        session_id: bytes = None,
+        session_id: Optional[bytes] = None,
         new_session: bool = False,
         derive_cardano: Optional[bool] = None,
     ) -> Optional[bytes]:
@@ -329,26 +337,26 @@ class TrezorClient:
         self._refresh_features(resp)
         return reported_session_id
 
-    def is_outdated(self):
+    def is_outdated(self) -> bool:
         if self.features.bootloader_mode:
             return False
         model = self.features.model or "1"
         required_version = MINIMUM_FIRMWARE_VERSION[model]
         return self.version < required_version
 
-    def check_firmware_version(self, warn_only=False):
+    def check_firmware_version(self, warn_only: bool = False) -> None:
         if self.is_outdated():
             if warn_only:
                 warnings.warn("Firmware is out of date", stacklevel=2)
             else:
                 raise exceptions.OutdatedFirmwareError(OUTDATED_FIRMWARE_ERROR)
 
-    @tools.expect(messages.Success, field="message")
+    @expect(messages.Success, field="message", ret_type=str)
     def ping(
         self,
-        msg,
-        button_protection=False,
-    ):
+        msg: str,
+        button_protection: bool = False,
+    ) -> "MessageType":
         # We would like ping to work on any valid TrezorClient instance, but
         # due to the protection modes, we need to go through self.call, and that will
         # raise an exception if the firmware is too old.
@@ -366,14 +374,15 @@ class TrezorClient:
             finally:
                 self.close()
 
-        msg = messages.Ping(message=msg, button_protection=button_protection)
-        return self.call(msg)
+        return self.call(
+            messages.Ping(message=msg, button_protection=button_protection)
+        )
 
-    def get_device_id(self):
+    def get_device_id(self) -> Optional[str]:
         return self.features.device_id
 
-    @tools.session
-    def lock(self, *, _refresh_features=True):
+    @session
+    def lock(self, *, _refresh_features: bool = True) -> None:
         """Lock the device.
 
         If the device does not have a PIN configured, this will do nothing.
@@ -393,8 +402,8 @@ class TrezorClient:
         if _refresh_features:
             self.refresh_features()
 
-    @tools.session
-    def ensure_unlocked(self):
+    @session
+    def ensure_unlocked(self) -> None:
         """Ensure the device is unlocked and a passphrase is cached.
 
         If the device is locked, this will prompt for PIN. If passphrase is enabled
@@ -409,7 +418,7 @@ class TrezorClient:
         get_address(self, "Testnet", PASSPHRASE_TEST_PATH)
         self.refresh_features()
 
-    def end_session(self):
+    def end_session(self) -> None:
         """Close the current session and clear cached passphrase.
 
         The session will become invalid until `init_device()` is called again.
@@ -428,8 +437,8 @@ class TrezorClient:
             pass
         self.session_id = None
 
-    @tools.session
-    def clear_session(self):
+    @session
+    def clear_session(self) -> None:
         """Lock the device and present a fresh session.
 
         The current session will be invalidated and a new one will be started. If the

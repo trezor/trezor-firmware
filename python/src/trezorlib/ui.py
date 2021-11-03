@@ -15,7 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import os
-from typing import Union
+from typing import Any, Callable, Optional, Union
 
 import click
 from mnemonic import Mnemonic
@@ -59,35 +59,37 @@ class TrezorClientUI(Protocol):
     def button_request(self, br: messages.ButtonRequest) -> None:
         ...
 
-    def get_pin(self, code: PinMatrixRequestType) -> str:
+    def get_pin(self, code: Optional[PinMatrixRequestType]) -> str:
         ...
 
     def get_passphrase(self, available_on_device: bool) -> Union[str, object]:
         ...
 
 
-def echo(*args, **kwargs):
+def echo(*args: Any, **kwargs: Any) -> None:
     return click.echo(*args, err=True, **kwargs)
 
 
-def prompt(*args, **kwargs):
+def prompt(*args: Any, **kwargs: Any) -> Any:
     return click.prompt(*args, err=True, **kwargs)
 
 
 class ClickUI:
-    def __init__(self, always_prompt=False, passphrase_on_host=False):
+    def __init__(
+        self, always_prompt: bool = False, passphrase_on_host: bool = False
+    ) -> None:
         self.pinmatrix_shown = False
         self.prompt_shown = False
         self.always_prompt = always_prompt
         self.passphrase_on_host = passphrase_on_host
 
-    def button_request(self, _br):
+    def button_request(self, _br: messages.ButtonRequest) -> None:
         if not self.prompt_shown:
             echo("Please confirm action on your Trezor device.")
         if not self.always_prompt:
             self.prompt_shown = True
 
-    def get_pin(self, code=None):
+    def get_pin(self, code: Optional[PinMatrixRequestType] = None) -> str:
         if code == PIN_CURRENT:
             desc = "current PIN"
         elif code == PIN_NEW:
@@ -125,13 +127,14 @@ class ClickUI:
             else:
                 return pin
 
-    def get_passphrase(self, available_on_device):
+    def get_passphrase(self, available_on_device: bool) -> Union[str, object]:
         if available_on_device and not self.passphrase_on_host:
             return PASSPHRASE_ON_DEVICE
 
-        if os.getenv("PASSPHRASE") is not None:
+        env_passphrase = os.getenv("PASSPHRASE")
+        if env_passphrase is not None:
             echo("Passphrase required. Using PASSPHRASE environment variable.")
-            return os.getenv("PASSPHRASE")
+            return env_passphrase
 
         while True:
             try:
@@ -155,13 +158,15 @@ class ClickUI:
                 raise Cancelled from None
 
 
-def mnemonic_words(expand=False, language="english"):
+def mnemonic_words(
+    expand: bool = False, language: str = "english"
+) -> Callable[[WordRequestType], str]:
     if expand:
         wordlist = Mnemonic(language).wordlist
     else:
-        wordlist = set()
+        wordlist = []
 
-    def expand_word(word):
+    def expand_word(word: str) -> str:
         if not expand:
             return word
         if word in wordlist:
@@ -172,7 +177,7 @@ def mnemonic_words(expand=False, language="english"):
         echo("Choose one of: " + ", ".join(matches))
         raise KeyError(word)
 
-    def get_word(type):
+    def get_word(type: WordRequestType) -> str:
         assert type == WordRequestType.Plain
         while True:
             try:
@@ -186,7 +191,7 @@ def mnemonic_words(expand=False, language="english"):
     return get_word
 
 
-def matrix_words(type):
+def matrix_words(type: WordRequestType) -> str:
     while True:
         try:
             ch = click.getchar()

@@ -17,7 +17,7 @@
 import logging
 import sys
 import time
-from typing import Any, Dict, Iterable
+from typing import Any, Dict, Iterable, List
 
 from ..log import DUMP_PACKETS
 from . import DEV_TREZOR1, UDEV_RULES_STR, TransportException
@@ -27,9 +27,11 @@ LOG = logging.getLogger(__name__)
 
 try:
     import hid
+
+    HID_IMPORTED = True
 except Exception as e:
     LOG.info(f"HID transport is disabled: {e}")
-    hid = None
+    HID_IMPORTED = False
 
 
 HidDevice = Dict[str, Any]
@@ -118,7 +120,7 @@ class HidTransport(ProtocolBasedTransport):
     """
 
     PATH_PREFIX = "hid"
-    ENABLED = hid is not None
+    ENABLED = HID_IMPORTED
 
     def __init__(self, device: HidDevice) -> None:
         self.device = device
@@ -131,7 +133,7 @@ class HidTransport(ProtocolBasedTransport):
 
     @classmethod
     def enumerate(cls, debug: bool = False) -> Iterable["HidTransport"]:
-        devices = []
+        devices: List["HidTransport"] = []
         for dev in hid.enumerate(0, 0):
             usb_id = (dev["vendor_id"], dev["product_id"])
             if usb_id != DEV_TREZOR1:

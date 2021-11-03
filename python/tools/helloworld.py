@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
+from trezorlib import btc
 from trezorlib.client import get_default_client
 from trezorlib.tools import parse_path
-from trezorlib import btc
 
 
-def main():
+def main() -> None:
     # Use first connected device
     client = get_default_client()
 

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import sys
+from typing import BinaryIO, TextIO
+
 import click
 
 from trezorlib import firmware
@@ -10,7 +12,7 @@ from trezorlib._internal import firmware_headers
 @click.command()
 @click.argument("filename", type=click.File("rb"))
 @click.option("-o", "--output", type=click.File("w"), default="-")
-def firmware_fingerprint(filename, output):
+def firmware_fingerprint(filename: BinaryIO, output: TextIO) -> None:
     """Display fingerprint of a firmware file."""
     data = filename.read()
 

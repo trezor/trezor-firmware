@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
+import sys
+
 from trezorlib.debuglink import DebugLink
 from trezorlib.transport import enumerate_devices
-import sys
 
 # usage examples
 # read entire bootloader: ./mem_read.py 8000000 8000
@@ -12,7 +13,7 @@ import sys
 # be running a firmware that was built with debug link enabled
 
 
-def find_debug():
+def find_debug() -> DebugLink:
     for device in enumerate_devices():
         try:
             debug_transport = device.find_debug()
@@ -26,7 +27,7 @@ def find_debug():
         sys.exit(1)
 
 
-def main():
+def main() -> None:
     debug = find_debug()
 
     arg1 = int(sys.argv[1], 16)
