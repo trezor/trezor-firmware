@@ -30,6 +30,9 @@
 #include "protect.h"
 #include "secp256k1.h"
 #include "transaction.h"
+#ifdef USE_SECP256K1_ZKP_ECDSA
+#include "zkp_ecdsa.h"
+#endif
 
 static uint32_t change_count;
 static const CoinInfo *coin;
@@ -1767,8 +1770,17 @@ static bool signing_check_orig_tx(void) {
     }
   }
 
-  if (ecdsa_verify_digest(coin->curve->params, node.public_key, sig, hash) !=
-      0) {
+  int ret = 0;
+#ifdef USE_SECP256K1_ZKP_ECDSA
+  if (coin->curve->params == &secp256k1) {
+    ret = zkp_ecdsa_verify_digest(coin->curve->params, node.public_key, sig,
+                                  hash);
+  } else
+#endif
+  {
+    ret = ecdsa_verify_digest(coin->curve->params, node.public_key, sig, hash);
+  }
+  if (ret != 0) {
     fsm_sendFailure(FailureType_Failure_DataError, _("Invalid signature."));
     signing_abort();
     return false;
@@ -1867,12 +1879,24 @@ static bool signing_sign_hash(TxInputType *txinput, const uint8_t *private_key,
   resp.serialized.signature_index = idx1;
   resp.serialized.has_signature = true;
   resp.serialized.has_serialized_tx = true;
-  if (ecdsa_sign_digest(coin->curve->params, private_key, hash, sig, NULL,
-                        NULL) != 0) {
+
+  int ret = 0;
+#ifdef USE_SECP256K1_ZKP_ECDSA
+  if (coin->curve->params == &secp256k1) {
+    ret = zkp_ecdsa_sign_digest(coin->curve->params, private_key, hash, sig,
+                                NULL, NULL);
+  } else
+#endif
+  {
+    ret = ecdsa_sign_digest(coin->curve->params, private_key, hash, sig, NULL,
+                            NULL);
+  }
+  if (ret != 0) {
     fsm_sendFailure(FailureType_Failure_ProcessError, _("Signing failed"));
     signing_abort();
     return false;
   }
+
   resp.serialized.signature.size =
       ecdsa_sig_to_der(sig, resp.serialized.signature.bytes);
 

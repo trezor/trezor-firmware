@@ -36,6 +36,9 @@
 #include "sha3.h"
 #include "transaction.h"
 #include "util.h"
+#ifdef USE_SECP256K1_ZKP_ECDSA
+#include "zkp_ecdsa.h"
+#endif
 
 /* Maximum chain_id which returns the full signature_v (which must fit into an
 uint32). chain_ids larger than this will only return one bit and the caller must
@@ -944,8 +947,20 @@ int ethereum_message_verify(const EthereumVerifyMessage *msg) {
   if (v >= 27) {
     v -= 27;
   }
-  if (v >= 2 || ecdsa_recover_pub_from_sig(
-                    &secp256k1, pubkey, msg->signature.bytes, hash, v) != 0) {
+
+  if (v >= 2) {
+    return 2;
+  }
+
+  int ret = 0;
+#ifdef USE_SECP256K1_ZKP_ECDSA
+  ret = zkp_ecdsa_recover_pub_from_sig(&secp256k1, pubkey, msg->signature.bytes,
+                                       hash, v);
+#else
+  ret = ecdsa_recover_pub_from_sig(&secp256k1, pubkey, msg->signature.bytes,
+                                   hash, v);
+#endif
+  if (ret != 0) {
     return 2;
   }
 
