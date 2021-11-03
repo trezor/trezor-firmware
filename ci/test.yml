@@ -11,6 +11,16 @@ core unit test:
     - nix-shell --run "poetry run make -C core test_rust | ts -s"
     - nix-shell --run "poetry run make -C core clippy | ts -s"
 
+core unit test t1:
+  stage: test
+  needs:
+    - core unix frozen btconly debug t1 build
+  variables:
+    BITCOIN_ONLY: "1"
+    TREZOR_MODEL: "1"
+  script:
+    - nix-shell --run "poetry run make -C core test_rust | ts -s"
+
 core device ui test:
   stage: test
   needs:
