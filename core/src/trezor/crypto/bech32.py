@@ -110,15 +110,22 @@ def bech32_decode(
 
 
 def convertbits(
-    data: Sequence[int], frombits: int, tobits: int, pad: bool = True
+    data: Sequence[int], frombits: int, tobits: int, arbitrary_input: bool = True
 ) -> list[int]:
-    """General power-of-2 base conversion."""
-    data_bits = len(data) * frombits
-    if not pad and data_bits % tobits != 0:
-        # the total number of bits provided is not divisible by `tobits`
-        # and padding is disabled
-        raise ValueError
+    """General power-of-2 base conversion.
 
+    The `arbitrary_input` parameter specifies what happens when the total length
+    of input bits is not a multiple of `tobits`.
+    If True (default), the overflowing bits are zero-padded to the right.
+    If False, the input must must be a valid output of `convertbits()` in the opposite
+    direction.
+    Namely:
+    (a) the overflow must only be the zero padding
+    (b) length of the overflow is less than `frombits`, meaning that there is no
+        additional all-zero `frombits`-sized group at the end.
+    If both conditions hold, the all-zero overflow is discarded.
+    Otherwise a ValueError is raised.
+    """
     acc = 0
     bits = 0
     ret = []
@@ -133,11 +140,14 @@ def convertbits(
             bits -= tobits
             ret.append((acc >> bits) & maxv)
 
-    if pad and bits:
-        # append remaining bits (if any), zero-padded from right
-        ret.append((acc << (tobits - bits)) & maxv)
-    else:
-        assert bits == 0
+    if arbitrary_input:
+        if bits:
+            # append remaining bits, zero-padded from right
+            ret.append((acc << (tobits - bits)) & maxv)
+    elif bits >= frombits or ((acc << (tobits - bits)) & maxv):
+        # (1) either there is a superfluous group at end of input, and/or
+        # (2) the remainder is nonzero
+        raise ValueError
 
     return ret
 
@@ -151,8 +161,11 @@ def decode(hrp: str, addr: str) -> OptionalTuple2[int, list[int]]:
         return (None, None)
     if hrpgot != hrp:
         return (None, None)
-    decoded = convertbits(data[1:], 5, 8, False)
-    if not 2 < len(decoded) < 40:
+    try:
+        decoded = convertbits(data[1:], 5, 8, False)
+    except ValueError:
+        return (None, None)
+    if not 2 <= len(decoded) <= 40:
         return (None, None)
     if data[0] > 16:
         return (None, None)

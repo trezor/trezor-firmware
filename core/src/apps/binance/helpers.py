@@ -91,5 +91,6 @@ def address_from_public_key(pubkey: bytes, hrp: str) -> str:
 
     h = sha256_ripemd160(pubkey).digest()
 
-    convertedbits = bech32.convertbits(h, 8, 5, False)
+    assert (len(h) * 8) % 5 == 0  # no padding will be added by convertbits
+    convertedbits = bech32.convertbits(h, 8, 5)
     return bech32.bech32_encode(hrp, convertedbits, bech32.Encoding.BECH32)
