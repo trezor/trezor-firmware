@@ -37,7 +37,7 @@ if False:
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
 
-    from .hash143 import Hash143
+    from .sig_hasher import SigHasher
 
 
 class DecredApprover(BasicApprover):
@@ -50,7 +50,7 @@ class DecredApprover(BasicApprover):
         await helpers.confirm_decred_sstx_submission(txo, self.coin, self.amount_unit)
 
 
-class DecredHash:
+class DecredSigHasher:
     def __init__(self, h_prefix: HashWriter) -> None:
         self.h_prefix = h_prefix
 
@@ -60,14 +60,21 @@ class DecredHash:
     def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         Decred.write_tx_output(self.h_prefix, txo, script_pubkey)
 
-    def preimage_hash(
+    def hash143(
         self,
-        i: int,
         txi: TxInput,
         public_keys: Sequence[bytes | memoryview],
         threshold: int,
         tx: SignTx | PrevTx,
         coin: CoinInfo,
+        sighash_type: int,
+    ) -> bytes:
+        raise NotImplementedError
+
+    def hash341(
+        self,
+        i: int,
+        tx: SignTx | PrevTx,
         sighash_type: int,
     ) -> bytes:
         raise NotImplementedError
@@ -99,8 +106,8 @@ class Decred(Bitcoin):
     def create_hash_writer(self) -> HashWriter:
         return HashWriter(blake256())
 
-    def create_hash143(self) -> Hash143:
-        return DecredHash(self.h_prefix)
+    def create_sig_hasher(self) -> SigHasher:
+        return DecredSigHasher(self.h_prefix)
 
     async def step2_approve_outputs(self) -> None:
         write_bitcoin_varint(self.serialized_tx, self.tx_info.tx.outputs_count)

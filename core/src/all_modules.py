@@ -264,8 +264,6 @@ apps.bitcoin.sign_tx.bitcoinlike
 import apps.bitcoin.sign_tx.bitcoinlike
 apps.bitcoin.sign_tx.decred
 import apps.bitcoin.sign_tx.decred
-apps.bitcoin.sign_tx.hash143
-import apps.bitcoin.sign_tx.hash143
 apps.bitcoin.sign_tx.helpers
 import apps.bitcoin.sign_tx.helpers
 apps.bitcoin.sign_tx.layout
@@ -276,6 +274,8 @@ apps.bitcoin.sign_tx.omni
 import apps.bitcoin.sign_tx.omni
 apps.bitcoin.sign_tx.progress
 import apps.bitcoin.sign_tx.progress
+apps.bitcoin.sign_tx.sig_hasher
+import apps.bitcoin.sign_tx.sig_hasher
 apps.bitcoin.sign_tx.tx_info
 import apps.bitcoin.sign_tx.tx_info
 apps.bitcoin.sign_tx.tx_weight

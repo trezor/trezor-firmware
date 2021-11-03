@@ -5,21 +5,20 @@ from trezor.utils import HashWriter
 from apps.common import coininfo
 
 from .. import scripts, writers
-from ..common import input_is_taproot, tagged_hashwriter
+from ..common import tagged_hashwriter
 
 if False:
     from typing import Protocol, Sequence
 
-    class Hash143(Protocol):
+    class SigHasher(Protocol):
         def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
             ...
 
         def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
             ...
 
-        def preimage_hash(
+        def hash143(
             self,
-            i: int,
             txi: TxInput,
             public_keys: Sequence[bytes | memoryview],
             threshold: int,
@@ -29,9 +28,17 @@ if False:
         ) -> bytes:
             ...
 
+        def hash341(
+            self,
+            i: int,
+            tx: SignTx | PrevTx,
+            sighash_type: int,
+        ) -> bytes:
+            ...
+
 
 # BIP-0143 hash
-class Bip143Hash:
+class BitcoinSigHasher:
     def __init__(self) -> None:
         self.h_prevouts = HashWriter(sha256())
         self.h_amounts = HashWriter(sha256())
@@ -51,22 +58,7 @@ class Bip143Hash:
     def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         writers.write_tx_output(self.h_outputs, txo, script_pubkey)
 
-    def preimage_hash(
-        self,
-        i: int,
-        txi: TxInput,
-        public_keys: Sequence[bytes | memoryview],
-        threshold: int,
-        tx: SignTx | PrevTx,
-        coin: coininfo.CoinInfo,
-        sighash_type: int,
-    ) -> bytes:
-        if input_is_taproot(txi):
-            return self.bip341_hash(i, tx, sighash_type)
-        else:
-            return self.bip143_hash(txi, public_keys, threshold, tx, coin, sighash_type)
-
-    def bip143_hash(
+    def hash143(
         self,
         txi: TxInput,
         public_keys: Sequence[bytes | memoryview],
@@ -119,7 +111,7 @@ class Bip143Hash:
 
         return writers.get_tx_hash(h_preimage, double=coin.sign_hash_double)
 
-    def bip341_hash(
+    def hash341(
         self,
         i: int,
         tx: SignTx | PrevTx,

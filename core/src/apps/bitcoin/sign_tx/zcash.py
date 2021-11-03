@@ -26,14 +26,14 @@ from .bitcoinlike import Bitcoinlike
 if False:
     from typing import Sequence
     from apps.common import coininfo
-    from .hash143 import Hash143
+    from .sig_hasher import SigHasher
     from .tx_info import OriginalTxInfo, TxInfo
     from ..writers import Writer
 
 OVERWINTERED = const(0x8000_0000)
 
 
-class Zip243Hash:
+class ZcashSigHasher:
     def __init__(self) -> None:
         self.h_prevouts = HashWriter(blake2b(outlen=32, personal=b"ZcashPrevoutHash"))
         self.h_sequence = HashWriter(blake2b(outlen=32, personal=b"ZcashSequencHash"))
@@ -47,9 +47,8 @@ class Zip243Hash:
     def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         write_tx_output(self.h_outputs, txo, script_pubkey)
 
-    def preimage_hash(
+    def hash143(
         self,
-        i: int,
         txi: TxInput,
         public_keys: Sequence[bytes | memoryview],
         threshold: int,
@@ -104,6 +103,14 @@ class Zip243Hash:
 
         return get_tx_hash(h_preimage)
 
+    def hash341(
+        self,
+        i: int,
+        tx: SignTx | PrevTx,
+        sighash_type: int,
+    ) -> bytes:
+        raise NotImplementedError
+
 
 class Zcashlike(Bitcoinlike):
     def __init__(
@@ -119,8 +126,8 @@ class Zcashlike(Bitcoinlike):
         if tx.version != 4:
             raise wire.DataError("Unsupported transaction version.")
 
-    def create_hash143(self) -> Hash143:
-        return Zip243Hash()
+    def create_sig_hasher(self) -> SigHasher:
+        return ZcashSigHasher()
 
     async def step7_finish(self) -> None:
         self.write_tx_footer(self.serialized_tx, self.tx_info.tx)
@@ -145,8 +152,7 @@ class Zcashlike(Bitcoinlike):
         script_pubkey: bytes,
         tx_hash: bytes | None = None,
     ) -> bytes:
-        return tx_info.hash143.preimage_hash(
-            0,
+        return tx_info.sig_hasher.hash143(
             txi,
             public_keys,
             threshold,

@@ -2,7 +2,7 @@ from common import *
 
 from apps.bitcoin.common import SIGHASH_ALL, SIGHASH_ALL_TAPROOT
 from apps.bitcoin.scripts import output_derive_script
-from apps.bitcoin.sign_tx.bitcoin import Bip143Hash
+from apps.bitcoin.sign_tx.bitcoin import BitcoinSigHasher
 from apps.bitcoin.writers import get_tx_hash
 from trezor.messages import SignTx
 from trezor.messages import TxInput
@@ -168,7 +168,7 @@ class TestSegwitBip341P2TR(unittest.TestCase):
 
     def test_bip341(self):
         for i, tx in enumerate(VECTORS):
-            hasher = Bip143Hash()
+            hasher = BitcoinSigHasher()
 
             for txi in tx["inputs"]:
                 hasher.add_input(txi, txi.script_pubkey)
@@ -185,7 +185,7 @@ class TestSegwitBip341P2TR(unittest.TestCase):
 
             for sh in tx["signature_hashes"]:
                 txi = tx["inputs"][sh["index"]]
-                result = hasher.preimage_hash(sh["index"], txi, [b""], 1, tx["sign_tx"], coin, sh["hash_type"])
+                result = hasher.hash341(sh["index"], tx["sign_tx"], sh["hash_type"])
                 self.assertEqual(result, sh["result"], f"signature_hash tx {i} input {sh['index']}")
 
 
