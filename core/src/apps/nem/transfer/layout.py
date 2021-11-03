@@ -31,14 +31,9 @@ async def ask_transfer(
     ctx: Context,
     common: NEMTransactionCommon,
     transfer: NEMTransfer,
-    payload: bytes,
     is_encrypted: bool,
 ) -> None:
-    if payload:
-        # TODO: not sure how to handle this, it seems to that transfer.payload
-        # can be None as per serialize.get_transfer_payload.
-        # Putting None into the _require_confirm_payload will cause TypeError: cannot convert 'NoneType' object to bytes
-        assert transfer.payload is not None
+    if transfer.payload:
         await _require_confirm_payload(ctx, transfer.payload, is_encrypted)
     for mosaic in transfer.mosaics:
         await ask_transfer_mosaic(ctx, common, transfer, mosaic)

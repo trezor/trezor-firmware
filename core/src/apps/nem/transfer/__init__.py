@@ -17,7 +17,7 @@ async def transfer(
     transfer.mosaics = serialize.canonicalize_mosaics(transfer.mosaics)
     payload, is_encrypted = serialize.get_transfer_payload(transfer, node)
 
-    await layout.ask_transfer(ctx, common, transfer, payload, is_encrypted)
+    await layout.ask_transfer(ctx, common, transfer, is_encrypted)
 
     w = serialize.serialize_transfer(
         common, transfer, public_key, payload, is_encrypted

@@ -56,11 +56,11 @@ message NEMSignTx {
     * Structure representing the transfer transaction part for NEM transactions
     */
     message NEMTransfer {
-        required string recipient = 1;      // Address of the recipient
-        required uint64 amount = 2;         // Amount of micro NEM that is transferred
-        optional bytes payload = 3;         // Actual message data (unencrypted)
-        optional bytes public_key = 4;      // Public key of the recipient (for encrypted payloads)
-        repeated NEMMosaic mosaics = 5;     // Attached mosaics
+        required string recipient = 1;              // Address of the recipient
+        required uint64 amount = 2;                 // Amount of micro NEM that is transferred
+        optional bytes payload = 3 [default=""];    // Actual message data (unencrypted)
+        optional bytes public_key = 4;              // Public key of the recipient (for encrypted payloads)
+        repeated NEMMosaic mosaics = 5;             // Attached mosaics
         /**
         * Structure representing the mosaic attachment for NEM transfer transactions
         */

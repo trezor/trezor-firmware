@@ -5914,7 +5914,7 @@ class NEMTransfer(protobuf.MessageType):
         recipient: "str",
         amount: "int",
         mosaics: Optional[List["NEMMosaic"]] = None,
-        payload: Optional["bytes"] = None,
+        payload: Optional["bytes"] = b'',
         public_key: Optional["bytes"] = None,
     ) -> None:
         self.mosaics = mosaics if mosaics is not None else []

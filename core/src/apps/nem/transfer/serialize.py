@@ -85,18 +85,13 @@ def serialize_importance_transfer(
 def get_transfer_payload(
     transfer: NEMTransfer, node: bip32.HDNode
 ) -> tuple[bytes, bool]:
-    payload = transfer.payload
-    is_encrypted = False
     if transfer.public_key is not None:
-        if payload is None:
+        if not transfer.payload:
             raise ValueError("Public key provided but no payload to encrypt")
-        payload = _encrypt(node, transfer.public_key, payload)
-        is_encrypted = True
-
-    if payload is None:
-        payload = b""
-
-    return payload, is_encrypted
+        encrypted_payload = _encrypt(node, transfer.public_key, transfer.payload)
+        return encrypted_payload, True
+    else:
+        return transfer.payload, False
 
 
 def _encrypt(node: bip32.HDNode, public_key: bytes, payload: bytes) -> bytes:
