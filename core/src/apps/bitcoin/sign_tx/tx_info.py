@@ -16,7 +16,7 @@ if False:
         TxInput,
         TxOutput,
     )
-    from .hash143 import Hash143
+    from .sig_hasher import SigHasher
 
     from apps.common.coininfo import CoinInfo
 
@@ -26,7 +26,7 @@ if False:
         def create_hash_writer(self) -> HashWriter:
             ...
 
-        def create_hash143(self) -> Hash143:
+        def create_sig_hasher(self) -> SigHasher:
             ...
 
         def write_tx_header(
@@ -72,15 +72,14 @@ class TxInfoBase:
         self.h_tx_check = HashWriter(sha256())  # not a real tx hash
 
         # BIP-0143 transaction hashing.
-        self.hash143 = signer.create_hash143()
+        self.sig_hasher = signer.create_sig_hasher()
 
         # The minimum nSequence of all inputs.
         self.min_sequence = _SEQUENCE_FINAL
 
     def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
-        self.hash143.add_input(
-            txi, script_pubkey
-        )  # all inputs are included (non-segwit as well)
+        # all inputs are included (non-segwit as well)
+        self.sig_hasher.add_input(txi, script_pubkey)
         writers.write_tx_input_check(self.h_tx_check, txi)
         self.min_sequence = min(self.min_sequence, txi.sequence)
 
@@ -89,7 +88,7 @@ class TxInfoBase:
             self.multisig_fingerprint.add_input(txi)
 
     def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
-        self.hash143.add_output(txo, script_pubkey)
+        self.sig_hasher.add_output(txo, script_pubkey)
         writers.write_tx_output(self.h_tx_check, txo, script_pubkey)
 
     def check_input(self, txi: TxInput) -> None:

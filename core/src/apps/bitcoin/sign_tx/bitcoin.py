@@ -20,7 +20,7 @@ from ..common import (
 from ..ownership import verify_nonownership
 from ..verification import SignatureVerifier
 from . import approvers, helpers, progress
-from .hash143 import Bip143Hash
+from .sig_hasher import BitcoinSigHasher
 from .tx_info import OriginalTxInfo, TxInfo
 
 if False:
@@ -40,7 +40,7 @@ if False:
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
 
-    from .hash143 import Hash143
+    from .sig_hasher import SigHasher
 
 
 # the number of bytes to preallocate for serialized transaction chunks
@@ -50,13 +50,13 @@ _SERIALIZED_TX_BUFFER = empty_bytearray(_MAX_SERIALIZED_CHUNK_SIZE)
 
 class Bitcoin:
     async def signer(self) -> None:
-        # Add inputs to hash143 and h_tx_check and compute the sum of input amounts.
+        # Add inputs to sig_hasher and h_tx_check and compute the sum of input amounts.
         await self.step1_process_inputs()
 
         # Approve the original TXIDs in case of a replacement transaction.
         await self.approver.approve_orig_txids(self.tx_info, self.orig_txs)
 
-        # Add outputs to hash143 and h_tx_check, approve outputs and compute
+        # Add outputs to sig_hasher and h_tx_check, approve outputs and compute
         # sum of output amounts.
         await self.step2_approve_outputs()
 
@@ -131,8 +131,8 @@ class Bitcoin:
     def create_hash_writer(self) -> HashWriter:
         return HashWriter(sha256())
 
-    def create_hash143(self) -> Hash143:
-        return Bip143Hash()
+    def create_sig_hasher(self) -> SigHasher:
+        return BitcoinSigHasher()
 
     async def step1_process_inputs(self) -> None:
         h_external_inputs_check = HashWriter(sha256())
@@ -443,15 +443,21 @@ class Bitcoin:
         script_pubkey: bytes,
     ) -> bytes:
         if txi.witness:
-            return tx_info.hash143.preimage_hash(
-                i,
-                txi,
-                public_keys,
-                threshold,
-                tx_info.tx,
-                self.coin,
-                self.get_sighash_type(txi),
-            )
+            if common.input_is_taproot(txi):
+                return tx_info.sig_hasher.hash341(
+                    i,
+                    tx_info.tx,
+                    self.get_sighash_type(txi),
+                )
+            else:
+                return tx_info.sig_hasher.hash143(
+                    txi,
+                    public_keys,
+                    threshold,
+                    tx_info.tx,
+                    self.coin,
+                    self.get_sighash_type(txi),
+                )
         else:
             digest, _, _ = await self.get_legacy_tx_digest(i, tx_info, script_pubkey)
             return digest
@@ -523,8 +529,8 @@ class Bitcoin:
         else:
             public_keys = [public_key]
             threshold = 1
-        hash143_hash = self.tx_info.hash143.preimage_hash(
-            0,
+
+        hash143_digest = self.tx_info.sig_hasher.hash143(
             txi,
             public_keys,
             threshold,
@@ -533,19 +539,15 @@ class Bitcoin:
             self.get_sighash_type(txi),
         )
 
-        signature = ecdsa_sign(node, hash143_hash)
+        signature = ecdsa_sign(node, hash143_digest)
 
         return public_key, signature
 
     def sign_taproot_input(self, i: int, txi: TxInput) -> bytes:
         self.tx_info.check_input(txi)
-        sigmsg_digest = self.tx_info.hash143.preimage_hash(
+        sigmsg_digest = self.tx_info.sig_hasher.hash341(
             i,
-            txi,
-            [],
-            1,
             self.tx_info.tx,
-            self.coin,
             self.get_sighash_type(txi),
         )
 
