@@ -28,8 +28,8 @@ def serialize_transfer(
     common: NEMTransactionCommon,
     transfer: NEMTransfer,
     public_key: bytes,
-    payload: bytes | None = None,
-    is_encrypted: bool = False,
+    payload: bytes,
+    is_encrypted: bool,
 ) -> bytearray:
     tx = serialize_tx_common(
         common,

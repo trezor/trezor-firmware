@@ -15,15 +15,12 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from datetime import datetime
-from typing import List, NewType
 
 from . import exceptions, messages
 from .tools import b58decode, expect, session
 
-Address = NewType("Address", List[int])
 
-
-def name_to_number(name: str) -> int:
+def name_to_number(name):
     length = len(name)
     value = 0
 
@@ -43,7 +40,7 @@ def name_to_number(name: str) -> int:
     return value
 
 
-def char_to_symbol(c: str) -> int:
+def char_to_symbol(c):
     if c >= "a" and c <= "z":
         return ord(c) - ord("a") + 6
     elif c >= "1" and c <= "5":
@@ -52,7 +49,7 @@ def char_to_symbol(c: str) -> int:
         return 0
 
 
-def parse_asset(asset: str) -> messages.EosAsset:
+def parse_asset(asset):
     amount_str, symbol_str = asset.split(" ")
 
     # "-1.0000" => ["-1", "0000"] => -10000
@@ -70,7 +67,7 @@ def parse_asset(asset: str) -> messages.EosAsset:
     return messages.EosAsset(amount=amount, symbol=symbol)
 
 
-def public_key_to_buffer(pub_key) -> tuple:
+def public_key_to_buffer(pub_key):
     _t = 0
     if pub_key[:3] == "EOS":
         pub_key = pub_key[3:]
@@ -85,7 +82,7 @@ def public_key_to_buffer(pub_key) -> tuple:
     return _t, b58decode(pub_key, None)[:-4]
 
 
-def parse_common(action: dict) -> messages.EosActionCommon:
+def parse_common(action):
     authorization = []
     for auth in action["authorization"]:
         authorization.append(
@@ -102,7 +99,7 @@ def parse_common(action: dict) -> messages.EosActionCommon:
     )
 
 
-def parse_transfer(data: dict) -> messages.EosActionTransfer:
+def parse_transfer(data):
     return messages.EosActionTransfer(
         sender=name_to_number(data["from"]),
         receiver=name_to_number(data["to"]),
@@ -111,7 +108,7 @@ def parse_transfer(data: dict) -> messages.EosActionTransfer:
     )
 
 
-def parse_vote_producer(data: dict) -> messages.EosActionVoteProducer:
+def parse_vote_producer(data):
     producers = []
     for producer in data["producers"]:
         producers.append(name_to_number(producer))
@@ -123,7 +120,7 @@ def parse_vote_producer(data: dict) -> messages.EosActionVoteProducer:
     )
 
 
-def parse_buy_ram(data: dict) -> messages.EosActionBuyRam:
+def parse_buy_ram(data):
     return messages.EosActionBuyRam(
         payer=name_to_number(data["payer"]),
         receiver=name_to_number(data["receiver"]),
@@ -131,7 +128,7 @@ def parse_buy_ram(data: dict) -> messages.EosActionBuyRam:
     )
 
 
-def parse_buy_rambytes(data: dict) -> messages.EosActionBuyRamBytes:
+def parse_buy_rambytes(data):
     return messages.EosActionBuyRamBytes(
         payer=name_to_number(data["payer"]),
         receiver=name_to_number(data["receiver"]),
@@ -139,13 +136,13 @@ def parse_buy_rambytes(data: dict) -> messages.EosActionBuyRamBytes:
     )
 
 
-def parse_sell_ram(data: dict) -> messages.EosActionSellRam:
+def parse_sell_ram(data):
     return messages.EosActionSellRam(
         account=name_to_number(data["account"]), bytes=int(data["bytes"])
     )
 
 
-def parse_delegate(data: dict) -> messages.EosActionDelegate:
+def parse_delegate(data):
     return messages.EosActionDelegate(
         sender=name_to_number(data["from"]),
         receiver=name_to_number(data["receiver"]),
@@ -155,7 +152,7 @@ def parse_delegate(data: dict) -> messages.EosActionDelegate:
     )
 
 
-def parse_undelegate(data: dict) -> messages.EosActionUndelegate:
+def parse_undelegate(data):
     return messages.EosActionUndelegate(
         sender=name_to_number(data["from"]),
         receiver=name_to_number(data["receiver"]),
@@ -164,11 +161,11 @@ def parse_undelegate(data: dict) -> messages.EosActionUndelegate:
     )
 
 
-def parse_refund(data: dict) -> messages.EosActionRefund:
+def parse_refund(data):
     return messages.EosActionRefund(owner=name_to_number(data["owner"]))
 
 
-def parse_updateauth(data: dict) -> messages.EosActionUpdateAuth:
+def parse_updateauth(data):
     auth = parse_authorization(data["auth"])
 
     return messages.EosActionUpdateAuth(
@@ -179,14 +176,14 @@ def parse_updateauth(data: dict) -> messages.EosActionUpdateAuth:
     )
 
 
-def parse_deleteauth(data: dict) -> messages.EosActionDeleteAuth:
+def parse_deleteauth(data):
     return messages.EosActionDeleteAuth(
         account=name_to_number(data["account"]),
         permission=name_to_number(data["permission"]),
     )
 
 
-def parse_linkauth(data: dict) -> messages.EosActionLinkAuth:
+def parse_linkauth(data):
     return messages.EosActionLinkAuth(
         account=name_to_number(data["account"]),
         code=name_to_number(data["code"]),
@@ -195,7 +192,7 @@ def parse_linkauth(data: dict) -> messages.EosActionLinkAuth:
     )
 
 
-def parse_unlinkauth(data: dict) -> messages.EosActionUnlinkAuth:
+def parse_unlinkauth(data):
     return messages.EosActionUnlinkAuth(
         account=name_to_number(data["account"]),
         code=name_to_number(data["code"]),
@@ -203,7 +200,7 @@ def parse_unlinkauth(data: dict) -> messages.EosActionUnlinkAuth:
     )
 
 
-def parse_authorization(data: dict) -> messages.EosAuthorization:
+def parse_authorization(data):
     keys = []
     for key in data["keys"]:
         _t, _k = public_key_to_buffer(key["key"])
@@ -237,7 +234,7 @@ def parse_authorization(data: dict) -> messages.EosAuthorization:
     )
 
 
-def parse_new_account(data: dict) -> messages.EosActionNewAccount:
+def parse_new_account(data):
     owner = parse_authorization(data["owner"])
     active = parse_authorization(data["active"])
 
@@ -249,12 +246,12 @@ def parse_new_account(data: dict) -> messages.EosActionNewAccount:
     )
 
 
-def parse_unknown(data: str) -> messages.EosActionUnknown:
+def parse_unknown(data):
     data_bytes = bytes.fromhex(data)
     return messages.EosActionUnknown(data_size=len(data_bytes), data_chunk=data_bytes)
 
 
-def parse_action(action: dict) -> messages.EosTxActionAck:
+def parse_action(action):
     tx_action = messages.EosTxActionAck(common=parse_common(action))
     data = action["data"]
 
@@ -291,7 +288,7 @@ def parse_action(action: dict) -> messages.EosTxActionAck:
     return tx_action
 
 
-def parse_transaction_json(transaction: dict) -> tuple:
+def parse_transaction_json(transaction):
     header = messages.EosTxHeader(
         expiration=int(
             (
@@ -315,7 +312,7 @@ def parse_transaction_json(transaction: dict) -> tuple:
 
 
 @expect(messages.EosPublicKey)
-def get_public_key(client, n: Address, show_display: bool = False):
+def get_public_key(client, n, show_display=False, multisig=None):
     response = client.call(
         messages.EosGetPublicKey(address_n=n, show_display=show_display)
     )
@@ -323,9 +320,7 @@ def get_public_key(client, n: Address, show_display: bool = False):
 
 
 @session
-def sign_tx(
-    client, address: Address, transaction: dict, chain_id: str
-) -> messages.EosSignedTx:
+def sign_tx(client, address, transaction, chain_id):
     header, actions = parse_transaction_json(transaction)
 
     msg = messages.EosSignTx(
