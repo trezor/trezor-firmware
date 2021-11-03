@@ -243,6 +243,7 @@ class TestMsgTezosSignTx:
                         "gas_limit": 20000,
                         "storage_limit": 10000,
                         "balance": 100000,
+                        "delegate": "00001e65c88ae6317cd62a638c8abd1e71c83c8475",
                         "script": "0000001c02000000170500036805010368050202000000080316053d036d03420000000a010000000568656c6c6f",
                     },
                 },
@@ -250,14 +251,14 @@ class TestMsgTezosSignTx:
         )
         assert (
             resp.signature
-            == "edsigtcAamBz7cL8whbLvaeMNYUdsQieh6RADrzWLCPhDjzqn7JtdX9Yy4vYWKcpMnycY6YTMWCAYMegPaKMNJVM4zbxypALAyN"
+            == "edsigu5XoEibne4CCk3fHnwVzQwd3C9AYykWnmjX6PmezGN1ei7PospbKU21XJ3cCLUnxw8jacyET15GnaDX4buHwxtMaoX9FAM"
         )
         assert (
             resp.sig_op_contents.hex()
-            == "927ac7cd7969bde606e7537712584eb0d34fc52d9f5a88cc908994d817170a166d005f450441f41ee11eee78a31d1e1e55627c783bd6a09c019402a09c01904ea08d06000000001c02000000170500036805010368050202000000080316053d036d03420000000a010000000568656c6c6f2151774735e1659a7d0f54659e98fbcbd86a667717a9a2a9961292a170e5e8d1608a1dbf805a03981be2f7389ba1738841ac8b1069fe5978a72d441a97de3505"
+            == "927ac7cd7969bde606e7537712584eb0d34fc52d9f5a88cc908994d817170a166d005f450441f41ee11eee78a31d1e1e55627c783bd6a09c019402a09c01904ea08d06ff00001e65c88ae6317cd62a638c8abd1e71c83c84750000001c02000000170500036805010368050202000000080316053d036d03420000000a010000000568656c6c6ff27dbda99889ed106fedc692b0943da00aa7ff52fc6b1fb8dcde717119113539f0b1ecdb255ced04988c5537f3043362beb67b9fcac537ed8d18b4f3d1f97f0c"
         )
         assert (
-            resp.operation_hash == "onmq9FFZzvG2zghNdr1bgv9jzdbzNycXjSSNmCVhXCGSnV3WA9g"
+            resp.operation_hash == "oo6uNxDaFCqaUzDqPfxjW7W1fg3AY7jWhH919DSrvGXnvquVcSZ"
         )
 
     def test_tezos_sign_tx_reveal(self, client):
