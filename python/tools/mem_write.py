@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-from trezorlib.debuglink import DebugLink
-from trezorlib.transport import enumerate_devices
 import sys
 
+from trezorlib.debuglink import DebugLink
+from trezorlib.transport import enumerate_devices
 
-def find_debug():
+
+def find_debug() -> DebugLink:
     for device in enumerate_devices():
         try:
             debug_transport = device.find_debug()
@@ -18,7 +19,7 @@ def find_debug():
         sys.exit(1)
 
 
-def main():
+def main() -> None:
     debug = find_debug()
     debug.memory_write(int(sys.argv[1], 16), bytes.fromhex(sys.argv[2]), flash=True)
 

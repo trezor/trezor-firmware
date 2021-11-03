@@ -3,7 +3,7 @@
 # isort:skip_file
 
 from enum import IntEnum
-from typing import List, Optional
+from typing import Sequence, Optional
 
 from . import protobuf
 % for enum in enums:
@@ -38,14 +38,14 @@ class ${message.name}(protobuf.MessageType):
         ${field.name}: "${field.python_type}",
 % endfor
 % for field in repeated_fields:
-        ${field.name}: Optional[List["${field.python_type}"]] = None,
+        ${field.name}: Optional[Sequence["${field.python_type}"]] = None,
 % endfor
 % for field in optional_fields:
         ${field.name}: Optional["${field.python_type}"] = ${field.default_value_repr},
 % endfor
     ) -> None:
 % for field in repeated_fields:
-        self.${field.name} = ${field.name} if ${field.name} is not None else []
+        self.${field.name}: Sequence["${field.python_type}"] = ${field.name} if ${field.name} is not None else []
 % endfor
 % for field in required_fields + optional_fields:
         self.${field.name} = ${field.name}
