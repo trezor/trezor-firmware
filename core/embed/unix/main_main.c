@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
   collect_hw_entropy();
 
 #ifdef USE_SECP256K1_ZKP
-  zkp_context_init();
+  ensure(sectrue * (zkp_context_init() == 0), NULL);
 #endif
 
 #if MICROPY_PY_THREAD

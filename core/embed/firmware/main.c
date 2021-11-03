@@ -75,10 +75,6 @@ int main(void) {
   enable_systemview();
 #endif
 
-#ifdef USE_SECP256K1_ZKP
-  zkp_context_init();
-#endif
-
 #if TREZOR_MODEL == T
 #if PRODUCTION
   check_and_replace_bootloader();
@@ -107,6 +103,10 @@ int main(void) {
   __asm__ volatile("isb");
 
   display_clear();
+#endif
+
+#ifdef USE_SECP256K1_ZKP
+  ensure(sectrue * (zkp_context_init() == 0), NULL);
 #endif
 
   printf("CORE: Preparing stack\n");

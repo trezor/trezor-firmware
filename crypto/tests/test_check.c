@@ -21,6 +21,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <assert.h>
 #include <check.h>
 #include <inttypes.h>
 #include <stdint.h>
@@ -9920,7 +9921,7 @@ Suite *test_suite(void) {
 
 // run suite
 int main(void) {
-  zkp_context_init();
+  assert(zkp_context_init() == 0);
   int number_failed;
   Suite *s = test_suite();
   SRunner *sr = srunner_create(s);
