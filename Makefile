@@ -94,7 +94,7 @@ mocks_check: ## check validity of mock python headers
 	./core/tools/build_mocks --check
 	flake8 core/mocks/generated
 
-templates: ## rebuild coin lists from definitions in common
+templates: icons ## rebuild coin lists from definitions in common
 	./core/tools/build_templates
 
 templates_check: ## check that coin lists are up to date
@@ -112,6 +112,6 @@ protobuf: ## generate python protobuf headers
 protobuf_check: ## check that generated protobuf headers are up to date
 	./tools/build_protobuf --check
 
-gen:  mocks templates protobuf icons ## regeneate auto-generated files from sources
+gen:  mocks icons templates protobuf ## regeneate auto-generated files from sources
 
-gen_check: mocks_check templates_check protobuf_check icons_check ## check validity of auto-generated files
+gen_check: mocks_check icons_check templates_check protobuf_check ## check validity of auto-generated files
