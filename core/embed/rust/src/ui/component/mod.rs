@@ -7,7 +7,7 @@ pub mod map;
 pub mod text;
 pub mod tuple;
 
-pub use base::{Child, Component, Event, EventCtx, Never, TimerToken};
+pub use base::{Child, Component, ComponentExt, Event, EventCtx, Never, TimerToken};
 pub use empty::Empty;
 pub use label::{Label, LabelStyle};
 pub use text::{

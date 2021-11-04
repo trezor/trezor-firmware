@@ -2,12 +2,18 @@ use crate::{
     time::{Duration, Instant},
     ui::{
         animation::Animation,
-        component::{Component, Event, EventCtx, Never},
+        component::{Component, Event, EventCtx},
         display::{self, Color},
+        geometry::Offset,
     },
 };
 
 use super::theme;
+
+pub enum LoaderMsg {
+    GrownCompletely,
+    ShrunkCompletely,
+}
 
 enum State {
     Initial,
@@ -24,6 +30,8 @@ pub struct Loader {
 }
 
 impl Loader {
+    pub const SIZE: Offset = Offset::new(120, 120);
+
     pub fn new(offset_y: i32) -> Self {
         Self {
             offset_y,
@@ -34,7 +42,7 @@ impl Loader {
         }
     }
 
-    pub fn start(&mut self, now: Instant) {
+    pub fn start_growing(&mut self, ctx: &mut EventCtx, now: Instant) {
         let mut anim = Animation::new(
             display::LOADER_MIN,
             display::LOADER_MAX,
@@ -45,9 +53,16 @@ impl Loader {
             anim.seek_to_value(shrinking.value(now));
         }
         self.state = State::Growing(anim);
+
+        // The animation is starting, request an animation frame event.
+        ctx.request_anim_frame();
+
+        // We don't have to wait for the animation frame event with the first paint,
+        // let's do that now.
+        ctx.request_paint();
     }
 
-    pub fn stop(&mut self, now: Instant) {
+    pub fn start_shrinking(&mut self, ctx: &mut EventCtx, now: Instant) {
         let mut anim = Animation::new(
             display::LOADER_MAX,
             display::LOADER_MIN,
@@ -55,46 +70,77 @@ impl Loader {
             now,
         );
         if let State::Growing(growing) = &self.state {
-            anim.seek_to_value(growing.value(now));
+            anim.seek_to_value(display::LOADER_MAX - growing.value(now));
         }
         self.state = State::Shrinking(anim);
+
+        // The animation should be already progressing at this point, so we don't need
+        // to request another animation frames, but we should request to get painted
+        // after this event pass.
+        ctx.request_paint();
     }
 
     pub fn reset(&mut self) {
         self.state = State::Initial;
     }
 
-    pub fn progress(&self, now: Instant) -> Option<u16> {
+    pub fn animation(&self) -> Option<&Animation<u16>> {
         match &self.state {
             State::Initial => None,
-            State::Growing(anim) | State::Shrinking(anim) => Some(anim.value(now)),
+            State::Growing(a) | State::Shrinking(a) => Some(a),
         }
     }
 
-    pub fn is_started(&self) -> bool {
-        matches!(self.state, State::Growing(_) | State::Shrinking(_))
+    pub fn progress(&self, now: Instant) -> Option<u16> {
+        self.animation().map(|a| a.value(now))
     }
 
-    pub fn is_finished(&self, now: Instant) -> bool {
-        self.progress(now) == Some(display::LOADER_MAX)
+    pub fn is_animating(&self) -> bool {
+        self.animation().is_some()
+    }
+
+    pub fn is_completely_grown(&self, now: Instant) -> bool {
+        matches!(self.progress(now), Some(display::LOADER_MAX))
+    }
+
+    pub fn is_completely_shrunk(&self, now: Instant) -> bool {
+        matches!(self.progress(now), Some(display::LOADER_MIN))
     }
 }
 
 impl Component for Loader {
-    type Msg = Never;
+    type Msg = LoaderMsg;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        let now = Instant::now();
+
         if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
-            if self.is_started() {
+            if self.is_animating() {
+                // We have something to paint, so request to be painted in the next pass.
                 ctx.request_paint();
-                ctx.request_anim_frame();
+
+                if self.is_completely_grown(now) {
+                    return Some(LoaderMsg::GrownCompletely);
+                } else if self.is_completely_shrunk(now) {
+                    return Some(LoaderMsg::ShrunkCompletely);
+                } else {
+                    // There is further progress in the animation, request an animation frame event.
+                    ctx.request_anim_frame();
+                }
             }
         }
         None
     }
 
     fn paint(&mut self) {
-        if let Some(progress) = self.progress(Instant::now()) {
+        // TODO: Consider passing the current instant along with the event -- that way,
+        // we could synchronize painting across the component tree. Also could be useful
+        // in automated tests.
+        // In practice, taking the current instant here is more precise in case some
+        // other component in the tree takes a long time to draw.
+        let now = Instant::now();
+
+        if let Some(progress) = self.progress(now) {
             let style = if progress < display::LOADER_MAX {
                 self.styles.normal
             } else {
@@ -122,20 +168,29 @@ pub struct LoaderStyle {
     pub background_color: Color,
 }
 
+#[cfg(feature = "ui_debug")]
+impl crate::trace::Trace for Loader {
+    fn trace(&self, d: &mut dyn crate::trace::Tracer) {
+        d.open("Loader");
+        d.close();
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn loader_yields_expected_progress() {
+        let mut ctx = EventCtx::new();
         let mut l = Loader::new(0);
         let t = Instant::now();
         assert_eq!(l.progress(t), None);
-        l.start(t);
+        l.start_growing(&mut ctx, t);
         assert_eq!(l.progress(t), Some(0));
         let t = add_millis(t, 500);
         assert_eq!(l.progress(t), Some(500));
-        l.stop(t);
+        l.start_shrinking(&mut ctx, t);
         assert_eq!(l.progress(t), Some(500));
         let t = add_millis(t, 125);
         assert_eq!(l.progress(t), Some(250));

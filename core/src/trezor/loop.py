@@ -572,3 +572,15 @@ class spawn(Syscall):
         is True, it would be calling close on self, which will result in a ValueError.
         """
         return self.task is this_task
+
+
+class Timer(Syscall):
+    def __init__(self) -> None:
+        self.task: Task | None = None
+
+    def handle(self, task: Task) -> None:
+        self.task = task
+
+    def schedule(self, deadline: int, value: Any) -> None:
+        if self.task is not None:
+            schedule(self.task, value, deadline)
