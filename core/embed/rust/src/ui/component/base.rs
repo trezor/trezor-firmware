@@ -105,6 +105,7 @@ where
 
 pub trait ComponentExt: Sized {
     fn into_child(self) -> Child<Self>;
+    fn request_complete_repaint(&mut self, ctx: &mut EventCtx);
 }
 
 impl<T> ComponentExt for T
@@ -113,6 +114,15 @@ where
 {
     fn into_child(self) -> Child<Self> {
         Child::new(self)
+    }
+
+    fn request_complete_repaint(&mut self, ctx: &mut EventCtx) {
+        if self.event(ctx, Event::RequestPaint).is_some() {
+            // Messages raised during a `RequestPaint` dispatch are not propagated, let's
+            // make sure we don't do that.
+            #[cfg(feature = "ui_debug")]
+            panic!("cannot raise messages during RequestPaint");
+        }
     }
 }
 
@@ -154,11 +164,15 @@ pub struct EventCtx {
     timers: Vec<(TimerToken, Duration), { Self::MAX_TIMERS }>,
     next_token: u32,
     paint_requested: bool,
+    anim_frame_scheduled: bool,
 }
 
 impl EventCtx {
     /// Timer token dedicated for animation frames.
     pub const ANIM_FRAME_TIMER: TimerToken = TimerToken(1);
+
+    /// How long into the future we should schedule the animation frame timer.
+    const ANIM_FRAME_DEADLINE: Duration = Duration::from_millis(18);
 
     // 0 == `TimerToken::INVALID`,
     // 1 == `Self::ANIM_FRAME_TIMER`.
@@ -172,6 +186,7 @@ impl EventCtx {
             timers: Vec::new(),
             next_token: Self::STARTING_TIMER_TOKEN,
             paint_requested: false,
+            anim_frame_scheduled: false,
         }
     }
 
@@ -180,10 +195,6 @@ impl EventCtx {
     /// again by the nearest `Child` wrapper.
     pub fn request_paint(&mut self) {
         self.paint_requested = true;
-    }
-
-    pub fn clear_paint_requests(&mut self) {
-        self.paint_requested = false;
     }
 
     /// Request a timer event to be delivered after `deadline` elapses.
@@ -195,11 +206,19 @@ impl EventCtx {
 
     /// Request an animation frame timer to fire as soon as possible.
     pub fn request_anim_frame(&mut self) {
-        self.register_timer(Self::ANIM_FRAME_TIMER, Duration::ZERO);
+        if !self.anim_frame_scheduled {
+            self.anim_frame_scheduled = true;
+            self.register_timer(Self::ANIM_FRAME_TIMER, Self::ANIM_FRAME_DEADLINE);
+        }
     }
 
     pub fn pop_timer(&mut self) -> Option<(TimerToken, Duration)> {
         self.timers.pop()
+    }
+
+    pub fn clear(&mut self) {
+        self.paint_requested = false;
+        self.anim_frame_scheduled = false;
     }
 
     fn register_timer(&mut self, token: TimerToken, deadline: Duration) {

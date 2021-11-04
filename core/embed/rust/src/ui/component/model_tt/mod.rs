@@ -1,4 +1,5 @@
 mod button;
+mod confirm;
 mod dialog;
 mod label;
 mod loader;
@@ -10,7 +11,9 @@ pub mod text;
 pub mod theme;
 
 pub use button::{Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet};
-pub use dialog::{Dialog, DialogMsg};
+pub use confirm::{HoldToConfirm, HoldToConfirmMsg};
+pub use dialog::{Dialog, DialogLayout, DialogMsg};
 pub use label::{Label, LabelStyle};
+pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use swipe::{Swipe, SwipeDirection};
 pub use text::{LineBreaking, PageBreaking, Text, TextLayout};

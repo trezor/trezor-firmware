@@ -441,26 +441,42 @@ def wait_until_layout_is_running() -> Awaitable[None]:  # type: ignore
         yield
 
 
-if utils.MODEL == "1":
+class RustLayout(Layout):
+    def __init__(self, layout: Any):
+        self.layout = layout
+        self.timer = loop.Timer()
+        self.layout.set_timer_fn(self.set_timer)
 
-    class RustLayout(Layout):
-        def __init__(self, layout: Any):
-            self.layout = layout
-            self.layout.set_timer_fn(self.set_timer)
+    def set_timer(self, token: int, deadline: int) -> None:
+        self.timer.schedule(deadline, token)
 
-        def set_timer(self, token: int, deadline: int) -> None:
-            # TODO: schedule a timer tick with `token` in `deadline` ms
-            print("timer", token, deadline)
+    def create_tasks(self) -> tuple[loop.Task, ...]:
+        return self.handle_input_and_rendering(), self.handle_timers()
 
-        def dispatch(self, event: int, x: int, y: int) -> None:
+    def handle_input_and_rendering(self) -> loop.Task:  # type: ignore
+        touch = loop.wait(io.TOUCH)
+        display.clear()
+        self.layout.paint()
+        while True:
+            # Using `yield` instead of `await` to avoid allocations.
+            event, x, y = yield touch
+            workflow.idle_timer.touch()
             msg = None
-            if event is RENDER:
-                self.layout.paint()
-            elif event is io.TOUCH_START:
+            if event is io.TOUCH_START:
                 msg = self.layout.touch_start(x, y)
             elif event is io.TOUCH_MOVE:
                 msg = self.layout.touch_move(x, y)
             elif event is io.TOUCH_END:
                 msg = self.layout.touch_end(x, y)
+            self.layout.paint()
+            if msg is not None:
+                raise Result(msg)
+
+    def handle_timers(self) -> loop.Task:
+        while True:
+            # Using `yield` instead of `await` to avoid allocations.
+            token = yield self.timer
+            msg = self.layout.timer(token)
+            self.layout.paint()
             if msg is not None:
                 raise Result(msg)

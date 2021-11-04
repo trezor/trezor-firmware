@@ -125,8 +125,8 @@ impl LayoutObj {
     fn obj_event(&self, event: Event) -> Result<Obj, Error> {
         let inner = &mut *self.inner.borrow_mut();
 
-        // Clear the upwards-propagating paint request flag from the last event pass.
-        inner.event_ctx.clear_paint_requests();
+        // Clear the leftover flags from the previous event pass.
+        inner.event_ctx.clear();
 
         // Send the event down the component tree. Bail out in case of failure.
         // SAFETY: `inner.root` is unique because of the `inner.borrow_mut()`.
