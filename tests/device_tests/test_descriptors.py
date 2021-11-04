@@ -24,145 +24,97 @@ VECTORS_DESCRIPTORS = (  # coin, account, script_type, descriptors
         "Bitcoin",
         0,
         messages.InputScriptType.SPENDADDRESS,
-        (
-            "pkh([5c9e228d/44'/0'/0']xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy/0/*)#vzuemqzv",
-            "pkh([5c9e228d/44'/0'/0']xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy/1/*)#akecx4j5",
-        ),
+        "pkh([5c9e228d/44'/0'/0']xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy/<0;1>/*)#t3pfpx6p",
     ),
     (
         "Bitcoin",
         1,
         messages.InputScriptType.SPENDADDRESS,
-        (
-            "pkh([5c9e228d/44'/0'/1']xpub6BiVtCpG9fQQ1EW99bMSYwySbPWvzTFRQZCFgTmV3samLSZAYU7C3f4Je9vkNh7h1GAWi5Fn93BwoGBy9EAXbWTTgTnVKAbthHpxM1fXVRL/0/*)#857lnusc",
-            "pkh([5c9e228d/44'/0'/1']xpub6BiVtCpG9fQQ1EW99bMSYwySbPWvzTFRQZCFgTmV3samLSZAYU7C3f4Je9vkNh7h1GAWi5Fn93BwoGBy9EAXbWTTgTnVKAbthHpxM1fXVRL/1/*)#kqm7wfqq",
-        ),
+        "pkh([5c9e228d/44'/0'/1']xpub6BiVtCpG9fQQ1EW99bMSYwySbPWvzTFRQZCFgTmV3samLSZAYU7C3f4Je9vkNh7h1GAWi5Fn93BwoGBy9EAXbWTTgTnVKAbthHpxM1fXVRL/<0;1>/*)#nxtyyv6d",
     ),
     (
         "Testnet",
         0,
         messages.InputScriptType.SPENDADDRESS,
-        (
-            "pkh([5c9e228d/44'/1'/0']tpubDDKn3FtHc74CaRrRbi1WFdJNaaenZkDWqq9NsEhcafnDZ4VuKeuLG2aKHm5SuwuLgAhRkkfHqcCxpnVNSrs5kJYZXwa6Ud431VnevzzzK3U/0/*)#k65gljcw",
-            "pkh([5c9e228d/44'/1'/0']tpubDDKn3FtHc74CaRrRbi1WFdJNaaenZkDWqq9NsEhcafnDZ4VuKeuLG2aKHm5SuwuLgAhRkkfHqcCxpnVNSrs5kJYZXwa6Ud431VnevzzzK3U/1/*)#8w3fz8gk",
-        ),
+        "pkh([5c9e228d/44'/1'/0']tpubDDKn3FtHc74CaRrRbi1WFdJNaaenZkDWqq9NsEhcafnDZ4VuKeuLG2aKHm5SuwuLgAhRkkfHqcCxpnVNSrs5kJYZXwa6Ud431VnevzzzK3U/<0;1>/*)#jlq3k5tw",
     ),
     (
         "Testnet",
         1,
         messages.InputScriptType.SPENDADDRESS,
-        (
-            "pkh([5c9e228d/44'/1'/1']tpubDDKn3FtHc74CcBfxJ3zdSNnRacuggmGwv3KEZLJP2LAuqc3HhsQR5ZAVudcQzezzXs7T6QrDtoJJYvgyDUJ9vgWx3Y7Et4Ats1Q25U1LXvU/0/*)#nxl4wmw3",
-            "pkh([5c9e228d/44'/1'/1']tpubDDKn3FtHc74CcBfxJ3zdSNnRacuggmGwv3KEZLJP2LAuqc3HhsQR5ZAVudcQzezzXs7T6QrDtoJJYvgyDUJ9vgWx3Y7Et4Ats1Q25U1LXvU/1/*)#zj65nw7f",
-        ),
+        "pkh([5c9e228d/44'/1'/1']tpubDDKn3FtHc74CcBfxJ3zdSNnRacuggmGwv3KEZLJP2LAuqc3HhsQR5ZAVudcQzezzXs7T6QrDtoJJYvgyDUJ9vgWx3Y7Et4Ats1Q25U1LXvU/<0;1>/*)#4uctv92u",
     ),
     (
         "Bitcoin",
         0,
         messages.InputScriptType.SPENDP2SHWITNESS,
-        (
-            "sh(wpkh([5c9e228d/49'/0'/0']xpub6CVKsQYXc9awxgV1tWbG4foDvdcnieK2JkbpPEBKB5WwAPKBZ1mstLbKVB4ov7QzxzjaxNK6EfmNY5Jsk2cG26EVcEkycGW4tchT2dyUhrx/0/*))#jkfqtdfw",
-            "sh(wpkh([5c9e228d/49'/0'/0']xpub6CVKsQYXc9awxgV1tWbG4foDvdcnieK2JkbpPEBKB5WwAPKBZ1mstLbKVB4ov7QzxzjaxNK6EfmNY5Jsk2cG26EVcEkycGW4tchT2dyUhrx/1/*))#8h8knju3",
-        ),
+        "sh(wpkh([5c9e228d/49'/0'/0']xpub6CVKsQYXc9awxgV1tWbG4foDvdcnieK2JkbpPEBKB5WwAPKBZ1mstLbKVB4ov7QzxzjaxNK6EfmNY5Jsk2cG26EVcEkycGW4tchT2dyUhrx/<0;1>/*))#a49xle58",
     ),
     (
         "Bitcoin",
         1,
         messages.InputScriptType.SPENDP2SHWITNESS,
-        (
-            "sh(wpkh([5c9e228d/49'/0'/1']xpub6CVKsQYXc9ax22ig3KAZMRiJL1xT9Me1sFX3t34mnVVzr6FkciU74qk7AqBkePQ2sM9pKeWp88KfPT2qcVQ19ykqGHMDioJhwywGuJ96Xt8/0/*))#xqu3tfqy",
-            "sh(wpkh([5c9e228d/49'/0'/1']xpub6CVKsQYXc9ax22ig3KAZMRiJL1xT9Me1sFX3t34mnVVzr6FkciU74qk7AqBkePQ2sM9pKeWp88KfPT2qcVQ19ykqGHMDioJhwywGuJ96Xt8/1/*))#npj8nk4m",
-        ),
+        "sh(wpkh([5c9e228d/49'/0'/1']xpub6CVKsQYXc9ax22ig3KAZMRiJL1xT9Me1sFX3t34mnVVzr6FkciU74qk7AqBkePQ2sM9pKeWp88KfPT2qcVQ19ykqGHMDioJhwywGuJ96Xt8/<0;1>/*))#udj76d60",
     ),
     (
         "Testnet",
         0,
         messages.InputScriptType.SPENDP2SHWITNESS,
-        (
-            "sh(wpkh([5c9e228d/49'/1'/0']tpubDCHRnuvE95JrpEVTUmr36sK3K9ADf3s3aztpXzL8coBeCTE8cHV8PjxS6SjWJM3GfPn798gyEa3dRPgjoUDSuNfuC9xz4PHznwKEk2XL7X1/0/*))#qfh8hjq8",
-            "sh(wpkh([5c9e228d/49'/1'/0']tpubDCHRnuvE95JrpEVTUmr36sK3K9ADf3s3aztpXzL8coBeCTE8cHV8PjxS6SjWJM3GfPn798gyEa3dRPgjoUDSuNfuC9xz4PHznwKEk2XL7X1/1/*))#4ge30d4c",
-        ),
+        "sh(wpkh([5c9e228d/49'/1'/0']tpubDCHRnuvE95JrpEVTUmr36sK3K9ADf3s3aztpXzL8coBeCTE8cHV8PjxS6SjWJM3GfPn798gyEa3dRPgjoUDSuNfuC9xz4PHznwKEk2XL7X1/<0;1>/*))#egxlxhl0",
     ),
     (
         "Testnet",
         1,
         messages.InputScriptType.SPENDP2SHWITNESS,
-        (
-            "sh(wpkh([5c9e228d/49'/1'/1']tpubDCHRnuvE95Jrs9NkLaZwKNdoHBSoCRge6wKunXyxnspvLpx3aZbJcScTnTdsEqT6uFfWdMvBmLs3jhnkBiE7ob3xVQPV8ngDPYAMs93X9xv/0/*))#m34f6mjs",
-            "sh(wpkh([5c9e228d/49'/1'/1']tpubDCHRnuvE95Jrs9NkLaZwKNdoHBSoCRge6wKunXyxnspvLpx3aZbJcScTnTdsEqT6uFfWdMvBmLs3jhnkBiE7ob3xVQPV8ngDPYAMs93X9xv/1/*))#wsmlzy80",
-        ),
+        "sh(wpkh([5c9e228d/49'/1'/1']tpubDCHRnuvE95Jrs9NkLaZwKNdoHBSoCRge6wKunXyxnspvLpx3aZbJcScTnTdsEqT6uFfWdMvBmLs3jhnkBiE7ob3xVQPV8ngDPYAMs93X9xv/<0;1>/*))#wdv0egg7",
     ),
     (
         "Bitcoin",
         0,
         messages.InputScriptType.SPENDWITNESS,
-        (
-            "wpkh([5c9e228d/84'/0'/0']xpub6DDUPHpUo4pcy43iJeZjbSVWGav1SMMmuWdMHiGtkK8rhKmfbomtkwW6GKs1GGAKehT6QRocrmda3WWxXawpjmwaUHfFRXuKrXSapdckEYF/0/*)#l4dc6ccr",
-            "wpkh([5c9e228d/84'/0'/0']xpub6DDUPHpUo4pcy43iJeZjbSVWGav1SMMmuWdMHiGtkK8rhKmfbomtkwW6GKs1GGAKehT6QRocrmda3WWxXawpjmwaUHfFRXuKrXSapdckEYF/1/*)#wpge8dgm",
-        ),
+        "wpkh([5c9e228d/84'/0'/0']xpub6DDUPHpUo4pcy43iJeZjbSVWGav1SMMmuWdMHiGtkK8rhKmfbomtkwW6GKs1GGAKehT6QRocrmda3WWxXawpjmwaUHfFRXuKrXSapdckEYF/<0;1>/*)#tdqj4vr6",
     ),
     (
         "Bitcoin",
         1,
         messages.InputScriptType.SPENDWITNESS,
-        (
-            "wpkh([5c9e228d/84'/0'/1']xpub6DDUPHpUo4pd1hyVtRaknvZvCgdPdEDMKx3bB5UFcx73pEHRDVK4rwEZUgeUbVuYWGMNLvuBHp5WeyPevN2Gv7m9FnLHQE6XaKNRPZcYcHH/0/*)#y3ld2s0l",
-            "wpkh([5c9e228d/84'/0'/1']xpub6DDUPHpUo4pd1hyVtRaknvZvCgdPdEDMKx3bB5UFcx73pEHRDVK4rwEZUgeUbVuYWGMNLvuBHp5WeyPevN2Gv7m9FnLHQE6XaKNRPZcYcHH/1/*)#496vh9l8",
-        ),
+        "wpkh([5c9e228d/84'/0'/1']xpub6DDUPHpUo4pd1hyVtRaknvZvCgdPdEDMKx3bB5UFcx73pEHRDVK4rwEZUgeUbVuYWGMNLvuBHp5WeyPevN2Gv7m9FnLHQE6XaKNRPZcYcHH/<0;1>/*)#7953frdx",
     ),
     (
         "Testnet",
         0,
         messages.InputScriptType.SPENDWITNESS,
-        (
-            "wpkh([5c9e228d/84'/1'/0']tpubDCZB6sR48s4T5Cr8qHUYSZEFCQMMHRg8AoVKVmvcAP5bRw7ArDKeoNwKAJujV3xCPkBvXH5ejSgbgyN6kREmF7sMd41NdbuHa8n1DZNxSMg/0/*)#rn0zejch",
-            "wpkh([5c9e228d/84'/1'/0']tpubDCZB6sR48s4T5Cr8qHUYSZEFCQMMHRg8AoVKVmvcAP5bRw7ArDKeoNwKAJujV3xCPkBvXH5ejSgbgyN6kREmF7sMd41NdbuHa8n1DZNxSMg/1/*)#j82ry8g0",
-        ),
+        "wpkh([5c9e228d/84'/1'/0']tpubDCZB6sR48s4T5Cr8qHUYSZEFCQMMHRg8AoVKVmvcAP5bRw7ArDKeoNwKAJujV3xCPkBvXH5ejSgbgyN6kREmF7sMd41NdbuHa8n1DZNxSMg/<0;1>/*)#egs8kz3g",
     ),
     (
         "Testnet",
         1,
         messages.InputScriptType.SPENDWITNESS,
-        (
-            "wpkh([5c9e228d/84'/1'/1']tpubDCZB6sR48s4T6xoXqaYxScvf23kmQvg5QpyFkYnDBjsmviKHLSG9s6cp593Exg87tuMjXXMWDvBRXnJtzppcQf8Z8HdJP1rothfxm4qnPXo/0/*)#3hdnary0",
-            "wpkh([5c9e228d/84'/1'/1']tpubDCZB6sR48s4T6xoXqaYxScvf23kmQvg5QpyFkYnDBjsmviKHLSG9s6cp593Exg87tuMjXXMWDvBRXnJtzppcQf8Z8HdJP1rothfxm4qnPXo/1/*)#qrgjqk5h",
-        ),
+        "wpkh([5c9e228d/84'/1'/1']tpubDCZB6sR48s4T6xoXqaYxScvf23kmQvg5QpyFkYnDBjsmviKHLSG9s6cp593Exg87tuMjXXMWDvBRXnJtzppcQf8Z8HdJP1rothfxm4qnPXo/<0;1>/*)#skg78rzf",
     ),
     (
         "Bitcoin",
         0,
         messages.InputScriptType.SPENDTAPROOT,
-        (
-            "tr([5c9e228d/86'/0'/0']xpub6Bw885JisRbcKmowfBvMmCxaFHodKn1VpmRmctmJJoM8D4DzyP4qJv8ZdD9V9r3SSGjmK2KJEDnvLH6f1Q4HrobEvnCeKydNvf1eir3RHZk/0/*)#d8jj22qr",
-            "tr([5c9e228d/86'/0'/0']xpub6Bw885JisRbcKmowfBvMmCxaFHodKn1VpmRmctmJJoM8D4DzyP4qJv8ZdD9V9r3SSGjmK2KJEDnvLH6f1Q4HrobEvnCeKydNvf1eir3RHZk/1/*)#unhnhlsm",
-        ),
+        "tr([5c9e228d/86'/0'/0']xpub6Bw885JisRbcKmowfBvMmCxaFHodKn1VpmRmctmJJoM8D4DzyP4qJv8ZdD9V9r3SSGjmK2KJEDnvLH6f1Q4HrobEvnCeKydNvf1eir3RHZk/<0;1>/*)#4swej4wz",
     ),
     (
         "Bitcoin",
         1,
         messages.InputScriptType.SPENDTAPROOT,
-        (
-            "tr([5c9e228d/86'/0'/1']xpub6Bw885JisRbcLp1379q64fdNPGTnHKYGcA9wcWqGcUgkKZkYCwXSCb9Qfw8DGDgYMmcDM8QwQGooqCM3Ym4yq8kS5dBjzZSXUdVUdhyfirD/0/*)#dq8u44kn",
-            "tr([5c9e228d/86'/0'/1']xpub6Bw885JisRbcLp1379q64fdNPGTnHKYGcA9wcWqGcUgkKZkYCwXSCb9Qfw8DGDgYMmcDM8QwQGooqCM3Ym4yq8kS5dBjzZSXUdVUdhyfirD/1/*)#u5zagqxt",
-        ),
+        "tr([5c9e228d/86'/0'/1']xpub6Bw885JisRbcLp1379q64fdNPGTnHKYGcA9wcWqGcUgkKZkYCwXSCb9Qfw8DGDgYMmcDM8QwQGooqCM3Ym4yq8kS5dBjzZSXUdVUdhyfirD/<0;1>/*)#qpx5cf45",
     ),
     (
         "Testnet",
         0,
         messages.InputScriptType.SPENDTAPROOT,
-        (
-            "tr([5c9e228d/86'/1'/0']tpubDC88gkaZi5HvJGxGDNLADkvtdpni3mLmx6vr2KnXmWMG8zfkBRggsxHVBkUpgcwPe2KKpkyvTJCdXHb1UHEWE64vczyyPQfHr1skBcsRedN/0/*)#4rqwxvej",
-            "tr([5c9e228d/86'/1'/0']tpubDC88gkaZi5HvJGxGDNLADkvtdpni3mLmx6vr2KnXmWMG8zfkBRggsxHVBkUpgcwPe2KKpkyvTJCdXHb1UHEWE64vczyyPQfHr1skBcsRedN/1/*)#yh90mef2",
-        ),
+        "tr([5c9e228d/86'/1'/0']tpubDC88gkaZi5HvJGxGDNLADkvtdpni3mLmx6vr2KnXmWMG8zfkBRggsxHVBkUpgcwPe2KKpkyvTJCdXHb1UHEWE64vczyyPQfHr1skBcsRedN/<0;1>/*)#rlla6vx8",
     ),
     (
         "Testnet",
         1,
         messages.InputScriptType.SPENDTAPROOT,
-        (
-            "tr([5c9e228d/86'/1'/1']tpubDC88gkaZi5HvKcrFLNkZwcXx1YyShkmPTkSNoP5MHQnSP9vTrKEYKtoeEkX4oEJmNYSm6Y3fFcNV4xbkDE1uZZBmJe1ircegxgVnBW8j4SL/0/*)#7254x7qg",
-            "tr([5c9e228d/86'/1'/1']tpubDC88gkaZi5HvKcrFLNkZwcXx1YyShkmPTkSNoP5MHQnSP9vTrKEYKtoeEkX4oEJmNYSm6Y3fFcNV4xbkDE1uZZBmJe1ircegxgVnBW8j4SL/1/*)#0735mtss",
-        ),
+        "tr([5c9e228d/86'/1'/1']tpubDC88gkaZi5HvKcrFLNkZwcXx1YyShkmPTkSNoP5MHQnSP9vTrKEYKtoeEkX4oEJmNYSm6Y3fFcNV4xbkDE1uZZBmJe1ircegxgVnBW8j4SL/<0;1>/*)#fwrmvr53",
     ),
 )
 
