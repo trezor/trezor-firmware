@@ -27,6 +27,7 @@ codegen-units = 1
 cty = "0.2.1"
 
 orchard = { path = "/home/agi/code/orchard" , default-features = false, features = ["alloc"] }
+f4jumble = { path = "/home/agi/code/librustzcash/components/f4jumble" , default-features = false }
 static-alloc = "0.2.3"
 bech32 = { version = "0.8.1", default_features = false }
 

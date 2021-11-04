@@ -12,6 +12,9 @@ mp_obj_t protobuf_debug_msg_type();
 mp_obj_t protobuf_debug_msg_def_type();
 #endif
 
+// TODO: BITCOIN_ONLY conditional
 mp_obj_t zcash_diag(mp_obj_t ins, mp_obj_t data);
 mp_obj_t zcash_get_fvk(mp_obj_t seed, mp_obj_t account);
 mp_obj_t zcash_get_address(mp_obj_t seed, mp_obj_t account, mp_obj_t diversifier_index);
+mp_obj_t zcash_f4jumble(mp_obj_t message);
+mp_obj_t zcash_f4jumble_inv(mp_obj_t message);
