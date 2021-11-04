@@ -1,4 +1,5 @@
 mod button;
+mod confirm;
 mod dialog;
 mod loader;
 mod page;
@@ -7,7 +8,9 @@ mod pin;
 mod swipe;
 
 pub use button::{Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet};
-pub use dialog::{Dialog, DialogMsg};
+pub use confirm::{HoldToConfirm, HoldToConfirmMsg};
+pub use dialog::{Dialog, DialogLayout, DialogMsg};
+pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use swipe::{Swipe, SwipeDirection};
 
 use super::{event, theme};
