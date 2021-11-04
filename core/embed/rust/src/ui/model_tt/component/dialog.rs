@@ -10,9 +10,9 @@ pub enum DialogMsg<T, L, R> {
 }
 
 pub struct Dialog<T, L, R> {
-    content: Child<T>,
-    left: Child<L>,
-    right: Child<R>,
+    pub content: Child<T>,
+    pub left: Child<L>,
+    pub right: Child<R>,
 }
 
 impl<T, L, R> Dialog<T, L, R>
@@ -59,19 +59,19 @@ where
     }
 }
 
-struct DialogLayout {
-    content: Rect,
-    left: Rect,
-    right: Rect,
+pub struct DialogLayout {
+    pub content: Rect,
+    pub left: Rect,
+    pub right: Rect,
 }
 
 impl DialogLayout {
-    fn middle(area: Rect) -> Self {
+    pub fn middle(area: Rect) -> Self {
         let grid = Grid::new(area, 5, 2);
         Self {
             content: Rect::new(
                 grid.row_col(0, 0).top_left(),
-                grid.row_col(4, 1).bottom_right(),
+                grid.row_col(3, 1).bottom_right(),
             ),
             left: grid.row_col(4, 0),
             right: grid.row_col(4, 1),

@@ -39,9 +39,9 @@ impl Duration {
 }
 
 impl Mul<f32> for Duration {
-    // Multiplication by float is saturating -- in particular, casting from a float to
-    // an int is saturating, value larger than INT_MAX casts to INT_MAX. So this
-    // operation does not need to be checked.
+    // Multiplication by float is saturating -- in particular, casting from a float
+    // to an int is saturating, value larger than INT_MAX casts to INT_MAX. So
+    // this operation does not need to be checked.
     type Output = Self;
 
     fn mul(self, rhs: f32) -> Self::Output {
@@ -116,10 +116,10 @@ impl Instant {
     }
 
     pub fn checked_sub(self, duration: Duration) -> Option<Self> {
-        let add_millis = duration.to_millis();
-        if add_millis <= MAX_DIFFERENCE_IN_MILLIS {
+        let sub_millis = duration.to_millis();
+        if sub_millis <= MAX_DIFFERENCE_IN_MILLIS {
             Some(Self {
-                millis: self.millis.wrapping_sub(add_millis),
+                millis: self.millis.wrapping_sub(sub_millis),
             })
         } else {
             None
