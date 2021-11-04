@@ -248,8 +248,7 @@ def _get_descriptor(client, coin, account, script_type, show_display):
 def get_descriptor(client, coin, account, script_type, show_display):
     """Get descriptor of given account."""
     try:
-        d = _get_descriptor(client, coin, account, script_type, show_display)
-        click.echo(d)
+        return _get_descriptor(client, coin, account, script_type, show_display)
     except ValueError as e:
         raise click.ClickException(e.msg)
 
