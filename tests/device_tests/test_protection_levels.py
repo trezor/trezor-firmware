@@ -273,33 +273,15 @@ def test_recovery_device(client):
         )
 
 
-@pytest.mark.skip_t2
-def test_sign_message_t1(client):
+def test_sign_message(client):
     _assert_protection(client)
     with client:
         client.use_pin_sequence([PIN4])
         client.set_expected_responses(
             [
+                _pin_request(client),
+                messages.PassphraseRequest,
                 messages.ButtonRequest,
-                _pin_request(client),
-                messages.PassphraseRequest,
-                messages.MessageSignature,
-            ]
-        )
-        btc.sign_message(
-            client, "Bitcoin", parse_path("44h/0h/0h/0/0"), "testing message"
-        )
-
-
-@pytest.mark.skip_t1
-def test_sign_message_t2(client):
-    _assert_protection(client)
-    with client:
-        client.use_pin_sequence([PIN4])
-        client.set_expected_responses(
-            [
-                _pin_request(client),
-                messages.PassphraseRequest,
                 messages.ButtonRequest,
                 messages.MessageSignature,
             ]
