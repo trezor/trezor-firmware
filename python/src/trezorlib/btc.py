@@ -156,12 +156,21 @@ def get_ownership_proof(
 
 @expect(messages.MessageSignature)
 def sign_message(
-    client, coin_name, n, message, script_type=messages.InputScriptType.SPENDADDRESS
+    client,
+    coin_name,
+    n,
+    message,
+    script_type=messages.InputScriptType.SPENDADDRESS,
+    no_script_type=False,
 ):
     message = normalize_nfc(message)
     return client.call(
         messages.SignMessage(
-            coin_name=coin_name, address_n=n, message=message, script_type=script_type
+            coin_name=coin_name,
+            address_n=n,
+            message=message,
+            script_type=script_type,
+            no_script_type=no_script_type,
         )
     )
 
