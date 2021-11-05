@@ -152,6 +152,7 @@ message SignMessage {
     required bytes message = 2;                                         // message to be signed
     optional string coin_name = 3 [default='Bitcoin'];                  // coin to use for signing
     optional InputScriptType script_type = 4 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
+    optional bool no_script_type = 5;                                   // don't include script type information in the recovery byte of the signature, same as in Bitcoin Core
 }
 
 /**
