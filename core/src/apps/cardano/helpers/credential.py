@@ -4,7 +4,7 @@ from trezor.enums import CardanoAddressType
 
 from ...common.paths import address_n_to_str
 from .paths import CHAIN_STAKING_KEY, SCHEMA_PAYMENT, SCHEMA_STAKING
-from .utils import format_key_hash, format_script_hash, to_account_path
+from .utils import bech32, to_account_path
 
 if TYPE_CHECKING:
     from trezor.messages import (
@@ -12,6 +12,9 @@ if TYPE_CHECKING:
         CardanoAddressParametersType,
     )
     from trezor.ui.layouts import PropertyType
+
+CREDENTIAL_TYPE_PAYMENT: str = "payment"
+CREDENTIAL_TYPE_STAKE: str = "stake"
 
 
 class Credential:
@@ -57,12 +60,12 @@ class Credential:
     ) -> "Credential":
         address_type = address_params.address_type
         credential = cls(
-            "payment",
-            address_type,
-            address_params.address_n,
-            None,
-            address_params.script_payment_hash,
-            None,
+            type_name=CREDENTIAL_TYPE_PAYMENT,
+            address_type=address_type,
+            path=address_params.address_n,
+            key_hash=None,
+            script_hash=address_params.script_payment_hash,
+            pointer=None,
         )
 
         if address_type in (
@@ -100,12 +103,12 @@ class Credential:
     ) -> "Credential":
         address_type = address_params.address_type
         credential = cls(
-            "stake",
-            address_type,
-            address_params.address_n_staking,
-            address_params.staking_key_hash,
-            address_params.script_staking_hash,
-            address_params.certificate_pointer,
+            type_name=CREDENTIAL_TYPE_STAKE,
+            address_type=address_type,
+            path=address_params.address_n_staking,
+            key_hash=address_params.staking_key_hash,
+            script_hash=address_params.script_staking_hash,
+            pointer=address_params.certificate_pointer,
         )
 
         if address_type == CardanoAddressType.BASE:
@@ -185,9 +188,14 @@ class Credential:
         if self.path:
             return [(None, address_n_to_str(self.path))]
         elif self.key_hash:
-            return [(None, format_key_hash(self.key_hash, False))]
+            hrp = (
+                bech32.HRP_KEY_HASH
+                if self.type_name == CREDENTIAL_TYPE_PAYMENT
+                else bech32.HRP_STAKE_KEY_HASH
+            )
+            return [(None, bech32.encode(hrp, self.key_hash))]
         elif self.script_hash:
-            return [(None, format_script_hash(self.script_hash))]
+            return [(None, bech32.encode(bech32.HRP_SCRIPT_HASH, self.script_hash))]
         elif self.pointer:
             return [
                 (f"Block: {self.pointer.block_index}", None),

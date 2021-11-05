@@ -524,9 +524,6 @@ async def _process_certificates(
     account_path_checker: AccountPathChecker,
 ) -> None:
     """Read, validate, confirm and serialize the certificates."""
-    if certificates_count == 0:
-        return
-
     for _ in range(certificates_count):
         certificate: CardanoTxCertificate = await ctx.call(
             CardanoTxItemAck(), CardanoTxCertificate
@@ -1021,7 +1018,6 @@ async def _show_certificate(
         CardanoTxSigningMode.MULTISIG_TRANSACTION,
         CardanoTxSigningMode.PLUTUS_TRANSACTION,
     ):
-        assert certificate.script_hash  # validate_certificate
         await confirm_certificate(ctx, certificate)
     elif signing_mode == CardanoTxSigningMode.POOL_REGISTRATION_AS_OWNER:
         await _show_stake_pool_registration_certificate(ctx, certificate)
@@ -1039,14 +1035,15 @@ def _validate_withdrawal(
     previous_reward_address: bytes,
 ) -> None:
     validate_stake_credential(
-        withdrawal.path, withdrawal.script_hash, signing_mode, INVALID_WITHDRAWAL
+        withdrawal.path,
+        withdrawal.script_hash,
+        withdrawal.key_hash,
+        signing_mode,
+        INVALID_WITHDRAWAL,
     )
 
     if not 0 <= withdrawal.amount < LOVELACE_MAX_SUPPLY:
         raise INVALID_WITHDRAWAL
-
-    credential = tuple(withdrawal.path) if withdrawal.path else withdrawal.script_hash
-    assert credential  # validate_stake_credential
 
     reward_address = _derive_withdrawal_reward_address_bytes(
         keychain, withdrawal, protocol_magic, network_id
@@ -1093,7 +1090,7 @@ def _derive_withdrawal_reward_address_bytes(
 ) -> bytes:
     reward_address_type = (
         CardanoAddressType.REWARD
-        if withdrawal.path
+        if withdrawal.path or withdrawal.key_hash
         else CardanoAddressType.REWARD_SCRIPT
     )
     return derive_address_bytes(
@@ -1101,6 +1098,7 @@ def _derive_withdrawal_reward_address_bytes(
         CardanoAddressParametersType(
             address_type=reward_address_type,
             address_n_staking=withdrawal.path,
+            staking_key_hash=withdrawal.key_hash,
             script_staking_hash=withdrawal.script_hash,
         ),
         protocol_magic,

@@ -42,6 +42,15 @@ class TestCardanoCertificate(unittest.TestCase):
             ),
             (
                 CardanoTxCertificate(
+                    type=CardanoCertificateType.STAKE_REGISTRATION,
+                    key_hash=unhexlify(
+                        "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+                    ),
+                ),
+                CardanoTxSigningMode.PLUTUS_TRANSACTION,
+            ),
+            (
+                CardanoTxCertificate(
                     type=CardanoCertificateType.STAKE_DELEGATION,
                     path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
                     pool=unhexlify(
@@ -76,6 +85,18 @@ class TestCardanoCertificate(unittest.TestCase):
             ),
             (
                 CardanoTxCertificate(
+                    type=CardanoCertificateType.STAKE_DELEGATION,
+                    key_hash=unhexlify(
+                        "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+                    ),
+                    pool=unhexlify(
+                        "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
+                    ),
+                ),
+                CardanoTxSigningMode.PLUTUS_TRANSACTION,
+            ),
+            (
+                CardanoTxCertificate(
                     type=CardanoCertificateType.STAKE_DEREGISTRATION,
                     path=[1852 | HARDENED, 1815 | HARDENED, 0 | HARDENED, 2, 0],
                 ),
@@ -94,6 +115,15 @@ class TestCardanoCertificate(unittest.TestCase):
                 CardanoTxCertificate(
                     type=CardanoCertificateType.STAKE_DEREGISTRATION,
                     script_hash=unhexlify(
+                        "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+                    ),
+                ),
+                CardanoTxSigningMode.PLUTUS_TRANSACTION,
+            ),
+            (
+                CardanoTxCertificate(
+                    type=CardanoCertificateType.STAKE_DEREGISTRATION,
+                    key_hash=unhexlify(
                         "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                     ),
                 ),
@@ -141,6 +171,19 @@ class TestCardanoCertificate(unittest.TestCase):
                     ),
                 ),
                 CardanoTxSigningMode.ORDINARY_TRANSACTION,
+            ),
+            # STAKE_REGISTRATION both script_hash and key_hash are set
+            (
+                CardanoTxCertificate(
+                    type=CardanoCertificateType.STAKE_REGISTRATION,
+                    script_hash=unhexlify(
+                        "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+                    ),
+                    key_hash=unhexlify(
+                        "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+                    ),
+                ),
+                CardanoTxSigningMode.PLUTUS_TRANSACTION,
             ),
             # STAKE_REGISTRATION pool is set
             (
@@ -200,6 +243,22 @@ class TestCardanoCertificate(unittest.TestCase):
                 ),
                 CardanoTxSigningMode.ORDINARY_TRANSACTION,
             ),
+            # STAKE_DELEGATION both script_hash and key_hash are set
+            (
+                CardanoTxCertificate(
+                    type=CardanoCertificateType.STAKE_DELEGATION,
+                    script_hash=unhexlify(
+                        "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+                    ),
+                    key_hash=unhexlify(
+                        "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+                    ),
+                    pool=unhexlify(
+                        "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
+                    ),
+                ),
+                CardanoTxSigningMode.PLUTUS_TRANSACTION,
+            ),
             # STAKE_DELEGATION pool parameters are set
             (
                 CardanoTxCertificate(
@@ -243,6 +302,19 @@ class TestCardanoCertificate(unittest.TestCase):
                     ),
                 ),
                 CardanoTxSigningMode.ORDINARY_TRANSACTION,
+            ),
+            # STAKE_DEREGISTRATION both script_hash and key_hash are set
+            (
+                CardanoTxCertificate(
+                    type=CardanoCertificateType.STAKE_DEREGISTRATION,
+                    script_hash=unhexlify(
+                        "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+                    ),
+                    key_hash=unhexlify(
+                        "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+                    ),
+                ),
+                CardanoTxSigningMode.PLUTUS_TRANSACTION,
             ),
             # STAKE_DEREGISTRATION pool is set
             (
@@ -313,6 +385,31 @@ class TestCardanoCertificate(unittest.TestCase):
                 CardanoTxCertificate(
                     type=CardanoCertificateType.STAKE_POOL_REGISTRATION,
                     script_hash=unhexlify(
+                        "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+                    ),
+                    pool_parameters=CardanoPoolParametersType(
+                        pool_id=unhexlify(
+                            "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
+                        ),
+                        vrf_key_hash=unhexlify(
+                            "198890ad6c92e80fbdab554dda02da9fb49d001bbd96181f3e07f7a6ab0d0640"
+                        ),
+                        pledge=500000000,
+                        cost=340000000,
+                        margin_numerator=1,
+                        margin_denominator=2,
+                        reward_account="stake1uya87zwnmax0v6nnn8ptqkl6ydx4522kpsc3l3wmf3yswygwx45el",
+                        owners_count=1,
+                        relays_count=1,
+                    ),
+                ),
+                CardanoTxSigningMode.POOL_REGISTRATION_AS_OWNER,
+            ),
+            # STAKE_POOL_REGISTRATION key hash is set
+            (
+                CardanoTxCertificate(
+                    type=CardanoCertificateType.STAKE_POOL_REGISTRATION,
+                    key_hash=unhexlify(
                         "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
                     ),
                     pool_parameters=CardanoPoolParametersType(

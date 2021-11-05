@@ -2490,6 +2490,7 @@ class CardanoTxCertificate(protobuf.MessageType):
         3: protobuf.Field("pool", "bytes", repeated=False, required=False),
         4: protobuf.Field("pool_parameters", "CardanoPoolParametersType", repeated=False, required=False),
         5: protobuf.Field("script_hash", "bytes", repeated=False, required=False),
+        6: protobuf.Field("key_hash", "bytes", repeated=False, required=False),
     }
 
     def __init__(
@@ -2500,12 +2501,14 @@ class CardanoTxCertificate(protobuf.MessageType):
         pool: Optional["bytes"] = None,
         pool_parameters: Optional["CardanoPoolParametersType"] = None,
         script_hash: Optional["bytes"] = None,
+        key_hash: Optional["bytes"] = None,
     ) -> None:
         self.path: Sequence["int"] = path if path is not None else []
         self.type = type
         self.pool = pool
         self.pool_parameters = pool_parameters
         self.script_hash = script_hash
+        self.key_hash = key_hash
 
 
 class CardanoTxWithdrawal(protobuf.MessageType):
@@ -2514,6 +2517,7 @@ class CardanoTxWithdrawal(protobuf.MessageType):
         1: protobuf.Field("path", "uint32", repeated=True, required=False),
         2: protobuf.Field("amount", "uint64", repeated=False, required=True),
         3: protobuf.Field("script_hash", "bytes", repeated=False, required=False),
+        4: protobuf.Field("key_hash", "bytes", repeated=False, required=False),
     }
 
     def __init__(
@@ -2522,10 +2526,12 @@ class CardanoTxWithdrawal(protobuf.MessageType):
         amount: "int",
         path: Optional[Sequence["int"]] = None,
         script_hash: Optional["bytes"] = None,
+        key_hash: Optional["bytes"] = None,
     ) -> None:
         self.path: Sequence["int"] = path if path is not None else []
         self.amount = amount
         self.script_hash = script_hash
+        self.key_hash = key_hash
 
 
 class CardanoCatalystRegistrationParametersType(protobuf.MessageType):

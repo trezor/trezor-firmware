@@ -14,7 +14,50 @@
         "certificates": [
           {
             "type": 0,
-            "path": "m/1852'/1815'/0'/0/0"
+            "path": "m/1852'/1815'/0'/2/0"
+          }
+        ],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "MULTISIG_TRANSACTION",
+        "additional_witness_requests": [
+          {
+            "path": "m/1854'/1815'/0'/0/0"
+          }
+        ],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid certificate"
+      }
+    },
+    {
+      "description": "Multisig transaction with stake registration certificate containing a key hash",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [
+          {
+            "type": 0,
+            "key_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
           }
         ],
         "withdrawals": [],
@@ -57,7 +100,53 @@
         "certificates": [
           {
             "type": 1,
-            "path": "m/1852'/1815'/0'/0/0"
+            "path": "m/1852'/1815'/0'/2/0"
+          }
+        ],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "MULTISIG_TRANSACTION",
+        "additional_witness_requests": [
+          {
+            "path": "m/1854'/1815'/0'/0/0"
+          },
+          {
+            "path": "m/1854'/1815'/2'/0/0"
+          }
+        ],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid certificate"
+      }
+    },
+    {
+      "description": "Multisig transaction with stake deregistration certificate containing a key hash",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [
+          {
+            "type": 1,
+            "key_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
           }
         ],
         "withdrawals": [],
@@ -103,7 +192,7 @@
         "certificates": [
           {
             "type": 2,
-            "path": "m/1852'/1815'/0'/0/0",
+            "path": "m/1852'/1815'/0'/2/0",
             "pool": "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
           }
         ],
@@ -135,6 +224,136 @@
       },
       "result": {
         "error_message": "Invalid certificate"
+      }
+    },
+    {
+      "description": "Multisig transaction with stake delegation certificate containing a key hash",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [
+          {
+            "type": 2,
+            "key_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd",
+            "pool": "f61c42cbf7c8c53af3f520508212ad3e72f674f957fe23ff0acb4973"
+          }
+        ],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1q84sh2j72ux0l03fxndjnhctdg7hcppsaejafsa84vh7lwgmcs5wgus8qt4atk45lvt4xfxpjtwfhdmvchdf2m3u3hlsd5tq5r",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "MULTISIG_TRANSACTION",
+        "additional_witness_requests": [
+          {
+            "path": "m/1854'/1815'/0'/0/0"
+          }
+        ],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid certificate"
+      }
+    },
+    {
+      "description": "Multisig transaction with withdrawal containing a path",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [
+          {
+            "path": "m/1852'/1815'/0'/2/0",
+            "amount": "1000"
+          }
+        ],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1w9rhu54nz94k9l5v6d9rzfs47h7dv7xffcwkekuxcx3evnqpvuxu0",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "MULTISIG_TRANSACTION",
+        "additional_witness_requests": [
+          {
+            "path": "m/1854'/1815'/0'/0/0"
+          }
+        ],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid withdrawal"
+      }
+    },
+    {
+      "description": "Multisig transaction with withdrawal containing a key hash",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [
+          {
+            "key_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd",
+            "amount": "1000"
+          }
+        ],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "addr1w9rhu54nz94k9l5v6d9rzfs47h7dv7xffcwkekuxcx3evnqpvuxu0",
+            "amount": "1"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "MULTISIG_TRANSACTION",
+        "additional_witness_requests": [
+          {
+            "path": "m/1854'/1815'/0'/0/0"
+          }
+        ],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid withdrawal"
       }
     },
     {

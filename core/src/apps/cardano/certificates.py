@@ -65,7 +65,11 @@ def validate_certificate(
         CardanoCertificateType.STAKE_DEREGISTRATION,
     ):
         validate_stake_credential(
-            certificate.path, certificate.script_hash, signing_mode, INVALID_CERTIFICATE
+            certificate.path,
+            certificate.script_hash,
+            certificate.key_hash,
+            signing_mode,
+            INVALID_CERTIFICATE,
         )
 
     if certificate.type == CardanoCertificateType.STAKE_DELEGATION:
@@ -83,8 +87,6 @@ def validate_certificate(
 
 
 def _validate_certificate_structure(certificate: CardanoTxCertificate) -> None:
-    path = certificate.path
-    script_hash = certificate.script_hash
     pool = certificate.pool
     pool_parameters = certificate.pool_parameters
 
@@ -92,7 +94,12 @@ def _validate_certificate_structure(certificate: CardanoTxCertificate) -> None:
         CardanoCertificateType.STAKE_REGISTRATION: (pool, pool_parameters),
         CardanoCertificateType.STAKE_DELEGATION: (pool_parameters,),
         CardanoCertificateType.STAKE_DEREGISTRATION: (pool, pool_parameters),
-        CardanoCertificateType.STAKE_POOL_REGISTRATION: (path, script_hash, pool),
+        CardanoCertificateType.STAKE_POOL_REGISTRATION: (
+            certificate.path,
+            certificate.script_hash,
+            certificate.key_hash,
+            pool,
+        ),
     }
 
     if certificate.type not in fields_to_be_empty or any(
@@ -111,14 +118,20 @@ def cborize_certificate(
         return (
             certificate.type,
             cborize_certificate_stake_credential(
-                keychain, certificate.path, certificate.script_hash
+                keychain,
+                certificate.path,
+                certificate.script_hash,
+                certificate.key_hash,
             ),
         )
     elif certificate.type == CardanoCertificateType.STAKE_DELEGATION:
         return (
             certificate.type,
             cborize_certificate_stake_credential(
-                keychain, certificate.path, certificate.script_hash
+                keychain,
+                certificate.path,
+                certificate.script_hash,
+                certificate.key_hash,
             ),
             certificate.pool,
         )
@@ -127,10 +140,13 @@ def cborize_certificate(
 
 
 def cborize_certificate_stake_credential(
-    keychain: seed.Keychain, path: list[int], script_hash: bytes | None
+    keychain: seed.Keychain,
+    path: list[int],
+    script_hash: bytes | None,
+    key_hash: bytes | None,
 ) -> tuple[int, bytes]:
-    if path:
-        return 0, get_public_key_hash(keychain, path)
+    if key_hash or path:
+        return 0, key_hash or get_public_key_hash(keychain, path)
 
     if script_hash:
         return 1, script_hash

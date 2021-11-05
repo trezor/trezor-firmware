@@ -67,27 +67,6 @@ def format_asset_fingerprint(policy_id: bytes, asset_name_bytes: bytes) -> str:
     return bech32.encode("asset", fingerprint)
 
 
-def format_script_hash(script_hash: bytes) -> str:
-    return bech32.encode(bech32.HRP_SCRIPT_HASH, script_hash)
-
-
-def format_key_hash(key_hash: bytes, is_shared_key: bool) -> str:
-    hrp = bech32.HRP_SHARED_KEY_HASH if is_shared_key else bech32.HRP_KEY_HASH
-    return bech32.encode(hrp, key_hash)
-
-
-def format_required_signer_key_hash(required_signer_key_hash: bytes) -> str:
-    return bech32.encode(bech32.HRP_REQUIRED_SIGNER_KEY_HASH, required_signer_key_hash)
-
-
-def format_output_datum_hash(output_datum_hash: bytes) -> str:
-    return bech32.encode(bech32.HRP_OUTPUT_DATUM_HASH, output_datum_hash)
-
-
-def format_script_data_hash(script_data_hash: bytes) -> str:
-    return bech32.encode(bech32.HRP_SCRIPT_DATA_HASH, script_data_hash)
-
-
 def get_public_key_hash(keychain: seed.Keychain, path: list[int]) -> bytes:
     public_key = derive_public_key(keychain, path)
     return hashlib.blake2b(data=public_key, outlen=ADDRESS_KEY_HASH_SIZE).digest()
@@ -104,14 +83,18 @@ def derive_public_key(
 def validate_stake_credential(
     path: list[int],
     script_hash: bytes | None,
+    key_hash: bytes | None,
     signing_mode: CardanoTxSigningMode,
     error: wire.ProcessError,
 ) -> None:
-    if path and script_hash:
+    if sum(bool(k) for k in (path, script_hash, key_hash)) != 1:
         raise error
 
     if path:
-        if signing_mode != CardanoTxSigningMode.ORDINARY_TRANSACTION:
+        if signing_mode not in (
+            CardanoTxSigningMode.ORDINARY_TRANSACTION,
+            CardanoTxSigningMode.PLUTUS_TRANSACTION,
+        ):
             raise error
         if not SCHEMA_STAKING_ANY_ACCOUNT.match(path):
             raise error
@@ -122,6 +105,11 @@ def validate_stake_credential(
         ):
             raise error
         if len(script_hash) != SCRIPT_HASH_SIZE:
+            raise error
+    elif key_hash:
+        if signing_mode != CardanoTxSigningMode.PLUTUS_TRANSACTION:
+            raise error
+        if len(key_hash) != ADDRESS_KEY_HASH_SIZE:
             raise error
     else:
         raise error

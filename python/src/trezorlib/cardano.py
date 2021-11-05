@@ -330,7 +330,7 @@ def parse_certificate(certificate: dict) -> CertificateWithPoolOwnersAndRelays:
         if "pool" not in certificate:
             raise CERTIFICATE_MISSING_FIELDS_ERROR
 
-        path, script_hash = _parse_path_or_script_hash(
+        path, script_hash, key_hash = _parse_credential(
             certificate, CERTIFICATE_MISSING_FIELDS_ERROR
         )
 
@@ -340,6 +340,7 @@ def parse_certificate(certificate: dict) -> CertificateWithPoolOwnersAndRelays:
                 path=path,
                 pool=bytes.fromhex(certificate["pool"]),
                 script_hash=script_hash,
+                key_hash=key_hash,
             ),
             None,
         )
@@ -347,13 +348,16 @@ def parse_certificate(certificate: dict) -> CertificateWithPoolOwnersAndRelays:
         messages.CardanoCertificateType.STAKE_REGISTRATION,
         messages.CardanoCertificateType.STAKE_DEREGISTRATION,
     ):
-        path, script_hash = _parse_path_or_script_hash(
+        path, script_hash, key_hash = _parse_credential(
             certificate, CERTIFICATE_MISSING_FIELDS_ERROR
         )
 
         return (
             messages.CardanoTxCertificate(
-                type=certificate_type, path=path, script_hash=script_hash
+                type=certificate_type,
+                path=path,
+                script_hash=script_hash,
+                key_hash=key_hash,
             ),
             None,
         )
@@ -406,16 +410,17 @@ def parse_certificate(certificate: dict) -> CertificateWithPoolOwnersAndRelays:
         raise ValueError("Unknown certificate type")
 
 
-def _parse_path_or_script_hash(
+def _parse_credential(
     obj: dict, error: ValueError
-) -> Tuple[List[int], Optional[bytes]]:
-    if "path" not in obj and "script_hash" not in obj:
+) -> Tuple[List[int], Optional[bytes], Optional[bytes]]:
+    if not any(k in obj for k in ("path", "script_hash", "key_hash")):
         raise error
 
     path = tools.parse_path(obj.get("path", ""))
     script_hash = parse_optional_bytes(obj.get("script_hash"))
+    key_hash = parse_optional_bytes(obj.get("key_hash"))
 
-    return path, script_hash
+    return path, script_hash, key_hash
 
 
 def _parse_pool_owner(pool_owner: dict) -> messages.CardanoPoolOwner:
@@ -473,7 +478,7 @@ def parse_withdrawal(withdrawal: dict) -> messages.CardanoTxWithdrawal:
     if "amount" not in withdrawal:
         raise WITHDRAWAL_MISSING_FIELDS_ERROR
 
-    path, script_hash = _parse_path_or_script_hash(
+    path, script_hash, key_hash = _parse_credential(
         withdrawal, WITHDRAWAL_MISSING_FIELDS_ERROR
     )
 
@@ -481,6 +486,7 @@ def parse_withdrawal(withdrawal: dict) -> messages.CardanoTxWithdrawal:
         path=path,
         amount=int(withdrawal["amount"]),
         script_hash=script_hash,
+        key_hash=key_hash,
     )
 
 
