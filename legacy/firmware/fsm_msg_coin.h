@@ -272,8 +272,9 @@ void fsm_msgSignMessage(const SignMessage *msg) {
   if (!node) return;
 
   layoutProgressSwipe(_("Signing"), 0);
-  if (cryptoMessageSign(coin, node, msg->script_type, msg->message.bytes,
-                        msg->message.size, resp->signature.bytes) == 0) {
+  if (cryptoMessageSign(coin, node, msg->script_type, msg->no_script_type,
+                        msg->message.bytes, msg->message.size,
+                        resp->signature.bytes) == 0) {
     if (hdnode_fill_public_key(node) != 0) {
       fsm_sendFailure(FailureType_Failure_ProcessError,
                       _("Failed to derive public key"));
