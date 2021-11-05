@@ -290,6 +290,11 @@ def test_signmessage_pagination(client, message):
         # Join lines that are separated by a single "-" string, space-separate lines otherwise.
         nonlocal message_read
 
+        # confirm address
+        br = yield
+        layout = client.debug.wait_layout()
+        client.debug.press_yes()
+
         # start assuming there was a word break; this avoids prepending space at start
         word_break = True
         br = yield
@@ -332,6 +337,8 @@ def test_signmessage_pagination_trailing_newline(client):
     with client:
         client.set_expected_responses(
             [
+                # expect address confirmation
+                message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
                 # expect a ButtonRequest that does not have pagination set
                 message_filters.ButtonRequest(pages=None),
                 messages.MessageSignature,
