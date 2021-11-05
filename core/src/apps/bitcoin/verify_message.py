@@ -67,6 +67,7 @@ async def verify_message(ctx: wire.Context, msg: VerifyMessage) -> Success:
         coin.coin_shortcut,
         decode_message(message),
         address=address_short(coin, address),
+        verify=True,
     )
 
     return Success(message="Message verified")

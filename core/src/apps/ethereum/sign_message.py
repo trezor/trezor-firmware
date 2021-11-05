@@ -31,9 +31,13 @@ async def sign_message(
     ctx: Context, msg: EthereumSignMessage, keychain: Keychain
 ) -> EthereumMessageSignature:
     await paths.validate_path(ctx, keychain, msg.address_n)
-    await confirm_signverify(ctx, "ETH", decode_message(msg.message))
 
     node = keychain.derive(msg.address_n)
+    address = address_from_bytes(node.ethereum_pubkeyhash())
+    await confirm_signverify(
+        ctx, "ETH", decode_message(msg.message), address, verify=False
+    )
+
     signature = secp256k1.sign(
         node.private_key(),
         message_digest(msg.message),
@@ -42,6 +46,6 @@ async def sign_message(
     )
 
     return EthereumMessageSignature(
-        address=address_from_bytes(node.ethereum_pubkeyhash()),
+        address=address,
         signature=signature[1:] + bytearray([signature[0]]),
     )
