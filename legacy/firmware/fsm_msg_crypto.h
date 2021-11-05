@@ -135,7 +135,7 @@ void fsm_msgSignIdentity(const SignIdentity *msg) {
     sha256_Raw((const uint8_t *)msg->challenge_visual,
                strlen(msg->challenge_visual), digest + 32);
     result = cryptoMessageSign(&(coins[0]), node, InputScriptType_SPENDADDRESS,
-                               digest, 64, resp->signature.bytes);
+                               false, digest, 64, resp->signature.bytes);
   }
 
   if (result == 0) {

@@ -54,8 +54,9 @@ int signifyMessageSign(HDNode *node, const uint8_t *message, size_t message_len,
                        uint8_t *signature);
 
 int cryptoMessageSign(const CoinInfo *coin, HDNode *node,
-                      InputScriptType script_type, const uint8_t *message,
-                      size_t message_len, uint8_t *signature);
+                      InputScriptType script_type, bool no_script_type,
+                      const uint8_t *message, size_t message_len,
+                      uint8_t *signature);
 
 int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message,
                         size_t message_len, const char *address,

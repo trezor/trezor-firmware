@@ -146,28 +146,33 @@ static void cryptoMessageHash(const CoinInfo *coin, const uint8_t *message,
 }
 
 int cryptoMessageSign(const CoinInfo *coin, HDNode *node,
-                      InputScriptType script_type, const uint8_t *message,
-                      size_t message_len, uint8_t *signature) {
+                      InputScriptType script_type, bool no_script_type,
+                      const uint8_t *message, size_t message_len,
+                      uint8_t *signature) {
   uint8_t hash[HASHER_DIGEST_LENGTH] = {0};
   cryptoMessageHash(coin, message, message_len, hash);
 
   uint8_t pby = 0;
   int result = hdnode_sign_digest(node, hash, signature + 1, &pby, NULL);
   if (result == 0) {
-    switch (script_type) {
-      case InputScriptType_SPENDP2SHWITNESS:
-        // segwit-in-p2sh
-        signature[0] = 35 + pby;
-        break;
-      case InputScriptType_SPENDWITNESS:
-        // segwit
-        signature[0] = 39 + pby;
-        break;
-      default:
-        // p2pkh
-        signature[0] = 31 + pby;
-        break;
+    uint8_t script_type_info = 0;
+    if (!no_script_type) {
+      switch (script_type) {
+        case InputScriptType_SPENDP2SHWITNESS:
+          // segwit-in-p2sh
+          script_type_info = 4;
+          break;
+        case InputScriptType_SPENDWITNESS:
+          // segwit
+          script_type_info = 8;
+          break;
+        default:
+          // p2pkh
+          script_type_info = 0;
+          break;
+      }
     }
+    signature[0] = 31 + pby + script_type_info;
   }
   return result;
 }
