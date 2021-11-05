@@ -1067,6 +1067,7 @@ class SignMessage(protobuf.MessageType):
         2: protobuf.Field("message", "bytes", repeated=False, required=True),
         3: protobuf.Field("coin_name", "string", repeated=False, required=False),
         4: protobuf.Field("script_type", "InputScriptType", repeated=False, required=False),
+        5: protobuf.Field("no_script_type", "bool", repeated=False, required=False),
     }
 
     def __init__(
@@ -1076,11 +1077,13 @@ class SignMessage(protobuf.MessageType):
         address_n: Optional[List["int"]] = None,
         coin_name: Optional["str"] = 'Bitcoin',
         script_type: Optional["InputScriptType"] = InputScriptType.SPENDADDRESS,
+        no_script_type: Optional["bool"] = None,
     ) -> None:
         self.address_n = address_n if address_n is not None else []
         self.message = message
         self.coin_name = coin_name
         self.script_type = script_type
+        self.no_script_type = no_script_type
 
 
 class MessageSignature(protobuf.MessageType):
