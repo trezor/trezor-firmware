@@ -693,6 +693,46 @@
       }
     },
     {
+      "description": "Certificate has key hash",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [
+          {
+            "type": 0,
+            "key_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+          }
+        ],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid certificate"
+      }
+    },
+    {
       "description": "Certificate has both path and script_hash",
       "parameters": {
         "protocol_magic": 764824073,
@@ -704,6 +744,47 @@
             "type": 0,
             "path": "m/1852'/1815'/0'/0/0",
             "script_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+          }
+        ],
+        "withdrawals": [],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid certificate"
+      }
+    },
+    {
+      "description": "Certificate has both path and key_hash",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [
+          {
+            "type": 0,
+            "path": "m/1852'/1815'/0'/0/0",
+            "key_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
           }
         ],
         "withdrawals": [],
@@ -895,6 +976,46 @@
       }
     },
     {
+      "description": "Withdrawal has key hash",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [
+          {
+            "key_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd",
+            "amount": "1000"
+          }
+        ],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid withdrawal"
+      }
+    },
+    {
       "description": "Withdrawal amount is too large",
       "parameters": {
         "protocol_magic": 764824073,
@@ -947,6 +1068,47 @@
             "path": "m/1852'/1815'/0'/2/0",
             "amount": "1000",
             "script_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
+          }
+        ],
+        "auxiliary_data": null,
+        "inputs": [
+          {
+            "path": "m/1852'/1815'/0'/0/0",
+            "prev_hash": "3b40265111d8bb3c3c608d95b3a0bf83461ace32d79336579a1939b3aad1c0b7",
+            "prev_index": 0
+          }
+        ],
+        "outputs": [
+          {
+            "address": "Ae2tdPwUPEZCanmBz5g2GEwFqKTKpNJcGYPKfDxoNeKZ8bRHr8366kseiK2",
+            "amount": "3003112"
+          }
+        ],
+        "mint": [],
+        "script_data_hash": null,
+        "collateral_inputs": [],
+        "required_signers": [],
+        "signing_mode": "ORDINARY_TRANSACTION",
+        "additional_witness_requests": [],
+        "include_network_id": false
+      },
+      "result": {
+        "error_message": "Invalid withdrawal"
+      }
+    },
+    {
+      "description": "Withdrawal contains both path and key_hash",
+      "parameters": {
+        "protocol_magic": 764824073,
+        "network_id": 1,
+        "fee": 42,
+        "ttl": 10,
+        "certificates": [],
+        "withdrawals": [
+          {
+            "path": "m/1852'/1815'/0'/2/0",
+            "amount": "1000",
+            "key_hash": "29fb5fd4aa8cadd6705acc8263cee0fc62edca5ac38db593fec2f9fd"
           }
         ],
         "auxiliary_data": null,

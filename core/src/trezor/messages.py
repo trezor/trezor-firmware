@@ -1526,6 +1526,7 @@ if TYPE_CHECKING:
         pool: "bytes | None"
         pool_parameters: "CardanoPoolParametersType | None"
         script_hash: "bytes | None"
+        key_hash: "bytes | None"
 
         def __init__(
             self,
@@ -1535,6 +1536,7 @@ if TYPE_CHECKING:
             pool: "bytes | None" = None,
             pool_parameters: "CardanoPoolParametersType | None" = None,
             script_hash: "bytes | None" = None,
+            key_hash: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -1546,6 +1548,7 @@ if TYPE_CHECKING:
         path: "list[int]"
         amount: "int"
         script_hash: "bytes | None"
+        key_hash: "bytes | None"
 
         def __init__(
             self,
@@ -1553,6 +1556,7 @@ if TYPE_CHECKING:
             amount: "int",
             path: "list[int] | None" = None,
             script_hash: "bytes | None" = None,
+            key_hash: "bytes | None" = None,
         ) -> None:
             pass
 

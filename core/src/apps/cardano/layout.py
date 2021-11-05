@@ -25,16 +25,11 @@ from apps.common.paths import address_n_to_str
 
 from . import seed
 from .address import derive_human_readable_address
-from .helpers import protocol_magics
+from .helpers import bech32, protocol_magics
 from .helpers.utils import (
     format_account_number,
     format_asset_fingerprint,
-    format_key_hash,
     format_optional_int,
-    format_output_datum_hash,
-    format_required_signer_key_hash,
-    format_script_data_hash,
-    format_script_hash,
     format_stake_pool_id,
     to_account_path,
 )
@@ -126,7 +121,9 @@ async def show_native_script(
     if script.type == CardanoNativeScriptType.PUB_KEY:
         assert script.key_hash is not None or script.key_path  # validate_script
         if script.key_hash:
-            props.append((None, format_key_hash(script.key_hash, True)))
+            props.append(
+                (None, bech32.encode(bech32.HRP_SHARED_KEY_HASH, script.key_hash))
+            )
         elif script.key_path:
             props.append((address_n_to_str(script.key_path), None))
     elif script.type == CardanoNativeScriptType.N_OF_K:
@@ -179,7 +176,9 @@ async def show_script_hash(
             ctx,
             "verify_script",
             title="Verify script",
-            props=[("Script hash:", format_script_hash(script_hash))],
+            props=[
+                ("Script hash:", bech32.encode(bech32.HRP_SCRIPT_HASH, script_hash))
+            ],
             br_code=ButtonRequestType.Other,
         )
     elif display_format == CardanoNativeScriptHashDisplayFormat.POLICY_ID:
@@ -380,7 +379,7 @@ async def show_warning_tx_output_contains_datum_hash(
         props=[
             (
                 "The following transaction output contains datum hash:",
-                format_output_datum_hash(datum_hash),
+                bech32.encode(bech32.HRP_OUTPUT_DATUM_HASH, datum_hash),
             ),
             ("\nContinue?", None),
         ],
@@ -476,18 +475,10 @@ async def confirm_certificate(
 
     props: list[PropertyType] = [
         ("Confirm:", CERTIFICATE_TYPE_NAMES[certificate.type]),
+        _format_stake_credential(
+            certificate.path, certificate.script_hash, certificate.key_hash
+        ),
     ]
-
-    if certificate.path:
-        props.append(
-            (
-                f"for account {format_account_number(certificate.path)}:",
-                address_n_to_str(to_account_path(certificate.path)),
-            ),
-        )
-    else:
-        assert certificate.script_hash is not None  # validate_certificate
-        props.append(("for script:", format_script_hash(certificate.script_hash)))
 
     if certificate.type == CardanoCertificateType.STAKE_DELEGATION:
         assert certificate.pool is not None  # validate_certificate
@@ -632,20 +623,11 @@ async def confirm_withdrawal(
 ) -> None:
     props: list[PropertyType] = [
         ("Confirm withdrawal", None),
+        _format_stake_credential(
+            withdrawal.path, withdrawal.script_hash, withdrawal.key_hash
+        ),
+        ("Amount:", format_coin_amount(withdrawal.amount)),
     ]
-
-    if withdrawal.path:
-        props.append(
-            (
-                f"for account {format_account_number(withdrawal.path)}:",
-                address_n_to_str(to_account_path(withdrawal.path)),
-            )
-        )
-    else:
-        assert withdrawal.script_hash is not None  # validate_withdrawal
-        props.append(("for script:", format_script_hash(withdrawal.script_hash)))
-
-    props.append(("Amount:", format_coin_amount(withdrawal.amount)))
 
     await confirm_properties(
         ctx,
@@ -654,6 +636,23 @@ async def confirm_withdrawal(
         props=props,
         br_code=ButtonRequestType.Other,
     )
+
+
+def _format_stake_credential(
+    path: list[int], script_hash: bytes | None, key_hash: bytes | None
+) -> tuple[str, str]:
+    if path:
+        return (
+            f"for account {format_account_number(path)}:",
+            address_n_to_str(to_account_path(path)),
+        )
+    elif key_hash:
+        return ("for key hash:", bech32.encode(bech32.HRP_STAKE_KEY_HASH, key_hash))
+    elif script_hash:
+        return ("for script:", bech32.encode(bech32.HRP_SCRIPT_HASH, script_hash))
+    else:
+        # should be unreachable unless there's a bug in validation
+        raise ValueError
 
 
 async def confirm_catalyst_registration(
@@ -734,7 +733,12 @@ async def confirm_script_data_hash(ctx: wire.Context, script_data_hash: bytes) -
         ctx,
         "confirm_script_data_hash",
         title="Confirm transaction",
-        props=[("Script data hash:", format_script_data_hash(script_data_hash))],
+        props=[
+            (
+                "Script data hash:",
+                bech32.encode(bech32.HRP_SCRIPT_DATA_HASH, script_data_hash),
+            )
+        ],
         br_code=ButtonRequestType.Other,
     )
 
@@ -761,7 +765,7 @@ async def confirm_required_signer(
         required_signer.key_hash is not None or required_signer.key_path
     )  # _validate_required_signer
     formatted_signer = (
-        format_required_signer_key_hash(required_signer.key_hash)
+        bech32.encode(bech32.HRP_REQUIRED_SIGNER_KEY_HASH, required_signer.key_hash)
         if required_signer.key_hash is not None
         else address_n_to_str(required_signer.key_path)
     )
