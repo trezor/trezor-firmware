@@ -7,7 +7,7 @@ from trezor.ui.layouts import confirm_signverify
 from apps.common.paths import validate_path
 from apps.common.signverify import decode_message, message_digest
 
-from .addresses import get_address
+from .addresses import address_short, get_address
 from .keychain import with_keychain
 
 if False:
@@ -26,12 +26,19 @@ async def sign_message(
     script_type = msg.script_type or InputScriptType.SPENDADDRESS
 
     await validate_path(ctx, keychain, address_n)
-    await confirm_signverify(ctx, coin.coin_shortcut, decode_message(message))
 
     node = keychain.derive(address_n)
+    address = get_address(script_type, coin, node)
+    await confirm_signverify(
+        ctx,
+        coin.coin_shortcut,
+        decode_message(message),
+        address_short(coin, address),
+        verify=False,
+    )
+
     seckey = node.private_key()
 
-    address = get_address(script_type, coin, node)
     digest = message_digest(coin, message)
     signature = secp256k1.sign(seckey, digest)
 
