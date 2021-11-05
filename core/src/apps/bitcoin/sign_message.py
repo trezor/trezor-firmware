@@ -36,12 +36,16 @@ async def sign_message(
     signature = secp256k1.sign(seckey, digest)
 
     if script_type == InputScriptType.SPENDADDRESS:
-        pass
+        script_type_info = 0
     elif script_type == InputScriptType.SPENDP2SHWITNESS:
-        signature = bytes([signature[0] + 4]) + signature[1:]
+        script_type_info = 4
     elif script_type == InputScriptType.SPENDWITNESS:
-        signature = bytes([signature[0] + 8]) + signature[1:]
+        script_type_info = 8
     else:
         raise wire.ProcessError("Unsupported script type")
+
+    # Add script type information to the recovery byte.
+    if script_type_info != 0 and not msg.no_script_type:
+        signature = bytes([signature[0] + script_type_info]) + signature[1:]
 
     return MessageSignature(address=address, signature=signature)
