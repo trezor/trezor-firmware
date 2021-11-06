@@ -54,7 +54,6 @@ stdenv.mkDerivation ({
     clang
     editorconfig-checker
     gcc
-    gcc-arm-embedded
     git
     gitAndTools.git-subrepo
     gnumake
@@ -74,6 +73,8 @@ stdenv.mkDerivation ({
   ] ++ lib.optionals (!stdenv.isDarwin) [
     procps
     valgrind
+  ] ++ lib.optionals (!stdenv.isDarwin || !stdenv.isAarch64) [
+    gcc-arm-embedded  # not yet available for aarch64-darwin
   ] ++ lib.optionals (stdenv.isDarwin) [
     darwin.apple_sdk.frameworks.CoreAudio
     darwin.apple_sdk.frameworks.AudioToolbox
@@ -99,6 +100,11 @@ stdenv.mkDerivation ({
 
   # Used by rust bindgen
   LIBCLANG_PATH = "${llvmPackages.libclang.lib}/lib";
+
+  # don't try to use stack protector for Apple Silicon (emulator) binaries
+  # it's broken at the moment
+  hardeningDisable = lib.optionals (stdenv.isDarwin && stdenv.isAarch64) [ "stackprotector" ];
+
 } // (lib.optionalAttrs fullDeps) {
   TREZOR_MONERO_TESTS_PATH = moneroTestsPatched;
 })

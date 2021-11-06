@@ -180,6 +180,11 @@
 
 extern const struct _mp_print_t mp_stderr_print;
 
+#if !(defined(MICROPY_GCREGS_SETJMP) || defined(__x86_64__) || defined(__i386__) || defined(__thumb2__) || defined(__thumb__) || defined(__arm__))
+// Fall back to setjmp() implementation for discovery of GC pointers in registers.
+#define MICROPY_GCREGS_SETJMP (1)
+#endif
+
 // coverage support
 #define MICROPY_PY_SYS_ATEXIT       (1)
 #define MICROPY_PY_SYS_SETTRACE     (1)
