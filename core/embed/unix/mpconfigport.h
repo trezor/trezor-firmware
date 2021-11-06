@@ -294,4 +294,9 @@ void mp_unix_mark_exec(void);
 #include <stdio.h>
 #endif
 
+#if defined(__aarch64__)
+// Use GC helper fallback implementation for Apple silicon
+#define MICROPY_GCREGS_SETJMP (1)
+#endif
+
 #endif // __INCLUDED_MPCONFIGPORT_H
