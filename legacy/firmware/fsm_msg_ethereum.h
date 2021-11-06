@@ -150,18 +150,35 @@ void fsm_msgEthereumSignMessage(const EthereumSignMessage *msg) {
 
   CHECK_INITIALIZED
 
+  CHECK_PIN
+
+  const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n,
+                                          msg->address_n_count, NULL);
+  if (!node) return;
+
+  uint8_t pubkeyhash[20] = {0};
+  if (!hdnode_get_ethereum_pubkeyhash(node, pubkeyhash)) {
+    return;
+  }
+
+  resp->address[0] = '0';
+  resp->address[1] = 'x';
+  ethereum_address_checksum(pubkeyhash, resp->address + 2, false, 0);
+  // ethereum_address_checksum adds trailing zero
+
+  layoutVerifyAddress(NULL, resp->address);
+  if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    layoutHome();
+    return;
+  }
+
   layoutSignMessage(msg->message.bytes, msg->message.size);
   if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
     fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
     layoutHome();
     return;
   }
-
-  CHECK_PIN
-
-  const HDNode *node = fsm_getDerivedNode(SECP256K1_NAME, msg->address_n,
-                                          msg->address_n_count, NULL);
-  if (!node) return;
 
   ethereum_message_sign(msg, node, resp);
   layoutHome();

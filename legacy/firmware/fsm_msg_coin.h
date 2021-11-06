@@ -256,13 +256,6 @@ void fsm_msgSignMessage(const SignMessage *msg) {
 
   CHECK_INITIALIZED
 
-  layoutSignMessage(msg->message.bytes, msg->message.size);
-  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
-    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-    layoutHome();
-    return;
-  }
-
   CHECK_PIN
 
   const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
@@ -271,24 +264,39 @@ void fsm_msgSignMessage(const SignMessage *msg) {
                                     msg->address_n_count, NULL);
   if (!node) return;
 
+  if (hdnode_fill_public_key(node) != 0) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to derive public key"));
+    layoutHome();
+    return;
+  }
+
+  if (!compute_address(coin, msg->script_type, node, false, NULL,
+                       resp->address)) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Error computing address"));
+    layoutHome();
+    return;
+  }
+
+  layoutVerifyAddress(coin, resp->address);
+  if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    layoutHome();
+    return;
+  }
+
+  layoutSignMessage(msg->message.bytes, msg->message.size);
+  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    layoutHome();
+    return;
+  }
+
   layoutProgressSwipe(_("Signing"), 0);
   if (cryptoMessageSign(coin, node, msg->script_type, msg->no_script_type,
                         msg->message.bytes, msg->message.size,
                         resp->signature.bytes) == 0) {
-    if (hdnode_fill_public_key(node) != 0) {
-      fsm_sendFailure(FailureType_Failure_ProcessError,
-                      _("Failed to derive public key"));
-      layoutHome();
-      return;
-    }
-
-    if (!compute_address(coin, msg->script_type, node, false, NULL,
-                         resp->address)) {
-      fsm_sendFailure(FailureType_Failure_ProcessError,
-                      _("Error computing address"));
-      layoutHome();
-      return;
-    }
     resp->signature.size = 65;
     msg_write(MessageType_MessageType_MessageSignature, resp);
   } else {
