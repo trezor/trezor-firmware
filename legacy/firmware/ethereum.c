@@ -905,16 +905,6 @@ static void ethereum_message_hash(const uint8_t *message, size_t message_len,
 
 void ethereum_message_sign(const EthereumSignMessage *msg, const HDNode *node,
                            EthereumMessageSignature *resp) {
-  uint8_t pubkeyhash[20] = {0};
-  if (!hdnode_get_ethereum_pubkeyhash(node, pubkeyhash)) {
-    return;
-  }
-
-  resp->address[0] = '0';
-  resp->address[1] = 'x';
-  ethereum_address_checksum(pubkeyhash, resp->address + 2, false, 0);
-  // ethereum_address_checksum adds trailing zero
-
   uint8_t hash[32] = {0};
   ethereum_message_hash(msg->message.bytes, msg->message.size, hash);
 
