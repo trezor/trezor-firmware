@@ -445,7 +445,7 @@ void layoutConfirmOmni(const uint8_t *data, uint32_t size) {
                     NULL);
 }
 
-static bool is_valid_ascii(const uint8_t *data, uint32_t size) {
+bool is_valid_ascii(const uint8_t *data, uint32_t size) {
   for (uint32_t i = 0; i < size; i++) {
     if (data[i] < ' ' || data[i] > '~') {
       return false;
@@ -600,36 +600,6 @@ void layoutConfirmNondefaultLockTime(uint32_t lock_time,
     layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL,
                       _("Locktime for this"), _("transaction is set to"),
                       str_type, str_locktime, _("Continue?"), NULL);
-  }
-}
-
-void layoutSignMessage(const uint8_t *msg, uint32_t len) {
-  const char **str = NULL;
-  if (!is_valid_ascii(msg, len)) {
-    str = split_message_hex(msg, len);
-    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"),
-                      _("Sign binary message?"), str[0], str[1], str[2], str[3],
-                      NULL, NULL);
-  } else {
-    str = split_message(msg, len, 20);
-    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"),
-                      _("Sign message?"), str[0], str[1], str[2], str[3], NULL,
-                      NULL);
-  }
-}
-
-void layoutVerifyMessage(const uint8_t *msg, uint32_t len) {
-  const char **str = NULL;
-  if (!is_valid_ascii(msg, len)) {
-    str = split_message_hex(msg, len);
-    layoutDialogSwipe(&bmp_icon_info, _("Cancel"), _("Confirm"),
-                      _("Verified binary message"), str[0], str[1], str[2],
-                      str[3], NULL, NULL);
-  } else {
-    str = split_message(msg, len, 20);
-    layoutDialogSwipe(&bmp_icon_info, _("Cancel"), _("Confirm"),
-                      _("Verified message"), str[0], str[1], str[2], str[3],
-                      NULL, NULL);
   }
 }
 

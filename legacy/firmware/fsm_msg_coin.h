@@ -286,8 +286,7 @@ void fsm_msgSignMessage(const SignMessage *msg) {
     return;
   }
 
-  layoutSignMessage(msg->message.bytes, msg->message.size);
-  if (!protectButton(ButtonRequestType_ButtonRequest_ProtectCall, false)) {
+  if (!fsm_layoutSignMessage(msg->message.bytes, msg->message.size)) {
     fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
     layoutHome();
     return;
@@ -319,12 +318,13 @@ void fsm_msgVerifyMessage(const VerifyMessage *msg) {
       layoutHome();
       return;
     }
-    layoutVerifyMessage(msg->message.bytes, msg->message.size);
-    if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
+
+    if (!fsm_layoutVerifyMessage(msg->message.bytes, msg->message.size)) {
       fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
       layoutHome();
       return;
     }
+
     fsm_sendSuccess(_("Message verified"));
   } else {
     fsm_sendFailure(FailureType_Failure_DataError, _("Invalid signature"));
