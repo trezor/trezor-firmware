@@ -326,12 +326,12 @@ def test_signmessage_pagination(client, message):
             n=parse_path("m/44h/0h/0h/0/0"),
             message=message,
         )
-    assert message.replace("\n", " ") == message_read
+    assert "Confirm message:   " + message.replace("\n", " ") == message_read
 
 
 @pytest.mark.skip_t1
 def test_signmessage_pagination_trailing_newline(client):
-    message = "THIS\nMUST\nNOT\nBE\nPAGINATED\n"
+    message = "THIS\nMUST NOT\nBE\nPAGINATED\n"
     # The trailing newline must not cause a new paginated screen to appear.
     # The UI must be a single dialog without pagination.
     with client:
