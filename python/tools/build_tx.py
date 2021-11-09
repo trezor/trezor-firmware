@@ -29,11 +29,12 @@ from trezorlib.protobuf import to_dict
 SESSION = requests.Session()
 SESSION.headers.update({"User-Agent": "trezorlib"})
 
+# the following script type mapping is only valid for single-sig Trezor-generated utxos
 BITCOIN_CORE_INPUT_TYPES = {
-    "scripthash": messages.InputScriptType.SPENDADDRESS,
-    "pubkeyhash": messages.InputScriptType.SPENDP2SHWITNESS,
+    "pubkeyhash": messages.InputScriptType.SPENDADDRESS,
+    "scripthash": messages.InputScriptType.SPENDP2SHWITNESS,
     "witness_v0_keyhash": messages.InputScriptType.SPENDWITNESS,
-    "witness_v1_taproot": messages.InputScriptType.SPENDP2SHWITNESS,
+    "witness_v1_taproot": messages.InputScriptType.SPENDTAPROOT,
 }
 
 
