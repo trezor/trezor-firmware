@@ -27,6 +27,13 @@ HEIGHT = Display.HEIGHT
 VIEWX = const(6)
 VIEWY = const(9)
 
+# layout results
+CONFIRMED = object()
+CANCELLED = object()
+INFO = object()
+GO_BACK = object()
+SHOW_PAGINATED = object()
+
 # channel used to cancel layouts, see `Cancelled` exception
 layout_chan = loop.chan()
 
@@ -443,6 +450,11 @@ def wait_until_layout_is_running() -> Awaitable[None]:  # type: ignore
 if utils.MODEL == "1":
 
     class RustLayout(Layout):
+        lookup = {
+            1: CANCELLED,
+            2: CONFIRMED,
+        }
+
         def __init__(self, layout: Any):
             super().__init__()
             self.layout = layout
@@ -461,4 +473,15 @@ if utils.MODEL == "1":
             # elif event in (io.TOUCH_START, io.TOUCH_MOVE, io.TOUCH_END):
             #    self.layout.touch_event(event, x, y)
             if msg is not None:
-                raise Result(msg)
+                raise Result(self.lookup.get(msg, msg))
+
+        if __debug__:
+
+            def read_content(self) -> list[str]:
+                # return self.content.read_content()
+                return ["RustLayout", "TODO"]
+
+            def create_tasks(self) -> tuple[loop.Task, ...]:
+                from apps.debug import confirm_signal
+
+                return super().create_tasks() + (confirm_signal(),)

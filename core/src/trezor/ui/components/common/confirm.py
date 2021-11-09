@@ -1,15 +1,10 @@
 from trezor import loop, ui, wire
+from trezor.ui import CANCELLED, CONFIRMED, GO_BACK, INFO, SHOW_PAGINATED  # noqa: F401
 
 if False:
     from typing import Callable, Any, Awaitable, TypeVar
 
     T = TypeVar("T")
-
-CONFIRMED = object()
-CANCELLED = object()
-INFO = object()
-GO_BACK = object()
-SHOW_PAGINATED = object()
 
 
 def is_confirmed(x: Any) -> bool:
