@@ -307,7 +307,7 @@ static bool fsm_layoutAddress(const char *address, const char *desc,
 static bool fsm_layoutPaginated(const char *description, const uint8_t *msg,
                                 uint32_t len, bool is_ascii) {
   const char **str = NULL;
-  const uint32_t row_len = is_ascii ? 13 : 8;
+  const uint32_t row_len = is_ascii ? 18 : 8;
   do {
     const uint32_t show_len = MIN(len, row_len * 4);
     if (is_ascii) {
@@ -320,8 +320,8 @@ static bool fsm_layoutPaginated(const char *description, const uint8_t *msg,
     len -= show_len;
 
     const char *label = len > 0 ? _("Next") : _("Confirm");
-    layoutDialogSwipe(&bmp_icon_question, _("Cancel"), label, description,
-                      str[0], str[1], str[2], str[3], NULL, NULL);
+    layoutDialogSwipeEx(&bmp_icon_question, _("Cancel"), label, description,
+                        str[0], str[1], str[2], str[3], NULL, NULL, FONT_FIXED);
 
     if (!protectButton(ButtonRequestType_ButtonRequest_Other, false)) {
       return false;

@@ -230,10 +230,19 @@ void layoutDialogSwipe(const BITMAP *icon, const char *btnNo,
                        const char *btnYes, const char *desc, const char *line1,
                        const char *line2, const char *line3, const char *line4,
                        const char *line5, const char *line6) {
+  layoutDialogSwipeEx(icon, btnNo, btnYes, desc, line1, line2, line3, line4,
+                      line5, line6, FONT_STANDARD);
+}
+
+void layoutDialogSwipeEx(const BITMAP *icon, const char *btnNo,
+                         const char *btnYes, const char *desc,
+                         const char *line1, const char *line2,
+                         const char *line3, const char *line4,
+                         const char *line5, const char *line6, uint8_t font) {
   layoutLast = layoutDialogSwipe;
   layoutSwipe();
-  layoutDialog(icon, btnNo, btnYes, desc, line1, line2, line3, line4, line5,
-               line6);
+  layoutDialogEx(icon, btnNo, btnYes, desc, line1, line2, line3, line4, line5,
+                 line6, font);
 }
 
 void layoutProgressSwipe(const char *desc, int permil) {
