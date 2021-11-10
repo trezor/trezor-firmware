@@ -23,189 +23,193 @@ from ...common import MNEMONIC12
 PIN4 = "1234"
 PIN6 = "789456"
 
+pytestmark = [pytest.mark.skip_t2]
 
-@pytest.mark.skip_t2
-class TestMsgRecoverydevice:
-    @pytest.mark.setup_client(uninitialized=True)
-    def test_pin_passphrase(self, client):
-        mnemonic = MNEMONIC12.split(" ")
-        ret = client.call_raw(
-            proto.RecoveryDevice(
-                word_count=12,
-                passphrase_protection=True,
-                pin_protection=True,
-                label="label",
-                language="en-US",
-                enforce_wordlist=True,
-            )
+
+@pytest.mark.setup_client(uninitialized=True)
+def test_pin_passphrase(client):
+    mnemonic = MNEMONIC12.split(" ")
+    ret = client.call_raw(
+        proto.RecoveryDevice(
+            word_count=12,
+            passphrase_protection=True,
+            pin_protection=True,
+            label="label",
+            language="en-US",
+            enforce_wordlist=True,
         )
+    )
 
-        # click through confirmation
-        assert isinstance(ret, proto.ButtonRequest)
-        client.debug.press_yes()
-        ret = client.call_raw(proto.ButtonAck())
+    # click through confirmation
+    assert isinstance(ret, proto.ButtonRequest)
+    client.debug.press_yes()
+    ret = client.call_raw(proto.ButtonAck())
 
-        assert isinstance(ret, proto.PinMatrixRequest)
+    assert isinstance(ret, proto.PinMatrixRequest)
 
-        # Enter PIN for first time
-        pin_encoded = client.debug.encode_pin(PIN6)
-        ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
-        assert isinstance(ret, proto.PinMatrixRequest)
+    # Enter PIN for first time
+    pin_encoded = client.debug.encode_pin(PIN6)
+    ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
+    assert isinstance(ret, proto.PinMatrixRequest)
 
-        # Enter PIN for second time
-        pin_encoded = client.debug.encode_pin(PIN6)
-        ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
+    # Enter PIN for second time
+    pin_encoded = client.debug.encode_pin(PIN6)
+    ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
 
-        fakes = 0
-        for _ in range(int(12 * 2)):
-            assert isinstance(ret, proto.WordRequest)
-            (word, pos) = client.debug.read_recovery_word()
-
-            if pos != 0:
-                ret = client.call_raw(proto.WordAck(word=mnemonic[pos - 1]))
-                mnemonic[pos - 1] = None
-            else:
-                ret = client.call_raw(proto.WordAck(word=word))
-                fakes += 1
-
-        # Workflow succesfully ended
-        assert isinstance(ret, proto.Success)
-
-        # 12 expected fake words and all words of mnemonic are used
-        assert fakes == 12
-        assert mnemonic == [None] * 12
-
-        # Mnemonic is the same
-        client.init_device()
-        assert client.debug.state().mnemonic_secret == MNEMONIC12.encode()
-
-        assert client.features.pin_protection is True
-        assert client.features.passphrase_protection is True
-
-        # Do passphrase-protected action, PassphraseRequest should be raised
-        resp = client.call_raw(proto.GetAddress())
-        assert isinstance(resp, proto.PassphraseRequest)
-        client.call_raw(proto.Cancel())
-
-    @pytest.mark.setup_client(uninitialized=True)
-    def test_nopin_nopassphrase(self, client):
-        mnemonic = MNEMONIC12.split(" ")
-        ret = client.call_raw(
-            proto.RecoveryDevice(
-                word_count=12,
-                passphrase_protection=False,
-                pin_protection=False,
-                label="label",
-                language="en-US",
-                enforce_wordlist=True,
-            )
-        )
-
-        # click through confirmation
-        assert isinstance(ret, proto.ButtonRequest)
-        client.debug.press_yes()
-        ret = client.call_raw(proto.ButtonAck())
-
-        fakes = 0
-        for _ in range(int(12 * 2)):
-            assert isinstance(ret, proto.WordRequest)
-            (word, pos) = client.debug.read_recovery_word()
-
-            if pos != 0:
-                ret = client.call_raw(proto.WordAck(word=mnemonic[pos - 1]))
-                mnemonic[pos - 1] = None
-            else:
-                ret = client.call_raw(proto.WordAck(word=word))
-                fakes += 1
-
-        # Workflow succesfully ended
-        assert isinstance(ret, proto.Success)
-
-        # 12 expected fake words and all words of mnemonic are used
-        assert fakes == 12
-        assert mnemonic == [None] * 12
-
-        # Mnemonic is the same
-        client.init_device()
-        assert client.debug.state().mnemonic_secret == MNEMONIC12.encode()
-
-        assert client.features.pin_protection is False
-        assert client.features.passphrase_protection is False
-
-        # Do pin & passphrase-protected action, PassphraseRequest should NOT be raised
-        resp = client.call_raw(proto.GetAddress())
-        assert isinstance(resp, proto.Address)
-
-    @pytest.mark.setup_client(uninitialized=True)
-    def test_word_fail(self, client):
-        ret = client.call_raw(
-            proto.RecoveryDevice(
-                word_count=12,
-                passphrase_protection=False,
-                pin_protection=False,
-                label="label",
-                language="en-US",
-                enforce_wordlist=True,
-            )
-        )
-
-        # click through confirmation
-        assert isinstance(ret, proto.ButtonRequest)
-        client.debug.press_yes()
-        ret = client.call_raw(proto.ButtonAck())
-
+    fakes = 0
+    for _ in range(int(12 * 2)):
         assert isinstance(ret, proto.WordRequest)
-        for _ in range(int(12 * 2)):
-            (word, pos) = client.debug.read_recovery_word()
-            if pos != 0:
-                ret = client.call_raw(proto.WordAck(word="kwyjibo"))
-                assert isinstance(ret, proto.Failure)
-                break
-            else:
-                client.call_raw(proto.WordAck(word=word))
+        (word, pos) = client.debug.read_recovery_word()
 
-    @pytest.mark.setup_client(uninitialized=True)
-    def test_pin_fail(self, client):
-        ret = client.call_raw(
-            proto.RecoveryDevice(
-                word_count=12,
-                passphrase_protection=True,
-                pin_protection=True,
-                label="label",
-                language="en-US",
-                enforce_wordlist=True,
-            )
+        if pos != 0:
+            ret = client.call_raw(proto.WordAck(word=mnemonic[pos - 1]))
+            mnemonic[pos - 1] = None
+        else:
+            ret = client.call_raw(proto.WordAck(word=word))
+            fakes += 1
+
+    # Workflow succesfully ended
+    assert isinstance(ret, proto.Success)
+
+    # 12 expected fake words and all words of mnemonic are used
+    assert fakes == 12
+    assert mnemonic == [None] * 12
+
+    # Mnemonic is the same
+    client.init_device()
+    assert client.debug.state().mnemonic_secret == MNEMONIC12.encode()
+
+    assert client.features.pin_protection is True
+    assert client.features.passphrase_protection is True
+
+    # Do passphrase-protected action, PassphraseRequest should be raised
+    resp = client.call_raw(proto.GetAddress())
+    assert isinstance(resp, proto.PassphraseRequest)
+    client.call_raw(proto.Cancel())
+
+
+@pytest.mark.setup_client(uninitialized=True)
+def test_nopin_nopassphrase(client):
+    mnemonic = MNEMONIC12.split(" ")
+    ret = client.call_raw(
+        proto.RecoveryDevice(
+            word_count=12,
+            passphrase_protection=False,
+            pin_protection=False,
+            label="label",
+            language="en-US",
+            enforce_wordlist=True,
+        )
+    )
+
+    # click through confirmation
+    assert isinstance(ret, proto.ButtonRequest)
+    client.debug.press_yes()
+    ret = client.call_raw(proto.ButtonAck())
+
+    fakes = 0
+    for _ in range(int(12 * 2)):
+        assert isinstance(ret, proto.WordRequest)
+        (word, pos) = client.debug.read_recovery_word()
+
+        if pos != 0:
+            ret = client.call_raw(proto.WordAck(word=mnemonic[pos - 1]))
+            mnemonic[pos - 1] = None
+        else:
+            ret = client.call_raw(proto.WordAck(word=word))
+            fakes += 1
+
+    # Workflow succesfully ended
+    assert isinstance(ret, proto.Success)
+
+    # 12 expected fake words and all words of mnemonic are used
+    assert fakes == 12
+    assert mnemonic == [None] * 12
+
+    # Mnemonic is the same
+    client.init_device()
+    assert client.debug.state().mnemonic_secret == MNEMONIC12.encode()
+
+    assert client.features.pin_protection is False
+    assert client.features.passphrase_protection is False
+
+    # Do pin & passphrase-protected action, PassphraseRequest should NOT be raised
+    resp = client.call_raw(proto.GetAddress())
+    assert isinstance(resp, proto.Address)
+
+
+@pytest.mark.setup_client(uninitialized=True)
+def test_word_fail(client):
+    ret = client.call_raw(
+        proto.RecoveryDevice(
+            word_count=12,
+            passphrase_protection=False,
+            pin_protection=False,
+            label="label",
+            language="en-US",
+            enforce_wordlist=True,
+        )
+    )
+
+    # click through confirmation
+    assert isinstance(ret, proto.ButtonRequest)
+    client.debug.press_yes()
+    ret = client.call_raw(proto.ButtonAck())
+
+    assert isinstance(ret, proto.WordRequest)
+    for _ in range(int(12 * 2)):
+        (word, pos) = client.debug.read_recovery_word()
+        if pos != 0:
+            ret = client.call_raw(proto.WordAck(word="kwyjibo"))
+            assert isinstance(ret, proto.Failure)
+            break
+        else:
+            client.call_raw(proto.WordAck(word=word))
+
+
+@pytest.mark.setup_client(uninitialized=True)
+def test_pin_fail(client):
+    ret = client.call_raw(
+        proto.RecoveryDevice(
+            word_count=12,
+            passphrase_protection=True,
+            pin_protection=True,
+            label="label",
+            language="en-US",
+            enforce_wordlist=True,
+        )
+    )
+
+    # click through confirmation
+    assert isinstance(ret, proto.ButtonRequest)
+    client.debug.press_yes()
+    ret = client.call_raw(proto.ButtonAck())
+
+    assert isinstance(ret, proto.PinMatrixRequest)
+
+    # Enter PIN for first time
+    pin_encoded = client.debug.encode_pin(PIN4)
+    ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
+    assert isinstance(ret, proto.PinMatrixRequest)
+
+    # Enter PIN for second time, but different one
+    pin_encoded = client.debug.encode_pin(PIN6)
+    ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
+
+    # Failure should be raised
+    assert isinstance(ret, proto.Failure)
+
+
+def test_already_initialized(client):
+    with pytest.raises(RuntimeError):
+        device.recover(
+            client, 12, False, False, "label", "en-US", client.mnemonic_callback
         )
 
-        # click through confirmation
-        assert isinstance(ret, proto.ButtonRequest)
-        client.debug.press_yes()
-        ret = client.call_raw(proto.ButtonAck())
-
-        assert isinstance(ret, proto.PinMatrixRequest)
-
-        # Enter PIN for first time
-        pin_encoded = client.debug.encode_pin(PIN4)
-        ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
-        assert isinstance(ret, proto.PinMatrixRequest)
-
-        # Enter PIN for second time, but different one
-        pin_encoded = client.debug.encode_pin(PIN6)
-        ret = client.call_raw(proto.PinMatrixAck(pin=pin_encoded))
-
-        # Failure should be raised
-        assert isinstance(ret, proto.Failure)
-
-    def test_already_initialized(self, client):
-        with pytest.raises(RuntimeError):
-            device.recover(
-                client, 12, False, False, "label", "en-US", client.mnemonic_callback
-            )
-
-        ret = client.call_raw(
-            proto.RecoveryDevice(
-                word_count=12, type=proto.RecoveryDeviceType.ScrambledWords
-            )
+    ret = client.call_raw(
+        proto.RecoveryDevice(
+            word_count=12, type=proto.RecoveryDeviceType.ScrambledWords
         )
-        assert isinstance(ret, proto.Failure)
-        assert "Device is already initialized" in ret.message
+    )
+    assert isinstance(ret, proto.Failure)
+    assert "Device is already initialized" in ret.message

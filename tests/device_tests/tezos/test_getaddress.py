@@ -23,12 +23,11 @@ from trezorlib.tools import parse_path
 @pytest.mark.altcoin
 @pytest.mark.tezos
 @pytest.mark.skip_t1
-class TestMsgTezosGetAddress:
-    def test_tezos_get_address(self, client):
-        path = parse_path("m/44'/1729'/0'")
-        address = get_address(client, path, show_display=True)
-        assert address == "tz1Kef7BSg6fo75jk37WkKRYSnJDs69KVqt9"
+def test_tezos_get_address(client):
+    path = parse_path("m/44'/1729'/0'")
+    address = get_address(client, path, show_display=True)
+    assert address == "tz1Kef7BSg6fo75jk37WkKRYSnJDs69KVqt9"
 
-        path = parse_path("m/44'/1729'/1'")
-        address = get_address(client, path, show_display=True)
-        assert address == "tz1ekQapZCX4AXxTJhJZhroDKDYLHDHegvm1"
+    path = parse_path("m/44'/1729'/1'")
+    address = get_address(client, path, show_display=True)
+    assert address == "tz1ekQapZCX4AXxTJhJZhroDKDYLHDHegvm1"

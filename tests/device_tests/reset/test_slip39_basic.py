@@ -31,6 +31,8 @@ from ...common import (
     read_and_confirm_mnemonic,
 )
 
+pytestmark = [pytest.mark.skip_t1]
+
 
 def reset_device(client, strength):
     member_threshold = 3
@@ -122,15 +124,14 @@ def reset_device(client, strength):
         device.backup(client)
 
 
-@pytest.mark.skip_t1
-class TestMsgResetDeviceT2:
-    @pytest.mark.setup_client(uninitialized=True)
-    def test_reset_device_slip39_basic(self, client):
-        reset_device(client, 128)
+@pytest.mark.setup_client(uninitialized=True)
+def test_reset_device_slip39_basic(client):
+    reset_device(client, 128)
 
-    @pytest.mark.setup_client(uninitialized=True)
-    def test_reset_device_slip39_basic_256(self, client):
-        reset_device(client, 256)
+
+@pytest.mark.setup_client(uninitialized=True)
+def test_reset_device_slip39_basic_256(client):
+    reset_device(client, 256)
 
 
 def validate_mnemonics(mnemonics, threshold, expected_ems):

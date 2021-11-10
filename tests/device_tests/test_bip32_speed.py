@@ -21,48 +21,50 @@ import pytest
 from trezorlib import btc
 from trezorlib.tools import H_
 
+pytestmark = [
+    pytest.mark.skip_t2,
+    pytest.mark.flaky(max_runs=5),
+]
 
-@pytest.mark.flaky(max_runs=5)
-class TestBip32Speed:
-    @pytest.mark.skip_t2
-    def test_public_ckd(self, client):
-        btc.get_address(client, "Bitcoin", [])  # to compute root node via BIP39
 
-        for depth in range(8):
-            start = time.time()
-            btc.get_address(client, "Bitcoin", range(depth))
-            delay = time.time() - start
-            expected = (depth + 1) * 0.26
-            print("DEPTH", depth, "EXPECTED DELAY", expected, "REAL DELAY", delay)
-            assert delay <= expected
+def test_public_ckd(client):
+    btc.get_address(client, "Bitcoin", [])  # to compute root node via BIP39
 
-    @pytest.mark.skip_t2
-    def test_private_ckd(self, client):
-        btc.get_address(client, "Bitcoin", [])  # to compute root node via BIP39
-
-        for depth in range(8):
-            start = time.time()
-            address_n = [H_(-i) for i in range(-depth, 0)]
-            btc.get_address(client, "Bitcoin", address_n)
-            delay = time.time() - start
-            expected = (depth + 1) * 0.26
-            print("DEPTH", depth, "EXPECTED DELAY", expected, "REAL DELAY", delay)
-            assert delay <= expected
-
-    @pytest.mark.skip_t2
-    def test_cache(self, client):
+    for depth in range(8):
         start = time.time()
-        for x in range(10):
-            btc.get_address(client, "Bitcoin", [x, 2, 3, 4, 5, 6, 7, 8])
-        nocache_time = time.time() - start
+        btc.get_address(client, "Bitcoin", range(depth))
+        delay = time.time() - start
+        expected = (depth + 1) * 0.26
+        print("DEPTH", depth, "EXPECTED DELAY", expected, "REAL DELAY", delay)
+        assert delay <= expected
 
+
+def test_private_ckd(client):
+    btc.get_address(client, "Bitcoin", [])  # to compute root node via BIP39
+
+    for depth in range(8):
         start = time.time()
-        for x in range(10):
-            btc.get_address(client, "Bitcoin", [1, 2, 3, 4, 5, 6, 7, x])
-        cache_time = time.time() - start
+        address_n = [H_(-i) for i in range(-depth, 0)]
+        btc.get_address(client, "Bitcoin", address_n)
+        delay = time.time() - start
+        expected = (depth + 1) * 0.26
+        print("DEPTH", depth, "EXPECTED DELAY", expected, "REAL DELAY", delay)
+        assert delay <= expected
 
-        print("NOCACHE TIME", nocache_time)
-        print("CACHED TIME", cache_time)
 
-        # Cached time expected to be at least 2x faster
-        assert cache_time <= nocache_time / 2.0
+def test_cache(client):
+    start = time.time()
+    for x in range(10):
+        btc.get_address(client, "Bitcoin", [x, 2, 3, 4, 5, 6, 7, 8])
+    nocache_time = time.time() - start
+
+    start = time.time()
+    for x in range(10):
+        btc.get_address(client, "Bitcoin", [1, 2, 3, 4, 5, 6, 7, x])
+    cache_time = time.time() - start
+
+    print("NOCACHE TIME", nocache_time)
+    print("CACHED TIME", cache_time)
+
+    # Cached time expected to be at least 2x faster
+    assert cache_time <= nocache_time / 2.0

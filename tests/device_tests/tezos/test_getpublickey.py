@@ -23,12 +23,11 @@ from trezorlib.tools import parse_path
 @pytest.mark.altcoin
 @pytest.mark.tezos
 @pytest.mark.skip_t1
-class TestMsgTezosGetPublicKey:
-    def test_tezos_get_public_key(self, client):
-        path = parse_path("m/44'/1729'/0'")
-        pk = get_public_key(client, path)
-        assert pk == "edpkttLhEbVfMC3DhyVVFzdwh8ncRnEWiLD1x8TAuPU7vSJak7RtBX"
+def test_tezos_get_public_key(client):
+    path = parse_path("m/44'/1729'/0'")
+    pk = get_public_key(client, path)
+    assert pk == "edpkttLhEbVfMC3DhyVVFzdwh8ncRnEWiLD1x8TAuPU7vSJak7RtBX"
 
-        path = parse_path("m/44'/1729'/1'")
-        pk = get_public_key(client, path)
-        assert pk == "edpkuTPqWjcApwyD3VdJhviKM5C13zGk8c4m87crgFarQboF3Mp56f"
+    path = parse_path("m/44'/1729'/1'")
+    pk = get_public_key(client, path)
+    assert pk == "edpkuTPqWjcApwyD3VdJhviKM5C13zGk8c4m87crgFarQboF3Mp56f"
