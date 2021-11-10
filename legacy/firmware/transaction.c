@@ -273,6 +273,9 @@ int compile_output(const CoinInfo *coin, AmountUnit amount_unit,
       case OutputScriptType_PAYTOP2SHWITNESS:
         input_script_type = InputScriptType_SPENDP2SHWITNESS;
         break;
+      case OutputScriptType_PAYTOTAPROOT:
+        input_script_type = InputScriptType_SPENDTAPROOT;
+        break;
       default:
         return 0;  // failed to compile output
     }
