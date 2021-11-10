@@ -112,11 +112,18 @@ typedef struct {
   uint32_t branch_id;
 #endif
   Hasher hasher_prevouts;
-  Hasher hasher_sequence;
+  Hasher hasher_amounts;
+  Hasher hasher_scriptpubkeys;
+  Hasher hasher_sequences;
   Hasher hasher_outputs;
   uint8_t hash_prevouts[32];
-  uint8_t hash_sequence[32];
+  uint8_t hash_amounts[32];
   uint8_t hash_outputs[32];
+  uint8_t hash_scriptpubkeys[32];
+  uint8_t hash_sequences[32];
+  uint8_t hash_prevouts143[32];
+  uint8_t hash_outputs143[32];
+  uint8_t hash_sequence143[32];
 } TxInfo;
 
 static TxInfo info;
@@ -190,13 +197,13 @@ Phase1 - process inputs
 
 foreach I (idx1):
     Request I                                                 STAGE_REQUEST_1_INPUT
-    Add I to segwit hash_prevouts, hash_sequence
+    Add I to segwit hash_prevouts, hash_sequences
     Add I to Decred decred_hash_prefix
     Add I to TransactionChecksum (prevout and type)
     if (I has orig_hash)
         Request input I2 orig_hash, orig_index                STAGE_REQUEST_1_ORIG_INPUT
         Check I matches I2
-        Add I2 to orig_hash_prevouts, orig_hash_sequence
+        Add I2 to orig_hash_prevouts, orig_hash_sequences
     if (Decred)
         Return I
 
@@ -817,17 +824,19 @@ static bool tx_info_init(TxInfo *tx_info, uint32_t inputs_count,
     // ZIP-243
     hasher_InitParam(&tx_info->hasher_prevouts, HASHER_BLAKE2B_PERSONAL,
                      "ZcashPrevoutHash", 16);
-    hasher_InitParam(&tx_info->hasher_sequence, HASHER_BLAKE2B_PERSONAL,
+    hasher_InitParam(&tx_info->hasher_sequences, HASHER_BLAKE2B_PERSONAL,
                      "ZcashSequencHash", 16);
     hasher_InitParam(&tx_info->hasher_outputs, HASHER_BLAKE2B_PERSONAL,
                      "ZcashOutputsHash", 16);
   } else
 #endif
   {
-    // BIP-143
-    hasher_Init(&tx_info->hasher_prevouts, coin->curve->hasher_sign);
-    hasher_Init(&tx_info->hasher_sequence, coin->curve->hasher_sign);
-    hasher_Init(&tx_info->hasher_outputs, coin->curve->hasher_sign);
+    // BIP-143/BIP-341
+    hasher_Init(&tx_info->hasher_prevouts, HASHER_SHA2);
+    hasher_Init(&tx_info->hasher_amounts, HASHER_SHA2);
+    hasher_Init(&tx_info->hasher_scriptpubkeys, HASHER_SHA2);
+    hasher_Init(&tx_info->hasher_sequences, HASHER_SHA2);
+    hasher_Init(&tx_info->hasher_outputs, HASHER_SHA2);
   }
 
   return true;
@@ -898,7 +907,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   }
 #endif
 
-  hasher_Init(&hasher_check, coin->curve->hasher_sign);
+  hasher_Init(&hasher_check, HASHER_SHA2);
 
   layoutProgressSwipe(_("Signing transaction"), 0);
 
@@ -1120,9 +1129,12 @@ static bool tx_info_add_input(TxInfo *tx_info, const TxInputType *txinput) {
     tx_info->min_sequence = txinput->sequence;
   }
 
-  // Add input to BIP-143 hashPrevouts and hashSequence.
+  // Add input to BIP-143 and BIP-341 running hashes.
   tx_prevout_hash(&tx_info->hasher_prevouts, txinput);
-  tx_sequence_hash(&tx_info->hasher_sequence, txinput);
+  tx_amount_hash(&tx_info->hasher_amounts, txinput);
+  tx_script_hash(&tx_info->hasher_scriptpubkeys, txinput->script_pubkey.size,
+                 txinput->script_pubkey.bytes);
+  tx_sequence_hash(&tx_info->hasher_sequences, txinput);
 
   return true;
 }
@@ -1136,8 +1148,26 @@ static bool tx_info_add_output(TxInfo *tx_info,
 
 static void tx_info_finish(TxInfo *tx_info) {
   hasher_Final(&tx_info->hasher_prevouts, tx_info->hash_prevouts);
-  hasher_Final(&tx_info->hasher_sequence, tx_info->hash_sequence);
+  hasher_Final(&tx_info->hasher_amounts, tx_info->hash_amounts);
+  hasher_Final(&tx_info->hasher_scriptpubkeys, tx_info->hash_scriptpubkeys);
+  hasher_Final(&tx_info->hasher_sequences, tx_info->hash_sequences);
   hasher_Final(&tx_info->hasher_outputs, tx_info->hash_outputs);
+
+  if (coin->curve->hasher_sign == HASHER_SHA2D) {
+    hasher_Raw(HASHER_SHA2, tx_info->hash_prevouts,
+               sizeof(tx_info->hash_prevouts), tx_info->hash_prevouts143);
+    hasher_Raw(HASHER_SHA2, tx_info->hash_sequences,
+               sizeof(tx_info->hash_sequences), tx_info->hash_sequence143);
+    hasher_Raw(HASHER_SHA2, tx_info->hash_outputs,
+               sizeof(tx_info->hash_outputs), tx_info->hash_outputs143);
+  } else {
+    memcpy(tx_info->hash_prevouts143, tx_info->hash_prevouts,
+           sizeof(tx_info->hash_prevouts));
+    memcpy(tx_info->hash_sequence143, tx_info->hash_sequences,
+           sizeof(tx_info->hash_sequences));
+    memcpy(tx_info->hash_outputs143, tx_info->hash_outputs,
+           sizeof(tx_info->hash_outputs));
+  }
 }
 
 static bool signing_check_input(const TxInputType *txinput) {
@@ -1650,9 +1680,9 @@ static void signing_hash_bip143(const TxInfo *tx_info,
   // nVersion
   hasher_Update(&hasher_preimage, (const uint8_t *)&tx_info->version, 4);
   // hashPrevouts
-  hasher_Update(&hasher_preimage, tx_info->hash_prevouts, 32);
+  hasher_Update(&hasher_preimage, tx_info->hash_prevouts143, 32);
   // hashSequence
-  hasher_Update(&hasher_preimage, tx_info->hash_sequence, 32);
+  hasher_Update(&hasher_preimage, tx_info->hash_sequence143, 32);
   // outpoint
   tx_prevout_hash(&hasher_preimage, txinput);
   // scriptCode
@@ -1663,13 +1693,44 @@ static void signing_hash_bip143(const TxInfo *tx_info,
   // nSequence
   tx_sequence_hash(&hasher_preimage, txinput);
   // hashOutputs
-  hasher_Update(&hasher_preimage, tx_info->hash_outputs, 32);
+  hasher_Update(&hasher_preimage, tx_info->hash_outputs143, 32);
   // nLockTime
   hasher_Update(&hasher_preimage, (const uint8_t *)&tx_info->lock_time, 4);
   // nHashType
   hasher_Update(&hasher_preimage, (const uint8_t *)&hash_type, 4);
 
   hasher_Final(&hasher_preimage, hash);
+}
+
+static void signing_hash_bip341(const TxInfo *tx_info, uint32_t i,
+                                uint8_t sighash_type, uint8_t *hash) {
+  const uint8_t zero = 0;
+  Hasher sigmsg_hasher = {0};
+  hasher_Init(&sigmsg_hasher, HASHER_SHA2_TAPSIGHASH);
+  // sighash epoch 0
+  hasher_Update(&sigmsg_hasher, &zero, 1);
+  // nHashType
+  hasher_Update(&sigmsg_hasher, &sighash_type, 1);
+  // nVersion
+  hasher_Update(&sigmsg_hasher, (const uint8_t *)&tx_info->version, 4);
+  // nLockTime
+  hasher_Update(&sigmsg_hasher, (const uint8_t *)&tx_info->lock_time, 4);
+  // sha_prevouts
+  hasher_Update(&sigmsg_hasher, tx_info->hash_prevouts, 32);
+  // sha_amounts
+  hasher_Update(&sigmsg_hasher, tx_info->hash_amounts, 32);
+  // sha_scriptpubkeys
+  hasher_Update(&sigmsg_hasher, tx_info->hash_scriptpubkeys, 32);
+  // sha_sequences
+  hasher_Update(&sigmsg_hasher, tx_info->hash_sequences, 32);
+  // sha_outputs
+  hasher_Update(&sigmsg_hasher, tx_info->hash_outputs, 32);
+  // spend_type 0 (no tapscript message extension, no annex)
+  hasher_Update(&sigmsg_hasher, &zero, 1);
+  // input_index
+  hasher_Update(&sigmsg_hasher, (const uint8_t *)&i, 4);
+
+  hasher_Final(&sigmsg_hasher, hash);
 }
 
 #if !BITCOIN_ONLY
@@ -1692,7 +1753,7 @@ static void signing_hash_zip243(const TxInfo *tx_info,
   // 3. hashPrevouts
   hasher_Update(&hasher_preimage, tx_info->hash_prevouts, 32);
   // 4. hashSequence
-  hasher_Update(&hasher_preimage, tx_info->hash_sequence, 32);
+  hasher_Update(&hasher_preimage, tx_info->hash_sequences, 32);
   // 5. hashOutputs
   hasher_Update(&hasher_preimage, tx_info->hash_outputs, 32);
   // 6. hashJoinSplits

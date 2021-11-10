@@ -78,6 +78,7 @@ int compile_output(const CoinInfo *coin, AmountUnit amount_unit,
 
 void tx_input_check_hash(Hasher *hasher, const TxInputType *input);
 uint32_t tx_prevout_hash(Hasher *hasher, const TxInputType *input);
+uint32_t tx_amount_hash(Hasher *hasher, const TxInputType *input);
 uint32_t tx_script_hash(Hasher *hasher, uint32_t size, const uint8_t *data);
 uint32_t tx_sequence_hash(Hasher *hasher, const TxInputType *input);
 uint32_t tx_output_hash(Hasher *hasher, const TxOutputBinType *output,
