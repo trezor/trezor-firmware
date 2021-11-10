@@ -49,13 +49,17 @@
 /* size of a pubkey */
 #define TXSIZE_PUBKEY 33
 /* size of a DER signature (3 type bytes, 3 len bytes, 33 R, 32 S, 1 sighash */
-#define TXSIZE_SIGNATURE 72
+#define TXSIZE_DER_SIGNATURE 72
+/* size of a Schnorr signature (32 R, 32 S, no sighash) */
+#define TXSIZE_SCHNORR_SIGNATURE 64
 /* size of a multiscript without pubkey (1 M, 1 N, 1 checksig) */
 #define TXSIZE_MULTISIGSCRIPT 3
 /* size of a p2wpkh script (1 version, 1 push, 20 hash) */
 #define TXSIZE_WITNESSPKHASH 22
 /* size of a p2wsh script (1 version, 1 push, 32 hash) */
 #define TXSIZE_WITNESSSCRIPT 34
+/* size of a p2tr script (1 version, 1 push, 32 hash) */
+#define TXSIZE_TAPROOT 34
 /* size of a p2pkh script (dup, hash, push, 20 pubkeyhash, equal, checksig) */
 #define TXSIZE_P2PKHASH 25
 /* size of a p2sh script (hash, push, 20 scripthash, equal) */
@@ -920,11 +924,13 @@ static uint32_t tx_input_script_size(const TxInputType *txinput) {
         TXSIZE_MULTISIGSCRIPT +
         cryptoMultisigPubkeyCount(&(txinput->multisig)) * (1 + TXSIZE_PUBKEY);
     input_script_size = 1  // the OP_FALSE bug in multisig
-                        + txinput->multisig.m * (1 + TXSIZE_SIGNATURE) +
+                        + txinput->multisig.m * (1 + TXSIZE_DER_SIGNATURE) +
                         op_push_size(multisig_script_size) +
                         multisig_script_size;
+  } else if (txinput->script_type == InputScriptType_SPENDTAPROOT) {
+    input_script_size = 1 + TXSIZE_SCHNORR_SIGNATURE;
   } else {
-    input_script_size = (1 + TXSIZE_SIGNATURE + 1 + TXSIZE_PUBKEY);
+    input_script_size = (1 + TXSIZE_DER_SIGNATURE + 1 + TXSIZE_PUBKEY);
   }
 
   return input_script_size;
@@ -946,6 +952,7 @@ uint32_t tx_input_weight(const CoinInfo *coin, const TxInputType *txinput) {
     input_script_size += ser_length_size(input_script_size);
     weight += 4 * input_script_size;
   } else if (txinput->script_type == InputScriptType_SPENDWITNESS ||
+             txinput->script_type == InputScriptType_SPENDTAPROOT ||
              txinput->script_type == InputScriptType_SPENDP2SHWITNESS) {
     if (txinput->script_type == InputScriptType_SPENDP2SHWITNESS) {
       weight += 4 * (2 + (txinput->has_multisig ? TXSIZE_WITNESSSCRIPT
@@ -967,6 +974,8 @@ uint32_t tx_output_weight(const CoinInfo *coin, const TxOutputType *txoutput) {
     if (txoutput->script_type == OutputScriptType_PAYTOWITNESS) {
       output_script_size =
           txoutput->has_multisig ? TXSIZE_WITNESSSCRIPT : TXSIZE_WITNESSPKHASH;
+    } else if (txoutput->script_type == OutputScriptType_PAYTOTAPROOT) {
+      output_script_size = TXSIZE_TAPROOT;
     } else if (txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS) {
       output_script_size = TXSIZE_P2SCRIPT;
     } else {
