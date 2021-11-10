@@ -18,7 +18,7 @@ import pytest
 
 from trezorlib import device, exceptions, messages
 
-from ..common import MNEMONIC12
+from ...common import MNEMONIC12
 
 pytestmark = pytest.mark.skip_t1
 

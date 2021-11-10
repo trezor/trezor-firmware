@@ -24,7 +24,7 @@ from trezorlib import device, messages as proto
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import BackupType, ButtonRequestType as B
 
-from ..common import (
+from ...common import (
     EXTERNAL_ENTROPY,
     click_through,
     generate_entropy,

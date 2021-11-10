@@ -23,7 +23,7 @@ from trezorlib import device, messages as proto
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import ButtonRequestType as B
 
-from ..common import (
+from ...common import (
     MNEMONIC12,
     click_through,
     generate_entropy,
