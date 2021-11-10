@@ -25,24 +25,27 @@ CUSTOM_MNEMONIC = (
     "whip snack decide blur unfold fiction pumpkin athlete"
 )
 
+pytestmark = [
+    pytest.mark.altcoin,
+    pytest.mark.ripple,
+    pytest.mark.skip_t1,  # T1 support is not planned
+]
 
-@pytest.mark.altcoin
-@pytest.mark.ripple
-@pytest.mark.skip_t1  # T1 support is not planned
-class TestMsgRippleGetAddress:
-    def test_ripple_get_address(self, client):
-        # data from https://iancoleman.io/bip39/
-        address = get_address(client, parse_path("m/44'/144'/0'/0/0"))
-        assert address == "rNaqKtKrMSwpwZSzRckPf7S96DkimjkF4H"
-        address = get_address(client, parse_path("m/44'/144'/0'/0/1"))
-        assert address == "rBKz5MC2iXdoS3XgnNSYmF69K1Yo4NS3Ws"
-        address = get_address(client, parse_path("m/44'/144'/1'/0/0"))
-        assert address == "rJX2KwzaLJDyFhhtXKi3htaLfaUH2tptEX"
 
-    @pytest.mark.setup_client(mnemonic=CUSTOM_MNEMONIC)
-    def test_ripple_get_address_other(self, client):
-        # data from https://github.com/you21979/node-ripple-bip32/blob/master/test/test.js
-        address = get_address(client, parse_path("m/44'/144'/0'/0/0"))
-        assert address == "r4ocGE47gm4G4LkA9mriVHQqzpMLBTgnTY"
-        address = get_address(client, parse_path("m/44'/144'/0'/0/1"))
-        assert address == "rUt9ULSrUvfCmke8HTFU1szbmFpWzVbBXW"
+def test_ripple_get_address(client):
+    # data from https://iancoleman.io/bip39/
+    address = get_address(client, parse_path("m/44'/144'/0'/0/0"))
+    assert address == "rNaqKtKrMSwpwZSzRckPf7S96DkimjkF4H"
+    address = get_address(client, parse_path("m/44'/144'/0'/0/1"))
+    assert address == "rBKz5MC2iXdoS3XgnNSYmF69K1Yo4NS3Ws"
+    address = get_address(client, parse_path("m/44'/144'/1'/0/0"))
+    assert address == "rJX2KwzaLJDyFhhtXKi3htaLfaUH2tptEX"
+
+
+@pytest.mark.setup_client(mnemonic=CUSTOM_MNEMONIC)
+def test_ripple_get_address_other(client):
+    # data from https://github.com/you21979/node-ripple-bip32/blob/master/test/test.js
+    address = get_address(client, parse_path("m/44'/144'/0'/0/0"))
+    assert address == "r4ocGE47gm4G4LkA9mriVHQqzpMLBTgnTY"
+    address = get_address(client, parse_path("m/44'/144'/0'/0/1"))
+    assert address == "rUt9ULSrUvfCmke8HTFU1szbmFpWzVbBXW"

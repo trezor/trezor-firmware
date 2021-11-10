@@ -17,33 +17,35 @@
 from trezorlib import device, messages
 
 
-class TestBasic:
-    def test_features(self, client):
-        f0 = client.features
-        # client erases session_id from its features
-        f0.session_id = client.session_id
-        f1 = client.call(messages.Initialize(session_id=f0.session_id))
-        assert f0 == f1
+def test_features(client):
+    f0 = client.features
+    # client erases session_id from its features
+    f0.session_id = client.session_id
+    f1 = client.call(messages.Initialize(session_id=f0.session_id))
+    assert f0 == f1
 
-    def test_ping(self, client):
-        ping = client.call(messages.Ping(message="ahoj!"))
-        assert ping == messages.Success(message="ahoj!")
 
-    def test_device_id_same(self, client):
-        id1 = client.get_device_id()
-        client.init_device()
-        id2 = client.get_device_id()
+def test_ping(client):
+    ping = client.call(messages.Ping(message="ahoj!"))
+    assert ping == messages.Success(message="ahoj!")
 
-        # ID must be at least 12 characters
-        assert len(id1) >= 12
 
-        # Every resulf of UUID must be the same
-        assert id1 == id2
+def test_device_id_same(client):
+    id1 = client.get_device_id()
+    client.init_device()
+    id2 = client.get_device_id()
 
-    def test_device_id_different(self, client):
-        id1 = client.get_device_id()
-        device.wipe(client)
-        id2 = client.get_device_id()
+    # ID must be at least 12 characters
+    assert len(id1) >= 12
 
-        # Device ID must be fresh after every reset
-        assert id1 != id2
+    # Every resulf of UUID must be the same
+    assert id1 == id2
+
+
+def test_device_id_different(client):
+    id1 = client.get_device_id()
+    device.wipe(client)
+    id2 = client.get_device_id()
+
+    # Device ID must be fresh after every reset
+    assert id1 != id2
