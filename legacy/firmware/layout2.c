@@ -189,18 +189,17 @@ const char **split_message(const uint8_t *msg, uint32_t len, uint32_t rowlen) {
   if (rowlen > 32) {
     rowlen = 32;
   }
+
   memzero(str, sizeof(str));
-  strlcpy(str[0], (char *)msg, rowlen + 1);
-  if (len > rowlen) {
-    strlcpy(str[1], (char *)msg + rowlen, rowlen + 1);
+  for (int i = 0; i < 4; ++i) {
+    size_t show_len = strnlen((char *)msg, MIN(rowlen, len));
+    memcpy(str[i], (char *)msg, show_len);
+    str[i][show_len] = '\0';
+    msg += show_len;
+    len -= show_len;
   }
-  if (len > rowlen * 2) {
-    strlcpy(str[2], (char *)msg + rowlen * 2, rowlen + 1);
-  }
-  if (len > rowlen * 3) {
-    strlcpy(str[3], (char *)msg + rowlen * 3, rowlen + 1);
-  }
-  if (len > rowlen * 4) {
+
+  if (len > 0) {
     str[3][rowlen - 1] = '.';
     str[3][rowlen - 2] = '.';
     str[3][rowlen - 3] = '.';
