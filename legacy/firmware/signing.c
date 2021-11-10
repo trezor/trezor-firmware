@@ -917,6 +917,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 static bool is_multisig_input_script_type(const TxInputType *txinput) {
+  // we do not support Multisig with Taproot yet
   if (txinput->script_type == InputScriptType_SPENDMULTISIG ||
       txinput->script_type == InputScriptType_SPENDP2SHWITNESS ||
       txinput->script_type == InputScriptType_SPENDWITNESS) {
@@ -926,6 +927,7 @@ static bool is_multisig_input_script_type(const TxInputType *txinput) {
 }
 
 static bool is_multisig_output_script_type(const TxOutputType *txoutput) {
+  // we do not support Multisig with Taproot yet
   if (txoutput->script_type == OutputScriptType_PAYTOMULTISIG ||
       txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS ||
       txoutput->script_type == OutputScriptType_PAYTOWITNESS) {
@@ -938,7 +940,8 @@ static bool is_internal_input_script_type(const TxInputType *txinput) {
   if (txinput->script_type == InputScriptType_SPENDADDRESS ||
       txinput->script_type == InputScriptType_SPENDMULTISIG ||
       txinput->script_type == InputScriptType_SPENDP2SHWITNESS ||
-      txinput->script_type == InputScriptType_SPENDWITNESS) {
+      txinput->script_type == InputScriptType_SPENDWITNESS ||
+      txinput->script_type == InputScriptType_SPENDTAPROOT) {
     return true;
   }
   return false;
@@ -948,7 +951,8 @@ static bool is_change_output_script_type(const TxOutputType *txoutput) {
   if (txoutput->script_type == OutputScriptType_PAYTOADDRESS ||
       txoutput->script_type == OutputScriptType_PAYTOMULTISIG ||
       txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS ||
-      txoutput->script_type == OutputScriptType_PAYTOWITNESS) {
+      txoutput->script_type == OutputScriptType_PAYTOWITNESS ||
+      txoutput->script_type == OutputScriptType_PAYTOTAPROOT) {
     return true;
   }
   return false;
@@ -956,7 +960,17 @@ static bool is_change_output_script_type(const TxOutputType *txoutput) {
 
 static bool is_segwit_input_script_type(const TxInputType *txinput) {
   if (txinput->script_type == InputScriptType_SPENDP2SHWITNESS ||
-      txinput->script_type == InputScriptType_SPENDWITNESS) {
+      txinput->script_type == InputScriptType_SPENDWITNESS ||
+      txinput->script_type == InputScriptType_SPENDTAPROOT) {
+    return true;
+  }
+  return false;
+}
+
+static bool is_segwit_output_script_type(const TxOutputType *txoutput) {
+  if (txoutput->script_type == OutputScriptType_PAYTOP2SHWITNESS ||
+      txoutput->script_type == OutputScriptType_PAYTOWITNESS ||
+      txoutput->script_type == OutputScriptType_PAYTOTAPROOT) {
     return true;
   }
   return false;
@@ -977,9 +991,9 @@ static bool signing_validate_input(const TxInputType *txinput) {
     return false;
   }
 
-  if (txinput->address_n_count > 0 && !is_internal_input_script_type(txinput)) {
+  if (!is_internal_input_script_type(txinput)) {
     fsm_sendFailure(FailureType_Failure_DataError,
-                    "Input's address_n provided but not expected.");
+                    _("Unsupported script type."));
     signing_abort();
     return false;
   }
@@ -991,6 +1005,14 @@ static bool signing_validate_input(const TxInputType *txinput) {
       signing_abort();
       return false;
     }
+  }
+
+  if (txinput->script_type == InputScriptType_SPENDTAPROOT &&
+      !coin->has_taproot) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("Taproot not enabled on this coin."));
+    signing_abort();
+    return false;
   }
 
   if (txinput->has_orig_hash) {
@@ -1060,6 +1082,23 @@ static bool signing_validate_output(TxOutputType *txoutput) {
       signing_abort();
       return false;
     }
+  }
+
+  if (is_segwit_output_script_type(txoutput)) {
+    if (!coin->has_segwit) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Segwit not enabled on this coin"));
+      signing_abort();
+      return false;
+    }
+  }
+
+  if (txoutput->script_type == OutputScriptType_PAYTOTAPROOT &&
+      !coin->has_taproot) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("Taproot not enabled on this coin."));
+    signing_abort();
+    return false;
   }
 
   if (txoutput->has_orig_hash) {
