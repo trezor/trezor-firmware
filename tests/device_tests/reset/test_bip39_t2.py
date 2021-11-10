@@ -19,7 +19,7 @@ from unittest import mock
 import pytest
 from mnemonic import Mnemonic
 
-from trezorlib import device, messages as proto
+from trezorlib import device, messages
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import ButtonRequestType as B
 
@@ -62,15 +62,15 @@ def reset_device(client, strength):
     with mock.patch("os.urandom", os_urandom), client:
         client.set_expected_responses(
             [
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.EntropyRequest(),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.Success),
-                proto.ButtonRequest(code=B.Success),
-                proto.Success,
-                proto.Features,
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.EntropyRequest(),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.Success),
+                messages.ButtonRequest(code=B.Success),
+                messages.Success,
+                messages.Features,
             ]
         )
         client.set_input_flow(input_flow)
@@ -95,12 +95,12 @@ def reset_device(client, strength):
     assert mnemonic == expected_mnemonic
 
     # Check if device is properly initialized
-    resp = client.call_raw(proto.Initialize())
+    resp = client.call_raw(messages.Initialize())
     assert resp.initialized is True
     assert resp.needs_backup is False
     assert resp.pin_protection is False
     assert resp.passphrase_protection is False
-    assert resp.backup_type is proto.BackupType.Bip39
+    assert resp.backup_type is messages.BackupType.Bip39
 
     # backup attempt fails because backup was done in reset
     with pytest.raises(TrezorFailure, match="ProcessError: Seed already backed up"):
@@ -170,18 +170,18 @@ def test_reset_device_pin(client):
     with mock.patch("os.urandom", os_urandom), client:
         client.set_expected_responses(
             [
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.PinEntry),
-                proto.ButtonRequest(code=B.PinEntry),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.EntropyRequest(),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.Success),
-                proto.ButtonRequest(code=B.Success),
-                proto.Success,
-                proto.Features,
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.PinEntry),
+                messages.ButtonRequest(code=B.PinEntry),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.EntropyRequest(),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.Success),
+                messages.ButtonRequest(code=B.Success),
+                messages.Success,
+                messages.Features,
             ]
         )
         client.set_input_flow(input_flow)
@@ -206,7 +206,7 @@ def test_reset_device_pin(client):
     assert mnemonic == expected_mnemonic
 
     # Check if device is properly initialized
-    resp = client.call_raw(proto.Initialize())
+    resp = client.call_raw(messages.Initialize())
     assert resp.initialized is True
     assert resp.needs_backup is False
     assert resp.pin_protection is True
@@ -250,17 +250,17 @@ def test_reset_failed_check(client):
     with mock.patch("os.urandom", os_urandom), client:
         client.set_expected_responses(
             [
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.EntropyRequest(),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.Success),
-                proto.ButtonRequest(code=B.Success),
-                proto.Success,
-                proto.Features,
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.EntropyRequest(),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.Success),
+                messages.ButtonRequest(code=B.Success),
+                messages.Success,
+                messages.Features,
             ]
         )
         client.set_input_flow(input_flow)
@@ -285,12 +285,12 @@ def test_reset_failed_check(client):
     assert mnemonic == expected_mnemonic
 
     # Check if device is properly initialized
-    resp = client.call_raw(proto.Initialize())
+    resp = client.call_raw(messages.Initialize())
     assert resp.initialized is True
     assert resp.needs_backup is False
     assert resp.pin_protection is False
     assert resp.passphrase_protection is False
-    assert resp.backup_type is proto.BackupType.Bip39
+    assert resp.backup_type is messages.BackupType.Bip39
 
 
 @pytest.mark.setup_client(uninitialized=True)
@@ -298,25 +298,25 @@ def test_failed_pin(client):
     # external_entropy = b'zlutoucky kun upel divoke ody' * 2
     strength = 128
     ret = client.call_raw(
-        proto.ResetDevice(strength=strength, pin_protection=True, label="test")
+        messages.ResetDevice(strength=strength, pin_protection=True, label="test")
     )
 
     # Confirm Reset
-    assert isinstance(ret, proto.ButtonRequest)
+    assert isinstance(ret, messages.ButtonRequest)
     client.debug.press_yes()
-    ret = client.call_raw(proto.ButtonAck())
+    ret = client.call_raw(messages.ButtonAck())
 
     # Enter PIN for first time
-    assert isinstance(ret, proto.ButtonRequest)
+    assert isinstance(ret, messages.ButtonRequest)
     client.debug.input("654")
-    ret = client.call_raw(proto.ButtonAck())
+    ret = client.call_raw(messages.ButtonAck())
 
     # Enter PIN for second time
-    assert isinstance(ret, proto.ButtonRequest)
+    assert isinstance(ret, messages.ButtonRequest)
     client.debug.input("456")
-    ret = client.call_raw(proto.ButtonAck())
+    ret = client.call_raw(messages.ButtonAck())
 
-    assert isinstance(ret, proto.ButtonRequest)
+    assert isinstance(ret, messages.ButtonRequest)
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)

@@ -16,13 +16,13 @@
 
 import pytest
 
-from trezorlib import btc, messages as proto
+from trezorlib import btc, messages
 from trezorlib.tools import parse_path
 
 from ..tx_cache import TxCache
 from .signtx import request_finished, request_input, request_meta, request_output
 
-B = proto.ButtonRequestType
+B = messages.ButtonRequestType
 TX_API = TxCache("Decred Testnet")
 
 
@@ -55,20 +55,20 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.decred]
 
 
 def test_send_decred(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         # TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz
         address_n=parse_path("m/44'/1'/0'/0/0"),
         prev_hash=TXHASH_e16248,
         prev_index=1,
         amount=200000000,
-        script_type=proto.InputScriptType.SPENDADDRESS,
+        script_type=messages.InputScriptType.SPENDADDRESS,
         decred_tree=0,
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz",
         amount=190000000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with client:
@@ -76,9 +76,9 @@ def test_send_decred(client):
             [
                 request_input(0),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
-                proto.ButtonRequest(code=B.FeeOverThreshold),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.FeeOverThreshold),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_e16248),
                 request_input(0, TXHASH_e16248),
@@ -100,29 +100,29 @@ def test_send_decred(client):
 
 @pytest.mark.skip_t1
 def test_purchase_ticket_decred(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("m/44'/1'/0'/0/0"),
         prev_hash=TXHASH_e16248,
         prev_index=1,
         amount=200000000,
         decred_tree=0,
-        script_type=proto.InputScriptType.SPENDADDRESS,
+        script_type=messages.InputScriptType.SPENDADDRESS,
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz",
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
         amount=199900000,
     )
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         address_n=parse_path("m/44'/1'/0'/0/0"),
         amount=200000000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    out3 = proto.TxOutputType(
+    out3 = messages.TxOutputType(
         address="TsR28UZRprhgQQhzWns2M6cAwchrNVvbYq2",
         amount=0,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with client:
@@ -130,10 +130,10 @@ def test_purchase_ticket_decred(client):
             [
                 request_input(0),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.ConfirmOutput),
                 request_output(1),
                 request_output(2),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_e16248),
                 request_input(0, TXHASH_e16248),
@@ -160,30 +160,30 @@ def test_purchase_ticket_decred(client):
 
 @pytest.mark.skip_t1
 def test_spend_from_stake_generation_and_revocation_decred(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("m/44'/1'/0'/0/0"),
         prev_hash=TXHASH_8b6890,
         prev_index=2,
         amount=200000000,
-        script_type=proto.InputScriptType.SPENDADDRESS,
-        decred_staking_spend=proto.DecredStakingSpendType.SSGen,
+        script_type=messages.InputScriptType.SPENDADDRESS,
+        decred_staking_spend=messages.DecredStakingSpendType.SSGen,
         decred_tree=1,
     )
 
-    inp2 = proto.TxInputType(
+    inp2 = messages.TxInputType(
         address_n=parse_path("m/44'/1'/0'/0/0"),
         prev_hash=TXHASH_1f00fc,
         prev_index=0,
         amount=200000000,
-        script_type=proto.InputScriptType.SPENDADDRESS,
-        decred_staking_spend=proto.DecredStakingSpendType.SSRTX,
+        script_type=messages.InputScriptType.SPENDADDRESS,
+        decred_staking_spend=messages.DecredStakingSpendType.SSRTX,
         decred_tree=1,
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz",
         amount=399900000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with client:
@@ -192,8 +192,8 @@ def test_spend_from_stake_generation_and_revocation_decred(client):
                 request_input(0),
                 request_input(1),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_8b6890),
                 request_input(0, TXHASH_8b6890),
@@ -221,47 +221,47 @@ def test_spend_from_stake_generation_and_revocation_decred(client):
 
 
 def test_send_decred_change(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         # TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz
         address_n=parse_path("m/44'/1'/0'/0/0"),
         amount=190000000,
         prev_hash=TXHASH_5e6e35,
         prev_index=0,
-        script_type=proto.InputScriptType.SPENDADDRESS,
+        script_type=messages.InputScriptType.SPENDADDRESS,
         decred_tree=0,
     )
 
-    inp2 = proto.TxInputType(
+    inp2 = messages.TxInputType(
         # TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz
         address_n=parse_path("m/44'/1'/0'/0/0"),
         amount=200000000,
         prev_hash=TXHASH_ccf95b,
         prev_index=1,
-        script_type=proto.InputScriptType.SPENDADDRESS,
+        script_type=messages.InputScriptType.SPENDADDRESS,
         decred_tree=0,
     )
 
-    inp3 = proto.TxInputType(
+    inp3 = messages.TxInputType(
         # Tskt39YEvzoJ5KBDH4f1auNzG3jViVjZ2RV
         address_n=parse_path("m/44'/1'/0'/0/1"),
         amount=200000000,
         prev_hash=TXHASH_f395ef,
         prev_index=0,
-        script_type=proto.InputScriptType.SPENDADDRESS,
+        script_type=messages.InputScriptType.SPENDADDRESS,
         decred_tree=0,
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="TsWjioPrP8E1TuTMmTrVMM2BA4iPrjQXBpR",
         amount=489975000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         # TsaSFRwfN9muW5F6ZX36iSksc9hruiC5F97
         address_n=parse_path("m/44'/1'/0'/1/0"),
         amount=100000000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with client:
@@ -271,9 +271,9 @@ def test_send_decred_change(client):
                 request_input(1),
                 request_input(2),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.ConfirmOutput),
                 request_output(1),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_5e6e35),
                 request_input(0, TXHASH_5e6e35),
@@ -320,7 +320,7 @@ def test_decred_multisig_change(client):
 
     def create_multisig(index, address, signatures=None):
         address_n = parse_path(address)
-        multisig = proto.MultisigRedeemScriptType(
+        multisig = messages.MultisigRedeemScriptType(
             nodes=nodes, address_n=address_n, signatures=signatures, m=2
         )
 
@@ -328,42 +328,42 @@ def test_decred_multisig_change(client):
 
     def test_multisig(index):
         address_n, multisig = create_multisig(index, "m/0/0", signatures[0])
-        inp1 = proto.TxInputType(
+        inp1 = messages.TxInputType(
             address_n=address_n,
             # TchpthUkRys1VQWgnQyLJNaA4MLBjVmRL2c
             multisig=multisig,
             amount=200000000,
             prev_hash=TXHASH_3f7c39,
             prev_index=1,
-            script_type=proto.InputScriptType.SPENDMULTISIG,
+            script_type=messages.InputScriptType.SPENDMULTISIG,
             decred_tree=0,
         )
 
         address_n, multisig = create_multisig(index, "m/0/1", signatures[1])
-        inp2 = proto.TxInputType(
+        inp2 = messages.TxInputType(
             address_n=address_n,
             # TcnfDEfMhkM3oLWqiq9v9GmYgLK7qfjitKG
             multisig=multisig,
             amount=200000000,
             prev_hash=TXHASH_16da18,
             prev_index=0,
-            script_type=proto.InputScriptType.SPENDMULTISIG,
+            script_type=messages.InputScriptType.SPENDMULTISIG,
             decred_tree=0,
         )
 
         address_n, multisig = create_multisig(index, "m/1/0")
-        out1 = proto.TxOutputType(
+        out1 = messages.TxOutputType(
             address_n=address_n,
             # TcrrURA3Bzj4isGU48PdSP9SDoU5oCpjEcb
             multisig=multisig,
             amount=99900000,
-            script_type=proto.OutputScriptType.PAYTOMULTISIG,
+            script_type=messages.OutputScriptType.PAYTOMULTISIG,
         )
 
-        out2 = proto.TxOutputType(
+        out2 = messages.TxOutputType(
             address="TsWjioPrP8E1TuTMmTrVMM2BA4iPrjQXBpR",
             amount=300000000,
-            script_type=proto.OutputScriptType.PAYTOADDRESS,
+            script_type=messages.OutputScriptType.PAYTOADDRESS,
         )
 
         with client:
@@ -373,8 +373,8 @@ def test_decred_multisig_change(client):
                     request_input(1),
                     request_output(0),
                     request_output(1),
-                    proto.ButtonRequest(code=B.ConfirmOutput),
-                    proto.ButtonRequest(code=B.SignTx),
+                    messages.ButtonRequest(code=B.ConfirmOutput),
+                    messages.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_meta(TXHASH_3f7c39),
                     request_input(0, TXHASH_3f7c39),

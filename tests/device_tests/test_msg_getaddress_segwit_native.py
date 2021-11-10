@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import btc, messages as proto
+from trezorlib import btc, messages
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -24,25 +24,25 @@ VECTORS = (  # coin, path, script_type, address
     (
         "Testnet",
         "84'/1'/0'/0/0",
-        proto.InputScriptType.SPENDWITNESS,
+        messages.InputScriptType.SPENDWITNESS,
         "tb1qkvwu9g3k2pdxewfqr7syz89r3gj557l3uuf9r9",
     ),
     (
         "Testnet",
         "84'/1'/0'/1/0",
-        proto.InputScriptType.SPENDWITNESS,
+        messages.InputScriptType.SPENDWITNESS,
         "tb1qejqxwzfld7zr6mf7ygqy5s5se5xq7vmt96jk9x",
     ),
     (
         "Bitcoin",
         "84'/0'/0'/0/0",
-        proto.InputScriptType.SPENDWITNESS,
+        messages.InputScriptType.SPENDWITNESS,
         "bc1qannfxke2tfd4l7vhepehpvt05y83v3qsf6nfkk",
     ),
     (
         "Bitcoin",
         "84'/0'/0'/1/0",
-        proto.InputScriptType.SPENDWITNESS,
+        messages.InputScriptType.SPENDWITNESS,
         "bc1qktmhrsmsenepnnfst8x6j27l0uqv7ggrg8x38q",
     ),
     (
@@ -72,14 +72,14 @@ VECTORS = (  # coin, path, script_type, address
     pytest.param(
         "Groestlcoin",
         "84'/17'/0'/0/0",
-        proto.InputScriptType.SPENDWITNESS,
+        messages.InputScriptType.SPENDWITNESS,
         "grs1qw4teyraux2s77nhjdwh9ar8rl9dt7zww8r6lne",
         marks=pytest.mark.altcoin,
     ),
     pytest.param(
         "Elements",
         "84'/1'/0'/0/0",
-        proto.InputScriptType.SPENDWITNESS,
+        messages.InputScriptType.SPENDWITNESS,
         "ert1qkvwu9g3k2pdxewfqr7syz89r3gj557l3xp9k2v",
         marks=pytest.mark.altcoin,
     ),
@@ -136,10 +136,10 @@ def test_show_multisig_3(client):
         ).node
         for index in range(1, 4)
     ]
-    multisig1 = proto.MultisigRedeemScriptType(
+    multisig1 = messages.MultisigRedeemScriptType(
         nodes=nodes, address_n=[0, 0], signatures=[b"", b"", b""], m=2
     )
-    multisig2 = proto.MultisigRedeemScriptType(
+    multisig2 = messages.MultisigRedeemScriptType(
         nodes=nodes, address_n=[0, 1], signatures=[b"", b"", b""], m=2
     )
     for i in [1, 2, 3]:
@@ -150,7 +150,7 @@ def test_show_multisig_3(client):
                 parse_path(f"84'/1'/{i}'/0/1"),
                 False,
                 multisig2,
-                script_type=proto.InputScriptType.SPENDWITNESS,
+                script_type=messages.InputScriptType.SPENDWITNESS,
             )
             == "tb1qauuv4e2pwjkr4ws5f8p20hu562jlqpe5h74whxqrwf7pufsgzcms9y8set"
         )
@@ -161,7 +161,7 @@ def test_show_multisig_3(client):
                 parse_path(f"84'/1'/{i}'/0/0"),
                 False,
                 multisig1,
-                script_type=proto.InputScriptType.SPENDWITNESS,
+                script_type=messages.InputScriptType.SPENDWITNESS,
             )
             == "tb1qgvn67p4twmpqhs8c39tukmu9geamtf7x0z3flwf9rrw4ff3h6d2qt0czq3"
         )
@@ -177,7 +177,7 @@ def test_multisig_missing(client, show_display):
         btc.get_public_node(client, parse_path(f"84'/0'/{i}'")).node
         for i in range(1, 4)
     ]
-    multisig1 = proto.MultisigRedeemScriptType(
+    multisig1 = messages.MultisigRedeemScriptType(
         nodes=nodes, address_n=[0, 0], signatures=[b"", b"", b""], m=2
     )
 
@@ -185,11 +185,11 @@ def test_multisig_missing(client, show_display):
     node = btc.get_public_node(
         client, parse_path("84h/0h/0h/0"), coin_name="Bitcoin"
     ).node
-    multisig2 = proto.MultisigRedeemScriptType(
+    multisig2 = messages.MultisigRedeemScriptType(
         pubkeys=[
-            proto.HDNodePathType(node=node, address_n=[1]),
-            proto.HDNodePathType(node=node, address_n=[2]),
-            proto.HDNodePathType(node=node, address_n=[3]),
+            messages.HDNodePathType(node=node, address_n=[1]),
+            messages.HDNodePathType(node=node, address_n=[2]),
+            messages.HDNodePathType(node=node, address_n=[3]),
         ],
         signatures=[b"", b"", b""],
         m=2,
@@ -203,5 +203,5 @@ def test_multisig_missing(client, show_display):
                 parse_path("84'/0'/0'/0/0"),
                 show_display=show_display,
                 multisig=multisig,
-                script_type=proto.InputScriptType.SPENDWITNESS,
+                script_type=messages.InputScriptType.SPENDWITNESS,
             )

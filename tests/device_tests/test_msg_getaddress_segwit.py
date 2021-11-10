@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import btc, messages as proto
+from trezorlib import btc, messages
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -29,7 +29,7 @@ def test_show_segwit(client):
             parse_path("49'/1'/0'/1/0"),
             True,
             None,
-            script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+            script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         )
         == "2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX"
     )
@@ -40,7 +40,7 @@ def test_show_segwit(client):
             parse_path("49'/1'/0'/0/0"),
             False,
             None,
-            script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+            script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         )
         == "2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp"
     )
@@ -51,7 +51,7 @@ def test_show_segwit(client):
             parse_path("44'/1'/0'/0/0"),
             False,
             None,
-            script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+            script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         )
         == "2N6UeBoqYEEnybg4cReFYDammpsyDw8R2Mc"
     )
@@ -62,7 +62,7 @@ def test_show_segwit(client):
             parse_path("44'/1'/0'/0/0"),
             False,
             None,
-            script_type=proto.InputScriptType.SPENDADDRESS,
+            script_type=messages.InputScriptType.SPENDADDRESS,
         )
         == "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q"
     )
@@ -77,7 +77,7 @@ def test_show_segwit_altcoin(client):
             parse_path("49'/1'/0'/0/0"),
             False,
             None,
-            script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+            script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         )
         == "2N4Q5FhU2497BryFfUgbqkAJE87aKDv3V3e"
     )
@@ -88,7 +88,7 @@ def test_show_segwit_altcoin(client):
             parse_path("m/49'/1'/0'/0/0"),
             False,
             None,
-            script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+            script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         )
         == "XNW67ZQA9K3AuXPBWvJH4zN2y5QBDTwy2Z"
     )
@@ -103,11 +103,11 @@ def test_show_multisig_3(client):
         for i in range(1, 4)
     ]
 
-    multisig1 = proto.MultisigRedeemScriptType(
+    multisig1 = messages.MultisigRedeemScriptType(
         nodes=nodes, address_n=[0, 7], signatures=[b"", b"", b""], m=2
     )
-    # multisig2 = proto.MultisigRedeemScriptType(
-    #     pubkeys=map(lambda n: proto.HDNodePathType(node=bip32.deserialize(n.xpub), address_n=[2, 1]), nodes),
+    # multisig2 = messages.MultisigRedeemScriptType(
+    #     pubkeys=map(lambda n: messages.HDNodePathType(node=bip32.deserialize(n.xpub), address_n=[2, 1]), nodes),
     #     signatures=[b'', b'', b''],
     #     m=2,
     # )
@@ -119,7 +119,7 @@ def test_show_multisig_3(client):
                 parse_path(f"49'/1'/{i}'/0/7"),
                 False,
                 multisig1,
-                script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+                script_type=messages.InputScriptType.SPENDP2SHWITNESS,
             )
             == "2MwuUwUzPG17wiKQpfXmzfxJEoe7RXZDRad"
         )
@@ -135,7 +135,7 @@ def test_multisig_missing(client, show_display):
         btc.get_public_node(client, parse_path(f"49'/0'/{i}'")).node
         for i in range(1, 4)
     ]
-    multisig1 = proto.MultisigRedeemScriptType(
+    multisig1 = messages.MultisigRedeemScriptType(
         nodes=nodes, address_n=[0, 0], signatures=[b"", b"", b""], m=2
     )
 
@@ -143,11 +143,11 @@ def test_multisig_missing(client, show_display):
     node = btc.get_public_node(
         client, parse_path("49h/0h/0h/0"), coin_name="Bitcoin"
     ).node
-    multisig2 = proto.MultisigRedeemScriptType(
+    multisig2 = messages.MultisigRedeemScriptType(
         pubkeys=[
-            proto.HDNodePathType(node=node, address_n=[1]),
-            proto.HDNodePathType(node=node, address_n=[2]),
-            proto.HDNodePathType(node=node, address_n=[3]),
+            messages.HDNodePathType(node=node, address_n=[1]),
+            messages.HDNodePathType(node=node, address_n=[2]),
+            messages.HDNodePathType(node=node, address_n=[3]),
         ],
         signatures=[b"", b"", b""],
         m=2,
@@ -161,5 +161,5 @@ def test_multisig_missing(client, show_display):
                 parse_path("49'/0'/0'/0/0"),
                 show_display=show_display,
                 multisig=multisig,
-                script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+                script_type=messages.InputScriptType.SPENDP2SHWITNESS,
             )

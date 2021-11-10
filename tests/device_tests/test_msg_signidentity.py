@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import messages as proto, misc
+from trezorlib import messages, misc
 
 from ..common import MNEMONIC12
 
@@ -31,7 +31,7 @@ def test_sign(client):
     # URI  : https://satoshi@bitcoin.org/login
     # hash : d0e2389d4c8394a9f3e32de01104bf6e8db2d9e2bb0905d60fffa5a18fd696db
     # path : m/2147483661/2637750992/2845082444/3761103859/4005495825
-    identity = proto.IdentityType(
+    identity = messages.IdentityType(
         proto="https",
         user="satoshi",
         host="bitcoin.org",
@@ -53,7 +53,7 @@ def test_sign(client):
     # URI  : ftp://satoshi@bitcoin.org:2323/pub
     # hash : 79a6b53831c6ff224fb283587adc4ebae8fb0d734734a46c876838f52dff53f3
     # path : m/2147483661/3098912377/2734671409/3632509519/3125730426
-    identity = proto.IdentityType(
+    identity = messages.IdentityType(
         proto="ftp",
         user="satoshi",
         host="bitcoin.org",
@@ -75,7 +75,7 @@ def test_sign(client):
     # URI  : ssh://satoshi@bitcoin.org
     # hash : 5fa612f558a1a3b1fb7f010b2ea0a25cb02520a0ffa202ce74a92fc6145da5f3
     # path : m/2147483661/4111640159/2980290904/2332131323/3701645358
-    identity = proto.IdentityType(
+    identity = messages.IdentityType(
         proto="ssh", user="satoshi", host="bitcoin.org", port="", path="", index=47
     )
     sig = misc.sign_identity(
@@ -94,7 +94,7 @@ def test_sign(client):
     # URI  : ssh://satoshi@bitcoin.org
     # hash : 5fa612f558a1a3b1fb7f010b2ea0a25cb02520a0ffa202ce74a92fc6145da5f3
     # path : m/2147483661/4111640159/2980290904/2332131323/3701645358
-    identity = proto.IdentityType(
+    identity = messages.IdentityType(
         proto="ssh", user="satoshi", host="bitcoin.org", port="", path="", index=47
     )
     sig = misc.sign_identity(
@@ -111,7 +111,7 @@ def test_sign(client):
     )
 
     # URI  : gpg://satoshi@bitcoin.org
-    identity = proto.IdentityType(
+    identity = messages.IdentityType(
         proto="gpg", user="satoshi", host="bitcoin.org", port="", path=""
     )
     sig = misc.sign_identity(
@@ -128,7 +128,7 @@ def test_sign(client):
     )
 
     # URI  : signify://satoshi@bitcoin.org
-    identity = proto.IdentityType(
+    identity = messages.IdentityType(
         proto="signify", user="satoshi", host="bitcoin.org", port="", path=""
     )
     sig = misc.sign_identity(

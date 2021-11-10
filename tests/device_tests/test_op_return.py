@@ -16,14 +16,14 @@
 
 import pytest
 
-from trezorlib import btc, messages as proto
+from trezorlib import btc, messages
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ..tx_cache import TxCache
 from .signtx import request_finished, request_input, request_meta, request_output
 
-B = proto.ButtonRequestType
+B = messages.ButtonRequestType
 TX_API = TxCache("Bitcoin")
 
 TXHASH_d5f65e = bytes.fromhex(
@@ -32,23 +32,23 @@ TXHASH_d5f65e = bytes.fromhex(
 
 
 def test_opreturn(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("44'/0'/0'/0/2"),
         amount=390000,
         prev_hash=TXHASH_d5f65e,
         prev_index=0,
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1",
         amount=390000 - 10000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         op_return_data=b"test of the op_return data",
         amount=0,
-        script_type=proto.OutputScriptType.PAYTOOPRETURN,
+        script_type=messages.OutputScriptType.PAYTOOPRETURN,
     )
 
     with client:
@@ -56,10 +56,10 @@ def test_opreturn(client):
             [
                 request_input(0),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.ConfirmOutput),
                 request_output(1),
-                proto.ButtonRequest(code=B.ConfirmOutput),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_d5f65e),
                 request_input(0, TXHASH_d5f65e),
@@ -84,22 +84,22 @@ def test_opreturn(client):
 
 
 def test_nonzero_opreturn(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("44'/0'/10'/0/5"),
         amount=390000,
         prev_hash=TXHASH_d5f65e,
         prev_index=0,
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         op_return_data=b"test of the op_return data",
         amount=10000,
-        script_type=proto.OutputScriptType.PAYTOOPRETURN,
+        script_type=messages.OutputScriptType.PAYTOOPRETURN,
     )
 
     with client:
         client.set_expected_responses(
-            [request_input(0), request_output(0), proto.Failure()]
+            [request_input(0), request_output(0), messages.Failure()]
         )
 
         with pytest.raises(
@@ -109,23 +109,23 @@ def test_nonzero_opreturn(client):
 
 
 def test_opreturn_address(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("44'/0'/0'/0/2"),
         amount=390000,
         prev_hash=TXHASH_d5f65e,
         prev_index=0,
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address_n=parse_path("44'/0'/0'/1/2"),
         amount=0,
         op_return_data=b"OMNI TRANSACTION GOES HERE",
-        script_type=proto.OutputScriptType.PAYTOOPRETURN,
+        script_type=messages.OutputScriptType.PAYTOOPRETURN,
     )
 
     with client:
         client.set_expected_responses(
-            [request_input(0), request_output(0), proto.Failure()]
+            [request_input(0), request_output(0), messages.Failure()]
         )
         with pytest.raises(
             TrezorFailure, match="Output's address_n provided but not expected."

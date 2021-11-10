@@ -16,14 +16,14 @@
 
 import pytest
 
-from trezorlib import messages as proto, misc
+from trezorlib import messages, misc
 
 from ..common import MNEMONIC12
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_ecdh(client):
-    identity = proto.IdentityType(
+    identity = messages.IdentityType(
         proto="gpg",
         user="",
         host="Satoshi Nakamoto <satoshi@bitcoin.org>",

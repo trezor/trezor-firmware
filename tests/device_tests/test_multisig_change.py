@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import btc, messages as proto
+from trezorlib import btc, messages
 from trezorlib.tools import H_, parse_path
 
 from .. import bip32
@@ -24,7 +24,7 @@ from ..common import MNEMONIC12
 from ..tx_cache import TxCache
 from .signtx import request_finished, request_input, request_meta, request_output
 
-B = proto.ButtonRequestType
+B = messages.ButtonRequestType
 TX_API = TxCache("Testnet")
 # NOTE: This test case was migrated from Testnet to Bitcoin, because we
 # disabled testnet for BIP-45 paths. So we are still using the Testnet TxCache
@@ -85,21 +85,21 @@ NODE_INT = bip32.deserialize(
 #   tx: b0946dc27ba308a749b11afecc2018980af18f79e89ad6b080b58220d856f739
 #   input 1: 0.555 BTC
 
-multisig_in1 = proto.MultisigRedeemScriptType(
+multisig_in1 = messages.MultisigRedeemScriptType(
     nodes=[NODE_EXT2, NODE_EXT1, NODE_INT],
     address_n=[0, 0],
     signatures=[b"", b"", b""],
     m=2,
 )
 
-multisig_in2 = proto.MultisigRedeemScriptType(
+multisig_in2 = messages.MultisigRedeemScriptType(
     nodes=[NODE_EXT1, NODE_EXT2, NODE_INT],
     address_n=[0, 1],
     signatures=[b"", b"", b""],
     m=2,
 )
 
-multisig_in3 = proto.MultisigRedeemScriptType(
+multisig_in3 = messages.MultisigRedeemScriptType(
     nodes=[NODE_EXT1, NODE_EXT3, NODE_INT],
     address_n=[0, 1],
     signatures=[b"", b"", b""],
@@ -107,32 +107,32 @@ multisig_in3 = proto.MultisigRedeemScriptType(
 )
 
 # 2N9W4z9AhAPaHghtqVQPbaTAGHdbrhKeBQw
-INP1 = proto.TxInputType(
+INP1 = messages.TxInputType(
     address_n=[H_(45), 0, 0, 0],
     amount=50000000,
     prev_hash=TXHASH_16c6c8,
     prev_index=1,
-    script_type=proto.InputScriptType.SPENDMULTISIG,
+    script_type=messages.InputScriptType.SPENDMULTISIG,
     multisig=multisig_in1,
 )
 
 # 2NDBG6QXQLtnQ3jRGkrqo53BiCeXfQXLdj4
-INP2 = proto.TxInputType(
+INP2 = messages.TxInputType(
     address_n=[H_(45), 0, 0, 1],
     amount=34500000,
     prev_hash=TXHASH_d80c34,
     prev_index=0,
-    script_type=proto.InputScriptType.SPENDMULTISIG,
+    script_type=messages.InputScriptType.SPENDMULTISIG,
     multisig=multisig_in2,
 )
 
 # 2MvwPWfp2XPU3S1cMwgEMKBPUw38VP5SBE4
-INP3 = proto.TxInputType(
+INP3 = messages.TxInputType(
     address_n=[H_(45), 0, 0, 1],
     amount=55500000,
     prev_hash=TXHASH_b0946d,
     prev_index=0,
-    script_type=proto.InputScriptType.SPENDMULTISIG,
+    script_type=messages.InputScriptType.SPENDMULTISIG,
     multisig=multisig_in3,
 )
 
@@ -143,12 +143,12 @@ def _responses(INP1, INP2, change=0):
         request_output(0),
     ]
     if change != 1:
-        resp.append(proto.ButtonRequest(code=B.ConfirmOutput))
+        resp.append(messages.ButtonRequest(code=B.ConfirmOutput))
     resp.append(request_output(1))
     if change != 2:
-        resp.append(proto.ButtonRequest(code=B.ConfirmOutput))
+        resp.append(messages.ButtonRequest(code=B.ConfirmOutput))
     resp += [
-        proto.ButtonRequest(code=B.SignTx),
+        messages.ButtonRequest(code=B.SignTx),
         request_input(0),
         request_meta(INP1.prev_hash),
         request_input(0, INP1.prev_hash),
@@ -176,16 +176,16 @@ def _responses(INP1, INP2, change=0):
 
 # both outputs are external
 def test_external_external(client):
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="1F8yBZB2NZhPZvJekhjTwjhQRRvQeTjjXr",
         amount=40000000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         address="1H7uXJQTVwXca2BXF2opTrvuZapk8Cm8zY",
         amount=44000000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with client:
@@ -206,16 +206,16 @@ def test_external_external(client):
 
 # first external, second internal
 def test_external_internal(client):
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="1F8yBZB2NZhPZvJekhjTwjhQRRvQeTjjXr",
         amount=40000000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         address_n=parse_path("45'/0/1/1"),
         amount=44000000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with client:
@@ -238,16 +238,16 @@ def test_external_internal(client):
 
 # first internal, second external
 def test_internal_external(client):
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address_n=parse_path("45'/0/1/0"),
         amount=40000000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         address="1H7uXJQTVwXca2BXF2opTrvuZapk8Cm8zY",
         amount=44000000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with client:
@@ -270,16 +270,16 @@ def test_internal_external(client):
 
 # both outputs are external
 def test_multisig_external_external(client):
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="3B23k4kFBRtu49zvpG3Z9xuFzfpHvxBcwt",
         amount=40000000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         address="3PkXLsY7AUZCrCKGvX8FfP2EawowUBMbcg",
         amount=44000000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with client:
@@ -300,24 +300,24 @@ def test_multisig_external_external(client):
 
 # inputs match, change matches (first is change)
 def test_multisig_change_match_first(client):
-    multisig_out1 = proto.MultisigRedeemScriptType(
+    multisig_out1 = messages.MultisigRedeemScriptType(
         nodes=[NODE_EXT2, NODE_EXT1, NODE_INT],
         address_n=[1, 0],
         signatures=[b"", b"", b""],
         m=2,
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address_n=[H_(45), 0, 1, 0],
         multisig=multisig_out1,
         amount=40000000,
-        script_type=proto.OutputScriptType.PAYTOMULTISIG,
+        script_type=messages.OutputScriptType.PAYTOMULTISIG,
     )
 
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         address="3PkXLsY7AUZCrCKGvX8FfP2EawowUBMbcg",
         amount=44000000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with client:
@@ -340,24 +340,24 @@ def test_multisig_change_match_first(client):
 
 # inputs match, change matches (second is change)
 def test_multisig_change_match_second(client):
-    multisig_out2 = proto.MultisigRedeemScriptType(
+    multisig_out2 = messages.MultisigRedeemScriptType(
         nodes=[NODE_EXT1, NODE_EXT2, NODE_INT],
         address_n=[1, 1],
         signatures=[b"", b"", b""],
         m=2,
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="3B23k4kFBRtu49zvpG3Z9xuFzfpHvxBcwt",
         amount=40000000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         address_n=[H_(45), 0, 1, 1],
         multisig=multisig_out2,
         amount=44000000,
-        script_type=proto.OutputScriptType.PAYTOMULTISIG,
+        script_type=messages.OutputScriptType.PAYTOMULTISIG,
     )
 
     with client:
@@ -380,24 +380,24 @@ def test_multisig_change_match_second(client):
 
 # inputs match, change mismatches (second tries to be change but isn't)
 def test_multisig_mismatch_change(client):
-    multisig_out2 = proto.MultisigRedeemScriptType(
+    multisig_out2 = messages.MultisigRedeemScriptType(
         nodes=[NODE_EXT1, NODE_INT, NODE_EXT3],
         address_n=[1, 0],
         signatures=[b"", b"", b""],
         m=2,
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="3B23k4kFBRtu49zvpG3Z9xuFzfpHvxBcwt",
         amount=40000000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         address_n=[H_(45), 0, 1, 0],
         multisig=multisig_out2,
         amount=44000000,
-        script_type=proto.OutputScriptType.PAYTOMULTISIG,
+        script_type=messages.OutputScriptType.PAYTOMULTISIG,
     )
 
     with client:
@@ -418,24 +418,24 @@ def test_multisig_mismatch_change(client):
 
 # inputs mismatch, change matches with first input
 def test_multisig_mismatch_inputs(client):
-    multisig_out1 = proto.MultisigRedeemScriptType(
+    multisig_out1 = messages.MultisigRedeemScriptType(
         nodes=[NODE_EXT2, NODE_EXT1, NODE_INT],
         address_n=[1, 0],
         signatures=[b"", b"", b""],
         m=2,
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address_n=[H_(45), 0, 1, 0],
         multisig=multisig_out1,
         amount=40000000,
-        script_type=proto.OutputScriptType.PAYTOMULTISIG,
+        script_type=messages.OutputScriptType.PAYTOMULTISIG,
     )
 
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         address="3PkXLsY7AUZCrCKGvX8FfP2EawowUBMbcg",
         amount=65000000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with client:
