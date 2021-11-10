@@ -18,8 +18,8 @@ import pytest
 
 from trezorlib import device, exceptions, messages
 
-from .. import buttons
-from ..common import MNEMONIC12
+from ... import buttons
+from ...common import MNEMONIC12
 
 
 def do_recover_legacy(client, mnemonic, **kwargs):
