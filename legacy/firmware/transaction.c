@@ -33,8 +33,10 @@
 #include "ripemd160.h"
 #include "segwit_addr.h"
 #include "util.h"
+#include "zkp_bip340.h"
 
 #define SEGWIT_VERSION_0 0
+#define SEGWIT_VERSION_1 1
 
 #define CASHADDR_P2KH (0)
 #define CASHADDR_P2SH (8)
@@ -143,21 +145,27 @@ bool compute_address(const CoinInfo *coin, InputScriptType script_type,
                                address, MAX_ADDR_SIZE)) {
         return 0;
       }
-    } else if (coin->cashaddr_prefix) {
-      raw[0] = CASHADDR_P2SH | CASHADDR_160;
-      ripemd160(digest, 32, raw + 1);
-      if (!cash_addr_encode(address, coin->cashaddr_prefix, raw, 21)) {
-        return 0;
+    } else if (script_type == InputScriptType_SPENDADDRESS ||
+               script_type == InputScriptType_SPENDMULTISIG) {
+      if (coin->cashaddr_prefix) {
+        raw[0] = CASHADDR_P2SH | CASHADDR_160;
+        ripemd160(digest, 32, raw + 1);
+        if (!cash_addr_encode(address, coin->cashaddr_prefix, raw, 21)) {
+          return 0;
+        }
+      } else {
+        // non-segwit p2sh multisig
+        prelen = address_prefix_bytes_len(coin->address_type_p2sh);
+        address_write_prefix_bytes(coin->address_type_p2sh, raw);
+        ripemd160(digest, 32, raw + prelen);
+        if (!base58_encode_check(raw, prelen + 20, coin->curve->hasher_base58,
+                                 address, MAX_ADDR_SIZE)) {
+          return 0;
+        }
       }
     } else {
-      // non-segwit p2sh multisig
-      prelen = address_prefix_bytes_len(coin->address_type_p2sh);
-      address_write_prefix_bytes(coin->address_type_p2sh, raw);
-      ripemd160(digest, 32, raw + prelen);
-      if (!base58_encode_check(raw, prelen + 20, coin->curve->hasher_base58,
-                               address, MAX_ADDR_SIZE)) {
-        return 0;
-      }
+      // unsupported script type
+      return 0;
     }
   } else if (script_type == InputScriptType_SPENDWITNESS) {
     // segwit p2wpkh:  pubkey hash is ripemd160 of sha256
@@ -169,6 +177,17 @@ bool compute_address(const CoinInfo *coin, InputScriptType script_type,
                             digest, 20)) {
       return 0;
     }
+  } else if (script_type == InputScriptType_SPENDTAPROOT) {
+    // taproot
+    if (!coin->has_taproot || !coin->has_segwit || !coin->bech32_prefix) {
+      return 0;
+    }
+    uint8_t tweaked_pubkey[32];
+    zkp_bip340_tweak_public_key(node->public_key + 1, NULL, tweaked_pubkey);
+    if (!segwit_addr_encode(address, coin->bech32_prefix, SEGWIT_VERSION_1,
+                            tweaked_pubkey, 32)) {
+      return 0;
+    }
   } else if (script_type == InputScriptType_SPENDP2SHWITNESS) {
     // segwit p2wpkh embedded in p2sh
     if (!coin->has_segwit) {
@@ -177,16 +196,22 @@ bool compute_address(const CoinInfo *coin, InputScriptType script_type,
     ecdsa_get_address_segwit_p2sh(
         node->public_key, coin->address_type_p2sh, coin->curve->hasher_pubkey,
         coin->curve->hasher_base58, address, MAX_ADDR_SIZE);
-  } else if (coin->cashaddr_prefix) {
-    ecdsa_get_address_raw(node->public_key, CASHADDR_P2KH | CASHADDR_160,
-                          coin->curve->hasher_pubkey, raw);
-    if (!cash_addr_encode(address, coin->cashaddr_prefix, raw, 21)) {
-      return 0;
+  } else if (script_type == InputScriptType_SPENDADDRESS ||
+             script_type == InputScriptType_SPENDMULTISIG) {
+    if (coin->cashaddr_prefix) {
+      ecdsa_get_address_raw(node->public_key, CASHADDR_P2KH | CASHADDR_160,
+                            coin->curve->hasher_pubkey, raw);
+      if (!cash_addr_encode(address, coin->cashaddr_prefix, raw, 21)) {
+        return 0;
+      }
+    } else {
+      ecdsa_get_address(node->public_key, coin->address_type,
+                        coin->curve->hasher_pubkey, coin->curve->hasher_base58,
+                        address, MAX_ADDR_SIZE);
     }
   } else {
-    ecdsa_get_address(node->public_key, coin->address_type,
-                      coin->curve->hasher_pubkey, coin->curve->hasher_base58,
-                      address, MAX_ADDR_SIZE);
+    // unsupported script type
+    return 0;
   }
   return 1;
 }
