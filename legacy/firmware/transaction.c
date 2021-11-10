@@ -489,6 +489,11 @@ uint32_t tx_prevout_hash(Hasher *hasher, const TxInputType *input) {
   return 36;
 }
 
+uint32_t tx_amount_hash(Hasher *hasher, const TxInputType *input) {
+  hasher_Update(hasher, (const uint8_t *)&input->amount, 8);
+  return 8;
+}
+
 uint32_t tx_script_hash(Hasher *hasher, uint32_t size, const uint8_t *data) {
   int r = ser_length_hash(hasher, size);
   hasher_Update(hasher, data, size);
