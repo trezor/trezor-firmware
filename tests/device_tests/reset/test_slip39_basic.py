@@ -20,7 +20,7 @@ from unittest import mock
 import pytest
 from shamir_mnemonic import MnemonicError, shamir
 
-from trezorlib import device, messages as proto
+from trezorlib import device, messages
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import BackupType, ButtonRequestType as B
 
@@ -69,26 +69,26 @@ def reset_device(client, strength):
     with mock.patch("os.urandom", os_urandom), client:
         client.set_expected_responses(
             [
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.EntropyRequest(),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.EntropyRequest(),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
             ]
             + [
                 # individual mnemonic
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.Success),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.Success),
             ]
             * 5  # number of shares
             + [
-                proto.ButtonRequest(code=B.Success),
-                proto.Success,
-                proto.Features,
+                messages.ButtonRequest(code=B.Success),
+                messages.Success,
+                messages.Features,
             ]
         )
         client.set_input_flow(input_flow)

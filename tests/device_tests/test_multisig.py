@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import btc, messages as proto
+from trezorlib import btc, messages
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path, tx_hash
 
@@ -24,7 +24,7 @@ from ..common import MNEMONIC12
 from ..tx_cache import TxCache
 from .signtx import request_finished, request_input, request_meta, request_output
 
-B = proto.ButtonRequestType
+B = messages.ButtonRequestType
 TX_API = TxCache("Bitcoin")
 
 TXHASH_c6091a = bytes.fromhex(
@@ -46,23 +46,23 @@ def test_2_of_3(client):
         for index in range(1, 4)
     ]
 
-    multisig = proto.MultisigRedeemScriptType(
+    multisig = messages.MultisigRedeemScriptType(
         nodes=nodes, address_n=[0, 0], signatures=[b"", b"", b""], m=2
     )
     # Let's go to sign with key 1
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("48'/0'/1'/0'/0/0"),
         amount=100000,
         prev_hash=TXHASH_c6091a,
         prev_index=1,
-        script_type=proto.InputScriptType.SPENDMULTISIG,
+        script_type=messages.InputScriptType.SPENDMULTISIG,
         multisig=multisig,
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="12iyMbUb4R2K3gre4dHSrbu5azG5KaqVss",
         amount=100000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with client:
@@ -70,8 +70,8 @@ def test_2_of_3(client):
             [
                 request_input(0),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_c6091a),
                 request_input(0, TXHASH_c6091a),
@@ -97,7 +97,7 @@ def test_2_of_3(client):
     # ---------------------------------------
     # Let's do second signature using 3rd key
 
-    multisig = proto.MultisigRedeemScriptType(
+    multisig = messages.MultisigRedeemScriptType(
         nodes=nodes,
         address_n=[0, 0],
         signatures=[
@@ -109,12 +109,12 @@ def test_2_of_3(client):
     )
 
     # Let's do a second signature with key 3
-    inp3 = proto.TxInputType(
+    inp3 = messages.TxInputType(
         address_n=parse_path("48'/0'/3'/0'/0/0"),
         amount=100000,
         prev_hash=TXHASH_c6091a,
         prev_index=1,
-        script_type=proto.InputScriptType.SPENDMULTISIG,
+        script_type=messages.InputScriptType.SPENDMULTISIG,
         multisig=multisig,
     )
 
@@ -123,8 +123,8 @@ def test_2_of_3(client):
             [
                 request_input(0),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_c6091a),
                 request_input(0, TXHASH_c6091a),
@@ -156,27 +156,27 @@ def test_15_of_15(client):
     node = btc.get_public_node(
         client, parse_path("48h/0h/1h/0h"), coin_name="Bitcoin"
     ).node
-    pubs = [proto.HDNodePathType(node=node, address_n=[0, x]) for x in range(15)]
+    pubs = [messages.HDNodePathType(node=node, address_n=[0, x]) for x in range(15)]
 
     signatures = [b""] * 15
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="17kTB7qSk3MupQxWdiv5ZU3zcrZc2Azes1",
         amount=10000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     for x in range(15):
-        multisig = proto.MultisigRedeemScriptType(
+        multisig = messages.MultisigRedeemScriptType(
             pubkeys=pubs, signatures=signatures, m=15
         )
 
-        inp1 = proto.TxInputType(
+        inp1 = messages.TxInputType(
             address_n=parse_path(f"48h/0h/1h/0h/0/{x}"),
             amount=20000,
             prev_hash=TXHASH_6189e3,
             prev_index=1,
-            script_type=proto.InputScriptType.SPENDMULTISIG,
+            script_type=messages.InputScriptType.SPENDMULTISIG,
             multisig=multisig,
         )
 
@@ -198,30 +198,30 @@ def test_missing_pubkey(client):
         client, parse_path("48h/0h/1h/0h/0"), coin_name="Bitcoin"
     ).node
 
-    multisig = proto.MultisigRedeemScriptType(
+    multisig = messages.MultisigRedeemScriptType(
         pubkeys=[
-            proto.HDNodePathType(node=node, address_n=[1]),
-            proto.HDNodePathType(node=node, address_n=[2]),
-            proto.HDNodePathType(node=node, address_n=[3]),
+            messages.HDNodePathType(node=node, address_n=[1]),
+            messages.HDNodePathType(node=node, address_n=[2]),
+            messages.HDNodePathType(node=node, address_n=[3]),
         ],
         signatures=[b"", b"", b""],
         m=2,
     )
 
     # Let's go to sign with key 10, which is NOT in pubkeys
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("48h/0h/1h/0h/0/10"),
         amount=100000,
         prev_hash=TXHASH_c6091a,
         prev_index=1,
-        script_type=proto.InputScriptType.SPENDMULTISIG,
+        script_type=messages.InputScriptType.SPENDMULTISIG,
         multisig=multisig,
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="12iyMbUb4R2K3gre4dHSrbu5azG5KaqVss",
         amount=100000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with pytest.raises(TrezorFailure) as exc:
@@ -245,19 +245,19 @@ def test_attack_change_input(client):
         "03653a148b68584acb97947344a7d4fd6a6f8b8485cad12987ff8edac874268088"
     )
 
-    input_real = proto.TxInputType(
+    input_real = messages.TxInputType(
         address_n=address_n,
         prev_hash=TXHASH_fbbff7,
         prev_index=1,
-        script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+        script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         amount=1000000,
     )
 
-    multisig_fake = proto.MultisigRedeemScriptType(
+    multisig_fake = messages.MultisigRedeemScriptType(
         m=1,
         nodes=[
             btc.get_public_node(client, address_n, coin_name="Testnet").node,
-            proto.HDNodeType(
+            messages.HDNodeType(
                 depth=0,
                 fingerprint=0,
                 child_num=0,
@@ -268,7 +268,7 @@ def test_attack_change_input(client):
         address_n=[],
     )
 
-    input_fake = proto.TxInputType(
+    input_fake = messages.TxInputType(
         address_n=address_n,
         prev_hash=input_real.prev_hash,
         prev_index=input_real.prev_index,
@@ -277,16 +277,16 @@ def test_attack_change_input(client):
         amount=input_real.amount,
     )
 
-    output_payee = proto.TxOutputType(
+    output_payee = messages.TxOutputType(
         address="n2eMqTT929pb1RDNuqEnxdaLau1rxy3efi",
         amount=1000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    output_change = proto.TxOutputType(
+    output_change = messages.TxOutputType(
         address_n=address_n,
         amount=input_real.amount - output_payee.amount - 1000,
-        script_type=proto.OutputScriptType.PAYTOP2SHWITNESS,
+        script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
         multisig=multisig_fake,
     )
 
@@ -301,14 +301,14 @@ def test_attack_change_input(client):
         return msg
 
     with client:
-        client.set_filter(proto.TxAck, attack_processor)
+        client.set_filter(messages.TxAck, attack_processor)
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.ConfirmOutput),
                 request_output(1),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_fbbff7),
                 request_input(0, TXHASH_fbbff7),
@@ -318,7 +318,7 @@ def test_attack_change_input(client):
                 request_output(0),
                 request_output(1),
                 request_input(0),
-                proto.Failure(code=proto.FailureType.ProcessError),
+                messages.Failure(code=messages.FailureType.ProcessError),
             ]
         )
 
@@ -333,5 +333,5 @@ def test_attack_change_input(client):
             # must not produce this tx:
             # 01000000000101396e2c107427f9eaece56a37539983adb8efd52b067c3d4567805fc8f3f7bffb01000000171600147a876a07b366f79000b441335f2907f777a0280bffffffff02e8030000000000001976a914e7c1345fc8f87c68170b3aa798a956c2fe6a9eff88ac703a0f000000000017a914a1261837f1b40e84346b1504ffe294e402965f2687024830450221009ff835e861be4e36ca1f2b6224aee2f253dfb9f456b13e4b1724bb4aaff4c9c802205e10679c2ead85743119f468cba5661f68b7da84dd2d477a7215fef98516f1f9012102af12ddd0d55e4fa2fcd084148eaf5b0b641320d0431d63d1e9a90f3cbd0d540700000000
 
-        assert exc.value.code == proto.FailureType.ProcessError
+        assert exc.value.code == messages.FailureType.ProcessError
         assert exc.value.message.endswith("Transaction has changed during signing")

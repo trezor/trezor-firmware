@@ -16,12 +16,12 @@
 
 import pytest
 
-from trezorlib import btc, messages as proto
+from trezorlib import btc, messages
 from trezorlib.tools import parse_path
 
 from ..tx_cache import TxCache
 
-B = proto.ButtonRequestType
+B = messages.ButtonRequestType
 TX_API = TxCache("Groestlcoin")
 TX_API_TESTNET = TxCache("Groestlcoin Testnet")
 
@@ -39,17 +39,17 @@ pytestmark = pytest.mark.altcoin
 
 
 def test_legacy(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         # FXHDsC5ZqWQHkDmShzgRVZ1MatpWhwxTAA
         address_n=parse_path("44'/17'/0'/0/2"),
         amount=210016,
         prev_hash=TXHASH_cb74c8,
         prev_index=0,
     )
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="FtM4zAn9aVYgHgxmamWBgWPyZsb6RhvkA9",
         amount=210016 - 192,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     _, serialized_tx = btc.sign_tx(
         client, "Groestlcoin", [inp1], [out1], prev_txes=TX_API
@@ -61,17 +61,17 @@ def test_legacy(client):
 
 
 def test_legacy_change(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         # FXHDsC5ZqWQHkDmShzgRVZ1MatpWhwxTAA
         address_n=parse_path("44'/17'/0'/0/2"),
         amount=210016,
         prev_hash=TXHASH_cb74c8,
         prev_index=0,
     )
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address_n=parse_path("44'/17'/0'/0/3"),  # FtM4zAn9aVYgHgxmamWBgWPyZsb6RhvkA9
         amount=210016 - 192,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     _, serialized_tx = btc.sign_tx(
         client, "Groestlcoin", [inp1], [out1], prev_txes=TX_API
@@ -83,24 +83,24 @@ def test_legacy_change(client):
 
 
 def test_send_segwit_p2sh(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         # 2N1LGaGg836mqSQqiuUBLfcyGBhyZYBtBZ7
         address_n=parse_path("49'/1'/0'/1/0"),
         amount=123456789,
         prev_hash=TXHASH_09a48b,
         prev_index=0,
-        script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+        script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         sequence=0xFFFFFFFE,
     )
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="mvbu1Gdy8SUjTenqerxUaZyYjmvedc787y",
         amount=12300000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         address="2N1LGaGg836mqSQqiuUBLfcyGBhyZYBtBZ7",
         amount=123456789 - 11000 - 12300000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     _, serialized_tx = btc.sign_tx(
         client,
@@ -117,23 +117,23 @@ def test_send_segwit_p2sh(client):
 
 
 def test_send_segwit_p2sh_change(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         # 2N1LGaGg836mqSQqiuUBLfcyGBhyZYBtBZ7
         address_n=parse_path("49'/1'/0'/1/0"),
         amount=123456789,
         prev_hash=TXHASH_09a48b,
         prev_index=0,
-        script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+        script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         sequence=0xFFFFFFFE,
     )
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="mvbu1Gdy8SUjTenqerxUaZyYjmvedc787y",
         amount=12300000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         address_n=parse_path("49'/1'/0'/1/0"),
-        script_type=proto.OutputScriptType.PAYTOP2SHWITNESS,
+        script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
         amount=123456789 - 11000 - 12300000,
     )
     _, serialized_tx = btc.sign_tx(
@@ -151,22 +151,22 @@ def test_send_segwit_p2sh_change(client):
 
 
 def test_send_segwit_native(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("84'/1'/0'/0/0"),
         amount=12300000,
         prev_hash=TXHASH_4f2f85,
         prev_index=0,
-        script_type=proto.InputScriptType.SPENDWITNESS,
+        script_type=messages.InputScriptType.SPENDWITNESS,
         sequence=0xFFFFFFFE,
     )
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="2N4Q5FhU2497BryFfUgbqkAJE87aKDv3V3e",
         amount=5000000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         address="tgrs1qejqxwzfld7zr6mf7ygqy5s5se5xq7vmt9lkd57",
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
         amount=12300000 - 11000 - 5000000,
     )
     _, serialized_tx = btc.sign_tx(
@@ -184,22 +184,22 @@ def test_send_segwit_native(client):
 
 
 def test_send_segwit_native_change(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("84'/1'/0'/0/0"),
         amount=12300000,
         prev_hash=TXHASH_4f2f85,
         prev_index=0,
-        script_type=proto.InputScriptType.SPENDWITNESS,
+        script_type=messages.InputScriptType.SPENDWITNESS,
         sequence=0xFFFFFFFE,
     )
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="2N4Q5FhU2497BryFfUgbqkAJE87aKDv3V3e",
         amount=5000000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         address_n=parse_path("84'/1'/0'/1/0"),
-        script_type=proto.OutputScriptType.PAYTOWITNESS,
+        script_type=messages.OutputScriptType.PAYTOWITNESS,
         amount=12300000 - 11000 - 5000000,
     )
     _, serialized_tx = btc.sign_tx(

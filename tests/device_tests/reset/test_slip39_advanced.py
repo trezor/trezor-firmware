@@ -19,7 +19,7 @@ from unittest import mock
 import pytest
 from shamir_mnemonic import shamir
 
-from trezorlib import device, messages as proto
+from trezorlib import device, messages
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import BackupType, ButtonRequestType as B
 
@@ -72,36 +72,36 @@ def test_reset_device_slip39_advanced(client):
     with mock.patch("os.urandom", os_urandom), client:
         client.set_expected_responses(
             [
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.EntropyRequest(),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),  # group #1 counts
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),  # group #2 counts
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),  # group #3 counts
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),  # group #4 counts
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.ResetDevice),  # group #5 counts
-                proto.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.EntropyRequest(),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),  # group #1 counts
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),  # group #2 counts
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),  # group #3 counts
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),  # group #4 counts
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.ResetDevice),  # group #5 counts
+                messages.ButtonRequest(code=B.ResetDevice),
             ]
             + [
                 # individual mnemonic
-                proto.ButtonRequest(code=B.ResetDevice),
-                proto.ButtonRequest(code=B.Success),
+                messages.ButtonRequest(code=B.ResetDevice),
+                messages.ButtonRequest(code=B.Success),
             ]
             * (5 * 5)  # groups * shares
             + [
-                proto.ButtonRequest(code=B.Success),
-                proto.Success,
-                proto.Features,
+                messages.ButtonRequest(code=B.Success),
+                messages.Success,
+                messages.Features,
             ]
         )
         client.set_input_flow(input_flow)

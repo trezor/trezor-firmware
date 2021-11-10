@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import messages as proto, nem
+from trezorlib import messages, nem
 from trezorlib.tools import parse_path
 
 from ...common import MNEMONIC12
@@ -34,12 +34,12 @@ def test_nem_signtx_simple(client):
         client.set_expected_responses(
             [
                 # Confirm transfer and network fee
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                messages.ButtonRequest(code=messages.ButtonRequestType.ConfirmOutput),
                 # Unencrypted message
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                messages.ButtonRequest(code=messages.ButtonRequestType.ConfirmOutput),
                 # Confirm recipient
-                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                proto.NEMSignedTx,
+                messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                messages.NEMSignedTx,
             ]
         )
 
@@ -77,12 +77,12 @@ def test_nem_signtx_encrypted_payload(client):
         client.set_expected_responses(
             [
                 # Confirm transfer and network fee
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                messages.ButtonRequest(code=messages.ButtonRequestType.ConfirmOutput),
                 # Ask for encryption
-                proto.ButtonRequest(code=proto.ButtonRequestType.ConfirmOutput),
+                messages.ButtonRequest(code=messages.ButtonRequestType.ConfirmOutput),
                 # Confirm recipient
-                proto.ButtonRequest(code=proto.ButtonRequestType.SignTx),
-                proto.NEMSignedTx,
+                messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                messages.NEMSignedTx,
             ]
         )
 

@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import btc, messages as proto
+from trezorlib import btc, messages
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -29,7 +29,7 @@ from .signtx import (
     request_output,
 )
 
-B = proto.ButtonRequestType
+B = messages.ButtonRequestType
 TX_API = TxCache("Zcash Testnet")
 
 TXHASH_aaf51e = bytes.fromhex(
@@ -59,7 +59,7 @@ def test_v3_not_supported(client):
     # prevout: aaf51e4606c264e47e5c42c958fe4cf1539c5172684721e38e69f4ef634d75dc:1
     # input 1: 3.0 TAZ
 
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
         address_n=parse_path("m/44h/1h/0h/0/0"),
         amount=300000000,
@@ -67,10 +67,10 @@ def test_v3_not_supported(client):
         prev_index=1,
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="tmJ1xYxP8XNTtCoDgvdmQPSrxh5qZJgy65Z",
         amount=300000000 - 1940,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with client, pytest.raises(TrezorFailure, match="DataError"):
@@ -90,7 +90,7 @@ def test_one_one_fee_sapling(client):
     # prevout: e3820602226974b1dd87b7113cc8aea8c63e5ae29293991e7bfa80c126930368:0
     # input 1: 3.0 TAZ
 
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
         address_n=parse_path("m/44h/1h/0h/0/0"),
         amount=300000000,
@@ -98,10 +98,10 @@ def test_one_one_fee_sapling(client):
         prev_index=0,
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="tmJ1xYxP8XNTtCoDgvdmQPSrxh5qZJgy65Z",
         amount=300000000 - 1940,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with client:
@@ -109,8 +109,8 @@ def test_one_one_fee_sapling(client):
             [
                 request_input(0),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_e38206),
                 request_input(0, TXHASH_e38206),
@@ -143,17 +143,17 @@ def test_one_one_fee_sapling(client):
 
 
 def test_version_group_id_missing(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
         address_n=parse_path("m/44h/1h/0h/0/0"),
         amount=300000000,
         prev_hash=TXHASH_e38206,
         prev_index=0,
     )
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="tmJ1xYxP8XNTtCoDgvdmQPSrxh5qZJgy65Z",
         amount=300000000 - 1940,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with pytest.raises(TrezorFailure, match="Version group ID must be set."):
@@ -169,25 +169,25 @@ def test_version_group_id_missing(client):
 
 def test_spend_old_versions(client):
     # inputs are NOT OWNED by this seed
-    input_v1 = proto.TxInputType(
+    input_v1 = messages.TxInputType(
         address_n=parse_path("m/44h/1h/0h/0/0"),
         amount=123000000,
         prev_hash=TXHASH_v1,
         prev_index=0,
     )
-    input_v2 = proto.TxInputType(
+    input_v2 = messages.TxInputType(
         address_n=parse_path("m/44h/1h/0h/0/1"),
         amount=49990000,
         prev_hash=TXHASH_v2,
         prev_index=0,
     )
-    input_v3 = proto.TxInputType(
+    input_v3 = messages.TxInputType(
         address_n=parse_path("m/44h/1h/0h/0/2"),
         amount=300000000,
         prev_hash=TXHASH_v3,
         prev_index=1,
     )
-    input_v4 = proto.TxInputType(
+    input_v4 = messages.TxInputType(
         address_n=parse_path("m/44h/1h/0h/0/3"),
         amount=100000,
         prev_hash=TXHASH_v4,
@@ -200,10 +200,10 @@ def test_spend_old_versions(client):
         txdata = TX_API[txi.prev_hash]
         assert txdata.version == i
 
-    output = proto.TxOutputType(
+    output = messages.TxOutputType(
         address="tmNvfeKR5PkcQazLEqddTskFr6Ev9tsovfQ",
         amount=sum(txi.amount for txi in inputs),
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with client:
@@ -226,7 +226,7 @@ def test_spend_old_versions(client):
 
 @pytest.mark.skip_t1
 def test_external_presigned(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
         address_n=parse_path("m/44h/1h/0h/0/0"),
         amount=300000000,
@@ -234,13 +234,13 @@ def test_external_presigned(client):
         prev_index=0,
     )
 
-    inp2 = proto.TxInputType(
+    inp2 = messages.TxInputType(
         # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
         # address_n=parse_path("m/44h/1h/0h/0/0"),
         amount=300000000,
         prev_hash=TXHASH_aaf51e,
         prev_index=1,
-        script_type=proto.InputScriptType.EXTERNAL,
+        script_type=messages.InputScriptType.EXTERNAL,
         script_pubkey=bytes.fromhex(
             "76a914a579388225827d9f2fe9014add644487808c695d88ac"
         ),
@@ -249,10 +249,10 @@ def test_external_presigned(client):
         ),
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="tmJ1xYxP8XNTtCoDgvdmQPSrxh5qZJgy65Z",
         amount=300000000 + 300000000 - 1940,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with client:
@@ -261,8 +261,8 @@ def test_external_presigned(client):
                 request_input(0),
                 request_input(1),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_e38206),
                 request_input(0, TXHASH_e38206),

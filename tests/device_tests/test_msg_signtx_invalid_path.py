@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import btc, device, messages as proto
+from trezorlib import btc, device, messages
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -42,7 +42,7 @@ def test_invalid_path_fail(client):
     # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
     # input 0: 0.0039 BTC
 
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("44h/0h/0h/0/0"),
         amount=390000,
         prev_hash=TXHASH_d5f65e,
@@ -50,16 +50,16 @@ def test_invalid_path_fail(client):
     )
 
     # address is converted from 1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1 by changing the version
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="LfWz9wLHmqU9HoDkMg9NqbRosrHvEixeVZ",
         amount=390000 - 10000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with pytest.raises(TrezorFailure) as exc:
         btc.sign_tx(client, "Litecoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET)
 
-    assert exc.value.code == proto.FailureType.DataError
+    assert exc.value.code == messages.FailureType.DataError
     assert exc.value.message.endswith("Forbidden key path")
 
 
@@ -71,7 +71,7 @@ def test_invalid_path_prompt(client):
     # tx: d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882
     # input 0: 0.0039 BTC
 
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("44h/0h/0h/0/0"),
         amount=390000,
         prev_hash=TXHASH_d5f65e,
@@ -79,14 +79,14 @@ def test_invalid_path_prompt(client):
     )
 
     # address is converted from 1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1 by changing the version
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="LfWz9wLHmqU9HoDkMg9NqbRosrHvEixeVZ",
         amount=390000 - 10000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     device.apply_settings(
-        client, safety_checks=proto.SafetyCheckLevel.PromptTemporarily
+        client, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
     )
 
     btc.sign_tx(client, "Litecoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET)
@@ -100,7 +100,7 @@ def test_invalid_path_pass_forkid(client):
     # tx: 8cc1f4adf7224ce855cf535a5104594a0004cb3b640d6714fdb00b9128832dd5
     # input 0: 0.0039 BTC
 
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("44h/0h/0h/0/0"),
         amount=390000,
         prev_hash=TXHASH_8cc1f4,
@@ -108,10 +108,10 @@ def test_invalid_path_pass_forkid(client):
     )
 
     # address is converted from 1MJ2tj2ThBE62zXbBYA5ZaN3fdve5CPAz1 to cashaddr format
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="bitcoincash:qr0fk25d5zygyn50u5w7h6jkvctas52n0qxff9ja6r",
         amount=390000 - 10000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     btc.sign_tx(client, "Bcash", [inp1], [out1], prev_txes=TX_CACHE_BCASH)

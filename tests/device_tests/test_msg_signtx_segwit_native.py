@@ -16,14 +16,14 @@
 
 import pytest
 
-from trezorlib import btc, messages as proto
+from trezorlib import btc, messages
 from trezorlib.tools import H_, parse_path
 
 from ..bip32 import deserialize
 from ..tx_cache import TxCache
 from .signtx import request_finished, request_input, request_meta, request_output
 
-B = proto.ButtonRequestType
+B = messages.ButtonRequestType
 TX_API = TxCache("Testnet")
 
 TXHASH_20912f = bytes.fromhex(
@@ -59,22 +59,22 @@ TXHASH_ec16dc = bytes.fromhex(
 
 
 def test_send_p2sh(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("49'/1'/0'/1/0"),
         # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
         amount=123456789,
         prev_hash=TXHASH_20912f,
         prev_index=0,
-        script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+        script_type=messages.InputScriptType.SPENDP2SHWITNESS,
     )
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s",
         amount=12300000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         address="2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX",
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
         amount=123456789 - 11000 - 12300000,
     )
     with client:
@@ -82,10 +82,10 @@ def test_send_p2sh(client):
             [
                 request_input(0),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.ConfirmOutput),
                 request_output(1),
-                proto.ButtonRequest(code=B.ConfirmOutput),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_20912f),
                 request_input(0, TXHASH_20912f),
@@ -109,22 +109,22 @@ def test_send_p2sh(client):
 
 
 def test_send_p2sh_change(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("49'/1'/0'/1/0"),
         # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
         amount=123456789,
         prev_hash=TXHASH_20912f,
         prev_index=0,
-        script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+        script_type=messages.InputScriptType.SPENDP2SHWITNESS,
     )
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s",
         amount=12300000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         address_n=parse_path("49'/1'/0'/1/0"),
-        script_type=proto.OutputScriptType.PAYTOP2SHWITNESS,
+        script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
         amount=123456789 - 11000 - 12300000,
     )
     with client:
@@ -132,9 +132,9 @@ def test_send_p2sh_change(client):
             [
                 request_input(0),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.ConfirmOutput),
                 request_output(1),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_20912f),
                 request_input(0, TXHASH_20912f),
@@ -158,21 +158,21 @@ def test_send_p2sh_change(client):
 
 
 def test_send_native(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("84'/1'/0'/0/0"),
         amount=12300000,
         prev_hash=TXHASH_091446,
         prev_index=0,
-        script_type=proto.InputScriptType.SPENDWITNESS,
+        script_type=messages.InputScriptType.SPENDWITNESS,
     )
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp",
         amount=5000000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         address="tb1q694ccp5qcc0udmfwgp692u2s2hjpq5h407urtu",
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
         amount=12300000 - 11000 - 5000000,
     )
     with client:
@@ -180,10 +180,10 @@ def test_send_native(client):
             [
                 request_input(0),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.ConfirmOutput),
                 request_output(1),
-                proto.ButtonRequest(code=B.ConfirmOutput),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_091446),
                 request_input(0, TXHASH_091446),
@@ -207,21 +207,21 @@ def test_send_native(client):
 
 
 def test_send_to_taproot(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("84'/1'/0'/0/0"),
         amount=10000,
         prev_hash=TXHASH_ec16dc,
         prev_index=0,
-        script_type=proto.InputScriptType.SPENDWITNESS,
+        script_type=messages.InputScriptType.SPENDWITNESS,
     )
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="tb1pdvdljpj774356dpk32c2ks0yqv7q7c4f98px2d9e76s73vpudpxs7tl6vp",
         amount=7000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         address="tb1qcc4ext5rsa8pzqa2m030jk670wmn5f649pu7sr",
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
         amount=10000 - 7000 - 200,
     )
     with client:
@@ -236,21 +236,21 @@ def test_send_to_taproot(client):
 
 
 def test_send_native_change(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("84'/1'/0'/0/0"),
         amount=12300000,
         prev_hash=TXHASH_091446,
         prev_index=0,
-        script_type=proto.InputScriptType.SPENDWITNESS,
+        script_type=messages.InputScriptType.SPENDWITNESS,
     )
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp",
         amount=5000000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         address_n=parse_path("84'/1'/0'/1/0"),
-        script_type=proto.OutputScriptType.PAYTOWITNESS,
+        script_type=messages.OutputScriptType.PAYTOWITNESS,
         amount=12300000 - 11000 - 5000000,
     )
     with client:
@@ -258,9 +258,9 @@ def test_send_native_change(client):
             [
                 request_input(0),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.ConfirmOutput),
                 request_output(1),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_091446),
                 request_input(0, TXHASH_091446),
@@ -284,37 +284,37 @@ def test_send_native_change(client):
 
 
 def test_send_both(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("49'/1'/0'/1/0"),
         # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
         amount=111145789,
         prev_hash=TXHASH_091446,
         prev_index=1,
-        script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+        script_type=messages.InputScriptType.SPENDP2SHWITNESS,
     )
-    inp2 = proto.TxInputType(
+    inp2 = messages.TxInputType(
         address_n=parse_path("84'/1'/0'/1/0"),
         amount=7289000,
         prev_hash=TXHASH_65b811,
         prev_index=1,
-        script_type=proto.InputScriptType.SPENDWITNESS,
+        script_type=messages.InputScriptType.SPENDWITNESS,
     )
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="tb1q54un3q39sf7e7tlfq99d6ezys7qgc62a6rxllc",
         amount=12300000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         # address_n=parse_path("44'/1'/0'/0/0"),
-        # script_type=proto.OutputScriptType.PAYTOP2SHWITNESS,
+        # script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
         address="2N6UeBoqYEEnybg4cReFYDammpsyDw8R2Mc",
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
         amount=45600000,
     )
-    out3 = proto.TxOutputType(
+    out3 = messages.TxOutputType(
         address="mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q",
         amount=111145789 + 7289000 - 11000 - 12300000 - 45600000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with client:
@@ -323,12 +323,12 @@ def test_send_both(client):
                 request_input(0),
                 request_input(1),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.ConfirmOutput),
                 request_output(1),
-                proto.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.ConfirmOutput),
                 request_output(2),
-                proto.ButtonRequest(code=B.ConfirmOutput),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_091446),
                 request_input(0, TXHASH_091446),
@@ -365,26 +365,26 @@ def test_send_multisig_1(client):
         btc.get_public_node(client, parse_path(f"49'/1'/{index}'"), coin_name="Testnet")
         for index in range(1, 4)
     ]
-    multisig = proto.MultisigRedeemScriptType(
+    multisig = messages.MultisigRedeemScriptType(
         nodes=[deserialize(n.xpub) for n in nodes],
         address_n=[0, 0],
         signatures=[b"", b"", b""],
         m=2,
     )
 
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("49'/1'/1'/0/0"),
         prev_hash=TXHASH_9c3192,
         prev_index=1,
-        script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+        script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         multisig=multisig,
         amount=1610436,
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="tb1qch62pf820spe9mlq49ns5uexfnl6jzcezp7d328fw58lj0rhlhasge9hzy",
         amount=1605000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with client:
@@ -392,8 +392,8 @@ def test_send_multisig_1(client):
             [
                 request_input(0),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_9c3192),
                 request_input(0, TXHASH_9c3192),
@@ -414,8 +414,8 @@ def test_send_multisig_1(client):
             [
                 request_input(0),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_9c3192),
                 request_input(0, TXHASH_9c3192),
@@ -443,26 +443,26 @@ def test_send_multisig_2(client):
         btc.get_public_node(client, parse_path(f"84'/1'/{index}'"), coin_name="Testnet")
         for index in range(1, 4)
     ]
-    multisig = proto.MultisigRedeemScriptType(
+    multisig = messages.MultisigRedeemScriptType(
         nodes=[deserialize(n.xpub) for n in nodes],
         address_n=[0, 1],
         signatures=[b"", b"", b""],
         m=2,
     )
 
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("84'/1'/2'/0/1"),
         prev_hash=TXHASH_f41cbe,
         prev_index=0,
-        script_type=proto.InputScriptType.SPENDWITNESS,
+        script_type=messages.InputScriptType.SPENDWITNESS,
         multisig=multisig,
         amount=1605000,
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="tb1qr6xa5v60zyt3ry9nmfew2fk5g9y3gerkjeu6xxdz7qga5kknz2ssld9z2z",
         amount=1604000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with client:
@@ -470,8 +470,8 @@ def test_send_multisig_2(client):
             [
                 request_input(0),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_f41cbe),
                 request_input(0, TXHASH_f41cbe),
@@ -491,8 +491,8 @@ def test_send_multisig_2(client):
             [
                 request_input(0),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_f41cbe),
                 request_input(0, TXHASH_f41cbe),
@@ -519,33 +519,33 @@ def test_send_multisig_3_change(client):
         btc.get_public_node(client, parse_path(f"84'/1'/{index}'"), coin_name="Testnet")
         for index in range(1, 4)
     ]
-    multisig = proto.MultisigRedeemScriptType(
+    multisig = messages.MultisigRedeemScriptType(
         nodes=[deserialize(n.xpub) for n in nodes],
         address_n=[1, 0],
         signatures=[b"", b"", b""],
         m=2,
     )
-    multisig2 = proto.MultisigRedeemScriptType(
+    multisig2 = messages.MultisigRedeemScriptType(
         nodes=[deserialize(n.xpub) for n in nodes],
         address_n=[1, 1],
         signatures=[b"", b"", b""],
         m=2,
     )
 
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("84'/1'/1'/1/0"),
         prev_hash=TXHASH_c93480,
         prev_index=0,
-        script_type=proto.InputScriptType.SPENDWITNESS,
+        script_type=messages.InputScriptType.SPENDWITNESS,
         multisig=multisig,
         amount=1604000,
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address_n=parse_path("84'/1'/1'/1/1"),
         amount=1603000,
         multisig=multisig2,
-        script_type=proto.OutputScriptType.PAYTOP2SHWITNESS,
+        script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
     )
 
     with client:
@@ -553,7 +553,7 @@ def test_send_multisig_3_change(client):
             [
                 request_input(0),
                 request_output(0),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_c93480),
                 request_input(0, TXHASH_c93480),
@@ -574,7 +574,7 @@ def test_send_multisig_3_change(client):
             [
                 request_input(0),
                 request_output(0),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_c93480),
                 request_input(0, TXHASH_c93480),
@@ -601,33 +601,33 @@ def test_send_multisig_4_change(client):
         btc.get_public_node(client, parse_path(f"49'/1'/{index}'"), coin_name="Testnet")
         for index in range(1, 4)
     ]
-    multisig = proto.MultisigRedeemScriptType(
+    multisig = messages.MultisigRedeemScriptType(
         nodes=[deserialize(n.xpub) for n in nodes],
         address_n=[1, 1],
         signatures=[b"", b"", b""],
         m=2,
     )
-    multisig2 = proto.MultisigRedeemScriptType(
+    multisig2 = messages.MultisigRedeemScriptType(
         nodes=[deserialize(n.xpub) for n in nodes],
         address_n=[1, 2],
         signatures=[b"", b"", b""],
         m=2,
     )
 
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("49'/1'/1'/1/1"),
         prev_hash=TXHASH_31bc1c,
         prev_index=0,
-        script_type=proto.InputScriptType.SPENDP2SHWITNESS,
+        script_type=messages.InputScriptType.SPENDP2SHWITNESS,
         multisig=multisig,
         amount=1603000,
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address_n=parse_path("49'/1'/1'/1/2"),
         amount=1602000,
         multisig=multisig2,
-        script_type=proto.OutputScriptType.PAYTOWITNESS,
+        script_type=messages.OutputScriptType.PAYTOWITNESS,
     )
 
     with client:
@@ -635,7 +635,7 @@ def test_send_multisig_4_change(client):
             [
                 request_input(0),
                 request_output(0),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_31bc1c),
                 request_input(0, TXHASH_31bc1c),
@@ -656,7 +656,7 @@ def test_send_multisig_4_change(client):
             [
                 request_input(0),
                 request_output(0),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_31bc1c),
                 request_input(0, TXHASH_31bc1c),
@@ -691,40 +691,40 @@ def test_multisig_mismatch_inputs_single(client):
     )
 
     # tb1qpzmgzpcumztvmpu3q27wwdggqav26j9dgks92pvnne2lz9ferxgssmhzlq
-    multisig_in = proto.MultisigRedeemScriptType(
+    multisig_in = messages.MultisigRedeemScriptType(
         nodes=[node_int, node_ext], address_n=[0, 0], signatures=[b"", b""], m=1
     )
 
-    multisig_out = proto.MultisigRedeemScriptType(
+    multisig_out = messages.MultisigRedeemScriptType(
         nodes=[node_int, node_ext], address_n=[1, 0], signatures=[b"", b""], m=1
     )
 
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("84'/1'/0'/0/0"),
         amount=12300000,
         prev_hash=TXHASH_091446,
         prev_index=0,
-        script_type=proto.InputScriptType.SPENDWITNESS,
+        script_type=messages.InputScriptType.SPENDWITNESS,
     )
 
-    inp2 = proto.TxInputType(
+    inp2 = messages.TxInputType(
         address_n=parse_path("84'/1'/0'/0/0"),
         prev_hash=TXHASH_a345b8,
         prev_index=0,
-        script_type=proto.InputScriptType.SPENDWITNESS,
+        script_type=messages.InputScriptType.SPENDWITNESS,
         multisig=multisig_in,
         amount=100,
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="2N4Q5FhU2497BryFfUgbqkAJE87aKHUhXMp",
         amount=5000000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         address_n=parse_path("84'/1'/0'/1/0"),
-        script_type=proto.OutputScriptType.PAYTOWITNESS,
+        script_type=messages.OutputScriptType.PAYTOWITNESS,
         multisig=multisig_out,
         amount=12300000 + 100 - 5000000 - 10000,
     )
@@ -735,11 +735,11 @@ def test_multisig_mismatch_inputs_single(client):
                 request_input(0),
                 request_input(1),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.ConfirmOutput),
                 request_output(1),
                 # Ensure that the multisig output is not identified as a change output.
-                proto.ButtonRequest(code=B.ConfirmOutput),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_091446),
                 request_input(0, TXHASH_091446),

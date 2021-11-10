@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import btc, messages as proto
+from trezorlib import btc, messages
 from trezorlib.tools import parse_path
 
 from ..tx_cache import TxCache
@@ -28,7 +28,7 @@ from .signtx import (
     request_output,
 )
 
-B = proto.ButtonRequestType
+B = messages.ButtonRequestType
 TX_API = TxCache("Dash")
 
 TXHASH_5579ea = bytes.fromhex(
@@ -42,26 +42,26 @@ pytestmark = pytest.mark.altcoin
 
 
 def test_send_dash(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("44'/5'/0'/0/0"),
         # dash:XdTw4G5AWW4cogGd7ayybyBNDbuB45UpgH
         amount=1000000000,
         prev_hash=TXHASH_5579ea,
         prev_index=1,
-        script_type=proto.InputScriptType.SPENDADDRESS,
+        script_type=messages.InputScriptType.SPENDADDRESS,
     )
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="XpTc36DPAeWmaueNBA9JqCg2GC8XDLKSYe",
         amount=999999000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
         client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(inp1.prev_hash),
                 request_input(0, inp1.prev_hash),
@@ -83,23 +83,23 @@ def test_send_dash(client):
 
 
 def test_send_dash_dip2_input(client):
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         address_n=parse_path("44'/5'/0'/0/0"),
         # dash:XdTw4G5AWW4cogGd7ayybyBNDbuB45UpgH
         amount=4095000260,
         prev_hash=TXHASH_15575a,
         prev_index=1,
-        script_type=proto.InputScriptType.SPENDADDRESS,
+        script_type=messages.InputScriptType.SPENDADDRESS,
     )
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address_n=parse_path("44'/5'/0'/1/0"),
         amount=4000000000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         address="XrEFMNkxeipYHgEQKiJuqch8XzwrtfH5fm",
         amount=95000000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
     with client:
         client.set_expected_responses(
@@ -107,8 +107,8 @@ def test_send_dash_dip2_input(client):
                 request_input(0),
                 request_output(0),
                 request_output(1),
-                proto.ButtonRequest(code=B.ConfirmOutput),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(inp1.prev_hash),
                 request_input(0, inp1.prev_hash),

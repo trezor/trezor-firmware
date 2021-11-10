@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import btc, messages as proto
+from trezorlib import btc, messages
 from trezorlib.tools import parse_path
 
 from ..tx_cache import TxCache
@@ -28,7 +28,7 @@ from .signtx import (
     request_output,
 )
 
-B = proto.ButtonRequestType
+B = messages.ButtonRequestType
 TX_API = TxCache("Komodo")
 
 TXHASH_2807c = bytes.fromhex(
@@ -45,7 +45,7 @@ def test_one_one_fee_sapling(client):
     # prevout: 2807c5b126ec8e2b078cab0f12e4c8b4ce1d7724905f8ebef8dca26b0c8e0f1d:0
     # input 1: 10.9998 KMD
 
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         # R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi
         address_n=parse_path("44'/141'/0'/0/0"),
         amount=1099980000,
@@ -53,10 +53,10 @@ def test_one_one_fee_sapling(client):
         prev_index=0,
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi",
         amount=1099980000 - 10000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with client:
@@ -64,9 +64,9 @@ def test_one_one_fee_sapling(client):
             [
                 request_input(0),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
-                proto.ButtonRequest(code=B.SignTx),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_2807c),
                 request_input(0, TXHASH_2807c),
@@ -101,7 +101,7 @@ def test_one_one_rewards_claim(client):
     # prevout: 7b28bd91119e9776f0d4ebd80e570165818a829bbf4477cd1afe5149dbcd34b1:0
     # input 1: 10.9997 KMD
 
-    inp1 = proto.TxInputType(
+    inp1 = messages.TxInputType(
         # R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi
         address_n=parse_path("44'/141'/0'/0/0"),
         amount=1099970000,
@@ -109,17 +109,17 @@ def test_one_one_rewards_claim(client):
         prev_index=0,
     )
 
-    out1 = proto.TxOutputType(
+    out1 = messages.TxOutputType(
         address="R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi",
         amount=1099970000 - 10000,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     # kmd interest, vout sum > vin sum
-    out2 = proto.TxOutputType(
+    out2 = messages.TxOutputType(
         address="R9HgJZo6JBKmPvhm7whLSR8wiHyZrEDVRi",
         amount=79605,
-        script_type=proto.OutputScriptType.PAYTOADDRESS,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
     with client:
@@ -127,11 +127,11 @@ def test_one_one_rewards_claim(client):
             [
                 request_input(0),
                 request_output(0),
-                proto.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.ConfirmOutput),
                 request_output(1),
-                proto.ButtonRequest(code=B.ConfirmOutput),
-                proto.ButtonRequest(code=B.SignTx),
-                proto.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.SignTx),
+                messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_7b28bd),
                 request_input(0, TXHASH_7b28bd),
