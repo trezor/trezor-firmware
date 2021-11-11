@@ -216,14 +216,88 @@ bool compute_address(const CoinInfo *coin, InputScriptType script_type,
   return 1;
 }
 
+static int address_to_script_pubkey(const CoinInfo *coin, const char *address,
+                                    uint8_t *script_pubkey, pb_size_t *size) {
+  uint8_t addr_raw[MAX_ADDR_RAW_SIZE] = {0};
+  size_t addr_raw_len = base58_decode_check(address, coin->curve->hasher_base58,
+                                            addr_raw, MAX_ADDR_RAW_SIZE);
+
+  // P2PKH
+  size_t prefix_len = address_prefix_bytes_len(coin->address_type);
+  if (addr_raw_len == 20 + prefix_len &&
+      address_check_prefix(addr_raw, coin->address_type)) {
+    script_pubkey[0] = 0x76;  // OP_DUP
+    script_pubkey[1] = 0xA9;  // OP_HASH_160
+    script_pubkey[2] = 0x14;  // pushing 20 bytes
+    memcpy(script_pubkey + 3, addr_raw + prefix_len, 20);
+    script_pubkey[23] = 0x88;  // OP_EQUALVERIFY
+    script_pubkey[24] = 0xAC;  // OP_CHECKSIG
+    *size = 25;
+    return 1;
+  }
+
+  // P2SH
+  prefix_len = address_prefix_bytes_len(coin->address_type_p2sh);
+  if (addr_raw_len == 20 + prefix_len &&
+      address_check_prefix(addr_raw, coin->address_type_p2sh)) {
+    script_pubkey[0] = 0xA9;  // OP_HASH_160
+    script_pubkey[1] = 0x14;  // pushing 20 bytes
+    memcpy(script_pubkey + 2, addr_raw + prefix_len, 20);
+    script_pubkey[22] = 0x87;  // OP_EQUAL
+    *size = 23;
+    return 1;
+  }
+
+  if (coin->cashaddr_prefix &&
+      cash_addr_decode(addr_raw, &addr_raw_len, coin->cashaddr_prefix,
+                       address)) {
+    if (addr_raw_len == 21 && addr_raw[0] == (CASHADDR_P2KH | CASHADDR_160)) {
+      script_pubkey[0] = 0x76;  // OP_DUP
+      script_pubkey[1] = 0xA9;  // OP_HASH_160
+      script_pubkey[2] = 0x14;  // pushing 20 bytes
+      memcpy(script_pubkey + 3, addr_raw + 1, 20);
+      script_pubkey[23] = 0x88;  // OP_EQUALVERIFY
+      script_pubkey[24] = 0xAC;  // OP_CHECKSIG
+      *size = 25;
+      return 1;
+    } else if (addr_raw_len == 21 &&
+               addr_raw[0] == (CASHADDR_P2SH | CASHADDR_160)) {
+      script_pubkey[0] = 0xA9;  // OP_HASH_160
+      script_pubkey[1] = 0x14;  // pushing 20 bytes
+      memcpy(script_pubkey + 2, addr_raw + 1, 20);
+      script_pubkey[22] = 0x87;  // OP_EQUAL
+      *size = 23;
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
+  // SegWit
+  if (coin->bech32_prefix) {
+    int witver = 0;
+    if (!segwit_addr_decode(&witver, addr_raw, &addr_raw_len,
+                            coin->bech32_prefix, address)) {
+      return 0;
+    }
+    // push 1 byte version id (opcode OP_0 = 0, OP_i = 80+i)
+    // push addr_raw (segwit_addr_decode makes sure addr_raw_len is at most 40)
+    script_pubkey[0] = witver == 0 ? 0 : 80 + witver;
+    script_pubkey[1] = addr_raw_len;
+    memcpy(script_pubkey + 2, addr_raw, addr_raw_len);
+    *size = addr_raw_len + 2;
+    return 1;
+  }
+
+  return 0;
+}
+
 int compile_output(const CoinInfo *coin, AmountUnit amount_unit,
                    const HDNode *root, TxOutputType *in, TxOutputBinType *out,
                    bool needs_confirm) {
   memzero(out, sizeof(TxOutputBinType));
   out->amount = in->amount;
   out->decred_script_version = DECRED_SCRIPT_VERSION;
-  uint8_t addr_raw[MAX_ADDR_RAW_SIZE] = {0};
-  size_t addr_raw_len = 0;
 
   if (in->script_type == OutputScriptType_PAYTOOPRETURN) {
     // only 0 satoshi allowed for OP_RETURN
@@ -295,66 +369,8 @@ int compile_output(const CoinInfo *coin, AmountUnit amount_unit,
     return 0;  // failed to compile output
   }
 
-  addr_raw_len = base58_decode_check(in->address, coin->curve->hasher_base58,
-                                     addr_raw, MAX_ADDR_RAW_SIZE);
-  size_t prefix_len = 0;
-  // p2pkh
-  if (addr_raw_len ==
-          20 + (prefix_len = address_prefix_bytes_len(coin->address_type)) &&
-      address_check_prefix(addr_raw, coin->address_type)) {
-    out->script_pubkey.bytes[0] = 0x76;  // OP_DUP
-    out->script_pubkey.bytes[1] = 0xA9;  // OP_HASH_160
-    out->script_pubkey.bytes[2] = 0x14;  // pushing 20 bytes
-    memcpy(out->script_pubkey.bytes + 3, addr_raw + prefix_len, 20);
-    out->script_pubkey.bytes[23] = 0x88;  // OP_EQUALVERIFY
-    out->script_pubkey.bytes[24] = 0xAC;  // OP_CHECKSIG
-    out->script_pubkey.size = 25;
-  } else
-      // p2sh
-      if (addr_raw_len == 20 + (prefix_len = address_prefix_bytes_len(
-                                    coin->address_type_p2sh)) &&
-          address_check_prefix(addr_raw, coin->address_type_p2sh)) {
-    out->script_pubkey.bytes[0] = 0xA9;  // OP_HASH_160
-    out->script_pubkey.bytes[1] = 0x14;  // pushing 20 bytes
-    memcpy(out->script_pubkey.bytes + 2, addr_raw + prefix_len, 20);
-    out->script_pubkey.bytes[22] = 0x87;  // OP_EQUAL
-    out->script_pubkey.size = 23;
-  } else if (coin->cashaddr_prefix &&
-             cash_addr_decode(addr_raw, &addr_raw_len, coin->cashaddr_prefix,
-                              in->address)) {
-    if (addr_raw_len == 21 && addr_raw[0] == (CASHADDR_P2KH | CASHADDR_160)) {
-      out->script_pubkey.bytes[0] = 0x76;  // OP_DUP
-      out->script_pubkey.bytes[1] = 0xA9;  // OP_HASH_160
-      out->script_pubkey.bytes[2] = 0x14;  // pushing 20 bytes
-      memcpy(out->script_pubkey.bytes + 3, addr_raw + 1, 20);
-      out->script_pubkey.bytes[23] = 0x88;  // OP_EQUALVERIFY
-      out->script_pubkey.bytes[24] = 0xAC;  // OP_CHECKSIG
-      out->script_pubkey.size = 25;
-
-    } else if (addr_raw_len == 21 &&
-               addr_raw[0] == (CASHADDR_P2SH | CASHADDR_160)) {
-      out->script_pubkey.bytes[0] = 0xA9;  // OP_HASH_160
-      out->script_pubkey.bytes[1] = 0x14;  // pushing 20 bytes
-      memcpy(out->script_pubkey.bytes + 2, addr_raw + 1, 20);
-      out->script_pubkey.bytes[22] = 0x87;  // OP_EQUAL
-      out->script_pubkey.size = 23;
-    } else {
-      return 0;
-    }
-  } else if (coin->bech32_prefix) {
-    int witver = 0;
-    if (!segwit_addr_decode(&witver, addr_raw, &addr_raw_len,
-                            coin->bech32_prefix, in->address)) {
-      return 0;
-    }
-    // segwit:
-    // push 1 byte version id (opcode OP_0 = 0, OP_i = 80+i)
-    // push addr_raw (segwit_addr_decode makes sure addr_raw_len is at most 40)
-    out->script_pubkey.bytes[0] = witver == 0 ? 0 : 80 + witver;
-    out->script_pubkey.bytes[1] = addr_raw_len;
-    memcpy(out->script_pubkey.bytes + 2, addr_raw, addr_raw_len);
-    out->script_pubkey.size = addr_raw_len + 2;
-  } else {
+  if (!address_to_script_pubkey(coin, in->address, out->script_pubkey.bytes,
+                                &out->script_pubkey.size)) {
     return 0;
   }
 
@@ -366,6 +382,24 @@ int compile_output(const CoinInfo *coin, AmountUnit amount_unit,
   }
 
   return out->script_pubkey.size;
+}
+
+int fill_input_script_pubkey(const CoinInfo *coin, const HDNode *root,
+                             TxInputType *in) {
+  static CONFIDENTIAL HDNode node;
+  memcpy(&node, root, sizeof(HDNode));
+  char address[MAX_ADDR_SIZE] = {0};
+  bool res = true;
+  res = res && hdnode_private_ckd_cached(&node, in->address_n,
+                                         in->address_n_count, NULL);
+  res = res && (hdnode_fill_public_key(&node) == 0);
+  res = res && compute_address(coin, in->script_type, &node, in->has_multisig,
+                               &in->multisig, address);
+  memzero(&node, sizeof(node));
+  res = res && address_to_script_pubkey(coin, address, in->script_pubkey.bytes,
+                                        &in->script_pubkey.size);
+  in->has_script_pubkey = res;
+  return res;
 }
 
 uint32_t compile_script_sig(uint32_t address_type, const uint8_t *pubkeyhash,
@@ -506,6 +540,7 @@ void tx_input_check_hash(Hasher *hasher, const TxInputType *input) {
   hasher_Update(hasher, (const uint8_t *)&input->sequence,
                 sizeof(input->sequence));
   hasher_Update(hasher, (const uint8_t *)&input->amount, sizeof(input->amount));
+  tx_script_hash(hasher, input->script_pubkey.size, input->script_pubkey.bytes);
   return;
 }
 
