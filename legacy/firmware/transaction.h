@@ -75,6 +75,8 @@ uint32_t serialize_script_multisig(const CoinInfo *coin,
 int compile_output(const CoinInfo *coin, AmountUnit amount_unit,
                    const HDNode *root, TxOutputType *in, TxOutputBinType *out,
                    bool needs_confirm);
+int fill_input_script_pubkey(const CoinInfo *coin, const HDNode *root,
+                             TxInputType *in);
 
 void tx_input_check_hash(Hasher *hasher, const TxInputType *input);
 uint32_t tx_prevout_hash(Hasher *hasher, const TxInputType *input);
