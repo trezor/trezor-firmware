@@ -1031,6 +1031,15 @@ static bool signing_validate_input(const TxInputType *txinput) {
     }
   }
 
+  if (txinput->has_script_pubkey) {
+    // scriptPubKey should only be provided for external inputs, which are not
+    // supported in this firmware
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("Input's script_pubkey provided but not expected."));
+    signing_abort();
+    return false;
+  }
+
   return true;
 }
 
@@ -1209,7 +1218,17 @@ static void tx_info_finish(TxInfo *tx_info) {
   }
 }
 
-static bool signing_check_input(const TxInputType *txinput) {
+static bool signing_check_input(TxInputType *txinput) {
+  // hash all input data to check it later (relevant for fee computation)
+  tx_input_check_hash(&hasher_check, txinput);
+
+  if (!fill_input_script_pubkey(coin, &root, txinput)) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to derive scriptPubKey"));
+    signing_abort();
+    return false;
+  }
+
   // Add input to BIP143 computation.
   if (!tx_info_add_input(&info, txinput)) {
     return false;
@@ -1227,8 +1246,6 @@ static bool signing_check_input(const TxInputType *txinput) {
     tx_serialize_input_hash(&ti, txinput);
   }
 #endif
-  // hash all input data to check it later (relevant for fee computation)
-  tx_input_check_hash(&hasher_check, txinput);
   return true;
 }
 
@@ -1410,17 +1427,29 @@ static bool save_signature(TxInputType *txinput) {
 }
 
 static bool signing_check_orig_input(TxInputType *orig_input) {
+  if (!fill_input_script_pubkey(coin, &root, orig_input)) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to derive scriptPubKey"));
+    signing_abort();
+    return false;
+  }
+
   // Verify that the original input matches the current input.
   // An input is characterized by its prev_hash and prev_index. We also
   // check that the amounts match, so that we don't have to stream the
   // prevtx twice for the same prevtx output. Verifying that script_type
-  // matches is just a sanity check.
+  // matches is just a sanity check. When all inputs are taproot, we don't
+  // check the prevtxs, so we have to ensure that the claims about the
+  // script_pubkey values and amounts remain consistent throughout.
   if (orig_input->prev_hash.size != input.prev_hash.size ||
       memcmp(orig_input->prev_hash.bytes, input.prev_hash.bytes,
              input.prev_hash.size) != 0 ||
       orig_input->prev_index != input.prev_index ||
       orig_input->amount != input.amount ||
-      orig_input->script_type != input.script_type) {
+      orig_input->script_type != input.script_type ||
+      orig_input->script_pubkey.size != input.script_pubkey.size ||
+      memcmp(orig_input->script_pubkey.bytes, input.script_pubkey.bytes,
+             input.script_pubkey.size) != 0) {
     fsm_sendFailure(FailureType_Failure_ProcessError,
                     _("Original input does not match current input."));
     signing_abort();
