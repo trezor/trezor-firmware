@@ -5,7 +5,7 @@ from trezor.messages import TxInput
 from trezor.messages import PrevOutput
 
 from apps.common import coins
-from apps.bitcoin.common import SIGHASH_ALL
+from apps.bitcoin.common import SigHashType
 from apps.bitcoin.writers import get_tx_hash
 
 if not utils.BITCOIN_ONLY:
@@ -213,7 +213,7 @@ class TestZcashZip243(unittest.TestCase):
             self.assertEqual(hexlify(get_tx_hash(zip243.h_prevouts)), v["prevouts_hash"])
             self.assertEqual(hexlify(get_tx_hash(zip243.h_sequence)), v["sequence_hash"])
             self.assertEqual(hexlify(get_tx_hash(zip243.h_outputs)), v["outputs_hash"])
-            self.assertEqual(hexlify(zip243.hash143(txi, [unhexlify(i["pubkey"])], 1, tx, coin, SIGHASH_ALL)), v["preimage_hash"])
+            self.assertEqual(hexlify(zip243.hash143(txi, [unhexlify(i["pubkey"])], 1, tx, coin, SigHashType.SIGHASH_ALL)), v["preimage_hash"])
 
 
 if __name__ == "__main__":

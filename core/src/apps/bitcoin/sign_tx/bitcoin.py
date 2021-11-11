@@ -10,8 +10,7 @@ from apps.common.writers import write_bitcoin_varint
 
 from .. import addresses, common, multisig, scripts, writers
 from ..common import (
-    SIGHASH_ALL,
-    SIGHASH_ALL_TAPROOT,
+    SigHashType,
     bip340_sign,
     ecdsa_sign,
     input_is_external,
@@ -408,7 +407,9 @@ class Bitcoin:
             verifier = SignatureVerifier(
                 script_pubkey, txi.script_sig, txi.witness, self.coin
             )
-            verifier.ensure_hash_type((SIGHASH_ALL_TAPROOT, self.get_hash_type(txi)))
+            verifier.ensure_hash_type(
+                (SigHashType.SIGHASH_ALL_TAPROOT, self.get_sighash_type(txi))
+            )
             tx_digest = await self.get_tx_digest(
                 orig.verification_index,
                 txi,
@@ -456,7 +457,7 @@ class Bitcoin:
                     threshold,
                     tx_info.tx,
                     self.coin,
-                    self.get_sighash_type(txi),
+                    self.get_hash_type(txi),
                 )
         else:
             digest, _, _ = await self.get_legacy_tx_digest(i, tx_info, script_pubkey)
@@ -479,7 +480,9 @@ class Bitcoin:
                 script_pubkey, txi.script_sig, txi.witness, self.coin
             )
 
-            verifier.ensure_hash_type((SIGHASH_ALL_TAPROOT, self.get_hash_type(txi)))
+            verifier.ensure_hash_type(
+                (SigHashType.SIGHASH_ALL_TAPROOT, self.get_sighash_type(txi))
+            )
 
             tx_digest = await self.get_tx_digest(
                 i,
@@ -536,7 +539,7 @@ class Bitcoin:
             threshold,
             self.tx_info.tx,
             self.coin,
-            self.get_sighash_type(txi),
+            self.get_hash_type(txi),
         )
 
         signature = ecdsa_sign(node, hash143_digest)
@@ -563,7 +566,7 @@ class Bitcoin:
         if txi.script_type == InputScriptType.SPENDTAPROOT:
             signature = self.sign_taproot_input(i, txi)
             scripts.write_witness_p2tr(
-                self.serialized_tx, signature, self.get_hash_type(txi)
+                self.serialized_tx, signature, self.get_sighash_type(txi)
             )
         else:
             public_key, signature = self.sign_bip143_input(i, txi)
@@ -578,11 +581,14 @@ class Bitcoin:
                     txi.multisig,
                     signature,
                     signature_index,
-                    self.get_hash_type(txi),
+                    self.get_sighash_type(txi),
                 )
             else:
                 scripts.write_witness_p2wpkh(
-                    self.serialized_tx, signature, public_key, self.get_hash_type(txi)
+                    self.serialized_tx,
+                    signature,
+                    public_key,
+                    self.get_sighash_type(txi),
                 )
 
         self.set_serialized_signature(i, signature)
@@ -645,7 +651,7 @@ class Bitcoin:
             self.write_tx_output(h_sign, txo, script_pubkey)
 
         writers.write_uint32(h_sign, tx_info.tx.lock_time)
-        writers.write_uint32(h_sign, self.get_sighash_type(txi_sign))
+        writers.write_uint32(h_sign, self.get_hash_type(txi_sign))
 
         # check that the inputs were the same as those streamed for approval
         if tx_info.get_tx_check_digest() != h_check.get_digest():
@@ -730,18 +736,19 @@ class Bitcoin:
     # Tx Helpers
     # ===
 
-    def get_sighash_type(self, txi: TxInput) -> int:
-        if common.input_is_taproot(txi):
-            return SIGHASH_ALL_TAPROOT
-        else:
-            return SIGHASH_ALL
-
     def get_hash_type(self, txi: TxInput) -> int:
+        # The nHashType in BIP 143.
+        if common.input_is_taproot(txi):
+            return SigHashType.SIGHASH_ALL_TAPROOT
+        else:
+            return SigHashType.SIGHASH_ALL
+
+    def get_sighash_type(self, txi: TxInput) -> SigHashType:
         """ Return the nHashType flags."""
         # The nHashType is the 8 least significant bits of the sighash type.
         # Some coins set the 24 most significant bits of the sighash type to
         # the fork ID value.
-        return self.get_sighash_type(txi) & 0xFF
+        return self.get_hash_type(txi) & 0xFF  # type: ignore
 
     def write_tx_input_derived(
         self,
@@ -757,7 +764,7 @@ class Bitcoin:
             txi.script_type,
             txi.multisig,
             self.coin,
-            self.get_hash_type(txi),
+            self.get_sighash_type(txi),
             pubkey,
             signature,
         )

@@ -1,6 +1,6 @@
 from common import *
 
-from apps.bitcoin.common import SIGHASH_ALL, SIGHASH_ALL_TAPROOT
+from apps.bitcoin.common import SigHashType
 from apps.bitcoin.scripts import output_derive_script
 from apps.bitcoin.sign_tx.bitcoin import BitcoinSigHasher
 from apps.bitcoin.writers import get_tx_hash
@@ -108,12 +108,12 @@ VECTORS = [
         [
             {
                 "index": 3,
-                "hash_type": SIGHASH_ALL,
+                "hash_type": SigHashType.SIGHASH_ALL,
                 "result": unhexlify('6ffd256e108685b41831385f57eebf2fca041bc6b5e607ea11b3e03d4cf9d9ba'),
             },
             {
                 "index": 4,
-                "hash_type": SIGHASH_ALL_TAPROOT,
+                "hash_type": SigHashType.SIGHASH_ALL_TAPROOT,
                 "result": unhexlify('9f90136737540ccc18707e1fd398ad222a1a7e4dd65cbfd22dbe4660191efa58'),
             },
         ]
@@ -155,7 +155,7 @@ VECTORS = [
         [
             {
                 "index": 1,
-                "hash_type": SIGHASH_ALL_TAPROOT,
+                "hash_type": SigHashType.SIGHASH_ALL_TAPROOT,
                 "result": unhexlify('07333acfe6dce8196f1ad62b2e039a3d9f0b6627bf955be767c519c0f8789ff4'),
             },
         ]

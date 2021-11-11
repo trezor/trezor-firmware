@@ -8,6 +8,7 @@ from apps.common.readers import read_bitcoin_varint
 from apps.common.writers import write_bitcoin_varint
 
 from . import common
+from .common import SigHashType
 from .multisig import (
     multisig_get_pubkey_count,
     multisig_get_pubkeys,
@@ -37,13 +38,13 @@ def write_input_script_prefixed(
     script_type: InputScriptType,
     multisig: MultisigRedeemScriptType | None,
     coin: CoinInfo,
-    hash_type: int,
+    sighash_type: SigHashType,
     pubkey: bytes,
     signature: bytes,
 ) -> None:
     if script_type == InputScriptType.SPENDADDRESS:
         # p2pkh or p2sh
-        write_input_script_p2pkh_or_p2sh_prefixed(w, pubkey, signature, hash_type)
+        write_input_script_p2pkh_or_p2sh_prefixed(w, pubkey, signature, sighash_type)
     elif script_type == InputScriptType.SPENDP2SHWITNESS:
         # p2wpkh or p2wsh using p2sh
 
@@ -69,7 +70,7 @@ def write_input_script_prefixed(
         assert multisig is not None  # checked in sanitize_tx_input
         signature_index = multisig_pubkey_index(multisig, pubkey)
         write_input_script_multisig_prefixed(
-            w, multisig, signature, signature_index, hash_type, coin
+            w, multisig, signature, signature_index, sighash_type, coin
         )
     else:
         raise wire.ProcessError("Invalid script type")
@@ -150,19 +151,21 @@ def write_bip143_script_code_prefixed(
 
 
 def write_input_script_p2pkh_or_p2sh_prefixed(
-    w: Writer, pubkey: bytes, signature: bytes, hash_type: int
+    w: Writer, pubkey: bytes, signature: bytes, sighash_type: SigHashType
 ) -> None:
     write_bitcoin_varint(w, 1 + len(signature) + 1 + 1 + len(pubkey))
-    append_signature(w, signature, hash_type)
+    append_signature(w, signature, sighash_type)
     append_pubkey(w, pubkey)
 
 
-def parse_input_script_p2pkh(script_sig: bytes) -> tuple[memoryview, memoryview, int]:
+def parse_input_script_p2pkh(
+    script_sig: bytes,
+) -> tuple[memoryview, memoryview, SigHashType]:
     try:
         r = utils.BufferReader(script_sig)
         n = read_op_push(r)
         signature = r.read_memoryview(n - 1)
-        hash_type = r.get()
+        sighash_type = SigHashType.from_int(r.get())
 
         n = read_op_push(r)
         pubkey = r.read_memoryview()
@@ -171,7 +174,7 @@ def parse_input_script_p2pkh(script_sig: bytes) -> tuple[memoryview, memoryview,
     except (ValueError, EOFError):
         wire.DataError("Invalid scriptSig.")
 
-    return pubkey, signature, hash_type
+    return pubkey, signature, sighash_type
 
 
 def write_output_script_p2pkh(
@@ -311,14 +314,14 @@ def write_input_script_p2wsh_in_p2sh(
 
 
 def write_witness_p2wpkh(
-    w: Writer, signature: bytes, pubkey: bytes, hash_type: int
+    w: Writer, signature: bytes, pubkey: bytes, sighash_type: SigHashType
 ) -> None:
     write_bitcoin_varint(w, 0x02)  # num of segwit items, in P2WPKH it's always 2
-    write_signature_prefixed(w, signature, hash_type)
+    write_signature_prefixed(w, signature, sighash_type)
     write_bytes_prefixed(w, pubkey)
 
 
-def parse_witness_p2wpkh(witness: bytes) -> tuple[memoryview, memoryview, int]:
+def parse_witness_p2wpkh(witness: bytes) -> tuple[memoryview, memoryview, SigHashType]:
     try:
         r = utils.BufferReader(witness)
 
@@ -328,7 +331,7 @@ def parse_witness_p2wpkh(witness: bytes) -> tuple[memoryview, memoryview, int]:
 
         n = read_bitcoin_varint(r)
         signature = r.read_memoryview(n - 1)
-        hash_type = r.get()
+        sighash_type = SigHashType.from_int(r.get())
 
         pubkey = read_memoryview_prefixed(r)
         if r.remaining_count():
@@ -336,7 +339,7 @@ def parse_witness_p2wpkh(witness: bytes) -> tuple[memoryview, memoryview, int]:
     except (ValueError, EOFError):
         raise wire.DataError("Invalid witness.")
 
-    return pubkey, signature, hash_type
+    return pubkey, signature, sighash_type
 
 
 def write_witness_multisig(
@@ -344,7 +347,7 @@ def write_witness_multisig(
     multisig: MultisigRedeemScriptType,
     signature: bytes,
     signature_index: int,
-    hash_type: int,
+    sighash_type: SigHashType,
 ) -> None:
     # get other signatures, stretch with empty bytes to the number of the pubkeys
     signatures = multisig.signatures + [b""] * (
@@ -367,7 +370,7 @@ def write_witness_multisig(
 
     for s in signatures:
         if s:
-            write_signature_prefixed(w, s, hash_type)  # size of the witness included
+            write_signature_prefixed(w, s, sighash_type)  # size of the witness included
 
     # redeem script
     pubkeys = multisig_get_pubkeys(multisig)
@@ -376,7 +379,7 @@ def write_witness_multisig(
 
 def parse_witness_multisig(
     witness: bytes,
-) -> tuple[memoryview, list[tuple[memoryview, int]]]:
+) -> tuple[memoryview, list[tuple[memoryview, SigHashType]]]:
     try:
         r = utils.BufferReader(witness)
 
@@ -391,8 +394,8 @@ def parse_witness_multisig(
         for _ in range(item_count - 2):
             n = read_bitcoin_varint(r)
             signature = r.read_memoryview(n - 1)
-            hash_type = r.get()
-            signatures.append((signature, hash_type))
+            sighash_type = SigHashType.from_int(r.get())
+            signatures.append((signature, sighash_type))
 
         script = read_memoryview_prefixed(r)
         if r.remaining_count():
@@ -407,13 +410,13 @@ def parse_witness_multisig(
 # ===
 
 
-def write_witness_p2tr(w: Writer, signature: bytes, hash_type: int) -> None:
+def write_witness_p2tr(w: Writer, signature: bytes, sighash_type: SigHashType) -> None:
     # Taproot key path spending without annex.
     write_bitcoin_varint(w, 0x01)  # num of segwit items
-    write_signature_prefixed(w, signature, hash_type)
+    write_signature_prefixed(w, signature, sighash_type)
 
 
-def parse_witness_p2tr(witness: bytes) -> tuple[memoryview, int]:
+def parse_witness_p2tr(witness: bytes) -> tuple[memoryview, SigHashType]:
     try:
         r = utils.BufferReader(witness)
 
@@ -426,14 +429,17 @@ def parse_witness_p2tr(witness: bytes) -> tuple[memoryview, int]:
             raise ValueError
 
         signature = r.read_memoryview(64)
-        hash_type = r.get() if n == 65 else common.SIGHASH_ALL_TAPROOT
+        if n == 65:
+            sighash_type = SigHashType.from_int(r.get())
+        else:
+            sighash_type = SigHashType.SIGHASH_ALL_TAPROOT
 
         if r.remaining_count():
             raise ValueError
     except (ValueError, EOFError):
         raise wire.DataError("Invalid witness.")
 
-    return signature, hash_type
+    return signature, sighash_type
 
 
 # Multisig
@@ -447,7 +453,7 @@ def write_input_script_multisig_prefixed(
     multisig: MultisigRedeemScriptType,
     signature: bytes,
     signature_index: int,
-    hash_type: int,
+    sighash_type: SigHashType,
     coin: CoinInfo,
 ) -> None:
     signatures = multisig.signatures  # other signatures
@@ -463,7 +469,7 @@ def write_input_script_multisig_prefixed(
     total_length = 1  # OP_FALSE
     for s in signatures:
         if s:
-            total_length += 1 + len(s) + 1  # length, signature, hash_type
+            total_length += 1 + len(s) + 1  # length, signature, sighash_type
     total_length += op_push_length(redeem_script_length) + redeem_script_length
     write_bitcoin_varint(w, total_length)
 
@@ -474,7 +480,7 @@ def write_input_script_multisig_prefixed(
 
     for s in signatures:
         if s:
-            append_signature(w, s, hash_type)
+            append_signature(w, s, sighash_type)
 
     # redeem script
     write_op_push(w, redeem_script_length)
@@ -483,7 +489,7 @@ def write_input_script_multisig_prefixed(
 
 def parse_input_script_multisig(
     script_sig: bytes,
-) -> tuple[memoryview, list[tuple[memoryview, int]]]:
+) -> tuple[memoryview, list[tuple[memoryview, SigHashType]]]:
     try:
         r = utils.BufferReader(script_sig)
 
@@ -495,8 +501,8 @@ def parse_input_script_multisig(
         n = read_op_push(r)
         while r.remaining_count() > n:
             signature = r.read_memoryview(n - 1)
-            hash_type = r.get()
-            signatures.append((signature, hash_type))
+            sighash_type = SigHashType.from_int(r.get())
+            signatures.append((signature, sighash_type))
             n = read_op_push(r)
 
         script = r.read_memoryview()
@@ -600,7 +606,7 @@ def write_bip322_signature_proof(
     signature: bytes,
 ) -> None:
     write_input_script_prefixed(
-        w, script_type, multisig, coin, common.SIGHASH_ALL, public_key, signature
+        w, script_type, multisig, coin, SigHashType.SIGHASH_ALL, public_key, signature
     )
 
     if script_type in common.SEGWIT_INPUT_SCRIPT_TYPES:
@@ -608,10 +614,10 @@ def write_bip322_signature_proof(
             # find the place of our signature based on the public key
             signature_index = multisig_pubkey_index(multisig, public_key)
             write_witness_multisig(
-                w, multisig, signature, signature_index, common.SIGHASH_ALL
+                w, multisig, signature, signature_index, SigHashType.SIGHASH_ALL
             )
         else:
-            write_witness_p2wpkh(w, signature, public_key, common.SIGHASH_ALL)
+            write_witness_p2wpkh(w, signature, public_key, SigHashType.SIGHASH_ALL)
     else:
         # Zero entries in witness stack.
         w.append(0x00)
@@ -627,21 +633,23 @@ def read_bip322_signature_proof(r: utils.BufferReader) -> tuple[memoryview, memo
 # ===
 
 
-def write_signature_prefixed(w: Writer, signature: bytes, hash_type: int) -> None:
+def write_signature_prefixed(
+    w: Writer, signature: bytes, sighash_type: SigHashType
+) -> None:
     length = len(signature)
-    if hash_type != common.SIGHASH_ALL_TAPROOT:
+    if sighash_type != SigHashType.SIGHASH_ALL_TAPROOT:
         length += 1
 
     write_bitcoin_varint(w, length)
     write_bytes_unchecked(w, signature)
-    if hash_type != common.SIGHASH_ALL_TAPROOT:
-        w.append(hash_type)
+    if sighash_type != SigHashType.SIGHASH_ALL_TAPROOT:
+        w.append(sighash_type)
 
 
-def append_signature(w: Writer, signature: bytes, hash_type: int) -> None:
+def append_signature(w: Writer, signature: bytes, sighash_type: SigHashType) -> None:
     write_op_push(w, len(signature) + 1)
     write_bytes_unchecked(w, signature)
-    w.append(hash_type)
+    w.append(sighash_type)
 
 
 def append_pubkey(w: Writer, pubkey: bytes | memoryview) -> None:

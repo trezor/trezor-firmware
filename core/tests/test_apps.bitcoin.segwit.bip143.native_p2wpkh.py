@@ -1,6 +1,6 @@
 from common import *
 
-from apps.bitcoin.common import SIGHASH_ALL
+from apps.bitcoin.common import SigHashType
 from apps.bitcoin.scripts import output_derive_script
 from apps.bitcoin.sign_tx.bitcoin import BitcoinSigHasher
 from apps.bitcoin.writers import get_tx_hash
@@ -95,7 +95,7 @@ class TestSegwitBip143NativeP2WPKH(unittest.TestCase):
 
         # test data public key hash
         # only for input 2 - input 1 is not segwit
-        result = sig_hasher.hash143(self.inp2, [node.public_key()], 1, self.tx, coin, SIGHASH_ALL)
+        result = sig_hasher.hash143(self.inp2, [node.public_key()], 1, self.tx, coin, SigHashType.SIGHASH_ALL)
         self.assertEqual(hexlify(result), b'2fa3f1351618b2532228d7182d3221d95c21fd3d496e7e22e9ded873cf022a8b')
 
 

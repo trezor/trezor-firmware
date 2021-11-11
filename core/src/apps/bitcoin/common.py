@@ -8,19 +8,43 @@ from trezor.enums import InputScriptType, OutputScriptType
 from trezor.utils import HashWriter, ensure
 
 if False:
+    from enum import IntEnum
     from typing import Tuple
     from apps.common.coininfo import CoinInfo
     from trezor.messages import TxInput
+else:
+    IntEnum = object  # type: ignore
 
 
 BITCOIN_NAMES = ("Bitcoin", "Regtest", "Testnet")
 
-# Signature hash type with the same semantics as the SIGHASH_ALL, but instead
-# of having to include the byte in the signature, it is implied.
-SIGHASH_ALL_TAPROOT = const(0x00)
 
-# Default signature hash type in Bitcoin which signs all inputs and all outputs of the transaction.
-SIGHASH_ALL = const(0x01)
+class SigHashType(IntEnum):
+    """Enumeration type listing the supported signature hash types."""
+
+    # Signature hash type with the same semantics as SIGHASH_ALL, but instead
+    # of having to include the byte in the signature, it is implied.
+    SIGHASH_ALL_TAPROOT = 0x00
+
+    # Default signature hash type in Bitcoin which signs all inputs and all
+    # outputs of the transaction.
+    SIGHASH_ALL = 0x01
+
+    # Signature hash flag used in some Bitcoin-like altcoins for replay
+    # protection.
+    SIGHASH_FORKID = 0x40
+
+    # Signature hash type with the same semantics as SIGHASH_ALL. Used in some
+    # Bitcoin-like altcoins for replay protection.
+    SIGHASH_ALL_FORKID = 0x41
+
+    @classmethod
+    def from_int(cls, sighash_type: int) -> "SigHashType":
+        for val in cls.__dict__.values():  # type: SigHashType
+            if val == sighash_type:
+                return val
+        raise ValueError("Unsupported sighash type.")
+
 
 # The number of bip32 levels used in a wallet (chain and address)
 BIP32_WALLET_DEPTH = const(2)
