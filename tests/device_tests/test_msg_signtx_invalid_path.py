@@ -61,12 +61,8 @@ class TestMsgSigntxInvalidPath:
         with pytest.raises(TrezorFailure) as exc:
             btc.sign_tx(client, "Litecoin", [inp1], [out1], prev_txes=TX_CACHE_MAINNET)
 
-        if client.features.model == "1":
-            assert exc.value.code == proto.FailureType.ProcessError
-            assert exc.value.message.endswith("Failed to compile input")
-        else:
-            assert exc.value.code == proto.FailureType.DataError
-            assert exc.value.message.endswith("Forbidden key path")
+        assert exc.value.code == proto.FailureType.DataError
+        assert exc.value.message.endswith("Forbidden key path")
 
     # Adapted from TestMsgSigntx.test_one_one_fee,
     # only changed the coin from Bitcoin to Litecoin and set safety checks to prompt.

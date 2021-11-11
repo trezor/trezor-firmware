@@ -653,14 +653,10 @@ bool check_change_bip32_path(const TxInfo *tx_info,
 }
 
 static bool fill_input_script_sig(TxInputType *tinput) {
-  memcpy(&node, &root, sizeof(HDNode));
-  if (hdnode_private_ckd_cached(&node, tinput->address_n,
-                                tinput->address_n_count, NULL) == 0) {
-    // Failed to derive private key
-    return false;
-  }
   if (hdnode_fill_public_key(&node) != 0) {
-    // Failed to derive public key
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to derive public key."));
+    signing_abort();
     return false;
   }
   if (tinput->has_multisig) {
@@ -675,30 +671,13 @@ static bool fill_input_script_sig(TxInputType *tinput) {
   return tinput->script_sig.size > 0;
 }
 
-bool compile_input_script_sig(TxInputType *tinput) {
-  if (!info.multisig_fp_mismatch) {
-    // check that this is still multisig
-    uint8_t h[32] = {0};
-    if (!tinput->has_multisig ||
-        cryptoMultisigFingerprint(&(tinput->multisig), h) == 0 ||
-        memcmp(info.multisig_fp, h, 32) != 0) {
-      // Transaction has changed during signing
-      return false;
-    }
-  }
-  if (info.in_address_n_count != BIP32_NOCHANGEALLOWED) {
-    // check that input address didn't change
-    size_t count = tinput->address_n_count;
-    if (count < 2 || count != info.in_address_n_count ||
-        0 != memcmp(info.in_address_n, tinput->address_n,
-                    (count - 2) * sizeof(uint32_t))) {
-      return false;
-    }
-  }
+static bool derive_node(TxInputType *tinput) {
   if (!coin_path_check(coin, tinput->script_type, tinput->address_n_count,
                        tinput->address_n, tinput->has_multisig,
                        CoinPathCheckLevel_BASIC)) {
     if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
+      fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
+      signing_abort();
       return false;
     }
 
@@ -708,11 +687,21 @@ bool compile_input_script_sig(TxInputType *tinput) {
     if (!protectButton(ButtonRequestType_ButtonRequest_UnknownDerivationPath,
                        false)) {
       fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-      layoutHome();
+      signing_abort();
       return false;
     }
   }
-  return fill_input_script_sig(tinput);
+
+  memcpy(&node, &root, sizeof(HDNode));
+  if (hdnode_private_ckd_cached(&node, tinput->address_n,
+                                tinput->address_n_count, NULL) == 0) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Failed to derive private key."));
+    signing_abort();
+    return false;
+  }
+
+  return true;
 }
 
 static bool tx_info_init(TxInfo *tx_info, uint32_t inputs_count,
@@ -1187,6 +1176,34 @@ static bool tx_info_add_input(TxInfo *tx_info, const TxInputType *txinput) {
   return true;
 }
 
+static bool tx_info_check_input(TxInfo *tx_info, TxInputType *tinput) {
+  if (!tx_info->multisig_fp_mismatch) {
+    // check that this is still multisig
+    uint8_t h[32] = {0};
+    if (!tinput->has_multisig ||
+        cryptoMultisigFingerprint(&(tinput->multisig), h) == 0 ||
+        memcmp(tx_info->multisig_fp, h, 32) != 0) {
+      fsm_sendFailure(FailureType_Failure_ProcessError,
+                      _("Transaction has changed during signing"));
+      signing_abort();
+      return false;
+    }
+  }
+  if (tx_info->in_address_n_count != BIP32_NOCHANGEALLOWED) {
+    // check that input address didn't change
+    size_t count = tinput->address_n_count;
+    if (count < 2 || count != tx_info->in_address_n_count ||
+        0 != memcmp(tx_info->in_address_n, tinput->address_n,
+                    (count - 2) * sizeof(uint32_t))) {
+      fsm_sendFailure(FailureType_Failure_ProcessError,
+                      _("Transaction has changed during signing"));
+      signing_abort();
+      return false;
+    }
+  }
+  return true;
+}
+
 static bool tx_info_add_output(TxInfo *tx_info,
                                const TxOutputBinType *tx_bin_output) {
   // Add output to BIP-143 hashOutputs.
@@ -1218,7 +1235,7 @@ static void tx_info_finish(TxInfo *tx_info) {
   }
 }
 
-static bool signing_check_input(TxInputType *txinput) {
+static bool signing_add_input(TxInputType *txinput) {
   // hash all input data to check it later (relevant for fee computation)
   tx_input_check_hash(&hasher_check, txinput);
 
@@ -1316,7 +1333,7 @@ static bool is_change_output(const TxInfo *tx_info,
   return check_change_bip32_path(tx_info, txoutput);
 }
 
-static bool signing_check_output(TxOutputType *txoutput) {
+static bool signing_add_output(TxOutputType *txoutput) {
   // Phase1: Check outputs
   //   add it to hash_outputs
   //   ask user for permission
@@ -1488,10 +1505,7 @@ static bool signing_check_orig_input(TxInputType *orig_input) {
     // (aka BIP-143 script code), which is what our code expects here in order
     // to properly compute the legacy transaction digest or BIP-143 transaction
     // digest.
-    if (!fill_input_script_sig(orig_input)) {
-      fsm_sendFailure(FailureType_Failure_ProcessError,
-                      _("Failed to derive public key."));
-      signing_abort();
+    if (!derive_node(orig_input) || !fill_input_script_sig(orig_input)) {
       return false;
     }
 
@@ -2067,10 +2081,9 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
       signing_abort();
       return false;
     }
-    if (!compile_input_script_sig(txinput)) {
-      fsm_sendFailure(FailureType_Failure_ProcessError,
-                      _("Failed to compile input"));
-      signing_abort();
+
+    if (!tx_info_check_input(&info, txinput) || !derive_node(txinput) ||
+        !fill_input_script_sig(txinput)) {
       return false;
     }
 
@@ -2170,7 +2183,7 @@ void signing_txack(TransactionType *tx) {
   switch (signing_stage) {
     case STAGE_REQUEST_1_INPUT:
       if (!signing_validate_input(&tx->inputs[0]) ||
-          !signing_check_input(&tx->inputs[0])) {
+          !signing_add_input(&tx->inputs[0])) {
         return;
       }
 
@@ -2289,7 +2302,7 @@ void signing_txack(TransactionType *tx) {
       return;
     case STAGE_REQUEST_2_OUTPUT:
       if (!signing_validate_output(&tx->outputs[0]) ||
-          !signing_check_output(&tx->outputs[0])) {
+          !signing_add_output(&tx->outputs[0])) {
         return;
       }
       tx_weight += tx_output_weight(coin, &tx->outputs[0]);
@@ -2547,10 +2560,9 @@ void signing_txack(TransactionType *tx) {
       // check inputs are the same as those in phase 1
       tx_input_check_hash(&hasher_check, tx->inputs);
       if (idx2 == idx1) {
-        if (!compile_input_script_sig(&tx->inputs[0])) {
-          fsm_sendFailure(FailureType_Failure_ProcessError,
-                          _("Failed to compile input"));
-          signing_abort();
+        if (!tx_info_check_input(&info, &tx->inputs[0]) ||
+            !derive_node(&tx->inputs[0]) ||
+            !fill_input_script_sig(&tx->inputs[0])) {
           return;
         }
         memcpy(&input, &tx->inputs[0], sizeof(input));
@@ -2647,10 +2659,9 @@ void signing_txack(TransactionType *tx) {
           signing_abort();
           return;
         }
-        if (!compile_input_script_sig(&tx->inputs[0])) {
-          fsm_sendFailure(FailureType_Failure_ProcessError,
-                          _("Failed to compile input"));
-          signing_abort();
+        if (!tx_info_check_input(&info, &tx->inputs[0]) ||
+            !derive_node(&tx->inputs[0]) ||
+            !fill_input_script_sig(&tx->inputs[0])) {
           return;
         }
         if (!tx->inputs[0].has_amount) {
@@ -2687,10 +2698,9 @@ void signing_txack(TransactionType *tx) {
       } else if (tx->inputs[0].script_type ==
                      InputScriptType_SPENDP2SHWITNESS &&
                  !tx->inputs[0].has_multisig) {
-        if (!compile_input_script_sig(&tx->inputs[0])) {
-          fsm_sendFailure(FailureType_Failure_ProcessError,
-                          _("Failed to compile input"));
-          signing_abort();
+        if (!tx_info_check_input(&info, &tx->inputs[0]) ||
+            !derive_node(&tx->inputs[0]) ||
+            !fill_input_script_sig(&tx->inputs[0])) {
           return;
         }
         // fixup normal p2pkh script into witness 0 p2wpkh script for p2sh
@@ -2803,10 +2813,9 @@ void signing_txack(TransactionType *tx) {
               coin->overwintered, info.version_group_id, info.timestamp);
       ti.version |= (DECRED_SERIALIZE_WITNESS_SIGNING << 16);
       ti.is_decred = true;
-      if (!compile_input_script_sig(&tx->inputs[0])) {
-        fsm_sendFailure(FailureType_Failure_ProcessError,
-                        _("Failed to compile input"));
-        signing_abort();
+      if (!tx_info_check_input(&info, &tx->inputs[0]) ||
+          !derive_node(&tx->inputs[0]) ||
+          !fill_input_script_sig(&tx->inputs[0])) {
         return;
       }
 
