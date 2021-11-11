@@ -3,7 +3,7 @@ from trezor.crypto import der
 from trezor.crypto.curve import bip340, secp256k1
 from trezor.crypto.hashlib import sha256
 
-from .common import OP_0, OP_1, ecdsa_hash_pubkey
+from .common import OP_0, OP_1, SigHashType, ecdsa_hash_pubkey
 from .scripts import (
     output_script_native_segwit,
     output_script_p2pkh,
@@ -34,7 +34,7 @@ class SignatureVerifier:
     ):
         self.threshold = 1
         self.public_keys: list[memoryview] = []
-        self.signatures: list[tuple[memoryview, int]] = []
+        self.signatures: list[tuple[memoryview, SigHashType]] = []
         self.is_taproot = False
 
         if not script_sig:
@@ -106,8 +106,8 @@ class SignatureVerifier:
         if self.threshold != len(self.signatures):
             raise wire.DataError("Invalid signature")
 
-    def ensure_hash_type(self, hash_types: Sequence[int]) -> None:
-        if any(h not in hash_types for _, h in self.signatures):
+    def ensure_hash_type(self, sighash_types: Sequence[SigHashType]) -> None:
+        if any(h not in sighash_types for _, h in self.signatures):
             raise wire.DataError("Unsupported sighash type")
 
     def verify(self, digest: bytes) -> None:

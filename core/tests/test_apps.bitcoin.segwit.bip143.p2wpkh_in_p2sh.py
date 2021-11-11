@@ -1,6 +1,6 @@
 from common import *
 
-from apps.bitcoin.common import SIGHASH_ALL
+from apps.bitcoin.common import SigHashType
 from apps.bitcoin.scripts import output_derive_script
 from apps.bitcoin.sign_tx.bitcoin import BitcoinSigHasher
 from apps.bitcoin.writers import get_tx_hash
@@ -80,7 +80,7 @@ class TestSegwitBip143(unittest.TestCase):
         node = keychain.derive(self.inp1.address_n)
 
         # test data public key hash
-        result = sig_hasher.hash143(self.inp1, [node.public_key()], 1, self.tx, coin, SIGHASH_ALL)
+        result = sig_hasher.hash143(self.inp1, [node.public_key()], 1, self.tx, coin, SigHashType.SIGHASH_ALL)
         self.assertEqual(hexlify(result), b'6e28aca7041720995d4acf59bbda64eef5d6f23723d23f2e994757546674bbd9')
 
 

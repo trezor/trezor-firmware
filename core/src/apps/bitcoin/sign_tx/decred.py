@@ -9,7 +9,7 @@ from trezor.utils import HashWriter, ensure
 from apps.common.writers import write_bitcoin_varint
 
 from .. import multisig, scripts_decred, writers
-from ..common import ecdsa_hash_pubkey, ecdsa_sign
+from ..common import SigHashType, ecdsa_hash_pubkey, ecdsa_sign
 from . import approvers, helpers, progress
 from .approvers import BasicApprover
 from .bitcoin import Bitcoin
@@ -18,7 +18,6 @@ DECRED_SERIALIZE_FULL = const(0 << 16)
 DECRED_SERIALIZE_NO_WITNESS = const(1 << 16)
 DECRED_SERIALIZE_WITNESS_SIGNING = const(3 << 16)
 DECRED_SCRIPT_VERSION = const(0)
-DECRED_SIGHASH_ALL = const(1)
 OUTPUT_SCRIPT_NULL_SSTXCHANGE = (
     b"\xBD\x76\xA9\x14\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x88\xAC"
 )
@@ -67,7 +66,7 @@ class DecredSigHasher:
         threshold: int,
         tx: SignTx | PrevTx,
         coin: CoinInfo,
-        sighash_type: int,
+        hash_type: int,
     ) -> bytes:
         raise NotImplementedError
 
@@ -75,7 +74,7 @@ class DecredSigHasher:
         self,
         i: int,
         tx: SignTx | PrevTx,
-        sighash_type: int,
+        sighash_type: SigHashType,
     ) -> bytes:
         raise NotImplementedError
 
@@ -197,7 +196,7 @@ class Decred(Bitcoin):
             )
 
             h_sign = self.create_hash_writer()
-            writers.write_uint32(h_sign, DECRED_SIGHASH_ALL)
+            writers.write_uint32(h_sign, SigHashType.SIGHASH_ALL)
             writers.write_bytes_fixed(h_sign, prefix_hash, writers.TX_HASH_SIZE)
             writers.write_bytes_fixed(h_sign, witness_hash, writers.TX_HASH_SIZE)
 
@@ -329,7 +328,7 @@ class Decred(Bitcoin):
             txi.script_type,
             txi.multisig,
             self.coin,
-            self.get_hash_type(txi),
+            self.get_sighash_type(txi),
             pubkey,
             signature,
         )

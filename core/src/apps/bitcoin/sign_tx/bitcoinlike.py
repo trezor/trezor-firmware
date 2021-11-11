@@ -1,20 +1,16 @@
-from micropython import const
-
 from trezor import wire
 from trezor.messages import PrevTx, SignTx, TxInput
 
 from apps.common.writers import write_bitcoin_varint
 
 from .. import multisig, writers
-from ..common import NONSEGWIT_INPUT_SCRIPT_TYPES
+from ..common import NONSEGWIT_INPUT_SCRIPT_TYPES, SigHashType
 from . import helpers
 from .bitcoin import Bitcoin
 
 if False:
     from typing import Sequence
     from .tx_info import OriginalTxInfo, TxInfo
-
-_SIGHASH_FORKID = const(0x40)
 
 
 class Bitcoinlike(Bitcoin):
@@ -55,17 +51,17 @@ class Bitcoinlike(Bitcoin):
                 threshold,
                 tx_info.tx,
                 self.coin,
-                self.get_sighash_type(txi),
+                self.get_hash_type(txi),
             )
         else:
             return await super().get_tx_digest(
                 i, txi, tx_info, public_keys, threshold, script_pubkey
             )
 
-    def get_sighash_type(self, txi: TxInput) -> int:
-        hashtype = super().get_sighash_type(txi)
+    def get_hash_type(self, txi: TxInput) -> int:
+        hashtype = super().get_hash_type(txi)
         if self.coin.fork_id is not None:
-            hashtype |= (self.coin.fork_id << 8) | _SIGHASH_FORKID
+            hashtype |= (self.coin.fork_id << 8) | SigHashType.SIGHASH_FORKID
         return hashtype
 
     def write_tx_header(

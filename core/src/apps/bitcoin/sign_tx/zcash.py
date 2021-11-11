@@ -28,6 +28,7 @@ if False:
     from apps.common import coininfo
     from .sig_hasher import SigHasher
     from .tx_info import OriginalTxInfo, TxInfo
+    from ..common import SigHashType
     from ..writers import Writer
 
 OVERWINTERED = const(0x8000_0000)
@@ -54,7 +55,7 @@ class ZcashSigHasher:
         threshold: int,
         tx: SignTx | PrevTx,
         coin: coininfo.CoinInfo,
-        sighash_type: int,
+        hash_type: int,
     ) -> bytes:
         h_preimage = HashWriter(
             blake2b(
@@ -90,7 +91,7 @@ class ZcashSigHasher:
         # 11. valueBalance
         write_uint64(h_preimage, 0)
         # 12. nHashType
-        write_uint32(h_preimage, sighash_type)
+        write_uint32(h_preimage, hash_type)
         # 13a. outpoint
         write_bytes_reversed(h_preimage, txi.prev_hash, TX_HASH_SIZE)
         write_uint32(h_preimage, txi.prev_index)
@@ -107,7 +108,7 @@ class ZcashSigHasher:
         self,
         i: int,
         tx: SignTx | PrevTx,
-        sighash_type: int,
+        sighash_type: SigHashType,
     ) -> bytes:
         raise NotImplementedError
 

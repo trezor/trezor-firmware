@@ -9,6 +9,7 @@ from ..common import tagged_hashwriter
 
 if False:
     from typing import Protocol, Sequence
+    from ..common import SigHashType
 
     class SigHasher(Protocol):
         def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
@@ -24,7 +25,7 @@ if False:
             threshold: int,
             tx: SignTx | PrevTx,
             coin: coininfo.CoinInfo,
-            sighash_type: int,
+            hash_type: int,
         ) -> bytes:
             ...
 
@@ -32,7 +33,7 @@ if False:
             self,
             i: int,
             tx: SignTx | PrevTx,
-            sighash_type: int,
+            sighash_type: SigHashType,
         ) -> bytes:
             ...
 
@@ -65,7 +66,7 @@ class BitcoinSigHasher:
         threshold: int,
         tx: SignTx | PrevTx,
         coin: coininfo.CoinInfo,
-        sighash_type: int,
+        hash_type: int,
     ) -> bytes:
         h_preimage = HashWriter(sha256())
 
@@ -107,7 +108,7 @@ class BitcoinSigHasher:
         writers.write_uint32(h_preimage, tx.lock_time)
 
         # nHashType
-        writers.write_uint32(h_preimage, sighash_type)
+        writers.write_uint32(h_preimage, hash_type)
 
         return writers.get_tx_hash(h_preimage, double=coin.sign_hash_double)
 
@@ -115,7 +116,7 @@ class BitcoinSigHasher:
         self,
         i: int,
         tx: SignTx | PrevTx,
-        sighash_type: int,
+        sighash_type: SigHashType,
     ) -> bytes:
         h_sigmsg = tagged_hashwriter(b"TapSighash")
 
