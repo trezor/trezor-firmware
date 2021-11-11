@@ -2,7 +2,6 @@ use core::convert::TryInto;
 
 use crate::{error, ui::geometry::Point};
 
-
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum TouchEvent {
     TouchStart(Point),

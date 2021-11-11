@@ -9,5 +9,4 @@ pub use button::{Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet
 pub use dialog::{Dialog, DialogMsg};
 pub use swipe::{Swipe, SwipeDirection};
 
-use super::event;
-use super::theme;
+use super::{event, theme};

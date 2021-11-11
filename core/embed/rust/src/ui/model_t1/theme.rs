@@ -47,7 +47,7 @@ pub fn button_cancel() -> ButtonStyleSheet {
     }
 }
 
-pub enum T1DefaultText {}
+pub struct T1DefaultText;
 
 impl DefaultTextTheme for T1DefaultText {
     const BACKGROUND_COLOR: Color = BG;

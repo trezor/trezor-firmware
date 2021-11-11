@@ -1,9 +1,11 @@
 use crate::trezorhal::display;
 
-use super::{
-    component::model::constants,
-    geometry::{Offset, Point, Rect},
-};
+#[cfg(not(feature = "model_tt"))]
+use crate::ui::model_t1::constant;
+#[cfg(feature = "model_tt")]
+use crate::ui::model_tt::constant;
+
+use super::geometry::{Offset, Point, Rect};
 
 pub fn width() -> i32 {
     display::width()
@@ -97,11 +99,11 @@ pub fn text_width(text: &[u8], font: Font) -> i32 {
 }
 
 pub fn text_height() -> i32 {
-    constants::TEXT_HEIGHT
+    constant::TEXT_HEIGHT
 }
 
 pub fn line_height() -> i32 {
-    constants::LINE_HEIGHT
+    constant::LINE_HEIGHT
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
