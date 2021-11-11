@@ -340,12 +340,7 @@ class TestMsgSigntxSegwit:
             with pytest.raises(TrezorFailure) as exc:
                 btc.sign_tx(client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API)
             assert exc.value.code == proto.FailureType.ProcessError
-            if client.features.model == "1":
-                assert exc.value.message.endswith("Failed to compile input")
-            else:
-                assert exc.value.message.endswith(
-                    "Transaction has changed during signing"
-                )
+            assert exc.value.message.endswith("Transaction has changed during signing")
 
     def test_attack_mixed_inputs(self, client):
         TRUE_AMOUNT = 123456789
