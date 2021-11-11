@@ -13,9 +13,15 @@ use crate::{
         qstr::Qstr,
         typ::Type,
     },
-    ui::component::{model::HidEvent, Child, Component, Event, EventCtx, Never, TimerToken},
+    ui::component::{Child, Component, Event, EventCtx, Never, TimerToken},
     util,
 };
+
+#[cfg(feature = "model_tt")]
+use crate::ui::model_tt::event::TouchEvent;
+
+#[cfg(feature = "model_t1")]
+use crate::ui::model_t1::event::ButtonEvent;
 
 /// Conversion trait implemented by components that know how to convert their
 /// message values into MicroPython `Obj`s. We can automatically implement
@@ -204,7 +210,8 @@ impl LayoutObj {
             name: Qstr::MP_QSTR_Layout,
             locals: &obj_dict!(obj_map! {
                 Qstr::MP_QSTR_set_timer_fn => obj_fn_2!(ui_layout_set_timer_fn).as_obj(),
-                Qstr::MP_QSTR_hid_event => obj_fn_var!(4, 4, ui_layout_hid_event).as_obj(),
+                Qstr::MP_QSTR_touch_event => obj_fn_var!(4, 4, ui_layout_touch_event).as_obj(),
+                Qstr::MP_QSTR_button_event => obj_fn_var!(3, 3, ui_layout_button_event).as_obj(),
                 Qstr::MP_QSTR_timer => obj_fn_2!(ui_layout_timer).as_obj(),
                 Qstr::MP_QSTR_paint => obj_fn_1!(ui_layout_paint).as_obj(),
                 Qstr::MP_QSTR_trace => obj_fn_2!(ui_layout_trace).as_obj(),
@@ -281,21 +288,46 @@ extern "C" fn ui_layout_set_timer_fn(this: Obj, timer_fn: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
-extern "C" fn ui_layout_hid_event(n_args: usize, args: *const Obj) -> Obj {
+#[cfg(feature = "model_tt")]
+extern "C" fn ui_layout_touch_event(n_args: usize, args: *const Obj) -> Obj {
     let block = |args: &[Obj], _kwargs: &Map| {
         if args.len() != 4 {
             return Err(Error::TypeError);
         }
         let this: Gc<LayoutObj> = args[0].try_into()?;
-        let event = HidEvent::new(
+        let event = TouchEvent::new(
             args[1].try_into()?,
             args[2].try_into()?,
             args[3].try_into()?,
         )?;
-        let msg = this.obj_event(Event::HumanInput(event))?;
+        let msg = this.obj_event(Event::Touch(event))?;
         Ok(msg)
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
+}
+
+#[cfg(not(feature = "model_tt"))]
+extern "C" fn ui_layout_touch_event(_n_args: usize, _args: *const Obj) -> Obj {
+    Obj::const_none()
+}
+
+#[cfg(feature = "model_t1")]
+extern "C" fn ui_layout_button_event(n_args: usize, args: *const Obj) -> Obj {
+    let block = |args: &[Obj], _kwargs: &Map| {
+        if args.len() != 3 {
+            return Err(Error::TypeError);
+        }
+        let this: Gc<LayoutObj> = args[0].try_into()?;
+        let event = ButtonEvent::new(args[1].try_into()?, args[2].try_into()?)?;
+        let msg = this.obj_event(Event::Button(event))?;
+        Ok(msg)
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, &Map::EMPTY, block) }
+}
+
+#[cfg(not(feature = "model_t1"))]
+extern "C" fn ui_layout_button_event(_n_args: usize, _args: *const Obj) -> Obj {
+    Obj::const_none()
 }
 
 extern "C" fn ui_layout_timer(this: Obj, token: Obj) -> Obj {

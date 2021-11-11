@@ -2,7 +2,10 @@ use core::{mem, time::Duration};
 
 use heapless::Vec;
 
-use crate::ui::{model_t1::event::ButtonEvent, model_tt::event::TouchEvent};
+#[cfg(feature = "model_t1")]
+use crate::ui::model_t1::event::ButtonEvent;
+#[cfg(feature = "model_tt")]
+use crate::ui::model_tt::event::TouchEvent;
 
 /// Type used by components that do not return any messages.
 ///
@@ -81,7 +84,10 @@ where
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Event {
-    HumanInput(HidEvent),
+    #[cfg(feature = "model_t1")]
+    Button(ButtonEvent),
+    #[cfg(feature = "model_tt")]
+    Touch(TouchEvent),
     Timer(TimerToken),
 }
 

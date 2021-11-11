@@ -4,7 +4,7 @@ use crate::ui::{
     geometry::{Point, Rect},
 };
 
-use super::{theme, event::TouchEvent};
+use super::{event::TouchEvent, theme};
 
 pub enum SwipeDirection {
     Up,

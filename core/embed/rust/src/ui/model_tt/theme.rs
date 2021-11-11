@@ -91,3 +91,19 @@ pub fn button_cancel() -> ButtonStyleSheet {
 pub fn button_clear() -> ButtonStyleSheet {
     button_default()
 }
+
+pub struct TTDefaultText;
+
+impl DefaultTextTheme for TTDefaultText {
+    const BACKGROUND_COLOR: Color = BG;
+    const TEXT_FONT: Font = FONT_NORMAL;
+    const TEXT_COLOR: Color = FG;
+    const HYPHEN_FONT: Font = FONT_BOLD;
+    const HYPHEN_COLOR: Color = GREY_LIGHT;
+    const ELLIPSIS_FONT: Font = FONT_BOLD;
+    const ELLIPSIS_COLOR: Color = GREY_LIGHT;
+
+    const NORMAL_FONT: Font = FONT_NORMAL;
+    const BOLD_FONT: Font = FONT_BOLD;
+    const MONO_FONT: Font = FONT_MONO;
+}

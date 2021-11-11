@@ -125,7 +125,7 @@ mod tests {
         let layout = Child::new(Dialog::new(
             display::screen(),
             |area| {
-                Text::new(
+                Text::new::<theme::T1DefaultText>(
                     area,
                     "Testing text layout, with some text, and some more text. And {param}",
                 )

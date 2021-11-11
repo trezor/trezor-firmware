@@ -1,9 +1,9 @@
+use super::event::TouchEvent;
 use crate::ui::{
     component::{Component, Event, EventCtx},
     display::{self, Color, Font},
     geometry::{Offset, Rect},
 };
-use super::event::TouchEvent;
 
 pub enum ButtonMsg {
     Clicked,

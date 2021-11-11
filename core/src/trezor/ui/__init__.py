@@ -457,8 +457,8 @@ if utils.MODEL == "1":
             if event is RENDER:
                 self.layout.paint()
             elif event in (io.BUTTON_PRESSED, io.BUTTON_RELEASED):
-                msg = self.layout.hid_event(event, x, 0)
+                msg = self.layout.button_event(event, x)
             # elif event in (io.TOUCH_START, io.TOUCH_MOVE, io.TOUCH_END):
-            #    self.layout.hid_event(event, x, y)
+            #    self.layout.touch_event(event, x, y)
             if msg is not None:
                 raise Result(msg)

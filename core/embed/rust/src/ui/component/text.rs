@@ -12,8 +12,6 @@ use crate::ui::{
     geometry::{Offset, Point, Rect},
 };
 
-use super::model::theme;
-
 pub const MAX_ARGUMENTS: usize = 6;
 
 pub struct Text<F, T> {
@@ -23,9 +21,9 @@ pub struct Text<F, T> {
 }
 
 impl<F, T> Text<F, T> {
-    pub fn new(area: Rect, format: F) -> Self {
+    pub fn new<D: DefaultTextTheme>(area: Rect, format: F) -> Self {
         Self {
-            layout: TextLayout::new(area),
+            layout: TextLayout::new::<D>(area),
             format,
             args: LinearMap::new(),
         }
@@ -80,9 +78,9 @@ where
             self.format.as_ref(),
             |arg| match arg {
                 Token::Literal(literal) => Some(Op::Text(literal)),
-                Token::Argument(b"mono") => Some(Op::Font(theme::FONT_MONO)),
-                Token::Argument(b"bold") => Some(Op::Font(theme::FONT_BOLD)),
-                Token::Argument(b"normal") => Some(Op::Font(theme::FONT_NORMAL)),
+                Token::Argument(b"mono") => Some(Op::Font(self.layout.mono_font)),
+                Token::Argument(b"bold") => Some(Op::Font(self.layout.bold_font)),
+                Token::Argument(b"normal") => Some(Op::Font(self.layout.normal_font)),
                 Token::Argument(argument) => self
                     .args
                     .get(argument)
@@ -204,21 +202,44 @@ pub struct TextLayout {
     pub ellipsis_font: Font,
     /// Foreground color used for drawing the ellipsis.
     pub ellipsis_color: Color,
+
+    /// Font used to format `{normal}`.
+    pub normal_font: Font,
+    /// Font used to format `{bold}`.
+    pub bold_font: Font,
+    /// Font used to format `{mono}`.
+    pub mono_font: Font,
+}
+
+pub trait DefaultTextTheme {
+    const BACKGROUND_COLOR: Color;
+    const TEXT_FONT: Font;
+    const TEXT_COLOR: Color;
+    const HYPHEN_FONT: Font;
+    const HYPHEN_COLOR: Color;
+    const ELLIPSIS_FONT: Font;
+    const ELLIPSIS_COLOR: Color;
+    const NORMAL_FONT: Font;
+    const BOLD_FONT: Font;
+    const MONO_FONT: Font;
 }
 
 impl TextLayout {
-    pub fn new(bounds: Rect) -> Self {
+    pub fn new<T: DefaultTextTheme>(bounds: Rect) -> Self {
         Self {
             bounds,
-            background_color: theme::BG,
-            text_color: theme::FG,
-            text_font: theme::FONT_NORMAL,
+            background_color: T::BACKGROUND_COLOR,
+            text_color: T::TEXT_COLOR,
+            text_font: T::TEXT_FONT,
             line_breaking: LineBreaking::BreakAtWhitespace,
-            hyphen_font: theme::FONT_BOLD,
-            hyphen_color: theme::GREY_LIGHT,
+            hyphen_font: T::HYPHEN_FONT,
+            hyphen_color: T::HYPHEN_COLOR,
             page_breaking: PageBreaking::CutAndInsertEllipsis,
-            ellipsis_font: theme::FONT_BOLD,
-            ellipsis_color: theme::GREY_LIGHT,
+            ellipsis_font: T::ELLIPSIS_FONT,
+            ellipsis_color: T::ELLIPSIS_COLOR,
+            normal_font: T::NORMAL_FONT,
+            bold_font: T::BOLD_FONT,
+            mono_font: T::MONO_FONT,
         }
     }
 
