@@ -49,7 +49,6 @@ TXHASH_65b811 = bytes.fromhex(
 )
 
 
-@pytest.mark.skip_t1
 class TestMsgSigntxTaproot:
     def test_send_p2tr(self, client):
         inp1 = messages.TxInputType(
@@ -269,6 +268,7 @@ class TestMsgSigntxTaproot:
                     request_input(0),
                     request_input(1),
                     request_input(2),
+                    (client.features.model == "1", request_input(3)),
                     request_finished(),
                 ]
             )
