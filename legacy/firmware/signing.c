@@ -165,7 +165,16 @@ static uint8_t orig_hash[32];  // TXID of the original transaction.
 #define MAX_BIP125_RBF_SEQUENCE 0xFFFFFFFD
 
 enum {
+  // Signature hash type with the same semantics as SIGHASH_ALL, but instead of
+  // having to include the byte in the signature, it is implied.
+  SIGHASH_ALL_TAPROOT = 0,
+
+  // Default signature hash type in Bitcoin which signs all inputs and all
+  // outputs of the transaction.
   SIGHASH_ALL = 1,
+
+  // Signature hash flag used in some Bitcoin-like altcoins for replay
+  // protection.
   SIGHASH_FORKID = 0x40,
 };
 
@@ -1743,8 +1752,11 @@ static bool signing_confirm_tx(void) {
   return true;
 }
 
-static uint32_t signing_hash_type(void) {
+static uint32_t signing_hash_type(const TxInputType *txinput) {
   uint32_t hash_type = SIGHASH_ALL;
+  if (txinput->script_type == InputScriptType_SPENDTAPROOT) {
+    hash_type = SIGHASH_ALL_TAPROOT;
+  }
 
   if (coin->has_fork_id) {
     hash_type |= (coin->fork_id << 8) | SIGHASH_FORKID;
@@ -1755,7 +1767,7 @@ static uint32_t signing_hash_type(void) {
 
 static void signing_hash_bip143(const TxInfo *tx_info,
                                 const TxInputType *txinput, uint8_t *hash) {
-  uint32_t hash_type = signing_hash_type();
+  uint32_t hash_type = signing_hash_type(txinput);
   Hasher hasher_preimage = {0};
   hasher_Init(&hasher_preimage, coin->curve->hasher_sign);
 
@@ -1818,7 +1830,7 @@ static void signing_hash_bip341(const TxInfo *tx_info, uint32_t i,
 #if !BITCOIN_ONLY
 static void signing_hash_zip243(const TxInfo *tx_info,
                                 const TxInputType *txinput, uint8_t *hash) {
-  uint32_t hash_type = signing_hash_type();
+  uint32_t hash_type = signing_hash_type(txinput);
   uint8_t personal[16] = {0};
   memcpy(personal, "ZcashSigHash", 12);
   memcpy(personal + 12, &tx_info->branch_id, 4);
@@ -1904,7 +1916,7 @@ static bool signing_check_orig_tx(void) {
       signing_hash_bip143(&orig_info, &orig_verif_input, hash);
     } else {
       // Finalize legacy digest computation.
-      uint32_t hash_type = signing_hash_type();
+      uint32_t hash_type = signing_hash_type(&orig_verif_input);
       hasher_Update(&ti.hasher, (const uint8_t *)&hash_type, 4);
       tx_hash_final(&ti, hash, false);
     }
@@ -1993,8 +2005,9 @@ static void phase1_request_orig_output(void) {
 }
 
 #if !BITCOIN_ONLY
-static void signing_hash_decred(const uint8_t *hash_witness, uint8_t *hash) {
-  uint32_t hash_type = signing_hash_type();
+static void signing_hash_decred(const TxInputType *txinput,
+                                const uint8_t *hash_witness, uint8_t *hash) {
+  uint32_t hash_type = signing_hash_type(txinput);
   Hasher hasher_preimage = {0};
   hasher_Init(&hasher_preimage, coin->curve->hasher_sign);
   hasher_Update(&hasher_preimage, (const uint8_t *)&hash_type, 4);
@@ -2019,7 +2032,7 @@ static bool signing_sign_hash(TxInputType *txinput, const uint8_t *private_key,
   resp.serialized.signature.size =
       ecdsa_sig_to_der(sig, resp.serialized.signature.bytes);
 
-  uint8_t sighash = signing_hash_type() & 0xff;
+  uint8_t sighash = signing_hash_type(txinput) & 0xff;
   if (txinput->has_multisig) {
     // fill in the signature
     int pubkey_idx =
@@ -2060,7 +2073,7 @@ static bool signing_sign_input(void) {
     return false;
   }
 
-  uint32_t hash_type = signing_hash_type();
+  uint32_t hash_type = signing_hash_type(&input);
   hasher_Update(&ti.hasher, (const uint8_t *)&hash_type, 4);
   tx_hash_final(&ti, hash, false);
   resp.has_serialized = true;
@@ -2093,7 +2106,7 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
     if (!signing_sign_hash(txinput, node.private_key, node.public_key, hash))
       return false;
 
-    uint8_t sighash = signing_hash_type() & 0xff;
+    uint8_t sighash = signing_hash_type(txinput) & 0xff;
     if (txinput->has_multisig) {
       uint32_t r = 1;  // skip number of items (filled in later)
       resp.serialized.serialized_tx.bytes[r] = 0;
@@ -2151,7 +2164,7 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
 static bool signing_sign_decred_input(TxInputType *txinput) {
   uint8_t hash[32] = {}, hash_witness[32] = {};
   tx_hash_final(&ti, hash_witness, false);
-  signing_hash_decred(hash_witness, hash);
+  signing_hash_decred(txinput, hash_witness, hash);
   resp.has_serialized = true;
   if (!signing_sign_hash(txinput, node.private_key, node.public_key, hash))
     return false;
