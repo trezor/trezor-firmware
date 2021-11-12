@@ -34,10 +34,23 @@
 #include "timer.h"
 #include "usb.h"
 #include "util.h"
+#include "zkp_context.h"
 #if !EMULATOR
 #include <libopencm3/stm32/desig.h>
 #include "otp.h"
 #endif
+
+void secp256k1_default_illegal_callback_fn(const char *str, void *data) {
+  (void)data;
+  __fatal_error(NULL, str, __FILE__, __LINE__, __func__);
+  return;
+}
+
+void secp256k1_default_error_callback_fn(const char *str, void *data) {
+  (void)data;
+  __fatal_error(NULL, str, __FILE__, __LINE__, __func__);
+  return;
+}
 
 /* Screen timeout */
 uint32_t system_millis_lock_start = 0;
@@ -142,6 +155,8 @@ int main(void) {
   } else {
     collect_hw_entropy(false);
   }
+
+  zkp_context_init();
 
 #if DEBUG_LINK
   oledSetDebugLink(1);
