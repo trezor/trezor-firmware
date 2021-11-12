@@ -30,6 +30,7 @@
 #include "protect.h"
 #include "secp256k1.h"
 #include "transaction.h"
+#include "zkp_bip340.h"
 
 static uint32_t change_count;
 static const CoinInfo *coin;
@@ -2017,8 +2018,8 @@ static void signing_hash_decred(const TxInputType *txinput,
 }
 #endif
 
-static bool signing_sign_hash(TxInputType *txinput, const uint8_t *private_key,
-                              const uint8_t *public_key, const uint8_t *hash) {
+static bool signing_sign_ecdsa(TxInputType *txinput, const uint8_t *private_key,
+                               const uint8_t *public_key, const uint8_t *hash) {
   resp.serialized.has_signature_index = true;
   resp.serialized.signature_index = idx1;
   resp.serialized.has_signature = true;
@@ -2063,6 +2064,31 @@ static bool signing_sign_hash(TxInputType *txinput, const uint8_t *private_key,
   return true;
 }
 
+static bool signing_sign_bip340(const uint8_t *private_key,
+                                const uint8_t *hash) {
+  resp.has_serialized = true;
+  resp.serialized.has_signature_index = true;
+  resp.serialized.signature_index = idx1;
+  resp.serialized.has_signature = true;
+  resp.serialized.has_serialized_tx = true;
+  resp.serialized.signature.size = 64;
+
+  uint8_t output_private_key[32] = {0};
+  bool ret = (zkp_bip340_tweak_private_key(private_key, NULL,
+                                           output_private_key) == 0);
+  ret = ret &&
+        (zkp_bip340_sign_digest(output_private_key, hash,
+                                resp.serialized.signature.bytes, NULL) == 0);
+  memzero(output_private_key, sizeof(output_private_key));
+
+  if (!ret) {
+    fsm_sendFailure(FailureType_Failure_ProcessError, _("Signing failed"));
+    signing_abort();
+  }
+
+  return ret;
+}
+
 static bool signing_sign_input(void) {
   uint8_t hash[32] = {0};
   hasher_Final(&hasher_check, hash);
@@ -2077,7 +2103,7 @@ static bool signing_sign_input(void) {
   hasher_Update(&ti.hasher, (const uint8_t *)&hash_type, 4);
   tx_hash_final(&ti, hash, false);
   resp.has_serialized = true;
-  if (!signing_sign_hash(&input, privkey, pubkey, hash)) return false;
+  if (!signing_sign_ecdsa(&input, privkey, pubkey, hash)) return false;
   resp.serialized.serialized_tx.size =
       tx_serialize_input(&to, &input, resp.serialized.serialized_tx.bytes);
   return true;
@@ -2087,7 +2113,21 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
   // idx1: index to sign
   uint8_t hash[32] = {0};
 
-  if (is_segwit_input_script_type(txinput)) {
+  if (txinput->script_type == InputScriptType_SPENDTAPROOT) {
+    signing_hash_bip341(&info, idx1, signing_hash_type(txinput), hash);
+
+    if (!tx_info_check_input(&info, txinput) || !derive_node(txinput) ||
+        !signing_sign_bip340(node.private_key, hash)) {
+      return false;
+    }
+
+    uint32_t r = 0;
+    r += ser_length(1, resp.serialized.serialized_tx.bytes + r);
+    r += tx_serialize_script(resp.serialized.signature.size,
+                             resp.serialized.signature.bytes,
+                             resp.serialized.serialized_tx.bytes + r);
+    resp.serialized.serialized_tx.size = r;
+  } else if (is_segwit_input_script_type(txinput)) {
     if (!txinput->has_amount) {
       fsm_sendFailure(FailureType_Failure_DataError,
                       _("Segwit input without amount"));
@@ -2103,7 +2143,7 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
     signing_hash_bip143(&info, txinput, hash);
 
     resp.has_serialized = true;
-    if (!signing_sign_hash(txinput, node.private_key, node.public_key, hash))
+    if (!signing_sign_ecdsa(txinput, node.private_key, node.public_key, hash))
       return false;
 
     uint8_t sighash = signing_hash_type(txinput) & 0xff;
@@ -2166,7 +2206,7 @@ static bool signing_sign_decred_input(TxInputType *txinput) {
   tx_hash_final(&ti, hash_witness, false);
   signing_hash_decred(txinput, hash_witness, hash);
   resp.has_serialized = true;
-  if (!signing_sign_hash(txinput, node.private_key, node.public_key, hash))
+  if (!signing_sign_ecdsa(txinput, node.private_key, node.public_key, hash))
     return false;
   resp.serialized.serialized_tx.size = tx_serialize_decred_witness(
       &to, txinput, resp.serialized.serialized_tx.bytes);
@@ -2700,8 +2740,8 @@ void signing_txack(TransactionType *tx) {
         {
           signing_hash_bip143(&info, &tx->inputs[0], hash);
         }
-        if (!signing_sign_hash(&tx->inputs[0], node.private_key,
-                               node.public_key, hash))
+        if (!signing_sign_ecdsa(&tx->inputs[0], node.private_key,
+                                node.public_key, hash))
           return;
         // since this took a longer time, update progress
         signatures++;
