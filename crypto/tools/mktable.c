@@ -18,9 +18,13 @@ int main(int argc, char **argv) {
   }
   const char *name = argv[1];
   const curve_info *info = get_curve_by_name(name);
+  if (info == 0) {
+    printf("Unknown curve '%s'\n", name);
+    return 1;
+  }
   const ecdsa_curve *curve = info->params;
   if (curve == 0) {
-    printf("Unknown curve '%s'\n", name);
+    printf("Unknown curve params");
     return 1;
   }
 
