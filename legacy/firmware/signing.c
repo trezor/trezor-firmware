@@ -63,8 +63,9 @@ enum {
   STAGE_REQUEST_DECRED_WITNESS,
 #endif
 } signing_stage;
-static uint32_t idx1;  // The index of the input or output in the current tx
-                       // which is being processed, signed or serialized.
+static bool taproot_only;  // indicates whether all internal inputs are Taproot
+static uint32_t idx1;      // The index of the input or output in the current tx
+                           // which is being processed, signed or serialized.
 static uint32_t idx2;  // The index of the input or output in the original tx
                        // (Phase 1), in the previous tx (Phase 2) or in the
                        // current tx when computing the legacy digest (Phase 2).
@@ -233,6 +234,9 @@ foreach O (idx1):
 
 Check tx fee
 Ask for confirmation
+
+if (taproot_only)
+    Skip to Phase 2.
 
 foreach I (idx1):
     Request I                                                 STAGE_REQUEST_3_INPUT
@@ -867,6 +871,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
 
   tx_weight = 4 * size;
 
+  taproot_only = true;
   signatures = 0;
   idx1 = 0;
   total_in = 0;
@@ -1954,7 +1959,24 @@ static void phase1_finish(void) {
     return;
   }
 
-  send_req_3_input();
+  if (taproot_only) {
+    // All internal inputs are Taproot. We do not need to verify them so we
+    // proceed directly to Phase 2, where the transaction will be signed. We can
+    // trust the amounts and scriptPubKeys, because if an invalid value is
+    // provided then all issued signatures will be invalid.
+    phase2_request_next_input();
+  } else {
+    // There are internal non-Taproot inputs. We need to verify all inputs,
+    // because we can't trust any amounts or scriptPubKeys. If we did, then an
+    // attacker who provides invalid information about amounts, scriptPubKeys
+    // and/or script types may still obtain valid signatures for legacy and
+    // SegWit v0 inputs. These valid signatures could be exploited in subsequent
+    // signing operations to falsely claim externality of the already signed
+    // inputs or to falsely claim that a transaction is a replacement of an
+    // already approved transaction or to construct a valid transaction by
+    // combining signatures obtained in multiple rounds of the attack.
+    send_req_3_input();
+  }
 }
 
 static void phase1_request_next_output(void) {
@@ -2089,11 +2111,11 @@ static bool signing_sign_bip340(const uint8_t *private_key,
   return ret;
 }
 
-static bool signing_sign_input(void) {
+static bool signing_sign_legacy_input(void) {
   uint8_t hash[32] = {0};
   hasher_Final(&hasher_check, hash);
-  if (memcmp(hash, info.hash_outputs, 32) != 0) {
-    fsm_sendFailure(FailureType_Failure_DataError,
+  if (memcmp(hash, info.hash_outputs, 32) != 0 || taproot_only) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
                     _("Transaction has changed during signing"));
     signing_abort();
     return false;
@@ -2131,6 +2153,13 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
     if (!txinput->has_amount) {
       fsm_sendFailure(FailureType_Failure_DataError,
                       _("Segwit input without amount"));
+      signing_abort();
+      return false;
+    }
+
+    if (taproot_only) {
+      fsm_sendFailure(FailureType_Failure_ProcessError,
+                      _("Transaction has changed during signing"));
       signing_abort();
       return false;
     }
@@ -2257,6 +2286,10 @@ void signing_txack(TransactionType *tx) {
         tx_weight += tx_decred_witness_weight(&tx->inputs[0]);
       }
 #endif
+
+      if (tx->inputs[0].script_type != InputScriptType_SPENDTAPROOT) {
+        taproot_only = false;
+      }
 
       if (tx->inputs[0].script_type == InputScriptType_SPENDMULTISIG ||
           tx->inputs[0].script_type == InputScriptType_SPENDADDRESS) {
@@ -2678,7 +2711,7 @@ void signing_txack(TransactionType *tx) {
         idx2++;
         send_req_4_output();
       } else {
-        if (!signing_sign_input()) {
+        if (!signing_sign_legacy_input()) {
           return;
         }
         // since this took a longer time, update progress
@@ -2706,7 +2739,7 @@ void signing_txack(TransactionType *tx) {
       resp.serialized.has_serialized_tx = true;
       if (tx->inputs[0].script_type == InputScriptType_SPENDMULTISIG ||
           tx->inputs[0].script_type == InputScriptType_SPENDADDRESS) {
-        if (!(coin->force_bip143 || coin->overwintered)) {
+        if (!(coin->force_bip143 || coin->overwintered) || taproot_only) {
           fsm_sendFailure(FailureType_Failure_DataError,
                           _("Transaction has changed during signing"));
           signing_abort();
