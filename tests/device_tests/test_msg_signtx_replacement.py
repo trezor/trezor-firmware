@@ -1076,3 +1076,52 @@ def test_p2wpkh_invalid_signature(client):
             lock_time=1348713,
             prev_txes=prev_txes,
         )
+
+
+def test_p2tr_invalid_signature(client):
+    # Ensure that transaction replacement fails when the original signature is invalid.
+
+    inp1 = messages.TxInputType(
+        # tb1p8tvmvsvhsee73rhym86wt435qrqm92psfsyhy6a3n5gw455znnpqm8wald
+        address_n=parse_path("86'/1'/0'/0/1"),
+        amount=13000,
+        orig_hash=TXHASH_8e4af7,
+        orig_index=0,
+        prev_hash=TXHASH_a4e274,
+        prev_index=1,
+        script_type=messages.InputScriptType.SPENDTAPROOT,
+    )
+    inp2 = messages.TxInputType(
+        # tb1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq8s8a5u
+        address_n=parse_path("86'/1'/0'/0/0"),
+        amount=6800,
+        orig_hash=TXHASH_8e4af7,
+        orig_index=1,
+        prev_hash=TXHASH_ccd7ea,
+        prev_index=0,
+        script_type=messages.InputScriptType.SPENDTAPROOT,
+    )
+    out1 = messages.TxOutputType(
+        address="tb1qq0rurzt04d76hk7pjxhqggk7ad4zj7c9u369kt",
+        amount=15000,
+        orig_hash=TXHASH_8e4af7,
+        orig_index=0,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+    out2 = messages.TxOutputType(
+        # tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c
+        address_n=parse_path("86'/1'/0'/1/0"),
+        amount=4600 - 250,  # bump the fee by 250
+        orig_hash=TXHASH_8e4af7,
+        orig_index=1,
+        script_type=messages.OutputScriptType.PAYTOTAPROOT,
+    )
+
+    # Invalidate the signature in the original witness.
+    prev_tx_invalid = TX_CACHE_TESTNET[TXHASH_8e4af7]
+    prev_tx_invalid.inputs[0].witness = bytearray(prev_tx_invalid.inputs[0].witness)
+    prev_tx_invalid.inputs[0].witness[10] ^= 1
+    prev_txes = {TXHASH_8e4af7: prev_tx_invalid}
+
+    with pytest.raises(TrezorFailure, match="Invalid signature"):
+        btc.sign_tx(client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=prev_txes)
