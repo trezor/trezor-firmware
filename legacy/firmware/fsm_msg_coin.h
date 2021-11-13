@@ -67,8 +67,7 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
   }
 
   if (coin->xpub_magic && (script_type == InputScriptType_SPENDADDRESS ||
-                           script_type == InputScriptType_SPENDMULTISIG ||
-                           script_type == InputScriptType_SPENDTAPROOT)) {
+                           script_type == InputScriptType_SPENDMULTISIG)) {
     hdnode_serialize_public(node, fingerprint, coin->xpub_magic, resp->xpub,
                             sizeof(resp->xpub));
   } else if (coin->has_segwit &&
@@ -87,6 +86,10 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
                             resp->xpub, sizeof(resp->xpub));
   } else if (coin->has_segwit && script_type == InputScriptType_SPENDWITNESS &&
              msg->ignore_xpub_magic && coin->xpub_magic) {
+    hdnode_serialize_public(node, fingerprint, coin->xpub_magic, resp->xpub,
+                            sizeof(resp->xpub));
+  } else if (coin->has_taproot && script_type == InputScriptType_SPENDTAPROOT &&
+             coin->xpub_magic) {
     hdnode_serialize_public(node, fingerprint, coin->xpub_magic, resp->xpub,
                             sizeof(resp->xpub));
   } else {
