@@ -352,7 +352,6 @@ def test_signmessage_pagination_trailing_newline(client):
         )
 
 
-@pytest.mark.skip_t1
 def test_signmessage_path_warning(client):
     message = "This is an example of a signed message."
 
