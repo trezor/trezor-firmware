@@ -923,9 +923,14 @@ static uint32_t tx_input_script_size(const TxInputType *txinput) {
     uint32_t multisig_script_size =
         TXSIZE_MULTISIGSCRIPT +
         cryptoMultisigPubkeyCount(&(txinput->multisig)) * (1 + TXSIZE_PUBKEY);
+    if (txinput->script_type == InputScriptType_SPENDWITNESS ||
+        txinput->script_type == InputScriptType_SPENDP2SHWITNESS) {
+      multisig_script_size += ser_length_size(multisig_script_size);
+    } else {
+      multisig_script_size += op_push_size(multisig_script_size);
+    }
     input_script_size = 1  // the OP_FALSE bug in multisig
                         + txinput->multisig.m * (1 + TXSIZE_DER_SIGNATURE) +
-                        op_push_size(multisig_script_size) +
                         multisig_script_size;
   } else if (txinput->script_type == InputScriptType_SPENDTAPROOT) {
     input_script_size = 1 + TXSIZE_SCHNORR_SIGNATURE;
