@@ -691,6 +691,7 @@
 "test_msg_signtx_replacement.py::test_attack_steal_change": "04ba3e05862eef616957f9f0c67f7a1d841a3bc7278c5fd999dfba4ebeee5314",
 "test_msg_signtx_replacement.py::test_p2pkh_fee_bump": "9521ab8dcf72d514103ec16410e3ad7d8e384084c3a645178ab191315911cd13",
 "test_msg_signtx_replacement.py::test_p2tr_fee_bump": "d2adcdaf62181c703628e355ba84ff979a81426429ee487c0059a9f161fbeb25",
+"test_msg_signtx_replacement.py::test_p2tr_invalid_signature": "d2adcdaf62181c703628e355ba84ff979a81426429ee487c0059a9f161fbeb25",
 "test_msg_signtx_replacement.py::test_p2wpkh_finalize": "66d0c98fe05fab4e77a516434883f81fa9516464373374097e91a8e3c278a6b3",
 "test_msg_signtx_replacement.py::test_p2wpkh_in_p2sh_fee_bump_from_external": "d3d97e310fb2d1d29b351bdc35b359aab75b4bba7afd257eb85100031edaacbf",
 "test_msg_signtx_replacement.py::test_p2wpkh_in_p2sh_remove_change": "ae9e7bc83227cf6187fb5c689515b66da7bf8fcc58a43128389f6eb7ab35240d",
