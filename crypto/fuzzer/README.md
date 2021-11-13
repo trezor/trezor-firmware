@@ -30,6 +30,8 @@ Examples:
   * `OPTFLAGS="-O0 -ggdb3"`
   * `OPTFLAGS="-O3 -march=native"`
 
+To be determined: use of `-fsanitize-ignorelist` to reduce sanitizer overhead on hot functions
+
 ### Other Flags
 
 To be determined:
