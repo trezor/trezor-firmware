@@ -134,9 +134,10 @@ typedef struct {
 static TxInfo info;
 
 /* Variables specific to replacement transactions. */
-static bool is_replacement;           // Is this a replacement transaction?
-static bool have_orig_verif_input;    // Is orig_verif_input, sig and node set?
-static TxInputType orig_verif_input;  // The input for signature verification.
+static bool is_replacement;            // Is this a replacement transaction?
+static bool have_orig_verif_input;     // Is orig_verif_input, sig and node set?
+static uint32_t orig_verif_input_idx;  // Index of orig_verif_input in orig tx.
+static TxInputType orig_verif_input;   // The input for signature verification.
 static TxInfo orig_info;
 static uint8_t orig_hash[32];  // TXID of the original transaction.
 
@@ -898,6 +899,7 @@ void signing_init(const SignTx *msg, const CoinInfo *_coin,
   memzero(&resp, sizeof(TxRequest));
   is_replacement = false;
   have_orig_verif_input = false;
+  orig_verif_input_idx = 0xffffffff;
   signing = true;
   progress = 0;
   // we step by 500/inputs_count per input in phase1 and phase2
@@ -1458,13 +1460,23 @@ static bool save_signature(TxInputType *txinput) {
   size = bytes[0];
   bytes += 1;
 
-  // Decode the DER-encoded signature and store in sig.
-  if (bytes[size - 1] != SIGHASH_ALL ||
-      ecdsa_sig_from_der(bytes, size - 1, sig) != 0) {
-    fsm_sendFailure(FailureType_Failure_DataError,
-                    _("Unsupported signature script."));
-    signing_abort();
-    return false;
+  if (txinput->script_type == InputScriptType_SPENDTAPROOT) {
+    if (size != 64) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Unsupported signature script."));
+      signing_abort();
+      return false;
+    }
+    memcpy(sig, bytes, size);
+  } else {
+    // Decode the DER-encoded signature and store in sig.
+    if (bytes[size - 1] != SIGHASH_ALL ||
+        ecdsa_sig_from_der(bytes, size - 1, sig) != 0) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Unsupported signature script."));
+      signing_abort();
+      return false;
+    }
   }
 
   return true;
@@ -1538,6 +1550,7 @@ static bool signing_add_orig_input(TxInputType *orig_input) {
 
     // Save the verification input with script_sig set to scriptPubKey.
     memcpy(&orig_verif_input, orig_input, sizeof(TxInputType));
+    orig_verif_input_idx = idx2;
     have_orig_verif_input = true;
   } else {
     orig_input->script_sig.size = 0;
@@ -1921,42 +1934,54 @@ static bool signing_check_orig_tx(void) {
     return false;
   }
 
-  // Compute the signed digest.
+  // Finish computation of BIP-143/BIP-341/ZIP-243 sub-hashes.
+  tx_info_finish(&orig_info);
+
+  // Compute the signed digest and verify signature.
+  uint32_t hash_type = signing_hash_type(&orig_verif_input);
+  bool valid = false;
+  if (orig_verif_input.script_type == InputScriptType_SPENDTAPROOT) {
+    signing_hash_bip341(&orig_info, orig_verif_input_idx, hash_type & 0xff,
+                        hash);
+    uint8_t output_public_key[32] = {0};
+    valid = (zkp_bip340_tweak_public_key(node.public_key + 1, NULL,
+                                         output_public_key) == 0) &&
+            (zkp_bip340_verify_digest(output_public_key, sig, hash) == 0);
+  } else {
 #if !BITCOIN_ONLY
-  if (coin->overwintered) {
-    tx_info_finish(&orig_info);
-    signing_hash_zip243(&orig_info, &orig_verif_input, hash);
-  } else
+    if (coin->overwintered) {
+      signing_hash_zip243(&orig_info, &orig_verif_input, hash);
+    } else
 #endif
-  {
-    if (is_segwit_input_script_type(&orig_verif_input) || coin->force_bip143) {
-      tx_info_finish(&orig_info);
-      signing_hash_bip143(&orig_info, &orig_verif_input, hash);
-    } else {
-      // Finalize legacy digest computation.
-      uint32_t hash_type = signing_hash_type(&orig_verif_input);
-      hasher_Update(&ti.hasher, (const uint8_t *)&hash_type, 4);
-      tx_hash_final(&ti, hash, false);
+    {
+      if (is_segwit_input_script_type(&orig_verif_input) ||
+          coin->force_bip143) {
+        signing_hash_bip143(&orig_info, &orig_verif_input, hash);
+      } else {
+        // Finalize legacy digest computation.
+        hasher_Update(&ti.hasher, (const uint8_t *)&hash_type, 4);
+        tx_hash_final(&ti, hash, false);
+      }
+    }
+
+#ifdef USE_SECP256K1_ZKP_ECDSA
+    if (coin->curve->params == &secp256k1) {
+      valid = zkp_ecdsa_verify_digest(coin->curve->params, node.public_key, sig,
+                                      hash) == 0;
+    } else
+#endif
+    {
+      valid = ecdsa_verify_digest(coin->curve->params, node.public_key, sig,
+                                  hash) == 0;
     }
   }
 
-  int ret = 0;
-#ifdef USE_SECP256K1_ZKP_ECDSA
-  if (coin->curve->params == &secp256k1) {
-    ret = zkp_ecdsa_verify_digest(coin->curve->params, node.public_key, sig,
-                                  hash);
-  } else
-#endif
-  {
-    ret = ecdsa_verify_digest(coin->curve->params, node.public_key, sig, hash);
-  }
-  if (ret != 0) {
+  if (!valid) {
     fsm_sendFailure(FailureType_Failure_DataError, _("Invalid signature."));
     signing_abort();
-    return false;
   }
 
-  return true;
+  return valid;
 }
 
 static void phase1_finish(void) {
