@@ -381,19 +381,19 @@ int fuzz_nem_validate_address(void) {
 }
 
 int fuzz_nem_get_address(void) {
-  unsigned char ed25519_public_key[32] = {0};
+  unsigned char ed25519_public_key_fuzz[32] = {0};
   uint32_t network = 0;
 
-  if (fuzzer_length != (sizeof(ed25519_public_key) + sizeof(network))) {
+  if (fuzzer_length != (sizeof(ed25519_public_key_fuzz) + sizeof(network))) {
     return 0;
   }
 
   char address[NEM_ADDRESS_SIZE + 1] = {0};
 
-  memcpy(ed25519_public_key, fuzzer_input(32), 32);
+  memcpy(ed25519_public_key_fuzz, fuzzer_input(32), 32);
   memcpy(&network, fuzzer_input(4), 4);
 
-  nem_get_address(ed25519_public_key, network, address);
+  nem_get_address(ed25519_public_key_fuzz, network, address);
 
 #if defined(__has_feature)
 #if __has_feature(memory_sanitizer)
@@ -616,15 +616,15 @@ int fuzz_slip39_word_completion_mask(void) {
 }
 
 int fuzz_mnemonic_to_bits(void) {
-  // length chosen somewhat arbitrarily
-#define MAX_MNEMONIC_LENGTH 256
+  // regular MAX_MNEMONIC_LEN is 240, try some extra bytes
+#define MAX_MNEMONIC_FUZZ_LENGTH 256
 
-  if (fuzzer_length < MAX_MNEMONIC_LENGTH) {
+  if (fuzzer_length < MAX_MNEMONIC_FUZZ_LENGTH) {
     return 0;
   }
 
-  char mnemonic[MAX_MNEMONIC_LENGTH + 1] = {0};
-  memcpy(&mnemonic, fuzzer_ptr, MAX_MNEMONIC_LENGTH);
+  char mnemonic[MAX_MNEMONIC_FUZZ_LENGTH + 1] = {0};
+  memcpy(&mnemonic, fuzzer_ptr, MAX_MNEMONIC_FUZZ_LENGTH);
   uint8_t mnemonic_bits[32 + 1] = {0};
 
   mnemonic_to_bits((const char *)&mnemonic, mnemonic_bits);
