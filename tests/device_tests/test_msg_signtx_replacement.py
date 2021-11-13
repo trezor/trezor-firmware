@@ -204,7 +204,6 @@ def test_p2wpkh_op_return_fee_bump(client):
 
 
 # txid 48bc29fc42a64b43d043b0b7b99b21aa39654234754608f791c60bcbd91a8e92
-@pytest.mark.skip_t1
 def test_p2tr_fee_bump(client):
     inp1 = messages.TxInputType(
         # tb1p8tvmvsvhsee73rhym86wt435qrqm92psfsyhy6a3n5gw455znnpqm8wald
