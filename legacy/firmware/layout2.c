@@ -79,19 +79,25 @@ static const char *address_n_str(const uint32_t *address_n,
     return _("Path: m");
   }
 
-  // known BIP44/49 path
+  // known BIP44/49/84/86 path
   static char path[100];
   if (address_n_count == 5 &&
       (address_n[0] == (0x80000000 + 44) || address_n[0] == (0x80000000 + 49) ||
-       address_n[0] == (0x80000000 + 84)) &&
+       address_n[0] == (0x80000000 + 84) ||
+       address_n[0] == (0x80000000 + 86)) &&
       (address_n[1] & 0x80000000) && (address_n[2] & 0x80000000) &&
       (address_n[3] <= 1) && (address_n[4] <= BIP32_MAX_LAST_ELEMENT)) {
+    bool taproot = (address_n[0] == (0x80000000 + 86));
     bool native_segwit = (address_n[0] == (0x80000000 + 84));
     bool p2sh_segwit = (address_n[0] == (0x80000000 + 49));
     bool legacy = false;
     const CoinInfo *coin = coinBySlip44(address_n[1]);
     const char *abbr = 0;
-    if (native_segwit) {
+    if (taproot) {
+      if (coin && coin->has_taproot && coin->bech32_prefix) {
+        abbr = coin->coin_shortcut;
+      }
+    } else if (native_segwit) {
       if (coin && coin->has_segwit && coin->bech32_prefix) {
         abbr = coin->coin_shortcut;
       }
@@ -118,13 +124,16 @@ static const char *address_n_str(const uint32_t *address_n,
       memzero(path, sizeof(path));
       strlcpy(path, abbr, sizeof(path));
       // TODO: how to name accounts?
-      // currently we have "legacy account", "account" and "segwit account"
-      // for BIP44/P2PKH, BIP49/P2SH-P2WPKH and BIP84/P2WPKH respectivelly
+      // currently we have
+      // "legacy account", "account", "segwit account" and "taproot account"
+      // for BIP44/P2PKH, BIP49/P2SH-P2WPKH, BIP84/P2WPKH and BIP86/P2TR
+      // respectively
       if (legacy) {
         strlcat(path, " legacy", sizeof(path));
-      }
-      if (native_segwit) {
+      } else if (native_segwit) {
         strlcat(path, " segwit", sizeof(path));
+      } else if (taproot) {
+        strlcat(path, " taproot", sizeof(path));
       }
       if (address_is_account) {
         strlcat(path, " address #", sizeof(path));
