@@ -628,7 +628,30 @@ int fuzz_mnemonic_to_bits(void) {
   uint8_t mnemonic_bits[32 + 1] = {0};
 
   mnemonic_to_bits((const char *)&mnemonic, mnemonic_bits);
+  // TODO what can be checked about the result, computing a checksum?
 
+  return 0;
+}
+
+int fuzz_mnemonic_from_data(void) {
+  if (fuzzer_length < 16 || fuzzer_length > 32) {
+    return 0;
+  }
+
+  const char* mnemo_result = mnemonic_from_data(fuzzer_ptr, fuzzer_length);
+  if(mnemo_result != NULL) {
+    int res = mnemonic_check(mnemo_result);
+    if(res == 0) {
+      // TODO the mnemonic_check() function is currently incorrectly rejecting
+      // valid 15 and 21 word seeds - remove this workaround limitation later
+      if(fuzzer_length != 20 && fuzzer_length != 28) {
+        // the generated mnemonic has an invalid format
+        crash();
+      }
+    }
+  }
+  // scrub the internal buffer to rule out persistent side effects
+  mnemonic_clear();
   return 0;
 }
 
@@ -1026,6 +1049,9 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       break;
     case 24:
       fuzz_ed25519_sign_verify();
+      break;
+    case 25:
+      fuzz_mnemonic_from_data();
       break;
 
     default:
