@@ -37,12 +37,6 @@
 #define PATH_MAX_CHANGE 1
 #define PATH_MAX_ADDRESS_INDEX 1000000
 
-// SLIP-44 hardened coin type for Bitcoin
-#define SLIP44_BITCOIN 0x80000000
-
-// SLIP-44 hardened coin type for all Testnet coins
-#define SLIP44_TESTNET 0x80000001
-
 uint32_t ser_length(uint32_t len, uint8_t *out) {
   if (len < 253) {
     out[0] = len & 0xFF;
