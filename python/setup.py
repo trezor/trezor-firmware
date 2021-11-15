@@ -7,7 +7,7 @@ from setuptools import find_packages, setup
 install_requires = [
     "setuptools>=19.0",
     "ecdsa>=0.9",
-    "mnemonic>=0.17",
+    "mnemonic>=0.20",
     "requests>=2.4.0",
     "click>=7,<9",
     "libusb1>=1.6.4",
