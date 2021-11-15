@@ -1,17 +1,12 @@
 import struct
 from enum import Enum
+from hashlib import blake2s
 from typing import Any, List, Optional
 
 import click
 import construct as c
 
 from .. import cosi, firmware
-
-try:
-    from hashlib import blake2s
-except ImportError:
-    from pyblake2 import blake2s
-
 
 SYM_OK = click.style("\u2714", fg="green")
 SYM_FAIL = click.style("\u274c", fg="red")
