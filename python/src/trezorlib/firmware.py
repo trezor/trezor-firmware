@@ -16,18 +16,13 @@
 
 import hashlib
 from enum import Enum
+from hashlib import blake2s
 from typing import Callable, List, Tuple
 
 import construct as c
 import ecdsa
 
 from . import cosi, messages, tools
-
-try:
-    from hashlib import blake2s
-except ImportError:
-    from pyblake2 import blake2s
-
 
 V1_SIGNATURE_SLOTS = 3
 V1_BOOTLOADER_KEYS = [
