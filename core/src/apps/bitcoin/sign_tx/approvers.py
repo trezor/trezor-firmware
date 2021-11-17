@@ -5,8 +5,8 @@ from trezor.enums import OutputScriptType
 
 from apps.common import safety_checks
 
-from .. import keychain
 from ..authorization import FEE_PER_ANONYMITY_DECIMALS
+from ..keychain import validate_path_against_script_type
 from . import helpers, tx_weight
 from .tx_info import OriginalTxInfo, TxInfo
 
@@ -55,6 +55,9 @@ class Approver:
         if txi.orig_hash:
             self.orig_total_in += txi.amount
 
+    async def check_internal_input(self, txi: TxInput) -> None:
+        pass
+
     def add_external_input(self, txi: TxInput) -> None:
         self.weight.add_input(txi)
         self.total_in += txi.amount
@@ -102,10 +105,21 @@ class BasicApprover(Approver):
         self.change_count = 0  # the number of change-outputs
 
     async def add_internal_input(self, txi: TxInput) -> None:
-        if not keychain.validate_path_against_script_type(self.coin, txi):
+        if not validate_path_against_script_type(self.coin, txi):
             await helpers.confirm_foreign_address(txi.address_n)
 
         await super().add_internal_input(txi)
+
+    async def check_internal_input(self, txi: TxInput) -> None:
+        if not validate_path_against_script_type(self.coin, txi):
+            # The following can be removed once we start validating script_pubkey in step3_verify_inputs().
+            if self.orig_total_in:
+                # Replacement transaction.
+                # This mitigates a cross-coin spending attack when safety checks are disabled.
+                raise wire.ProcessError(
+                    "Non-standard paths not allowed in replacement transactions."
+                )
+            await helpers.confirm_foreign_address(txi.address_n)
 
     def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         super().add_change_output(txo, script_pubkey)
@@ -292,6 +306,11 @@ class CoinJoinApprover(Approver):
             raise wire.ProcessError("Unauthorized path")
 
         await super().add_internal_input(txi)
+
+    async def check_internal_input(self, txi: TxInput) -> None:
+        # The following can be removed once we start validating script_pubkey in step3_verify_inputs().
+        if not self.authorization.check_sign_tx_input(txi, self.coin):
+            raise wire.ProcessError("Unauthorized path")
 
     def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         super().add_change_output(txo, script_pubkey)
