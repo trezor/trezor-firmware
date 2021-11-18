@@ -1,5 +1,5 @@
 use crate::ui::{
-    component::text::DefaultTextTheme,
+    component::text::layout::DefaultTextTheme,
     display::{Color, Font},
 };
 
