@@ -65,6 +65,7 @@ stdenv.mkDerivation ({
     pkgconfig
     poetry
     protobuf3_6
+    pyright
     rustfmt
     rustStable
     wget
