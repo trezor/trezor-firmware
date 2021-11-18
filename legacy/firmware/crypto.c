@@ -223,9 +223,8 @@ int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message,
         len != address_prefix_bytes_len(coin->address_type) + 20) {
       return 2;
     }
-  } else
-      // segwit-in-p2sh
-      if (signature[0] >= 35 && signature[0] <= 38) {
+  } else if (signature[0] >= 35 && signature[0] <= 38) {
+    // segwit-in-p2sh
     size_t len = base58_decode_check(address, coin->curve->hasher_base58,
                                      addr_raw, MAX_ADDR_RAW_SIZE);
     ecdsa_get_address_segwit_p2sh_raw(pubkey, coin->address_type_p2sh,
@@ -235,9 +234,8 @@ int cryptoMessageVerify(const CoinInfo *coin, const uint8_t *message,
         len != address_prefix_bytes_len(coin->address_type_p2sh) + 20) {
       return 2;
     }
-  } else
-      // segwit
-      if (signature[0] >= 39 && signature[0] <= 42) {
+  } else if (signature[0] >= 39 && signature[0] <= 42) {
+    // segwit
     int witver = 0;
     size_t len = 0;
     if (!coin->bech32_prefix ||
