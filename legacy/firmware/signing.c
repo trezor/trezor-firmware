@@ -702,6 +702,14 @@ static bool derive_node(TxInputType *tinput) {
   if (!coin_path_check(coin, tinput->script_type, tinput->address_n_count,
                        tinput->address_n, tinput->has_multisig,
                        CoinPathCheckLevel_BASIC)) {
+    if (is_replacement) {
+      fsm_sendFailure(
+          FailureType_Failure_ProcessError,
+          _("Non-standard paths not allowed in replacement transactions."));
+      layoutHome();
+      return false;
+    }
+
     if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
       fsm_sendFailure(FailureType_Failure_DataError, _("Forbidden key path"));
       signing_abort();
