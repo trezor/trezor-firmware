@@ -4,7 +4,7 @@ use crate::{
     error::Error,
     micropython::{buffer::Buffer, map::Map, obj::Obj, qstr::Qstr},
     ui::{
-        component::{Child, Text},
+        component::{Child, FormattedText},
         display,
         layout::obj::LayoutObj,
     },
@@ -64,7 +64,7 @@ extern "C" fn ui_layout_new_confirm_action(
         let obj = LayoutObj::new(Child::new(Dialog::new(
             display::screen(),
             |area| {
-                Text::new::<theme::T1DefaultText>(area, format)
+                FormattedText::new::<theme::T1DefaultText>(area, format)
                     .with(b"action", action.unwrap_or("".into()))
                     .with(b"description", description.unwrap_or("".into()))
             },
@@ -125,7 +125,7 @@ mod tests {
         let layout = Child::new(Dialog::new(
             display::screen(),
             |area| {
-                Text::new::<theme::T1DefaultText>(
+                FormattedText::new::<theme::T1DefaultText>(
                     area,
                     "Testing text layout, with some text, and some more text. And {param}",
                 )
