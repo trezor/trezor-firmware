@@ -28,8 +28,11 @@ def generate(env):
         btc_only = env['bitcoin_only'] == '1'
         interim = f"{target[:-4]}.i"  # replace .mpy with .i
         sed_scripts = " ".join([
-            f"-e 's/utils\.BITCOIN_ONLY/{btc_only}/g'",
-            "-e 's/if TYPE_CHECKING/if False/'",
+            rf"-e 's/utils\.BITCOIN_ONLY/{btc_only}/g'",
+            r"-e 's/if TYPE_CHECKING/if False/'",
+            r"-e 's/import typing/# \0/'",
+            r"-e '/from typing import (/,/^\s*)/ {s/^/# /}'",
+            r"-e 's/from typing import/# \0/'"
         ])
         return f'$SED {sed_scripts} {source} > {interim} && $MPY_CROSS -o {target} -s {source_name} {interim}'
 
