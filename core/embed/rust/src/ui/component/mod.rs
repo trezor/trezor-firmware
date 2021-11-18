@@ -8,4 +8,4 @@ pub mod tuple;
 pub use base::{Child, Component, Event, EventCtx, Never, TimerToken};
 pub use empty::Empty;
 pub use label::{Label, LabelStyle};
-pub use text::{LineBreaking, PageBreaking, Text, TextLayout};
+pub use text::{FormattedText, LineBreaking, PageBreaking, TextLayout};
