@@ -5,7 +5,7 @@ use crate::{
     micropython::obj::Obj,
     ui::{
         component::{
-            model_tt::{ButtonMsg, DialogMsg, HoldToConfirm, HoldToConfirmMsg, Text},
+            model_tt::{ButtonMsg, DialogMsg, FormattedText, HoldToConfirm, HoldToConfirmMsg},
             Child,
         },
         display,
@@ -52,7 +52,7 @@ where
 extern "C" fn ui_layout_new_example(_param: Obj) -> Obj {
     let block = move || {
         let layout = LayoutObj::new(Child::new(HoldToConfirm::new(display::screen(), |area| {
-            Text::new(
+            FormattedText::new(
                 area,
                 "Testing text layout, with some text, and some more text. And {param}",
             )
@@ -114,7 +114,7 @@ mod tests {
         let layout = Child::new(Dialog::new(
             display::screen(),
             |area| {
-                Text::new(
+                FormattedText::new(
                     area,
                     "Testing text layout, with some text, and some more text. And {param}",
                 )

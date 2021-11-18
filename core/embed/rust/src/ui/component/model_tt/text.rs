@@ -16,13 +16,13 @@ use super::theme;
 
 pub const MAX_ARGUMENTS: usize = 6;
 
-pub struct Text<F, T> {
+pub struct FormattedText<F, T> {
     layout: TextLayout,
     format: F,
     args: LinearMap<&'static [u8], T, MAX_ARGUMENTS>,
 }
 
-impl<F, T> Text<F, T> {
+impl<F, T> FormattedText<F, T> {
     pub fn new(area: Rect, format: F) -> Self {
         Self {
             layout: TextLayout::new(area),
@@ -31,17 +31,17 @@ impl<F, T> Text<F, T> {
         }
     }
 
-    pub fn format(mut self, format: F) -> Self {
-        self.format = format;
-        self
-    }
-
     pub fn with(mut self, key: &'static [u8], value: T) -> Self {
         if self.args.insert(key, value).is_err() {
             // Map is full, ignore.
             #[cfg(feature = "ui_debug")]
             panic!("text args map is full");
         }
+        self
+    }
+
+    pub fn with_format(mut self, format: F) -> Self {
+        self.format = format;
         self
     }
 
@@ -70,30 +70,28 @@ impl<F, T> Text<F, T> {
     }
 }
 
-impl<F, T> Text<F, T>
+impl<F, T> FormattedText<F, T>
 where
     F: AsRef<[u8]>,
     T: AsRef<[u8]>,
 {
     fn layout_content(&self, sink: &mut dyn LayoutSink) {
-        self.layout.layout_formatted(
-            self.format.as_ref(),
-            |arg| match arg {
-                Token::Literal(literal) => Some(Op::Text(literal)),
-                Token::Argument(b"mono") => Some(Op::Font(theme::FONT_MONO)),
-                Token::Argument(b"bold") => Some(Op::Font(theme::FONT_BOLD)),
-                Token::Argument(b"normal") => Some(Op::Font(theme::FONT_NORMAL)),
-                Token::Argument(argument) => self
-                    .args
-                    .get(argument)
-                    .map(|value| Op::Text(value.as_ref())),
-            },
-            sink,
-        );
+        let mut cursor = self.layout.initial_cursor();
+        let mut ops = Tokenizer::new(self.format.as_ref()).flat_map(|arg| match arg {
+            Token::Literal(literal) => Some(Op::Text(literal)),
+            Token::Argument(b"mono") => Some(Op::Font(theme::FONT_MONO)),
+            Token::Argument(b"bold") => Some(Op::Font(theme::FONT_BOLD)),
+            Token::Argument(b"normal") => Some(Op::Font(theme::FONT_NORMAL)),
+            Token::Argument(argument) => self
+                .args
+                .get(argument)
+                .map(|value| Op::Text(value.as_ref())),
+        });
+        self.layout.layout_ops(&mut ops, &mut cursor, sink);
     }
 }
 
-impl<F, T> Component for Text<F, T>
+impl<F, T> Component for FormattedText<F, T>
 where
     F: AsRef<[u8]>,
     T: AsRef<[u8]>,
@@ -133,7 +131,7 @@ mod trace {
         }
     }
 
-    pub struct TraceText<'a, F, T>(pub &'a Text<F, T>);
+    pub struct TraceText<'a, F, T>(pub &'a FormattedText<F, T>);
 
     impl<'a, F, T> crate::trace::Trace for TraceText<'a, F, T>
     where
@@ -147,7 +145,7 @@ mod trace {
 }
 
 #[cfg(feature = "ui_debug")]
-impl<F, T> crate::trace::Trace for Text<F, T>
+impl<F, T> crate::trace::Trace for FormattedText<F, T>
 where
     F: AsRef<[u8]>,
     T: AsRef<[u8]>,
@@ -229,26 +227,7 @@ impl TextLayout {
         )
     }
 
-    pub fn layout_formatted<'f, 'o, F, I>(
-        self,
-        format: &'f [u8],
-        resolve: F,
-        sink: &mut dyn LayoutSink,
-    ) -> LayoutFit
-    where
-        F: Fn(Token<'f>) -> I,
-        I: IntoIterator<Item = Op<'o>>,
-    {
-        let mut cursor = self.initial_cursor();
-
-        self.layout_op_stream(
-            &mut Tokenizer::new(format).flat_map(resolve),
-            &mut cursor,
-            sink,
-        )
-    }
-
-    pub fn layout_op_stream<'o>(
+    pub fn layout_ops<'o>(
         mut self,
         ops: &mut dyn Iterator<Item = Op<'o>>,
         cursor: &mut Point,

@@ -16,4 +16,4 @@ pub use dialog::{Dialog, DialogLayout, DialogMsg};
 pub use label::{Label, LabelStyle};
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use swipe::{Swipe, SwipeDirection};
-pub use text::{LineBreaking, PageBreaking, Text, TextLayout};
+pub use text::{FormattedText, LineBreaking, PageBreaking, TextLayout};
