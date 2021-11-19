@@ -13,6 +13,11 @@ let
     url = "https://github.com/NixOS/nixpkgs/archive/7fad01d9d5a3f82081c00fb57918d64145dc904c.tar.gz";
     sha256 = "0g0jn8cp1f3zgs7xk2xb2vwa44gb98qlp7k0dvigs0zh163c2kim";
   }) { overlays = [ rustOverlay ]; };
+  # commit before python36 was removed
+  python36nixpkgs = import (builtins.fetchTarball {
+    url = "https://github.com/NixOS/nixpkgs/archive/b9126f77f553974c90ab65520eff6655415fc5f4.tar.gz";
+    sha256 = "02s3qkb6kz3ndyx7rfndjbvp4vlwiqc42fxypn3g6jnc0v5jyz95";
+  }) { };
   moneroTests = nixpkgs.fetchurl {
     url = "https://github.com/ph4r05/monero/releases/download/v0.17.1.9-tests/trezor_tests";
     sha256 = "410bc4ff2ff1edc65e17f15b549bd1bf8a3776cf67abdea86aed52cf4bce8d9d";
@@ -43,7 +48,7 @@ stdenv.mkDerivation ({
     python38
     python39
     python37
-    python36
+    python36nixpkgs.python36
   ] ++ [
     SDL2
     SDL2_image
