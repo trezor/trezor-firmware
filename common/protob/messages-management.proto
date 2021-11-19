@@ -34,7 +34,7 @@ enum SafetyCheckLevel {
  */
 message Initialize {
     optional bytes session_id = 1;     // assumed device session id; Trezor clears caches if it is different or empty
-    optional boolean _skip_passphrase = 2 [deprecated=true]; // removed as part of passphrase redesign
+    optional bool _skip_passphrase = 2 [deprecated=true]; // removed as part of passphrase redesign
     optional bool derive_cardano = 3;  // whether to derive Cardano Icarus root keys in this session
 }
 

@@ -3007,6 +3007,7 @@ class Initialize(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 0
     FIELDS = {
         1: protobuf.Field("session_id", "bytes", repeated=False, required=False),
+        2: protobuf.Field("_skip_passphrase", "bool", repeated=False, required=False),
         3: protobuf.Field("derive_cardano", "bool", repeated=False, required=False),
     }
 
@@ -3014,9 +3015,11 @@ class Initialize(protobuf.MessageType):
         self,
         *,
         session_id: Optional["bytes"] = None,
+        _skip_passphrase: Optional["bool"] = None,
         derive_cardano: Optional["bool"] = None,
     ) -> None:
         self.session_id = session_id
+        self._skip_passphrase = _skip_passphrase
         self.derive_cardano = derive_cardano
 
 
@@ -3042,6 +3045,7 @@ class Features(protobuf.MessageType):
         14: protobuf.Field("bootloader_hash", "bytes", repeated=False, required=False),
         15: protobuf.Field("imported", "bool", repeated=False, required=False),
         16: protobuf.Field("unlocked", "bool", repeated=False, required=False),
+        17: protobuf.Field("_passphrase_cached", "bool", repeated=False, required=False),
         18: protobuf.Field("firmware_present", "bool", repeated=False, required=False),
         19: protobuf.Field("needs_backup", "bool", repeated=False, required=False),
         20: protobuf.Field("flags", "uint32", repeated=False, required=False),
@@ -3086,6 +3090,7 @@ class Features(protobuf.MessageType):
         bootloader_hash: Optional["bytes"] = None,
         imported: Optional["bool"] = None,
         unlocked: Optional["bool"] = None,
+        _passphrase_cached: Optional["bool"] = None,
         firmware_present: Optional["bool"] = None,
         needs_backup: Optional["bool"] = None,
         flags: Optional["int"] = None,
@@ -3125,6 +3130,7 @@ class Features(protobuf.MessageType):
         self.bootloader_hash = bootloader_hash
         self.imported = imported
         self.unlocked = unlocked
+        self._passphrase_cached = _passphrase_cached
         self.firmware_present = firmware_present
         self.needs_backup = needs_backup
         self.flags = flags
@@ -3164,6 +3170,7 @@ class ApplySettings(protobuf.MessageType):
         2: protobuf.Field("label", "string", repeated=False, required=False),
         3: protobuf.Field("use_passphrase", "bool", repeated=False, required=False),
         4: protobuf.Field("homescreen", "bytes", repeated=False, required=False),
+        5: protobuf.Field("_passphrase_source", "uint32", repeated=False, required=False),
         6: protobuf.Field("auto_lock_delay_ms", "uint32", repeated=False, required=False),
         7: protobuf.Field("display_rotation", "uint32", repeated=False, required=False),
         8: protobuf.Field("passphrase_always_on_device", "bool", repeated=False, required=False),
@@ -3178,6 +3185,7 @@ class ApplySettings(protobuf.MessageType):
         label: Optional["str"] = None,
         use_passphrase: Optional["bool"] = None,
         homescreen: Optional["bytes"] = None,
+        _passphrase_source: Optional["int"] = None,
         auto_lock_delay_ms: Optional["int"] = None,
         display_rotation: Optional["int"] = None,
         passphrase_always_on_device: Optional["bool"] = None,
@@ -3188,6 +3196,7 @@ class ApplySettings(protobuf.MessageType):
         self.label = label
         self.use_passphrase = use_passphrase
         self.homescreen = homescreen
+        self._passphrase_source = _passphrase_source
         self.auto_lock_delay_ms = auto_lock_delay_ms
         self.display_rotation = display_rotation
         self.passphrase_always_on_device = passphrase_always_on_device
