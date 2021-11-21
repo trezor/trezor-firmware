@@ -17,5 +17,6 @@ pub use label::{Label, LabelStyle};
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 pub use swipe::{Swipe, SwipeDirection};
 pub use text::{
-    formatted::FormattedText, layout::LineBreaking, layout::PageBreaking, layout::TextLayout,
+    formatted::FormattedText,
+    layout::{LineBreaking, PageBreaking, TextLayout},
 };
