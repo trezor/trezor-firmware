@@ -22,6 +22,13 @@ impl Offset {
         Self::new(0, 0)
     }
 
+    pub fn on_axis(axis: Axis, a: i32) -> Self {
+        match axis {
+            Axis::Horizontal => Self::new(a, 0),
+            Axis::Vertical => Self::new(0, a),
+        }
+    }
+
     pub fn abs(self) -> Self {
         Self::new(self.x.abs(), self.y.abs())
     }
@@ -107,6 +114,10 @@ impl Rect {
             x1: p1.x,
             y1: p1.y,
         }
+    }
+
+    pub const fn zero() -> Self {
+        Self::new(Point::zero(), Point::zero())
     }
 
     pub fn from_top_left_and_size(p0: Point, size: Offset) -> Self {
@@ -231,10 +242,32 @@ impl Rect {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub enum Align {
-    Left,
-    Right,
+pub enum Alignment {
+    Start,
     Center,
+    End,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq)]
+pub enum Axis {
+    Horizontal,
+    Vertical,
+}
+
+impl Axis {
+    pub fn main<T>(self, x: T, y: T) -> T {
+        match self {
+            Axis::Horizontal => x,
+            Axis::Vertical => y,
+        }
+    }
+
+    pub fn cross(self) -> Self {
+        match self {
+            Axis::Horizontal => Axis::Vertical,
+            Axis::Vertical => Axis::Horizontal,
+        }
+    }
 }
 
 pub struct Grid {
@@ -274,4 +307,89 @@ impl Grid {
     pub fn cell(&self, index: usize) -> Rect {
         self.row_col(index / self.cols, index % self.cols)
     }
+}
+
+#[derive(Copy, Clone)]
+pub struct LinearLayout {
+    axis: Axis,
+    align: Alignment,
+    spacing: i32,
+}
+
+impl LinearLayout {
+    pub fn horizontal() -> Self {
+        Self {
+            axis: Axis::Horizontal,
+            align: Alignment::Start,
+            spacing: 0,
+        }
+    }
+
+    pub fn vertical() -> Self {
+        Self {
+            axis: Axis::Vertical,
+            align: Alignment::Start,
+            spacing: 0,
+        }
+    }
+
+    pub fn align_at_start(mut self) -> Self {
+        self.align = Alignment::Start;
+        self
+    }
+
+    pub fn align_at_center(mut self) -> Self {
+        self.align = Alignment::Center;
+        self
+    }
+
+    pub fn align_at_end(mut self) -> Self {
+        self.align = Alignment::End;
+        self
+    }
+
+    pub fn with_spacing(mut self, spacing: i32) -> Self {
+        self.spacing = spacing;
+        self
+    }
+
+    /// Arranges all `items` by parameters configured in `self` into `area`.
+    /// Does not change the size of the items (only the position), but it needs
+    /// to iterate (and ask for the size) twice.
+    pub fn arrange(&self, area: Rect, items: &mut [impl Dimensions]) {
+        let item_sum: i32 = items
+            .iter_mut()
+            .map(|i| {
+                let size = i.get_size();
+                self.axis.main(size.x, size.y)
+            })
+            .sum();
+        let spacing_count = items.len().saturating_sub(1);
+        let spacing_sum = spacing_count as i32 * self.spacing;
+        let total_size = item_sum + spacing_sum;
+
+        let available_space = match self.axis {
+            Axis::Horizontal => area.width(),
+            Axis::Vertical => area.height(),
+        };
+        let mut cursor = match self.align {
+            Alignment::Start => 0,
+            Alignment::Center => available_space / 2 - total_size / 2,
+            Alignment::End => available_space - total_size,
+        };
+
+        for item in items {
+            let top_left = area.top_left() + Offset::on_axis(self.axis, cursor);
+            let size = item.get_size();
+            item.set_area(Rect::from_top_left_and_size(top_left, size));
+            cursor += self.axis.main(size.x, size.y);
+            cursor += self.spacing;
+        }
+    }
+}
+
+/// Types that have a size and a position.
+pub trait Dimensions {
+    fn get_size(&mut self) -> Offset;
+    fn set_area(&mut self, area: Rect);
 }
