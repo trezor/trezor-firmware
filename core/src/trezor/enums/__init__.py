@@ -219,6 +219,12 @@ if TYPE_CHECKING:
         WebAuthnRemoveResidentCredential = 803
         DebugZcashDiagRequest = 900
         DebugZcashDiagResponse = 901
+        ZcashGetFullViewingKey = 902
+        ZcashFullViewingKey = 903
+        ZcashGetIncomingViewingKey = 904
+        ZcashIncomingViewingKey = 905
+        ZcashGetAddress = 906
+        ZcashAddress = 907
 
     class BinanceOrderType(IntEnum):
         OT_UNKNOWN = 0

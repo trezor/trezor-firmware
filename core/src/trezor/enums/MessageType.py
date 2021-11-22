@@ -214,3 +214,9 @@ if not utils.BITCOIN_ONLY:
     WebAuthnRemoveResidentCredential = 803
     DebugZcashDiagRequest = 900
     DebugZcashDiagResponse = 901
+    ZcashGetFullViewingKey = 902
+    ZcashFullViewingKey = 903
+    ZcashGetIncomingViewingKey = 904
+    ZcashIncomingViewingKey = 905
+    ZcashGetAddress = 906
+    ZcashAddress = 907

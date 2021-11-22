@@ -32,6 +32,15 @@ let
     # to use official binary, remove rustfmt from buildInputs and add it to extensions:
     extensions = [ "clippy" ];
   };
+  rustNightly = nixpkgs.rust-bin.selectLatestNightlyWith (toolchain: toolchain.minimal.override {
+    targets = [
+      "thumbv7em-none-eabihf" # TT
+      "thumbv7m-none-eabi"    # T1
+    ];
+    # we use rustfmt from nixpkgs because it's built with the nighly flag needed for wrap_comments
+    # to use official binary, remove rustfmt from buildInputs and add it to extensions:
+    extensions = [ "clippy" ];    
+  });
 in
 with nixpkgs;
 stdenv.mkDerivation ({
@@ -67,7 +76,8 @@ stdenv.mkDerivation ({
     poetry
     protobuf3_6
     rustfmt
-    rustStable
+    #rustStable
+    rustNightly
     wget
     zlib
     moreutils

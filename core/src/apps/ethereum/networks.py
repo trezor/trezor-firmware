@@ -97,7 +97,7 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         chain_id=8,
         slip44=108,
         shortcut="UBQ",
-        name="Ubiq Network",
+        name="Ubiq",
         rskip60=False,
     )
     yield NetworkInfo(
@@ -263,7 +263,7 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
     )
     yield NetworkInfo(
         chain_id=56,
-        slip44=60,
+        slip44=714,
         shortcut="BNB",
         name="Binance Smart Chain",
         rskip60=False,
@@ -382,7 +382,7 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
     )
     yield NetworkInfo(
         chain_id=88,
-        slip44=60,
+        slip44=889,
         shortcut="TOMO",
         name="TomoChain",
         rskip60=False,
@@ -396,16 +396,9 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
     )
     yield NetworkInfo(
         chain_id=99,
-        slip44=60,
+        slip44=178,
         shortcut="SKL",
         name="POA Network Core",
-        rskip60=False,
-    )
-    yield NetworkInfo(
-        chain_id=100,
-        slip44=700,
-        shortcut="xDAI",
-        name="xDAI Chain",
         rskip60=False,
     )
     yield NetworkInfo(
@@ -417,7 +410,7 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
     )
     yield NetworkInfo(
         chain_id=108,
-        slip44=60,
+        slip44=1001,
         shortcut="TT",
         name="ThunderCore",
         rskip60=False,
@@ -452,16 +445,16 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
     )
     yield NetworkInfo(
         chain_id=128,
-        slip44=60,
+        slip44=1010,
         shortcut="HT",
         name="Huobi ECO Chain",
         rskip60=False,
     )
     yield NetworkInfo(
         chain_id=137,
-        slip44=60,
+        slip44=966,
         shortcut="MATIC",
-        name="Matic(Polygon)",
+        name="Polygon",
         rskip60=False,
     )
     yield NetworkInfo(
@@ -524,7 +517,7 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         chain_id=321,
         slip44=60,
         shortcut="KCS",
-        name="KuCoin Community Chain",
+        name="KCC",
         rskip60=False,
     )
     yield NetworkInfo(
@@ -641,7 +634,7 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
     )
     yield NetworkInfo(
         chain_id=1010,
-        slip44=60,
+        slip44=1020,
         shortcut="EVC",
         name="Evrice Network",
         rskip60=False,
@@ -685,28 +678,28 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         chain_id=1284,
         slip44=60,
         shortcut="GLMR",
-        name="Moonbeam Polkadot",
+        name="Moonbeam",
         rskip60=False,
     )
     yield NetworkInfo(
         chain_id=1285,
         slip44=60,
         shortcut="MOVR",
-        name="Moonriver Kusama",
+        name="Moonriver",
         rskip60=False,
     )
     yield NetworkInfo(
         chain_id=1286,
         slip44=60,
         shortcut="ROC",
-        name="Moonrock Rococo",
+        name="Moonrock",
         rskip60=False,
     )
     yield NetworkInfo(
         chain_id=1288,
         slip44=60,
         shortcut="MSHD",
-        name="Moonshadow Westend",
+        name="Moonshadow",
         rskip60=False,
     )
     yield NetworkInfo(
@@ -809,7 +802,7 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
     )
     yield NetworkInfo(
         chain_id=24484,
-        slip44=60,
+        slip44=227,
         shortcut="WEB",
         name="Webchain",
         rskip60=False,
@@ -865,7 +858,7 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
     )
     yield NetworkInfo(
         chain_id=43114,
-        slip44=60,
+        slip44=9000,
         shortcut="AVAX",
         name="Avalanche",
         rskip60=False,
@@ -909,7 +902,7 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         chain_id=80001,
         slip44=1,
         shortcut="tMATIC",
-        name="Matic(Polygon) Testnet Mumbai",
+        name="Polygon Testnet Mumbai",
         rskip60=False,
     )
     yield NetworkInfo(
@@ -1000,7 +993,7 @@ def _networks_iterator() -> Iterator[NetworkInfo]:
         chain_id=1313114,
         slip44=1313114,
         shortcut="ETHO",
-        name="Ether-1",
+        name="Etho Protocol",
         rskip60=False,
     )
     yield NetworkInfo(

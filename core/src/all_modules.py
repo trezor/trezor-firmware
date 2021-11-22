@@ -382,10 +382,18 @@ apps.workflow_handlers
 import apps.workflow_handlers
 apps.zcash
 import apps.zcash
+apps.zcash.address
+import apps.zcash.address
 apps.zcash.diag
 import apps.zcash.diag
-apps.zcash.orchard
-import apps.zcash.orchard
+apps.zcash.get_address
+import apps.zcash.get_address
+apps.zcash.get_fvk
+import apps.zcash.get_fvk
+apps.zcash.get_ivk
+import apps.zcash.get_ivk
+apps.zcash.zip32
+import apps.zcash.zip32
 
 if utils.BITCOIN_ONLY:
     trezor.enums.BinanceOrderSide
