@@ -34,7 +34,6 @@ impl<F, T> FormattedText<F, T> {
 
     pub fn with(mut self, key: &'static [u8], value: T) -> Self {
         if self.args.insert(key, value).is_err() {
-            // Map is full, ignore.
             #[cfg(feature = "ui_debug")]
             panic!("text args map is full");
         }
@@ -109,30 +108,10 @@ where
 }
 
 #[cfg(feature = "ui_debug")]
-mod trace {
-    use crate::ui::geometry::Point;
+pub mod trace {
+    use crate::ui::component::text::layout::trace::TraceSink;
 
     use super::*;
-
-    pub struct TraceSink<'a>(pub &'a mut dyn crate::trace::Tracer);
-
-    impl<'a> LayoutSink for TraceSink<'a> {
-        fn text(&mut self, _cursor: Point, _layout: &TextLayout, text: &[u8]) {
-            self.0.bytes(text);
-        }
-
-        fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {
-            self.0.string("-");
-        }
-
-        fn ellipsis(&mut self, _cursor: Point, _layout: &TextLayout) {
-            self.0.string("...");
-        }
-
-        fn line_break(&mut self, _cursor: Point) {
-            self.0.string("\n");
-        }
-    }
 
     pub struct TraceText<'a, F, T>(pub &'a FormattedText<F, T>);
 
@@ -239,12 +218,12 @@ impl<'a> Iterator for Tokenizer<'a> {
 
 #[cfg(test)]
 mod tests {
+    use std::array::IntoIter;
+
     use super::*;
 
     #[test]
     fn tokenizer_yields_expected_tokens() {
-        use std::array::IntoIter;
-
         assert!(Tokenizer::new(b"").eq(IntoIter::new([])));
         assert!(Tokenizer::new(b"x").eq(IntoIter::new([Token::Literal(b"x")])));
         assert!(Tokenizer::new(b"x\0y").eq(IntoIter::new([Token::Literal("x\0y".as_bytes())])));
