@@ -10,16 +10,14 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
-
 from typing import List, Optional
 
-import attr
 import click
 import construct as c
 import mako
 import mako.template
-
 from google.protobuf import descriptor_pb2
 
 FieldDescriptor = descriptor_pb2.FieldDescriptorProto
@@ -140,7 +138,7 @@ QDEF_RE = re.compile(
 )
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class ProtoField:
     name: str
     number: int
@@ -229,7 +227,7 @@ class ProtoField:
         )
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class ProtoMessage:
     name: str
     wire_type: Optional[int]

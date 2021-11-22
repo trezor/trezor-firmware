@@ -1,8 +1,7 @@
 import struct
 import zlib
+from dataclasses import dataclass
 from typing import Sequence, Tuple
-
-import attr
 
 from . import firmware
 
@@ -61,14 +60,14 @@ def _to_grayscale(data: bytes) -> bytes:
     return bytes(res)
 
 
-@attr.s
+@dataclass
 class Toif:
-    mode: firmware.ToifMode = attr.ib()
-    size: Tuple[int, int] = attr.ib()
-    data: bytes = attr.ib()
+    mode: firmware.ToifMode
+    size: Tuple[int, int]
+    data: bytes
 
-    @data.validator
-    def check_data_size(self, _, value):
+    def __post_init__(self) -> None:
+        # checking the data size
         width, height = self.size
         if self.mode is firmware.ToifMode.grayscale:
             expected_size = width * height // 2

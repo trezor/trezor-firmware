@@ -13,7 +13,7 @@ install_requires = [
     "libusb1>=1.6.4",
     "construct>=2.9",
     "typing_extensions>=3.7.4",
-    "attrs",
+    "dataclasses ; python_version<'3.7'",
 ]
 
 extras_require = {
