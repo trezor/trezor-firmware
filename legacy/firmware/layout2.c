@@ -123,17 +123,19 @@ static const char *address_n_str(const uint32_t *address_n,
     if (abbr && accnum < 100) {
       memzero(path, sizeof(path));
       strlcpy(path, abbr, sizeof(path));
-      // TODO: how to name accounts?
-      // currently we have
-      // "legacy account", "account", "segwit account" and "taproot account"
+      // account naming:
+      // "Legacy", "Legacy SegWit", "SegWit" and "Taproot"
       // for BIP44/P2PKH, BIP49/P2SH-P2WPKH, BIP84/P2WPKH and BIP86/P2TR
-      // respectively
+      // respectively.
+      // For non-segwit coins we use only BIP44 with no special naming.
       if (legacy) {
-        strlcat(path, " legacy", sizeof(path));
+        strlcat(path, " Legacy", sizeof(path));
+      } else if (p2sh_segwit) {
+        strlcat(path, " L.SegWit", sizeof(path));
       } else if (native_segwit) {
-        strlcat(path, " segwit", sizeof(path));
+        strlcat(path, " SegWit", sizeof(path));
       } else if (taproot) {
-        strlcat(path, " taproot", sizeof(path));
+        strlcat(path, " Taproot", sizeof(path));
       }
       if (address_is_account) {
         strlcat(path, " address #", sizeof(path));
