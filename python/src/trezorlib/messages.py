@@ -240,10 +240,12 @@ class MessageType(IntEnum):
     WebAuthnRemoveResidentCredential = 803
     DebugZcashDiagRequest = 900
     DebugZcashDiagResponse = 901
-    ZcashGetAddress = 902
-    ZcashAddress = 903
-    ZcashGetFullViewingKey = 904
-    ZcashFullViewingKey = 905
+    ZcashGetFullViewingKey = 902
+    ZcashFullViewingKey = 903
+    ZcashGetIncomingViewingKey = 904
+    ZcashIncomingViewingKey = 905
+    ZcashGetAddress = 906
+    ZcashAddress = 907
 
 
 class FailureType(IntEnum):
@@ -6765,14 +6767,14 @@ class WebAuthnCredential(protobuf.MessageType):
 class DebugZcashDiagRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 900
     FIELDS = {
-        1: protobuf.Field("ins", "uint64", repeated=False, required=False),
+        1: protobuf.Field("ins", "bytes", repeated=False, required=False),
         2: protobuf.Field("data", "bytes", repeated=False, required=False),
     }
 
     def __init__(
         self,
         *,
-        ins: Optional["int"] = None,
+        ins: Optional["bytes"] = None,
         data: Optional["bytes"] = None,
     ) -> None:
         self.ins = ins
@@ -6794,21 +6796,21 @@ class DebugZcashDiagResponse(protobuf.MessageType):
 
 
 class ZcashGetFullViewingKey(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 904
+    MESSAGE_WIRE_TYPE = 902
     FIELDS = {
-        1: protobuf.Field("account", "uint32", repeated=False, required=False),
+        2: protobuf.Field("z_address_n", "uint32", repeated=True, required=False),
     }
 
     def __init__(
         self,
         *,
-        account: Optional["int"] = 0,
+        z_address_n: Optional[List["int"]] = None,
     ) -> None:
-        self.account = account
+        self.z_address_n = z_address_n if z_address_n is not None else []
 
 
 class ZcashFullViewingKey(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 905
+    MESSAGE_WIRE_TYPE = 903
     FIELDS = {
         1: protobuf.Field("fvk", "bytes", repeated=False, required=True),
     }
@@ -6821,34 +6823,59 @@ class ZcashFullViewingKey(protobuf.MessageType):
         self.fvk = fvk
 
 
-class ZcashGetAddress(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 902
+class ZcashGetIncomingViewingKey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 904
     FIELDS = {
-        1: protobuf.Field("account", "uint32", repeated=False, required=False),
-        2: protobuf.Field("network_type", "uint32", repeated=False, required=False),
-        3: protobuf.Field("diversifier_index", "uint64", repeated=False, required=False),
-        4: protobuf.Field("show_display", "bool", repeated=False, required=False),
-        5: protobuf.Field("transparent", "GetAddress", repeated=False, required=False),
+        2: protobuf.Field("z_address_n", "uint32", repeated=True, required=False),
     }
 
     def __init__(
         self,
         *,
-        account: Optional["int"] = 0,
-        network_type: Optional["int"] = 0,
+        z_address_n: Optional[List["int"]] = None,
+    ) -> None:
+        self.z_address_n = z_address_n if z_address_n is not None else []
+
+
+class ZcashIncomingViewingKey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 905
+    FIELDS = {
+        1: protobuf.Field("ivk", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        ivk: "bytes",
+    ) -> None:
+        self.ivk = ivk
+
+
+class ZcashGetAddress(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 906
+    FIELDS = {
+        1: protobuf.Field("t_address_n", "uint32", repeated=True, required=False),
+        2: protobuf.Field("z_address_n", "uint32", repeated=True, required=False),
+        3: protobuf.Field("diversifier_index", "uint64", repeated=False, required=False),
+        4: protobuf.Field("show_display", "bool", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        t_address_n: Optional[List["int"]] = None,
+        z_address_n: Optional[List["int"]] = None,
         diversifier_index: Optional["int"] = 0,
         show_display: Optional["bool"] = False,
-        transparent: Optional["GetAddress"] = None,
     ) -> None:
-        self.account = account
-        self.network_type = network_type
+        self.t_address_n = t_address_n if t_address_n is not None else []
+        self.z_address_n = z_address_n if z_address_n is not None else []
         self.diversifier_index = diversifier_index
         self.show_display = show_display
-        self.transparent = transparent
 
 
 class ZcashAddress(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 903
+    MESSAGE_WIRE_TYPE = 907
     FIELDS = {
         1: protobuf.Field("address", "string", repeated=False, required=False),
     }

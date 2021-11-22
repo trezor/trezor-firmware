@@ -227,6 +227,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7313c0d620d0cb4dbd9d019e461a4beb501071ff46ec0ab933efb4daa76d73e3"
 
 [[package]]
+name = "f4jumble"
+version = "0.0.0"
+dependencies = [
+ "blake2b_simd",
+]
+
+[[package]]
 name = "ff"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -381,12 +388,10 @@ dependencies = [
  "ff",
  "fpe",
  "group",
- "lazy_static",
  "pasta_curves",
  "rand",
  "rand_core 0.5.1",
  "reddsa",
- "serde",
  "subtle",
  "zcash_note_encryption",
 ]
@@ -499,26 +504,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "08d43f7aa6b08d49f382cde6a7982047c3426db949b1424bc4b7ec9ae12c6ce2"
 
 [[package]]
-name = "serde"
-version = "1.0.130"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f12d06de37cf59146fbdecab66aa99f9fe4f78722e3607577a5375d66bd0c913"
-dependencies = [
- "serde_derive",
-]
-
-[[package]]
-name = "serde_derive"
-version = "1.0.130"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7bc1a1ab1961464eae040d96713baa5a724a8152c1222492465b54322ec508b"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "shlex"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -546,17 +531,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6bdef32e8150c2a081110b42772ffe7d7c9032b606bc226c8260fd97e0976601"
 
 [[package]]
-name = "syn"
-version = "1.0.80"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d010a1623fbd906d51d650a9916aaefc05ffa0e4053ff7fe601167f3e715d194"
-dependencies = [
- "proc-macro2",
- "quote",
- "unicode-xid",
-]
-
-[[package]]
 name = "tap"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -571,7 +545,9 @@ dependencies = [
  "cc",
  "cstr_core",
  "cty",
+ "f4jumble",
  "glob",
+ "group",
  "orchard",
  "static-alloc",
 ]

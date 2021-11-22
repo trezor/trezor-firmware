@@ -23,26 +23,50 @@ from . import with_client
 def cli():
     """Zcash commands."""
 
+def is_ascii(s):
+    return all(ord(c) < 128 for c in s)
 
 @cli.command()
-@click.option("-i", "--ins",  required=False, default="0", help="Diag message instruction.")
-@click.option("-d", "--data", required=False, default="hello", help="Diag message data.")
+@click.option("-i", "--ins",  required=False, default="hello", help="Diagnostic instruction.")
+@click.option("-d", "--data", required=False, default="", help="Diagnostic input data.")
+@click.option("-a", "--ascii", is_flag=True, help="Parse data as ascii string.")
 @with_client
-def diag(client, ins, data):
+def diag(client, ins, data, ascii):
     """Get Zcash diagnotic message."""
-    return zcash.diag(client, int(ins), data.encode("utf-8"))
+    if ascii:
+        data = data.encode("ascii")
+    else:
+        data = bytes.fromhex(data)
 
-@cli.command()
-@click.option(
-    "-n",
-    "--account",
-    type=int,
-    required=False,
-    default=0,
-    help="Account number. default = 0",
-)
+    response = zcash.diag(client, ins.encode("ascii"), data)
+
+    try:
+        return response.decode("ascii")
+    except:
+        return response.hex()
+
+@cli.command(help="""Example:\n
+trezorctl zcash get-address -d -t m/44h/133h/0h/0/0 -z m/32h/133h/0h -j 0
+""")
+@click.option("-t", "--t-address", help="BIP-32 path of a transparent address.")
+@click.option("-z", "--z-address", help="BIP-32 path of a shielded address.")
+@click.option("-j", "--diversifier-index", default=0, type=int, help="diversifier index of the shielded address.")
 @click.option("-d", "--show-display", is_flag=True)
 @with_client
-def get_address(client, account, show_display):
-    """Get Zcash diversified public address."""
-    return zcash.get_address(client, account=account, show_display=show_display)    
+def get_address(client, t_address, z_address, diversifier_index, show_display):
+    """Get Zcash address."""
+    if not t_address and not z_address:
+        return """Specify address path using -t (transparent) and -z (shielded) arguments.\nYou can use both to get Zcash unified address."""
+
+    kwargs = dict()
+    kwargs["show_display"] = show_display
+    if t_address:
+        kwargs["t_address_n"] = tools.parse_path(t_address)
+    if z_address:
+        kwargs["z_address_n"] = tools.parse_path(z_address)
+        kwargs["diversifier_index"] = diversifier_index
+
+    try:
+        return zcash.get_address(client, **kwargs)
+    except ValueError as e:
+        return str(e)  

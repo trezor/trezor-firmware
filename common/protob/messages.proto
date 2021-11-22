@@ -335,8 +335,10 @@ enum MessageType {
     // Zcash
     MessageType_DebugZcashDiagRequest = 900 [(wire_in) = true];   // wire_debug_in ?
     MessageType_DebugZcashDiagResponse = 901 [(wire_out) = true]; // wire_debug_out ?
-    MessageType_ZcashGetAddress = 902 [(wire_in) = true];
-    MessageType_ZcashAddress = 903 [(wire_out) = true];
-    MessageType_ZcashGetFullViewingKey = 904 [(wire_in) = true];
-    MessageType_ZcashFullViewingKey = 905 [(wire_out) = true];
+    MessageType_ZcashGetFullViewingKey = 902 [(wire_in) = true];
+    MessageType_ZcashFullViewingKey = 903 [(wire_out) = true];
+    MessageType_ZcashGetIncomingViewingKey = 904 [(wire_in) = true];
+    MessageType_ZcashIncomingViewingKey = 905 [(wire_out) = true];
+    MessageType_ZcashGetAddress = 906 [(wire_in) = true];
+    MessageType_ZcashAddress = 907 [(wire_out) = true];
 }

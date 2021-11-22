@@ -178,10 +178,13 @@ def find_message_handler_module(msg_type: int) -> str:
         # zcash
         elif msg_type == MessageType.DebugZcashDiagRequest: # TODO: and __debug__
             return "apps.zcash.diag"
-        elif msg_type == MessageType.ZcashGetAddress:
-            return "apps.zcash.orchard.get_address"
         elif msg_type == MessageType.ZcashGetFullViewingKey:
-            return "apps.zcash.orchard.get_fvk"
+            return "apps.zcash.get_fvk"
+        elif msg_type == MessageType.ZcashGetIncomingViewingKey:
+            return "apps.zcash.get_ivk"
+        elif msg_type == MessageType.ZcashGetAddress:
+            return "apps.zcash.get_address"
+            
     raise ValueError
 
 

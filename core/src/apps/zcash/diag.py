@@ -10,22 +10,22 @@ from trezor import log
 from trezor.crypto import zcash
 
 async def diag(ctx: Context, msg: DebugZcashDiagRequest) -> DebugZcashDiagResponse:
-    log.debug(__name__, "zcash.diag called")
-    log.debug(__name__, "ins : {}".format(msg.ins))
-    log.debug(__name__, "data: {}".format(msg.data))
+    log.warning(__name__, "zcash.diag called")
+    log.warning(__name__, "ins : {}".format(msg.ins))
+    log.warning(__name__, "data: {}".format(msg.data))
 
-    if msg.ins == 1:
+    if msg.ins == b"hello":
+        await confirm_action(
+            ctx,
+            "test",
+            "Confirm test",
+            action="msg: {}".format(msg.data),
+            description="continue",
+            br_code=ButtonRequestType.ProtectCall,
+        )
+
+        return DebugZcashDiagResponse(data=b"Hello from the Trezor!")
+    else:
         return DebugZcashDiagResponse(
             data=zcash.diag(msg.ins, msg.data)
         )
-
-    await confirm_action(
-        ctx,
-        "test",
-        "Confirm test",
-        action="msg: {}".format(msg.data),
-        description="continue",
-        br_code=ButtonRequestType.ProtectCall,
-    )
-
-    return DebugZcashDiagResponse(data=b"Hello from the Trezor!") 

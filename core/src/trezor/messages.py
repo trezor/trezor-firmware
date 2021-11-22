@@ -5166,3 +5166,123 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["WebAuthnCredential"]:
             return isinstance(msg, cls)
+
+    class DebugZcashDiagRequest(protobuf.MessageType):
+        ins: "bytes | None"
+        data: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            ins: "bytes | None" = None,
+            data: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["DebugZcashDiagRequest"]:
+            return isinstance(msg, cls)
+
+    class DebugZcashDiagResponse(protobuf.MessageType):
+        data: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            data: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["DebugZcashDiagResponse"]:
+            return isinstance(msg, cls)
+
+    class ZcashGetFullViewingKey(protobuf.MessageType):
+        z_address_n: "list[int]"
+
+        def __init__(
+            self,
+            *,
+            z_address_n: "list[int] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ZcashGetFullViewingKey"]:
+            return isinstance(msg, cls)
+
+    class ZcashFullViewingKey(protobuf.MessageType):
+        fvk: "bytes"
+
+        def __init__(
+            self,
+            *,
+            fvk: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ZcashFullViewingKey"]:
+            return isinstance(msg, cls)
+
+    class ZcashGetIncomingViewingKey(protobuf.MessageType):
+        z_address_n: "list[int]"
+
+        def __init__(
+            self,
+            *,
+            z_address_n: "list[int] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ZcashGetIncomingViewingKey"]:
+            return isinstance(msg, cls)
+
+    class ZcashIncomingViewingKey(protobuf.MessageType):
+        ivk: "bytes"
+
+        def __init__(
+            self,
+            *,
+            ivk: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ZcashIncomingViewingKey"]:
+            return isinstance(msg, cls)
+
+    class ZcashGetAddress(protobuf.MessageType):
+        t_address_n: "list[int]"
+        z_address_n: "list[int]"
+        diversifier_index: "int"
+        show_display: "bool"
+
+        def __init__(
+            self,
+            *,
+            t_address_n: "list[int] | None" = None,
+            z_address_n: "list[int] | None" = None,
+            diversifier_index: "int | None" = None,
+            show_display: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ZcashGetAddress"]:
+            return isinstance(msg, cls)
+
+    class ZcashAddress(protobuf.MessageType):
+        address: "str | None"
+
+        def __init__(
+            self,
+            *,
+            address: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ZcashAddress"]:
+            return isinstance(msg, cls)
