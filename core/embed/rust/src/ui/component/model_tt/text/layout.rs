@@ -182,6 +182,24 @@ impl TextLayout {
             processed_chars: text.len(),
         }
     }
+
+    pub fn measure_ops_height(self, ops: &mut dyn Iterator<Item = Op>) -> i32 {
+        // TODO: Return the bounding box in `LayoutFit` instead of computing it from the
+        // cursor.
+        let init_cursor = self.initial_cursor();
+        let mut cursor = init_cursor;
+        self.layout_ops(ops, &mut cursor, &mut TextNoop);
+        cursor.y - init_cursor.y + self.text_font.line_height()
+    }
+
+    pub fn measure_text_height(self, text: &[u8]) -> i32 {
+        // TODO: Return the bounding box in `LayoutFit` instead of computing it from the
+        // cursor.
+        let init_cursor = self.initial_cursor();
+        let mut cursor = init_cursor;
+        self.layout_text(text, &mut cursor, &mut TextNoop);
+        cursor.y - init_cursor.y + self.text_font.line_height()
+    }
 }
 
 pub enum LayoutFit {
@@ -236,6 +254,33 @@ impl LayoutSink for TextRenderer {
     }
 }
 
+#[cfg(feature = "ui_debug")]
+pub mod trace {
+    use crate::ui::geometry::Point;
+
+    use super::*;
+
+    pub struct TraceSink<'a>(pub &'a mut dyn crate::trace::Tracer);
+
+    impl<'a> LayoutSink for TraceSink<'a> {
+        fn text(&mut self, _cursor: Point, _layout: &TextLayout, text: &[u8]) {
+            self.0.bytes(text);
+        }
+
+        fn hyphen(&mut self, _cursor: Point, _layout: &TextLayout) {
+            self.0.string("-");
+        }
+
+        fn ellipsis(&mut self, _cursor: Point, _layout: &TextLayout) {
+            self.0.string("...");
+        }
+
+        fn line_break(&mut self, _cursor: Point) {
+            self.0.string("\n");
+        }
+    }
+}
+
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Op<'a> {
     /// Render text with current color and font.
@@ -247,7 +292,7 @@ pub enum Op<'a> {
 }
 
 impl<'a> Op<'a> {
-    fn skip_n_text_bytes(
+    pub fn skip_n_text_bytes(
         ops: impl Iterator<Item = Op<'a>>,
         skip_bytes: usize,
     ) -> impl Iterator<Item = Op<'a>> {
