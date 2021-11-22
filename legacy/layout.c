@@ -55,10 +55,11 @@ void layoutDialog(const BITMAP *icon, const char *btnNo, const char *btnYes,
                  line6, FONT_STANDARD);
 }
 
-void layoutDialogEx(const BITMAP *icon, const char *btnNo, const char *btnYes,
-                    const char *desc, const char *line1, const char *line2,
-                    const char *line3, const char *line4, const char *line5,
-                    const char *line6, uint8_t font) {
+inline void layoutDialogEx(const BITMAP *icon, const char *btnNo,
+                           const char *btnYes, const char *desc,
+                           const char *line1, const char *line2,
+                           const char *line3, const char *line4,
+                           const char *line5, const char *line6, uint8_t font) {
   int left = 0;
   oledClear();
   if (icon) {
