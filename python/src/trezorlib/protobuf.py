@@ -24,12 +24,12 @@ For serializing (dumping) protobuf types, object with `Writer` interface is requ
 
 import logging
 import warnings
+from dataclasses import dataclass
 from enum import IntEnum
 from io import BytesIO
 from itertools import zip_longest
 from typing import Any, Dict, List, Optional, Type, TypeVar, Union
 
-import attr
 from typing_extensions import Protocol
 
 MT = TypeVar("MT", bound="MessageType")
@@ -141,13 +141,13 @@ WIRE_TYPES = {
 REQUIRED_FIELD_PLACEHOLDER = object()
 
 
-@attr.s(auto_attribs=True)
+@dataclass
 class Field:
     name: str
     type: str
-    repeated: bool = attr.ib(default=False)
-    required: bool = attr.ib(default=False)
-    default: object = attr.ib(default=None)
+    repeated: bool = False
+    required: bool = False
+    default: object = None
 
     @property
     def wire_type(self) -> int:

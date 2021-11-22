@@ -67,7 +67,6 @@ setuptools = ">=24.2.0"
 # storage
 cryptography = "*"
 hypothesis = "*"
-attrs = "*"
 inotify = "*"
 yamllint = "^1.25.0"
 
