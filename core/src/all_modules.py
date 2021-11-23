@@ -392,6 +392,8 @@ apps.zcash.get_fvk
 import apps.zcash.get_fvk
 apps.zcash.get_ivk
 import apps.zcash.get_ivk
+apps.zcash.layout
+import apps.zcash.layout
 apps.zcash.zip32
 import apps.zcash.zip32
 

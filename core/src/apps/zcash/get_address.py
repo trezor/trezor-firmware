@@ -11,13 +11,13 @@ from trezor import log, wire
 
 from . import zip32
 from .address import encode_unified, encode_transparent, P2PKH,\
-                     ORCHARD, MAINNET, TESTNET, SLIP44_COIN_TYPES
+                     ORCHARD, MAINNET, TESTNET, SLIP44_ZCASH_COIN_TYPES
 
 if False:
     from trezor.wire import Context
 
 SLIP44_COIN_TYPES = (MAINNET, TESTNET)
-BIP44_SCHEMA = PathSchema.parse(PATTERN_BIP44, SLIP44_COIN_TYPES)
+BIP44_SCHEMA = PathSchema.parse(PATTERN_BIP44, SLIP44_ZCASH_COIN_TYPES)
 
 async def get_address(ctx: Context, msg: ZcashGetAddress) -> ZcashAddress:
     has_t_addr = len(msg.t_address_n) != 0
@@ -34,7 +34,7 @@ async def get_address(ctx: Context, msg: ZcashGetAddress) -> ZcashAddress:
             if msg.z_address_n[1] != msg.t_address_n[1]:
                 raise wire.DataError("SLIP-44 coin_type of addresses differs.")
             receivers[P2PKH] = await get_transparent_raw_address(ctx, msg)
-            title = "" # no title for unified address
+            title = "Unified Address" # no title for unified address
         else:
             title = address_n_to_str(msg.z_address_n)
 

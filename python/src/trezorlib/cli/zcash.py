@@ -45,11 +45,27 @@ def diag(client, ins, data, ascii):
     except:
         return response.hex()
 
+@cli.command()
+@click.option("-z", "--z-address", help="ZIP-32 path of an Orchard shielded address.")
+@with_client
+def get_fvk(client, z_address):
+    """Get Zcash Orchard Full Incoming Key."""
+    fvk = zcash.get_fvk(client, tools.parse_path(z_address))
+    return fvk.hex()
+
+@cli.command()
+@click.option("-z", "--z-address", help="ZIP-32 path of an Orchard shielded address.")
+@with_client
+def get_ivk(client, z_address):
+    """Get Zcash Orchard Incoming Viewing Key."""
+    ivk = zcash.get_ivk(client, tools.parse_path(z_address))
+    return ivk.hex()
+
 @cli.command(help="""Example:\n
 trezorctl zcash get-address -d -t m/44h/133h/0h/0/0 -z m/32h/133h/0h -j 0
 """)
-@click.option("-t", "--t-address", help="BIP-32 path of a transparent address.")
-@click.option("-z", "--z-address", help="BIP-32 path of a shielded address.")
+@click.option("-t", "--t-address", help="BIP-32 path of a P2PKH transparent address.")
+@click.option("-z", "--z-address", help="ZIP-32 path of an Orchard shielded address.")
 @click.option("-j", "--diversifier-index", default=0, type=int, help="diversifier index of the shielded address.")
 @click.option("-d", "--show-display", is_flag=True)
 @with_client

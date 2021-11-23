@@ -46,7 +46,7 @@ U_PREFIX = {
 	TESTNET: "utest"
 }
 
-def encode_transparent(raw_address: bytes, network_type=MAINNET: IntEnum) -> str:
+def encode_transparent(raw_address: bytes, network_type=MAINNET) -> str:
 	return base58.encode_check(T_PREFIX[network_type] + raw_address)
 
 def padding(hrp: str) -> bytes:

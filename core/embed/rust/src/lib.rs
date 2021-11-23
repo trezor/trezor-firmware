@@ -34,7 +34,6 @@ fn panic(info: &PanicInfo) -> ! {
     let msg = unsafe { CStr::from_bytes_with_nul_unchecked("rs\0".as_bytes()) };
     // TODO: remove this debug print
     use alloc::borrow::ToOwned;
-    use alloc::string::String;
     let msg = format!("{}\0", info);
     let msg = msg.to_owned();
     let msg = &msg[..];
