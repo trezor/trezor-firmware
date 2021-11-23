@@ -187,7 +187,7 @@ legacy fw regular build:
   needs: []
   script:
     - nix-shell --run "export MEMORY_PROTECT=1 && poetry run legacy/script/cibuild"
-    - nix-shell --run "make -C legacy clean"
+    - nix-shell --run "poetry run legacy/script/setup"
     - nix-shell --run "export MEMORY_PROTECT=0 && poetry run legacy/script/cibuild"
     - nix-shell --run "poetry run make -C legacy/demo"
     - mv legacy/firmware/trezor.bin trezor-fw-regular-$LEGACY_VERSION-$CI_COMMIT_SHORT_SHA.bin
@@ -204,7 +204,7 @@ legacy fw regular debug build:
     DEBUG_LINK: "1"
   script:
     - nix-shell --run "export MEMORY_PROTECT=1 && poetry run legacy/script/cibuild"
-    - nix-shell --run "make -C legacy clean"
+    - nix-shell --run "poetry run legacy/script/setup"
     - nix-shell --run "export MEMORY_PROTECT=0 && poetry run legacy/script/cibuild"
     - mv legacy/firmware/trezor.bin trezor-fw-regular-debug-$LEGACY_VERSION-$CI_COMMIT_SHORT_SHA.bin
   artifacts:
@@ -220,7 +220,7 @@ legacy fw btconly build:
     BITCOIN_ONLY: "1"
   script:
     - nix-shell --run "export MEMORY_PROTECT=1 && poetry run legacy/script/cibuild"
-    - nix-shell --run "make -C legacy clean"
+    - nix-shell --run "poetry run legacy/script/setup"
     - nix-shell --run "export MEMORY_PROTECT=0 && poetry run legacy/script/cibuild"
     - mv legacy/firmware/trezor.bin legacy/firmware/trezor-bitcoinonly.bin
     - nix-shell --run "poetry run ./tools/check-bitcoin-only legacy/firmware/trezor-bitcoinonly.bin"
@@ -239,7 +239,7 @@ legacy fw btconly debug build:
     DEBUG_LINK: "1"
   script:
     - nix-shell --run "export MEMORY_PROTECT=1 && poetry run legacy/script/cibuild"
-    - nix-shell --run "make -C legacy clean"
+    - nix-shell --run "poetry run legacy/script/setup"
     - nix-shell --run "export MEMORY_PROTECT=0 && poetry run legacy/script/cibuild"
     - nix-shell --run "poetry run ./tools/check-bitcoin-only legacy/firmware/trezor.bin"
     - mv legacy/firmware/trezor.bin trezor-fw-btconly-debug-$LEGACY_VERSION-$CI_COMMIT_SHORT_SHA.bin
