@@ -216,8 +216,13 @@ def _show_qr(
     cancel: str = "Address",
 ) -> Confirm:
     QR_COEF = const(4) if len(address) < QR_SIZE_THRESHOLD else const(3)
-    qr = Qr(address, QR_X, QR_Y, QR_COEF)
-    text = Text(title, ui.ICON_RECEIVE, ui.GREEN)
+    
+    if len(address) < 140:
+        qr = Qr(address, QR_X, QR_Y, QR_COEF)
+        text = Text(title, ui.ICON_RECEIVE, ui.GREEN)
+    else: # hide title to show even bigger QR code (Zcash Unified Address)
+        qr = Qr(address, QR_X, QR_Y - 15, QR_COEF)
+        text = Text("", ui.ICON_RECEIVE, ui.GREEN)       
 
     return Confirm(Container(qr, text), cancel=cancel, cancel_style=ButtonDefault)
 

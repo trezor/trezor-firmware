@@ -47,7 +47,6 @@ async def get_address(ctx: Context, msg: ZcashGetAddress) -> ZcashAddress:
         coin_type = msg.t_address_n[1]^HARDENED
         address = encode_transparent(raw_address, coin_type)
 
-    # TODO: QR code overflows for Orchard+P2PKH addresses
     if msg.show_display:
         await show_address(
             ctx, address=address, address_qr=address, title=title
