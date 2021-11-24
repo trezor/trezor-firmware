@@ -11,6 +11,7 @@ OBJS += ../gen/fonts.small.o
 # overrides from trezor-crypto
 CFLAGS += -DUSE_PRECOMPUTED_IV=0
 CFLAGS += -DUSE_PRECOMPUTED_CP=0
+CFLAGS += -DUSE_INVERSE_FAST=0
 OBJS += ../vendor/trezor-crypto/bignum.small.o
 OBJS += ../vendor/trezor-crypto/ecdsa.small.o
 OBJS += ../vendor/trezor-crypto/secp256k1.small.o
