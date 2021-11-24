@@ -1,9 +1,17 @@
 image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/trezor-firmware-env.nix
 
+# Caching
+.gitlab_caching: &gitlab_caching
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - .venv/
+
 # Core
 
 core unit test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - core unix regular build
   script:
@@ -23,6 +31,7 @@ core unit test t1:
 
 core device ui test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - core unix frozen debug build
   script:
@@ -47,6 +56,7 @@ core device ui test:
 
 core device test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - core unix frozen debug build
   variables:
@@ -67,6 +77,7 @@ core device test:
 
 core btconly device test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - core unix frozen btconly debug build
   variables:
@@ -86,6 +97,7 @@ core btconly device test:
 
 core monero test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - core unix frozen debug build
   variables:
@@ -104,6 +116,7 @@ core monero test:
 
 core u2f test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - core unix frozen debug build
   variables:
@@ -122,6 +135,7 @@ core u2f test:
 
 core fido2 test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - core unix frozen debug build
   variables:
@@ -144,6 +158,7 @@ core fido2 test:
 
 core click test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - core unix frozen debug build
   script:
@@ -160,6 +175,7 @@ core click test:
 
 core upgrade test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - core unix frozen debug build
   variables:
@@ -178,6 +194,7 @@ core upgrade test:
 
 core persistence test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - core unix frozen debug build
   script:
@@ -201,6 +218,7 @@ crypto test:
       - .gitlab-ci.yml
       - ci/**/*
       - crypto/**/*
+  <<: *gitlab_caching
   needs:
     - crypto build
   script:
@@ -223,6 +241,7 @@ crypto test:
 
 legacy test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - legacy emu regular debug build
   variables:
@@ -240,6 +259,7 @@ legacy test:
 
 legacy btconly test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - legacy emu btconly debug build
   variables:
@@ -260,6 +280,7 @@ legacy btconly test:
 
 legacy upgrade test:
   stage: test
+  <<: *gitlab_caching
   needs:
     - legacy emu regular debug build
   variables:
@@ -281,6 +302,7 @@ legacy upgrade test:
 
 python test:
   stage: test
+  <<: *gitlab_caching
   needs: []
   variables:
     LC_ALL: "C.UTF-8"
@@ -314,6 +336,7 @@ storage test:
       - .gitlab-ci.yml
       - ci/**/*
       - storage/**/*
+  <<: *gitlab_caching
   needs: []
   script:
     - nix-shell --run "poetry run make -C storage/tests build | ts -s"
@@ -332,6 +355,7 @@ storage test:
 core unix memory profiler:
   stage: test
   when: manual
+  <<: *gitlab_caching
   needs: []
   variables:
     PYOPT: "0"
