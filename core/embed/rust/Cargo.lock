@@ -24,12 +24,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "alloc-traits"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6b2d54853319fd101b8dd81de382bcbf3e03410a64d8928bbee85a3e7dcde483"
-
-[[package]]
 name = "arrayref"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -229,6 +223,7 @@ checksum = "7313c0d620d0cb4dbd9d019e461a4beb501071ff46ec0ab933efb4daa76d73e3"
 [[package]]
 name = "f4jumble"
 version = "0.0.0"
+source = "git+https://github.com/zcash/librustzcash?rev=6e39480c589bcb1b548c507aa96575368e72952a#6e39480c589bcb1b548c507aa96575368e72952a"
 dependencies = [
  "blake2b_simd",
 ]
@@ -380,6 +375,7 @@ checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 [[package]]
 name = "orchard"
 version = "0.0.0"
+source = "git+https://github.com/jarys/orchard?branch=no-std-alloc#8a8f9f4edc954564077496f5a563b8f5e947ea87"
 dependencies = [
  "aes",
  "arrayvec 0.7.1",
@@ -474,6 +470,7 @@ checksum = "d34f1408f55294453790c48b2f1ebbb1c5b4b7563eb1f418bcfcfdbb06ebb4e7"
 [[package]]
 name = "reddsa"
 version = "0.1.0"
+source = "git+https://github.com/jarys/no_std_redpallas?branch=main#2c01cd0106cade3d4134698c7d9f0a7cb4feaea6"
 dependencies = [
  "blake2b_simd",
  "ff",
@@ -510,15 +507,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43b2853a4d09f215c24cc5489c992ce46052d359b5109343cbafbf26bc62f8a3"
 
 [[package]]
-name = "static-alloc"
-version = "0.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ba7261e1a48f13244bf2bdfcbddf87567570749056c8747d23b2afa485b8e35"
-dependencies = [
- "alloc-traits",
-]
-
-[[package]]
 name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -549,7 +537,6 @@ dependencies = [
  "glob",
  "group",
  "orchard",
- "static-alloc",
 ]
 
 [[package]]
@@ -614,7 +601,7 @@ dependencies = [
 [[package]]
 name = "zcash_note_encryption"
 version = "0.0.0"
-source = "git+https://github.com/jarys/librustzcash.git?branch=no-std-note-encryption#024a1440875c85f40579b99813840bae865d2351"
+source = "git+https://github.com/jarys/librustzcash.git?rev=024a1440875c85f40579b99813840bae865d2351#024a1440875c85f40579b99813840bae865d2351"
 dependencies = [
  "blake2b_simd",
  "byteorder",
