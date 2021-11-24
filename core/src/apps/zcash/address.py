@@ -8,8 +8,10 @@ from apps.common.writers import write_bitcoin_varint, write_bytes_fixed
 from trezor.crypto import zcash
 
 if False:
+	# TODO: network_type should be IntEnum
+	# TODO: recerivers should be IntEnum
 	from enum import IntEnum
-	from typing import  Union, TypeVar
+	from typing import Dict
 else:
 	IntEnum = object  # type: ignore
 
@@ -46,14 +48,14 @@ U_PREFIX = {
 	TESTNET: "utest"
 }
 
-def encode_transparent(raw_address: bytes, network_type=MAINNET) -> str:
+def encode_transparent(raw_address: bytes, network_type=MAINNET: int) -> str:
 	return base58.encode_check(T_PREFIX[network_type] + raw_address)
 
 def padding(hrp: str) -> bytes:
 	assert(len(hrp) <= 16)
 	return bytes(hrp, "utf8") + bytes(16 - len(hrp))
 
-def encode_unified(receivers, network_type=MAINNET):
+def encode_unified(receivers: Dict[int,bytes], network_type=MAINNET: int) -> str:
 	assert not (P2PKH in receivers and P2SH in receivers), "multiple transparent receivers"
 
 	length = 16 # 16 bytes for padding
@@ -77,7 +79,7 @@ def encode_unified(receivers, network_type=MAINNET):
 	converted = convertbits(w, 8, 5)
 	return bech32_encode(hrp, converted, Encoding.BECH32M)
 
-def decode_unified(addr_str: str):
+def decode_unified(addr_str: str) -> Dict[int,bytes]:
 	# TODO: validation of receivers' encodings
 	(hrp, data, encoding) = bech32_decode(addr_str, max_bech_len=1000)
 	assert (hrp, data, encoding) != (None, None, None), "Bech32m decoding failed"
