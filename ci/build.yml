@@ -1,5 +1,12 @@
 image: registry.gitlab.com/satoshilabs/trezor/trezor-firmware/trezor-firmware-env.nix
 
+# Caching
+.gitlab_caching: &gitlab_caching
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - .venv/
+
 variables:
   SDL_VIDEODRIVER: "dummy"
   XDG_RUNTIME_DIR: "/var/tmp"
@@ -8,6 +15,7 @@ variables:
 
 core fw regular build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   script:
     - nix-shell --run "poetry run make -C core build_boardloader"
@@ -25,6 +33,7 @@ core fw regular build:
 
 core fw regular debug build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   script:
     - nix-shell --run "PYOPT=0 poetry run make -C core build_firmware"
@@ -37,6 +46,7 @@ core fw regular debug build:
 
 core fw btconly build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   variables:
     BITCOIN_ONLY: "1"
@@ -53,6 +63,7 @@ core fw btconly build:
 
 core fw btconly debug build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   variables:
     BITCOIN_ONLY: "1"
@@ -75,6 +86,7 @@ core fw btconly debug build:
 
 core fw btconly t1 build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   variables:
     BITCOIN_ONLY: "1"
@@ -90,6 +102,7 @@ core fw btconly t1 build:
 
 core unix regular build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   script:
     - nix-shell --run "poetry run make -C core build_unix"
@@ -101,6 +114,7 @@ core unix regular build:
 
 core unix frozen regular build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   script:
     - nix-shell --run "poetry run make -C core build_unix_frozen"
@@ -112,6 +126,7 @@ core unix frozen regular build:
 
 core unix frozen btconly debug build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   variables:
     PYOPT: "0"
@@ -127,6 +142,7 @@ core unix frozen btconly debug build:
 
 core unix frozen debug build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   variables:
     PYOPT: "0"
@@ -139,6 +155,7 @@ core unix frozen debug build:
 
 core macos frozen regular build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   when: manual
   tags:
@@ -162,6 +179,7 @@ core macos frozen regular build:
 
 crypto build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   only:
     changes:
@@ -184,6 +202,7 @@ crypto build:
 
 legacy fw regular build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   script:
     - nix-shell --run "export MEMORY_PROTECT=1 && poetry run legacy/script/cibuild"
@@ -199,6 +218,7 @@ legacy fw regular build:
 
 legacy fw regular debug build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   variables:
     DEBUG_LINK: "1"
@@ -215,6 +235,7 @@ legacy fw regular debug build:
 
 legacy fw btconly build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   variables:
     BITCOIN_ONLY: "1"
@@ -233,6 +254,7 @@ legacy fw btconly build:
 
 legacy fw btconly debug build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   variables:
     BITCOIN_ONLY: "1"
@@ -251,6 +273,7 @@ legacy fw btconly debug build:
 
 legacy emu regular debug build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   variables:
     DEBUG_LINK: "1"
@@ -265,6 +288,7 @@ legacy emu regular debug build:
 
 legacy emu btconly debug build:
   stage: build
+  <<: *gitlab_caching
   needs: []
   variables:
     BITCOIN_ONLY: "1"
