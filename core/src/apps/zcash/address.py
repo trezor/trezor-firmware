@@ -48,14 +48,14 @@ U_PREFIX = {
 	TESTNET: "utest"
 }
 
-def encode_transparent(raw_address: bytes, network_type=MAINNET: int) -> str:
+def encode_transparent(raw_address: bytes, network_type: int = MAINNET) -> str:
 	return base58.encode_check(T_PREFIX[network_type] + raw_address)
 
 def padding(hrp: str) -> bytes:
 	assert(len(hrp) <= 16)
 	return bytes(hrp, "utf8") + bytes(16 - len(hrp))
 
-def encode_unified(receivers: Dict[int,bytes], network_type=MAINNET: int) -> str:
+def encode_unified(receivers: Dict[int,bytes], network_type: int = MAINNET) -> str:
 	assert not (P2PKH in receivers and P2SH in receivers), "multiple transparent receivers"
 
 	length = 16 # 16 bytes for padding
