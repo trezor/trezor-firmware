@@ -1,4 +1,4 @@
-use crate::trezorhal::display;
+use crate::{micropython::time, time::Duration, trezorhal::display};
 
 use super::geometry::{Offset, Point, Rect};
 
@@ -18,8 +18,30 @@ pub fn screen() -> Rect {
     Rect::from_top_left_and_size(Point::zero(), size())
 }
 
-pub fn backlight(val: i32) -> i32 {
-    display::backlight(val)
+pub fn backlight() -> i32 {
+    display::backlight(-1)
+}
+
+pub fn set_backlight(val: i32) {
+    display::backlight(val);
+}
+
+pub fn fade_backlight(target: i32) {
+    const BACKLIGHT_DELAY: Duration = Duration::from_millis(14);
+    const BACKLIGHT_STEP: usize = 15;
+
+    let current = backlight();
+    if current < target {
+        for val in (current..target).step_by(BACKLIGHT_STEP) {
+            set_backlight(val);
+            time::sleep(BACKLIGHT_DELAY);
+        }
+    } else {
+        for val in (target..current).rev().step_by(BACKLIGHT_STEP) {
+            set_backlight(val);
+            time::sleep(BACKLIGHT_DELAY);
+        }
+    }
 }
 
 pub fn rect(r: Rect, fg_color: Color) {
