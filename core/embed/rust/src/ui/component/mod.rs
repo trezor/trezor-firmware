@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 mod base;
 mod empty;
 mod map;
