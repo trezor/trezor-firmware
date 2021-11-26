@@ -1,8 +1,7 @@
 use crate::{
     time::Instant,
     ui::{
-        component::{Child, Component, ComponentExt, Event, EventCtx},
-        display::{self, Color},
+        component::{Child, Component, ComponentExt, Event, EventCtx, Pad},
         geometry::Rect,
     },
 };
@@ -108,33 +107,5 @@ where
         d.open("HoldToConfirm");
         self.content.trace(d);
         d.close();
-    }
-}
-
-struct Pad {
-    area: Rect,
-    color: Color,
-    clear: bool,
-}
-
-impl Pad {
-    fn with_background(area: Rect, color: Color) -> Self {
-        Self {
-            area,
-            color,
-            clear: false,
-        }
-    }
-
-    fn clear(&mut self) {
-        self.clear = true;
-    }
-
-    fn paint(&mut self) {
-        if self.clear {
-            self.clear = false;
-
-            display::rect(self.area, self.color);
-        }
     }
 }
