@@ -123,6 +123,10 @@ where
             #[cfg(feature = "ui_debug")]
             panic!("cannot raise messages during RequestPaint");
         }
+        // Make sure to at least a propagate the paint flag upwards (in case there are
+        // no `Child` instances in `self`, paint would not get automatically requested
+        // by sending `Event::RequestPaint` down the tree).
+        ctx.request_paint();
     }
 }
 
