@@ -3,6 +3,7 @@ from common import *
 from apps.zcash import address
 from apps.zcash.address import P2PKH, P2SH, SAPLING, ORCHARD
 
+# source: https://github.com/jarys/zcash-test-vectors/blob/trezor/unified_address.py
 # (receivers, unified_address)
 TESTVECTORS_UNIFIED = [
 	({

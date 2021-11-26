@@ -2,6 +2,7 @@ from common import *
 
 from trezor.crypto import zcash
 
+# source: https://github.com/jarys/zcash-test-vectors/blob/trezor/orchard_key_components.py
 TESTVECTORS_KEY_COMPONENTS = [
     {
         "sk": unhexlify("5d7a8f739a2d9e945b0ce152a8049e294c4d6e66b164939daffa2ef6ee692148"),
@@ -175,7 +176,7 @@ TESTVECTORS_KEY_COMPONENTS = [
     },
 ]
 
-
+# source: https://github.com/jarys/zcash-test-vectors/blob/trezor/f4jumble.py
 TESTVECTORS_F4JUMBLE = [
     {
         "normal": unhexlify("5d7a8f739a2d9e945b0ce152a8049e294c4d6e66b164939daffa2ef6ee6921481cdd86b3cc4318d9614fc820905d042b"),

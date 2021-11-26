@@ -2,6 +2,8 @@ from common import *
 
 from apps.zcash import zip32
 
+# source: https://github.com/jarys/zcash-test-vectors/blob/trezor/orchard_zip32.py
+# TODO: waiting for real zip32 test vectors 
 TESTVECTORS_ZIP32 = [
 	{
 		"seed": unhexlify("5d7a8f739a2d9e945b0ce152a8049e294c4d6e66b164939daffa2ef6ee692148"),
