@@ -264,7 +264,6 @@ impl TextBox {
     fn replace_last(&mut self, ctx: &mut EventCtx, char: u8) {
         self.text.pop();
         if self.text.push(char).is_err() {
-            // Should not happen unless `self.text` has zero capacity.
             #[cfg(feature = "ui_debug")]
             panic!("textbox has zero capacity");
         }
@@ -273,7 +272,6 @@ impl TextBox {
 
     fn append(&mut self, ctx: &mut EventCtx, char: u8) {
         if self.text.push(char).is_err() {
-            // `self.text` is full, ignore this change.
             #[cfg(feature = "ui_debug")]
             panic!("textbox is full");
         }

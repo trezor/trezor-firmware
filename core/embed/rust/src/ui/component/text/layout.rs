@@ -210,7 +210,7 @@ impl TextLayout {
         // cursor.
         let init_cursor = self.initial_cursor();
         let mut cursor = init_cursor;
-        self.layout_ops(ops, &mut cursor, &mut TextNoop);
+        self.layout_ops(ops, &mut cursor, &mut TextNoOp);
         cursor.y - init_cursor.y + self.text_font.line_height()
     }
 
@@ -219,7 +219,7 @@ impl TextLayout {
         // cursor.
         let init_cursor = self.initial_cursor();
         let mut cursor = init_cursor;
-        self.layout_text(text, &mut cursor, &mut TextNoop);
+        self.layout_text(text, &mut cursor, &mut TextNoOp);
         cursor.y - init_cursor.y + self.text_font.line_height()
     }
 }
@@ -238,9 +238,9 @@ pub trait LayoutSink {
     fn out_of_bounds(&mut self) {}
 }
 
-pub struct TextNoop;
+pub struct TextNoOp;
 
-impl LayoutSink for TextNoop {}
+impl LayoutSink for TextNoOp {}
 
 pub struct TextRenderer;
 
@@ -325,7 +325,7 @@ impl<'a> Op<'a> {
                 skipped = skipped.saturating_add(text.len());
                 if skipped > skip_bytes {
                     let leave_bytes = skipped - skip_bytes;
-                    Some(Op::Text(&text[..text.len() - leave_bytes]))
+                    Some(Op::Text(&text[text.len() - leave_bytes..]))
                 } else {
                     None
                 }
