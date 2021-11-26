@@ -77,7 +77,7 @@ impl Swipe {
         let start = self.backlight_start as f32;
         let end = self.backlight_end as f32;
         let value = start + ratio * (end - start);
-        display::backlight(value as i32);
+        display::set_backlight(value as i32);
     }
 }
 
