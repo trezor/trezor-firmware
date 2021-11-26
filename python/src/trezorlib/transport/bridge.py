@@ -16,12 +16,15 @@
 
 import logging
 import struct
-from typing import Any, Dict, Iterable, Optional
+from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional
 
 import requests
 
 from ..log import DUMP_PACKETS
 from . import MessagePayload, Transport, TransportException
+
+if TYPE_CHECKING:
+    from ..models import TrezorModel
 
 LOG = logging.getLogger(__name__)
 
@@ -135,7 +138,9 @@ class BridgeTransport(Transport):
         return call_bridge(uri, data=data)
 
     @classmethod
-    def enumerate(cls) -> Iterable["BridgeTransport"]:
+    def enumerate(
+        cls, _models: Optional[Iterable["TrezorModel"]] = None
+    ) -> Iterable["BridgeTransport"]:
         try:
             legacy = is_legacy_bridge()
             return [

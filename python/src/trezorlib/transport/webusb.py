@@ -21,7 +21,8 @@ import time
 from typing import Iterable, List, Optional
 
 from ..log import DUMP_PACKETS
-from . import TREZORS, UDEV_RULES_STR, TransportException
+from ..models import TREZORS, TrezorModel
+from . import UDEV_RULES_STR, TransportException
 from .protocol import ProtocolBasedTransport, ProtocolV1
 
 LOG = logging.getLogger(__name__)
@@ -114,15 +115,21 @@ class WebUsbTransport(ProtocolBasedTransport):
         return f"{self.PATH_PREFIX}:{dev_to_str(self.device)}"
 
     @classmethod
-    def enumerate(cls, usb_reset: bool = False) -> Iterable["WebUsbTransport"]:
+    def enumerate(
+        cls, models: Optional[Iterable["TrezorModel"]] = None, usb_reset: bool = False
+    ) -> Iterable["WebUsbTransport"]:
         if cls.context is None:
             cls.context = usb1.USBContext()
             cls.context.open()
             atexit.register(cls.context.close)  # type: ignore [Param spec "_P@register" has no bound value]
+
+        if models is None:
+            models = TREZORS
+        usb_ids = [id for model in models for id in model.usb_ids]
         devices: List["WebUsbTransport"] = []
         for dev in cls.context.getDeviceIterator(skip_on_error=True):
             usb_id = (dev.getVendorID(), dev.getProductID())
-            if usb_id not in TREZORS:
+            if usb_id not in usb_ids:
                 continue
             if not is_vendor_class(dev):
                 continue
