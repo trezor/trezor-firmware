@@ -28,9 +28,11 @@ fn get_orchard_fvk(sk: Obj) -> Result<FullViewingKey, Error> {
     let sk = SpendingKey::from_bytes(sk_bytes);
     // conversion from CtOption to Option
     let sk: Option<SpendingKey> = sk.into();
-    let err_msg =
-        unsafe { CStr::from_bytes_with_nul_unchecked("Invalid Spending Key\0".as_bytes()) };
-    let sk = sk.ok_or(Error::ValueError(err_msg))?;
+    let sk = sk.ok_or_else(|| {
+        let err_msg =
+            unsafe { CStr::from_bytes_with_nul_unchecked("Invalid Spending Key\0".as_bytes()) };
+        Error::ValueError(err_msg)
+    })?;
 
     let fvk: FullViewingKey = (&sk).into();
     Ok(fvk)
