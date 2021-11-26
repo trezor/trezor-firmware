@@ -169,6 +169,10 @@ impl LayoutObj {
         struct CallbackTracer(Obj);
 
         impl Tracer for CallbackTracer {
+            fn int(&mut self, i: i64) {
+                self.0.call_with_n_args(&[i.try_into().unwrap()]).unwrap();
+            }
+
             fn bytes(&mut self, b: &[u8]) {
                 self.0.call_with_n_args(&[b.try_into().unwrap()]).unwrap();
             }

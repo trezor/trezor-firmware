@@ -59,6 +59,10 @@ mod tests {
     use super::*;
 
     impl Tracer for Vec<u8> {
+        fn int(&mut self, i: i64) {
+            self.string(&i.to_string());
+        }
+
         fn bytes(&mut self, b: &[u8]) {
             self.extend(b)
         }
