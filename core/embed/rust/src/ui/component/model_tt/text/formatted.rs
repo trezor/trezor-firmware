@@ -11,7 +11,9 @@ use crate::ui::{
     geometry::Rect,
 };
 
-use super::layout::{LayoutSink, LineBreaking, Op, PageBreaking, TextLayout, TextRenderer};
+use super::layout::{
+    LayoutFit, LayoutSink, LineBreaking, Op, PageBreaking, TextLayout, TextRenderer,
+};
 
 pub const MAX_ARGUMENTS: usize = 6;
 
@@ -19,6 +21,7 @@ pub struct FormattedText<F, T> {
     layout: TextLayout,
     format: F,
     args: LinearMap<&'static [u8], T, MAX_ARGUMENTS>,
+    char_offset: usize,
 }
 
 impl<F, T> FormattedText<F, T> {
@@ -27,6 +30,7 @@ impl<F, T> FormattedText<F, T> {
             layout: TextLayout::new(area),
             format,
             args: LinearMap::new(),
+            char_offset: 0,
         }
     }
 
@@ -63,6 +67,14 @@ impl<F, T> FormattedText<F, T> {
         self
     }
 
+    pub fn set_char_offset(&mut self, char_offset: usize) {
+        self.char_offset = char_offset;
+    }
+
+    pub fn char_offset(&mut self) -> usize {
+        self.char_offset
+    }
+
     pub fn layout_mut(&mut self) -> &mut TextLayout {
         &mut self.layout
     }
@@ -73,19 +85,22 @@ where
     F: AsRef<[u8]>,
     T: AsRef<[u8]>,
 {
-    fn layout_content(&self, sink: &mut dyn LayoutSink) {
+    pub fn layout_content(&self, sink: &mut dyn LayoutSink) -> LayoutFit {
         let mut cursor = self.layout.initial_cursor();
-        let mut ops = Tokenizer::new(self.format.as_ref()).flat_map(|arg| match arg {
-            Token::Literal(literal) => Some(Op::Text(literal)),
-            Token::Argument(b"mono") => Some(Op::Font(theme::FONT_MONO)),
-            Token::Argument(b"bold") => Some(Op::Font(theme::FONT_BOLD)),
-            Token::Argument(b"normal") => Some(Op::Font(theme::FONT_NORMAL)),
-            Token::Argument(argument) => self
-                .args
-                .get(argument)
-                .map(|value| Op::Text(value.as_ref())),
-        });
-        self.layout.layout_ops(&mut ops, &mut cursor, sink);
+        let mut ops = Op::skip_n_text_bytes(
+            Tokenizer::new(self.format.as_ref()).flat_map(|arg| match arg {
+                Token::Literal(literal) => Some(Op::Text(literal)),
+                Token::Argument(b"mono") => Some(Op::Font(theme::FONT_MONO)),
+                Token::Argument(b"bold") => Some(Op::Font(theme::FONT_BOLD)),
+                Token::Argument(b"normal") => Some(Op::Font(theme::FONT_NORMAL)),
+                Token::Argument(argument) => self
+                    .args
+                    .get(argument)
+                    .map(|value| Op::Text(value.as_ref())),
+            }),
+            self.char_offset,
+        );
+        self.layout.layout_ops(&mut ops, &mut cursor, sink)
     }
 }
 
