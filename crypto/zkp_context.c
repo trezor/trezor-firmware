@@ -84,6 +84,7 @@ void zkp_context_destroy() {
   secp256k1_context_preallocated_destroy(context);
   memzero(context_buffer, sizeof(context_buffer));
   atomic_flag_clear(&locked);
+  context = NULL;
 }
 
 const secp256k1_context *zkp_context_get_read_only() {
