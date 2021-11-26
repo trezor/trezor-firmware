@@ -1,3 +1,4 @@
+use core::array::TryFromSliceError;
 use core::convert::{TryFrom, TryInto};
 use core::ops::{Deref, DerefMut};
 
@@ -12,11 +13,16 @@ use crate::micropython::{
 };
 use crate::util;
 
+impl From<TryFromSliceError> for Error {
+    fn from(_e: TryFromSliceError) -> Error {
+        Error::OutOfRange
+    }
+}
+
 /// Returns Orchard Full Viewing Key.
 fn get_orchard_fvk(sk: Obj) -> Result<FullViewingKey, Error> {
     let sk: Buffer = sk.try_into()?;
-    let mut sk_bytes = [0u8; 32];
-    sk_bytes.copy_from_slice(sk.deref());
+    let sk_bytes: [u8; 32] = sk.as_ref().try_into()?;
 
     // SpendingKey is not valid with a negligible probability.
     let sk = SpendingKey::from_bytes(sk_bytes);
