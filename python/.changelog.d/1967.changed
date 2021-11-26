@@ -1,0 +1,1 @@
+Introduce Trezor models as an abstraction over USB IDs, vendor strings, and possibly protobuf mappings.

@@ -17,11 +17,14 @@
 import logging
 import socket
 import time
-from typing import Iterable, Optional
+from typing import TYPE_CHECKING, Iterable, Optional
 
 from ..log import DUMP_PACKETS
 from . import TransportException
 from .protocol import ProtocolBasedTransport, ProtocolV1
+
+if TYPE_CHECKING:
+    from ..models import TrezorModel
 
 SOCKET_TIMEOUT = 10
 
@@ -70,7 +73,9 @@ class UdpTransport(ProtocolBasedTransport):
             d.close()
 
     @classmethod
-    def enumerate(cls) -> Iterable["UdpTransport"]:
+    def enumerate(
+        cls, _models: Optional[Iterable["TrezorModel"]] = None
+    ) -> Iterable["UdpTransport"]:
         default_path = f"{cls.DEFAULT_HOST}:{cls.DEFAULT_PORT}"
         try:
             return [cls._try_path(default_path)]
