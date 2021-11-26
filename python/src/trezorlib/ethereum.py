@@ -189,17 +189,18 @@ def sign_tx(
         tx_type=tx_type,
     )
 
-    if data:
-        msg.data_length = len(data)
-        data, chunk = data[1024:], data[:1024]
-        msg.data_initial_chunk = chunk
+    if data is None:
+        data = b""
+
+    msg.data_length = len(data)
+    data, chunk = data[1024:], data[:1024]
+    msg.data_initial_chunk = chunk
 
     response = client.call(msg)
     assert isinstance(response, messages.EthereumTxRequest)
 
     while response.data_length is not None:
         data_length = response.data_length
-        assert data is not None
         data, chunk = data[data_length:], data[:data_length]
         response = client.call(messages.EthereumTxAck(data_chunk=chunk))
         assert isinstance(response, messages.EthereumTxRequest)
