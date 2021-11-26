@@ -2,6 +2,7 @@ use crate::micropython::{buffer::Buffer, obj::Obj};
 use crate::util;
 use core::{convert::TryFrom, ops::Deref};
 use group::GroupEncoding;
+use orchard;
 use orchard::keys::{
     FullViewingKey, NullifierDerivingKey, SpendAuthorizingKey, SpendValidatingKey, SpendingKey,
 };
@@ -81,6 +82,10 @@ pub extern "C" fn zcash_diag(ins: Obj, data: Obj) -> Obj {
                 let size = as_u32_be(data) as usize;
                 let _ = vec![0u8; size];
                 Obj::try_from(&b"allocation successed"[..])?
+            }
+            b"encrypt" => {
+                orchard::note_encryption::tests::test_vectors();
+                Obj::try_from(&b"encryption successed"[..])?
             }
             _ => Obj::try_from(&b"unknown instruction"[..])?,
         };

@@ -375,7 +375,6 @@ checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 [[package]]
 name = "orchard"
 version = "0.0.0"
-source = "git+https://github.com/jarys/orchard?branch=no-std-alloc#8a8f9f4edc954564077496f5a563b8f5e947ea87"
 dependencies = [
  "aes",
  "arrayvec 0.7.1",
@@ -601,7 +600,7 @@ dependencies = [
 [[package]]
 name = "zcash_note_encryption"
 version = "0.0.0"
-source = "git+https://github.com/jarys/librustzcash.git?rev=024a1440875c85f40579b99813840bae865d2351#024a1440875c85f40579b99813840bae865d2351"
+source = "git+https://github.com/jarys/librustzcash.git?rev=719e3f812e7335a89ae4132cc45d5df6a76a4de4#719e3f812e7335a89ae4132cc45d5df6a76a4de4"
 dependencies = [
  "blake2b_simd",
  "byteorder",
