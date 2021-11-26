@@ -21,13 +21,29 @@ impl<T> Page<T> {
     pub fn new(area: Rect, page: T, page_count: usize, active_page: usize) -> Self {
         let scrollbar = ScrollBar::vertical_right(area, page_count, active_page);
         let mut swipe = Swipe::new(area);
-        swipe.allow_up = scrollbar.has_next_page();
-        swipe.allow_down = scrollbar.has_previous_page();
+        Self::setup_swipe(&scrollbar, &mut swipe);
         Self {
             swipe,
             scrollbar,
             page,
         }
+    }
+
+    fn setup_swipe(scrollbar: &ScrollBar, swipe: &mut Swipe) {
+        swipe.allow_up = scrollbar.has_next_page();
+        swipe.allow_down = scrollbar.has_previous_page();
+    }
+
+    pub fn inner_mut(&mut self) -> &mut T {
+        &mut self.page
+    }
+
+    pub fn page_count(&self) -> usize {
+        self.scrollbar.page_count
+    }
+
+    pub fn active_page(&self) -> usize {
+        self.scrollbar.active_page
     }
 }
 
@@ -39,11 +55,15 @@ impl<T: Component> Component for Page<T> {
             match swipe {
                 SwipeDirection::Up => {
                     // Scroll down, if possible.
-                    return Some(PageMsg::ChangePage(self.scrollbar.next_page()));
+                    self.scrollbar.go_to_next_page();
+                    Self::setup_swipe(&self.scrollbar, &mut self.swipe);
+                    return Some(PageMsg::ChangePage(self.active_page()));
                 }
                 SwipeDirection::Down => {
                     // Scroll up, if possible.
-                    return Some(PageMsg::ChangePage(self.scrollbar.previous_page()));
+                    self.scrollbar.go_to_previous_page();
+                    Self::setup_swipe(&self.scrollbar, &mut self.swipe);
+                    return Some(PageMsg::ChangePage(self.active_page()));
                 }
                 _ => {
                     // Ignore other directions.
@@ -59,6 +79,20 @@ impl<T: Component> Component for Page<T> {
     fn paint(&mut self) {
         self.page.paint();
         self.scrollbar.paint();
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl<T> crate::trace::Trace for Page<T>
+where
+    T: crate::trace::Trace,
+{
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.open("Page");
+        t.field("active_page", &self.active_page());
+        t.field("page_count", &self.page_count());
+        t.field("content", &self.page);
+        t.close();
     }
 }
 
@@ -88,12 +122,12 @@ impl ScrollBar {
         self.active_page > 0
     }
 
-    pub fn next_page(&self) -> usize {
-        self.active_page.saturating_add(1).min(self.page_count - 1)
+    pub fn go_to_next_page(&mut self) {
+        self.active_page = self.active_page.saturating_add(1).min(self.page_count - 1);
     }
 
-    pub fn previous_page(&self) -> usize {
-        self.active_page.saturating_sub(1)
+    pub fn go_to_previous_page(&mut self) {
+        self.active_page = self.active_page.saturating_sub(1);
     }
 }
 
