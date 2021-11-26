@@ -79,6 +79,7 @@ pub struct Instant {
 
 impl Instant {
     pub fn now() -> Self {
+        // TODO: We should move this to `micropython::time`.
         Self {
             millis: time::ticks_ms(),
         }

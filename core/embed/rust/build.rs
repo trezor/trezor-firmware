@@ -111,6 +111,7 @@ fn generate_micropython_bindings() {
         .allowlist_var("mp_type_TypeError")
         // time
         .allowlist_function("mp_hal_ticks_ms")
+        .allowlist_function("mp_hal_delay_ms")
         // typ
         .allowlist_var("mp_type_type");
 
