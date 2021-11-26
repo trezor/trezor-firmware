@@ -1,3 +1,5 @@
+#![forbid(unsafe_code)]
+
 pub mod base;
 pub mod empty;
 pub mod label;
