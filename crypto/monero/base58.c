@@ -119,7 +119,11 @@ bool decode_block(const char* block, size_t size, char* res)
 			return false; // Overflow
 
 		res_num = tmp;
-		order *= alphabet_size; // Never overflows, 58^10 < 2^64
+		// The original code comment for the order multiplication says
+		// "Never overflows, 58^10 < 2^64"
+		// This is incorrect since it overflows on the 11th iteration
+		// However, there is no negative impact since the result is unused
+		order *= alphabet_size;
 	}
 
 	if ((size_t)res_size < full_block_size && (UINT64_C(1) << (8 * res_size)) <= res_num)
