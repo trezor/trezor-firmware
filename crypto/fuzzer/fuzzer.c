@@ -89,7 +89,8 @@ void fuzzer_reset_state(void) {
 }
 
 void crash(void) {
-  // intentionally exit the program, which is picked up as a crash by the fuzzer framework
+  // intentionally exit the program, which is picked up as a crash by the fuzzer
+  // framework
   exit(1);
 }
 
@@ -157,10 +158,10 @@ int fuzz_bn_format(void) {
   }
 
   ret = bn_format(&target_bignum, prefix, suffix, decimals, exponent, trailing,
-                buf, FUZZ_BN_FORMAT_OUTPUT_BUFFER_SIZE);
+                  buf, FUZZ_BN_FORMAT_OUTPUT_BUFFER_SIZE);
 
   // basic sanity checks for r
-  if(ret > FUZZ_BN_FORMAT_OUTPUT_BUFFER_SIZE) {
+  if (ret > FUZZ_BN_FORMAT_OUTPUT_BUFFER_SIZE) {
     crash();
   }
 
@@ -280,13 +281,12 @@ int fuzz_xmr_base58_addr_decode_check(void) {
   char in_buffer[XMR_BASE58_ADDR_DECODE_MAX_INPUT_LEN] = {0};
   char out_buffer[XMR_BASE58_ADDR_DECODE_MAX_INPUT_LEN] = {0};
   size_t outlen = sizeof(out_buffer);
+  uint64_t tag = 0;
+  size_t raw_inlen = fuzzer_length;
 
   // mutate in_buffer
-  size_t raw_inlen = fuzzer_length;
-  memcpy(&in_buffer, fuzzer_ptr, raw_inlen);
-  fuzzer_input(raw_inlen);
+  memcpy(&in_buffer, fuzzer_input(raw_inlen), raw_inlen);
 
-  uint64_t tag;
   xmr_base58_addr_decode_check(in_buffer, raw_inlen, &tag, out_buffer, outlen);
   return 0;
 }
@@ -382,18 +382,18 @@ int fuzz_nem_validate_address(void) {
 
 int fuzz_nem_get_address(void) {
   unsigned char ed25519_public_key_fuzz[32] = {0};
-  uint32_t network = 0;
+  uint8_t version = 0;
 
-  if (fuzzer_length != (sizeof(ed25519_public_key_fuzz) + sizeof(network))) {
+  if (fuzzer_length != (sizeof(ed25519_public_key_fuzz) + sizeof(version))) {
     return 0;
   }
 
   char address[NEM_ADDRESS_SIZE + 1] = {0};
 
   memcpy(ed25519_public_key_fuzz, fuzzer_input(32), 32);
-  memcpy(&network, fuzzer_input(4), 4);
+  memcpy(&version, fuzzer_input(1), 1);
 
-  nem_get_address(ed25519_public_key_fuzz, network, address);
+  nem_get_address(ed25519_public_key_fuzz, version, address);
 
 #if defined(__has_feature)
 #if __has_feature(memory_sanitizer)
@@ -615,20 +615,26 @@ int fuzz_slip39_word_completion_mask(void) {
   return 0;
 }
 
-int fuzz_mnemonic_to_bits(void) {
-  // regular MAX_MNEMONIC_LEN is 240, try some extra bytes
+// regular MAX_MNEMONIC_LEN is 240, try some extra bytes
 #define MAX_MNEMONIC_FUZZ_LENGTH 256
-
+int fuzz_mnemonic_check(void) {
   if (fuzzer_length < MAX_MNEMONIC_FUZZ_LENGTH) {
     return 0;
   }
 
   char mnemonic[MAX_MNEMONIC_FUZZ_LENGTH + 1] = {0};
   memcpy(&mnemonic, fuzzer_ptr, MAX_MNEMONIC_FUZZ_LENGTH);
-  uint8_t mnemonic_bits[32 + 1] = {0};
 
-  mnemonic_to_bits((const char *)&mnemonic, mnemonic_bits);
-  // TODO what can be checked about the result, computing a checksum?
+  // as of 11/2021, mnemonic_check() internally calls mnemonic_to_bits() and
+  // checks the result
+  int ret = mnemonic_check(mnemonic);
+
+  (void)ret;
+  /*
+  if(ret == 1) {
+    // correct result
+  }
+  */
 
   return 0;
 }
@@ -638,13 +644,14 @@ int fuzz_mnemonic_from_data(void) {
     return 0;
   }
 
-  const char* mnemo_result = mnemonic_from_data(fuzzer_ptr, fuzzer_length);
-  if(mnemo_result != NULL) {
+  const char *mnemo_result = mnemonic_from_data(fuzzer_ptr, fuzzer_length);
+  if (mnemo_result != NULL) {
     int res = mnemonic_check(mnemo_result);
-    if(res == 0) {
+    if (res == 0) {
       // TODO the mnemonic_check() function is currently incorrectly rejecting
-      // valid 15 and 21 word seeds - remove this workaround limitation later
-      if(fuzzer_length != 20 && fuzzer_length != 28) {
+      // valid 15 and 21 word seeds
+      // remove this workaround limitation later
+      if (fuzzer_length != 20 && fuzzer_length != 28) {
         // the generated mnemonic has an invalid format
         crash();
       }
@@ -652,6 +659,27 @@ int fuzz_mnemonic_from_data(void) {
   }
   // scrub the internal buffer to rule out persistent side effects
   mnemonic_clear();
+  return 0;
+}
+
+// passphrase normally has a 64 or 256 byte length maximum
+#define MAX_PASSPHRASE_FUZZ_LENGTH 257
+int fuzz_mnemonic_to_seed(void) {
+  if (fuzzer_length < MAX_MNEMONIC_FUZZ_LENGTH + MAX_PASSPHRASE_FUZZ_LENGTH) {
+    return 0;
+  }
+
+  char mnemonic[MAX_PASSPHRASE_FUZZ_LENGTH + 1] = {0};
+  char passphrase[MAX_MNEMONIC_FUZZ_LENGTH + 1] = {0};
+  uint8_t seed[512 / 8] = {0};
+
+  memcpy(&mnemonic, fuzzer_input(MAX_MNEMONIC_FUZZ_LENGTH),
+         MAX_MNEMONIC_FUZZ_LENGTH);
+  memcpy(&passphrase, fuzzer_input(MAX_PASSPHRASE_FUZZ_LENGTH),
+         MAX_PASSPHRASE_FUZZ_LENGTH);
+
+  mnemonic_to_seed(mnemonic, passphrase, seed, NULL);
+
   return 0;
 }
 
@@ -807,7 +835,7 @@ int fuzz_schnorr_verify_digest(void) {
     int ret = schnorr_verify_digest(curve, pub_key, digest, signature);
     if (ret == 0) {
       // exit with a forced crash if a successful verification is observed
-      // TODO this assumes that the fuzzer can't puzzle together validly signed 
+      // TODO this assumes that the fuzzer can't puzzle together validly signed
       // inputs and needs to be revisited
       crash();
     }
@@ -849,15 +877,18 @@ int fuzz_schnorr_sign_digest(void) {
     // compute matching pubkey
     uint8_t pub_key[33] = {0};
     ret = ecdsa_get_public_key33(curve, priv_key, pub_key);
-    if(ret != 0) {
+    if (ret != 0) {
       crash();
-    } 
+    }
     if (schnorr_verify_digest(curve, pub_key, digest, signature) != 0) {
       crash();
     }
   }
   return 0;
 }
+
+// TODO zkp_bip340_sign, see test_check.c
+// TODO zkp_bip340_verify, see test_check.c
 
 int fuzz_chacha_drbg(void) {
 #define CHACHA_DRBG_ENTROPY_LENGTH 32
@@ -1022,7 +1053,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       fuzz_slip39_word_completion_mask();
       break;
     case 17:
-      fuzz_mnemonic_to_bits();
+      fuzz_mnemonic_check();
       break;
     case 18:
 #ifdef FUZZ_ALLOW_SLOW
@@ -1052,6 +1083,9 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
       break;
     case 25:
       fuzz_mnemonic_from_data();
+      break;
+    case 26:
+      fuzz_mnemonic_to_seed();
       break;
 
     default:
