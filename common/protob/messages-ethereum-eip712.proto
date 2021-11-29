@@ -87,12 +87,3 @@ message EthereumTypedDataValueAck {
     // * array types: number of elements, encoded as uint16.
     // * struct types: undefined, Trezor will not query a struct field.
 }
-
-/**
- * Response: Signed typed data
- * @end
- */
-message EthereumTypedDataSignature {
-    required bytes signature = 1;    // signature of the typed data
-    required string address = 2;     // address used to sign the typed data
-}
