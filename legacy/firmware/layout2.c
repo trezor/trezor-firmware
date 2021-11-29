@@ -1253,3 +1253,22 @@ void layoutConfirmSafetyChecks(SafetyCheckLevel safety_ckeck_level) {
                       _("be unsafe?"), NULL);
   }
 }
+
+void layoutConfirmHash(const BITMAP *icon, const char *description,
+                       const uint8_t *hash, uint32_t len) {
+  const char **str = split_message_hex(hash, len);
+
+  layoutSwipe();
+  oledClear();
+  oledDrawBitmap(0, 0, icon);
+  oledDrawString(20, 0 * 9, description, FONT_STANDARD);
+  oledDrawString(20, 1 * 9, str[0], FONT_FIXED);
+  oledDrawString(20, 2 * 9, str[1], FONT_FIXED);
+  oledDrawString(20, 3 * 9, str[2], FONT_FIXED);
+  oledDrawString(20, 4 * 9, str[3], FONT_FIXED);
+  oledHLine(OLED_HEIGHT - 13);
+
+  layoutButtonNo(_("Cancel"), &bmp_btn_cancel);
+  layoutButtonYes(_("Confirm"), &bmp_btn_confirm);
+  oledRefresh();
+}

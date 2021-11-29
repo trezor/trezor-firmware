@@ -34,6 +34,13 @@ EthereumVerifyMessage.message           max_size:1024
 EthereumMessageSignature.address        max_size:43
 EthereumMessageSignature.signature      max_size:65
 
+EthereumSignTypedHash.address_n             max_count:8
+EthereumSignTypedHash.domain_separator_hash max_size:32
+EthereumSignTypedHash.message_hash          max_size:32
+
+EthereumTypedDataSignature.address      max_size:43
+EthereumTypedDataSignature.signature    max_size:65
+
 EthereumGetAddress.address_n            max_count:8
 EthereumGetPublicKey.address_n          max_count:8
 
