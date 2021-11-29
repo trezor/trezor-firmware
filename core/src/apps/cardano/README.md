@@ -24,11 +24,58 @@ REVIEWER = Jan Matejek <jan.matejek@satoshilabs.com>, Tomas Susanka <tomas.susan
 
 [cbor.me](http://cbor.me/) - very useful tool for CBOR inspection.
 
-## Important notes
 
-Cardano requires a custom `seed.py` file and `Keychain` class. This is because the original Cardano derivation schemes don't separate seed generation from key tree derivation and also because we need to support Byron (44'), Shelley (1852'), multi-sig ([1854'](https://cips.cardano.org/cips/cip1854/)) and minting ([1855'](https://cips.cardano.org/cips/cip1855/)) purposes. More on this can be found [here](https://github.com/satoshilabs/slips/blob/master/slip-0023.md) and [here](https://github.com/input-output-hk/implementation-decisions/blob/e2d1bed5e617f0907bc5e12cf1c3f3302a4a7c42/text/1852-hd-chimeric.md).
+## Seed derivation schemes
+
+When using a **BIP-39 seed phrase**, multiple seed derivation schemes are [specified](https://github.com/cardano-foundation/CIPs/blob/master/CIP-0003/README.md):
+
+* `ICARUS`, which is the recommended default.
+* `ICARUS_TREZOR`, which differs from Icarus for 24-word seed phrases due to a [historic bug](https://github.com/trezor/trezor-firmware/issues/1387).
+  When a seed shorter than 24 words is used, the result is the same as `ICARUS`.
+* `LEDGER`, designed and used by the Ledger wallet.
+
+Given the same seed phrase, each of the schemes may produce a different master seed,
+and so opens a different wallet.
+
+Icarus (and Icarus-Trezor) scheme processes the seed phrase in a manner incompatible
+with BIP-39. A separate derivation step is required when using the Icarus scheme, which
+prolongs Trezor's first-response time by 2 seconds, plus additional 2 seconds for
+Icarus-Trezor if the seed phrase is 24 words long.
+
+Since firmware version 2.4.3, wallets that require the Cardano-derived seed must specify
+`derive_cardano=true` in the `Initialize` call. Otherwise an error will be returned when
+performing any Cardano call with an Icarus-like derivation.
+
+Ledger derivation scheme is compatible with BIP-39 and does not require the separate
+derivation step. For that reason, it is available even if `derive_cardano=true` was not
+specified.
+
+Since firmware version 2.4.3, Trezor requires the caller to specify derivation type in
+every Cardano call. In older versions, the Icarus-Trezor derivation is always used.
+
+For compatibility with older firmwares, wallet implementations should default to the
+Icarus-Trezor derivation. For compatibility with other wallet vendors, wallets should
+make the derivation scheme configurable by user -- or perform a discovery for all three
+schemes.
+
+When using **SLIP-39 backup**, the only supported derivation is [SLIP-23](https://github.com/satoshilabs/slips/blob/master/slip-0023.md).
+The `derive_cardano=true` parameter is not required, and the value of `derivation_type`
+is ignored.
 
 Cardano uses extended public keys. This also means that the transaction signature is built using the `ed25519.sign_ext` function.
+
+
+## Multiple BIP-32 purposes
+
+Cardano is using the following values for BIP-32 purpose field:
+
+* Byron: 44'
+* Shelley: 1852'
+* Multi-sig: [1854'](https://cips.cardano.org/cips/cip1854/)
+* Minting: [1855'](https://cips.cardano.org/cips/cip1855/)
+
+Details about the purpose identifiers can be found [here](https://github.com/input-output-hk/implementation-decisions/blob/e2d1bed5e617f0907bc5e12cf1c3f3302a4a7c42/text/1852-hd-chimeric.md).
+
 
 ## Protocol magic vs. Network id
 
