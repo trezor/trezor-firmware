@@ -27,6 +27,10 @@ EthereumTxAck.data_chunk                max_size:1024
 EthereumSignMessage.address_n           max_count:8
 EthereumSignMessage.message             max_size:1024
 
+EthereumSignTypedHash.address_n             max_count:8
+EthereumSignTypedHash.domain_separator_hash max_size:32
+EthereumSignTypedHash.message_hash          max_size:32
+
 EthereumVerifyMessage.address           max_size:43
 EthereumVerifyMessage.signature         max_size:65
 EthereumVerifyMessage.message           max_size:1024

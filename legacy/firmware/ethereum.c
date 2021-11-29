@@ -923,6 +923,33 @@ void ethereum_message_sign(const EthereumSignMessage *msg, const HDNode *node,
   msg_write(MessageType_MessageType_EthereumMessageSignature, resp);
 }
 
+static void ethereum_typed_hash(const uint8_t *domain_separator_hash,
+                                const uint8_t *message_hash, uint8_t hash[32]) {
+  struct SHA3_CTX ctx = {0};
+  sha3_256_Init(&ctx);
+  sha3_Update(&ctx, (const uint8_t *)"\x19\x01", 2);
+  sha3_Update(&ctx, domain_separator_hash, 32);
+  sha3_Update(&ctx, message_hash, 32);
+  keccak_Final(&ctx, hash);
+}
+
+void ethereum_typed_hash_sign(const EthereumSignTypedHash *msg, const HDNode *node,
+                                 EthereumMessageSignature *resp) {
+  uint8_t hash[32] = {0};
+  ethereum_typed_hash(msg->domain_separator_hash.bytes, msg->message_hash.bytes, hash);
+
+  uint8_t v = 0;
+  if (ecdsa_sign_digest(&secp256k1, node->private_key, hash,
+                        resp->signature.bytes, &v, ethereum_is_canonic) != 0) {
+    fsm_sendFailure(FailureType_Failure_ProcessError, _("Signing failed"));
+    return;
+  }
+
+  resp->signature.bytes[64] = 27 + v;
+  resp->signature.size = 65;
+  msg_write(MessageType_MessageType_EthereumMessageSignature, resp);
+}
+
 int ethereum_message_verify(const EthereumVerifyMessage *msg) {
   if (msg->signature.size != 65) {
     fsm_sendFailure(FailureType_Failure_DataError, _("Malformed signature"));

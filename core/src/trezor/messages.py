@@ -3201,6 +3201,24 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumSignMessage"]:
             return isinstance(msg, cls)
 
+    class EthereumSignTypedHash(protobuf.MessageType):
+        address_n: "list[int]"
+        domain_separator_hash: "bytes"
+        message_hash: "bytes"
+
+        def __init__(
+            self,
+            *,
+            domain_separator_hash: "bytes",
+            message_hash: "bytes",
+            address_n: "list[int] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["EthereumSignTypedHash"]:
+            return isinstance(msg, cls)
+
     class EthereumMessageSignature(protobuf.MessageType):
         signature: "bytes"
         address: "str"

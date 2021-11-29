@@ -399,6 +399,27 @@ def sign_message(client: "TrezorClient", address: str, message: str) -> Dict[str
     }
     return output
 
+@cli.command()
+@click.option("-n", "--address", required=True, help=PATH_HELP)
+@click.argument("domain_hash")
+@click.argument("message_hash")
+@with_client
+def sign_typed_data_hash(client: "TrezorClient", address: str, domain_hash: str, message_hash: str) -> Dict[str, str]:
+    """
+    Sign hash of typed data (EIP-712) with Ethereum address.
+
+    For T1 backward compatibility.
+    """
+    address_n = tools.parse_path(address)
+    ret = ethereum.sign_typed_data_hash(client, address_n, domain_hash, message_hash)
+    output = {
+        "domain_hash": domain_hash,
+        "message_hash": message_hash,
+        "address": ret.address,
+        "signature": f"0x{ret.signature.hex()}",
+    }
+    return output
+
 
 @cli.command()
 @click.option("-n", "--address", required=True, help=PATH_HELP)
