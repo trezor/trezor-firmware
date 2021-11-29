@@ -476,6 +476,7 @@ mod tests {
 
     #[test]
     fn trace_example_layout() {
+        let title: Option<&str> = None;
         let layout = Child::new(Dialog::new(
             display::screen(),
             |area| {
@@ -487,7 +488,7 @@ mod tests {
             },
             Some(|area, pos| Button::with_text(area, pos, "Left", theme::button_cancel())),
             Some(|area, pos| Button::with_text(area, pos, "Right", theme::button_default())),
-            None,
+            title,
         ));
         assert_eq!(
             trace(&layout),
