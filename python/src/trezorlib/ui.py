@@ -15,6 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import os
+import sys
 from typing import Any, Callable, Optional, Union
 
 import click
@@ -54,6 +55,12 @@ PIN_CONFIRM = PinMatrixRequestType.NewSecond
 WIPE_CODE_NEW = PinMatrixRequestType.WipeCodeFirst
 WIPE_CODE_CONFIRM = PinMatrixRequestType.WipeCodeSecond
 
+# Workaround for limitation of Git Bash
+# getpass function does not work correctly on Windows when not using a real terminal
+# (the hidden input is not allowed and it also freezes the script completely)
+# Details: https://bugs.python.org/issue44762
+CAN_HANDLE_HIDDEN_INPUT = sys.stdin and sys.stdin.isatty()
+
 
 class TrezorClientUI(Protocol):
     def button_request(self, br: messages.ButtonRequest) -> None:
@@ -70,8 +77,12 @@ def echo(*args: Any, **kwargs: Any) -> None:
     return click.echo(*args, err=True, **kwargs)
 
 
-def prompt(*args: Any, **kwargs: Any) -> Any:
-    return click.prompt(*args, err=True, **kwargs)
+def prompt(text: str, *, hide_input: bool = False, **kwargs: Any) -> Any:
+    # Disallowing hidden input and warning user when it would cause issues
+    if not CAN_HANDLE_HIDDEN_INPUT and hide_input:
+        hide_input = False
+        text += " (WARNING: will be displayed!)"
+    return click.prompt(text, hide_input=hide_input, err=True, **kwargs)
 
 
 class ClickUI:
@@ -144,6 +155,9 @@ class ClickUI:
                     default="",
                     show_default=False,
                 )
+                # In case user sees the input on the screen, we do not need confirmation
+                if not CAN_HANDLE_HIDDEN_INPUT:
+                    return passphrase
                 second = prompt(
                     "Confirm your passphrase",
                     hide_input=True,
