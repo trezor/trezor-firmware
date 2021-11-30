@@ -569,4 +569,5 @@ class Timer(Syscall):
         self.task = task
 
     def schedule(self, deadline: int, value: Any) -> None:
-        schedule(self.task, value)
+        if self.task is not None:
+            schedule(self.task, value)
