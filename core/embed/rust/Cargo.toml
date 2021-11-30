@@ -29,8 +29,9 @@ bech32 = { version = "0.8.1", default_features = false }
 group = { version = "0.11", default-features = false }
 
 [dependencies.orchard]
-git = "https://github.com/jarys/orchard"
-branch = "no-std-alloc"
+path = "/home/agi/code/orchard"
+#git = "https://github.com/jarys/orchard"
+#branch = "no-std-alloc"
 default-features = false
 features = ["alloc"]
 
