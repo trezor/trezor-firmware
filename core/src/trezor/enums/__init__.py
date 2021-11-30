@@ -225,6 +225,8 @@ if TYPE_CHECKING:
         ZcashIncomingViewingKey = 905
         ZcashGetAddress = 906
         ZcashAddress = 907
+        ZcashPushAction = 908
+        ZcashShieldedAction = 909
 
     class BinanceOrderType(IntEnum):
         OT_UNKNOWN = 0

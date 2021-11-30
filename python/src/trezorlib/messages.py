@@ -246,6 +246,8 @@ class MessageType(IntEnum):
     ZcashIncomingViewingKey = 905
     ZcashGetAddress = 906
     ZcashAddress = 907
+    ZcashPushAction = 908
+    ZcashShieldedAction = 909
 
 
 class FailureType(IntEnum):
@@ -6886,3 +6888,104 @@ class ZcashAddress(protobuf.MessageType):
         address: Optional["str"] = None,
     ) -> None:
         self.address = address
+
+
+class ZcashSpendInfo(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("z_address_n", "uint32", repeated=True, required=False),
+        2: protobuf.Field("value", "uint64", repeated=False, required=True),
+        3: protobuf.Field("nullifier", "bytes", repeated=False, required=True),
+        4: protobuf.Field("rseed", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        value: "int",
+        nullifier: "bytes",
+        rseed: "bytes",
+        z_address_n: Optional[List["int"]] = None,
+    ) -> None:
+        self.z_address_n = z_address_n if z_address_n is not None else []
+        self.value = value
+        self.nullifier = nullifier
+        self.rseed = rseed
+
+
+class ZcashRecipientInfo(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("ovk_flag", "bool", repeated=False, required=False),
+        2: protobuf.Field("address", "string", repeated=False, required=True),
+        3: protobuf.Field("amount", "uint64", repeated=False, required=True),
+        4: protobuf.Field("memo", "bytes", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        address: "str",
+        amount: "int",
+        ovk_flag: Optional["bool"] = None,
+        memo: Optional["bytes"] = None,
+    ) -> None:
+        self.address = address
+        self.amount = amount
+        self.ovk_flag = ovk_flag
+        self.memo = memo
+
+
+class ZcashPushAction(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 908
+    FIELDS = {
+        1: protobuf.Field("spend_info", "ZcashSpendInfo", repeated=False, required=False),
+        2: protobuf.Field("recipient_info", "ZcashRecipientInfo", repeated=False, required=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        spend_info: Optional["ZcashSpendInfo"] = None,
+        recipient_info: Optional["ZcashRecipientInfo"] = None,
+    ) -> None:
+        self.spend_info = spend_info
+        self.recipient_info = recipient_info
+
+
+class ZcashShieldedAction(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 909
+    FIELDS = {
+        1: protobuf.Field("cv", "bytes", repeated=False, required=True),
+        2: protobuf.Field("nullifier", "bytes", repeated=False, required=True),
+        3: protobuf.Field("rk", "bytes", repeated=False, required=True),
+        4: protobuf.Field("cmx", "bytes", repeated=False, required=True),
+        5: protobuf.Field("ephemeral_key", "bytes", repeated=False, required=True),
+        6: protobuf.Field("enc_ciphertext", "bytes", repeated=False, required=True),
+        7: protobuf.Field("out_ciphertext", "bytes", repeated=False, required=True),
+        8: protobuf.Field("ak", "bytes", repeated=False, required=True),
+        9: protobuf.Field("alpha", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        cv: "bytes",
+        nullifier: "bytes",
+        rk: "bytes",
+        cmx: "bytes",
+        ephemeral_key: "bytes",
+        enc_ciphertext: "bytes",
+        out_ciphertext: "bytes",
+        ak: "bytes",
+        alpha: "bytes",
+    ) -> None:
+        self.cv = cv
+        self.nullifier = nullifier
+        self.rk = rk
+        self.cmx = cmx
+        self.ephemeral_key = ephemeral_key
+        self.enc_ciphertext = enc_ciphertext
+        self.out_ciphertext = out_ciphertext
+        self.ak = ak
+        self.alpha = alpha

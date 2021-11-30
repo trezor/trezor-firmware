@@ -220,3 +220,5 @@ if not utils.BITCOIN_ONLY:
     ZcashIncomingViewingKey = 905
     ZcashGetAddress = 906
     ZcashAddress = 907
+    ZcashPushAction = 908
+    ZcashShieldedAction = 909

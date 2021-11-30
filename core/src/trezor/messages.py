@@ -5286,3 +5286,89 @@ if TYPE_CHECKING:
         @classmethod
         def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ZcashAddress"]:
             return isinstance(msg, cls)
+
+    class ZcashSpendInfo(protobuf.MessageType):
+        z_address_n: "list[int]"
+        value: "int"
+        nullifier: "bytes"
+        rseed: "bytes"
+
+        def __init__(
+            self,
+            *,
+            value: "int",
+            nullifier: "bytes",
+            rseed: "bytes",
+            z_address_n: "list[int] | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ZcashSpendInfo"]:
+            return isinstance(msg, cls)
+
+    class ZcashRecipientInfo(protobuf.MessageType):
+        ovk_flag: "bool | None"
+        address: "str"
+        amount: "int"
+        memo: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            address: "str",
+            amount: "int",
+            ovk_flag: "bool | None" = None,
+            memo: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ZcashRecipientInfo"]:
+            return isinstance(msg, cls)
+
+    class ZcashPushAction(protobuf.MessageType):
+        spend_info: "ZcashSpendInfo | None"
+        recipient_info: "ZcashRecipientInfo | None"
+
+        def __init__(
+            self,
+            *,
+            spend_info: "ZcashSpendInfo | None" = None,
+            recipient_info: "ZcashRecipientInfo | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ZcashPushAction"]:
+            return isinstance(msg, cls)
+
+    class ZcashShieldedAction(protobuf.MessageType):
+        cv: "bytes"
+        nullifier: "bytes"
+        rk: "bytes"
+        cmx: "bytes"
+        ephemeral_key: "bytes"
+        enc_ciphertext: "bytes"
+        out_ciphertext: "bytes"
+        ak: "bytes"
+        alpha: "bytes"
+
+        def __init__(
+            self,
+            *,
+            cv: "bytes",
+            nullifier: "bytes",
+            rk: "bytes",
+            cmx: "bytes",
+            ephemeral_key: "bytes",
+            enc_ciphertext: "bytes",
+            out_ciphertext: "bytes",
+            ak: "bytes",
+            alpha: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: protobuf.MessageType) -> TypeGuard["ZcashShieldedAction"]:
+            return isinstance(msg, cls)

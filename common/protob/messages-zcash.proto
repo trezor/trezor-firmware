@@ -79,3 +79,52 @@ message ZcashGetAddress {
 message ZcashAddress {
     optional string address = 1;
 }
+
+message ZcashSpendInfo {
+    repeated uint32 z_address_n = 1; // to derive fvk 
+    required uint64 value = 2;
+    required bytes nullifier = 3;
+    required bytes rseed = 4;
+}
+
+message ZcashRecipientInfo {
+    optional bool ovk_flag = 1;
+    required string address = 2;
+    required uint64 amount = 3;
+    optional bytes memo = 4;
+}
+
+message ZcashPushAction {
+    optional ZcashSpendInfo spend_info = 1;
+    optional ZcashRecipientInfo recipient_info = 2;    
+}
+
+message ZcashShieldedAction {
+    required bytes cv = 1;
+    required bytes nullifier = 2;
+    required bytes rk = 3;
+    required bytes cmx = 4;
+    required bytes ephemeral_key = 5;
+    required bytes enc_ciphertext = 6;
+    required bytes out_ciphertext = 7;
+    required bytes ak = 8;
+    required bytes alpha = 9;
+}
+
+/*
+message ZcashGetBindingSignature {
+
+}
+
+message ZcashBindingSignature {
+    required bytes binding_sig = 1;
+}
+
+message ZcashGetSpendAuthorizingSignature {
+    repeated uint32 z_address_n = 1;
+}
+
+message ZcashSpendAuthorizingSignature {
+    required bytes spend_auth_sig = 1;
+}
+*/
