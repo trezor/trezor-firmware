@@ -58,6 +58,12 @@ TXHASH_3ac32e = bytes.fromhex(
 TXHASH_df862e = bytes.fromhex(
     "df862e31da31ff84addd392f6aa89af18978a398ea258e4901ae72894b66679f"
 )
+TXHASH_afde2d = bytes.fromhex(
+    "afde2d41702948e922150825742cda3294d80d43b8e508865c1e2d648f6d4dae"
+)
+TXHASH_4012d9 = bytes.fromhex(
+    "4012d9abb675243758b8f2cfd0042ce9a6c1459aaf5327dcac16c80f9eff1cbf"
+)
 
 
 @pytest.mark.skip_t1
@@ -620,6 +626,73 @@ def test_p2wpkh_with_proof(client):
             [out1, out2],
             prev_txes=TX_CACHE_TESTNET,
         )
+
+
+@pytest.mark.skip_t1
+@pytest.mark.setup_client(
+    mnemonic="abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about"
+)
+def test_p2tr_with_proof(client):
+    # Resulting TXID 48ec6dc7bb772ff18cbce0135fedda7c0e85212c7b2f85a5d0cc7a917d77c48a
+
+    inp1 = messages.TxInputType(
+        # seed "all all all all all all all all all all all all"
+        # 86'/1'/2'/0/0
+        # tb1pyu3e8expmey3n5mhra64c9lhz8865rftmaedwa7dddxrlktuv6us6snqxg
+        # afde2d41702948e922150825742cda3294d80d43b8e508865c1e2d648f6d4dae
+        amount=100892,
+        prev_hash=TXHASH_afde2d,
+        prev_index=2,
+        script_type=messages.InputScriptType.EXTERNAL,
+        script_pubkey=bytes.fromhex(
+            "5120272393e4c1de4919d3771f755c17f711cfaa0d2bdf72d777cd6b4c3fd97c66b9"
+        ),
+        ownership_proof=bytearray.fromhex(
+            "534c001900015f6c298a141152b5aef9ef31badea5ceaf9f628a968bed0a14d5ad660761cf1c00014088cb80b8c559d9991c1403eed4ff27717a46ee5d11feb4996ce1f3247504d888e7f04675f6c78961893997b2416431d046439c6740d6c262895d0857e11d2aa0"
+        ),
+    )
+    inp2 = messages.TxInputType(
+        address_n=parse_path("86'/1'/0'/0/0"),
+        amount=6456,
+        prev_hash=TXHASH_4012d9,
+        prev_index=0,
+        script_type=messages.InputScriptType.SPENDTAPROOT,
+    )
+    out1 = messages.TxOutputType(
+        address="tb1puyst6yj0x3w5z253k5xt0crk2zjy36g0fzhascd4wknxfwv9h9lszyhefk",
+        amount=100892 + 6456 - 300,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    with client:
+        client.set_expected_responses(
+            [
+                request_input(0),
+                request_input(1),
+                request_output(0),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                messages.ButtonRequest(code=B.SignTx),
+                request_input(0),
+                request_input(0),
+                request_input(1),
+                request_output(0),
+                request_input(1),
+                request_finished(),
+            ]
+        )
+        _, serialized_tx = btc.sign_tx(
+            client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_CACHE_TESTNET
+        )
+
+    assert (
+        serialized_tx.hex()
+        == "01000000000102ae4d6d8f642d1e5c8608e5b8430dd89432da2c7425081522e9482970412ddeaf0200000000ffffffffbf1cff9e0fc816acdc2753af9a45c1a6e92c04d0cff2b858372475b6abd912400000000000ffffffff0128a2010000000000225120e120bd124f345d412a91b50cb7e07650a448e90f48afd861b575a664b985b97f000140af196d0b64cfe8b5e7a2074b43ec1f11bfdea1df3ecb3b9d6c17e7542d7ca43b698237b5b9788cb49fa758f787311bc79bcbfa4e6046271c682927d7a9c2480900000000"
+    )
+
+    # Test corrupted ownership proof.
+    inp1.ownership_proof[10] ^= 1
+    with pytest.raises(TrezorFailure, match="Invalid signature"):
+        btc.sign_tx(client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_CACHE_TESTNET)
 
 
 @pytest.mark.skip_t1
