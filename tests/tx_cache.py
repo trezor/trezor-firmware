@@ -107,7 +107,10 @@ def cli(tx, coin_name):
 
     click.echo(f"Fetching from {tx_url}...")
     try:
-        tx_src = requests.get(tx_url).json(parse_float=Decimal)
+        # Get transaction from Blockbook server. The servers refuse requests with an empty user agent.
+        tx_src = requests.get(tx_url, headers={"user-agent": "tx_cache"}).json(
+            parse_float=Decimal
+        )
         tx_proto = btc.from_json(tx_src)
         tx_dict = protobuf.to_dict(tx_proto)
         tx_json = json.dumps(tx_dict, sort_keys=True, indent=2) + "\n"
