@@ -23,7 +23,7 @@ from trezorlib.tools import parse_path
 pytestmark = pytest.mark.skip_t1
 
 
-def test_ownership_id(client):
+def test_p2wpkh_ownership_id(client):
     ownership_id = btc.get_ownership_id(
         client,
         "Bitcoin",
@@ -33,6 +33,19 @@ def test_ownership_id(client):
     assert (
         ownership_id.hex()
         == "a122407efc198211c81af4450f40b235d54775efd934d16b9e31c6ce9bad5707"
+    )
+
+
+def test_p2tr_ownership_id(client):
+    ownership_id = btc.get_ownership_id(
+        client,
+        "Bitcoin",
+        parse_path("m/86'/0'/0'/1/0"),
+        script_type=messages.InputScriptType.SPENDTAPROOT,
+    )
+    assert (
+        ownership_id.hex()
+        == "dc18066224b9e30e306303436dc18ab881c7266c13790350a3fe415e438135ec"
     )
 
 
@@ -83,6 +96,19 @@ def test_p2wpkh_ownership_proof(client):
     assert (
         ownership_proof.hex()
         == "534c00190001a122407efc198211c81af4450f40b235d54775efd934d16b9e31c6ce9bad57070002483045022100e5eaf2cb0a473b4545115c7b85323809e75cb106175ace38129fd62323d73df30220363dbc7acb7afcda022b1f8d97acb8f47c42043cfe0595583aa26e30bc8b3bb50121032ef68318c8f6aaa0adec0199c69901f0db7d3485eb38d9ad235221dc3d61154b"
+    )
+
+
+def test_p2tr_ownership_proof(client):
+    ownership_proof, _ = btc.get_ownership_proof(
+        client,
+        "Bitcoin",
+        parse_path("m/86'/0'/0'/1/0"),
+        script_type=messages.InputScriptType.SPENDTAPROOT,
+    )
+    assert (
+        ownership_proof.hex()
+        == "534c00190001dc18066224b9e30e306303436dc18ab881c7266c13790350a3fe415e438135ec0001406cd08474ea019c9ab4b9b7b76ec03c4dd4db76abc3a460434a91cfc1b190174949eb7111c8e762407730a215421a0da0b5e01f48de62d7ccea0abea046e2a496"
     )
 
 
