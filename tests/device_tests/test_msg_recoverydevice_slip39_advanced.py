@@ -40,18 +40,21 @@ VECTORS = (
 )
 
 
-@pytest.mark.parametrize("shares, secret", VECTORS)
-@pytest.mark.setup_client(uninitialized=True)
-def test_secret(client, shares, secret):
+# To allow reusing functionality for multiple tests
+def _test_secret(client, shares, secret, click_info=False):
     debug = client.debug
 
     def input_flow():
         yield  # Confirm Recovery
         debug.press_yes()
         # Proceed with recovery
-        yield from recovery_enter_shares(debug, shares, groups=True)
+        yield from recovery_enter_shares(
+            debug, shares, groups=True, click_info=click_info
+        )
 
     with client:
+        if click_info:
+            client.watch_layout()
         client.set_input_flow(input_flow)
         ret = device.recover(
             client, pin_protection=False, passphrase_protection=False, label="label"
@@ -66,30 +69,25 @@ def test_secret(client, shares, secret):
     assert debug.state().mnemonic_secret.hex() == secret
 
 
+@pytest.mark.parametrize("shares, secret", VECTORS)
+@pytest.mark.setup_client(uninitialized=True)
+def test_secret(client, shares, secret):
+    _test_secret(client, shares, secret)
+
+
+@pytest.mark.parametrize("shares, secret", VECTORS)
+@pytest.mark.setup_client(uninitialized=True)
+def test_secret_click_info_button(client, shares, secret):
+    _test_secret(client, shares, secret, click_info=True)
+
+
 @pytest.mark.setup_client(uninitialized=True)
 def test_extra_share_entered(client):
-    debug = client.debug
-
-    def input_flow():
-        yield  # Confirm Recovery
-        debug.press_yes()
-        # Proceed with recovery
-        yield from recovery_enter_shares(
-            debug, EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20, groups=True
-        )
-
-    with client:
-        client.set_input_flow(input_flow)
-        ret = device.recover(
-            client, pin_protection=False, passphrase_protection=False, label="label"
-        )
-
-    # Workflow succesfully ended
-    assert ret == messages.Success(message="Device recovered")
-    assert client.features.initialized is True
-    assert client.features.pin_protection is False
-    assert client.features.passphrase_protection is False
-    assert client.features.backup_type is messages.BackupType.Slip39_Advanced
+    _test_secret(
+        client,
+        shares=EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20,
+        secret=VECTORS[0][1],
+    )
 
 
 @pytest.mark.setup_client(uninitialized=True)
