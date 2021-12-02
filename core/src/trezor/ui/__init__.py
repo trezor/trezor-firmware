@@ -441,6 +441,7 @@ def wait_until_layout_is_running() -> Awaitable[None]:  # type: ignore
 
 
 class RustLayout(Layout):
+    # pylint: disable=super-init-not-called
     def __init__(self, layout: Any):
         self.layout = layout
         self.timer = loop.Timer()
@@ -453,6 +454,7 @@ class RustLayout(Layout):
         return self.handle_input_and_rendering(), self.handle_timers()
 
     if utils.MODEL == "T":
+
         def handle_input_and_rendering(self) -> loop.Task:  # type: ignore
             touch = loop.wait(io.TOUCH)
             display.clear()
@@ -469,6 +471,7 @@ class RustLayout(Layout):
                     raise Result(msg)
 
     elif utils.MODEL == "1":
+
         def handle_input_and_rendering(self) -> loop.Task:  # type: ignore
             button = loop.wait(io.BUTTON)
             display.clear()
@@ -484,7 +487,7 @@ class RustLayout(Layout):
                 if msg is not None:
                     raise Result(msg)
 
-    def handle_timers(self) -> loop.Task:
+    def handle_timers(self) -> loop.Task:  # type: ignore
         while True:
             # Using `yield` instead of `await` to avoid allocations.
             token = yield self.timer

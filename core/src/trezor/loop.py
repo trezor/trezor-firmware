@@ -561,7 +561,6 @@ class spawn(Syscall):
 
 
 class Timer(Syscall):
-
     def __init__(self) -> None:
         self.task: Task | None = None
 
