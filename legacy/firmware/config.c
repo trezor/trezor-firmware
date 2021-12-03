@@ -318,8 +318,10 @@ static secbool config_upgrade_v10(void) {
   storage_init(NULL, HW_ENTROPY_DATA, HW_ENTROPY_LEN);
   storage_unlock(PIN_EMPTY, PIN_EMPTY_LEN, NULL);
   if (config.has_pin) {
+    size_t pin_len =
+        MIN(strnlen(config.pin, sizeof(config.pin)), (size_t)MAX_PIN_LEN);
     storage_change_pin(PIN_EMPTY, PIN_EMPTY_LEN, (const uint8_t *)config.pin,
-                       strnlen(config.pin, MAX_PIN_LEN), NULL, NULL);
+                       pin_len, NULL, NULL);
   }
 
   while (pin_wait != 0) {
