@@ -55,7 +55,6 @@ stdenv.mkDerivation ({
     autoflake
     bash
     check
-    clang-tools
     clang
     editorconfig-checker
     gcc
