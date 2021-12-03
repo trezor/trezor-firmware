@@ -37,6 +37,8 @@ let
     # to use official binary, remove rustfmt from buildInputs and add it to extensions:
     extensions = [ "clippy" ];
   };
+  gcc = nixpkgs.gcc11;
+  llvmPackages = nixpkgs.llvmPackages_12;
 in
 with nixpkgs;
 stdenv.mkDerivation ({
@@ -55,8 +57,7 @@ stdenv.mkDerivation ({
     autoflake
     bash
     check
-    clang-tools
-    clang
+    llvmPackages.clang
     editorconfig-checker
     gcc
     git
