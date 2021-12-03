@@ -57,7 +57,6 @@ stdenvNoCC.mkDerivation ({
     autoflake
     bash
     check
-    llvmPackages.clang
     editorconfig-checker
     gcc
     gcc-arm-embedded
@@ -68,6 +67,7 @@ stdenvNoCC.mkDerivation ({
     libffi
     libjpeg
     libusb1
+    llvmPackages.clang
     openssl
     pkgconfig
     poetry
