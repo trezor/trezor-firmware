@@ -37,9 +37,11 @@ let
     # to use official binary, remove rustfmt from buildInputs and add it to extensions:
     extensions = [ "clippy" ];
   };
+  gcc = nixpkgs.gcc11;
+  llvmPackages = nixpkgs.llvmPackages_12;
 in
 with nixpkgs;
-stdenv.mkDerivation ({
+stdenvNoCC.mkDerivation ({
   name = "trezor-firmware-env";
   buildInputs = lib.optionals fullDeps [
     # install other python versions for tox testing
@@ -55,8 +57,7 @@ stdenv.mkDerivation ({
     autoflake
     bash
     check
-    clang-tools
-    clang
+    llvmPackages.clang
     editorconfig-checker
     gcc
     git
