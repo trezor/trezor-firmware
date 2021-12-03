@@ -229,6 +229,9 @@ class Bitcoin:
                 if prev_amount != txi.amount:
                     raise wire.DataError("Invalid amount specified")
 
+                if script_pubkey != self.input_derive_script(txi):
+                    raise wire.DataError("Input does not match scriptPubKey")
+
                 if i in self.external:
                     await self.verify_external_input(i, txi, script_pubkey)
 
