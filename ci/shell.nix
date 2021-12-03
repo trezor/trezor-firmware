@@ -57,6 +57,7 @@ stdenvNoCC.mkDerivation ({
     autoflake
     bash
     check
+    curl  # for connect tests
     editorconfig-checker
     gcc
     gcc-arm-embedded
