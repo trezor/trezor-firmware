@@ -60,6 +60,7 @@ stdenvNoCC.mkDerivation ({
     llvmPackages.clang
     editorconfig-checker
     gcc
+    gcc-arm-embedded
     git
     gitAndTools.git-subrepo
     gnumake
@@ -80,8 +81,6 @@ stdenvNoCC.mkDerivation ({
   ] ++ lib.optionals (!stdenv.isDarwin) [
     procps
     valgrind
-  ] ++ lib.optionals (!stdenv.isDarwin || !stdenv.isAarch64) [
-    gcc-arm-embedded  # not yet available for aarch64-darwin
   ] ++ lib.optionals (stdenv.isDarwin) [
     darwin.apple_sdk.frameworks.CoreAudio
     darwin.apple_sdk.frameworks.AudioToolbox
