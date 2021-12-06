@@ -360,8 +360,7 @@ void fsm_msgRebootToBootloader(void) {
   oledRefresh();
   fsm_sendSuccess(_("Rebooting"));
   // make sure the outgoing message is sent
-  usbPoll();
-  usbSleep(500);
+  usbFlush(500);
 #if !EMULATOR
   svc_reboot_to_bootloader();
 #else
