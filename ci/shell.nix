@@ -3,10 +3,10 @@
  }:
 
 let
-  # the last commit from master as of 2021-09-13
+  # the last commit from master as of 2021-12-06
   rustOverlay = import (builtins.fetchTarball {
-    url = "https://github.com/oxalica/rust-overlay/archive/9fd1c36484a844683153896f37d6fd28b365b931.tar.gz";
-    sha256 = "1nylnc16y9jwjajvq2zj314lla2g16p77jhaj3vapfgq17n78i12";
+    url = "https://github.com/oxalica/rust-overlay/archive/96f1bd1ec11d9c9e8b41c7560df9efae8d091908.tar.gz";
+    sha256 = "07qfya55d3lw4mblm62ykx8h9zg2ms3891ik30qzzpywwacafi8j";
   });
   # the last successful build of nixpkgs-unstable as of 2021-11-18
   nixpkgs = import (builtins.fetchTarball {
@@ -28,7 +28,7 @@ let
     ${nixpkgs.patchelf}/bin/patchelf --set-interpreter "$(cat $NIX_CC/nix-support/dynamic-linker)" "$out"
     chmod -w $out
   '';
-  rustStable = nixpkgs.rust-bin.stable."1.55.0".minimal.override {
+  rustStable = nixpkgs.rust-bin.stable."1.57.0".minimal.override {
     targets = [
       "thumbv7em-none-eabihf" # TT
       "thumbv7m-none-eabi"    # T1
