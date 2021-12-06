@@ -66,6 +66,8 @@
 
 // message methods
 
+bool reset_flag = false;
+
 static uint8_t msg_resp[MSG_OUT_DECODED_SIZE] __attribute__((aligned));
 
 #define RESP_INIT(TYPE)                                                    \
@@ -359,14 +361,7 @@ void fsm_msgRebootToBootloader(void) {
   oledClear();
   oledRefresh();
   fsm_sendSuccess(_("Rebooting"));
-  // make sure the outgoing message is sent
-  usbPoll();
-  usbSleep(500);
-#if !EMULATOR
-  svc_reboot_to_bootloader();
-#else
-  printf("Reboot!\n");
-#endif
+  reset_flag = true;
 }
 
 #include "fsm_msg_coin.h"

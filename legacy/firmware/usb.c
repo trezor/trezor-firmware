@@ -85,6 +85,8 @@ enum {
 static const char *usb_strings[] = {USB_STRINGS};
 #undef X
 
+extern bool reset_flag;
+
 static const struct usb_device_descriptor dev_descr = {
     .bLength = USB_DT_DEVICE_SIZE,
     .bDescriptorType = USB_DT_DEVICE,
@@ -406,8 +408,6 @@ void usbPoll(void) {
   }
 
   static const uint8_t *data;
-  // poll read buffer
-  usbd_poll(usbd_dev);
   // write pending data
   data = msg_out_data();
   if (data) {
@@ -415,6 +415,21 @@ void usbPoll(void) {
                                 USB_PACKET_SIZE) != USB_PACKET_SIZE) {
     }
   }
+#if !EMULATOR
+  if (reset_flag) {
+    uint32_t start = timer_ms();
+
+    while ((timer_ms() - start) < 500) {
+      asm("nop");
+    }
+
+    svc_reboot_to_bootloader();
+  }
+#else
+  printf("Reboot!\n");
+#endif
+  // poll read buffer
+  usbd_poll(usbd_dev);
 #if U2F_ENABLED
   data = u2f_out_data();
   if (data) {
