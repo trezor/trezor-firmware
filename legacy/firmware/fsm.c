@@ -339,9 +339,12 @@ bool fsm_layoutSignMessage(const uint8_t *msg, uint32_t len) {
   }
 }
 
-bool fsm_layoutSignTypedHash(const uint8_t *domain_hash, const uint8_t *message_hash) {
-  return fsm_layoutPaginated(_("Sign typed hash? (1/2)"), domain_hash, 32, false) &&
-         fsm_layoutPaginated(_("Sign typed hash? (2/2)"), message_hash, 32, false);
+bool fsm_layoutSignTypedHash(const uint8_t *domain_hash,
+                             const uint8_t *message_hash) {
+  return fsm_layoutPaginated(_("Sign typed hash? (1/2)"), domain_hash, 32,
+                             false) &&
+         fsm_layoutPaginated(_("Sign typed hash? (2/2)"), message_hash, 32,
+                             false);
 }
 
 bool fsm_layoutVerifyMessage(const uint8_t *msg, uint32_t len) {

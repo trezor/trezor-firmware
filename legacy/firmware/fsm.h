@@ -137,7 +137,8 @@ void fsm_msgStellarBumpSequenceOp(const StellarBumpSequenceOp *msg);
 void fsm_msgRebootToBootloader(void);
 
 bool fsm_layoutSignMessage(const uint8_t *msg, uint32_t len);
-bool fsm_layoutSignTypedHash(const uint8_t *domain_hash, const uint8_t *message_hash);
+bool fsm_layoutSignTypedHash(const uint8_t *domain_hash,
+                             const uint8_t *message_hash);
 bool fsm_layoutVerifyMessage(const uint8_t *msg, uint32_t len);
 
 #endif

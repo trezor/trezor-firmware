@@ -399,12 +399,15 @@ def sign_message(client: "TrezorClient", address: str, message: str) -> Dict[str
     }
     return output
 
+
 @cli.command()
 @click.option("-n", "--address", required=True, help=PATH_HELP)
 @click.argument("domain_hash")
 @click.argument("message_hash")
 @with_client
-def sign_typed_data_hash(client: "TrezorClient", address: str, domain_hash: str, message_hash: str) -> Dict[str, str]:
+def sign_typed_data_hash(
+    client: "TrezorClient", address: str, domain_hash: str, message_hash: str
+) -> Dict[str, str]:
     """
     Sign hash of typed data (EIP-712) with Ethereum address.
 

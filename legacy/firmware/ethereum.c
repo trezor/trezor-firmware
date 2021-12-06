@@ -933,10 +933,12 @@ static void ethereum_typed_hash(const uint8_t *domain_separator_hash,
   keccak_Final(&ctx, hash);
 }
 
-void ethereum_typed_hash_sign(const EthereumSignTypedHash *msg, const HDNode *node,
-                                 EthereumMessageSignature *resp) {
+void ethereum_typed_hash_sign(const EthereumSignTypedHash *msg,
+                              const HDNode *node,
+                              EthereumMessageSignature *resp) {
   uint8_t hash[32] = {0};
-  ethereum_typed_hash(msg->domain_separator_hash.bytes, msg->message_hash.bytes, hash);
+  ethereum_typed_hash(msg->domain_separator_hash.bytes, msg->message_hash.bytes,
+                      hash);
 
   uint8_t v = 0;
   if (ecdsa_sign_digest(&secp256k1, node->private_key, hash,
