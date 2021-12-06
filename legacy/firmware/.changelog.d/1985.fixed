@@ -1,0 +1,1 @@
+Prevent recursing in handling RebootToBootloader by USB flush.
