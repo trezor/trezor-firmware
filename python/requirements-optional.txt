@@ -3,3 +3,4 @@ rlp >= 1.1.0
 web3 >= 4.8
 Pillow
 stellar-sdk>=4.0.0,<6.0.0
+types-click
