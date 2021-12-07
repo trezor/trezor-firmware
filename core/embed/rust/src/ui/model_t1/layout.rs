@@ -12,7 +12,7 @@ use crate::{
 };
 
 use super::{
-    component::{Button, Dialog, DialogMsg},
+    component::{Button, Dialog, DialogMsg, Title},
     theme,
 };
 
@@ -64,13 +64,14 @@ extern "C" fn ui_layout_new_confirm_action(
         let obj = LayoutObj::new(Child::new(Dialog::new(
             display::screen(),
             |area| {
-                FormattedText::new::<theme::T1DefaultText>(area, format)
-                    .with(b"action", action.unwrap_or("".into()))
-                    .with(b"description", description.unwrap_or("".into()))
+                Title::new(area, title, |area| {
+                    FormattedText::new::<theme::T1DefaultText>(area, format)
+                        .with(b"action", action.unwrap_or("".into()))
+                        .with(b"description", description.unwrap_or("".into()))
+                })
             },
             left,
             right,
-            Some(title),
         )))?;
         Ok(obj.into())
     };
@@ -137,7 +138,6 @@ mod tests {
             },
             Some(|area, pos| Button::with_text(area, pos, "Left", theme::button_cancel())),
             Some(|area, pos| Button::with_text(area, pos, "Right", theme::button_default())),
-            None,
         ));
         assert_eq!(
             trace(&layout),
@@ -145,6 +145,31 @@ mod tests {
 with some text, and
 some more text. And p-
 arameters! > left:<Button text:Left > right:<Button text:Right > >"#
+        )
+    }
+
+    #[test]
+    fn trace_layout_title() {
+        let layout = Child::new(Title::new(display::screen(), "Please confirm", |area| {
+            Dialog::new(
+                area,
+                |area| {
+                    FormattedText::new::<theme::T1DefaultText>(
+                        area,
+                        "Testing text layout, with some text, and some more text. And {param}",
+                    )
+                    .with(b"param", b"parameters!")
+                },
+                Some(|area, pos| Button::with_text(area, pos, "Left", theme::button_cancel())),
+                Some(|area, pos| Button::with_text(area, pos, "Right", theme::button_default())),
+            )
+        }));
+        assert_eq!(
+            trace(&layout),
+            r#"<Title title:Please confirm content:<Dialog content:<Text content:Testing text layout,
+with some text, and
+some more text. And p-
+arameters! > left:<Button text:Left > right:<Button text:Right > > >"#
         )
     }
 }
