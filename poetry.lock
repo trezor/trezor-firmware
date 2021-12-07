@@ -942,6 +942,14 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "types-click"
+version = "7.1.8"
+description = "Typing stubs for click"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "typing-extensions"
 version = "3.10.0.2"
 description = "Backported and Experimental Type Hints for Python 3.5+"
@@ -1025,7 +1033,7 @@ testing = ["pytest (>=3.5,!=3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "b1d15025f87ed1594781eed4d6dd75e42936053e11c7f9a0ff5aad544785b5bd"
+content-hash = "da1edd6acca40dd11b35035252e99b47ad309ed65ce13ed1fd19040968a40476"
 
 [metadata.files]
 appdirs = [
@@ -1684,6 +1692,10 @@ typed-ast = [
     {file = "typed_ast-1.4.2-cp39-cp39-win32.whl", hash = "sha256:cc7b98bf58167b7f2db91a4327da24fb93368838eb84a44c472283778fc2446b"},
     {file = "typed_ast-1.4.2-cp39-cp39-win_amd64.whl", hash = "sha256:7147e2a76c75f0f64c4319886e7639e490fee87c9d25cb1d4faef1d8cf83a440"},
     {file = "typed_ast-1.4.2.tar.gz", hash = "sha256:9fc0b3cb5d1720e7141d103cf4819aea239f7d136acf9ee4a69b047b7986175a"},
+]
+types-click = [
+    {file = "types-click-7.1.8.tar.gz", hash = "sha256:b6604968be6401dc516311ca50708a0a28baa7a0cb840efd7412f0dbbff4e092"},
+    {file = "types_click-7.1.8-py3-none-any.whl", hash = "sha256:8cb030a669e2e927461be9827375f83c16b8178c365852c060a34e24871e7e81"},
 ]
 typing-extensions = [
     {file = "typing_extensions-3.10.0.2-py2-none-any.whl", hash = "sha256:d8226d10bc02a29bcc81df19a26e56a9647f8b0a6d4a83924139f4a8b01f17b7"},
