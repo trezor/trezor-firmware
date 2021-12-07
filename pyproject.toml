@@ -34,6 +34,7 @@ fido2 = "^0.8.0"
 ## typing
 mypy = "^0.910"
 typing-extensions = ">=3.7.4"
+types-click = "*"
 
 ## style
 isort = "<5"  # 5 changes lots of stuff that need to be addressed first: https://timothycrosley.github.io/isort/docs/upgrade_guides/5.0.0/
