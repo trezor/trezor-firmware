@@ -1,24 +1,32 @@
 use crate::ui::{
-    component::{Component, Event, EventCtx, Never},
+    component::{
+        paginated::{Page, PageMsg},
+        Component, Event, EventCtx, Never,
+    },
     display,
     geometry::{Offset, Point, Rect},
 };
 
 use super::{theme, Swipe, SwipeDirection};
 
-pub enum PageMsg<T> {
-    Content(T),
-    ChangePage(usize),
-}
-
-pub struct Page<T> {
+pub struct SwipePage<T> {
     swipe: Swipe,
     scrollbar: ScrollBar,
     page: T,
+    fade: Option<i32>,
 }
 
-impl<T> Page<T> {
-    pub fn new(area: Rect, page: T, page_count: usize, active_page: usize) -> Self {
+impl<T> SwipePage<T> {
+    fn setup_swipe(scrollbar: &ScrollBar, swipe: &mut Swipe) {
+        swipe.allow_up = scrollbar.has_next_page();
+        swipe.allow_down = scrollbar.has_previous_page();
+    }
+}
+
+impl<T> Page for SwipePage<T> {
+    type Content = T;
+
+    fn new(area: Rect, page: T, page_count: usize, active_page: usize) -> Self {
         let scrollbar = ScrollBar::vertical_right(area, page_count, active_page);
         let mut swipe = Swipe::new(area);
         Self::setup_swipe(&scrollbar, &mut swipe);
@@ -26,28 +34,28 @@ impl<T> Page<T> {
             swipe,
             scrollbar,
             page,
+            fade: None,
         }
     }
 
-    fn setup_swipe(scrollbar: &ScrollBar, swipe: &mut Swipe) {
-        swipe.allow_up = scrollbar.has_next_page();
-        swipe.allow_down = scrollbar.has_previous_page();
-    }
-
-    pub fn inner_mut(&mut self) -> &mut T {
+    fn inner_mut(&mut self) -> &mut T {
         &mut self.page
     }
 
-    pub fn page_count(&self) -> usize {
+    fn page_count(&self) -> usize {
         self.scrollbar.page_count
     }
 
-    pub fn active_page(&self) -> usize {
+    fn active_page(&self) -> usize {
         self.scrollbar.active_page
+    }
+
+    fn fade_after_next_paint(&mut self) {
+        self.fade = Some(theme::BACKLIGHT_NORMAL);
     }
 }
 
-impl<T: Component> Component for Page<T> {
+impl<T: Component> Component for SwipePage<T> {
     type Msg = PageMsg<T::Msg>;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
@@ -79,16 +87,19 @@ impl<T: Component> Component for Page<T> {
     fn paint(&mut self) {
         self.page.paint();
         self.scrollbar.paint();
+        if let Some(val) = self.fade.take() {
+            display::fade_backlight(val);
+        }
     }
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Page<T>
+impl<T> crate::trace::Trace for SwipePage<T>
 where
     T: crate::trace::Trace,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.open("Page");
+        t.open("SwipePage");
         t.field("active_page", &self.active_page());
         t.field("page_count", &self.page_count());
         t.field("content", &self.page);
