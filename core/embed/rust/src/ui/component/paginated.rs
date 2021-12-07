@@ -3,48 +3,61 @@ use crate::ui::{
         text::layout::{LayoutFit, TextNoOp},
         Component, ComponentExt, Event, EventCtx, FormattedText, Pad,
     },
-    display,
+    display::Color,
     geometry::Rect,
 };
 
-use super::{
-    page::{Page, PageMsg},
-    theme,
-};
+pub trait Page {
+    type Content;
 
-pub struct Paginated<T> {
-    page: Page<T>,
-    pad: Pad,
-    fade_after_next_paint: Option<i32>,
+    fn new(area: Rect, page: Self::Content, page_count: usize, active_page: usize) -> Self;
+
+    fn inner_mut(&mut self) -> &mut Self::Content;
+    fn page_count(&self) -> usize;
+    fn active_page(&self) -> usize;
+    fn fade_after_next_paint(&mut self);
 }
 
-impl<T> Paginated<T>
+pub enum PageMsg<T> {
+    Content(T),
+    ChangePage(usize),
+}
+
+pub struct Paginated<P> {
+    page: P,
+    pad: Pad,
+}
+
+impl<P> Paginated<P>
 where
-    T: Paginate,
+    P: Page,
+    P::Content: Paginate,
 {
-    pub fn new(area: Rect, mut content: T) -> Self {
+    pub fn new(area: Rect, content: impl FnOnce(Rect) -> P::Content, background: Color) -> Self {
         let active_page = 0;
+        let mut content = content(area);
         let page_count = content.page_count();
         Self {
-            page: Page::new(area, content, page_count, active_page),
-            pad: Pad::with_background(area, theme::BG),
-            fade_after_next_paint: None,
+            page: P::new(area, content, page_count, active_page),
+            pad: Pad::with_background(area, background),
         }
     }
 }
 
-impl<T> Component for Paginated<T>
+impl<P> Component for Paginated<P>
 where
-    T: Paginate,
-    T: Component,
+    P: Page,
+    P: Component<Msg = PageMsg<<<P as Page>::Content as Component>::Msg>>,
+    P::Content: Paginate,
+    P::Content: Component,
 {
-    type Msg = T::Msg;
+    type Msg = <<P as Page>::Content as Component>::Msg;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.page.event(ctx, event).and_then(|msg| match msg {
             PageMsg::Content(c) => Some(c),
             PageMsg::ChangePage(page) => {
-                self.fade_after_next_paint = Some(theme::BACKLIGHT_NORMAL);
+                self.page.fade_after_next_paint();
                 self.page.inner_mut().change_page(page);
                 self.page.inner_mut().request_complete_repaint(ctx);
                 self.pad.clear();
@@ -56,16 +69,14 @@ where
     fn paint(&mut self) {
         self.pad.paint();
         self.page.paint();
-        if let Some(val) = self.fade_after_next_paint.take() {
-            display::fade_backlight(val);
-        }
     }
 }
 
 #[cfg(feature = "ui_debug")]
-impl<T> crate::trace::Trace for Paginated<T>
+impl<P> crate::trace::Trace for Paginated<P>
 where
-    T: crate::trace::Trace,
+    P: Page + crate::trace::Trace,
+    P::Content: crate::trace::Trace,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         self.page.trace(t);
