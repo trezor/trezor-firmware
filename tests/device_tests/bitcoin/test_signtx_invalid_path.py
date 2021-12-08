@@ -214,6 +214,4 @@ def test_attack_path_segwit(client):
             ]
         )
 
-        btc.sign_tx(
-            client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_CACHE_MAINNET
-        )
+        btc.sign_tx(client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_CACHE_MAINNET)
