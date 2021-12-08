@@ -16,6 +16,8 @@ if False:
 class Bitcoinlike(Bitcoin):
     async def sign_nonsegwit_bip143_input(self, i_sign: int) -> None:
         txi = await helpers.request_tx_input(self.tx_req, i_sign, self.coin)
+        self.tx_info.check_input(txi)
+        await self.approver.check_internal_input(txi)
 
         if txi.script_type not in NONSEGWIT_INPUT_SCRIPT_TYPES:
             raise wire.ProcessError("Transaction has changed during signing")

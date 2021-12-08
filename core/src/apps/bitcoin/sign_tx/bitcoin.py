@@ -519,8 +519,9 @@ class Bitcoin:
         self.write_tx_input_derived(self.serialized_tx, txi, key_sign_pub, b"")
 
     def sign_bip143_input(self, i: int, txi: TxInput) -> tuple[bytes, bytes]:
-        self.tx_info.check_input(txi)
         if self.taproot_only:
+            # Prevents an attacker from bypassing prev tx checking by providing a different
+            # script type than the one that was provided during the confirmation phase.
             raise wire.ProcessError("Transaction has changed during signing")
 
         node = self.keychain.derive(txi.address_n)
@@ -547,7 +548,6 @@ class Bitcoin:
         return public_key, signature
 
     def sign_taproot_input(self, i: int, txi: TxInput) -> bytes:
-        self.tx_info.check_input(txi)
         sigmsg_digest = self.tx_info.sig_hasher.hash341(
             i,
             self.tx_info.tx,
@@ -560,6 +560,8 @@ class Bitcoin:
     async def sign_segwit_input(self, i: int) -> None:
         # STAGE_REQUEST_SEGWIT_WITNESS in legacy
         txi = await helpers.request_tx_input(self.tx_req, i, self.coin)
+        self.tx_info.check_input(txi)
+        await self.approver.check_internal_input(txi)
         if txi.script_type not in common.SEGWIT_INPUT_SCRIPT_TYPES:
             raise wire.ProcessError("Transaction has changed during signing")
 
@@ -662,6 +664,8 @@ class Bitcoin:
 
     async def sign_nonsegwit_input(self, i: int) -> None:
         if self.taproot_only:
+            # Prevents an attacker from bypassing prev tx checking by providing a different
+            # script type than the one that was provided during the confirmation phase.
             raise wire.ProcessError("Transaction has changed during signing")
 
         tx_digest, txi, node = await self.get_legacy_tx_digest(i, self.tx_info)
