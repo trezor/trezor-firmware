@@ -37,7 +37,7 @@ MT = TypeVar("MT", bound="MessageType")
 
 
 class Reader(Protocol):
-    def readinto(self, buf: bytearray) -> int:
+    def readinto(self, __buf: bytearray) -> int:
         """
         Reads exactly `len(buffer)` bytes into `buffer`. Returns number of bytes read,
         or 0 if it cannot read that much.
@@ -46,7 +46,7 @@ class Reader(Protocol):
 
 
 class Writer(Protocol):
-    def write(self, buf: bytes) -> int:
+    def write(self, __buf: bytes) -> int:
         """
         Writes all bytes from `buffer`, or raises `EOFError`
         """
