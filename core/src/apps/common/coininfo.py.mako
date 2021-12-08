@@ -140,10 +140,8 @@ for c in coins_btc + coins_alt:
 
 %>\
 def by_name(name: str) -> CoinInfo:
-    if False:
-        pass
 % for coin in coins_btc:
-    elif name == ${black_repr(coin["coin_name"])}:
+    if name == ${black_repr(coin["coin_name"])}:
         return CoinInfo(
             % for attr, func in ATTRIBUTES:
             ${attr}=${func(coin[attr])},
@@ -151,10 +149,8 @@ def by_name(name: str) -> CoinInfo:
         )
 % endfor
     if not utils.BITCOIN_ONLY:
-        if False:
-            pass
 % for coin in coins_alt:
-        elif name == ${black_repr(coin["coin_name"])}:
+        if name == ${black_repr(coin["coin_name"])}:
             return CoinInfo(
                 % for attr, func in ATTRIBUTES:
                 ${attr}=${func(coin[attr])},
