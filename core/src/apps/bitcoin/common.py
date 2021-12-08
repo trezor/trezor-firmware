@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import wire
 from trezor.crypto import bech32, bip32, der
@@ -7,9 +8,9 @@ from trezor.crypto.hashlib import sha256
 from trezor.enums import InputScriptType, OutputScriptType
 from trezor.utils import HashWriter, ensure
 
-if False:
-    from enum import IntEnum
+if TYPE_CHECKING:
     from typing import Tuple
+    from enum import IntEnum
     from apps.common.coininfo import CoinInfo
     from trezor.messages import TxInput
 else:
@@ -131,6 +132,7 @@ def decode_bech32_address(prefix: str, address: str) -> Tuple[int, bytes]:
     witver, raw = bech32.decode(prefix, address)
     if witver not in _BECH32_WITVERS:
         raise wire.ProcessError("Invalid address witness program")
+    assert witver is not None
     assert raw is not None
     return witver, bytes(raw)
 

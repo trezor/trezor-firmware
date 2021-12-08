@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import ui
 
@@ -15,7 +16,7 @@ from ...constants import (
 LINE_WIDTH = ui.WIDTH - TEXT_MARGIN_LEFT
 LINE_WIDTH_PAGINATED = LINE_WIDTH - PAGINATION_MARGIN_RIGHT
 
-if False:
+if TYPE_CHECKING:
     from typing import Any, Sequence, Union
 
     TextContent = Union[str, int]

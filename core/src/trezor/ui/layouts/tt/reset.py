@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import ui, utils, wire
 from trezor.crypto import random
 from trezor.enums import BackupType, ButtonRequestType
@@ -12,7 +14,7 @@ from ...components.tt.scroll import Paginated
 from ...components.tt.text import Text
 from ..common import interact
 
-if False:
+if TYPE_CHECKING:
     from typing import Sequence
 
     NumberedWords = Sequence[tuple[int, str]]

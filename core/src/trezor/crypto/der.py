@@ -1,8 +1,9 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor.utils import BufferReader, empty_bytearray
 
-if False:
+if TYPE_CHECKING:
     from trezor.utils import Writer
 
 # Maximum length of a DER-encoded secp256k1 or secp256p1 signature.
@@ -79,7 +80,7 @@ def read_int(r: BufferReader) -> memoryview:
     return r.read_memoryview(n)
 
 
-def encode_seq(seq: tuple) -> bytes:
+def encode_seq(seq: tuple[bytes, ...]) -> bytes:
     # Preallocate space for a signature, which is all that this function ever encodes.
     buffer = empty_bytearray(MAX_DER_SIGNATURE_LENGTH)
     buffer.append(0x30)

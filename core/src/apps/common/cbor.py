@@ -4,12 +4,13 @@ Minimalistic CBOR implementation, supports only what we need in cardano.
 
 import ustruct as struct
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import log, utils
 
 from . import readers
 
-if False:
+if TYPE_CHECKING:
     from typing import Any, Generic, Iterator, Tuple, TypeVar, Union
 
     K = TypeVar("K")
@@ -17,7 +18,7 @@ if False:
     Value = Any
     CborSequence = Union[list[Value], Tuple[Value, ...]]
 else:
-    # mypy cheat: Generic[K, V] will be `object` which is a valid parent type
+    # typechecker cheat: Generic[K, V] will be `object` which is a valid parent type
     Generic = {(0, 0): object}  # type: ignore
     K = V = 0  # type: ignore
 

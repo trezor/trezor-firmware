@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
 from trezor import ui, wire
@@ -37,10 +38,11 @@ from ...constants.tt import (
 )
 from ..common import button_request, interact
 
-if False:
+if TYPE_CHECKING:
     from typing import Awaitable, Iterable, Iterator, NoReturn, Sequence
 
     from ..common import PropertyType, ExceptionType
+    from ...components.tt.button import ButtonContent
 
 
 __all__ = (
@@ -85,8 +87,8 @@ async def confirm_action(
     description: str | None = None,
     description_param: str | None = None,
     description_param_font: int = ui.BOLD,
-    verb: str | bytes | None = Confirm.DEFAULT_CONFIRM,
-    verb_cancel: str | bytes | None = Confirm.DEFAULT_CANCEL,
+    verb: ButtonContent = Confirm.DEFAULT_CONFIRM,
+    verb_cancel: ButtonContent | None = Confirm.DEFAULT_CANCEL,
     hold: bool = False,
     hold_danger: bool = False,
     icon: str | None = None,  # TODO cleanup @ redesign
@@ -126,17 +128,23 @@ async def confirm_action(
             param_font=description_param_font,
         )
 
-    cls = HoldToConfirm if hold else Confirm
-    kwargs = {}
+    layout: ui.Layout
     if hold_danger:
-        kwargs = {"loader_style": LoaderDanger, "confirm_style": ButtonCancel}
+        assert isinstance(verb, str)
+        layout = HoldToConfirm(
+            text,
+            confirm=verb,
+            loader_style=LoaderDanger,
+            confirm_style=ButtonCancel,
+            cancel=verb_cancel is not None,
+        )
+    elif hold:
+        assert isinstance(verb, str)
+        layout = HoldToConfirm(text, confirm=verb, cancel=verb_cancel is not None)
+    else:
+        layout = Confirm(text, confirm=verb, cancel=verb_cancel)
     await raise_if_cancelled(
-        interact(
-            ctx,
-            cls(text, confirm=verb, cancel=verb_cancel, **kwargs),
-            br_type,
-            br_code,
-        ),
+        interact(ctx, layout, br_type, br_code),
         exc,
     )
 
@@ -761,7 +769,7 @@ async def confirm_properties(
     ctx: wire.GenericContext,
     br_type: str,
     title: str,
-    props: Sequence[PropertyType],
+    props: Iterable[PropertyType],
     icon: str = ui.ICON_SEND,  # TODO cleanup @ redesign
     icon_color: int = ui.GREEN,  # TODO cleanup @ redesign
     hold: bool = False,

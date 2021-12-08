@@ -1,9 +1,7 @@
 import sys
 import utime
 from micropython import const
-
-if False:
-    from typing import Any
+from typing import Any
 
 NOTSET = const(0)
 DEBUG = const(10)
@@ -60,7 +58,7 @@ def critical(name: str, msg: str, *args: Any) -> None:
 
 def exception(name: str, exc: BaseException) -> None:
     # we are using `__class__.__name__` to avoid importing ui module
-    # we also need to instruct mypy to ignore the missing argument
+    # we also need to instruct typechecker to ignore the missing argument
     # in ui.Result exception
     if exc.__class__.__name__ == "Result":
         _log(

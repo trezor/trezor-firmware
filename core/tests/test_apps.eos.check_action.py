@@ -3,62 +3,49 @@ from common import *
 if not utils.BITCOIN_ONLY:
     from apps.eos.actions import check_action
     from trezor.messages import EosTxActionAck
-    from trezor.messages import EosActionBuyRam
-    from trezor.messages import EosActionBuyRamBytes
-    from trezor.messages import EosActionDelegate
-    from trezor.messages import EosActionDeleteAuth
-    from trezor.messages import EosActionLinkAuth
-    from trezor.messages import EosActionNewAccount
-    from trezor.messages import EosActionRefund
-    from trezor.messages import EosActionSellRam
-    from trezor.messages import EosActionTransfer
-    from trezor.messages import EosActionUndelegate
-    from trezor.messages import EosActionUnlinkAuth
-    from trezor.messages import EosActionUpdateAuth
-    from trezor.messages import EosActionVoteProducer
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestEosActions(unittest.TestCase):
     def test_check_action(self):
         # return True
-        self.assertEqual(check_action(EosTxActionAck(buy_ram=EosActionBuyRam()), 'buyram', 'eosio'), True)
-        self.assertEqual(check_action(EosTxActionAck(buy_ram_bytes=EosActionBuyRamBytes()), 'buyrambytes', 'eosio'), True)
-        self.assertEqual(check_action(EosTxActionAck(sell_ram=EosActionSellRam()), 'sellram', 'eosio'), True)
-        self.assertEqual(check_action(EosTxActionAck(delegate=EosActionDelegate()), 'delegatebw', 'eosio'), True)
-        self.assertEqual(check_action(EosTxActionAck(undelegate=EosActionDeleteAuth()), 'undelegatebw', 'eosio'), True)
-        self.assertEqual(check_action(EosTxActionAck(refund=EosActionRefund()), 'refund', 'eosio'), True)
-        self.assertEqual(check_action(EosTxActionAck(vote_producer=EosActionVoteProducer()), 'voteproducer', 'eosio'), True)
-        self.assertEqual(check_action(EosTxActionAck(update_auth=EosActionUpdateAuth()), 'updateauth', 'eosio'), True)
-        self.assertEqual(check_action(EosTxActionAck(delete_auth=EosActionDeleteAuth()), 'deleteauth', 'eosio'), True)
-        self.assertEqual(check_action(EosTxActionAck(link_auth=EosActionLinkAuth()), 'linkauth', 'eosio'), True)
-        self.assertEqual(check_action(EosTxActionAck(unlink_auth=EosActionUnlinkAuth()), 'unlinkauth', 'eosio'), True)
-        self.assertEqual(check_action(EosTxActionAck(new_account=EosActionNewAccount()), 'newaccount', 'eosio'), True)
-        self.assertEqual(check_action(EosTxActionAck(transfer=EosActionTransfer()), 'transfer', 'not_eosio'), True)
-        self.assertEqual(check_action(EosTxActionAck(unknown=[]), 'unknown', 'not_eosio'), True)
-        self.assertEqual(check_action(EosTxActionAck(unknown=[]), 'buyram', 'buygoods'), True)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), buy_ram=object()), 'buyram', 'eosio'), True)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), buy_ram_bytes=object()), 'buyrambytes', 'eosio'), True)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), sell_ram=object()), 'sellram', 'eosio'), True)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), delegate=object()), 'delegatebw', 'eosio'), True)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), undelegate=object()), 'undelegatebw', 'eosio'), True)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), refund=object()), 'refund', 'eosio'), True)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), vote_producer=object()), 'voteproducer', 'eosio'), True)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), update_auth=object()), 'updateauth', 'eosio'), True)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), delete_auth=object()), 'deleteauth', 'eosio'), True)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), link_auth=object()), 'linkauth', 'eosio'), True)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), unlink_auth=object()), 'unlinkauth', 'eosio'), True)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), new_account=object()), 'newaccount', 'eosio'), True)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), transfer=object()), 'transfer', 'not_eosio'), True)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), unknown=[]), 'unknown', 'not_eosio'), True)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), unknown=[]), 'buyram', 'buygoods'), True)
 
         # returns False
-        self.assertEqual(check_action(EosTxActionAck(buy_ram=EosActionBuyRam()), 'buyram', 'not_eosio'), False)
-        self.assertEqual(check_action(EosTxActionAck(), 'buyram', 'eosio'), False)
-        self.assertEqual(check_action(EosTxActionAck(buy_ram_bytes=EosActionBuyRamBytes()), 'buyrambytes', 'not_eosio'), False)
-        self.assertEqual(check_action(EosTxActionAck(sell_ram=EosActionSellRam()), 'sellram', 'not_eosio'), False)
-        self.assertEqual(check_action(EosTxActionAck(delegate=EosActionDelegate()), 'delegatebw', 'not_eosio'), False)
-        self.assertEqual(check_action(EosTxActionAck(undelegate=EosActionDeleteAuth()), 'undelegatebw', 'not_eosio'), False)
-        self.assertEqual(check_action(EosTxActionAck(refund=EosActionRefund()), 'refund', 'not_eosio'), False)
-        self.assertEqual(check_action(EosTxActionAck(), 'refund', 'eosio'), False)
-        self.assertEqual(check_action(EosTxActionAck(vote_producer=EosActionVoteProducer()), 'voteproducer', 'not_eosio'), False)
-        self.assertEqual(check_action(EosTxActionAck(update_auth=EosActionUpdateAuth()), 'updateauth', 'not_eosio'), False)
-        self.assertEqual(check_action(EosTxActionAck(delete_auth=EosActionDeleteAuth()), 'deleteauth', 'not_eosio'), False)
-        self.assertEqual(check_action(EosTxActionAck(link_auth=EosActionLinkAuth()), 'linkauth', 'not_eosio'), False)
-        self.assertEqual(check_action(EosTxActionAck(unlink_auth=EosActionUnlinkAuth()), 'unlinkauth', 'not_eosio'), False)
-        self.assertEqual(check_action(EosTxActionAck(), 'unlinkauth', 'eosio'), False)
-        self.assertEqual(check_action(EosTxActionAck(new_account=EosActionNewAccount()), 'newaccount', 'not_eosio'), False)
-        self.assertEqual(check_action(EosTxActionAck(transfer=EosActionTransfer()), 'transfer', 'eosio'), False)
-        self.assertEqual(check_action(EosTxActionAck(), 'unknown', 'not_eosio'), False)
-        self.assertEqual(check_action(EosTxActionAck(buy_ram=EosActionBuyRam()), 'test', 'eosio'), False)
-        self.assertEqual(check_action(EosTxActionAck(unknown=[]), 'buyram', 'eosio'), False)
-        self.assertEqual(check_action(EosTxActionAck(unknown=[]), 'transfer', 'loveme'), False)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), buy_ram=object()), 'buyram', 'not_eosio'), False)
+        self.assertEqual(check_action(EosTxActionAck(common=object()), 'buyram', 'eosio'), False)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), buy_ram_bytes=object()), 'buyrambytes', 'not_eosio'), False)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), sell_ram=object()), 'sellram', 'not_eosio'), False)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), delegate=object()), 'delegatebw', 'not_eosio'), False)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), undelegate=object()), 'undelegatebw', 'not_eosio'), False)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), refund=object()), 'refund', 'not_eosio'), False)
+        self.assertEqual(check_action(EosTxActionAck(common=object()), 'refund', 'eosio'), False)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), vote_producer=object()), 'voteproducer', 'not_eosio'), False)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), update_auth=object()), 'updateauth', 'not_eosio'), False)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), delete_auth=object()), 'deleteauth', 'not_eosio'), False)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), link_auth=object()), 'linkauth', 'not_eosio'), False)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), unlink_auth=object()), 'unlinkauth', 'not_eosio'), False)
+        self.assertEqual(check_action(EosTxActionAck(common=object()), 'unlinkauth', 'eosio'), False)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), new_account=object()), 'newaccount', 'not_eosio'), False)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), transfer=object()), 'transfer', 'eosio'), False)
+        self.assertEqual(check_action(EosTxActionAck(common=object()), 'unknown', 'not_eosio'), False)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), buy_ram=object()), 'test', 'eosio'), False)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), unknown=[]), 'buyram', 'eosio'), False)
+        self.assertEqual(check_action(EosTxActionAck(common=object(), unknown=[]), 'transfer', 'loveme'), False)
 
 
 if __name__ == '__main__':

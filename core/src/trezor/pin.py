@@ -1,8 +1,6 @@
+from typing import Any
+
 from trezor import utils
-
-if False:
-    from typing import Any
-
 
 _previous_progress: int | None = None
 _previous_seconds: int | None = None

@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import utils, wire
 from trezor.crypto import bip32, hashlib, hmac
 from trezor.enums import InputScriptType
@@ -10,7 +12,7 @@ from . import common
 from .scripts import read_bip322_signature_proof, write_bip322_signature_proof
 from .verification import SignatureVerifier
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import MultisigRedeemScriptType
     from apps.common.coininfo import CoinInfo
 

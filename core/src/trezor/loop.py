@@ -9,10 +9,11 @@ See `schedule`, `run`, and syscalls `sleep`, `wait`, `signal` and `race`.
 
 import utime
 import utimeq
+from typing import TYPE_CHECKING
 
 from trezor import io, log
 
-if False:
+if TYPE_CHECKING:
     from typing import (
         Any,
         Awaitable,
@@ -21,7 +22,8 @@ if False:
         Generator,
     )
 
-    Task = Coroutine
+    Task = Coroutine | Generator
+    AwaitableTask = Task | Awaitable
     Finalizer = Callable[[Task, Any], None]
 
 # function to call after every task step
@@ -208,12 +210,14 @@ class Syscall:
     scheduler, they do so through instances of a class derived from `Syscall`.
     """
 
-    def __iter__(self) -> Task:  # type: ignore
+    def __iter__(self) -> Generator:
         # support `yield from` or `await` on syscalls
         return (yield self)
 
-    def __await__(self) -> Generator:
-        return self.__iter__()  # type: ignore
+    if TYPE_CHECKING:
+
+        def __await__(self) -> Generator:
+            return self.__iter__()
 
     def handle(self, task: Task) -> None:
         pass
@@ -261,7 +265,7 @@ class wait(Syscall):
         pause(task, self.msg_iface)
 
 
-_type_gen = type((lambda: (yield))())
+_type_gen: type[Generator] = type((lambda: (yield))())
 
 
 class race(Syscall):
@@ -290,10 +294,10 @@ class race(Syscall):
     `race.__iter__` for explanation.  Always use `await`.
     """
 
-    def __init__(self, *children: Awaitable, exit_others: bool = True) -> None:
+    def __init__(self, *children: AwaitableTask, exit_others: bool = True) -> None:
         self.children = children
         self.exit_others = exit_others
-        self.finished: list[Awaitable] = []  # children that finished
+        self.finished: list[AwaitableTask] = []  # children that finished
         self.scheduled: list[Task] = []  # scheduled wrapper tasks
 
     def handle(self, task: Task) -> None:
@@ -309,13 +313,19 @@ class race(Syscall):
         finished.clear()
 
         for child in self.children:
+            child_task: Task
             if isinstance(child, _type_gen):
+                # child is a coroutine/generator
+                # i.e., async function, or function using yield (these are identical
+                # in micropython)
                 child_task = child
             else:
-                child_task = iter(child)  # type: ignore
+                # child is a layout -- type-wise, it is an Awaitable, but
+                # implementation-wise it is an Iterable and we know that its __iter__
+                # will return a Generator.
+                child_task = child.__iter__()  # type: ignore
             schedule(child_task, None, None, finalizer)
             scheduled.append(child_task)
-            # TODO: document the types here
 
     def exit(self, except_for: Task | None = None) -> None:
         for task in self.scheduled:
@@ -330,6 +340,8 @@ class race(Syscall):
                 if child_task is task:
                     child = self.children[index]
                     break
+            else:
+                raise RuntimeError  # task not found in scheduled
             self.finished.append(child)
             if self.exit_others:
                 self.exit(task)
@@ -485,6 +497,8 @@ class spawn(Syscall):
         # schedule task immediately
         if __debug__:
             log.debug(__name__, "spawn new task: %s", task)
+
+        assert isinstance(task, _type_gen)
         schedule(task, finalizer=self._finalize)
 
     def _finalize(self, task: Task, value: Any) -> None:

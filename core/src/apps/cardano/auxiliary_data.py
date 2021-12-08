@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor.crypto import hashlib
 from trezor.crypto.curve import ed25519
 from trezor.enums import CardanoAddressType, CardanoTxAuxiliaryDataSupplementType
@@ -16,7 +18,7 @@ from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 from .helpers.utils import derive_public_key
 from .layout import confirm_catalyst_registration, show_auxiliary_data_hash
 
-if False:
+if TYPE_CHECKING:
     from typing import Union
     from trezor import wire
 

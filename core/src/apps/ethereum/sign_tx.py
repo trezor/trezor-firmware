@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import wire
 from trezor.crypto import rlp
 from trezor.crypto.curve import secp256k1
@@ -17,7 +19,7 @@ from .layout import (
     require_confirm_unknown_token,
 )
 
-if False:
+if TYPE_CHECKING:
     from typing import Tuple
 
     from apps.common.keychain import Keychain

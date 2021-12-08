@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import wire
 from trezor.crypto.hashlib import sha256
@@ -22,7 +23,7 @@ from . import approvers, helpers, progress
 from .sig_hasher import BitcoinSigHasher
 from .tx_info import OriginalTxInfo, TxInfo
 
-if False:
+if TYPE_CHECKING:
     from typing import Sequence
 
     from trezor.crypto import bip32
@@ -611,6 +612,8 @@ class Bitcoin:
         self.write_tx_header(h_sign, tx_info.tx, witness_marker=False)
         write_bitcoin_varint(h_sign, tx_info.tx.inputs_count)
 
+        txi_sign = None
+        node = None
         for i in range(tx_info.tx.inputs_count):
             # STAGE_REQUEST_4_INPUT in legacy
             txi = await helpers.request_tx_input(self.tx_req, i, self.coin, tx_hash)
@@ -618,7 +621,6 @@ class Bitcoin:
             # Only the previous UTXO's scriptPubKey is included in h_sign.
             if i == index:
                 txi_sign = txi
-                node = None
                 if not script_pubkey:
                     self.tx_info.check_input(txi)
                     node = self.keychain.derive(txi.address_n)
@@ -642,6 +644,9 @@ class Bitcoin:
                 self.write_tx_input(h_sign, txi, script_pubkey)
             else:
                 self.write_tx_input(h_sign, txi, bytes())
+
+        if txi_sign is None:
+            raise RuntimeError  # index >= tx_info.tx.inputs_count
 
         write_bitcoin_varint(h_sign, tx_info.tx.outputs_count)
 
@@ -712,6 +717,7 @@ class Bitcoin:
 
         write_bitcoin_varint(txh, tx.outputs_count)
 
+        script_pubkey: bytes | None = None
         for i in range(tx.outputs_count):
             # STAGE_REQUEST_3_PREV_OUTPUT in legacy
             txo_bin = await helpers.request_tx_prev_output(
@@ -722,6 +728,8 @@ class Bitcoin:
                 amount_out = txo_bin.amount
                 script_pubkey = txo_bin.script_pubkey
                 self.check_prevtx_output(txo_bin)
+
+        assert script_pubkey is not None  # prev_index < tx.outputs_count
 
         await self.write_prev_tx_footer(txh, tx, prev_hash)
 

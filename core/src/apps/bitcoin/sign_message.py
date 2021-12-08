@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import wire
 from trezor.crypto.curve import secp256k1
 from trezor.enums import InputScriptType
@@ -10,7 +12,7 @@ from apps.common.signverify import decode_message, message_digest
 from .addresses import address_short, get_address
 from .keychain import validate_path_against_script_type, with_keychain
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import SignMessage
 
     from apps.common.coininfo import CoinInfo

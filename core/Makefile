@@ -110,14 +110,19 @@ pylint: ## run pylint on application sources and tests
 mypy:
 	mypy --config-file ../setup.cfg \
 		src/main.py \
-		src/apps/bitcoin \
-		src/apps/cardano \
-		src/apps/ethereum \
-		src/apps/management \
-		src/apps/misc \
-		src/apps/stellar \
-		src/apps/webauthn \
-		src/trezor/ui
+		src/apps \
+		src/trezor \
+		src/storage \
+		--exclude src/apps/monero
+
+mypy_report:
+	mypy --config-file ../setup.cfg \
+		src/main.py \
+		src/apps \
+		src/trezor \
+		src/storage \
+		--exclude src/apps/monero \
+		--html-report mypy_report
 
 clippy:
 	cd embed/rust ; cargo clippy

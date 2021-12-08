@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor.crypto import hashlib
 from trezor.enums import CardanoTxSigningMode
 
@@ -10,7 +12,7 @@ from apps.common.seed import remove_ed25519_prefix
 
 from . import ADDRESS_KEY_HASH_SIZE, SCRIPT_HASH_SIZE, bech32
 
-if False:
+if TYPE_CHECKING:
     from trezor import wire
     from .. import seed
 

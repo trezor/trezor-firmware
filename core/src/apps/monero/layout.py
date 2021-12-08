@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import strings, ui
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import (
@@ -11,7 +13,7 @@ from trezor.ui.popup import Popup
 DUMMY_PAYMENT_ID = b"\x00\x00\x00\x00\x00\x00\x00\x00"
 
 
-if False:
+if TYPE_CHECKING:
     from apps.monero.signing.state import State
     from trezor.messages import (
         MoneroTransactionData,

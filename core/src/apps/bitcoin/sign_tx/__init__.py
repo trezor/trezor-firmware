@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import utils, wire
 from trezor.enums import RequestType
 from trezor.messages import TxRequest
@@ -9,7 +11,7 @@ from . import approvers, bitcoin, helpers, progress
 if not utils.BITCOIN_ONLY:
     from . import bitcoinlike, decred, zcash
 
-if False:
+if TYPE_CHECKING:
     from typing import Protocol, Union
 
     from trezor.messages import (

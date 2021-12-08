@@ -1,10 +1,12 @@
+from typing import TYPE_CHECKING
+
 from trezor import io, loop, res, ui, workflow
 from trezor.crypto import slip39
 from trezor.ui import display
 
 from .button import Button, ButtonClear, ButtonMono, ButtonMonoConfirm
 
-if False:
+if TYPE_CHECKING:
     from .button import ButtonContent, ButtonStyleStateType
 
 
@@ -222,7 +224,7 @@ class Slip39Keyboard(ui.Layout):
 
     if __debug__:
 
-        def create_tasks(self) -> tuple[loop.Task, ...]:
+        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
             from apps.debug import input_signal
 
             return super().create_tasks() + (input_signal(),)

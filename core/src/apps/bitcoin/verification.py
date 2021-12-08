@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import utils, wire
 from trezor.crypto import der
 from trezor.crypto.curve import bip340, secp256k1
@@ -19,7 +21,7 @@ from .scripts import (
     write_input_script_p2wsh_in_p2sh,
 )
 
-if False:
+if TYPE_CHECKING:
     from typing import Sequence
     from apps.common.coininfo import CoinInfo
 

@@ -1,7 +1,9 @@
+from typing import TYPE_CHECKING
+
 from apps.monero.xmr import crypto
 from apps.monero.xmr.keccak_hasher import KeccakXmrArchive
 
-if False:
+if TYPE_CHECKING:
     from apps.monero.xmr.serialize_messages.tx_rsig_bulletproof import Bulletproof
 
 

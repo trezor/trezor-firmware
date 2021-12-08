@@ -1,8 +1,9 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor.enums import MessageType
 
-if False:
+if TYPE_CHECKING:
     from typing import Union
     from trezor import protobuf
 
@@ -99,4 +100,5 @@ def get_op_code(msg: protobuf.MessageType) -> int:
     wire = msg.MESSAGE_WIRE_TYPE
     if wire not in op_codes:
         raise ValueError("Stellar: op code unknown")
+    assert isinstance(wire, int)
     return op_codes[wire]

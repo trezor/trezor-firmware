@@ -1,10 +1,12 @@
+from typing import TYPE_CHECKING
+
 from trezor import ui
 
 from .button import Button
 from .num_input import NumInput
 from .text import Text
 
-if False:
+if TYPE_CHECKING:
     from trezor import loop
     from typing import Callable, NoReturn, Sequence
 
@@ -50,6 +52,8 @@ class Slip39NumInput(ui.Component):
                 header = "Set num. of groups"
             elif self.step is Slip39NumInput.SET_GROUP_THRESHOLD:
                 header = "Set group threshold"
+            else:
+                raise RuntimeError  # invalid step
             ui.header(header, ui.ICON_RESET, ui.TITLE_GREY, ui.BG, ui.ORANGE_ICON)
 
             # render the counter
@@ -148,5 +152,5 @@ class MnemonicWordSelect(ui.Layout):
         def read_content(self) -> list[str]:
             return self.text.read_content() + [b.text for b in self.buttons]
 
-        def create_tasks(self) -> tuple[loop.Task, ...]:
+        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
             return super().create_tasks() + (debug.input_signal(),)

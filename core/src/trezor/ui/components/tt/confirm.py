@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import loop, res, ui, utils
 from trezor.ui.loader import Loader, LoaderDefault
@@ -6,7 +7,7 @@ from trezor.ui.loader import Loader, LoaderDefault
 from ..common.confirm import CANCELLED, CONFIRMED, INFO, ConfirmBase, Pageable
 from .button import Button, ButtonAbort, ButtonCancel, ButtonConfirm, ButtonDefault
 
-if False:
+if TYPE_CHECKING:
     from typing import Any
     from .button import ButtonContent, ButtonStyleType
     from trezor.ui.loader import LoaderStyleType
@@ -39,7 +40,7 @@ class Confirm(ConfirmBase):
             else:
                 area = ui.grid(9, n_x=2)
             button_confirm = Button(area, confirm, confirm_style)
-            button_confirm.on_click = self.on_confirm  # type: ignore
+            button_confirm.on_click = self.on_confirm
 
         if cancel is not None:
             if confirm is None:
@@ -49,7 +50,7 @@ class Confirm(ConfirmBase):
             else:
                 area = ui.grid(8, n_x=2)
             button_cancel = Button(area, cancel, cancel_style)
-            button_cancel.on_click = self.on_cancel  # type: ignore
+            button_cancel.on_click = self.on_cancel
 
         super().__init__(content, button_confirm, button_cancel)
 
@@ -87,7 +88,7 @@ class ConfirmPageable(Confirm):
         if self.cancel is not None:
             self.cancel.repaint = True
 
-    def create_tasks(self) -> tuple[loop.Task, ...]:
+    def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
         tasks = super().create_tasks()
         if self.pageable.page_count() > 1:
             return tasks + (self.handle_paging(),)
@@ -171,7 +172,7 @@ class InfoConfirm(ui.Layout):
         def read_content(self) -> list[str]:
             return self.content.read_content()
 
-        def create_tasks(self) -> tuple[loop.Task, ...]:
+        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
             from apps.debug import confirm_signal
 
             return super().create_tasks() + (confirm_signal(),)
@@ -250,7 +251,7 @@ class HoldToConfirm(ui.Layout):
         def read_content(self) -> list[str]:
             return self.content.read_content()
 
-        def create_tasks(self) -> tuple[loop.Task, ...]:
+        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
             from apps.debug import confirm_signal
 
             return super().create_tasks() + (confirm_signal(),)

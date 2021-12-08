@@ -1,8 +1,9 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 HARDENED = const(0x8000_0000)
 
-if False:
+if TYPE_CHECKING:
     from typing import (
         Any,
         Callable,
@@ -17,7 +18,7 @@ if False:
 
     Bip32Path = Sequence[int]
     Slip21Path = Sequence[bytes]
-    PathType = TypeVar("PathType", Bip32Path, Slip21Path)
+    PathType = TypeVar("PathType", Bip32Path, Slip21Path, contravariant=True)
 
     class PathSchemaType(Protocol):
         def match(self, path: Bip32Path) -> bool:
@@ -105,7 +106,7 @@ class PathSchema:
     _EMPTY_TUPLE = ()
 
     @staticmethod
-    def _parse_hardened(s: str) -> int:
+    def _parse_hardened(s: str | int) -> int:
         return int(s) | HARDENED
 
     @staticmethod
@@ -259,7 +260,8 @@ class PathSchema:
                     prime = "'" if a & HARDENED else ""
                     components.append(f"[{unharden(a)}-{unharden(b)}]{prime}")
                 else:
-                    # mypy thinks component is a Contanier but we're using it as a Collection.
+                    # typechecker thinks component is a Contanier but we're using it
+                    # as a Collection.
                     # Which in practice it is, the only non-Collection is Interval.
                     # But we're not going to introduce an additional type requirement
                     # for the sake of __repr__ that doesn't exist in production anyway
@@ -282,24 +284,17 @@ class PathSchema:
             return "<schema:" + "/".join(components) + ">"
 
 
-class _AlwaysMatchingSchema:
+class AlwaysMatchingSchema:
     @staticmethod
     def match(path: Bip32Path) -> bool:
         return True
 
 
-class _NeverMatchingSchema:
+class NeverMatchingSchema:
     @staticmethod
     def match(path: Bip32Path) -> bool:
         return False
 
-
-# type objects _AlwaysMatchingSchema and _NeverMatching schema conform to the
-# PathSchemaType protocol, but mypy fails to recognize this due to:
-# https://github.com/python/mypy/issues/4536,
-# hence the following trickery
-AlwaysMatchingSchema: PathSchemaType = _AlwaysMatchingSchema  # type: ignore
-NeverMatchingSchema: PathSchemaType = _NeverMatchingSchema  # type: ignore
 
 # BIP-44 for basic (legacy) Bitcoin accounts, and widely used for other currencies:
 # https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki

@@ -15,11 +15,7 @@ from .layout import require_sign_tx
 
 @auto_keychain(__name__)
 async def sign_tx(ctx: wire.Context, msg: EosSignTx, keychain: Keychain) -> EosSignedTx:
-    if msg.chain_id is None:
-        raise wire.DataError("No chain id")
-    if msg.header is None:
-        raise wire.DataError("No header")
-    if msg.num_actions is None or msg.num_actions == 0:
+    if not msg.num_actions:
         raise wire.DataError("No actions")
 
     await paths.validate_path(ctx, keychain, msg.address_n)

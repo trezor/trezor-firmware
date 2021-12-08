@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import utils, wire
 from trezor.crypto import base58
 from trezor.crypto.base58 import blake256d_32
@@ -15,7 +17,7 @@ from .scripts import (  # noqa: F401
 )
 from .writers import op_push_length, write_bitcoin_varint, write_op_push
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import MultisigRedeemScriptType
 
     from apps.common.coininfo import CoinInfo

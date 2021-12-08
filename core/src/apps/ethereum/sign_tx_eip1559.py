@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import wire
 from trezor.crypto import rlp
 from trezor.crypto.curve import secp256k1
@@ -16,7 +18,7 @@ from .layout import (
 )
 from .sign_tx import check_common_fields, handle_erc20, send_request_chunk
 
-if False:
+if TYPE_CHECKING:
     from typing import Tuple
 
     from trezor.messages import EthereumSignTxEIP1559

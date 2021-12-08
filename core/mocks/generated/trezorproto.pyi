@@ -4,12 +4,12 @@ T = TypeVar("T", bound=MessageType)
 
 
 # extmod/rustmods/modtrezorproto.c
-def type_for_name(name: str) -> Type[MessageType]:
+def type_for_name(name: str) -> type[T]:
     """Find the message definition for the given protobuf name."""
 
 
 # extmod/rustmods/modtrezorproto.c
-def type_for_wire(wire_type: int) -> Type[MessageType]:
+def type_for_wire(wire_type: int) -> type[T]:
     """Find the message definition for the given wire type (numeric
     identifier)."""
 

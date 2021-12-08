@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
 from trezor import utils, wire
@@ -5,7 +6,7 @@ from trezor.crypto.hashlib import blake256, sha256
 
 from apps.common.writers import write_bitcoin_varint
 
-if False:
+if TYPE_CHECKING:
     from apps.common.coininfo import CoinInfo
 
 

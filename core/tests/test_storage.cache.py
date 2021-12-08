@@ -102,13 +102,6 @@ class TestStorageCache(unittest.TestCase):
         cache.start_session(session_id1)
         self.assertEqual(cache.get(KEY), b"hello")
 
-    def test_decorator_mismatch(self):
-        with self.assertRaises(AssertionError):
-
-            @cache.stored(KEY)
-            async def async_fun():
-                pass
-
     def test_decorators(self):
         run_count = 0
         cache.start_session()

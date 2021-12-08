@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from storage import cache, device
 from trezor import wire
 from trezor.crypto import bip32, cardano
@@ -8,7 +10,7 @@ from apps.common.seed import derive_and_store_roots, get_seed
 
 from .helpers import paths
 
-if False:
+if TYPE_CHECKING:
     from typing import Callable, Awaitable, TypeVar, Union
 
     from apps.common.paths import Bip32Path

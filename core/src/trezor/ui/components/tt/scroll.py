@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import loop, res, ui, utils, wire, workflow
 from trezor.enums import ButtonRequestType
@@ -16,17 +17,13 @@ from .text import (
     Text,
 )
 
-if False:
-    from typing import Callable, Iterable
+if TYPE_CHECKING:
+    from typing import Any, Callable, Iterable
 
     from ..common.text import TextContent
 
 
 WAS_PAGED = object()
-
-
-if False:
-    from typing import Any
 
 
 def render_scrollbar(pages: int, page: int) -> None:
@@ -137,8 +134,8 @@ class Paginated(ui.Layout):
 
         return result
 
-    def create_tasks(self) -> tuple[loop.Task, ...]:
-        tasks: tuple[loop.Task, ...] = (
+    def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
+        tasks: tuple[loop.AwaitableTask, ...] = (
             self.handle_input(),
             self.handle_rendering(),
             self.handle_paging(),
@@ -292,7 +289,7 @@ class PaginatedWithButtons(ui.Layout):
         def read_content(self) -> list[str]:
             return self.pages[self.page].read_content()
 
-        def create_tasks(self) -> tuple[loop.Task, ...]:
+        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
             from apps.debug import confirm_signal
 
             return super().create_tasks() + (confirm_signal(),)

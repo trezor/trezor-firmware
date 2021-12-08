@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import utils, wire
 from trezor.enums import InputScriptType, OutputScriptType, RequestType
 from trezor.messages import (
@@ -23,7 +25,7 @@ from .. import common
 from ..writers import TX_HASH_SIZE
 from . import layout
 
-if False:
+if TYPE_CHECKING:
     from typing import Any, Awaitable
     from trezor.enums import AmountUnit
 
@@ -36,6 +38,8 @@ class UiConfirm:
     def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
         raise NotImplementedError
 
+    __eq__ = utils.obj_eq  # type: ignore
+
 
 class UiConfirmOutput(UiConfirm):
     def __init__(self, output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit):
@@ -45,8 +49,6 @@ class UiConfirmOutput(UiConfirm):
 
     def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
         return layout.confirm_output(ctx, self.output, self.coin, self.amount_unit)
-
-    __eq__ = utils.obj_eq
 
 
 class UiConfirmDecredSSTXSubmission(UiConfirm):
@@ -60,8 +62,6 @@ class UiConfirmDecredSSTXSubmission(UiConfirm):
             ctx, self.output, self.coin, self.amount_unit
         )
 
-    __eq__ = utils.obj_eq
-
 
 class UiConfirmReplacement(UiConfirm):
     def __init__(self, description: str, txid: bytes):
@@ -70,8 +70,6 @@ class UiConfirmReplacement(UiConfirm):
 
     def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
         return layout.confirm_replacement(ctx, self.description, self.txid)
-
-    __eq__ = utils.obj_eq
 
 
 class UiConfirmModifyOutput(UiConfirm):
@@ -92,8 +90,6 @@ class UiConfirmModifyOutput(UiConfirm):
             ctx, self.txo, self.orig_txo, self.coin, self.amount_unit
         )
 
-    __eq__ = utils.obj_eq
-
 
 class UiConfirmModifyFee(UiConfirm):
     def __init__(
@@ -113,8 +109,6 @@ class UiConfirmModifyFee(UiConfirm):
             ctx, self.user_fee_change, self.total_fee_new, self.coin, self.amount_unit
         )
 
-    __eq__ = utils.obj_eq
-
 
 class UiConfirmTotal(UiConfirm):
     def __init__(
@@ -129,8 +123,6 @@ class UiConfirmTotal(UiConfirm):
         return layout.confirm_total(
             ctx, self.spending, self.fee, self.coin, self.amount_unit
         )
-
-    __eq__ = utils.obj_eq
 
 
 class UiConfirmJointTotal(UiConfirm):
@@ -147,8 +139,6 @@ class UiConfirmJointTotal(UiConfirm):
             ctx, self.spending, self.total, self.coin, self.amount_unit
         )
 
-    __eq__ = utils.obj_eq
-
 
 class UiConfirmFeeOverThreshold(UiConfirm):
     def __init__(self, fee: int, coin: CoinInfo, amount_unit: AmountUnit):
@@ -161,8 +151,6 @@ class UiConfirmFeeOverThreshold(UiConfirm):
             ctx, self.fee, self.coin, self.amount_unit
         )
 
-    __eq__ = utils.obj_eq
-
 
 class UiConfirmChangeCountOverThreshold(UiConfirm):
     def __init__(self, change_count: int):
@@ -171,8 +159,6 @@ class UiConfirmChangeCountOverThreshold(UiConfirm):
     def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
         return layout.confirm_change_count_over_threshold(ctx, self.change_count)
 
-    __eq__ = utils.obj_eq
-
 
 class UiConfirmForeignAddress(UiConfirm):
     def __init__(self, address_n: list):
@@ -180,8 +166,6 @@ class UiConfirmForeignAddress(UiConfirm):
 
     def confirm_dialog(self, ctx: wire.Context) -> Awaitable[Any]:
         return paths.show_path_warning(ctx, self.address_n)
-
-    __eq__ = utils.obj_eq
 
 
 class UiConfirmNonDefaultLocktime(UiConfirm):
@@ -193,8 +177,6 @@ class UiConfirmNonDefaultLocktime(UiConfirm):
         return layout.confirm_nondefault_locktime(
             ctx, self.lock_time, self.lock_time_disabled
         )
-
-    __eq__ = utils.obj_eq
 
 
 def confirm_output(output: TxOutput, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[None]:  # type: ignore
@@ -250,9 +232,9 @@ def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes | None = N
     return sanitize_tx_meta(ack.tx, coin)
 
 
-def request_tx_extra_data(  # type: ignore
+def request_tx_extra_data(
     tx_req: TxRequest, offset: int, size: int, tx_hash: bytes | None = None
-) -> Awaitable[bytearray]:
+) -> Awaitable[bytearray]:  # type: ignore
     assert tx_req.details is not None
     tx_req.request_type = RequestType.TXEXTRADATA
     tx_req.details.extra_data_offset = offset
@@ -327,7 +309,8 @@ def _clear_tx_request(tx_req: TxRequest) -> None:
     tx_req.details.extra_data_offset = None
     tx_req.serialized.signature = None
     tx_req.serialized.signature_index = None
-    # mypy thinks serialized_tx is `bytes`, which doesn't support indexed assignment
+    # typechecker thinks serialized_tx is `bytes`, which is immutable
+    # we know that it is `bytearray` in reality
     tx_req.serialized.serialized_tx[:] = bytes()  # type: ignore
 
 
