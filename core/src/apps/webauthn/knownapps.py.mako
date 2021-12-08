@@ -1,6 +1,5 @@
 # generated from knownapps.py.mako
 # do not edit manually!
-# flake8: noqa
 
 
 class FIDOApp:
@@ -34,10 +33,8 @@ for app in fido:
 %>\
 # fmt: off
 def by_rp_id_hash(rp_id_hash: bytes) -> FIDOApp | None:
-    if False:
-        raise RuntimeError  # if false
 % for label, rp_id_hash, type, app in fido_entries:
-    elif rp_id_hash == ${black_repr(rp_id_hash)}:
+    if rp_id_hash == ${black_repr(rp_id_hash)}:
         # ${type} key for ${app.name}
         return FIDOApp(
             label=${black_repr(label)},
@@ -46,5 +43,5 @@ def by_rp_id_hash(rp_id_hash: bytes) -> FIDOApp | None:
             use_self_attestation=${black_repr(app.use_self_attestation)},
         )
 % endfor
-    else:
-        return None
+
+    return None
