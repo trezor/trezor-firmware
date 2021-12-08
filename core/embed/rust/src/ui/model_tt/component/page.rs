@@ -53,10 +53,14 @@ impl<T> Page for SwipePage<T> {
     fn fade_after_next_paint(&mut self) {
         self.fade = Some(theme::BACKLIGHT_NORMAL);
     }
+
+    fn content_area(area: Rect) -> Rect {
+        area
+    }
 }
 
 impl<T: Component> Component for SwipePage<T> {
-    type Msg = PageMsg<T::Msg>;
+    type Msg = PageMsg<T::Msg, Never>;
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Some(swipe) = self.swipe.event(ctx, event) {
