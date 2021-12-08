@@ -3,15 +3,15 @@ import math
 import utime
 from micropython import const
 from trezorui import Display
+from typing import TYPE_CHECKING
 
 from trezor import io, loop, res, utils, workflow
 
-if False:
-    from typing import Any, Awaitable, Generator, TypeVar
+if TYPE_CHECKING:
+    from typing import Any, Awaitable, Generator
 
     Pos = tuple[int, int]
     Area = tuple[int, int, int, int]
-    ResultValue = TypeVar("ResultValue")
 
 # all rendering is done through a singleton of `Display`
 display = Display()
@@ -45,7 +45,7 @@ if __debug__:
 
 
 else:
-    refresh = display.refresh
+    refresh = display.refresh  # type: ignore
 
 
 # in both debug and production, emulator needs to draw the screen explicitly
@@ -298,7 +298,7 @@ class Result(Exception):
     See `Layout.__iter__` for details.
     """
 
-    def __init__(self, value: ResultValue) -> None:
+    def __init__(self, value: Any) -> None:
         super().__init__()
         self.value = value
 
@@ -327,7 +327,7 @@ class Layout(Component):
     BACKLIGHT_LEVEL = style.BACKLIGHT_NORMAL
     RENDER_SLEEP: loop.Syscall = loop.sleep(_RENDER_DELAY_MS)
 
-    async def __iter__(self) -> ResultValue:
+    async def __iter__(self) -> Any:
         """
         Run the layout and wait until it completes.  Returns the result value.
         Usually not overridden.
@@ -357,10 +357,15 @@ class Layout(Component):
             value = result.value
         return value
 
-    def __await__(self) -> Generator[Any, Any, ResultValue]:
-        return self.__iter__()  # type: ignore
+    if TYPE_CHECKING:
 
-    def create_tasks(self) -> tuple[loop.Task, ...]:
+        def __await__(self) -> Generator:
+            return self.__iter__()  # type: ignore
+
+    else:
+        __await__ = __iter__
+
+    def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
         """
         Called from `__iter__`.  Creates and returns a sequence of tasks that
         run this layout.  Tasks are executed in parallel.  When one of them
@@ -371,7 +376,7 @@ class Layout(Component):
 
     if utils.MODEL == "T":
 
-        def handle_input(self) -> loop.Task:  # type: ignore
+        def handle_input(self) -> Generator:
             """Task that is waiting for the user input."""
             touch = loop.wait(io.TOUCH)
             while True:
@@ -385,7 +390,7 @@ class Layout(Component):
 
     elif utils.MODEL == "1":
 
-        def handle_input(self) -> loop.Task:  # type: ignore
+        def handle_input(self) -> Generator:
             """Task that is waiting for the user input."""
             button = loop.wait(io.BUTTON)
             while True:

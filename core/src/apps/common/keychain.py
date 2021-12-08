@@ -1,4 +1,5 @@
 import sys
+from typing import TYPE_CHECKING
 
 from trezor import wire
 from trezor.crypto import bip32
@@ -6,7 +7,7 @@ from trezor.crypto import bip32
 from . import paths, safety_checks
 from .seed import Slip21Node, get_seed
 
-if False:
+if TYPE_CHECKING:
     from typing import (
         Any,
         Awaitable,

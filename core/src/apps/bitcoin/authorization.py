@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import wire
 from trezor.messages import AuthorizeCoinJoin
@@ -7,7 +8,7 @@ from apps.common import authorization
 
 from .common import BIP32_WALLET_DEPTH
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import (
         GetOwnershipProof,
         SignTx,

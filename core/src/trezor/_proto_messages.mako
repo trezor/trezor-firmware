@@ -4,10 +4,7 @@
 
 from trezor import protobuf
 
-if False:
-    from typing import TYPE_CHECKING, Any, TypeGuard
-else:
-    TYPE_CHECKING = False
+from typing import Any, TYPE_CHECKING
 
 
 def __getattr__(name: str) -> Any:
@@ -18,6 +15,7 @@ def __getattr__(name: str) -> Any:
 
 
 if TYPE_CHECKING:
+    from typing import TypeGuard
 % for enum in sorted(enums, key=lambda e: e.name):
     from trezor.enums import ${enum.name}  # noqa: F401
 % endfor

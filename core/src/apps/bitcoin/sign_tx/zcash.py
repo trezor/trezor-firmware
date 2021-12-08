@@ -1,5 +1,6 @@
 import ustruct as struct
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import wire
 from trezor.crypto.hashlib import blake2b
@@ -23,7 +24,7 @@ from ..writers import (
 from . import approvers, helpers
 from .bitcoinlike import Bitcoinlike
 
-if False:
+if TYPE_CHECKING:
     from typing import Sequence
     from apps.common import coininfo
     from .sig_hasher import SigHasher
@@ -119,7 +120,7 @@ class Zcashlike(Bitcoinlike):
         tx: SignTx,
         keychain: Keychain,
         coin: CoinInfo,
-        approver: approvers.Approver,
+        approver: approvers.Approver | None,
     ) -> None:
         ensure(coin.overwintered)
         super().__init__(tx, keychain, coin, approver)

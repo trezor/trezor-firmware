@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import wire
 from trezor.crypto.curve import secp256k1
 from trezor.enums import InputScriptType
@@ -15,7 +17,7 @@ from .addresses import (
     address_to_cashaddr,
 )
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import VerifyMessage
 
 

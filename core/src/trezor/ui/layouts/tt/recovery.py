@@ -1,3 +1,5 @@
+from typing import Callable, Iterable
+
 from trezor import strings, ui, wire
 from trezor.crypto.slip39 import MAX_SHARE_COUNT
 from trezor.enums import ButtonRequestType
@@ -15,9 +17,6 @@ from ...components.tt.scroll import Paginated
 from ...components.tt.text import Text
 from ...components.tt.word_select import WordSelector
 from ..common import button_request, interact
-
-if False:
-    from typing import Callable, Iterable
 
 
 async def request_word_count(ctx: wire.GenericContext, dry_run: bool) -> int:

@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount
 from trezor.ui.layouts import confirm_metadata
@@ -5,8 +7,11 @@ from trezor.ui.layouts.tt.altcoin import confirm_total_ripple
 
 from . import helpers
 
+if TYPE_CHECKING:
+    from trezor.wire import Context
 
-async def require_confirm_fee(ctx, fee):
+
+async def require_confirm_fee(ctx: Context, fee: int) -> None:
     await confirm_metadata(
         ctx,
         "confirm_fee",
@@ -18,7 +23,7 @@ async def require_confirm_fee(ctx, fee):
     )
 
 
-async def require_confirm_destination_tag(ctx, tag):
+async def require_confirm_destination_tag(ctx: Context, tag: int) -> None:
     await confirm_metadata(
         ctx,
         "confirm_destination_tag",
@@ -30,5 +35,5 @@ async def require_confirm_destination_tag(ctx, tag):
     )
 
 
-async def require_confirm_tx(ctx, to, value):
+async def require_confirm_tx(ctx: Context, to: str, value: int) -> None:
     await confirm_total_ripple(ctx, to, format_amount(value, helpers.DECIMALS))

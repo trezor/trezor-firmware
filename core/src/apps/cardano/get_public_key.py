@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
 from trezor import log, wire
@@ -10,7 +11,7 @@ from . import seed
 from .helpers.paths import SCHEMA_MINT, SCHEMA_PUBKEY
 from .helpers.utils import derive_public_key
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import CardanoGetPublicKey
 
 

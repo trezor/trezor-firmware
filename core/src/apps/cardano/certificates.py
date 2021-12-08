@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor.enums import (
     CardanoCertificateType,
     CardanoPoolRelayType,
@@ -15,7 +17,7 @@ from .helpers import ADDRESS_KEY_HASH_SIZE, INVALID_CERTIFICATE, LOVELACE_MAX_SU
 from .helpers.paths import SCHEMA_STAKING_ANY_ACCOUNT
 from .helpers.utils import validate_stake_credential
 
-if False:
+if TYPE_CHECKING:
     from typing import Any
 
     from trezor.messages import (

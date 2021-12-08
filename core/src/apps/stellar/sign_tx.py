@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
 from trezor.crypto.curve import ed25519
@@ -12,8 +13,9 @@ from apps.common.keychain import auto_keychain
 from . import consts, helpers, layout, writers
 from .operations import process_operation
 
-if False:
+if TYPE_CHECKING:
     from trezor.wire import Context
+    from trezor.utils import Writer
 
     from apps.common.keychain import Keychain
 
@@ -45,14 +47,14 @@ async def sign_tx(
     return StellarSignedTx(public_key=pubkey, signature=signature)
 
 
-async def _final(ctx: Context, w: bytearray, msg: StellarSignTx) -> None:
+async def _final(ctx: Context, w: Writer, msg: StellarSignTx) -> None:
     # 4 null bytes representing a (currently unused) empty union
     writers.write_uint32(w, 0)
     # final confirm
     await layout.require_confirm_final(ctx, msg.fee, msg.num_operations)
 
 
-async def _init(ctx: Context, w: bytearray, pubkey: bytes, msg: StellarSignTx) -> None:
+async def _init(ctx: Context, w: Writer, pubkey: bytes, msg: StellarSignTx) -> None:
     network_passphrase_hash = sha256(msg.network_passphrase.encode()).digest()
     writers.write_bytes_fixed(w, network_passphrase_hash, 32)
     writers.write_bytes_fixed(w, consts.TX_TYPE, 4)
@@ -70,7 +72,7 @@ async def _init(ctx: Context, w: bytearray, pubkey: bytes, msg: StellarSignTx) -
     )
 
 
-async def _timebounds(ctx: Context, w: bytearray, start: int, end: int) -> None:
+async def _timebounds(ctx: Context, w: Writer, start: int, end: int) -> None:
     # confirm dialog
     await layout.require_confirm_timebounds(ctx, start, end)
 
@@ -80,14 +82,14 @@ async def _timebounds(ctx: Context, w: bytearray, start: int, end: int) -> None:
     writers.write_uint64(w, end)
 
 
-async def _operations(ctx: Context, w: bytearray, num_operations: int) -> None:
+async def _operations(ctx: Context, w: Writer, num_operations: int) -> None:
     writers.write_uint32(w, num_operations)
     for _ in range(num_operations):
         op = await ctx.call_any(StellarTxOpRequest(), *consts.op_wire_types)
         await process_operation(ctx, w, op)  # type: ignore
 
 
-async def _memo(ctx: Context, w: bytearray, msg: StellarSignTx) -> None:
+async def _memo(ctx: Context, w: Writer, msg: StellarSignTx) -> None:
     writers.write_uint32(w, msg.memo_type)
     if msg.memo_type == StellarMemoType.NONE:
         # nothing is serialized

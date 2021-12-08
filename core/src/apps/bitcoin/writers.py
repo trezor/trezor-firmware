@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor.crypto.hashlib import sha256
 from trezor.utils import ensure
@@ -14,7 +15,7 @@ from apps.common.writers import (  # noqa: F401
     write_uint64_le,
 )
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import (
         PrevInput,
         PrevOutput,

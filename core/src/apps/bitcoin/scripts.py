@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import utils, wire
 from trezor.crypto import base58, cashaddr
 from trezor.crypto.hashlib import sha256
@@ -23,7 +25,7 @@ from .writers import (
     write_op_push,
 )
 
-if False:
+if TYPE_CHECKING:
     from typing import Sequence
 
     from trezor.messages import MultisigRedeemScriptType, TxInput
@@ -172,7 +174,7 @@ def parse_input_script_p2pkh(
         if len(pubkey) != n:
             raise ValueError
     except (ValueError, EOFError):
-        wire.DataError("Invalid scriptSig.")
+        raise wire.DataError("Invalid scriptSig.")
 
     return pubkey, signature, sighash_type
 

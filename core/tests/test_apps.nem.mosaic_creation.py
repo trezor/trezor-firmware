@@ -125,31 +125,36 @@ def _create_msg(network: int, timestamp: int, fee: int, deadline: int,
                 divisibility: int, supply: int, mutable_supply: bool, transferable: bool,
                 levy_type: int, levy_fee: int, levy_address: str, levy_namespace: str,
                 levy_mosaic: str, creation_sink: str, creation_fee: int):
-    m = NEMSignTx()
-    m.transaction = NEMTransactionCommon()
-    m.transaction.network = network
-    m.transaction.timestamp = timestamp
-    m.transaction.fee = fee
-    m.transaction.deadline = deadline
+    transaction = NEMTransactionCommon(
+        network=network,
+        timestamp=timestamp,
+        fee=fee,
+        deadline=deadline,
+    )
 
-    m.mosaic_creation = NEMMosaicCreation()
-    m.mosaic_creation.sink = creation_sink
-    m.mosaic_creation.fee = creation_fee
+    mosaic_creation = NEMMosaicCreation(
+        sink=creation_sink,
+        fee=creation_fee,
+        definition=NEMMosaicDefinition(
+            namespace=namespace,
+            mosaic=mosaic,
+            description=description,
+            divisibility=divisibility,
+            supply=supply,
+            mutable_supply=mutable_supply,
+            transferable=transferable,
+            levy=levy_type,
+            fee=levy_fee,
+            levy_address=levy_address,
+            levy_namespace=levy_namespace,
+            levy_mosaic=levy_mosaic,
+        )
+    )
 
-    m.mosaic_creation.definition = NEMMosaicDefinition()
-    m.mosaic_creation.definition.namespace = namespace
-    m.mosaic_creation.definition.mosaic = mosaic
-    m.mosaic_creation.definition.description = description
-    m.mosaic_creation.definition.divisibility = divisibility
-    m.mosaic_creation.definition.supply = supply
-    m.mosaic_creation.definition.mutable_supply = mutable_supply
-    m.mosaic_creation.definition.transferable = transferable
-    m.mosaic_creation.definition.levy = levy_type
-    m.mosaic_creation.definition.fee = levy_fee
-    m.mosaic_creation.definition.levy_address = levy_address
-    m.mosaic_creation.definition.levy_namespace = levy_namespace
-    m.mosaic_creation.definition.levy_mosaic = levy_mosaic
-    return m
+    return NEMSignTx(
+        transaction=transaction,
+        mosaic_creation=mosaic_creation,
+    )
 
 
 if __name__ == '__main__':

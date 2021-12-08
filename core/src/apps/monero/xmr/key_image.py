@@ -1,7 +1,9 @@
+from typing import TYPE_CHECKING
+
 from apps.monero.xmr import crypto, monero
 from apps.monero.xmr.serialize.int_serialize import dump_uvarint_b
 
-if False:
+if TYPE_CHECKING:
     from apps.monero.xmr.types import Ge25519, Sc25519
     from apps.monero.xmr.credentials import AccountCreds
     from trezor.messages import MoneroTransferDetails

@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from ...common.paths import HARDENED
 from ..seed import is_byron_path, is_minting_path, is_multisig_path, is_shelley_path
 from . import (
@@ -9,7 +11,7 @@ from . import (
 from .paths import ACCOUNT_PATH_INDEX, ACCOUNT_PATH_LENGTH
 from .utils import to_account_path
 
-if False:
+if TYPE_CHECKING:
     from trezor import wire
     from trezor.messages import (
         CardanoPoolOwner,

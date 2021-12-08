@@ -1,13 +1,11 @@
 import utime
+from typing import Any, NoReturn
 
 import storage.cache
 import storage.sd_salt
 from trezor import config, wire
 
 from .sdcard import SdCardUnavailable, request_sd_salt
-
-if False:
-    from typing import Any, NoReturn
 
 
 def can_lock_device() -> bool:
@@ -108,7 +106,8 @@ async def verify_user_pin(
         raise RuntimeError
 
     while retry:
-        pin = await request_pin_on_device(
+        # request_pin_on_device possibly unbound
+        pin = await request_pin_on_device(  # type: ignore
             ctx, "Wrong PIN, enter again", config.get_pin_rem(), allow_cancel
         )
         if config.unlock(pin, salt):

@@ -1,3 +1,5 @@
+from typing import Any
+
 import storage.cache
 import storage.device
 from trezor import res, ui
@@ -16,7 +18,7 @@ class HomescreenBase(ui.Layout):
             "apps/homescreen/res/bg.toif"
         )
 
-    async def __iter__(self) -> ui.ResultValue:
+    async def __iter__(self) -> Any:
         # We need to catch the ui.Cancelled exception that kills us, because that means
         # that we will need to draw on screen again after restart.
         try:

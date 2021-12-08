@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from trezor import ui, utils, wire
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_action, confirm_blob, show_success, show_warning
@@ -10,9 +12,6 @@ from trezor.ui.layouts.tt.reset import (  # noqa: F401
     slip39_prompt_threshold,
     slip39_show_checklist,
 )
-
-if False:
-    from typing import Sequence
 
 
 async def show_internal_entropy(ctx: wire.GenericContext, entropy: bytes) -> None:

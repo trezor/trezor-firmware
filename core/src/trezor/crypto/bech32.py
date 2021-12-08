@@ -20,7 +20,9 @@
 
 """Reference implementation for Bech32/Bech32m and segwit addresses."""
 
-if False:
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
     from enum import IntEnum
     from typing import Iterable, Union, TypeVar
 
@@ -138,7 +140,7 @@ def decode(hrp: str, addr: str) -> OptionalTuple2[int, list[int]]:
     """Decode a segwit address."""
     hrpgot, data, spec = bech32_decode(addr)
     # the following two lines are strictly not required
-    # but they make mypy happy
+    # but they make typecheckers happy
     if data is None:
         return (None, None)
     if hrpgot != hrp:

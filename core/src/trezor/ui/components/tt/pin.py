@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import config, res, ui
 from trezor.crypto import random
@@ -6,7 +7,7 @@ from trezor.ui import display
 
 from .button import Button, ButtonCancel, ButtonClear, ButtonConfirm, ButtonMono
 
-if False:
+if TYPE_CHECKING:
     from trezor import loop
     from typing import Iterable
 
@@ -176,7 +177,7 @@ class PinDialog(ui.Layout):
 
     if __debug__:
 
-        def create_tasks(self) -> tuple[loop.Task, ...]:
+        def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
             from apps.debug import input_signal
 
             return super().create_tasks() + (input_signal(),)

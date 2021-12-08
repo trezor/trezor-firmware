@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import ui
 from trezor.enums import (
     ButtonRequestType,
@@ -35,7 +37,7 @@ from .helpers.utils import (
 )
 from .seed import is_minting_path, is_multisig_path
 
-if False:
+if TYPE_CHECKING:
     from trezor import wire
     from trezor.messages import (
         CardanoNativeScript,

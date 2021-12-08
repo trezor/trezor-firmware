@@ -1,7 +1,9 @@
+from typing import TYPE_CHECKING
+
 from .. import consts, writers
 from . import layout, serialize
 
-if False:
+if TYPE_CHECKING:
     from trezor.utils import Writer
     from trezor.wire import Context
 

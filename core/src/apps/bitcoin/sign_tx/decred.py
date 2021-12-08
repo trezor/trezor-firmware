@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import wire
 from trezor.crypto.hashlib import blake256
@@ -22,7 +23,7 @@ OUTPUT_SCRIPT_NULL_SSTXCHANGE = (
     b"\xBD\x76\xA9\x14\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x88\xAC"
 )
 
-if False:
+if TYPE_CHECKING:
     from typing import Sequence
 
     from trezor.messages import (

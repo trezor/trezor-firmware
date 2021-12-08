@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor.crypto import bip32
 from trezor.enums import InputScriptType
 from trezor.messages import Address
@@ -9,7 +11,7 @@ from . import addresses
 from .keychain import validate_path_against_script_type, with_keychain
 from .multisig import multisig_pubkey_index
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import GetAddress
     from trezor.messages import HDNodeType
     from trezor import wire
@@ -62,8 +64,8 @@ async def get_address(
     else:
         address_qr = address  # base58 address
 
+    multisig_xpub_magic = coin.xpub_magic
     if msg.multisig:
-        multisig_xpub_magic = coin.xpub_magic
         if coin.segwit and not msg.ignore_xpub_magic:
             if (
                 msg.script_type == InputScriptType.SPENDWITNESS

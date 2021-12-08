@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import log, ui, wire
 from trezor.enums import ButtonRequestType
 
@@ -5,7 +7,7 @@ from trezorui2 import layout_new_confirm_action
 
 from .common import interact
 
-if False:
+if TYPE_CHECKING:
     from typing import NoReturn, Type, Union
 
     ExceptionType = Union[BaseException, Type[BaseException]]

@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import wire
 from trezor.enums import OutputScriptType
@@ -10,7 +11,7 @@ from ..keychain import validate_path_against_script_type
 from . import helpers, tx_weight
 from .tx_info import OriginalTxInfo, TxInfo
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import SignTx
     from trezor.messages import TxInput
     from trezor.messages import TxOutput

@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
 from trezor import utils
@@ -13,7 +14,7 @@ if not utils.BITCOIN_ONLY:
     from trezor.ui.layouts.tt import altcoin
 
 
-if False:
+if TYPE_CHECKING:
     from trezor import wire
     from trezor.messages import TxOutput
     from trezor.ui.layouts import LayoutType

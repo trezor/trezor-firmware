@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import wire
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha3_256
@@ -25,7 +27,7 @@ from .layout import (
     should_show_struct,
 )
 
-if False:
+if TYPE_CHECKING:
     from apps.common.keychain import Keychain
     from trezor.wire import Context
 

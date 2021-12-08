@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import res, ui
 
 from ...constants import TEXT_LINE_HEIGHT, TEXT_MARGIN_LEFT
@@ -5,8 +7,10 @@ from .button import Button, ButtonConfirm
 from .confirm import CONFIRMED
 from .text import render_text
 
-if False:
+if TYPE_CHECKING:
     from .button import ButtonContent
+
+    InfoConfirmStyleType = type["DefaultInfoConfirm"]
 
 
 class DefaultInfoConfirm:
@@ -20,10 +24,6 @@ class DefaultInfoConfirm:
 
         class disabled(ButtonConfirm.disabled):
             border_color = ui.BLACKISH
-
-
-if False:
-    InfoConfirmStyleType = type[DefaultInfoConfirm]
 
 
 class InfoConfirm(ui.Layout):

@@ -24,7 +24,7 @@ class TestNemTransfer(unittest.TestCase):
                         'TBGIMRE4SBFRUJXMH7DVF2IBY36L2EDWZ37GVSC4',
                         50000000000000)
 
-        t = serialize_transfer(m.transaction, m.transfer, unhexlify('e59ef184a612d4c3c4d89b5950eb57262c69862b2f96e59c5043bf41765c482f'))
+        t = serialize_transfer(m.transaction, m.transfer, unhexlify('e59ef184a612d4c3c4d89b5950eb57262c69862b2f96e59c5043bf41765c482f'), None, False)
         self.assertEqual(t, unhexlify('01010000010000980000000020000000e59ef184a612d4c3c4d89b5950eb57262c69862b2f96e59c5043bf41765c482f00000000000000000000000028000000544247494d52453453424652554a584d48374456463249425933364c324544575a3337475653433400203d88792d000000000000'))
         self.assertEqual(hashlib.sha3_256(t, keccak=True).digest(), unhexlify('0acbf8df91e6a65dc56c56c43d65f31ff2a6a48d06fc66e78c7f3436faf3e74f'))
 
@@ -40,7 +40,8 @@ class TestNemTransfer(unittest.TestCase):
 
         t = serialize_transfer(m.transaction, m.transfer,
                                unhexlify('8d07f90fb4bbe7715fa327c926770166a11be2e494a970605f2e12557f66c9b9'),
-                               bytearray('Good luck!'))
+                               bytearray('Good luck!'),
+                               False)
         self.assertEqual(hashlib.sha3_256(t, keccak=True).digest(), unhexlify('e90e98614c7598fbfa4db5411db1b331d157c2f86b558fb7c943d013ed9f71cb'))
 
     def test_create_transfer_with_encrypted_payload(self):
@@ -102,19 +103,23 @@ class TestNemTransfer(unittest.TestCase):
 
 def _create_msg(network: int, timestamp: int, fee: int, deadline: int,
                 recipient: str, amount: int, mosaics: int = 0):
-    m = NEMSignTx()
-    m.transaction = NEMTransactionCommon()
-    m.transaction.network = network
-    m.transaction.timestamp = timestamp
-    m.transaction.fee = fee
-    m.transaction.deadline = deadline
-    m.transfer = NEMTransfer()
-    m.transfer.recipient = recipient
-    m.transfer.amount = amount
-    m.transfer.mosaics = list()
-    for i in range(mosaics):
-        m.transfer.mosaics.append(NEMMosaic())
-    return m
+    transaction = NEMTransactionCommon(
+        network=network,
+        timestamp=timestamp,
+        fee=fee,
+        deadline=deadline,
+    )
+
+    transfer = NEMTransfer(
+        recipient=recipient,
+        amount=amount,
+        mosaics=[NEMMosaic(namespace="abc", quantity=5, mosaic="mosaic") for _ in range(mosaics)],
+    )
+
+    return NEMSignTx(
+        transaction=transaction,
+        transfer=transfer,
+    )
 
 
 if __name__ == '__main__':

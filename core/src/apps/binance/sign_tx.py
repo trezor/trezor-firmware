@@ -6,6 +6,7 @@ from trezor.messages import (
     BinanceCancelMsg,
     BinanceOrderMsg,
     BinanceSignedTx,
+    BinanceSignTx,
     BinanceTransferMsg,
     BinanceTxRequest,
 )
@@ -17,7 +18,9 @@ from . import helpers, layout
 
 
 @auto_keychain(__name__)
-async def sign_tx(ctx, envelope, keychain: Keychain):
+async def sign_tx(
+    ctx: wire.Context, envelope: BinanceSignTx, keychain: Keychain
+) -> BinanceSignedTx:
     # create transaction message -> sign it -> create signature/pubkey message -> serialize all
     if envelope.msg_count > 1:
         raise wire.DataError("Multiple messages not supported.")
@@ -34,8 +37,8 @@ async def sign_tx(ctx, envelope, keychain: Keychain):
         MessageType.BinanceTransferMsg,
     )
 
-    if envelope.source is None or envelope.source < 0:
-        raise wire.DataError("Source missing or invalid.")
+    if envelope.source < 0:
+        raise wire.DataError("Source is invalid.")
 
     msg_json = helpers.produce_json_for_signing(envelope, msg)
 
@@ -46,7 +49,7 @@ async def sign_tx(ctx, envelope, keychain: Keychain):
     elif BinanceCancelMsg.is_type_of(msg):
         await layout.require_confirm_cancel(ctx, msg)
     else:
-        raise ValueError("input message unrecognized, is of type " + type(msg).__name__)
+        raise wire.ProcessError("input message unrecognized")
 
     signature_bytes = generate_content_signature(msg_json.encode(), node.private_key())
 

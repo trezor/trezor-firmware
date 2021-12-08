@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import wire
 
 from apps.common import paths
@@ -5,7 +7,7 @@ from apps.common.keychain import get_keychain
 
 from . import CURVE, networks
 
-if False:
+if TYPE_CHECKING:
     from typing import Callable, Iterable, TypeVar, Union
 
     from trezor.messages import (

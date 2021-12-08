@@ -12,6 +12,7 @@ from trezorutils import (  # noqa: F401
     halt,
     memcpy,
 )
+from typing import TYPE_CHECKING
 
 DISABLE_ANIMATION = 0
 
@@ -24,7 +25,7 @@ if __debug__:
     else:
         LOG_MEMORY = 0
 
-if False:
+if TYPE_CHECKING:
     from typing import (
         Any,
         Iterator,
@@ -124,7 +125,7 @@ def ensure(cond: bool, msg: str | None = None) -> None:
             raise AssertionError(msg)
 
 
-if False:
+if TYPE_CHECKING:
     Chunkable = TypeVar("Chunkable", str, Sequence[Any])
 
 
@@ -133,9 +134,7 @@ def chunks(items: Chunkable, size: int) -> Iterator[Chunkable]:
         yield items[i : i + size]
 
 
-def chunks_intersperse(
-    items: Chunkable, size: int, sep: str = "\n"
-) -> Iterator[Chunkable]:
+def chunks_intersperse(items: str, size: int, sep: str = "\n") -> Iterator[str]:
     first = True
     for i in range(0, len(items), size):
         if not first:
@@ -145,25 +144,25 @@ def chunks_intersperse(
         yield items[i : i + size]
 
 
-if False:
+if TYPE_CHECKING:
 
     class HashContext(Protocol):
         def __init__(  # pylint: disable=super-init-not-called
-            self, data: bytes = None
+            self, __data: bytes = None
         ) -> None:
             ...
 
-        def update(self, buf: bytes) -> None:
+        def update(self, __buf: bytes) -> None:
             ...
 
         def digest(self) -> bytes:
             ...
 
     class Writer(Protocol):
-        def append(self, b: int) -> None:
+        def append(self, __b: int) -> None:
             ...
 
-        def extend(self, buf: bytes) -> None:
+        def extend(self, __buf: bytes) -> None:
             ...
 
 
@@ -186,7 +185,7 @@ class HashWriter:
         return self.ctx.digest()
 
 
-if False:
+if TYPE_CHECKING:
     BufferType = Union[bytearray, memoryview]
 
 

@@ -8,9 +8,21 @@
 # the actual data follow. This currently only supports the Payment
 # transaction type and the fields that are required for it.
 
+from typing import TYPE_CHECKING
+
 from trezor.messages import RippleSignTx
 
 from . import helpers
+
+if TYPE_CHECKING:
+    from trezor.utils import Writer
+
+
+class RippleField:
+    def __init__(self, type: int, key: int) -> None:
+        self.type: int = type
+        self.key: int = key
+
 
 FIELD_TYPE_INT16 = 1
 FIELD_TYPE_INT32 = 2
@@ -18,24 +30,29 @@ FIELD_TYPE_AMOUNT = 6
 FIELD_TYPE_VL = 7
 FIELD_TYPE_ACCOUNT = 8
 
-FIELDS_MAP = {
-    "account": {"type": FIELD_TYPE_ACCOUNT, "key": 1},
-    "amount": {"type": FIELD_TYPE_AMOUNT, "key": 1},
-    "destination": {"type": FIELD_TYPE_ACCOUNT, "key": 3},
-    "fee": {"type": FIELD_TYPE_AMOUNT, "key": 8},
-    "sequence": {"type": FIELD_TYPE_INT32, "key": 4},
-    "type": {"type": FIELD_TYPE_INT16, "key": 2},
-    "signingPubKey": {"type": FIELD_TYPE_VL, "key": 3},
-    "flags": {"type": FIELD_TYPE_INT32, "key": 2},
-    "txnSignature": {"type": FIELD_TYPE_VL, "key": 4},
-    "lastLedgerSequence": {"type": FIELD_TYPE_INT32, "key": 27},
-    "destinationTag": {"type": FIELD_TYPE_INT32, "key": 14},
+FIELDS_MAP: dict[str, RippleField] = {
+    "account": RippleField(type=FIELD_TYPE_ACCOUNT, key=1),
+    "amount": RippleField(type=FIELD_TYPE_AMOUNT, key=1),
+    "destination": RippleField(type=FIELD_TYPE_ACCOUNT, key=3),
+    "fee": RippleField(type=FIELD_TYPE_AMOUNT, key=8),
+    "sequence": RippleField(type=FIELD_TYPE_INT32, key=4),
+    "type": RippleField(type=FIELD_TYPE_INT16, key=2),
+    "signingPubKey": RippleField(type=FIELD_TYPE_VL, key=3),
+    "flags": RippleField(type=FIELD_TYPE_INT32, key=2),
+    "txnSignature": RippleField(type=FIELD_TYPE_VL, key=4),
+    "lastLedgerSequence": RippleField(type=FIELD_TYPE_INT32, key=27),
+    "destinationTag": RippleField(type=FIELD_TYPE_INT32, key=14),
 }
 
 TRANSACTION_TYPES = {"Payment": 0}
 
 
-def serialize(msg: RippleSignTx, source_address: str, pubkey=None, signature=None):
+def serialize(
+    msg: RippleSignTx,
+    source_address: str,
+    pubkey: bytes,
+    signature: bytes | None = None,
+) -> bytearray:
     w = bytearray()
     # must be sorted numerically first by type and then by name
     write(w, FIELDS_MAP["type"], TRANSACTION_TYPES["Payment"])
@@ -52,31 +69,36 @@ def serialize(msg: RippleSignTx, source_address: str, pubkey=None, signature=Non
     return w
 
 
-def write(w: bytearray, field: dict, value):
+def write(w: Writer, field: RippleField, value: int | bytes | str | None) -> None:
     if value is None:
         return
     write_type(w, field)
-    if field["type"] == FIELD_TYPE_INT16:
+    if field.type == FIELD_TYPE_INT16:
+        assert isinstance(value, int)
         w.extend(value.to_bytes(2, "big"))
-    elif field["type"] == FIELD_TYPE_INT32:
+    elif field.type == FIELD_TYPE_INT32:
+        assert isinstance(value, int)
         w.extend(value.to_bytes(4, "big"))
-    elif field["type"] == FIELD_TYPE_AMOUNT:
+    elif field.type == FIELD_TYPE_AMOUNT:
+        assert isinstance(value, int)
         w.extend(serialize_amount(value))
-    elif field["type"] == FIELD_TYPE_ACCOUNT:
+    elif field.type == FIELD_TYPE_ACCOUNT:
+        assert isinstance(value, str)
         write_bytes_varint(w, helpers.decode_address(value))
-    elif field["type"] == FIELD_TYPE_VL:
+    elif field.type == FIELD_TYPE_VL:
+        assert isinstance(value, (bytes, bytearray))
         write_bytes_varint(w, value)
     else:
         raise ValueError("Unknown field type")
 
 
-def write_type(w: bytearray, field: dict):
-    if field["key"] <= 0xF:
-        w.append((field["type"] << 4) | field["key"])
+def write_type(w: Writer, field: RippleField) -> None:
+    if field.key <= 0xF:
+        w.append((field.type << 4) | field.key)
     else:
         # this concerns two-bytes fields such as lastLedgerSequence
-        w.append(field["type"] << 4)
-        w.append(field["key"])
+        w.append(field.type << 4)
+        w.append(field.key)
 
 
 def serialize_amount(value: int) -> bytearray:
@@ -91,13 +113,13 @@ def serialize_amount(value: int) -> bytearray:
     return b
 
 
-def write_bytes_varint(w: bytearray, value: bytes):
+def write_bytes_varint(w: Writer, value: bytes) -> None:
     """Serialize a variable length bytes."""
     write_varint(w, len(value))
     w.extend(value)
 
 
-def write_varint(w: bytearray, val: int):
+def write_varint(w: Writer, val: int) -> None:
     """
     Implements variable-length int encoding from Ripple.
     See: https://ripple.com/wiki/Binary_Format#Variable_Length_Data_Encoding
@@ -119,7 +141,7 @@ def write_varint(w: bytearray, val: int):
         raise ValueError("Value is too large")
 
 
-def rshift(val, n):
+def rshift(val: int, n: int) -> int:
     """
     Implements signed right-shift.
     See: http://stackoverflow.com/a/5833119/15677

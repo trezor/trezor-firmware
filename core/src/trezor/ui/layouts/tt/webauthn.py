@@ -8,14 +8,11 @@ from ...components.tt.text import Text
 from ...components.tt.webauthn import ConfirmContent
 from ..common import interact
 
-if False:
-    from typing import Optional
-
 
 async def confirm_webauthn(
-    ctx: Optional[wire.GenericContext],
+    ctx: wire.GenericContext | None,
     info: ConfirmInfo,
-    pageable: Optional[Pageable] = None,
+    pageable: Pageable | None = None,
 ) -> bool:
     if pageable is not None:
         confirm: ui.Layout = ConfirmPageable(pageable, ConfirmContent(info))

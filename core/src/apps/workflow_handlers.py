@@ -1,15 +1,17 @@
+from typing import TYPE_CHECKING
+
 from trezor import utils
 from trezor.enums import MessageType
 
-if False:
-    from trezor.wire import Handler
+if TYPE_CHECKING:
+    from trezor.wire import Handler, Msg
     from trezorio import WireInterface
 
 
 workflow_handlers: dict[int, Handler] = {}
 
 
-def register(wire_type: int, handler: Handler) -> None:
+def register(wire_type: int, handler: Handler[Msg]) -> None:
     """Register `handler` to get scheduled after `wire_type` message is received."""
     workflow_handlers[wire_type] = handler
 
@@ -24,159 +26,153 @@ def find_message_handler_module(msg_type: int) -> str:
     - collecting everything as strings instead of importing directly means that we don't
       need to load any of the modules into memory until we actually need them
     """
-    if False:
-        raise RuntimeError
-
     # debug
-    elif __debug__ and msg_type == MessageType.LoadDevice:
+    if __debug__ and msg_type == MessageType.LoadDevice:
         return "apps.debug.load_device"
 
     # management
-    elif msg_type == MessageType.ResetDevice:
+    if msg_type == MessageType.ResetDevice:
         return "apps.management.reset_device"
-    elif msg_type == MessageType.BackupDevice:
+    if msg_type == MessageType.BackupDevice:
         return "apps.management.backup_device"
-    elif msg_type == MessageType.WipeDevice:
+    if msg_type == MessageType.WipeDevice:
         return "apps.management.wipe_device"
-    elif msg_type == MessageType.RecoveryDevice:
+    if msg_type == MessageType.RecoveryDevice:
         return "apps.management.recovery_device"
-    elif msg_type == MessageType.ApplySettings:
+    if msg_type == MessageType.ApplySettings:
         return "apps.management.apply_settings"
-    elif msg_type == MessageType.ApplyFlags:
+    if msg_type == MessageType.ApplyFlags:
         return "apps.management.apply_flags"
-    elif msg_type == MessageType.ChangePin:
+    if msg_type == MessageType.ChangePin:
         return "apps.management.change_pin"
-    elif msg_type == MessageType.ChangeWipeCode:
+    if msg_type == MessageType.ChangeWipeCode:
         return "apps.management.change_wipe_code"
 
-    elif utils.MODEL == "T" and msg_type == MessageType.SdProtect:
+    if utils.MODEL == "T" and msg_type == MessageType.SdProtect:
         return "apps.management.sd_protect"
 
     # bitcoin
-    elif msg_type == MessageType.AuthorizeCoinJoin:
+    if msg_type == MessageType.AuthorizeCoinJoin:
         return "apps.bitcoin.authorize_coinjoin"
-    elif msg_type == MessageType.GetPublicKey:
+    if msg_type == MessageType.GetPublicKey:
         return "apps.bitcoin.get_public_key"
-    elif msg_type == MessageType.GetAddress:
+    if msg_type == MessageType.GetAddress:
         return "apps.bitcoin.get_address"
-    elif msg_type == MessageType.GetOwnershipId:
+    if msg_type == MessageType.GetOwnershipId:
         return "apps.bitcoin.get_ownership_id"
-    elif msg_type == MessageType.GetOwnershipProof:
+    if msg_type == MessageType.GetOwnershipProof:
         return "apps.bitcoin.get_ownership_proof"
-    elif msg_type == MessageType.SignTx:
+    if msg_type == MessageType.SignTx:
         return "apps.bitcoin.sign_tx"
-    elif msg_type == MessageType.SignMessage:
+    if msg_type == MessageType.SignMessage:
         return "apps.bitcoin.sign_message"
-    elif msg_type == MessageType.VerifyMessage:
+    if msg_type == MessageType.VerifyMessage:
         return "apps.bitcoin.verify_message"
 
     # misc
-    elif msg_type == MessageType.GetEntropy:
+    if msg_type == MessageType.GetEntropy:
         return "apps.misc.get_entropy"
-    elif msg_type == MessageType.SignIdentity:
+    if msg_type == MessageType.SignIdentity:
         return "apps.misc.sign_identity"
-    elif msg_type == MessageType.GetECDHSessionKey:
+    if msg_type == MessageType.GetECDHSessionKey:
         return "apps.misc.get_ecdh_session_key"
-    elif msg_type == MessageType.CipherKeyValue:
+    if msg_type == MessageType.CipherKeyValue:
         return "apps.misc.cipher_key_value"
 
-    elif not utils.BITCOIN_ONLY:
-        if False:
-            raise RuntimeError
-
-        elif msg_type == MessageType.SetU2FCounter:
+    if not utils.BITCOIN_ONLY:
+        if msg_type == MessageType.SetU2FCounter:
             return "apps.management.set_u2f_counter"
-        elif msg_type == MessageType.GetNextU2FCounter:
+        if msg_type == MessageType.GetNextU2FCounter:
             return "apps.management.get_next_u2f_counter"
 
         # webauthn
-        elif msg_type == MessageType.WebAuthnListResidentCredentials:
+        if msg_type == MessageType.WebAuthnListResidentCredentials:
             return "apps.webauthn.list_resident_credentials"
-        elif msg_type == MessageType.WebAuthnAddResidentCredential:
+        if msg_type == MessageType.WebAuthnAddResidentCredential:
             return "apps.webauthn.add_resident_credential"
-        elif msg_type == MessageType.WebAuthnRemoveResidentCredential:
+        if msg_type == MessageType.WebAuthnRemoveResidentCredential:
             return "apps.webauthn.remove_resident_credential"
 
         # ethereum
-        elif msg_type == MessageType.EthereumGetAddress:
+        if msg_type == MessageType.EthereumGetAddress:
             return "apps.ethereum.get_address"
-        elif msg_type == MessageType.EthereumGetPublicKey:
+        if msg_type == MessageType.EthereumGetPublicKey:
             return "apps.ethereum.get_public_key"
-        elif msg_type == MessageType.EthereumSignTx:
+        if msg_type == MessageType.EthereumSignTx:
             return "apps.ethereum.sign_tx"
-        elif msg_type == MessageType.EthereumSignTxEIP1559:
+        if msg_type == MessageType.EthereumSignTxEIP1559:
             return "apps.ethereum.sign_tx_eip1559"
-        elif msg_type == MessageType.EthereumSignMessage:
+        if msg_type == MessageType.EthereumSignMessage:
             return "apps.ethereum.sign_message"
-        elif msg_type == MessageType.EthereumVerifyMessage:
+        if msg_type == MessageType.EthereumVerifyMessage:
             return "apps.ethereum.verify_message"
-        elif msg_type == MessageType.EthereumSignTypedData:
+        if msg_type == MessageType.EthereumSignTypedData:
             return "apps.ethereum.sign_typed_data"
 
         # monero
-        elif msg_type == MessageType.MoneroGetAddress:
+        if msg_type == MessageType.MoneroGetAddress:
             return "apps.monero.get_address"
-        elif msg_type == MessageType.MoneroGetWatchKey:
+        if msg_type == MessageType.MoneroGetWatchKey:
             return "apps.monero.get_watch_only"
-        elif msg_type == MessageType.MoneroTransactionInitRequest:
+        if msg_type == MessageType.MoneroTransactionInitRequest:
             return "apps.monero.sign_tx"
-        elif msg_type == MessageType.MoneroKeyImageExportInitRequest:
+        if msg_type == MessageType.MoneroKeyImageExportInitRequest:
             return "apps.monero.key_image_sync"
-        elif msg_type == MessageType.MoneroGetTxKeyRequest:
+        if msg_type == MessageType.MoneroGetTxKeyRequest:
             return "apps.monero.get_tx_keys"
-        elif msg_type == MessageType.MoneroLiveRefreshStartRequest:
+        if msg_type == MessageType.MoneroLiveRefreshStartRequest:
             return "apps.monero.live_refresh"
         if __debug__ and msg_type == MessageType.DebugMoneroDiagRequest:
             return "apps.monero.diag"
 
         # nem
-        elif msg_type == MessageType.NEMGetAddress:
+        if msg_type == MessageType.NEMGetAddress:
             return "apps.nem.get_address"
-        elif msg_type == MessageType.NEMSignTx:
+        if msg_type == MessageType.NEMSignTx:
             return "apps.nem.sign_tx"
 
         # stellar
-        elif msg_type == MessageType.StellarGetAddress:
+        if msg_type == MessageType.StellarGetAddress:
             return "apps.stellar.get_address"
-        elif msg_type == MessageType.StellarSignTx:
+        if msg_type == MessageType.StellarSignTx:
             return "apps.stellar.sign_tx"
 
         # ripple
-        elif msg_type == MessageType.RippleGetAddress:
+        if msg_type == MessageType.RippleGetAddress:
             return "apps.ripple.get_address"
-        elif msg_type == MessageType.RippleSignTx:
+        if msg_type == MessageType.RippleSignTx:
             return "apps.ripple.sign_tx"
 
         # cardano
-        elif msg_type == MessageType.CardanoGetAddress:
+        if msg_type == MessageType.CardanoGetAddress:
             return "apps.cardano.get_address"
-        elif msg_type == MessageType.CardanoGetPublicKey:
+        if msg_type == MessageType.CardanoGetPublicKey:
             return "apps.cardano.get_public_key"
-        elif msg_type == MessageType.CardanoSignTxInit:
+        if msg_type == MessageType.CardanoSignTxInit:
             return "apps.cardano.sign_tx"
-        elif msg_type == MessageType.CardanoGetNativeScriptHash:
+        if msg_type == MessageType.CardanoGetNativeScriptHash:
             return "apps.cardano.get_native_script_hash"
 
         # tezos
-        elif msg_type == MessageType.TezosGetAddress:
+        if msg_type == MessageType.TezosGetAddress:
             return "apps.tezos.get_address"
-        elif msg_type == MessageType.TezosSignTx:
+        if msg_type == MessageType.TezosSignTx:
             return "apps.tezos.sign_tx"
-        elif msg_type == MessageType.TezosGetPublicKey:
+        if msg_type == MessageType.TezosGetPublicKey:
             return "apps.tezos.get_public_key"
 
         # eos
-        elif msg_type == MessageType.EosGetPublicKey:
+        if msg_type == MessageType.EosGetPublicKey:
             return "apps.eos.get_public_key"
-        elif msg_type == MessageType.EosSignTx:
+        if msg_type == MessageType.EosSignTx:
             return "apps.eos.sign_tx"
 
         # binance
-        elif msg_type == MessageType.BinanceGetAddress:
+        if msg_type == MessageType.BinanceGetAddress:
             return "apps.binance.get_address"
-        elif msg_type == MessageType.BinanceGetPublicKey:
+        if msg_type == MessageType.BinanceGetPublicKey:
             return "apps.binance.get_public_key"
-        elif msg_type == MessageType.BinanceSignTx:
+        if msg_type == MessageType.BinanceSignTx:
             return "apps.binance.sign_tx"
 
     raise ValueError

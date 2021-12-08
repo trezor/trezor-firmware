@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import ui
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount
@@ -11,8 +13,11 @@ from trezor.ui.layouts import (
 
 from .helpers import TEZOS_AMOUNT_DECIMALS
 
+if TYPE_CHECKING:
+    from trezor.wire import Context
 
-async def require_confirm_tx(ctx, to, value):
+
+async def require_confirm_tx(ctx: Context, to: str, value: int) -> None:
     await confirm_output(
         ctx,
         to,
@@ -24,7 +29,7 @@ async def require_confirm_tx(ctx, to, value):
     )
 
 
-async def require_confirm_fee(ctx, value, fee):
+async def require_confirm_fee(ctx: Context, value: int, fee: int) -> None:
     await confirm_total(
         ctx,
         total_amount=format_tezos_amount(value),
@@ -34,7 +39,7 @@ async def require_confirm_fee(ctx, value, fee):
     )
 
 
-async def require_confirm_origination(ctx, address):
+async def require_confirm_origination(ctx: Context, address: str) -> None:
     await confirm_address(
         ctx,
         title="Confirm origination",
@@ -46,7 +51,7 @@ async def require_confirm_origination(ctx, address):
     )
 
 
-async def require_confirm_origination_fee(ctx, balance, fee):
+async def require_confirm_origination_fee(ctx: Context, balance: int, fee: int) -> None:
     await confirm_properties(
         ctx,
         title="Confirm origination",
@@ -60,7 +65,7 @@ async def require_confirm_origination_fee(ctx, balance, fee):
     )
 
 
-async def require_confirm_delegation_baker(ctx, baker):
+async def require_confirm_delegation_baker(ctx: Context, baker: str) -> None:
     await confirm_address(
         ctx,
         title="Confirm delegation",
@@ -72,7 +77,7 @@ async def require_confirm_delegation_baker(ctx, baker):
     )
 
 
-async def require_confirm_set_delegate(ctx, fee):
+async def require_confirm_set_delegate(ctx: Context, fee: int) -> None:
     await confirm_metadata(
         ctx,
         "confirm_delegation_final",
@@ -86,7 +91,9 @@ async def require_confirm_set_delegate(ctx, fee):
     )
 
 
-async def require_confirm_register_delegate(ctx, address, fee):
+async def require_confirm_register_delegate(
+    ctx: Context, address: str, fee: int
+) -> None:
     await confirm_properties(
         ctx,
         "confirm_register_delegate",
@@ -100,12 +107,12 @@ async def require_confirm_register_delegate(ctx, address, fee):
     )
 
 
-def format_tezos_amount(value):
+def format_tezos_amount(value: int) -> str:
     formatted_value = format_amount(value, TEZOS_AMOUNT_DECIMALS)
     return formatted_value + " XTZ"
 
 
-async def require_confirm_ballot(ctx, proposal, ballot):
+async def require_confirm_ballot(ctx: Context, proposal: str, ballot: str) -> None:
     await confirm_properties(
         ctx,
         "confirm_ballot",
@@ -119,7 +126,7 @@ async def require_confirm_ballot(ctx, proposal, ballot):
     )
 
 
-async def require_confirm_proposals(ctx, proposals):
+async def require_confirm_proposals(ctx: Context, proposals: list[str]) -> None:
     if len(proposals) > 1:
         title = "Submit proposals"
     else:
@@ -137,7 +144,9 @@ async def require_confirm_proposals(ctx, proposals):
     )
 
 
-async def require_confirm_delegation_manager_withdraw(ctx, address):
+async def require_confirm_delegation_manager_withdraw(
+    ctx: Context, address: str
+) -> None:
     await confirm_address(
         ctx,
         title="Remove delegation",
@@ -150,7 +159,7 @@ async def require_confirm_delegation_manager_withdraw(ctx, address):
     )
 
 
-async def require_confirm_manager_remove_delegate(ctx, fee):
+async def require_confirm_manager_remove_delegate(ctx: Context, fee: int) -> None:
     await confirm_metadata(
         ctx,
         "confirm_undelegation_final",

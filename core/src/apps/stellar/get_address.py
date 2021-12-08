@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor.messages import StellarAddress, StellarGetAddress
 from trezor.ui.layouts import show_address
 
@@ -6,7 +8,7 @@ from apps.common.keychain import auto_keychain
 
 from . import helpers
 
-if False:
+if TYPE_CHECKING:
     from trezor.wire import Context
     from apps.common.keychain import Keychain
 

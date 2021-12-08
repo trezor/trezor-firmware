@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import wire
 from trezor.crypto.curve import secp256k1
 from trezor.crypto.hashlib import sha3_256
@@ -9,7 +11,7 @@ from apps.common.signverify import decode_message
 from .helpers import address_from_bytes, bytes_from_address
 from .sign_message import message_digest
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import EthereumVerifyMessage
     from trezor.wire import Context
 

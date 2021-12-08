@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import ui
 from trezor.enums import ButtonRequestType, NEMImportanceTransferMode, NEMMosaicLevy
 from trezor.messages import (
@@ -22,15 +24,18 @@ from ..helpers import (
 from ..layout import require_confirm_final, require_confirm_text
 from ..mosaic.helpers import get_mosaic_definition, is_nem_xem_mosaic
 
+if TYPE_CHECKING:
+    from trezor.wire import Context
+    from ..mosaic.nem_mosaics import MosaicLevy
+
 
 async def ask_transfer(
-    ctx,
+    ctx: Context,
     common: NEMTransactionCommon,
     transfer: NEMTransfer,
-    payload: bytes,
     encrypted: bool,
-):
-    if payload:
+) -> None:
+    if transfer.payload:
         await _require_confirm_payload(ctx, transfer.payload, encrypted)
     for mosaic in transfer.mosaics:
         await ask_transfer_mosaic(ctx, common, transfer, mosaic)
@@ -39,9 +44,9 @@ async def ask_transfer(
 
 
 async def ask_transfer_mosaic(
-    ctx, common: NEMTransactionCommon, transfer: NEMTransfer, mosaic: NEMMosaic
-):
-    if is_nem_xem_mosaic(mosaic.namespace, mosaic.mosaic):
+    ctx: Context, common: NEMTransactionCommon, transfer: NEMTransfer, mosaic: NEMMosaic
+) -> None:
+    if is_nem_xem_mosaic(mosaic):
         return
 
     definition = get_mosaic_definition(mosaic.namespace, mosaic.mosaic, common.network)
@@ -55,15 +60,19 @@ async def ask_transfer_mosaic(
             props=[
                 (
                     "Confirm transfer of",
-                    format_amount(mosaic_quantity, definition["divisibility"])
-                    + definition["ticker"],
+                    format_amount(mosaic_quantity, definition.divisibility)
+                    + definition.ticker,
                 ),
-                ("of", definition["name"]),
+                ("of", definition.name),
             ],
         )
 
-        if "levy" in definition and "fee" in definition:
-            levy_msg = _get_levy_msg(definition, mosaic_quantity, common.network)
+        if definition.levy is not None:
+            levy_fee = _get_levy_fee(definition.levy, mosaic_quantity)
+            levy_msg = (
+                format_amount(levy_fee, definition.divisibility) + definition.ticker
+            )
+
             await confirm_properties(
                 ctx,
                 "confirm_mosaic_levy",
@@ -96,37 +105,28 @@ async def ask_transfer_mosaic(
         )
 
 
-def _get_xem_amount(transfer: NEMTransfer):
+def _get_xem_amount(transfer: NEMTransfer) -> int:
     # if mosaics are empty the transfer.amount denotes the xem amount
     if not transfer.mosaics:
         return transfer.amount
     # otherwise xem amount is taken from the nem xem mosaic if present
     for mosaic in transfer.mosaics:
-        if is_nem_xem_mosaic(mosaic.namespace, mosaic.mosaic):
+        if is_nem_xem_mosaic(mosaic):
             return mosaic.quantity * transfer.amount // NEM_MOSAIC_AMOUNT_DIVISOR
     # if there are mosaics but do not include xem, 0 xem is sent
     return 0
 
 
-def _get_levy_msg(mosaic_definition, quantity: int, network: int) -> str:
-    levy_definition = get_mosaic_definition(
-        mosaic_definition["levy_namespace"], mosaic_definition["levy_mosaic"], network
-    )
-    if mosaic_definition["levy"] == NEMMosaicLevy.MosaicLevy_Absolute:
-        levy_fee = mosaic_definition["fee"]
+def _get_levy_fee(levy: MosaicLevy, quantity: int) -> int:
+    if levy.type == NEMMosaicLevy.MosaicLevy_Absolute:
+        return levy.fee
     else:
-        levy_fee = (
-            quantity * mosaic_definition["fee"] // NEM_LEVY_PERCENTILE_DIVISOR_ABSOLUTE
-        )
-    return (
-        format_amount(levy_fee, levy_definition["divisibility"])
-        + levy_definition["ticker"]
-    )
+        return quantity * levy.fee // NEM_LEVY_PERCENTILE_DIVISOR_ABSOLUTE
 
 
 async def ask_importance_transfer(
-    ctx, common: NEMTransactionCommon, imp: NEMImportanceTransfer
-):
+    ctx: Context, common: NEMTransactionCommon, imp: NEMImportanceTransfer
+) -> None:
     if imp.mode == NEMImportanceTransferMode.ImportanceTransfer_Activate:
         m = "Activate"
     else:
@@ -135,7 +135,7 @@ async def ask_importance_transfer(
     await require_confirm_final(ctx, common.fee)
 
 
-async def _require_confirm_transfer(ctx, recipient, value):
+async def _require_confirm_transfer(ctx: Context, recipient: str, value: int) -> None:
     await confirm_output(
         ctx,
         recipient,
@@ -146,16 +146,15 @@ async def _require_confirm_transfer(ctx, recipient, value):
     )
 
 
-async def _require_confirm_payload(ctx, payload: bytearray, encrypt=False):
-    payload = bytes(payload).decode()
-    subtitle = "Encrypted:" if encrypt else "Unencrypted:"
-
+async def _require_confirm_payload(
+    ctx: Context, payload: bytes, encrypted: bool = False
+) -> None:
     await confirm_text(
         ctx,
         "confirm_payload",
         title="Confirm payload",
-        description=subtitle,
-        data=payload,
-        icon_color=ui.GREEN if encrypt else ui.RED,
+        description="Encrypted:" if encrypted else "Unencrypted:",
+        data=bytes(payload).decode(),
+        icon_color=ui.GREEN if encrypted else ui.RED,
         br_code=ButtonRequestType.ConfirmOutput,
     )

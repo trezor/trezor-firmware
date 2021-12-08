@@ -38,6 +38,8 @@ main
 import main
 session
 import session
+typing
+import typing
 usb
 import usb
 storage

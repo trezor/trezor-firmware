@@ -1,11 +1,12 @@
-from trezor import ui
+from typing import TYPE_CHECKING
+
+from trezor import ui, wire
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import confirm_properties
 
 from .. import helpers
 
-if False:
-    from trezor import wire
+if TYPE_CHECKING:
     from trezor.messages import (
         EosActionBuyRam,
         EosActionBuyRamBytes,
@@ -23,6 +24,7 @@ if False:
         EosActionVoteProducer,
         EosAuthorization,
     )
+    from trezor.ui.layouts import PropertyType
 
 
 async def confirm_action_buyram(ctx: wire.Context, msg: EosActionBuyRam) -> None:
@@ -194,7 +196,7 @@ async def confirm_action_transfer(
 async def confirm_action_updateauth(
     ctx: wire.Context, msg: EosActionUpdateAuth
 ) -> None:
-    props = [
+    props: list[PropertyType] = [
         ("Account:", helpers.eos_name_to_string(msg.account)),
         ("Permission:", helpers.eos_name_to_string(msg.permission)),
         ("Parent:", helpers.eos_name_to_string(msg.parent)),
@@ -262,7 +264,7 @@ async def confirm_action_unlinkauth(
 async def confirm_action_newaccount(
     ctx: wire.Context, msg: EosActionNewAccount
 ) -> None:
-    props = [
+    props: list[PropertyType] = [
         ("Creator:", helpers.eos_name_to_string(msg.creator)),
         ("Name:", helpers.eos_name_to_string(msg.name)),
     ]
@@ -296,11 +298,14 @@ async def confirm_action_unknown(
     )
 
 
-def authorization_fields(auth: EosAuthorization) -> list[tuple[str, str | None]]:
-    fields = []
+def authorization_fields(auth: EosAuthorization) -> list[PropertyType]:
+    fields: list[PropertyType] = []
     fields.append(("Threshold:", str(auth.threshold)))
 
     for i, key in enumerate(auth.keys, 1):
+        if key.key is None:
+            raise wire.DataError("Key must be provided explicitly.")
+
         _key = helpers.public_key_to_wif(bytes(key.key))
         _weight = str(key.weight)
 

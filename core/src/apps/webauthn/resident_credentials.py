@@ -1,13 +1,10 @@
 from micropython import const
+from typing import Iterator
 
 import storage.resident_credentials
 from storage.resident_credentials import MAX_RESIDENT_CREDENTIALS
 
 from .credential import Fido2Credential
-
-if False:
-    from typing import Iterator
-
 
 RP_ID_HASH_LENGTH = const(32)
 

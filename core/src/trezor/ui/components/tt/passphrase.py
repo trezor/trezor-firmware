@@ -1,4 +1,5 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
 from trezor import io, loop, res, ui, workflow
 from trezor.ui import display
@@ -6,7 +7,7 @@ from trezor.ui import display
 from .button import Button, ButtonClear, ButtonConfirm
 from .swipe import SWIPE_HORIZONTAL, SWIPE_LEFT, Swipe
 
-if False:
+if TYPE_CHECKING:
     from typing import Iterable
     from .button import ButtonContent, ButtonStyleStateType
 
@@ -246,7 +247,7 @@ class PassphraseKeyboard(ui.Layout):
     def on_confirm(self) -> None:
         raise ui.Result(self.input.text)
 
-    def create_tasks(self) -> tuple[loop.Task, ...]:
+    def create_tasks(self) -> tuple[loop.AwaitableTask, ...]:
         tasks: tuple[loop.Task, ...] = (
             self.handle_input(),
             self.handle_rendering(),

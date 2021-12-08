@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor.crypto.hashlib import sha256
 from trezor.messages import PrevTx, SignTx, TxInput, TxOutput
 from trezor.utils import HashWriter
@@ -7,7 +9,7 @@ from apps.common import coininfo
 from .. import scripts, writers
 from ..common import tagged_hashwriter
 
-if False:
+if TYPE_CHECKING:
     from typing import Protocol, Sequence
     from ..common import SigHashType
 

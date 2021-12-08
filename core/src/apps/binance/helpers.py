@@ -1,5 +1,7 @@
 from micropython import const
+from typing import TYPE_CHECKING
 
+from trezor import wire
 from trezor.crypto import bech32
 from trezor.crypto.scripts import sha256_ripemd160
 from trezor.messages import (
@@ -9,6 +11,9 @@ from trezor.messages import (
     BinanceSignTx,
     BinanceTransferMsg,
 )
+
+if TYPE_CHECKING:
+    from trezor.protobuf import MessageType
 
 ENVELOPE_BLUEPRINT = '{{"account_number":"{account_number}","chain_id":"{chain_id}","data":null,"memo":"{memo}","msgs":[{msgs}],"sequence":"{sequence}","source":"{source}"}}'
 MSG_TRANSFER_BLUEPRINT = '{{"inputs":[{inputs}],"outputs":[{outputs}]}}'
@@ -21,7 +26,7 @@ COIN_BLUEPRINT = '{{"amount":{amount},"denom":"{denom}"}}'
 DECIMALS = const(8)
 
 
-def produce_json_for_signing(envelope: BinanceSignTx, msg) -> str:
+def produce_json_for_signing(envelope: BinanceSignTx, msg: MessageType) -> str:
     if BinanceTransferMsg.is_type_of(msg):
         json_msg = produce_transfer_json(msg)
     elif BinanceOrderMsg.is_type_of(msg):
@@ -29,12 +34,10 @@ def produce_json_for_signing(envelope: BinanceSignTx, msg) -> str:
     elif BinanceCancelMsg.is_type_of(msg):
         json_msg = produce_cancel_json(msg)
     else:
-        raise ValueError("input message unrecognized, is of type " + type(msg).__name__)
+        raise wire.ProcessError("input message unrecognized")
 
-    if envelope.source is None or envelope.source < 0:
-        raise ValueError("source missing or invalid")
-
-    source = envelope.source
+    if envelope.source < 0:
+        raise wire.DataError("Source is invalid")
 
     return ENVELOPE_BLUEPRINT.format(
         account_number=envelope.account_number,
@@ -42,12 +45,12 @@ def produce_json_for_signing(envelope: BinanceSignTx, msg) -> str:
         memo=envelope.memo,
         msgs=json_msg,
         sequence=envelope.sequence,
-        source=source,
+        source=envelope.source,
     )
 
 
 def produce_transfer_json(msg: BinanceTransferMsg) -> str:
-    def make_input_output(input_output: BinanceInputOutput):
+    def make_input_output(input_output: BinanceInputOutput) -> str:
         coins = ",".join(
             COIN_BLUEPRINT.format(amount=c.amount, denom=c.denom)
             for c in input_output.coins
@@ -89,5 +92,6 @@ def address_from_public_key(pubkey: bytes, hrp: str) -> str:
     h = sha256_ripemd160(pubkey).digest()
 
     convertedbits = bech32.convertbits(h, 8, 5, False)
+    assert convertedbits is not None
 
     return bech32.bech32_encode(hrp, convertedbits, bech32.Encoding.BECH32)

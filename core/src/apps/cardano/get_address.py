@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from trezor import log, wire
 from trezor.messages import CardanoAddress
 
@@ -7,7 +9,7 @@ from .helpers.credential import Credential, should_show_address_credentials
 from .layout import show_cardano_address, show_credentials
 from .sign_tx import validate_network_info
 
-if False:
+if TYPE_CHECKING:
     from trezor.messages import (
         CardanoAddressParametersType,
         CardanoGetAddress,
