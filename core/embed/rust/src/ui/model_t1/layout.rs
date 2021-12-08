@@ -4,7 +4,7 @@ use crate::{
     error::Error,
     micropython::{buffer::Buffer, map::Map, obj::Obj, qstr::Qstr},
     ui::{
-        component::{Child, FormattedText},
+        component::{Child, FormattedText, Paginated, PaginatedMsg},
         display,
         layout::obj::LayoutObj,
     },
@@ -12,22 +12,17 @@ use crate::{
 };
 
 use super::{
-    component::{Button, Dialog, DialogMsg, Title},
+    component::{Button, ButtonPage, Title},
     theme,
 };
 
-impl<T> TryFrom<DialogMsg<T>> for Obj
-where
-    Obj: TryFrom<T>,
-    Error: From<<T as TryInto<Obj>>::Error>,
-{
+impl<T> TryFrom<PaginatedMsg<T, bool>> for Obj {
     type Error = Error;
 
-    fn try_from(val: DialogMsg<T>) -> Result<Self, Self::Error> {
+    fn try_from(val: PaginatedMsg<T, bool>) -> Result<Self, Self::Error> {
         match val {
-            DialogMsg::Content(c) => Ok(c.try_into()?),
-            DialogMsg::LeftClicked => 1.try_into(),
-            DialogMsg::RightClicked => 2.try_into(),
+            PaginatedMsg::Content(_) => 2.try_into(),
+            PaginatedMsg::Controls(c) => Ok(c.into()),
         }
     }
 }
@@ -61,18 +56,17 @@ extern "C" fn ui_layout_new_confirm_action(
         let right = verb
             .map(|label| |area, pos| Button::with_text(area, pos, label, theme::button_default()));
 
-        let obj = LayoutObj::new(Child::new(Dialog::new(
-            display::screen(),
-            |area| {
-                Title::new(area, title, |area| {
+        let obj = LayoutObj::new(Child::new(Title::new(display::screen(), title, |area| {
+            Paginated::<ButtonPage<_>>::new(
+                area,
+                |area| {
                     FormattedText::new::<theme::T1DefaultText>(area, format)
                         .with(b"action", action.unwrap_or("".into()))
                         .with(b"description", description.unwrap_or("".into()))
-                })
-            },
-            left,
-            right,
-        )))?;
+                },
+                theme::BG,
+            )
+        })))?;
         Ok(obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -80,7 +74,10 @@ extern "C" fn ui_layout_new_confirm_action(
 
 #[cfg(test)]
 mod tests {
-    use crate::trace::{Trace, Tracer};
+    use crate::{
+        trace::{Trace, Tracer},
+        ui::model_t1::component::{Dialog, DialogMsg},
+    };
 
     use super::*;
 
@@ -123,6 +120,22 @@ mod tests {
         let mut t = Vec::new();
         val.trace(&mut t);
         String::from_utf8(t).unwrap()
+    }
+
+    impl<T> TryFrom<DialogMsg<T>> for Obj
+    where
+        Obj: TryFrom<T>,
+        Error: From<<T as TryInto<Obj>>::Error>,
+    {
+        type Error = Error;
+
+        fn try_from(val: DialogMsg<T>) -> Result<Self, Self::Error> {
+            match val {
+                DialogMsg::Content(c) => Ok(c.try_into()?),
+                DialogMsg::LeftClicked => 1.try_into(),
+                DialogMsg::RightClicked => 2.try_into(),
+            }
+        }
     }
 
     #[test]
