@@ -46,7 +46,7 @@ The build process is configured via environment variables:
 
 * `EMULATOR=1` specifies that an emulator should be built, instead of the device firmware.
 * `DEBUG_LINK=1` specifies that DebugLink should be available in the built image.
-* `MEMORY_PROTECT=0` disables memory protection. This is necessary for installing unofficial firmware.
+* `PRODUCTION=0` disables memory protection. This is necessary for installing unofficial firmware.
 * `DEBUG_LOG=1` enables debug messages to be printed on device screen.
 * `BITCOIN_ONLY=1` specifies Bitcoin-only version of the firmware.
 
@@ -99,21 +99,21 @@ Step 3 should produce the same fingerprint like your local build (for the same v
 
 **WARNING: This will erase the recovery seed stored on the device! You should never do this on Trezor that contains coins!**
 
-Build with `MEMORY_PROTECT=0` or you will get a hard fault on your device.
+Build with `PRODUCTION=0` or you will get a hard fault on your device.
 
 Switch your device to bootloader mode, then execute:
 ```sh
 trezorctl firmware-update -f build/legacy/firmware/firmware.bin
 ```
 
-## Combining bootloader and firmware with various `MEMORY_PROTECT` settings, signed/unsigned
+## Combining bootloader and firmware with various `PRODUCTION` settings, signed/unsigned
 
 Not all combinations of bootloader and firmware will work. This depends on
-3 variables: MEMORY_PROTECT of bootloader, MEMORY_PROTECT of firmware, whether firmware is signed
+3 variables: PRODUCTION of bootloader, PRODUCTION of firmware, whether firmware is signed
 
 This table shows the result for bootloader 1.8.0+ and 1.9.1+:
 
-| Bootloader MEMORY_PROTECT | Firmware MEMORY_PROTECT | Is firmware officially signed? | Result                                                                                     |
+| Bootloader PRODUCTION | Firmware PRODUCTION | Is firmware officially signed? | Result                                                                                     |
 | ------------------------- | ----------------------- | ------------------------------ | ------------------------------------------------------------------------------------------ |
 |  1                        |  1                      | yes                            | works, official configuration                                                              |
 |  1                        |  1                      | no                             | hardfault in header.S when setting VTOR and stack                                          |
@@ -121,5 +121,5 @@ This table shows the result for bootloader 1.8.0+ and 1.9.1+:
 |  0                        |  0                      | no                             | hard fault because header.S doesn't set VTOR and stack right                               |
 |  1                        |  0                      | no                             | works                                                                                      |
 
-The other three possibilities with signed firmware and `MEMORY_PROTECT!=0` for bootloader/firmware don't exist.
+The other three possibilities with signed firmware and `PRODUCTION!=0` for bootloader/firmware don't exist.
 

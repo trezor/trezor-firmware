@@ -20,7 +20,7 @@ memset_reg:
   .type reset_handler, STT_FUNC
 reset_handler:
 
-#if MEMORY_PROTECT
+#if PRODUCTION
 // we need to perform this in case an old bootloader (<1.8.0)
 // is starting the new firmware, these will be set incorrectly
   ldr r0, =0xE000ED08  // r0 = VTOR address
