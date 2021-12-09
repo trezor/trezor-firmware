@@ -16,7 +16,7 @@ Developers documentation on the XRP Ledger can be found at [xrpl.org](https://xr
 
 ## Transactions
 
-Trezor support all 18 XRP Ledger [transaction types](https://xrpl.org/transaction-types.html) and all [common fields](https://xrpl.org/transaction-common-fields.html). You can use your Trezor to store both XRP and assets issued on the XRP Ledger such as USD, SOLO and stocks. All supported transaction types:
+Trezor support all 18 XRP Ledger [transaction types](https://xrpl.org/transaction-types.html) and all [common fields](https://xrpl.org/transaction-common-fields.html). You can use your Trezor to manage both XRP and assets issued on the XRP Ledger such as BTC, ETH and USD. All supported transaction types:
 
 * **AccountSet**, set options on an account.
 * **AccountDelete**, delete an account.
