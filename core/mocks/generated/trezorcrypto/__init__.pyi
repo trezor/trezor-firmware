@@ -41,12 +41,12 @@ class blake256:
     block_size: int
     digest_size: int
 
-    def __init__(self, data: bytes | None = None) -> None:
+    def __init__(self, __data: AnyStr | None = None) -> None:
         """
         Creates a hash context object.
         """
 
-    def update(self, data: bytes) -> None:
+    def update(self, __data: AnyStr) -> None:
         """
         Update the hash context with hashed data.
         """
@@ -76,7 +76,7 @@ class blake2b:
         Creates a hash context object.
         """
 
-    def update(self, data: bytes) -> None:
+    def update(self, __data: AnyStr) -> None:
         """
         Update the hash context with hashed data.
         """
@@ -106,7 +106,7 @@ class blake2s:
         Creates a hash context object.
         """
 
-    def update(self, data: bytes) -> None:
+    def update(self, __data: AnyStr) -> None:
         """
         Update the hash context with hashed data.
         """
@@ -162,12 +162,12 @@ class groestl512:
     block_size: int
     digest_size: int
 
-    def __init__(self, data: bytes | None = None) -> None:
+    def __init__(self, __data: AnyStr | None = None) -> None:
         """
         Creates a hash context object.
         """
 
-    def update(self, data: bytes) -> None:
+    def update(self, __data: AnyStr) -> None:
         """
         Update the hash context with hashed data.
         """
@@ -246,12 +246,12 @@ class ripemd160:
     block_size: int
     digest_size: int
 
-    def __init__(self, data: bytes | None = None) -> None:
+    def __init__(self, __data: AnyStr | None = None) -> None:
         """
         Creates a hash context object.
         """
 
-    def update(self, data: bytes) -> None:
+    def update(self, __data: AnyStr) -> None:
         """
         Update the hash context with hashed data.
         """
@@ -270,12 +270,12 @@ class sha1:
     block_size: int
     digest_size: int
 
-    def __init__(self, data: bytes | None = None) -> None:
+    def __init__(self, __data: AnyStr | None = None) -> None:
         """
         Creates a hash context object.
         """
 
-    def update(self, data: bytes) -> None:
+    def update(self, __data: AnyStr) -> None:
         """
         Update the hash context with hashed data.
         """
@@ -294,12 +294,12 @@ class sha256:
     block_size: int
     digest_size: int
 
-    def __init__(self, data: bytes | None = None) -> None:
+    def __init__(self, __data: AnyStr | None = None) -> None:
         """
         Creates a hash context object.
         """
 
-    def update(self, data: bytes) -> None:
+    def update(self, __data: AnyStr) -> None:
         """
         Update the hash context with hashed data.
         """
@@ -327,7 +327,7 @@ class sha3_256:
         Creates a hash context object.
         """
 
-    def update(self, data: bytes) -> None:
+    def update(self, __data: AnyStr) -> None:
         """
         Update the hash context with hashed data.
         """
@@ -360,7 +360,7 @@ class sha3_512:
         Creates a hash context object.
         """
 
-    def update(self, data: bytes) -> None:
+    def update(self, __data: AnyStr) -> None:
         """
         Update the hash context with hashed data.
         """
@@ -384,12 +384,12 @@ class sha512:
     block_size: int
     digest_size: int
 
-    def __init__(self, data: bytes | None = None) -> None:
+    def __init__(self, __data: AnyStr | None = None) -> None:
         """
         Creates a hash context object.
         """
 
-    def update(self, data: bytes) -> None:
+    def update(self, __data: AnyStr) -> None:
         """
         Update the hash context with hashed data.
         """
