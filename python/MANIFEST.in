@@ -5,3 +5,4 @@ graft tests
 
 include AUTHORS README.md COPYING CHANGELOG.md
 include requirements*.txt
+exclude src/trezorlib/_proto_messages.mako
