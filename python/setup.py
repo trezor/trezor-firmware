@@ -29,7 +29,7 @@ install_requires = [
     "click>=7,<9",
     "libusb1>=1.6.4",
     "construct>=2.9",
-    "typing_extensions>=3.7.4",
+    "typing_extensions>=3.10",
     "dataclasses ; python_version<'3.7'",
 ]
 
