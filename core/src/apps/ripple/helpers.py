@@ -1,27 +1,25 @@
-from micropython import const
-
 from trezor.crypto.hashlib import ripemd160, sha256
 
 from . import base58_ripple
 
 from apps.common import HARDENED
 
-# HASH_TX_ID = const(0x54584E00)  # 'TXN'
-HASH_TX_SIGN = const(0x53545800)  # 'STX'
-# HASH_TX_SIGN_TESTNET = const(0x73747800)  # 'stx'
 
-# https://developers.ripple.com/basic-data-types.html#specifying-currency-amounts
-DIVISIBILITY = const(6)  # 1000000 drops equal 1 XRP
+def bytes_to_hex(bytes):
+    """
+    Convert a bytes object to a hex string
+    """
+    result = ""
+    for byte in bytes:
+        result += "%02x" % byte
+    return result
 
-# https://developers.ripple.com/transaction-cost.html
-MIN_FEE = const(10)
-# max is not defined officially but we check to make sure
-MAX_FEE = const(1000000)  # equals 1 XRP
-# https://xrpl.org/basic-data-types.html#specifying-currency-amounts
-# the value in docs is in XRP, we declare it here in drops
-MAX_ALLOWED_AMOUNT = const(100000000000000000)
 
-FLAG_FULLY_CANONICAL = 0x80000000
+def account_id_from_public_key(pubkey: bytes) -> str:
+    """Extracts account id from a public key"""
+    h = sha256(pubkey).digest()
+    h = ripemd160(h).digest()
+    return h
 
 
 def address_from_public_key(pubkey: bytes) -> str:
@@ -34,7 +32,7 @@ def address_from_public_key(pubkey: bytes) -> str:
     - 20-bytes account id is a ripemd160(sha256(pubkey))
     - checksum is first 4 bytes of double sha256(data)
 
-    see https://developers.ripple.com/accounts.html#address-encoding
+    see https://xrpl.org/accounts.html#address-encoding
     """
     """Returns the Ripple address created using base58"""
     h = sha256(pubkey).digest()
@@ -72,3 +70,79 @@ def validate_full_path(path: list) -> bool:
     if path[4] != 0:
         return False
     return True
+
+
+def time_from_ripple_timestamp(timestamp: int):
+    """
+    Converts
+    Based on http://git.musl-libc.org/cgit/musl/tree/src/time/__secs_to_tm.c?h=v0.9.15
+    :param timestamp: seconds since the Ripple epoch (https://xrpl.org/basic-data-types.html#specifying-time)
+    :return: (year, month, day, hour, minute, second)
+    """
+    # Adjust to Mar 1 2000 for easier leap year calculation
+    secs = timestamp - 86400 * (31 + 29)
+
+    days = secs // 86400
+
+    # Count 400 year cycles
+    days_per_400_y = 365 * 400 + 97
+    qc_cycles = days // days_per_400_y
+    remdays = days % days_per_400_y
+    if remdays < 0:
+        remdays += days_per_400_y
+        qc_cycles -= 1
+
+    # Count remaining 100 year cycles
+    days_per_100_y = 365 * 100 + 24
+    c_cycles = remdays // days_per_100_y
+    if c_cycles == 4:
+        c_cycles -= 1
+    remdays -= c_cycles * days_per_100_y
+
+    # Count remaining 4 year cycles
+    days_per_4_y = 365 * 4 + 1
+    q_cycles = remdays // days_per_4_y
+    if q_cycles == 25:
+        q_cycles -= 1
+    remdays -= q_cycles * days_per_4_y
+
+    # Count remaining years
+    remyears = remdays // 365
+    if remyears == 4:
+        remyears -= 1
+    remdays -= remyears * 365
+
+    # Check and account for if current year is a leap year
+    leap = bool(not remyears and (q_cycles or not c_cycles))
+    yday = remdays + 31 + 28 + leap
+    if yday >= 365 + leap:
+        yday -= 365 + leap
+
+    # Sum up number of years since 2000
+    years = remyears + 4 * q_cycles + 100 * c_cycles + 400 * qc_cycles
+
+    # Count which month we are in
+    days_in_month = [31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 31, 29]
+    months = 0
+    while days_in_month[months] <= remdays:
+        remdays -= days_in_month[months]
+        months += 1
+
+    if months > 9:
+        months -= 12
+        years += 1
+
+    # How many seconds into the current day we are
+    remsecs = timestamp % 86400
+    return (
+        years + 2000,
+        months + 3,
+        remdays + 1,
+        remsecs // 3600,
+        remsecs // 60 % 60,
+        remsecs % 60,
+    )
+
+
+def convert_to_snake_case(word):
+    return "".join(x[0].upper() + x[1:] or "_" for x in word.split("_"))
