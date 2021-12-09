@@ -51,6 +51,7 @@
 #endif
 
 /// package: trezorio.__init__
+/// from . import fatfs, sdcard
 
 /// POLL_READ: int  # wait until interface is readable and return read data
 /// POLL_WRITE: int  # wait until interface is writable
@@ -67,9 +68,6 @@
 /// BUTTON_RIGHT: int  # button number of right button
 
 /// WireInterface = Union[HID, WebUSB]
-
-/// if False:
-///     from . import fatfs, sdcard
 
 STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorio)},
