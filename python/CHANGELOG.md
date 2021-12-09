@@ -5,6 +5,63 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0] - 2021-12-09
+[0.13.0]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.4...python/v0.13.0
+
+### Added
+- `trezorctl firmware update` shows progress bar (Model T only)
+- Enabled session management via `EndSession`  [#1227]
+- Added parameters to enable Cardano derivation when calling `init_device()`.  [#1231]
+- two new trezorctl commands - `trezorctl firmware download` and `trezorctl firmware verify`  [#1258]
+- Support no_script_type option in SignMessage.  [#1586]
+- Support for Ethereum EIP1559 transactions  [#1604]
+- Debuglink can automatically scroll through paginated views.  [#1671]
+- Support for Taproot descriptors  [#1710]
+- `trezorlib.stellar.from_envelope` was added, it includes support for the Stellar [TransactionV1](https://github.com/stellar/stellar-protocol/blob/master/core/cap-0015.md#xdr) format transaction.  [#1745]
+- Ethereum: support 64-bit chain IDs  [#1771]
+- Support for Cardano multi-sig transactions, token minting, script addresses, multi-sig keys, minting keys and native script verification  [#1772]
+- Added parameters to specify kind of Cardano derivation to all functions and `trezorctl` commands.  [#1783]
+- Support for EIP-712 in library and `trezorctl ethereum sign-typed-data`  [#1835]
+- Add script_pubkey field to TxInput message.  [#1857]
+- Full type hinting checkable with pyright  [#1893]
+
+### Changed
+- protobuf is aware of `required` fields and default values  [#379]
+- `trezorctl firmware-update` command changed to `trezorctl firmware update`  [#1258]
+- `btc.sign_tx()` accepts keyword arguments for transaction metadata  [#1266]
+- Raise `ValueError` when the txid for an input is not present in `prev_txes` during `btc.sign_tx`  [#1442]
+- `trezorlib.mappings` was refactored for easier customization  [#1449]
+- Refactor protobuf codec for better clarity  [#1541]
+- `UdpTransport.wait_until_ready` no longer sets socket to nonblocking  [#1668]
+- Cardano transaction parameters are now streamed into the device one by one instead of being sent as one large object  [#1683]
+- `trezorlib.stellar` will refuse to process transactions containing MuxedAccount  [#1838]
+- Use unified descriptors format.  [#1885]
+- Introduce Trezor models as an abstraction over USB IDs, vendor strings, and possibly protobuf mappings.  [#1967]
+
+### Deprecated
+- instantiating protobuf objects with positional arguments is deprecated  [#379]
+- `details` argument to `btc.sign_tx()` is deprecated. Use keyword arguments instead.  [#379]
+- values of required fields must be supplied at instantiation time. Omitting them is deprecated.  [#379]
+
+### Removed
+- dropped Python 3.5 support  [#810]
+- dropped debug-only `trezorctl debug show-text` functionality  [#1531]
+- Removed support for Lisk  [#1765]
+
+### Fixed
+- fix operator precedence issue for ethereum sign-tx command  [#1867]
+- Updated `tools/build_tx.py` to work with Blockbook's API protections.  [#1896]
+- Fix PIN and passphrase entry in certain terminals on Windows  [#1959]
+
+### Incompatible changes
+- `client.init_device(derive_cardano=True)` must be used before calling Cardano functions.  [#1231]
+- The type of argument to `ui.button_request(x)` is changed from int to ButtonRequest.
+  The original int value can be accessed as `x.code`  [#1671]
+- Due to transaction streaming in Cardano, it isn't possible to return the whole serialized transaction anymore. Instead the transaction hash, transaction witnesses and auxiliary data supplement are returned and the serialized transaction needs to be assembled by the client.  [#1683]
+- `trezorlib.stellar` was reworked to use stellar-sdk instead of providing local implementations  [#1745]
+- Cardano derivation now defaults to Icarus method. This will result in different keys for users with 24-word seed.  [#1783]
+
+
 ## [0.12.4] - 2021-09-07
 [0.12.4]: https://github.com/trezor/trezor-firmware/compare/python/v0.12.3...python/v0.12.4
 
@@ -504,14 +561,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#349]: https://github.com/trezor/python-trezor/issues/349
 [#351]: https://github.com/trezor/python-trezor/issues/351
 [#352]: https://github.com/trezor/python-trezor/issues/352
+[#379]: https://github.com/trezor/trezor-firmware/issues/379
+[#810]: https://github.com/trezor/trezor-firmware/issues/810
 [#948]: https://github.com/trezor/trezor-firmware/issues/948
 [#1052]: https://github.com/trezor/trezor-firmware/issues/1052
 [#1126]: https://github.com/trezor/trezor-firmware/issues/1126
 [#1179]: https://github.com/trezor/trezor-firmware/issues/1179
 [#1196]: https://github.com/trezor/trezor-firmware/issues/1196
 [#1210]: https://github.com/trezor/trezor-firmware/issues/1210
+[#1227]: https://github.com/trezor/trezor-firmware/issues/1227
+[#1231]: https://github.com/trezor/trezor-firmware/issues/1231
 [#1257]: https://github.com/trezor/trezor-firmware/issues/1257
+[#1258]: https://github.com/trezor/trezor-firmware/issues/1258
+[#1266]: https://github.com/trezor/trezor-firmware/issues/1266
 [#1296]: https://github.com/trezor/trezor-firmware/issues/1296
 [#1363]: https://github.com/trezor/trezor-firmware/issues/1363
+[#1442]: https://github.com/trezor/trezor-firmware/issues/1442
+[#1449]: https://github.com/trezor/trezor-firmware/issues/1449
+[#1531]: https://github.com/trezor/trezor-firmware/issues/1531
+[#1541]: https://github.com/trezor/trezor-firmware/issues/1541
+[#1586]: https://github.com/trezor/trezor-firmware/issues/1586
+[#1604]: https://github.com/trezor/trezor-firmware/issues/1604
+[#1668]: https://github.com/trezor/trezor-firmware/issues/1668
+[#1671]: https://github.com/trezor/trezor-firmware/issues/1671
+[#1683]: https://github.com/trezor/trezor-firmware/issues/1683
+[#1710]: https://github.com/trezor/trezor-firmware/issues/1710
 [#1738]: https://github.com/trezor/trezor-firmware/issues/1738
+[#1745]: https://github.com/trezor/trezor-firmware/issues/1745
+[#1765]: https://github.com/trezor/trezor-firmware/issues/1765
+[#1771]: https://github.com/trezor/trezor-firmware/issues/1771
+[#1772]: https://github.com/trezor/trezor-firmware/issues/1772
+[#1783]: https://github.com/trezor/trezor-firmware/issues/1783
 [#1798]: https://github.com/trezor/trezor-firmware/issues/1798
+[#1835]: https://github.com/trezor/trezor-firmware/issues/1835
+[#1838]: https://github.com/trezor/trezor-firmware/issues/1838
+[#1857]: https://github.com/trezor/trezor-firmware/issues/1857
+[#1867]: https://github.com/trezor/trezor-firmware/issues/1867
+[#1885]: https://github.com/trezor/trezor-firmware/issues/1885
+[#1893]: https://github.com/trezor/trezor-firmware/issues/1893
+[#1896]: https://github.com/trezor/trezor-firmware/issues/1896
+[#1959]: https://github.com/trezor/trezor-firmware/issues/1959
+[#1967]: https://github.com/trezor/trezor-firmware/issues/1967
