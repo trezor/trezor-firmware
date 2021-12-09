@@ -71,7 +71,7 @@ If the test should only run on T1, mark it with `@pytest.mark.skip_t2`.
 You must not use both on the same test.
 
 [pytest-random-order]: https://pypi.org/project/pytest-random-order/
-[REGISTERED_MARKERS]: ../REGISTERED_MARKERS
+[REGISTERED_MARKERS]: ../../tests/REGISTERED_MARKERS
 
 ## Extended testing and debugging
 

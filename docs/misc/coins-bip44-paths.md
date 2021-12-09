@@ -73,10 +73,10 @@ sends `44'/60'/0'/0` for getPublicKey.
 3. <a name="Ripple"></a> Similar to Ethereum this should be `44'/c'/a'`. But for
    compatibility with other HW vendors we use `44'/c'/a'/0/0`.
 
-4. <a name="Cardano"></a> Cardano has a [custom derivation] algorithm that allows
+4. <a name="Cardano"></a> Cardano has [CIP-0003] algorithm that allows
    non-hardened derivation on ed25519.
 
-[custom derivation]: https://cardanolaunch.com/assets/Ed25519_BIP.pdf
+[cip-0003]: https://cips.cardano.org/cips/cip3/
 
 5. <a name="NEM"></a> NEM's path should be `44'/43'/a'` as per SEP-0005, but we allow
    `44'/43'/a'/0'/0'` as well for compatibility reasons with NanoWallet.
