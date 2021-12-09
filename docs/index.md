@@ -11,7 +11,6 @@ Welcome to the Trezor Firmware repository. This repository is so called _monorep
 * **[`common/protob`](https://github.com/trezor/trezor-firmware/tree/master/common/protob/)**: Common protobuf definitions for the Trezor protocol
 * **[`common/tools`](https://github.com/trezor/trezor-firmware/tree/master/common/tools/)**: Tools for managing coin definitions and related data
 * **[`core`](https://github.com/trezor/trezor-firmware/tree/master/core/)**: Trezor Core, firmware implementation for Trezor T
-* **[`core/systemview`](https://github.com/trezor/trezor-firmware/tree/master/core/systemview)**: Hardware instrumentation and debugging with SystemView for Trezor T
 * **[`crypto`](https://github.com/trezor/trezor-firmware/tree/master/crypto/)**: Stand-alone cryptography library used by both Trezor Core and the Trezor One firmware
 * **[`docs`](https://github.com/trezor/trezor-firmware/tree/master/docs/)**: Assorted documentation
 * **[`legacy`](https://github.com/trezor/trezor-firmware/tree/master/legacy/)**: Trezor One firmware implementation

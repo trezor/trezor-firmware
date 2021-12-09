@@ -43,7 +43,7 @@
 * 1 x USB Cable Type A Plug/Male to Type Mini-B Plug/Male
 * 1 x USB Cable Type A Plug/Male to Type Micro-B Plug/Male
 * 1 x [ER-TFTM028-4 Display + Capacitive Touch Panel Module](https://www.ebay.com/itm/302049581340) (Note: specify 40-Pin Header, 8080 8-bit Parallel, VDD=3.3V, Capacitive Touch Panel) (note: [Manual](https://www.buydisplay.com/download/manual/ER-TFTM028-4_Datasheet.pdf))
-* 1 x [microSD Board](https://www.waveshare.com/product/modules/storage/sd-tf-storage/micro-sd-storage-board.htm)
+* 1 x [microSD Board](https://www.waveshare.com/micro-sd-storage-board.htm)
 * 1 x [Pack of 40 Female to female jumper wires with 0.1" header contacts](https://www.adafruit.com/product/266)
 
 ### Display
