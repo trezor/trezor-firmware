@@ -52,6 +52,8 @@
 "bitcoin-test_descriptors.py::test_descriptors[Testnet-1-InputScriptType.SPENDWITNESS-wpkh([-996ae319": "3181b25e844eb1047d2904abb1099029c5f5ae4ba4d333be21336d1a745aafe0",
 "bitcoin-test_firo.py::test_spend_lelantus": "7b68b613a1ed9dc03c0416d8b86353effdaaacb703dcc40bbf7b8dbcd6254745",
 "bitcoin-test_fujicoin.py::test_send_p2tr": "18bdbbceedee99f00b4f23d0b78b8e6b4d17b3eaced0cd13010188cc49747230",
+"bitcoin-test_getaddress.py::test_address_mac": "c09de07fbbf1e047442180e2facb5482d06a1a428891b875b7dd93c9e4704ae1",
+"bitcoin-test_getaddress.py::test_altcoin_address_mac": "c09de07fbbf1e047442180e2facb5482d06a1a428891b875b7dd93c9e4704ae1",
 "bitcoin-test_getaddress.py::test_bch": "c09de07fbbf1e047442180e2facb5482d06a1a428891b875b7dd93c9e4704ae1",
 "bitcoin-test_getaddress.py::test_bch_multisig": "e3dbcee904b54393c3a6d4488fc6cb3c621c1cc907795061c6a05bc2d335cad1",
 "bitcoin-test_getaddress.py::test_btc": "c09de07fbbf1e047442180e2facb5482d06a1a428891b875b7dd93c9e4704ae1",
