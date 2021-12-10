@@ -135,6 +135,62 @@ def test_elements(client):
     )
 
 
+@pytest.mark.skip_t1
+def test_address_mac(client):
+    resp = btc.get_authenticated_address(
+        client, "Bitcoin", parse_path("m/44'/0'/0'/1/0")
+    )
+    assert resp.address == "1DyHzbQUoQEsLxJn6M7fMD8Xdt1XvNiwNE"
+    assert (
+        resp.mac.hex()
+        == "9cf7c230041d6ed95b8273bd32e023d3f227ec8c44257f6463c743a4b4add028"
+    )
+
+    resp = btc.get_authenticated_address(
+        client, "Testnet", parse_path("m/44'/1'/0'/1/0")
+    )
+    assert resp.address == "mm6kLYbGEL1tGe4ZA8xacfgRPdW1NLjCbZ"
+    assert (
+        resp.mac.hex()
+        == "4375089e50423505dc3480e6e85b0ba37a52bd1e009db5d260b6329f22c950d9"
+    )
+
+    # Script type mismatch.
+    resp = btc.get_authenticated_address(
+        client, "Bitcoin", parse_path("84'/0'/0'/0/0"), show_display=False
+    )
+    assert resp.mac is None
+
+
+@pytest.mark.skip_t1
+@pytest.mark.altcoin
+def test_altcoin_address_mac(client):
+    resp = btc.get_authenticated_address(
+        client, "Litecoin", parse_path("m/44'/2'/0'/1/0")
+    )
+    assert resp.address == "LWj6ApswZxay4cJEJES2sGe7fLMLRvvv8h"
+    assert (
+        resp.mac.hex()
+        == "eaf47182d7ae17d2046ec2e204bc5b67477db20a5eaea3cec5393c25664bc4d2"
+    )
+
+    resp = btc.get_authenticated_address(client, "Bcash", parse_path("44'/145'/0'/1/0"))
+    assert resp.address == "bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw"
+    assert (
+        resp.mac.hex()
+        == "46d8e369b499a9dc62eb9e4472f4a12640ae0fb7a63c1a4dde6752123b2b7274"
+    )
+
+    resp = btc.get_authenticated_address(
+        client, "Groestlcoin", parse_path("44'/17'/0'/1/1")
+    )
+    assert resp.address == "Fmhtxeh7YdCBkyQF7AQG4QnY8y3rJg89di"
+    assert (
+        resp.mac.hex()
+        == "08d67c5f1ee20fd03f3e5aa26f798574716c122238ac280e33a6f3787d531552"
+    )
+
+
 @pytest.mark.multisig
 def test_multisig(client):
     xpubs = []
