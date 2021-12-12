@@ -26,7 +26,7 @@
 #include "memory.h"
 #include "util.h"
 
-#if MEMORY_PROTECT
+#if PRODUCTION
 
 static int known_bootloader(int r, const uint8_t *hash) {
   if (r != 32) return 0;
@@ -143,7 +143,7 @@ static int known_bootloader(int r, const uint8_t *hash) {
  * @param shutdown_on_replace: if true, shuts down device instead of return
  */
 void check_and_replace_bootloader(bool shutdown_on_replace) {
-#if MEMORY_PROTECT
+#if PRODUCTION
   uint8_t hash[32] = {0};
   int r = memory_bootloader_hash(hash);
 
@@ -206,6 +206,6 @@ void check_and_replace_bootloader(bool shutdown_on_replace) {
                _("contact our support."), NULL);
   shutdown();
 #endif
-  // prevent compiler warning when MEMORY_PROTECT==0
+  // prevent compiler warning when PRODUCTION==0
   (void)shutdown_on_replace;
 }

@@ -78,4 +78,4 @@ _Note: Fingerprints displayed for T1 at the end of `build-docker.sh` do not matc
 official firmware due to the legacy header._
 
 _Note: T1 firmware built this way won't boot because unsigned firmware needs to be built with
-[`MEMORY_PROTECT=0`](../legacy/index.md#combining-bootloader-and-firmware-with-various-memory_protect-settings-signedunsigned)._
+[`PRODUCTION=0`](../legacy/index.md#combining-bootloader-and-firmware-with-various-production-settings-signedunsigned)._

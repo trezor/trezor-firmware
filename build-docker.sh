@@ -62,7 +62,6 @@ fi
 TAG=${1:-master}
 REPOSITORY=${2:-/local}
 PRODUCTION=${PRODUCTION:-1}
-MEMORY_PROTECT=${MEMORY_PROTECT:-1}
 
 
 if which wget > /dev/null ; then
@@ -164,7 +163,7 @@ EOF
     -v "$DIR:/local" \
     -v "$DIR/build/legacy$DIRSUFFIX":/build:z \
     --env BITCOIN_ONLY="$BITCOIN_ONLY" \
-    --env MEMORY_PROTECT="$MEMORY_PROTECT" \
+    --env PRODUCTION="$PRODUCTION" \
     --init \
     "$CONTAINER_NAME" \
     /nix/var/nix/profiles/default/bin/nix-shell --run "bash /local/build/$SCRIPT_NAME"
