@@ -28,7 +28,7 @@ stages:
   - deploy
 
 before_script:
-  - . $HOME/.nix-profile/etc/profile.d/nix.sh || true
+  - . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
   - nix-shell --run "poetry install"
   - export LEGACY_VERSION=$(nix-shell --run "./tools/version.sh legacy/firmware/version.h")
   - export CORE_VERSION=$(nix-shell --run "./tools/version.sh core/embed/firmware/version.h")
