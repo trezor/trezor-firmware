@@ -153,6 +153,27 @@ core unix frozen debug build:
     untracked: true
     expire_in: 1 week
 
+core unix frozen debug build arm:
+  image: vdovhanych/nixos
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  only:
+    - master
+    - /^release\//
+    - /^secfix\//
+  variables:
+    PYOPT: "0"
+  script:
+    - nix-shell --run "poetry run make -C core build_unix_frozen"
+    - mv core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-arm
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    untracked: true
+    expire_in: 1 week
+  tags:
+    - docker_darwin_arm
+
 core unix frozen btconly debug t1 build:
   stage: build
   needs: []
@@ -174,9 +195,9 @@ core macos frozen regular build:
   needs: []
   when: manual
   tags:
-    - darwin
+    - darwin_arm
   script:
-    - nix-shell --run "poetry run make -C core build_unix_frozen"
+    - nix-shell --option system x86_64-darwin --run "poetry run make -C core build_unix_frozen"
     - export NAME="trezor-emu-core.darwin"
     - cp -v core/build/unix/trezor-emu-core ./$NAME
     - chmod +x $NAME
@@ -300,6 +321,29 @@ legacy emu regular debug build:
     paths:
       - legacy/firmware/trezor.elf
     expire_in: 1 week
+
+legacy emu regular debug build arm:
+  image: vdovhanych/nixos
+  stage: build
+  <<: *gitlab_caching
+  needs: []
+  only:
+    - master
+    - /^release\//
+    - /^secfix\//
+  variables:
+    DEBUG_LINK: "1"
+    EMULATOR: "1"
+  script:
+    - nix-shell --run "poetry run legacy/script/cibuild"
+    - mv legacy/firmware/trezor.elf  legacy/firmware/trezor-arm.elf
+  artifacts:
+    name: "$CI_JOB_NAME-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - legacy/firmware/trezor-arm.elf
+    expire_in: 1 week
+  tags:
+    - docker_darwin_arm
 
 legacy emu btconly debug build:
   stage: build
