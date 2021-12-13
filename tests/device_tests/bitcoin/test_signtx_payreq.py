@@ -102,6 +102,8 @@ PaymentRequestParams = namedtuple(
     "PaymentRequestParams", ["txo_indices", "memos", "get_nonce"]
 )
 
+SERIALIZED_TX = "010000000001018a44999c07bba32df1cacdc50987944e68e3205b4429438fdde35c76024614090000000000ffffffff03404b4c000000000017a9147a55d61848e77ca266e79a39bfc85c580a6426c98780841e0000000000160014d16b8c0680c61fc6ed2e407455715055e41052f528b4500000000000160014b31dc2a236505a6cb9201fa0411ca38a254a7bf10247304402204adea8ae600878c5912310f546d600359f6cde8087ebd23f20f8acc7ecb2ede70220603334476c8fb478d8c539f027f9bff5f126e4438df757f9b4ba528adcb56c48012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86200000000"
+
 
 @pytest.mark.parametrize(
     "payment_request_params",
@@ -159,10 +161,7 @@ def test_payment_request(client, payment_request_params):
         payment_reqs=payment_reqs,
     )
 
-    assert (
-        serialized_tx.hex()
-        == "010000000001018a44999c07bba32df1cacdc50987944e68e3205b4429438fdde35c76024614090000000000ffffffff03404b4c000000000017a9147a55d61848e77ca266e79a39bfc85c580a6426c98780841e0000000000160014d16b8c0680c61fc6ed2e407455715055e41052f528b4500000000000160014b31dc2a236505a6cb9201fa0411ca38a254a7bf10247304402204adea8ae600878c5912310f546d600359f6cde8087ebd23f20f8acc7ecb2ede70220603334476c8fb478d8c539f027f9bff5f126e4438df757f9b4ba528adcb56c48012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86200000000"
-    )
+    assert serialized_tx.hex() == SERIALIZED_TX
 
     # Ensure that the nonce has been invalidated.
     with pytest.raises(TrezorFailure, match="Invalid nonce in payment request"):
@@ -174,6 +173,56 @@ def test_payment_request(client, payment_request_params):
             prev_txes=TX_API,
             payment_reqs=payment_reqs,
         )
+
+
+def test_payment_request_details(client):
+    # Test that payment request details are shown when requested.
+    outputs[0].payment_req_index = 0
+    outputs[1].payment_req_index = 0
+    outputs[2].payment_req_index = None
+    nonce = misc.get_nonce(client)
+    payment_reqs = [
+        make_payment_request(
+            client,
+            recipient_name="trezor.io",
+            outputs=outputs[:2],
+            memos=[TextMemo("Invoice #87654321.")],
+            nonce=nonce,
+        )
+    ]
+
+    def input_flow():
+        yield  # request to see details
+        client.debug.wait_layout()
+        client.debug.press_info()
+
+        yield  # confirm first output
+        layout = client.debug.wait_layout()
+        assert outputs[0].address[:16] in layout.text
+        client.debug.press_yes()
+
+        yield  # confirm second output
+        layout = client.debug.wait_layout()
+        assert outputs[1].address[:16] in layout.text
+        client.debug.press_yes()
+
+        yield  # confirm transaction
+        client.debug.press_yes()
+
+    with client:
+        client.set_input_flow(input_flow)
+        client.watch_layout(True)
+
+        _, serialized_tx = btc.sign_tx(
+            client,
+            "Testnet",
+            inputs,
+            outputs,
+            prev_txes=TX_API,
+            payment_reqs=payment_reqs,
+        )
+
+    assert serialized_tx.hex() == SERIALIZED_TX
 
 
 def test_payment_req_wrong_amount(client):
