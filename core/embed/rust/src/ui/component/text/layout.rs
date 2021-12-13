@@ -103,6 +103,7 @@ impl TextLayout {
         cursor: &mut Point,
         sink: &mut dyn LayoutSink,
     ) -> LayoutFit {
+        let init_cursor: Point = *cursor;
         let mut total_processed_chars = 0;
 
         for op in ops {
@@ -114,7 +115,9 @@ impl TextLayout {
                     self.text_font = font;
                 }
                 Op::Text(text) => match self.layout_text(text, cursor, sink) {
-                    LayoutFit::Fitting { processed_chars } => {
+                    LayoutFit::Fitting {
+                        processed_chars, ..
+                    } => {
                         total_processed_chars += processed_chars;
                     }
                     LayoutFit::OutOfBounds { processed_chars } => {
@@ -130,6 +133,10 @@ impl TextLayout {
 
         LayoutFit::Fitting {
             processed_chars: total_processed_chars,
+            size: Offset::new(
+                self.bounds.width(),
+                cursor.y - init_cursor.y + self.text_font.line_height(),
+            ),
         }
     }
 
@@ -139,6 +146,7 @@ impl TextLayout {
         cursor: &mut Point,
         sink: &mut dyn LayoutSink,
     ) -> LayoutFit {
+        let init_cursor: Point = *cursor;
         let mut remaining_text = text;
 
         while !remaining_text.is_empty() {
@@ -202,30 +210,35 @@ impl TextLayout {
 
         LayoutFit::Fitting {
             processed_chars: text.len(),
+            size: Offset::new(
+                self.bounds.width(),
+                cursor.y - init_cursor.y + self.text_font.line_height(),
+            ),
         }
     }
 
     pub fn measure_ops_height(self, ops: &mut dyn Iterator<Item = Op>) -> i32 {
-        // TODO: Return the bounding box in `LayoutFit` instead of computing it from the
-        // cursor.
-        let init_cursor = self.initial_cursor();
-        let mut cursor = init_cursor;
-        self.layout_ops(ops, &mut cursor, &mut TextNoOp);
-        cursor.y - init_cursor.y + self.text_font.line_height()
+        match self.layout_ops(ops, &mut self.initial_cursor(), &mut TextNoOp) {
+            LayoutFit::Fitting { size, .. } => size.y,
+            LayoutFit::OutOfBounds { .. } => self.bounds.height(),
+        }
     }
 
     pub fn measure_text_height(self, text: &[u8]) -> i32 {
-        // TODO: Return the bounding box in `LayoutFit` instead of computing it from the
-        // cursor.
-        let init_cursor = self.initial_cursor();
-        let mut cursor = init_cursor;
-        self.layout_text(text, &mut cursor, &mut TextNoOp);
-        cursor.y - init_cursor.y + self.text_font.line_height()
+        match self.layout_text(text, &mut self.initial_cursor(), &mut TextNoOp) {
+            LayoutFit::Fitting { size, .. } => size.y,
+            LayoutFit::OutOfBounds { .. } => self.bounds.height(),
+        }
     }
 }
 
 pub enum LayoutFit {
-    Fitting { processed_chars: usize },
+    /// Entire content fits. Bounding box is returned in `size`.
+    Fitting {
+        processed_chars: usize,
+        size: Offset,
+    },
+    /// Content fits partially or not at all.
     OutOfBounds { processed_chars: usize },
 }
 
