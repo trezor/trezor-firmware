@@ -94,6 +94,8 @@ trezor.enums.ButtonRequestType
 import trezor.enums.ButtonRequestType
 trezor.enums.Capability
 import trezor.enums.Capability
+trezor.enums.DebugButton
+import trezor.enums.DebugButton
 trezor.enums.DebugSwipeDirection
 import trezor.enums.DebugSwipeDirection
 trezor.enums.DecredStakingSpendType

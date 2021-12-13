@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from trezor.enums import CardanoTxAuxiliaryDataSupplementType  # noqa: F401
     from trezor.enums import CardanoTxSigningMode  # noqa: F401
     from trezor.enums import CardanoTxWitnessType  # noqa: F401
+    from trezor.enums import DebugButton  # noqa: F401
     from trezor.enums import DebugSwipeDirection  # noqa: F401
     from trezor.enums import DecredStakingSpendType  # noqa: F401
     from trezor.enums import EthereumDataType  # noqa: F401
@@ -2258,7 +2259,7 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class DebugLinkDecision(protobuf.MessageType):
-        yes_no: "bool | None"
+        button: "DebugButton | None"
         swipe: "DebugSwipeDirection | None"
         input: "str | None"
         x: "int | None"
@@ -2269,7 +2270,7 @@ if TYPE_CHECKING:
         def __init__(
             self,
             *,
-            yes_no: "bool | None" = None,
+            button: "DebugButton | None" = None,
             swipe: "DebugSwipeDirection | None" = None,
             input: "str | None" = None,
             x: "int | None" = None,
