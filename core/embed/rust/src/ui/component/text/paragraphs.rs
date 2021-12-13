@@ -1,12 +1,12 @@
 use heapless::Vec;
 
 use crate::ui::{
-    component::{Component, Event, EventCtx, Never},
+    component::{Component, Event, EventCtx, Never, Paginate},
     display::Font,
     geometry::{Dimensions, LinearLayout, Offset, Rect},
 };
 
-use super::layout::{DefaultTextTheme, TextLayout, TextRenderer};
+use super::layout::{DefaultTextTheme, LayoutFit, TextLayout, TextNoOp, TextRenderer};
 
 pub const MAX_PARAGRAPHS: usize = 6;
 
@@ -14,6 +14,8 @@ pub struct Paragraphs<T> {
     area: Rect,
     list: Vec<Paragraph<T>, MAX_PARAGRAPHS>,
     layout: LinearLayout,
+    para_offset: usize,
+    char_offset: usize,
 }
 
 impl<T> Paragraphs<T>
@@ -25,6 +27,8 @@ where
             area,
             list: Vec::new(),
             layout: LinearLayout::vertical().align_at_center().with_spacing(10),
+            para_offset: 0,
+            char_offset: 0,
         }
     }
 
@@ -34,6 +38,9 @@ where
     }
 
     pub fn add<D: DefaultTextTheme>(mut self, text_font: Font, content: T) -> Self {
+        if content.as_ref().len() == 0 {
+            return self;
+        }
         let paragraph = Paragraph::new(
             content,
             TextLayout {
@@ -48,9 +55,12 @@ where
         self
     }
 
-    pub fn arrange(mut self) -> Self {
-        self.layout.arrange(self.area, &mut self.list);
-        self
+    fn break_pages<'a>(&'a mut self) -> PageBreakIterator<'a, T> {
+        PageBreakIterator {
+            paragraphs: self,
+            para_offset: 0,
+            char_offset: 0,
+        }
     }
 }
 
@@ -65,8 +75,17 @@ where
     }
 
     fn paint(&mut self) {
-        for paragraph in &mut self.list {
-            paragraph.paint();
+        let mut char_offset = self.char_offset;
+        for paragraph in self.list.iter().skip(self.para_offset) {
+            let fit = paragraph.layout.layout_text(
+                &paragraph.content.as_ref()[char_offset..],
+                &mut paragraph.layout.initial_cursor(),
+                &mut TextRenderer,
+            );
+            if matches!(fit, LayoutFit::OutOfBounds { .. }) {
+                break;
+            }
+            char_offset = 0;
         }
     }
 }
@@ -88,7 +107,6 @@ where
 pub struct Paragraph<T> {
     content: T,
     layout: TextLayout,
-    size: Offset,
 }
 
 impl<T> Paragraph<T>
@@ -96,18 +114,7 @@ where
     T: AsRef<[u8]>,
 {
     pub fn new(content: T, layout: TextLayout) -> Self {
-        Self {
-            size: Self::measure(&content, layout),
-            content,
-            layout,
-        }
-    }
-
-    fn measure(content: &T, layout: TextLayout) -> Offset {
-        Offset::new(
-            layout.bounds.width(),
-            layout.measure_text_height(content.as_ref()),
-        )
+        Self { content, layout }
     }
 }
 
@@ -116,7 +123,7 @@ where
     T: AsRef<[u8]>,
 {
     fn get_size(&mut self) -> Offset {
-        self.size
+        self.layout.bounds.size()
     }
 
     fn set_area(&mut self, area: Rect) {
@@ -124,22 +131,108 @@ where
     }
 }
 
-impl<T> Component for Paragraph<T>
+struct PageBreakIterator<'a, T> {
+    paragraphs: &'a mut Paragraphs<T>,
+    para_offset: usize,
+    char_offset: usize,
+}
+
+/// Yields indices to beginnings of successive pages. As a side effect it
+/// updates the bounding box of each paragraph on the page. Because a paragraph
+/// can be rendered on multiple pages, such bounding boxes are only valid for
+/// paragraphs processed in the last call to `next`.
+///
+/// The boxes are simply stacked below each other and may be further arranged
+/// before drawing.
+impl<'a, T> Iterator for PageBreakIterator<'a, T>
 where
     T: AsRef<[u8]>,
 {
-    type Msg = Never;
+    /// Paragraph index, character index, number of paragraphs shown.
+    type Item = (usize, usize, usize);
 
-    fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
-        None
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.para_offset >= self.paragraphs.list.len() {
+            return None;
+        }
+
+        let old_para_offset = self.para_offset;
+        let old_char_offset = self.char_offset;
+        let mut area = self.paragraphs.area;
+
+        for paragraph in self.paragraphs.list.iter_mut().skip(self.para_offset) {
+            loop {
+                paragraph.set_area(area);
+                let fit = paragraph.layout.layout_text(
+                    &paragraph.content.as_ref()[self.char_offset..],
+                    &mut paragraph.layout.initial_cursor(),
+                    &mut TextNoOp,
+                );
+                match fit {
+                    LayoutFit::Fitting { size, .. } => {
+                        // Text fits, update the bounding box.
+                        let (used, free) = area.hsplit(size.y);
+                        paragraph.set_area(used);
+                        // Continue with next paragraph in remaining space.
+                        area = free;
+                        self.char_offset = 0;
+                        self.para_offset += 1;
+                        break;
+                    }
+                    LayoutFit::OutOfBounds { processed_chars } => {
+                        // Text does not fit, assume whatever fits takes the entire remaining area.
+                        self.char_offset += processed_chars;
+                        let visible = if processed_chars > 0 {
+                            self.para_offset - old_para_offset + 1
+                        } else {
+                            self.para_offset - old_para_offset
+                        };
+                        // Return pointer to start of page.
+                        return Some((old_para_offset, old_char_offset, visible));
+                    }
+                }
+            }
+        }
+
+        // Last page.
+        Some((
+            old_para_offset,
+            old_char_offset,
+            self.para_offset - old_para_offset,
+        ))
+    }
+}
+
+impl<T> Paginate for Paragraphs<T>
+where
+    T: AsRef<[u8]>,
+{
+    fn page_count(&mut self) -> usize {
+        // There's always at least one page.
+        let page_count = self.break_pages().count().max(1);
+
+        // Reset to first page.
+        self.change_page(0);
+
+        page_count
     }
 
-    fn paint(&mut self) {
-        self.layout.layout_text(
-            self.content.as_ref(),
-            &mut self.layout.initial_cursor(),
-            &mut TextRenderer,
-        );
+    fn change_page(&mut self, to_page: usize) {
+        if let Some((para_offset, char_offset, para_visible)) =
+            self.break_pages().skip(to_page).next()
+        {
+            // Set offsets used by `paint`.
+            self.para_offset = para_offset;
+            self.char_offset = char_offset;
+
+            // Arrange visible paragraphs.
+            let visible = &mut self.list[para_offset..para_offset + para_visible];
+            self.layout.arrange(self.area, visible);
+        } else {
+            // Should not happen, set index past last paragraph to render empty page.
+            self.para_offset = self.list.len();
+            self.char_offset = 0;
+        }
     }
 }
 
