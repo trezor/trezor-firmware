@@ -23,6 +23,7 @@ impl<T> ButtonPage<T> {
         let button_height = theme::FONT_BOLD.line_height() + 2;
         let (content_area, button_area) = area.hsplit(-button_height);
         let (content_area, scrollbar_area) = content_area.vsplit(-ScrollBar::WIDTH);
+        let (content_area, _) = content_area.hsplit(-1);
         (content_area, scrollbar_area, button_area)
     }
 }
