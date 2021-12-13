@@ -8,6 +8,7 @@ def layout_new_example(text: str) -> None:
 
 # extmod/rustmods/modtrezorui2.c
 def layout_new_confirm_action(
+    *,
     title: str,
     action: str | None,
     description: str | None,
@@ -16,4 +17,14 @@ def layout_new_confirm_action(
     hold: bool | None,
     reverse: bool,
 ) -> int:
-    """Example layout. All arguments must be passed as kwargs."""
+    """Example layout."""
+
+
+# extmod/rustmods/modtrezorui2.c
+def layout_new_confirm_text(
+    *,
+    title: str,
+    data: str,
+    description: str | None,
+) -> int:
+    """Example layout."""
