@@ -4,7 +4,7 @@ use crate::{
     error::Error,
     micropython::{buffer::Buffer, map::Map, obj::Obj, qstr::Qstr},
     ui::{
-        component::{Child, FormattedText, Paginated, PaginatedMsg},
+        component::{text::paragraphs::Paragraphs, Child, FormattedText, Paginated, PaginatedMsg},
         display,
         layout::obj::LayoutObj,
     },
@@ -63,6 +63,37 @@ extern "C" fn ui_layout_new_confirm_action(
                     FormattedText::new::<theme::T1DefaultText>(area, format)
                         .with(b"action", action.unwrap_or("".into()))
                         .with(b"description", description.unwrap_or("".into()))
+                },
+                theme::BG,
+            )
+        })))?;
+        Ok(obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+#[no_mangle]
+extern "C" fn ui_layout_new_confirm_text(
+    n_args: usize,
+    args: *const Obj,
+    kwargs: *const Map,
+) -> Obj {
+    let block = |_args: &[Obj], kwargs: &Map| {
+        let title: Buffer = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let data: Buffer = kwargs.get(Qstr::MP_QSTR_data)?.try_into()?;
+        let description: Option<Buffer> =
+            kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
+
+        let obj = LayoutObj::new(Child::new(Title::new(display::screen(), title, |area| {
+            Paginated::<ButtonPage<_>>::new(
+                area,
+                |area| {
+                    Paragraphs::new(area)
+                        .add::<theme::T1DefaultText>(
+                            theme::FONT_NORMAL,
+                            description.unwrap_or("".into()),
+                        )
+                        .add::<theme::T1DefaultText>(theme::FONT_BOLD, data)
                 },
                 theme::BG,
             )
