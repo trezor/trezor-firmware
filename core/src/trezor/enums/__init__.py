@@ -429,6 +429,11 @@ if TYPE_CHECKING:
         LEFT = 2
         RIGHT = 3
 
+    class DebugButton(IntEnum):
+        NO = 0
+        YES = 1
+        INFO = 2
+
     class EthereumDataType(IntEnum):
         UINT = 1
         INT = 2

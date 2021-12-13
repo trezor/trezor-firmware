@@ -147,7 +147,7 @@ class DebugLink:
     def input(
         self,
         word: Optional[str] = None,
-        button: Optional[bool] = None,
+        button: Optional[messages.DebugButton] = None,
         swipe: Optional[messages.DebugSwipeDirection] = None,
         x: Optional[int] = None,
         y: Optional[int] = None,
@@ -162,7 +162,7 @@ class DebugLink:
             raise ValueError("Invalid input - must use one of word, button, swipe")
 
         decision = messages.DebugLinkDecision(
-            yes_no=button, swipe=swipe, input=word, x=x, y=y, wait=wait, hold_ms=hold_ms
+            button=button, swipe=swipe, input=word, x=x, y=y, wait=wait, hold_ms=hold_ms
         )
         ret = self._call(decision, nowait=not wait)
         if ret is not None:
@@ -177,10 +177,13 @@ class DebugLink:
         return self.input(x=x, y=y, wait=wait)
 
     def press_yes(self) -> None:
-        self.input(button=True)
+        self.input(button=messages.DebugButton.YES)
 
     def press_no(self) -> None:
-        self.input(button=False)
+        self.input(button=messages.DebugButton.NO)
+
+    def press_info(self) -> None:
+        self.input(button=messages.DebugButton.INFO)
 
     def swipe_up(self, wait: bool = False) -> None:
         self.input(swipe=messages.DebugSwipeDirection.UP, wait=wait)
