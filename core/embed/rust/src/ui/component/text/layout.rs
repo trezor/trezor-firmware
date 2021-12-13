@@ -149,6 +149,12 @@ impl TextLayout {
         let init_cursor: Point = *cursor;
         let mut remaining_text = text;
 
+        // Check if bounding box is high enough for at least one line.
+        if cursor.y > self.bounds.y1 {
+            sink.out_of_bounds();
+            return LayoutFit::OutOfBounds { processed_chars: 0 };
+        }
+
         while !remaining_text.is_empty() {
             let span = Span::fit_horizontally(
                 remaining_text,

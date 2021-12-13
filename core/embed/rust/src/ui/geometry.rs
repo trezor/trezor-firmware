@@ -141,6 +141,10 @@ impl Rect {
         self.y1 - self.y0
     }
 
+    pub fn size(&self) -> Offset {
+        Offset::new(self.width(), self.height())
+    }
+
     pub fn top_left(&self) -> Point {
         Point::new(self.x0, self.y0)
     }
@@ -193,10 +197,10 @@ impl Rect {
     }
 
     pub fn hsplit(self, height: i32) -> (Self, Self) {
-        let height = if height.is_positive() {
-            height
-        } else {
+        let height = if height.is_negative() {
             self.height() + height
+        } else {
+            height
         };
 
         let top = Self {
@@ -208,7 +212,7 @@ impl Rect {
 
         let bottom = Self {
             x0: self.x0,
-            y0: top.y0 + height,
+            y0: self.y0 + height,
             x1: self.x1,
             y1: self.y1,
         };
@@ -217,10 +221,10 @@ impl Rect {
     }
 
     pub fn vsplit(self, width: i32) -> (Self, Self) {
-        let width = if width.is_positive() {
-            width
-        } else {
+        let width = if width.is_negative() {
             self.width() + width
+        } else {
+            width
         };
 
         let left = Self {
@@ -231,7 +235,7 @@ impl Rect {
         };
 
         let right = Self {
-            x0: left.x0 + width,
+            x0: self.x0 + width,
             y0: self.y0,
             x1: self.x1,
             y1: self.y1,
@@ -366,12 +370,21 @@ impl LinearLayout {
             .sum();
         let spacing_count = items.len().saturating_sub(1);
         let spacing_sum = spacing_count as i32 * self.spacing;
-        let total_size = item_sum + spacing_sum;
-
+        let naive_size = item_sum + spacing_sum;
         let available_space = match self.axis {
             Axis::Horizontal => area.width(),
             Axis::Vertical => area.height(),
         };
+
+        // scale down spacing to fit everything into area
+        let (total_size, spacing) = if naive_size > available_space {
+            let scaled_space = (available_space - item_sum) / spacing_count as i32;
+            // forbid negative spacing
+            (available_space, scaled_space.max(0))
+        } else {
+            (naive_size, self.spacing)
+        };
+
         let mut cursor = match self.align {
             Alignment::Start => 0,
             Alignment::Center => available_space / 2 - total_size / 2,
@@ -383,7 +396,7 @@ impl LinearLayout {
             let size = item.get_size();
             item.set_area(Rect::from_top_left_and_size(top_left, size));
             cursor += self.axis.main(size.x, size.y);
-            cursor += self.spacing;
+            cursor += spacing;
         }
     }
 }
