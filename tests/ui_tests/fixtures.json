@@ -290,6 +290,7 @@
 "bitcoin-test_signtx_external.py::test_p2wsh_external_presigned": "864fb0b756bef195c9140dc9d1d4878a801c709b880fa38c703ca8438adfedb8",
 "bitcoin-test_signtx_invalid_path.py::test_attack_path_segwit": "3feaa01d47aa9757e9d74f668927fd1445493c367adff94215405eb8e0a2749b",
 "bitcoin-test_signtx_invalid_path.py::test_invalid_path_fail": "1c100ce4b7c1e47e72428f390de0846c1ff933e9f07894872644a369a9422738",
+"bitcoin-test_signtx_invalid_path.py::test_invalid_path_fail_asap": "1c100ce4b7c1e47e72428f390de0846c1ff933e9f07894872644a369a9422738",
 "bitcoin-test_signtx_invalid_path.py::test_invalid_path_pass_forkid": "ef98eb752ec5fa948c952def7599f57a2bc5240b2d6b1eec0e02cc9be5c3040f",
 "bitcoin-test_signtx_invalid_path.py::test_invalid_path_prompt": "12e137210397357ed754af0f4618ef03312b3e884930f55727d1b034f969bfd5",
 "bitcoin-test_signtx_mixed_inputs.py::test_non_segwit_segwit_inputs": "34cbf0075c03f13db8285b0ca9fd3e32dc3380ef95116d873754ec10c9801b99",

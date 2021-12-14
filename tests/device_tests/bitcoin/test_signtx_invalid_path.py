@@ -25,10 +25,14 @@ from ..signtx import request_finished, request_input, request_meta, request_outp
 
 B = messages.ButtonRequestType
 TX_CACHE_MAINNET = TxCache("Bitcoin")
+TX_CACHE_TESTNET = TxCache("Testnet")
 TX_CACHE_BCASH = TxCache("Bcash")
 
 TXHASH_8cc1f4 = bytes.fromhex(
     "8cc1f4adf7224ce855cf535a5104594a0004cb3b640d6714fdb00b9128832dd5"
+)
+TXHASH_a5cd2a = bytes.fromhex(
+    "a5cd2a706d680587e572df16a8ce5233139a094ebbd148cc66a8004dcc88819c"
 )
 TXHASH_d5f65e = bytes.fromhex(
     "d5f65ee80147b4bcc70b75e4bbf2d7382021b871bd8867ef8fa525ef50864882"
@@ -215,3 +219,30 @@ def test_attack_path_segwit(client):
         )
 
         btc.sign_tx(client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_CACHE_MAINNET)
+
+
+@pytest.mark.skip_t1(reason="T1 only prevents using paths known to be altcoins")
+def test_invalid_path_fail_asap(client):
+    inp1 = messages.TxInputType(
+        address_n=parse_path("0"),
+        amount=4977040,
+        prev_hash=TXHASH_a5cd2a,
+        prev_index=0,
+        script_type=messages.InputScriptType.SPENDWITNESS,
+        sequence=4294967293,
+    )
+
+    out1 = messages.TxOutputType(
+        address_n=parse_path("84h/0h/0h/1/0"),
+        amount=4977040,
+        script_type=messages.OutputScriptType.PAYTOWITNESS,
+    )
+
+    with client:
+        client.set_expected_responses(
+            [request_input(0), messages.Failure(code=messages.FailureType.DataError)]
+        )
+        try:
+            btc.sign_tx(client, "Testnet", [inp1], [out1], prev_txes=TX_CACHE_TESTNET)
+        except TrezorFailure:
+            pass
