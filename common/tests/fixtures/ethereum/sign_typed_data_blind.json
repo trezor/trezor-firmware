@@ -1,0 +1,56 @@
+{
+    "setup": {
+        "mnemonic": "all all all all all all all all all all all all",
+        "passphrase": ""
+    },
+    "tests": [
+        {
+            "name": "basic_data",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "message_hash": "0xea6529f0ee9eb0b207b5a8b0ebfa673d398d6a78262818da1d270bd138f81f03",
+                "domain_separator_hash": "0x97d6f53774b810fbda27e091c03c6a6d6815dd1270c2e62e82c6917c1eff774b"
+            },
+            "result": {
+                "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "sig": "0x2c2d8c7c1facf5bdcd997b5435bb42f3f4170a111ce079c94b5d1e34414f76560c4600d2167568e052ab846555bd590de93bb230987766c636613262eaeb8bdc1c"
+            }
+        },
+        {
+            "name": "complex_data",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "message_hash": "0xdbafe746b1c47e4870f6f77205660d3c49a94db9a80939809bfca7bf43919df5",
+                "domain_separator_hash": "0xc4f4e0cd1376e27837fe933e3f77b7bd6213211b377f0e19815a0dbd194731cc"
+            },
+            "result": {
+                "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "sig": "0xf0a187388b33f17885c915173f38bd613d2ce4346acadfc390b2bae4c6def03667ceac155b5398bd8be326386e841e8820c5254f389a09d6d95ac72e2f6e19e61c"
+            }
+        },
+        {
+            "name": "struct_list_v4",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "message_hash": "0xc16c4b0b9a45a8e9c34c4074d8deb589686f7de3b83e80596ec79f815a17276e",
+                "domain_separator_hash": "0x97d6f53774b810fbda27e091c03c6a6d6815dd1270c2e62e82c6917c1eff774b"
+            },
+            "result": {
+                "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "sig": "0x61d4a929f8513b6327c5eae227d65c394c3857904de483a2191095e2ec35a9ea2ecaf1a461332a6f4847679018848612b35c94150d9be8870ffad01fcbe72cf71c"
+            }
+        },
+        {
+            "name": "struct_list_non_v4",
+            "parameters": {
+                "path": "m/44'/60'/0'/0/0",
+                "message_hash": "0x6ba2528513daa98abdbec7363a77751fc79ca38fe6d37bdbb983e310e5c1444e",
+                "domain_separator_hash": "0x97d6f53774b810fbda27e091c03c6a6d6815dd1270c2e62e82c6917c1eff774b"
+            },
+            "result": {
+                "address": "0x73d0385F4d8E00C5e6504C6030F47BF6212736A8",
+                "sig": "0xba6658fd95d8f6048150c8ac64a596d974184522d1069237a57d0e170835fff661ff6f10c5049906a8a508c18d58145dcff91508e70e7e3c186193e3e3bb7dd61b"
+            }
+        }
+    ]
+}
