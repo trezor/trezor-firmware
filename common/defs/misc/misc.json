@@ -90,7 +90,7 @@
     {
         "name": "Cardano Testnet",
         "shortcut": "tADA",
-        "slip44": 1815,
+        "slip44": 1,
         "curve": "ed25519",
         "decimals": 6,
         "links": {
