@@ -414,7 +414,12 @@ def sign_typed_data_hash(
     For T1 backward compatibility.
     """
     address_n = tools.parse_path(address)
-    ret = ethereum.sign_typed_data_hash(client, address_n, domain_hash, message_hash)
+    ret = ethereum.sign_typed_data_hash(
+        client,
+        address_n,
+        ethereum.decode_hex(domain_hash),
+        ethereum.decode_hex(message_hash),
+    )
     output = {
         "domain_hash": domain_hash,
         "message_hash": message_hash,

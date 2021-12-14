@@ -272,15 +272,15 @@ def sign_message(
     )
 
 
-@expect(messages.EthereumMessageSignature)
+@expect(messages.EthereumTypedDataSignature)
 def sign_typed_data_hash(
-    client: "TrezorClient", n: "Address", domain_hash: AnyStr, message_hash: AnyStr
+    client: "TrezorClient", n: "Address", domain_hash: bytes, message_hash: bytes
 ) -> "MessageType":
     return client.call(
         messages.EthereumSignTypedHash(
             address_n=n,
-            domain_separator_hash=normalize_nfc(domain_hash),
-            message_hash=normalize_nfc(message_hash),
+            domain_separator_hash=domain_hash,
+            message_hash=message_hash,
         )
     )
 
