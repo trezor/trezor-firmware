@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import ethereum, exceptions
+from trezorlib import device, ethereum, exceptions, messages
 from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
@@ -35,6 +35,24 @@ def test_ethereum_sign_typed_data(client, parameters, result):
             address_n,
             parameters["data"],
             metamask_v4_compat=parameters["metamask_v4_compat"],
+        )
+        assert ret.address == result["address"]
+        assert f"0x{ret.signature.hex()}" == result["sig"]
+
+
+@parametrize_using_common_fixtures("ethereum/sign_typed_data_blind.json")
+def test_ethereum_sign_typed_data_blind(client, parameters, result):
+    with client:
+        device.apply_settings(
+            client, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
+        )
+
+        address_n = parse_path(parameters["path"])
+        ret = ethereum.sign_typed_data_hash(
+            client,
+            address_n,
+            bytes.fromhex(parameters["domain_separator_hash"][2:]),
+            bytes.fromhex(parameters["message_hash"][2:]),
         )
         assert ret.address == result["address"]
         assert f"0x{ret.signature.hex()}" == result["sig"]

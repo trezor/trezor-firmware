@@ -15,6 +15,7 @@ if False:
         EthereumSignTx,
         EthereumSignTxEIP1559,
         EthereumSignTypedData,
+        EthereumSignTypedHash,
     )
 
     from apps.common.keychain import MsgOut, Handler, HandlerWithKeychain
@@ -25,6 +26,7 @@ if False:
         EthereumSignTx,
         EthereumSignMessage,
         EthereumSignTypedData,
+        EthereumSignTypedHash,
     ]
     MsgIn = TypeVar("MsgIn", bound=EthereumMessages)
 

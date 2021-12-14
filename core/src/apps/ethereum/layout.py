@@ -109,11 +109,14 @@ def require_confirm_data(ctx: Context, data: bytes, data_total: int) -> Awaitabl
     )
 
 
-async def confirm_hash(ctx: Context, message_hash: bytes) -> None:
+async def confirm_hash(
+    ctx: Context, message_hash: bytes, description: str | None = None
+) -> None:
     await confirm_blob(
         ctx,
         "confirm_hash",
         title="Confirm hash",
+        description=description,
         data="0x" + hexlify(message_hash).decode(),
         hold=True,
     )

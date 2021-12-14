@@ -96,6 +96,10 @@ async def generate_typed_data_hash(
 
     await confirm_hash(ctx, message_hash)
 
+    return finalize_hash(domain_separator, message_hash)
+
+
+def finalize_hash(domain_separator: bytes, message_hash: bytes) -> bytes:
     return keccak256(b"\x19" + b"\x01" + domain_separator + message_hash)
 
 
